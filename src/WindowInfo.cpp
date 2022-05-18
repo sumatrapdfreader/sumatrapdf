@@ -65,7 +65,7 @@ struct LinkHandler : ILinkHandler {
     void GotoNamedDest(const WCHAR*) override;
     void ScrollTo(IPageDestination*) override;
     void LaunchURL(const char*) override;
-    void LaunchFile(const WCHAR* path, IPageDestination*) override;
+    void LaunchFile(const char* path, IPageDestination*) override;
     IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
 };
 
@@ -355,7 +355,8 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
             str::Free(tmpPath);
             tmpPath = tmp;
         }
-        LaunchFile(tmpPath, dest);
+        char* tmpPathA = ToUtf8Temp(tmpPath);
+        LaunchFile(tmpPathA, dest);
         str::Free(tmpPath);
         return;
     }
@@ -403,7 +404,7 @@ void LinkHandler::LaunchURL(const char* uri) {
         str::TransCharsInPlace(path, "/", "\\");
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
-        LaunchFile(ToWstrTemp(path), nullptr);
+        LaunchFile(path, nullptr);
     } else {
         // LaunchBrowser will reject unsupported URI schemes
         // TODO: support file URIs?
@@ -411,7 +412,7 @@ void LinkHandler::LaunchURL(const char* uri) {
     }
 }
 
-void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
+void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
@@ -421,20 +422,20 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
     }
 
     // TODO: make it a function
-    AutoFreeWstr pathW = str::Replace(pathOrig, L"/", L"\\");
-    if (str::StartsWith(pathW, L".\\")) {
-        pathW.Set(str::Dup(pathW + 2));
+    AutoFreeStr path = str::Replace(pathOrig, "/", "\\");
+    if (str::StartsWith(path, ".\\")) {
+        path.SetCopy(path + 2);
     }
 
-    WCHAR drive;
-    bool isAbsPath = str::StartsWith(pathW, L"\\") || str::Parse(pathW, L"%c:\\", &drive);
+    char drive;
+    bool isAbsPath = str::StartsWith(path, "\\") || str::Parse(path, "%c:\\", &drive);
     if (isAbsPath) {
         return;
     }
 
     IPageDestination* remoteLink = link;
     char* fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
-    fullPath = path::JoinTemp(fullPath, ToUtf8Temp(pathW));
+    fullPath = path::JoinTemp(fullPath, path);
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
     WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
@@ -454,7 +455,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath));
+            AutoFreeStr msg(str::Format(_TRA("Error loading %s"), fullPath));
             win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
         }
         return;
