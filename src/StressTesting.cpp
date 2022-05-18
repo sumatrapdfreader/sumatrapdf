@@ -112,8 +112,8 @@ static void BenchChmLoadOnly(const char* filePath) {
     logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
-static void BenchFile(const char* pathA, const char* pagesSpecA) {
-    if (!file::Exists(pathA)) {
+static void BenchFile(const char* path, const char* pagesSpec) {
+    if (!file::Exists(path)) {
         return;
     }
 
@@ -121,23 +121,23 @@ static void BenchFile(const char* pathA, const char* pagesSpecA) {
     // using all text rendering methods, so that we can compare and find
     // docs that take a long time to load
 
-    Kind kind = GuessFileType(pathA, true);
+    Kind kind = GuessFileType(path, true);
     if (!kind) {
         return;
     }
 
     if (ChmModel::IsSupportedFileType(kind) && !gGlobalPrefs->chmUI.useFixedPageUI) {
-        BenchChmLoadOnly(pathA);
+        BenchChmLoadOnly(path);
         return;
     }
 
     auto total = TimeGet();
-    logf("Starting: %s\n", pathA);
+    logf("Starting: %s\n", path);
 
     auto t = TimeGet();
-    EngineBase* engine = CreateEngine(pathA, nullptr, true);
+    EngineBase* engine = CreateEngine(path, nullptr, true);
     if (!engine) {
-        logf("Error: failed to load %s\n", pathA);
+        logf("Error: failed to load %s\n", path);
         return;
     }
 
@@ -146,13 +146,12 @@ static void BenchFile(const char* pathA, const char* pagesSpecA) {
     int pages = engine->PageCount();
     logf("page count: %d\n", pages);
 
-    if (!pagesSpecA) {
+    if (!pagesSpec) {
         for (int i = 1; i <= pages; i++) {
             BenchLoadRender(engine, i);
         }
     }
 
-    WCHAR* pagesSpec = ToWstrTemp(pagesSpecA);
     CrashIf(pagesSpec && !IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
@@ -167,7 +166,7 @@ static void BenchFile(const char* pathA, const char* pagesSpecA) {
 
     delete engine;
 
-    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), pathA);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path);
 }
 
 static bool IsFileToBench(const char* path) {
@@ -212,12 +211,11 @@ void BenchFileOrDir(StrVec& pathsToBench) {
     }
 }
 
-static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter) {
+static bool IsStressTestSupportedFile(const char* filePath, const char* filter) {
     if (filter && !path::Match(path::GetBaseNameTemp(filePath), filter)) {
         return false;
     }
-    char* pathA = ToUtf8Temp(filePath);
-    Kind kind = GuessFileType(pathA, false);
+    Kind kind = GuessFileType(filePath, false);
     if (!kind) {
         return false;
     }
@@ -229,7 +227,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     }
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    Kind kindSniffed = GuessFileType(pathA, true);
+    Kind kindSniffed = GuessFileType(filePath, true);
     if (!kindSniffed || kindSniffed == kind) {
         return false;
     }
@@ -239,9 +237,9 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     return DocIsSupportedFileType(kindSniffed);
 }
 
-static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVec& paths) {
+static bool CollectStressTestSupportedFilesFromDirectory(const char* dirPath, const char* filter, StrVec& paths) {
     bool hasFiles = false;
-    DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const WCHAR* filePath) -> bool {
+    DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const char* filePath) -> bool {
         if (IsStressTestSupportedFile(filePath, filter)) {
             paths.Append(filePath);
             hasFiles = true;
@@ -318,24 +316,24 @@ class TestFileProvider {
     virtual ~TestFileProvider() {
     }
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
-    virtual WCHAR* NextFile() = 0;
+    virtual char* NextFile() = 0;
     // start the iteration from the beginning
     virtual void Restart() = 0;
 };
 
 class FilesProvider : public TestFileProvider {
-    WStrVec files;
+    StrVec files;
     size_t provided;
 
   public:
-    explicit FilesProvider(const WCHAR* path) {
+    explicit FilesProvider(const char* path) {
         files.Append(path);
         provided = 0;
     }
-    FilesProvider(WStrVec& newFiles, int n, int offset) {
+    FilesProvider(StrVec& newFiles, int n, int offset) {
         // get every n-th file starting at offset
         for (size_t i = offset; i < newFiles.size(); i += n) {
-            const WCHAR* f = newFiles.at(i);
+            const char* f = newFiles.at(i);
             files.Append(f);
         }
         provided = 0;
@@ -344,7 +342,7 @@ class FilesProvider : public TestFileProvider {
     ~FilesProvider() override {
     }
 
-    WCHAR* NextFile() override {
+    char* NextFile() override {
         if (provided >= files.size()) {
             return nullptr;
         }
@@ -357,25 +355,25 @@ class FilesProvider : public TestFileProvider {
 };
 
 class DirFileProvider : public TestFileProvider {
-    AutoFreeWstr startDir;
-    AutoFreeWstr fileFilter;
+    AutoFreeStr startDir;
+    AutoFreeStr fileFilter;
 
     // current state of directory traversal
-    WStrVec filesToOpen;
-    WStrVec dirsToVisit;
+    StrVec filesToOpen;
+    StrVec dirsToVisit;
 
-    bool OpenDir(const WCHAR* dirPath);
+    bool OpenDir(const char* dirPath);
 
   public:
-    DirFileProvider(const WCHAR* path, const WCHAR* filter);
+    DirFileProvider(const char* path, const char* filter);
     ~DirFileProvider() override;
-    WCHAR* NextFile() override;
+    char* NextFile() override;
     void Restart() override;
 };
 
-DirFileProvider::DirFileProvider(const WCHAR* path, const WCHAR* filter) {
+DirFileProvider::DirFileProvider(const char* path, const char* filter) {
     startDir.SetCopy(path);
-    if (filter && !str::Eq(filter, L"*")) {
+    if (filter && !str::Eq(filter, "*")) {
         fileFilter.SetCopy(filter);
     }
     OpenDir(path);
@@ -384,26 +382,26 @@ DirFileProvider::DirFileProvider(const WCHAR* path, const WCHAR* filter) {
 DirFileProvider::~DirFileProvider() {
 }
 
-bool DirFileProvider::OpenDir(const WCHAR* dirPath) {
+bool DirFileProvider::OpenDir(const char* dirPath) {
     CrashIf(filesToOpen.size() > 0);
 
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
 
-    AutoFreeWstr pattern(str::Format(L"%s\\*", dirPath));
+    AutoFreeStr pattern(str::Format("%s\\*", dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
 }
 
-WCHAR* DirFileProvider::NextFile() {
+char* DirFileProvider::NextFile() {
     if (filesToOpen.size() > 0) {
         return filesToOpen.PopAt(0);
     }
 
     if (dirsToVisit.size() > 0) {
         // test next directory
-        AutoFreeWstr path(dirsToVisit.PopAt(0));
+        char* path = dirsToVisit.RemoveAt(0);
         OpenDir(path);
         return NextFile();
     }
@@ -415,8 +413,8 @@ void DirFileProvider::Restart() {
     OpenDir(startDir);
 }
 
-static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVec& files, bool showProgress) {
-    WStrVec dirsToVisit;
+static size_t GetAllMatchingFiles(const char* dir, const char* filter, StrVec& files, bool showProgress) {
+    StrVec dirsToVisit;
     dirsToVisit.Append(dir);
 
     while (dirsToVisit.size() > 0) {
@@ -425,9 +423,9 @@ static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVec
             fflush(stdout);
         }
 
-        AutoFreeWstr path(dirsToVisit.PopAt(0));
+        AutoFreeStr path(dirsToVisit.RemoveAt(0));
         CollectStressTestSupportedFilesFromDirectory(path, filter, files);
-        AutoFreeWstr pattern(str::Format(L"%s\\*", path.Get()));
+        AutoFreeStr pattern(str::Format("%s\\*", path.Get()));
         CollectPathsFromDirectory(pattern, dirsToVisit, true);
     }
     return files.size();
@@ -514,7 +512,7 @@ static void Finished(StressTest* st, bool success) {
     delete st;
 }
 
-static void Start(StressTest* st, const WCHAR* path, const WCHAR* filter, const WCHAR* ranges, int cycles) {
+static void Start(StressTest* st, const char* path, const char* filter, const char* ranges, int cycles) {
     if (file::Exists(path)) {
         FilesProvider* filesProvider = new FilesProvider(path);
         ParsePageRanges(ranges, st->pageRanges);
@@ -687,12 +685,12 @@ static void RandomizeViewingState(StressTest* st) {
 
 static bool GoToNextFile(StressTest* st) {
     for (;;) {
-        AutoFreeWstr nextFile(st->fileProvider->NextFile());
+        AutoFreeStr nextFile(st->fileProvider->NextFile());
         if (nextFile) {
             if (!IsInRange(st->fileRanges, ++st->fileIndex)) {
                 continue;
             }
-            if (OpenFile(st, ToUtf8Temp(nextFile))) {
+            if (OpenFile(st, nextFile)) {
                 return true;
             }
             continue;
@@ -831,32 +829,32 @@ void GetStressTestInfo(str::Str* s) {
 // for each extension, randomly, and inter-leave the files with different
 // extensions, so their testing is evenly distributed.
 // Returns result in <files>.
-static void RandomizeFiles(WStrVec& files, int maxPerType) {
-    WStrVec fileExts;
-    Vec<WStrVec*> filesPerType;
+static void RandomizeFiles(StrVec& files, int maxPerType) {
+    StrVec fileExts;
+    Vec<StrVec*> filesPerType;
 
     for (size_t i = 0; i < files.size(); i++) {
-        const WCHAR* file = files.at(i);
-        const WCHAR* ext = path::GetExtTemp(file);
+        const char* file = files.at(i);
+        const char* ext = path::GetExtTemp(file);
         CrashAlwaysIf(!ext);
         int typeNo = fileExts.FindI(ext);
         if (-1 == typeNo) {
             fileExts.Append(ext);
-            filesPerType.Append(new WStrVec());
+            filesPerType.Append(new StrVec());
             typeNo = (int)filesPerType.size() - 1;
         }
         filesPerType.at(typeNo)->Append(file);
     }
 
     for (size_t j = 0; j < filesPerType.size(); j++) {
-        WStrVec* all = filesPerType.at(j);
-        WStrVec* random = new WStrVec();
+        StrVec* all = filesPerType.at(j);
+        StrVec* random = new StrVec();
 
         for (int n = 0; n < maxPerType && all->size() > 0; n++) {
             int idx = rand() % all->size();
-            WCHAR* file = all->at(idx);
+            char* file = all->at(idx);
             random->Append(file);
-            all->PopAt(idx);
+            all->RemoveAt(idx);
         }
 
         filesPerType.at(j) = random;
@@ -869,12 +867,12 @@ static void RandomizeFiles(WStrVec& files, int maxPerType) {
     while (!gotAll) {
         gotAll = true;
         for (size_t j = 0; j < filesPerType.size(); j++) {
-            WStrVec* random = filesPerType.at(j);
+            StrVec* random = filesPerType.at(j);
             if (random->size() > 0) {
                 gotAll = false;
-                WCHAR* file = random->at(0);
+                char* file = random->at(0);
                 files.Append(file);
-                random->PopAt(0);
+                random->RemoveAt(0);
             }
         }
     }
@@ -907,24 +905,24 @@ void StartStressTest(Flags* i, WindowInfo* win) {
                 return;
             }
         }
-        WStrVec filesToTest;
+        StrVec filesToTest;
 
-        wprintf(L"Scanning for files in directory %s\n", i->stressTestPath);
+        printf("Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);
         size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
         if (0 == filesCount) {
-            wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter);
+            printf("Didn't find any files matching filter '%s'\n", i->stressTestFilter);
             return;
         }
-        wprintf(L"Found %d files", (int)filesCount);
+        printf("Found %d files", (int)filesCount);
         fflush(stdout);
         if (i->stressRandomizeFiles) {
             // TODO: should probably allow over-writing the 100 limit
             RandomizeFiles(filesToTest, 100);
             filesCount = filesToTest.size();
-            wprintf(L"\nAfter randomization: %d files", (int)filesCount);
+            printf("\nAfter randomization: %d files", (int)filesCount);
         }
-        wprintf(L"\n");
+        printf("\n");
         fflush(stdout);
 
         for (int j = 0; j < n; j++) {

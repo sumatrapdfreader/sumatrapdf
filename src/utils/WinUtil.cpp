@@ -1190,13 +1190,12 @@ void CenterDialog(HWND hDlg, HWND hParent) {
     SetWindowPos(hDlg, nullptr, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-/* Get the name of default printer or nullptr if not exists.
-   The caller needs to free() the result */
-WCHAR* GetDefaultPrinterName() {
-    WCHAR buf[512]{};
+// Get the name of default printer or nullptr if not exists.
+char* GetDefaultPrinterNameTemp() {
+    WCHAR buf[512] = {0};
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize)) {
-        return str::Dup(buf);
+        return ToUtf8Temp(buf);
     }
     return nullptr;
 }

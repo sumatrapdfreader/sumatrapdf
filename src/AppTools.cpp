@@ -84,10 +84,10 @@ bool IsDllBuild() {
     return resSrc != nullptr;
 }
 
-static AutoFreeWstr gAppDataDir;
+static AutoFreeStr gAppDataDir;
 
-void SetAppDataPath(const WCHAR* path) {
-    gAppDataDir.Set(path::Normalize(path));
+void SetAppDataPath(const char* path) {
+    gAppDataDir.SetCopy(path::NormalizeTemp(path));
 }
 
 // Generate the full path for a filename used by the app in the userdata path
@@ -98,7 +98,7 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     }
 
     if (gAppDataDir && dir::Exists(gAppDataDir)) {
-        return path::Join(gAppDataDir, fileName);
+        return path::Join(ToWstrTemp(gAppDataDir), fileName);
     }
 
     if (IsRunningInPortableMode()) {

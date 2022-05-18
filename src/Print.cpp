@@ -112,19 +112,17 @@ Printer::~Printer() {
     }
 
     free((void*)papers);
-    free((void*)paperNames);
     free((void*)paperSizes);
-
     free((void*)bins);
-    free((void*)binNames);
 }
 
 // get all the important info about a printer
-Printer* NewPrinter(WCHAR* printerName) {
+Printer* NewPrinter(char* printerName) {
     HANDLE hPrinter = nullptr;
     LONG ret = 0;
     Printer* printer = nullptr;
-    BOOL ok = OpenPrinterW(printerName, &hPrinter, nullptr);
+    WCHAR* printerNameW = ToWstrTemp(printerName);
+    BOOL ok = OpenPrinterW(printerNameW, &hPrinter, nullptr);
     if (!ok) {
         return nullptr;
     }
@@ -143,7 +141,7 @@ Printer* NewPrinter(WCHAR* printerName) {
     }
 
     /* ask for the size of DEVMODE struct */
-    structSize = DocumentPropertiesW(nullptr, hPrinter, printerName, nullptr, nullptr, 0);
+    structSize = DocumentPropertiesW(nullptr, hPrinter, printerNameW, nullptr, nullptr, 0);
     if (structSize < sizeof(DEVMODEW)) {
         // if (displayErrors) {
         //    MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
@@ -153,7 +151,7 @@ Printer* NewPrinter(WCHAR* printerName) {
     devMode = (DEVMODEW*)Allocator::AllocZero(nullptr, structSize);
 
     // Get the default DevMode for the printer and modify it for your needs.
-    ret = DocumentPropertiesW(nullptr, hPrinter, printerName, devMode, nullptr, DM_OUT_BUFFER);
+    ret = DocumentPropertiesW(nullptr, hPrinter, printerNameW, devMode, nullptr, DM_OUT_BUFFER);
     if (IDOK != ret) {
         // if (displayErrors) {
         //    MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
@@ -167,9 +165,9 @@ Printer* NewPrinter(WCHAR* printerName) {
     printer->info = info;
 
     {
-        DWORD n = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
-        DWORD n2 = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, nullptr, nullptr);
-        DWORD n3 = DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, nullptr, nullptr);
+        DWORD n = DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, nullptr, nullptr);
+        DWORD n2 = DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, nullptr, nullptr);
+        DWORD n3 = DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, nullptr, nullptr);
         if (n != n2 || n != n3 || 0 == n || ((DWORD)-1 == n)) {
             delete printer;
             return nullptr;
@@ -179,23 +177,24 @@ Printer* NewPrinter(WCHAR* printerName) {
         printer->papers = AllocArray<WORD>(n);
         WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // +1 is "just in case"
         printer->paperSizes = AllocArray<POINT>(n);
-        printer->paperNames = AllocArray<WCHAR*>(n);
+        printer->paperNames;
 
-        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
-        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
-        DeviceCapabilitiesW(printerName, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
         WCHAR* paperName = paperNamesSeq;
         for (int i = 0; i < (int)n; i++) {
-            printer->paperNames[i] = str::Dup(paperName);
+            char* name = ToUtf8Temp(paperName);
+            printer->paperNames.Append(name);
             paperName += paperNameSize;
         }
         str::Free(paperNamesSeq);
     }
 
     {
-        DWORD n = DeviceCapabilitiesW(printerName, nullptr, DC_BINS, nullptr, nullptr);
-        DWORD n2 = DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, nullptr, nullptr);
+        DWORD n = DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, nullptr, nullptr);
+        DWORD n2 = DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, nullptr, nullptr);
         if (n != n2 || ((DWORD)-1 == n)) {
             delete printer;
             return nullptr;
@@ -205,13 +204,13 @@ Printer* NewPrinter(WCHAR* printerName) {
         if (n > 0) {
             size_t binNameSize = 24;
             printer->bins = AllocArray<WORD>(n);
-            printer->binNames = AllocArray<WCHAR*>(n);
             WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1); // +1 is "just in case"
-            DeviceCapabilitiesW(printerName, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
-            DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
+            DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
+            DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             WCHAR* binName = binNamesSeq;
             for (int i = 0; i < (int)n; i++) {
-                printer->binNames[i] = str::Dup(binName);
+                char* name = ToUtf8Temp(binName);
+                printer->binNames.Append(name);
                 binName += binNameSize;
             }
             str::Free(binNamesSeq);
@@ -221,19 +220,19 @@ Printer* NewPrinter(WCHAR* printerName) {
     {
         DWORD n;
 
-        n = DeviceCapabilitiesW(printerName, nullptr, DC_COLLATE, nullptr, nullptr);
+        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_COLLATE, nullptr, nullptr);
         printer->canCallate = (n > 0);
 
-        n = DeviceCapabilitiesW(printerName, nullptr, DC_COLORDEVICE, nullptr, nullptr);
+        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_COLORDEVICE, nullptr, nullptr);
         printer->isColor = (n > 0);
 
-        n = DeviceCapabilitiesW(printerName, nullptr, DC_DUPLEX, nullptr, nullptr);
+        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_DUPLEX, nullptr, nullptr);
         printer->isDuplex = (n > 0);
 
-        n = DeviceCapabilitiesW(printerName, nullptr, DC_STAPLE, nullptr, nullptr);
+        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_STAPLE, nullptr, nullptr);
         printer->canStaple = (n > 0);
 
-        n = DeviceCapabilitiesW(printerName, nullptr, DC_ORIENTATION, nullptr, nullptr);
+        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_ORIENTATION, nullptr, nullptr);
         printer->orientation = n;
     }
 
@@ -260,6 +259,14 @@ static Size NormalizePaperSize(Size s) {
 
 static void MessageBoxWarningCond(bool show, const WCHAR* msg, const WCHAR* title) {
     logf(L"%s: %s\n", title, msg);
+    if (!show) {
+        return;
+    }
+    MessageBoxWarning(nullptr, msg, title);
+}
+
+static void MessageBoxWarningCond(bool show, const char* msg, const char* title) {
+    logf("%s: %s\n", title, msg);
     if (!show) {
         return;
     }
@@ -331,7 +338,8 @@ static bool PrintToDevice(const PrintData& pd) {
 
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    AutoDeleteDC hdc(CreateDCW(nullptr, pd.printer->name, nullptr, devMode));
+    WCHAR* printerName = ToWstrTemp(pd.printer->name);
+    AutoDeleteDC hdc(CreateDCW(nullptr, printerName, nullptr, devMode));
     if (!hdc) {
         return false;
     }
@@ -786,7 +794,8 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         if (devNames) {
             // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
             WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
-            printer = NewPrinter(printerName);
+            char* name = ToUtf8Temp(printerName);
+            printer = NewPrinter(name);
             // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
             GlobalUnlock(pdex.hDevNames);
         }
@@ -1001,7 +1010,7 @@ static short GetPaperByName(const WCHAR* papername) {
 #endif
 
 // wantedName can be a paper name, like "A6" or number for DMPAPER_* contstants like DMPAPER_LETTER
-static short GetPaperByName(Printer* printer, const WCHAR* wantedName) {
+static short GetPaperByName(Printer* printer, const char* wantedName) {
     auto devMode = printer->devMode;
     CrashIf(!(devMode->dmFields & DM_PAPERSIZE));
     if (!(devMode->dmFields & DM_PAPERSIZE)) {
@@ -1010,7 +1019,7 @@ static short GetPaperByName(Printer* printer, const WCHAR* wantedName) {
 
     int n = printer->nPaperSizes;
     for (int i = 0; i < n; i++) {
-        auto paperName = printer->paperNames[i];
+        char* paperName = printer->paperNames[i];
         if (str::EqIS(wantedName, paperName)) {
             return printer->papers[i];
         }
@@ -1018,21 +1027,21 @@ static short GetPaperByName(Printer* printer, const WCHAR* wantedName) {
 
     // alternatively allow indicating the paper directly by number
     DWORD paperId = 0;
-    if (str::Parse(wantedName, L"%u%$", &paperId)) {
+    if (str::Parse(wantedName, "%u%$", &paperId)) {
         return (short)paperId;
     }
     return devMode->dmPaperSize;
 }
 
-static short GetPaperKind(const WCHAR* kindName) {
+static short GetPaperKind(const char* kindName) {
     DWORD kind;
-    if (str::Parse(kindName, L"%u%$", &kind)) {
+    if (str::Parse(kindName, "%u%$", &kind)) {
         return (short)kind;
     }
     return DMPAPER_USER;
 }
 
-static short GetPaperSourceByName(Printer* printer, const WCHAR* binName) {
+static short GetPaperSourceByName(Printer* printer, const char* binName) {
     auto devMode = printer->devMode;
     CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
@@ -1043,78 +1052,78 @@ static short GetPaperSourceByName(Printer* printer, const WCHAR* binName) {
         return devMode->dmDefaultSource;
     }
     for (int i = 0; i < n; i++) {
-        WCHAR* currName = printer->binNames[i];
+        char* currName = printer->binNames[i];
         if (str::EqIS(currName, binName)) {
             return printer->bins[i];
         }
     }
     DWORD count = 0;
     // alternatively allow indicating the paper bin directly by number
-    if (str::Parse(binName, L"%u%$", &count)) {
+    if (str::Parse(binName, "%u%$", &count)) {
         return (short)count;
     }
     return devMode->dmDefaultSource;
 }
 
-static void ApplyPrintSettings(Printer* printer, const WCHAR* settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
+static void ApplyPrintSettings(Printer* printer, const char* settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
     auto devMode = printer->devMode;
     auto printerName = printer->name;
 
-    WStrVec rangeList;
+    StrVec rangeList;
     if (settings) {
-        Split(rangeList, settings, L",", true);
+        Split(rangeList, settings, ",", true);
     }
 
-    for (WCHAR* s : rangeList) {
+    for (char* s : rangeList) {
         int val;
         PRINTPAGERANGE pr{};
-        if (str::Parse(s, L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
+        if (str::Parse(s, "%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::Parse(s, L"%d%$", &pr.nFromPage)) {
+        } else if (str::Parse(s, "%d%$", &pr.nFromPage)) {
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::EqI(s, L"even")) {
+        } else if (str::EqI(s, "even")) {
             advanced.range = PrintRangeAdv::Even;
-        } else if (str::EqI(s, L"odd")) {
+        } else if (str::EqI(s, "odd")) {
             advanced.range = PrintRangeAdv::Odd;
-        } else if (str::EqI(s, L"noscale")) {
+        } else if (str::EqI(s, "noscale")) {
             advanced.scale = PrintScaleAdv::None;
-        } else if (str::EqI(s, L"shrink")) {
+        } else if (str::EqI(s, "shrink")) {
             advanced.scale = PrintScaleAdv::Shrink;
-        } else if (str::EqI(s, L"fit")) {
+        } else if (str::EqI(s, "fit")) {
             advanced.scale = PrintScaleAdv::Fit;
-        } else if (str::EqI(s, L"portrait")) {
+        } else if (str::EqI(s, "portrait")) {
             advanced.rotation = PrintRotationAdv::Portrait;
-        } else if (str::EqI(s, L"landscape")) {
+        } else if (str::EqI(s, "landscape")) {
             advanced.rotation = PrintRotationAdv::Landscape;
-        } else if (str::Parse(s, L"%dx%$", &val) && 0 < val && val < 1000) {
+        } else if (str::Parse(s, "%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
             devMode->dmFields |= DM_COPIES;
-        } else if (str::EqI(s, L"simplex")) {
+        } else if (str::EqI(s, "simplex")) {
             devMode->dmDuplex = DMDUP_SIMPLEX;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(s, L"duplex") || str::EqI(s, L"duplexlong")) {
+        } else if (str::EqI(s, "duplex") || str::EqI(s, "duplexlong")) {
             devMode->dmDuplex = DMDUP_VERTICAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(s, L"duplexshort")) {
+        } else if (str::EqI(s, "duplexshort")) {
             devMode->dmDuplex = DMDUP_HORIZONTAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(s, L"color")) {
+        } else if (str::EqI(s, "color")) {
             devMode->dmColor = DMCOLOR_COLOR;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::EqI(s, L"monochrome")) {
+        } else if (str::EqI(s, "monochrome")) {
             devMode->dmColor = DMCOLOR_MONOCHROME;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::StartsWithI(s, L"bin=")) {
+        } else if (str::StartsWithI(s, "bin=")) {
             devMode->dmDefaultSource = GetPaperSourceByName(printer, s + 4);
             devMode->dmFields |= DM_DEFAULTSOURCE;
-        } else if (str::StartsWithI(s, L"paper=")) {
+        } else if (str::StartsWithI(s, "paper=")) {
             devMode->dmPaperSize = GetPaperByName(printer, s + 6);
             devMode->dmFields |= DM_PAPERSIZE;
-        } else if (str::StartsWithI(s, L"paperkind=")) {
+        } else if (str::StartsWithI(s, "paperkind=")) {
             // alternatively allow indicating the paper kind directly by number
             devMode->dmPaperSize = GetPaperKind(s + 10);
             devMode->dmFields |= DM_PAPERSIZE;
@@ -1153,7 +1162,7 @@ static void SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
     SetCustomPaperSize(printer, size);
 }
 
-bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
+bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const char* settings) {
     bool ok = false;
     Printer* printer = nullptr;
 
@@ -1175,13 +1184,12 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
     if (printerName) {
         printer = NewPrinter(printerName);
     } else {
-        auto defName = GetDefaultPrinterName();
+        char* defName = GetDefaultPrinterNameTemp();
         if (!defName) {
             logf("PrintFile: GetDefaultPrinterName() failed\n");
             return false;
         }
         printer = NewPrinter(defName);
-        str::Free(defName);
     }
 
     if (!printer) {
@@ -1218,14 +1226,13 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
     return ok;
 }
 
-bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
-    logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
-    WCHAR* fileName2 = path::Normalize(fileName);
-    char* fileName2A = ToUtf8Temp(fileName2);
-    EngineBase* engine = CreateEngine(fileName2A, nullptr, true);
+bool PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
+    logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
+    char* fileName2 = path::NormalizeTemp(fileName);
+    EngineBase* engine = CreateEngine(fileName2, nullptr, true);
     if (!engine) {
-        WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);
-        MessageBoxWarningCond(displayErrors, msg, L"Error");
+        char* msg = str::Format("Couldn't open file '%s' for printing", fileName2);
+        MessageBoxWarningCond(displayErrors, msg, "Error");
         free(msg);
         return false;
     }

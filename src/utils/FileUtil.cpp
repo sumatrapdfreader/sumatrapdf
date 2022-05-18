@@ -414,6 +414,26 @@ static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
 #undef AtEndOf
 }
 
+static bool MatchWildcardsRec(const char* fileName, const char* filter) {
+#define AtEndOf(str) (*(str) == '\0')
+    switch (*filter) {
+        case '\0':
+        case ';':
+            return AtEndOf(fileName);
+        case '*':
+            filter++;
+            while (!AtEndOf(fileName) && !MatchWildcardsRec(fileName, filter)) {
+                fileName++;
+            }
+            return !AtEndOf(fileName) || AtEndOf(filter) || *filter == ';';
+        case '?':
+            return !AtEndOf(fileName) && MatchWildcardsRec(fileName + 1, filter + 1);
+        default:
+            return tolower(*fileName) == tolower(*filter) && MatchWildcardsRec(fileName + 1, filter + 1);
+    }
+#undef AtEndOf
+}
+
 /* matches the filename of a path against a list of semicolon
    separated filters as used by the common file dialogs
    (e.g. "*.pdf;*.xps;?.*" will match all PDF and XPS files and
@@ -426,6 +446,17 @@ bool Match(const WCHAR* path, const WCHAR* filter) {
             return true;
         }
         filter = str::FindChar(filter, L';') + 1;
+    }
+    return MatchWildcardsRec(path, filter);
+}
+
+bool Match(const char* path, const char* filter) {
+    path = GetBaseNameTemp(path);
+    while (str::FindChar(filter, L';')) {
+        if (MatchWildcardsRec(path, filter)) {
+            return true;
+        }
+        filter = str::FindChar(filter, ';') + 1;
     }
     return MatchWildcardsRec(path, filter);
 }

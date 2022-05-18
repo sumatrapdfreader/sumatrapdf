@@ -361,6 +361,7 @@ struct StrVec {
     bool InsertAt(int, const char*);
     void SetAt(int idx, const char* s);
     int Find(const char*, int startAt = 0) const;
+    int FindI(const char*, int startAt = 0) const;
     bool Contains(const char*) const;
     char* PopAt(int);
     char* RemoveAtFast(size_t idx);

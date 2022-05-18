@@ -8,7 +8,7 @@ struct PageRange {
 };
 
 struct Flags {
-    WStrVec fileNames;
+    StrVec fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (nullptr if not available) string that represents which pages
@@ -17,12 +17,12 @@ struct Flags {
     StrVec pathsToBenchmark;
     bool exitWhenDone = false;
     bool printDialog = false;
-    WCHAR* printerName = nullptr;
-    WCHAR* printSettings = nullptr;
+    char* printerName = nullptr;
+    char* printSettings = nullptr;
     WCHAR* forwardSearchOrigin = nullptr;
     int forwardSearchLine = 0;
     bool reuseDdeInstance = false;
-    WCHAR* destName = nullptr;
+    char* destName = nullptr;
     int pageNumber = -1;
     bool restrictedUse = false;
     bool enterPresentation = false;
@@ -32,10 +32,10 @@ struct Flags {
     Point startScroll = {-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;
-    WCHAR* pluginURL = nullptr;
+    char* pluginURL = nullptr;
     bool exitImmediately = false;
     bool silent = false;
-    WCHAR* appdataDir = nullptr;
+    char* appdataDir = nullptr;
     WCHAR* inverseSearchCmdLine = nullptr;
     bool invertColors = false;
     bool regress = false;
@@ -46,10 +46,10 @@ struct Flags {
     WCHAR* search = nullptr;
 
     // stress-testing related
-    WCHAR* stressTestPath = nullptr;
+    char* stressTestPath = nullptr;
     // nullptr is equivalent to "*" (i.e. all files)
-    WCHAR* stressTestFilter = nullptr;
-    WCHAR* stressTestRanges = nullptr;
+    char* stressTestFilter = nullptr;
+    char* stressTestRanges = nullptr;
     int stressTestCycles = 1;
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
@@ -96,6 +96,6 @@ struct Flags {
 
 void ParseFlags(const WCHAR* cmdLine, Flags&);
 
-bool IsValidPageRange(const WCHAR* ranges);
-bool IsBenchPagesInfo(const WCHAR* s);
-bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result);
+bool IsValidPageRange(const char* ranges);
+bool IsBenchPagesInfo(const char* s);
+bool ParsePageRanges(const char* ranges, Vec<PageRange>& result);

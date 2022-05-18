@@ -34,6 +34,7 @@ bool IsOnFixedDrive(const WCHAR* path);
 bool IsOnFixedDrive(const char* path);
 
 bool Match(const WCHAR* path, const WCHAR* filter);
+bool Match(const char* path, const char* filter);
 
 bool IsAbsolute(const WCHAR* path);
 bool IsAbsolute(const char* path);

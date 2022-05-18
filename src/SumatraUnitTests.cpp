@@ -79,8 +79,8 @@ static void ParseCommandLineTest() {
         utassert(true == i.enterPresentation);
         utassert(true == i.invertColors);
         utassert(2 == i.fileNames.size());
-        utassert(0 == i.fileNames.Find(L"foo.pdf"));
-        utassert(1 == i.fileNames.Find(L"bar.pdf"));
+        utassert(0 == i.fileNames.Find("foo.pdf"));
+        utassert(1 == i.fileNames.Find("bar.pdf"));
     }
 
     {
@@ -88,15 +88,15 @@ static void ParseCommandLineTest() {
         ParseFlags(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
         utassert(true == i.invertColors);
         utassert(1 == i.fileNames.size());
-        utassert(0 == i.fileNames.Find(L"rosanna.pdf"));
+        utassert(0 == i.fileNames.Find("rosanna.pdf"));
     }
 
     {
         Flags i;
         ParseFlags(LR"(SumatraPDF.exe "foo \" bar \\.pdf" un\"quoted.pdf)", i);
         utassert(2 == i.fileNames.size());
-        utassert(0 == i.fileNames.Find(LR"(foo " bar \\.pdf)"));
-        utassert(1 == i.fileNames.Find(LR"(un"quoted.pdf)"));
+        utassert(0 == i.fileNames.Find(R"(foo " bar \\.pdf)"));
+        utassert(1 == i.fileNames.Find(R"(un"quoted.pdf)"));
     }
 
     {
@@ -135,19 +135,19 @@ static void ParseCommandLineTest() {
 }
 
 static void BenchRangeTest() {
-    utassert(IsBenchPagesInfo(L"1"));
-    utassert(IsBenchPagesInfo(L"2-4"));
-    utassert(IsBenchPagesInfo(L"5,7"));
-    utassert(IsBenchPagesInfo(L"6,8,"));
-    utassert(IsBenchPagesInfo(L"1-3,4,6-9,13"));
-    utassert(IsBenchPagesInfo(L"2-"));
-    utassert(IsBenchPagesInfo(L"loadonly"));
+    utassert(IsBenchPagesInfo("1"));
+    utassert(IsBenchPagesInfo("2-4"));
+    utassert(IsBenchPagesInfo("5,7"));
+    utassert(IsBenchPagesInfo("6,8,"));
+    utassert(IsBenchPagesInfo("1-3,4,6-9,13"));
+    utassert(IsBenchPagesInfo("2-"));
+    utassert(IsBenchPagesInfo("loadonly"));
 
-    utassert(!IsBenchPagesInfo(L""));
-    utassert(!IsBenchPagesInfo(L"-2"));
-    utassert(!IsBenchPagesInfo(L"2--4"));
-    utassert(!IsBenchPagesInfo(L"4-2"));
-    utassert(!IsBenchPagesInfo(L"1-3,loadonly"));
+    utassert(!IsBenchPagesInfo(""));
+    utassert(!IsBenchPagesInfo("-2"));
+    utassert(!IsBenchPagesInfo("2--4"));
+    utassert(!IsBenchPagesInfo("4-2"));
+    utassert(!IsBenchPagesInfo("1-3,loadonly"));
     utassert(!IsBenchPagesInfo(nullptr));
 }
 

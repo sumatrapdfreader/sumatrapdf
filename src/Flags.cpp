@@ -56,11 +56,12 @@ static void EnumeratePrinters() {
         free(info5Arr);
         return;
     }
-    AutoFreeWstr defName(GetDefaultPrinterName());
+    char* defName = GetDefaultPrinterNameTemp();
+    WCHAR* defNameW = ToWstrTemp(defName);
     for (DWORD i = 0; i < printersCount; i++) {
         const WCHAR* printerName = info5Arr[i].pPrinterName;
         const WCHAR* printerPort = info5Arr[i].pPortName;
-        bool fDefault = str::Eq(defName, printerName);
+        bool fDefault = str::Eq(defNameW, printerName);
         output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort, info5Arr[i].Attributes,
                          fDefault ? L", default" : L"");
 
@@ -88,22 +89,22 @@ static void EnumeratePrinters() {
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
 // caller must delete the result
-bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
+bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
     if (!ranges) {
         return false;
     }
 
-    WStrVec rangeList;
-    Split(rangeList, ranges, L",", true);
+    StrVec rangeList;
+    Split(rangeList, ranges, ",", true);
     rangeList.SortNatural();
 
-    for (WCHAR* rangeStr : rangeList) {
+    for (char* rangeStr : rangeList) {
         int start, end;
-        if (str::Parse(rangeStr, L"%d-%d%$", &start, &end) && 0 < start && start <= end) {
+        if (str::Parse(rangeStr, "%d-%d%$", &start, &end) && 0 < start && start <= end) {
             result.Append(PageRange{start, end});
-        } else if (str::Parse(rangeStr, L"%d-%$", &start) && 0 < start) {
+        } else if (str::Parse(rangeStr, "%d-%$", &start) && 0 < start) {
             result.Append(PageRange{start, INT_MAX});
-        } else if (str::Parse(rangeStr, L"%d%$", &start) && 0 < start) {
+        } else if (str::Parse(rangeStr, "%d%$", &start) && 0 < start) {
             result.Append(PageRange{start, start});
         } else {
             return false;
@@ -116,7 +117,7 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
 // a valid page range is a non-empty, comma separated list of either
 // single page ("3") numbers, closed intervals "2-4" or intervals
 // unlimited to the right ("5-")
-bool IsValidPageRange(const WCHAR* ranges) {
+bool IsValidPageRange(const char* ranges) {
     Vec<PageRange> rangeList;
     return ParsePageRanges(ranges, rangeList);
 }
@@ -124,8 +125,8 @@ bool IsValidPageRange(const WCHAR* ranges) {
 // <s> can be:
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
-bool IsBenchPagesInfo(const WCHAR* s) {
-    return str::EqI(s, L"loadonly") || IsValidPageRange(s);
+bool IsBenchPagesInfo(const char* s) {
+    return str::EqI(s, "loadonly") || IsValidPageRange(s);
 }
 
 // -view [continuous][singlepage|facing|bookview]
@@ -286,7 +287,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::PrintToDefault) {
-            i.printerName = GetDefaultPrinterName();
+            i.printerName = str::Dup(GetDefaultPrinterNameTemp());
             if (!i.printerName) {
                 i.printDialog = true;
             }
@@ -426,7 +427,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
 
         if (arg == Arg::PrintTo) {
-            i.printerName = str::Dup(param);
+            i.printerName = str::Dup(paramA);
             i.exitWhenDone = true;
             continue;
         }
@@ -434,9 +435,9 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
-            i.printSettings = str::Dup(param);
-            str::RemoveCharsInPlace(i.printSettings, L" ");
-            str::TransCharsInPlace(i.printSettings, L";", L",");
+            i.printSettings = str::Dup(paramA);
+            str::RemoveCharsInPlace(i.printSettings, " ");
+            str::TransCharsInPlace(i.printSettings, ";", ",");
             continue;
         }
         if (arg == Arg::InverseSearch) {
@@ -453,7 +454,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
-            i.destName = str::Dup(param);
+            i.destName = str::Dup(paramA);
             continue;
         }
         if (arg == Arg::Page) {
@@ -473,7 +474,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::AppData) {
-            i.appdataDir = str::Dup(param);
+            i.appdataDir = str::Dup(paramA);
             continue;
         }
         if (arg == Arg::Plugin) {
@@ -482,7 +483,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
-                i.pluginURL = str::Dup(param);
+                i.pluginURL = str::Dup(paramA);
                 i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.EatParam());
             } else {
                 i.hwndPluginParent = (HWND)(INT_PTR)_wtol(param);
@@ -497,15 +498,15 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            i.stressTestPath = str::Dup(param);
+            i.stressTestPath = str::Dup(paramA);
             int num;
             const WCHAR* s = args.AdditionalParam(1);
             if (s && str::FindChar(s, '*')) {
-                i.stressTestFilter = str::Dup(args.EatParam());
+                i.stressTestFilter = ToUtf8(args.EatParam());
                 s = args.AdditionalParam(1);
             }
-            if (s && IsValidPageRange(s)) {
-                i.stressTestRanges = str::Dup(args.EatParam());
+            if (s && IsValidPageRange(ToUtf8Temp(s))) {
+                i.stressTestRanges = ToUtf8(args.EatParam());
                 s = args.AdditionalParam(1);
             }
             if (s && str::Parse(s, L"%dx%$", &num) && num > 0) {
@@ -532,7 +533,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::Bench) {
             i.pathsToBenchmark.Append(paramA);
             const WCHAR* s = args.AdditionalParam(1);
-            if (s && IsBenchPagesInfo(s)) {
+            if (s && IsBenchPagesInfo(ToUtf8Temp(s))) {
                 s = args.EatParam();
                 i.pathsToBenchmark.Append(ToUtf8Temp(s));
             } else {
@@ -592,7 +593,8 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             filePath = ResolveLnkTemp(argName);
         }
         if (filePath) { // resolve might fail
-            i.fileNames.Append(filePath);
+            char* s = ToUtf8Temp(filePath);
+            i.fileNames.Append(s);
         }
     }
 

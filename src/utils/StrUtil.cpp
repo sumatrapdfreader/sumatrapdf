@@ -2762,6 +2762,17 @@ int StrVec::Find(const char* sv, int startAt) const {
     return -1;
 }
 
+int StrVec::FindI(const char* sv, int startAt) const {
+    int n = Size();
+    for (int i = startAt; i < n; i++) {
+        auto s = at(i);
+        if (str::EqI(sv, s)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 bool StrVec::Contains(const char* s) const {
     int idx = Find(s);
     return idx != -1;

@@ -119,7 +119,7 @@ bool IsCursorOverWindow(HWND);
 bool GetCursorPosInHwnd(HWND, Point&);
 POINT GetCursorPosInHwnd(HWND);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
-WCHAR* GetDefaultPrinterName();
+char* GetDefaultPrinterNameTemp();
 bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 

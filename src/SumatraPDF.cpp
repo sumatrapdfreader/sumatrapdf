@@ -540,6 +540,16 @@ void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
     MessageBoxW(hwnd, msg, title, type);
 }
 
+void MessageBoxWarning(HWND hwnd, const char* msg, const char* title) {
+    uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
+    if (!title) {
+        title = _TRA("Warning");
+    }
+    WCHAR* msgW = ToWstrTemp(msg);
+    WCHAR* titleW = ToWstrTemp(title);
+    MessageBoxW(hwnd, msgW, titleW, type);
+}
+
 // updates the layout for a window to either left-to-right or right-to-left
 // depending on the currently used language (cf. IsUIRightToLeft)
 static void UpdateWindowRtlLayout(WindowInfo* win) {

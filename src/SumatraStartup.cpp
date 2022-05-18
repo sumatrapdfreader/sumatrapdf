@@ -253,7 +253,8 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     }
 
     if (win->IsDocLoaded() && flags.destName && isFirstWin) {
-        win->linkHandler->GotoNamedDest(flags.destName);
+        WCHAR* dest = ToWstrTemp(flags.destName);
+        win->linkHandler->GotoNamedDest(dest);
     } else if (win->IsDocLoaded() && flags.pageNumber > 0 && isFirstWin) {
         if (win->ctrl->ValidPageNo(flags.pageNumber)) {
             win->ctrl->GoToPage(flags.pageNumber, false);
@@ -356,9 +357,9 @@ static bool SetupPluginMode(Flags& i) {
         return false;
     }
 
-    gPluginURL = ToUtf8(i.pluginURL);
+    gPluginURL = i.pluginURL;
     if (!gPluginURL) {
-        gPluginURL = ToUtf8(i.fileNames.at(0)); // TODO: leaks?
+        gPluginURL = i.fileNames[0];
     }
 
     // don't save preferences for plugin windows (and don't allow fullscreen mode)
@@ -391,16 +392,16 @@ static bool SetupPluginMode(Flags& i) {
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
-        str::TransCharsInPlace(args, L"#", L"&");
-        WStrVec parts;
-        Split(parts, args, L"&", true);
+        AutoFreeStr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        str::TransCharsInPlace(args, "#", "&");
+        StrVec parts;
+        Split(parts, args, "&", true);
         for (size_t k = 0; k < parts.size(); k++) {
-            WCHAR* part = parts.at(k);
+            char* part = parts.at(k);
             int pageNo;
-            if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo)) {
+            if (str::StartsWithI(part, "page=") && str::Parse(part + 4, "=%d%$", &pageNo)) {
                 i.pageNumber = pageNo;
-            } else if (str::StartsWithI(part, L"nameddest=") && part[10]) {
+            } else if (str::StartsWithI(part, "nameddest=") && part[10]) {
                 i.destName = str::Dup(part + 10);
             } else if (!str::FindChar(part, '=') && part[0]) {
                 i.destName = str::Dup(part);
@@ -1176,8 +1177,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         auto nFiles = flags.fileNames.size();
-        for (size_t n = 0; n < nFiles; n++) {
-            bool ok = PrintFile(flags.fileNames.at(n), flags.printerName, !flags.silent, flags.printSettings);
+        for (char* path : flags.fileNames) {
+            bool ok = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
             if (!ok) {
                 retCode++;
             }
@@ -1201,7 +1202,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             goto Exit;
         }
         for (size_t n = 0; n < nFiles; n++) {
-            OpenUsingDde(hPrevWnd, flags.fileNames.at(n), flags, 0 == n);
+            char* path = flags.fileNames[n];
+            OpenUsingDde(hPrevWnd, ToWstrTemp(path), flags, 0 == n);
         }
         if (0 == nFiles) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
@@ -1248,16 +1250,14 @@ ContinueOpenWindow:
     }
     ResetSessionState(gGlobalPrefs->sessionData);
 
-    for (const WCHAR* filePath : flags.fileNames) {
+    for (const char* path : flags.fileNames) {
         if (restoreSession) {
-            char* path = ToUtf8Temp(filePath);
             auto tab = FindTabByFile(path);
             if (tab) {
                 tabToSelect = tab;
                 continue;
             }
         }
-        auto path = ToUtf8Temp(filePath);
         win = LoadOnStartup(path, flags, !win);
         if (!win) {
             retCode++;
