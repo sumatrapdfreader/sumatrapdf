@@ -3410,14 +3410,12 @@ static void OnMenuGoToPage(WindowInfo* win) {
 
     auto* ctrl = win->ctrl;
     AutoFreeStr label = ctrl->GetPageLabel(ctrl->CurrentPageNo());
-    WCHAR* labelW = ToWstrTemp(label);
-    AutoFreeWstr newPageLabelW(Dialog_GoToPage(win->hwndFrame, labelW, ctrl->PageCount(), !ctrl->HasPageLabels()));
-    if (!newPageLabelW) {
+    AutoFreeStr newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
+    if (!newPageLabel) {
         return;
     }
 
-    char* newPageLabel = ToUtf8(newPageLabelW);
-    int newPageNo = ctrl->GetPageByLabel(newPageLabel);
+    int newPageNo = ctrl->GetPageByLabel(newPageLabel.Get());
     if (ctrl->ValidPageNo(newPageNo)) {
         ctrl->GoToPage(newPageNo, true);
     }

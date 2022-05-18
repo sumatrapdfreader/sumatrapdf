@@ -137,10 +137,15 @@ char* Dialog_GetPassword(HWND hwndParent, const char* fileName, bool* rememberPa
 
 /* For passing data to/from GoToPage dialog */
 struct Dialog_GoToPage_Data {
-    const WCHAR* currPageLabel; // currently shown page label
-    int pageCount;              // total number of pages
-    bool onlyNumeric;           // whether the page label must be numeric
-    WCHAR* newPageLabel;        // page number entered by user
+    char* currPageLabel = nullptr; // currently shown page label
+    int pageCount = 0;             // total number of pages
+    bool onlyNumeric = false;      // whether the page label must be numeric
+    char* newPageLabel = nullptr;  // page number entered by user
+
+    ~Dialog_GoToPage_Data() {
+        str::Free(currPageLabel);
+        str::Free(newPageLabel);
+    }
 };
 
 static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -158,14 +163,15 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
         }
         CrashIf(!data->currPageLabel);
-        SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
+        WCHAR* ws = ToWstrTemp(data->currPageLabel);
+        SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_EDIT, ws);
         AutoFreeWstr totalCount(str::Format(_TR("(of %d)"), data->pageCount));
-        SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
+        SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
 
         EditSelectAll(editPageNo);
-        SetDlgItemText(hDlg, IDC_STATIC, _TR("&Go to page:"));
-        SetDlgItemText(hDlg, IDOK, _TR("Go to page"));
-        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+        SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Go to page:"));
+        SetDlgItemTextW(hDlg, IDOK, _TR("Go to page"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
 
         CenterDialog(hDlg);
         SetFocus(editPageNo);
@@ -173,15 +179,15 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
     }
     //] ACCESSKEY_GROUP GoTo Page Dialog
 
-    WCHAR* tmp;
+    char* tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    tmp = win::GetTextTemp(editPageNo);
-                    data->newPageLabel = str::Dup(tmp);
+                    tmp = win::GetTextATemp(editPageNo);
+                    str::ReplaceWithCopy(&data->newPageLabel, tmp);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
 
@@ -197,15 +203,15 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
 /* Shows a 'go to page' dialog and returns the page label entered by the user
    or nullptr if user clicked the "cancel" button or there was an error.
    The caller must free() the result. */
-WCHAR* Dialog_GoToPage(HWND hwnd, const WCHAR* currentPageLabel, int pageCount, bool onlyNumeric) {
+char* Dialog_GoToPage(HWND hwnd, const char* currentPageLabel, int pageCount, bool onlyNumeric) {
     Dialog_GoToPage_Data data;
-    data.currPageLabel = currentPageLabel;
+    data.currPageLabel = str::Dup(currentPageLabel);
     data.pageCount = pageCount;
     data.onlyNumeric = onlyNumeric;
     data.newPageLabel = nullptr;
 
     CreateDialogBox(IDD_DIALOG_GOTO_PAGE, hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
-    return data.newPageLabel;
+    return str::Dup(data.newPageLabel);
 }
 
 /* For passing data to/from Find dialog */

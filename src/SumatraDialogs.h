@@ -3,7 +3,7 @@
 
 struct GlobalPrefs;
 
-WCHAR* Dialog_GoToPage(HWND hwnd, const WCHAR* currentPageLabel, int pageCount, bool onlyNumeric = true);
+char* Dialog_GoToPage(HWND hwnd, const char* currentPageLabel, int pageCount, bool onlyNumeric = true);
 WCHAR* Dialog_Find(HWND hwnd, const WCHAR* previousSearch, bool* matchCase);
 char* Dialog_GetPassword(HWND hwnd, const char* fileName, bool* rememberPassword);
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool* dontAskAgainOut);
