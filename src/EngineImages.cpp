@@ -816,7 +816,7 @@ class EngineImageDir : public EngineImages {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
 
-    WStrVec pageFileNames;
+    StrVec pageFileNames;
     TocTree* tocTree = nullptr;
 };
 
@@ -826,8 +826,7 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     DirTraverse(dir, false, [e](const char* path) -> bool {
         Kind kind = GuessFileTypeFromName(path);
         if (IsEngineImageSupportedFileType(kind)) {
-            WCHAR* pathW = ToWstrTemp(path);
-            e->pageFileNames.Append(pathW);
+            e->pageFileNames.Append(path);
         }
         return true;
     });
@@ -860,18 +859,17 @@ char* EngineImageDir::GetPageLabel(int pageNo) const {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    const WCHAR* path = pageFileNames.at(pageNo - 1);
-    const WCHAR* fileName = path::GetBaseNameTemp(path);
+    const char* path = pageFileNames.at(pageNo - 1);
+    const char* fileName = path::GetBaseNameTemp(path);
     size_t n = path::GetExtTemp(fileName) - fileName;
-    return ToUtf8(fileName, n);
+    return str::Dup(fileName, n);
 }
 
 int EngineImageDir::GetPageByLabel(const char* label) const {
-    WCHAR* labelW = ToWstrTemp(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
-        const WCHAR* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
-        const WCHAR* fileExt = path::GetExtTemp(fileName);
-        if (str::StartsWithI(fileName, labelW) &&
+        const char* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
+        const char* fileExt = path::GetExtTemp(fileName);
+        if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
             return i + 1;
         }
@@ -903,23 +901,24 @@ TocTree* EngineImageDir::GetToc() {
     return tocTree;
 }
 
-bool EngineImageDir::SaveFileAs(const char* copyFileName) {
+bool EngineImageDir::SaveFileAs(const char* dstPath) {
     // only copy the files if the target directory doesn't exist yet
-    auto dstPath = ToWstrTemp(copyFileName);
-    if (!CreateDirectoryW(dstPath, nullptr)) {
+    WCHAR* dstPathW = ToWstrTemp(dstPath);
+    if (!CreateDirectoryW(dstPathW, nullptr)) {
         return false;
     }
     bool ok = true;
-    for (WCHAR* pathOld : pageFileNames) {
-        const WCHAR* fileName = path::GetBaseNameTemp(pathOld);
-        WCHAR* pathNew = path::JoinTemp(dstPath, fileName);
+    for (char* pathOld : pageFileNames) {
+        const char* fileName = path::GetBaseNameTemp(pathOld);
+        char* pathNew = path::JoinTemp(dstPath, fileName);
         ok = ok && file::Copy(pathNew, pathOld, true);
     }
     return ok;
 }
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
+    char* path = pageFileNames.at(pageNo - 1);
+    AutoFree bmpData = file::ReadFile(path);;
     if (bmpData.data) {
         deleteAfterUse = true;
         return BitmapFromData(bmpData.AsByteSlice());
@@ -928,7 +927,8 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
-    AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
+    char* path = pageFileNames.at(pageNo - 1);
+    AutoFree bmpData = file::ReadFile(path);
     if (bmpData.data) {
         ByteSlice sp{(u8*)bmpData.data, bmpData.size()};
         Size size = BitmapSizeFromData(sp);
@@ -941,7 +941,8 @@ bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName) {
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        auto data = file::ReadFile(pageFileNames.at(i - 1));
+        char* path = pageFileNames.at(i - 1);
+        ByteSlice data = file::ReadFile(path);
         ok = c->AddPageFromImageData(data, GetFileDPI());
         str::Free(data);
     }
