@@ -2563,8 +2563,9 @@ char* GetFileName(const char* url) {
     if (str::IsEmpty(base)) {
         return nullptr;
     }
-    DecodeInPlace(base);
-    return str::Dup(base);
+    WCHAR* ws = ToWstrTemp(base);
+    DecodeInPlace(ws);
+    return ToUtf8(ws);
 }
 
 } // namespace url

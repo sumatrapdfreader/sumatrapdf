@@ -135,7 +135,8 @@ static void StrUrlExtractTest() {
     fileName.Set(url::GetFileName("http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
     utassert(str::Eq(fileName, "na/me.ext"));
     fileName.Set(url::GetFileName("http://example.net/%E2%82%AC"));
-    utassert(str::Eq((char*)fileName.Get(), "\xAC\x20"));
+    char* s = fileName.Get();
+    utassert(str::Eq(s, "\xE2\x82\xaC"));
 }
 
 void strStrTest() {
