@@ -1488,13 +1488,13 @@ void SetText(HMENU m, int id, const WCHAR* s) {
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-const WCHAR* ToSafeString(AutoFreeWstr& s) {
-    auto str = s.Get();
+char* ToSafeStringTemp(const char* s) {
+    auto str = str::DupTemp(s);
     if (!str::FindChar(str, '&')) {
         return str;
     }
-    s.Set(str::Replace(str, L"&", L"&&"));
-    return s.Get();
+    AutoFreeStr safe = str::Replace(str, "&", "&&");
+    return str::DupTemp(safe.Get());
 }
 } // namespace menu
 } // namespace win

@@ -192,7 +192,7 @@ void Remove(HMENU m, int id);
 // void Remove(HMENU m, enum Cmd id);
 void Empty(HMENU m);
 void SetText(HMENU m, int id, const WCHAR* s);
-const WCHAR* ToSafeString(AutoFreeWstr& s);
+char* ToSafeStringTemp(const char* s);
 
 } // namespace menu
 

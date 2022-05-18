@@ -1024,25 +1024,25 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
-static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
+static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     CrashIf(!filePath || !menuFile);
     if (!filePath || !menuFile) {
         return;
     }
 
-    AutoFreeWstr menuString;
-    menuString.SetCopy(path::GetBaseNameTemp(filePath));
+    const char* menuString = path::GetBaseNameTemp(filePath);
 
     // If the name is too long, save only the ends glued together
     // E.g. 'Very Long PDF Name (3).pdf' -> 'Very Long...e (3).pdf'
-    const UINT MAX_LEN = 70;
-    if (menuString.size() > MAX_LEN) {
-        WCHAR* tmpStr = menuString.Get();
-        WCHAR* newStr = AllocArray<WCHAR>(MAX_LEN);
-        const UINT half = MAX_LEN / 2;
-        const UINT strSize = menuString.size() + 1; // size()+1 because wcslen() doesn't include \0
+    const size_t MAX_LEN = 70;
+    size_t menuStrLen = str::Len(menuString);
+    if (menuStrLen > MAX_LEN) {
+        const char* tmpStr = menuString;
+        char* newStr = AllocArray<char>(MAX_LEN);
+        const size_t half = MAX_LEN / 2;
+        const size_t strSize = menuStrLen + 1; // size()+1 because wcslen() doesn't include \0
         // Copy first N/2 characters, move last N/2 characters to the halfway point
-        for (UINT i = 0; i < half; i++) {
+        for (size_t i = 0; i < half; i++) {
             newStr[i] = tmpStr[i];
             newStr[i + half] = tmpStr[strSize - half + i];
         }
@@ -1051,15 +1051,17 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
         // Ensure null-terminated string
         newStr[MAX_LEN - 1] = '\0';
         // Save truncated string
-        menuString.Set(newStr);
+        menuString = str::DupTemp(newStr);
+        str::Free(newStr);
     }
 
-    auto fileName = win::menu::ToSafeString(menuString);
+    char* fileName = win::menu::ToSafeStringTemp(menuString);
     int menuIdx = (int)((index + 1) % 10);
-    menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
+    menuString = str::Format("&%d) %s", menuIdx, fileName);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
-    InsertMenuW(menuFile, CmdExit, flags, menuId, menuString);
+    InsertMenuW(menuFile, CmdExit, flags, menuId, ToWstrTemp(menuString));
+    str::Free(menuString);
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
@@ -1073,7 +1075,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
         if (!fs || fs->isMissing) {
             break;
         }
-        WCHAR* fp = ToWstrTemp(fs->filePath);
+        const char* fp = fs->filePath;
         AddFileMenuItem(m, fp, i);
     }
 

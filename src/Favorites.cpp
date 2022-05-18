@@ -284,32 +284,32 @@ bool HasFavorites() {
 }
 
 // caller has to free() the result
-static WCHAR* FavReadableName(Favorite* fn) {
-    const WCHAR* toFree = nullptr;
-    const WCHAR* label = ToWstrTemp(fn->pageLabel);
+static char* FavReadableName(Favorite* fn) {
+    const char* toFree = nullptr;
+    const char* label = fn->pageLabel;
     if (!label) {
-        label = str::Format(L"%d", fn->pageNo);
+        label = str::Format("%d", fn->pageNo);
         toFree = label;
     }
-    WCHAR* res = nullptr;
+    char* res = nullptr;
     if (fn->name) {
-        AutoFreeWstr pageNo(str::Format(_TR("(page %s)"), label));
-        res = str::Join(ToWstrTemp(fn->name), L" ", pageNo);
+        AutoFreeStr pageNo(str::Format(_TRA("(page %s)"), label));
+        res = str::Join(fn->name, " ", pageNo);
     } else {
-        res = str::Format(_TR("Page %s"), label);
+        res = str::Format(_TRA("Page %s"), label);
     }
     str::Free(toFree);
     return res;
 }
 
 // caller has to free() the result
-static WCHAR* FavCompactReadableName(FileState* fav, Favorite* fn, bool isCurrent = false) {
-    AutoFreeWstr rn(FavReadableName(fn));
+static char* FavCompactReadableName(FileState* fav, Favorite* fn, bool isCurrent = false) {
+    AutoFreeStr rn(FavReadableName(fn));
     if (isCurrent) {
-        return str::Format(L"%s : %s", _TR("Current file"), rn.Get());
+        return str::Format("%s : %s", _TRA("Current file"), rn.Get());
     }
-    const WCHAR* fp = path::GetBaseNameTemp(ToWstrTemp(fav->filePath));
-    return str::Format(L"%s : %s", fp, rn.Get());
+    const char* fp = path::GetBaseNameTemp(fav->filePath);
+    return str::Format("%s : %s", fp, rn.Get());
 }
 
 static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
@@ -323,14 +323,15 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
         }
         Favorite* fn = f->favorites->at(i);
         fn->menuId = idx++;
-        AutoFreeWstr s;
+        AutoFreeStr s;
         if (combined) {
-            s.Set(FavCompactReadableName(f, fn, isCurrent));
+            s = FavCompactReadableName(f, fn, isCurrent);
         } else {
-            s.Set(FavReadableName(fn));
+            s = FavReadableName(fn);
         }
-        auto str = win::menu::ToSafeString(s);
-        AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, str);
+        auto safeStr = win::menu::ToSafeStringTemp(s);
+        WCHAR* ws = ToWstrTemp(safeStr);
+        AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, ws);
     }
 }
 
@@ -397,8 +398,9 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 
     for (size_t i = 0; i < menusCount; i++) {
-        const WCHAR* filePath = filePathsSorted.at(i);
-        FileState* f = gFavorites.GetFavByFilePath(ToUtf8(filePath));
+        const WCHAR* filePathW = filePathsSorted.at(i);
+        char* filePath = ToUtf8(filePathW);
+        FileState* f = gFavorites.GetFavByFilePath(filePath);
         CrashIf(!f);
         if (!f) {
             continue;
@@ -413,10 +415,8 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
             if (f == currFileFav) {
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                AutoFreeWstr tmp;
-                tmp.SetCopy(path::GetBaseNameTemp(filePath));
-                auto fileName = win::menu::ToSafeString(tmp);
-                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
+                char* fileName = win::menu::ToSafeStringTemp(path::GetBaseNameTemp(filePath));
+                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWstrTemp(fileName));
             }
         }
     }
@@ -561,7 +561,9 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
     res->isExpanded = isExpanded;
 
     if (isCollapsed) {
-        res->text = FavCompactReadableName(fav, fn);
+        char* s = FavCompactReadableName(fav, fn);
+        res->text = ToWstr(s);
+        str::Free(s);
     } else {
         WCHAR* fp = ToWstrTemp(fav->filePath);
         res->text = str::Dup(path::GetBaseNameTemp(fp));
@@ -574,7 +576,9 @@ static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
     for (size_t i = 0; i < n; i++) {
         Favorite* fn = f->favorites->at(i);
         auto* ti = new FavTreeItem();
-        ti->text = FavReadableName(fn);
+        char* s = FavReadableName(fn);
+        ti->text = ToWstr(s);
+        str::Free(s);
         ti->parent = parent;
         ti->favorite = fn;
         parent->children.Append(ti);
