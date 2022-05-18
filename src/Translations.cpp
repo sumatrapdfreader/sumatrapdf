@@ -78,19 +78,6 @@ static void UnescapeStringIntoStr(char* s, str::Str& str) {
     str.AppendChar(0);
 }
 
-static int FindChar(char* s, int sLen, char c) {
-    int i = 0;
-    char c2;
-    while (i < sLen) {
-        c2 = *s++;
-        if (c == c2) {
-            return i;
-        }
-        i++;
-    }
-    return sLen;
-}
-
 static void FreeTranslations() {
     if (!gTranslationCache) {
         return;
@@ -106,25 +93,15 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
     // parse into lines
     char* s = (char*)d.data();
     int sLen = (int)d.size();
-    Vec<char*> lines;
-    int n;
+    StrVec lines;
+    Split(lines, s, "\n", true);
     int nStrings = 0;
-    while (sLen > 0) {
-        n = FindChar(s, sLen, '\n');
-        if (n < 2) {
-            break;
-        }
-        s[n] = 0;
-        lines.Append(s);
-        if (s[0] == ':') {
+    for (char* l : lines) {
+        if (l[0] == ':') {
             nStrings++;
         }
-        n++; // skip '\n'
-        s += n;
-        sLen -= n;
-        CrashIf(sLen < 0);
     }
-    int nLines = lines.isize();
+    int nLines = lines.Size();
     logf("ParseTranslationsTxt: %d lines, nStrings: %d\n", nLines, nStrings);
 
     FreeTranslations();
