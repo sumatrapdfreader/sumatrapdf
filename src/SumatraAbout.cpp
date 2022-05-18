@@ -63,7 +63,7 @@ constexpr int ABOUT_RECT_PADDING = 8;
 #endif
 
 #ifdef GIT_COMMIT_ID
-#define GIT_COMMIT_ID_STR TEXT(QM(GIT_COMMIT_ID))
+#define GIT_COMMIT_ID_STR QM(GIT_COMMIT_ID)
 #endif
 
 #define URL_LICENSE "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
