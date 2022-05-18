@@ -374,6 +374,13 @@ static WCHAR* PdfToWstr(fz_context* ctx, pdf_obj* obj) {
     return res;
 }
 
+static char* PdfToUtf8(fz_context* ctx, pdf_obj* obj) {
+    char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
+    char* res = str::Dup(s);
+    fz_free(ctx, s);
+    return res;
+}
+
 // some PDF documents contain control characters in outline titles or /Info properties
 // we replace them with spaces and cleanup for display with NormalizeWSInPlace()
 static WCHAR* PdfCleanString(WCHAR* s) {
@@ -1308,9 +1315,9 @@ int CmpPageLabelInfo(const void* a, const void* b) {
     return ((PageLabelInfo*)a)->startAt - ((PageLabelInfo*)b)->startAt;
 }
 
-WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
+static char* FormatPageLabel(const char* type, int pageNo, const char* prefix) {
     if (str::Eq(type, "D")) {
-        return str::Format(L"%s%d", prefix, pageNo);
+        return str::Format("%s%d", prefix, pageNo);
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
@@ -1318,7 +1325,7 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
         if (*type == 'r') {
             str::ToLowerInPlace(number.Get());
         }
-        return str::Format(L"%s%s", prefix, number.Get());
+        return str::Format("%s%s", prefix, number.Get());
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
@@ -1330,7 +1337,7 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
         if (*type == 'a') {
             str::ToLowerInPlace(number.Get());
         }
-        return str::Format(L"%s%s", prefix, number.Get());
+        return str::Format("%s%s", prefix, number.Get());
     }
     return str::Dup(prefix);
 }
@@ -1369,7 +1376,7 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
     }
 }
 
-WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
+StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
@@ -1385,9 +1392,9 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         return nullptr;
     }
 
-    WStrVec* labels = new WStrVec();
+    StrVec* labels = new StrVec();
     for (int i = 0; i < pageCount; i++) {
-        labels->Append(L"");
+        labels->Append("");
     }
 
     for (size_t i = 0; i < n; i++) {
@@ -1399,21 +1406,21 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         if (i < n - 1 && data.at(i + 1).startAt <= pageCount) {
             secLen = data.at(i + 1).startAt - pli.startAt;
         }
-        AutoFreeWstr prefix(PdfToWstr(ctx, data.at(i).prefix));
+        AutoFreeStr prefix(PdfToUtf8(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
             int idx = pli.startAt + j - 1;
-            WCHAR* label = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
+            char* label = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
             labels->SetAt(idx, label);
             str::Free(label);
         }
     }
 
     for (int idx = 0; (idx = labels->Find(nullptr, idx)) != -1; idx++) {
-        labels->SetAt(idx, L"");
+        labels->SetAt(idx, "");
     }
 
     // ensure that all page labels are unique (by appending a number to duplicates)
-    WStrVec dups(*labels);
+    StrVec dups(*labels);
     dups.Sort();
     int nDups = dups.Size();
     for (int i = 1; i < nDups; i++) {
@@ -1422,9 +1429,9 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         }
         int idx = labels->Find(dups.at(i)), counter = 0;
         while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
-            AutoFreeWstr unique;
+            AutoFreeStr unique;
             do {
-                unique.Set(str::Format(L"%s.%d", dups.at(i), ++counter));
+                unique.Set(str::Format("%s.%d", dups.at(i), ++counter));
             } while (labels->Contains(unique));
             labels->SetAt(idx, unique.Get());
         }
@@ -3392,7 +3399,7 @@ char* EngineMupdf::GetPageLabel(int pageNo) const {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    return ToUtf8(pageLabels->at(pageNo - 1));
+    return str::Dup(pageLabels->at(pageNo - 1));
 }
 
 int EngineMupdf::GetPageByLabel(const char* label) const {
@@ -3400,10 +3407,9 @@ int EngineMupdf::GetPageByLabel(const char* label) const {
         // non-pdf documents don't have labels so label is just a page number as string
         return EngineBase::GetPageByLabel(label);
     }
-    WCHAR* labelW = ToWstrTemp(label);
     int pageNo = 0;
     if (pageLabels) {
-        pageNo = pageLabels->Find(labelW) + 1;
+        pageNo = pageLabels->Find(label) + 1;
     }
 
     if (!pageNo) {

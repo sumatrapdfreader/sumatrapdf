@@ -918,7 +918,8 @@ bool EngineImageDir::SaveFileAs(const char* dstPath) {
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     char* path = pageFileNames.at(pageNo - 1);
-    AutoFree bmpData = file::ReadFile(path);;
+    AutoFree bmpData = file::ReadFile(path);
+    ;
     if (bmpData.data) {
         deleteAfterUse = true;
         return BitmapFromData(bmpData.AsByteSlice());

@@ -90,7 +90,7 @@ class EngineMupdf : public EngineBase {
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* pdfInfo = nullptr;
-    WStrVec* pageLabels = nullptr;
+    StrVec* pageLabels = nullptr;
 
     TocTree* tocTree = nullptr;
 
