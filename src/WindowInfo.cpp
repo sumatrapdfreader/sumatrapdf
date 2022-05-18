@@ -602,10 +602,10 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
 
 void ClearFindBox(WindowInfo* win) {
     HWND hwndFocused = GetFocus();
-    if (hwndFocused == win->hwndFindBox) {
+    if (hwndFocused == win->hwndFindEdit) {
         SetFocus(win->hwndFrame);
     }
-    HwndSetText(win->hwndFindBox, "");
+    HwndSetText(win->hwndFindEdit, "");
 }
 
 bool IsRightDragging(WindowInfo* win) {

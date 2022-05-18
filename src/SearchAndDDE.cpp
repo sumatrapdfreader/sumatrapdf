@@ -80,26 +80,26 @@ void OnMenuFind(WindowInfo* win) {
 
     // copy any selected text to the find bar, if it's still empty
     DisplayModel* dm = win->AsFixed();
-    if (dm->textSelection->result.len > 0 && Edit_GetTextLength(win->hwndFindBox) == 0) {
+    if (dm->textSelection->result.len > 0 && Edit_GetTextLength(win->hwndFindEdit) == 0) {
         AutoFreeWstr selection(dm->textSelection->ExtractText(L" "));
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
-            win::SetText(win->hwndFindBox, selection);
-            Edit_SetModify(win->hwndFindBox, TRUE);
+            win::SetText(win->hwndFindEdit, selection);
+            Edit_SetModify(win->hwndFindEdit, TRUE);
         }
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (IsFocused(win->hwndFindBox)) {
-            SendMessageW(win->hwndFindBox, WM_SETFOCUS, 0, 0);
+        if (IsFocused(win->hwndFindEdit)) {
+            SendMessageW(win->hwndFindEdit, WM_SETFOCUS, 0, 0);
         } else {
-            SetFocus(win->hwndFindBox);
+            SetFocus(win->hwndFindEdit);
         }
         return;
     }
 
-    WCHAR* previousFind = win::GetTextTemp(win->hwndFindBox);
+    WCHAR* previousFind = win::GetTextTemp(win->hwndFindEdit);
     WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
@@ -108,8 +108,8 @@ void OnMenuFind(WindowInfo* win) {
         return;
     }
 
-    win::SetText(win->hwndFindBox, findString);
-    Edit_SetModify(win->hwndFindBox, TRUE);
+    win::SetText(win->hwndFindEdit, findString);
+    Edit_SetModify(win->hwndFindEdit, TRUE);
 
     bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
     if (matchCaseChanged) {
@@ -149,7 +149,7 @@ void OnMenuFindMatchCase(WindowInfo* win) {
     }
     WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     win->AsFixed()->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
-    Edit_SetModify(win->hwndFindBox, TRUE);
+    Edit_SetModify(win->hwndFindEdit, TRUE);
 }
 
 void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
@@ -167,9 +167,9 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
         return;
     }
 
-    win::SetText(win->hwndFindBox, selection);
+    win::SetText(win->hwndFindEdit, selection);
     AbortFinding(win, false); // cancel "find as you type"
-    Edit_SetModify(win->hwndFindBox, FALSE);
+    Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
 
     FindTextOnThread(win, direction, true);
@@ -383,9 +383,9 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const WCHA
 }
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
-    WCHAR* text = win::GetTextTemp(win->hwndFindBox);
-    bool wasModified = Edit_GetModify(win->hwndFindBox);
-    Edit_SetModify(win->hwndFindBox, FALSE);
+    WCHAR* text = win::GetTextTemp(win->hwndFindEdit);
+    bool wasModified = Edit_GetModify(win->hwndFindEdit);
+    Edit_SetModify(win->hwndFindEdit, FALSE);
     FindTextOnThread(win, direction, text, wasModified, showProgress);
 }
 

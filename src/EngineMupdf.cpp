@@ -3415,7 +3415,8 @@ char* EngineMupdf::GetPageLabel(int pageNo) const {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    return str::Dup(pageLabels->at(pageNo - 1));
+    char* res = pageLabels->at(pageNo - 1);
+    return str::Dup(res);
 }
 
 int EngineMupdf::GetPageByLabel(const char* label) const {

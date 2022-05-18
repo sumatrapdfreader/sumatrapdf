@@ -162,7 +162,7 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
         case CmdFindNext:
         case CmdFindPrev:
             // TODO: Update on whether there's more to find, not just on whether there is text.
-            return win::GetTextLen(win->hwndFindBox) > 0;
+            return win::GetTextLen(win->hwndFindEdit) > 0;
 
         case CmdGoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
@@ -247,7 +247,7 @@ void ShowOrHideToolbar(WindowInfo* win) {
         ShowWindow(win->hwndReBar, SW_SHOW);
     } else {
         // Move the focus out of the toolbar
-        if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
+        if (IsFocused(win->hwndFindEdit) || IsFocused(win->hwndPageEdit)) {
             SetFocus(win->hwndFrame);
         }
         ShowWindow(win->hwndReBar, SW_HIDE);
@@ -263,10 +263,10 @@ void UpdateFindbox(WindowInfo* win) {
     UpdateWindow(win->hwndToolbar);
 
     if (!win->IsDocLoaded()) { // Avoid focus on Find box
-        SetClassLongPtrW(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(IDC_ARROW));
+        SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(IDC_ARROW));
         HideCaret(nullptr);
     } else {
-        SetClassLongPtrW(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(IDC_IBEAM));
+        SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(IDC_IBEAM));
         ShowCaret(nullptr);
     }
 }
@@ -307,7 +307,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         HWND hEdit = (HWND)lp;
         WindowInfo* win = FindWindowInfoByHwnd(hEdit);
         // "find as you type"
-        if (EN_UPDATE == HIWORD(wp) && hEdit == win->hwndFindBox && gGlobalPrefs->showToolbar) {
+        if (EN_UPDATE == HIWORD(wp) && hEdit == win->hwndFindEdit && gGlobalPrefs->showToolbar) {
             FindTextOnThread(win, TextSearchDirection::Forward, false);
         }
     }
@@ -395,15 +395,15 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 
 void UpdateToolbarFindText(WindowInfo* win) {
     bool showUI = NeedsFindUI(win);
-    win::SetVisibility(win->hwndFindText, showUI);
+    win::SetVisibility(win->hwndFindLabel, showUI);
     win::SetVisibility(win->hwndFindBg, showUI);
-    win::SetVisibility(win->hwndFindBox, showUI);
+    win::SetVisibility(win->hwndFindEdit, showUI);
     if (!showUI) {
         return;
     }
 
     const WCHAR* text = _TR("Find:");
-    win::SetText(win->hwndFindText, text);
+    win::SetText(win->hwndFindLabel, text);
 
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
@@ -412,21 +412,21 @@ void UpdateToolbarFindText(WindowInfo* win) {
     int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
-    Size size = TextSizeInHwnd(win->hwndFindText, text);
+    Size size = TextSizeInHwnd(win->hwndFindLabel, text);
     size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;
     int y = (findWndRect.dy - size.dy + 1) / 2 + currY;
-    MoveWindow(win->hwndFindText, x, y, size.dx, size.dy, TRUE);
+    MoveWindow(win->hwndFindLabel, x, y, size.dx, size.dy, TRUE);
     x = currX + size.dx;
     y = currY;
     MoveWindow(win->hwndFindBg, x, y, findWndRect.dx, findWndRect.dy, FALSE);
     x = currX + size.dx + padding;
     y = (findWndRect.dy - size.dy + 1) / 2 + currY;
     int dx = findWndRect.dx - 2 * padding;
-    MoveWindow(win->hwndFindBox, x, y, dx, size.dy, FALSE);
+    MoveWindow(win->hwndFindEdit, x, y, dx, size.dy, FALSE);
 
     dx = size.dx + findWndRect.dx + 12;
     TbSetButtonDx(win->hwndToolbar, CmdFindFirst, dx);
@@ -517,8 +517,8 @@ static void CreateFindBox(WindowInfo* win, HFONT hfont, int iconDy) {
     }
     SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcFindBox);
 
-    win->hwndFindText = label;
-    win->hwndFindBox = find;
+    win->hwndFindLabel = label;
+    win->hwndFindEdit = find;
     win->hwndFindBg = findBg;
 }
 
@@ -545,7 +545,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     } else if (WM_CHAR == msg) {
         switch (wp) {
             case VK_RETURN: {
-                char* s = win::GetTextATemp(win->hwndPageBox);
+                char* s = win::GetTextATemp(win->hwndPageEdit);
                 int newPageNo = win->ctrl->GetPageByLabel(s);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
@@ -581,9 +581,9 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     const WCHAR* text = _TR("Page:");
     if (!updateOnly) {
-        win::SetText(win->hwndPageText, text);
+        win::SetText(win->hwndPageLabel, text);
     }
-    Size size = TextSizeInHwnd(win->hwndPageText, text);
+    Size size = TextSizeInHwnd(win->hwndPageLabel, text);
     size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
@@ -624,7 +624,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;
     int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
-    MoveWindow(win->hwndPageText, x, y, size.dx, size.dy, FALSE);
+    MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
     if (IsUIRightToLeft()) {
         currX += size2.dx;
         currX -= DpiScale(win->hwndFrame, kTextPaddingRight);
@@ -636,7 +636,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     x = currX + size.dx + padding;
     y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
     int dx = pageWndRect.dx - 2 * padding;
-    MoveWindow(win->hwndPageBox, x, y, dx, size.dy, FALSE);
+    MoveWindow(win->hwndPageEdit, x, y, dx, size.dy, FALSE);
     // in right-to-left layout, the total comes "before" the current page number
     if (IsUIRightToLeft()) {
         currX -= size2.dx;
@@ -697,8 +697,8 @@ static void CreatePageBox(WindowInfo* win, HFONT font, int iconDy) {
     }
     SetWindowLongPtr(page, GWLP_WNDPROC, (LONG_PTR)WndProcPageBox);
 
-    win->hwndPageText = label;
-    win->hwndPageBox = page;
+    win->hwndPageLabel = label;
+    win->hwndPageEdit = page;
     win->hwndPageBg = pageBg;
     win->hwndPageTotal = total;
 }

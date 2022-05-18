@@ -51,7 +51,7 @@ struct FavTreeItem {
 };
 
 FavTreeItem::~FavTreeItem() {
-    free(text);
+    str::Free(text);
     DeleteVecMembers(children);
 }
 

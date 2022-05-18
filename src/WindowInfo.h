@@ -98,11 +98,11 @@ struct WindowInfo {
     HWND hwndCanvas = nullptr;
     HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
-    HWND hwndFindText = nullptr;
-    HWND hwndFindBox = nullptr;
+    HWND hwndFindLabel = nullptr;
+    HWND hwndFindEdit = nullptr;
     HWND hwndFindBg = nullptr;
-    HWND hwndPageText = nullptr;
-    HWND hwndPageBox = nullptr;
+    HWND hwndPageLabel = nullptr;
+    HWND hwndPageEdit = nullptr;
     HWND hwndPageBg = nullptr;
     HWND hwndPageTotal = nullptr;
     HWND hwndTbInfoText = nullptr;

@@ -579,10 +579,10 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
 
     SetRtl(win->hwndReBar, isRTL);
     SetRtl(win->hwndToolbar, isRTL);
-    SetRtl(win->hwndFindBox, isRTL);
-    SetRtl(win->hwndFindText, isRTL);
+    SetRtl(win->hwndFindEdit, isRTL);
+    SetRtl(win->hwndFindLabel, isRTL);
     SetRtl(win->hwndTbInfoText, isRTL);
-    SetRtl(win->hwndPageText, isRTL);
+    SetRtl(win->hwndPageLabel, isRTL);
 
     SetRtl(win->hwndCaption, isRTL);
     SetCaptionButtonsRtl(win->caption, isRTL);
@@ -827,8 +827,9 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     }
 
     if (kInvalidPageNo != pageNo) {
-        AutoFreeStr buf(win->ctrl->GetPageLabel(pageNo));
-        win::SetText(win->hwndPageBox, buf);
+        char* label = win->ctrl->GetPageLabel(pageNo);
+        win::SetText(win->hwndPageEdit, label);
+        str::Free(label);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
@@ -1001,7 +1002,7 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
     UpdateCurrentTabBgColor(win);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
-    SetWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
+    SetWindowStyle(win->hwndPageEdit, ES_NUMBER, onlyNumbers);
 }
 
 static bool showTocByDefault(const char* path) {
@@ -3389,11 +3390,11 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
     }
 }
 
-static void FocusPageNoEdit(HWND hwndPageBox) {
-    if (IsFocused(hwndPageBox)) {
-        SendMessageW(hwndPageBox, WM_SETFOCUS, 0, 0);
+static void FocusPageNoEdit(HWND hwndPageEdit) {
+    if (IsFocused(hwndPageEdit)) {
+        SendMessageW(hwndPageEdit, WM_SETFOCUS, 0, 0);
     } else {
-        SetFocus(hwndPageBox);
+        SetFocus(hwndPageEdit);
     }
 }
 
@@ -3404,7 +3405,7 @@ static void OnMenuGoToPage(WindowInfo* win) {
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        FocusPageNoEdit(win->hwndPageBox);
+        FocusPageNoEdit(win->hwndPageEdit);
         return;
     }
 
@@ -3580,10 +3581,10 @@ void AdvanceFocus(WindowInfo* win) {
     HWND tabOrder[MAX_WINDOWS] = {win->hwndFrame};
     int nWindows = 1;
     if (hasToolbar) {
-        tabOrder[nWindows++] = win->hwndPageBox;
+        tabOrder[nWindows++] = win->hwndPageEdit;
     }
     if (hasToolbar && NeedsFindUI(win)) {
-        tabOrder[nWindows++] = win->hwndFindBox;
+        tabOrder[nWindows++] = win->hwndFindEdit;
     }
     if (win->tocLoaded && win->tocVisible) {
         tabOrder[nWindows++] = win->tocTreeCtrl->hwnd;
@@ -4246,7 +4247,7 @@ static void CopySelectionInTabToClipboard(TabInfo* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    if (IsFocused(tab->win->hwndFindBox) || IsFocused(tab->win->hwndPageBox)) {
+    if (IsFocused(tab->win->hwndFindEdit) || IsFocused(tab->win->hwndPageEdit)) {
         SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
     }

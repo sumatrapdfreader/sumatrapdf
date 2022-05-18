@@ -1881,12 +1881,12 @@ void SetText(HWND hwnd, const WCHAR* txt) {
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 
-void SetText(HWND hwnd, const char* txt) {
-    if (!txt) {
-        txt = "";
+void SetText(HWND hwnd, const char* s) {
+    if (!s) {
+        s = "";
     }
-    WCHAR* ws = ToWstrTemp(txt);
-    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
+    WCHAR* ws = ToWstrTemp(s);
+    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws);
 }
 
 void SetVisibility(HWND hwnd, bool visible) {
