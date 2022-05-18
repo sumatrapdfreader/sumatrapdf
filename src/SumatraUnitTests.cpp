@@ -29,7 +29,7 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("foo.pdf", i.pathsToBenchmark.at(0)));
         utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
@@ -42,7 +42,7 @@ static void ParseCommandLineTest() {
         s = i.globalPrefArgs.at(1);
         utassert(str::Eq(s, L"5"));
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("foo.pdf", i.pathsToBenchmark.at(0)));
         utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
@@ -50,8 +50,8 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench bar.pdf loadonly", i);
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
-        utassert(str::Eq(L"loadonly", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("loadonly", i.pathsToBenchmark.at(1)));
     }
 
     {
@@ -59,18 +59,18 @@ static void ParseCommandLineTest() {
         ParseFlags(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
         utassert(i.globalPrefArgs.size() == 3);
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
-        utassert(str::Eq(L"1", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("1", i.pathsToBenchmark.at(1)));
     }
 
     {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
         utassert(4 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
-        utassert(str::Eq(L"1-5,3", i.pathsToBenchmark.at(1)));
-        utassert(str::Eq(L"some.pdf", i.pathsToBenchmark.at(2)));
-        utassert(str::Eq(L"1,3,8-34", i.pathsToBenchmark.at(3)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("1-5,3", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq("some.pdf", i.pathsToBenchmark.at(2)));
+        utassert(str::Eq("1,3,8-34", i.pathsToBenchmark.at(3)));
     }
 
     {

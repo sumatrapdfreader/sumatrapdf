@@ -530,11 +530,11 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Bench) {
-            i.pathsToBenchmark.Append(param);
+            i.pathsToBenchmark.Append(paramA);
             const WCHAR* s = args.AdditionalParam(1);
             if (s && IsBenchPagesInfo(s)) {
                 s = args.EatParam();
-                i.pathsToBenchmark.Append((WCHAR*)s);
+                i.pathsToBenchmark.Append(ToUtf8Temp(s));
             } else {
                 // pathsToBenchmark are always in pairs
                 // i.e. path + page spec

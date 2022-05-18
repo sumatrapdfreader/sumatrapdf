@@ -1137,10 +1137,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RedirectIOToConsole();
     }
 
-    if (flags.pathsToBenchmark.size() > 0) {
-        // TODO: restore by either changing pathsToBenchmark to StrVec
-        //  or conerting to StrVec here
-        // BenchFileOrDir(flags.pathsToBenchmark);
+    if (flags.pathsToBenchmark.Size() > 0) {
+        BenchFileOrDir(flags.pathsToBenchmark);
     }
 
     if (flags.exitImmediately) {
