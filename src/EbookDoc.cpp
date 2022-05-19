@@ -1084,7 +1084,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len, uint) {
+static const char* HandleTealDocTag(str::Str& builder, StrVec& tocEntries, const char* text, size_t len, uint) {
     if (len < 9) {
     Fallback:
         builder.Append("&lt;");
@@ -1105,9 +1105,10 @@ static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, cons
         // <BOOKMARK NAME="Contents">
         AttrInfo* attr = tok->GetAttrByName("NAME");
         if (attr && attr->valLen > 0) {
-            WCHAR* s = strconv::FromHtmlUtf8(attr->val, attr->valLen);
+            WCHAR* ws = strconv::FromHtmlUtf8(attr->val, attr->valLen);
+            char* s = ToUtf8Temp(ws);
             tocEntries.Append(s);
-            str::Free(s);
+            str::Free(ws);
             builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", (int)tocEntries.size());
             return tok->s + tok->sLen;
         }
@@ -1223,8 +1224,9 @@ bool PalmDoc::HasToc() const {
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < tocEntries.Size(); i++) {
-        AutoFreeWstr name(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", int(i + 1)));
-        visitor->Visit(tocEntries.at(i), name, 1);
+        AutoFreeWstr url(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", int(i + 1)));
+        WCHAR* name = ToWstrTemp(tocEntries.at(i));
+        visitor->Visit(name, url, 1);
     }
     return true;
 }
