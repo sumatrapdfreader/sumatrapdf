@@ -1131,7 +1131,7 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
     }
 }
 
-static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
+static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
     if (0 == gGlobalPrefs->externalViewers->size()) {
         return;
     }
@@ -1484,7 +1484,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         if (cmdId == CmdOpenWithHtmlHelp && ctx) {
             TabInfo* tab = ctx->tab;
-            WCHAR* path = tab ? ToWstrTemp(tab->filePath.Get()) : nullptr;
+            char* path = tab ? tab->filePath : nullptr;
             AppendExternalViewersToMenu(menu, path);
         }
     }

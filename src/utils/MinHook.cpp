@@ -1371,7 +1371,7 @@ static MH_STATUS EnableOrDisableHooksLL(HOOK_ENTRY* pHooks, int nHooks, BOOL ena
         return status;
     }
 
-    FROZEN_THREADS threads = { 0 };
+    FROZEN_THREADS threads = {0};
     Freeze(&threads, pHooks, nHooks, enable ? ACTION_ENABLE : ACTION_DISABLE);
 
     for (int i = first; i < nHooks; ++i) {

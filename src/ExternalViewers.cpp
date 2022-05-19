@@ -317,7 +317,7 @@ bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     return LaunchFile(ev->exeFullPath, params);
 }
 
-bool PathMatchFilter(const WCHAR* path, char* filter) {
+bool PathMatchFilter(const char* path, char* filter) {
     // no filter means matches everything
     if (str::IsEmpty(filter)) {
         return true;
@@ -325,8 +325,7 @@ bool PathMatchFilter(const WCHAR* path, char* filter) {
     if (str::Eq(filter, "*")) {
         return true;
     }
-    auto s = ToWstrTemp(filter);
-    bool matches = path::Match(path, s);
+    bool matches = path::Match(path, filter);
     return matches;
 }
 
@@ -337,15 +336,20 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
 
     auto& viewers = gGlobalPrefs->externalViewers;
     ExternalViewer* ev = nullptr;
-    for (size_t i = 0; i < viewers->size() && i <= idx; i++) {
+    size_t n = viewers->size();
+    for (size_t i = 0; i < n && i <= idx; i++) {
         ev = viewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
-        WCHAR* pathW = ToWstrTemp(tab->filePath);
-        if (!ev->commandLine || !PathMatchFilter(pathW, ev->filter)) {
+        char* path = tab->filePath;
+        if (!ev->commandLine || !PathMatchFilter(path, ev->filter)) {
             idx++;
         }
     }
-    if (idx >= viewers->size() || !viewers->at(idx)->commandLine) {
+    if (idx >= n) {
+        return false;
+    }
+    ev = viewers->at(idx);
+    if (!ev || !ev->commandLine) {
         return false;
     }
 
