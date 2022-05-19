@@ -67,7 +67,7 @@ struct FileWatcherState {
 
 struct WatchedDir {
     WatchedDir* next = nullptr;
-    const WCHAR* dirPath = nullptr;
+    const char* dirPath = nullptr;
     HANDLE hDir = nullptr;
     bool startMonitoring = true;
     OverlappedEx overlapped;
@@ -77,7 +77,7 @@ struct WatchedDir {
 struct WatchedFile {
     WatchedFile* next = nullptr;
     WatchedDir* watchedDir = nullptr;
-    const WCHAR* filePath = nullptr;
+    const char* filePath = nullptr;
     std::function<void()> onFileChangedCb;
 
     // if true, the file is on a network drive and we have
@@ -107,13 +107,12 @@ static void AwakeWatcherThread() {
     SetEvent(g_threadControlHandle);
 }
 
-static void GetFileState(const WCHAR* pathW, FileWatcherState* fs) {
+static void GetFileState(const char* path, FileWatcherState* fs) {
     // Note: in my testing on network drive that is mac volume mounted
     // via parallels, lastWriteTime is not updated. lastAccessTime is,
     // but it's also updated when the file is being read from (e.g.
     // copy f.pdf f2.pdf will change lastAccessTime of f.pdf)
     // So I'm sticking with lastWriteTime
-    char* path = ToUtf8Temp(pathW);
     fs->time = file::GetModificationTime(path);
     fs->size = file::GetSize(path);
 }
@@ -128,7 +127,7 @@ static bool FileStateEq(FileWatcherState* fs1, FileWatcherState* fs2) {
     return true;
 }
 
-static bool FileStateChanged(const WCHAR* filePath, FileWatcherState* fs) {
+static bool FileStateChanged(const char* filePath, FileWatcherState* fs) {
     FileWatcherState fsTmp;
 
     GetFileState(filePath, &fsTmp);
@@ -155,10 +154,9 @@ static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
         if (wf->watchedDir != d) {
             continue;
         }
-        const WCHAR* wfFileName = path::GetBaseNameTemp(wf->filePath);
-        char* s = ToUtf8Temp(wfFileName);
+        const char* path = path::GetBaseNameTemp(wf->filePath);
 
-        if (!str::EqI(fileName, s)) {
+        if (!str::EqI(fileName, path)) {
             continue;
         }
 
@@ -338,7 +336,7 @@ static void StartThreadIfNecessary() {
     SetThreadName(g_threadId, "FileWatcherThread");
 }
 
-static WatchedDir* FindExistingWatchedDir(const WCHAR* dirPath) {
+static WatchedDir* FindExistingWatchedDir(const char* dirPath) {
     for (WatchedDir* wd = g_watchedDirs; wd; wd = wd->next) {
         // TODO: normalize dirPath?
         if (str::EqI(dirPath, wd->dirPath)) {
@@ -366,9 +364,13 @@ static void CALLBACK ExitMonitoringThread(ULONG_PTR arg) {
     ExitThread(0);
 }
 
-static WatchedDir* NewWatchedDir(const WCHAR* dirPath) {
-    HANDLE hDir = CreateFile(dirPath, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
-                             nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
+static WatchedDir* NewWatchedDir(const char* dirPath) {
+    WCHAR* dirW = ToWstrTemp(dirPath);
+    DWORD access = FILE_LIST_DIRECTORY;
+    DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE;
+    DWORD disp = OPEN_EXISTING;
+    DWORD flags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
+    HANDLE hDir = CreateFileW(dirW, access, shareMode, nullptr, disp, flags, nullptr);
     if (INVALID_HANDLE_VALUE == hDir) {
         return nullptr;
     }
@@ -381,9 +383,10 @@ static WatchedDir* NewWatchedDir(const WCHAR* dirPath) {
     return wd;
 }
 
-static WatchedFile* NewWatchedFile(const WCHAR* filePath, const std::function<void()>& onFileChangedCb) {
-    bool isManualCheck = PathIsNetworkPath(filePath);
-    WCHAR* dirPath = path::GetDirTemp(filePath);
+static WatchedFile* NewWatchedFile(const char* filePath, const std::function<void()>& onFileChangedCb) {
+    WCHAR* pathW = ToWstrTemp(filePath);
+    bool isManualCheck = PathIsNetworkPathW(pathW);
+    char* dirPath = path::GetDirTemp(filePath);
     WatchedDir* wd = nullptr;
     bool newDir = false;
     if (!isManualCheck) {
@@ -431,7 +434,7 @@ We take ownership of observer object.
 Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
-WatchedFile* FileWatcherSubscribe(const WCHAR* path, const std::function<void()>& onFileChangedCb) {
+WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>& onFileChangedCb) {
     // logf(L"FileWatcherSubscribe() path: %s\n", path);
 
     if (!file::Exists(path)) {

@@ -1736,9 +1736,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // via DDE Open command.
     CrashIf(currTab->watcher);
 
-    WCHAR* pathW = ToWstrTemp(path);
     if (gGlobalPrefs->reloadModifiedDocuments) {
-        currTab->watcher = FileWatcherSubscribe(pathW, [currTab] { scheduleReloadTab(currTab); });
+        currTab->watcher = FileWatcherSubscribe(path, [currTab] { scheduleReloadTab(currTab); });
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {

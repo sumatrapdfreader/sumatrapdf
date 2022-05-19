@@ -361,8 +361,7 @@ void RegisterForFileChanges() {
 
     CrashIf(gWatchedSettingsFile); // only call me once
     char* path = GetSettingsPathTemp();
-    WCHAR* pathW = ToWstrTemp(path);
-    gWatchedSettingsFile = FileWatcherSubscribe(pathW, schedulePrefsReload);
+    gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }
 
 void UnregisterForFileChanges() {
