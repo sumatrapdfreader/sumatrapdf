@@ -76,7 +76,7 @@ const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
 static AutoFreeWstr gMsg;
 static Color gMsgColor;
 
-static WStrVec gProcessesToClose;
+static StrVec gProcessesToClose;
 
 PreviousInstallationInfo::~PreviousInstallationInfo() {
     free(installationDir);
@@ -236,7 +236,38 @@ static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
     return false;
 }
 
+static bool IsProcessUsingFiles(DWORD procId, const char* file1, const char* file2) {
+    // Note: don't know why procId 0 shows up as using our files
+    if (procId == 0 || procId == GetCurrentProcessId()) {
+        return false;
+    }
+    if (!file1 && !file2) {
+        return false;
+    }
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
+    if (snap == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    MODULEENTRY32 mod{};
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    while (cont) {
+        WCHAR* exePathW = mod.szExePath;
+        char* exePath = ToUtf8Temp(exePathW);
+        if (file1 && path::IsSame(file1, exePath)) {
+            return true;
+        }
+        if (file2 && path::IsSame(file2, exePath)) {
+            return true;
+        }
+        cont = Module32Next(snap, &mod);
+    }
+    return false;
+}
+
 constexpr const WCHAR* kBrowserPluginName = L"npPdfViewer.dll";
+constexpr const char* kBrowserPluginNameA = "npPdfViewer.dll";
 
 void UninstallBrowserPlugin() {
     log("UninstallBrowserPlugin()\n");
@@ -453,14 +484,14 @@ static bool KillProcessesUsingInstallation() {
 
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
-static void ProcessesUsingInstallation(WStrVec& names) {
+static void ProcessesUsingInstallation(StrVec& names) {
     log("ProcessesUsingInstallation()\n");
-    AutoFreeWstr dir = GetExistingInstallationDir();
+    AutoFreeStr dir = GetExistingInstallationDirA();
     if (dir.empty()) {
         return;
     }
-    AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
-    AutoFreeWstr browserPlugin = path::Join(dir, kBrowserPluginName);
+    char* libmupdf = path::JoinTemp(dir, "libmupdf.dll");
+    char* browserPlugin = path::JoinTemp(dir, kBrowserPluginNameA);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -474,7 +505,8 @@ static void ProcessesUsingInstallation(WStrVec& names) {
         DWORD procID = proc.th32ProcessID;
         if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
             // TODO: this kils ReadableProcName logic
-            WCHAR* name = str::Format(L"%s (%d)", proc.szExeFile, (int)procID);
+            char* s = ToUtf8Temp(proc.szExeFile);
+            char* name = str::Format("%s (%d)", s, (int)procID);
             names.Append(name);
             str::Free(name);
         }
@@ -484,19 +516,19 @@ static void ProcessesUsingInstallation(WStrVec& names) {
 }
 
 // clang-format off
-static const WCHAR* readableProcessNames[] = {
+static const char* readableProcessNames[] = {
     nullptr, nullptr, // to be filled with our process
-    L"plugin-container.exe", L"Mozilla Firefox",
-    L"chrome.exe", L"Google Chrome",
-    L"prevhost.exe", L"Windows Explorer",
-    L"dllhost.exe", L"Windows Explorer"
+    "plugin-container.exe", "Mozilla Firefox",
+    "chrome.exe", "Google Chrome",
+    "prevhost.exe", "Windows Explorer",
+    "dllhost.exe", "Windows Explorer"
 };
 // clang-format on
 
-static const WCHAR* ReadableProcName(const WCHAR* procPath) {
-    readableProcessNames[0] = kExeName;
-    readableProcessNames[1] = kAppName;
-    const WCHAR* procName = path::GetBaseNameTemp(procPath);
+static const char* ReadableProcName(const char* procPath) {
+    readableProcessNames[0] = kExeNameA;
+    readableProcessNames[1] = kAppNameA;
+    const char* procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
         if (str::EqI(procName, readableProcessNames[i])) {
             return readableProcessNames[i + 1];
@@ -507,17 +539,17 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
 
 static void SetCloseProcessMsg() {
     int n = gProcessesToClose.Size();
-    AutoFreeWstr procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
+    const char* procNames = ReadableProcName(gProcessesToClose.at(0));
     for (int i = 1; i < n; i++) {
-        const WCHAR* name = ReadableProcName(gProcessesToClose.at(i));
+        const char* name = ReadableProcName(gProcessesToClose.at(i));
         if (i < n - 1) {
-            procNames.Set(str::Join(procNames, L", ", name));
+            procNames = str::JoinTemp(procNames, ", ", name);
         } else {
-            procNames.Set(str::Join(procNames, L" and ", name));
+            procNames = str::JoinTemp(procNames, " and ", name);
         }
     }
-    AutoFreeWstr s = str::Format(_TR("Please close %s to proceed!"), procNames.Get());
-    SetMsg(s, COLOR_MSG_FAILED);
+    AutoFreeStr s = str::Format(_TRA("Please close %s to proceed!"), procNames);
+    SetMsg(ToWstr(s), COLOR_MSG_FAILED);
 }
 
 void SetDefaultMsg() {

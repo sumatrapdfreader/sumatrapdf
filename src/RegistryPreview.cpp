@@ -20,27 +20,27 @@
 // clang-format off
 static struct {
     const WCHAR* clsid;
-    const WCHAR *ext, *ext2;
+    const char *ext, *ext2;
     bool skip;
 } gPreviewers[] = {
-    {kPdfPreviewClsid, L".pdf"},
-    {kCbxPreviewClsid, L".cbz"},
-    {kCbxPreviewClsid, L".cbr"},
-    {kCbxPreviewClsid, L".cb7"},
-    {kCbxPreviewClsid, L".cbt"},
-    {kTgaPreviewClsid, L".tga"},
-    {kDjVuPreviewClsid, L".djvu"},
+    {kPdfPreviewClsid, ".pdf"},
+    {kCbxPreviewClsid, ".cbz"},
+    {kCbxPreviewClsid, ".cbr"},
+    {kCbxPreviewClsid, ".cb7"},
+    {kCbxPreviewClsid, ".cbt"},
+    {kTgaPreviewClsid, ".tga"},
+    {kDjVuPreviewClsid, ".djvu"},
 #ifdef BUILD_XPS_PREVIEW
-    {kXpsPreviewClsid, L".xps", L".oxps"},
+    {kXpsPreviewClsid, ".xps", ".oxps"},
 #endif
 #ifdef BUILD_EPUB_PREVIEW
-    {kEpubPreviewClsid, L".epub"},
+    {kEpubPreviewClsid, ".epub"},
 #endif
 #ifdef BUILD_FB2_PREVIEW
-    {kFb2PreviewClsid, L".fb2", L".fb2z"},
+    {kFb2PreviewClsid, ".fb2", ".fb2z"},
 #endif
 #ifdef BUILD_MOBI_PREVIEW
-    {kMobiPreviewClsid, L".mobi"},
+    {kMobiPreviewClsid, ".mobi"},
 #endif
 };
 // clang-format on
@@ -49,13 +49,13 @@ bool InstallPreviewDll(const WCHAR* dllPath, bool allUsers) {
     HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     bool ok;
 
-    for (int i = 0; i < dimof(gPreviewers); i++) {
-        if (gPreviewers[i].skip) {
+    for (auto& prev : gPreviewers) {
+        if (prev.skip) {
             continue;
         }
-        const WCHAR* clsid = gPreviewers[i].clsid;
-        const WCHAR* ext = gPreviewers[i].ext;
-        const WCHAR* ext2 = gPreviewers[i].ext2;
+        const WCHAR* clsid = prev.clsid;
+        const WCHAR* ext = ToWstrTemp(prev.ext);
+        const WCHAR* ext2 = ToWstrTemp(prev.ext2);
         ok = true;
 
         AutoFreeWstr displayName = str::Format(L"SumatraPDF Preview (*%s)", ext);
@@ -101,13 +101,13 @@ static void DeleteOrFail(const WCHAR* key, HRESULT* hr) {
 bool UninstallPreviewDll() {
     HRESULT hr = S_OK;
 
-    for (int i = 0; i < dimof(gPreviewers); i++) {
-        if (gPreviewers[i].skip) {
+    for (auto& prev : gPreviewers) {
+        if (prev.skip) {
             continue;
         }
-        const WCHAR* clsid = gPreviewers[i].clsid;
-        const WCHAR* ext = gPreviewers[i].ext;
-        const WCHAR* ext2 = gPreviewers[i].ext2;
+        const WCHAR* clsid = prev.clsid;
+        const WCHAR* ext = ToWstrTemp(prev.ext);
+        const WCHAR* ext2 = ToWstrTemp(prev.ext2);
 
         // unregister preview handler
         DeleteRegValue(HKEY_LOCAL_MACHINE, kRegKeyPreviewHandlers, clsid);
@@ -141,14 +141,15 @@ bool UninstallPreviewDll() {
 }
 
 // TODO: is anyone using this functionality?
-void DisablePreviewInstallExts(const WCHAR* cmdLine) {
+void DisablePreviewInstallExts(const WCHAR* cmdLineW) {
+    char* cmdLine = ToUtf8Temp(cmdLineW);
     // allows installing only a subset of available preview handlers
-    if (str::StartsWithI(cmdLine, L"exts:")) {
-        AutoFreeWstr extsList = str::Dup(cmdLine + 5);
+    if (str::StartsWithI(cmdLine, "exts:")) {
+        AutoFreeStr extsList = str::Dup(cmdLine + 5);
         str::ToLowerInPlace(extsList);
-        str::TransCharsInPlace(extsList, L";. :", L",,,\0");
-        WStrVec exts;
-        Split(exts, extsList, L",", true);
+        str::TransCharsInPlace(extsList, ";. :", ",,,\0");
+        StrVec exts;
+        Split(exts, extsList, ",", true);
         for (auto& p : gPreviewers) {
             p.skip = !exts.Contains(p.ext + 1);
         }
