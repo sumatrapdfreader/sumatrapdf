@@ -186,9 +186,6 @@ void Next(const char*& s, int& idx);
 int StrToIdx(SeqStrings strs, const char* toFind);
 int StrToIdxIS(SeqStrings strs, const char* toFind);
 const char* IdxToStr(SeqStrings strs, int idx);
-
-int StrToIdx(SeqStrings strs, const WCHAR* toFind);
-const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 } // namespace seqstrings
 
 #define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))

@@ -50,10 +50,6 @@ static void StrSeqTest() {
     utassert(1 == seqstrings::StrToIdx(s, "a"));
     utassert(2 == seqstrings::StrToIdx(s, "bar"));
 
-    utassert(0 == seqstrings::StrToIdx(s, L"foo"));
-    utassert(1 == seqstrings::StrToIdx(s, L"a"));
-    utassert(2 == seqstrings::StrToIdx(s, L"bar"));
-
     utassert(str::Eq("foo", seqstrings::IdxToStr(s, 0)));
     utassert(str::Eq("a", seqstrings::IdxToStr(s, 1)));
     utassert(str::Eq("bar", seqstrings::IdxToStr(s, 2)));
@@ -66,15 +62,6 @@ static void StrSeqTest() {
     utassert(-1 == seqstrings::StrToIdx(s, "ab"));
     utassert(-1 == seqstrings::StrToIdx(s, "baro"));
     utassert(-1 == seqstrings::StrToIdx(s, "ba"));
-
-    utassert(0 == seqstrings::StrToIdx(s, L"foo"));
-    utassert(1 == seqstrings::StrToIdx(s, L"a"));
-    utassert(2 == seqstrings::StrToIdx(s, L"bar"));
-    utassert(-1 == seqstrings::StrToIdx(s, L"fo"));
-    utassert(-1 == seqstrings::StrToIdx(s, L""));
-    utassert(-1 == seqstrings::StrToIdx(s, L"ab"));
-    utassert(-1 == seqstrings::StrToIdx(s, L"baro"));
-    utassert(-1 == seqstrings::StrToIdx(s, L"ba"));
 }
 
 static void StrIsDigitTest() {
