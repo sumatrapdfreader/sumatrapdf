@@ -303,7 +303,7 @@ static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx
 }
 
 struct LinkRectList {
-    WStrVec links;
+    StrVec links;
     Vec<fz_rect> coords;
 };
 
@@ -722,7 +722,7 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
                                          const WCHAR* next, Rect* coords) {
     int lastIx = list->coords.Size() - 1;
-    WCHAR* uri = list->links.at(lastIx);
+    char* uri = list->links.at(lastIx);
     const WCHAR* end = next;
     bool multiline = false;
 
@@ -730,7 +730,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         end = LinkifyFindEnd(next, start > pageText ? start[-1] : ' ');
         multiline = LinkifyCheckMultiline(pageText, end, coords);
 
-        WCHAR* part = str::DupTemp(next, end - next);
+        char* part = ToUtf8Temp(next, end - next);
         uri = str::JoinTemp(uri, part);
         Rect bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
@@ -826,8 +826,12 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
             continue;
         }
 
-        AutoFreeWstr part(str::Dup(start, end - start));
-        WCHAR* uri = protocol ? str::JoinTemp(protocol, part) : part.Get();
+        char* part = ToUtf8Temp(start, end - start);
+        char* uri = part;
+        if (protocol) {
+            char* proto = ToUtf8Temp(protocol);
+            uri = str::JoinTemp(proto, part);
+        }
         list->links.Append(uri);
         Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
@@ -1148,14 +1152,13 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
             continue;
         }
 
-        WCHAR* uri = list->links.at(i);
+        char* uri = list->links[i];
         if (!uri) {
             continue;
         }
 
         // TODO: those leak on xps
-        char* uriA = ToUtf8Temp(uri);
-        auto dest = new PageDestinationURL(uriA);
+        auto dest = new PageDestinationURL(uri);
         auto pel = new PageElementDestination(dest);
         pel->rect = ToRectF(bbox);
         pageInfo->autoLinks.Append(pel);

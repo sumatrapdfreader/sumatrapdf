@@ -2799,6 +2799,11 @@ char* StrVec::operator[](int idx) const {
     return at(idx);
 }
 
+char* StrVec::operator[](size_t idx) const {
+    CrashIf(idx < 0);
+    return at((int)idx);
+}
+
 char* StrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);

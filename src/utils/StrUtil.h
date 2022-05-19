@@ -361,6 +361,7 @@ struct StrVec {
     int Size() const;
     char* at(int) const;
     char* operator[](int) const;
+    char* operator[](size_t) const;
 
     int Append(const char*, size_t len = 0);
     int AppendIfNotExists(const char*);
