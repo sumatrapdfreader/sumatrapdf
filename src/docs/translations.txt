@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bca2e429871feb86ef709452258eee0fa156379a
+7846595dad91b46e40a718e3f37e567a5563cd20
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -83,7 +83,7 @@ nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 tl:&Totoong Sukat
 uk:Фактичний розмір
-vn:&Kích Thước Thực
+vn:Kích Thước Thực
 :&Advanced Options...
 am:&Ընդլայնված ընտրանքներ..
 ar:خيارات &متقدمة
@@ -149,7 +149,7 @@ tr:&Gelişmiş Ayarlar...
 tw:進階選項(&A)...
 uk:&Розширені налаштування...
 uz:&Qo'shimcha parametrlar...
-vn:Tùy chọn &nâng cao...
+vn:Tùy Chọn Nâng Cao...
 :&All selected pages
 am:&Ընտրված բոլոր էջերը
 ar:كل الصفحات المحددة&
@@ -216,7 +216,7 @@ tr:Tüm seçilen &sayfalar
 tw:所有已選取頁面(&A)
 uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
-vn:Tất cả các tr&ang được chọn
+vn:Tất cả các trang được chọn
 :&Back
 br:&Voltar
 cn:上一视图(B)
@@ -225,11 +225,12 @@ de:&Vorherige Ansicht
 eu:A&tzera
 fr:Revenir (&b)
 it:&Indietro
+ja:戻る(&B)
 nl:&Terug
 pl:&Wstecz
 tl:&Bumalik
 uk:Назад
-vn:&Quay Lại
+vn:Quay Lại
 :&Book View
 br:&Ver como livro
 cn:书籍视图(&B)
@@ -241,7 +242,7 @@ nl:&Boek Tonen
 pl:Widok o&dczytu
 tl:&View ng libro
 uk:Подання книги
-vn:&Đọc Sách
+vn:Đọc Sách
 :&Cancel
 am:Չեղարկել
 bg:&Отказ
@@ -312,6 +313,7 @@ de:&Schließen
 eu:It&xi
 fr:Fermer (&c)
 it:&Chiudi
+ja:閉じる(&C)
 nl:&Sluiten
 pl:&Zamknij
 tl:&Isara
@@ -421,6 +423,7 @@ de:&In Zwischenablage kopieren
 eu:&Kopiatu gakora
 fr:&Copier dans le Presse-Papiers
 it:&Copia negli Appunti
+ja:クリップボードへコピー(&C)
 nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 tl:&Kopyahin sa clipboard
@@ -599,7 +602,7 @@ nl:&Gericht op
 pl:&Wiele stron
 tl:Nakaharap
 uk:По дві сторінки
-vn:&Đối Mặt
+vn:&Trang kép
 :&File
 af:&Lêer
 am:&Ֆայլ
@@ -3104,7 +3107,7 @@ tr:Sık Kullanılanlara Ekle
 tw:加到最愛
 uk:Додати закладку
 uz:Tanlanganlarga qo'shish
-vn:Thêm Ưa thích
+vn:Thêm Ưa Thích
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
 ar:الى المفضلة %s اضافة صفحة
@@ -3943,7 +3946,7 @@ tr:Yazar:
 tw:作者:
 uk:Автор:
 uz:Muallif:
-vn:Tác giả
+vn:Tác Giả
 :Author: %s
 am:Հեղինակ՝ %s
 az:Müəllif: %s
@@ -5286,6 +5289,7 @@ et:Käsupalett
 eu:Agindu paleta
 fr:Palette de commande
 it:Elenco comandi
+ja:コマンドパレット
 nl:Opdrachten
 pl:Paleta poleceń
 tl:Command Palette
@@ -5868,6 +5872,7 @@ et:Kopeeri lõikelauale
 eu:Kopiatu gakora
 fr:Copier dans le Presse-Papiers
 it:Copia negli Appunti
+ja:クリップボードへコピー
 nl:Kopieer naar klembord
 pl:Kopiuj do schowka
 tl:Kopyahin sa clipboard
@@ -7494,6 +7499,7 @@ de:&Beenden
 eu:I&rten
 fr:Quitter (&x)
 it:&Esci
+ja:終了(&X)
 nl:A&fsluiten
 pl:&Wyjście
 tl:&Lumabas
@@ -8034,11 +8040,12 @@ de:&Nächste Ansicht
 eu:A&urrera
 fr:Avancer (&o)
 it:&Avanti
+ja:進む(&O)
 nl:V&ooruit
 pl:&Dalej
 tl:&Pasulong
 uk:Вперед
-vn:T&iếp
+vn:Tiếp
 :F&ullscreen
 br:T&ela Cheia
 cn:全屏(&U)
@@ -8047,10 +8054,11 @@ de:&Vollbild
 eu:Ikusleiho-o&soa
 fr:Plein écran (&u)
 it:Sc&hermo pieno
+ja:全画面表示(&U)
 nl:V&oledig Scherm
 pl:Pełny &ekran
 uk:Повноекранний
-vn:T&oàn Màn Hình
+vn:Toàn Màn Hình
 :Facing
 af:Teenoor
 am:Երկու էջ
@@ -8893,7 +8901,7 @@ nl:Zoe&k
 pl:&Znajdź...
 tl:&Hanapin
 uk:Знайти ...
-vn:Tì&m
+vn:Tìm
 :Find
 am:Գտնել
 ar:بحث
@@ -9881,6 +9889,7 @@ et:Hangi fondi infot
 eu:Lortu hizkien argibideak
 fr:Obtenir les Informations sur les Polices
 it:Ottieni informazioni sui font
+ja:フォント情報を取得
 nl:Informatie over lettertypen ophalen
 pl:Uzyskaj informacje o czcionkach
 tl:Kumuha ng impormasyon ng mga font
@@ -10491,6 +10500,7 @@ de:Für alle Benutzer installieren
 eu:Ezarri erabiltzaile guztientzat
 fr:Installer pour tous les utilisateurs
 it:Installa per tutti gli utenti
+ja:すべてのユーザーに対してインストール
 nl:Installeer voor alle gebruikers
 pl:Zainstaluj dla wszystkich użytkowników
 tl:I-install para sa lahat ng user
@@ -11430,6 +11440,7 @@ de:Neues &Fenster
 eu:&Leiho berria
 fr:Nouvelle fenêtre (&w)
 it:Nuova &finestra
+ja:新しいウィンドウ(&W)
 nl:Nieuw &Kader
 pl:Nowe &okno
 uk:Нове вікно
@@ -12944,10 +12955,11 @@ de:&Seite...
 eu:O&rrialdea...
 fr:Pa&ge...
 it:Pa&gina...
+ja:ページ(&G)...
 nl:Pa&gina
 pl:&Strona...
 uk:Сторінка
-vn:Tr&ang...
+vn:Trang...
 :Page %s
 am:Էջ %s
 ar:الصفحة %s
@@ -13488,6 +13500,7 @@ hr:Poli-linija
 hu:Vonallánc
 id:Garis Poli
 it:Poli linea
+ja:ポリライン
 ka:ტეხილი ხაზი
 kr:다중 선형
 kw:Lieslinen
@@ -13528,6 +13541,7 @@ hr:Poligon
 hu:Sokszög
 id:Poligon
 it:Poligono
+ja:ポリゴン
 ka:მრავალკუთხედი
 kr:다각형
 kw:Liestuek
@@ -13638,10 +13652,11 @@ de:Pr&äsentation
 eu:Aur&kezpena
 fr:Prés&entation
 it:Presentazione
+ja:プレゼンテーション(&E)
 nl:Pr&esentatie
 pl:&Prezentacja
 uk:Презентація
-vn:Tr&ình Chiếu
+vn:Trình Chiếu
 :Previous Page
 af:Vorige Bladsy
 am:Նախորդ էջը
@@ -14751,7 +14766,7 @@ sl:I&zbor
 th:&การเลือก
 tr:S&eçim
 uk:Виділення 
-vn:K&hung
+vn:Chọn
 :S&quiggly
 am:Ա&լիքավոր
 az:&Dalğa
@@ -14778,7 +14793,7 @@ sl:Vi&jugasto
 th:S&ยุ่งเหยิง
 tr:&Kıvrımlı
 uk:Хвилясті 
-vn:L&ệch
+vn:Lệch
 :SVG documents
 am:SVG փաստաթղթեր
 bg:SVG документи
@@ -14798,6 +14813,7 @@ hr:SVG dokumenti
 hu:SVG dokumentumok
 id:Dokumen SVG
 it:Documenti SVG
+ja:SVG ドキュメント
 kw:Dogvennow SVG
 nl:SVG Documenten
 pl:Documenty SVG
@@ -15861,6 +15877,7 @@ co:Affissà l’&indette
 de:Lesezeichen anzeigen
 fr:Afficher les &marque-pages
 it:Visualizza &Preferiti
+ja:ブックマークを表示(&M)
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 uk:Показати закладки
@@ -16224,6 +16241,7 @@ hr:Preskoči ovu verziju
 hu:Ezen verzió kihagyása
 id:Lewatkan versi ini
 it:Salta questa versione
+ja:このバージョンをスキップ
 kr:이 버전 건너뛰기
 kw:Skyppya an gwersyon ma
 nl:Sla deze versie over
