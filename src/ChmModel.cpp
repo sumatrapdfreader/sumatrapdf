@@ -55,16 +55,16 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     }
     ~HtmlWindowHandler() override = default;
 
-    bool OnBeforeNavigate(const WCHAR* url, bool newWindow) override {
+    bool OnBeforeNavigate(const char* url, bool newWindow) override {
         return cm->OnBeforeNavigate(url, newWindow);
     }
-    void OnDocumentComplete(const WCHAR* url) override {
+    void OnDocumentComplete(const char* url) override {
         cm->OnDocumentComplete(url);
     }
     void OnLButtonDown() override {
         cm->OnLButtonDown();
     }
-    ByteSlice GetDataForUrl(const WCHAR* url) override {
+    ByteSlice GetDataForUrl(const char* url) override {
         return cm->GetDataForUrl(url);
     }
     void DownloadData(const char* url, ByteSlice data) override {
@@ -210,8 +210,7 @@ void ChmModel::DisplayPage(const char* pageUrl) {
 
     CrashIf(!htmlWindow);
     if (htmlWindow) {
-        WCHAR* ws = ToWstrTemp(pageUrl);
-        htmlWindow->NavigateToDataUrl(ws);
+        htmlWindow->NavigateToDataUrl(pageUrl);
     }
 }
 
@@ -399,8 +398,7 @@ ChmCacheEntry* ChmModel::FindDataForUrl(const char* url) const {
 // Called after html document has been loaded.
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
-void ChmModel::OnDocumentComplete(const WCHAR* urlW) {
-    char* url = ToUtf8Temp(urlW);
+void ChmModel::OnDocumentComplete(const char* url) {
     if (!url || IsBlankUrl(url)) {
         return;
     }
@@ -426,8 +424,7 @@ void ChmModel::OnDocumentComplete(const WCHAR* urlW) {
 
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
-bool ChmModel::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
-    char* url = ToUtf8Temp(urlW);
+bool ChmModel::OnBeforeNavigate(const char* url, bool newWindow) {
     // ensure that JavaScript doesn't keep the focus
     // in the HtmlWindow when a new page is loaded
     if (cb) {
@@ -450,8 +447,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
-ByteSlice ChmModel::GetDataForUrl(const WCHAR* urlW) {
-    char* url = ToUtf8Temp(urlW);
+ByteSlice ChmModel::GetDataForUrl(const char* url) {
     ScopedCritSec scope(&docAccess);
     char* plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
@@ -619,7 +615,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     HtmlWindow* hw = nullptr;
     Size size;
     onBitmapRenderedCb saveThumbnail;
-    AutoFreeWstr homeUrl;
+    AutoFreeStr homeUrl;
     Vec<ByteSlice> data;
     CRITICAL_SECTION docAccess;
 
@@ -646,18 +642,18 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 
     void CreateThumbnail(HtmlWindow* hw) {
         this->hw = hw;
-        homeUrl.Set(strconv::AnsiToWstr(doc->GetHomePath()));
+        homeUrl.Set(strconv::AnsiToUtf8(doc->GetHomePath()));
         if (*homeUrl == '/') {
             homeUrl.SetCopy(homeUrl + 1);
         }
         hw->NavigateToDataUrl(homeUrl);
     }
 
-    bool OnBeforeNavigate(const WCHAR*, bool newWindow) override {
+    bool OnBeforeNavigate(const char*, bool newWindow) override {
         return !newWindow;
     }
 
-    void OnDocumentComplete(const WCHAR* url) override {
+    void OnDocumentComplete(const char* url) override {
         if (url && *url == '/') {
             url++;
         }
@@ -676,11 +672,10 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     void OnLButtonDown() override {
     }
 
-    ByteSlice GetDataForUrl(const WCHAR* url) override {
+    ByteSlice GetDataForUrl(const char* url) override {
         ScopedCritSec scope(&docAccess);
-        AutoFreeWstr plainUrl(url::GetFullPath(url));
-        auto urlA(ToUtf8Temp(plainUrl));
-        auto d = doc->GetData(urlA);
+        char* plainUrl = url::GetFullPathTemp(url);
+        auto d = doc->GetData(plainUrl);
         data.Append(d);
         return d;
     }

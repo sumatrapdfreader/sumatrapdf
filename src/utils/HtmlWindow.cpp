@@ -230,6 +230,8 @@ static void FreeWindowId(int windowId) {
 // Re-using its protocol, see comments at the top.
 #define HW_PROTO_PREFIX L"its"
 
+#define HW_PROTO_PREFIXA "its"
+
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
 static const GUID CLSID_HW_IInternetProtocol = {0xf1ec293f,
                                                 0xdbbd,
@@ -368,6 +370,14 @@ static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWstr* url
     return rest && !*rest;
 }
 
+// given url in the form "its://$htmlWindowId/$urlRest, parses
+// out $htmlWindowId and $urlRest. Returns false if url doesn't conform
+// to this pattern.
+static bool ParseProtoUrl(const char* url, int* htmlWindowId, AutoFreeStr* urlRest) {
+    const char* rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
+    return rest && !*rest;
+}
+
 #define kDefaultMimeType "text/html"
 
 // caller must free() the result
@@ -448,13 +458,13 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    data = win->htmlWinCb->GetDataForUrl(urlRest);
+    char* urlRestA = ToUtf8Temp(urlRest);
+    data = win->htmlWinCb->GetDataForUrl(urlRestA);
     if (data.empty()) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
     const char* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
-    char* urlRestA = ToUtf8Temp(urlRest);
     AutoFreeStr mime(MimeFromUrl(urlRestA, imgExt));
     WCHAR* mimeW = ToWstrTemp(mime.Get());
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
@@ -1157,13 +1167,13 @@ class HW_IDownloadManager : public IDownloadManager {
         if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
         }
-        auto data = win->htmlWinCb->GetDataForUrl(urlRest);
+        char* urlRestA = ToUtf8Temp(urlRest);
+        auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
         if (data.empty()) {
             return INET_E_DATA_NOT_AVAILABLE;
         }
         // ask the UI to let the user save the file
-        char* urlA = ToUtf8Temp(urlRest);
-        win->htmlWinCb->DownloadData(urlA, data);
+        win->htmlWinCb->DownloadData(urlRestA, data);
         return S_OK;
     }
 };
@@ -1609,12 +1619,13 @@ void HtmlWindow::SetVisible(bool visible) {
 
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
-void HtmlWindow::NavigateToDataUrl(const WCHAR* url) {
-    AutoFreeWstr fullUrl(str::Format(L"its://%d/%s", windowId, url));
+void HtmlWindow::NavigateToDataUrl(const char* url) {
+    AutoFreeStr fullUrl(str::Format("its://%d/%s", windowId, url));
     NavigateToUrl(fullUrl);
 }
 
-void HtmlWindow::NavigateToUrl(const WCHAR* url) {
+void HtmlWindow::NavigateToUrl(const char* urlA) {
+    WCHAR* url = ToWstrTemp(urlA);
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
     currentURL.Reset();
@@ -1673,13 +1684,13 @@ void HtmlWindow::CopySelection() {
 }
 
 void HtmlWindow::NavigateToAboutBlank() {
-    NavigateToUrl(L"about:blank");
+    NavigateToUrl("about:blank");
 }
 
-void HtmlWindow::SetHtml(ByteSlice d, const WCHAR* url) {
+void HtmlWindow::SetHtml(ByteSlice d, const char* url) {
     FreeHtmlSetInProgressData();
-    htmlSetInProgress = str::Dup(d);
-    htmlSetInProgressUrl = str::Dup(url);
+    str::ReplaceWithCopy(&htmlSetInProgress, d);
+    str::ReplaceWithCopy(&htmlSetInProgress, url);
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()
 }
@@ -1797,11 +1808,12 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
+bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
     currentURL.Reset();
     if (!htmlWinCb) {
         return true;
     }
+    char* url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         return true;
     }
@@ -1809,7 +1821,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeWstr urlReal(str::Dup(url));
+    AutoFreeStr urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     CrashIf(ok && (protoWindowId != windowId));
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
@@ -1817,13 +1829,12 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
 }
 
 void HtmlWindow::FreeHtmlSetInProgressData() {
-    str::Free(this->htmlSetInProgress);
-    str::Free(this->htmlSetInProgressUrl);
-    this->htmlSetInProgress = nullptr;
-    this->htmlSetInProgressUrl = nullptr;
+    str::FreePtr(&this->htmlSetInProgress);
+    str::FreePtr(&this->htmlSetInProgressUrl);
 }
 
-void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
+void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
+    char* url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress != nullptr) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
@@ -1846,7 +1857,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeWstr urlReal(str::Dup(url));
+    AutoFreeStr urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     CrashIf(ok && (protoWindowId != windowId));
 

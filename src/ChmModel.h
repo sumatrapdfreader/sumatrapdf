@@ -61,10 +61,10 @@ struct ChmModel : Controller {
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 
     // for HtmlWindowCallback (called through htmlWindowCb)
-    bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
-    void OnDocumentComplete(const WCHAR* url);
+    bool OnBeforeNavigate(const char* url, bool newWindow);
+    void OnDocumentComplete(const char* url);
     void OnLButtonDown();
-    ByteSlice GetDataForUrl(const WCHAR* url);
+    ByteSlice GetDataForUrl(const char* url);
     void DownloadData(const char* url, ByteSlice data);
 
     static bool IsSupportedFileType(Kind);

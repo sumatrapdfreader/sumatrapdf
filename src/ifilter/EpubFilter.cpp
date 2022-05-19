@@ -74,7 +74,6 @@ static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-
 static WCHAR* ExtractHtmlText(EpubDoc* doc) {
     log("ExtractHtmlText()\n");
 
