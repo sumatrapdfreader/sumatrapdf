@@ -305,9 +305,12 @@ static char* FormatParams(const char* cmdLine, TabInfo* tab) {
 
 bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmd);
-    CrashIf(!canView);
+    ReportIf(!canView); // TODO: with command palette can send un-enforcable command
+    if (!canView) {
+        return false;
+    }
     ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
-    if (!canView || ev->exeFullPath == nullptr) {
+    if (ev->exeFullPath == nullptr) {
         return false;
     }
     AutoFreeStr params = FormatParams(ev->launchArgs, tab);
