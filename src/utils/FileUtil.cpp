@@ -627,7 +627,6 @@ ByteSlice ReadFile(const char* path) {
     return ReadFileWithAllocator(path, nullptr);
 }
 
-
 bool WriteFile(const char* path, ByteSlice d) {
     WCHAR* pathW = ToWstrTemp(path);
     const void* data = d.data();
@@ -749,15 +748,6 @@ bool Delete(const char* filePathA) {
     return true;
 }
 
-bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite) {
-    BOOL ok = CopyFileW(src, dst, (BOOL)dontOverwrite);
-    if (!ok) {
-        LogLastError();
-        return false;
-    }
-    return true;
-}
-
 bool Copy(const char* dst, const char* src, bool dontOverwrite) {
     WCHAR* dstW = ToWstrTemp(dst);
     WCHAR* srcW = ToWstrTemp(src);
@@ -797,27 +787,20 @@ bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
 }
 
 // return true if a file starts with string s of size len
-bool StartsWithN(const WCHAR* path, const char* s, size_t len) {
+bool StartsWithN(const char* path, const char* s, size_t len) {
     AutoFree buf(AllocArray<char>(len));
     if (!buf) {
         return false;
     }
-    char* pathA = ToUtf8Temp(path);
-    if (!ReadN(pathA, buf.Get(), len)) {
+    if (!ReadN(path, buf.Get(), len)) {
         return false;
     }
     return memeq(buf, s, len);
 }
 
 // return true if a file starts with null-terminated string s
-bool StartsWith(const WCHAR* filePath, const char* s) {
-    return file::StartsWithN(filePath, s, str::Len(s));
-}
-
-// return true if a file starts with null-terminated string s
-bool StartsWith(const char* filePathA, const char* s) {
-    WCHAR* filePath = ToWstrTemp(filePathA);
-    return file::StartsWithN(filePath, s, str::Len(s));
+bool StartsWith(const char* path, const char* s) {
+    return file::StartsWithN(path, s, str::Len(s));
 }
 
 int GetZoneIdentifier(const char* filePath) {

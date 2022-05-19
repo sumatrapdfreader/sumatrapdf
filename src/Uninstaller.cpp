@@ -316,11 +316,12 @@ static int RunApp() {
     }
 }
 
-static WCHAR* GetUninstallerPathInTemp() {
+static char* GetUninstallerPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
-    return path::Join(tempDir, L"Sumatra-Uninstaller.exe");
+    char* dirA = ToUtf8Temp(tempDir);
+    return path::Join(dirA, "Sumatra-Uninstaller.exe");
 }
 
 // to be able to delete installation directory we must copy
@@ -333,8 +334,8 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
         return;
     }
 
-    AutoFreeWstr installerTempPath = GetUninstallerPathInTemp();
-    auto ownPath = GetExePathTemp();
+    char* installerTempPath = GetUninstallerPathInTemp();
+    char* ownPath = GetExePathATemp();
     if (str::EqI(installerTempPath, ownPath)) {
         if (IsProcessRunningElevated()) {
             log("  already running elevated and from temp dir\n");
@@ -342,7 +343,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
         }
     }
 
-    logf(L"  copying installer '%s' to '%s'\n", ownPath, installerTempPath.Get());
+    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
     bool ok = file::Copy(installerTempPath, ownPath, false);
     if (!ok) {
         logf("  failed to copy installer\n");
@@ -351,15 +352,14 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
 
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
-
-    str::WStr cmdLine = L"-uninstall";
+    str::Str cmdLine = "-uninstall";
     if (cli->silent) {
-        cmdLine.Append(L" -silent");
+        cmdLine.Append(" -silent");
     }
     if (cli->log) {
-        cmdLine.Append(L" -log");
+        cmdLine.Append(" -log");
     }
-    logf(L"  re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine.Get());
+    logf("  re-launching '%s' with args '%s' as elevated\n", installerTempPath, cmdLine.Get());
     LaunchElevated(installerTempPath, cmdLine.Get());
     ::ExitProcess(0);
 }

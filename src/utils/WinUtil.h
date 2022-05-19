@@ -111,6 +111,8 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
 bool CreateProcessHelper(const char* exe, const char* args);
 
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
+bool LaunchElevated(const char* path, const char* cmdline);
+
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
 DWORD GetAccountType();

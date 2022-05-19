@@ -78,15 +78,13 @@ bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
 DWORD GetAttributes(const char* path);
 bool SetAttributes(const char* path, DWORD attrs);
 
-bool StartsWithN(const WCHAR* path, const char* s, size_t len);
-bool StartsWith(const WCHAR* path, const char* s);
+bool StartsWithN(const char* path, const char* s, size_t len);
 bool StartsWith(const char* path, const char* s);
 
 int GetZoneIdentifier(const char* path);
 bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);
 bool DeleteZoneIdentifier(const char* path);
 
-bool Copy(const WCHAR* dst, const WCHAR* src, bool dontOverwrite);
 bool Copy(const char* dst, const char* src, bool dontOverwrite);
 
 } // namespace file

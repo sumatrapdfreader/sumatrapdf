@@ -245,7 +245,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     // this is called after reading change notification and we're only
     // interested in logging the first time a dir is registered for monitoring
     if (wd->startMonitoring) {
-        logf(L"StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
+        logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
     }
 
     CrashIf(g_threadId != GetCurrentThreadId());

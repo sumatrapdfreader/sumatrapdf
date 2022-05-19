@@ -1066,6 +1066,10 @@ DWORD GetOriginalAccountType() {
     return GetAccountTypeHelper(false);
 }
 
+bool LaunchElevated(const char* path, const char* cmdline) {
+    return LaunchFile(path, cmdline, "runas");
+}
+
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {
     return LaunchFile(path, cmdline, L"runas");
 }
