@@ -92,7 +92,7 @@ using namespace wg;
 
 using std::placeholders::_1;
 
-#define RESTRICTIONS_FILE_NAME L"sumatrapdfrestrict.ini"
+#define kRestrictionsFileName "sumatrapdfrestrict.ini"
 
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
@@ -186,7 +186,7 @@ void InitializePolicies(bool restrict) {
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (see ../docs/sumatrapdfrestrict.ini)
     // (if the file isn't there, everything is allowed)
-    AutoFreeWstr restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
+    AutoFreeStr restrictPath(path::GetPathOfFileInAppDir(kRestrictionsFileName));
     if (!file::Exists(restrictPath)) {
         gPolicyRestrictions = Perm::All;
         Split(gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, ",");

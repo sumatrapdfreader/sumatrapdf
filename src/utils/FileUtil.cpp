@@ -8,6 +8,10 @@
 
 #include "utils/Log.h"
 
+namespace file {
+ByteSlice ReadFile(const WCHAR* filePath);
+}
+
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written

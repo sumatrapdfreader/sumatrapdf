@@ -195,7 +195,8 @@ static char* Advance0Line(char* line, char* end) {
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
 int Pdfsync::RebuildIndex() {
-    ByteSlice data = file::ReadFile(syncfilepath);
+    char* path = ToUtf8Temp(syncfilepath);
+    ByteSlice data = file::ReadFile(path);
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
@@ -299,7 +300,7 @@ int Pdfsync::RebuildIndex() {
                 }
 
                 filestack.Append(srcfiles.size());
-                char* path = ToUtf8Temp(filename);
+                path = ToUtf8Temp(filename);
                 srcfiles.Append(path);
                 findex.start = findex.end = lines.size();
                 fileIndex.Append(findex);

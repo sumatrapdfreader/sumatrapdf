@@ -98,8 +98,8 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath) {
     char buf[1024];
 
     WCHAR* pathW = ToWstrTemp(destFilePath);
-    HANDLE hf = CreateFileW(pathW, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-                            nullptr);
+    HANDLE hf =
+        CreateFileW(pathW, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
         logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
         LogLastError();

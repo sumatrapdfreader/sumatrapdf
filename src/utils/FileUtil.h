@@ -61,7 +61,6 @@ HANDLE OpenReadOnly(const char*);
 ByteSlice ReadFileWithAllocator(const char* path, Allocator*);
 
 ByteSlice ReadFile(const char* path);
-ByteSlice ReadFile(const WCHAR* filePath);
 
 int ReadN(const char* path, char* buf, size_t toRead);
 
