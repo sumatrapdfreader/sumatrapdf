@@ -413,7 +413,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
 static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
-    WStrVec references;
+    StrVec references;
     AutoFreeWstr keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {
@@ -440,8 +440,10 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
             if (str::Find(attrVal, L"::/")) {
                 attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
             }
-            references.Append(name);
-            references.Append(attrVal);
+            char* nameA = ToUtf8Temp(name);
+            char* attrValA = ToUtf8Temp(attrVal);
+            references.Append(nameA);
+            references.Append(attrValA);
         }
     }
     if (!keyword) {
@@ -450,14 +452,14 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
 
     char* keywordA = ToUtf8Temp(keyword);
     if (references.size() == 2) {
-        char* referencesA = ToUtf8Temp(references[1]);
-        visitor->Visit(keywordA, referencesA, level);
+        char* refs = references[1];
+        visitor->Visit(keywordA, refs, level);
         return true;
     }
     visitor->Visit(keywordA, nullptr, level);
     for (int i = 0; i < references.Size(); i += 2) {
-        char* ref1 = ToUtf8Temp(references[i]);
-        char* ref2 = ToUtf8Temp(references[i + 1]);
+        char* ref1 = references[i];
+        char* ref2 = references[i + 1];
         visitor->Visit(ref1, ref2, level + 1);
     }
     return true;
