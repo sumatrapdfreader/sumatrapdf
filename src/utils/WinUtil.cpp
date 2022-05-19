@@ -2779,7 +2779,7 @@ bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen) {
         return false;
     }
     sLen = str::Len(ws); // TODO: can this be different after converting to WCHAR?
-    return TextOutW(hdc, x, y, ws, sLen);
+    return TextOutW(hdc, x, y, ws, (int)sLen);
 }
 
 bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
@@ -2788,13 +2788,13 @@ bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
         return true;
     }
     if (sLen <= 0) {
-        sLen = str::Len(s);
+        sLen = (int)str::Len(s);
     }
     WCHAR* ws = ToWstrTemp(s, sLen);
     if (!ws) {
         return false;
     }
-    sLen = str::Len(ws); // TODO: can this be different after converting to WCHAR?
+    sLen = (int)str::Len(ws); // TODO: can this be different after converting to WCHAR?
     return GetTextExtentPoint32W(hdc, ws, sLen, psizl);
 }
 
