@@ -45,15 +45,11 @@ constexpr int ABOUT_TXT_DY = 6;
 constexpr int ABOUT_RECT_PADDING = 8;
 #define kInnerPadding 8
 
-#define ABOUT_CLASS_NAME L"SUMATRA_PDF_ABOUT"
+constexpr const char* kSumatraTxtFont = "Arial Black";
+constexpr int kSumatraTxtFontSize = 24;
 
-#define ABOUT_WIN_TITLE _TR("About SumatraPDF")
-
-#define SUMATRA_TXT_FONT L"Arial Black"
-#define SUMATRA_TXT_FONT_SIZE 24
-
-#define VERSION_TXT_FONT L"Arial Black"
-#define VERSION_TXT_FONT_SIZE 12
+constexpr const char* kVersionTxtFont = "Arial Black";
+constexpr int kVersionTxtFontSize = 12;
 
 #define VERSION_TXT L"v" CURR_VERSION_STR
 #ifdef PRE_RELEASE_VER
@@ -152,8 +148,8 @@ static char* GetAppVersionTemp() {
 static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     Size result{};
 
-    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
-    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
+    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
+    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize));
     ScopedSelectObject selFont(hdc, fontSumatraTxt);
 
     SIZE txtSize{};
@@ -178,8 +174,8 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 }
 
 static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
-    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
-    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
+    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
+    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize));
     HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
 
     SetBkMode(hdc, TRANSPARENT);
@@ -204,7 +200,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 
 // draw on the bottom right
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 16));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 16));
     auto col = GetAppColor(AppColor::MainWindowLink);
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
     ScopedSelectObject font(hdc, fontLeftTxt);
@@ -553,6 +549,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
+constexpr const WCHAR* kAboutClassName = L"SUMATRA_PDF_ABOUT";
+
 void OnMenuAbout(WindowInfo* win) {
     if (gHwndAbout) {
         SetActiveWindow(gHwndAbout);
@@ -561,16 +559,18 @@ void OnMenuAbout(WindowInfo* win) {
 
     if (!gAtomAbout) {
         WNDCLASSEX wcex;
-        FillWndClassEx(wcex, ABOUT_CLASS_NAME, WndProcAbout);
+        FillWndClassEx(wcex, kAboutClassName, WndProcAbout);
         HMODULE h = GetModuleHandleW(nullptr);
         wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(GetAppIconID()));
         gAtomAbout = RegisterClassEx(&wcex);
         CrashIf(!gAtomAbout);
     }
 
-    gHwndAbout =
-        CreateWindow(ABOUT_CLASS_NAME, ABOUT_WIN_TITLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT,
-                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    const WCHAR* title = _TR("About SumatraPDF");
+    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    HANDLE h = GetModuleHandle(nullptr);
+    gHwndAbout = CreateWindowExW(0, kAboutClassName, title, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                                 CW_USEDEFAULT, nullptr, nullptr, h, nullptr);
     if (!gHwndAbout) {
         return;
     }
@@ -630,10 +630,10 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     col = GetAppColor(AppColor::MainWindowLink);
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
-    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
+    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 24));
     int fontSize = 24;
-    AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, L"MS Shell Dlg", fontSize));
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+    AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, "MS Shell Dlg", fontSize));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
 
     ScopedSelectObject font(hdc, fontSumatraTxt);
 

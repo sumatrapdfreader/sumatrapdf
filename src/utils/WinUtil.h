@@ -94,7 +94,7 @@ bool IsShiftPressed();
 bool IsAltPressed();
 bool IsCtrlPressed();
 
-HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize);
+HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize);
 
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd = nullptr, bool bFully = false);
 Rect GetWorkAreaRect(Rect rect, HWND hwnd);

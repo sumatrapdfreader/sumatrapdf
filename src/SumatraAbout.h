@@ -5,9 +5,9 @@
 
 struct WindowInfo;
 
-constexpr const WCHAR* kLeftTextFont = L"Arial";
+constexpr const char* kLeftTextFont = "Arial";
 constexpr int kLeftTextFontSize = 12;
-constexpr const WCHAR* kRightTextFont = L"Arial Black";
+constexpr const char* kRightTextFont = "Arial Black";
 constexpr int kRightTextFontSize = 12;
 
 void OnMenuAbout(WindowInfo*);

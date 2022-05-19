@@ -1626,7 +1626,8 @@ char* ToSafeStringTemp(const char* s) {
 } // namespace menu
 } // namespace win
 
-HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
+HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {
+    WCHAR* fontNameW = ToWstrTemp(fontName);
     LOGFONTW lf{};
 
     lf.lfWidth = 0;
@@ -1638,7 +1639,7 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;
-    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontNameW);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfEscapement = 0;
