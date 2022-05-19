@@ -1761,16 +1761,14 @@ ScrollState DisplayModel::GetScrollState() {
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
     if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0) {
-        // TODO: after 3.4
-        // ReportIf(!ValidPageNo(state.page));
+        ReportIf(!ValidPageNo(state.page));
         return state;
     }
 
     Rect screen(Point(), viewPort.Size());
     Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
-    // TODO: after 3.4
-    // ReportIf(!ValidPageNo(state.page));
+    ReportIf(!ValidPageNo(state.page));
     PointF ptD = CvtFromScreen(pageVis.TL(), state.page);
 
     // Remember to show the margin, if it's currently visible
