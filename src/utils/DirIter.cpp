@@ -26,13 +26,8 @@ static bool IsRegularFile(DWORD fileAttr) {
     return true;
 }
 
-bool IsDirectory(DWORD fileAttr) {
+static bool IsDirectory(DWORD fileAttr) {
     return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
-}
-
-// "." and ".." are special
-static bool IsSpecialDir(const WCHAR* s) {
-    return str::Eq(s, L".") || str::Eq(s, L"..");
 }
 
 static bool IsSpecialDir(const char* s) {
@@ -65,56 +60,6 @@ bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const c
     } while (cont && FindNextFileW(hfind, &fdata));
     FindClose(hfind);
     return true;
-}
-
-bool DirTraverse(const WCHAR* dir, bool recurse, const std::function<bool(const WCHAR*)>& cb) {
-    WCHAR* pattern = path::JoinTemp(dir, L"*");
-
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return false;
-    }
-
-    bool isFile;
-    bool isDir;
-    bool cont = true;
-    do {
-        isFile = IsRegularFile(fdata.dwFileAttributes);
-        isDir = IsDirectory(fdata.dwFileAttributes);
-        WCHAR* name = fdata.cFileName;
-        const WCHAR* path = path::JoinTemp(dir, name);
-        if (isFile) {
-            cont = cb(path);
-        } else if (recurse && isDir) {
-            cont = DirTraverse(path, recurse, cb);
-        }
-    } while (cont && FindNextFileW(hfind, &fdata));
-    FindClose(hfind);
-    return true;
-}
-
-bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles) {
-    WCHAR* dirPath = path::GetDirTemp(pattern);
-
-    WIN32_FIND_DATAW fdata{};
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return false;
-    }
-
-    do {
-        bool append = !dirsInsteadOfFiles;
-        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
-        }
-        if (append) {
-            WCHAR* s = path::JoinTemp(dirPath, fdata.cFileName);
-            paths.Append(s);
-        }
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
-    return paths.size() > 0;
 }
 
 bool CollectPathsFromDirectory(const char* patternA, StrVec& paths, bool dirsInsteadOfFiles) {
