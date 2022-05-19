@@ -56,7 +56,7 @@ class Pdfsync : public Synchronizer {
     UINT SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
-    WStrVec srcfiles;                // source file names
+    StrVec srcfiles;                 // source file names
     Vec<PdfsyncLine> lines;          // record-to-line mapping
     Vec<PdfsyncPoint> points;        // record-to-point mapping
     Vec<PdfsyncFileIndex> fileIndex; // start and end of entries for a file in <lines>
@@ -232,7 +232,8 @@ int Pdfsync::RebuildIndex() {
 
     // add the initial tex file to the source file stack
     filestack.Append(srcfiles.size());
-    srcfiles.Append(jobName.Get());
+    char* jobNameA = ToUtf8Temp(jobName);
+    srcfiles.Append(jobNameA);
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
 
@@ -298,7 +299,8 @@ int Pdfsync::RebuildIndex() {
                 }
 
                 filestack.Append(srcfiles.size());
-                srcfiles.Append(filename.StealData());
+                char* path = ToUtf8Temp(filename);
+                srcfiles.Append(path);
                 findex.start = findex.end = lines.size();
                 fileIndex.Append(findex);
             } break;
@@ -390,7 +392,8 @@ int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* li
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    filename.SetCopy(srcfiles.at(found->file));
+    WCHAR* pathW = ToWstrTemp(srcfiles[found->file]);
+    filename.SetCopy(pathW);
     *line = found->line;
     *col = found->column;
 
@@ -425,8 +428,10 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, __unused UINT 
 
     // find the source file entry
     size_t isrc;
+    char* srcfilepathA = ToUtf8Temp(srcfilepath);
     for (isrc = 0; isrc < srcfiles.size(); isrc++) {
-        if (path::IsSame(srcfilepath, srcfiles.at(isrc))) {
+        char* path = srcfiles[isrc];
+        if (path::IsSame(srcfilepathA, path)) {
             break;
         }
     }
