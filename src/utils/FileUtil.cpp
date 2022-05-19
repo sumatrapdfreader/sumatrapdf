@@ -264,6 +264,22 @@ WCHAR* ShortPath(const WCHAR* path) {
     return shortpath;
 }
 
+// Normalizes the file path and the converts it into a short form that
+// can be used for interaction with non-UNICODE aware applications
+char* ShortPath(const char* pathA) {
+    WCHAR* path = ToWstrTemp(pathA);
+    AutoFreeWstr normpath(Normalize(path));
+    DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
+    if (!cch) {
+        return ToUtf8(normpath.Get());
+    }
+    WCHAR* shortPath = AllocArray<WCHAR>(cch + 1);
+    GetShortPathNameW(normpath, shortPath, cch);
+    char* res = ToUtf8(shortPath);
+    str::Free(shortPath);
+    return res;
+}
+
 static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HANDLE_FILE_INFORMATION fi2) {
     if (fi1.dwVolumeSerialNumber != fi2.dwVolumeSerialNumber) {
         return false;
@@ -488,6 +504,25 @@ WCHAR* GetTempFilePath(const WCHAR* filePrefix) {
     return str::Dup(path);
 }
 
+// returns the path to either the %TEMP% directory or a
+// non-existing file inside whose name starts with filePrefix
+char* GetTempFilePath(const char* filePrefix) {
+    WCHAR tempDir[MAX_PATH]{};
+    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
+    if (!res || res >= dimof(tempDir)) {
+        return nullptr;
+    }
+    if (!filePrefix) {
+        return ToUtf8(tempDir);
+    }
+    WCHAR path[MAX_PATH]{};
+    WCHAR* filePrefixW = ToWstrTemp(filePrefix);
+    if (!GetTempFileNameW(tempDir, filePrefixW, 0, path)) {
+        return nullptr;
+    }
+    return ToUtf8(path);
+}
+
 // returns a path to the application module's directory
 // with either the given fileName or the module's name
 // (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
@@ -501,6 +536,25 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     WCHAR* moduleDir = path::GetDirTemp(modulePath);
     WCHAR* path = path::JoinTemp(moduleDir, fileName);
     return path::Normalize(path);
+}
+
+// returns a path to the application module's directory
+// with either the given fileName or the module's name
+// (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
+char* GetPathOfFileInAppDir(const char* fileName) {
+    WCHAR modulePath[MAX_PATH]{};
+    GetModuleFileNameW(GetInstance(), modulePath, dimof(modulePath));
+    modulePath[dimof(modulePath) - 1] = '\0';
+    if (!fileName) {
+        return ToUtf8(modulePath);
+    }
+    WCHAR* moduleDir = path::GetDirTemp(modulePath);
+    WCHAR* fileNameW = ToWstrTemp(fileName);
+    WCHAR* path = path::JoinTemp(moduleDir, fileNameW);
+    path = path::Normalize(path);
+    char* res = ToUtf8(path);
+    str::Free(path);
+    return res;
 }
 } // namespace path
 

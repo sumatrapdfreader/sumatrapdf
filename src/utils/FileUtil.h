@@ -8,8 +8,10 @@ bool IsSep(WCHAR c);
 
 const char* GetExtTemp(const char* path);
 const WCHAR* GetExtTemp(const WCHAR* path);
+
 const char* GetBaseNameTemp(const char* path);
 const WCHAR* GetBaseNameTemp(const WCHAR* path);
+
 TempStr GetDirTemp(const char* path);
 TempWstr GetDirTemp(const WCHAR* path);
 
@@ -24,6 +26,8 @@ WCHAR* Normalize(const WCHAR* path);
 char* NormalizeTemp(const char* path);
 
 WCHAR* ShortPath(const WCHAR* path);
+char* ShortPath(const char* pathA);
+
 bool IsSame(const WCHAR* path1, const WCHAR* path2);
 bool IsSame(const char* path1, const char* path2);
 
@@ -40,7 +44,10 @@ bool IsAbsolute(const WCHAR* path);
 bool IsAbsolute(const char* path);
 
 WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
+char* GetTempFilePath(const char* filePrefix = nullptr);
+
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
+char* GetPathOfFileInAppDir(const char* fileName = nullptr);
 } // namespace path
 
 namespace file {

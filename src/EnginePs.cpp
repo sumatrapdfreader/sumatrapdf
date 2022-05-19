@@ -19,27 +19,29 @@
 
 Kind kindEnginePostScript = "enginePostScript";
 
-static WCHAR* GetGhostscriptPath() {
-    const WCHAR* gsProducts[] = {
-        L"AFPL Ghostscript",
-        L"Aladdin Ghostscript",
-        L"GPL Ghostscript",
-        L"GNU Ghostscript",
+static char* GetGhostscriptPath() {
+    const char* gsProducts[] = {
+        "AFPL Ghostscript",
+        "Aladdin Ghostscript",
+        "GPL Ghostscript",
+        "GNU Ghostscript",
     };
 
     // find all installed Ghostscript versions
-    WStrVec versions;
+    StrVec versions;
     REGSAM access = KEY_READ | KEY_WOW64_32KEY;
 TryAgain64Bit:
-    for (int i = 0; i < dimof(gsProducts); i++) {
+    for (const char* gsProd : gsProducts) {
         HKEY hkey;
-        AutoFreeWstr keyName(str::Join(L"Software\\", gsProducts[i]));
-        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS) {
+        char* keyName = str::Join("Software\\", gsProd);
+        WCHAR* keyNameW = ToWstrTemp(keyName);
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyNameW, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
         }
         WCHAR subkey[32];
         for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++) {
-            versions.Append(subkey);
+            char* ver = ToUtf8Temp(subkey);
+            versions.Append(ver);
         }
         RegCloseKey(hkey);
     }
@@ -55,38 +57,41 @@ TryAgain64Bit:
     versions.SortNatural();
 
     // return the path to the newest installation
-    for (size_t ix = versions.size(); ix > 0; ix--) {
-        for (int i = 0; i < dimof(gsProducts); i++) {
-            AutoFreeWstr keyName(str::Format(L"Software\\%s\\%s", gsProducts[i], versions.at(ix - 1)));
-            AutoFreeWstr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
+    size_t nVers = versions.size();
+    for (size_t ix = nVers; ix > 0; ix--) {
+        for (const char* gsProd : gsProducts) {
+            char* ver = versions.at(ix - 1);
+            AutoFreeStr keyName(str::Format("Software\\%s\\%s", gsProd, ver));
+            WCHAR* keyNameW = ToWstrTemp(keyName);
+            AutoFreeWstr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyNameW, L"GS_DLL"));
             if (!GS_DLL) {
                 continue;
             }
             WCHAR* dir = path::GetDirTemp(GS_DLL);
             WCHAR* exe = path::JoinTemp(dir, L"gswin32c.exe");
             if (file::Exists(exe)) {
-                return str::Dup(exe);
+                return ToUtf8(exe);
             }
             exe = path::JoinTemp(dir, L"gswin64c.exe");
             if (file::Exists(exe)) {
-                return str::Dup(exe);
+                return ToUtf8(exe);
             }
         }
     }
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
-    DWORD size = GetEnvironmentVariable(L"PATH", nullptr, 0);
-    AutoFreeWstr envpath(AllocArray<WCHAR>(size));
+    DWORD size = GetEnvironmentVariableW(L"PATH", nullptr, 0);
+    AutoFreeWstr envpath(AllocArray<WCHAR>(size + 1));
     if (size == 0) {
         return nullptr;
     }
-    GetEnvironmentVariable(L"PATH", envpath, size);
-    WStrVec paths;
-    Split(paths, envpath, L";", true);
-    for (WCHAR* path : paths) {
-        WCHAR* exe = path::JoinTemp(path, L"gswin32c.exe");
+    GetEnvironmentVariableW(L"PATH", envpath, size);
+    StrVec paths;
+    Split(paths, ToUtf8Temp(envpath), ";", true);
+    for (char* path : paths) {
+        char* exe = path::JoinTemp(path, "gswin32c.exe");
         if (!file::Exists(exe)) {
-            exe = path::JoinTemp(path, L"gswin64c.exe");
+            exe = path::JoinTemp(path, "gswin64c.exe");
         }
         if (!file::Exists(exe)) {
             continue;
@@ -101,6 +106,9 @@ class ScopedFile {
 
   public:
     explicit ScopedFile(const WCHAR* path) : path(str::Dup(path)) {
+    }
+    explicit ScopedFile(const char* pathA) {
+        path.Set(ToWstr(pathA));
     }
     ~ScopedFile() {
         if (path) {
@@ -134,13 +142,13 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 }
 #endif
 
-static EngineBase* ps2pdf(const char* pathA) {
-    WCHAR* path = ToWstrTemp(pathA);
+static EngineBase* ps2pdf(const char* path) {
+    WCHAR* pathW = ToWstrTemp(path);
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    AutoFreeWstr shortPath(path::ShortPath(path));
-    AutoFreeWstr tmpFile(path::GetTempFilePath(L"PsE"));
+    AutoFreeStr shortPath = path::ShortPath(path);
+    AutoFreeStr tmpFile = path::GetTempFilePath("PsE");
     ScopedFile tmpFileScope(tmpFile);
-    AutoFreeWstr gswin32c(GetGhostscriptPath());
+    AutoFreeStr gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c) {
         return nullptr;
     }
@@ -157,12 +165,12 @@ static EngineBase* ps2pdf(const char* pathA) {
     AutoFreeWstr cmdLine = str::Format(
         L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
         L"-f \"%s\"",
-        gswin32c.Get(), tmpFile.Get(), shortPath.Get());
+        ToWstrTemp(gswin32c.Get()), ToWstrTemp(tmpFile.Get()), ToWstrTemp(shortPath.Get()));
 
     {
         const char* fileName = path::GetBaseNameTemp(__FILE__);
-        auto gswin = ToUtf8Temp(gswin32c.Get());
-        auto tmpFileName = ToUtf8Temp(path::GetBaseNameTemp(tmpFile));
+        char* gswin = gswin32c.Get();
+        const char* tmpFileName = path::GetBaseNameTemp(tmpFile.Get());
         logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin, tmpFileName);
     }
 
@@ -199,7 +207,7 @@ static EngineBase* ps2pdf(const char* pathA) {
         return nullptr;
     }
 
-    return CreateEngineMupdfFromStream(stream, ToUtf8Temp(tmpFile));
+    return CreateEngineMupdfFromStream(stream, tmpFile);
 }
 
 static EngineBase* psgz2pdf(const char* fileName) {
@@ -385,7 +393,7 @@ EngineBase* EnginePs::CreateFromFile(const char* fileName) {
 }
 
 bool IsEnginePsAvailable() {
-    AutoFreeWstr gswin32c(GetGhostscriptPath());
+    AutoFreeStr gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != nullptr;
 }
 
