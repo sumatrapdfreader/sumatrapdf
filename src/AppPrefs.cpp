@@ -92,27 +92,31 @@ bool Load() {
         logf("prefs::Load() took %.2f ms\n", dur);
     };
 
-    char* path = GetSettingsPathTemp();
-    AutoFree prefsData = file::ReadFile(path);
+    GlobalPrefs* gprefs = nullptr;
+    char* settingsPath = GetSettingsPathTemp();
+    {
+        ByteSlice prefsData = file::ReadFile(settingsPath);
 
-    gGlobalPrefs = NewGlobalPrefs(prefsData.data);
-    CrashAlwaysIf(!gGlobalPrefs);
-    auto* gprefs = gGlobalPrefs;
+        gGlobalPrefs = NewGlobalPrefs(prefsData);
+        CrashAlwaysIf(!gGlobalPrefs);
+        gprefs = gGlobalPrefs;
 
-    // in pre-release builds between 3.1.10079 and 3.1.10377,
-    // RestoreSession was a string with the additional option "auto"
-    // TODO: remove this after 3.2 has been released
+        // in pre-release builds between 3.1.10079 and 3.1.10377,
+        // RestoreSession was a string with the additional option "auto"
+        // TODO: remove this after 3.2 has been released
 #if defined(DEBUG) || defined(PRE_RELEASE_VER)
-    if (!gprefs->restoreSession && prefsData.data && str::Find(prefsData.data, "\nRestoreSession = auto")) {
-        gprefs->restoreSession = true;
-    }
+        if (!gprefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto")) {
+            gprefs->restoreSession = true;
+        }
 #endif
+        prefsData.Free();
+    }
 
     if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
     }
-    gprefs->lastPrefUpdate = file::GetModificationTime(path);
+    gprefs->lastPrefUpdate = file::GetModificationTime(settingsPath);
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
@@ -172,7 +176,7 @@ bool Load() {
     //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
-    if (!file::Exists(path)) {
+    if (!file::Exists(settingsPath)) {
         Save();
     }
     return true;

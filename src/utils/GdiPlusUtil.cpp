@@ -523,11 +523,13 @@ RenderedBitmap* LoadRenderedBitmapWin(const char* path) {
     if (!path) {
         return nullptr;
     }
-    AutoFree data(file::ReadFile(path));
-    if (!data.data) {
+    ByteSlice data = file::ReadFile(path);
+    if (!data) {
         return nullptr;
     }
-    Gdiplus::Bitmap* bmp = BitmapFromDataWin(data.AsByteSlice());
+    Gdiplus::Bitmap* bmp = BitmapFromDataWin(data);
+    data.Free();
+
     if (!bmp) {
         return nullptr;
     }

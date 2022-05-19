@@ -529,10 +529,11 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     i64 fileSize = file::GetSize(pathA);
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
-        AutoFree d = engine->GetFileData();
+        ByteSlice d = engine->GetFileData();
         if (!d.empty()) {
             fileSize = d.size();
         }
+        d.Free();
     }
     if (-1 != fileSize) {
         str = FormatFileSize((size_t)fileSize);

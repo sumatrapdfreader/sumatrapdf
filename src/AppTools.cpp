@@ -386,12 +386,13 @@ Rect GetDefaultWindowPos() {
 }
 
 void SaveCallstackLogs() {
-    AutoFree s = dbghelp::GetCallstacks();
+    ByteSlice s = dbghelp::GetCallstacks();
     if (s.empty()) {
         return;
     }
-    AutoFreeWstr filePath(AppGenDataFilename(L"callstacks.txt"));
-    file::WriteFile(filePath.Get(), s.AsByteSlice());
+    char* filePath = AppGenDataFilenameTemp("callstacks.txt");
+    file::WriteFile(filePath, s);
+    s.Free();
 }
 
 // TODO: this can be used for extracting other data
@@ -412,7 +413,7 @@ static const WCHAR* Md5OfAppExe() {
     if (appPath.empty()) {
         return {};
     }
-    AutoFree d = file::ReadFile(appPath.data);
+    ByteSlice d = file::ReadFile(appPath.data);
     if (d.empty()) {
         return nullptr;
     }
@@ -422,7 +423,7 @@ static const WCHAR* Md5OfAppExe() {
 
     AutoFree md5HexA(_MemToHex(&md5));
     AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());
-
+    d.Free();
     return md5Hex.StealData();
 }
 

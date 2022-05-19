@@ -373,10 +373,12 @@ bool ChmModel::Load(const char* fileName) {
 struct ChmCacheEntry {
     // owned by ChmModel::poolAllocator
     const char* url = nullptr;
-    AutoFree data{};
+    ByteSlice data;
 
     explicit ChmCacheEntry(const char* url);
-    ~ChmCacheEntry() = default;
+    ~ChmCacheEntry() {
+        data.Free();
+    };
 };
 
 ChmCacheEntry::ChmCacheEntry(const char* url) {
@@ -463,7 +465,7 @@ ByteSlice ChmModel::GetDataForUrl(const WCHAR* urlW) {
         }
         urlDataCache.Append(e);
     }
-    return e->data.AsByteSlice();
+    return e->data;
 }
 
 void ChmModel::DownloadData(const char* url, ByteSlice data) {

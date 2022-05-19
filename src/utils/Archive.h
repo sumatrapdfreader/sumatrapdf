@@ -36,7 +36,6 @@ class MultiFormatArchive {
 
     size_t GetFileId(const char* fileName);
 
-    ByteSlice GetFileDataByName(const WCHAR* filename);
     ByteSlice GetFileDataByName(const char* filename);
     ByteSlice GetFileDataById(size_t fileId);
 

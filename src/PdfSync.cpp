@@ -195,16 +195,17 @@ static char* Advance0Line(char* line, char* end) {
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
 int Pdfsync::RebuildIndex() {
-    AutoFree data(file::ReadFile(syncfilepath));
-    if (!data.data) {
+    ByteSlice data = file::ReadFile(syncfilepath);
+    if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
+
+    char* line = (char*)data.Get();
     // convert the file data into a list of zero-terminated strings
-    str::TransCharsInPlace(data.data, "\r\n", "\0\0");
+    str::TransCharsInPlace(line, "\r\n", "\0\0");
 
     // parse preamble (jobname and version marker)
-    char* line = data.data;
-    char* dataEnd = data.data + data.size();
+    char* dataEnd = line + data.size();
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(line, "*/", " \\");

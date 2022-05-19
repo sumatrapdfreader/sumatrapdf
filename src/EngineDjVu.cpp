@@ -188,11 +188,12 @@ struct DjVuContext {
 
     ddjvu_document_t* OpenStream(IStream* stream) {
         ScopedCritSec scope(&lock);
-        AutoFree d = GetDataFromStream(stream, nullptr);
+        ByteSlice d = GetDataFromStream(stream, nullptr);
+        AutoFree dFree(d.Get());
         if (d.empty() || d.size() > ULONG_MAX) {
             return nullptr;
         }
-        auto res = ddjvu_document_create_by_data(ctx, d.data, (ULONG)d.size());
+        auto res = ddjvu_document_create_by_data(ctx, d, (ULONG)d.size());
         return res;
     }
 };
@@ -766,8 +767,9 @@ ByteSlice EngineDjVu::GetFileData() {
 
 bool EngineDjVu::SaveFileAs(const char* dstPath) {
     if (stream) {
-        AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsByteSlice());
+        ByteSlice d = GetDataFromStream(stream, nullptr);
+        bool ok = !d.empty() && file::WriteFile(dstPath, d);
+        d.Free();
         if (ok) {
             return true;
         }

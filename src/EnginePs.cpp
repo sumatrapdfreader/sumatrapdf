@@ -187,12 +187,13 @@ static EngineBase* ps2pdf(const char* pathA) {
         return nullptr;
     }
 
-    AutoFree pdfData = file::ReadFile(tmpFile);
+    ByteSlice pdfData = file::ReadFile(tmpFile);
     if (pdfData.empty()) {
         return nullptr;
     }
 
-    auto strm = CreateStreamFromData(pdfData.AsByteSlice());
+    IStream* strm = CreateStreamFromData(pdfData);
+    pdfData.Free();
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;

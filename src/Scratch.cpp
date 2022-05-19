@@ -96,7 +96,7 @@ Vec<FileData*> MobiToEpub2(const char* path) {
     if (!doc) {
         return res;
     }
-    auto d = doc->GetHtmlData();
+    ByteSlice d = doc->GetHtmlData();
     {
         auto e = new FileData();
         e->name = str::Dup("input.htm");
@@ -185,8 +185,8 @@ void LoadFile() {
         auto dur = TimeSinceInMs(timeStart);
         logf("LoadFile() took %.2f ms\n", dur);
     };
-    auto d = file::ReadFile(rarFilePath);
-    free(d.data());
+    ByteSlice d = file::ReadFile(rarFilePath);
+    d.Free();
 }
 
 // return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD

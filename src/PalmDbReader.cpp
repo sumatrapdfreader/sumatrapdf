@@ -132,9 +132,8 @@ PdbReader* PdbReader::CreateFromData(ByteSlice d) {
 }
 
 PdbReader* PdbReader::CreateFromFile(const char* path) {
-    auto d = file::ReadFile(path);
-    ByteSlice bytes = {(u8*)d.data(), d.size()};
-    return CreateFromData(bytes);
+    ByteSlice d = file::ReadFile(path);
+    return CreateFromData(d);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {

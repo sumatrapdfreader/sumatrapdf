@@ -177,8 +177,8 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 
 // add a given file under (optional) nameInZip
 bool ZipCreator::AddFile(const char* path, const char* nameInZip) {
-    AutoFree fileData = file::ReadFile(path);
-    if (!fileData.data) {
+    ByteSlice fileData = file::ReadFile(path);
+    if (!fileData) {
         return false;
     }
 
@@ -199,7 +199,9 @@ bool ZipCreator::AddFile(const char* path, const char* nameInZip) {
     char* name = str::Dup(nameInZip);
     str::TransCharsInPlace(name, "\\", "/");
 
-    return AddFileData(name, fileData.Get(), fileData.size(), dosdatetime);
+    bool res = AddFileData(name, fileData.Get(), fileData.size(), dosdatetime);
+    fileData.Free();
+    return res;
 }
 
 // we use the filePath relative to dir as the zip name

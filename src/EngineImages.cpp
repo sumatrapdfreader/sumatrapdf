@@ -306,11 +306,11 @@ bool EngineImages::SaveFileAs(const char* dstPath) {
             return true;
         }
     }
-    AutoFree d = GetFileData();
+    ByteSlice d = GetFileData();
     if (d.empty()) {
         return false;
     }
-    return file::WriteFile(dstPath, d.AsByteSlice());
+    return file::WriteFile(dstPath, d);
 }
 
 ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
@@ -543,8 +543,8 @@ bool EngineImage::LoadSingleFile(const char* path) {
     }
     SetFileName(path);
 
-    AutoFree data = file::ReadFile(path);
-    const char* fileExtA = GfxFileExtFromData(data.AsByteSlice());
+    ByteSlice data = file::ReadFile(path);
+    const char* fileExtA = GfxFileExtFromData(data);
     if (fileExtA == nullptr) {
         Kind kind = GuessFileTypeFromName(path);
         fileExtA = GfxFileExtFromKind(kind);
@@ -552,7 +552,8 @@ bool EngineImage::LoadSingleFile(const char* path) {
     CrashIf(fileExtA == nullptr);
     fileExt = fileExtA;
     str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExtA));
-    image = BitmapFromData(data.AsByteSlice());
+    image = BitmapFromData(data);
+    data.Free();
     return FinishLoading();
 }
 
@@ -573,8 +574,9 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     }
     str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExtA));
 
-    AutoFree data = GetDataFromStream(stream, nullptr);
-    image = BitmapFromData(data.AsByteSlice());
+    ByteSlice data = GetDataFromStream(stream, nullptr);
+    image = BitmapFromData(data);
+    data.Free();
     return FinishLoading();
 }
 
@@ -709,13 +711,13 @@ bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
     PdfCreator* c = new PdfCreator();
     auto dpi = GetFileDPI();
     if (FileName()) {
-        auto data = file::ReadFile(FileName());
+        ByteSlice data = file::ReadFile(FileName());
         ok = c->AddPageFromImageData(data, dpi);
-        str::Free(data);
+        data.Free();
     } else {
-        auto data = GetDataFromStream(fileStream, nullptr);
+        ByteSlice data = GetDataFromStream(fileStream, nullptr);
         ok = c->AddPageFromImageData(data, dpi);
-        str::Free(data);
+        data.Free();
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
@@ -903,11 +905,10 @@ TocTree* EngineImageDir::GetToc() {
 
 bool EngineImageDir::SaveFileAs(const char* dstPath) {
     // only copy the files if the target directory doesn't exist yet
-    WCHAR* dstPathW = ToWstrTemp(dstPath);
-    if (!CreateDirectoryW(dstPathW, nullptr)) {
+    bool ok = dir::CreateAll(dstPath);
+    if (!ok) {
         return false;
     }
-    bool ok = true;
     for (char* pathOld : pageFileNames) {
         const char* fileName = path::GetBaseNameTemp(pathOld);
         char* pathNew = path::JoinTemp(dstPath, fileName);
@@ -918,21 +919,21 @@ bool EngineImageDir::SaveFileAs(const char* dstPath) {
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     char* path = pageFileNames.at(pageNo - 1);
-    AutoFree bmpData = file::ReadFile(path);
-    ;
-    if (bmpData.data) {
+    ByteSlice bmpData = file::ReadFile(path);
+    AutoFree bmpDataFree = bmpData;
+    if (bmpData) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData.AsByteSlice());
+        return BitmapFromData(bmpData);
     }
     return nullptr;
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
     char* path = pageFileNames.at(pageNo - 1);
-    AutoFree bmpData = file::ReadFile(path);
-    if (bmpData.data) {
-        ByteSlice sp{(u8*)bmpData.data, bmpData.size()};
-        Size size = BitmapSizeFromData(sp);
+    ByteSlice bmpData = file::ReadFile(path);
+    if (bmpData) {
+        Size size = BitmapSizeFromData(bmpData);
+        bmpData.Free();
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
     return RectF();
@@ -1140,9 +1141,10 @@ bool EngineCbx::FinishLoading() {
         }
     }
 
-    AutoFree metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
-    if (metadata.data) {
-        ParseComicInfoXml(metadata.AsByteSlice());
+    ByteSlice metadata = cbxFile->GetFileDataByName("ComicInfo.xml");
+    if (metadata) {
+        ParseComicInfoXml(metadata);
+        metadata.Free();
     }
     const char* comment = cbxFile->GetComment();
     if (comment) {

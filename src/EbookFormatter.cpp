@@ -187,11 +187,12 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    AutoFree src(str::Dup(attr->val, attr->valLen));
+    char* src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
-    AutoFree data(epubDoc->GetFileData(src, pagePath));
-    if (data.data) {
-        ParseStyleSheet(data.data, data.size());
+    ByteSlice data = epubDoc->GetFileData(src, pagePath);
+    if (data) {
+        ParseStyleSheet(data, data.size());
+        data.Free();
     }
 }
 
@@ -373,8 +374,9 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
 
     AutoFree src(str::Dup(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    AutoFree data(htmlDoc->GetFileData(src));
-    if (data.data) {
-        ParseStyleSheet(data.data, data.size());
+    ByteSlice data = htmlDoc->GetFileData(src);
+    if (data) {
+        ParseStyleSheet(data, data.size());
     }
+    data.Free();
 }

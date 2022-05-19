@@ -323,12 +323,13 @@ bool EpubDoc::Load() {
     if (!zip) {
         return false;
     }
-    AutoFree container(zip->GetFileDataByName("META-INF/container.xml"));
-    if (!container.data) {
+    ByteSlice container = zip->GetFileDataByName("META-INF/container.xml");
+    if (!container) {
         return false;
     }
+    AutoFree contFree = container.Get();
     HtmlParser parser;
-    HtmlElement* node = parser.ParseInPlace(container.AsByteSlice());
+    HtmlElement* node = parser.ParseInPlace(container);
     if (!node) {
         return false;
     }
@@ -346,9 +347,9 @@ bool EpubDoc::Load() {
 
     // encrypted files will be ignored (TODO: support decryption)
     StrVec encList;
-    AutoFree encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
-    if (encryption.data) {
-        (void)parser.ParseInPlace(encryption.AsByteSlice());
+    ByteSlice encryption = zip->GetFileDataByName("META-INF/encryption.xml");
+    if (encryption) {
+        (void)parser.ParseInPlace(encryption);
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR* uriW = cr->GetAttribute("URI");
@@ -360,14 +361,16 @@ bool EpubDoc::Load() {
             }
             cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
         }
+        encryption.Free();
     }
 
-    AutoFree content(zip->GetFileDataByName(contentPath));
-    if (!content.data) {
+    ByteSlice content = zip->GetFileDataByName(contentPath);
+    AutoFree contentFree = content.Get();
+    if (!content) {
         return false;
     }
-    ParseMetadata(content.data);
-    node = parser.ParseInPlace(content.AsByteSlice());
+    ParseMetadata(content);
+    node = parser.ParseInPlace(content);
     if (!node) {
         return false;
     }
@@ -453,13 +456,13 @@ bool EpubDoc::Load() {
 
         const char* fileName = pathList.at(idList.Find(idref));
         char* fullPath = str::JoinTemp(contentPath, fileName);
-        AutoFree html = zip->GetFileDataByName(fullPath);
-        if (!html.data) {
+        ByteSlice html = zip->GetFileDataByName(fullPath);
+        if (!html) {
             continue;
         }
-        char* decoded = DecodeTextToUtf8(html.data, true);
-        html.TakeOwnershipOf(decoded);
-        if (!html.data) {
+        char* decoded = DecodeTextToUtf8(html, true);
+        html.Free();
+        if (!decoded) {
             continue;
         }
         // insert explicit page-breaks between sections including
@@ -467,7 +470,8 @@ bool EpubDoc::Load() {
         ReportIf(str::FindChar(fullPath, '"'));
         str::TransCharsInPlace(fullPath, "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", fullPath);
-        htmlData.Append(html.data);
+        htmlData.Append(decoded);
+        str::Free(decoded);
     }
 
     return htmlData.size() > 0;
@@ -719,7 +723,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     AutoFree tocData;
     {
         ScopedCritSec scope(&zipAccess);
-        auto res = zip->GetFileDataByName(tocPath);
+        ByteSlice res = zip->GetFileDataByName(tocPath);
         tocDataLen = res.size();
         tocData.Set(res);
     }
@@ -836,7 +840,7 @@ static ByteSlice loadFromStream(Fb2Doc* doc) {
 bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
 
-    AutoFree data;
+    ByteSlice data;
     if (fileName) {
         data = loadFromFile(this);
     } else if (stream) {
@@ -845,13 +849,15 @@ bool Fb2Doc::Load() {
     if (data.empty()) {
         return false;
     }
-    char* tmp = DecodeTextToUtf8(data.Get(), true);
+    AutoFree tmp = DecodeTextToUtf8(data, true);
+    data.Free();
     if (!tmp) {
         return false;
     }
-    data.TakeOwnershipOf(tmp);
 
-    HtmlPullParser parser(data.AsByteSlice());
+    ByteSlice data2(tmp.Get());
+
+    HtmlPullParser parser(data2);
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     const char* bodyStart = nullptr;
@@ -1176,9 +1182,10 @@ bool PalmDoc::Load() {
     ByteSlice text = mobiDoc->GetHtmlData();
     uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
     AutoFree textUtf8 = strconv::ToMultiByte((const char*)text.data(), codePage, CP_UTF8);
+    text.Free();
 
     const char* start = textUtf8.Get();
-    const char* end = start + textUtf8.size();
+    const char* end = start + str::Len(textUtf8);
     // TODO: speedup by not calling htmlData.Append() for every byte
     // but gather spans and memcpy them wholesale
     for (const char* curr = start; curr < end; curr++) {
@@ -1245,22 +1252,27 @@ HtmlDoc::~HtmlDoc() {
         str::Free(img.base);
         str::Free(img.fileName);
     }
+    htmlData.Free();
 }
 
 bool HtmlDoc::Load() {
-    AutoFree data(file::ReadFile(fileName));
-    if (!data.data) {
-        return false;
-    }
-    htmlData.Set(DecodeTextToUtf8(data.data, true));
-    if (!htmlData) {
-        return false;
+    {
+        ByteSlice data = file::ReadFile(fileName);
+        if (!data) {
+            return false;
+        }
+        char* decoded = DecodeTextToUtf8(data, true);
+        if (!decoded) {
+            return false;
+        }
+        htmlData = decoded;
+        data.Free();
     }
 
     pagePath.SetCopy(fileName);
     str::TransCharsInPlace(pagePath, "\\", "/");
 
-    HtmlPullParser parser(htmlData.AsByteSlice());
+    HtmlPullParser parser(htmlData);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
@@ -1288,7 +1300,7 @@ bool HtmlDoc::Load() {
 }
 
 ByteSlice HtmlDoc::GetHtmlData() {
-    return htmlData.AsByteSlice();
+    return htmlData;
 }
 
 ByteSlice* HtmlDoc::GetImageData(const char* fileName) {
@@ -1501,17 +1513,24 @@ static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
 }
 
 bool TxtDoc::Load() {
-    AutoFree text(file::ReadFile(fileName));
+    ByteSlice fileContent = file::ReadFile(fileName);
+    if (!fileContent) {
+        return false;
+    }
+
+    AutoFreeStr text(fileContent);
     if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
-        text.TakeOwnershipOf(DecompressTcrText(text.data, text.size()));
+        char* s = DecompressTcrText(fileContent, fileContent.size());
+        if (!s) {
+            return false;
+        }
+        text.TakeOwnershipOf(s);
     }
-    if (!text.data) {
+    char* s = DecodeTextToUtf8(text.data);
+    if (!s) {
         return false;
     }
-    text.TakeOwnershipOf(DecodeTextToUtf8(text.data));
-    if (!text.data) {
-        return false;
-    }
+    text.TakeOwnershipOf(s);
 
     int rfc;
     isRFC = str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc) != nullptr;

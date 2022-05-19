@@ -104,9 +104,12 @@ static char* GetCharZ(ByteSlice d, size_t off) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
 void ChmFile::ParseWindowsData() {
-    AutoFree windowsData = GetData("/#WINDOWS");
-    auto stringsData = GetData("/#STRINGS");
+    ByteSlice windowsData = GetData("/#WINDOWS");
+    ByteSlice stringsData = GetData("/#STRINGS");
+
     AutoFree stringsDataFree(stringsData);
+    AutoFree windowsDataFree(windowsData);
+
     if (windowsData.empty() || stringsData.empty()) {
         return;
     }
@@ -115,7 +118,7 @@ void ChmFile::ParseWindowsData() {
         return;
     }
 
-    ByteReader rw(windowsData, windowsLen);
+    ByteReader rw(windowsData);
     size_t entries = rw.DWordLE(0);
     size_t entrySize = rw.DWordLE(4);
     if (entrySize < 188) {
@@ -166,7 +169,7 @@ static uint LcidToCodepage(DWORD lcid) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmFile::ParseSystemData() {
-    auto data = GetData("/#SYSTEM");
+    ByteSlice data = GetData("/#SYSTEM");
     if (data.empty()) {
         return false;
     }
@@ -237,8 +240,10 @@ char* ChmFile::ResolveTopicID(unsigned int id) const {
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
-            AutoFree stringsData(GetData("/#STRINGS"));
-            return GetCharZ(stringsData.AsByteSlice(), br.DWordLE(off + 4));
+            ByteSlice stringsData = GetData("/#STRINGS");
+            char* res = GetCharZ(stringsData, br.DWordLE(off + 4));
+            stringsData.Free();
+            return res;
         }
     }
     return nullptr;
@@ -263,8 +268,9 @@ void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
 }
 
 bool ChmFile::Load(const char* path) {
-    data = file::ReadFile(path);
-    chmHandle = chm_open((const char*)data.Get(), data.size());
+    ByteSlice fileContent = file::ReadFile(path);
+    data = fileContent;
+    chmHandle = chm_open(fileContent, fileContent.size());
     if (!chmHandle) {
         return false;
     }

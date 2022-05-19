@@ -714,7 +714,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
         ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
         gSettingsFile = (char*)d.data();
         DeleteGlobalPrefs(gp);
-        str::Free(prefsData.data());
+        prefsData.Free();
     }
 
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);

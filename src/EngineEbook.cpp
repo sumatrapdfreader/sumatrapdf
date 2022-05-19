@@ -797,8 +797,9 @@ ByteSlice EngineEpub::GetFileData() {
 
 bool EngineEpub::SaveFileAs(const char* dstPath) {
     if (stream) {
-        AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d.AsByteSlice());
+        ByteSlice d = GetDataFromStream(stream, nullptr);
+        bool ok = !d.empty() && file::WriteFile(dstPath, d);
+        d.Free();
         if (ok) {
             return true;
         }
@@ -1058,7 +1059,7 @@ IPageDestination* EngineMobi::GetNamedDest(const char* name) {
     }
     CrashIf(pageNo < 1 || pageNo > PageCount());
 
-    auto htmlData = doc->GetHtmlData();
+    ByteSlice htmlData = doc->GetHtmlData();
     size_t htmlLen = htmlData.size();
     const char* start = (const char*)htmlData.data();
     if ((size_t)filePos > htmlLen) {
@@ -1218,7 +1219,7 @@ EngineBase* CreateEnginePdbFromFile(const char* fileName) {
 
 class ChmDataCache {
     ChmFile* doc = nullptr; // owned by creator
-    AutoFree html;
+    ByteSlice html;
     Vec<ImageData> images;
 
   public:
@@ -1230,10 +1231,11 @@ class ChmDataCache {
             str::Free(img.base);
             str::Free(img.fileName);
         }
+        html.Free();
     }
 
     ByteSlice GetHtmlData() {
-        return html.AsByteSlice();
+        return html;
     }
 
     ByteSlice* GetImageData(const char* id, const char* pagePath) {
@@ -1327,12 +1329,13 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    AutoFree src(str::Dup(attr->val, attr->valLen));
+    char* src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
-    AutoFree data = chmDoc->GetFileData(src, pagePath);
-    if (data.data) {
-        ParseStyleSheet(data.data, data.size());
+    ByteSlice data = chmDoc->GetFileData(src, pagePath);
+    if (data.Get()) {
+        ParseStyleSheet(data, data.size());
     }
+    data.Free();
 }
 
 /* EngineBase for handling CHM documents */
@@ -1468,15 +1471,16 @@ class ChmHtmlCollector : public EbookTocVisitor {
         defer {
             gAllowAllocFailure--;
         };
-        auto urlA(ToUtf8Temp(plainUrl));
-        AutoFree pageHtml = doc->GetData(urlA);
+        char* urlA = ToUtf8Temp(plainUrl);
+        ByteSlice pageHtml = doc->GetData(urlA);
         if (!pageHtml) {
             return;
         }
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlA);
-        auto charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
-        html.AppendAndFree(doc->ToUtf8((const u8*)pageHtml.data, charset));
+        uint charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
+        html.AppendAndFree(doc->ToUtf8((const u8*)pageHtml.Get(), charset));
         added.Append(plainUrl.Get());
+        pageHtml.Free();
     }
 };
 

@@ -111,11 +111,6 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
-ByteSlice MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
-    auto fileNameA = ToUtf8Temp(fileName);
-    return GetFileDataByName(fileNameA);
-}
-
 ByteSlice MultiFormatArchive::GetFileDataByName(const char* fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);

@@ -42,11 +42,17 @@ struct ByteSlice {
     u8* data() const {
         return d;
     }
+    u8* Get() const {
+        return d;
+    }
     size_t size() const {
         return sz;
     }
+    int Size() const {
+        return (int)sz;
+    }
     bool empty() const {
-        return !d || sz == 0;
+        return !d;
     }
     size_t Left() {
         return sz - (curr - d);
@@ -57,6 +63,15 @@ struct ByteSlice {
         }
         u8* res = (u8*)memdup(d, sz, 1);
         return {res, size()};
+    }
+    void Free() {
+        free(d);
+        d = nullptr;
+        sz = 0;
+        curr = nullptr;
+    }
+    operator const char*() {
+        return (const char*)d;
     }
 };
 

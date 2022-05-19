@@ -194,8 +194,8 @@ void InitializePolicies(bool restrict) {
         return;
     }
 
-    AutoFree restrictData(file::ReadFile(restrictPath));
-    SquareTree sqt(restrictData.data);
+    ByteSlice restrictData = file::ReadFile(restrictPath);
+    SquareTree sqt(restrictData);
     SquareTreeNode* polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
     if (!polsec) {
@@ -2589,9 +2589,10 @@ static void OnMenuSaveAs(WindowInfo* win) {
             FreePageText(&pageText);
         }
 
-        auto textA = ToUtf8Temp(text.LendData());
-        AutoFree textUTF8BOM = str::Join(UTF8_BOM, textA);
-        ok = file::WriteFile(realDstFileName, textUTF8BOM.AsByteSlice());
+        char* textA = ToUtf8Temp(text.LendData());
+        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textA);
+        ByteSlice data = textUTF8BOM;
+        ok = file::WriteFile(realDstFileName, data);
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         WCHAR* producerName = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);

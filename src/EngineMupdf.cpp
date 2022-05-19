@@ -492,7 +492,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < kMaxMemoryFileSize) {
-        auto dataTmp = file::ReadFile(path);
+        ByteSlice dataTmp = file::ReadFile(path);
         if (dataTmp.empty()) {
             // failed to read
             return nullptr;
@@ -508,7 +508,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
         if (!data) {
             return nullptr;
         }
-        str::Free(dataTmp.data());
+        dataTmp.Free();
 
         fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
         fz_var(buf);
@@ -1689,7 +1689,7 @@ ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
 }
 
 static ByteSlice TxtFileToHTML(const char* path) {
-    auto fd = file::ReadFile(path);
+    ByteSlice fd = file::ReadFile(path);
     if (fd.empty()) {
         return {};
     }
@@ -1729,12 +1729,8 @@ static ByteSlice PalmDocToHTML(const char* path) {
         return {};
     }
     AutoDelete<PalmDoc> delDoc;
-    auto html = doc->GetHtmlData();
-    if (html.empty()) {
-        return {};
-    }
-    auto res = str::Dup(html);
-    return {(u8*)res, html.size()};
+    ByteSlice html = doc->GetHtmlData();
+    return html.Clone();
 }
 
 bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
@@ -3285,9 +3281,10 @@ ByteSlice EngineMupdf::GetFileData() {
 }
 
 bool EngineMupdf::SaveFileAs(const char* dstPath) {
-    AutoFree d = GetFileData();
+    ByteSlice d = GetFileData();
     if (!d.empty()) {
-        bool ok = file::WriteFile(dstPath, d.AsByteSlice());
+        bool ok = file::WriteFile(dstPath, d);
+        d.Free();
         return ok;
     }
     auto srcPath = FileName();
@@ -3501,11 +3498,12 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
         if (files.size() != 1) {
             return nullptr;
         }
-        AutoFree d = archive->GetFileDataById(0);
+        ByteSlice d = archive->GetFileDataById(0);
         if (d.empty()) {
             return nullptr;
         }
-        auto strm = CreateStreamFromData(d.AsByteSlice());
+        IStream* strm = CreateStreamFromData(d);
+        d.Free();
         ScopedComPtr<IStream> stream(strm);
         if (!stream) {
             return nullptr;

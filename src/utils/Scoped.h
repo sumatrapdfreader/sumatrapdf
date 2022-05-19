@@ -95,7 +95,6 @@ struct AutoDelete {
 // AutoFree toFree = str::Dup("foo");
 struct AutoFree {
     char* data = nullptr;
-    size_t len = 0;
 
     AutoFree() = default;
     AutoFree(AutoFree& other) = delete;
@@ -103,29 +102,24 @@ struct AutoFree {
 
     AutoFree(const char* p) { // NOLINT
         data = (char*)p;
-        len = str::Len(data);
     }
 
     AutoFree(const u8* p) { // NOLINT
         data = (char*)p;
-        len = str::Len(data);
     }
 
     AutoFree(ByteSlice s) { // NOLINT
         data = (char*)s.data();
-        len = s.size();
     }
 
     void Set(const char* newPtr) {
         free(data);
         data = (char*)newPtr;
-        len = str::Len(data);
     }
 
     void Set(ByteSlice d) {
         free(data);
         data = (char*)d.data();
-        len = d.size();
     }
 
     void SetCopy(const char* newPtr) {
@@ -133,7 +127,6 @@ struct AutoFree {
         data = nullptr;
         if (newPtr) {
             data = str::Dup(newPtr);
-            len = str::Len(data);
         }
     }
 
@@ -148,9 +141,7 @@ struct AutoFree {
         }
         free(data);
         data = other.data;
-        len = other.len;
         other.data = nullptr;
-        other.len = 0;
         return *this;
     }
 
@@ -165,30 +156,18 @@ struct AutoFree {
         return data;
     }
 
-    // for convenince, we calculate the size if wasn't provided
-    // by the caller
-    size_t size() const {
-        return len;
-    }
-
     bool empty() const {
-        return (data == nullptr) || (len == 0);
-    }
-
-    ByteSlice AsByteSlice() const {
-        return {(u8*)data, len};
+        return (!data || !*data);
     }
 
     void Reset() {
         free(data);
         data = nullptr;
-        len = 0;
     }
 
     char* Release() {
         char* res = data;
         data = nullptr;
-        len = 0;
         return res;
     }
 
@@ -196,14 +175,9 @@ struct AutoFree {
         return this->Release();
     }
 
-    void TakeOwnershipOf(const char* s, size_t size = 0) {
+    void TakeOwnershipOf(const char* s) {
         free(data);
         data = (char*)s;
-        if (size == 0) {
-            len = str::Len(s);
-        } else {
-            len = size;
-        }
     }
 };
 

@@ -299,22 +299,26 @@ Kind GuessFileTypeFromContent(ByteSlice d) {
 static bool IsEpubArchive(MultiFormatArchive* archive) {
     // assume that if this file exists, this is a epub file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1801
-    AutoFree container(archive->GetFileDataByName("META-INF/container.xml"));
-    if (container.data) {
+    ByteSlice container = archive->GetFileDataByName("META-INF/container.xml");
+    if (container) {
+        container.Free();
         return true;
     }
 
-    AutoFree mimetype(archive->GetFileDataByName("mimetype"));
-    if (!mimetype.data) {
+    ByteSlice mimeType = archive->GetFileDataByName("mimetype");
+    if (!mimeType) {
         return false;
     }
-    char* d = mimetype.data;
+    AutoFree mtFree(mimeType);
+
+    char* mt = (char*)mimeType.Get();
     // trailing whitespace is allowed for the mimetype file
-    for (size_t i = mimetype.size(); i > 0; i--) {
-        if (!str::IsWs(d[i - 1])) {
+    size_t n = mimeType.size();
+    for (size_t i = n; i > 0; i--) {
+        if (!str::IsWs(mt[i - 1])) {
             break;
         }
-        d[i - 1] = '\0';
+        mt[i - 1] = '\0';
     }
 
 #if 0
@@ -325,12 +329,12 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
         return false; 
     }
 #endif
-    if (str::Eq(mimetype.data, "application/epub+zip")) {
+    if (str::Eq(mt, "application/epub+zip")) {
         return true;
     }
     // also open renamed .ibooks files
     // http://en.wikipedia.org/wiki/IBooks#Formats
-    return str::Eq(mimetype.data, "application/x-ibooks+zip");
+    return str::Eq(mt, "application/x-ibooks+zip");
 }
 
 // check if a given file is a likely a .zip archive containing XPS

@@ -41,12 +41,13 @@ HRESULT EpubFilter::OnInit() {
 
     // load content of EPUB document into a seekable stream
     HRESULT res;
-    AutoFree data = GetDataFromStream(m_pStream, &res);
+    ByteSlice data = GetDataFromStream(m_pStream, &res);
     if (data.empty()) {
         return res;
     }
 
-    auto strm = CreateStreamFromData(data.AsByteSlice());
+    IStream* strm = CreateStreamFromData(data);
+    data.Free();
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return E_FAIL;
@@ -76,7 +77,7 @@ static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
 static WCHAR* ExtractHtmlText(EpubDoc* doc) {
     log("ExtractHtmlText()\n");
 
-    auto d = doc->GetHtmlData();
+    ByteSlice d = doc->GetHtmlData();
     size_t len = d.size();
 
     str::Str text(len / 2);
