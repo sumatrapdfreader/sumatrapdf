@@ -984,7 +984,9 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
                 itemLink.Reset();
                 continue;
             }
-            visitor->Visit(itemText, itemLink, itemLevel);
+            char* txt = ToUtf8Temp(itemText);
+            char* link = ToUtf8Temp(itemLink);
+            visitor->Visit(txt, link, itemLevel);
             itemText.Reset();
             itemLink.Reset();
         } else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {

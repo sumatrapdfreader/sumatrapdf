@@ -6,6 +6,6 @@
 
 class EbookTocVisitor {
   public:
-    virtual void Visit(const WCHAR* name, const WCHAR* url, int level) = 0;
+    virtual void Visit(const char* name, const char* url, int level) = 0;
     virtual ~EbookTocVisitor() = default;
 };

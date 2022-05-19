@@ -648,7 +648,7 @@ class EbookTocBuilder : public EbookTocVisitor {
         this->engine = engine;
     }
 
-    void Visit(const WCHAR* name, const WCHAR* url, int level) override;
+    void Visit(const char* name, const char* url, int level) override;
 
     TocItem* GetRoot() {
         return root;
@@ -658,9 +658,7 @@ class EbookTocBuilder : public EbookTocVisitor {
     }
 };
 
-void EbookTocBuilder::Visit(const WCHAR* nameW, const WCHAR* urlW, int level) {
-    char* name = ToUtf8Temp(nameW);
-    char* url = ToUtf8Temp(urlW);
+void EbookTocBuilder::Visit(const char* name, const char* url, int level) {
     IPageDestination* dest;
     if (!url) {
         dest = nullptr;
@@ -1424,7 +1422,7 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
 
 class ChmHtmlCollector : public EbookTocVisitor {
     ChmFile* doc = nullptr;
-    WStrVec added;
+    StrVec added;
     str::Str html;
 
   public:
@@ -1435,7 +1433,8 @@ class ChmHtmlCollector : public EbookTocVisitor {
     char* GetHtml() {
         // first add the homepage
         const char* index = doc->GetHomePath();
-        AutoFreeWstr url(doc->ToWstr(index));
+        AutoFreeWstr urlW(doc->ToWstr(index));
+        char* url = ToUtf8Temp(urlW);
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1449,18 +1448,19 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 if (*path == '/') {
                     path++;
                 }
-                url.Set(ToWstr(path));
+                urlW.Set(ToWstr(path));
+                url = ToUtf8Temp(urlW);
                 Visit(nullptr, url, -1);
             }
         }
         return html.StealData();
     }
 
-    void Visit(__unused const WCHAR* name, const WCHAR* url, __unused int level) override {
+    void Visit(__unused const char* name, const char* url, __unused int level) override {
         if (!url || url::IsAbsolute(url)) {
             return;
         }
-        AutoFreeWstr plainUrl(url::GetFullPath(url));
+        char* plainUrl = url::GetFullPathTemp(url);
         if (added.FindI(plainUrl) != -1) {
             return;
         }
@@ -1468,15 +1468,14 @@ class ChmHtmlCollector : public EbookTocVisitor {
         defer {
             gAllowAllocFailure--;
         };
-        char* urlA = ToUtf8Temp(plainUrl);
-        ByteSlice pageHtml = doc->GetData(urlA);
+        ByteSlice pageHtml = doc->GetData(plainUrl);
         if (!pageHtml) {
             return;
         }
-        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlA);
+        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl);
         uint charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
         html.AppendAndFree(doc->ToUtf8((const u8*)pageHtml.Get(), charset));
-        added.Append(plainUrl.Get());
+        added.Append(plainUrl);
         pageHtml.Free();
     }
 };
@@ -1536,7 +1535,7 @@ TocTree* EngineChm::GetToc() {
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)
-        builder.Visit(L"Index", nullptr, 1);
+        builder.Visit("Index", nullptr, 1);
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }

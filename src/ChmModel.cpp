@@ -340,9 +340,9 @@ class ChmTocBuilder : public EbookTocVisitor {
         }
     }
 
-    void Visit(const WCHAR* nameW, const WCHAR* urlW, int level) override {
-        char* name = strconv::WstrToUtf8(nameW, (size_t)-1, allocator);
-        char* url = strconv::WstrToUtf8(urlW, (size_t)-1, allocator);
+    void Visit(const char* name, const char* url, int level) override {
+        name = str::Dup(allocator, name, (size_t)-1);
+        url = str::Dup(allocator, url, (size_t)-1);
         int pageNo = CreatePageNoForURL(url);
         auto item = ChmTocTraceItem{name, url, level, pageNo};
         tocTrace->Append(item);

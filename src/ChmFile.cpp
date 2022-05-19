@@ -391,7 +391,9 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         return false;
     }
 
-    visitor->Visit(name, local, level);
+    char* nameA = ToUtf8Temp(name);
+    char* localA = ToUtf8Temp(local);
+    visitor->Visit(nameA, localA, level);
     return true;
 }
 
@@ -446,13 +448,17 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         return false;
     }
 
+    char* keywordA = ToUtf8Temp(keyword);
     if (references.size() == 2) {
-        visitor->Visit(keyword, references.at(1), level);
+        char* referencesA = ToUtf8Temp(references[1]);
+        visitor->Visit(keywordA, referencesA, level);
         return true;
     }
-    visitor->Visit(keyword, nullptr, level);
+    visitor->Visit(keywordA, nullptr, level);
     for (int i = 0; i < references.Size(); i += 2) {
-        visitor->Visit(references.at(i), references.at(i + 1), level + 1);
+        char* ref1 = ToUtf8Temp(references[i]);
+        char* ref2 = ToUtf8Temp(references[i + 1]);
+        visitor->Visit(ref1, ref2, level + 1);
     }
     return true;
 }

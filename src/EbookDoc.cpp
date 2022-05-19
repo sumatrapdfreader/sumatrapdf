@@ -660,7 +660,9 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
                 href.Set(NormalizeURL(href, pagePath));
                 itemSrc.Set(strconv::FromHtmlUtf8(href, str::Len(href)));
             }
-            visitor->Visit(itemText, itemSrc, level);
+            char* txt = ToUtf8Temp(itemText);
+            char* src = ToUtf8Temp(itemSrc);
+            visitor->Visit(txt, src, level);
         }
     }
 
@@ -686,7 +688,9 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
            (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
         if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS)) {
             if (itemText) {
-                visitor->Visit(itemText, itemSrc, level);
+                char* txt = ToUtf8Temp(itemText);
+                char* src = ToUtf8Temp(itemSrc);
+                visitor->Visit(txt, src, level);
                 itemText.Reset();
                 itemSrc.Reset();
             }
@@ -1032,8 +1036,9 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
                 str::NormalizeWSInPlace(itemText);
             }
             if (!str::IsEmpty(itemText.Get())) {
-                AutoFreeWstr url(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
-                visitor->Visit(itemText, url, level);
+                AutoFreeStr url(str::Format(FB2_TOC_ENTRY_MARK "%d", titleCount));
+                char* txt = ToUtf8Temp(itemText);
+                visitor->Visit(txt, url, level);
                 itemText.Reset();
             }
             inTitle = false;
@@ -1224,8 +1229,8 @@ bool PalmDoc::HasToc() const {
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < tocEntries.Size(); i++) {
-        AutoFreeWstr url(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", int(i + 1)));
-        WCHAR* name = ToWstrTemp(tocEntries.at(i));
+        AutoFreeStr url(str::Format(PDB_TOC_ENTRY_MARK "%d", i + 1));
+        char* name = tocEntries[i];
         visitor->Visit(name, url, 1);
     }
     return true;
@@ -1644,7 +1649,9 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
                 dot = SkipDigits(dot + 1);
             }
         }
-        visitor->Visit(title, id, level);
+        char* titleA = ToUtf8Temp(title);
+        char* idA = ToUtf8Temp(id);
+        visitor->Visit(titleA, idA, level);
     }
 
     return true;
