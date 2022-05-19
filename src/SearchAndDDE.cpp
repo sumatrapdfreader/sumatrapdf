@@ -480,8 +480,8 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         }
     }
 
-    WCHAR* inverseSearch = ToWstrTemp(gGlobalPrefs->inverseSearchCmdLine);
-    WCHAR* toFree = nullptr;
+    char* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
+    char* toFree = nullptr;
     if (!inverseSearch) {
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands(nullptr);
@@ -490,7 +490,8 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 
     AutoFreeWstr cmdline;
     if (inverseSearch) {
-        cmdline.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
+        WCHAR* ws = ToWstrTemp(inverseSearch);
+        cmdline.Set(dm->pdfSync->PrepareCommandline(ws, srcfilepath, line, col));
     }
     if (!str::IsEmpty(cmdline.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory

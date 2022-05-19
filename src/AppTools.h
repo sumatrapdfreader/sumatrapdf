@@ -12,7 +12,7 @@ void SetAppDataPath(const char* path);
 
 // bool IsExeAssociatedWithPdfExtension();
 
-WCHAR* AutoDetectInverseSearchCommands(HWND);
+char* AutoDetectInverseSearchCommands(HWND);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 

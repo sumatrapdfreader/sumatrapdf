@@ -634,11 +634,11 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
                 // Fill the combo with the list of possible inverse search commands
                 // Try to select a correct default when first showing this dialog
-                const WCHAR* cmdLine = ToWstrTemp(prefs->inverseSearchCmdLine);
-                AutoFreeWstr inverseSearch;
+                const char* cmdLine = prefs->inverseSearchCmdLine;
+                AutoFreeStr inverseSearch;
                 if (!cmdLine) {
                     HWND hwnd = GetDlgItem(hDlg, IDC_CMDLINE);
-                    WCHAR* cmd = AutoDetectInverseSearchCommands(hwnd);
+                    char* cmd = AutoDetectInverseSearchCommands(hwnd);
                     inverseSearch.Set(cmd);
                     cmdLine = inverseSearch;
                 }
@@ -648,7 +648,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 if (CB_ERR == ind) {
                     // if no existing command was selected then set the user custom command in the combo
                     ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), cmdLine);
-                    SetDlgItemText(hDlg, IDC_CMDLINE, cmdLine);
+                    SetDlgItemTextA(hDlg, IDC_CMDLINE, cmdLine);
                 } else {
                     // select the active command
                     SendMessageW(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM)ind, 0);

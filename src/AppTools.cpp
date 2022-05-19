@@ -218,29 +218,30 @@ static struct {
 //      commands.
 // Returns:
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
-WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
-    WCHAR* firstEditor = nullptr;
-    WStrVec foundExes;
+char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
+    char* firstEditor = nullptr;
+    StrVec foundExes;
 
     for (auto& rule : editorRules) {
         WCHAR* regKey = ToWstrTemp(rule.regKey);
         WCHAR* regValue = ToWstrTemp(rule.regValue);
-        AutoFreeWstr path(LoggedReadRegStr2(regKey, regValue));
-        if (!path) {
+        AutoFreeWstr pathW(LoggedReadRegStr2(regKey, regValue));
+        if (!pathW) {
             continue;
         }
 
-        AutoFreeWstr exePath;
-        WCHAR* binaryFileName = ToWstrTemp(rule.binaryFilename);
-        WCHAR* inverseSearchArgs = ToWstrTemp(rule.inverseSearchArgs);
+        char* path = ToUtf8Temp(pathW);
+        char* exePath = nullptr;
+        const char* binaryFileName = rule.binaryFilename;
+        const char* inverseSearchArgs = rule.inverseSearchArgs;
         if (rule.type == SiblingPath) {
             // remove file part
-            WCHAR* dir = path::GetDirTemp(path);
-            exePath.Set(path::Join(dir, binaryFileName));
+            char* dir = path::GetDirTemp(path);
+            exePath = path::JoinTemp(dir, binaryFileName);
         } else if (rule.type == BinaryDir) {
-            exePath.Set(path::Join(path, binaryFileName));
+            exePath = path::JoinTemp(path, binaryFileName);
         } else { // if (editor_rules[i].Type == BinaryPath)
-            exePath.Set(path.StealData());
+            exePath = path;
         }
         // don't show duplicate entries
         if (foundExes.FindI(exePath) != -1) {
@@ -248,29 +249,31 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
         }
         // don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {
-            foundExes.Append(exePath.Get());
+            foundExes.Append(exePath);
             continue;
         }
 
-        AutoFreeWstr editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), inverseSearchArgs));
+        AutoFreeStr editorCmd(str::Format("\"%s\" %s", exePath, inverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
             return editorCmd.StealData();
         }
 
-        ComboBox_AddString(hwndCombo, editorCmd);
+        WCHAR* ws = ToWstrTemp(editorCmd);
+        ComboBox_AddString(hwndCombo, ws);
         if (!firstEditor) {
             firstEditor = editorCmd.StealData();
         }
-        foundExes.Append(exePath.Get());
+        foundExes.Append(exePath);
     }
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
-        firstEditor = str::Dup(L"notepad %f");
+        firstEditor = str::Dup("notepad %f");
         if (hwndCombo) {
-            ComboBox_AddString(hwndCombo, firstEditor);
+            WCHAR* ws = ToWstrTemp(firstEditor);
+            ComboBox_AddString(hwndCombo, ws);
         }
     }
     return firstEditor;
