@@ -383,7 +383,7 @@ static char* PdfToUtf8(fz_context* ctx, pdf_obj* obj) {
 
 // some PDF documents contain control characters in outline titles or /Info properties
 // we replace them with spaces and cleanup for display with NormalizeWSInPlace()
-static WCHAR* PdfCleanString(WCHAR* s) {
+static WCHAR* PdfCleanStringInPlace(WCHAR* s) {
     if (!s) {
         return nullptr;
     }
@@ -397,23 +397,6 @@ static WCHAR* PdfCleanString(WCHAR* s) {
     }
     str::NormalizeWSInPlace(s);
     return s;
-}
-
-// some PDF documents contain control characters in outline titles or /Info properties
-// we replace them with spaces and cleanup for display with NormalizeWSInPlace()
-static void PdfCleanString(char* s) {
-    if (!s) {
-        return;
-    }
-    char* curr = s;
-    while (*curr) {
-        char c = *curr;
-        if (c < 0x20) {
-            *curr = ' ';
-        }
-        curr++;
-    }
-    str::NormalizeWSInPlace(s);
 }
 
 struct istream_filter {
@@ -2318,8 +2301,11 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
     while (outline) {
         char* name = nullptr;
         if (outline->title) {
-            name = str::Dup(outline->title);
-            PdfCleanString(name);
+            // must convert to Unicode because PdfCleanString() doesn't work on utf8
+            WCHAR* nameW = ToWstr(outline->title);
+            PdfCleanStringInPlace(nameW);
+            name = ToUtf8(nameW);
+            str::Free(nameW);
         }
         if (!name) {
             name = str::Dup("");
@@ -3247,7 +3233,7 @@ WCHAR* EngineMupdf::GetProperty(DocumentProperty prop) {
                 return nullptr;
             }
             WCHAR* s = PdfToWstr(ctx, obj);
-            return PdfCleanString(s);
+            return PdfCleanStringInPlace(s);
         }
     }
     return nullptr;
