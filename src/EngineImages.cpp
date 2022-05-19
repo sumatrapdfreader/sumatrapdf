@@ -920,12 +920,13 @@ bool EngineImageDir::SaveFileAs(const char* dstPath) {
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     char* path = pageFileNames.at(pageNo - 1);
     ByteSlice bmpData = file::ReadFile(path);
-    AutoFree bmpDataFree = bmpData;
-    if (bmpData) {
-        deleteAfterUse = true;
-        return BitmapFromData(bmpData);
+    if (!bmpData) {
+        return nullptr;
     }
-    return nullptr;
+    deleteAfterUse = true;
+    Bitmap* res = BitmapFromData(bmpData);
+    bmpData.Free();
+    return res;
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {

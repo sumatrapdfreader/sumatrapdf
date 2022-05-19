@@ -108,18 +108,9 @@ struct AutoFree {
         data = (char*)p;
     }
 
-    AutoFree(ByteSlice s) { // NOLINT
-        data = (char*)s.data();
-    }
-
     void Set(const char* newPtr) {
         free(data);
         data = (char*)newPtr;
-    }
-
-    void Set(ByteSlice d) {
-        free(data);
-        data = (char*)d.data();
     }
 
     void SetCopy(const char* newPtr) {

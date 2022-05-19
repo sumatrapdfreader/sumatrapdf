@@ -173,7 +173,7 @@ bool ChmFile::ParseSystemData() {
     if (data.empty()) {
         return false;
     }
-    AutoFree dataFree = data;
+    AutoFree dataFree = data.Get();
 
     ByteReader r(data);
     DWORD len = 0;
@@ -231,7 +231,7 @@ bool ChmFile::ParseSystemData() {
 
 char* ChmFile::ResolveTopicID(unsigned int id) const {
     ByteSlice ivbData = GetData("/#IVB");
-    AutoFree f = ivbData;
+    AutoFree f = ivbData.Get();
     size_t ivbLen = ivbData.size();
     ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
@@ -269,7 +269,7 @@ void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
 
 bool ChmFile::Load(const char* path) {
     ByteSlice fileContent = file::ReadFile(path);
-    data = fileContent;
+    data = fileContent.Get();
     chmHandle = chm_open(fileContent, fileContent.size());
     if (!chmHandle) {
         return false;
@@ -514,11 +514,12 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
     if (!path) {
         return false;
     }
-    AutoFree htmlData = GetData(path);
+    ByteSlice htmlData = GetData(path);
     if (htmlData.empty()) {
         return false;
     }
-    const char* html = htmlData.Get();
+    const char* html = htmlData;
+    AutoFree htmlFree = htmlData.Get();
 
     HtmlParser p;
     uint cp = codepage;
