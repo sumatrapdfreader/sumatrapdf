@@ -875,26 +875,12 @@ bool Create(const char* dir) {
 }
 
 // creates a directory and all its parent directories that don't exist yet
-bool CreateAll(const WCHAR* dir) {
-    WCHAR* parent = path::GetDirTemp(dir);
-    if (!str::Eq(parent, dir) && !Exists(parent)) {
-        CreateAll(parent);
-    }
-    return Create(dir);
-}
-
-// creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const char* dir) {
     char* parent = path::GetDirTemp(dir);
     if (!str::Eq(parent, dir) && !Exists(parent)) {
         CreateAll(parent);
     }
     return Create(dir);
-}
-
-bool CreateForFile(const WCHAR* path) {
-    WCHAR* dir = path::GetDirTemp(path);
-    return CreateAll(dir);
 }
 
 bool CreateForFile(const char* path) {
