@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-extern WCHAR* gCrashFilePath;
+extern char* gCrashFilePath;
 
 void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir);
 void UninstallCrashHandler();

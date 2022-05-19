@@ -2557,9 +2557,9 @@ static void OnMenuSaveAs(WindowInfo* win) {
         return;
     }
 
-    WCHAR* realDstFileName = dstFileName;
-    bool convertToTXT = canConvertToTXT && str::EndsWithI(dstFileName, L".txt");
-    bool convertToPDF = canConvertToPDF && str::EndsWithI(dstFileName, L".pdf");
+    char* realDstFileName = ToUtf8Temp(dstFileName);
+    bool convertToTXT = canConvertToTXT && str::EndsWithI(realDstFileName, ".txt");
+    bool convertToPDF = canConvertToPDF && str::EndsWithI(realDstFileName, ".pdf");
 
     // Make sure that the file has a valid ending
     if (!str::EndsWithI(dstFileName, defExt) && !convertToTXT && !convertToPDF) {
@@ -2570,10 +2570,10 @@ static void OnMenuSaveAs(WindowInfo* win) {
             defExt = L".pdf";
             convertToPDF = true;
         }
-        realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
+        // TODO: leaks
+        realDstFileName = str::Format("%s%s", dstFileName, defExt);
     }
 
-    auto pathA(ToUtf8Temp(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2595,27 +2595,27 @@ static void OnMenuSaveAs(WindowInfo* win) {
         // Convert the file into a PDF one
         char* producerName = str::JoinTemp(kAppNameA, " ", CURR_VERSION_STRA);
         PdfCreator::SetProducerName(producerName);
-        ok = engine->SaveFileAsPDF(pathA);
+        ok = engine->SaveFileAsPDF(realDstFileName);
         if (!ok && gIsDebugBuild) {
             // rendering includes all page annotations
-            ok = PdfCreator::RenderToFile(pathA, engine);
+            ok = PdfCreator::RenderToFile(realDstFileName, engine);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(pathA);
+        ok = engine->SaveFileAs(realDstFileName);
     } else if (EngineSupportsAnnotations(engine)) {
         // ... as well as files containing annotations ...
-        ok = engine->SaveFileAs(pathA);
-    } else if (!path::IsSame(srcFileNameW, realDstFileName)) {
+        ok = engine->SaveFileAs(realDstFileName);
+    } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
         WCHAR* msgBuf;
-        ok = CopyFile(srcFileNameW, realDstFileName, false);
+        ok = file::Copy(srcFileName, realDstFileName, false);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
-            DWORD attributes = GetFileAttributes(realDstFileName);
+            DWORD attributes = file::GetAttributes(realDstFileName);
             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop)) {
-                SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
+                file::SetAttributes(realDstFileName, attributes & ~attributesToDrop);
             }
         } else if (FormatMessage(
                        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -2634,13 +2634,13 @@ static void OnMenuSaveAs(WindowInfo* win) {
 
     auto path = win->ctrl->GetFilePath();
     if (ok && IsUntrustedFile(path, gPluginURL) && !convertToTXT) {
-        auto realDstFileNameA = ToUtf8Temp(realDstFileName);
-        file::SetZoneIdentifier(realDstFileNameA);
+        file::SetZoneIdentifier(realDstFileName);
     }
-
+#if 0
     if (realDstFileName != dstFileName) {
         free(realDstFileName);
     }
+#endif
 }
 
 static void OnMenuShowInFolder(WindowInfo* win) {
@@ -5234,8 +5234,7 @@ static TempStr GetFileSizeAsStrTemp(const char* path) {
 }
 
 void GetProgramInfo(str::Str& s) {
-    char* d = ToUtf8Temp(gCrashFilePath);
-    s.AppendFmt("Crash file: %s\r\n", d);
+    s.AppendFmt("Crash file: %s\r\n", gCrashFilePath);
 
     WCHAR* exePathW = GetExePathTemp();
     char* exePath = ToUtf8Temp(exePathW);
@@ -5311,9 +5310,9 @@ void ShowCrashHandlerMessage() {
         log("ShowCrashHandlerMessage: !gCrashFilePath\n");
         return;
     }
-    LaunchFile(gCrashFilePath, nullptr, L"open");
-    auto url = L"https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
-    LaunchFile(url, nullptr, L"open");
+    LaunchFile(gCrashFilePath, nullptr, "open");
+    auto url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
+    LaunchFile(url, nullptr, "open");
 }
 
 static TempWstr GetSymbolsDirTemp() {

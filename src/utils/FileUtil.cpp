@@ -8,10 +8,6 @@
 
 #include "utils/Log.h"
 
-namespace file {
-ByteSlice ReadFile(const WCHAR* filePath);
-}
-
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
@@ -631,14 +627,24 @@ ByteSlice ReadFile(const char* path) {
     return ReadFileWithAllocator(path, nullptr);
 }
 
-ByteSlice ReadFile(const WCHAR* filePath) {
-    char* path = ToUtf8Temp(filePath);
-    return ReadFileWithAllocator(path, nullptr);
-}
 
-bool WriteFile(const char* filePath, ByteSlice d) {
-    auto buf = ToWstrTemp(filePath);
-    return WriteFile(buf, d);
+bool WriteFile(const char* path, ByteSlice d) {
+    WCHAR* pathW = ToWstrTemp(path);
+    const void* data = d.data();
+    size_t dataLen = d.size();
+    DWORD access = GENERIC_WRITE;
+    DWORD share = FILE_SHARE_READ;
+    DWORD flags = FILE_ATTRIBUTE_NORMAL;
+    auto fh = CreateFileW(pathW, access, share, nullptr, CREATE_ALWAYS, flags, nullptr);
+    if (INVALID_HANDLE_VALUE == fh) {
+        return false;
+    }
+    AutoCloseHandle h(fh);
+
+    DWORD size = 0;
+    BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
+    CrashIf(ok && (dataLen != (size_t)size));
+    return ok && dataLen == (size_t)size;
 }
 
 HANDLE OpenReadOnly(const char* path) {
@@ -718,24 +724,6 @@ int ReadN(const char* path, char* buf, size_t toRead) {
     return (int)nRead;
 }
 
-bool WriteFile(const WCHAR* filePath, ByteSlice d) {
-    const void* data = d.data();
-    size_t dataLen = d.size();
-    DWORD access = GENERIC_WRITE;
-    DWORD share = FILE_SHARE_READ;
-    DWORD flags = FILE_ATTRIBUTE_NORMAL;
-    auto fh = CreateFileW(filePath, access, share, nullptr, CREATE_ALWAYS, flags, nullptr);
-    if (INVALID_HANDLE_VALUE == fh) {
-        return false;
-    }
-    AutoCloseHandle h(fh);
-
-    DWORD size = 0;
-    BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
-    CrashIf(ok && (dataLen != (size_t)size));
-    return ok && dataLen == (size_t)size;
-}
-
 // Return true if the file wasn't there or was successfully deleted
 bool Delete(const WCHAR* filePath) {
     BOOL ok = DeleteFileW(filePath);
@@ -788,6 +776,16 @@ FILETIME GetModificationTime(const char* filePath) {
         GetFileTime(h, nullptr, nullptr, &lastMod);
     }
     return lastMod;
+}
+
+DWORD GetAttributes(const char* path) {
+    WCHAR* pathW = ToWstrTemp(path);
+    return GetFileAttributesW(pathW);
+}
+
+bool SetAttributes(const char* path, DWORD attrs) {
+    WCHAR* pathW = ToWstrTemp(path);
+    return SetFileAttributesW(pathW, attrs);
 }
 
 bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
@@ -913,6 +911,11 @@ bool CreateAll(const char* dir) {
 
 bool CreateForFile(const WCHAR* path) {
     WCHAR* dir = path::GetDirTemp(path);
+    return CreateAll(dir);
+}
+
+bool CreateForFile(const char* path) {
+    char* dir = path::GetDirTemp(path);
     return CreateAll(dir);
 }
 

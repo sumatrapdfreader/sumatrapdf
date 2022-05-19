@@ -151,26 +151,26 @@ Vec<FileData*> MobiToEpub2(const char* path) {
 
 Vec<FileData*> MobiToEpub(const char* path) {
     auto files = MobiToEpub2(path);
-    const WCHAR* dstDir = LR"(C:\Users\kjk\Downloads\mobiToEpub)";
+    const char* dstDir = R"(C:\Users\kjk\Downloads\mobiToEpub)";
     bool failed = false;
     for (auto& f : files) {
         if (failed) {
             break;
         }
-        WCHAR* name = ToWstrTemp(f->name);
-        AutoFreeWstr dstPath = path::Join(dstDir, name);
+        char* name = f->name;
+        char* dstPath = path::JoinTemp(dstDir, name);
         bool ok = dir::CreateForFile(dstPath);
         if (!ok) {
-            logf("Failed to create directory for file '%s'\n", ToUtf8Temp(dstPath));
+            logf("Failed to create directory for file '%s'\n", dstPath);
             failed = true;
             continue;
         }
-        ok = file::WriteFile(dstPath.Get(), f->data);
+        ok = file::WriteFile(dstPath, f->data);
         if (!ok) {
-            logf("Failed to write '%s'\n", ToUtf8Temp(dstPath));
+            logf("Failed to write '%s'\n", dstPath);
             failed = true;
         } else {
-            logf("Wrote '%s'\n", ToUtf8Temp(dstPath));
+            logf("Wrote '%s'\n", dstPath);
         }
     }
     return files;

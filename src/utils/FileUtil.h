@@ -66,7 +66,6 @@ int ReadN(const char* path, char* buf, size_t toRead);
 
 i64 GetSize(const char*);
 
-bool WriteFile(const WCHAR* path, ByteSlice);
 bool WriteFile(const char* path, ByteSlice);
 
 bool Delete(const WCHAR* path);
@@ -75,6 +74,9 @@ bool Delete(const char* path);
 FILETIME GetModificationTime(const char* path);
 
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
+
+DWORD GetAttributes(const char* path);
+bool SetAttributes(const char* path, DWORD attrs);
 
 bool StartsWithN(const WCHAR* path, const char* s, size_t len);
 bool StartsWith(const WCHAR* path, const char* s);
@@ -98,6 +100,7 @@ bool Create(const WCHAR* dir);
 bool Create(const char* dir);
 
 bool CreateForFile(const WCHAR* path);
+bool CreateForFile(const char* path);
 
 bool CreateAll(const WCHAR* dir);
 bool CreateAll(const char* dir);

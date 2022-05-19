@@ -32,7 +32,7 @@
 #include "EbookFormatter.h"
 
 // if true, we'll save html content of a mobi ebook as well
-// as pretty-printed html to MOBI_SAVE_DIR. The name will be
+// as pretty-printed html to kMobiSaveDir. The name will be
 // ${file}.html and ${file}_pp.html
 static bool gSaveHtml = false;
 // if true, we'll also save images in mobi files. The name
@@ -42,7 +42,7 @@ static bool gSaveImages = false;
 // if true, we'll do a layout of mobi files
 static bool gLayout = false;
 // directory to which we'll save mobi html and images
-#define MOBI_SAVE_DIR L"..\\ebooks-converted"
+#define kMobiSaveDir "..\\ebooks-converted"
 
 static int Usage() {
     printf("Tester.exe\n");
@@ -56,33 +56,33 @@ static int Usage() {
     return 1;
 }
 
-static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
+static void MobiSaveHtml(const char* filePathBase, MobiDoc* mb) {
     CrashAlwaysIf(!gSaveHtml);
 
-    AutoFreeWstr outFile(str::Join(filePathBase, L"_pp.html"));
+    char* outFile = str::JoinTemp(filePathBase, "_pp.html");
 
     ByteSlice htmlData = mb->GetHtmlData();
 
     ByteSlice ppHtml = PrettyPrintHtml(htmlData);
-    file::WriteFile(outFile.Get(), ppHtml);
+    file::WriteFile(outFile, ppHtml);
 
-    outFile.Set(str::Join(filePathBase, L".html"));
-    file::WriteFile(outFile.Get(), htmlData);
+    outFile = str::JoinTemp(filePathBase, ".html");
+    file::WriteFile(outFile, htmlData);
 }
 
-static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ByteSlice img) {
+static void MobiSaveImage(const char* filePathBase, size_t imgNo, ByteSlice img) {
     // it's valid to not have image data at a given index
     if (img.empty()) {
         return;
     }
-    const char* extA = GfxFileExtFromData(img);
-    CrashAlwaysIf(!extA);
-    WCHAR* ext = ToWstrTemp(extA);
-    AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, (int)imgNo, ext));
-    file::WriteFile(fileName.Get(), img);
+    const char* ext = GfxFileExtFromData(img);
+    CrashAlwaysIf(!ext);
+    char* path = str::Format("%s_img_%d%s", filePathBase, (int)imgNo, ext);
+    file::WriteFile(path, img);
+    str::Free(path);
 }
 
-static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
+static void MobiSaveImages(const char* filePathBase, MobiDoc* mb) {
     for (size_t i = 0; i < mb->imagesCount; i++) {
         ByteSlice* img = mb->GetImage(i + 1);
         if (!img) {
@@ -110,9 +110,9 @@ static void MobiLayout(MobiDoc* mobiDoc) {
     delete pages;
 }
 
-static void MobiTestFile(const char* filePathA) {
-    printf("Testing file '%s'\n", filePathA);
-    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePathA);
+static void MobiTestFile(const char* filePath) {
+    printf("Testing file '%s'\n", filePath);
+    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePath);
     if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
         return;
@@ -121,20 +121,19 @@ static void MobiTestFile(const char* filePathA) {
     if (gLayout) {
         auto t = TimeGet();
         MobiLayout(mobiDoc);
-        printf("Spent %.2f ms laying out %s\n", TimeSinceInMs(t), filePathA);
+        printf("Spent %.2f ms laying out %s\n", TimeSinceInMs(t), filePath);
     }
 
     if (gSaveHtml || gSaveImages) {
-        WCHAR* filePath = ToWstrTemp(filePathA);
         // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
         // construct a base name for extracted html/image files in the form
-        // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
+        // "${kMobiSaveDir}/${file}" i.e. change dir to kMobiSaveDir and
         // remove the file extension
-        const WCHAR* dir = MOBI_SAVE_DIR;
+        const char* dir = kMobiSaveDir;
         dir::CreateAll(dir);
-        AutoFreeWstr fileName(str::Dup(path::GetBaseNameTemp(filePath)));
-        AutoFreeWstr filePathBase(path::Join(dir, fileName));
-        WCHAR* ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
+        const char* fileName = path::GetBaseNameTemp(filePath);
+        char* filePathBase = path::JoinTemp(dir, fileName);
+        char* ext = str::FindCharLast(filePathBase, '.');
         *ext = 0;
 
         if (gSaveHtml) {

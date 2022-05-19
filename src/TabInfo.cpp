@@ -147,7 +147,8 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     if (!ok) {
         return false;
     }
-    ok = file::WriteFile(dstFileName, data);
+    char* path = ToUtf8Temp(dstFileName);
+    ok = file::WriteFile(path, data);
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
     if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {

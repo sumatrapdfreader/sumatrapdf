@@ -92,7 +92,7 @@ static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static bool isDllBuild = false;
 static bool gCrashed = false;
-WCHAR* gCrashFilePath = nullptr;
+char* gCrashFilePath = nullptr;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
@@ -681,7 +681,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
          symDir);
 
     gCrashDumpPath = str::Dup(crashDumpPath);
-    gCrashFilePath = str::Dup(crashFilePath);
+    gCrashFilePath = ToUtf8(crashFilePath);
 
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
@@ -757,7 +757,7 @@ void UninstallCrashHandler() {
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
     free(gSumatraPdfDllPdbPath);
-    free(gCrashFilePath);
+    str::FreePtr(&gCrashFilePath);
 
     free(gSymbolPathW);
     free(gSystemInfo);
