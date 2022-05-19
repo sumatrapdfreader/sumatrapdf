@@ -1619,29 +1619,39 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
     }
 }
 
-static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
-    WCHAR filePath[MAX_PATH]{};
+static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec& files) {
     int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
-
-    bool isShift = IsShiftPressed();
+    WCHAR pathW[MAX_PATH]{};
+    char* path = nullptr;
     for (int i = 0; i < nFiles; i++) {
-        DragQueryFile(hDrop, i, filePath, dimof(filePath));
-        if (str::EndsWithI(filePath, L".lnk")) {
-            WCHAR* resolved = ResolveLnkTemp(filePath);
+        DragQueryFile(hDrop, i, pathW, dimof(pathW));
+        path = ToUtf8Temp(pathW);
+        if (str::EndsWithI(path, ".lnk")) {
+            char* resolved = ResolveLnkTemp(path);
             if (resolved) {
-                str::BufSet(filePath, dimof(filePath), resolved);
+                path = resolved;
             }
         }
+        files.Append(path);
+    }
+    if (dragFinish) {
+        DragFinish(hDrop);
+    }
+}
+
+static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
+    StrVec files;
+    bool isShift = IsShiftPressed();
+
+    GetDropFilesResolved(hDrop, dragFinish, files);
+    for (char* path : files) {
         // The first dropped document may override the current window
-        LoadArgs args(ToUtf8Temp(filePath), win);
+        LoadArgs args(path, win);
         if (isShift && !win) {
             win = CreateAndShowWindowInfo(nullptr);
             args.win = win;
         }
         LoadDocument(args);
-    }
-    if (dragFinish) {
-        DragFinish(hDrop);
     }
 }
 

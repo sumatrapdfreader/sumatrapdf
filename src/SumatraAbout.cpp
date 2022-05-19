@@ -568,9 +568,12 @@ void OnMenuAbout(WindowInfo* win) {
 
     const WCHAR* title = _TR("About SumatraPDF");
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    HANDLE h = GetModuleHandle(nullptr);
-    gHwndAbout = CreateWindowExW(0, kAboutClassName, title, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                                 CW_USEDEFAULT, nullptr, nullptr, h, nullptr);
+    int x = CW_USEDEFAULT;
+    int y = CW_USEDEFAULT;
+    int dx = CW_USEDEFAULT;
+    int dy = CW_USEDEFAULT;
+    HINSTANCE h = GetModuleHandleW(nullptr);
+    gHwndAbout = CreateWindowExW(0, kAboutClassName, title, style, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     if (!gHwndAbout) {
         return;
     }

@@ -675,41 +675,6 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
     return (int)diff;
 }
 
-WCHAR* ResolveLnkTemp(const WCHAR* path) {
-    ScopedMem<OLECHAR> olePath(str::Dup(path));
-    if (!olePath) {
-        return nullptr;
-    }
-
-    ScopedComPtr<IShellLink> lnk;
-    if (!lnk.Create(CLSID_ShellLink)) {
-        return nullptr;
-    }
-
-    ScopedComQIPtr<IPersistFile> file(lnk);
-    if (!file) {
-        return nullptr;
-    }
-
-    HRESULT hRes = file->Load(olePath, STGM_READ);
-    if (FAILED(hRes)) {
-        return nullptr;
-    }
-
-    hRes = lnk->Resolve(nullptr, SLR_UPDATE);
-    if (FAILED(hRes)) {
-        return nullptr;
-    }
-
-    WCHAR newPath[MAX_PATH]{};
-    hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
-    if (FAILED(hRes)) {
-        return nullptr;
-    }
-
-    return str::DupTemp(newPath);
-}
-
 char* ResolveLnkTemp(const char* path) {
     WCHAR* pathW = ToWstr(path);
     ScopedMem<OLECHAR> olePath(pathW);
