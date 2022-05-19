@@ -3,7 +3,7 @@
 
 extern char* gCrashFilePath;
 
-void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir);
+void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir);
 void UninstallCrashHandler();
 bool CrashHandlerDownloadSymbols();
-bool SetSymbolsDir(const WCHAR* symDir);
+bool SetSymbolsDir(const char* symDir);

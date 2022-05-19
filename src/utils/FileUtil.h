@@ -73,7 +73,7 @@ bool Delete(const char* path);
 
 FILETIME GetModificationTime(const char* path);
 
-bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
+bool SetModificationTime(const char* path, FILETIME lastMod);
 
 DWORD GetAttributes(const char* path);
 bool SetAttributes(const char* path, DWORD attrs);
@@ -94,9 +94,7 @@ namespace dir {
 bool Exists(const WCHAR* dir);
 bool Exists(const char*);
 
-bool Create(const WCHAR* dir);
 bool Create(const char* dir);
-
 bool CreateForFile(const char* path);
 bool CreateAll(const char* dir);
 bool RemoveAll(const char* dir);

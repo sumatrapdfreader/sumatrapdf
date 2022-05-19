@@ -778,8 +778,11 @@ bool SetAttributes(const char* path, DWORD attrs) {
     return SetFileAttributesW(pathW, attrs);
 }
 
-bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
-    AutoCloseHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr));
+bool SetModificationTime(const char* path, FILETIME lastMod) {
+    WCHAR* pathW = ToWstrTemp(path);
+    DWORD access = GENERIC_READ | GENERIC_WRITE;
+    DWORD disp = OPEN_EXISTING;
+    AutoCloseHandle h(CreateFileW(pathW, access, 0, nullptr, disp, 0, nullptr));
     if (INVALID_HANDLE_VALUE == h) {
         return false;
     }
@@ -853,15 +856,6 @@ bool Exists(const char* dirA) {
     }
 
     return (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-}
-
-// Return true if a directory already exists or has been successfully created
-bool Create(const WCHAR* dir) {
-    BOOL ok = CreateDirectoryW(dir, nullptr);
-    if (ok) {
-        return true;
-    }
-    return ERROR_ALREADY_EXISTS == GetLastError();
 }
 
 // Return true if a directory already exists or has been successfully created

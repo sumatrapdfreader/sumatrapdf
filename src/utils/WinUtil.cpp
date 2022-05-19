@@ -647,6 +647,12 @@ TempWstr GetExeDirTemp() {
     return path::GetDirTemp(path);
 }
 
+// Return directory where our executable is located
+TempStr GetExeDirATemp() {
+    auto path = GetExePathATemp();
+    return path::GetDirTemp(path);
+}
+
 void ChangeCurrDirToDocuments() {
     WCHAR* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
     SetCurrentDirectoryW(dir);

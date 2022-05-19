@@ -76,6 +76,8 @@ TempWstr GetExePathTemp();
 TempStr GetExePathATemp();
 
 TempWstr GetExeDirTemp();
+TempStr GetExeDirATemp();
+
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 

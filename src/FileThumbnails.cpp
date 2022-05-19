@@ -149,18 +149,18 @@ void SaveThumbnail(FileState& ds) {
         return;
     }
 
-    WCHAR* fp = ToWstrTemp(ds.filePath);
-    char* bmpPathA = GetThumbnailPathTemp(ds.filePath);
-    if (!bmpPathA) {
+    char* path = ds.filePath;
+    char* bmpPath = GetThumbnailPathTemp(path);
+    if (!bmpPath) {
         return;
     }
-    WCHAR* bmpPath = ToWstrTemp(bmpPathA);
-    WCHAR* thumbsPath = path::GetDirTemp(bmpPath);
+    char* thumbsPath = path::GetDirTemp(bmpPath);
     if (dir::Create(thumbsPath)) {
-        CrashIf(!str::EndsWithI(bmpPath, L".png"));
+        CrashIf(!str::EndsWithI(bmpPath, ".png"));
         Gdiplus::Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
-        bmp.Save(bmpPath, &tmpClsid, nullptr);
+        WCHAR* bmpPathW = ToWstrTemp(bmpPath);
+        bmp.Save(bmpPathW, &tmpClsid, nullptr);
     }
 }
 

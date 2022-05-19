@@ -413,12 +413,10 @@ static bool SetupPluginMode(Flags& i) {
 }
 
 static void SetupCrashHandler() {
-    WCHAR* symDir = AppGenDataFilename(L"crashinfo");
-    WCHAR* crashDumpPath = path::Join(symDir, L"sumatrapdfcrash.dmp");
-    WCHAR* crashFilePath = path::Join(symDir, L"sumatrapdfcrash.txt");
+    char* symDir = AppGenDataFilenameTemp("crashinfo");
+    char* crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
+    char* crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
-    free(crashFilePath);
-    free(crashDumpPath);
     free(symDir);
 }
 

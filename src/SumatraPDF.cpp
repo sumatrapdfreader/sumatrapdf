@@ -5315,31 +5315,29 @@ void ShowCrashHandlerMessage() {
     LaunchFile(url, nullptr, "open");
 }
 
-static TempWstr GetSymbolsDirTemp() {
+static TempStr GetSymbolsDirTemp() {
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return GetExeDirTemp();
+        return GetExeDirATemp();
     }
-    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    return path::JoinTemp(dir, kAppName, L"crashinfo");
+    TempStr dir = GetSpecialFolderATemp(CSIDL_LOCAL_APPDATA, true);
+    return path::JoinTemp(dir, kAppNameA, "crashinfo");
 }
 
 static void DownloadDebugSymbols() {
     // over-ride the default symbols directory to be more useful
-    WCHAR* symDir = GetSymbolsDirTemp();
+    char* symDir = GetSymbolsDirTemp();
     SetSymbolsDir(symDir);
 
     bool ok = CrashHandlerDownloadSymbols();
     char* msg = nullptr;
     if (ok) {
-        auto symDirA = ToUtf8Temp(symDir);
-        msg = str::Format("Downloaded symbols! to %s", symDirA);
+        msg = str::Format("Downloaded symbols! to %s", symDir);
     } else {
         msg = str::Dup("Failed to download symbols.");
     }
     uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);
-
     free(msg);
 }
 

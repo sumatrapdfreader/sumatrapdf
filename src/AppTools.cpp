@@ -92,25 +92,26 @@ void SetAppDataPath(const char* path) {
 
 // Generate the full path for a filename used by the app in the userdata path
 // Caller needs to free() the result
-WCHAR* AppGenDataFilename(const WCHAR* fileName) {
+char* AppGenDataFilenameTemp(const char* fileName) {
     if (!fileName) {
         return nullptr;
     }
 
     if (gAppDataDir && dir::Exists(gAppDataDir)) {
-        return path::Join(ToWstrTemp(gAppDataDir), fileName);
+        return path::JoinTemp(gAppDataDir, fileName);
     }
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return path::GetPathOfFileInAppDir(fileName);
+        AutoFreeStr res = path::GetPathOfFileInAppDir(fileName);
+        return str::Dup(res);
     }
 
-    WCHAR* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    char* path = GetSpecialFolderATemp(CSIDL_LOCAL_APPDATA, true);
     if (!path) {
         return nullptr;
     }
-    path = path::JoinTemp(path, kAppName);
+    path = path::JoinTemp(path, kAppNameA);
     if (!path) {
         return nullptr;
     }
@@ -119,46 +120,17 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (gIsStoreBuild) {
         // %APPLOCALDATA%/SumatraPDF Store
         // %APPLOCALDATA%/SumatraPDF Store Preview
-        path = str::Join(path, L" Store");
+        path = str::JoinTemp(path, " Store");
         if (gIsPreReleaseBuild) {
-            path = str::Join(path, L" Preview");
+            path = str::JoinTemp(path, " Preview");
         }
     }
     bool ok = dir::Create(path);
     if (!ok) {
         return nullptr;
     }
-    return path::Join(path, fileName);
+    return path::JoinTemp(path, fileName);
 }
-
-char* AppGenDataFilenameTemp(const char* fileName) {
-    if (!fileName) {
-        return nullptr;
-    }
-    WCHAR* tmp = ToWstrTemp(fileName);
-    WCHAR* path = AppGenDataFilename(tmp);
-    char* res = ToUtf8Temp(path);
-    str::Free(path);
-    return res;
-}
-
-#if 0
-WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
-    if (!fileName) {
-        return nullptr;
-    }
-
-    /* Use local (non-roaming) app data directory */
-    TempWstr dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    AutoFreeWstr dir = path::Join(dataDir.Get(), APP_NAME_STR);
-    bool ok = dir::Create(dir);
-    if (!ok) {
-        return nullptr;
-    }
-
-    return path::Join(dir, fileName);
-}
-#endif
 
 // List of rules used to detect TeX editors.
 
