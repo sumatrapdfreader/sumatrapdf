@@ -288,6 +288,9 @@ inline void ZeroArray(T& a) {
 
 template <typename T>
 inline T limitValue(T val, T min, T max) {
+    if (min > max) {
+        std::swap(min, max);
+    }
     CrashIf(min > max);
     if (val < min) {
         return min;
