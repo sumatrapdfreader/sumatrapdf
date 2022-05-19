@@ -401,19 +401,6 @@ bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*) {
     return false;
 }
 
-// skip file:// and maybe file:/// from s. It might be added by mupdf.
-// do not free the result
-static const WCHAR* SkipFileProtocolTemp(const WCHAR* s) {
-    if (!str::StartsWithI(s, L"file://")) {
-        return s;
-    }
-    s += 7; // skip "file://"
-    while (*s == L'/') {
-        s++;
-    }
-    return s;
-}
-
 // skip file:// and maybe file:/// from s. It might be added by mupdf
 // do not free the result
 static const char* SkipFileProtocolTemp(const char* s) {
@@ -422,18 +409,6 @@ static const char* SkipFileProtocolTemp(const char* s) {
     }
     s += 7; // skip "file://"
     while (*s == '/') {
-        s++;
-    }
-    return s;
-}
-
-// skip mailto: from s.
-static const WCHAR* SkipMailProtocolTemp(const WCHAR* s) {
-    if (!str::StartsWithI(s, L"mailto:")) {
-        return s;
-    }
-    s += 7;              // skip "mailto:"
-    while (*s == L'/') { // probably not needed but just in case
         s++;
     }
     return s;
@@ -450,21 +425,12 @@ static const char* SkipMailProtocolTemp(const char* s) {
     }
     return s;
 }
+
 // s could be in format "file://path.pdf#page=1"
 // We only want the "path.pdf"
 // caller must free
 // TODO: could also parse page=1 and return it so that
 // we can go to the right place
-WCHAR* CleanupFileURL(const WCHAR* s) {
-    s = SkipFileProtocolTemp(s);
-    WCHAR* s2 = str::Dup(s);
-    WCHAR* s3 = str::FindChar(s2, L'#');
-    if (s3) {
-        *s3 = 0;
-    }
-    return s2;
-}
-
 char* CleanupFileURL(const char* s) {
     s = SkipFileProtocolTemp(s);
     char* s2 = str::Dup(s);
@@ -473,16 +439,6 @@ char* CleanupFileURL(const char* s) {
         *s3 = 0;
     }
     return s2;
-}
-
-// s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
-// We only want the "path.pdf" / "foo@bar.com"
-// caller must free
-WCHAR* CleanupURLForClipbardCopy(const WCHAR* s) {
-    WCHAR* s2 = CleanupFileURL(s);
-    WCHAR* s3 = str::Dup(SkipMailProtocolTemp(s));
-    str::Free(s2);
-    return s3;
 }
 
 // s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
