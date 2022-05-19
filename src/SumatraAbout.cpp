@@ -57,9 +57,9 @@ constexpr int ABOUT_RECT_PADDING = 8;
 
 #define VERSION_TXT L"v" CURR_VERSION_STR
 #ifdef PRE_RELEASE_VER
-#define VERSION_SUB_TXT L"Pre-release"
+#define VERSION_SUB_TXT "Pre-release"
 #else
-#define VERSION_SUB_TXT L""
+#define VERSION_SUB_TXT ""
 #endif
 
 #ifdef GIT_COMMIT_ID
@@ -79,8 +79,8 @@ static const char* gClickedURL = nullptr;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const WCHAR* leftTxt;
-    const WCHAR* rightTxt;
+    const char* leftTxt;
+    const char* rightTxt;
     const char* url;
 
     /* data calculated by the layout */
@@ -89,22 +89,22 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    {L"website", L"SumatraPDF website", WEBSITE_MAIN_URL},
-    {L"manual", L"SumatraPDF manual", WEBSITE_MANUAL_URL},
-    {L"forums", L"SumatraPDF forums", "https://forum.sumatrapdfreader.org/"},
-    {L"programming", L"The Programmers", URL_AUTHORS},
-    {L"translations", L"The Translators", URL_TRANSLATORS},
-    {L"licenses", L"Various Open Source", URL_LICENSE},
+    {"website", "SumatraPDF website", WEBSITE_MAIN_URL},
+    {"manual", "SumatraPDF manual", WEBSITE_MANUAL_URL},
+    {"forums", "SumatraPDF forums", "https://forum.sumatrapdfreader.org/"},
+    {"programming", "The Programmers", URL_AUTHORS},
+    {"translations", "The Translators", URL_TRANSLATORS},
+    {"licenses", "Various Open Source", URL_LICENSE},
 #ifdef GIT_COMMIT_ID
     // TODO: use short ID for rightTxt (only first 7 digits) with less hackery
-    {L"last change", L"git commit " GIT_COMMIT_ID_STR,
+    {"last change", "git commit " GIT_COMMIT_ID_STR,
      "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
 #endif
 #ifdef PRE_RELEASE_VER
-    {L"a note", L"Pre-release version, for testing only!", nullptr},
+    {"a note", "Pre-release version, for testing only!", nullptr},
 #endif
 #ifdef DEBUG
-    {L"a note", L"Debug version, for testing only!", nullptr},
+    {"a note", "Debug version, for testing only!", nullptr},
 #endif
     {nullptr, nullptr, nullptr}};
 
@@ -142,6 +142,13 @@ static WCHAR* GetAppVersion() {
     return s.StealData();
 }
 
+static char* GetAppVersionTemp() {
+    WCHAR* ws = GetAppVersion();
+    char* s = ToUtf8Temp(ws);
+    str::Free(ws);
+    return s;
+}
+
 static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     Size result{};
 
@@ -151,19 +158,19 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     SIZE txtSize{};
     /* calculate minimal top box size */
-    const WCHAR* txt = kAppName;
+    const char* txt = kAppNameA;
 
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
     result.dx = txtSize.cx;
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
-    AutoFreeWstr ver = GetAppVersion();
-    GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
+    char* ver = GetAppVersionTemp();
+    GetTextExtentPoint32Utf8(hdc, ver, (int)str::Len(ver), &txtSize);
     LONG minWidth = txtSize.cx + DpiScale(hwnd, 8);
     txt = VERSION_SUB_TXT;
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     txtSize.cx = std::max(txtSize.cx, minWidth);
     result.dx += 2 * (txtSize.cx + DpiScale(hwnd, kInnerPadding));
 
@@ -178,8 +185,8 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const WCHAR* txt = kAppName;
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    const char* txt = kAppNameA;
+    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
 
@@ -187,16 +194,16 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     SelectObject(hdc, fontVersionTxt);
     Point pt(mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding), mainRect.y);
 
-    AutoFreeWstr ver = GetAppVersion();
-    TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
+    char* ver = GetAppVersionTemp();
+    TextOutUtf8(hdc, pt.x, pt.y, ver, (int)str::Len(ver));
     txt = VERSION_SUB_TXT;
-    TextOut(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
+    TextOutUtf8(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
 
     SelectObject(hdc, oldFont);
 }
 
 // draw on the bottom right
-static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
+static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 16));
     auto col = GetAppColor(AppColor::MainWindowLink);
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
@@ -207,13 +214,13 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     Rect rc = ClientRect(hwnd);
 
     SIZE txtSize;
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     int innerPadding = DpiScale(hwnd, kInnerPadding);
     int x = rc.dx - txtSize.cx - innerPadding;
     int y = rc.y + rc.dy - txtSize.cy - innerPadding;
     Rect rect(x, y, txtSize.cx, txtSize.cy);
     RECT rTmp = ToRECT(rect);
-    DrawTextW(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
+    DrawTextUtf8(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
         PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
@@ -277,7 +284,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, (int)str::Len(el->leftTxt));
+        TextOutUtf8(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, (int)str::Len(el->leftTxt));
     }
 
     /* render text on the right */
@@ -294,11 +301,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
         SetTextColor(hdc, col);
         size_t txtLen = str::Len(el->rightTxt);
         if (gitCommidId) {
-            if (str::EndsWith(ToUtf8Temp(el->rightTxt), gitCommidId)) {
+            if (str::EndsWith(el->rightTxt, gitCommidId)) {
                 txtLen -= str::Len(gitCommidId) - 7;
             }
         }
-        TextOutW(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)txtLen);
+        TextOutUtf8(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)txtLen);
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
@@ -329,7 +336,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     int leftDy = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
-        GetTextExtentPoint32(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
+        GetTextExtentPoint32Utf8(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -351,11 +358,11 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         SIZE txtSize;
         size_t txtLen = str::Len(el->rightTxt);
         if (gitCommidId) {
-            if (str::EndsWith(ToUtf8Temp(el->rightTxt), gitCommidId)) {
+            if (str::EndsWith(el->rightTxt, gitCommidId)) {
                 txtLen -= str::Len(gitCommidId) - 7;
             }
         }
-        GetTextExtentPoint32W(hdc, el->rightTxt, (int)txtLen, &txtSize);
+        GetTextExtentPoint32Utf8(hdc, el->rightTxt, (int)txtLen, &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
@@ -418,14 +425,14 @@ static void OnPaintAbout(HWND hwnd) {
     EndPaint(hwnd, &ps);
 }
 
-static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
-    str::WStr info(512);
-    AutoFreeWstr ver = GetAppVersion();
-    info.AppendFmt(L"%s %s\r\n", kAppName, ver.Get());
+static void CopyAboutInfoToClipboard() {
+    str::Str info(512);
+    char* ver = GetAppVersionTemp();
+    info.AppendFmt("%s %s\r\n", kAppNameA, ver);
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.AppendChar('-');
     }
-    info.Append(L"\r\n");
+    info.Append("\r\n");
     // concatenate all the information into a single string
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
     size_t maxLen = 0;
@@ -436,7 +443,7 @@ static void CopyAboutInfoToClipboard(__unused HWND hwnd) {
         for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--) {
             info.AppendChar(' ');
         }
-        info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? ToWstrTemp(el->url) : el->rightTxt);
+        info.AppendFmt("%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
     }
     CopyTextToClipboard(info.LendData());
 }
@@ -530,7 +537,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_COMMAND:
             if (CmdCopySelection == LOWORD(wp)) {
-                CopyAboutInfoToClipboard(hwnd);
+                CopyAboutInfoToClipboard();
             }
             break;
 
@@ -596,7 +603,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
-        Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
+        Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Show frequently read"));
         auto sl = new StaticLinkInfo(rect, kLinkShowList);
         win->staticLinks.Append(sl);
     }
@@ -683,14 +690,14 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     SelectObject(hdc, fontFrequentlyRead);
     SIZE txtSize;
-    const WCHAR* txt = _TR("Frequently Read");
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    const char* txt = _TRA("Frequently Read");
+    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
     rTmp = ToRECT(headerRect);
-    DrawTextW(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
+    DrawTextUtf8(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
@@ -778,14 +785,14 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     }
     ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
-    txt = _TR("Open a document...");
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    txt = _TRA("Open a document...");
+    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl) {
         rect.x = rectIcon.x - rect.dx - 3;
     }
     rTmp = ToRECT(rect);
-    DrawTextW(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
+    DrawTextUtf8(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);
@@ -793,7 +800,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     auto sl = new StaticLinkInfo(rect, kLinkOpenFile);
     win->staticLinks.Append(sl);
 
-    rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
+    rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
     sl = new StaticLinkInfo(rect, kLinkHideList);
     win->staticLinks.Append(sl);
 }

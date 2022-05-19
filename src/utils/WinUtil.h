@@ -317,6 +317,10 @@ void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndSendCommand(HWND hwnd, int cmdId);
 void HwndDestroyWindowSafe(HWND* hwnd);
 
+bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen = 0);
+bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
+int DrawTextUtf8(HDC hdc, const char* s, int sLen, RECT* r, UINT format);
+
 bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteFontSafe(HFONT*);
 bool DestroyIconSafe(HICON*);

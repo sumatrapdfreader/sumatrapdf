@@ -2766,3 +2766,49 @@ bool DestroyIconSafe(HICON* h) {
     *h = nullptr;
     return ToBool(res);
 }
+
+bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen) {
+    if (!s) {
+        return false;
+    }
+    if (sLen <= 0) {
+        sLen = str::Len(s);
+    }
+    WCHAR* ws = ToWstrTemp(s, sLen);
+    if (!ws) {
+        return false;
+    }
+    sLen = str::Len(ws); // TODO: can this be different after converting to WCHAR?
+    return TextOutW(hdc, x, y, ws, sLen);
+}
+
+bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
+    *psizl = SIZE{};
+    if (!s) {
+        return true;
+    }
+    if (sLen <= 0) {
+        sLen = str::Len(s);
+    }
+    WCHAR* ws = ToWstrTemp(s, sLen);
+    if (!ws) {
+        return false;
+    }
+    sLen = str::Len(ws); // TODO: can this be different after converting to WCHAR?
+    return GetTextExtentPoint32W(hdc, ws, sLen, psizl);
+}
+
+int DrawTextUtf8(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
+    if (!s) {
+        return 0;
+    }
+    if (sLen <= 0) {
+        sLen = (int)str::Len(s);
+    }
+    WCHAR* ws = ToWstrTemp(s, (size_t)sLen);
+    if (!ws) {
+        return 0;
+    }
+    sLen = (int)str::Len(ws);
+    return DrawTextW(hdc, ws, sLen, r, format);
+}
