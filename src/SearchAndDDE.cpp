@@ -220,10 +220,10 @@ struct FindThreadData : public ProgressUpdateUI {
     NotificationWnd* wnd = nullptr;
     HANDLE thread = nullptr;
 
-    FindThreadData(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified) {
+    FindThreadData(WindowInfo* win, TextSearchDirection direction, const char* text, bool wasModified) {
         this->win = win;
         this->direction = direction;
-        this->text = str::Dup(text);
+        this->text = ToWstr(text);
         this->wasModified = wasModified;
     }
     ~FindThreadData() override {
@@ -239,7 +239,7 @@ struct FindThreadData : public ProgressUpdateUI {
             wnd->wndRemovedCb = [notificationsInCb](NotificationWnd* wnd) {
                 notificationsInCb->RemoveNotification(wnd);
             };
-            wnd->Create(L"", _TR("Searching %d of %d..."));
+            wnd->Create("", _TRA("Searching %d of %d..."));
             win->notifications->Add(wnd, NG_FIND_PROGRESS);
         }
 
@@ -261,7 +261,7 @@ struct FindThreadData : public ProgressUpdateUI {
             // i.e. canceled
             win->notifications->RemoveNotification(wnd);
         } else if (!success && loopedAround) {
-            wnd->UpdateMessage(_TR("No matches were found"), 3000);
+            wnd->UpdateMessage(_TRA("No matches were found"), 3000);
         } else {
             AutoFreeStr label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetSearchHitStartPageNo()));
             AutoFreeStr buf(str::Format(_TRA("Found text at page %s"), label.Get()));
@@ -369,7 +369,7 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
 //   if true, starting a search for new term
 //   if false, searching for the next occurence of previous term
 // TODO: should detect wasModified by comparing with the last search result
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const WCHAR* text, bool wasModified,
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress) {
     AbortFinding(win, true);
     if (str::IsEmpty(text)) {
@@ -383,7 +383,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const WCHA
 }
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
-    WCHAR* text = win::GetTextTemp(win->hwndFindEdit);
+    char* text = win::GetTextATemp(win->hwndFindEdit);
     bool wasModified = Edit_GetModify(win->hwndFindEdit);
     Edit_SetModify(win->hwndFindEdit, FALSE);
     FindTextOnThread(win, direction, text, wasModified, showProgress);
@@ -450,7 +450,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
-            win->notifications->Show(win->hwndCanvas, _TR("Synchronization file cannot be opened"));
+            win->notifications->Show(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
             return true;
         }
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -466,7 +466,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
-        win->notifications->Show(win->hwndCanvas, _TR("No synchronization info at this position"));
+        win->notifications->Show(win->hwndCanvas, _TRA("No synchronization info at this position"));
         return true;
     }
 
@@ -500,12 +500,12 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         if (!process) {
             win->notifications->Show(
                 win->hwndCanvas,
-                _TR("Cannot start inverse search command. Please check the command line in the settings."));
+                _TRA("Cannot start inverse search command. Please check the command line in the settings."));
         }
     } else if (gGlobalPrefs->enableTeXEnhancements) {
         win->notifications->Show(
             win->hwndCanvas,
-            _TR("Cannot start inverse search command. Please check the command line in the settings."));
+            _TRA("Cannot start inverse search command. Please check the command line in the settings."));
     }
 
     if (toFree) {
@@ -516,7 +516,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, uint /* col */, uint ret, uint page,
+void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, uint /* col */, uint ret, uint page,
                              Vec<Rect>& rects) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -551,23 +551,23 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, 
         return;
     }
 
-    AutoFreeWstr buf;
+    AutoFreeStr buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
-        win->notifications->Show(win->hwndCanvas, _TR("No synchronization file found"));
+        win->notifications->Show(win->hwndCanvas, _TRA("No synchronization file found"));
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
-        win->notifications->Show(win->hwndCanvas, _TR("Synchronization file cannot be opened"));
+        win->notifications->Show(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        buf.Set(str::Format(_TR("Page number %u inexistant"), page));
+        buf.Set(str::Format(_TRA("Page number %u inexistant"), page));
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
-        win->notifications->Show(win->hwndCanvas, _TR("No synchronization info at this position"));
+        win->notifications->Show(win->hwndCanvas, _TRA("No synchronization info at this position"));
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-        buf.Set(str::Format(_TR("Unknown source file (%s)"), fileName));
+        buf.Set(str::Format(_TRA("Unknown source file (%s)"), fileName));
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
-        buf.Set(str::Format(_TR("Source file %s has no synchronization point"), fileName));
+        buf.Set(str::Format(_TRA("Source file %s has no synchronization point"), fileName));
     } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE) {
-        buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
+        buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
     } else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
-        buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
+        buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
     }
     if (buf) {
         win->notifications->Show(win->hwndCanvas, buf);
@@ -625,22 +625,22 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
+    char* srcFileA = ToUtf8Temp(srcFile);
+    char* pdfFileA = ToUtf8Temp(pdfFile);
     WindowInfo* win = nullptr;
     if (pdfFile) {
-        char* path = ToUtf8Temp(pdfFile);
         // check if the PDF is already opened
-        win = FindWindowInfoByFile(path, !newWindow);
+        win = FindWindowInfoByFile(pdfFileA, !newWindow);
         // if not then open it
         if (newWindow || !win) {
-            LoadArgs args(path, !newWindow ? win : nullptr);
+            LoadArgs args(pdfFileA, !newWindow ? win : nullptr);
             win = LoadDocument(args);
         } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
     } else {
         // check if any opened PDF has sync information for the source file
-        char* path = ToUtf8Temp(srcFile);
-        win = FindWindowInfoBySyncFile(path, true);
+        win = FindWindowInfoBySyncFile(srcFileA, true);
         if (win && newWindow) {
             LoadArgs args(win->currentTab->filePath, nullptr);
             win = LoadDocument(args);
@@ -660,7 +660,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     uint page;
     Vec<Rect> rects;
     int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
-    ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
+    ShowForwardSearchResult(win, srcFileA, line, col, ret, page, rects);
     if (setFocus) {
         win->Focus();
     }
@@ -674,21 +674,22 @@ Search DDE command
 [Search("<pdffile>","<search-term>")]
 */
 static const WCHAR* HandleSearchCmd(const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFile;
-    AutoFreeWstr term;
-    const WCHAR* next = str::Parse(cmd, L"[Search(\"%S\",\"%s\")]", &pdfFile, &term);
+    AutoFreeWstr pdfFileW;
+    AutoFreeWstr termW;
+    const WCHAR* next = str::Parse(cmd, L"[Search(\"%S\",\"%s\")]", &pdfFileW, &termW);
     // TODO: should un-quote text to allow searching text with '"' in them
     if (!next) {
         return nullptr;
     }
-    if (str::IsEmpty(term.Get())) {
+    if (str::IsEmpty(termW.Get())) {
         return next;
     }
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    char* path = ToUtf8Temp(pdfFile);
-    WindowInfo* win = FindWindowInfoByFile(path, true);
+    char* pdfFile = ToUtf8Temp(pdfFileW);
+    char* term = ToUtf8Temp(termW);
+    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -699,7 +700,9 @@ static const WCHAR* HandleSearchCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
     ack.fAck = 1;
-    FindTextOnThread(win, TextSearchDirection::Forward, term, true /* wasModified*/, true /*showProgress*/);
+    bool wasModified = true;
+    bool showProgress = true;
+    FindTextOnThread(win, TextSearchDirection::Forward, term, wasModified, showProgress);
     win->Focus();
     return next;
 }

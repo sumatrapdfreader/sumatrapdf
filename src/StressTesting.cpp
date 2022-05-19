@@ -263,18 +263,18 @@ static int SecsSinceSystemTime(SYSTEMTIME& time) {
     return SystemTimeDiffInSecs(currTime, time);
 }
 
-static WCHAR* FormatTime(int totalSecs) {
+static char* FormatTime(int totalSecs) {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
     int mins = totalMins % 60;
     int hrs = totalMins / 60;
     if (hrs > 0) {
-        return str::Format(L"%d hrs %d mins %d secs", hrs, mins, secs);
+        return str::Format("%d hrs %d mins %d secs", hrs, mins, secs);
     }
     if (mins > 0) {
-        return str::Format(L"%d mins %d secs", mins, secs);
+        return str::Format("%d mins %d secs", mins, secs);
     }
-    return str::Format(L"%d secs", secs);
+    return str::Format("%d secs", secs);
 }
 
 static void FormatTime(int totalSecs, str::Str* s) {
@@ -503,8 +503,8 @@ static void Finished(StressTest* st, bool success) {
 
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
-        AutoFreeWstr tm(FormatTime(secs));
-        AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", st->filesCount, tm.Get()));
+        AutoFreeStr tm(FormatTime(secs));
+        AutoFreeStr s(str::Format("Stress test complete, rendered %d files in %s", st->filesCount, tm.Get()));
         st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -523,7 +523,7 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
         Start(st, dirFileProvider, cycles);
     } else {
         // Note: string dev only, don't translate
-        AutoFreeWstr s(str::Format(L"Path '%s' doesn't exist", path));
+        AutoFreeStr s(str::Format("Path '%s' doesn't exist", path));
         st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::Warning, NG_STRESS_TEST_SUMMARY);
         Finished(st, false);
     }
@@ -624,8 +624,8 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     }
 
     int secs = SecsSinceSystemTime(st->stressStartTime);
-    AutoFreeWstr tm(FormatTime(secs));
-    AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", st->filesCount, fileName, tm.Get()));
+    AutoFreeStr tm(FormatTime(secs));
+    AutoFreeStr s(str::Format("File %d: %s, time: %s", st->filesCount, fileName, tm.Get()));
     st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
 
     return true;
@@ -704,7 +704,7 @@ static bool GoToNextFile(StressTest* st) {
 
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
-    AutoFreeWstr s(str::Format(L"Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime));
+    AutoFreeStr s(str::Format("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime));
     st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::WithTimeout, NG_STRESS_TEST_BENCHMARK);
 
     if (st->pagesToRender.size() == 0) {

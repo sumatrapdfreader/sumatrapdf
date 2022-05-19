@@ -558,7 +558,7 @@ class PrintThreadData : public ProgressUpdateUI {
         this->data = data;
         wnd = new NotificationWnd(win->hwndCanvas, 0);
         wnd->wndRemovedCb = [this](NotificationWnd* wnd) { this->RemoveNotification(wnd); };
-        wnd->Create(L"", _TR("Printing page %d of %d..."));
+        wnd->Create("", _TRA("Printing page %d of %d..."));
 
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs

@@ -384,7 +384,7 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     }
 
     if (UpdateCheck::UserInitiated == updateCheckType) {
-        win->notifications->Show(win->hwndCanvas, _TR("Checking for update..."), NotificationOptions::Warning,
+        win->notifications->Show(win->hwndCanvas, _TRA("Checking for update..."), NotificationOptions::Warning,
                                  kindNotifUpdateCheckInProgress);
     }
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);

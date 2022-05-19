@@ -53,13 +53,14 @@ NotificationWnd::~NotificationWnd() {
     str::Free(this->progressMsg);
 }
 
-static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, bool init) {
+static void UpdateWindowPosition(NotificationWnd* wnd, const char* message, bool init) {
     // compute the length of the message
     RECT rc = ToRECT(ClientRect(wnd->hwnd));
 
     HDC hdc = GetDC(wnd->hwnd);
     HFONT oldfnt = SelectFont(hdc, wnd->font);
-    DrawTextW(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
+    uint fmt = DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX;
+    DrawTextUtf8(hdc, message, -1, &rc, fmt);
     SelectFont(hdc, oldfnt);
     ReleaseDC(wnd->hwnd, hdc);
 
@@ -103,7 +104,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
     }
 }
 
-bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
+bool NotificationWnd::Create(const char* msg, const char* progressMsg) {
     static ATOM atom = 0;
     if (atom == 0) {
         WNDCLASSEX wcex{};
@@ -137,7 +138,8 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     int margin = DpiScale(hwnd, kTopLeftMargin);
     int x = margin;
     int y = margin;
-    this->hwnd = CreateWindowExW(exStyle, clsName, msg, style, x, y, 0, 0, parent, (HMENU) nullptr, h, nullptr);
+    WCHAR* title = ToWstrTemp(msg);
+    this->hwnd = CreateWindowExW(exStyle, clsName, title, style, x, y, 0, 0, parent, (HMENU) nullptr, h, nullptr);
     if (this->hwnd == nullptr) {
         return false;
     }
@@ -153,7 +155,7 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     return true;
 }
 
-void NotificationWnd::UpdateMessage(const WCHAR* msg, int timeoutInMS, bool highlight) {
+void NotificationWnd::UpdateMessage(const char* msg, int timeoutInMS, bool highlight) {
     win::SetText(hwnd, msg);
     this->highlight = highlight;
     if (timeoutInMS != 0) {
@@ -165,11 +167,6 @@ void NotificationWnd::UpdateMessage(const WCHAR* msg, int timeoutInMS, bool high
     if (timeoutInMS != 0) {
         SetTimer(hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
     }
-}
-
-void NotificationWnd::UpdateMessage(const char* msg, int timeoutInMS, bool highlight) {
-    WCHAR* ws = ToWstrTemp(msg);
-    UpdateMessage(ws, timeoutInMS, highlight);
 }
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
@@ -407,7 +404,7 @@ void Notifications::Relayout() {
     }
 }
 
-NotificationWnd* Notifications::Show(HWND hwnd, const WCHAR* msg, NotificationOptions opts, Kind groupId) {
+NotificationWnd* Notifications::Show(HWND hwnd, const char* msg, NotificationOptions opts, Kind groupId) {
     int timeoutMS = ((uint)opts & (uint)NotificationOptions::Persist) ? 0 : 3000;
     bool highlight = ((uint)opts & (uint)NotificationOptions::Highlight);
 
@@ -422,11 +419,6 @@ NotificationWnd* Notifications::Show(HWND hwnd, const WCHAR* msg, NotificationOp
     return wnd;
 }
 
-NotificationWnd* Notifications::Show(HWND hwnd, const char* s, NotificationOptions opts, Kind groupId) {
-    WCHAR* msg = ToWstrTemp(s);
-    return Show(hwnd, msg, opts, groupId);
-}
-
 void NotificationWnd::UpdateProgress(int current, int total) {
     CrashIf(total <= 0);
     if (total <= 0) {
@@ -434,8 +426,9 @@ void NotificationWnd::UpdateProgress(int current, int total) {
     }
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
-        AutoFreeWstr message(str::Format(progressMsg, current, total));
-        this->UpdateMessage(message);
+        char* msg = str::Format(progressMsg, current, total);
+        this->UpdateMessage(msg);
+        str::Free(msg);
     }
 }
 

@@ -291,11 +291,12 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
         char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
         WCHAR* sourcePath = ToWstrTemp(srcPath);
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, flags.forwardSearchLine, 0, &page, rects);
-        ShowForwardSearchResult(win, sourcePath, flags.forwardSearchLine, 0, ret, page, rects);
+        ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
     }
     if (flags.search != nullptr) {
-        WCHAR* search = ToWstrTemp(flags.search);
-        FindTextOnThread(win, TextSearchDirection::Forward, search, true /*wasModified*/, true /*showProgress*/);
+        bool wasModified = true;
+        bool showProgress = true;
+        FindTextOnThread(win, TextSearchDirection::Forward, flags.search, wasModified, showProgress);
     }
     return win;
 }

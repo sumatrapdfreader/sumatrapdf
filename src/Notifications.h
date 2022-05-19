@@ -30,9 +30,9 @@ struct NotificationWnd : public ProgressUpdateUI {
     bool isCanceled = false;
     int progress = 0;
     int progressWidth = 0;
-    WCHAR* progressMsg = nullptr; // must contain two %d (for current and total)
+    char* progressMsg = nullptr; // must contain two %d (for current and total)
 
-    bool Create(const WCHAR* msg, const WCHAR* progressMsg);
+    bool Create(const char* msg, const char* progressMsg);
 
     Kind groupId = nullptr; // for use by Notifications
 
@@ -45,7 +45,6 @@ struct NotificationWnd : public ProgressUpdateUI {
 
     ~NotificationWnd() override;
 
-    void UpdateMessage(const WCHAR* msg, int timeoutInMS = 0, bool highlight = false);
     void UpdateMessage(const char* msg, int timeoutInMS = 0, bool highlight = false);
 
     // ProgressUpdateUI methods
@@ -62,8 +61,6 @@ struct Notifications {
     ~Notifications();
     bool Contains(NotificationWnd* wnd) const;
 
-    NotificationWnd* Show(HWND hwnd, const WCHAR* msg, NotificationOptions opts = NotificationOptions::WithTimeout,
-                          Kind groupId = NG_RESPONSE_TO_ACTION);
     NotificationWnd* Show(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
                           Kind groupId = NG_RESPONSE_TO_ACTION);
 

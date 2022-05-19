@@ -1912,9 +1912,9 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 
-    AutoFreeWstr posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.Get()));
+    AutoFreeStr posInfo(str::Format("%s %s", _TRA("Cursor position:"), posStr.Get()));
     if (selStr) {
-        posInfo.Set(str::Format(L"%s - %s %s", posInfo.Get(), _TR("Selection:"), selStr.Get()));
+        posInfo.Set(str::Format("%s - %s %s", posInfo.Get(), _TRA("Selection:"), selStr.Get()));
     }
     if (!wnd) {
         win->notifications->Show(win->hwndCanvas, posInfo, NotificationOptions::Persist, NG_CURSOR_POS_HELPER);
@@ -2730,7 +2730,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         LoadArgs args(srcFileName, win);
         args.forceReuse = true;
         LoadDocument(args);
-        win->notifications->Show(win->hwndCanvas, _TR("Failed to rename the file!"), NotificationOptions::Warning);
+        win->notifications->Show(win->hwndCanvas, _TRA("Failed to rename the file!"), NotificationOptions::Warning);
         return;
     }
 
@@ -4265,7 +4265,7 @@ static void CopySelectionInTabToClipboard(TabInfo* tab) {
     }
     // TODO: can this be reached?
     if (tab->AsFixed()) {
-        tab->win->notifications->Show(tab->win->hwndCanvas, _TR("Select content with Ctrl+left mouse button"));
+        tab->win->notifications->Show(tab->win->hwndCanvas, _TRA("Select content with Ctrl+left mouse button"));
     }
 }
 
@@ -4861,7 +4861,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
 
         case CmdDebugShowNotif: {
-            win->notifications->Show(win->hwndCanvas, L"This is a notification", NotificationOptions::Warning);
+            win->notifications->Show(win->hwndCanvas, "This is a notification", NotificationOptions::Warning);
             // TODO: this notification covers previous
             // win->notifications->Show(win->hwndCanvas, L"This is a second notification\nMy friend.");
         } break;
