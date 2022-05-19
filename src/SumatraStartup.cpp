@@ -1273,8 +1273,7 @@ ContinueOpenWindow:
     nWithDde = (int)gDdeOpenOnStartup.size();
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
-        for (auto&& filePath : gDdeOpenOnStartup) {
-            auto path = ToUtf8Temp(filePath);
+        for (char* path : gDdeOpenOnStartup) {
             if (restoreSession && FindWindowInfoByFile(path, false)) {
                 continue;
             }

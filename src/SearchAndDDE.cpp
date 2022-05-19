@@ -47,7 +47,7 @@
 //  eg: [Open("c:\file.pdf", 1, 1, 0)]
 
 bool gIsStartup = false;
-WStrVec gDdeOpenOnStartup;
+StrVec gDdeOpenOnStartup;
 
 Kind NG_FIND_PROGRESS = "findProgress";
 
@@ -729,14 +729,14 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         win = CreateAndShowWindowInfo(nullptr);
     }
 
+    char* path = ToUtf8Temp(pdfFile);
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
-        gDdeOpenOnStartup.Append(pdfFile.Get());
+        gDdeOpenOnStartup.Append(path);
         return next;
     }
 
-    char* path = ToUtf8Temp(pdfFile);
     if (win == nullptr) {
         win = FindWindowInfoByFile(path, focusTab);
     }
