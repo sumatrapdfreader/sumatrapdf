@@ -28,9 +28,10 @@ struct ChmFile {
     char* ResolveTopicID(unsigned int id) const;
 
     char* ToUtf8(const u8* text, uint overrideCP = 0) const;
-    WCHAR* ToStr(const char* text) const;
+    char* ToUtf8(const char* text, uint overrideCP = 0) const;
+    WCHAR* ToWstr(const char* text) const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetHomePath() const;
     Vec<char*>* GetAllPaths() const;
 

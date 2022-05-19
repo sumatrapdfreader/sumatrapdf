@@ -952,24 +952,23 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
 
-    AutoFreeWstr docTitle(str::Dup(L""));
+    AutoFreeStr docTitle(str::Dup(""));
     if (tab->ctrl) {
-        WCHAR* title = tab->ctrl->GetProperty(DocumentProperty::Title);
+        char* title = tab->ctrl->GetProperty(DocumentProperty::Title);
         if (title != nullptr) {
             str::NormalizeWSInPlace(title);
             docTitle.Set(title);
             if (!str::IsEmpty(title)) {
-                docTitle.Set(str::Format(L"- [%s] ", title));
+                docTitle.Set(str::Format("- [%s] ", title));
             }
         }
     }
 
-    char* docTitleA = ToUtf8Temp(docTitle);
     if (!IsUIRightToLeft()) {
-        tab->frameTitle.Set(str::Format("%s %s- %s", titlePath, docTitleA, kSumatraWindowTitle));
+        tab->frameTitle.Set(str::Format("%s %s- %s", titlePath, docTitle.Get(), kSumatraWindowTitle));
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        tab->frameTitle.Set(str::Format("%s %s- %s", kSumatraWindowTitle, docTitleA, titlePath));
+        tab->frameTitle.Set(str::Format("%s %s- %s", kSumatraWindowTitle, docTitle.Get(), titlePath));
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
@@ -1203,9 +1202,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
         return;
     }
 
-    AutoFreeWstr unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
+    AutoFreeStr unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (unsupported) {
-        unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"),
+        unsupported.Set(str::Format(_TRA("This document uses unsupported features (%s) and might not render properly"),
                                     unsupported.Get()));
         win->notifications->Show(win->hwndCanvas, unsupported, NotificationOptions::Warning, NG_PERSISTENT_WARNING);
     }
@@ -2595,7 +2594,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         ok = file::WriteFile(realDstFileName, data);
     } else if (convertToPDF) {
         // Convert the file into a PDF one
-        WCHAR* producerName = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
+        char* producerName = str::JoinTemp(kAppNameA, " ", CURR_VERSION_STRA);
         PdfCreator::SetProducerName(producerName);
         ok = engine->SaveFileAsPDF(pathA);
         if (!ok && gIsDebugBuild) {

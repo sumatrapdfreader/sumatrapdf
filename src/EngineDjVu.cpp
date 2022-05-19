@@ -254,7 +254,7 @@ class EngineDjVu : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override;
@@ -347,7 +347,7 @@ bool EngineDjVu::HasClipOptimizations(int) {
     return false;
 }
 
-WCHAR* EngineDjVu::GetProperty(DocumentProperty) {
+char* EngineDjVu::GetProperty(DocumentProperty) {
     return nullptr;
 }
 

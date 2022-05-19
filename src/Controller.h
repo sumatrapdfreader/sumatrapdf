@@ -76,7 +76,7 @@ struct Controller {
     virtual const char* GetFilePath() const = 0;
     virtual const char* GetDefaultFileExt() const = 0;
     virtual int PageCount() const = 0;
-    virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
+    virtual char* GetProperty(DocumentProperty prop) = 0;
 
     // page navigation (stateful)
     virtual int CurrentPageNo() const = 0;

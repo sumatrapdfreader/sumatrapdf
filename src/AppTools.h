@@ -24,5 +24,7 @@ WCHAR* PathForFileInAppDataDir(const WCHAR* fileName);
 #endif
 
 WCHAR* FormatFileSize(i64);
+char* FormatFileSizeA(i64);
+
 WCHAR* FormatFileSizeNoTrans(i64);
 bool LaunchFileIfExists(const char* path);

@@ -311,7 +311,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->HasClipOptimizations(pageNo);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         // omit properties created by Ghostscript
         if (!pdfEngine || DocumentProperty::CreationDate == prop || DocumentProperty::ModificationDate == prop ||
             DocumentProperty::PdfVersion == prop || DocumentProperty::PdfProducer == prop ||

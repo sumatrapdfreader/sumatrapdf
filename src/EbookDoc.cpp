@@ -249,16 +249,16 @@ void PropertyMap::Set(DocumentProperty prop, char* valueUtf8, bool replace) {
     int idx = Find(prop);
     CrashIf(-1 == idx);
     if (-1 == idx || !replace && values[idx]) {
-        free(valueUtf8);
+        str::Free(valueUtf8);
     } else {
         values[idx].Set(valueUtf8);
     }
 }
 
-WCHAR* PropertyMap::Get(DocumentProperty prop) const {
+char* PropertyMap::Get(DocumentProperty prop) const {
     int idx = Find(prop);
     if (idx >= 0 && values[idx]) {
-        return ToWstr(values[idx].Get());
+        return str::Dup(values[idx].Get());
     }
     return nullptr;
 }
@@ -592,7 +592,7 @@ ByteSlice EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     return zip->GetFileDataByName(url);
 }
 
-WCHAR* EpubDoc::GetProperty(DocumentProperty prop) const {
+char* EpubDoc::GetProperty(DocumentProperty prop) const {
     return props.Get(prop);
 }
 
@@ -994,7 +994,7 @@ ByteSlice* Fb2Doc::GetCoverImage() const {
     return GetImageData(coverImage);
 }
 
-WCHAR* Fb2Doc::GetProperty(DocumentProperty prop) const {
+char* Fb2Doc::GetProperty(DocumentProperty prop) const {
     return props.Get(prop);
 }
 
@@ -1209,7 +1209,7 @@ ByteSlice PalmDoc::GetHtmlData() const {
     return htmlData.AsByteSlice();
 }
 
-WCHAR* PalmDoc::GetProperty(DocumentProperty) const {
+char* PalmDoc::GetProperty(DocumentProperty) const {
     return nullptr;
 }
 
@@ -1341,7 +1341,7 @@ ByteSlice HtmlDoc::LoadURL(const char* url) {
     return file::ReadFile(path);
 }
 
-WCHAR* HtmlDoc::GetProperty(DocumentProperty prop) const {
+char* HtmlDoc::GetProperty(DocumentProperty prop) const {
     return props.Get(prop);
 }
 
@@ -1600,7 +1600,7 @@ ByteSlice TxtDoc::GetHtmlData() const {
     return htmlData.AsByteSlice();
 }
 
-WCHAR* TxtDoc::GetProperty(DocumentProperty) const {
+char* TxtDoc::GetProperty(DocumentProperty) const {
     return nullptr;
 }
 

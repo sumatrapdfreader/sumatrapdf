@@ -141,7 +141,7 @@ class EngineEbook : public EngineBase {
 
     void GetTransform(Matrix& m, float zoom, int rotation);
     bool ExtractPageAnchors();
-    WCHAR* ExtractFontList();
+    char* ExtractFontList();
 
     virtual IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
 
@@ -570,7 +570,7 @@ IPageDestination* EngineEbook::GetNamedDest(const char* name) {
     return nullptr;
 }
 
-WCHAR* EngineEbook::ExtractFontList() {
+char* EngineEbook::ExtractFontList() {
     ScopedCritSec scope(&pagesAccess);
 
     Vec<mui::CachedFont*> seenFonts;
@@ -613,7 +613,7 @@ WCHAR* EngineEbook::ExtractFontList() {
 
     fonts.SortNatural();
     char* res = Join(fonts, "\n");
-    return ToWstr(res);
+    return res;
 }
 
 static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
@@ -696,7 +696,7 @@ class EngineEpub : public EngineEbook {
     ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
@@ -873,7 +873,7 @@ class EngineFb2 : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
@@ -993,7 +993,7 @@ class EngineMobi : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
@@ -1145,7 +1145,7 @@ class EnginePdb : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
@@ -1361,7 +1361,7 @@ class EngineChm : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
@@ -1435,7 +1435,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
     char* GetHtml() {
         // first add the homepage
         const char* index = doc->GetHomePath();
-        AutoFreeWstr url(doc->ToStr(index));
+        AutoFreeWstr url(doc->ToWstr(index));
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1612,7 +1612,7 @@ class EngineHtml : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
@@ -1715,7 +1715,7 @@ class EngineTxt : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
+    char* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 

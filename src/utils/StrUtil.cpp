@@ -2298,6 +2298,35 @@ WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
     return res;
 }
 
+// format a number with a given thousand separator e.g. it turns 1234 into "1,234"
+// Caller needs to free() the result.
+char* FormatNumWithThousandSepA(i64 num, LCID locale) {
+    WCHAR thousandSepW[4]{};
+    if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
+        str::BufSet(thousandSepW, dimof(thousandSepW), ",");
+    }
+    char* thousandSep = ToUtf8Temp(thousandSepW);
+    AutoFreeStr buf(str::Format("%Iu", (size_t)num));
+
+    size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
+    char* res = AllocArray<char>(resLen);
+    if (!res) {
+        return nullptr;
+    }
+    char* next = res;
+    int i = 3 - (str::Len(buf) % 3);
+    for (const char* src = buf; *src;) {
+        *next++ = *src++;
+        if (*src && i == 2) {
+            next += str::BufSet(next, resLen - (next - res), thousandSep);
+        }
+        i = (i + 1) % 3;
+    }
+    *next = '\0';
+
+    return res;
+}
+
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
 WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
@@ -2312,6 +2341,28 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
     // always add between one and two decimals after the point
     AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
     if (str::EndsWith(buf, L"0")) {
+        buf[str::Len(buf) - 1] = '\0';
+    }
+
+    return buf.StealData();
+}
+
+// Format a floating point number with at most two decimal after the point
+// Caller needs to free the result.
+char* FormatFloatWithThousandSepA(double number, LCID locale) {
+    i64 num = (i64)(number * 100 + 0.5);
+
+    AutoFreeStr tmp(FormatNumWithThousandSepA(num / 100, locale));
+    WCHAR decimalW[4];
+    if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
+        decimalW[0] = '.';
+        decimalW[1] = 0;
+    }
+    char* decimal = ToUtf8Temp(decimalW);
+
+    // always add between one and two decimals after the point
+    AutoFreeStr buf(str::Format("%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
+    if (str::EndsWith(buf, "0")) {
         buf[str::Len(buf) - 1] = '\0';
     }
 

@@ -86,7 +86,7 @@ static char* Escape(const WCHAR* str) {
                 escaped.Append(L"&amp;");
                 break;
             default:
-                escaped.Append(*s);
+                escaped.AppendChar(*s);
                 break;
         }
     }
@@ -106,26 +106,26 @@ static char* Escape(const char* str) {
     for (const char* s = str; *s; s++) {
         switch (*s) {
             case '&':
-                escaped.Append(L"&amp;");
+                escaped.Append("&amp;");
                 break;
             case '<':
-                escaped.Append(L"&lt;");
+                escaped.Append("&lt;");
                 break;
             case '>':
-                escaped.Append(L"&gt;");
+                escaped.Append("&gt;");
                 break;
             case '"':
-                escaped.Append(L"&quot;");
+                escaped.Append("&quot;");
                 break;
             case '\'':
-                escaped.Append(L"&amp;");
+                escaped.Append("&amp;");
                 break;
             default:
-                escaped.Append(*s);
+                escaped.AppendChar(*s);
                 break;
         }
     }
-    return ToUtf8(escaped.Get());
+    return escaped.StealData();
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
@@ -195,18 +195,18 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (!fullDump) {
         return;
     }
-    AutoFreeWstr fontlist(engine->GetProperty(DocumentProperty::FontList));
+    AutoFreStr fontlist(engine->GetProperty(DocumentProperty::FontList));
     if (fontlist) {
-        WStrVec fonts;
-        Split(fonts, fontlist, L"\n");
-        str = Escape(Join(fonts, L"\n\t\t"));
+        StrVec fonts;
+        Split(fonts, fontlist, "\n");
+        str = Escape(Join(fonts, "\n\t\t"));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
     }
 }
 
 // caller must free() the result
 static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
-    WCHAR* destName = dest->GetName();
+    char* destName = dest->GetName();
     if (destName) {
         AutoFree name = Escape(destName);
         return str::Format("Name=\"%s\"", name.Get());

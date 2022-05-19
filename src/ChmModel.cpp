@@ -110,7 +110,7 @@ int ChmModel::PageCount() const {
     return (int)pages.size();
 }
 
-WCHAR* ChmModel::GetProperty(DocumentProperty prop) {
+char* ChmModel::GetProperty(DocumentProperty prop) {
     return doc->GetProperty(prop);
 }
 

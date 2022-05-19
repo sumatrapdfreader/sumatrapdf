@@ -70,6 +70,10 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     return {data, len};
 }
 
+char* ChmFile::ToUtf8(const char* text, uint overrideCP) const {
+    return ToUtf8((u8*)text, overrideCP);
+}
+
 char* ChmFile::ToUtf8(const u8* text, uint overrideCP) const {
     const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM)) {
@@ -84,7 +88,7 @@ char* ChmFile::ToUtf8(const u8* text, uint overrideCP) const {
     return strconv::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-WCHAR* ChmFile::ToStr(const char* text) const {
+WCHAR* ChmFile::ToWstr(const char* text) const {
     return strconv::StrToWstr(text, codepage);
 }
 
@@ -314,12 +318,12 @@ bool ChmFile::Load(const char* path) {
     return true;
 }
 
-WCHAR* ChmFile::GetProperty(DocumentProperty prop) const {
-    AutoFreeWstr result;
+char* ChmFile::GetProperty(DocumentProperty prop) const {
+    AutoFreeStr result;
     if (DocumentProperty::Title == prop && title) {
-        result.Set(ToStr(title));
+        result.Set(ToUtf8(title));
     } else if (DocumentProperty::CreatorApp == prop && creator) {
-        result.Set(ToStr(creator));
+        result.Set(ToUtf8(creator));
     }
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {

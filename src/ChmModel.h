@@ -15,7 +15,7 @@ struct ChmModel : Controller {
     const char* GetFilePath() const override;
     const char* GetDefaultFileExt() const override;
     int PageCount() const override;
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     // page navigation (stateful)
     int CurrentPageNo() const override;

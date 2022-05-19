@@ -490,7 +490,7 @@ class EngineImage : public EngineImages {
 
     EngineBase* Clone() override;
 
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     bool SaveFileAsPDF(const char* pdfFileName) override;
 
@@ -606,7 +606,7 @@ bool EngineImage::FinishLoading() {
     return fileExt != nullptr;
 }
 
-// cf. http://www.universalthread.com/ViewPageArticle.aspx?ID=831
+// http://www.universalthread.com/ViewPageArticle.aspx?ID=831
 #ifndef PropertyTagXPTitle
 #define PropertyTagXPTitle 0x9c9b
 #define PropertyTagXPComment 0x9c9c
@@ -615,18 +615,18 @@ bool EngineImage::FinishLoading() {
 #define PropertyTagXPSubject 0x9c9f
 #endif
 
-static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
-    WCHAR* value = nullptr;
+static char* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
+    char* value = nullptr;
     uint size = bmp->GetPropertyItemSize(id);
     PropertyItem* item = (PropertyItem*)malloc(size);
     Status ok = item ? bmp->GetPropertyItem(id, size, item) : OutOfMemory;
     if (Ok != ok) {
         /* property didn't exist */;
     } else if (PropertyTagTypeASCII == item->type) {
-        value = strconv::AnsiToWstr((char*)item->value);
+        value = strconv::AnsiToUtf8((char*)item->value);
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
                !((WCHAR*)item->value)[item->length / 2 - 1]) {
-        value = str::Dup((WCHAR*)item->value);
+        value = ToUtf8((WCHAR*)item->value);
     }
     free(item);
     if (!value && altId) {
@@ -635,7 +635,7 @@ static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     return value;
 }
 
-WCHAR* EngineImage::GetProperty(DocumentProperty prop) {
+char* EngineImage::GetProperty(DocumentProperty prop) {
     switch (prop) {
         case DocumentProperty::Title:
             return GetImageProperty(image, PropertyTagImageDescription, PropertyTagXPTitle);
@@ -800,7 +800,7 @@ class EngineImageDir : public EngineImages {
     }
     bool SaveFileAs(const char* copyFileName) override;
 
-    WCHAR* GetProperty(DocumentProperty) override {
+    char* GetProperty(DocumentProperty) override {
         return nullptr;
     }
 
@@ -986,7 +986,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     bool SaveFileAsPDF(const char* pdfFileName) override;
 
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     TocTree* GetToc() override;
 
@@ -1016,14 +1016,14 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     TocTree* tocTree = nullptr;
 
     // extracted metadata
-    AutoFreeWstr propTitle;
-    WStrVec propAuthors;
-    AutoFreeWstr propDate;
-    AutoFreeWstr propModDate;
-    AutoFreeWstr propCreator;
-    AutoFreeWstr propSummary;
+    AutoFreeStr propTitle;
+    StrVec propAuthors;
+    AutoFreeStr propDate;
+    AutoFreeStr propModDate;
+    AutoFreeStr propCreator;
+    AutoFreeStr propSummary;
     // temporary state needed for extracting metadata
-    AutoFreeWstr propAuthorTmp;
+    AutoFreeStr propAuthorTmp;
 };
 
 // TODO: refactor so that doesn't have to keep <arch>
@@ -1267,23 +1267,23 @@ void EngineCbx::ParseComicInfoXml(ByteSlice xmlData) {
 // http://code.google.com/p/comicbookinfo/
 bool EngineCbx::Visit(const char* path, const char* value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
-        propTitle.Set(ToWstr(value));
+        propTitle.Set(str::Dup(value));
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        propDate.Set(str::Format(L"%s/%d", propDate ? propDate.Get() : L"", atoi(value)));
+        propDate.Set(str::Format("%s/%d", propDate ? propDate.Get() : "", atoi(value)));
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.Get() : L""));
+        propDate.Set(str::Format("%d%s", atoi(value), propDate ? propDate.Get() : ""));
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {
-        propCreator.Set(ToWstr(value));
+        propCreator.Set(str::Dup(value));
     } else if (json::Type::String == type && str::Eq(path, "/lastModified")) {
-        propModDate.Set(ToWstr(value));
+        propModDate.Set(str::Dup(value));
     } else if (json::Type::String == type && str::Eq(path, "/X-summary")) {
-        propSummary.Set(ToWstr(value));
+        propSummary.Set(str::Dup(value));
     } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
         const char* prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type::String == type && str::Eq(prop, "person")) {
-                propAuthorTmp.Set(ToWstr(value));
+                propAuthorTmp.Set(str::Dup(value));
             } else if (json::Type::Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
                        !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp.Get());
@@ -1311,12 +1311,12 @@ bool EngineCbx::SaveFileAsPDF(const char* pdfFileName) {
     return ok;
 }
 
-WCHAR* EngineCbx::GetProperty(DocumentProperty prop) {
+char* EngineCbx::GetProperty(DocumentProperty prop) {
     switch (prop) {
         case DocumentProperty::Title:
             return str::Dup(propTitle);
         case DocumentProperty::Author:
-            return propAuthors.size() ? Join(propAuthors, L", ") : nullptr;
+            return propAuthors.size() ? Join(propAuthors, ", ") : nullptr;
         case DocumentProperty::CreationDate:
             return str::Dup(propDate);
         case DocumentProperty::ModificationDate:

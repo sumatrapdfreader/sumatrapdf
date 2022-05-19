@@ -96,7 +96,7 @@ int DisplayModel::PageCount() const {
     return engine->PageCount();
 }
 
-WCHAR* DisplayModel::GetProperty(DocumentProperty prop) {
+char* DisplayModel::GetProperty(DocumentProperty prop) {
     return engine->GetProperty(prop);
 }
 

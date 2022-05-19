@@ -40,14 +40,14 @@ constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 struct PropertyEl {
-    PropertyEl(const WCHAR* leftTxt, WCHAR* rightTxt, bool isPath = false) : leftTxt(leftTxt), isPath(isPath) {
+    PropertyEl(const char* leftTxt, char* rightTxt, bool isPath = false) : leftTxt(leftTxt), isPath(isPath) {
         this->rightTxt.Set(rightTxt);
     }
 
     // A property is always in format: Name (left): Value (right)
     // (leftTxt is static, rightTxt will be freed)
-    const WCHAR* leftTxt;
-    AutoFreeWstr rightTxt;
+    const char* leftTxt;
+    AutoFreeStr rightTxt;
 
     // data calculated by the layout
     Rect leftPos;
@@ -65,7 +65,7 @@ struct PropertiesLayout {
         DeleteVecMembers(props);
     }
 
-    void AddProperty(const WCHAR* key, WCHAR* value, bool isPath = false) {
+    void AddProperty(const char* key, char* value, bool isPath = false) {
         // don't display value-less properties
         if (!str::IsEmpty(value)) {
             props.Append(new PropertyEl(key, value, isPath));
@@ -73,7 +73,7 @@ struct PropertiesLayout {
             free(value);
         }
     }
-    bool HasProperty(const WCHAR* key) {
+    bool HasProperty(const char* key) {
         for (auto&& prop : props) {
             if (str::Eq(key, prop->leftTxt)) {
                 return true;
@@ -113,15 +113,15 @@ void DeletePropertiesWindow(HWND hwndParent) {
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
+static bool PdfDateParseA(const char* pdfDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, L"D:")) {
+    if (str::StartsWith(pdfDate, "D:")) {
         pdfDate += 2;
     }
     return str::Parse(pdfDate,
-                      L"%4d%2d%2d"
-                      L"%2d%2d%2d",
+                      "%4d%2d%2d"
+                      "%2d%2d%2d",
                       &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
                       &timeOut->wSecond) != nullptr;
     // don't bother about the day of week, we won't display it anyway
@@ -130,44 +130,44 @@ static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
+static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const WCHAR* end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const char* end = str::Parse(isoDate, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) { // time is optional
-        str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        str::Parse(end, "T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     }
     return end != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
-static WCHAR* FormatSystemTime(SYSTEMTIME& date) {
-    WCHAR buf[512]{};
-    int cchBufLen = dimof(buf);
-    int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, buf, cchBufLen);
+static char* FormatSystemTimeA(SYSTEMTIME& date) {
+    WCHAR bufW[512]{};
+    int cchBufLen = dimof(bufW);
+    int ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, bufW, cchBufLen);
     if (ret < 2) { // GetDateFormat() failed or returned an empty result
         return nullptr;
     }
 
     // don't add 00:00:00 for dates without time
     if (0 == date.wHour && 0 == date.wMinute && 0 == date.wSecond) {
-        return str::Dup(buf);
+        return ToUtf8(bufW);
     }
 
-    WCHAR* tmp = buf + ret;
+    WCHAR* tmp = bufW + ret;
     tmp[-1] = ' ';
-    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, nullptr, tmp, cchBufLen - ret);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &date, nullptr, tmp, cchBufLen - ret);
     if (ret < 2) { // GetTimeFormat() failed or returned an empty result
         tmp[-1] = '\0';
     }
 
-    return str::Dup(buf);
+    return ToUtf8(bufW);
 }
 
 // Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
 // format e.g. "12/22/2009 5:19:33 PM"
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // The conversion happens in place
-static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SYSTEMTIME* timeOut)) {
+static void ConvDateToDisplay(char** s, bool (*DateParse)(const char* date, SYSTEMTIME* timeOut)) {
     if (!s || !*s || !DateParse) {
         return;
     }
@@ -178,7 +178,7 @@ static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SY
         return;
     }
 
-    WCHAR* formatted = FormatSystemTime(date);
+    char* formatted = FormatSystemTimeA(date);
     if (formatted) {
         free(*s);
         *s = formatted;
@@ -187,44 +187,44 @@ static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SY
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
-static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
+static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
     SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
-    const WCHAR* formatName = L"";
+    const char* formatName = "";
     switch (GetPaperFormatFromSizeApprox(size)) {
         case PaperFormat::A2:
-            formatName = L" (A2)";
+            formatName = " (A2)";
             break;
         case PaperFormat::A3:
-            formatName = L" (A3)";
+            formatName = " (A3)";
             break;
         case PaperFormat::A4:
-            formatName = L" (A4)";
+            formatName = " (A4)";
             break;
         case PaperFormat::A5:
-            formatName = L" (A5)";
+            formatName = " (A5)";
             break;
         case PaperFormat::A6:
-            formatName = L" (A6)";
+            formatName = " (A6)";
             break;
         case PaperFormat::Letter:
-            formatName = L" (Letter)";
+            formatName = " (Letter)";
             break;
         case PaperFormat::Legal:
-            formatName = L" (Legal)";
+            formatName = " (Legal)";
             break;
         case PaperFormat::Tabloid:
-            formatName = L" (Tabloid)";
+            formatName = " (Tabloid)";
             break;
         case PaperFormat::Statement:
-            formatName = L" (Statement)";
+            formatName = " (Statement)";
             break;
     }
 
     bool isMetric = GetMeasurementSystem() == 0;
     double unitsPerInch = isMetric ? 2.54 : 1.0;
-    const WCHAR* unit = isMetric ? L"cm" : L"in";
+    const char* unit = isMetric ? "cm" : "in";
 
     double width = size.dx * unitsPerInch;
     double height = size.dy * unitsPerInch;
@@ -235,59 +235,59 @@ static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
         height += 0.01;
     }
 
-    AutoFreeWstr strWidth(str::FormatFloatWithThousandSep(width));
-    AutoFreeWstr strHeight(str::FormatFloatWithThousandSep(height));
+    AutoFreeStr strWidth(str::FormatFloatWithThousandSepA(width));
+    AutoFreeStr strHeight(str::FormatFloatWithThousandSepA(height));
 
-    return str::Format(L"%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
+    return str::Format("%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
 
-static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
-    AutoFreeWstr fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
+static char* FormatPdfFileStructure(Controller* ctrl) {
+    AutoFreeStr fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
     if (str::IsEmpty(fstruct.Get())) {
         return nullptr;
     }
-    WStrVec parts;
-    Split(parts, fstruct, L",", true);
+    StrVec parts;
+    Split(parts, fstruct, ",", true);
 
-    WStrVec props;
+    StrVec props;
 
-    if (parts.Contains(L"linearized")) {
-        props.Append(_TR("Fast Web View"));
+    if (parts.Contains("linearized")) {
+        props.Append(_TRA("Fast Web View"));
     }
-    if (parts.Contains(L"tagged")) {
-        props.Append(_TR("Tagged PDF"));
+    if (parts.Contains("tagged")) {
+        props.Append(_TRA("Tagged PDF"));
     }
-    if (parts.Contains(L"PDFX")) {
-        props.Append(L"PDF/X (ISO 15930)");
+    if (parts.Contains("PDFX")) {
+        props.Append("PDF/X (ISO 15930)");
     }
-    if (parts.Contains(L"PDFA1")) {
-        props.Append(L"PDF/A (ISO 19005)");
+    if (parts.Contains("PDFA1")) {
+        props.Append("PDF/A (ISO 19005)");
     }
-    if (parts.Contains(L"PDFE1")) {
-        props.Append(L"PDF/E (ISO 24517)");
+    if (parts.Contains("PDFE1")) {
+        props.Append("PDF/E (ISO 24517)");
     }
 
-    return Join(props, L", ");
+    return Join(props, ", ");
 }
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static WCHAR* FormatPermissions(Controller* ctrl) {
+static char* FormatPermissionsA(Controller* ctrl) {
     if (!ctrl->AsFixed()) {
         return nullptr;
     }
 
-    WStrVec denials;
+    StrVec denials;
 
     EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {
-        denials.Append(_TR("printing document"));
+        denials.Append(_TRA("printing document"));
     }
     if (!engine->AllowsCopyingText()) {
-        denials.Append(_TR("copying text"));
+        denials.Append(_TRA("copying text"));
     }
 
-    return Join(denials, L", ");
+    return Join(denials, ", ");
 }
 
 static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
@@ -299,9 +299,9 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     SelectObject(hdc, fontLeftTxt);
     int leftMaxDx = 0;
     for (PropertyEl* el : layoutData->props) {
-        const WCHAR* txt = el->leftTxt;
+        const char* txt = el->leftTxt;
         RECT rc{};
-        DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        DrawTextUtf8(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->leftPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
 
@@ -316,9 +316,9 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     int lineCount = 0;
     int textDy = 0;
     for (PropertyEl* el : layoutData->props) {
-        const WCHAR* txt = el->rightTxt;
+        const char* txt = el->rightTxt;
         RECT rc{};
-        DrawTextW(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        DrawTextUtf8(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         auto dx = rc.right - rc.left;
         // limit the width or right text as some fields can be very long
         if (dx > 720) {
@@ -381,7 +381,7 @@ static void ShowExtendedProperties(HWND hwnd) {
     PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
     if (pl) {
         WindowInfo* win = FindWindowInfoByHwnd(pl->hwndParent);
-        if (win && !pl->HasProperty(_TR("Fonts:"))) {
+        if (win && !pl->HasProperty(_TRA("Fonts:"))) {
             DestroyWindow(hwnd);
             ShowProperties(win->hwndFrame, win->ctrl, true);
         }
@@ -395,9 +395,9 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
     }
 
     // concatenate all the properties into a multi-line string
-    str::WStr lines(256);
+    str::Str lines(256);
     for (PropertyEl* el : layoutData->props) {
-        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt.Get());
+        lines.AppendFmt("%s %s\r\n", el->leftTxt, el->rightTxt.Get());
     }
 
     CopyTextToClipboard(lines.LendData());
@@ -481,49 +481,49 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     CrashIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
-    WCHAR* str = ToWstr(path);
-    layoutData->AddProperty(_TR("File:"), str, true);
+    char* str = str::Dup(path);
+    layoutData->AddProperty(_TRA("File:"), str, true);
 
     str = ctrl->GetProperty(DocumentProperty::Title);
-    layoutData->AddProperty(_TR("Title:"), str);
+    layoutData->AddProperty(_TRA("Title:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::Subject);
-    layoutData->AddProperty(_TR("Subject:"), str);
+    layoutData->AddProperty(_TRA("Subject:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::Author);
-    layoutData->AddProperty(_TR("Author:"), str);
+    layoutData->AddProperty(_TRA("Author:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::Copyright);
-    layoutData->AddProperty(_TR("Copyright:"), str);
+    layoutData->AddProperty(_TRA("Copyright:"), str);
 
     DisplayModel* dm = ctrl->AsFixed();
     str = ctrl->GetProperty(DocumentProperty::CreationDate);
     if (str && dm && kindEngineMupdf == dm->engineType) {
-        ConvDateToDisplay(&str, PdfDateParse);
+        ConvDateToDisplay(&str, PdfDateParseA);
     } else {
         ConvDateToDisplay(&str, IsoDateParse);
     }
-    layoutData->AddProperty(_TR("Created:"), str);
+    layoutData->AddProperty(_TRA("Created:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::ModificationDate);
     if (str && dm && kindEngineMupdf == dm->engineType) {
-        ConvDateToDisplay(&str, PdfDateParse);
+        ConvDateToDisplay(&str, PdfDateParseA);
     } else {
         ConvDateToDisplay(&str, IsoDateParse);
     }
-    layoutData->AddProperty(_TR("Modified:"), str);
+    layoutData->AddProperty(_TRA("Modified:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::CreatorApp);
-    layoutData->AddProperty(_TR("Application:"), str);
+    layoutData->AddProperty(_TRA("Application:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::PdfProducer);
-    layoutData->AddProperty(_TR("PDF Producer:"), str);
+    layoutData->AddProperty(_TRA("PDF Producer:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::PdfVersion);
-    layoutData->AddProperty(_TR("PDF Version:"), str);
+    layoutData->AddProperty(_TRA("PDF Version:"), str);
 
     str = FormatPdfFileStructure(ctrl);
-    layoutData->AddProperty(_TR("PDF Optimizations:"), str);
+    layoutData->AddProperty(_TRA("PDF Optimizations:"), str);
 
     const char* pathA = ctrl->GetFilePath();
     i64 fileSize = file::GetSize(pathA);
@@ -536,36 +536,37 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
         d.Free();
     }
     if (-1 != fileSize) {
-        str = FormatFileSize((size_t)fileSize);
-        layoutData->AddProperty(_TR("File Size:"), str);
+        str = FormatFileSizeA((size_t)fileSize);
+        layoutData->AddProperty(_TRA("File Size:"), str);
     }
 
-    str = str::Format(L"%d", ctrl->PageCount());
-    layoutData->AddProperty(_TR("Number of Pages:"), str);
+    str = str::Format("%d", ctrl->PageCount());
+    layoutData->AddProperty(_TRA("Number of Pages:"), str);
 
     if (dm) {
         str = FormatPageSize(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
         if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            WCHAR* tmp = str;
-            str = str::Format(L"\u202A%s\u202C", tmp);
-            free(tmp);
+            WCHAR* tmp = ToWstrTemp(str);
+            tmp = str::Format(L"\u202A%s\u202C", tmp);
+            str = ToUtf8(tmp);
+            str::Free(tmp);
         }
-        layoutData->AddProperty(_TR("Page Size:"), str);
+        layoutData->AddProperty(_TRA("Page Size:"), str);
     }
 
-    str = FormatPermissions(ctrl);
-    layoutData->AddProperty(_TR("Denied Permissions:"), str);
+    str = FormatPermissionsA(ctrl);
+    layoutData->AddProperty(_TRA("Denied Permissions:"), str);
 
     if (extended) {
         // Note: FontList extraction can take a while
         str = ctrl->GetProperty(DocumentProperty::FontList);
         if (str) {
             // add a space between basic and extended file properties
-            layoutData->AddProperty(L" ", str::Dup(L" "));
+            layoutData->AddProperty(" ", str::Dup(" "));
         }
-        layoutData->AddProperty(_TR("Fonts:"), str);
+        layoutData->AddProperty(_TRA("Fonts:"), str);
     }
 }
 
@@ -614,22 +615,22 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
     for (PropertyEl* el : layoutData->props) {
-        const WCHAR* txt = el->leftTxt;
+        const char* txt = el->leftTxt;
         rTmp = ToRECT(el->leftPos);
-        DrawTextW(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
+        DrawTextUtf8(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
     }
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
     for (PropertyEl* el : layoutData->props) {
-        const WCHAR* txt = el->rightTxt;
+        const char* txt = el->rightTxt;
         Rect rc = el->rightPos;
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - kRectPadding) {
             rc.dx = rcClient.x + rcClient.dx - kRectPadding - rc.x;
         }
         rTmp = ToRECT(rc);
         uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
-        DrawTextW(hdc, txt, -1, &rTmp, format);
+        DrawTextUtf8(hdc, txt, -1, &rTmp, format);
     }
 
     SelectObject(hdc, origFont);

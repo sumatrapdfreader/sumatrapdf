@@ -17,13 +17,13 @@ class PdfCreator {
     bool AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi = 0);
     bool AddPageFromImageData(ByteSlice data, float imgDpi = 0) const;
 
-    bool SetProperty(DocumentProperty prop, const WCHAR* value) const;
+    bool SetProperty(DocumentProperty prop, const char* value) const;
     bool CopyProperties(EngineBase* engine) const;
 
     bool SaveToFile(const char* filePath) const;
 
     // this name is included in all saved PDF files
-    static void SetProducerName(const WCHAR* name);
+    static void SetProducerName(const char* name);
 
     // creates a simple PDF with all pages rendered as a single image
     static bool RenderToFile(const char* pdfFileName, EngineBase* engine, int dpi = 150);

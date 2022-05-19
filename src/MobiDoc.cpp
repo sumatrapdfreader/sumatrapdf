@@ -905,10 +905,10 @@ ByteSlice MobiDoc::GetHtmlData() const {
     return {};
 }
 
-WCHAR* MobiDoc::GetProperty(DocumentProperty prop) {
-    for (size_t i = 0; i < props.size(); i++) {
-        if (props.at(i).prop == prop) {
-            return strconv::StrToWstr(props.at(i).value, textEncoding);
+char* MobiDoc::GetProperty(DocumentProperty prop) {
+    for (auto& p : props) {
+        if (p.prop == prop) {
+            return strconv::StrToUtf8(p.value, textEncoding);
         }
     }
     return nullptr;

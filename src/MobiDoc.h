@@ -53,7 +53,7 @@ class MobiDoc {
     const char* GetFileName() const {
         return fileName;
     }
-    WCHAR* GetProperty(DocumentProperty prop);
+    char* GetProperty(DocumentProperty prop);
     PdbDocType GetDocType() const {
         return docType;
     }

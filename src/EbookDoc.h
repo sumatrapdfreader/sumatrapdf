@@ -14,14 +14,14 @@ struct ImageData {
 
 char* NormalizeURL(const char* url, const char* base);
 
-class PropertyMap {
+struct PropertyMap {
     AutoFree values[(int)DocumentProperty::PdfVersion];
 
     int Find(DocumentProperty prop) const;
 
   public:
     void Set(DocumentProperty prop, char* valueUtf8, bool replace = false);
-    WCHAR* Get(DocumentProperty prop) const;
+    char* Get(DocumentProperty prop) const;
 };
 
 /* ********** EPUB ********** */
@@ -55,7 +55,7 @@ class EpubDoc {
     ByteSlice* GetImageData(const char* fileName, const char* pagePath);
     ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetFileName() const;
     bool IsRTL() const;
 
@@ -96,7 +96,7 @@ class Fb2Doc {
     ByteSlice* GetImageData(const char* fileName) const;
     ByteSlice* GetCoverImage() const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetFileName() const;
     bool IsZipped() const;
 
@@ -126,7 +126,7 @@ class PalmDoc {
 
     ByteSlice GetHtmlData() const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetFileName() const;
 
     bool HasToc() const;
@@ -157,7 +157,7 @@ class HtmlDoc {
     ByteSlice* GetImageData(const char* fileName);
     ByteSlice GetFileData(const char* relPath);
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
@@ -178,7 +178,7 @@ class TxtDoc {
 
     ByteSlice GetHtmlData() const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetFileName() const;
 
     bool IsRFC() const;

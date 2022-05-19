@@ -52,7 +52,7 @@ class EngineMulti : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -144,7 +144,7 @@ bool EngineMulti::HasClipOptimizations(int pageNo) {
     return e->HasClipOptimizations(pageNo);
 }
 
-WCHAR* EngineMulti::GetProperty(DocumentProperty prop) {
+char* EngineMulti::GetProperty(DocumentProperty prop) {
     return nullptr;
 }
 

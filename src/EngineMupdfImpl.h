@@ -55,7 +55,7 @@ class EngineMupdf : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -111,7 +111,7 @@ class EngineMupdf : public EngineBase {
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) const;
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
-    WCHAR* ExtractFontList();
+    char* ExtractFontList();
 
     ByteSlice LoadStreamFromPDFFile(const char* filePath);
     void InvalideAnnotationsForPage(int pageNo);
