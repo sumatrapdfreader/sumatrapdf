@@ -1343,8 +1343,8 @@ ByteSlice HtmlDoc::LoadURL(const char* url) {
     if (str::FindChar(url, ':')) {
         return {};
     }
-    auto path(ToWstrTemp(url));
-    str::TransCharsInPlace(path, L"/", L"\\");
+    char* path = str::Dup(url);
+    str::TransCharsInPlace(path, "/", "\\");
     return file::ReadFile(path);
 }
 

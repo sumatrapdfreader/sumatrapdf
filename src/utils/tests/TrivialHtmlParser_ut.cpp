@@ -211,13 +211,13 @@ static void HtmlParser11() {
 }
 
 static void HtmlParserFile() {
-    const WCHAR* fileName = L"HtmlParseTest00.html";
+    const char* fileName = "HtmlParseTest00.html";
     // We assume we're being run from obj-[dbg|rel], so the test
     // files are in ..\src\utils directory relative to exe's dir
-    auto exePath = GetExePathTemp();
-    const WCHAR* exeDir = path::GetBaseNameTemp(exePath);
-    AutoFreeWstr p1(path::Join(exeDir, L"..\\src\\utils"));
-    AutoFreeWstr p2(path::Join(p1, fileName));
+    char* exePath = GetExePathATemp();
+    const char* exeDir = path::GetBaseNameTemp(exePath);
+    char* p1 = path::JoinTemp(exeDir, "..\\src\\utils");
+    char* p2 = path::JoinTemp(p1, fileName);
     ByteSlice d = file::ReadFile(p2);
     // it's ok if we fail - we assume we were not run from the
     // right location

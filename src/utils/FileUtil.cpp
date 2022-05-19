@@ -566,7 +566,7 @@ FILE* OpenFILE(const char* path) {
         return nullptr;
     }
     WCHAR* pathW = ToWstrTemp(path);
-    return OpenFILE(pathW);
+    return _wfopen(pathW, L"rb");
 }
 
 ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
@@ -640,13 +640,6 @@ bool WriteFile(const char* filePath, ByteSlice d) {
 HANDLE OpenReadOnly(const char* path) {
     WCHAR* filePath = ToWstrTemp(path);
     return CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-}
-
-FILE* OpenFILE(const WCHAR* path) {
-    if (!path) {
-        return nullptr;
-    }
-    return _wfopen(path, L"rb");
 }
 
 bool Exists(const WCHAR* path) {

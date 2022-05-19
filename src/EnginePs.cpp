@@ -67,14 +67,15 @@ TryAgain64Bit:
             if (!GS_DLL) {
                 continue;
             }
-            WCHAR* dir = path::GetDirTemp(GS_DLL);
-            WCHAR* exe = path::JoinTemp(dir, L"gswin32c.exe");
+            WCHAR* dirW = path::GetDirTemp(GS_DLL);
+            char* dir = ToUtf8Temp(dirW);
+            char* exe = path::JoinTemp(dir, "gswin32c.exe");
             if (file::Exists(exe)) {
-                return ToUtf8(exe);
+                return str::Dup(exe);
             }
-            exe = path::JoinTemp(dir, L"gswin64c.exe");
+            exe = path::JoinTemp(dir, "gswin64c.exe");
             if (file::Exists(exe)) {
-                return ToUtf8(exe);
+                return str::Dup(exe);
             }
         }
     }
@@ -102,13 +103,14 @@ TryAgain64Bit:
 }
 
 class ScopedFile {
-    AutoFreeWstr path;
+    AutoFreeStr path;
 
   public:
-    explicit ScopedFile(const WCHAR* path) : path(str::Dup(path)) {
+    explicit ScopedFile(const WCHAR* pathW) {
+        path.Set(ToUtf8(pathW));
     }
     explicit ScopedFile(const char* pathA) {
-        path.Set(ToWstr(pathA));
+        path.SetCopy(pathA);
     }
     ~ScopedFile() {
         if (path) {

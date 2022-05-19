@@ -56,7 +56,6 @@ bool Exists(const char* path);
 bool Exists(const WCHAR* path);
 
 FILE* OpenFILE(const char* path);
-FILE* OpenFILE(const WCHAR* path);
 HANDLE OpenReadOnly(const char*);
 
 ByteSlice ReadFileWithAllocator(const char* path, Allocator*);
