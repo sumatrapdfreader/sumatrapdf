@@ -1498,10 +1498,10 @@ static void fz_unlock_context_cs(void* user, int lock) {
 }
 
 static void fz_print_cb(void* user, const char* msg) {
-    log(msg);
     if (!str::EndsWith(msg, "\n")) {
-        log("\n");
+        msg = str::JoinTemp(msg, "\n");
     }
+    log(msg);
 }
 
 static void InstallFitzErrorCallbacks(fz_context* ctx) {

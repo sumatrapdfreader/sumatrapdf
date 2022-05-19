@@ -897,6 +897,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     return true;
 }
 
+// don't free the result
 ByteSlice MobiDoc::GetHtmlData() const {
     if (doc) {
         return doc->AsByteSlice();

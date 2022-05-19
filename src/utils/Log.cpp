@@ -117,9 +117,13 @@ static void logToPipe(const char* s, size_t n = 0) {
 }
 
 void log(const char* s) {
-    // in reduced logging mode, we do want to log to at least the debugger
-    if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
-        OutputDebugStringA(s);
+    bool skipLog = gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
+
+    if (!skipLog) {
+        // in reduced logging mode, we do want to log to at least the debugger
+        if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
+            OutputDebugStringA(s);
+        }
     }
     if (gStopLogging) {
         return;
@@ -151,8 +155,6 @@ void log(const char* s) {
     }
 
     size_t n = str::Len(s);
-
-    bool skipLog = gSkipDuplicateLines && gLogBuf->Contains(s);
 
     // when skipping, we skip buf (crash reports) and console
     // but write to file and logview

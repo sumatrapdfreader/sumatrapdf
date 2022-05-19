@@ -12,31 +12,38 @@ struct ByteSlice {
     ~ByteSlice() = default;
     ByteSlice(const char* str) {
         d = (u8*)str;
+        curr = d;
         sz = strlen(str);
     }
     ByteSlice(char* str) {
         d = (u8*)str;
+        curr = d;
         sz = strlen(str);
     }
     ByteSlice(u8* data, size_t size) {
         d = data;
+        curr = d;
         sz = size;
     }
     ByteSlice(const ByteSlice& data) {
         d = data.data();
+        curr = d;
         sz = data.size();
     }
     ByteSlice& operator=(const ByteSlice& other) {
         d = other.d;
+        curr = d;
         sz = other.sz;
         return *this;
     }
     void Set(u8* data, size_t size) {
         d = data;
+        curr = d;
         sz = size;
     }
     void Set(char* data, size_t size) {
         d = (u8*)data;
+        curr = d;
         sz = size;
     }
     u8* data() const {

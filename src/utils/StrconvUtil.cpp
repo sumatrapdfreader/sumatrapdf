@@ -99,12 +99,14 @@ char* ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
         return str::Dup(src);
     }
 
-    AutoFreeWstr tmp(StrToWstr(src, codePageSrc));
+    WCHAR* tmp = StrToWstr(src, codePageSrc);
     if (!tmp) {
         return nullptr;
     }
-
-    return WstrToCodePage(codePageDest, tmp.Get(), tmp.size());
+    size_t tmpLen = str::Len(tmp);
+    char* res = WstrToCodePage(codePageDest, tmp, tmpLen);
+    str::Free(tmp);
+    return res;
 }
 
 // caller needs to free() the result

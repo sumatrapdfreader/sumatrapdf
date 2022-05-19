@@ -1181,10 +1181,9 @@ bool PalmDoc::Load() {
 
     ByteSlice text = mobiDoc->GetHtmlData();
     uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
-    AutoFree textUtf8 = strconv::ToMultiByte((const char*)text.data(), codePage, CP_UTF8);
-    text.Free();
+    char* textUtf8 = strconv::ToMultiByte((const char*)text.data(), codePage, CP_UTF8);
 
-    const char* start = textUtf8.Get();
+    const char* start = textUtf8;
     const char* end = start + str::Len(textUtf8);
     // TODO: speedup by not calling htmlData.Append() for every byte
     // but gather spans and memcpy them wholesale
@@ -1202,6 +1201,7 @@ bool PalmDoc::Load() {
     }
 
     delete mobiDoc;
+    str::Free(textUtf8);
     return true;
 }
 
