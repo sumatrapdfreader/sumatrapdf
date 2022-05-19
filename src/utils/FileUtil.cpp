@@ -903,30 +903,16 @@ bool CreateForFile(const char* path) {
 }
 
 // remove directory and all its children
-bool RemoveAll(const WCHAR* dir) {
+bool RemoveAll(const char* dir) {
+    WCHAR* dirW = ToWstrTemp(dir);
     // path must be doubly terminated
-    // (https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/ns-shellapi-_shfileopstructa)
-    size_t n = str::Len(dir) + 2;
-    AutoFreeWstr path = AllocArray<WCHAR>(n);
-    str::BufSet(path, n, dir);
+    // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
+    size_t n = str::Len(dirW) + 2;
+    AutoFreeWstr dirDoubleTerminated = AllocArray<WCHAR>(n);
+    str::BufSet(dirDoubleTerminated, n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, path, nullptr, flags, FALSE, nullptr, nullptr};
-    int res = SHFileOperationW(&shfo);
-    return res == 0;
-}
-
-// remove directory and all its children
-bool RemoveAll(const char* dirA) {
-    // path must be doubly terminated
-    // (https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/ns-shellapi-_shfileopstructa)
-    WCHAR* dir = ToWstrTemp(dirA);
-    size_t n = str::Len(dir) + 2;
-    AutoFreeWstr path = AllocArray<WCHAR>(n);
-    str::BufSet(path, n, dir);
-    FILEOP_FLAGS flags = FOF_NO_UI;
-    uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, path, nullptr, flags, FALSE, nullptr, nullptr};
+    SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
     int res = SHFileOperationW(&shfo);
     return res == 0;
 }

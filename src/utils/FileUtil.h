@@ -103,7 +103,6 @@ bool CreateForFile(const char* path);
 bool CreateAll(const WCHAR* dir);
 bool CreateAll(const char* dir);
 
-bool RemoveAll(const WCHAR* dir);
 bool RemoveAll(const char* dir);
 
 } // namespace dir
