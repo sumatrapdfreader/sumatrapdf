@@ -4211,11 +4211,13 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
 #endif
 
     bool isTextOnlySelectionOut; // if false, a rectangular selection
-    WCHAR* selText = GetSelectedText(tab, L"\n", isTextOnlySelectionOut);
+    char* selText = GetSelectedText(tab, "\n", isTextOnlySelectionOut);
     if (!selText) {
         return;
     }
-    str::WStr encodedSelection = URLEncode(selText);
+    // TODO: limit the size of the selection to e.g. 1 kB?
+    WCHAR* selTextW = ToWstrTemp(selText);
+    str::WStr encodedSelection = URLEncode(selTextW);
     str::WStr url(urlPattern);
     // assume that user might typo and use e.g. ${userLang} in url
     // so replace with cannonical lower-cased version

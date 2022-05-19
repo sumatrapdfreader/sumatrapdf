@@ -260,7 +260,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
 // caller needs to str::Free() the result
-WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelectionOut) {
+char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
         return nullptr;
     }
@@ -278,21 +278,25 @@ WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelec
 
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
     if (isTextOnlySelectionOut) {
-        WCHAR* s = dm->textSelection->ExtractText(lineSep);
-        return s;
+        WCHAR* lineSepW = ToWstrTemp(lineSep);
+        WCHAR* s = dm->textSelection->ExtractText(lineSepW);
+        char* res = ToUtf8(s);
+        str::Free(s);
+        return res;
     }
-    WStrVec selections;
+    StrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {
-            selections.Append(text);
+            char* s = ToUtf8Temp(text);
+            selections.Append(s);
         }
         str::Free(text);
     }
     if (selections.size() == 0) {
         return nullptr;
     }
-    WCHAR* s = Join(selections, lineSep);
+    char* s = Join(selections, lineSep);
     return s;
 }
 
@@ -309,12 +313,12 @@ void CopySelectionToClipboard(WindowInfo* win) {
     };
 
     DisplayModel* dm = win->AsFixed();
-    WCHAR* selText = nullptr;
+    char* selText = nullptr;
     bool isTextOnlySelectionOut = false;
     if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->AllowsCopyingText())) {
         win->notifications->Show(win->hwndCanvas, _TR("Copying text was denied (copying as image only)"));
     } else {
-        selText = GetSelectedText(tab, L"\r\n", isTextOnlySelectionOut);
+        selText = GetSelectedText(tab, "\r\n", isTextOnlySelectionOut);
     }
 
     // don't copy empty text

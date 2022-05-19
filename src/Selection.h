@@ -34,4 +34,4 @@ bool NeedsSelectionEdgeAutoscroll(WindowInfo* win, int x, int y);
 void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y);
 void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key);
 void OnSelectionStop(WindowInfo* win, int x, int y, bool aborted);
-WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelectionOut);
+char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelectionOut);
