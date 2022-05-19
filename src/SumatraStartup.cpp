@@ -77,7 +77,7 @@
 // terminate and delete itself asynchronously while the UI is
 // being set up
 class FileExistenceChecker : public ThreadBase {
-    WStrVec paths;
+    StrVec paths;
 
     void GetFilePathsToCheck();
     void HideMissingFiles();
@@ -96,7 +96,7 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     FileState* fs;
     for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (!fs->isMissing) {
-            WCHAR* fp = ToWstrTemp(fs->filePath);
+            char* fp = fs->filePath;
             paths.Append(fp);
         }
     }
@@ -106,15 +106,14 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
-        WCHAR* fp = ToWstr(fs->filePath);
+        char* fp = fs->filePath;
         paths.AppendIfNotExists(fp);
     }
 }
 
 void FileExistenceChecker::HideMissingFiles() {
-    for (const WCHAR* path : paths) {
-        char* fp = ToUtf8Temp(path);
-        gFileHistory.MarkFileInexistent(fp, true);
+    for (const char* path : paths) {
+        gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
     if (paths.size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
@@ -133,8 +132,7 @@ void FileExistenceChecker::Run() {
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
     for (size_t i = 0; i < paths.size(); i++) {
-        const WCHAR* pathW = paths.at(i);
-        char* path = ToUtf8Temp(pathW);
+        const char* path = paths[i];
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
             paths.RemoveAt(i--);
         }
