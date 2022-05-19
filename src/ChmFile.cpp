@@ -341,15 +341,13 @@ static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info
     if (str::IsEmpty(info->path)) {
         return CHM_ENUMERATOR_CONTINUE;
     }
-    Vec<char*>* paths = (Vec<char*>*)data;
-    paths->Append(str::Dup(info->path));
+    StrVec* paths = (StrVec*)data;
+    paths->Append(info->path);
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-Vec<char*>* ChmFile::GetAllPaths() const {
-    Vec<char*>* paths = new Vec<char*>();
-    chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
-    return paths;
+void ChmFile::GetAllPaths(StrVec* v) const {
+    chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, v);
 }
 
 /* The html looks like:

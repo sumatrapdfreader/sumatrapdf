@@ -33,7 +33,7 @@ struct ChmFile {
 
     char* GetProperty(DocumentProperty prop) const;
     const char* GetHomePath() const;
-    Vec<char*>* GetAllPaths() const;
+    void GetAllPaths(StrVec*) const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;

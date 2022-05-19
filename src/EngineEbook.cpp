@@ -1442,9 +1442,9 @@ class ChmHtmlCollector : public EbookTocVisitor {
         doc->ParseToc(this);
 
         // finally add all the remaining HTML files
-        Vec<char*>* paths = doc->GetAllPaths();
-        for (size_t i = 0; i < paths->size(); i++) {
-            char* path = paths->at(i);
+        StrVec paths;
+        doc->GetAllPaths(&paths);
+        for (char* path : paths) {
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
                 if (*path == '/') {
                     path++;
@@ -1453,9 +1453,6 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 Visit(nullptr, url, -1);
             }
         }
-        paths->FreeMembers();
-        delete paths;
-
         return html.StealData();
     }
 
