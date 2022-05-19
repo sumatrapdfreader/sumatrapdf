@@ -61,7 +61,7 @@ struct OverlappedEx {
 
 // info needed to detect that a file has changed
 struct FileWatcherState {
-    FILETIME time = 0;
+    FILETIME time = {0};
     i64 size = 0;
 };
 
@@ -148,7 +148,7 @@ static bool FileStateChanged(const WCHAR* filePath, FileWatcherState* fs) {
 // queue, restart the thread with a timeout, restart the process if we
 // get notified again before timeout expires, call OnFileChanges() when
 // timeout expires
-static void NotifyAboutFile(WatchedDir* d, const WCHAR* fileName) {
+static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
     // logf(L"NotifyAboutFile(): %s", fileName);
 
     for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
@@ -156,8 +156,9 @@ static void NotifyAboutFile(WatchedDir* d, const WCHAR* fileName) {
             continue;
         }
         const WCHAR* wfFileName = path::GetBaseNameTemp(wf->filePath);
+        char* s = ToUtf8Temp(wfFileName);
 
-        if (!str::EqI(fileName, wfFileName)) {
+        if (!str::EqI(fileName, s)) {
             continue;
         }
 
@@ -199,9 +200,10 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
 
     // collect files that changed, removing duplicates
-    WStrVec changedFiles;
+    StrVec changedFiles;
     for (;;) {
-        AutoFreeWstr fileName(str::Dup(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
+        size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
+        char* fileName = ToUtf8Temp(notify->FileName, fnLen);
         // files can get updated either by writing to them directly or
         // by writing to a .tmp file first and then moving that file in place
         // (the latter only yields a RENAMED action with the expected file name)
@@ -211,7 +213,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
                 logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName.Get(),
                      wd->dirPath);
 #endif
-                changedFiles.Append(fileName.Get());
+                changedFiles.Append(fileName);
             } else {
                 // logf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
             }
@@ -230,7 +232,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     wd->startMonitoring = false;
     StartMonitoringDirForChanges(wd);
 
-    for (const WCHAR* f : changedFiles) {
+    for (char* f : changedFiles) {
         NotifyAboutFile(wd, f);
     }
 }
