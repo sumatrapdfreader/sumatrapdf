@@ -195,7 +195,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (!fullDump) {
         return;
     }
-    AutoFreStr fontlist(engine->GetProperty(DocumentProperty::FontList));
+    AutoFreeStr fontlist(engine->GetProperty(DocumentProperty::FontList));
     if (fontlist) {
         StrVec fonts;
         Split(fonts, fontlist, "\n");
@@ -415,13 +415,13 @@ void DumpData(EngineBase* engine, bool fullDump) {
     Out1("</EngineDump>\n");
 }
 
-#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
-#define ErrOut1(msg) fwprintf(stderr, TEXT("%s"), TEXT(msg) TEXT("\n"))
+#define ErrOut(msg, ...) fprintf(stderr, msg "\n", __VA_ARGS__)
+#define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
-bool CheckRenderPath(const WCHAR* path) {
+static bool CheckRenderPath(const char* path) {
     CrashIf(!path);
     bool hasArg = false;
-    const WCHAR* p = path - 1;
+    const char* p = path - 1;
     while ((p = str::FindChar(p + 1, '%')) != nullptr) {
         p++;
         if (*p == '%') {
@@ -439,12 +439,12 @@ bool CheckRenderPath(const WCHAR* path) {
     return true;
 }
 
-bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.f, bool silent = false) {
+static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f, bool silent = false) {
     if (!CheckRenderPath(renderPath)) {
         return false;
     }
 
-    if (str::EndsWithI(renderPath, L".txt")) {
+    if (str::EndsWithI(renderPath, ".txt")) {
         str::WStr text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             PageText pageText = engine->ExtractPageText(pageNo);
@@ -457,22 +457,21 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         if (silent) {
             return true;
         }
-        AutoFreeWstr txtFilePath(str::Format(renderPath, 0));
-        auto textA = ToUtf8Temp(text.Get());
-        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textA.Get()));
-        return file::WriteFile(txtFilePath, textUTF8BOM.AsSpan());
+        AutoFreeStr txtFilePath(str::Format(renderPath, 0));
+        char* textA = ToUtf8Temp(text.Get());
+        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textA);
+        return file::WriteFile(txtFilePath, textUTF8BOM);
     }
 
-    if (str::EndsWithI(renderPath, L".pdf")) {
+    if (str::EndsWithI(renderPath, ".pdf")) {
         if (silent) {
             return false;
         }
-        AutoFreeWstr pdfFilePath(str::Format(renderPath, 0));
-        auto pathA(ToUtf8Temp(pdfFilePath.Get()));
-        if (engine->SaveFileAsPDF(pathA.Get())) {
+        AutoFreeStr pdfFilePath(str::Format(renderPath, 0));
+        if (engine->SaveFileAsPDF(pdfFilePath)) {
             return true;
         }
-        return PdfCreator::RenderToFile(pathA.Get(), engine);
+        return PdfCreator::RenderToFile(pdfFilePath, engine);
     }
 
     bool success = true;
@@ -487,12 +486,13 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             delete bmp;
             continue;
         }
-        AutoFreeWstr pageBmpPath(str::Format(renderPath, pageNo));
-        if (str::EndsWithI(pageBmpPath, L".png")) {
+        AutoFreeStr pageBmpPath(str::Format(renderPath, pageNo));
+        if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
-            gbmp.Save(pageBmpPath, &pngEncId);
-        } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
+            WCHAR* pageBmpPathW = ToWstrTemp(pageBmpPath);
+            gbmp.Save(pageBmpPathW, &pngEncId);
+        } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
             ByteSlice imgData = SerializeBitmap(bmp->GetBitmap());
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
@@ -537,36 +537,36 @@ int main(__unused int argc, __unused char** argv) {
         return 2;
     }
 
-    AutoFreeWstr filePath;
-    WCHAR* password = nullptr;
+    char* filePath = nullptr;
+    char* password = nullptr;
     bool fullDump = true;
-    WCHAR* renderPath = nullptr;
+    char* renderPath = nullptr;
     float renderZoom = 1.f;
     bool loadOnly = false, silent = false;
 
     for (int i = 1; i < nArgs; i++) {
-        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < nArgs && !password) {
+        if (str::Eq(argList.at(i), "-pwd") && i + 1 < nArgs && !password) {
             password = argList.at(++i);
-        } else if (str::Eq(argList.at(i), L"-quick")) {
+        } else if (str::Eq(argList.at(i), "-quick")) {
             fullDump = false;
-        } else if (str::Eq(argList.at(i), L"-render") && i + 1 < nArgs && !renderPath) {
+        } else if (str::Eq(argList.at(i), "-render") && i + 1 < nArgs && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
-            if (i + 2 < nArgs && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
+            if (i + 2 < nArgs && str::Parse(argList.at(i + 1), "%f%%%$", &zoom) && zoom > 0.f) {
                 renderZoom = zoom / 100.f;
                 i++;
             }
             renderPath = argList.at(++i);
-        } else if (str::Eq(argList.at(i), L"-loadonly")) {
+        } else if (str::Eq(argList.at(i), "-loadonly")) {
             // -loadonly and -silent are only meant for profiling
             loadOnly = true;
-        } else if (str::Eq(argList.at(i), L"-silent")) {
+        } else if (str::Eq(argList.at(i), "-silent")) {
             silent = true;
-        } else if (str::Eq(argList.at(i), L"-full")) {
+        } else if (str::Eq(argList.at(i), "-full")) {
             // -full is for backward compatibility
             fullDump = true;
         } else if (!filePath) {
-            filePath.SetCopy(argList.at(i));
+            filePath = argList.at(i);
         } else {
             goto Usage;
         }
@@ -585,18 +585,19 @@ int main(__unused int argc, __unused char** argv) {
     ScopedMui miniMui;
 
     WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(filePath, &fdata);
+    WCHAR* pathW = ToWstrTemp(filePath);
+    HANDLE hfind = FindFirstFileW(pathW, &fdata);
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        WCHAR* dir = path::GetDirTemp(filePath);
-        filePath.Set(path::Join(dir, fdata.cFileName));
+        char* dir = path::GetDirTemp(filePath);
+        char* name = ToUtf8Temp(fdata.cFileName);
+        filePath = path::JoinTemp(dir, name);
         FindClose(hfind);
     }
 
     PasswordHolder pwdUI(password);
-    char* path = ToUtf8Temp(filePath);
-    EngineBase* engine = CreateEngine(path, &pwdUI, false);
+    EngineBase* engine = CreateEngine(filePath, &pwdUI, false);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath));
         return 1;
