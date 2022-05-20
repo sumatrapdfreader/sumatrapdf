@@ -51,7 +51,6 @@ constexpr int kSumatraTxtFontSize = 24;
 constexpr const char* kVersionTxtFont = "Arial Black";
 constexpr int kVersionTxtFontSize = 12;
 
-#define VERSION_TXT L"v" CURR_VERSION_STR
 #ifdef PRE_RELEASE_VER
 #define VERSION_SUB_TXT "Pre-release"
 #else
@@ -126,22 +125,14 @@ static void DrawAppName(HDC hdc, Point pt) {
     }
 }
 
-static WCHAR* GetAppVersion() {
-    str::WStr s;
-    s.Set(VERSION_TXT);
-    if (IsProcess64()) {
-        s.Append(L" 64-bit");
-    }
-#ifdef DEBUG
-    s.Append(L" (dbg)");
-#endif
-    return s.StealData();
-}
-
 static char* GetAppVersionTemp() {
-    WCHAR* ws = GetAppVersion();
-    char* s = ToUtf8Temp(ws);
-    str::Free(ws);
+    char* s = str::DupTemp("v" CURR_VERSION_STRA);
+    if (IsProcess64()) {
+        s = str::JoinTemp(s, " 64-bit");
+    }
+    if (gIsDebugBuild) {
+        s = str::JoinTemp(s, " (dbg)");
+    }
     return s;
 }
 
