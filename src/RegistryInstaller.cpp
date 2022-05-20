@@ -65,7 +65,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     logf("WriteUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
-    AutoFreeStr installedExePath = GetInstallationFilePath(kExeNameA);
+    char* installedExePath = GetInstallationFilePathTemp(kExeNameA);
     AutoFreeStr installDate = GetInstallDate();
     char* installDir = GetInstallDirTemp();
     // uninstaller is the same executable with a different flag

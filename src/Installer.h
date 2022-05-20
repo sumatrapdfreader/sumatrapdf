@@ -64,7 +64,7 @@ char* GetInstallDirTemp();
 TempStr GetInstalledExePathTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 
-char* GetInstallationFilePath(const char* name);
+char* GetInstallationFilePathTemp(const char* name);
 
 void RegisterPreviewer(bool allUsers);
 void UnRegisterPreviewer();
