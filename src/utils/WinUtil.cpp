@@ -2290,16 +2290,16 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
         return false;
     }
 
-    result = DdeInitialize(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
+    result = DdeInitializeW(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR) {
         return false;
     }
 
-    hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
+    hszServer = DdeCreateStringHandleW(inst, server, CP_WINNEUTRAL);
     if (!hszServer) {
         goto Exit;
     }
-    hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
+    hszTopic = DdeCreateStringHandleW(inst, topic, CP_WINNEUTRAL);
     if (!hszTopic) {
         goto Exit;
     }

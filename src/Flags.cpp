@@ -36,7 +36,7 @@ Flags::~Flags() {
 }
 
 static void EnumeratePrinters() {
-    str::WStr output;
+    str::Str out;
 
     PRINTER_INFO_5* info5Arr = nullptr;
     DWORD bufSize = 0;
@@ -51,39 +51,42 @@ static void EnumeratePrinters() {
         }
     }
     if (ok == 0 || !info5Arr) {
-        output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
-        MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
+        out.AppendFmt("Call to EnumPrinters failed with error %#x", GetLastError());
+        MessageBoxA(nullptr, out.Get(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
         free(info5Arr);
         return;
     }
     char* defName = GetDefaultPrinterNameTemp();
-    WCHAR* defNameW = ToWstrTemp(defName);
     for (DWORD i = 0; i < printersCount; i++) {
-        const WCHAR* printerName = info5Arr[i].pPrinterName;
-        const WCHAR* printerPort = info5Arr[i].pPortName;
-        bool fDefault = str::Eq(defNameW, printerName);
-        output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort, info5Arr[i].Attributes,
-                         fDefault ? L", default" : L"");
+        const WCHAR* nameW = info5Arr[i].pPrinterName;
+        const WCHAR* portW = info5Arr[i].pPortName;
+        DWORD attr = info5Arr[i].Attributes;
+        char* name = ToUtf8Temp(nameW);
+        char* port = ToUtf8Temp(portW);
+        const char* defStr = str::Eq(defName, name) ? ", default" : "";
+        out.AppendFmt("%s (Port: %s, attributes: %#x%s)\n", name, port, attr, defStr);
 
-        DWORD bins = DeviceCapabilities(printerName, printerPort, DC_BINS, nullptr, nullptr);
-        DWORD binNames = DeviceCapabilities(printerName, printerPort, DC_BINNAMES, nullptr, nullptr);
+        DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
+        DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
         CrashIf(bins != binNames);
         if (0 == bins) {
-            output.Append(L" - no paper bins available\n");
+            out.Append(" - no paper bins available\n");
         } else if (bins == (DWORD)-1) {
-            output.AppendFmt(L" - Call to DeviceCapabilities failed with error %#x\n", GetLastError());
+            out.AppendFmt(" - Call to DeviceCapabilities failed with error %#x\n", GetLastError());
         } else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
-            AutoFreeWstr binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
-            DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
+            DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
+            ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
+            DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
-                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * (size_t)j, binValues.Get()[j]);
+                WCHAR* ws = binNameValues.Get() + 24 * (size_t)j;
+                char* s = ToUtf8Temp(ws);
+                out.AppendFmt(" - '%s' (%d)\n", s, binValues.Get()[j]);
             }
         }
     }
     free(info5Arr);
-    MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(nullptr, out.Get(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)

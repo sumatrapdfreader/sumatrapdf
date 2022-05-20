@@ -196,51 +196,52 @@ static bool InstanceInit() {
     return true;
 }
 
-static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool isFirstWin) {
+static void OpenUsingDde(HWND targetWnd, const char* filePath, Flags& i, bool isFirstWin) {
     // delegate file opening to a previously running instance by sending a DDE message
-    WCHAR fullpath[MAX_PATH];
-    GetFullPathNameW(filePath, dimof(fullpath), fullpath, nullptr);
+    WCHAR fullpathW[MAX_PATH];
+    GetFullPathNameW(fullpathW, dimof(fullpathW), fullpathW, nullptr);
+    char* fullpath = ToUtf8Temp(fullpathW);
 
-    str::WStr cmd;
+    str::Str cmd;
     int newWindow = 0;
     if (i.inNewWindow) {
         // 2 forces opening a new window
         newWindow = 2;
     }
-    cmd.AppendFmt(L"[Open(\"%s\", %d, 1, 0)]", fullpath, newWindow);
+    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullpath, newWindow);
     if (i.destName && isFirstWin) {
-        cmd.AppendFmt(L"[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
+        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.AppendFmt(L"[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
+        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
     }
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
         auto viewMode = ToWstrTemp(viewModeStr);
-        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
+        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
                       i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         char* srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
-        WCHAR* sourcePath = ToWstrTemp(srcPath);
-        cmd.AppendFmt(L"[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath, i.forwardSearchLine);
+        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, srcPath, i.forwardSearchLine);
     }
     if (i.search != nullptr) {
         // TODO: quote if i.search has '"' in it
-        cmd.AppendFmt(L"[Search(\"%s\",\"%s\")]", fullpath, i.search);
+        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullpath, i.search);
     }
 
+    WCHAR* cmdW = ToWstrTemp(cmd.Get());
     if (!i.reuseDdeInstance) {
         // try WM_COPYDATA first, as that allows targetting a specific window
-        auto cbData = (cmd.size() + 1) * sizeof(WCHAR);
-        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, cmd.Get()};
+        size_t cbData = (str::Len(cmdW) + 1) * sizeof(WCHAR);
+        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, cmdW};
         LRESULT res = SendMessageW(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res) {
             return;
         }
     }
-    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
+    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmdW);
 }
 
 static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
@@ -1193,7 +1194,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
         for (size_t n = 0; n < nFiles; n++) {
             char* path = flags.fileNames[n];
-            OpenUsingDde(hPrevWnd, ToWstrTemp(path), flags, 0 == n);
+            bool isFirstWindow = (0 == n);
+            OpenUsingDde(hPrevWnd, path, flags, isFirstWindow);
         }
         if (0 == nFiles) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
