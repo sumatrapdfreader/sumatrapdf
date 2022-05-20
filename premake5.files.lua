@@ -623,7 +623,6 @@ function utils_files()
     "SquareTreeParser.*",
     "StrconvUtil.*",
     "StrFormat.*",
-    "StrSlice.*",
     "StrUtil.*",
     "TempAllocator.*",
     "ThreadUtil.*",

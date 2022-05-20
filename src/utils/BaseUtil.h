@@ -581,7 +581,6 @@ defer { instance->Release(); };
 */
 
 #include "GeomUtil.h"
-#include "StrSlice.h"
 #include "Vec.h"
 #include "StrUtil.h"
 #include "StrconvUtil.h"

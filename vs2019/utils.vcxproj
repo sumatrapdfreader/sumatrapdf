@@ -472,7 +472,6 @@
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />
     <ClInclude Include="..\src\utils\StrFormat.h" />
-    <ClInclude Include="..\src\utils\StrSlice.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\StrconvUtil.h" />
     <ClInclude Include="..\src\utils\TempAllocator.h" />
@@ -520,7 +519,6 @@
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
-    <ClCompile Include="..\src\utils\StrSlice.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
     <ClCompile Include="..\src\utils\TempAllocator.cpp" />
