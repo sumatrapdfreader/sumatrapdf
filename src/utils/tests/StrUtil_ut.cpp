@@ -233,18 +233,6 @@ static void assertStrEq(const char* s1, const char* s2) {
     utassert(ok);
 }
 
-static void StrVecCheckIter(StrVec& v, const char** strs) {
-    int i = 0;
-    for (char* s : v) {
-        char* s2 = v[i];
-        utassert(str::Eq(s, s2));
-        if (strs) {
-            const char* s3 = strs[i];
-            utassert(str::Eq(s, s3));
-        }
-        i++;
-    }
-}
 
 static void CheckRemoveAt(StrVec& v) {
     while (v.Size() > 0) {
@@ -259,6 +247,19 @@ static void CheckRemoveAt(StrVec& v) {
         }
         utassert(exp == got); // should be exact same pointer value
         utassert(v.Size() == n - 1);
+    }
+}
+
+static void StrVecCheckIter(StrVec& v, const char** strs) {
+    int i = 0;
+    for (char* s : v) {
+        char* s2 = v[i];
+        utassert(str::Eq(s, s2));
+        if (strs) {
+            const char* s3 = strs[i];
+            utassert(str::Eq(s, s3));
+        }
+        i++;
     }
 }
 
@@ -332,107 +333,78 @@ static void StrVecTest() {
     CheckRemoveAt(v);
 }
 
-static void WStrVecCheckIter(WStrVec& v, const WCHAR** strs = nullptr) {
-    int i = 0;
-    for (WCHAR* s : v) {
-        WCHAR* s2 = v[i];
-        utassert(str::Eq(s, s2));
-        if (strs) {
-            const WCHAR* s3 = strs[i];
-            utassert(str::Eq(s, s3));
-        }
-        i++;
-    }
-}
-
-static void CheckRemoveAt(WStrVec& v) {
-    while (v.Size() > 0) {
-        int n = v.Size();
-        int idx = v.Size() / 2;
-        auto exp = v[idx];
-        WCHAR* got;
-        if (n % 2 == 0) {
-            got = v.RemoveAt(idx);
-        } else {
-            got = v.RemoveAtFast(idx);
-        }
-        utassert(exp == got); // should be exact same pointer value
-        utassert(v.Size() == n - 1);
-    }
-}
-
-static void WStrVecTest() {
-    WStrVec v;
-    v.Append(L"foo");
-    v.Append(L"bar");
-    WCHAR* s = Join(v);
+static void StrVecTest2() {
+    StrVec v;
+    v.Append("foo");
+    v.Append("bar");
+    char* s = Join(v);
     utassert(v.size() == 2);
-    utassert(str::Eq(L"foobar", s));
+    utassert(str::Eq("foobar", s));
     str::Free(s);
 
-    s = Join(v, L";");
+    s = Join(v, ";");
     utassert(v.size() == 2);
-    utassert(str::Eq(L"foo;bar", s));
+    utassert(str::Eq("foo;bar", s));
     str::Free(s);
 
     v.Append(nullptr);
     utassert(v.size() == 3);
 
-    v.Append(L"glee");
-    s = Join(v, L"_ _");
+    v.Append("glee");
+    s = Join(v, "_ _");
     utassert(v.size() == 4);
-    utassert(str::Eq(L"foo_ _bar_ _glee", s));
+    utassert(str::Eq("foo_ _bar_ _glee", s));
     str::Free(s);
 
-    WStrVecCheckIter(v);
+    StrVecCheckIter(v, nullptr);
     v.Sort();
-    const WCHAR* strsSorted[] = {nullptr, L"bar", L"foo", L"glee"};
-    WStrVecCheckIter(v, strsSorted);
+    const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
+    StrVecCheckIter(v, strsSorted);
 
-    s = Join(v, L"++");
+    s = Join(v, "++");
     utassert(v.size() == 4);
-    utassert(str::Eq(L"bar++foo++glee", s));
+    utassert(str::Eq("bar++foo++glee", s));
     str::Free(s);
 
     s = Join(v);
-    utassert(str::Eq(L"barfooglee", s));
+    utassert(str::Eq("barfooglee", s));
     str::Free(s);
 
     {
-        WStrVec v2(v);
-        utassert(str::Eq(v2.at(2), L"foo"));
-        v2.Append(L"nobar");
-        utassert(str::Eq(v2.at(4), L"nobar"));
+        StrVec v2(v);
+        utassert(str::Eq(v2.at(2), "foo"));
+        v2.Append("nobar");
+        utassert(str::Eq(v2.at(4), "nobar"));
         v2 = v;
         utassert(v2.size() == 4);
         // copies should be same values but at different addresses
         utassert(v2.at(1) != v.at(1));
         utassert(str::Eq(v2.at(1), v.at(1)));
         s = v2.at(2);
-        utassert(str::Eq(s, L"foo"));
+        utassert(str::Eq(s, "foo"));
         CheckRemoveAt(v2);
     }
 
     {
-        WStrVec v2;
-        size_t count = Split(v2, L"a,b,,c,", L",");
-        utassert(count == 5 && v2.Find(L"c") == 3);
-        utassert(v2.Find(L"") == 2);
-        utassert(v2.Find(L"", 3) == 4);
-        utassert(v2.Find(L"", 5) == -1);
-        utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
-        AutoFreeWstr joined(Join(v2, L";"));
-        utassert(str::Eq(joined, L"a;b;;c;"));
+        StrVec v2;
+        size_t count = Split(v2, "a,b,,c,", ",");
+        utassert(count == 5 && v2.Find("c") == 3);
+        utassert(v2.Find("") == 2);
+        utassert(v2.Find("", 3) == 4);
+        utassert(v2.Find("", 5) == -1);
+        utassert(v2.Find("B") == -1 && v2.FindI("B") == 1);
+        AutoFreeStr joined(Join(v2, ";"));
+        utassert(str::Eq(joined, "a;b;;c;"));
         CheckRemoveAt(v2);
     }
 
     {
-        WStrVec v2;
-        size_t count = Split(v2, L"a,b,,c,", L",", true);
-        utassert(count == 3 && v2.Find(L"c") == 2);
-        AutoFreeWstr joined(Join(v2, L";"));
-        utassert(str::Eq(joined, L"a;b;c"));
-        WStrVecCheckIter(v2);
+        StrVec v2;
+        size_t count = Split(v2, "a,b,,c,", ",", true);
+        utassert(count == 3 && v2.Find("c") == 2);
+        AutoFreeStr joined(Join(v2, ";"));
+        utassert(str::Eq(joined, "a;b;c"));
+        StrVecCheckIter(v2, nullptr);
 
 #if 0
         AutoFreeWstr last(v2.Pop());
@@ -443,19 +415,19 @@ static void WStrVecTest() {
     CheckRemoveAt(v);
 }
 
-static void WStrVecTest2() {
-    WStrVec v;
+static void StrVecTest3() {
+    StrVec v;
     utassert(v.size() == 0);
-    v.Append(str::Dup(L"one"));
-    v.Append(str::Dup(L"two"));
-    v.Append(str::Dup(L"One"));
+    v.Append(str::Dup("one"));
+    v.Append(str::Dup("two"));
+    v.Append(str::Dup("One"));
     utassert(v.size() == 3);
-    utassert(str::Eq(v.at(0), L"one"));
-    utassert(str::EqI(v.at(2), L"one"));
-    utassert(v.Find(L"One") == 2);
-    utassert(v.FindI(L"One") == 0);
-    utassert(v.Find(L"Two") == -1);
-    WStrVecCheckIter(v);
+    utassert(str::Eq(v.at(0), "one"));
+    utassert(str::EqI(v.at(2), "one"));
+    utassert(v.Find("One") == 2);
+    utassert(v.FindI("One") == 0);
+    utassert(v.Find("Two") == -1);
+    StrVecCheckIter(v, nullptr);
     CheckRemoveAt(v);
 }
 
@@ -885,7 +857,7 @@ void StrTest() {
     StrConvTest();
     StrUrlExtractTest();
     // ParseUntilTest();
-    WStrVecTest();
-    WStrVecTest2();
     StrVecTest();
+    StrVecTest2();
+    StrVecTest3();
 }
