@@ -1614,11 +1614,8 @@ HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {
 }
 
 // https://www.gamedev.net/forums/topic/683205-c-win32-can-i-change-the-menu-font/
-// affects size of menu font
+// affects size of menu font, system wide
 void SetMenuFontSize(int fontSize) {
-    // TODO: hangs, maybe needs to use SystemParametersInfoForDpi as doc say
-    // for per-monitor dpi aware apps
-    CrashIf(true);
     NONCLIENTMETRICS m = {0};
     uint sz = sizeof(NONCLIENTMETRICS);
     m.cbSize = sz;
@@ -1626,6 +1623,9 @@ void SetMenuFontSize(int fontSize) {
     logf("font size: %d\n", m.lfMenuFont.lfHeight);
     m.lfMenuFont.lfHeight = -fontSize;
     SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sz, (void*)&m, 0);
+    // TODO: hangs, maybe needs to use SystemParametersInfoForDpi as doc say
+    // for per-monitor dpi aware apps
+    // CrashIf(true);
 }
 
 IStream* CreateStreamFromData(ByteSlice d) {
