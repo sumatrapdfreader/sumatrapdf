@@ -47,27 +47,31 @@ bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const c
     bool isFile;
     bool isDir;
     bool cont = true;
+    char* name;
+    char* path;
     do {
         isFile = IsRegularFile(fdata.dwFileAttributes);
         isDir = IsDirectory(fdata.dwFileAttributes);
-        char* name = ToUtf8Temp(fdata.cFileName);
-        const char* path = path::JoinTemp(dir, name);
+        name = ToUtf8Temp(fdata.cFileName);
+        path = path::JoinTemp(dir, name);
         if (isFile) {
             cont = cb(path);
         } else if (recurse && isDir) {
-            cont = DirTraverse(path, recurse, cb);
+            if (!IsSpecialDir(name)) {
+                cont = DirTraverse(path, recurse, cb);
+            }
         }
     } while (cont && FindNextFileW(hfind, &fdata));
     FindClose(hfind);
     return true;
 }
 
-bool CollectPathsFromDirectory(const char* patternA, StrVec& paths, bool dirsInsteadOfFiles) {
-    char* dir = path::GetDirTemp(patternA);
+bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles) {
+    char* dir = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATAW fdata{};
-    WCHAR* pattern = ToWstr(patternA);
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
+    WCHAR* patternW = ToWstr(pattern);
+    HANDLE hfind = FindFirstFileW(patternW, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return false;
     }

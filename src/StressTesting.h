@@ -3,9 +3,6 @@
 
 void BenchFileOrDir(StrVec& pathsToBench);
 bool IsStressTesting();
-
-struct WindowInfo;
 void StartStressTest(Flags* i, WindowInfo* win);
-
 void OnStressTestTimer(WindowInfo* win, int timerId);
 void FinishStressTest(WindowInfo* win);

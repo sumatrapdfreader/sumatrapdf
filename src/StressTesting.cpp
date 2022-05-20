@@ -319,24 +319,29 @@ class TestFileProvider {
     virtual char* NextFile() = 0;
     // start the iteration from the beginning
     virtual void Restart() = 0;
+    virtual int GetFilesCount() = 0;
 };
 
 class FilesProvider : public TestFileProvider {
     StrVec files;
-    size_t provided;
+    size_t provided = 0;
 
   public:
     explicit FilesProvider(const char* path) {
         files.Append(path);
         provided = 0;
     }
-    FilesProvider(StrVec& newFiles, int n, int offset) {
+    FilesProvider(StrVec& filesIn, int n, int offset) {
         // get every n-th file starting at offset
-        for (size_t i = offset; i < newFiles.size(); i += n) {
-            const char* f = newFiles.at(i);
+        for (size_t i = offset; i < filesIn.size(); i += n) {
+            const char* f = filesIn[i];
             files.Append(f);
         }
         provided = 0;
+    }
+
+    int GetFilesCount() override {
+        return files.Size();
     }
 
     ~FilesProvider() override {
@@ -369,6 +374,7 @@ class DirFileProvider : public TestFileProvider {
     ~DirFileProvider() override;
     char* NextFile() override;
     void Restart() override;
+    int GetFilesCount() override;
 };
 
 DirFileProvider::DirFileProvider(const char* path, const char* filter) {
@@ -409,25 +415,16 @@ char* DirFileProvider::NextFile() {
     return nullptr;
 }
 
+int DirFileProvider::GetFilesCount() {
+    return filesToOpen.Size();
+}
+
 void DirFileProvider::Restart() {
     OpenDir(startDir);
 }
 
 static size_t GetAllMatchingFiles(const char* dir, const char* filter, StrVec& files, bool showProgress) {
-    StrVec dirsToVisit;
-    dirsToVisit.Append(dir);
-
-    while (dirsToVisit.size() > 0) {
-        if (showProgress) {
-            wprintf(L".");
-            fflush(stdout);
-        }
-
-        AutoFreeStr path(dirsToVisit.RemoveAt(0));
-        CollectStressTestSupportedFilesFromDirectory(path, filter, files);
-        AutoFreeStr pattern(str::Format("%s\\*", path.Get()));
-        CollectPathsFromDirectory(pattern, dirsToVisit, true);
-    }
+    CollectStressTestSupportedFilesFromDirectory(dir, filter, files);
     return files.size();
 }
 
@@ -441,7 +438,7 @@ struct StressTest {
     Vec<int> pagesToRender;
     int currPageNo = 0;
     int pageForSearchStart = 0;
-    int filesCount = 0; // number of files processed so far
+    int nFilesProcessed = 0; // number of files processed so far
     int timerId = 0;
     bool exitWhenDone = false;
 
@@ -504,7 +501,7 @@ static void Finished(StressTest* st, bool success) {
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         AutoFreeStr tm(FormatTime(secs));
-        AutoFreeStr s(str::Format("Stress test complete, rendered %d files in %s", st->filesCount, tm.Get()));
+        AutoFreeStr s(str::Format("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.Get()));
         ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -522,7 +519,6 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
     } else {
-        // Note: string dev only, don't translate
         AutoFreeStr s(str::Format("Path '%s' doesn't exist", path));
         ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Warning, NG_STRESS_TEST_SUMMARY);
         Finished(st, false);
@@ -534,7 +530,10 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     fflush(stdout);
 
     LoadArgs args(fileName, nullptr);
-    args.forceReuse = rand() % 3 != 1;
+    //args.forceReuse = rand() % 3 != 1;
+    args.win = st->win;
+    args.forceReuse = true;
+    args.noPlaceWindow = true;
     WindowInfo* w = LoadDocument(args);
     if (!w) {
         return false;
@@ -544,11 +543,14 @@ static bool OpenFile(StressTest* st, const char* fileName) {
         if (!st->win->IsDocLoaded()) {
             return false;
         }
-    } else if (!w->IsDocLoaded()) { // new WindowInfo
-        CloseWindow(w, false, false);
-        return false;
+    } else {
+        if (!w->IsDocLoaded()) { // new WindowInfo
+            CloseWindow(w, false, false);
+            return false;
+        }
     }
 
+#if 0
     // transfer ownership of stressTest object to a new window and close the
     // current one
     CrashIf(st != st->win->stressTest);
@@ -570,6 +572,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
         st->win = w;
         CloseWindow(toClose, false, false);
     }
+#endif
     if (!st->win->IsDocLoaded()) {
         return false;
     }
@@ -614,7 +617,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     st->currPageNo = st->pagesToRender.PopAt(0);
     st->win->ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
-    ++st->filesCount;
+    ++st->nFilesProcessed;
 
     // search immediately in single page documents
     if (1 == st->pageForSearchStart) {
@@ -625,9 +628,9 @@ static bool OpenFile(StressTest* st, const char* fileName) {
 
     int secs = SecsSinceSystemTime(st->stressStartTime);
     AutoFreeStr tm(FormatTime(secs));
-    AutoFreeStr s(str::Format("File %d: %s, time: %s", st->filesCount, fileName, tm.Get()));
+    int nTotalFiles = st->fileProvider->GetFilesCount();
+    AutoFreeStr s(str::Format("File %d (of %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm.Get()));
     ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
-
     return true;
 }
 
@@ -796,7 +799,7 @@ Next:
 
 // note: used from CrashHandler, shouldn't allocate memory
 static void GetLogInfo(StressTest* st, str::Str* s) {
-    s->AppendFmt(", stress test rendered %d files in ", st->filesCount);
+    s->AppendFmt(", stress test rendered %d files in ", st->nFilesProcessed);
     FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
     s->AppendFmt(", currPage: %d", st->currPageNo);
 }

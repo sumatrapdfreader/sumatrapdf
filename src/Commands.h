@@ -31,8 +31,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdPresentationWhiteBackground, "Presentation White Background")    \
     V(CmdPresentationBlackBackground, "Presentation Black Background")    \
     V(CmdTogglePresentationMode, "View: Presentation Mode")               \
-    V(CmdToggleToolbar, "Toogle Toolbar")                                 \
-    V(CmdToggleScrollbars, "Toogle Scrollbars")                           \
+    V(CmdToggleToolbar, "Toggle Toolbar")                                 \
+    V(CmdToggleScrollbars, "Toggle Scrollbars")                           \
     V(CmdToggleMenuBar, "Toggle Menu Bar")                                \
     V(CmdCopySelection, "Copy Selection")                                 \
     V(CmdTranslateSelectionWithGoogle, "Translate Selection with Google") \

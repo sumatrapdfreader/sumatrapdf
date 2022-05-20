@@ -539,6 +539,7 @@ enum class ConsoleRedirectStatus {
 static ConsoleRedirectStatus gConsoleRedirectStatus{ConsoleRedirectStatus::NotRedirected};
 
 // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
+// TODO: see if https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go would improve things
 static void redirectIOToConsole() {
     FILE* con{nullptr};
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
