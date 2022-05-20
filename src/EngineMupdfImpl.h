@@ -7,6 +7,9 @@ struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
     fz_matrix transform;
     IPageElement* imageElement = nullptr;
+    ~FitzPageImageInfo() {
+        delete imageElement;
+    }
 };
 
 struct FzPageInfo {
@@ -27,7 +30,7 @@ struct FzPageInfo {
     bool gotAllElements = false;
 
     RectF mediabox{};
-    Vec<FitzPageImageInfo> images;
+    Vec<FitzPageImageInfo*> images;
 
     // if false, only loaded page (fast)
     // if true, loaded expensive info (extracted text etc.)

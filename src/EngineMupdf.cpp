@@ -1085,9 +1085,9 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
     size_t imageIdx = 0;
     fz_point p = {(float)pt.x, (float)pt.y};
     for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
+        fz_rect ir = img->rect;
         if (IsPointInRect(ir, p)) {
-            res.Append(img.imageElement);
+            res.Append(img->imageElement);
         }
         imageIdx++;
     }
@@ -1108,7 +1108,7 @@ static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
     // item types in inverse order and reverse the whole list at the end
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
-        auto image = img.imageElement;
+        auto image = img->imageElement;
         els.Append(image);
         imageIdx++;
     }
@@ -1124,7 +1124,6 @@ static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
     for (auto& comment : pageInfo->comments) {
         els.Append(comment);
     }
-
     els.Reverse();
 }
 
@@ -1167,7 +1166,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageInfo>& images, fz_stext_page* stext) {
+static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageInfo*>& images, fz_stext_page* stext) {
     if (!stext) {
         return;
     }
@@ -1183,12 +1182,12 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
             // fz_convert_pixmap_samples doesn't handle src without colorspace
             // TODO: this is probably not right
-            FitzPageImageInfo img = {block->bbox, block->u.i.transform};
+            FitzPageImageInfo* img = new FitzPageImageInfo{block->bbox, block->u.i.transform};
             auto pel = new PageElementImage();
             pel->pageNo = pageNo;
             pel->rect = ToRectF(block->bbox);
             pel->imageID = images.isize();
-            img.imageElement = pel;
+            img->imageElement = pel;
             images.Append(img);
         }
         block = block->next;
@@ -1526,6 +1525,7 @@ EngineMupdf::~EngineMupdf() {
         DeleteVecMembers(pi->links);
         DeleteVecMembers(pi->autoLinks);
         DeleteVecMembers(pi->comments);
+        DeleteVecMembers(pi->images);
         if (pi->retainedLinks) {
             fz_drop_link(ctx, pi->retainedLinks);
         }
@@ -2052,8 +2052,12 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
         fz_var(page);
         fz_var(mbox);
         fz_try(ctx) {
+            page = nullptr;
             page = fz_load_page(ctx, e->_doc, i);
             mbox = fz_bound_page(ctx, page);
+        }
+        fz_always(ctx) {
+            fz_drop_page(ctx, page);
         }
         fz_catch(ctx) {
             mbox = {};
@@ -2903,7 +2907,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     }
     auto& images = pageInfo->images;
     bool outOfBounds = imageIdx >= images.isize();
-    fz_rect imgRect = images.at(imageIdx).rect;
+    fz_rect imgRect = images.at(imageIdx)->rect;
     bool badRect = ToRectF(imgRect) != rect;
     CrashIf(outOfBounds);
     CrashIf(badRect);
@@ -3391,7 +3395,7 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
     fz_rect mbox = ToFzRect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
+        fz_rect ir = img->rect;
         if (FzRectOverlap(mbox, ir) >= 0.9f) {
             return false;
         }

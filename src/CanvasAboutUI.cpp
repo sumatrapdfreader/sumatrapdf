@@ -70,7 +70,7 @@ static bool IsLink(const char* url) {
 static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     char* url = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
     char* prevUrl = win->urlOnLastButtonDown;
-    bool clickedURL = url || !str::Eq(url, prevUrl);
+    bool clickedURL = url && str::Eq(url, prevUrl);
     win->urlOnLastButtonDown.Set(nullptr);
     if (!clickedURL) {
         return;
@@ -87,6 +87,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
         SumatraLaunchBrowser(url);
     } else {
         // assume it's a thumbnail of a document
+        CrashIf(!url);
         LoadArgs args(url, win);
         LoadDocument(args);
     }
