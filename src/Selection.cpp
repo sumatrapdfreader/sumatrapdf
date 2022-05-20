@@ -320,6 +320,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
     if (!str::IsEmpty(selText)) {
         CopyTextToClipboard(selText, true);
     }
+    str::Free(selText);
     if (isTextOnlySelectionOut) {
         // don't also copy the first line of a text selection as an image
         return;
