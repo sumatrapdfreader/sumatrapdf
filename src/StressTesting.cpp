@@ -505,7 +505,7 @@ static void Finished(StressTest* st, bool success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         AutoFreeStr tm(FormatTime(secs));
         AutoFreeStr s(str::Format("Stress test complete, rendered %d files in %s", st->filesCount, tm.Get()));
-        st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
+        ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
     }
 
     CloseWindow(st->win, st->exitWhenDone && CanCloseWindow(st->win), false);
@@ -524,7 +524,7 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
     } else {
         // Note: string dev only, don't translate
         AutoFreeStr s(str::Format("Path '%s' doesn't exist", path));
-        st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::Warning, NG_STRESS_TEST_SUMMARY);
+        ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Warning, NG_STRESS_TEST_SUMMARY);
         Finished(st, false);
     }
 }
@@ -626,7 +626,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     int secs = SecsSinceSystemTime(st->stressStartTime);
     AutoFreeStr tm(FormatTime(secs));
     AutoFreeStr s(str::Format("File %d: %s, time: %s", st->filesCount, fileName, tm.Get()));
-    st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
+    ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
 
     return true;
 }
@@ -705,7 +705,7 @@ static bool GoToNextFile(StressTest* st) {
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
     AutoFreeStr s(str::Format("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime));
-    st->win->notifications->Show(st->win->hwndCanvas, s, NotificationOptions::WithTimeout, NG_STRESS_TEST_BENCHMARK);
+    ShowNotification(st->win->hwndCanvas, s, NotificationOptions::WithTimeout, NG_STRESS_TEST_BENCHMARK);
 
     if (st->pagesToRender.size() == 0) {
         if (GoToNextFile(st)) {

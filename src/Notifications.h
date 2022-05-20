@@ -52,25 +52,12 @@ struct NotificationWnd : public ProgressUpdateUI {
     bool WasCanceled() override;
 };
 
-struct Notifications {
-    Vec<NotificationWnd*> wnds;
-
-    void MoveBelow(NotificationWnd* fix, NotificationWnd* move);
-    void Remove(NotificationWnd* wnd);
-
-    ~Notifications();
-    bool Contains(NotificationWnd* wnd) const;
-
-    NotificationWnd* Show(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
-                          Kind groupId = NG_RESPONSE_TO_ACTION);
-
-    // groupId is used to classify notifications and causes a notification
-    // to replace any other notification of the same group
-    void Add(NotificationWnd*, Kind);
-    NotificationWnd* GetForGroup(Kind) const;
-    void RemoveForGroup(Kind);
-    void Relayout();
-
-    // NotificationWndCallback methods
-    void RemoveNotification(NotificationWnd* wnd);
-};
+NotificationWnd* ShowNotification(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
+                                  Kind groupId = NG_RESPONSE_TO_ACTION);
+void RemoveNotification(NotificationWnd*);
+void RemoveNotificationsForGroup(Kind);
+NotificationWnd* GetNotificationForGroup(Kind);
+bool UpdateNotificationProgress(NotificationWnd*, int, int);
+void AddNotification(NotificationWnd*, Kind);
+bool NotificationExists(NotificationWnd*);
+void RelayoutNotifications();

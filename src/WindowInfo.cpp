@@ -105,7 +105,6 @@ StaticLinkInfo::~StaticLinkInfo() {
 WindowInfo::WindowInfo(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
-    notifications = new Notifications();
 }
 
 static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
@@ -144,7 +143,6 @@ WindowInfo::~WindowInfo() {
 
     delete linkHandler;
     delete buffer;
-    delete notifications;
     delete tabSelectionHistory;
     DeleteCaption(caption);
     DeleteVecMembers(tabs);
@@ -215,7 +213,7 @@ void WindowInfo::UpdateCanvasSize() {
 
     // keep the notifications visible (only needed for right-to-left layouts)
     if (IsUIRightToLeft()) {
-        notifications->Relayout();
+        RelayoutNotifications();
     }
 }
 
@@ -454,7 +452,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             AutoFreeStr msg(str::Format(_TRA("Error loading %s"), fullPath));
-            win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
+            ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
         }
         return;
     }

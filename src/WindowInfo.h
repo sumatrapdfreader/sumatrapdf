@@ -3,8 +3,6 @@
 
 struct DoubleBuffer;
 struct LinkHandler;
-struct Notifications;
-struct NotificationWnd;
 struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
@@ -190,8 +188,6 @@ struct WindowInfo {
 
     int wheelAccumDelta = 0;
     UINT_PTR delayedRepaintTimer = 0;
-
-    Notifications* notifications = nullptr; // only access from UI thread
 
     HANDLE printThread = nullptr;
     bool printCanceled = false;

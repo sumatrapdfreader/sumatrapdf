@@ -351,14 +351,14 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
         str::Str msg;
         // TODO: duplicated message
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-        tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
+        ShowNotification(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
-    tab->win->notifications->Show(tab->win->hwndCanvas, msg.LendData());
+    ShowNotification(tab->win->hwndCanvas, msg.LendData());
 
     // TODO: hacky: set tab->editAnnotsWindow to nullptr to
     // disable a check in ReloadDocuments. Could pass additional argument

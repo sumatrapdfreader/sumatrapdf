@@ -557,12 +557,12 @@ class PrintThreadData : public ProgressUpdateUI {
         this->win = win;
         this->data = data;
         wnd = new NotificationWnd(win->hwndCanvas, 0);
-        wnd->wndRemovedCb = [this](NotificationWnd* wnd) { this->RemoveNotification(wnd); };
+        wnd->wndRemovedCb = [this](NotificationWnd* wnd) { RemoveNotification(wnd); };
         wnd->Create("", _TRA("Printing page %d of %d..."));
 
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
-        win->notifications->Add(wnd, nullptr);
+        AddNotification(wnd, nullptr);
     }
     PrintThreadData(PrintThreadData const&) = delete;
     PrintThreadData& operator=(PrintThreadData const&) = delete;
@@ -579,16 +579,12 @@ class PrintThreadData : public ProgressUpdateUI {
         cookie.Abort();
         this->wnd = nullptr;
         if (WindowInfoStillValid(win)) {
-            win->notifications->RemoveNotification(wnd);
+            RemoveNotification(wnd);
         }
     }
 
     void UpdateProgress(int current, int total) override {
-        uitask::Post([=] {
-            if (WindowInfoStillValid(win) && win->notifications->Contains(wnd)) {
-                wnd->UpdateProgress(current, total);
-            }
-        });
+        uitask::Post([=] { UpdateNotificationProgress(wnd, current, total); });
     }
 
     bool WasCanceled() override {

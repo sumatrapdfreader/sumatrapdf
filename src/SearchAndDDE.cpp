@@ -202,9 +202,7 @@ static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int curr
     if (!WindowInfoStillValid(win) || win->findCanceled) {
         return;
     }
-    if (win->notifications->Contains(wnd)) {
-        wnd->UpdateProgress(current, total);
-    } else {
+    if (!UpdateNotificationProgress(wnd, current, total)) {
         // the search has been canceled by closing the notification
         win->findCanceled = true;
     }
@@ -234,13 +232,10 @@ struct FindThreadData : public ProgressUpdateUI {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
         if (showProgress) {
-            auto notificationsInCb = this->win->notifications;
             wnd = new NotificationWnd(win->hwndCanvas, 0);
-            wnd->wndRemovedCb = [notificationsInCb](NotificationWnd* wnd) {
-                notificationsInCb->RemoveNotification(wnd);
-            };
+            wnd->wndRemovedCb = [](NotificationWnd* wnd) { RemoveNotification(wnd); };
             wnd->Create("", _TRA("Searching %d of %d..."));
-            win->notifications->Add(wnd, NG_FIND_PROGRESS);
+            AddNotification(wnd, NG_FIND_PROGRESS);
         }
 
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, disable);
@@ -255,11 +250,11 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindNext, enable);
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindMatch, enable);
 
-        if (!win->notifications->Contains(wnd)) {
+        if (!NotificationExists(wnd)) {
             /* our notification has been replaced or closed (or never created) */;
         } else if (!success && !loopedAround) {
             // i.e. canceled
-            win->notifications->RemoveNotification(wnd);
+            RemoveNotification(wnd);
         } else if (!success && loopedAround) {
             wnd->UpdateMessage(_TRA("No matches were found"), 3000);
         } else {
@@ -361,7 +356,7 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
     win->findCanceled = false;
 
     if (hideMessage) {
-        win->notifications->RemoveForGroup(NG_FIND_PROGRESS);
+        RemoveNotificationsForGroup(NG_FIND_PROGRESS);
     }
 }
 
@@ -450,7 +445,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
-            win->notifications->Show(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
+            ShowNotification(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
             return true;
         }
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -466,7 +461,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
-        win->notifications->Show(win->hwndCanvas, _TRA("No synchronization info at this position"));
+        ShowNotification(win->hwndCanvas, _TRA("No synchronization info at this position"));
         return true;
     }
 
@@ -498,14 +493,13 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         WCHAR* appDir = GetExeDirTemp();
         AutoCloseHandle process(LaunchProcess(cmdline, appDir));
         if (!process) {
-            win->notifications->Show(
+            ShowNotification(
                 win->hwndCanvas,
                 _TRA("Cannot start inverse search command. Please check the command line in the settings."));
         }
     } else if (gGlobalPrefs->enableTeXEnhancements) {
-        win->notifications->Show(
-            win->hwndCanvas,
-            _TRA("Cannot start inverse search command. Please check the command line in the settings."));
+        ShowNotification(win->hwndCanvas,
+                         _TRA("Cannot start inverse search command. Please check the command line in the settings."));
     }
 
     if (toFree) {
@@ -553,13 +547,13 @@ void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, u
 
     AutoFreeStr buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
-        win->notifications->Show(win->hwndCanvas, _TRA("No synchronization file found"));
+        ShowNotification(win->hwndCanvas, _TRA("No synchronization file found"));
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
-        win->notifications->Show(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
+        ShowNotification(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
         buf.Set(str::Format(_TRA("Page number %u inexistant"), page));
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
-        win->notifications->Show(win->hwndCanvas, _TRA("No synchronization info at this position"));
+        ShowNotification(win->hwndCanvas, _TRA("No synchronization info at this position"));
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
         buf.Set(str::Format(_TRA("Unknown source file (%s)"), fileName));
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
@@ -570,7 +564,7 @@ void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, u
         buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
     }
     if (buf) {
-        win->notifications->Show(win->hwndCanvas, buf);
+        ShowNotification(win->hwndCanvas, buf);
     }
 }
 

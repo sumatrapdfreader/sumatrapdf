@@ -30,6 +30,29 @@ constexpr int TIMEOUT_TIMER_ID = 1;
 
 static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
+struct Notifications {
+    Vec<NotificationWnd*> wnds;
+
+    void MoveBelow(NotificationWnd* fix, NotificationWnd* move);
+    void Remove(NotificationWnd* wnd);
+
+    ~Notifications();
+    bool Contains(NotificationWnd* wnd) const;
+
+    NotificationWnd* Show(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
+                          Kind groupId = NG_RESPONSE_TO_ACTION);
+
+    // groupId is used to classify notifications and causes a notification
+    // to replace any other notification of the same group
+    void Add(NotificationWnd*, Kind);
+    NotificationWnd* GetForGroup(Kind) const;
+    void RemoveForGroup(Kind);
+    void Relayout();
+
+    // NotificationWndCallback methods
+    void RemoveNotification(NotificationWnd* wnd);
+};
+
 static Rect GetCloseRect(HWND hwnd) {
     int n = DpiScale(hwnd, 16);
     Rect r = ClientRect(hwnd);
@@ -434,4 +457,57 @@ void NotificationWnd::UpdateProgress(int current, int total) {
 
 bool NotificationWnd::WasCanceled() {
     return this->isCanceled;
+}
+
+static Notifications* gNotifications = nullptr;
+
+static Notifications* GetNotifications() {
+    if (!gNotifications) {
+        gNotifications = new Notifications();
+    }
+    return gNotifications;
+}
+
+NotificationWnd* ShowNotification(HWND hwnd, const char* s, NotificationOptions opts, Kind groupId) {
+    auto notifs = GetNotifications();
+    return notifs->Show(hwnd, s, opts, groupId);
+}
+
+void RemoveNotification(NotificationWnd* wnd) {
+    auto notifs = GetNotifications();
+    notifs->Remove(wnd);
+}
+
+void RemoveNotificationsForGroup(Kind kind) {
+    auto notifs = GetNotifications();
+    notifs->RemoveForGroup(kind);
+}
+
+NotificationWnd* GetNotificationForGroup(Kind kind) {
+    auto notifs = GetNotifications();
+    return notifs->GetForGroup(kind);
+}
+
+bool UpdateNotificationProgress(NotificationWnd* wnd, int curr, int total) {
+    auto notifs = GetNotifications();
+    if (!notifs->Contains(wnd)) {
+        return false;
+    }
+    wnd->UpdateProgress(curr, total);
+    return true;
+}
+
+void AddNotification(NotificationWnd* wnd, Kind kind) {
+    auto notifs = GetNotifications();
+    notifs->Add(wnd, kind);
+}
+
+bool NotificationExists(NotificationWnd* wnd) {
+    auto notifs = GetNotifications();
+    return notifs->Contains(wnd);
+}
+
+void RelayoutNotifications() {
+    auto notifs = GetNotifications();
+    notifs->Relayout();
 }

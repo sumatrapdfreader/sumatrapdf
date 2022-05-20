@@ -375,7 +375,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM) {
     }
     win->dragPrevPos = pos;
 
-    NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
+    NotificationWnd* wnd = GetNotificationForGroup(NG_CURSOR_POS_HELPER);
     if (!wnd) {
         return;
     }
@@ -1007,7 +1007,7 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         win->HideToolTip();
         return FALSE;
     }
-    if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
+    if (GetNotificationForGroup(NG_CURSOR_POS_HELPER)) {
         SetCursorCached(IDC_CROSS);
         return TRUE;
     }
