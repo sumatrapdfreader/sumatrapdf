@@ -4,7 +4,6 @@
 namespace path {
 
 bool IsSep(char c);
-bool IsSep(WCHAR c);
 
 const char* GetExtTemp(const char* path);
 const WCHAR* GetExtTemp(const WCHAR* path);
@@ -25,22 +24,16 @@ bool IsDirectory(const char*);
 WCHAR* Normalize(const WCHAR* path);
 char* NormalizeTemp(const char* path);
 
-WCHAR* ShortPath(const WCHAR* path);
 char* ShortPath(const char* pathA);
 
 bool IsSame(const WCHAR* path1, const WCHAR* path2);
 bool IsSame(const char* path1, const char* path2);
 
 bool HasVariableDriveLetter(const char* path);
-
-bool IsOnFixedDrive(const WCHAR* path);
 bool IsOnFixedDrive(const char* path);
-
-bool Match(const WCHAR* path, const WCHAR* filter);
-bool Match(const char* path, const char* filter);
-
-bool IsAbsolute(const WCHAR* path);
 bool IsAbsolute(const char* path);
+
+bool Match(const char* path, const char* filter);
 
 char* GetTempFilePath(const char* filePrefix = nullptr);
 char* GetPathOfFileInAppDir(const char* fileName = nullptr);

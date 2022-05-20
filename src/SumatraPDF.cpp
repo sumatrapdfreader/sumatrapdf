@@ -2120,16 +2120,16 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     CloseDocumentInCurrentTab(win, true, true);
     SetFocus(win->hwndFrame);
 
-    AutoFreeWstr newPath(path::Normalize(dstFileName));
+    char* newPath = path::NormalizeTemp(dstFilePath);
     // TODO: this should be 'duplicate FileInHistory"
-    RenameFileInHistory(srcFileName, ToUtf8(newPath));
+    RenameFileInHistory(srcFileName, newPath);
 
-    LoadArgs args(dstFilePath, win);
+    LoadArgs args(newPath, win);
     args.forceReuse = true;
     LoadDocument(args);
 
     str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), dstFilePath);
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
     ShowNotification(win->hwndCanvas, msg.LendData());
     return true;
 }
@@ -2732,12 +2732,11 @@ static void OnMenuRenameFile(WindowInfo* win) {
         ShowNotification(win->hwndCanvas, _TRA("Failed to rename the file!"), NotificationOptions::Warning);
         return;
     }
+    char* dstFilePath = ToUtf8Temp(dstFileName);
+    char* newPath = path::NormalizeTemp(dstFilePath);
+    RenameFileInHistory(srcFileName, newPath);
 
-    AutoFreeWstr newPath(path::Normalize(dstFileName));
-    RenameFileInHistory(srcFileName, ToUtf8(newPath));
-
-    char* path = ToUtf8Temp(dstFileName);
-    LoadArgs args(path, win);
+    LoadArgs args(newPath, win);
     args.forceReuse = true;
     LoadDocument(args);
 }

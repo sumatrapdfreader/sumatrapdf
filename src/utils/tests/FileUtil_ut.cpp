@@ -40,15 +40,15 @@ void FileUtilTest() {
     utassert(str::Eq(path2, L"C:\\Windows"));
     free(path2);
 
-    utassert(path::Match(L"C:\\file.pdf", L"*.pdf"));
-    utassert(path::Match(L"C:\\file.pdf", L"file.*"));
-    utassert(path::Match(L"C:\\file.pdf", L"*.xps;*.pdf"));
-    utassert(path::Match(L"C:\\file.pdf", L"*.xps;*.pdf;*.djvu"));
-    utassert(path::Match(L"C:\\file.pdf", L"f??e.p?f"));
-    utassert(!path::Match(L"C:\\file.pdf", L"*.xps;*.djvu"));
-    utassert(!path::Match(L"C:\\dir.xps\\file.pdf", L"*.xps;*.djvu"));
-    utassert(!path::Match(L"C:\\file.pdf", L"f??f.p?f"));
-    utassert(!path::Match(L"C:\\.pdf", L"?.pdf"));
+    utassert(path::Match("C:\\file.pdf", "*.pdf"));
+    utassert(path::Match("C:\\file.pdf", "file.*"));
+    utassert(path::Match("C:\\file.pdf", "*.xps;*.pdf"));
+    utassert(path::Match("C:\\file.pdf", "*.xps;*.pdf;*.djvu"));
+    utassert(path::Match("C:\\file.pdf", "f??e.p?f"));
+    utassert(!path::Match("C:\\file.pdf", "*.xps;*.djvu"));
+    utassert(!path::Match("C:\\dir.xps\\file.pdf", "*.xps;*.djvu"));
+    utassert(!path::Match("C:\\file.pdf", "f??f.p?f"));
+    utassert(!path::Match("C:\\.pdf", "?.pdf"));
     {
         WCHAR* path = path::JoinTemp(L"foo", L"bar");
         utassert(str::Eq(path, L"foo\\bar"));

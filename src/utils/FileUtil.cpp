@@ -88,7 +88,7 @@ bool IsDirectory(const char* path) {
     return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-bool IsSep(WCHAR c) {
+static bool IsSep(WCHAR c) {
     return '\\' == c || '/' == c;
 }
 
@@ -253,19 +253,6 @@ char* NormalizeTemp(const char* path) {
 
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
-WCHAR* ShortPath(const WCHAR* path) {
-    AutoFreeWstr normpath(Normalize(path));
-    DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
-    if (!cch) {
-        return normpath.StealData();
-    }
-    WCHAR* shortpath = AllocArray<WCHAR>(cch);
-    GetShortPathNameW(normpath, shortpath, cch);
-    return shortpath;
-}
-
-// Normalizes the file path and the converts it into a short form that
-// can be used for interaction with non-UNICODE aware applications
 char* ShortPath(const char* pathA) {
     WCHAR* path = ToWstrTemp(pathA);
     AutoFreeWstr normpath(Normalize(path));
@@ -374,23 +361,20 @@ bool HasVariableDriveLetter(const char* path) {
     return false;
 }
 
-bool IsOnFixedDrive(const WCHAR* path) {
-    if (PathIsNetworkPath(path)) {
+bool IsOnFixedDrive(const char* pathA) {
+    WCHAR* path = ToWstrTemp(pathA);
+    if (PathIsNetworkPathW(path)) {
         return false;
     }
 
     uint type;
     WCHAR root[MAX_PATH];
-    if (GetVolumePathName(path, root, dimof(root))) {
+    if (GetVolumePathNameW(path, root, dimof(root))) {
         type = GetDriveType(root);
     } else {
         type = GetDriveType(path);
     }
     return DRIVE_FIXED == type;
-}
-
-bool IsOnFixedDrive(const char* path) {
-    return IsOnFixedDrive(ToWstrTemp(path));
 }
 
 static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
@@ -438,17 +422,6 @@ static bool MatchWildcardsRec(const char* fileName, const char* filter) {
    (e.g. "*.pdf;*.xps;?.*" will match all PDF and XPS files and
    all filenames consisting of only a single character and
    having any extension) */
-bool Match(const WCHAR* path, const WCHAR* filter) {
-    path = GetBaseNameTemp(path);
-    while (str::FindChar(filter, L';')) {
-        if (MatchWildcardsRec(path, filter)) {
-            return true;
-        }
-        filter = str::FindChar(filter, L';') + 1;
-    }
-    return MatchWildcardsRec(path, filter);
-}
-
 bool Match(const char* path, const char* filter) {
     path = GetBaseNameTemp(path);
     while (str::FindChar(filter, L';')) {
@@ -458,10 +431,6 @@ bool Match(const char* path, const char* filter) {
         filter = str::FindChar(filter, ';') + 1;
     }
     return MatchWildcardsRec(path, filter);
-}
-
-bool IsAbsolute(const WCHAR* path) {
-    return !PathIsRelativeW(path);
 }
 
 bool IsAbsolute(const char* path) {
