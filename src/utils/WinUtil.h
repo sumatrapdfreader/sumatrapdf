@@ -45,48 +45,45 @@ void DbgOutLastError(DWORD err = 0);
 
 // registry
 const char* RegKeyNameTemp(HKEY key);
-const WCHAR* RegKeyNameWTemp(HKEY key);
-bool RegKeyExists(HKEY keySub, const WCHAR* keyName);
-WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
-WCHAR* LoggedReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
-char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
-WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName);
-WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName);
-bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
-bool LoggedWriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
-bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value);
-bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
-bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
-bool LoggedWriteRegNone(HKEY hkey, const WCHAR* key, const WCHAR* valName);
-bool CreateRegKey(HKEY keySub, const WCHAR* keyName);
-bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
-bool LoggedDeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
-bool DeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
-bool LoggedDeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
+const char* RegKeyNameWTemp(HKEY key);
+bool RegKeyExists(HKEY keySub, const char* keyName);
+char* ReadRegStr(HKEY keySub, const char* keyName, const char* valName);
+char* LoggedReadRegStr(HKEY keySub, const char* keyName, const char* valName);
+char* ReadRegStr2(const char* keyName, const char* valName);
+char* LoggedReadRegStr2(const char* keyName, const char* valName);
+bool WriteRegStr(HKEY keySub, const char* keyName, const char* valName, const char* value);
+bool LoggedWriteRegStr(HKEY keySub, const char* keyName, const char* valName, const char* value);
+bool ReadRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD& value);
+bool WriteRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD value);
+bool LoggedWriteRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD value);
+bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName);
+bool CreateRegKey(HKEY keySub, const char* keyName);
+bool DeleteRegKey(HKEY keySub, const char* keyName, bool resetACLFirst = false);
+bool LoggedDeleteRegKey(HKEY keySub, const char* keyName, bool resetACLFirst = false);
+bool DeleteRegValue(HKEY keySub, const char* keyName, const char* val);
+bool LoggedDeleteRegValue(HKEY keySub, const char* keyName, const char* val);
+HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid);
 
-TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
-TempStr GetSpecialFolderATemp(int csidl, bool createIfMissing = false);
+TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 
 void DisableDataExecution();
 bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
 
-TempWstr GetExePathTemp();
-TempStr GetExePathATemp();
+TempStr GetExePathTemp();
 
-TempWstr GetExeDirTemp();
-TempStr GetExeDirATemp();
+TempStr GetExeDirTemp();
 
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 
 char* ResolveLnkTemp(const char* path);
 
-bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args = nullptr,
-                    const WCHAR* description = nullptr, int iconIndex = 0);
+bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args = nullptr,
+                    const char* description = nullptr, int iconIndex = 0);
 IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
-DWORD GetFileVersion(const WCHAR* path);
+DWORD GetFileVersion(const char* path);
 
 bool IsKeyPressed(int key);
 bool IsShiftPressed();
@@ -173,9 +170,9 @@ void ScheduleRepaint(HWND hwnd);
 // do WM_PAINT immediately
 void RepaintNow(HWND hwnd);
 
-bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr);
-bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr);
-bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr);
+bool RegisterServerDLL(const char* dllPath, const char* args = nullptr);
+bool UnRegisterServerDLL(const char* dllPath, const char* args = nullptr);
+bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char* args = nullptr);
 
 inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
@@ -286,7 +283,7 @@ HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
-void RunNonElevated(const WCHAR* exePath);
+void RunNonElevated(const char* exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s);
 ByteSlice LoadDataResource(int resId);
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command);

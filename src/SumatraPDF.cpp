@@ -308,8 +308,7 @@ bool OpenFileExternally(const char* path) {
 
     // check if this file's perceived type is allowed
     const char* ext = path::GetExtTemp(path);
-    AutoFreeWstr perceivedTypeW(ReadRegStr(HKEY_CLASSES_ROOT, ToWstrTemp(ext), L"PerceivedType"));
-    char* perceivedType = ToUtf8Temp(perceivedTypeW);
+    AutoFreeStr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, "PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
         perceivedType = str::DupTemp("webpage");
@@ -2783,9 +2782,9 @@ static void CreateLnkShortcut(WindowInfo* win) {
         return;
     }
 
-    AutoFreeWstr fileName(str::Dup(dstFileName));
-    if (!str::EndsWithI(dstFileName, L".lnk")) {
-        fileName.Set(str::Join(dstFileName, L".lnk"));
+    char* fileName = ToUtf8Temp(dstFileName);
+    if (!str::EndsWithI(fileName, ".lnk")) {
+        fileName = str::JoinTemp(fileName, ".lnk");
     }
 
     ScrollState ss(win->ctrl->CurrentPageNo(), 0, 0);
@@ -2803,12 +2802,11 @@ static void CreateLnkShortcut(WindowInfo* win) {
     }
 
     auto viewMode = ToWstrTemp(viewModeStr);
-    AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(),
-                                    ss.page, viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
+    AutoFreeStr args = str::Format("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(), ss.page,
+                                   viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeStr label = ctrl->GetPageLabel(ss.page);
-    const WCHAR* srcFileName = ToWstrTemp(path::GetBaseNameTemp(ctrl->GetFilePath()));
-    WCHAR* labelW = ToWstrTemp(label);
-    AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), labelW, srcFileName);
+    const char* srcFileName = path::GetBaseNameTemp(ctrl->GetFilePath());
+    AutoFreeStr desc = str::Format(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
     auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -4282,13 +4280,11 @@ static void OnMenuCustomZoom(WindowInfo* win) {
 }
 
 char* GetLogFilePath() {
-    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     if (!dir) {
         return nullptr;
     }
-    auto path = path::JoinTemp(dir, L"sumatra-log.txt");
-    auto res = ToUtf8(path);
-    return res;
+    return path::Join(dir, "sumatra-log.txt");
 }
 
 void ShowLogFileSmart() {
@@ -5236,8 +5232,7 @@ static TempStr GetFileSizeAsStrTemp(const char* path) {
 void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Crash file: %s\r\n", gCrashFilePath);
 
-    WCHAR* exePathW = GetExePathTemp();
-    char* exePath = ToUtf8Temp(exePathW);
+    char* exePath = GetExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
     s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe);
     if (IsDllBuild()) {
@@ -5318,9 +5313,9 @@ void ShowCrashHandlerMessage() {
 static TempStr GetSymbolsDirTemp() {
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return GetExeDirATemp();
+        return GetExeDirTemp();
     }
-    TempStr dir = GetSpecialFolderATemp(CSIDL_LOCAL_APPDATA, true);
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     return path::JoinTemp(dir, kAppNameA, "crashinfo");
 }
 

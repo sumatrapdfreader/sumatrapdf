@@ -73,14 +73,16 @@ bool EndsWithI(const char* txt, const char* end);
 bool EqNIx(const char* s, size_t len, const char* s2);
 
 char* ToLowerInPlace(char*);
+WCHAR* ToLowerInPlace(WCHAR*);
+
 char* ToLower(const char*);
+WCHAR* ToLower(const WCHAR*);
+
+char* ToUpperInPlace(char*);
 
 bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
-WCHAR* ToLowerInPlace(WCHAR*);
-WCHAR* ToLower(const WCHAR*);
-WCHAR* ToUpperInPlace(WCHAR*);
 
 void Utf8Encode(char*& dst, int c);
 

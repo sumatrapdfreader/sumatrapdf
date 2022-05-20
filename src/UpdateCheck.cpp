@@ -430,7 +430,7 @@ void UpdateSelfTo(const char* path) {
     // had time to exit so that we can overwrite it
     ::Sleep(gCli->sleepMs);
 
-    const char* srcPath = GetExePathATemp();
+    const char* srcPath = GetExePathTemp();
     bool ok = file::Copy(path, srcPath, false);
     // TODO: maybe retry if copy fails under the theory that the file
     // might be temporarily locked

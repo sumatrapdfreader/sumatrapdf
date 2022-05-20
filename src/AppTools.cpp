@@ -20,19 +20,19 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
-    WCHAR* regPathUninst = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
-    AutoFreeWstr installedPath = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
+    char* regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppNameA);
+    AutoFreeStr installedPath = LoggedReadRegStr2(regPathUninst, "InstallLocation");
     if (!installedPath) {
         return false;
     }
 
-    WCHAR* exePath = GetExePathTemp();
+    char* exePath = GetExePathTemp();
     if (exePath) {
         return false;
     }
 
-    if (!str::EndsWithI(installedPath, L".exe")) {
-        WCHAR* tmp = path::Join(installedPath, path::GetBaseNameTemp(exePath));
+    if (!str::EndsWithI(installedPath, ".exe")) {
+        char* tmp = path::Join(installedPath, path::GetBaseNameTemp(exePath));
         installedPath.Set(tmp);
     }
     return path::IsSame(installedPath, exePath);
@@ -58,8 +58,8 @@ bool IsRunningInPortableMode() {
         return false;
     }
 
-    WCHAR* exePath = GetExePathTemp();
-    WCHAR* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
+    char* exePath = GetExePathTemp();
+    char* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         return true;
@@ -67,8 +67,8 @@ bool IsRunningInPortableMode() {
 
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
-    WCHAR* baseName;
-    while ((baseName = (WCHAR*)path::GetBaseNameTemp(exePath)) > exePath) {
+    char* baseName;
+    while ((baseName = (char*)path::GetBaseNameTemp(exePath)) > exePath) {
         baseName[-1] = '\0';
         if (path::IsSame(programFilesDir, exePath)) {
             sCacheIsPortable = 0;
@@ -107,7 +107,7 @@ char* AppGenDataFilenameTemp(const char* fileName) {
         return str::Dup(res);
     }
 
-    char* path = GetSpecialFolderATemp(CSIDL_LOCAL_APPDATA, true);
+    char* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     if (!path) {
         return nullptr;
     }
@@ -195,14 +195,13 @@ char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
     StrVec foundExes;
 
     for (auto& rule : editorRules) {
-        WCHAR* regKey = ToWstrTemp(rule.regKey);
-        WCHAR* regValue = ToWstrTemp(rule.regValue);
-        AutoFreeWstr pathW(LoggedReadRegStr2(regKey, regValue));
-        if (!pathW) {
+        const char* regKey = rule.regKey;
+        const char* regValue = rule.regValue;
+        AutoFreeStr path(LoggedReadRegStr2(regKey, regValue));
+        if (!path) {
             continue;
         }
 
-        char* path = ToUtf8Temp(pathW);
         char* exePath = nullptr;
         const char* binaryFileName = rule.binaryFilename;
         const char* inverseSearchArgs = rule.inverseSearchArgs;

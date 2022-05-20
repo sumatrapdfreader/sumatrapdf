@@ -821,8 +821,7 @@ bool SetZoneIdentifier(const char* filePath, int zoneId) {
 
 bool DeleteZoneIdentifier(const char* filePath) {
     char* path = str::JoinTemp(filePath, ":Zone.Identifier");
-    WCHAR* pathW = ToWstrTemp(path);
-    return !!DeleteFileW(pathW);
+    return Delete(path);
 }
 
 } // namespace file

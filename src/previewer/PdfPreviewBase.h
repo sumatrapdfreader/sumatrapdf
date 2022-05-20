@@ -11,7 +11,7 @@ class PreviewBase : public IThumbnailProvider,
                     public IPreviewHandler,
                     public IOleWindow {
   public:
-    PreviewBase(long* plRefCount, const WCHAR* clsid) {
+    PreviewBase(long* plRefCount, const char* clsid) {
         m_plModuleRef = plRefCount;
         InterlockedIncrement(m_plModuleRef);
     }

@@ -6,7 +6,7 @@ constexpr int kInstallerWinDy = 340;
 enum class PreviousInstallationType { None = 0, User = 1, Machine = 2, Both = 3 };
 
 struct PreviousInstallationInfo {
-    WCHAR* installationDir = nullptr;
+    char* installationDir = nullptr;
     PreviousInstallationType typ = PreviousInstallationType::None;
     bool searchFilterInstalled = false;
     bool previewInstalled = false;
@@ -52,21 +52,19 @@ void NotifyFailed(const char* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
 
-int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
+int KillProcessesWithModule(const char* modulePath, bool waitUntilTerminated);
 
-TempWstr GetShortcutPathTemp(int csidl);
+TempStr GetShortcutPathTemp(int csidl);
 
 bool ExtractInstallerFiles(char* dir);
 
-WCHAR* GetExistingInstallationDir();
-char* GetExistingInstallationDirA();
+char* GetExistingInstallationDir();
 
-WCHAR* GetInstallDirTemp();
-TempWstr GetInstalledExePathTemp();
+char* GetInstallDirTemp();
+TempStr GetInstalledExePathTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 
-WCHAR* GetInstallationFilePath(const WCHAR* name);
-WCHAR* GetExistingInstallationFilePath(const WCHAR* name);
+char* GetInstallationFilePath(const char* name);
 
 void RegisterPreviewer(bool allUsers);
 void UnRegisterPreviewer();
@@ -79,7 +77,7 @@ void UninstallBrowserPlugin();
 bool CheckInstallUninstallPossible(bool silent = false);
 char* GetInstallerLogPath();
 
-TempWstr GetRegPathUninstTemp(const WCHAR* appName);
+TempStr GetRegPathUninstTemp(const char* appName);
 
 // Installer.cpp
 void RemoveAppShortcuts();

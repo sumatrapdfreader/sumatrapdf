@@ -50,7 +50,7 @@ void ShowUsage(const char* exeName) {
             ErrOut1("Available certificates:");
             hasCert = true;
         }
-        //fprintf(stderr, "\"%s\"\n", name);
+        // fprintf(stderr, "\"%s\"\n", name);
         fprintf(stderr, "%s\n", name);
     }
     if (!hasCert)

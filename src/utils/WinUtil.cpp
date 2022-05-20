@@ -284,9 +284,10 @@ void DbgOutLastError(DWORD err) {
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY hkey, const WCHAR* keyName) {
+bool RegKeyExists(HKEY hkey, const char* keyName) {
     HKEY hKey;
-    LONG res = RegOpenKeyW(hkey, keyName, &hKey);
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    LONG res = RegOpenKeyW(hkey, keyNameW, &hKey);
     if (ERROR_SUCCESS == res) {
         RegCloseKey(hKey);
         return true;
@@ -298,21 +299,23 @@ bool RegKeyExists(HKEY hkey, const WCHAR* keyName) {
 }
 
 // called needs to free() the result
-WCHAR* ReadRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
+char* ReadRegStr(HKEY hkey, const char* keyName, const char* valName) {
     if (!hkey) {
         return nullptr;
     }
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* valNameW = ToWstrTemp(valName);
     WCHAR* val = nullptr;
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
-    LONG res = RegOpenKeyEx(hkey, keyName, 0, access, &hKey);
+    LONG res = RegOpenKeyEx(hkey, keyNameW, 0, access, &hKey);
     if (ERROR_SUCCESS == res) {
         DWORD valLen;
-        res = RegQueryValueEx(hKey, valName, nullptr, nullptr, nullptr, &valLen);
+        res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
         if (ERROR_SUCCESS == res) {
             val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
-            res = RegQueryValueEx(hKey, valName, nullptr, nullptr, (LPBYTE)val, &valLen);
+            res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val, &valLen);
             if (ERROR_SUCCESS != res) {
                 str::ReplaceWithCopy(&val, nullptr);
             }
@@ -329,80 +332,82 @@ TryAgainWOW64:
 #endif
         goto TryAgainWOW64;
     }
-    return val;
+    char* resv = ToUtf8(val);
+    str::Free(val);
+    return resv;
 }
 
-WCHAR* LoggedReadRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
+char* LoggedReadRegStr(HKEY hkey, const char* keyName, const char* valName) {
     auto res = ReadRegStr(hkey, keyName, valName);
-    logf(L"ReadRegStr(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(hkey), keyName, valName, res);
+    logf("ReadRegStr(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(hkey), keyName, valName, res);
     return res;
 }
 
-// called needs to free() the result
-char* ReadRegStrUtf8(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
-    WCHAR* ws = ReadRegStr(hkey, keyName, valName);
-    if (!ws) {
-        return nullptr;
-    }
-    auto s = ToUtf8(ws);
-    str::Free(ws);
-    return s;
-}
-
-WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
-    WCHAR* res = ReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
+char* ReadRegStr2(const char* keyName, const char* valName) {
+    char* res = ReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
         res = ReadRegStr(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
 }
 
-WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
-    WCHAR* res = LoggedReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
+char* LoggedReadRegStr2(const char* keyName, const char* valName) {
+    char* res = LoggedReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
         res = LoggedReadRegStr(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
 }
 
-bool WriteRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
-    DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(hkey, keyName, valName, REG_SZ, (const void*)value, cbData);
+bool WriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char* value) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* valNameW = ToWstrTemp(valName);
+    WCHAR* valueW = ToWstrTemp(value);
+
+    DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
+    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)value, cbData);
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegStr(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
+bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char* value) {
     auto res = WriteRegStr(hkey, keyName, valName, value);
-    logf(L"WriteRegStr(%s, %s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, value, res);
+    logf("WriteRegStr(%s, %s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, value, res);
     return res;
 }
 
-bool ReadRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD& value) {
+bool ReadRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD& value) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* valNameW = ToWstrTemp(valName);
     DWORD size = sizeof(DWORD);
-    LSTATUS res = SHGetValue(hkey, keyName, valName, nullptr, &value, &size);
+    LSTATUS res = SHGetValue(hkey, keyNameW, valNameW, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY hkey, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
-    LSTATUS res = SHSetValueW(hkey, keyName, valName, REG_DWORD, (const void*)&value, sizeof(DWORD));
+bool WriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD value) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* valNameW = ToWstrTemp(valName);
+    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY hkey, const WCHAR* key, const WCHAR* valName, DWORD value) {
+bool LoggedWriteRegDWORD(HKEY hkey, const char* key, const char* valName, DWORD value) {
     auto res = WriteRegDWORD(hkey, key, valName, value);
-    logf(L"WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, (int)value, res);
+    logf("WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, (int)value, res);
     return res;
 }
 
-bool LoggedWriteRegNone(HKEY hkey, const WCHAR* key, const WCHAR* valName) {
-    LSTATUS res = SHSetValueW(hkey, key, valName, REG_NONE, nullptr, 0);
-    logf(L"LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, res);
+bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName) {
+    WCHAR* keyW = ToWstrTemp(key);
+    WCHAR* valNameW = ToWstrTemp(valName);
+    LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
+    logf("LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, res);
     return (ERROR_SUCCESS == res);
 }
 
-bool CreateRegKey(HKEY hkey, const WCHAR* keyName) {
+bool CreateRegKey(HKEY hkey, const char* keyName) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
     HKEY hKey;
-    LSTATUS res = RegCreateKeyExW(hkey, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    LSTATUS res = RegCreateKeyExW(hkey, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS) {
         return false;
     }
@@ -423,14 +428,15 @@ const char* RegKeyNameTemp(HKEY key) {
     return "RegKeyName: unknown key";
 }
 
-const WCHAR* RegKeyNameWTemp(HKEY key) {
+const char* RegKeyNameWTemp(HKEY key) {
     auto k = RegKeyNameTemp(key);
-    return ToWstrTemp(k);
+    return str::Dup(k);
 }
 
-static void ResetRegKeyAcl(HKEY hkey, const WCHAR* keyName) {
+static void ResetRegKeyAcl(HKEY hkey, const char* keyName) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
     HKEY hKey;
-    LONG res = RegOpenKeyEx(hkey, keyName, 0, WRITE_DAC, &hKey);
+    LONG res = RegOpenKeyEx(hkey, keyNameW, 0, WRITE_DAC, &hKey);
     if (ERROR_SUCCESS != res) {
         return;
     }
@@ -448,20 +454,22 @@ static void ResetRegKeyAcl(HKEY hkey, const WCHAR* keyName) {
     RegCloseKey(hKey);
 }
 
-bool DeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
+bool DeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
-    LSTATUS res = SHDeleteKeyW(hkey, keyName);
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-bool LoggedDeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
+bool LoggedDeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
-    LSTATUS res = SHDeleteKeyW(hkey, keyName);
-    logf(L"LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
+    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
     if (!ok) {
         LogLastError(res);
@@ -469,39 +477,38 @@ bool LoggedDeleteRegKey(HKEY hkey, const WCHAR* keyName, bool resetACLFirst) {
     return ok;
 }
 
-bool DeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* val) {
-    auto res = SHDeleteValueW(hkey, keyName, val);
+bool DeleteRegValue(HKEY hkey, const char* keyName, const char* value) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* valueW = ToWstrTemp(value);
+
+    auto res = SHDeleteValueW(hkey, keyNameW, valueW);
     return res == ERROR_SUCCESS;
 }
 
-bool LoggedDeleteRegValue(HKEY hkey, const WCHAR* keyName, const WCHAR* valName) {
-    auto res = SHDeleteValueW(hkey, keyName, valName);
+bool LoggedDeleteRegValue(HKEY hkey, const char* keyName, const char* valName) {
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* valNameW = ToWstrTemp(valName);
+
+    auto res = SHDeleteValueW(hkey, keyNameW, valNameW);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
-    logf(L"LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
+    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
     if (!ok) {
         LogLastError(res);
     }
     return ok;
 }
 
-TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
-    if (createIfMissing) {
-        csidl = csidl | CSIDL_FLAG_CREATE;
-    }
-    WCHAR path[MAX_PATH]{};
-    HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
-    if (S_OK != res) {
-        return nullptr;
-    }
-    return str::DupTemp(path);
+HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid) {
+    WCHAR* ws = ToWstrTemp(lpsz);
+    return CLSIDFromString(ws, pclsid);
 }
 
-TempStr GetSpecialFolderATemp(int csidl, bool createIfMissing) {
+TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
     if (createIfMissing) {
         csidl = csidl | CSIDL_FLAG_CREATE;
     }
     WCHAR path[MAX_PATH]{};
-    HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
+    HRESULT res = SHGetFolderPathW(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res) {
         return nullptr;
     }
@@ -628,34 +635,23 @@ void HandleRedirectedConsoleOnShutdown() {
     }
 }
 
-TempWstr GetExePathTemp() {
-    WCHAR buf[MAX_PATH]{};
-    GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
-    return str::DupTemp(buf);
-}
-
 // Return the full exe path of my own executable
-TempStr GetExePathATemp() {
+TempStr GetExePathTemp() {
     WCHAR buf[MAX_PATH]{};
     GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
     return ToUtf8Temp(buf);
 }
 
 // Return directory where our executable is located
-TempWstr GetExeDirTemp() {
+TempStr GetExeDirTemp() {
     auto path = GetExePathTemp();
     return path::GetDirTemp(path);
 }
 
-// Return directory where our executable is located
-TempStr GetExeDirATemp() {
-    auto path = GetExePathATemp();
-    return path::GetDirTemp(path);
-}
-
 void ChangeCurrDirToDocuments() {
-    WCHAR* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
-    SetCurrentDirectoryW(dir);
+    char* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
+    WCHAR* dirW = ToWstrTemp(dir);
+    SetCurrentDirectoryW(dirW);
 }
 
 static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
@@ -711,9 +707,14 @@ char* ResolveLnkTemp(const char* path) {
     return ToUtf8Temp(newPath);
 }
 
-bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args, const WCHAR* description,
+bool CreateShortcut(const char* shortcutPathA, const char* exePathA, const char* argsA, const char* descriptionA,
                     int iconIndex) {
     ScopedCom com;
+
+    WCHAR* shortcutPath = ToWstrTemp(shortcutPathA);
+    WCHAR* exePath = ToWstrTemp(exePathA);
+    WCHAR* args = ToWstrTemp(argsA);
+    WCHAR* description = ToWstrTemp(descriptionA);
 
     ScopedComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
@@ -1771,7 +1772,7 @@ char* NormalizeString(const char* strA, int /* NORM_FORM */ form) {
     return ToUtf8(res.Get());
 }
 
-bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args) {
+bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char* args) {
     if (FAILED(OleInitialize(nullptr))) {
         return false;
     }
@@ -1779,8 +1780,9 @@ bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCH
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
     if (DynSetDllDirectoryW) {
-        WCHAR* dllDir = path::GetDirTemp(dllPath);
-        DynSetDllDirectoryW(dllDir);
+        char* dllDir = path::GetDirTemp(dllPath);
+        WCHAR* dllDirW = ToWstrTemp(dllDir);
+        DynSetDllDirectoryW(dllDirW);
     }
 
     defer {
@@ -1790,7 +1792,7 @@ bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCH
         OleUninitialize();
     };
 
-    HMODULE lib = LoadLibraryW(dllPath);
+    HMODULE lib = LoadLibraryA(dllPath);
     if (!lib) {
         return false;
     }
@@ -1804,7 +1806,8 @@ bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCH
     if (args) {
         DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
         if (DllInstall) {
-            ok = SUCCEEDED(DllInstall(install, args));
+            WCHAR* argsW = ToWstrTemp(args);
+            ok = SUCCEEDED(DllInstall(install, argsW));
         } else {
             args = nullptr;
         }
@@ -1820,11 +1823,11 @@ bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCH
     return ok;
 }
 
-bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args) {
+bool RegisterServerDLL(const char* dllPath, const char* args) {
     return RegisterOrUnregisterServerDLL(dllPath, true, args);
 }
 
-bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args) {
+bool UnRegisterServerDLL(const char* dllPath, const char* args) {
     if (!file::Exists(dllPath)) {
         return true;
     }
@@ -2213,18 +2216,21 @@ bool SafeCloseHandle(HANDLE* h) {
 // - using CreateProcessAsUser() with hand-crafted token
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
-void RunNonElevated(const WCHAR* exePath) {
-    AutoFreeWstr cmd, explorerPath;
+void RunNonElevated(const char* exePath) {
+    AutoFreeStr cmd;
+    char* explorerPath;
+    char* bufA;
     WCHAR buf[MAX_PATH]{};
-    uint res = GetWindowsDirectory(buf, dimof(buf));
+    uint res = GetWindowsDirectoryW(buf, dimof(buf));
     if (0 == res || res >= dimof(buf)) {
         goto Run;
     }
-    explorerPath.Set(path::Join(buf, L"explorer.exe"));
+    bufA = ToUtf8Temp(buf);
+    explorerPath = path::JoinTemp(bufA, "explorer.exe");
     if (!file::Exists(explorerPath)) {
         goto Run;
     }
-    cmd.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), exePath));
+    cmd.Set(str::Format("\"%s\" \"%s\"", explorerPath, exePath));
 Run:
     HANDLE h = LaunchProcess(cmd ? cmd.Get() : exePath);
     SafeCloseHandle(&h);

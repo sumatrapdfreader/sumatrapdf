@@ -585,12 +585,12 @@ static void UpdateGlobalPrefs(const Flags& i) {
 // we're in installer mode if the name of the executable
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
-    auto exePath = GetExePathTemp();
-    const WCHAR* exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, L"uninstall")) {
+    char* exePath = GetExePathTemp();
+    const char* exeName = path::GetBaseNameTemp(exePath);
+    if (str::FindI(exeName, "uninstall")) {
         return false;
     }
-    return str::FindI(exeName, L"install");
+    return str::FindI(exeName, "install");
 }
 
 static bool ExeHasInstallerResources() {
@@ -606,11 +606,11 @@ static bool IsInstallerAndNamedAsSuch() {
 }
 
 static bool IsOurExeInstalled() {
-    AutoFreeWstr installedDir = GetExistingInstallationDir();
+    AutoFreeStr installedDir = GetExistingInstallationDir();
     if (!installedDir.Get()) {
         return false;
     }
-    WCHAR* exeDir = GetExeDirTemp();
+    char* exeDir = GetExeDirTemp();
     return str::EqI(installedDir.Get(), exeDir);
 }
 
@@ -622,14 +622,14 @@ static bool IsInstallerButNotInstalled() {
 }
 
 static void CheckIsStoreBuild() {
-    WCHAR* exePath = GetExePathTemp();
-    const WCHAR* exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, L"store")) {
+    char* exePath = GetExePathTemp();
+    const char* exeName = path::GetBaseNameTemp(exePath);
+    if (str::FindI(exeName, "store")) {
         gIsStoreBuild = true;
         return;
     }
-    WCHAR* dir = path::GetDirTemp(exePath);
-    WCHAR* path = path::JoinTemp(dir, L"AppxManifest.xml");
+    char* dir = path::GetDirTemp(exePath);
+    char* path = path::JoinTemp(dir, "AppxManifest.xml");
     if (file::Exists(path)) {
         gIsStoreBuild = true;
     }
@@ -667,10 +667,10 @@ static void VerifyNoLibmupdfMismatch() {
         return;
     }
 
-    WCHAR* exePath = GetExePathTemp();
-    WCHAR* dir = path::GetDirTemp(exePath);
-    WCHAR* path = path::JoinTemp(dir, L"libmupdf.dll");
-    auto realSize = file::GetSize(ToUtf8Temp(path));
+    char* exePath = GetExePathTemp();
+    char* dir = path::GetDirTemp(exePath);
+    char* path = path::JoinTemp(dir, "libmupdf.dll");
+    auto realSize = file::GetSize(path);
     if (realSize == (i64)expectedSize) {
         return;
     }
@@ -885,8 +885,9 @@ static void ForceStartupLeaks() {
     secs = mktime(&tm);
     gmtime_s(&tm, &secs);
     gmtime(&secs);
-    WCHAR* path = GetExePathTemp();
-    FILE* fp = _wfopen(path, L"rb");
+    char* path = GetExePathTemp();
+    WCHAR* pathW = ToWstrTemp(path);
+    FILE* fp = _wfopen(pathW, L"rb");
     if (fp) {
         fclose(fp);
     }

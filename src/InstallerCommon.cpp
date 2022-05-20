@@ -85,8 +85,8 @@ PreviousInstallationInfo::~PreviousInstallationInfo() {
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-TempWstr GetRegPathUninstTemp(const WCHAR* appName) {
-    return str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
+TempStr GetRegPathUninstTemp(const char* appName) {
+    return str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
 }
 
 void NotifyFailed(const WCHAR* msg) {
@@ -108,35 +108,29 @@ void SetMsg(const WCHAR* msg, Color color) {
     gMsgColor = color;
 }
 
-WCHAR* gCachedExistingInstallationDir = nullptr;
+char* gCachedExistingInstallationDir = nullptr;
 
 // caller has to free()
-WCHAR* GetExistingInstallationDir() {
+char* GetExistingInstallationDir() {
     if (gCachedExistingInstallationDir) {
         // no logging if returning cached
         return str::Dup(gCachedExistingInstallationDir);
     }
     log("GetExistingInstallationDir()\n");
-    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
-    AutoFreeWstr dir = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
+    char* regPathUninst = GetRegPathUninstTemp(kAppNameA);
+    AutoFreeStr dir = LoggedReadRegStr2(regPathUninst, "InstallLocation");
     if (!dir) {
         return nullptr;
     }
-    if (str::EndsWithI(dir, L".exe")) {
+    if (str::EndsWithI(dir, ".exe")) {
         dir.SetCopy(path::GetDirTemp(dir));
     }
     if (!str::IsEmpty(dir) && dir::Exists(dir)) {
-        WCHAR* res = dir.StealData();
+        char* res = dir.StealData();
         gCachedExistingInstallationDir = str::Dup(res);
         return res;
     }
     return nullptr;
-}
-
-// caller has to free()
-char* GetExistingInstallationDirA() {
-    AutoFreeWstr res = GetExistingInstallationDir();
-    return ToUtf8(res);
 }
 
 void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
@@ -148,9 +142,9 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     }
     info->searchFilterInstalled = IsSearchFilterInstalled();
     info->previewInstalled = IsPreviewInstalled();
-    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
-    AutoFreeWstr dirLM = LoggedReadRegStr(HKEY_LOCAL_MACHINE, regPathUninst, L"InstallLocation");
-    AutoFreeWstr dirCU = LoggedReadRegStr(HKEY_CURRENT_USER, regPathUninst, L"InstallLocation");
+    char* regPathUninst = GetRegPathUninstTemp(kAppNameA);
+    AutoFreeStr dirLM = LoggedReadRegStr(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
+    AutoFreeStr dirCU = LoggedReadRegStr(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
     if (dirLM.Get() && dirCU.Get()) {
         info->typ = PreviousInstallationType::Both;
     }
@@ -159,81 +153,50 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     } else {
         info->typ = PreviousInstallationType::User;
     }
-    logf(L"GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d\n", info->installationDir,
+    logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d\n", info->installationDir,
          (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ);
 }
 
-WCHAR* GetExistingInstallationFilePath(const WCHAR* name) {
-    WCHAR* dir = GetExistingInstallationDir();
+static char* GetExistingInstallationFilePath(const char* name) {
+    char* dir = GetExistingInstallationDir();
     if (!dir) {
         return nullptr;
     }
     return path::Join(dir, name);
 }
 
-WCHAR* GetInstallDirTemp() {
+char* GetInstallDirTemp() {
     logf("GetInstallDirTemp() => %s\n", gCli->installDir);
-    WCHAR* dirW = ToWstrTemp(gCli->installDir);
-    return dirW;
+    return gCli->installDir;
 }
 
-WCHAR* GetInstallationFilePath(const WCHAR* name) {
-    WCHAR* dirW = ToWstrTemp(gCli->installDir);
-    WCHAR* res = path::Join(dirW, name);
-    logf(L"GetInstallationFilePath(%s) = > %s\n", name, res);
+char* GetInstallationFilePath(const char* name) {
+    char* res = path::Join(gCli->installDir, name);
+    logf("GetInstallationFilePath(%s) = > %s\n", name, res);
     return res;
 }
 
-TempWstr GetInstalledExePathTemp() {
-    WCHAR* dir = GetInstallDirTemp();
-    return path::JoinTemp(dir, kExeName);
+TempStr GetInstalledExePathTemp() {
+    char* dir = GetInstallDirTemp();
+    return path::JoinTemp(dir, kExeNameA);
 }
 
-TempWstr GetShortcutPathTemp(int csidl) {
-    WCHAR* dir = GetSpecialFolderTemp(csidl, false);
+TempStr GetShortcutPathTemp(int csidl) {
+    char* dir = GetSpecialFolderTemp(csidl, false);
     if (!dir) {
         return {};
     }
-    WCHAR* lnkName = str::JoinTemp(kAppName, L".lnk");
+    char* lnkName = str::JoinTemp(kAppNameA, ".lnk");
     return path::JoinTemp(dir, lnkName);
 }
 
-WCHAR* GetInstalledBrowserPluginPath() {
+char* GetInstalledBrowserPluginPath() {
 #ifndef _WIN64
-    const WCHAR* kRegPathPlugin = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
+    const char* kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
 #else
-    const WCHAR* kRegPathPlugin = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
+    const char* kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
 #endif
-    return LoggedReadRegStr2(kRegPathPlugin, L"Path");
-}
-
-static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
-    // Note: don't know why procId 0 shows up as using our files
-    if (procId == 0 || procId == GetCurrentProcessId()) {
-        return false;
-    }
-    if (!file1 && !file2) {
-        return false;
-    }
-    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
-    if (snap == INVALID_HANDLE_VALUE) {
-        return false;
-    }
-
-    MODULEENTRY32 mod{};
-    mod.dwSize = sizeof(mod);
-    BOOL cont = Module32First(snap, &mod);
-    while (cont) {
-        WCHAR* exePath = mod.szExePath;
-        if (file1 && path::IsSame(file1, exePath)) {
-            return true;
-        }
-        if (file2 && path::IsSame(file2, exePath)) {
-            return true;
-        }
-        cont = Module32Next(snap, &mod);
-    }
-    return false;
+    return LoggedReadRegStr2(kRegPathPlugin, "Path");
 }
 
 static bool IsProcessUsingFiles(DWORD procId, const char* file1, const char* file2) {
@@ -266,12 +229,11 @@ static bool IsProcessUsingFiles(DWORD procId, const char* file1, const char* fil
     return false;
 }
 
-constexpr const WCHAR* kBrowserPluginName = L"npPdfViewer.dll";
-constexpr const char* kBrowserPluginNameA = "npPdfViewer.dll";
+constexpr const char* kBrowserPluginName = "npPdfViewer.dll";
 
 void UninstallBrowserPlugin() {
     log("UninstallBrowserPlugin()\n");
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kBrowserPluginName);
+    AutoFreeStr dllPath = GetExistingInstallationFilePath(kBrowserPluginName);
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
@@ -288,11 +250,11 @@ void UninstallBrowserPlugin() {
     NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
-constexpr const WCHAR* kSearchFilterDllName = L"PdfFilter.dll";
+constexpr const char* kSearchFilterDllName = "PdfFilter.dll";
 
 void RegisterSearchFilter(bool allUsers) {
-    AutoFreeWstr dllPath = GetInstallationFilePath(kSearchFilterDllName);
-    logf(L"RegisterSearchFilter() dllPath=%s\n", dllPath.Get());
+    AutoFreeStr dllPath = GetInstallationFilePath(kSearchFilterDllName);
+    logf("RegisterSearchFilter() dllPath=%s\n", dllPath.Get());
     bool ok = InstallSearchFiler(dllPath, allUsers);
     if (ok) {
         log("  did registe\n");
@@ -303,7 +265,7 @@ void RegisterSearchFilter(bool allUsers) {
 }
 
 void UnRegisterSearchFilter() {
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
+    AutoFreeStr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
     logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
     bool ok = UninstallSearchFilter();
     if (ok) {
@@ -314,10 +276,10 @@ void UnRegisterSearchFilter() {
     NotifyFailed(_TR("Couldn't uninstall Sumatra search filter"));
 }
 
-constexpr const WCHAR* kPreviewDllName = L"PdfPreview.dll";
+constexpr const char* kPreviewDllName = "PdfPreview.dll";
 
 void RegisterPreviewer(bool allUsers) {
-    AutoFreeWstr dllPath = GetInstallationFilePath(kPreviewDllName);
+    AutoFreeStr dllPath = GetInstallationFilePath(kPreviewDllName);
     logf("RegisterPreviewer() dllPath=%s\n", dllPath.Get());
     bool ok = InstallPreviewDll(dllPath, allUsers);
     if (ok) {
@@ -329,7 +291,7 @@ void RegisterPreviewer(bool allUsers) {
 }
 
 void UnRegisterPreviewer() {
-    AutoFreeWstr dllPath = GetExistingInstallationFilePath(kPreviewDllName);
+    AutoFreeStr dllPath = GetExistingInstallationFilePath(kPreviewDllName);
     logf("UnRegisterPreviewer() dllPath=%s\n", dllPath.Get());
     bool ok = UninstallPreviewDll();
     if (ok) {
@@ -340,17 +302,18 @@ void UnRegisterPreviewer() {
     NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
-static bool IsProcWithModule(DWORD processId, const WCHAR* modulePath) {
+static bool IsProcWithModule(DWORD processId, const char* modulePath) {
     AutoCloseHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
     if (!hModSnapshot.IsValid()) {
         return false;
     }
 
+    WCHAR* modulePathW = ToWstrTemp(modulePath);
     MODULEENTRY32W me32{};
     me32.dwSize = sizeof(me32);
     BOOL ok = Module32FirstW(hModSnapshot, &me32);
     while (ok) {
-        if (path::IsSame(modulePath, me32.szExePath)) {
+        if (path::IsSame(modulePathW, me32.szExePath)) {
             return true;
         }
         ok = Module32NextW(hModSnapshot, &me32);
@@ -383,11 +346,11 @@ static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
 // Kill a process with given <processId> if it has a module (dll or exe) <modulePath>.
 // If <waitUntilTerminated> is true, will wait until process is fully killed.
 // Returns TRUE if killed a process
-static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
+static bool KillProcWithIdAndModule(DWORD processId, const char* modulePath, bool waitUntilTerminated) {
     if (!IsProcWithModule(processId, modulePath)) {
         return false;
     }
-    logf(L"KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
+    logf("KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
 
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
@@ -412,9 +375,8 @@ static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bo
 // returns number of killed processes that have a module (exe or dll) with a given
 // modulePath
 // returns -1 on error, 0 if no matching processes
-int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
-    auto modulePathA = ToUtf8Temp(modulePath);
-    logf("KillProcessesWithModule: '%s'\n", modulePathA);
+int KillProcessesWithModule(const char* modulePath, bool waitUntilTerminated) {
+    logf("KillProcessesWithModule: '%s'\n", modulePath);
     AutoCloseHandle hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hProcSnapshot) {
         return -1;
@@ -450,12 +412,12 @@ int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
 // returns false if there are processes and we failed to kill them
 static bool KillProcessesUsingInstallation() {
     log("KillProcessesUsingInstallation()\n");
-    AutoFreeWstr dir = GetExistingInstallationDir();
+    AutoFreeStr dir = GetExistingInstallationDir();
     if (dir.empty()) {
         return true;
     }
-    AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
-    AutoFreeWstr browserPlugin = path::Join(dir, kBrowserPluginName);
+    AutoFreeStr libmupdf = path::Join(dir, "libmupdf.dll");
+    AutoFreeStr browserPlugin = path::Join(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -486,12 +448,12 @@ static bool KillProcessesUsingInstallation() {
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(StrVec& names) {
     log("ProcessesUsingInstallation()\n");
-    AutoFreeStr dir = GetExistingInstallationDirA();
+    AutoFreeStr dir = GetExistingInstallationDir();
     if (dir.empty()) {
         return;
     }
     char* libmupdf = path::JoinTemp(dir, "libmupdf.dll");
-    char* browserPlugin = path::JoinTemp(dir, kBrowserPluginNameA);
+    char* browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {

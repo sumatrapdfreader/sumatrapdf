@@ -21,19 +21,20 @@ static void ShellNotifyAssociationsChanged() {
 }
 
 // caller needs to str::Free() the result
-static WCHAR* GetInstallDate() {
+static char* GetInstallDate() {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    return str::Format(L"%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
+    return str::Format("%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(const WCHAR* dir, bool recur) {
-    logf(L"GetDirSize(%s)\n", dir);
-    AutoFreeWstr dirPattern = path::Join(dir, L"*");
-    WIN32_FIND_DATA findData;
+static DWORD GetDirSize(const char* dir, bool recur) {
+    logf("GetDirSize(%s)\n", dir);
+    char* dirPattern = path::JoinTemp(dir, "*");
+    WIN32_FIND_DATAW findData;
 
-    HANDLE h = FindFirstFile(dirPattern, &findData);
+    WCHAR* patternW = ToWstrTemp(dirPattern);
+    HANDLE h = FindFirstFile(patternW, &findData);
     if (h == INVALID_HANDLE_VALUE) {
         return 0;
     }
@@ -42,10 +43,10 @@ static DWORD GetDirSize(const WCHAR* dir, bool recur) {
     do {
         DWORD fattr = findData.dwFileAttributes;
         bool isDir = fattr & FILE_ATTRIBUTE_DIRECTORY;
-        WCHAR* name = findData.cFileName;
+        char* name = ToUtf8Temp(findData.cFileName);
         if (isDir) {
-            if (recur && !str::Eq(name, L".") && !str::Eq(name, L"..")) {
-                WCHAR* subdir = path::JoinTemp(dir, name);
+            if (recur && !str::Eq(name, ".") && !str::Eq(name, "..")) {
+                char* subdir = path::JoinTemp(dir, name);
                 totalSize += GetDirSize(subdir, recur);
             }
         } else {
@@ -64,41 +65,41 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     logf("WriteUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
-    AutoFreeWstr installedExePath = GetInstallationFilePath(kExeName);
-    AutoFreeWstr installDate = GetInstallDate();
-    WCHAR* installDir = GetInstallDirTemp();
+    AutoFreeStr installedExePath = GetInstallationFilePath(kExeNameA);
+    AutoFreeStr installDate = GetInstallDate();
+    char* installDir = GetInstallDirTemp();
     // uninstaller is the same executable with a different flag
-    WCHAR* uninstallerPath = installedExePath;
-    AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
+    char* uninstallerPath = installedExePath;
+    AutoFreeStr uninstallCmdLine = str::Format("\"%s\" -uninstall", uninstallerPath);
 
-    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
+    char* regPathUninst = GetRegPathUninstTemp(kAppNameA);
     // path to installed executable (or "$path,0" to force the first icon)
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", kAppName);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "DisplayIcon", installedExePath);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "DisplayName", kAppNameA);
     // version format: "1.2"
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayVersion", CURR_VERSION_STR);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "DisplayVersion", CURR_VERSION_STRA);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsWindowsVistaOrGreater()) {
-        WCHAR* key = str::JoinTemp(kAppName, L" ", CURR_VERSION_STR);
-        ok &= LoggedWriteRegStr(hkey, regPathUninst, L"DisplayName", key);
+        char* key = str::JoinTemp(kAppNameA, " ", CURR_VERSION_STRA);
+        ok &= LoggedWriteRegStr(hkey, regPathUninst, "DisplayName", key);
     }
     // non-recursive because we don't want to count space used for thumbnails
     // which is in installDir for local install
     DWORD size = GetDirSize(installDir, false) / 1024;
     // size of installed directory after copying files
-    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
+    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "EstimatedSize", size);
     // current date as YYYYMMDD
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"InstallDate", installDate);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"InstallLocation", installDir);
-    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"NoModify", 1);
-    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, L"NoRepair", 1);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"Publisher", TEXT(PUBLISHER_STR));
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallDate", installDate);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallLocation", installDir);
+    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoModify", 1);
+    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoRepair", 1);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "Publisher", PUBLISHER_STR);
     // command line for uninstaller
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"UninstallString", uninstallCmdLine);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, L"URLUpdateInfo",
-                            L"https://www.sumatrapdfreader.org/docs/Version-history.html");
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "UninstallString", uninstallCmdLine);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLInfoAbout", "https://www.sumatrapdfreader.org/");
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLUpdateInfo",
+                            "https://www.sumatrapdfreader.org/docs/Version-history.html");
     if (!ok) {
         log("WriteUninstallerRegistryInfo() failed\n");
     }
@@ -121,24 +122,23 @@ static bool RegisterForDefaultPrograms(HKEY hkey) {
     bool ok = true;
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
-    WCHAR* appCapabilityPath = str::JoinTemp(L"SOFTWARE\\", kAppName, L"\\Capabilities");
+    char* appCapabilityPath = str::JoinTemp("SOFTWARE\\", kAppNameA, "\\Capabilities");
 
-    const WCHAR* desc = L"SumatraPDF is a PDF reader.";
-    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, L"ApplicationDescription", desc);
-    const WCHAR* appLongName = L"SumatraPDF Reader";
-    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, L"ApplicationName", appLongName);
+    const char* desc = "SumatraPDF is a PDF reader.";
+    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, "ApplicationDescription", desc);
+    const char* appLongName = "SumatraPDF Reader";
+    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, "ApplicationName", appLongName);
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
-    WCHAR* keyAssoc = str::JoinTemp(appCapabilityPath, L"\\FileAssociations");
+    char* keyAssoc = str::JoinTemp(appCapabilityPath, "\\FileAssociations");
 
     auto ext = gSupportedExts;
     while (ext) {
-        WCHAR* extw = ToWstrTemp(ext);
-        ok &= LoggedWriteRegStr(hkey, keyAssoc, extw, kAppName);
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, kAppNameA);
         seqstrings::Next(ext);
     }
 
-    ok &= LoggedWriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", kAppName, appCapabilityPath);
+    ok &= LoggedWriteRegStr(hkey, "SOFTWARE\\RegisteredApplications", kAppNameA, appCapabilityPath);
     return ok;
 }
 
@@ -164,59 +164,59 @@ ShCtx\Software\Classes\${ext}\OpenWithProgids
   SumatraPDF.${ext} = "" (empty REG_SZ value)
 */
 bool RegisterForOpenWith(HKEY hkey) {
-    WCHAR* exePath = GetInstalledExePathTemp();
-    WCHAR* cmdOpen = str::JoinTemp(L"\"", exePath, L"\" \"%1\"");
-    WCHAR* cmdPrint = str::JoinTemp(L"\"", exePath, L"\" -print-to-default \"%1\"");
-    WCHAR* cmdPrintTo = str::JoinTemp(L"\"", exePath, L"\" -print-to \"%2\" \"%1\"");
-    WCHAR* key;
+    char* exePath = GetInstalledExePathTemp();
+    char* cmdOpen = str::JoinTemp("\"", exePath, "\" \"%1\"");
+    char* cmdPrint = str::JoinTemp("\"", exePath, "\" -print-to-default \"%1\"");
+    char* cmdPrintTo = str::JoinTemp("\"", exePath, "\" -print-to \"%2\" \"%1\"");
+    char* key;
     auto exts = gSupportedExts;
     bool ok = true;
     while (exts) {
-        WCHAR* ext = ToWstrTemp(exts);
-        WCHAR* progIDName = str::JoinTemp(kAppName, ext);
-        WCHAR* progIDKey = str::JoinTemp(L"Software\\Classes\\", progIDName);
+        const char* ext = exts;
+        char* progIDName = str::JoinTemp(kAppNameA, ext);
+        char* progIDKey = str::JoinTemp("Software\\Classes\\", progIDName);
         // ok &= CreateRegKey(hkey, progIDKey);
 
         // .pdf => "PDF file"
-        WCHAR* extUC = str::ToUpperInPlace(str::DupTemp(ext + 1));
-        WCHAR* desc = str::JoinTemp(extUC, L" File");
+        char* extUC = str::ToUpperInPlace(str::DupTemp(ext + 1));
+        char* desc = str::JoinTemp(extUC, " File");
         ok &= LoggedWriteRegStr(hkey, progIDKey, nullptr, desc);
         // ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
 
         // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
         // ",${n}" => n is 0-based index of the icon
         // ",-${n}" => n is icon with resource id
-        WCHAR* iconPath = str::JoinTemp(exePath, L"");
-        if (str::Eq(ext, L".epub")) {
-            iconPath = str::JoinTemp(exePath, L",-3");
+        char* iconPath = str::JoinTemp(exePath, "");
+        if (str::Eq(ext, ".epub")) {
+            iconPath = str::JoinTemp(exePath, ",-3");
         }
-        if (str::Eq(ext, L".cbr") || str::Eq(ext, L".cbz") || str::Eq(ext, L".cbt") || str::Eq(ext, L".cb7")) {
-            iconPath = str::JoinTemp(exePath, L",-4");
+        if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
+            iconPath = str::JoinTemp(exePath, ",-4");
         }
 
-        key = str::JoinTemp(progIDKey, L"\\Application");
-        ok &= LoggedWriteRegStr(hkey, key, L"ApplicationCompany", L"Krzysztof Kowalczyk");
-        ok &= LoggedWriteRegStr(hkey, key, L"ApplicationName", kAppName);
+        key = str::JoinTemp(progIDKey, "\\Application");
+        ok &= LoggedWriteRegStr(hkey, key, "ApplicationCompany", "Krzysztof Kowalczyk");
+        ok &= LoggedWriteRegStr(hkey, key, "ApplicationName", kAppNameA);
 
-        key = str::JoinTemp(progIDKey, L"\\DefaultIcon");
+        key = str::JoinTemp(progIDKey, "\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
 
-        key = str::JoinTemp(progIDKey, L"\\shell\\open");
-        ok &= LoggedWriteRegStr(hkey, key, L"Icon", iconPath);
+        key = str::JoinTemp(progIDKey, "\\shell\\open");
+        ok &= LoggedWriteRegStr(hkey, key, "Icon", iconPath);
 
-        key = str::JoinTemp(progIDKey, L"\\shell\\open\\command");
+        key = str::JoinTemp(progIDKey, "\\shell\\open\\command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdOpen);
 
         // for PDF also register for Print/PrintTo shell actions
-        if (str::Eq(ext, L".pdf")) {
-            key = str::JoinTemp(progIDKey, L"\\shell\\Print\\command");
+        if (str::Eq(ext, ".pdf")) {
+            key = str::JoinTemp(progIDKey, "\\shell\\Print\\command");
             ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPrint);
 
-            key = str::JoinTemp(progIDKey, L"\\shell\\PrintTo\\command");
+            key = str::JoinTemp(progIDKey, "\\shell\\PrintTo\\command");
             ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPrintTo);
         }
 
-        key = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
+        key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
         ok &= LoggedWriteRegNone(hkey, key, progIDName);
 
         seqstrings::Next(exts);
@@ -294,8 +294,8 @@ Note: When making changes below, please also adjust WriteExtendedFileExtensionIn
 UnregisterFromBeingDefaultViewer() and RemoveInstallRegistryKeys() in Installer.cpp.
 */
 
-#define kRegExplorerPdfExt L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
-#define kRegClassesPdf L"Software\\Classes\\.pdf"
+#define kRegExplorerPdfExt "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
+#define kRegClassesPdf "Software\\Classes\\.pdf"
 
 // TODO: this method no longer valid
 #if 0
@@ -437,8 +437,8 @@ bool IsExeAssociatedWithPdfExtension() {
 }
 #endif
 
-TempWstr GetRegClassesAppsTemp(const WCHAR* appName) {
-    return str::JoinTemp(L"Software\\Classes\\Applications\\", appName, L".exe");
+TempStr GetRegClassesAppsTemp(const char* appName) {
+    return str::JoinTemp("Software\\Classes\\Applications\\", appName, ".exe");
 }
 
 // pre-3.4, for reference so that we know what to delete
@@ -482,7 +482,7 @@ bool OldWriteFileAssoc(HKEY hkey) {
 bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
-    const WCHAR* key;
+    const char* key;
 
     // ok &= OldWriteFileAssoc(hkey);
 
@@ -492,9 +492,9 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     ok &= RegisterForOpenWith(hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
-    ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, L"Content Type", L"application/pdf");
-    key = L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
-    ok &= LoggedWriteRegStr(hkey, key, L"Extension", L".pdf");
+    ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, "Content Type", "application/pdf");
+    key = "Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
+    ok &= LoggedWriteRegStr(hkey, key, "Extension", ".pdf");
 
     if (!ok) {
         log("WriteExtendedFileExtensionInfo() failed\n");
@@ -506,26 +506,26 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
 bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
-    WCHAR* regPathUninst = GetRegPathUninstTemp(kAppName);
+    char* regPathUninst = GetRegPathUninstTemp(kAppNameA);
     bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
     // legacy, this key was added by installers up to version 1.8
-    WCHAR* key = str::JoinTemp(L"Software\\", kAppName);
+    char* key = str::JoinTemp("Software\\", kAppNameA);
     bool ok2 = LoggedDeleteRegKey(hkey, key);
     return ok1 && ok2;
 }
 
-static const WCHAR* GetRegClassesAppTemp(const WCHAR* appName) {
-    return str::JoinTemp(L"Software\\Classes\\", appName);
+static const char* GetRegClassesAppTemp(const char* appName) {
+    return str::JoinTemp("Software\\Classes\\", appName);
 }
 
 // Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did.
 // Used in pre-3.4
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     log("UnregisterFromBeingDefaultViewer()\n");
-    AutoFreeWstr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
-    const WCHAR* regClassesApp = GetRegClassesAppTemp(kAppName);
-    AutoFreeWstr prev = LoggedReadRegStr(hkey, regClassesApp, L"previous.pdf");
-    if (!curr || !str::Eq(curr, kAppName)) {
+    AutoFreeStr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
+    const char* regClassesApp = GetRegClassesAppTemp(kAppNameA);
+    AutoFreeStr prev = LoggedReadRegStr(hkey, regClassesApp, "previous.pdf");
+    if (!curr || !str::Eq(curr, kAppNameA)) {
         // not the default, do nothing
     } else {
         // TODO: is nullptr valid here?
@@ -533,24 +533,25 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeWstr buf = LoggedReadRegStr(hkey, kRegExplorerPdfExt, L"ProgId");
-    if (str::Eq(buf, kAppName)) {
-        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, L"ProgId");
+    AutoFreeStr buf = LoggedReadRegStr(hkey, kRegExplorerPdfExt, "ProgId");
+    if (str::Eq(buf, kAppNameA)) {
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "ProgId");
     }
-    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt, L"Application"));
-    if (str::EqI(buf, kExeName)) {
-        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, L"Application");
+    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt, "Application"));
+    if (str::EqI(buf, kExeNameA)) {
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "Application");
     }
-    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt L"\\UserChoice", L"ProgId"));
-    if (str::Eq(buf, kAppName)) {
-        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt L"\\UserChoice", true);
+    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt "\\UserChoice", "ProgId"));
+    if (str::Eq(buf, kAppNameA)) {
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt "\\UserChoice", true);
     }
 }
 
 // delete registry key but only if it's empty
-static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
+static bool DeleteEmptyRegKey(HKEY root, const char* keyName) {
     HKEY hkey;
-    LSTATUS status = RegOpenKeyExW(root, keyName, 0, KEY_READ, &hkey);
+    WCHAR* keyNameW = ToWstrTemp(keyName);
+    LSTATUS status = RegOpenKeyExW(root, keyNameW, 0, KEY_READ, &hkey);
     if (status != ERROR_SUCCESS) {
         return true;
     }
@@ -576,31 +577,31 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
 
     // those are registry keys written before 3.4
-    const WCHAR* regClassApp = GetRegClassesAppTemp(kAppName);
+    const char* regClassApp = GetRegClassesAppTemp(kAppNameA);
     LoggedDeleteRegKey(hkey, regClassApp);
-    WCHAR* regPath = GetRegClassesAppsTemp(kAppName);
+    char* regPath = GetRegClassesAppsTemp(kAppNameA);
     LoggedDeleteRegKey(hkey, regPath);
     {
-        WCHAR* key = str::JoinTemp(kRegClassesPdf, L"\\OpenWithProgids");
-        LoggedDeleteRegValue(hkey, key, kAppName);
+        char* key = str::JoinTemp(kRegClassesPdf, "\\OpenWithProgids");
+        LoggedDeleteRegValue(hkey, key, kAppNameA);
     }
 
     if (HKEY_LOCAL_MACHINE == hkey) {
-        WCHAR* key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
+        char* key = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeNameA);
         LoggedDeleteRegKey(hkey, key);
     }
 
     // those are registry keys written before 3.4
     SeqStrings exts = gSupportedExts;
-    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
-    WCHAR* p;
+    char* openWithVal = str::JoinTemp("\\OpenWithList\\", kExeNameA);
+    char* p;
     while (exts) {
-        WCHAR* ext = ToWstrTemp(exts);
-        WCHAR* keyname = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
-        LoggedDeleteRegValue(hkey, keyname, kAppName);
+        const char* ext = exts;
+        char* keyname = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
+        LoggedDeleteRegValue(hkey, keyname, kAppNameA);
         DeleteEmptyRegKey(hkey, keyname);
 
-        keyname = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
+        keyname = str::JoinTemp("Software\\Classes\\", ext, openWithVal);
         if (!LoggedDeleteRegKey(hkey, keyname)) {
             goto Next;
         }
@@ -620,21 +621,20 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     // those were introduced in 3.4
     exts = gSupportedExts;
     while (exts) {
-        WCHAR* ext = ToWstrTemp(exts);
-        WCHAR* progIDName = str::JoinTemp(kAppName, ext);
-        WCHAR* key = str::JoinTemp(L"Software\\Classes\\", progIDName);
+        char* progIDName = str::JoinTemp(kAppNameA, exts);
+        char* key = str::JoinTemp("Software\\Classes\\", progIDName);
 
         LoggedDeleteRegKey(hkey, key);
 
-        key = str::JoinTemp(L"Software\\Classes\\", ext, L"\\OpenWithProgids");
+        key = str::JoinTemp("Software\\Classes\\", exts, "\\OpenWithProgids");
         LoggedDeleteRegValue(hkey, key, progIDName);
 
         seqstrings::Next(exts);
     }
 
     // delete keys written in ListAsDefaultProgramWin10()
-    LoggedDeleteRegValue(hkey, L"SOFTWARE\\RegisteredApplications", kAppName);
-    AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", kAppName);
+    LoggedDeleteRegValue(hkey, "SOFTWARE\\RegisteredApplications", kAppNameA);
+    AutoFreeStr keyName = str::Format("SOFTWARE\\%s\\Capabilities", kAppNameA);
     LoggedDeleteRegKey(hkey, keyName);
 
     ShellNotifyAssociationsChanged();

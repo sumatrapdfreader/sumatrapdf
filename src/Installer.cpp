@@ -92,14 +92,11 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked)
 }
 
 char* GetInstallerLogPath() {
-    TempWstr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     if (!dir) {
         return nullptr;
     }
-    WCHAR* path = path::Join(dir, L"sumatra-install-log.txt", nullptr);
-    auto res = ToUtf8(path);
-    str::Free(path);
-    return res;
+    return path::Join(dir, "sumatra-install-log.txt", nullptr);
 }
 
 static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
@@ -139,7 +136,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
 
 static bool CopySelfToDir(const char* destDir) {
     logf("CopySelfToDir(%s)\n", destDir);
-    char* exePath = GetExePathATemp();
+    char* exePath = GetExePathTemp();
     char* dstPath = path::JoinTemp(destDir, kExeNameA);
     bool failIfExists = false;
     bool ok = file::Copy(dstPath, exePath, failIfExists);
@@ -162,11 +159,11 @@ static void CopySettingsFile() {
     // copy the settings from old directory
 
     // seen a crash when running elevated
-    char* srcDir = GetSpecialFolderATemp(CSIDL_APPDATA, false);
+    char* srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);
     if (str::IsEmpty(srcDir)) {
         return;
     }
-    char* dstDir = GetSpecialFolderATemp(CSIDL_LOCAL_APPDATA, false);
+    char* dstDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (str::IsEmpty(dstDir)) {
         return;
     }
@@ -183,13 +180,13 @@ static void CopySettingsFile() {
 }
 
 static bool CreateAppShortcut(int csidl) {
-    WCHAR* shortcutPath = GetShortcutPathTemp(csidl);
+    char* shortcutPath = GetShortcutPathTemp(csidl);
     if (!shortcutPath) {
         log("CreateAppShortcut() failed\n");
         return false;
     }
-    logf(L"CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
-    WCHAR* installedExePath = GetInstalledExePathTemp();
+    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
+    char* installedExePath = GetInstalledExePathTemp();
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -212,11 +209,11 @@ static void CreateAppShortcuts(bool forAllUsers) {
 }
 
 static void RemoveShortcutFile(int csidl) {
-    WCHAR* path = GetShortcutPathTemp(csidl);
+    char* path = GetShortcutPathTemp(csidl);
     if (!path || !file::Exists(path)) {
         return;
     }
-    DeleteFileW(path);
+    file::Delete(path);
     logf("RemoveShorcuts: deleted '%s'\n", path);
 }
 
@@ -295,27 +292,27 @@ Exit:
 }
 
 static void RestartElevatedForAllUsers() {
-    auto exePath = GetExePathTemp();
-    const WCHAR* cmdLine = L"-run-install-now";
+    char* exePath = GetExePathTemp();
+    const char* cmdLine = "-run-install-now";
     if (gWnd->checkboxForAllUsers->IsChecked()) {
-        cmdLine = str::JoinTemp(cmdLine, L" -all-users");
+        cmdLine = str::JoinTemp(cmdLine, " -all-users");
     }
     if (gCli->withFilter) {
-        cmdLine = str::JoinTemp(cmdLine, L" -with-filter");
+        cmdLine = str::JoinTemp(cmdLine, " -with-filter");
     }
     if (gCli->withPreview) {
-        cmdLine = str::JoinTemp(cmdLine, L" -with-preview");
+        cmdLine = str::JoinTemp(cmdLine, " -with-preview");
     }
     if (gCli->silent) {
-        cmdLine = str::JoinTemp(cmdLine, L" -silent");
+        cmdLine = str::JoinTemp(cmdLine, " -silent");
     }
     if (gCli->log) {
-        cmdLine = str::JoinTemp(cmdLine, L" -log");
+        cmdLine = str::JoinTemp(cmdLine, " -log");
     }
-    WCHAR* dirW = ToWstrTemp(gCli->installDir);
-    cmdLine = str::JoinTemp(cmdLine, L" -install-dir \"", dirW);
-    cmdLine = str::JoinTemp(cmdLine, L"\"");
-    logf(L"Re-launching '%s' as elevated, args\n%s\n", exePath, cmdLine);
+    char* dir = gCli->installDir;
+    cmdLine = str::JoinTemp(cmdLine, " -install-dir \"", dir);
+    cmdLine = str::JoinTemp(cmdLine, "\"");
+    logf("Re-launching '%s' as elevated, args\n%s\n", exePath, cmdLine);
     LaunchElevated(exePath, cmdLine);
 }
 
@@ -377,7 +374,7 @@ static void OnButtonInstall() {
 
     {
         /* if the app is running, we have to kill it so that we can over-write the executable */
-        WCHAR* exePath = GetInstalledExePathTemp();
+        char* exePath = GetInstalledExePathTemp();
         KillProcessesWithModule(exePath, true);
     }
 
@@ -411,7 +408,7 @@ static void OnButtonExit() {
 }
 
 static void OnButtonStartSumatra() {
-    WCHAR* exePath = GetInstalledExePathTemp();
+    char* exePath = GetInstalledExePathTemp();
     RunNonElevated(exePath);
     OnButtonExit();
 }
@@ -580,28 +577,28 @@ static void PositionInstallButton(Button* b) {
 
 // caller needs to str::Free()
 static char* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
-    logf(L"GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
+    logf("GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
-    WCHAR* dir;
-    WCHAR* dirPrevInstall = gWnd->prevInstall.installationDir;
-    WCHAR* dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
-    WCHAR* dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
+    char* dir;
+    char* dirPrevInstall = gWnd->prevInstall.installationDir;
+    char* dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
+    char* dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
 
     if (dirPrevInstall && !ignorePrev) {
-        logf(L"  using %s from previous install\n", dirPrevInstall);
-        return ToUtf8(dirPrevInstall);
+        logf("  using %s from previous install\n", dirPrevInstall);
+        return str::Dup(dirPrevInstall);
     }
 
     if (forAllUsers) {
-        dir = path::Join(dirAll, kAppName);
-        logf(L"  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
-        return ToUtf8(dir);
+        dir = path::Join(dirAll, kAppNameA);
+        logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
+        return dir;
     }
 
     // %APPLOCALDATA%\SumatraPDF
-    dir = path::Join(dirUser, kAppName);
-    logf(L"  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
-    return ToUtf8(dir);
+    dir = path::Join(dirUser, kAppNameA);
+    logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
+    return dir;
 }
 
 void ForAllUsersStateChanged() {
@@ -1061,7 +1058,7 @@ int RunInstaller() {
     if (!gCli->installDir) {
         gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, false);
     }
-    logf(L"Running'%s' installing into dir '%s'\n", GetExePathTemp(), gCli->installDir);
+    logf("Running'%s' installing into dir '%s'\n", GetExePathTemp(), gCli->installDir);
 
     if (!gCli->silent && MaybeMismatchedOSDialog(nullptr)) {
         return 0;

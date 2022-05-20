@@ -2071,10 +2071,10 @@ const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
     return nullptr;
 }
 
-WCHAR* ToUpperInPlace(WCHAR* s) {
-    WCHAR* res = s;
+char* ToUpperInPlace(char* s) {
+    char* res = s;
     for (; s && *s; s++) {
-        *s = towupper(*s);
+        *s = (char)toupper(*s);
     }
     return res;
 }

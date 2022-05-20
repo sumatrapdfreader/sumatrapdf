@@ -56,9 +56,6 @@ static inline bool NeedsNonClientBandHack(HWND hwnd) {
     return IsZoomed(hwnd) && win::HasCaption(hwnd);
 }
 
-// http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
-#define REG_DWM L"Software\\Microsoft\\Windows\\DWM"
-
 // When DWM composition is enabled, this is the ratio between alpha channels of active and inactive caption colors.
 #define ACTIVE_INACTIVE_ALPHA_RATIO 2.0f
 
@@ -132,11 +129,14 @@ void CaptionInfo::UpdateTheme() {
     }
 }
 
+// http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
+#define REG_DWM "Software\\Microsoft\\Windows\\DWM"
+
 void CaptionInfo::UpdateColors(bool activeWindow) {
     ARGB colorizationColor;
     if (dwm::IsCompositionEnabled() &&
         // get the color from the Registry and blend it with white background
-        ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", colorizationColor)) {
+        ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, "ColorizationColor", colorizationColor)) {
         BYTE A, R, G, B, white;
         A = BYTE((colorizationColor >> 24) & 0xff);
         if (!activeWindow) {

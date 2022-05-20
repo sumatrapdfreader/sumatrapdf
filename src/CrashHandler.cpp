@@ -464,12 +464,12 @@ static void GetOsVersion(str::Str& s) {
 }
 
 static void GetProcessorName(str::Str& s) {
-    auto key = L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
-    char* name = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"ProcessorNameString");
+    auto key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
+    char* name = ReadRegStr(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
         // if more than one processor
-        key = L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
-        name = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"ProcessorNameString");
+        key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+        name = ReadRegStr(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     }
     if (name) {
         s.AppendFmt("Processor: %s\n", name);
@@ -478,8 +478,8 @@ static void GetProcessorName(str::Str& s) {
 }
 
 static void GetMachineName(str::Str& s) {
-    char* s1 = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
-    char* s2 = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
+    char* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
+    char* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
 
     if (!s1 && !s2) {
         // no-op
@@ -494,7 +494,7 @@ static void GetMachineName(str::Str& s) {
     free(s1);
 }
 
-#define GFX_DRIVER_KEY_FMT L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
+#define GFX_DRIVER_KEY_FMT "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
 
 static void GetGraphicsDriverInfo(str::Str& s) {
     // the info is in registry in:
@@ -506,8 +506,8 @@ static void GetGraphicsDriverInfo(str::Str& s) {
     //
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
-        AutoFreeWstr key(str::Format(GFX_DRIVER_KEY_FMT, i));
-        char* v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"DriverDesc");
+        AutoFreeStr key(str::Format(GFX_DRIVER_KEY_FMT, i));
+        char* v = ReadRegStr(HKEY_LOCAL_MACHINE, key, "DriverDesc");
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {
             break;
@@ -516,13 +516,13 @@ static void GetGraphicsDriverInfo(str::Str& s) {
         s.AppendFmt("  DriverDesc:         %s\n", v);
         str::Free(v);
 
-        v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"DriverVersion");
+        v = ReadRegStr(HKEY_LOCAL_MACHINE, key, "DriverVersion");
         if (v) {
             s.AppendFmt("  DriverVersion:      %s\n", v);
             str::Free(v);
         }
 
-        v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName");
+        v = ReadRegStr(HKEY_LOCAL_MACHINE, key, "UserModeDriverName");
         if (v) {
             s.AppendFmt("  UserModeDriverName: %s\n", v);
             str::Free(v);

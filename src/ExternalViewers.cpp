@@ -147,7 +147,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
 
     int csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
     for (int csidl : csidls) {
-        char* dir = GetSpecialFolderATemp(csidl);
+        char* dir = GetSpecialFolderTemp(csidl);
         char* path = path::JoinTemp(dir, partialPath);
         if (file::Exists(path)) {
             ev->exeFullPath = str::Dup(path);
@@ -167,52 +167,52 @@ void FreeExternalViewers() {
 
 static char* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    AutoFreeWstr path =
-        ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
+    AutoFreeStr path =
+        ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
     if (!path) {
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)",
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)",
                             nullptr));
     }
     if (path && file::Exists(path)) {
-        return ToUtf8(path.Get());
+        return path.StealData();
     }
     return nullptr;
 }
 
 static char* GetFoxitPath() {
-    AutoFreeWstr path = ReadRegStr(
-        HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)", L"DisplayIcon");
+    AutoFreeStr path = ReadRegStr(HKEY_LOCAL_MACHINE,
+                                  R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)", "DisplayIcon");
     if (path && file::Exists(path)) {
-        return ToUtf8(path.Get());
+        return path.StealData();
     }
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)",
-                        L"DisplayIcon"));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)",
+                        "DisplayIcon"));
     if (path && file::Exists(path)) {
-        return ToUtf8(path.Get());
+        return path.StealData();
     }
     // Registry value for Foxit 5.5 MSI installer
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Foxit Software\Foxit Reader)", L"InstallPath"));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Foxit Software\Foxit Reader)", "InstallPath"));
     if (path) {
-        path.Set(path::Join(path, L"Foxit Reader.exe"));
+        path.Set(path::Join(path, "Foxit Reader.exe"));
     }
     if (path && file::Exists(path)) {
-        return ToUtf8(path.Get());
+        return path.StealData();
     }
     return nullptr;
 }
 
 static char* GetPDFXChangePath() {
-    AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath");
+    AutoFreeStr path = ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Tracker Software\PDFViewer)", "InstallPath");
     if (!path) {
-        path.Set(ReadRegStr(HKEY_CURRENT_USER, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath"));
+        path.Set(ReadRegStr(HKEY_CURRENT_USER, R"(Software\Tracker Software\PDFViewer)", "InstallPath"));
     }
     if (!path) {
         return nullptr;
     }
-    AutoFreeWstr exePath(path::Join(path, L"PDFXCview.exe"));
+    AutoFreeStr exePath(path::Join(path, "PDFXCview.exe"));
     if (file::Exists(exePath)) {
-        return ToUtf8(exePath.Get());
+        return exePath.StealData();
     }
     return nullptr;
 }

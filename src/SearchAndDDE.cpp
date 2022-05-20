@@ -483,15 +483,16 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         toFree = inverseSearch;
     }
 
-    AutoFreeWstr cmdline;
+    AutoFreeWstr cmdLine;
     if (inverseSearch) {
         WCHAR* ws = ToWstrTemp(inverseSearch);
-        cmdline.Set(dm->pdfSync->PrepareCommandline(ws, srcfilepath, line, col));
+        cmdLine.Set(dm->pdfSync->PrepareCommandline(ws, srcfilepath, line, col));
     }
-    if (!str::IsEmpty(cmdline.Get())) {
+    if (!str::IsEmpty(cmdLine.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
-        WCHAR* appDir = GetExeDirTemp();
-        AutoCloseHandle process(LaunchProcess(cmdline, appDir));
+        char* appDir = GetExeDirTemp();
+        char* cmdLineA = ToUtf8Temp(cmdLine);
+        AutoCloseHandle process(LaunchProcess(cmdLineA, appDir));
         if (!process) {
             ShowNotification(
                 win->hwndCanvas,

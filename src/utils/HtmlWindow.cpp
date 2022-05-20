@@ -417,11 +417,9 @@ static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
         }
     }
 
-    WCHAR* extW = ToWstrTemp(ext);
-    AutoFreeWstr contentType(ReadRegStr(HKEY_CLASSES_ROOT, extW, L"Content Type"));
+    AutoFreeStr contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, "Content Type"));
     if (contentType) {
-        WCHAR* res = contentType.Get();
-        return ToUtf8(res);
+        return contentType.Get();
     }
 
     return str::Dup(kDefaultMimeType);

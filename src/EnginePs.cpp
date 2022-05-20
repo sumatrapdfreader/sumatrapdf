@@ -62,13 +62,11 @@ TryAgain64Bit:
         for (const char* gsProd : gsProducts) {
             char* ver = versions.at(ix - 1);
             AutoFreeStr keyName(str::Format("Software\\%s\\%s", gsProd, ver));
-            WCHAR* keyNameW = ToWstrTemp(keyName);
-            AutoFreeWstr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyNameW, L"GS_DLL"));
+            AutoFreeStr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, "GS_DLL"));
             if (!GS_DLL) {
                 continue;
             }
-            WCHAR* dirW = path::GetDirTemp(GS_DLL);
-            char* dir = ToUtf8Temp(dirW);
+            char* dir = path::GetDirTemp(GS_DLL);
             char* exe = path::JoinTemp(dir, "gswin32c.exe");
             if (file::Exists(exe)) {
                 return str::Dup(exe);
