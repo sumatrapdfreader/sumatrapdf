@@ -434,8 +434,8 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!dm->pdfSync) {
-        WCHAR* pathW = ToWstrTemp(tab->filePath);
-        int err = Synchronizer::Create(pathW, dm->GetEngine(), &dm->pdfSync);
+        char* path = tab->filePath;
+        int err = Synchronizer::Create(path, dm->GetEngine(), &dm->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
             // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer
@@ -457,7 +457,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     }
 
     Point pt = ToPoint(dm->CvtFromScreen(Point(x, y), pageNo));
-    AutoFreeWstr srcfilepath;
+    AutoFreeStr srcfilepath;
     uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
@@ -468,7 +468,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     if (!file::Exists(srcfilepath)) {
         // if the source file is missing, check if it's been moved to the same place as
         // the PDF document (which happens if all files are moved together)
-        WCHAR* altsrcpath = path::GetDirTemp(ToWstrTemp(tab->filePath));
+        char* altsrcpath = path::GetDirTemp(tab->filePath);
         altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(srcfilepath));
         if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
             srcfilepath.SetCopy(altsrcpath);
@@ -483,16 +483,14 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         toFree = inverseSearch;
     }
 
-    AutoFreeWstr cmdLine;
+    AutoFreeStr cmdLine;
     if (inverseSearch) {
-        WCHAR* ws = ToWstrTemp(inverseSearch);
-        cmdLine.Set(dm->pdfSync->PrepareCommandline(ws, srcfilepath, line, col));
+        cmdLine.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     }
     if (!str::IsEmpty(cmdLine.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         char* appDir = GetExeDirTemp();
-        char* cmdLineA = ToUtf8Temp(cmdLine);
-        AutoCloseHandle process(LaunchProcess(cmdLineA, appDir));
+        AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
         if (!process) {
             ShowNotification(
                 win->hwndCanvas,
@@ -654,7 +652,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     ack.fAck = 1;
     uint page;
     Vec<Rect> rects;
-    int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
+    int ret = dm->pdfSync->SourceToDoc(srcFileA, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFileA, line, col, ret, page, rects);
     if (setFocus) {
         win->Focus();

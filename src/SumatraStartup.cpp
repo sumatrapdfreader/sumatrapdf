@@ -289,8 +289,7 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
         uint page;
         Vec<Rect> rects;
         char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
-        WCHAR* sourcePath = ToWstrTemp(srcPath);
-        int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, flags.forwardSearchLine, 0, &page, rects);
+        int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
     }
     if (flags.search != nullptr) {

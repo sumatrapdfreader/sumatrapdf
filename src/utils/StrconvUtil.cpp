@@ -161,6 +161,11 @@ char* WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(CP_ACP, src);
 }
 
+char* Utf8ToAnsi(const char* s) {
+    WCHAR* ws = ToWstrTemp(s);
+    return WstrToAnsi(ws);
+}
+
 } // namespace strconv
 
 char* ToUtf8(const WCHAR* s, size_t cch) {

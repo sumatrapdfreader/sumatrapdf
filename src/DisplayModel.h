@@ -169,7 +169,7 @@ struct DisplayModel : Controller {
        kZoomFitWidth or kZoomFitContent, whose real value depends on draw area size */
     void RotateBy(int rotation);
 
-    WCHAR* GetTextInRegion(int pageNo, RectF region) const;
+    char* GetTextInRegion(int pageNo, RectF region) const;
     bool IsOverText(Point pt);
     IPageElement* GetElementAtPos(Point pt, int* pageNoOut);
     Annotation* GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots);

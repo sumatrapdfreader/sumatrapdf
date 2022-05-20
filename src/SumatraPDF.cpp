@@ -373,8 +373,7 @@ WindowInfo* FindWindowInfoByFile(const char* file, bool focusTab) {
 }
 
 // Find the first window that has been produced from <file>
-WindowInfo* FindWindowInfoBySyncFile(const char* pathA, bool focusTab) {
-    WCHAR* path = ToWstrTemp(pathA);
+WindowInfo* FindWindowInfoBySyncFile(const char* path, bool focusTab) {
     for (WindowInfo* win : gWindows) {
         Vec<Rect> rects;
         uint page;
@@ -1155,8 +1154,8 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
 
     if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEngineMupdf) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
-        WCHAR* pathW = ToWstrTemp(args.FilePath());
-        int res = Synchronizer::Create(pathW, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
+        path = args.FilePath();
+        int res = Synchronizer::Create(path, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res) {
             gGlobalPrefs->enableTeXEnhancements = true;

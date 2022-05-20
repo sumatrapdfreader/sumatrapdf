@@ -286,10 +286,9 @@ char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelecti
     }
     StrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
-        WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
+        char* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {
-            char* s = ToUtf8Temp(text);
-            selections.Append(s);
+            selections.Append(text);
         }
         str::Free(text);
     }

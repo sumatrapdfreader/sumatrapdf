@@ -21,10 +21,10 @@
 // Minimal vertical distance
 #define PDFSYNC_EPSILON_Y 20
 
-#define PDFSYNC_EXTENSION L".pdfsync"
+#define PDFSYNC_EXTENSION ".pdfsync"
 
-#define SYNCTEX_EXTENSION L".synctex"
-#define SYNCTEXGZ_EXTENSION L".synctex.gz"
+#define SYNCTEX_EXTENSION ".synctex"
+#define SYNCTEXGZ_EXTENSION ".synctex.gz"
 
 struct PdfsyncFileIndex {
     size_t start, end; // first and one-after-last index of lines associated with a file
@@ -44,16 +44,16 @@ struct PdfsyncPoint {
 // Synchronizer based on .pdfsync file generated with the pdfsync tex package
 class Pdfsync : public Synchronizer {
   public:
-    Pdfsync(const WCHAR* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
+    Pdfsync(const char* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
         CrashIf(!str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
-    int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) override;
-    int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) override;
+    int DocToSource(UINT pageNo, Point pt, AutoFreeStr& filename, UINT* line, UINT* col) override;
+    int SourceToDoc(const char* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) override;
 
   private:
     int RebuildIndex();
-    UINT SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
+    UINT SourceToRecord(const char* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
     StrVec srcfiles;                 // source file names
@@ -66,7 +66,7 @@ class Pdfsync : public Synchronizer {
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer {
   public:
-    SyncTex(const WCHAR* syncfilename, EngineBase* engine)
+    SyncTex(const char* syncfilename, EngineBase* engine)
         : Synchronizer(syncfilename), engine(engine), scanner(nullptr) {
         CrashIf(!str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
@@ -74,8 +74,8 @@ class SyncTex : public Synchronizer {
         synctex_scanner_free(scanner);
     }
 
-    int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) override;
-    int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) override;
+    int DocToSource(UINT pageNo, Point pt, AutoFreeStr& filename, UINT* line, UINT* col) override;
+    int SourceToDoc(const char* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) override;
 
   private:
     int RebuildIndex();
@@ -84,8 +84,9 @@ class SyncTex : public Synchronizer {
     synctex_scanner_t scanner;
 };
 
-Synchronizer::Synchronizer(const WCHAR* syncfilepath) : indexDiscarded(true), syncfilepath(str::Dup(syncfilepath)) {
-    _wstat(syncfilepath, &syncfileTimestamp);
+Synchronizer::Synchronizer(const char* syncfilepath) : indexDiscarded(true), syncfilepath(str::Dup(syncfilepath)) {
+    WCHAR* path = ToWstrTemp(syncfilepath);
+    _wstat(path, &syncfileTimestamp);
 }
 
 bool Synchronizer::IsIndexDiscarded() const {
@@ -96,7 +97,8 @@ bool Synchronizer::IsIndexDiscarded() const {
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    if (_wstat(syncfilepath, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
+    WCHAR* path = ToWstrTemp(syncfilepath);
+    if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
         return true; // the file has changed!
@@ -108,40 +110,41 @@ bool Synchronizer::IsIndexDiscarded() const {
 int Synchronizer::RebuildIndex() {
     indexDiscarded = false;
     // save sync file timestamp
-    _wstat(syncfilepath, &syncfileTimestamp);
+    WCHAR* path = ToWstrTemp(syncfilepath);
+    _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
 
-WCHAR* Synchronizer::PrependDir(const WCHAR* filename) const {
-    WCHAR* dir = path::GetDirTemp(syncfilepath);
+char* Synchronizer::PrependDir(const char* filename) const {
+    char* dir = path::GetDirTemp(syncfilepath);
     return path::Join(dir, filename);
 }
 
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const WCHAR* pdffilename, EngineBase* engine, Synchronizer** sync) {
+int Synchronizer::Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync) {
     if (!sync || !engine) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    const WCHAR* fileExt = path::GetExtTemp(pdffilename);
-    if (!str::EqI(fileExt, L".pdf")) {
+    const char* fileExt = path::GetExtTemp(pdffilename);
+    if (!str::EqI(fileExt, ".pdf")) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    AutoFreeWstr baseName(str::Dup(pdffilename, fileExt - pdffilename));
+    AutoFreeStr baseName(str::Dup(pdffilename, fileExt - pdffilename));
 
     // Check if a PDFSYNC file is present
-    AutoFreeWstr syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
+    AutoFreeStr syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    AutoFreeWstr texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
-    AutoFreeWstr texFile(str::Join(baseName, SYNCTEX_EXTENSION));
+    AutoFreeStr texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
+    AutoFreeStr texFile(str::Join(baseName, SYNCTEX_EXTENSION));
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
@@ -155,9 +158,9 @@ int Synchronizer::Create(const WCHAR* pdffilename, EngineBase* engine, Synchroni
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
-WCHAR* Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* filename, UINT line, UINT col) {
-    const WCHAR* perc;
-    str::WStr cmdline(256);
+char* Synchronizer::PrepareCommandline(const char* pattern, const char* filename, UINT line, UINT col) {
+    const char* perc;
+    str::Str cmdline(256);
 
     while ((perc = str::FindChar(pattern, '%')) != nullptr) {
         cmdline.Append(pattern, perc - pattern);
@@ -165,11 +168,11 @@ WCHAR* Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* filen
         perc++;
 
         if (*perc == 'f') {
-            cmdline.AppendAndFree(path::Normalize(filename));
+            cmdline.Append(path::NormalizeTemp(filename));
         } else if (*perc == 'l') {
-            cmdline.AppendFmt(L"%u", line);
+            cmdline.AppendFmt("%u", line);
         } else if (*perc == 'c') {
-            cmdline.AppendFmt(L"%u", col);
+            cmdline.AppendFmt("%u", col);
         } else if (*perc == '%') {
             cmdline.AppendChar('%');
         } else {
@@ -195,8 +198,7 @@ static char* Advance0Line(char* line, char* end) {
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
 int Pdfsync::RebuildIndex() {
-    char* path = ToUtf8Temp(syncfilepath);
-    ByteSlice data = file::ReadFile(path);
+    ByteSlice data = file::ReadFile(syncfilepath);
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
@@ -210,8 +212,8 @@ int Pdfsync::RebuildIndex() {
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(line, "*/", " \\");
-    AutoFreeWstr jobName(strconv::AnsiToWstr(line));
-    jobName.Set(str::Join(jobName, L".tex"));
+    AutoFreeStr jobName(strconv::AnsiToUtf8(line));
+    jobName.Set(str::Join(jobName, ".tex"));
     jobName.Set(PrependDir(jobName));
 
     line = Advance0Line(line, dataEnd);
@@ -233,8 +235,7 @@ int Pdfsync::RebuildIndex() {
 
     // add the initial tex file to the source file stack
     filestack.Append(srcfiles.size());
-    char* jobNameA = ToUtf8Temp(jobName);
-    srcfiles.Append(jobNameA);
+    srcfiles.Append(jobName);
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
 
@@ -282,26 +283,25 @@ int Pdfsync::RebuildIndex() {
                 break;
 
             case '(': {
-                AutoFreeWstr filename(strconv::AnsiToWstr(line + 1));
+                AutoFreeStr filename(strconv::AnsiToUtf8(line + 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"') {
                     filename.Set(str::Dup(filename + 1, str::Len(filename) - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
-                str::TransCharsInPlace(filename, L"*/", L" \\");
+                str::TransCharsInPlace(filename, "*/", " \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExtTemp(filename))) {
-                    filename.Set(str::Join(filename, L".tex"));
+                    filename.Set(str::Join(filename, ".tex"));
                 }
                 // ensure that the path is absolute
-                if (PathIsRelative(filename)) {
+                if (!path::IsAbsolute(filename)) {
                     filename.Set(PrependDir(filename));
                 }
 
                 filestack.Append(srcfiles.size());
-                path = ToUtf8Temp(filename);
-                srcfiles.Append(path);
+                srcfiles.Append(filename);
                 findex.start = findex.end = lines.size();
                 fileIndex.Append(findex);
             } break;
@@ -332,7 +332,7 @@ static int cmpLineRecords(const void* a, const void* b) {
     return ((PdfsyncLine*)a)->record - ((PdfsyncLine*)b)->record;
 }
 
-int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
+int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeStr& filename, UINT* line, UINT* col) {
     if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -393,8 +393,8 @@ int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* li
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    WCHAR* pathW = ToWstrTemp(srcfiles[found->file]);
-    filename.SetCopy(pathW);
+    char* path = srcfiles[found->file];
+    filename.SetCopy(path);
     *line = found->line;
     *col = found->column;
 
@@ -411,14 +411,14 @@ int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* li
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
-UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, __unused UINT col, Vec<size_t>& records) {
+UINT Pdfsync::SourceToRecord(const char* srcfilename, UINT line, __unused UINT col, Vec<size_t>& records) {
     if (!srcfilename) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    AutoFreeWstr srcfilepath;
+    AutoFreeStr srcfilepath;
     // convert the source file to an absolute path
-    if (PathIsRelative(srcfilename)) {
+    if (!path::IsAbsolute(srcfilename)) {
         srcfilepath.Set(PrependDir(srcfilename));
     } else {
         srcfilepath.SetCopy(srcfilename);
@@ -429,10 +429,9 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, __unused UINT 
 
     // find the source file entry
     size_t isrc;
-    char* srcfilepathA = ToUtf8Temp(srcfilepath);
     for (isrc = 0; isrc < srcfiles.size(); isrc++) {
         char* path = srcfiles[isrc];
-        if (path::IsSame(srcfilepathA, path)) {
+        if (path::IsSame(srcfilepath, path)) {
             break;
         }
     }
@@ -476,7 +475,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, __unused UINT 
     return PDFSYNCERR_SUCCESS;
 }
 
-int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) {
+int Pdfsync::SourceToDoc(const char* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) {
     if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -522,12 +521,12 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    AutoFree syncfname = strconv::WstrToAnsi(syncfilepath);
-    if (!syncfname.Get()) {
+    char* syncfname = syncfilepath;
+    if (!syncfname) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
-    scanner = synctex_scanner_new_with_output_file(syncfname.Get(), nullptr, 1);
+    scanner = synctex_scanner_new_with_output_file(syncfname, nullptr, 1);
     if (!scanner) {
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
     }
@@ -535,7 +534,7 @@ int SyncTex::RebuildIndex() {
     return Synchronizer::RebuildIndex();
 }
 
-int SyncTex::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
+int SyncTex::DocToSource(UINT pageNo, Point pt, AutoFreeStr& filename, UINT* line, UINT* col) {
     if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -560,23 +559,23 @@ int SyncTex::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* li
     }
 
     bool isUtf8 = true;
-    filename.Set(ToWstr(name));
+    filename.Set(str::Dup(name));
 TryAgainAnsi:
     if (!filename) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
     // undecorate the filepath: replace * by space and / by \ (backslash)
-    str::TransCharsInPlace(filename, L"*/", L" \\");
+    str::TransCharsInPlace(filename, "*/", " \\");
     // Convert the source filepath to an absolute path
-    if (PathIsRelative(filename)) {
+    if (!path::IsAbsolute(filename)) {
         filename.Set(PrependDir(filename));
     }
 
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && !file::Exists(filename)) {
         isUtf8 = false;
-        filename.Set(strconv::AnsiToWstr(name));
+        filename.Set(strconv::AnsiToUtf8(name));
         goto TryAgainAnsi;
     }
 
@@ -586,7 +585,7 @@ TryAgainAnsi:
     return PDFSYNCERR_SUCCESS;
 }
 
-int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) {
+int SyncTex::SourceToDoc(const char* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) {
     if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -594,9 +593,9 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
     }
     CrashIf(!this->scanner);
 
-    AutoFreeWstr srcfilepath;
+    AutoFreeStr srcfilepath;
     // convert the source file to an absolute path
-    if (PathIsRelative(srcfilename)) {
+    if (!path::IsAbsolute(srcfilename)) {
         srcfilepath.Set(PrependDir(srcfilename));
     } else {
         srcfilepath.SetCopy(srcfilename);
@@ -606,7 +605,7 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
     }
 
     bool isUtf8 = true;
-    char* mb_srcfilepath = ToUtf8(srcfilepath);
+    char* mb_srcfilepath = srcfilepath;
 TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
@@ -616,7 +615,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        mb_srcfilepath = strconv::WstrToAnsi(srcfilepath);
+        mb_srcfilepath = strconv::Utf8ToAnsi(srcfilepath);
         goto TryAgainAnsi;
     }
 

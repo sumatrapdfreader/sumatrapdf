@@ -1676,7 +1676,7 @@ void DisplayModel::RotateBy(int newRotation) {
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
+char* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
     const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
@@ -1697,7 +1697,8 @@ WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
         }
     }
 
-    return result.StealData();
+    WCHAR* ws = result.Get();
+    return ToUtf8(ws);
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
