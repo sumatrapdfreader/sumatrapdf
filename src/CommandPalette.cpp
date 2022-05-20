@@ -77,6 +77,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdFavoriteToggle,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
+    CmdToggleToolbar,
     CmdShowLog,
 };
 
