@@ -810,28 +810,6 @@ DWORD GetFileVersion(const WCHAR* path) {
     return fileVersion;
 }
 
-bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool hidden) {
-    if (str::IsEmpty(path)) {
-        return false;
-    }
-
-    SHELLEXECUTEINFOW sei{};
-    sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_FLAG_NO_UI;
-    sei.lpVerb = verb;
-    sei.lpFile = path;
-    sei.lpParameters = params;
-    sei.nShow = hidden ? SW_HIDE : SW_SHOWNORMAL;
-    BOOL ok = ShellExecuteExW(&sei);
-    if (!ok) {
-        DWORD err = GetLastError();
-        logf(L"LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path, params, verb);
-        LogLastError(err);
-        return false;
-    }
-    return true;
-}
-
 bool LaunchFile(const char* path, const char* params, const char* verb, bool hidden) {
     if (str::IsEmpty(path)) {
         return false;
@@ -858,22 +836,6 @@ bool LaunchBrowser(const char* url) {
     return LaunchFile(url, nullptr, "open");
 }
 
-HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
-    PROCESS_INFORMATION pi = {nullptr};
-    STARTUPINFOW si{};
-    si.cb = sizeof(si);
-
-    // CreateProcess() might modify cmd line argument, so make a copy
-    // in case caller provides a read-only string
-    AutoFreeWstr cmdLineCopy(str::Dup(cmdLine));
-    if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si, &pi)) {
-        return nullptr;
-    }
-
-    CloseHandle(pi.hThread);
-    return pi.hProcess;
-}
-
 HANDLE LaunchProcess(const char* cmdLine, const char* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si{};
@@ -889,15 +851,6 @@ HANDLE LaunchProcess(const char* cmdLine, const char* currDir, DWORD flags) {
 
     CloseHandle(pi.hThread);
     return pi.hProcess;
-}
-
-bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
-    if (!args) {
-        args = L"";
-    }
-    AutoFreeWstr cmd = str::Format(L"\"%s\" %s", exe, args);
-    AutoCloseHandle process = LaunchProcess(cmd);
-    return process != nullptr;
 }
 
 bool CreateProcessHelper(const char* exe, const char* args) {
@@ -1040,10 +993,6 @@ DWORD GetOriginalAccountType() {
 
 bool LaunchElevated(const char* path, const char* cmdline) {
     return LaunchFile(path, cmdline, "runas");
-}
-
-bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {
-    return LaunchFile(path, cmdline, L"runas");
 }
 
 /* Ensure that the rectangle is at least partially in the work area on a

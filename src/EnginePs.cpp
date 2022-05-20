@@ -143,7 +143,6 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 #endif
 
 static EngineBase* ps2pdf(const char* path) {
-    WCHAR* pathW = ToWstrTemp(path);
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     AutoFreeStr shortPath = path::ShortPath(path);
     AutoFreeStr tmpFile = path::GetTempFilePath("PsE");
@@ -162,10 +161,10 @@ static EngineBase* ps2pdf(const char* path) {
     // way to do it
     // https://github.com/GravityMedia/Ghostscript/issues/6
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1923
-    AutoFreeWstr cmdLine = str::Format(
-        L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
-        L"-f \"%s\"",
-        ToWstrTemp(gswin32c.Get()), ToWstrTemp(tmpFile.Get()), ToWstrTemp(shortPath.Get()));
+    AutoFreeStr cmdLine = str::Format(
+        "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
+        "-f \"%s\"",
+        gswin32c.Get(), tmpFile.Get(), shortPath.Get());
 
     {
         const char* fileName = path::GetBaseNameTemp(__FILE__);
@@ -211,7 +210,7 @@ static EngineBase* ps2pdf(const char* path) {
 }
 
 static EngineBase* psgz2pdf(const char* fileName) {
-    AutoFreeWstr tmpFile(path::GetTempFilePath(L"PsE"));
+    AutoFreeStr tmpFile(path::GetTempFilePath("PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;
@@ -223,7 +222,8 @@ static EngineBase* psgz2pdf(const char* fileName) {
         return nullptr;
     }
     FILE* outFile = nullptr;
-    errno_t err = _wfopen_s(&outFile, tmpFile, L"wb");
+    WCHAR* tmpFileW = ToWstrTemp(tmpFile);
+    errno_t err = _wfopen_s(&outFile, tmpFileW, L"wb");
     if (err != 0 || !outFile) {
         gzclose(inFile);
         return nullptr;
@@ -240,8 +240,7 @@ static EngineBase* psgz2pdf(const char* fileName) {
     fclose(outFile);
     gzclose(inFile);
 
-    char* tmpFileA = ToUtf8Temp(tmpFile);
-    return ps2pdf(tmpFileA);
+    return ps2pdf(tmpFile);
 }
 
 // EnginePs is mostly a proxy for a PdfEngine that's fed whatever

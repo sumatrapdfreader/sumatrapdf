@@ -62,7 +62,7 @@ struct UpdateInfo {
     const char* portable32 = nullptr;
 
     const char* dlURL = nullptr;
-    const WCHAR* installerPath = nullptr;
+    const char* installerPath = nullptr;
 
     UpdateInfo() = default;
     ~UpdateInfo() {
@@ -195,15 +195,15 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
-    auto mainInstr = _TR("New version available");
+    const WCHAR* mainInstr = _TR("New version available");
     WCHAR* verTmp = ToWstrTemp(updateInfo->latestVer);
-    auto content =
+    WCHAR* content =
         str::Format(_TR("You have version '%s' and version '%s' is available.\nDo you want to install new version?"),
                     CURR_VERSION_STR, verTmp);
 
     constexpr int kBtnIdDontInstall = 100;
     constexpr int kBtnIdInstall = 101;
-    auto title = _TR("SumatraPDF Update");
+    const WCHAR* title = _TR("SumatraPDF Update");
     TASKDIALOGCONFIG dialogConfig{};
     TASKDIALOG_BUTTON buttons[2];
 
@@ -239,7 +239,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     CrashIf(hr == E_INVALIDARG);
     bool doInstall = (hr == S_OK) && (buttonPressedId == kBtnIdInstall);
 
-    auto installerPath = updateInfo->installerPath;
+    const char* installerPath = updateInfo->installerPath;
     if (!doInstall && verificationFlagChecked) {
         str::ReplaceWithCopy(&gGlobalPrefs->versionToSkip, updateInfo->latestVer);
     }
@@ -259,16 +259,16 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     // TODO: we don't really handle a case when it's a dll build but not installed
     // maybe in that case go to website
-    str::WStr cmd;
+    str::Str cmd;
     if (IsDllBuild()) {
         // no need for sleep because it shows the installer dialog anyway
-        cmd.Append(L" -install");
+        cmd.Append(" -install");
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(LR"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp());
+        cmd.AppendFmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp());
     }
-    logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.LendData()));
+    logf("NotifyUserOfUpdate: installer cmd: '%s'\n", cmd.Get());
     CreateProcessHelper(installerPath, cmd.Get());
     PostQuitMessage(0);
 }
@@ -349,13 +349,12 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
     RunAsync([hwndForNotif, updateInfo] { // NOLINT
-        auto installerPath = path::GetTempFilePath(L"sumatra-installer");
+        char* installerPath = path::GetTempFilePath("sumatra-installer");
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
-        installerPath = str::JoinTemp(installerPath, L".exe");
-        char* installerPathA = ToUtf8Temp(installerPath);
-        bool ok = HttpGetToFile(updateInfo->dlURL, installerPathA);
-        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPathA);
+        installerPath = str::JoinTemp(installerPath, ".exe");
+        bool ok = HttpGetToFile(updateInfo->dlURL, installerPath);
+        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
         if (ok) {
             updateInfo->installerPath = str::Dup(installerPath);
         } else {

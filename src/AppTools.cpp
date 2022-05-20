@@ -575,7 +575,6 @@ bool LaunchFileIfExists(const char* path) {
     if (!file::Exists(path)) {
         return false;
     }
-    WCHAR* pathTmp = ToWstrTemp(path);
-    LaunchFile(pathTmp, nullptr, L"open");
+    LaunchFile(path, nullptr, "open");
     return true;
 }

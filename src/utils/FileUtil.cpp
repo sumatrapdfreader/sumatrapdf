@@ -374,23 +374,6 @@ bool HasVariableDriveLetter(const char* path) {
     return false;
 }
 
-bool HasVariableDriveLetter(const WCHAR* path) {
-    WCHAR root[] = L"?:\\";
-    root[0] = towupper(path[0]);
-    if (root[0] < 'A' || 'Z' < root[0]) {
-        return false;
-    }
-
-    uint driveType = GetDriveTypeW(root);
-    switch (driveType) {
-        case DRIVE_REMOVABLE:
-        case DRIVE_CDROM:
-        case DRIVE_NO_ROOT_DIR:
-            return true;
-    }
-    return false;
-}
-
 bool IsOnFixedDrive(const WCHAR* path) {
     if (PathIsNetworkPath(path)) {
         return false;
@@ -488,24 +471,6 @@ bool IsAbsolute(const char* path) {
 
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
-WCHAR* GetTempFilePath(const WCHAR* filePrefix) {
-    WCHAR tempDir[MAX_PATH - 14]{};
-    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
-    if (!res || res >= dimof(tempDir)) {
-        return nullptr;
-    }
-    if (!filePrefix) {
-        return str::Dup(tempDir);
-    }
-    WCHAR path[MAX_PATH]{};
-    if (!GetTempFileNameW(tempDir, filePrefix, 0, path)) {
-        return nullptr;
-    }
-    return str::Dup(path);
-}
-
-// returns the path to either the %TEMP% directory or a
-// non-existing file inside whose name starts with filePrefix
 char* GetTempFilePath(const char* filePrefix) {
     WCHAR tempDir[MAX_PATH]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
@@ -521,21 +486,6 @@ char* GetTempFilePath(const char* filePrefix) {
         return nullptr;
     }
     return ToUtf8(path);
-}
-
-// returns a path to the application module's directory
-// with either the given fileName or the module's name
-// (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
-WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
-    WCHAR modulePath[MAX_PATH]{};
-    GetModuleFileName(GetInstance(), modulePath, dimof(modulePath));
-    modulePath[dimof(modulePath) - 1] = '\0';
-    if (!fileName) {
-        return str::Dup(modulePath);
-    }
-    WCHAR* moduleDir = path::GetDirTemp(modulePath);
-    WCHAR* path = path::JoinTemp(moduleDir, fileName);
-    return path::Normalize(path);
 }
 
 // returns a path to the application module's directory

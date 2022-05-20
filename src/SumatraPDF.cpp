@@ -2658,8 +2658,8 @@ static void OnMenuShowInFolder(WindowInfo* win) {
         return;
     }
 
-    const WCHAR* process = L"explorer.exe";
-    AutoFreeWstr args = str::Format(L"/select,\"%s\"", srcFileName);
+    const char* process = "explorer.exe";
+    AutoFreeStr args = str::Format("/select,\"%s\"", srcFileName);
     CreateProcessHelper(process, args);
 }
 

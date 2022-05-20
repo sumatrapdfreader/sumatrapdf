@@ -100,17 +100,12 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
 Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 
-bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
 bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
 bool LaunchBrowser(const char* url);
 
-HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir = nullptr, DWORD flags = 0);
 HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
 
-bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
 bool CreateProcessHelper(const char* exe, const char* args);
-
-bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
 bool LaunchElevated(const char* path, const char* cmdline);
 
 bool IsProcessRunningElevated();

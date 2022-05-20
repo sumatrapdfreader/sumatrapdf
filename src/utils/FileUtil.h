@@ -31,7 +31,6 @@ char* ShortPath(const char* pathA);
 bool IsSame(const WCHAR* path1, const WCHAR* path2);
 bool IsSame(const char* path1, const char* path2);
 
-bool HasVariableDriveLetter(const WCHAR* path);
 bool HasVariableDriveLetter(const char* path);
 
 bool IsOnFixedDrive(const WCHAR* path);
@@ -43,10 +42,7 @@ bool Match(const char* path, const char* filter);
 bool IsAbsolute(const WCHAR* path);
 bool IsAbsolute(const char* path);
 
-WCHAR* GetTempFilePath(const WCHAR* filePrefix = nullptr);
 char* GetTempFilePath(const char* filePrefix = nullptr);
-
-WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 char* GetPathOfFileInAppDir(const char* fileName = nullptr);
 } // namespace path
 
