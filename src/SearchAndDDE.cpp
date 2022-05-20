@@ -356,7 +356,7 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
     win->findCanceled = false;
 
     if (hideMessage) {
-        RemoveNotificationsForGroup(NG_FIND_PROGRESS);
+        RemoveNotificationsForGroup(win->hwndCanvas, NG_FIND_PROGRESS);
     }
 }
 

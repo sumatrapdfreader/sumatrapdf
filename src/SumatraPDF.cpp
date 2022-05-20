@@ -593,7 +593,7 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     // TODO: make tab bar RTL aware
     // SetRtl(win->tabsCtrl->hwnd, isRTL);
 
-    RelayoutNotifications();
+    RelayoutNotifications(win->hwndCanvas);
 
     // TODO: also update the canvas scrollbars (?)
 
@@ -842,7 +842,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     UpdateTocSelection(win, pageNo);
     win->currPageNo = pageNo;
 
-    NotificationWnd* wnd = GetNotificationForGroup(NG_PAGE_INFO_HELPER);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
     if (wnd) {
         CrashIf(!win->AsFixed());
         UpdatePageInfoHelper(win, wnd, pageNo);
@@ -1834,9 +1834,9 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
 }
 
 static void TogglePageInfoHelper(WindowInfo* win) {
-    NotificationWnd* wnd = GetNotificationForGroup(NG_PAGE_INFO_HELPER);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
     if (wnd) {
-        RemoveNotificationsForGroup(NG_PAGE_INFO_HELPER);
+        RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
         return;
     }
     UpdatePageInfoHelper(win, nullptr, -1);
@@ -1844,7 +1844,7 @@ static void TogglePageInfoHelper(WindowInfo* win) {
 
 enum class MeasurementUnit { pt, mm, in };
 
-static WCHAR* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit unit) {
+static char* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit unit) {
     if (pt.x < 0) {
         pt.x = 0;
     }
@@ -1856,21 +1856,21 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUni
 
     // for MeasurementUnit::in
     float factor = 1;
-    const WCHAR* unitName = L"in";
+    const char* unitName = "in";
     switch (unit) {
         case MeasurementUnit::pt:
             factor = 72;
-            unitName = L"pt";
+            unitName = "pt";
             break;
 
         case MeasurementUnit::mm:
             factor = 25.4f;
-            unitName = L"mm";
+            unitName = "mm";
             break;
     }
 
-    AutoFreeWstr xPos(str::FormatFloatWithThousandSep((double)pt.x * (double)factor));
-    AutoFreeWstr yPos(str::FormatFloatWithThousandSep((double)pt.y * (double)factor));
+    AutoFreeStr xPos(str::FormatFloatWithThousandSep((double)pt.x * (double)factor));
+    AutoFreeStr yPos(str::FormatFloatWithThousandSep((double)pt.y * (double)factor));
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
         if (str::IsDigit(xPos[str::Len(xPos) - 2])) {
@@ -1880,13 +1880,13 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUni
             yPos[str::Len(yPos) - 1] = '\0';
         }
     }
-    return str::Format(L"%s x %s %s", xPos.Get(), yPos.Get(), unitName);
+    return str::Format("%s x %s %s", xPos.Get(), yPos.Get(), unitName);
 }
 
 void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd) {
     static auto unit = MeasurementUnit::pt;
     // toggle measurement unit by repeatedly invoking the helper
-    if (!wnd && GetNotificationForGroup(NG_CURSOR_POS_HELPER)) {
+    if (!wnd && GetNotificationForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER)) {
         switch (unit) {
             case MeasurementUnit::pt:
                 unit = MeasurementUnit::mm;
@@ -1900,13 +1900,13 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
             default:
                 CrashAlwaysIf(true);
         }
-        wnd = GetNotificationForGroup(NG_CURSOR_POS_HELPER);
+        wnd = GetNotificationForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER);
     }
 
     CrashIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
     PointF pt = win->AsFixed()->CvtFromScreen(pos);
-    AutoFreeWstr posStr(FormatCursorPosition(engine, pt, unit)), selStr;
+    AutoFreeStr posStr(FormatCursorPosition(engine, pt, unit)), selStr;
     if (!win->selectionMeasure.IsEmpty()) {
         pt = PointF(win->selectionMeasure.dx, win->selectionMeasure.dy);
         selStr.Set(FormatCursorPosition(engine, pt, unit));
@@ -2043,9 +2043,9 @@ static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool 
     } else {
         win->currentTab = nullptr;
     }
-    RemoveNotificationsForGroup(NG_RESPONSE_TO_ACTION);
-    RemoveNotificationsForGroup(NG_PAGE_INFO_HELPER);
-    RemoveNotificationsForGroup(NG_CURSOR_POS_HELPER);
+    RemoveNotificationsForGroup(win->hwndCanvas, NG_RESPONSE_TO_ACTION);
+    RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
+    RemoveNotificationsForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER);
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
     win->mouseAction = MouseAction::Idle;
 
@@ -3758,16 +3758,16 @@ static void OnFrameKeyEsc(WindowInfo* win) {
         AbortFinding(win, false);
         return;
     }
-    if (GetNotificationForGroup(NG_PERSISTENT_WARNING)) {
-        RemoveNotificationsForGroup(NG_PERSISTENT_WARNING);
+    if (GetNotificationForGroup(win->hwndCanvas, NG_PERSISTENT_WARNING)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, NG_PERSISTENT_WARNING);
         return;
     }
-    if (GetNotificationForGroup(NG_PAGE_INFO_HELPER)) {
-        RemoveNotificationsForGroup(NG_PAGE_INFO_HELPER);
+    if (GetNotificationForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
         return;
     }
-    if (GetNotificationForGroup(NG_CURSOR_POS_HELPER)) {
-        RemoveNotificationsForGroup(NG_CURSOR_POS_HELPER);
+    if (GetNotificationForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER);
         return;
     }
     if (win->showSelection) {
@@ -5229,8 +5229,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 static TempStr GetFileSizeAsStrTemp(const char* path) {
     i64 fileSize = file::GetSize(path);
-    AutoFreeWstr fileSizeStr = FormatFileSizeNoTrans(fileSize);
-    return ToUtf8Temp(fileSizeStr);
+    AutoFreeStr fileSizeStr = FormatFileSizeNoTrans(fileSize);
+    return str::DupTemp(fileSizeStr);
 }
 
 void GetProgramInfo(str::Str& s) {

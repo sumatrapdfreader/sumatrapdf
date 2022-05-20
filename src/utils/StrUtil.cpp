@@ -2272,35 +2272,7 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
-    WCHAR thousandSep[4]{};
-    if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep))) {
-        str::BufSet(thousandSep, dimof(thousandSep), ",");
-    }
-    AutoFreeWstr buf(str::Format(L"%Iu", (size_t)num));
-
-    size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
-    WCHAR* res = AllocArray<WCHAR>(resLen);
-    if (!res) {
-        return nullptr;
-    }
-    WCHAR* next = res;
-    int i = 3 - (str::Len(buf) % 3);
-    for (const WCHAR* src = buf; *src;) {
-        *next++ = *src++;
-        if (*src && i == 2) {
-            next += str::BufSet(next, resLen - (next - res), thousandSep);
-        }
-        i = (i + 1) % 3;
-    }
-    *next = '\0';
-
-    return res;
-}
-
-// format a number with a given thousand separator e.g. it turns 1234 into "1,234"
-// Caller needs to free() the result.
-char* FormatNumWithThousandSepA(i64 num, LCID locale) {
+char* FormatNumWithThousandSep(i64 num, LCID locale) {
     WCHAR thousandSepW[4]{};
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
@@ -2329,30 +2301,10 @@ char* FormatNumWithThousandSepA(i64 num, LCID locale) {
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
+char* FormatFloatWithThousandSep(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
-    AutoFreeWstr tmp(FormatNumWithThousandSep(num / 100, locale));
-    WCHAR decimal[4];
-    if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal))) {
-        str::BufSet(decimal, dimof(decimal), ".");
-    }
-
-    // always add between one and two decimals after the point
-    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
-    if (str::EndsWith(buf, L"0")) {
-        buf[str::Len(buf) - 1] = '\0';
-    }
-
-    return buf.StealData();
-}
-
-// Format a floating point number with at most two decimal after the point
-// Caller needs to free the result.
-char* FormatFloatWithThousandSepA(double number, LCID locale) {
-    i64 num = (i64)(number * 100 + 0.5);
-
-    AutoFreeStr tmp(FormatNumWithThousandSepA(num / 100, locale));
+    AutoFreeStr tmp(FormatNumWithThousandSep(num / 100, locale));
     WCHAR decimalW[4];
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
@@ -2369,17 +2321,17 @@ char* FormatFloatWithThousandSepA(double number, LCID locale) {
     return buf.StealData();
 }
 
-// cf. http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
-WCHAR* FormatRomanNumeral(int number) {
+// http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
+char* FormatRomanNumeral(int number) {
     if (number < 1) {
         return nullptr;
     }
 
     static struct {
         int value;
-        const WCHAR* numeral;
-    } romandata[] = {{1000, L"M"}, {900, L"CM"}, {500, L"D"}, {400, L"CD"}, {100, L"C"}, {90, L"XC"}, {50, L"L"},
-                     {40, L"XL"},  {10, L"X"},   {9, L"IX"},  {5, L"V"},    {4, L"IV"},  {1, L"I"}};
+        const char* numeral;
+    } romandata[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
+                     {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
 
     size_t len = 0;
     for (int n = number, i = 0; i < dimof(romandata); i++) {
@@ -2389,7 +2341,7 @@ WCHAR* FormatRomanNumeral(int number) {
     }
     CrashIf(len == 0);
 
-    WCHAR *roman = AllocArray<WCHAR>(len + 1), *c = roman;
+    char *roman = AllocArray<char>(len + 1), *c = roman;
     for (int n = number, i = 0; i < dimof(romandata); i++) {
         for (; n >= romandata[i].value; n -= romandata[i].value) {
             c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);

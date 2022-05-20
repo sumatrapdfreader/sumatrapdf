@@ -55,9 +55,9 @@ struct NotificationWnd : public ProgressUpdateUI {
 NotificationWnd* ShowNotification(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
                                   Kind groupId = NG_RESPONSE_TO_ACTION);
 void RemoveNotification(NotificationWnd*);
-void RemoveNotificationsForGroup(Kind);
-NotificationWnd* GetNotificationForGroup(Kind);
+void RemoveNotificationsForGroup(HWND hwnd, Kind);
+NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, int, int);
 void AddNotification(NotificationWnd*, Kind);
 bool NotificationExists(NotificationWnd*);
-void RelayoutNotifications();
+void RelayoutNotifications(HWND hwnd);

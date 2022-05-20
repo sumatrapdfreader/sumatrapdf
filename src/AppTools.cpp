@@ -496,32 +496,7 @@ constexpr double GB = (double)1024 * (double)1024 * (double)1024;
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static WCHAR* FormatSizeSuccint(i64 size) {
-    const WCHAR* unit = nullptr;
-    double s = (double)size;
-
-    if (s > GB) {
-        s = s / GB;
-        unit = _TR("GB");
-    } else if (s > MB) {
-        s = s / MB;
-        unit = _TR("MB");
-    } else {
-        s = s / KB;
-        unit = _TR("KB");
-    }
-
-    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
-    if (!unit) {
-        return sizestr.StealData();
-    }
-    return str::Format(L"%s %s", sizestr.Get(), unit);
-}
-
-// Format the file size in a short form that rounds to the largest size unit
-// e.g. "3.48 GB", "12.38 MB", "23 KB"
-// Caller needs to free the result.
-static char* FormatSizeSuccintA(i64 size) {
+static char* FormatSizeSuccint(i64 size) {
     const char* unit = nullptr;
     double s = (double)size;
 
@@ -536,7 +511,7 @@ static char* FormatSizeSuccintA(i64 size) {
         unit = _TRA("KB");
     }
 
-    AutoFreeStr sizestr = str::FormatFloatWithThousandSepA(s);
+    AutoFreeStr sizestr = str::FormatFloatWithThousandSep(s);
     if (!unit) {
         return sizestr.StealData();
     }
@@ -546,24 +521,12 @@ static char* FormatSizeSuccintA(i64 size) {
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-WCHAR* FormatFileSize(i64 size) {
-    if (size <= 0) {
-        return str::Format(L"%d", (int)size);
-    }
-    AutoFreeWstr n1(FormatSizeSuccint(size));
-    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
-    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
-}
-
-// format file size in a readable way e.g. 1348258 is shown
-// as "1.29 MB (1,348,258 Bytes)"
-// Caller needs to free the result
-char* FormatFileSizeA(i64 size) {
+char* FormatFileSize(i64 size) {
     if (size <= 0) {
         return str::Format("%d", (int)size);
     }
-    AutoFreeStr n1(FormatSizeSuccintA(size));
-    AutoFreeStr n2(str::FormatNumWithThousandSepA(size));
+    AutoFreeStr n1(FormatSizeSuccint(size));
+    AutoFreeStr n2(str::FormatNumWithThousandSep(size));
     return str::Format("%s (%s %s)", n1.Get(), n2.Get(), _TRA("Bytes"));
 }
 
@@ -571,38 +534,38 @@ char* FormatFileSizeA(i64 size) {
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // To be used in a context where translations are not yet available
 // Caller needs to free the result.
-static WCHAR* FormatSizeSuccintNoTrans(i64 size) {
-    const WCHAR* unit = nullptr;
+static char* FormatSizeSuccintNoTrans(i64 size) {
+    const char* unit = nullptr;
     double s = (double)size;
 
     if (s > GB) {
         s = s / GB;
-        unit = L"GB";
+        unit = "GB";
     } else if (s > MB) {
         s = s / MB;
-        unit = L"MB";
+        unit = "MB";
     } else {
         s = s / KB;
-        unit = L"KB";
+        unit = "KB";
     }
 
-    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
+    AutoFreeStr sizestr = str::FormatFloatWithThousandSep(s);
     if (!unit) {
         return sizestr.StealData();
     }
-    return str::Format(L"%s %s", sizestr.Get(), unit);
+    return str::Format("%s %s", sizestr.Get(), unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-WCHAR* FormatFileSizeNoTrans(i64 size) {
+char* FormatFileSizeNoTrans(i64 size) {
     if (size <= 0) {
-        return str::Format(L"%d", (int)size);
+        return str::Format("%d", (int)size);
     }
-    AutoFreeWstr n1(FormatSizeSuccintNoTrans(size));
-    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
-    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), L"Bytes");
+    AutoFreeStr n1(FormatSizeSuccintNoTrans(size));
+    AutoFreeStr n2(str::FormatNumWithThousandSep(size));
+    return str::Format("%s (%s %s)", n1.Get(), n2.Get(), "Bytes");
 }
 
 // returns true if file exists

@@ -211,10 +211,7 @@ void WindowInfo::UpdateCanvasSize() {
         currentTab->canvasRc = canvasRc;
     }
 
-    // keep the notifications visible (only needed for right-to-left layouts)
-    if (IsUIRightToLeft()) {
-        RelayoutNotifications();
-    }
+    RelayoutNotifications(hwndCanvas);
 }
 
 Size WindowInfo::GetViewPortSize() const {

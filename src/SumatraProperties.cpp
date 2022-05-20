@@ -235,8 +235,8 @@ static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
         height += 0.01;
     }
 
-    AutoFreeStr strWidth(str::FormatFloatWithThousandSepA(width));
-    AutoFreeStr strHeight(str::FormatFloatWithThousandSepA(height));
+    AutoFreeStr strWidth(str::FormatFloatWithThousandSep(width));
+    AutoFreeStr strHeight(str::FormatFloatWithThousandSep(height));
 
     return str::Format("%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
@@ -536,7 +536,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
         d.Free();
     }
     if (-1 != fileSize) {
-        str = FormatFileSizeA((size_t)fileSize);
+        str = FormatFileSize((size_t)fileSize);
         layoutData->AddProperty(_TRA("File Size:"), str);
     }
 

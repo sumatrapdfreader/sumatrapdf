@@ -309,6 +309,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     }
     updateInfo->hwndParent = hwndParent;
 
+    WindowInfo* win = FindWindowInfoByHwnd(hwndParent);
+    HWND hwndForNotif = win->hwndCanvas;
     if (!gForceAutoUpdate) {
         auto latestVer = updateInfo->latestVer;
         const char* myVer = UPDATE_CHECK_VERA;
@@ -318,7 +320,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
             logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, latestVer);
             /* if automated => don't notify that there is no new version */
             if (updateCheckType == UpdateCheck::UserInitiated) {
-                RemoveNotificationsForGroup(kindNotifUpdateCheckInProgress);
+                RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
                 uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
                 MessageBoxW(hwndParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
             }
@@ -338,7 +340,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     if (!updateInfo->dlURL) {
         // shouldn't happen but it's fine, we just tell the user
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
-        RemoveNotificationsForGroup(kindNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         return 0;
     }
@@ -346,7 +348,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     // download the installer to make update feel instant to the user
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
-    RunAsync([updateInfo] { // NOLINT
+    RunAsync([hwndForNotif, updateInfo] { // NOLINT
         auto installerPath = path::GetTempFilePath(L"sumatra-installer");
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
@@ -361,8 +363,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         }
 
         // process the rest on ui thread to avoid threading issues
-        uitask::Post([updateInfo] {
-            RemoveNotificationsForGroup(kindNotifUpdateCheckInProgress);
+        uitask::Post([hwndForNotif, updateInfo] {
+            RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
             NotifyUserOfUpdate(updateInfo);
             gUpdateCheckInProgress = false;
             delete updateInfo;
@@ -403,7 +405,7 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
         uitask::Post([=] {
             DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
             if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
-                RemoveNotificationsForGroup(kindNotifUpdateCheckInProgress);
+                RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
                 // notify the user about network error during a manual update check
                 AutoFreeWstr msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), err));
                 MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));

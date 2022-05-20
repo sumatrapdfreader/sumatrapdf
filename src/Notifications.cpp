@@ -30,28 +30,19 @@ constexpr int TIMEOUT_TIMER_ID = 1;
 
 static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
-struct Notifications {
-    Vec<NotificationWnd*> wnds;
+Vec<NotificationWnd*> gNotifs;
 
-    void MoveBelow(NotificationWnd* fix, NotificationWnd* move);
-    void Remove(NotificationWnd* wnd);
+static void GetForHwnd(HWND hwnd, Vec<NotificationWnd*>& v) {
+    for (auto* wnd : gNotifs) {
+        if (wnd->parent == hwnd) {
+            v.Append(wnd);
+        }
+    }
+}
 
-    ~Notifications();
-    bool Contains(NotificationWnd* wnd) const;
-
-    NotificationWnd* Show(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
-                          Kind groupId = NG_RESPONSE_TO_ACTION);
-
-    // groupId is used to classify notifications and causes a notification
-    // to replace any other notification of the same group
-    void Add(NotificationWnd*, Kind);
-    NotificationWnd* GetForGroup(Kind) const;
-    void RemoveForGroup(Kind);
-    void Relayout();
-
-    // NotificationWndCallback methods
-    void RemoveNotification(NotificationWnd* wnd);
-};
+static void GetForSameHwnd(NotificationWnd* wnd, Vec<NotificationWnd*>& v) {
+    GetForHwnd(wnd->parent, v);
+}
 
 static Rect GetCloseRect(HWND hwnd) {
     int n = DpiScale(hwnd, 16);
@@ -64,6 +55,21 @@ static Rect GetCloseRect(HWND hwnd) {
     return Rect(x, y, dx, dy);
 }
 
+int GetWndX(NotificationWnd* wnd) {
+    Rect rect = WindowRect(wnd->hwnd);
+    rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
+    return rect.x;
+}
+
+static void MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
+    Rect rect = WindowRect(fix->hwnd);
+    rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
+    uint flags = SWP_NOSIZE | SWP_NOZORDER;
+    auto x = GetWndX(move);
+    int y = rect.y + rect.dy + DpiScale(fix->hwnd, kTopLeftMargin);
+    SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
+}
+
 NotificationWnd::NotificationWnd(HWND parent, int timeoutInMS) {
     this->parent = parent;
     this->timeoutInMS = timeoutInMS;
@@ -74,6 +80,23 @@ NotificationWnd::~NotificationWnd() {
     DestroyWindow(this->hwnd);
     DeleteObject(this->font);
     str::Free(this->progressMsg);
+}
+
+void NotificationWnd::UpdateProgress(int current, int total) {
+    CrashIf(total <= 0);
+    if (total <= 0) {
+        total = 1;
+    }
+    progress = limitValue(100 * current / total, 0, 100);
+    if (hasProgress && progressMsg) {
+        char* msg = str::Format(progressMsg, current, total);
+        this->UpdateMessage(msg);
+        str::Free(msg);
+    }
+}
+
+bool NotificationWnd::WasCanceled() {
+    return this->isCanceled;
 }
 
 static void UpdateWindowPosition(NotificationWnd* wnd, const char* message, bool init) {
@@ -307,34 +330,17 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-Notifications::~Notifications() {
-    DeleteVecMembers(wnds);
+bool NotifsContains(NotificationWnd* wnd) {
+    return gNotifs.Contains(wnd);
 }
 
-bool Notifications::Contains(NotificationWnd* wnd) const {
-    return wnds.Contains(wnd);
-}
-
-int GetWndX(Notifications* notifs, NotificationWnd* wnd) {
-    Rect rect = WindowRect(wnd->hwnd);
-    rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
-    return rect.x;
-}
-
-void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
-    Rect rect = WindowRect(fix->hwnd);
-    rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
-    uint flags = SWP_NOSIZE | SWP_NOZORDER;
-    auto x = GetWndX(this, move);
-    int y = rect.y + rect.dy + DpiScale(fix->hwnd, kTopLeftMargin);
-    SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
-}
-
-void Notifications::Remove(NotificationWnd* wnd) {
-    int pos = wnds.Remove(wnd);
+void NotifsRemove(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd) {
+    int pos = gNotifs.Remove(wnd);
     if (pos < 0) {
         return;
     }
+    wnds.Reset();
+    GetForSameHwnd(wnd, wnds);
     int n = wnds.size();
     if (n == 0) {
         return;
@@ -348,7 +354,7 @@ void Notifications::Remove(NotificationWnd* wnd) {
     if (isFirst) {
         auto* first = wnds[0];
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
-        auto x = GetWndX(this, first);
+        auto x = GetWndX(first);
         SetWindowPos(first->hwnd, nullptr, x, DpiScale(first->hwnd, kTopLeftMargin), 0, 0, flags);
     }
     for (int i = pos; i < n; i++) {
@@ -361,59 +367,42 @@ void Notifications::Remove(NotificationWnd* wnd) {
     }
 }
 
-void Notifications::Add(NotificationWnd* wnd, Kind groupId) {
-    if (groupId != nullptr) {
-        this->RemoveForGroup(groupId);
+static void NotifsRemoveNotification(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd) {
+    if (wnds.Contains(wnd)) {
+        NotifsRemove(wnds, wnd);
+        delete wnd;
     }
-    wnd->groupId = groupId;
-
-    if (!wnds.IsEmpty()) {
-        auto lastIdx = this->wnds.size() - 1;
-        MoveBelow(this->wnds[lastIdx], wnd);
-    }
-    this->wnds.Append(wnd);
 }
 
-NotificationWnd* Notifications::GetForGroup(Kind groupId) const {
-    CrashIf(!groupId);
-    for (auto* wnd : this->wnds) {
-        if (wnd->groupId == groupId) {
-            return wnd;
-        }
-    }
-    return nullptr;
+static void NotifsRemoveNotification(NotificationWnd* wnd) {
+    Vec<NotificationWnd*> wnds;
+    GetForSameHwnd(wnd, wnds);
+    NotifsRemoveNotification(wnds, wnd);
 }
 
-void Notifications::RemoveForGroup(Kind groupId) {
+static void NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
     CrashIf(groupId == nullptr);
     Vec<NotificationWnd*> toRemove;
-    for (auto* wnd : this->wnds) {
+    for (auto* wnd : wnds) {
         if (wnd->groupId == groupId) {
             toRemove.Append(wnd);
         }
     }
     for (auto* wnd : toRemove) {
-        this->RemoveNotification(wnd);
+        NotifsRemoveNotification(wnds, wnd);
     }
 }
 
-void Notifications::RemoveNotification(NotificationWnd* wnd) {
-    if (this->Contains(wnd)) {
-        this->Remove(wnd);
-        delete wnd;
-    }
-}
-
-void Notifications::Relayout() {
-    if (this->wnds.IsEmpty()) {
+static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
+    if (wnds.IsEmpty()) {
         return;
     }
 
-    auto* first = this->wnds[0];
+    auto* first = wnds[0];
     HWND hwndCanvas = GetParent(first->hwnd);
     Rect frame = ClientRect(hwndCanvas);
     int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
-    for (auto* wnd : this->wnds) {
+    for (auto* wnd : wnds) {
         Rect rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
@@ -427,70 +416,75 @@ void Notifications::Relayout() {
     }
 }
 
-NotificationWnd* Notifications::Show(HWND hwnd, const char* msg, NotificationOptions opts, Kind groupId) {
+static void NotifsRelayout(NotificationWnd* wnd) {
+    Vec<NotificationWnd*> wnds;
+    GetForSameHwnd(wnd, wnds);
+    NotifsRelayout(wnds);
+}
+
+static void NotifsAdd(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd, Kind groupId) {
+    if (groupId != nullptr) {
+        NotifsRemoveForGroup(wnds, groupId);
+    }
+    wnd->groupId = groupId;
+
+    if (!wnds.IsEmpty()) {
+        auto lastIdx = wnds.size() - 1;
+        MoveBelow(wnds[lastIdx], wnd);
+    }
+    gNotifs.Append(wnd);
+    NotifsRelayout(wnd);
+}
+
+static void NotifsAdd(NotificationWnd* wnd, Kind groupId) {
+    Vec<NotificationWnd*> wnds;
+    GetForSameHwnd(wnd, wnds);
+    NotifsAdd(wnds, wnd, groupId);
+}
+
+NotificationWnd* NotifsGetForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
+    CrashIf(!groupId);
+    for (auto* wnd : wnds) {
+        if (wnd->groupId == groupId) {
+            return wnd;
+        }
+    }
+    return nullptr;
+}
+
+NotificationWnd* ShowNotification(HWND hwnd, const char* msg, NotificationOptions opts, Kind groupId) {
     int timeoutMS = ((uint)opts & (uint)NotificationOptions::Persist) ? 0 : 3000;
     bool highlight = ((uint)opts & (uint)NotificationOptions::Highlight);
 
     NotificationWnd* wnd = new NotificationWnd(hwnd, timeoutMS);
     wnd->highlight = highlight;
-    wnd->wndRemovedCb = [this](NotificationWnd* wnd) { RemoveNotification(wnd); };
+    wnd->wndRemovedCb = [](NotificationWnd* wnd) { NotifsRemoveNotification(wnd); };
     if (NG_CURSOR_POS_HELPER == groupId) {
         wnd->shrinkLimit = 0.7f;
     }
     wnd->Create(msg, nullptr);
-    Add(wnd, groupId);
+    NotifsAdd(wnd, groupId);
     return wnd;
 }
 
-void NotificationWnd::UpdateProgress(int current, int total) {
-    CrashIf(total <= 0);
-    if (total <= 0) {
-        total = 1;
-    }
-    progress = limitValue(100 * current / total, 0, 100);
-    if (hasProgress && progressMsg) {
-        char* msg = str::Format(progressMsg, current, total);
-        this->UpdateMessage(msg);
-        str::Free(msg);
-    }
-}
-
-bool NotificationWnd::WasCanceled() {
-    return this->isCanceled;
-}
-
-static Notifications* gNotifications = nullptr;
-
-static Notifications* GetNotifications() {
-    if (!gNotifications) {
-        gNotifications = new Notifications();
-    }
-    return gNotifications;
-}
-
-NotificationWnd* ShowNotification(HWND hwnd, const char* s, NotificationOptions opts, Kind groupId) {
-    auto notifs = GetNotifications();
-    return notifs->Show(hwnd, s, opts, groupId);
-}
-
 void RemoveNotification(NotificationWnd* wnd) {
-    auto notifs = GetNotifications();
-    notifs->Remove(wnd);
+    NotifsRemoveNotification(wnd);
 }
 
-void RemoveNotificationsForGroup(Kind kind) {
-    auto notifs = GetNotifications();
-    notifs->RemoveForGroup(kind);
+void RemoveNotificationsForGroup(HWND hwnd, Kind kind) {
+    Vec<NotificationWnd*> wnds;
+    GetForHwnd(hwnd, wnds);
+    NotifsRemoveForGroup(wnds, kind);
 }
 
-NotificationWnd* GetNotificationForGroup(Kind kind) {
-    auto notifs = GetNotifications();
-    return notifs->GetForGroup(kind);
+NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {
+    Vec<NotificationWnd*> wnds;
+    GetForHwnd(hwnd, wnds);
+    return NotifsGetForGroup(wnds, kind);
 }
 
 bool UpdateNotificationProgress(NotificationWnd* wnd, int curr, int total) {
-    auto notifs = GetNotifications();
-    if (!notifs->Contains(wnd)) {
+    if (!gNotifs.Contains(wnd)) {
         return false;
     }
     wnd->UpdateProgress(curr, total);
@@ -498,16 +492,17 @@ bool UpdateNotificationProgress(NotificationWnd* wnd, int curr, int total) {
 }
 
 void AddNotification(NotificationWnd* wnd, Kind kind) {
-    auto notifs = GetNotifications();
-    notifs->Add(wnd, kind);
+    Vec<NotificationWnd*> wnds;
+    GetForSameHwnd(wnd, wnds);
+    NotifsAdd(wnds, wnd, kind);
 }
 
 bool NotificationExists(NotificationWnd* wnd) {
-    auto notifs = GetNotifications();
-    return notifs->Contains(wnd);
+    return gNotifs.Contains(wnd);
 }
 
-void RelayoutNotifications() {
-    auto notifs = GetNotifications();
-    notifs->Relayout();
+void RelayoutNotifications(HWND hwnd) {
+    Vec<NotificationWnd*> wnds;
+    GetForHwnd(hwnd, wnds);
+    NotifsRelayout(wnds);
 }

@@ -1325,7 +1325,7 @@ static char* FormatPageLabel(const char* type, int pageNo, const char* prefix) {
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
-        AutoFreeWstr number(str::FormatRomanNumeral(pageNo));
+        AutoFreeStr number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r') {
             str::ToLowerInPlace(number.Get());
         }

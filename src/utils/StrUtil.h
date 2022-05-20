@@ -151,13 +151,9 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int CmpNatural(const char*, const char*);
 int CmpNatural(const WCHAR*, const WCHAR*);
 
-WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
-char* FormatFloatWithThousandSepA(double number, LCID locale = LOCALE_USER_DEFAULT);
-
-WCHAR* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
-char* FormatNumWithThousandSepA(i64 num, LCID locale = LOCALE_USER_DEFAULT);
-
-WCHAR* FormatRomanNumeral(int number);
+char* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
+char* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
+char* FormatRomanNumeral(int number);
 
 bool EmptyOrWhiteSpaceOnly(const char* sv);
 } // namespace str

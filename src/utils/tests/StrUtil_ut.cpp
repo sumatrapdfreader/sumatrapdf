@@ -680,27 +680,27 @@ void StrTest() {
 
     struct {
         size_t number;
-        const WCHAR* result;
+        const char* result;
     } formatNumData[] = {
-        {1, L"1"},          {12, L"12"},          {123, L"123"},           {1234, L"1,234"},
-        {12345, L"12,345"}, {123456, L"123,456"}, {1234567, L"1,234,567"}, {12345678, L"12,345,678"},
+        {1, "1"},          {12, "12"},          {123, "123"},           {1234, "1,234"},
+        {12345, "12,345"}, {123456, "123,456"}, {1234567, "1,234,567"}, {12345678, "12,345,678"},
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        AutoFreeWstr tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
+        AutoFreeStr tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
         utassert(str::Eq(tmp, formatNumData[i].result));
     }
 
     struct {
         double number;
-        const WCHAR* result;
+        const char* result;
     } formatFloatData[] = {
-        {1, L"1.0"},        {1.2, L"1.2"},        {1.23, L"1.23"},          {1.234, L"1.23"},
-        {12.345, L"12.35"}, {123.456, L"123.46"}, {1234.5678, L"1,234.57"},
+        {1, "1.0"},        {1.2, "1.2"},        {1.23, "1.23"},          {1.234, "1.23"},
+        {12.345, "12.35"}, {123.456, "123.46"}, {1234.5678, "1,234.57"},
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
-        AutoFreeWstr tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
+        AutoFreeStr tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
         utassert(str::Eq(tmp, formatFloatData[i].result));
     }
 
@@ -716,84 +716,84 @@ void StrTest() {
 
     struct {
         int number;
-        const WCHAR* result;
+        const char* result;
     } formatRomanData[] = {
-        {1, L"I"},        {3, L"III"},      {6, L"VI"},         {14, L"XIV"},    {49, L"XLIX"},
-        {176, L"CLXXVI"}, {499, L"CDXCIX"}, {1666, L"MDCLXVI"}, {2011, L"MMXI"}, {12345, L"MMMMMMMMMMMMCCCXLV"},
-        {0, nullptr},     {-133, nullptr},
+        {1, "I"},        {3, "III"},      {6, "VI"},         {14, "XIV"},    {49, "XLIX"},
+        {176, "CLXXVI"}, {499, "CDXCIX"}, {1666, "MDCLXVI"}, {2011, "MMXI"}, {12345, "MMMMMMMMMMMMCCCXLV"},
+        {0, nullptr},    {-133, nullptr},
     };
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
-        AutoFreeWstr tmp(str::FormatRomanNumeral(formatRomanData[i].number));
+        AutoFreeStr tmp(str::FormatRomanNumeral(formatRomanData[i].number));
         utassert(str::Eq(tmp, formatRomanData[i].result));
     }
 
     {
         size_t trimmed;
-        WCHAR* s = str::Dup(L"");
+        char* s = str::Dup("");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 0);
-        utassert(str::Eq(s, L""));
+        utassert(str::Eq(s, ""));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
-        utassert(str::Eq(s, L""));
+        utassert(str::Eq(s, ""));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
-        utassert(str::Eq(s, L""));
+        utassert(str::Eq(s, ""));
 
         free(s);
-        s = str::Dup(L"  \n\t  ");
+        s = str::Dup("  \n\t  ");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 6);
-        utassert(str::Eq(s, L""));
+        utassert(str::Eq(s, ""));
 
         free(s);
-        s = str::Dup(L"  \n\t  ");
+        s = str::Dup("  \n\t  ");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 6);
-        utassert(str::Eq(s, L""));
+        utassert(str::Eq(s, ""));
 
         free(s);
-        s = str::Dup(L"  \n\t  ");
+        s = str::Dup("  \n\t  ");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 6);
-        utassert(str::Eq(s, L""));
+        utassert(str::Eq(s, ""));
 
         free(s);
-        s = str::Dup(L"  lola");
+        s = str::Dup("  lola");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
-        utassert(str::Eq(s, L"lola"));
+        utassert(str::Eq(s, "lola"));
 
         free(s);
-        s = str::Dup(L"  lola");
+        s = str::Dup("  lola");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 2);
-        utassert(str::Eq(s, L"lola"));
+        utassert(str::Eq(s, "lola"));
 
         free(s);
-        s = str::Dup(L"  lola");
+        s = str::Dup("  lola");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
-        utassert(str::Eq(s, L"  lola"));
+        utassert(str::Eq(s, "  lola"));
 
         free(s);
-        s = str::Dup(L"lola\r\t");
+        s = str::Dup("lola\r\t");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
-        utassert(str::Eq(s, L"lola"));
+        utassert(str::Eq(s, "lola"));
 
         free(s);
-        s = str::Dup(L"lola\r\t");
+        s = str::Dup("lola\r\t");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 2);
-        utassert(str::Eq(s, L"lola"));
+        utassert(str::Eq(s, "lola"));
 
         free(s);
-        s = str::Dup(L"lola\r\t");
+        s = str::Dup("lola\r\t");
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
-        utassert(str::Eq(s, L"lola\r\t"));
+        utassert(str::Eq(s, "lola\r\t"));
 
         free(s);
     }

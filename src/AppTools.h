@@ -19,8 +19,7 @@ void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
 void SaveCallstackLogs();
 
-WCHAR* FormatFileSize(i64);
-char* FormatFileSizeA(i64);
+char* FormatFileSize(i64);
 
-WCHAR* FormatFileSizeNoTrans(i64);
+char* FormatFileSizeNoTrans(i64);
 bool LaunchFileIfExists(const char* path);
