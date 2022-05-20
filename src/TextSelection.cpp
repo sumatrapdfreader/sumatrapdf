@@ -143,7 +143,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     return result;
 }
 
-static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, WStrVec* lines = nullptr) {
+static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr) {
     int len;
     Rect* coords;
     const WCHAR* text = ts->textCache->GetTextForPage(pageNo, &len, &coords);
@@ -167,7 +167,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         }
 
         if (lines) {
-            WCHAR* s = str::DupTemp(text + (c0 - coords), c - c0);
+            char* s = ToUtf8Temp(text + (c0 - coords), c - c0);
             lines->Append(s);
             continue;
         }
@@ -295,8 +295,8 @@ void TextSelection::CopySelection(TextSelection* orig) {
     SelectUpTo(orig->endPage, orig->endGlyph);
 }
 
-WCHAR* TextSelection::ExtractText(const WCHAR* lineSep) {
-    WStrVec lines;
+WCHAR* TextSelection::ExtractText(const char* lineSep) {
+    StrVec lines;
 
     int fromPage, fromGlyph, toPage, toGlyph;
     GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
@@ -311,7 +311,10 @@ WCHAR* TextSelection::ExtractText(const WCHAR* lineSep) {
         }
     }
 
-    return Join(lines, lineSep);
+    char* res = Join(lines, lineSep);
+    WCHAR* ws = ToWstr(res);
+    str::Free(res);
+    return ws;
 }
 
 void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const {

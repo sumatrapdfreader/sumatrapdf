@@ -233,7 +233,6 @@ static void assertStrEq(const char* s1, const char* s2) {
     utassert(ok);
 }
 
-
 static void CheckRemoveAt(StrVec& v) {
     while (v.Size() > 0) {
         int n = v.Size();

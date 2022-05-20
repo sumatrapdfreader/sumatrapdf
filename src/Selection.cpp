@@ -278,8 +278,7 @@ char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelecti
 
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
     if (isTextOnlySelectionOut) {
-        WCHAR* lineSepW = ToWstrTemp(lineSep);
-        WCHAR* s = dm->textSelection->ExtractText(lineSepW);
+        WCHAR* s = dm->textSelection->ExtractText(lineSep);
         char* res = ToUtf8(s);
         str::Free(s);
         return res;

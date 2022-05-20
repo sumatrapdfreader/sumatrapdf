@@ -81,7 +81,7 @@ void OnMenuFind(WindowInfo* win) {
     // copy any selected text to the find bar, if it's still empty
     DisplayModel* dm = win->AsFixed();
     if (dm->textSelection->result.len > 0 && Edit_GetTextLength(win->hwndFindEdit) == 0) {
-        AutoFreeWstr selection(dm->textSelection->ExtractText(L" "));
+        AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
             win::SetText(win->hwndFindEdit, selection);
@@ -161,7 +161,7 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
         return;
     }
 
-    AutoFreeWstr selection(dm->textSelection->ExtractText(L" "));
+    AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
     str::NormalizeWSInPlace(selection);
     if (str::IsEmpty(selection.Get())) {
         return;
