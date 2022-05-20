@@ -25,22 +25,23 @@ static void StrReplaceTest() {
     }
 
     struct {
-        const WCHAR *string, *find, *replace, *result;
+        const char *string, *find, *replace, *result;
     } data[] = {
-        {L"golagon", L"gon", L"rabato", L"golarabato"},
-        {L"a", L"a", L"bor", L"bor"},
-        {L"abora", L"a", L"", L"bor"},
-        {L"aaaaaa", L"a", L"b", L"bbbbbb"},
-        {L"aba", L"a", L"ccc", L"cccbccc"},
-        {L"Aba", L"a", L"c", L"Abc"},
-        {L"abc", L"abc", L"", L""},
-        {nullptr, L"a", L"b", nullptr},
-        {L"a", L"", L"b", nullptr},
-        {L"a", L"b", nullptr, nullptr},
+        {"golagon", "gon", "rabato", "golarabato"},
+        {"a", "a", "bor", "bor"},
+        {"abora", "a", "", "bor"},
+        {"aaaaaa", "a", "b", "bbbbbb"},
+        {"aba", "a", "ccc", "cccbccc"},
+        {"Aba", "a", "c", "Abc"},
+        {"abc", "abc", "", ""},
+        {nullptr, "a", "b", nullptr},
+        {"a", "", "b", nullptr},
+        {"a", "b", nullptr, nullptr},
     };
     for (size_t i = 0; i < dimof(data); i++) {
-        AutoFreeWstr result(str::Replace(data[i].string, data[i].find, data[i].replace));
+        char* result = str::Replace(data[i].string, data[i].find, data[i].replace);
         utassert(str::Eq(result, data[i].result));
+        str::Free(result);
     }
 }
 
@@ -326,6 +327,8 @@ static void StrVecTest() {
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
+    v.SetAt(3, nullptr);
+    utassert(nullptr == v[3]);
     CheckRemoveAt(v);
 }
 
