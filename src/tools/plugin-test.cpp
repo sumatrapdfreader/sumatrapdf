@@ -8,16 +8,21 @@
 #include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 
+#define PLUGIN_TEST_NAMEA "SumatraPDF Plugin Test"
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
 
 struct PluginStartData {
     // path to SumatraPDF.exe
-    const WCHAR* sumatraPath;
+    const char* sumatraPath;
     // path to the (downloaded) document to display
-    const WCHAR* filePath;
+    const char* filePath;
     // path/URL to display in the UI (to hide temporary paths)
-    const WCHAR* fileOriginUrl;
+    const char* fileOriginUrl;
 };
+
+void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+    // no-op implementation to satisfy SubmitBugReport()
+}
 
 // in order to host SumatraPDF as a plugin, create a (child) window and
 // handle the following messages for it:
@@ -25,11 +30,11 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     if (WM_CREATE == msg) {
         // run SumatraPDF.exe with the -plugin command line argument
         PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
-        AutoFreeWstr cmdLine(str::Format(L"-plugin %d \"%s\"", hwnd, data->filePath));
+        AutoFreeStr cmdLine(str::Format("-plugin %d \"%s\"", hwnd, data->filePath));
         if (data->fileOriginUrl) {
-            cmdLine.Set(str::Format(L"-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, data->filePath));
+            cmdLine.Set(str::Format("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, data->filePath));
         }
-        ShellExecute(hwnd, L"open", data->sumatraPath, cmdLine, nullptr, SW_SHOW);
+        ShellExecute(hwnd, L"open", ToWstrTemp(data->sumatraPath), ToWstrTemp(cmdLine), nullptr, SW_SHOW);
     } else if (WM_SIZE == msg) {
         // resize the SumatraPDF window
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
@@ -84,18 +89,28 @@ WCHAR* GetSumatraExePath() {
     return path.StealData();
 }
 
+static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
+    int nArgs = 0;
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    for (int i = 0; i < nArgs; i++) {
+        char* arg = ToUtf8Temp(argsArr[i]);
+        args.Append(arg);
+    }
+    LocalFree(argsArr);
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR lpCmdLineA, int nCmdShow) {
-    WStrVec argList;
+    StrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
 
     if (argList.size() == 1) {
-        AutoFreeWstr msg(
-            str::Format(L"Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseNameTemp(argList.at(0))));
-        MessageBox(nullptr, msg, PLUGIN_TEST_NAME, MB_OK | MB_ICONINFORMATION);
+        AutoFreeStr msg(
+            str::Format("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseNameTemp(argList.at(0))));
+        MessageBoxA(nullptr, msg.Get(), PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (argList.size() == 2 || !str::EndsWithI(argList.at(1), L".exe")) {
-        argList.InsertAt(1, GetSumatraExePath());
+    if (argList.size() == 2 || !str::EndsWithI(argList.at(1), ".exe")) {
+        argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
     if (argList.size() == 3) {
         argList.InsertAt(2, nullptr);
@@ -109,7 +124,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     RegisterClass(&wc);
 
     PluginStartData data = {argList.at(1), argList.at(3), argList.at(2)};
-    HWND hwnd = CreateWindow(PLUGIN_TEST_NAME, PLUGIN_TEST_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT,
+    HWND hwnd = CreateWindowExW(0, PLUGIN_TEST_NAME, PLUGIN_TEST_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT,
                              0, nullptr, nullptr, hInstance, &data);
     ShowWindow(hwnd, nCmdShow);
 
