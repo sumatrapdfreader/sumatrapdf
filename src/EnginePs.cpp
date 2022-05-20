@@ -33,7 +33,7 @@ static char* GetGhostscriptPath() {
 TryAgain64Bit:
     for (const char* gsProd : gsProducts) {
         HKEY hkey;
-        char* keyName = str::Join("Software\\", gsProd);
+        char* keyName = str::JoinTemp("Software\\", gsProd);
         WCHAR* keyNameW = ToWstrTemp(keyName);
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyNameW, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
