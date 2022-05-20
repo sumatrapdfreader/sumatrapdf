@@ -137,8 +137,8 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
 // file paths may be relative to the current directory or absolute and
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
-bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 0) {
-    AutoFree prevData(file::ReadFile(archivePath));
+bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0) {
+    ByteSlice prevData(file::ReadFile(archivePath));
     size_t prevDataLen = prevData.size();
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive((const u8*)prevData.data, prevDataLen, &prevArchive))
@@ -155,14 +155,14 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     data.AppendSlice(lzsaHeader.AsByteSlice());
 
     for (size_t i = skipFiles; i < files.size(); i++) {
-        AutoFreeWstr filePath(str::Dup(files.at(i)));
-        WCHAR* sep = str::FindCharLast(filePath, ':');
+        AutoFreeStr filePath(str::Dup(files.at(i)));
+        char* sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
         if (sep) {
-            utf8Name = ToUtf8(sep + 1);
+            utf8Name = str::Dup(sep + 1);
             *sep = '\0';
         } else {
-            utf8Name = ToUtf8(filePath);
+            utf8Name = str::Dup(filePath);
         }
 
         str::TransCharsInPlace(utf8Name, "/", "\\");
@@ -198,6 +198,16 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
         return errorStep;                       \
     }
 
+static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
+    int nArgs = 0;
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    for (int i = 0; i < nArgs; i++) {
+        char* arg = ToUtf8Temp(argsArr[i]);
+        args.Append(arg);
+    }
+    LocalFree(argsArr);
+}
+
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
     AutoFree fileData(file::ReadFile(archivePath));
@@ -227,7 +237,7 @@ int main(__unused int argc, __unused char** argv) {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    WStrVec args;
+    StrVec args;
     ParseCmdLine(GetCommandLine(), args);
     int errorStep = 1;
 
