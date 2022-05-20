@@ -2874,7 +2874,7 @@ char* Join(const StrVec& v, const char* joint) {
     str::Str tmp(256);
     int len = v.Size();
     size_t jointLen = str::Len(joint);
-    size_t firstForJoint = 0;
+    int firstForJoint = 0;
     for (int i = 0; i < len; i++) {
         char* s = v.at(i);
         if (!s) {
