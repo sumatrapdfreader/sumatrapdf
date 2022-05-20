@@ -65,7 +65,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     logf("WriteUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
-    char* installedExePath = GetInstallationFilePathTemp(kExeNameA);
+    char* installedExePath = GetInstallationFilePathTemp(kExeName);
     AutoFreeStr installDate = GetInstallDate();
     char* installDir = GetInstallDirTemp();
     // uninstaller is the same executable with a different flag
@@ -538,7 +538,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "ProgId");
     }
     buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt, "Application"));
-    if (str::EqI(buf, kExeNameA)) {
+    if (str::EqI(buf, kExeName)) {
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "Application");
     }
     buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt "\\UserChoice", "ProgId"));
@@ -587,13 +587,13 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     }
 
     if (HKEY_LOCAL_MACHINE == hkey) {
-        char* key = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeNameA);
+        char* key = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
         LoggedDeleteRegKey(hkey, key);
     }
 
     // those are registry keys written before 3.4
     SeqStrings exts = gSupportedExts;
-    char* openWithVal = str::JoinTemp("\\OpenWithList\\", kExeNameA);
+    char* openWithVal = str::JoinTemp("\\OpenWithList\\", kExeName);
     char* p;
     while (exts) {
         const char* ext = exts;

@@ -178,7 +178,7 @@ char* GetInstallationFilePathTemp(const char* name) {
 
 TempStr GetInstalledExePathTemp() {
     char* dir = GetInstallDirTemp();
-    return path::JoinTemp(dir, kExeNameA);
+    return path::JoinTemp(dir, kExeName);
 }
 
 TempStr GetShortcutPathTemp(int csidl) {
@@ -488,7 +488,7 @@ static const char* readableProcessNames[] = {
 // clang-format on
 
 static const char* ReadableProcName(const char* procPath) {
-    readableProcessNames[0] = kExeNameA;
+    readableProcessNames[0] = kExeName;
     readableProcessNames[1] = kAppName;
     const char* procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {

@@ -137,7 +137,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
 static bool CopySelfToDir(const char* destDir) {
     logf("CopySelfToDir(%s)\n", destDir);
     char* exePath = GetExePathTemp();
-    char* dstPath = path::JoinTemp(destDir, kExeNameA);
+    char* dstPath = path::JoinTemp(destDir, kExeName);
     bool failIfExists = false;
     bool ok = file::Copy(dstPath, exePath, failIfExists);
     // strip zone identifier (if exists) to avoid windows
