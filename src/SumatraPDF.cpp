@@ -2592,7 +2592,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         ok = file::WriteFile(realDstFileName, data);
     } else if (convertToPDF) {
         // Convert the file into a PDF one
-        char* producerName = str::JoinTemp(kAppNameA, " ", CURR_VERSION_STRA);
+        char* producerName = str::JoinTemp(kAppName, " ", CURR_VERSION_STRA);
         PdfCreator::SetProducerName(producerName);
         ok = engine->SaveFileAsPDF(realDstFileName);
         if (!ok && gIsDebugBuild) {
@@ -5316,7 +5316,7 @@ static TempStr GetSymbolsDirTemp() {
         return GetExeDirTemp();
     }
     TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    return path::JoinTemp(dir, kAppNameA, "crashinfo");
+    return path::JoinTemp(dir, kAppName, "crashinfo");
 }
 
 static void DownloadDebugSymbols() {

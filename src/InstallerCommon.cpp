@@ -117,7 +117,7 @@ char* GetExistingInstallationDir() {
         return str::Dup(gCachedExistingInstallationDir);
     }
     log("GetExistingInstallationDir()\n");
-    char* regPathUninst = GetRegPathUninstTemp(kAppNameA);
+    char* regPathUninst = GetRegPathUninstTemp(kAppName);
     AutoFreeStr dir = LoggedReadRegStr2(regPathUninst, "InstallLocation");
     if (!dir) {
         return nullptr;
@@ -142,7 +142,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     }
     info->searchFilterInstalled = IsSearchFilterInstalled();
     info->previewInstalled = IsPreviewInstalled();
-    char* regPathUninst = GetRegPathUninstTemp(kAppNameA);
+    char* regPathUninst = GetRegPathUninstTemp(kAppName);
     AutoFreeStr dirLM = LoggedReadRegStr(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
     AutoFreeStr dirCU = LoggedReadRegStr(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
     if (dirLM.Get() && dirCU.Get()) {
@@ -186,7 +186,7 @@ TempStr GetShortcutPathTemp(int csidl) {
     if (!dir) {
         return {};
     }
-    char* lnkName = str::JoinTemp(kAppNameA, ".lnk");
+    char* lnkName = str::JoinTemp(kAppName, ".lnk");
     return path::JoinTemp(dir, lnkName);
 }
 
@@ -489,7 +489,7 @@ static const char* readableProcessNames[] = {
 
 static const char* ReadableProcName(const char* procPath) {
     readableProcessNames[0] = kExeNameA;
-    readableProcessNames[1] = kAppNameA;
+    readableProcessNames[1] = kAppName;
     const char* procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
         if (str::EqI(procName, readableProcessNames[i])) {

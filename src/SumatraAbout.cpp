@@ -113,15 +113,15 @@ static Vec<StaticLinkInfo*> gStaticLinks;
 #define COL5 RGB(112, 115, 207)
 
 static void DrawAppName(HDC hdc, Point pt) {
-    const WCHAR* txt = kAppName;
+    const char* txt = kAppName;
     // colorful version
     COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
     for (size_t i = 0; i < str::Len(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
-        TextOutW(hdc, pt.x, pt.y, txt + i, 1);
+        TextOutUtf8(hdc, pt.x, pt.y, txt + i, 1);
 
         SIZE txtSize;
-        GetTextExtentPoint32(hdc, txt + i, 1, &txtSize);
+        GetTextExtentPoint32A(hdc, txt + i, 1, &txtSize);
         pt.x += txtSize.cx;
     }
 }
@@ -154,7 +154,7 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     SIZE txtSize{};
     /* calculate minimal top box size */
-    const char* txt = kAppNameA;
+    const char* txt = kAppName;
 
     GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
@@ -181,7 +181,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const char* txt = kAppNameA;
+    const char* txt = kAppName;
     GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
@@ -424,7 +424,7 @@ static void OnPaintAbout(HWND hwnd) {
 static void CopyAboutInfoToClipboard() {
     str::Str info(512);
     char* ver = GetAppVersionTemp();
-    info.AppendFmt("%s %s\r\n", kAppNameA, ver);
+    info.AppendFmt("%s %s\r\n", kAppName, ver);
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.AppendChar('-');
     }

@@ -689,7 +689,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
         printf("%s", corruptedInstallationConsole);
     }
 
-    WCHAR* title = str::JoinTemp(kAppName, L" installer");
+    WCHAR* title = str::JoinTemp(kAppNameW, L" installer");
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -734,9 +734,8 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    const char* appName = ToUtf8Temp(kAppName);
     str::Str msg{kInstallerHelpTmpl};
-    str::Replace(msg, "${appName}", appName);
+    str::Replace(msg, "${appName}", kAppName);
 
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
@@ -745,7 +744,7 @@ static void ShowInstallerHelp() {
         return;
     }
 
-    WCHAR* title = str::JoinTemp(kAppName, L" installer usage");
+    const WCHAR* title = L"SumatraPDF installer usage";
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =

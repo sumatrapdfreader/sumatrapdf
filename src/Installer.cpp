@@ -169,8 +169,8 @@ static void CopySettingsFile() {
     }
 
     const char* prefsFileName = prefs::GetSettingsFileNameTemp();
-    char* srcPath = path::JoinTemp(srcDir, kAppNameA, prefsFileName);
-    char* dstPath = path::JoinTemp(dstDir, kAppNameA, prefsFileName);
+    char* srcPath = path::JoinTemp(srcDir, kAppName, prefsFileName);
+    char* dstPath = path::JoinTemp(dstDir, kAppName, prefsFileName);
 
     // don't over-write
     bool failIfExists = true;
@@ -555,9 +555,9 @@ static void OnButtonBrowse() {
 
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    WCHAR* end = str::JoinTemp(L"\\", kAppName);
+    WCHAR* end = str::JoinTemp(L"\\", kAppNameW);
     if (!str::EndsWithI(installPath, end)) {
-        installPath = path::JoinTemp(installPath, kAppName);
+        installPath = path::JoinTemp(installPath, kAppNameW);
     }
     editDir->SetText(installPath);
     editDir->SetSelection(0, -1);
@@ -590,13 +590,13 @@ static char* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
     }
 
     if (forAllUsers) {
-        dir = path::Join(dirAll, kAppNameA);
+        dir = path::Join(dirAll, kAppName);
         logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
         return dir;
     }
 
     // %APPLOCALDATA%\SumatraPDF
-    dir = path::Join(dirUser, kAppNameA);
+    dir = path::Join(dirUser, kAppName);
     logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
     return dir;
 }

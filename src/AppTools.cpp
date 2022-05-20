@@ -20,7 +20,7 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
-    char* regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppNameA);
+    char* regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
     AutoFreeStr installedPath = LoggedReadRegStr2(regPathUninst, "InstallLocation");
     if (!installedPath) {
         return false;
@@ -111,7 +111,7 @@ char* AppGenDataFilenameTemp(const char* fileName) {
     if (!path) {
         return nullptr;
     }
-    path = path::JoinTemp(path, kAppNameA);
+    path = path::JoinTemp(path, kAppName);
     if (!path) {
         return nullptr;
     }

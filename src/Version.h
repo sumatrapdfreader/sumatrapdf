@@ -55,5 +55,5 @@
 
 #define APP_NAME_STR        "SumatraPDF"
 
-constexpr const WCHAR* kAppName = L"SumatraPDF";
-constexpr const char* kAppNameA = "SumatraPDF";
+constexpr const WCHAR* kAppNameW = L"SumatraPDF";
+constexpr const char* kAppName = "SumatraPDF";
