@@ -95,6 +95,8 @@ bool IsCtrlPressed();
 
 HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize);
 
+void SetMenuFontSize(int);
+
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd = nullptr, bool bFully = false);
 Rect GetWorkAreaRect(Rect rect, HWND hwnd);
 void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);

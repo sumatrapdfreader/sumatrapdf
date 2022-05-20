@@ -428,6 +428,7 @@ static void NotifsAdd(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd, Kind gr
     }
     wnd->groupId = groupId;
 
+    // TODO: probably not needed because of NotifsRelayout
     if (!wnds.IsEmpty()) {
         auto lastIdx = wnds.size() - 1;
         MoveBelow(wnds[lastIdx], wnd);

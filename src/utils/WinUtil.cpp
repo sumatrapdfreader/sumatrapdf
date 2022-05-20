@@ -1429,21 +1429,21 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
     }
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     if (bold) {
         ncm.lfMessageFont.lfWeight = FW_BOLD;
     }
     if (italic) {
         ncm.lfMessageFont.lfItalic = true;
     }
-    *dest = CreateFontIndirect(&ncm.lfMessageFont);
+    *dest = CreateFontIndirectW(&ncm.lfMessageFont);
     return *dest;
 }
 
 int GetSizeOfDefaultGuiFont() {
     NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     int res = -ncm.lfMessageFont.lfHeight;
     CrashIf(res <= 0);
     return res;
@@ -1611,6 +1611,21 @@ HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {
     lf.lfOrientation = 0;
 
     return CreateFontIndirectW(&lf);
+}
+
+// https://www.gamedev.net/forums/topic/683205-c-win32-can-i-change-the-menu-font/
+// affects size of menu font
+void SetMenuFontSize(int fontSize) {
+    // TODO: hangs, maybe needs to use SystemParametersInfoForDpi as doc say
+    // for per-monitor dpi aware apps
+    CrashIf(true);
+    NONCLIENTMETRICS m = {0};
+    uint sz = sizeof(NONCLIENTMETRICS);
+    m.cbSize = sz;
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sz, (void*)&m, 0);
+    logf("font size: %d\n", m.lfMenuFont.lfHeight);
+    m.lfMenuFont.lfHeight = -fontSize;
+    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sz, (void*)&m, 0);
 }
 
 IStream* CreateStreamFromData(ByteSlice d) {
