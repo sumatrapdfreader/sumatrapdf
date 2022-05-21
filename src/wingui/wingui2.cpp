@@ -13,6 +13,9 @@
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 
+#include "wingui/Window.h"
+#include "wingui/TreeCtrl.h" // TODO: temporary
+
 #include "utils/Log.h"
 
 // TODO: don't use it
@@ -2447,11 +2450,13 @@ void TreeView::SetToolTipsDelayTime(int type, int timeInMs) {
 HWND TreeView::GetToolTipsHwnd() {
     return TreeView_GetToolTips(hwnd);
 }
-} // namespace wg
 
-#if 0
+HTREEITEM TreeView::GetHandleByTreeItem(TreeItem item) {
+    return treeModel->GetHandle(item);
+}
+
 // the result only valid until the next GetItem call
-static TVITEMW* GetTVITEM(TreeCtrl* tree, HTREEITEM hItem) {
+static TVITEMW* GetTVITEM(TreeView* tree, HTREEITEM hItem) {
     TVITEMW* ti = &tree->item;
     ZeroStruct(ti);
     ti->hItem = hItem;
@@ -2465,13 +2470,13 @@ static TVITEMW* GetTVITEM(TreeCtrl* tree, HTREEITEM hItem) {
     return ti;
 }
 
-static TVITEMW* GetTVITEM(TreeCtrl* tree, TreeItem ti) {
+TVITEMW* GetTVITEM(TreeView* tree, TreeItem ti) {
     HTREEITEM hi = tree->GetHandleByTreeItem(ti);
     return GetTVITEM(tree, hi);
 }
 
 // expand if collapse, collapse if expanded
-static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
+void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
     HWND hTree = tree->hwnd;
     HTREEITEM child = TreeView_GetChild(hTree, hItem);
     if (!child) {
@@ -2495,12 +2500,18 @@ static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
     }
 }
 
-static void SetTreeItemState(uint uState, TreeItemState& state) {
+void SetTreeItemState(uint uState, TreeItemState& state) {
     state.isExpanded = bitmask::IsSet(uState, TVIS_EXPANDED);
     state.isSelected = bitmask::IsSet(uState, TVIS_SELECTED);
     uint n = (uState >> 12) - 1;
     state.isChecked = n != 0;
 }
+
+
+} // namespace wg
+
+#if 0
+
 
 static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     uint msg = ev->msg;
@@ -2785,9 +2796,6 @@ TreeItem TreeCtrl::GetItemAt(int x, int y) {
     return GetTreeItemByHandle(ht.hItem);
 }
 
-HTREEITEM TreeCtrl::GetHandleByTreeItem(TreeItem item) {
-    return treeModel->GetHandle(item);
-}
 
 TreeItem TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     if (item == nullptr) {
@@ -2932,7 +2940,6 @@ TreeItemState TreeCtrl::GetItemState(TreeItem ti) {
 
     return res;
 }
-
 
 // if context menu invoked via keyboard, get selected item
 // if via right-click, selects the item under the cursor

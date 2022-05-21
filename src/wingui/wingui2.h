@@ -545,8 +545,16 @@ struct TreeView : Wnd {
     void SetToolTipsDelayTime(int type, int timeInMs);
     HWND GetToolTipsHwnd();
 
+    HTREEITEM GetHandleByTreeItem(TreeItem item);
+
     bool fullRowSelect = false;
     Size idealSize{};
+
+    TreeModel* treeModel = nullptr; // not owned by us
+
+    // private
+    TVITEMW item{};
+
 };
 
 } // namespace wg
