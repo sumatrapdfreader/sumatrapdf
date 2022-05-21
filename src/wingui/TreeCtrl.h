@@ -99,15 +99,8 @@ struct TreeItemDraggeddEvent {
 
 using TreeItemDraggedHandler = std::function<void(TreeItemDraggeddEvent*)>;
 
-/* Creation sequence:
-- auto ctrl = new TreeCtrl()
-- set creation parameters
-- ctrl->Create()
-*/
-
 struct TreeCtrl : WindowBase {
     // creation parameters. must be set before Create() call
-    bool withCheckboxes = false;
 
     // sets TVS_FULLROWSELECT style
     // https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
@@ -199,7 +192,7 @@ struct TreeCtrl : WindowBase {
     void SetToolTipsDelayTime(int type, int timeInMs);
 };
 
-void FillTVITEM(TVITEMEXW* tvitem, TreeModel*, TreeItem ti, bool withCheckboxes);
+void FillTVITEM(TVITEMEXW* tvitem, TreeModel*, TreeItem ti);
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);
 
 bool IsTreeKind(Kind);

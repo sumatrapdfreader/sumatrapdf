@@ -530,12 +530,6 @@ bool TreeCtrl::Create(HWND parent) {
 
     TreeView_SetUnicodeFormat(hwnd, true);
 
-    // TVS_CHECKBOXES has to be set with SetWindowLong before populating with data
-    // https: // docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
-    if (withCheckboxes) {
-        SetWindowStyle(hwnd, TVS_CHECKBOXES, true);
-    }
-
     SetToolTipsDelayTime(TTDT_AUTOPOP, 32767);
 
     // must be done at the end. Doing  SetWindowStyle() sends bogus (?)
@@ -653,7 +647,7 @@ TreeItem TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     return res;
 }
 
-void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti, bool withCheckboxes) {
+void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
     uint mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
     tvitem->mask = mask;
 
@@ -663,38 +657,12 @@ void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti, bool withCheckbox
         state = TVIS_EXPANDED;
     }
 
-    if (withCheckboxes) {
-        stateMask |= TVIS_STATEIMAGEMASK;
-        bool isChecked = tm->IsChecked(ti);
-        uint imgIdx = isChecked ? 2 : 1;
-        uint imgState = INDEXTOSTATEIMAGEMASK(imgIdx);
-        state |= imgState;
-    }
-
     tvitem->state = state;
     tvitem->stateMask = stateMask;
     tvitem->lParam = static_cast<LPARAM>(ti);
     char* title = tm->Text(ti);
     tvitem->pszText = ToWstrTemp(title);
 }
-
-#if 0
-static HTREEITEM insertItem(TreeCtrl* treeCtrl, HTREEITEM parent, TreeItem ti) {
-    TVINSERTSTRUCTW toInsert{};
-
-    toInsert.hParent = parent;
-    toInsert.hInsertAfter = TVI_LAST;
-
-    TVITEMEXW* tvitem = &toInsert.itemex;
-    FillTVITEM(tvitem, treeCtrl->treeModel, ti, treeCtrl->withCheckboxes);
-    bool onDemand = treeCtrl->onTreeGetDispInfo != nullptr;
-    if (onDemand) {
-        tvitem->pszText = LPSTR_TEXTCALLBACK;
-    }
-    HTREEITEM res = TreeView_InsertItem(treeCtrl->hwnd, &toInsert);
-    return res;
-}
-#endif
 
 // inserting in front is faster:
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
@@ -705,7 +673,7 @@ HTREEITEM insertItemFront(TreeCtrl* treeCtrl, TreeItem ti, HTREEITEM parent) {
     toInsert.hInsertAfter = TVI_FIRST;
 
     TVITEMEXW* tvitem = &toInsert.itemex;
-    FillTVITEM(tvitem, treeCtrl->treeModel, ti, treeCtrl->withCheckboxes);
+    FillTVITEM(tvitem, treeCtrl->treeModel, ti);
     bool onDemand = treeCtrl->onTreeGetDispInfo != nullptr;
     if (onDemand) {
         tvitem->pszText = LPSTR_TEXTCALLBACK;
@@ -723,7 +691,7 @@ bool TreeCtrl::UpdateItem(TreeItem ti) {
 
     TVITEMEXW tvitem;
     tvitem.hItem = ht;
-    FillTVITEM(&tvitem, treeModel, ti, withCheckboxes);
+    FillTVITEM(&tvitem, treeModel, ti);
     bool onDemand = onTreeGetDispInfo != nullptr;
     if (onDemand) {
         tvitem.pszText = LPSTR_TEXTCALLBACK;
@@ -735,16 +703,6 @@ bool TreeCtrl::UpdateItem(TreeItem ti) {
 // complicated because it inserts items backwards, as described in
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
 void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
-#if 0
-    auto tm = treeCtrl->treeModel;
-    int n = tm->ChildCount(item);
-    for (int i = 0; i < n; i++) {
-        auto ti = tm->ItemChildAt(item, i);
-        HTREEITEM h = insertItem(treeCtrl, parent, ti);
-        tm->SetHandle(ti, h);
-        PopulateTreeItem(treeCtrl, ti, h);
-    }
-#else
     auto tm = treeCtrl->treeModel;
     int n = tm->ChildCount(item);
     TreeItem tmp[256];
@@ -780,7 +738,6 @@ void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
     if (a != &tmp[0]) {
         free(a);
     }
-#endif
 }
 
 static void PopulateTree(TreeCtrl* treeCtrl, TreeModel* tm) {
