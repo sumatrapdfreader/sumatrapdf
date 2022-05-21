@@ -2759,3 +2759,17 @@ int DrawTextUtf8(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
     sLen = (int)str::Len(ws);
     return DrawTextW(hdc, ws, sLen, r, format);
 }
+
+void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {
+    while (hItem) {
+        TreeView_Expand(hTree, hItem, flag);
+        HTREEITEM child = TreeView_GetChild(hTree, hItem);
+        if (child) {
+            TreeViewExpandRecursively(hTree, child, flag, false);
+        }
+        if (subtree) {
+            break;
+        }
+        hItem = TreeView_GetNextSibling(hTree, hItem);
+    }
+}

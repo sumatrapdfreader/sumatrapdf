@@ -486,7 +486,8 @@ using WebViewMsgCb = std::function<void(const char*)>;
 // using dispatch_fn_t = std::function<void()>;
 
 struct Webview2Wnd : Wnd {
-    ~Webview2Wnd();
+    Webview2Wnd();
+    ~Webview2Wnd() override;
 
     HWND Create(const CreateCustomArgs&);
 
@@ -520,4 +521,32 @@ void DeleteWnd(Button**);
 void DeleteWnd(Edit**);
 void DeleteWnd(Checkbox**);
 void DeleteWnd(Progress**);
+} // namespace wg
+
+//--- TreeView
+
+namespace wg {
+
+struct TreeViewCreateArgs {
+    HWND parent = nullptr;
+    HFONT font = nullptr;
+    bool fullRowSelect = false;
+};
+
+struct TreeView : Wnd {
+    TreeView();
+    ~TreeView() override;
+
+    HWND Create(const TreeViewCreateArgs&);
+
+    LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
+
+    Size GetIdealSize() override;
+    void SetToolTipsDelayTime(int type, int timeInMs);
+    HWND GetToolTipsHwnd();
+
+    bool fullRowSelect = false;
+    Size idealSize{};
+};
+
 } // namespace wg

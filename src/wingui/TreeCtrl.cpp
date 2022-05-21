@@ -36,20 +36,6 @@ bool IsTreeKind(Kind k) {
     return k == kindTree;
 }
 
-static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {
-    while (hItem) {
-        TreeView_Expand(hTree, hItem, flag);
-        HTREEITEM child = TreeView_GetChild(hTree, hItem);
-        if (child) {
-            TreeViewExpandRecursively(hTree, child, flag, false);
-        }
-        if (subtree) {
-            break;
-        }
-        hItem = TreeView_GetNextSibling(hTree, hItem);
-    }
-}
-
 // the result only valid until the next GetItem call
 static TVITEMW* GetTVITEM(TreeCtrl* tree, HTREEITEM hItem) {
     TVITEMW* ti = &tree->item;
