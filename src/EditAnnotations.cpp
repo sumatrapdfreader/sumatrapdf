@@ -263,7 +263,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     DeleteAnnotations(this);
     delete mainWindow;
     delete mainLayout;
-}
+} 
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
     EngineMupdf* engine = GetEngineMupdf(ew);
