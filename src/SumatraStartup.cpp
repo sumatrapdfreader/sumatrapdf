@@ -689,7 +689,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
         printf("%s", corruptedInstallationConsole);
     }
 
-    WCHAR* title = str::JoinTemp(kAppNameW, L" installer");
+    auto title = L"SumatraPDF installer";
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =

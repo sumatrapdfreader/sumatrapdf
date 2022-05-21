@@ -511,11 +511,12 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
     return 0;
 }
 
-static TempWstr BrowseForFolderTemp(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption) {
-    BROWSEINFO bi = {};
+static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const char* caption) {
+    WCHAR* initialFolder = ToWstrTemp(initialFolderA);
+    BROWSEINFO bi = {0};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpszTitle = caption;
+    bi.lpszTitle = ToWstrTemp(caption);
     bi.lpfn = BrowseCallbackProc;
     bi.lParam = (LPARAM)initialFolder;
 
@@ -534,20 +535,20 @@ static TempWstr BrowseForFolderTemp(HWND hwnd, const WCHAR* initialFolder, const
         pMalloc->Free(pidlFolder);
         pMalloc->Release();
     }
-    return str::DupTemp(buf);
+    return ToUtf8Temp(buf);
 }
 
 static void OnButtonBrowse() {
     auto editDir = gWnd->editInstallationDir;
-    WCHAR* installDir = win::GetTextTemp(editDir->hwnd);
+    char* installDir = win::GetTextATemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
         installDir = path::GetDirTemp(installDir);
     }
 
-    auto caption = _TR("Select the folder where SumatraPDF should be installed:");
-    WCHAR* installPath = BrowseForFolderTemp(gWnd->hwnd, installDir, caption);
+    auto caption = _TRA("Select the folder where SumatraPDF should be installed:");
+    char* installPath = BrowseForFolderTemp(gWnd->hwnd, installDir, caption);
     if (!installPath) {
         gWnd->btnBrowseDir->SetFocus();
         return;
@@ -555,9 +556,9 @@ static void OnButtonBrowse() {
 
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    WCHAR* end = str::JoinTemp(L"\\", kAppNameW);
+    char* end = str::JoinTemp("\\", kAppName);
     if (!str::EndsWithI(installPath, end)) {
-        installPath = path::JoinTemp(installPath, kAppNameW);
+        installPath = path::JoinTemp(installPath, kAppName);
     }
     editDir->SetText(installPath);
     editDir->SetSelection(0, -1);

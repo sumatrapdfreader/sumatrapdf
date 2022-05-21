@@ -140,8 +140,8 @@ void Wnd::SetText(const char* s) {
     if (!s) {
         s = "";
     }
-    auto ws = ToWstrTemp(s);
-    SetText(ws);
+    HwndSetText(hwnd, s);
+    HwndInvalidate(hwnd); // TODO: move inside HwndSetText()?
 }
 
 TempStr Wnd::GetText() {

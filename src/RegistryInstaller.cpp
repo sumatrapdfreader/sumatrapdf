@@ -73,7 +73,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallLocation", installDir);
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoModify", 1);
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoRepair", 1);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, "Publisher", PUBLISHER_STR);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "Publisher", kPublisherStr);
     // command line for uninstaller
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "UninstallString", uninstallCmdLine);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLInfoAbout", "https://www.sumatrapdfreader.org/");

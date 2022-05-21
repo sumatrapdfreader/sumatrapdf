@@ -3,13 +3,13 @@
 
 // CURR_VERSION can be over-written externally
 #ifndef CURR_VERSION
-#define CURR_VERSION 3.4
+#define CURR_VERSION 3.5
 #endif
 #ifndef CURR_VERSION_COMMA
-#define CURR_VERSION_COMMA 3,4,0
+#define CURR_VERSION_COMMA 3,5,0
 #endif
 
-// this is sth. like "3.4"
+// this is sth. like "3.5"
 #define CURR_VERSION_MAJOR_STRA QM(CURR_VERSION)
 
 // VER_QUALIFIER allows people who recompile SumatraPDF to add
@@ -50,10 +50,7 @@
 #endif
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
-#define COPYRIGHT_STR      "Copyright 2006-2021 all authors (GPLv3)"
-#define PUBLISHER_STR      "Krzysztof Kowalczyk"
+#define kCopyrightStr      "Copyright 2006-2022 all authors (GPLv3)"
+#define kPublisherStr      "Krzysztof Kowalczyk"
 
-#define APP_NAME_STR        "SumatraPDF"
-
-constexpr const WCHAR* kAppNameW = L"SumatraPDF";
-constexpr const char* kAppName = "SumatraPDF";
+#define kAppName        "SumatraPDF"
