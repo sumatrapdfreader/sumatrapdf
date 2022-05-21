@@ -114,17 +114,6 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     LPARAM lp = ev->lp;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
 
-    if (w->onNotify) {
-        WmNotifyEvent a{};
-        CopyWndEvent cp(&a, ev);
-        a.treeView = nmtv;
-
-        w->onNotify(&a);
-        if (a.didHandle) {
-            return;
-        }
-    }
-
     auto code = nmtv->hdr.code;
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
@@ -184,51 +173,6 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         return;
     }
 
-    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-itemchanged
-    if (code == TVN_ITEMCHANGED) {
-        if (!w->onTreeItemChanged) {
-            return;
-        }
-        TreeItemChangedEvent a;
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.nmic = (NMTVITEMCHANGE*)lp;
-        a.treeItem = w->GetTreeItemByHandle(a.nmic->hItem);
-        SetTreeItemState(a.nmic->uStateOld, a.prevState);
-        SetTreeItemState(a.nmic->uStateNew, a.newState);
-        a.expandedChanged = (a.prevState.isExpanded != a.newState.isExpanded);
-        a.checkedChanged = (a.prevState.isChecked != a.newState.isChecked);
-        a.selectedChanged = (a.prevState.isSelected != a.newState.isSelected);
-        w->onTreeItemChanged(&a);
-        return;
-    }
-
-    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-itemexpanded
-    if (code == TVN_ITEMEXPANDED) {
-        if (!w->onTreeItemExpanded) {
-            return;
-        }
-        bool doNotify = false;
-        bool isExpanded = false;
-        if (nmtv->action == TVE_COLLAPSE) {
-            isExpanded = false;
-            doNotify = true;
-        } else if (nmtv->action == TVE_EXPAND) {
-            isExpanded = true;
-            doNotify = true;
-        }
-        if (!doNotify) {
-            return;
-        }
-        TreeItemExpandedEvent a{};
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.treeItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
-        a.isExpanded = isExpanded;
-        w->onTreeItemExpanded(&a);
-        return;
-    }
-
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
         if (!w->onTreeClick) {
@@ -275,20 +219,6 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         a.keyCode = nmkd->wVKey;
         a.flags = nmkd->flags;
         w->onTreeKeyDown(&a);
-        return;
-    }
-
-    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getdispinfo
-    if (code == TVN_GETDISPINFO) {
-        if (!w->onTreeGetDispInfo) {
-            return;
-        }
-        TreeGetDispInfoEvent a{};
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.dispInfo = (NMTVDISPINFOEXW*)lp;
-        a.treeItem = w->GetTreeItemByHandle(a.dispInfo->item.hItem);
-        w->onTreeGetDispInfo(&a);
         return;
     }
 }
@@ -540,10 +470,6 @@ HTREEITEM insertItemFront(TreeCtrl* treeCtrl, TreeItem ti, HTREEITEM parent) {
 
     TVITEMEXW* tvitem = &toInsert.itemex;
     FillTVITEM(tvitem, treeCtrl->treeModel, ti);
-    bool onDemand = treeCtrl->onTreeGetDispInfo != nullptr;
-    if (onDemand) {
-        tvitem->pszText = LPSTR_TEXTCALLBACK;
-    }
     HTREEITEM res = TreeView_InsertItem(treeCtrl->hwnd, &toInsert);
     return res;
 }
@@ -558,10 +484,6 @@ bool TreeCtrl::UpdateItem(TreeItem ti) {
     TVITEMEXW tvitem;
     tvitem.hItem = ht;
     FillTVITEM(&tvitem, treeModel, ti);
-    bool onDemand = onTreeGetDispInfo != nullptr;
-    if (onDemand) {
-        tvitem.pszText = LPSTR_TEXTCALLBACK;
-    }
     BOOL ok = TreeView_SetItem(hwnd, &tvitem);
     return ok != 0;
 }

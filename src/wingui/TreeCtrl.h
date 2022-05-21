@@ -22,35 +22,12 @@ struct TreeSelectionChangedEvent : WndEvent {
 
 using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
 
-struct TreeItemExpandedEvent : WndEvent {
-    TreeCtrl* treeCtrl = nullptr;
-    TreeItem treeItem = 0;
-    bool isExpanded = false;
-};
-
-using TreeItemExpandedHandler = std::function<void(TreeItemExpandedEvent*)>;
-
 struct TreeItemState {
     bool isSelected = false;
     bool isExpanded = false;
     bool isChecked = false;
     int nChildren = 0;
 };
-
-struct TreeItemChangedEvent : WndEvent {
-    TreeCtrl* treeCtrl = nullptr;
-    TreeItem treeItem = 0;
-    NMTVITEMCHANGE* nmic = nullptr;
-
-    bool checkedChanged = false;
-    bool expandedChanged = false;
-    bool selectedChanged = false;
-    // except for nChildren
-    TreeItemState prevState{};
-    TreeItemState newState{};
-};
-
-using TreeItemChangedHandler = std::function<void(TreeItemChangedEvent*)>;
 
 struct TreeItemCustomDrawEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
@@ -82,14 +59,6 @@ struct TreeKeyDownEvent : WndEvent {
 
 using TreeKeyDownHandler = std::function<void(TreeKeyDownEvent*)>;
 
-struct TreeGetDispInfoEvent : WndEvent {
-    TreeCtrl* treeCtrl = nullptr;
-    TreeItem treeItem = 0;
-    NMTVDISPINFOEXW* dispInfo = nullptr;
-};
-
-using TreeGetDispInfoHandler = std::function<void(TreeGetDispInfoEvent*)>;
-
 struct TreeCtrl : WindowBase {
     // creation parameters. must be set before Create() call
 
@@ -100,20 +69,11 @@ struct TreeCtrl : WindowBase {
     // treeModel not owned by us
     TreeModel* treeModel = nullptr;
 
-    // for all WM_NOTIFY messages
-    WmNotifyHandler onNotify = nullptr;
-
     // for WM_NOTIFY with TVN_GETINFOTIP
     TreeItemGetTooltipHandler onGetTooltip = nullptr;
 
     // for WM_NOTIFY with TVN_SELCHANGED
     TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
-
-    // for WM_NOTIFY with TVN_ITEMEXPANDED
-    TreeItemExpandedHandler onTreeItemExpanded = nullptr;
-
-    // for WM_NOTIFY with TVN_ITEMCHANGED
-    TreeItemChangedHandler onTreeItemChanged = nullptr;
 
     // for WM_NOTIFY wiht NM_CUSTOMDRAW
     TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
@@ -123,9 +83,6 @@ struct TreeCtrl : WindowBase {
 
     // for WM_NOITFY with TVN_KEYDOWN
     TreeKeyDownHandler onTreeKeyDown = nullptr;
-
-    // for WM_NOTIFY with TVN_GETDISPINFO
-    TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
 
     Size idealSize{};
 
