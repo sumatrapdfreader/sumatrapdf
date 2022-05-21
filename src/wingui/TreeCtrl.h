@@ -90,30 +90,12 @@ struct TreeGetDispInfoEvent : WndEvent {
 
 using TreeGetDispInfoHandler = std::function<void(TreeGetDispInfoEvent*)>;
 
-struct TreeItemDraggeddEvent {
-    TreeCtrl* treeCtrl = nullptr;
-    TreeItem draggedItem = 0;
-    TreeItem dragTargetItem = 0;
-    bool isStart = false;
-};
-
-using TreeItemDraggedHandler = std::function<void(TreeItemDraggeddEvent*)>;
-
 struct TreeCtrl : WindowBase {
     // creation parameters. must be set before Create() call
 
     // sets TVS_FULLROWSELECT style
     // https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
     bool fullRowSelect = false;
-
-    // set before Create() to enable drag&drop
-    bool supportDragDrop = false;
-
-    // TODO: possibly not needed anymore
-    bool isDragging = false;
-
-    TreeItem draggedItem = 0;
-    TreeItem dragTargetItem = 0;
 
     // treeModel not owned by us
     TreeModel* treeModel = nullptr;
@@ -144,9 +126,6 @@ struct TreeCtrl : WindowBase {
 
     // for WM_NOTIFY with TVN_GETDISPINFO
     TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
-
-    // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_LBUTTONUP
-    TreeItemDraggedHandler onTreeItemDragStartEnd = nullptr;
 
     Size idealSize{};
 

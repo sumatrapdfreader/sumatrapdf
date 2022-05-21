@@ -36,119 +36,6 @@ bool IsTreeKind(Kind k) {
     return k == kindTree;
 }
 
-static void DragMove(TreeCtrl* w, int xCur, int yCur) {
-    // logf("dragMove(): x: %d, y: %d\n", xCur, yCur);
-    // drag the item to the current position of the mouse pointer
-    // first convert the dialog coordinates to control coordinates
-    POINT pt{xCur, yCur};
-    auto parent = ::GetParent(w->hwnd);
-    MapWindowPoints(parent, w->hwnd, &pt, 1);
-    ImageList_DragMove(pt.x, pt.y);
-
-    // turn off the dragged image so the background can be refreshed.
-    ImageList_DragShowNolock(FALSE);
-
-    // find out if the pointer is on the item. If it is,
-    // highlight the item as a drop target.
-    TVHITTESTINFO tvht{};
-    tvht.pt.x = pt.x;
-    tvht.pt.y = pt.y;
-    HTREEITEM htiTarget = TreeView_HitTest(w->hwnd, &tvht);
-
-    if (htiTarget != nullptr) {
-        // TODO: don't know which is better
-        SendMessageW(w->hwnd, TVM_SELECTITEM, TVGN_DROPHILITE, (LPARAM)htiTarget);
-        // TreeView_SelectDropTarget(hwnd, htiTarget);
-    }
-    ImageList_DragShowNolock(TRUE);
-}
-
-static void DragEnd(TreeCtrl* w) {
-    HTREEITEM htiDest = TreeView_GetDropHilight(w->hwnd);
-    if (htiDest != nullptr) {
-        w->dragTargetItem = w->GetTreeItemByHandle(htiDest);
-        // logf("finished dragging 0x%p on 0x%p\n", draggedItem, dragTargetItem);
-        TreeItemDraggeddEvent ev;
-        ev.treeCtrl = w;
-        ev.draggedItem = w->draggedItem;
-        ev.dragTargetItem = w->dragTargetItem;
-        ev.isStart = false;
-        w->onTreeItemDragStartEnd(&ev);
-    }
-    ImageList_EndDrag();
-    TreeView_SelectDropTarget(w->hwnd, nullptr);
-    ReleaseCapture();
-    SetCursorCached(IDC_ARROW);
-    // ShowCursor(TRUE);
-    w->isDragging = false;
-    auto tm = w->treeModel;
-    w->draggedItem = TreeModel::kNullItem;
-    w->dragTargetItem = TreeModel::kNullItem;
-    HWND hwndParent = GetParent(w->hwnd);
-    UnregisterHandlerForMessage(hwndParent, WM_MOUSEMOVE);
-    UnregisterHandlerForMessage(hwndParent, WM_LBUTTONUP);
-}
-
-static void DispatchMouseDuringDrag(void* user, WndEvent* ev) {
-    auto w = (TreeCtrl*)user;
-    ev->w = w;
-    uint msg = ev->msg;
-
-    CrashIf(!w->isDragging);
-
-    if (msg == WM_MOUSEMOVE) {
-        if (!w->isDragging) {
-            return;
-        }
-        int x = GET_X_LPARAM(ev->lp);
-        int y = GET_Y_LPARAM(ev->lp);
-        DragMove(w, x, y);
-        ev->didHandle = true;
-        return;
-    }
-
-    if (msg == WM_LBUTTONUP) {
-        if (!w->isDragging) {
-            return;
-        }
-        DragEnd(w);
-        ev->didHandle = true;
-        return;
-    }
-
-    CrashIf(true);
-}
-
-// https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
-static void DragStart(TreeCtrl* w, NMTREEVIEWW* nmtv) {
-    // need to intercept mouse messages in the parent window during dragging
-    HWND hwndParent = GetParent(w->hwnd);
-    void* user = w;
-    RegisterHandlerForMessage(hwndParent, WM_MOUSEMOVE, DispatchMouseDuringDrag, user);
-    RegisterHandlerForMessage(hwndParent, WM_LBUTTONUP, DispatchMouseDuringDrag, user);
-
-    HTREEITEM hitem = nmtv->itemNew.hItem;
-    w->draggedItem = w->GetTreeItemByHandle(hitem);
-    HIMAGELIST himl = TreeView_CreateDragImage(w->hwnd, hitem);
-
-    ImageList_BeginDrag(himl, 0, 0, 0);
-    BOOL ok = ImageList_DragEnter(w->hwnd, nmtv->ptDrag.x, nmtv->ptDrag.x);
-    CrashIf(!ok);
-
-    if (w->onTreeItemDragStartEnd) {
-        TreeItemDraggeddEvent ev;
-        ev.treeCtrl = w;
-        ev.draggedItem = w->draggedItem;
-        ev.isStart = true;
-        w->onTreeItemDragStartEnd(&ev);
-    }
-
-    // ShowCursor(FALSE);
-    SetCursorCached(IDC_HAND);
-    SetCapture(GetParent(w->hwnd));
-    w->isDragging = true;
-}
-
 static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
@@ -404,17 +291,6 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         w->onTreeGetDispInfo(&a);
         return;
     }
-
-    // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
-    if (code == TVN_BEGINDRAG) {
-        // we don't do dragging if not asked for drag end notification
-        if (!w->onTreeItemDragStartEnd) {
-            return;
-        }
-        DragStart(w, (NMTREEVIEWW*)lp);
-        ev->didHandle = true;
-        return;
-    }
 }
 
 static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
@@ -501,9 +377,6 @@ TreeCtrl::TreeCtrl() {
 }
 
 bool TreeCtrl::Create(HWND parent) {
-    if (!supportDragDrop) {
-        dwStyle |= TVS_DISABLEDRAGDROP;
-    }
     if (fullRowSelect) {
         dwStyle |= TVS_FULLROWSELECT;
         dwStyle &= ~TVS_HASLINES;
@@ -512,13 +385,6 @@ bool TreeCtrl::Create(HWND parent) {
     bool ok = WindowBase::Create(parent);
     if (!ok) {
         return false;
-    }
-
-    if (supportDragDrop) {
-        // we need image list to create drag image in DragStart()
-        HIMAGELIST himl = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1);
-        CrashIf(!himl);
-        TreeView_SetImageList(hwnd, himl, TVSIL_NORMAL);
     }
 
     if (IsWindowsVistaOrGreater()) {
