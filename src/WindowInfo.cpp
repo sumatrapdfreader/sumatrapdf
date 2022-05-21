@@ -13,7 +13,6 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/TreeCtrl.h"
-#include "wingui/TooltipCtrl.h"
 #include "wingui/TabsCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"

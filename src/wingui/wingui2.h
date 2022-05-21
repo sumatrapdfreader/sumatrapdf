@@ -1,10 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+//--- Wnd
+
 namespace wg {
 
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
 struct CreateControlArgs {
@@ -130,7 +131,7 @@ bool PreTranslateMessage(MSG& msg);
 
 } // namespace wg
 
-//- Static
+//--- Static
 
 namespace wg {
 using ClickedHandler = std::function<void()>;
@@ -156,7 +157,7 @@ struct Static : Wnd {
 
 } // namespace wg
 
-//- Button
+//--- Button
 namespace wg {
 
 struct ButtonCreateArgs {
@@ -184,8 +185,34 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s);
 
 } // namespace wg
 
-// Edit
+//--- Tooltip
+namespace wg {
 
+struct TooltipCreateArgs {
+    HWND parent = nullptr;
+    HFONT font = nullptr;
+};
+
+struct Tooltip : Wnd {
+    Tooltip();
+    HWND Create(const TooltipCreateArgs&);
+    Size GetIdealSize() override;
+
+    void ShowOrUpdate(const char* s, Rect& rc, bool multiline);
+    void Hide();
+
+    void SetDelayTime(int type, int timeInMs);
+    void SetMaxWidth(int dx);
+    int Count();
+    bool IsShowing();
+
+    // window this tooltip is associated with
+    HWND parent = nullptr;
+};
+
+} // namespace wg
+
+//--- Edit
 namespace wg {
 using TextChangedHandler = std::function<void()>;
 
@@ -219,6 +246,7 @@ struct Edit : Wnd {
 };
 } // namespace wg
 
+//--- ListBox
 namespace wg {
 
 using ListBoxSelectionChangedHandler = std::function<void()>;
@@ -258,8 +286,7 @@ struct ListBox : Wnd {
 
 } // namespace wg
 
-//- CheckboxCtrl
-
+//--- CheckboxCtrl
 namespace wg {
 
 enum class CheckState {
@@ -296,8 +323,7 @@ struct Checkbox : Wnd {
 
 } // namespace wg
 
-//- Progress
-
+//--- Progress
 namespace wg {
 
 struct ProgressCreateArgs {
@@ -323,8 +349,7 @@ struct Progress : Wnd {
 
 } // namespace wg
 
-//- DropDown
-
+//--- DropDown
 namespace wg {
 
 using DropDownSelectionChangedHandler = std::function<void()>;
@@ -355,7 +380,7 @@ struct DropDown : Wnd {
 
 } // namespace wg
 
-//- Trackbar
+//--- Trackbar
 
 namespace wg {
 
@@ -400,7 +425,7 @@ struct Trackbar : Wnd {
 
 } // namespace wg
 
-// - Splitter
+// -- Splitter
 namespace wg {
 enum class SplitterType {
     Horiz,
@@ -451,6 +476,8 @@ struct Splitter : public Wnd {
 };
 
 } // namespace wg
+
+//--- Webview2
 
 // TODO: maybe hide those inside a private struct
 typedef interface ICoreWebView2 ICoreWebView2;

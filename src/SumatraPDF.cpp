@@ -26,11 +26,9 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
-#include "wingui/TooltipCtrl.h"
 #include "wingui/TabsCtrl.h"
 
 #include "wingui/wingui2.h"
-using namespace wg;
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -89,6 +87,8 @@ using namespace wg;
 #include "CommandPalette.h"
 
 #include "utils/Log.h"
+
+using namespace wg;
 
 using std::placeholders::_1;
 
@@ -1404,8 +1404,10 @@ static WindowInfo* CreateWindowInfo() {
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
 
-    win->infotip = new TooltipCtrl();
-    win->infotip->Create(win->hwndCanvas);
+    win->infotip = new Tooltip();
+    TooltipCreateArgs args;
+    args.parent = win->hwndCanvas;
+    win->infotip->Create(args);
 
     CreateCaption(win);
     CreateTabbar(win);

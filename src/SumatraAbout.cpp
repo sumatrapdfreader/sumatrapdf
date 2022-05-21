@@ -8,10 +8,9 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TooltipCtrl.h"
+#include "wingui/wingui2.h"
 
 #include "Settings.h"
 #include "Controller.h"
@@ -67,9 +66,11 @@ constexpr int kVersionTxtFontSize = 12;
 
 #define LAYOUT_LTR 0
 
+using namespace wg;
+
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
-static TooltipCtrl* gAboutTooltip = nullptr;
+static Tooltip* gAboutTooltip = nullptr;
 static const char* gClickedURL = nullptr;
 
 struct AboutLayoutInfoEl {
@@ -459,8 +460,10 @@ static void CreateInfotipForLink(StaticLinkInfo* linkInfo) {
         return;
     }
 
-    gAboutTooltip = new TooltipCtrl();
-    gAboutTooltip->Create(gHwndAbout);
+    gAboutTooltip = new Tooltip();
+    TooltipCreateArgs args;
+    args.parent = gHwndAbout;
+    gAboutTooltip->Create(args);
     gAboutTooltip->ShowOrUpdate(linkInfo->infotip, linkInfo->rect, false);
 }
 

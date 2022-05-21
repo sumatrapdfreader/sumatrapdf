@@ -84,6 +84,6 @@ void FileUtilTest() {
 
         // path = path::Join("foo\\", "\\bar\\", "\\z");
         // utassert(str::Eq(path, "foo\\bar\\z"));
-        //str::Free(path);
+        // str::Free(path);
     }
 }

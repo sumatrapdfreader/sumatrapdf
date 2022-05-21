@@ -780,11 +780,12 @@ static void WndRegisterClass(const WCHAR* className) {
 }
 
 HWND Wnd::CreateControl(const CreateControlArgs& args) {
-    CrashIf(!args.parent);
     CrashIf(!args.className);
 
     DWORD style = args.style;
-    style |= WS_CHILD;
+    if (args.parent) {
+        style |= WS_CHILD;
+    }
     if (args.visible) {
         style |= WS_VISIBLE;
     } else {
@@ -1048,7 +1049,7 @@ LRESULT Static::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
 
 } // namespace wg
 
-//- Button
+//--- Button
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
 namespace wg {
@@ -1146,7 +1147,118 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
 
 } // namespace wg
 
-//- Edit
+//--- Tooltip
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
+
+namespace wg {
+
+Kind kindTooltip = "tooltip";
+
+Tooltip::Tooltip() {
+    kind = kindTooltip;
+}
+
+HWND Tooltip::Create(const TooltipCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.className = TOOLTIPS_CLASS;
+    cargs.font = args.font;
+    cargs.style = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
+    cargs.exStyle = WS_EX_TOPMOST;
+
+    parent = args.parent;
+
+    Wnd::CreateControl(cargs);
+    SetDelayTime(TTDT_AUTOPOP, 32767);
+    return hwnd;
+}
+Size Tooltip::GetIdealSize() {
+    return {100, 32}; // not used as this is top-level window
+}
+
+void Tooltip::SetMaxWidth(int dx) {
+    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
+}
+
+static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
+
+static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
+    int dx = -1;
+    if (multiline || str::FindChar(s, '\n')) {
+        // TODO: dpi scale
+        dx = MULTILINE_INFOTIP_WIDTH_PX;
+    }
+    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
+}
+
+void Tooltip::ShowOrUpdate(const char* s, Rect& rc, bool multiline) {
+    WCHAR* ws = ToWstrTemp(s);
+    bool isShowing = IsShowing();
+    if (!isShowing) {
+        SetMaxWidthForText(hwnd, s, multiline);
+        TOOLINFOW ti = {0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = parent;
+        ti.uFlags = TTF_SUBCLASS;
+        ti.rect = ToRECT(rc);
+        ti.lpszText = (WCHAR*)ws;
+        SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+        return;
+    }
+
+    constexpr int bufSize = 512;
+    WCHAR buf[bufSize] = {0};
+    TOOLINFOW tiCurr = {0};
+    tiCurr.cbSize = sizeof(tiCurr);
+    tiCurr.hwnd = parent;
+    tiCurr.lpszText = buf;
+    SendMessageW(hwnd, TTM_GETTEXT, bufSize - 1, (LPARAM)&tiCurr);
+    // TODO: should also compare ti.rect wit rc
+    if (str::Eq(buf, ws)) {
+        return;
+    }
+
+    SetMaxWidthForText(hwnd, s, multiline);
+    tiCurr.lpszText = (WCHAR*)ws;
+    tiCurr.uFlags = TTF_SUBCLASS;
+    tiCurr.rect = ToRECT(rc);
+    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&tiCurr);
+    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&tiCurr);
+}
+
+int Tooltip::Count() {
+    int n = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    return n;
+}
+
+bool Tooltip::IsShowing() {
+    return Count() > 0;
+}
+
+void Tooltip::Hide() {
+    if (!IsShowing()) {
+        return;
+    }
+
+    TOOLINFO ti{0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = hwnd;
+    SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime
+// type is: TTDT_AUTOPOP, TTDT_INITIAL, TTDT_RESHOW, TTDT_AUTOMATIC
+// timeInMs is max 32767 (~32 secs)
+void Tooltip::SetDelayTime(int type, int timeInMs) {
+    CrashIf(!IsValidDelayType(type));
+    CrashIf(timeInMs < 0);
+    CrashIf(timeInMs > 32767); // TODO: or is it 65535?
+    SendMessageW(hwnd, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
+}
+
+} // namespace wg
+
+//--- Edit
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
 

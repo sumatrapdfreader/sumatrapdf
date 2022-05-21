@@ -9,7 +9,8 @@ struct FrameRateWnd;
 struct LabelWithCloseWnd;
 namespace wg {
 struct Splitter;
-}
+struct Tooltip;
+} // namespace wg
 struct CaptionInfo;
 struct TabsCtrl2;
 
@@ -23,7 +24,6 @@ struct DisplayModel;
 struct TabInfo;
 
 struct TreeCtrl;
-struct TooltipCtrl;
 
 struct Annotation;
 struct ILinkHandler;
@@ -142,7 +142,7 @@ struct WindowInfo {
     CaptionInfo* caption = nullptr;
     int extendedFrameHeight = 0;
 
-    TooltipCtrl* infotip = nullptr;
+    wg::Tooltip* infotip = nullptr;
 
     HMENU menu = nullptr;
     bool isMenuHidden = false; // not persisted at shutdown
