@@ -545,11 +545,62 @@ void DeleteWnd(Progress**);
 
 namespace wg {
 
+struct TreeView;
+
 struct TreeViewCreateArgs {
     HWND parent = nullptr;
     HFONT font = nullptr;
     bool fullRowSelect = false;
 };
+
+struct TreeItemGetTooltipEvent2 {
+    TreeView* treeCtrl = nullptr;
+    TreeItem treeItem = 0;
+    NMTVGETINFOTIPW* info = nullptr;
+};
+
+using TreeItemGetTooltipHandler2 = std::function<void(TreeItemGetTooltipEvent2*)>;
+
+struct TreeItemCustomDrawEvent2 {
+    TreeView* treeCtrl = nullptr;
+    TreeItem treeItem = 0;
+    NMTVCUSTOMDRAW* nm = nullptr;
+};
+
+using TreeItemCustomDrawHandler2 = std::function<void(TreeItemCustomDrawEvent2*)>;
+
+struct TreeSelectionChangedEvent2 {
+    TreeView* treeCtrl = nullptr;
+    TreeItem prevSelectedItem = 0;
+    TreeItem selectedItem = 0;
+    NMTREEVIEW* nmtv = nullptr;
+    bool byKeyboard = false;
+    bool byMouse = false;
+};
+
+using TreeSelectionChangedHandler2 = std::function<void(TreeSelectionChangedEvent2*)>;
+
+struct TreeClickEvent2 {
+    TreeView* treeCtrl = nullptr;
+    TreeItem treeItem = 0;
+    bool isDblClick = false;
+
+    // mouse x,y position relative to the window
+    Point mouseWindow{};
+    // global (screen) mouse x,y position
+    Point mouseGlobal{};
+};
+
+using TreeClickHandler2 = std::function<void(TreeClickEvent2*)>;
+
+struct TreeKeyDownEvent2 {
+    TreeView* treeCtrl = nullptr;
+    NMTVKEYDOWN* nmkd = nullptr;
+    int keyCode = 0;
+    u32 flags = 0;
+};
+
+using TreeKeyDownHandler2 = std::function<void(TreeKeyDownEvent2*)>;
 
 struct TreeView : Wnd {
     TreeView();
@@ -588,6 +639,21 @@ struct TreeView : Wnd {
     Size idealSize{};
 
     TreeModel* treeModel = nullptr; // not owned by us
+
+    // for WM_NOTIFY with TVN_GETINFOTIP
+    TreeItemGetTooltipHandler2 onGetTooltip = nullptr;
+
+    // for WM_NOTIFY wiht NM_CUSTOMDRAW
+    TreeItemCustomDrawHandler2 onTreeItemCustomDraw = nullptr;
+
+    // for WM_NOTIFY with TVN_SELCHANGED
+    TreeSelectionChangedHandler2 onTreeSelectionChanged = nullptr;
+
+    // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
+    TreeClickHandler2 onTreeClick = nullptr;
+
+    // for WM_NOITFY with TVN_KEYDOWN
+    TreeKeyDownHandler2 onTreeKeyDown = nullptr;
 
     // private
     TVITEMW item{};

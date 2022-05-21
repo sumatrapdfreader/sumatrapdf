@@ -2460,10 +2460,6 @@ Size TreeView::GetIdealSize() {
     return {idealSize.dx, idealSize.dy};
 }
 
-LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
-    return 0;
-}
-
 void TreeView::SetToolTipsDelayTime(int type, int timeInMs) {
     CrashIf(!IsValidDelayType(type));
     CrashIf(timeInMs < 0);
@@ -2837,129 +2833,114 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
     }
     return ti;
 }
-} // namespace wg
 
-#if 0
-
-static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
-    uint msg = ev->msg;
-
-    CrashIf(msg != WM_NOTIFY);
-
-    TreeCtrl* w = (TreeCtrl*)user;
-    CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
-
-    ev->w = w;
-    LPARAM lp = ev->lp;
+LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
+    TreeView* w = this;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
 
     auto code = nmtv->hdr.code;
-
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
     if (code == TVN_GETINFOTIP) {
-        if (!w->onGetTooltip) {
-            return;
+        if (!onGetTooltip) {
+            return 0;
         }
-        TreeItemGetTooltipEvent a{};
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.info = (NMTVGETINFOTIPW*)(nmtv);
-        a.treeItem = w->GetTreeItemByHandle(a.info->hItem);
-        w->onGetTooltip(&a);
-        return;
+        TreeItemGetTooltipEvent2 ev;
+        ev.treeCtrl = w;
+        ev.info = (NMTVGETINFOTIPW*)(nmtv);
+        ev.treeItem = GetTreeItemByHandle(ev.info->hItem);
+        onGetTooltip(&ev);
+        return 0;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
     if (code == NM_CUSTOMDRAW) {
-        if (!w->onTreeItemCustomDraw) {
-            return;
+        if (!onTreeItemCustomDraw) {
+            return 0;
         }
-        TreeItemCustomDrawEvent a;
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.nm = (NMTVCUSTOMDRAW*)lp;
-        HTREEITEM hItem = (HTREEITEM)a.nm->nmcd.dwItemSpec;
+        TreeItemCustomDrawEvent2 ev;
+        ev.treeCtrl = w;
+        ev.nm = (NMTVCUSTOMDRAW*)lp;
+        HTREEITEM hItem = (HTREEITEM)ev.nm->nmcd.dwItemSpec;
         // it can be 0 in CDDS_PREPAINT state
-        a.treeItem = w->GetTreeItemByHandle(hItem);
+        ev.treeItem = GetTreeItemByHandle(hItem);
         // TODO: seeing this in crash reports because GetTVITEM() returns nullptr
         // should log more info
         // SubmitBugReportIf(!a.treeItem);
-        if (!a.treeItem) {
-            return;
+        if (!ev.treeItem) {
+            return 0;
         }
-        w->onTreeItemCustomDraw(&a);
-        return;
+        onTreeItemCustomDraw(&ev);
+        return 0;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
-        if (!w->onTreeSelectionChanged) {
-            return;
+        if (!onTreeSelectionChanged) {
+            return 0;
         }
-        TreeSelectionChangedEvent a;
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.nmtv = nmtv;
-        auto action = a.nmtv->action;
+        TreeSelectionChangedEvent2 ev;
+        ev.treeCtrl = w;
+        ev.nmtv = nmtv;
+        auto action = ev.nmtv->action;
         if (action == TVC_BYKEYBOARD) {
-            a.byKeyboard = true;
+            ev.byKeyboard = true;
         } else if (action == TVC_BYMOUSE) {
-            a.byMouse = true;
+            ev.byMouse = true;
         }
-        a.prevSelectedItem = w->GetTreeItemByHandle(nmtv->itemOld.hItem);
-        a.selectedItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
-        w->onTreeSelectionChanged(&a);
-        return;
+        ev.prevSelectedItem = w->GetTreeItemByHandle(nmtv->itemOld.hItem);
+        ev.selectedItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
+        onTreeSelectionChanged(&ev);
+        return 0;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
-        if (!w->onTreeClick) {
-            return;
+        if (!onTreeClick) {
+            return 0;
         }
         NMHDR* nmhdr = (NMHDR*)lp;
-        TreeClickEvent a{};
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.isDblClick = (code == NM_DBLCLK);
+        TreeClickEvent2 ev{};
+        ev.treeCtrl = w;
+        ev.isDblClick = (code == NM_DBLCLK);
 
         DWORD pos = GetMessagePos();
-        a.mouseGlobal.x = GET_X_LPARAM(pos);
-        a.mouseGlobal.y = GET_Y_LPARAM(pos);
-        POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
+        ev.mouseGlobal.x = GET_X_LPARAM(pos);
+        ev.mouseGlobal.y = GET_Y_LPARAM(pos);
+        POINT pt{ev.mouseGlobal.x, ev.mouseGlobal.y};
         if (pt.x != -1) {
             MapWindowPoints(HWND_DESKTOP, nmhdr->hwndFrom, &pt, 1);
         }
-        a.mouseWindow.x = pt.x;
-        a.mouseWindow.y = pt.y;
+        ev.mouseWindow.x = pt.x;
+        ev.mouseWindow.y = pt.y;
 
         // determine which item has been clicked (if any)
         TVHITTESTINFO ht{};
-        ht.pt.x = a.mouseWindow.x;
-        ht.pt.y = a.mouseWindow.y;
+        ht.pt.x = ev.mouseWindow.x;
+        ht.pt.y = ev.mouseWindow.y;
         TreeView_HitTest(nmhdr->hwndFrom, &ht);
         if ((ht.flags & TVHT_ONITEM)) {
-            a.treeItem = w->GetTreeItemByHandle(ht.hItem);
+            ev.treeItem = GetTreeItemByHandle(ht.hItem);
         }
-        w->onTreeClick(&a);
-        return;
+        onTreeClick(&ev);
+        return 0;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-keydown
     if (code == TVN_KEYDOWN) {
-        if (!w->onTreeKeyDown) {
-            return;
+        if (!onTreeKeyDown) {
+            return 0;
         }
         NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
-        TreeKeyDownEvent a{};
-        CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
-        a.nmkd = nmkd;
-        a.keyCode = nmkd->wVKey;
-        a.flags = nmkd->flags;
-        w->onTreeKeyDown(&a);
-        return;
+        TreeKeyDownEvent2 ev{};
+        ev.treeCtrl = w;
+        ev.nmkd = nmkd;
+        ev.keyCode = nmkd->wVKey;
+        ev.flags = nmkd->flags;
+        onTreeKeyDown(&ev);
+        return 0;
     }
+
+    return 0;
 }
 
-#endif
+} // namespace wg
