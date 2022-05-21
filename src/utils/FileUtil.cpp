@@ -76,7 +76,7 @@ char* Join(const char* path, const char* fileName, Allocator* allocator) {
     if (!IsSep(path[str::Len(path) - 1])) {
         sepStr = "\\";
     }
-    return str::Join(path, sepStr, fileName, allocator);
+    return str::Join(allocator, path, sepStr, fileName);
 }
 
 bool IsDirectory(const char* path) {

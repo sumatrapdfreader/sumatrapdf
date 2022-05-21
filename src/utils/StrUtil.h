@@ -122,10 +122,10 @@ void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew);
 void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
 
+char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3);
+WCHAR* Join(Allocator* allocator, const WCHAR*, const WCHAR*, const WCHAR* s3);
 char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
-char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator);
-WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3, Allocator* allocator);
 
 bool Eq(const char* s1, const char* s2);
 bool Eq(ByteSlice sp1, ByteSlice sp2);
@@ -242,11 +242,8 @@ bool EmptyOrWhiteSpaceOnly(const char* sv);
 namespace url {
 
 void DecodeInPlace(char* url);
-
 bool IsAbsolute(const char* url);
-
 char* GetFullPathTemp(const char* url);
-
 char* GetFileName(const char* url);
 
 } // namespace url

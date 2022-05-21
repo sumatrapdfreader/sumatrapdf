@@ -50,11 +50,11 @@ TempWstr DupTemp(const WCHAR* s, size_t cch) {
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
-    return Join(s1, s2, s3, GetTempAllocator());
+    return Join(GetTempAllocator(), s1, s2, s3);
 }
 
 TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    return Join(s1, s2, s3, GetTempAllocator());
+    return Join(GetTempAllocator(), s1, s2, s3);
 }
 
 } // namespace str
