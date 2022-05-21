@@ -2,8 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/DirIter.h"
 #include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/DirIter.h"
 
 // try to filter out things that are not files
 // or not meant to be used by other applications
@@ -34,13 +35,13 @@ static bool IsSpecialDir(const char* s) {
     return str::Eq(s, ".") || str::Eq(s, "..");
 }
 
-bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const char*)>& cb) {
+bool DirTraverse(const char* dir, bool recurse, const std::function<bool(WIN32_FIND_DATAW* fd, const char*)>& cb) {
     auto dirW = ToWstrTemp(dir);
     WCHAR* pattern = path::JoinTemp(dirW, L"*");
 
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW(pattern, &fd);
+    if (!IsValidHandle(h)) {
         return false;
     }
 
@@ -50,20 +51,28 @@ bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const c
     char* name;
     char* path;
     do {
-        isFile = IsRegularFile(fdata.dwFileAttributes);
-        isDir = IsDirectory(fdata.dwFileAttributes);
-        name = ToUtf8Temp(fdata.cFileName);
+        isFile = IsRegularFile(fd.dwFileAttributes);
+        isDir = IsDirectory(fd.dwFileAttributes);
+        name = ToUtf8Temp(fd.cFileName);
         path = path::JoinTemp(dir, name);
         if (isFile) {
-            cont = cb(path);
+            cont = cb(&fd, path);
         } else if (recurse && isDir) {
             if (!IsSpecialDir(name)) {
                 cont = DirTraverse(path, recurse, cb);
             }
         }
-    } while (cont && FindNextFileW(hfind, &fdata));
-    FindClose(hfind);
+    } while (cont && FindNextFileW(h, &fd));
+    FindClose(h);
     return true;
+}
+
+bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const char*)>& cb) {
+    bool ok = DirTraverse(dir, recurse, [&cb](WIN32_FIND_DATAW*, const char* path) -> bool {
+        bool cont = cb(path);
+        return cont;
+    });
+    return ok;
 }
 
 bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles) {
@@ -76,11 +85,14 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
         return false;
     }
 
+    bool append;
     do {
-        bool append = !dirsInsteadOfFiles;
+        append = false;
         char* name = ToUtf8Temp(fdata.cFileName);
-        // TODO: don't append FILE_ATTRIBUTE_DEVICE etc.
-        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        DWORD attrs = fdata.dwFileAttributes;
+        if (IsRegularFile(attrs)) {
+            append = !dirsInsteadOfFiles;
+        } else if (IsDirectory(attrs)) {
             append = dirsInsteadOfFiles && !IsSpecialDir(name);
         }
         if (append) {
@@ -119,4 +131,11 @@ bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::functi
     } while (FindNextFileW(hfind, &fdata));
     FindClose(hfind);
     return true;
+}
+
+i64 GetFileSize(WIN32_FIND_DATAW* fd) {
+    ULARGE_INTEGER ul;
+    ul.HighPart = fd->nFileSizeHigh;
+    ul.LowPart = fd->nFileSizeLow;
+    return (i64)ul.QuadPart;
 }

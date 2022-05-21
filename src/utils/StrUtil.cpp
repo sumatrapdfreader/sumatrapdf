@@ -2703,6 +2703,16 @@ char* StrVec::RemoveAtFast(size_t idx) {
     return res;
 }
 
+// return true if did remove
+bool StrVec::Remove(const char* s) {
+    int idx = Find(s);
+    if (idx >= 0) {
+        RemoveAt(idx);
+        return true;
+    }
+    return false;
+}
+
 static bool strLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
         if (str::IsEmpty(s2)) {

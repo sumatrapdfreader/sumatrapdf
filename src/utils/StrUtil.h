@@ -441,6 +441,7 @@ struct StrVec {
     char* PopAt(int);
     char* RemoveAtFast(size_t idx);
     char* RemoveAt(int idx);
+    bool Remove(const char*);
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;

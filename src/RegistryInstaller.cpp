@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/DirIter.h"
 
 #include "SumatraConfig.h"
 #include "Version.h"
@@ -30,35 +31,13 @@ static char* GetInstallDate() {
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(const char* dir, bool recur) {
     logf("GetDirSize(%s)\n", dir);
-    char* dirPattern = path::JoinTemp(dir, "*");
-    WIN32_FIND_DATAW findData;
-
-    WCHAR* patternW = ToWstrTemp(dirPattern);
-    HANDLE h = FindFirstFile(patternW, &findData);
-    if (h == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-
-    DWORD totalSize = 0;
-    do {
-        DWORD fattr = findData.dwFileAttributes;
-        bool isDir = fattr & FILE_ATTRIBUTE_DIRECTORY;
-        char* name = ToUtf8Temp(findData.cFileName);
-        if (isDir) {
-            if (recur && !str::Eq(name, ".") && !str::Eq(name, "..")) {
-                char* subdir = path::JoinTemp(dir, name);
-                totalSize += GetDirSize(subdir, recur);
-            }
-        } else {
-            bool isNormal = fattr & FILE_ATTRIBUTE_NORMAL;
-            if (isNormal) {
-                totalSize += findData.nFileSizeLow;
-            }
-        }
-    } while (FindNextFile(h, &findData) != 0);
-    FindClose(h);
-
-    return totalSize;
+    i64 totalSize = 0;
+    DirTraverse(dir, recur, [&totalSize](WIN32_FIND_DATAW* fd, const char*) -> bool {
+        i64 fileSize = GetFileSize(fd);
+        totalSize += fileSize;
+        return true;
+    });
+    return (DWORD)totalSize;
 }
 
 bool WriteUninstallerRegistryInfo(HKEY hkey) {

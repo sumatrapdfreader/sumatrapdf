@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/CryptoUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/DirIter.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
@@ -50,23 +51,14 @@ static char* GetThumbnailPathTemp(const char* filePath) {
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
-    AutoFreeStr pattern(path::Join(thumbsPath, kPngExt));
+    char* pattern = path::JoinTemp(thumbsPath, kPngExt);
 
-    StrVec files;
-    WIN32_FIND_DATA fdata;
+    StrVec filePaths;
 
-    WCHAR* pw = ToWstrTemp(pattern);
-    HANDLE hfind = FindFirstFileW(pw, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
+    bool ok = CollectPathsFromDirectory(pattern, filePaths, false);
+    if (!ok) {
         return;
     }
-    do {
-        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            char* s = ToUtf8Temp(fdata.cFileName);
-            files.Append(s);
-        }
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
 
     // remove files that should not be deleted
     Vec<FileState*> list;
@@ -76,21 +68,14 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
         if (n++ > kFileHistoryMaxFrequent * 2) {
             break;
         }
-        char* bmpPath = GetThumbnailPathTemp(fs->filePath);
-        if (!bmpPath) {
-            continue;
+        char* path = GetThumbnailPathTemp(fs->filePath);
+        if (path) {
+            filePaths.Remove(path);
         }
-        const char* fileName = path::GetBaseNameTemp(bmpPath);
-        int idx = files.Find(fileName);
-        if (idx < 0) {
-            continue;
-        }
-        char* path = files.RemoveAt(idx);
     }
 
-    for (char* path : files) {
-        char* bmpPath = path::JoinTemp(thumbsPath, path, nullptr);
-        file::Delete(bmpPath);
+    for (char* path : filePaths) {
+        file::Delete(path);
     }
 }
 
