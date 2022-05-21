@@ -3,13 +3,13 @@
 
 struct TreeCtrl;
 
-struct TreeItmGetTooltipEvent : WndEvent {
+struct TreeItemGetTooltipEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem = 0;
     NMTVGETINFOTIPW* info = nullptr;
 };
 
-using TreeItemGetTooltipHandler = std::function<void(TreeItmGetTooltipEvent*)>;
+using TreeItemGetTooltipHandler = std::function<void(TreeItemGetTooltipEvent*)>;
 
 struct TreeSelectionChangedEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;

@@ -56,8 +56,6 @@ struct Wnd : public ILayout {
     HWND CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
                   int height, HWND parent, HMENU idOrMenu, LPVOID lparam = NULL);
 
-    virtual bool PreTranslateMessage(MSG& msg);
-
     void Attach(HWND hwnd);
     void AttachDlgItem(UINT id, HWND parent);
 
@@ -67,33 +65,29 @@ struct Wnd : public ILayout {
     void Subclass();
     // void UnSubclass();
 
-    // Message handlers that can be over-written
+    // over-ride those to hook into message processing
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    virtual bool PreTranslateMessage(MSG& msg);
+    virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
+    virtual LRESULT OnNotifyReflect(WPARAM, LPARAM);
+    virtual LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
 
     virtual void OnAttach();
     virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
     virtual void OnClose();
     virtual int OnCreate(CREATESTRUCT*);
     virtual void OnDestroy();
-
     virtual void OnContextMenu(HWND hwnd, Point pt);
     virtual void OnDropFiles(HDROP drop_info);
     virtual void OnGetMinMaxInfo(MINMAXINFO* mmi);
     virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
     virtual void OnMove(POINTS* pts);
-    virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
-    virtual LRESULT OnNotifyReflect(WPARAM, LPARAM);
     virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
     virtual bool OnEraseBkgnd(HDC dc);
     virtual void OnSize(UINT msg, UINT type, SIZE size);
     virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
     virtual void OnTimer(UINT_PTR event_id);
     virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
-    virtual LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
-
-    LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-    LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
-    LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
 
     void Close();
     void SetPos(RECT* r);
@@ -109,6 +103,10 @@ struct Wnd : public ILayout {
     bool IsFocused() const;
     void SetRtl(bool) const;
     void SetBackgroundColor(COLORREF);
+
+    LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
 
     Kind kind = nullptr;
 

@@ -49,7 +49,7 @@
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
+static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
     auto treeCtrl = ev->treeCtrl;
     auto tm = treeCtrl->treeModel;
     auto ti = ev->treeItem;

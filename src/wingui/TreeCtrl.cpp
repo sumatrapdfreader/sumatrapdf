@@ -245,7 +245,7 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         if (!w->onGetTooltip) {
             return;
         }
-        TreeItmGetTooltipEvent a{};
+        TreeItemGetTooltipEvent a{};
         CopyWndEvent cp(&a, ev);
         a.treeCtrl = w;
         a.info = (NMTVGETINFOTIPW*)(nmtv);
