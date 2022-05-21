@@ -241,13 +241,10 @@ bool EmptyOrWhiteSpaceOnly(const char* sv);
 
 namespace url {
 
-void DecodeInPlace(char* urlA);
-void DecodeInPlace(WCHAR* url);
+void DecodeInPlace(char* url);
 
-bool IsAbsolute(const WCHAR* url);
 bool IsAbsolute(const char* url);
 
-WCHAR* GetFullPath(const WCHAR* url);
 char* GetFullPathTemp(const char* url);
 
 char* GetFileName(const char* url);

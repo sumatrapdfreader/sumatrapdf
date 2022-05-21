@@ -530,7 +530,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     fflush(stdout);
 
     LoadArgs args(fileName, nullptr);
-    //args.forceReuse = rand() % 3 != 1;
+    // args.forceReuse = rand() % 3 != 1;
     args.win = st->win;
     args.forceReuse = true;
     args.noPlaceWindow = true;

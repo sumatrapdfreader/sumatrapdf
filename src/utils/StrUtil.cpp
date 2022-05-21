@@ -1095,7 +1095,6 @@ void DecodeInPlace(char* url) {
     }
     *url = '\0';
 }
-
 } // namespace url
 
 // seqstrings is for size-efficient implementation of:
@@ -2513,34 +2512,10 @@ Failure:
 
 namespace url {
 
-bool IsAbsolute(const WCHAR* url) {
-    const WCHAR* colon = str::FindChar(url, ':');
-    const WCHAR* hash = str::FindChar(url, '#');
-    return colon && (!hash || hash > colon);
-}
-
 bool IsAbsolute(const char* url) {
     const char* colon = str::FindChar(url, ':');
     const char* hash = str::FindChar(url, '#');
     return colon && (!hash || hash > colon);
-}
-void DecodeInPlace(WCHAR* url) {
-    if (!str::FindChar(url, '%')) {
-        return;
-    }
-    // URLs are usually UTF-8 encoded
-    auto urlA(ToUtf8Temp(url));
-    DecodeInPlace(urlA);
-    // convert back in place
-    CrashIf(str::Len(url) >= INT_MAX);
-    MultiByteToWideChar(CP_UTF8, 0, urlA, -1, url, (int)str::Len(url) + 1);
-}
-
-WCHAR* GetFullPath(const WCHAR* url) {
-    WCHAR* path = str::Dup(url);
-    str::TransCharsInPlace(path, L"#?", L"\0\0");
-    DecodeInPlace(path);
-    return path;
 }
 
 char* GetFullPathTemp(const char* url) {
@@ -2548,22 +2523,6 @@ char* GetFullPathTemp(const char* url) {
     str::TransCharsInPlace(path, "#?", "\0\0");
     DecodeInPlace(path);
     return path;
-}
-
-WCHAR* GetFileName(const WCHAR* url) {
-    AutoFreeWstr path(str::Dup(url));
-    str::TransCharsInPlace(path, L"#?", L"\0\0");
-    WCHAR* base = path + str::Len(path);
-    for (; base > path; base--) {
-        if ('/' == base[-1] || '\\' == base[-1]) {
-            break;
-        }
-    }
-    if (str::IsEmpty(base)) {
-        return nullptr;
-    }
-    DecodeInPlace(base);
-    return str::Dup(base);
 }
 
 char* GetFileName(const char* url) {
@@ -2578,9 +2537,8 @@ char* GetFileName(const char* url) {
     if (str::IsEmpty(base)) {
         return nullptr;
     }
-    WCHAR* ws = ToWstrTemp(base);
-    DecodeInPlace(ws);
-    return ToUtf8(ws);
+    DecodeInPlace(base);
+    return str::Dup(base);
 }
 
 } // namespace url
