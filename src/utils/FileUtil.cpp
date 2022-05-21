@@ -618,16 +618,6 @@ int ReadN(const char* path, char* buf, size_t toRead) {
 }
 
 // Return true if the file wasn't there or was successfully deleted
-bool Delete(const WCHAR* filePath) {
-    BOOL ok = DeleteFileW(filePath);
-    ok |= (GetLastError() == ERROR_FILE_NOT_FOUND);
-    if (!ok) {
-        LogLastError();
-        return false;
-    }
-    return true;
-}
-
 bool Delete(const char* filePathA) {
     if (!filePathA) {
         return false;

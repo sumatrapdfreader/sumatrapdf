@@ -40,18 +40,12 @@ bool Exists(const char* path);
 
 FILE* OpenFILE(const char* path);
 HANDLE OpenReadOnly(const char*);
-
 ByteSlice ReadFileWithAllocator(const char* path, Allocator*);
-
 ByteSlice ReadFile(const char* path);
-
 int ReadN(const char* path, char* buf, size_t toRead);
-
-i64 GetSize(const char*);
-
 bool WriteFile(const char* path, ByteSlice);
 
-bool Delete(const WCHAR* path);
+i64 GetSize(const char*);
 bool Delete(const char* path);
 
 FILETIME GetModificationTime(const char* path);
