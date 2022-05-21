@@ -96,7 +96,7 @@ char* GetInstallerLogPath() {
     if (!dir) {
         return nullptr;
     }
-    return path::Join(dir, "sumatra-install-log.txt", nullptr);
+    return path::Join(dir, "sumatra-install-log.txt");
 }
 
 static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {

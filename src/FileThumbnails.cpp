@@ -50,7 +50,7 @@ static char* GetThumbnailPathTemp(const char* filePath) {
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
-    AutoFreeStr pattern(path::Join(thumbsPath, kPngExt, nullptr));
+    AutoFreeStr pattern(path::Join(thumbsPath, kPngExt));
 
     StrVec files;
     WIN32_FIND_DATA fdata;

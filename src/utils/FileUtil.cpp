@@ -68,7 +68,7 @@ TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2) 
     return res;
 }
 
-char* Join(const char* path, const char* fileName, Allocator* allocator) {
+char* Join(Allocator* allocator, const char* path, const char* fileName) {
     if (IsSep(*fileName)) {
         fileName++;
     }
@@ -77,6 +77,10 @@ char* Join(const char* path, const char* fileName, Allocator* allocator) {
         sepStr = "\\";
     }
     return str::Join(allocator, path, sepStr, fileName);
+}
+
+char* Join(const char* path, const char* fileName) {
+    return Join(nullptr, path, fileName);
 }
 
 bool IsDirectory(const char* path) {

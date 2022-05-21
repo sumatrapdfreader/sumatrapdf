@@ -218,7 +218,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
         if (!uncompressed) {
             return false;
         }
-        char* filePath = path::Join(dstDir, name, allocator);
+        char* filePath = path::Join(allocator, dstDir, name);
         if (!filePath) {
             return false;
         }

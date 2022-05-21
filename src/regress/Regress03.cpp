@@ -87,7 +87,7 @@ void RegressSearch(const char* filePath, RegressSearchInfo& info) {
 }
 
 void Regress03() {
-    char* filePath = path::Join(TestFilesDir(), "sumatra-search-across-pages-20170615.pdf", nullptr);
+    char* filePath = path::Join(TestFilesDir(), "sumatra-search-across-pages-20170615.pdf");
     VerifyFileExists(filePath);
     // searches with hits that are all located completely in one page
     RegressSearch(filePath, data_suspendisse);
