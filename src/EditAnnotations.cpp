@@ -267,6 +267,9 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
     EngineMupdf* engine = GetEngineMupdf(ew);
+    if (!engine) { // maybe seen in crash report
+        return false;
+    }
     return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
