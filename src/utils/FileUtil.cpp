@@ -30,8 +30,7 @@ const char* GetBaseNameTemp(const char* path) {
     return s;
 }
 
-// do not free, returns pointer inside <path>
-const char* GetExtTemp(const char* path) {
+TempStr GetExtTemp(const char* path) {
     const char* ext = nullptr;
     char c = *path;
     while (c) {
@@ -44,9 +43,9 @@ const char* GetExtTemp(const char* path) {
         c = *path;
     }
     if (nullptr == ext) {
-        return path; // empty string
+        return TempStr("");
     }
-    return ext;
+    return str::DupTemp(ext);
 }
 
 TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2) {
@@ -106,19 +105,6 @@ const WCHAR* GetBaseNameTemp(const WCHAR* path) {
         --end;
     }
     return end;
-}
-
-// returns extension e.g. ".pdf"
-// do not free, returns pointer inside <path>
-const WCHAR* GetExtTemp(const WCHAR* path) {
-    const WCHAR* ext = path + str::Len(path);
-    while ((ext > path) && !IsSep(*ext)) {
-        if (*ext == '.') {
-            return ext;
-        }
-        ext--;
-    }
-    return path + str::Len(path);
 }
 
 TempWstr GetDirTemp(const WCHAR* path) {
