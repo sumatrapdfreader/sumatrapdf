@@ -169,7 +169,7 @@ struct LoadArgs {
     bool noSavePrefs = false;
 };
 
-WindowInfo* LoadDocument(LoadArgs& args);
+WindowInfo* LoadDocument(LoadArgs& args, bool lazyload = false);
 WindowInfo* CreateAndShowWindowInfo(SessionData* data = nullptr);
 
 uint MbRtlReadingMaybe();

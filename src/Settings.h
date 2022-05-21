@@ -329,6 +329,8 @@ struct GlobalPrefs {
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
+    // if true, lazyload session tabs on startup
+    bool lazyloadWhenRestore;
     // ISO code of the current UI language
     char* uiLanguage;
     // pattern used to launch the LaTeX editor when doing inverse search
@@ -645,6 +647,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
     {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
     {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, lazyloadWhenRestore), SettingType::Bool, true},
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
@@ -686,12 +689,12 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs), 57, gGlobalPrefsFields,
-    "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDef"
-    "aults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSessi"
-    "on\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExit"
+    "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults"
+    "\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0LazyloadWhenRestore"
+    "\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExitavorites"
     "\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar\0ShowF"
-    "avorites\0ShowToc\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0SmoothScroll\0ShowStartPage\0CheckForUpd"
-    "ates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0Re"
-    "openOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "\0ShowToc\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0SmoothScroll\0ShowStartPage\0CheckForUpdates"
+    "\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce"
+    "\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

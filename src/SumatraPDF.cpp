@@ -1561,7 +1561,7 @@ static void scheduleReloadTab(TabInfo* tab) {
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
-WindowInfo* LoadDocument(LoadArgs& args) {
+WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
     int threadID = (int)GetCurrentThreadId();
@@ -1634,47 +1634,54 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     auto timeStart = TimeGet();
     HwndPasswordUI pwdUI(win->hwndFrame);
     Controller* ctrl = nullptr;
-    if (args.engine != nullptr) {
-        ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
-    } else {
-        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
-    }
+    if (!lazyload) {
+        if (args.engine != nullptr) {
+            ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
+        } else {
+            ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+        }
 
-    {
+        {
+            char* path = ToUtf8Temp(fullPath);
+            auto durMs = TimeSinceInMs(timeStart);
+            if (ctrl) {
+                int nPages = ctrl->PageCount();
+                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
+            } else {
+                logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
+            }
+        }
+
+        if (!ctrl) {
+            // TODO: same message as in Canvas.cpp to not introduce
+            // new translation. Find a better message e.g. why failed.
+            WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.Get());
+            win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
+            str::Free(msg);
+            ShowWindow(win->hwndFrame, SW_SHOW);
+
+            // display the notification ASAP (prefs::Save() can introduce a notable delay)
+            win->RedrawAll(true);
+
+            fullPathA = ToUtf8Temp(fullPath);
+            if (gFileHistory.MarkFileInexistent(fullPathA)) {
+                // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
+                if (!args.noSavePrefs) {
+                    prefs::Save();
+                }
+                // update the Frequently Read list
+                if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+                    gWindows.at(0)->RedrawAll(true);
+                }
+            }
+            return win;
+        }
+    } else {
         char* path = ToUtf8Temp(fullPath);
         auto durMs = TimeSinceInMs(timeStart);
-        if (ctrl) {
-            int nPages = ctrl->PageCount();
-            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
-        } else {
-            logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
-        }
+        logf("LoadDocument: lazy load '%s' in %.2f ms\n", path, (float)durMs);
     }
 
-    if (!ctrl) {
-        // TODO: same message as in Canvas.cpp to not introduce
-        // new translation. Find a better message e.g. why failed.
-        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.Get());
-        win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
-        str::Free(msg);
-        ShowWindow(win->hwndFrame, SW_SHOW);
-
-        // display the notification ASAP (prefs::Save() can introduce a notable delay)
-        win->RedrawAll(true);
-
-        fullPathA = ToUtf8Temp(fullPath);
-        if (gFileHistory.MarkFileInexistent(fullPathA)) {
-            // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-            if (!args.noSavePrefs) {
-                prefs::Save();
-            }
-            // update the Frequently Read list
-            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
-                gWindows.at(0)->RedrawAll(true);
-            }
-        }
-        return win;
-    }
     CrashIf(openNewTab && args.forceReuse);
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
@@ -1707,7 +1714,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     args.fileName = fullPath;
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
-    LoadDocIntoCurrentTab(args, ctrl, nullptr);
+    if (!lazyload) {
+        LoadDocIntoCurrentTab(args, ctrl, nullptr);
+    }
 
     if (gPluginMode) {
         // hide the menu for embedded documents opened from the plugin
@@ -1740,7 +1749,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
         fullPathA = ToUtf8Temp(fullPath);
         FileState* ds = gFileHistory.MarkFileLoaded(fullPathA);
-        if (gGlobalPrefs->showStartPage) {
+        if (!lazyload && gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
         }
         // TODO: this seems to save the state of file that we just opened
@@ -1765,8 +1774,14 @@ void LoadModelIntoTab(TabInfo* tab) {
         return;
     }
     WindowInfo* win = tab->win;
+    if (gGlobalPrefs->lazyloadWhenRestore && win->ctrl && !tab->ctrl) {
+        WCHAR* msg = str::Format(_TR("Please wait - rendering..."));
+        NotificationWnd* hwnd = win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
+        str::Free(msg);
+        ShowWindow(win->hwndFrame, SW_SHOW);
+        win->RedrawAll(true);
+    }
     CloseDocumentInCurrentTab(win, true);
-
     win->currentTab = tab;
     win->ctrl = tab->ctrl;
 
@@ -1805,11 +1820,16 @@ void LoadModelIntoTab(TabInfo* tab) {
     }
 
     SetFocus(win->hwndFrame);
-    win->RedrawAll(true);
+    if (gGlobalPrefs->lazyloadWhenRestore && !tab->ctrl) {
+        ReloadDocument(win, false);
+        win->RedrawAll(true);
+    } else {
+        win->RedrawAll(true);
 
-    if (tab->reloadOnFocus) {
-        tab->reloadOnFocus = false;
-        ReloadDocument(win, true);
+        if (tab->reloadOnFocus) {
+            tab->reloadOnFocus = false;
+            ReloadDocument(win, true);
+        }
     }
 }
 
