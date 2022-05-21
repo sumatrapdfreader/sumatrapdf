@@ -593,4 +593,6 @@ struct TreeView : Wnd {
     TVITEMW item{};
 };
 
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt);
+
 } // namespace wg

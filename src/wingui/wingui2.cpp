@@ -2798,6 +2798,45 @@ TreeItemState TreeView::GetItemState(TreeItem ti) {
     return res;
 }
 
+// if context menu invoked via keyboard, get selected item
+// if via right-click, selects the item under the cursor
+// in both cases can return null
+// sets pt to screen position (for context menu coordinates)
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
+    TreeView* treeCtrl = (TreeView*)args->wnd;
+    TreeModel* tm = treeCtrl->treeModel;
+    HWND hwnd = treeCtrl->hwnd;
+
+    TreeItem ti = TreeModel::kNullItem;
+    pt = {args->mouseWindow.x, args->mouseWindow.y};
+    if (pt.x == -1 || pt.y == -1) {
+        // no mouse position when launched via keyboard shortcut
+        // use position of selected item to show menu
+        ti = treeCtrl->GetSelection();
+        if (ti == TreeModel::kNullItem) {
+            return TreeModel::kNullItem;
+        }
+        RECT rcItem;
+        if (treeCtrl->GetItemRect(ti, true, rcItem)) {
+            // rcItem is local to window, map to global screen position
+            MapWindowPoints(hwnd, HWND_DESKTOP, (POINT*)&rcItem, 2);
+            pt.x = rcItem.left;
+            pt.y = rcItem.bottom;
+        }
+    } else {
+        ti = treeCtrl->GetItemAt(pt.x, pt.y);
+        if (ti == TreeModel::kNullItem) {
+            // only show context menu if over a node in tree
+            return TreeModel::kNullItem;
+        }
+        // context menu acts on this item so select it
+        // for better visual feedback to the user
+        treeCtrl->SelectItem(ti);
+        pt.x = args->mouseGlobal.x;
+        pt.y = args->mouseGlobal.y;
+    }
+    return ti;
+}
 } // namespace wg
 
 #if 0
@@ -2923,43 +2962,4 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     }
 }
 
-// if context menu invoked via keyboard, get selected item
-// if via right-click, selects the item under the cursor
-// in both cases can return null
-// sets pt to screen position (for context menu coordinates)
-TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
-    TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
-    TreeModel* tm = treeCtrl->treeModel;
-    HWND hwnd = treeCtrl->hwnd;
-
-    TreeItem ti = TreeModel::kNullItem;
-    pt = {args->mouseWindow.x, args->mouseWindow.y};
-    if (pt.x == -1 || pt.y == -1) {
-        // no mouse position when launched via keyboard shortcut
-        // use position of selected item to show menu
-        ti = treeCtrl->GetSelection();
-        if (ti == TreeModel::kNullItem) {
-            return TreeModel::kNullItem;
-        }
-        RECT rcItem;
-        if (treeCtrl->GetItemRect(ti, true, rcItem)) {
-            // rcItem is local to window, map to global screen position
-            MapWindowPoints(hwnd, HWND_DESKTOP, (POINT*)&rcItem, 2);
-            pt.x = rcItem.left;
-            pt.y = rcItem.bottom;
-        }
-    } else {
-        ti = treeCtrl->GetItemAt(pt.x, pt.y);
-        if (ti == TreeModel::kNullItem) {
-            // only show context menu if over a node in tree
-            return TreeModel::kNullItem;
-        }
-        // context menu acts on this item so select it
-        // for better visual feedback to the user
-        treeCtrl->SelectItem(ti);
-        pt.x = args->mouseGlobal.x;
-        pt.y = args->mouseGlobal.y;
-    }
-    return ti;
-}
 #endif
