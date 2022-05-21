@@ -948,6 +948,14 @@ void Wnd::SetBackgroundColor(COLORREF col) {
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
+void Wnd::SuspendRedraw() const {
+    SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
+}
+
+void Wnd::ResumeRedraw() const {
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
+}
+
 // application.cpp
 bool PreTranslateMessage(MSG& msg) {
     bool shouldProcess = (WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST) ||
@@ -2507,11 +2515,281 @@ void SetTreeItemState(uint uState, TreeItemState& state) {
     state.isChecked = n != 0;
 }
 
+#if 0
+void TreeView::OnContextMenu(HWND hwnd, Point pt) {
+    // TODO: must implement context menu 
+    // onContextMenu in Wnd
+}
+#endif
+
+static bool HandleKey(TreeView* tree, WPARAM wp) {
+    HWND hwnd = tree->hwnd;
+    // consistently expand/collapse whole (sub)trees
+    if (VK_MULTIPLY == wp) {
+        if (IsShiftPressed()) {
+            TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, false);
+        } else {
+            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
+        }
+    } else if (VK_DIVIDE == wp) {
+        if (IsShiftPressed()) {
+            HTREEITEM root = TreeView_GetRoot(hwnd);
+            if (!TreeView_GetNextSibling(hwnd, root)) {
+                root = TreeView_GetChild(hwnd, root);
+            }
+            TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
+        } else {
+            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+        }
+    } else if (wp == 13) {
+        // this is Enter key
+        bool recursive = IsShiftPressed();
+        TreeViewToggle(tree, TreeView_GetSelection(hwnd), recursive);
+    } else {
+        return false;
+    }
+    TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
+    return true;
+}
+
+LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    TreeView* w = this;
+
+    if (WM_RBUTTONDOWN == msg) {
+        return WndProcDefault(hwnd, msg, wparam, lparam);
+    }
+    if (WM_ERASEBKGND == msg) {
+        return FALSE;
+    }
+
+    if (WM_KEYDOWN == msg) {
+        if (HandleKey(w, wparam)) {
+            return 0;
+        }
+    }
+    return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
+bool TreeView::IsExpanded(TreeItem ti) {
+    auto state = GetItemState(ti);
+    return state.isExpanded;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
+bool TreeView::GetItemRect(TreeItem ti, bool justText, RECT& r) {
+    HTREEITEM hi = GetHandleByTreeItem(ti);
+    BOOL b = toBOOL(justText);
+    BOOL ok = TreeView_GetItemRect(hwnd, hi, &r, b);
+    return ok == TRUE;
+}
+
+TreeItem TreeView::GetSelection() {
+    HTREEITEM hi = TreeView_GetSelection(hwnd);
+    return GetTreeItemByHandle(hi);
+}
+
+bool TreeView::SelectItem(TreeItem ti) {
+    HTREEITEM hi = nullptr;
+    if (ti != TreeModel::kNullItem) {
+        hi = GetHandleByTreeItem(ti);
+    }
+    BOOL ok = TreeView_SelectItem(hwnd, hi);
+    return ok == TRUE;
+}
+
+void TreeView::SetBackgroundColor(COLORREF bgCol) {
+    // TODO: implement me
+#if 0
+    this->backgroundColor = bgCol;
+    TreeView_SetBkColor(this->hwnd, bgCol);
+#endif
+}
+
+void TreeView::SetTextColor(COLORREF col) {
+    // TODO: implement me
+#if 0
+    this->textColor = col;
+#endif
+    TreeView_SetTextColor(this->hwnd, col);
+}
+
+void TreeView::ExpandAll() {
+    SuspendRedraw();
+    auto root = TreeView_GetRoot(this->hwnd);
+    TreeViewExpandRecursively(this->hwnd, root, TVE_EXPAND, false);
+    ResumeRedraw();
+}
+
+void TreeView::CollapseAll() {
+    SuspendRedraw();
+    auto root = TreeView_GetRoot(this->hwnd);
+    TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
+    ResumeRedraw();
+}
+
+void TreeView::Clear() {
+    treeModel = nullptr;
+
+    HWND hwnd = this->hwnd;
+    ::SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
+    TreeView_DeleteAllItems(hwnd);
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
+    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    ::RedrawWindow(hwnd, nullptr, nullptr, flags);
+}
+
+str::WStr TreeView::GetDefaultTooltip(TreeItem ti) {
+    auto hItem = GetHandleByTreeItem(ti);
+    WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
+
+    TVITEMW item{};
+    item.hItem = hItem;
+    item.mask = TVIF_TEXT;
+    item.pszText = buf;
+    item.cchTextMax = dimof(buf);
+    TreeView_GetItem(hwnd, &item);
+
+    return str::WStr(buf);
+}
+
+// get the item at a given (x,y) position in the window
+TreeItem TreeView::GetItemAt(int x, int y) {
+    TVHITTESTINFO ht{};
+    ht.pt = {x, y};
+    TreeView_HitTest(hwnd, &ht);
+    return GetTreeItemByHandle(ht.hItem);
+}
+
+TreeItem TreeView::GetTreeItemByHandle(HTREEITEM item) {
+    if (item == nullptr) {
+        return TreeModel::kNullItem;
+    }
+    auto tvi = GetTVITEM(this, item);
+    if (!tvi) {
+        return TreeModel::kNullItem;
+    }
+    TreeItem res = (TreeItem)(tvi->lParam);
+    return res;
+}
+
+// inserting in front is faster:
+// https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
+HTREEITEM insertItemFront(TreeView* treeCtrl, TreeItem ti, HTREEITEM parent) {
+    TVINSERTSTRUCTW toInsert{};
+
+    toInsert.hParent = parent;
+    toInsert.hInsertAfter = TVI_FIRST;
+
+    TVITEMEXW* tvitem = &toInsert.itemex;
+    FillTVITEM(tvitem, treeCtrl->treeModel, ti);
+    HTREEITEM res = TreeView_InsertItem(treeCtrl->hwnd, &toInsert);
+    return res;
+}
+
+bool TreeView::UpdateItem(TreeItem ti) {
+    HTREEITEM ht = GetHandleByTreeItem(ti);
+    CrashIf(!ht);
+    if (!ht) {
+        return false;
+    }
+
+    TVITEMEXW tvitem;
+    tvitem.hItem = ht;
+    FillTVITEM(&tvitem, treeModel, ti);
+    BOOL ok = TreeView_SetItem(hwnd, &tvitem);
+    return ok != 0;
+}
+
+// complicated because it inserts items backwards, as described in
+// https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
+void PopulateTreeItem(TreeView* treeCtrl, TreeItem item, HTREEITEM parent) {
+    auto tm = treeCtrl->treeModel;
+    int n = tm->ChildCount(item);
+    TreeItem tmp[256];
+    TreeItem* a = &tmp[0];
+    if (n > dimof(tmp)) {
+        size_t nBytes = (size_t)n * sizeof(TreeItem);
+        a = (TreeItem*)malloc(nBytes);
+        nBytes = (size_t)n * sizeof(HTREEITEM);
+        if (a == nullptr) {
+            free(a);
+            a = &tmp[0];
+            n = (int)dimof(tmp);
+        }
+    }
+    // ChildAt() is optimized for sequential access and we need to
+    // insert backwards, so gather the items in v first
+    for (int i = 0; i < n; i++) {
+        auto ti = tm->ChildAt(item, i);
+        CrashIf(ti == 0);
+        a[n - 1 - i] = ti;
+    }
+
+    for (int i = 0; i < n; i++) {
+        auto ti = a[i];
+        HTREEITEM h = insertItemFront(treeCtrl, ti, parent);
+        tm->SetHandle(ti, h);
+        // avoid recursing if not needed because we use a lot of stack space
+        if (tm->ChildCount(ti) > 0) {
+            PopulateTreeItem(treeCtrl, ti, h);
+        }
+    }
+
+    if (a != &tmp[0]) {
+        free(a);
+    }
+}
+
+static void PopulateTree(TreeView* treeCtrl, TreeModel* tm) {
+    TreeItem root = tm->Root();
+    PopulateTreeItem(treeCtrl, root, nullptr);
+}
+
+void TreeView::SetTreeModel(TreeModel* tm) {
+    CrashIf(!tm);
+
+    SuspendRedraw();
+
+    TreeView_DeleteAllItems(hwnd);
+
+    treeModel = tm;
+    PopulateTree(this, tm);
+    ResumeRedraw();
+
+    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwnd, nullptr, nullptr, flags);
+}
+
+void TreeView::SetCheckState(TreeItem item, bool enable) {
+    HTREEITEM hi = GetHandleByTreeItem(item);
+    CrashIf(!hi);
+    TreeView_SetCheckState(hwnd, hi, enable);
+}
+
+bool TreeView::GetCheckState(TreeItem item) {
+    HTREEITEM hi = GetHandleByTreeItem(item);
+    CrashIf(!hi);
+    auto res = TreeView_GetCheckState(hwnd, hi);
+    return res != 0;
+}
+
+TreeItemState TreeView::GetItemState(TreeItem ti) {
+    TreeItemState res;
+
+    TVITEMW* item = GetTVITEM(this, ti);
+    CrashIf(!item);
+    if (!item) {
+        return res;
+    }
+    SetTreeItemState(item->state, res);
+    res.nChildren = item->cChildren;
+
+    return res;
+}
 
 } // namespace wg
 
 #if 0
-
 
 static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     uint msg = ev->msg;
@@ -2632,313 +2910,6 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         w->onTreeKeyDown(&a);
         return;
     }
-}
-
-static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
-    HWND hwnd = tree->hwnd;
-    // consistently expand/collapse whole (sub)trees
-    if (VK_MULTIPLY == wp) {
-        if (IsShiftPressed()) {
-            TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, false);
-        } else {
-            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
-        }
-    } else if (VK_DIVIDE == wp) {
-        if (IsShiftPressed()) {
-            HTREEITEM root = TreeView_GetRoot(hwnd);
-            if (!TreeView_GetNextSibling(hwnd, root)) {
-                root = TreeView_GetChild(hwnd, root);
-            }
-            TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
-        } else {
-            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
-        }
-    } else if (wp == 13) {
-        // this is Enter key
-        bool recursive = IsShiftPressed();
-        TreeViewToggle(tree, TreeView_GetSelection(hwnd), recursive);
-    } else {
-        return false;
-    }
-    TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
-    return true;
-}
-
-void TreeCtrl::WndProc(WndEvent* ev) {
-    HWND hwnd = ev->hwnd;
-    UINT msg = ev->msg;
-    WPARAM wp = ev->wp;
-    LPARAM lp = ev->lp;
-
-    // DbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
-
-    TreeCtrl* w = this;
-    CrashIf(w->hwnd != (HWND)hwnd);
-
-    if (WM_RBUTTONDOWN == msg) {
-        DefWindowProc(hwnd, msg, wp, lp);
-        return;
-    }
-
-    if (WM_CONTEXTMENU == msg && onContextMenu) {
-        WindowBase* wb = (WindowBase*)this;
-        Handle_WM_CONTEXTMENU(wb, ev);
-        return;
-    }
-
-    if (w->msgFilter) {
-        w->msgFilter(ev);
-        if (ev->didHandle) {
-            return;
-        }
-    }
-
-    if (WM_ERASEBKGND == msg) {
-        ev->didHandle = true;
-        ev->result = FALSE;
-        return;
-    }
-
-    if (WM_KEYDOWN == msg) {
-        if (HandleKey(w, wp)) {
-            ev->didHandle = true;
-            return;
-        }
-    }
-}
-
-
-bool TreeCtrl::IsExpanded(TreeItem ti) {
-    auto state = GetItemState(ti);
-    return state.isExpanded;
-}
-
-// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
-bool TreeCtrl::GetItemRect(TreeItem ti, bool justText, RECT& r) {
-    HTREEITEM hi = GetHandleByTreeItem(ti);
-    BOOL b = toBOOL(justText);
-    BOOL ok = TreeView_GetItemRect(hwnd, hi, &r, b);
-    return ok == TRUE;
-}
-
-TreeItem TreeCtrl::GetSelection() {
-    HTREEITEM hi = TreeView_GetSelection(hwnd);
-    return GetTreeItemByHandle(hi);
-}
-
-bool TreeCtrl::SelectItem(TreeItem ti) {
-    HTREEITEM hi = nullptr;
-    if (ti != TreeModel::kNullItem) {
-        hi = GetHandleByTreeItem(ti);
-    }
-    BOOL ok = TreeView_SelectItem(hwnd, hi);
-    return ok == TRUE;
-}
-
-void TreeCtrl::SetBackgroundColor(COLORREF bgCol) {
-    this->backgroundColor = bgCol;
-    TreeView_SetBkColor(this->hwnd, bgCol);
-}
-
-void TreeCtrl::SetTextColor(COLORREF col) {
-    this->textColor = col;
-    TreeView_SetTextColor(this->hwnd, col);
-}
-
-void TreeCtrl::ExpandAll() {
-    SuspendRedraw();
-    auto root = TreeView_GetRoot(this->hwnd);
-    TreeViewExpandRecursively(this->hwnd, root, TVE_EXPAND, false);
-    ResumeRedraw();
-}
-
-void TreeCtrl::CollapseAll() {
-    SuspendRedraw();
-    auto root = TreeView_GetRoot(this->hwnd);
-    TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
-    ResumeRedraw();
-}
-
-void TreeCtrl::Clear() {
-    treeModel = nullptr;
-
-    HWND hwnd = this->hwnd;
-    ::SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
-    TreeView_DeleteAllItems(hwnd);
-    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
-    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    ::RedrawWindow(hwnd, nullptr, nullptr, flags);
-}
-
-TreeCtrl::~TreeCtrl() {
-    // DeleteObject(w->bgBrush);
-}
-
-str::WStr TreeCtrl::GetDefaultTooltip(TreeItem ti) {
-    auto hItem = GetHandleByTreeItem(ti);
-    WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
-
-    TVITEMW item{};
-    item.hItem = hItem;
-    item.mask = TVIF_TEXT;
-    item.pszText = buf;
-    item.cchTextMax = dimof(buf);
-    TreeView_GetItem(hwnd, &item);
-
-    return str::WStr(buf);
-}
-
-// get the item at a given (x,y) position in the window
-TreeItem TreeCtrl::GetItemAt(int x, int y) {
-    TVHITTESTINFO ht{};
-    ht.pt = {x, y};
-    TreeView_HitTest(hwnd, &ht);
-    return GetTreeItemByHandle(ht.hItem);
-}
-
-
-TreeItem TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
-    if (item == nullptr) {
-        return TreeModel::kNullItem;
-    }
-    auto tvi = GetTVITEM(this, item);
-    if (!tvi) {
-        return TreeModel::kNullItem;
-    }
-    TreeItem res = (TreeItem)(tvi->lParam);
-    return res;
-}
-
-void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
-    uint mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-    tvitem->mask = mask;
-
-    uint stateMask = TVIS_EXPANDED;
-    uint state = 0;
-    if (tm->IsExpanded(ti)) {
-        state = TVIS_EXPANDED;
-    }
-
-    tvitem->state = state;
-    tvitem->stateMask = stateMask;
-    tvitem->lParam = static_cast<LPARAM>(ti);
-    char* title = tm->Text(ti);
-    tvitem->pszText = ToWstrTemp(title);
-}
-
-// inserting in front is faster:
-// https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-HTREEITEM insertItemFront(TreeCtrl* treeCtrl, TreeItem ti, HTREEITEM parent) {
-    TVINSERTSTRUCTW toInsert{};
-
-    toInsert.hParent = parent;
-    toInsert.hInsertAfter = TVI_FIRST;
-
-    TVITEMEXW* tvitem = &toInsert.itemex;
-    FillTVITEM(tvitem, treeCtrl->treeModel, ti);
-    HTREEITEM res = TreeView_InsertItem(treeCtrl->hwnd, &toInsert);
-    return res;
-}
-
-bool TreeCtrl::UpdateItem(TreeItem ti) {
-    HTREEITEM ht = GetHandleByTreeItem(ti);
-    CrashIf(!ht);
-    if (!ht) {
-        return false;
-    }
-
-    TVITEMEXW tvitem;
-    tvitem.hItem = ht;
-    FillTVITEM(&tvitem, treeModel, ti);
-    BOOL ok = TreeView_SetItem(hwnd, &tvitem);
-    return ok != 0;
-}
-
-// complicated because it inserts items backwards, as described in
-// https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-void PopulateTreeItem(TreeCtrl* treeCtrl, TreeItem item, HTREEITEM parent) {
-    auto tm = treeCtrl->treeModel;
-    int n = tm->ChildCount(item);
-    TreeItem tmp[256];
-    TreeItem* a = &tmp[0];
-    if (n > dimof(tmp)) {
-        size_t nBytes = (size_t)n * sizeof(TreeItem);
-        a = (TreeItem*)malloc(nBytes);
-        nBytes = (size_t)n * sizeof(HTREEITEM);
-        if (a == nullptr) {
-            free(a);
-            a = &tmp[0];
-            n = (int)dimof(tmp);
-        }
-    }
-    // ChildAt() is optimized for sequential access and we need to
-    // insert backwards, so gather the items in v first
-    for (int i = 0; i < n; i++) {
-        auto ti = tm->ChildAt(item, i);
-        CrashIf(ti == 0);
-        a[n - 1 - i] = ti;
-    }
-
-    for (int i = 0; i < n; i++) {
-        auto ti = a[i];
-        HTREEITEM h = insertItemFront(treeCtrl, ti, parent);
-        tm->SetHandle(ti, h);
-        // avoid recursing if not needed because we use a lot of stack space
-        if (tm->ChildCount(ti) > 0) {
-            PopulateTreeItem(treeCtrl, ti, h);
-        }
-    }
-
-    if (a != &tmp[0]) {
-        free(a);
-    }
-}
-
-static void PopulateTree(TreeCtrl* treeCtrl, TreeModel* tm) {
-    TreeItem root = tm->Root();
-    PopulateTreeItem(treeCtrl, root, nullptr);
-}
-
-void TreeCtrl::SetTreeModel(TreeModel* tm) {
-    CrashIf(!tm);
-
-    SuspendRedraw();
-
-    TreeView_DeleteAllItems(hwnd);
-
-    treeModel = tm;
-    PopulateTree(this, tm);
-    ResumeRedraw();
-
-    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    RedrawWindow(hwnd, nullptr, nullptr, flags);
-}
-
-void TreeCtrl::SetCheckState(TreeItem item, bool enable) {
-    HTREEITEM hi = GetHandleByTreeItem(item);
-    CrashIf(!hi);
-    TreeView_SetCheckState(hwnd, hi, enable);
-}
-
-bool TreeCtrl::GetCheckState(TreeItem item) {
-    HTREEITEM hi = GetHandleByTreeItem(item);
-    CrashIf(!hi);
-    auto res = TreeView_GetCheckState(hwnd, hi);
-    return res != 0;
-}
-
-TreeItemState TreeCtrl::GetItemState(TreeItem ti) {
-    TreeItemState res;
-
-    TVITEMW* item = GetTVITEM(this, ti);
-    CrashIf(!item);
-    if (!item) {
-        return res;
-    }
-    SetTreeItemState(item->state, res);
-    res.nChildren = item->cChildren;
-
-    return res;
 }
 
 // if context menu invoked via keyboard, get selected item

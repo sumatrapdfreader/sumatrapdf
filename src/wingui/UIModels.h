@@ -54,3 +54,10 @@ struct TreeModel {
 using TreeItemVisitor = std::function<bool(TreeModel*, TreeItem)>;
 
 bool VisitTreeModelItems(TreeModel*, const TreeItemVisitor& visitor);
+
+struct TreeItemState {
+    bool isSelected = false;
+    bool isExpanded = false;
+    bool isChecked = false;
+    int nChildren = 0;
+};

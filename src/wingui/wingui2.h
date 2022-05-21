@@ -104,6 +104,9 @@ struct Wnd : public ILayout {
     void SetRtl(bool) const;
     void SetBackgroundColor(COLORREF);
 
+    void SuspendRedraw() const;
+    void ResumeRedraw() const;
+
     LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -539,13 +542,32 @@ struct TreeView : Wnd {
 
     HWND Create(const TreeViewCreateArgs&);
 
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
 
     Size GetIdealSize() override;
     void SetToolTipsDelayTime(int type, int timeInMs);
     HWND GetToolTipsHwnd();
 
+    bool IsExpanded(TreeItem ti);
+    bool GetItemRect(TreeItem ti, bool justText, RECT& r);
+    TreeItem GetSelection();
+    bool SelectItem(TreeItem ti);
+    void SetBackgroundColor(COLORREF bgCol);
+    void SetTextColor(COLORREF col);
+    void ExpandAll();
+    void CollapseAll();
+    void Clear();
+
     HTREEITEM GetHandleByTreeItem(TreeItem item);
+    str::WStr GetDefaultTooltip(TreeItem ti);
+    TreeItem GetItemAt(int x, int y);
+    TreeItem GetTreeItemByHandle(HTREEITEM item);
+    bool UpdateItem(TreeItem ti);
+    void SetTreeModel(TreeModel* tm);
+    void SetCheckState(TreeItem item, bool enable);
+    bool GetCheckState(TreeItem item);
+    TreeItemState GetItemState(TreeItem ti);
 
     bool fullRowSelect = false;
     Size idealSize{};
@@ -554,7 +576,6 @@ struct TreeView : Wnd {
 
     // private
     TVITEMW item{};
-
 };
 
 } // namespace wg

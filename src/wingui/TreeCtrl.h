@@ -22,13 +22,6 @@ struct TreeSelectionChangedEvent : WndEvent {
 
 using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
 
-struct TreeItemState {
-    bool isSelected = false;
-    bool isExpanded = false;
-    bool isChecked = false;
-    int nChildren = 0;
-};
-
 struct TreeItemCustomDrawEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem treeItem = 0;
