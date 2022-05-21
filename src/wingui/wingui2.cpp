@@ -267,7 +267,23 @@ void Wnd::OnClose() {
     Destroy();
 }
 
-void Wnd::OnContextMenu(HWND hwnd, Point pt) {
+void Wnd::OnContextMenu(Point pt) {
+    if (!onContextMenu) {
+        return;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+    ContextMenuEvent2 ev;
+    ev.wnd = this;
+    ev.mouseGlobal = pt;
+
+    POINT ptW{pt.x, pt.y};
+    if (pt.x != -1) {
+        MapWindowPoints(HWND_DESKTOP, hwnd, &ptW, 1);
+    }
+    ev.mouseWindow.x = ptW.x;
+    ev.mouseWindow.y = ptW.y;
+    onContextMenu(&ev);
 }
 
 void Wnd::OnDropFiles(HDROP drop_info) {
@@ -685,7 +701,9 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         case WM_CONTEXTMENU: {
             Point pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
-            OnContextMenu(reinterpret_cast<HWND>(wparam), pt);
+            HWND evHwnd = reinterpret_cast<HWND>(wparam);
+            CrashIf(evHwnd != hwnd);
+            OnContextMenu(pt);
             break;
         }
 
@@ -2514,13 +2532,6 @@ void SetTreeItemState(uint uState, TreeItemState& state) {
     uint n = (uState >> 12) - 1;
     state.isChecked = n != 0;
 }
-
-#if 0
-void TreeView::OnContextMenu(HWND hwnd, Point pt) {
-    // TODO: must implement context menu 
-    // onContextMenu in Wnd
-}
-#endif
 
 static bool HandleKey(TreeView* tree, WPARAM wp) {
     HWND hwnd = tree->hwnd;

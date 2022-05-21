@@ -8,6 +8,19 @@ namespace wg {
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
+struct Wnd;
+
+struct ContextMenuEvent2 {
+    Wnd* wnd = nullptr;
+
+    // mouse x,y position relative to the window
+    Point mouseWindow{};
+    // global (screen) mouse x,y position
+    Point mouseGlobal{};
+};
+
+using ContextMenuHandler2 = std::function<void(ContextMenuEvent2*)>;
+
 struct CreateControlArgs {
     HWND parent = nullptr;
     const WCHAR* className = nullptr;
@@ -77,7 +90,7 @@ struct Wnd : public ILayout {
     virtual void OnClose();
     virtual int OnCreate(CREATESTRUCT*);
     virtual void OnDestroy();
-    virtual void OnContextMenu(HWND hwnd, Point pt);
+    virtual void OnContextMenu(Point pt);
     virtual void OnDropFiles(HDROP drop_info);
     virtual void OnGetMinMaxInfo(MINMAXINFO* mmi);
     virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -126,6 +139,8 @@ struct Wnd : public ILayout {
 
     COLORREF backgroundColor{ColorUnset};
     HBRUSH backgroundColorBrush = nullptr;
+
+    ContextMenuHandler2 onContextMenu;
 };
 
 bool PreTranslateMessage(MSG& msg);
