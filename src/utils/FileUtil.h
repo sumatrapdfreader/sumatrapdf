@@ -37,7 +37,6 @@ char* GetPathOfFileInAppDir(const char* fileName = nullptr);
 namespace file {
 
 bool Exists(const char* path);
-bool Exists(const WCHAR* path);
 
 FILE* OpenFILE(const char* path);
 HANDLE OpenReadOnly(const char*);

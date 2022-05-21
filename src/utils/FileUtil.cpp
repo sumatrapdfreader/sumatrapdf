@@ -561,22 +561,6 @@ HANDLE OpenReadOnly(const char* path) {
     return CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
-bool Exists(const WCHAR* path) {
-    if (!path) {
-        return false;
-    }
-
-    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(path, GetFileExInfoStandard, &fileInfo);
-    if (0 == res) {
-        return false;
-    }
-    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        return false;
-    }
-    return true;
-}
-
 bool Exists(const char* path) {
     if (!path) {
         return false;
