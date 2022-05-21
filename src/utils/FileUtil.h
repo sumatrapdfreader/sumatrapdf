@@ -23,10 +23,7 @@ WCHAR* Normalize(const WCHAR* path);
 char* NormalizeTemp(const char* path);
 
 char* ShortPath(const char* pathA);
-
-bool IsSame(const WCHAR* path1, const WCHAR* path2);
 bool IsSame(const char* path1, const char* path2);
-
 bool HasVariableDriveLetter(const char* path);
 bool IsOnFixedDrive(const char* path);
 bool IsAbsolute(const char* path);

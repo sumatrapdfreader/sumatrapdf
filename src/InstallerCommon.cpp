@@ -308,12 +308,13 @@ static bool IsProcWithModule(DWORD processId, const char* modulePath) {
         return false;
     }
 
-    WCHAR* modulePathW = ToWstrTemp(modulePath);
     MODULEENTRY32W me32{};
     me32.dwSize = sizeof(me32);
     BOOL ok = Module32FirstW(hModSnapshot, &me32);
+    char* path;
     while (ok) {
-        if (path::IsSame(modulePathW, me32.szExePath)) {
+        path = ToUtf8Temp(me32.szExePath);
+        if (path::IsSame(modulePath, path)) {
             return true;
         }
         ok = Module32NextW(hModSnapshot, &me32);

@@ -294,23 +294,25 @@ static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HAND
 // Code adapted from
 // http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
-bool IsSame(const WCHAR* path1, const WCHAR* path2) {
+bool IsSame(const char* path1, const char* path2) {
     if (str::EqI(path1, path2)) {
         return true;
     }
 
     // we assume that if the last part doesn't match, they can't be the same
-    const WCHAR* base1 = path::GetBaseNameTemp(path1);
-    const WCHAR* base2 = path::GetBaseNameTemp(path2);
+    const char* base1 = path::GetBaseNameTemp(path1);
+    const char* base2 = path::GetBaseNameTemp(path2);
     if (!str::EqI(base1, base2)) {
         return false;
     }
 
+    WCHAR* path1W = ToWstrTemp(path1);
+    WCHAR* path2W = ToWstrTemp(path2);
     bool isSame = false;
     bool needFallback = true;
     // CreateFile might fail for already opened files
-    HANDLE h1 = CreateFileW(path1, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-    HANDLE h2 = CreateFileW(path2, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    HANDLE h1 = CreateFileW(path1W, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    HANDLE h2 = CreateFileW(path2W, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 
     if (h1 != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;
@@ -327,14 +329,10 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
         return isSame;
     }
 
-    AutoFreeWstr npath1(Normalize(path1));
-    AutoFreeWstr npath2(Normalize(path2));
+    char* npath1 = NormalizeTemp(path1);
+    char* npath2 = NormalizeTemp(path2);
     // consider the files different, if their paths can't be normalized
     return npath1 && str::EqI(npath1, npath2);
-}
-
-bool IsSame(const char* path1, const char* path2) {
-    return IsSame(ToWstrTemp(path1), ToWstrTemp(path2));
 }
 
 bool HasVariableDriveLetter(const char* path) {
