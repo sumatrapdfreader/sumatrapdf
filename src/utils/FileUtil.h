@@ -7,7 +7,6 @@ bool IsSep(char c);
 
 TempStr GetExtTemp(const char* path);
 const char* GetBaseNameTemp(const char* path);
-const WCHAR* GetBaseNameTemp(const WCHAR* path);
 
 TempStr GetDirTemp(const char* path);
 TempWstr GetDirTemp(const WCHAR* path);

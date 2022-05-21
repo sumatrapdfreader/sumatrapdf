@@ -742,20 +742,20 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 rect.x -= iconSpace;
             }
             rTmp = ToRECT(rect);
-            WCHAR* filePath = ToWstrTemp(state->filePath);
-            const WCHAR* fileName = path::GetBaseNameTemp(filePath);
+            char* path = state->filePath;
+            const char* fileName = path::GetBaseNameTemp(path);
             UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
-            DrawTextW(hdc, fileName, -1, &rTmp, fmt);
+            DrawTextUtf8(hdc, fileName, -1, &rTmp, fmt);
 
             // note: this crashes asan build in windows code
             // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
             SHFILEINFO sfi = {nullptr};
             uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePath, 0, &sfi, sizeof(sfi), flags);
+            WCHAR* filePathW = ToWstrTemp(path);
+            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
             x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
             ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
 
-            char* path = state->filePath;
             auto sl = new StaticLinkInfo(rect.Union(page), path, path);
             win->staticLinks.Append(sl);
         }

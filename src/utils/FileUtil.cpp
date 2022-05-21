@@ -20,6 +20,9 @@ bool IsSep(char c) {
 }
 
 // do not free, returns pointer inside <path>
+// Note: if want to change to returning TempStr, would have
+// to audit caller as they depend of in-place nature of returned
+// value
 const char* GetBaseNameTemp(const char* path) {
     const char* s = path + str::Len(path);
     for (; s > path; s--) {
@@ -96,7 +99,7 @@ static bool IsSep(WCHAR c) {
 }
 
 // do not free, returns pointer inside <path>
-const WCHAR* GetBaseNameTemp(const WCHAR* path) {
+static const WCHAR* GetBaseNameTemp(const WCHAR* path) {
     const WCHAR* end = path + str::Len(path);
     while (end > path) {
         if (IsSep(end[-1])) {
