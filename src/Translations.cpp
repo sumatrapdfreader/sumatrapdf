@@ -182,6 +182,7 @@ static Translation* FindTranslation(const char* s) {
     return nullptr;
 }
 
+// don't free
 const char* GetTranslationA(const char* s) {
     if (gCurrLangIdx == 0) {
         return s;
@@ -196,6 +197,7 @@ const char* GetTranslationA(const char* s) {
     return gTranslationCache->allTranslations.LendData() + idx;
 }
 
+// don't free
 const WCHAR* GetTranslation(const char* s) {
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string

@@ -1241,31 +1241,31 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     RemoveBadMenuSeparators(menu);
 }
 
-static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
+static void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
     bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
     bool isGerman = str::Eq(lang, "de");
 
-    str.Append(L"\t"); // marks start of an accelerator in menu item
+    str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if (virt & FALT) {
-        const WCHAR* s = L"Alt+";
+        const char* s = "Alt+";
         if (isGerman) {
-            s = L"Größe+";
+            s = "Größe+";
         }
         str.Append(s);
     }
     if (virt & FCONTROL) {
-        const WCHAR* s = L"Ctrl+";
+        const char* s = "Ctrl+";
         if (isGerman) {
-            s = L"Strg+";
+            s = "Strg+";
         }
         str.Append(s);
     }
     if (virt & FSHIFT) {
-        const WCHAR* s = L"Shift+";
+        const char* s = "Shift+";
         if (isGerman) {
-            s = L"Umschalt+";
+            s = "Umschalt+";
         }
         str.Append(s);
     }
@@ -1274,7 +1274,7 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
 
     if (isVirt && key >= VK_F1 && key <= VK_F24) {
         int n = key - VK_F1 + 1;
-        str.AppendFmt(L"F%d", n);
+        str.AppendFmt("F%d", n);
         return;
     }
     if (isVirt && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
@@ -1287,8 +1287,7 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
     // so for non-virtual assume it's a single char
     bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
     if (isAscii || !isVirt) {
-        WCHAR c = (WCHAR)key;
-        str.AppendChar(c);
+        str.AppendChar((char)key);
         return;
     }
 
@@ -1370,8 +1369,7 @@ static void AppendAccelKeyToMenuString(str::WStr& str, const ACCEL& a) {
         ReportIf(!keyStr);
     }
     if (keyStr) {
-        WCHAR* tmp = ToWstrTemp(keyStr);
-        str.Append(tmp);
+        str.Append(keyStr);
     }
 }
 
@@ -1454,13 +1452,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         bool noTranslate = isDebugMenu || cmdIdInList(menusNoTranslate);
         noTranslate |= (subMenuDef == menuDefDebug);
-        AutoFreeWstr tmp;
-        const WCHAR* title = nullptr;
-        if (noTranslate) {
-            tmp = ToWstr(md.title);
-            title = tmp.Get();
-        } else {
-            title = trans::GetTranslation(md.title);
+        const char* title = md.title;
+        if (!noTranslate) {
+            title = trans::GetTranslationA(md.title);
         }
 
         if (isSubMenu) {
@@ -1469,17 +1463,19 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             if (subMenuDef == menuDefFile) {
                 DynamicPartOfFileMenu(subMenu, ctx);
             }
-            AppendMenuW(menu, flags, (UINT_PTR)subMenu, title);
+            WCHAR* ws = ToWstrTemp(title);
+            AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
-            str::WStr title2 = title;
+            str::Str title2 = title;
             if (GetAccelByCmd(cmdId, accel)) {
                 // if this is an accelerator, append it to menu
-                if (!str::Find(title, L"\t")) {
+                if (!str::Find(title, "\t")) {
                     AppendAccelKeyToMenuString(title2, accel);
                 }
             }
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
-            AppendMenuW(menu, flags, md.idOrSubmenu, title2.Get());
+            WCHAR* ws = ToWstrTemp(title2.Get());
+            AppendMenuW(menu, flags, md.idOrSubmenu, ws);
         }
 
         if (cmdId == CmdOpenWithHtmlHelp && ctx) {
@@ -1574,9 +1570,9 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
         if (def.idOrSubmenu != CmdPrint) {
             continue;
         }
-        str::WStr printItem = trans::GetTranslation(def.title);
+        str::Str printItem = trans::GetTranslationA(def.title);
         if (!filePrintAllowed) {
-            printItem = _TR("&Print... (denied)");
+            printItem = _TRA("&Print... (denied)");
         } else {
             ACCEL accel;
             if (GetAccelByCmd(CmdPrint, accel)) {
@@ -1584,7 +1580,8 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
             }
         }
         if (!filePrintAllowed || !disableOnly) {
-            ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, printItem.Get());
+            WCHAR* ws = ToWstrTemp(printItem.Get());
+            ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, ws);
         }
         win::menu::SetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
     }
