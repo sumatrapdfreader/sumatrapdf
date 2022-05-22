@@ -7,5 +7,5 @@ void ToggleTocBox(WindowInfo*);
 void LoadTocTree(WindowInfo*);
 void UpdateTreeCtrlColors(WindowInfo*);
 void UpdateTocSelection(WindowInfo*, int currPageNo);
-void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl*, TocTree*);
+void UpdateTocExpansionState(Vec<int>& tocState, wg::TreeView*, TocTree*);
 void UnsubclassToc(WindowInfo*);

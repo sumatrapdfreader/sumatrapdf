@@ -10,9 +10,11 @@ struct LabelWithCloseWnd;
 namespace wg {
 struct Splitter;
 struct Tooltip;
+struct TreeView;
 } // namespace wg
 struct CaptionInfo;
 struct TabsCtrl2;
+struct TreeCtrl;
 
 struct IPageElement;
 struct PageDestination;
@@ -22,8 +24,6 @@ struct ControllerCallback;
 struct ChmModel;
 struct DisplayModel;
 struct TabInfo;
-
-struct TreeCtrl;
 
 struct Annotation;
 struct ILinkHandler;
@@ -109,7 +109,7 @@ struct WindowInfo {
     HWND hwndTocBox = nullptr;
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
-    TreeCtrl* tocTreeCtrl = nullptr;
+    wg::TreeView* tocTreeCtrl = nullptr;
     UINT_PTR tocBoxSubclassId = 0;
 
     // whether the current tab's ToC has been loaded into the tree

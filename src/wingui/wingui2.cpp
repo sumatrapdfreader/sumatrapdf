@@ -274,7 +274,7 @@ void Wnd::OnContextMenu(Point pt) {
 
     // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
     ContextMenuEvent2 ev;
-    ev.wnd = this;
+    ev.w = this;
     ev.mouseGlobal = pt;
 
     POINT ptW{pt.x, pt.y};
@@ -2562,11 +2562,16 @@ static bool HandleKey(TreeView* tree, WPARAM wp) {
 LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     TreeView* w = this;
 
-    if (WM_RBUTTONDOWN == msg) {
-        return WndProcDefault(hwnd, msg, wparam, lparam);
-    }
     if (WM_ERASEBKGND == msg) {
         return FALSE;
+    }
+
+    if (WM_RBUTTONUP == msg) {
+        log("WM_RBUTTONUP\n");
+    }
+
+    if (WM_CONTEXTMENU == msg) {
+        log("WM_CNTEXTMENU\n");
     }
 
     if (WM_KEYDOWN == msg) {
@@ -2799,7 +2804,7 @@ TreeItemState TreeView::GetItemState(TreeItem ti) {
 // in both cases can return null
 // sets pt to screen position (for context menu coordinates)
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
-    TreeView* treeCtrl = (TreeView*)args->wnd;
+    TreeView* treeCtrl = (TreeView*)args->w;
     TreeModel* tm = treeCtrl->treeModel;
     HWND hwnd = treeCtrl->hwnd;
 
@@ -2869,8 +2874,8 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         if (!ev.treeItem) {
             return 0;
         }
-        onTreeItemCustomDraw(&ev);
-        return 0;
+        LRESULT res = onTreeItemCustomDraw(&ev);
+        return res;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged

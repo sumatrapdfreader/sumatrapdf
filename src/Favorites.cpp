@@ -847,15 +847,21 @@ extern void TocTreeCharHandler(CharEvent* ev);
 extern void TocTreeMouseWheelHandler(MouseWheelEvent* ev);
 extern void TocTreeKeyDown(TreeKeyDownEvent* ev);
 
+static HFONT gTreeFont = nullptr;
+
 HFONT GetTreeFont() {
+    if (gTreeFont) {
+        return gTreeFont;
+    }
+
     int fntSize = GetSizeOfDefaultGuiFont();
     int fntSizeUser = gGlobalPrefs->treeFontSize;
     if (fntSizeUser > 5) {
         fntSize = fntSizeUser;
     }
-    HFONT fnt = GetDefaultGuiFontOfSize(fntSize);
-    CrashIf(!fnt);
-    return fnt;
+    gTreeFont = GetDefaultGuiFontOfSize(fntSize);
+    CrashIf(!gTreeFont);
+    return gTreeFont;
 }
 
 void CreateFavorites(WindowInfo* win) {

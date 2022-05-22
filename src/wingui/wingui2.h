@@ -11,7 +11,7 @@ enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderSt
 struct Wnd;
 
 struct ContextMenuEvent2 {
-    Wnd* wnd = nullptr;
+    Wnd* w = nullptr;
 
     // mouse x,y position relative to the window
     Point mouseWindow{};
@@ -567,7 +567,7 @@ struct TreeItemCustomDrawEvent2 {
     NMTVCUSTOMDRAW* nm = nullptr;
 };
 
-using TreeItemCustomDrawHandler2 = std::function<void(TreeItemCustomDrawEvent2*)>;
+using TreeItemCustomDrawHandler2 = std::function<LRESULT(TreeItemCustomDrawEvent2*)>;
 
 struct TreeSelectionChangedEvent2 {
     TreeView* treeCtrl = nullptr;
@@ -591,7 +591,7 @@ struct TreeClickEvent2 {
     Point mouseGlobal{};
 };
 
-using TreeClickHandler2 = std::function<void(TreeClickEvent2*)>;
+using TreeClickHandler2 = std::function<LRESULT(TreeClickEvent2*)>;
 
 struct TreeKeyDownEvent2 {
     TreeView* treeCtrl = nullptr;

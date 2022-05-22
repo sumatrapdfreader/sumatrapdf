@@ -17,6 +17,8 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
+#include "wingui/wingui2.h"
+
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "AppColors.h"
