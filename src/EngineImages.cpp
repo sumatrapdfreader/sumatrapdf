@@ -868,11 +868,16 @@ char* EngineImageDir::GetPageLabel(int pageNo) const {
 }
 
 int EngineImageDir::GetPageByLabel(const char* label) const {
+    size_t nLabel = str::Len(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
-        const char* fileName = path::GetBaseNameTemp(pageFileNames.at(i));
-        const char* fileExt = path::GetExtTemp(fileName);
-        if (str::StartsWithI(fileName, label) &&
-            (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
+        char* pagePath = pageFileNames[i];
+        const char* fileName = path::GetBaseNameTemp(pagePath);
+        char* ext = path::GetExtTemp(fileName);
+        if (!str::StartsWith(fileName, label)) {
+            continue;
+        }
+        const char* maybeExt = fileName + nLabel;
+        if (str::Eq(maybeExt, ext) || fileName[nLabel] == 0) {
             return i + 1;
         }
     }

@@ -1162,9 +1162,9 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
             }
             char* arg0 = args.at(2 + 0);
             name = str::DupTemp(path::GetBaseNameTemp(arg0));
-            char* ext = path::GetExtTemp(name);
-            if (ext) {
-                *ext = 0;
+            char* pos = str::FindChar(name, '.');
+            if (pos) {
+                *pos = 0;
             }
         }
 
