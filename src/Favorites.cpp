@@ -10,11 +10,11 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/LabelWithCloseWnd.h"
-#include "wingui/TreeCtrl.h"
+#include "wingui/wingui2.h"
+using namespace wg;
 
 #include "Settings.h"
 #include "Controller.h"
@@ -35,6 +35,7 @@
 #include "SumatraDialogs.h"
 #include "Tabs.h"
 #include "Translations.h"
+#include "TableOfContents.h" // TODO: sharing some functions
 
 struct FavTreeItem {
     ~FavTreeItem();
@@ -608,7 +609,7 @@ static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
 }
 
 void PopulateFavTreeIfNeeded(WindowInfo* win) {
-    TreeCtrl* treeCtrl = win->favTreeCtrl;
+    TreeView* treeCtrl = win->favTreeCtrl;
     if (treeCtrl->treeModel) {
         return;
     }
@@ -617,7 +618,7 @@ void PopulateFavTreeIfNeeded(WindowInfo* win) {
 }
 
 void UpdateFavoritesTree(WindowInfo* win) {
-    TreeCtrl* treeCtrl = win->favTreeCtrl;
+    TreeView* treeCtrl = win->favTreeCtrl;
     auto* prevModel = treeCtrl->treeModel;
     TreeModel* newModel = BuildFavTreeModel(win);
     treeCtrl->SetTreeModel(newModel);
@@ -723,7 +724,7 @@ void DelFavorite(const char* filePath, int pageNo) {
 
 void RememberFavTreeExpansionState(WindowInfo* win) {
     win->expandedFavorites.Reset();
-    TreeCtrl* treeCtrl = win->favTreeCtrl;
+    TreeView* treeCtrl = win->favTreeCtrl;
     TreeModel* tm = treeCtrl ? treeCtrl->treeModel : nullptr;
     if (!tm) {
         // TODO: remember all favorites as expanded
@@ -749,16 +750,17 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
+#if 0
 static void FavTreeItemClicked(TreeClickEvent* ev) {
     ev->didHandle = true;
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
     GoToFavForTreeItem(win, ev->treeItem);
 }
+#endif
 
-static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
-    ev->didHandle = true;
-    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
+static void FavTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->treeCtrl->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -774,11 +776,9 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     GoToFavForTreeItem(win, ev->selectedItem);
 }
 
-static void FavTreeContextMenu(ContextMenuEvent* ev) {
-    ev->didHandle = true;
-
-    TreeCtrl* treeCtrl = (TreeCtrl*)ev->w;
-    CrashIf(!IsTreeKind(treeCtrl->kind));
+static void FavTreeContextMenu(ContextMenuEvent2* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    TreeView* treeCtrl = (TreeView*)ev->w;
     HWND hwnd = treeCtrl->hwnd;
     // WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
@@ -827,7 +827,12 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return res;
     }
 
-    TreeCtrl* treeCtrl = win->favTreeCtrl;
+    res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res) {
+        return res;
+    }
+
+    TreeView* treeCtrl = win->favTreeCtrl;
     switch (msg) {
         case WM_SIZE:
             LayoutTreeContainer(win->favLabelWithClose, treeCtrl->hwnd);
@@ -841,11 +846,6 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
     return CallWindowProc(DefWndProcFavBox, hwnd, msg, wp, lp);
 }
-
-// in TableOfContents.cpp
-extern void TocTreeCharHandler(CharEvent* ev);
-extern void TocTreeMouseWheelHandler(MouseWheelEvent* ev);
-extern void TocTreeKeyDown(TreeKeyDownEvent* ev);
 
 static HFONT gTreeFont = nullptr;
 
@@ -864,6 +864,10 @@ HFONT GetTreeFont() {
     return gTreeFont;
 }
 
+// in TableOfContents.cpp
+extern void TocCustomizeTooltip(TreeItemGetTooltipEvent2*);
+extern LRESULT TocTreeKeyDown2(TreeKeyDownEvent2*);
+
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -877,22 +881,23 @@ void CreateFavorites(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    TreeCtrl* treeCtrl = new TreeCtrl();
+    auto* treeCtrl = new TreeView();
+    TreeViewCreateArgs args;
+    args.parent = win->hwndFavBox;
+    args.font = GetTreeFont();
+    args.fullRowSelect = true;
+    args.exStyle = WS_EX_STATICEDGE;
 
-    treeCtrl->fullRowSelect = true;
+    treeCtrl->onGetTooltip = TocCustomizeTooltip;
     treeCtrl->onContextMenu = FavTreeContextMenu;
-    treeCtrl->onChar = TocTreeCharHandler;
-    treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
-    treeCtrl->onTreeClick = FavTreeItemClicked;
-    treeCtrl->onTreeKeyDown = TocTreeKeyDown;
+    treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
+    //treeCtrl->onTreeClick = FavTreeItemClicked;
+    //treeCtrl->onChar = TocTreeCharHandler;
+    //treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
 
-    // TODO: leaks font?
-    HFONT fnt = GetTreeFont();
-    treeCtrl->SetFont(fnt);
-
-    bool ok = treeCtrl->Create(win->hwndFavBox);
-    CrashIf(!ok);
+    treeCtrl->Create(args);
+    CrashIf(!treeCtrl->hwnd);
 
     win->favTreeCtrl = treeCtrl;
 

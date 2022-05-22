@@ -266,36 +266,3 @@ void LabelWithCloseWnd::SetPaddingXY(int x, int y) {
     this->padY = y;
     ScheduleRepaint(this->hwnd);
 }
-
-Kind kindLabelWithClose = "labelWithClose";
-
-LabelWithCloseCtrl::LabelWithCloseCtrl() {
-    kind = kindLabelWithClose;
-    dwStyle = WS_VISIBLE | WS_CHILD;
-    dwExStyle = 0;
-    backgroundColor = GetSysColor(COLOR_BTNFACE);
-    textColor = GetSysColor(COLOR_BTNTEXT);
-}
-
-LabelWithCloseCtrl::~LabelWithCloseCtrl() = default;
-
-void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
-    padX = x;
-    padY = y;
-    ScheduleRepaint(hwnd);
-}
-
-Size LabelWithCloseCtrl::GetIdealSize() {
-    WCHAR* s = ToWstrTemp(text.Get());
-    Size size = TextSizeInHwnd(hwnd, s);
-    int btnDx = DpiScale(hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScale(hwnd, CLOSE_BTN_DY);
-    size.dx += btnDx;
-    size.dx += DpiScale(hwnd, LABEL_BUTTON_SPACE_DX);
-    size.dx += 2 * DpiScale(hwnd, padX);
-    if (size.dy < btnDy) {
-        size.dy = btnDy;
-    }
-    size.dy += 2 * DpiScale(hwnd, padY);
-    return {size.dx, size.dy};
-}

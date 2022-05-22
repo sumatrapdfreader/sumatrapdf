@@ -11,12 +11,11 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/LabelWithCloseWnd.h"
-#include "wingui/TreeCtrl.h"
 #include "wingui/wingui2.h"
+using namespace wg;
 
 #include "Settings.h"
 #include "Controller.h"
@@ -48,11 +47,9 @@
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-using namespace wg;
-
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
+void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
     auto treeCtrl = ev->treeCtrl;
     auto tm = treeCtrl->treeModel;
     auto ti = ev->treeItem;
@@ -565,7 +562,6 @@ static bool ShouldCustomDraw(WindowInfo* win) {
 
 LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent2*);
 
-
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {
     if (root->next && root->next->next) {
@@ -687,7 +683,7 @@ LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent2* ev) {
 // this calls GoToTocLinkTask) which will eventually call GoToPage()
 // which adds nav point. Maybe I should not add nav point
 // if going to the same page?
-void TocTreeClick(TreeClickEvent2* ev) {
+LRESULT TocTreeClick(TreeClickEvent2* ev) {
 #if 0
     ev->didHandle = true;
     if (!ev->treeItem) {
@@ -698,6 +694,7 @@ void TocTreeClick(TreeClickEvent2* ev) {
     bool allowExternal = false;
     GoToTocTreeItem(win, ev->treeItem, allowExternal);
 #endif
+    return -1;
 }
 
 static void TocTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
@@ -716,38 +713,6 @@ static void TocTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
     }
     bool allowExternal = ev->byMouse;
     GoToTocTreeItem(win, ev->selectedItem, allowExternal);
-}
-
-// also used in Favorites.cpp
-void TocTreeKeyDown(TreeKeyDownEvent* ev) {
-    // TODO: trying to fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1841
-    // doesn't work i.e. page up / page down seems to be processed anyway by TreeCtrl
-#if 0
-    if ((ev->keyCode == VK_PRIOR) || (ev->keyCode == VK_NEXT)) {
-        // up/down in tree is not very useful, so instead
-        // send it to frame so that it scrolls document instead
-        WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
-        // this is sent as WM_NOTIFY to TreeCtrl but for frame it's WM_KEYDOWN
-        // alternatively, we could call FrameOnKeydown(ev->wp, ev->lp, false);
-        SendMessageW(win->hwndFrame, WM_KEYDOWN, ev->wp, ev->lp);
-        ev->didHandle = true;
-        ev->result = 1;
-        return;
-    }
-#endif
-    ev->didHandle = true;
-    ev->result = 0;
-    if (ev->keyCode != VK_TAB) {
-        return;
-    }
-
-    ev->result = 1;
-    WindowInfo* win = FindWindowInfoByHwnd(ev->treeCtrl->hwnd);
-    if (win->tabsVisible && IsCtrlPressed()) {
-        TabsOnCtrlTab(win, IsShiftPressed());
-        return;
-    }
-    AdvanceFocus(win);
 }
 
 LRESULT TocTreeKeyDown2(TreeKeyDownEvent2* ev) {
@@ -918,25 +883,23 @@ void CreateToc(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    HFONT fnt = GetTreeFont();
-
     auto* treeCtrl = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndTocBox;
-    args.font = fnt;
+    args.font =  GetTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
     treeCtrl->onGetTooltip = TocCustomizeTooltip;
     treeCtrl->onContextMenu = TocContextMenu;
+    treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
+    treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
+    //treeCtrl->onTreeClick = TocTreeClick; // TODO: maybe not necessary
     //treeCtrl->onChar = TocTreeCharHandler;
     //treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
-    treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
-    treeCtrl->onTreeClick = TocTreeClick; // TODO: maybe not necessary
-    treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
 
-    bool ok = treeCtrl->Create(args);
-    CrashIf(!ok);
+    treeCtrl->Create(args);
+    CrashIf(!treeCtrl->hwnd);;
     win->tocTreeCtrl = treeCtrl;
     SubclassToc(win);
 }

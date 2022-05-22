@@ -2845,6 +2845,7 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
 LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     TreeView* w = this;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
+    LRESULT res;
 
     auto code = nmtv->hdr.code;
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
@@ -2863,7 +2864,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
     if (code == NM_CUSTOMDRAW) {
         if (!onTreeItemCustomDraw) {
-            return 0;
+            return CDRF_DODEFAULT;
         }
         TreeItemCustomDrawEvent2 ev;
         ev.treeCtrl = w;
@@ -2875,9 +2876,12 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         // should log more info
         // SubmitBugReportIf(!a.treeItem);
         if (!ev.treeItem) {
-            return 0;
+            return CDRF_DODEFAULT;
         }
-        LRESULT res = onTreeItemCustomDraw(&ev);
+        res = onTreeItemCustomDraw(&ev);
+        if (res < 0) {
+            return CDRF_DODEFAULT;
+        }
         return res;
     }
 
@@ -2931,7 +2935,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         if ((ht.flags & TVHT_ONITEM)) {
             ev.treeItem = GetTreeItemByHandle(ht.hItem);
         }
-        onTreeClick(&ev);
+        res = onTreeClick(&ev);
         return 0;
     }
 

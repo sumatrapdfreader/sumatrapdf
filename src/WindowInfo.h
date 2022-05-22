@@ -14,7 +14,6 @@ struct TreeView;
 } // namespace wg
 struct CaptionInfo;
 struct TabsCtrl2;
-struct TreeCtrl;
 
 struct IPageElement;
 struct PageDestination;
@@ -107,10 +106,10 @@ struct WindowInfo {
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;
+    UINT_PTR tocBoxSubclassId = 0;
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
     wg::TreeView* tocTreeCtrl = nullptr;
-    UINT_PTR tocBoxSubclassId = 0;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -122,7 +121,7 @@ struct WindowInfo {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
-    TreeCtrl* favTreeCtrl = nullptr;
+    wg::TreeView* favTreeCtrl = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
