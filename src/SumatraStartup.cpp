@@ -424,9 +424,9 @@ static void SetupCrashHandler() {
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    auto exePath = GetExePathTemp();
+    char* exePath = GetExePathTemp();
     str::ToLowerInPlace(exePath);
-    u32 hash = MurmurHash2(exePath, str::Len(exePath) * sizeof(WCHAR));
+    u32 hash = MurmurHash2(exePath, str::Len(exePath));
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
@@ -438,7 +438,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     DWORD lastErr = 0;
 Retry:
     // use a memory mapping containing a process id as mutex
-    hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
+    hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
     if (!hMap) {
         goto Error;
     }
