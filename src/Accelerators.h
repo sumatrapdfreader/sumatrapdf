@@ -2,4 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 HACCEL* CreateSumatraAcceleratorTable();
+HACCEL* GetSafeAcceleratorTable();
+
 bool GetAccelByCmd(int cmdId, ACCEL& accelOut);

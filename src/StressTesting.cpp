@@ -837,8 +837,8 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
     Vec<StrVec*> filesPerType;
 
     for (size_t i = 0; i < files.size(); i++) {
-        const char* file = files.at(i);
-        const char* ext = path::GetExtTemp(file);
+        char* file = files.at(i);
+        char* ext = path::GetExtTemp(file);
         CrashAlwaysIf(!ext);
         int typeNo = fileExts.FindI(ext);
         if (-1 == typeNo) {

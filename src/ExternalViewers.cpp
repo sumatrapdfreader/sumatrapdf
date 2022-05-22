@@ -256,7 +256,7 @@ bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     }
     // must match file extension
     const char* filePath = tab->filePath.Get();
-    const char* ext = path::GetExtTemp(filePath);
+    char* ext = path::GetExtTemp(filePath);
     const char* pos = str::FindI(ev->exts, ext);
     if (!pos) {
         return false;

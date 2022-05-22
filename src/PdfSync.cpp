@@ -128,23 +128,24 @@ int Synchronizer::Create(const char* pdffilename, EngineBase* engine, Synchroniz
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    const char* fileExt = path::GetExtTemp(pdffilename);
+    char* fileExt = path::GetExtTemp(pdffilename);
     if (!str::EqI(fileExt, ".pdf")) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    AutoFreeStr baseName(str::Dup(pdffilename, fileExt - pdffilename));
+    size_t nBaseLen = str::Len(pdffilename) - str::Len(fileExt);
+    char* baseName = str::DupTemp(pdffilename, nBaseLen);
 
     // Check if a PDFSYNC file is present
-    AutoFreeStr syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
+    char* syncFile = str::JoinTemp(baseName, PDFSYNC_EXTENSION);
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    AutoFreeStr texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
-    AutoFreeStr texFile(str::Join(baseName, SYNCTEX_EXTENSION));
+    char* texGzFile = str::JoinTemp(baseName, SYNCTEXGZ_EXTENSION);
+    char* texFile = str::JoinTemp(baseName, SYNCTEX_EXTENSION);
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be

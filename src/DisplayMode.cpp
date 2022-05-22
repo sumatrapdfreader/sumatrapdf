@@ -105,7 +105,7 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
     if (!IsValidZoom(zoom) && stateForIssue2140) {
         // TODO: does issue 2140 still occur?
         logf("Invalid ds->zoom: %g\n", zoom);
-        const char* ext = path::GetExtTemp(stateForIssue2140->filePath);
+        char* ext = path::GetExtTemp(stateForIssue2140->filePath);
         if (!str::IsEmpty(ext)) {
             logf("File type: %s\n", ext);
         }
