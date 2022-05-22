@@ -14,7 +14,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
 #include "wingui/wingui2.h"

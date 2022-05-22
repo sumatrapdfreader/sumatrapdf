@@ -35,7 +35,6 @@ using namespace wg;
 #include "SumatraDialogs.h"
 #include "Tabs.h"
 #include "Translations.h"
-#include "TableOfContents.h" // TODO: sharing some functions
 
 struct FavTreeItem {
     ~FavTreeItem();
@@ -865,7 +864,6 @@ HFONT GetTreeFont() {
 }
 
 // in TableOfContents.cpp
-extern void TocCustomizeTooltip(TreeItemGetTooltipEvent2*);
 extern LRESULT TocTreeKeyDown2(TreeKeyDownEvent2*);
 
 void CreateFavorites(WindowInfo* win) {
@@ -888,13 +886,12 @@ void CreateFavorites(WindowInfo* win) {
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
-    treeCtrl->onGetTooltip = TocCustomizeTooltip;
     treeCtrl->onContextMenu = FavTreeContextMenu;
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
-    //treeCtrl->onTreeClick = FavTreeItemClicked;
-    //treeCtrl->onChar = TocTreeCharHandler;
-    //treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
+    // treeCtrl->onTreeClick = FavTreeItemClicked;
+    // treeCtrl->onChar = TocTreeCharHandler;
+    // treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeCtrl->Create(args);
     CrashIf(!treeCtrl->hwnd);

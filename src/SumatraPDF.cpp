@@ -23,7 +23,6 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TreeCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 #include "wingui/TabsCtrl.h"

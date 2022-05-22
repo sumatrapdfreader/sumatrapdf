@@ -14,7 +14,6 @@
 #include "wingui/wingui2.h"
 
 #include "wingui/Window.h"
-#include "wingui/TreeCtrl.h" // TODO: temporary
 
 #include "utils/Log.h"
 
@@ -2685,6 +2684,23 @@ TreeItem TreeView::GetTreeItemByHandle(HTREEITEM item) {
     }
     TreeItem res = (TreeItem)(tvi->lParam);
     return res;
+}
+
+static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
+    uint mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+    tvitem->mask = mask;
+
+    uint stateMask = TVIS_EXPANDED;
+    uint state = 0;
+    if (tm->IsExpanded(ti)) {
+        state = TVIS_EXPANDED;
+    }
+
+    tvitem->state = state;
+    tvitem->stateMask = stateMask;
+    tvitem->lParam = static_cast<LPARAM>(ti);
+    char* title = tm->Text(ti);
+    tvitem->pszText = ToWstrTemp(title);
 }
 
 // inserting in front is faster:

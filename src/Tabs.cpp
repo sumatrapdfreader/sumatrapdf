@@ -14,7 +14,6 @@
 
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/TreeCtrl.h"
 #include "wingui/TabsCtrl.h"
 
 #include "Settings.h"

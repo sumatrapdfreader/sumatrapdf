@@ -49,7 +49,7 @@ using namespace wg;
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
+static void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
     auto treeCtrl = ev->treeCtrl;
     auto tm = treeCtrl->treeModel;
     auto ti = ev->treeItem;
