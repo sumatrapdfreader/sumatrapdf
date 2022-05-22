@@ -2427,7 +2427,7 @@ HWND TreeView::Create(const TreeViewCreateArgs& argsIn) {
     args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     args.style |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     args.style |= TVS_TRACKSELECT | TVS_NOHSCROLL | TVS_INFOTIP;
-    args.exStyle = TVS_EX_DOUBLEBUFFER;
+    args.exStyle = argsIn.exStyle | TVS_EX_DOUBLEBUFFER;
 
     if (fullRowSelect) {
         args.exStyle |= TVS_FULLROWSELECT;
@@ -2560,18 +2560,19 @@ static bool HandleKey(TreeView* tree, WPARAM wp) {
 }
 
 LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    LRESULT res;
     TreeView* w = this;
 
     if (WM_ERASEBKGND == msg) {
         return FALSE;
     }
 
-    if (WM_RBUTTONUP == msg) {
-        log("WM_RBUTTONUP\n");
-    }
-
-    if (WM_CONTEXTMENU == msg) {
-        log("WM_CNTEXTMENU\n");
+    if (WM_RBUTTONDOWN == msg) {
+        // this is needed to make right click trigger context menu
+        // otherwise it gets turned into NM_CLICK and it somehow
+        // blocks WM_RBUTTONUP, which is a trigger for WM_CONTEXTMENU
+        res = DefWindowProcW(hwnd, msg, wparam, lparam);
+        return res;
     }
 
     if (WM_KEYDOWN == msg) {
@@ -2579,7 +2580,9 @@ LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             return 0;
         }
     }
-    return WndProcDefault(hwnd, msg, wparam, lparam);
+
+    res = WndProcDefault(hwnd, msg, wparam, lparam);
+    return res;
 }
 
 bool TreeView::IsExpanded(TreeItem ti) {
@@ -2880,6 +2883,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
+        log("tv: TVN_SELCHANGED\n");
         if (!onTreeSelectionChanged) {
             return 0;
         }
@@ -2900,6 +2904,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
+        log("tv: NM_CLICK\n");
         if (!onTreeClick) {
             return 0;
         }

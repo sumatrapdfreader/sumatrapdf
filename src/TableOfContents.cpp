@@ -862,6 +862,8 @@ void UnsubclassToc(WindowInfo* win) {
     }
 }
 
+// TODO: restore
+#if 0
 void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
     CrashIf(!win);
@@ -874,7 +876,10 @@ void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
         ev->result = SendMessageW(win->hwndCanvas, ev->msg, ev->wp, ev->lp);
     }
 }
+#endif
 
+// TODO: restore
+#if 0
 void TocTreeCharHandler(CharEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
     CrashIf(!win);
@@ -894,6 +899,7 @@ void TocTreeCharHandler(CharEvent* ev) {
     CloseWindow(win, true, false);
     ev->didHandle = true;
 }
+#endif
 
 extern HFONT GetTreeFont();
 
@@ -919,14 +925,14 @@ void CreateToc(WindowInfo* win) {
     args.parent = win->hwndTocBox;
     args.font = fnt;
     args.fullRowSelect = true;
+    args.exStyle = WS_EX_STATICEDGE;
 
-    //treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->onGetTooltip = TocCustomizeTooltip;
     treeCtrl->onContextMenu = TocContextMenu;
     //treeCtrl->onChar = TocTreeCharHandler;
     //treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
     treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
-    //treeCtrl->onTreeClick = TocTreeClick;
+    treeCtrl->onTreeClick = TocTreeClick; // TODO: maybe not necessary
     treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
 
     bool ok = treeCtrl->Create(args);

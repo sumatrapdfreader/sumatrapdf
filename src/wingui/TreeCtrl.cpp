@@ -251,7 +251,7 @@ void TreeCtrl::WndProc(WndEvent* ev) {
     CrashIf(w->hwnd != (HWND)hwnd);
 
     if (WM_RBUTTONDOWN == msg) {
-        DefWindowProc(hwnd, msg, wp, lp);
+        DefWindowProcW(hwnd, msg, wp, lp);
         return;
     }
 

@@ -525,6 +525,7 @@ static int RunMessageLoop() {
             continue;
         }
 
+        // TODO: why mouse events?
         bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
                          (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
 

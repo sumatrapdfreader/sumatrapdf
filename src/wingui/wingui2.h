@@ -550,6 +550,7 @@ struct TreeView;
 struct TreeViewCreateArgs {
     HWND parent = nullptr;
     HFONT font = nullptr;
+    DWORD exStyle = 0; // additional flags, will be OR with the rest
     bool fullRowSelect = false;
 };
 
