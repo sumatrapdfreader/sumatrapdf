@@ -835,7 +835,6 @@ void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annota
         RebuildAnnotations(ew);
         UpdateUIForSelectedAnnotation(ew, 0);
         ew->listBox->SetCurrentSelection(0);
-
     }
     WindowInfoRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);

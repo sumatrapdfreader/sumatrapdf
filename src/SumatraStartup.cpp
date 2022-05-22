@@ -485,10 +485,46 @@ Error:
     goto Retry;
 }
 
-static int RunMessageLoop() {
-    HACCEL* accTable = CreateSumatraAcceleratorTable();
+static HACCEL* gAccTable;
+static HACCEL* gSafeAccTable;
 
-    MSG msg{nullptr};
+static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
+    CrashIf(!gAccTable || !*gAccTable);
+    CrashIf(!gSafeAccTable || !*gSafeAccTable);
+
+    if (FindPropertyWindowByHwnd(hwnd)) {
+        *hwndAccel = hwnd;
+        return *gSafeAccTable;
+    }
+
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    if (!win) {
+        return nullptr;
+    }
+    if (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) {
+        *hwndAccel = win->hwndFrame;
+        return *gAccTable;
+    }
+    WCHAR clsName[256];
+    int n = GetClassNameW(hwnd, clsName, dimof(clsName));
+    if (n == 0) {
+        return nullptr;
+    }
+    if (str::Eq(clsName, WC_EDITW) || str::Eq(clsName, WC_TREEVIEWW)) {
+        *hwndAccel = win->hwndFrame;
+        return *gSafeAccTable;
+    }
+    return nullptr;
+}
+
+static int RunMessageLoop() {
+    gAccTable = CreateSumatraAcceleratorTable();
+    gSafeAccTable = GetSafeAcceleratorTable();
+
+    MSG msg;
+    HACCEL accels;
+    HWND hwndDialog;
+    HWND hwndAccel;
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
         if (wg::PreTranslateMessage(msg)) {
@@ -498,19 +534,17 @@ static int RunMessageLoop() {
         bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
                          (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
 
-        // dispatch the accelerator but only in frame / canvas
-        // this prevents translating accelerator in e.g. edit control
-        HWND hwnd = msg.hwnd;
-        WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-        if (doAccels && win && (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) &&
-            TranslateAccelerator(win->hwndFrame, *accTable, &msg)) {
-            continue;
-        }
-        if (doAccels && FindPropertyWindowByHwnd(hwnd) && TranslateAccelerator(hwnd, *accTable, &msg)) {
-            continue;
+        if (doAccels) {
+            accels = FindAcceleratorsForHwnd(msg.hwnd, &hwndAccel);
+            if (accels) {
+                auto didTranslate = TranslateAccelerator(hwndAccel, accels, &msg);
+                if (didTranslate) {
+                    continue;
+                }
+            }
         }
 
-        HWND hwndDialog = GetCurrentModelessDialog();
+        hwndDialog = GetCurrentModelessDialog();
         if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
             // DbgLogMsg("dialog: ", msg.hwnd, msg.message, msg.wParam, msg.lParam);
             continue;

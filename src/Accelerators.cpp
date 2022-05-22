@@ -73,8 +73,6 @@
     V(VK_F23, "F23")           \
     V(VK_F24, "F24")
 
-static HACCEL gLastAccel = nullptr;
-
 ACCEL gBuiltInAccelerators[] = {
     {0, 'k', CmdScrollUp},
     {0, 'j', CmdScrollDown},
@@ -204,9 +202,6 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'c', CmdToggleContinuousView},
 };
 
-ACCEL* gAccels = nullptr;
-int gAccelsCount = 0;
-
 static void SkipWS(const char*& s) {
     while (*s) {
         if (!str::IsWs(*s)) {
@@ -310,25 +305,55 @@ static bool SameAccelKey(const ACCEL& a1, const ACCEL& a2) {
     return true;
 }
 
-/* returns a pointer to HACCEL so that we can update it and message loop will use
-  the latest version */
-HACCEL* CreateSumatraAcceleratorTable() {
-    DestroyAcceleratorTable(gLastAccel);
-    if (gAccels != gBuiltInAccelerators) {
-        free(gAccels);
+static WORD gNotSafeKeys[] = {VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, VK_SPACE, VK_RETURN, VK_INSERT, VK_DELETE};
+
+static bool IsSafeAccel(const ACCEL& a) {
+    BYTE fv = a.fVirt;
+    WORD k = a.key;
+    if (fv == 0) {
+        return false;
     }
+    if (fv == FVIRTKEY) {
+        for (WORD notSafe : gNotSafeKeys) {
+            if (notSafe == k) {
+                return false;
+            }
+        }
+    }
+    if (fv & FALT) {
+        return true;
+    }
+    if (fv & FSHIFT) {
+        return true;
+    }
+    if (fv & FCONTROL) {
+        return true;
+    }
+    return false;
+}
+
+static ACCEL* gAccels = nullptr;
+static int gAccelsCount = 0;
+
+static ACCEL* gSafeAccels = nullptr;
+static int gSafeAccelsCount = 0;
+
+static HACCEL gAccelerators = nullptr;
+static HACCEL gSafeAccelerators = nullptr;
+
+/* returns a pointer to HACCEL so that we can update it and message loop will use
+the latest version */
+HACCEL* CreateSumatraAcceleratorTable() {
+    DestroyAcceleratorTable(gAccelerators);
+    DestroyAcceleratorTable(gSafeAccelerators);
+    free(gAccels);
+    free(gSafeAccels);
+
     int nBuiltIn = (int)dimof(gBuiltInAccelerators);
-    gAccels = gBuiltInAccelerators;
-    gAccelsCount = nBuiltIn;
 
     int nCustomShortcuts = 0;
     if (gGlobalPrefs->shortcuts) {
         nCustomShortcuts = gGlobalPrefs->shortcuts->isize();
-    }
-    if (nCustomShortcuts == 0) {
-        gLastAccel = CreateAcceleratorTableW(gAccels, gAccelsCount);
-        CrashIf(gLastAccel == nullptr);
-        return &gLastAccel;
     }
 
     // build a combined accelerator table of those defined in settings file
@@ -336,48 +361,61 @@ HACCEL* CreateSumatraAcceleratorTable() {
     int nMax = nBuiltIn + nCustomShortcuts;
     ACCEL* accels = AllocArray<ACCEL>(nMax);
     int nAccels = 0;
+    ACCEL* safeAccels = AllocArray<ACCEL>(nMax);
+    int nSafeAccels = 0;
+
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
         char* cmd = shortcut->cmd;
         int cmdId = GetCommandIdByName(cmd);
         if (cmdId < 0) {
+            // TODO: make it a notification
             logf("CreateSumatraAcceleratorTable: unknown cmd name '%s'\n", cmd);
             continue;
         }
         ACCEL accel = {};
         accel.cmd = cmdId;
         if (!ParseShortcut(shortcut->key, accel)) {
+            // TODO: make it a notification
             logf("CreateSumatraAcceleratorTable: bad shortcut '%s'\n", shortcut->key);
             continue;
         }
         accels[nAccels++] = accel;
-    }
-
-    if (nAccels == 0) {
-        free(accels);
-        gLastAccel = CreateAcceleratorTableW(gAccels, gAccelsCount);
-        CrashIf(gLastAccel == nullptr);
-        return &gLastAccel;
+        if (IsSafeAccel(accel)) {
+            safeAccels[nSafeAccels++] = accel;
+        }
     }
 
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
     nCustomShortcuts = nAccels;
-    for (int i = 0; i < nBuiltIn; i++) {
+    for (ACCEL accel : gBuiltInAccelerators) {
         bool shortcutExists = false;
-        ACCEL accel = gBuiltInAccelerators[i];
-        for (int j = 0; !shortcutExists && j < nAccels; j++) {
-            ACCEL accelExisting = accels[j];
-            shortcutExists = SameAccelKey(accels[j], accel);
+        for (int i = 0; !shortcutExists && i < nAccels; i++) {
+            ACCEL accelExisting = accels[i];
+            shortcutExists = SameAccelKey(accels[i], accel);
         }
-        if (!shortcutExists) {
-            accels[nAccels++] = accel;
+        if (shortcutExists) {
+            continue;
+        }
+        accels[nAccels++] = accel;
+        if (IsSafeAccel(accel)) {
+            safeAccels[nSafeAccels++] = accel;
         }
     }
 
     gAccels = accels;
     gAccelsCount = nAccels;
-    gLastAccel = CreateAcceleratorTableW(gAccels, gAccelsCount);
-    CrashIf(gLastAccel == nullptr);
-    return &gLastAccel;
+    gSafeAccels = safeAccels;
+    gSafeAccelsCount = nSafeAccels;
+
+    gAccelerators = CreateAcceleratorTableW(gAccels, gAccelsCount);
+    CrashIf(gAccelerators == nullptr);
+    gSafeAccelerators = CreateAcceleratorTableW(gSafeAccels, gSafeAccelsCount);
+    return &gAccelerators;
+}
+
+HACCEL* GetSafeAcceleratorTable() {
+    CrashIf(!gSafeAccelerators);
+    return &gSafeAccelerators;
 }
 
 bool GetAccelByCmd(int cmdId, ACCEL& accelOut) {
