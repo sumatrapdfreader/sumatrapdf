@@ -814,9 +814,9 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
     if (WM_INITDIALOG == msg) {
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win::SetText(hDlg, _TR("Add Favorite"));
-        AutoFreeWstr s(str::Format(_TR("Add page %s to favorites with (optional) name:"), data->pageNo));
-        SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
+        win::SetText(hDlg, _TRA("Add Favorite"));
+        AutoFreeStr s(str::Format(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo));
+        SetDlgItemTextW(hDlg, IDC_ADD_PAGE_STATIC, ToWstrTemp(s));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->favName) {
@@ -862,11 +862,9 @@ bool Dialog_AddFavorite(HWND hwnd, const char* pageNo, AutoFreeStr& favName) {
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
     if (IDCANCEL == res) {
-        CrashIf(data.favName != favName);
         return false;
     }
 
-    CrashIf(!(data.favName != favName || !data.favName));
     favName.SetCopy(data.favName);
     return true;
 }
