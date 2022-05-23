@@ -257,14 +257,6 @@ static Size NormalizePaperSize(Size s) {
     return Size(s.dy, s.dx);
 }
 
-static void MessageBoxWarningCond(bool show, const WCHAR* msg, const WCHAR* title) {
-    logf(L"%s: %s\n", title, msg);
-    if (!show) {
-        return;
-    }
-    MessageBoxWarning(nullptr, msg, title);
-}
-
 static void MessageBoxWarningCond(bool show, const char* msg, const char* title) {
     logf("%s: %s\n", title, msg);
     if (!show) {
@@ -1173,7 +1165,7 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
 #endif
 
     if (!engine) {
-        MessageBoxWarningCond(displayErrors, _TR("Cannot print this file"), _TR("Printing problem."));
+        MessageBoxWarningCond(displayErrors, _TRA("Cannot print this file"), _TRA("Printing problem."));
         return false;
     }
 
@@ -1189,7 +1181,7 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
     }
 
     if (!printer) {
-        MessageBoxWarningCond(displayErrors, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
+        MessageBoxWarningCond(displayErrors, _TRA("Printer with given name doesn't exist"), _TRA("Printing problem."));
         return false;
     }
 
@@ -1214,7 +1206,7 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
         PrintData pd(engine, printer, ranges, advanced);
         ok = PrintToDevice(pd);
         if (!ok) {
-            MessageBoxWarningCond(displayErrors, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+            MessageBoxWarningCond(displayErrors, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
         }
     }
 
