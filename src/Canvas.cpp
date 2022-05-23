@@ -1645,10 +1645,10 @@ static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
     GetDropFilesResolved(hDrop, dragFinish, files);
     for (char* path : files) {
         // The first dropped document may override the current window
-        LoadArgs args(path, win);
+        LoadArgs* args = new LoadArgs(path, win);
         if (isShift && !win) {
             win = CreateAndShowWindowInfo(nullptr);
-            args.win = win;
+            args->win = win;
         }
         LoadDocument(args);
     }

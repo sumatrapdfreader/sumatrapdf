@@ -426,7 +426,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
-        LoadArgs args(fullPath, win);
+        LoadArgs* args = new LoadArgs(fullPath, win);
         newWin = LoadDocument(args);
         if (!newWin) {
             return;

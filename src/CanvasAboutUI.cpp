@@ -88,7 +88,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     } else {
         // assume it's a thumbnail of a document
         CrashIf(!url);
-        LoadArgs args(url, win);
+        LoadArgs* args = new LoadArgs(url, win);
         LoadDocument(args);
     }
     // SetFocus(win->hwndFrame);

@@ -430,7 +430,7 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
     WindowInfo* newWin = FindWindowInfoByFile(path, true);
     if (!newWin) {
-        LoadArgs args(path, win);
+        LoadArgs* args = new LoadArgs(path, win);
         newWin = LoadDocument(args);
     }
     if (newWin) {

@@ -1599,7 +1599,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     DestroyMenu(popup);
 
     if (CmdOpenSelectedDocument == cmd) {
-        LoadArgs args(filePath, win);
+        LoadArgs* args = new LoadArgs(filePath, win);
         LoadDocument(args);
         return;
     }

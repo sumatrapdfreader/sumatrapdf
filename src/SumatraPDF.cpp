@@ -1015,8 +1015,8 @@ static bool showTocByDefault(const char* path) {
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* fs) {
-    WindowInfo* win = args.win;
+static void ReplaceDocumentInCurrentTab(LoadArgs* args, Controller* ctrl, FileState* fs) {
+    WindowInfo* win = args->win;
     CrashIf(!win);
     if (!win) {
         return;
@@ -1027,7 +1027,7 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!fs && gGlobalPrefs->rememberStatePerDocument) {
-        const char* fn = args.FilePath();
+        const char* fn = args->FilePath();
         fs = gFileHistory.Find(fn, nullptr);
         if (fs) {
             if (fs->windowPos.IsEmpty()) {
@@ -1044,7 +1044,7 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
     int rotation = 0;
-    const char* path = args.FilePath();
+    const char* path = args->FilePath();
     bool showToc = showTocByDefault(path);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
     int showType = SW_NORMAL;
@@ -1069,7 +1069,7 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
         }
     }
 
-    AbortFinding(args.win, false);
+    AbortFinding(args->win, false);
 
     Controller* prevCtrl = win->ctrl;
     tab->ctrl = ctrl;
@@ -1142,7 +1142,7 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
     }
 
     // TODO: why is this needed?
-    if (!args.isNewWindow && win->IsDocLoaded()) {
+    if (!args->isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
     }
 
@@ -1151,7 +1151,7 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
 
     if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEngineMupdf) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
-        path = args.FilePath();
+        path = args->FilePath();
         int res = Synchronizer::Create(path, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res) {
@@ -1159,19 +1159,19 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
         }
     }
 
-    bool shouldPlace = args.isNewWindow || args.placeWindow && fs;
-    if (args.noPlaceWindow) {
+    bool shouldPlace = args->isNewWindow || args->placeWindow && fs;
+    if (args->noPlaceWindow) {
         shouldPlace = false;
     }
     if (shouldPlace) {
-        if (args.isNewWindow && fs && !fs->windowPos.IsEmpty()) {
+        if (args->isNewWindow && fs && !fs->windowPos.IsEmpty()) {
             // Make sure it doesn't have a position like outside of the screen etc.
             Rect rect = ShiftRectToWorkArea(fs->windowPos);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect);
         }
-        if (args.showWin) {
+        if (args->showWin) {
             ShowWindow(win->hwndFrame, showType);
         }
         if (win) {
@@ -1182,11 +1182,11 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
     // if the window isn't shown and win.canvasRc is still empty, zoom
     // has not been determined yet
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
-    // CrashIf(win->IsDocLoaded() && args.showWin && win->canvasRc.IsEmpty() && !win->AsChm());
+    // CrashIf(win->IsDocLoaded() && args->showWin && win->canvasRc.IsEmpty() && !win->AsChm());
 
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     // restore scroll state after the canvas size has been restored
-    if ((args.showWin || ss.page != 1) && win->AsFixed()) {
+    if ((args->showWin || ss.page != 1) && win->AsFixed()) {
         win->AsFixed()->SetScrollState(ss);
     }
 
@@ -1211,10 +1211,10 @@ static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, 
     }
 
     // This should only happen after everything else is ready
-    if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen) {
+    if ((args->isNewWindow || args->placeWindow) && args->showWin && showAsFullScreen) {
         EnterFullScreen(win);
     }
-    if (!args.isNewWindow && win->presentation && win->ctrl) {
+    if (!args->isNewWindow && win->presentation && win->ctrl) {
         win->ctrl->SetPresentationMode(true);
     }
 }
@@ -1232,9 +1232,9 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     }
     if (!win->IsDocLoaded()) {
         if (!autoRefresh) {
-            LoadArgs args(tab->filePath, win);
-            args.forceReuse = true;
-            args.noSavePrefs = true;
+            LoadArgs* args = new LoadArgs(tab->filePath, win);
+            args->forceReuse = true;
+            args->noSavePrefs = true;
             LoadDocument(args);
         }
         return;
@@ -1271,9 +1271,9 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     fs->windowState = wstate;
     fs->useDefaultState = false;
 
-    LoadArgs args(tab->filePath, win);
-    args.showWin = true;
-    args.placeWindow = false;
+    LoadArgs* args = new LoadArgs(tab->filePath, win);
+    args->showWin = true;
+    args->placeWindow = false;
     ReplaceDocumentInCurrentTab(args, ctrl, fs);
 
     if (!ctrl) {
@@ -1541,7 +1541,7 @@ bool DocumentPathExists(const char* path) {
 // settings for this file or default position), update file history,
 // update frequently read information, generate a thumbnail if necessary
 // TODO: write me
-static WindowInfo* LoadDocumentNew(LoadArgs& args)
+static WindowInfo* LoadDocumentNew(LoadArgs* args)
 {
     AutoFreeWstr fullPath(path::Normalize(args.fileName));
     // TODO: try to find file on other drives if doesn't exist
@@ -1572,14 +1572,13 @@ static void scheduleReloadTab(TabInfo* tab) {
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
-WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
+WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
-    char* fullPath = path::NormalizeTemp(args.FilePath());
-    WindowInfo* win = args.win;
+    char* fullPath = path::NormalizeTemp(args->FilePath());
+    WindowInfo* win = args->win;
 
-#if 0
-    bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
+    bool failEarly = win && !args->forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
     if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
@@ -1605,7 +1604,7 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
 
         if (gFileHistory.MarkFileInexistent(fullPath)) {
             // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-            if (!args.noSavePrefs) {
+            if (!args->noSavePrefs) {
                 prefs::Save();
             }
             // update the Frequently Read list
@@ -1615,30 +1614,29 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
         }
         return nullptr;
     }
-#endif
 
-    bool openNewTab = gGlobalPrefs->useTabs && !args.forceReuse;
-    if (openNewTab && !args.win) {
+    bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
+    if (openNewTab && !args->win) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
         if (!gWindows.empty()) {
-            win = args.win = gWindows.Last();
-            args.isNewWindow = false;
+            win = args->win = gWindows.Last();
+            args->isNewWindow = false;
         }
     }
 
     if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
         win = gWindows.at(0);
-        args.win = win;
-        args.isNewWindow = false;
-    } else if (!win || !openNewTab && !args.forceReuse && win->IsDocLoaded()) {
+        args->win = win;
+        args->isNewWindow = false;
+    } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
         WindowInfo* currWin = win;
         win = CreateWindowInfo();
         if (!win) {
             return nullptr;
         }
-        args.win = win;
-        args.isNewWindow = true;
+        args->win = win;
+        args->isNewWindow = true;
         if (currWin) {
             RememberFavTreeExpansionState(currWin);
             win->expandedFavorites = currWin->expandedFavorites;
@@ -1649,8 +1647,8 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
     HwndPasswordUI pwdUI(win->hwndFrame);
     Controller* ctrl = nullptr;
     if (!lazyload) {
-        if (args.engine != nullptr) {
-            ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
+        if (args->engine != nullptr) {
+            ctrl = CreateControllerForEngine(args->engine, fullPath, &pwdUI, win);
         } else {
             ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
         }
@@ -1682,7 +1680,7 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
 
             if (gFileHistory.MarkFileInexistent(fullPath)) {
                 // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-                if (!args.noSavePrefs) {
+                if (!args->noSavePrefs) {
                     prefs::Save();
                 }
                 // update the Frequently Read list
@@ -1694,24 +1692,24 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
         }
     }
 
-    CrashIf(openNewTab && args.forceReuse);
+    CrashIf(openNewTab && args->forceReuse);
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
         // there's no tab to reuse at this point
-        args.forceReuse = false;
+        args->forceReuse = false;
     } else {
         // TODO: figure out why happens. seen in 2019/12/11/3e06348ed000006.txt
-        if (!args.forceReuse && !openNewTab) {
-            logf("LoadDocument: got !args.forceReuse && !openNewTab\n");
+        if (!args->forceReuse && !openNewTab) {
+            logf("LoadDocument: got !args->forceReuse && !openNewTab\n");
         }
-        ReportIf(!args.forceReuse && !openNewTab);
+        ReportIf(!args->forceReuse && !openNewTab);
         if (openNewTab) {
-            SaveCurrentTabInfo(args.win);
+            SaveCurrentTabInfo(args->win);
         }
-        CloseDocumentInCurrentTab(win, true, args.forceReuse);
+        CloseDocumentInCurrentTab(win, true, args->forceReuse);
     }
-    if (!args.forceReuse) {
+    if (!args->forceReuse) {
         // insert a new tab for the loaded document
         win->currentTab = CreateNewTab(win, fullPath);
         // logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
@@ -1723,9 +1721,9 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
 #endif
     }
 
-    args.SetFilePath(fullPath);
+    args->SetFilePath(fullPath);
     // TODO: stop remembering/restoring window positions when using tabs?
-    args.placeWindow = !gGlobalPrefs->useTabs;
+    args->placeWindow = !gGlobalPrefs->useTabs;
     if (!lazyload) {
         ReplaceDocumentInCurrentTab(args, ctrl, nullptr);
     }
@@ -1765,7 +1763,7 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
         }
         // TODO: this seems to save the state of file that we just opened
         // add a way to skip saving currTab?
-        if (!args.noSavePrefs) {
+        if (!args->noSavePrefs) {
             prefs::Save();
         }
     }
@@ -2172,8 +2170,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     // TODO: this should be 'duplicate FileInHistory"
     RenameFileInHistory(srcFileName, newPath);
 
-    LoadArgs args(newPath, win);
-    args.forceReuse = true;
+    LoadArgs* args = new LoadArgs(newPath, win);
+    args->forceReuse = true;
     LoadDocument(args);
 
     str::Str msg;
@@ -2783,8 +2781,8 @@ static void OnMenuRenameFile(WindowInfo* win) {
     BOOL moveOk = MoveFileExW(ToWstrTemp(srcFileName.Get()), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
-        LoadArgs args(srcFileName, win);
-        args.forceReuse = true;
+        LoadArgs* args = new LoadArgs(srcFileName, win);
+        args->forceReuse = true;
         LoadDocument(args);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
@@ -2798,8 +2796,8 @@ static void OnMenuRenameFile(WindowInfo* win) {
     char* newPath = path::NormalizeTemp(dstFilePath);
     RenameFileInHistory(srcFileName, newPath);
 
-    LoadArgs args(newPath, win);
-    args.forceReuse = true;
+    LoadArgs* args = new LoadArgs(newPath, win);
+    args->forceReuse = true;
     LoadDocument(args);
 }
 
@@ -2927,9 +2925,9 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
     }
 
     // TODO: should copy the display state from current file
-    LoadArgs args(path, newWin);
-    args.showWin = true;
-    args.noPlaceWindow = true;
+    LoadArgs* args = new LoadArgs(path, newWin);
+    args->showWin = true;
+    args->noPlaceWindow = true;
     LoadDocument(args);
 }
 
@@ -2975,8 +2973,8 @@ static void OnMenuOpenFolder(WindowInfo* win) {
     if (!engine) {
         return;
     }
-    LoadArgs args(dir, win);
-    args.engine = engine;
+    LoadArgs* args = new LoadArgs(dir, win);
+    args->engine = engine;
     LoadDocument(args);
 }
 
@@ -3075,7 +3073,7 @@ static void OnMenuOpen(WindowInfo* win) {
 
     if (*(fileName - 1)) {
         // special case: single filename without nullptr separator
-        LoadArgs args(fileName, win);
+        LoadArgs* args = new LoadArgs(fileName, win);
         LoadDocument(args);
         return;
     }
@@ -3083,7 +3081,7 @@ static void OnMenuOpen(WindowInfo* win) {
     while (*fileName) {
         char* filePath = path::JoinTemp(dir, fileName);
         if (filePath) {
-            LoadArgs args(filePath, win);
+            LoadArgs* args = new LoadArgs(filePath, win);
             LoadDocument(args);
         }
         fileName += str::Len(fileName) + 1;
@@ -3132,8 +3130,8 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForTab(tab);
-    LoadArgs args(files.at(index), win);
-    args.forceReuse = true;
+    LoadArgs* args = new LoadArgs(files.at(index), win);
+    args->forceReuse = true;
     LoadDocument(args);
 }
 
@@ -4384,7 +4382,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     if ((wmId >= CmdFileHistoryFirst) && (wmId <= CmdFileHistoryLast)) {
         FileState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm::DiskAccess)) {
-            LoadArgs args(state->filePath, win);
+            LoadArgs* args = new LoadArgs(state->filePath, win);
             LoadDocument(args);
         }
         return 0;

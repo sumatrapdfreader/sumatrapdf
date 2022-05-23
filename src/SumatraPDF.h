@@ -165,7 +165,7 @@ struct LoadArgs {
     AutoFreeStr fileName;
 };
 
-WindowInfo* LoadDocument(LoadArgs& args, bool lazyload = false);
+WindowInfo* LoadDocument(LoadArgs* args, bool lazyload = false);
 WindowInfo* CreateAndShowWindowInfo(SessionData* data = nullptr);
 
 uint MbRtlReadingMaybe();
