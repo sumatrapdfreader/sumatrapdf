@@ -1007,13 +1007,15 @@ static bool showTocByDefault(const char* path) {
     return showByDefault;
 }
 
+// Document is represented as Controller. Replace current Controller (if any) with ctrl
+// in current tab.
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* fs) {
+static void ReplaceDocumentInCurrentTab(const LoadArgs& args, Controller* ctrl, FileState* fs) {
     WindowInfo* win = args.win;
     CrashIf(!win);
     if (!win) {
@@ -1272,7 +1274,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     LoadArgs args(tab->filePath, win);
     args.showWin = true;
     args.placeWindow = false;
-    LoadDocIntoCurrentTab(args, ctrl, fs);
+    ReplaceDocumentInCurrentTab(args, ctrl, fs);
 
     if (!ctrl) {
         DeleteDisplayState(fs);
@@ -1573,10 +1575,10 @@ static void scheduleReloadTab(TabInfo* tab) {
 WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
-    int threadID = (int)GetCurrentThreadId();
     char* fullPath = path::NormalizeTemp(args.FilePath());
     WindowInfo* win = args.win;
 
+#if 0
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
@@ -1613,6 +1615,7 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
         }
         return nullptr;
     }
+#endif
 
     bool openNewTab = gGlobalPrefs->useTabs && !args.forceReuse;
     if (openNewTab && !args.win) {
@@ -1689,10 +1692,8 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
             }
             return win;
         }
-    } else {
-        auto durMs = TimeSinceInMs(timeStart);
-        logf("LoadDocument: lazy load '%s' in %.2f ms\n", fullPath, (float)durMs);
     }
+
     CrashIf(openNewTab && args.forceReuse);
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
@@ -1726,7 +1727,7 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
     if (!lazyload) {
-        LoadDocIntoCurrentTab(args, ctrl, nullptr);
+        ReplaceDocumentInCurrentTab(args, ctrl, nullptr);
     }
 
     if (gPluginMode) {
@@ -1742,7 +1743,7 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
         nPages = currTab->ctrl->PageCount();
     }
 #if 0
-    logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s', %d pages\n", currTab,
+    logf("LoadDocument: after ReplaceDocumentInCurrentTab win->currentTab is 0x%p, path: '%s', %d pages\n", currTab,
          path.Get(), nPages);
 #endif
 
@@ -2057,7 +2058,7 @@ static void OnMenuExit() {
 
 // closes a document inside a WindowInfo and optionally turns it into
 // about window (set keepUIEnabled if a new document will be loaded
-// into the tab right afterwards and LoadDocIntoCurrentTab would revert
+// into the tab right afterwards and ReplaceDocumentInCurrentTab would revert
 // the UI disabling afterwards anyway)
 static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool deleteModel) {
     bool wasntFixed = !win->AsFixed();
