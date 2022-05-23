@@ -628,7 +628,7 @@ struct TreeView : Wnd {
     void Clear();
 
     HTREEITEM GetHandleByTreeItem(TreeItem item);
-    str::WStr GetDefaultTooltip(TreeItem ti);
+    char* GetDefaultTooltipTemp(TreeItem ti);
     TreeItem GetItemAt(int x, int y);
     TreeItem GetTreeItemByHandle(HTREEITEM item);
     bool UpdateItem(TreeItem ti);

@@ -2665,7 +2665,7 @@ void TreeView::Clear() {
     ::RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-str::WStr TreeView::GetDefaultTooltip(TreeItem ti) {
+char* TreeView::GetDefaultTooltipTemp(TreeItem ti) {
     auto hItem = GetHandleByTreeItem(ti);
     WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
 
@@ -2676,7 +2676,7 @@ str::WStr TreeView::GetDefaultTooltip(TreeItem ti) {
     item.cchTextMax = dimof(buf);
     TreeView_GetItem(hwnd, &item);
 
-    return str::WStr(buf);
+    return ToUtf8Temp(buf);
 }
 
 // get the item at a given (x,y) position in the window
