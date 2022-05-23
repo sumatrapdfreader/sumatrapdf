@@ -32,8 +32,6 @@ Kind kindWnd = "wnd";
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 
-namespace wg {
-
 // window_map.h / window_map.cpp
 struct WindowToHwnd {
     Wnd* window = nullptr;
@@ -1007,9 +1005,7 @@ bool PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-} // namespace wg
-
-static void SizeToIdealSize(wg::Wnd* wnd) {
+static void SizeToIdealSize(Wnd* wnd) {
     if (!wnd || !wnd->hwnd) {
         return;
     }
@@ -1023,7 +1019,6 @@ static void SizeToIdealSize(wg::Wnd* wnd) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
 
-namespace wg {
 Kind kindStatic = "static";
 
 Static::Static() {
@@ -1093,12 +1088,9 @@ LRESULT Static::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-} // namespace wg
-
 //--- Button
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
-namespace wg {
 
 Kind kindButton = "button";
 
@@ -1191,13 +1183,9 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     return b;
 }
 
-} // namespace wg
-
 //--- Tooltip
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
-
-namespace wg {
 
 Kind kindTooltip = "tooltip";
 
@@ -1302,8 +1290,6 @@ void Tooltip::SetDelayTime(int type, int timeInMs) {
     SendMessageW(hwnd, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
 }
 
-} // namespace wg
-
 //--- Edit
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
@@ -1315,8 +1301,6 @@ void Tooltip::SetDelayTime(int type, int timeInMs) {
 // WM_NCHITTEST
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
 // - include value we remember in WM_NCCALCSIZE in GetIdealSize()
-
-namespace wg {
 
 Kind kindEdit = "edit";
 
@@ -1454,10 +1438,6 @@ LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-} // namespace wg
-
-namespace wg {
-
 Kind kindListBox = "listbox";
 
 ListBox::ListBox() {
@@ -1585,11 +1565,7 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-} // namespace wg
-
 //- Checkbox
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
 
@@ -1656,11 +1632,7 @@ bool Checkbox::IsChecked() const {
     return state == CheckState::Checked;
 }
 
-} // namespace wg
-
 //- Progress
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/progress-bar-control-reference
 
@@ -1707,11 +1679,7 @@ int Progress::GetCurrent() {
     return current;
 }
 
-} // namespace wg
-
 //- DropDown
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/combo-boxes
 
@@ -1829,11 +1797,7 @@ Size DropDown::GetIdealSize() {
     return {dx, dy};
 }
 
-} // namespace wg
-
 //- Trackbar
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/trackbar-control-reference
 
@@ -1940,11 +1904,7 @@ int Trackbar::GetValue() {
     return res;
 }
 
-} // namespace wg
-
 //- Splitter
-
-namespace wg {
 
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows
@@ -2110,8 +2070,6 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
-} // namespace wg
-
 #if 0
 // Convert ASCII hex digit to a nibble (four bits, 0 - 15).
 //
@@ -2173,8 +2131,6 @@ std::string html_from_uri(const std::string s) {
     return "";
 }
 #endif
-
-namespace wg {
 
 Kind kindWebView = "webView";
 
@@ -2375,10 +2331,6 @@ Webview2Wnd::~Webview2Wnd() {
     str::Free(dataDir);
 }
 
-} // namespace wg
-
-namespace wg {
-
 void DeleteWnd(Static** wnd) {
     delete *wnd;
     *wnd = nullptr;
@@ -2403,7 +2355,6 @@ void DeleteWnd(Progress** wnd) {
     delete *wnd;
     *wnd = nullptr;
 }
-} // namespace wg
 
 //--- TreeView
 
@@ -2422,7 +2373,6 @@ Tree view, checkboxes and other info:
 https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
 */
 
-namespace wg {
 Kind kindTreeView = "treeView";
 
 TreeView::TreeView() {
@@ -2986,12 +2936,10 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-} // namespace wg
-
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (wg::PreTranslateMessage(msg)) {
+        if (PreTranslateMessage(msg)) {
             continue;
         }
         if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
@@ -3046,7 +2994,7 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
 
 #if 0
 // sets initial position of w within hwnd. Assumes w->initialSize is set.
-void PositionCloseTo(wg::Wnd* w, HWND hwnd) {
+void PositionCloseTo(Wnd* w, HWND hwnd) {
     CrashIf(!hwnd);
     Size is = w->initialSize;
     CrashIf(is.IsEmpty());

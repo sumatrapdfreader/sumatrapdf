@@ -247,8 +247,6 @@ void LoadRar() {
 
 // ----------------
 
-using namespace wg;
-
 struct BrowserTestWnd : Wnd {
     Webview2Wnd* webView = nullptr;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;

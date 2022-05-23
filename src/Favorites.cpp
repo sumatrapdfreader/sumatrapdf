@@ -13,7 +13,6 @@
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 #include "wingui/LabelWithCloseWnd.h"
-using namespace wg;
 
 #include "Settings.h"
 #include "Controller.h"

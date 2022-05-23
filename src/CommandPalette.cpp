@@ -28,8 +28,6 @@
 
 #include "utils/Log.h"
 
-using namespace wg;
-
 static HFONT gCommandPaletteFont = nullptr;
 
 // clang-format off

@@ -27,8 +27,6 @@
 
 #include "utils/Log.h"
 
-using namespace wg;
-
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
 static bool success = false;

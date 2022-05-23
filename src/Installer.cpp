@@ -34,8 +34,6 @@
 
 constexpr int kInstallerWinMargin = 8;
 
-using namespace wg;
-
 struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;

@@ -86,8 +86,6 @@
 
 #include "utils/Log.h"
 
-using namespace wg;
-
 using std::placeholders::_1;
 
 #define kRestrictionsFileName "sumatrapdfrestrict.ini"

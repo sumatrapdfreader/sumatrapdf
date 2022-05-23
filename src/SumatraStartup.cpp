@@ -299,7 +299,7 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     return win;
 }
 
-static void RestoreTabOnStartup(WindowInfo* win, TabState* state, bool lazyload=true) {
+static void RestoreTabOnStartup(WindowInfo* win, TabState* state, bool lazyload = true) {
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
     if (!LoadDocument(args, lazyload)) {
@@ -519,7 +519,7 @@ static int RunMessageLoop() {
     HWND hwndAccel;
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (wg::PreTranslateMessage(msg)) {
+        if (PreTranslateMessage(msg)) {
             continue;
         }
 

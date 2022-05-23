@@ -65,8 +65,6 @@ constexpr int kVersionTxtFontSize = 12;
 
 #define LAYOUT_LTR 0
 
-using namespace wg;
-
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static Tooltip* gAboutTooltip = nullptr;

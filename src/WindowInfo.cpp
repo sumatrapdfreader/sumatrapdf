@@ -16,8 +16,6 @@
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 
-using namespace wg;
-
 #include "Settings.h"
 #include "Controller.h"
 #include "EngineBase.h"

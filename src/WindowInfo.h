@@ -7,11 +7,9 @@ struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
-namespace wg {
 struct Splitter;
 struct Tooltip;
 struct TreeView;
-} // namespace wg
 struct CaptionInfo;
 struct TabsCtrl;
 
@@ -108,7 +106,7 @@ struct WindowInfo {
     HWND hwndTocBox = nullptr;
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
-    wg::TreeView* tocTreeCtrl = nullptr;
+    TreeView* tocTreeCtrl = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -120,14 +118,14 @@ struct WindowInfo {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
-    wg::TreeView* favTreeCtrl = nullptr;
+    TreeView* favTreeCtrl = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    wg::Splitter* sidebarSplitter = nullptr;
+    Splitter* sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    wg::Splitter* favSplitter = nullptr;
+    Splitter* favSplitter = nullptr;
 
     TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
@@ -140,7 +138,7 @@ struct WindowInfo {
     CaptionInfo* caption = nullptr;
     int extendedFrameHeight = 0;
 
-    wg::Tooltip* infotip = nullptr;
+    Tooltip* infotip = nullptr;
 
     HMENU menu = nullptr;
     bool isMenuHidden = false; // not persisted at shutdown

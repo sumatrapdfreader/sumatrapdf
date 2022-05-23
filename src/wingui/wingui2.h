@@ -3,8 +3,6 @@
 
 //--- Wnd
 
-namespace wg {
-
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
@@ -147,11 +145,8 @@ struct Wnd : public ILayout {
 
 bool PreTranslateMessage(MSG& msg);
 
-} // namespace wg
-
 //--- Static
 
-namespace wg {
 using ClickedHandler = std::function<void()>;
 
 struct StaticCreateArgs {
@@ -173,10 +168,7 @@ struct Static : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
-} // namespace wg
-
 //--- Button
-namespace wg {
 
 struct ButtonCreateArgs {
     HWND parent = nullptr;
@@ -201,10 +193,7 @@ struct Button : Wnd {
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
 Button* CreateDefaultButton(HWND parent, const WCHAR* s);
 
-} // namespace wg
-
 //--- Tooltip
-namespace wg {
 
 struct TooltipCreateArgs {
     HWND parent = nullptr;
@@ -228,10 +217,7 @@ struct Tooltip : Wnd {
     HWND parent = nullptr;
 };
 
-} // namespace wg
-
 //--- Edit
-namespace wg {
 using TextChangedHandler = std::function<void()>;
 
 struct EditCreateArgs {
@@ -262,11 +248,8 @@ struct Edit : Wnd {
     void SetSelection(int start, int end);
     bool HasBorder();
 };
-} // namespace wg
 
 //--- ListBox
-namespace wg {
-
 using ListBoxSelectionChangedHandler = std::function<void()>;
 using ListBoxDoubleClickHandler = std::function<void()>;
 
@@ -302,10 +285,7 @@ struct ListBox : Wnd {
     void SetModel(ListBoxModel*);
 };
 
-} // namespace wg
-
 //--- CheckboxCtrl
-namespace wg {
 
 enum class CheckState {
     Unchecked = BST_UNCHECKED,
@@ -339,10 +319,7 @@ struct Checkbox : Wnd {
     bool IsChecked() const;
 };
 
-} // namespace wg
-
 //--- Progress
-namespace wg {
 
 struct ProgressCreateArgs {
     HWND parent = nullptr;
@@ -365,10 +342,7 @@ struct Progress : Wnd {
     Size GetIdealSize() override;
 };
 
-} // namespace wg
-
 //--- DropDown
-namespace wg {
 
 using DropDownSelectionChangedHandler = std::function<void()>;
 
@@ -396,11 +370,7 @@ struct DropDown : Wnd {
     void SetCueBanner(const char*);
 };
 
-} // namespace wg
-
 //--- Trackbar
-
-namespace wg {
 
 struct Trackbar;
 
@@ -441,10 +411,8 @@ struct Trackbar : Wnd {
     int GetValue();
 };
 
-} // namespace wg
-
 // -- Splitter
-namespace wg {
+
 enum class SplitterType {
     Horiz,
     Vert,
@@ -492,15 +460,12 @@ struct Splitter : public Wnd {
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 };
 
-} // namespace wg
-
 //--- Webview2
 
 // TODO: maybe hide those inside a private struct
 typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
-namespace wg {
 using WebViewMsgCb = std::function<void(const char*)>;
 // using dispatch_fn_t = std::function<void()>;
 
@@ -532,19 +497,7 @@ struct Webview2Wnd : Wnd {
     ICoreWebView2Controller* controller = nullptr;
 };
 
-} // namespace wg
-
-namespace wg {
-void DeleteWnd(Static**);
-void DeleteWnd(Button**);
-void DeleteWnd(Edit**);
-void DeleteWnd(Checkbox**);
-void DeleteWnd(Progress**);
-} // namespace wg
-
 //--- TreeView
-
-namespace wg {
 
 struct TreeView;
 
@@ -663,7 +616,11 @@ struct TreeView : Wnd {
 
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt);
 
-} // namespace wg
+void DeleteWnd(Static**);
+void DeleteWnd(Button**);
+void DeleteWnd(Edit**);
+void DeleteWnd(Checkbox**);
+void DeleteWnd(Progress**);
 
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 

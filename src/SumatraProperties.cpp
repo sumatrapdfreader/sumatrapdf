@@ -27,8 +27,6 @@
 #include "SumatraConfig.h"
 #include "Print.h"
 
-using namespace wg;
-
 void ShowProperties(HWND parent, Controller* ctrl, bool extended);
 
 constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";

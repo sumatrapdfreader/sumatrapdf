@@ -9,8 +9,6 @@
 
 #include "utils/Log.h"
 
-using namespace wg;
-
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp

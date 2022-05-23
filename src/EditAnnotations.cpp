@@ -37,8 +37,6 @@ extern "C" {
 
 #include "utils/Log.h"
 
-using namespace wg;
-
 using std::placeholders::_1;
 
 constexpr int borderWidthMin = 0;
