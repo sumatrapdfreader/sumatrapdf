@@ -445,7 +445,10 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
-            ShowNotification(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
+            NotificationCreateArgs args;
+            args.hwndParent = win->hwndCanvas;
+            args.msg = _TRA("Synchronization file cannot be opened");
+            ShowNotification(args);
             return true;
         }
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -461,7 +464,10 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
-        ShowNotification(win->hwndCanvas, _TRA("No synchronization info at this position"));
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.msg = _TRA("No synchronization info at this position");
+        ShowNotification(args);
         return true;
     }
 
@@ -487,18 +493,19 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     if (inverseSearch) {
         cmdLine.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     }
+
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = _TRA("Cannot start inverse search command. Please check the command line in the settings.");
     if (!str::IsEmpty(cmdLine.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         char* appDir = GetExeDirTemp();
         AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
         if (!process) {
-            ShowNotification(
-                win->hwndCanvas,
-                _TRA("Cannot start inverse search command. Please check the command line in the settings."));
+            ShowNotification(args);
         }
     } else if (gGlobalPrefs->enableTeXEnhancements) {
-        ShowNotification(win->hwndCanvas,
-                         _TRA("Cannot start inverse search command. Please check the command line in the settings."));
+        ShowNotification(args);
     }
 
     if (toFree) {
@@ -545,14 +552,16 @@ void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, u
     }
 
     AutoFreeStr buf;
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
-        ShowNotification(win->hwndCanvas, _TRA("No synchronization file found"));
+        args.msg = _TRA("No synchronization file found");
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
-        ShowNotification(win->hwndCanvas, _TRA("Synchronization file cannot be opened"));
+        args.msg = _TRA("Synchronization file cannot be opened");
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
         buf.Set(str::Format(_TRA("Page number %u inexistant"), page));
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
-        ShowNotification(win->hwndCanvas, _TRA("No synchronization info at this position"));
+        args.msg = _TRA("No synchronization info at this position");
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
         buf.Set(str::Format(_TRA("Unknown source file (%s)"), fileName));
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
@@ -563,7 +572,10 @@ void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, u
         buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
     }
     if (buf) {
-        ShowNotification(win->hwndCanvas, buf);
+        args.msg = buf;
+    }
+    if (args.msg) {
+        ShowNotification(args);
     }
 }
 
