@@ -22,12 +22,11 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/LabelWithCloseWnd.h"
-#include "wingui/FrameRateWnd.h"
+#include "wingui/wingui2.h"
 #include "wingui/TabsCtrl.h"
 
-#include "wingui/wingui2.h"
+#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -4993,8 +4992,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         }
     }
 
-    LRESULT res = 0;
-    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+    LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res) {
         return res;
     }
 

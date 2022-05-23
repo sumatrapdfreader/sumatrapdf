@@ -11,9 +11,8 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/LabelWithCloseWnd.h"
 #include "wingui/wingui2.h"
+#include "wingui/LabelWithCloseWnd.h"
 using namespace wg;
 
 #include "Settings.h"
@@ -821,12 +820,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return CallWindowProc(DefWndProcFavBox, hwnd, msg, wp, lp);
     }
 
-    LRESULT res = 0;
-    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
-        return res;
-    }
-
-    res = TryReflectMessages(hwnd, msg, wp, lp);
+    LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
     if (res) {
         return res;
     }

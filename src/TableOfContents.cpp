@@ -12,10 +12,11 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/Window.h" // NextSubclassId
 #include "wingui/wingui2.h"
 using namespace wg;
+
+#include "wingui/LabelWithCloseWnd.h"
 
 #include "Settings.h"
 #include "Controller.h"
@@ -779,10 +780,6 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     // TODO: TreeCtrl and DropDownCtrl should be children of frame
 
     LRESULT res = 0;
-    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
-        return res;
-    }
-
     res = TryReflectMessages(hwnd, msg, wp, lp);
     if (res) {
         return res;

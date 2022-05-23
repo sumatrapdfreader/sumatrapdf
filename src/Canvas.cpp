@@ -11,12 +11,10 @@
 #include "utils/ScopedWin.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/FrameRateWnd.h"
-
 #include "wingui/wingui2.h"
+
+#include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"

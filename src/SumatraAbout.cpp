@@ -9,7 +9,6 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
 #include "wingui/wingui2.h"
 
 #include "Settings.h"

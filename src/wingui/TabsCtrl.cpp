@@ -6,8 +6,9 @@
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
+#include "wingui/wingui2.h"
 #include "wingui/TabsCtrl.h"
 
 #include "utils/Log.h"
@@ -15,37 +16,38 @@
 Kind kindTabs = "tabs";
 
 TabsCtrl::TabsCtrl() {
-    dwStyle = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
-    winClass = WC_TABCONTROLW;
     kind = kindTabs;
 }
 
 TabsCtrl::~TabsCtrl() = default;
 
-static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
-    CrashIf(ev->msg != WM_NOTIFY);
-    TabsCtrl* w = (TabsCtrl*)user;
-    ev->w = w; // TODO: is this needed?
-    CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
-    LPNMHDR hdr = (LPNMHDR)ev->lp;
+LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
+    LPNMHDR hdr = (LPNMHDR)lp;
     if (hdr->code == TTN_GETDISPINFOA) {
-        logf("Handle_WM_NOTIFY TTN_GETDISPINFOA\n");
+        logf("TabsCtrl::OnNotifyReflec: TTN_GETDISPINFOA\n");
     } else if (hdr->code == TTN_GETDISPINFOW) {
-        logf("Handle_WM_NOTIFY TTN_GETDISPINFOW\n");
+        logf("TabsCtrl::OnNotifyReflec: TTN_GETDISPINFOW\n");
     }
+    return 0;
 }
 
-bool TabsCtrl::Create(HWND parent) {
+HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
+    createToolTipsHwnd = argsIn.createToolTipsHwnd;
+
+    CreateControlArgs args;
+    args.parent = argsIn.parent;
+    args.font = argsIn.font;
+    args.className = WC_TABCONTROLW;
+    args.style = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
     if (createToolTipsHwnd) {
-        dwStyle |= TCS_TOOLTIPS;
-    }
-    bool ok = WindowBase::Create(parent);
-    if (!ok) {
-        return false;
+        args.style |= TCS_TOOLTIPS;
     }
 
-    void* user = this;
-    RegisterHandlerForMessage(hwnd, WM_NOTIFY, Handle_WM_NOTIFY, user);
+    HWND hwnd = CreateControl(args);
+    if (!hwnd) {
+        return nullptr;
+    }
+
     if (createToolTipsHwnd) {
         HWND ttHwnd = GetToolTipsHwnd();
         TOOLINFO ti{0};
@@ -56,22 +58,9 @@ bool TabsCtrl::Create(HWND parent) {
         ti.lpszText = (WCHAR*)L"placeholder tooltip";
         SetRectEmpty(&ti.rect);
         RECT r = ti.rect;
-        SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+        SendMessageW(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
     }
-    return true;
-}
-
-void TabsCtrl::WndProc(WndEvent* ev) {
-    HWND hwnd = ev->hwnd;
-#if 0
-    UINT msg = ev->msg;
-    WPARAM wp = ev->wp;
-    LPARAM lp = ev->lp;
-    DbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
-#endif
-
-    TabsCtrl* w = this;
-    CrashIf(w->hwnd != (HWND)hwnd);
+    return hwnd;
 }
 
 Size TabsCtrl::GetIdealSize() {

@@ -11,9 +11,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
+#include "wingui/wingui2.h"
 #include "wingui/TabsCtrl.h"
 
 #include "Settings.h"
@@ -646,9 +645,12 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
 
 void CreateTabbar(WindowInfo* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
-    tabsCtrl->ctrlID = IDC_TABBAR;
-    tabsCtrl->createToolTipsHwnd = true;
-    tabsCtrl->Create(win->hwndFrame);
+
+    TabsCreateArgs args;
+    args.parent = win->hwndFrame;
+    args.ctrlID = IDC_TABBAR;
+    args.createToolTipsHwnd = true;
+    tabsCtrl->Create(args);
 
     HWND hwndTabBar = tabsCtrl->hwnd;
     SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);

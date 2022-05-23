@@ -8,7 +8,6 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
 #include "wingui/LabelWithCloseWnd.h"
 
 #define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)

@@ -9,14 +9,13 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
+#include "wingui/wingui2.h"
 #include "wingui/TabsCtrl.h"
+
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 
-#include "wingui/wingui2.h"
 using namespace wg;
 
 #include "Settings.h"

@@ -17,7 +17,7 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
-#include "wingui/Window.h"
+#include "wingui/Window.h" // RunMessageLoop
 
 #include "Settings.h"
 #include "Controller.h"

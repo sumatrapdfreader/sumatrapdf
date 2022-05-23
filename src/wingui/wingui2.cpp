@@ -13,8 +13,6 @@
 #include "wingui/Layout.h"
 #include "wingui/wingui2.h"
 
-#include "wingui/Window.h"
-
 #include "utils/Log.h"
 
 // TODO: don't use it
