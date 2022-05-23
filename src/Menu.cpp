@@ -1518,7 +1518,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HacToc();
+    bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HasToc();
     win::menu::SetEnabled(win->menu, CmdToggleBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
@@ -1667,7 +1667,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     SetMenuStateForSelection(tab, popup);
 
     MenuUpdatePrintItem(win, popup, true);
-    win::menu::SetEnabled(popup, CmdToggleBookmarks, win->ctrl->HacToc());
+    win::menu::SetEnabled(popup, CmdToggleBookmarks, win->ctrl->HasToc());
     win::menu::SetChecked(popup, CmdToggleBookmarks, win->tocVisible);
 
     win::menu::SetChecked(popup, CmdToggleScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);

@@ -470,7 +470,7 @@ class EngineBase {
     virtual IPageDestination* GetNamedDest(const char* name);
 
     // checks whether this document has an associated Table of Contents
-    bool HacToc();
+    bool HasToc();
 
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)

@@ -344,7 +344,7 @@ IPageDestination* EngineBase::GetNamedDest(const char*) {
     return nullptr;
 }
 
-bool EngineBase::HacToc() {
+bool EngineBase::HasToc() {
     TocTree* tree = GetToc();
     return tree != nullptr;
 }

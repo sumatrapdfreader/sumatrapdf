@@ -600,7 +600,7 @@ void LoadTocTree(WindowInfo* win) {
     win->tocLoaded = true;
 
     auto* tocTree = tab->ctrl->GetToc();
-    if (!tocTree || !tocTree->root || !tocTree->root->child) {
+    if (!tocTree || !tocTree->root) {
         return;
     }
 

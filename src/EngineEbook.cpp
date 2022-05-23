@@ -1192,6 +1192,9 @@ TocTree* EnginePdb::GetToc() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
+    if (!root) {
+        return nullptr;
+    }
     auto realRoot = new TocItem();
     realRoot->child = root;
     tocTree = new TocTree(realRoot);

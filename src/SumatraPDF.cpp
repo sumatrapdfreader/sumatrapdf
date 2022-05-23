@@ -4063,7 +4063,7 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
         showFavorites = false;
     }
 
-    if (!win->IsDocLoaded() || !win->ctrl->HacToc()) {
+    if (!win->IsDocLoaded() || !win->ctrl->HasToc()) {
         tocVisible = false;
     }
 

@@ -346,7 +346,7 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
         }
     }
 
-    ctx.hasToc = win->ctrl && win->ctrl->HacToc();
+    ctx.hasToc = win->ctrl && win->ctrl->HasToc();
 
     // append paths of opened files
     for (WindowInfo* w : gWindows) {

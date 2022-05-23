@@ -282,11 +282,11 @@ void DumpToc(EngineBase* engine) {
     }
     auto* root = tree->root;
     if (root) {
-        Out("\t<TocTree%s>\n", engine->HacToc() ? "" : " Expected=\"no\"");
+        Out("\t<TocTree%s>\n", engine->HasToc() ? "" : " Expected=\"no\"");
         int idCounter = 0;
         DumpTocItem(engine, root, 2, idCounter);
         Out1("\t</TocTree>\n");
-    } else if (engine->HacToc()) {
+    } else if (engine->HasToc()) {
         Out1("\t<TocTree />\n");
     }
 }

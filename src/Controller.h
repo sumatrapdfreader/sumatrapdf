@@ -94,7 +94,7 @@ struct Controller {
     virtual void SetViewPortSize(Size size) = 0;
 
     // table of contents
-    bool HacToc() {
+    bool HasToc() {
         auto* tree = GetToc();
         return tree != nullptr;
     }
