@@ -43,6 +43,7 @@ struct CreateCustomArgs {
     HMENU menu = nullptr;
     bool visible = true;
     HFONT font = nullptr;
+    HICON icon = nullptr;
 };
 
 struct Wnd : public ILayout {

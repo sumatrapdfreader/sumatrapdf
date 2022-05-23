@@ -886,6 +886,12 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     // hwnd should be assigned in WM_CREATE
     CrashIf(hwndTmp != hwnd);
     CrashIf(this != WindowMapGetWindow(hwndTmp));
+    if (!hwnd) {
+        return nullptr;
+    }
+    if (args.icon) {
+        HwndSetIcon(hwnd, args.icon);
+    }
 
     HFONT f = args.font;
     if (!f) {

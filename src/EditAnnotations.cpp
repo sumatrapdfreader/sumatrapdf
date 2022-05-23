@@ -1367,7 +1367,7 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    // args.icon = LoadIconW(h, iconName);
+    args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
     // args.backgroundColor = MkGray(0xee);
 
