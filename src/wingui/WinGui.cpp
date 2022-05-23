@@ -144,7 +144,7 @@ void Wnd::SetText(const char* s) {
 }
 
 TempStr Wnd::GetText() {
-    WCHAR* sw = win::GetTextTemp(hwnd);
+    WCHAR* sw = HwndGetTextTemp(hwnd);
     auto sa = ToUtf8Temp(sw);
     return sa;
 }
@@ -1041,7 +1041,7 @@ HWND Static::Create(const StaticCreateArgs& args) {
 
 Size Static::GetIdealSize() {
     CrashIf(!hwnd);
-    WCHAR* txt = win::GetTextTemp(hwnd);
+    WCHAR* txt = HwndGetTextTemp(hwnd);
     HFONT hfont = GetWindowFont(hwnd);
     return HwndMeasureText(hwnd, txt, hfont);
 }
@@ -1140,7 +1140,7 @@ Size Button::GetIdealSize() {
 
 #if 0
 Size Button::SetTextAndResize(const WCHAR* s) {
-    win::SetText(this->hwnd, s);
+    HwndSetText(this->hwnd, s);
     Size size = this->GetIdealSize();
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(this->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
@@ -1369,7 +1369,7 @@ Size Edit::GetIdealSize() {
     HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    auto txt = win::GetTextTemp(hwnd);
+    WCHAR* txt = HwndGetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 

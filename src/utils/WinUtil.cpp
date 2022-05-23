@@ -87,7 +87,7 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
     HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    auto txt = win::GetTextTemp(hwnd);
+    auto txt = HwndGetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
     int dy = std::min(s1.dy, s2.dy);
     if (dy == 0) {
@@ -1784,18 +1784,20 @@ bool UnRegisterServerDLL(const char* dllPath, const char* args) {
     return RegisterOrUnregisterServerDLL(dllPath, false, args);
 }
 
-namespace win {
-
-void ToForeground(HWND hwnd) {
+void HwndToForeground(HWND hwnd) {
     if (IsIconic(hwnd)) {
         ShowWindow(hwnd, SW_RESTORE);
     }
     SetForegroundWindow(hwnd);
 }
 
+size_t HwndGetTextLen(HWND hwnd) {
+    return (size_t)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
+}
+
 // return text of window or edit control, nullptr in case of an error
-TempWstr GetTextTemp(HWND hwnd) {
-    size_t cch = GetTextLen(hwnd);
+TempWstr HwndGetTextTemp(HWND hwnd) {
+    size_t cch = HwndGetTextLen(hwnd);
     size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
     WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
     if (nullptr == txt) {
@@ -1806,8 +1808,8 @@ TempWstr GetTextTemp(HWND hwnd) {
 }
 
 // return text of window or edit control, nullptr in case of an error
-TempStr GetTextATemp(HWND hwnd) {
-    size_t cch = GetTextLen(hwnd);
+TempStr HwndGetTextATemp(HWND hwnd) {
+    size_t cch = HwndGetTextLen(hwnd);
     size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
     WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
     if (nullptr == txt) {
@@ -1817,34 +1819,17 @@ TempStr GetTextATemp(HWND hwnd) {
     return ToUtf8Temp(txt);
 }
 
-size_t GetTextLen(HWND hwnd) {
-    return (size_t)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
-}
-
-void SetText(HWND hwnd, const WCHAR* txt) {
-    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
-}
-
-void SetText(HWND hwnd, const char* s) {
-    if (!s) {
-        s = "";
-    }
-    WCHAR* ws = ToWstrTemp(s);
-    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws);
-}
-
-void SetVisibility(HWND hwnd, bool visible) {
-    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
-}
-
-bool HasFrameThickness(HWND hwnd) {
+bool HwndHasFrameThickness(HWND hwnd) {
     return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_THICKFRAME);
 }
 
-bool HasCaption(HWND hwnd) {
+bool HwndHasCaption(HWND hwnd) {
     return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION);
 }
-} // namespace win
+
+void HwndSetVisibility(HWND hwnd, bool visible) {
+    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+}
 
 Size GetBitmapSize(HBITMAP hbmp) {
     BITMAP bmpInfo;

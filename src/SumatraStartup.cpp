@@ -1237,7 +1237,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             if (flags.inNewWindow) {
                 goto ContinueOpenWindow;
             } else {
-                win::ToForeground(hPrevWnd);
+                HwndToForeground(hPrevWnd);
             }
         }
         goto Exit;

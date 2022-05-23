@@ -53,7 +53,7 @@ using Gdiplus::SolidBrush;
 #define NON_CLIENT_BAND 1
 // This non-client-band hack is only needed for maximized non-fullscreen windows:
 static inline bool NeedsNonClientBandHack(HWND hwnd) {
-    return IsZoomed(hwnd) && win::HasCaption(hwnd);
+    return IsZoomed(hwnd) && HwndHasCaption(hwnd);
 }
 
 // When DWM composition is enabled, this is the ratio between alpha channels of active and inactive caption colors.
@@ -682,11 +682,11 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                 // Extend the translucent frame in the client area.
                 if (wp == SIZE_MAXIMIZED || wp == SIZE_RESTORED) {
                     int frameThickness = 0;
-                    if (win::HasFrameThickness(hwnd)) {
+                    if (HwndHasFrameThickness(hwnd)) {
                         frameThickness = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
                     }
                     int captionHeight = 0;
-                    if (win::HasCaption(hwnd)) {
+                    if (HwndHasCaption(hwnd)) {
                         float tabScale = kCaptionTabBarDyFactor;
                         if (IsZoomed(hwnd)) {
                             tabScale = 1.f;

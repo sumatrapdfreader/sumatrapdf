@@ -263,7 +263,7 @@ static HWND FindModalOwnedBy(HWND hwndParent) {
 }
 
 void WindowInfo::Focus() const {
-    win::ToForeground(hwndFrame);
+    HwndToForeground(hwndFrame);
     // set focus to an owned modal dialog if there is one
     HWND hwnd = FindModalOwnedBy(hwndFrame);
     if (hwnd != nullptr) {

@@ -103,7 +103,7 @@ static bool NeedsRotateUI(WindowInfo* win) {
 }
 
 static bool NeedsInfo(WindowInfo* win) {
-    WCHAR* s = win::GetTextTemp(win->hwndTbInfoText);
+    WCHAR* s = HwndGetTextTemp(win->hwndTbInfoText);
     bool show = str::Len(s) > 0;
     return show;
 }
@@ -162,7 +162,7 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
         case CmdFindNext:
         case CmdFindPrev:
             // TODO: Update on whether there's more to find, not just on whether there is text.
-            return win::GetTextLen(win->hwndFindEdit) > 0;
+            return HwndGetTextLen(win->hwndFindEdit) > 0;
 
         case CmdGoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
@@ -395,15 +395,15 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 
 void UpdateToolbarFindText(WindowInfo* win) {
     bool showUI = NeedsFindUI(win);
-    win::SetVisibility(win->hwndFindLabel, showUI);
-    win::SetVisibility(win->hwndFindBg, showUI);
-    win::SetVisibility(win->hwndFindEdit, showUI);
+    HwndSetVisibility(win->hwndFindLabel, showUI);
+    HwndSetVisibility(win->hwndFindBg, showUI);
+    HwndSetVisibility(win->hwndFindEdit, showUI);
     if (!showUI) {
         return;
     }
 
     const WCHAR* text = _TR("Find:");
-    win::SetText(win->hwndFindLabel, text);
+    HwndSetText(win->hwndFindLabel, text);
 
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
@@ -434,7 +434,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
 
 void SetToolbarInfoText(WindowInfo* win, const WCHAR* s) {
     HWND hwnd = win->hwndTbInfoText;
-    win::SetText(hwnd, s);
+    HwndSetText(hwnd, s);
     Size size = TextSizeInHwnd(hwnd, s);
 
     bool hide = size.dx == 0;
@@ -545,7 +545,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     } else if (WM_CHAR == msg) {
         switch (wp) {
             case VK_RETURN: {
-                char* s = win::GetTextATemp(win->hwndPageEdit);
+                char* s = HwndGetTextATemp(win->hwndPageEdit);
                 int newPageNo = win->ctrl->GetPageByLabel(s);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
@@ -581,7 +581,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     const WCHAR* text = _TR("Page:");
     if (!updateOnly) {
-        win::SetText(win->hwndPageLabel, text);
+        HwndSetText(win->hwndPageLabel, text);
     }
     Size size = TextSizeInHwnd(win->hwndPageLabel, text);
     size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
@@ -598,7 +598,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Size size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
-        WCHAR* tmp = win::GetTextTemp(win->hwndPageTotal);
+        WCHAR* tmp = HwndGetTextTemp(win->hwndPageTotal);
         buf = str::Dup(tmp);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= DpiScale(win->hwndFrame, kTextPaddingRight);
@@ -613,7 +613,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }
 
-    win::SetText(win->hwndPageTotal, buf);
+    HwndSetText(win->hwndPageTotal, buf);
     if (0 == size2.dx) {
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     }

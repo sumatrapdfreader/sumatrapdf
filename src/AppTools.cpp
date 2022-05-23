@@ -295,12 +295,12 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {
-            WCHAR* text = win::GetTextTemp(hwnd);
+            WCHAR* text = HwndGetTextTemp(hwnd);
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {
                 memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
-                win::SetText(hwnd, text);
+                HwndSetText(hwnd, text);
                 selStart = selEnd = selStart - 1;
             }
             // remove the previous word (and any spacing after it)

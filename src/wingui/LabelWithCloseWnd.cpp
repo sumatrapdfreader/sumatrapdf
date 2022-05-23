@@ -84,7 +84,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     SetTextColor(hdc, w->txtCol);
     SetBkColor(hdc, w->bgCol);
 
-    WCHAR* s = win::GetTextTemp(w->hwnd);
+    WCHAR* s = HwndGetTextTemp(w->hwnd);
     ExtTextOut(hdc, x, y, opts, nullptr, s, (uint)str::Len(s), nullptr);
 
     // Text might be too long and invade close button area. We just re-paint
@@ -208,7 +208,7 @@ static void RegisterLabelWithCloseWnd() {
 }
 
 void LabelWithCloseWnd::SetLabel(const WCHAR* label) const {
-    win::SetText(this->hwnd, label);
+    HwndSetText(this->hwnd, label);
     ScheduleRepaint(this->hwnd);
 }
 
@@ -241,7 +241,7 @@ bool LabelWithCloseWnd::Create(HWND parent, int cmd) {
 }
 
 Size LabelWithCloseWnd::GetIdealSize() const {
-    WCHAR* s = win::GetTextTemp(this->hwnd);
+    WCHAR* s = HwndGetTextTemp(this->hwnd);
     Size size = TextSizeInHwnd(this->hwnd, s);
     int btnDx = DpiScale(this->hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScale(this->hwnd, CLOSE_BTN_DY);

@@ -84,7 +84,7 @@ void OnMenuFind(WindowInfo* win) {
         AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
-            win::SetText(win->hwndFindEdit, selection);
+            HwndSetText(win->hwndFindEdit, selection);
             Edit_SetModify(win->hwndFindEdit, TRUE);
         }
     }
@@ -99,7 +99,7 @@ void OnMenuFind(WindowInfo* win) {
         return;
     }
 
-    WCHAR* previousFind = win::GetTextTemp(win->hwndFindEdit);
+    WCHAR* previousFind = HwndGetTextTemp(win->hwndFindEdit);
     WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
@@ -108,7 +108,7 @@ void OnMenuFind(WindowInfo* win) {
         return;
     }
 
-    win::SetText(win->hwndFindEdit, findString);
+    HwndSetText(win->hwndFindEdit, findString);
     Edit_SetModify(win->hwndFindEdit, TRUE);
 
     bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
@@ -167,7 +167,7 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
         return;
     }
 
-    win::SetText(win->hwndFindEdit, selection);
+    HwndSetText(win->hwndFindEdit, selection);
     AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
@@ -382,7 +382,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const char
 }
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
-    char* text = win::GetTextATemp(win->hwndFindEdit);
+    char* text = HwndGetTextATemp(win->hwndFindEdit);
     bool wasModified = Edit_GetModify(win->hwndFindEdit);
     Edit_SetModify(win->hwndFindEdit, FALSE);
     FindTextOnThread(win, direction, text, wasModified, showProgress);

@@ -442,7 +442,7 @@ char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decry
         hwnd = GetForegroundWindow();
     }
     // make sure that the password dialog is visible
-    win::ToForeground(hwnd);
+    HwndToForeground(hwnd);
 
     bool* rememberPwd = gGlobalPrefs->rememberOpenedFiles ? saveKey : nullptr;
     return Dialog_GetPassword(hwnd, fileName, rememberPwd);
@@ -821,7 +821,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
 
     if (kInvalidPageNo != pageNo) {
         char* label = win->ctrl->GetPageLabel(pageNo);
-        win::SetText(win->hwndPageEdit, label);
+        HwndSetText(win->hwndPageEdit, label);
         str::Free(label);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
@@ -990,7 +990,7 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
     OnMenuFindMatchCase(win);
     UpdateFindbox(win);
 
-    win::SetText(win->hwndFrame, win->currentTab->frameTitle);
+    HwndSetText(win->hwndFrame, win->currentTab->frameTitle);
     UpdateCurrentTabBgColor(win);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
@@ -1247,7 +1247,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     // we postpone the reload until the next autorefresh event
     if (!ctrl && autoRefresh) {
         SetFrameTitleForTab(tab, true);
-        win::SetText(win->hwndFrame, tab->frameTitle);
+        HwndSetText(win->hwndFrame, tab->frameTitle);
         return;
     }
 
@@ -2108,7 +2108,7 @@ static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool 
         }
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
-        win::SetText(win->hwndFrame, kSumatraWindowTitle);
+        HwndSetText(win->hwndFrame, kSumatraWindowTitle);
         CrashIf(win->tabs.size() != 0 || win->currentTab);
     }
 
@@ -4138,12 +4138,12 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
         SetFocus(win->hwndFrame);
     }
 
-    win::SetVisibility(win->sidebarSplitter->hwnd, tocVisible || showFavorites);
-    win::SetVisibility(win->hwndTocBox, tocVisible);
+    HwndSetVisibility(win->sidebarSplitter->hwnd, tocVisible || showFavorites);
+    HwndSetVisibility(win->hwndTocBox, tocVisible);
     win->sidebarSplitter->isLive = true;
 
-    win::SetVisibility(win->favSplitter->hwnd, tocVisible && showFavorites);
-    win::SetVisibility(win->hwndFavBox, showFavorites);
+    HwndSetVisibility(win->favSplitter->hwnd, tocVisible && showFavorites);
+    HwndSetVisibility(win->hwndFavBox, showFavorites);
     win->favSplitter->isLive = true;
 
     RelayoutFrame(win, false);

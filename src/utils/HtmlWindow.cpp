@@ -1609,7 +1609,7 @@ void HtmlWindow::OnLButtonDown() const {
 }
 
 void HtmlWindow::SetVisible(bool visible) {
-    win::SetVisibility(hwndParent, visible);
+    HwndSetVisibility(hwndParent, visible);
     if (webBrowser) {
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
     }

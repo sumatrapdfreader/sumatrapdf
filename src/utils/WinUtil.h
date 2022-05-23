@@ -183,18 +183,6 @@ inline bool tobool(BOOL b) {
 
 namespace win {
 
-void ToForeground(HWND hwnd);
-
-size_t GetTextLen(HWND hwnd);
-TempWstr GetTextTemp(HWND hwnd);
-TempStr GetTextATemp(HWND hwnd);
-
-void SetText(HWND hwnd, const WCHAR* txt);
-void SetText(HWND hwnd, const char* txt);
-void SetVisibility(HWND hwnd, bool visible);
-bool HasFrameThickness(HWND hwnd);
-bool HasCaption(HWND hwnd);
-
 namespace menu {
 void SetChecked(HMENU m, int id, bool isChecked);
 bool SetEnabled(HMENU m, int id, bool isEnabled);
@@ -301,18 +289,30 @@ std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id);
 bool IsValidDelayType(int type);
 
 void HwndResizeClientSize(HWND, int, int);
+
+size_t HwndGetTextLen(HWND hwnd);
+TempWstr HwndGetTextTemp(HWND hwnd);
+TempStr HwndGetTextATemp(HWND hwnd);
 void HwndSetText(HWND, const char* s);
 void HwndSetText(HWND, const WCHAR*);
-HICON HwndSetIcon(HWND, HICON);
+bool HwndHasFrameThickness(HWND hwnd);
+bool HwndHasCaption(HWND hwnd);
+
 HICON HwndGetIcon(HWND);
+HICON HwndSetIcon(HWND, HICON);
+
 void HwndInvalidate(HWND);
-void HwndSetFont(HWND, HFONT);
+
 HFONT HwndGetFont(HWND);
+void HwndSetFont(HWND, HFONT);
+
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndSendCommand(HWND hwnd, int cmdId);
 void HwndDestroyWindowSafe(HWND* hwnd);
+void HwndToForeground(HWND hwnd);
+void HwndSetVisibility(HWND hwnd, bool visible);
 
 bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen = 0);
 bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);

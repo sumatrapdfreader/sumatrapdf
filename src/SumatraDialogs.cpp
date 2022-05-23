@@ -75,7 +75,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
     //[ ACCESSKEY_GROUP Password Dialog
     if (WM_INITDIALOG == msg) {
         data = (Dialog_GetPassword_Data*)lp;
-        win::SetText(hDlg, _TR("Enter password"));
+        HwndSetText(hDlg, _TR("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
@@ -100,7 +100,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     data->pwdOut = ToUtf8(tmp);
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
@@ -156,7 +156,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
     if (WM_INITDIALOG == msg) {
         data = (Dialog_GoToPage_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win::SetText(hDlg, _TR("Go to page"));
+        HwndSetText(hDlg, _TR("Go to page"));
 
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
         if (!data->onlyNumeric) {
@@ -186,7 +186,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    tmp = win::GetTextATemp(editPageNo);
+                    tmp = HwndGetTextATemp(editPageNo);
                     str::ReplaceWithCopy(&data->newPageLabel, tmp);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
@@ -239,7 +239,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             data = (Dialog_Find_Data*)lp;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
-            win::SetText(hDlg, _TR("Find"));
+            HwndSetText(hDlg, _TR("Find"));
             SetDlgItemText(hDlg, IDC_STATIC, _TR("&Find what:"));
             SetDlgItemText(hDlg, IDC_MATCH_CASE, _TR("&Match case"));
             SetDlgItemText(hDlg, IDC_FIND_NEXT_HINT, _TR("Hint: Use the F3 key for finding again"));
@@ -263,7 +263,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_FIND_EDIT));
+                    tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FIND_EDIT));
                     data->searchTerm = str::Dup(tmp);
                     data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
                     EndDialog(hDlg, IDOK);
@@ -309,7 +309,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp,
     if (WM_INITDIALOG == msg) {
         data = (Dialog_PdfAssociate_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win::SetText(hDlg, _TR("Associate with PDF files?"));
+        HwndSetText(hDlg, _TR("Associate with PDF files?"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("Make SumatraPDF default application for PDF files?"));
         SetDlgItemText(hDlg, IDC_DONT_ASK_ME_AGAIN, _TR("&Don't ask me again"));
         CheckDlgButton(hDlg, IDC_DONT_ASK_ME_AGAIN, BST_UNCHECKED);
@@ -375,7 +375,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         // for non-latin languages this depends on the correct fonts being installed,
         // otherwise all the user will see are squares
-        win::SetText(hDlg, _TR("Change Language"));
+        HwndSetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int itemToSelect = 0;
         for (int i = 0; i < trans::GetLangsCount(); i++) {
@@ -486,7 +486,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
 
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        WCHAR* customZoom = win::GetTextTemp(GetDlgItem(hDlg, idComboBox));
+        WCHAR* customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
         float zoom = (float)_wtof(customZoom);
         if (zoom > 0) {
             newZoom = limitValue(zoom, kZoomMin, kZoomMax);
@@ -521,10 +521,10 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, L
 
             SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, data->forChm, data->zoomArg);
 
-            win::SetText(hDlg, _TR("Zoom factor"));
-            SetDlgItemText(hDlg, IDC_STATIC, _TR("&Magnification:"));
-            SetDlgItemText(hDlg, IDOK, _TR("Zoom"));
-            SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+            HwndSetText(hDlg, _TR("Zoom factor"));
+            SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Magnification:"));
+            SetDlgItemTextW(hDlg, IDOK, _TR("Zoom"));
+            SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
 
             CenterDialog(hDlg);
             SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
@@ -615,7 +615,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             EnableWindow(GetDlgItem(hDlg, IDC_CHECK_FOR_UPDATES), HasPermission(Perm::InternetAccess));
             CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
 
-            win::SetText(hDlg, _TR("SumatraPDF Options"));
+            HwndSetText(hDlg, _TR("SumatraPDF Options"));
             SetDlgItemText(hDlg, IDC_SECTION_VIEW, _TR("View"));
             SetDlgItemText(hDlg, IDC_DEFAULT_LAYOUT_LABEL, _TR("Default &Layout:"));
             SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TR("Default &Zoom:"));
@@ -679,7 +679,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->checkForUpdates = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_CHECK_FOR_UPDATES));
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
                     if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
-                        auto tmp = win::GetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
+                        auto tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
                         char* cmdLine = str::Dup(ToUtf8Temp(tmp));
                         str::ReplacePtr(&prefs->inverseSearchCmdLine, cmdLine);
                     }
@@ -814,7 +814,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
     if (WM_INITDIALOG == msg) {
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win::SetText(hDlg, _TRA("Add Favorite"));
+        HwndSetText(hDlg, _TRA("Add Favorite"));
         AutoFreeStr s(str::Format(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo));
         SetDlgItemTextW(hDlg, IDC_ADD_PAGE_STATIC, ToWstrTemp(s));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
@@ -833,7 +833,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
-            WCHAR* name = win::GetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+            WCHAR* name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name)) {
                 str::ReplacePtr(&data->favName, ToUtf8(name));

@@ -380,7 +380,7 @@ static void OnButtonInstall() {
         return;
     }
 
-    char* userInstallDir = win::GetTextATemp(gWnd->editInstallationDir->hwnd);
+    char* userInstallDir = HwndGetTextATemp(gWnd->editInstallationDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
@@ -439,7 +439,7 @@ static void OnInstallationFinished() {
 
 static void EnableAndShow(Wnd* w, bool enable) {
     if (w) {
-        win::SetVisibility(w->hwnd, enable);
+        HwndSetVisibility(w->hwnd, enable);
         w->SetIsEnabled(enable);
     }
 }
@@ -538,7 +538,7 @@ static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const 
 
 static void OnButtonBrowse() {
     auto editDir = gWnd->editInstallationDir;
-    char* installDir = win::GetTextATemp(editDir->hwnd);
+    char* installDir = HwndGetTextATemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {

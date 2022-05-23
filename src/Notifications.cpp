@@ -230,7 +230,7 @@ bool NotificationWnd::Create(const char* msg, const char* progressMsg) {
 }
 
 void NotificationWnd::UpdateMessage(const char* msg, int timeoutInMS, bool highlight) {
-    win::SetText(hwnd, msg);
+    HwndSetText(hwnd, msg);
     this->highlight = highlight;
     if (timeoutInMS != 0) {
         hasClose = false;
@@ -281,7 +281,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     if (wnd->hasClose) {
         rectMsg.dx -= DpiScale(hwnd, kCloseLeftMargin);
     }
-    WCHAR* text = win::GetTextTemp(hwnd);
+    WCHAR* text = HwndGetTextTemp(hwnd);
     rTmp = ToRECT(rectMsg);
     DrawTextW(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 
