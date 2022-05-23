@@ -144,9 +144,8 @@ void Wnd::SetText(const char* s) {
 }
 
 TempStr Wnd::GetText() {
-    WCHAR* sw = HwndGetTextTemp(hwnd);
-    auto sa = ToUtf8Temp(sw);
-    return sa;
+    char* s = HwndGetTextTemp(hwnd);
+    return s;
 }
 
 void Wnd::SetVisibility(Visibility newVisibility) {
@@ -1041,7 +1040,7 @@ HWND Static::Create(const StaticCreateArgs& args) {
 
 Size Static::GetIdealSize() {
     CrashIf(!hwnd);
-    WCHAR* txt = HwndGetTextTemp(hwnd);
+    char* txt = HwndGetTextTemp(hwnd);
     HFONT hfont = GetWindowFont(hwnd);
     return HwndMeasureText(hwnd, txt, hfont);
 }
@@ -1367,9 +1366,9 @@ bool Edit::HasBorder() {
 
 Size Edit::GetIdealSize() {
     HFONT hfont = HwndGetFont(hwnd);
-    Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
+    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    WCHAR* txt = HwndGetTextTemp(hwnd);
+    char* txt = HwndGetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 

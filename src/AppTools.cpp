@@ -295,7 +295,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {
-            WCHAR* text = HwndGetTextTemp(hwnd);
+            WCHAR* text = HwndGetTextWTemp(hwnd);
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {

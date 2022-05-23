@@ -380,7 +380,7 @@ static void OnButtonInstall() {
         return;
     }
 
-    char* userInstallDir = HwndGetTextATemp(gWnd->editInstallationDir->hwnd);
+    char* userInstallDir = HwndGetTextTemp(gWnd->editInstallationDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&gCli->installDir, userInstallDir);
     }
@@ -538,7 +538,7 @@ static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const 
 
 static void OnButtonBrowse() {
     auto editDir = gWnd->editInstallationDir;
-    char* installDir = HwndGetTextATemp(editDir->hwnd);
+    char* installDir = HwndGetTextTemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {

@@ -118,6 +118,7 @@ void PaintLine(HDC, Rect);
 void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
+Size TextSizeInHwnd(HWND, const char*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
 Size TextSizeInDC(HDC, const WCHAR*);
 
@@ -287,8 +288,8 @@ bool IsValidDelayType(int type);
 void HwndResizeClientSize(HWND, int, int);
 
 size_t HwndGetTextLen(HWND hwnd);
-TempWstr HwndGetTextTemp(HWND hwnd);
-TempStr HwndGetTextATemp(HWND hwnd);
+TempWstr HwndGetTextWTemp(HWND hwnd);
+TempStr HwndGetTextTemp(HWND hwnd);
 void HwndSetText(HWND, const char* s);
 void HwndSetText(HWND, const WCHAR*);
 bool HwndHasFrameThickness(HWND hwnd);
@@ -303,6 +304,7 @@ HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);
 
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
+Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndSendCommand(HWND hwnd, int cmdId);

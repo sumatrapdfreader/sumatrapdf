@@ -99,7 +99,7 @@ void OnMenuFind(WindowInfo* win) {
         return;
     }
 
-    WCHAR* previousFind = HwndGetTextTemp(win->hwndFindEdit);
+    WCHAR* previousFind = HwndGetTextWTemp(win->hwndFindEdit);
     WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
@@ -382,7 +382,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const char
 }
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
-    char* text = HwndGetTextATemp(win->hwndFindEdit);
+    char* text = HwndGetTextTemp(win->hwndFindEdit);
     bool wasModified = Edit_GetModify(win->hwndFindEdit);
     Edit_SetModify(win->hwndFindEdit, FALSE);
     FindTextOnThread(win, direction, text, wasModified, showProgress);

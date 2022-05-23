@@ -72,10 +72,6 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
 
     int x = DpiScale(w->hwnd, w->padX);
     int y = DpiScale(w->hwnd, w->padY);
-    uint opts = ETO_OPAQUE;
-    if (IsRtl(w->hwnd)) {
-        opts = opts | ETO_RTLREADING;
-    }
 
     HGDIOBJ prevFont = nullptr;
     if (w->font) {
@@ -84,8 +80,13 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     SetTextColor(hdc, w->txtCol);
     SetBkColor(hdc, w->bgCol);
 
-    WCHAR* s = HwndGetTextTemp(w->hwnd);
-    ExtTextOut(hdc, x, y, opts, nullptr, s, (uint)str::Len(s), nullptr);
+    uint format = DT_SINGLELINE | DT_TOP | DT_LEFT;
+    if (IsRtl(w->hwnd)) {
+        format |= DT_RTLREADING;
+    }
+    char* s = HwndGetTextTemp(w->hwnd);
+    RECT rs{x, y, x+cr.dx, y+cr.dy};
+    DrawTextUtf8(hdc, s, (int)str::Len(s), &rs, format);
 
     // Text might be too long and invade close button area. We just re-paint
     // the background, which is not the pretties but works.
@@ -241,7 +242,7 @@ bool LabelWithCloseWnd::Create(HWND parent, int cmd) {
 }
 
 Size LabelWithCloseWnd::GetIdealSize() const {
-    WCHAR* s = HwndGetTextTemp(this->hwnd);
+    char* s = HwndGetTextTemp(this->hwnd);
     Size size = TextSizeInHwnd(this->hwnd, s);
     int btnDx = DpiScale(this->hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScale(this->hwnd, CLOSE_BTN_DY);

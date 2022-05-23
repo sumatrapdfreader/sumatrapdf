@@ -103,7 +103,7 @@ static bool NeedsRotateUI(WindowInfo* win) {
 }
 
 static bool NeedsInfo(WindowInfo* win) {
-    WCHAR* s = HwndGetTextTemp(win->hwndTbInfoText);
+    char* s = HwndGetTextTemp(win->hwndTbInfoText);
     bool show = str::Len(s) > 0;
     return show;
 }
@@ -545,7 +545,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     } else if (WM_CHAR == msg) {
         switch (wp) {
             case VK_RETURN: {
-                char* s = HwndGetTextATemp(win->hwndPageEdit);
+                char* s = HwndGetTextTemp(win->hwndPageEdit);
                 int newPageNo = win->ctrl->GetPageByLabel(s);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
@@ -594,22 +594,22 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     int currX = r.right + DpiScale(win->hwndFrame, 10);
     int currY = (r.bottom - pageWndRect.dy) / 2;
 
-    WCHAR* buf;
+    char* buf;
     Size size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
-        WCHAR* tmp = HwndGetTextTemp(win->hwndPageTotal);
+        char* tmp = HwndGetTextTemp(win->hwndPageTotal);
         buf = str::Dup(tmp);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= DpiScale(win->hwndFrame, kTextPaddingRight);
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
     } else if (!pageCount) {
-        buf = str::Dup(L"");
+        buf = str::Dup("");
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
-        buf = str::Format(L" / %d", pageCount);
+        buf = str::Format(" / %d", pageCount);
     } else {
-        buf = str::Format(L" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
-        AutoFreeWstr buf2(str::Format(L" (%d / %d)", pageCount, pageCount));
+        buf = str::Format(" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
+        AutoFreeStr buf2(str::Format(" (%d / %d)", pageCount, pageCount));
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }
 

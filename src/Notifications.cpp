@@ -281,10 +281,9 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     if (wnd->hasClose) {
         rectMsg.dx -= DpiScale(hwnd, kCloseLeftMargin);
     }
-    WCHAR* text = HwndGetTextTemp(hwnd);
+    char* text = HwndGetTextTemp(hwnd);
     rTmp = ToRECT(rectMsg);
-    DrawTextW(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
-
+    DrawTextUtf8(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
     if (wnd->hasClose) {
         rTmp = ToRECT(GetCloseRect(hwnd));
         DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);

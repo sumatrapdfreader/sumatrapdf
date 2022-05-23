@@ -94,14 +94,14 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
     }
     //] ACCESSKEY_GROUP Password Dialog
 
-    WCHAR* tmp;
+    char* tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
-                    data->pwdOut = ToUtf8(tmp);
+                    data->pwdOut = str::Dup(tmp);
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     }
@@ -186,7 +186,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    tmp = HwndGetTextATemp(editPageNo);
+                    tmp = HwndGetTextTemp(editPageNo);
                     str::ReplaceWithCopy(&data->newPageLabel, tmp);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
@@ -263,7 +263,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FIND_EDIT));
+                    tmp = HwndGetTextWTemp(GetDlgItem(hDlg, IDC_FIND_EDIT));
                     data->searchTerm = str::Dup(tmp);
                     data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
                     EndDialog(hDlg, IDOK);
@@ -486,8 +486,8 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
 
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        WCHAR* customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
-        float zoom = (float)_wtof(customZoom);
+        char* customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
+        float zoom = (float)atof(customZoom);
         if (zoom > 0) {
             newZoom = limitValue(zoom, kZoomMin, kZoomMax);
         }
@@ -679,8 +679,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->checkForUpdates = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_CHECK_FOR_UPDATES));
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
                     if (prefs->enableTeXEnhancements && HasPermission(Perm::DiskAccess)) {
-                        auto tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
-                        char* cmdLine = str::Dup(ToUtf8Temp(tmp));
+                        char* tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
+                        char* cmdLine = str::Dup(tmp);
                         str::ReplacePtr(&prefs->inverseSearchCmdLine, cmdLine);
                     }
                     EndDialog(hDlg, IDOK);
@@ -833,10 +833,10 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
-            WCHAR* name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+            char* name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name)) {
-                str::ReplacePtr(&data->favName, ToUtf8(name));
+                str::ReplaceWithCopy(&data->favName, name);
             } else {
                 str::FreePtr(&data->favName);
             }
