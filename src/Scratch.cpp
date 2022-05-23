@@ -285,7 +285,7 @@ void TestBrowser() {
     {
         CreateCustomArgs args;
         args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, dx, dy};
-        args.title = L"test browser";
+        args.title = "test browser";
         // TODO: if set, navigate to url doesn't work
         // args.visible = false;
         HWND hwnd = w->CreateCustom(args);

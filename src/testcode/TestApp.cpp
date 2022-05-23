@@ -64,7 +64,7 @@ void TestApp(HINSTANCE hInstance) {
     //w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
-    args.title = L"a little test app";
+    args.title = "a little test app";
     HWND hwnd = w->CreateCustom(args);
     CrashIf(!hwnd);
 

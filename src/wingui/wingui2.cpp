@@ -124,7 +124,7 @@ Wnd::Wnd() {
 Wnd::~Wnd() {
     Destroy();
     delete layout;
-    DeleteObject(backgroundColorBrush);
+    DeleteBrush(backgroundColorBrush);
 }
 
 Kind Wnd::GetKind() {
@@ -617,11 +617,19 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hwnd, &ps);
+                auto bgBrush = backgroundColorBrush;
+                if (bgBrush != nullptr) {
+                    FillRect(hdc, &ps.rcPaint, bgBrush);
+                }
                 OnPaint(hdc, &ps);
                 ::EndPaint(hwnd, &ps);
             } else {
                 HDC hdc = ::GetDC(hwnd);
                 OnPaint(hdc, nullptr);
+                auto bgBrush = backgroundColorBrush;
+                if (bgBrush != nullptr) {
+                    FillRect(hdc, nullptr, bgBrush);
+                }
                 ::ReleaseDC(hwnd, hdc);
             }
             // No more drawing required
@@ -872,15 +880,15 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
 
     DWORD tmpStyle = style & ~WS_VISIBLE;
     DWORD exStyle = args.exStyle;
-    const WCHAR* title = args.title;
     HMENU m = (HMENU)args.menu;
     HINSTANCE inst = GetInstance();
     LPVOID* createParams = nullptr;
+    WCHAR* titleW = ToWstrTemp(args.title);
 
     // associate hwnd with this window as soon as possible
     // in StaticWndProc
     gWindowBeingCreated = this;
-    HWND hwndTmp = ::CreateWindowExW(exStyle, className, title, style, x, y, dx, dy, parent, m, inst, createParams);
+    HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
     gWindowBeingCreated = nullptr;
     CrashIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE
@@ -889,16 +897,17 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
-    if (args.icon) {
-        HwndSetIcon(hwnd, args.icon);
-    }
 
+    // trigger creating a backgroundBrush
+    SetBackgroundColor(args.bgColor);
     HFONT f = args.font;
     if (!f) {
         f = GetDefaultGuiFont();
     }
     HwndSetFont(hwnd, f);
-
+    if (args.icon) {
+        HwndSetIcon(hwnd, args.icon);
+    }
     if (style & WS_VISIBLE) {
         if (style & WS_MAXIMIZE)
             ::ShowWindow(hwnd, SW_MAXIMIZE);
@@ -921,6 +930,10 @@ void Wnd::Subclass() {
     CrashIf(prevWindowProc); // don't subclass multiple times
 
     WindowMapAdd(hwnd, this);
+    WNDPROC proc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC);
+    if (proc == StaticWindowProc) {
+        return;
+    }
     prevWindowProc = SubclassWindow(hwnd, StaticWindowProc);
     CrashIf(!prevWindowProc);
 }
@@ -956,7 +969,7 @@ void Wnd::SetBackgroundColor(COLORREF col) {
     }
     backgroundColor = col;
     if (backgroundColorBrush != nullptr) {
-        DeleteObject(backgroundColorBrush);
+        DeleteBrush(backgroundColorBrush);
         backgroundColorBrush = nullptr;
     }
     if (backgroundColor != ColorUnset) {
@@ -2616,16 +2629,12 @@ bool TreeView::SelectItem(TreeItem ti) {
 }
 
 void TreeView::SetBackgroundColor(COLORREF bgCol) {
-    // TODO: implement me
-#if 0
-    this->backgroundColor = bgCol;
-    TreeView_SetBkColor(this->hwnd, bgCol);
-#endif
+    backgroundColor = bgCol;
+    TreeView_SetBkColor(hwnd, bgCol);
 }
 
 void TreeView::SetTextColor(COLORREF col) {
-    // TODO: implement me
-#if 0
+#if 0 // TODO: do I need this?
     this->textColor = col;
 #endif
     TreeView_SetTextColor(this->hwnd, col);

@@ -1369,14 +1369,14 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
-    // args.backgroundColor = MkGray(0xee);
+    args.bgColor = MkGray(0xee);
+    args.title = _TRA("Annotations");
 
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
     // w->initialSize = {winSize.cx, winSize.cy};
     ew->CreateCustom(args);
-    ew->SetText(_TRA("Annotations"));
 
     CreateMainLayout(ew);
     ew->tab = tab;

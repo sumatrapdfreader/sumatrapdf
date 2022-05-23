@@ -36,7 +36,7 @@ struct CreateControlArgs {
 struct CreateCustomArgs {
     HWND parent = nullptr;
     const WCHAR* className = nullptr;
-    const WCHAR* title = nullptr;
+    const char* title = nullptr;
     DWORD style = 0;
     DWORD exStyle = 0;
     Rect pos = {};
@@ -44,6 +44,7 @@ struct CreateCustomArgs {
     bool visible = true;
     HFONT font = nullptr;
     HICON icon = nullptr;
+    COLORREF bgColor = ColorUnset;
 };
 
 struct Wnd : public ILayout {
@@ -138,7 +139,7 @@ struct Wnd : public ILayout {
     HWND hwnd = nullptr;
     ILayout* layout = nullptr;
 
-    COLORREF backgroundColor{ColorUnset};
+    COLORREF backgroundColor = ColorUnset;
     HBRUSH backgroundColorBrush = nullptr;
 
     ContextMenuHandler2 onContextMenu;
@@ -474,7 +475,6 @@ struct Splitter : public Wnd {
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
     SplitterMoveHandler onSplitterMove = nullptr;
-    COLORREF backgroundColor = 0;
 
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;
