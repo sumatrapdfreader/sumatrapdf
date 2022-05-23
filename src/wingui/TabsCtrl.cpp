@@ -8,7 +8,7 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/wingui2.h"
+#include "wingui/WinGui.h"
 #include "wingui/TabsCtrl.h"
 
 #include "utils/Log.h"

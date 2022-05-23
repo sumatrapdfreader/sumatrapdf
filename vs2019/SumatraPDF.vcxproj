@@ -604,7 +604,7 @@
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
-    <ClInclude Include="..\src\wingui\wingui2.h" />
+    <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
@@ -871,7 +871,7 @@
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
-    <ClCompile Include="..\src\wingui\wingui2.cpp" />
+    <ClCompile Include="..\src\wingui\WinGui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\docs\releasenotes.txt" />
