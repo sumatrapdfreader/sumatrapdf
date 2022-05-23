@@ -813,11 +813,11 @@ static void FavTreeContextMenu(ContextMenuEvent2* ev) {
     }
 }
 
-static WNDPROC DefWndProcFavBox = nullptr;
+static WNDPROC gWndProcFavBox = nullptr;
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return CallWindowProc(DefWndProcFavBox, hwnd, msg, wp, lp);
+        return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
     }
 
     LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
@@ -837,7 +837,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             }
             break;
     }
-    return CallWindowProc(DefWndProcFavBox, hwnd, msg, wp, lp);
+    return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
 }
 
 static HFONT gTreeFont = nullptr;
@@ -892,8 +892,8 @@ void CreateFavorites(WindowInfo* win) {
 
     win->favTreeCtrl = treeCtrl;
 
-    if (nullptr == DefWndProcFavBox) {
-        DefWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
+    if (nullptr == gWndProcFavBox) {
+        gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
     }
     SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
 

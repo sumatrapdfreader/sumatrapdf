@@ -265,8 +265,6 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 void RunModalWindow(HWND hwndDialog, HWND hwndParent);
 void PositionCloseTo(WindowBase* w, HWND hwnd);
 int GetNextCtrlID();
-HWND GetCurrentModelessDialog();
-void SetCurrentModelessDialog(HWND);
 
 const char* GetWinMessageName(UINT msg);
 void DbgLogMsg(const char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);

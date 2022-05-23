@@ -124,8 +124,6 @@ WindowInfo::~WindowInfo() {
     CrashIf(linkOnLastButtonDown);
     CrashIf(annotationOnLastButtonDown);
 
-    UnsubclassToc(this);
-
     DeleteObject(brMovePattern);
     DeleteObject(bmpMovePattern);
 

@@ -106,7 +106,6 @@ struct WindowInfo {
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;
-    UINT_PTR tocBoxSubclassId = 0;
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
     wg::TreeView* tocTreeCtrl = nullptr;

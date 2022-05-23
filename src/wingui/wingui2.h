@@ -664,3 +664,9 @@ struct TreeView : Wnd {
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt);
 
 } // namespace wg
+
+int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
+
+// TODO: those are hacks
+HWND GetCurrentModelessDialog();
+void SetCurrentModelessDialog(HWND);

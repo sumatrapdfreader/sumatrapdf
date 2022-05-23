@@ -2,14 +2,10 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
-#include "utils/HtmlWindow.h"
-#include "mui/Mui.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
 
@@ -19,9 +15,6 @@
 #include "Controller.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "EbookBase.h"
-#include "HtmlFormatter.h"
-#include "EbookFormatter.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
@@ -33,7 +26,6 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
-#include "AppTools.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
 #include "StressTesting.h"

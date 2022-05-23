@@ -2987,3 +2987,123 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 }
 
 } // namespace wg
+
+int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (wg::PreTranslateMessage(msg)) {
+            continue;
+        }
+        if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
+            continue;
+        }
+        if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
+            continue;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return (int)msg.wParam;
+}
+
+#if 0
+// TODO: support accelerator table?
+// TODO: a better way to stop the loop e.g. via shared
+// atomic int to signal termination and sending WM_IDLE
+// to trigger processing of the loop
+void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
+    if (hwndParent != nullptr) {
+        EnableWindow(hwndParent, FALSE);
+    }
+
+    MSG msg;
+    bool isFinished = false;
+    while (!isFinished) {
+        BOOL ok = WaitMessage();
+        if (!ok) {
+            DWORD err = GetLastError();
+            LogLastError(err);
+            isFinished = true;
+            continue;
+        }
+        while (!isFinished && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                isFinished = true;
+                break;
+            }
+            if (!IsDialogMessage(hwndDialog, &msg)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+    }
+
+    if (hwndParent != nullptr) {
+        EnableWindow(hwndParent, TRUE);
+    }
+}
+#endif
+
+#if 0
+// sets initial position of w within hwnd. Assumes w->initialSize is set.
+void PositionCloseTo(wg::Wnd* w, HWND hwnd) {
+    CrashIf(!hwnd);
+    Size is = w->initialSize;
+    CrashIf(is.IsEmpty());
+    RECT r{};
+    BOOL ok = GetWindowRect(hwnd, &r);
+    CrashIf(!ok);
+
+    // position w in the the center of hwnd
+    // if window is bigger than hwnd, let the system position
+    // we don't want to hide it
+    int offX = (RectDx(r) - is.dx) / 2;
+    if (offX < 0) {
+        return;
+    }
+    int offY = (RectDy(r) - is.dy) / 2;
+    if (offY < 0) {
+        return;
+    }
+    Point& ip = w->initialPos;
+    ip.x = (int)r.left + (int)offX;
+    ip.y = (int)r.top + (int)offY;
+}
+#endif
+
+// http://www.guyswithtowels.com/blog/10-things-i-hate-about-win32.html#ModelessDialogs
+// to implement a standard dialog navigation we need to call
+// IsDialogMessage(hwnd) in message loop.
+// hwnd has to be current top-level window that is modeless dialog
+// we need to manually maintain this window
+HWND g_currentModelessDialog = nullptr;
+
+HWND GetCurrentModelessDialog() {
+    return g_currentModelessDialog;
+}
+
+// set to nullptr to disable
+void SetCurrentModelessDialog(HWND hwnd) {
+    g_currentModelessDialog = hwnd;
+}
+
+// TODO: port from Window.cpp or figure out something better
+#if 0
+static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    // ...
+    if (w->isDialog) {
+        // TODO: should handle more messages as per
+        // https://stackoverflow.com/questions/35688400/set-full-focus-on-a-button-setfocus-is-not-enough
+        // and https://docs.microsoft.com/en-us/windows/win32/dlgbox/dlgbox-programming-considerations
+        if (WM_ACTIVATE == msg) {
+            if (wp == 0) {
+                // becoming inactive
+                SetCurrentModelessDialog(nullptr);
+            } else {
+                // becoming active
+                SetCurrentModelessDialog(w->hwnd);
+            }
+        }
+    }
+}
+#endif
