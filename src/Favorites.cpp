@@ -764,7 +764,7 @@ static void FavTreeItemClicked(TreeClickEvent* ev) {
 }
 #endif
 
-static void FavTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
+static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
     CrashIf(!win);
 
@@ -865,7 +865,7 @@ HFONT GetTreeFont() {
 }
 
 // in TableOfContents.cpp
-extern LRESULT TocTreeKeyDown2(TreeKeyDownEvent2*);
+extern LRESULT TocTreeKeyDown2(TreeKeyDownEvent*);
 
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);

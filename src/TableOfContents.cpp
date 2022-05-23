@@ -49,7 +49,7 @@
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
+static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
     auto treeView = ev->treeView;
     auto tm = treeView->treeModel;
     auto ti = ev->treeItem;
@@ -565,7 +565,7 @@ static bool ShouldCustomDraw(WindowInfo* win) {
     return kind == kindEngineMupdf || kind == kindEngineMulti;
 }
 
-LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent2*);
+LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent*);
 
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {
@@ -643,7 +643,7 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent2* ev) {
+LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
 #if defined(DISPLAY_TOC_PAGE_NUMBERS)
     if (false)
         return CDRF_DODEFAULT;
@@ -692,7 +692,7 @@ LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent2* ev) {
 // this calls GoToTocLinkTask) which will eventually call GoToPage()
 // which adds nav point. Maybe I should not add nav point
 // if going to the same page?
-LRESULT TocTreeClick(TreeClickEvent2* ev) {
+LRESULT TocTreeClick(TreeClickEvent* ev) {
 #if 0
     ev->didHandle = true;
     if (!ev->treeItem) {
@@ -706,7 +706,7 @@ LRESULT TocTreeClick(TreeClickEvent2* ev) {
     return -1;
 }
 
-static void TocTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
+static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
     CrashIf(!win);
 
@@ -724,7 +724,7 @@ static void TocTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
     GoToTocTreeItem(win, ev->selectedItem, allowExternal);
 }
 
-LRESULT TocTreeKeyDown2(TreeKeyDownEvent2* ev) {
+LRESULT TocTreeKeyDown2(TreeKeyDownEvent* ev) {
     // TODO: trying to fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1841
     // doesn't work i.e. page up / page down seems to be processed anyway by TreeCtrl
 #if 0

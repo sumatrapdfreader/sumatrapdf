@@ -10,8 +10,8 @@ void UpdateTocSelection(WindowInfo*, int currPageNo);
 void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
 
 // shared with Favorites.cpp
-// void TocCustomizeTooltip(TreeItemGetTooltipEvent2*);
-// LRESULT TocTreeKeyDown2(TreeKeyDownEvent2*);
+// void TocCustomizeTooltip(TreeItemGetTooltipEvent*);
+// LRESULT TocTreeKeyDown2(TreeKeyDownEvent*);
 
 // void TocTreeCharHandler(CharEvent* ev);
 // void TocTreeMouseWheelHandler(MouseWheelEvent* ev);

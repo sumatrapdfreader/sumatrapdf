@@ -508,23 +508,23 @@ struct TreeViewCreateArgs {
     bool fullRowSelect = false;
 };
 
-struct TreeItemGetTooltipEvent2 {
+struct TreeItemGetTooltipEvent {
     TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
     NMTVGETINFOTIPW* info = nullptr;
 };
 
-using TreeItemGetTooltipHandler2 = std::function<void(TreeItemGetTooltipEvent2*)>;
+using TreeItemGetTooltipHandler = std::function<void(TreeItemGetTooltipEvent*)>;
 
-struct TreeItemCustomDrawEvent2 {
+struct TreeItemCustomDrawEvent {
     TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
     NMTVCUSTOMDRAW* nm = nullptr;
 };
 
-using TreeItemCustomDrawHandler2 = std::function<LRESULT(TreeItemCustomDrawEvent2*)>;
+using TreeItemCustomDrawHandler = std::function<LRESULT(TreeItemCustomDrawEvent*)>;
 
-struct TreeSelectionChangedEvent2 {
+struct TreeSelectionChangedEvent {
     TreeView* treeView = nullptr;
     TreeItem prevSelectedItem = 0;
     TreeItem selectedItem = 0;
@@ -533,9 +533,9 @@ struct TreeSelectionChangedEvent2 {
     bool byMouse = false;
 };
 
-using TreeSelectionChangedHandler2 = std::function<void(TreeSelectionChangedEvent2*)>;
+using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
 
-struct TreeClickEvent2 {
+struct TreeClickEvent {
     TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
     bool isDblClick = false;
@@ -546,16 +546,16 @@ struct TreeClickEvent2 {
     Point mouseGlobal{};
 };
 
-using TreeClickHandler2 = std::function<LRESULT(TreeClickEvent2*)>;
+using TreeClickHandler = std::function<LRESULT(TreeClickEvent*)>;
 
-struct TreeKeyDownEvent2 {
+struct TreeKeyDownEvent {
     TreeView* treeView = nullptr;
     NMTVKEYDOWN* nmkd = nullptr;
     int keyCode = 0;
     u32 flags = 0;
 };
 
-using TreeKeyDownHandler2 = std::function<void(TreeKeyDownEvent2*)>;
+using TreeKeyDownHandler = std::function<void(TreeKeyDownEvent*)>;
 
 struct TreeView : Wnd {
     TreeView();
@@ -596,19 +596,19 @@ struct TreeView : Wnd {
     TreeModel* treeModel = nullptr; // not owned by us
 
     // for WM_NOTIFY with TVN_GETINFOTIP
-    TreeItemGetTooltipHandler2 onGetTooltip = nullptr;
+    TreeItemGetTooltipHandler onGetTooltip = nullptr;
 
     // for WM_NOTIFY wiht NM_CUSTOMDRAW
-    TreeItemCustomDrawHandler2 onTreeItemCustomDraw = nullptr;
+    TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
 
     // for WM_NOTIFY with TVN_SELCHANGED
-    TreeSelectionChangedHandler2 onTreeSelectionChanged = nullptr;
+    TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
 
     // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
-    TreeClickHandler2 onTreeClick = nullptr;
+    TreeClickHandler onTreeClick = nullptr;
 
     // for WM_NOITFY with TVN_KEYDOWN
-    TreeKeyDownHandler2 onTreeKeyDown = nullptr;
+    TreeKeyDownHandler onTreeKeyDown = nullptr;
 
     // private
     TVITEMW item{};
