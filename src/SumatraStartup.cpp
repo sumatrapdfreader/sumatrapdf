@@ -299,10 +299,10 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     return win;
 }
 
-static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
+static void RestoreTabOnStartup(WindowInfo* win, TabState* state, bool lazyload=true) {
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
-    if (!LoadDocument(args)) {
+    if (!LoadDocument(args, lazyload)) {
         return;
     }
     TabInfo* tab = win->currentTab;
@@ -1268,9 +1268,12 @@ ContinueOpenWindow:
                 // the current fix is to not call prefs::Save() below but maybe there's a better way
                 // maybe make a copy of TabState so that it isn't invalidated
                 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-                RestoreTabOnStartup(win, state);
+                RestoreTabOnStartup(win, state, gEnableLazyLoad);
             }
             TabsSelect(win, data->tabIndex - 1);
+            if (gEnableLazyLoad) {
+                ReloadDocument(win, false);
+            }
         }
     }
     ResetSessionState(gGlobalPrefs->sessionData);
