@@ -1901,7 +1901,7 @@ static char* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit
 void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd) {
     static auto unit = MeasurementUnit::pt;
     // toggle measurement unit by repeatedly invoking the helper
-    if (!wnd && GetNotificationForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER)) {
+    if (!wnd && GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
         switch (unit) {
             case MeasurementUnit::pt:
                 unit = MeasurementUnit::mm;
@@ -1915,7 +1915,7 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
             default:
                 CrashAlwaysIf(true);
         }
-        wnd = GetNotificationForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER);
+        wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
     }
 
     CrashIf(!win->AsFixed());
@@ -1932,7 +1932,7 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
         posInfo.Set(str::Format("%s - %s %s", posInfo.Get(), _TRA("Selection:"), selStr.Get()));
     }
     if (!wnd) {
-        ShowNotification(win->hwndCanvas, posInfo, NotificationOptions::Persist, NG_CURSOR_POS_HELPER);
+        ShowNotification(win->hwndCanvas, posInfo, NotificationOptions::Persist, kNotifGroupCursorPos);
     } else {
         wnd->UpdateMessage(posInfo);
     }
@@ -2058,9 +2058,9 @@ static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool 
     } else {
         win->currentTab = nullptr;
     }
-    RemoveNotificationsForGroup(win->hwndCanvas, NG_RESPONSE_TO_ACTION);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupActionResponse);
     RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
-    RemoveNotificationsForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
     win->mouseAction = MouseAction::Idle;
 
@@ -3780,8 +3780,8 @@ static void OnFrameKeyEsc(WindowInfo* win) {
         RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, NG_CURSOR_POS_HELPER);
+    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
         return;
     }
     if (win->showSelection) {

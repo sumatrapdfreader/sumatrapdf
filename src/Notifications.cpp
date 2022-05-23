@@ -13,8 +13,8 @@ using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
 
-Kind NG_CURSOR_POS_HELPER = "cursorPosHelper";
-Kind NG_RESPONSE_TO_ACTION = "responseToAction";
+Kind kNotifGroupCursorPos = "cursorPosHelper";
+Kind kNotifGroupActionResponse = "responseToAction";
 
 extern bool IsUIRightToLeft(); // SumatraPDF.h
 
@@ -460,11 +460,30 @@ NotificationWnd* ShowNotification(HWND hwnd, const char* msg, NotificationOption
     NotificationWnd* wnd = new NotificationWnd(hwnd, timeoutMS);
     wnd->highlight = highlight;
     wnd->wndRemovedCb = [](NotificationWnd* wnd) { NotifsRemoveNotification(wnd); };
-    if (NG_CURSOR_POS_HELPER == groupId) {
+    if (kNotifGroupCursorPos == groupId) {
         wnd->shrinkLimit = 0.7f;
     }
     wnd->Create(msg, nullptr);
     NotifsAdd(wnd, groupId);
+    return wnd;
+}
+
+NotificationWnd* ShowNotification(NotificationCreateArgs& args) {
+    CrashIf(!args.hwndParent);
+
+    NotificationWnd* wnd = new NotificationWnd(args.hwndParent, args.timeoutMs);
+
+    wnd->highlight = args.warning;
+    if (args.onRemoved) {
+        wnd->wndRemovedCb = args.onRemoved;
+    } else {
+        wnd->wndRemovedCb = [](NotificationWnd* wnd) { NotifsRemoveNotification(wnd); };
+    }
+    if (kNotifGroupCursorPos == args.groupId) {
+        wnd->shrinkLimit = 0.7f;
+    }
+    wnd->Create(args.msg, args.progressMsg);
+    NotifsAdd(wnd, args.groupId);
     return wnd;
 }
 

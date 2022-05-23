@@ -3,8 +3,8 @@
 
 struct NotificationWnd;
 
-extern Kind NG_CURSOR_POS_HELPER;
-extern Kind NG_RESPONSE_TO_ACTION;
+extern Kind kNotifGroupCursorPos;
+extern Kind kNotifGroupActionResponse;
 
 using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
 
@@ -15,10 +15,23 @@ enum class NotificationOptions {
     Warning = Persist | Highlight,
 };
 
+// 3 seconds
+constexpr const int kNotifDefaultTimeOut = 1000 * 3;
+
+struct NotificationCreateArgs {
+    HWND hwndParent = nullptr;
+    Kind groupId = kNotifGroupActionResponse;
+    bool warning = false;
+    int timeoutMs = 0; // if 0 => persists until closed manually
+    const char* msg = nullptr;
+    const char* progressMsg = nullptr;
+    NotificationWndRemovedCallback onRemoved;
+};
+
 struct NotificationWnd : public ProgressUpdateUI {
     HWND parent = nullptr;
     HWND hwnd = nullptr;
-    int timeoutInMS = 0; // 0 means no timeout
+    int timeoutInMS = kNotifDefaultTimeOut; // 0 means no timeout
     bool hasProgress = false;
     bool hasClose = false;
 
@@ -52,8 +65,9 @@ struct NotificationWnd : public ProgressUpdateUI {
     bool WasCanceled() override;
 };
 
+NotificationWnd* ShowNotification(NotificationCreateArgs& args);
 NotificationWnd* ShowNotification(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
-                                  Kind groupId = NG_RESPONSE_TO_ACTION);
+                                  Kind groupId = kNotifGroupActionResponse);
 void RemoveNotification(NotificationWnd*);
 void RemoveNotificationsForGroup(HWND hwnd, Kind);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
