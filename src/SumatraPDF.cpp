@@ -109,8 +109,8 @@ bool gShowFrameRate = false;
 // embedded (e.g. in a web browser)
 const char* gPluginURL = nullptr; // owned by Flags in WinMain
 
-static Kind NG_PERSISTENT_WARNING = "persistentWarning";
-static Kind NG_PAGE_INFO_HELPER = "pageInfoHelper";
+static Kind kNotifGroupPersistentWarning = "persistentWarning";
+static Kind kNotifGroupPageInfo = "pageInfoHelper";
 
 #define SPLITTER_DX 5
 #define SIDEBAR_MIN_WIDTH 150
@@ -835,7 +835,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     UpdateTocSelection(win, pageNo);
     win->currPageNo = pageNo;
 
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
     if (wnd) {
         CrashIf(!win->AsFixed());
         UpdatePageInfoHelper(win, wnd, pageNo);
@@ -1199,7 +1199,13 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, FileSt
     if (unsupported) {
         unsupported.Set(str::Format(_TRA("This document uses unsupported features (%s) and might not render properly"),
                                     unsupported.Get()));
-        ShowNotification(win->hwndCanvas, unsupported, NotificationOptions::Warning, NG_PERSISTENT_WARNING);
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = win->hwndCanvas;
+        nargs.warning = true;
+        nargs.timeoutMs = 0;
+        nargs.groupId = kNotifGroupPersistentWarning;
+        nargs.msg = unsupported;
+        ShowNotification(nargs);
     }
 
     // This should only happen after everything else is ready
@@ -1587,7 +1593,11 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
     // there is a window the user has just been interacting with
     if (failEarly) {
         AutoFreeStr msg(str::Format(_TRA("File %s not found"), fullPath));
-        ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = win->hwndCanvas;
+        nargs.warning = true;
+        nargs.msg = msg;
+        ShowNotification(nargs);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
@@ -1656,7 +1666,11 @@ WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
             // TODO: same message as in Canvas.cpp to not introduce
             // new translation. Find a better message e.g. why failed.
             char* msg = str::Format(_TRA("Error loading %s"), fullPath);
-            ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
+            NotificationCreateArgs nargs;
+            nargs.hwndParent = win->hwndCanvas;
+            nargs.msg = msg;
+            nargs.warning = true;
+            ShowNotification(nargs);
             str::Free(msg);
             ShowWindow(win->hwndFrame, SW_SHOW);
 
@@ -1772,7 +1786,11 @@ void LoadModelIntoTab(TabInfo* tab) {
     WindowInfo* win = tab->win;
     if (gEnableLazyLoad && win->ctrl && !tab->ctrl) {
         char* msg = str::Format(_TRA("Please wait - rendering..."));
-        ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.msg = msg;
+        args.warning = true;
+        ShowNotification(args);
         str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
         // display the notification ASAP
@@ -1841,17 +1859,21 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
         pageInfo.Set(str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
-        auto options = NotificationOptions::Persist;
-        ShowNotification(win->hwndCanvas, pageInfo, options, NG_PAGE_INFO_HELPER);
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.timeoutMs = 0;
+        args.msg = pageInfo;
+        args.groupId = kNotifGroupPageInfo;
+        ShowNotification(args);
     } else {
         wnd->UpdateMessage(pageInfo);
     }
 }
 
 static void TogglePageInfoHelper(WindowInfo* win) {
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
     if (wnd) {
-        RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
         return;
     }
     UpdatePageInfoHelper(win, nullptr, -1);
@@ -1932,7 +1954,12 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
         posInfo.Set(str::Format("%s - %s %s", posInfo.Get(), _TRA("Selection:"), selStr.Get()));
     }
     if (!wnd) {
-        ShowNotification(win->hwndCanvas, posInfo, NotificationOptions::Persist, kNotifGroupCursorPos);
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.msg = posInfo;
+        args.groupId = kNotifGroupCursorPos;
+        args.timeoutMs = 0;
+        ShowNotification(args);
     } else {
         wnd->UpdateMessage(posInfo);
     }
@@ -2059,7 +2086,7 @@ static void CloseDocumentInCurrentTab(WindowInfo* win, bool keepUIEnabled, bool 
         win->currentTab = nullptr;
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupActionResponse);
-    RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
     win->mouseAction = MouseAction::Idle;
@@ -2125,7 +2152,11 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
         str::Str msg;
         // TODO: duplicated string
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath, mupdfErr);
-        ShowNotification(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.warning = true;
+        args.timeoutMs = 0;
+        args.msg = msg.Get();
     });
     if (!ok) {
         return false;
@@ -2146,7 +2177,10 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
 
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
-    ShowNotification(win->hwndCanvas, msg.LendData());
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = win->hwndCanvas;
+    nargs.msg = msg.Get();
+    ShowNotification(nargs);
     return true;
 }
 
@@ -2263,7 +2297,12 @@ static bool MaybeSaveAnnotations(TabInfo* tab) {
                 str::Str msg;
                 // TODO: duplicated message
                 msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-                ShowNotification(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
+                NotificationCreateArgs args;
+                args.hwndParent = tab->win->hwndCanvas;
+                args.msg = msg.Get();
+                args.warning = true;
+                args.timeoutMs = 0;
+                ShowNotification(args);
             });
         } break;
         case SaveChoice::Cancel:
@@ -2746,7 +2785,12 @@ static void OnMenuRenameFile(WindowInfo* win) {
         LoadArgs args(srcFileName, win);
         args.forceReuse = true;
         LoadDocument(args);
-        ShowNotification(win->hwndCanvas, _TRA("Failed to rename the file!"), NotificationOptions::Warning);
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = win->hwndCanvas;
+        nargs.msg = _TRA("Failed to rename the file!");
+        nargs.warning = true;
+        nargs.timeoutMs = 0;
+        ShowNotification(nargs);
         return;
     }
     char* dstFilePath = ToUtf8Temp(dstFileName);
@@ -3772,12 +3816,12 @@ static void OnFrameKeyEsc(WindowInfo* win) {
         AbortFinding(win, false);
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, NG_PERSISTENT_WARNING)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, NG_PERSISTENT_WARNING);
+    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupPersistentWarning)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPersistentWarning);
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, NG_PAGE_INFO_HELPER);
+    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
         return;
     }
     if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
@@ -4165,14 +4209,22 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
         str::Str msg;
         // TODO: duplicated message
         msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-        ShowNotification(tab->win->hwndCanvas, msg.LendData(), NotificationOptions::Warning);
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = msg.Get();
+        args.warning = true;
+        args.timeoutMs = 0;
+        ShowNotification(args);
     });
     if (!ok) {
         return;
     }
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
-    ShowNotification(tab->win->hwndCanvas, msg.LendData());
+    NotificationCreateArgs args;
+    args.hwndParent = tab->win->hwndCanvas;
+    args.msg = msg.Get();
+    ShowNotification(args);
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
@@ -4279,7 +4331,10 @@ static void CopySelectionInTabToClipboard(TabInfo* tab) {
     }
     // TODO: can this be reached?
     if (tab->AsFixed()) {
-        ShowNotification(tab->win->hwndCanvas, _TRA("Select content with Ctrl+left mouse button"));
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("Select content with Ctrl+left mouse button");
+        ShowNotification(args);
     }
 }
 
@@ -4873,9 +4928,18 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
 
         case CmdDebugShowNotif: {
-            ShowNotification(win->hwndCanvas, "This is a notification", NotificationOptions::Warning);
-            // TODO: this notification covers previous
-            // ShowNotification(win->hwndCanvas, L"This is a second notification\nMy friend.");
+            NotificationCreateArgs args;
+            args.hwndParent = win->hwndCanvas;
+            args.msg = "This is a notification";
+            args.warning = true;
+            args.timeoutMs = 0;
+            ShowNotification(args);
+
+            args.groupId = kNotifGroupPersistentWarning;
+            args.msg = "This is a second notification\nMy friend.";
+            args.warning = false;
+            args.timeoutMs = kNotifDefaultTimeOut;
+            ShowNotification(args);
         } break;
 
         case CmdDebugCrashMe:
