@@ -15,7 +15,6 @@ extern "C" {
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
 #include "wingui/wingui2.h"
 
 #include "Settings.h"
@@ -113,9 +112,11 @@ const char* GetKnownColorName(PdfColor c) {
     return nullptr;
 }
 
-struct EditAnnotationsWindow {
+struct EditAnnotationsWindow : Wnd {
+    void OnSize(UINT msg, UINT type, SIZE size) override;
+    void OnClose() override;
+
     TabInfo* tab = nullptr;
-    Window* mainWindow = nullptr;
     LayoutBase* mainLayout = nullptr;
 
     ListBox* listBox = nullptr;
@@ -261,7 +262,6 @@ static void DeleteAnnotations(EditAnnotationsWindow* ew) {
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
     DeleteAnnotations(this);
-    delete mainWindow;
     delete mainLayout;
 }
 
@@ -329,10 +329,9 @@ static void RebuildAnnotations(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
-static void WndCloseHandler(EditAnnotationsWindow* ew, WindowCloseEvent* ev) {
-    CrashIf(ew->mainWindow != ev->w);
-    ew->tab->editAnnotsWindow = nullptr;
-    delete ew;
+void EditAnnotationsWindow::OnClose() {
+    tab->editAnnotsWindow = nullptr;
+    delete this; // sketchy
 }
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
@@ -797,7 +796,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
     auto currBounds = ew->mainLayout->lastBounds;
     int dx = currBounds.dx;
     int dy = currBounds.dy;
-    LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->mainWindow->hwnd);
+    LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->hwnd);
     if (annotPageNo < 1) {
         return;
     }
@@ -821,13 +820,13 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
 static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     CrashIf(!ew->annot);
     // TODO: implement me
-    MessageBoxNYI(ew->mainWindow->hwnd);
+    MessageBoxNYI(ew->hwnd);
 }
 
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     CrashIf(!ew->annot);
     // TODO: implement me
-    MessageBoxNYI(ew->mainWindow->hwnd);
+    MessageBoxNYI(ew->hwnd);
 }
 
 void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annotation* annot) {
@@ -881,20 +880,24 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     });
 }
 
-static void WndSizeHandler(EditAnnotationsWindow* ew, SizeEvent* ev) {
-    int dx = ev->dx;
-    int dy = ev->dy;
-    HWND hwnd = ev->hwnd;
+void EditAnnotationsWindow::OnSize(UINT msg, UINT type, SIZE size) {
+    if (msg != WM_SIZE) {
+        return;
+    }
+    if (!mainLayout) {
+        return;
+    }
+    int dx = (int)size.cx;
+    int dy = (int)size.cy;
     if (dx == 0 || dy == 0) {
         return;
     }
-    ev->didHandle = true;
     InvalidateRect(hwnd, nullptr, false);
-    if (false && ew->mainLayout->lastBounds.EqSize(dx, dy)) {
+    if (false && mainLayout->lastBounds.EqSize(dx, dy)) {
         // avoid un-necessary layout
         return;
     }
-    LayoutToSize(ew->mainLayout, {dx, dy});
+    LayoutToSize(mainLayout, {dx, dy});
 }
 
 static Static* CreateStatic(HWND parent, const char* s = nullptr) {
@@ -908,7 +911,7 @@ static Static* CreateStatic(HWND parent, const char* s = nullptr) {
 }
 
 static void CreateMainLayout(EditAnnotationsWindow* ew) {
-    HWND parent = ew->mainWindow->hwnd;
+    HWND parent = ew->hwnd;
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -1317,7 +1320,7 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* ann
 }
 
 void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
-    HWND hwnd = ew->mainWindow->hwnd;
+    HWND hwnd = ew->hwnd;
     BringWindowToTop(hwnd);
     if (!annot) {
         return;
@@ -1339,7 +1342,7 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
         return;
     }
     ew->skipGoToPage = true;
-    HWND hwnd = ew->mainWindow->hwnd;
+    HWND hwnd = ew->hwnd;
     BringWindowToTop(hwnd);
     SelectAnnotationInListBox(ew, annot);
 }
@@ -1361,24 +1364,20 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
         return;
     }
     ew = new EditAnnotationsWindow();
-    auto mainWindow = new Window();
+    CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    mainWindow->hIcon = LoadIconW(h, iconName);
+    // args.icon = LoadIconW(h, iconName);
+    // mainWindow->isDialog = true;
+    // args.backgroundColor = MkGray(0xee);
 
-    mainWindow->isDialog = true;
-    mainWindow->backgroundColor = MkGray(0xee);
-    mainWindow->SetText(_TR("Annotations"));
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
     // w->initialSize = {winSize.cx, winSize.cy};
-    bool ok = mainWindow->Create(0);
-    CrashIf(!ok);
-    mainWindow->onClose = [ew](auto&& PH1) { return WndCloseHandler(ew, std::forward<decltype(PH1)>(PH1)); };
-    mainWindow->onSize = [ew](auto&& PH1) { return WndSizeHandler(ew, std::forward<decltype(PH1)>(PH1)); };
+    ew->CreateCustom(args);
+    ew->SetText(_TRA("Annotations"));
 
-    ew->mainWindow = mainWindow;
     CreateMainLayout(ew);
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
@@ -1398,8 +1397,8 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
             ew->listBox->idealSizeLines = 14;
         }
     }
-    LayoutAndSizeToContent(ew->mainLayout, 520, minDy, mainWindow->hwnd);
-    HwndPositionToTheRightOf(mainWindow->hwnd, tab->win->hwndFrame);
+    LayoutAndSizeToContent(ew->mainLayout, 520, minDy, ew->hwnd);
+    HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     ew->skipGoToPage = !annots.empty();
     if (!annots.empty()) {
         SelectAnnotationInListBox(ew, annots[0]);
@@ -1407,7 +1406,7 @@ void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
-    mainWindow->SetIsVisible(true);
+    ew->SetIsVisible(true);
 
     DeleteVecMembers(annots);
 }
