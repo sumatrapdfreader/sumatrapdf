@@ -647,8 +647,11 @@ static void insert_inline_box(fz_context *ctx, fz_html_box *box, fz_html_box *to
 	}
 	else
 	{
-		while (top->type != BOX_BLOCK && top->type != BOX_TABLE_CELL)
+		/* SumatraPDF: seen a crash referencing top->up */
+		while (top && top->type != BOX_BLOCK && top->type != BOX_TABLE_CELL)
 			top = top->up;
+		if (!top)
+			return;
 
 		/* Here 'next' actually means 'last of my children' */
 		if (top->next && top->next->type == BOX_FLOW)
