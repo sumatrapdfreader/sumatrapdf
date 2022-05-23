@@ -6,6 +6,8 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 #include "AppColors.h"
+#include "Settings.h"
+#include "SumatraPdf.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 
@@ -15,8 +17,6 @@ using Gdiplus::SolidBrush;
 
 Kind kNotifGroupCursorPos = "cursorPosHelper";
 Kind kNotifGroupActionResponse = "responseToAction";
-
-extern bool IsUIRightToLeft(); // SumatraPDF.h
 
 #define kNotificationsWndClassName L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
@@ -29,6 +29,43 @@ constexpr int kCloseLeftMargin = 32;
 constexpr int TIMEOUT_TIMER_ID = 1;
 
 static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+
+struct NotificationWnd : public ProgressUpdateUI {
+    HWND parent = nullptr;
+    HWND hwnd = nullptr;
+    int timeoutInMS = kNotifDefaultTimeOut; // 0 means no timeout
+    bool hasProgress = false;
+    bool hasClose = false;
+
+    HFONT font = nullptr;
+    bool highlight = false;
+    NotificationWndRemovedCallback wndRemovedCb = nullptr;
+
+    // only used for progress notifications
+    bool isCanceled = false;
+    int progress = 0;
+    int progressWidth = 0;
+    char* progressMsg = nullptr; // must contain two %d (for current and total)
+
+    bool Create(const char* msg, const char* progressMsg);
+
+    Kind groupId = nullptr; // for use by Notifications
+
+    // to reduce flicker, we might ask the window to shrink the size less often
+    // (notifcation windows are only shrunken if by less than factor shrinkLimit)
+    float shrinkLimit = 1.0f;
+
+    // Note: in most cases use WindowInfo::ShowNotification()
+    explicit NotificationWnd(HWND parent, int timeoutInMS);
+
+    ~NotificationWnd() override;
+
+    void UpdateMessage(const char* msg, int timeoutInMS = 0, bool highlight = false);
+
+    // ProgressUpdateUI methods
+    void UpdateProgress(int current, int total) override;
+    bool WasCanceled() override;
+};
 
 Vec<NotificationWnd*> gNotifs;
 

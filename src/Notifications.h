@@ -21,43 +21,6 @@ struct NotificationCreateArgs {
     NotificationWndRemovedCallback onRemoved;
 };
 
-struct NotificationWnd : public ProgressUpdateUI {
-    HWND parent = nullptr;
-    HWND hwnd = nullptr;
-    int timeoutInMS = kNotifDefaultTimeOut; // 0 means no timeout
-    bool hasProgress = false;
-    bool hasClose = false;
-
-    HFONT font = nullptr;
-    bool highlight = false;
-    NotificationWndRemovedCallback wndRemovedCb = nullptr;
-
-    // only used for progress notifications
-    bool isCanceled = false;
-    int progress = 0;
-    int progressWidth = 0;
-    char* progressMsg = nullptr; // must contain two %d (for current and total)
-
-    bool Create(const char* msg, const char* progressMsg);
-
-    Kind groupId = nullptr; // for use by Notifications
-
-    // to reduce flicker, we might ask the window to shrink the size less often
-    // (notifcation windows are only shrunken if by less than factor shrinkLimit)
-    float shrinkLimit = 1.0f;
-
-    // Note: in most cases use WindowInfo::ShowNotification()
-    explicit NotificationWnd(HWND parent, int timeoutInMS);
-
-    ~NotificationWnd() override;
-
-    void UpdateMessage(const char* msg, int timeoutInMS = 0, bool highlight = false);
-
-    // ProgressUpdateUI methods
-    void UpdateProgress(int current, int total) override;
-    bool WasCanceled() override;
-};
-
 NotificationWnd* ShowNotification(NotificationCreateArgs& args);
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
 void RemoveNotification(NotificationWnd*);
