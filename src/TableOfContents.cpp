@@ -570,6 +570,10 @@ LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent2*);
 
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {
+    if (!root) {
+        return;
+    }
+
     if (root->next && root->next->next) {
         return;
     }
@@ -596,7 +600,7 @@ void LoadTocTree(WindowInfo* win) {
     win->tocLoaded = true;
 
     auto* tocTree = tab->ctrl->GetToc();
-    if (!tocTree || !tocTree->root) {
+    if (!tocTree || !tocTree->root || !tocTree->root->child) {
         return;
     }
 
