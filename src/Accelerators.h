@@ -3,5 +3,5 @@
 
 HACCEL* CreateSumatraAcceleratorTable();
 HACCEL* GetSafeAcceleratorTable();
-
+void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a);
 bool GetAccelByCmd(int cmdId, ACCEL& accelOut);

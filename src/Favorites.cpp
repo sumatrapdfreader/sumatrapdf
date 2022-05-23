@@ -426,6 +426,8 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 }
 
+#include "Accelerators.h"
+
 // Called when a user opens "Favorites" top-level menu. We need to construct
 // the menu:
 // - disable add/remove menu items if no document is opened
@@ -447,7 +449,13 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
             win::menu::SetText(menu, CmdFavoriteDel, s);
         } else {
             win::menu::SetEnabled(menu, CmdFavoriteDel, false);
-            AutoFreeStr s(str::Format(_TRA("Add page %s to favorites\tCtrl+B"), label.Get()));
+            str::Str str = _TRA("Add page %s to favorites");
+            ACCEL a;
+            bool ok = GetAccelByCmd(CmdFavoriteAdd, a);
+            if (ok) {
+                AppendAccelKeyToMenuString(str, a);
+            }
+            AutoFreeStr s(str::Format(str.Get(), label.Get()));
             win::menu::SetText(menu, CmdFavoriteAdd, s);
         }
         AppendFavMenus(menu, win->ctrl->GetFilePath());

@@ -2,11 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "resource.h"
-
 #include "Settings.h"
 #include "GlobalPrefs.h"
+#include "Translations.h"
 #include "Commands.h"
+
+#include "Accelerators.h"
 
 #include "utils/Log.h"
 
@@ -293,6 +294,138 @@ again:
     }
     accel.key = c;
     return true;
+}
+
+void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
+    auto lang = trans::GetCurrentLangCode();
+    bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
+    bool isGerman = str::Eq(lang, "de");
+
+    str.Append("\t"); // marks start of an accelerator in menu item
+    BYTE virt = a.fVirt;
+    if (virt & FALT) {
+        const char* s = "Alt+";
+        if (isGerman) {
+            s = "Größe+";
+        }
+        str.Append(s);
+    }
+    if (virt & FCONTROL) {
+        const char* s = "Ctrl+";
+        if (isGerman) {
+            s = "Strg+";
+        }
+        str.Append(s);
+    }
+    if (virt & FSHIFT) {
+        const char* s = "Shift+";
+        if (isGerman) {
+            s = "Umschalt+";
+        }
+        str.Append(s);
+    }
+    bool isVirt = virt & FVIRTKEY;
+    BYTE key = a.key;
+
+    if (isVirt && key >= VK_F1 && key <= VK_F24) {
+        int n = key - VK_F1 + 1;
+        str.AppendFmt("F%d", n);
+        return;
+    }
+    if (isVirt && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
+        WCHAR c = (WCHAR)key - VK_NUMPAD0 + '0';
+        str.AppendChar(c);
+        return;
+    }
+
+    // virtual codes overlap with some ascii chars like '-' is VK_INSERT
+    // so for non-virtual assume it's a single char
+    bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
+    if (isAscii || !isVirt) {
+        str.AppendChar((char)key);
+        return;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    // Note: might need to add if we add more shortcuts
+    const char* keyStr = nullptr;
+    switch (key) {
+        case VK_END:
+            keyStr = "End";
+            break;
+        case VK_HOME:
+            keyStr = "Home";
+            break;
+        case VK_LEFT:
+            keyStr = "Left";
+            if (!isEng) {
+                keyStr = "<-";
+            }
+            break;
+        case VK_RIGHT:
+            keyStr = "Right";
+            if (!isEng) {
+                keyStr = "->";
+            }
+            break;
+        case VK_UP:
+            keyStr = "Up";
+            break;
+        case VK_DOWN:
+            keyStr = "Down";
+            break;
+        case VK_NEXT:
+            keyStr = "PageDown";
+            break;
+        case VK_PRIOR:
+            keyStr = "PageUp";
+            break;
+        case VK_BACK:
+            keyStr = "Backspace";
+            break;
+        case VK_DELETE:
+            keyStr = "Del";
+            break;
+        case VK_INSERT:
+            keyStr = "Insert";
+            break;
+        case VK_ESCAPE:
+            keyStr = "Esc";
+            break;
+        case VK_RETURN:
+            keyStr = "Return";
+            break;
+        case VK_SPACE:
+            keyStr = "Space";
+            break;
+        case VK_MULTIPLY:
+            keyStr = "*";
+            break;
+        case VK_ADD:
+        case VK_OEM_PLUS:
+            keyStr = "+";
+            break;
+        case VK_SUBTRACT:
+        case VK_OEM_MINUS:
+            keyStr = "-";
+            break;
+        case VK_DIVIDE:
+            keyStr = "/";
+            break;
+        case VK_HELP:
+            keyStr = "Help";
+            break;
+        case VK_SELECT:
+            keyStr = "Select";
+            break;
+    }
+    if (!keyStr) {
+        logf("Unknown key: 0x%x, virt: 0x%x\n", virt, key);
+        ReportIf(!keyStr);
+    }
+    if (keyStr) {
+        str.Append(keyStr);
+    }
 }
 
 static bool SameAccelKey(const ACCEL& a1, const ACCEL& a2) {

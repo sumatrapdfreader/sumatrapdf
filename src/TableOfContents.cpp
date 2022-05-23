@@ -37,6 +37,7 @@ using namespace wg;
 #include "Translations.h"
 #include "Tabs.h"
 #include "Menu.h"
+#include "Accelerators.h"
 
 #include "utils/Log.h"
 
@@ -507,8 +508,13 @@ static void TocContextMenu(ContextMenuEvent2* ev) {
         } else {
             win::menu::Remove(popup, CmdFavoriteDel);
             // %s and not %d because re-using translation from RebuildFavMenu()
-            const char* tr = _TRA("Add page %s to favorites");
-            AutoFreeStr s = str::Format(tr, pageLabel.Get());
+            str::Str str = _TRA("Add page %s to favorites");
+            ACCEL a;
+            bool ok = GetAccelByCmd(CmdFavoriteAdd, a);
+            if (ok) {
+                AppendAccelKeyToMenuString(str, a);
+            }
+            AutoFreeStr s(str::Format(str.Get(), pageLabel.Get()));
             win::menu::SetText(popup, CmdFavoriteAdd, s);
         }
     } else {
@@ -777,8 +783,10 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
 static WNDPROC gWndProcTocBox = nullptr;
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    // this is a parent of TreeCtrl and DropDownCtrl
-    // TODO: TreeCtrl and DropDownCtrl should be children of frame
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    if (!win) {
+        return CallWindowProc(gWndProcTocBox, hwnd, msg, wp, lp);
+    }
 
     LRESULT res = 0;
     res = TryReflectMessages(hwnd, msg, wp, lp);
@@ -786,16 +794,11 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         return res;
     }
 
-    WindowInfo* winFromData = (WindowInfo*)(data);
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win) {
-        return CallWindowProc(gWndProcTocBox, hwnd, msg, wp, lp);
-    }
-    CrashIf(win != winFromData);
+    TreeView* treeCtrl = win->tocTreeCtrl;
 
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeCtrl->hwnd);
+            LayoutTreeContainer(win->tocLabelWithClose, treeCtrl->hwnd);
             break;
 
         case WM_COMMAND:
@@ -804,7 +807,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
+    return CallWindowProc(gWndProcTocBox, hwnd, msg, wp, lp);
 }
 
 // TODO: restore
@@ -883,9 +886,9 @@ void CreateToc(WindowInfo* win) {
     win->tocTreeCtrl = treeCtrl;
 
     if (nullptr == gWndProcTocBox) {
-        gWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
+        gWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
     }
-    SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
+    SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
 
     UpdateTreeCtrlColors(win);
 }
