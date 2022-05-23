@@ -49,7 +49,7 @@
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
-Kind NG_FIND_PROGRESS = "findProgress";
+Kind kNotifGroupFindProgress = "findProgress";
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific
@@ -232,10 +232,14 @@ struct FindThreadData : public ProgressUpdateUI {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
         if (showProgress) {
-            wnd = new NotificationWnd(win->hwndCanvas, 0);
-            wnd->wndRemovedCb = [](NotificationWnd* wnd) { RemoveNotification(wnd); };
-            wnd->Create("", _TRA("Searching %d of %d..."));
-            AddNotification(wnd, NG_FIND_PROGRESS);
+            NotificationCreateArgs args;
+            args.hwndParent = win->hwndCanvas;
+            args.timeoutMs = 0;
+            args.onRemoved = [](NotificationWnd* wnd) { RemoveNotification(wnd); };
+
+            args.progressMsg = _TRA("Searching %d of %d...");
+            args.groupId = kNotifGroupFindProgress;
+            ShowNotification(args);
         }
 
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, disable);
@@ -256,7 +260,7 @@ struct FindThreadData : public ProgressUpdateUI {
             // i.e. canceled
             RemoveNotification(wnd);
         } else if (!success && loopedAround) {
-            wnd->UpdateMessage(_TRA("No matches were found"), 3000);
+            NotificationUpdateMessage(wnd, _TRA("No matches were found"), kNotifDefaultTimeOut);
         } else {
             AutoFreeStr label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetSearchHitStartPageNo()));
             AutoFreeStr buf(str::Format(_TRA("Found text at page %s"), label.Get()));
@@ -264,7 +268,7 @@ struct FindThreadData : public ProgressUpdateUI {
                 buf.Set(str::Format(_TRA("Found text at page %s (again)"), label.Get()));
                 MessageBeep(MB_ICONINFORMATION);
             }
-            wnd->UpdateMessage(buf, 3000, loopedAround);
+            NotificationUpdateMessage(wnd, buf, kNotifDefaultTimeOut, loopedAround);
         }
     }
 
@@ -356,7 +360,7 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
     win->findCanceled = false;
 
     if (hideMessage) {
-        RemoveNotificationsForGroup(win->hwndCanvas, NG_FIND_PROGRESS);
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupFindProgress);
     }
 }
 

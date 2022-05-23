@@ -8,13 +8,6 @@ extern Kind kNotifGroupActionResponse;
 
 using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
 
-enum class NotificationOptions {
-    WithTimeout = 0, // timeout after 3 seconds, no highlight
-    Persist = (1 << 0),
-    Highlight = (1 << 1),
-    Warning = Persist | Highlight,
-};
-
 // 3 seconds
 constexpr const int kNotifDefaultTimeOut = 1000 * 3;
 
@@ -66,12 +59,10 @@ struct NotificationWnd : public ProgressUpdateUI {
 };
 
 NotificationWnd* ShowNotification(NotificationCreateArgs& args);
-NotificationWnd* ShowNotification(HWND hwnd, const char*, NotificationOptions opts = NotificationOptions::WithTimeout,
-                                  Kind groupId = kNotifGroupActionResponse);
+void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
 void RemoveNotification(NotificationWnd*);
 void RemoveNotificationsForGroup(HWND hwnd, Kind);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, int, int);
-void AddNotification(NotificationWnd*, Kind);
 bool NotificationExists(NotificationWnd*);
 void RelayoutNotifications(HWND hwnd);

@@ -1866,7 +1866,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
         args.groupId = kNotifGroupPageInfo;
         ShowNotification(args);
     } else {
-        wnd->UpdateMessage(pageInfo);
+        NotificationUpdateMessage(wnd, pageInfo);
     }
 }
 
@@ -1961,7 +1961,7 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
         args.timeoutMs = 0;
         ShowNotification(args);
     } else {
-        wnd->UpdateMessage(posInfo);
+        NotificationUpdateMessage(wnd, posInfo);
     }
 }
 

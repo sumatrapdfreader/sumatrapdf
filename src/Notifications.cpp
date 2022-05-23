@@ -90,7 +90,7 @@ void NotificationWnd::UpdateProgress(int current, int total) {
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
         char* msg = str::Format(progressMsg, current, total);
-        this->UpdateMessage(msg);
+        UpdateMessage(msg);
         str::Free(msg);
     }
 }
@@ -453,21 +453,6 @@ NotificationWnd* NotifsGetForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
     return nullptr;
 }
 
-NotificationWnd* ShowNotification(HWND hwnd, const char* msg, NotificationOptions opts, Kind groupId) {
-    int timeoutMS = ((uint)opts & (uint)NotificationOptions::Persist) ? 0 : 3000;
-    bool highlight = ((uint)opts & (uint)NotificationOptions::Highlight);
-
-    NotificationWnd* wnd = new NotificationWnd(hwnd, timeoutMS);
-    wnd->highlight = highlight;
-    wnd->wndRemovedCb = [](NotificationWnd* wnd) { NotifsRemoveNotification(wnd); };
-    if (kNotifGroupCursorPos == groupId) {
-        wnd->shrinkLimit = 0.7f;
-    }
-    wnd->Create(msg, nullptr);
-    NotifsAdd(wnd, groupId);
-    return wnd;
-}
-
 NotificationWnd* ShowNotification(NotificationCreateArgs& args) {
     CrashIf(!args.hwndParent);
 
@@ -485,6 +470,9 @@ NotificationWnd* ShowNotification(NotificationCreateArgs& args) {
     wnd->Create(args.msg, args.progressMsg);
     NotifsAdd(wnd, args.groupId);
     return wnd;
+}
+void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS, bool highlight) {
+    wnd->UpdateMessage(msg, timeoutInMS, highlight);
 }
 
 void RemoveNotification(NotificationWnd* wnd) {
@@ -511,11 +499,13 @@ bool UpdateNotificationProgress(NotificationWnd* wnd, int curr, int total) {
     return true;
 }
 
+#if 0
 void AddNotification(NotificationWnd* wnd, Kind kind) {
     Vec<NotificationWnd*> wnds;
     GetForSameHwnd(wnd, wnds);
     NotifsAdd(wnds, wnd, kind);
 }
+#endif
 
 bool NotificationExists(NotificationWnd* wnd) {
     return gNotifs.Contains(wnd);
