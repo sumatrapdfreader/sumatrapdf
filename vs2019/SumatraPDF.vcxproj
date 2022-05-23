@@ -604,7 +604,6 @@
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
-    <ClInclude Include="..\src\wingui\Window.h" />
     <ClInclude Include="..\src\wingui\wingui2.h" />
   </ItemGroup>
   <ItemGroup>
@@ -872,7 +871,6 @@
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
-    <ClCompile Include="..\src\wingui\Window.cpp" />
     <ClCompile Include="..\src\wingui\wingui2.cpp" />
   </ItemGroup>
   <ItemGroup>
