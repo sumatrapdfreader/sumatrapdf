@@ -19,7 +19,7 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

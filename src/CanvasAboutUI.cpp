@@ -13,7 +13,7 @@
 
 #include "AppColors.h"
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "GlobalPrefs.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"

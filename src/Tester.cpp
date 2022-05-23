@@ -23,7 +23,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"

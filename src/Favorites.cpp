@@ -15,7 +15,7 @@
 #include "wingui/LabelWithCloseWnd.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "SumatraConfig.h"

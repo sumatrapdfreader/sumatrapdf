@@ -10,7 +10,7 @@
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
 

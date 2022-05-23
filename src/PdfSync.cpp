@@ -8,7 +8,7 @@
 
 #include "wingui/UIModels.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "PdfSync.h"
 

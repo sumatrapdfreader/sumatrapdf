@@ -69,9 +69,6 @@
     <ClInclude Include="..\src\Commands.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Controller.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -79,6 +76,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DisplayModel.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DocController.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\EditAnnotations.h">

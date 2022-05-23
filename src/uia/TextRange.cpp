@@ -9,7 +9,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "uia/TextRange.h"
 #include "EngineAll.h"

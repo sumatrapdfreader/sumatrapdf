@@ -12,7 +12,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmFile.h"

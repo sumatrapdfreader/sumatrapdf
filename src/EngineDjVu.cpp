@@ -18,7 +18,7 @@
 #include "wingui/UIModels.h"
 
 #include "SumatraConfig.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 

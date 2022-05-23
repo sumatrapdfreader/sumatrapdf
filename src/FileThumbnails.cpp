@@ -9,7 +9,7 @@
 #include "utils/WinUtil.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "FzImgReader.h"
 #include "FileHistory.h"
 

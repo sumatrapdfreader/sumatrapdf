@@ -30,7 +30,7 @@ To write new regression test:
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

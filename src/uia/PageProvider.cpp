@@ -12,7 +12,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
