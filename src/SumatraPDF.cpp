@@ -1569,7 +1569,7 @@ static void scheduleReloadTab(TabInfo* tab) {
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
-WindowInfo* LoadDocument(LoadArgs& args) {
+WindowInfo* LoadDocument(LoadArgs& args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
     int threadID = (int)GetCurrentThreadId();
@@ -1640,44 +1640,49 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     auto timeStart = TimeGet();
     HwndPasswordUI pwdUI(win->hwndFrame);
     Controller* ctrl = nullptr;
-    if (args.engine != nullptr) {
-        ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
-    } else {
-        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
-    }
-
-    {
-        auto durMs = TimeSinceInMs(timeStart);
-        if (ctrl) {
-            int nPages = ctrl->PageCount();
-            logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPath);
+    if (!lazyload) {
+        if (args.engine != nullptr) {
+            ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
         } else {
-            logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPath, (float)durMs);
+            ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
         }
-    }
 
-    if (!ctrl) {
-        // TODO: same message as in Canvas.cpp to not introduce
-        // new translation. Find a better message e.g. why failed.
-        char* msg = str::Format(_TRA("Error loading %s"), fullPath);
-        ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
-        str::Free(msg);
-        ShowWindow(win->hwndFrame, SW_SHOW);
-
-        // display the notification ASAP (prefs::Save() can introduce a notable delay)
-        win->RedrawAll(true);
-
-        if (gFileHistory.MarkFileInexistent(fullPath)) {
-            // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-            if (!args.noSavePrefs) {
-                prefs::Save();
-            }
-            // update the Frequently Read list
-            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
-                gWindows.at(0)->RedrawAll(true);
+        {
+            auto durMs = TimeSinceInMs(timeStart);
+            if (ctrl) {
+                int nPages = ctrl->PageCount();
+                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPath);
+            } else {
+                logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPath, (float)durMs);
             }
         }
-        return win;
+
+        if (!ctrl) {
+            // TODO: same message as in Canvas.cpp to not introduce
+            // new translation. Find a better message e.g. why failed.
+            char* msg = str::Format(_TRA("Error loading %s"), fullPath);
+            ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
+            str::Free(msg);
+            ShowWindow(win->hwndFrame, SW_SHOW);
+
+            // display the notification ASAP (prefs::Save() can introduce a notable delay)
+            win->RedrawAll(true);
+
+            if (gFileHistory.MarkFileInexistent(fullPath)) {
+                // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
+                if (!args.noSavePrefs) {
+                    prefs::Save();
+                }
+                // update the Frequently Read list
+                if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+                    gWindows.at(0)->RedrawAll(true);
+                }
+            }
+            return win;
+        }
+    } else {
+        auto durMs = TimeSinceInMs(timeStart);
+        logf("LoadDocument: lazy load '%s' in %.2f ms\n", fullPath, (float)durMs);
     }
     CrashIf(openNewTab && args.forceReuse);
     if (win->IsAboutWindow()) {
@@ -1711,7 +1716,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     args.SetFilePath(fullPath);
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
-    LoadDocIntoCurrentTab(args, ctrl, nullptr);
+    if (!lazyload) {
+        LoadDocIntoCurrentTab(args, ctrl, nullptr);
+    }
 
     if (gPluginMode) {
         // hide the menu for embedded documents opened from the plugin
@@ -1743,7 +1750,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, path));
         FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
-        if (gGlobalPrefs->showStartPage) {
+        if (!lazyload && gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
         }
         // TODO: this seems to save the state of file that we just opened
@@ -1768,6 +1775,14 @@ void LoadModelIntoTab(TabInfo* tab) {
         return;
     }
     WindowInfo* win = tab->win;
+    if (gEnableLazyLoad && win->ctrl && !tab->ctrl) {
+        char* msg = str::Format(_TRA("Please wait - rendering..."));
+        ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
+        str::Free(msg);
+        ShowWindow(win->hwndFrame, SW_SHOW);
+        // display the notification ASAP
+        win->RedrawAll(true);
+    }
     CloseDocumentInCurrentTab(win, true);
 
     win->currentTab = tab;
@@ -1808,11 +1823,16 @@ void LoadModelIntoTab(TabInfo* tab) {
     }
 
     SetFocus(win->hwndFrame);
-    win->RedrawAll(true);
+    if (gEnableLazyLoad && !tab->ctrl) {
+        ReloadDocument(win, false);
+        win->RedrawAll(true);
+    } else {
+        win->RedrawAll(true);
 
-    if (tab->reloadOnFocus) {
-        tab->reloadOnFocus = false;
-        ReloadDocument(win, true);
+        if (tab->reloadOnFocus) {
+            tab->reloadOnFocus = false;
+            ReloadDocument(win, true);
+        }
     }
 }
 
