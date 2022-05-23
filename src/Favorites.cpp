@@ -549,12 +549,12 @@ static void GoToFavForTreeItem(WindowInfo* win, TreeItem ti) {
 }
 
 #if 0
-static void GoToFavForTVItem(WindowInfo* win, TreeCtrl* treeCtrl, HTREEITEM hItem = nullptr) {
+static void GoToFavForTVItem(WindowInfo* win, TreeCtrl* treeView, HTREEITEM hItem = nullptr) {
     TreeItem ti = nullptr;
     if (nullptr == hItem) {
-        ti = treeCtrl->GetSelection();
+        ti = treeView->GetSelection();
     } else {
-        ti = treeCtrl->GetTreeItemByHandle(hItem);
+        ti = treeView->GetTreeItemByHandle(hItem);
     }
     GoToFavForTreeItem(win, ti);
 }
@@ -614,19 +614,19 @@ static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
 }
 
 void PopulateFavTreeIfNeeded(WindowInfo* win) {
-    TreeView* treeCtrl = win->favTreeCtrl;
-    if (treeCtrl->treeModel) {
+    TreeView* treeView = win->favTreeCtrl;
+    if (treeView->treeModel) {
         return;
     }
     TreeModel* tm = BuildFavTreeModel(win);
-    treeCtrl->SetTreeModel(tm);
+    treeView->SetTreeModel(tm);
 }
 
 void UpdateFavoritesTree(WindowInfo* win) {
-    TreeView* treeCtrl = win->favTreeCtrl;
-    auto* prevModel = treeCtrl->treeModel;
+    TreeView* treeView = win->favTreeCtrl;
+    auto* prevModel = treeView->treeModel;
     TreeModel* newModel = BuildFavTreeModel(win);
-    treeCtrl->SetTreeModel(newModel);
+    treeView->SetTreeModel(newModel);
     delete prevModel;
 
     // hide the favorites tree if we've removed the last favorite
@@ -729,8 +729,8 @@ void DelFavorite(const char* filePath, int pageNo) {
 
 void RememberFavTreeExpansionState(WindowInfo* win) {
     win->expandedFavorites.Reset();
-    TreeView* treeCtrl = win->favTreeCtrl;
-    TreeModel* tm = treeCtrl ? treeCtrl->treeModel : nullptr;
+    TreeView* treeView = win->favTreeCtrl;
+    TreeModel* tm = treeView ? treeView->treeModel : nullptr;
     if (!tm) {
         // TODO: remember all favorites as expanded
         return;
@@ -739,7 +739,7 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
     int n = tm->ChildCount(root);
     for (int i = 0; i < n; i++) {
         TreeItem ti = tm->ChildAt(root, i);
-        bool isExpanded = treeCtrl->IsExpanded(ti);
+        bool isExpanded = treeView->IsExpanded(ti);
         if (isExpanded) {
             FavTreeItem* fti = (FavTreeItem*)ti;
             Favorite* fn = fti->favorite;
@@ -765,7 +765,7 @@ static void FavTreeItemClicked(TreeClickEvent* ev) {
 #endif
 
 static void FavTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
-    WindowInfo* win = FindWindowInfoByHwnd(ev->treeCtrl->hwnd);
+    WindowInfo* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -783,8 +783,8 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
 
 static void FavTreeContextMenu(ContextMenuEvent2* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
-    TreeView* treeCtrl = (TreeView*)ev->w;
-    HWND hwnd = treeCtrl->hwnd;
+    TreeView* treeView = (TreeView*)ev->w;
+    HWND hwnd = treeView->hwnd;
     // WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     POINT pt{};
@@ -832,10 +832,10 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return res;
     }
 
-    TreeView* treeCtrl = win->favTreeCtrl;
+    TreeView* treeView = win->favTreeCtrl;
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(win->favLabelWithClose, treeCtrl->hwnd);
+            LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
             break;
 
         case WM_COMMAND:
@@ -880,24 +880,24 @@ void CreateFavorites(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    auto* treeCtrl = new TreeView();
+    auto* treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndFavBox;
     args.font = GetTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
-    treeCtrl->onContextMenu = FavTreeContextMenu;
-    treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
-    treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
-    // treeCtrl->onTreeClick = FavTreeItemClicked;
-    // treeCtrl->onChar = TocTreeCharHandler;
-    // treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
+    treeView->onContextMenu = FavTreeContextMenu;
+    treeView->onTreeSelectionChanged = FavTreeSelectionChanged;
+    treeView->onTreeKeyDown = TocTreeKeyDown2;
+    // treeView->onTreeClick = FavTreeItemClicked;
+    // treeView->onChar = TocTreeCharHandler;
+    // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
-    treeCtrl->Create(args);
-    CrashIf(!treeCtrl->hwnd);
+    treeView->Create(args);
+    CrashIf(!treeView->hwnd);
 
-    win->favTreeCtrl = treeCtrl;
+    win->favTreeCtrl = treeView;
 
     if (nullptr == gWndProcFavBox) {
         gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);

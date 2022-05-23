@@ -509,7 +509,7 @@ struct TreeViewCreateArgs {
 };
 
 struct TreeItemGetTooltipEvent2 {
-    TreeView* treeCtrl = nullptr;
+    TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
     NMTVGETINFOTIPW* info = nullptr;
 };
@@ -517,7 +517,7 @@ struct TreeItemGetTooltipEvent2 {
 using TreeItemGetTooltipHandler2 = std::function<void(TreeItemGetTooltipEvent2*)>;
 
 struct TreeItemCustomDrawEvent2 {
-    TreeView* treeCtrl = nullptr;
+    TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
     NMTVCUSTOMDRAW* nm = nullptr;
 };
@@ -525,7 +525,7 @@ struct TreeItemCustomDrawEvent2 {
 using TreeItemCustomDrawHandler2 = std::function<LRESULT(TreeItemCustomDrawEvent2*)>;
 
 struct TreeSelectionChangedEvent2 {
-    TreeView* treeCtrl = nullptr;
+    TreeView* treeView = nullptr;
     TreeItem prevSelectedItem = 0;
     TreeItem selectedItem = 0;
     NMTREEVIEW* nmtv = nullptr;
@@ -536,7 +536,7 @@ struct TreeSelectionChangedEvent2 {
 using TreeSelectionChangedHandler2 = std::function<void(TreeSelectionChangedEvent2*)>;
 
 struct TreeClickEvent2 {
-    TreeView* treeCtrl = nullptr;
+    TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
     bool isDblClick = false;
 
@@ -549,7 +549,7 @@ struct TreeClickEvent2 {
 using TreeClickHandler2 = std::function<LRESULT(TreeClickEvent2*)>;
 
 struct TreeKeyDownEvent2 {
-    TreeView* treeCtrl = nullptr;
+    TreeView* treeView = nullptr;
     NMTVKEYDOWN* nmkd = nullptr;
     int keyCode = 0;
     u32 flags = 0;

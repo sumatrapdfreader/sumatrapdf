@@ -2668,15 +2668,15 @@ static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
 
 // inserting in front is faster:
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-HTREEITEM insertItemFront(TreeView* treeCtrl, TreeItem ti, HTREEITEM parent) {
+HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM parent) {
     TVINSERTSTRUCTW toInsert{};
 
     toInsert.hParent = parent;
     toInsert.hInsertAfter = TVI_FIRST;
 
     TVITEMEXW* tvitem = &toInsert.itemex;
-    FillTVITEM(tvitem, treeCtrl->treeModel, ti);
-    HTREEITEM res = TreeView_InsertItem(treeCtrl->hwnd, &toInsert);
+    FillTVITEM(tvitem, treeView->treeModel, ti);
+    HTREEITEM res = TreeView_InsertItem(treeView->hwnd, &toInsert);
     return res;
 }
 
@@ -2696,8 +2696,8 @@ bool TreeView::UpdateItem(TreeItem ti) {
 
 // complicated because it inserts items backwards, as described in
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
-void PopulateTreeItem(TreeView* treeCtrl, TreeItem item, HTREEITEM parent) {
-    auto tm = treeCtrl->treeModel;
+void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
+    auto tm = treeView->treeModel;
     int n = tm->ChildCount(item);
     TreeItem tmp[256];
     TreeItem* a = &tmp[0];
@@ -2721,11 +2721,11 @@ void PopulateTreeItem(TreeView* treeCtrl, TreeItem item, HTREEITEM parent) {
 
     for (int i = 0; i < n; i++) {
         auto ti = a[i];
-        HTREEITEM h = insertItemFront(treeCtrl, ti, parent);
+        HTREEITEM h = insertItemFront(treeView, ti, parent);
         tm->SetHandle(ti, h);
         // avoid recursing if not needed because we use a lot of stack space
         if (tm->ChildCount(ti) > 0) {
-            PopulateTreeItem(treeCtrl, ti, h);
+            PopulateTreeItem(treeView, ti, h);
         }
     }
 
@@ -2734,9 +2734,9 @@ void PopulateTreeItem(TreeView* treeCtrl, TreeItem item, HTREEITEM parent) {
     }
 }
 
-static void PopulateTree(TreeView* treeCtrl, TreeModel* tm) {
+static void PopulateTree(TreeView* treeView, TreeModel* tm) {
     TreeItem root = tm->Root();
-    PopulateTreeItem(treeCtrl, root, nullptr);
+    PopulateTreeItem(treeView, root, nullptr);
 }
 
 void TreeView::SetTreeModel(TreeModel* tm) {
@@ -2786,35 +2786,35 @@ TreeItemState TreeView::GetItemState(TreeItem ti) {
 // in both cases can return null
 // sets pt to screen position (for context menu coordinates)
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
-    TreeView* treeCtrl = (TreeView*)args->w;
-    TreeModel* tm = treeCtrl->treeModel;
-    HWND hwnd = treeCtrl->hwnd;
+    TreeView* treeView = (TreeView*)args->w;
+    TreeModel* tm = treeView->treeModel;
+    HWND hwnd = treeView->hwnd;
 
     TreeItem ti = TreeModel::kNullItem;
     pt = {args->mouseWindow.x, args->mouseWindow.y};
     if (pt.x == -1 || pt.y == -1) {
         // no mouse position when launched via keyboard shortcut
         // use position of selected item to show menu
-        ti = treeCtrl->GetSelection();
+        ti = treeView->GetSelection();
         if (ti == TreeModel::kNullItem) {
             return TreeModel::kNullItem;
         }
         RECT rcItem;
-        if (treeCtrl->GetItemRect(ti, true, rcItem)) {
+        if (treeView->GetItemRect(ti, true, rcItem)) {
             // rcItem is local to window, map to global screen position
             MapWindowPoints(hwnd, HWND_DESKTOP, (POINT*)&rcItem, 2);
             pt.x = rcItem.left;
             pt.y = rcItem.bottom;
         }
     } else {
-        ti = treeCtrl->GetItemAt(pt.x, pt.y);
+        ti = treeView->GetItemAt(pt.x, pt.y);
         if (ti == TreeModel::kNullItem) {
             // only show context menu if over a node in tree
             return TreeModel::kNullItem;
         }
         // context menu acts on this item so select it
         // for better visual feedback to the user
-        treeCtrl->SelectItem(ti);
+        treeView->SelectItem(ti);
         pt.x = args->mouseGlobal.x;
         pt.y = args->mouseGlobal.y;
     }
@@ -2833,7 +2833,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
             return 0;
         }
         TreeItemGetTooltipEvent2 ev;
-        ev.treeCtrl = w;
+        ev.treeView = w;
         ev.info = (NMTVGETINFOTIPW*)(nmtv);
         ev.treeItem = GetTreeItemByHandle(ev.info->hItem);
         onGetTooltip(&ev);
@@ -2846,7 +2846,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
             return CDRF_DODEFAULT;
         }
         TreeItemCustomDrawEvent2 ev;
-        ev.treeCtrl = w;
+        ev.treeView = w;
         ev.nm = (NMTVCUSTOMDRAW*)lp;
         HTREEITEM hItem = (HTREEITEM)ev.nm->nmcd.dwItemSpec;
         // it can be 0 in CDDS_PREPAINT state
@@ -2871,7 +2871,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
             return 0;
         }
         TreeSelectionChangedEvent2 ev;
-        ev.treeCtrl = w;
+        ev.treeView = w;
         ev.nmtv = nmtv;
         auto action = ev.nmtv->action;
         if (action == TVC_BYKEYBOARD) {
@@ -2893,7 +2893,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         }
         NMHDR* nmhdr = (NMHDR*)lp;
         TreeClickEvent2 ev{};
-        ev.treeCtrl = w;
+        ev.treeView = w;
         ev.isDblClick = (code == NM_DBLCLK);
 
         DWORD pos = GetMessagePos();
@@ -2925,7 +2925,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         }
         NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
         TreeKeyDownEvent2 ev{};
-        ev.treeCtrl = w;
+        ev.treeView = w;
         ev.nmkd = nmkd;
         ev.keyCode = nmkd->wVKey;
         ev.flags = nmkd->flags;

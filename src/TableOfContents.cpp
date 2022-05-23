@@ -50,8 +50,8 @@
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
 static void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
-    auto treeCtrl = ev->treeCtrl;
-    auto tm = treeCtrl->treeModel;
+    auto treeView = ev->treeView;
+    auto tm = treeView->treeModel;
     auto ti = ev->treeItem;
     auto nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
@@ -84,8 +84,8 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent2* ev) {
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;
-    treeCtrl->GetItemRect(ev->treeItem, false, rcLine);
-    treeCtrl->GetItemRect(ev->treeItem, true, rcLabel);
+    treeView->GetItemRect(ev->treeItem, false, rcLine);
+    treeView->GetItemRect(ev->treeItem, true, rcLabel);
 
     // TODO: this causes a duplicate. Not sure what changed
     if (false && rcLine.right + 2 < rcLabel.right) {
@@ -241,11 +241,11 @@ void ToggleTocBox(WindowInfo* win) {
 }
 
 // find the closest item in tree view to a given page number
-static TocItem* TreeItemForPageNo(TreeView* treeCtrl, int pageNo) {
+static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
     TocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
 
-    TreeModel* tm = treeCtrl->treeModel;
+    TreeModel* tm = treeView->treeModel;
     if (!tm) {
         return 0;
     }
@@ -281,7 +281,7 @@ static TocItem* TreeItemForPageNo(TreeView* treeCtrl, int pageNo) {
 
 // TODO: I can't use TreeItem->IsExpanded() because it's not in sync with
 // the changes user makes to TreeCtrl
-static TocItem* FindVisibleParentTreeItem(TreeView* treeCtrl, TocItem* ti) {
+static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
     if (!ti) {
         return nullptr;
     }
@@ -291,7 +291,7 @@ static TocItem* FindVisibleParentTreeItem(TreeView* treeCtrl, TocItem* ti) {
             // ti is a root node
             return ti;
         }
-        if (treeCtrl->IsExpanded((TreeItem)parent)) {
+        if (treeView->IsExpanded((TreeItem)parent)) {
             return ti;
         }
         ti = parent;
@@ -304,15 +304,15 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
         return;
     }
 
-    auto treeCtrl = win->tocTreeCtrl;
-    auto item = TreeItemForPageNo(treeCtrl, currPageNo);
+    auto treeView = win->tocTreeCtrl;
+    auto item = TreeItemForPageNo(treeView, currPageNo);
     // only select the items that are visible i.e. are top nodes or
     // children of expanded node
-    TreeItem toSelect = (TreeItem)FindVisibleParentTreeItem(treeCtrl, item);
-    treeCtrl->SelectItem(toSelect);
+    TreeItem toSelect = (TreeItem)FindVisibleParentTreeItem(treeView, item);
+    treeView->SelectItem(toSelect);
 }
 
-static void UpdateDocTocExpansionStateRecur(TreeView* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
+static void UpdateDocTocExpansionStateRecur(TreeView* treeView, Vec<int>& tocState, TocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
         if (tocItem->child) {
@@ -320,25 +320,25 @@ static void UpdateDocTocExpansionStateRecur(TreeView* treeCtrl, Vec<int>& tocSta
             // isOpenToggled is not kept in sync
             // TODO: keep toggle state on TocItem in sync
             // by subscribing to the right notifications
-            bool isExpanded = treeCtrl->IsExpanded((TreeItem)tocItem);
+            bool isExpanded = treeView->IsExpanded((TreeItem)tocItem);
             bool wasToggled = isExpanded != tocItem->isOpenDefault;
             if (wasToggled) {
                 tocState.Append(tocItem->id);
             }
-            UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem->child);
+            UpdateDocTocExpansionStateRecur(treeView, tocState, tocItem->child);
         }
         tocItem = tocItem->next;
     }
 }
 
-void UpdateTocExpansionState(Vec<int>& tocState, TreeView* treeCtrl, TocTree* docTree) {
-    if (treeCtrl->treeModel != docTree) {
+void UpdateTocExpansionState(Vec<int>& tocState, TreeView* treeView, TocTree* docTree) {
+    if (treeView->treeModel != docTree) {
         // CrashMe();
         return;
     }
     tocState.Reset();
     TocItem* tocItem = docTree->root->child;
-    UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem);
+    UpdateDocTocExpansionStateRecur(treeView, tocState, tocItem);
 }
 
 static bool inRange(WCHAR c, WCHAR low, WCHAR hi) {
@@ -457,8 +457,8 @@ static void TocContextMenu(ContextMenuEvent2* ev) {
 
     POINT pt{};
 
-    TreeView* treeCtrl = (TreeView*)ev->w;
-    TreeModel* tm = treeCtrl->treeModel;
+    TreeView* treeView = (TreeView*)ev->w;
+    TreeModel* tm = treeView->treeModel;
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (ti == TreeModel::kNullItem) {
         pt = {ev->mouseGlobal.x, ev->mouseGlobal.y};
@@ -611,19 +611,19 @@ void LoadTocTree(WindowInfo* win) {
     GetLeftRightCounts(tocTree->root, l2r, r2l);
     bool isRTL = r2l > l2r;
 
-    TreeView* treeCtrl = win->tocTreeCtrl;
-    HWND hwnd = treeCtrl->hwnd;
+    TreeView* treeView = win->tocTreeCtrl;
+    HWND hwnd = treeView->hwnd;
     SetRtl(hwnd, isRTL);
 
     UpdateTreeCtrlColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
     AutoExpandTopLevelItems(tocTree->root->child);
 
-    treeCtrl->SetTreeModel(tocTree);
+    treeView->SetTreeModel(tocTree);
 
-    treeCtrl->onTreeItemCustomDraw = nullptr;
+    treeView->onTreeItemCustomDraw = nullptr;
     if (ShouldCustomDraw(win)) {
-        treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
+        treeView->onTreeItemCustomDraw = OnTocCustomDraw;
     }
     LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeCtrl->hwnd);
     // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
@@ -707,7 +707,7 @@ LRESULT TocTreeClick(TreeClickEvent2* ev) {
 }
 
 static void TocTreeSelectionChanged(TreeSelectionChangedEvent2* ev) {
-    WindowInfo* win = FindWindowInfoByHwnd(ev->treeCtrl->hwnd);
+    WindowInfo* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -744,7 +744,7 @@ LRESULT TocTreeKeyDown2(TreeKeyDownEvent2* ev) {
         return 0;
     }
 
-    WindowInfo* win = FindWindowInfoByHwnd(ev->treeCtrl->hwnd);
+    WindowInfo* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
     if (win->tabsVisible && IsCtrlPressed()) {
         TabsOnCtrlTab(win, IsShiftPressed());
         return 1;
@@ -797,11 +797,11 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         return res;
     }
 
-    TreeView* treeCtrl = win->tocTreeCtrl;
+    TreeView* treeView = win->tocTreeCtrl;
 
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(win->tocLabelWithClose, treeCtrl->hwnd);
+            LayoutTreeContainer(win->tocLabelWithClose, treeView->hwnd);
             break;
 
         case WM_COMMAND:
@@ -869,24 +869,24 @@ void CreateToc(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    auto* treeCtrl = new TreeView();
+    auto* treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndTocBox;
     args.font =  GetTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
-    treeCtrl->onGetTooltip = TocCustomizeTooltip;
-    treeCtrl->onContextMenu = TocContextMenu;
-    treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
-    treeCtrl->onTreeKeyDown = TocTreeKeyDown2;
-    //treeCtrl->onTreeClick = TocTreeClick; // TODO: maybe not necessary
-    //treeCtrl->onChar = TocTreeCharHandler;
-    //treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
+    treeView->onGetTooltip = TocCustomizeTooltip;
+    treeView->onContextMenu = TocContextMenu;
+    treeView->onTreeSelectionChanged = TocTreeSelectionChanged;
+    treeView->onTreeKeyDown = TocTreeKeyDown2;
+    //treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary
+    //treeView->onChar = TocTreeCharHandler;
+    //treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
-    treeCtrl->Create(args);
-    CrashIf(!treeCtrl->hwnd);;
-    win->tocTreeCtrl = treeCtrl;
+    treeView->Create(args);
+    CrashIf(!treeView->hwnd);;
+    win->tocTreeCtrl = treeView;
 
     if (nullptr == gWndProcTocBox) {
         gWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
