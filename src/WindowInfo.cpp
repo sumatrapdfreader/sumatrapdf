@@ -52,7 +52,7 @@ struct LinkHandler : ILinkHandler {
     }
     ~LinkHandler() override;
 
-    Controller* GetController() override {
+    DocController* GetDocController() override {
         return win->ctrl;
     }
     void GotoLink(IPageDestination*) override;
@@ -140,7 +140,7 @@ WindowInfo::~WindowInfo() {
     DeleteVecMembers(tabs);
     DeleteVecMembers(staticLinks);
     delete tabsCtrl;
-    // cbHandler is passed into Controller and must be deleted afterwards
+    // cbHandler is passed into DocController and must be deleted afterwards
     // (all controllers should have been deleted prior to WindowInfo, though)
     delete cbHandler;
 
@@ -510,7 +510,7 @@ IPageDestination* LinkHandler::FindTocItem(TocItem* item, const char* name, bool
 
 void LinkHandler::GotoNamedDest(const char* name) {
     CrashIf(!win || win->linkHandler != this);
-    Controller* ctrl = win->ctrl;
+    DocController* ctrl = win->ctrl;
     if (!ctrl) {
         return;
     }
@@ -631,7 +631,7 @@ WindowInfo* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
     return nullptr;
 }
 
-WindowInfo* FindWindowInfoByController(Controller* ctrl) {
+WindowInfo* FindWindowInfoByController(DocController* ctrl) {
     for (auto& win : gWindows) {
         for (auto& tab : win->tabs) {
             if (tab->ctrl == ctrl) {

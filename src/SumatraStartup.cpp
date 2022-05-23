@@ -310,7 +310,7 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state, bool lazyload 
         return;
     }
 
-    Controller* ctrl = tab->ctrl;
+    DocController* ctrl = tab->ctrl;
     DisplayModel* dm = tab->AsFixed();
 
     // validate page number from session state

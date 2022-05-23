@@ -649,7 +649,7 @@ class ThumbnailRenderingTask : public RenderingCallback {
     }
 };
 
-struct ControllerCallbackHandler : ControllerCallback {
+struct ControllerCallbackHandler : DocControllerCallback {
     WindowInfo* win{nullptr};
 
   public:
@@ -660,7 +660,7 @@ struct ControllerCallbackHandler : ControllerCallback {
     void Repaint() override {
         RepaintAsync(win, 0);
     }
-    void PageNoChanged(Controller* ctrl, int pageNo) override;
+    void PageNoChanged(DocController* ctrl, int pageNo) override;
     void UpdateScrollbars(Size canvas) override;
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
@@ -807,7 +807,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
 }
 
 // The current page edit box is updated with the current page number
-void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
+void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     // discard page number change requests from documents
     // loaded asynchronously in a background tab
     if (win->ctrl != ctrl) {
@@ -842,21 +842,21 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     }
 }
 
-static Controller* CreateControllerForEngine(EngineBase* engine, const char* filePath, PasswordUI* pwdUI,
-                                             WindowInfo* win) {
+static DocController* CreateControllerForEngine(EngineBase* engine, const char* filePath, PasswordUI* pwdUI,
+                                                WindowInfo* win) {
     int nPages = engine ? engine->PageCount() : 0;
     logf("CreateControllerForEngine: '%s', %d pages\n", filePath), nPages;
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
-    Controller* ctrl = nullptr;
+    DocController* ctrl = nullptr;
     ctrl = new DisplayModel(engine, win->cbHandler);
     CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
     return ctrl;
 }
 
 // TODO: remove when we figure out why this ctrl->GetFilePath() is not always same as path
-static NO_INLINE void VerifyController(Controller* ctrl, const char* path) {
+static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     if (!ctrl) {
         return;
     }
@@ -870,7 +870,7 @@ static NO_INLINE void VerifyController(Controller* ctrl, const char* path) {
     CrashIf(true);
 }
 
-static Controller* CreateForChm(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
+static DocController* CreateForChm(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
     Kind kind = GuessFileType(path, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
@@ -888,7 +888,7 @@ static Controller* CreateForChm(const char* path, PasswordUI* pwdUI, WindowInfo*
     // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
     CrashAlwaysIf(gPluginMode);
     // if CLSID_WebBrowser isn't available, fall back on ChmEngine
-    Controller* ctrl = nullptr;
+    DocController* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
         delete chmModel;
         EngineBase* engine = CreateEngine(path, pwdUI, true);
@@ -908,12 +908,12 @@ static Controller* CreateForChm(const char* path, PasswordUI* pwdUI, WindowInfo*
     return ctrl;
 }
 
-static Controller* CreateControllerForFile(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
+static DocController* CreateControllerForFile(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
 
-    Controller* ctrl = nullptr;
+    DocController* ctrl = nullptr;
 
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
 
@@ -1007,7 +1007,7 @@ static bool showTocByDefault(const char* path) {
     return showByDefault;
 }
 
-// Document is represented as Controller. Replace current Controller (if any) with ctrl
+// Document is represented as DocController. Replace current DocController (if any) with ctrl
 // in current tab.
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
@@ -1015,7 +1015,7 @@ static bool showTocByDefault(const char* path) {
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static void ReplaceDocumentInCurrentTab(LoadArgs* args, Controller* ctrl, FileState* fs) {
+static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, FileState* fs) {
     WindowInfo* win = args->win;
     CrashIf(!win);
     if (!win) {
@@ -1071,7 +1071,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, Controller* ctrl, FileSt
 
     AbortFinding(args->win, false);
 
-    Controller* prevCtrl = win->ctrl;
+    DocController* prevCtrl = win->ctrl;
     tab->ctrl = ctrl;
     win->ctrl = tab->ctrl;
 
@@ -1242,7 +1242,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
 
     HwndPasswordUI pwdUI(win->hwndFrame);
     char* pathA = tab->filePath;
-    Controller* ctrl = CreateControllerForFile(pathA, &pwdUI, win);
+    DocController* ctrl = CreateControllerForFile(pathA, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken,
@@ -1645,7 +1645,7 @@ WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
 
     auto timeStart = TimeGet();
     HwndPasswordUI pwdUI(win->hwndFrame);
-    Controller* ctrl = nullptr;
+    DocController* ctrl = nullptr;
     if (!lazyload) {
         if (args->engine != nullptr) {
             ctrl = CreateControllerForEngine(args->engine, fullPath, &pwdUI, win);
@@ -2457,7 +2457,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 }
 
 // returns false if no filter has been appended
-static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
+static bool AppendFileFilterForDoc(DocController* ctrl, str::WStr& fileFilter) {
     // TODO: use ctrl->GetDefaultFileExt()
     Kind type = nullptr;
     if (ctrl->AsFixed()) {

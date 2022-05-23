@@ -2860,7 +2860,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     }
 
     RectF r(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    auto ctrl = linkHandler->GetController();
+    auto ctrl = linkHandler->GetDocController();
     ctrl->ScrollTo(pageNo + 1, r, zoom);
 }
 

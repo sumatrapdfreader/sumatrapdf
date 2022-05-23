@@ -64,8 +64,8 @@ class Synchronizer;
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
-struct DisplayModel : Controller {
-    DisplayModel(EngineBase* engine, ControllerCallback* cb);
+struct DisplayModel : DocController {
+    DisplayModel(EngineBase* engine, DocControllerCallback* cb);
     DisplayModel(DisplayModel const&) = delete;
     DisplayModel& operator=(DisplayModel const&) = delete;
 

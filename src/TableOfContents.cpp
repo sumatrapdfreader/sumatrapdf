@@ -172,9 +172,9 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 }
 #endif
 
-static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
+static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, DocController* ctrl) {
     WindowInfo* win = tab->win;
-    // tocItem is invalid if the Controller has been replaced
+    // tocItem is invalid if the DocController has been replaced
     if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl) {
         return;
     }
@@ -210,7 +210,7 @@ static void GoToTocTreeItem(WindowInfo* win, TreeItem ti, bool allowExternal) {
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
         TabInfo* tab = win->currentTab;
-        Controller* ctrl = win->ctrl;
+        DocController* ctrl = win->ctrl;
         uitask::Post([=] { GoToTocLinkTask(tocItem, tab, ctrl); });
     }
 }

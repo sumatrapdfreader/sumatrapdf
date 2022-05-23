@@ -27,7 +27,7 @@
 #include "SumatraConfig.h"
 #include "Print.h"
 
-void ShowProperties(HWND parent, Controller* ctrl, bool extended);
+void ShowProperties(HWND parent, DocController* ctrl, bool extended);
 
 constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
 
@@ -239,7 +239,7 @@ static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     return str::Format("%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
 
-static char* FormatPdfFileStructure(Controller* ctrl) {
+static char* FormatPdfFileStructure(DocController* ctrl) {
     AutoFreeStr fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
     if (str::IsEmpty(fstruct.Get())) {
         return nullptr;
@@ -270,7 +270,7 @@ static char* FormatPdfFileStructure(Controller* ctrl) {
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static char* FormatPermissionsA(Controller* ctrl) {
+static char* FormatPermissionsA(DocController* ctrl) {
     if (!ctrl->AsFixed()) {
         return nullptr;
     }
@@ -475,7 +475,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     return true;
 }
 
-static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extended) {
+static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool extended) {
     CrashIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
@@ -568,7 +568,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     }
 }
 
-void ShowProperties(HWND parent, Controller* ctrl, bool extended) {
+void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
     PropertiesLayout* layoutData = FindPropertyWindowByHwnd(parent);
     if (layoutData) {
         SetActiveWindow(layoutData->hwnd);

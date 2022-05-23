@@ -1047,7 +1047,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
 
     const char* link = ddest->link;
 
-    auto ctrl = linkHandler->GetController();
+    auto ctrl = linkHandler->GetDocController();
     if (str::Eq(link, "#+1")) {
         ctrl->GoToNextPage();
         return true;

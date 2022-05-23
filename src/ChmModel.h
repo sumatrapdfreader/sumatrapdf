@@ -7,8 +7,8 @@ class HtmlWindow;
 class HtmlWindowCallback;
 struct ChmCacheEntry;
 
-struct ChmModel : Controller {
-    explicit ChmModel(ControllerCallback* cb);
+struct ChmModel : DocController {
+    explicit ChmModel(DocControllerCallback* cb);
     ~ChmModel() override;
 
     // meta data
@@ -47,7 +47,7 @@ struct ChmModel : Controller {
     // for quick type determination and type-safe casting
     ChmModel* AsChm() override;
 
-    static ChmModel* Create(const char* fileName, ControllerCallback* cb = nullptr);
+    static ChmModel* Create(const char* fileName, DocControllerCallback* cb = nullptr);
 
     // the following is specific to ChmModel
 

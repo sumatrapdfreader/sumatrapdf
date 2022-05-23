@@ -79,7 +79,7 @@ struct ChmTocTraceItem {
     int pageNo = 0;
 };
 
-ChmModel::ChmModel(ControllerCallback* cb) : Controller(cb) {
+ChmModel::ChmModel(DocControllerCallback* cb) : DocController(cb) {
     InitializeCriticalSection(&docAccess);
 }
 
@@ -721,7 +721,7 @@ bool ChmModel::IsSupportedFileType(Kind kind) {
     return ChmFile::IsSupportedFileType(kind);
 }
 
-ChmModel* ChmModel::Create(const char* fileName, ControllerCallback* cb) {
+ChmModel* ChmModel::Create(const char* fileName, DocControllerCallback* cb) {
     ChmModel* cm = new ChmModel(cb);
     if (!cm->Load(fileName)) {
         delete cm;

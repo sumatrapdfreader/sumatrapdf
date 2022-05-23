@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct Controller;
+struct DocController;
 struct ChmModel;
 struct DisplayModel;
 struct IPageElement;
@@ -32,7 +32,7 @@ enum class DocumentProperty {
 
 struct ILinkHandler {
     virtual ~ILinkHandler(){};
-    virtual Controller* GetController() = 0;
+    virtual DocController* GetDocController() = 0;
     virtual void GotoLink(IPageDestination*) = 0;
     virtual void GotoNamedDest(const char*) = 0;
     virtual void ScrollTo(IPageDestination*) = 0;
@@ -41,12 +41,12 @@ struct ILinkHandler {
     virtual IPageDestination* FindTocItem(TocItem* item, const char* name, bool partially) = 0;
 };
 
-struct ControllerCallback {
-    virtual ~ControllerCallback() = default;
+struct DocControllerCallback {
+    virtual ~DocControllerCallback() = default;
     // tell the UI to show the pageNo as current page (which also syncs
     // the toc with the curent page). Needed for when a page change happens
     // indirectly or is initiated from within the model
-    virtual void PageNoChanged(Controller* ctrl, int pageNo) = 0;
+    virtual void PageNoChanged(DocController* ctrl, int pageNo) = 0;
     // tell the UI to open the linked document or URL
     virtual void GotoLink(IPageDestination*) = 0;
     // DisplayModel //
@@ -64,13 +64,13 @@ struct ControllerCallback {
     virtual void SaveDownload(const char* url, ByteSlice data) = 0;
 };
 
-struct Controller {
-    ControllerCallback* cb;
+struct DocController {
+    DocControllerCallback* cb;
 
-    explicit Controller(ControllerCallback* cb) : cb(cb) {
+    explicit DocController(DocControllerCallback* cb) : cb(cb) {
         CrashIf(!cb);
     }
-    virtual ~Controller() = default;
+    virtual ~DocController() = default;
 
     // meta data
     virtual const char* GetFilePath() const = 0;

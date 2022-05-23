@@ -12,7 +12,7 @@ struct WindowInfo;
 struct TabInfo {
     AutoFreeStr filePath;
     WindowInfo* win = nullptr;
-    Controller* ctrl = nullptr;
+    DocController* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
     AutoFreeStr frameTitle;
     // state of the table of contents

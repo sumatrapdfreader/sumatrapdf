@@ -16,8 +16,8 @@ struct TabsCtrl;
 struct IPageElement;
 struct PageDestination;
 struct TocItem;
-struct Controller;
-struct ControllerCallback;
+struct DocController;
+struct DocControllerCallback;
 struct ChmModel;
 struct DisplayModel;
 struct TabInfo;
@@ -84,7 +84,7 @@ struct WindowInfo {
     ChmModel* AsChm() const;
 
     // TODO: use currentTab->ctrl instead
-    Controller* ctrl = nullptr; // owned by currentTab
+    DocController* ctrl = nullptr; // owned by currentTab
 
     Vec<TabInfo*> tabs;
     TabInfo* currentTab = nullptr; // points into tabs
@@ -200,7 +200,7 @@ struct WindowInfo {
     HBITMAP bmpMovePattern = nullptr;
     HBRUSH brMovePattern = nullptr;
 
-    ControllerCallback* cbHandler = nullptr;
+    DocControllerCallback* cbHandler = nullptr;
 
     // The target y offset for smooth scrolling.
     // We use a timer to gradually scroll there.
@@ -251,6 +251,6 @@ bool IsRightDragging(WindowInfo*);
 WindowInfo* FindWindowInfoByTabInfo(TabInfo*);
 WindowInfo* FindWindowInfoByHwnd(HWND);
 bool WindowInfoStillValid(WindowInfo*);
-WindowInfo* FindWindowInfoByController(Controller*);
+WindowInfo* FindWindowInfoByController(DocController*);
 
 extern Vec<WindowInfo*> gWindows;

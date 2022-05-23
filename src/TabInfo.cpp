@@ -97,7 +97,7 @@ void TabInfo::ToggleZoom() const {
     if (!IsDocLoaded()) {
         return;
     }
-    // TODO: maybe move to Controller?
+    // TODO: maybe move to DocController?
     float newZoom = kZoomFitPage;
     float currZoom = ctrl->GetZoomVirtual();
     if (kZoomFitPage == currZoom) {
