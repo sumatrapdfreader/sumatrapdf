@@ -1,8 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-
-struct TabsCtrl2 : WindowBase {
+struct TabsCtrl : WindowBase {
     str::Str lastTabText;
     bool createToolTipsHwnd = false;
     str::Str currTooltipText;
@@ -12,8 +11,8 @@ struct TabsCtrl2 : WindowBase {
     // for all WM_NOTIFY messages
     WmNotifyHandler onNotify = nullptr;
 
-    TabsCtrl2();
-    ~TabsCtrl2() override;
+    TabsCtrl();
+    ~TabsCtrl() override;
     bool Create(HWND parent) override;
 
     void WndProc(WndEvent*) override;

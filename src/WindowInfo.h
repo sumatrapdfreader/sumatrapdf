@@ -13,7 +13,7 @@ struct Tooltip;
 struct TreeView;
 } // namespace wg
 struct CaptionInfo;
-struct TabsCtrl2;
+struct TabsCtrl;
 
 struct IPageElement;
 struct PageDestination;
@@ -130,7 +130,7 @@ struct WindowInfo {
     // horizontal splitter for resizing favorites and bookmars parts
     wg::Splitter* favSplitter = nullptr;
 
-    TabsCtrl2* tabsCtrl = nullptr;
+    TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
     bool tabsInTitlebar = false;
     // keeps the sequence of tab selection. This is needed for restoration

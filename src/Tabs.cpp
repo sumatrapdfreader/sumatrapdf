@@ -97,7 +97,7 @@ static inline Size GetTabSize(HWND hwnd) {
 }
 
 struct TabPainter {
-    TabsCtrl2* tabsCtrl = nullptr;
+    TabsCtrl* tabsCtrl = nullptr;
     PathData* data = nullptr;
     int width = -1;
     int height = -1;
@@ -113,7 +113,7 @@ struct TabPainter {
     LPARAM mouseCoordinates = 0;
     COLORREF currBgCol{kTabDefaultBgCol};
 
-    TabPainter(TabsCtrl2* ctrl, Size tabSize);
+    TabPainter(TabsCtrl* ctrl, Size tabSize);
     ~TabPainter();
     bool Reshape(int dx, int dy);
     int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) const;
@@ -122,7 +122,7 @@ struct TabPainter {
     int Count() const;
 };
 
-TabPainter::TabPainter(TabsCtrl2* ctrl, Size tabSize) {
+TabPainter::TabPainter(TabsCtrl* ctrl, Size tabSize) {
     tabsCtrl = ctrl;
     hwnd = tabsCtrl->hwnd;
     Reshape(tabSize.dx, tabSize.dy);
@@ -645,7 +645,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
 }
 
 void CreateTabbar(WindowInfo* win) {
-    TabsCtrl2* tabsCtrl = new TabsCtrl2();
+    TabsCtrl* tabsCtrl = new TabsCtrl();
     tabsCtrl->ctrlID = IDC_TABBAR;
     tabsCtrl->createToolTipsHwnd = true;
     tabsCtrl->Create(win->hwndFrame);
