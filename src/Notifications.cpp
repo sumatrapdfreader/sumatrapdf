@@ -98,15 +98,6 @@ int GetWndX(NotificationWnd* wnd) {
     return rect.x;
 }
 
-static void MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
-    Rect rect = WindowRect(fix->hwnd);
-    rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
-    uint flags = SWP_NOSIZE | SWP_NOZORDER;
-    auto x = GetWndX(move);
-    int y = rect.y + rect.dy + DpiScale(fix->hwnd, kTopLeftMargin);
-    SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
-}
-
 NotificationWnd::NotificationWnd(HWND parent, int timeoutInMS) {
     this->parent = parent;
     this->timeoutInMS = timeoutInMS;
@@ -371,37 +362,45 @@ bool NotifsContains(NotificationWnd* wnd) {
     return gNotifs.Contains(wnd);
 }
 
+static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
+    if (wnds.IsEmpty()) {
+        return;
+    }
+
+    auto* first = wnds[0];
+    HWND hwndCanvas = GetParent(first->hwnd);
+    Rect frame = ClientRect(hwndCanvas);
+    int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
+    int dyPadding = DpiScale(hwndCanvas, kPadding);
+    int y = topLeftMargin;
+    for (auto* wnd : wnds) {
+        Rect rect = WindowRect(wnd->hwnd);
+        rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
+        if (IsUIRightToLeft()) {
+            int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
+            rect.x = frame.dx - rect.dx - topLeftMargin - cxVScroll;
+        } else {
+            rect.x = topLeftMargin;
+        }
+        uint flags = SWP_NOSIZE | SWP_NOZORDER;
+        int dy = rect.dy;
+        SetWindowPos(wnd->hwnd, nullptr, rect.x, y, 0, 0, flags);
+        y += rect.dy + dyPadding;
+    }
+}
+
+static void NotifsRelayout(NotificationWnd* wnd) {
+    Vec<NotificationWnd*> wnds;
+    GetForSameHwnd(wnd, wnds);
+    NotifsRelayout(wnds);
+}
+
 void NotifsRemove(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd) {
     int pos = gNotifs.Remove(wnd);
     if (pos < 0) {
         return;
     }
-    wnds.Reset();
-    GetForSameHwnd(wnd, wnds);
-    int n = wnds.size();
-    if (n == 0) {
-        return;
-    }
-
-    bool isFirst = (pos == 0);
-
-    // TODO: this might be busted but I'm not sure what it's supposed
-    // to do and it happens rarely. Would need to add a trigger for
-    // visually testing notifications
-    if (isFirst) {
-        auto* first = wnds[0];
-        uint flags = SWP_NOSIZE | SWP_NOZORDER;
-        auto x = GetWndX(first);
-        SetWindowPos(first->hwnd, nullptr, x, DpiScale(first->hwnd, kTopLeftMargin), 0, 0, flags);
-    }
-    for (int i = pos; i < n; i++) {
-        if (i == 0) {
-            continue;
-        }
-        auto curr = wnds[i];
-        auto prev = wnds[i - 1];
-        MoveBelow(prev, curr);
-    }
+    NotifsRelayout(wnd);
 }
 
 static void NotifsRemoveNotification(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd) {
@@ -430,46 +429,11 @@ static void NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
     }
 }
 
-static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
-    if (wnds.IsEmpty()) {
-        return;
-    }
-
-    auto* first = wnds[0];
-    HWND hwndCanvas = GetParent(first->hwnd);
-    Rect frame = ClientRect(hwndCanvas);
-    int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
-    for (auto* wnd : wnds) {
-        Rect rect = WindowRect(wnd->hwnd);
-        rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
-        if (IsUIRightToLeft()) {
-            int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-            rect.x = frame.dx - rect.dx - topLeftMargin - cxVScroll;
-        } else {
-            rect.x = topLeftMargin;
-        }
-        uint flags = SWP_NOSIZE | SWP_NOZORDER;
-        SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, flags);
-    }
-}
-
-static void NotifsRelayout(NotificationWnd* wnd) {
-    Vec<NotificationWnd*> wnds;
-    GetForSameHwnd(wnd, wnds);
-    NotifsRelayout(wnds);
-}
-
 static void NotifsAdd(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd, Kind groupId) {
     if (groupId != nullptr) {
         NotifsRemoveForGroup(wnds, groupId);
     }
     wnd->groupId = groupId;
-
-    // TODO: probably not needed because of NotifsRelayout
-    if (!wnds.IsEmpty()) {
-        auto lastIdx = wnds.size() - 1;
-        MoveBelow(wnds[lastIdx], wnd);
-    }
     gNotifs.Append(wnd);
     NotifsRelayout(wnd);
 }

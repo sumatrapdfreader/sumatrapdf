@@ -4928,18 +4928,24 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
 
         case CmdDebugShowNotif: {
-            NotificationCreateArgs args;
-            args.hwndParent = win->hwndCanvas;
-            args.msg = "This is a notification";
-            args.warning = true;
-            args.timeoutMs = 0;
-            ShowNotification(args);
+            {
+                NotificationCreateArgs args;
+                args.hwndParent = win->hwndCanvas;
+                args.groupId = kNotifGroupPersistentWarning;
+                args.msg = "This is a second notification\nMy friend.";
+                args.warning = false;
+                args.timeoutMs = kNotifDefaultTimeOut;
+                ShowNotification(args);
+            }
 
-            args.groupId = kNotifGroupPersistentWarning;
-            args.msg = "This is a second notification\nMy friend.";
-            args.warning = false;
-            args.timeoutMs = kNotifDefaultTimeOut;
-            ShowNotification(args);
+            {
+                NotificationCreateArgs args;
+                args.hwndParent = win->hwndCanvas;
+                args.msg = "This is a notification";
+                args.warning = true;
+                args.timeoutMs = 0;
+                ShowNotification(args);
+            }
         } break;
 
         case CmdDebugCrashMe:
