@@ -69,12 +69,11 @@ inline constexpr Perm operator~(Perm lhs) {
     return static_cast<Perm>(v);
 }
 
-struct DocController;
-class Favorites;
+struct Favorites;
 struct FileHistory;
 struct WindowInfo;
 struct NotificationWnd;
-class RenderCache;
+struct RenderCache;
 struct TabInfo;
 struct LabelWithCloseWnd;
 struct SessionData;

@@ -20,10 +20,9 @@ per-file basis in FileHistory.
 */
 
 // Favorites is a convenience interface into gFileHistory
-class Favorites {
+struct Favorites {
     size_t idxCache = (size_t)-1;
 
-  public:
     Favorites() = default;
 
     Favorite* GetByMenuId(int menuId, FileState** dsOut = nullptr);

@@ -88,8 +88,7 @@ struct PageRenderRequest {
     RenderingCallback* renderCb = nullptr;
 };
 
-class RenderCache {
-  public:
+struct RenderCache {
     BitmapCacheEntry* cache[MAX_BITMAPS_CACHED]{};
     int cacheCount = 0;
     // make sure to never ask for requestAccess in a cacheAccess
