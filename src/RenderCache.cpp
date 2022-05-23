@@ -52,7 +52,11 @@ RenderCache::~RenderCache() {
 
     CloseHandle(renderThread);
     CloseHandle(startRendering);
-    CrashIf(curReq || 0 != requestCount || 0 != cacheCount);
+    if (curReq || 0 != requestCount || cacheCount != 0) {
+        logf("RenderCache::~RenderCache: curReq: 0x%p, requestCount: %d, cacheCount: %d\n", curReq, requestCount,
+             cacheCount);
+        ReportIf(true);
+    }
 
     LeaveCriticalSection(&cacheAccess);
     DeleteCriticalSection(&cacheAccess);
