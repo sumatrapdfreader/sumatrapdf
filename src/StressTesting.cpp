@@ -36,8 +36,8 @@
 
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
-static Kind NG_STRESS_TEST_BENCHMARK = "stressTestBenchmark";
-static Kind NG_STRESS_TEST_SUMMARY = "stressTestSummary";
+static Kind kNotifGroupStressTestBenchmark = "stressTestBenchmark";
+static Kind kNotifGroupStressTestSummary = "stressTestSummary";
 
 bool IsStressTesting() {
     return gIsStressTesting;
@@ -494,7 +494,12 @@ static void Finished(StressTest* st, bool success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         AutoFreeStr tm(FormatTime(secs));
         AutoFreeStr s(str::Format("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.Get()));
-        ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
+        NotificationCreateArgs args;
+        args.hwndParent = st->win->hwndCanvas;
+        args.msg = s;
+        args.timeoutMs = 0;
+        args.groupId = kNotifGroupStressTestSummary;
+        ShowNotification(args);
     }
 
     CloseWindow(st->win, st->exitWhenDone && CanCloseWindow(st->win), false);
@@ -512,7 +517,13 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
         Start(st, dirFileProvider, cycles);
     } else {
         AutoFreeStr s(str::Format("Path '%s' doesn't exist", path));
-        ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Warning, NG_STRESS_TEST_SUMMARY);
+        NotificationCreateArgs args;
+        args.hwndParent = st->win->hwndCanvas;
+        args.msg = s;
+        args.warning = true;
+        args.timeoutMs = 0;
+        args.groupId = kNotifGroupStressTestSummary;
+        ShowNotification(args);
         Finished(st, false);
     }
 }
@@ -622,7 +633,12 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     AutoFreeStr tm(FormatTime(secs));
     int nTotalFiles = st->fileProvider->GetFilesCount();
     AutoFreeStr s(str::Format("File %d (of %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm.Get()));
-    ShowNotification(st->win->hwndCanvas, s, NotificationOptions::Persist, NG_STRESS_TEST_SUMMARY);
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = st->win->hwndCanvas;
+    nargs.msg = s;
+    nargs.timeoutMs = 0;
+    nargs.groupId = kNotifGroupStressTestSummary;
+    ShowNotification(nargs);
     return true;
 }
 
@@ -700,7 +716,11 @@ static bool GoToNextFile(StressTest* st) {
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
     AutoFreeStr s(str::Format("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime));
-    ShowNotification(st->win->hwndCanvas, s, NotificationOptions::WithTimeout, NG_STRESS_TEST_BENCHMARK);
+    NotificationCreateArgs args;
+    args.hwndParent = st->win->hwndCanvas;
+    args.msg = s;
+    args.groupId = kNotifGroupStressTestBenchmark;
+    ShowNotification(args);
 
     if (st->pagesToRender.size() == 0) {
         if (GoToNextFile(st)) {

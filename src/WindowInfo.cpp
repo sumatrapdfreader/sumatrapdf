@@ -441,7 +441,10 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             AutoFreeStr msg(str::Format(_TRA("Error loading %s"), fullPath));
-            ShowNotification(win->hwndCanvas, msg, NotificationOptions::Highlight);
+            NotificationCreateArgs nargs;
+            nargs.hwndParent = win->hwndCanvas;
+            nargs.warning = true;
+            ShowNotification(nargs);
         }
         return;
     }
