@@ -1481,7 +1481,6 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
     this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
 }
 
-namespace win {
 namespace menu {
 
 void SetChecked(HMENU m, int id, bool isChecked) {
@@ -1540,7 +1539,6 @@ char* ToSafeStringTemp(const char* s) {
     return str::DupTemp(safe.Get());
 }
 } // namespace menu
-} // namespace win
 
 HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {
     WCHAR* fontNameW = ToWstrTemp(fontName);

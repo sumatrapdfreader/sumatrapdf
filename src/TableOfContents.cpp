@@ -485,27 +485,27 @@ static void TocContextMenu(ContextMenuEvent2* ev) {
         char* ext = path::GetExtTemp(fileName);
         bool canOpenEmbedded = str::EqI(ext, ".pdf");
         if (!canOpenEmbedded) {
-            win::menu::Remove(popup, CmdOpenEmbeddedPDF);
+            menu::Remove(popup, CmdOpenEmbeddedPDF);
         }
     }
     else {
         // TODO: maybe move this to BuildMenuFromMenuDef
-        win::menu::Remove(popup, CmdSaveEmbeddedFile);
-        win::menu::Remove(popup, CmdOpenEmbeddedPDF);
+        menu::Remove(popup, CmdSaveEmbeddedFile);
+        menu::Remove(popup, CmdOpenEmbeddedPDF);
     }
 
     if (pageNo > 0) {
         AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, CmdFavoriteAdd);
+            menu::Remove(popup, CmdFavoriteAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             const char* tr = _TRA("Remove page %s from favorites");
             AutoFreeStr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavoriteDel, s);
+            menu::SetText(popup, CmdFavoriteDel, s);
         } else {
-            win::menu::Remove(popup, CmdFavoriteDel);
+            menu::Remove(popup, CmdFavoriteDel);
             // %s and not %d because re-using translation from RebuildFavMenu()
             str::Str str = _TRA("Add page %s to favorites");
             ACCEL a;
@@ -514,11 +514,11 @@ static void TocContextMenu(ContextMenuEvent2* ev) {
                 AppendAccelKeyToMenuString(str, a);
             }
             AutoFreeStr s(str::Format(str.Get(), pageLabel.Get()));
-            win::menu::SetText(popup, CmdFavoriteAdd, s);
+            menu::SetText(popup, CmdFavoriteAdd, s);
         }
     } else {
-        win::menu::Remove(popup, CmdFavoriteAdd);
-        win::menu::Remove(popup, CmdFavoriteDel);
+        menu::Remove(popup, CmdFavoriteAdd);
+        menu::Remove(popup, CmdFavoriteDel);
     }
     RemoveBadMenuSeparators(popup);
     MarkMenuOwnerDraw(popup);

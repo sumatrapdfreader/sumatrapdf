@@ -326,7 +326,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
         } else {
             s = FavReadableName(fn);
         }
-        auto safeStr = win::menu::ToSafeStringTemp(s);
+        auto safeStr = menu::ToSafeStringTemp(s);
         WCHAR* ws = ToWstrTemp(safeStr);
         AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, ws);
     }
@@ -418,7 +418,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
             if (f == currFileFav) {
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                char* fileName = win::menu::ToSafeStringTemp(path::GetBaseNameTemp(filePath));
+                char* fileName = menu::ToSafeStringTemp(path::GetBaseNameTemp(filePath));
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWstrTemp(fileName));
             }
         }
@@ -436,18 +436,18 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
 //   enable "add" menu item and disable "remove" menu item
 void RebuildFavMenu(WindowInfo* win, HMENU menu) {
     if (!win->IsDocLoaded()) {
-        win::menu::SetEnabled(menu, CmdFavoriteAdd, false);
-        win::menu::SetEnabled(menu, CmdFavoriteDel, false);
+        menu::SetEnabled(menu, CmdFavoriteAdd, false);
+        menu::SetEnabled(menu, CmdFavoriteDel, false);
         AppendFavMenus(menu, (const char*)nullptr);
     } else {
         AutoFreeStr label(win->ctrl->GetPageLabel(win->currPageNo));
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
-            win::menu::SetEnabled(menu, CmdFavoriteAdd, false);
+            menu::SetEnabled(menu, CmdFavoriteAdd, false);
             AutoFreeStr s(str::Format(_TRA("Remove page %s from favorites"), label.Get()));
-            win::menu::SetText(menu, CmdFavoriteDel, s);
+            menu::SetText(menu, CmdFavoriteDel, s);
         } else {
-            win::menu::SetEnabled(menu, CmdFavoriteDel, false);
+            menu::SetEnabled(menu, CmdFavoriteDel, false);
             str::Str str = _TRA("Add page %s to favorites");
             ACCEL a;
             bool ok = GetAccelByCmd(CmdFavoriteAdd, a);
@@ -455,11 +455,11 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
                 AppendAccelKeyToMenuString(str, a);
             }
             AutoFreeStr s(str::Format(str.Get(), label.Get()));
-            win::menu::SetText(menu, CmdFavoriteAdd, s);
+            menu::SetText(menu, CmdFavoriteAdd, s);
         }
         AppendFavMenus(menu, win->ctrl->GetFilePath());
     }
-    win::menu::SetEnabled(menu, CmdFavoriteToggle, HasFavorites());
+    menu::SetEnabled(menu, CmdFavoriteToggle, HasFavorites());
 }
 
 void ToggleFavorites(WindowInfo* win) {

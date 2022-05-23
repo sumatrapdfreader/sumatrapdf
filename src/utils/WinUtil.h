@@ -181,8 +181,6 @@ inline bool tobool(BOOL b) {
     return b != 0;
 }
 
-namespace win {
-
 namespace menu {
 void SetChecked(HMENU m, int id, bool isChecked);
 bool SetEnabled(HMENU m, int id, bool isEnabled);
@@ -197,8 +195,6 @@ void SetText(HMENU m, int id, const char* s);
 char* ToSafeStringTemp(const char* s);
 
 } // namespace menu
-
-} // namespace win
 
 struct DoubleBuffer {
     HWND hTarget = nullptr;
