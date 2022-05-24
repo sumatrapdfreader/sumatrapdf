@@ -106,6 +106,14 @@ struct AutoFree {
         other.data = nullptr;
         return *this;
     }
+    AutoFree& operator=(const char* d) noexcept {
+        if (this->data == d) {
+            return *this;
+        }
+        free(data);
+        data = (char*)d;
+        return *this;
+    }
 
     // AutoFree& operator=(const AutoFree& other) = delete;
     // AutoFree& operator=(const AutoFree&& other) = delete;

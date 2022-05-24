@@ -811,25 +811,31 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
-static void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
-    if (!win->ctrl->ValidPageNo(pageNo)) {
-        pageNo = win->ctrl->CurrentPageNo();
+static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
+    if (!ctrl->ValidPageNo(pageNo)) {
+        pageNo = ctrl->CurrentPageNo();
     }
-    AutoFreeStr pageInfo(str::Format("%s %d / %d", _TRA("Page:"), pageNo, win->ctrl->PageCount()));
-    if (win->ctrl->HasPageLabels()) {
-        AutoFreeStr label(win->ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
+    AutoFreeStr pageInfo = str::Format("%s %d / %d", _TRA("Page:"), pageNo, ctrl->PageCount());
+    if (ctrl->HasPageLabels()) {
+        AutoFreeStr label = ctrl->GetPageLabel(pageNo);
+        pageInfo = str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, ctrl->PageCount());
     }
-    if (!wnd) {
-        NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
-        args.timeoutMs = 0;
-        args.msg = pageInfo;
-        args.groupId = kNotifGroupPageInfo;
-        ShowNotification(args);
-    } else {
-        NotificationUpdateMessage(wnd, pageInfo);
+    NotificationUpdateMessage(wnd, pageInfo);
+}
+
+static void TogglePageInfoHelper(MainWindow* win) {
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    if (wnd) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+        return;
     }
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.timeoutMs = 0;
+    args.msg = "";
+    args.groupId = kNotifGroupPageInfo;
+    wnd = ShowNotification(args);
+    UpdatePageInfoHelper(win->ctrl, wnd, -1);
 }
 
 // The current page edit box is updated with the current page number
@@ -862,10 +868,11 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     win->currPageNo = pageNo;
 
     NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
-    if (wnd) {
-        CrashIf(!win->AsFixed());
-        UpdatePageInfoHelper(win, wnd, pageNo);
+    if (!wnd) {
+        return;
     }
+    CrashIf(!win->AsFixed());
+    UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
 }
 
 // TODO: remove when we figure out why this ctrl->GetFilePath() is not always same as path
@@ -1849,15 +1856,6 @@ void LoadModelIntoTab(TabInfo* tab) {
             ReloadDocument(win, true);
         }
     }
-}
-
-static void TogglePageInfoHelper(MainWindow* win) {
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
-    if (wnd) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
-        return;
-    }
-    UpdatePageInfoHelper(win, nullptr, -1);
 }
 
 enum class MeasurementUnit { pt, mm, in };
