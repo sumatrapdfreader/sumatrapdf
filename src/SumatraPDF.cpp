@@ -152,7 +152,6 @@ static StrVec gAllowedFileTypes;
 static bool gDontSavePrefs = false;
 
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled = false, bool deleteModel = false);
-static void UpdatePageInfoHelper(MainWindow*, NotificationWnd* wnd = nullptr, int pageNo = -1);
 static void OnSidebarSplitterMove(SplitterMoveEvent*);
 static void OnFavSplitterMove(SplitterMoveEvent*);
 static void DownloadDebugSymbols();
@@ -810,6 +809,27 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     }
     ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+}
+
+static void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        pageNo = win->ctrl->CurrentPageNo();
+    }
+    AutoFreeStr pageInfo(str::Format("%s %d / %d", _TRA("Page:"), pageNo, win->ctrl->PageCount()));
+    if (win->ctrl->HasPageLabels()) {
+        AutoFreeStr label(win->ctrl->GetPageLabel(pageNo));
+        pageInfo.Set(str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
+    }
+    if (!wnd) {
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.timeoutMs = 0;
+        args.msg = pageInfo;
+        args.groupId = kNotifGroupPageInfo;
+        ShowNotification(args);
+    } else {
+        NotificationUpdateMessage(wnd, pageInfo);
+    }
 }
 
 // The current page edit box is updated with the current page number
@@ -1828,27 +1848,6 @@ void LoadModelIntoTab(TabInfo* tab) {
             tab->reloadOnFocus = false;
             ReloadDocument(win, true);
         }
-    }
-}
-
-static void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
-    if (!win->ctrl->ValidPageNo(pageNo)) {
-        pageNo = win->ctrl->CurrentPageNo();
-    }
-    AutoFreeStr pageInfo(str::Format("%s %d / %d", _TRA("Page:"), pageNo, win->ctrl->PageCount()));
-    if (win->ctrl->HasPageLabels()) {
-        AutoFreeStr label(win->ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
-    }
-    if (!wnd) {
-        NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
-        args.timeoutMs = 0;
-        args.msg = pageInfo;
-        args.groupId = kNotifGroupPageInfo;
-        ShowNotification(args);
-    } else {
-        NotificationUpdateMessage(wnd, pageInfo);
     }
 }
 
