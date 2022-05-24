@@ -32,36 +32,7 @@ class ScopedMem {
     }
 };
 
-// deletes any object at the end of the scope
-template <class T>
-class ScopedPtr {
-    T* obj = nullptr;
-
-  public:
-    ScopedPtr() = default;
-    explicit ScopedPtr(T* obj) : obj(obj) {
-    }
-    ~ScopedPtr() {
-        delete obj;
-    }
-    T* Detach() {
-        T* tmp = obj;
-        obj = nullptr;
-        return tmp;
-    }
-    explicit operator T*() const {
-        return obj;
-    }
-    T* operator->() const {
-        return obj;
-    }
-    T* operator=(T* newObj) {
-        delete obj;
-        obj = newObj;
-        return obj;
-    }
-};
-
+// deletes an object at the end of the scope
 template <typename T>
 struct AutoDelete {
     T* o = nullptr;

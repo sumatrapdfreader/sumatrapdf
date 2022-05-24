@@ -1714,7 +1714,6 @@ static ByteSlice PalmDocToHTML(const char* path) {
     if (!doc) {
         return {};
     }
-    AutoDelete<PalmDoc> delDoc;
     ByteSlice html = doc->GetHtmlData();
     return html.Clone();
 }
@@ -3486,7 +3485,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
         return nullptr;
     }
     if (kind == kindFileFb2z) {
-        AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
+        AutoDelete archive = OpenZipArchive(path, true);
         if (!archive) {
             return nullptr;
         }

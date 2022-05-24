@@ -1578,6 +1578,8 @@ WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
     char* fullPath = path::NormalizeTemp(args->FilePath());
     WindowInfo* win = args->win;
 
+    AutoDelete delArgs(args);
+
     bool failEarly = win && !args->forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
