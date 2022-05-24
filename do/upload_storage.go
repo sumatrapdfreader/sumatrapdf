@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -274,6 +275,26 @@ func minioVerifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
 	panicIf(exists, "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
+func UploadDir(c *minio.Client, dirRemote string, dirLocal string, public bool) error {
+	files, err := ioutil.ReadDir(dirLocal)
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		fname := f.Name()
+		pathLocal := filepath.Join(dirLocal, fname)
+		pathRemote := path.Join(dirRemote, fname)
+		timeStart := time.Now()
+		_, err := c.UploadFile(pathRemote, pathLocal, public)
+		if err != nil {
+			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
+		}
+		uri := c.URLForPath(pathRemote)
+		logf(ctx(), "Uploaded %s => %s in %s\n", pathLocal, uri, time.Since(timeStart))
+	}
+	return nil
+}
+
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
 func minioUploadBuildMust(mc *minio.Client, buildType string) {
 	timeStart := time.Now()
@@ -298,11 +319,12 @@ func minioUploadBuildMust(mc *minio.Client, buildType string) {
 	dirLocal := getFinalDirForBuildType()
 	//verifyBuildNotInSpaces(c, buildType)
 
-	err := mc.UploadDir(dirRemote, dirLocal, true)
+	err := UploadDir(mc, dirRemote, dirLocal, true)
 	must(err)
 
 	// for release build we don't upload files with version info
 	if buildType == buildTypeRel {
+		logf(ctx(), "Skipping uploading version for release builds\n")
 		return
 	}
 
@@ -312,7 +334,7 @@ func minioUploadBuildMust(mc *minio.Client, buildType string) {
 			remotePath := f[0]
 			_, err := mc.UploadData(remotePath, []byte(f[1]), true)
 			must(err)
-			logf(ctx(), "Uploaded `%s%s'\n", mc.URLBase(), remotePath)
+			logf(ctx(), "Uploaded `%s'\n", mc.URLForPath(remotePath))
 		}
 	}
 
@@ -442,7 +464,9 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	go func() {
 		mc := newMinioBackblazeClient()
 		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType == buildTypePreRel {
+			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		}
 		wg.Done()
 	}()
 
@@ -450,7 +474,9 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	go func() {
 		mc := newMinioS3Client()
 		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType == buildTypePreRel {
+			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		}
 		wg.Done()
 	}()
 	wg.Wait()
@@ -463,14 +489,18 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	// world (including cloudflare)
 	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
 	// no guarantees the files will be visible from other networks
-	logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
-	time.Sleep(time.Minute * 5)
+	if buildType == buildTypePreRel {
+		logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
+		time.Sleep(time.Minute * 5)
+	}
 
 	wg.Add(1)
 	go func() {
 		mc := newMinioSpacesClient()
 		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType == buildTypePreRel {
+			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		}
 		wg.Done()
 	}()
 	wg.Wait()
