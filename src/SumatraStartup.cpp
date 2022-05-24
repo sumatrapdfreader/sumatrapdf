@@ -39,7 +39,7 @@
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "UpdateCheck.h"
 #include "resource.h"
@@ -143,7 +143,7 @@ void FileExistenceChecker::Run() {
     });
 }
 
-static void MakePluginWindow(WindowInfo* win, HWND hwndParent) {
+static void MakePluginWindow(MainWindow* win, HWND hwndParent) {
     CrashIf(!IsWindow(hwndParent));
     CrashIf(!gPluginMode);
 
@@ -242,10 +242,10 @@ static void OpenUsingDde(HWND targetWnd, const char* filePath, Flags& i, bool is
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmdW);
 }
 
-static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
+static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs* args = new LoadArgs(filePath, nullptr);
     args->showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
-    WindowInfo* win = LoadDocument(args);
+    MainWindow* win = LoadDocument(args);
     if (!win) {
         return win;
     }
@@ -299,7 +299,7 @@ static WindowInfo* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     return win;
 }
 
-static void RestoreTabOnStartup(WindowInfo* win, TabState* state, bool lazyload = true) {
+static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
     LoadArgs* args = new LoadArgs(state->filePath, win);
     args->noSavePrefs = true;
     if (!LoadDocument(args, lazyload)) {
@@ -489,7 +489,7 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
         return *gSafeAccTable;
     }
 
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
         return nullptr;
     }
@@ -929,7 +929,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
                      __unused int nCmdShow) {
     int retCode = 1; // by default it's error
     int nWithDde = 0;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     bool showStartPage = false;
     bool restoreSession = false;
     HANDLE hMutex = nullptr;

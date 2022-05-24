@@ -21,7 +21,7 @@
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "Print.h"
 #include "Selection.h"
@@ -540,12 +540,12 @@ class PrintThreadData : public ProgressUpdateUI {
     NotificationWnd* wnd = nullptr;
     AbortCookieManager cookie;
     bool isCanceled = false;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
 
     PrintData* data = nullptr;
     HANDLE thread = nullptr; // close the print thread handle after execution
 
-    PrintThreadData(WindowInfo* win, PrintData* data) {
+    PrintThreadData(MainWindow* win, PrintData* data) {
         this->win = win;
         this->data = data;
         NotificationCreateArgs args;
@@ -588,7 +588,7 @@ class PrintThreadData : public ProgressUpdateUI {
 
 static DWORD WINAPI PrintThread(LPVOID data) {
     PrintThreadData* threadData = (PrintThreadData*)data;
-    WindowInfo* win = threadData->win;
+    MainWindow* win = threadData->win;
     // wait for PrintToDeviceOnThread to return so that we
     // close the correct handle to the current printing thread
     while (!win->printThread) {
@@ -612,14 +612,14 @@ static DWORD WINAPI PrintThread(LPVOID data) {
     return 0;
 }
 
-static void PrintToDeviceOnThread(WindowInfo* win, PrintData* data) {
+static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {
     CrashIf(win->printThread);
     PrintThreadData* threadData = new PrintThreadData(win, data);
     win->printThread = nullptr;
     win->printThread = CreateThread(nullptr, 0, PrintThread, threadData, 0, nullptr);
 }
 
-void AbortPrinting(WindowInfo* win) {
+void AbortPrinting(MainWindow* win) {
     if (win->printThread) {
         win->printCanceled = true;
         WaitForSingleObject(win->printThread, INFINITE);
@@ -662,7 +662,7 @@ So far have tested printing from XP to
  - Lexmark Z515 inkjet, which should cover most bases.
 */
 enum { MAXPAGERANGES = 10 };
-void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
+void OnMenuPrint(MainWindow* win, bool waitForCompletion) {
     // we remember some printer settings per process
     static ScopedMem<DEVMODE> defaultDevMode;
     static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;

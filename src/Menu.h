@@ -21,10 +21,10 @@ HFONT GetMenuFont();
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
 void RemoveBadMenuSeparators(HMENU menu);
-HMENU BuildMenu(WindowInfo* win);
-void OnWindowContextMenu(WindowInfo* win, int x, int y);
-void OnAboutContextMenu(WindowInfo* win, int x, int y);
+HMENU BuildMenu(MainWindow* win);
+void OnWindowContextMenu(MainWindow* win, int x, int y);
+void OnAboutContextMenu(MainWindow* win, int x, int y);
 int MenuIdFromVirtualZoom(float virtualZoom);
-void UpdateAppMenu(WindowInfo* win, HMENU m);
-void ToggleMenuBar(WindowInfo* win, bool showTemporarily = false);
+void UpdateAppMenu(MainWindow* win, HMENU m);
+void ToggleMenuBar(MainWindow* win, bool showTemporarily = false);
 float ZoomMenuItemToZoom(int menuItemId);

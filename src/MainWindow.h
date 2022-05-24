@@ -68,11 +68,11 @@ struct StaticLinkInfo {
 
 /* Describes information related to one window with (optional) a document
    on the screen */
-struct WindowInfo {
-    explicit WindowInfo(HWND hwnd);
-    WindowInfo(const WindowInfo&) = delete;
-    WindowInfo& operator=(const WindowInfo&) = delete;
-    ~WindowInfo();
+struct MainWindow {
+    explicit MainWindow(HWND hwnd);
+    MainWindow(const MainWindow&) = delete;
+    MainWindow& operator=(const MainWindow&) = delete;
+    ~MainWindow();
 
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
@@ -242,15 +242,15 @@ struct WindowInfo {
     bool CreateUIAProvider();
 };
 
-void UpdateTreeCtrlColors(WindowInfo*);
-void RepaintAsync(WindowInfo*, int delay);
-void ClearFindBox(WindowInfo*);
-void CreateMovePatternLazy(WindowInfo*);
-void ClearMouseState(WindowInfo*);
-bool IsRightDragging(WindowInfo*);
-WindowInfo* FindWindowInfoByTabInfo(TabInfo*);
-WindowInfo* FindWindowInfoByHwnd(HWND);
-bool WindowInfoStillValid(WindowInfo*);
-WindowInfo* FindWindowInfoByController(DocController*);
+void UpdateTreeCtrlColors(MainWindow*);
+void RepaintAsync(MainWindow*, int delay);
+void ClearFindBox(MainWindow*);
+void CreateMovePatternLazy(MainWindow*);
+void ClearMouseState(MainWindow*);
+bool IsRightDragging(MainWindow*);
+MainWindow* FindWindowInfoByTabInfo(TabInfo*);
+MainWindow* FindWindowInfoByHwnd(HWND);
+bool WindowInfoStillValid(MainWindow*);
+MainWindow* FindWindowInfoByController(DocController*);
 
-extern Vec<WindowInfo*> gWindows;
+extern Vec<MainWindow*> gWindows;

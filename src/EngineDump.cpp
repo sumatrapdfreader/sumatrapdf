@@ -211,7 +211,7 @@ static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
         AutoFreeStr name = Escape(destName);
         return str::Format("Name=\"%s\"", name.Get());
     }
-    // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
+    // as handled by LinkHandler::ScrollTo in MainWindow.cpp
     int pageNo = dest->GetPageNo();
     if (pageNo <= 0 || pageNo > engine->PageCount()) {
         return nullptr;

@@ -3,6 +3,6 @@
 
 void BenchFileOrDir(StrVec& pathsToBench);
 bool IsStressTesting();
-void StartStressTest(Flags* i, WindowInfo* win);
-void OnStressTestTimer(WindowInfo* win, int timerId);
-void FinishStressTest(WindowInfo* win);
+void StartStressTest(Flags* i, MainWindow* win);
+void OnStressTestTimer(MainWindow* win, int timerId);
+void FinishStressTest(MainWindow* win);

@@ -24,7 +24,7 @@
 #include "SumatraPDF.h"
 #include "TabInfo.h"
 #include "Flags.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Favorites.h"
@@ -35,7 +35,7 @@
 #include "utils/Log.h"
 
 // SumatraPDF.cpp
-extern void RememberDefaultWindowPosition(WindowInfo* win);
+extern void RememberDefaultWindowPosition(MainWindow* win);
 
 static WatchedFile* gWatchedSettingsFile = nullptr;
 
@@ -236,7 +236,7 @@ bool Save() {
     }
 
     // update display states for all tabs
-    for (WindowInfo* win : gWindows) {
+    for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             UpdateTabFileDisplayStateForTab(tab);
         }
@@ -321,7 +321,7 @@ bool Reload() {
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
-        WindowInfo* win = gWindows.at(0);
+        MainWindow* win = gWindows.at(0);
         win->HideToolTip();
         DeleteVecMembers(win->staticLinks);
         win->RedrawAll(true);
@@ -331,7 +331,7 @@ bool Reload() {
         SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
     }
 
-    for (WindowInfo* win : gWindows) {
+    for (MainWindow* win : gWindows) {
         if (gGlobalPrefs->showToolbar != showToolbar) {
             ShowOrHideToolbar(win);
         }

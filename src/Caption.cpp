@@ -13,7 +13,7 @@
 #include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "Caption.h"
 #include "Tabs.h"
 #include "Translations.h"
@@ -98,10 +98,10 @@ struct CaptionInfo {
     void UpdateBackgroundAlpha();
 };
 
-static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win);
-static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer);
+static void DrawCaptionButton(DRAWITEMSTRUCT* item, MainWindow* win);
+static void PaintCaptionBackground(HDC hdc, MainWindow* win, bool useDoubleBuffer);
 static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem);
-static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y);
+static void MenuBarAsPopupMenu(MainWindow* win, int x, int y);
 
 CaptionInfo::CaptionInfo(HWND hwndCaption) : hwnd(hwndCaption) {
     UpdateTheme();
@@ -171,8 +171,8 @@ void SetCaptionButtonsRtl(CaptionInfo* caption, bool isRTL) {
     }
 }
 
-// TODO: could lookup WindowInfo ourselves
-void CaptionUpdateUI(WindowInfo* win, CaptionInfo* caption) {
+// TODO: could lookup MainWindow ourselves
+void CaptionUpdateUI(MainWindow* win, CaptionInfo* caption) {
     caption->UpdateTheme();
     caption->UpdateColors(win->hwndFrame == GetForegroundWindow());
     caption->UpdateBackgroundAlpha();
@@ -183,7 +183,7 @@ void DeleteCaption(CaptionInfo* caption) {
 }
 
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
 
     switch (msg) {
         case WM_COMMAND:
@@ -281,7 +281,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return 0;
 }
 
-void OpenSystemMenu(WindowInfo* win) {
+void OpenSystemMenu(MainWindow* win) {
     HWND hwndSysMenu = win->caption->btn[CB_SYSTEM_MENU].hwnd;
     HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
     RECT rc;
@@ -293,7 +293,7 @@ void OpenSystemMenu(WindowInfo* win) {
 
 static WNDPROC DefWndProcButton = nullptr;
 static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
     switch (msg) {
@@ -363,7 +363,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
 }
 
-void CreateCaption(WindowInfo* win) {
+void CreateCaption(MainWindow* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_CHILDWINDOW | WS_CLIPCHILDREN;
     HWND hwndParent = win->hwndFrame;
@@ -392,7 +392,7 @@ void RegisterCaptionWndClass() {
     RegisterClassEx(&wcex);
 }
 
-void RelayoutCaption(WindowInfo* win) {
+void RelayoutCaption(MainWindow* win) {
     Rect rc = ClientRect(win->hwndCaption);
     CaptionInfo* ci = win->caption;
     ButtonInfo* button;
@@ -459,7 +459,7 @@ void RelayoutCaption(WindowInfo* win) {
     dh.End();
 }
 
-static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
+static void DrawCaptionButton(DRAWITEMSTRUCT* item, MainWindow* win) {
     if (!item || item->CtlType != ODT_BUTTON) {
         return;
     }
@@ -587,7 +587,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
     InvalidateRect(parent, nullptr, TRUE);
 }
 
-static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer) {
+static void PaintCaptionBackground(HDC hdc, MainWindow* win, bool useDoubleBuffer) {
     RECT rClip;
     GetClipBox(hdc, &rClip);
     Rect rect = Rect::FromRECT(rClip);
@@ -643,7 +643,7 @@ static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge = true) {
 // (can be static because there can only be one menu active at a time)
 static WCHAR gMenuAccelPressed = 0;
 
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, WindowInfo* win) {
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, MainWindow* win) {
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
@@ -906,7 +906,7 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
     return menu;
 }
 
-static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
+static void MenuBarAsPopupMenu(MainWindow* win, int x, int y) {
     int count = GetMenuItemCount(win->menu);
     if (count <= 0) {
         return;

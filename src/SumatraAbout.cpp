@@ -19,7 +19,7 @@
 #include "AppColors.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "resource.h"
 #include "Commands.h"
 #include "FileThumbnails.h"
@@ -542,7 +542,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 constexpr const WCHAR* kAboutClassName = L"SUMATRA_PDF_ABOUT";
 
-void OnMenuAbout(WindowInfo* win) {
+void OnMenuAbout(MainWindow* win) {
     if (gHwndAbout) {
         SetActiveWindow(gHwndAbout);
         return;
@@ -592,7 +592,7 @@ void OnMenuAbout(WindowInfo* win) {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-void DrawAboutPage(WindowInfo* win, HDC hdc) {
+void DrawAboutPage(MainWindow* win, HDC hdc) {
     Rect rc = ClientRect(win->hwndCanvas);
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
@@ -616,7 +616,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
 #define DOCLIST_MAX_THUMBNAILS_X 5
 #define DOCLIST_BOTTOM_BOX_DY DpiScale(win->hwndFrame, 50)
 
-void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
+void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     HWND hwnd = win->hwndFrame;
     auto col = GetAppColor(AppColor::MainWindowText);
     AutoDeletePen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));

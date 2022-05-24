@@ -36,15 +36,15 @@ struct Favorites {
 };
 
 bool HasFavorites();
-void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const char* pageLabel, const char* nameIn);
-void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo);
-void AddFavoriteForCurrentPage(WindowInfo* win);
+void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLabel, const char* nameIn);
+void AddFavoriteForCurrentPage(MainWindow* win, int pageNo);
+void AddFavoriteForCurrentPage(MainWindow* win);
 void DelFavorite(const char* filePath, int pageNo);
-void RebuildFavMenu(WindowInfo* win, HMENU menu);
-void CreateFavorites(WindowInfo* win);
-void ToggleFavorites(WindowInfo* win);
-void PopulateFavTreeIfNeeded(WindowInfo* win);
+void RebuildFavMenu(MainWindow* win, HMENU menu);
+void CreateFavorites(MainWindow* win);
+void ToggleFavorites(MainWindow* win);
+void PopulateFavTreeIfNeeded(MainWindow* win);
 void RememberFavTreeExpansionStateForAllWindows();
-void GoToFavoriteByMenuId(WindowInfo* win, int wmId);
-void UpdateFavoritesTree(WindowInfo* win);
+void GoToFavoriteByMenuId(MainWindow* win, int wmId);
+void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();

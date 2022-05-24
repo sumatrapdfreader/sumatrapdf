@@ -27,7 +27,7 @@
 #include "AppColors.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "resource.h"
 #include "Commands.h"
@@ -1417,7 +1417,7 @@ static void ZoomMenuItemCheck(HMENU m, int menuItemId, bool canZoom) {
     }
 }
 
-void MenuUpdateZoom(WindowInfo* win) {
+void MenuUpdateZoom(MainWindow* win) {
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
@@ -1426,7 +1426,7 @@ void MenuUpdateZoom(WindowInfo* win) {
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
 
-void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) {
+void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) {
     bool filePrintEnabled = win->IsDocLoaded();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     bool filePrintAllowed = !filePrintEnabled || !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
@@ -1474,7 +1474,7 @@ static void SetMenuStateForSelection(TabInfo* tab, HMENU menu) {
     }
 }
 
-void MenuUpdateDisplayMode(WindowInfo* win) {
+void MenuUpdateDisplayMode(MainWindow* win) {
     bool enabled = win->IsDocLoaded();
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
     if (enabled) {
@@ -1505,7 +1505,7 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
     }
 }
 
-static void MenuUpdateStateForWindow(WindowInfo* win) {
+static void MenuUpdateStateForWindow(MainWindow* win) {
     TabInfo* tab = win->currentTab;
 
     bool hasDocument = tab && tab->IsDocLoaded();
@@ -1571,7 +1571,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 #endif
 }
 
-void OnAboutContextMenu(WindowInfo* win, int x, int y) {
+void OnAboutContextMenu(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !gGlobalPrefs->rememberOpenedFiles ||
         !gGlobalPrefs->showStartPage) {
         return;
@@ -1626,7 +1626,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
-void OnWindowContextMenu(WindowInfo* win, int x, int y) {
+void OnWindowContextMenu(MainWindow* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
     if (!dm) {
@@ -2103,7 +2103,7 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
     SelectObject(hdc, prevFont);
 }
 
-HMENU BuildMenu(WindowInfo* win) {
+HMENU BuildMenu(MainWindow* win) {
     TabInfo* tab = win->currentTab;
 
     BuildMenuCtx buildCtx;
@@ -2127,7 +2127,7 @@ HMENU BuildMenu(WindowInfo* win) {
     return mainMenu;
 }
 
-void UpdateAppMenu(WindowInfo* win, HMENU m) {
+void UpdateAppMenu(MainWindow* win, HMENU m) {
     CrashIf(!win);
     if (!win) {
         return;
@@ -2146,7 +2146,7 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
 
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
-void ToggleMenuBar(WindowInfo* win, bool showTemporarily) {
+void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     CrashIf(!win->menu);
     if (win->presentation || win->isFullScreen) {
         return;

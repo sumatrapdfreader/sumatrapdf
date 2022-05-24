@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-void CreateToolbar(WindowInfo* win);
-void ToolbarUpdateStateForWindow(WindowInfo* win, bool setButtonsVisibility);
-void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win);
-void UpdateToolbarFindText(WindowInfo* win);
-void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly = false);
-void UpdateFindbox(WindowInfo* win);
-void ShowOrHideToolbar(WindowInfo* win);
-void UpdateToolbarState(WindowInfo* win);
-void SetToolbarInfoText(WindowInfo* win, const WCHAR* s);
+void CreateToolbar(MainWindow* win);
+void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility);
+void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win);
+void UpdateToolbarFindText(MainWindow* win);
+void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly = false);
+void UpdateFindbox(MainWindow* win);
+void ShowOrHideToolbar(MainWindow* win);
+void UpdateToolbarState(MainWindow* win);
+void SetToolbarInfoText(MainWindow* win, const WCHAR* s);

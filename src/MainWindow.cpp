@@ -29,7 +29,7 @@
 #include "TextSearch.h"
 #include "Annotation.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "TableOfContents.h"
 #include "resource.h"
@@ -44,9 +44,9 @@
 #include "utils/Log.h"
 
 struct LinkHandler : ILinkHandler {
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
 
-    explicit LinkHandler(WindowInfo* w) {
+    explicit LinkHandler(MainWindow* w) {
         CrashIf(!w);
         win = w;
     }
@@ -67,7 +67,7 @@ LinkHandler::~LinkHandler() {
     // do nothing
 }
 
-Vec<WindowInfo*> gWindows;
+Vec<MainWindow*> gWindows;
 
 StaticLinkInfo::StaticLinkInfo(Rect rect, const char* target, const char* infotip) {
     this->rect = rect;
@@ -96,14 +96,14 @@ StaticLinkInfo::~StaticLinkInfo() {
     str::Free(infotip);
 }
 
-WindowInfo::WindowInfo(HWND hwnd) {
+MainWindow::MainWindow(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
 }
 
 static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
 
-void CreateMovePatternLazy(WindowInfo* win) {
+void CreateMovePatternLazy(MainWindow* win) {
     if (win->bmpMovePattern) {
         return;
     }
@@ -113,7 +113,7 @@ void CreateMovePatternLazy(WindowInfo* win) {
     CrashIf(!win->brMovePattern);
 }
 
-WindowInfo::~WindowInfo() {
+MainWindow::~MainWindow() {
     FinishStressTest(this);
 
     CrashIf(tabs.size() > 0);
@@ -141,7 +141,7 @@ WindowInfo::~WindowInfo() {
     DeleteVecMembers(staticLinks);
     delete tabsCtrl;
     // cbHandler is passed into DocController and must be deleted afterwards
-    // (all controllers should have been deleted prior to WindowInfo, though)
+    // (all controllers should have been deleted prior to MainWindow, though)
     delete cbHandler;
 
     delete frameRateWnd;
@@ -158,32 +158,32 @@ WindowInfo::~WindowInfo() {
     delete favLabelWithClose;
 }
 
-void ClearMouseState(WindowInfo* win) {
+void ClearMouseState(MainWindow* win) {
     win->linkOnLastButtonDown = nullptr;
     delete win->annotationOnLastButtonDown;
     win->annotationOnLastButtonDown = nullptr;
 }
 
-bool WindowInfo::IsAboutWindow() const {
+bool MainWindow::IsAboutWindow() const {
     return nullptr == currentTab;
 }
 
-bool WindowInfo::IsDocLoaded() const {
+bool MainWindow::IsDocLoaded() const {
     CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
     return this->ctrl != nullptr;
 }
 
-DisplayModel* WindowInfo::AsFixed() const {
+DisplayModel* MainWindow::AsFixed() const {
     return ctrl ? ctrl->AsFixed() : nullptr;
 }
 
-ChmModel* WindowInfo::AsChm() const {
+ChmModel* MainWindow::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
 }
 
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
-void WindowInfo::UpdateCanvasSize() {
+void MainWindow::UpdateCanvasSize() {
     Rect rc = ClientRect(hwndCanvas);
     if (buffer && canvasRc == rc) {
         return;
@@ -206,7 +206,7 @@ void WindowInfo::UpdateCanvasSize() {
     RelayoutNotifications(hwndCanvas);
 }
 
-Size WindowInfo::GetViewPortSize() const {
+Size MainWindow::GetViewPortSize() const {
     Size size = canvasRc.Size();
     ReportIf(size.IsEmpty());
 
@@ -221,21 +221,21 @@ Size WindowInfo::GetViewPortSize() const {
     return size;
 }
 
-void WindowInfo::RedrawAll(bool update) const {
+void MainWindow::RedrawAll(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (update) {
         UpdateWindow(this->hwndCanvas);
     }
 }
 
-void WindowInfo::RedrawAllIncludingNonClient(bool update) const {
+void MainWindow::RedrawAllIncludingNonClient(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (update) {
         RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
     }
 }
 
-void WindowInfo::ChangePresentationMode(PresentationMode mode) {
+void MainWindow::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
         HideToolTip();
@@ -262,7 +262,7 @@ static HWND FindModalOwnedBy(HWND hwndParent) {
     return nullptr;
 }
 
-void WindowInfo::Focus() const {
+void MainWindow::Focus() const {
     HwndToForeground(hwndFrame);
     // set focus to an owned modal dialog if there is one
     HWND hwnd = FindModalOwnedBy(hwndFrame);
@@ -273,18 +273,18 @@ void WindowInfo::Focus() const {
     SetFocus(hwndFrame);
 }
 
-void WindowInfo::ToggleZoom() const {
+void MainWindow::ToggleZoom() const {
     if (currentTab) {
         currentTab->ToggleZoom();
     }
 }
 
-void WindowInfo::MoveDocBy(int dx, int dy) const {
+void MainWindow::MoveDocBy(int dx, int dy) const {
     CrashIf(!currentTab);
     currentTab->MoveDocBy(dx, dy);
 }
 
-void WindowInfo::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
+void MainWindow::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
     if (str::IsEmpty(text)) {
         HideToolTip();
         return;
@@ -292,11 +292,11 @@ void WindowInfo::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
     infotip->ShowOrUpdate(text, rc, multiline);
 }
 
-void WindowInfo::HideToolTip() const {
+void MainWindow::HideToolTip() const {
     infotip->Hide();
 }
 
-bool WindowInfo::CreateUIAProvider() {
+bool MainWindow::CreateUIAProvider() {
     if (uiaProvider) {
         return true;
     }
@@ -423,7 +423,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     fullPath = path::JoinTemp(fullPath, path);
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
-    WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
+    MainWindow* newWin = FindWindowInfoByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
         LoadArgs* args = new LoadArgs(fullPath, win);
@@ -546,7 +546,7 @@ void LinkHandler::GotoNamedDest(const char* name) {
     }
 }
 
-void UpdateTreeCtrlColors(WindowInfo* win) {
+void UpdateTreeCtrlColors(MainWindow* win) {
     COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
     COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
@@ -590,7 +590,7 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
     //   and match their colors as well
 }
 
-void ClearFindBox(WindowInfo* win) {
+void ClearFindBox(MainWindow* win) {
     HWND hwndFocused = GetFocus();
     if (hwndFocused == win->hwndFindEdit) {
         SetFocus(win->hwndFrame);
@@ -598,19 +598,19 @@ void ClearFindBox(WindowInfo* win) {
     HwndSetText(win->hwndFindEdit, "");
 }
 
-bool IsRightDragging(WindowInfo* win) {
+bool IsRightDragging(MainWindow* win) {
     if (win->mouseAction != MouseAction::Dragging) {
         return false;
     }
     return win->dragRightClick;
 }
 
-bool WindowInfoStillValid(WindowInfo* win) {
+bool WindowInfoStillValid(MainWindow* win) {
     return gWindows.Contains(win);
 }
 
-WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
-    for (WindowInfo* win : gWindows) {
+MainWindow* FindWindowInfoByHwnd(HWND hwnd) {
+    for (MainWindow* win : gWindows) {
         if ((win->hwndFrame == hwnd) || ::IsChild(win->hwndFrame, hwnd)) {
             return win;
         }
@@ -618,10 +618,10 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
     return nullptr;
 }
 
-// Find WindowInfo using TabInfo. Diffrent than TabInfo->win in that
+// Find MainWindow using TabInfo. Diffrent than TabInfo->win in that
 // it validates that TabInfo is still valid
-WindowInfo* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
-    for (WindowInfo* win : gWindows) {
+MainWindow* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
+    for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             if (tab == tabToFind) {
                 return win;
@@ -631,7 +631,7 @@ WindowInfo* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
     return nullptr;
 }
 
-WindowInfo* FindWindowInfoByController(DocController* ctrl) {
+MainWindow* FindWindowInfoByController(DocController* ctrl) {
     for (auto& win : gWindows) {
         for (auto& tab : win->tabs) {
             if (tab->ctrl == ctrl) {

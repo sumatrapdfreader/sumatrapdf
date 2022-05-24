@@ -545,7 +545,7 @@ function sumatrapdf_files()
     "TranslationsInfo.cpp",
     "UpdateCheck.*",
     "Version.h",
-    "WindowInfo.*",
+    "MainWindow.*",
 
     "ext/versions.txt",
     "docs/*.txt",

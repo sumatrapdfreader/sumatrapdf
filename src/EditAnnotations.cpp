@@ -29,7 +29,7 @@ extern "C" {
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "Toolbar.h"
 #include "TabInfo.h"
 #include "EditAnnotations.h"
@@ -859,7 +859,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 }
 
 static UINT_PTR gWindowInfoRerenderTimer = 0;
-static WindowInfo* gWindowInfoForRender = nullptr;
+static MainWindow* gWindowInfoForRender = nullptr;
 
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* ew) {
@@ -867,9 +867,9 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     SetContents(ew->annot, txt);
     EnableSaveIfAnnotationsChanged(ew);
 
-    WindowInfo* win = ew->tab->win;
+    MainWindow* win = ew->tab->win;
     if (gWindowInfoRerenderTimer != 0) {
-        // logf("ContentsChanged: killing existing timer for re-render of WindowInfo\n");
+        // logf("ContentsChanged: killing existing timer for re-render of MainWindow\n");
         KillTimer(win->hwndCanvas, gWindowInfoRerenderTimer);
         gWindowInfoRerenderTimer = 0;
     }
@@ -877,10 +877,10 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     gWindowInfoForRender = win;
     gWindowInfoRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
         if (WindowInfoStillValid(gWindowInfoForRender)) {
-            // logf("ContentsChanged: re-rendering WindowInfo\n");
+            // logf("ContentsChanged: re-rendering MainWindow\n");
             WindowInfoRerender(gWindowInfoForRender);
         } else {
-            // logf("ContentsChanged: NOT re-rendering WindowInfo because is not valid anymore\n");
+            // logf("ContentsChanged: NOT re-rendering MainWindow because is not valid anymore\n");
         }
         gWindowInfoRerenderTimer = 0;
     });

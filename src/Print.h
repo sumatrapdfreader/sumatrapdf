@@ -37,5 +37,5 @@ bool PrintFile(const char* fileName, char* printerName = nullptr, bool displayEr
                const char* settings = nullptr);
 bool PrintFile(EngineBase* engine, char* printerName = nullptr, bool displayErrors = true,
                const char* settings = nullptr);
-void OnMenuPrint(WindowInfo* win, bool waitForCompletion = false);
-void AbortPrinting(WindowInfo* win);
+void OnMenuPrint(MainWindow* win, bool waitForCompletion = false);
+void AbortPrinting(MainWindow* win);

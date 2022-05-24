@@ -4,14 +4,14 @@
 struct SelectionOnPage;
 struct WatchedFile;
 struct EditAnnotationsWindow;
-struct WindowInfo;
+struct MainWindow;
 
 /* Data related to a single document loaded into a tab/window */
-/* (none of these depend on WindowInfo, so that a TabInfo could
+/* (none of these depend on MainWindow, so that a TabInfo could
    be moved between windows once this is supported) */
 struct TabInfo {
     AutoFreeStr filePath;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
     AutoFreeStr frameTitle;
@@ -38,7 +38,7 @@ struct TabInfo {
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
 
-    TabInfo(WindowInfo* win, const char* filePath);
+    TabInfo(MainWindow* win, const char* filePath);
     ~TabInfo();
 
     DisplayModel* AsFixed() const;

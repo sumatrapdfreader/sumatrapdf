@@ -3,16 +3,16 @@
 
 /* styling for About/Properties windows */
 
-struct WindowInfo;
+struct MainWindow;
 
 constexpr const char* kLeftTextFont = "Arial";
 constexpr int kLeftTextFontSize = 12;
 constexpr const char* kRightTextFont = "Arial Black";
 constexpr int kRightTextFontSize = 12;
 
-void OnMenuAbout(WindowInfo*);
+void OnMenuAbout(MainWindow*);
 
-void DrawAboutPage(WindowInfo* win, HDC hdc);
+void DrawAboutPage(MainWindow* win, HDC hdc);
 
 char* GetStaticLinkTemp(Vec<StaticLinkInfo*>& linkInfo, int x, int y, StaticLinkInfo** info);
 
@@ -20,4 +20,4 @@ constexpr const char* kLinkOpenFile = "<File,Open>";
 constexpr const char* kLinkShowList = "<View,ShowList>";
 constexpr const char* kLinkHideList = "<View,HideList>";
 
-void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);
+void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);

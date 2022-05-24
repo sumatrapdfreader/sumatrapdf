@@ -21,7 +21,7 @@
 #include "Flags.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "SumatraDialogs.h"
 #include "UpdateCheck.h"
 
@@ -309,7 +309,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     }
     updateInfo->hwndParent = hwndParent;
 
-    WindowInfo* win = FindWindowInfoByHwnd(hwndParent);
+    MainWindow* win = FindWindowInfoByHwnd(hwndParent);
     HWND hwndForNotif = win->hwndCanvas;
     if (!gForceAutoUpdate) {
         auto latestVer = updateInfo->latestVer;
@@ -376,7 +376,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
 // on a background thread and processing the retrieved data on ui thread
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
-void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
+void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
     if (!ShouldCheckForUpdate(updateCheckType)) {
         return;
     }

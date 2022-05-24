@@ -3,18 +3,18 @@
 
 int GetTabbarHeight(HWND, float factor = 1.f);
 
-void SaveCurrentTabInfo(WindowInfo* win);
+void SaveCurrentTabInfo(MainWindow* win);
 void LoadModelIntoTab(TabInfo* tab);
 
-void CreateTabbar(WindowInfo* win);
-TabInfo* CreateNewTab(WindowInfo* win, const char* filePath);
-void TabsOnCloseDoc(WindowInfo* win);
-void TabsOnCloseWindow(WindowInfo* win);
-void TabsOnChangedDoc(WindowInfo* win);
-LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1 = -1, int tab2 = -1);
-void TabsSelect(WindowInfo* win, int tabIndex);
-void TabsOnCtrlTab(WindowInfo* win, bool reverse);
+void CreateTabbar(MainWindow* win);
+TabInfo* CreateNewTab(MainWindow* win, const char* filePath);
+void TabsOnCloseDoc(MainWindow* win);
+void TabsOnCloseWindow(MainWindow* win);
+void TabsOnChangedDoc(MainWindow* win);
+LRESULT TabsOnNotify(MainWindow* win, LPARAM lp, int tab1 = -1, int tab2 = -1);
+void TabsSelect(MainWindow* win, int tabIndex);
+void TabsOnCtrlTab(MainWindow* win, bool reverse);
 // also shows/hides the tabbar when necessary
-void UpdateTabWidth(WindowInfo* win);
-void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar);
-void UpdateCurrentTabBgColor(WindowInfo* win);
+void UpdateTabWidth(MainWindow* win);
+void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
+void UpdateCurrentTabBgColor(MainWindow* win);

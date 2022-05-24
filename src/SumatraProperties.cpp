@@ -18,7 +18,7 @@
 #include "AppTools.h"
 #include "AppColors.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "resource.h"
 #include "Commands.h"
 #include "SumatraAbout.h"
@@ -378,7 +378,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
 static void ShowExtendedProperties(HWND hwnd) {
     PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
     if (pl) {
-        WindowInfo* win = FindWindowInfoByHwnd(pl->hwndParent);
+        MainWindow* win = FindWindowInfoByHwnd(pl->hwndParent);
         if (win && !pl->HasProperty(_TRA("Fonts:"))) {
             DestroyWindow(hwnd);
             ShowProperties(win->hwndFrame, win->ctrl, true);
@@ -587,7 +587,7 @@ void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
     }
 }
 
-void ShowPropertiesWindow(WindowInfo* win) {
+void ShowPropertiesWindow(MainWindow* win) {
     ShowProperties(win->hwndFrame, win->ctrl, false);
 }
 

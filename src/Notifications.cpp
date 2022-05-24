@@ -55,7 +55,7 @@ struct NotificationWnd : public ProgressUpdateUI {
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
     float shrinkLimit = 1.0f;
 
-    // Note: in most cases use WindowInfo::ShowNotification()
+    // Note: in most cases use MainWindow::ShowNotification()
     explicit NotificationWnd(HWND parent, int timeoutInMS);
 
     ~NotificationWnd() override;

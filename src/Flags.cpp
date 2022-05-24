@@ -9,7 +9,7 @@
 #include "DisplayMode.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"
 

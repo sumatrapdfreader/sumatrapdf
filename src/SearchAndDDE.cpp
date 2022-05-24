@@ -28,7 +28,7 @@
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "resource.h"
 #include "Commands.h"
@@ -55,7 +55,7 @@ Kind kNotifGroupFindProgress = "findProgress";
 // support extracting text and/or navigating to a specific
 // text selection; default to showing it, since most users
 // will never use a format that does not support search
-bool NeedsFindUI(WindowInfo* win) {
+bool NeedsFindUI(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return true;
     }
@@ -68,7 +68,7 @@ bool NeedsFindUI(WindowInfo* win) {
     return true;
 }
 
-void OnMenuFind(WindowInfo* win) {
+void OnMenuFind(MainWindow* win) {
     if (win->AsChm()) {
         win->AsChm()->FindInCurrentPage();
         return;
@@ -125,7 +125,7 @@ void OnMenuFind(WindowInfo* win) {
     FindTextOnThread(win, TextSearchDirection::Forward, true);
 }
 
-void OnMenuFindNext(WindowInfo* win) {
+void OnMenuFindNext(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -134,7 +134,7 @@ void OnMenuFindNext(WindowInfo* win) {
     }
 }
 
-void OnMenuFindPrev(WindowInfo* win) {
+void OnMenuFindPrev(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -143,7 +143,7 @@ void OnMenuFindPrev(WindowInfo* win) {
     }
 }
 
-void OnMenuFindMatchCase(WindowInfo* win) {
+void OnMenuFindMatchCase(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -152,7 +152,7 @@ void OnMenuFindMatchCase(WindowInfo* win) {
     Edit_SetModify(win->hwndFindEdit, TRUE);
 }
 
-void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
+void OnMenuFindSel(MainWindow* win, TextSearchDirection direction) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -175,7 +175,7 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
     FindTextOnThread(win, direction, true);
 }
 
-static void ShowSearchResult(WindowInfo* win, TextSel* result, bool addNavPt) {
+static void ShowSearchResult(MainWindow* win, TextSel* result, bool addNavPt) {
     CrashIf(0 == result->len || !result->pages || !result->rects);
     if (0 == result->len || !result->pages || !result->rects) {
         return;
@@ -193,12 +193,12 @@ static void ShowSearchResult(WindowInfo* win, TextSel* result, bool addNavPt) {
     RepaintAsync(win, 0);
 }
 
-void ClearSearchResult(WindowInfo* win) {
+void ClearSearchResult(MainWindow* win) {
     DeleteOldSelectionInfo(win, true);
     RepaintAsync(win, 0);
 }
 
-static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int current, int total) {
+static void UpdateFindStatusTask(MainWindow* win, NotificationWnd* wnd, int current, int total) {
     if (!WindowInfoStillValid(win) || win->findCanceled) {
         return;
     }
@@ -209,7 +209,7 @@ static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int curr
 }
 
 struct FindThreadData : public ProgressUpdateUI {
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     TextSearchDirection direction{TextSearchDirection::Forward};
     bool wasModified = false;
     AutoFreeWstr text;
@@ -218,7 +218,7 @@ struct FindThreadData : public ProgressUpdateUI {
     NotificationWnd* wnd = nullptr;
     HANDLE thread = nullptr;
 
-    FindThreadData(WindowInfo* win, TextSearchDirection direction, const char* text, bool wasModified) {
+    FindThreadData(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified) {
         this->win = win;
         this->direction = direction;
         this->text = ToWstr(text);
@@ -284,7 +284,7 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 };
 
-static void FindEndTask(WindowInfo* win, FindThreadData* ftd, TextSel* textSel, bool wasModifiedCanceled,
+static void FindEndTask(MainWindow* win, FindThreadData* ftd, TextSel* textSel, bool wasModifiedCanceled,
                         bool loopedAround) {
     if (!WindowInfoStillValid(win)) {
         delete ftd;
@@ -314,7 +314,7 @@ static void FindEndTask(WindowInfo* win, FindThreadData* ftd, TextSel* textSel, 
 static DWORD WINAPI FindThread(LPVOID data) {
     FindThreadData* ftd = (FindThreadData*)data;
     CrashIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
-    WindowInfo* win = ftd->win;
+    MainWindow* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
 
     TextSel* rect;
@@ -352,7 +352,7 @@ static DWORD WINAPI FindThread(LPVOID data) {
     return 0;
 }
 
-void AbortFinding(WindowInfo* win, bool hideMessage) {
+void AbortFinding(MainWindow* win, bool hideMessage) {
     if (win->findThread) {
         win->findCanceled = true;
         WaitForSingleObject(win->findThread, INFINITE);
@@ -368,7 +368,7 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
 //   if true, starting a search for new term
 //   if false, searching for the next occurence of previous term
 // TODO: should detect wasModified by comparing with the last search result
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const char* text, bool wasModified,
+void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress) {
     AbortFinding(win, true);
     if (str::IsEmpty(text)) {
@@ -381,14 +381,14 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const char
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
+void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showProgress) {
     char* text = HwndGetTextTemp(win->hwndFindEdit);
     bool wasModified = Edit_GetModify(win->hwndFindEdit);
     Edit_SetModify(win->hwndFindEdit, FALSE);
     FindTextOnThread(win, direction, text, wasModified, showProgress);
 }
 
-void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
+void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
     int pageNo = win->fwdSearchMark.page;
@@ -421,7 +421,7 @@ void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
 }
 
 // returns true if the double-click was handled and false if it wasn't
-bool OnInverseSearch(WindowInfo* win, int x, int y) {
+bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;
     }
@@ -520,7 +520,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, uint /* col */, uint ret, uint page,
+void ShowForwardSearchResult(MainWindow* win, const char* fileName, uint line, uint /* col */, uint ret, uint page,
                              Vec<Rect>& rects) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -636,7 +636,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
 
     char* srcFileA = ToUtf8Temp(srcFile);
     char* pdfFileA = ToUtf8Temp(pdfFile);
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     if (pdfFile) {
         // check if the PDF is already opened
         win = FindWindowInfoByFile(pdfFileA, !newWindow);
@@ -698,7 +698,7 @@ static const WCHAR* HandleSearchCmd(const WCHAR* cmd, DDEACK& ack) {
     // opened in multiple tabs / windows, we operate on the one that got the message
     char* pdfFile = ToUtf8Temp(pdfFileW);
     char* term = ToUtf8Temp(termW);
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
+    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -736,7 +736,7 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     bool focusTab = (newWindow == 0);
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     if (newWindow == 2) {
         // TODO: don't do it if we have a about window
         win = CreateAndShowWindowInfo(nullptr);
@@ -800,7 +800,7 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     char* path = ToUtf8Temp(pdfFile);
-    WindowInfo* win = FindWindowInfoByFile(path, true);
+    MainWindow* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }
@@ -838,7 +838,7 @@ static const WCHAR* HandlePageCmd(__unused HWND hwnd, const WCHAR* cmd, DDEACK& 
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
     char* path = ToUtf8Temp(pdfFile);
-    WindowInfo* win = FindWindowInfoByFile(path, true);
+    MainWindow* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }
@@ -882,7 +882,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     char* path = ToUtf8Temp(pdfFile);
-    WindowInfo* win = FindWindowInfoByFile(path, true);
+    MainWindow* win = FindWindowInfoByFile(path, true);
     if (!win) {
         return next;
     }

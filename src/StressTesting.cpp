@@ -24,7 +24,7 @@
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
@@ -283,7 +283,7 @@ static void FormatTime(int totalSecs, str::Str* s) {
     s->AppendFmt("%d secs", secs);
 }
 
-static void MakeRandomSelection(WindowInfo* win, int pageNo) {
+static void MakeRandomSelection(MainWindow* win, int pageNo) {
     DisplayModel* dm = win->AsFixed();
     if (!dm->ValidPageNo(pageNo)) {
         pageNo = 1;
@@ -425,7 +425,7 @@ a human advancing one page at a time. This is mostly to run through a large numb
 of PDFs before a release to make sure we're crash proof. */
 
 struct StressTest {
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     LARGE_INTEGER currPageRenderTime = {};
     Vec<int> pagesToRender;
     int currPageNo = 0;
@@ -444,7 +444,7 @@ struct StressTest {
     // owned by StressTest
     TestFileProvider* fileProvider = nullptr;
 
-    StressTest(WindowInfo* win, bool exitWhenDone);
+    StressTest(MainWindow* win, bool exitWhenDone);
     ~StressTest();
 };
 
@@ -457,7 +457,7 @@ T RemoveRandomElementFromVec(Vec<T>& v) {
     return res;
 }
 
-StressTest::StressTest(WindowInfo* win, bool exitWhenDone) {
+StressTest::StressTest(MainWindow* win, bool exitWhenDone) {
     this->win = win;
     this->exitWhenDone = exitWhenDone;
     timerId = gCurrStressTimerId++;
@@ -537,17 +537,17 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     args->win = st->win;
     args->forceReuse = true;
     args->noPlaceWindow = true;
-    WindowInfo* w = LoadDocument(args);
+    MainWindow* w = LoadDocument(args);
     if (!w) {
         return false;
     }
 
-    if (w == st->win) { // WindowInfo reused
+    if (w == st->win) { // MainWindow reused
         if (!st->win->IsDocLoaded()) {
             return false;
         }
     } else {
-        if (!w->IsDocLoaded()) { // new WindowInfo
+        if (!w->IsDocLoaded()) { // new MainWindow
             CloseWindow(w, false, false);
             return false;
         }
@@ -569,7 +569,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
             RepaintAsync(st->win, 0);
         }
 
-        WindowInfo* toClose = st->win;
+        MainWindow* toClose = st->win;
         w->stressTest = st->win->stressTest;
         st->win->stressTest = nullptr;
         st->win = w;
@@ -826,7 +826,7 @@ void GetStressTestInfo(str::Str* s) {
     }
 
     for (size_t i = 0; i < gWindows.size(); i++) {
-        WindowInfo* w = gWindows.at(i);
+        MainWindow* w = gWindows.at(i);
         if (!w || !w->currentTab || !w->currentTab->filePath) {
             continue;
         }
@@ -897,7 +897,7 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
     }
 }
 
-void StartStressTest(Flags* i, WindowInfo* win) {
+void StartStressTest(Flags* i, MainWindow* win) {
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
     gGlobalPrefs->chmUI.useFixedPageUI = true;
@@ -912,7 +912,7 @@ void StartStressTest(Flags* i, WindowInfo* win) {
 
     int n = i->stressParallelCount;
     if (n > 1 || i->stressRandomizeFiles) {
-        WindowInfo** windows = AllocArray<WindowInfo*>(n);
+        MainWindow** windows = AllocArray<MainWindow*>(n);
         windows[0] = win;
         for (int j = 1; j < n; j++) {
             windows[j] = CreateAndShowWindowInfo();
@@ -959,10 +959,10 @@ void StartStressTest(Flags* i, WindowInfo* win) {
     }
 }
 
-void OnStressTestTimer(WindowInfo* win, int timerId) {
+void OnStressTestTimer(MainWindow* win, int timerId) {
     OnTimer(win->stressTest, timerId);
 }
 
-void FinishStressTest(WindowInfo* win) {
+void FinishStressTest(MainWindow* win) {
     delete win->stressTest;
 }

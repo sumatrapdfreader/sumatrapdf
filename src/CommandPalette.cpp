@@ -16,7 +16,7 @@
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "DisplayModel.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "SumatraConfig.h"
 #include "Commands.h"
@@ -131,7 +131,7 @@ static bool IsCmdInMenuList(i32 cmdId, UINT_PTR* a) {
 
 struct CommandPaletteWnd : Wnd {
     ~CommandPaletteWnd() override = default;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
     StrVec allStrings;
@@ -146,7 +146,7 @@ struct CommandPaletteWnd : Wnd {
 
     void ScheduleDelete();
 
-    bool Create(WindowInfo* win);
+    bool Create(MainWindow* win);
     void QueryChanged();
     void ListDoubleClick();
 
@@ -284,7 +284,7 @@ static char* ConvertPathForDisplayTemp(const char* s) {
     return res;
 }
 
-static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, WindowInfo* win) {
+static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, MainWindow* win) {
     for (TabInfo* tab : win->tabs) {
         if (!tab->IsDocLoaded()) {
             continue;
@@ -300,7 +300,7 @@ static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, WindowInfo* win) 
 }
 
 static TabInfo* FindOpenedFile(const char* sv) {
-    for (WindowInfo* win : gWindows) {
+    for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             if (!tab->IsDocLoaded()) {
                 continue;
@@ -314,7 +314,7 @@ static TabInfo* FindOpenedFile(const char* sv) {
     return nullptr;
 }
 
-static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo* win) {
+static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, MainWindow* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
     TabInfo* tab = win->currentTab;
@@ -349,7 +349,7 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
     ctx.hasToc = win->ctrl && win->ctrl->HasToc();
 
     // append paths of opened files
-    for (WindowInfo* w : gWindows) {
+    for (MainWindow* w : gWindows) {
         AddOpenedFiles(strings, filePaths, w);
     }
     // append paths of files from history, excluding
@@ -582,7 +582,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-bool CommandPaletteWnd::Create(WindowInfo* win) {
+bool CommandPaletteWnd::Create(MainWindow* win) {
     CollectPaletteStrings(allStrings, convertedFilePaths, win);
     {
         CreateCustomArgs args;
@@ -667,7 +667,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     return true;
 }
 
-void RunCommandPallette(WindowInfo* win) {
+void RunCommandPallette(MainWindow* win) {
     CrashIf(gCommandPaletteWnd);
     // make min font size 16 (I get 12)
     int fontSize = GetSizeOfDefaultGuiFont();

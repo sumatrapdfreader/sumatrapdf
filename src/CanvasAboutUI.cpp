@@ -17,7 +17,7 @@
 #include "GlobalPrefs.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Canvas.h"
@@ -25,7 +25,7 @@
 #include "SumatraAbout.h"
 #include "Translations.h"
 
-static void OnPaintAbout(WindowInfo* win) {
+static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
@@ -46,7 +46,7 @@ static void OnPaintAbout(WindowInfo* win) {
     }
 }
 
-static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     // lf("Left button clicked on %d %d", x, y);
 
     // remember a link under so that on mouse up we only activate
@@ -67,7 +67,7 @@ static bool IsLink(const char* url) {
     return false;
 }
 
-static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     char* url = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
     char* prevUrl = win->urlOnLastButtonDown;
     bool clickedURL = url && str::Eq(url, prevUrl);
@@ -94,13 +94,13 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     // SetFocus(win->hwndFrame);
 }
 
-static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     // lf("Right button clicked on %d %d", x, y);
     SetFocus(win->hwndFrame);
     win->dragStart = Point(x, y);
 }
 
-static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     int isDrag = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
     if (isDrag) {
         return;
@@ -108,7 +108,7 @@ static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     OnAboutContextMenu(win, x, y);
 }
 
-static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
+static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
     Point pt;
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo* linkInfo;
@@ -126,7 +126,7 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     return FALSE;
 }
 
-LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int x = GET_X_LPARAM(lp);
     int y = GET_Y_LPARAM(lp);
     switch (msg) {

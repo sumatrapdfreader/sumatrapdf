@@ -71,7 +71,7 @@ inline constexpr Perm operator~(Perm lhs) {
 
 struct Favorites;
 struct FileHistory;
-struct WindowInfo;
+struct MainWindow;
 struct NotificationWnd;
 struct RenderCache;
 struct TabInfo;
@@ -104,24 +104,24 @@ bool HasPermission(Perm permission);
 bool IsUIRightToLeft();
 bool SumatraLaunchBrowser(const char* url);
 bool OpenFileExternally(const char* path);
-void CloseCurrentTab(WindowInfo* win, bool quitIfLast = false);
-bool CanCloseWindow(WindowInfo* win);
-void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose);
-void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites);
-void RememberFavTreeExpansionState(WindowInfo* win);
+void CloseCurrentTab(MainWindow* win, bool quitIfLast = false);
+bool CanCloseWindow(MainWindow* win);
+void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);
+void RememberFavTreeExpansionState(MainWindow* win);
 void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree);
-void AdvanceFocus(WindowInfo* win);
+void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
 void UpdateTabFileDisplayStateForTab(TabInfo* tab);
-void ReloadDocument(WindowInfo* win, bool autoRefresh);
-void ToggleFullScreen(WindowInfo* win, bool presentation = false);
-void RelayoutWindow(WindowInfo* win);
+void ReloadDocument(MainWindow* win, bool autoRefresh);
+void ToggleFullScreen(MainWindow* win, bool presentation = false);
+void RelayoutWindow(MainWindow* win);
 
 // note: background tabs are only searched if focusTab is true
-WindowInfo* FindWindowInfoByFile(const char* file, bool focusTab);
-WindowInfo* FindWindowInfoBySyncFile(const char* file, bool focusTab);
+MainWindow* FindWindowInfoByFile(const char* file, bool focusTab);
+MainWindow* FindWindowInfoBySyncFile(const char* file, bool focusTab);
 TabInfo* FindTabByFile(const char* file);
 void SelectTabInWindow(TabInfo*);
 
@@ -130,13 +130,13 @@ class EngineBase;
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs {
-    explicit LoadArgs(const char* fileName, WindowInfo* win);
+    explicit LoadArgs(const char* fileName, MainWindow* win);
 
     ~LoadArgs() = default;
 
     // we don't own those values
     EngineBase* engine = nullptr;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
 
     bool showWin = true;
     bool forceReuse = false;
@@ -161,21 +161,21 @@ struct LoadArgs {
     AutoFreeStr fileName;
 };
 
-WindowInfo* LoadDocument(LoadArgs* args, bool lazyload = false);
-WindowInfo* CreateAndShowWindowInfo(SessionData* data = nullptr);
+MainWindow* LoadDocument(LoadArgs* args, bool lazyload = false);
+MainWindow* CreateAndShowWindowInfo(SessionData* data = nullptr);
 
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
 void MessageBoxWarning(HWND hwnd, const char* msg, const char* title = nullptr);
-void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd);
+void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
 bool DocumentPathExists(const char* path);
-void EnterFullScreen(WindowInfo* win, bool presentation = false);
-void ExitFullScreen(WindowInfo* win);
+void EnterFullScreen(MainWindow* win, bool presentation = false);
+void ExitFullScreen(MainWindow* win);
 void SetCurrentLang(const char* langCode);
-void RebuildMenuBarForWindow(WindowInfo* win);
-void DeleteWindowInfo(WindowInfo* win);
-void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
-void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false);
+void RebuildMenuBarForWindow(MainWindow* win);
+void DeleteWindowInfo(MainWindow* win);
+void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
+void WindowInfoRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 bool DocIsSupportedFileType(Kind);

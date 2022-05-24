@@ -3,7 +3,7 @@
 
 struct PropertiesLayout;
 
-void ShowPropertiesWindow(WindowInfo* win);
+void ShowPropertiesWindow(MainWindow* win);
 void DeletePropertiesWindow(HWND hwndParent);
 
 PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd);

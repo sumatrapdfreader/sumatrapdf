@@ -122,7 +122,7 @@ struct DisplayModel : DocController {
     EngineBase* GetEngine() const;
     Kind GetEngineType() const;
 
-    // controller-specific data (easier to save here than on WindowInfo)
+    // controller-specific data (easier to save here than on MainWindow)
     Kind engineType = nullptr;
 
     Synchronizer* pdfSync = nullptr;

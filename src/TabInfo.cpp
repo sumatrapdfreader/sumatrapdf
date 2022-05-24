@@ -17,13 +17,13 @@
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "Selection.h"
 #include "Translations.h"
 #include "EditAnnotations.h"
 
-TabInfo::TabInfo(WindowInfo* win, const char* filePath) {
+TabInfo::TabInfo(MainWindow* win, const char* filePath) {
     this->win = win;
     this->filePath.SetCopy(filePath);
 }

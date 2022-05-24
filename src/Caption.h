@@ -4,12 +4,12 @@
 // factor by how large the non-maximized caption should be in relation to the tabbar
 #define kCaptionTabBarDyFactor 1.25f
 
-void CreateCaption(WindowInfo* win);
+void CreateCaption(MainWindow* win);
 void RegisterCaptionWndClass();
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, WindowInfo* win);
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, MainWindow* win);
 void PaintParentBackground(HWND hwnd, HDC hdc);
-void RelayoutCaption(WindowInfo* win);
+void RelayoutCaption(MainWindow* win);
 void SetCaptionButtonsRtl(CaptionInfo*, bool isRtl);
-void CaptionUpdateUI(WindowInfo*, CaptionInfo*);
+void CaptionUpdateUI(MainWindow*, CaptionInfo*);
 void DeleteCaption(CaptionInfo*);
-void OpenSystemMenu(WindowInfo* win);
+void OpenSystemMenu(MainWindow* win);

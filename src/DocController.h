@@ -8,7 +8,7 @@ struct IPageElement;
 struct IPageDestination;
 struct TocTree;
 struct TocItem;
-struct WindowInfo;
+struct MainWindow;
 struct FileState;
 enum class DisplayMode;
 

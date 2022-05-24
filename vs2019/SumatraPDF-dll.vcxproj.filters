@@ -108,6 +108,9 @@
     <ClInclude Include="..\src\Installer.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\MainWindow.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Menu.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -190,9 +193,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Version.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\WindowInfo.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
@@ -323,6 +323,9 @@
     <ClCompile Include="..\src\InstallerCommon.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\MainWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\MemLeakDetect.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -426,9 +429,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UpdateCheck.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\WindowInfo.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">

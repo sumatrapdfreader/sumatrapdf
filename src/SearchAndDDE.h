@@ -14,20 +14,20 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp);
 #define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS 100
 #define HIDE_FWDSRCHMARK_STEPS 5
 
-bool NeedsFindUI(WindowInfo* win);
-void ClearSearchResult(WindowInfo* win);
-bool OnInverseSearch(WindowInfo* win, int x, int y);
-void ShowForwardSearchResult(WindowInfo* win, const char* fileName, uint line, uint col, uint ret, uint page,
+bool NeedsFindUI(MainWindow* win);
+void ClearSearchResult(MainWindow* win);
+bool OnInverseSearch(MainWindow* win, int x, int y);
+void ShowForwardSearchResult(MainWindow* win, const char* fileName, uint line, uint col, uint ret, uint page,
                              Vec<Rect>& rects);
-void PaintForwardSearchMark(WindowInfo* win, HDC hdc);
-void OnMenuFindPrev(WindowInfo* win);
-void OnMenuFindNext(WindowInfo* win);
-void OnMenuFind(WindowInfo* win);
-void OnMenuFindMatchCase(WindowInfo* win);
-void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction);
-void AbortFinding(WindowInfo* win, bool hideMessage);
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress);
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, const char* text, bool wasModified,
+void PaintForwardSearchMark(MainWindow* win, HDC hdc);
+void OnMenuFindPrev(MainWindow* win);
+void OnMenuFindNext(MainWindow* win);
+void OnMenuFind(MainWindow* win);
+void OnMenuFindMatchCase(MainWindow* win);
+void OnMenuFindSel(MainWindow* win, TextSearchDirection direction);
+void AbortFinding(MainWindow* win, bool hideMessage);
+void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showProgress);
+void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress);
 extern bool gIsStartup;
 extern StrVec gDdeOpenOnStartup;
