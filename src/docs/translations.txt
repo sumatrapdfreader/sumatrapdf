@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7846595dad91b46e40a718e3f37e567a5563cd20
+c6b2574eaf3ceae6b994aed8c21c2e0992eca997
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -72,7 +72,7 @@ uk:&Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size
-br:&Tamanho Real
+br:&Tamanho real
 cn:实际大小(&A)
 co:&Dimensione attuale
 de:&Tatsächliche Größe
@@ -416,7 +416,7 @@ uk:Скопіювати вибране
 uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy To Clipboard
-br:&Copiar para Área de Transferência
+br:&Copiar para área de transferência
 cn:复制到剪贴版(&C)
 co:&Cupià in u preme’papei
 de:&In Zwischenablage kopieren
@@ -742,7 +742,7 @@ uk:Що шукати:
 uz:&Qidirish:
 vn:Tìm (các) từ sau:
 :&First Page
-br:&Primeira Página
+br:&Primeira página
 cn:第一页(&F)
 co:P&rima pagina
 de:&Erste Seite
@@ -1278,7 +1278,7 @@ uk:Враховувати регістр
 uz:&Registrni hisobga olish
 vn:Phân biệt &HOA-thường
 :&Next Page
-br:&Próxima Página
+br:&Próxima página
 cn:下一页(&N)
 co:Pagina &seguente
 de:&Nächste Seite
@@ -5281,7 +5281,7 @@ uk:Документи CBR, CBZ (комікси)
 uz:Komikslar
 vn:Truyện tranh
 :Command Palette
-br:Paleta de Comandos
+br:Paleta de comandos
 cn:命令面板
 co:Tavuletta di cumande
 de:Befehlspalette
@@ -5864,7 +5864,7 @@ uk:Копіювати коментар
 uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
-br:Copiar para Área de Transferência
+br:Copiar para área de transferência
 cn:复制到剪贴版
 co:Cupià in u preme’papei
 de:In Zwischenablage kopieren
@@ -6657,7 +6657,7 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
-br:Criar Anotação Sobre o C&ursor
+br:Criar Anotação sobre o c&ursor
 ca-xv:Crea una anotació a sota del c&ursor
 ca:Crea una anotació a sota del c&ursor
 cn:在光标位置创建标注(&U)
@@ -6918,7 +6918,7 @@ uk:Позиція вказівника:
 uz:Kursor holati:
 vn:Vị trí con trỏ:
 :Custom &Zoom...
-br:Zoom &Personalizado...
+br:Zoom &personalizado...
 cn:自定义缩放(&Z)...
 co:&Ingrandamentu persunalizatu…
 de:Benutzerdefinierter &Zoom...
@@ -7085,7 +7085,7 @@ ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
 bn:পূর্বনির্ধারিত &লেআউট
-br:&Visualização Padrão
+br:&Visualização padrão
 bs:Izvorni &izgled:
 by:&Кампаноўка па змаўчанні
 ca-xv:&Visualització predeterminada:
@@ -7150,7 +7150,7 @@ ar:التكبير الافتراضي&:
 az:Standart miq&yas:
 bg:&Увеличение по подразбиране:
 bn:পুর্ব নির্ধারিত &বড় আকৃতি
-br:&Zoom Padrão
+br:&Zoom padrão
 bs:Izvorno &uvećanje:
 by:&Маштаб па змаўчанні
 ca-xv:&Zoom predeterminat
@@ -7509,7 +7509,7 @@ vn:T&hoát
 am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
-br:Sair da Tela &Cheia
+br:Sair da tela &cheia
 ca-xv:Surt de &la pantalla completa
 ca:Surt de &la pantalla completa
 cn:退出全屏(&X)
@@ -8047,7 +8047,7 @@ tl:&Pasulong
 uk:Вперед
 vn:Tiếp
 :F&ullscreen
-br:T&ela Cheia
+br:T&ela cheia
 cn:全屏(&U)
 co:&Screnu sanu
 de:&Vollbild
@@ -9427,7 +9427,7 @@ am:Ձգել լայնությամբ և ցուցադրել էջերը անդադա
 ar:ملائمة العرض واظهار الصفحات باستمرار
 az:Səhifənin genişliyinə görə sığışdır və səhifələri ardıcıl göstər
 bg:Оразмери по широчина и покажи страниците непрекъснато
-br:Ajustar pela largura e exibir páginas de modo contínuo
+br:Ajustar pela largura e exibir páginas em modo contínuo
 bs:Uklopi po širini i prikaži stranice slijedno
 by:Падагнаць па шырыне і Паказаць бесперапынную старонку
 ca-xv:Ajusta l'amplada i mostra les pàgines de forma contínua
@@ -15767,7 +15767,7 @@ vn:Xem trang liên tiếp
 am:Ցուցադրել &ոլորգոտիները
 ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
-br:Mostrar Barras de &Rolagem
+br:Mostrar barras de &rolagem
 ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&S)
