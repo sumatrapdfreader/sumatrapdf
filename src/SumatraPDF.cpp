@@ -848,19 +848,6 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     }
 }
 
-static DocController* CreateControllerForEngine(EngineBase* engine, const char* filePath, PasswordUI* pwdUI,
-                                                WindowInfo* win) {
-    int nPages = engine ? engine->PageCount() : 0;
-    logf("CreateControllerForEngine: '%s', %d pages\n", filePath), nPages;
-    if (!win->cbHandler) {
-        win->cbHandler = new ControllerCallbackHandler(win);
-    }
-    DocController* ctrl = nullptr;
-    ctrl = new DisplayModel(engine, win->cbHandler);
-    CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
-    return ctrl;
-}
-
 // TODO: remove when we figure out why this ctrl->GetFilePath() is not always same as path
 static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     if (!ctrl) {
@@ -876,7 +863,21 @@ static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     CrashIf(true);
 }
 
-static DocController* CreateForChm(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
+static DocController* CreateControllerForEngine(EngineBase* engine, const char* path, PasswordUI* pwdUI,
+                                                WindowInfo* win) {
+    int nPages = engine ? engine->PageCount() : 0;
+    logf("CreateControllerForEngine: '%s', %d pages\n", path), nPages;
+    // TODO: move this to WindowInfo constructor
+    if (!win->cbHandler) {
+        win->cbHandler = new ControllerCallbackHandler(win);
+    }
+    DocController* ctrl = new DisplayModel(engine, win->cbHandler);
+    CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+    VerifyController(ctrl, path);
+    return ctrl;
+}
+
+static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
     Kind kind = GuessFileType(path, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
@@ -915,29 +916,23 @@ static DocController* CreateForChm(const char* path, PasswordUI* pwdUI, WindowIn
 }
 
 static DocController* CreateControllerForFile(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
-    if (!win->cbHandler) {
-        win->cbHandler = new ControllerCallbackHandler(win);
-    }
-
-    DocController* ctrl = nullptr;
-
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
-
     // TODO: sniff file content only once
     EngineBase* engine = CreateEngine(path, pwdUI, chmInFixedUI);
 
     if (engine) {
-        ctrl = new DisplayModel(engine, win->cbHandler);
-        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
-        VerifyController(ctrl, path);
-        // logf(L"CreateControllerForFile: '%s', %d pages\n", path, engine->PageCount());
-        return ctrl;
+        return CreateControllerForEngine(engine, path, pwdUI, win);
     }
 
     if (chmInFixedUI) {
         return nullptr;
     }
-    ctrl = CreateForChm(path, pwdUI, win);
+    // TODO: move this to WindowInfo constructor
+    if (!win->cbHandler) {
+        win->cbHandler = new ControllerCallbackHandler(win);
+    }
+
+    DocController* ctrl = CreateControllerForChm(path, pwdUI, win);
     if (!ctrl) {
         return nullptr;
     }
