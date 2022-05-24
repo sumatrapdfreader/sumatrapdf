@@ -237,13 +237,14 @@ func main() {
 		flag.Parse()
 	}
 
+	detectVersions()
+
 	if false {
 		testGenUpdateTxt()
 		return
 	}
 
 	if false {
-		detectVersions()
 		//buildPreRelease()
 		return
 	}
@@ -372,18 +373,15 @@ func main() {
 	}
 
 	if flgSmoke {
-		detectVersions()
 		buildSmoke()
 		return
 	}
 
 	if flgBuildNo {
-		detectVersions()
 		return
 	}
 
 	if flgCIBuild {
-		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
@@ -405,7 +403,6 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
-		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
@@ -420,7 +417,6 @@ func main() {
 	}
 
 	if flgBuildRelease {
-		detectVersions()
 		buildRelease()
 		uploadToStorage(opts, buildTypeRel)
 		return
@@ -428,7 +424,6 @@ func main() {
 
 	if flgBuildPreRelease {
 		// make sure we can sign the executables
-		detectVersions()
 		buildPreRelease()
 		uploadToStorage(opts, buildTypePreRel)
 		return
