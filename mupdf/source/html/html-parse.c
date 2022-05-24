@@ -313,8 +313,11 @@ static void generate_text(fz_context *ctx, fz_html_box *box, const char *text, i
 	static const char *space = " ";
 
 	flow = box;
-	while (flow->type != BOX_FLOW)
+	/* SumatraPDF: seen in crash report */
+	while (flow && flow->type != BOX_FLOW)
 		flow = flow->up;
+	if (!flow)
+		return;
 
 	while (*text)
 	{
