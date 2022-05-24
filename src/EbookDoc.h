@@ -141,7 +141,7 @@ class PalmDoc {
 class HtmlDoc {
     AutoFreeStr fileName;
     ByteSlice htmlData;
-    AutoFree pagePath;
+    AutoFreeStr pagePath;
     Vec<ImageData> images;
     PropertyMap props;
 

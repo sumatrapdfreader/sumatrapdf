@@ -1945,7 +1945,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        AutoFree pwdA(str::Dup(pwd));
+        AutoFreeStr pwdA = str::Dup(pwd);
         ok = fz_authenticate_password(ctx, _doc, pwdA.Get());
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
@@ -1960,7 +1960,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            AutoFree pwd_ansi = str::Dup(pwd.Get());
+            AutoFreeStr pwd_ansi = str::Dup(pwd.Get());
             AutoFreeWstr pwd_cp1252(strconv::StrToWstr(pwd_ansi.Get(), 1252));
             pwdA = ToUtf8(pwd_cp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.Get());
@@ -3038,7 +3038,7 @@ char* EngineMupdf::ExtractFontList() {
     StrVec fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
-        AutoFree anonFontName;
+        AutoFreeStr anonFontName;
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj* font = fontList.at(i);

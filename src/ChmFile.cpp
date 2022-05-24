@@ -253,12 +253,12 @@ char* ChmFile::ResolveTopicID(unsigned int id) const {
     return nullptr;
 }
 
-void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
+void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
     if (!path || HasData(path)) {
         return;
     }
 
-    AutoFree utf8Path(ToUtf8((u8*)path.Get()));
+    AutoFreeStr utf8Path = ToUtf8((u8*)path.Get());
     if (HasData(utf8Path)) {
         path.Set(utf8Path.Release());
         fileCP = codepage;
@@ -372,7 +372,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
+            AutoFreeStr bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
             attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
@@ -422,7 +422,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
+            AutoFreeStr bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
             attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
@@ -529,7 +529,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
         return false;
     }
     const char* html = htmlData;
-    AutoFree htmlFree = htmlData.Get();
+    AutoFreeStr htmlFree = htmlData.Get();
 
     HtmlParser p;
     uint cp = codepage;

@@ -1004,7 +1004,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         }
         Rect rect(x, page.dy - y - h, w, h);
 
-        AutoFree link = ResolveNamedDest(urlA);
+        AutoFreeStr link = ResolveNamedDest(urlA);
         const char* tmp = link.Get();
         if (!tmp) {
             tmp = urlA;
@@ -1106,7 +1106,7 @@ IPageDestination* EngineDjVu::GetNamedDest(const char* name) {
         name = str::JoinTemp("#", name);
     }
 
-    AutoFree link = ResolveNamedDest(name);
+    AutoFreeStr link = ResolveNamedDest(name);
     if (link) {
         return NewDjVuDestination(link, nullptr);
     }
@@ -1129,7 +1129,7 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
         }
 
         TocItem* tocItem = nullptr;
-        AutoFree linkNo = ResolveNamedDest(link);
+        AutoFreeStr linkNo = ResolveNamedDest(link);
         if (!linkNo) {
             tocItem = NewDjVuTocItem(parent, name, link);
         } else if (!str::IsEmpty(name) && !str::Eq(name, link + 1)) {

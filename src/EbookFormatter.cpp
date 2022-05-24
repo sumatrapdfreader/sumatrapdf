@@ -145,7 +145,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFree src(str::Dup(attr->val, attr->valLen));
+        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
         url::DecodeInPlace(src);
         ByteSlice* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -208,7 +208,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (!attr) {
         return;
     }
-    AutoFree src(str::Dup(attr->val, attr->valLen));
+    AutoFreeStr src = str::Dup(attr->val, attr->valLen);
     url::DecodeInPlace(src);
     ByteSlice* img = epubDoc->GetImageData(src, pagePath);
     if (img) {
@@ -270,7 +270,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     ByteSlice* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
-        AutoFree src(str::Dup(attr->val, attr->valLen));
+        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
         url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
@@ -289,7 +289,7 @@ void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, const char* name) {
 void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
     if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
         bool isSubtitle = Tag_Subtitle == t->tag;
-        AutoFree name(str::Format("h%d", section + (isSubtitle ? 1 : 0)));
+        AutoFreeStr name = str::Format("h%d", section + (isSubtitle ? 1 : 0));
         HtmlToken tok;
         tok.SetTag(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
@@ -344,7 +344,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFree src(str::Dup(attr->val, attr->valLen));
+        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
         url::DecodeInPlace(src);
         ByteSlice* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
@@ -372,7 +372,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    AutoFree src(str::Dup(attr->val, attr->valLen));
+    char* src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
     ByteSlice data = htmlDoc->GetFileData(src);
     if (data) {
