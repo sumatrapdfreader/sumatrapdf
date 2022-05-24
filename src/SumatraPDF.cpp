@@ -863,20 +863,6 @@ static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     CrashIf(true);
 }
 
-static DocController* CreateControllerForEngine(EngineBase* engine, const char* path, PasswordUI* pwdUI,
-                                                WindowInfo* win) {
-    int nPages = engine ? engine->PageCount() : 0;
-    logf("CreateControllerForEngine: '%s', %d pages\n", path), nPages;
-    // TODO: move this to WindowInfo constructor
-    if (!win->cbHandler) {
-        win->cbHandler = new ControllerCallbackHandler(win);
-    }
-    DocController* ctrl = new DisplayModel(engine, win->cbHandler);
-    CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
-    VerifyController(ctrl, path);
-    return ctrl;
-}
-
 static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
     Kind kind = GuessFileType(path, true);
 
@@ -915,29 +901,28 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
     return ctrl;
 }
 
-static DocController* CreateControllerForFile(const char* path, PasswordUI* pwdUI, WindowInfo* win) {
-    bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
-    // TODO: sniff file content only once
-    EngineBase* engine = CreateEngine(path, pwdUI, chmInFixedUI);
-
-    if (engine) {
-        return CreateControllerForEngine(engine, path, pwdUI, win);
-    }
-
-    if (chmInFixedUI) {
-        return nullptr;
-    }
+static DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
+                                                      WindowInfo* win) {
     // TODO: move this to WindowInfo constructor
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
 
-    DocController* ctrl = CreateControllerForChm(path, pwdUI, win);
-    if (!ctrl) {
-        return nullptr;
+    bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
+    // TODO: sniff file content only once
+    if (!engine) {
+        engine = CreateEngine(path, pwdUI, chmInFixedUI);
+    }
+    if (engine) {
+        int nPages = engine ? engine->PageCount() : 0;
+        logf("CreateControllerForEngine: '%s', %d pages\n", path), nPages;
+        DocController* ctrl = new DisplayModel(engine, win->cbHandler);
+        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+        VerifyController(ctrl, path);
+        return ctrl;
     }
     // logf("CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
-    return ctrl;
+    return CreateControllerForChm(path, pwdUI, win);
 }
 
 static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
@@ -1242,8 +1227,8 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     }
 
     HwndPasswordUI pwdUI(win->hwndFrame);
-    char* pathA = tab->filePath;
-    DocController* ctrl = CreateControllerForFile(pathA, &pwdUI, win);
+    char* path = tab->filePath;
+    DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken,
@@ -1254,7 +1239,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         return;
     }
 
-    FileState* fs = NewDisplayState(pathA);
+    FileState* fs = NewDisplayState(path);
     tab->ctrl->GetDisplayState(fs);
     UpdateDisplayStateWindowRect(win, fs);
     UpdateSidebarDisplayState(tab, fs);
@@ -1576,18 +1561,18 @@ static void scheduleReloadTab(TabInfo* tab) {
 WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
-    const char* fullPath = args->FilePath();
-    WindowInfo* win = args->win;
-
     AutoDelete delArgs(args);
 
-    bool failEarly = win && !args->forceReuse && !DocumentPathExists(fullPath);
+    WindowInfo* win = args->win;
+    const char* fullPath = args->FilePath();
+    bool failEarly = win && !args->forceReuse && !args->engine && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
     if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
         char* adjPath = str::DupTemp(fullPath);
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
+            args->SetFilePath(adjPath);
             fullPath = adjPath;
             failEarly = false;
         }
@@ -1650,11 +1635,7 @@ WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
     HwndPasswordUI pwdUI(win->hwndFrame);
     DocController* ctrl = nullptr;
     if (!lazyload) {
-        if (args->engine != nullptr) {
-            ctrl = CreateControllerForEngine(args->engine, fullPath, &pwdUI, win);
-        } else {
-            ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
-        }
+        ctrl = CreateControllerForEngineOrFile(args->engine, fullPath, &pwdUI, win);
 
         {
             auto durMs = TimeSinceInMs(timeStart);
@@ -1724,7 +1705,6 @@ WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
 #endif
     }
 
-    args->SetFilePath(fullPath);
     // TODO: stop remembering/restoring window positions when using tabs?
     args->placeWindow = !gGlobalPrefs->useTabs;
     if (!lazyload) {
