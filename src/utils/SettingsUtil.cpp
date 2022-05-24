@@ -195,7 +195,7 @@ static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
 
 static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field) {
     const u8* fieldPtr = base + field.offset;
-    AutoFree value;
+    AutoFreeStr value;
 
     switch (field.type) {
         case SettingType::Bool:

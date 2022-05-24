@@ -30,7 +30,7 @@ class ThreadBase {
 
   protected:
     // for debugging
-    AutoFree threadName;
+    AutoFreeStr threadName;
 
     virtual ~ThreadBase();
 

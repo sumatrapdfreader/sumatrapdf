@@ -407,7 +407,7 @@ class HwndPasswordUI : public PasswordUI {
 char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
     FileState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
-        AutoFree fingerprint(str::MemToHex(fileDigest, 16));
+        AutoFreeStr fingerprint = str::MemToHex(fileDigest, 16);
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
         if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32)) {
             return nullptr;
@@ -710,7 +710,7 @@ static void CreateThumbnailForFile(WindowInfo* win, FileState& ds) {
     if (model) {
         auto* engine = model->GetEngine();
         bool withPwd = engine->IsPasswordProtected();
-        AutoFree decrKey(engine->GetDecryptionKey());
+        AutoFreeStr decrKey = engine->GetDecryptionKey();
         if (withPwd && !decrKey) {
             RemoveThumbnail(ds);
             return;
@@ -1294,7 +1294,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     if (tab->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
+        AutoFreeStr decryptionKey= tab->AsFixed()->GetEngine()->GetDecryptionKey();
         if (decryptionKey) {
             FileState* fs2 = gFileHistory.Find(fs->filePath, nullptr);
             if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {

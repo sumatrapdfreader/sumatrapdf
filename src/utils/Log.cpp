@@ -186,7 +186,7 @@ void logf(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFree s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args);
     log(s.Get());
     va_end(args);
 }
@@ -198,7 +198,7 @@ void logfa(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFree s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args);
     log(s.Get());
     va_end(args);
 }

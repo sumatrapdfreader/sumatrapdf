@@ -76,7 +76,7 @@ int main() {
     const char* certName = nullptr;
     const char* signFilePath = nullptr;
     const char* pubkeyPath = nullptr;
-    AutoFree inFileCommentSyntax;
+    AutoFreeStr inFileCommentSyntax;
     // find certificate
     HCERTSTORE hStore = nullptr;
     PCCERT_CONTEXT pCertCtx = nullptr;

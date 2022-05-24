@@ -17,7 +17,7 @@ void dbglayoutf(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFree s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args);
     OutputDebugStringA(s.Get());
     va_end(args);
 }

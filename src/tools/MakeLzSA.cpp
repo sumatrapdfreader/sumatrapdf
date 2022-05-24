@@ -102,8 +102,8 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         return content.Append(fi->compressedData, fi->compressedSize);
     }
 
-    AutoFree fileData(file::ReadFile(filePath));
-    if (!fileData.data || fileData.size() >= UINT32_MAX) {
+    ByteSlice fileData = file::ReadFile(filePath);
+    if (!fileData.data() || fileData.size() >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
     }
@@ -157,7 +157,7 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
     for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeStr filePath(str::Dup(files.at(i)));
         char* sep = str::FindCharLast(filePath, ':');
-        AutoFree utf8Name;
+        AutoFreeStr utf8Name;
         if (sep) {
             utf8Name = str::Dup(sep + 1);
             *sep = '\0';
@@ -210,7 +210,7 @@ static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
 
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
-    AutoFree fileData(file::ReadFile(archivePath));
+    ByteSlice fileData = file::ReadFile(archivePath);
     FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
     errorStep++;
 

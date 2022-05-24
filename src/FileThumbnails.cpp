@@ -35,7 +35,7 @@ static char* GetThumbnailPathTemp(const char* filePath) {
         tmp[0] = '?';
     }
     CalcMD5Digest((u8*)filePath, str::Len(filePath), digest);
-    AutoFree fingerPrint(_MemToHex(&digest));
+    AutoFreeStr fingerPrint = _MemToHex(&digest);
 
     char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
     if (!thumbsPath) {

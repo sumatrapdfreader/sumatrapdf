@@ -84,7 +84,7 @@ static bool SetupSymbolPath()
         if (!ok)
             plog("DynSymSetSearchPathW() failed");
     } else {
-        AutoFree tmp(strconv::ToAnsi(tpath));
+        AutoFreeStr tmp = strconv::ToAnsi(tpath);
         ok = DynSymSetSearchPath(GetCurrentProcess(), tmp);
         if (!ok)
             plog("DynSymSetSearchPath() failed");
