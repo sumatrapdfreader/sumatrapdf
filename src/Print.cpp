@@ -1218,16 +1218,14 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
 
 bool PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
     logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
-    char* fileName2 = path::NormalizeTemp(fileName);
-    EngineBase* engine = CreateEngine(fileName2, nullptr, true);
+    fileName = path::NormalizeTemp(fileName);
+    EngineBase* engine = CreateEngine(fileName, nullptr, true);
     if (!engine) {
-        char* msg = str::Format("Couldn't open file '%s' for printing", fileName2);
+        AutoFreeStr msg = str::Format("Couldn't open file '%s' for printing", fileName);
         MessageBoxWarningCond(displayErrors, msg, "Error");
-        free(msg);
         return false;
     }
     bool ok = PrintFile(engine, printerName, displayErrors, settings);
     delete engine;
-    free(fileName2);
     return ok;
 }

@@ -206,22 +206,22 @@ WCHAR* Normalize(const WCHAR* path) {
     AutoFreeWstr fullpath(AllocArray<WCHAR>(cch));
     GetFullPathNameW(path, cch, fullpath, nullptr);
     // convert to long form
-    cch = GetLongPathName(fullpath, nullptr, 0);
+    cch = GetLongPathNameW(fullpath, nullptr, 0);
     if (!cch) {
         return fullpath.StealData();
     }
 
     AutoFreeWstr normpath(AllocArray<WCHAR>(cch));
-    GetLongPathName(fullpath, normpath, cch);
+    GetLongPathNameW(fullpath, normpath, cch);
     if (cch <= MAX_PATH) {
         return normpath.StealData();
     }
 
     // handle overlong paths: first, try to shorten the path
-    cch = GetShortPathName(fullpath, nullptr, 0);
+    cch = GetShortPathNameW(fullpath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
         AutoFreeWstr shortpath(AllocArray<WCHAR>(cch));
-        GetShortPathName(fullpath, shortpath, cch);
+        GetShortPathNameW(fullpath, shortpath, cch);
         if (str::Len(path::GetBaseNameTemp(normpath)) + path::GetBaseNameTemp(shortpath) - shortpath < MAX_PATH) {
             // keep the long filename if possible
             *(WCHAR*)path::GetBaseNameTemp(shortpath) = '\0';
@@ -238,9 +238,8 @@ WCHAR* Normalize(const WCHAR* path) {
 
 char* NormalizeTemp(const char* path) {
     WCHAR* s = ToWstrTemp(path);
-    WCHAR* ws = Normalize(s);
+    AutoFreeWstr ws = Normalize(s);
     char* res = ToUtf8Temp(ws);
-    str::Free(ws);
     return res;
 }
 

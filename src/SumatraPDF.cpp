@@ -157,6 +157,12 @@ static void OnSidebarSplitterMove(SplitterMoveEvent*);
 static void OnFavSplitterMove(SplitterMoveEvent*);
 static void DownloadDebugSymbols();
 
+LoadArgs::LoadArgs(const char* fileName, WindowInfo* win) {
+    char* path = path::NormalizeTemp(fileName);
+    this->fileName.SetCopy(path);
+    this->win = win;
+}
+
 void SetCurrentLang(const char* langCode) {
     if (!langCode) {
         return;
@@ -1294,7 +1300,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     if (tab->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        AutoFreeStr decryptionKey= tab->AsFixed()->GetEngine()->GetDecryptionKey();
+        AutoFreeStr decryptionKey = tab->AsFixed()->GetEngine()->GetDecryptionKey();
         if (decryptionKey) {
             FileState* fs2 = gFileHistory.Find(fs->filePath, nullptr);
             if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
@@ -1575,7 +1581,7 @@ static void scheduleReloadTab(TabInfo* tab) {
 WindowInfo* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
-    char* fullPath = path::NormalizeTemp(args->FilePath());
+    const char* fullPath = args->FilePath();
     WindowInfo* win = args->win;
 
     AutoDelete delArgs(args);

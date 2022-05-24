@@ -87,7 +87,8 @@ bool IsDllBuild() {
 static AutoFreeStr gAppDataDir;
 
 void SetAppDataPath(const char* path) {
-    gAppDataDir.SetCopy(path::NormalizeTemp(path));
+    path = path::NormalizeTemp(path);
+    gAppDataDir.SetCopy(path);
 }
 
 // Generate the full path for a filename used by the app in the userdata path

@@ -169,7 +169,8 @@ char* Synchronizer::PrepareCommandline(const char* pattern, const char* filename
         perc++;
 
         if (*perc == 'f') {
-            cmdline.Append(path::NormalizeTemp(filename));
+            char* fname = path::NormalizeTemp(filename);
+            cmdline.Append(fname);
         } else if (*perc == 'l') {
             cmdline.AppendFmt("%u", line);
         } else if (*perc == 'c') {

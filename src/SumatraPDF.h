@@ -130,10 +130,7 @@ class EngineBase;
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs {
-    explicit LoadArgs(const char* fileName, WindowInfo* win) {
-        this->fileName.SetCopy(fileName);
-        this->win = win;
-    }
+    explicit LoadArgs(const char* fileName, WindowInfo* win);
 
     ~LoadArgs() = default;
 
