@@ -41,13 +41,12 @@ static void EnumeratePrinters() {
     PRINTER_INFO_5* info5Arr = nullptr;
     DWORD bufSize = 0;
     DWORD printersCount = 0;
-    BOOL ok =
-        EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, 0, &bufSize, &printersCount);
+    DWORD flags = PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS;
+    BOOL ok = EnumPrintersW(flags, nullptr, 5, nullptr, 0, &bufSize, &printersCount);
     if (ok != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-        info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
+        info5Arr = (PRINTER_INFO_5*)calloc(bufSize, 1);
         if (info5Arr != nullptr) {
-            ok = EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, (LPBYTE)info5Arr, bufSize,
-                               &bufSize, &printersCount);
+            ok = EnumPrintersW(flags, nullptr, 5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
         }
     }
     if (ok == 0 || !info5Arr) {
@@ -58,9 +57,10 @@ static void EnumeratePrinters() {
     }
     char* defName = GetDefaultPrinterNameTemp();
     for (DWORD i = 0; i < printersCount; i++) {
-        const WCHAR* nameW = info5Arr[i].pPrinterName;
-        const WCHAR* portW = info5Arr[i].pPortName;
-        DWORD attr = info5Arr[i].Attributes;
+        PRINTER_INFO_5& info = info5Arr[i];
+        const WCHAR* nameW = info.pPrinterName;
+        const WCHAR* portW = info.pPortName;
+        DWORD attr = info.Attributes;
         char* name = ToUtf8Temp(nameW);
         char* port = ToUtf8Temp(portW);
         const char* defStr = str::Eq(defName, name) ? ", default" : "";
@@ -227,8 +227,9 @@ static void ParseScrollValue(Point* scroll, const char* txt) {
     V(Scroll, "scroll")                          \
     V(AppData, "appdata")                        \
     V(Plugin, "plugin")                          \
-    V(ArgStressTest, "stress-test")              \
+    V(StressTest, "stress-test")                 \
     V(N, "n")                                    \
+    V(Max, "max")                                \
     V(Render, "render")                          \
     V(ExtractText, "extract-text")               \
     V(Bench, "bench")                            \
@@ -492,7 +493,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
 
-        if (arg == Arg::ArgStressTest) {
+        if (arg == Arg::StressTest) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
             // count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
@@ -520,6 +521,9 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::N) {
             i.stressParallelCount = paramInt;
             continue;
+        }
+        if (arg == Arg::Max) {
+            i.stressTestMax = paramInt;
         }
         if (arg == Arg::Render) {
             i.testRenderPage = true;

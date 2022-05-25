@@ -79,11 +79,11 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     }
 }
 
-bool LoadThumbnail(FileState& ds) {
-    delete ds.thumbnail;
-    ds.thumbnail = nullptr;
+bool LoadThumbnail(FileState* ds) {
+    delete ds->thumbnail;
+    ds->thumbnail = nullptr;
 
-    char* bmpPath = GetThumbnailPathTemp(ds.filePath);
+    char* bmpPath = GetThumbnailPathTemp(ds->filePath);
     if (!bmpPath) {
         return false;
     }
@@ -94,28 +94,28 @@ bool LoadThumbnail(FileState& ds) {
         return false;
     }
 
-    ds.thumbnail = bmp;
+    ds->thumbnail = bmp;
     return true;
 }
 
-bool HasThumbnail(FileState& ds) {
-    if (!ds.thumbnail && !LoadThumbnail(ds)) {
+bool HasThumbnail(FileState* ds) {
+    if (!ds->thumbnail && !LoadThumbnail(ds)) {
         return false;
     }
 
-    char* bmpPath = GetThumbnailPathTemp(ds.filePath);
+    char* bmpPath = GetThumbnailPathTemp(ds->filePath);
     if (!bmpPath) {
         return true;
     }
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
-    FILETIME fileTime = file::GetModificationTime(ds.filePath);
+    FILETIME fileTime = file::GetModificationTime(ds->filePath);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-        delete ds.thumbnail;
-        ds.thumbnail = nullptr;
+        delete ds->thumbnail;
+        ds->thumbnail = nullptr;
     }
 
-    return ds.thumbnail != nullptr;
+    return ds->thumbnail != nullptr;
 }
 
 void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
@@ -126,15 +126,15 @@ void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
     }
     delete ds->thumbnail;
     ds->thumbnail = bmp;
-    SaveThumbnail(*ds);
+    SaveThumbnail(ds);
 }
 
-void SaveThumbnail(FileState& ds) {
-    if (!ds.thumbnail) {
+void SaveThumbnail(FileState* ds) {
+    if (!ds->thumbnail) {
         return;
     }
 
-    char* path = ds.filePath;
+    char* path = ds->filePath;
     char* bmpPath = GetThumbnailPathTemp(path);
     if (!bmpPath) {
         return;
@@ -142,22 +142,22 @@ void SaveThumbnail(FileState& ds) {
     char* thumbsPath = path::GetDirTemp(bmpPath);
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, ".png"));
-        Gdiplus::Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
+        Gdiplus::Bitmap bmp(ds->thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
         WCHAR* bmpPathW = ToWstrTemp(bmpPath);
         bmp.Save(bmpPathW, &tmpClsid, nullptr);
     }
 }
 
-void RemoveThumbnail(FileState& ds) {
+void RemoveThumbnail(FileState* ds) {
     if (!HasThumbnail(ds)) {
         return;
     }
 
-    char* bmpPath = GetThumbnailPathTemp(ds.filePath);
+    char* bmpPath = GetThumbnailPathTemp(ds->filePath);
     if (bmpPath) {
         file::Delete(bmpPath);
     }
-    delete ds.thumbnail;
-    ds.thumbnail = nullptr;
+    delete ds->thumbnail;
+    ds->thumbnail = nullptr;
 }

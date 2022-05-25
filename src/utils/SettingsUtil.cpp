@@ -504,7 +504,8 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
                 Vec<void*>* array = new Vec<void*>();
                 size_t idx = 0;
                 while (parent && (child = parent->GetChild(fieldName, &idx)) != nullptr) {
-                    array->Append(DeserializeStructRec(GetSubstruct(field), child, nullptr, true));
+                    void* v = DeserializeStructRec(GetSubstruct(field), child, nullptr, true);
+                    array->Append(v);
                 }
                 FreeArray(*(Vec<void*>**)fieldPtr, field);
                 *(Vec<void*>**)fieldPtr = array;

@@ -462,6 +462,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
+// TODO: this leaks IPageElement*, other engines cache this in a per-page struct
 Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     Vec<IPageElement*> els;
 

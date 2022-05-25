@@ -713,7 +713,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             bool loadOk = true;
             if (!state->thumbnail) {
-                loadOk = LoadThumbnail(*state);
+                loadOk = LoadThumbnail(state);
             }
             if (loadOk && state->thumbnail) {
                 Size thumbSize = state->thumbnail->Size();

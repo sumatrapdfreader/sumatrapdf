@@ -7,9 +7,9 @@
 
 void CleanUpThumbnailCache(const FileHistory& fileHistory);
 
-bool LoadThumbnail(FileState& ds);
-bool HasThumbnail(FileState& ds);
+bool LoadThumbnail(FileState* ds);
+bool HasThumbnail(FileState* ds);
 // takes ownership of bmp
 void SetThumbnail(FileState* ds, RenderedBitmap* bmp);
-void SaveThumbnail(FileState& ds);
-void RemoveThumbnail(FileState& ds);
+void SaveThumbnail(FileState* ds);
+void RemoveThumbnail(FileState* ds);

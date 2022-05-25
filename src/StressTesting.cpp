@@ -931,6 +931,14 @@ void StartStressTest(Flags* i, MainWindow* win) {
             return;
         }
         printf("Found %d files", (int)filesCount);
+        if (i->stressTestMax > 0) {
+            while (filesToTest.Size() > i->stressTestMax) {
+                int lastIdx = filesToTest.Size() - 1;
+                filesToTest.RemoveAtFast(lastIdx);
+            }
+            printf("limited to %d files", filesToTest.Size());
+        }
+
         fflush(stdout);
         if (i->stressRandomizeFiles) {
             // TODO: should probably allow over-writing the 100 limit

@@ -471,6 +471,7 @@ NotificationWnd* ShowNotification(NotificationCreateArgs& args) {
     NotifsAdd(wnd, args.groupId);
     return wnd;
 }
+
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS, bool highlight) {
     wnd->UpdateMessage(msg, timeoutInMS, highlight);
 }

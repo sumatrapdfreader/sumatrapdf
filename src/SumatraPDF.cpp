@@ -618,7 +618,7 @@ void RebuildMenuBarForWindow(MainWindow* win) {
     DestroyMenu(oldMenu);
 }
 
-static bool ShouldSaveThumbnail(FileState& ds) {
+static bool ShouldSaveThumbnail(FileState* ds) {
     // don't create thumbnails if we won't be needing them at all
     if (!HasPermission(Perm::SavePreferences)) {
         return false;
@@ -627,7 +627,7 @@ static bool ShouldSaveThumbnail(FileState& ds) {
     // don't create thumbnails for files that won't need them anytime soon
     Vec<FileState*> list;
     gFileHistory.GetFrequencyOrder(list);
-    int idx = list.Find(&ds);
+    int idx = list.Find(ds);
     if (idx < 0 || kFileHistoryMaxFrequent * 2 <= idx) {
         return false;
     }
@@ -699,7 +699,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     // cppcheck-suppress memleak
 }
 
-static void CreateThumbnailForFile(MainWindow* win, FileState& ds) {
+static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     if (!ShouldSaveThumbnail(ds)) {
         return;
     }
@@ -1300,7 +1300,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         // refresh the thumbnail for this file
         FileState* state = gFileHistory.Find(fs->filePath, nullptr);
         if (state) {
-            CreateThumbnailForFile(win, *state);
+            CreateThumbnailForFile(win, state);
         }
     }
 
@@ -1769,7 +1769,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
         CrashIf(!str::Eq(fullPath, path));
         FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (!lazyload && gGlobalPrefs->showStartPage) {
-            CreateThumbnailForFile(win, *ds);
+            CreateThumbnailForFile(win, ds);
         }
         // TODO: this seems to save the state of file that we just opened
         // add a way to skip saving currTab?
@@ -4898,8 +4898,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
             // TODO: ideally would ask user for the cmd-line args but this will do
             Flags f;
-            f.stressTestPath = str::Dup("C:\\Users\\kjk\\!sumatra\\all formats");
+            // f.stressTestPath = str::Dup("C:\\Users\\kjk\\!sumatra\\all formats");
+            f.stressTestPath = str::Dup("D:\\sumstress");
             f.stressRandomizeFiles = true;
+            f.stressTestMax = 5;
             StartStressTest(&f, win);
         } break;
 
