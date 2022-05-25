@@ -50,7 +50,7 @@
 #endif
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
-#define COPYRIGHT_STR      "Copyright 2006-2021 all authors (GPLv3)"
+#define COPYRIGHT_STR      "Copyright 2006-2022 all authors (GPLv3)"
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"
 
 #define APP_NAME_STR        "SumatraPDF"
