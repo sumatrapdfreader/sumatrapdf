@@ -73,6 +73,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdHelpAbout,
     CmdDebugDownloadSymbols,
     CmdDebugShowNotif,
+    CmdDebugStartStressTest,
     CmdDebugTestApp,
     CmdFavoriteToggle,
     CmdToggleFullscreen,
@@ -265,10 +266,10 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
 
     switch (cmdId) {
         case CmdDebugShowLinks:
-        // case CmdDebugAnnotations:
         // case CmdDebugDownloadSymbols:
         case CmdDebugTestApp:
         case CmdDebugShowNotif:
+        case CmdDebugStartStressTest:
         case CmdDebugCrashMe: {
             return gIsDebugBuild || gIsPreReleaseBuild;
         }

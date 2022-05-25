@@ -4858,23 +4858,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnSelectAll(win);
             break;
 
-        case CmdDebugShowLinks:
-            gDebugShowLinks = !gDebugShowLinks;
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
-            break;
-
-        case CmdDebugDownloadSymbols:
-            DownloadDebugSymbols();
-            break;
-
-#if 0 // TODO: what was that?
-        case CmdDebugAnnotations:
-            FrameOnChar(win, 'h');
-            break;
-#endif
-
         // TODO: make it closer to handling in OnWindowContextMenu()
         case CmdCreateAnnotHighlight:
         case CmdCreateAnnotSquiggly:
@@ -4891,12 +4874,33 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             DeleteAnnotationUnderCursor(win);
         } break;
 
+        case CmdDebugDownloadSymbols:
+            DownloadDebugSymbols();
+            break;
+
+        case CmdDebugShowLinks:
+            gDebugShowLinks = !gDebugShowLinks;
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
+            }
+            break;
+
 #if defined(DEBUG)
         case CmdDebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             TestApp(GetModuleHandle(nullptr));
             break;
-#endif
+
+        case CmdDebugStartStressTest:
+            if (!win) {
+                return 0;
+            }
+            // TODO: ideally would ask user for the cmd-line args but this will do
+            Flags f;
+            f.stressTestPath = str::Dup("C:\\Users\\kjk\\!sumatra\\all formats");
+            f.stressRandomizeFiles = true;
+            StartStressTest(&f, win);
+            break;
 
         case CmdDebugShowNotif: {
             {
@@ -4922,6 +4926,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDebugCrashMe:
             CrashMe();
             break;
+#endif
 
         case CmdFavoriteAdd:
             AddFavoriteForCurrentPage(win);

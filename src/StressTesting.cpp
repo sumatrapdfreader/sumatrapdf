@@ -906,6 +906,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(nullptr));
+
     // redirect stderr to NUL to disable (MuPDF) logging
     FILE* nul;
     freopen_s(&nul, "NUL", "w", stderr);

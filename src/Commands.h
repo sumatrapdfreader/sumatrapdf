@@ -125,6 +125,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                 \
     V(CmdDebugTestApp, "Debug: Test App")                                 \
     V(CmdDebugShowNotif, "Debug: Show Notification")                      \
+    V(CmdDebugStartStressTest, "Debug: Start Stress Test")                \
     V(CmdCreateAnnotText, "Create Text Annotation")                       \
     V(CmdCreateAnnotLink, "Create Link Annotation")                       \
     V(CmdCreateAnnotFreeText, "Create Free Text Annotation")              \
@@ -155,9 +156,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCommandPalette, "Command Palette")                               \
     V(CmdShowLog, "Show log")                                             \
     V(CmdNone, "Do nothing")
-
-// TODO: was it ever implemented?
-//    V(CmdDebugAnnotations, "Debug: Annotations")                          \
 
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*
