@@ -416,7 +416,6 @@ static void SetupCrashHandler() {
     char* crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
     char* crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
-    free(symDir);
 }
 
 static HWND FindPrevInstWindow(HANDLE* hMutex) {

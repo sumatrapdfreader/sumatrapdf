@@ -4901,7 +4901,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             // f.stressTestPath = str::Dup("C:\\Users\\kjk\\!sumatra\\all formats");
             f.stressTestPath = str::Dup("D:\\sumstress");
             f.stressRandomizeFiles = true;
-            f.stressTestMax = 5;
+            f.stressTestMax = 25;
             StartStressTest(&f, win);
         } break;
 

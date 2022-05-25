@@ -239,7 +239,7 @@ struct FindThreadData : public ProgressUpdateUI {
 
             args.progressMsg = _TRA("Searching %d of %d...");
             args.groupId = kNotifGroupFindProgress;
-            ShowNotification(args);
+            wnd = ShowNotification(args);
         }
 
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, disable);
@@ -576,7 +576,7 @@ void ShowForwardSearchResult(MainWindow* win, const char* fileName, uint line, u
         buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
     }
     if (buf) {
-        args.msg = buf;
+        args.msg = buf.StealData();
     }
     if (args.msg) {
         ShowNotification(args);
