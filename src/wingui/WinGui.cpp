@@ -2253,9 +2253,9 @@ put_IsBuiltInErrorPageEnabled(BOOL enabled)
 */
 
 bool Webview2Wnd::Embed(WebViewMsgCb cb) {
-    // TOOD: replace with Interlock* functions
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
-    flag.test_and_set();
+    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
+    // called on a different thread?
+    LONG flag = 0;
     // InterlockedCompareExchange()
     WCHAR* userDataFolder = ToWstrTemp(dataDir);
     HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
@@ -2263,13 +2263,13 @@ bool Webview2Wnd::Embed(WebViewMsgCb cb) {
             controller = ctrl;
             controller->get_CoreWebView2(&webview);
             webview->AddRef();
-            flag.clear();
+            InterlockedAdd(&flag, 1);
         }));
     if (hr != S_OK) {
         return false;
     }
     MSG msg = {};
-    while (flag.test_and_set() && GetMessage(&msg, NULL, 0, 0)) {
+    while ((InterlockedAdd(&flag, 0) == 0) && GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
