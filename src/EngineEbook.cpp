@@ -361,9 +361,9 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&pagesAccess);
 
-    gAllowAllocFailure++;
+    InterlockedIncrement(&gAllowAllocFailure);
     defer {
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
     };
 
     str::WStr content;
@@ -1467,9 +1467,9 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (added.FindI(plainUrl) != -1) {
             return;
         }
-        gAllowAllocFailure++;
+        InterlockedIncrement(&gAllowAllocFailure);
         defer {
-            gAllowAllocFailure--;
+            InterlockedDecrement(&gAllowAllocFailure);
         };
         ByteSlice pageHtml = doc->GetData(plainUrl);
         if (!pageHtml) {

@@ -53,7 +53,7 @@ class Vec {
             newEls = (T*)Allocator::Realloc(allocator, els, allocSize);
         }
         if (!newEls) {
-            CrashAlwaysIf(gAllowAllocFailure.load() == 0);
+            CrashAlwaysIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
             return false;
         }
         els = newEls;

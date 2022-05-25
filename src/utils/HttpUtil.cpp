@@ -60,9 +60,9 @@ bool HttpGet(const char* urlA, HttpRsp* rspOut) {
         if (0 == dwRead) {
             break;
         }
-        gAllowAllocFailure++;
+        InterlockedIncrement(&gAllowAllocFailure);
         bool ok = rspOut->data.Append(buf, dwRead);
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
         if (!ok) {
             logf("HttpGet: data.Append failed\n");
             goto Error;

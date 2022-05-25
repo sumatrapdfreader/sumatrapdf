@@ -4891,16 +4891,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             TestApp(GetModuleHandle(nullptr));
             break;
 
-        case CmdDebugStartStressTest:
+        case CmdDebugStartStressTest: {
             if (!win) {
                 return 0;
             }
+
             // TODO: ideally would ask user for the cmd-line args but this will do
             Flags f;
             f.stressTestPath = str::Dup("C:\\Users\\kjk\\!sumatra\\all formats");
             f.stressRandomizeFiles = true;
             StartStressTest(&f, win);
-            break;
+        } break;
 
         case CmdDebugShowNotif: {
             {

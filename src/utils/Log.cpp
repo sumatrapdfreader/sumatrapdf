@@ -139,9 +139,9 @@ void log(const char* s) {
     }
     gLogMutex.Lock();
 
-    gAllowAllocFailure++;
+    InterlockedIncrement(&gAllowAllocFailure);
     defer {
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
     };
 
     if (!gLogBuf) {

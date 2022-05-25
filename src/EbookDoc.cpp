@@ -1393,9 +1393,9 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
     }
 
     str::Str text(dataLen * 2);
-    gAllowAllocFailure++;
+    InterlockedIncrement(&gAllowAllocFailure);
     defer {
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
     };
 
     for (; curr < end; curr++) {

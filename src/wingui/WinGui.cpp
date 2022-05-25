@@ -15,9 +15,6 @@
 
 #include "utils/Log.h"
 
-// TODO: don't use it
-#include <atomic>
-
 #include "webview2.h"
 
 // TODO: move to premake

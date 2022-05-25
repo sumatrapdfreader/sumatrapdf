@@ -1331,9 +1331,9 @@ static bool IsEmptyPage(HtmlPage* p) {
 // or more pages, which we remeber and send to the caller
 // if we detect accumulated pages.
 HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
-    gAllowAllocFailure++;
+    InterlockedIncrement(&gAllowAllocFailure);
     defer {
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
     };
 
     for (;;) {

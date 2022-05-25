@@ -132,7 +132,7 @@
 #include <string>
 #include <array>
 #include <limits>
-#include <span>
+//#include <span>
 //#include <iostream>
 //#include <locale>
 
@@ -572,7 +572,7 @@ class ExitScopeHelp {
 
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
-extern std::atomic<int> gAllowAllocFailure;
+extern LONG gAllowAllocFailure;
 
 /* How to use:
 defer { free(tools_filename); };
