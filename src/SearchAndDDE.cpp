@@ -611,22 +611,21 @@ if pdffilepath is provided, the file will be opened if no open window can be fou
 if newwindow = 1 then a new window is created even if the file is already open
 if focus = 1 then the focus is set to the window
 */
-static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFile, srcFile;
+static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
+    AutoFreeStr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
-    const WCHAR* next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%? \"%S\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
+    const char* next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
     if (!next) {
-        next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%? \"%S\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
+        next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
                           &newWindow, &setFocus);
     }
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (!next) {
         pdfFile.Reset();
-        next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%u,%u)]", &srcFile, &line, &col);
+        next = str::Parse(cmd, "[ForwardSearch(\"%s\",%u,%u)]", &srcFile, &line, &col);
         if (!next) {
-            next =
-                str::Parse(cmd, L"[ForwardSearch(\"%S\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow, &setFocus);
+            next = str::Parse(cmd, "[ForwardSearch(\"%s\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow, &setFocus);
         }
     }
 
@@ -634,22 +633,20 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    char* srcFileA = ToUtf8Temp(srcFile);
-    char* pdfFileA = ToUtf8Temp(pdfFile);
     MainWindow* win = nullptr;
     if (pdfFile) {
         // check if the PDF is already opened
-        win = FindWindowInfoByFile(pdfFileA, !newWindow);
+        win = FindWindowInfoByFile(pdfFile, !newWindow);
         // if not then open it
         if (newWindow || !win) {
-            LoadArgs* args = new LoadArgs(pdfFileA, !newWindow ? win : nullptr);
+            LoadArgs* args = new LoadArgs(pdfFile, !newWindow ? win : nullptr);
             win = LoadDocument(args);
         } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
     } else {
         // check if any opened PDF has sync information for the source file
-        win = FindWindowInfoBySyncFile(srcFileA, true);
+        win = FindWindowInfoBySyncFile(srcFile, true);
         if (win && newWindow) {
             LoadArgs* args = new LoadArgs(win->currentTab->filePath, nullptr);
             win = LoadDocument(args);
@@ -668,8 +665,8 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     ack.fAck = 1;
     uint page;
     Vec<Rect> rects;
-    int ret = dm->pdfSync->SourceToDoc(srcFileA, line, col, &page, rects);
-    ShowForwardSearchResult(win, srcFileA, line, col, ret, page, rects);
+    int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
+    ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus) {
         win->Focus();
     }
@@ -682,22 +679,20 @@ Search DDE command
 
 [Search("<pdffile>","<search-term>")]
 */
-static const WCHAR* HandleSearchCmd(const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFileW;
-    AutoFreeWstr termW;
-    const WCHAR* next = str::Parse(cmd, L"[Search(\"%S\",\"%s\")]", &pdfFileW, &termW);
+static const char* HandleSearchCmd(const char* cmd, DDEACK& ack) {
+    AutoFreeStr pdfFile;
+    AutoFreeStr term;
+    const char* next = str::Parse(cmd, "[Search(\"%s\",\"%s\")]", &pdfFile, &term);
     // TODO: should un-quote text to allow searching text with '"' in them
     if (!next) {
         return nullptr;
     }
-    if (str::IsEmpty(termW.Get())) {
+    if (str::IsEmpty(term.Get())) {
         return next;
     }
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    char* pdfFile = ToUtf8Temp(pdfFileW);
-    char* term = ToUtf8Temp(termW);
     MainWindow* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
@@ -721,14 +716,14 @@ Open file DDE Command
 
 [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
 */
-static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFile;
+static const char* HandleOpenCmd(const char* cmd, DDEACK& ack) {
+    AutoFreeStr pdfFile;
     int newWindow = 0;
     BOOL setFocus = 0;
     BOOL forceRefresh = 0;
-    const WCHAR* next = str::Parse(cmd, L"[Open(\"%S\")]", &pdfFile);
+    const char* next = str::Parse(cmd, "[Open(\"%s\")]", &pdfFile);
     if (!next) {
-        const WCHAR* pat = L"[Open(\"%S\",%u,%u,%u)]";
+        const char* pat = "[Open(\"%s\",%u,%u,%u)]";
         next = str::Parse(cmd, pat, &pdfFile, &newWindow, &setFocus, &forceRefresh);
     }
     if (!next) {
@@ -742,16 +737,15 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         win = CreateAndShowWindowInfo(nullptr);
     }
 
-    char* path = ToUtf8Temp(pdfFile);
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
-        gDdeOpenOnStartup.Append(path);
+        gDdeOpenOnStartup.Append(pdfFile);
         return next;
     }
 
     if (win == nullptr) {
-        win = FindWindowInfoByFile(path, focusTab);
+        win = FindWindowInfoByFile(pdfFile, focusTab);
     }
     if (newWindow || !win) {
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2315
@@ -759,7 +753,7 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         if (win == nullptr) {
             win = FindWindowInfoByHwnd(gLastActiveFrameHwnd);
         }
-        LoadArgs* args = new LoadArgs(path, win);
+        LoadArgs* args = new LoadArgs(pdfFile, win);
         win = LoadDocument(args);
     } else if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
@@ -792,15 +786,14 @@ DDE command: jump to named destination in an already opened document.
 e.g.:
 [GoToNamedDest("c:\file.pdf", "chapter.1")]
 */
-static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFile, destName;
-    const WCHAR* next = str::Parse(cmd, L"[GotoNamedDest(\"%S\",%? \"%S\")]", &pdfFile, &destName);
+static const char* HandleGotoCmd(const char* cmd, DDEACK& ack) {
+    AutoFreeStr pdfFile, destName;
+    const char* next = str::Parse(cmd, "[GotoNamedDest(\"%s\",%? \"%s\")]", &pdfFile, &destName);
     if (!next) {
         return nullptr;
     }
 
-    char* path = ToUtf8Temp(pdfFile);
-    MainWindow* win = FindWindowInfoByFile(path, true);
+    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -811,7 +804,7 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    win->linkHandler->GotoNamedDest(ToUtf8Temp(destName));
+    win->linkHandler->GotoNamedDest(destName);
     ack.fAck = 1;
     win->Focus();
     return next;
@@ -824,12 +817,10 @@ DDE command: jump to a page in an already opened document.
 eg:
 [GoToPage("c:\file.pdf",37)]
 */
-#define DDECOMMAND_PAGE L"GotoPage"
-
-static const WCHAR* HandlePageCmd(__unused HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFile;
+static const char* HandlePageCmd(__unused HWND hwnd, const char* cmd, DDEACK& ack) {
+    AutoFreeStr pdfFile;
     uint page = 0;
-    const WCHAR* next = str::Parse(cmd, L"[GotoPage(\"%S\",%u)]", &pdfFile, &page);
+    const char* next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
     if (!next) {
         return nullptr;
     }
@@ -837,8 +828,7 @@ static const WCHAR* HandlePageCmd(__unused HWND hwnd, const WCHAR* cmd, DDEACK& 
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    char* path = ToUtf8Temp(pdfFile);
-    MainWindow* win = FindWindowInfoByFile(path, true);
+    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -868,21 +858,20 @@ eg:
 
 use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
 */
-static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
-    AutoFreeWstr pdfFile, viewMode;
+static const char* HandleSetViewCmd(const char* cmd, DDEACK& ack) {
+    AutoFreeStr pdfFile, viewMode;
     float zoom = kInvalidZoom;
     Point scroll(-1, -1);
-    const WCHAR* next = str::Parse(cmd, L"[SetView(\"%S\",%? \"%S\",%f)]", &pdfFile, &viewMode, &zoom);
+    const char* next = str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f)]", &pdfFile, &viewMode, &zoom);
     if (!next) {
         next =
-            str::Parse(cmd, L"[SetView(\"%S\",%? \"%S\",%f,%d,%d)]", &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
+            str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f,%d,%d)]", &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
     }
     if (!next) {
         return nullptr;
     }
 
-    char* path = ToUtf8Temp(pdfFile);
-    MainWindow* win = FindWindowInfoByFile(path, true);
+    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -893,8 +882,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    auto viewModeWstr = ToUtf8Temp(viewMode);
-    DisplayMode mode = DisplayModeFromString(viewModeWstr, DisplayMode::Automatic);
+    DisplayMode mode = DisplayModeFromString(viewMode, DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
     }
@@ -915,14 +903,11 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
+static void HandleDdeCmds(HWND hwnd, const char* cmd, DDEACK& ack) {
     while (!str::IsEmpty(cmd)) {
-        {
-            auto tmp = ToUtf8Temp(cmd);
-            logf("HandleDdeCmds: '%s'\n", tmp);
-        }
+        { logf("HandleDdeCmds: '%s'\n", cmd); }
 
-        const WCHAR* nextCmd = HandleSyncCmd(cmd, ack);
+        const char* nextCmd = HandleSyncCmd(cmd, ack);
         if (!nextCmd) {
             nextCmd = HandleOpenCmd(cmd, ack);
         }
@@ -939,8 +924,8 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
             nextCmd = HandleSearchCmd(cmd, ack);
         }
         if (!nextCmd) {
-            AutoFreeWstr tmp;
-            nextCmd = str::Parse(cmd, L"%S]", &tmp);
+            AutoFreeStr tmp;
+            nextCmd = str::Parse(cmd, "%s]", &tmp);
         }
         cmd = nextCmd;
     }
@@ -958,11 +943,11 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    AutoFreeWstr cmd;
+    char* cmd;
     if (IsWindowUnicode((HWND)wp)) {
-        cmd = str::Dup((WCHAR*)command);
+        cmd = ToUtf8Temp((WCHAR*)command);
     } else {
-        cmd = strconv::AnsiToWstr((const char*)command);
+        cmd = (char*)command;
     }
     HandleDdeCmds(hwnd, cmd, ack);
     GlobalUnlock((HGLOBAL)hi);
@@ -984,12 +969,13 @@ LRESULT OnCopyData(__unused HWND hwnd, WPARAM wp, LPARAM lp) {
         return FALSE;
     }
 
-    const WCHAR* cmd = (const WCHAR*)cds->lpData;
-    if (cmd[cds->cbData / sizeof(WCHAR) - 1]) {
+    const WCHAR* cmdW = (const WCHAR*)cds->lpData;
+    if (cmdW[cds->cbData / sizeof(WCHAR) - 1]) {
         return FALSE;
     }
 
     DDEACK ack{};
+    char* cmd = ToUtf8Temp(cmdW);
     HandleDdeCmds(hwnd, cmd, ack);
     return ack.fAck ? TRUE : FALSE;
 }
