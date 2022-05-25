@@ -83,10 +83,10 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 WCHAR* GetSumatraExePath() {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
-    AutoFreeWstr path(path::GetPathOfFileInAppDir(L"SumatraPDF.exe"));
+    char* path = path::GetPathOfFileInAppDir("SumatraPDF.exe");
     if (!file::Exists(path))
         return str::Dup(L"SumatraPDF.exe");
-    return path.StealData();
+    return ToWstr(path);
 }
 
 static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
