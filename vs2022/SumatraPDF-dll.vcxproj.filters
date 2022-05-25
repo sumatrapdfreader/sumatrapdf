@@ -419,10 +419,10 @@
     <ClCompile Include="..\src\Toolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Translations.cpp">
+    <ClCompile Include="..\src\TranslationLangs.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TranslationsInfo.cpp">
+    <ClCompile Include="..\src\Translations.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Uninstaller.cpp">
