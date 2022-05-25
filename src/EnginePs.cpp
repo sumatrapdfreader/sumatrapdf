@@ -62,7 +62,7 @@ TryAgain64Bit:
         for (const char* gsProd : gsProducts) {
             char* ver = versions.at(ix - 1);
             AutoFreeStr keyName(str::Format("Software\\%s\\%s", gsProd, ver));
-            AutoFreeStr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, "GS_DLL"));
+            char* GS_DLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!GS_DLL) {
                 continue;
             }

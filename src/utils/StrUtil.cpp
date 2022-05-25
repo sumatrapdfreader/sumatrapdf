@@ -198,7 +198,9 @@ void FreePtr(WCHAR** s) {
 }
 
 char* Dup(Allocator* a, const char* s, size_t cch) {
-    CrashIf(!s && (int)cch > 0);
+    if (!s) {
+        return nullptr;
+    }
     if (cch == (size_t)-1) {
         cch = str::Len(s);
     }

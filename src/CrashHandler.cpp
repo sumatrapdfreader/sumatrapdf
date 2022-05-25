@@ -465,21 +465,20 @@ static void GetOsVersion(str::Str& s) {
 
 static void GetProcessorName(str::Str& s) {
     auto key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
-    char* name = ReadRegStr(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
+    char* name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
         // if more than one processor
         key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
-        name = ReadRegStr(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
+        name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     }
     if (name) {
         s.AppendFmt("Processor: %s\n", name);
-        free(name);
     }
 }
 
 static void GetMachineName(str::Str& s) {
-    char* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
-    char* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
+    char* s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
+    char* s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
 
     if (!s1 && !s2) {
         // no-op
@@ -490,8 +489,6 @@ static void GetMachineName(str::Str& s) {
     } else {
         s.AppendFmt("Machine: %s %s\n", s1, s2);
     }
-    free(s2);
-    free(s1);
 }
 
 #define GFX_DRIVER_KEY_FMT "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
@@ -507,25 +504,22 @@ static void GetGraphicsDriverInfo(str::Str& s) {
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
         AutoFreeStr key(str::Format(GFX_DRIVER_KEY_FMT, i));
-        char* v = ReadRegStr(HKEY_LOCAL_MACHINE, key, "DriverDesc");
+        char* v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverDesc");
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {
             break;
         }
         s.AppendFmt("Graphics driver %d\n", i);
         s.AppendFmt("  DriverDesc:         %s\n", v);
-        str::Free(v);
 
-        v = ReadRegStr(HKEY_LOCAL_MACHINE, key, "DriverVersion");
+        v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverVersion");
         if (v) {
             s.AppendFmt("  DriverVersion:      %s\n", v);
-            str::Free(v);
         }
 
-        v = ReadRegStr(HKEY_LOCAL_MACHINE, key, "UserModeDriverName");
+        v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "UserModeDriverName");
         if (v) {
             s.AppendFmt("  UserModeDriverName: %s\n", v);
-            str::Free(v);
         }
     }
 }

@@ -118,17 +118,16 @@ char* GetExistingInstallationDir() {
     }
     log("GetExistingInstallationDir()\n");
     char* regPathUninst = GetRegPathUninstTemp(kAppName);
-    AutoFreeStr dir = LoggedReadRegStr2(regPathUninst, "InstallLocation");
+    char* dir = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!dir) {
         return nullptr;
     }
     if (str::EndsWithI(dir, ".exe")) {
-        dir.SetCopy(path::GetDirTemp(dir));
+        dir = path::GetDirTemp(dir);
     }
     if (!str::IsEmpty(dir) && dir::Exists(dir)) {
-        char* res = dir.StealData();
-        gCachedExistingInstallationDir = str::Dup(res);
-        return res;
+        gCachedExistingInstallationDir = str::Dup(dir);
+        return str::Dup(dir);
     }
     return nullptr;
 }
@@ -143,12 +142,12 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     info->searchFilterInstalled = IsSearchFilterInstalled();
     info->previewInstalled = IsPreviewInstalled();
     char* regPathUninst = GetRegPathUninstTemp(kAppName);
-    AutoFreeStr dirLM = LoggedReadRegStr(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
-    AutoFreeStr dirCU = LoggedReadRegStr(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
-    if (dirLM.Get() && dirCU.Get()) {
+    char* dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
+    char* dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
+    if (dirLM && dirCU) {
         info->typ = PreviousInstallationType::Both;
     }
-    if (dirLM.Get()) {
+    if (dirLM) {
         info->typ = PreviousInstallationType::Machine;
     } else {
         info->typ = PreviousInstallationType::User;
@@ -157,12 +156,12 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
          (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ);
 }
 
-static char* GetExistingInstallationFilePath(const char* name) {
+static char* GetExistingInstallationFilePathTemp(const char* name) {
     char* dir = GetExistingInstallationDir();
     if (!dir) {
         return nullptr;
     }
-    return path::Join(dir, name);
+    return path::JoinTemp(dir, name);
 }
 
 char* GetInstallDirTemp() {
@@ -190,13 +189,13 @@ TempStr GetShortcutPathTemp(int csidl) {
     return path::JoinTemp(dir, lnkName);
 }
 
-char* GetInstalledBrowserPluginPath() {
+static char* GetInstalledBrowserPluginPathTemp() {
 #ifndef _WIN64
     const char* kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
 #else
     const char* kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
 #endif
-    return LoggedReadRegStr2(kRegPathPlugin, "Path");
+    return LoggedReadRegStr2Temp(kRegPathPlugin, "Path");
 }
 
 static bool IsProcessUsingFiles(DWORD procId, const char* file1, const char* file2) {
@@ -233,10 +232,10 @@ constexpr const char* kBrowserPluginName = "npPdfViewer.dll";
 
 void UninstallBrowserPlugin() {
     log("UninstallBrowserPlugin()\n");
-    AutoFreeStr dllPath = GetExistingInstallationFilePath(kBrowserPluginName);
+    char* dllPath = GetExistingInstallationFilePathTemp(kBrowserPluginName);
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
-        dllPath.Set(GetInstalledBrowserPluginPath());
+        dllPath = GetInstalledBrowserPluginPathTemp();
         if (!file::Exists(dllPath)) {
             return;
         }
@@ -265,8 +264,8 @@ void RegisterSearchFilter(bool allUsers) {
 }
 
 void UnRegisterSearchFilter() {
-    AutoFreeStr dllPath = GetExistingInstallationFilePath(kSearchFilterDllName);
-    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.Get());
+    char* dllPath = GetExistingInstallationFilePathTemp(kSearchFilterDllName);
+    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = UninstallSearchFilter();
     if (ok) {
         log("  did unregister\n");
@@ -291,8 +290,8 @@ void RegisterPreviewer(bool allUsers) {
 }
 
 void UnRegisterPreviewer() {
-    AutoFreeStr dllPath = GetExistingInstallationFilePath(kPreviewDllName);
-    logf("UnRegisterPreviewer() dllPath=%s\n", dllPath.Get());
+    char* dllPath = GetExistingInstallationFilePathTemp(kPreviewDllName);
+    logf("UnRegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = UninstallPreviewDll();
     if (ok) {
         log("  did unregister\n");

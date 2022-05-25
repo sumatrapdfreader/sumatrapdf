@@ -308,7 +308,7 @@ bool OpenFileExternally(const char* path) {
 
     // check if this file's perceived type is allowed
     char* ext = path::GetExtTemp(path);
-    AutoFreeStr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, "PerceivedType"));
+    char* perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "PerceivedType");
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
         perceivedType = str::DupTemp("webpage");

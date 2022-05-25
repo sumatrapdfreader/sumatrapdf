@@ -165,54 +165,57 @@ void FreeExternalViewers() {
     }
 }
 
-static char* GetAcrobatPath() {
+static char* GetAcrobatPathTemp() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    AutoFreeStr path =
-        ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
+    const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)";
+    char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
     if (!path) {
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)",
-                            nullptr));
+        keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)";
+        path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
     }
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     return nullptr;
 }
 
-static char* GetFoxitPath() {
-    AutoFreeStr path = ReadRegStr(HKEY_LOCAL_MACHINE,
-                                  R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)", "DisplayIcon");
+static char* GetFoxitPathTemp() {
+    const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)";
+    char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)",
-                        "DisplayIcon"));
+    keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)";
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     // Registry value for Foxit 5.5 MSI installer
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Foxit Software\Foxit Reader)", "InstallPath"));
+    keyName = R"(Software\Foxit Software\Foxit Reader)";
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
     if (path) {
-        path.Set(path::Join(path, "Foxit Reader.exe"));
+        path = path::JoinTemp(path, "Foxit Reader.exe");
     }
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     return nullptr;
 }
 
-static char* GetPDFXChangePath() {
-    AutoFreeStr path = ReadRegStr(HKEY_LOCAL_MACHINE, R"(Software\Tracker Software\PDFViewer)", "InstallPath");
+static char* GetPDFXChangePathTemp() {
+    const char* keyName = R"(Software\Tracker Software\PDFViewer)";
+    char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
     if (!path) {
-        path.Set(ReadRegStr(HKEY_CURRENT_USER, R"(Software\Tracker Software\PDFViewer)", "InstallPath"));
+        keyName = R"(Software\Tracker Software\PDFViewer)";
+        path = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, "InstallPath");
     }
     if (!path) {
         return nullptr;
     }
-    AutoFreeStr exePath(path::Join(path, "PDFXCview.exe"));
+    char* exePath = path::JoinTemp(path, "PDFXCview.exe");
     if (file::Exists(exePath)) {
-        return exePath.StealData();
+        return exePath;
     }
     return nullptr;
 }
@@ -232,17 +235,17 @@ void DetectExternalViewers() {
 
     info = FindExternalViewerInfoByCmd(CmdOpenWithAcrobat);
     if (!info->exeFullPath) {
-        info->exeFullPath = GetAcrobatPath();
+        info->exeFullPath = str::Dup(GetAcrobatPathTemp());
     }
 
     info = FindExternalViewerInfoByCmd(CmdOpenWithFoxIt);
     if (!info->exeFullPath) {
-        info->exeFullPath = GetFoxitPath();
+        info->exeFullPath = str::Dup(GetFoxitPathTemp());
     }
 
     info = FindExternalViewerInfoByCmd(CmdOpenWithPdfXchange);
     if (!info->exeFullPath) {
-        info->exeFullPath = GetPDFXChangePath();
+        info->exeFullPath = str::Dup(GetPDFXChangePathTemp());
     }
 }
 

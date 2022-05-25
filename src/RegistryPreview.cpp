@@ -157,7 +157,7 @@ void DisablePreviewInstallExts(const char* cmdLine) {
 
 bool IsPreviewInstalled() {
     const char* key = ".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    AutoFreeStr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    char* iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
     bool isInstalled = str::EqI(iid, kPdfPreviewClsid);
     logf("IsPreviewInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;

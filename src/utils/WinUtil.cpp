@@ -298,8 +298,7 @@ bool RegKeyExists(HKEY hkey, const char* keyName) {
     return ERROR_ACCESS_DENIED == res;
 }
 
-// called needs to free() the result
-char* ReadRegStr(HKEY hkey, const char* keyName, const char* valName) {
+char* ReadRegStrTemp(HKEY hkey, const char* keyName, const char* valName) {
     if (!hkey) {
         return nullptr;
     }
@@ -332,29 +331,29 @@ TryAgainWOW64:
 #endif
         goto TryAgainWOW64;
     }
-    char* resv = ToUtf8(val);
+    char* resv = ToUtf8Temp(val);
     str::Free(val);
     return resv;
 }
 
-char* LoggedReadRegStr(HKEY hkey, const char* keyName, const char* valName) {
-    auto res = ReadRegStr(hkey, keyName, valName);
-    logf("ReadRegStr(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(hkey), keyName, valName, res);
+char* LoggedReadRegStrTemp(HKEY hkey, const char* keyName, const char* valName) {
+    auto res = ReadRegStrTemp(hkey, keyName, valName);
+    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(hkey), keyName, valName, res);
     return res;
 }
 
-char* ReadRegStr2(const char* keyName, const char* valName) {
-    char* res = ReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
+char* ReadRegStr2Temp(const char* keyName, const char* valName) {
+    char* res = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
-        res = ReadRegStr(HKEY_CURRENT_USER, keyName, valName);
+        res = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
 }
 
-char* LoggedReadRegStr2(const char* keyName, const char* valName) {
-    char* res = LoggedReadRegStr(HKEY_LOCAL_MACHINE, keyName, valName);
+char* LoggedReadRegStr2Temp(const char* keyName, const char* valName) {
+    char* res = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
-        res = LoggedReadRegStr(HKEY_CURRENT_USER, keyName, valName);
+        res = LoggedReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
 }

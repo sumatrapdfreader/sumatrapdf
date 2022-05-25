@@ -417,12 +417,12 @@ static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
         }
     }
 
-    AutoFreeStr contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, "Content Type"));
+    char* contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
     if (contentType) {
-        return contentType.Get();
+        return contentType;
     }
 
-    return str::Dup(kDefaultMimeType);
+    return str::DupTemp(kDefaultMimeType);
 }
 
 // TODO: return an error page html in case of errors?

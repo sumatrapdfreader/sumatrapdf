@@ -21,7 +21,7 @@
 bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
     char* regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
-    AutoFreeStr installedPath = LoggedReadRegStr2(regPathUninst, "InstallLocation");
+    char* installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!installedPath) {
         return false;
     }
@@ -32,8 +32,7 @@ bool HasBeenInstalled() {
     }
 
     if (!str::EndsWithI(installedPath, ".exe")) {
-        char* tmp = path::Join(installedPath, path::GetBaseNameTemp(exePath));
-        installedPath.Set(tmp);
+        installedPath = path::JoinTemp(installedPath, path::GetBaseNameTemp(exePath));
     }
     return path::IsSame(installedPath, exePath);
 }
@@ -198,7 +197,7 @@ char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
     for (auto& rule : editorRules) {
         const char* regKey = rule.regKey;
         const char* regValue = rule.regValue;
-        AutoFreeStr path(LoggedReadRegStr2(regKey, regValue));
+        char* path = LoggedReadRegStr2Temp(regKey, regValue);
         if (!path) {
             continue;
         }

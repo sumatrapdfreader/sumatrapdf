@@ -501,9 +501,9 @@ static const char* GetRegClassesAppTemp(const char* appName) {
 // Used in pre-3.4
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     log("UnregisterFromBeingDefaultViewer()\n");
-    AutoFreeStr curr = LoggedReadRegStr(hkey, kRegClassesPdf, nullptr);
+    char* curr = LoggedReadRegStrTemp(hkey, kRegClassesPdf, nullptr);
     const char* regClassesApp = GetRegClassesAppTemp(kAppName);
-    AutoFreeStr prev = LoggedReadRegStr(hkey, regClassesApp, "previous.pdf");
+    char* prev = LoggedReadRegStrTemp(hkey, regClassesApp, "previous.pdf");
     if (!curr || !str::Eq(curr, kAppName)) {
         // not the default, do nothing
     } else {
@@ -512,15 +512,15 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeStr buf = LoggedReadRegStr(hkey, kRegExplorerPdfExt, "ProgId");
+    char* buf = LoggedReadRegStrTemp(hkey, kRegExplorerPdfExt, "ProgId");
     if (str::Eq(buf, kAppName)) {
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "ProgId");
     }
-    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt, "Application"));
+    buf = LoggedReadRegStrTemp(hkey, kRegExplorerPdfExt, "Application");
     if (str::EqI(buf, kExeName)) {
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "Application");
     }
-    buf.Set(LoggedReadRegStr(hkey, kRegExplorerPdfExt "\\UserChoice", "ProgId"));
+    buf = LoggedReadRegStrTemp(hkey, kRegExplorerPdfExt "\\UserChoice", "ProgId");
     if (str::Eq(buf, kAppName)) {
         LoggedDeleteRegKey(hkey, kRegExplorerPdfExt "\\UserChoice", true);
     }
