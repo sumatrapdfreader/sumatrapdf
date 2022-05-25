@@ -274,7 +274,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
 }
 
 bool CrashHandlerDownloadSymbols() {
-    log("CrashHandlerDownloadSymbols()\n");
+    logf("CrashHandlerDownloadSymbols() from %s\n", gSymbolsUrl);
     if (!dir::Create(gSymbolsDir)) {
         log("CrashHandlerDownloadSymbols: couldn't create symbols dir\n");
         return false;
