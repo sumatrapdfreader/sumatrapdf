@@ -4272,14 +4272,6 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
     }
     Replace(url, kSelectionStr, encodedSelection.Get());
     const char* lang = trans::GetCurrentLangCode();
-    if (str::Eq(lang, "en")) {
-        // no point to translate from en => en
-        // a hack for google translate: instead of translating to forced language
-        // leave dest lang unspecified which presumably will select whatever
-        // language the user used last
-        Replace(url, L"&tl=${userlang}", L"");
-        lang = "de";
-    }
     auto langW = ToWstrTemp(lang);
     Replace(url, kUserLangStr, langW);
     char* uri = ToUtf8Temp(url.Get());
@@ -4843,11 +4835,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdTranslateSelectionWithGoogle:
             LaunchBrowserWithSelection(
-                tab, L"https://translate.google.com/?sl=auto&tl=${userlang}&op=translate&text=${selection}");
+                tab, L"https://translate.google.com/?op=translate&sl=auto&tl=${userlang}&text=${selection}");
             break;
 
         case CmdTranslateSelectionWithDeepL:
-            LaunchBrowserWithSelection(tab, L"https://www.deepl.com/translator#en/${userlang}/${selection}");
+            LaunchBrowserWithSelection(tab, L"https://www.deepl.com/translator#-/${userlang}/${selection}");
             break;
 
         case CmdSearchSelectionWithGoogle:
