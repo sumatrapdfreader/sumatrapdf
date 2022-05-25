@@ -53,7 +53,7 @@ static char* BuildSymbolsUrl() {
         urlBase = "https://www.sumatrapdfreader.org/dl/prerel/" QM(PRE_RELEASE_VER) "/SumatraPDF-prerel";
     } else {
         // assuming this is release version
-        urlBase = "https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" QM(CURR_VERSION);
+        urlBase = "https://www.sumatrapdfreader.org/dl/rel/" QM(PRE_RELEASE_VER) "/SumatraPDF-" QM(CURR_VERSION);
     }
     const char* suff = ".pdb.lzsa";
     if (IsProcess64()) {
