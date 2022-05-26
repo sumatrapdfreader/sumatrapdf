@@ -881,6 +881,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
 
     // associate hwnd with this window as soon as possible
     // in StaticWndProc
+    // TODO: use createParams instead of gWindowBeingCreated
     gWindowBeingCreated = this;
     HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
     gWindowBeingCreated = nullptr;
