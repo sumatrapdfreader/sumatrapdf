@@ -1609,10 +1609,8 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     AutoDelete delArgs(args);
 
     MainWindow* win = args->win;
-    AdjustPathForMaybeMovedFile(args);
-
-    const char* fullPath = args->FilePath();
     bool failEarly = AdjustPathForMaybeMovedFile(args);
+    const char* fullPath = args->FilePath();
 
     // fail fast if the file doesn't exist and there is a window the user
     // has just been interacting with
