@@ -417,7 +417,7 @@ xps_load_fixed_page(fz_context *ctx, xps_document *doc, xps_fixpage *page)
 			fz_xml *node = xps_lookup_alternate_content(ctx, doc, root);
 			if (!node)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "FixedPage missing alternate root element");
-			fz_detach_xml(ctx, xml, node);
+			fz_detach_xml(ctx, node);
 			root = node;
 		}
 

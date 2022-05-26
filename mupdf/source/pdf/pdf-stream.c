@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -489,7 +489,7 @@ pdf_load_raw_stream_number(fz_context *ctx, pdf_document *doc, int num)
 
 	if (num > 0 && num < pdf_xref_len(ctx, doc))
 	{
-		x = pdf_get_xref_entry(ctx, doc, num);
+		x = pdf_get_xref_entry_no_null(ctx, doc, num);
 		if (x->stm_buf)
 			return fz_keep_buffer(ctx, x->stm_buf);
 	}

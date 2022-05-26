@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -745,8 +745,8 @@ static void removeduplicateobjs(fz_context *ctx, pdf_document *doc, pdf_write_st
 			if (differ)
 				continue;
 
-			a = pdf_get_xref_entry(ctx, doc, num)->obj;
-			b = pdf_get_xref_entry(ctx, doc, other)->obj;
+			a = pdf_get_xref_entry_no_null(ctx, doc, num)->obj;
+			b = pdf_get_xref_entry_no_null(ctx, doc, other)->obj;
 
 			if (pdf_objcmp(ctx, a, b))
 				continue;
@@ -923,7 +923,7 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 			if (to == 0)
 				continue;
 
-			obj = pdf_get_xref_entry(ctx, doc, num)->obj;
+			obj = pdf_get_xref_entry_no_null(ctx, doc, num)->obj;
 
 			if (pdf_is_indirect(ctx, obj))
 			{
@@ -943,7 +943,7 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 
 		/* Create new table for the reordered, compacted xref */
 		newxref = Memento_label(fz_malloc_array(ctx, xref_len + 3, pdf_xref_entry), "pdf_xref_entries");
-		newxref[0] = *pdf_get_xref_entry(ctx, doc, 0);
+		newxref[0] = *pdf_get_xref_entry_no_null(ctx, doc, 0);
 
 		/* Move used objects into the new compacted xref */
 		newlen = 0;
@@ -954,7 +954,7 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 				pdf_xref_entry *e;
 				if (newlen < opts->renumber_map[num])
 					newlen = opts->renumber_map[num];
-				e = pdf_get_xref_entry(ctx, doc, num);
+				e = pdf_get_xref_entry_no_null(ctx, doc, num);
 				newxref[opts->renumber_map[num]] = *e;
 				if (e->obj)
 					pdf_set_obj_parent(ctx, e->obj, opts->renumber_map[num]);
@@ -964,7 +964,7 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 			}
 			else
 			{
-				pdf_xref_entry *e = pdf_get_xref_entry(ctx, doc, num);
+				pdf_xref_entry *e = pdf_get_xref_entry_no_null(ctx, doc, num);
 				pdf_drop_obj(ctx, e->obj);
 				e->obj = NULL;
 				fz_drop_buffer(ctx, e->stm_buf);
@@ -1287,7 +1287,7 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		pdf_dict_put(ctx, hint_obj, PDF_NAME(Filter), PDF_NAME(FlateDecode));
 		opts->hints_length = pdf_new_int(ctx, INT_MIN);
 		pdf_dict_put(ctx, hint_obj, PDF_NAME(Length), opts->hints_length);
-		xe = pdf_get_xref_entry(ctx, doc, hint_num);
+		xe = pdf_get_xref_entry_no_null(ctx, doc, hint_num);
 		xe->stm_ofs = 0;
 		/* Empty stream, required so that we write the object as
 		 * a stream during the first pass. Without this, offsets
@@ -1600,7 +1600,7 @@ static void preloadobjstms(fz_context *ctx, pdf_document *doc)
 	/* xref_len may change due to repair, so check it every iteration */
 	for (num = 0; num < pdf_xref_len(ctx, doc); num++)
 	{
-		if (pdf_get_xref_entry(ctx, doc, num)->type == 'o')
+		if (pdf_get_xref_entry_no_null(ctx, doc, num)->type == 'o')
 		{
 			obj = pdf_load_object(ctx, doc, num);
 			pdf_drop_obj(ctx, obj);
@@ -2426,7 +2426,7 @@ padto(fz_context *ctx, fz_output *out, int64_t target)
 static void
 dowriteobject(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, int num, int pass)
 {
-	pdf_xref_entry *entry = pdf_get_xref_entry(ctx, doc, num);
+	pdf_xref_entry *entry = pdf_get_xref_entry_no_null(ctx, doc, num);
 	int gen = opts->gen_list ? opts->gen_list[num] : 0;
 	if (entry->type == 'f')
 		gen = entry->gen;

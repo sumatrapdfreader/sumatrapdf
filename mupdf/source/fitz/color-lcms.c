@@ -24,6 +24,8 @@
 
 #include "color-imp.h"
 
+#include <string.h>
+
 #if FZ_ENABLE_ICC
 
 #ifndef LCMS_USE_FLOAT
@@ -338,8 +340,10 @@ fz_new_icc_link(fz_context *ctx,
 	if (copy_spots)
 		flags |= cmsFLAGS_COPY_ALPHA;
 
+#ifdef cmsFLAGS_PREMULT
 	if (premult)
 		flags |= cmsFLAGS_PREMULT;
+#endif
 
 	if (prf_pro == NULL)
 	{
@@ -471,9 +475,15 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 
 	inputpos = src->samples;
 	outputpos = dst->samples;
-	/* LCMS can only handle premultiplied data if the number of 'extra'
+
+#ifdef cmsFLAGS_PREMULT
+	/* LCMS2MT can only handle premultiplied data if the number of 'extra'
 	 * channels is the same. If not, do it by steam. */
 	if (sa && cmm_extras != (int)T_EXTRA(dst_format))
+#else
+	/* Vanilla LCMS2 cannot handle premultiplied data. If present, do it by steam. */
+	if (sa)
+#endif
 	{
 		buffer = fz_malloc(ctx, ss);
 		for (; h > 0; h--)

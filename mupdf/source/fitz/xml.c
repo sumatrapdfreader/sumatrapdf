@@ -20,7 +20,7 @@
 // Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
-#include "mupdf/fitz.h"
+#include "xml-imp.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -104,42 +104,6 @@ struct parser
 #endif
 };
 
-struct attribute
-{
-	char *value;
-	struct attribute *next;
-	char name[1];
-};
-
-struct fz_xml_doc
-{
-	fz_pool *pool;
-	fz_xml *root;
-};
-
-/* Text nodes never use the down pointer. Therefore
- * if the down pointer is the MAGIC_TEXT value, we
- * know there is text. */
-struct fz_xml
-{
-	fz_xml *up, *down, *prev, *next;
-#ifdef FZ_XML_SEQ
-	int seq;
-#endif
-	union
-	{
-		char text[1];
-		struct
-		{
-			struct attribute *atts;
-			char name[1];
-		} d;
-	} u;
-};
-
-#define MAGIC_TEXT ((fz_xml *)1)
-#define FZ_TEXT_ITEM(item) (item && item->down == MAGIC_TEXT)
-
 static void xml_indent(int n)
 {
 	while (n--) {
@@ -150,7 +114,16 @@ static void xml_indent(int n)
 
 void fz_debug_xml(fz_xml *item, int level)
 {
-	char *s = fz_xml_text(item);
+	char *s;
+
+	/* Skip over the DOC object at the top. */
+	if (item->up == NULL)
+	{
+		fz_debug_xml(item->down, level);
+		return;
+	}
+
+	s = fz_xml_text(item);
 	if (s)
 	{
 		int c;
@@ -188,69 +161,76 @@ void fz_debug_xml(fz_xml *item, int level)
 
 		xml_indent(level);
 #ifdef FZ_XML_SEQ
-		printf("(%s <%d>\n", item->u.d.name, item->seq);
+		printf("(%s <%d>\n", item->u.node.u.d.name, item->u.node.seq);
 #else
-		printf("(%s\n", item->u.d.name);
+		printf("(%s\n", item->u.node.u.d.name);
 #endif
-		for (att = item->u.d.atts; att; att = att->next)
+		for (att = item->u.node.u.d.atts; att; att = att->next)
 		{
 			xml_indent(level);
 			printf("=%s %s\n", att->name, att->value);
 		}
-		for (child = fz_xml_down(item); child; child = child->next)
+		for (child = fz_xml_down(item); child; child = child->u.node.next)
 			fz_debug_xml(child, level + 1);
 		xml_indent(level);
 #ifdef FZ_XML_SEQ
-		printf(")%s <%d>\n", item->u.d.name, item->seq);
+		printf(")%s <%d>\n", item->u.node.u.d.name, item->u.node.seq);
 #else
-		printf(")%s\n", item->u.d.name);
+		printf(")%s\n", item->u.node.u.d.name);
 #endif
 	}
 }
 
 fz_xml *fz_xml_prev(fz_xml *item)
 {
-	return item ? item->prev : NULL;
+	return item && item->up ? item->u.node.prev : NULL;
 }
 
 fz_xml *fz_xml_next(fz_xml *item)
 {
-	return item ? item->next : NULL;
+	return item && item->up ? item->u.node.next : NULL;
 }
 
 fz_xml *fz_xml_up(fz_xml *item)
 {
-	return item ? item->up : NULL;
+	/* Never step up to the DOC. */
+	return item && item->up && item->up->up ? item->up : NULL;
 }
 
 fz_xml *fz_xml_down(fz_xml *item)
 {
+	/* DOC items can never have MAGIC_TEXT as their down value,
+	 * so this is safe. */
 	return item && !FZ_TEXT_ITEM(item) ? item->down : NULL;
 }
 
 char *fz_xml_text(fz_xml *item)
 {
-	return (item && FZ_TEXT_ITEM(item)) ? item->u.text : NULL;
+	/* DOC items can never have MAGIC_TEXT as their down value,
+	 * so this is safe. */
+	return (item && FZ_TEXT_ITEM(item)) ? item->u.node.u.text : NULL;
 }
 
 char *fz_xml_tag(fz_xml *item)
 {
-	return item && !FZ_TEXT_ITEM(item) && item->u.d.name[0] ? item->u.d.name : NULL;
+	/* DOC items can never have MAGIC_TEXT as their down value,
+	 * so this is safe. */
+	return item && !FZ_TEXT_ITEM(item) && item->u.node.u.d.name[0] ? item->u.node.u.d.name : NULL;
 }
 
 int fz_xml_is_tag(fz_xml *item, const char *name)
 {
-	if (!item || FZ_TEXT_ITEM(item))
+	if (!item || FZ_DOCUMENT_ITEM(item) || FZ_TEXT_ITEM(item))
 		return 0;
-	return !strcmp(item->u.d.name, name);
+	return !strcmp(item->u.node.u.d.name, name);
 }
 
 char *fz_xml_att(fz_xml *item, const char *name)
 {
 	struct attribute *att;
-	if (!item || FZ_TEXT_ITEM(item))
+	if (!item || FZ_DOCUMENT_ITEM(item) || FZ_TEXT_ITEM(item))
 		return NULL;
-	for (att = item->u.d.atts; att; att = att->next)
+	for (att = item->u.node.u.d.atts; att; att = att->next)
 		if (!strcmp(att->name, name))
 			return att->value;
 	return NULL;
@@ -266,19 +246,27 @@ char *fz_xml_att_alt(fz_xml *item, const char *one, const char *two)
 
 fz_xml *fz_xml_find(fz_xml *item, const char *tag)
 {
+	/* Skip over any DOC item. */
+	if (item && FZ_DOCUMENT_ITEM(item))
+		item = item->down;
+
 	while (item)
 	{
-		if (!FZ_TEXT_ITEM(item) && !strcmp(item->u.d.name, tag))
+		if (!FZ_TEXT_ITEM(item) && !strcmp(item->u.node.u.d.name, tag))
 			return item;
-		item = item->next;
+		item = item->u.node.next;
 	}
 	return NULL;
 }
 
 fz_xml *fz_xml_find_next(fz_xml *item, const char *tag)
 {
+	/* Skip over any DOC item. */
+	if (item && FZ_DOCUMENT_ITEM(item))
+		item = item->down;
+
 	if (item)
-		item = item->next;
+		item = item->u.node.next;
 	return fz_xml_find(item, tag);
 }
 
@@ -298,12 +286,16 @@ int fz_xml_att_eq(fz_xml *item, const char *name, const char *match)
 
 fz_xml *fz_xml_find_match(fz_xml *item, const char *tag, const char *att, const char *match)
 {
+	/* Skip over any document item. */
+	if (item && FZ_DOCUMENT_ITEM(item))
+		item = item->down;
+
 	while (1)
 	{
-		item = fz_xml_find(item, tag);
+		item = tag ? fz_xml_find(item, tag) : item;
 		if (item == NULL || fz_xml_att_eq(item, att, match))
 			break;
-		item = item->next;
+		item = item->u.node.next;
 	}
 
 	return item;
@@ -311,9 +303,13 @@ fz_xml *fz_xml_find_match(fz_xml *item, const char *tag, const char *att, const 
 
 fz_xml *fz_xml_find_next_match(fz_xml *item, const char *tag, const char *att, const char *match)
 {
+	/* Skip over any document item. */
+	if (item && FZ_DOCUMENT_ITEM(item))
+		item = item->down;
+
 	do
 	{
-		item = fz_xml_find_next(item, tag);
+		item = tag ? fz_xml_find_next(item, tag) : item->u.node.next;
 	}
 	while (item != NULL && !fz_xml_att_eq(item, att, match));
 
@@ -325,25 +321,60 @@ fz_xml *fz_xml_find_down_match(fz_xml *item, const char *tag, const char *att, c
 	return fz_xml_find_match(fz_xml_down(item), tag, att, match);
 }
 
-fz_xml *fz_xml_root(fz_xml_doc *xml)
+fz_xml *fz_xml_root(fz_xml *xml)
 {
-	return xml ? xml->root : NULL;
+	if (xml == NULL)
+		return NULL;
+
+	/* If we've been given a node mid-tree, run up to the root to find
+	 * the doc node. */
+	while (xml->up)
+		xml = xml->up;
+
+	/* And the root is the child of the doc.*/
+	return xml->down;
 }
 
-void fz_drop_xml(fz_context *ctx, fz_xml_doc *xml)
+void fz_drop_xml(fz_context *ctx, fz_xml *xml)
 {
-	if (xml)
-		fz_drop_pool(ctx, xml->pool);
+	if (!xml)
+		return;
+
+	/* Whereever we are in the tree, we want the doc node at the root. */
+	while (xml->up)
+		xml = xml->up;
+
+	/* Drop a reference to the tree as a whole. */
+	if (fz_drop_imp(ctx, xml, &xml->u.doc.refs) == 0)
+		return;
+
+	fz_drop_pool(ctx, xml->u.doc.pool);
 }
 
-void fz_detach_xml(fz_context *ctx, fz_xml_doc *xml, fz_xml *node)
+void fz_detach_xml(fz_context *ctx, fz_xml *node)
 {
-	if (node->up)
-		node->up->down = NULL;
-	xml->root = node;
+	fz_xml *doc = node;
+
+	/* If we're already a document node, then this is a NOP. */
+	if (doc->up == NULL)
+		return;
+
+	/* Move doc to be the doc pointer at the top of the tree. */
+	while (doc->up)
+	{
+		doc = doc->up;
+	}
+
+	/* Relocate node to be the child of doc. */
+	node->up->down = NULL;
+	doc->down = node;
+
+	/* NOTE: Suppose that X = doc->down on entry. On exit doc->down == node, but
+	 * X->up = doc. We need to be careful throughout this code to not assume that
+	 * Y is always a child of Y->up. */
 }
 
-static size_t xml_parse_entity(int *c, const char *a)
+size_t xml_parse_entity(int *c, const char *a)
 {
 	char *b;
 	size_t i;
@@ -410,7 +441,7 @@ static void xml_emit_open_tag(fz_context *ctx, struct parser *parser, const char
 	size_t size;
 
 	if (is_text)
-		size = offsetof(fz_xml, u.text) + b-a+1;
+		size = offsetof(fz_xml, u.node.u.text) + b-a+1;
 	else
 	{
 		/* skip namespace prefix */
@@ -418,7 +449,7 @@ static void xml_emit_open_tag(fz_context *ctx, struct parser *parser, const char
 			if (*ns == ':')
 				a = ns + 1;
 
-		size = offsetof(fz_xml, u.d.name) + b-a+1;
+		size = offsetof(fz_xml, u.node.u.d.name) + b-a+1;
 	}
 	head = fz_pool_alloc(ctx, parser->pool, size);
 
@@ -426,16 +457,16 @@ static void xml_emit_open_tag(fz_context *ctx, struct parser *parser, const char
 		head->down = MAGIC_TEXT;
 	else
 	{
-		memcpy(head->u.d.name, a, b - a);
-		head->u.d.name[b - a] = 0;
-		head->u.d.atts = NULL;
+		memcpy(head->u.node.u.d.name, a, b - a);
+		head->u.node.u.d.name[b - a] = 0;
+		head->u.node.u.d.atts = NULL;
 		head->down = NULL;
 	}
 
 	head->up = parser->head;
-	head->next = NULL;
+	head->u.node.next = NULL;
 #ifdef FZ_XML_SEQ
-	head->seq = parser->seq++;
+	head->u.node.seq = parser->seq++;
 #endif
 
 	/* During construction, we use head->next to mean "the
@@ -443,14 +474,14 @@ static void xml_emit_open_tag(fz_context *ctx, struct parser *parser, const char
 	 * rewrite it to be NULL. */
 	if (!parser->head->down) {
 		parser->head->down = head;
-		parser->head->next = head;
-		head->prev = NULL;
+		parser->head->u.node.next = head;
+		head->u.node.prev = NULL;
 	}
 	else {
-		tail = parser->head->next;
-		tail->next = head;
-		head->prev = tail;
-		parser->head->next = head;
+		tail = parser->head->u.node.next;
+		tail->u.node.next = head;
+		head->u.node.prev = tail;
+		parser->head->u.node.next = head;
 	}
 
 	parser->head = head;
@@ -468,14 +499,14 @@ static void xml_emit_att_name(fz_context *ctx, struct parser *parser, const char
 	memcpy(att->name, a, b - a);
 	att->name[b - a] = 0;
 	att->value = NULL;
-	att->next = head->u.d.atts;
-	head->u.d.atts = att;
+	att->next = head->u.node.u.d.atts;
+	head->u.node.u.d.atts = att;
 }
 
 static void xml_emit_att_value(fz_context *ctx, struct parser *parser, const char *a, const char *b)
 {
 	fz_xml *head = parser->head;
-	struct attribute *att = head->u.d.atts;
+	struct attribute *att = head->u.node.u.d.atts;
 	char *s;
 	int c;
 
@@ -496,7 +527,7 @@ static void xml_emit_att_value(fz_context *ctx, struct parser *parser, const cha
 static void xml_emit_close_tag(fz_context *ctx, struct parser *parser)
 {
 	parser->depth--;
-	parser->head->next = NULL;
+	parser->head->u.node.next = NULL;
 	if (parser->head->up)
 		parser->head = parser->head->up;
 }
@@ -549,7 +580,7 @@ static void xml_emit_cdata(fz_context *ctx, struct parser *parser, const char *a
 	xml_emit_open_tag(ctx, parser, a, b, 1);
 	head = parser->head;
 
-	s = head->u.text;
+	s = head->u.node.u.text;
 	while (a < b)
 		*s++ = *a++;
 	*s = 0;
@@ -807,24 +838,33 @@ static char *convert_to_utf8(fz_context *ctx, unsigned char *s, size_t n, int *d
 	return (char*)s;
 }
 
-fz_xml_doc *
+fz_xml *
 fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white)
 {
 	struct parser parser;
-	fz_xml_doc *xml = NULL;
+	fz_xml *xml = NULL;
 	fz_xml root, *node;
 	char *p = NULL;
 	char *error;
 	int dofree = 0;
 	unsigned char *s;
 	size_t n;
+	static unsigned char empty_string[] = "";
 
 	fz_var(dofree);
 	fz_var(p);
 
-	/* ensure we are zero-terminated */
-	fz_terminate_buffer(ctx, buf);
-	n = fz_buffer_storage(ctx, buf, &s);
+	if (buf == NULL)
+	{
+		n = 0;
+		s = empty_string;
+	}
+	else
+	{
+		/* ensure we are zero-terminated */
+		fz_terminate_buffer(ctx, buf);
+		n = fz_buffer_storage(ctx, buf, &s);
+	}
 
 	memset(&root, 0, sizeof(root));
 	parser.pool = fz_new_pool(ctx);
@@ -844,14 +884,16 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white)
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "%s", error);
 
 		for (node = parser.head; node; node = node->up)
-			node->next = NULL;
-
-		for (node = root.down; node; node = node->next)
-			node->up = NULL;
+			node->u.node.next = NULL;
 
 		xml = fz_pool_alloc(ctx, parser.pool, sizeof *xml);
-		xml->pool = parser.pool;
-		xml->root = root.down;
+		xml->up = NULL;
+		xml->down = root.down;
+		xml->u.doc.refs = 1;
+		xml->u.doc.pool = parser.pool;
+
+		for (node = root.down; node; node = node->u.node.next)
+			node->up = xml;
 	}
 	fz_always(ctx)
 	{
@@ -942,11 +984,11 @@ static void xml_from_gumbo(fz_context *ctx, struct parser *parser, GumboNode *no
 	}
 }
 
-fz_xml_doc *
+fz_xml *
 fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf)
 {
 	struct parser parser;
-	fz_xml_doc *xml = NULL;
+	fz_xml *xml = NULL;
 	fz_xml root, *node;
 	char *p = NULL;
 	int dofree = 0;
@@ -955,15 +997,24 @@ fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf)
 	GumboOutput *soup = NULL;
 	GumboOptions opts;
 	struct mem_gumbo mem;
+	static unsigned char empty_string[] = "";
 
 	fz_var(mem.pool);
 	fz_var(soup);
 	fz_var(dofree);
 	fz_var(p);
 
-	/* ensure we are zero-terminated */
-	fz_terminate_buffer(ctx, buf);
-	n = fz_buffer_storage(ctx, buf, &s);
+	if (buf == NULL)
+	{
+		n = 0;
+		s = empty_string;
+	}
+	else
+	{
+		/* ensure we are zero-terminated */
+		fz_terminate_buffer(ctx, buf);
+		n = fz_buffer_storage(ctx, buf, &s);
+	}
 
 	mem.ctx = ctx;
 	mem.pool = NULL;
@@ -997,13 +1048,16 @@ fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf)
 		xml_from_gumbo(ctx, &parser, soup->root);
 
 		for (node = parser.head; node; node = node->up)
-			node->next = NULL;
-		for (node = root.down; node; node = node->next)
-			node->up = NULL;
+			node->u.node.next = NULL;
 
 		xml = fz_pool_alloc(ctx, parser.pool, sizeof *xml);
-		xml->pool = parser.pool;
-		xml->root = root.down;
+		xml->up = NULL;
+		xml->down = root.down;
+		xml->u.doc.pool = parser.pool;
+		xml->u.doc.refs = 1;
+
+		for (node = root.down; node; node = node->u.node.next)
+			node->up = xml;
 	}
 	fz_always(ctx)
 	{
@@ -1020,4 +1074,85 @@ fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf)
 	}
 
 	return xml;
+}
+
+fz_xml *fz_xml_find_dfs(fz_xml *item, const char *tag, const char *att, const char *match)
+{
+	/* Skip over any DOC object. */
+	if (item && FZ_DOCUMENT_ITEM(item))
+		item = item->down;
+
+	while (item)
+	{
+		if (!FZ_TEXT_ITEM(item) && (tag == NULL || !strcmp(item->u.node.u.d.name, tag)))
+		{
+			if (att == NULL || (match == NULL ? fz_xml_att(item, att) != NULL : fz_xml_att_eq(item, att, match)))
+				return item;
+		}
+
+		if (!FZ_TEXT_ITEM(item) && item->down)
+			item = item->down;
+		else if (item->u.node.next)
+			item = item->u.node.next;
+		else
+			while (1) {
+				item = item->up;
+				/* We should never reach item == NULL, but just in case. */
+				if (item == NULL)
+					return NULL;
+				/* If we reach the DOC object at the top, we're done. */
+				if (item->up == NULL)
+					return NULL;
+				if (item->u.node.next)
+				{
+					item = item->u.node.next;
+					break;
+				}
+			}
+	}
+
+	return NULL;
+}
+
+fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, const char *match)
+{
+	/* Skip over any DOC object. */
+	if (item && FZ_DOCUMENT_ITEM(item))
+		item = item->down;
+
+	if (item == NULL)
+		return NULL;
+
+	if (item->down)
+		item = item->down;
+	else if (item->u.node.next)
+		item = item->u.node.next;
+	else
+		while (1) {
+			item = item->up;
+			/* We should never reach item == NULL, but just in case. */
+			if (item == NULL)
+				return NULL;
+			/* If we reach the DOC object at the top, we're done. */
+			if (item->up == NULL)
+				return NULL;
+			if (item->u.node.next)
+			{
+				item = item->u.node.next;
+				break;
+			}
+		}
+
+	return fz_xml_find_dfs(item, tag, att, match);
+}
+
+fz_xml *fz_keep_xml(fz_context *ctx, fz_xml *xml)
+{
+	if (xml == NULL)
+		return xml;
+
+	while (xml->up)
+		xml = xml->up;
+
+	return fz_keep_imp(ctx, xml, &xml->u.doc.refs);
 }

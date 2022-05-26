@@ -100,8 +100,8 @@ static fz_html *epub_get_laid_out_html(fz_context *ctx, epub_document *doc, epub
 
 static int count_laid_out_pages(fz_html *html)
 {
-	if (html->root->b > 0)
-		return ceilf(html->root->b / html->page_h);
+	if (html->tree.root->b > 0)
+		return ceilf(html->tree.root->b / html->page_h);
 	return 1;
 }
 

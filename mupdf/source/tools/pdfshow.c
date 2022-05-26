@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -73,7 +73,7 @@ static void showxref(void)
 	fz_write_printf(ctx, out, "xref\n0 %d\n", xref_len);
 	for (i = 0; i < xref_len; i++)
 	{
-		pdf_xref_entry *entry = pdf_get_xref_entry(ctx, doc, i);
+		pdf_xref_entry *entry = pdf_get_xref_entry_no_null(ctx, doc, i);
 		fz_write_printf(ctx, out, "%05d: %010d %05d %c \n",
 				i,
 				(int)entry->ofs,
@@ -197,7 +197,7 @@ static void showgrep(void)
 	len = pdf_count_objects(ctx, doc);
 	for (i = 0; i < len; i++)
 	{
-		pdf_xref_entry *entry = pdf_get_xref_entry(ctx, doc, i);
+		pdf_xref_entry *entry = pdf_get_xref_entry_no_null(ctx, doc, i);
 		if (entry->type == 'n' || entry->type == 'o')
 		{
 			fz_try(ctx)

@@ -133,7 +133,7 @@ pdf_enable_layer(fz_context *ctx, pdf_document *doc, int layer, int enabled)
 static int
 count_entries(fz_context *ctx, pdf_obj *obj, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	int len = pdf_array_len(ctx, obj);
 	int i;
 	int count = 0;
@@ -168,7 +168,7 @@ static int
 populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order, int depth, pdf_obj *rbgroups, pdf_obj *locked,
 	pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	int len = pdf_array_len(ctx, order);
 	int i, j;
 	pdf_ocg_ui *ui;
@@ -563,7 +563,7 @@ ocg_intents_include(fz_context *ctx, pdf_ocg_descriptor *desc, const char *name)
 static int
 pdf_is_ocg_hidden_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, const char *usage, pdf_obj *ocg, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
 	pdf_obj *obj, *obj2, *type;
 	char event_state[16];

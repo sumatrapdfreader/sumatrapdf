@@ -101,6 +101,8 @@ fz_recognize_document(fz_context *ctx, const char *magic)
 	ext = strrchr(magic, '.');
 	if (ext)
 		ext = ext + 1;
+	else
+		ext = magic;
 
 	best_score = 0;
 	best_i = -1;

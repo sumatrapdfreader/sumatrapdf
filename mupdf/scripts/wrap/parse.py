@@ -103,7 +103,8 @@ def has_refs( tu, type_):
             Byte offset of 'refs' or name of 'refs' for use with offsetof(),
             e.g. 'super.refs'.
         bits:
-            Size of 'refs' in bits.
+            Size of 'refs' in bits. Will be -1 if there is no simple .refs
+            member (e.g. fz_xml).
     '''
     type0 = type_
     type_ = type_.get_canonical()
@@ -164,7 +165,7 @@ def has_refs( tu, type_):
                             elif key == 'pdf_cmap':
                                 return 'storable.refs', 32
                         else:
-                            #jlib.log( 'No defintion available, i.e. forward decl only.')
+                            #jlib.log( 'No definition available, i.e. forward decl only.')
                             if key == 'pdf_obj':
                                 ret = 0, 16
                             elif key == 'fz_path':
@@ -185,11 +186,16 @@ def has_refs( tu, type_):
                                     ):
                                 # Forward decl, first member is 'fz_storable storable;'.
                                 return 0, 32
+                            elif key == 'fz_xml':
+                                # This only has a simple .refs member if the
+                                # .up member is null, so we don't attempt to
+                                # use it, by returning size=-1.
+                                ret = 0, -1
 
                         if ret is None:
                             # Need to hard-code info for this type.
                             assert 0, jlib.expand_nv(
-                                    '{key=} has {keep_name}() fn but is forward decl or we cannot find .regs,'
+                                    '{key=} has {keep_name}() fn but is forward decl or we cannot find .refs,'
                                     ' and we have no hard-coded info about size and offset of .regs.'
                                     ' {type0.spelling=} {type_.spelling=} {base_type_cursor.spelling}'
                                     )

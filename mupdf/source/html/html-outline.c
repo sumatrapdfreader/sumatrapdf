@@ -150,7 +150,7 @@ fz_load_html_links(fz_context *ctx, fz_html *html, int page, const char *file)
 	char dir[2048];
 	fz_dirname(dir, file, sizeof dir);
 
-	head = load_link_box(ctx, html->root, NULL, page, html->page_h, dir, file);
+	head = load_link_box(ctx, html->tree.root, NULL, page, html->page_h, dir, file);
 
 	for (link = head; link; link = link->next)
 	{
@@ -221,7 +221,7 @@ find_box_target(fz_html_box *box, const char *id)
 float
 fz_find_html_target(fz_context *ctx, fz_html *html, const char *id)
 {
-	return find_box_target(html->root, id);
+	return find_box_target(html->tree.root, id);
 }
 
 static fz_html_flow *
@@ -265,7 +265,7 @@ make_box_bookmark(fz_context *ctx, fz_html_box *box, float y)
 fz_bookmark
 fz_make_html_bookmark(fz_context *ctx, fz_html *html, int page)
 {
-	return (fz_bookmark)make_box_bookmark(ctx, html->root, page * html->page_h);
+	return (fz_bookmark)make_box_bookmark(ctx, html->tree.root, page * html->page_h);
 }
 
 static int
@@ -304,7 +304,7 @@ int
 fz_lookup_html_bookmark(fz_context *ctx, fz_html *html, fz_bookmark mark)
 {
 	fz_html_flow *flow = (fz_html_flow*)mark;
-	if (flow && lookup_box_bookmark(ctx, html->root, flow))
+	if (flow && lookup_box_bookmark(ctx, html->tree.root, flow))
 		return (int)(flow->y / html->page_h);
 	return -1;
 }
@@ -380,7 +380,7 @@ add_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 		if (!box->id)
 		{
 			fz_snprintf(buf, sizeof buf, "'%d", x->id++);
-			box->id = Memento_label(fz_pool_strdup(ctx, x->html->pool, buf), "box_id");
+			box->id = Memento_label(fz_pool_strdup(ctx, x->html->tree.pool, buf), "box_id");
 		}
 		node->uri = Memento_label(fz_asprintf(ctx, "#%s", box->id), "outline_uri");
 		node->is_open = 1;
@@ -436,7 +436,7 @@ fz_load_html_outline(fz_context *ctx, fz_html *html)
 	state.current = 0;
 	state.id = 1;
 	fz_try(ctx)
-		load_html_outline(ctx, &state, html->root);
+		load_html_outline(ctx, &state, html->tree.root);
 	fz_always(ctx)
 		fz_drop_buffer(ctx, state.cat);
 	fz_catch(ctx)

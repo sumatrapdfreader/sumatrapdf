@@ -45,7 +45,7 @@ int pdf_count_pages_imp(fz_context *ctx, fz_document *doc, int chapter)
 static int
 pdf_load_page_tree_imp(fz_context *ctx, pdf_document *doc, pdf_obj *node, int idx, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	pdf_obj *type = pdf_dict_get(ctx, node, PDF_NAME(Type));
 	if (pdf_name_eq(ctx, type, PDF_NAME(Pages)))
 	{
@@ -360,7 +360,7 @@ static int
 pdf_pattern_uses_blending(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_up)
 {
 	pdf_obj *obj;
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	if (pdf_cycle(ctx, &cycle, cycle_up, dict))
 		return 0;
 	obj = pdf_dict_get(ctx, dict, PDF_NAME(Resources));
@@ -374,7 +374,7 @@ static int
 pdf_xobject_uses_blending(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_up)
 {
 	pdf_obj *obj = pdf_dict_get(ctx, dict, PDF_NAME(Resources));
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	if (pdf_cycle(ctx, &cycle, cycle_up, dict))
 		return 0;
 	if (pdf_name_eq(ctx, pdf_dict_getp(ctx, dict, "Group/S"), PDF_NAME(Transparency)))
@@ -385,7 +385,7 @@ pdf_xobject_uses_blending(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_
 static int
 pdf_resources_use_blending(fz_context *ctx, pdf_obj *rdb, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	pdf_obj *obj;
 	int i, n, useBM = 0;
 
@@ -442,7 +442,7 @@ static int
 pdf_pattern_uses_overprint(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_up)
 {
 	pdf_obj *obj;
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	if (pdf_cycle(ctx, &cycle, cycle_up, dict))
 		return 0;
 	obj = pdf_dict_get(ctx, dict, PDF_NAME(Resources));
@@ -456,7 +456,7 @@ static int
 pdf_xobject_uses_overprint(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_up)
 {
 	pdf_obj *obj = pdf_dict_get(ctx, dict, PDF_NAME(Resources));
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	if (pdf_cycle(ctx, &cycle, cycle_up, dict))
 		return 0;
 	return pdf_resources_use_overprint(ctx, obj, &cycle);
@@ -465,7 +465,7 @@ pdf_xobject_uses_overprint(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle
 static int
 pdf_resources_use_overprint(fz_context *ctx, pdf_obj *rdb, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */;
+	pdf_cycle_list cycle;
 	pdf_obj *obj;
 	int i, n, useOP = 0;
 

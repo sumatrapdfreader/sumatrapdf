@@ -78,8 +78,8 @@ static int
 htdoc_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 {
 	html_document *doc = (html_document*)doc_;
-	if (doc->html->root->b > 0)
-		return ceilf(doc->html->root->b / doc->html->page_h);
+	if (doc->html->tree.root->b > 0)
+		return ceilf(doc->html->tree.root->b / doc->html->page_h);
 	return 1;
 }
 

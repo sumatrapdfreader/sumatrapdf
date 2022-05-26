@@ -2853,9 +2853,11 @@ def class_wrapper(
     if refs:
         refs_name, refs_size = refs
         if isinstance(refs_name, int):
+            # <refs_name> is offset of .refs in the struct.
             allow_int_this = ', true /*allow_int_this*/' if struct_name == 'pdf_obj' else ''
             out_cpp.write( f'static RefsCheck<{struct_name}, {classname}{allow_int_this}> s_{classname}_refs_check({refs_name}, {refs_size});\n')
         else:
+            # <refs_name> is name of .refs in the struct.
             out_cpp.write( f'static RefsCheck<{struct_name}, {classname}> s_{classname}_refs_check(offsetof({struct_name}, {refs_name}), {refs_size});\n')
         out_cpp.write( '\n')
 
@@ -3271,6 +3273,9 @@ def refcount_check_code( out):
             enums PDF_ENUM_NAME_* are converted to mupdf.PdfObj's containg
             .m_internal's which are the enum values cast to (for_pdf_obj*), so
             that they can be used directly.
+
+            If m_size is -1, we don't attempt any checking; this is for fz_xml
+            which is reference counted but does not have a simple .refs member.
             */
             template<typename Struct, typename ClassWrapper, bool allow_int_this=false>
             struct RefsCheck
@@ -3283,12 +3288,18 @@ def refcount_check_code( out):
                 RefsCheck(int offset, int size)
                 : m_offset(offset), m_size(size)
                 {
-                    assert(m_size == 32 || m_size == 16 || m_size == 8);
+                    assert(offset >= 0 && offset < 1000);
+                    assert(m_size == 32 || m_size == 16 || m_size == 8 || m_size == -1);
                 }
 
                 void change( const ClassWrapper* this_, const char* file, int line, const char* fn, int delta)
                 {
                     assert( s_check_refs);
+                    if (m_size == -1)
+                    {
+                        /* No well-defined .refs member for us to check, e.g. fz_xml. */
+                        return;
+                    }
                     if (!this_->m_internal) return;
                     if (allow_int_this)
                     {
