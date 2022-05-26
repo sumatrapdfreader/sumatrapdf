@@ -13,6 +13,7 @@ constexpr const int kNotifDefaultTimeOut = 1000 * 3;
 
 struct NotificationCreateArgs {
     HWND hwndParent = nullptr;
+    HFONT font = nullptr;
     Kind groupId = kNotifGroupActionResponse;
     bool warning = false;
     int timeoutMs = 0; // if 0 => persists until closed manually

@@ -108,8 +108,15 @@ struct Wnd : public ILayout {
     bool IsVisible() const;
     void SetText(const WCHAR*);
     void SetText(const char*);
-
     TempStr GetText();
+
+    HFONT GetFont() {
+        return font;
+    }
+    void SetFont(HFONT font) {
+        this->font = font;
+    }
+
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
     void SetFocus() const;
@@ -135,10 +142,12 @@ struct Wnd : public ILayout {
 
     WNDPROC prevWindowProc = nullptr;
     HWND hwnd = nullptr;
-    ILayout* layout = nullptr;
+    HFONT font = nullptr; // we don't own it
 
     COLORREF backgroundColor = ColorUnset;
     HBRUSH backgroundColorBrush = nullptr;
+
+    ILayout* layout = nullptr;
 
     ContextMenuHandler2 onContextMenu;
 };
@@ -192,6 +201,7 @@ struct Button : Wnd {
 
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
 Button* CreateDefaultButton(HWND parent, const WCHAR* s);
+Button* CreateDefaultButton(HWND parent, const char* s);
 
 //--- Tooltip
 

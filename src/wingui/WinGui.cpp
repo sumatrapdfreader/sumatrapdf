@@ -551,6 +551,19 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             return 0;
         }
 
+        // windows don't support WM_GETFONT / WM_SETFONT
+        // only controls do. not sure if we won't interfere
+        // with control handling
+        // TODO: maybe when font is nullptr, ask the original proc
+        case WM_GETFONT: {
+            return (LRESULT)font;
+        }
+
+        case WM_SETFONT: {
+            font = (HFONT)wparam;
+            return 0;
+        }
+
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
             Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
@@ -826,11 +839,14 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     CrashIf(!hwnd);
     Subclass();
     OnAttach();
+
+    // TODO: verify this
     HFONT f = args.font;
     if (!f) {
         f = GetDefaultGuiFont();
     }
-    HwndSetFont(hwnd, f);
+    //prevWindowProc(hwnd, WM_SETFONT, (WPARAM)f, 0);
+    //HwndSetFont(hwnd, f);
     if (args.text) {
         SetText(args.text);
     }
@@ -838,6 +854,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
 }
 
 HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
+    font = args.font;
+
     const WCHAR* className = args.className;
     if (className == nullptr) {
         className = kDefaultClassName;
@@ -895,11 +913,6 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
 
     // trigger creating a backgroundBrush
     SetBackgroundColor(args.bgColor);
-    HFONT f = args.font;
-    if (!f) {
-        f = GetDefaultGuiFont();
-    }
-    HwndSetFont(hwnd, f);
     if (args.icon) {
         HwndSetIcon(hwnd, args.icon);
     }
@@ -1162,6 +1175,28 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     ButtonCreateArgs args;
     args.parent = parent;
     args.text = ToUtf8Temp(s);
+
+    auto* b = new Button();
+    b->Create(args);
+
+    RECT r;
+    GetClientRect(parent, &r);
+    Size size = b->GetIdealSize();
+    int margin = DpiScale(parent, kButtonMargin);
+    int x = RectDx(r) - size.dx - margin;
+    int y = RectDy(r) - size.dy - margin;
+    r.left = x;
+    r.right = x + size.dx;
+    r.top = y;
+    r.bottom = y + size.dy;
+    b->SetPos(&r);
+    return b;
+}
+
+Button* CreateDefaultButton(HWND parent, const char* s) {
+    ButtonCreateArgs args;
+    args.parent = parent;
+    args.text = s;
 
     auto* b = new Button();
     b->Create(args);

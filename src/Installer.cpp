@@ -654,7 +654,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     gButtonDy = btnSize.dy;
     gBottomPartDy = gButtonDy + (margin * 2);
 
-    Size size = TextSizeInHwnd(hwnd, L"Foo");
+    Size size = TextSizeInHwnd(hwnd, "Foo");
     int staticDy = size.dy + DpiScale(hwnd, 6);
 
     y = r.dy - gBottomPartDy;
@@ -707,7 +707,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     // a bit more space between text box and checkboxes
     y -= (DpiScale(hwnd, 4) + margin);
 
-    const WCHAR* s = L"&...";
+    const char* s = "&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize2.dx += DpiScale(hwnd, 4);
     wnd->btnBrowseDir = CreateDefaultButton(hwnd, s);

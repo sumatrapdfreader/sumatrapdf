@@ -1091,87 +1091,6 @@ void PaintLine(HDC hdc, const Rect rect) {
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
-    SetBkMode(hdc, TRANSPARENT);
-    RECT tmpRect = ToRECT(r);
-    uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
-    if (isRTL) {
-        format |= DT_RTLREADING;
-    }
-    DrawTextW(hdc, txt, -1, &tmpRect, format);
-}
-
-void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
-    Rect rc = Rect::FromRECT(r);
-    DrawCenteredText(hdc, rc, txt, isRTL);
-}
-
-// Return size of a text <txt> in a given <hwnd>, taking into account its font
-Size TextSizeInHwnd(HWND hwnd, const char* txt, HFONT font) {
-    if (!txt || !*txt) {
-        return Size{};
-    }
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-    SIZE sz{};
-    GetTextExtentPoint32Utf8(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    return Size(sz.cx, sz.cy);
-}
-
-// Return size of a text <txt> in a given <hwnd>, taking into account its font
-Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
-    if (!txt || !*txt) {
-        return Size{};
-    }
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-    SIZE sz{};
-    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    return Size(sz.cx, sz.cy);
-}
-
-// TODO: unify with TextSizeInHwnd
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz{};
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-    window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    return sz;
-}
-
-/* Return size of a text <txt> in a given <hdc>, taking into account its font */
-Size TextSizeInDC(HDC hdc, const WCHAR* txt) {
-    SIZE sz;
-    size_t txtLen = str::Len(txt);
-    GetTextExtentPoint32(hdc, txt, (int)txtLen, &sz);
-    return Size(sz.cx, sz.cy);
-}
-
 bool IsFocused(HWND hwnd) {
     return GetFocus() == hwnd;
 }
@@ -2585,50 +2504,6 @@ HFONT HwndGetFont(HWND hwnd) {
     return res;
 }
 
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
-    SIZE sz{};
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-
-    RECT r{};
-    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    DrawTextUtf8(dc, txt, (int)txtLen, &r, fmt);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    int dx = RectDx(r);
-    int dy = RectDy(r);
-    return {dx, dy};
-}
-
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz{};
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-
-    RECT r{};
-    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    int dx = RectDx(r);
-    int dy = RectDy(r);
-    return {dx, dy};
-}
-
 // change size of the window to have a given client size
 void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
     Rect rc = WindowRect(hwnd);
@@ -2769,7 +2644,7 @@ bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
     return GetTextExtentPoint32W(hdc, ws, sLen, psizl);
 }
 
-int DrawTextUtf8(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
+int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
     if (!s) {
         return 0;
     }
@@ -2782,6 +2657,154 @@ int DrawTextUtf8(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
     }
     sLen = (int)str::Len(ws);
     return DrawTextW(hdc, ws, sLen, r, format);
+}
+
+// uses the same logic as HdcDrawText
+Size HdcMeasureText(HDC hdc, const char* s, UINT format) {
+    format |= DT_CALCRECT;
+    WCHAR* ws = ToWstrTemp(s);
+    if (!ws) {
+        return {};
+    }
+    int sLen = (int)str::Len(ws);
+    // pick a very large area
+    // TODO: allow limiting by dx
+    RECT rc{0, 0, 4096, 4096};
+    int dy = DrawTextW(hdc, ws, sLen, &rc, format);
+    if (0 == dy) {
+        return {};
+    }
+    int dx = RectDx(rc);
+    int dy2 = RectDy(rc);
+    if (dy2 > dy) {
+        dy = dy2;
+    }
+    return Size(dx, dy);
+}
+
+void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
+    SetBkMode(hdc, TRANSPARENT);
+    RECT tmpRect = ToRECT(r);
+    uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+    if (isRTL) {
+        format |= DT_RTLREADING;
+    }
+    DrawTextW(hdc, txt, -1, &tmpRect, format);
+}
+
+void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
+    Rect rc = Rect::FromRECT(r);
+    DrawCenteredText(hdc, rc, txt, isRTL);
+}
+
+// Return size of a text <txt> in a given <hwnd>, taking into account its font
+Size TextSizeInHwnd(HWND hwnd, const char* txt, HFONT font) {
+    if (!txt || !*txt) {
+        return Size{};
+    }
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+       window's current font into dc */
+    if (font == nullptr) {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
+    SIZE sz{};
+    GetTextExtentPoint32Utf8(dc, txt, (int)txtLen, &sz);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    return Size(sz.cx, sz.cy);
+}
+
+// Return size of a text <txt> in a given <hwnd>, taking into account its font
+Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
+    if (!txt || !*txt) {
+        return Size{};
+    }
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+       window's current font into dc */
+    if (font == nullptr) {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
+    SIZE sz{};
+    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    return Size(sz.cx, sz.cy);
+}
+
+// TODO: unify with TextSizeInHwnd
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
+    SIZE sz{};
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+    window's current font into dc */
+    if (font == nullptr) {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
+    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    return sz;
+}
+
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
+    SIZE sz{};
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+       window's current font into dc */
+    if (font == nullptr) {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
+
+    RECT r{};
+    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
+    HdcDrawText(dc, txt, (int)txtLen, &r, fmt);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    int dx = RectDx(r);
+    int dy = RectDy(r);
+    return {dx, dy};
+}
+
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
+    SIZE sz{};
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+       window's current font into dc */
+    if (font == nullptr) {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
+
+    RECT r{};
+    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
+    DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    int dx = RectDx(r);
+    int dy = RectDy(r);
+    return {dx, dy};
+}
+
+/* Return size of a text <txt> in a given <hdc>, taking into account its font */
+Size TextSizeInDC(HDC hdc, const WCHAR* txt) {
+    SIZE sz;
+    size_t txtLen = str::Len(txt);
+    GetTextExtentPoint32(hdc, txt, (int)txtLen, &sz);
+    return Size(sz.cx, sz.cy);
 }
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {

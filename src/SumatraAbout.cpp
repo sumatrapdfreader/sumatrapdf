@@ -205,7 +205,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     int y = rc.y + rc.dy - txtSize.cy - innerPadding;
     Rect rect(x, y, txtSize.cx, txtSize.cy);
     RECT rTmp = ToRECT(rect);
-    DrawTextUtf8(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
+    HdcDrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
         PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
@@ -691,7 +691,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
     rTmp = ToRECT(headerRect);
-    DrawTextUtf8(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
+    HdcDrawText(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
@@ -745,7 +745,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             char* path = state->filePath;
             const char* fileName = path::GetBaseNameTemp(path);
             UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
-            DrawTextUtf8(hdc, fileName, -1, &rTmp, fmt);
+            HdcDrawText(hdc, fileName, -1, &rTmp, fmt);
 
             // note: this crashes asan build in windows code
             // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
@@ -786,7 +786,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
         rect.x = rectIcon.x - rect.dx - 3;
     }
     rTmp = ToRECT(rect);
-    DrawTextUtf8(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
+    HdcDrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);

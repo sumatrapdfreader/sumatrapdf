@@ -86,7 +86,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     }
     char* s = HwndGetTextTemp(w->hwnd);
     RECT rs{x, y, x + cr.dx, y + cr.dy};
-    DrawTextUtf8(hdc, s, (int)str::Len(s), &rs, format);
+    HdcDrawText(hdc, s, (int)str::Len(s), &rs, format);
 
     // Text might be too long and invade close button area. We just re-paint
     // the background, which is not the pretties but works.

@@ -1972,7 +1972,7 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     int dx = size.dx;
     if (mt.shortcutText != nullptr) {
         // add space betweeen menu text and shortcut
-        size = TextSizeInHwnd(hwnd, L"    ", font);
+        size = TextSizeInHwnd(hwnd, "    ", font);
         dx += size.dx;
         size = TextSizeInHwnd(hwnd, mt.shortcutText, font);
         dx += size.dx;

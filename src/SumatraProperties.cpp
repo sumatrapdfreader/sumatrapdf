@@ -299,7 +299,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     for (PropertyEl* el : layoutData->props) {
         const char* txt = el->leftTxt;
         RECT rc{};
-        DrawTextUtf8(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        HdcDrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->leftPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
 
@@ -316,7 +316,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     for (PropertyEl* el : layoutData->props) {
         const char* txt = el->rightTxt;
         RECT rc{};
-        DrawTextUtf8(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        HdcDrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         auto dx = rc.right - rc.left;
         // limit the width or right text as some fields can be very long
         if (dx > 720) {
@@ -615,7 +615,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     for (PropertyEl* el : layoutData->props) {
         const char* txt = el->leftTxt;
         rTmp = ToRECT(el->leftPos);
-        DrawTextUtf8(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
+        HdcDrawText(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
     }
 
     /* render text on the right */
@@ -628,7 +628,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
         }
         rTmp = ToRECT(rc);
         uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
-        DrawTextUtf8(hdc, txt, -1, &rTmp, format);
+        HdcDrawText(hdc, txt, -1, &rTmp, format);
     }
 
     SelectObject(hdc, origFont);

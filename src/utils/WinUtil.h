@@ -314,7 +314,8 @@ void HwndSetVisibility(HWND hwnd, bool visible);
 
 bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen = 0);
 bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
-int DrawTextUtf8(HDC hdc, const char* s, int sLen, RECT* r, UINT format);
+int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format);
+Size HdcMeasureText(HDC hdc, const char* s, UINT format);
 
 bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteFontSafe(HFONT*);
