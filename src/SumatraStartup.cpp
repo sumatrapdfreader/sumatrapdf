@@ -571,7 +571,7 @@ static void ReplaceColor(char** col, WCHAR* maybeColor) {
     ParseColor(c, ToUtf8Temp(maybeColor).Get());
     if (c.parsedOk) {
         char* colNewStr = SerializeColor(c.col);
-        str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
+        str::ReplacePtr(col, colNewStr);
     }
 }
 
