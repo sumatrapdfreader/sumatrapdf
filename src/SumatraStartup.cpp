@@ -563,7 +563,7 @@ static void ReplaceColor(char** col, char* maybeColor) {
     ParseColor(c, maybeColor);
     if (c.parsedOk) {
         char* colNewStr = SerializeColor(c.col);
-        str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
+        str::ReplacePtr(col, colNewStr);
     }
 }
 
