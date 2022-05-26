@@ -260,7 +260,7 @@ void NotificationWnd::Layout(const char* message) {
     rcTxt = {padX, padY, szText.dx, szText.dy};
     int closeDx = DpiScale(hwnd, 16);
     int leftMargin = DpiScale(hwnd, kCloseLeftMargin - padX);
-    rcClose = {dx + leftMargin, padY, closeDx, closeDx+2};
+    rcClose = {dx + leftMargin, padY, closeDx, closeDx + 2};
     if (HasClose()) {
         dx += leftMargin + closeDx + padX;
     }

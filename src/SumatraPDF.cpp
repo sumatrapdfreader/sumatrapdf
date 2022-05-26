@@ -1580,6 +1580,24 @@ static void scheduleReloadTab(TabInfo* tab) {
     });
 }
 
+static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
+    MainWindow* win = args->win;
+    const char* path = args->FilePath();
+    bool failEarly = win && !args->forceReuse && !args->engine && !DocumentPathExists(path);
+    bool fileInHistory = gFileHistory.Find(path, nullptr) != nullptr;
+    if (!failEarly || !fileInHistory) {
+        return failEarly;
+    }
+    // try to find non-existent files with history data
+    // on a different removable drive before failing
+    char* adjPath = str::DupTemp(path);
+    if (AdjustVariableDriveLetter(adjPath)) {
+        RenameFileInHistory(path, adjPath);
+        args->SetFilePath(adjPath);
+    }
+    return false;
+}
+
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
 // file (and showing progress/load failures in topmost window) and placing
@@ -1591,22 +1609,13 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     AutoDelete delArgs(args);
 
     MainWindow* win = args->win;
-    const char* fullPath = args->FilePath();
-    bool failEarly = win && !args->forceReuse && !args->engine && !DocumentPathExists(fullPath);
-    // try to find inexistent files with history data
-    // on a different removable drive before failing
-    if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
-        char* adjPath = str::DupTemp(fullPath);
-        if (AdjustVariableDriveLetter(adjPath)) {
-            RenameFileInHistory(fullPath, adjPath);
-            args->SetFilePath(adjPath);
-            fullPath = adjPath;
-            failEarly = false;
-        }
-    }
+    AdjustPathForMaybeMovedFile(args);
 
-    // fail with a notification if the file doesn't exist and
-    // there is a window the user has just been interacting with
+    const char* fullPath = args->FilePath();
+    bool failEarly = AdjustPathForMaybeMovedFile(args);
+
+    // fail fast if the file doesn't exist and there is a window the user
+    // has just been interacting with
     if (failEarly) {
         AutoFreeStr msg(str::Format(_TRA("File %s not found"), fullPath));
         NotificationCreateArgs nargs;

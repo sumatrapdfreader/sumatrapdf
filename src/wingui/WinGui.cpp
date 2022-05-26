@@ -845,8 +845,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     if (!f) {
         f = GetDefaultGuiFont();
     }
-    //prevWindowProc(hwnd, WM_SETFONT, (WPARAM)f, 0);
-    //HwndSetFont(hwnd, f);
+    // prevWindowProc(hwnd, WM_SETFONT, (WPARAM)f, 0);
+    // HwndSetFont(hwnd, f);
     if (args.text) {
         SetText(args.text);
     }
