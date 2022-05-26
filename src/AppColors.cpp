@@ -125,7 +125,7 @@ COLORREF GetAppColor(AppColor col) {
             }
             return c;
         }
-        ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
+        //ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
         if (gGlobalPrefs->fixedPageUI.invertColors) {
             parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
         } else {
