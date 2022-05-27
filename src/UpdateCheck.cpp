@@ -396,6 +396,12 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     url.Append("&os=");
     const char* osVerTemp = GetWindowsVerTemp();
     url.Append(osVerTemp);
+    url.Append("&64bit=");
+    if (IsProcess64()) {
+        url.Append("yes");
+    } else {
+        url.Append("no");
+    }
     if (gIsStoreBuild) {
         url.Append("&store");
     }
