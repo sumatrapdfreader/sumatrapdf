@@ -88,20 +88,17 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 
 //- Window.h / Window.cpp
 
-Wnd* gWindowBeingCreated = nullptr;
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
 LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     Wnd* window = WindowMapGetWindow(hwnd);
 
-    if (!window) {
-        // I think it's meant to ensure we associate Window with HWND
-        // as early as possible given than CreateWindow
-        window = gWindowBeingCreated;
-        if (window) {
-            window->hwnd = hwnd;
-            WindowMapAdd(hwnd, window);
-        }
+    if (msg == WM_NCCREATE) {
+        CREATESTRUCT* cs = (CREATESTRUCT*)(lparam);
+        CrashIf(window);
+        window = (Wnd*)(cs->lpCreateParams);
+        window->hwnd = hwnd;
+        WindowMapAdd(hwnd, window);
     }
 
     if (window) {
@@ -834,7 +831,7 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HWND parent = args.parent;
     HMENU id = args.ctrlId;
     HINSTANCE inst = GetInstance();
-    LPVOID* createParams = 0;
+    void* createParams = this;
     hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     CrashIf(!hwnd);
     Subclass();
@@ -898,29 +895,11 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
         m = (HMENU)(INT_PTR)args.cmdId;
     }
     HINSTANCE inst = GetInstance();
-    void* createParams = nullptr;
+    void* createParams = this;
     WCHAR* titleW = ToWstrTemp(args.title);
 
-    // associate hwnd with this window as soon as possible
-    // in StaticWndProc
-    // TODO: use createParams instead of gWindowBeingCreated
-    /*
-        void* createParams = (void*)this;
-
-        LabelWithCloseWnd* w = nullptr;
-        if (WM_NCCREATE == msg) {
-            LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
-            w = reinterpret_cast<LabelWithCloseWnd*>(lpcs->lpCreateParams);
-            w->hwnd = hwnd;
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(w));
-            goto DoDefault;
-        } else {
-            w = reinterpret_cast<LabelWithCloseWnd*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-        }
-    */
-    gWindowBeingCreated = this;
     HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
-    gWindowBeingCreated = nullptr;
+
     CrashIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE
     CrashIf(hwndTmp != hwnd);
