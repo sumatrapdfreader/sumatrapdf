@@ -497,7 +497,7 @@ static void UpdateSidebarDisplayState(TabInfo* tab, FileState* fs) {
     fs->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
         TocTree* tocTree = tab->ctrl->GetToc();
-        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
+        UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
     }
     *fs->tocState = tab->tocState;
 }
@@ -573,7 +573,7 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     SetRtl(win->hwndFavBox, isRTL);
     HWND favBoxTitle = win->favLabelWithClose->hwnd;
     SetRtl(favBoxTitle, isRTL);
-    win->favTreeCtrl->SetRtl(isRTL);
+    win->favTreeView->SetRtl(isRTL);
 
     SetRtl(win->hwndReBar, isRTL);
     SetRtl(win->hwndToolbar, isRTL);
@@ -3630,10 +3630,10 @@ void AdvanceFocus(MainWindow* win) {
         tabOrder[nWindows++] = win->hwndFindEdit;
     }
     if (win->tocLoaded && win->tocVisible) {
-        tabOrder[nWindows++] = win->tocTreeCtrl->hwnd;
+        tabOrder[nWindows++] = win->tocTreeView->hwnd;
     }
     if (gGlobalPrefs->showFavorites) {
-        tabOrder[nWindows++] = win->favTreeCtrl->hwnd;
+        tabOrder[nWindows++] = win->favTreeView->hwnd;
     }
     CrashIf(nWindows > MAX_WINDOWS);
 
@@ -4120,7 +4120,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
-    if ((!tocVisible && IsFocused(win->tocTreeCtrl->hwnd)) || (!showFavorites && IsFocused(win->favTreeCtrl->hwnd))) {
+    if ((!tocVisible && IsFocused(win->tocTreeView->hwnd)) || (!showFavorites && IsFocused(win->favTreeView->hwnd))) {
         SetFocus(win->hwndFrame);
     }
 
@@ -4836,7 +4836,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!IsFocused(win->hwndFrame)) {
                 SetFocus(win->hwndFrame);
             } else if (win->tocVisible) {
-                SetFocus(win->tocTreeCtrl->hwnd);
+                SetFocus(win->tocTreeView->hwnd);
             }
             break;
 
@@ -5193,7 +5193,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // handled as expected)
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
-            if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeCtrl->hwnd)) {
+            if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeView->hwnd)) {
                 return SendMessageW(win->hwndCanvas, WM_CONTEXTMENU, wp, lp);
             }
             return DefWindowProc(hwnd, msg, wp, lp);

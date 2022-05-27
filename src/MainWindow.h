@@ -106,7 +106,7 @@ struct MainWindow {
     HWND hwndTocBox = nullptr;
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
-    TreeView* tocTreeCtrl = nullptr;
+    TreeView* tocTreeView = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -118,7 +118,7 @@ struct MainWindow {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
-    TreeView* favTreeCtrl = nullptr;
+    TreeView* favTreeView = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel

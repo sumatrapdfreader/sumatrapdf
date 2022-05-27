@@ -220,7 +220,7 @@ void ClearTocBox(MainWindow* win) {
         return;
     }
 
-    win->tocTreeCtrl->Clear();
+    win->tocTreeView->Clear();
 
     win->currPageNo = 0;
     win->tocLoaded = false;
@@ -236,7 +236,7 @@ void ToggleTocBox(MainWindow* win) {
     }
     SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
     if (win->tocVisible) {
-        win->tocTreeCtrl->SetFocus();
+        win->tocTreeView->SetFocus();
     }
 }
 
@@ -304,7 +304,7 @@ void UpdateTocSelection(MainWindow* win, int currPageNo) {
         return;
     }
 
-    auto treeView = win->tocTreeCtrl;
+    auto treeView = win->tocTreeView;
     auto item = TreeItemForPageNo(treeView, currPageNo);
     // only select the items that are visible i.e. are top nodes or
     // children of expanded node
@@ -528,10 +528,10 @@ static void TocContextMenu(ContextMenuEvent2* ev) {
     DestroyMenu(popup);
     switch (cmd) {
         case CmdExpandAll:
-            win->tocTreeCtrl->ExpandAll();
+            win->tocTreeView->ExpandAll();
             break;
         case CmdCollapseAll:
-            win->tocTreeCtrl->CollapseAll();
+            win->tocTreeView->CollapseAll();
             break;
         case CmdFavoriteAdd:
             AddFavoriteFromToc(win, dti);
@@ -611,7 +611,7 @@ void LoadTocTree(MainWindow* win) {
     GetLeftRightCounts(tocTree->root, l2r, r2l);
     bool isRTL = r2l > l2r;
 
-    TreeView* treeView = win->tocTreeCtrl;
+    TreeView* treeView = win->tocTreeView;
     HWND hwnd = treeView->hwnd;
     SetRtl(hwnd, isRTL);
 
@@ -625,7 +625,7 @@ void LoadTocTree(MainWindow* win) {
     if (ShouldCustomDraw(win)) {
         treeView->onTreeItemCustomDraw = OnTocCustomDraw;
     }
-    LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeCtrl->hwnd);
+    LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeView->hwnd);
     // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
@@ -797,7 +797,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         return res;
     }
 
-    TreeView* treeView = win->tocTreeCtrl;
+    TreeView* treeView = win->tocTreeView;
 
     switch (msg) {
         case WM_SIZE:
@@ -891,7 +891,7 @@ void CreateToc(MainWindow* win) {
 
     treeView->Create(args);
     CrashIf(!treeView->hwnd);;
-    win->tocTreeCtrl = treeView;
+    win->tocTreeView = treeView;
 
     if (nullptr == gWndProcTocBox) {
         gWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);

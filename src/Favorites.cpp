@@ -467,7 +467,7 @@ void ToggleFavorites(MainWindow* win) {
         SetSidebarVisibility(win, win->tocVisible, false);
     } else {
         SetSidebarVisibility(win, win->tocVisible, true);
-        win->favTreeCtrl->SetFocus();
+        win->favTreeView->SetFocus();
     }
 }
 
@@ -614,7 +614,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
 }
 
 void PopulateFavTreeIfNeeded(MainWindow* win) {
-    TreeView* treeView = win->favTreeCtrl;
+    TreeView* treeView = win->favTreeView;
     if (treeView->treeModel) {
         return;
     }
@@ -623,7 +623,7 @@ void PopulateFavTreeIfNeeded(MainWindow* win) {
 }
 
 void UpdateFavoritesTree(MainWindow* win) {
-    TreeView* treeView = win->favTreeCtrl;
+    TreeView* treeView = win->favTreeView;
     auto* prevModel = treeView->treeModel;
     TreeModel* newModel = BuildFavTreeModel(win);
     treeView->SetTreeModel(newModel);
@@ -729,7 +729,7 @@ void DelFavorite(const char* filePath, int pageNo) {
 
 void RememberFavTreeExpansionState(MainWindow* win) {
     win->expandedFavorites.Reset();
-    TreeView* treeView = win->favTreeCtrl;
+    TreeView* treeView = win->favTreeView;
     TreeModel* tm = treeView ? treeView->treeModel : nullptr;
     if (!tm) {
         // TODO: remember all favorites as expanded
@@ -832,7 +832,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return res;
     }
 
-    TreeView* treeView = win->favTreeCtrl;
+    TreeView* treeView = win->favTreeView;
     switch (msg) {
         case WM_SIZE:
             LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
@@ -904,7 +904,7 @@ void CreateFavorites(MainWindow* win) {
     treeView->Create(args);
     CrashIf(!treeView->hwnd);
 
-    win->favTreeCtrl = treeView;
+    win->favTreeView = treeView;
 
     if (nullptr == gWndProcFavBox) {
         gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);

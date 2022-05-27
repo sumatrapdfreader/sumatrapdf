@@ -703,7 +703,7 @@ void SaveCurrentTabInfo(MainWindow* win) {
     TabInfo* tab = win->currentTab;
     if (win->tocLoaded) {
         TocTree* tocTree = tab->ctrl->GetToc();
-        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
+        UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
     }
     VerifyTabInfo(win, tab);
 

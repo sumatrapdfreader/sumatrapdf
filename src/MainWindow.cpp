@@ -146,10 +146,10 @@ MainWindow::~MainWindow() {
 
     delete frameRateWnd;
     delete infotip;
-    delete tocTreeCtrl;
-    if (favTreeCtrl) {
-        delete favTreeCtrl->treeModel;
-        delete favTreeCtrl;
+    delete tocTreeView;
+    if (favTreeView) {
+        delete favTreeView->treeModel;
+        delete favTreeView;
     }
 
     delete sidebarSplitter;
@@ -555,31 +555,31 @@ void UpdateTreeCtrlColors(MainWindow* win) {
     bool flatTreeWnd = false;
 
     {
-        auto tocTreeCtrl = win->tocTreeCtrl;
-        tocTreeCtrl->SetBackgroundColor(treeBgCol);
-        tocTreeCtrl->SetTextColor(treeTxtCol);
+        auto tocTreeView = win->tocTreeView;
+        tocTreeView->SetBackgroundColor(treeBgCol);
+        tocTreeView->SetTextColor(treeTxtCol);
 
         win->tocLabelWithClose->SetBgCol(labelBgCol);
         win->tocLabelWithClose->SetTextCol(labelTxtCol);
         win->sidebarSplitter->SetBackgroundColor(splitterCol);
-        SetWindowExStyle(tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+        SetWindowExStyle(tocTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
-        SetWindowPos(tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
+        SetWindowPos(tocTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
     }
 
-    auto favTreeCtrl = win->favTreeCtrl;
-    if (favTreeCtrl) {
-        favTreeCtrl->SetBackgroundColor(treeBgCol);
-        favTreeCtrl->SetTextColor(treeTxtCol);
+    auto favTreeView = win->favTreeView;
+    if (favTreeView) {
+        favTreeView->SetBackgroundColor(treeBgCol);
+        favTreeView->SetTextColor(treeTxtCol);
 
         win->favLabelWithClose->SetBgCol(labelBgCol);
         win->favLabelWithClose->SetTextCol(labelTxtCol);
 
         win->favSplitter->SetBackgroundColor(splitterCol);
 
-        SetWindowExStyle(favTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+        SetWindowExStyle(favTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
-        SetWindowPos(favTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
+        SetWindowPos(favTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
     }
 
     // TODO: more work needed to to ensure consistent look of the ebook window:
