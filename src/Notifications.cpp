@@ -53,7 +53,6 @@ struct NotificationWnd : ProgressUpdateUI, Wnd {
     }
     void Layout(const char* message);
 
-    HWND parent = nullptr;
     int timeoutMs = kNotifDefaultTimeOut; // 0 means no timeout
 
     bool highlight = false; // TODO: should really be a color
@@ -81,14 +80,16 @@ Vec<NotificationWnd*> gNotifs;
 
 static void GetForHwnd(HWND hwnd, Vec<NotificationWnd*>& v) {
     for (auto* wnd : gNotifs) {
-        if (wnd->parent == hwnd) {
+        HWND parent = GetParent(wnd->hwnd);
+        if (parent == hwnd) {
             v.Append(wnd);
         }
     }
 }
 
 static void GetForSameHwnd(NotificationWnd* wnd, Vec<NotificationWnd*>& v) {
-    GetForHwnd(wnd->parent, v);
+    HWND parent = GetParent(wnd->hwnd);
+    GetForHwnd(parent, v);
 }
 
 // TODO: better name
@@ -162,7 +163,6 @@ NotificationWnd::~NotificationWnd() {
 }
 
 HWND NotificationWnd::Create(NotificationCreateArgs& args) {
-    parent = args.hwndParent;
     if (args.progressMsg != nullptr) {
         progressMsg = str::Dup(args.progressMsg);
     }
@@ -182,12 +182,12 @@ HWND NotificationWnd::Create(NotificationCreateArgs& args) {
 
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;
+    cargs.font = args.font;
     // TODO: was this important?
     // wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
     cargs.exStyle = WS_EX_TOPMOST;
     cargs.style = WS_CHILD | SS_CENTER;
     cargs.title = args.msg;
-    cargs.font = args.font;
     if (cargs.font == nullptr) {
         int fontSize = GetSizeOfDefaultGuiFont();
         // make font 1.4x bigger than system font

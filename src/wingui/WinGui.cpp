@@ -892,14 +892,32 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
 
     DWORD tmpStyle = style & ~WS_VISIBLE;
     DWORD exStyle = args.exStyle;
-    HMENU m = (HMENU)args.menu;
+    CrashIf(args.menu && args.cmdId);
+    HMENU m = args.menu;
+    if (m == nullptr) {
+        m = (HMENU)(INT_PTR)args.cmdId;
+    }
     HINSTANCE inst = GetInstance();
-    LPVOID* createParams = nullptr;
+    void* createParams = nullptr;
     WCHAR* titleW = ToWstrTemp(args.title);
 
     // associate hwnd with this window as soon as possible
     // in StaticWndProc
     // TODO: use createParams instead of gWindowBeingCreated
+    /*
+        void* createParams = (void*)this;
+
+        LabelWithCloseWnd* w = nullptr;
+        if (WM_NCCREATE == msg) {
+            LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
+            w = reinterpret_cast<LabelWithCloseWnd*>(lpcs->lpCreateParams);
+            w->hwnd = hwnd;
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(w));
+            goto DoDefault;
+        } else {
+            w = reinterpret_cast<LabelWithCloseWnd*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        }
+    */
     gWindowBeingCreated = this;
     HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
     gWindowBeingCreated = nullptr;

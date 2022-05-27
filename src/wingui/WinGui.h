@@ -38,7 +38,9 @@ struct CreateCustomArgs {
     DWORD style = 0;
     DWORD exStyle = 0;
     Rect pos = {};
+    // don't set both menu and cmdId
     HMENU menu = nullptr;
+    int cmdId = 0; // command sent on click
     bool visible = true;
     HFONT font = nullptr;
     HICON icon = nullptr;

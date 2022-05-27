@@ -861,25 +861,30 @@ void CreateToc(MainWindow* win) {
     HWND parent = win->hwndFrame;
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
-    auto* l = new LabelWithCloseWnd();
-    l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
+    auto l = new LabelWithCloseWnd();
+    {
+        LabelWithCloseCreateArgs args;
+        args.parent = win->hwndTocBox;
+        args.cmdId = IDC_TOC_LABEL_WITH_CLOSE;
+        // TODO: use the same font size as in GetTreeFont()?
+        args.font = GetDefaultGuiFont(true, false);
+        l->Create(args);
+    }
     win->tocLabelWithClose = l;
     l->SetPaddingXY(2, 2);
-    // TODO: use the same font size as in GetTreeFont()?
-    l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    auto* treeView = new TreeView();
+    auto treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndTocBox;
     args.font =  GetTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
-    treeView->onGetTooltip = TocCustomizeTooltip;
     treeView->onContextMenu = TocContextMenu;
     treeView->onTreeSelectionChanged = TocTreeSelectionChanged;
     treeView->onTreeKeyDown = TocTreeKeyDown2;
+    treeView->onGetTooltip = TocCustomizeTooltip;
     //treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary
     //treeView->onChar = TocTreeCharHandler;
     //treeView->onMouseWheel = TocTreeMouseWheelHandler;

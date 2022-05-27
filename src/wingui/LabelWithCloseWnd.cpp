@@ -7,18 +7,19 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/UIModels.h"
 #include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+
 #include "wingui/LabelWithCloseWnd.h"
 
-#define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
-#define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
-#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
+#define kColCloseX RGB(0xa0, 0xa0, 0xa0)
+#define kColCloseXHover RGB(0xf9, 0xeb, 0xeb)   // white-ish
+#define kColCloseXHoverBg RGB(0xC1, 0x35, 0x35) // red-ish
 
-#define CLOSE_BTN_DX 16
-#define CLOSE_BTN_DY 16
-#define LABEL_BUTTON_SPACE_DX 8
-
-#define WND_CLASS_NAME L"LabelWithCloseWndClass"
+#define kCloseBtnDx 16
+#define kCloseBtnDy 16
+#define kButtonSpaceDx 8
 
 static bool IsMouseOverClose(LabelWithCloseWnd* w) {
     Point p;
@@ -46,13 +47,13 @@ static void DrawCloseButton(HDC hdc, LabelWithCloseWnd* w) {
     // in onhover state, background is a red-ish circle
     bool onHover = IsMouseOverClose(w);
     if (onHover) {
-        c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
+        c.SetFromCOLORREF(kColCloseXHoverBg);
         Gdiplus::SolidBrush b(c);
         g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
     }
 
     // draw 'x'
-    c.SetFromCOLORREF(onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X);
+    c.SetFromCOLORREF(onHover ? kColCloseXHover : kColCloseX);
     g.TranslateTransform((float)r.x, (float)r.y);
     Gdiplus::Pen p(c, 2);
     if (onHover) {
@@ -92,7 +93,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     // the background, which is not the pretties but works.
     // A better way would be to intelligently truncate text or shrink the font
     // size (within reason)
-    x = w->closeBtnPos.x - DpiScale(w->hwnd, LABEL_BUTTON_SPACE_DX);
+    x = w->closeBtnPos.x - DpiScale(w->hwnd, kButtonSpaceDx);
     Rect ri(x, 0, cr.dx - x, cr.dy);
     RECT r = ToRECT(ri);
     FillRect(hdc, &r, br);
@@ -105,18 +106,15 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     }
 }
 
-static void OnPaint(LabelWithCloseWnd* w) {
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(w->hwnd, &ps);
-    DoubleBuffer buffer(w->hwnd, Rect::FromRECT(ps.rcPaint));
-    PaintHDC(w, buffer.GetDC(), ps);
+void LabelWithCloseWnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
+    DoubleBuffer buffer(hwnd, Rect::FromRECT(ps->rcPaint));
+    PaintHDC(this, buffer.GetDC(), *ps);
     buffer.Flush(hdc);
-    EndPaint(w->hwnd, &ps);
 }
 
 static void CalcCloseButtonPos(LabelWithCloseWnd* w, int dx, int dy) {
-    int btnDx = DpiScale(w->hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScale(w->hwnd, CLOSE_BTN_DY);
+    int btnDx = DpiScale(w->hwnd, kCloseBtnDx);
+    int btnDy = DpiScale(w->hwnd, kCloseBtnDy);
     int x = dx - btnDx - DpiScale(w->hwnd, w->padX);
     int y = 0;
     if (dy > btnDy) {
@@ -125,87 +123,55 @@ static void CalcCloseButtonPos(LabelWithCloseWnd* w, int dx, int dy) {
     w->closeBtnPos = Rect(x, y, btnDx, btnDy);
 }
 
-static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT LabelWithCloseWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_ERASEBKGND == msg) {
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
 
-    LabelWithCloseWnd* w = nullptr;
-    if (WM_NCCREATE == msg) {
-        LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
-        w = reinterpret_cast<LabelWithCloseWnd*>(lpcs->lpCreateParams);
-        w->hwnd = hwnd;
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(w));
-        goto DoDefault;
-    } else {
-        w = reinterpret_cast<LabelWithCloseWnd*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    }
-
-    if (!w) {
-        goto DoDefault;
-    }
-
+#if 0
     // to match other controls, preferred way is explict SetFont() call
     if (WM_SETFONT == msg) {
-        w->SetFont((HFONT)wp);
+        SetFont((HFONT)wp);
         return 0;
     }
 
     if (WM_GETFONT == msg) {
-        return (LRESULT)w->font;
+        return (LRESULT)font;
     }
+#endif
 
     if (WM_SIZE == msg) {
         int dx = LOWORD(lp);
         int dy = HIWORD(lp);
-        CalcCloseButtonPos(w, dx, dy);
+        CalcCloseButtonPos(this, dx, dy);
         ScheduleRepaint(hwnd);
         return 0;
     }
 
     if (WM_MOUSEMOVE == msg) {
-        ScheduleRepaint(w->hwnd);
+        ScheduleRepaint(hwnd);
 
-        if (IsMouseOverClose(w)) {
+        if (IsMouseOverClose(this)) {
             TrackMouseLeave(hwnd);
         }
         goto DoDefault;
     }
 
     if (WM_MOUSELEAVE == msg) {
-        ScheduleRepaint(w->hwnd);
+        ScheduleRepaint(hwnd);
         return 0;
     }
 
     if (WM_LBUTTONUP == msg) {
-        if (IsMouseOverClose(w)) {
-            HWND parent = GetParent(w->hwnd);
-            HwndSendCommand(parent, w->cmd);
+        if (IsMouseOverClose(this)) {
+            HWND parent = GetParent(hwnd);
+            HwndSendCommand(parent, cmdId);
         }
         return 0;
     }
 
-    if (WM_PAINT == msg) {
-        OnPaint(w);
-        return 0;
-    }
-
 DoDefault:
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
-static void RegisterLabelWithCloseWnd() {
-    static ATOM atom = 0;
-
-    if (atom != 0) {
-        // already registered
-        return;
-    }
-
-    WNDCLASSEX wcex{};
-    FillWndClassEx(wcex, WND_CLASS_NAME, WndProcLabelWithClose);
-    atom = RegisterClassExW(&wcex);
-    CrashIf(!atom);
+    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
 void LabelWithCloseWnd::SetLabel(const WCHAR* label) const {
@@ -226,28 +192,29 @@ void LabelWithCloseWnd::SetTextCol(COLORREF c) {
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
 // caller needs to free() the result
-bool LabelWithCloseWnd::Create(HWND parent, int cmd) {
-    RegisterLabelWithCloseWnd();
+HWND LabelWithCloseWnd::Create(const LabelWithCloseCreateArgs& args) {
+    cmdId = args.cmdId;
+    bgCol = GetSysColor(COLOR_BTNFACE);
+    txtCol = GetSysColor(COLOR_BTNTEXT);
 
-    this->cmd = cmd;
-    this->bgCol = GetSysColor(COLOR_BTNFACE);
-    this->txtCol = GetSysColor(COLOR_BTNTEXT);
+    CreateCustomArgs cargs;
+    cargs.parent = args.parent;
+    cargs.font = args.font;
+    cargs.pos = Rect(0, 0, 0, 0);
+    cargs.style = WS_VISIBLE;
+    cargs.cmdId = cmdId; // TODO: not sure if needed
+    CreateCustom(cargs);
 
-    // sets w->hwnd during WM_NCCREATE
-    HWND hwnd = CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, parent, (HMENU)(INT_PTR)cmd,
-                             GetModuleHandle(nullptr), this);
-    CrashIf(this->hwnd != hwnd);
-    CrashIf(!this->hwnd);
-    return this->hwnd != nullptr;
+    return hwnd;
 }
 
 Size LabelWithCloseWnd::GetIdealSize() const {
     char* s = HwndGetTextTemp(this->hwnd);
     Size size = TextSizeInHwnd(this->hwnd, s);
-    int btnDx = DpiScale(this->hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScale(this->hwnd, CLOSE_BTN_DY);
+    int btnDx = DpiScale(this->hwnd, kCloseBtnDx);
+    int btnDy = DpiScale(this->hwnd, kCloseBtnDy);
     size.dx += btnDx;
-    size.dx += DpiScale(this->hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += DpiScale(this->hwnd, kButtonSpaceDx);
     size.dx += 2 * DpiScale(this->hwnd, this->padX);
     if (size.dy < btnDy) {
         size.dy = btnDy;

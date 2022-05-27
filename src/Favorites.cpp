@@ -873,14 +873,21 @@ void CreateFavorites(MainWindow* win) {
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
     win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 
-    auto* l = new LabelWithCloseWnd();
-    l->Create(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
+    auto l = new LabelWithCloseWnd();
+    {
+        LabelWithCloseCreateArgs args;
+        args.parent = win->hwndFavBox;
+        args.cmdId = IDC_FAV_LABEL_WITH_CLOSE;
+        // TODO: use the same font size as in GetTreeFont()?
+        args.font = GetDefaultGuiFont(true, false);
+        l->Create(args);
+    }
+
     win->favLabelWithClose = l;
     l->SetPaddingXY(2, 2);
-    l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
-    auto* treeView = new TreeView();
+    auto treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndFavBox;
     args.font = GetTreeFont();
