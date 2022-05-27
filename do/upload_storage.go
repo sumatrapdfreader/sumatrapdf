@@ -255,13 +255,16 @@ func getVersionFilesForLatestInfo(mc *minio.Client, buildType string) [][]string
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func minioVerifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
+func verifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
-	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	fname := "SumatraPDF-prerel-manifest.txt"
+	if buildType == buildTypeRel {
+		fname = fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
+	}
 	remotePath := path.Join(dirRemote, fname)
 	exists := mc.Exists(remotePath)
-	panicIf(exists, "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
+	panicIf(exists, "build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
 }
 
 func UploadDir(c *minio.Client, dirRemote string, dirLocal string, public bool) error {
@@ -306,7 +309,6 @@ func minioUploadBuildMust(mc *minio.Client, buildType string) {
 	}
 
 	dirLocal := getFinalDirForBuildType()
-	//verifyBuildNotInSpaces(c, buildType)
 
 	err := UploadDir(mc, dirRemote, dirLocal, true)
 	must(err)
