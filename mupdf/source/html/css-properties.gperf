@@ -5,6 +5,7 @@ struct css_property_info { const char *name; int key; };
 %global-table
 %struct-type
 %%
+-mupdf-leading,PRO_LEADING
 background-color,PRO_BACKGROUND_COLOR
 border,PRO_BORDER
 border-bottom,PRO_BORDER_BOTTOM

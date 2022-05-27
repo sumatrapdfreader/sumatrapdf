@@ -11,7 +11,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
@@ -22,7 +22,7 @@
 #include "Notifications.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "Selection.h"
 #include "Toolbar.h"
@@ -92,7 +92,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
     return sel;
 }
 
-void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
+void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     win->showSelection = false;
     win->selectionMeasure = SizeF();
     TabInfo* tab = win->currentTab;
@@ -133,7 +133,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     }
 }
 
-void PaintSelection(WindowInfo* win, HDC hdc) {
+void PaintSelection(MainWindow* win, HDC hdc) {
     CrashIf(!win->AsFixed());
 
     Vec<Rect> rects;
@@ -178,7 +178,7 @@ void PaintSelection(WindowInfo* win, HDC hdc) {
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col);
 }
 
-void UpdateTextSelection(WindowInfo* win, bool select) {
+void UpdateTextSelection(MainWindow* win, bool select) {
     if (!win->AsFixed()) {
         return;
     }
@@ -201,7 +201,7 @@ void UpdateTextSelection(WindowInfo* win, bool select) {
     }
 }
 
-void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relative) {
+void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit, bool relative) {
     if (!win->IsDocLoaded()) {
         return;
     }
@@ -260,7 +260,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
 // caller needs to str::Free() the result
-WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelectionOut) {
+char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
         return nullptr;
     }
@@ -279,23 +279,26 @@ WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelec
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
     if (isTextOnlySelectionOut) {
         WCHAR* s = dm->textSelection->ExtractText(lineSep);
-        return s;
+        char* res = ToUtf8(s);
+        str::Free(s);
+        return res;
     }
-    WStrVec selections;
+    StrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
-        WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
+        char* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {
             selections.Append(text);
         }
+        str::Free(text);
     }
     if (selections.size() == 0) {
         return nullptr;
     }
-    WCHAR* s = selections.Join(lineSep);
+    char* s = Join(selections, lineSep);
     return s;
 }
 
-void CopySelectionToClipboard(WindowInfo* win) {
+void CopySelectionToClipboard(MainWindow* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(tab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
 
@@ -308,12 +311,15 @@ void CopySelectionToClipboard(WindowInfo* win) {
     };
 
     DisplayModel* dm = win->AsFixed();
-    WCHAR* selText = nullptr;
+    char* selText = nullptr;
     bool isTextOnlySelectionOut = false;
     if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->AllowsCopyingText())) {
-        win->notifications->Show(win->hwndCanvas, _TR("Copying text was denied (copying as image only)"));
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.msg = _TRA("Copying text was denied (copying as image only)");
+        ShowNotification(args);
     } else {
-        selText = GetSelectedText(tab, L"\r\n", isTextOnlySelectionOut);
+        selText = GetSelectedText(tab, "\r\n", isTextOnlySelectionOut);
     }
 
     // don't copy empty text
@@ -321,6 +327,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
         CopyTextToClipboard(selText, true);
     }
     str::Free(selText);
+
     if (isTextOnlySelectionOut) {
         // don't also copy the first line of a text selection as an image
         return;
@@ -341,12 +348,12 @@ void CopySelectionToClipboard(WindowInfo* win) {
     delete bmp;
 }
 
-void OnSelectAll(WindowInfo* win, bool textOnly) {
+void OnSelectAll(MainWindow* win, bool textOnly) {
     if (!HasPermission(Perm::CopySelection)) {
         return;
     }
 
-    if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
+    if (IsFocused(win->hwndFindEdit) || IsFocused(win->hwndPageEdit)) {
         EditSelectAll(GetFocus());
         return;
     }
@@ -385,12 +392,12 @@ void OnSelectAll(WindowInfo* win, bool textOnly) {
 #define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(win->hwndFrame, 15)
 #define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(win->hwndFrame, 10)
 
-bool NeedsSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
+bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     return x < SELECT_AUTOSCROLL_AREA_WIDTH || x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH ||
            y < SELECT_AUTOSCROLL_AREA_WIDTH || y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH;
 }
 
-void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
+void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     int dx = 0, dy = 0;
 
     if (x < SELECT_AUTOSCROLL_AREA_WIDTH) {
@@ -420,7 +427,7 @@ void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
     }
 }
 
-void OnSelectionStart(WindowInfo* win, int x, int y, __unused WPARAM key) {
+void OnSelectionStart(MainWindow* win, int x, int y, __unused WPARAM key) {
     CrashIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 
@@ -447,7 +454,7 @@ void OnSelectionStart(WindowInfo* win, int x, int y, __unused WPARAM key) {
     RepaintAsync(win, 0);
 }
 
-void OnSelectionStop(WindowInfo* win, int x, int y, bool aborted) {
+void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() == win->hwndCanvas) {
         ReleaseCapture();
     }

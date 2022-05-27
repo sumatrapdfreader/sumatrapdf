@@ -31,32 +31,41 @@
 	XML document model
 */
 
-typedef struct fz_xml_doc fz_xml_doc;
 typedef struct fz_xml fz_xml;
+
+/* For backwards compatibility */
+typedef fz_xml fz_xml_doc;
 
 /**
 	Parse the contents of buffer into a tree of xml nodes.
 
 	preserve_white: whether to keep or delete all-whitespace nodes.
 */
-fz_xml_doc *fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white);
+fz_xml *fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white);
 
 /**
 	Parse the contents of a buffer into a tree of XML nodes,
 	using the HTML5 parsing algorithm.
 */
-fz_xml_doc *fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf);
+fz_xml *fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf);
 
 /**
-	Free the XML node and all its children and siblings.
+	Add a reference to the XML.
 */
-void fz_drop_xml(fz_context *ctx, fz_xml_doc *xml);
+fz_xml *fz_keep_xml(fz_context *ctx, fz_xml *xml);
+
+/**
+	Drop a reference to the XML. When the last reference is
+	dropped, the node and all its children and siblings will
+	be freed.
+*/
+void fz_drop_xml(fz_context *ctx, fz_xml *xml);
 
 /**
 	Detach a node from the tree, unlinking it from its parent,
 	and setting the document root to the node.
 */
-void fz_detach_xml(fz_context *ctx, fz_xml_doc *xml, fz_xml *node);
+void fz_detach_xml(fz_context *ctx, fz_xml *node);
 
 /**
 	Return the topmost XML node of a document.
@@ -151,7 +160,8 @@ fz_xml *fz_xml_find_down(fz_xml *item, const char *tag);
 
 /**
 	Search the siblings of XML nodes starting with item looking for
-	the first with the given tag, and with a matching attribute.
+	the first with the given tag (or any tag if tag is NULL), and
+	with a matching attribute.
 
 	Return NULL if none found.
 */
@@ -159,8 +169,8 @@ fz_xml *fz_xml_find_match(fz_xml *item, const char *tag, const char *att, const 
 
 /**
 	Search the siblings of XML nodes starting with the first sibling
-	of item looking for the first with the given tag, and with a
-	matching attribute.
+	of item looking for the first with the given tag (or any tag if tag
+	is NULL), and with a matching attribute.
 
 	Return NULL if none found.
 */
@@ -168,11 +178,165 @@ fz_xml *fz_xml_find_next_match(fz_xml *item, const char *tag, const char *att, c
 
 /**
 	Search the siblings of XML nodes starting with the first child
-	of item looking for the first with the given tag, and with a
-	matching attribute.
+	of item looking for the first with the given tag (or any tag if
+	tag is NULL), and with a matching attribute.
 
 	Return NULL if none found.
 */
 fz_xml *fz_xml_find_down_match(fz_xml *item, const char *tag, const char *att, const char *match);
+
+/**
+	Perform a depth first search from item, returning the first
+	child that matches the given tag (or any tag if tag is NULL),
+	with the given attribute (if att is non NULL), that matches
+	match (if match is non NULL).
+*/
+fz_xml *fz_xml_find_dfs(fz_xml *item, const char *tag, const char *att, const char *match);
+
+/**
+	Perform a depth first search onwards from item, returning the first
+	child that matches the given tag (or any tag if tag is NULL),
+	with the given attribute (if att is non NULL), that matches
+	match (if match is non NULL).
+*/
+fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, const char *match);
+
+/**
+	DOM-like functions for html in xml.
+*/
+
+/**
+	Return a borrowed reference for the 'body' element of
+	the given DOM.
+*/
+fz_xml *fz_dom_body(fz_context *ctx, fz_xml *dom);
+
+/**
+	Return a borrowed reference for the document (the top
+	level element) of the DOM.
+*/
+fz_xml *fz_dom_document_element(fz_context *ctx, fz_xml *dom);
+
+/**
+	Create an element of a given tag type for the given DOM.
+
+	The element is not linked into the DOM yet.
+*/
+fz_xml *fz_dom_create_element(fz_context *ctx, fz_xml *dom, const char *tag);
+
+/**
+	Create a text node for the given DOM.
+
+	The element is not linked into the DOM yet.
+*/
+fz_xml *fz_dom_create_text_node(fz_context *ctx, fz_xml *dom, const char *text);
+
+/**
+	Find the first element matching the requirements in a depth first traversal from elt.
+
+	The tagname must match tag, unless tag is NULL, when all tag names are considered to match.
+
+	If att is NULL, then all tags match.
+	Otherwise:
+		If match is NULL, then only nodes that have an att attribute match.
+		If match is non-NULL, then only nodes that have an att attribute that matches match match.
+
+	Returns NULL (if no match found), or a borrowed reference to the first matching element.
+*/
+fz_xml *fz_dom_find(fz_context *ctx, fz_xml *elt, const char *tag, const char *att, const char *match);
+
+/**
+	Find the next element matching the requirements.
+*/
+fz_xml *fz_dom_find_next(fz_context *ctx, fz_xml *elt, const char *tag, const char *att, const char *match);
+
+/**
+	Insert an element as the last child of a parent, unlinking the
+	child from its current position if required.
+*/
+void fz_dom_append_child(fz_context *ctx, fz_xml *parent, fz_xml *child);
+
+/**
+	Insert an element (new_elt), before another element (node),
+	unlinking the new_elt from its current position if required.
+*/
+void fz_dom_insert_before(fz_context *ctx, fz_xml *node, fz_xml *new_elt);
+
+/**
+	Insert an element (new_elt), after another element (node),
+	unlinking the new_elt from its current position if required.
+*/
+void fz_dom_insert_after(fz_context *ctx, fz_xml *node, fz_xml *new_elt);
+
+/**
+	Remove an element from the DOM. The element can be added back elsewhere
+	if required.
+
+	No reference counting changes for the element.
+*/
+void fz_dom_remove(fz_context *ctx, fz_xml *elt);
+
+/**
+	Clone an element (and its children).
+
+	A borrowed reference to the clone is returned. The clone is not
+	yet linked into the DOM.
+*/
+fz_xml *fz_dom_clone(fz_context *ctx, fz_xml *elt);
+
+/**
+	Return a borrowed reference to the first child of a node,
+	or NULL if there isn't one.
+*/
+fz_xml *fz_dom_first_child(fz_context *ctx, fz_xml *elt);
+
+/**
+	Return a borrowed reference to the parent of a node,
+	or NULL if there isn't one.
+*/
+fz_xml *fz_dom_parent(fz_context *ctx, fz_xml *elt);
+
+/**
+	Return a borrowed reference to the next sibling of a node,
+	or NULL if there isn't one.
+*/
+fz_xml *fz_dom_next(fz_context *ctx, fz_xml *elt);
+
+/**
+	Return a borrowed reference to the previous sibling of a node,
+	or NULL if there isn't one.
+*/
+fz_xml *fz_dom_previous(fz_context *ctx, fz_xml *elt);
+
+/**
+	Add an attribute to an element.
+
+	Ownership of att and value remain with the caller.
+*/
+void fz_dom_add_attribute(fz_context *ctx, fz_xml *elt, const char *att, const char *value);
+
+/**
+	Remove an attribute from an element.
+*/
+void fz_dom_remove_attribute(fz_context *ctx, fz_xml *elt, const char *att);
+
+/**
+	Retrieve the value of a given attribute from a given element.
+
+	Returns a borrowed pointer to the value or NULL if not found.
+*/
+const char *fz_dom_attribute(fz_context *ctx, fz_xml *elt, const char *att);
+
+/**
+	Enumerate through the attributes of an element.
+
+	Call with i=0,1,2,3... to enumerate attributes.
+
+	On return *att and the return value will be NULL if there are not
+	that many attributes to read. Otherwise, *att will be filled in
+	with a borrowed pointer to the attribute name, and the return
+	value will be a borrowed pointer to the value.
+*/
+const char *fz_dom_get_attribute(fz_context *ctx, fz_xml *elt, int i, const char **att);
 
 #endif

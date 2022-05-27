@@ -9,7 +9,7 @@ Don't depend on UI subsystem because they are used in non-gui code e.g. engines.
 struct ListBoxModel {
     virtual ~ListBoxModel() = default;
     virtual int ItemsCount() = 0;
-    virtual std::string_view Item(int) = 0;
+    virtual const char* Item(int) = 0;
 };
 
 using DropDownModel = ListBoxModel;
@@ -19,7 +19,7 @@ struct ListBoxModelStrings : ListBoxModel {
 
     ~ListBoxModelStrings() override = default;
     int ItemsCount() override;
-    std::string_view Item(int) override;
+    const char* Item(int) override;
 };
 
 using DropDownModelStrings = ListBoxModelStrings;
@@ -37,8 +37,7 @@ struct TreeModel {
 
     virtual TreeItem Root() = 0;
 
-    // TODO: convert to char*
-    virtual WCHAR* Text(TreeItem) = 0;
+    virtual char* Text(TreeItem) = 0;
     virtual TreeItem Parent(TreeItem) = 0;
     virtual int ChildCount(TreeItem) = 0;
     virtual TreeItem ChildAt(TreeItem, int index) = 0;
@@ -55,3 +54,10 @@ struct TreeModel {
 using TreeItemVisitor = std::function<bool(TreeModel*, TreeItem)>;
 
 bool VisitTreeModelItems(TreeModel*, const TreeItemVisitor& visitor);
+
+struct TreeItemState {
+    bool isSelected = false;
+    bool isExpanded = false;
+    bool isChecked = false;
+    int nChildren = 0;
+};

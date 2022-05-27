@@ -3,29 +3,24 @@
 
 struct DoubleBuffer;
 struct LinkHandler;
-struct Notifications;
-struct NotificationWnd;
 struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
-namespace wg {
 struct Splitter;
-}
+struct Tooltip;
+struct TreeView;
 struct CaptionInfo;
-struct TabsCtrl2;
+struct TabsCtrl;
 
 struct IPageElement;
 struct PageDestination;
 struct TocItem;
-struct Controller;
-struct ControllerCallback;
+struct DocController;
+struct DocControllerCallback;
 struct ChmModel;
 struct DisplayModel;
 struct TabInfo;
-
-struct TreeCtrl;
-struct TooltipCtrl;
 
 struct Annotation;
 struct ILinkHandler;
@@ -61,10 +56,10 @@ struct TouchState {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     Rect rect;
-    WCHAR* target = nullptr;
-    WCHAR* infotip = nullptr;
+    char* target = nullptr;
+    char* infotip = nullptr;
 
-    explicit StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip = nullptr);
+    explicit StaticLinkInfo(Rect rect, const char* target, const char* infotip = nullptr);
     StaticLinkInfo() = default;
     StaticLinkInfo(const StaticLinkInfo&);
     StaticLinkInfo& operator=(const StaticLinkInfo& other);
@@ -73,23 +68,23 @@ struct StaticLinkInfo {
 
 /* Describes information related to one window with (optional) a document
    on the screen */
-struct WindowInfo {
-    explicit WindowInfo(HWND hwnd);
-    WindowInfo(const WindowInfo&) = delete;
-    WindowInfo& operator=(const WindowInfo&) = delete;
-    ~WindowInfo();
+struct MainWindow {
+    explicit MainWindow(HWND hwnd);
+    MainWindow(const MainWindow&) = delete;
+    MainWindow& operator=(const MainWindow&) = delete;
+    ~MainWindow();
 
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
-    [[nodiscard]] bool IsAboutWindow() const;
-    [[nodiscard]] bool IsDocLoaded() const;
+    bool IsAboutWindow() const;
+    bool IsDocLoaded() const;
 
-    [[nodiscard]] DisplayModel* AsFixed() const;
-    [[nodiscard]] ChmModel* AsChm() const;
+    DisplayModel* AsFixed() const;
+    ChmModel* AsChm() const;
 
     // TODO: use currentTab->ctrl instead
-    Controller* ctrl = nullptr; // owned by currentTab
+    DocController* ctrl = nullptr; // owned by currentTab
 
     Vec<TabInfo*> tabs;
     TabInfo* currentTab = nullptr; // points into tabs
@@ -98,11 +93,11 @@ struct WindowInfo {
     HWND hwndCanvas = nullptr;
     HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
-    HWND hwndFindText = nullptr;
-    HWND hwndFindBox = nullptr;
+    HWND hwndFindLabel = nullptr;
+    HWND hwndFindEdit = nullptr;
     HWND hwndFindBg = nullptr;
-    HWND hwndPageText = nullptr;
-    HWND hwndPageBox = nullptr;
+    HWND hwndPageLabel = nullptr;
+    HWND hwndPageEdit = nullptr;
     HWND hwndPageBg = nullptr;
     HWND hwndPageTotal = nullptr;
     HWND hwndTbInfoText = nullptr;
@@ -111,8 +106,7 @@ struct WindowInfo {
     HWND hwndTocBox = nullptr;
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
-    TreeCtrl* tocTreeCtrl = nullptr;
-    UINT_PTR tocBoxSubclassId = 0;
+    TreeView* tocTreeView = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -124,16 +118,16 @@ struct WindowInfo {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
-    TreeCtrl* favTreeCtrl = nullptr;
+    TreeView* favTreeView = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    wg::Splitter* sidebarSplitter = nullptr;
+    Splitter* sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    wg::Splitter* favSplitter = nullptr;
+    Splitter* favSplitter = nullptr;
 
-    TabsCtrl2* tabsCtrl = nullptr;
+    TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
     bool tabsInTitlebar = false;
     // keeps the sequence of tab selection. This is needed for restoration
@@ -144,7 +138,7 @@ struct WindowInfo {
     CaptionInfo* caption = nullptr;
     int extendedFrameHeight = 0;
 
-    TooltipCtrl* infotip = nullptr;
+    Tooltip* infotip = nullptr;
 
     HMENU menu = nullptr;
     bool isMenuHidden = false; // not persisted at shutdown
@@ -191,8 +185,6 @@ struct WindowInfo {
     int wheelAccumDelta = 0;
     UINT_PTR delayedRepaintTimer = 0;
 
-    Notifications* notifications = nullptr; // only access from UI thread
-
     HANDLE printThread = nullptr;
     bool printCanceled = false;
 
@@ -201,14 +193,14 @@ struct WindowInfo {
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
-    const WCHAR* urlOnLastButtonDown = nullptr;
+    AutoFreeStr urlOnLastButtonDown;
     Annotation* annotationOnLastButtonDown = nullptr;
     Size annotationBeingMovedSize;
     Point annotationBeingMovedOffset;
     HBITMAP bmpMovePattern = nullptr;
     HBRUSH brMovePattern = nullptr;
 
-    ControllerCallback* cbHandler = nullptr;
+    DocControllerCallback* cbHandler = nullptr;
 
     // The target y offset for smooth scrolling.
     // We use a timer to gradually scroll there.
@@ -244,21 +236,21 @@ struct WindowInfo {
     void ToggleZoom() const;
     void MoveDocBy(int dx, int dy) const;
 
-    void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false) const;
+    void ShowToolTip(const char* text, Rect& rc, bool multiline = false) const;
     void HideToolTip() const;
 
     bool CreateUIAProvider();
 };
 
-void UpdateTreeCtrlColors(WindowInfo*);
-void RepaintAsync(WindowInfo*, int delay);
-void ClearFindBox(WindowInfo*);
-void CreateMovePatternLazy(WindowInfo*);
-void ClearMouseState(WindowInfo*);
-bool IsRightDragging(WindowInfo*);
-WindowInfo* FindWindowInfoByTabInfo(TabInfo*);
-WindowInfo* FindWindowInfoByHwnd(HWND);
-bool WindowInfoStillValid(WindowInfo*);
-WindowInfo* FindWindowInfoByController(Controller*);
+void UpdateTreeCtrlColors(MainWindow*);
+void RepaintAsync(MainWindow*, int delay);
+void ClearFindBox(MainWindow*);
+void CreateMovePatternLazy(MainWindow*);
+void ClearMouseState(MainWindow*);
+bool IsRightDragging(MainWindow*);
+MainWindow* FindWindowInfoByTabInfo(TabInfo*);
+MainWindow* FindWindowInfoByHwnd(HWND);
+bool WindowInfoStillValid(MainWindow*);
+MainWindow* FindWindowInfoByController(DocController*);
 
-extern Vec<WindowInfo*> gWindows;
+extern Vec<MainWindow*> gWindows;

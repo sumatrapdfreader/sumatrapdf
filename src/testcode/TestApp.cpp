@@ -5,11 +5,9 @@
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
-#include "wingui/wingui2.h"
+#include "wingui/WinGui.h"
 
 #include "utils/Log.h"
-
-using namespace wg;
 
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
@@ -64,7 +62,7 @@ void TestApp(HINSTANCE hInstance) {
     //w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
-    args.title = L"a little test app";
+    args.title = "a little test app";
     HWND hwnd = w->CreateCustom(args);
     CrashIf(!hwnd);
 

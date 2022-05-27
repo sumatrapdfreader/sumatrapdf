@@ -96,7 +96,7 @@ MultiFormatArchive::~MultiFormatArchive() {
 
 size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
     for (auto fileInfo : fileInfos) {
-        if (str::EqI(fileInfo->name.data(), name)) {
+        if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
         }
     }
@@ -109,11 +109,6 @@ Vec<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
 
 size_t MultiFormatArchive::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
-}
-
-ByteSlice MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
-    auto fileNameA = ToUtf8Temp(fileName);
-    return GetFileDataByName(fileNameA);
 }
 
 ByteSlice MultiFormatArchive::GetFileDataByName(const char* fileName) {
@@ -165,24 +160,24 @@ ByteSlice MultiFormatArchive::GetFileDataById(size_t fileId) {
     return {data, size};
 }
 
-std::string_view MultiFormatArchive::GetComment() {
+const char* MultiFormatArchive::GetComment() {
     if (!ar_) {
-        return {};
+        return nullptr;
     }
 
     size_t n = ar_get_global_comment(ar_, nullptr, 0);
     if (0 == n || (size_t)-1 == n) {
-        return {};
+        return nullptr;
     }
     char* comment = Allocator::Alloc<char>(&allocator_, n + 1);
     if (!comment) {
-        return {};
+        return nullptr;
     }
     size_t nRead = ar_get_global_comment(ar_, comment, n);
     if (nRead != n) {
-        return {};
+        return nullptr;
     }
-    return std::string_view(comment, n);
+    return comment;
 }
 
 ///// format specific handling /////
@@ -195,13 +190,9 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
 }
 
 static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
-    archive->Open(ar_open_file(path), path);
-    return archive;
-}
-
-static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    auto pathA = ToUtf8Temp(path);
-    bool ok = archive->Open(ar_open_file_w(path), pathA.Get());
+    WCHAR* pathW = ToWstrTemp(path);
+    ar_stream* stm = ar_open_file_w(pathW);
+    bool ok = archive->Open(stm, path);
     if (!ok) {
         delete archive;
         return nullptr;
@@ -242,30 +233,6 @@ MultiFormatArchive* OpenRarArchive(const char* path) {
     return open(archive, path);
 }
 
-MultiFormatArchive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
-    auto opener = ar_open_zip_archive_any;
-    if (deflatedOnly) {
-        opener = ar_open_zip_archive_deflated;
-    }
-    auto* archive = new MultiFormatArchive(opener, MultiFormatArchive::Format::Zip);
-    return open(archive, path);
-}
-
-MultiFormatArchive* Open7zArchive(const WCHAR* path) {
-    auto* archive = new MultiFormatArchive(ar_open_7z_archive, MultiFormatArchive::Format::SevenZip);
-    return open(archive, path);
-}
-
-MultiFormatArchive* OpenTarArchive(const WCHAR* path) {
-    auto* archive = new MultiFormatArchive(ar_open_tar_archive, MultiFormatArchive::Format::Tar);
-    return open(archive, path);
-}
-
-MultiFormatArchive* OpenRarArchive(const WCHAR* path) {
-    auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
-    return open(archive, path);
-}
-
 MultiFormatArchive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
@@ -295,7 +262,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
     }
-    str::Slice* buf = (str::Slice*)userData;
+    ByteSlice* buf = (ByteSlice*)userData;
     size_t bytesGot = (size_t)bytesProcessed;
     if (bytesGot > buf->Left()) {
         return -1;
@@ -332,10 +299,10 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     auto rarPath = ToWstrTemp(rarFilePath_);
 
-    str::Slice uncompressedBuf;
+    ByteSlice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = rarPath.Get();
+    arcData.ArcNameW = rarPath;
     arcData.OpenMode = RAR_OM_EXTRACT;
     arcData.Callback = unrarCallback;
     arcData.UserData = (LPARAM)&uncompressedBuf;
@@ -347,10 +314,10 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     char* data = nullptr;
     size_t size = 0;
-    auto fileName = ToWstrTemp(fileInfo->name.data());
+    auto fileName = ToWstrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
-    bool ok = FindFile(hArc, &rarHeader, fileName.Get());
+    bool ok = FindFile(hArc, &rarHeader, fileName);
     if (!ok) {
         goto Exit;
     }
@@ -388,7 +355,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
     CrashIf(rarFilePath_);
     auto rarPathW = ToWstrTemp(rarPath);
 
-    str::Slice uncompressedBuf;
+    ByteSlice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarPathW;
@@ -420,7 +387,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
         i->fileSizeUncompressed = (size_t)rarHeader.UnpSize;
         i->filePos = 0;
         i->fileTime = (i64)rarHeader.FileTime;
-        i->name = str::Dup(&allocator_, name.Get());
+        i->name = str::Dup(&allocator_, name);
         i->data = nullptr;
         if (loadOnOpen) {
             // +2 so that it's zero-terminated even when interprted as WCHAR*

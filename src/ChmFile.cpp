@@ -10,7 +10,7 @@
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
 
@@ -70,21 +70,25 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     return {data, len};
 }
 
+char* ChmFile::ToUtf8(const char* text, uint overrideCP) const {
+    return ToUtf8((u8*)text, overrideCP);
+}
+
 char* ChmFile::ToUtf8(const u8* text, uint overrideCP) const {
     const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
     }
     if (overrideCP) {
-        return (char*)strconv::ToMultiByteV(s, overrideCP, CP_UTF8).data();
+        return strconv::ToMultiByte(s, overrideCP, CP_UTF8);
     }
     if (CP_UTF8 == codepage) {
         return str::Dup(s);
     }
-    return (char*)strconv::ToMultiByteV(s, codepage, CP_UTF8).data();
+    return strconv::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-WCHAR* ChmFile::ToStr(const char* text) const {
+WCHAR* ChmFile::ToWstr(const char* text) const {
     return strconv::StrToWstr(text, codepage);
 }
 
@@ -104,9 +108,12 @@ static char* GetCharZ(ByteSlice d, size_t off) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
 void ChmFile::ParseWindowsData() {
-    AutoFree windowsData = GetData("/#WINDOWS");
-    auto stringsData = GetData("/#STRINGS");
+    ByteSlice windowsData = GetData("/#WINDOWS");
+    ByteSlice stringsData = GetData("/#STRINGS");
+
     AutoFree stringsDataFree(stringsData);
+    AutoFree windowsDataFree(windowsData);
+
     if (windowsData.empty() || stringsData.empty()) {
         return;
     }
@@ -115,7 +122,7 @@ void ChmFile::ParseWindowsData() {
         return;
     }
 
-    ByteReader rw(windowsData, windowsLen);
+    ByteReader rw(windowsData);
     size_t entries = rw.DWordLE(0);
     size_t entrySize = rw.DWordLE(4);
     if (entrySize < 188) {
@@ -166,11 +173,11 @@ static uint LcidToCodepage(DWORD lcid) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmFile::ParseSystemData() {
-    auto data = GetData("/#SYSTEM");
+    ByteSlice data = GetData("/#SYSTEM");
     if (data.empty()) {
         return false;
     }
-    AutoFree dataFree = data;
+    AutoFree dataFree = data.Get();
 
     ByteReader r(data);
     DWORD len = 0;
@@ -227,28 +234,31 @@ bool ChmFile::ParseSystemData() {
 }
 
 char* ChmFile::ResolveTopicID(unsigned int id) const {
-    AutoFree ivbData = GetData("/#IVB");
+    ByteSlice ivbData = GetData("/#IVB");
+    AutoFree f = ivbData.Get();
     size_t ivbLen = ivbData.size();
-    ByteReader br(ivbData.AsView());
+    ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
         return nullptr;
     }
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
-            AutoFree stringsData(GetData("/#STRINGS"));
-            return GetCharZ(stringsData.AsSpan(), br.DWordLE(off + 4));
+            ByteSlice stringsData = GetData("/#STRINGS");
+            char* res = GetCharZ(stringsData, br.DWordLE(off + 4));
+            stringsData.Free();
+            return res;
         }
     }
     return nullptr;
 }
 
-void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
+void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
     if (!path || HasData(path)) {
         return;
     }
 
-    AutoFree utf8Path(ToUtf8((u8*)path.Get()));
+    AutoFreeStr utf8Path = ToUtf8((u8*)path.Get());
     if (HasData(utf8Path)) {
         path.Set(utf8Path.Release());
         fileCP = codepage;
@@ -261,10 +271,10 @@ void ChmFile::FixPathCodepage(AutoFree& path, uint& fileCP) {
     }
 }
 
-bool ChmFile::Load(const char* fileNameA) {
-    WCHAR* fileName = ToWstrTemp(fileNameA);
-    data = file::ReadFile(fileName);
-    chmHandle = chm_open((const char*)data.Get(), data.size());
+bool ChmFile::Load(const char* path) {
+    ByteSlice fileContent = file::ReadFile(path);
+    data = fileContent.Get();
+    chmHandle = chm_open(fileContent, fileContent.size());
     if (!chmHandle) {
         return false;
     }
@@ -276,7 +286,7 @@ bool ChmFile::Load(const char* fileNameA) {
 
     uint fileCodepage = codepage;
     char header[24]{};
-    int n = file::ReadN(fileName, header, sizeof(header));
+    int n = file::ReadN(path, header, sizeof(header));
     if (n < (int)sizeof(header)) {
         ByteReader r(header, sizeof(header));
         DWORD lcid = r.DWordLE(20);
@@ -308,12 +318,12 @@ bool ChmFile::Load(const char* fileNameA) {
     return true;
 }
 
-WCHAR* ChmFile::GetProperty(DocumentProperty prop) const {
-    AutoFreeWstr result;
+char* ChmFile::GetProperty(DocumentProperty prop) const {
+    AutoFreeStr result;
     if (DocumentProperty::Title == prop && title) {
-        result.Set(ToStr(title));
+        result.Set(ToUtf8(title));
     } else if (DocumentProperty::CreatorApp == prop && creator) {
-        result.Set(ToStr(creator));
+        result.Set(ToUtf8(creator));
     }
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {
@@ -331,15 +341,13 @@ static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info
     if (str::IsEmpty(info->path)) {
         return CHM_ENUMERATOR_CONTINUE;
     }
-    Vec<char*>* paths = (Vec<char*>*)data;
-    paths->Append(str::Dup(info->path));
+    StrVec* paths = (StrVec*)data;
+    paths->Append(info->path);
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-Vec<char*>* ChmFile::GetAllPaths() const {
-    Vec<char*>* paths = new Vec<char*>();
-    chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
-    return paths;
+void ChmFile::GetAllPaths(StrVec* v) const {
+    chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, v);
 }
 
 /* The html looks like:
@@ -364,7 +372,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes(strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal));
+            AutoFreeStr bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
             attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
@@ -383,7 +391,9 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         return false;
     }
 
-    visitor->Visit(name, local, level);
+    char* nameA = ToUtf8Temp(name);
+    char* localA = ToUtf8Temp(local);
+    visitor->Visit(nameA, localA, level);
     return true;
 }
 
@@ -403,7 +413,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
 static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
-    WStrVec references;
+    StrVec references;
     AutoFreeWstr keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {
@@ -412,7 +422,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes(strconv::WstrToCodePageV(CP_CHM_DEFAULT, attrVal));
+            AutoFreeStr bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
             attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
@@ -430,21 +440,27 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
             if (str::Find(attrVal, L"::/")) {
                 attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
             }
-            references.Append(name.StealData());
-            references.Append(attrVal.StealData());
+            char* nameA = ToUtf8Temp(name);
+            char* attrValA = ToUtf8Temp(attrVal);
+            references.Append(nameA);
+            references.Append(attrValA);
         }
     }
     if (!keyword) {
         return false;
     }
 
+    char* keywordA = ToUtf8Temp(keyword);
     if (references.size() == 2) {
-        visitor->Visit(keyword, references.at(1), level);
+        char* refs = references[1];
+        visitor->Visit(keywordA, refs, level);
         return true;
     }
-    visitor->Visit(keyword, nullptr, level);
-    for (size_t i = 0; i < references.size(); i += 2) {
-        visitor->Visit(references.at(i), references.at(i + 1), level + 1);
+    visitor->Visit(keywordA, nullptr, level);
+    for (int i = 0; i < references.Size(); i += 2) {
+        char* ref1 = references[i];
+        char* ref2 = references[i + 1];
+        visitor->Visit(ref1, ref2, level + 1);
     }
     return true;
 }
@@ -508,11 +524,12 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
     if (!path) {
         return false;
     }
-    AutoFree htmlData = GetData(path);
+    ByteSlice htmlData = GetData(path);
     if (htmlData.empty()) {
         return false;
     }
-    const char* html = htmlData.Get();
+    const char* html = htmlData;
+    AutoFreeStr htmlFree = htmlData.Get();
 
     HtmlParser p;
     uint cp = codepage;
@@ -558,10 +575,9 @@ bool ChmFile::IsSupportedFileType(Kind kind) {
     return kind == kindFileChm;
 }
 
-ChmFile* ChmFile::CreateFromFile(const WCHAR* path) {
+ChmFile* ChmFile::CreateFromFile(const char* path) {
     ChmFile* chmFile = new ChmFile();
-    char* pathA = ToUtf8Temp(path);
-    if (!chmFile || !chmFile->Load(pathA)) {
+    if (!chmFile || !chmFile->Load(path)) {
         delete chmFile;
         return nullptr;
     }

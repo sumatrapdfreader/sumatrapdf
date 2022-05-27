@@ -102,7 +102,7 @@ static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
 
     for (size_t i = 0; i < strArray->size(); i++) {
         if (i > 0) {
-            serialized.Append(' ');
+            serialized.AppendChar(' ');
         }
         const char* str = strArray->at(i);
         bool needsQuotes = !*str;
@@ -112,14 +112,14 @@ static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
         if (!needsQuotes) {
             serialized.Append(str);
         } else {
-            serialized.Append('"');
+            serialized.AppendChar('"');
             for (const char* c = str; *c; c++) {
                 if ('"' == *c) {
-                    serialized.Append('"');
+                    serialized.AppendChar('"');
                 }
-                serialized.Append(*c);
+                serialized.AppendChar(*c);
             }
-            serialized.Append('"');
+            serialized.AppendChar('"');
         }
     }
 
@@ -143,7 +143,7 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
                 if ('"' == *s) {
                     s++;
                 }
-                part.Append(*s);
+                part.AppendChar(*s);
             }
             strArray->Append(part.StealData());
             if ('"' == *s) {
@@ -195,7 +195,7 @@ static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
 
 static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field) {
     const u8* fieldPtr = base + field.offset;
-    AutoFree value;
+    AutoFreeStr value;
 
     switch (field.type) {
         case SettingType::Bool:
@@ -504,7 +504,8 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
                 Vec<void*>* array = new Vec<void*>();
                 size_t idx = 0;
                 while (parent && (child = parent->GetChild(fieldName, &idx)) != nullptr) {
-                    array->Append(DeserializeStructRec(GetSubstruct(field), child, nullptr, true));
+                    void* v = DeserializeStructRec(GetSubstruct(field), child, nullptr, true);
+                    array->Append(v);
                 }
                 FreeArray(*(Vec<void*>**)fieldPtr, field);
                 *(Vec<void*>**)fieldPtr = array;
@@ -524,8 +525,7 @@ ByteSlice SerializeStruct(const StructInfo* info, const void* strct, const char*
     out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
-    auto sv = out.StealAsView();
-    return ToSpanU8(sv);
+    return out.StealAsByteSlice();
 }
 
 void* DeserializeStruct(const StructInfo* info, const char* data, void* strct) {

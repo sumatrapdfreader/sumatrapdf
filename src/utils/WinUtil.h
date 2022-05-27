@@ -45,49 +45,54 @@ void DbgOutLastError(DWORD err = 0);
 
 // registry
 const char* RegKeyNameTemp(HKEY key);
-const WCHAR* RegKeyNameWTemp(HKEY key);
-bool RegKeyExists(HKEY keySub, const WCHAR* keyName);
-WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
-WCHAR* LoggedReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
-char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
-WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName);
-WCHAR* LoggedReadRegStr2(const WCHAR* keyName, const WCHAR* valName);
-bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
-bool LoggedWriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
-bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value);
-bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
-bool LoggedWriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value);
-bool LoggedWriteRegNone(HKEY hkey, const WCHAR* key, const WCHAR* valName);
-bool CreateRegKey(HKEY keySub, const WCHAR* keyName);
-bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
-bool LoggedDeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst = false);
-bool DeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
-bool LoggedDeleteRegValue(HKEY keySub, const WCHAR* keyName, const WCHAR* val);
+const char* RegKeyNameWTemp(HKEY key);
+bool RegKeyExists(HKEY keySub, const char* keyName);
+char* ReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
+char* LoggedReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
+char* ReadRegStr2Temp(const char* keyName, const char* valName);
+char* LoggedReadRegStr2Temp(const char* keyName, const char* valName);
+bool WriteRegStr(HKEY keySub, const char* keyName, const char* valName, const char* value);
+bool LoggedWriteRegStr(HKEY keySub, const char* keyName, const char* valName, const char* value);
+bool ReadRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD& value);
+bool WriteRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD value);
+bool LoggedWriteRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD value);
+bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName);
+bool CreateRegKey(HKEY keySub, const char* keyName);
+bool DeleteRegKey(HKEY keySub, const char* keyName, bool resetACLFirst = false);
+bool LoggedDeleteRegKey(HKEY keySub, const char* keyName, bool resetACLFirst = false);
+bool DeleteRegValue(HKEY keySub, const char* keyName, const char* val);
+bool LoggedDeleteRegValue(HKEY keySub, const char* keyName, const char* val);
+HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid);
 
-TempWstr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
+TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 
 void DisableDataExecution();
 bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
 
-TempWstr GetExePathTemp();
-WCHAR* GetExeDir();
+TempStr GetExePathTemp();
+
+TempStr GetExeDirTemp();
+
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 
-WCHAR* ResolveLnk(const WCHAR* path);
-bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args = nullptr,
-                    const WCHAR* description = nullptr, int iconIndex = 0);
-IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd = nullptr);
-DWORD GetFileVersion(const WCHAR* path);
+char* ResolveLnkTemp(const char* path);
+
+bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args = nullptr,
+                    const char* description = nullptr, int iconIndex = 0);
+IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
+DWORD GetFileVersion(const char* path);
 
 bool IsKeyPressed(int key);
 bool IsShiftPressed();
 bool IsAltPressed();
 bool IsCtrlPressed();
 
-HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize);
+HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize);
+
+void SetMenuFontSize(int);
 
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd = nullptr, bool bFully = false);
 Rect GetWorkAreaRect(Rect rect, HWND hwnd);
@@ -95,12 +100,14 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
 Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 
-bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
-bool LaunchBrowser(const WCHAR* url);
+bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
 bool LaunchBrowser(const char* url);
-HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir = nullptr, DWORD flags = 0);
-bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
-bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
+
+HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
+
+bool CreateProcessHelper(const char* exe, const char* args);
+bool LaunchElevated(const char* path, const char* cmdline);
+
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
 DWORD GetAccountType();
@@ -111,6 +118,7 @@ void PaintLine(HDC, Rect);
 void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
+Size TextSizeInHwnd(HWND, const char*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
 Size TextSizeInDC(HDC, const WCHAR*);
 
@@ -119,8 +127,11 @@ bool IsCursorOverWindow(HWND);
 bool GetCursorPosInHwnd(HWND, Point&);
 POINT GetCursorPosInHwnd(HWND);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
-WCHAR* GetDefaultPrinterName();
+char* GetDefaultPrinterNameTemp();
+
 bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);
+bool CopyTextToClipboard(const char* textA, bool appendOnly = false);
+
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 
 bool IsWindowStyleSet(HWND hwnd, DWORD flags);
@@ -139,10 +150,10 @@ HFONT GetDefaultGuiFontOfSize(int size);
 
 IStream* CreateStreamFromData(ByteSlice);
 ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt);
-ByteSlice GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
+ByteSlice GetStreamOrFileData(IStream* stream, const char* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 uint GuessTextCodepage(const char* data, size_t len, uint defVal = CP_ACP);
-WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);
+char* NormalizeString(const char* str, int /* NORM_FORM */ form);
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 void ResizeWindow(HWND, int dx, int dy);
 
@@ -155,9 +166,9 @@ void ScheduleRepaint(HWND hwnd);
 // do WM_PAINT immediately
 void RepaintNow(HWND hwnd);
 
-bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr);
-bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr);
-bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr);
+bool RegisterServerDLL(const char* dllPath, const char* args = nullptr);
+bool UnRegisterServerDLL(const char* dllPath, const char* args = nullptr);
+bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char* args = nullptr);
 
 inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
@@ -171,18 +182,6 @@ inline bool tobool(BOOL b) {
     return b != 0;
 }
 
-namespace win {
-
-void ToForeground(HWND hwnd);
-
-size_t GetTextLen(HWND hwnd);
-TempWstr GetTextTemp(HWND hwnd);
-
-void SetText(HWND hwnd, const WCHAR* txt);
-void SetVisibility(HWND hwnd, bool visible);
-bool HasFrameThickness(HWND hwnd);
-bool HasCaption(HWND hwnd);
-
 namespace menu {
 void SetChecked(HMENU m, int id, bool isChecked);
 bool SetEnabled(HMENU m, int id, bool isEnabled);
@@ -190,12 +189,13 @@ void Remove(HMENU m, int id);
 // TODO: this doesn't recognize enum Cmd, why?
 // void Remove(HMENU m, enum Cmd id);
 void Empty(HMENU m);
+
 void SetText(HMENU m, int id, const WCHAR* s);
-const WCHAR* ToSafeString(AutoFreeWstr& s);
+void SetText(HMENU m, int id, const char* s);
+
+char* ToSafeStringTemp(const char* s);
 
 } // namespace menu
-
-} // namespace win
 
 struct DoubleBuffer {
     HWND hTarget = nullptr;
@@ -209,7 +209,7 @@ struct DoubleBuffer {
     DoubleBuffer& operator=(const DoubleBuffer&) = delete;
     ~DoubleBuffer();
 
-    [[nodiscard]] HDC GetDC() const;
+    HDC GetDC() const;
     void Flush(HDC hdc) const;
 };
 
@@ -246,9 +246,9 @@ struct RenderedBitmap {
     RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }
     ~RenderedBitmap();
-    [[nodiscard]] RenderedBitmap* Clone() const;
-    [[nodiscard]] HBITMAP GetBitmap() const;
-    [[nodiscard]] Size Size() const;
+    RenderedBitmap* Clone() const;
+    HBITMAP GetBitmap() const;
+    Size Size() const;
     bool StretchDIBits(HDC hdc, Rect target) const;
 };
 
@@ -263,7 +263,7 @@ HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
-void RunNonElevated(const WCHAR* exePath);
+void RunNonElevated(const char* exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s);
 ByteSlice LoadDataResource(int resId);
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command);
@@ -286,18 +286,36 @@ std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id);
 bool IsValidDelayType(int type);
 
 void HwndResizeClientSize(HWND, int, int);
-void HwndSetText(HWND, std::string_view s);
+
+size_t HwndGetTextLen(HWND hwnd);
+TempWstr HwndGetTextWTemp(HWND hwnd);
+TempStr HwndGetTextTemp(HWND hwnd);
+void HwndSetText(HWND, const char* s);
 void HwndSetText(HWND, const WCHAR*);
-HICON HwndSetIcon(HWND, HICON);
+bool HwndHasFrameThickness(HWND hwnd);
+bool HwndHasCaption(HWND hwnd);
+
 HICON HwndGetIcon(HWND);
+HICON HwndSetIcon(HWND, HICON);
+
 void HwndInvalidate(HWND);
-void HwndSetFont(HWND, HFONT);
+
 HFONT HwndGetFont(HWND);
+void HwndSetFont(HWND, HFONT);
+
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
+Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndSendCommand(HWND hwnd, int cmdId);
 void HwndDestroyWindowSafe(HWND* hwnd);
+void HwndToForeground(HWND hwnd);
+void HwndSetVisibility(HWND hwnd, bool visible);
+
+bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen = 0);
+bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
+int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format);
+Size HdcMeasureText(HDC hdc, const char* s, UINT format);
 
 bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteFontSafe(HFONT*);
@@ -309,3 +327,5 @@ void TbSetPadding(HWND, int padX, int padY);
 void TbGetMetrics(HWND hwnd, TBMETRICS* metrics);
 void TbSetMetrics(HWND hwnd, TBMETRICS* metrics);
 void TbGetRect(HWND hwnd, int buttonId, RECT* rc);
+
+void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree);

@@ -9,7 +9,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
@@ -52,7 +52,11 @@ RenderCache::~RenderCache() {
 
     CloseHandle(renderThread);
     CloseHandle(startRendering);
-    CrashIf(curReq || 0 != requestCount || 0 != cacheCount);
+    if (curReq || 0 != requestCount || cacheCount != 0) {
+        logf("RenderCache::~RenderCache: curReq: 0x%p, requestCount: %d, cacheCount: %d\n", curReq, requestCount,
+             cacheCount);
+        ReportIf(true);
+    }
 
     LeaveCriticalSection(&cacheAccess);
     DeleteCriticalSection(&cacheAccess);
@@ -679,8 +683,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         }
         auto durMs = TimeSinceInMs(timeStart);
         if (durMs > 100) {
-            auto pathW = engine->FileName();
-            char* path = ToUtf8Temp(pathW);
+            auto path = engine->FileName();
             logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
         }
 

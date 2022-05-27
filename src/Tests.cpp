@@ -8,7 +8,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
@@ -33,8 +33,7 @@ void TestRenderPage(const Flags& i) {
         zoom = i.startZoom;
     }
     for (auto fileName : files) {
-        auto fileNameA(ToUtf8Temp(fileName));
-        printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameA.Get(), zoom);
+        printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileName, zoom);
         auto engine = CreateEngine(fileName, nullptr, true);
         if (engine == nullptr) {
             printf("failed to create engine\n");
@@ -61,8 +60,8 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do
     int idx = 0;
-    while (uniA.Get()[idx] != 0) {
-        char c = uniA.Get()[idx++];
+    while (uniA[idx] != 0) {
+        char c = uniA[idx++];
         printf("%02x ", (u8)c);
     }
     printf("'\n");
@@ -82,10 +81,9 @@ void TestExtractPage(const Flags& ci) {
         return;
     }
     for (auto fileName : files) {
-        auto fileNameA(ToUtf8Temp(fileName));
         auto engine = CreateEngine(fileName, nullptr, true);
         if (engine == nullptr) {
-            printf("failed to create engine for file '%s'\n", fileNameA.Get());
+            printf("failed to create engine for file '%s'\n", fileName);
             continue;
         }
         if (pageNo < 0) {

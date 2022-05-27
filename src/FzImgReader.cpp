@@ -223,13 +223,17 @@ RenderedBitmap* LoadRenderedBitmap(const char* path) {
     if (!path) {
         return nullptr;
     }
-    AutoFree data(file::ReadFile(path));
-    if (!data.data) {
-        return nullptr;
-    }
-    Gdiplus::Bitmap* bmp = BitmapFromData(data.AsSpan());
-    if (!bmp) {
-        return nullptr;
+    Gdiplus::Bitmap* bmp;
+    {
+        ByteSlice data = file::ReadFile(path);
+        if (!data) {
+            return nullptr;
+        }
+        bmp = BitmapFromData(data);
+        data.Free();
+        if (!bmp) {
+            return nullptr;
+        }
     }
 
     HBITMAP hbmp;

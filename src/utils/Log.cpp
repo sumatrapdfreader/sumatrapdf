@@ -29,6 +29,8 @@ bool gReducedLogging = false;
 // try to log. when true, this stops logging
 bool gStopLogging = false;
 
+bool gSkipDuplicateLines = true;
+
 bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 
@@ -57,12 +59,15 @@ static const char* getWinError(DWORD errCode) {
 }
 #endif
 
-static void logToPipe(std::string_view sv) {
+static void logToPipe(const char* s, size_t n = 0) {
     if (!gLogToPipe) {
         return;
     }
-    if (sv.empty()) {
+    if (!s || n == 0) {
         return;
+    }
+    if (n == 0) {
+        n = str::Len(s);
     }
 
     DWORD cbWritten = 0;
@@ -94,10 +99,10 @@ static void logToPipe(std::string_view sv) {
         str::Free(initialMsg);
     }
 
-    DWORD cb = (DWORD)sv.size();
+    DWORD cb = (DWORD)n;
     // TODO: what happens when we write more than the server can read?
     // should I loop if cbWritten < cb?
-    ok = WriteFile(hLogPipe, sv.data(), cb, &cbWritten, nullptr);
+    ok = WriteFile(hLogPipe, s, cb, &cbWritten, nullptr);
     if (!ok) {
 #if 0
         DWORD err = GetLastError();
@@ -111,10 +116,14 @@ static void logToPipe(std::string_view sv) {
     }
 }
 
-void log(std::string_view s) {
-    // in reduced logging mode, we do want to log to at least the debugger
-    if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
-        OutputDebugStringA(s.data());
+void log(const char* s) {
+    bool skipLog = gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
+
+    if (!skipLog) {
+        // in reduced logging mode, we do want to log to at least the debugger
+        if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
+            OutputDebugStringA(s);
+        }
     }
     if (gStopLogging) {
         return;
@@ -130,9 +139,9 @@ void log(std::string_view s) {
     }
     gLogMutex.Lock();
 
-    gAllowAllocFailure++;
+    InterlockedIncrement(&gAllowAllocFailure);
     defer {
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
     };
 
     if (!gLogBuf) {
@@ -145,27 +154,29 @@ void log(std::string_view s) {
         }
     }
 
-    gLogBuf->Append(s.data(), s.size());
-    if (gLogToConsole) {
-        fwrite(s.data(), 1, s.size(), stdout);
+    size_t n = str::Len(s);
+
+    // when skipping, we skip buf (crash reports) and console
+    // but write to file and logview
+    if (!skipLog) {
+        gLogBuf->Append(s, n);
+    }
+
+    if (!skipLog && gLogToConsole) {
+        fwrite(s, 1, n, stdout);
         fflush(stdout);
     }
 
     if (gLogFilePath) {
         auto f = fopen(gLogFilePath, "a");
         if (f != nullptr) {
-            fwrite(s.data(), 1, s.size(), f);
+            fwrite(s, 1, n, f);
             fflush(f);
             fclose(f);
         }
     }
-    logToPipe(s);
+    logToPipe(s, n);
     gLogMutex.Unlock();
-}
-
-void log(const char* s) {
-    auto sv = std::string_view(s);
-    log(sv);
 }
 
 void logf(const char* fmt, ...) {
@@ -175,8 +186,8 @@ void logf(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFree s = str::FmtV(fmt, args);
-    log(s.AsView());
+    AutoFreeStr s = str::FmtV(fmt, args);
+    log(s.Get());
     va_end(args);
 }
 
@@ -187,8 +198,8 @@ void logfa(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFree s = str::FmtV(fmt, args);
-    log(s.AsView());
+    AutoFreeStr s = str::FmtV(fmt, args);
+    log(s.Get());
     va_end(args);
 }
 
@@ -213,8 +224,8 @@ void log(const WCHAR* s) {
     if (gStopLogging || !s) {
         return;
     }
-    auto tmp = ToUtf8Temp(s);
-    log(tmp.AsView());
+    char* tmp = ToUtf8Temp(s);
+    log(tmp);
 }
 
 void logf(const WCHAR* fmt, ...) {

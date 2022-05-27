@@ -131,9 +131,8 @@
 #include <memory>
 #include <string>
 #include <array>
-#include <vector>
 #include <limits>
-#include <span>
+//#include <span>
 //#include <iostream>
 //#include <locale>
 
@@ -289,6 +288,9 @@ inline void ZeroArray(T& a) {
 
 template <typename T>
 inline T limitValue(T val, T min, T max) {
+    if (min > max) {
+        std::swap(min, max);
+    }
     CrashIf(min > max);
     if (val < min) {
         return min;
@@ -349,7 +351,7 @@ bool ListRemove(T** root, T* el) {
 struct Allocator {
     Allocator() = default;
     virtual ~Allocator() = default;
-    ;
+
     virtual void* Alloc(size_t size) = 0;
     virtual void* Realloc(void* mem, size_t size) = 0;
     virtual void Free(const void* mem) = 0;
@@ -570,7 +572,7 @@ class ExitScopeHelp {
 
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
-extern std::atomic<int> gAllowAllocFailure;
+extern LONG gAllowAllocFailure;
 
 /* How to use:
 defer { free(tools_filename); };
@@ -579,12 +581,10 @@ defer { instance->Release(); };
 */
 
 #include "GeomUtil.h"
-#include "StrSlice.h"
 #include "Vec.h"
 #include "StrUtil.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"
-#include "StringViewUtil.h"
 #include "ColorUtil.h"
 #include "TempAllocator.h"
 

@@ -6,6 +6,31 @@
 
 namespace fmt {
 
+// formatting instruction
+struct Inst {
+    Type t;
+    int argNo;           // <0 for strings that come from formatting string
+    std::string_view sv; // if t is Type::FormatStr
+};
+
+struct Fmt {
+    explicit Fmt(const char* fmt);
+
+    bool Eval(const Arg** args, int nArgs);
+
+    bool isOk = true; // true if mismatch between formatting instruction and args
+
+    const char* format = nullptr;
+    Inst instructions[32]; // 32 should be big enough for everybody
+    int nInst = 0;
+
+    int currArgNo = 0;
+    int currPercArgNo = 0;
+    str::Str res;
+
+    char buf[256];
+};
+
 static Type typeFromChar(char c) {
     switch (c) {
         case 'c': // char
@@ -161,10 +186,10 @@ Fmt::Fmt(const char* fmt) {
     isOk = ParseFormat(*this, fmt);
 }
 
-std::string_view Fmt::Eval(const Arg** args, int nArgs) {
+bool Fmt::Eval(const Arg** args, int nArgs) {
     if (!isOk) {
         // if failed parsing format
-        return {};
+        return false;
     }
 
     for (int n = 0; n < nInst; n++) {
@@ -176,11 +201,11 @@ std::string_view Fmt::Eval(const Arg** args, int nArgs) {
         CrashIf(argNo >= nArgs);
         if (argNo >= nArgs) {
             isOk = false;
-            return {};
+            return false;
         }
 
         if (inst.t == Type::FormatStr) {
-            res.AppendView(inst.sv);
+            res.Append(inst.sv.data(), inst.sv.size());
             continue;
         }
 
@@ -188,7 +213,7 @@ std::string_view Fmt::Eval(const Arg** args, int nArgs) {
         isOk = validArgTypes(inst.t, arg.t);
         CrashIf(!isOk);
         if (!isOk) {
-            return {};
+            return false;
         }
 
         switch (arg.t) {
@@ -196,33 +221,33 @@ std::string_view Fmt::Eval(const Arg** args, int nArgs) {
                 res.AppendChar(arg.u.c);
                 break;
             case Type::Int:
-                // TODO: using AppendFmt is cheating
-                res.AppendFmt("%d", (int)arg.u.i);
+                // TODO: i64 is potentially bigger than int
+                str::BufFmt(buf, dimof(buf), "%d", (int)arg.u.i);
+                res.Append(buf);
                 break;
             case Type::Float:
-                // TODO: using AppendFmt is cheating
                 // Note: %G, unlike %f, avoid trailing '0'
-                res.AppendFmt("%G", arg.u.f);
+                str::BufFmt(buf, dimof(buf), "%G", arg.u.f);
+                res.Append(buf);
                 break;
             case Type::Double:
-                // TODO: using AppendFmt is cheating
                 // Note: %G, unlike %f, avoid trailing '0'
-                res.AppendFmt("%G", arg.u.d);
+                str::BufFmt(buf, dimof(buf), "%G", arg.u.d);
+                res.Append(buf);
                 break;
             case Type::Str:
-                res.AppendView(arg.u.sv);
+                res.Append(arg.u.s);
                 break;
             case Type::WStr:
-                auto s = ToUtf8Temp(arg.u.wsv);
-                res.AppendView(s.AsView());
+                char* s = ToUtf8Temp(arg.u.ws);
+                res.Append(s);
                 break;
         };
     }
-    return res.StealAsView();
+    return true;
 }
 
-std::string_view Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                        const Arg& a6) {
+char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
     const Arg* args[6];
     int nArgs = 0;
     args[nArgs++] = &a1;
@@ -239,12 +264,47 @@ std::string_view Format(const char* s, const Arg& a1, const Arg& a2, const Arg& 
 
     if (nArgs == 0) {
         // TODO: verify that format has no references to args
-        return {s};
+        return str::Dup(s);
     }
 
     Fmt fmt(s);
-    auto res = fmt.Eval(args, nArgs);
+    bool ok = fmt.Eval(args, nArgs);
+    if (!ok) {
+        return nullptr;
+    }
+    char* res = fmt.res.StealData();
     return res;
+}
+
+char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
+                 const Arg& a6) {
+    const Arg* args[6];
+    int nArgs = 0;
+    args[nArgs++] = &a1;
+    args[nArgs++] = &a2;
+    args[nArgs++] = &a3;
+    args[nArgs++] = &a4;
+    args[nArgs++] = &a5;
+    args[nArgs++] = &a6;
+    CrashIf(nArgs > dimof(args));
+    // arguments at the end could be empty
+    while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
+        nArgs--;
+    }
+
+    if (nArgs == 0) {
+        // TODO: verify that format has no references to args
+        return (char*)s;
+    }
+
+    Fmt fmt(s);
+    bool ok = fmt.Eval(args, nArgs);
+    if (!ok) {
+        return nullptr;
+    }
+    char* res = fmt.res.Get();
+    size_t n = fmt.res.size();
+    return str::DupTemp(res, n);
 }
 
 } // namespace fmt

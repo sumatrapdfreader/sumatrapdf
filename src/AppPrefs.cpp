@@ -13,7 +13,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "SumatraConfig.h"
@@ -24,7 +24,7 @@
 #include "SumatraPDF.h"
 #include "TabInfo.h"
 #include "Flags.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Favorites.h"
@@ -35,7 +35,7 @@
 #include "utils/Log.h"
 
 // SumatraPDF.cpp
-extern void RememberDefaultWindowPosition(WindowInfo* win);
+extern void RememberDefaultWindowPosition(MainWindow* win);
 
 static WatchedFile* gWatchedSettingsFile = nullptr;
 
@@ -59,12 +59,12 @@ static int cmpFloat(const void* a, const void* b) {
 
 namespace prefs {
 
-const WCHAR* GetSettingsFileNameTemp() {
-    return L"SumatraPDF-settings.txt";
+char* GetSettingsFileNameTemp() {
+    return str::DupTemp("SumatraPDF-settings.txt");
 }
 
-WCHAR* GetSettingsPath() {
-    return AppGenDataFilename(GetSettingsFileNameTemp());
+char* GetSettingsPathTemp() {
+    return AppGenDataFilenameTemp(GetSettingsFileNameTemp());
 }
 
 static void setMin(int& i, int minVal) {
@@ -92,27 +92,31 @@ bool Load() {
         logf("prefs::Load() took %.2f ms\n", dur);
     };
 
-    AutoFreeWstr path = GetSettingsPath();
-    AutoFree prefsData = file::ReadFile(path.Get());
+    GlobalPrefs* gprefs = nullptr;
+    char* settingsPath = GetSettingsPathTemp();
+    {
+        ByteSlice prefsData = file::ReadFile(settingsPath);
 
-    gGlobalPrefs = NewGlobalPrefs(prefsData.data);
-    CrashAlwaysIf(!gGlobalPrefs);
-    auto* gprefs = gGlobalPrefs;
+        gGlobalPrefs = NewGlobalPrefs(prefsData);
+        CrashAlwaysIf(!gGlobalPrefs);
+        gprefs = gGlobalPrefs;
 
-    // in pre-release builds between 3.1.10079 and 3.1.10377,
-    // RestoreSession was a string with the additional option "auto"
-    // TODO: remove this after 3.2 has been released
+        // in pre-release builds between 3.1.10079 and 3.1.10377,
+        // RestoreSession was a string with the additional option "auto"
+        // TODO: remove this after 3.2 has been released
 #if defined(DEBUG) || defined(PRE_RELEASE_VER)
-    if (!gprefs->restoreSession && prefsData.data && str::Find(prefsData.data, "\nRestoreSession = auto")) {
-        gprefs->restoreSession = true;
-    }
+        if (!gprefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto")) {
+            gprefs->restoreSession = true;
+        }
 #endif
+        prefsData.Free();
+    }
 
     if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
     }
-    gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
+    gprefs->lastPrefUpdate = file::GetModificationTime(settingsPath);
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
@@ -172,7 +176,7 @@ bool Load() {
     //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
-    if (!file::Exists(path.Get())) {
+    if (!file::Exists(settingsPath)) {
         Save();
     }
     return true;
@@ -202,7 +206,7 @@ static void RememberSessionState() {
         }
         SessionData* data = NewSessionData();
         for (TabInfo* tab : win->tabs) {
-            char* fp = ToUtf8Temp(tab->filePath);
+            char* fp = tab->filePath;
             FileState* fs = NewDisplayState(fp);
             if (tab->ctrl) {
                 tab->ctrl->GetDisplayState(fs);
@@ -232,7 +236,7 @@ bool Save() {
     }
 
     // update display states for all tabs
-    for (WindowInfo* win : gWindows) {
+    for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             UpdateTabFileDisplayStateForTab(tab);
         }
@@ -245,12 +249,12 @@ bool Save() {
     str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
 
-    AutoFreeWstr path = GetSettingsPath();
-    ReportIf(!path.data);
-    if (!path.data) {
+    char* path = GetSettingsPathTemp();
+    ReportIf(!path);
+    if (!path) {
         return false;
     }
-    ByteSlice prevPrefs = file::ReadFile(path.data);
+    ByteSlice prevPrefs = file::ReadFile(path);
     const char* prevPrefsData = (char*)prevPrefs.data();
     ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
@@ -267,18 +271,18 @@ bool Save() {
         return true;
     }
 
-    bool ok = file::WriteFile(path.Get(), prefs);
+    bool ok = file::WriteFile(path, prefs);
     if (!ok) {
         return false;
     }
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.Get());
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     return true;
 }
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
 bool Reload() {
-    AutoFreeWstr path = GetSettingsPath();
+    char* path = GetSettingsPathTemp();
     if (!file::Exists(path)) {
         return false;
     }
@@ -317,7 +321,7 @@ bool Reload() {
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
-        WindowInfo* win = gWindows.at(0);
+        MainWindow* win = gWindows.at(0);
         win->HideToolTip();
         DeleteVecMembers(win->staticLinks);
         win->RedrawAll(true);
@@ -327,7 +331,7 @@ bool Reload() {
         SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
     }
 
-    for (WindowInfo* win : gWindows) {
+    for (MainWindow* win : gWindows) {
         if (gGlobalPrefs->showToolbar != showToolbar) {
             ShowOrHideToolbar(win);
         }
@@ -356,7 +360,7 @@ void RegisterForFileChanges() {
     }
 
     CrashIf(gWatchedSettingsFile); // only call me once
-    AutoFreeWstr path = GetSettingsPath();
+    char* path = GetSettingsPathTemp();
     gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }
 

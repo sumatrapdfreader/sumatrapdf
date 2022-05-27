@@ -97,13 +97,13 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
         CrashIf(meta.Size() != kBufSize);
-        data.AppendSpan(meta.AsSpan());
+        data.AppendSlice(meta.AsByteSlice());
         data.Append(inArchiveName, nameLen + 1);
         return content.Append(fi->compressedData, fi->compressedSize);
     }
 
-    AutoFree fileData(file::ReadFile(filePath));
-    if (!fileData.data || fileData.size() >= UINT32_MAX) {
+    ByteSlice fileData = file::ReadFile(filePath);
+    if (!fileData.data() || fileData.size() >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
     }
@@ -128,7 +128,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
     CrashIf(meta.Size() != kBufSize);
-    data.AppendSpan(meta.AsSpan());
+    data.AppendSlice(meta.AsByteSlice());
     data.Append(inArchiveName, nameLen + 1);
     return content.Append(compressed, compressedSize);
 }
@@ -137,8 +137,8 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
 // file paths may be relative to the current directory or absolute and
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
-bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 0) {
-    AutoFree prevData(file::ReadFile(archivePath));
+bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0) {
+    ByteSlice prevData(file::ReadFile(archivePath));
     size_t prevDataLen = prevData.size();
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive((const u8*)prevData.data, prevDataLen, &prevArchive))
@@ -152,17 +152,17 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((u32)(files.size() - skipFiles));
     CrashIf(lzsaHeader.Size() != kBufSize);
-    data.AppendSpan(lzsaHeader.AsSpan());
+    data.AppendSlice(lzsaHeader.AsByteSlice());
 
     for (size_t i = skipFiles; i < files.size(); i++) {
-        AutoFreeWstr filePath(str::Dup(files.at(i)));
-        WCHAR* sep = str::FindCharLast(filePath, ':');
-        AutoFree utf8Name;
+        AutoFreeStr filePath(str::Dup(files.at(i)));
+        char* sep = str::FindCharLast(filePath, ':');
+        AutoFreeStr utf8Name;
         if (sep) {
-            utf8Name = strconv::WstrToUtf8(sep + 1);
+            utf8Name = str::Dup(sep + 1);
             *sep = '\0';
         } else {
-            utf8Name = strconv::WstrToUtf8(filePath);
+            utf8Name = str::Dup(filePath);
         }
 
         str::TransCharsInPlace(utf8Name, "/", "\\");
@@ -183,7 +183,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     ByteWriterLE buf(4);
     buf.Write32(headerCrc32);
     CrashIf(buf.Size() != 4);
-    data.AppendSpan(buf.AsSpan());
+    data.AppendSlice(buf.AsByteSlice());
     if (!data.Append(content.Get(), content.size()))
         return false;
 
@@ -198,9 +198,19 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
         return errorStep;                       \
     }
 
+static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
+    int nArgs = 0;
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    for (int i = 0; i < nArgs; i++) {
+        char* arg = ToUtf8Temp(argsArr[i]);
+        args.Append(arg);
+    }
+    LocalFree(argsArr);
+}
+
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
-    AutoFree fileData(file::ReadFile(archivePath));
+    ByteSlice fileData = file::ReadFile(archivePath);
     FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
     errorStep++;
 
@@ -227,7 +237,7 @@ int main(__unused int argc, __unused char** argv) {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    WStrVec args;
+    StrVec args;
     ParseCmdLine(GetCommandLine(), args);
     int errorStep = 1;
 

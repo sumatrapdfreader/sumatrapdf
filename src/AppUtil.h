@@ -3,6 +3,6 @@
 
 bool IsValidProgramVersion(const char* txt);
 int CompareVersion(const char* txt1, const char* txt2);
-bool AdjustVariableDriveLetter(WCHAR* path);
+bool AdjustVariableDriveLetter(char* path);
 
-bool IsUntrustedFile(const WCHAR* filePath, const WCHAR* fileUrl = nullptr);
+bool IsUntrustedFile(const char* filePath, const char* fileUrl = nullptr);

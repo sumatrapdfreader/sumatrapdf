@@ -69,99 +69,87 @@ struct IPageDestination {
     IPageDestination() = default;
     virtual ~IPageDestination(){};
 
-    [[nodiscard]] Kind GetKind() {
+    Kind GetKind() {
         return kind;
     }
 
     // page the destination points to (-1 for external destinations such as URLs)
-    [[nodiscard]] virtual int GetPageNo() {
+    virtual int GetPageNo() {
         return pageNo;
     }
     // rectangle of the destination on the above returned page
-    [[nodiscard]] virtual RectF GetRect() {
+    virtual RectF GetRect() {
         return rect;
     }
     // optional zoom level on the above returned page
-    [[nodiscard]] virtual float GetZoom() {
+    virtual float GetZoom() {
         return zoom;
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    [[nodiscard]] virtual WCHAR* GetValue() {
+    virtual char* GetValue() {
         return nullptr;
     }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    [[nodiscard]] virtual WCHAR* GetName() {
+    virtual char* GetName() {
         return nullptr;
     }
 };
 
 struct PageDestinationURL : IPageDestination {
-    WCHAR* url = nullptr;
+    char* url = nullptr;
 
     PageDestinationURL() = delete;
-
-    PageDestinationURL(const WCHAR* u) {
-        CrashIf(!u);
-        kind = kindDestinationLaunchURL;
-        url = str::Dup(u);
-    }
 
     PageDestinationURL(const char* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchURL;
-        url = strconv::Utf8ToWstr(u);
+        url = str::Dup(u);
     }
 
     ~PageDestinationURL() override {
         str::Free(url);
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         return url;
     }
 };
 
 struct PageDestinationFile : IPageDestination {
-    WCHAR* path = nullptr;
+    char* path = nullptr;
 
     PageDestinationFile() = delete;
 
-    PageDestinationFile(const WCHAR* u) {
+    PageDestinationFile(const char* u) {
         CrashIf(!u);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
-    }
-
-    PageDestinationFile(const char* u) {
-        CrashIf(!u);
-        kind = kindDestinationLaunchURL;
-        path = strconv::Utf8ToWstr(u);
     }
 
     ~PageDestinationFile() override {
         str::Free(path);
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         return path;
     }
 };
 
 struct PageDestination : IPageDestination {
-    WCHAR* value = nullptr;
-    WCHAR* name = nullptr;
+    char* value = nullptr;
+    char* name = nullptr;
 
     PageDestination() = default;
 
     ~PageDestination() override;
 
-    [[nodiscard]] WCHAR* GetValue() override;
-    [[nodiscard]] WCHAR* GetName() override;
+    char* GetValue() override;
+    char* GetName() override;
 };
 
-IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const WCHAR* value = nullptr);
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const char* value = nullptr);
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9f
@@ -197,7 +185,7 @@ struct IPageElement {
 
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    virtual WCHAR* GetValue() {
+    virtual char* GetValue() {
         return nullptr;
     }
     // if this element is a link, this returns information about the link's destination
@@ -219,9 +207,9 @@ struct PageElementImage : IPageElement {
 };
 
 struct PageElementComment : IPageElement {
-    WCHAR* comment = nullptr;
+    char* comment = nullptr;
 
-    PageElementComment(const WCHAR* c) {
+    PageElementComment(const char* c) {
         kind = kindPageElementComment;
         comment = str::Dup(c);
     }
@@ -230,7 +218,7 @@ struct PageElementComment : IPageElement {
         str::Free(comment);
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         return comment;
     }
 };
@@ -247,7 +235,7 @@ struct PageElementDestination : IPageElement {
         delete dest;
     }
 
-    WCHAR* GetValue() override {
+    char* GetValue() override {
         if (dest) {
             return dest->GetValue();
         }
@@ -283,7 +271,7 @@ struct TocItem {
     TocItem* parent = nullptr;
 
     // the item's visible label
-    WCHAR* title = nullptr;
+    char* title = nullptr;
 
     // in some formats, the document can specify the tree item
     // is expanded by default. We keep track if user toggled
@@ -327,7 +315,7 @@ struct TocItem {
 
     TocItem() = default;
 
-    explicit TocItem(TocItem* parent, const WCHAR* title, int pageNo);
+    explicit TocItem(TocItem* parent, const char* title, int pageNo);
 
     ~TocItem();
 
@@ -343,7 +331,7 @@ struct TocItem {
     TocItem* ChildAt(int n);
     bool IsExpanded();
 
-    [[nodiscard]] bool PageNumbersMatch() const;
+    bool PageNumbersMatch() const;
 };
 
 struct TocTree : TreeModel {
@@ -356,7 +344,7 @@ struct TocTree : TreeModel {
     // TreeModel
     TreeItem Root() override;
 
-    WCHAR* Text(TreeItem) override;
+    char* Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
     TreeItem ChildAt(TreeItem, int index) override;
@@ -398,7 +386,7 @@ class EngineBase {
     Kind kind = nullptr;
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
-    const WCHAR* defaultExt = nullptr;
+    const char* defaultExt = nullptr;
     PageLayout preferredLayout;
     float fileDPI = 96.0f;
     bool isImageCollection = false;
@@ -410,14 +398,14 @@ class EngineBase {
     int pageCount = -1;
 
     // TODO: migrate other engines to use this
-    AutoFreeWstr fileNameBase;
+    AutoFreeStr fileNameBase;
 
     virtual ~EngineBase();
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual EngineBase* Clone() = 0;
 
     // number of pages the loaded document contains
-    [[nodiscard]] int PageCount() const;
+    int PageCount() const;
 
     // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
     virtual RectF PageMediabox(int pageNo) = 0;
@@ -454,10 +442,10 @@ class EngineBase {
     // the layout type this document's author suggests (if the user doesn't care)
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    [[nodiscard]] bool IsImageCollection() const;
+    bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
+    virtual char* GetProperty(DocumentProperty prop) = 0;
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
@@ -465,10 +453,10 @@ class EngineBase {
 
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    [[nodiscard]] bool AllowsCopyingText() const;
+    bool AllowsCopyingText() const;
 
     // the DPI for a file is needed when converting internal measures to physical ones
-    [[nodiscard]] float GetFileDPI() const;
+    float GetFileDPI() const;
 
     // returns a list of all available elements for this page
     // caller must delete the Vec but not the elements inside the vector
@@ -479,10 +467,10 @@ class EngineBase {
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual IPageDestination* GetNamedDest(const WCHAR* name);
+    virtual IPageDestination* GetNamedDest(const char* name);
 
     // checks whether this document has an associated Table of Contents
-    bool HacToc();
+    bool HasToc();
 
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
@@ -490,29 +478,30 @@ class EngineBase {
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    [[nodiscard]] bool HasPageLabels() const;
+    bool HasPageLabels() const;
 
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    [[nodiscard]] virtual WCHAR* GetPageLabel(int pageNo) const;
+    virtual char* GetPageLabel(int pageNo) const;
 
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const WCHAR* label) const;
+    virtual int GetPageByLabel(const char* label) const;
 
     // whether this document required a password in order to be loaded
-    [[nodiscard]] bool IsPasswordProtected() const;
+    bool IsPasswordProtected() const;
 
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    [[nodiscard]] char* GetDecryptionKey() const;
+    char* GetDecryptionKey() const;
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    [[nodiscard]] const WCHAR* FileName() const;
+    const char* FileName() const;
+    const char* FilePathTemp() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
@@ -521,13 +510,16 @@ class EngineBase {
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
 
     // protected:
-    void SetFileName(const WCHAR* s);
+    void SetFileName(const char* s);
 };
 
 struct PasswordUI {
-    virtual WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
+    virtual char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
 
-WCHAR* CleanupFileURL(const WCHAR*);
-WCHAR* CleanupURLForClipbardCopy(const WCHAR*);
+// WCHAR* CleanupFileURL(const WCHAR*);
+char* CleanupFileURL(const char* s);
+
+// WCHAR* CleanupURLForClipbardCopy(const WCHAR*);
+char* CleanupURLForClipbardCopy(const char* s);

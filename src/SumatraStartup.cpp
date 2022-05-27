@@ -20,14 +20,12 @@
 #include "SumatraConfig.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/wingui2.h"
+#include "wingui/WinGui.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
@@ -41,7 +39,7 @@
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "UpdateCheck.h"
 #include "resource.h"
@@ -77,7 +75,7 @@
 // terminate and delete itself asynchronously while the UI is
 // being set up
 class FileExistenceChecker : public ThreadBase {
-    WStrVec paths;
+    StrVec paths;
 
     void GetFilePathsToCheck();
     void HideMissingFiles();
@@ -96,7 +94,7 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     FileState* fs;
     for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (!fs->isMissing) {
-            WCHAR* fp = strconv::Utf8ToWstr(fs->filePath);
+            char* fp = fs->filePath;
             paths.Append(fp);
         }
     }
@@ -106,19 +104,14 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
-        WCHAR* fp = strconv::Utf8ToWstr(fs->filePath);
-        if (!paths.Contains(fp)) {
-            paths.Append(fp);
-        } else {
-            str::Free(fp);
-        }
+        char* fp = fs->filePath;
+        paths.AppendIfNotExists(fp);
     }
 }
 
 void FileExistenceChecker::HideMissingFiles() {
-    for (const WCHAR* path : paths) {
-        char* fp = ToUtf8Temp(path);
-        gFileHistory.MarkFileInexistent(fp, true);
+    for (const char* path : paths) {
+        gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
     if (paths.size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
@@ -137,9 +130,9 @@ void FileExistenceChecker::Run() {
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
     for (size_t i = 0; i < paths.size(); i++) {
-        const WCHAR* path = paths.at(i);
+        const char* path = paths[i];
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-            free(paths.PopAt(i--));
+            paths.RemoveAt(i--);
         }
     }
 
@@ -150,7 +143,7 @@ void FileExistenceChecker::Run() {
     });
 }
 
-static void MakePluginWindow(WindowInfo* win, HWND hwndParent) {
+static void MakePluginWindow(MainWindow* win, HWND hwndParent) {
     CrashIf(!IsWindow(hwndParent));
     CrashIf(!gPluginMode);
 
@@ -201,62 +194,65 @@ static bool InstanceInit() {
     return true;
 }
 
-static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool isFirstWin) {
+static void OpenUsingDde(HWND targetWnd, const char* filePath, Flags& i, bool isFirstWin) {
     // delegate file opening to a previously running instance by sending a DDE message
-    WCHAR fullpath[MAX_PATH];
-    GetFullPathNameW(filePath, dimof(fullpath), fullpath, nullptr);
+    WCHAR fullpathW[MAX_PATH];
+    GetFullPathNameW(fullpathW, dimof(fullpathW), fullpathW, nullptr);
+    char* fullpath = ToUtf8Temp(fullpathW);
 
-    str::WStr cmd;
+    str::Str cmd;
     int newWindow = 0;
     if (i.inNewWindow) {
         // 2 forces opening a new window
         newWindow = 2;
     }
-    cmd.AppendFmt(L"[Open(\"%s\", %d, 1, 0)]", fullpath, newWindow);
+    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullpath, newWindow);
     if (i.destName && isFirstWin) {
-        cmd.AppendFmt(L"[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
+        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.AppendFmt(L"[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
+        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
     }
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
         auto viewMode = ToWstrTemp(viewModeStr);
-        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode.Get(), i.startZoom,
-                      i.startScroll.x, i.startScroll.y);
+        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
+                      i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.AppendFmt(L"[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.Get(), i.forwardSearchLine);
+        char* srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
+        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, srcPath, i.forwardSearchLine);
     }
     if (i.search != nullptr) {
         // TODO: quote if i.search has '"' in it
-        cmd.AppendFmt(L"[Search(\"%s\",\"%s\")]", fullpath, i.search);
+        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullpath, i.search);
     }
 
+    WCHAR* cmdW = ToWstrTemp(cmd.Get());
     if (!i.reuseDdeInstance) {
         // try WM_COPYDATA first, as that allows targetting a specific window
-        auto cbData = (cmd.size() + 1) * sizeof(WCHAR);
-        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, cmd.Get()};
+        size_t cbData = (str::Len(cmdW) + 1) * sizeof(WCHAR);
+        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, cmdW};
         LRESULT res = SendMessageW(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res) {
             return;
         }
     }
-    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
+    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmdW);
 }
 
-static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& flags, bool isFirstWin) {
-    LoadArgs args(filePath, nullptr);
-    args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
-    WindowInfo* win = LoadDocument(args);
+static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
+    LoadArgs* args = new LoadArgs(filePath, nullptr);
+    args->showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
+    MainWindow* win = LoadDocument(args);
     if (!win) {
         return win;
     }
 
     if (win->IsDocLoaded() && flags.destName && isFirstWin) {
-        win->linkHandler->GotoNamedDest(flags.destName);
+        char* dest = flags.destName;
+        win->linkHandler->GotoNamedDest(dest);
     } else if (win->IsDocLoaded() && flags.pageNumber > 0 && isFirstWin) {
         if (win->ctrl->ValidPageNo(flags.pageNumber)) {
             win->ctrl->GoToPage(flags.pageNumber, false);
@@ -291,20 +287,22 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& flags, bool
     if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         uint page;
         Vec<Rect> rects;
-        AutoFreeWstr sourcePath(path::Normalize(flags.forwardSearchOrigin));
-        int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, flags.forwardSearchLine, 0, &page, rects);
-        ShowForwardSearchResult(win, sourcePath, flags.forwardSearchLine, 0, ret, page, rects);
+        char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
+        int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
+        ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
     }
     if (flags.search != nullptr) {
-        FindTextOnThread(win, TextSearchDirection::Forward, flags.search, true /*wasModified*/, true /*showProgress*/);
+        bool wasModified = true;
+        bool showProgress = true;
+        FindTextOnThread(win, TextSearchDirection::Forward, flags.search, wasModified, showProgress);
     }
     return win;
 }
 
-static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
-    LoadArgs args(state->filePath, win);
-    args.noSavePrefs = true;
-    if (!LoadDocument(args)) {
+static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
+    LoadArgs* args = new LoadArgs(state->filePath, win);
+    args->noSavePrefs = true;
+    if (!LoadDocument(args, lazyload)) {
         return;
     }
     TabInfo* tab = win->currentTab;
@@ -312,7 +310,7 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
         return;
     }
 
-    Controller* ctrl = tab->ctrl;
+    DocController* ctrl = tab->ctrl;
     DisplayModel* dm = tab->AsFixed();
 
     // validate page number from session state
@@ -361,11 +359,7 @@ static bool SetupPluginMode(Flags& i) {
 
     gPluginURL = i.pluginURL;
     if (!gPluginURL) {
-        gPluginURL = i.fileNames.at(0);
-    }
-
-    while (i.fileNames.size() > 1) {
-        free(i.fileNames.Pop());
+        gPluginURL = i.fileNames[0];
     }
 
     // don't save preferences for plugin windows (and don't allow fullscreen mode)
@@ -398,16 +392,16 @@ static bool SetupPluginMode(Flags& i) {
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
-        str::TransCharsInPlace(args, L"#", L"&");
-        WStrVec parts;
-        parts.Split(args, L"&", true);
+        AutoFreeStr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        str::TransCharsInPlace(args, "#", "&");
+        StrVec parts;
+        Split(parts, args, "&", true);
         for (size_t k = 0; k < parts.size(); k++) {
-            WCHAR* part = parts.at(k);
+            char* part = parts.at(k);
             int pageNo;
-            if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo)) {
+            if (str::StartsWithI(part, "page=") && str::Parse(part + 4, "=%d%$", &pageNo)) {
                 i.pageNumber = pageNo;
-            } else if (str::StartsWithI(part, L"nameddest=") && part[10]) {
+            } else if (str::StartsWithI(part, "nameddest=") && part[10]) {
                 i.destName = str::Dup(part + 10);
             } else if (!str::FindChar(part, '=') && part[0]) {
                 i.destName = str::Dup(part);
@@ -418,21 +412,18 @@ static bool SetupPluginMode(Flags& i) {
 }
 
 static void SetupCrashHandler() {
-    WCHAR* symDir = AppGenDataFilename(L"crashinfo");
-    WCHAR* crashDumpPath = path::Join(symDir, L"sumatrapdfcrash.dmp");
-    WCHAR* crashFilePath = path::Join(symDir, L"sumatrapdfcrash.txt");
+    char* symDir = AppGenDataFilenameTemp("crashinfo");
+    char* crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
+    char* crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
-    free(crashFilePath);
-    free(crashDumpPath);
-    free(symDir);
 }
 
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    auto exePath = GetExePathTemp();
+    char* exePath = GetExePathTemp();
     str::ToLowerInPlace(exePath);
-    u32 hash = MurmurHash2(exePath, str::Len(exePath) * sizeof(WCHAR));
+    u32 hash = MurmurHash2(exePath, str::Len(exePath));
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
@@ -444,7 +435,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     DWORD lastErr = 0;
 Retry:
     // use a memory mapping containing a process id as mutex
-    hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
+    hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
     if (!hMap) {
         goto Error;
     }
@@ -497,7 +488,7 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
         return *gSafeAccTable;
     }
 
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
         return nullptr;
     }
@@ -527,10 +518,11 @@ static int RunMessageLoop() {
     HWND hwndAccel;
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (wg::PreTranslateMessage(msg)) {
+        if (PreTranslateMessage(msg)) {
             continue;
         }
 
+        // TODO: why mouse events?
         bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
                          (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
 
@@ -566,58 +558,58 @@ static void ShutdownCommon() {
 }
 #endif
 
-static void ReplaceColor(char** col, WCHAR* maybeColor) {
+static void ReplaceColor(char** col, char* maybeColor) {
     ParsedColor c;
-    ParseColor(c, ToUtf8Temp(maybeColor).Get());
+    ParseColor(c, maybeColor);
     if (c.parsedOk) {
         char* colNewStr = SerializeColor(c.col);
-        str::ReplacePtr(&gGlobalPrefs->mainWindowBackground, colNewStr);
+        str::ReplacePtr(col, colNewStr);
     }
 }
 
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
-        char* cmdLine = str::Dup(ToUtf8Temp(i.inverseSearchCmdLine).AsView());
+        char* cmdLine = str::Dup(i.inverseSearchCmdLine);
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
     gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
 
-    WCHAR* arg = nullptr;
-    WCHAR* param = nullptr;
+    char* arg = nullptr;
+    char* param = nullptr;
     for (size_t n = 0; n < i.globalPrefArgs.size(); n++) {
         arg = i.globalPrefArgs.at(n);
-        if (str::EqI(arg, L"-esc-to-exit")) {
+        if (str::EqI(arg, "-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
-        } else if (str::EqI(arg, L"-bgcolor") || str::EqI(arg, L"-bg-color")) {
+        } else if (str::EqI(arg, "-bgcolor") || str::EqI(arg, "-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->mainWindowBackground, param);
-        } else if (str::EqI(arg, L"-set-color-range")) {
+        } else if (str::EqI(arg, "-set-color-range")) {
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->fixedPageUI.textColor, param);
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
-        } else if (str::EqI(arg, L"-fwdsearch-offset")) {
+        } else if (str::EqI(arg, "-fwdsearch-offset")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(param);
+            gGlobalPrefs->forwardSearch.highlightOffset = atoi(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-fwdsearch-width")) {
+        } else if (str::EqI(arg, "-fwdsearch-width")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(param);
+            gGlobalPrefs->forwardSearch.highlightWidth = atoi(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-fwdsearch-color")) {
+        } else if (str::EqI(arg, "-fwdsearch-color")) {
             param = i.globalPrefArgs.at(++n);
             ReplaceColor(&gGlobalPrefs->forwardSearch.highlightColor, param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-fwdsearch-permanent")) {
+        } else if (str::EqI(arg, "-fwdsearch-permanent")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(param);
+            gGlobalPrefs->forwardSearch.highlightPermanent = atoi(param);
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(arg, L"-manga-mode")) {
+        } else if (str::EqI(arg, "-manga-mode")) {
             param = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", param) || str::Eq(L"1", param);
+            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI("true", param) || str::Eq("1", param);
         }
     }
 }
@@ -625,12 +617,12 @@ static void UpdateGlobalPrefs(const Flags& i) {
 // we're in installer mode if the name of the executable
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
-    auto exePath = GetExePathTemp();
-    const WCHAR* exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, L"uninstall")) {
+    char* exePath = GetExePathTemp();
+    const char* exeName = path::GetBaseNameTemp(exePath);
+    if (str::FindI(exeName, "uninstall")) {
         return false;
     }
-    return str::FindI(exeName, L"install");
+    return str::FindI(exeName, "install");
 }
 
 static bool ExeHasInstallerResources() {
@@ -646,12 +638,12 @@ static bool IsInstallerAndNamedAsSuch() {
 }
 
 static bool IsOurExeInstalled() {
-    AutoFreeWstr installedDir = GetExistingInstallationDir();
+    AutoFreeStr installedDir = GetExistingInstallationDir();
     if (!installedDir.Get()) {
         return false;
     }
-    AutoFreeWstr exeDir = GetExeDir();
-    return str::EqI(installedDir.Get(), exeDir.Get());
+    char* exeDir = GetExeDirTemp();
+    return str::EqI(installedDir.Get(), exeDir);
 }
 
 static bool IsInstallerButNotInstalled() {
@@ -662,14 +654,14 @@ static bool IsInstallerButNotInstalled() {
 }
 
 static void CheckIsStoreBuild() {
-    WCHAR* exePath = GetExePathTemp();
-    const WCHAR* exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, L"store")) {
+    char* exePath = GetExePathTemp();
+    const char* exeName = path::GetBaseNameTemp(exePath);
+    if (str::FindI(exeName, "store")) {
         gIsStoreBuild = true;
         return;
     }
-    WCHAR* dir = path::GetDirTemp(exePath);
-    WCHAR* path = path::JoinTemp(dir, L"AppxManifest.xml");
+    char* dir = path::GetDirTemp(exePath);
+    char* path = path::JoinTemp(dir, "AppxManifest.xml");
     if (file::Exists(path)) {
         gIsStoreBuild = true;
     }
@@ -682,7 +674,7 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
             WCHAR* s = (WCHAR*)lParam;
-            LaunchBrowser(s);
+            LaunchBrowser(ToUtf8Temp(s));
             break;
     }
     return S_OK;
@@ -707,10 +699,10 @@ static void VerifyNoLibmupdfMismatch() {
         return;
     }
 
-    WCHAR* exePath = GetExePathTemp();
-    WCHAR* dir = path::GetDirTemp(exePath);
-    WCHAR* path = path::JoinTemp(dir, L"libmupdf.dll");
-    auto realSize = file::GetSize(ToUtf8Temp(path).AsView());
+    char* exePath = GetExePathTemp();
+    char* dir = path::GetDirTemp(exePath);
+    char* path = path::JoinTemp(dir, "libmupdf.dll");
+    auto realSize = file::GetSize(path);
     if (realSize == (i64)expectedSize) {
         return;
     }
@@ -729,7 +721,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
         printf("%s", corruptedInstallationConsole);
     }
 
-    WCHAR* title = str::JoinTemp(kAppName, L" installer");
+    auto title = L"SumatraPDF installer";
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -774,9 +766,8 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    const char* appName = ToUtf8Temp(kAppName);
     str::Str msg{kInstallerHelpTmpl};
-    str::Replace(msg, "${appName}", appName);
+    str::Replace(msg, "${appName}", kAppName);
 
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
@@ -785,7 +776,7 @@ static void ShowInstallerHelp() {
         return;
     }
 
-    WCHAR* title = str::JoinTemp(kAppName, L" installer usage");
+    const WCHAR* title = L"SumatraPDF installer usage";
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -925,8 +916,9 @@ static void ForceStartupLeaks() {
     secs = mktime(&tm);
     gmtime_s(&tm, &secs);
     gmtime(&secs);
-    WCHAR* path = GetExePathTemp();
-    FILE* fp = _wfopen(path, L"rb");
+    char* path = GetExePathTemp();
+    WCHAR* pathW = ToWstrTemp(path);
+    FILE* fp = _wfopen(pathW, L"rb");
     if (fp) {
         fclose(fp);
     }
@@ -936,7 +928,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
                      __unused int nCmdShow) {
     int retCode = 1; // by default it's error
     int nWithDde = 0;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
     bool showStartPage = false;
     bool restoreSession = false;
     HANDLE hMutex = nullptr;
@@ -1149,19 +1141,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
 
-    // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
-    // in layout
-#if 0
-    RedirectIOToConsole();
-    BenchEbookLayout(L"C:\\kjk\\downloads\\pg12.mobi");
-    system("pause");
-    goto Exit;
-#endif
-
-#ifdef DEBUG
+#if defined(DEBUG)
     if (false) {
         // LoadFile();
         LoadRar();
+        return 0;
+    }
+#endif
+
+#if defined(DEBUG)
+    void TestBrowser(); // scratch.cpp
+    if (flags.testBrowser) {
+        TestBrowser();
         return 0;
     }
 #endif
@@ -1170,7 +1161,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         RedirectIOToConsole();
     }
 
-    if (flags.pathsToBenchmark.size() > 0) {
+    if (flags.pathsToBenchmark.Size() > 0) {
         BenchFileOrDir(flags.pathsToBenchmark);
     }
 
@@ -1209,8 +1200,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         auto nFiles = flags.fileNames.size();
-        for (size_t n = 0; n < nFiles; n++) {
-            bool ok = PrintFile(flags.fileNames.at(n), flags.printerName, !flags.silent, flags.printSettings);
+        for (char* path : flags.fileNames) {
+            bool ok = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
             if (!ok) {
                 retCode++;
             }
@@ -1234,7 +1225,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             goto Exit;
         }
         for (size_t n = 0; n < nFiles; n++) {
-            OpenUsingDde(hPrevWnd, flags.fileNames.at(n), flags, 0 == n);
+            char* path = flags.fileNames[n];
+            bool isFirstWindow = (0 == n);
+            OpenUsingDde(hPrevWnd, path, flags, isFirstWindow);
         }
         if (0 == nFiles) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
@@ -1243,7 +1236,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             if (flags.inNewWindow) {
                 goto ContinueOpenWindow;
             } else {
-                win::ToForeground(hPrevWnd);
+                HwndToForeground(hPrevWnd);
             }
         }
         goto Exit;
@@ -1274,23 +1267,25 @@ ContinueOpenWindow:
                 // the current fix is to not call prefs::Save() below but maybe there's a better way
                 // maybe make a copy of TabState so that it isn't invalidated
                 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-                RestoreTabOnStartup(win, state);
+                RestoreTabOnStartup(win, state, gEnableLazyLoad);
             }
             TabsSelect(win, data->tabIndex - 1);
+            if (gEnableLazyLoad) {
+                ReloadDocument(win, false);
+            }
         }
     }
     ResetSessionState(gGlobalPrefs->sessionData);
 
-    for (const WCHAR* filePath : flags.fileNames) {
+    for (const char* path : flags.fileNames) {
         if (restoreSession) {
-            auto tab = FindTabByFile(filePath);
+            auto tab = FindTabByFile(path);
             if (tab) {
                 tabToSelect = tab;
                 continue;
             }
         }
-        auto path = ToUtf8Temp(filePath);
-        win = LoadOnStartup(filePath, flags, !win);
+        win = LoadOnStartup(path, flags, !win);
         if (!win) {
             retCode++;
             continue;
@@ -1304,12 +1299,11 @@ ContinueOpenWindow:
     nWithDde = (int)gDdeOpenOnStartup.size();
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
-        for (auto&& filePath : gDdeOpenOnStartup) {
-            if (restoreSession && FindWindowInfoByFile(filePath, false)) {
+        for (char* path : gDdeOpenOnStartup) {
+            if (restoreSession && FindWindowInfoByFile(path, false)) {
                 continue;
             }
-            auto path = ToUtf8Temp(filePath);
-            win = LoadOnStartup(filePath, flags, !win);
+            win = LoadOnStartup(path, flags, !win);
             if (!win) {
                 retCode++;
             }

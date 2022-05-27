@@ -8,15 +8,15 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/wingui2.h"
+#include "wingui/WinGui.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "DisplayModel.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "SumatraConfig.h"
 #include "Commands.h"
@@ -27,8 +27,6 @@
 #include "Annotation.h"
 
 #include "utils/Log.h"
-
-using namespace wg;
 
 static HFONT gCommandPaletteFont = nullptr;
 
@@ -74,9 +72,13 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdHelpVisitWebsite,
     CmdHelpAbout,
     CmdDebugDownloadSymbols,
+    CmdDebugShowNotif,
+    CmdDebugStartStressTest,
+    CmdDebugTestApp,
     CmdFavoriteToggle,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
+    CmdToggleToolbar,
     CmdShowLog,
 };
 
@@ -130,7 +132,7 @@ static bool IsCmdInMenuList(i32 cmdId, UINT_PTR* a) {
 
 struct CommandPaletteWnd : Wnd {
     ~CommandPaletteWnd() override = default;
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
     StrVec allStrings;
@@ -145,7 +147,7 @@ struct CommandPaletteWnd : Wnd {
 
     void ScheduleDelete();
 
-    bool Create(WindowInfo* win);
+    bool Create(MainWindow* win);
     void QueryChanged();
     void ListDoubleClick();
 
@@ -264,10 +266,10 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
 
     switch (cmdId) {
         case CmdDebugShowLinks:
-        // case CmdDebugAnnotations:
         // case CmdDebugDownloadSymbols:
         case CmdDebugTestApp:
         case CmdDebugShowNotif:
+        case CmdDebugStartStressTest:
         case CmdDebugCrashMe: {
             return gIsDebugBuild || gIsPreReleaseBuild;
         }
@@ -283,31 +285,29 @@ static char* ConvertPathForDisplayTemp(const char* s) {
     return res;
 }
 
-static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, WindowInfo* win) {
+static void AddOpenedFiles(StrVec& strings, StrVec& filePaths, MainWindow* win) {
     for (TabInfo* tab : win->tabs) {
         if (!tab->IsDocLoaded()) {
             continue;
         }
-        auto path = tab->filePath.Get();
-        char* s = ToUtf8Temp(path);
-        filePaths.AppendIfNotExists(s);
-        s = (char*)path::GetBaseNameTemp(s);
+        const char* path = tab->filePath.Get();
+        filePaths.AppendIfNotExists(path);
+        path = path::GetBaseNameTemp(path);
         // s = ConvertPathForDisplayTemp(s);
-        filePaths.AppendIfNotExists(s);
+        filePaths.AppendIfNotExists(path);
         // avoid adding the same file opened in multiple window
-        strings.AppendIfNotExists(s);
+        strings.AppendIfNotExists(path);
     }
 }
 
-static TabInfo* FindOpenedFile(std::string_view sv) {
-    for (WindowInfo* win : gWindows) {
+static TabInfo* FindOpenedFile(const char* sv) {
+    for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             if (!tab->IsDocLoaded()) {
                 continue;
             }
             auto path = tab->filePath.Get();
-            char* s = ToUtf8Temp(path);
-            if (str::Eq(s, sv.data())) {
+            if (str::Eq(path, sv)) {
                 return tab;
             }
         }
@@ -315,7 +315,7 @@ static TabInfo* FindOpenedFile(std::string_view sv) {
     return nullptr;
 }
 
-static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo* win) {
+static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, MainWindow* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
     TabInfo* tab = win->currentTab;
@@ -340,17 +340,17 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
         PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
-            WCHAR* value = pageEl->GetValue();
+            char* value = pageEl->GetValue();
             ctx.cursorOnLinkTarget = value && pageEl->Is(kindPageElementDest);
             ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
             ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
         }
     }
 
-    ctx.hasToc = win->ctrl && win->ctrl->HacToc();
+    ctx.hasToc = win->ctrl && win->ctrl->HasToc();
 
     // append paths of opened files
-    for (WindowInfo* w : gWindows) {
+    for (MainWindow* w : gWindows) {
         AddOpenedFiles(strings, filePaths, w);
     }
     // append paths of files from history, excluding
@@ -377,7 +377,7 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, WindowInfo
     int n = sortedView.Size();
     for (int i = 0; i < n; i++) {
         auto sv = sortedView.at(i);
-        strings.Append(sv.data());
+        strings.Append(sv);
     }
 }
 
@@ -410,7 +410,7 @@ static bool FilterMatches(const char* str, const char* filter) {
     int nWords = words.Size();
     for (int i = 0; i < nWords; i++) {
         auto word = words.at(i);
-        if (!str::ContainsI(str, word.data())) {
+        if (!str::ContainsI(str, word)) {
             return false;
         }
     }
@@ -421,11 +421,11 @@ static void FilterStrings(const StrVec& strs, const char* filter, StrVec& matche
     matchedOut.Reset();
     int n = strs.Size();
     for (int i = 0; i < n; i++) {
-        auto s = strs.at(i);
-        if (!FilterMatches(s.data(), filter)) {
+        char* s = strs.at(i);
+        if (!FilterMatches(s, filter)) {
             continue;
         }
-        matchedOut.Append(s.data());
+        matchedOut.Append(s);
     }
 }
 
@@ -484,7 +484,7 @@ void CommandPaletteWnd::QueryChanged() {
     auto filter = editQuery->GetText();
     // for efficiency, reusing existing model
     auto m = (ListBoxModelStrings*)listBox->model;
-    FilterStrings(allStrings, filter.Get(), m->strings);
+    FilterStrings(allStrings, filter, m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
         listBox->SetCurrentSelection(0);
@@ -518,7 +518,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
     auto m = (ListBoxModelStrings*)listBox->model;
-    const char* s = m->Item(sel).data();
+    const char* s = m->Item(sel);
     int cmdId = GetCommandIdByDesc(s);
     if (cmdId >= 0) {
         bool noActivate = IsCmdInList(gCommandsNoActivate);
@@ -533,11 +533,11 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     int n = convertedFilePaths.Size() / 2;
     bool isFromTab = false;
     for (int i = 0; i < n; i++) {
-        const char* converted = convertedFilePaths.at(i * 2 + 1).data();
+        char* converted = convertedFilePaths.at(i * 2 + 1);
         if (!str::Eq(converted, s)) {
             continue;
         }
-        s = convertedFilePaths.at(i * 2).data();
+        s = convertedFilePaths.at(i * 2);
         // a hack-ish detection of filename from tab
         // vs. from history. Name from tab are only file names
         // and therefore much shorter than full path (converted)
@@ -557,8 +557,8 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
 
-    LoadArgs args(s, win);
-    args.forceReuse = false; // open in a new tab
+    LoadArgs* args = new LoadArgs(s, win);
+    args->forceReuse = false; // open in a new tab
     LoadDocument(args);
     ScheduleDelete();
 }
@@ -583,7 +583,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-bool CommandPaletteWnd::Create(WindowInfo* win) {
+bool CommandPaletteWnd::Create(MainWindow* win) {
     CollectPaletteStrings(allStrings, convertedFilePaths, win);
     {
         CreateCustomArgs args;
@@ -668,7 +668,7 @@ bool CommandPaletteWnd::Create(WindowInfo* win) {
     return true;
 }
 
-void RunCommandPallette(WindowInfo* win) {
+void RunCommandPallette(MainWindow* win) {
     CrashIf(gCommandPaletteWnd);
     // make min font size 16 (I get 12)
     int fontSize = GetSizeOfDefaultGuiFont();

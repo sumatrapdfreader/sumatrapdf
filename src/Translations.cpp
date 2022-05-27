@@ -78,19 +78,6 @@ static void UnescapeStringIntoStr(char* s, str::Str& str) {
     str.AppendChar(0);
 }
 
-static int FindChar(char* s, int sLen, char c) {
-    int i = 0;
-    char c2;
-    while (i < sLen) {
-        c2 = *s++;
-        if (c == c2) {
-            return i;
-        }
-        i++;
-    }
-    return sLen;
-}
-
 static void FreeTranslations() {
     if (!gTranslationCache) {
         return;
@@ -99,32 +86,22 @@ static void FreeTranslations() {
     gTranslationCache = nullptr;
 }
 
-static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
+static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
     langCode = str::JoinTemp(langCode, ":");
     int nLangCode = str::Len(langCode);
 
     // parse into lines
-    char* s = (char*)sv.data();
-    int sLen = (int)sv.size();
-    Vec<char*> lines;
-    int n;
+    char* s = (char*)d.data();
+    int sLen = (int)d.size();
+    StrVec lines;
+    Split(lines, s, "\n", true);
     int nStrings = 0;
-    while (sLen > 0) {
-        n = FindChar(s, sLen, '\n');
-        if (n < 2) {
-            break;
-        }
-        s[n] = 0;
-        lines.Append(s);
-        if (s[0] == ':') {
+    for (char* l : lines) {
+        if (l[0] == ':') {
             nStrings++;
         }
-        n++; // skip '\n'
-        s += n;
-        sLen -= n;
-        CrashIf(sLen < 0);
     }
-    int nLines = lines.isize();
+    int nLines = lines.Size();
     logf("ParseTranslationsTxt: %d lines, nStrings: %d\n", nLines, nStrings);
 
     FreeTranslations();
@@ -181,7 +158,8 @@ static void ParseTranslationsTxt(std::string_view sv, const char* langCode) {
         size_t idxTransW = c->allTranslationsW.size();
         CrashIf(idxTransW > 64 * 1024);
         translation.idxTransW = (u16)idxTransW;
-        c->allTranslationsW.Append(ws.Get(), ws.size() + 1);
+        size_t wsLen = str::Len(ws);
+        c->allTranslationsW.Append(ws, wsLen + 1);
     }
     CrashIf(nTrans != c->nTranslations);
     if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
@@ -204,6 +182,7 @@ static Translation* FindTranslation(const char* s) {
     return nullptr;
 }
 
+// don't free
 const char* GetTranslationA(const char* s) {
     if (gCurrLangIdx == 0) {
         return s;
@@ -218,6 +197,7 @@ const char* GetTranslationA(const char* s) {
     return gTranslationCache->allTranslations.LendData() + idx;
 }
 
+// don't free
 const WCHAR* GetTranslation(const char* s) {
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string
@@ -227,7 +207,7 @@ const WCHAR* GetTranslation(const char* s) {
         // ReportIf(true);
         // it's a mem leak but the contract is that those strings
         // are not freed and survive long enough they can't be temp strings
-        return strconv::Utf8ToWstr(s);
+        return ToWstr(s);
     }
     auto idx = trans->idxTransW;
     return gTranslationCache->allTranslationsW.LendData() + idx;
@@ -258,8 +238,7 @@ void SetCurrentLangByCode(const char* langCode) {
 
     ByteSlice d = LoadDataResource(2);
     CrashIf(d.empty());
-    std::string_view sv{(const char*)d.data(), d.size()};
-    ParseTranslationsTxt(sv, langCode);
+    ParseTranslationsTxt(d, langCode);
     free(d.data());
 }
 

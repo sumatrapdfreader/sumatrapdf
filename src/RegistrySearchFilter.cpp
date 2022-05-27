@@ -8,40 +8,40 @@
 
 #include "utils/Log.h"
 
-bool InstallSearchFiler(const WCHAR* dllPath, bool allUsers) {
+bool InstallSearchFiler(const char* dllPath, bool allUsers) {
     struct {
-        const WCHAR *key, *value, *data;
+        const char *key, *value, *data;
     } regVals[] = {
-        {L"Software\\Classes\\CLSID\\" kPdfFilterClsid, nullptr, L"SumatraPDF IFilter"},
-        {L"Software\\Classes\\CLSID\\" kPdfFilterClsid L"\\InProcServer32", nullptr, dllPath},
-        {L"Software\\Classes\\CLSID\\" kPdfFilterClsid L"\\InProcServer32", L"ThreadingModel", L"Both"},
-        {L"Software\\Classes\\CLSID\\" kPdfFilterHandler, nullptr, L"SumatraPDF IFilter Persistent Handler"},
-        {L"Software\\Classes\\CLSID\\" kPdfFilterHandler L"\\PersistentAddinsRegistered", nullptr, L""},
-        {L"Software\\Classes\\CLSID"
-         L"\\" kPdfFilterHandler L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
+        {"Software\\Classes\\CLSID\\" kPdfFilterClsid, nullptr, "SumatraPDF IFilter"},
+        {"Software\\Classes\\CLSID\\" kPdfFilterClsid "\\InProcServer32", nullptr, dllPath},
+        {"Software\\Classes\\CLSID\\" kPdfFilterClsid "\\InProcServer32", "ThreadingModel", "Both"},
+        {"Software\\Classes\\CLSID\\" kPdfFilterHandler, nullptr, "SumatraPDF IFilter Persistent Handler"},
+        {"Software\\Classes\\CLSID\\" kPdfFilterHandler "\\PersistentAddinsRegistered", nullptr, ""},
+        {"Software\\Classes\\CLSID"
+         "\\" kPdfFilterHandler "\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
          nullptr, kPdfFilterClsid},
-        {L"Software\\Classes\\.pdf\\PersistentHandler", nullptr, kPdfFilterHandler},
+        {"Software\\Classes\\.pdf\\PersistentHandler", nullptr, kPdfFilterHandler},
 #ifdef BUILD_TEX_IFILTER
-        {L"Software\\Classes\\CLSID\\" kTexFilterClsid, nullptr, L"SumatraPDF IFilter"},
-        {L"Software\\Classes\\CLSID\\" kTexFilterClsid L"\\InProcServer32", nullptr, dllPath},
-        {L"Software\\Classes\\CLSID\\" kTexFilterClsid L"\\InProcServer32", L"ThreadingModel", L"Both"},
-        {L"Software\\Classes\\CLSID\\" kTexFilterHandler, nullptr, L"SumatraPDF LaTeX IFilter Persistent Handler"},
-        {L"Software\\Classes\\CLSID\\" kTexFilterHandler L"\\PersistentAddinsRegistered", nullptr, L""},
-        {L"Software\\Classes\\CLSID"
-         L"\\" kTexFilterHandler L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
+        {"Software\\Classes\\CLSID\\" kTexFilterClsid, nullptr, "SumatraPDF IFilter"},
+        {"Software\\Classes\\CLSID\\" kTexFilterClsid "\\InProcServer32", nullptr, dllPath},
+        {"Software\\Classes\\CLSID\\" kTexFilterClsid "\\InProcServer32", "ThreadingModel", "Both"},
+        {"Software\\Classes\\CLSID\\" kTexFilterHandler, nullptr, "SumatraPDF LaTeX IFilter Persistent Handler"},
+        {"Software\\Classes\\CLSID\\" kTexFilterHandler "\\PersistentAddinsRegistered", nullptr, ""},
+        {"Software\\Classes\\CLSID"
+         "\\" kTexFilterHandler "\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
          nullptr, kTexFilterClsid},
-        {L"Software\\Classes\\.tex\\PersistentHandler", nullptr, kTexFilterHandler},
+        {"Software\\Classes\\.tex\\PersistentHandler", nullptr, kTexFilterHandler},
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        {L"Software\\Classes\\CLSID\\" kEpubFilterClsid, nullptr, L"SumatraPDF IFilter"},
-        {L"Software\\Classes\\CLSID\\" kEpubFilterClsid L"\\InProcServer32", nullptr, dllPath},
-        {L"Software\\Classes\\CLSID\\" kEpubFilterClsid L"\\InProcServer32", L"ThreadingModel", L"Both"},
-        {L"Software\\Classes\\CLSID\\" kEpubFilterHandler, nullptr, L"SumatraPDF EPUB IFilter Persistent Handler"},
-        {L"Software\\Classes\\CLSID\\" kEpubFilterHandler L"\\PersistentAddinsRegistered", nullptr, L""},
-        {L"Software\\Classes\\CLSID"
-         L"\\" kEpubFilterHandler L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
+        {"Software\\Classes\\CLSID\\" kEpubFilterClsid, nullptr, "SumatraPDF IFilter"},
+        {"Software\\Classes\\CLSID\\" kEpubFilterClsid "\\InProcServer32", nullptr, dllPath},
+        {"Software\\Classes\\CLSID\\" kEpubFilterClsid "\\InProcServer32", "ThreadingModel", "Both"},
+        {"Software\\Classes\\CLSID\\" kEpubFilterHandler, nullptr, "SumatraPDF EPUB IFilter Persistent Handler"},
+        {"Software\\Classes\\CLSID\\" kEpubFilterHandler "\\PersistentAddinsRegistered", nullptr, ""},
+        {"Software\\Classes\\CLSID"
+         "\\" kEpubFilterHandler "\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
          nullptr, kEpubFilterClsid},
-        {L"Software\\Classes\\.epub\\PersistentHandler", nullptr, kEpubFilterHandler},
+        {"Software\\Classes\\.epub\\PersistentHandler", nullptr, kEpubFilterHandler},
 #endif
     };
     HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
@@ -59,16 +59,16 @@ bool InstallSearchFiler(const WCHAR* dllPath, bool allUsers) {
 
 // Note: for compat with pre-3.4 removes HKLM and HKCU keys
 bool UninstallSearchFilter() {
-    const WCHAR* regKeys[] = {
-        L"Software\\Classes\\CLSID\\" kPdfFilterClsid,  L"Software\\Classes\\CLSID\\" kPdfFilterHandler,
-        L"Software\\Classes\\.pdf\\PersistentHandler",
+    const char* regKeys[] = {
+        "Software\\Classes\\CLSID\\" kPdfFilterClsid,  "Software\\Classes\\CLSID\\" kPdfFilterHandler,
+        "Software\\Classes\\.pdf\\PersistentHandler",
 #ifdef BUILD_TEX_IFILTER
-        L"Software\\Classes\\CLSID\\" kTexFilterClsid,  L"Software\\Classes\\CLSID\\" kTexFilterHandler,
-        L"Software\\Classes\\.tex\\PersistentHandler",
+        "Software\\Classes\\CLSID\\" kTexFilterClsid,  "Software\\Classes\\CLSID\\" kTexFilterHandler,
+        "Software\\Classes\\.tex\\PersistentHandler",
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        L"Software\\Classes\\CLSID\\" kEpubFilterClsid, L"Software\\Classes\\CLSID\\" kEpubFilterHandler,
-        L"Software\\Classes\\.epub\\PersistentHandler",
+        "Software\\Classes\\CLSID\\" kEpubFilterClsid, "Software\\Classes\\CLSID\\" kEpubFilterHandler,
+        "Software\\Classes\\.epub\\PersistentHandler",
 #endif
     };
 
@@ -82,8 +82,8 @@ bool UninstallSearchFilter() {
 }
 
 bool IsSearchFilterInstalled() {
-    const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeWstr iid = LoggedReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    const char* key = ".pdf\\PersistentHandler";
+    char* iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
     bool isInstalled = str::EqI(iid, kPdfFilterHandler);
     logf("IsSearchFilterInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;

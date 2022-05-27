@@ -287,6 +287,9 @@ struct SessionData {
     int sidebarDx;
 };
 
+// if true, Enable lazyload session tabs on startup
+static bool gEnableLazyLoad = true;
+
 // Most values on this structure can be updated through the UI and are
 // persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {

@@ -7,7 +7,7 @@
 Kind kindNone = "none";
 
 // if > 1 we won't crash when memory allocation fails
-std::atomic<int> gAllowAllocFailure = 0;
+LONG gAllowAllocFailure = 0;
 
 void* Allocator::Alloc(Allocator* a, size_t size) {
     if (!a) {
@@ -405,18 +405,17 @@ u32 MurmurHashWStrI(const WCHAR* str) {
 
 // variation of MurmurHash2 which deals with strings that are
 // mostly ASCII and should be treated case independently
-u32 MurmurHashStrI(const char* str) {
-    TempStr scopy = str::DupTemp(str);
-    size_t len = scopy.size();
-    char* dst = scopy.Get();
+u32 MurmurHashStrI(const char* s) {
+    char* dst = str::DupTemp(s);
     char c;
-    for (size_t i = 0; i < len; i++) {
-        c = *str++;
+    size_t len = 0;
+    while (*s) {
+        c = *s++;
+        len++;
         if ('A' <= c && c <= 'Z') {
-            *dst++ = (c + 'a' - 'A');
-            continue;
+            c = (c + 'a' - 'A');
         }
         *dst++ = c;
     }
-    return MurmurHash2(scopy.Get(), len);
+    return MurmurHash2(dst - len, len);
 }

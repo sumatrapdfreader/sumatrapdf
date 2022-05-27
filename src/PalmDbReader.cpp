@@ -132,21 +132,20 @@ PdbReader* PdbReader::CreateFromData(ByteSlice d) {
 }
 
 PdbReader* PdbReader::CreateFromFile(const char* path) {
-    auto d = file::ReadFile(path);
-    ByteSlice bytes = {(u8*)d.data(), d.size()};
-    return CreateFromData(bytes);
-}
-
-PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    ByteSlice d = file::ReadFile(filePath);
-    ByteSlice bytes = d;
-    return CreateFromData(bytes);
+    ByteSlice d = file::ReadFile(path);
+    return CreateFromData(d);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
     ByteSlice d = GetDataFromStream(stream, nullptr);
     return CreateFromData(d);
 }
+
+// values for typeCreator
+#define MOBI_TYPE_CREATOR "BOOKMOBI"
+#define PALMDOC_TYPE_CREATOR "TEXtREAd"
+#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
+#define PLUCKER_TYPE_CREATOR "DataPlkr"
 
 PdbDocType GetPdbDocType(const char* typeCreator) {
     if (memeq(typeCreator, MOBI_TYPE_CREATOR, 8)) {

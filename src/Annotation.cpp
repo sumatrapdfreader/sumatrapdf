@@ -14,7 +14,7 @@ extern "C" {
 
 #include "Annotation.h"
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
 #include "GlobalPrefs.h"
@@ -25,7 +25,7 @@ void SetLineEndingStyles(Annotation*, int start, int end);
 Vec<RectF> GetQuadPointsAsRect(Annotation*);
 time_t CreationDate(Annotation*);
 
-std::string_view AnnotationName(AnnotationType);
+const char* AnnotationName(AnnotationType);
 */
 
 // spot checks the definitions are the same
@@ -105,7 +105,7 @@ static const char* gAnnotReadableNames =
 // clang format-on
 
 /*
-std::string_view AnnotationName(AnnotationType tp) {
+const char* AnnotationName(AnnotationType tp) {
     int n = (int)tp;
     CrashIf(n < -1 || n > (int)AnnotationType::ThreeD);
     if (n < 0) {
@@ -113,11 +113,11 @@ std::string_view AnnotationName(AnnotationType tp) {
     }
     const char* s = seqstrings::IdxToStr(gAnnotNames, n);
     CrashIf(!s);
-    return {s};
+    return s;
 }
 */
 
-std::string_view AnnotationReadableName(AnnotationType tp) {
+const char* AnnotationReadableName(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
         return "Unknown";
@@ -164,7 +164,7 @@ void SetRect(Annotation* annot, RectF r) {
     annot->isChanged = true;
 }
 
-std::string_view Author(Annotation* annot) {
+const char* Author(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
 
@@ -248,28 +248,28 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
 }
 */
 
-std::string_view Contents(Annotation* annot) {
+const char* Contents(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
     const char* s = pdf_annot_contents(e->ctx, annot->pdfannot);
     return s;
 }
 
-bool SetContents(Annotation* annot, std::string_view sv) {
+bool SetContents(Annotation* annot, const char* sv) {
     EngineMupdf* e = annot->engine;
-    std::string_view currValue = Contents(annot);
-    if (str::Eq(sv, currValue.data())) {
+    const char* currValue = Contents(annot);
+    if (str::Eq(sv, currValue)) {
         return false;
     }
     ScopedCritSec cs(e->ctxAccess);
-    pdf_set_annot_contents(e->ctx, annot->pdfannot, sv.data());
+    pdf_set_annot_contents(e->ctx, annot->pdfannot, sv);
     pdf_update_annot(e->ctx, annot->pdfannot);
     e->InvalideAnnotationsForPage(annot->pageNo);
     annot->isChanged = true;
     return true;
 }
 
-void Delete(Annotation* annot) {
+void DeleteAnnotation(Annotation* annot) {
     if (!annot) {
         return;
     }
@@ -313,7 +313,7 @@ time_t ModificationDate(Annotation* annot) {
 }
 
 // return empty() if no icon
-std::string_view IconName(Annotation* annot) {
+const char* IconName(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
     bool hasIcon = pdf_annot_has_icon_name(e->ctx, annot->pdfannot);
@@ -322,13 +322,13 @@ std::string_view IconName(Annotation* annot) {
     }
     // can only call if pdf_annot_has_icon_name() returned true
     const char* iconName = pdf_annot_icon_name(e->ctx, annot->pdfannot);
-    return {iconName};
+    return iconName;
 }
 
-void SetIconName(Annotation* annot, std::string_view iconName) {
+void SetIconName(Annotation* annot, const char* iconName) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
-    pdf_set_annot_icon_name(e->ctx, annot->pdfannot, iconName.data());
+    pdf_set_annot_icon_name(e->ctx, annot->pdfannot, iconName);
     pdf_update_annot(e->ctx, annot->pdfannot);
     e->InvalideAnnotationsForPage(annot->pageNo);
     // TODO: only if the value changed
@@ -468,7 +468,7 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
     return true;
 }
 
-std::string_view DefaultAppearanceTextFont(Annotation* annot) {
+const char* DefaultAppearanceTextFont(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName;
@@ -479,7 +479,7 @@ std::string_view DefaultAppearanceTextFont(Annotation* annot) {
     return fontName;
 }
 
-void SetDefaultAppearanceTextFont(Annotation* annot, std::string_view sv) {
+void SetDefaultAppearanceTextFont(Annotation* annot, const char* sv) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
@@ -487,7 +487,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, std::string_view sv) {
     int n = {0};
     float textColor[4]{};
     pdf_annot_default_appearance(e->ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
-    pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, sv.data(), sizeF, n, textColor);
+    pdf_set_annot_default_appearance(e->ctx, annot->pdfannot, sv, sizeF, n, textColor);
     pdf_update_annot(e->ctx, annot->pdfannot);
     e->InvalideAnnotationsForPage(annot->pageNo);
     annot->isChanged = true;

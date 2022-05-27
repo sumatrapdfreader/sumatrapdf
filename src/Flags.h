@@ -8,21 +8,21 @@ struct PageRange {
 };
 
 struct Flags {
-    WStrVec fileNames;
+    StrVec fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (nullptr if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
-    WStrVec pathsToBenchmark;
+    StrVec pathsToBenchmark;
     bool exitWhenDone = false;
     bool printDialog = false;
-    WCHAR* printerName = nullptr;
-    WCHAR* printSettings = nullptr;
-    WCHAR* forwardSearchOrigin = nullptr;
+    char* printerName = nullptr;
+    char* printSettings = nullptr;
+    char* forwardSearchOrigin = nullptr;
     int forwardSearchLine = 0;
     bool reuseDdeInstance = false;
-    WCHAR* destName = nullptr;
+    char* destName = nullptr;
     int pageNumber = -1;
     bool restrictedUse = false;
     bool enterPresentation = false;
@@ -32,27 +32,28 @@ struct Flags {
     Point startScroll = {-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;
-    WCHAR* pluginURL = nullptr;
+    char* pluginURL = nullptr;
     bool exitImmediately = false;
     bool silent = false;
-    WCHAR* appdataDir = nullptr;
-    WCHAR* inverseSearchCmdLine = nullptr;
+    char* appdataDir = nullptr;
+    char* inverseSearchCmdLine = nullptr;
     bool invertColors = false;
     bool regress = false;
     bool tester = false;
     // -new-window, if true and we're using tabs, opens
     // the document in new window
     bool inNewWindow = false;
-    WCHAR* search = nullptr;
+    char* search = nullptr;
 
     // stress-testing related
-    WCHAR* stressTestPath = nullptr;
+    char* stressTestPath = nullptr;
     // nullptr is equivalent to "*" (i.e. all files)
-    WCHAR* stressTestFilter = nullptr;
-    WCHAR* stressTestRanges = nullptr;
+    char* stressTestFilter = nullptr;
+    char* stressTestRanges = nullptr;
     int stressTestCycles = 1;
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
+    int stressTestMax = 0;
 
     // related to testing
     bool testRenderPage = false;
@@ -64,11 +65,11 @@ struct Flags {
 
     // deprecated flags
     char* lang = nullptr;
-    WStrVec globalPrefArgs;
+    StrVec globalPrefArgs;
 
     // related to installer
     bool showHelp = false;
-    WCHAR* installDir = nullptr;
+    char* installDir = nullptr;
     bool install = false;
     bool uninstall = false;
     bool withFilter = false;
@@ -79,14 +80,16 @@ struct Flags {
     bool runInstallNow = false;
 
     // for internal use
-    WCHAR* updateSelfTo = nullptr;
-    WCHAR* deleteFile = nullptr;
+    char* updateSelfTo = nullptr;
+    char* deleteFile = nullptr;
 
-    WCHAR* toEpubPath = nullptr;
+    char* toEpubPath = nullptr;
 
     // for some commands, will sleep for sleepMs milliseconds
     // before proceeding
     int sleepMs = 0;
+
+    bool testBrowser = false;
 
     Flags() = default;
     ~Flags();
@@ -94,6 +97,6 @@ struct Flags {
 
 void ParseFlags(const WCHAR* cmdLine, Flags&);
 
-bool IsValidPageRange(const WCHAR* ranges);
-bool IsBenchPagesInfo(const WCHAR* s);
-bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result);
+bool IsValidPageRange(const char* ranges);
+bool IsBenchPagesInfo(const char* s);
+bool ParsePageRanges(const char* ranges, Vec<PageRange>& result);

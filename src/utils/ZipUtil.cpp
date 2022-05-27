@@ -22,9 +22,10 @@ class FileWriteStream : public ISequentialStream {
     LONG refCount;
 
   public:
-    explicit FileWriteStream(const WCHAR* filePath) : refCount(1) {
-        hFile = CreateFileW(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-                            nullptr);
+    explicit FileWriteStream(const char* filePath) : refCount(1) {
+        WCHAR* path = ToWstrTemp(filePath);
+        hFile =
+            CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
     virtual ~FileWriteStream() {
         CloseHandle(hFile);
@@ -54,7 +55,7 @@ class FileWriteStream : public ISequentialStream {
     }
 };
 
-ZipCreator::ZipCreator(const WCHAR* zipFilePath) : bytesWritten(0), fileCount(0) {
+ZipCreator::ZipCreator(const char* zipFilePath) : bytesWritten(0), fileCount(0) {
     stream = new FileWriteStream(zipFilePath);
 }
 
@@ -175,14 +176,14 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 }
 
 // add a given file under (optional) nameInZip
-bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
-    AutoFree fileData = file::ReadFile(filePath);
-    if (!fileData.data) {
+bool ZipCreator::AddFile(const char* path, const char* nameInZip) {
+    ByteSlice fileData = file::ReadFile(path);
+    if (!fileData) {
         return false;
     }
 
     u32 dosdatetime = 0;
-    FILETIME ft = file::GetModificationTime(filePath);
+    FILETIME ft = file::GetModificationTime(path);
     if (ft.dwLowDateTime || ft.dwHighDateTime) {
         FILETIME ftLocal;
         WORD dosDate, dosTime;
@@ -192,34 +193,36 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
     }
 
     if (!nameInZip) {
-        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseNameTemp(filePath) : filePath;
+        nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : path;
     }
 
-    auto nameA = ToUtf8Temp(nameInZip);
-    str::TransCharsInPlace(nameA.Get(), "\\", "/");
+    char* name = str::Dup(nameInZip);
+    str::TransCharsInPlace(name, "\\", "/");
 
-    return AddFileData(nameA.Get(), fileData.Get(), fileData.size(), dosdatetime);
+    bool res = AddFileData(name, fileData.Get(), fileData.size(), dosdatetime);
+    fileData.Free();
+    return res;
 }
 
 // we use the filePath relative to dir as the zip name
-bool ZipCreator::AddFileFromDir(const WCHAR* filePath, const WCHAR* dir) {
+bool ZipCreator::AddFileFromDir(const char* filePath, const char* dir) {
     if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir)) {
         return false;
     }
-    const WCHAR* nameInZip = filePath + str::Len(dir) + 1;
+    const char* nameInZip = filePath + str::Len(dir) + 1;
     if (!path::IsSep(nameInZip[-1])) {
         return false;
     }
     return AddFile(filePath, nameInZip);
 }
 
-bool ZipCreator::AddDir(const WCHAR* dirPath, bool recursive) {
-    DirIter di(dirPath, recursive);
-    for (const WCHAR* filePath = di.First(); filePath; filePath = di.Next()) {
-        if (!AddFileFromDir(filePath, dirPath)) {
+bool ZipCreator::AddDir(const char* dir, bool recursive) {
+    DirTraverse(dir, recursive, [this, dir](const char* path) -> bool {
+        if (!this->AddFileFromDir(path, dir)) {
             return false;
         }
-    }
+        return true;
+    });
     return true;
 }
 
@@ -247,7 +250,7 @@ bool ZipCreator::Finish() {
     return ok;
 }
 
-IStream* OpenDirAsZipStream(const WCHAR* dirPath, bool recursive) {
+IStream* OpenDirAsZipStream(const char* dirPath, bool recursive) {
     if (!dir::Exists(dirPath)) {
         return nullptr;
     }

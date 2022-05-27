@@ -31,7 +31,8 @@ struct HtmlElement {
     bool NameIsNS(const char* name, const char* ns) const;
 
     WCHAR* GetAttribute(const char* name) const;
-    [[nodiscard]] HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
+    char* GetAttributeTemp(const char* name) const;
+    HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
 };
 
 class HtmlParser {
@@ -73,23 +74,28 @@ class HtmlParser {
     HtmlParser();
     ~HtmlParser();
 
-    HtmlElement* Parse(ByteSlice d, UINT codepage = CP_ACP);
-    HtmlElement* ParseInPlace(ByteSlice d, UINT codepage = CP_ACP);
+    HtmlElement* Parse(ByteSlice d, uint codepage = CP_ACP);
+    HtmlElement* ParseInPlace(ByteSlice d, uint codepage = CP_ACP);
 
-    [[nodiscard]] size_t ElementsCount() const;
-    [[nodiscard]] size_t TotalAttrCount() const;
+    size_t ElementsCount() const;
+    size_t TotalAttrCount() const;
 
     HtmlElement* FindElementByName(const char* name, HtmlElement* from = nullptr);
     HtmlElement* FindElementByNameNS(const char* name, const char* ns, HtmlElement* from = nullptr);
 };
 
-WCHAR* DecodeHtmlEntitites(const char* string, UINT codepage);
+WCHAR* DecodeHtmlEntitites(const char* string, uint codepage);
+char* DecodeHtmlEntititesTemp(const char* string, uint codepage);
 
 namespace strconv {
 
 inline WCHAR* FromHtmlUtf8(const char* s, size_t len) {
-    AutoFree tmp(str::Dup(s, len));
+    char* tmp = str::DupTemp(s, len);
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
+inline char* FromHtmlUtf8Temp(const char* s, size_t len) {
+    char* tmp = str::DupTemp(s, len);
+    return DecodeHtmlEntititesTemp(tmp, CP_UTF8);
+}
 } // namespace strconv

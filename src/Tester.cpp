@@ -23,7 +23,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"
@@ -32,7 +32,7 @@
 #include "EbookFormatter.h"
 
 // if true, we'll save html content of a mobi ebook as well
-// as pretty-printed html to MOBI_SAVE_DIR. The name will be
+// as pretty-printed html to kMobiSaveDir. The name will be
 // ${file}.html and ${file}_pp.html
 static bool gSaveHtml = false;
 // if true, we'll also save images in mobi files. The name
@@ -42,7 +42,7 @@ static bool gSaveImages = false;
 // if true, we'll do a layout of mobi files
 static bool gLayout = false;
 // directory to which we'll save mobi html and images
-#define MOBI_SAVE_DIR L"..\\ebooks-converted"
+#define kMobiSaveDir "..\\ebooks-converted"
 
 static int Usage() {
     printf("Tester.exe\n");
@@ -56,32 +56,33 @@ static int Usage() {
     return 1;
 }
 
-static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
+static void MobiSaveHtml(const char* filePathBase, MobiDoc* mb) {
     CrashAlwaysIf(!gSaveHtml);
 
-    AutoFreeWstr outFile(str::Join(filePathBase, L"_pp.html"));
+    char* outFile = str::JoinTemp(filePathBase, "_pp.html");
 
     ByteSlice htmlData = mb->GetHtmlData();
 
     ByteSlice ppHtml = PrettyPrintHtml(htmlData);
-    file::WriteFile(outFile.Get(), ppHtml);
+    file::WriteFile(outFile, ppHtml);
 
-    outFile.Set(str::Join(filePathBase, L".html"));
-    file::WriteFile(outFile.Get(), htmlData);
+    outFile = str::JoinTemp(filePathBase, ".html");
+    file::WriteFile(outFile, htmlData);
 }
 
-static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ByteSlice img) {
+static void MobiSaveImage(const char* filePathBase, size_t imgNo, ByteSlice img) {
     // it's valid to not have image data at a given index
     if (img.empty()) {
         return;
     }
-    const WCHAR* ext = GfxFileExtFromData(img);
+    const char* ext = GfxFileExtFromData(img);
     CrashAlwaysIf(!ext);
-    AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, (int)imgNo, ext));
-    file::WriteFile(fileName.Get(), img);
+    char* path = str::Format("%s_img_%d%s", filePathBase, (int)imgNo, ext);
+    file::WriteFile(path, img);
+    str::Free(path);
 }
 
-static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
+static void MobiSaveImages(const char* filePathBase, MobiDoc* mb) {
     for (size_t i = 0; i < mb->imagesCount; i++) {
         ByteSlice* img = mb->GetImage(i + 1);
         if (!img) {
@@ -109,8 +110,8 @@ static void MobiLayout(MobiDoc* mobiDoc) {
     delete pages;
 }
 
-static void MobiTestFile(const WCHAR* filePath) {
-    wprintf(L"Testing file '%s'\n", filePath);
+static void MobiTestFile(const char* filePath) {
+    printf("Testing file '%s'\n", filePath);
     MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePath);
     if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
@@ -120,19 +121,19 @@ static void MobiTestFile(const WCHAR* filePath) {
     if (gLayout) {
         auto t = TimeGet();
         MobiLayout(mobiDoc);
-        wprintf(L"Spent %.2f ms laying out %s\n", TimeSinceInMs(t), filePath);
+        printf("Spent %.2f ms laying out %s\n", TimeSinceInMs(t), filePath);
     }
 
     if (gSaveHtml || gSaveImages) {
         // Given the name of the name of source mobi file "${srcdir}/${file}.mobi"
         // construct a base name for extracted html/image files in the form
-        // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
+        // "${kMobiSaveDir}/${file}" i.e. change dir to kMobiSaveDir and
         // remove the file extension
-        const WCHAR* dir = MOBI_SAVE_DIR;
+        const char* dir = kMobiSaveDir;
         dir::CreateAll(dir);
-        AutoFreeWstr fileName(str::Dup(path::GetBaseNameTemp(filePath)));
-        AutoFreeWstr filePathBase(path::Join(dir, fileName));
-        WCHAR* ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
+        const char* fileName = path::GetBaseNameTemp(filePath);
+        char* filePathBase = path::JoinTemp(dir, fileName);
+        char* ext = str::FindCharLast(filePathBase, '.');
         *ext = 0;
 
         if (gSaveHtml) {
@@ -146,18 +147,18 @@ static void MobiTestFile(const WCHAR* filePath) {
     delete mobiDoc;
 }
 
-static void MobiTestDir(WCHAR* dir) {
-    wprintf(L"Testing mobi files in '%s'\n", dir);
-    DirIter di(dir, true);
-    for (const WCHAR* path = di.First(); path; path = di.Next()) {
+static void MobiTestDir(char* dir) {
+    printf("Testing mobi files in '%s'\n", dir);
+    DirTraverse(dir, true, [](const char* path) -> bool {
         Kind kind = GuessFileTypeFromName(path);
         if (kind == kindFileMobi) {
             MobiTestFile(path);
         }
-    }
+        return true;
+    });
 }
 
-static void MobiTest(WCHAR* dirOrFile) {
+static void MobiTest(char* dirOrFile) {
     Kind kind = GuessFileTypeFromName(dirOrFile);
     if (file::Exists(dirOrFile) && kind == kindFileMobi) {
         MobiTestFile(dirOrFile);
@@ -169,15 +170,15 @@ static void MobiTest(WCHAR* dirOrFile) {
 // we assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest() {
-    const WCHAR* zipFileName = L"tester-tmp.zip";
+    const char* zipFileName = "tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
-    auto ok = zc.AddFile(L"premake5.lua");
+    auto ok = zc.AddFile("premake5.lua");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;
     }
-    ok = zc.AddFile(L"premake5.files.lua");
+    ok = zc.AddFile("premake5.files.lua");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;
@@ -200,13 +201,13 @@ int TesterMain() {
     // ScopedGdiPlus gdi;
     // mui::Initialize();
 
-    WCHAR* dirOrFile = nullptr;
+    char* dirOrFile = nullptr;
 
     bool mobiTest = false;
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
-        WCHAR* arg = argv.at(i);
-        if (str::Eq(arg, L"-mobi")) {
+        char* arg = argv.at(i);
+        if (str::Eq(arg, "-mobi")) {
             ++i;
             if (i == nArgs) {
                 return Usage();
@@ -214,16 +215,16 @@ int TesterMain() {
             mobiTest = true;
             dirOrFile = argv.at(i);
             ++i;
-        } else if (str::Eq(arg, L"-layout")) {
+        } else if (str::Eq(arg, "-layout")) {
             gLayout = true;
             ++i;
-        } else if (str::Eq(arg, L"-save-html")) {
+        } else if (str::Eq(arg, "-save-html")) {
             gSaveHtml = true;
             ++i;
-        } else if (str::Eq(arg, L"-save-images")) {
+        } else if (str::Eq(arg, "-save-images")) {
             gSaveImages = true;
             ++i;
-        } else if (str::Eq(arg, L"-zip-create")) {
+        } else if (str::Eq(arg, "-zip-create")) {
             ZipCreateTest();
             ++i;
         } else {

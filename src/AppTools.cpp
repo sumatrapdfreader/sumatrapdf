@@ -8,7 +8,6 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
-#include "utils/DirIter.h"
 
 #include "AppTools.h"
 #include "SumatraConfig.h"
@@ -21,20 +20,19 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
-    WCHAR* regPathUninst = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
-    AutoFreeWstr installedPath = LoggedReadRegStr2(regPathUninst, L"InstallLocation");
+    char* regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
+    char* installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!installedPath) {
         return false;
     }
 
-    auto exePath = GetExePathTemp();
-    if (exePath.empty()) {
+    char* exePath = GetExePathTemp();
+    if (exePath) {
         return false;
     }
 
-    if (!str::EndsWithI(installedPath, L".exe")) {
-        WCHAR* tmp = path::Join(installedPath, path::GetBaseNameTemp(exePath));
-        installedPath.Set(tmp);
+    if (!str::EndsWithI(installedPath, ".exe")) {
+        installedPath = path::JoinTemp(installedPath, path::GetBaseNameTemp(exePath));
     }
     return path::IsSame(installedPath, exePath);
 }
@@ -59,8 +57,8 @@ bool IsRunningInPortableMode() {
         return false;
     }
 
-    WCHAR* exePath = GetExePathTemp();
-    WCHAR* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
+    char* exePath = GetExePathTemp();
+    char* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         return true;
@@ -68,8 +66,8 @@ bool IsRunningInPortableMode() {
 
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
-    WCHAR* baseName;
-    while ((baseName = (WCHAR*)path::GetBaseNameTemp(exePath)) > exePath) {
+    char* baseName;
+    while ((baseName = (char*)path::GetBaseNameTemp(exePath)) > exePath) {
         baseName[-1] = '\0';
         if (path::IsSame(programFilesDir, exePath)) {
             sCacheIsPortable = 0;
@@ -85,29 +83,31 @@ bool IsDllBuild() {
     return resSrc != nullptr;
 }
 
-static AutoFreeWstr gAppDataDir;
+static AutoFreeStr gAppDataDir;
 
-void SetAppDataPath(const WCHAR* path) {
-    gAppDataDir.Set(path::Normalize(path));
+void SetAppDataPath(const char* path) {
+    path = path::NormalizeTemp(path);
+    gAppDataDir.SetCopy(path);
 }
 
 // Generate the full path for a filename used by the app in the userdata path
 // Caller needs to free() the result
-WCHAR* AppGenDataFilename(const WCHAR* fileName) {
+char* AppGenDataFilenameTemp(const char* fileName) {
     if (!fileName) {
         return nullptr;
     }
 
     if (gAppDataDir && dir::Exists(gAppDataDir)) {
-        return path::Join(gAppDataDir, fileName);
+        return path::JoinTemp(gAppDataDir, fileName);
     }
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return path::GetPathOfFileInAppDir(fileName);
+        AutoFreeStr res = path::GetPathOfFileInAppDir(fileName);
+        return str::DupTemp(res);
     }
 
-    WCHAR* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    char* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     if (!path) {
         return nullptr;
     }
@@ -120,46 +120,17 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (gIsStoreBuild) {
         // %APPLOCALDATA%/SumatraPDF Store
         // %APPLOCALDATA%/SumatraPDF Store Preview
-        path = str::Join(path, L" Store");
+        path = str::JoinTemp(path, " Store");
         if (gIsPreReleaseBuild) {
-            path = str::Join(path, L" Preview");
+            path = str::JoinTemp(path, " Preview");
         }
     }
     bool ok = dir::Create(path);
     if (!ok) {
         return nullptr;
     }
-    return path::Join(path, fileName);
+    return path::JoinTemp(path, fileName);
 }
-
-char* AppGenDataFilenameTemp(const char* fileName) {
-    if (!fileName) {
-        return nullptr;
-    }
-    WCHAR* tmp = ToWstrTemp(fileName);
-    WCHAR* path = AppGenDataFilename(tmp);
-    char* res = ToUtf8Temp(path);
-    str::Free(path);
-    return res;
-}
-
-#if 0
-WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
-    if (!fileName) {
-        return nullptr;
-    }
-
-    /* Use local (non-roaming) app data directory */
-    TempWstr dataDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    AutoFreeWstr dir = path::Join(dataDir.Get(), APP_NAME_STR);
-    bool ok = dir::Create(dir);
-    if (!ok) {
-        return nullptr;
-    }
-
-    return path::Join(dir, fileName);
-}
-#endif
 
 // List of rules used to detect TeX editors.
 
@@ -219,29 +190,29 @@ static struct {
 //      commands.
 // Returns:
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
-WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
-    WCHAR* firstEditor = nullptr;
-    WStrList foundExes;
+char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
+    char* firstEditor = nullptr;
+    StrVec foundExes;
 
     for (auto& rule : editorRules) {
-        WCHAR* regKey = ToWstrTemp(rule.regKey);
-        WCHAR* regValue = ToWstrTemp(rule.regValue);
-        AutoFreeWstr path(LoggedReadRegStr2(regKey, regValue));
+        const char* regKey = rule.regKey;
+        const char* regValue = rule.regValue;
+        char* path = LoggedReadRegStr2Temp(regKey, regValue);
         if (!path) {
             continue;
         }
 
-        AutoFreeWstr exePath;
-        WCHAR* binaryFileName = ToWstrTemp(rule.binaryFilename);
-        WCHAR* inverseSearchArgs = ToWstrTemp(rule.inverseSearchArgs);
+        char* exePath = nullptr;
+        const char* binaryFileName = rule.binaryFilename;
+        const char* inverseSearchArgs = rule.inverseSearchArgs;
         if (rule.type == SiblingPath) {
             // remove file part
-            AutoFreeWstr dir(path::GetDir(path));
-            exePath.Set(path::Join(dir, binaryFileName));
+            char* dir = path::GetDirTemp(path);
+            exePath = path::JoinTemp(dir, binaryFileName);
         } else if (rule.type == BinaryDir) {
-            exePath.Set(path::Join(path, binaryFileName));
+            exePath = path::JoinTemp(path, binaryFileName);
         } else { // if (editor_rules[i].Type == BinaryPath)
-            exePath.Set(path.StealData());
+            exePath = path;
         }
         // don't show duplicate entries
         if (foundExes.FindI(exePath) != -1) {
@@ -249,29 +220,31 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
         }
         // don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {
-            foundExes.Append(exePath.StealData());
+            foundExes.Append(exePath);
             continue;
         }
 
-        AutoFreeWstr editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), inverseSearchArgs));
+        AutoFreeStr editorCmd(str::Format("\"%s\" %s", exePath, inverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
             return editorCmd.StealData();
         }
 
-        ComboBox_AddString(hwndCombo, editorCmd);
+        WCHAR* ws = ToWstrTemp(editorCmd);
+        ComboBox_AddString(hwndCombo, ws);
         if (!firstEditor) {
             firstEditor = editorCmd.StealData();
         }
-        foundExes.Append(exePath.StealData());
+        foundExes.Append(exePath);
     }
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
-        firstEditor = str::Dup(L"notepad %f");
+        firstEditor = str::Dup("notepad %f");
         if (hwndCombo) {
-            ComboBox_AddString(hwndCombo, firstEditor);
+            WCHAR* ws = ToWstrTemp(firstEditor);
+            ComboBox_AddString(hwndCombo, ws);
         }
     }
     return firstEditor;
@@ -322,12 +295,12 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {
-            WCHAR* text = win::GetTextTemp(hwnd).Get();
+            WCHAR* text = HwndGetTextWTemp(hwnd);
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {
                 memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
-                win::SetText(hwnd, text);
+                HwndSetText(hwnd, text);
                 selStart = selEnd = selStart - 1;
             }
             // remove the previous word (and any spacing after it)
@@ -387,12 +360,13 @@ Rect GetDefaultWindowPos() {
 }
 
 void SaveCallstackLogs() {
-    AutoFree s = dbghelp::GetCallstacks();
+    ByteSlice s = dbghelp::GetCallstacks();
     if (s.empty()) {
         return;
     }
-    AutoFreeWstr filePath(AppGenDataFilename(L"callstacks.txt"));
-    file::WriteFile(filePath.Get(), s.AsSpan());
+    char* filePath = AppGenDataFilenameTemp("callstacks.txt");
+    file::WriteFile(filePath, s);
+    s.Free();
 }
 
 // TODO: this can be used for extracting other data
@@ -413,7 +387,7 @@ static const WCHAR* Md5OfAppExe() {
     if (appPath.empty()) {
         return {};
     }
-    AutoFree d = file::ReadFile(appPath.data);
+    ByteSlice d = file::ReadFile(appPath.data);
     if (d.empty()) {
         return nullptr;
     }
@@ -423,7 +397,7 @@ static const WCHAR* Md5OfAppExe() {
 
     AutoFree md5HexA(_MemToHex(&md5));
     AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());
-
+    d.Free();
     return md5Hex.StealData();
 }
 
@@ -521,76 +495,76 @@ constexpr double GB = (double)1024 * (double)1024 * (double)1024;
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static WCHAR* FormatSizeSuccint(i64 size) {
-    const WCHAR* unit = nullptr;
+static char* FormatSizeSuccint(i64 size) {
+    const char* unit = nullptr;
     double s = (double)size;
 
     if (s > GB) {
         s = s / GB;
-        unit = _TR("GB");
+        unit = _TRA("GB");
     } else if (s > MB) {
         s = s / MB;
-        unit = _TR("MB");
+        unit = _TRA("MB");
     } else {
         s = s / KB;
-        unit = _TR("KB");
+        unit = _TRA("KB");
     }
 
-    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
+    AutoFreeStr sizestr = str::FormatFloatWithThousandSep(s);
     if (!unit) {
         return sizestr.StealData();
     }
-    return str::Format(L"%s %s", sizestr.Get(), unit);
+    return str::Format("%s %s", sizestr.Get(), unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-WCHAR* FormatFileSize(i64 size) {
+char* FormatFileSize(i64 size) {
     if (size <= 0) {
-        return str::Format(L"%d", (int)size);
+        return str::Format("%d", (int)size);
     }
-    AutoFreeWstr n1(FormatSizeSuccint(size));
-    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
-    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
+    AutoFreeStr n1(FormatSizeSuccint(size));
+    AutoFreeStr n2(str::FormatNumWithThousandSep(size));
+    return str::Format("%s (%s %s)", n1.Get(), n2.Get(), _TRA("Bytes"));
 }
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // To be used in a context where translations are not yet available
 // Caller needs to free the result.
-static WCHAR* FormatSizeSuccintNoTrans(i64 size) {
-    const WCHAR* unit = nullptr;
+static char* FormatSizeSuccintNoTrans(i64 size) {
+    const char* unit = nullptr;
     double s = (double)size;
 
     if (s > GB) {
         s = s / GB;
-        unit = L"GB";
+        unit = "GB";
     } else if (s > MB) {
         s = s / MB;
-        unit = L"MB";
+        unit = "MB";
     } else {
         s = s / KB;
-        unit = L"KB";
+        unit = "KB";
     }
 
-    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
+    AutoFreeStr sizestr = str::FormatFloatWithThousandSep(s);
     if (!unit) {
         return sizestr.StealData();
     }
-    return str::Format(L"%s %s", sizestr.Get(), unit);
+    return str::Format("%s %s", sizestr.Get(), unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-WCHAR* FormatFileSizeNoTrans(i64 size) {
+char* FormatFileSizeNoTrans(i64 size) {
     if (size <= 0) {
-        return str::Format(L"%d", (int)size);
+        return str::Format("%d", (int)size);
     }
-    AutoFreeWstr n1(FormatSizeSuccintNoTrans(size));
-    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
-    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), L"Bytes");
+    AutoFreeStr n1(FormatSizeSuccintNoTrans(size));
+    AutoFreeStr n2(str::FormatNumWithThousandSep(size));
+    return str::Format("%s (%s %s)", n1.Get(), n2.Get(), "Bytes");
 }
 
 // returns true if file exists
@@ -601,7 +575,6 @@ bool LaunchFileIfExists(const char* path) {
     if (!file::Exists(path)) {
         return false;
     }
-    WCHAR* pathTmp = ToWstrTemp(path);
-    LaunchFile(pathTmp, nullptr, L"open");
+    LaunchFile(path, nullptr, "open");
     return true;
 }

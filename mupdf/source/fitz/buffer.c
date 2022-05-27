@@ -111,29 +111,24 @@ static inline int iswhite(int a)
 fz_buffer *
 fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size)
 {
-	fz_buffer *out = fz_new_buffer(ctx, size);
+	fz_buffer *out = fz_new_buffer(ctx, size > 0 ? size : strlen(data));
 	const char *end = data + (size > 0 ? size : strlen(data));
 	const char *s = data;
 	uint32_t buf = 0;
 	int bits = 0;
-	size_t len;
 
-	/* Implements https://infra.spec.whatwg.org/#forgiving-base64-decode */
+	/* This is https://infra.spec.whatwg.org/#forgiving-base64-decode
+	 * but even more relaxed. We allow any number of trailing '=' code
+	 * points and instead of returning failure on invalid characters, we
+	 * warn and truncate.
+	 */
+
 	while (s < end && iswhite(*s))
 		s++;
-	while (s > end && iswhite(*end))
+	while (s < end && iswhite(end[-1]))
 		end--;
-
-	len = end - s;
-	if (len > 0 && (len & 3) == 0)
-	{
-		if (end[-1] == '=') --end;
-		if (end[-1] == '=') --end;
-	}
-
-	len = end - s;
-	if ((len & 3) == 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid number of characters in base64");
+	while (s < end && end[-1] == '=')
+		end--;
 
 	fz_try(ctx)
 	{
@@ -153,10 +148,11 @@ fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size)
 				c = 63;
 			else if (iswhite(c))
 				continue;
-			else if (c == '=') /* SumatraPDF */
-				continue;
 			else
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid character in base64");
+			{
+				fz_warn(ctx, "invalid character in base64");
+				break;
+			}
 
 			buf <<= 6;
 			buf |= c & 0x3f;
@@ -177,7 +173,9 @@ fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size)
 			fz_append_byte(ctx, out, buf >> 2);
 		}
 		else if (bits == 12)
+		{
 			fz_append_byte(ctx, out, buf >> 4);
+		}
 	}
 	fz_catch(ctx)
 	{

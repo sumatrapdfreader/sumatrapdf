@@ -11,10 +11,6 @@ void check(const char* got, const char* expected) {
     utassert(str::Eq(got, expected));
 }
 
-void check(std::string_view got, const char* expected) {
-    utassert(str::Eq(got, expected));
-}
-
 void StrFormatTest() {
     {
         auto s = fmt::Format("int: %d, s: %s", 5, "foo");
@@ -77,7 +73,7 @@ void StrFormatTest() {
 #endif
 
     {
-        auto s = fmt::Format("foo %s bar %d %s", "sa", 5, L"sab").data();
+        char* s = fmt::Format("foo %s bar %d %s", "sa", 5, L"sab");
         check(s, "foo sa bar 5 sab");
         str::Free(s);
     }

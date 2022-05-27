@@ -16,17 +16,17 @@ class ZipCreator {
     bool AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate = 0);
 
   public:
-    explicit ZipCreator(const WCHAR* zipFilePath);
+    explicit ZipCreator(const char* zipFilePath);
     explicit ZipCreator(ISequentialStream* stream);
     ~ZipCreator();
 
     ZipCreator(ZipCreator const&) = delete;
     ZipCreator& operator=(ZipCreator const&) = delete;
 
-    bool AddFile(const WCHAR* filePath, const WCHAR* nameInZip = nullptr);
-    bool AddFileFromDir(const WCHAR* filePath, const WCHAR* dir);
-    bool AddDir(const WCHAR* dirPath, bool recursive = false);
+    bool AddFile(const char* filePath, const char* nameInZip = nullptr);
+    bool AddFileFromDir(const char* filePath, const char* dir);
+    bool AddDir(const char* dirPath, bool recursive = false);
     bool Finish();
 };
 
-IStream* OpenDirAsZipStream(const WCHAR* dirPath, bool recursive = false);
+IStream* OpenDirAsZipStream(const char* dirPath, bool recursive = false);

@@ -5,18 +5,18 @@ struct ChmFile {
     struct chmFile* chmHandle = nullptr;
 
     // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
-    AutoFree title;
-    AutoFree tocPath;
-    AutoFree indexPath;
-    AutoFree homePath;
-    AutoFree creator;
+    AutoFreeStr title;
+    AutoFreeStr tocPath;
+    AutoFreeStr indexPath;
+    AutoFreeStr homePath;
+    AutoFreeStr creator;
     AutoFree data;
     uint codepage = 0;
 
     void ParseWindowsData();
     bool ParseSystemData();
     bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) const;
-    void FixPathCodepage(AutoFree& path, uint& fileCP);
+    void FixPathCodepage(AutoFreeStr& path, uint& fileCP);
 
     bool Load(const char* fileName);
 
@@ -28,17 +28,18 @@ struct ChmFile {
     char* ResolveTopicID(unsigned int id) const;
 
     char* ToUtf8(const u8* text, uint overrideCP = 0) const;
-    WCHAR* ToStr(const char* text) const;
+    char* ToUtf8(const char* text, uint overrideCP = 0) const;
+    WCHAR* ToWstr(const char* text) const;
 
-    WCHAR* GetProperty(DocumentProperty prop) const;
+    char* GetProperty(DocumentProperty prop) const;
     const char* GetHomePath() const;
-    Vec<char*>* GetAllPaths() const;
+    void GetAllPaths(StrVec*) const;
 
-    [[nodiscard]] bool HasToc() const;
+    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
-    [[nodiscard]] bool HasIndex() const;
+    bool HasIndex() const;
     bool ParseIndex(EbookTocVisitor* visitor) const;
 
     static bool IsSupportedFileType(Kind);
-    static ChmFile* CreateFromFile(const WCHAR* path);
+    static ChmFile* CreateFromFile(const char* path);
 };

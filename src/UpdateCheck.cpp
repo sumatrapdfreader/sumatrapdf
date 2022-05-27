@@ -21,7 +21,7 @@
 #include "Flags.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "SumatraDialogs.h"
 #include "UpdateCheck.h"
 
@@ -42,9 +42,9 @@ constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-
 
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
 #if defined(PRE_RELEASE_VER)
-#define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/prerelease"
+#define WEBSITE_DOWNLOAD_PAGE_URL "https://www.sumatrapdfreader.org/prerelease"
 #else
-#define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/download-free-pdf-viewer"
+#define WEBSITE_DOWNLOAD_PAGE_URL "https://www.sumatrapdfreader.org/download-free-pdf-viewer"
 #endif
 #endif
 // clang-format on
@@ -62,7 +62,7 @@ struct UpdateInfo {
     const char* portable32 = nullptr;
 
     const char* dlURL = nullptr;
-    const WCHAR* installerPath = nullptr;
+    const char* installerPath = nullptr;
 
     UpdateInfo() = default;
     ~UpdateInfo() {
@@ -195,15 +195,15 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
-    auto mainInstr = _TR("New version available");
-    auto verTmp = ToWstrTemp(updateInfo->latestVer).Get();
-    auto content =
+    const WCHAR* mainInstr = _TR("New version available");
+    WCHAR* verTmp = ToWstrTemp(updateInfo->latestVer);
+    WCHAR* content =
         str::Format(_TR("You have version '%s' and version '%s' is available.\nDo you want to install new version?"),
                     CURR_VERSION_STR, verTmp);
 
     constexpr int kBtnIdDontInstall = 100;
     constexpr int kBtnIdInstall = 101;
-    auto title = _TR("SumatraPDF Update");
+    const WCHAR* title = _TR("SumatraPDF Update");
     TASKDIALOGCONFIG dialogConfig{};
     TASKDIALOG_BUTTON buttons[2];
 
@@ -239,7 +239,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     CrashIf(hr == E_INVALIDARG);
     bool doInstall = (hr == S_OK) && (buttonPressedId == kBtnIdInstall);
 
-    auto installerPath = updateInfo->installerPath;
+    const char* installerPath = updateInfo->installerPath;
     if (!doInstall && verificationFlagChecked) {
         str::ReplaceWithCopy(&gGlobalPrefs->versionToSkip, updateInfo->latestVer);
     }
@@ -259,16 +259,16 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     // TODO: we don't really handle a case when it's a dll build but not installed
     // maybe in that case go to website
-    str::WStr cmd;
+    str::Str cmd;
     if (IsDllBuild()) {
         // no need for sleep because it shows the installer dialog anyway
-        cmd.Append(L" -install");
+        cmd.Append(" -install");
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(LR"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp().Get());
+        cmd.AppendFmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetExePathTemp());
     }
-    logf("NotifyUserOfUpdate: installer cmd: '%s'\n", ToUtf8Temp(cmd.AsView()).Get());
+    logf("NotifyUserOfUpdate: installer cmd: '%s'\n", cmd.Get());
     CreateProcessHelper(installerPath, cmd.Get());
     PostQuitMessage(0);
 }
@@ -309,6 +309,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     }
     updateInfo->hwndParent = hwndParent;
 
+    MainWindow* win = FindWindowInfoByHwnd(hwndParent);
+    HWND hwndForNotif = win->hwndCanvas;
     if (!gForceAutoUpdate) {
         auto latestVer = updateInfo->latestVer;
         const char* myVer = UPDATE_CHECK_VERA;
@@ -318,8 +320,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
             logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, latestVer);
             /* if automated => don't notify that there is no new version */
             if (updateCheckType == UpdateCheck::UserInitiated) {
-                auto win = FindWindowInfoByHwnd(hwndParent);
-                win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
+                RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
                 uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
                 MessageBoxW(hwndParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
             }
@@ -339,8 +340,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     if (!updateInfo->dlURL) {
         // shouldn't happen but it's fine, we just tell the user
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
-        auto win = FindWindowInfoByHwnd(hwndParent);
-        win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         return 0;
     }
@@ -348,14 +348,13 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     // download the installer to make update feel instant to the user
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
-    RunAsync([updateInfo] { // NOLINT
-        auto installerPath = path::GetTempFilePath(L"sumatra-installer");
+    RunAsync([hwndForNotif, updateInfo] { // NOLINT
+        char* installerPath = path::GetTempFilePath("sumatra-installer");
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
-        installerPath = str::JoinTemp(installerPath, L".exe");
-        char* installerPathA = ToUtf8Temp(installerPath);
-        bool ok = HttpGetToFile(updateInfo->dlURL, installerPathA);
-        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPathA);
+        installerPath = str::JoinTemp(installerPath, ".exe");
+        bool ok = HttpGetToFile(updateInfo->dlURL, installerPath);
+        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
         if (ok) {
             updateInfo->installerPath = str::Dup(installerPath);
         } else {
@@ -363,9 +362,8 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         }
 
         // process the rest on ui thread to avoid threading issues
-        uitask::Post([updateInfo] {
-            auto win = FindWindowInfoByHwnd(updateInfo->hwndParent);
-            win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
+        uitask::Post([hwndForNotif, updateInfo] {
+            RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
             NotifyUserOfUpdate(updateInfo);
             gUpdateCheckInProgress = false;
             delete updateInfo;
@@ -378,14 +376,19 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
 // on a background thread and processing the retrieved data on ui thread
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
-void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
+void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
     if (!ShouldCheckForUpdate(updateCheckType)) {
         return;
     }
 
     if (UpdateCheck::UserInitiated == updateCheckType) {
-        win->notifications->Show(win->hwndCanvas, _TR("Checking for update..."), NotificationOptions::Warning,
-                                 kindNotifUpdateCheckInProgress);
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.msg = _TRA("Checking for update...");
+        args.warning = true;
+        args.timeoutMs = 0;
+        args.groupId = kindNotifUpdateCheckInProgress;
+        ShowNotification(args);
     }
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
     gUpdateCheckInProgress = true;
@@ -396,6 +399,12 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     url.Append("&os=");
     const char* osVerTemp = GetWindowsVerTemp();
     url.Append(osVerTemp);
+    url.Append("&64bit=");
+    if (IsProcess64()) {
+        url.Append("yes");
+    } else {
+        url.Append("no");
+    }
     if (gIsStoreBuild) {
         url.Append("&store");
     }
@@ -406,7 +415,7 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
         uitask::Post([=] {
             DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
             if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
-                win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
+                RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
                 // notify the user about network error during a manual update check
                 AutoFreeWstr msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), err));
                 MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
@@ -418,7 +427,7 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
 // the assumption is that this is a portable version downloaded to temp directory
 // we should copy ourselves over the existing file, launch ourselves and
 // tell our new copy to delete ourselves
-void UpdateSelfTo(const WCHAR* path) {
+void UpdateSelfTo(const char* path) {
     CrashIf(!path);
     if (!file::Exists(path)) {
         logf("UpdateSelfTo: failed because destination doesn't exist\n");
@@ -426,13 +435,13 @@ void UpdateSelfTo(const WCHAR* path) {
     }
 
     auto sleepMs = gCli->sleepMs;
-    logf(L"UpdateSelfTo: '%s', sleep for %d ms\n", path, sleepMs);
+    logf("UpdateSelfTo: '%s', sleep for %d ms\n", path, sleepMs);
     // sleeping for a bit to make sure that the program that launched us
     // had time to exit so that we can overwrite it
     ::Sleep(gCli->sleepMs);
 
-    const WCHAR* src = GetExePathTemp().Get();
-    bool ok = file::Copy(path, src, false);
+    const char* srcPath = GetExePathTemp();
+    bool ok = file::Copy(path, srcPath, false);
     // TODO: maybe retry if copy fails under the theory that the file
     // might be temporarily locked
     if (!ok) {
@@ -441,6 +450,6 @@ void UpdateSelfTo(const WCHAR* path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    AutoFreeWstr args = str::Format(LR"(-sleep-ms 500 -delete-file "%s")", GetExePathTemp().Get());
+    AutoFreeStr args = str::Format(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
     CreateProcessHelper(path, args.Get());
 }

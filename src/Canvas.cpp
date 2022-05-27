@@ -11,17 +11,16 @@
 #include "utils/ScopedWin.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/TreeCtrl.h"
+#include "wingui/WinGui.h"
+
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "AppColors.h"
 #include "Annotation.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 
@@ -37,7 +36,7 @@
 #include "SumatraPDF.h"
 #include "EditAnnotations.h"
 #include "Notifications.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Canvas.h"
@@ -84,7 +83,7 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-static void OnVScroll(WindowInfo* win, WPARAM wp) {
+static void OnVScroll(MainWindow* win, WPARAM wp) {
     CrashIf(!win->AsFixed());
 
     SCROLLINFO si{};
@@ -149,7 +148,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wp) {
     }
 }
 
-static void OnHScroll(WindowInfo* win, WPARAM wp) {
+static void OnHScroll(MainWindow* win, WPARAM wp) {
     CrashIf(!win->AsFixed());
 
     SCROLLINFO si{};
@@ -196,7 +195,7 @@ static void OnHScroll(WindowInfo* win, WPARAM wp) {
     }
 }
 
-static void DrawMovePattern(WindowInfo* win, Point pt, Size size) {
+static void DrawMovePattern(MainWindow* win, Point pt, Size size) {
     HWND hwnd = win->hwndCanvas;
     HDC hdc = GetDC(hwnd);
     auto [x, y] = pt;
@@ -210,7 +209,7 @@ static void DrawMovePattern(WindowInfo* win, Point pt, Size size) {
     ReleaseDC(hwnd, hdc);
 }
 
-static void StartMouseDrag(WindowInfo* win, int x, int y, bool right = false) {
+static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
     win->mouseAction = MouseAction::Dragging;
     win->dragRightClick = right;
@@ -221,7 +220,7 @@ static void StartMouseDrag(WindowInfo* win, int x, int y, bool right = false) {
 }
 
 // return true if this was annotation dragging
-static bool StopDraggingAnnotation(WindowInfo* win, int x, int y, bool aborted) {
+static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) {
     Annotation* annot = win->annotationOnLastButtonDown;
     if (!annot) {
         return false;
@@ -258,7 +257,7 @@ static bool StopDraggingAnnotation(WindowInfo* win, int x, int y, bool aborted) 
     return true;
 }
 
-static void StopMouseDrag(WindowInfo* win, int x, int y, bool aborted) {
+static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() != win->hwndCanvas) {
         return;
     }
@@ -280,7 +279,7 @@ static void StopMouseDrag(WindowInfo* win, int x, int y, bool aborted) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
-void CancelDrag(WindowInfo* win) {
+void CancelDrag(MainWindow* win) {
     auto pt = win->dragPrevPos;
     auto [x, y] = pt;
     StopMouseDrag(win, x, y, true);
@@ -301,7 +300,7 @@ bool IsDrag(int x1, int x2, int y1, int y2) {
     return dy > dragDy;
 }
 
-static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     CrashIf(!win->AsFixed());
 
     if (win->presentation != PM_DISABLED) {
@@ -375,7 +374,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM) {
     }
     win->dragPrevPos = pos;
 
-    NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
     if (!wnd) {
         return;
     }
@@ -418,7 +417,7 @@ static AnnotationType moveableAnnotations[] = {
 };
 // clang-format on
 
-static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
+static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
     CrashIf(win->linkOnLastButtonDown);
     CrashIf(win->annotationOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
@@ -446,7 +445,7 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
     }
 }
 
-static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
+static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
         return;
@@ -493,7 +492,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     }
 }
 
-static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
+static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
     auto ma = win->mouseAction;
@@ -579,7 +578,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     }
 }
 
-static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
+static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (win->presentation && !(key & ~MK_LBUTTON)) {
         // in presentation mode, left clicks turn the page,
@@ -624,7 +623,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     }
 }
 
-static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
     // Handle message by recording placement then moving document as mouse moves.
 
     switch (win->mouseAction) {
@@ -643,7 +642,7 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM) {
     }
 }
 
-static void OnMouseRightButtonDown(WindowInfo* win, int x, int y) {
+static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
     // lf("Right button clicked on %d %d", x, y);
     if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::Idle;
@@ -660,7 +659,7 @@ static void OnMouseRightButtonDown(WindowInfo* win, int x, int y) {
     StartMouseDrag(win, x, y, true);
 }
 
-static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
+static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     CrashIf(!win->AsFixed());
     if (!IsRightDragging(win)) {
         return;
@@ -691,7 +690,7 @@ static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     }
 }
 
-static void OnMouseRightButtonDblClick(WindowInfo* win, int x, int y, WPARAM key) {
+static void OnMouseRightButtonDblClick(MainWindow* win, int x, int y, WPARAM key) {
     if (win->presentation && !(key & ~MK_RBUTTON)) {
         // in presentation mode, right clicks turn the page,
         // make two quick right clicks (AKA one double-click) turn two pages
@@ -812,7 +811,7 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     tv->Blue = (COLOR16)((ab + perc * (bb - ab)) * 256);
 }
 
-static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
+static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) {
         return;
@@ -917,7 +916,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         int renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay != 0) {
-            AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+            AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             auto col = GetAppColor(AppColor::MainWindowText);
             SetTextColor(hdc, col);
@@ -968,7 +967,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     }
 }
 
-static void OnPaintDocument(WindowInfo* win) {
+static void OnPaintDocument(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
@@ -1000,14 +999,14 @@ static void SetTextOrArrorCursor(DisplayModel* dm, Point pt) {
 }
 
 // TODO: this gets called way too often
-static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
+static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
     Point pt;
     DisplayModel* dm = win->AsFixed();
     if (!dm || !GetCursor() || !GetCursorPosInHwnd(hwnd, pt)) {
         win->HideToolTip();
         return FALSE;
     }
-    if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
+    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
         SetCursorCached(IDC_CROSS);
         return TRUE;
     }
@@ -1019,11 +1018,10 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         win->HideToolTip();
         return TRUE;
     }
-    WCHAR* text = pageEl->GetValue();
+    char* text = pageEl->GetValue();
     if (!dm->ValidPageNo(pageNo)) {
         const char* kind = pageEl->GetKind();
-        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", ToUtf8Temp(text).Get(), kind,
-             pageNo);
+        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", text, kind, pageNo);
         ReportIf(true);
         return TRUE;
     }
@@ -1041,7 +1039,7 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     return TRUE;
 }
 
-static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
+static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     CrashIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::Idle) {
         win->HideToolTip();
@@ -1065,14 +1063,14 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
     return win->presentation ? TRUE : FALSE;
 }
 
-static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd) && !gWheelMsgRedirect) {
+    if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessageW(win->tocTreeCtrl->hwnd, msg, wp, lp);
+        LRESULT res = SendMessageW(win->tocTreeView->hwnd, msg, wp, lp);
         gWheelMsgRedirect = false;
         return res;
     }
@@ -1183,14 +1181,14 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
     return 0;
 }
 
-static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd) && !gWheelMsgRedirect) {
+    if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessageW(win->tocTreeCtrl->hwnd, msg, wp, lp);
+        LRESULT res = SendMessageW(win->tocTreeView->hwnd, msg, wp, lp);
         gWheelMsgRedirect = false;
         return res;
     }
@@ -1231,7 +1229,7 @@ const char* GiFlagsToStr(DWORD flags) {
     return "unknown";
 }
 
-static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     if (!touch::SupportsGestures()) {
         return DefWindowProc(win->hwndFrame, msg, wp, lp);
     }
@@ -1372,7 +1370,7 @@ Exit:
     return 0;
 }
 
-static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // DbgLogMsg("canvas:", hwnd, msg, wp, lp);
 
     int x = GET_X_LPARAM(lp);
@@ -1480,7 +1478,7 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
 
 ///// methods needed for ChmUI canvases (should be subclassed by HtmlHwnd) /////
 
-static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
@@ -1494,11 +1492,11 @@ static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM w
 
 ///// methods needed for FixedPageUI canvases with loading error /////
 
-static void OnPaintError(WindowInfo* win) {
+static void OnPaintError(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
     auto bgCol = GetAppColor(AppColor::NoDocBg);
     ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));
@@ -1511,7 +1509,7 @@ static void OnPaintError(WindowInfo* win) {
     EndPaint(win->hwndCanvas, &ps);
 }
 
-static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_PAINT:
             OnPaintError(win);
@@ -1529,7 +1527,7 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
 
 ///// methods needed for all types of canvas /////
 
-void RepaintAsync(WindowInfo* win, int delayInMs) {
+void RepaintAsync(MainWindow* win, int delayInMs) {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
     uitask::Post([win, delayInMs] {
@@ -1544,7 +1542,7 @@ void RepaintAsync(WindowInfo* win, int delayInMs) {
     });
 }
 
-static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
+static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
     Point pt;
 
     switch (timerId) {
@@ -1620,37 +1618,46 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
     }
 }
 
-static void OnDropFiles(WindowInfo* win, HDROP hDrop, bool dragFinish) {
-    WCHAR filePath[MAX_PATH]{};
+static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec& files) {
     int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
-
-    bool isShift = IsShiftPressed();
+    WCHAR pathW[MAX_PATH]{};
+    char* path = nullptr;
     for (int i = 0; i < nFiles; i++) {
-        DragQueryFile(hDrop, i, filePath, dimof(filePath));
-        if (str::EndsWithI(filePath, L".lnk")) {
-            WCHAR* resolved = ResolveLnk(filePath);
+        DragQueryFile(hDrop, i, pathW, dimof(pathW));
+        path = ToUtf8Temp(pathW);
+        if (str::EndsWithI(path, ".lnk")) {
+            char* resolved = ResolveLnkTemp(path);
             if (resolved) {
-                str::BufSet(filePath, dimof(filePath), resolved);
-                str::Free(resolved);
+                path = resolved;
             }
         }
-        // The first dropped document may override the current window
-        LoadArgs args(filePath, win);
-        if (isShift && !win) {
-            win = CreateAndShowWindowInfo(nullptr);
-            args.win = win;
-        }
-        LoadDocument(args);
+        files.Append(path);
     }
     if (dragFinish) {
         DragFinish(hDrop);
     }
 }
 
+static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
+    StrVec files;
+    bool isShift = IsShiftPressed();
+
+    GetDropFilesResolved(hDrop, dragFinish, files);
+    for (char* path : files) {
+        // The first dropped document may override the current window
+        LoadArgs* args = new LoadArgs(path, win);
+        if (isShift && !win) {
+            win = CreateAndShowWindowInfo(nullptr);
+            args->win = win;
+        }
+        LoadDocument(args);
+    }
+}
+
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // messages that don't require win
 
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
     switch (msg) {
         case WM_DROPFILES:
             CrashIf(lp != 0 && lp != 1);
@@ -1704,7 +1711,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // Maybe instead of having a single provider per win, we should always create a new one
             // like in this sample:
             // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // currently win->uiaProvider refCount is really out of wack in WindowInfo::~WindowInfo
+            // currently win->uiaProvider refCount is really out of wack in MainWindow::~MainWindow
             // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
             // and since WM_GETOBJECT is called many times, it accumulates
             return UiaReturnRawElementProvider(hwnd, wp, lp, win->uiaProvider);

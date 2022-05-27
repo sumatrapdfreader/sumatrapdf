@@ -75,6 +75,7 @@ typedef struct
 	int icon_type;
 	int button_group_type;
 	const char *title;
+	int has_check_box;
 	const char *check_box_message;
 	int initially_checked;
 	int finally_checked;

@@ -6,20 +6,28 @@
 #include "utils/BitManip.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
+#include "utils/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
-#include "wingui/wingui2.h"
+#include "wingui/WinGui.h"
 
 #include "utils/Log.h"
+
+#include "webview2.h"
+
+// TODO: move to premake
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "Shlwapi.lib")
+// TODO: delay load windowsapp ?
+//#pragma comment(lib, "windowsapp")
+#pragma comment(lib, "shell32.lib")
 
 Kind kindWnd = "wnd";
 
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
-
-namespace wg {
 
 // window_map.h / window_map.cpp
 struct WindowToHwnd {
@@ -80,20 +88,17 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 
 //- Window.h / Window.cpp
 
-Wnd* gWindowBeingCreated = nullptr;
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
 LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     Wnd* window = WindowMapGetWindow(hwnd);
 
-    if (!window) {
-        // I think it's meant to ensure we associate Window with HWND
-        // as early as possible given than CreateWindow
-        window = gWindowBeingCreated;
-        if (window) {
-            window->hwnd = hwnd;
-            WindowMapAdd(hwnd, window);
-        }
+    if (msg == WM_NCCREATE) {
+        CREATESTRUCT* cs = (CREATESTRUCT*)(lparam);
+        CrashIf(window);
+        window = (Wnd*)(cs->lpCreateParams);
+        window->hwnd = hwnd;
+        WindowMapAdd(hwnd, window);
     }
 
     if (window) {
@@ -111,7 +116,7 @@ Wnd::Wnd() {
 Wnd::~Wnd() {
     Destroy();
     delete layout;
-    DeleteObject(backgroundColorBrush);
+    DeleteBrush(backgroundColorBrush);
 }
 
 Kind Wnd::GetKind() {
@@ -128,22 +133,13 @@ void Wnd::SetText(const char* s) {
     if (!s) {
         s = "";
     }
-    auto ws = ToWstrTemp(s);
-    SetText(ws.Get());
-}
-
-void Wnd::SetText(std::string_view sv) {
-    if (sv.empty()) {
-        SetText(L"");
-    }
-    auto ws = ToWstrTemp(sv);
-    SetText(ws.Get());
+    HwndSetText(hwnd, s);
+    HwndInvalidate(hwnd); // TODO: move inside HwndSetText()?
 }
 
 TempStr Wnd::GetText() {
-    auto sw = win::GetTextTemp(hwnd);
-    auto sa = ToUtf8Temp(sw.AsView());
-    return sa;
+    char* s = HwndGetTextTemp(hwnd);
+    return s;
 }
 
 void Wnd::SetVisibility(Visibility newVisibility) {
@@ -259,7 +255,23 @@ void Wnd::OnClose() {
     Destroy();
 }
 
-void Wnd::OnContextMenu(HWND hwnd, Point pt) {
+void Wnd::OnContextMenu(Point pt) {
+    if (!onContextMenu) {
+        return;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+    ContextMenuEvent2 ev;
+    ev.w = this;
+    ev.mouseGlobal = pt;
+
+    POINT ptW{pt.x, pt.y};
+    if (pt.x != -1) {
+        MapWindowPoints(HWND_DESKTOP, hwnd, &ptW, 1);
+    }
+    ev.mouseWindow.x = ptW.x;
+    ev.mouseWindow.y = ptW.y;
+    onContextMenu(&ev);
 }
 
 void Wnd::OnDropFiles(HDROP drop_info) {
@@ -536,6 +548,19 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             return 0;
         }
 
+        // windows don't support WM_GETFONT / WM_SETFONT
+        // only controls do. not sure if we won't interfere
+        // with control handling
+        // TODO: maybe when font is nullptr, ask the original proc
+        case WM_GETFONT: {
+            return (LRESULT)font;
+        }
+
+        case WM_SETFONT: {
+            font = (HFONT)wparam;
+            return 0;
+        }
+
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
             Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
@@ -596,11 +621,19 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hwnd, &ps);
+                auto bgBrush = backgroundColorBrush;
+                if (bgBrush != nullptr) {
+                    FillRect(hdc, &ps.rcPaint, bgBrush);
+                }
                 OnPaint(hdc, &ps);
                 ::EndPaint(hwnd, &ps);
             } else {
                 HDC hdc = ::GetDC(hwnd);
                 OnPaint(hdc, nullptr);
+                auto bgBrush = backgroundColorBrush;
+                if (bgBrush != nullptr) {
+                    FillRect(hdc, nullptr, bgBrush);
+                }
                 ::ReleaseDC(hwnd, hdc);
             }
             // No more drawing required
@@ -677,7 +710,9 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         case WM_CONTEXTMENU: {
             Point pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
-            OnContextMenu(reinterpret_cast<HWND>(wparam), pt);
+            HWND evHwnd = reinterpret_cast<HWND>(wparam);
+            CrashIf(evHwnd != hwnd);
+            OnContextMenu(pt);
             break;
         }
 
@@ -776,11 +811,12 @@ static void WndRegisterClass(const WCHAR* className) {
 }
 
 HWND Wnd::CreateControl(const CreateControlArgs& args) {
-    CrashIf(!args.parent);
     CrashIf(!args.className);
 
     DWORD style = args.style;
-    style |= WS_CHILD;
+    if (args.parent) {
+        style |= WS_CHILD;
+    }
     if (args.visible) {
         style |= WS_VISIBLE;
     } else {
@@ -795,16 +831,19 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HWND parent = args.parent;
     HMENU id = args.ctrlId;
     HINSTANCE inst = GetInstance();
-    LPVOID* createParams = 0;
+    void* createParams = this;
     hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     CrashIf(!hwnd);
     Subclass();
     OnAttach();
+
+    // TODO: verify this
     HFONT f = args.font;
     if (!f) {
         f = GetDefaultGuiFont();
     }
-    HwndSetFont(hwnd, f);
+    // prevWindowProc(hwnd, WM_SETFONT, (WPARAM)f, 0);
+    // HwndSetFont(hwnd, f);
     if (args.text) {
         SetText(args.text);
     }
@@ -812,6 +851,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
 }
 
 HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
+    font = args.font;
+
     const WCHAR* className = args.className;
     if (className == nullptr) {
         className = kDefaultClassName;
@@ -848,27 +889,30 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
 
     DWORD tmpStyle = style & ~WS_VISIBLE;
     DWORD exStyle = args.exStyle;
-    const WCHAR* title = args.title;
-    HMENU m = (HMENU)args.menu;
+    CrashIf(args.menu && args.cmdId);
+    HMENU m = args.menu;
+    if (m == nullptr) {
+        m = (HMENU)(INT_PTR)args.cmdId;
+    }
     HINSTANCE inst = GetInstance();
-    LPVOID* createParams = nullptr;
+    void* createParams = this;
+    WCHAR* titleW = ToWstrTemp(args.title);
 
-    // associate hwnd with this window as soon as possible
-    // in StaticWndProc
-    gWindowBeingCreated = this;
-    HWND hwndTmp = ::CreateWindowExW(exStyle, className, title, style, x, y, dx, dy, parent, m, inst, createParams);
-    gWindowBeingCreated = nullptr;
+    HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
+
     CrashIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE
     CrashIf(hwndTmp != hwnd);
     CrashIf(this != WindowMapGetWindow(hwndTmp));
-
-    HFONT f = args.font;
-    if (!f) {
-        f = GetDefaultGuiFont();
+    if (!hwnd) {
+        return nullptr;
     }
-    HwndSetFont(hwnd, f);
 
+    // trigger creating a backgroundBrush
+    SetBackgroundColor(args.bgColor);
+    if (args.icon) {
+        HwndSetIcon(hwnd, args.icon);
+    }
     if (style & WS_VISIBLE) {
         if (style & WS_MAXIMIZE)
             ::ShowWindow(hwnd, SW_MAXIMIZE);
@@ -891,6 +935,10 @@ void Wnd::Subclass() {
     CrashIf(prevWindowProc); // don't subclass multiple times
 
     WindowMapAdd(hwnd, this);
+    WNDPROC proc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC);
+    if (proc == StaticWindowProc) {
+        return;
+    }
     prevWindowProc = SubclassWindow(hwnd, StaticWindowProc);
     CrashIf(!prevWindowProc);
 }
@@ -926,7 +974,7 @@ void Wnd::SetBackgroundColor(COLORREF col) {
     }
     backgroundColor = col;
     if (backgroundColorBrush != nullptr) {
-        DeleteObject(backgroundColorBrush);
+        DeleteBrush(backgroundColorBrush);
         backgroundColorBrush = nullptr;
     }
     if (backgroundColor != ColorUnset) {
@@ -937,6 +985,14 @@ void Wnd::SetBackgroundColor(COLORREF col) {
         return;
     }
     InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+void Wnd::SuspendRedraw() const {
+    SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
+}
+
+void Wnd::ResumeRedraw() const {
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
 }
 
 // application.cpp
@@ -956,9 +1012,7 @@ bool PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-} // namespace wg
-
-static void SizeToIdealSize(wg::Wnd* wnd) {
+static void SizeToIdealSize(Wnd* wnd) {
     if (!wnd || !wnd->hwnd) {
         return;
     }
@@ -972,7 +1026,6 @@ static void SizeToIdealSize(wg::Wnd* wnd) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
 
-namespace wg {
 Kind kindStatic = "static";
 
 Static::Static() {
@@ -995,7 +1048,7 @@ HWND Static::Create(const StaticCreateArgs& args) {
 
 Size Static::GetIdealSize() {
     CrashIf(!hwnd);
-    WCHAR* txt = win::GetTextTemp(hwnd);
+    char* txt = HwndGetTextTemp(hwnd);
     HFONT hfont = GetWindowFont(hwnd);
     return HwndMeasureText(hwnd, txt, hfont);
 }
@@ -1042,12 +1095,9 @@ LRESULT Static::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-} // namespace wg
-
-//- Button
+//--- Button
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
-namespace wg {
 
 Kind kindButton = "button";
 
@@ -1097,7 +1147,7 @@ Size Button::GetIdealSize() {
 
 #if 0
 Size Button::SetTextAndResize(const WCHAR* s) {
-    win::SetText(this->hwnd, s);
+    HwndSetText(this->hwnd, s);
     Size size = this->GetIdealSize();
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(this->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
@@ -1108,7 +1158,7 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked) {
     ButtonCreateArgs args;
     args.parent = parent;
-    args.text = ToUtf8Temp(s).Get();
+    args.text = ToUtf8Temp(s);
 
     auto b = new Button();
     b->onClicked = onClicked;
@@ -1121,7 +1171,7 @@ Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicke
 Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     ButtonCreateArgs args;
     args.parent = parent;
-    args.text = ToUtf8Temp(s).Get();
+    args.text = ToUtf8Temp(s);
 
     auto* b = new Button();
     b->Create(args);
@@ -1140,9 +1190,136 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     return b;
 }
 
-} // namespace wg
+Button* CreateDefaultButton(HWND parent, const char* s) {
+    ButtonCreateArgs args;
+    args.parent = parent;
+    args.text = s;
 
-//- Edit
+    auto* b = new Button();
+    b->Create(args);
+
+    RECT r;
+    GetClientRect(parent, &r);
+    Size size = b->GetIdealSize();
+    int margin = DpiScale(parent, kButtonMargin);
+    int x = RectDx(r) - size.dx - margin;
+    int y = RectDy(r) - size.dy - margin;
+    r.left = x;
+    r.right = x + size.dx;
+    r.top = y;
+    r.bottom = y + size.dy;
+    b->SetPos(&r);
+    return b;
+}
+
+//--- Tooltip
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
+
+Kind kindTooltip = "tooltip";
+
+Tooltip::Tooltip() {
+    kind = kindTooltip;
+}
+
+HWND Tooltip::Create(const TooltipCreateArgs& args) {
+    CreateControlArgs cargs;
+    cargs.className = TOOLTIPS_CLASS;
+    cargs.font = args.font;
+    cargs.style = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
+    cargs.exStyle = WS_EX_TOPMOST;
+
+    parent = args.parent;
+
+    Wnd::CreateControl(cargs);
+    SetDelayTime(TTDT_AUTOPOP, 32767);
+    return hwnd;
+}
+Size Tooltip::GetIdealSize() {
+    return {100, 32}; // not used as this is top-level window
+}
+
+void Tooltip::SetMaxWidth(int dx) {
+    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
+}
+
+static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
+
+static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
+    int dx = -1;
+    if (multiline || str::FindChar(s, '\n')) {
+        // TODO: dpi scale
+        dx = MULTILINE_INFOTIP_WIDTH_PX;
+    }
+    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
+}
+
+void Tooltip::ShowOrUpdate(const char* s, Rect& rc, bool multiline) {
+    WCHAR* ws = ToWstrTemp(s);
+    bool isShowing = IsShowing();
+    if (!isShowing) {
+        SetMaxWidthForText(hwnd, s, multiline);
+        TOOLINFOW ti = {0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = parent;
+        ti.uFlags = TTF_SUBCLASS;
+        ti.rect = ToRECT(rc);
+        ti.lpszText = (WCHAR*)ws;
+        SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+        return;
+    }
+
+    constexpr int bufSize = 512;
+    WCHAR buf[bufSize] = {0};
+    TOOLINFOW tiCurr = {0};
+    tiCurr.cbSize = sizeof(tiCurr);
+    tiCurr.hwnd = parent;
+    tiCurr.lpszText = buf;
+    SendMessageW(hwnd, TTM_GETTEXT, bufSize - 1, (LPARAM)&tiCurr);
+    // TODO: should also compare ti.rect wit rc
+    if (str::Eq(buf, ws)) {
+        return;
+    }
+
+    SetMaxWidthForText(hwnd, s, multiline);
+    tiCurr.lpszText = (WCHAR*)ws;
+    tiCurr.uFlags = TTF_SUBCLASS;
+    tiCurr.rect = ToRECT(rc);
+    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&tiCurr);
+    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&tiCurr);
+}
+
+int Tooltip::Count() {
+    int n = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    return n;
+}
+
+bool Tooltip::IsShowing() {
+    return Count() > 0;
+}
+
+void Tooltip::Hide() {
+    if (!IsShowing()) {
+        return;
+    }
+
+    TOOLINFO ti{0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = hwnd;
+    SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime
+// type is: TTDT_AUTOPOP, TTDT_INITIAL, TTDT_RESHOW, TTDT_AUTOMATIC
+// timeInMs is max 32767 (~32 secs)
+void Tooltip::SetDelayTime(int type, int timeInMs) {
+    CrashIf(!IsValidDelayType(type));
+    CrashIf(timeInMs < 0);
+    CrashIf(timeInMs > 32767); // TODO: or is it 65535?
+    SendMessageW(hwnd, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
+}
+
+//--- Edit
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
 
@@ -1154,16 +1331,14 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
 // - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
-namespace wg {
-
 Kind kindEdit = "edit";
 
-static bool EditSetCueText(HWND hwnd, std::string_view s) {
+static bool EditSetCueText(HWND hwnd, const char* s) {
     if (!hwnd) {
         return false;
     }
-    auto ws = ToWstrTemp(s);
-    bool ok = Edit_SetCueBannerText(hwnd, ws.Get()) == TRUE;
+    WCHAR* ws = ToWstrTemp(s);
+    bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
     return ok;
 }
 
@@ -1221,9 +1396,9 @@ bool Edit::HasBorder() {
 
 Size Edit::GetIdealSize() {
     HFONT hfont = HwndGetFont(hwnd);
-    Size s1 = HwndMeasureText(hwnd, L"Minimal", hfont);
+    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    auto txt = win::GetTextTemp(hwnd);
+    char* txt = HwndGetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
@@ -1291,10 +1466,6 @@ LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
     return 0;
 }
-
-} // namespace wg
-
-namespace wg {
 
 Kind kindListBox = "listbox";
 
@@ -1423,11 +1594,7 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-} // namespace wg
-
 //- Checkbox
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
 
@@ -1494,11 +1661,7 @@ bool Checkbox::IsChecked() const {
     return state == CheckState::Checked;
 }
 
-} // namespace wg
-
 //- Progress
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/progress-bar-control-reference
 
@@ -1545,11 +1708,7 @@ int Progress::GetCurrent() {
     return current;
 }
 
-} // namespace wg
-
 //- DropDown
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/combo-boxes
 
@@ -1559,10 +1718,12 @@ DropDown::DropDown() {
     kind = kindDropDown;
 }
 
-static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
+static void SetDropDownItems(HWND hwnd, StrVec& items) {
     ComboBox_ResetContent(hwnd);
-    for (std::string_view s : items) {
-        auto ws = ToWstrTemp(s);
+    int n = items.Size();
+    for (int i = 0; i < n; i++) {
+        char* s = items[i];
+        WCHAR* ws = ToWstrTemp(s);
         ComboBox_AddString(hwnd, ws);
     }
 }
@@ -1612,29 +1773,30 @@ void DropDown::SetCurrentSelection(int n) {
     ComboBox_SetCurSel(hwnd, n);
 }
 
-void DropDown::SetCueBanner(std::string_view sv) {
+void DropDown::SetCueBanner(const char* sv) {
     auto ws = ToWstrTemp(sv);
-    ComboBox_SetCueBannerText(hwnd, ws.Get());
+    ComboBox_SetCueBannerText(hwnd, ws);
 }
 
-void DropDown::SetItems(Vec<std::string_view>& newItems) {
+void DropDown::SetItems(StrVec& newItems) {
     items.Reset();
-    for (std::string_view s : newItems) {
+    int n = newItems.Size();
+    for (int i = 0; i < n; i++) {
+        char* s = newItems[i];
         items.Append(s);
     }
     SetDropDownItems(hwnd, items);
     SetCurrentSelection(-1);
 }
 
-static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
-    while (strings) {
+static void DropDownItemsFromStringArray(StrVec& items, const char* strings) {
+    for (; strings; seqstrings::Next(strings)) {
         items.Append(strings);
-        seqstrings::Next(strings);
     }
 }
 
 void DropDown::SetItemsSeqStrings(const char* items) {
-    Vec<std::string_view> strings;
+    StrVec strings;
     DropDownItemsFromStringArray(strings, items);
     SetItems(strings);
 }
@@ -1642,8 +1804,11 @@ void DropDown::SetItemsSeqStrings(const char* items) {
 Size DropDown::GetIdealSize() {
     HFONT hfont = GetWindowFont(hwnd);
     Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
-    for (std::string_view s : items) {
-        auto ws = ToWstrTemp(s);
+
+    int n = items.Size();
+    for (int i = 0; i < n; i++) {
+        char* s = items[i];
+        WCHAR* ws = ToWstrTemp(s);
         Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);
@@ -1661,11 +1826,7 @@ Size DropDown::GetIdealSize() {
     return {dx, dy};
 }
 
-} // namespace wg
-
 //- Trackbar
-
-namespace wg {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/trackbar-control-reference
 
@@ -1772,11 +1933,7 @@ int Trackbar::GetValue() {
     return res;
 }
 
-} // namespace wg
-
 //- Splitter
-
-namespace wg {
 
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows
@@ -1942,9 +2099,1180 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
-} // namespace wg
+#if 0
+// Convert ASCII hex digit to a nibble (four bits, 0 - 15).
+//
+// Use unsigned to avoid signed overflow UB.
+unsigned char hex2nibble(unsigned char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    } else if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    }
+    return 0;
+}
 
-namespace wg {
+// Convert ASCII hex string (two characters) to byte.
+//
+// E.g., "0B" => 0x0B, "af" => 0xAF.
+char hex2char(const char* p) {
+    return hex2nibble(p[0]) * 16 + hex2nibble(p[1]);
+}
+
+std::string url_encode(const std::string s) {
+    std::string encoded;
+    for (unsigned int i = 0; i < s.length(); i++) {
+        auto c = s[i];
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded = encoded + c;
+        } else {
+            char hex[4];
+            snprintf(hex, sizeof(hex), "%%%02x", c);
+            encoded = encoded + hex;
+        }
+    }
+    return encoded;
+}
+
+std::string url_decode(const std::string st) {
+    std::string decoded;
+    const char* s = st.c_str();
+    size_t length = strlen(s);
+    for (unsigned int i = 0; i < length; i++) {
+        if (s[i] == '%') {
+            decoded.push_back(hex2char(s + i + 1));
+            i = i + 2;
+        } else if (s[i] == '+') {
+            decoded.push_back(' ');
+        } else {
+            decoded.push_back(s[i]);
+        }
+    }
+    return decoded;
+}
+
+std::string html_from_uri(const std::string s) {
+    if (s.substr(0, 15) == "data:text/html,") {
+        return url_decode(s.substr(15));
+    }
+    return "";
+}
+#endif
+
+//--- WebView
+
+Kind kindWebView = "webView";
+
+class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
+                             public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
+                             public ICoreWebView2WebMessageReceivedEventHandler,
+                             public ICoreWebView2PermissionRequestedEventHandler {
+    using webview2_com_handler_cb_t = std::function<void(ICoreWebView2Controller*)>;
+
+  public:
+    webview2_com_handler(HWND hwnd, WebViewMsgCb msgCb, webview2_com_handler_cb_t cb)
+        : m_window(hwnd), msgCb(msgCb), m_cb(cb) {
+    }
+    ULONG STDMETHODCALLTYPE AddRef() {
+        return 1;
+    }
+
+    ULONG STDMETHODCALLTYPE Release() {
+        return 1;
+    }
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Environment* env) {
+        env->CreateCoreWebView2Controller(m_window, this);
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Controller* controller) {
+        controller->AddRef();
+
+        ICoreWebView2* webview;
+        ::EventRegistrationToken token;
+        controller->get_CoreWebView2(&webview);
+        webview->add_WebMessageReceived(this, &token);
+        webview->add_PermissionRequested(this, &token);
+
+        m_cb(controller);
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args) {
+        WCHAR* message = nullptr;
+        args->TryGetWebMessageAsString(&message);
+        if (!message) {
+            return S_OK;
+        }
+        char* s = ToUtf8Temp(message);
+        msgCb(s);
+        sender->PostWebMessageAsString(message);
+        CoTaskMemFree(message);
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* sender, ICoreWebView2PermissionRequestedEventArgs* args) {
+        COREWEBVIEW2_PERMISSION_KIND kind;
+        args->get_PermissionKind(&kind);
+        if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ) {
+            args->put_State(COREWEBVIEW2_PERMISSION_STATE_ALLOW);
+        }
+        return S_OK;
+    }
+
+  private:
+    HWND m_window;
+    WebViewMsgCb msgCb;
+    webview2_com_handler_cb_t m_cb;
+};
+
+Webview2Wnd::Webview2Wnd() {
+    kind = kindWebView;
+}
+
+void Webview2Wnd::UpdateWebviewSize() {
+    if (controller == nullptr) {
+        return;
+    }
+    RECT bounds;
+    GetClientRect(hwnd, &bounds);
+    controller->put_Bounds(bounds);
+}
+
+void Webview2Wnd::Eval(const char* js) {
+    WCHAR* ws = ToWstrTemp(js);
+    webview->ExecuteScript(ws, nullptr);
+}
+
+void Webview2Wnd::SetHtml(const char* html) {
+#if 0
+        std::string s = "data:text/html,";
+        s += url_encode(html);
+        WCHAR* html2 = ToWstrTemp(s.c_str());
+        m_webview->Navigate(html2);
+#else
+    WCHAR* html2 = ToWstrTemp(html);
+    webview->NavigateToString(html2);
+#endif
+}
+
+void Webview2Wnd::Init(const char* js) {
+    WCHAR* ws = ToWstrTemp(js);
+    webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
+}
+
+void Webview2Wnd::Navigate(const char* url) {
+    WCHAR* ws = ToWstrTemp(url);
+    webview->Navigate(ws);
+}
+
+/*
+Settings:
+put_IsWebMessageEnabled(BOOL isWebMessageEnabled)
+put_AreDefaultScriptDialogsEnabled(BOOL areDefaultScriptDialogsEnabled)
+put_IsStatusBarEnabled(BOOL isStatusBarEnabled)
+put_AreDevToolsEnabled(BOOL areDevToolsEnabled)
+put_AreDefaultContextMenusEnabled(BOOL enabled)
+put_AreHostObjectsAllowed(BOOL allowed)
+put_IsZoomControlEnabled(BOOL enabled)
+put_IsBuiltInErrorPageEnabled(BOOL enabled)
+*/
+
+bool Webview2Wnd::Embed(WebViewMsgCb cb) {
+    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
+    // called on a different thread?
+    LONG flag = 0;
+    // InterlockedCompareExchange()
+    WCHAR* userDataFolder = ToWstrTemp(dataDir);
+    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
+        nullptr, userDataFolder, nullptr, new webview2_com_handler(hwnd, cb, [&](ICoreWebView2Controller* ctrl) {
+            controller = ctrl;
+            controller->get_CoreWebView2(&webview);
+            webview->AddRef();
+            InterlockedAdd(&flag, 1);
+        }));
+    if (hr != S_OK) {
+        return false;
+    }
+    MSG msg = {};
+    while ((InterlockedAdd(&flag, 0) == 0) && GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    // remove window frame and decorations
+    auto style = GetWindowLong(hwnd, GWL_STYLE);
+    style &= ~(WS_OVERLAPPEDWINDOW);
+    SetWindowLong(hwnd, GWL_STYLE, style);
+
+    ICoreWebView2Settings* settings = nullptr;
+    hr = webview->get_Settings(&settings);
+    if (hr == S_OK) {
+        settings->put_AreDefaultContextMenusEnabled(FALSE);
+        settings->put_AreDevToolsEnabled(FALSE);
+        settings->put_IsStatusBarEnabled(FALSE);
+    }
+
+    Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+    return true;
+}
+
+void Webview2Wnd::OnBrowserMessage(const char* msg) {
+    /*
+    auto seq = json_parse(msg, "id", 0);
+    auto name = json_parse(msg, "method", 0);
+    auto args = json_parse(msg, "params", 0);
+    if (bindings.find(name) == bindings.end()) {
+      return;
+    }
+    auto fn = bindings[name];
+    (*fn->first)(seq, args, fn->second);
+    */
+    log(msg);
+}
+
+HWND Webview2Wnd::Create(const CreateCustomArgs& args) {
+    CrashIf(!dataDir);
+    CreateCustom(args);
+    if (!hwnd) {
+        return nullptr;
+    }
+
+    auto cb = std::bind(&Webview2Wnd::OnBrowserMessage, this, std::placeholders::_1);
+    Embed(cb);
+    UpdateWebviewSize();
+    return hwnd;
+}
+
+LRESULT Webview2Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_SIZE) {
+        UpdateWebviewSize();
+    }
+    return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
+Webview2Wnd::~Webview2Wnd() {
+    str::Free(dataDir);
+}
+
+//--- TreeView
+
+/*
+- https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-reference
+
+Tree view, checkboxes and other info:
+- https://devblogs.microsoft.com/oldnewthing/20171127-00/?p=97465
+- https://devblogs.microsoft.com/oldnewthing/20171128-00/?p=97475
+- https://devblogs.microsoft.com/oldnewthing/20171129-00/?p=97485
+- https://devblogs.microsoft.com/oldnewthing/20171130-00/?p=97495
+- https://devblogs.microsoft.com/oldnewthing/20171201-00/?p=97505
+- https://devblogs.microsoft.com/oldnewthing/20171204-00/?p=97515
+- https://devblogs.microsoft.com/oldnewthing/20171205-00/?p=97525
+-
+https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
+*/
+
+Kind kindTreeView = "treeView";
+
+TreeView::TreeView() {
+    kind = kindTreeView;
+}
+
+TreeView::~TreeView() {
+}
+
+HWND TreeView::Create(const TreeViewCreateArgs& argsIn) {
+    idealSize = {48, 120}; // arbitrary
+    fullRowSelect = argsIn.fullRowSelect;
+
+    CreateControlArgs args;
+    args.className = WC_TREEVIEWW;
+    args.parent = argsIn.parent;
+    args.font = argsIn.font;
+    args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    args.style |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
+    args.style |= TVS_TRACKSELECT | TVS_NOHSCROLL | TVS_INFOTIP;
+    args.exStyle = argsIn.exStyle | TVS_EX_DOUBLEBUFFER;
+
+    if (fullRowSelect) {
+        args.exStyle |= TVS_FULLROWSELECT;
+        args.exStyle &= ~TVS_HASLINES;
+    }
+
+    Wnd::CreateControl(args);
+
+    if (IsWindowsVistaOrGreater()) {
+        SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
+    }
+    if (DynSetWindowTheme) {
+        DynSetWindowTheme(hwnd, L"Explorer", nullptr);
+    }
+
+    TreeView_SetUnicodeFormat(hwnd, true);
+
+    SetToolTipsDelayTime(TTDT_AUTOPOP, 32767);
+
+    // TODO:
+    // must be done at the end. Doing  SetWindowStyle() sends bogus (?)
+    // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
+    // if hItem doesn't point to an TreeItem
+    // Subclass();
+
+    return hwnd;
+}
+
+Size TreeView::GetIdealSize() {
+    return {idealSize.dx, idealSize.dy};
+}
+
+void TreeView::SetToolTipsDelayTime(int type, int timeInMs) {
+    CrashIf(!IsValidDelayType(type));
+    CrashIf(timeInMs < 0);
+    CrashIf(timeInMs > 32767); // TODO: or is it 65535?
+    HWND hwndToolTips = GetToolTipsHwnd();
+    SendMessageW(hwndToolTips, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/tvm-gettooltips
+HWND TreeView::GetToolTipsHwnd() {
+    return TreeView_GetToolTips(hwnd);
+}
+
+HTREEITEM TreeView::GetHandleByTreeItem(TreeItem item) {
+    return treeModel->GetHandle(item);
+}
+
+// the result only valid until the next GetItem call
+static TVITEMW* GetTVITEM(TreeView* tree, HTREEITEM hItem) {
+    TVITEMW* ti = &tree->item;
+    ZeroStruct(ti);
+    ti->hItem = hItem;
+    // https: // docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-tvitemexa
+    ti->mask = TVIF_HANDLE | TVIF_PARAM | TVIF_STATE | TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    ti->stateMask = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED | TVIS_STATEIMAGEMASK;
+    BOOL ok = TreeView_GetItem(tree->hwnd, ti);
+    if (!ok) {
+        return nullptr;
+    }
+    return ti;
+}
+
+TVITEMW* GetTVITEM(TreeView* tree, TreeItem ti) {
+    HTREEITEM hi = tree->GetHandleByTreeItem(ti);
+    return GetTVITEM(tree, hi);
+}
+
+// expand if collapse, collapse if expanded
+void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
+    HWND hTree = tree->hwnd;
+    HTREEITEM child = TreeView_GetChild(hTree, hItem);
+    if (!child) {
+        // only applies to nodes with children
+        return;
+    }
+
+    TVITEMW* item = GetTVITEM(tree, hItem);
+    if (!item) {
+        return;
+    }
+    uint flag = TVE_EXPAND;
+    bool isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
+    if (isExpanded) {
+        flag = TVE_COLLAPSE;
+    }
+    if (recursive) {
+        TreeViewExpandRecursively(hTree, hItem, flag, false);
+    } else {
+        TreeView_Expand(hTree, hItem, flag);
+    }
+}
+
+void SetTreeItemState(uint uState, TreeItemState& state) {
+    state.isExpanded = bitmask::IsSet(uState, TVIS_EXPANDED);
+    state.isSelected = bitmask::IsSet(uState, TVIS_SELECTED);
+    uint n = (uState >> 12) - 1;
+    state.isChecked = n != 0;
+}
+
+static bool HandleKey(TreeView* tree, WPARAM wp) {
+    HWND hwnd = tree->hwnd;
+    // consistently expand/collapse whole (sub)trees
+    if (VK_MULTIPLY == wp) {
+        if (IsShiftPressed()) {
+            TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, false);
+        } else {
+            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
+        }
+    } else if (VK_DIVIDE == wp) {
+        if (IsShiftPressed()) {
+            HTREEITEM root = TreeView_GetRoot(hwnd);
+            if (!TreeView_GetNextSibling(hwnd, root)) {
+                root = TreeView_GetChild(hwnd, root);
+            }
+            TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
+        } else {
+            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+        }
+    } else if (wp == 13) {
+        // this is Enter key
+        bool recursive = IsShiftPressed();
+        TreeViewToggle(tree, TreeView_GetSelection(hwnd), recursive);
+    } else {
+        return false;
+    }
+    TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
+    return true;
+}
+
+LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    LRESULT res;
+    TreeView* w = this;
+
+    if (WM_ERASEBKGND == msg) {
+        return FALSE;
+    }
+
+    if (WM_RBUTTONDOWN == msg) {
+        // this is needed to make right click trigger context menu
+        // otherwise it gets turned into NM_CLICK and it somehow
+        // blocks WM_RBUTTONUP, which is a trigger for WM_CONTEXTMENU
+        res = DefWindowProcW(hwnd, msg, wparam, lparam);
+        return res;
+    }
+
+    if (WM_KEYDOWN == msg) {
+        if (HandleKey(w, wparam)) {
+            return 0;
+        }
+    }
+
+    res = WndProcDefault(hwnd, msg, wparam, lparam);
+    return res;
+}
+
+bool TreeView::IsExpanded(TreeItem ti) {
+    auto state = GetItemState(ti);
+    return state.isExpanded;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
+bool TreeView::GetItemRect(TreeItem ti, bool justText, RECT& r) {
+    HTREEITEM hi = GetHandleByTreeItem(ti);
+    BOOL b = toBOOL(justText);
+    BOOL ok = TreeView_GetItemRect(hwnd, hi, &r, b);
+    return ok == TRUE;
+}
+
+TreeItem TreeView::GetSelection() {
+    HTREEITEM hi = TreeView_GetSelection(hwnd);
+    return GetTreeItemByHandle(hi);
+}
+
+bool TreeView::SelectItem(TreeItem ti) {
+    HTREEITEM hi = nullptr;
+    if (ti != TreeModel::kNullItem) {
+        hi = GetHandleByTreeItem(ti);
+    }
+    BOOL ok = TreeView_SelectItem(hwnd, hi);
+    return ok == TRUE;
+}
+
+void TreeView::SetBackgroundColor(COLORREF bgCol) {
+    backgroundColor = bgCol;
+    TreeView_SetBkColor(hwnd, bgCol);
+}
+
+void TreeView::SetTextColor(COLORREF col) {
+#if 0 // TODO: do I need this?
+    this->textColor = col;
+#endif
+    TreeView_SetTextColor(this->hwnd, col);
+}
+
+void TreeView::ExpandAll() {
+    SuspendRedraw();
+    auto root = TreeView_GetRoot(this->hwnd);
+    TreeViewExpandRecursively(this->hwnd, root, TVE_EXPAND, false);
+    ResumeRedraw();
+}
+
+void TreeView::CollapseAll() {
+    SuspendRedraw();
+    auto root = TreeView_GetRoot(this->hwnd);
+    TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
+    ResumeRedraw();
+}
+
+void TreeView::Clear() {
+    treeModel = nullptr;
+
+    HWND hwnd = this->hwnd;
+    ::SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
+    TreeView_DeleteAllItems(hwnd);
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
+    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    ::RedrawWindow(hwnd, nullptr, nullptr, flags);
+}
+
+char* TreeView::GetDefaultTooltipTemp(TreeItem ti) {
+    auto hItem = GetHandleByTreeItem(ti);
+    WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
+
+    TVITEMW item{};
+    item.hItem = hItem;
+    item.mask = TVIF_TEXT;
+    item.pszText = buf;
+    item.cchTextMax = dimof(buf);
+    TreeView_GetItem(hwnd, &item);
+
+    return ToUtf8Temp(buf);
+}
+
+// get the item at a given (x,y) position in the window
+TreeItem TreeView::GetItemAt(int x, int y) {
+    TVHITTESTINFO ht{};
+    ht.pt = {x, y};
+    TreeView_HitTest(hwnd, &ht);
+    return GetTreeItemByHandle(ht.hItem);
+}
+
+TreeItem TreeView::GetTreeItemByHandle(HTREEITEM item) {
+    if (item == nullptr) {
+        return TreeModel::kNullItem;
+    }
+    auto tvi = GetTVITEM(this, item);
+    if (!tvi) {
+        return TreeModel::kNullItem;
+    }
+    TreeItem res = (TreeItem)(tvi->lParam);
+    return res;
+}
+
+static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
+    uint mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+    tvitem->mask = mask;
+
+    uint stateMask = TVIS_EXPANDED;
+    uint state = 0;
+    if (tm->IsExpanded(ti)) {
+        state = TVIS_EXPANDED;
+    }
+
+    tvitem->state = state;
+    tvitem->stateMask = stateMask;
+    tvitem->lParam = static_cast<LPARAM>(ti);
+    char* title = tm->Text(ti);
+    tvitem->pszText = ToWstrTemp(title);
+}
+
+// inserting in front is faster:
+// https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
+HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM parent) {
+    TVINSERTSTRUCTW toInsert{};
+
+    toInsert.hParent = parent;
+    toInsert.hInsertAfter = TVI_FIRST;
+
+    TVITEMEXW* tvitem = &toInsert.itemex;
+    FillTVITEM(tvitem, treeView->treeModel, ti);
+    HTREEITEM res = TreeView_InsertItem(treeView->hwnd, &toInsert);
+    return res;
+}
+
+bool TreeView::UpdateItem(TreeItem ti) {
+    HTREEITEM ht = GetHandleByTreeItem(ti);
+    CrashIf(!ht);
+    if (!ht) {
+        return false;
+    }
+
+    TVITEMEXW tvitem;
+    tvitem.hItem = ht;
+    FillTVITEM(&tvitem, treeModel, ti);
+    BOOL ok = TreeView_SetItem(hwnd, &tvitem);
+    return ok != 0;
+}
+
+// complicated because it inserts items backwards, as described in
+// https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
+void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
+    auto tm = treeView->treeModel;
+    int n = tm->ChildCount(item);
+    TreeItem tmp[256];
+    TreeItem* a = &tmp[0];
+    if (n > dimof(tmp)) {
+        size_t nBytes = (size_t)n * sizeof(TreeItem);
+        a = (TreeItem*)malloc(nBytes);
+        nBytes = (size_t)n * sizeof(HTREEITEM);
+        if (a == nullptr) {
+            free(a);
+            a = &tmp[0];
+            n = (int)dimof(tmp);
+        }
+    }
+    // ChildAt() is optimized for sequential access and we need to
+    // insert backwards, so gather the items in v first
+    for (int i = 0; i < n; i++) {
+        auto ti = tm->ChildAt(item, i);
+        CrashIf(ti == 0);
+        a[n - 1 - i] = ti;
+    }
+
+    for (int i = 0; i < n; i++) {
+        auto ti = a[i];
+        HTREEITEM h = insertItemFront(treeView, ti, parent);
+        tm->SetHandle(ti, h);
+        // avoid recursing if not needed because we use a lot of stack space
+        if (tm->ChildCount(ti) > 0) {
+            PopulateTreeItem(treeView, ti, h);
+        }
+    }
+
+    if (a != &tmp[0]) {
+        free(a);
+    }
+}
+
+static void PopulateTree(TreeView* treeView, TreeModel* tm) {
+    TreeItem root = tm->Root();
+    PopulateTreeItem(treeView, root, nullptr);
+}
+
+void TreeView::SetTreeModel(TreeModel* tm) {
+    CrashIf(!tm);
+
+    SuspendRedraw();
+
+    TreeView_DeleteAllItems(hwnd);
+
+    treeModel = tm;
+    PopulateTree(this, tm);
+    ResumeRedraw();
+
+    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwnd, nullptr, nullptr, flags);
+}
+
+void TreeView::SetCheckState(TreeItem item, bool enable) {
+    HTREEITEM hi = GetHandleByTreeItem(item);
+    CrashIf(!hi);
+    TreeView_SetCheckState(hwnd, hi, enable);
+}
+
+bool TreeView::GetCheckState(TreeItem item) {
+    HTREEITEM hi = GetHandleByTreeItem(item);
+    CrashIf(!hi);
+    auto res = TreeView_GetCheckState(hwnd, hi);
+    return res != 0;
+}
+
+TreeItemState TreeView::GetItemState(TreeItem ti) {
+    TreeItemState res;
+
+    TVITEMW* item = GetTVITEM(this, ti);
+    CrashIf(!item);
+    if (!item) {
+        return res;
+    }
+    SetTreeItemState(item->state, res);
+    res.nChildren = item->cChildren;
+
+    return res;
+}
+
+// if context menu invoked via keyboard, get selected item
+// if via right-click, selects the item under the cursor
+// in both cases can return null
+// sets pt to screen position (for context menu coordinates)
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
+    TreeView* treeView = (TreeView*)args->w;
+    TreeModel* tm = treeView->treeModel;
+    HWND hwnd = treeView->hwnd;
+
+    TreeItem ti = TreeModel::kNullItem;
+    pt = {args->mouseWindow.x, args->mouseWindow.y};
+    if (pt.x == -1 || pt.y == -1) {
+        // no mouse position when launched via keyboard shortcut
+        // use position of selected item to show menu
+        ti = treeView->GetSelection();
+        if (ti == TreeModel::kNullItem) {
+            return TreeModel::kNullItem;
+        }
+        RECT rcItem;
+        if (treeView->GetItemRect(ti, true, rcItem)) {
+            // rcItem is local to window, map to global screen position
+            MapWindowPoints(hwnd, HWND_DESKTOP, (POINT*)&rcItem, 2);
+            pt.x = rcItem.left;
+            pt.y = rcItem.bottom;
+        }
+    } else {
+        ti = treeView->GetItemAt(pt.x, pt.y);
+        if (ti == TreeModel::kNullItem) {
+            // only show context menu if over a node in tree
+            return TreeModel::kNullItem;
+        }
+        // context menu acts on this item so select it
+        // for better visual feedback to the user
+        treeView->SelectItem(ti);
+        pt.x = args->mouseGlobal.x;
+        pt.y = args->mouseGlobal.y;
+    }
+    return ti;
+}
+
+LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
+    TreeView* w = this;
+    NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
+    LRESULT res;
+
+    auto code = nmtv->hdr.code;
+    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
+    if (code == TVN_GETINFOTIP) {
+        if (!onGetTooltip) {
+            return 0;
+        }
+        TreeItemGetTooltipEvent ev;
+        ev.treeView = w;
+        ev.info = (NMTVGETINFOTIPW*)(nmtv);
+        ev.treeItem = GetTreeItemByHandle(ev.info->hItem);
+        onGetTooltip(&ev);
+        return 0;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
+    if (code == NM_CUSTOMDRAW) {
+        if (!onTreeItemCustomDraw) {
+            return CDRF_DODEFAULT;
+        }
+        TreeItemCustomDrawEvent ev;
+        ev.treeView = w;
+        ev.nm = (NMTVCUSTOMDRAW*)lp;
+        HTREEITEM hItem = (HTREEITEM)ev.nm->nmcd.dwItemSpec;
+        // it can be 0 in CDDS_PREPAINT state
+        ev.treeItem = GetTreeItemByHandle(hItem);
+        // TODO: seeing this in crash reports because GetTVITEM() returns nullptr
+        // should log more info
+        // SubmitBugReportIf(!a.treeItem);
+        if (!ev.treeItem) {
+            return CDRF_DODEFAULT;
+        }
+        res = onTreeItemCustomDraw(&ev);
+        if (res < 0) {
+            return CDRF_DODEFAULT;
+        }
+        return res;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
+    if (code == TVN_SELCHANGED) {
+        log("tv: TVN_SELCHANGED\n");
+        if (!onTreeSelectionChanged) {
+            return 0;
+        }
+        TreeSelectionChangedEvent ev;
+        ev.treeView = w;
+        ev.nmtv = nmtv;
+        auto action = ev.nmtv->action;
+        if (action == TVC_BYKEYBOARD) {
+            ev.byKeyboard = true;
+        } else if (action == TVC_BYMOUSE) {
+            ev.byMouse = true;
+        }
+        ev.prevSelectedItem = w->GetTreeItemByHandle(nmtv->itemOld.hItem);
+        ev.selectedItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
+        onTreeSelectionChanged(&ev);
+        return 0;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
+    if (code == NM_CLICK || code == NM_DBLCLK) {
+        log("tv: NM_CLICK\n");
+        if (!onTreeClick) {
+            return 0;
+        }
+        NMHDR* nmhdr = (NMHDR*)lp;
+        TreeClickEvent ev{};
+        ev.treeView = w;
+        ev.isDblClick = (code == NM_DBLCLK);
+
+        DWORD pos = GetMessagePos();
+        ev.mouseGlobal.x = GET_X_LPARAM(pos);
+        ev.mouseGlobal.y = GET_Y_LPARAM(pos);
+        POINT pt{ev.mouseGlobal.x, ev.mouseGlobal.y};
+        if (pt.x != -1) {
+            MapWindowPoints(HWND_DESKTOP, nmhdr->hwndFrom, &pt, 1);
+        }
+        ev.mouseWindow.x = pt.x;
+        ev.mouseWindow.y = pt.y;
+
+        // determine which item has been clicked (if any)
+        TVHITTESTINFO ht{};
+        ht.pt.x = ev.mouseWindow.x;
+        ht.pt.y = ev.mouseWindow.y;
+        TreeView_HitTest(nmhdr->hwndFrom, &ht);
+        if ((ht.flags & TVHT_ONITEM)) {
+            ev.treeItem = GetTreeItemByHandle(ht.hItem);
+        }
+        res = onTreeClick(&ev);
+        return 0;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-keydown
+    if (code == TVN_KEYDOWN) {
+        if (!onTreeKeyDown) {
+            return 0;
+        }
+        NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
+        TreeKeyDownEvent ev{};
+        ev.treeView = w;
+        ev.nmkd = nmkd;
+        ev.keyCode = nmkd->wVKey;
+        ev.flags = nmkd->flags;
+        onTreeKeyDown(&ev);
+        return 0;
+    }
+
+    return 0;
+}
+
+//--- Tabs
+
+Kind kindTabs = "tabs";
+
+TabsCtrl::TabsCtrl() {
+    kind = kindTabs;
+}
+
+TabsCtrl::~TabsCtrl() = default;
+
+LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
+    LPNMHDR hdr = (LPNMHDR)lp;
+    if (hdr->code == TTN_GETDISPINFOA) {
+        logf("TabsCtrl::OnNotifyReflec: TTN_GETDISPINFOA\n");
+    } else if (hdr->code == TTN_GETDISPINFOW) {
+        logf("TabsCtrl::OnNotifyReflec: TTN_GETDISPINFOW\n");
+    }
+    return 0;
+}
+
+HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
+    createToolTipsHwnd = argsIn.createToolTipsHwnd;
+
+    CreateControlArgs args;
+    args.parent = argsIn.parent;
+    args.font = argsIn.font;
+    args.className = WC_TABCONTROLW;
+    args.style = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
+    if (createToolTipsHwnd) {
+        args.style |= TCS_TOOLTIPS;
+    }
+
+    HWND hwnd = CreateControl(args);
+    if (!hwnd) {
+        return nullptr;
+    }
+
+    if (createToolTipsHwnd) {
+        HWND ttHwnd = GetToolTipsHwnd();
+        TOOLINFO ti{0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = hwnd;
+        ti.uId = 0;
+        ti.uFlags = TTF_SUBCLASS;
+        ti.lpszText = (WCHAR*)L"placeholder tooltip";
+        SetRectEmpty(&ti.rect);
+        RECT r = ti.rect;
+        SendMessageW(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    }
+    return hwnd;
+}
+
+Size TabsCtrl::GetIdealSize() {
+    Size sz{32, 128};
+    return sz;
+}
+
+int TabsCtrl::GetTabCount() {
+    int n = TabCtrl_GetItemCount(hwnd);
+    return n;
+}
+
+int TabsCtrl::InsertTab(int idx, const char* s) {
+    CrashIf(idx < 0);
+
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
+    item.pszText = ToWstrTemp(s);
+    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
+    tooltips.InsertAt(idx, "");
+    return insertedIdx;
+}
+
+void TabsCtrl::RemoveTab(int idx) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+    BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
+    CrashIf(!ok);
+    tooltips.RemoveAt(idx);
+}
+
+void TabsCtrl::RemoveAllTabs() {
+    TabCtrl_DeleteAllItems(hwnd);
+    tooltips.Reset();
+}
+
+void TabsCtrl::SetTabText(int idx, const char* s) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
+    item.pszText = ToWstrTemp(s);
+    TabCtrl_SetItem(hwnd, idx, &item);
+}
+
+// result is valid until next call to GetTabText()
+char* TabsCtrl::GetTabText(int idx) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+
+    WCHAR buf[512]{};
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
+    item.pszText = buf;
+    item.cchTextMax = dimof(buf) - 1; // -1 just in case
+    TabCtrl_GetItem(hwnd, idx, &item);
+    char* s = ToUtf8Temp(buf);
+    lastTabText.Set(s);
+    return lastTabText.Get();
+}
+
+int TabsCtrl::GetSelectedTabIndex() {
+    int idx = TabCtrl_GetCurSel(hwnd);
+    return idx;
+}
+
+int TabsCtrl::SetSelectedTabByIndex(int idx) {
+    int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
+    return prevSelectedIdx;
+}
+
+void TabsCtrl::SetItemSize(Size sz) {
+    TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
+}
+
+void TabsCtrl::SetToolTipsHwnd(HWND hwndTooltip) {
+    TabCtrl_SetToolTips(hwnd, hwndTooltip);
+}
+
+HWND TabsCtrl::GetToolTipsHwnd() {
+    HWND res = TabCtrl_GetToolTips(hwnd);
+    return res;
+}
+
+// TODO: this is a nasty implementation
+// should probably TTM_ADDTOOL for each tab item
+// we could re-calculate it in SetItemSize()
+void TabsCtrl::MaybeUpdateTooltip() {
+    // logf("MaybeUpdateTooltip() start\n");
+    HWND ttHwnd = GetToolTipsHwnd();
+    if (!ttHwnd) {
+        return;
+    }
+
+    {
+        TOOLINFO ti{0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = hwnd;
+        ti.uId = 0;
+        SendMessage(ttHwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+    }
+
+    {
+        TOOLINFO ti{0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = hwnd;
+        ti.uFlags = TTF_SUBCLASS;
+        // ti.lpszText = LPSTR_TEXTCALLBACK;
+        WCHAR* ws = ToWstrTemp(currTooltipText.Get());
+        ti.lpszText = ws;
+        ti.uId = 0;
+        GetClientRect(hwnd, &ti.rect);
+        SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    }
+}
+
+void TabsCtrl::MaybeUpdateTooltipText(int idx) {
+    HWND ttHwnd = GetToolTipsHwnd();
+    if (!ttHwnd) {
+        return;
+    }
+    const char* tooltip = GetTooltip(idx);
+    if (!tooltip) {
+        // TODO: remove tooltip
+        return;
+    }
+    currTooltipText.Set(tooltip);
+#if 1
+    MaybeUpdateTooltip();
+#else
+    // TODO: why this doesn't work?
+    TOOLINFO ti{0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = hwnd;
+    ti.uFlags = TTF_SUBCLASS;
+    ti.lpszText = currTooltipText.Get();
+    ti.uId = 0;
+    GetClientRect(hwnd, &ti.rect);
+    SendMessage(ttHwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+#endif
+    // SendMessage(ttHwnd, TTM_UPDATE, 0, 0);
+
+    SendMessage(ttHwnd, TTM_POP, 0, 0);
+    SendMessage(ttHwnd, TTM_POPUP, 0, 0);
+    // logf(L"MaybeUpdateTooltipText: %s\n", tooltip);
+}
+
+void TabsCtrl::SetTooltip(int idx, const char* s) {
+    tooltips.SetAt(idx, s);
+}
+
+const char* TabsCtrl::GetTooltip(int idx) {
+    if (idx >= tooltips.Size()) {
+        return nullptr;
+    }
+    char* res = tooltips.at(idx);
+    return res;
+}
+
+//--- misc code
+
+int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (PreTranslateMessage(msg)) {
+            continue;
+        }
+        if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
+            continue;
+        }
+        if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
+            continue;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return (int)msg.wParam;
+}
+
+#if 0
+// TODO: support accelerator table?
+// TODO: a better way to stop the loop e.g. via shared
+// atomic int to signal termination and sending WM_IDLE
+// to trigger processing of the loop
+void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
+    if (hwndParent != nullptr) {
+        EnableWindow(hwndParent, FALSE);
+    }
+
+    MSG msg;
+    bool isFinished = false;
+    while (!isFinished) {
+        BOOL ok = WaitMessage();
+        if (!ok) {
+            DWORD err = GetLastError();
+            LogLastError(err);
+            isFinished = true;
+            continue;
+        }
+        while (!isFinished && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                isFinished = true;
+                break;
+            }
+            if (!IsDialogMessage(hwndDialog, &msg)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+    }
+
+    if (hwndParent != nullptr) {
+        EnableWindow(hwndParent, TRUE);
+    }
+}
+#endif
+
+#if 0
+// sets initial position of w within hwnd. Assumes w->initialSize is set.
+void PositionCloseTo(Wnd* w, HWND hwnd) {
+    CrashIf(!hwnd);
+    Size is = w->initialSize;
+    CrashIf(is.IsEmpty());
+    RECT r{};
+    BOOL ok = GetWindowRect(hwnd, &r);
+    CrashIf(!ok);
+
+    // position w in the the center of hwnd
+    // if window is bigger than hwnd, let the system position
+    // we don't want to hide it
+    int offX = (RectDx(r) - is.dx) / 2;
+    if (offX < 0) {
+        return;
+    }
+    int offY = (RectDy(r) - is.dy) / 2;
+    if (offY < 0) {
+        return;
+    }
+    Point& ip = w->initialPos;
+    ip.x = (int)r.left + (int)offX;
+    ip.y = (int)r.top + (int)offY;
+}
+#endif
+
+// http://www.guyswithtowels.com/blog/10-things-i-hate-about-win32.html#ModelessDialogs
+// to implement a standard dialog navigation we need to call
+// IsDialogMessage(hwnd) in message loop.
+// hwnd has to be current top-level window that is modeless dialog
+// we need to manually maintain this window
+HWND g_currentModelessDialog = nullptr;
+
+HWND GetCurrentModelessDialog() {
+    return g_currentModelessDialog;
+}
+
+// set to nullptr to disable
+void SetCurrentModelessDialog(HWND hwnd) {
+    g_currentModelessDialog = hwnd;
+}
+
+// TODO: port from Window.cpp or figure out something better
+#if 0
+static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    // ...
+    if (w->isDialog) {
+        // TODO: should handle more messages as per
+        // https://stackoverflow.com/questions/35688400/set-full-focus-on-a-button-setfocus-is-not-enough
+        // and https://docs.microsoft.com/en-us/windows/win32/dlgbox/dlgbox-programming-considerations
+        if (WM_ACTIVATE == msg) {
+            if (wp == 0) {
+                // becoming inactive
+                SetCurrentModelessDialog(nullptr);
+            } else {
+                // becoming active
+                SetCurrentModelessDialog(w->hwnd);
+            }
+        }
+    }
+}
+#endif
 
 void DeleteWnd(Static** wnd) {
     delete *wnd;
@@ -1970,4 +3298,3 @@ void DeleteWnd(Progress** wnd) {
     delete *wnd;
     *wnd = nullptr;
 }
-} // namespace wg

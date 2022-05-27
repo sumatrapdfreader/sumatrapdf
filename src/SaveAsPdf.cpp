@@ -12,7 +12,7 @@ extern "C" {
 
 #include "wingui/UIModels.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "Translations.h"
@@ -67,7 +67,7 @@ struct PdfMerger {
     PdfMerger() = default;
     ~PdfMerger();
     bool MergeAndSave(TocItem*, char* dstPath);
-    bool MergePdfFile(std::string_view);
+    bool MergePdfFile(const char*);
     void MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map) const;
 };
 
@@ -114,8 +114,8 @@ void PdfMerger::MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_ma
     }
 }
 
-bool PdfMerger::MergePdfFile(std::string_view path) {
-    doc_src = pdf_open_document(ctx, path.data());
+bool PdfMerger::MergePdfFile(const char* path) {
+    doc_src = pdf_open_document(ctx, path);
     if (!doc_src) {
         return false;
     }
@@ -146,8 +146,8 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
         if (!ti->engineFilePath) {
             return true;
         }
-        std::string_view path = ti->engineFilePath;
-        filePaths.Append(path.data());
+        char* path = ti->engineFilePath;
+        filePaths.Append(path);
         return true;
     });
 
@@ -172,7 +172,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
 
     bool ok;
     for (int i = 0; i < nFiles; i++) {
-        std::string_view path = filePaths.at(i);
+        const char* path = filePaths.at(i);
         ok = MergePdfFile(path);
         if (!ok) {
             // TODO: show error message

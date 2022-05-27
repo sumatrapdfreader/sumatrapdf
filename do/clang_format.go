@@ -53,7 +53,7 @@ func clangFormatFiles() {
 		whitelisted := []string{
 			"resource.h",
 			"Version.h",
-			"TranslationsInfo.cpp",
+			"TranslationLangs.cpp",
 		}
 		s = strings.ToLower(s)
 		for _, wl := range whitelisted {

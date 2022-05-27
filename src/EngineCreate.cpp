@@ -11,7 +11,7 @@
 
 #include "SumatraConfig.h"
 #include "Annotation.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 
@@ -55,7 +55,7 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     return false;
 }
 
-static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine) {
+static EngineBase* CreateEngineForKind(Kind kind, const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
     if (!kind) {
         return nullptr;
     }
@@ -136,7 +136,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     return nullptr;
 }
 
-EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine) {
+EngineBase* CreateEngine(const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
     CrashIf(!path);
 
     // try to open with the engine guess from file name

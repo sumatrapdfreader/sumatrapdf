@@ -13,11 +13,11 @@
 
 #include "AppColors.h"
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "GlobalPrefs.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Canvas.h"
@@ -25,7 +25,7 @@
 #include "SumatraAbout.h"
 #include "Translations.h"
 
-static void OnPaintAbout(WindowInfo* win) {
+static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
@@ -46,34 +46,33 @@ static void OnPaintAbout(WindowInfo* win) {
     }
 }
 
-static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     // lf("Left button clicked on %d %d", x, y);
 
     // remember a link under so that on mouse up we only activate
     // link if mouse up is on the same link as mouse down
-    win->urlOnLastButtonDown = GetStaticLink(win->staticLinks, x, y, nullptr);
+    win->urlOnLastButtonDown.SetCopy(GetStaticLinkTemp(win->staticLinks, x, y, nullptr));
 }
 
-static bool IsLink(const WCHAR* url) {
-    if (str::StartsWithI(url, L"http:")) {
+static bool IsLink(const char* url) {
+    if (str::StartsWithI(url, "http:")) {
         return true;
     }
-    if (str::StartsWithI(url, L"https:")) {
+    if (str::StartsWithI(url, "https:")) {
         return true;
     }
-    if (str::StartsWithI(url, L"mailto:")) {
+    if (str::StartsWithI(url, "mailto:")) {
         return true;
     }
     return false;
 }
 
-static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
-    SetFocus(win->hwndFrame);
-
-    const WCHAR* url = GetStaticLink(win->staticLinks, x, y, nullptr);
-    const WCHAR* prevUrl = win->urlOnLastButtonDown;
-    win->urlOnLastButtonDown = nullptr;
-    if (!url || url != prevUrl) {
+static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
+    char* url = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
+    char* prevUrl = win->urlOnLastButtonDown;
+    bool clickedURL = url && str::Eq(url, prevUrl);
+    win->urlOnLastButtonDown.Set(nullptr);
+    if (!clickedURL) {
         return;
     }
     if (str::Eq(url, kLinkOpenFile)) {
@@ -87,19 +86,21 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     } else if (IsLink(url)) {
         SumatraLaunchBrowser(url);
     } else {
-        // assume it's a document
-        LoadArgs args(url, win);
+        // assume it's a thumbnail of a document
+        CrashIf(!url);
+        LoadArgs* args = new LoadArgs(url, win);
         LoadDocument(args);
     }
+    // SetFocus(win->hwndFrame);
 }
 
-static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     // lf("Right button clicked on %d %d", x, y);
     SetFocus(win->hwndFrame);
     win->dragStart = Point(x, y);
 }
 
-static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
+static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     int isDrag = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
     if (isDrag) {
         return;
@@ -107,11 +108,11 @@ static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM) {
     OnAboutContextMenu(win, x, y);
 }
 
-static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
+static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
     Point pt;
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo* linkInfo;
-        if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
+        if (GetStaticLinkTemp(win->staticLinks, pt.x, pt.y, &linkInfo)) {
             win->ShowToolTip(linkInfo->infotip, linkInfo->rect);
             SetCursorCached(IDC_HAND);
         } else {
@@ -125,7 +126,7 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     return FALSE;
 }
 
-LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int x = GET_X_LPARAM(lp);
     int y = GET_Y_LPARAM(lp);
     switch (msg) {

@@ -8,7 +8,7 @@ int ListBoxModelStrings::ItemsCount() {
     return strings.Size();
 }
 
-std::string_view ListBoxModelStrings::Item(int i) {
+const char* ListBoxModelStrings::Item(int i) {
     return strings.at(i);
 }
 
@@ -18,7 +18,7 @@ void FillWithItems(HWND hwnd, ListBoxModel* model) {
         for (int i = 0; i < model->ItemsCount(); i++) {
             auto sv = model->Item(i);
             auto ws = ToWstrTemp(sv);
-            ListBox_AddString(hwnd, ws.Get());
+            ListBox_AddString(hwnd, ws);
         }
     }
 }

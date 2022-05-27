@@ -44,12 +44,12 @@ BEGIN
     BEGIN
         BLOCK "040904E4"
         BEGIN
-            VALUE "FileDescription", APP_NAME_STR
+            VALUE "FileDescription", kAppName
             VALUE "FileVersion", VER_RESOURCE_STR
-            VALUE "LegalCopyright", COPYRIGHT_STR
-            VALUE "ProductName", APP_NAME_STR
+            VALUE "LegalCopyright", kCopyrightStr
+            VALUE "ProductName", kAppName
             VALUE "ProductVersion", VER_RESOURCE_STR
-            VALUE "CompanyName", PUBLISHER_STR
+            VALUE "CompanyName", kPublisherStr
         END
     END
     BLOCK "VarFileInfo"

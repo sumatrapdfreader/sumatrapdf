@@ -120,8 +120,7 @@ static const char* gFileExts = DEF_EXT_KIND(EXT);
 static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
-static Kind GetKindByFileExt(const WCHAR* pathW) {
-    char* path = ToUtf8Temp(pathW);
+static Kind GetKindByFileExt(const char* path) {
     auto ext = path::GetExtTemp(path);
     int idx = seqstrings::StrToIdxIS(gFileExts, ext);
     if (idx < 0) {
@@ -140,8 +139,8 @@ static void VerifyExtsMatch() {
     if (gDidVerifyExtsMatch) {
         return;
     }
-    CrashAlwaysIf(kindFileEpub != GetKindByFileExt(L"foo.epub"));
-    CrashAlwaysIf(kindFileJp2 != GetKindByFileExt(L"foo.JP2"));
+    CrashAlwaysIf(kindFileEpub != GetKindByFileExt("foo.epub"));
+    CrashAlwaysIf(kindFileJp2 != GetKindByFileExt("foo.JP2"));
     gDidVerifyExtsMatch = true;
 }
 
@@ -300,22 +299,26 @@ Kind GuessFileTypeFromContent(ByteSlice d) {
 static bool IsEpubArchive(MultiFormatArchive* archive) {
     // assume that if this file exists, this is a epub file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1801
-    AutoFree container(archive->GetFileDataByName("META-INF/container.xml"));
-    if (container.data) {
+    ByteSlice container = archive->GetFileDataByName("META-INF/container.xml");
+    if (container) {
+        container.Free();
         return true;
     }
 
-    AutoFree mimetype(archive->GetFileDataByName("mimetype"));
-    if (!mimetype.data) {
+    ByteSlice mimeType = archive->GetFileDataByName("mimetype");
+    if (!mimeType) {
         return false;
     }
-    char* d = mimetype.data;
+    AutoFree mtFree(mimeType);
+
+    char* mt = (char*)mimeType.Get();
     // trailing whitespace is allowed for the mimetype file
-    for (size_t i = mimetype.size(); i > 0; i--) {
-        if (!str::IsWs(d[i - 1])) {
+    size_t n = mimeType.size();
+    for (size_t i = n; i > 0; i--) {
+        if (!str::IsWs(mt[i - 1])) {
             break;
         }
-        d[i - 1] = '\0';
+        mt[i - 1] = '\0';
     }
 
 #if 0
@@ -326,12 +329,12 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
         return false; 
     }
 #endif
-    if (str::Eq(mimetype.data, "application/epub+zip")) {
+    if (str::Eq(mt, "application/epub+zip")) {
         return true;
     }
     // also open renamed .ibooks files
     // http://en.wikipedia.org/wiki/IBooks#Formats
-    return str::Eq(mimetype.data, "application/x-ibooks+zip");
+    return str::Eq(mt, "application/x-ibooks+zip");
 }
 
 // check if a given file is a likely a .zip archive containing XPS
@@ -350,16 +353,15 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
         return false;
     }
     auto fi = files[0];
-    auto name = fi->name.data();
+    auto name = fi->name;
     return str::EndsWithI(name, ".fb2");
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(const WCHAR* path) {
+Kind GuessFileTypeFromContent(const char* path) {
     CrashIf(!path);
-
     if (path::IsDirectory(path)) {
-        AutoFreeWstr mimetypePath(path::Join(path, L"mimetype"));
+        char* mimetypePath = path::JoinTemp(path, "mimetype");
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
             return kindFileEpub;
         }
@@ -394,13 +396,13 @@ Kind GuessFileTypeFromContent(const WCHAR* path) {
 
 // embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
 // return pointer starting at ":${pdfStream}"
-const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path) {
-    const WCHAR* start = path;
-    const WCHAR* end = start + str::Len(start) - 1;
+const char* FindEmbeddedPdfFileStreamNo(const char* path) {
+    const char* start = path;
+    const char* end = start + str::Len(start) - 1;
 
     int nDigits = 0;
     while (end > start) {
-        WCHAR c = *end;
+        char c = *end;
         if (c == ':') {
             if (nDigits > 0) {
                 return end;
@@ -417,7 +419,7 @@ const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path) {
     return nullptr;
 }
 
-Kind GuessFileTypeFromName(const WCHAR* path) {
+Kind GuessFileTypeFromName(const char* path) {
     VerifyExtsMatch();
 
     if (!path) {
@@ -439,7 +441,7 @@ Kind GuessFileTypeFromName(const WCHAR* path) {
     return nullptr;
 }
 
-Kind GuessFileType(const WCHAR* path, bool sniff) {
+Kind GuessFileType(const char* path, bool sniff) {
     if (sniff) {
         Kind kind = GuessFileTypeFromContent(path);
         if (kind) {
@@ -455,18 +457,18 @@ Kind GuessFileType(const WCHAR* path, bool sniff) {
 static const Kind gImageKinds[] = {kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
                                    kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2, kindFileHeic};
 
-static const WCHAR* gImageFormatExts =
-    L".png\0"
-    L".jpg\0"
-    L".gif\0"
-    L".bmp\0"
-    L".tif\0"
-    L".tga\0"
-    L".jxr\0"
-    L".webp\0"
-    L".jp2\0"
-    L".heic\0"
-    L"\0";
+static const char* gImageFormatExts =
+    ".png\0"
+    ".jpg\0"
+    ".gif\0"
+    ".bmp\0"
+    ".tif\0"
+    ".tga\0"
+    ".jxr\0"
+    ".webp\0"
+    ".jp2\0"
+    ".heic\0"
+    "\0";
 
 static int FindImageKindIdx(Kind kind) {
     int n = (int)dimof(gImageKinds);
@@ -478,7 +480,7 @@ static int FindImageKindIdx(Kind kind) {
     return -1;
 }
 
-const WCHAR* GfxFileExtFromKind(Kind kind) {
+const char* GfxFileExtFromKind(Kind kind) {
     int idx = FindImageKindIdx(kind);
     if (idx >= 0) {
         return seqstrings::IdxToStr(gImageFormatExts, idx);
@@ -486,7 +488,7 @@ const WCHAR* GfxFileExtFromKind(Kind kind) {
     return nullptr;
 }
 
-const WCHAR* GfxFileExtFromData(ByteSlice d) {
+const char* GfxFileExtFromData(ByteSlice d) {
     Kind kind = GuessFileTypeFromContent(d);
     return GfxFileExtFromKind(kind);
 }

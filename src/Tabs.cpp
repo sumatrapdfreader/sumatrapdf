@@ -11,21 +11,18 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/TreeCtrl.h"
-#include "wingui/TabsCtrl.h"
+#include "wingui/WinGui.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "AppColors.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "resource.h"
 #include "Commands.h"
@@ -50,8 +47,6 @@ using Gdiplus::FontStyleItalic;
 using Gdiplus::FontStyleRegular;
 using Gdiplus::FontStyleStrikeout;
 using Gdiplus::FontStyleUnderline;
-using Gdiplus::FrameDimensionPage;
-using Gdiplus::FrameDimensionTime;
 using Gdiplus::Graphics;
 using Gdiplus::GraphicsPath;
 using Gdiplus::Image;
@@ -79,28 +74,28 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-#define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
+#define kTabDefaultBgCol (COLORREF) - 1
 
-#define T_CLOSING (TCN_LAST + 1)
-#define T_CLOSE (TCN_LAST + 2)
-#define T_DRAG (TCN_LAST + 3)
+#define kTabClosing (TCN_LAST + 1)
+#define kTabClose (TCN_LAST + 2)
+#define kTabDrag (TCN_LAST + 3)
 
-#define TABBAR_HEIGHT 24
-#define MIN_TAB_WIDTH 100
+#define kTabBarDy 24
+#define kTabMinDx 100
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScale(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScale(hwnd, kTabBarDy);
     return (int)(dy * factor);
 }
 
 static inline Size GetTabSize(HWND hwnd) {
-    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
-    int dy = DpiScale(hwnd, TABBAR_HEIGHT);
+    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, kTabMinDx));
+    int dy = DpiScale(hwnd, kTabBarDy);
     return Size(dx, dy);
 }
 
 struct TabPainter {
-    TabsCtrl2* tabsCtrl = nullptr;
+    TabsCtrl* tabsCtrl = nullptr;
     PathData* data = nullptr;
     int width = -1;
     int height = -1;
@@ -114,9 +109,9 @@ struct TabPainter {
     bool isDragging = false;
     bool inTitlebar = false;
     LPARAM mouseCoordinates = 0;
-    COLORREF currBgCol{DEFAULT_CURRENT_BG_COL};
+    COLORREF currBgCol{kTabDefaultBgCol};
 
-    TabPainter(TabsCtrl2* ctrl, Size tabSize);
+    TabPainter(TabsCtrl* ctrl, Size tabSize);
     ~TabPainter();
     bool Reshape(int dx, int dy);
     int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) const;
@@ -125,7 +120,7 @@ struct TabPainter {
     int Count() const;
 };
 
-TabPainter::TabPainter(TabsCtrl2* ctrl, Size tabSize) {
+TabPainter::TabPainter(TabsCtrl* ctrl, Size tabSize) {
     tabsCtrl = ctrl;
     hwnd = tabsCtrl->hwnd;
     Reshape(tabSize.dx, tabSize.dy);
@@ -317,8 +312,8 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // draw tab's text
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
         br.SetColor(GdiRgbFromCOLORREF(textCol));
-        WCHAR* text = tabsCtrl->GetTabText(i);
-        gfx.DrawString(text, -1, &f, layout, &sf, &br);
+        char* text = tabsCtrl->GetTabText(i);
+        gfx.DrawString(ToWstrTemp(text), -1, &f, layout, &sf, &br);
 
         // paint "x"'s circle
         iterator.NextMarker(&shape);
@@ -345,15 +340,15 @@ static void SetTabTitle(TabInfo* tab) {
     if (!tab) {
         return;
     }
-    WindowInfo* win = tab->win;
+    MainWindow* win = tab->win;
     int idx = win->tabs.Find(tab);
-    WCHAR* title = (WCHAR*)tab->GetTabTitle();
+    const char* title = tab->GetTabTitle();
     win->tabsCtrl->SetTabText(idx, title);
-    auto tooltip = tab->filePath.AsView();
+    auto tooltip = tab->filePath.Get();
     win->tabsCtrl->SetTooltip(idx, tooltip);
 }
 
-static void NO_INLINE SwapTabs(WindowInfo* win, int tab1, int tab2) {
+static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
     if (tab1 == tab2 || tab1 < 0 || tab2 < 0) {
         return;
     }
@@ -371,7 +366,7 @@ static void NO_INLINE SwapTabs(WindowInfo* win, int tab1, int tab2) {
     win->tabsCtrl->SetSelectedTabByIndex(newSelected);
 }
 
-static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
+static void TabNotification(MainWindow* win, UINT code, int idx1, int idx2) {
     if (!WindowInfoStillValid(win)) {
         return;
     }
@@ -380,7 +375,7 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
         return;
     }
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
-    if ((UINT)T_CLOSING == code) {
+    if ((UINT)kTabClosing == code) {
         // if we have permission to close the tab
         tab->Invalidate(tab->nextTab);
         tab->xClicked = tab->nextTab;
@@ -400,7 +395,7 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
 static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __unused UINT_PTR uIdSubclass,
                                          DWORD_PTR dwRefData) {
     if (msg == WM_NOTIFY && wp == IDC_TABBAR) {
-        WindowInfo* win = (WindowInfo*)dwRefData;
+        MainWindow* win = (MainWindow*)dwRefData;
         if (win) {
             return TabsOnNotify(win, lp);
         }
@@ -533,9 +528,9 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             if (tab->highlighted != hl) {
                 if (tab->isDragging) {
                     // send notification if the highlighted tab is dragged over another
-                    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+                    MainWindow* win = FindWindowInfoByHwnd(hwnd);
                     int tabNo = tab->highlighted;
-                    uitask::Post([=] { TabNotification(win, T_DRAG, tabNo, hl); });
+                    uitask::Post([=] { TabNotification(win, kTabDrag, tabNo, hl); });
                 }
 
                 tab->Invalidate(hl);
@@ -565,13 +560,13 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
                 // send request to close the tab
-                WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSING, next, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
             } else if (tab->nextTab != -1) {
                 if (tab->nextTab != tab->selectedTabIdx) {
                     // send request to select tab
-                    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+                    MainWindow* win = FindWindowInfoByHwnd(hwnd);
                     uitask::Post([=] { TabNotification(win, (UINT)TCN_SELCHANGING, -1, -1); });
                 }
                 tab->isDragging = true;
@@ -582,9 +577,9 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
         case WM_LBUTTONUP:
             if (tab->xClicked != -1) {
                 // send notification that the tab is closed
-                WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindWindowInfoByHwnd(hwnd);
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSE, clicked, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -599,18 +594,18 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             {
                 tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
                 // send request to close the tab
-                WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSING, next, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
             }
             return 0;
 
         case WM_MBUTTONUP:
             if (tab->xClicked != -1) {
                 // send notification that the tab is closed
-                WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindWindowInfoByHwnd(hwnd);
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, (UINT)T_CLOSE, clicked, -1); });
+                uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -637,7 +632,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
         }
 
         case WM_SIZE: {
-            WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+            MainWindow* win = FindWindowInfoByHwnd(hwnd);
             if (win) {
                 UpdateTabWidth(win);
             }
@@ -647,11 +642,14 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-void CreateTabbar(WindowInfo* win) {
-    TabsCtrl2* tabsCtrl = new TabsCtrl2();
-    tabsCtrl->ctrlID = IDC_TABBAR;
-    tabsCtrl->createToolTipsHwnd = true;
-    tabsCtrl->Create(win->hwndFrame);
+void CreateTabbar(MainWindow* win) {
+    TabsCtrl* tabsCtrl = new TabsCtrl();
+
+    TabsCreateArgs args;
+    args.parent = win->hwndFrame;
+    args.ctrlID = IDC_TABBAR;
+    args.createToolTipsHwnd = true;
+    tabsCtrl->Create(args);
 
     HWND hwndTabBar = tabsCtrl->hwnd;
     SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);
@@ -666,8 +664,8 @@ void CreateTabbar(WindowInfo* win) {
     win->tabSelectionHistory = new Vec<TabInfo*>();
 }
 
-// verifies that TabInfo state is consistent with WindowInfo state
-static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
+// verifies that TabInfo state is consistent with MainWindow state
+static NO_INLINE void VerifyTabInfo(MainWindow* win, TabInfo* tdata) {
     CrashIf(tdata->ctrl != win->ctrl);
 #if 0
     // disabling this check. best I can tell, external apps can change window
@@ -691,7 +689,7 @@ static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
 
 // Must be called when the active tab is losing selection.
 // This happens when a new document is loaded or when another tab is selected.
-void SaveCurrentTabInfo(WindowInfo* win) {
+void SaveCurrentTabInfo(MainWindow* win) {
     if (!win) {
         return;
     }
@@ -705,7 +703,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     if (win->tocLoaded) {
         TocTree* tocTree = tab->ctrl->GetToc();
-        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
+        UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
     }
     VerifyTabInfo(win, tab);
 
@@ -714,15 +712,15 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     win->tabSelectionHistory->Append(tab);
 }
 
-void UpdateCurrentTabBgColor(WindowInfo* win) {
+void UpdateCurrentTabBgColor(MainWindow* win) {
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
     // TODO: match either the toolbar (if shown) or background
-    tab->currBgCol = DEFAULT_CURRENT_BG_COL;
+    tab->currBgCol = kTabDefaultBgCol;
     RepaintNow(win->tabsCtrl->hwnd);
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
-TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
+TabInfo* CreateNewTab(MainWindow* win, const char* filePath) {
     CrashIf(!win);
     if (!win) {
         return nullptr;
@@ -733,15 +731,16 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     tab->canvasRc = win->canvasRc;
 
     int idx = (int)win->tabs.size() - 1;
-    int insertedIdx = win->tabsCtrl->InsertTab(idx, (WCHAR*)tab->GetTabTitle());
+    auto tabs = win->tabsCtrl;
+    int insertedIdx = tabs->InsertTab(idx, tab->GetTabTitle());
     CrashIf(insertedIdx == -1);
-    win->tabsCtrl->SetSelectedTabByIndex(idx);
+    tabs->SetSelectedTabByIndex(idx);
     UpdateTabWidth(win);
     return tab;
 }
 
 // Refresh the tab's title
-void TabsOnChangedDoc(WindowInfo* win) {
+void TabsOnChangedDoc(MainWindow* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab != !win->tabs.size());
     if (!tab) {
@@ -753,7 +752,7 @@ void TabsOnChangedDoc(WindowInfo* win) {
     SetTabTitle(tab);
 }
 
-static void RemoveTab(WindowInfo* win, int idx) {
+static void RemoveTab(MainWindow* win, int idx) {
     TabInfo* tab = win->tabs.at(idx);
     UpdateTabFileDisplayStateForTab(tab);
     win->tabSelectionHistory->Remove(tab);
@@ -768,7 +767,7 @@ static void RemoveTab(WindowInfo* win, int idx) {
 }
 
 // Called when we're closing a document
-void TabsOnCloseDoc(WindowInfo* win) {
+void TabsOnCloseDoc(MainWindow* win) {
     if (win->tabs.size() == 0) {
         return;
     }
@@ -796,7 +795,7 @@ void TabsOnCloseDoc(WindowInfo* win) {
 }
 
 // Called when we're closing an entire window (quitting)
-void TabsOnCloseWindow(WindowInfo* win) {
+void TabsOnCloseWindow(MainWindow* win) {
     win->tabsCtrl->RemoveAllTabs();
     win->tabSelectionHistory->Reset();
     win->currentTab = nullptr;
@@ -805,8 +804,8 @@ void TabsOnCloseWindow(WindowInfo* win) {
 }
 
 // On tab selection, we save the data for the tab which is losing selection and
-// load the data of the selected tab into the WindowInfo.
-LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
+// load the data of the selected tab into the MainWindow.
+LRESULT TabsOnNotify(MainWindow* win, LPARAM lp, int tab1, int tab2) {
     LPNMHDR data = (LPNMHDR)lp;
     int current;
 
@@ -821,11 +820,11 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             LoadModelIntoTab(win->tabs.at(current));
             break;
 
-        case T_CLOSING:
+        case kTabClosing:
             // allow the closure
             return FALSE;
 
-        case T_CLOSE:
+        case kTabClose:
             current = win->tabsCtrl->GetSelectedTabIndex();
             if (tab1 == current) {
                 CloseCurrentTab(win);
@@ -834,7 +833,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             }
             break;
 
-        case T_DRAG:
+        case kTabDrag:
             SwapTabs(win, tab1, tab2);
             break;
         case TTN_GETDISPINFOA:
@@ -845,7 +844,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
     return TRUE;
 }
 
-static void ShowTabBar(WindowInfo* win, bool show) {
+static void ShowTabBar(MainWindow* win, bool show) {
     if (show == win->tabsVisible) {
         return;
     }
@@ -854,7 +853,7 @@ static void ShowTabBar(WindowInfo* win, bool show) {
     RelayoutWindow(win);
 }
 
-void UpdateTabWidth(WindowInfo* win) {
+void UpdateTabWidth(MainWindow* win) {
     int count = (int)win->tabs.size();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     bool showTabs = (count > 1) || (showSingleTab && (count > 0));
@@ -871,7 +870,7 @@ void UpdateTabWidth(WindowInfo* win) {
     win->tabsCtrl->MaybeUpdateTooltip();
 }
 
-void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar) {
+void SetTabsInTitlebar(MainWindow* win, bool inTitlebar) {
     if (inTitlebar == win->tabsInTitlebar) {
         return;
     }
@@ -897,7 +896,7 @@ void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar) {
 }
 
 // Selects the given tab (0-based index).
-void TabsSelect(WindowInfo* win, int tabIndex) {
+void TabsSelect(MainWindow* win, int tabIndex) {
     int count = (int)win->tabs.size();
     if (count < 2 || tabIndex < 0 || tabIndex >= count) {
         return;
@@ -907,8 +906,8 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
         return;
     }
     win->currentTab = win->tabs.at(tabIndex);
-    auto path = ToUtf8Temp(win->currentTab->filePath);
-    logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
+    char* path = win->currentTab->filePath;
+    logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path);
     int prevIdx = win->tabsCtrl->SetSelectedTabByIndex(tabIndex);
     if (prevIdx != -1) {
         ntd.code = (UINT)TCN_SELCHANGE;
@@ -917,7 +916,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
 }
 
 // Selects the next (or previous) tab.
-void TabsOnCtrlTab(WindowInfo* win, bool reverse) {
+void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     int count = (int)win->tabs.size();
     if (count < 2) {
         return;

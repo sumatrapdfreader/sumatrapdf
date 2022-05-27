@@ -64,8 +64,8 @@ size_t ByteWriter::Size() const {
     return d.size();
 }
 
-ByteSlice ByteWriter::AsSpan() const {
-    return d.AsSpan();
+ByteSlice ByteWriter::AsByteSlice() const {
+    return d.AsByteSlice();
 }
 
 ByteWriterLE::ByteWriterLE(size_t sizeHint) {

@@ -9,7 +9,7 @@
 #include "DisplayMode.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"
 
@@ -36,74 +36,78 @@ Flags::~Flags() {
 }
 
 static void EnumeratePrinters() {
-    str::WStr output;
+    str::Str out;
 
     PRINTER_INFO_5* info5Arr = nullptr;
     DWORD bufSize = 0;
     DWORD printersCount = 0;
-    BOOL ok =
-        EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr, 0, &bufSize, &printersCount);
+    DWORD flags = PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS;
+    BOOL ok = EnumPrintersW(flags, nullptr, 5, nullptr, 0, &bufSize, &printersCount);
     if (ok != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-        info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
+        info5Arr = (PRINTER_INFO_5*)calloc(bufSize, 1);
         if (info5Arr != nullptr) {
-            ok = EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, (LPBYTE)info5Arr, bufSize,
-                               &bufSize, &printersCount);
+            ok = EnumPrintersW(flags, nullptr, 5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
         }
     }
     if (ok == 0 || !info5Arr) {
-        output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
-        MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
+        out.AppendFmt("Call to EnumPrinters failed with error %#x", GetLastError());
+        MessageBoxA(nullptr, out.Get(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
         free(info5Arr);
         return;
     }
-    AutoFreeWstr defName(GetDefaultPrinterName());
+    char* defName = GetDefaultPrinterNameTemp();
     for (DWORD i = 0; i < printersCount; i++) {
-        const WCHAR* printerName = info5Arr[i].pPrinterName;
-        const WCHAR* printerPort = info5Arr[i].pPortName;
-        bool fDefault = str::Eq(defName, printerName);
-        output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort, info5Arr[i].Attributes,
-                         fDefault ? L", default" : L"");
+        PRINTER_INFO_5& info = info5Arr[i];
+        const WCHAR* nameW = info.pPrinterName;
+        const WCHAR* portW = info.pPortName;
+        DWORD attr = info.Attributes;
+        char* name = ToUtf8Temp(nameW);
+        char* port = ToUtf8Temp(portW);
+        const char* defStr = str::Eq(defName, name) ? ", default" : "";
+        out.AppendFmt("%s (Port: %s, attributes: %#x%s)\n", name, port, attr, defStr);
 
-        DWORD bins = DeviceCapabilities(printerName, printerPort, DC_BINS, nullptr, nullptr);
-        DWORD binNames = DeviceCapabilities(printerName, printerPort, DC_BINNAMES, nullptr, nullptr);
+        DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
+        DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
         CrashIf(bins != binNames);
         if (0 == bins) {
-            output.Append(L" - no paper bins available\n");
+            out.Append(" - no paper bins available\n");
         } else if (bins == (DWORD)-1) {
-            output.AppendFmt(L" - Call to DeviceCapabilities failed with error %#x\n", GetLastError());
+            out.AppendFmt(" - Call to DeviceCapabilities failed with error %#x\n", GetLastError());
         } else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
-            AutoFreeWstr binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
-            DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
+            DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
+            ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
+            DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
-                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * (size_t)j, binValues.Get()[j]);
+                WCHAR* ws = binNameValues.Get() + 24 * (size_t)j;
+                char* s = ToUtf8Temp(ws);
+                out.AppendFmt(" - '%s' (%d)\n", s, binValues.Get()[j]);
             }
         }
     }
     free(info5Arr);
-    MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(nullptr, out.Get(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
 // caller must delete the result
-bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
+bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
     if (!ranges) {
         return false;
     }
 
-    WStrVec rangeList;
-    rangeList.Split(ranges, L",", true);
+    StrVec rangeList;
+    Split(rangeList, ranges, ",", true);
     rangeList.SortNatural();
 
-    for (size_t i = 0; i < rangeList.size(); i++) {
+    for (char* rangeStr : rangeList) {
         int start, end;
-        if (str::Parse(rangeList.at(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end) {
+        if (str::Parse(rangeStr, "%d-%d%$", &start, &end) && 0 < start && start <= end) {
             result.Append(PageRange{start, end});
-        } else if (str::Parse(rangeList.at(i), L"%d-%$", &start) && 0 < start) {
+        } else if (str::Parse(rangeStr, "%d-%$", &start) && 0 < start) {
             result.Append(PageRange{start, INT_MAX});
-        } else if (str::Parse(rangeList.at(i), L"%d%$", &start) && 0 < start) {
+        } else if (str::Parse(rangeStr, "%d%$", &start) && 0 < start) {
             result.Append(PageRange{start, start});
         } else {
             return false;
@@ -116,7 +120,7 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
 // a valid page range is a non-empty, comma separated list of either
 // single page ("3") numbers, closed intervals "2-4" or intervals
 // unlimited to the right ("5-")
-bool IsValidPageRange(const WCHAR* ranges) {
+bool IsValidPageRange(const char* ranges) {
     Vec<PageRange> rangeList;
     return ParsePageRanges(ranges, rangeList);
 }
@@ -124,14 +128,13 @@ bool IsValidPageRange(const WCHAR* ranges) {
 // <s> can be:
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
-bool IsBenchPagesInfo(const WCHAR* s) {
-    return str::EqI(s, L"loadonly") || IsValidPageRange(s);
+bool IsBenchPagesInfo(const char* s) {
+    return str::EqI(s, "loadonly") || IsValidPageRange(s);
 }
 
 // -view [continuous][singlepage|facing|bookview]
-static void ParseViewMode(DisplayMode* mode, const WCHAR* txt) {
-    auto s = ToUtf8Temp(txt);
-    *mode = DisplayModeFromString(s.Get(), DisplayMode::Automatic);
+static void ParseViewMode(DisplayMode* mode, const char* s) {
+    *mode = DisplayModeFromString(s, DisplayMode::Automatic);
 }
 
 static const char* zoomValues =
@@ -141,9 +144,9 @@ static const char* zoomValues =
 // -zoom [fitwidth|fitpage|fitcontent|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
-static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
-    auto txtDup = ToUtf8Temp(txtOrig);
-    char* txt = str::ToLowerInPlace(txtDup.Get());
+static void ParseZoomValue(float* zoom, const char* txtOrig) {
+    auto txtDup = str::DupTemp(txtOrig);
+    char* txt = str::ToLowerInPlace(txtDup);
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
     if (zoomVal >= 0) {
         // 0-2 : fit page
@@ -171,9 +174,9 @@ static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
 }
 
 // -scroll x,y
-static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
+static void ParseScrollValue(Point* scroll, const char* txt) {
     int x, y;
-    if (str::Parse(txt, L"%d,%d%$", &x, &y)) {
+    if (str::Parse(txt, "%d,%d%$", &x, &y)) {
         *scroll = Point(x, y);
     }
 }
@@ -224,8 +227,9 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(Scroll, "scroll")                          \
     V(AppData, "appdata")                        \
     V(Plugin, "plugin")                          \
-    V(ArgStressTest, "stress-test")              \
+    V(StressTest, "stress-test")                 \
     V(N, "n")                                    \
+    V(Max, "max")                                \
     V(Render, "render")                          \
     V(ExtractText, "extract-text")               \
     V(Bench, "bench")                            \
@@ -245,6 +249,7 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(AllUsers, "all-users")                     \
     V(AllUsers2, "allusers")                     \
     V(RunInstallNow, "run-install-now")          \
+    V(TestBrowser, "test-browser")               \
     V(SetColorRange, "set-color-range")
 
 #define MAKE_ARG(__arg, __name) __arg,
@@ -254,11 +259,11 @@ enum class Arg { Unknown = -1, ARGS(MAKE_ARG) };
 
 static const char* gArgNames = ARGS(MAKE_STR);
 
-static Arg GetArg(const WCHAR* s) {
+static Arg GetArg(const char* s) {
     if (!CouldBeArg(s)) {
         return Arg::Unknown;
     }
-    char* arg = ToUtf8Temp(s + 1);
+    const char* arg = s + 1;
     int idx = seqstrings::StrToIdxIS(gArgNames, arg);
     if (idx < 0) {
         return Arg::Unknown;
@@ -270,10 +275,10 @@ static Arg GetArg(const WCHAR* s) {
 void ParseFlags(const WCHAR* cmdLine, Flags& i) {
     CmdLineArgsIter args(cmdLine);
 
-    const WCHAR* param = nullptr;
+    const char* param = nullptr;
     int paramInt = 0;
 
-    for (auto argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
+    for (const char* argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
         Arg arg = GetArg(argName);
         if (arg == Arg::Unknown) {
             goto CollectFile;
@@ -285,7 +290,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::PrintToDefault) {
-            i.printerName = GetDefaultPrinterName();
+            i.printerName = str::Dup(GetDefaultPrinterNameTemp());
             if (!i.printerName) {
                 i.printDialog = true;
             }
@@ -378,6 +383,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.runInstallNow = true;
             continue;
         }
+        if (arg == Arg::TestBrowser) {
+            i.testBrowser = true;
+            continue;
+        }
         if (arg == Arg::AllUsers || arg == Arg::AllUsers2) {
             i.allUsers = true;
             continue;
@@ -395,7 +404,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::EscToExit) {
-            i.globalPrefArgs.Append(str::Dup(argName));
+            i.globalPrefArgs.Append(argName);
             continue;
         }
         if (arg == Arg::ArgEnumPrinters && (gIsDebugBuild || gIsPreReleaseBuild)) {
@@ -412,7 +421,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // one of the args without params, so assume this is a file that starts with '-'
             goto CollectFile;
         }
-        paramInt = _wtoi(param);
+        paramInt = atoi(param);
 
         if (arg == Arg::SleepMs) {
             i.sleepMs = paramInt;
@@ -429,8 +438,8 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             i.printSettings = str::Dup(param);
-            str::RemoveCharsInPlace(i.printSettings, L" ");
-            str::TransCharsInPlace(i.printSettings, L";", L",");
+            str::RemoveCharsInPlace(i.printSettings, " ");
+            str::TransCharsInPlace(i.printSettings, ";", ",");
             continue;
         }
         if (arg == Arg::InverseSearch) {
@@ -441,7 +450,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             i.forwardSearchOrigin = str::Dup(param);
-            i.forwardSearchLine = _wtoi(args.EatParam());
+            i.forwardSearchLine = atoi(args.EatParam());
             continue;
         }
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
@@ -477,14 +486,14 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
                 i.pluginURL = str::Dup(param);
-                i.hwndPluginParent = (HWND)(INT_PTR)_wtol(args.EatParam());
+                i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam());
             } else {
-                i.hwndPluginParent = (HWND)(INT_PTR)_wtol(param);
+                i.hwndPluginParent = (HWND)(INT_PTR)atol(param);
             }
             continue;
         }
 
-        if (arg == Arg::ArgStressTest) {
+        if (arg == Arg::StressTest) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
             // count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
@@ -493,7 +502,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             i.stressTestPath = str::Dup(param);
             int num;
-            const WCHAR* s = args.AdditionalParam(1);
+            const char* s = args.AdditionalParam(1);
             if (s && str::FindChar(s, '*')) {
                 i.stressTestFilter = str::Dup(args.EatParam());
                 s = args.AdditionalParam(1);
@@ -502,7 +511,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
                 i.stressTestRanges = str::Dup(args.EatParam());
                 s = args.AdditionalParam(1);
             }
-            if (s && str::Parse(s, L"%dx%$", &num) && num > 0) {
+            if (s && str::Parse(s, "%dx%$", &num) && num > 0) {
                 i.stressTestCycles = num;
                 args.EatParam();
             }
@@ -512,6 +521,9 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::N) {
             i.stressParallelCount = paramInt;
             continue;
+        }
+        if (arg == Arg::Max) {
+            i.stressTestMax = paramInt;
         }
         if (arg == Arg::Render) {
             i.testRenderPage = true;
@@ -524,11 +536,11 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Bench) {
-            i.pathsToBenchmark.Append(str::Dup(param));
-            const WCHAR* s = args.AdditionalParam(1);
+            i.pathsToBenchmark.Append(param);
+            const char* s = args.AdditionalParam(1);
             if (s && IsBenchPagesInfo(s)) {
-                s = str::Dup(args.EatParam());
-                i.pathsToBenchmark.Append((WCHAR*)s);
+                s = args.EatParam();
+                i.pathsToBenchmark.Append(s);
             } else {
                 // pathsToBenchmark are always in pairs
                 // i.e. path + page spec
@@ -549,7 +561,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::Lang) {
             // TODO: remove the following deprecated options within
             // a release or two
-            i.lang = strconv::WstrToUtf8(param);
+            i.lang = str::Dup(param);
             continue;
         }
         if (arg == Arg::UpdateSelfTo) {
@@ -566,29 +578,28 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||
             arg == Arg::FwdSearchColor || arg == Arg::FwdSearchPermanent || arg == Arg::MangaMode) {
-            i.globalPrefArgs.Append(str::Dup(argName));
-            i.globalPrefArgs.Append(str::Dup(param));
+            i.globalPrefArgs.Append(argName);
+            i.globalPrefArgs.Append(param);
             continue;
         }
         if (arg == Arg::SetColorRange && args.AdditionalParam(1)) {
-            i.globalPrefArgs.Append(str::Dup(argName));
-            i.globalPrefArgs.Append(str::Dup(param));
-            i.globalPrefArgs.Append(str::Dup(args.EatParam()));
+            i.globalPrefArgs.Append(argName);
+            i.globalPrefArgs.Append(param);
+            i.globalPrefArgs.Append(args.EatParam());
             continue;
         }
         // again, argName is any of the known args, so assume it's a file starting with '-'
         args.RewindParam();
 
     CollectFile:
-        WCHAR* filePath = nullptr;
         // TODO: resolve .lnk when opening file
-        if (str::EndsWithI(argName, L".lnk")) {
-            filePath = ResolveLnk(argName);
+        const char* filePath = argName;
+        if (str::EndsWithI(filePath, ".lnk")) {
+            filePath = ResolveLnkTemp(argName);
         }
-        if (!filePath) {
-            filePath = str::Dup(argName);
+        if (filePath) { // resolve might fail
+            i.fileNames.Append(filePath);
         }
-        i.fileNames.Append(filePath);
     }
 
     if (i.justExtractFiles) {
@@ -596,7 +607,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         // or current directory if no /d given
         i.silent = true;
         if (!i.installDir) {
-            i.installDir = str::Dup(L".");
+            i.installDir = str::Dup(".");
         }
     }
 }

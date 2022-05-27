@@ -3,14 +3,14 @@
 
 struct GlobalPrefs;
 
-WCHAR* Dialog_GoToPage(HWND hwnd, const WCHAR* currentPageLabel, int pageCount, bool onlyNumeric = true);
+char* Dialog_GoToPage(HWND hwnd, const char* currentPageLabel, int pageCount, bool onlyNumeric = true);
 WCHAR* Dialog_Find(HWND hwnd, const WCHAR* previousSearch, bool* matchCase);
-WCHAR* Dialog_GetPassword(HWND hwnd, const WCHAR* fileName, bool* rememberPassword);
+char* Dialog_GetPassword(HWND hwnd, const char* fileName, bool* rememberPassword);
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool* dontAskAgainOut);
 const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode);
 bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
-bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeWstr& favName);
+bool Dialog_AddFavorite(HWND hwnd, const char* pageNo, AutoFreeStr& favName);
 
 enum class PrintRangeAdv { All = 0, Even, Odd };
 enum class PrintScaleAdv { None = 0, Shrink, Fit };

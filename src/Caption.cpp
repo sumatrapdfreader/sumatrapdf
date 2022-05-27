@@ -5,15 +5,15 @@
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/TabsCtrl.h"
+#include "wingui/WinGui.h"
 
 #include "Settings.h"
 #include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "Caption.h"
 #include "Tabs.h"
 #include "Translations.h"
@@ -53,11 +53,8 @@ using Gdiplus::SolidBrush;
 #define NON_CLIENT_BAND 1
 // This non-client-band hack is only needed for maximized non-fullscreen windows:
 static inline bool NeedsNonClientBandHack(HWND hwnd) {
-    return IsZoomed(hwnd) && win::HasCaption(hwnd);
+    return IsZoomed(hwnd) && HwndHasCaption(hwnd);
 }
-
-// http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
-#define REG_DWM L"Software\\Microsoft\\Windows\\DWM"
 
 // When DWM composition is enabled, this is the ratio between alpha channels of active and inactive caption colors.
 #define ACTIVE_INACTIVE_ALPHA_RATIO 2.0f
@@ -101,10 +98,10 @@ struct CaptionInfo {
     void UpdateBackgroundAlpha();
 };
 
-static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win);
-static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer);
+static void DrawCaptionButton(DRAWITEMSTRUCT* item, MainWindow* win);
+static void PaintCaptionBackground(HDC hdc, MainWindow* win, bool useDoubleBuffer);
 static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem);
-static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y);
+static void MenuBarAsPopupMenu(MainWindow* win, int x, int y);
 
 CaptionInfo::CaptionInfo(HWND hwndCaption) : hwnd(hwndCaption) {
     UpdateTheme();
@@ -132,11 +129,14 @@ void CaptionInfo::UpdateTheme() {
     }
 }
 
+// http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
+#define REG_DWM "Software\\Microsoft\\Windows\\DWM"
+
 void CaptionInfo::UpdateColors(bool activeWindow) {
     ARGB colorizationColor;
     if (dwm::IsCompositionEnabled() &&
         // get the color from the Registry and blend it with white background
-        ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", colorizationColor)) {
+        ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, "ColorizationColor", colorizationColor)) {
         BYTE A, R, G, B, white;
         A = BYTE((colorizationColor >> 24) & 0xff);
         if (!activeWindow) {
@@ -171,8 +171,8 @@ void SetCaptionButtonsRtl(CaptionInfo* caption, bool isRTL) {
     }
 }
 
-// TODO: could lookup WindowInfo ourselves
-void CaptionUpdateUI(WindowInfo* win, CaptionInfo* caption) {
+// TODO: could lookup MainWindow ourselves
+void CaptionUpdateUI(MainWindow* win, CaptionInfo* caption) {
     caption->UpdateTheme();
     caption->UpdateColors(win->hwndFrame == GetForegroundWindow());
     caption->UpdateBackgroundAlpha();
@@ -183,7 +183,7 @@ void DeleteCaption(CaptionInfo* caption) {
 }
 
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
 
     switch (msg) {
         case WM_COMMAND:
@@ -281,7 +281,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return 0;
 }
 
-void OpenSystemMenu(WindowInfo* win) {
+void OpenSystemMenu(MainWindow* win) {
     HWND hwndSysMenu = win->caption->btn[CB_SYSTEM_MENU].hwnd;
     HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
     RECT rc;
@@ -293,7 +293,7 @@ void OpenSystemMenu(WindowInfo* win) {
 
 static WNDPROC DefWndProcButton = nullptr;
 static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
     switch (msg) {
@@ -363,7 +363,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
 }
 
-void CreateCaption(WindowInfo* win) {
+void CreateCaption(MainWindow* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_CHILDWINDOW | WS_CLIPCHILDREN;
     HWND hwndParent = win->hwndFrame;
@@ -392,7 +392,7 @@ void RegisterCaptionWndClass() {
     RegisterClassEx(&wcex);
 }
 
-void RelayoutCaption(WindowInfo* win) {
+void RelayoutCaption(MainWindow* win) {
     Rect rc = ClientRect(win->hwndCaption);
     CaptionInfo* ci = win->caption;
     ButtonInfo* button;
@@ -459,7 +459,7 @@ void RelayoutCaption(WindowInfo* win) {
     dh.End();
 }
 
-static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
+static void DrawCaptionButton(DRAWITEMSTRUCT* item, MainWindow* win) {
     if (!item || item->CtlType != ODT_BUTTON) {
         return;
     }
@@ -587,7 +587,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
     InvalidateRect(parent, nullptr, TRUE);
 }
 
-static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer) {
+static void PaintCaptionBackground(HDC hdc, MainWindow* win, bool useDoubleBuffer) {
     RECT rClip;
     GetClipBox(hdc, &rClip);
     Rect rect = Rect::FromRECT(rClip);
@@ -643,7 +643,7 @@ static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge = true) {
 // (can be static because there can only be one menu active at a time)
 static WCHAR gMenuAccelPressed = 0;
 
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, WindowInfo* win) {
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, MainWindow* win) {
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
@@ -682,12 +682,12 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                 // Extend the translucent frame in the client area.
                 if (wp == SIZE_MAXIMIZED || wp == SIZE_RESTORED) {
                     int frameThickness = 0;
-                    if (win::HasFrameThickness(hwnd)) {
+                    if (HwndHasFrameThickness(hwnd)) {
                         frameThickness = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
                     }
                     int captionHeight = 0;
-                    if (win::HasCaption(hwnd)) {
-                        float tabScale = CAPTION_TABBAR_HEIGHT_FACTOR;
+                    if (HwndHasCaption(hwnd)) {
+                        float tabScale = kCaptionTabBarDyFactor;
                         if (IsZoomed(hwnd)) {
                             tabScale = 1.f;
                         }
@@ -906,7 +906,7 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
     return menu;
 }
 
-static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
+static void MenuBarAsPopupMenu(MainWindow* win, int x, int y) {
     int count = GetMenuItemCount(win->menu);
     if (count <= 0) {
         return;

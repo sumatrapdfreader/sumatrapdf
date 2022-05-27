@@ -181,7 +181,7 @@ func runClangTidy(fix bool) {
 		whitelisted := []string{
 			"resource.h",
 			"Version.h",
-			"TranslationsInfo.cpp",
+			"TranslationLangs.cpp",
 			"signfile.cpp",
 			// those fail due to DrawInstr
 			"Doc.cpp",

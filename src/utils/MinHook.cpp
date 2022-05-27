@@ -1302,10 +1302,11 @@ static VOID Freeze(FROZEN_THREADS* pThreads, HOOK_ENTRY* pHooks, int nHooks, UIN
 }
 
 static VOID Unfreeze(FROZEN_THREADS* pThreads) {
-    UINT i;
-    for (i = 0; i < pThreads->size; ++i) {
-        HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
-        if (hThread != nullptr) {
+    HANDLE hThread = nullptr;
+    uint n = pThreads->size;
+    for (uint i = 0; i < n; ++i) {
+        hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
+        if (hThread) {
             ResumeThread(hThread);
             CloseHandle(hThread);
         }
@@ -1370,7 +1371,7 @@ static MH_STATUS EnableOrDisableHooksLL(HOOK_ENTRY* pHooks, int nHooks, BOOL ena
         return status;
     }
 
-    FROZEN_THREADS threads;
+    FROZEN_THREADS threads = {0};
     Freeze(&threads, pHooks, nHooks, enable ? ACTION_ENABLE : ACTION_DISABLE);
 
     for (int i = first; i < nHooks; ++i) {

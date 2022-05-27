@@ -82,9 +82,6 @@
     <ClInclude Include="..\src\utils\StrconvUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\StringViewUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\TempAllocator.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -171,9 +168,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrconvUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\StringViewUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\TempAllocator.cpp">

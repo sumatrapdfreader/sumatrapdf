@@ -19,7 +19,7 @@ class ScopedMem {
         free(ptr);
         ptr = newPtr;
     }
-    [[nodiscard]] T* Get() const {
+    T* Get() const {
         return ptr;
     }
     T* StealData() {
@@ -27,41 +27,12 @@ class ScopedMem {
         ptr = nullptr;
         return tmp;
     }
-    [[nodiscard]] operator T*() const { // NOLINT
+    operator T*() const { // NOLINT
         return ptr;
     }
 };
 
-// deletes any object at the end of the scope
-template <class T>
-class ScopedPtr {
-    T* obj = nullptr;
-
-  public:
-    ScopedPtr() = default;
-    explicit ScopedPtr(T* obj) : obj(obj) {
-    }
-    ~ScopedPtr() {
-        delete obj;
-    }
-    T* Detach() {
-        T* tmp = obj;
-        obj = nullptr;
-        return tmp;
-    }
-    explicit operator T*() const {
-        return obj;
-    }
-    T* operator->() const {
-        return obj;
-    }
-    T* operator=(T* newObj) {
-        delete obj;
-        obj = newObj;
-        return obj;
-    }
-};
-
+// deletes an object at the end of the scope
 template <typename T>
 struct AutoDelete {
     T* o = nullptr;
@@ -78,14 +49,14 @@ struct AutoDelete {
     AutoDelete& operator=(const AutoDelete& other) = delete;
     AutoDelete& operator=(const AutoDelete&& other) = delete;
 
-    [[nodiscard]] operator T*() const { // NOLINT
+    operator T*() const { // NOLINT
         return o;
     }
-    [[nodiscard]] T* operator->() const { // NOLINT
+    T* operator->() const { // NOLINT
         return o;
     }
 
-    [[nodiscard]] T* Get() const {
+    T* Get() const {
         return o;
     }
 };
@@ -95,7 +66,6 @@ struct AutoDelete {
 // AutoFree toFree = str::Dup("foo");
 struct AutoFree {
     char* data = nullptr;
-    size_t len = 0;
 
     AutoFree() = default;
     AutoFree(AutoFree& other) = delete;
@@ -103,34 +73,15 @@ struct AutoFree {
 
     AutoFree(const char* p) { // NOLINT
         data = (char*)p;
-        len = str::Len(data);
     }
 
     AutoFree(const u8* p) { // NOLINT
         data = (char*)p;
-        len = str::Len(data);
-    }
-
-    AutoFree(std::string_view s) { // NOLINT
-        data = (char*)s.data();
-        len = s.size();
-    }
-
-    AutoFree(ByteSlice s) { // NOLINT
-        data = (char*)s.data();
-        len = s.size();
     }
 
     void Set(const char* newPtr) {
         free(data);
         data = (char*)newPtr;
-        len = str::Len(data);
-    }
-
-    void Set(ByteSlice d) {
-        free(data);
-        data = (char*)d.data();
-        len = d.size();
     }
 
     void SetCopy(const char* newPtr) {
@@ -138,7 +89,6 @@ struct AutoFree {
         data = nullptr;
         if (newPtr) {
             data = str::Dup(newPtr);
-            len = str::Len(data);
         }
     }
 
@@ -153,66 +103,51 @@ struct AutoFree {
         }
         free(data);
         data = other.data;
-        len = other.len;
         other.data = nullptr;
-        other.len = 0;
+        return *this;
+    }
+    AutoFree& operator=(const char* d) noexcept {
+        if (this->data == d) {
+            return *this;
+        }
+        free(data);
+        data = (char*)d;
         return *this;
     }
 
     // AutoFree& operator=(const AutoFree& other) = delete;
     // AutoFree& operator=(const AutoFree&& other) = delete;
 
-    [[nodiscard]] char* Get() const {
+    char* Get() const {
         return data;
     }
 
-    [[nodiscard]] operator char*() const { // NOLINT
+    operator char*() const { // NOLINT
         return data;
     }
 
-    // for convenince, we calculate the size if wasn't provided
-    // by the caller
-    [[nodiscard]] size_t size() const {
-        return len;
-    }
-
-    [[nodiscard]] bool empty() const {
-        return (data == nullptr) || (len == 0);
-    }
-
-    [[nodiscard]] std::string_view AsView() const {
-        return {data, len};
-    }
-
-    [[nodiscard]] ByteSlice AsSpan() const {
-        return {(u8*)data, len};
+    bool empty() const {
+        return (!data || !*data);
     }
 
     void Reset() {
         free(data);
         data = nullptr;
-        len = 0;
     }
 
-    [[nodiscard]] char* Release() {
+    char* Release() {
         char* res = data;
         data = nullptr;
-        len = 0;
         return res;
     }
 
-    [[nodiscard]] char* StealData() {
+    char* StealData() {
         return this->Release();
     }
 
-    void TakeOwnershipOf(const char* s, size_t size = 0) {
+    void TakeOwnershipOf(const char* s) {
         free(data);
         data = (char*)s;
-        if (size == 0) {
-            len = str::Len(s);
-        } else {
-            len = size;
-        }
     }
 };
 
@@ -263,11 +198,11 @@ struct AutoFreeWstr {
     AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
 #endif
 
-    [[nodiscard]] WCHAR* Get() const {
+    WCHAR* Get() const {
         return data;
     }
 
-    [[nodiscard]] operator WCHAR*() const { // NOLINT
+    operator WCHAR*() const { // NOLINT
         return data;
     }
 
@@ -277,11 +212,6 @@ struct AutoFreeWstr {
     }
 
     void SetCopy(const WCHAR* newVal) {
-        str::FreePtr(&data);
-        data = str::Dup(newVal);
-    }
-
-    void SetCopy(std::wstring_view newVal) {
         str::FreePtr(&data);
         data = str::Dup(newVal);
     }
@@ -298,11 +228,6 @@ struct AutoFreeWstr {
 
     bool empty() {
         return (data == nullptr) || (size() == 0);
-    }
-
-    std::wstring_view AsView() const {
-        size_t sz = str::Len(data);
-        return {data, sz};
     }
 
     WCHAR* StealData() {

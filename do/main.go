@@ -218,7 +218,7 @@ func main() {
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgTransDownload, "trans-dl", false, "download latest translations to src/docs/translations.txt")
-		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationsInfo.cpp")
+		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationLangs.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		//flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
@@ -237,13 +237,14 @@ func main() {
 		flag.Parse()
 	}
 
+	detectVersions()
+
 	if false {
 		testGenUpdateTxt()
 		return
 	}
 
 	if false {
-		detectVersions()
 		//buildPreRelease()
 		return
 	}
@@ -372,18 +373,15 @@ func main() {
 	}
 
 	if flgSmoke {
-		detectVersions()
 		buildSmoke()
 		return
 	}
 
 	if flgBuildNo {
-		detectVersions()
 		return
 	}
 
 	if flgCIBuild {
-		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
@@ -405,7 +403,6 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
-		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
@@ -420,7 +417,6 @@ func main() {
 	}
 
 	if flgBuildRelease {
-		detectVersions()
 		buildRelease()
 		uploadToStorage(opts, buildTypeRel)
 		return
@@ -428,7 +424,6 @@ func main() {
 
 	if flgBuildPreRelease {
 		// make sure we can sign the executables
-		detectVersions()
 		buildPreRelease()
 		uploadToStorage(opts, buildTypePreRel)
 		return

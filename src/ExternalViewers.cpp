@@ -10,7 +10,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
@@ -27,7 +27,7 @@ struct ExternalViewerInfo {
     const char* launchArgs;
     Kind engineKind;
     // set by DetectExternalViewers()
-    const WCHAR* exeFullPath; // if found, full path to the executable
+    const char* exeFullPath; // if found, full path to the executable
 };
 
 // kindEngineChm
@@ -140,48 +140,20 @@ static bool CanViewExternally(TabInfo* tab) {
 }
 
 static bool DetectExternalViewer(ExternalViewerInfo* ev) {
-    const WCHAR* partialPath = ToWstrTemp(ev->exePartialPath);
+    const char* partialPath = ev->exePartialPath;
     if (!partialPath || !*partialPath) {
         return false;
     }
 
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
-        WCHAR* path = path::Join(dir, partialPath);
+    int csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
+    for (int csidl : csidls) {
+        char* dir = GetSpecialFolderTemp(csidl);
+        char* path = path::JoinTemp(dir, partialPath);
         if (file::Exists(path)) {
-            ev->exeFullPath = path;
+            ev->exeFullPath = str::Dup(path);
             return true;
         }
-        str::Free(path);
     }
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
-        WCHAR* path = path::Join(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = path;
-            return true;
-        }
-        str::Free(path);
-    }
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_WINDOWS);
-        WCHAR* path = path::Join(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = path;
-            return true;
-        }
-        str::Free(path);
-    }
-    {
-        TempWstr dir = GetSpecialFolderTemp(CSIDL_SYSTEM);
-        WCHAR* path = path::Join(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = path;
-            return true;
-        }
-        str::Free(path);
-    }
-
     return false;
 }
 
@@ -193,54 +165,57 @@ void FreeExternalViewers() {
     }
 }
 
-static WCHAR* GetAcrobatPath() {
+static char* GetAcrobatPathTemp() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    AutoFreeWstr path =
-        ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)", nullptr);
+    const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)";
+    char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
     if (!path) {
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)",
-                            nullptr));
+        keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)";
+        path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
     }
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     return nullptr;
 }
 
-static WCHAR* GetFoxitPath() {
-    AutoFreeWstr path = ReadRegStr(
-        HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)", L"DisplayIcon");
+static char* GetFoxitPathTemp() {
+    const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)";
+    char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)",
-                        L"DisplayIcon"));
+    keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)";
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     // Registry value for Foxit 5.5 MSI installer
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Foxit Software\Foxit Reader)", L"InstallPath"));
+    keyName = R"(Software\Foxit Software\Foxit Reader)";
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
     if (path) {
-        path.Set(path::Join(path, L"Foxit Reader.exe"));
+        path = path::JoinTemp(path, "Foxit Reader.exe");
     }
     if (path && file::Exists(path)) {
-        return path.StealData();
+        return path;
     }
     return nullptr;
 }
 
-static WCHAR* GetPDFXChangePath() {
-    AutoFreeWstr path = ReadRegStr(HKEY_LOCAL_MACHINE, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath");
+static char* GetPDFXChangePathTemp() {
+    const char* keyName = R"(Software\Tracker Software\PDFViewer)";
+    char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
     if (!path) {
-        path.Set(ReadRegStr(HKEY_CURRENT_USER, LR"(Software\Tracker Software\PDFViewer)", L"InstallPath"));
+        keyName = R"(Software\Tracker Software\PDFViewer)";
+        path = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, "InstallPath");
     }
     if (!path) {
         return nullptr;
     }
-    AutoFreeWstr exePath(path::Join(path, L"PDFXCview.exe"));
+    char* exePath = path::JoinTemp(path, "PDFXCview.exe");
     if (file::Exists(exePath)) {
-        return exePath.StealData();
+        return exePath;
     }
     return nullptr;
 }
@@ -250,8 +225,8 @@ void DetectExternalViewers() {
 
     ExternalViewerInfo* info = nullptr;
     int n = dimof(gExternalViewers);
-    for (int i = 0; i < n; i++) {
-        info = &gExternalViewers[i];
+    for (auto& i : gExternalViewers) {
+        info = &i;
         bool didDetect = DetectExternalViewer(info);
         if (didDetect) {
             gExternalViewersCount++;
@@ -260,17 +235,17 @@ void DetectExternalViewers() {
 
     info = FindExternalViewerInfoByCmd(CmdOpenWithAcrobat);
     if (!info->exeFullPath) {
-        info->exeFullPath = GetAcrobatPath();
+        info->exeFullPath = str::Dup(GetAcrobatPathTemp());
     }
 
     info = FindExternalViewerInfoByCmd(CmdOpenWithFoxIt);
     if (!info->exeFullPath) {
-        info->exeFullPath = GetFoxitPath();
+        info->exeFullPath = str::Dup(GetFoxitPathTemp());
     }
 
     info = FindExternalViewerInfoByCmd(CmdOpenWithPdfXchange);
     if (!info->exeFullPath) {
-        info->exeFullPath = GetPDFXChangePath();
+        info->exeFullPath = str::Dup(GetPDFXChangePathTemp());
     }
 }
 
@@ -283,10 +258,9 @@ bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
         return false;
     }
     // must match file extension
-    const WCHAR* filePath = tab->filePath.Get();
-    const WCHAR* ext = path::GetExtTemp(filePath);
-    WCHAR* exts = ToWstrTemp(ev->exts);
-    const WCHAR* pos = str::FindI(exts, ext);
+    const char* filePath = tab->filePath.Get();
+    char* ext = path::GetExtTemp(filePath);
+    const char* pos = str::FindI(ev->exts, ext);
     if (!pos) {
         return false;
     }
@@ -306,43 +280,47 @@ bool CouldBePDFDoc(TabInfo* tab) {
     return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
-static WCHAR* FormatParams(const WCHAR* cmdLine, TabInfo* tab) {
+static char* FormatParams(const char* cmdLine, TabInfo* tab) {
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
-    AutoFreeWstr params;
+    AutoFreeStr params;
     if (cmdLine == nullptr) {
-        cmdLine = LR"("%1")";
+        cmdLine = R"("%1")";
     }
-    if (str::Find(cmdLine, L"%p")) {
-        AutoFreeWstr pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
-        params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
+    if (str::Find(cmdLine, "%p")) {
+        AutoFreeStr pageNoStr(str::Format("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
+        params.Set(str::Replace(cmdLine, "%p", pageNoStr));
         cmdLine = params;
     }
-    if (str::Find(cmdLine, LR"("%1")")) {
+    char* path = tab->filePath;
+    if (str::Find(cmdLine, R"("%1")")) {
         // "%1", is alrady quoted so no need to add quotes
-        params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
-    } else if (str::Find(cmdLine, LR"(%1)")) {
+        params.Set(str::Replace(cmdLine, "%1", path));
+    } else if (str::Find(cmdLine, R"(%1)")) {
         // %1, not quoted, need to add
-        auto s = str::JoinTemp(L"\"", tab->filePath.Get(), L"\"").Get();
-        params.Set(str::Replace(cmdLine, L"%1", s));
+        char* s = str::JoinTemp("\"", path, "\"");
+        params.Set(str::Replace(cmdLine, "%1", s));
     } else {
-        params.Set(str::Format(LR"(%s "%s")", cmdLine, tab->filePath.Get()));
+        params.Set(str::Format(R"(%s "%s")", cmdLine, path));
     }
     return params.StealData();
 }
 
 bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmd);
-    CrashIf(!canView);
-    ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
-    if (!canView || ev->exeFullPath == nullptr) {
+    ReportIf(!canView); // TODO: with command palette can send un-enforcable command
+    if (!canView) {
         return false;
     }
-    AutoFreeWstr params = FormatParams(ToWstrTemp(ev->launchArgs), tab);
+    ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
+    if (ev->exeFullPath == nullptr) {
+        return false;
+    }
+    AutoFreeStr params = FormatParams(ev->launchArgs, tab);
     return LaunchFile(ev->exeFullPath, params);
 }
 
-bool PathMatchFilter(const WCHAR* path, char* filter) {
+bool PathMatchFilter(const char* path, char* filter) {
     // no filter means matches everything
     if (str::IsEmpty(filter)) {
         return true;
@@ -350,8 +328,7 @@ bool PathMatchFilter(const WCHAR* path, char* filter) {
     if (str::Eq(filter, "*")) {
         return true;
     }
-    auto s = ToWstrTemp(filter);
-    bool matches = path::Match(path, s.Get());
+    bool matches = path::Match(path, filter);
     return matches;
 }
 
@@ -362,14 +339,20 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
 
     auto& viewers = gGlobalPrefs->externalViewers;
     ExternalViewer* ev = nullptr;
-    for (size_t i = 0; i < viewers->size() && i <= idx; i++) {
+    size_t n = viewers->size();
+    for (size_t i = 0; i < n && i <= idx; i++) {
         ev = viewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
-        if (!ev->commandLine || !PathMatchFilter(tab->filePath, ev->filter)) {
+        char* path = tab->filePath;
+        if (!ev->commandLine || !PathMatchFilter(path, ev->filter)) {
             idx++;
         }
     }
-    if (idx >= viewers->size() || !viewers->at(idx)->commandLine) {
+    if (idx >= n) {
+        return false;
+    }
+    ev = viewers->at(idx);
+    if (!ev || !ev->commandLine) {
         return false;
     }
 
@@ -377,12 +360,12 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (args.nArgs == 0) {
         return false;
     }
-    const WCHAR* exePath = args.at(0);
+    const char* exePath = args.at(0);
     if (!file::Exists(exePath)) {
         return false;
     }
-    const WCHAR* cmdLine = args.ParamsTemp();
-    AutoFreeWstr params = FormatParams(cmdLine, tab);
+    char* cmdLine = args.ParamsTemp();
+    AutoFreeStr params = FormatParams(cmdLine, tab);
     return LaunchFile(exePath, params);
 }
 

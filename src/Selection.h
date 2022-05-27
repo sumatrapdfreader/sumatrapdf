@@ -22,16 +22,16 @@ struct SelectionOnPage {
     static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);
 };
 
-void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel = false);
+void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel = false);
 void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha = 0x5f,
                                 int margin = 1);
-void PaintSelection(WindowInfo* win, HDC hdc);
-void UpdateTextSelection(WindowInfo* win, bool select = true);
-void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit = true, bool relative = false);
-void CopySelectionToClipboard(WindowInfo* win);
-void OnSelectAll(WindowInfo* win, bool textOnly = false);
-bool NeedsSelectionEdgeAutoscroll(WindowInfo* win, int x, int y);
-void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y);
-void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key);
-void OnSelectionStop(WindowInfo* win, int x, int y, bool aborted);
-WCHAR* GetSelectedText(TabInfo* tab, const WCHAR* lineSep, bool& isTextOnlySelectionOut);
+void PaintSelection(MainWindow* win, HDC hdc);
+void UpdateTextSelection(MainWindow* win, bool select = true);
+void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit = true, bool relative = false);
+void CopySelectionToClipboard(MainWindow* win);
+void OnSelectAll(MainWindow* win, bool textOnly = false);
+bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
+void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key);
+void OnSelectionStop(MainWindow* win, int x, int y, bool aborted);
+char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelectionOut);

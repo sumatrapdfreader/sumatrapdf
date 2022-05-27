@@ -67,7 +67,7 @@ int CompareVersion(const char* txt1, const char* txt2) {
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
 // returns true if the path has been changed
-bool AdjustVariableDriveLetter(WCHAR* path) {
+bool AdjustVariableDriveLetter(char* path) {
     // Don't bother if the file path is still valid
     if (file::Exists(path)) {
         return false;
@@ -78,8 +78,8 @@ bool AdjustVariableDriveLetter(WCHAR* path) {
     }
 
     // Iterate through all (other) removable drives and try to find the file there
-    WCHAR szDrive[] = L"A:\\";
-    WCHAR origDrive = path[0];
+    char szDrive[] = "A:\\";
+    char origDrive = path[0];
     for (DWORD driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
         if ((driveMask & 1) && szDrive[0] != origDrive && path::HasVariableDriveLetter(szDrive)) {
             path[0] = szDrive[0];
@@ -96,25 +96,23 @@ bool AdjustVariableDriveLetter(WCHAR* path) {
 // files are considered untrusted, if they're either loaded from a
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)
-bool IsUntrustedFile(const WCHAR* filePath, const WCHAR* fileURL) {
-    AutoFreeWstr protocol;
-    if (fileURL && str::Parse(fileURL, L"%S:", &protocol)) {
-        if (str::Len(protocol) > 1 && !str::EqI(protocol, L"file")) {
+bool IsUntrustedFile(const char* filePath, const char* fileURL) {
+    AutoFreeStr protocol;
+    if (fileURL && str::Parse(fileURL, "%S:", &protocol)) {
+        if (str::Len(protocol) > 1 && !str::EqI(protocol, "file")) {
             return true;
         }
     }
 
-    auto filePathA = ToUtf8Temp(filePath);
-    if (file::GetZoneIdentifier(filePathA) >= URLZONE_INTERNET) {
+    if (file::GetZoneIdentifier(filePath) >= URLZONE_INTERNET) {
         return true;
     }
 
     // check all parents of embedded files and ADSs as well
-    AutoFreeWstr path(str::Dup(filePath));
+    AutoFreeStr path(str::Dup(filePath));
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
         *str::FindCharLast(path, ':') = '\0';
-        auto pathA = ToUtf8Temp(path);
-        if (file::GetZoneIdentifier(pathA) >= URLZONE_INTERNET) {
+        if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {
             return true;
         }
     }

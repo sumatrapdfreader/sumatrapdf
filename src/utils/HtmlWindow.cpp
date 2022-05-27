@@ -138,6 +138,10 @@ bool IsBlankUrl(const WCHAR* url) {
     return str::EqI(L"about:blank", url);
 }
 
+bool IsBlankUrl(const char* url) {
+    return str::EqI("about:blank", url);
+}
+
 // HW stands for HtmlWindow
 // FrameSite ties together HtmlWindow and all the COM interfaces we need to implement
 // to support it
@@ -225,6 +229,8 @@ static void FreeWindowId(int windowId) {
 
 // Re-using its protocol, see comments at the top.
 #define HW_PROTO_PREFIX L"its"
+
+#define HW_PROTO_PREFIXA "its"
 
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
 static const GUID CLSID_HW_IInternetProtocol = {0xf1ec293f,
@@ -364,35 +370,43 @@ static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWstr* url
     return rest && !*rest;
 }
 
-#define DEFAULT_MIME_TYPE L"text/html"
+// given url in the form "its://$htmlWindowId/$urlRest, parses
+// out $htmlWindowId and $urlRest. Returns false if url doesn't conform
+// to this pattern.
+static bool ParseProtoUrl(const char* url, int* htmlWindowId, AutoFreeStr* urlRest) {
+    const char* rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
+    return rest && !*rest;
+}
+
+#define kDefaultMimeType "text/html"
 
 // caller must free() the result
-static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
-    const WCHAR* ext = str::FindCharLast(url, '.');
+static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
+    const char* ext = str::FindCharLast(url, '.');
     if (!ext) {
-        return str::Dup(DEFAULT_MIME_TYPE);
+        return str::Dup(kDefaultMimeType);
     }
 
     if (str::FindChar(ext, ';')) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
-        AutoFreeWstr newUrl(str::Dup(url, str::FindChar(ext, ';') - url));
+        char* newUrl = str::DupTemp(url, str::FindChar(ext, ';') - url);
         return MimeFromUrl(newUrl, imgExt);
     }
 
     static const struct {
-        const WCHAR* ext;
-        const WCHAR* mimetype;
+        const char* ext;
+        const char* mimetype;
     } mimeTypes[] = {
-        {L".html", L"text/html"}, {L".htm", L"text/html"},  {L".gif", L"image/gif"},
-        {L".png", L"image/png"},  {L".jpg", L"image/jpeg"}, {L".jpeg", L"image/jpeg"},
-        {L".bmp", L"image/bmp"},  {L".css", L"text/css"},   {L".txt", L"text/plain"},
+        {".html", "text/html"}, {".htm", "text/html"},  {".gif", "image/gif"},
+        {".png", "image/png"},  {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"},
+        {".bmp", "image/bmp"},  {".css", "text/css"},   {".txt", "text/plain"},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext)) {
             // trust an image's data more than its extension
-            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
+            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, "image/")) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
                     if (str::Eq(imgExt, mimeTypes[j].ext)) {
                         return str::Dup(mimeTypes[j].mimetype);
@@ -403,12 +417,12 @@ static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
         }
     }
 
-    AutoFreeWstr contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
+    char* contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
     if (contentType) {
-        return contentType.StealData();
+        return contentType;
     }
 
-    return str::Dup(DEFAULT_MIME_TYPE);
+    return str::DupTemp(kDefaultMimeType);
 }
 
 // TODO: return an error page html in case of errors?
@@ -442,14 +456,16 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    data = win->htmlWinCb->GetDataForUrl(urlRest);
+    char* urlRestA = ToUtf8Temp(urlRest);
+    data = win->htmlWinCb->GetDataForUrl(urlRestA);
     if (data.empty()) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    const WCHAR* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
-    AutoFreeWstr mime(MimeFromUrl(urlRest, imgExt));
-    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
+    const char* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
+    AutoFreeStr mime(MimeFromUrl(urlRestA, imgExt));
+    WCHAR* mimeW = ToWstrTemp(mime.Get());
+    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
     CrashIf(data.size() > ULONG_MAX);
@@ -1149,12 +1165,13 @@ class HW_IDownloadManager : public IDownloadManager {
         if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
         }
-        auto data = win->htmlWinCb->GetDataForUrl(urlRest);
+        char* urlRestA = ToUtf8Temp(urlRest);
+        auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
         if (data.empty()) {
             return INET_E_DATA_NOT_AVAILABLE;
         }
         // ask the UI to let the user save the file
-        win->htmlWinCb->DownloadData(urlRest, data);
+        win->htmlWinCb->DownloadData(urlRestA, data);
         return S_OK;
     }
 };
@@ -1592,7 +1609,7 @@ void HtmlWindow::OnLButtonDown() const {
 }
 
 void HtmlWindow::SetVisible(bool visible) {
-    win::SetVisibility(hwndParent, visible);
+    HwndSetVisibility(hwndParent, visible);
     if (webBrowser) {
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
     }
@@ -1600,12 +1617,13 @@ void HtmlWindow::SetVisible(bool visible) {
 
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
-void HtmlWindow::NavigateToDataUrl(const WCHAR* url) {
-    AutoFreeWstr fullUrl(str::Format(L"its://%d/%s", windowId, url));
+void HtmlWindow::NavigateToDataUrl(const char* url) {
+    AutoFreeStr fullUrl(str::Format("its://%d/%s", windowId, url));
     NavigateToUrl(fullUrl);
 }
 
-void HtmlWindow::NavigateToUrl(const WCHAR* url) {
+void HtmlWindow::NavigateToUrl(const char* urlA) {
+    WCHAR* url = ToWstrTemp(urlA);
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
     currentURL.Reset();
@@ -1664,13 +1682,13 @@ void HtmlWindow::CopySelection() {
 }
 
 void HtmlWindow::NavigateToAboutBlank() {
-    NavigateToUrl(L"about:blank");
+    NavigateToUrl("about:blank");
 }
 
-void HtmlWindow::SetHtml(ByteSlice d, const WCHAR* url) {
+void HtmlWindow::SetHtml(ByteSlice d, const char* url) {
     FreeHtmlSetInProgressData();
-    htmlSetInProgress = str::Dup(d);
-    htmlSetInProgressUrl = str::Dup(url);
+    str::ReplaceWithCopy(&htmlSetInProgress, d);
+    str::ReplaceWithCopy(&htmlSetInProgress, url);
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()
 }
@@ -1788,11 +1806,12 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
+bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
     currentURL.Reset();
     if (!htmlWinCb) {
         return true;
     }
+    char* url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         return true;
     }
@@ -1800,7 +1819,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeWstr urlReal(str::Dup(url));
+    AutoFreeStr urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     CrashIf(ok && (protoWindowId != windowId));
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
@@ -1808,13 +1827,12 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
 }
 
 void HtmlWindow::FreeHtmlSetInProgressData() {
-    str::Free(this->htmlSetInProgress);
-    str::Free(this->htmlSetInProgressUrl);
-    this->htmlSetInProgress = nullptr;
-    this->htmlSetInProgressUrl = nullptr;
+    str::FreePtr(&this->htmlSetInProgress);
+    str::FreePtr(&this->htmlSetInProgressUrl);
 }
 
-void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
+void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
+    char* url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress != nullptr) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
@@ -1837,7 +1855,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeWstr urlReal(str::Dup(url));
+    AutoFreeStr urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     CrashIf(ok && (protoWindowId != windowId));
 

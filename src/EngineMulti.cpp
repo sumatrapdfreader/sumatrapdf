@@ -14,7 +14,7 @@ extern "C" {
 
 #include "wingui/UIModels.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
 #include "EngineAll.h"
@@ -52,7 +52,7 @@ class EngineMulti : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -61,14 +61,14 @@ class EngineMulti : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
-    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
-    bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
-    bool LoadFromFiles(std::string_view dir, StrVec& files);
+    bool Load(const char* fileName, PasswordUI* pwdUI);
+    bool LoadFromFiles(const char* dir, StrVec& files);
     void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
     EngineBase* PageToEngine(int& pageNo) const;
@@ -85,7 +85,7 @@ EngineBase* EngineMulti::PageToEngine(int& pageNo) const {
 
 EngineMulti::EngineMulti() {
     kind = kindEngineMulti;
-    defaultExt = L""; // TODO: no extension, is it important?
+    defaultExt = str::Dup(""); // TODO: no extension, is it important?
     fileDPI = 72.0f;
 }
 
@@ -144,7 +144,7 @@ bool EngineMulti::HasClipOptimizations(int pageNo) {
     return e->HasClipOptimizations(pageNo);
 }
 
-WCHAR* EngineMulti::GetProperty(DocumentProperty prop) {
+char* EngineMulti::GetProperty(DocumentProperty prop) {
     return nullptr;
 }
 
@@ -171,7 +171,7 @@ RenderedBitmap* EngineMulti::GetImageForPageElement(IPageElement* ipel) {
     return e->GetImageForPageElement(pel);
 }
 
-IPageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
+IPageDestination* EngineMulti::GetNamedDest(const char* name) {
     for (auto&& pe : pageToEngine) {
         EngineBase* e = pe.engine;
         auto dest = e->GetNamedDest(name);
@@ -222,7 +222,7 @@ TocTree* EngineMulti::GetToc() {
     return tocTree;
 }
 
-WCHAR* EngineMulti::GetPageLabel(int pageNo) const {
+char* EngineMulti::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || pageNo >= pageCount) {
         return nullptr;
     }
@@ -231,7 +231,7 @@ WCHAR* EngineMulti::GetPageLabel(int pageNo) const {
     return e->GetPageLabel(pageNo);
 }
 
-int EngineMulti::GetPageByLabel(const WCHAR* label) const {
+int EngineMulti::GetPageByLabel(const char* label) const {
     for (auto&& pe : pageToEngine) {
         EngineBase* e = pe.engine;
         int pageNo = e->GetPageByLabel(label);
@@ -324,11 +324,11 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     }
 
     int nPages = engine->PageCount();
-    const WCHAR* title = path::GetBaseNameTemp(engine->FileName());
+    const char* title = path::GetBaseNameTemp(engine->FileName());
     TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;
-    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName());
+    char* filePath = (char*)engine->FileName();
     tocWrapper->engineFilePath = filePath;
     tocWrapper->nPages = nPages;
     tocWrapper->pageNo = 1;
@@ -338,13 +338,12 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     return tocWrapper;
 }
 
-bool EngineMulti::LoadFromFiles(std::string_view dir, StrVec& files) {
+bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     int n = files.Size();
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
-        std::string_view path = files.at(i);
-        auto pathW = ToWstrTemp(path);
-        EngineBase* engine = CreateEngine(pathW, nullptr, true);
+        char* path = files.at(i);
+        EngineBase* engine = CreateEngine(path, nullptr, true);
         if (!engine) {
             continue;
         }
@@ -366,15 +365,13 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, StrVec& files) {
     }
     UpdatePagesForEngines(enginesInfo);
 
-    auto dirW = ToWstrTemp(dir);
-    TocItem* root = new TocItem(nullptr, dirW, 0);
+    TocItem* root = new TocItem(nullptr, dir, 0);
     root->child = tocFiles;
     auto realRoot = new TocItem();
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
 
-    auto fileName = ToWstrTemp(dir);
-    SetFileName(fileName);
+    SetFileName(dir);
 
     return true;
 }
@@ -419,7 +416,7 @@ bool IsEngineMultiSupportedFileType(Kind kind) {
     return kind == kindDirectory;
 }
 
-EngineBase* CreateEngineMultiFromFiles(std::string_view dir, StrVec& files) {
+EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
         delete engine;
@@ -428,14 +425,13 @@ EngineBase* CreateEngineMultiFromFiles(std::string_view dir, StrVec& files) {
     return engine;
 }
 
-EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
-    auto isValidFunc = [](std::string_view path) -> bool {
-        bool isValid = str::EndsWithI(path.data(), ".pdf");
+EngineBase* CreateEngineMultiFromDirectory(const char* dir) {
+    auto isValidFunc = [](const char* path) -> bool {
+        bool isValid = str::EndsWithI(path, ".pdf");
         return isValid;
     };
     StrVec files;
-    auto dir = ToUtf8Temp(dirW);
-    bool ok = CollectFilesFromDirectory(dir.AsView(), files, isValidFunc);
+    bool ok = CollectFilesFromDirectory(dir, files, isValidFunc);
     if (!ok) {
         // TODO: show error message
         return nullptr;
@@ -444,7 +440,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         // TODO: show error message
         return nullptr;
     }
-    EngineBase* engine = CreateEngineMultiFromFiles(dir.AsView(), files);
+    EngineBase* engine = CreateEngineMultiFromFiles(dir, files);
     if (!engine) {
         // TODO: show error message
         return nullptr;

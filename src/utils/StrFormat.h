@@ -53,13 +53,6 @@ enum class Type {
     None,
 };
 
-// formatting instruction
-struct Inst {
-    Type t;
-    int argNo;           // <0 for strings that come from formatting string
-    std::string_view sv; // if t is Type::FormatStr
-};
-
 // argument to a formatting instruction
 // at the front are arguments given with i(), s() etc.
 // at the end are FormatStr arguments from format string
@@ -70,8 +63,8 @@ struct Arg {
         i64 i;
         float f;
         double d;
-        std::string_view sv;
-        std::wstring_view wsv;
+        const char* s;
+        const WCHAR* ws;
     } u{};
 
     Arg() = default;
@@ -96,43 +89,21 @@ struct Arg {
         u.d = d;
     }
 
-    Arg(std::string_view arg) {
-        t = Type::Str;
-        u.sv = arg;
-    }
-
     Arg(const char* arg) {
         t = Type::Str;
-        u.sv = arg;
-    }
-
-    Arg(std::wstring_view arg) {
-        t = Type::WStr;
-        u.wsv = arg;
+        u.s = arg;
     }
 
     Arg(const WCHAR* arg) {
         t = Type::WStr;
-        u.wsv = arg;
+        u.ws = arg;
     }
 };
 
-struct Fmt {
-    explicit Fmt(const char* fmt);
+char* Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
+             const Arg& a5 = Arg(), const Arg& a6 = Arg());
 
-    std::string_view Eval(const Arg** args, int nArgs);
+char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
+                 const Arg& a6);
 
-    bool isOk = true; // true if mismatch between formatting instruction and args
-
-    const char* format = nullptr;
-    Inst instructions[32]; // 32 should be big enough for everybody
-    int nInst = 0;
-
-    int currArgNo = 0;
-    int currPercArgNo = 0;
-    str::Str res;
-};
-
-std::string_view Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(),
-                        const Arg& a4 = Arg(), const Arg& a5 = Arg(), const Arg& a6 = Arg());
 } // namespace fmt

@@ -169,20 +169,12 @@ void Free(const u8* s) {
     free((void*)s);
 }
 
-void Free(std::string_view sv) {
-    free((void*)sv.data());
-}
-
 void Free(ByteSlice d) {
     free((void*)d.data());
 }
 
 void Free(const WCHAR* s) {
     free((void*)s);
-}
-
-void Free(std::wstring_view sv) {
-    free((void*)sv.data());
 }
 
 void FreePtr(const char** s) {
@@ -206,7 +198,9 @@ void FreePtr(WCHAR** s) {
 }
 
 char* Dup(Allocator* a, const char* s, size_t cch) {
-    CrashIf(!s && (int)cch > 0);
+    if (!s) {
+        return nullptr;
+    }
     if (cch == (size_t)-1) {
         cch = str::Len(s);
     }
@@ -215,17 +209,6 @@ char* Dup(Allocator* a, const char* s, size_t cch) {
 
 char* Dup(const char* s, size_t cch) {
     return Dup(nullptr, s, cch);
-}
-
-// allocates a copy of the source string inside the allocator.
-// it's only safe in PoolAllocator because allocated data
-// never moves in memory
-char* Dup(Allocator* a, std::string_view sv) {
-    return Dup(a, sv.data(), sv.size());
-}
-
-char* Dup(const std::string_view sv) {
-    return Dup(nullptr, sv.data(), sv.size());
 }
 
 char* Dup(const ByteSlice d) {
@@ -243,10 +226,6 @@ WCHAR* Dup(const WCHAR* s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
 
-WCHAR* Dup(std::wstring_view sv) {
-    return Dup(nullptr, sv.data(), sv.size());
-}
-
 // return true if s1 == s2, case sensitive
 bool Eq(const char* s1, const char* s2) {
     if (s1 == s2) {
@@ -256,10 +235,6 @@ bool Eq(const char* s1, const char* s2) {
         return false;
     }
     return 0 == strcmp(s1, s2);
-}
-
-bool Eq(std::string_view s1, const char* s2) {
-    return EqN(s1.data(), s2, s1.size());
 }
 
 bool Eq(ByteSlice sp1, ByteSlice sp2) {
@@ -272,10 +247,6 @@ bool Eq(ByteSlice sp1, ByteSlice sp2) {
     const char* s1 = (const char*)sp1.data();
     const char* s2 = (const char*)sp2.data();
     return 0 == strcmp(s1, s2);
-}
-
-bool EqI(std::string_view s1, const char* s2) {
-    return EqNI(s1.data(), s2, s1.size());
 }
 
 // return true if s1 == s2, case insensitive
@@ -351,14 +322,6 @@ bool StartsWith(const u8* str, const char* prefix) {
     return StartsWith((const char*)str, prefix);
 }
 
-bool StartsWith(std::string_view s, const char* prefix) {
-    size_t n = Len(prefix);
-    if (n > s.size()) {
-        return false;
-    }
-    return EqN(s.data(), prefix, n);
-}
-
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const char* s, const char* prefix) {
     if (s == prefix) {
@@ -375,16 +338,14 @@ ByteSlice ToSpan(const char* s) {
     return {(u8*)s, n};
 }
 
-bool Contains(std::string_view s, const char* txt) {
-    // TODO: needs to respect s.size()
-    const char* p = str::Find(s.data(), txt);
+bool Contains(const char* s, const char* txt) {
+    const char* p = str::Find(s, txt);
     bool contains = p != nullptr;
     return contains;
 }
 
-bool ContainsI(std::string_view s, const char* txt) {
-    // TODO: needs to respect s.size()
-    const char* p = str::FindI(s.data(), txt);
+bool ContainsI(const char* s, const char* txt) {
+    const char* p = str::FindI(s, txt);
     bool contains = p != nullptr;
     return contains;
 }
@@ -478,7 +439,7 @@ void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
     ReplaceWithCopy((const WCHAR**)s, snew);
 }
 
-char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator) {
+char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3) {
     size_t s1Len = str::Len(s1);
     size_t s2Len = str::Len(s2);
     size_t s3Len = str::Len(s3);
@@ -500,12 +461,12 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 char* Join(const char* s1, const char* s2, const char* s3) {
-    return Join(s1, s2, s3, nullptr);
+    return Join(nullptr, s1, s2, s3);
 }
 
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
-WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3, Allocator* allocator) {
+WCHAR* Join(Allocator* allocator, const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
     // don't use str::Format(L"%s%s%s", s1, s2, s3) since the strings
     // might contain non-characters which str::Format fails to handle
     size_t s1Len = str::Len(s1), s2Len = str::Len(s2), s3Len = str::Len(s3);
@@ -519,7 +480,7 @@ WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3, Allocator* alloca
 }
 
 WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    return Join(s1, s2, s3, nullptr);
+    return Join(nullptr, s1, s2, s3);
 }
 
 char* ToLowerInPlace(char* s) {
@@ -827,21 +788,6 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove) {
     return removed;
 }
 
-// Note: BufSet() should only be used when absolutely necessary (e.g. when
-// handling buffers in OS-defined structures)
-// returns the number of characters written (without the terminating \0)
-size_t BufSet(char* dst, size_t dstCchSize, const char* src) {
-    CrashAlwaysIf(0 == dstCchSize);
-
-    size_t srcCchSize = str::Len(src);
-    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
-
-    errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
-    CrashIf(err || dst[toCopy] != '\0');
-
-    return toCopy;
-}
-
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s) {
@@ -1122,13 +1068,12 @@ int CmpNatural(const char* a, const char* b) {
     return diff;
 }
 
-bool EmptyOrWhiteSpaceOnly(std::string_view sv) {
-    size_t n = sv.size();
-    if (n == 0) {
+bool EmptyOrWhiteSpaceOnly(const char* s) {
+    if (!s || !*s) {
         return true;
     }
-    for (size_t i = 0; i < n; i++) {
-        char c = sv[i];
+    while (*s) {
+        char c = *s++;
         if (!str::IsWs(c)) {
             return false;
         }
@@ -1152,7 +1097,6 @@ void DecodeInPlace(char* url) {
     }
     *url = '\0';
 }
-
 } // namespace url
 
 // seqstrings is for size-efficient implementation of:
@@ -1308,7 +1252,7 @@ static char* EnsureCap(Str* s, size_t needed) {
         newEls = (char*)Allocator::Realloc(s->allocator, s->els, allocSize);
     }
     if (!newEls) {
-        CrashAlwaysIf(gAllowAllocFailure.load() == 0);
+        CrashAlwaysIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
         return nullptr;
     }
     s->els = newEls;
@@ -1377,11 +1321,6 @@ Str::Str(const Str& that) {
     len = that.len;
     size_t n = len + kPadding;
     memcpy(s, sOrig, n);
-}
-
-Str::Str(std::string_view s) {
-    Reset();
-    AppendView(s);
 }
 
 Str::Str(const char* s) {
@@ -1460,8 +1399,8 @@ bool Str::InsertAt(size_t idx, char el) {
     return true;
 }
 
-bool Str::Append(char el) {
-    return InsertAt(len, el);
+bool Str::AppendChar(char c) {
+    return InsertAt(len, c);
 }
 
 bool Str::Append(const char* src, size_t count) {
@@ -1477,6 +1416,10 @@ bool Str::Append(const char* src, size_t count) {
     }
     memcpy(dst, src, count);
     return true;
+}
+
+bool Str::Append(const Str& s) {
+    return Append(s.LendData(), s.size());
 }
 
 char Str::RemoveAt(size_t idx, size_t count) {
@@ -1522,82 +1465,54 @@ char* Str::LendData() const {
     return els;
 }
 
-int Str::Find(char el, size_t startAt) const {
-    for (size_t i = startAt; i < len; i++) {
-        if (els[i] == el) {
-            return (int)i;
+// TODO: rewrite as size_t Find(const char* s, size_t sLen, size_t start);
+bool Str::Contains(const char* s, size_t sLen) {
+    if (str::IsEmpty(s)) {
+        return false;
+    }
+    if (sLen == 0) {
+        sLen = str::Len(s);
+    }
+    if (sLen > len) {
+        return false;
+    }
+    // must account for possibility of 0 in the string
+    const char* curr = LendData();
+    int nLeft = (int)(len - sLen);
+    char c = *s;
+    char c2;
+    while (nLeft >= 0) {
+        c2 = *curr++;
+        nLeft--;
+        if (c != c2) {
+            continue;
+        }
+        if (str::EqN(s, curr - 1, sLen)) {
+            return true;
         }
     }
-    return -1;
-}
-
-bool Str::Contains(char el) const {
-    return -1 != Find(el);
-}
-
-// returns position of removed element or -1 if not removed
-int Str::Remove(char el) {
-    int i = Find(el);
-    if (-1 == i) {
-        return -1;
-    }
-    RemoveAt(i);
-    return i;
-}
-
-void Str::Reverse() const {
-    for (size_t i = 0; i < len / 2; i++) {
-        std::swap(els[i], els[len - i - 1]);
-    }
-}
-
-char& Str::FindEl(const std::function<bool(char&)>& check) const {
-    for (size_t i = 0; i < len; i++) {
-        if (check(els[i])) {
-            return els[i];
-        }
-    }
-    return els[len]; // nullptr-sentinel
+    return false;
 }
 
 bool Str::IsEmpty() const {
     return len == 0;
 }
 
-std::string_view Str::AsView() const {
-    return {Get(), size()};
-}
-
-ByteSlice Str::AsSpan() const {
-    return {(u8*)Get(), size()};
-}
-
 ByteSlice Str::AsByteSlice() const {
     return {(u8*)Get(), size()};
 }
 
-std::string_view Str::StealAsView() {
+ByteSlice Str::StealAsByteSlice() {
     size_t len = size();
     char* d = StealData();
-    return {d, len};
-}
-
-bool Str::AppendChar(char c) {
-    return InsertAt(len, c);
+    return {(u8*)d, len};
 }
 
 bool Str::Append(const u8* src, size_t size) {
     return this->Append((const char*)src, size);
 }
 
-bool Str::AppendView(const std::string_view sv) {
-    if (sv.empty()) {
-        return true;
-    }
-    return this->Append(sv.data(), sv.size());
-}
-
-bool Str::AppendSpan(ByteSlice d) {
+bool Str::AppendSlice(ByteSlice d) {
     if (d.empty()) {
         return true;
     }
@@ -1633,9 +1548,9 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
     return true;
 }
 
-void Str::Set(std::string_view sv) {
+void Str::Set(const char* s) {
     Reset();
-    AppendView(sv);
+    Append(s);
 }
 
 char* Str::Get() const {
@@ -1691,7 +1606,7 @@ static WCHAR* EnsureCap(WStr* s, size_t needed) {
     }
 
     if (!newEls) {
-        CrashAlwaysIf(gAllowAllocFailure.load() == 0);
+        CrashAlwaysIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
         return nullptr;
     }
     s->els = newEls;
@@ -1760,15 +1675,9 @@ WStr::WStr(const WStr& that) {
     memcpy(s, sOrig, n);
 }
 
-WStr::WStr(std::wstring_view s) {
-    Reset();
-    AppendView(s);
-}
-
 WStr::WStr(const WCHAR* s) {
     Reset();
-    std::wstring_view ws{s};
-    AppendView(ws);
+    Append(s);
 }
 
 WStr& WStr::operator=(const WStr& that) {
@@ -1842,8 +1751,8 @@ bool WStr::InsertAt(size_t idx, const WCHAR& el) {
     return true;
 }
 
-bool WStr::Append(const WCHAR& el) {
-    return InsertAt(len, el);
+bool WStr::AppendChar(WCHAR c) {
+    return InsertAt(len, c);
 }
 
 bool WStr::Append(const WCHAR* src, size_t count) {
@@ -1945,38 +1854,6 @@ bool WStr::IsEmpty() const {
     return len == 0;
 }
 
-std::wstring_view WStr::AsView() const {
-    return {Get(), size()};
-}
-
-std::span<WCHAR> WStr::AsSpan() const {
-    return {Get(), size()};
-}
-
-std::wstring_view WStr::StealAsView() {
-    size_t len = size();
-    WCHAR* d = StealData();
-    return {d, len};
-}
-
-bool WStr::AppendChar(WCHAR c) {
-    return InsertAt(len, c);
-}
-
-bool WStr::AppendView(const std::wstring_view sv) {
-    if (sv.empty()) {
-        return true;
-    }
-    return this->Append(sv.data(), sv.size());
-}
-
-bool WStr::AppendSpan(std::span<WCHAR> d) {
-    if (d.empty()) {
-        return true;
-    }
-    return this->Append(d.data(), d.size());
-}
-
 void WStr::AppendFmt(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -2006,9 +1883,9 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith) {
     return true;
 }
 
-void WStr::Set(std::wstring_view sv) {
+void WStr::Set(const WCHAR* s) {
     Reset();
-    AppendView(sv);
+    Append(s);
 }
 
 WCHAR* WStr::Get() const {
@@ -2048,10 +1925,6 @@ bool Eq(const WCHAR* s1, const WCHAR* s2) {
         return false;
     }
     return 0 == wcscmp(s1, s2);
-}
-
-bool Eq(std::wstring_view s1, const WCHAR* s2) {
-    return Eq(s1.data(), s2);
 }
 
 // return true if s1 == s2, case insensitive
@@ -2199,10 +2072,10 @@ const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
     return nullptr;
 }
 
-WCHAR* ToUpperInPlace(WCHAR* s) {
-    WCHAR* res = s;
+char* ToUpperInPlace(char* s) {
+    char* res = s;
     for (; s && *s; s++) {
-        *s = towupper(*s);
+        *s = (char)toupper(*s);
     }
     return res;
 }
@@ -2351,6 +2224,21 @@ size_t NormalizeWSInPlace(WCHAR* str) {
     return src - dst;
 }
 
+// Note: BufSet() should only be used when absolutely necessary (e.g. when
+// handling buffers in OS-defined structures)
+// returns the number of characters written (without the terminating \0)
+size_t BufSet(char* dst, size_t dstCchSize, const char* src) {
+    CrashAlwaysIf(0 == dstCchSize);
+
+    size_t srcCchSize = str::Len(src);
+    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
+
+    errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
+    CrashIf(err || dst[toCopy] != '\0');
+
+    return toCopy;
+}
+
 size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {
     CrashAlwaysIf(0 == dstCchSize);
 
@@ -2360,6 +2248,10 @@ size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {
     memset(dst, 0, dstCchSize * sizeof(WCHAR));
     memcpy(dst, src, toCopy * sizeof(WCHAR));
     return toCopy;
+}
+
+size_t BufSet(WCHAR* dst, size_t dstCchSize, const char* src) {
+    return BufSet(dst, dstCchSize, ToWstrTemp(src));
 }
 
 size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
@@ -2381,21 +2273,22 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
-    WCHAR thousandSep[4]{};
-    if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep))) {
-        str::BufSet(thousandSep, dimof(thousandSep), L",");
+char* FormatNumWithThousandSep(i64 num, LCID locale) {
+    WCHAR thousandSepW[4]{};
+    if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
+        str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
-    AutoFreeWstr buf(str::Format(L"%Iu", (size_t)num));
+    char* thousandSep = ToUtf8Temp(thousandSepW);
+    AutoFreeStr buf(str::Format("%Iu", (size_t)num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
-    WCHAR* res = AllocArray<WCHAR>(resLen);
+    char* res = AllocArray<char>(resLen);
     if (!res) {
         return nullptr;
     }
-    WCHAR* next = res;
+    char* next = res;
     int i = 3 - (str::Len(buf) % 3);
-    for (const WCHAR* src = buf; *src;) {
+    for (const char* src = buf; *src;) {
         *next++ = *src++;
         if (*src && i == 2) {
             next += str::BufSet(next, resLen - (next - res), thousandSep);
@@ -2409,35 +2302,37 @@ WCHAR* FormatNumWithThousandSep(i64 num, LCID locale) {
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
+char* FormatFloatWithThousandSep(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
-    AutoFreeWstr tmp(FormatNumWithThousandSep(num / 100, locale));
-    WCHAR decimal[4];
-    if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal))) {
-        str::BufSet(decimal, dimof(decimal), L".");
+    AutoFreeStr tmp(FormatNumWithThousandSep(num / 100, locale));
+    WCHAR decimalW[4];
+    if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
+        decimalW[0] = '.';
+        decimalW[1] = 0;
     }
+    char* decimal = ToUtf8Temp(decimalW);
 
     // always add between one and two decimals after the point
-    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
-    if (str::EndsWith(buf, L"0")) {
+    AutoFreeStr buf(str::Format("%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
+    if (str::EndsWith(buf, "0")) {
         buf[str::Len(buf) - 1] = '\0';
     }
 
     return buf.StealData();
 }
 
-// cf. http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
-WCHAR* FormatRomanNumeral(int number) {
+// http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
+char* FormatRomanNumeral(int number) {
     if (number < 1) {
         return nullptr;
     }
 
     static struct {
         int value;
-        const WCHAR* numeral;
-    } romandata[] = {{1000, L"M"}, {900, L"CM"}, {500, L"D"}, {400, L"CD"}, {100, L"C"}, {90, L"XC"}, {50, L"L"},
-                     {40, L"XL"},  {10, L"X"},   {9, L"IX"},  {5, L"V"},    {4, L"IV"},  {1, L"I"}};
+        const char* numeral;
+    } romandata[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
+                     {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
 
     size_t len = 0;
     for (int n = number, i = 0; i < dimof(romandata); i++) {
@@ -2447,7 +2342,7 @@ WCHAR* FormatRomanNumeral(int number) {
     }
     CrashIf(len == 0);
 
-    WCHAR *roman = AllocArray<WCHAR>(len + 1), *c = roman;
+    char *roman = AllocArray<char>(len + 1), *c = roman;
     for (int n = number, i = 0; i < dimof(romandata); i++) {
         for (; n >= romandata[i].value; n -= romandata[i].value) {
             c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);
@@ -2619,35 +2514,23 @@ Failure:
 
 namespace url {
 
-bool IsAbsolute(const WCHAR* url) {
-    const WCHAR* colon = str::FindChar(url, ':');
-    const WCHAR* hash = str::FindChar(url, '#');
+bool IsAbsolute(const char* url) {
+    const char* colon = str::FindChar(url, ':');
+    const char* hash = str::FindChar(url, '#');
     return colon && (!hash || hash > colon);
 }
 
-void DecodeInPlace(WCHAR* url) {
-    if (!str::FindChar(url, '%')) {
-        return;
-    }
-    // URLs are usually UTF-8 encoded
-    auto urlA(ToUtf8Temp(url));
-    DecodeInPlace(urlA.Get());
-    // convert back in place
-    CrashIf(str::Len(url) >= INT_MAX);
-    MultiByteToWideChar(CP_UTF8, 0, urlA.Get(), -1, url, (int)str::Len(url) + 1);
-}
-
-WCHAR* GetFullPath(const WCHAR* url) {
-    WCHAR* path = str::Dup(url);
-    str::TransCharsInPlace(path, L"#?", L"\0\0");
+char* GetFullPathTemp(const char* url) {
+    char* path = str::Dup(url);
+    str::TransCharsInPlace(path, "#?", "\0\0");
     DecodeInPlace(path);
     return path;
 }
 
-WCHAR* GetFileName(const WCHAR* url) {
-    AutoFreeWstr path(str::Dup(url));
-    str::TransCharsInPlace(path, L"#?", L"\0\0");
-    WCHAR* base = path + str::Len(path);
+char* GetFileName(const char* url) {
+    char* path = str::DupTemp(url);
+    str::TransCharsInPlace(path, "#?", "\0\0");
+    char* base = path + str::Len(path);
     for (; base > path; base--) {
         if ('/' == base[-1] || '\\' == base[-1]) {
             break;
@@ -2662,228 +2545,7 @@ WCHAR* GetFileName(const WCHAR* url) {
 
 } // namespace url
 
-namespace seqstrings {
-
-// advance to next string
-// return nullptr if end of strings
-const WCHAR* SkipStr(const WCHAR* s) {
-    // empty string marks the end, means idx was too high
-    if (!*s) {
-        return nullptr;
-    }
-    // skip past next '\0' char
-    while (*s) {
-        s++;
-    }
-    return s + 1;
-}
-
-// Returns nullptr if s is the same as toFind
-// If they are not equal, returns end of s + 1
-static inline const char* StrEqWeird(const char* s, const WCHAR* toFind) {
-    WCHAR wc;
-    char c, c2;
-    for (;;) {
-        c = *s++;
-        if (0 == c) {
-            if (0 == *toFind) {
-                return nullptr;
-            }
-            return s;
-        }
-        wc = *toFind++;
-        if (wc > 255) {
-            return nullptr;
-        }
-        c2 = (char)wc;
-        if (c != c2) {
-            while (*s) {
-                s++;
-            }
-            return s + 1;
-        }
-        // were equal, check another char
-    }
-}
-
-// optimization: allows finding WCHAR strings in char * strings array
-// without the need to convert first
-// returns -1 if toFind doesn't exist in strings, or its index if exists
-int StrToIdx(const char* strs, const WCHAR* toFind) {
-    const char* s = strs;
-    int idx = 0;
-    while (*s) {
-        s = StrEqWeird(s, toFind);
-        if (nullptr == s) {
-            return idx;
-        }
-        ++idx;
-    }
-    return -1;
-}
-
-// Given an index in the "array" of sequentially laid out strings,
-// returns a strings at that index.
-const WCHAR* IdxToStr(const WCHAR* strs, int idx) {
-    CrashIf(idx < 0);
-    const WCHAR* s = strs;
-    while (idx > 0) {
-        s = SkipStr(s);
-        if (!s) {
-            return nullptr;
-        }
-        --idx;
-    }
-    return s;
-}
-
-} // namespace seqstrings
-
-ByteSlice ToSpanU8(std::string_view sv) {
-    return {(u8*)sv.data(), sv.size()};
-}
-
-#if 0
-// TODO: could increase kVecStrIndexSize when expanding array
-constexpr int kVecStrIndexSize = 128;
-struct VecStrIndex {
-    VecStrIndex* next;
-    int nStrings;
-    char* offsets[kVecStrIndexSize];
-    i32 sizes[kVecStrIndexSize];
-    int ItemsLeft() const;
-};
-
-// Append-only, optimized vector of strings. Allocates from pool allocator, so
-// strings are close together and freed in bulk
-// implemented in BaseUtil.cpp
-struct VecStr {
-    PoolAllocator allocator;
-    VecStrIndex* firstIndex = nullptr;
-    VecStrIndex* currIndex = nullptr;
-
-    VecStr() = default;
-    ~VecStr() = default;
-    void Reset();
-
-    int Size() const;
-    std::string_view at(int) const;
-
-    bool Append(std::string_view sv);
-    bool Exists(std::string_view sv);
-    bool AppendIfNotExists(std::string_view sv);
-};
-
-
-int VecStrIndex::ItemsLeft() const {
-    return kVecStrIndexSize - nStrings;
-}
-
-int VecStr::Size() const {
-    VecStrIndex* idx = firstIndex;
-    int n = 0;
-    while (idx) {
-        n += idx->nStrings;
-        idx = idx->next;
-    }
-    return n;
-}
-
-std::string_view VecStr::at(int i) const {
-    CrashIf(i < 0);
-    VecStrIndex* idx = firstIndex;
-    while (idx) {
-        if (idx->nStrings > i) {
-            break;
-        }
-        i -= idx->nStrings;
-        idx = idx->next;
-    }
-    if (idx == nullptr) {
-        CrashMe();
-        return {};
-    }
-    CrashIf(idx->nStrings <= i);
-    if (idx->nStrings <= i) {
-        return {};
-    }
-    const char* s = (const char*)idx->offsets[i];
-    i32 size = idx->sizes[i];
-    return {s, (size_t)size};
-}
-
-static bool allocateIndexIfNeeded(VecStr& v) {
-    if (v.currIndex && v.currIndex->ItemsLeft() > 0) {
-        return true;
-    }
-
-    VecStrIndex* idx = v.allocator.AllocStruct<VecStrIndex>();
-
-    if (!idx) {
-        CrashAlwaysIf(gAllowAllocFailure.load() == 0);
-        return false;
-    }
-
-    idx->next = nullptr;
-    idx->nStrings = 0;
-
-    if (!v.firstIndex) {
-        v.firstIndex = idx;
-        v.currIndex = idx;
-    } else {
-        CrashIf(!v.firstIndex);
-        CrashIf(!v.currIndex);
-        v.currIndex->next = idx;
-        v.currIndex = idx;
-    }
-    return true;
-}
-
-bool VecStr::Exists(std::string_view sv) {
-    int n = Size();
-    for (int i = 0; i < n; i++) {
-        auto s = at(i);
-        if (str::Eq(sv, s)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool VecStr::AppendIfNotExists(std::string_view sv) {
-    if (!Exists(sv)) {
-        return Append(sv);
-    }
-    return false;
-}
-
-bool VecStr::Append(std::string_view sv) {
-    bool ok = allocateIndexIfNeeded(*this);
-    if (!ok) {
-        return false;
-    }
-    constexpr size_t maxLen = (size_t)std::numeric_limits<i32>::max();
-    CrashIf(sv.size() > maxLen);
-    if (sv.size() > maxLen) {
-        return false;
-    }
-    std::string_view res = str::Dup(&allocator, sv);
-
-    int n = currIndex->nStrings;
-    currIndex->offsets[n] = (char*)res.data();
-    currIndex->sizes[n] = (i32)res.size();
-    currIndex->nStrings++;
-    return true;
-}
-
-void VecStr::Reset() {
-    allocator.Reset();
-    firstIndex = nullptr;
-    currIndex = nullptr;
-}
-#endif
-
-//- StrVec
+//--- StrVec
 
 /*
 TODO:
@@ -2902,7 +2564,7 @@ void StrVec::Reset() {
     index.Reset();
 }
 
-int StrVec::Append(const char* s) {
+int StrVec::Append(const char* s, size_t sLen) {
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -2911,9 +2573,13 @@ int StrVec::Append(const char* s) {
         }
         return Size() - 1;
     }
-    size_t sLen = str::Len(s);
+    if (sLen == 0) {
+        sLen = str::Len(s);
+    }
     u32 idx = (u32)strings.size();
-    ok = strings.Append(s, sLen + 1);
+    ok = strings.Append(s, sLen);
+    // ensure to always zero-terminate
+    ok &= strings.AppendChar(0);
     if (!ok) {
         return -1;
     }
@@ -2924,27 +2590,71 @@ int StrVec::Append(const char* s) {
     return Size() - 1;
 }
 
+int StrVec::AppendIfNotExists(const char* s) {
+    if (Contains(s)) {
+        return -1;
+    }
+    return Append(s);
+}
+
+bool StrVec::InsertAt(int idx, const char* s) {
+    size_t n = str::Len(s);
+    u32 strIdx = (u32)strings.size();
+    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    if (!ok) {
+        return false;
+    }
+    return index.InsertAt(idx, strIdx);
+}
+
+void StrVec::SetAt(int idx, const char* s) {
+    if (s == nullptr) {
+        index[idx] = kNullIdx;
+        return;
+    }
+    size_t n = str::Len(s);
+    u32 strIdx = (u32)strings.size();
+    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    if (!ok) {
+        return;
+    }
+    index[idx] = strIdx;
+}
+
+size_t StrVec::size() const {
+    return index.size();
+}
+
 int StrVec::Size() const {
     return index.isize();
 }
 
-std::string_view StrVec::at(int idx) const {
+char* StrVec::operator[](int idx) const {
+    CrashIf(idx < 0);
+    return at(idx);
+}
+
+char* StrVec::operator[](size_t idx) const {
+    CrashIf(idx < 0);
+    return at((int)idx);
+}
+
+char* StrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
     if (start == kNullIdx) {
-        return {};
+        return nullptr;
     }
     u32 end = (u32)strings.size();
     if (idx + 1 < n) {
         end = (u32)index.at(idx + 1);
     }
-    const char* s = strings.LendData() + start;
-    size_t len = (size_t)(end - start - 1);
-    return {s, len};
+    char* s = strings.LendData() + start;
+    return s;
 }
 
-int StrVec::Find(std::string_view sv, int startAt) const {
+int StrVec::Find(const char* sv, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
         auto s = at(i);
@@ -2955,73 +2665,109 @@ int StrVec::Find(std::string_view sv, int startAt) const {
     return -1;
 }
 
-bool StrVec::Exists(std::string_view sv) const {
-    int idx = Find(sv);
+int StrVec::FindI(const char* sv, int startAt) const {
+    int n = Size();
+    for (int i = startAt; i < n; i++) {
+        auto s = at(i);
+        if (str::EqI(sv, s)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool StrVec::Contains(const char* s) const {
+    int idx = Find(s);
     return idx != -1;
 }
 
-int StrVec::AppendIfNotExists(std::string_view sv) {
-    if (Exists(sv)) {
-        return -1;
-    }
-    return Append(sv.data());
+// TODO: remove, use RemoveAt() instead
+char* StrVec::PopAt(int idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAt(idx);
+    char* res = strings.Get() + strIdx;
+    return res;
 }
 
-static bool strLess(std::string_view s1, std::string_view s2) {
-    if (s1.empty()) {
-        return true;
-    }
-    if (s1.empty()) {
-        return false;
-    }
-    bool ret = s1 < s2;
-    return ret;
+// Note: returned string remains valid as long as StrVec is valid
+char* StrVec::RemoveAt(int idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAt(idx);
+    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
+    return res;
 }
 
-static bool strLessNoCase(std::string_view s1, std::string_view s2) {
-    if (s1.empty()) {
+// Note: returned string remains valid as long as StrVec is valid
+char* StrVec::RemoveAtFast(size_t idx) {
+    u32 strIdx = index[idx];
+    index.RemoveAtFast(idx);
+    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
+    return res;
+}
+
+// return true if did remove
+bool StrVec::Remove(const char* s) {
+    int idx = Find(s);
+    if (idx >= 0) {
+        RemoveAt(idx);
         return true;
     }
-    if (s1.empty()) {
-        return false;
-    }
-    size_t n1 = s1.size();
-    size_t n2 = s2.size();
-    for (size_t i = 0; i < n1 && i < n2; i++) {
-        int c1 = tolower(s1[i]);
-        int c2 = tolower(s2[i]);
-        if (c1 == c2) {
-            continue;
+    return false;
+}
+
+static bool strLess(const char* s1, const char* s2) {
+    if (str::IsEmpty(s1)) {
+        if (str::IsEmpty(s2)) {
+            return false;
         }
-        return c1 < c2;
+        return true;
     }
-    return n1 < n2;
+    if (str::IsEmpty(s2)) {
+        return false;
+    }
+    int n = strcmp(s1, s2);
+    return n < 0;
 }
 
-#if 0
+static bool strLessNoCase(const char* s1, const char* s2) {
+    if (str::IsEmpty(s1)) {
+        // null / empty string is smallest
+        if (str::IsEmpty(s2)) {
+            return false;
+        }
+        return true;
+    }
+    if (str::IsEmpty(s2)) {
+        return false;
+    }
+    int n = _stricmp(s1, s2);
+    return n < 0;
+}
+
+void StrVec::SortNoCase() {
+    Sort(strLessNoCase);
+}
+
+static bool strLessNatural(const char* s1, const char* s2) {
+    int n = str::CmpNatural(s1, s2);
+    return n < 0; // TODO: verify it's < and not >
+}
+
+void StrVec::SortNatural() {
+    Sort(strLessNatural);
+}
+
 void StrVec::Sort(StrLessFunc lessFn) {
     if (lessFn == nullptr) {
         lessFn = strLess;
     }
-
-    // sortedIndex is 0...Size()-1 value
-    // that points into index Vec
-    // starty by fillng sortedIndex with 0...Size()-1
-    // and then sort by swapping indexes
-    u32 n = (u32)index.size();
-    sortedIndex.Reset();
-    for (u32 i = 0; i < n; i++) {
-        sortedIndex.Append(i);
-    }
-    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        std::string_view is1 = at((int)i1);
-        std::string_view is2 = at((int)i2);
+    std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
+        char* is1 = (i1 == kNullIdx) ? nullptr : strings.Get() + i1;
+        char* is2 = (i2 == kNullIdx) ? nullptr : strings.Get() + i2;
         bool ret = lessFn(is1, is2);
         return ret;
     });
-    isSorted = true;
 }
-#endif
 
 bool StrVec::GetSortedView(StrVecSortedView& view, StrLessFunc lessFn) const {
     view.v = (StrVec*)this;
@@ -3042,8 +2788,8 @@ bool StrVec::GetSortedView(StrVecSortedView& view, StrLessFunc lessFn) const {
         sortedIndex.Append(i);
     }
     std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        std::string_view is1 = at((int)i1);
-        std::string_view is2 = at((int)i2);
+        const char* is1 = at((int)i1);
+        const char* is2 = at((int)i2);
         bool ret = lessFn(is1, is2);
         return ret;
     });
@@ -3059,157 +2805,56 @@ int StrVecSortedView::Size() const {
     return sortedIndex.isize();
 }
 
-std::string_view StrVecSortedView::at(int i) const {
+char* StrVecSortedView::at(int i) const {
     CrashIf(sortedIndex.size() != v->index.size());
 
     u32 i2 = sortedIndex[i];
     return v->at((int)i2);
 }
 
-//- WStrVec
-
-bool wstrLess(std::wstring_view s1, std::wstring_view s2) {
-    if (s1.empty()) {
-        return true;
-    }
-    if (s1.empty()) {
-        return false;
-    }
-    bool ret = s1 < s2;
-    return ret;
+char* StrVecSortedView::operator[](int i) const {
+    return at(i);
 }
 
-bool wstrLessNoCase(std::wstring_view s1, std::wstring_view s2) {
-    if (s1.empty()) {
-        return true;
+/* splits a string into several substrings, separated by the separator
+(optionally collapsing several consecutive separators into one);
+e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+(resp. "a", "b", "c" if separators are collapsed) */
+size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
+    int startSize = v.Size();
+    const char* next;
+    while (true) {
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            v.Append(str::DupTemp(s, next - s));
+        }
+        s = next + str::Len(separator);
     }
-    if (s1.empty()) {
-        return false;
+    if (!collapse || *s) {
+        v.Append(s);
     }
-    size_t n1 = s1.size();
-    size_t n2 = s2.size();
-    for (size_t i = 0; i < n1 && i < n2; i++) {
-        WCHAR c1 = towlower(s1[i]);
-        WCHAR c2 = towlower(s2[i]);
-        if (c1 == c2) {
+
+    return (size_t)(v.Size() - startSize);
+}
+
+char* Join(const StrVec& v, const char* joint) {
+    str::Str tmp(256);
+    int len = v.Size();
+    size_t jointLen = str::Len(joint);
+    int firstForJoint = 0;
+    for (int i = 0; i < len; i++) {
+        char* s = v.at(i);
+        if (!s) {
+            firstForJoint++;
             continue;
         }
-        return c1 < c2;
-    }
-    return n1 < n2;
-}
-
-void WStrVec2::Reset() {
-    strings.Reset();
-    index.Reset();
-}
-
-// returns index with strings
-int WStrVec2::Append(const WCHAR* s) {
-    bool ok;
-    if (s == nullptr) {
-        ok = index.Append(kNullIdx);
-        if (!ok) {
-            return -1;
+        if (i > firstForJoint && jointLen > 0) {
+            tmp.Append(joint, jointLen);
         }
-        return Size() - 1;
+        tmp.Append(s);
     }
-    size_t sLen = str::Len(s);
-    u32 idx = (u32)strings.size();
-    ok = strings.Append(s, sLen + 1);
-    if (!ok) {
-        return -1;
-    }
-    ok = index.Append(idx);
-    if (!ok) {
-        return -1;
-    }
-    return Size() - 1;
-}
-
-int WStrVec2::Size() const {
-    return index.isize();
-}
-
-size_t WStrVec2::size() const {
-    return index.size();
-}
-
-std::wstring_view WStrVec2::at(int idx) const {
-    int n = Size();
-    CrashIf(idx < 0 || idx >= n);
-    u32 start = index.at(idx);
-    if (start == kNullIdx) {
-        return {};
-    }
-    u32 end = (u32)strings.size();
-    if (idx + 1 < n) {
-        end = (u32)index.at(idx + 1);
-    }
-    const WCHAR* s = strings.LendData() + start;
-    size_t len = (size_t)(end - start - 1);
-    return {s, len};
-}
-
-int WStrVec2::Find(const WCHAR* s, int startAt) const {
-    int n = Size();
-    for (int i = startAt; i < n; i++) {
-        auto s2 = at(i);
-        if (str::Eq(s, s2.data())) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-bool WStrVec2::Exists(std::wstring_view sv) const {
-    int idx = Find(sv.data(), 0);
-    return idx != -1;
-}
-
-int WStrVec2::AppendIfNotExists(std::wstring_view sv) {
-    if (Exists(sv)) {
-        return -1;
-    }
-    return Append(sv.data());
-}
-
-bool WStrVec2::GetSortedView(WStrVecSortedView& view, WStrLessFunc lessFn) const {
-    view.v = (WStrVec2*)this;
-    view.sortedIndex = this->index; // TOOD: verify this works as expected
-
-    if (lessFn == nullptr) {
-        lessFn = wstrLess;
-    }
-
-    auto& sortedIndex = view.sortedIndex;
-    // sortedIndex is 0...Size()-1 value
-    // that points into index Vec
-    // starty by fillng sortedIndex with 0...Size()-1
-    // and then sort by swapping indexes
-    u32 n = (u32)index.size();
-    sortedIndex.Reset();
-    for (u32 i = 0; i < n; i++) {
-        sortedIndex.Append(i);
-    }
-    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        std::wstring_view is1 = at((int)i1);
-        std::wstring_view is2 = at((int)i2);
-        bool ret = lessFn(is1, is2);
-        return ret;
-    });
-
-    return true;
-}
-bool WStrVec2::GetSortedViewNoCase(WStrVecSortedView& view) const {
-    return GetSortedView(view, wstrLessNoCase);
-}
-
-int WStrVecSortedView::Size() const {
-    return sortedIndex.isize();
-}
-
-std::wstring_view WStrVecSortedView::at(int i) const {
-    u32 idx = sortedIndex[i];
-    return v->at(idx);
+    return tmp.StealData();
 }

@@ -2,39 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/DirIter.h"
 #include "utils/FileUtil.h"
-
-// Start directory traversal in a given dir
-bool DirIter::StartDirIter(std::wstring_view dir) {
-    currDir.SetCopy(dir);
-    AutoFreeWstr pattern(path::Join(currDir, L"*"));
-    currFindHandle = FindFirstFile(pattern, &currFindData);
-    return INVALID_HANDLE_VALUE != currFindHandle;
-}
-
-bool DirIter::TryNextDir() {
-    while (dirsToVisit.size() > 0) {
-        AutoFreeWstr nextDir(dirsToVisit.Pop());
-        // it's ok if we fail, this might be an auth problem,
-        // we keep going
-        bool ok = StartDirIter(nextDir.AsView());
-        if (ok) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Start iteration in a given dir and return fullPath of first
-// file found or nullptr if no files
-const WCHAR* DirIter::First() {
-    foundNext = StartDirIter(startDir);
-    if (!foundNext) {
-        return nullptr;
-    }
-    return Next();
-}
+#include "utils/WinUtil.h"
+#include "utils/DirIter.h"
 
 // try to filter out things that are not files
 // or not meant to be used by other applications
@@ -57,96 +27,88 @@ static bool IsRegularFile(DWORD fileAttr) {
     return true;
 }
 
-bool IsDirectory(DWORD fileAttr) {
+static bool IsDirectory(DWORD fileAttr) {
     return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-// "." and ".." are special
-static bool IsSpecialDir(const WCHAR* s) {
-    return str::Eq(s, L".") || str::Eq(s, L"..");
+static bool IsSpecialDir(const char* s) {
+    return str::Eq(s, ".") || str::Eq(s, "..");
 }
 
-// Returns a full path of the next file
-// Returns nullptr if finished iteration.
-// Returned value is valid only until we call Next() again.
-const WCHAR* DirIter::Next() {
-    // when we enter here, currFindData has info for an entry
-    // we haven't processed yet (filled by StartDirIter() or
-    // ourselves at the end) unless foundNext is false
-    currPath.Reset();
-    while (foundNext && !currPath) {
-        WCHAR* f = currFindData.cFileName;
-        if ((currFindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            if (recursive && !IsSpecialDir(f)) {
-                WCHAR* d = path::Join(currDir, f);
-                dirsToVisit.Append(d);
-            }
-        } else if (IsRegularFile(currFindData.dwFileAttributes)) {
-            WCHAR* p = path::Join(currDir, f);
-            currPath.Set(p);
-        }
-        BOOL hasMore = FindNextFile(currFindHandle, &currFindData);
-        if (!hasMore) {
-            foundNext = TryNextDir();
-        }
+bool DirTraverse(const char* dir, bool recurse, const std::function<bool(WIN32_FIND_DATAW* fd, const char*)>& cb) {
+    auto dirW = ToWstrTemp(dir);
+    WCHAR* pattern = path::JoinTemp(dirW, L"*");
+
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW(pattern, &fd);
+    if (!IsValidHandle(h)) {
+        return false;
     }
-    return currPath;
+
+    bool isFile;
+    bool isDir;
+    bool cont = true;
+    char* name;
+    char* path;
+    do {
+        isFile = IsRegularFile(fd.dwFileAttributes);
+        isDir = IsDirectory(fd.dwFileAttributes);
+        name = ToUtf8Temp(fd.cFileName);
+        path = path::JoinTemp(dir, name);
+        if (isFile) {
+            cont = cb(&fd, path);
+        } else if (recurse && isDir) {
+            if (!IsSpecialDir(name)) {
+                cont = DirTraverse(path, recurse, cb);
+            }
+        }
+    } while (cont && FindNextFileW(h, &fd));
+    FindClose(h);
+    return true;
 }
 
-bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles) {
-    AutoFreeWstr dirPath = path::GetDir(pattern);
+bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const char*)>& cb) {
+    bool ok = DirTraverse(dir, recurse, [&cb](WIN32_FIND_DATAW*, const char* path) -> bool {
+        bool cont = cb(path);
+        return cont;
+    });
+    return ok;
+}
 
-    WIN32_FIND_DATA fdata{};
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
+bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles) {
+    char* dir = path::GetDirTemp(pattern);
+
+    WIN32_FIND_DATAW fdata{};
+    WCHAR* patternW = ToWstr(pattern);
+    HANDLE hfind = FindFirstFileW(patternW, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return false;
     }
 
+    bool append;
     do {
-        bool append = !dirsInsteadOfFiles;
-        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
+        append = false;
+        char* name = ToUtf8Temp(fdata.cFileName);
+        DWORD attrs = fdata.dwFileAttributes;
+        if (IsRegularFile(attrs)) {
+            append = !dirsInsteadOfFiles;
+        } else if (IsDirectory(attrs)) {
+            append = dirsInsteadOfFiles && !IsSpecialDir(name);
         }
         if (append) {
-            paths.Append(path::Join(dirPath, fdata.cFileName));
+            char* path = path::JoinTemp(dir, name);
+            paths.Append(path);
         }
-    } while (FindNextFile(hfind, &fdata));
+    } while (FindNextFileW(hfind, &fdata));
     FindClose(hfind);
     return paths.size() > 0;
 }
 
-#if 0
-// returns a list of directories (full paths) in a given directory
-// TODO: add recursive flag
-std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
-    AutoFreeWstr pattern = path::Join(dir, L"*");
-
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return {};
-    }
-
-    std::vector<std::wstring> res;
-    do {
-        if (IsDirectory(fdata.dwFileAttributes)) {
-            if (!IsSpecialDir(fdata.cFileName)) {
-                AutoFreeWstr s = path::Join(dir, fdata.cFileName);
-                res.emplace_back(std::move(std::wstring(s)));
-            }
-        }
-    } while (FindNextFileW(hfind, &fdata));
-    FindClose(hfind);
-    return res;
-}
-#endif
-
-bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
-                               const std::function<bool(std::string_view)>& fileMatchesFn) {
+bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::function<bool(const char*)>& fileMatchesFn) {
     auto dirW = ToWstrTemp(dir);
-    AutoFreeWstr pattern = path::Join(dirW, L"*");
+    WCHAR* pattern = path::JoinTemp(dirW, L"*");
 
-    WIN32_FIND_DATA fdata;
+    WIN32_FIND_DATAW fdata;
     HANDLE hfind = FindFirstFileW(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return false;
@@ -156,11 +118,11 @@ bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
     do {
         isFile = IsRegularFile(fdata.dwFileAttributes);
         if (isFile) {
-            auto name = ToUtf8Temp(fdata.cFileName);
-            AutoFreeStr filePath = path::Join(dir.data(), name.Get(), nullptr);
+            char* name = ToUtf8Temp(fdata.cFileName);
+            char* filePath = path::JoinTemp(dir, name);
             bool matches = true;
             if (fileMatchesFn) {
-                matches = fileMatchesFn(filePath.AsView());
+                matches = fileMatchesFn(filePath);
             }
             if (matches) {
                 files.Append(filePath);
@@ -169,4 +131,11 @@ bool CollectFilesFromDirectory(std::string_view dir, StrVec& files,
     } while (FindNextFileW(hfind, &fdata));
     FindClose(hfind);
     return true;
+}
+
+i64 GetFileSize(WIN32_FIND_DATAW* fd) {
+    ULARGE_INTEGER ul;
+    ul.HighPart = fd->nFileSizeHigh;
+    ul.LowPart = fd->nFileSizeLow;
+    return (i64)ul.QuadPart;
 }

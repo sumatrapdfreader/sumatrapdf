@@ -32,7 +32,7 @@ class EpubFormatter : public HtmlFormatter {
     void HandleTagSvgImage(HtmlToken* t);
 
     EpubDoc* epubDoc;
-    AutoFree pagePath;
+    AutoFreeStr pagePath;
     size_t hiddenDepth;
 
   public:

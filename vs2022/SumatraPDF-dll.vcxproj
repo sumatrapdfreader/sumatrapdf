@@ -573,10 +573,10 @@
     <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
-    <ClInclude Include="..\src\Controller.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
+    <ClInclude Include="..\src\DocController.h" />
     <ClInclude Include="..\src\EditAnnotations.h" />
     <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
@@ -586,6 +586,7 @@
     <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
     <ClInclude Include="..\src\Installer.h" />
+    <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\Menu.h" />
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\PdfSync.h" />
@@ -614,7 +615,6 @@
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />
     <ClInclude Include="..\src\Version.h" />
-    <ClInclude Include="..\src\WindowInfo.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\resource.h" />
@@ -627,15 +627,10 @@
     <ClInclude Include="..\src\utils\UtAssert.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
-    <ClInclude Include="..\src\wingui\ImageCtrl.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\Layout.h" />
-    <ClInclude Include="..\src\wingui\TabsCtrl.h" />
-    <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
-    <ClInclude Include="..\src\wingui\TreeCtrl.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
-    <ClInclude Include="..\src\wingui\Window.h" />
-    <ClInclude Include="..\src\wingui\wingui2.h" />
+    <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
@@ -664,6 +659,7 @@
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
+    <ClCompile Include="..\src\MainWindow.cpp" />
     <ClCompile Include="..\src\MemLeakDetect.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
@@ -709,11 +705,10 @@
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
+    <ClCompile Include="..\src\TranslationLangs.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />
-    <ClCompile Include="..\src\TranslationsInfo.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
-    <ClCompile Include="..\src\WindowInfo.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\regress\Regress.cpp">
@@ -899,15 +894,10 @@
     </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
-    <ClCompile Include="..\src\wingui\ImageCtrl.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
-    <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
-    <ClCompile Include="..\src\wingui\Window.cpp" />
-    <ClCompile Include="..\src\wingui\wingui2.cpp" />
+    <ClCompile Include="..\src\wingui\WinGui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\docs\releasenotes.txt" />

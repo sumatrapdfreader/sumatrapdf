@@ -28,7 +28,7 @@
 static pdf_cmap *
 pdf_load_embedded_cmap_imp(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */
+	pdf_cycle_list cycle;
 	fz_stream *file = NULL;
 	pdf_cmap *cmap = NULL;
 	pdf_cmap *usecmap = NULL;

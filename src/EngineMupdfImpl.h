@@ -58,7 +58,7 @@ class EngineMupdf : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    WCHAR* GetProperty(DocumentProperty prop) override;
+    char* GetProperty(DocumentProperty prop) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -68,11 +68,11 @@ class EngineMupdf : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    IPageDestination* GetNamedDest(const WCHAR* name) override;
+    IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
-    [[nodiscard]] WCHAR* GetPageLabel(int pageNo) const override;
-    int GetPageByLabel(const WCHAR* label) const override;
+    char* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const char* label) const override;
 
     int GetAnnotations(Vec<Annotation*>* annotsOut);
 
@@ -93,7 +93,7 @@ class EngineMupdf : public EngineBase {
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* pdfInfo = nullptr;
-    WStrVec* pageLabels = nullptr;
+    StrVec* pageLabels = nullptr;
 
     TocTree* tocTree = nullptr;
 
@@ -101,7 +101,7 @@ class EngineMupdf : public EngineBase {
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
 
-    bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
+    bool Load(const char* filePath, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
@@ -114,9 +114,9 @@ class EngineMupdf : public EngineBase {
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) const;
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
-    WCHAR* ExtractFontList();
+    char* ExtractFontList();
 
-    ByteSlice LoadStreamFromPDFFile(const WCHAR* filePath);
+    ByteSlice LoadStreamFromPDFFile(const char* filePath);
     void InvalideAnnotationsForPage(int pageNo);
 };
 

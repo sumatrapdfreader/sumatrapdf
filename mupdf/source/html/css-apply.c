@@ -768,6 +768,7 @@ is_inheritable_property(int name)
 		name == PRO_FONT_STYLE ||
 		name == PRO_FONT_VARIANT ||
 		name == PRO_FONT_WEIGHT ||
+		name == PRO_LEADING ||
 		name == PRO_LETTER_SPACING ||
 		name == PRO_LINE_HEIGHT ||
 		name == PRO_LIST_STYLE_IMAGE ||
@@ -828,6 +829,15 @@ make_number(float v, int u)
 	fz_css_number n;
 	n.value = v;
 	n.unit = u;
+	return n;
+}
+
+static fz_css_number
+make_undefined_number(void)
+{
+	fz_css_number n;
+	n.value = 0;
+	n.unit = N_UNDEFINED;
 	return n;
 }
 
@@ -961,6 +971,11 @@ border_style_from_property(fz_css_match *match, int property)
 		else if (!strcmp(value->data, "solid")) return BS_SOLID;
 	}
 	return BS_NONE;
+}
+
+int fz_css_number_defined(fz_css_number number)
+{
+	return number.unit != N_UNDEFINED;
 }
 
 float
@@ -1213,6 +1228,7 @@ fz_default_css_style(fz_context *ctx, fz_css_style *style)
 	style->font_size = make_number(1, N_SCALE);
 	style->width = make_number(0, N_AUTO);
 	style->height = make_number(0, N_AUTO);
+	style->leading = make_undefined_number();
 }
 
 void
@@ -1292,6 +1308,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 	}
 
 	style->line_height = number_from_property(match, PRO_LINE_HEIGHT, 1.2f, N_SCALE);
+	style->leading = number_from_property(match, PRO_LEADING, 0, N_UNDEFINED);
 
 	style->text_indent = number_from_property(match, PRO_TEXT_INDENT, 0, N_LENGTH);
 

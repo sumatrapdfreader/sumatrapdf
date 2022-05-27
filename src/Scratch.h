@@ -13,7 +13,7 @@ struct FileData {
     }
 };
 
-Vec<FileData*> MobiToEpub(const WCHAR* path);
+Vec<FileData*> MobiToEpub(const char* path);
 
 void LoadRar();
 void LoadFile();

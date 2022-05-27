@@ -10,20 +10,20 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "Selection.h"
 #include "Translations.h"
 #include "EditAnnotations.h"
 
-TabInfo::TabInfo(WindowInfo* win, const WCHAR* filePath) {
+TabInfo::TabInfo(MainWindow* win, const char* filePath) {
     this->win = win;
     this->filePath.SetCopy(filePath);
 }
@@ -64,7 +64,7 @@ EngineBase* TabInfo::GetEngine() const {
     return nullptr;
 }
 
-const WCHAR* TabInfo::GetTabTitle() const {
+const char* TabInfo::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }
@@ -97,7 +97,7 @@ void TabInfo::ToggleZoom() const {
     if (!IsDocLoaded()) {
         return;
     }
-    // TODO: maybe move to Controller?
+    // TODO: maybe move to DocController?
     float newZoom = kZoomFitPage;
     float currZoom = ctrl->GetZoomVirtual();
     if (kZoomFitPage == currZoom) {
@@ -117,14 +117,14 @@ LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
 }
 #endif
 
-bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data) {
+bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     if (!HasPermission(Perm::DiskAccess)) {
         return false;
     }
 
-    WCHAR dstFileName[MAX_PATH]{};
-    if (fileName) {
-        str::BufSet(dstFileName, dimof(dstFileName), fileName);
+    WCHAR dstFileName[MAX_PATH] = {0};
+    if (fileNameA) {
+        str::BufSet(dstFileName, dimof(dstFileName), fileNameA);
     }
     // CrashIf(fileName && str::FindChar(fileName, '/'));
 
@@ -147,7 +147,8 @@ bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data) {
     if (!ok) {
         return false;
     }
-    ok = file::WriteFile(dstFileName, data);
+    char* path = ToUtf8Temp(dstFileName);
+    ok = file::WriteFile(path, data);
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
     if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {

@@ -24,9 +24,6 @@ This is an easy way to disable logging per file
 */
 
 #ifdef NO_LOG
-static inline void log(std::string_view) {
-    // do nothing
-}
 static inline void log(const char*) {
     // do nothing
 }
@@ -40,7 +37,6 @@ static inline void logf(const WCHAR*, ...) {
     // do nothing
 }
 #else
-void log(std::string_view s);
 void log(const char* s);
 void logf(const char* fmt, ...);
 void log(const WCHAR* s);

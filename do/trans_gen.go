@@ -22,7 +22,8 @@ const compactCTmpl = `/*
  Generated with .\doit.bat -trans-regen
 */
 
-#include "utils/BaseUtil.h"
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 
 namespace trans {
 
@@ -90,7 +91,7 @@ func cEscapeForCompact(txt string) string {
 	return fmt.Sprintf(`"%s\0"`, res)
 }
 
-// generate TranslationsInfo.cpp
+// generate TranslationLangs.cpp
 func genTranslationInfoCpp() {
 
 	sort.Slice(gLangs, func(i, j int) bool {
@@ -196,7 +197,7 @@ func genTranslationInfoCpp() {
 		Langids:    langids,
 		Islangrtl:  islangrtl,
 	}
-	path := filepath.Join("src", "TranslationsInfo.cpp")
+	path := filepath.Join("src", "TranslationLangs.cpp")
 	fileContent := evalTmpl(compactCTmpl, v2)
 	logf(ctx(), "fileContent: path: %s, file size: %d\n", path, len(fileContent))
 	writeFileMust(path, []byte(fileContent))

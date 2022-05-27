@@ -41,9 +41,9 @@ const char* preReleaseVersion = nullptr;
 #endif
 
 #if defined(GIT_COMMIT_ID)
-const char* gitSha1 = QM(GIT_COMMIT_ID);
+const char* gitCommidId = QM(GIT_COMMIT_ID);
 #else
-const char* gitSha1 = nullptr;
+const char* gitCommidId = nullptr;
 #endif
 
 // experimental, unfinished theme support for menus by making them owner-drawn

@@ -664,7 +664,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100" }
     files { "ext/unarr/main.c" }
     links { "unarrlib", "zlib" }
-
+  --]]
 
   project "signfile"
     kind "ConsoleApp"
@@ -686,7 +686,6 @@ workspace "SumatraPDF"
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
     links { "shlwapi", "version", "comctl32" }
-  --]]
 
   project "enginedump"
     kind "ConsoleApp"
@@ -898,6 +897,10 @@ workspace "MakeLZSA"
 
   filter "action:vs2019"
     location "vs2019"
+  filter {}
+
+  filter "action:vs2022"
+    location "vs2022"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}

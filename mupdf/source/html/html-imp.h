@@ -23,6 +23,10 @@
 #ifndef SOURCE_HTML_IMP_H
 #define SOURCE_HTML_IMP_H
 
+#include "mupdf/fitz.h"
+
+#include "../fitz/xml-imp.h"
+
 typedef struct fz_html_font_face_s fz_html_font_face;
 typedef struct fz_html_font_set_s fz_html_font_set;
 typedef struct fz_html_s fz_html;
@@ -143,6 +147,7 @@ enum
 	PRO_FONT_VARIANT,
 	PRO_FONT_WEIGHT,
 	PRO_HEIGHT,
+	PRO_LEADING,
 	PRO_LETTER_SPACING,
 	PRO_LINE_HEIGHT,
 	PRO_LIST_STYLE_IMAGE,
@@ -225,7 +230,7 @@ enum {
 	LST_ARMENIAN, LST_GEORGIAN,
 };
 
-enum { N_NUMBER='u', N_LENGTH='p', N_SCALE='m', N_PERCENT='%', N_AUTO='a' };
+enum { N_NUMBER='u', N_LENGTH='p', N_SCALE='m', N_PERCENT='%', N_AUTO='a', N_UNDEFINED='x' };
 
 struct fz_css_number_s
 {
@@ -262,6 +267,7 @@ struct fz_css_style_s
 	 * on structure copies. */
 	unsigned int blank : 6;
 	fz_css_number line_height;
+	fz_css_number leading;
 	fz_css_color background_color;
 	fz_css_color border_color[4];
 	fz_css_color color;
@@ -285,15 +291,84 @@ enum
 	BOX_TABLE_CELL,	/* table-cell: contains block */
 };
 
-struct fz_html_s
+typedef struct
 {
 	fz_storable storable;
 	fz_pool *pool; /* pool allocator for this html tree */
+	fz_html_box *root;
+} fz_html_tree;
+
+struct fz_html_s
+{
+	fz_html_tree tree;
 	float page_w, page_h;
 	float layout_w, layout_h, layout_em;
 	float page_margin[4];
-	fz_html_box *root;
 	char *title;
+};
+
+typedef struct {
+	/* start will be filled in on entry with the first node to start
+	 * operation on. NULL means start 'immediately'. As we traverse
+	 * the tree, once we reach the node to start on, we set this to
+	 * NULL, hence if 'start != NULL' then we are still skipping to
+	 * find the starting node. */
+	fz_html_box *start;
+
+	/* If start is a BOX_FLOW, then start_flow will be the flow entry
+	 * at which we should start. */
+	fz_html_flow *start_flow;
+
+
+	/* end should be NULL on entry. On exit, if it's NULL, then we
+	 * finished. Otherwise, this is where we should restart the
+	 * process the next time. */
+	fz_html_box *end;
+
+	/* If end is a BOX_FLOW, then end_flow will be the flow entry at which
+	 * we should restart next time. */
+	fz_html_flow *end_flow;
+
+
+	/* Workspace used on the traversal of the tree to store a good place
+	 * to restart. Typically this will be set to an enclosing box with
+	 * a border, so that if we then fail to put any content into the box
+	 * we'll elide the entire box/border, not output an empty one. */
+	fz_html_box *potential;
+} fz_html_restarter;
+
+struct fz_html_story_s
+{
+	/* The user_css (or NULL) */
+	char *user_css;
+
+	/* The HTML story as XML nodes with a DOM */
+	fz_xml *dom;
+
+	/* The HTML tree of content. */
+	fz_html_tree tree;
+
+	/* The fontset for the content. */
+	fz_html_font_set *font_set;
+
+	/* restart_place holds the start position for the next place.
+	 * This is updated by draw. */
+	fz_html_restarter restart_place;
+
+	/* restart_draw holds the start position for the next draw.
+	 * This is updated by place. */
+	fz_html_restarter restart_draw;
+
+	/* complete is set true when all the story has been placed and
+	 * drawn. */
+	int complete;
+
+	/* The last bbox we laid out for. Used for making a clipping
+	 * rectangle. */
+	fz_rect bbox;
+
+	/* The default 'em' size. */
+	float em;
 };
 
 struct fz_html_box_s
@@ -389,6 +464,7 @@ const fz_css_style *fz_css_enlist(fz_context *ctx, const fz_css_style *style, fz
 
 float fz_from_css_number(fz_css_number number, float em, float percent_value, float auto_value);
 float fz_from_css_number_scale(fz_css_number number, float scale);
+int fz_css_number_defined(fz_css_number number);
 
 fz_html_font_set *fz_new_html_font_set(fz_context *ctx);
 void fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
@@ -417,5 +493,7 @@ void fz_debug_html(fz_context *ctx, fz_html_box *box);
 fz_html *fz_store_html(fz_context *ctx, fz_html *html, void *doc, int chapter);
 fz_html *fz_find_html(fz_context *ctx, void *doc, int chapter);
 void fz_purge_stored_html(fz_context *ctx, void *doc);
+
+void fz_restartable_layout_html(fz_context *ctx, fz_html_box *box, float w, float h, float page_w, float page_h, float em, fz_html_restarter *restart);
 
 #endif

@@ -43,7 +43,7 @@ struct TextSelection {
     void SelectUpTo(int pageNo, double x, double y);
     void SelectWordAt(int pageNo, double x, double y);
     void CopySelection(TextSelection* orig);
-    WCHAR* ExtractText(const WCHAR* lineSep);
+    WCHAR* ExtractText(const char* lineSep);
     void Reset();
 
     TextSel result{};

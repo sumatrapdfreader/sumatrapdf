@@ -35,11 +35,11 @@ class AutoCloseHandle {
         return *this;
     }
 
-    [[nodiscard]] operator HANDLE() const { // NOLINT
+    operator HANDLE() const { // NOLINT
         return handle;
     }
 
-    [[nodiscard]] bool IsValid() const {
+    bool IsValid() const {
         return handle != nullptr && handle != INVALID_HANDLE_VALUE;
     }
 };
@@ -67,10 +67,10 @@ class ScopedComPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
-    [[nodiscard]] T* Get() const {
+    T* Get() const {
         return ptr;
     }
-    [[nodiscard]] operator T*() const { // NOLINT
+    operator T*() const { // NOLINT
         return ptr;
     }
     T** operator&() {
@@ -122,7 +122,7 @@ class ScopedComQIPtr {
             ptr = nullptr;
         return ptr;
     }
-    [[nodiscard]] operator T*() const { // NOLINT
+    operator T*() const { // NOLINT
         return ptr;
     }
     T** operator&() {
@@ -148,7 +148,7 @@ class AutoDeleteDC {
     ~AutoDeleteDC() {
         DeleteDC(hdc);
     }
-    [[nodiscard]] operator HDC() const { // NOLINT
+    operator HDC() const { // NOLINT
         return hdc;
     }
 };
@@ -164,7 +164,7 @@ class ScopedGdiObj {
     ~ScopedGdiObj() {
         DeleteObject(obj);
     }
-    [[nodiscard]] operator T() const { // NOLINT
+    operator T() const { // NOLINT
         return obj;
     }
 };
@@ -184,7 +184,7 @@ class ScopedGetDC {
     ~ScopedGetDC() {
         ReleaseDC(hwnd, hdc);
     }
-    [[nodiscard]] operator HDC() const { // NOLINT
+    operator HDC() const { // NOLINT
         return hdc;
     }
 };

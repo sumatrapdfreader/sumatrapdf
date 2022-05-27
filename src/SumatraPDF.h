@@ -3,14 +3,13 @@
 
 #define CANVAS_CLASS_NAME L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME L"SUMATRA_PDF_FRAME"
-#define SUMATRA_WINDOW_TITLE L"SumatraPDF"
 
-#define WEBSITE_MAIN_URL L"https://www.sumatrapdfreader.org/"
-#define WEBSITE_MANUAL_URL L"https://www.sumatrapdfreader.org/manual.html"
-#define WEBSITE_TRANSLATIONS_URL L"https://www.sumatrapdfreader.org/docs/How-to-contribute-translation.html"
+#define WEBSITE_MAIN_URL "https://www.sumatrapdfreader.org/"
+#define WEBSITE_MANUAL_URL "https://www.sumatrapdfreader.org/manual"
+#define WEBSITE_TRANSLATIONS_URL "https://www.sumatrapdfreader.org/docs/Contribute-translation"
 
 #ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL L"https://www.sumatrapdfreader.org/docs/Join-the-project-as-a-developer.html"
+#define CRASH_REPORT_URL "https://www.sumatrapdfreader.org/docs/Contribute-to-SumatraPDF"
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
@@ -70,12 +69,11 @@ inline constexpr Perm operator~(Perm lhs) {
     return static_cast<Perm>(v);
 }
 
-struct Controller;
-class Favorites;
+struct Favorites;
 struct FileHistory;
-struct WindowInfo;
+struct MainWindow;
 struct NotificationWnd;
-class RenderCache;
+struct RenderCache;
 struct TabInfo;
 struct LabelWithCloseWnd;
 struct SessionData;
@@ -86,7 +84,7 @@ extern Flags* gCli;
 extern bool gDebugShowLinks;
 extern bool gShowFrameRate;
 
-extern const WCHAR* gPluginURL;
+extern const char* gPluginURL;
 extern Favorites gFavorites;
 extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;
@@ -104,28 +102,27 @@ void InitializePolicies(bool restrict);
 void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);
 bool IsUIRightToLeft();
-bool SumatraLaunchBrowser(const WCHAR* url);
-bool OpenFileExternally(const WCHAR* path);
-// void AssociateExeWithPdfExtension(bool forAllUsers);
-void CloseCurrentTab(WindowInfo* win, bool quitIfLast = false);
-bool CanCloseWindow(WindowInfo* win);
-void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose);
-void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites);
-void RememberFavTreeExpansionState(WindowInfo* win);
+bool SumatraLaunchBrowser(const char* url);
+bool OpenFileExternally(const char* path);
+void CloseCurrentTab(MainWindow* win, bool quitIfLast = false);
+bool CanCloseWindow(MainWindow* win);
+void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);
+void RememberFavTreeExpansionState(MainWindow* win);
 void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree);
-void AdvanceFocus(WindowInfo* win);
+void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
 void UpdateTabFileDisplayStateForTab(TabInfo* tab);
-void ReloadDocument(WindowInfo* win, bool autoRefresh);
-void ToggleFullScreen(WindowInfo* win, bool presentation = false);
-void RelayoutWindow(WindowInfo* win);
+void ReloadDocument(MainWindow* win, bool autoRefresh);
+void ToggleFullScreen(MainWindow* win, bool presentation = false);
+void RelayoutWindow(MainWindow* win);
 
 // note: background tabs are only searched if focusTab is true
-WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab);
-WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab);
-TabInfo* FindTabByFile(const WCHAR* file);
+MainWindow* FindWindowInfoByFile(const char* file, bool focusTab);
+MainWindow* FindWindowInfoBySyncFile(const char* file, bool focusTab);
+TabInfo* FindTabByFile(const char* file);
 void SelectTabInWindow(TabInfo*);
 
 class EngineBase;
@@ -133,27 +130,13 @@ class EngineBase;
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs {
-    explicit LoadArgs(const WCHAR* fileName, WindowInfo* win) {
-        this->fileName = fileName;
-        this->win = win;
-    }
+    explicit LoadArgs(const char* fileName, MainWindow* win);
 
-    explicit LoadArgs(const char* fileName, WindowInfo* win) {
-        this->win = win;
-        fileNameToFree = strconv::Utf8ToWstr(fileName);
-        this->fileName = fileNameToFree;
-    }
-
-    ~LoadArgs() {
-        str::Free(fileNameToFree);
-    }
+    ~LoadArgs() = default;
 
     // we don't own those values
     EngineBase* engine = nullptr;
-    const WCHAR* fileName = nullptr;
-    WindowInfo* win = nullptr;
-
-    const WCHAR* fileNameToFree = nullptr;
+    MainWindow* win = nullptr;
 
     bool showWin = true;
     bool forceReuse = false;
@@ -167,22 +150,32 @@ struct LoadArgs {
     // TODO: this is hacky. I save prefs too frequently. Need to go over
     // and rationalize all prefs::Save() calls
     bool noSavePrefs = false;
+    const char* FilePath() const {
+        return fileName.Get();
+    }
+    void SetFilePath(const char* path) {
+        fileName.SetCopy(path);
+    }
+
+  private:
+    AutoFreeStr fileName;
 };
 
-WindowInfo* LoadDocument(LoadArgs& args);
-WindowInfo* CreateAndShowWindowInfo(SessionData* data = nullptr);
+MainWindow* LoadDocument(LoadArgs* args, bool lazyload = false);
+MainWindow* CreateAndShowWindowInfo(SessionData* data = nullptr);
 
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
-void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd);
-bool DocumentPathExists(const WCHAR* path);
-void EnterFullScreen(WindowInfo* win, bool presentation = false);
-void ExitFullScreen(WindowInfo* win);
+void MessageBoxWarning(HWND hwnd, const char* msg, const char* title = nullptr);
+void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
+bool DocumentPathExists(const char* path);
+void EnterFullScreen(MainWindow* win, bool presentation = false);
+void ExitFullScreen(MainWindow* win);
 void SetCurrentLang(const char* langCode);
-void RebuildMenuBarForWindow(WindowInfo* win);
-void DeleteWindowInfo(WindowInfo* win);
-void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
-void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false);
+void RebuildMenuBarForWindow(MainWindow* win);
+void DeleteWindowInfo(MainWindow* win);
+void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
+void WindowInfoRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 bool DocIsSupportedFileType(Kind);

@@ -360,10 +360,10 @@ static fz_colorspace *
 pdf_load_colorspace_imp(fz_context *ctx, pdf_obj *obj, pdf_cycle_list *cycle_up)
 {
 	fz_colorspace *cs = NULL;
-	pdf_cycle_list cycle = { 0 }; /* SumatraPDF */
+	pdf_cycle_list cycle;
 
-	if (pdf_is_indirect(ctx, obj) && pdf_cycle(ctx, &cycle, cycle_up, obj))
-		fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive colorspace");
+	if (pdf_cycle(ctx, &cycle, cycle_up, obj))
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive colorspace");
 
 	if (pdf_is_name(ctx, obj))
 	{

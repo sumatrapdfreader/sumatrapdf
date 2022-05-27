@@ -10,6 +10,85 @@
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
 bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 
+struct ByteSlice {
+    u8* d = nullptr;
+    size_t sz = 0;
+    u8* curr = nullptr;
+
+    ByteSlice() = default;
+    ~ByteSlice() = default;
+    ByteSlice(const char* str) {
+        d = (u8*)str;
+        curr = d;
+        sz = strlen(str);
+    }
+    ByteSlice(char* str) {
+        d = (u8*)str;
+        curr = d;
+        sz = strlen(str);
+    }
+    ByteSlice(u8* data, size_t size) {
+        d = data;
+        curr = d;
+        sz = size;
+    }
+    ByteSlice(const ByteSlice& data) {
+        d = data.data();
+        curr = d;
+        sz = data.size();
+    }
+    ByteSlice& operator=(const ByteSlice& other) {
+        d = other.d;
+        curr = d;
+        sz = other.sz;
+        return *this;
+    }
+    void Set(u8* data, size_t size) {
+        d = data;
+        curr = d;
+        sz = size;
+    }
+    void Set(char* data, size_t size) {
+        d = (u8*)data;
+        curr = d;
+        sz = size;
+    }
+    u8* data() const {
+        return d;
+    }
+    u8* Get() const {
+        return d;
+    }
+    size_t size() const {
+        return sz;
+    }
+    int Size() const {
+        return (int)sz;
+    }
+    bool empty() const {
+        return !d;
+    }
+    size_t Left() {
+        return sz - (curr - d);
+    }
+    ByteSlice Clone() const {
+        if (empty()) {
+            return {};
+        }
+        u8* res = (u8*)memdup(d, sz, 1);
+        return {res, size()};
+    }
+    void Free() {
+        free(d);
+        d = nullptr;
+        sz = 0;
+        curr = nullptr;
+    }
+    operator const char*() {
+        return (const char*)d;
+    }
+};
+
 namespace str {
 
 enum class TrimOpt { Left, Right, Both };
@@ -19,11 +98,9 @@ size_t Len(const char* s);
 
 void Free(const char*);
 void Free(const u8*);
-void Free(std::string_view);
 void Free(ByteSlice);
 
 void Free(const WCHAR* s);
-void Free(std::wstring_view);
 
 void FreePtr(const char** s);
 void FreePtr(char** s);
@@ -32,13 +109,10 @@ void FreePtr(WCHAR** s);
 
 char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
-char* Dup(Allocator*, std::string_view);
-char* Dup(std::string_view);
 char* Dup(ByteSlice d);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
-WCHAR* Dup(std::wstring_view);
 
 void ReplacePtr(const char** s, const char* snew);
 void ReplacePtr(char** s, const char* snew);
@@ -48,27 +122,23 @@ void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew);
 void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
 
+char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3);
+WCHAR* Join(Allocator* allocator, const WCHAR*, const WCHAR*, const WCHAR* s3);
 char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
-char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator);
-WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3, Allocator* allocator);
 
 bool Eq(const char* s1, const char* s2);
-bool Eq(std::string_view s1, const char* s2);
 bool Eq(ByteSlice sp1, ByteSlice sp2);
 bool EqI(const char* s1, const char* s2);
-bool EqI(std::string_view s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);
 bool EqN(const char* s1, const char* s2, size_t len);
 bool EqNI(const char* s1, const char* s2, size_t len);
 bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* prefix);
 bool StartsWith(const u8* str, const char* prefix);
-bool StartsWith(std::string_view s, const char* prefix);
 ByteSlice ToSpan(const char* s);
 
 bool Eq(const WCHAR*, const WCHAR*);
-bool Eq(std::wstring_view s1, const WCHAR* s2);
 bool EqI(const WCHAR*, const WCHAR*);
 bool EqIS(const WCHAR*, const WCHAR*);
 bool EqN(const WCHAR*, const WCHAR*, size_t);
@@ -82,14 +152,16 @@ bool EndsWithI(const char* txt, const char* end);
 bool EqNIx(const char* s, size_t len, const char* s2);
 
 char* ToLowerInPlace(char*);
+WCHAR* ToLowerInPlace(WCHAR*);
+
 char* ToLower(const char*);
+WCHAR* ToLower(const WCHAR*);
+
+char* ToUpperInPlace(char*);
 
 bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
-WCHAR* ToLowerInPlace(WCHAR*);
-WCHAR* ToLower(const WCHAR*);
-WCHAR* ToUpperInPlace(WCHAR*);
 
 void Utf8Encode(char*& dst, int c);
 
@@ -104,8 +176,8 @@ char* FindCharLast(char* str, char c);
 const char* Find(const char* str, const char* find);
 const char* FindI(const char* str, const char* find);
 
-bool Contains(std::string_view s, const char* txt);
-bool ContainsI(std::string_view s, const char* txt);
+bool Contains(const char* s, const char* txt);
+bool ContainsI(const char* s, const char* txt);
 
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
 bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
@@ -146,6 +218,7 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 
 size_t BufSet(char* dst, size_t dstCchSize, const char* src);
 size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src);
+size_t BufSet(WCHAR* dst, size_t dstCchSize, const char* src);
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s);
 size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
 
@@ -159,21 +232,19 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int CmpNatural(const char*, const char*);
 int CmpNatural(const WCHAR*, const WCHAR*);
 
-WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
-WCHAR* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
-WCHAR* FormatRomanNumeral(int number);
+char* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
+char* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
+char* FormatRomanNumeral(int number);
 
-bool EmptyOrWhiteSpaceOnly(std::string_view sv);
+bool EmptyOrWhiteSpaceOnly(const char* sv);
 } // namespace str
 
 namespace url {
 
-void DecodeInPlace(char* urlA);
-
-bool IsAbsolute(const WCHAR* url);
-void DecodeInPlace(WCHAR* url);
-WCHAR* GetFullPath(const WCHAR* url);
-WCHAR* GetFileName(const WCHAR* url);
+void DecodeInPlace(char* url);
+bool IsAbsolute(const char* url);
+char* GetFullPathTemp(const char* url);
+char* GetFileName(const char* url);
 
 } // namespace url
 
@@ -186,9 +257,6 @@ void Next(const char*& s, int& idx);
 int StrToIdx(SeqStrings strs, const char* toFind);
 int StrToIdxIS(SeqStrings strs, const char* toFind);
 const char* IdxToStr(SeqStrings strs, int idx);
-
-int StrToIdx(SeqStrings strs, const WCHAR* toFind);
-const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 } // namespace seqstrings
 
 #define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))
@@ -210,62 +278,54 @@ struct Str {
 
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& that);
-    Str(std::string_view s); // NOLINT
-    Str(const char*);        // NOLINT
+    Str(const char*); // NOLINT
 
     Str& operator=(const Str& that);
 
     ~Str();
 
     void Reset();
-    [[nodiscard]] char& at(size_t idx) const;
-    [[nodiscard]] char& at(int idx) const;
-    [[nodiscard]] char& operator[](size_t idx) const;
-    [[nodiscard]] char& operator[](long idx) const;
-    [[nodiscard]] char& operator[](ULONG idx) const;
-    [[nodiscard]] char& operator[](int idx) const;
+    char& at(size_t idx) const;
+    char& at(int idx) const;
+    char& operator[](size_t idx) const;
+    char& operator[](long idx) const;
+    char& operator[](ULONG idx) const;
+    char& operator[](int idx) const;
 #if defined(_WIN64)
-    [[nodiscard]] char& at(u32 idx) const;
-    [[nodiscard]] char& operator[](u32 idx) const;
+    char& at(u32 idx) const;
+    char& operator[](u32 idx) const;
 #endif
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] int isize() const;
+    size_t size() const;
+    int isize() const;
     bool InsertAt(size_t idx, char el);
-    bool Append(char el);
+    bool AppendChar(char c);
     bool Append(const char* src, size_t count = -1);
+    bool Append(const Str& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
-    [[nodiscard]] char& Last() const;
-    [[nodiscard]] char* StealData();
-    [[nodiscard]] char* LendData() const;
-    [[nodiscard]] int Find(char el, size_t startAt = 0) const;
-    [[nodiscard]] bool Contains(char el) const;
-    int Remove(char el);
-    void Reverse() const;
-    char& FindEl(const std::function<bool(char&)>& check) const;
-    [[nodiscard]] bool IsEmpty() const;
-    [[nodiscard]] std::string_view AsView() const;
-    [[nodiscard]] ByteSlice AsSpan() const;
-    [[nodiscard]] ByteSlice AsByteSlice() const;
-    std::string_view StealAsView();
-    bool AppendChar(char c);
+    char& Last() const;
+    char* StealData();
+    char* LendData() const;
+    bool Contains(const char* s, size_t sLen = 0);
+    bool IsEmpty() const;
+    ByteSlice AsByteSlice() const;
+    ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
-    bool AppendView(std::string_view sv);
-    bool AppendSpan(ByteSlice d);
+    bool AppendSlice(ByteSlice d);
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
-    void Set(std::string_view sv);
-    [[nodiscard]] char* Get() const;
-    [[nodiscard]] char LastChar() const;
+    void Set(const char*);
+    char* Get() const;
+    char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = char*;
 
-    [[nodiscard]] iterator begin() const {
+    iterator begin() const {
         return &(els[0]);
     }
-    [[nodiscard]] iterator end() const {
+    iterator end() const {
         return &(els[len]);
     }
 };
@@ -285,57 +345,50 @@ struct WStr {
 
     explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr);
     WStr(const WStr&);
-    explicit WStr(std::wstring_view);
     WStr(const WCHAR*); // NOLINT
     WStr& operator=(const WStr& that);
     ~WStr();
     void Reset();
-    [[nodiscard]] WCHAR& at(size_t idx) const;
-    [[nodiscard]] WCHAR& at(int idx) const;
-    [[nodiscard]] WCHAR& operator[](size_t idx) const;
-    [[nodiscard]] WCHAR& operator[](long idx) const;
-    [[nodiscard]] WCHAR& operator[](ULONG idx) const;
-    [[nodiscard]] WCHAR& operator[](int idx) const;
+    WCHAR& at(size_t idx) const;
+    WCHAR& at(int idx) const;
+    WCHAR& operator[](size_t idx) const;
+    WCHAR& operator[](long idx) const;
+    WCHAR& operator[](ULONG idx) const;
+    WCHAR& operator[](int idx) const;
 #if defined(_WIN64)
-    [[nodiscard]] WCHAR& at(u32 idx) const;
-    [[nodiscard]] WCHAR& operator[](u32 idx) const;
+    WCHAR& at(u32 idx) const;
+    WCHAR& operator[](u32 idx) const;
 #endif
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] int isize() const;
+    size_t size() const;
+    int isize() const;
     bool InsertAt(size_t idx, const WCHAR& el);
-    bool Append(const WCHAR& el);
+    bool AppendChar(WCHAR);
     bool Append(const WCHAR* src, size_t count = -1);
     WCHAR RemoveAt(size_t idx, size_t count = 1);
     WCHAR RemoveLast();
-    [[nodiscard]] WCHAR& Last() const;
-    [[nodiscard]] WCHAR* StealData();
-    [[nodiscard]] WCHAR* LendData() const;
-    [[nodiscard]] int Find(const WCHAR& el, size_t startAt = 0) const;
-    [[nodiscard]] bool Contains(const WCHAR& el) const;
+    WCHAR& Last() const;
+    WCHAR* StealData();
+    WCHAR* LendData() const;
+    int Find(const WCHAR& el, size_t startAt = 0) const;
+    bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
     void Reverse() const;
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
-    [[nodiscard]] bool IsEmpty() const;
-    [[nodiscard]] std::wstring_view AsView() const;
-    [[nodiscard]] std::span<WCHAR> AsSpan() const;
-    std::wstring_view StealAsView();
-    bool AppendChar(WCHAR c);
-    bool AppendSpan(std::span<WCHAR> d);
-    bool AppendView(std::wstring_view sv);
+    bool IsEmpty() const;
     void AppendFmt(const WCHAR* fmt, ...);
-    bool AppendAndFree(const WCHAR* s);
-    void Set(std::wstring_view sv);
-    [[nodiscard]] WCHAR* Get() const;
-    [[nodiscard]] WCHAR LastChar() const;
+    bool AppendAndFree(const WCHAR*);
+    void Set(const WCHAR*);
+    WCHAR* Get() const;
+    WCHAR LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = WCHAR*;
 
-    [[nodiscard]] iterator begin() const {
+    iterator begin() const {
         return &(els[0]);
     }
-    [[nodiscard]] iterator end() const {
+    iterator end() const {
         return &(els[len]);
     }
 };
@@ -344,191 +397,9 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 } // namespace str
 
-ByteSlice ToSpanU8(std::string_view sv);
+//----------------
 
-// TOOD: smarter WStrVec class which uses str::Wstr for the buffer
-// and stores str::wstring_view in an array
-
-// WStrVec owns the strings in the list
-class WStrVec : public Vec<WCHAR*> {
-  public:
-    WStrVec() = default;
-    WStrVec(const WStrVec& other) : Vec(other) {
-        // make sure not to share string pointers between StrVecs
-        for (size_t i = 0; i < len; i++) {
-            if (at(i)) {
-                at(i) = str::Dup(at(i));
-            }
-        }
-    }
-    ~WStrVec() {
-        FreeMembers();
-    }
-
-    WStrVec& operator=(const WStrVec& other) {
-        if (this == &other) {
-            return *this;
-        }
-
-        FreeMembers();
-        Vec::operator=(other);
-        for (size_t i = 0; i < other.len; i++) {
-            if (at(i)) {
-                at(i) = str::Dup(at(i));
-            }
-        }
-        return *this;
-    }
-
-    void Reset() {
-        FreeMembers();
-    }
-
-    WCHAR* Join(const WCHAR* joint = nullptr) {
-        str::WStr tmp(256);
-        size_t jointLen = str::Len(joint);
-        for (size_t i = 0; i < len; i++) {
-            WCHAR* s = at(i);
-            if (i > 0 && jointLen > 0) {
-                tmp.Append(joint, jointLen);
-            }
-            tmp.Append(s);
-        }
-        return tmp.StealData();
-    }
-
-    int Find(const WCHAR* s, int startAt = 0) const {
-        for (int i = startAt; i < (int)len; i++) {
-            WCHAR* item = at(i);
-            if (str::Eq(s, item)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    bool Contains(const WCHAR* s) const {
-        return -1 != Find(s);
-    }
-
-    int FindI(const WCHAR* s, size_t startAt = 0) const {
-        for (size_t i = startAt; i < len; i++) {
-            WCHAR* item = at(i);
-            if (str::EqI(s, item)) {
-                return (int)i;
-            }
-        }
-        return -1;
-    }
-
-    /* splits a string into several substrings, separated by the separator
-       (optionally collapsing several consecutive separators into one);
-       e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
-       (resp. "a", "b", "c" if separators are collapsed) */
-    size_t Split(const WCHAR* s, const WCHAR* separator, bool collapse = false) {
-        size_t start = len;
-        const WCHAR* next;
-
-        while ((next = str::Find(s, separator)) != nullptr) {
-            if (!collapse || next > s) {
-                Append(str::Dup(s, next - s));
-            }
-            s = next + str::Len(separator);
-        }
-        if (!collapse || *s) {
-            Append(str::Dup(s));
-        }
-
-        return len - start;
-    }
-
-    void Sort() {
-        Vec::Sort(cmpAscii);
-    }
-    void SortNatural() {
-        Vec::Sort(cmpNatural);
-    }
-
-  private:
-    static int cmpNatural(const void* a, const void* b) {
-        return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
-    }
-
-    static int cmpAscii(const void* a, const void* b) {
-        return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
-    }
-};
-
-// WStrList is a subset of WStrVec that's optimized for appending and searching
-// WStrList owns the strings it contains and frees them at destruction
-class WStrList {
-    struct Item {
-        WCHAR* string = nullptr;
-        u32 hash = 0;
-    };
-
-    Vec<Item> items;
-    size_t count = 0;
-    Allocator* allocator;
-
-  public:
-    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr) : items(capHint, allocator) {
-        this->allocator = allocator;
-    }
-
-    ~WStrList() {
-        for (Item& item : items) {
-            Allocator::Free(allocator, item.string);
-        }
-    }
-
-    [[nodiscard]] const WCHAR* at(size_t idx) const {
-        return items.at(idx).string;
-    }
-
-    [[nodiscard]] const WCHAR* Last() const {
-        return items.Last().string;
-    }
-
-    [[nodiscard]] size_t size() const {
-        return count;
-    }
-
-    // str must have been allocated by allocator and is owned by StrList
-    void Append(WCHAR* str) {
-        u32 hash = MurmurHashWStrI(str);
-        items.Append(Item{str, hash});
-        count++;
-    }
-
-    int Find(const WCHAR* str, size_t startAt = 0) const {
-        u32 hash = MurmurHashWStrI(str);
-        Item* item = items.LendData();
-        for (size_t i = startAt; i < count; i++) {
-            if (item[i].hash == hash && str::Eq(item[i].string, str)) {
-                return (int)i;
-            }
-        }
-        return -1;
-    }
-
-    int FindI(const WCHAR* str, size_t startAt = 0) const {
-        u32 hash = MurmurHashWStrI(str);
-        Item* item = items.LendData();
-        for (size_t i = startAt; i < count; i++) {
-            if (item[i].hash == hash && str::EqI(item[i].string, str)) {
-                return (int)i;
-            }
-        }
-        return -1;
-    }
-
-    bool Contains(const WCHAR* str) const {
-        return -1 != Find(str);
-    }
-};
-
-typedef bool (*StrLessFunc)(std::string_view s1, std::string_view s2);
+typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 
 struct StrVec;
 
@@ -536,7 +407,8 @@ struct StrVecSortedView {
     StrVec* v; // not owned
     Vec<u32> sortedIndex;
     int Size() const;
-    std::string_view at(int) const;
+    char* at(int) const;
+    char* operator[](int) const;
 
     StrVecSortedView() = default;
     ~StrVecSortedView() = default;
@@ -553,49 +425,66 @@ struct StrVec {
     ~StrVec() = default;
     void Reset();
 
+    size_t size() const;
     int Size() const;
-    std::string_view at(int) const;
+    char* at(int) const;
+    char* operator[](int) const;
+    char* operator[](size_t) const;
 
-    int Append(const char*);
-    int Find(std::string_view sv, int startAt = 0) const;
-    bool Exists(std::string_view) const;
-    int AppendIfNotExists(std::string_view);
+    int Append(const char*, size_t len = 0);
+    int AppendIfNotExists(const char*);
+    bool InsertAt(int, const char*);
+    void SetAt(int idx, const char* s);
+    int Find(const char*, int startAt = 0) const;
+    int FindI(const char*, int startAt = 0) const;
+    bool Contains(const char*) const;
+    char* PopAt(int);
+    char* RemoveAtFast(size_t idx);
+    char* RemoveAt(int idx);
+    bool Remove(const char*);
 
     bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
     bool GetSortedViewNoCase(StrVecSortedView&) const;
+
+    void Sort(StrLessFunc lessFn = nullptr);
+    void SortNoCase();
+    void SortNatural();
+    struct Iterator {
+        using iterator_category = std::forward_iterator_tag;
+
+        Iterator(StrVec* v, int i) : v(v), idx(i) {
+        }
+
+        char* operator*() const {
+            return v->at(idx);
+        }
+
+        Iterator& operator++() {
+            idx++;
+            return *this;
+        }
+        Iterator operator++(int) {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const Iterator& a, const Iterator& b) {
+            return a.idx == b.idx;
+        };
+        friend bool operator!=(const Iterator& a, const Iterator& b) {
+            return a.idx != b.idx;
+        };
+
+        StrVec* v;
+        int idx;
+    };
+    Iterator begin() {
+        return Iterator(this, 0);
+    }
+    Iterator end() {
+        return Iterator(this, index.isize());
+    }
 };
 
-typedef bool (*WStrLessFunc)(std::wstring_view s1, std::wstring_view s2);
-
-struct WStrVec2;
-
-struct WStrVecSortedView {
-    WStrVec2* v; // not owned
-    Vec<u32> sortedIndex;
-    int Size() const;
-    std::wstring_view at(int) const;
-};
-
-// same design as StrVec
-struct WStrVec2 {
-    str::WStr strings;
-    Vec<u32> index;
-
-    WStrVec2() = default;
-    ~WStrVec2() = default;
-    void Reset();
-
-    int Size() const;
-    std::wstring_view at(int) const;
-    int Append(const WCHAR*);
-    int Find(const WCHAR* s, int startAt = 0) const;
-    bool Exists(std::wstring_view) const;
-    int AppendIfNotExists(std::wstring_view);
-
-    bool GetSortedView(WStrVecSortedView&, WStrLessFunc lessFn = nullptr) const;
-    bool GetSortedViewNoCase(WStrVecSortedView&) const;
-
-    // TODO: remove, only for compat
-    size_t size() const;
-    // TODO: rename to Index()
-};
+size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
+char* Join(const StrVec& v, const char* joint = nullptr);

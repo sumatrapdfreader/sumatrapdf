@@ -88,8 +88,7 @@ struct PageRenderRequest {
     RenderingCallback* renderCb = nullptr;
 };
 
-class RenderCache {
-  public:
+struct RenderCache {
     BitmapCacheEntry* cache[MAX_BITMAPS_CACHED]{};
     int cacheCount = 0;
     // make sure to never ask for requestAccess in a cacheAccess
@@ -136,7 +135,7 @@ class RenderCache {
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
 
-    [[nodiscard]] bool IsRenderQueueFull() const {
+    bool IsRenderQueueFull() const {
         return requestCount == MAX_PAGE_REQUESTS;
     }
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);

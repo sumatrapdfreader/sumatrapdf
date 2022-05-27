@@ -1,12 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// values for typeCreator
-#define MOBI_TYPE_CREATOR "BOOKMOBI"
-#define PALMDOC_TYPE_CREATOR "TEXtREAd"
-#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
-#define PLUCKER_TYPE_CREATOR "DataPlkr"
-
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 // http://wiki.mobileread.com/wiki/PDB
 struct PdbHeader {
@@ -59,7 +53,6 @@ class PdbReader {
     static PdbReader* CreateFromData(ByteSlice);
     static PdbReader* CreateFromFile(const char* path);
 
-    static PdbReader* CreateFromFile(const WCHAR* path);
     static PdbReader* CreateFromStream(IStream* stream);
 };
 

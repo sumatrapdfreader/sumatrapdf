@@ -5,20 +5,20 @@ enum class PaperFormat { Other, A2, A3, A4, A5, A6, Letter, Legal, Tabloid, Stat
 PaperFormat GetPaperFormatFromSizeApprox(SizeF size);
 
 struct Printer {
-    WCHAR* name = nullptr;
+    char* name = nullptr;
     DEVMODEW* devMode = nullptr;
     PRINTER_INFO_2* info = nullptr;
 
     // number of paper sizes supported by the printer
     int nPaperSizes = 0;
     // papers[i] is DMPAPER_LETTER etc.
-    WORD* papers = nullptr;       // DC_PAPERS
-    WCHAR** paperNames = nullptr; // DC_PAPERNAMES
-    POINT* paperSizes = nullptr;  // DC_PAPERSIZE
+    WORD* papers = nullptr;      // DC_PAPERS
+    StrVec paperNames;           // DC_PAPERNAMES
+    POINT* paperSizes = nullptr; // DC_PAPERSIZE
 
     int nBins = 0;
-    WORD* bins = nullptr;       // DC_BINS
-    WCHAR** binNames = nullptr; // DC_BINNAMES
+    WORD* bins = nullptr; // DC_BINS
+    StrVec binNames;      // DC_BINNAMES
 
     bool isColor = false;    // DC_COLORDEVICE
     bool isDuplex = false;   // DC_DUPLEX
@@ -31,11 +31,11 @@ struct Printer {
     void SetDevMode(DEVMODEW*);
 };
 
-Printer* NewPrinter(const WCHAR* name);
+Printer* NewPrinter(const char* name);
 
-bool PrintFile(const WCHAR* fileName, WCHAR* printerName = nullptr, bool displayErrors = true,
-               const WCHAR* settings = nullptr);
-bool PrintFile(EngineBase* engine, WCHAR* printerName = nullptr, bool displayErrors = true,
-               const WCHAR* settings = nullptr);
-void OnMenuPrint(WindowInfo* win, bool waitForCompletion = false);
-void AbortPrinting(WindowInfo* win);
+bool PrintFile(const char* fileName, char* printerName = nullptr, bool displayErrors = true,
+               const char* settings = nullptr);
+bool PrintFile(EngineBase* engine, char* printerName = nullptr, bool displayErrors = true,
+               const char* settings = nullptr);
+void OnMenuPrint(MainWindow* win, bool waitForCompletion = false);
+void AbortPrinting(MainWindow* win);

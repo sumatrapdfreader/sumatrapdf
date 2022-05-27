@@ -8,7 +8,7 @@
 
 #include "wingui/UIModels.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "RegistryPreview.h"
 #include "PdfPreviewBase.h"
@@ -177,11 +177,11 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
 }
 
 STDAPI DllRegisterServer() {
-    AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
+    AutoFreeStr dllPath = path::GetPathOfFileInAppDir((const char*)nullptr);
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
-    logf(L"DllRegisterServer: dllPath=%s\n", dllPath.Get());
+    logf("DllRegisterServer: dllPath=%s\n", dllPath.Get());
 
     // for compat with SumatraPDF 3.3 and lower
     // in 3.4 we call this code from the installer
@@ -208,7 +208,8 @@ STDAPI DllUnregisterServer() {
 
 // TODO: maybe remove, is anyone using this functionality?
 STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) {
-    DisablePreviewInstallExts(pszCmdLine);
+    char* s = ToUtf8Temp(pszCmdLine);
+    DisablePreviewInstallExts(s);
     if (!bInstall) {
         return DllUnregisterServer();
     }

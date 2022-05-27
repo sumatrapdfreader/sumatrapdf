@@ -13,23 +13,28 @@ void WinUtilTest() {
 
     {
         const char* string = "abcde";
-        size_t stringSize = 5;
+        size_t stringSize = str::Len(string);
         auto strm = CreateStreamFromData({(u8*)string, stringSize});
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
-        AutoFree data = GetDataFromStream(stream, nullptr);
-        utassert(data.data && stringSize == data.size() && str::Eq(data.data, string));
+        ByteSlice data = GetDataFromStream(stream, nullptr);
+        utassert(data.Get());
+        utassert(stringSize == data.size());
+        const char* s = data;
+        utassert(str::Eq(s, string));
+        data.Free();
     }
 
     {
         const WCHAR* string = L"abcde";
-        size_t stringSize = 10;
+        size_t stringSize = str::Len(string) * sizeof(WCHAR);
         auto strm = CreateStreamFromData({(u8*)string, stringSize});
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
-        AutoFree dataTmp = GetDataFromStream(stream, nullptr);
-        WCHAR* data = (WCHAR*)dataTmp.data;
+        ByteSlice dataTmp = GetDataFromStream(stream, nullptr);
+        WCHAR* data = (WCHAR*)dataTmp.Get();
         utassert(data && stringSize == dataTmp.size() && str::Eq(data, string));
+        dataTmp.Free();
     }
 
     {

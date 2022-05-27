@@ -422,9 +422,9 @@ func buildRelease() {
 	s := fmt.Sprintf("buidling release version %s", ver)
 	defer makePrintDuration(s)()
 
-	minioVerifyBuildNotInStorageMust(newMinioS3Client(), buildTypeRel)
-	minioVerifyBuildNotInStorageMust(newMinioBackblazeClient(), buildTypeRel)
-	minioVerifyBuildNotInStorageMust(newMinioSpacesClient(), buildTypeRel)
+	verifyBuildNotInStorageMust(newMinioS3Client(), buildTypeRel)
+	verifyBuildNotInStorageMust(newMinioBackblazeClient(), buildTypeRel)
+	verifyBuildNotInStorageMust(newMinioSpacesClient(), buildTypeRel)
 
 	clean()
 	setBuildConfigRelease()

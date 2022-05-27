@@ -14,7 +14,7 @@
 
 #include "wingui/UIModels.h"
 
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"
@@ -461,7 +461,7 @@ static bool IsValidCompression(int comprType) {
     return (COMPRESSION_NONE == comprType) || (COMPRESSION_PALM == comprType) || (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc(const WCHAR* filePath) {
+MobiDoc::MobiDoc(const char* filePath) {
     docTocIndex = kInvalidSize;
     fileName = str::Dup(filePath);
 }
@@ -546,8 +546,8 @@ bool MobiDoc::ParseHeader() {
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Metadata prop;
         prop.prop = DocumentProperty::UnsupportedFeatures;
-        auto tmp = strconv::WstrToCodePageV(mobiHdr.textEncoding, L"DRM");
-        prop.value = (char*)tmp.data();
+        char* tmp = strconv::WstrToCodePage(mobiHdr.textEncoding, L"DRM");
+        prop.value = tmp;
         props.Append(prop);
     }
     textEncoding = mobiHdr.textEncoding;
@@ -857,7 +857,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
     return false;
 }
 
-bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
+bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     this->pdbReader = pdbReader;
     if (!ParseHeader()) {
         return false;
@@ -888,7 +888,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
-        const char* docUtf8 = strconv::ToMultiByteV(doc->Get(), textEncoding, CP_UTF8).data();
+        char* docUtf8 = strconv::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
         if (docUtf8) {
             doc->Reset();
             doc->AppendAndFree(docUtf8);
@@ -897,17 +897,18 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     return true;
 }
 
+// don't free the result
 ByteSlice MobiDoc::GetHtmlData() const {
     if (doc) {
-        return doc->AsSpan();
+        return doc->AsByteSlice();
     }
     return {};
 }
 
-WCHAR* MobiDoc::GetProperty(DocumentProperty prop) {
-    for (size_t i = 0; i < props.size(); i++) {
-        if (props.at(i).prop == prop) {
-            return strconv::StrToWstr(props.at(i).value, textEncoding);
+char* MobiDoc::GetProperty(DocumentProperty prop) {
+    for (auto& p : props) {
+        if (p.prop == prop) {
+            return strconv::StrToUtf8(p.value, textEncoding);
         }
     }
     return nullptr;
@@ -920,7 +921,7 @@ bool MobiDoc::HasToc() {
     docTocIndex = doc->size(); // no ToC
 
     // search for <reference type=toc filepos=\d+/>
-    HtmlPullParser parser(doc->AsSpan());
+    HtmlPullParser parser(doc->AsByteSlice());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag() || !tok->NameIs("reference")) {
@@ -983,7 +984,9 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
                 itemLink.Reset();
                 continue;
             }
-            visitor->Visit(itemText, itemLink, itemLevel);
+            char* txt = ToUtf8Temp(itemText);
+            char* link = ToUtf8Temp(itemLink);
+            visitor->Visit(txt, link, itemLevel);
             itemText.Reset();
             itemLink.Reset();
         } else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
@@ -1001,10 +1004,10 @@ bool MobiDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileMobi;
 }
 
-MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {
+MobiDoc* MobiDoc::CreateFromFile(const char* fileName) {
     MobiDoc* mb = new MobiDoc(fileName);
     PdbReader* pdbReader = PdbReader::CreateFromFile(fileName);
-    if (!pdbReader || !mb->LoadDocument(pdbReader)) {
+    if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
         delete mb;
         return nullptr;
     }
@@ -1014,7 +1017,7 @@ MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {
 MobiDoc* MobiDoc::CreateFromStream(IStream* stream) {
     MobiDoc* mb = new MobiDoc(nullptr);
     PdbReader* pdbReader = PdbReader::CreateFromStream(stream);
-    if (!pdbReader || !mb->LoadDocument(pdbReader)) {
+    if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
         delete mb;
         return nullptr;
     }

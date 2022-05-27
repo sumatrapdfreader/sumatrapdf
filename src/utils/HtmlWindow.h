@@ -5,6 +5,7 @@ class FrameSite;
 class HtmlMoniker;
 
 bool IsBlankUrl(const WCHAR*);
+bool IsBlankUrl(const char*);
 
 // HtmlWindowCallback allows HtmlWindow to notify other code about notable
 // events or delegate some of the functionality.
@@ -12,21 +13,21 @@ class HtmlWindowCallback {
   public:
     // called when we're about to show a given url. Returning false will
     // stop loading this url
-    virtual bool OnBeforeNavigate(const WCHAR* url, bool newWindow) = 0;
+    virtual bool OnBeforeNavigate(const char* url, bool newWindow) = 0;
 
     // called after html document has been completely loaded
-    virtual void OnDocumentComplete(const WCHAR* url) = 0;
+    virtual void OnDocumentComplete(const char* url) = 0;
 
     // allows for providing data for a given url.
     // returning nullptr means data wasn't provided.
-    virtual ByteSlice GetDataForUrl(const WCHAR* url) = 0;
+    virtual ByteSlice GetDataForUrl(const char* url) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
     virtual void OnLButtonDown() = 0;
 
     // called when a file can't be displayed and has to be downloaded instead
-    virtual void DownloadData(const WCHAR* url, ByteSlice data) = 0;
+    virtual void DownloadData(const char* url, ByteSlice data) = 0;
 
     virtual ~HtmlWindowCallback() = default;
 };
@@ -49,12 +50,12 @@ class HtmlWindow {
     int zoomDPI = 96;
 
     const char* htmlSetInProgress = nullptr;
-    const WCHAR* htmlSetInProgressUrl = nullptr;
+    const char* htmlSetInProgressUrl = nullptr;
 
     DWORD adviseCookie = 0;
     bool blankWasShown = false;
 
-    AutoFreeWstr currentURL;
+    AutoFreeStr currentURL;
 
     HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb);
 
@@ -72,9 +73,9 @@ class HtmlWindow {
 
     void OnSize(Size size);
     void SetVisible(bool visible);
-    void NavigateToUrl(const WCHAR* url);
-    void NavigateToDataUrl(const WCHAR* url);
-    void SetHtml(ByteSlice, const WCHAR* url = nullptr);
+    void NavigateToUrl(const char* url);
+    void NavigateToDataUrl(const char* url);
+    void SetHtml(ByteSlice, const char* url = nullptr);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);

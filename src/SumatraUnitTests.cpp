@@ -11,7 +11,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
@@ -29,7 +29,7 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("foo.pdf", i.pathsToBenchmark.at(0)));
         utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
@@ -37,12 +37,12 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(i.globalPrefArgs.size() == 2);
-        const WCHAR* s = i.globalPrefArgs.at(0);
-        utassert(str::Eq(s, L"-fwdsearch-width"));
+        const char* s = i.globalPrefArgs.at(0);
+        utassert(str::Eq(s, "-fwdsearch-width"));
         s = i.globalPrefArgs.at(1);
-        utassert(str::Eq(s, L"5"));
+        utassert(str::Eq(s, "5"));
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("foo.pdf", i.pathsToBenchmark.at(0)));
         utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
@@ -50,8 +50,8 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench bar.pdf loadonly", i);
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
-        utassert(str::Eq(L"loadonly", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("loadonly", i.pathsToBenchmark.at(1)));
     }
 
     {
@@ -59,18 +59,18 @@ static void ParseCommandLineTest() {
         ParseFlags(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
         utassert(i.globalPrefArgs.size() == 3);
         utassert(2 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
-        utassert(str::Eq(L"1", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("1", i.pathsToBenchmark.at(1)));
     }
 
     {
         Flags i;
         ParseFlags(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
         utassert(4 == i.pathsToBenchmark.size());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
-        utassert(str::Eq(L"1-5,3", i.pathsToBenchmark.at(1)));
-        utassert(str::Eq(L"some.pdf", i.pathsToBenchmark.at(2)));
-        utassert(str::Eq(L"1,3,8-34", i.pathsToBenchmark.at(3)));
+        utassert(str::Eq("bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq("1-5,3", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq("some.pdf", i.pathsToBenchmark.at(2)));
+        utassert(str::Eq("1,3,8-34", i.pathsToBenchmark.at(3)));
     }
 
     {
@@ -79,8 +79,8 @@ static void ParseCommandLineTest() {
         utassert(true == i.enterPresentation);
         utassert(true == i.invertColors);
         utassert(2 == i.fileNames.size());
-        utassert(0 == i.fileNames.Find(L"foo.pdf"));
-        utassert(1 == i.fileNames.Find(L"bar.pdf"));
+        utassert(0 == i.fileNames.Find("foo.pdf"));
+        utassert(1 == i.fileNames.Find("bar.pdf"));
     }
 
     {
@@ -88,15 +88,15 @@ static void ParseCommandLineTest() {
         ParseFlags(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
         utassert(true == i.invertColors);
         utassert(1 == i.fileNames.size());
-        utassert(0 == i.fileNames.Find(L"rosanna.pdf"));
+        utassert(0 == i.fileNames.Find("rosanna.pdf"));
     }
 
     {
         Flags i;
         ParseFlags(LR"(SumatraPDF.exe "foo \" bar \\.pdf" un\"quoted.pdf)", i);
         utassert(2 == i.fileNames.size());
-        utassert(0 == i.fileNames.Find(LR"(foo " bar \\.pdf)"));
-        utassert(1 == i.fileNames.Find(LR"(un"quoted.pdf)"));
+        utassert(0 == i.fileNames.Find(R"(foo " bar \\.pdf)"));
+        utassert(1 == i.fileNames.Find(R"(un"quoted.pdf)"));
     }
 
     {
@@ -135,19 +135,19 @@ static void ParseCommandLineTest() {
 }
 
 static void BenchRangeTest() {
-    utassert(IsBenchPagesInfo(L"1"));
-    utassert(IsBenchPagesInfo(L"2-4"));
-    utassert(IsBenchPagesInfo(L"5,7"));
-    utassert(IsBenchPagesInfo(L"6,8,"));
-    utassert(IsBenchPagesInfo(L"1-3,4,6-9,13"));
-    utassert(IsBenchPagesInfo(L"2-"));
-    utassert(IsBenchPagesInfo(L"loadonly"));
+    utassert(IsBenchPagesInfo("1"));
+    utassert(IsBenchPagesInfo("2-4"));
+    utassert(IsBenchPagesInfo("5,7"));
+    utassert(IsBenchPagesInfo("6,8,"));
+    utassert(IsBenchPagesInfo("1-3,4,6-9,13"));
+    utassert(IsBenchPagesInfo("2-"));
+    utassert(IsBenchPagesInfo("loadonly"));
 
-    utassert(!IsBenchPagesInfo(L""));
-    utassert(!IsBenchPagesInfo(L"-2"));
-    utassert(!IsBenchPagesInfo(L"2--4"));
-    utassert(!IsBenchPagesInfo(L"4-2"));
-    utassert(!IsBenchPagesInfo(L"1-3,loadonly"));
+    utassert(!IsBenchPagesInfo(""));
+    utassert(!IsBenchPagesInfo("-2"));
+    utassert(!IsBenchPagesInfo("2--4"));
+    utassert(!IsBenchPagesInfo("4-2"));
+    utassert(!IsBenchPagesInfo("1-3,loadonly"));
     utassert(!IsBenchPagesInfo(nullptr));
 }
 
@@ -171,7 +171,7 @@ static void versioncheck_test() {
 static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
     u8 buf2[6]{};
-    AutoFree s(_MemToHex(&buf));
+    AutoFreeStr s = _MemToHex(&buf);
     utassert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
     utassert(ok);

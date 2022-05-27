@@ -52,7 +52,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
@@ -81,11 +81,11 @@ bool ScrollState::operator==(const ScrollState& other) const {
     return page == other.page && x == other.x && y == other.y;
 }
 
-const WCHAR* DisplayModel::GetFilePath() const {
+const char* DisplayModel::GetFilePath() const {
     return engine->FileName();
 }
 
-const WCHAR* DisplayModel::GetDefaultFileExt() const {
+const char* DisplayModel::GetDefaultFileExt() const {
     return engine->defaultExt;
 }
 
@@ -96,7 +96,7 @@ int DisplayModel::PageCount() const {
     return engine->PageCount();
 }
 
-WCHAR* DisplayModel::GetProperty(DocumentProperty prop) {
+char* DisplayModel::GetProperty(DocumentProperty prop) {
     return engine->GetProperty(prop);
 }
 
@@ -115,7 +115,7 @@ TocTree* DisplayModel::GetToc() {
     return engine->GetToc();
 }
 
-IPageDestination* DisplayModel::GetNamedDest(const WCHAR* name) {
+IPageDestination* DisplayModel::GetNamedDest(const char* name) {
     return engine->GetNamedDest(name);
 }
 
@@ -128,11 +128,11 @@ bool DisplayModel::HasPageLabels() const {
     return engine->HasPageLabels();
 }
 
-WCHAR* DisplayModel::GetPageLabel(int pageNo) const {
+char* DisplayModel::GetPageLabel(int pageNo) const {
     return engine->GetPageLabel(pageNo);
 }
 
-int DisplayModel::GetPageByLabel(const WCHAR* label) const {
+int DisplayModel::GetPageByLabel(const char* label) const {
     return engine->GetPageByLabel(label);
 }
 
@@ -216,7 +216,7 @@ bool DisplayModel::GetPresentationMode() const {
 }
 
 void DisplayModel::GetDisplayState(FileState* fs) {
-    char* fileNameA = ToUtf8Temp(engine->FileName());
+    const char* fileNameA = engine->FileName();
     SetFileStatePath(fs, fileNameA);
 
     fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
@@ -281,7 +281,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 }
 
 // must call SetInitialViewSettings() after creation
-DisplayModel::DisplayModel(EngineBase* engine, ControllerCallback* cb) : Controller(cb) {
+DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocController(cb) {
     this->engine = engine;
     CrashIf(!engine || engine->PageCount() <= 0);
     engineType = engine->kind;
@@ -963,7 +963,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
     if (zoom > 0) {
         return zoom;
     }
-    char* name = ToUtf8Temp(dm->GetFilePath());
+    const char* name = dm->GetFilePath();
     logf(
         "getZoomSafe: invalid zoom in doc: %s\npageNo: %d\npageInfo->zoomReal\n%.2f\ndm->zoomReal: %.2f\n"
         "dm->zoomVirtual: %.2f\n",
@@ -1676,7 +1676,7 @@ void DisplayModel::RotateBy(int newRotation) {
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
+char* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
     const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
@@ -1690,14 +1690,15 @@ WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
             Rect rect = coords[src - pageText];
             Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
-                result.Append(*src);
+                result.AppendChar(*src);
             }
         } else if (result.size() > 0 && result.Last() != '\n') {
             result.Append(L"\r\n", 2);
         }
     }
 
-    return result.StealData();
+    WCHAR* ws = result.Get();
+    return ToUtf8(ws);
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
@@ -1761,16 +1762,14 @@ ScrollState DisplayModel::GetScrollState() {
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
     if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0) {
-        // TODO: after 3.4
-        // ReportIf(!ValidPageNo(state.page));
+        ReportIf(!ValidPageNo(state.page));
         return state;
     }
 
     Rect screen(Point(), viewPort.Size());
     Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
-    // TODO: after 3.4
-    // ReportIf(!ValidPageNo(state.page));
+    ReportIf(!ValidPageNo(state.page));
     PointF ptD = CvtFromScreen(pageVis.TL(), state.page);
 
     // Remember to show the margin, if it's currently visible

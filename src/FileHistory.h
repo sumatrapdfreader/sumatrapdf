@@ -20,7 +20,7 @@ struct FileHistory {
     void Clear(bool keepFavorites) const;
     void Append(FileState* state) const;
     void Remove(FileState* state) const;
-    [[nodiscard]] FileState* Get(size_t index) const;
+    FileState* Get(size_t index) const;
     FileState* Find(const char* filePath, size_t* idxOut) const;
     FileState* MarkFileLoaded(const char* filePath) const;
     bool MarkFileInexistent(const char* filePath, bool hide = false) const;

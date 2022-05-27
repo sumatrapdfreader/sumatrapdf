@@ -4,17 +4,17 @@
 struct SelectionOnPage;
 struct WatchedFile;
 struct EditAnnotationsWindow;
-struct WindowInfo;
+struct MainWindow;
 
 /* Data related to a single document loaded into a tab/window */
-/* (none of these depend on WindowInfo, so that a TabInfo could
+/* (none of these depend on MainWindow, so that a TabInfo could
    be moved between windows once this is supported) */
 struct TabInfo {
-    AutoFreeWstr filePath;
-    WindowInfo* win = nullptr;
-    Controller* ctrl = nullptr;
+    AutoFreeStr filePath;
+    MainWindow* win = nullptr;
+    DocController* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
-    AutoFreeWstr frameTitle;
+    AutoFreeStr frameTitle;
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
@@ -38,21 +38,21 @@ struct TabInfo {
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
 
-    TabInfo(WindowInfo* win, const WCHAR* filePath);
+    TabInfo(MainWindow* win, const char* filePath);
     ~TabInfo();
 
-    [[nodiscard]] DisplayModel* AsFixed() const;
+    DisplayModel* AsFixed() const;
 
     // only if AsFixed()
-    [[nodiscard]] EngineBase* GetEngine() const;
-    [[nodiscard]] Kind GetEngineType() const;
+    EngineBase* GetEngine() const;
+    Kind GetEngineType() const;
 
-    [[nodiscard]] ChmModel* AsChm() const;
+    ChmModel* AsChm() const;
 
-    [[nodiscard]] const WCHAR* GetTabTitle() const;
-    [[nodiscard]] bool IsDocLoaded() const;
+    const char* GetTabTitle() const;
+    bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
     void ToggleZoom() const;
 };
 
-bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, ByteSlice data);
+bool SaveDataToFile(HWND hwndParent, char* fileName, ByteSlice data);

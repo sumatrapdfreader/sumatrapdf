@@ -14,14 +14,14 @@ struct ImageData {
 
 char* NormalizeURL(const char* url, const char* base);
 
-class PropertyMap {
+struct PropertyMap {
     AutoFree values[(int)DocumentProperty::PdfVersion];
 
-    [[nodiscard]] int Find(DocumentProperty prop) const;
+    int Find(DocumentProperty prop) const;
 
   public:
     void Set(DocumentProperty prop, char* valueUtf8, bool replace = false);
-    [[nodiscard]] WCHAR* Get(DocumentProperty prop) const;
+    char* Get(DocumentProperty prop) const;
 };
 
 /* ********** EPUB ********** */
@@ -34,8 +34,8 @@ class EpubDoc {
 
     str::Str htmlData;
     Vec<ImageData> images;
-    AutoFreeWstr tocPath;
-    AutoFreeWstr fileName;
+    AutoFreeStr tocPath;
+    AutoFreeStr fileName;
     PropertyMap props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
@@ -46,25 +46,25 @@ class EpubDoc {
     bool ParseNcxToc(const char* data, size_t dataLen, const char* pagePath, EbookTocVisitor* visitor);
 
   public:
-    explicit EpubDoc(const WCHAR* fileName);
+    explicit EpubDoc(const char* fileName);
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
-    [[nodiscard]] ByteSlice GetHtmlData() const;
+    ByteSlice GetHtmlData() const;
 
     ByteSlice* GetImageData(const char* fileName, const char* pagePath);
     ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
-    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
-    [[nodiscard]] const WCHAR* GetFileName() const;
-    [[nodiscard]] bool IsRTL() const;
+    char* GetProperty(DocumentProperty prop) const;
+    const char* GetFileName() const;
+    bool IsRTL() const;
 
-    [[nodiscard]] bool HasToc() const;
+    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
 
-    static EpubDoc* CreateFromFile(const WCHAR* path);
+    static EpubDoc* CreateFromFile(const char* path);
     static EpubDoc* CreateFromStream(IStream* stream);
 };
 
@@ -74,7 +74,7 @@ class EpubDoc {
 
 class Fb2Doc {
   public:
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     IStream* stream = nullptr;
 
     str::Str xmlData;
@@ -87,25 +87,25 @@ class Fb2Doc {
     bool Load();
     void ExtractImage(HtmlPullParser* parser, HtmlToken* tok);
 
-    explicit Fb2Doc(const WCHAR* fileName);
+    explicit Fb2Doc(const char* fileName);
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
-    [[nodiscard]] ByteSlice GetXmlData() const;
+    ByteSlice GetXmlData() const;
 
     ByteSlice* GetImageData(const char* fileName) const;
     ByteSlice* GetCoverImage() const;
 
-    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
-    [[nodiscard]] const WCHAR* GetFileName() const;
-    [[nodiscard]] bool IsZipped() const;
+    char* GetProperty(DocumentProperty prop) const;
+    const char* GetFileName() const;
+    bool IsZipped() const;
 
-    [[nodiscard]] bool HasToc() const;
+    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
 
     static bool IsSupportedFileType(Kind kind);
 
-    static Fb2Doc* CreateFromFile(const WCHAR* path);
+    static Fb2Doc* CreateFromFile(const char* path);
     static Fb2Doc* CreateFromStream(IStream* stream);
 };
 
@@ -114,34 +114,34 @@ class Fb2Doc {
 class PdbReader;
 
 class PalmDoc {
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     str::Str htmlData;
-    WStrVec tocEntries;
+    StrVec tocEntries;
 
     bool Load();
 
   public:
-    explicit PalmDoc(const WCHAR* path);
+    explicit PalmDoc(const char* path);
     ~PalmDoc();
 
-    [[nodiscard]] ByteSlice GetHtmlData() const;
+    ByteSlice GetHtmlData() const;
 
-    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
-    [[nodiscard]] const WCHAR* GetFileName() const;
+    char* GetProperty(DocumentProperty prop) const;
+    const char* GetFileName() const;
 
-    [[nodiscard]] bool HasToc() const;
+    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static PalmDoc* CreateFromFile(const WCHAR* path);
+    static PalmDoc* CreateFromFile(const char* path);
 };
 
 /* ********** Plain HTML ********** */
 
 class HtmlDoc {
-    AutoFreeWstr fileName;
-    AutoFree htmlData;
-    AutoFree pagePath;
+    AutoFreeStr fileName;
+    ByteSlice htmlData;
+    AutoFreeStr pagePath;
     Vec<ImageData> images;
     PropertyMap props;
 
@@ -149,7 +149,7 @@ class HtmlDoc {
     ByteSlice LoadURL(const char* url);
 
   public:
-    explicit HtmlDoc(const WCHAR* path);
+    explicit HtmlDoc(const char* path);
     ~HtmlDoc();
 
     ByteSlice GetHtmlData();
@@ -157,34 +157,34 @@ class HtmlDoc {
     ByteSlice* GetImageData(const char* fileName);
     ByteSlice GetFileData(const char* relPath);
 
-    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
-    [[nodiscard]] const WCHAR* GetFileName() const;
+    char* GetProperty(DocumentProperty prop) const;
+    const char* GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
-    static HtmlDoc* CreateFromFile(const WCHAR* fileName);
+    static HtmlDoc* CreateFromFile(const char* fileName);
 };
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
 class TxtDoc {
-    AutoFreeWstr fileName;
+    AutoFreeStr fileName;
     str::Str htmlData;
-    bool isRFC;
+    bool isRFC = false;
 
     bool Load();
 
   public:
-    explicit TxtDoc(const WCHAR* fileName);
+    explicit TxtDoc(const char* fileName);
 
-    [[nodiscard]] ByteSlice GetHtmlData() const;
+    ByteSlice GetHtmlData() const;
 
-    [[nodiscard]] WCHAR* GetProperty(DocumentProperty prop) const;
-    [[nodiscard]] const WCHAR* GetFileName() const;
+    char* GetProperty(DocumentProperty prop) const;
+    const char* GetFileName() const;
 
-    [[nodiscard]] bool IsRFC() const;
-    [[nodiscard]] bool HasToc() const;
+    bool IsRFC() const;
+    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static TxtDoc* CreateFromFile(const WCHAR* fileName);
+    static TxtDoc* CreateFromFile(const char* fileName);
 };

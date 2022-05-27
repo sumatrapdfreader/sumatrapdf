@@ -14,7 +14,7 @@ extern "C" {
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"
 #include "EngineMupdfImpl.h"
@@ -51,9 +51,9 @@ using Gdiplus::StringFormatFlagsDirectionRightToLeft;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
-static AutoFreeWstr gPdfProducer;
+static AutoFreeStr gPdfProducer;
 
-void PdfCreator::SetProducerName(const WCHAR* name) {
+void PdfCreator::SetProducerName(const char* name) {
     if (!str::Eq(gPdfProducer, name)) {
         gPdfProducer.SetCopy(name);
     }
@@ -269,7 +269,7 @@ bool PdfCreator::AddPageFromImageData(ByteSlice data, float imgDpi) const {
     return ok;
 }
 
-bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
+bool PdfCreator::SetProperty(DocumentProperty prop, const char* value) const {
     if (!ctx || !doc) {
         return false;
     }
@@ -297,7 +297,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
         return false;
     }
 
-    auto val = ToUtf8Temp(value);
+    const char* val = value;
 
     fz_try(ctx) {
         pdf_obj* info = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info));
@@ -308,7 +308,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) const {
         }
 
         // TODO: not sure if pdf_new_text_string() handles utf8
-        pdf_obj* valobj = pdf_new_text_string(ctx, val.Get());
+        pdf_obj* valobj = pdf_new_text_string(ctx, val);
         pdf_dict_puts_drop(ctx, info, name, valobj);
     }
     fz_catch(ctx) {
@@ -331,7 +331,7 @@ static DocumentProperty propsToCopy[] = {
 bool PdfCreator::CopyProperties(EngineBase* engine) const {
     bool ok;
     for (int i = 0; i < dimof(propsToCopy); i++) {
-        AutoFreeWstr value = engine->GetProperty(propsToCopy[i]);
+        AutoFreeStr value = engine->GetProperty(propsToCopy[i]);
         if (value) {
             ok = SetProperty(propsToCopy[i], value);
             if (!ok) {

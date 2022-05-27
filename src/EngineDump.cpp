@@ -13,7 +13,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "PdfCreator.h"
@@ -41,16 +41,30 @@ static bool NeedsEscape(const WCHAR* s) {
     return false;
 }
 
+static bool NeedsEscape(const char* s) {
+    // TODO: optimize to do a single loop over s
+    if (str::FindChar(s, '<')) {
+        return true;
+    }
+    if (str::FindChar(s, '&')) {
+        return true;
+    }
+    if (str::FindChar(s, '"')) {
+        return true;
+    }
+    return false;
+}
+
 // TODO: we leak because in the past Escape() was freeing str
 // and now we don't but I didn't update all the code
 // doesn't matter because engine dump does its job and quits
-static std::string_view Escape(const WCHAR* str) {
+static char* Escape(const WCHAR* str) {
     if (str::IsEmpty(str)) {
         return {};
     }
 
     if (!NeedsEscape(str)) {
-        return strconv::WstrToUtf8(str);
+        return ToUtf8(str);
     }
 
     str::WStr escaped(256);
@@ -72,16 +86,51 @@ static std::string_view Escape(const WCHAR* str) {
                 escaped.Append(L"&amp;");
                 break;
             default:
-                escaped.Append(*s);
+                escaped.AppendChar(*s);
                 break;
         }
     }
-    return strconv::WstrToUtf8(escaped.Get());
+    return ToUtf8(escaped.Get());
+}
+
+static char* Escape(const char* str) {
+    if (str::IsEmpty(str)) {
+        return {};
+    }
+
+    if (!NeedsEscape(str)) {
+        return str::Dup(str);
+    }
+
+    str::Str escaped(256);
+    for (const char* s = str; *s; s++) {
+        switch (*s) {
+            case '&':
+                escaped.Append("&amp;");
+                break;
+            case '<':
+                escaped.Append("&lt;");
+                break;
+            case '>':
+                escaped.Append("&gt;");
+                break;
+            case '"':
+                escaped.Append("&quot;");
+                break;
+            case '\'':
+                escaped.Append("&amp;");
+                break;
+            default:
+                escaped.AppendChar(*s);
+                break;
+        }
+    }
+    return escaped.StealData();
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
     Out1("\t<Properties\n");
-    AutoFree str = Escape(engine->FileName());
+    AutoFreeStr str = Escape(engine->FileName());
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str = Escape(engine->GetProperty(DocumentProperty::Title));
     if (str.Get()) {
@@ -146,23 +195,23 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (!fullDump) {
         return;
     }
-    AutoFreeWstr fontlist(engine->GetProperty(DocumentProperty::FontList));
+    AutoFreeStr fontlist(engine->GetProperty(DocumentProperty::FontList));
     if (fontlist) {
-        WStrVec fonts;
-        fonts.Split(fontlist, L"\n");
-        str = Escape(fonts.Join(L"\n\t\t"));
+        StrVec fonts;
+        Split(fonts, fontlist, "\n");
+        str = Escape(Join(fonts, "\n\t\t"));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
     }
 }
 
 // caller must free() the result
 static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
-    WCHAR* destName = dest->GetName();
+    char* destName = dest->GetName();
     if (destName) {
-        AutoFree name = Escape(destName);
+        AutoFreeStr name = Escape(destName);
         return str::Format("Name=\"%s\"", name.Get());
     }
-    // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
+    // as handled by LinkHandler::ScrollTo in MainWindow.cpp
     int pageNo = dest->GetPageNo();
     if (pageNo <= 0 || pageNo > engine->PageCount()) {
         return nullptr;
@@ -185,7 +234,7 @@ static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
 
 void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
-        AutoFree title(Escape(item->title));
+        AutoFreeStr title = Escape(item->title);
         for (int i = 0; i < level; i++) {
             Out1("\t");
         }
@@ -198,14 +247,14 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
         }
         if (item->GetPageDestination()) {
             IPageDestination* dest = item->GetPageDestination();
-            AutoFree target = Escape(dest->GetValue());
+            AutoFreeStr target = Escape(dest->GetValue());
             if (target.Get()) {
                 Out(" Target=\"%s\"", target.Get());
             }
             if (item->pageNo != dest->GetPageNo()) {
                 Out(" TargetPage=\"%d\"", dest->GetPageNo());
             }
-            AutoFree rectStr(DestRectToStr(engine, dest));
+            AutoFreeStr rectStr = DestRectToStr(engine, dest);
             if (rectStr) {
                 Out(" Target%s", rectStr.Get());
             }
@@ -233,11 +282,11 @@ void DumpToc(EngineBase* engine) {
     }
     auto* root = tree->root;
     if (root) {
-        Out("\t<TocTree%s>\n", engine->HacToc() ? "" : " Expected=\"no\"");
+        Out("\t<TocTree%s>\n", engine->HasToc() ? "" : " Expected=\"no\"");
         int idCounter = 0;
         DumpTocItem(engine, root, 2, idCounter);
         Out1("\t</TocTree>\n");
-    } else if (engine->HacToc()) {
+    } else if (engine->HasToc()) {
         Out1("\t<TocTree />\n");
     }
 }
@@ -260,7 +309,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
-        AutoFree label(Escape(engine->GetPageLabel(pageNo)));
+        AutoFreeStr label = Escape(engine->GetPageLabel(pageNo));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
     Rect bbox = engine->PageMediabox(pageNo).Round();
@@ -277,7 +326,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     if (fullDump) {
         PageText pageText = engine->ExtractPageText(pageNo);
         if (pageText.text != nullptr) {
-            AutoFree text(Escape(pageText.text));
+            AutoFreeStr text = Escape(pageText.text);
             if (text.Get()) {
                 Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
             }
@@ -297,19 +346,19 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 if (dest->GetKind() != nullptr) {
                     Out("\t\t\t\tLinkType=\"%s\"\n", dest->GetKind());
                 }
-                AutoFree value(Escape(dest->GetValue()));
+                AutoFreeStr value = Escape(dest->GetValue());
                 if (value.Get()) {
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
                 }
                 if (dest->GetPageNo()) {
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetPageNo());
                 }
-                AutoFree rectStr(DestRectToStr(engine, dest));
+                AutoFreeStr rectStr = DestRectToStr(engine, dest);
                 if (rectStr) {
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
                 }
             }
-            AutoFree name(Escape(el->GetValue()));
+            AutoFreeStr name = Escape(el->GetValue());
             if (name.Get()) {
                 Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
             }
@@ -366,13 +415,13 @@ void DumpData(EngineBase* engine, bool fullDump) {
     Out1("</EngineDump>\n");
 }
 
-#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
-#define ErrOut1(msg) fwprintf(stderr, TEXT("%s"), TEXT(msg) TEXT("\n"))
+#define ErrOut(msg, ...) fprintf(stderr, msg "\n", __VA_ARGS__)
+#define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
-bool CheckRenderPath(const WCHAR* path) {
+static bool CheckRenderPath(const char* path) {
     CrashIf(!path);
     bool hasArg = false;
-    const WCHAR* p = path - 1;
+    const char* p = path - 1;
     while ((p = str::FindChar(p + 1, '%')) != nullptr) {
         p++;
         if (*p == '%') {
@@ -390,12 +439,12 @@ bool CheckRenderPath(const WCHAR* path) {
     return true;
 }
 
-bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.f, bool silent = false) {
+static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f, bool silent = false) {
     if (!CheckRenderPath(renderPath)) {
         return false;
     }
 
-    if (str::EndsWithI(renderPath, L".txt")) {
+    if (str::EndsWithI(renderPath, ".txt")) {
         str::WStr text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             PageText pageText = engine->ExtractPageText(pageNo);
@@ -408,22 +457,21 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         if (silent) {
             return true;
         }
-        AutoFreeWstr txtFilePath(str::Format(renderPath, 0));
-        auto textA = ToUtf8Temp(text.Get());
-        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textA.Get()));
-        return file::WriteFile(txtFilePath, textUTF8BOM.AsSpan());
+        AutoFreeStr txtFilePath(str::Format(renderPath, 0));
+        char* textA = ToUtf8Temp(text.Get());
+        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textA);
+        return file::WriteFile(txtFilePath, textUTF8BOM);
     }
 
-    if (str::EndsWithI(renderPath, L".pdf")) {
+    if (str::EndsWithI(renderPath, ".pdf")) {
         if (silent) {
             return false;
         }
-        AutoFreeWstr pdfFilePath(str::Format(renderPath, 0));
-        auto pathA(ToUtf8Temp(pdfFilePath.Get()));
-        if (engine->SaveFileAsPDF(pathA.Get())) {
+        AutoFreeStr pdfFilePath(str::Format(renderPath, 0));
+        if (engine->SaveFileAsPDF(pdfFilePath)) {
             return true;
         }
-        return PdfCreator::RenderToFile(pathA.Get(), engine);
+        return PdfCreator::RenderToFile(pdfFilePath, engine);
     }
 
     bool success = true;
@@ -438,12 +486,13 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             delete bmp;
             continue;
         }
-        AutoFreeWstr pageBmpPath(str::Format(renderPath, pageNo));
-        if (str::EndsWithI(pageBmpPath, L".png")) {
+        AutoFreeStr pageBmpPath(str::Format(renderPath, pageNo));
+        if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
-            gbmp.Save(pageBmpPath, &pngEncId);
-        } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
+            WCHAR* pageBmpPathW = ToWstrTemp(pageBmpPath);
+            gbmp.Save(pageBmpPathW, &pngEncId);
+        } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
             ByteSlice imgData = SerializeBitmap(bmp->GetBitmap());
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
@@ -463,13 +512,13 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
 }
 
 class PasswordHolder : public PasswordUI {
-    const WCHAR* password;
+    const char* password;
 
   public:
-    explicit PasswordHolder(const WCHAR* password) : password(password) {
+    explicit PasswordHolder(const char* password) : password(password) {
     }
-    WCHAR* GetPassword(__unused const WCHAR* fileName, __unused u8* fileDigest, __unused u8 decryptionKeyOut[32],
-                       __unused bool* saveKey) override {
+    char* GetPassword(__unused const char* fileName, __unused u8* fileDigest, __unused u8 decryptionKeyOut[32],
+                      __unused bool* saveKey) override {
         return str::Dup(password);
     }
 };
@@ -488,36 +537,36 @@ int main(__unused int argc, __unused char** argv) {
         return 2;
     }
 
-    AutoFreeWstr filePath;
-    WCHAR* password = nullptr;
+    char* filePath = nullptr;
+    char* password = nullptr;
     bool fullDump = true;
-    WCHAR* renderPath = nullptr;
+    char* renderPath = nullptr;
     float renderZoom = 1.f;
     bool loadOnly = false, silent = false;
 
     for (int i = 1; i < nArgs; i++) {
-        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < nArgs && !password) {
+        if (str::Eq(argList.at(i), "-pwd") && i + 1 < nArgs && !password) {
             password = argList.at(++i);
-        } else if (str::Eq(argList.at(i), L"-quick")) {
+        } else if (str::Eq(argList.at(i), "-quick")) {
             fullDump = false;
-        } else if (str::Eq(argList.at(i), L"-render") && i + 1 < nArgs && !renderPath) {
+        } else if (str::Eq(argList.at(i), "-render") && i + 1 < nArgs && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
-            if (i + 2 < nArgs && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
+            if (i + 2 < nArgs && str::Parse(argList.at(i + 1), "%f%%%$", &zoom) && zoom > 0.f) {
                 renderZoom = zoom / 100.f;
                 i++;
             }
             renderPath = argList.at(++i);
-        } else if (str::Eq(argList.at(i), L"-loadonly")) {
+        } else if (str::Eq(argList.at(i), "-loadonly")) {
             // -loadonly and -silent are only meant for profiling
             loadOnly = true;
-        } else if (str::Eq(argList.at(i), L"-silent")) {
+        } else if (str::Eq(argList.at(i), "-silent")) {
             silent = true;
-        } else if (str::Eq(argList.at(i), L"-full")) {
+        } else if (str::Eq(argList.at(i), "-full")) {
             // -full is for backward compatibility
             fullDump = true;
         } else if (!filePath) {
-            filePath.SetCopy(argList.at(i));
+            filePath = argList.at(i);
         } else {
             goto Usage;
         }
@@ -536,12 +585,14 @@ int main(__unused int argc, __unused char** argv) {
     ScopedMui miniMui;
 
     WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(filePath, &fdata);
+    WCHAR* pathW = ToWstrTemp(filePath);
+    HANDLE hfind = FindFirstFileW(pathW, &fdata);
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        AutoFreeWstr dir(path::GetDir(filePath));
-        filePath.Set(path::Join(dir, fdata.cFileName));
+        char* dir = path::GetDirTemp(filePath);
+        char* name = ToUtf8Temp(fdata.cFileName);
+        filePath = path::JoinTemp(dir, name);
         FindClose(hfind);
     }
 

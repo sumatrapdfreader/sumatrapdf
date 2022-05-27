@@ -11,7 +11,7 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/wingui2.h"
+#include "wingui/WinGui.h"
 
 #include "Settings.h"
 #include "SumatraConfig.h"
@@ -26,8 +26,6 @@
 #include "RegistrySearchFilter.h"
 
 #include "utils/Log.h"
-
-using namespace wg;
 
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
@@ -68,7 +66,7 @@ const char* gInstalledFiles[] = {
 static void RemoveInstalledFiles() {
     // can't use GetExistingInstallationDir() anymore because we
     // delete registry entries
-    WCHAR* dir = gCli->installDir;
+    char* dir = gCli->installDir;
     if (!dir) {
         log("RemoveInstalledFiles(): dir is empty\n");
     }
@@ -78,22 +76,22 @@ static void RemoveInstalledFiles() {
         const char* s = gInstalledFiles[i];
         auto relPath = ToWstrTemp(s);
         AutoFreeWstr path = path::Join(dir, relPath);
-        BOOL ok = DeleteFileW(path);
+        BOOL ok = file::Delete(path);
         if (ok) {
             logf(L"RemoveInstalledFiles(): removed '%s'\n", path.Get());
         }
     }
 #endif
     bool ok = dir::RemoveAll(dir);
-    logf(L"RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
+    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
 static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    WCHAR* exePath = GetInstalledExePathTemp();
-    WCHAR* ownPath = GetExePathTemp();
+    char* exePath = GetInstalledExePathTemp();
+    char* ownPath = GetExePathTemp();
     if (!path::IsSame(exePath, ownPath)) {
         KillProcessesWithModule(exePath, true);
     }
@@ -191,14 +189,14 @@ static void CreateUninstallerWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    WCHAR* caption = str::JoinTemp(kAppName, L" Uninstaller Usage");
-    AutoFreeWstr msg = str::Format(
-        L"uninstall.exe [/s][/d <path>]\n\
+    char* caption = str::JoinTemp(kAppName, " Uninstaller Usage");
+    AutoFreeStr msg = str::Format(
+        "uninstall.exe [/s][/d <path>]\n\
     \n\
     /s\tuninstalls %s silently (without user interaction).\n\
     /d\tchanges the directory from where %s will be uninstalled.",
         kAppName, kAppName);
-    MessageBoxW(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
 static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -316,11 +314,12 @@ static int RunApp() {
     }
 }
 
-static WCHAR* GetUninstallerPathInTemp() {
+static char* GetUninstallerPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
-    return path::Join(tempDir, L"Sumatra-Uninstaller.exe");
+    char* dirA = ToUtf8Temp(tempDir);
+    return path::Join(dirA, "Sumatra-Uninstaller.exe");
 }
 
 // to be able to delete installation directory we must copy
@@ -333,8 +332,8 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
         return;
     }
 
-    AutoFreeWstr installerTempPath = GetUninstallerPathInTemp();
-    auto ownPath = GetExePathTemp();
+    char* installerTempPath = GetUninstallerPathInTemp();
+    char* ownPath = GetExePathTemp();
     if (str::EqI(installerTempPath, ownPath)) {
         if (IsProcessRunningElevated()) {
             log("  already running elevated and from temp dir\n");
@@ -342,7 +341,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
         }
     }
 
-    logf(L"  copying installer '%s' to '%s'\n", ownPath.Get(), installerTempPath.Get());
+    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
     bool ok = file::Copy(installerTempPath, ownPath, false);
     if (!ok) {
         logf("  failed to copy installer\n");
@@ -351,52 +350,50 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
 
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
-
-    str::WStr cmdLine = L"-uninstall";
+    str::Str cmdLine = "-uninstall";
     if (cli->silent) {
-        cmdLine.Append(L" -silent");
+        cmdLine.Append(" -silent");
     }
     if (cli->log) {
-        cmdLine.Append(L" -log");
+        cmdLine.Append(" -log");
     }
-    logf(L"  re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine.Get());
+    logf("  re-launching '%s' with args '%s' as elevated\n", installerTempPath, cmdLine.Get());
     LaunchElevated(installerTempPath, cmdLine.Get());
     ::ExitProcess(0);
 }
 
-static WCHAR* GetSelfDeleteBatchPathInTemp() {
+static char* GetSelfDeleteBatchPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
-    return path::Join(tempDir, L"sumatra-self-del.bat");
+    char* tempDirA = ToUtf8Temp(tempDir);
+    return path::JoinTemp(tempDirA, "sumatra-self-del.bat");
 }
 
 // a hack to allow deleting our own executable
 // we create a bash script that deletes us
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
-    auto exePath = GetExePathTemp();
-    auto exePathA = ToUtf8Temp(exePath.AsView());
+    char* exePath = GetExePathTemp();
     str::Str script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
     // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
     script.Append("timeout /t 2 /nobreak >nul\r\n");
     // delete our executable
-    script.AppendFmt("del \"%s\"\r\n", exePathA.Get());
+    script.AppendFmt("del \"%s\"\r\n", exePath);
     // del itself
     // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
 
-    AutoFreeWstr scriptPath = GetSelfDeleteBatchPathInTemp();
-    auto scriptPathA = ToUtf8Temp(scriptPath.AsView());
-    bool ok = file::WriteFile(scriptPathA, script.AsSpan());
+    char* scriptPath = GetSelfDeleteBatchPathInTemp();
+    bool ok = file::WriteFile(scriptPath, script.AsByteSlice());
     if (!ok) {
-        logf("Failed to write '%s'\n", scriptPathA.Get());
+        logf("Failed to write '%s'\n", scriptPath);
         return;
     }
-    logf("Created self-delete batch script '%s'\n", scriptPathA.Get());
-    AutoFreeWstr cmdLine = str::Format(L"cmd.exe /C \"%s\"", scriptPath.Get());
+    logf("Created self-delete batch script '%s'\n", scriptPath);
+    AutoFreeStr cmdLine = str::Format("cmd.exe /C \"%s\"", scriptPath);
     DWORD flags = CREATE_NO_WINDOW;
     LaunchProcess(cmdLine, nullptr, flags);
 }
@@ -416,9 +413,10 @@ int RunUninstaller() {
 
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
-    WCHAR* cmdLine = GetCommandLineW();
-    WCHAR* exePath = GetExePathTemp();
-    logf(L"Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
+    char* instDir = gCli->installDir;
+    char* cmdLine = ToUtf8Temp(GetCommandLineW());
+    char* exePath = GetExePathTemp();
+    logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
     int ret = 1;
     auto installerExists = file::Exists(exePath);

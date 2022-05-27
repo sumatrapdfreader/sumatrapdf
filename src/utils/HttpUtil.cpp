@@ -60,9 +60,9 @@ bool HttpGet(const char* urlA, HttpRsp* rspOut) {
         if (0 == dwRead) {
             break;
         }
-        gAllowAllocFailure++;
+        InterlockedIncrement(&gAllowAllocFailure);
         bool ok = rspOut->data.Append(buf, dwRead);
-        gAllowAllocFailure--;
+        InterlockedDecrement(&gAllowAllocFailure);
         if (!ok) {
             logf("HttpGet: data.Append failed\n");
             goto Error;
@@ -87,21 +87,21 @@ Error:
 }
 
 // Download content of a url to a file
-bool HttpGetToFile(const char* urlA, const char* destFilePathA) {
-    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePathA);
+bool HttpGetToFile(const char* urlA, const char* destFilePath) {
+    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
     WCHAR* url = ToWstrTemp(urlA);
-    WCHAR* destFilePath = ToWstrTemp(destFilePathA);
     char buf[1024];
 
-    HANDLE hf = CreateFileW(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-                            nullptr);
+    WCHAR* pathW = ToWstrTemp(destFilePath);
+    HANDLE hf =
+        CreateFileW(pathW, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
-        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePathA);
+        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
         LogLastError();
         goto Exit;
     }

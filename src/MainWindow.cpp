@@ -9,20 +9,14 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
-
 #include "wingui/Layout.h"
-#include "wingui/Window.h"
-#include "wingui/TreeCtrl.h"
-#include "wingui/TooltipCtrl.h"
-#include "wingui/TabsCtrl.h"
+#include "wingui/WinGui.h"
+
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 
-#include "wingui/wingui2.h"
-using namespace wg;
-
 #include "Settings.h"
-#include "Controller.h"
+#include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
@@ -35,7 +29,7 @@ using namespace wg;
 #include "TextSearch.h"
 #include "Annotation.h"
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
+#include "MainWindow.h"
 #include "TabInfo.h"
 #include "TableOfContents.h"
 #include "resource.h"
@@ -50,32 +44,32 @@ using namespace wg;
 #include "utils/Log.h"
 
 struct LinkHandler : ILinkHandler {
-    WindowInfo* win = nullptr;
+    MainWindow* win = nullptr;
 
-    explicit LinkHandler(WindowInfo* w) {
+    explicit LinkHandler(MainWindow* w) {
         CrashIf(!w);
         win = w;
     }
     ~LinkHandler() override;
 
-    Controller* GetController() override {
+    DocController* GetDocController() override {
         return win->ctrl;
     }
     void GotoLink(IPageDestination*) override;
-    void GotoNamedDest(const WCHAR*) override;
+    void GotoNamedDest(const char*) override;
     void ScrollTo(IPageDestination*) override;
     void LaunchURL(const char*) override;
-    void LaunchFile(const WCHAR* path, IPageDestination*) override;
-    IPageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially) override;
+    void LaunchFile(const char* path, IPageDestination*) override;
+    IPageDestination* FindTocItem(TocItem* item, const char* name, bool partially) override;
 };
 
 LinkHandler::~LinkHandler() {
     // do nothing
 }
 
-Vec<WindowInfo*> gWindows;
+Vec<MainWindow*> gWindows;
 
-StaticLinkInfo::StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip) {
+StaticLinkInfo::StaticLinkInfo(Rect rect, const char* target, const char* infotip) {
     this->rect = rect;
     this->target = str::Dup(target);
     this->infotip = str::Dup(infotip);
@@ -102,15 +96,14 @@ StaticLinkInfo::~StaticLinkInfo() {
     str::Free(infotip);
 }
 
-WindowInfo::WindowInfo(HWND hwnd) {
+MainWindow::MainWindow(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
-    notifications = new Notifications();
 }
 
 static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
 
-void CreateMovePatternLazy(WindowInfo* win) {
+void CreateMovePatternLazy(MainWindow* win) {
     if (win->bmpMovePattern) {
         return;
     }
@@ -120,15 +113,13 @@ void CreateMovePatternLazy(WindowInfo* win) {
     CrashIf(!win->brMovePattern);
 }
 
-WindowInfo::~WindowInfo() {
+MainWindow::~MainWindow() {
     FinishStressTest(this);
 
     CrashIf(tabs.size() > 0);
     // CrashIf(ctrl); // TODO: seen in crash report
     CrashIf(linkOnLastButtonDown);
     CrashIf(annotationOnLastButtonDown);
-
-    UnsubclassToc(this);
 
     DeleteObject(brMovePattern);
     DeleteObject(bmpMovePattern);
@@ -144,22 +135,21 @@ WindowInfo::~WindowInfo() {
 
     delete linkHandler;
     delete buffer;
-    delete notifications;
     delete tabSelectionHistory;
     DeleteCaption(caption);
     DeleteVecMembers(tabs);
     DeleteVecMembers(staticLinks);
     delete tabsCtrl;
-    // cbHandler is passed into Controller and must be deleted afterwards
-    // (all controllers should have been deleted prior to WindowInfo, though)
+    // cbHandler is passed into DocController and must be deleted afterwards
+    // (all controllers should have been deleted prior to MainWindow, though)
     delete cbHandler;
 
     delete frameRateWnd;
     delete infotip;
-    delete tocTreeCtrl;
-    if (favTreeCtrl) {
-        delete favTreeCtrl->treeModel;
-        delete favTreeCtrl;
+    delete tocTreeView;
+    if (favTreeView) {
+        delete favTreeView->treeModel;
+        delete favTreeView;
     }
 
     delete sidebarSplitter;
@@ -168,32 +158,32 @@ WindowInfo::~WindowInfo() {
     delete favLabelWithClose;
 }
 
-void ClearMouseState(WindowInfo* win) {
+void ClearMouseState(MainWindow* win) {
     win->linkOnLastButtonDown = nullptr;
     delete win->annotationOnLastButtonDown;
     win->annotationOnLastButtonDown = nullptr;
 }
 
-bool WindowInfo::IsAboutWindow() const {
+bool MainWindow::IsAboutWindow() const {
     return nullptr == currentTab;
 }
 
-bool WindowInfo::IsDocLoaded() const {
+bool MainWindow::IsDocLoaded() const {
     CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
     return this->ctrl != nullptr;
 }
 
-DisplayModel* WindowInfo::AsFixed() const {
+DisplayModel* MainWindow::AsFixed() const {
     return ctrl ? ctrl->AsFixed() : nullptr;
 }
 
-ChmModel* WindowInfo::AsChm() const {
+ChmModel* MainWindow::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
 }
 
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
-void WindowInfo::UpdateCanvasSize() {
+void MainWindow::UpdateCanvasSize() {
     Rect rc = ClientRect(hwndCanvas);
     if (buffer && canvasRc == rc) {
         return;
@@ -213,13 +203,10 @@ void WindowInfo::UpdateCanvasSize() {
         currentTab->canvasRc = canvasRc;
     }
 
-    // keep the notifications visible (only needed for right-to-left layouts)
-    if (IsUIRightToLeft()) {
-        notifications->Relayout();
-    }
+    RelayoutNotifications(hwndCanvas);
 }
 
-Size WindowInfo::GetViewPortSize() const {
+Size MainWindow::GetViewPortSize() const {
     Size size = canvasRc.Size();
     ReportIf(size.IsEmpty());
 
@@ -234,21 +221,21 @@ Size WindowInfo::GetViewPortSize() const {
     return size;
 }
 
-void WindowInfo::RedrawAll(bool update) const {
+void MainWindow::RedrawAll(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (update) {
         UpdateWindow(this->hwndCanvas);
     }
 }
 
-void WindowInfo::RedrawAllIncludingNonClient(bool update) const {
+void MainWindow::RedrawAllIncludingNonClient(bool update) const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (update) {
         RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
     }
 }
 
-void WindowInfo::ChangePresentationMode(PresentationMode mode) {
+void MainWindow::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
         HideToolTip();
@@ -275,8 +262,8 @@ static HWND FindModalOwnedBy(HWND hwndParent) {
     return nullptr;
 }
 
-void WindowInfo::Focus() const {
-    win::ToForeground(hwndFrame);
+void MainWindow::Focus() const {
+    HwndToForeground(hwndFrame);
     // set focus to an owned modal dialog if there is one
     HWND hwnd = FindModalOwnedBy(hwndFrame);
     if (hwnd != nullptr) {
@@ -286,18 +273,18 @@ void WindowInfo::Focus() const {
     SetFocus(hwndFrame);
 }
 
-void WindowInfo::ToggleZoom() const {
+void MainWindow::ToggleZoom() const {
     if (currentTab) {
         currentTab->ToggleZoom();
     }
 }
 
-void WindowInfo::MoveDocBy(int dx, int dy) const {
+void MainWindow::MoveDocBy(int dx, int dy) const {
     CrashIf(!currentTab);
     currentTab->MoveDocBy(dx, dy);
 }
 
-void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) const {
+void MainWindow::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
     if (str::IsEmpty(text)) {
         HideToolTip();
         return;
@@ -305,11 +292,11 @@ void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) const 
     infotip->ShowOrUpdate(text, rc, multiline);
 }
 
-void WindowInfo::HideToolTip() const {
+void MainWindow::HideToolTip() const {
     infotip->Hide();
 }
 
-bool WindowInfo::CreateUIAProvider() {
+bool MainWindow::CreateUIAProvider() {
     if (uiaProvider) {
         return true;
     }
@@ -340,18 +327,17 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     }
     if (kindDestinationLaunchURL == kind) {
         auto d = (PageDestinationURL*)dest;
-        char* urlA = ToUtf8Temp(d->url);
-        LaunchURL(urlA);
+        LaunchURL(d->url);
         return;
     }
     if (kindDestinationLaunchFile == kind) {
         PageDestinationFile* pdf = (PageDestinationFile*)dest;
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        WCHAR* tmpPath = CleanupFileURL(pdf->path);
+        char* tmpPath = CleanupFileURL(pdf->path);
         // heuristic: replace %20 with ' '
-        if (!file::Exists(tmpPath) && (str::Find(tmpPath, L"%20") != nullptr)) {
-            WCHAR* tmp = str::Replace(tmpPath, L"%20", L" ");
+        if (!file::Exists(tmpPath) && (str::Find(tmpPath, "%20") != nullptr)) {
+            char* tmp = str::Replace(tmpPath, "%20", " ");
             str::Free(tmpPath);
             tmpPath = tmp;
         }
@@ -392,15 +378,15 @@ void LinkHandler::LaunchURL(const char* uri) {
         return;
     }
 
-    WCHAR* path = ToWstrTemp(uri);
-    WCHAR* colon = str::FindChar(path, ':');
-    WCHAR* hash = str::FindChar(path, '#');
+    char* path = str::DupTemp(uri);
+    char* colon = str::FindChar(path, ':');
+    char* hash = str::FindChar(path, '#');
     if (!colon || (hash && colon > hash)) {
         // treat relative URIs as file paths (without fragment identifier)
         if (hash) {
             *hash = '\0';
         }
-        str::TransCharsInPlace(path, L"/", L"\\");
+        str::TransCharsInPlace(path, "/", "\\");
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
         LaunchFile(path, nullptr);
@@ -411,7 +397,7 @@ void LinkHandler::LaunchURL(const char* uri) {
     }
 }
 
-void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
+void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
@@ -421,26 +407,26 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
     }
 
     // TODO: make it a function
-    AutoFreeWstr path = str::Replace(pathOrig, L"/", L"\\");
-    if (str::StartsWith(path, L".\\")) {
-        path.Set(str::Dup(path + 2));
+    AutoFreeStr path = str::Replace(pathOrig, "/", "\\");
+    if (str::StartsWith(path, ".\\")) {
+        path.SetCopy(path + 2);
     }
 
-    WCHAR drive;
-    bool isAbsPath = str::StartsWith(path, L"\\") || str::Parse(path, L"%c:\\", &drive);
+    char drive;
+    bool isAbsPath = str::StartsWith(path, "\\") || str::Parse(path, "%c:\\", &drive);
     if (isAbsPath) {
         return;
     }
 
     IPageDestination* remoteLink = link;
-    AutoFreeWstr fullPath(path::GetDir(win->ctrl->GetFilePath()));
-    fullPath.Set(path::Join(fullPath, path));
+    char* fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
+    fullPath = path::JoinTemp(fullPath, path);
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
-    WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
+    MainWindow* newWin = FindWindowInfoByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
-        LoadArgs args(fullPath, win);
+        LoadArgs* args = new LoadArgs(fullPath, win);
         newWin = LoadDocument(args);
         if (!newWin) {
             return;
@@ -454,8 +440,11 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.Get()));
-            win->notifications->Show(win->hwndCanvas, msg, NotificationOptions::Highlight);
+            AutoFreeStr msg(str::Format(_TRA("Error loading %s"), fullPath));
+            NotificationCreateArgs nargs;
+            nargs.hwndParent = win->hwndCanvas;
+            nargs.warning = true;
+            ShowNotification(nargs);
         }
         return;
     }
@@ -465,7 +454,7 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
         return;
     }
 
-    WCHAR* destName = remoteLink->GetName();
+    char* destName = remoteLink->GetName();
     if (destName) {
         IPageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
@@ -479,21 +468,21 @@ void LinkHandler::LaunchFile(const WCHAR* pathOrig, IPageDestination* link) {
 
 // normalizes case and whitespace in the string
 // caller needs to free() the result
-static WCHAR* NormalizeFuzzy(const WCHAR* str) {
-    WCHAR* dup = str::Dup(str);
-    CharLowerW(dup);
+static char* NormalizeFuzzy(const char* str) {
+    char* dup = str::Dup(str);
+    str::ToLowerInPlace(dup);
     str::NormalizeWSInPlace(dup);
     // cf. AddTocItemToView
     return dup;
 }
 
-static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
+static bool MatchFuzzy(const char* s1, const char* s2, bool partially) {
     if (!partially) {
         return str::Eq(s1, s2);
     }
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const WCHAR* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
+    for (const char* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
         if (last == s1 || *(last - 1) == ' ') {
             return true;
         }
@@ -503,10 +492,10 @@ static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially) {
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool partially) {
+IPageDestination* LinkHandler::FindTocItem(TocItem* item, const char* name, bool partially) {
     for (; item; item = item->next) {
         if (item->title) {
-            AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
+            AutoFreeStr fuzTitle(NormalizeFuzzy(item->title));
             if (MatchFuzzy(fuzTitle, name, partially)) {
                 return item->GetPageDestination();
             }
@@ -519,9 +508,9 @@ IPageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, boo
     return nullptr;
 }
 
-void LinkHandler::GotoNamedDest(const WCHAR* name) {
+void LinkHandler::GotoNamedDest(const char* name) {
     CrashIf(!win || win->linkHandler != this);
-    Controller* ctrl = win->ctrl;
+    DocController* ctrl = win->ctrl;
     if (!ctrl) {
         return;
     }
@@ -536,10 +525,10 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     if (dest) {
         ScrollTo(dest);
         delete dest;
-    } else if (ctrl->HacToc()) {
+    } else if (ctrl->HasToc()) {
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
-        AutoFreeWstr fuzName(NormalizeFuzzy(name));
+        AutoFreeStr fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName, false);
         if (!dest) {
             dest = FindTocItem(root, fuzName, true);
@@ -557,7 +546,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     }
 }
 
-void UpdateTreeCtrlColors(WindowInfo* win) {
+void UpdateTreeCtrlColors(MainWindow* win) {
     COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
     COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
@@ -566,31 +555,31 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
     bool flatTreeWnd = false;
 
     {
-        auto tocTreeCtrl = win->tocTreeCtrl;
-        tocTreeCtrl->SetBackgroundColor(treeBgCol);
-        tocTreeCtrl->SetTextColor(treeTxtCol);
+        auto tocTreeView = win->tocTreeView;
+        tocTreeView->SetBackgroundColor(treeBgCol);
+        tocTreeView->SetTextColor(treeTxtCol);
 
         win->tocLabelWithClose->SetBgCol(labelBgCol);
         win->tocLabelWithClose->SetTextCol(labelTxtCol);
         win->sidebarSplitter->SetBackgroundColor(splitterCol);
-        SetWindowExStyle(tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+        SetWindowExStyle(tocTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
-        SetWindowPos(tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
+        SetWindowPos(tocTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
     }
 
-    auto favTreeCtrl = win->favTreeCtrl;
-    if (favTreeCtrl) {
-        favTreeCtrl->SetBackgroundColor(treeBgCol);
-        favTreeCtrl->SetTextColor(treeTxtCol);
+    auto favTreeView = win->favTreeView;
+    if (favTreeView) {
+        favTreeView->SetBackgroundColor(treeBgCol);
+        favTreeView->SetTextColor(treeTxtCol);
 
         win->favLabelWithClose->SetBgCol(labelBgCol);
         win->favLabelWithClose->SetTextCol(labelTxtCol);
 
         win->favSplitter->SetBackgroundColor(splitterCol);
 
-        SetWindowExStyle(favTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+        SetWindowExStyle(favTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
-        SetWindowPos(favTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
+        SetWindowPos(favTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
     }
 
     // TODO: more work needed to to ensure consistent look of the ebook window:
@@ -601,27 +590,27 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
     //   and match their colors as well
 }
 
-void ClearFindBox(WindowInfo* win) {
+void ClearFindBox(MainWindow* win) {
     HWND hwndFocused = GetFocus();
-    if (hwndFocused == win->hwndFindBox) {
+    if (hwndFocused == win->hwndFindEdit) {
         SetFocus(win->hwndFrame);
     }
-    HwndSetText(win->hwndFindBox, "");
+    HwndSetText(win->hwndFindEdit, "");
 }
 
-bool IsRightDragging(WindowInfo* win) {
+bool IsRightDragging(MainWindow* win) {
     if (win->mouseAction != MouseAction::Dragging) {
         return false;
     }
     return win->dragRightClick;
 }
 
-bool WindowInfoStillValid(WindowInfo* win) {
+bool WindowInfoStillValid(MainWindow* win) {
     return gWindows.Contains(win);
 }
 
-WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
-    for (WindowInfo* win : gWindows) {
+MainWindow* FindWindowInfoByHwnd(HWND hwnd) {
+    for (MainWindow* win : gWindows) {
         if ((win->hwndFrame == hwnd) || ::IsChild(win->hwndFrame, hwnd)) {
             return win;
         }
@@ -629,10 +618,10 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
     return nullptr;
 }
 
-// Find WindowInfo using TabInfo. Diffrent than TabInfo->win in that
+// Find MainWindow using TabInfo. Diffrent than TabInfo->win in that
 // it validates that TabInfo is still valid
-WindowInfo* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
-    for (WindowInfo* win : gWindows) {
+MainWindow* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
+    for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             if (tab == tabToFind) {
                 return win;
@@ -642,7 +631,7 @@ WindowInfo* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
     return nullptr;
 }
 
-WindowInfo* FindWindowInfoByController(Controller* ctrl) {
+MainWindow* FindWindowInfoByController(DocController* ctrl) {
     for (auto& win : gWindows) {
         for (auto& tab : win->tabs) {
             if (tab->ctrl == ctrl) {

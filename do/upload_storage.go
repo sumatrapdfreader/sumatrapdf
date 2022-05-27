@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -19,9 +20,6 @@ import (
 const nBuildsToRetainPreRel = 5
 
 const (
-	// TODO: only remains because we want to update the version
-	// so that people eventually upgrade to pre-release
-	buildTypeDaily  = "daily"
 	buildTypePreRel = "prerel"
 	buildTypeRel    = "rel"
 )
@@ -40,14 +38,6 @@ func getRemotePaths(buildType string) []string {
 		}
 	}
 
-	if buildType == buildTypeDaily {
-		return []string{
-			"software/sumatrapdf/sumadaily.js",
-			"software/sumatrapdf/sumpdf-daily-latest.txt",
-			"software/sumatrapdf/sumpdf-daily-update.txt",
-		}
-	}
-
 	if buildType == buildTypeRel {
 		return []string{
 			"software/sumatrapdf/sumarellatest.js",
@@ -62,7 +52,7 @@ func getRemotePaths(buildType string) []string {
 
 func isValidBuildType(buildType string) bool {
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel, buildTypeRel:
+	case buildTypePreRel, buildTypeRel:
 		return true
 	}
 	return false
@@ -71,7 +61,7 @@ func isValidBuildType(buildType string) bool {
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType string) string {
 	switch buildType {
-	case buildTypePreRel, buildTypeDaily:
+	case buildTypePreRel:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:
@@ -178,7 +168,7 @@ func getDownloadUrlsDirectS3(mc *minio.Client, buildType string, ver string) *Do
 func createSumatraLatestJs(mc *minio.Client, buildType string) string {
 	var appName string
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel:
+	case buildTypePreRel:
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
@@ -265,13 +255,36 @@ func getVersionFilesForLatestInfo(mc *minio.Client, buildType string) [][]string
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func minioVerifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
+func verifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
-	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	fname := "SumatraPDF-prerel-manifest.txt"
+	if buildType == buildTypeRel {
+		fname = fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
+	}
 	remotePath := path.Join(dirRemote, fname)
 	exists := mc.Exists(remotePath)
-	panicIf(exists, "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
+	panicIf(exists, "build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
+}
+
+func UploadDir(c *minio.Client, dirRemote string, dirLocal string, public bool) error {
+	files, err := ioutil.ReadDir(dirLocal)
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		fname := f.Name()
+		pathLocal := filepath.Join(dirLocal, fname)
+		pathRemote := path.Join(dirRemote, fname)
+		timeStart := time.Now()
+		_, err := c.UploadFile(pathRemote, pathLocal, public)
+		if err != nil {
+			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
+		}
+		uri := c.URLForPath(pathRemote)
+		logf(ctx(), "Uploaded %s => %s in %s\n", pathLocal, uri, time.Since(timeStart))
+	}
+	return nil
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
@@ -296,13 +309,13 @@ func minioUploadBuildMust(mc *minio.Client, buildType string) {
 	}
 
 	dirLocal := getFinalDirForBuildType()
-	//verifyBuildNotInSpaces(c, buildType)
 
-	err := mc.UploadDir(dirRemote, dirLocal, true)
+	err := UploadDir(mc, dirRemote, dirLocal, true)
 	must(err)
 
 	// for release build we don't upload files with version info
 	if buildType == buildTypeRel {
+		logf(ctx(), "Skipping uploading version for release builds\n")
 		return
 	}
 
@@ -312,7 +325,7 @@ func minioUploadBuildMust(mc *minio.Client, buildType string) {
 			remotePath := f[0]
 			_, err := mc.UploadData(remotePath, []byte(f[1]), true)
 			must(err)
-			logf(ctx(), "Uploaded `%s%s'\n", mc.URLBase(), remotePath)
+			logf(ctx(), "Uploaded `%s'\n", mc.URLForPath(remotePath))
 		}
 	}
 
@@ -442,7 +455,9 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	go func() {
 		mc := newMinioBackblazeClient()
 		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType == buildTypePreRel {
+			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		}
 		wg.Done()
 	}()
 
@@ -450,7 +465,9 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	go func() {
 		mc := newMinioS3Client()
 		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType == buildTypePreRel {
+			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		}
 		wg.Done()
 	}()
 	wg.Wait()
@@ -463,14 +480,18 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 	// world (including cloudflare)
 	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
 	// no guarantees the files will be visible from other networks
-	logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
-	time.Sleep(time.Minute * 5)
+	if buildType == buildTypePreRel {
+		logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
+		time.Sleep(time.Minute * 5)
+	}
 
 	wg.Add(1)
 	go func() {
 		mc := newMinioSpacesClient()
 		minioUploadBuildMust(mc, buildType)
-		minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType == buildTypePreRel {
+			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		}
 		wg.Done()
 	}()
 	wg.Wait()

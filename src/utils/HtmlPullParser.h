@@ -28,26 +28,26 @@ struct HtmlToken {
 
     enum ParsingError { NoError, ExpectedElement, UnclosedTag, InvalidTag };
 
-    [[nodiscard]] bool IsStartTag() const {
+    bool IsStartTag() const {
         return type == StartTag;
     }
-    [[nodiscard]] bool IsEndTag() const {
+    bool IsEndTag() const {
         return type == EndTag;
     }
-    [[nodiscard]] bool IsEmptyElementEndTag() const {
+    bool IsEmptyElementEndTag() const {
         return type == EmptyElementTag;
     }
-    [[nodiscard]] bool IsTag() const {
+    bool IsTag() const {
         return IsStartTag() || IsEndTag() || IsEmptyElementEndTag();
     }
-    [[nodiscard]] bool IsText() const {
+    bool IsText() const {
         return type == Text;
     }
-    [[nodiscard]] bool IsError() const {
+    bool IsError() const {
         return type == Error;
     }
 
-    [[nodiscard]] const char* GetReparsePoint() const;
+    const char* GetReparsePoint() const;
     void SetTag(TokenType new_type, const char* new_s, const char* end);
     void SetError(ParsingError err, const char* errContext);
     void SetText(const char* new_s, const char* end);
@@ -96,10 +96,10 @@ class HtmlPullParser {
     void SetCurrPosOff(ptrdiff_t off) {
         currPos = start + off;
     }
-    [[nodiscard]] size_t Len() const {
+    size_t Len() const {
         return len;
     }
-    [[nodiscard]] const char* Start() const {
+    const char* Start() const {
         return start;
     }
 

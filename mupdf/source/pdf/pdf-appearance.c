@@ -394,10 +394,10 @@ pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
 
-	x = rect->x0 + lw;
-	y = rect->y0 + lw;
-	w = rect->x1 - x - lw;
-	h = rect->y1 - y - lw;
+	x = rect->x0 + lw/2;
+	y = rect->y0 + lw/2;
+	w = rect->x1 - rect->x0 - lw;
+	h = rect->y1 - rect->y0 - lw;
 
 	fz_append_printf(ctx, buf, "%g %g %g %g re\n", x, y, w, h);
 	maybe_stroke_and_fill(ctx, buf, sc, ic);
@@ -418,10 +418,10 @@ draw_circle(fz_context *ctx, fz_buffer *buf, float rx, float ry, float cx, float
 static void
 draw_circle_in_box(fz_context *ctx, fz_buffer *buf, float lw, float x0, float y0, float x1, float y1)
 {
-	float rx = (x1 - x0) / 2 - lw;
-	float ry = (y1 - y0) / 2 - lw;
-	float cx = x0 + lw + rx;
-	float cy = y0 + lw + ry;
+	float rx = (x1 - x0) / 2 - lw/2;
+	float ry = (y1 - y0) / 2 - lw/2;
+	float cx = x0 + lw/2 + rx;
+	float cy = y0 + lw/2 + ry;
 	draw_circle(ctx, buf, rx, ry, cx, cy);
 }
 
