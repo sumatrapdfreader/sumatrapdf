@@ -1109,6 +1109,10 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
     int maxEntries = CmdSelectionHandlerLast - CmdSelectionHandlerFirst;
     int n = 0;
     for (auto& sh : *gGlobalPrefs->selectionHandlers) {
+        if (!sh || !sh->url || !sh->name) {
+            // can happen for bad selection handler definition
+            continue;
+        }
         if (str::EmptyOrWhiteSpaceOnly(sh->url) || str::EmptyOrWhiteSpaceOnly(sh->name)) {
             continue;
         }
