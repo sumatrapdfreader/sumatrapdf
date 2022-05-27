@@ -104,6 +104,8 @@ struct DrawStyle {
     bool dirRtl = false;
 };
 
+struct IPageElement;
+
 struct HtmlPage {
     explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {
     }
@@ -115,6 +117,9 @@ struct HtmlPage {
     // TODO: reparsing from reparseIdx can lead to different styling
     // due to internal state of HtmlFormatter not being properly set
     int reparseIdx;
+
+    Vec<IPageElement*> elements;
+    bool gotElements = false;
 };
 
 // just to pack args to HtmlFormatter

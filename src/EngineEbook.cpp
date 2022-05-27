@@ -146,6 +146,7 @@ class EngineEbook : public EngineBase {
     virtual IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
 
     Vec<DrawInstr>* GetHtmlPage(int pageNo);
+    HtmlPage* GetHtmlPage2(int pageNo);
 };
 
 static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* dest, int pageNo = 0,
@@ -201,6 +202,9 @@ EngineEbook::~EngineEbook() {
     EnterCriticalSection(&pagesAccess);
 
     if (pages) {
+        for (HtmlPage* page : *pages) {
+            DeleteVecMembers(page->elements);
+        }
         DeleteVecMembers(*pages);
     }
     delete pages;
@@ -255,6 +259,14 @@ Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
         return nullptr;
     }
     return &pages->at(pageNo - 1)->instructions;
+}
+
+HtmlPage* EngineEbook::GetHtmlPage2(int pageNo) {
+    CrashIf(pageNo < 1 || PageCount() < pageNo);
+    if (pageNo < 1 || PageCount() < pageNo) {
+        return nullptr;
+    }
+    return pages->at(pageNo - 1);
 }
 
 bool EngineEbook::ExtractPageAnchors() {
@@ -462,11 +474,15 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
-// TODO: this leaks IPageElement*, other engines cache this in a per-page struct
 Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
-    Vec<IPageElement*> els;
+    HtmlPage* pi = GetHtmlPage2(pageNo);
+    if (pi->gotElements) {
+        return pi->elements;
+    }
+    pi->gotElements = true;
+    Vec<IPageElement*>& els = pi->elements;
 
-    Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
+    Vec<DrawInstr>* pageInstrs = &pi->instructions;
     size_t n = pageInstrs->size();
     for (size_t idx = 0; idx < n; idx++) {
         DrawInstr& i = pageInstrs->at(idx);
