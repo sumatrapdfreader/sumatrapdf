@@ -20,9 +20,6 @@ import (
 const nBuildsToRetainPreRel = 5
 
 const (
-	// TODO: only remains because we want to update the version
-	// so that people eventually upgrade to pre-release
-	buildTypeDaily  = "daily"
 	buildTypePreRel = "prerel"
 	buildTypeRel    = "rel"
 )
@@ -41,14 +38,6 @@ func getRemotePaths(buildType string) []string {
 		}
 	}
 
-	if buildType == buildTypeDaily {
-		return []string{
-			"software/sumatrapdf/sumadaily.js",
-			"software/sumatrapdf/sumpdf-daily-latest.txt",
-			"software/sumatrapdf/sumpdf-daily-update.txt",
-		}
-	}
-
 	if buildType == buildTypeRel {
 		return []string{
 			"software/sumatrapdf/sumarellatest.js",
@@ -63,7 +52,7 @@ func getRemotePaths(buildType string) []string {
 
 func isValidBuildType(buildType string) bool {
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel, buildTypeRel:
+	case buildTypePreRel, buildTypeRel:
 		return true
 	}
 	return false
@@ -72,7 +61,7 @@ func isValidBuildType(buildType string) bool {
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType string) string {
 	switch buildType {
-	case buildTypePreRel, buildTypeDaily:
+	case buildTypePreRel:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:
@@ -179,7 +168,7 @@ func getDownloadUrlsDirectS3(mc *minio.Client, buildType string, ver string) *Do
 func createSumatraLatestJs(mc *minio.Client, buildType string) string {
 	var appName string
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel:
+	case buildTypePreRel:
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
