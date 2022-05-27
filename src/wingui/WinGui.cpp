@@ -21,7 +21,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "Shlwapi.lib")
 // TODO: delay load windowsapp ?
-#pragma comment(lib, "windowsapp")
+//#pragma comment(lib, "windowsapp")
 #pragma comment(lib, "shell32.lib")
 
 Kind kindWnd = "wnd";

@@ -225,8 +225,8 @@ void DetectExternalViewers() {
 
     ExternalViewerInfo* info = nullptr;
     int n = dimof(gExternalViewers);
-    for (int i = 0; i < n; i++) {
-        info = &gExternalViewers[i];
+    for (auto& i : gExternalViewers) {
+        info = &i;
         bool didDetect = DetectExternalViewer(info);
         if (didDetect) {
             gExternalViewersCount++;
