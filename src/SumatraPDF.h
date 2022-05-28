@@ -96,6 +96,8 @@ extern HCURSOR gCursorDrag;
 extern bool gCrashOnOpen;
 extern HWND gLastActiveFrameHwnd;
 
+extern bool gEnableLazyLoad;
+
 #define gPluginMode (gPluginURL != nullptr)
 
 void InitializePolicies(bool restrict);

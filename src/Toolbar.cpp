@@ -314,8 +314,8 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
 }
 
-static WNDPROC DefWndProcFindBox = nullptr;
-static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static WNDPROC DefWndProcEditSearch = nullptr;
+static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     MainWindow* win = FindWindowInfoByHwnd(hwnd);
     if (!win || !win->IsDocLoaded()) {
         return DefWindowProc(hwnd, msg, wp, lp);
@@ -372,7 +372,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         // white-listed shortucts but only if they were not modified by the user
     }
 
-    LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, msg, wp, lp);
+    LRESULT ret = CallWindowProc(DefWndProcEditSearch, hwnd, msg, wp, lp);
 
     // TOOD: why do we do it? re-eneable when we notice what breaks
     // the intent seems to be "after content of edit box changed"
@@ -512,10 +512,10 @@ static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
     }
     SetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
 
-    if (!DefWndProcFindBox) {
-        DefWndProcFindBox = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
+    if (!DefWndProcEditSearch) {
+        DefWndProcEditSearch = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
     }
-    SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcFindBox);
+    SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcEditSearch);
 
     win->hwndFindLabel = label;
     win->hwndFindEdit = find;
@@ -572,7 +572,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == msg) {
-        // TODO: see WndProcFindBox for note on enabling accelerators here as well
+        // TODO: see WndProcEditSearch for note on enabling accelerators here as well
     }
 
     return CallWindowProc(DefWndProcPageBox, hwnd, msg, wp, lp);
