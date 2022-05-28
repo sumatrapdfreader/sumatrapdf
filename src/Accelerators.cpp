@@ -305,7 +305,19 @@ static bool SameAccelKey(const ACCEL& a1, const ACCEL& a2) {
     return true;
 }
 
-static WORD gNotSafeKeys[] = {VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, VK_SPACE, VK_RETURN, VK_INSERT, VK_DELETE};
+// clang-format off
+static WORD gNotSafeKeys[] = {
+    VK_LEFT,
+    VK_RIGHT,
+    VK_UP,
+    VK_DOWN,
+    VK_SPACE,
+    VK_RETURN,
+    VK_INSERT,
+    VK_DELETE,
+    VK_BACK
+};
+// clang-format on
 
 static bool IsSafeAccel(const ACCEL& a) {
     BYTE fv = a.fVirt;
