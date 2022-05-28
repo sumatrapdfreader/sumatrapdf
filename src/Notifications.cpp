@@ -305,7 +305,7 @@ void NotificationWnd::Layout(const char* message) {
     }
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
-    uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE;
+    uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE;
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, flags);
 
     // move the window to the right for a right-to-left layout

@@ -327,7 +327,7 @@ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
         switch (wp) {
             case VK_ESCAPE:
                 if (win->findThread) {
-                    AbortFinding(win, false);
+                    AbortFinding(win, true);
                 } else {
                     SetFocus(win->hwndFrame);
                 }

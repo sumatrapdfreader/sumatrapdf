@@ -1074,7 +1074,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         }
     }
 
-    AbortFinding(args->win, false);
+    AbortFinding(args->win, true);
 
     DocController* prevCtrl = win->ctrl;
     tab->ctrl = ctrl;
@@ -3797,7 +3797,7 @@ static WCHAR SingleCharLowerW(WCHAR c) {
 
 static void OnFrameKeyEsc(MainWindow* win) {
     if (win->findThread) {
-        AbortFinding(win, false);
+        AbortFinding(win, true);
         return;
     }
     if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupPersistentWarning)) {
