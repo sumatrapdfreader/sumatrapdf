@@ -334,8 +334,11 @@ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
                 return 1;
 
             case VK_RETURN: {
-                auto searchDir = IsShiftPressed() ? TextSearchDirection::Backward : TextSearchDirection::Forward;
-                FindTextOnThread(win, searchDir, true);
+                if (IsShiftPressed()) {
+                    FindPrev(win);
+                } else {
+                    FindNext(win);
+                }
                 return 1;
             }
 

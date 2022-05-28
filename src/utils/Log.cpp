@@ -116,8 +116,8 @@ static void logToPipe(const char* s, size_t n = 0) {
     }
 }
 
-void log(const char* s) {
-    bool skipLog = gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
+void log(const char* s, bool always) {
+    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
 
     if (!skipLog) {
         // in reduced logging mode, we do want to log to at least the debugger
@@ -187,7 +187,7 @@ void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args);
-    log(s.Get());
+    log(s.Get(), false);
     va_end(args);
 }
 
@@ -199,7 +199,7 @@ void logfa(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args);
-    log(s.Get());
+    log(s.Get(), true);
     va_end(args);
 }
 
@@ -220,12 +220,12 @@ bool WriteCurrentLogToFile(const char* path) {
     return ok;
 }
 
-void log(const WCHAR* s) {
+void log(const WCHAR* s, bool always) {
     if (gStopLogging || !s) {
         return;
     }
     char* tmp = ToUtf8Temp(s);
-    log(tmp);
+    log(tmp, always);
 }
 
 void logf(const WCHAR* fmt, ...) {
@@ -236,7 +236,7 @@ void logf(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeWstr s = str::FmtV(fmt, args);
-    log(s);
+    log(s, false);
     va_end(args);
 }
 

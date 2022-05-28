@@ -330,6 +330,10 @@ LRESULT Wnd::OnNotifyReflect(WPARAM, LPARAM) {
 }
 
 void Wnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
+    auto bgBrush = backgroundColorBrush;
+    if (bgBrush != nullptr) {
+        FillRect(hdc, &ps->rcPaint, bgBrush);
+    }
 }
 
 void Wnd::OnSize(UINT msg, UINT type, SIZE size) {
@@ -621,19 +625,11 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hwnd, &ps);
-                auto bgBrush = backgroundColorBrush;
-                if (bgBrush != nullptr) {
-                    FillRect(hdc, &ps.rcPaint, bgBrush);
-                }
                 OnPaint(hdc, &ps);
                 ::EndPaint(hwnd, &ps);
             } else {
                 HDC hdc = ::GetDC(hwnd);
                 OnPaint(hdc, nullptr);
-                auto bgBrush = backgroundColorBrush;
-                if (bgBrush != nullptr) {
-                    FillRect(hdc, nullptr, bgBrush);
-                }
                 ::ReleaseDC(hwnd, hdc);
             }
             // No more drawing required

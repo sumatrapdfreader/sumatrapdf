@@ -19,6 +19,8 @@
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 
+#include "utils/Log.h"
+
 using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
@@ -40,6 +42,8 @@ struct NotificationWnd : ProgressUpdateUI, Wnd {
     void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
     void OnTimer(UINT_PTR event_id) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool OnEraseBkgnd(HDC) override;
+
     void UpdateMessage(const char* msg, int timeoutMs = 0, bool highlight = false);
 
     // ProgressUpdateUI methods
@@ -272,13 +276,13 @@ void NotificationWnd::Layout(const char* message) {
         dy += padY + progressDy + padY;
     }
 
-    Rect rcCurr = ClientRect(hwnd);
+    Rect rCurr = WindowRect(hwnd);
     // for less flicker we don't want to shrink the window when the text shrinks
-    if (dx < rcCurr.dx) {
-        dx = rcCurr.dx;
+    if (dx < rCurr.dx) {
+        dx = rCurr.dx;
     }
-    if (dy < rcCurr.dy) {
-        dy = rcCurr.dy;
+    if (dy < rCurr.dy) {
+        dy = rCurr.dy;
     }
 #if 0
     if (wnd->shrinkLimit < 1.0f) {
@@ -292,8 +296,12 @@ void NotificationWnd::Layout(const char* message) {
     // y-center close
     rClose.y = ((dy - closeDx) / 2) + 1;
 
+    if (dx == rCurr.dx && dy == rCurr.dy) {
+        return;
+    }
+
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
-    uint flags = SWP_NOMOVE | SWP_NOZORDER;
+    uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE;
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, flags);
 
     // move the window to the right for a right-to-left layout
@@ -302,15 +310,18 @@ void NotificationWnd::Layout(const char* message) {
         Rect r = MapRectToWindow(WindowRect(hwnd), HWND_DESKTOP, parent);
         int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
         r.x = WindowRect(parent).dx - r.dx - DpiScale(hwnd, kTopLeftMargin) - cxVScroll;
-        flags = SWP_NOSIZE | SWP_NOZORDER;
+        flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_DEFERERASE;
         SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, flags);
     }
 }
 
+// TODO: figure out why it flickers
 void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     Rect rc = ClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();
+    // HDC hdc = hdcIn;
+
     ScopedSelectObject fontPrev(hdc, font);
 
     COLORREF colBg = GetAppColor(AppColor::NotificationsBg);
@@ -379,12 +390,12 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
     }
 }
 
-LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_ERASEBKGND == msg) {
-        // do nothing, helps to avoid flicker
-        return TRUE;
-    }
+bool NotificationWnd::OnEraseBkgnd(HDC) {
+    // avoid flicker by telling we took care of erasing background
+    return true;
+}
 
+LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_SETCURSOR == msg && HasClose()) {
         Point pt = HwndGetCursorPos(hwnd);
         if (!pt.IsEmpty() && rClose.Contains(pt)) {

@@ -992,7 +992,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     UpdateToolbarPageText(win, pageCount);
     UpdateToolbarFindText(win);
 
-    OnMenuFindMatchCase(win);
+    FindToggleMatchCase(win);
     UpdateFindbox(win);
 
     HwndSetText(win->hwndFrame, win->currentTab->frameTitle);
@@ -4010,7 +4010,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
         } break;
         case '/':
             if (!gIsDivideKeyDown) {
-                OnMenuFind(win);
+                FindFirst(win);
             }
             gIsDivideKeyDown = false;
             break;
@@ -4767,27 +4767,27 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdFindFirst:
-            OnMenuFind(win);
+            FindFirst(win);
             break;
 
         case CmdFindNext:
-            OnMenuFindNext(win);
+            FindNext(win);
             break;
 
         case CmdFindPrev:
-            OnMenuFindPrev(win);
+            FindPrev(win);
             break;
 
         case CmdFindMatch:
-            OnMenuFindMatchCase(win);
+            FindToggleMatchCase(win);
             break;
 
         case CmdFindNextSel:
-            OnMenuFindSel(win, TextSearchDirection::Forward);
+            FindSelection(win, TextSearchDirection::Forward);
             break;
 
         case CmdFindPrevSel:
-            OnMenuFindSel(win, TextSearchDirection::Backward);
+            FindSelection(win, TextSearchDirection::Backward);
             break;
 
         case CmdHelpVisitWebsite:

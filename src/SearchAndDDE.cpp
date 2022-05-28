@@ -68,7 +68,7 @@ bool NeedsFindUI(MainWindow* win) {
     return true;
 }
 
-void OnMenuFind(MainWindow* win) {
+void FindFirst(MainWindow* win) {
     if (win->AsChm()) {
         win->AsChm()->FindInCurrentPage();
         return;
@@ -125,7 +125,7 @@ void OnMenuFind(MainWindow* win) {
     FindTextOnThread(win, TextSearchDirection::Forward, true);
 }
 
-void OnMenuFindNext(MainWindow* win) {
+void FindNext(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -134,7 +134,7 @@ void OnMenuFindNext(MainWindow* win) {
     }
 }
 
-void OnMenuFindPrev(MainWindow* win) {
+void FindPrev(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -143,7 +143,7 @@ void OnMenuFindPrev(MainWindow* win) {
     }
 }
 
-void OnMenuFindMatchCase(MainWindow* win) {
+void FindToggleMatchCase(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -152,7 +152,7 @@ void OnMenuFindMatchCase(MainWindow* win) {
     Edit_SetModify(win->hwndFindEdit, TRUE);
 }
 
-void OnMenuFindSel(MainWindow* win, TextSearchDirection direction) {
+void FindSelection(MainWindow* win, TextSearchDirection direction) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -213,9 +213,6 @@ struct FindThreadData : public ProgressUpdateUI {
     TextSearchDirection direction{TextSearchDirection::Forward};
     bool wasModified = false;
     AutoFreeWstr text;
-    // owned by win->notifications, as FindThreadData
-    // can be deleted before the notification times out
-    NotificationWnd* wnd = nullptr;
     HANDLE thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified) {
@@ -231,15 +228,20 @@ struct FindThreadData : public ProgressUpdateUI {
     void ShowUI(bool showProgress) {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-        if (showProgress) {
+        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+
+        if (showProgress && wnd == nullptr) {
             NotificationCreateArgs args;
             args.hwndParent = win->hwndCanvas;
             args.timeoutMs = 0;
-            args.onRemoved = [](NotificationWnd* wnd) { RemoveNotification(wnd); };
+            args.onRemoved = [](NotificationWnd* wnd) {
+                RemoveNotification(wnd);
+                wnd = nullptr;
+            };
 
             args.progressMsg = _TRA("Searching %d of %d...");
             args.groupId = kNotifGroupFindProgress;
-            wnd = ShowNotification(args);
+            ShowNotification(args);
         }
 
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, disable);
@@ -254,7 +256,9 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindNext, enable);
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindMatch, enable);
 
-        if (!NotificationExists(wnd)) {
+        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+
+        if (!wnd) {
             /* our notification has been replaced or closed (or never created) */;
         } else if (!success && !loopedAround) {
             // i.e. canceled
@@ -273,10 +277,13 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     void UpdateProgress(int current, int total) override {
-        if (!wnd || WasCanceled()) {
-            return;
-        }
-        uitask::Post([=] { UpdateFindStatusTask(win, wnd, current, total); });
+        uitask::Post([this, current, total] {
+            auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+            if (!wnd || WasCanceled()) {
+                return;
+            }
+            UpdateFindStatusTask(win, wnd, current, total);
+        });
     }
 
     bool WasCanceled() override {
@@ -370,7 +377,7 @@ void AbortFinding(MainWindow* win, bool hideMessage) {
 // TODO: should detect wasModified by comparing with the last search result
 void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress) {
-    AbortFinding(win, true);
+    AbortFinding(win, false);
     if (str::IsEmpty(text)) {
         return;
     }
