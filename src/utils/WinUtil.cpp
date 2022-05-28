@@ -379,7 +379,7 @@ bool WriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char
     WCHAR* valueW = ToWstrTemp(value);
 
     DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)value, cbData);
+    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     return ERROR_SUCCESS == res;
 }
 
