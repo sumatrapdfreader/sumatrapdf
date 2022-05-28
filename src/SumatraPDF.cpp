@@ -2957,6 +2957,25 @@ static void OnMenuOpenFolder(MainWindow* win) {
     LoadDocument(args);
 }
 
+static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
+    WCHAR* dir = ofn->lpstrFile;
+    WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
+    // only a single file, full path
+    char* path;
+    if (file[-1] != 0) {
+        path = ToUtf8Temp(dir);
+        filesOut.Append(path);
+        return;
+    }
+    // the layout of lpstrFile is:
+    // <dir> 0 <file1> 0 <file2> 0 0
+    while (*file) {
+        path = ToUtf8Temp(path::JoinTemp(dir, file));
+        filesOut.Append(path);
+        file += str::Len(file) + 1;
+    }
+}
+
 static void OnMenuOpen(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
@@ -3012,7 +3031,7 @@ static void OnMenuOpen(MainWindow* win) {
     fileFilter.Append(L"\1*.*\1");
     str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
-    OPENFILENAME ofn{};
+    OPENFILENAMEW ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
 
@@ -3035,35 +3054,18 @@ static void OnMenuOpen(MainWindow* win) {
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
 
-    char* fileName = nullptr;
-    char* pstrFile = nullptr;
-    char* dir = nullptr;
-    {
-        AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
-        ofn.lpstrFile = file;
+    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
+    ofn.lpstrFile = file;
 
-        if (!GetOpenFileNameW(&ofn)) {
-            return;
-        }
-        pstrFile = ToUtf8Temp(ofn.lpstrFile);
-        dir = pstrFile;
-        fileName = pstrFile + ofn.nFileOffset;
-    }
-
-    if (*(fileName - 1)) {
-        // special case: single filename without nullptr separator
-        LoadArgs* args = new LoadArgs(fileName, win);
-        LoadDocument(args);
+    if (!GetOpenFileNameW(&ofn)) {
         return;
     }
 
-    while (*fileName) {
-        char* filePath = path::JoinTemp(dir, fileName);
-        if (filePath) {
-            LoadArgs* args = new LoadArgs(filePath, win);
-            LoadDocument(args);
-        }
-        fileName += str::Len(fileName) + 1;
+    StrVec files;
+    GetFilesFromGetOpenFileName(&ofn, files);
+    for (char* path : files) {
+        LoadArgs* args = new LoadArgs(path, win);
+        LoadDocument(args);
     }
 }
 
