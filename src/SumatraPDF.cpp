@@ -115,16 +115,6 @@ const char* gPluginURL = nullptr; // owned by Flags in WinMain
 static Kind kNotifGroupPersistentWarning = "persistentWarning";
 static Kind kNotifGroupPageInfo = "pageInfoHelper";
 
-#define SPLITTER_DX 5
-#define SIDEBAR_MIN_WIDTH 150
-
-#define SPLITTER_DY 4
-#define TOC_MIN_DY 100
-
-// minimum size of the window
-constexpr LONG MIN_WIN_DX = 480;
-constexpr LONG MIN_WIN_DY = 320;
-
 FileHistory gFileHistory;
 Favorites gFavorites;
 
@@ -3125,6 +3115,11 @@ static void BrowseFolder(MainWindow* win, bool forward) {
     LoadDocument(args);
 }
 
+constexpr int kSplitterDx = 5;
+constexpr int kSplitterDy = 4;
+constexpr int kSidebarMinDx = 150;
+constexpr int kTocMinDy = 100;
+
 static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1) {
     Rect rc = ClientRect(win->hwndFrame);
     // don't relayout while the window is minimized
@@ -3206,9 +3201,9 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sideb
             toc.dx = rc.dx / 4;
         }
         // make sure that the sidebar is never too wide or too narrow
-        // note: requires that the main frame is at least 2 * SIDEBAR_MIN_WIDTH
+        // note: requires that the main frame is at least 2 * kSidebarMinDx
         //       wide (cf. OnFrameGetMinMaxInfo)
-        toc.dx = limitValue(toc.dx, SIDEBAR_MIN_WIDTH, rc.dx / 2);
+        toc.dx = limitValue(toc.dx, kSidebarMinDx, rc.dx / 2);
 
         toc.dy = 0;
         if (tocVisible) {
@@ -3225,27 +3220,27 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sideb
         }
 
         if (tocVisible && showFavorites) {
-            toc.dy = limitValue(toc.dy, TOC_MIN_DY, rc.dy - TOC_MIN_DY);
+            toc.dy = limitValue(toc.dy, kTocMinDy, rc.dy - kTocMinDy);
         }
 
         if (tocVisible) {
             Rect rToc(rc.TL(), toc);
             dh.MoveWindow(win->hwndTocBox, rToc);
             if (showFavorites) {
-                Rect rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
+                Rect rSplitV(rc.x, rc.y + toc.dy, toc.dx, kSplitterDy);
                 dh.MoveWindow(win->favSplitter->hwnd, rSplitV);
-                toc.dy += SPLITTER_DY;
+                toc.dy += kSplitterDy;
             }
         }
         if (showFavorites) {
             Rect rFav(rc.x, rc.y + toc.dy, toc.dx, rc.dy - toc.dy);
             dh.MoveWindow(win->hwndFavBox, rFav);
         }
-        Rect rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
+        Rect rSplitH(rc.x + toc.dx, rc.y, kSplitterDx, rc.dy);
         dh.MoveWindow(win->sidebarSplitter->hwnd, rSplitH);
 
-        rc.x += toc.dx + SPLITTER_DX;
-        rc.dx -= toc.dx + SPLITTER_DX;
+        rc.x += toc.dx + kSplitterDx;
+        rc.dx -= toc.dx + kSplitterDx;
     }
 
     dh.MoveWindow(win->hwndCanvas, rc);
@@ -4055,7 +4050,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     //       stuck at its width if it accidentally got too wide or too narrow
     Rect rFrame = ClientRect(win->hwndFrame);
     Rect rToc = ClientRect(win->hwndTocBox);
-    int minDx = std::min(SIDEBAR_MIN_WIDTH, rToc.dx);
+    int minDx = std::min(kSidebarMinDx, rToc.dx);
     int maxDx = std::max(rFrame.dx / 2, rToc.dx);
     if (sidebarDx < minDx || sidebarDx > maxDx) {
         ev->resizeAllowed = false;
@@ -4078,8 +4073,8 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     Rect rFrame = ClientRect(win->hwndFrame);
     Rect rToc = ClientRect(win->hwndTocBox);
     CrashIf(rToc.dx != ClientRect(win->hwndFavBox).dx);
-    int minDy = std::min(TOC_MIN_DY, rToc.dy);
-    int maxDy = std::max(rFrame.dy - TOC_MIN_DY, rToc.dy);
+    int minDy = std::min(kTocMinDy, rToc.dy);
+    int maxDy = std::max(rFrame.dy - kTocMinDy, rToc.dy);
     if (tocDy < minDy || tocDy > maxDy) {
         ev->resizeAllowed = false;
         return;
@@ -5047,10 +5042,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     return 0;
 }
 
+// minimum size of the window
+constexpr LONG kWinMinDx = 480;
+constexpr LONG kWinMinDy = 320;
+
 static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
     // limit windows min width to prevent render loop when siderbar is too big
-    info->ptMinTrackSize.x = MIN_WIN_DX - SIDEBAR_MIN_WIDTH + gGlobalPrefs->sidebarDx;
-    info->ptMinTrackSize.y = MIN_WIN_DY;
+    info->ptMinTrackSize.x = kWinMinDx - kSidebarMinDx + gGlobalPrefs->sidebarDx;
+    info->ptMinTrackSize.y = kWinMinDy;
     return 0;
 }
 
