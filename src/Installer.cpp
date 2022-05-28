@@ -921,7 +921,7 @@ static int RunApp() {
 
 static void ShowNoEmbeddedFiles(const WCHAR* msg) {
     if (gCli->silent) {
-        log(msg);
+        log(ToUtf8Temp(msg));
         return;
     }
     const WCHAR* caption = L"Error";

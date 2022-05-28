@@ -194,11 +194,11 @@ static void UploadCrashReport(ByteSlice d) {
 static void DeleteSymbolsIfExist() {
     // TODO: remove all files in symDir (symbols, previous crash files
     bool ok = file::Delete(gLibMupdfPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
+    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
     ok = file::Delete(gSumatraPdfPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
+    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
     ok = file::Delete(gSumatraPdfDllPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
+    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
 }
 
 static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* dstDir, Allocator* allocator) {

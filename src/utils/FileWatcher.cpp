@@ -148,7 +148,7 @@ static bool FileStateChanged(const char* filePath, FileWatcherState* fs) {
 // get notified again before timeout expires, call OnFileChanges() when
 // timeout expires
 static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
-    // logf(L"NotifyAboutFile(): %s", fileName);
+    // logf("NotifyAboutFile(): %s", fileName);
 
     for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir != d) {
@@ -179,7 +179,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     OverlappedEx* over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
 
-    // logf(L"ReadDirectoryChangesNotification() dir: %s, numBytes: %d\n", wd->dirPath, (int)bytesTransfered);
+    // logf("ReadDirectoryChangesNotification() dir: %s, numBytes: %d\n", wd->dirPath, (int)bytesTransfered);
 
     CrashIf(wd != wd->overlapped.data);
 
@@ -208,15 +208,15 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         if (notify->Action == FILE_ACTION_MODIFIED || notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             if (!changedFiles.Contains(fileName)) {
 #if 0
-                logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName.Get(),
+                logf("ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName,
                      wd->dirPath);
 #endif
                 changedFiles.Append(fileName);
             } else {
-                // logf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
+                // logf("ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
             }
         } else {
-            // logf(L"ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName.Get());
+            // logf("ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName);
         }
 
         // step to the next entry if there is one
@@ -283,7 +283,7 @@ static void RunManualChecks() {
             continue;
         }
         if (FileStateChanged(wf->filePath, &wf->fileState)) {
-            // logf(L"RunManualCheck() %s changed\n", wf->filePath);
+            // logf("RunManualCheck() %s changed\n", wf->filePath);
             wf->onFileChangedCb();
         }
     }
@@ -435,7 +435,7 @@ Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
 WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>& onFileChangedCb) {
-    // logf(L"FileWatcherSubscribe() path: %s\n", path);
+    // logf("FileWatcherSubscribe() path: %s\n", path);
 
     if (!file::Exists(path)) {
         return nullptr;

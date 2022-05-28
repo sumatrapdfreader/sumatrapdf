@@ -93,7 +93,8 @@ void NotifyFailed(const WCHAR* msg) {
     if (!gFirstError) {
         gFirstError = str::Dup(msg);
     }
-    logf(L"NotifyFailed: %s\n", msg);
+    char* s = ToUtf8Temp(msg);
+    logf("NotifyFailed: %s\n", s);
 }
 
 void NotifyFailed(const char* msg) {
@@ -431,7 +432,8 @@ static bool KillProcessesUsingInstallation() {
     while (ok) {
         DWORD procID = proc.th32ProcessID;
         if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
-            logf(L"  attempting to kill process %d '%s'\n", (int)procID, proc.szExeFile);
+            char* s = ToUtf8Temp(proc.szExeFile);
+            logf("  attempting to kill process %d '%s'\n", (int)procID, s);
             bool didKill = KillProcWithId(procID, true);
             logf("  KillProcWithId(%d) returned %d\n", procID, (int)didKill);
             if (!didKill) {

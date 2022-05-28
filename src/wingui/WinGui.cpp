@@ -3134,7 +3134,7 @@ void TabsCtrl::MaybeUpdateTooltipText(int idx) {
 
     SendMessage(ttHwnd, TTM_POP, 0, 0);
     SendMessage(ttHwnd, TTM_POPUP, 0, 0);
-    // logf(L"MaybeUpdateTooltipText: %s\n", tooltip);
+    // logf("MaybeUpdateTooltipText: %s\n", tooltip);
 }
 
 void TabsCtrl::SetTooltip(int idx, const char* s) {

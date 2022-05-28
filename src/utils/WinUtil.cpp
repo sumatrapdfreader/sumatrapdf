@@ -1472,7 +1472,8 @@ void SetText(HMENU m, int id, const WCHAR* s) {
     mii.cch = (uint)str::Len(s);
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
     if (!ok) {
-        logf(L"SetText(): id=%d, s='%s'\n", id, s ? s : L"(null)");
+        const char* tmp = s ? ToUtf8Temp(s) : "(null)";
+        logf("SetText(): id=%d, s='%s'\n", id, tmp);
         LogLastError();
         ReportIf(true);
     }

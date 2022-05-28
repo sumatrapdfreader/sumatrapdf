@@ -1005,7 +1005,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
-    logf(L"Starting SumatraPDF, GetCommandLineW():\n%s\n", GetCommandLineW());
+    {
+        char* s = ToUtf8Temp(GetCommandLineW());
+        logf("Starting SumatraPDF, GetCommandLineW():\n%s\n", s);
+    }
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {

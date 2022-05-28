@@ -220,26 +220,6 @@ bool WriteCurrentLogToFile(const char* path) {
     return ok;
 }
 
-void log(const WCHAR* s, bool always) {
-    if (gStopLogging || !s) {
-        return;
-    }
-    char* tmp = ToUtf8Temp(s);
-    log(tmp, always);
-}
-
-void logf(const WCHAR* fmt, ...) {
-    if (gReducedLogging || gStopLogging) {
-        return;
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    AutoFreeWstr s = str::FmtV(fmt, args);
-    log(s, false);
-    va_end(args);
-}
-
 void DestroyLogging() {
     gStopLogging = true;
     gLogMutex.Lock();

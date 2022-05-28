@@ -66,23 +66,23 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     bool ok = engine->BenchLoadPage(pagenum);
 
     if (!ok) {
-        logf(L"Error: failed to load page %d\n", pagenum);
+        logf("Error: failed to load page %d\n", pagenum);
         return;
     }
     double timeMs = TimeSinceInMs(t);
-    logf(L"pageload   %3d: %.2f ms\n", pagenum, timeMs);
+    logf("pageload   %3d: %.2f ms\n", pagenum, timeMs);
 
     t = TimeGet();
     RenderPageArgs args(pagenum, 1.0, 0);
     RenderedBitmap* rendered = engine->RenderPage(args);
 
     if (!rendered) {
-        logf(L"Error: failed to render page %d\n", pagenum);
+        logf("Error: failed to render page %d\n", pagenum);
         return;
     }
     delete rendered;
     timeMs = TimeSinceInMs(t);
-    logf(L"pagerender %3d: %.2f ms\n", pagenum, timeMs);
+    logf("pagerender %3d: %.2f ms\n", pagenum, timeMs);
 }
 
 static void BenchChmLoadOnly(const char* filePath) {
@@ -92,16 +92,16 @@ static void BenchChmLoadOnly(const char* filePath) {
     auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
-        logf(L"Error: failed to load %s\n", filePath);
+        logf("Error: failed to load %s\n", filePath);
         return;
     }
 
     double timeMs = TimeSinceInMs(t);
-    logf(L"load: %.2f ms\n", timeMs);
+    logf("load: %.2f ms\n", timeMs);
 
     delete chmModel;
 
-    logf(L"Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
 static void BenchFile(const char* path, const char* pagesSpec) {
@@ -198,7 +198,7 @@ void BenchFileOrDir(StrVec& pathsToBench) {
         } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {
-            logf(L"Error: file or dir %s doesn't exist", path);
+            logf("Error: file or dir %s doesn't exist", path);
         }
     }
 }

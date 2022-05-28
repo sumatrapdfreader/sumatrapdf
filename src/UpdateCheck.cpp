@@ -297,7 +297,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     }
     str::Str* data = &rsp->data;
     if (0 == data->size()) {
-        logf(L"ShowAutoUpdateDialog: empty response from url '%s'\n", url);
+        logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url);
         return ERROR_INTERNET_CONNECTION_ABORTED;
     }
 

@@ -11,9 +11,9 @@
 
 void SimpleLogTest() {
     {
-        log(L"Test1\n");
-        log(L"ML\n");
-        logf(L"%s : %d\n", L"filename.pdf", 25);
+        log("Test1\n");
+        log("ML\n");
+        logf("%s : %d\n", "filename.pdf", 25);
 
         char* got = gLogBuf->Get();
         const char* exp = "Test1\nML\nfilename.pdf : 25\n";

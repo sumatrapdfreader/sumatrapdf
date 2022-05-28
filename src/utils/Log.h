@@ -39,8 +39,6 @@ static inline void logf(const WCHAR*, ...) {
 #else
 void log(const char* s, bool always = false);
 void logf(const char* fmt, ...);
-void log(const WCHAR* s, bool always = false);
-void logf(const WCHAR* fmt, ...);
 #endif
 
 // always log, even if NO_LOG is defined
