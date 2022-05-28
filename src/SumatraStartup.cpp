@@ -1089,9 +1089,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         // TODO: retry if file busy?
         bool ok = file::Delete(flags.deleteFile);
         if (ok) {
-            logf(L"Deleted '%s'\n", flags.deleteFile);
+            logf("Deleted '%s'\n", flags.deleteFile);
         } else {
-            logf(L"Failed to delete '%s'\n", flags.deleteFile);
+            logf("Failed to delete '%s'\n", flags.deleteFile);
         }
         if (flags.exitWhenDone) {
             HandleRedirectedConsoleOnShutdown();
