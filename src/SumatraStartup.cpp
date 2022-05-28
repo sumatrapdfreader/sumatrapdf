@@ -193,11 +193,9 @@ static bool InstanceInit() {
     return true;
 }
 
-static void OpenUsingDde(HWND targetWnd, const char* filePath, Flags& i, bool isFirstWin) {
-    // delegate file opening to a previously running instance by sending a DDE message
-    WCHAR fullpathW[MAX_PATH];
-    GetFullPathNameW(fullpathW, dimof(fullpathW), fullpathW, nullptr);
-    char* fullpath = ToUtf8Temp(fullpathW);
+// delegate file opening to a previously running instance by sending a DDE message
+static void OpenUsingDde(HWND targetWnd, const char* path, Flags& i, bool isFirstWin) {
+    char* fullPath = path::NormalizeTemp(path);
 
     str::Str cmd;
     int newWindow = 0;
@@ -205,27 +203,27 @@ static void OpenUsingDde(HWND targetWnd, const char* filePath, Flags& i, bool is
         // 2 forces opening a new window
         newWindow = 2;
     }
-    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullpath, newWindow);
+    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullPath, newWindow);
     if (i.destName && isFirstWin) {
-        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
+        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath, i.destName);
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
+        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullPath, i.pageNumber);
     }
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
         auto viewMode = ToWstrTemp(viewModeStr);
-        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
+        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath, viewMode, i.startZoom, i.startScroll.x,
                       i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         char* srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
-        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, srcPath, i.forwardSearchLine);
+        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine);
     }
     if (i.search != nullptr) {
         // TODO: quote if i.search has '"' in it
-        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullpath, i.search);
+        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullPath, i.search);
     }
 
     WCHAR* cmdW = ToWstrTemp(cmd.Get());

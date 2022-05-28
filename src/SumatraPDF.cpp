@@ -934,7 +934,7 @@ static DocController* CreateControllerForEngineOrFile(EngineBase* engine, const 
     }
     if (engine) {
         int nPages = engine ? engine->PageCount() : 0;
-        logf("CreateControllerForEngine: '%s', %d pages\n", path), nPages;
+        logf("CreateControllerForEngine: '%s', %d pages\n", path, nPages);
         DocController* ctrl = new DisplayModel(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
         VerifyController(ctrl, path);
