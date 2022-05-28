@@ -29,22 +29,20 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     if (!filePath) {
         return nullptr;
     }
-    if (path::HasVariableDriveLetter(filePath)) {
+    char* path = str::DupTemp(filePath);
+    if (path::HasVariableDriveLetter(path)) {
         // ignore the drive letter, if it might change
-        char* tmp = (char*)filePath;
-        tmp[0] = '?';
+        path[0] = '?';
     }
-    CalcMD5Digest((u8*)filePath, str::Len(filePath), digest);
-    AutoFreeStr fingerPrint = _MemToHex(&digest);
+    CalcMD5Digest((u8*)path, str::Len(path), digest);
+    AutoFreeStr fingerPrint = str::MemToHex(digest, dimof(digest));
 
-    char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
-    if (!thumbsPath) {
+    char* thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    if (!thumbsDir) {
         return nullptr;
     }
 
-    char* tmp = str::Format(R"(%s\%s.png)", thumbsPath, fingerPrint.Get());
-    char* res = str::DupTemp(tmp);
-    str::Free(tmp);
+    char* res = path::JoinTemp(thumbsDir, str::JoinTemp(fingerPrint, ".png"));
     return res;
 }
 
