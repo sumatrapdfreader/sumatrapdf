@@ -419,10 +419,10 @@ static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
 
     char* contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
     if (contentType) {
-        return contentType;
+        return str::Dup(contentType);
     }
 
-    return str::DupTemp(kDefaultMimeType);
+    return str::Dup(kDefaultMimeType);
 }
 
 // TODO: return an error page html in case of errors?
@@ -463,8 +463,9 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     }
 
     const char* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
-    AutoFreeStr mime(MimeFromUrl(urlRestA, imgExt));
-    WCHAR* mimeW = ToWstrTemp(mime.Get());
+    char* mime = MimeFromUrl(urlRestA, imgExt);
+    WCHAR* mimeW = ToWstrTemp(mime);
+    str::Free(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
