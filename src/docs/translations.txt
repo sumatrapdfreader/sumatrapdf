@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8c0a55284eecb96ccebc1c515debcc63fe2ce90b
+c6c7a7073123945d3c8cb1ef725ecee802b9e6f2
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -458,7 +458,7 @@ kw:&Tewlel chanjyow
 mk:Откажи ги измените
 nl:&Weggooien
 pl:O&drzuć zmiany
-ru:Отменит&ь изменения
+ru:Отказат&ься от изменений
 sl:&Zavrži spremembe
 th:&ละทิ้งการเปลี่ยนแปลง
 tl:&Itapon ang mga pagbabago
@@ -760,7 +760,7 @@ fr:Première page (&f)
 it:&Prima pagina
 nl:&Eerste Pagina
 pl:&Pierwsza strona
-ru:&Первая страница
+ru:Пер&вая страница
 tl:&Unang pahina
 uk:Перша сторінка
 vn:&Trang Đầu
@@ -3115,7 +3115,7 @@ pa:ਪਸੰਦੀਦਾ ਜੋੜੋ
 pl:Dodaj do ulubionych
 pt:Adicionar favorito
 ro:Adaugă ca favorit
-ru:Добавить в избранное
+ru:&Добавить в избранное
 si:ප්‍රියතම  ගොන්නට දමන්න
 sk:Pridať obľúbenú položku
 sl:Dodaj Priljubljene
@@ -4412,7 +4412,7 @@ lt:Kraštas: %d
 lv:Apmale: %d
 nl:Rand %d
 pl:Obramowanie: %d
-ru:Граница: %d
+ru:Рамка: %d
 sl:Rob: %d
 tl:Gilid: %d
 tr:Kenarlık: %d
@@ -4470,7 +4470,7 @@ pa:ਬਾਈਟਾਂ
 pl:bajtów
 pt:Bytes
 ro:Octeți
-ru:Байт
+ru:байт
 si:Bytes
 sk:Bajtov
 sl:Bajtov
@@ -4876,7 +4876,7 @@ pa:ਭਾਸ਼ਾ ਬਦਲੋ
 pl:Zmień język (Change Language)
 pt:Mudar idioma (Change Language)
 ro:Schimbare limbă (Change Language)
-ru:Изменить язык (Change Language)
+ru:Изменить &язык (Change Language)
 si:භාෂාව වෙනස්කරන්න (Change Language)
 sk:Zmeniť jazyk (Change Language)
 sl:Spremeni jezik (Change Language)
@@ -9466,7 +9466,7 @@ no:Tilpass bredde og vis sider kontinuerlig
 pl:Dopasuj szerokość i wyświetlaj strony w układzie ciągłym
 pt:Ajustar largura e mostrar páginas contínuas
 ro:Potrivire după lățime și afișare continuă a paginilor
-ru:Вписать по ширине и разрешить прокрутку
+ru:Вписать по ширине и прокручивать непрерывно (не по страницам)
 si:අඛණ්ඩව නිසිලෙස පළල සකසමින් පිටු පෙන්වන්න
 sk:Prispôsobiť šírke okna
 sl:Prilagodi po širini in prikaži strani nepretrgano
@@ -14859,7 +14859,7 @@ id:Simpan catatan ke PDF terkini
 it:Salva annotazioni in PDF esistente
 nl:Notities opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
-ru:Со&хранить аннотации в имеющийся PDF
+ru:Со&хранить аннотации в имеющемся PDF
 sl:Shrani pripombe v obstoječi PDF
 tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
@@ -14973,7 +14973,7 @@ lv:Saglabāt izmaiņas jaunā PDF failā
 mk:Зачувај ги измените во нов ПДФ
 nl:Wijzigingen opslaan in een nieuwe PDF
 pl:Zapisz zmiany w nowym pliku PDF
-ru:Сохранить изменения в новый PDF
+ru:Сохранить изменения в новом PDF
 sk:Uloženie zmien do nového PDF
 sl:Shrani spremembe v novo PDF datoteko
 th:บันทึกการเปลี่ยนแปลงเป็น PDF ใหม่
@@ -15005,7 +15005,7 @@ lt:Išsaugoti pakeitimus į esamą PDF failą
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
-ru:Сохранить изменения в имеющийся PDF
+ru:Сохранить изменения в имеющемся PDF
 sl:Shrani spremembe v trenutno PDF datoteko
 th:บันทึกการเปลี่ยนแปลงไปยัง PDF ที่เปิดอยู่
 tr:Değişiklikleri var olan PDF'ye kaydet
@@ -15032,7 +15032,7 @@ kr:새(&n) PDF에 저장하기
 kw:Gwitha dhe PDF &nowydh
 nl:Opslaan in &nieuwe PDF
 pl:Zapisz w &nowym pliku PDF
-ru:Сохранить в &новый PDF
+ru:Сохранить в &новом PDF
 sk:Uložiť do &nového PDF
 sl:Shrani v &novo PDF datoteko
 th:บันทึกไปที่ &​PDF ใหม่
@@ -15294,7 +15294,7 @@ lt:Pasirinkti anotaciją redaktoriuje
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
-ru:Выберите аннотацию в редакторе
+ru:Выбрать аннотацию в редакторе
 sl:Izberi pripombo v urejevalniku
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 tl:Piliin ang Anotasyon sa Editor
@@ -15956,7 +15956,7 @@ no:Vis favoritter
 pl:Pokaż ulubione
 pt:Mostrar favoritos
 ro:Arată favoritele
-ru:Показывать избранное
+ru:Показывать панель &избранного
 si: ප්‍රියතමයන් පෙන්වන්න
 sk:Zobraziť obľúbené položky
 sl:Prikaži Priljubljene
@@ -16002,7 +16002,7 @@ lt:Rodyti &slinkties juostas
 lv:Rādīt rit&joslas
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
-ru:По&лосы прокрутки
+ru:Показывать по&лосы прокрутки
 sl:Pokaži drsne trak&ove
 ta:உருட்பட்டைகளை காண்பி 
 th:&แสดงแถบเลื่อน
@@ -17933,7 +17933,7 @@ lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
-ru:Не сохранённые аннотации
+ru:Не сохранены аннотации
 sl:Neshranjene pripombe
 th:ไม่ได้บันทึกคำอธิบายประกอบ
 tl:Mga hindi na-save na anotasyon
@@ -17960,7 +17960,7 @@ it:Annotazioni non salvate in '%s'
 kw:Notenyansow anwithys yn '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
-ru:Не сохранённые аннотации в '%s'
+ru:В '%s' есть несохранённые аннотации
 sl:Neshranjene pripombe v '%s'
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
 tl:Hindi na-save na mga anotasyon sa '%s'
