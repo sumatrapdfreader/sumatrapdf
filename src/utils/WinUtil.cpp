@@ -183,43 +183,44 @@ bool GetOsVersion(OSVERSIONINFOEX& ver) {
     return !!ok;
 }
 
-const char* OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
+TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId) {
-        return "9x";
+        return str::DupTemp("9x");
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3) {
-        return "8.1"; // or Server 2012 R2
+        return str::DupTemp("8.1"); // or Server 2012 R2
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 2) {
-        return "8"; // or Server 2012
+        return str::DupTemp("8"); // or Server 2012
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
-        return "7"; // or Server 2008 R2
+        return str::DupTemp("7"); // or Server 2008 R2
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
-        return "Vista"; // or Server 2008
+        return str::DupTemp("Vista"); // or Server 2008
     }
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
-        return "Server 2003";
+        return str::DupTemp("Server 2003");
     }
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
-        return "XP";
+        return str::DupTemp("XP");
     }
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
-        return "2000";
+        return str::DupTemp("2000");
     }
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
-        return "10";
+        int buildNo = (int)(ver.dwBuildNumber & 0xFFFF);
+        AutoFreeStr s = str::Format("10.%d", buildNo);
+        return str::DupTemp(s.Get());
     }
 
     // either a newer or an older NT version, neither of which we support
-    static char osVerStr[32];
-    wsprintfA(osVerStr, "NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
-    return osVerStr;
+    AutoFreeStr s = str::Format("NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
+    return str::DupTemp(s.Get());
 }
 
-const char* GetWindowsVerTemp() {
+TempStr GetWindowsVerTemp() {
     OSVERSIONINFOEX ver{};
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
@@ -231,7 +232,7 @@ const char* GetWindowsVerTemp() {
     BOOL ok = GetVersionExW((OSVERSIONINFO*)&ver); // NOLINT
 #pragma warning(pop)
     if (!ok) {
-        return "uknown";
+        return str::DupTemp("uknown");
     }
     return OsNameFromVerTemp(ver);
 }

@@ -396,7 +396,7 @@ void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
     url.Append("?v=");
     url.Append(UPDATE_CHECK_VERA);
     url.Append("&os=");
-    const char* osVerTemp = GetWindowsVerTemp();
+    char* osVerTemp = GetWindowsVerTemp();
     url.Append(osVerTemp);
     url.Append("&64bit=");
     if (IsProcess64()) {

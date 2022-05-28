@@ -37,8 +37,8 @@ bool IsRunningInWow64();
 bool IsProcessAndOsArchSame();
 
 bool GetOsVersion(OSVERSIONINFOEX& ver);
-const char* OsNameFromVerTemp(const OSVERSIONINFOEX& ver);
-const char* GetWindowsVerTemp();
+TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver);
+TempStr GetWindowsVerTemp();
 
 void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);
