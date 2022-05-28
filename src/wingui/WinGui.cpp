@@ -813,6 +813,12 @@ static void WndRegisterClass(const WCHAR* className) {
 HWND Wnd::CreateControl(const CreateControlArgs& args) {
     CrashIf(!args.className);
 
+    font = args.font;
+    if (!font) {
+        // TODO: need this?
+        font = GetDefaultGuiFont();
+    }
+
     DWORD style = args.style;
     if (args.parent) {
         style |= WS_CHILD;
@@ -833,15 +839,11 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HINSTANCE inst = GetInstance();
     void* createParams = this;
     hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
+    HwndSetFont(hwnd, font);
     CrashIf(!hwnd);
     Subclass();
     OnAttach();
 
-    // TODO: verify this
-    HFONT f = args.font;
-    if (!f) {
-        f = GetDefaultGuiFont();
-    }
     // prevWindowProc(hwnd, WM_SETFONT, (WPARAM)f, 0);
     // HwndSetFont(hwnd, f);
     if (args.text) {

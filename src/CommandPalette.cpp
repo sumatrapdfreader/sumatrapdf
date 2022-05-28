@@ -669,15 +669,18 @@ bool CommandPaletteWnd::Create(MainWindow* win) {
 
 void RunCommandPallette(MainWindow* win) {
     CrashIf(gCommandPaletteWnd);
-    // make min font size 16 (I get 12)
-    int fontSize = GetSizeOfDefaultGuiFont();
-    // make font 1.4x bigger than system font
-    fontSize = (fontSize * 14) / 10;
-    if (fontSize < 16) {
-        fontSize = 16;
+
+    if (!gCommandPaletteFont) {
+        // make min font size 16 (I get 12)
+        int fontSize = GetSizeOfDefaultGuiFont();
+        // make font 1.4x bigger than system font
+        fontSize = (fontSize * 14) / 10;
+        if (fontSize < 16) {
+            fontSize = 16;
+        }
+        // TODO: leaking font
+        gCommandPaletteFont = GetDefaultGuiFontOfSize(fontSize);
     }
-    gCommandPaletteFont = GetDefaultGuiFontOfSize(fontSize);
-    // TODO: leaking font
 
     auto wnd = new CommandPaletteWnd();
     wnd->win = win;
