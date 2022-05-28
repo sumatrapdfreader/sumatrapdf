@@ -245,6 +245,7 @@ static IPageElement* NewImageElement(int pageNo, float dx, float dy) {
     return res;
 }
 
+// don't delete the result
 Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > pageCount);
     auto* pi = pages[pageNo - 1];
@@ -265,11 +266,12 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
     if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;
     }
-    auto* pi = pages[pageNo - 1];
-    if (pi->allElements.size() == 0) {
+    auto els = GetElements(pageNo);
+    if (els.size() == 0) {
         return nullptr;
     }
-    return pi->allElements[0];
+    IPageElement* el = els[0];
+    return el;
 }
 
 RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
