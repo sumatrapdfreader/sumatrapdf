@@ -493,7 +493,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_SETCURSOR:
-            if (GetCursorPosInHwnd(hwnd, pt)) {
+            pt = HwndGetCursorPos(hwnd);
+            if (!pt.IsEmpty()) {
                 StaticLinkInfo* linkInfo;
                 if (GetStaticLinkTemp(gStaticLinks, pt.x, pt.y, &linkInfo)) {
                     CreateInfotipForLink(linkInfo);

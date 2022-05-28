@@ -1986,8 +1986,7 @@ static void DrawResizeLineVH(HWND hwnd, HBRUSH br, bool isVert, Point pos) {
 
 static void DrawResizeLine(HWND hwnd, HBRUSH br, SplitterType stype, bool erasePrev, bool drawCurr,
                            Point& prevResizeLinePos) {
-    Point pos;
-    GetCursorPosInHwnd(GetParent(hwnd), pos);
+    Point pos = HwndGetCursorPos(GetParent(hwnd));
     bool isVert = stype != SplitterType::Horiz;
 
     if (erasePrev) {

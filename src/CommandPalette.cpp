@@ -323,8 +323,7 @@ static void CollectPaletteStrings(StrVec& strings, StrVec& filePaths, MainWindow
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !win->tabsInTitlebar;
 
-    Point cursorPos;
-    GetCursorPosInHwnd(win->hwndCanvas, cursorPos);
+    Point cursorPos = HwndGetCursorPos(win->hwndCanvas);
 
     DisplayModel* dm = win->AsFixed();
     if (dm) {

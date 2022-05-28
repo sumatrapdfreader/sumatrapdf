@@ -1000,9 +1000,9 @@ static void SetTextOrArrorCursor(DisplayModel* dm, Point pt) {
 
 // TODO: this gets called way too often
 static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
-    Point pt;
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !GetCursor() || !GetCursorPosInHwnd(hwnd, pt)) {
+    Point pt = HwndGetCursorPos(hwnd);
+    if (!dm || !GetCursor() || pt.IsEmpty()) {
         win->HideToolTip();
         return FALSE;
     }
@@ -1079,8 +1079,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
     if ((LOWORD(wp) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wp) & MK_RBUTTON)) {
-        Point pt;
-        GetCursorPosInHwnd(win->hwndCanvas, pt);
+        Point pt = HwndGetCursorPos(win->hwndCanvas);
 
         float zoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
         win->ctrl->SetZoomVirtual(zoom, &pt);
@@ -1141,8 +1140,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     // scroll faster if the cursor is over the scroll bar
     if (IsCursorOverWindow(win->hwndCanvas)) {
-        Point pt;
-        GetCursorPosInHwnd(win->hwndCanvas, pt);
+        Point pt = HwndGetCursorPos(win->hwndCanvas);
         if (pt.x > win->canvasRc.dx) {
             SendMessageW(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN, 0);
             return 0;
@@ -1437,8 +1435,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
         case WM_CONTEXTMENU:
             if (x == -1 || y == -1) {
                 // if invoked with a keyboard (shift-F10) use current mouse position
-                Point pt;
-                GetCursorPosInHwnd(hwnd, pt);
+                Point pt = HwndGetCursorPos(hwnd);
                 x = pt.x;
                 y = pt.y;
             }
@@ -1556,7 +1553,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             if (MouseAction::Scrolling == win->mouseAction) {
                 win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
             } else if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
-                GetCursorPosInHwnd(win->hwndCanvas, pt);
+                pt = HwndGetCursorPos(win->hwndCanvas);
                 if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y)) {
                     OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
                 }

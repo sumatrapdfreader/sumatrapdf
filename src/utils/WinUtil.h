@@ -124,9 +124,8 @@ Size TextSizeInDC(HDC, const WCHAR*);
 
 bool IsFocused(HWND);
 bool IsCursorOverWindow(HWND);
-bool GetCursorPosInHwnd(HWND, Point&);
 Point HwndGetCursorPos(HWND hwnd);
-POINT GetCursorPosInHwnd(HWND);
+int MapWindowPoints(HWND, HWND, Point*, int);
 bool IsMouseOverRect(HWND hwnd, const Rect& r);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 char* GetDefaultPrinterNameTemp();

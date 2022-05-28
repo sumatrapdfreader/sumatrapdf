@@ -385,8 +385,8 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (WM_SETCURSOR == msg && HasClose()) {
-        Point pt;
-        if (GetCursorPosInHwnd(hwnd, pt) && rClose.Contains(pt)) {
+        Point pt = HwndGetCursorPos(hwnd);
+        if (!pt.IsEmpty() && rClose.Contains(pt)) {
             SetCursorCached(IDC_HAND);
             return TRUE;
         }

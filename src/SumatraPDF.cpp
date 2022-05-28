@@ -3677,11 +3677,10 @@ static bool ChmForwardKey(WPARAM key) {
 }
 
 static void DeleteAnnotationUnderCursor(MainWindow* win) {
-    Point pt{0, 0};
-    bool ok = GetCursorPosInHwnd(win->hwndCanvas, pt);
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
     DisplayModel* dm = win->AsFixed();
     Annotation* annot = nullptr;
-    if (ok && dm) {
+    if (!pt.IsEmpty() && dm) {
         int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
         if (pageNoUnderCursor > 0) {
             annot = dm->GetAnnotationAtPos(pt, nullptr);
@@ -3930,8 +3929,8 @@ static void ShowCursorPositionInDoc(MainWindow* win) {
     if (!win->AsFixed()) {
         return;
     }
-    Point pt;
-    if (GetCursorPosInHwnd(win->hwndCanvas, pt)) {
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    if (!pt.IsEmpty()) {
         UpdateCursorPositionHelper(win, pt, nullptr);
     }
 }
@@ -4041,8 +4040,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     HWND hwnd = splitter->hwnd;
     MainWindow* win = FindWindowInfoByHwnd(hwnd);
 
-    Point pcur;
-    GetCursorPosInHwnd(win->hwndFrame, pcur);
+    Point pcur = HwndGetCursorPos(win->hwndFrame);
     int sidebarDx = pcur.x; // without splitter
 
     // make sure to keep this in sync with the calculations in RelayoutFrame
@@ -4065,8 +4063,7 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     HWND hwnd = splitter->hwnd;
     MainWindow* win = FindWindowInfoByHwnd(hwnd);
 
-    Point pcur;
-    GetCursorPosInHwnd(win->hwndTocBox, pcur);
+    Point pcur = HwndGetCursorPos(win->hwndCanvas);
     int tocDy = pcur.y; // without splitter
 
     // make sure to keep this in sync with the calculations in RelayoutFrame
@@ -5016,14 +5013,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!handle) {
                 return 0;
             }
-            POINT pt = GetCursorPosInHwnd(hwnd);
-            int x = pt.x;
-            int y = pt.y;
-            int pageNoUnderCursor = dm->GetPageNoByPoint(Point{x, y});
+            Point pt = HwndGetCursorPos(hwnd);
+            int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
             if (pageNoUnderCursor < 0) {
                 return 0;
             }
-            PointF ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNoUnderCursor);
+            PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
             auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
             if (annot) {

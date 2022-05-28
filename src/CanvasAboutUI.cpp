@@ -109,8 +109,8 @@ static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
 }
 
 static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
-    Point pt;
-    if (GetCursorPosInHwnd(hwnd, pt)) {
+    Point pt = HwndGetCursorPos(hwnd);
+    if (!pt.IsEmpty()) {
         StaticLinkInfo* linkInfo;
         if (GetStaticLinkTemp(win->staticLinks, pt.x, pt.y, &linkInfo)) {
             win->ShowToolTip(linkInfo->infotip, linkInfo->rect);

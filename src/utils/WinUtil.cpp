@@ -146,6 +146,21 @@ Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     return Rect::FromRECT(rc);
 }
 
+int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
+    CrashIf(nPoints > 64);
+    POINT pnts[64];
+    for (int i = 0; i < nPoints; i++) {
+        pnts[i].x = points[i].x;
+        pnts[i].y = points[i].y;
+    }
+    int res = MapWindowPoints(hwndFrom, hwndTo, &pnts[0], (uint)nPoints);
+    for (int i = 0; i < nPoints; i++) {
+        points[i].x = pnts[i].x;
+        points[i].y = pnts[i].y;
+    }
+    return res;
+}
+
 void MoveWindow(HWND hwnd, Rect rect) {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }
@@ -1111,18 +1126,6 @@ Point HwndGetCursorPos(HWND hwnd) {
         return {};
     }
     return {pt.x, pt.y};
-}
-
-bool GetCursorPosInHwnd(HWND hwnd, Point& posOut) {
-    POINT pt;
-    if (!GetCursorPos(&pt)) {
-        return false;
-    }
-    if (!ScreenToClient(hwnd, &pt)) {
-        return false;
-    }
-    posOut = {pt.x, pt.y};
-    return true;
 }
 
 bool IsMouseOverRect(HWND hwnd, const Rect& r) {
@@ -2400,14 +2403,6 @@ bool TrackMouseLeave(HWND hwnd) {
 
 void TriggerRepaint(HWND hwnd) {
     InvalidateRect(hwnd, nullptr, FALSE);
-}
-
-POINT GetCursorPosInHwnd(HWND hwnd) {
-    POINT pt = {0, 0};
-    if (GetCursorPos(&pt)) {
-        ScreenToClient(hwnd, &pt);
-    }
-    return pt;
 }
 
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
