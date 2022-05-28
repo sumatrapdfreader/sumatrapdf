@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\common">
+      <UniqueIdentifier>{C1DC2C46-ADAA-204C-963E-917282ABFCB0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\dav1d">
+      <UniqueIdentifier>{A8A713A5-1468-8FDB-DDA2-D8584922D4B7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\dav1d\include\common\attributes.h">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\common\bitdepth.h">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\common\dump.h">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\common\frame.h">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\common\intops.h">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\common\validate.h">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\dav1d\common.h">
+      <Filter>include\dav1d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\dav1d\data.h">
+      <Filter>include\dav1d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\dav1d\dav1d.h">
+      <Filter>include\dav1d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\dav1d\headers.h">
+      <Filter>include\dav1d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\dav1d\picture.h">
+      <Filter>include\dav1d</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\dav1d\src\cdf.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\cpu.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\data.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\decode.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\dequant_tables.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\getbits.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\intra_edge.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\itx_1d.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\lf_mask.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\log.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\mem.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\msac.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\obu.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\picture.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\qm.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\ref.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\refmvs.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\scan.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\tables.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\warpmv.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\wedge.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

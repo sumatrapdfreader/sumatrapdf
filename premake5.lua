@@ -298,6 +298,14 @@ workspace "SumatraPDF"
     includedirs { "ext/libwebp" }
     libwebp_files()
 
+  project "dav1d"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4057", "4090", "4100", "4201", "4244", "4245", "4456", "4701", "4703", "4706", "4996" }
+    includedirs { "ext/dav1d/include/compat/msvc", "ext/dav1d", "ext/dav1d/include" }
+    dav1d_files()
+
   project "zlib-ng"
     kind "StaticLib"
     language "C"

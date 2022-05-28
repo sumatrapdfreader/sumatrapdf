@@ -249,6 +249,34 @@ function jbig2dec_files()
   })
 end
 
+function dav1d_files()
+  files_in_dir("ext/dav1d/src", {
+    "cdf.c",
+    "cpu.c",
+    "data.c",
+    "decode.c",
+    "dequant_tables.c",
+    "getbits.c",
+    "intra_edge.c",
+    "itx_1d.c",
+    "lf_mask.c",
+    "log.c",
+    "mem.c",
+    "msac.c",
+    "obu.c",
+    "picture.c",
+    "qm.c",
+    "ref.c",
+    "refmvs.c",
+    "scan.c",
+    "tables.c",
+    "warpmv.c",
+    "wedge.c",
+  })
+  files("ext/dav1d/include/common/*.h")
+  files("ext/dav1d/include/dav1d/*.h")
+end
+
 function openjpeg_files()
   files_in_dir( "ext/openjpeg/src/lib/openjp2", {
     "bio.c",

@@ -71,3 +71,6 @@ extract         trunk
 
 windrawlib      trunk
   https://github.com/mity/windrawlib
+
+dav1d           trunk      2022-05-28
+  https://code.videolan.org/videolan/dav1d
