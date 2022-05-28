@@ -287,9 +287,6 @@ struct SessionData {
     int sidebarDx;
 };
 
-// if true, Enable lazyload session tabs on startup
-static bool gEnableLazyLoad = true;
-
 // Most values on this structure can be updated through the UI and are
 // persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {
@@ -627,7 +624,7 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
-     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-4.html"},
+     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-5.html"},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
