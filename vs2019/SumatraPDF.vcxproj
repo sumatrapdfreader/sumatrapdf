@@ -540,7 +540,6 @@
     <ClInclude Include="..\src\AppColors.h" />
     <ClInclude Include="..\src\AppPrefs.h" />
     <ClInclude Include="..\src\AppTools.h" />
-    <ClInclude Include="..\src\AppUtil.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
     <ClInclude Include="..\src\ChmModel.h" />
@@ -612,7 +611,6 @@
     <ClCompile Include="..\src\AppColors.cpp" />
     <ClCompile Include="..\src\AppPrefs.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
-    <ClCompile Include="..\src\AppUtil.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\Caption.cpp" />

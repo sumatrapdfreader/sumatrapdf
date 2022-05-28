@@ -486,7 +486,6 @@ function sumatrapdf_files()
     "AppColors.*",
     "AppPrefs.*",
     "AppTools.*",
-    "AppUtil.*",
     "Caption.*",
     "Canvas.*",
     "CanvasAboutUI.*",
@@ -1024,9 +1023,8 @@ function test_util_files()
     "tests/*"
   })
   files_in_dir("src", {
-    --"AppTools.*",
     --"StressTesting.*",
-    "AppUtil.*",
+    --"AppTools.*",
     "DisplayMode.*",
     "Flags.*",
     "SumatraConfig.*",

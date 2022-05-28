@@ -9,8 +9,6 @@ char* AppGenDataFilenameTemp(const char* fileName);
 
 void SetAppDataPath(const char* path);
 
-// bool IsExeAssociatedWithPdfExtension();
-
 char* AutoDetectInverseSearchCommands(HWND);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -23,3 +21,10 @@ char* FormatFileSize(i64);
 
 char* FormatFileSizeNoTrans(i64);
 bool LaunchFileIfExists(const char* path);
+
+bool IsValidProgramVersion(const char* txt);
+int CompareVersion(const char* txt1, const char* txt2);
+bool AdjustVariableDriveLetter(char* path);
+
+bool IsUntrustedFile(const char* filePath, const char* fileUrl = nullptr);
+void DrawCloseButton(HWND hwnd, HDC hdc, Rect& r);

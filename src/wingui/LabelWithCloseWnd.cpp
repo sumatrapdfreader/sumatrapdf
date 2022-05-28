@@ -7,11 +7,11 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include "AppUtil.h"
-
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+
+#include "AppTools.h"
 
 #include "wingui/LabelWithCloseWnd.h"
 

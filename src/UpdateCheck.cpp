@@ -11,7 +11,6 @@
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
-#include "AppUtil.h"
 #include "AppTools.h"
 #include "AppPrefs.h"
 #include "Version.h"

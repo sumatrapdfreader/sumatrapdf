@@ -153,6 +153,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\store.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\story.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\fitz\stream.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
@@ -310,6 +313,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\utfdata.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\xml-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h">

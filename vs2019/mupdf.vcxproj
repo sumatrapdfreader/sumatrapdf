@@ -461,6 +461,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\separation.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\shade.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\store.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\story.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\stream.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\string-util.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\structured-text.h" />
@@ -514,6 +515,7 @@
     <ClInclude Include="..\mupdf\source\fitz\tessocr.h" />
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h" />
     <ClInclude Include="..\mupdf\source\fitz\utfdata.h" />
+    <ClInclude Include="..\mupdf\source\fitz\xml-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h" />
     <ClInclude Include="..\mupdf\source\pdf\annotation-icons.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-annot-imp.h" />

@@ -6,14 +6,15 @@
 #include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
 #include "utils/UITask.h"
-#include "AppColors.h"
-#include "Settings.h"
-#include "SumatraPdf.h"
-#include "AppUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+
+#include "AppColors.h"
+#include "Settings.h"
+#include "SumatraPdf.h"
+#include "AppTools.h"
 
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"

@@ -47,7 +47,6 @@
 #include "Flags.h"
 #include "Scratch.h"
 #include "AppPrefs.h"
-#include "AppTools.h"
 #include "Canvas.h"
 #include "Caption.h"
 #include "CrashHandler.h"
