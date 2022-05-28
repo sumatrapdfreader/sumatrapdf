@@ -7,63 +7,17 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#include "AppUtil.h"
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
 #include "wingui/LabelWithCloseWnd.h"
 
-#define kColCloseX RGB(0xa0, 0xa0, 0xa0)
-#define kColCloseXHover RGB(0xf9, 0xeb, 0xeb)   // white-ish
-#define kColCloseXHoverBg RGB(0xC1, 0x35, 0x35) // red-ish
-
 #define kCloseBtnDx 16
 #define kCloseBtnDy 16
 #define kButtonSpaceDx 8
-
-static bool IsMouseOverClose(LabelWithCloseWnd* w) {
-    Point p;
-    GetCursorPosInHwnd(w->hwnd, p);
-    return w->closeBtnPos.Contains(p);
-}
-
-// Draws the 'x' close button in regular state or onhover state
-// Tries to mimic visual style of Chrome tab close button
-static void DrawCloseButton(HDC hdc, LabelWithCloseWnd* w) {
-    Gdiplus::Graphics g(hdc);
-    g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    g.SetPageUnit(Gdiplus::UnitPixel);
-    // GDI+ doesn't pick up the window's orientation through the device context,
-    // so we have to explicitly mirror all rendering horizontally
-    if (IsRtl(w->hwnd)) {
-        g.ScaleTransform(-1, 1);
-        g.TranslateTransform((float)ClientRect(w->hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
-    }
-
-    Gdiplus::Color c;
-    Rect& r = w->closeBtnPos;
-
-    // in onhover state, background is a red-ish circle
-    bool onHover = IsMouseOverClose(w);
-    if (onHover) {
-        c.SetFromCOLORREF(kColCloseXHoverBg);
-        Gdiplus::SolidBrush b(c);
-        g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
-    }
-
-    // draw 'x'
-    c.SetFromCOLORREF(onHover ? kColCloseXHover : kColCloseX);
-    g.TranslateTransform((float)r.x, (float)r.y);
-    Gdiplus::Pen p(c, 2);
-    if (onHover) {
-        g.DrawLine(&p, Gdiplus::Point(4, 4), Gdiplus::Point(r.dx - 6, r.dy - 6));
-        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 4), Gdiplus::Point(4, r.dy - 6));
-    } else {
-        g.DrawLine(&p, Gdiplus::Point(4, 5), Gdiplus::Point(r.dx - 6, r.dy - 5));
-        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 5), Gdiplus::Point(4, r.dy - 5));
-    }
-}
 
 static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     HBRUSH br = CreateSolidBrush(w->bgCol);
@@ -98,7 +52,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     RECT r = ToRECT(ri);
     FillRect(hdc, &r, br);
 
-    DrawCloseButton(hdc, w);
+    DrawCloseButton(w->hwnd, hdc, w->closeBtnPos);
     DeleteObject(br);
 
     if (w->font) {
@@ -151,7 +105,7 @@ LRESULT LabelWithCloseWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_MOUSEMOVE == msg) {
         ScheduleRepaint(hwnd);
 
-        if (IsMouseOverClose(this)) {
+        if (IsMouseOverRect(hwnd, closeBtnPos)) {
             TrackMouseLeave(hwnd);
         }
         goto DoDefault;
@@ -163,7 +117,7 @@ LRESULT LabelWithCloseWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (WM_LBUTTONUP == msg) {
-        if (IsMouseOverClose(this)) {
+        if (IsMouseOverRect(hwnd, closeBtnPos)) {
             HWND parent = GetParent(hwnd);
             HwndSendCommand(parent, cmdId);
         }

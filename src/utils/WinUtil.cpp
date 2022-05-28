@@ -1102,6 +1102,17 @@ bool IsCursorOverWindow(HWND hwnd) {
     return rcWnd.Contains({pt.x, pt.y});
 }
 
+Point HwndGetCursorPos(HWND hwnd) {
+    POINT pt;
+    if (!GetCursorPos(&pt)) {
+        return {};
+    }
+    if (!ScreenToClient(hwnd, &pt)) {
+        return {};
+    }
+    return {pt.x, pt.y};
+}
+
 bool GetCursorPosInHwnd(HWND hwnd, Point& posOut) {
     POINT pt;
     if (!GetCursorPos(&pt)) {
@@ -1112,6 +1123,11 @@ bool GetCursorPosInHwnd(HWND hwnd, Point& posOut) {
     }
     posOut = {pt.x, pt.y};
     return true;
+}
+
+bool IsMouseOverRect(HWND hwnd, const Rect& r) {
+    Point curPos = HwndGetCursorPos(hwnd);
+    return r.Contains(curPos);
 }
 
 void CenterDialog(HWND hDlg, HWND hParent) {

@@ -9,6 +9,7 @@
 #include "AppColors.h"
 #include "Settings.h"
 #include "SumatraPdf.h"
+#include "AppUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -71,9 +72,9 @@ struct NotificationWnd : ProgressUpdateUI, Wnd {
     int progress = 0;
     char* progressMsg = nullptr; // must contain two %d (for current and total)
 
-    Rect rcTxt;
-    Rect rcClose;
-    Rect rcProgress;
+    Rect rTxt;
+    Rect rClose;
+    Rect rProgress;
 };
 
 Vec<NotificationWnd*> gNotifs;
@@ -257,15 +258,15 @@ void NotificationWnd::Layout(const char* message) {
     int padY = DpiScale(hwnd, 8);
     int dx = padX + szText.dx + padX;
     int dy = padY + szText.dy + padY;
-    rcTxt = {padX, padY, szText.dx, szText.dy};
+    rTxt = {padX, padY, szText.dx, szText.dy};
     int closeDx = DpiScale(hwnd, 16);
     int leftMargin = DpiScale(hwnd, kCloseLeftMargin - padX);
-    rcClose = {dx + leftMargin, padY, closeDx, closeDx + 2};
+    rClose = {dx + leftMargin, padY, closeDx, closeDx + 2};
     if (HasClose()) {
         dx += leftMargin + closeDx + padX;
     }
     int progressDy = DpiScale(hwnd, kProgressDy);
-    rcProgress = {padX, dy, szText.dx, progressDy};
+    rProgress = {padX, dy, szText.dx, progressDy};
     if (HasProgress()) {
         dy += padY + progressDy + padY;
     }
@@ -288,7 +289,7 @@ void NotificationWnd::Layout(const char* message) {
 #endif
 
     // y-center close
-    rcClose.y = ((dy - closeDx) / 2) + 1;
+    rClose.y = ((dy - closeDx) / 2) + 1;
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
     uint flags = SWP_NOMOVE | SWP_NOZORDER;
@@ -338,16 +339,15 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     SetTextColor(hdc, colTxt);
     char* text = HwndGetTextTemp(hwnd);
     uint format = DT_SINGLELINE | DT_NOPREFIX;
-    RECT rTmp = ToRECT(rcTxt);
+    RECT rTmp = ToRECT(rTxt);
     HdcDrawText(hdc, text, -1, &rTmp, format);
 
     if (HasClose()) {
-        rTmp = ToRECT(rcClose);
-        DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+        DrawCloseButton(hwnd, hdc, rClose);
     }
 
     if (HasProgress()) {
-        rc = rcProgress;
+        rc = rProgress;
         int progressWidth = rc.dx;
 
         COLORREF col = GetAppColor(AppColor::NotifcationsProgress);
@@ -386,15 +386,29 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     if (WM_SETCURSOR == msg && HasClose()) {
         Point pt;
-        if (GetCursorPosInHwnd(hwnd, pt) && rcClose.Contains(pt)) {
+        if (GetCursorPosInHwnd(hwnd, pt) && rClose.Contains(pt)) {
             SetCursorCached(IDC_HAND);
             return TRUE;
         }
     }
 
+    if (WM_MOUSEMOVE == msg) {
+        ScheduleRepaint(hwnd);
+
+        if (IsMouseOverRect(hwnd, rClose)) {
+            TrackMouseLeave(hwnd);
+        }
+        goto DoDefault;
+    }
+
+    if (WM_MOUSELEAVE == msg) {
+        ScheduleRepaint(hwnd);
+        return 0;
+    }
+
     if (WM_LBUTTONUP == msg && HasClose()) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-        if (rcClose.Contains(pt)) {
+        if (rClose.Contains(pt)) {
             // TODO a better way to delete myself
             if (wndRemovedCb) {
                 uitask::Post([this] { wndRemovedCb(this); });
@@ -405,6 +419,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
 
+DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
