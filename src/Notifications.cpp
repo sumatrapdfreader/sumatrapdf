@@ -279,11 +279,15 @@ void NotificationWnd::Layout(const char* message) {
     Rect rCurr = WindowRect(hwnd);
     // for less flicker we don't want to shrink the window when the text shrinks
     if (dx < rCurr.dx) {
+        int diff = rCurr.dx - dx;
+        rClose.x += diff;
         dx = rCurr.dx;
     }
+#if 0
     if (dy < rCurr.dy) {
         dy = rCurr.dy;
     }
+#endif
 #if 0
     if (wnd->shrinkLimit < 1.0f) {
         Rect rcOrig = ClientRect(wnd->hwnd);
