@@ -402,13 +402,17 @@ void CheckForUpdateAsync(WindowInfo* win, UpdateCheck updateCheckType) {
     } else {
         url.Append("no");
     }
+    const char* lang = trans::GetCurrentLangCode();
+    url.Append("&lang=");
+    url.Append(lang);
     if (gIsStoreBuild) {
         url.Append("&store");
     }
     if (UpdateCheck::UserInitiated == updateCheckType) {
         url.Append("&force");
     }
-    HttpGetAsync(url.Get(), [=](HttpRsp* rsp) {
+    char* uri = url.Get();
+    HttpGetAsync(uri, [=](HttpRsp* rsp) {
         uitask::Post([=] {
             DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
             if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
