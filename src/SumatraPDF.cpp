@@ -1780,7 +1780,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
     if (HasPermission(Perm::DiskAccess) && !gPluginMode && !IsStressTesting()) {
-        SHAddToRecentDocs(SHARD_PATH, fullPath);
+        AddPathToRecentDocs(fullPath);
     }
 
     return win;

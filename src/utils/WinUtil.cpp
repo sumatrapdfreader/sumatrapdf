@@ -2833,3 +2833,8 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
         hItem = TreeView_GetNextSibling(hTree, hItem);
     }
 }
+
+void AddPathToRecentDocs(const char* path) {
+    WCHAR* pathW = ToWstrTemp(path);
+    SHAddToRecentDocs(SHARD_PATH, pathW);
+}
