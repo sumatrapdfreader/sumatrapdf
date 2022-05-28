@@ -638,8 +638,8 @@ bool AdjustVariableDriveLetter(char* path) {
     if (file::Exists(path)) {
         return false;
     }
-    // Don't bother for files on non-removable drives
-    if (!path::HasVariableDriveLetter(path)) {
+    // only check absolute path on drives i.e. those that start with "d:\"
+    if (str::Len(path) < 4 || path[1] != ':') {
         return false;
     }
 
