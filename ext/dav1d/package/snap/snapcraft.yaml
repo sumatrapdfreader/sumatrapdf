@@ -1,0 +1,24 @@
+name: dav1d
+base: core18
+version: git
+version-script: git describe HEAD --always
+summary: AV1 decoder from VideoLAN
+description: |
+  A small and fast AV1 decoder from the people who brought you VLC.
+
+grade: stable
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+apps:
+  dav1d:
+    command: usr/bin/dav1d
+    plugs: [ 'home' ]
+
+parts:
+  dav1d:
+    plugin: meson
+    source: ../../
+    build-packages: [ 'nasm' ]
+    meson-parameters:
+      - --prefix=/usr
+      - --buildtype=release

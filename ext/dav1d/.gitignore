@@ -1,0 +1,9 @@
+/build*
+/Session.vim
+[._]*.swp
+*~
+tags
+.DS_Store
+/tests/dav1d-test-data
+*.snap
+/tools/output/xxhash.h

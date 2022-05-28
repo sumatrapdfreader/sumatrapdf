@@ -1,0 +1,292 @@
+Changes for 1.0.0 'Peregrine falcon':
+-------------------------------------
+
+1.0.0 is a major release of dav1d, adding important features and bug fixes.
+
+It notably changes, in an important way, the way threading works, by adding
+an automatic thread management.
+
+It also adds support for AVX-512 acceleration, and adds speedups to existing x86
+code (from SSE2 to AVX2).
+
+1.0.0 adds new grain API to ease acceleration on the GPU, and adds an API call
+to get information of which frame failed to decode, in error cases.
+
+Finally, 1.0.0 fixes numerous small bugs that were reported since the beginning
+of the project to have a proper release.
+
+                                     .''.
+         .''.      .        *''*    :_\/_:     .
+        :_\/_:   _\(/_  .:.*_\/_*   : /\ :  .'.:.'.
+    .''.: /\ :   ./)\   ':'* /\ * :  '..'.  -=:o:=-
+   :_\/_:'.:::.    ' *''*    * '.\'/.' _\(/_'.':'.'
+   : /\ : :::::     *_\/_*     -= o =-  /)\    '  *
+    '..'  ':::'     * /\ *     .'/.\'.   '
+        *            *..*         :
+          *                       :
+          *         1.0.0
+
+
+
+Changes for 0.9.2 'Golden Eagle':
+---------------------------------
+
+0.9.2 is a small update of dav1d on the 0.9.x branch:
+ - x86: SSE4 optimizations of inverse transforms for 10bit for all sizes
+ - x86: mc.resize optimizations with AVX2/SSSE3 for 10/12b
+ - x86: SSSE3 optimizations for cdef_filter in 10/12b and mc_w_mask_422/444 in 8b
+ - ARM NEON optimizations for FilmGrain Gen_grain functions
+ - Optimizations for splat_mv in SSE2/AVX2 and NEON
+ - x86: SGR improvements for SSSE3 CPUs
+ - x86: AVX2 optimizations for cfl_ac
+
+
+Changes for 0.9.1 'Golden Eagle':
+---------------------------------
+
+0.9.1 is a middle-size revision of dav1d, adding notably 10b acceleration for SSSE3:
+ - 10/12b SSSE3 optimizations for mc (avg, w_avg, mask, w_mask, emu_edge),
+   prep/put_bilin, prep/put_8tap, ipred (dc/h/v, paeth, smooth, pal, filter), wiener,
+   sgr (10b), warp8x8, deblock, film_grain, cfl_ac/pred for 32bit and 64bit x86 processors
+ - Film grain NEON for fguv 10/12b, fgy/fguv 8b and fgy/fguv 10/12 arm32
+ - Fixes for filmgrain on ARM
+ - itx 10bit optimizations for 4x4/x8/x16, 8x4/x8/x16 for SSE4
+ - Misc improvements on SSE2, SSE4
+
+
+Changes for 0.9.0 'Golden Eagle':
+---------------------------------
+
+0.9.0 is a major version of dav1d, adding notably 10b acceleration on x64.
+
+Details:
+ - x86 (64bit) AVX2 implementation of most 10b/12b functions, which should provide
+   a large boost for high-bitdepth decoding on modern x86 computers and servers.
+ - ARM64 neon implementation of FilmGrain (4:2:0/4:2:2/4:4:4 8bit)
+ - New API to signal events happening during the decoding process
+
+
+Changes for 0.8.2 'Eurasian hobby':
+-----------------------------------
+
+0.8.2 is a middle-size update of the 0.8.0 branch:
+ - ARM32 optimizations for ipred and itx in 10/12bits,
+   completing the 10b/12b work on ARM64 and ARM32
+ - Give the post-filters their own threads
+ - ARM64: rewrite the wiener functions
+ - Speed up coefficient decoding, 0.5%-3% global decoding gain
+ - x86 optimizations for CDEF_filter and wiener in 10/12bit
+ - x86: rewrite the SGR AVX2 asm
+ - x86: improve msac speed on SSE2+ machines
+ - ARM32: improve speed of ipred and warp
+ - ARM64: improve speed of ipred, cdef_dir, cdef_filter, warp_motion and itx16
+ - ARM32/64: improve speed of looprestoration
+ - Add seeking, pausing to the player
+ - Update the player for rendering of 10b/12b
+ - Misc speed improvements and fixes on all platforms
+ - Add a xxh3 muxer in the dav1d application
+
+
+Changes for 0.8.1 'Eurasian hobby':
+-----------------------------------
+
+0.8.1 is a minor update on 0.8.0:
+ - Keep references to buffers valid after dav1d_close(). Fixes a regression
+   caused by the picture buffer pool added in 0.8.0.
+ - ARM32 optimizations for 10bit bitdepth for SGR
+ - ARM32 optimizations for 16bit bitdepth for blend/w_masl/emu_edge
+ - ARM64 optimizations for 10bit bitdepth for SGR
+ - x86 optimizations for wiener in SSE2/SSSE3/AVX2
+
+
+Changes for 0.8.0 'Eurasian hobby':
+-----------------------------------
+
+0.8.0 is a major update for dav1d:
+ - Improve the performance by using a picture buffer pool;
+   The improvements can reach 10% on some cases on Windows.
+ - Support for Apple ARM Silicon
+ - ARM32 optimizations for 8bit bitdepth for ipred paeth, smooth, cfl
+ - ARM32 optimizations for 10/12/16bit bitdepth for mc_avg/mask/w_avg,
+   put/prep 8tap/bilin, wiener and CDEF filters
+ - ARM64 optimizations for cfl_ac 444 for all bitdepths
+ - x86 optimizations for MC 8-tap, mc_scaled in AVX2
+ - x86 optimizations for CDEF in SSE and {put/prep}_{8tap/bilin} in SSSE3
+
+
+Changes for 0.7.1 'Frigatebird':
+------------------------------
+
+0.7.1 is a minor update on 0.7.0:
+ - ARM32 NEON optimizations for itxfm, which can give up to 28% speedup, and MSAC
+ - SSE2 optimizations for prep_bilin and prep_8tap
+ - AVX2 optimizations for MC scaled
+ - Fix a clamping issue in motion vector projection
+ - Fix an issue on some specific Haswell CPU on ipred_z AVX2 functions
+ - Improvements on the dav1dplay utility player to support resizing
+
+
+Changes for 0.7.0 'Frigatebird':
+------------------------------
+
+0.7.0 is a major release for dav1d:
+ - Faster refmv implementation gaining up to 12% speed while -25% of RAM (Single Thread)
+ - 10b/12b ARM64 optimizations are mostly complete:
+   - ipred (paeth, smooth, dc, pal, filter, cfl)
+   - itxfm (only 10b)
+ - AVX2/SSSE3 for non-4:2:0 film grain and for mc.resize
+ - AVX2 for cfl4:4:4
+ - AVX-512 CDEF filter
+ - ARM64 8b improvements for cfl_ac and itxfm
+ - ARM64 implementation for emu_edge in 8b/10b/12b
+ - ARM32 implementation for emu_edge in 8b
+ - Improvements on the dav1dplay utility player to support 10 bit,
+   non-4:2:0 pixel formats and film grain on the GPU
+
+
+Changes for 0.6.0 'Gyrfalcon':
+------------------------------
+
+0.6.0 is a major release for dav1d:
+ - New ARM64 optimizations for the 10/12bit depth:
+    - mc_avg, mc_w_avg, mc_mask
+    - mc_put/mc_prep 8tap/bilin
+    - mc_warp_8x8
+    - mc_w_mask
+    - mc_blend
+    - wiener
+    - SGR
+    - loopfilter
+    - cdef
+ - New AVX-512 optimizations for prep_bilin, prep_8tap, cdef_filter, mc_avg/w_avg/mask
+ - New SSSE3 optimizations for film grain
+ - New AVX2 optimizations for msac_adapt16
+ - Fix rare mismatches against the reference decoder, notably because of clipping
+ - Improvements on ARM64 on msac, cdef and looprestoration optimizations
+ - Improvements on AVX2 optimizations for cdef_filter
+ - Improvements in the C version for itxfm, cdef_filter
+
+
+Changes for 0.5.2 'Asiatic Cheetah':
+------------------------------------
+
+0.5.2 is a small release improving speed for ARM32 and adding minor features:
+ - ARM32 optimizations for loopfilter, ipred_dc|h|v
+ - Add section-5 raw OBU demuxer
+ - Improve the speed by reducing the L2 cache collisions
+ - Fix minor issues
+
+
+Changes for 0.5.1 'Asiatic Cheetah':
+------------------------------------
+
+0.5.1 is a small release improving speeds and fixing minor issues
+compared to 0.5.0:
+ - SSE2 optimizations for CDEF, wiener and warp_affine
+ - NEON optimizations for SGR on ARM32
+ - Fix mismatch issue in x86 asm in inverse identity transforms
+ - Fix build issue in ARM64 assembly if debug info was enabled
+ - Add a workaround for Xcode 11 -fstack-check bug
+
+
+Changes for 0.5.0 'Asiatic Cheetah':
+------------------------------------
+
+0.5.0 is a medium release fixing regressions and minor issues,
+and improving speed significantly:
+ - Export ITU T.35 metadata
+ - Speed improvements on blend_ on ARM
+ - Speed improvements on decode_coef and MSAC
+ - NEON optimizations for blend*, w_mask_, ipred functions for ARM64
+ - NEON optimizations for CDEF and warp on ARM32
+ - SSE2 optimizations for MSAC hi_tok decoding
+ - SSSE3 optimizations for deblocking loopfilters and warp_affine
+ - AVX2 optimizations for film grain and ipred_z2
+ - SSE4 optimizations for warp_affine
+ - VSX optimizations for wiener
+ - Fix inverse transform overflows in x86 and NEON asm
+ - Fix integer overflows with large frames
+ - Improve film grain generation to match reference code
+ - Improve compatibility with older binutils for ARM
+ - More advanced Player example in tools
+
+
+Changes for 0.4.0 'Cheetah':
+----------------------------
+
+ - Fix playback with unknown OBUs
+ - Add an option to limit the maximum frame size
+ - SSE2 and ARM64 optimizations for MSAC
+ - Improve speed on 32bits systems
+ - Optimization in obmc blend
+ - Reduce RAM usage significantly
+ - The initial PPC SIMD code, cdef_filter
+ - NEON optimizations for blend functions on ARM
+ - NEON optimizations for w_mask functions on ARM
+ - NEON optimizations for inverse transforms on ARM64
+ - VSX optimizations for CDEF filter
+ - Improve handling of malloc failures
+ - Simple Player example in tools
+
+
+Changes for 0.3.1 'Sailfish':
+------------------------------
+
+ - Fix a buffer overflow in frame-threading mode on SSSE3 CPUs
+ - Reduce binary size, notably on Windows
+ - SSSE3 optimizations for ipred_filter
+ - ARM optimizations for MSAC
+
+
+Changes for 0.3.0 'Sailfish':
+------------------------------
+
+This is the final release for the numerous speed improvements of 0.3.0-rc.
+It mostly:
+ - Fixes an annoying crash on SSSE3 that happened in the itx functions
+
+
+Changes for 0.2.2 (0.3.0-rc) 'Antelope':
+-----------------------------
+
+ - Large improvement on MSAC decoding with SSE, bringing 4-6% speed increase
+   The impact is important on SSSE3, SSE4 and AVX2 cpus
+ - SSSE3 optimizations for all blocks size in itx
+ - SSSE3 optimizations for ipred_paeth and ipred_cfl (420, 422 and 444)
+ - Speed improvements on CDEF for SSE4 CPUs
+ - NEON optimizations for SGR and loop filter
+ - Minor crashes, improvements and build changes
+
+
+Changes for 0.2.1 'Antelope':
+----------------------------
+
+ - SSSE3 optimization for cdef_dir
+ - AVX2 improvements of the existing CDEF optimizations
+ - NEON improvements of the existing CDEF and wiener optimizations
+ - Clarification about the numbering/versionning scheme
+
+
+Changes for 0.2.0 'Antelope':
+----------------------------
+
+ - ARM64 and ARM optimizations using NEON instructions
+ - SSSE3 optimizations for both 32 and 64bits
+ - More AVX2 assembly, reaching almost completion
+ - Fix installation of includes
+ - Rewrite inverse transforms to avoid overflows
+ - Snap packaging for Linux
+ - Updated API (ABI and API break)
+ - Fixes for un-decodable samples
+
+
+Changes for 0.1.0 'Gazelle':
+----------------------------
+
+Initial release of dav1d, the fast and small AV1 decoder.
+ - Support for all features of the AV1 bitstream
+ - Support for all bitdepth, 8, 10 and 12bits
+ - Support for all chroma subsamplings 4:2:0, 4:2:2, 4:4:4 *and* grayscale
+ - Full acceleration for AVX2 64bits processors, making it the fastest decoder
+ - Partial acceleration for SSSE3 processors
+ - Partial acceleration for NEON processors

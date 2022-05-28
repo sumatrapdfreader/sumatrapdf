@@ -1,0 +1,23 @@
+PROJECT_NAME            = dav1d
+PROJECT_NUMBER          = \@VCS_TAG\@
+PROJECT_BRIEF           = dav1d is an AV1 decoder
+OUTPUT_DIRECTORY        = @DOXYGEN_OUTPUT@
+STRIP_FROM_PATH         = @DOXYGEN_STRIP@
+OUTPUT_LANGUAGE         = English
+TAB_SIZE                = 4
+EXTRACT_ALL             = YES
+OPTIMIZE_OUTPUT_FOR_C   = YES
+DOXYFILE_ENCODING       = UTF-8
+TYPEDEF_HIDES_STRUCT    = YES
+HAVE_DOT                = YES
+
+QUIET                   = YES
+WARNINGS                = YES
+WARN_IF_UNDOCUMENTED    = YES
+WARN_AS_ERROR           = FAIL_ON_WARNINGS
+
+INPUT                   = @DOXYGEN_INPUT@
+FILE_PATTERNS           = *.h
+
+GENERATE_HTML           = YES
+GENERATE_LATEX          = NO

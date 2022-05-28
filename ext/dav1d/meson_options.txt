@@ -1,0 +1,59 @@
+# General options
+
+option('bitdepths',
+    type: 'array',
+    choices: ['8', '16'],
+    description: 'Enable only specified bitdepths')
+
+option('enable_asm',
+    type: 'boolean',
+    value: true,
+    description: 'Build asm files, if available')
+
+option('enable_tools',
+    type: 'boolean',
+    value: true,
+    description: 'Build dav1d cli tools')
+
+option('enable_examples',
+    type: 'boolean',
+    value: false,
+    description: 'Build dav1d examples')
+
+option('enable_tests',
+    type: 'boolean',
+    value: true,
+    description: 'Build dav1d tests')
+
+option('enable_docs',
+    type: 'boolean',
+    value: false,
+    description: 'Build dav1d documentation')
+
+option('logging',
+    type: 'boolean',
+    value: true,
+    description: 'Print error log messages using the provided callback function')
+
+option('testdata_tests',
+    type: 'boolean',
+    value: false,
+    description: 'Run tests requiring the test data repository')
+
+option('fuzzing_engine',
+    type: 'combo',
+    choices : ['none', 'libfuzzer', 'oss-fuzz'],
+    value: 'none',
+    description: 'Select the fuzzing engine')
+
+option('fuzzer_ldflags',
+    type: 'string',
+    description: 'Extra LDFLAGS used during linking of fuzzing binaries')
+
+option('stack_alignment',
+    type: 'integer',
+    value: 0)
+
+option('xxhash_muxer',
+    type : 'feature',
+    value : 'auto')
