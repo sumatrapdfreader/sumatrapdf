@@ -446,24 +446,13 @@ static bool IsSafeAccel(const ACCEL& a) {
     if (fv == 0) {
         return false;
     }
-    if (fv & FALT) {
-        return true;
-    }
-    if (fv & FSHIFT) {
-        return true;
-    }
-    if (fv & FCONTROL) {
-        return true;
-    }
-    if (fv & FVIRTKEY) {
-        for (WORD notSafe : gNotSafeKeys) {
-            if (notSafe == k) {
-                return false;
-            }
+
+    for (WORD notSafe : gNotSafeKeys) {
+        if (notSafe == k) {
+            return false;
         }
-        return true;
     }
-    return false;
+    return true;
 }
 
 static ACCEL* gAccels = nullptr;
