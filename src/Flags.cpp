@@ -230,6 +230,7 @@ static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     V(ExtractText, "extract-text")               \
     V(Bench, "bench")                            \
     V(Dir, "d")                                  \
+    V(InstallDir, "install-dir")                 \
     V(Lang, "lang")                              \
     V(UpdateSelfTo, "update-self-to")            \
     V(ArgDeleteFile, "delete-file")              \
@@ -538,7 +539,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.exitImmediately = true;
             continue;
         }
-        if (arg == Arg::Dir) {
+        if (arg == Arg::Dir || arg == Arg::InstallDir) {
             i.installDir = str::Dup(param);
             continue;
         }

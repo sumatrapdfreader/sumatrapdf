@@ -219,7 +219,7 @@ static void RemoveShortcutFile(int csidl) {
         return;
     }
     DeleteFileW(path);
-    logf("RemoveShorcuts: deleted '%s'\n", path);
+    logf(L"RemoveShortcutFile: deleted '%s'\n", path);
 }
 
 // those are shortcuts created by versions before 3.4
@@ -1052,7 +1052,8 @@ int RunInstaller() {
     const char* installerLogPath = nullptr;
     if (gCli->log) {
         installerLogPath = GetInstallerLogPath();
-        StartLogToFile(installerLogPath, true);
+        bool removeLog = !gCli->runInstallNow;
+        StartLogToFile(installerLogPath, removeLog);
     }
     logf("------------- Starting SumatraPDF installation\n");
 
