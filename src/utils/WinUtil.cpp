@@ -2562,13 +2562,14 @@ void HwndSendCommand(HWND hwnd, int cmdId) {
     SendMessageW(hwnd, WM_COMMAND, (WPARAM)cmdId, 0);
 }
 
-void HwndDestroyWindowSafe(HWND* hwnd) {
-    if (!hwnd || !*hwnd || !::IsWindow(*hwnd)) {
+void HwndDestroyWindowSafe(HWND* hwndPtr) {
+    auto hwnd = *hwndPtr;
+    *hwndPtr = nullptr;
+
+    if (!hwnd || !::IsWindow(hwnd)) {
         return;
     }
-    auto hwndTemp = *hwnd;
-    *hwnd = nullptr;
-    ::DestroyWindow(hwndTemp);
+    ::DestroyWindow(hwnd);
 }
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {

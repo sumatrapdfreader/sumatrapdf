@@ -60,6 +60,7 @@ struct Flags {
     bool testExtractPage = false;
     int testPageNo = 0;
     bool testApp = false;
+    char* dde = nullptr;
 
     bool crashOnOpen = false;
 

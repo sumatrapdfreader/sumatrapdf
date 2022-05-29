@@ -821,8 +821,8 @@ static const char* HandleGotoCmd(const char* cmd, DDEACK& ack) {
 DDE command: jump to a page in an already opened document.
 
 [GoToPage("<pdffilepath>",<page number>)]
-eg:
-[GoToPage("c:\file.pdf",37)]
+
+eg: [GoToPage("c:\file.pdf",37)]
 */
 static const char* HandlePageCmd(__unused HWND hwnd, const char* cmd, DDEACK& ack) {
     AutoFreeStr pdfFile;
@@ -860,8 +860,8 @@ static const char* HandlePageCmd(__unused HWND hwnd, const char* cmd, DDEACK& ac
 Set view mode and zoom level DDE command
 
 [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
-eg:
-[SetView("c:\file.pdf", "book view", -2)]
+
+eg: [SetView("c:\file.pdf", "book view", -2)]
 
 use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
 */
@@ -910,6 +910,31 @@ static const char* HandleSetViewCmd(const char* cmd, DDEACK& ack) {
     return next;
 }
 
+/*
+Handle all commands as defined in Commands.h
+eg: [CmdClose]
+*/
+static const char* HandleCmdCommand(HWND hwnd, const char* cmd, DDEACK& ack) {
+    AutoFreeStr cmdName;
+    const char* next = str::Parse(cmd, "[%s]", &cmdName);
+    if (!next) {
+        return nullptr;
+    }
+    int cmdId = GetCommandIdByName(cmdName);
+    if (cmdId < 0) {
+        return nullptr;
+    }
+    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    if (!win) {
+        logfa("HandleCmdCommand: not executing DDE becaues MainWindow for hwnd 0x%p not found\n", hwnd);
+        return nullptr;
+    }
+    logfa("HandleCmdCommand: sending %d (%s) command\n", cmdId, cmdName.Get());
+    SendMessageW(win->hwndFrame, WM_COMMAND, cmdId, 0);
+    ack.fAck = 1;
+    return next;
+}
+
 static void HandleDdeCmds(HWND hwnd, const char* cmd, DDEACK& ack) {
     while (!str::IsEmpty(cmd)) {
         { logf("HandleDdeCmds: '%s'\n", cmd); }
@@ -929,6 +954,9 @@ static void HandleDdeCmds(HWND hwnd, const char* cmd, DDEACK& ack) {
         }
         if (!nextCmd) {
             nextCmd = HandleSearchCmd(cmd, ack);
+        }
+        if (!nextCmd) {
+            nextCmd = HandleCmdCommand(hwnd, cmd, ack);
         }
         if (!nextCmd) {
             AutoFreeStr tmp;

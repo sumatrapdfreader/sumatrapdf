@@ -193,8 +193,23 @@ static bool InstanceInit() {
     return true;
 }
 
+static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
+    WCHAR* cmd = ToWstrTemp(cmdA);
+    if (targetHwnd) {
+        // try WM_COPYDATA first, as that allows targetting a specific window
+        size_t cbData = (str::Len(cmd) + 1) * sizeof(WCHAR);
+        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, (void*)cmd};
+        LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
+        if (res) {
+            return;
+        }
+        // fall-through to DDEExecute if wasn't handled
+    }
+    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+}
+
 // delegate file opening to a previously running instance by sending a DDE message
-static void OpenUsingDde(HWND targetWnd, const char* path, Flags& i, bool isFirstWin) {
+static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFirstWin) {
     char* fullPath = path::NormalizeTemp(path);
 
     str::Str cmd;
@@ -226,17 +241,10 @@ static void OpenUsingDde(HWND targetWnd, const char* path, Flags& i, bool isFirs
         cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullPath, i.search);
     }
 
-    WCHAR* cmdW = ToWstrTemp(cmd.Get());
-    if (!i.reuseDdeInstance) {
-        // try WM_COPYDATA first, as that allows targetting a specific window
-        size_t cbData = (str::Len(cmdW) + 1) * sizeof(WCHAR);
-        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, cmdW};
-        LRESULT res = SendMessageW(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
-        if (res) {
-            return;
-        }
+    if (i.reuseDdeInstance) {
+        targetHwnd = nullptr; // force DDEExecute
     }
-    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmdW);
+    SendMyselfDDE(cmd.Get(), targetHwnd);
 }
 
 static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
@@ -929,7 +937,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     bool showStartPage = false;
     bool restoreSession = false;
     HANDLE hMutex = nullptr;
-    HWND hPrevWnd = nullptr;
+    HWND existingHwnd = nullptr;
     TabInfo* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
 
@@ -1212,22 +1220,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     if (flags.printDialog || flags.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
-    } else if (flags.reuseDdeInstance) {
-        hPrevWnd = FindWindow(FRAME_CLASS_NAME, nullptr);
+    } else if (flags.reuseDdeInstance || flags.dde) {
+        existingHwnd = FindWindow(FRAME_CLASS_NAME, nullptr);
     } else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
-        hPrevWnd = FindPrevInstWindow(&hMutex);
+        existingHwnd = FindPrevInstWindow(&hMutex);
     }
 
-    if (hPrevWnd) {
+    if (flags.dde) {
+        logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde, existingHwnd);
+        SendMyselfDDE(flags.dde, existingHwnd);
+        // TODO: should exit?
+    }
+
+    if (existingHwnd) {
         size_t nFiles = flags.fileNames.size();
         // we allow -new-window on its own if no files given
-        if (nFiles > 0 && IsNoAdminToAdmin(hPrevWnd)) {
+        if (nFiles > 0 && IsNoAdminToAdmin(existingHwnd)) {
             goto Exit;
         }
         for (size_t n = 0; n < nFiles; n++) {
             char* path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);
-            OpenUsingDde(hPrevWnd, path, flags, isFirstWindow);
+            OpenUsingDDE(existingHwnd, path, flags, isFirstWindow);
         }
         if (0 == nFiles) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
@@ -1236,7 +1250,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             if (flags.inNewWindow) {
                 goto ContinueOpenWindow;
             } else {
-                HwndToForeground(hPrevWnd);
+                HwndToForeground(existingHwnd);
             }
         }
         goto Exit;

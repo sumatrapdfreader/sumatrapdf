@@ -15,25 +15,85 @@
 
 #include "utils/Log.h"
 
-Flags::~Flags() {
-    str::Free(printerName);
-    str::Free(printSettings);
-    str::Free(forwardSearchOrigin);
-    str::Free(destName);
-    str::Free(pluginURL);
-    str::Free(appdataDir);
-    str::Free(inverseSearchCmdLine);
-    str::Free(stressTestPath);
-    str::Free(stressTestFilter);
-    str::Free(stressTestRanges);
-    str::Free(lang);
-    str::Free(updateSelfTo);
-    str::Free(deleteFile);
-    str::Free(search);
+#define ARGS(V)                                  \
+    V(Silent, "s")                               \
+    V(Silent2, "silent")                         \
+    V(PrintToDefault, "print-to-default")        \
+    V(PrintDialog, "print-dialog")               \
+    V(Help, "h")                                 \
+    V(Help2, "?")                                \
+    V(Help3, "help")                             \
+    V(ExitWhenDone, "exit-when-done")            \
+    V(ExitOnPrint, "exit-on-print")              \
+    V(Restrict, "restrict")                      \
+    V(Presentation, "presentation")              \
+    V(FullScreen, "fullscreen")                  \
+    V(InvertColors, "invertcolors")              \
+    V(InvertColors2, "invert-colors")            \
+    V(Console, "console")                        \
+    V(Install, "install")                        \
+    V(UnInstall, "uninstall")                    \
+    V(WithFilter, "with-filter")                 \
+    V(WithSearch, "with-search")                 \
+    V(WithPreview, "with-preview")               \
+    V(Rand, "rand")                              \
+    V(Regress, "regress")                        \
+    V(Extract, "x")                              \
+    V(Tester, "tester")                          \
+    V(TestApp, "testapp")                        \
+    V(NewWindow, "new-window")                   \
+    V(Log, "log")                                \
+    V(CrashOnOpen, "crash-on-open")              \
+    V(ReuseInstance, "reuse-instance")           \
+    V(EscToExit, "esc-to-exit")                  \
+    V(ArgEnumPrinters, "enum-printers")          \
+    V(SleepMs, "sleep-ms")                       \
+    V(PrintTo, "print-to")                       \
+    V(PrintSettings, "print-settings")           \
+    V(InverseSearch, "inverse-search")           \
+    V(ForwardSearch1, "forward-search")          \
+    V(ForwardSearch2, "fwdsearch")               \
+    V(NamedDest, "nameddest")                    \
+    V(NamedDest2, "named-dest")                  \
+    V(Page, "page")                              \
+    V(View, "view")                              \
+    V(Zoom, "zoom")                              \
+    V(Scroll, "scroll")                          \
+    V(AppData, "appdata")                        \
+    V(Plugin, "plugin")                          \
+    V(StressTest, "stress-test")                 \
+    V(N, "n")                                    \
+    V(Max, "max")                                \
+    V(Render, "render")                          \
+    V(ExtractText, "extract-text")               \
+    V(Bench, "bench")                            \
+    V(Dir, "d")                                  \
+    V(InstallDir, "install-dir")                 \
+    V(Lang, "lang")                              \
+    V(UpdateSelfTo, "update-self-to")            \
+    V(ArgDeleteFile, "delete-file")              \
+    V(BgCol, "bgcolor")                          \
+    V(BgCol2, "bg-color")                        \
+    V(FwdSearchOffset, "fwdsearch-offset")       \
+    V(FwdSearchWidth, "fwdsearch-width")         \
+    V(FwdSearchColor, "fwdsearch-color")         \
+    V(FwdSearchPermanent, "fwdsearch-permanent") \
+    V(MangaMode, "manga-mode")                   \
+    V(ToEpub, "to-epub")                         \
+    V(Search, "search")                          \
+    V(AllUsers, "all-users")                     \
+    V(AllUsers2, "allusers")                     \
+    V(RunInstallNow, "run-install-now")          \
+    V(TestBrowser, "test-browser")               \
+    V(DDE, "dde")                                \
+    V(SetColorRange, "set-color-range")
 
-    // TODO: temporary
-    str::Free(toEpubPath);
-}
+#define MAKE_ARG(__arg, __name) __arg,
+#define MAKE_STR(__arg, __name) __name "\0"
+
+enum class Arg { Unknown = -1, ARGS(MAKE_ARG) };
+
+static const char* gArgNames = ARGS(MAKE_STR);
 
 static void EnumeratePrinters() {
     str::Str out;
@@ -180,85 +240,6 @@ static void ParseScrollValue(Point* scroll, const char* txt) {
         *scroll = Point(x, y);
     }
 }
-
-#define ARGS(V)                                  \
-    V(Silent, "s")                               \
-    V(Silent2, "silent")                         \
-    V(PrintToDefault, "print-to-default")        \
-    V(PrintDialog, "print-dialog")               \
-    V(Help, "h")                                 \
-    V(Help2, "?")                                \
-    V(Help3, "help")                             \
-    V(ExitWhenDone, "exit-when-done")            \
-    V(ExitOnPrint, "exit-on-print")              \
-    V(Restrict, "restrict")                      \
-    V(Presentation, "presentation")              \
-    V(FullScreen, "fullscreen")                  \
-    V(InvertColors, "invertcolors")              \
-    V(InvertColors2, "invert-colors")            \
-    V(Console, "console")                        \
-    V(Install, "install")                        \
-    V(UnInstall, "uninstall")                    \
-    V(WithFilter, "with-filter")                 \
-    V(WithSearch, "with-search")                 \
-    V(WithPreview, "with-preview")               \
-    V(Rand, "rand")                              \
-    V(Regress, "regress")                        \
-    V(Extract, "x")                              \
-    V(Tester, "tester")                          \
-    V(TestApp, "testapp")                        \
-    V(NewWindow, "new-window")                   \
-    V(Log, "log")                                \
-    V(CrashOnOpen, "crash-on-open")              \
-    V(ReuseInstance, "reuse-instance")           \
-    V(EscToExit, "esc-to-exit")                  \
-    V(ArgEnumPrinters, "enum-printers")          \
-    V(SleepMs, "sleep-ms")                       \
-    V(PrintTo, "print-to")                       \
-    V(PrintSettings, "print-settings")           \
-    V(InverseSearch, "inverse-search")           \
-    V(ForwardSearch1, "forward-search")          \
-    V(ForwardSearch2, "fwdsearch")               \
-    V(NamedDest, "nameddest")                    \
-    V(NamedDest2, "named-dest")                  \
-    V(Page, "page")                              \
-    V(View, "view")                              \
-    V(Zoom, "zoom")                              \
-    V(Scroll, "scroll")                          \
-    V(AppData, "appdata")                        \
-    V(Plugin, "plugin")                          \
-    V(StressTest, "stress-test")                 \
-    V(N, "n")                                    \
-    V(Max, "max")                                \
-    V(Render, "render")                          \
-    V(ExtractText, "extract-text")               \
-    V(Bench, "bench")                            \
-    V(Dir, "d")                                  \
-    V(InstallDir, "install-dir")                 \
-    V(Lang, "lang")                              \
-    V(UpdateSelfTo, "update-self-to")            \
-    V(ArgDeleteFile, "delete-file")              \
-    V(BgCol, "bgcolor")                          \
-    V(BgCol2, "bg-color")                        \
-    V(FwdSearchOffset, "fwdsearch-offset")       \
-    V(FwdSearchWidth, "fwdsearch-width")         \
-    V(FwdSearchColor, "fwdsearch-color")         \
-    V(FwdSearchPermanent, "fwdsearch-permanent") \
-    V(MangaMode, "manga-mode")                   \
-    V(ToEpub, "to-epub")                         \
-    V(Search, "search")                          \
-    V(AllUsers, "all-users")                     \
-    V(AllUsers2, "allusers")                     \
-    V(RunInstallNow, "run-install-now")          \
-    V(TestBrowser, "test-browser")               \
-    V(SetColorRange, "set-color-range")
-
-#define MAKE_ARG(__arg, __name) __arg,
-#define MAKE_STR(__arg, __name) __name "\0"
-
-enum class Arg { Unknown = -1, ARGS(MAKE_ARG) };
-
-static const char* gArgNames = ARGS(MAKE_STR);
 
 static Arg GetArg(const char* s) {
     if (!CouldBeArg(s)) {
@@ -559,6 +540,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.toEpubPath = str::Dup(param);
             continue;
         }
+        if (arg == Arg::DDE) {
+            i.dde = str::Dup(param);
+            continue;
+        }
         if (arg == Arg::Lang) {
             // TODO: remove the following deprecated options within
             // a release or two
@@ -611,4 +596,25 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.installDir = str::Dup(".");
         }
     }
+}
+
+Flags::~Flags() {
+    str::Free(printerName);
+    str::Free(printSettings);
+    str::Free(forwardSearchOrigin);
+    str::Free(destName);
+    str::Free(pluginURL);
+    str::Free(appdataDir);
+    str::Free(inverseSearchCmdLine);
+    str::Free(stressTestPath);
+    str::Free(stressTestFilter);
+    str::Free(stressTestRanges);
+    str::Free(lang);
+    str::Free(updateSelfTo);
+    str::Free(deleteFile);
+    str::Free(search);
+    str::Free(dde);
+
+    // TODO: temporary
+    str::Free(toEpubPath);
 }
