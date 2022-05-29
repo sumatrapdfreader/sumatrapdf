@@ -75,7 +75,26 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 	fz_font *best_font = NULL;
 	int size;
 
-	/* SumatraPDF */
+	for (custom = set->custom; custom; custom = custom->next)
+	{
+		if (!strcmp(family, custom->family))
+		{
+			int score =
+				1 * (is_bold == custom->is_bold) +
+				2 * (is_italic == custom->is_italic) +
+				4 * (is_small_caps == custom->is_small_caps);
+			if (score > best_score)
+			{
+				best_score = score;
+				best_font = custom->font;
+			}
+		}
+	}
+
+	/* SumatraPDF: return if perfect match, then try to load exact, if not available, return the best match */
+	if (best_score == 7)
+		return best_font;
+
 	fz_font* font = fz_load_system_font(ctx, family, is_bold, is_italic, 0);
 	if (font) {
 		fz_font_flags_t *flags = fz_font_flags(font);
@@ -105,21 +124,6 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 		return fz_load_html_default_font(ctx, set, family, is_bold, is_italic);
 
 	/* SumatraPDF */
-	for (custom = set->custom; custom; custom = custom->next)
-	{
-		if (!strcmp(family, custom->family))
-		{
-			int score =
-				1 * (is_bold == custom->is_bold) +
-				2 * (is_italic == custom->is_italic) +
-				4 * (is_small_caps == custom->is_small_caps);
-			if (score > best_score)
-			{
-				best_score = score;
-				best_font = custom->font;
-			}
-		}
-	}
 	if (best_font)
 		return best_font;
 
