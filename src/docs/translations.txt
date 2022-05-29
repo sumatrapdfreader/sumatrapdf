@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c6c7a7073123945d3c8cb1ef725ecee802b9e6f2
+cbcbe99ce16b6eef05cbe73b0a66afac876e9c94
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -76,6 +76,7 @@ br:&Tamanho real
 cn:实际大小(&A)
 co:&Dimensione attuale
 de:&Tatsächliche Größe
+es:&Tamaño actual
 eu:&Oraingo neurria
 fr:T&aille réelle
 it:Dimensione &attuale
@@ -223,6 +224,7 @@ br:&Voltar
 cn:上一视图(B)
 co:&Precedente
 de:&Vorherige Ansicht
+es:&Volver
 eu:A&tzera
 fr:Revenir (&b)
 it:&Indietro
@@ -238,6 +240,7 @@ br:&Ver como livro
 cn:书籍视图(&B)
 co:Cum’è un &libru
 de:&Buchansicht
+es:&Vista de libro
 eu:&Liburu ikuspegia
 it:&Libro
 nl:&Boek Tonen
@@ -314,6 +317,7 @@ br:&Fechar
 cn:关闭(&C)
 co:&Chjode
 de:&Schließen
+es:&Cerrar
 eu:It&xi
 fr:Fermer (&c)
 it:&Chiudi
@@ -426,6 +430,7 @@ br:&Copiar para área de transferência
 cn:复制到剪贴版(&C)
 co:&Cupià in u preme’papei
 de:&In Zwischenablage kopieren
+es:&Copiar a portapapeles
 eu:&Kopiatu gakora
 fr:&Copier dans le Presse-Papiers
 it:&Copia negli Appunti
@@ -605,6 +610,7 @@ br:&Página dupla
 cn:双页视图(&F)
 co:Pagina d&oppia
 de:&Doppelseite
+es:&Doble página
 it:Pagine a&ffiancate
 nl:&Gericht op
 pl:&Wiele stron
@@ -755,6 +761,7 @@ br:&Primeira página
 cn:第一页(&F)
 co:P&rima pagina
 de:&Erste Seite
+es:&Primera página
 eu:&Lehen orrialdea
 fr:Première page (&f)
 it:&Prima pagina
@@ -1072,6 +1079,7 @@ br:&Destacar
 cn:高亮(&H)
 co:&Sopralineà
 de:Text &hervorheben
+es:&Destacar
 eu:&Nabarmendu
 fr:Surligner (&h)
 it:Eviden&zia
@@ -1085,6 +1093,7 @@ br:&Última página
 cn:最后一页(&L)
 co:&Ultima pagina
 de:&Letzte Seite
+es:Última página
 eu:&Azken orrialdea
 fr:Dernière page (&l)
 it:&Ultima pagina
@@ -1295,6 +1304,7 @@ br:&Próxima página
 cn:下一页(&N)
 co:Pagina &seguente
 de:&Nächste Seite
+es:&Página siguiente
 eu:&Hurrengo orrialdea
 fr:Page Suiva&nte
 it:Pagina &successiva
@@ -1505,6 +1515,7 @@ br:&Abrir
 cn:打开(&O)...
 co:&Apre…
 de:&Öffnen...
+es:&Abrir...
 eu:&Ireki...
 fr:&Ouvrir
 it:&Apri
@@ -1773,6 +1784,7 @@ br:&Página anterior
 cn:上一页(&P)
 co:Pagina &precedente
 de:&Vorherige Seite
+es:&Página anterior
 eu:A&urreko orrialdea
 fr:Page &Précédente
 it:Pagina &precedente
@@ -2331,6 +2343,7 @@ br:&Página única
 cn:单页视图(&S)
 co:&Una pagina sola
 de:Einzel&seitenansicht
+es:&Una sola página
 fr:Page unique (&s)
 it:Pagina &singola
 nl:&Enkele Pagina
@@ -5265,6 +5278,7 @@ br:Paleta de comandos
 cn:命令面板
 co:Tavuletta di cumande
 de:Befehlspalette
+es:Paleta de comandos 
 et:Käsupalett
 eu:Agindu paleta
 fr:Palette de commande
@@ -5850,6 +5864,7 @@ br:Copiar para área de transferência
 cn:复制到剪贴版
 co:Cupià in u preme’papei
 de:In Zwischenablage kopieren
+es:Copiar a portapapeles
 et:Kopeeri lõikelauale
 eu:Kopiatu gakora
 fr:Copier dans le Presse-Papiers
@@ -6908,6 +6923,7 @@ br:Zoom &personalizado...
 cn:自定义缩放(&Z)...
 co:&Ingrandamentu persunalizatu…
 de:Benutzerdefinierter &Zoom...
+es:Zoom &personalizado...
 eu:Norbere &Zooma...
 fr:&Zoom personnalisé...
 it:&Zoom personalizzato
@@ -7486,6 +7502,7 @@ br:S&air
 cn:退出(&X)
 co:&Esce
 de:&Beenden
+es:S&alir
 eu:I&rten
 fr:Quitter (&x)
 it:&Esci
@@ -8028,6 +8045,7 @@ br:A&vançar
 cn:下一视图(&O)
 co:&Dopu
 de:&Nächste Ansicht
+es:A&vanzar
 eu:A&urrera
 fr:Avancer (&o)
 it:&Avanti
@@ -8043,6 +8061,7 @@ br:T&ela cheia
 cn:全屏(&U)
 co:&Screnu sanu
 de:&Vollbild
+es:P&antalla completa
 eu:Ikusleiho-o&soa
 fr:Plein écran (&u)
 it:Sc&hermo pieno
@@ -8071,7 +8090,7 @@ cz:Dvojstránky
 de:Doppelseite
 dk:Modstående
 el:Δύο σελίδες
-es:Doble pàgina
+es:Doble página
 et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
@@ -8887,6 +8906,7 @@ br:Locali&zar
 cn:查找(&D)...
 co:&Circà…
 de:S&uchen...
+es:Busca&r...
 eu:&Bilatu...
 fr:Rechercher... (&d)
 it:&Trova
@@ -9182,6 +9202,7 @@ br:Ajustar ao &conteúdo
 cn:适合内容(&C)
 co:&Adattà à u cuntenutu
 de:An &Inhalt anpassen
+es:Ajustar al &contenido
 eu:Finkatu &edukia
 it:Adatta al &contenuto
 nl:&Inhoud Aanpassen
@@ -9195,6 +9216,7 @@ br:Ajustar à &página
 cn:适合页面(&P)
 co:&Pagina sana
 de:An &Seite anpassen
+es:Ajustar a la &página
 eu:Finkatu &orrialdea
 it:Adatta alla &pagina
 nl:&Pagina Aanpassen
@@ -9208,6 +9230,7 @@ br:Ajustar pela &largura
 cn:适合宽度(&W)
 co:&Larghezza sana
 de:An Fenster&breite anpassen
+es:Ajustar al &ancho
 eu:Finkatu &zabalera
 it:Adatta a &larghezza
 nl:&Breedte Aanpassen
@@ -9882,6 +9905,7 @@ br:Informações da Fonte
 cn:显示字体信息
 co:Ottene infurmazioni di grafie
 de:Schriftarten-Infos erhalten
+es:Información sobre las fuentes
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
 fr:Obtenir les Informations sur les Polices
@@ -10497,6 +10521,7 @@ br:Instalar para todos os usuários
 cn:为所有用户安装
 co:Installà per tutti l’utilizatori
 de:Für alle Benutzer installieren
+es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
 fr:Installer pour tous les utilisateurs
 it:Installa per tutti gli utenti
@@ -11440,6 +11465,7 @@ br:Nova &janela
 cn:新建窗口(&W)
 co:Nova &finestra
 de:Neues &Fenster
+es:Nueva &ventana
 eu:&Leiho berria
 fr:Nouvelle fenêtre (&w)
 it:Nuova &finestra
@@ -12959,6 +12985,7 @@ br:Pá&gina
 cn:前往第 ... 页(&G)
 co:Pa&gina…
 de:&Seite...
+es:Pá&gina...
 eu:O&rrialdea...
 fr:Pa&ge...
 it:Pa&gina...
@@ -13657,6 +13684,7 @@ br:A&presentação
 cn:幻灯片(&E)
 co:&Presentazione
 de:Pr&äsentation
+es:Pr&esentación
 eu:Aur&kezpena
 fr:Prés&entation
 it:Presentazione
@@ -14258,6 +14286,7 @@ br:Re&nomear...
 cn:重命名(&N)...
 co:&Rinuminà…
 de:Umbe&nennen...
+es:Re&nombrar...
 eu:B&errizendatu...
 fr:Re&nommer...
 it:Ri&nomina...
@@ -14591,6 +14620,7 @@ br:Girar à &esquerda
 cn:逆时针旋转(&L)
 co:Girà à &manca
 de:&Gegen UZS drehen
+es:Rotar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fr:Rotation vers &la gauche
 it:Ruota a &sinistra
@@ -14675,6 +14705,7 @@ br:Girar à &direita
 cn:顺时针旋转(&R)
 co:Girà à &diritta
 de:Im &UZS drehen
+es:Rotar &a la derecha
 eu:Itzulikatu e&skuinera
 fr:Rotation vers la d&roite
 it:Ruota a &destra
@@ -14907,6 +14938,7 @@ br:Salvar A&talho
 cn:保存快捷方式(&H)...
 co:Arregistrà l’&accurtatoghju…
 de:Verknüpfung speichern...
+es:Guardar A&tajo...
 eu:Gorde &lastertekla...
 fr:Enregistrer le raccourci (&h)
 it:Sal&va scorciatoia...
@@ -15900,6 +15932,7 @@ br:Mostrar favo&ritos
 cn:显示书签(&M)
 co:Affissà l’&indette
 de:Lesezeichen anzeigen
+es:Mostrar favo&ritos
 fr:Afficher les &marque-pages
 it:Visualizza &Preferiti
 ja:ブックマークを表示(&M)
