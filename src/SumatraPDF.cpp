@@ -5458,18 +5458,9 @@ void ShowCrashHandlerMessage() {
     LaunchFile(url, nullptr, "open");
 }
 
-static TempStr GetSymbolsDirTemp() {
-    if (IsRunningInPortableMode()) {
-        /* Use the same path as the binary */
-        return GetExeDirTemp();
-    }
-    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    return path::JoinTemp(dir, kAppName, "crashinfo");
-}
-
 static void DownloadDebugSymbols() {
     // over-ride the default symbols directory to be more useful
-    char* symDir = GetSymbolsDirTemp();
+    char* symDir = AppGenDataFilenameTemp("crashinfo");
     SetSymbolsDir(symDir);
 
     bool ok = CrashHandlerDownloadSymbols();
