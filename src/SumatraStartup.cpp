@@ -493,7 +493,7 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
         return *gSafeAccTable;
     }
 
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
         return nullptr;
     }
@@ -1314,7 +1314,7 @@ ContinueOpenWindow:
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
         for (char* path : gDdeOpenOnStartup) {
-            if (restoreSession && FindWindowInfoByFile(path, false)) {
+            if (restoreSession && FindMainWindowByFile(path, false)) {
                 continue;
             }
             win = LoadOnStartup(path, flags, !win);

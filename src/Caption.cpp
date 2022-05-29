@@ -183,7 +183,7 @@ void DeleteCaption(CaptionInfo* caption) {
 }
 
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     switch (msg) {
         case WM_COMMAND:
@@ -293,7 +293,7 @@ void OpenSystemMenu(MainWindow* win) {
 
 static WNDPROC DefWndProcButton = nullptr;
 static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
     switch (msg) {

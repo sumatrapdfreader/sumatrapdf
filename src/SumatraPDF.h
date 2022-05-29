@@ -122,8 +122,8 @@ void ToggleFullScreen(MainWindow* win, bool presentation = false);
 void RelayoutWindow(MainWindow* win);
 
 // note: background tabs are only searched if focusTab is true
-MainWindow* FindWindowInfoByFile(const char* file, bool focusTab);
-MainWindow* FindWindowInfoBySyncFile(const char* file, bool focusTab);
+MainWindow* FindMainWindowByFile(const char* file, bool focusTab);
+MainWindow* FindMainWindowBySyncFile(const char* file, bool focusTab);
 TabInfo* FindTabByFile(const char* file);
 void SelectTabInWindow(TabInfo*);
 

@@ -133,7 +133,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
     TreeView_GetItem(hTV, &item);
 
     // Draw the page number right-aligned (if there is one)
-    MainWindow* win = FindWindowInfoByHwnd(hTV);
+    MainWindow* win = FindMainWindowByHwnd(hTV);
     TocItem* tocItem = (TocItem*)item.lParam;
     AutoFreeWstr label;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
@@ -428,7 +428,7 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     if (!str::StartsWith(path, tabPath)) {
         return;
     }
-    MainWindow* newWin = FindWindowInfoByFile(path, true);
+    MainWindow* newWin = FindMainWindowByFile(path, true);
     if (!newWin) {
         LoadArgs* args = new LoadArgs(path, win);
         newWin = LoadDocument(args);
@@ -452,7 +452,7 @@ static void SaveEmbeddedFile(TabInfo* tab, const char* srcPath, const char* file
 }
 
 static void TocContextMenu(ContextMenuEvent* ev) {
-    MainWindow* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     const char* filePath = win->ctrl->GetFilePath();
 
     POINT pt{};
@@ -698,7 +698,7 @@ LRESULT TocTreeClick(TreeClickEvent* ev) {
     if (!ev->treeItem) {
         return;
     }
-    MainWindow* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     CrashIf(!win);
     bool allowExternal = false;
     GoToTocTreeItem(win, ev->treeItem, allowExternal);
@@ -707,7 +707,7 @@ LRESULT TocTreeClick(TreeClickEvent* ev) {
 }
 
 static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
-    MainWindow* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -731,7 +731,7 @@ LRESULT TocTreeKeyDown2(TreeKeyDownEvent* ev) {
     if ((ev->keyCode == VK_PRIOR) || (ev->keyCode == VK_NEXT)) {
         // up/down in tree is not very useful, so instead
         // send it to frame so that it scrolls document instead
-        MainWindow* win = FindWindowInfoByHwnd(ev->hwnd);
+        MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
         // this is sent as WM_NOTIFY to TreeCtrl but for frame it's WM_KEYDOWN
         // alternatively, we could call FrameOnKeydown(ev->wp, ev->lp, false);
         SendMessageW(win->hwndFrame, WM_KEYDOWN, ev->wp, ev->lp);
@@ -744,7 +744,7 @@ LRESULT TocTreeKeyDown2(TreeKeyDownEvent* ev) {
         return 0;
     }
 
-    MainWindow* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     if (win->tabsVisible && IsCtrlPressed()) {
         TabsOnCtrlTab(win, IsShiftPressed());
         return 1;
@@ -784,7 +784,7 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
@@ -831,7 +831,7 @@ void UnsubclassToc(MainWindow* win) {
 // TODO: restore
 #if 0
 void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
-    MainWindow* win = FindWindowInfoByHwnd(ev->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
     CrashIf(!win);
     if (!win) {
         return;
@@ -847,7 +847,7 @@ void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
 // TODO: restore
 #if 0
 void TocTreeCharHandler(CharEvent* ev) {
-    MainWindow* win = FindWindowInfoByHwnd(ev->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
     CrashIf(!win);
     if (!win) {
         return;

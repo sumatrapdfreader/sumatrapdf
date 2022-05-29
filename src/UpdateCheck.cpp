@@ -308,7 +308,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     }
     updateInfo->hwndParent = hwndParent;
 
-    MainWindow* win = FindWindowInfoByHwnd(hwndParent);
+    MainWindow* win = FindMainWindowByHwnd(hwndParent);
     HWND hwndForNotif = win->hwndCanvas;
     if (!gForceAutoUpdate) {
         auto latestVer = updateInfo->latestVer;

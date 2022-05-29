@@ -643,7 +643,7 @@ static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
     MainWindow* win = nullptr;
     if (pdfFile) {
         // check if the PDF is already opened
-        win = FindWindowInfoByFile(pdfFile, !newWindow);
+        win = FindMainWindowByFile(pdfFile, !newWindow);
         // if not then open it
         if (newWindow || !win) {
             LoadArgs* args = new LoadArgs(pdfFile, !newWindow ? win : nullptr);
@@ -653,7 +653,7 @@ static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
         }
     } else {
         // check if any opened PDF has sync information for the source file
-        win = FindWindowInfoBySyncFile(srcFile, true);
+        win = FindMainWindowBySyncFile(srcFile, true);
         if (win && newWindow) {
             LoadArgs* args = new LoadArgs(win->currentTab->filePath, nullptr);
             win = LoadDocument(args);
@@ -700,7 +700,7 @@ static const char* HandleSearchCmd(const char* cmd, DDEACK& ack) {
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -752,13 +752,13 @@ static const char* HandleOpenCmd(const char* cmd, DDEACK& ack) {
     }
 
     if (win == nullptr) {
-        win = FindWindowInfoByFile(pdfFile, focusTab);
+        win = FindMainWindowByFile(pdfFile, focusTab);
     }
     if (newWindow || !win) {
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2315
         // open in the last active window
         if (win == nullptr) {
-            win = FindWindowInfoByHwnd(gLastActiveFrameHwnd);
+            win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
         }
         LoadArgs* args = new LoadArgs(pdfFile, win);
         win = LoadDocument(args);
@@ -800,7 +800,7 @@ static const char* HandleGotoCmd(const char* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -835,7 +835,7 @@ static const char* HandlePageCmd(__unused HWND hwnd, const char* cmd, DDEACK& ac
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -878,7 +878,7 @@ static const char* HandleSetViewCmd(const char* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    MainWindow* win = FindWindowInfoByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -924,7 +924,7 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, DDEACK& ack) {
     if (cmdId < 0) {
         return nullptr;
     }
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
         logfa("HandleCmdCommand: not executing DDE becaues MainWindow for hwnd 0x%p not found\n", hwnd);
         return nullptr;

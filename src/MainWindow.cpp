@@ -425,7 +425,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     fullPath = path::JoinTemp(fullPath, path);
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
-    MainWindow* newWin = FindWindowInfoByFile(fullPath, true);
+    MainWindow* newWin = FindMainWindowByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
         LoadArgs* args = new LoadArgs(fullPath, win);
@@ -611,7 +611,7 @@ bool WindowInfoStillValid(MainWindow* win) {
     return gWindows.Contains(win);
 }
 
-MainWindow* FindWindowInfoByHwnd(HWND hwnd) {
+MainWindow* FindMainWindowByHwnd(HWND hwnd) {
     for (MainWindow* win : gWindows) {
         if ((win->hwndFrame == hwnd) || ::IsChild(win->hwndFrame, hwnd)) {
             return win;
@@ -622,7 +622,7 @@ MainWindow* FindWindowInfoByHwnd(HWND hwnd) {
 
 // Find MainWindow using TabInfo. Diffrent than TabInfo->win in that
 // it validates that TabInfo is still valid
-MainWindow* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
+MainWindow* FindMainWindowByTabInfo(TabInfo* tabToFind) {
     for (MainWindow* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             if (tab == tabToFind) {
@@ -633,7 +633,7 @@ MainWindow* FindWindowInfoByTabInfo(TabInfo* tabToFind) {
     return nullptr;
 }
 
-MainWindow* FindWindowInfoByController(DocController* ctrl) {
+MainWindow* FindMainWindowByController(DocController* ctrl) {
     for (auto& win : gWindows) {
         for (auto& tab : win->tabs) {
             if (tab->ctrl == ctrl) {

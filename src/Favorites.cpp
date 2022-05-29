@@ -494,7 +494,7 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     }
 
     char* fp = fs->filePath;
-    MainWindow* existingWin = FindWindowInfoByFile(fp, true);
+    MainWindow* existingWin = FindMainWindowByFile(fp, true);
     if (existingWin) {
         int pageNo = fn->pageNo;
         uitask::Post([=] { GoToFavorite(existingWin, pageNo); });
@@ -758,14 +758,14 @@ void RememberFavTreeExpansionStateForAllWindows() {
 #if 0
 static void FavTreeItemClicked(TreeClickEvent* ev) {
     ev->didHandle = true;
-    MainWindow* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     CrashIf(!win);
     GoToFavForTreeItem(win, ev->treeItem);
 }
 #endif
 
 static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
-    MainWindow* win = FindWindowInfoByHwnd(ev->treeView->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -782,10 +782,10 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
 }
 
 static void FavTreeContextMenu(ContextMenuEvent* ev) {
-    MainWindow* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     TreeView* treeView = (TreeView*)ev->w;
     HWND hwnd = treeView->hwnd;
-    // MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    // MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     POINT pt{};
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
@@ -822,7 +822,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
 
 static WNDPROC gWndProcFavBox = nullptr;
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
         return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
     }

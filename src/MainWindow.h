@@ -249,9 +249,9 @@ void ClearFindBox(MainWindow*);
 void CreateMovePatternLazy(MainWindow*);
 void ClearMouseState(MainWindow*);
 bool IsRightDragging(MainWindow*);
-MainWindow* FindWindowInfoByTabInfo(TabInfo*);
-MainWindow* FindWindowInfoByHwnd(HWND);
+MainWindow* FindMainWindowByTabInfo(TabInfo*);
+MainWindow* FindMainWindowByHwnd(HWND);
 bool WindowInfoStillValid(MainWindow*);
-MainWindow* FindWindowInfoByController(DocController*);
+MainWindow* FindMainWindowByController(DocController*);
 
 extern Vec<MainWindow*> gWindows;

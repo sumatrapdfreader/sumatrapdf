@@ -528,7 +528,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             if (tab->highlighted != hl) {
                 if (tab->isDragging) {
                     // send notification if the highlighted tab is dragged over another
-                    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+                    MainWindow* win = FindMainWindowByHwnd(hwnd);
                     int tabNo = tab->highlighted;
                     uitask::Post([=] { TabNotification(win, kTabDrag, tabNo, hl); });
                 }
@@ -560,13 +560,13 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
                 // send request to close the tab
-                MainWindow* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindMainWindowByHwnd(hwnd);
                 int next = tab->nextTab;
                 uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
             } else if (tab->nextTab != -1) {
                 if (tab->nextTab != tab->selectedTabIdx) {
                     // send request to select tab
-                    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+                    MainWindow* win = FindMainWindowByHwnd(hwnd);
                     uitask::Post([=] { TabNotification(win, (UINT)TCN_SELCHANGING, -1, -1); });
                 }
                 tab->isDragging = true;
@@ -577,7 +577,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
         case WM_LBUTTONUP:
             if (tab->xClicked != -1) {
                 // send notification that the tab is closed
-                MainWindow* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindMainWindowByHwnd(hwnd);
                 int clicked = tab->xClicked;
                 uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
@@ -594,7 +594,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             {
                 tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
                 // send request to close the tab
-                MainWindow* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindMainWindowByHwnd(hwnd);
                 int next = tab->nextTab;
                 uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
             }
@@ -603,7 +603,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
         case WM_MBUTTONUP:
             if (tab->xClicked != -1) {
                 // send notification that the tab is closed
-                MainWindow* win = FindWindowInfoByHwnd(hwnd);
+                MainWindow* win = FindMainWindowByHwnd(hwnd);
                 int clicked = tab->xClicked;
                 uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
@@ -632,7 +632,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
         }
 
         case WM_SIZE: {
-            MainWindow* win = FindWindowInfoByHwnd(hwnd);
+            MainWindow* win = FindMainWindowByHwnd(hwnd);
             if (win) {
                 UpdateTabWidth(win);
             }

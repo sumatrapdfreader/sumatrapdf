@@ -1654,7 +1654,7 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // messages that don't require win
 
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     switch (msg) {
         case WM_DROPFILES:
             CrashIf(lp != 0 && lp != 1);

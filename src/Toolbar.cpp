@@ -276,7 +276,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     if (WM_CTLCOLORSTATIC == msg) {
         HWND hStatic = (HWND)lp;
         HDC hdc = (HDC)wp;
-        MainWindow* win = FindWindowInfoByHwnd(hStatic);
+        MainWindow* win = FindMainWindowByHwnd(hStatic);
         if (!win) {
             return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
         }
@@ -305,7 +305,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     }
     if (WM_COMMAND == msg) {
         HWND hEdit = (HWND)lp;
-        MainWindow* win = FindWindowInfoByHwnd(hEdit);
+        MainWindow* win = FindMainWindowByHwnd(hEdit);
         // "find as you type"
         if (EN_UPDATE == HIWORD(wp) && hEdit == win->hwndFindEdit && gGlobalPrefs->showToolbar) {
             FindTextOnThread(win, TextSearchDirection::Forward, false);
@@ -316,7 +316,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 
 static WNDPROC DefWndProcEditSearch = nullptr;
 static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win || !win->IsDocLoaded()) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -538,7 +538,7 @@ static void CreateInfoText(MainWindow* win, HFONT font) {
 
 static WNDPROC DefWndProcPageBox = nullptr;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win || !win->IsDocLoaded()) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }

@@ -378,7 +378,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
 static void ShowExtendedProperties(HWND hwnd) {
     PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
     if (pl) {
-        MainWindow* win = FindWindowInfoByHwnd(pl->hwndParent);
+        MainWindow* win = FindMainWindowByHwnd(pl->hwndParent);
         if (win && !pl->HasProperty(_TRA("Fonts:"))) {
             DestroyWindow(hwnd);
             ShowProperties(win->hwndFrame, win->ctrl, true);

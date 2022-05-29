@@ -353,7 +353,7 @@ void SelectTabInWindow(TabInfo* tab) {
 }
 
 // Find the first window showing a given PDF file
-MainWindow* FindWindowInfoByFile(const char* file, bool focusTab) {
+MainWindow* FindMainWindowByFile(const char* file, bool focusTab) {
     TabInfo* tab = FindTabByFile(file);
     if (!tab) {
         return nullptr;
@@ -365,7 +365,7 @@ MainWindow* FindWindowInfoByFile(const char* file, bool focusTab) {
 }
 
 // Find the first window that has been produced from <file>
-MainWindow* FindWindowInfoBySyncFile(const char* path, bool focusTab) {
+MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
     for (MainWindow* win : gWindows) {
         Vec<Rect> rects;
         uint page;
@@ -747,7 +747,7 @@ void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
 }
 
 void ControllerCallbackHandler::FocusFrame(bool always) {
-    if (always || !FindWindowInfoByHwnd(GetFocus())) {
+    if (always || !FindMainWindowByHwnd(GetFocus())) {
         SetFocus(win->hwndFrame);
     }
 }
@@ -1377,7 +1377,7 @@ static MainWindow* CreateWindowInfo() {
         return nullptr;
     }
 
-    CrashIf(nullptr != FindWindowInfoByHwnd(hwndFrame));
+    CrashIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
 
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
@@ -1560,7 +1560,7 @@ static void scheduleReloadTab(TabInfo* tab) {
     uitask::Post([=] {
         // tab might have been closed, so first ensure it's still valid
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
-        MainWindow* win = FindWindowInfoByTabInfo(tab);
+        MainWindow* win = FindMainWindowByTabInfo(tab);
         if (win == nullptr) {
             return;
         }
@@ -4039,7 +4039,7 @@ static bool FrameOnSysChar(MainWindow* win, WPARAM key) {
 static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     Splitter* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     Point pcur = HwndGetCursorPos(win->hwndFrame);
     int sidebarDx = pcur.x; // without splitter
@@ -4062,7 +4062,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
 static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     Splitter* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     Point pcur = HwndGetCursorPos(win->hwndCanvas);
     int tocDy = pcur.y; // without splitter
@@ -5052,7 +5052,7 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
 HWND gLastActiveFrameHwnd = nullptr;
 
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindWindowInfoByHwnd(hwnd);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     // DbgLogMsg("frame:", hwnd, msg, wp, lp);
     if (win && win->tabsInTitlebar) {
