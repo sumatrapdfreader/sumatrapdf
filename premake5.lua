@@ -309,6 +309,11 @@ workspace "SumatraPDF"
     language "C"
     optconf()
     defines { "_CRT_SECURE_NO_WARNINGS" }
+    filter {'platforms:x32'}
+      defines { "ARCH_X86_32=1", "ARCH_X86_64=0" }
+    filter {'platforms:x64 or x64_asan'}
+      defines { "ARCH_X86_32=0", "ARCH_X86_64=1" }
+    filter{}
     disablewarnings { "4057", "4090", "4100", "4152", "4201", "4244", "4245", "4456", "4457", "4701", "4703", "4706", "4996" }
     includedirs { "ext/dav1d/include/compat/msvc", "ext/dav1d", "ext/dav1d/include" }
      -- nasm.exe -I .\ext\libjpeg-turbo\simd\
@@ -319,14 +324,14 @@ workspace "SumatraPDF"
        buildmessage '%{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
        buildcommands {
-          '..\\bin\\nasm.exe -f win32 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+          '..\\bin\\nasm.exe -f win32 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
        }
     filter {}
     filter {'files:**.asm', 'platforms:x64 or x64_asan'}
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
       buildcommands {
-        '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+        '..\\bin\\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
       }
     filter {}
 

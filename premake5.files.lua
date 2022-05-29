@@ -670,6 +670,7 @@ end
 
 function utils_files()
   files_in_dir("src/utils", {
+    "AvifReader.*",
     "ApiHook.*",
     "Archive.*",
     "BaseUtil.*",
@@ -719,6 +720,7 @@ function utils_files()
     "Vec.h",
     "VecSegmented.h",
     "WebpReader.*",
+    "AvifReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
     "ZipUtil.*",

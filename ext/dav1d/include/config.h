@@ -13,9 +13,9 @@
 
 #define ARCH_X86 1
 
-#define ARCH_X86_32 0
-
-#define ARCH_X86_64 1
+/* those are defined in premake5.lua project "dav1d" */
+/* #define ARCH_X86_32 0 */
+/* #define ARCH_X86_64 1 */
 
 #define CONFIG_16BPC 1
 
