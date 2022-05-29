@@ -26,6 +26,13 @@
 
 Kind kindWnd = "wnd";
 
+static UINT_PTR gSubclassId = 0;
+
+UINT_PTR NextSubclassId() {
+    gSubclassId++;
+    return gSubclassId;
+}
+
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 

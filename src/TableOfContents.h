@@ -8,6 +8,7 @@ void LoadTocTree(MainWindow*);
 void UpdateTreeCtrlColors(MainWindow*);
 void UpdateTocSelection(MainWindow*, int currPageNo);
 void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
+void UnsubclassToc(MainWindow*);
 
 // shared with Favorites.cpp
 // void TocCustomizeTooltip(TreeItemGetTooltipEvent*);

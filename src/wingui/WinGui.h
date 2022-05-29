@@ -3,6 +3,8 @@
 
 //--- Wnd
 
+UINT_PTR NextSubclassId();
+
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 

@@ -5,12 +5,12 @@
 #include "utils/AvifReader.h"
 
 bool HasAvifSignature(ByteSlice) {
-  return false;
+    return false;
 }
 Size AvifSizeFromData(ByteSlice) {
-  return {};
+    return {};
 }
 
 Gdiplus::Bitmap* AvifImageFromData(ByteSlice) {
-  return nullptr;
+    return nullptr;
 }

@@ -783,12 +783,10 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
     MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
 }
 
-static WNDPROC gWndProcTocBox = nullptr;
-
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
     MainWindow* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return CallWindowProc(gWndProcTocBox, hwnd, msg, wp, lp);
+        return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
     LRESULT res = 0;
@@ -810,7 +808,24 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
     }
-    return CallWindowProc(gWndProcTocBox, hwnd, msg, wp, lp);
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+static void SubclassToc(MainWindow* win) {
+    HWND hwndTocBox = win->hwndTocBox;
+
+    if (win->tocBoxSubclassId == 0) {
+        win->tocBoxSubclassId = NextSubclassId();
+        BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
+        CrashIf(!ok);
+    }
+}
+
+void UnsubclassToc(MainWindow* win) {
+    if (win->tocBoxSubclassId != 0) {
+        RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
+        win->tocBoxSubclassId = 0;
+    }
 }
 
 // TODO: restore
@@ -893,10 +908,7 @@ void CreateToc(MainWindow* win) {
     CrashIf(!treeView->hwnd);;
     win->tocTreeView = treeView;
 
-    if (nullptr == gWndProcTocBox) {
-        gWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
+    SubclassToc(win);
 
     UpdateTreeCtrlColors(win);
 }
