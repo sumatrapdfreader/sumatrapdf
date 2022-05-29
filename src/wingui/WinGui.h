@@ -10,16 +10,16 @@ enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderSt
 
 struct Wnd;
 
-struct ContextMenuEvent2 {
+struct ContextMenuEvent {
     Wnd* w = nullptr;
 
     // mouse x,y position relative to the window
     Point mouseWindow{};
     // global (screen) mouse x,y position
-    Point mouseGlobal{};
+    Point mouseScreen{};
 };
 
-using ContextMenuHandler2 = std::function<void(ContextMenuEvent2*)>;
+using ContextMenuHandler2 = std::function<void(ContextMenuEvent*)>;
 
 struct CreateControlArgs {
     HWND parent = nullptr;
@@ -557,7 +557,7 @@ struct TreeClickEvent {
     // mouse x,y position relative to the window
     Point mouseWindow{};
     // global (screen) mouse x,y position
-    Point mouseGlobal{};
+    Point mouseScreen{};
 };
 
 using TreeClickHandler = std::function<LRESULT(TreeClickEvent*)>;
@@ -628,7 +628,7 @@ struct TreeView : Wnd {
     TVITEMW item{};
 };
 
-TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt);
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);
 
 struct TabsCreateArgs {
     HWND parent = nullptr;

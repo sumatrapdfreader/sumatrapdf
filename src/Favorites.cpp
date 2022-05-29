@@ -781,7 +781,7 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     GoToFavForTreeItem(win, ev->selectedItem);
 }
 
-static void FavTreeContextMenu(ContextMenuEvent2* ev) {
+static void FavTreeContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindWindowInfoByHwnd(ev->w->hwnd);
     TreeView* treeView = (TreeView*)ev->w;
     HWND hwnd = treeView->hwnd;

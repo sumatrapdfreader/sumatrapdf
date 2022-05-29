@@ -262,18 +262,18 @@ void Wnd::OnClose() {
     Destroy();
 }
 
-void Wnd::OnContextMenu(Point pt) {
+void Wnd::OnContextMenu(Point ptScreen) {
     if (!onContextMenu) {
         return;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
-    ContextMenuEvent2 ev;
+    ContextMenuEvent ev;
     ev.w = this;
-    ev.mouseGlobal = pt;
+    ev.mouseScreen = ptScreen;
 
-    POINT ptW{pt.x, pt.y};
-    if (pt.x != -1) {
+    POINT ptW{ptScreen.x, ptScreen.y};
+    if (ptScreen.x != -1) {
         MapWindowPoints(HWND_DESKTOP, hwnd, &ptW, 1);
     }
     ev.mouseWindow.x = ptW.x;
@@ -720,15 +720,9 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
 
         case WM_CONTEXTMENU: {
-            Point pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
-            HWND evHwnd = reinterpret_cast<HWND>(wparam);
-            if (evHwnd != hwnd) {
-                logfa("hwnd  : 0x%p\n", hwnd);
-                logfa("evHwnd: 0x%p\n", evHwnd);
-                ReportIf(true);
-            } else {
-                OnContextMenu(pt);
-            }
+            Point ptScreen = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+            // Note: HWND in wparam might be a child window
+            OnContextMenu(ptScreen);
             break;
         }
 
@@ -2808,7 +2802,7 @@ TreeItemState TreeView::GetItemState(TreeItem ti) {
 // if via right-click, selects the item under the cursor
 // in both cases can return null
 // sets pt to screen position (for context menu coordinates)
-TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
+TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
     TreeView* treeView = (TreeView*)args->w;
     TreeModel* tm = treeView->treeModel;
     HWND hwnd = treeView->hwnd;
@@ -2838,8 +2832,8 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent2* args, POINT& pt) {
         // context menu acts on this item so select it
         // for better visual feedback to the user
         treeView->SelectItem(ti);
-        pt.x = args->mouseGlobal.x;
-        pt.y = args->mouseGlobal.y;
+        pt.x = args->mouseScreen.x;
+        pt.y = args->mouseScreen.y;
     }
     return ti;
 }
@@ -2920,9 +2914,9 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         ev.isDblClick = (code == NM_DBLCLK);
 
         DWORD pos = GetMessagePos();
-        ev.mouseGlobal.x = GET_X_LPARAM(pos);
-        ev.mouseGlobal.y = GET_Y_LPARAM(pos);
-        POINT pt{ev.mouseGlobal.x, ev.mouseGlobal.y};
+        ev.mouseScreen.x = GET_X_LPARAM(pos);
+        ev.mouseScreen.y = GET_Y_LPARAM(pos);
+        POINT pt{ev.mouseScreen.x, ev.mouseScreen.y};
         if (pt.x != -1) {
             MapWindowPoints(HWND_DESKTOP, nmhdr->hwndFrom, &pt, 1);
         }

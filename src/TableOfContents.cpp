@@ -451,7 +451,7 @@ static void SaveEmbeddedFile(TabInfo* tab, const char* srcPath, const char* file
     str::Free(data.data());
 }
 
-static void TocContextMenu(ContextMenuEvent2* ev) {
+static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindWindowInfoByHwnd(ev->w->hwnd);
     const char* filePath = win->ctrl->GetFilePath();
 
@@ -461,7 +461,7 @@ static void TocContextMenu(ContextMenuEvent2* ev) {
     TreeModel* tm = treeView->treeModel;
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (ti == TreeModel::kNullItem) {
-        pt = {ev->mouseGlobal.x, ev->mouseGlobal.y};
+        pt = {ev->mouseScreen.x, ev->mouseScreen.y};
     }
     int pageNo = 0;
     TocItem* dti = (TocItem*)ti;
