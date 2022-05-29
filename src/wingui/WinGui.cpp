@@ -635,9 +635,17 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
                 OnPaint(hdc, &ps);
                 ::EndPaint(hwnd, &ps);
             } else {
+                // TODO: for now those are the same because LabelWithCloseWnd::OnPaint
+                // assumes ps is provided (and maybe others)
+                PAINTSTRUCT ps;
+                HDC hdc = ::BeginPaint(hwnd, &ps);
+                OnPaint(hdc, &ps);
+                ::EndPaint(hwnd, &ps);
+#if 0
                 HDC hdc = ::GetDC(hwnd);
                 OnPaint(hdc, nullptr);
                 ::ReleaseDC(hwnd, hdc);
+#endif
             }
             // No more drawing required
             return 0;
