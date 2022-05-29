@@ -722,8 +722,13 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_CONTEXTMENU: {
             Point pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
             HWND evHwnd = reinterpret_cast<HWND>(wparam);
-            CrashIf(evHwnd != hwnd);
-            OnContextMenu(pt);
+            if (evHwnd != hwnd) {
+                logfa("hwnd  : 0x%p\n", hwnd);
+                logfa("evHwnd: 0x%p\n", evHwnd);
+                ReportIf(true);
+            } else {
+                OnContextMenu(pt);
+            }
             break;
         }
 
