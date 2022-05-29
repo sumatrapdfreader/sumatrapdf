@@ -251,6 +251,8 @@ end
 
 function dav1d_files()
   files_in_dir("ext/dav1d/src", {
+    "lib.c",
+    "thread_task.c",
     "cdf.c",
     "cpu.c",
     "data.c",
@@ -272,6 +274,63 @@ function dav1d_files()
     "tables.c",
     "warpmv.c",
     "wedge.c",
+    "win32/thread.c",
+
+    "sumatra_bitdepth_8.c",
+    "sumatra_bitdepth_8_2.c",
+    "sumatra_bitdepth_16.c",
+    "sumatra_bitdepth_16_2.c",
+  })
+  files_in_dir("ext/dav1d/src/x86", {
+    "cpu.c",
+    "msac_init.c",
+    "refmvs_init.c",
+  })
+
+  files_in_dir("ext/dav1d/src/x86", {
+    "cpuid.asm",
+    "msac.asm",
+    "refmvs.asm",
+    "cdef_avx2.asm",
+    "itx_avx2.asm",
+    "looprestoration_avx2.asm",
+    "cdef_sse.asm",
+    "itx_sse.asm",
+    "cdef_avx512.asm",
+    "filmgrain_avx512.asm",
+    "ipred_avx512.asm",
+    "itx_avx512.asm",
+    "loopfilter_avx512.asm",
+    "looprestoration_avx512.asm",
+    "mc_avx512.asm",
+    "filmgrain_avx2.asm",
+    "ipred_avx2.asm",
+    "loopfilter_avx2.asm",
+    "mc_avx2.asm",
+    "filmgrain_sse.asm",
+    "ipred_sse.asm",
+    "loopfilter_sse.asm",
+    "looprestoration_sse.asm",
+    "mc_sse.asm",
+    "cdef16_avx512.asm",
+    "filmgrain16_avx512.asm",
+    "ipred16_avx512.asm",
+    "looprestoration16_avx512.asm",
+    "mc16_avx512.asm",
+    "cdef16_avx2.asm",
+    "filmgrain16_avx2.asm",
+    "ipred16_avx2.asm",
+    "itx16_avx2.asm",
+    "loopfilter16_avx2.asm",
+    "looprestoration16_avx2.asm",
+    "mc16_avx2.asm",
+    "cdef16_sse.asm",
+    "filmgrain16_sse.asm",
+    "ipred16_sse.asm",
+    "itx16_sse.asm",
+    "loopfilter16_sse.asm",
+    "looprestoration16_sse.asm",
+    "mc16_sse.asm",
   })
   files("ext/dav1d/include/common/*.h")
   files("ext/dav1d/include/dav1d/*.h")

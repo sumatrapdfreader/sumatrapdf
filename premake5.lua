@@ -298,12 +298,38 @@ workspace "SumatraPDF"
     includedirs { "ext/libwebp" }
     libwebp_files()
 
+  -- ARGS = "-Isrc\libdav1d_entrypoint.a.p" "-Isrc" "-I..\src" "-I." "-I.." "-Iinclude\dav1d" "-I..\include\dav1d" "-Iinclude" "-I..\include" "-I..\include\compat\msvc" "-DNDEBUG" "/MD" "/nologo" "/showIncludes" "/utf-8" "/W3" "/O2" "/Gw" "-D_POSIX_C_SOURCE=200112L" "-wd4028" "-wd4090" "-wd4996" "/Fdsrc\libdav1d_entrypoint.a.p\thread_task.c.pdb"
+
+  -- for asm files
+  -- build src/libdav1d.a.p/looprestoration_avx2.obj: CUSTOM_COMMAND_DEP ../src/x86/looprestoration_avx2.asm | C$:/Users/kjk/AppData/Local/bin/NASM/nasm.EXE
+  -- COMMAND = "C:\Users\kjk\AppData\Local\bin\NASM\nasm.EXE" "-f" "win64" "-I" "C:/Users/kjk/src/dav1d/src/" "-I" "C:/Users/kjk/src/dav1d/build/" "-MQ" "src/libdav1d.a.p/looprestoration_avx2.obj" "-MF" "src/libdav1d.a.p/looprestoration_avx2.obj.ndep" "../src/x86/looprestoration_avx2.asm" "-o" "src/libdav1d.a.p/looprestoration_avx2.obj"
+
   project "dav1d"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4057", "4090", "4100", "4201", "4244", "4245", "4456", "4701", "4703", "4706", "4996" }
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4057", "4090", "4100", "4152", "4201", "4244", "4245", "4456", "4457", "4701", "4703", "4706", "4996" }
     includedirs { "ext/dav1d/include/compat/msvc", "ext/dav1d", "ext/dav1d/include" }
+     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
+    -- -I .\ext\libjpeg-turbo\win\ -f win32
+    -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
+    -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
+    filter {'files:**.asm', 'platforms:x32'}
+       buildmessage '%{file.relpath}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
+       buildcommands {
+          '..\\bin\\nasm.exe -f win32 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+       }
+    filter {}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
+      buildmessage '%{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
+      buildcommands {
+        '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+      }
+    filter {}
+
     dav1d_files()
 
   project "zlib-ng"
