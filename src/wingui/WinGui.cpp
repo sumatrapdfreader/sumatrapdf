@@ -1188,8 +1188,7 @@ Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
     auto* b = new Button();
     b->Create(args);
 
-    RECT r;
-    GetClientRect(parent, &r);
+    RECT r = ClientRECT(parent);
     Size size = b->GetIdealSize();
     int margin = DpiScale(parent, kButtonMargin);
     int x = RectDx(r) - size.dx - margin;
@@ -1210,8 +1209,7 @@ Button* CreateDefaultButton(HWND parent, const char* s) {
     auto* b = new Button();
     b->Create(args);
 
-    RECT r;
-    GetClientRect(parent, &r);
+    RECT r = ClientRECT(parent);
     Size size = b->GetIdealSize();
     int margin = DpiScale(parent, kButtonMargin);
     int x = RectDx(r) - size.dx - margin;
@@ -2252,8 +2250,7 @@ void Webview2Wnd::UpdateWebviewSize() {
     if (controller == nullptr) {
         return;
     }
-    RECT bounds;
-    GetClientRect(hwnd, &bounds);
+    RECT bounds = ClientRECT(hwnd);
     controller->put_Bounds(bounds);
 }
 
@@ -3115,7 +3112,7 @@ void TabsCtrl::MaybeUpdateTooltip() {
         WCHAR* ws = ToWstrTemp(currTooltipText.Get());
         ti.lpszText = ws;
         ti.uId = 0;
-        GetClientRect(hwnd, &ti.rect);
+        ti.rect = ClientRECT(hwnd);
         SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
     }
 }
@@ -3141,7 +3138,7 @@ void TabsCtrl::MaybeUpdateTooltipText(int idx) {
     ti.uFlags = TTF_SUBCLASS;
     ti.lpszText = currTooltipText.Get();
     ti.uId = 0;
-    GetClientRect(hwnd, &ti.rect);
+    ti.rect = ClientRECT(hwnd);
     SendMessage(ttHwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
 #endif
     // SendMessage(ttHwnd, TTM_UPDATE, 0, 0);

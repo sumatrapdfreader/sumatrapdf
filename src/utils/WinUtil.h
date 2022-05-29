@@ -15,15 +15,15 @@ POINT MakePoint(long x, long y);
 SIZE MakeSize(long dx, long dy);
 RECT MakeRect(long x, long y, long dx, long dy);
 
-RECT GetClientRect(HWND);
-Rect ClientRect(HWND hwnd);
-Rect WindowRect(HWND hwnd);
-Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo);
+RECT ClientRECT(HWND);
+Rect ClientRect(HWND);
+Rect WindowRect(HWND);
+Rect MapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
 
-void EditSelectAll(HWND hwnd);
-int EditIdealDy(HWND hwnd, bool hasBorder, int lines = 1);
+void EditSelectAll(HWND);
+int EditIdealDy(HWND, bool hasBorder, int lines = 1);
 
-void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt);
+void ListBox_AppendString_NoSort(HWND, const WCHAR*);
 
 bool IsValidHandle(HANDLE);
 bool SafeCloseHandle(HANDLE*);

@@ -101,7 +101,7 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
     return dy;
 }
 
-void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt) {
+void ListBox_AppendString_NoSort(HWND hwnd, const WCHAR* txt) {
     ListBox_InsertString(hwnd, -1, txt);
 }
 
@@ -122,15 +122,15 @@ void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc) {
     wcex.lpfnWndProc = wndproc;
 }
 
-RECT GetClientRect(HWND hwnd) {
+RECT ClientRECT(HWND hwnd) {
     RECT r;
-    GetClientRect(hwnd, &r);
+    ::GetClientRect(hwnd, &r);
     return r;
 }
 
 Rect ClientRect(HWND hwnd) {
     RECT rc{};
-    GetClientRect(hwnd, &rc);
+    ::GetClientRect(hwnd, &rc);
     return Rect(rc);
 }
 
