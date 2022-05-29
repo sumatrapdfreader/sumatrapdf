@@ -715,7 +715,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     }
 
     char* filePath = str::Dup(win->ctrl->GetFilePath());
-    win->ctrl->CreateThumbnail(Size(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
+    win->ctrl->CreateThumbnail(Size(kThumbnailDx, kThumbnailDy), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
                 SetThumbnail(gFileHistory.Find(filePath, nullptr), bmp);
@@ -4344,6 +4344,75 @@ void ShowLogFileSmart() {
     }
 }
 
+void ClearHistory(MainWindow* win) {
+    if (!win) {
+        // TODO: find current active MainWindow ?
+        return;
+    }
+
+    // TODO: what is relation between gFileHistory and gGlobalPrefs->fileStates?
+    int nFiles = 0;
+    if (gFileHistory.states) {
+        nFiles = gFileHistory.states->Size();
+    }
+    gFileHistory.Clear(false);
+
+    /*
+    Vec<FileState*>* files = gGlobalPrefs->fileStates;
+    int nFiles = 0;
+    if (files) {
+        nFiles = files->Size();
+        DeleteVecMembers(*files);
+        delete files;
+    }
+    gGlobalPrefs->fileStates = new Vec<FileState*>();
+    if (gGlobalPrefs->sessionData) {
+        DeleteVecMembers(*gGlobalPrefs->sessionData);
+        delete gGlobalPrefs->sessionData;
+    }
+    gGlobalPrefs->sessionData = new Vec<SessionData*>();
+    */
+
+    prefs::Save();
+
+    // TODO: translate this message
+    const char* msg = "Clearing history...";
+    auto notifWnd = ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
+
+    DeleteThumbnailCacheDirectory();
+    char* symDir = AppGenDataFilenameTemp("crashinfo");
+    dir::RemoveAll(symDir);
+
+    RemoveNotification(notifWnd);
+    ::InvalidateRect(win->hwndCanvas, nullptr, true);
+    ::UpdateWindow(win->hwndCanvas);
+    // TODO: translate this message
+    char* msg2 = str::Format("Cleared history of %d files, deleted thumbnails.", nFiles);
+    ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
+    str::Free(msg2);
+
+    // TODO: deletion takes time so run it async
+
+    /*
+    RunAsync([nFiles, win, notifWnd]() {
+        DeleteThumbnailCacheDirectory();
+        char* symDir = AppGenDataFilenameTemp("crashinfo");
+        dir::RemoveAll(symDir);
+
+        uitask::Post([nFiles, win, notifWnd]() {
+            RemoveNotification(notifWnd);
+            ::InvalidateRect(win->hwndCanvas, nullptr, true);
+            ::UpdateWindow(win->hwndCanvas);
+            // TODO: translate this message
+            char* msg = str::Format("Cleared history of %d files, deleted thumbnails.", nFiles);
+            ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
+            str::Free(msg);
+        });
+        DestroyTempAllocator();
+    });
+    */
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
@@ -4487,6 +4556,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdCommandPalette:
             RunCommandPallette(win);
+            break;
+
+        case CmdClearHistory:
+            ClearHistory(win);
             break;
 
         case CmdShowLog:

@@ -490,6 +490,18 @@ NotificationWnd* ShowNotification(NotificationCreateArgs& args) {
     return wnd;
 }
 
+// show a temporary notification that will go away after a timeout
+NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs) {
+    if (timeoutMs <= 0) {
+        timeoutMs = kNotifDefaultTimeOut;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = hwnd;
+    args.msg = msg;
+    args.timeoutMs = timeoutMs;
+    return ShowNotification(args);
+}
+
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutMs, bool highlight) {
     wnd->UpdateMessage(msg, timeoutMs, highlight);
 }

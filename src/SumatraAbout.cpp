@@ -667,13 +667,13 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     fileHistory.GetFrequencyOrder(list);
 
     int dx = (rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) /
-             (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X);
+             (kThumbnailDx + DOCLIST_MARGIN_BETWEEN_X);
     int width = limitValue(dx, 1, DOCLIST_MAX_THUMBNAILS_X);
     int dy = (rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
-             (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y);
+             (kThumbnailDy + DOCLIST_MARGIN_BETWEEN_Y);
     int height = std::min(dy, kFileHistoryMaxFrequent / width);
     int x = rc.x + DOCLIST_MARGIN_LEFT +
-            (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
+            (rc.dx - width * kThumbnailDx - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
              DOCLIST_MARGIN_RIGHT) /
                 2;
     Point offset(x, rc.y + DOCLIST_MARGIN_TOP);
@@ -707,8 +707,8 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             FileState* state = list.at(h * width + w);
 
-            Rect page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
-                      offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), THUMBNAIL_DX, THUMBNAIL_DY);
+            Rect page(offset.x + w * (kThumbnailDx + DOCLIST_MARGIN_BETWEEN_X),
+                      offset.y + h * (kThumbnailDy + DOCLIST_MARGIN_BETWEEN_Y), kThumbnailDx, kThumbnailDy);
             if (isRtl) {
                 page.x = rc.dx - page.x - page.dx;
             }
@@ -718,9 +718,9 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             if (loadOk && state->thumbnail) {
                 Size thumbSize = state->thumbnail->Size();
-                if (thumbSize.dx != THUMBNAIL_DX || thumbSize.dy != THUMBNAIL_DY) {
-                    page.dy = thumbSize.dy * THUMBNAIL_DX / thumbSize.dx;
-                    page.y += THUMBNAIL_DY - page.dy;
+                if (thumbSize.dx != kThumbnailDx || thumbSize.dy != kThumbnailDy) {
+                    page.dy = thumbSize.dy * kThumbnailDx / thumbSize.dx;
+                    page.y += kThumbnailDy - page.dy;
                 }
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
@@ -764,7 +764,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     /* render bottom links */
     rc.y +=
-        DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
+        DOCLIST_MARGIN_TOP + height * kThumbnailDy + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
 
     col = GetAppColor(AppColor::MainWindowLink);

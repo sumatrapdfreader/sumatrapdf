@@ -80,6 +80,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdToggleMenuBar,
     CmdToggleToolbar,
     CmdShowLog,
+    CmdClearHistory,
 };
 
 // for those commands do not activate main window

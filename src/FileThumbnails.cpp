@@ -46,10 +46,15 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     return res;
 }
 
+void DeleteThumbnailCacheDirectory() {
+    char* thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    dir::RemoveAll(thumbsDir);
+}
+
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
-    char* thumbsPath = AppGenDataFilenameTemp(kThumbnailsDirName);
-    char* pattern = path::JoinTemp(thumbsPath, kPngExt);
+    char* thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    char* pattern = path::JoinTemp(thumbsDir, kPngExt);
 
     StrVec filePaths;
 
@@ -116,6 +121,7 @@ bool HasThumbnail(FileState* ds) {
     return ds->thumbnail != nullptr;
 }
 
+// takes ownership of bmp
 void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
     CrashIf(bmp && bmp->Size().IsEmpty());
     if (!ds || !bmp || bmp->Size().IsEmpty()) {

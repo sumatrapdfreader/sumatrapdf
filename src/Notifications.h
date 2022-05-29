@@ -8,8 +8,8 @@ extern Kind kNotifGroupActionResponse;
 
 using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
 
-// 3 seconds
-constexpr const int kNotifDefaultTimeOut = 1000 * 3;
+constexpr const int kNotifDefaultTimeOut = 1000 * 3; // 3 seconds
+constexpr const int kNotif5SecsTimeOut = 1000 * 5;
 
 struct NotificationCreateArgs {
     HWND hwndParent = nullptr;
@@ -24,6 +24,7 @@ struct NotificationCreateArgs {
 
 NotificationWnd* ShowNotification(NotificationCreateArgs& args);
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
+NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
 void RemoveNotification(NotificationWnd*);
 void RemoveNotificationsForGroup(HWND hwnd, Kind);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
