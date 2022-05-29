@@ -865,7 +865,12 @@ char* EngineImageDir::GetPageLabel(int pageNo) const {
 
     const char* path = pageFileNames.at(pageNo - 1);
     const char* fileName = path::GetBaseNameTemp(path);
-    size_t n = path::GetExtTemp(fileName) - fileName;
+    char* ext = path::GetExtTemp(fileName);
+    if (!ext) {
+        return str::Dup(fileName);
+    }
+    auto pos = str::Find(fileName, ext);
+    size_t n = pos - fileName;
     return str::Dup(fileName, n);
 }
 
