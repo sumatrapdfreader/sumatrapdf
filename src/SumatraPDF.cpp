@@ -2941,7 +2941,7 @@ static char* BrowseForFolderTemp(HWND hwnd, const char* initialFolder, const cha
     return ToUtf8Temp(dirW);
 }
 
-static void OnMenuOpenFolder(MainWindow* win) {
+static void OpenFolder(MainWindow* win) {
     HWND hwnd = win->hwndFrame;
     char* dir = BrowseForFolderTemp(hwnd, nullptr, "Select folder with PDF files");
     if (!dir) {
@@ -4525,7 +4525,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdOpenFolder:
-            OnMenuOpenFolder(win);
+            OpenFolder(win);
             break;
 
         case CmdShowInFolder:

@@ -329,7 +329,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;
     char* filePath = (char*)engine->FileName();
-    tocWrapper->engineFilePath = filePath;
+    tocWrapper->engineFilePath = str::Dup(filePath);
     tocWrapper->nPages = nPages;
     tocWrapper->pageNo = 1;
     if (tocFileRoot) {
@@ -425,13 +425,25 @@ EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     return engine;
 }
 
+// clang-format off
+// list of supported file extensions for which SumatraPDF.exe will
+// be registered as a candidate for the Open With dialog's suggestions
+static SeqStrings gSupportedExtsForMulti = 
+    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
+    ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
+    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
+    ".jpg\0.jpeg\0.tga\0.gif\0";
+// clang-format on
+
+static bool isSupportedForMultis(const char* path) {
+    char* ext = path::GetExtTemp(path);
+    int idx = seqstrings::StrToIdxIS(gSupportedExtsForMulti, ext);
+    return idx >= 0;
+};
+
 EngineBase* CreateEngineMultiFromDirectory(const char* dir) {
-    auto isValidFunc = [](const char* path) -> bool {
-        bool isValid = str::EndsWithI(path, ".pdf");
-        return isValid;
-    };
     StrVec files;
-    bool ok = CollectFilesFromDirectory(dir, files, isValidFunc);
+    bool ok = CollectFilesFromDirectory(dir, files, isSupportedForMultis);
     if (!ok) {
         // TODO: show error message
         return nullptr;
