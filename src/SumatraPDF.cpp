@@ -5325,6 +5325,11 @@ void GetProgramInfo(str::Str& s) {
     }
     if (IsProcess64()) {
         s.Append(" 64-bit");
+    } else {
+        s.Append(" 32-bit");
+        if (IsRunningInWow64()) {
+            s.Append(" Wow64");
+        }
     }
     if (gIsDebugBuild) {
         if (!str::Find(s.Get(), " (dbg)")) {
