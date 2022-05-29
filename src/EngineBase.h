@@ -261,13 +261,6 @@ extern Kind kindTocDjvu;
 struct TocItem {
     HTREEITEM hItem = nullptr;
 
-    // each engine has a raw representation of the toc item which
-    // we want to access. Not (yet) supported by all engines
-    // other values come from parsing this value
-    Kind kindRaw = nullptr;
-    char* rawVal1 = nullptr;
-    char* rawVal2 = nullptr;
-
     TocItem* parent = nullptr;
 
     // the item's visible label

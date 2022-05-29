@@ -2306,9 +2306,10 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
 
     while (outline) {
         char* name = nullptr;
+        WCHAR* nameW = nullptr;
         if (outline->title) {
             // must convert to Unicode because PdfCleanString() doesn't work on utf8
-            WCHAR* nameW = ToWstr(outline->title);
+            nameW = ToWstr(outline->title);
             PdfCleanStringInPlace(nameW);
             name = ToUtf8(nameW);
             str::Free(nameW);
@@ -2320,19 +2321,13 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         int pageNo = FzGetPageNo(ctx, _doc, nullptr, outline);
 
         IPageDestination* dest = nullptr;
-        Kind kindRaw = nullptr;
+        Kind kind = nullptr;
         if (isAttachment) {
-            kindRaw = kindTocFzOutlineAttachment;
             dest = DestFromAttachment(this, outline);
         } else {
-            kindRaw = kindTocFzOutline;
             dest = NewPageDestinationMupdf(ctx, _doc, nullptr, outline);
         }
-
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
-        item->kindRaw = kindRaw;
-        item->rawVal1 = str::Dup(outline->title);
-        item->rawVal2 = str::Dup(outline->uri);
 
         free(name);
         item->isOpenDefault = outline->is_open;

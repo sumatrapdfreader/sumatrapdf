@@ -101,8 +101,6 @@ TocItem::~TocItem() {
         next = tmp;
     }
     str::Free(title);
-    str::Free(rawVal1);
-    str::Free(rawVal2);
     str::Free(engineFilePath);
 }
 
