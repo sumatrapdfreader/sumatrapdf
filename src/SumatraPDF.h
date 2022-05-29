@@ -164,7 +164,7 @@ struct LoadArgs {
 };
 
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload = false);
-MainWindow* CreateAndShowWindowInfo(SessionData* data = nullptr);
+MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);
 
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
@@ -175,9 +175,9 @@ void EnterFullScreen(MainWindow* win, bool presentation = false);
 void ExitFullScreen(MainWindow* win);
 void SetCurrentLang(const char* langCode);
 void RebuildMenuBarForWindow(MainWindow* win);
-void DeleteWindowInfo(MainWindow* win);
+void DeleteMainWindow(MainWindow* win);
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
-void WindowInfoRerender(MainWindow* win, bool includeNonClientArea = false);
+void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 bool DocIsSupportedFileType(Kind);

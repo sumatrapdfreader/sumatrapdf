@@ -1274,7 +1274,7 @@ ContinueOpenWindow:
 
     if (restoreSession) {
         for (SessionData* data : *gGlobalPrefs->sessionData) {
-            win = CreateAndShowWindowInfo(data);
+            win = CreateAndShowMainWindow(data);
             for (TabState* state : *data->tabStates) {
                 // TODO: if prefs::Save() is called, it deletes gGlobalPrefs->sessionData
                 // we're currently iterating (happened e.g. if the file is deleted)
@@ -1340,7 +1340,7 @@ ContinueOpenWindow:
     CreateSumatraAcceleratorTable();
 
     if (!win) {
-        win = CreateAndShowWindowInfo();
+        win = CreateAndShowMainWindow();
         if (!win) {
             goto Exit;
         }
@@ -1398,7 +1398,7 @@ Exit:
 
     FreeExternalViewers();
     while (gWindows.size() > 0) {
-        DeleteWindowInfo(gWindows.at(0));
+        DeleteMainWindow(gWindows.at(0));
     }
 
     DeleteCachedCursors();

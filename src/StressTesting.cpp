@@ -916,7 +916,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
         MainWindow** windows = AllocArray<MainWindow*>(n);
         windows[0] = win;
         for (int j = 1; j < n; j++) {
-            windows[j] = CreateAndShowWindowInfo();
+            windows[j] = CreateAndShowMainWindow();
             if (!windows[j]) {
                 return;
             }

@@ -506,7 +506,7 @@ static void TextAlignmentSelectionChanged(EditAnnotationsWindow* ew) {
     int newQuadding = idx;
     SetQuadding(ew->annot, newQuadding);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -530,7 +530,7 @@ static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
     const char* font = seqstrings::IdxToStr(gFontNames, idx);
     SetDefaultAppearanceTextFont(ew->annot, font);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -552,7 +552,7 @@ static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingE
     AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
     ew->staticTextSize->SetText(s.Get());
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -571,7 +571,7 @@ static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -595,7 +595,7 @@ static void BorderWidthChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEv
     AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
     ew->staticBorder->SetText(s.Get());
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoLineStartEnd(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -623,7 +623,7 @@ static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
     int newVal = idx;
     start = newVal;
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
@@ -634,7 +634,7 @@ static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
     int newVal = idx;
     end = newVal;
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -669,7 +669,7 @@ static void IconSelectionChanged(EditAnnotationsWindow* ew) {
     auto item = ew->dropDownIcon->items.at(idx);
     SetIconName(ew->annot, item);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -697,7 +697,7 @@ static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto col = GetDropDownColor(item);
     SetColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -718,7 +718,7 @@ static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto col = GetDropDownColor(item);
     SetInteriorColor(ew->annot, col);
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void DoOpacity(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -747,7 +747,7 @@ static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent*
     AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
     ew->staticOpacity->SetText(s.Get());
     EnableSaveIfAnnotationsChanged(ew);
-    WindowInfoRerender(ew->tab->win);
+    MainWindowRerender(ew->tab->win);
 }
 
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo) {
@@ -844,7 +844,7 @@ void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annota
         UpdateUIForSelectedAnnotation(ew, 0);
         ew->listBox->SetCurrentSelection(0);
     }
-    WindowInfoRerender(tab->win);
+    MainWindowRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);
 }
 
@@ -858,8 +858,8 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
     UpdateUIForSelectedAnnotation(this, itemNo);
 }
 
-static UINT_PTR gWindowInfoRerenderTimer = 0;
-static MainWindow* gWindowInfoForRender = nullptr;
+static UINT_PTR gMainWindowRerenderTimer = 0;
+static MainWindow* gMainWindowForRender = nullptr;
 
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* ew) {
@@ -868,21 +868,21 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 
     MainWindow* win = ew->tab->win;
-    if (gWindowInfoRerenderTimer != 0) {
+    if (gMainWindowRerenderTimer != 0) {
         // logf("ContentsChanged: killing existing timer for re-render of MainWindow\n");
-        KillTimer(win->hwndCanvas, gWindowInfoRerenderTimer);
-        gWindowInfoRerenderTimer = 0;
+        KillTimer(win->hwndCanvas, gMainWindowRerenderTimer);
+        gMainWindowRerenderTimer = 0;
     }
     UINT timeoutInMs = 1000;
-    gWindowInfoForRender = win;
-    gWindowInfoRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
-        if (WindowInfoStillValid(gWindowInfoForRender)) {
+    gMainWindowForRender = win;
+    gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
+        if (MainWindowStillValid(gMainWindowForRender)) {
             // logf("ContentsChanged: re-rendering MainWindow\n");
-            WindowInfoRerender(gWindowInfoForRender);
+            MainWindowRerender(gMainWindowForRender);
         } else {
             // logf("ContentsChanged: NOT re-rendering MainWindow because is not valid anymore\n");
         }
-        gWindowInfoRerenderTimer = 0;
+        gMainWindowRerenderTimer = 0;
     });
 }
 

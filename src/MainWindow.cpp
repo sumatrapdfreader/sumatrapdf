@@ -607,7 +607,7 @@ bool IsRightDragging(MainWindow* win) {
     return win->dragRightClick;
 }
 
-bool WindowInfoStillValid(MainWindow* win) {
+bool MainWindowStillValid(MainWindow* win) {
     return gWindows.Contains(win);
 }
 

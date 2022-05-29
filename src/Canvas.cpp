@@ -247,7 +247,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         // logf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
         // logf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
         SetRect(annot, r);
-        WindowInfoRerender(win);
+        MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
         StartEditAnnotations(win->currentTab, annot);
     } else {
@@ -1528,7 +1528,7 @@ void RepaintAsync(MainWindow* win, int delayInMs) {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
     uitask::Post([win, delayInMs] {
-        if (!WindowInfoStillValid(win)) {
+        if (!MainWindowStillValid(win)) {
             return;
         }
         if (!delayInMs) {
@@ -1644,7 +1644,7 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
         // The first dropped document may override the current window
         LoadArgs* args = new LoadArgs(path, win);
         if (isShift && !win) {
-            win = CreateAndShowWindowInfo(nullptr);
+            win = CreateAndShowMainWindow(nullptr);
             args->win = win;
         }
         LoadDocument(args);

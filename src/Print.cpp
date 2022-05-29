@@ -572,7 +572,7 @@ class PrintThreadData : public ProgressUpdateUI {
         isCanceled = true;
         cookie.Abort();
         this->wnd = nullptr;
-        if (WindowInfoStillValid(win)) {
+        if (MainWindowStillValid(win)) {
             RemoveNotification(wnd);
         }
     }
@@ -582,7 +582,7 @@ class PrintThreadData : public ProgressUpdateUI {
     }
 
     bool WasCanceled() override {
-        return isCanceled || !WindowInfoStillValid(win) || win->printCanceled;
+        return isCanceled || !MainWindowStillValid(win) || win->printCanceled;
     }
 };
 
@@ -603,7 +603,7 @@ static DWORD WINAPI PrintThread(LPVOID data) {
     PrintToDevice(*pd);
 
     uitask::Post([=] {
-        if (WindowInfoStillValid(win) && thread == win->printThread) {
+        if (MainWindowStillValid(win) && thread == win->printThread) {
             win->printThread = nullptr;
         }
         delete threadData;

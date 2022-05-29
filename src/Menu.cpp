@@ -1783,7 +1783,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotCircle: {
             auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
             if (annot) {
-                WindowInfoRerender(win);
+                MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
                 createdAnnots.Append(annot);
             }

@@ -175,7 +175,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, DocController* ctrl) {
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
-    if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl) {
+    if (!MainWindowStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl) {
         return;
     }
 

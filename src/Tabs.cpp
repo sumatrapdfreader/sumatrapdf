@@ -367,7 +367,7 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
 }
 
 static void TabNotification(MainWindow* win, UINT code, int idx1, int idx2) {
-    if (!WindowInfoStillValid(win)) {
+    if (!MainWindowStillValid(win)) {
         return;
     }
     NMHDR nmhdr = {nullptr, 0, code};

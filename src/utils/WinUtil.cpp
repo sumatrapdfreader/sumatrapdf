@@ -2131,7 +2131,7 @@ Run:
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
     WINDOWINFO wi{};
     wi.cbSize = sizeof(wi);
-    GetWindowInfo(hwnd, &wi);
+    ::GetWindowInfo(hwnd, &wi);
 
     RECT r{};
     r.right = dx;

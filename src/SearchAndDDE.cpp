@@ -199,7 +199,7 @@ void ClearSearchResult(MainWindow* win) {
 }
 
 static void UpdateFindStatusTask(MainWindow* win, NotificationWnd* wnd, int current, int total) {
-    if (!WindowInfoStillValid(win) || win->findCanceled) {
+    if (!MainWindowStillValid(win) || win->findCanceled) {
         return;
     }
     if (!UpdateNotificationProgress(wnd, current, total)) {
@@ -287,13 +287,13 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     bool WasCanceled() override {
-        return !WindowInfoStillValid(win) || win->findCanceled;
+        return !MainWindowStillValid(win) || win->findCanceled;
     }
 };
 
 static void FindEndTask(MainWindow* win, FindThreadData* ftd, TextSel* textSel, bool wasModifiedCanceled,
                         bool loopedAround) {
-    if (!WindowInfoStillValid(win)) {
+    if (!MainWindowStillValid(win)) {
         delete ftd;
         return;
     }
@@ -741,7 +741,7 @@ static const char* HandleOpenCmd(const char* cmd, DDEACK& ack) {
     MainWindow* win = nullptr;
     if (newWindow == 2) {
         // TODO: don't do it if we have a about window
-        win = CreateAndShowWindowInfo(nullptr);
+        win = CreateAndShowMainWindow(nullptr);
     }
 
     // on startup this is called while LoadDocument is in progress, which causes

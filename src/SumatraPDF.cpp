@@ -1353,7 +1353,7 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     win->favLabelWithClose->SetLabel(_TR("Favorites"));
 }
 
-static MainWindow* CreateWindowInfo() {
+static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
         EnsureAreaVisibility(windowPos);
@@ -1443,10 +1443,10 @@ static MainWindow* CreateWindowInfo() {
     return win;
 }
 
-MainWindow* CreateAndShowWindowInfo(SessionData* data) {
-    // CreateWindowInfo shouldn't change the windowState value
+MainWindow* CreateAndShowMainWindow(SessionData* data) {
+    // CreateMainWindow shouldn't change the windowState value
     int windowState = gGlobalPrefs->windowState;
-    MainWindow* win = CreateWindowInfo();
+    MainWindow* win = CreateMainWindow();
     if (!win) {
         return nullptr;
     }
@@ -1475,7 +1475,7 @@ MainWindow* CreateAndShowWindowInfo(SessionData* data) {
     return win;
 }
 
-void DeleteWindowInfo(MainWindow* win) {
+void DeleteMainWindow(MainWindow* win) {
     DeletePropertiesWindow(win->hwndFrame);
 
     gWindows.Remove(win);
@@ -1645,7 +1645,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
         args->isNewWindow = false;
     } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
         MainWindow* currWin = win;
-        win = CreateWindowInfo();
+        win = CreateMainWindow();
         if (!win) {
             return nullptr;
         }
@@ -1944,7 +1944,7 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
 }
 
 // re-render the document currently displayed in this window
-void WindowInfoRerender(MainWindow* win, bool includeNonClientArea) {
+void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -1960,14 +1960,14 @@ void WindowInfoRerender(MainWindow* win, bool includeNonClientArea) {
 
 static void RerenderEverything() {
     for (auto* win : gWindows) {
-        WindowInfoRerender(win);
+        MainWindowRerender(win);
     }
 }
 
 static void RerenderFixedPage() {
     for (auto* win : gWindows) {
         if (win->AsFixed()) {
-            WindowInfoRerender(win, true);
+            MainWindowRerender(win, true);
         }
     }
 }
@@ -2415,7 +2415,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
     if (forceClose) {
         // WM_DESTROY has already been sent, so don't destroy win->hwndFrame again
-        DeleteWindowInfo(win);
+        DeleteMainWindow(win);
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
         CloseDocumentInCurrentTab(win);
@@ -2424,7 +2424,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     } else {
         FreeMenuOwnerDrawInfoData(win->menu);
         HWND hwndToDestroy = win->hwndFrame;
-        DeleteWindowInfo(win);
+        DeleteMainWindow(win);
         DestroyWindow(hwndToDestroy);
     }
 
@@ -2880,7 +2880,7 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM l
 #endif
 
 static void OnMenuNewWindow() {
-    CreateAndShowWindowInfo(nullptr);
+    CreateAndShowMainWindow(nullptr);
 }
 
 // create a new window and load currently shown document into it
@@ -2898,7 +2898,7 @@ static void OnDuplicateInNewWindow(MainWindow* win) {
     if (!path) {
         return;
     }
-    MainWindow* newWin = CreateAndShowWindowInfo(nullptr);
+    MainWindow* newWin = CreateAndShowMainWindow(nullptr);
     if (!newWin) {
         return;
     }
@@ -3919,7 +3919,7 @@ Vec<Annotation*> MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotT
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     CopySelectionToClipboard(win);
     DeleteOldSelectionInfo(win, true);
-    WindowInfoRerender(win);
+    MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
     return annots;
 }
@@ -3940,7 +3940,7 @@ static void openAnnotsInEditWindow(MainWindow* win, Vec<Annotation*>& annots, bo
     if (annots.empty()) {
         return;
     }
-    WindowInfoRerender(win);
+    MainWindowRerender(win);
     if (isShift) {
         StartEditAnnotations(win->currentTab, annots);
         return;
@@ -5023,7 +5023,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
             auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
             if (annot) {
-                WindowInfoRerender(win);
+                MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
                 createdAnnots.Append(annot);
             }
