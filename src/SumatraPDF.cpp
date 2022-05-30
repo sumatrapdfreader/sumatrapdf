@@ -1630,7 +1630,7 @@ static void ShowErrorLoading(MainWindow* win, const char* path, bool noSavePrefs
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
 
-static MainWindow* LoadDocumentRest(LoadArgs* args, DocController* ctrl, bool lazyload) {
+static MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
     MainWindow* win = args->win;
     const char* fullPath = args->FilePath();
 
@@ -1668,7 +1668,7 @@ static MainWindow* LoadDocumentRest(LoadArgs* args, DocController* ctrl, bool la
     // TODO: stop remembering/restoring window positions when using tabs?
     args->placeWindow = !gGlobalPrefs->useTabs;
     if (!lazyload) {
-        ReplaceDocumentInCurrentTab(args, ctrl, nullptr);
+        ReplaceDocumentInCurrentTab(args, args->ctrl, nullptr);
     }
 
     if (gPluginMode) {
@@ -1720,14 +1720,87 @@ static MainWindow* LoadDocumentRest(LoadArgs* args, DocController* ctrl, bool la
     return win;
 }
 
-void LoadDocumentAsync(LoadArgs* args) {
+static NotificationWnd* ShowLoadingNotif(MainWindow* win, const char* path) {
+    AutoFreeStr msg(str::Format(_TRA("Loading %s ..."), path));
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = win->hwndCanvas;
+    nargs.groupId = path;
+    nargs.msg = msg;
+    return ShowNotification(nargs);
+}
+
+static bool LoadDocumentMaybeCreateWindow(LoadArgs* args) {
     MainWindow* win = args->win;
-    bool failEarly = AdjustPathForMaybeMovedFile(args);
-    const char* fullPath = args->FilePath();
+    bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
+    if (openNewTab && !args->win) {
+        // modify the args so that we always reuse the same window
+        // TODO: enable the tab bar if tabs haven't been initialized
+        if (!gWindows.empty()) {
+            win = args->win = gWindows.Last();
+            args->isNewWindow = false;
+        }
+    }
+
+    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+        win = gWindows.at(0);
+        args->win = win;
+        args->isNewWindow = false;
+    } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
+        MainWindow* currWin = win;
+        win = CreateMainWindow();
+        if (!win) {
+            return false;
+        }
+        args->win = win;
+        args->isNewWindow = true;
+        if (currWin) {
+            RememberFavTreeExpansionState(currWin);
+            win->expandedFavorites = currWin->expandedFavorites;
+        }
+    }
+    return true;
+}
+
+void LoadDocumentAsync(LoadArgs* argsIn) {
+    MainWindow* win = argsIn->win;
+    bool failEarly = AdjustPathForMaybeMovedFile(argsIn);
+    const char* path = argsIn->FilePath();
     if (failEarly) {
-        ShowFileNotFound(win, fullPath, args->noSavePrefs);
+        ShowFileNotFound(win, path, argsIn->noSavePrefs);
         return;
     }
+
+    if (!LoadDocumentMaybeCreateWindow(argsIn)) {
+        return;
+    }
+
+    auto wndNotif = ShowLoadingNotif(win, path);
+    LoadArgs* args = argsIn->Clone();
+
+    RunAsync([args, wndNotif] {
+        DocController* ctrl = nullptr;
+        MainWindow* win = args->win;
+        HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
+        const char* path = args->FilePath();
+        EngineBase* engine = args->engine;
+        args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
+        if (args->ctrl && gIsDebugBuild) {
+            //::Sleep(5000);
+        }
+
+        uitask::Post([args, wndNotif] {
+            RemoveNotification(wndNotif);
+            MainWindow* win = args->win;
+            const char* path = args->FilePath();
+            if (!args->ctrl) {
+                ShowErrorLoading(win, path, args->noSavePrefs);
+                delete args;
+                return;
+            }
+            LoadDocumentFinish(args, false);
+            delete args;
+        });
+    });
 }
 
 // TODO: eventually I would like to move all loading to be async. To achieve that
@@ -1749,32 +1822,8 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
         return nullptr;
     }
 
-    bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
-    if (openNewTab && !args->win) {
-        // modify the args so that we always reuse the same window
-        // TODO: enable the tab bar if tabs haven't been initialized
-        if (!gWindows.empty()) {
-            win = args->win = gWindows.Last();
-            args->isNewWindow = false;
-        }
-    }
-
-    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
-        win = gWindows.at(0);
-        args->win = win;
-        args->isNewWindow = false;
-    } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
-        MainWindow* currWin = win;
-        win = CreateMainWindow();
-        if (!win) {
-            return nullptr;
-        }
-        args->win = win;
-        args->isNewWindow = true;
-        if (currWin) {
-            RememberFavTreeExpansionState(currWin);
-            win->expandedFavorites = currWin->expandedFavorites;
-        }
+    if (!LoadDocumentMaybeCreateWindow(args)) {
+        return nullptr;
     }
 
     auto timeStart = TimeGet();
@@ -1797,7 +1846,8 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
             return win;
         }
     }
-    return LoadDocumentRest(args, ctrl, lazyload);
+    args->ctrl = ctrl;
+    return LoadDocumentFinish(args, lazyload);
 }
 
 // Loads document data into the MainWindow.

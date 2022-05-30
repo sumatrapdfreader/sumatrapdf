@@ -128,6 +128,7 @@ TabInfo* FindTabByFile(const char* file);
 void SelectTabInWindow(TabInfo*);
 
 class EngineBase;
+struct DocController;
 
 // LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
@@ -155,11 +156,14 @@ struct LoadArgs {
     // and rationalize all SaveSettings() calls
     bool noSavePrefs = false;
 
+    DocController* ctrl = nullptr;
+
   private:
     AutoFreeStr fileName;
 };
 
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload = false);
+void LoadDocumentAsync(LoadArgs* args);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);
 
 uint MbRtlReadingMaybe();
