@@ -276,17 +276,20 @@ static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
 }
 
 static bool PrintToDevice(const PrintData& pd) {
-    CrashIf(!pd.engine);
+    ReportIf(!pd.engine);
     if (!pd.engine) {
+        logf("PrintToDevice: !pd.engine\n");
         return false;
     }
-    CrashIf(!pd.printer);
+    ReportIf(!pd.printer);
     if (!pd.printer) {
+        logf("PrintToDevice: !pd.printer\n");
         return false;
     }
 
     auto progressUI = pd.progressUI;
     auto abortCookie = pd.abortCookie;
+    int res;
 
     EngineBase& engine = *pd.engine;
 
@@ -319,8 +322,9 @@ static bool PrintToDevice(const PrintData& pd) {
             }
         }
     }
-    CrashIf(total <= 0);
+    ReportIf(total <= 0);
     if (0 == total) {
+        logf("PrintToDevice: total == 0\n");
         return false;
     }
 
@@ -333,11 +337,14 @@ static bool PrintToDevice(const PrintData& pd) {
     WCHAR* printerName = ToWstrTemp(pd.printer->name);
     AutoDeleteDC hdc(CreateDCW(nullptr, printerName, nullptr, devMode));
     if (!hdc) {
+        logf("PrintToDevice: CreateDCW('%s') failed\n", pd.printer->name);
         return false;
     }
 
     // for PDF Printer, this shows a file dialog to pick file name for destination PDF
-    if (StartDoc(hdc, &di) <= 0) {
+    res = StartDoc(hdc, &di);
+    if (res <= 0) {
+        logf("PrintToDevice: StartDoc() failed with %d\n", res);
         return false;
     }
 
@@ -420,15 +427,22 @@ static bool PrintToDevice(const PrintData& pd) {
             }
             // TODO: abort if !ok?
 
-            if (EndPage(hdc) <= 0 || (progressUI && progressUI->WasCanceled())) {
+            res = EndPage(hdc);
+            if (res <= 0 || (progressUI && progressUI->WasCanceled())) {
+                bool wasCancelled = progressUI && progressUI->WasCanceled();
+                logf("PrintToDevice: EndPage() failed with %d or wasCancelled: %d\n", res, (int)wasCancelled);
                 AbortDoc(hdc);
                 return false;
             }
             current++;
         }
 
-        EndDoc(hdc);
-        return false;
+        res = EndDoc(hdc);
+        if (res <= 0) {
+            logf("PrintToDevice: EndDoc() failed with %d\n", res);
+            return false;
+        }
+        return true;
     }
 
     // print all the pages the user requested
@@ -443,7 +457,11 @@ static bool PrintToDevice(const PrintData& pd) {
                 progressUI->UpdateProgress(current, total);
             }
 
-            StartPage(hdc);
+            res = StartPage(hdc);
+            if (res <= 0) {
+                logf("PrintToDevice: StartPage() failed with %d\n", res);
+                continue;
+            }
 
             SizeF pSize = engine.PageMediabox(pageNo).Size();
             int rotation = 0;
@@ -523,7 +541,10 @@ static bool PrintToDevice(const PrintData& pd) {
             } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
             // TODO: abort if !ok?
 
-            if (EndPage(hdc) <= 0 || (progressUI && progressUI->WasCanceled())) {
+            res = EndPage(hdc);
+            if (res <= 0 || (progressUI && progressUI->WasCanceled())) {
+                bool wasCancelled = progressUI && progressUI->WasCanceled();
+                logf("PrintToDevice: EndPage() failed with %d or wasCancelled: %d\n", res, (int)wasCancelled);
                 AbortDoc(hdc);
                 return false;
             }
@@ -531,7 +552,11 @@ static bool PrintToDevice(const PrintData& pd) {
         }
     }
 
-    EndDoc(hdc);
+    res = EndDoc(hdc);
+    if (res <= 0) {
+        logf("PrintToDevice: EndDoc() failed with %d\n", res);
+        return false;
+    }
     return true;
 }
 
@@ -613,7 +638,7 @@ static DWORD WINAPI PrintThread(LPVOID data) {
 }
 
 static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {
-    CrashIf(win->printThread);
+    ReportIf(win->printThread);
     PrintThreadData* threadData = new PrintThreadData(win, data);
     win->printThread = nullptr;
     win->printThread = CreateThread(nullptr, 0, PrintThread, threadData, 0, nullptr);
@@ -697,7 +722,7 @@ void OnMenuPrint(MainWindow* win, bool waitForCompletion) {
         win->AsChm()->PrintCurrentPage(showUI);
         return;
     }
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     if (!win->AsFixed()) {
         return;
     }
@@ -825,7 +850,7 @@ void OnMenuPrint(MainWindow* win, bool waitForCompletion) {
         PRINTPAGERANGE pr = {1, (DWORD)dm->PageCount()};
         ranges.Append(pr);
     } else {
-        CrashIf(pdex.nPageRanges <= 0);
+        ReportIf(pdex.nPageRanges <= 0);
         for (DWORD i = 0; i < pdex.nPageRanges; i++) {
             ranges.Append(pdex.lpPageRanges[i]);
         }
@@ -1002,7 +1027,7 @@ static short GetPaperByName(const WCHAR* papername) {
 // wantedName can be a paper name, like "A6" or number for DMPAPER_* contstants like DMPAPER_LETTER
 static short GetPaperByName(Printer* printer, const char* wantedName) {
     auto devMode = printer->devMode;
-    CrashIf(!(devMode->dmFields & DM_PAPERSIZE));
+    ReportIf(!(devMode->dmFields & DM_PAPERSIZE));
     if (!(devMode->dmFields & DM_PAPERSIZE)) {
         return devMode->dmPaperSize;
     }
@@ -1033,7 +1058,7 @@ static short GetPaperKind(const char* kindName) {
 
 static short GetPaperSourceByName(Printer* printer, const char* binName) {
     auto devMode = printer->devMode;
-    CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
+    ReportIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
         return devMode->dmDefaultSource;
     }
