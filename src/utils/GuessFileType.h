@@ -37,6 +37,7 @@ extern Kind kindFilePalmDoc;
 extern Kind kindFileHTML;
 extern Kind kindFileSvg;
 extern Kind kindFileHeic;
+extern Kind kindFileAvif;
 extern Kind kindFileTxt;
 
 extern Kind kindDirectory;

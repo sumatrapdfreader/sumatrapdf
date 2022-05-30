@@ -4,6 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/AvifReader.h"
 
+#include <dav1d/dav1d.h>
+
 bool HasAvifSignature(ByteSlice) {
     return false;
 }

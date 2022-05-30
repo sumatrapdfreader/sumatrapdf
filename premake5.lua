@@ -635,7 +635,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4702" }
-    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "unarrlib" }
+    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "libavif", "unarrlib" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -659,9 +659,8 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4267", "4457", "4838" }
     zlib_ng_defines()
     includedirs { "src", "ext/zlib-ng", "ext/lzma/C" }
-    includedirs { "ext/libwebp/src", "ext/unarr", "mupdf/include" }
+    includedirs { "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
     utils_files()
-
 
   ---- executables
   --[[
@@ -846,7 +845,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
+      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "libavif"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
