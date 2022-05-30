@@ -2300,12 +2300,14 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     if (!win) {
         return;
     }
-
     AbortFinding(win, true);
     ClearFindBox(win);
 
+    TabInfo* tab = win->currentTab;
+    RememberRecentlyClosedDocument(tab->filePath);
+
     // TODO: maybe should have a way to over-ride this for unconditional close?
-    bool canClose = MaybeSaveAnnotations(win->currentTab);
+    bool canClose = MaybeSaveAnnotations(tab);
     if (!canClose) {
         return;
     }
@@ -4344,6 +4346,15 @@ void ShowLogFileSmart() {
     }
 }
 
+void ReopenLastClosedFile(MainWindow* win) {
+    char* path = PopRecentlyClosedDocument();
+    if (!path) {
+        return;
+    }
+    LoadArgs* args = new LoadArgs(path, win);
+    LoadDocument(args);
+}
+
 void ClearHistory(MainWindow* win) {
     if (!win) {
         // TODO: find current active MainWindow ?
@@ -4560,6 +4571,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdClearHistory:
             ClearHistory(win);
+            break;
+
+        case CmdReopenLastClosedFile:
+            ReopenLastClosedFile(win);
             break;
 
         case CmdShowLog:

@@ -81,6 +81,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdToggleToolbar,
     CmdShowLog,
     CmdClearHistory,
+    CmdReopenLastClosedFile,
 };
 
 // for those commands do not activate main window

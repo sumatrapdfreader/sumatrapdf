@@ -156,6 +156,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCommandPalette, "Command Palette")                               \
     V(CmdShowLog, "Show Log")                                             \
     V(CmdClearHistory, "Clear History")                                   \
+    V(CmdReopenLastClosedFile, "Reopen Last Closed")                      \
     V(CmdNone, "Do nothing")
 
 // order of CreateAnnot* must be the same as enum AnnotationType

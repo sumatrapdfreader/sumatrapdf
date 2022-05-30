@@ -218,3 +218,25 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         DeleteDisplayState(state);
     }
 }
+
+// list of recently closed documents, most recent at the end
+StrVec gClosedDocuments;
+
+int RecentlyCloseDocumentsCount() {
+    return gClosedDocuments.Size();
+}
+
+void RememberRecentlyClosedDocument(const char* path) {
+    if (str::EmptyOrWhiteSpaceOnly(path)) {
+        return;
+    }
+    gClosedDocuments.Append(path);
+}
+
+char* PopRecentlyClosedDocument() {
+    size_t n = gClosedDocuments.size();
+    if (n > 0) {
+        return gClosedDocuments.RemoveAtFast(n - 1);
+    }
+    return nullptr;
+}

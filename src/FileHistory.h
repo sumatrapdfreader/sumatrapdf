@@ -28,3 +28,7 @@ struct FileHistory {
     void Purge(bool alwaysUseDefaultState = false) const;
     void UpdateStatesSource(Vec<FileState*>* states);
 };
+
+int RecentlyCloseDocumentsCount();
+void RememberRecentlyClosedDocument(const char* path);
+char* PopRecentlyClosedDocument();
