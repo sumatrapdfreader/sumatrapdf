@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4d9e367143561bf7030f84e805d31cf2da3a9bea
+c86a5dd9d3781b373daedd44ce47f85b59b90a18
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -76,7 +76,7 @@ br:&Tamanho real
 cn:实际大小(&A)
 co:&Dimensione attuale
 de:&Tatsächliche Größe
-es:&Tamaño actual
+es:&Tamaño real
 eu:&Oraingo neurria
 fr:T&aille réelle
 it:Dimensione &attuale
@@ -224,7 +224,7 @@ br:&Voltar
 cn:上一视图(B)
 co:&Precedente
 de:&Vorherige Ansicht
-es:&Volver
+es:&Atrás
 eu:A&tzera
 fr:Revenir (&b)
 it:&Indietro
@@ -610,7 +610,7 @@ br:&Página dupla
 cn:双页视图(&F)
 co:Pagina d&oppia
 de:&Doppelseite
-es:&Doble página
+es:&Caras opuestas
 it:Pagine a&ffiancate
 nl:&Gericht op
 pl:&Wiele stron
@@ -8091,7 +8091,7 @@ br:A&vançar
 cn:下一视图(&O)
 co:&Dopu
 de:&Nächste Ansicht
-es:A&vanzar
+es:A&delante
 eu:A&urrera
 fr:Avancer (&o)
 it:&Avanti
@@ -8136,7 +8136,7 @@ cz:Dvojstránky
 de:Doppelseite
 dk:Modstående
 el:Δύο σελίδες
-es:Doble página
+es:Caras opuestas
 et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
@@ -14666,7 +14666,7 @@ br:Girar à &esquerda
 cn:逆时针旋转(&L)
 co:Girà à &manca
 de:&Gegen UZS drehen
-es:Rotar &a la izquierda
+es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fr:Rotation vers &la gauche
 it:Ruota a &sinistra
@@ -14751,7 +14751,7 @@ br:Girar à &direita
 cn:顺时针旋转(&R)
 co:Girà à &diritta
 de:Im &UZS drehen
-es:Rotar &a la derecha
+es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
 fr:Rotation vers la d&roite
 it:Ruota a &destra
