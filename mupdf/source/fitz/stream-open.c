@@ -201,7 +201,8 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 
 /* Memory stream */
 
-static int next_buffer(fz_context *ctx, fz_stream *stm, size_t max)
+/* SumatraPDF: https://bugs.ghostscript.com/show_bug.cgi?id=705248 */
+int next_buffer(fz_context *ctx, fz_stream *stm, size_t max)
 {
 	return EOF;
 }

@@ -744,8 +744,7 @@ fz_open_rld(fz_context *ctx, fz_stream *chain)
 	state->c = 0;
 
 	/* Don't explode RLE compression bombs. */
-	/* SumatraPDF */
-	if (0 && (chain->next == next_rld || chain->next == next_rld_defused))
+	if (chain->next == next_rld || chain->next == next_rld_defused)
 	{
 		fz_warn(ctx, "RLE bomb defused");
 		return fz_new_stream(ctx, state, next_rld_defused, close_rld);
