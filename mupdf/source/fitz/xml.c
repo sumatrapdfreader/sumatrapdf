@@ -1148,11 +1148,15 @@ fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, con
 
 fz_xml *fz_keep_xml(fz_context *ctx, fz_xml *xml)
 {
+	fz_xml *dom = xml;
 	if (xml == NULL)
 		return xml;
 
-	while (xml->up)
-		xml = xml->up;
+	while (dom->up)
+		dom = dom->up;
 
-	return fz_keep_imp(ctx, xml, &xml->u.doc.refs);
+	fz_keep_imp(ctx, dom, &dom->u.doc.refs);
+
+	/* Return the original node pointer, not the dom pointer! */
+	return xml;
 }

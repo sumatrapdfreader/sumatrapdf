@@ -318,10 +318,28 @@ static void ffi_gc_fz_outline_iterator(js_State *J, void *iter)
 	fz_drop_outline_iterator(ctx, iter);
 }
 
+static void ffi_gc_fz_html_story(js_State *J, void *story)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_drop_html_story(ctx, story);
+}
+
+static void ffi_gc_fz_xml(js_State *J, void *xml)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_drop_xml(ctx, xml);
+}
+
 static void ffi_pushoutlineiterator(js_State *J, fz_outline_iterator *iter)
 {
 	js_getregistry(J, "fz_outline_iterator");
 	js_newuserdata(J, "fz_outline_iterator", iter, ffi_gc_fz_outline_iterator);
+}
+
+static void ffi_pushdom(js_State *J, fz_xml *dom)
+{
+	js_getregistry(J, "fz_xml");
+	js_newuserdata(J, "fz_xml", dom, ffi_gc_fz_xml);
 }
 
 #if FZ_ENABLE_PDF
@@ -1028,6 +1046,12 @@ static fz_buffer *ffi_tobuffer(js_State *J, int idx)
 
 	if (js_isuserdata(J, idx, "fz_buffer"))
 		buf = fz_keep_buffer(ctx, js_touserdata(J, idx, "fz_buffer"));
+	else if (!js_iscoercible(J, idx)) {
+		fz_try(ctx)
+			buf = fz_new_buffer(ctx, 1);
+		fz_catch(ctx)
+			rethrow(J);
+	}
 	else {
 		const char *str = js_tostring(J, idx);
 		fz_try(ctx)
@@ -4331,6 +4355,355 @@ static void ffi_DocumentWriter_close(js_State *J)
 		fz_close_document_writer(ctx, wri);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_new_HTMLStory(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_buffer *contents = ffi_tobuffer(J, 1);
+	const char *user_css = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+	double em = js_tonumber(J, 3);
+	fz_html_story *story = NULL;
+
+	fz_try(ctx)
+		story = fz_new_html_story(ctx, contents, user_css, em);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_getregistry(J, "fz_html_story");
+	js_newuserdata(J, "fz_html_story", story, ffi_gc_fz_html_story);
+}
+
+static void ffi_HTMLStory_place(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
+	fz_rect rect = ffi_torect(J, 1);
+	fz_rect filled = fz_empty_rect;
+	int done;
+
+	fz_try(ctx)
+		done = fz_place_story(ctx, story, rect, &filled);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_newobject(J);
+
+	ffi_pushrect(J, filled);
+	js_setproperty(J, -2, "filled");
+
+	js_pushboolean(J, !!done);
+	js_setproperty(J, -2, "done");
+}
+
+static void ffi_HTMLStory_draw(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
+	fz_device *device;
+	int drop = 1;
+	fz_matrix ctm = ffi_tomatrix(J, 2);
+
+	if (js_isuserdata(J, 1, "fz_device")) {
+		device = js_touserdata(J, 1, "fz_device");
+		drop = 0;
+	} else {
+		device = new_js_device(ctx, J);
+		js_copy(J, 1);
+	}
+
+	fz_try(ctx) {
+		fz_draw_story(ctx, story, device, ctm);
+		if (drop)
+			fz_close_device(ctx, device);
+	}
+	fz_always(ctx)
+	{
+		if (drop)
+			fz_drop_device(ctx, device);
+	}
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_HTMLStory_document(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
+	fz_xml *dom;
+
+	fz_try(ctx)
+		dom = fz_html_story_document(ctx, story);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_body(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_body(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_document_element(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_document_element(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_create_element(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *tag = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+
+	fz_try(ctx)
+		dom = fz_dom_create_element(ctx, dom, tag);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+
+static void ffi_DOM_create_text_node(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *text = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+
+	fz_try(ctx)
+		dom = fz_dom_create_text_node(ctx, dom, text);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_find(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *tag = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *att = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+	const char *val = js_iscoercible(J, 3) ? js_tostring(J, 3) : NULL;
+
+	fz_try(ctx)
+		dom = fz_dom_find(ctx, dom, tag, att, val);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_find_next(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *tag = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *att = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+	const char *val = js_iscoercible(J, 3) ? js_tostring(J, 3) : NULL;
+
+	fz_try(ctx)
+		dom = fz_dom_find_next(ctx, dom, tag, att, val);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_append_child(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	fz_xml *child = js_touserdata(J, 1, "fz_xml");
+
+	fz_try(ctx)
+		fz_dom_append_child(ctx, dom, child);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_DOM_insert_before(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	fz_xml *elt = js_touserdata(J, 1, "fz_xml");
+
+	fz_try(ctx)
+		fz_dom_insert_before(ctx, dom, elt);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_DOM_insert_after(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	fz_xml *elt = js_touserdata(J, 1, "fz_xml");
+
+	fz_try(ctx)
+		fz_dom_insert_after(ctx, dom, elt);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_DOM_remove(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		fz_dom_remove(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_DOM_clone(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_clone(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_first_child(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_first_child(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_parent(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_parent(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_next(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_next(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_previous(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+
+	fz_try(ctx)
+		dom = fz_dom_previous(ctx, dom);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_add_attribute(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *att = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *val = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+
+	fz_try(ctx)
+		fz_dom_add_attribute(ctx, dom, att, val);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushdom(J, fz_keep_xml(ctx, dom));
+}
+
+static void ffi_DOM_remove_attribute(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *att = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+
+	fz_try(ctx)
+		fz_dom_remove_attribute(ctx, dom, att);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_DOM_attribute(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *att = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *val;
+
+	fz_try(ctx)
+		val = fz_dom_attribute(ctx, dom, att);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_pushstring(J, val);
+}
+
+static void ffi_DOM_get_attributes(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_xml *dom = js_touserdata(J, 0, "fz_xml");
+	const char *att;
+	const char *val;
+	int i;
+
+	js_newobject(J);
+
+	i = 0;
+	while (1)
+	{
+		fz_try(ctx)
+			val = fz_dom_get_attribute(ctx, dom, i, &att);
+		fz_catch(ctx)
+			rethrow(J);
+		if (att == NULL)
+			break;
+		js_pushstring(J, val);
+		js_setproperty(J, -2, att);
+		i++;
+	}
 }
 
 /* PDF specifics */
@@ -7764,6 +8137,40 @@ int murun_main(int argc, char **argv)
 	js_getregistry(J, "Userdata");
 	js_newobjectx(J);
 	{
+		jsB_propfun(J, "HTMLStory.place", ffi_HTMLStory_place, 1);
+		jsB_propfun(J, "HTMLStory.draw", ffi_HTMLStory_draw, 2);
+		jsB_propfun(J, "HTMLStory.document", ffi_HTMLStory_document, 0);
+	}
+	js_setregistry(J, "fz_html_story");
+
+	js_getregistry(J, "DOM");
+	js_newobjectx(J);
+	{
+		jsB_propfun(J, "DOM.body", ffi_DOM_body, 0);
+		jsB_propfun(J, "DOM.documentElement", ffi_DOM_document_element, 0);
+		jsB_propfun(J, "DOM.createElement", ffi_DOM_create_element, 1);
+		jsB_propfun(J, "DOM.createTextNode", ffi_DOM_create_text_node, 1);
+		jsB_propfun(J, "DOM.find", ffi_DOM_find, 3);
+		jsB_propfun(J, "DOM.findNext", ffi_DOM_find_next, 3);
+		jsB_propfun(J, "DOM.appendChild", ffi_DOM_append_child, 1);
+		jsB_propfun(J, "DOM.insertBefore", ffi_DOM_insert_before, 1);
+		jsB_propfun(J, "DOM.insertAfter", ffi_DOM_insert_after, 1);
+		jsB_propfun(J, "DOM.remove", ffi_DOM_remove, 0);
+		jsB_propfun(J, "DOM.clone", ffi_DOM_clone, 0);
+		jsB_propfun(J, "DOM.first_child", ffi_DOM_first_child, 0);
+		jsB_propfun(J, "DOM.parent", ffi_DOM_parent, 0);
+		jsB_propfun(J, "DOM.next", ffi_DOM_next, 0);
+		jsB_propfun(J, "DOM.previous", ffi_DOM_previous, 0);
+		jsB_propfun(J, "DOM.addAttribute", ffi_DOM_add_attribute, 2);
+		jsB_propfun(J, "DOM.removeAttribute", ffi_DOM_remove_attribute, 1);
+		jsB_propfun(J, "DOM.attribute", ffi_DOM_attribute, 1);
+		jsB_propfun(J, "DOM.getAttributes", ffi_DOM_get_attributes, 0);
+	}
+	js_setregistry(J, "fz_xml");
+
+	js_getregistry(J, "Userdata");
+	js_newobjectx(J);
+	{
 		jsB_propfun(J, "OutlineIterator.item", ffi_OutlineIterator_item, 0);
 		jsB_propfun(J, "OutlineIterator.next", ffi_OutlineIterator_next, 0);
 		jsB_propfun(J, "OutlineIterator.prev", ffi_OutlineIterator_prev, 0);
@@ -8258,6 +8665,7 @@ int murun_main(int argc, char **argv)
 		jsB_propcon(J, "fz_device", "DrawDevice", ffi_new_DrawDevice, 2);
 		jsB_propcon(J, "fz_device", "DisplayListDevice", ffi_new_DisplayListDevice, 1);
 		jsB_propcon(J, "fz_document_writer", "DocumentWriter", ffi_new_DocumentWriter, 3);
+		jsB_propcon(J, "fz_html_story", "HTMLStory", ffi_new_HTMLStory, 3);
 #if FZ_ENABLE_PDF
 		jsB_propcon(J, "pdf_pkcs7_signer", "PDFPKCS7Signer", ffi_new_PDFPKCS7Signer, 2);
 #endif
