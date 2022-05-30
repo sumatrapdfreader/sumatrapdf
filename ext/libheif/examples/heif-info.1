@@ -1,0 +1,35 @@
+.TH HEIF-INFO 1
+.SH NAME
+heif-info \- show information on HEIC/HEIF file
+.SH SYNOPSIS
+.B heif-info
+[\fB\-d\fR|\fB--dump-boxes\fR]
+[\fB\-h\fR|\fB--help\fR]
+.IR filename
+.SH DESCRIPTION
+.B heif-info
+Show information on HEIC/HEIF file.
+.SH OPTIONS
+.TP
+.BR \-d ", " \-\-dump-boxes\fR
+Show a low-level dump of all MP4 file boxes.
+.TP
+.BR \-help ", " \-\-help\fR
+Show help.
+.SH EXIT STATUS
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; error while loading image).
+.RE
+.SH BUGS
+Please reports bugs or issues at https://github.com/strukturag/libheif
+.SH AUTHORS
+Dirk Farin, struktur AG
+.SH COPYRIGHT
+Copyright \[co] 2017 struktur AG

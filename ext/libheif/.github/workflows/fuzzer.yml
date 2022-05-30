@@ -1,0 +1,31 @@
+name: fuzzer
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  fuzzer:
+    env:
+      WITH_AOM: 1
+      WITH_GRAPHICS: 1
+      WITH_LIBDE265: 2
+      WITH_X265: 1
+      FUZZER: 1
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        ./scripts/install-ci-linux.sh
+
+    - name: Prepare CI
+      run: |
+        ./scripts/prepare-ci.sh
+
+    - name: Run tests
+      run: |
+        ./scripts/run-ci.sh

@@ -1,0 +1,13 @@
+---
+Checks: >
+  -clang-analyzer-security.insecureAPI.strcat,
+  -clang-analyzer-security.insecureAPI.strcpy,
+  modernize-shrink-to-fit,
+  modernize-use-default-member-init,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-use-override,
+  performance-*
+HeaderFilterRegex: .*
+WarningsAsErrors: '*'
+...

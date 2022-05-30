@@ -1,0 +1,4 @@
+[Thumbnailer Entry]
+TryExec=heif-thumbnailer
+Exec=heif-thumbnailer -s %s %i %o
+MimeType=image/heif;image/avif;

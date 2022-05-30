@@ -1,0 +1,82 @@
+.TH HEIF-ENC 1
+.SH NAME
+heif-enc \- convert image to HEIC/HEIF
+.SH SYNOPSIS
+.B heif-enc
+[\fB\-h\fR|\fB--help\fR]
+[\fB\-q\fR \fIQUALITY\fR|\fB--quality\fR \fIQUALITY\fR]
+[\fB\-L\fR|\fB--lossless\fR]
+[\fB\-t\fR \fISIZE\fR|\fB--thumb\fR \fISIZE\fR]
+[\fB--no-alpha\fR]
+[\fB--no-thumb-alpha\fR]
+[\fB\-o\fR \fIFILENAME\fR|\fB--output\fR \fIFILENAME\fR]
+[\fB\-v\fR|\fB--verbose\fR]
+[\fB\-P\fR|\fB--params\fR]
+[\fB\-b\fR \fIDEPTH\fR]
+[\fB\-p\fR \fINAME\fR\fB=\fR\fIVALUE\fR]
+.IR filename[.jpg|.png|.y4m]
+.SH DESCRIPTION
+.B heif-enc
+Convert image to HEIC/HEIF.
+.SH OPTIONS
+.TP
+.BR \-q\fR\ \fIQUALITY\fR ", " \-\-quality\fR\ \fIQUALITY\fR
+Defines quality level between 0 and 100 for the generated output file.
+.TP
+.BR \-L ", "\-\-lossless\fR
+Generate lossless output (\fB-q\fR has no effect)
+.TP
+.BR \-t\fR\ \fISIZE\fR ", " \-\-thumb\fR\ \fISIZE\fR
+Generate thumbnail with maximum size \fISIZE\fR pixels (default: off).
+.TP
+.BR \-\-no-alpha\fR
+Do not save alpha channel.
+.TP
+.BR \-\-no-thumb-alpha\fR
+Do not save alpha channel in thumbnail image.
+.TP
+.BR \-o\fR\ \fIFILENAME\fR ", " \-\-output\fR\ \fIFILENAME\fR
+Output filename (optional).
+.TP
+.BR \-v ", "\-\-verbose\fR
+Enable logging output (more \fB\-v\fR will increase logging level).
+.TP
+.BR \-P ", "\-\-params\fR
+Show all encoder parameters.
+.TP
+.BR \-b\fR\ \fIDEPTH\fR
+Bit-depth of generated HEIF file when using 16-bit PNG input (default: 10 bit).
+.TP
+.BR \-p\fR\ \fINAME\fR\fB=\fR\fIVALUE\fR
+Set additional encoder parameters. See \fBNOTES\fR below.
+.SH EXIT STATUS
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; error while loading, converting or writing image).
+.RE
+.SH NOTES
+The available input formats depend on the libraries that were available at
+compile time. Supported are JPEG, PNG and Y4M, the file type is determined based
+on the extension of the input file.
+
+When specifying multiple source images, they will all be saved into the same
+HEIF file.
+
+When using the x265 encoder, you may pass it any of its parameters by
+prefixing the parameter name with \fBx265:\fR.
+Hence, to set the \fBctu\fR parameter, you will have to set \fBx265:ctu\fR
+in libheif (e.g.: \fB-p x265:ctu=64\fR).
+
+Note that there is no checking for valid parameters when using the prefix.
+.SH BUGS
+Please reports bugs or issues at https://github.com/strukturag/libheif
+.SH AUTHORS
+Dirk Farin, struktur AG
+.SH COPYRIGHT
+Copyright \[co] 2017 struktur AG

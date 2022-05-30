@@ -1,0 +1,18 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+builtin_h265_decoder=@have_libde265@
+builtin_h265_encoder=@have_x265@
+builtin_avif_decoder=@have_avif_decoder@
+builtin_avif_encoder=@have_avif_encoder@
+
+Name: libheif
+Description: HEIF image codec.
+URL: https://github.com/strukturag/libheif
+Version: @VERSION@
+Requires:
+Requires.private: @REQUIRES_PRIVATE@
+Libs: -L@libdir@ -lheif
+Libs.private: @LIBS@ -lstdc++
+Cflags: -I@includedir@

@@ -1,0 +1,35 @@
+# stats available at
+# https://ci.appveyor.com/project/strukturag/libheif
+image: Visual Studio 2019
+configuration: Release
+cache: c:\tools\vcpkg\installed\
+
+matrix:
+  allow_failures:
+    - arch: arm64 # libde265 currently doesn't support arm64 on vcpkg
+
+environment:
+  matrix:
+  - arch: x64
+  - arch: arm64
+
+install:
+  - vcpkg install libde265:%arch%-windows
+  - vcpkg install x265:%arch%-windows
+  - vcpkg install dav1d:%arch%-windows
+  - cd c:\tools\vcpkg
+  - vcpkg integrate install
+  - cd %APPVEYOR_BUILD_FOLDER%
+
+before_build:
+  - mkdir build
+  - cd build
+  - cmake .. -A %arch% -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+build:
+  verbosity: normal
+
+artifacts:
+  - path: build
+  - path: build\**\Release\*.exe
+  - path: build\**\Release\*.dll

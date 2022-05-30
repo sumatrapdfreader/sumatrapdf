@@ -1,0 +1,39 @@
+name: go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  libde265:
+    strategy:
+      matrix:
+        libde265-version:
+          - "1"
+          - "2"
+    env:
+      WITH_LIBDE265: ${{ matrix.libde265-version }}
+      WITH_X265: 1
+      WITH_GRAPHICS: 1
+      GO: 1
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-go@v3
+      with:
+        go-version: "1.10"
+
+    - name: Install dependencies
+      run: |
+        ./scripts/install-ci-linux.sh
+
+    - name: Prepare CI
+      run: |
+        ./scripts/prepare-ci.sh
+
+    - name: Run tests
+      run: |
+        ./scripts/run-ci.sh

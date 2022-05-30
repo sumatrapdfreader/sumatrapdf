@@ -1,0 +1,38 @@
+.TH HEIF-THUMBNAILER 1
+.SH NAME
+heif-convert \- convert HEIC/HEIF image
+.SH SYNOPSIS
+.B heif-convert
+[\fB\-q\fR \fIQUALITY\fR]
+.IR filename
+.IR output[.jpg|.png|.y4m]
+.SH DESCRIPTION
+.B heif-convert
+Convert HEIC/HEIF image to a different image format.
+.SH OPTIONS
+.TP
+.BR \-q\fR\ \fIQUALITY\fR
+Defines quality level between 0 and 100 for the generated output file.
+.SH EXIT STATUS
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; error while loading, converting or writing image).
+.RE
+.SH NOTES
+The available output formats depend on the libraries that were available at
+compile time. Supported are JPEG, PNG and Y4M, the file type is determined based
+on the extension of the output file.
+.SH BUGS
+Please reports bugs or issues at https://github.com/strukturag/libheif
+.SH AUTHORS
+Joachim Bauch, struktur AG
+.br
+Dirk Farin, struktur AG
+.SH COPYRIGHT
+Copyright \[co] 2017 struktur AG

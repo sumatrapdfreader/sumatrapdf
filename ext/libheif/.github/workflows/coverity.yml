@@ -1,0 +1,53 @@
+name: coverity
+
+on:
+  push:
+    branches: [ coverity ]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    env:
+      TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+      WITH_AOM: 1
+      WITH_GRAPHICS: 1
+      WITH_LIBDE265: 1
+      WITH_X265: 1
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Cache Coverity build tool
+      uses: actions/cache@v3
+      with:
+        path: |
+          coverity_tool.tar.gz
+        key: ${{ runner.os }}
+
+    - name: Download Coverity build tool
+      run: |
+        wget -c -N https://scan.coverity.com/download/linux64 --post-data "token=$TOKEN&project=strukturag%2Flibheif" -O coverity_tool.tar.gz
+        mkdir coverity_tool
+        tar xzf coverity_tool.tar.gz --strip 1 -C coverity_tool
+
+    - name: Install dependencies
+      run: |
+        ./scripts/install-ci-linux.sh
+
+    - name: Prepare CI
+      run: |
+        ./scripts/prepare-ci.sh
+
+    - name: Build with Coverity build tool
+      run: |
+        export PATH=`pwd`/coverity_tool/bin:$PATH
+        cov-build --dir cov-int make
+
+    - name: Submit build result to Coverity Scan
+      run: |
+        tar czvf libheif.tar.gz cov-int
+        curl --form token=$TOKEN \
+          --form email=opensource@struktur.de \
+          --form file=@libheif.tar.gz \
+          --form version="Commit $GITHUB_SHA" \
+          --form description="Build submitted via CI" \
+          https://scan.coverity.com/builds?project=strukturag%2Flibheif

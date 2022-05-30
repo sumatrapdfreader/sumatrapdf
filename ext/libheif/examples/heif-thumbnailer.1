@@ -1,0 +1,33 @@
+.TH HEIF-THUMBNAILER 1
+.SH NAME
+heif-thumbnailer \- create thumbnails from HEIC/HEIF files
+.SH SYNOPSIS
+.B heif-thumbnailer
+[\fB\-s\fR \fISIZE\fR]
+.IR filename
+.IR output
+.SH DESCRIPTION
+.B heif-thumbnailer
+Create thumbnail images from HEIC/HEIF files that can be used for example by Nautilus.
+.SH OPTIONS
+.TP
+.BR \-s\fR\ \fISIZE\fR
+Defines the maximum width and height of the thumbnail to generate.
+Default is 512 pixel.
+.SH EXIT STATUS
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; error while loading, converting or writing image).
+.RE
+.SH BUGS
+Please reports bugs or issues at https://github.com/strukturag/libheif
+.SH AUTHORS
+Dirk Farin, struktur AG
+.SH COPYRIGHT
+Copyright \[co] 2018 struktur AG
