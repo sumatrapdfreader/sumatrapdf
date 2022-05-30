@@ -635,7 +635,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4702" }
-    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "libavif", "unarrlib" }
+    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "dav1d", "unarrlib" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -845,7 +845,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "libavif"
+      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "dav1d"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
