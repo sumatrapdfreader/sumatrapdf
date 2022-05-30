@@ -161,7 +161,7 @@ body {
 <h2>Languages supported by SumatraPDF %VER%</h2>
 
 <p>Languages supported by SumatraPDF. You can use ISO code as a value
-of <code>UiLanguage</code> setting in <a href="settings%VER%">settings file</a>.
+of <code>UiLanguage</code> setting in <a href="settings%VER_URL%">settings file</a>.
 </p>
 
 <p>Note: not all languages are fully translated. Help us <a href="http://www.apptranslator.org/app/SumatraPDF">translate SumatraPDF</a>.</p>
