@@ -129,12 +129,14 @@ void SelectTabInWindow(TabInfo*);
 
 class EngineBase;
 
-// LoadDocument carries a lot of state, this holds them in
-// one place
+// LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
     explicit LoadArgs(const char* fileName, MainWindow* win);
-
     ~LoadArgs() = default;
+
+    const char* FilePath() const;
+    void SetFilePath(const char* path);
+    LoadArgs* Clone();
 
     // we don't own those values
     EngineBase* engine = nullptr;
@@ -152,12 +154,6 @@ struct LoadArgs {
     // TODO: this is hacky. I save prefs too frequently. Need to go over
     // and rationalize all SaveSettings() calls
     bool noSavePrefs = false;
-    const char* FilePath() const {
-        return fileName.Get();
-    }
-    void SetFilePath(const char* path) {
-        fileName.SetCopy(path);
-    }
 
   private:
     AutoFreeStr fileName;

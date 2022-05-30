@@ -154,6 +154,19 @@ LoadArgs::LoadArgs(const char* fileName, MainWindow* win) {
     this->win = win;
 }
 
+const char* LoadArgs::FilePath() const {
+    return fileName.Get();
+}
+
+void LoadArgs::SetFilePath(const char* path) {
+    fileName.SetCopy(path);
+}
+
+LoadArgs* LoadArgs::Clone() {
+    LoadArgs* res = new LoadArgs(fileName, win);
+    return res;
+}
+
 void SetCurrentLang(const char* langCode) {
     if (!langCode) {
         return;
@@ -1540,22 +1553,6 @@ bool DocumentPathExists(const char* path) {
     return false;
 }
 
-#if 0
-// Load a file into a new or existing window, show error message
-// if loading failed, set the right window position (based on history
-// settings for this file or default position), update file history,
-// update frequently read information, generate a thumbnail if necessary
-// TODO: write me
-static MainWindow* LoadDocumentNew(LoadArgs* args)
-{
-    AutoFreeWstr fullPath(path::Normalize(args.fileName));
-    // TODO: try to find file on other drives if doesn't exist
-
-    CrashIf(true);
-    return nullptr;
-}
-#endif
-
 static void scheduleReloadTab(TabInfo* tab) {
     uitask::Post([=] {
         // tab might have been closed, so first ensure it's still valid
@@ -1590,120 +1587,56 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     return false;
 }
 
-void LoadDocumentAsync(LoadArgs* args) {
+static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noSavePrefs) {
+    ShowWindow(win->hwndFrame, SW_SHOW);
+
+    // display the notification ASAP (SaveSettings() can introduce a notable delay)
+    win->RedrawAll(true);
+
+    if (!gFileHistory.MarkFileInexistent(path)) {
+        return;
+    }
+    // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
+    if (!noSavePrefs) {
+        SaveSettings();
+    }
+    // update the Frequently Read list
+    if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+        gWindows.at(0)->RedrawAll(true);
+    }
 }
 
-// TODO: eventually I would like to move all loading to be async. To achieve that
-// we need clear separatation of loading process into 2 phases: loading the
-// file (and showing progress/load failures in topmost window) and placing
-// the loaded document in the window (either by replacing document in existing
-// window or creating a new window for the document)
-MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
-    CrashAlwaysIf(gCrashOnOpen);
+static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs) {
+    AutoFreeStr msg(str::Format(_TRA("File %s not found"), path));
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = win->hwndCanvas;
+    nargs.warning = true;
+    nargs.msg = msg;
+    ShowNotification(nargs);
+    LoadDocumentMarkNotExist(win, path, noSavePrefs);
+}
 
+static void ShowErrorLoading(MainWindow* win, const char* path, bool noSavePrefs) {
+    // TODO: same message as in Canvas.cpp to not introduce
+    // new translation. Find a better message e.g. why failed.
+    char* msg = str::Format(_TRA("Error loading %s"), path);
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = win->hwndCanvas;
+    nargs.msg = msg;
+    nargs.warning = true;
+    ShowNotification(nargs);
+    str::Free(msg);
+
+    LoadDocumentMarkNotExist(win, path, noSavePrefs);
+}
+
+static MainWindow* LoadDocumentRest(LoadArgs* args, DocController* ctrl, bool lazyload) {
     MainWindow* win = args->win;
-    bool failEarly = AdjustPathForMaybeMovedFile(args);
     const char* fullPath = args->FilePath();
 
-    // fail fast if the file doesn't exist and there is a window the user
-    // has just been interacting with
-    if (failEarly) {
-        AutoFreeStr msg(str::Format(_TRA("File %s not found"), fullPath));
-        NotificationCreateArgs nargs;
-        nargs.hwndParent = win->hwndCanvas;
-        nargs.warning = true;
-        nargs.msg = msg;
-        ShowNotification(nargs);
-        // display the notification ASAP (SaveSettings() can introduce a notable delay)
-        win->RedrawAll(true);
-
-        if (gFileHistory.MarkFileInexistent(fullPath)) {
-            // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-            if (!args->noSavePrefs) {
-                SaveSettings();
-            }
-            // update the Frequently Read list
-            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
-                gWindows.at(0)->RedrawAll(true);
-            }
-        }
-        return nullptr;
-    }
-
     bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
-    if (openNewTab && !args->win) {
-        // modify the args so that we always reuse the same window
-        // TODO: enable the tab bar if tabs haven't been initialized
-        if (!gWindows.empty()) {
-            win = args->win = gWindows.Last();
-            args->isNewWindow = false;
-        }
-    }
-
-    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
-        win = gWindows.at(0);
-        args->win = win;
-        args->isNewWindow = false;
-    } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
-        MainWindow* currWin = win;
-        win = CreateMainWindow();
-        if (!win) {
-            return nullptr;
-        }
-        args->win = win;
-        args->isNewWindow = true;
-        if (currWin) {
-            RememberFavTreeExpansionState(currWin);
-            win->expandedFavorites = currWin->expandedFavorites;
-        }
-    }
-
-    auto timeStart = TimeGet();
-    HwndPasswordUI pwdUI(win->hwndFrame);
-    DocController* ctrl = nullptr;
-    if (!lazyload) {
-        ctrl = CreateControllerForEngineOrFile(args->engine, fullPath, &pwdUI, win);
-
-        {
-            auto durMs = TimeSinceInMs(timeStart);
-            if (ctrl) {
-                int nPages = ctrl->PageCount();
-                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPath);
-            } else {
-                logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPath, (float)durMs);
-            }
-        }
-
-        if (!ctrl) {
-            // TODO: same message as in Canvas.cpp to not introduce
-            // new translation. Find a better message e.g. why failed.
-            char* msg = str::Format(_TRA("Error loading %s"), fullPath);
-            NotificationCreateArgs nargs;
-            nargs.hwndParent = win->hwndCanvas;
-            nargs.msg = msg;
-            nargs.warning = true;
-            ShowNotification(nargs);
-            str::Free(msg);
-            ShowWindow(win->hwndFrame, SW_SHOW);
-
-            // display the notification ASAP (SaveSettings() can introduce a notable delay)
-            win->RedrawAll(true);
-
-            if (gFileHistory.MarkFileInexistent(fullPath)) {
-                // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
-                if (!args->noSavePrefs) {
-                    SaveSettings();
-                }
-                // update the Frequently Read list
-                if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
-                    gWindows.at(0)->RedrawAll(true);
-                }
-            }
-            return win;
-        }
-    }
-
     CrashIf(openNewTab && args->forceReuse);
+
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
@@ -1785,6 +1718,86 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     }
 
     return win;
+}
+
+void LoadDocumentAsync(LoadArgs* args) {
+    MainWindow* win = args->win;
+    bool failEarly = AdjustPathForMaybeMovedFile(args);
+    const char* fullPath = args->FilePath();
+    if (failEarly) {
+        ShowFileNotFound(win, fullPath, args->noSavePrefs);
+        return;
+    }
+}
+
+// TODO: eventually I would like to move all loading to be async. To achieve that
+// we need clear separatation of loading process into 2 phases: loading the
+// file (and showing progress/load failures in topmost window) and placing
+// the loaded document in the window (either by replacing document in existing
+// window or creating a new window for the document)
+MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
+    CrashAlwaysIf(gCrashOnOpen);
+
+    MainWindow* win = args->win;
+    bool failEarly = AdjustPathForMaybeMovedFile(args);
+    const char* fullPath = args->FilePath();
+
+    // fail fast if the file doesn't exist and there is a window the user
+    // has just been interacting with
+    if (failEarly) {
+        ShowFileNotFound(win, fullPath, args->noSavePrefs);
+        return nullptr;
+    }
+
+    bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
+    if (openNewTab && !args->win) {
+        // modify the args so that we always reuse the same window
+        // TODO: enable the tab bar if tabs haven't been initialized
+        if (!gWindows.empty()) {
+            win = args->win = gWindows.Last();
+            args->isNewWindow = false;
+        }
+    }
+
+    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+        win = gWindows.at(0);
+        args->win = win;
+        args->isNewWindow = false;
+    } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
+        MainWindow* currWin = win;
+        win = CreateMainWindow();
+        if (!win) {
+            return nullptr;
+        }
+        args->win = win;
+        args->isNewWindow = true;
+        if (currWin) {
+            RememberFavTreeExpansionState(currWin);
+            win->expandedFavorites = currWin->expandedFavorites;
+        }
+    }
+
+    auto timeStart = TimeGet();
+    HwndPasswordUI pwdUI(win->hwndFrame);
+    DocController* ctrl = nullptr;
+    if (!lazyload) {
+        ctrl = CreateControllerForEngineOrFile(args->engine, fullPath, &pwdUI, win);
+        {
+            auto durMs = TimeSinceInMs(timeStart);
+            if (ctrl) {
+                int nPages = ctrl->PageCount();
+                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPath);
+            } else {
+                logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPath, (float)durMs);
+            }
+        }
+
+        if (!ctrl) {
+            ShowErrorLoading(win, fullPath, args->noSavePrefs);
+            return win;
+        }
+    }
+    return LoadDocumentRest(args, ctrl, lazyload);
 }
 
 // Loads document data into the MainWindow.
