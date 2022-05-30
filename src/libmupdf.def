@@ -881,3 +881,5 @@ EXPORTS
 
 	WebPDecodeBGRAInto
 	WebPGetInfo
+
+; libavif exports (required for AvifReader)

@@ -342,7 +342,6 @@ Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
     Bitmap* bmp = nullptr;
     if (tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
-        ;
     }
     if (!bmp) {
         bmp = DecodeWithWIC(bmpData);

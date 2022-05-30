@@ -45,6 +45,7 @@ Kind kindFileHTML = "fileHTML";
 Kind kindFileTxt = "fileTxt";
 Kind kindFileSvg = "fileSvg";
 Kind kindFileHeic = "fileHeic";
+Kind kindFileAvif = "fileAvif";
 
 // http://en.wikipedia.org/wiki/.nfo
 // http://en.wikipedia.org/wiki/FILE_ID.DIZ
@@ -108,6 +109,7 @@ Kind kindFileHeic = "fileHeic";
     V(".rar", kindFileRar)        \
     V(".7z", kindFile7Z)          \
     V(".heic", kindFileHeic)      \
+    V(".avif", kindFileAvif)      \
     V(".tar", kindFileTar)
 
 #define EXT(ext, kind) ext "\0"
@@ -454,21 +456,39 @@ Kind GuessFileType(const char* path, bool sniff) {
     return GuessFileTypeFromName(path);
 }
 
-static const Kind gImageKinds[] = {kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
-                                   kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2, kindFileHeic};
+// clang-format off
+static const Kind gImageKinds[] = {
+    kindFilePng,
+    kindFileJpeg,
+    kindFileJpeg,
+    kindFileGif,
+    kindFileBmp,
+    kindFileTiff,
+    kindFileTiff,
+    kindFileTga,
+    kindFileJxr,
+    kindFileWebp,
+    kindFileJp2,
+    kindFileHeic,
+    kindFileAvif
+};
 
 static const char* gImageFormatExts =
     ".png\0"
     ".jpg\0"
+    ".jpeg\0"
     ".gif\0"
     ".bmp\0"
     ".tif\0"
+    ".tiff\0"
     ".tga\0"
     ".jxr\0"
     ".webp\0"
     ".jp2\0"
     ".heic\0"
+    ".avif\0"
     "\0";
+// clang-format on
 
 static int FindImageKindIdx(Kind kind) {
     int n = (int)dimof(gImageKinds);

@@ -753,12 +753,18 @@ EngineBase* EngineImage::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-static Kind imageEngineKinds[] = {kindFilePng, kindFileJpeg, kindFileGif, kindFileTiff, kindFileBmp, kindFileTga,
-                                  kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2, kindFileHeic};
+// clang-format off
+static Kind imageEngineKinds[] = {
+    kindFilePng, kindFileJpeg, kindFileGif,
+    kindFileTiff, kindFileBmp, kindFileTga,
+    kindFileJxr, kindFileHdp, kindFileWdp,
+    kindFileWebp, kindFileJp2, kindFileHeic, kindFileAvif
+};
+// clang-format on
 
 bool IsEngineImageSupportedFileType(Kind kind) {
     // logf("IsEngineImageSupportedFileType(%s)\n", kind);
-    int n = dimof(imageEngineKinds);
+    int n = (int)dimof(imageEngineKinds);
     return KindInArray(imageEngineKinds, n, kind);
 }
 
