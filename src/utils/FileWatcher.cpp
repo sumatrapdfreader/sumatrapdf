@@ -333,7 +333,7 @@ static void StartThreadIfNecessary() {
     g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
     g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
-    SetThreadName(g_threadId, "FileWatcherThread");
+    SetThreadName("FileWatcherThread", g_threadId);
 }
 
 static WatchedDir* FindExistingWatchedDir(const char* dirPath) {

@@ -67,6 +67,10 @@ class ThreadBase {
     virtual void Run() = 0;
 };
 
-void SetThreadName(DWORD threadId, const char* threadName);
+void SetThreadName(const char* threadName, DWORD threadId = 0);
 
 void RunAsync(const std::function<void()>&);
+
+void IncDangerousThreadCount();
+void DecDangerousThreadCount();
+bool AreDangerousThreadsPending();

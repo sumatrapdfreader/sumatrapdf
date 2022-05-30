@@ -26,7 +26,10 @@ typedef struct tagTHREADNAME_INFO {
                                 // EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were
                                 // not intended to be handled
 #pragma warning(disable : 6322) // silence /analyze: Empty _except block
-void SetThreadName(DWORD threadId, const char* threadName) {
+void SetThreadName(const char* threadName, DWORD threadId) {
+    if (threadId == 0) {
+        threadId = GetCurrentThreadId();
+    }
     THREADNAME_INFO info;
     info.dwType = 0x1000;
     info.szName = threadName;
@@ -67,7 +70,7 @@ ThreadBase::~ThreadBase() {
 DWORD WINAPI ThreadBase::ThreadProc(void* data) {
     ThreadBase* thread = reinterpret_cast<ThreadBase*>(data);
     if (thread->threadName) {
-        SetThreadName(GetCurrentThreadId(), thread->threadName);
+        SetThreadName(thread->threadName);
     }
     thread->Run();
     return 0;
@@ -99,4 +102,18 @@ static DWORD WINAPI ThreadFunc(void* data) {
 void RunAsync(const std::function<void()>& func) {
     auto fp = new std::function<void()>(func);
     AutoCloseHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, nullptr));
+}
+
+LONG gDangerousThreadCount = 0;
+
+void IncDangerousThreadCount() {
+    InterlockedIncrement(&gDangerousThreadCount);
+}
+
+void DecDangerousThreadCount() {
+    InterlockedDecrement(&gDangerousThreadCount);
+}
+bool AreDangerousThreadsPending() {
+    LONG count = InterlockedAdd(&gDangerousThreadCount, 0);
+    return count != 0;
 }

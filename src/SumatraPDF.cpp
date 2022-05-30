@@ -1778,6 +1778,8 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
     LoadArgs* args = argsIn->Clone();
 
     RunAsync([args, wndNotif] {
+        IncDangerousThreadCount();
+        SetThreadName("LoadDocument");
         DocController* ctrl = nullptr;
         MainWindow* win = args->win;
         HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
@@ -1800,14 +1802,10 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
             LoadDocumentFinish(args, false);
             delete args;
         });
+        DecDangerousThreadCount();
     });
 }
 
-// TODO: eventually I would like to move all loading to be async. To achieve that
-// we need clear separatation of loading process into 2 phases: loading the
-// file (and showing progress/load failures in topmost window) and placing
-// the loaded document in the window (either by replacing document in existing
-// window or creating a new window for the document)
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
