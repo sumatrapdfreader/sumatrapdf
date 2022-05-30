@@ -515,7 +515,10 @@ func genAndSaveSettingsStructs() {
 		}
 		inside := strings.Join(lines, "\n")
 		s := strings.Replace(tmplLangsHTML, "%INSIDE%", inside, -1)
-		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
+		ver := extractSumatraVersionMust()
+		verUrlized := strings.Replace(ver, ".", "-", -1)
+		s = strings.Replace(s, "%VER%", ver, -1)
+		s = strings.Replace(s, "%VER_URL%", verUrlized, -1)
 		s = strings.Replace(s, "settings.html", settingsFileName, -1)
 		s = strings.Replace(s, "\n", "\r\n", -1)
 		// undo html escaping that differs from Python
