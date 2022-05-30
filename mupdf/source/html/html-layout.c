@@ -355,14 +355,14 @@ static void measure_string(fz_context *ctx, fz_html_flow *node, hb_buffer_t *hb_
 	}
 }
 
-static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline, float *leading)
+static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline, float *vert_adv)
 {
 	float max_a = 0, max_d = 0, h = node->h;
-	*leading = node->h;
+	*vert_adv = node->h;
 	while (node != end)
 	{
-		if (fz_css_number_defined(node->box->style->leading))
-			*leading = node->h;
+		if (node->h > *vert_adv)
+			*vert_adv = node->h;
 		if (node->type == FLOW_IMAGE)
 		{
 			if (node->h > max_a)

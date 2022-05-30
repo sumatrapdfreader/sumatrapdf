@@ -3159,7 +3159,6 @@ static void ffi_Page_run(js_State *J)
 				fz_run_page_contents(ctx, page, device, ctm, NULL);
 			else
 				fz_run_page(ctx, page, device, ctm, NULL);
-			fz_close_device(ctx, device);
 		}
 		fz_always(ctx)
 			fz_drop_device(ctx, device);
@@ -4071,10 +4070,8 @@ static void ffi_DisplayList_run(js_State *J)
 	} else {
 		device = new_js_device(ctx, J);
 		js_copy(J, 1);
-		fz_try(ctx) {
+		fz_try(ctx)
 			fz_run_display_list(ctx, list, device, ctm, fz_infinite_rect, NULL);
-			fz_close_device(ctx, device);
-		}
 		fz_always(ctx)
 			fz_drop_device(ctx, device);
 		fz_catch(ctx)
@@ -4414,8 +4411,6 @@ static void ffi_HTMLStory_draw(js_State *J)
 
 	fz_try(ctx) {
 		fz_draw_story(ctx, story, device, ctm);
-		if (drop)
-			fz_close_device(ctx, device);
 	}
 	fz_always(ctx)
 	{
@@ -6417,10 +6412,8 @@ static void ffi_PDFAnnotation_run(js_State *J)
 	} else {
 		device = new_js_device(ctx, J);
 		js_copy(J, 1); /* put the js device on the top so the callbacks know where to get it */
-		fz_try(ctx) {
+		fz_try(ctx)
 			pdf_run_annot(ctx, annot, device, ctm, NULL);
-			fz_close_device(ctx, device);
-		}
 		fz_always(ctx)
 			fz_drop_device(ctx, device);
 		fz_catch(ctx)
