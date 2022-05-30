@@ -68,6 +68,7 @@ NORMALIZ_API_LIST(API_DECLARATION)
     V(SetDefaultDllDirectories) \
     V(RtlCaptureContext)        \
     V(RtlCaptureStackBackTrace) \
+    V(SetThreadDescription)     \
     V(SetProcessMitigationPolicy)
 
 KERNEL32_API_LIST(API_DECLARATION2)

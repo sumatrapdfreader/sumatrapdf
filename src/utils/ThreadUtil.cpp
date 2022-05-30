@@ -2,8 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "ThreadUtil.h"
 #include "ScopedWin.h"
+#include "WinDynCalls.h"
+
+#include "ThreadUtil.h"
 
 #if COMPILER_MSVC
 
@@ -27,6 +29,12 @@ typedef struct tagTHREADNAME_INFO {
                                 // not intended to be handled
 #pragma warning(disable : 6322) // silence /analyze: Empty _except block
 void SetThreadName(const char* threadName, DWORD threadId) {
+    if (DynSetThreadDescription && threadId == 0) {
+        WCHAR* ws = ToWstrTemp(threadName);
+        DynSetThreadDescription(GetCurrentThread(), ws);
+        return;
+    }
+
     if (threadId == 0) {
         threadId = GetCurrentThreadId();
     }
