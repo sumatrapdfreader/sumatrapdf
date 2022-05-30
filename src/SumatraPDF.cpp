@@ -1237,10 +1237,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
     if (!win->IsDocLoaded()) {
         if (!autoRefresh) {
-            LoadArgs* args = new LoadArgs(tab->filePath, win);
-            args->forceReuse = true;
-            args->noSavePrefs = true;
-            LoadDocument(args);
+            LoadArgs args(tab->filePath, win);
+            args.forceReuse = true;
+            args.noSavePrefs = true;
+            LoadDocument(&args);
         }
         return;
     }
@@ -1276,10 +1276,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     fs->windowState = wstate;
     fs->useDefaultState = false;
 
-    LoadArgs* args = new LoadArgs(tab->filePath, win);
-    args->showWin = true;
-    args->placeWindow = false;
-    ReplaceDocumentInCurrentTab(args, ctrl, fs);
+    LoadArgs args(tab->filePath, win);
+    args.showWin = true;
+    args.placeWindow = false;
+    ReplaceDocumentInCurrentTab(&args, ctrl, fs);
 
     if (!ctrl) {
         DeleteDisplayState(fs);
@@ -1590,6 +1590,9 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     return false;
 }
 
+void LoadDocumentAsync(LoadArgs* args) {
+}
+
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
 // file (and showing progress/load failures in topmost window) and placing
@@ -1597,8 +1600,6 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
 // window or creating a new window for the document)
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
-
-    AutoDelete delArgs(args);
 
     MainWindow* win = args->win;
     bool failEarly = AdjustPathForMaybeMovedFile(args);
@@ -2149,9 +2150,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
     // TODO: this should be 'duplicate FileInHistory"
     RenameFileInHistory(srcFileName, newPath);
 
-    LoadArgs* args = new LoadArgs(newPath, win);
-    args->forceReuse = true;
-    LoadDocument(args);
+    LoadArgs args(newPath, win);
+    args.forceReuse = true;
+    LoadDocument(&args);
 
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
@@ -2764,9 +2765,9 @@ static void OnMenuRenameFile(MainWindow* win) {
     BOOL moveOk = MoveFileExW(ToWstrTemp(srcFileName.Get()), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
-        LoadArgs* args = new LoadArgs(srcFileName, win);
-        args->forceReuse = true;
-        LoadDocument(args);
+        LoadArgs args(srcFileName, win);
+        args.forceReuse = true;
+        LoadDocument(&args);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.msg = _TRA("Failed to rename the file!");
@@ -2779,9 +2780,9 @@ static void OnMenuRenameFile(MainWindow* win) {
     char* newPath = path::NormalizeTemp(dstFilePath);
     RenameFileInHistory(srcFileName, newPath);
 
-    LoadArgs* args = new LoadArgs(newPath, win);
-    args->forceReuse = true;
-    LoadDocument(args);
+    LoadArgs args(newPath, win);
+    args.forceReuse = true;
+    LoadDocument(&args);
 }
 
 static void CreateLnkShortcut(MainWindow* win) {
@@ -2908,10 +2909,10 @@ static void OnDuplicateInNewWindow(MainWindow* win) {
     }
 
     // TODO: should copy the display state from current file
-    LoadArgs* args = new LoadArgs(path, newWin);
-    args->showWin = true;
-    args->noPlaceWindow = true;
-    LoadDocument(args);
+    LoadArgs args(path, newWin);
+    args.showWin = true;
+    args.noPlaceWindow = true;
+    LoadDocument(&args);
 }
 
 // TODO: similar to Installer.cpp
@@ -2956,9 +2957,9 @@ static void OpenFolder(MainWindow* win) {
     if (!engine) {
         return;
     }
-    LoadArgs* args = new LoadArgs(dir, win);
-    args->engine = engine;
-    LoadDocument(args);
+    LoadArgs args(dir, win);
+    args.engine = engine;
+    LoadDocument(&args);
 }
 
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
@@ -3068,8 +3069,8 @@ static void OnMenuOpen(MainWindow* win) {
     StrVec files;
     GetFilesFromGetOpenFileName(&ofn, files);
     for (char* path : files) {
-        LoadArgs* args = new LoadArgs(path, win);
-        LoadDocument(args);
+        LoadArgs args(path, win);
+        LoadDocument(&args);
     }
 }
 
@@ -3115,9 +3116,9 @@ static void BrowseFolder(MainWindow* win, bool forward) {
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForTab(tab);
-    LoadArgs* args = new LoadArgs(files.at(index), win);
-    args->forceReuse = true;
-    LoadDocument(args);
+    LoadArgs args(files.at(index), win);
+    args.forceReuse = true;
+    LoadDocument(&args);
 }
 
 constexpr int kSplitterDx = 5;
@@ -4353,8 +4354,8 @@ void ReopenLastClosedFile(MainWindow* win) {
     if (!path) {
         return;
     }
-    LoadArgs* args = new LoadArgs(path, win);
-    LoadDocument(args);
+    LoadArgs args(path, win);
+    LoadDocument(&args);
 }
 
 void ClearHistory(MainWindow* win) {
@@ -4439,8 +4440,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if ((wmId >= CmdFileHistoryFirst) && (wmId <= CmdFileHistoryLast)) {
         FileState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm::DiskAccess)) {
-            LoadArgs* args = new LoadArgs(state->filePath, win);
-            LoadDocument(args);
+            LoadArgs args(state->filePath, win);
+            LoadDocument(&args);
         }
         return 0;
     }

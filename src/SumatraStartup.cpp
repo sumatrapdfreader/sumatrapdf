@@ -248,9 +248,9 @@ static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFir
 }
 
 static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
-    LoadArgs* args = new LoadArgs(filePath, nullptr);
-    args->showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
-    MainWindow* win = LoadDocument(args);
+    LoadArgs args(filePath, nullptr);
+    args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
+    MainWindow* win = LoadDocument(&args);
     if (!win) {
         return win;
     }
@@ -305,9 +305,9 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
 }
 
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
-    LoadArgs* args = new LoadArgs(state->filePath, win);
-    args->noSavePrefs = true;
-    if (!LoadDocument(args, lazyload)) {
+    LoadArgs args(state->filePath, win);
+    args.noSavePrefs = true;
+    if (!LoadDocument(&args, lazyload)) {
         return;
     }
     TabInfo* tab = win->currentTab;

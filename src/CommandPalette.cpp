@@ -563,9 +563,9 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
 
-    LoadArgs* args = new LoadArgs(s, win);
-    args->forceReuse = false; // open in a new tab
-    LoadDocument(args);
+    LoadArgs args(s, win);
+    args.forceReuse = false; // open in a new tab
+    LoadDocument(&args);
     ScheduleDelete();
 }
 

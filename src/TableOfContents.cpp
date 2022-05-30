@@ -430,8 +430,8 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
     MainWindow* newWin = FindMainWindowByFile(path, true);
     if (!newWin) {
-        LoadArgs* args = new LoadArgs(path, win);
-        newWin = LoadDocument(args);
+        LoadArgs args(path, win);
+        newWin = LoadDocument(&args);
     }
     if (newWin) {
         newWin->Focus();

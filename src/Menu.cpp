@@ -1592,8 +1592,8 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     DestroyMenu(popup);
 
     if (CmdOpenSelectedDocument == cmd) {
-        LoadArgs* args = new LoadArgs(filePath, win);
-        LoadDocument(args);
+        LoadArgs args(filePath, win);
+        LoadDocument(&args);
         return;
     }
 

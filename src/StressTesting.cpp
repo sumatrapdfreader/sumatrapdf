@@ -532,12 +532,11 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     printf("%s\n", fileName);
     fflush(stdout);
 
-    LoadArgs* args = new LoadArgs(fileName, nullptr);
+    LoadArgs args(fileName, st->win);
     // args->forceReuse = rand() % 3 != 1;
-    args->win = st->win;
-    args->forceReuse = true;
-    args->noPlaceWindow = true;
-    MainWindow* w = LoadDocument(args);
+    args.forceReuse = true;
+    args.noPlaceWindow = true;
+    MainWindow* w = LoadDocument(&args);
     if (!w) {
         return false;
     }
