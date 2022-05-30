@@ -1,0 +1,70 @@
+name: clang
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        env:
+          - { NAME: "nothing" }
+          - { NAME: "libde265 (1) / x265 / aom / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_AOM: 1, WITH_LIBDE265: 1 }
+          - { NAME: "libde265 (2) / x265 / aom / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_AOM: 1, WITH_LIBDE265: 2 }
+    env: ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        ./scripts/install-ci-linux.sh
+        sudo apt install clang
+
+    - name: Prepare CI
+      env:
+        CC: clang
+        CXX: clang++
+      run: |
+        ./scripts/prepare-ci.sh
+
+    - name: Run tests
+      env:
+        CC: clang
+        CXX: clang++
+      run: |
+        ./scripts/run-ci.sh
+
+  tidy:
+    env:
+      WITH_GRAPHICS: 1
+      WITH_X265: 1
+      WITH_AOM: 1
+      WITH_DAV1D: 1
+      WITH_RAV1E: 1
+      WITH_LIBDE265: 1
+      CMAKE: 1
+      CLANG_TIDY: 1
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        ./scripts/install-ci-linux.sh
+        sudo apt install clang-tidy-12
+
+    - name: Prepare CI
+      run: |
+        ./scripts/prepare-ci.sh
+
+    - name: Run tests
+      run: |
+        ./scripts/run-ci.sh
+
+    - name: Run clang-tidy
+      run: |
+        run-clang-tidy-12 -checks=-clang-diagnostic-tautological-compare,-clang-diagnostic-tautological-constant-out-of-range-compare -j$(nproc)

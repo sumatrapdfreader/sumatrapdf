@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        env:
+          - { NAME: "nothing" }
+          - { NAME: "cmake", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_AOM: 1, WITH_DAV1D: 1, WITH_RAV1E: 1, WITH_LIBDE265: 1, CMAKE: 1 }
+          - { NAME: "tarball", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_AOM: 1, WITH_DAV1D: 1, WITH_RAV1E: 1, WITH_LIBDE265: 1, TARBALL: 1 }
+          - { NAME: "graphics", WITH_GRAPHICS: 1 }
+          - { NAME: "x265", WITH_X265: 1 }
+          - { NAME: "x265 / graphics", WITH_GRAPHICS: 1, WITH_X265: 1 }
+          - { NAME: "libde265 (1) / graphics", WITH_GRAPHICS: 1, WITH_LIBDE265: 1 }
+          - { NAME: "libde265 (2) / graphics", WITH_GRAPHICS: 1, WITH_LIBDE265: 2 }
+          - { NAME: "libde265 (1) / x265 / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_LIBDE265: 1 }
+          - { NAME: "libde265 (2) / x265 / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_LIBDE265: 2 }
+          - { NAME: "libde265 (1) / x265 / aom / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_AOM: 1, WITH_LIBDE265: 1 }
+          - { NAME: "libde265 (1) / x265 / dav1d / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_DAV1D: 1, WITH_LIBDE265: 1 }
+          - { NAME: "libde265 (1) / x265 / aom / rav1e / graphics", WITH_GRAPHICS: 1, WITH_X265: 1, WITH_AOM: 1, WITH_RAV1E: 1, WITH_LIBDE265: 1 }
+    env: ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        ./scripts/install-ci-linux.sh
+
+    - name: Prepare CI
+      run: |
+        ./scripts/prepare-ci.sh
+
+    - name: Run tests
+      run: |
+        ./scripts/run-ci.sh

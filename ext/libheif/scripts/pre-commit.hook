@@ -1,0 +1,105 @@
+#!/bin/bash
+set -e
+#
+# HEIF codec.
+# Copyright (c) 2018 struktur AG, Joachim Bauch <bauch@struktur.de>
+#
+# This file is part of libheif.
+#
+# libheif is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# libheif is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with libheif.  If not, see <http://www.gnu.org/licenses/>.
+#
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Assume running from ".git/hooks" folder.
+CPPLINT="$ROOT/../../scripts/cpplint.py"
+if [ ! -x "$CPPLINT" ]; then
+    # Running from "scripts" folder.
+    CPPLINT="$ROOT/cpplint.py"
+fi
+
+PYTHON=$(which python || true)
+if [ -z "$PYTHON" ]; then
+    PYTHON=$(which python3 || true)
+fi
+
+# Run cpplint against changed C/C++ files and check if all enums from the API
+# are also updated in the Emscripten/Go files.
+check_c_enums=
+check_go_enums=
+logged_python=
+for file in `git diff-index --cached --name-only HEAD --diff-filter=ACMR| grep -E "\.cc$|\.h$|\.c$"` ; do
+    if [ -z "$PYTHON" ]; then
+        if [ -z "$logged_python" ]; then
+            echo "WARNING: Could not find valid Python interpreter to run cpplint, skipping checks..."
+            logged_python=1
+        fi
+    else
+        "$PYTHON" "$CPPLINT" "$file"
+    fi
+    if [ "$file" = "libheif/heif.h" ] ; then
+        check_c_enums=1
+        check_go_enums=1
+    fi
+    if [ "$file" = "libheif/heif_emscripten.h" ] ; then
+        check_c_enums=1
+    fi
+done
+
+if [ "$check_c_enums" = "1" ]; then
+    CHECK_EMSCRIPTEN="$ROOT/../../scripts/check-emscripten-enums.sh"
+    if [ ! -x "$CHECK_EMSCRIPTEN" ]; then
+        # Running from "scripts" folder.
+        CHECK_EMSCRIPTEN="$ROOT/check-emscripten-enums.sh"
+    fi
+    "$CHECK_EMSCRIPTEN"
+fi
+
+# Check format of Go files
+for file in `git diff-index --cached --name-only HEAD --diff-filter=ACMR| grep "\.go$"` ; do
+    # nf is the temporary checkout. This makes sure we check against the
+    # revision in the index (and not the checked out version).
+    nf=`git checkout-index --temp ${file} | cut -f 1`
+    newfile=`mktemp /tmp/${nf}.XXXXXX` || exit 1
+    gofmt ${nf} > "${newfile}" 2>> /dev/null
+    set +e
+    diff -u -p --label "$file" "${nf}" --label "$file (formatted)" "${newfile}"
+    r=$?
+    set -e
+    rm "${newfile}"
+    rm "${nf}"
+    if [ $r != 0 ] ; then
+echo "================================================================================================="
+echo " Code format error in: $file                                                                      "
+echo "                                                                                                 "
+echo " Please fix before committing. Don't forget to run git add before trying to commit again.        "
+echo " If the whole file is to be committed, this should work (run from the top-level directory):      "
+echo "                                                                                                 "
+echo "   go fmt $file; git add $file; git commit"
+echo "                                                                                                 "
+echo "================================================================================================="
+        exit 1
+    fi
+    if [ "$file" = "go/heif/heif.go" ] ; then
+        check_go_enums=1
+    fi
+done
+
+if [ "$check_go_enums" = "1" ]; then
+    CHECK_GO="$ROOT/../../scripts/check-go-enums.sh"
+    if [ ! -x "$CHECK_GO" ]; then
+        # Running from "scripts" folder.
+        CHECK_GO="$ROOT/check-go-enums.sh"
+    fi
+    "$CHECK_GO"
+fi

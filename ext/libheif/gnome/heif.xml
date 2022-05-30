@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="image/heif">
+    <comment>HEIF image</comment>
+    <comment xml:lang="de">HEIF-Bild</comment>
+    <glob pattern="*.heic"/>
+    <glob pattern="*.heif"/>
+    <alias type="image/heic"/>
+  </mime-type>
+</mime-info>

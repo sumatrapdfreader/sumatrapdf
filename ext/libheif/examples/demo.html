@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>libheif decoder demo</title>
+<style type="text/css">
+body {
+    font-family: sans-serif;
+    color: white;
+    background-color: black;
+}
+a {
+    color: #00c1c3;
+}
+#form, #save-container, select {
+    margin: 1em 0;
+}
+.hidden {
+    display: none;
+}
+.flexible-size {
+    position: relative;
+    height: 0;
+}
+.flexible-size canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
+</head>
+<body>
+<h1>libheif decoder demo</h1>
+<a href="https://github.com/strukturag/libheif"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/52760788cde945287fbb584134c4cbc2bc36f904/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"></a>
+<div><small>Copyright &copy; 2017-2018 by <a href="http://www.struktur.de">struktur AG</a></small></div>
+<div id="form" class="hidden">
+    <div>
+        Select HEIF image file to display:
+    </div>
+    <input type="file" id="file">
+</div>
+<select id="images" class="hidden"></select>
+<div id="loading">
+    Loading, please wait...
+</div>
+<div id="decoding" class="hidden">
+    Decoding, please wait...
+</div>
+<div id="save-container" class="hidden">
+    <button id="save">Save image...</button>
+    <div id="downloads" class="hidden">
+    </div>
+</div>
+<div id="container" class="hidden">
+    <canvas id="canvas"></canvas>
+</div>
+<div id="error-format" class="hidden">
+    The selected file is not a valid HEIF file or the specific format is not
+    supported yet.<br>
+    If you selected is a valid HEIF file and still see this error, please send
+    the file to
+    <a target="_blank" href="mailto:opensource@struktur.de">opensource@struktur.de</a>
+    so we can improve the library.
+</div>
+<script>
+(function() {
+
+    var saveSupported = false;
+
+    // IE polyfill for Canvas.toBlob
+    if (!HTMLCanvasElement.prototype.toBlob) {
+      Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
+        value: function (callback, type, quality) {
+          var canvas = this;
+          setTimeout(function() {
+
+            var binStr = atob(canvas.toDataURL(type, quality).split(',')[1]),
+                len = binStr.length,
+                arr = new Uint8Array(len);
+
+            for (var i = 0; i < len; i++ ) {
+              arr[i] = binStr.charCodeAt(i);
+            }
+
+            callback(new Blob([arr], {type: type || 'image/png'}));
+          });
+        }
+      });
+    }
+
+    function show(id) {
+        document.getElementById(id).style.display = "block";
+    }
+
+    function hide(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+    function addClass(elem, classname) {
+        if (elem.classList) {
+            elem.classList.add(classname);
+        } else {
+            var arr = elem.className.split(" ");
+            if (arr.indexOf(classname) === -1) {
+                elem.className += " " + classname;
+            }
+        }
+    }
+
+    function removeClass(elem, classname) {
+        if (elem.classList) {
+            elem.classList.remove(classname);
+        } else {
+            var arr = elem.className.split(" ");
+            var i = arr.indexOf(classname);
+            if (i >= 0) {
+                arr.splice(i, 1);
+                elem.className = arr.join(" ");
+            }
+        }
+    }
+
+    var CanvasDrawer = function(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+        this.image_data = null;
+        this.container = document.getElementById("container");
+    };
+
+    CanvasDrawer.prototype.draw = function(image) {
+        var w = image.get_width();
+        var h = image.get_height();
+        if (w != this.canvas.width || h != this.canvas.height ||
+                !this.image_data) {
+            this.canvas.width = w;
+            this.canvas.height = h;
+            if (w > document.body.clientWidth) {
+                addClass(this.container, "flexible-size");
+                this.container.style["padding-bottom"] = String(100 * (h / w)) + "%";
+            } else {
+                removeClass(this.container, "flexible-size");
+                this.container.style["padding-bottom"] = "";
+            }
+            this.image_data = this.ctx.createImageData(w, h);
+            var image_data = this.image_data.data;
+            // Start with a white image.
+            for (var i=0; i<w*h; i++) {
+                image_data[i*4+3] = 255;
+            }
+        }
+
+        image.display(this.image_data, function(display_image_data) {
+            hide("decoding");
+            if (!display_image_data) {
+                show("error-format");
+                return;
+            }
+
+            show("container");
+            if (saveSupported) {
+                show("save-container");
+            } else {
+                hide("save-container");
+            }
+            if (window.requestAnimationFrame) {
+                this.pending_image_data = display_image_data;
+                window.requestAnimationFrame(function() {
+                    if (this.pending_image_data) {
+                        this.ctx.putImageData(this.pending_image_data, 0, 0);
+                        this.pending_image_data = null;
+                    }
+                }.bind(this));
+            } else {
+                this.ctx.putImageData(display_image_data, 0, 0);
+            }
+        }.bind(this));
+    };
+
+    function HeifDemo(libheif) {
+        this.libheif = libheif;
+        this.canvas = document.getElementById("canvas");
+        this.downloads = document.getElementById("downloads");
+        this.image_data = [];
+        this.images_select = document.getElementById("images");
+        this.images_select.addEventListener("change", function(event) {
+            var index = parseInt(event.target.value, 10);
+            if (index >= 0 && index < this.image_data.length) {
+                this._showImage(this.image_data[index]);
+            }
+        }.bind(this));
+        this.drawer = new CanvasDrawer(canvas);
+        this.decoder = new libheif.HeifDecoder();
+        saveSupported = this.canvas.toBlob &&
+            ((URL && URL.createObjectURL) || navigator.msSaveOrOpenBlob);
+        if (saveSupported) {
+            console.log("Saving images is supported in this browser.");
+        } else {
+            console.warn("Saving images is not supported in this browser.");
+        }
+    }
+
+    HeifDemo.prototype.reset = function() {
+        this.canvas.width = 0;
+        this.canvas.height = 0;
+    };
+
+    HeifDemo.prototype.loadUrl = function(url) {
+        var request = new XMLHttpRequest();
+        console.log("Downloading", url);
+        request.open("get", url, true);
+        request.responseType = "arraybuffer";
+        hide("container");
+        show("loading");
+        request.onload = function(event) {
+            hide("loading");
+            if (request.status !== 200) {
+                console.log("Downloading failed", request);
+                return;
+            }
+
+            var data = request.response;
+            var remaining = data.byteLength;
+            console.log("Received", remaining, "bytes");
+            var buffer = new Uint8Array(data, 0, remaining);
+            var filename = url.substring(url.lastIndexOf('/')+1);
+            this.loadBuffer(buffer, filename);
+        }.bind(this);
+        request.send();
+    };
+
+    HeifDemo.prototype.loadBuffer = function(buffer, filename) {
+        this.filename = filename;
+        hide("error-format");
+        hide("container");
+        hide("save-container");
+        show("loading");
+        for (var i = 0; i < this.image_data.length; i++) {
+            this.image_data[i].free();
+        }
+        this.image_data = this.decoder.decode(buffer);
+        hide("loading");
+        if (!this.image_data || !this.image_data.length) {
+            show("error-format");
+            return false;
+        }
+        this._showImage(this.image_data[0]);
+        if (this.image_data.length > 1) {
+            show("images");
+            while (this.images_select.firstChild) {
+                this.images_select.removeChild(this.images_select.firstChild);
+            }
+            for (var i = 0; i < this.image_data.length; i++) {
+                var option = document.createElement("option"); 
+                option.setAttribute("value", i);
+                var label = document.createTextNode("Image " + (i+1));
+                option.appendChild(label);
+                this.images_select.appendChild(option);
+            }
+        } else {
+            hide("images");
+        }
+        return true;
+    };
+
+    HeifDemo.prototype._showImage = function(image) {
+        this.reset();
+        hide("container");
+        hide("save-container");
+        show("decoding");
+        this.drawer.draw(image);
+    };
+
+    HeifDemo.prototype.saveImage = function(format) {
+        if (!saveSupported) {
+            alert("Saving images is not supported with your browser.");
+            return;
+        }
+
+        if (!format) {
+            format = "image/jpeg";
+        }
+        while (this.downloads.firstChild) {
+            this.downloads.removeChild(this.downloads.firstChild);
+        }
+
+        var FILE_EXTENSIONS = {
+            "image/jpeg": ".jpeg",
+            "image/png": ".png"
+        };
+        this.canvas.toBlob(function(blob) {
+            var extension = FILE_EXTENSIONS[blob.type] || ".bin";
+            var basename = this.filename.replace(/\.[^/.]+$/, "");
+            if (navigator.msSaveOrOpenBlob) {
+                navigator.msSaveOrOpenBlob(blob, basename + extension);
+                return;
+            }
+
+            var url = URL.createObjectURL(blob);
+            var dlink = document.createElement("a");
+            dlink.download = basename + extension;
+            dlink.href = url;
+            this.downloads.appendChild(dlink);
+            dlink.click();
+            URL.revokeObjectURL(url);
+        }.bind(this), format);
+    };
+
+    window.onload = function() {
+        hide("loading");
+        if (typeof libheif === "undefined") {
+            alert("libheif could not be loaded, please check your browser console for details.");
+            return;
+        }
+
+        console.log("Using libheif", libheif.heif_get_version());
+        var demo = new HeifDemo(libheif);
+
+        show("form");
+
+        document.getElementById("file").addEventListener("change", function(event) {
+            var files = event.target.files;
+            if (!files || !files.length) {
+                return;
+            }
+
+            hide("container");
+            hide("error-format");
+            hide("decoding");
+            show("loading");
+            demo.reset();
+            var file = files[0];
+            var reader = new FileReader();
+            reader.onload = (function(theFile) {
+                return function(e) {
+                    hide("container");
+                    hide("save-container");
+                    setTimeout(function() {
+                        var buffer = e.target.result;
+                        if (!demo.loadBuffer(buffer, theFile.name)) {
+                            hide("container");
+                            show("error-format");
+                        }
+                    }, 1);
+                };
+            })(file);
+            reader.readAsArrayBuffer(file);
+        });
+
+        document.getElementById("save").addEventListener("click", function(event) {
+            demo.saveImage();
+        });
+
+        // Start with example image.
+        var url = "example.heic";
+        demo.loadUrl(url);
+    };
+
+}).call();
+</script>
+<script src="libheif.js"></script>
+</body>
+</html>
