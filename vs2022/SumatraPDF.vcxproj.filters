@@ -45,7 +45,7 @@
     <ClInclude Include="..\src\AppColors.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AppPrefs.h">
+    <ClInclude Include="..\src\AppSettings.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\AppTools.h">
@@ -254,7 +254,7 @@
     <ClCompile Include="..\src\AppColors.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\AppPrefs.cpp">
+    <ClCompile Include="..\src\AppSettings.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AppTools.cpp">

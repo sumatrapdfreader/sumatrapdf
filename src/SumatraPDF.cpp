@@ -56,7 +56,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
-#include "AppPrefs.h"
+#include "AppSettings.h"
 #include "AppTools.h"
 #include "Canvas.h"
 #include "Caption.h"

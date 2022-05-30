@@ -538,7 +538,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\AppColors.h" />
-    <ClInclude Include="..\src\AppPrefs.h" />
+    <ClInclude Include="..\src\AppSettings.h" />
     <ClInclude Include="..\src\AppTools.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
@@ -609,7 +609,7 @@
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AppColors.cpp" />
-    <ClCompile Include="..\src\AppPrefs.cpp" />
+    <ClCompile Include="..\src\AppSettings.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />

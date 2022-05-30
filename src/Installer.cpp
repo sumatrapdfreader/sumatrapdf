@@ -18,7 +18,7 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "AppPrefs.h"
+#include "AppSettings.h"
 #include "Settings.h"
 #include "Flags.h"
 #include "Version.h"

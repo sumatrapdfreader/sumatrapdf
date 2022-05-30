@@ -571,7 +571,7 @@ function sumatrapdf_files()
     "Accelerators.*",
     "Actions.*",
     "AppColors.*",
-    "AppPrefs.*",
+    "AppSettings.*",
     "AppTools.*",
     "Caption.*",
     "Canvas.*",

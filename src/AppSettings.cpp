@@ -25,7 +25,7 @@
 #include "TabInfo.h"
 #include "Flags.h"
 #include "MainWindow.h"
-#include "AppPrefs.h"
+#include "AppSettings.h"
 #include "AppTools.h"
 #include "Favorites.h"
 #include "Toolbar.h"

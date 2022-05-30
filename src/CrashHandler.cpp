@@ -20,7 +20,7 @@
 #include "CrashHandler.h"
 #include "Version.h"
 #include "SumatraConfig.h"
-#include "AppPrefs.h"
+#include "AppSettings.h"
 
 #include "utils/Log.h"
 

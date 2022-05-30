@@ -12,7 +12,7 @@
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppTools.h"
-#include "AppPrefs.h"
+#include "AppSettings.h"
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "Translations.h"

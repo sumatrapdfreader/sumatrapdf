@@ -27,7 +27,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
-#include "AppPrefs.h"
+#include "AppSettings.h"
 #include "Favorites.h"
 #include "Menu.h"
 #include "SumatraDialogs.h"
