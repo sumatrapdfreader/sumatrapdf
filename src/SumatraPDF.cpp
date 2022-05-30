@@ -2304,7 +2304,9 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     ClearFindBox(win);
 
     TabInfo* tab = win->currentTab;
-    RememberRecentlyClosedDocument(tab->filePath);
+    if (tab) {
+        RememberRecentlyClosedDocument(tab->filePath);
+    }
 
     // TODO: maybe should have a way to over-ride this for unconditional close?
     bool canClose = MaybeSaveAnnotations(tab);
