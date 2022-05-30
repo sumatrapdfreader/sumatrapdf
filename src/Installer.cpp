@@ -166,7 +166,7 @@ static void CopySettingsFile() {
         return;
     }
 
-    const char* prefsFileName = prefs::GetSettingsFileNameTemp();
+    const char* prefsFileName = GetSettingsFileNameTemp();
     char* srcPath = path::JoinTemp(srcDir, kAppName, prefsFileName);
     char* dstPath = path::JoinTemp(dstDir, kAppName, prefsFileName);
 

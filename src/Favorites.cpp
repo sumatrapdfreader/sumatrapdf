@@ -689,7 +689,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
         win->expandedFavorites.Append(fav);
     }
     UpdateFavoritesTreeForAllWindows();
-    prefs::Save();
+    SaveSettings();
 }
 
 void AddFavoriteForCurrentPage(MainWindow* win, int pageNo) {
@@ -724,7 +724,7 @@ void DelFavorite(const char* filePath, int pageNo) {
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites.Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();
-    prefs::Save();
+    SaveSettings();
 }
 
 void RememberFavTreeExpansionState(MainWindow* win) {
@@ -816,7 +816,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
             gFavorites.RemoveAllForFile(fp);
         }
         UpdateFavoritesTreeForAllWindows();
-        prefs::Save();
+        SaveSettings();
     }
 }
 

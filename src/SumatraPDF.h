@@ -150,7 +150,7 @@ struct LoadArgs {
     bool isNewWindow = false;
     bool placeWindow = true;
     // TODO: this is hacky. I save prefs too frequently. Need to go over
-    // and rationalize all prefs::Save() calls
+    // and rationalize all SaveSettings() calls
     bool noSavePrefs = false;
     const char* FilePath() const {
         return fileName.Get();

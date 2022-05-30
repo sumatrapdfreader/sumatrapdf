@@ -57,8 +57,6 @@ static int cmpFloat(const void* a, const void* b) {
     return *(float*)a < *(float*)b ? -1 : *(float*)a > *(float*)b ? 1 : 0;
 }
 
-namespace prefs {
-
 char* GetSettingsFileNameTemp() {
     return str::DupTemp("SumatraPDF-settings.txt");
 }
@@ -82,14 +80,14 @@ static void setMinMax(int& i, int minVal, int maxVal) {
     }
 }
 
-/* Caller needs to prefs::CleanUp() */
-bool Load() {
+/* Caller needs to CleanUpSettings() */
+bool LoadSettings() {
     CrashIf(gGlobalPrefs);
 
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("prefs::Load() took %.2f ms\n", dur);
+        logf("LoadSettings() took %.2f ms\n", dur);
     };
 
     GlobalPrefs* gprefs = nullptr;
@@ -177,7 +175,7 @@ bool Load() {
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
     if (!file::Exists(settingsPath)) {
-        Save();
+        SaveSettings();
     }
     return true;
 }
@@ -229,7 +227,7 @@ static void RememberSessionState() {
 // called whenever global preferences change or a file is
 // added or removed from gFileHistory (in order to keep
 // the list of recently opened documents in sync)
-bool Save() {
+bool SaveSettings() {
     // don't save preferences without the proper permission
     if (!HasPermission(Perm::SavePreferences)) {
         return false;
@@ -281,7 +279,7 @@ bool Save() {
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
-bool Reload() {
+bool ReloadSettings() {
     char* path = GetSettingsPathTemp();
     if (!file::Exists(path)) {
         return false;
@@ -312,9 +310,9 @@ bool Reload() {
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
     gFileHistory.UpdateStatesSource(nullptr);
-    CleanUp();
+    CleanUpSettings();
 
-    bool ok = Load();
+    bool ok = LoadSettings();
     CrashAlwaysIf(!ok || !gGlobalPrefs);
 
     gGlobalPrefs->fixedPageUI.invertColors = invertColors;
@@ -345,16 +343,16 @@ bool Reload() {
     return true;
 }
 
-void CleanUp() {
+void CleanUpSettings() {
     DeleteGlobalPrefs(gGlobalPrefs);
     gGlobalPrefs = nullptr;
 }
 
 void schedulePrefsReload() {
-    uitask::Post(prefs::Reload);
+    uitask::Post(ReloadSettings);
 }
 
-void RegisterForFileChanges() {
+void RegisterSettingsForFileChanges() {
     if (!HasPermission(Perm::SavePreferences)) {
         return;
     }
@@ -364,8 +362,6 @@ void RegisterForFileChanges() {
     gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }
 
-void UnregisterForFileChanges() {
+void UnregisterSettingsForFileChanges() {
     FileWatcherUnsubscribe(gWatchedSettingsFile);
 }
-
-}; // namespace prefs

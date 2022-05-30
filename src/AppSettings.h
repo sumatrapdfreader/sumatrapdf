@@ -9,17 +9,12 @@ enum {
     WIN_STATE_MINIMIZED,
 };
 
-namespace prefs {
-
-char* GetSettingsFileNameTemp();
 char* GetSettingsPathTemp();
+char* GetSettingsFileNameTemp();
 
-bool Load();
-bool Save();
-bool Reload();
-void CleanUp();
-
-void RegisterForFileChanges();
-void UnregisterForFileChanges();
-
-}; // namespace prefs
+bool LoadSettings();
+bool SaveSettings();
+bool ReloadSettings();
+void CleanUpSettings();
+void RegisterSettingsForFileChanges();
+void UnregisterSettingsForFileChanges();

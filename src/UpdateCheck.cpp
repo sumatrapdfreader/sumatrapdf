@@ -244,7 +244,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     }
 
     // persist the versionToSkip and timeOfLastUpdateCheck
-    prefs::Save();
+    SaveSettings();
     if (!doInstall) {
         file::Delete(installerPath);
         return;

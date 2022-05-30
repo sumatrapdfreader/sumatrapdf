@@ -1613,13 +1613,13 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
         nargs.warning = true;
         nargs.msg = msg;
         ShowNotification(nargs);
-        // display the notification ASAP (prefs::Save() can introduce a notable delay)
+        // display the notification ASAP (SaveSettings() can introduce a notable delay)
         win->RedrawAll(true);
 
         if (gFileHistory.MarkFileInexistent(fullPath)) {
             // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
             if (!args->noSavePrefs) {
-                prefs::Save();
+                SaveSettings();
             }
             // update the Frequently Read list
             if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
@@ -1685,13 +1685,13 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
             str::Free(msg);
             ShowWindow(win->hwndFrame, SW_SHOW);
 
-            // display the notification ASAP (prefs::Save() can introduce a notable delay)
+            // display the notification ASAP (SaveSettings() can introduce a notable delay)
             win->RedrawAll(true);
 
             if (gFileHistory.MarkFileInexistent(fullPath)) {
                 // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
                 if (!args->noSavePrefs) {
-                    prefs::Save();
+                    SaveSettings();
                 }
                 // update the Frequently Read list
                 if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
@@ -1773,7 +1773,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
         // TODO: this seems to save the state of file that we just opened
         // add a way to skip saving currTab?
         if (!args->noSavePrefs) {
-            prefs::Save();
+            SaveSettings();
         }
     }
 
@@ -2022,7 +2022,7 @@ static void OnMenuExit() {
     // since we are closing the windows one by one,
     // CloseWindow() must not save the session state every time
     // (or we will end up with just the last window)
-    prefs::Save();
+    SaveSettings();
     gDontSavePrefs = true;
 
     // CloseWindow removes the MainWindow from gWindows,
@@ -2324,7 +2324,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
         TabsOnCloseDoc(win);
     }
     if (!didSavePrefs) {
-        prefs::Save();
+        SaveSettings();
     }
 }
 
@@ -2408,10 +2408,10 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     }
     if (!gDontSavePrefs) {
         // if we are exiting the application by File->Exit,
-        // OnMenuExit will have called prefs::Save() already
+        // OnMenuExit will have called SaveSettings() already
         // and we skip the call here to avoid saving incomplete session info
         // (because some windows might have been closed already)
-        prefs::Save();
+        SaveSettings();
     }
     TabsOnCloseWindow(win);
 
@@ -3293,7 +3293,7 @@ void SetCurrentLanguageAndRefreshUI(const char* langCode) {
         }
     }
 
-    prefs::Save();
+    SaveSettings();
 }
 
 static void OnMenuChangeLanguage(HWND hwnd) {
@@ -3318,7 +3318,7 @@ static void OnMenuAdvancedOptions() {
         return;
     }
 
-    char* path = prefs::GetSettingsPathTemp();
+    char* path = GetSettingsPathTemp();
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
     LaunchFile(path, nullptr, "open");
@@ -3343,7 +3343,7 @@ static void OnMenuOptions(HWND hwnd) {
     // to do it right we would have to convert tabs to windows. When moving no tabs -> tabs,
     // there's no problem. When moving tabs -> no tabs, a half solution would be to only
     // call SetTabsInTitlebar() for windows that have only one tab, but that's somewhat inconsistent
-    prefs::Save();
+    SaveSettings();
 }
 
 static void OnMenuOptions(MainWindow* win) {
@@ -4384,7 +4384,7 @@ void ClearHistory(MainWindow* win) {
     gGlobalPrefs->sessionData = new Vec<SessionData*>();
     */
 
-    prefs::Save();
+    SaveSettings();
 
     // TODO: translate this message
     const char* msg = "Clearing history...";
@@ -4460,7 +4460,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                      RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN); // paint new theme
         UpdateDocumentColors();        // doing this a second time ensures the frequently read documents are updated
         UpdateAppMenu(win, (HMENU)wp); // update the radio buttons
-        prefs::Save();                 // save new preferences
+        SaveSettings();                // save new preferences
     }
 #endif
 
@@ -5341,7 +5341,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
             if (wp == TRUE) {
-                prefs::Save();
+                SaveSettings();
                 // we must quit so that we restore opened files on start.
                 DestroyWindow(hwnd);
             }

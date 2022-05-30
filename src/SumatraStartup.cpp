@@ -1145,7 +1145,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     DetectExternalViewers();
 
-    prefs::Load();
+    LoadSettings();
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
 
@@ -1276,9 +1276,9 @@ ContinueOpenWindow:
         for (SessionData* data : *gGlobalPrefs->sessionData) {
             win = CreateAndShowMainWindow(data);
             for (TabState* state : *data->tabStates) {
-                // TODO: if prefs::Save() is called, it deletes gGlobalPrefs->sessionData
+                // TODO: if SaveSettings() is called, it deletes gGlobalPrefs->sessionData
                 // we're currently iterating (happened e.g. if the file is deleted)
-                // the current fix is to not call prefs::Save() below but maybe there's a better way
+                // the current fix is to not call SaveSettings() below but maybe there's a better way
                 // maybe make a copy of TabState so that it isn't invalidated
                 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
                 RestoreTabOnStartup(win, state, gEnableLazyLoad);
@@ -1360,7 +1360,7 @@ ContinueOpenWindow:
         gFileExistenceChecker->Start();
     }
     // call this once it's clear whether Perm::SavePreferences has been granted
-    prefs::RegisterForFileChanges();
+    RegisterSettingsForFileChanges();
 
     // Change current directory for 2 reasons:
     // * prevent dll hijacking (LoadLibrary first loads from current directory
@@ -1384,7 +1384,7 @@ ContinueOpenWindow:
     CleanUpThumbnailCache(gFileHistory);
 
 Exit:
-    prefs::UnregisterForFileChanges();
+    UnregisterSettingsForFileChanges();
 
     HandleRedirectedConsoleOnShutdown();
 
@@ -1425,10 +1425,10 @@ Exit:
     SaveCallstackLogs();
     dbghelp::FreeCallstackLogs();
 
-    // must be after uitask::Destroy() because we might have queued prefs::Reload()
+    // must be after uitask::Destroy() because we might have queued ReloadSettings()
     // which crashes if gGlobalPrefs is freed
     gFileHistory.UpdateStatesSource(nullptr);
-    prefs::CleanUp();
+    CleanUpSettings();
 
     FreeAllMenuDrawInfos();
 
