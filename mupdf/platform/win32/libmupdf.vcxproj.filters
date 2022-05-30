@@ -612,6 +612,9 @@
     <ClCompile Include="..\..\source\reflow\reflow-doc.c">
       <Filter>reflow</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\html\xml-dom.c">
+      <Filter>html</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -856,6 +859,12 @@
     </ClInclude>
     <ClInclude Include="..\..\source\pdf\pdf-annot-imp.h">
       <Filter>pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\story.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\xml-imp.h">
+      <Filter>fitz</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

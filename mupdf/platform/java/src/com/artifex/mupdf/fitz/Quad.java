@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -21,6 +21,8 @@
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
 package com.artifex.mupdf.fitz;
+
+import java.util.Objects;
 
 public class Quad
 {
@@ -130,6 +132,7 @@ public class Quad
 			+ "]";
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Quad))
 			return false;
@@ -137,5 +140,10 @@ public class Quad
 		return ul_x == other.ul_x && ul_y == other.ul_y && ur_x == other.ur_x &&
 			ur_y == other.ur_y && ll_x == other.ll_x && ll_y == other.ll_y &&
 			lr_x == other.lr_x && lr_y == other.lr_y;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(ul_x, ul_y, ur_x, ur_y, ll_x, ll_y, lr_x, lr_y);
 	}
 }

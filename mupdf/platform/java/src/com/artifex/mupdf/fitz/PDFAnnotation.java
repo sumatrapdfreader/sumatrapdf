@@ -23,6 +23,7 @@
 package com.artifex.mupdf.fitz;
 
 import java.util.Date;
+import java.util.Objects;
 
 public class PDFAnnotation
 {
@@ -42,12 +43,17 @@ public class PDFAnnotation
 		pointer = p;
 	}
 
-	public boolean equals(PDFAnnotation other) {
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof PDFAnnotation))
+			return false;
+		PDFAnnotation other = (PDFAnnotation) obj;
 		return (this.pointer == other.pointer);
 	}
 
-	public boolean equals(long other) {
-		return (this.pointer == other);
+	@Override
+	public int hashCode() {
+		return Objects.hash(pointer);
 	}
 
 	public native void run(Device dev, Matrix ctm, Cookie cookie);

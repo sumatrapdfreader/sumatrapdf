@@ -150,7 +150,7 @@ FUN(OutlineIterator_update)(JNIEnv *env, jobject self, jstring jtitle, jstring j
 		jni_rethrow_void(env, ctx);
 }
 
-JNIEXPORT int JNICALL
+JNIEXPORT jint JNICALL
 FUN(OutlineIterator_insert)(JNIEnv *env, jobject self, jstring jtitle, jstring juri, jboolean is_open)
 {
 	fz_context *ctx = get_context(env);

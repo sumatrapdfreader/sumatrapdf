@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -22,46 +22,45 @@
 
 package com.artifex.mupdf.fitz;
 
-import java.util.Objects;
-
-public class Point
+public class HTMLStory
 {
-	public float x;
-	public float y;
-
-	public Point(float x, float y) {
-		this.x = x;
-		this.y = y;
+	static {
+		Context.init();
 	}
 
-	public Point(Point p) {
-		this.x = p.x;
-		this.y = p.y;
+	protected long pointer;
+
+	protected native void finalize();
+
+	public void destroy() {
+		finalize();
 	}
 
-	public String toString() {
-		return "[" + x + " " + y + "]";
+	private static native long newHTMLStory(byte[] content, byte[] user_css, float em);
+
+	public HTMLStory(String content, String user_css, float em)
+	{
+		pointer = newHTMLStory(content.getBytes(), user_css.getBytes(), em);
 	}
 
-	public Point transform(Matrix tm) {
-		float old_x = this.x;
-
-		this.x = old_x * tm.a + y * tm.c + tm.e;
-		this.y = old_x * tm.b + y * tm.d + tm.f;
-
-		return this;
+	public HTMLStory(byte[] content, String user_css, float em)
+	{
+		pointer = newHTMLStory(content, user_css.getBytes(), em);
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof Point))
-			return false;
-		Point other = (Point) obj;
-		return x == other.x && y == other.y;
+	public HTMLStory(String content, byte[] user_css, float em)
+	{
+		pointer = newHTMLStory(content.getBytes(), user_css, em);
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(x, y);
+	public HTMLStory(byte[] content, byte[] user_css, float em)
+	{
+		pointer = newHTMLStory(content, user_css, em);
 	}
+
+	public native boolean place(Rect rect, Rect filled);
+
+	public native void draw(Device dev, Matrix ctm);
+
+	public native DOM document();
 }

@@ -431,6 +431,33 @@ static inline jobjectArray to_QuadArray_safe(fz_context *ctx, JNIEnv *env, const
 	return arr;
 }
 
+static inline jobject to_DOM_safe(fz_context *ctx, JNIEnv *env, fz_xml *xml)
+{
+	jobject jxml;
+
+	if (!ctx || !xml) return NULL;
+
+	fz_keep_xml(ctx, xml);
+	jxml = (*env)->NewObject(env, cls_DOM, mid_DOM_init, jlong_cast(xml));
+	if (!jxml) fz_drop_xml(ctx, xml);
+	if ((*env)->ExceptionCheck(env)) return NULL;
+
+	return jxml;
+}
+
+static inline jobject to_String_safe(fz_context *ctx, JNIEnv *env, const char *val)
+{
+	jstring jval;
+	if (!ctx) return NULL;
+
+	jval = (*env)->NewStringUTF(env, val);
+	if (!jval || (*env)->ExceptionCheck(env))
+		fz_throw_java(ctx, env);
+
+	return jval;
+}
+
+
 static int count_next_hits(const int *marks, int a, int end)
 {
 	int b = a + 1;
@@ -1117,6 +1144,12 @@ static inline fz_font *from_Font_safe(JNIEnv *env, jobject jobj)
 	return CAST(fz_font *, (*env)->GetLongField(env, jobj, fid_Font_pointer));
 }
 
+static inline fz_html_story *from_HTMLStory_safe(JNIEnv *env, jobject jobj)
+{
+	if (!jobj) return NULL;
+	return CAST(fz_html_story *, (*env)->GetLongField(env, jobj, fid_HTMLStory_pointer));
+}
+
 static inline fz_image *from_Image_safe(JNIEnv *env, jobject jobj)
 {
 	if (!jobj) return NULL;
@@ -1211,4 +1244,10 @@ static inline fz_text *from_Text_safe(JNIEnv *env, jobject jobj)
 {
 	if (!jobj) return NULL;
 	return CAST(fz_text *, (*env)->GetLongField(env, jobj, fid_Text_pointer));
+}
+
+static inline fz_xml *from_DOM_safe(JNIEnv *env, jobject jobj)
+{
+	if (!jobj) return NULL;
+	return CAST(fz_xml *, (*env)->GetLongField(env, jobj, fid_DOM_pointer));
 }

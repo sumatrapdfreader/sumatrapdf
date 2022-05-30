@@ -18,6 +18,7 @@ else ifeq ($(build),memento)
 else
   BUILD_FLAGS := -DNDEBUG -O2
 endif
+BUILD_FLAGS += $(XCFLAGS)
 
 ifndef OUT
   OUT := build/java/$(build)
@@ -70,6 +71,8 @@ EXAMPLE_JAVA_OBJECTS := $(subst example/,../../$(OUT)/example/,$(EXAMPLE_JAVA_SO
 
 default: $(MUPDF_JAVA) $(MUPDF_JAR) $(EXAMPLE_JAVA_OBJECTS)
 
+jar: $(MUPDF_JAR)
+
 MUPDF_CORE := ../../$(OUT)/libmupdf.a ../../$(OUT)/libmupdf-third.a
 ifeq "$(OS)" "Linux"
 $(MUPDF_CORE) : .FORCE
@@ -110,6 +113,9 @@ $(MUPDF_JAVA) : ../../$(OUT)/mupdf_native.o $(MUPDF_CORE)
 
 run: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.Viewer $$MUPDF_ARGS
+
+storytest:  $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
+	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.StoryTest $$MUPDF_ARGS
 
 gdb: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	gdb --args $(JAVA) -classpath ../../$(OUT) -Djava.library.path="../../$(OUT)" example.Viewer $$MUPDF_ARGS

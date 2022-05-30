@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -22,6 +22,8 @@
 
 package com.artifex.mupdf.fitz;
 
+import java.util.Objects;
+
 public class Location
 {
 	public final int chapter;
@@ -32,11 +34,17 @@ public class Location
 		this.page = page;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Location))
 			return false;
 		Location other = (Location) obj;
 		return this.chapter == other.chapter && this.page == other.page;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.chapter, this.page);
 	}
 
 	public String toString() {
