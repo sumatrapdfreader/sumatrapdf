@@ -25,6 +25,7 @@
 #include "Tabs.h"
 #include "ExternalViewers.h"
 #include "Annotation.h"
+#include "FileHistory.h"
 
 #include "utils/Log.h"
 
@@ -180,6 +181,10 @@ CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsCmdInList(gBlacklistCommandsFromPalette)) {
         return false;
+    }
+
+    if (CmdReopenLastClosedFile == cmdId) {
+        return RecentlyCloseDocumentsCount() > 0;
     }
 
     if (!ctx.isDocLoaded) {
