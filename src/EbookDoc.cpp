@@ -402,7 +402,7 @@ bool EpubDoc::Load() {
             }
             // load the image lazily
             ImageData data;
-            data.fileName = imgPath; // TODO: str:Dup(imgPath) ?
+            data.fileName = str::Dup(imgPath);
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediaType)) {
@@ -534,14 +534,13 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         // styling related state (such as nextPageStyle, listDepth, etc. including
         // format specific state such as hiddenDepth and titleCount) and store it
         // in every HtmlPage, but this should work well enough for now
-        for (size_t i = 0; i < images.size(); i++) {
-            ImageData* img = &images.at(i);
-            if (str::EndsWithI(img->fileName, fileName)) {
-                if (img->base.empty()) {
-                    img->base = zip->GetFileDataById(img->fileId);
+        for (ImageData& img : images) {
+            if (str::EndsWithI(img.fileName, fileName)) {
+                if (img.base.empty()) {
+                    img.base = zip->GetFileDataById(img.fileId);
                 }
-                if (!img->base.empty()) {
-                    return &img->base;
+                if (!img.base.empty()) {
+                    return &img.base;
                 }
             }
         }
@@ -553,14 +552,13 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     if (str::FindChar(url, '\\')) {
         str::TransCharsInPlace(url, "\\", "/");
     }
-    for (size_t i = 0; i < images.size(); i++) {
-        ImageData* img = &images.at(i);
-        if (str::Eq(img->fileName, url)) {
-            if (img->base.empty()) {
-                img->base = zip->GetFileDataById(img->fileId);
+    for (ImageData& img : images) {
+        if (str::Eq(img.fileName, url)) {
+            if (img.base.empty()) {
+                img.base = zip->GetFileDataById(img.fileId);
             }
-            if (!img->base.empty()) {
-                return &img->base;
+            if (!img.base.empty()) {
+                return &img.base;
             }
         }
     }
