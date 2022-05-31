@@ -49,8 +49,8 @@ mujs            1.0.6      Apr 4, 2019
 openjpeg        2.3.1      2020-02-07
   https://git.ghostscript.com/?p=thirdparty-openjpeg.git;a=commit;h=6596aacc8af6c940586ed0e81bed30c3c282bf82   
 
-synctex         1.16       2011-06-14
-  https://itexmac.sourceforge.net/SyncTeX.html
+synctex         1.21       2020-06-22
+  https://github.com/jlaurens/synctexl
 
 UnRAR           5.9.3
   https://www.rarlab.com/rar_add.htm

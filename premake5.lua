@@ -836,10 +836,8 @@ workspace "SumatraPDF"
 
     webviewconf()
 
-    synctex_files()
     mui_files()
     wingui_files()
-    uia_files()
     sumatrapdf_files()
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -853,11 +851,14 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    synctex_files()
+    defines { "SYNCTEX_NO_UPDATER" }
+    disablewarnings { "4100", "4102", "4244", "4267", "4702", "4706" }
     zlib_ng_defines()
     includedirs { "ext/zlib-ng", "ext/synctex" }
 
     -- for uia
+    uia_files()
     disablewarnings { "4302", "4311", "4838" }
 
     links {
@@ -884,7 +885,6 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
 
-    synctex_files()
     mui_files()
     wingui_files()
     uia_files()
@@ -903,7 +903,9 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    synctex_files()
+    defines { "SYNCTEX_NO_UPDATER" }
+    disablewarnings { "4100", "4102", "4244", "4267", "4702", "4706" }
     zlib_ng_defines()
     includedirs { "ext/zlib-ng", "ext/synctex" }
 
