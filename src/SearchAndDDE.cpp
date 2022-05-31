@@ -472,7 +472,8 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     Point pt = ToPoint(dm->CvtFromScreen(Point(x, y), pageNo));
     AutoFreeStr srcfilepath;
-    uint line, col;
+    int line = 0;
+    int col = 0;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         NotificationCreateArgs args;
@@ -527,7 +528,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(MainWindow* win, const char* fileName, uint line, uint /* col */, uint ret, uint page,
+void ShowForwardSearchResult(MainWindow* win, const char* fileName, int line, int /* col */, int ret, int page,
                              Vec<Rect>& rects) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -670,7 +671,7 @@ static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
     }
 
     ack.fAck = 1;
-    uint page;
+    int page;
     Vec<Rect> rects;
     int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);

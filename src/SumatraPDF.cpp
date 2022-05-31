@@ -381,7 +381,7 @@ MainWindow* FindMainWindowByFile(const char* file, bool focusTab) {
 MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
     for (MainWindow* win : gWindows) {
         Vec<Rect> rects;
-        uint page;
+        int page;
         auto dm = win->AsFixed();
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;

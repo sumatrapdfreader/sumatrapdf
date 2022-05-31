@@ -32,14 +32,14 @@ class Synchronizer {
     //  - filename: receives the name of the source file
     //  - line: receives the line number
     //  - col: receives the column number
-    virtual int DocToSource(UINT pageNo, Point pt, AutoFreeStr& filename, UINT* line, UINT* col) = 0;
+    virtual int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) = 0;
 
     // Forward-search:
     // The result is returned in page and rects (list of rectangles to highlight).
-    virtual int SourceToDoc(const char* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) = 0;
+    virtual int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
 
     // the caller must free() the command line
-    char* PrepareCommandline(const char* pattern, const char* filename, UINT line, UINT col);
+    char* PrepareCommandline(const char* pattern, const char* filename, int line, int col);
 
   private:
     bool indexDiscarded; // true if the index needs to be recomputed (needs to be set to true when a change to the

@@ -290,7 +290,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
         dm->SetScrollState(ss);
     }
     if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
-        uint page;
+        int page;
         Vec<Rect> rects;
         char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
         int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
