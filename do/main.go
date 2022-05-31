@@ -17,10 +17,12 @@ var (
 
 func regenPremake() {
 	premakePath := filepath.Join("bin", "premake5.exe")
-	{
-		cmd := exec.Command(premakePath, "vs2019")
-		runCmdLoggedMust(cmd)
-	}
+	/*
+		{
+			cmd := exec.Command(premakePath, "vs2019")
+			runCmdLoggedMust(cmd)
+		}
+	*/
 	{
 		cmd := exec.Command(premakePath, "vs2022")
 		runCmdLoggedMust(cmd)
