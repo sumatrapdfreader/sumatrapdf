@@ -322,7 +322,7 @@ workspace "SumatraPDF"
     optconf()
     defines { "_CRT_SECURE_NO_WARNINGS" }
     filter {'platforms:x32'}
-      defines { "ARCH_X86_32=1", "ARCH_X86_64=0" }
+      defines { "ARCH_X86_32=1", "ARCH_X86_64=0", "__SSE2__" }
     filter {'platforms:x64 or x64_asan'}
       defines { "ARCH_X86_32=0", "ARCH_X86_64=1" }
     filter{}
@@ -336,7 +336,7 @@ workspace "SumatraPDF"
        buildmessage '%{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
        buildcommands {
-          '..\\bin\\nasm.exe -f win32 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+          '..\\bin\\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
        }
     filter {}
     filter {'files:**.asm', 'platforms:x64 or x64_asan'}
