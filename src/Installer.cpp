@@ -90,9 +90,9 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked)
 }
 
 char* GetInstallerLogPath() {
-    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    TempStr dir = GetTempDirTemp();
     if (!dir) {
-        return nullptr;
+        return str::DupTemp("sumatra-install-log.txt");
     }
     return path::Join(dir, "sumatra-install-log.txt");
 }

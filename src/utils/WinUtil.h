@@ -64,26 +64,34 @@ bool DeleteRegValue(HKEY keySub, const char* keyName, const char* val);
 bool LoggedDeleteRegValue(HKEY keySub, const char* keyName, const char* val);
 HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid);
 
+// file and directory operations
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
+TempStr GetTempDirTemp();
+TempStr GetExePathTemp();
+TempStr GetExeDirTemp();
+void ChangeCurrDirToDocuments();
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
+char* ResolveLnkTemp(const char* path);
+bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args = nullptr,
+                    const char* description = nullptr, int iconIndex = 0);
+DWORD GetFileVersion(const char* path);
+IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
+
+HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
+bool CreateProcessHelper(const char* exe, const char* args);
+bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
+bool LaunchBrowser(const char* url);
+
+bool LaunchElevated(const char* path, const char* cmdline);
+bool IsProcessRunningElevated();
+bool CanTalkToProcess(DWORD procId);
+DWORD GetAccountType();
+DWORD GetOriginalAccountType();
 
 void DisableDataExecution();
 bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
-
-TempStr GetExePathTemp();
-
-TempStr GetExeDirTemp();
-
-void ChangeCurrDirToDocuments();
-int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
-
-char* ResolveLnkTemp(const char* path);
-
-bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args = nullptr,
-                    const char* description = nullptr, int iconIndex = 0);
-IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
-DWORD GetFileVersion(const char* path);
 
 bool IsKeyPressed(int key);
 bool IsShiftPressed();
@@ -99,19 +107,6 @@ Rect GetWorkAreaRect(Rect rect, HWND hwnd);
 void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
 Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
-
-bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
-bool LaunchBrowser(const char* url);
-
-HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
-
-bool CreateProcessHelper(const char* exe, const char* args);
-bool LaunchElevated(const char* path, const char* cmdline);
-
-bool IsProcessRunningElevated();
-bool CanTalkToProcess(DWORD procId);
-DWORD GetAccountType();
-DWORD GetOriginalAccountType();
 
 void PaintRect(HDC, Rect);
 void PaintLine(HDC, Rect);

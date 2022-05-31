@@ -71,6 +71,10 @@ NORMALIZ_API_LIST(API_DECLARATION)
     V(SetThreadDescription)     \
     V(SetProcessMitigationPolicy)
 
+
+// TODO: only available in 20348, not yet present in SDK?
+//V(GetTempPath2W)            \
+
 KERNEL32_API_LIST(API_DECLARATION2)
 
 // user32.dll

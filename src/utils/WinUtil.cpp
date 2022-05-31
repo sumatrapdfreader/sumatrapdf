@@ -530,6 +530,28 @@ TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
     return ToUtf8Temp(path);
 }
 
+// temp directory
+TempStr GetTempDirTemp() {
+    WCHAR dir[MAX_PATH] = {0};
+#if 0 // TODO: only available in 20348, not yet present in SDK
+    DWORD cch = 0;
+    if (DynGetTempPath2W) {
+        cch = DynGetTempPath2W(dimof(dir), dir);
+    }
+    if (cch == 0) {
+        cch = GetTempPathW(dimof(dir), dir);
+    }
+#else
+    DWORD cch = GetTempPathW(dimof(dir), dir);
+#endif
+    if (cch == 0) {
+        return {};
+    }
+    // TODO: should handle this
+    CrashIf(cch >= dimof(dir));
+    return ToUtf8Temp(dir, cch);
+}
+
 void DisableDataExecution() {
     // first try the documented SetProcessDEPPolicy
     if (DynSetProcessDEPPolicy) {
