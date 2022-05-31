@@ -54,6 +54,9 @@
     <ClInclude Include="..\ext\dav1d\include\dav1d\picture.h">
       <Filter>include\dav1d</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\dav1d\include\dav1d\version.h">
+      <Filter>include\dav1d</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\dav1d\src\cdf.c">

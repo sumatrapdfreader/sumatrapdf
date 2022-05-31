@@ -249,6 +249,26 @@ function jbig2dec_files()
   })
 end
 
+function libheif_files() 
+  files_in_dir("ext/libheif/libheif", {
+    "bitstream.*",
+    "box.*",
+    "error.*",
+    "heif.*",
+    "heif_avif.*",
+    "heif_colorconversion.*",
+    "heif_context.*",
+    "heif_decoder_dav1d.*",
+    "heif_file.*",
+    "heif_hevc.*",
+    "heif_image.*",
+    "heif_plugin.*",
+    "heif_plugin_registry.*",
+    "nclx.*",
+  })
+
+end
+
 function dav1d_files()
   files_in_dir("ext/dav1d/src", {
     "lib.c",
