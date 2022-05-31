@@ -927,8 +927,9 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
         // another ChmModel might still be active
         chmModel->RemoveParentHwnd();
         ctrl = chmModel;
+        CrashIf(!ctrl->AsChm() || ctrl->AsFixed());
     }
-    CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed()));
+    CrashIf(!ctrl);
     VerifyController(ctrl, path);
     return ctrl;
 }

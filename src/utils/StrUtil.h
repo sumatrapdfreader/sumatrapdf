@@ -27,8 +27,8 @@ struct ByteSlice {
         curr = d;
         sz = strlen(str);
     }
-    ByteSlice(u8* data, size_t size) {
-        d = data;
+    ByteSlice(const u8* data, size_t size) {
+        d = (u8*)data;
         curr = d;
         sz = size;
     }
