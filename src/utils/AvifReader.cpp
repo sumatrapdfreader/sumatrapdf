@@ -4,55 +4,109 @@
 #include "utils/BaseUtil.h"
 #include "utils/AvifReader.h"
 
-#include <dav1d/dav1d.h>
+#ifndef NO_AVIF
 
-bool HasAvifSignature(ByteSlice) {
+#include <libheif/heif.h>
+
+// - image/heic           HEIF file using h265 compression
+// - image/heif           HEIF file using any other compression
+// - image/heic-sequence  HEIF image sequence using h265 compression
+// - image/heif-sequence  HEIF image sequence using any other compression
+// - image/avif
+// - image/avif-sequence
+
+static const char* gSupportedTypes =
+    "image/heic\0"
+    "image/heif\0"
+    "image/avif\0\0";
+
+bool HasAvifSignature(const ByteSlice& d) {
+    const char* mimeType = heif_get_file_mime_type(d.Get(), d.Size());
+    if (!mimeType) {
+        return false;
+    }
+    int idx = seqstrings::StrToIdxIS(gSupportedTypes, mimeType);
+    return idx >= 0;
+}
+
+Size AvifSizeFromData(const ByteSlice& d) {
+    Size res;
+    struct heif_image_handle* hdl = nullptr;
+    struct heif_image* img = nullptr;
+
+    heif_context* ctx = heif_context_alloc();
+
+    // TODO: can I provide a subset of the image?
+    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)d.Get(), d.size(), nullptr);
+    if (err.code != heif_error_Ok) {
+        goto Exit;
+    }
+    err = heif_context_get_primary_image_handle(ctx, &hdl);
+    if (err.code != heif_error_Ok) {
+        goto Exit;
+    }
+    res.dx = heif_image_handle_get_width(hdl);
+    res.dy = heif_image_handle_get_width(hdl);
+
+Exit:
+    if (hdl) {
+        heif_image_handle_release(hdl);
+    }
+    heif_context_free(ctx);
+    return res;
+}
+
+Gdiplus::Bitmap* AvifImageFromData(const ByteSlice& d) {
+    Gdiplus::Bitmap* bmp = nullptr;
+    struct heif_image_handle* hdl = nullptr;
+    struct heif_image* img = nullptr;
+    int dx, dy, stride;
+    int has_alpha;
+    const u8* data = nullptr;
+
+    heif_context* ctx = heif_context_alloc();
+    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)d.Get(), d.size(), nullptr);
+
+    if (err.code != heif_error_Ok) {
+        goto Exit;
+    }
+
+    err = heif_context_get_primary_image_handle(ctx, &hdl);
+    if (err.code != heif_error_Ok) {
+        goto Exit;
+    }
+
+    dx = heif_image_handle_get_width(hdl);
+    dy = heif_image_handle_get_width(hdl);
+
+    has_alpha = heif_image_handle_has_alpha_channel(hdl);
+
+    err = heif_decode_image(hdl, &img, heif_colorspace_RGB,
+                            has_alpha ? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RGB, nullptr);
+
+    if (err.code != heif_error_Ok) {
+        goto Exit;
+    }
+
+    data = heif_image_get_plane_readonly(img, heif_channel_interleaved, &stride);
+
+Exit:
+    if (hdl) {
+        heif_image_handle_release(hdl);
+    }
+    if (ctx) {
+        heif_context_free(ctx);
+    }
+    return bmp;
+}
+#else
+bool HasAvifSignature(const ByteSlice&) {
     return false;
 }
-Size AvifSizeFromData(ByteSlice) {
+Size AvifSizeFromData(const ByteSlice&) {
     return {};
 }
-
-#if 0
-avifCodec* avifCodecCreateDav1d(void) {
-    avifCodec* codec = (avifCodec*)avifAlloc(sizeof(avifCodec));
-    memset(codec, 0, sizeof(struct avifCodec));
-    codec->getNextImage = dav1dCodecGetNextImage;
-    codec->destroyInternal = dav1dCodecDestroyInternal;
-
-    codec->internal = (struct avifCodecInternal*)avifAlloc(sizeof(struct avifCodecInternal));
-    memset(codec->internal, 0, sizeof(struct avifCodecInternal));
-    dav1d_default_settings(&codec->internal->dav1dSettings);
-
-    // Ensure that we only get the "highest spatial layer" as a single frame
-    // for each input sample, instead of getting each spatial layer as its own
-    // frame one at a time ("all layers").
-    codec->internal->dav1dSettings.all_layers = 0;
-    return codec;
-}
-#endif
-
-void log_callback(void*, const char*, va_list) {
-}
-
-Gdiplus::Bitmap* AvifImageFromData(ByteSlice) {
-    // Dav1dPicture* p;
-    Dav1dContext* c = NULL;
-
-    Dav1dSettings settings = {};
-    dav1d_default_settings(&settings);
-    // NOTE(ledyba-z):
-    // If > 1, dav1d tends to buffer frames(?). See libavif
-    settings.max_frame_delay = 1;
-    settings.logger.cookie = 0;
-    settings.logger.callback = log_callback;
-    settings.n_threads = 1;
-    int err = dav1d_open(&c, &settings);
-    if (err != 0) {
-        return nullptr;
-    }
-    // Dav1dPicture primaryImg = {};
-    // Dav1dPicture alphaImg = {};
-
+Gdiplus::Bitmap* AvifImageFromData(const ByteSlice&) {
     return nullptr;
 }
+#endif

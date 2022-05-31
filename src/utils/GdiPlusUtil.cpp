@@ -9,6 +9,7 @@
 #include "utils/ByteReader.h"
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
+#include "utils/AvifReader.h"
 #include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
 
@@ -325,21 +326,32 @@ static Bitmap* DecodeWithGdiplus(ByteSlice bmpData) {
     return bmp;
 }
 
-Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
-    Kind format = GuessFileTypeFromContent(bmpData);
-    if (kindFileTga == format) {
-        return tga::ImageFromData(bmpData);
+Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
+    Bitmap* bmp = nullptr;
+
+    Kind kind = GuessFileTypeFromContent(bmpData);
+    if (kindFileTga == kind) {
+        bmp = tga::ImageFromData(bmpData);
+        if (bmp) {
+            return bmp;
+        }
     }
-    if (kindFileWebp == format) {
-        return webp::ImageFromData(bmpData);
+    if (kindFileWebp == kind) {
+        bmp = webp::ImageFromData(bmpData);
+        if (bmp) {
+            return bmp;
+        }
+    }
+
+    if (kindFileHeic == kind || kindFileAvif == kind) {
+        bmp = AvifImageFromData(bmpData);
     }
 
     // those are potentially multi-image formats and WICDecodeImageFromStream
     // doesn't support that
     // TODO: more formats? webp?
-    bool tryGdiplusFirst = (kindFileTiff == format) || (kindFileGif == format);
+    bool tryGdiplusFirst = (kindFileTiff == kind) || (kindFileGif == kind);
 
-    Bitmap* bmp = nullptr;
     if (tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
     }
@@ -356,7 +368,7 @@ Bitmap* BitmapFromDataWin(ByteSlice bmpData) {
 #define JP2_IHDR 0x69686472 /**< Image header box */
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Size BitmapSizeFromData(ByteSlice d) {
+Size BitmapSizeFromData(const ByteSlice& d) {
     Size result;
     ByteReader r(d);
     size_t len = d.size();

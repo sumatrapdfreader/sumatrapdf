@@ -243,26 +243,31 @@ static bool IsPSFileContent(ByteSlice d) {
 // https://github.com/file/file/blob/7449263e1d6167233b3b6abfc3e4c13407d6432c/magic/Magdir/animation#L265
 // https://nokiatech.github.io/heif/technical.html
 // TODO: need to figure out heif vs. heic
-static bool IsHeicContent(ByteSlice d) {
+static Kind DetectHicAndAvif(const ByteSlice& d) {
     if (d.size() < 0x18) {
-        return false;
+        return nullptr;
     }
     char* s = (char*)d.data();
     char* hdr = s + 4;
     bool isheic = str::StartsWith(hdr, "ftypheic");
     bool ismif = str::StartsWith(hdr, "ftypmif1");
+    bool isAvif = str::StartsWith(hdr, "ftypavif");
     if (!(isheic || ismif)) {
-        return false;
+        return kindFileHeic;
     }
+    if (isAvif) {
+        return kindFileAvif;
+    }
+
     hdr = s + 16;
-    if (!str::StartsWith(hdr, "mif1heic")) {
-        return false;
+    if (str::StartsWith(hdr, "mif1heic")) {
+        return kindFileHeic;
     }
-    return true;
+    return nullptr;
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(ByteSlice d) {
+Kind GuessFileTypeFromContent(const ByteSlice& d) {
     // TODO: sniff .fb2 content
     u8* data = d.data();
     size_t len = d.size();
@@ -278,9 +283,9 @@ Kind GuessFileTypeFromContent(ByteSlice d) {
             return gFileSigs[i].kind;
         }
     }
-
-    if (IsHeicContent(d)) {
-        return kindFileHeic;
+    Kind kind = DetectHicAndAvif(d);
+    if (kind) {
+        return kind;
     }
 
     if (IsPdfFileContent(d)) {
@@ -377,7 +382,9 @@ Kind GuessFileTypeFromContent(const char* path) {
     if (n <= 0) {
         return nullptr;
     }
-    auto res = GuessFileTypeFromContent({(u8*)buf, (size_t)n});
+
+    ByteSlice d = {(u8*)buf, (size_t)n};
+    auto res = GuessFileTypeFromContent(d);
     if (res == kindFileZip) {
         MultiFormatArchive* archive = OpenZipArchive(path, true);
         if (archive) {
@@ -508,7 +515,7 @@ const char* GfxFileExtFromKind(Kind kind) {
     return nullptr;
 }
 
-const char* GfxFileExtFromData(ByteSlice d) {
+const char* GfxFileExtFromData(const ByteSlice& d) {
     Kind kind = GuessFileTypeFromContent(d);
     return GfxFileExtFromKind(kind);
 }

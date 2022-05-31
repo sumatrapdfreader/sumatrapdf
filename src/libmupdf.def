@@ -872,14 +872,29 @@ EXPORTS
 	inflateInit_
 	inflateInit2_
 
-; lzma exports (required for LzmaSimpleArchive)
+; lzma exports (needed for LzmaSimpleArchive)
 
 ;	LzmaDecode
 ;	x86_Convert
 
-; libwebp exports (required for WebpReader)
+; libwebp exports (needed for WebpReader)
 
 	WebPDecodeBGRAInto
 	WebPGetInfo
 
-; libavif exports (required for AvifReader)
+; libavif exports (needed for AvifReader)
+
+; libheif exports (needed for AvifReader)
+	heif_get_file_mime_type
+	heif_context_alloc
+	heif_context_free
+	heif_context_read_from_memory_without_copy
+	heif_context_get_primary_image_handle
+	heif_image_handle_release
+	heif_image_handle_has_alpha_channel
+	heif_decode_image
+	heif_image_get_width
+	heif_image_get_height
+	heif_image_get_plane_readonly
+	heif_image_handle_get_width
+	heif_image_handle_get_height
