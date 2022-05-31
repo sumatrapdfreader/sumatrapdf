@@ -160,6 +160,7 @@ static struct {
     {"sublime_text.exe", "\"%f:%l\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1", "DisplayIcon"},
     {"sublime_text.exe", "\"%f:%l\"", BinaryDir, kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1", "InstallLocation"},
     {"sublime_text.exe", "\"%f:%l\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1", "DisplayIcon"},
+    {"sublime_text.exe", "\"%f:%l\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Sublime Text_is1", "DisplayIcon"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, "Software\\ToolsCenter\\TeXnicCenterNT",
      "AppPath"},
     {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
@@ -224,7 +225,7 @@ char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
             continue;
         }
 
-        AutoFreeStr editorCmd(str::Format("\"%s\" %s", exePath, inverseSearchArgs));
+        AutoFreeStr editorCmd = str::Format("\"%s\" %s", exePath, inverseSearchArgs);
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
