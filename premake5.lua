@@ -304,6 +304,18 @@ workspace "SumatraPDF"
   -- build src/libdav1d.a.p/looprestoration_avx2.obj: CUSTOM_COMMAND_DEP ../src/x86/looprestoration_avx2.asm | C$:/Users/kjk/AppData/Local/bin/NASM/nasm.EXE
   -- COMMAND = "C:\Users\kjk\AppData\Local\bin\NASM\nasm.EXE" "-f" "win64" "-I" "C:/Users/kjk/src/dav1d/src/" "-I" "C:/Users/kjk/src/dav1d/build/" "-MQ" "src/libdav1d.a.p/looprestoration_avx2.obj" "-MF" "src/libdav1d.a.p/looprestoration_avx2.obj.ndep" "../src/x86/looprestoration_avx2.asm" "-o" "src/libdav1d.a.p/looprestoration_avx2.obj"
 
+  project "libheif"
+    kind "StaticLib"
+    language "C++"
+    optconf()
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_DAV1D", "LIBHEIF_STATIC_BUILD" }
+    includedirs { "ext/libheif", "ext/dav1d/include" }
+    disablewarnings {  "4018", "4100", "4101","4146", "4244", "4245", "4267", "4273", "4456", "4701", "4703" }
+    -- TODO: I don't want RTTI and /EHsc
+    rtti "On"
+    buildoptions { "/EHsc" }
+    libheif_files()
+
   project "dav1d"
     kind "StaticLib"
     language "C"
@@ -635,7 +647,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4702" }
-    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "dav1d", "unarrlib" }
+    links { "mupdf", "zlib-ng", "libdjvu", "libwebp", "dav1d", "libheif", "unarrlib" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -845,7 +857,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "dav1d"
+      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "dav1d", "libheif"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

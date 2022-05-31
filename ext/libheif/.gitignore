@@ -35,6 +35,6 @@ m4/libtool.m4
 missing
 out.bin
 libheif/*-fuzzer
-libheif/heif_version.h
+libheif/heif_version.h.nope
 stamp-h1
 tests/test-race
