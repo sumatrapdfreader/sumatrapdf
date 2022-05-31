@@ -898,3 +898,4 @@ EXPORTS
 	heif_image_get_plane_readonly
 	heif_image_handle_get_width
 	heif_image_handle_get_height
+	heif_image_release
