@@ -21,11 +21,6 @@
 // Minimal vertical distance
 #define PDFSYNC_EPSILON_Y 20
 
-#define PDFSYNC_EXTENSION ".pdfsync"
-
-#define SYNCTEX_EXTENSION ".synctex"
-#define SYNCTEXGZ_EXTENSION ".synctex.gz"
-
 struct PdfsyncFileIndex {
     size_t start, end; // first and one-after-last index of lines associated with a file
 };
@@ -45,7 +40,7 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer {
   public:
     Pdfsync(const char* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
-        CrashIf(!str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
+        CrashIf(!str::EndsWithI(syncfilename, ".pdfsync"));
     }
 
     int DocToSource(UINT pageNo, Point pt, AutoFreeStr& filename, UINT* line, UINT* col) override;
@@ -66,10 +61,12 @@ class Pdfsync : public Synchronizer {
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer {
   public:
-    SyncTex(const char* syncfilename, EngineBase* engine)
-        : Synchronizer(syncfilename), engine(engine), scanner(nullptr) {
-        CrashIf(!str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
+    SyncTex(const char* syncfilename, EngineBase* engineIn) : Synchronizer(syncfilename) {
+        engine = engineIn;
+        scanner = nullptr;
+        CrashIf(!str::EndsWithI(syncfilename, ".synctex"));
     }
+
     ~SyncTex() override {
         synctex_scanner_free(scanner);
     }
@@ -84,8 +81,10 @@ class SyncTex : public Synchronizer {
     synctex_scanner_t scanner;
 };
 
-Synchronizer::Synchronizer(const char* syncfilepath) : indexDiscarded(true), syncfilepath(str::Dup(syncfilepath)) {
-    WCHAR* path = ToWstrTemp(syncfilepath);
+Synchronizer::Synchronizer(const char* syncFilePathIn) {
+    indexDiscarded = true;
+    syncfilepath = str::Dup(syncFilePathIn);
+    WCHAR* path = ToWstrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
 
@@ -137,15 +136,15 @@ int Synchronizer::Create(const char* pdffilename, EngineBase* engine, Synchroniz
     char* baseName = str::DupTemp(pdffilename, nBaseLen);
 
     // Check if a PDFSYNC file is present
-    char* syncFile = str::JoinTemp(baseName, PDFSYNC_EXTENSION);
+    char* syncFile = str::JoinTemp(baseName, ".pdfsync");
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    char* texGzFile = str::JoinTemp(baseName, SYNCTEXGZ_EXTENSION);
-    char* texFile = str::JoinTemp(baseName, SYNCTEX_EXTENSION);
+    char* texGzFile = str::JoinTemp(baseName, ".synctex.gz");
+    char* texFile = str::JoinTemp(baseName, ".synctex");
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
