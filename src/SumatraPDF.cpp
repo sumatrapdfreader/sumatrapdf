@@ -2547,7 +2547,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::WStr& fileFilter) {
     return true;
 }
 
-static void OnMenuSaveAs(MainWindow* win) {
+static void SaveCurrentFileAs(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
@@ -2767,7 +2767,7 @@ static void OnMenuShowInFolder(MainWindow* win) {
     CreateProcessHelper(process, args);
 }
 
-static void OnMenuRenameFile(MainWindow* win) {
+static void RenameCurrentFile(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
@@ -4622,15 +4622,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdRenameFile:
-            OnMenuRenameFile(win);
+            RenameCurrentFile(win);
             break;
 
         case CmdSaveAs:
-            OnMenuSaveAs(win);
+            SaveCurrentFileAs(win);
             break;
 
         case CmdPrint:
-            OnMenuPrint(win);
+            PrintCurrentFile(win);
             break;
 
         case CmdCommandPalette:

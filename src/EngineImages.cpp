@@ -545,6 +545,8 @@ bool EngineImage::LoadSingleFile(const char* path) {
     }
     SetFileName(path);
 
+    // TODO: maybe default to file extension and only use detected from content
+    // if no extension?
     ByteSlice data = file::ReadFile(path);
     const char* fileExtA = GfxFileExtFromData(data);
     if (fileExtA == nullptr) {

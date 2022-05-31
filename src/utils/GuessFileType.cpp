@@ -249,16 +249,31 @@ static Kind DetectHicAndAvif(const ByteSlice& d) {
     }
     char* s = (char*)d.data();
     char* hdr = s + 4;
-    bool isheic = str::StartsWith(hdr, "ftypheic");
-    bool ismif = str::StartsWith(hdr, "ftypmif1");
-    bool isAvif = str::StartsWith(hdr, "ftypavif");
-    if (!(isheic || ismif)) {
+    // ftyp values per https://github.com/strukturag/libheif/issues/83
+    /*
+        'heic': the usual HEIF images
+        'heix': 10bit images, or anything that uses h265 with range extension
+        'hevc', 'hevx': brands for image sequences
+        'heim': multiview
+        'heis': scalable
+        'hevm': multiview sequence
+        'hevs': scalable sequence
+
+        'mif1' also happens?
+    */
+    // TODO: support more ftyp types?
+    if (str::StartsWith(hdr, "ftypheic")) {
         return kindFileHeic;
     }
-    if (isAvif) {
+    if (str::StartsWith(hdr, "ftypheix")) {
+        return kindFileHeic;
+    }
+    if (str::StartsWith(hdr, "ftypmif1")) {
+        return kindFileHeic;
+    }
+    if (str::StartsWith(hdr, "ftypavif")) {
         return kindFileAvif;
     }
-
     hdr = s + 16;
     if (str::StartsWith(hdr, "mif1heic")) {
         return kindFileHeic;

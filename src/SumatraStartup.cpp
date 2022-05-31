@@ -1305,7 +1305,7 @@ ContinueOpenWindow:
             continue;
         }
         if (flags.printDialog) {
-            OnMenuPrint(win, flags.exitWhenDone);
+            PrintCurrentFile(win, flags.exitWhenDone);
         }
     }
     SelectTabInWindow(tabToSelect);
