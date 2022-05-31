@@ -11,7 +11,7 @@
 namespace webp {
 
 // checks whether this could be data for a WebP image
-bool HasSignature(ByteSlice d) {
+bool HasSignature(const ByteSlice& d) {
     if (d.size() <= 12) {
         return false;
     }
@@ -19,13 +19,13 @@ bool HasSignature(ByteSlice d) {
     return str::StartsWith(data, "RIFF") && str::StartsWith(data + 8, "WEBP");
 }
 
-Size SizeFromData(ByteSlice d) {
+Size SizeFromData(const ByteSlice& d) {
     Size size;
     WebPGetInfo((const u8*)d.data(), d.size(), &size.dx, &size.dy);
     return size;
 }
 
-Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
+Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
     int w, h;
     if (!WebPGetInfo((const u8*)d.data(), d.size(), &w, &h)) {
         return nullptr;
@@ -51,13 +51,13 @@ Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
 
 #else
 namespace webp {
-bool HasSignature(ByteSlice) {
+bool HasSignature(const ByteSlice&) {
     return false;
 }
-Size SizeFromData(ByteSlice) {
+Size SizeFromData(const ByteSlice&) {
     return Size();
 }
-Gdiplus::Bitmap* ImageFromData(ByteSlice) {
+Gdiplus::Bitmap* ImageFromData(const ByteSlice&) {
     return nullptr;
 }
 } // namespace webp

@@ -181,7 +181,7 @@ static ImageAlpha GetAlphaType(const u8* data, size_t len) {
 }
 
 // checks whether this could be data for a TGA image
-bool HasSignature(ByteSlice d) {
+bool HasSignature(const ByteSlice& d) {
     size_t len = d.size();
     const u8* data = (const u8*)d.data();
     if (HasVersion2Footer(data, len)) {
@@ -328,7 +328,7 @@ static void ReadPixel(ReadState& s, u8* dst) {
     }
 }
 
-Gdiplus::Bitmap* ImageFromData(ByteSlice d) {
+Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
     size_t len = d.size();
     const u8* data = (const u8*)d.data();
 

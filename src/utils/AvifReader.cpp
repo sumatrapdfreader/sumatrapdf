@@ -8,27 +8,6 @@
 
 #include <libheif/heif.h>
 
-// - image/heic           HEIF file using h265 compression
-// - image/heif           HEIF file using any other compression
-// - image/heic-sequence  HEIF image sequence using h265 compression
-// - image/heif-sequence  HEIF image sequence using any other compression
-// - image/avif
-// - image/avif-sequence
-
-static const char* gSupportedTypes =
-    "image/heic\0"
-    "image/heif\0"
-    "image/avif\0\0";
-
-bool HasAvifSignature(const ByteSlice& d) {
-    const char* mimeType = heif_get_file_mime_type(d.Get(), d.Size());
-    if (!mimeType) {
-        return false;
-    }
-    int idx = seqstrings::StrToIdxIS(gSupportedTypes, mimeType);
-    return idx >= 0;
-}
-
 Size AvifSizeFromData(const ByteSlice& d) {
     Size res;
     struct heif_image_handle* hdl = nullptr;
@@ -137,9 +116,6 @@ Exit:
     return bmp;
 }
 #else
-bool HasAvifSignature(const ByteSlice&) {
-    return false;
-}
 Size AvifSizeFromData(const ByteSlice&) {
     return {};
 }

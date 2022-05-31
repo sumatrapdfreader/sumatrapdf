@@ -7,8 +7,8 @@
 
 namespace tga {
 
-bool HasSignature(ByteSlice);
-Gdiplus::Bitmap* ImageFromData(ByteSlice);
+bool HasSignature(const ByteSlice&);
+Gdiplus::Bitmap* ImageFromData(const ByteSlice&);
 
 ByteSlice SerializeBitmap(HBITMAP hbmp);
 

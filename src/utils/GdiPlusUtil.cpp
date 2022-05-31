@@ -367,144 +367,205 @@ Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
 #define JP2_JP2H 0x6a703268 /**< JP2 header box (super-box) */
 #define JP2_IHDR 0x69686472 /**< Image header box */
 
+static bool BmpSizeFromData(ByteReader r, Size& result) {
+    if (r.len < sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
+        return false;
+    }
+    BITMAPINFOHEADER bmi;
+    bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
+    CrashIf(!ok);
+    result.dx = bmi.biWidth;
+    result.dy = bmi.biHeight;
+    return true;
+}
+
+static bool GifSizeFromData(ByteReader r, Size& result) {
+    const u8* data = r.d;
+    size_t len = r.len;
+    if (len < 13) {
+        return false;
+    }
+    // find the first image's actual size instead of using the
+    // "logical screen" size which is sometimes too large
+    size_t idx = 13;
+    // skip the global color table
+    if ((r.Byte(10) & 0x80)) {
+        idx += (size_t)3 * (size_t)((size_t)1 << ((r.Byte(10) & 0x07) + 1));
+    }
+    while (idx + 8 < r.len) {
+        if (r.Byte(idx) == 0x2C) {
+            result.dx = r.WordLE(idx + 5);
+            result.dy = r.WordLE(idx + 7);
+            return true;
+        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xF9) {
+            idx += 8;
+        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFE) {
+            const u8* commentEnd = r.Find(idx + 2, 0x00);
+            idx = commentEnd ? commentEnd - data + 1 : len;
+        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < len) {
+            const u8* textDataEnd = r.Find(idx + 15, 0x00);
+            idx = textDataEnd ? textDataEnd - data + 1 : len;
+        } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < len) {
+            const u8* applicationDataEnd = r.Find(idx + 14, 0x00);
+            idx = applicationDataEnd ? applicationDataEnd - data + 1 : len;
+        } else {
+            return false;
+        }
+    }
+    return false;
+}
+
+static bool JpegSizeFromData(ByteReader r, Size& result) {
+    // find the last start of frame marker for non-differential Huffman/arithmetic coding
+    size_t len = r.len;
+    for (size_t idx = 2; idx + 9 < len && r.Byte(idx) == 0xFF;) {
+        if (0xC0 <= r.Byte(idx + 1) && r.Byte(idx + 1) <= 0xC3 || 0xC9 <= r.Byte(idx + 1) && r.Byte(idx + 1) <= 0xCB) {
+            result.dx = r.WordBE(idx + 7);
+            result.dy = r.WordBE(idx + 5);
+            return true;
+        }
+        idx += (size_t)r.WordBE(idx + 2) + 2;
+    }
+    return false;
+}
+
+static bool TiffSizeFromData(ByteReader r, Size& result) {
+    if (r.len < 10) {
+        return false;
+    }
+    bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
+    CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
+    const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
+    size_t idx = r.DWord(4, isBE);
+    WORD count = idx <= r.len - 2 ? r.Word(idx, isBE) : 0;
+    for (idx += 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
+        WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
+        if (r.DWord(idx + 4, isBE) != 1) {
+            continue;
+        } else if (WIDTH == tag && 4 == type) {
+            result.dx = r.DWord(idx + 8, isBE);
+        } else if (WIDTH == tag && 3 == type) {
+            result.dx = r.Word(idx + 8, isBE);
+        } else if (WIDTH == tag && 1 == type) {
+            result.dx = r.Byte(idx + 8);
+        } else if (HEIGHT == tag && 4 == type) {
+            result.dy = r.DWord(idx + 8, isBE);
+        } else if (HEIGHT == tag && 3 == type) {
+            result.dy = r.Word(idx + 8, isBE);
+        } else if (HEIGHT == tag && 1 == type) {
+            result.dy = r.Byte(idx + 8);
+        }
+    }
+    return true;
+}
+
+static bool PngSizeFromData(ByteReader r, Size& result) {
+    if (r.len >= 24 && str::StartsWith(r.d + 12, "IHDR")) {
+        result.dx = r.DWordBE(16);
+        result.dy = r.DWordBE(20);
+        return true;
+    }
+    return false;
+}
+
+static bool TgaSizeFromData(ByteReader r, Size& result) {
+    if (r.len >= 16) {
+        result.dx = r.WordLE(12);
+        result.dy = r.WordLE(14);
+        return true;
+    }
+    return false;
+}
+
+static bool WebpSizeFromData(ByteReader r, Size& result) {
+    if (r.len >= 30 && str::StartsWith(r.d + 12, "VP8 ")) {
+        result.dx = r.WordLE(26) & 0x3fff;
+        result.dy = r.WordLE(28) & 0x3fff;
+        return true;
+    } else {
+        ByteSlice bs(r.d, r.len);
+        result = webp::SizeFromData(bs);
+        return !result.IsEmpty();
+    }
+    return false;
+}
+
+static bool Jp2SizeFromData(ByteReader r, Size& result) {
+    size_t len = r.len;
+    if (len < 32) {
+        return false;
+    }
+    size_t idx = 0;
+    while (idx < len - 32) {
+        u32 boxLen = r.DWordBE(idx);
+        u32 boxType = r.DWordBE(idx + 4);
+        if (JP2_JP2H == boxType) {
+            idx += 8;
+            u32 boxLen2 = r.DWordBE(idx);
+            u32 boxType2 = r.DWordBE(idx + 4);
+            bool isIhdr = boxType2 == JP2_IHDR;
+            idx += 8;
+            if (isIhdr && boxLen2 <= (boxLen - 8)) {
+                result.dx = r.DWordBE(idx);
+                result.dy = r.DWordBE(idx + 4);
+                if (result.dx > 64 * 1024 || result.dy > 64 * 1024) {
+                    // sanity check, assuming that images that big can't
+                    // possibly be valid
+                    return false;
+                }
+                return true;
+            }
+            break;
+        } else if (boxLen != 0 && idx < UINT32_MAX - boxLen) {
+            idx += boxLen;
+        } else {
+            break;
+        }
+    }
+    return false;
+}
+
+static bool AvifSizeFromData(ByteReader r, Size& result) {
+    ByteSlice bs(r.d, r.len);
+    result = AvifSizeFromData(bs);
+    return !result.IsEmpty();
+}
+
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 Size BitmapSizeFromData(const ByteSlice& d) {
     Size result;
-    ByteReader r(d);
-    size_t len = d.size();
-    u8* data = d.data();
+    bool ok = false;
     Kind kind = GuessFileTypeFromContent(d);
 
+    ByteReader r(d);
     if (kind == kindFileBmp) {
-        if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
-            BITMAPINFOHEADER bmi;
-            bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
-            CrashIf(!ok);
-            result.dx = bmi.biWidth;
-            result.dy = bmi.biHeight;
-        }
+        ok = BmpSizeFromData(r, result);
     } else if (kind == kindFileGif) {
-        if (len >= 13) {
-            // find the first image's actual size instead of using the
-            // "logical screen" size which is sometimes too large
-            size_t idx = 13;
-            // skip the global color table
-            if ((r.Byte(10) & 0x80)) {
-                idx += (size_t)3 * (size_t)((size_t)1 << ((r.Byte(10) & 0x07) + 1));
-            }
-            while (idx + 8 < len) {
-                if (r.Byte(idx) == 0x2C) {
-                    result.dx = r.WordLE(idx + 5);
-                    result.dy = r.WordLE(idx + 7);
-                    break;
-                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xF9) {
-                    idx += 8;
-                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFE) {
-                    const u8* commentEnd = r.Find(idx + 2, 0x00);
-                    idx = commentEnd ? commentEnd - data + 1 : len;
-                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < len) {
-                    const u8* textDataEnd = r.Find(idx + 15, 0x00);
-                    idx = textDataEnd ? textDataEnd - data + 1 : len;
-                } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < len) {
-                    const u8* applicationDataEnd = r.Find(idx + 14, 0x00);
-                    idx = applicationDataEnd ? applicationDataEnd - data + 1 : len;
-                } else {
-                    break;
-                }
-            }
-        }
+        ok = GifSizeFromData(r, result);
     } else if (kind == kindFileJpeg) {
-        // find the last start of frame marker for non-differential Huffman/arithmetic coding
-        for (size_t idx = 2; idx + 9 < len && r.Byte(idx) == 0xFF;) {
-            if (0xC0 <= r.Byte(idx + 1) && r.Byte(idx + 1) <= 0xC3 ||
-                0xC9 <= r.Byte(idx + 1) && r.Byte(idx + 1) <= 0xCB) {
-                result.dx = r.WordBE(idx + 7);
-                result.dy = r.WordBE(idx + 5);
-            }
-            idx += (size_t)r.WordBE(idx + 2) + 2;
-        }
+        ok = JpegSizeFromData(r, result);
     } else if (kind == kindFileJxr || kind == kindFileTiff) {
-        if (len >= 10) {
-            bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
-            CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
-            const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
-            size_t idx = r.DWord(4, isBE);
-            WORD count = idx <= len - 2 ? r.Word(idx, isBE) : 0;
-            for (idx += 2; count > 0 && idx <= len - 12; count--, idx += 12) {
-                WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
-                if (r.DWord(idx + 4, isBE) != 1) {
-                    continue;
-                } else if (WIDTH == tag && 4 == type) {
-                    result.dx = r.DWord(idx + 8, isBE);
-                } else if (WIDTH == tag && 3 == type) {
-                    result.dx = r.Word(idx + 8, isBE);
-                } else if (WIDTH == tag && 1 == type) {
-                    result.dx = r.Byte(idx + 8);
-                } else if (HEIGHT == tag && 4 == type) {
-                    result.dy = r.DWord(idx + 8, isBE);
-                } else if (HEIGHT == tag && 3 == type) {
-                    result.dy = r.Word(idx + 8, isBE);
-                } else if (HEIGHT == tag && 1 == type) {
-                    result.dy = r.Byte(idx + 8);
-                }
-            }
-        }
+        ok = TiffSizeFromData(r, result);
     } else if (kind == kindFilePng) {
-        if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-            result.dx = r.DWordBE(16);
-            result.dy = r.DWordBE(20);
-        }
+        ok = PngSizeFromData(r, result);
     } else if (kind == kindFileTga) {
-        if (len >= 16) {
-            result.dx = r.WordLE(12);
-            result.dy = r.WordLE(14);
-        }
+        ok = TgaSizeFromData(r, result);
     } else if (kind == kindFileWebp) {
-        if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
-            result.dx = r.WordLE(26) & 0x3fff;
-            result.dy = r.WordLE(28) & 0x3fff;
-        } else {
-            result = webp::SizeFromData(d);
-        }
+        ok = WebpSizeFromData(r, result);
     } else if (kind == kindFileJp2) {
-        if (len >= 32) {
-            size_t idx = 0;
-            while (idx < len - 32) {
-                u32 boxLen = r.DWordBE(idx);
-                u32 boxType = r.DWordBE(idx + 4);
-                if (JP2_JP2H == boxType) {
-                    idx += 8;
-                    u32 boxLen2 = r.DWordBE(idx);
-                    u32 boxType2 = r.DWordBE(idx + 4);
-                    bool isIhdr = boxType2 == JP2_IHDR;
-                    idx += 8;
-                    if (isIhdr && boxLen2 <= (boxLen - 8)) {
-                        result.dx = r.DWordBE(idx);
-                        result.dy = r.DWordBE(idx + 4);
-                        if (result.dx > 64 * 1024 || result.dy > 64 * 1024) {
-                            // sanity check, assuming that images that big can't
-                            // possibly be valid
-                            result.dx = 0;
-                            result.dy = 0;
-                        }
-                    }
-                    break;
-                } else if (boxLen != 0 && idx < UINT32_MAX - boxLen) {
-                    idx += boxLen;
-                } else {
-                    break;
-                }
-            }
-        }
+        ok = Jp2SizeFromData(r, result);
+    } else if (kind == kindFileAvif || kind == kindFileHeic) {
+        ok = AvifSizeFromData(r, result);
+    }
+    if (ok && !result.IsEmpty()) {
+        return result;
     }
 
-    if (result.IsEmpty()) {
-        // let GDI+ extract the image size if we've failed
-        // (currently happens for animated GIF)
-        Bitmap* bmp = BitmapFromDataWin(d);
-        if (bmp) {
-            result = Size(bmp->GetWidth(), bmp->GetHeight());
-        }
+    // try expensive way of getting the info by decoding the image
+    // (currently happens for animated GIF)
+    Bitmap* bmp = BitmapFromDataWin(d);
+    if (bmp) {
+        result = Size(bmp->GetWidth(), bmp->GetHeight());
         delete bmp;
     }
     return result;
