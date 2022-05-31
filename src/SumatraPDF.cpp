@@ -2712,7 +2712,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
         WCHAR* msgBuf;
-        ok = file::Copy(srcFileName, realDstFileName, false);
+        ok = file::Copy(realDstFileName, srcFileName, false);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
