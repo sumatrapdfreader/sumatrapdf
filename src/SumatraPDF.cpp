@@ -1729,14 +1729,15 @@ static NotificationWnd* ShowLoadingNotif(MainWindow* win, const char* path) {
     return ShowNotification(nargs);
 }
 
-static bool LoadDocumentMaybeCreateWindow(LoadArgs* args) {
+static MainWindow* LoadDocumentMaybeCreateWindow(LoadArgs* args) {
     MainWindow* win = args->win;
     bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
     if (openNewTab && !args->win) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
         if (!gWindows.empty()) {
-            win = args->win = gWindows.Last();
+            win = gWindows.Last();
+            args->win = win;
             args->isNewWindow = false;
         }
     }
@@ -1749,7 +1750,7 @@ static bool LoadDocumentMaybeCreateWindow(LoadArgs* args) {
         MainWindow* currWin = win;
         win = CreateMainWindow();
         if (!win) {
-            return false;
+            return nullptr;
         }
         args->win = win;
         args->isNewWindow = true;
@@ -1758,7 +1759,7 @@ static bool LoadDocumentMaybeCreateWindow(LoadArgs* args) {
             win->expandedFavorites = currWin->expandedFavorites;
         }
     }
-    return true;
+    return win;
 }
 
 void LoadDocumentAsync(LoadArgs* argsIn) {
@@ -1770,7 +1771,8 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
         return;
     }
 
-    if (!LoadDocumentMaybeCreateWindow(argsIn)) {
+    win = LoadDocumentMaybeCreateWindow(argsIn);
+    if (!win) {
         return;
     }
 
@@ -1820,7 +1822,8 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
         return nullptr;
     }
 
-    if (!LoadDocumentMaybeCreateWindow(args)) {
+    win = LoadDocumentMaybeCreateWindow(args);
+    if (!win) {
         return nullptr;
     }
 
