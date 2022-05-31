@@ -892,6 +892,12 @@
     <ProjectReference Include="libwebp.vcxproj">
       <Project>{0A466F79-7625-EE14-7F3D-79EBEB9B5476}</Project>
     </ProjectReference>
+    <ProjectReference Include="dav1d.vcxproj">
+      <Project>{F5BF470F-61D4-6FC0-2A56-132096296CF1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libheif.vcxproj">
+      <Project>{380D6779-A4EC-E514-AD04-71EB19634C76}</Project>
+    </ProjectReference>
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>
@@ -903,12 +909,6 @@
     </ProjectReference>
     <ProjectReference Include="unrar.vcxproj">
       <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="dav1d.vcxproj">
-      <Project>{F5BF470F-61D4-6FC0-2A56-132096296CF1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libheif.vcxproj">
-      <Project>{380D6779-A4EC-E514-AD04-71EB19634C76}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

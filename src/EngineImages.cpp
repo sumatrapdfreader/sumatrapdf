@@ -569,7 +569,8 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     const char* fileExtA = nullptr;
     u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
-        fileExtA = GfxFileExtFromData({header, sizeof(header)});
+        ByteSlice d = {header, sizeof(header)};
+        fileExtA = GfxFileExtFromData(d);
     }
     if (!fileExtA) {
         return false;

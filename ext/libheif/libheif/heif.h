@@ -45,6 +45,9 @@ extern "C" {
 //  1.11         1             2            4             1             1            1
 //  1.13         1             3            4             1             1            1
 
+#if !defined(LIBHEIF_STATIC_BUILD)
+#error "haha"`
+#endif
 
 #if defined(_MSC_VER) && !defined(LIBHEIF_STATIC_BUILD)
 #ifdef LIBHEIF_EXPORTS

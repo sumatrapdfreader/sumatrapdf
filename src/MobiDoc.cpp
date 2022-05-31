@@ -692,11 +692,11 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
 #define SRCS_REC 0x53524353 // 'SRCS'
 #define VIDE_REC 0x56494445 // 'VIDE'
 
-static bool IsEofRecord(ByteSlice d) {
+static bool IsEofRecord(const ByteSlice& d) {
     return (4 == d.size()) && (EOF_REC == UInt32BE(d.data()));
 }
 
-static bool KnownNonImageRec(ByteSlice d) {
+static bool KnownNonImageRec(const ByteSlice& d) {
     if (d.size() < 4) {
         return false;
     }
@@ -714,7 +714,7 @@ static bool KnownNonImageRec(ByteSlice d) {
     return false;
 }
 
-static bool KnownImageFormat(ByteSlice d) {
+static bool KnownImageFormat(const ByteSlice& d) {
     return nullptr != GuessFileTypeFromContent(d);
 }
 

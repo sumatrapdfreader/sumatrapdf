@@ -187,7 +187,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
     return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 
-Gdiplus::Bitmap* FzImageFromData(ByteSlice d) {
+Gdiplus::Bitmap* FzImageFromData(const ByteSlice& d) {
     const u8* data = (const u8*)d.data();
     size_t len = d.size();
     if (len > INT_MAX || len < 12) {
@@ -211,7 +211,7 @@ Gdiplus::Bitmap* FzImageFromData(ByteSlice d) {
     return result;
 }
 
-Gdiplus::Bitmap* BitmapFromData(ByteSlice bmpData) {
+Gdiplus::Bitmap* BitmapFromData(const ByteSlice& bmpData) {
     auto res = BitmapFromDataWin(bmpData);
     if (res) {
         return res;

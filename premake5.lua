@@ -459,6 +459,9 @@ workspace "SumatraPDF"
     includedirs { "ext/zlib-ng" }
     extract_files()
 
+    -- iibheif
+    defines { "LIBHEIF_STATIC_BUILD" }
+
 --[[
   project "zlib"
     kind "StaticLib"
@@ -670,8 +673,9 @@ workspace "SumatraPDF"
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4100", "4267", "4457", "4838" }
     zlib_ng_defines()
+    defines { "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "ext/zlib-ng", "ext/lzma/C" }
-    includedirs { "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
+    includedirs { "ext/libheif", "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
     utils_files()
 
   ---- executables
@@ -857,7 +861,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "zlib-ng", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "dav1d", "libheif"
+      "engines", "zlib-ng", "libdjvu",  "libwebp", "dav1d", "libheif", "mupdf", "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
