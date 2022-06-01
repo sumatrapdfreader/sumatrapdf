@@ -143,6 +143,7 @@ enum EditorPathType {
 
 #define kRegCurrentVer "Software\\Microsoft\\Windows\\CurrentVersion"
 
+// clang-format off
 static struct {
     const char* binaryFilename;    // Editor's binary file name
     const char* inverseSearchArgs; // Parameters to be passed to the editor;
@@ -151,39 +152,160 @@ static struct {
     const char* regKey;            // Registry key path
     const char* regValue;          // Registry value name
 } editorRules[] = {
-    {"WinEdt.exe", "\"[Open(|%f|);SelPar(%l,8)]\"", BinaryPath, kRegCurrentVer "\\App Paths\\WinEdt.exe", nullptr},
-    {"WinEdt.exe", "\"[Open(|%f|);SelPar(%l,8)]\"", BinaryDir, "Software\\WinEdt", "Install Root"},
-    {"notepad++.exe", "-n%l \"%f\"", BinaryPath, kRegCurrentVer "\\App Paths\\notepad++.exe", nullptr},
-    {"notepad++.exe", "-n%l \"%f\"", BinaryDir, "Software\\Notepad++", nullptr},
-    {"notepad++.exe", "-n%l \"%f\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Notepad++", "DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l:%c\"", BinaryDir, kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
-     "InstallLocation"},
-    {"sublime_text.exe", "\"%f:%l:%c\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1", "DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l:%c\"", BinaryDir, kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
-     "InstallLocation"},
-    {"sublime_text.exe", "\"%f:%l:%c\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1", "DisplayIcon"},
-    {"sublime_text.exe", "\"%f:%l:%c\"", BinaryPath, kRegCurrentVer "\\Uninstall\\Sublime Text_is1", "DisplayIcon"},
-    {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, "Software\\ToolsCenter\\TeXnicCenterNT",
-     "AppPath"},
-    {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
-     "InstallLocation"},
-    {"TeXnicCenter.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir,
-     kRegCurrentVer "\\Uninstall\\TeXnicCenter Alpha_is1", "InstallLocation"},
-    {"TEXCNTR.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, "Software\\ToolsCenter\\TeXnicCenter", "AppPath"},
-    {"TEXCNTR.exe", "/ddecmd \"[goto('%f', '%l')]\"", BinaryDir, kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
-     "InstallLocation"},
-    {"WinShell.exe", "-c \"%f\" -l %l", BinaryDir, kRegCurrentVer "\\Uninstall\\WinShell_is1", "InstallLocation"},
-    {"gvim.exe", "\"%f\" +%l", BinaryPath, "Software\\Vim\\Gvim", "path"},
-    {// TODO: add this rule only if the latex-suite for ViM is installed
-     // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-     "gvim.exe", "-c \":RemoteOpen +%l %f\"", BinaryPath, "Software\\Vim\\Gvim", "path"},
-    {"texmaker.exe", "\"%f\" -line %l", SiblingPath, kRegCurrentVer "\\Uninstall\\Texmaker", "UninstallString"},
     {
-        "TeXworks.exe", "-p=%l \"%f\"", BinaryDir,
-        kRegCurrentVer "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", "InstallLocation",
+        "Code.exe",
+        "--goto \"%f:%l:%c\"",
+        BinaryPath,
+        kRegCurrentVer "\\Uninstall\\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1",
+        "DisplayIcon"
+    },
+    {
+        "WinEdt.exe",
+         "\"[Open(|%f|);SelPar(%l,8)]\"",
+        BinaryPath,
+        kRegCurrentVer "\\App Paths\\WinEdt.exe",
+        nullptr
+    },
+    {
+        "WinEdt.exe",
+        "\"[Open(|%f|);SelPar(%l,8)]\"",
+        BinaryDir,
+        "Software\\WinEdt",
+        "Install Root"
+    },
+    {
+        "notepad++.exe",
+        "-n%l \"%f\"",
+        BinaryPath,
+        kRegCurrentVer "\\App Paths\\notepad++.exe",
+        nullptr
+    },
+    {
+        "notepad++.exe",
+        "-n%l \"%f\"",
+        BinaryDir,
+        "Software\\Notepad++",
+        nullptr
+    },
+    {
+        "notepad++.exe",
+        "-n%l \"%f\"",
+        BinaryPath,
+        kRegCurrentVer "\\Uninstall\\Notepad++",
+        "DisplayIcon"
+    },
+    {
+        "sublime_text.exe",
+        "\"%f:%l:%c\"",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
+        "InstallLocation"
+    },
+    {
+        "sublime_text.exe",
+        "\"%f:%l:%c\"",
+        BinaryPath,
+        kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
+        "DisplayIcon"
+    },
+    {
+        "sublime_text.exe",
+        "\"%f:%l:%c\"",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
+         "InstallLocation"
+    },
+    {
+        "sublime_text.exe",
+        "\"%f:%l:%c\"",
+        BinaryPath,
+        kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
+        "DisplayIcon"
+    },
+    {
+        "sublime_text.exe",
+        "\"%f:%l:%c\"",
+        BinaryPath,
+        kRegCurrentVer "\\Uninstall\\Sublime Text_is1",
+        "DisplayIcon"
+    },
+    {
+        "TeXnicCenter.exe",
+        "/ddecmd \"[goto('%f', '%l')]\"",
+        BinaryDir,
+        "Software\\ToolsCenter\\TeXnicCenterNT",
+        "AppPath"
+    },
+    {
+        "TeXnicCenter.exe",
+        "/ddecmd \"[goto('%f', '%l')]\"",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
+        "InstallLocation"
+    },
+    {
+        "TeXnicCenter.exe",
+        "/ddecmd \"[goto('%f', '%l')]\"",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\TeXnicCenter Alpha_is1",
+        "InstallLocation"
+    },
+    {
+        "TEXCNTR.exe",
+        "/ddecmd \"[goto('%f', '%l')]\"",
+        BinaryDir,
+        "Software\\ToolsCenter\\TeXnicCenter",
+        "AppPath"
+    },
+    {
+        "TEXCNTR.exe",
+        "/ddecmd \"[goto('%f', '%l')]\"",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
+        "InstallLocation"
+    },
+    {
+        "WinShell.exe",
+        "-c \"%f\" -l %l",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\WinShell_is1",
+        "InstallLocation"
+    },
+    {
+        "gvim.exe",
+        "\"%f\" +%l",
+        BinaryPath,
+        "Software\\Vim\\Gvim",
+        "path"
+    },
+    {
+        // TODO: add this rule only if the latex-suite for ViM is installed
+        // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
+        "gvim.exe",
+        "-c \":RemoteOpen +%l %f\"",
+        BinaryPath,
+        "Software\\Vim\\Gvim",
+        "path"
+    },
+    {
+        "texmaker.exe",
+        "\"%f\" -line %l",
+        SiblingPath,
+        kRegCurrentVer "\\Uninstall\\Texmaker",
+        "UninstallString"
+    },
+    {
+        "TeXworks.exe",
+        "-p=%l \"%f\"",
+        BinaryDir,
+        kRegCurrentVer "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1",
+        "InstallLocation",
         // TODO: find a way to detect where emacs is installed
         // "emacsclientw.exe","+%l \"%f\"", BinaryPath, "???", "???",
-    }};
+    }
+};
+
+// clang-format on
 
 // Detect TeX editors installed on the system and construct the
 // corresponding inverse search commands.
