@@ -1058,9 +1058,11 @@ int RunInstaller() {
     if (!gCli->installDir) {
         gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, false);
     }
-    logf("Running'%s' installing into dir '%s'\n", GetExePathTemp(), gCli->installDir);
+    char* cmdLine = ToUtf8Temp(GetCommandLineW());
+    logf("Running'%s', cmdLine: '%s', installing into dir '%s'\n", GetExePathTemp(), cmdLine, gCli->installDir);
 
     if (!gCli->silent && MaybeMismatchedOSDialog(nullptr)) {
+        logfa("quitting because !gCli->silent && MaybeMismatchedOSDialog()\n");
         return 0;
     }
 
@@ -1081,13 +1083,15 @@ int RunInstaller() {
             gCli->withPreview = gWnd->prevInstall.previewInstalled;
         }
     }
-    logf("RunInstaller: gCli->runInstallNow = %d, gCli->withFilter = %d, gCli->withPreview = %d\n",
-         (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview);
+    logf("RunInstaller: gClii->silent: %d, gCli->runInstallNow = %d, gCli->withFilter = %d, gCli->withPreview = %d\n",
+         (int)gCli->silent, (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview);
 
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded
     UninstallSearchFilter();
+    log("After UninstallSearchFilter\n");
     UninstallPreviewDll();
+    log("After UninstallPreviewDll\n");
 
     if (gCli->silent) {
         if (gCli->allUsers && !IsProcessRunningElevated()) {
@@ -1096,15 +1100,20 @@ int RunInstaller() {
             ::ExitProcess(0);
         }
         gInstallStarted = true;
+        logfa("gCli->silent, before runinng InstallerThread()\n");
         InstallerThread(nullptr);
         ret = gWnd->failed ? 1 : 0;
     } else {
+        log("Before CreateInstallerWindow()\n");
         if (!CreateInstallerWindow()) {
             log("CreateInstallerWindow() failed\n");
             goto Exit;
         }
+        log("Before BringWindowToTop()\n");
         BringWindowToTop(gWnd->hwnd);
+        log("Before RunApp()\n");
         ret = RunApp();
+        logfa("RunApp() returned %d\n", ret);
     }
 
     // re-register if we un-registered but installation was cancelled
