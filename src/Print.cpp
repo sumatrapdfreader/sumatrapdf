@@ -722,13 +722,14 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         win->AsChm()->PrintCurrentPage(showUI);
         return;
     }
-    ReportIf(!win->AsFixed());
-    if (!win->AsFixed()) {
+    DisplayModel* dm = win->AsFixed();
+    ReportIf(!dm);
+    if (!dm) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
     int rotation = dm->GetRotation();
     auto engine = dm->GetEngine();
+    int nPages = dm->PageCount();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (!dm->GetEngine()->AllowsPrinting()) {
@@ -768,9 +769,9 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     PRINTPAGERANGE* ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
     pdex.lpPageRanges = ppr;
     ppr->nFromPage = 1;
-    ppr->nToPage = dm->PageCount();
+    ppr->nToPage = nPages;
     pdex.nMinPage = 1;
-    pdex.nMaxPage = dm->PageCount();
+    pdex.nMaxPage = nPages;
     pdex.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
@@ -847,7 +848,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     } else if (win->currentTab->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pdex.Flags & PD_PAGENUMS)) {
-        PRINTPAGERANGE pr = {1, (DWORD)dm->PageCount()};
+        PRINTPAGERANGE pr = {1, (DWORD)nPages};
         ranges.Append(pr);
     } else {
         ReportIf(pdex.nPageRanges <= 0);
