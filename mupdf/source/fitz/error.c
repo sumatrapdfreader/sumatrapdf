@@ -216,6 +216,12 @@ fz_jmp_buf *fz_push_try(fz_context *ctx)
 		ctx->error.top->state = 0;
 		ctx->error.top->code = FZ_ERROR_NONE;
 	}
+	/* SumatraPDF: https://fossies.org/linux/tcsh/win32/fork.c#l_212
+	https://stackoverflow.com/questions/26605063/an-invalid-or-unaligned-stack-was-encountered-during-an-unwind-operation
+	*/
+#ifdef _M_AMD64
+	((_JUMP_BUFFER *)&ctx->error.top->buffer)->Frame = 0;
+#endif
 	return &ctx->error.top->buffer;
 }
 
