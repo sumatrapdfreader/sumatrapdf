@@ -343,7 +343,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
 
     // find the entry in the index corresponding to this page
     int nPages = engine->PageCount();
-    if (pageNo == 0 || pageNo >= sheetIndex.size() || pageNo > nPages) {
+    if (pageNo == 0 || pageNo >= sheetIndex.isize() || pageNo > nPages) {
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
     }
 
