@@ -74,6 +74,8 @@ void *_synctex_malloc(size_t size) {
 	return (void *)ptr;
 }
 
+/* SumatraPDF: moved to PdfSync.cpp so that we log this to our logs */
+#if 0
 int _synctex_error(const char * reason,...) {
 	va_list arg;
 	int result;
@@ -105,6 +107,7 @@ int _synctex_error(const char * reason,...) {
 	va_end (arg);
 	return result;
 }
+#endif
 
 /*  strip the last extension of the given string, this string is modified! */
 void _synctex_strip_last_path_extension(char * string) {

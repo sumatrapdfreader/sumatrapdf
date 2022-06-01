@@ -531,7 +531,7 @@ int SyncTex::RebuildIndexIfNeeded() {
     }
     synctex_scanner_free(scanner);
     scanner = nullptr;
-
+    bool synctexExists = false;
     {
         char* pathNoExt = path::GetPathNoExtTemp(syncFilePath);
         char* pathSync = str::JoinTemp(pathNoExt, ".synctex");
@@ -539,27 +539,49 @@ int SyncTex::RebuildIndexIfNeeded() {
         if (file::Exists(pathSync)) {
             fsize = file::GetSize(pathSync);
             logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSync, (int)fsize);
+            synctexExists = true;
         }
         char* pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
         if (file::Exists(pathSyncGz)) {
             fsize = file::GetSize(pathSyncGz);
             logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
+            synctexExists = true;
+        }
+        if (!synctexExists) {
+            logf("SyncTex::RebuildIndexIfNeeded: files %s and %s don't exist\n", pathSync, pathSyncGz);
         }
     }
 
+    bool didRepeat = false;
+Repeat:
     WCHAR* ws = ToWstrTemp(syncFilePath);
     AutoFreeStr pathAnsi = strconv::WstrToAnsi(ws);
-    logfa("SyncTex::RebuildIndexIfNeeded(): rebuilding syncFilePath: '%s', pathAnsi: '%s'\n", syncFilePath.Get(),
-          pathAnsi.Get());
     scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
-    if (!scanner) {
-        logfa("synctex_scanner_new_with_output_file: '%s' failed'%s'\n", pathAnsi.Get(), pathAnsi.Get());
+    if (scanner) {
+        logfa("synctex_scanner_new_with_output_file: ok for pathAnsi '%s'\n", pathAnsi.Get());
+        goto Exit;
+    }
+    if (!str::Eq(syncFilePath, pathAnsi)) {
+        logfa("synctex_scanner_new_with_output_file: retrying for syncFilePath '%s'\n", syncFilePath.Get());
         scanner = synctex_scanner_new_with_output_file(syncFilePath, nullptr, 1);
     }
-    if (!scanner) {
-        logfa("synctex_scanner_new_with_output_file: '%s' failed'%s'\n", syncFilePath.Get());
+    if (scanner) {
+        logfa("synctex_scanner_new_with_output_file: ok forsyncFilePath '%s'\n", syncFilePath.Get());
+        goto Exit;
+    }
+    if (!synctexExists || didRepeat) {
+        logfa("synctex_scanner_new_with_output_file: failed for '%s'\n", pathAnsi.Get());
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
+    // Note: https://github.com/sumatrapdfreader/sumatrapdf/discussions/2640#discussioncomment-2861368
+    // reported failure to parse a large (12 MB) .synctex.gz even though file exists
+    // theory: timing issue of us reading partially written file
+    // retry with 1 sec delay once
+    logfa("SyncTex::RebuildIndexIfNeeded: retrying with 1 sec delay\n");
+    ::Sleep(1000);
+    didRepeat = true;
+    goto Repeat;
+Exit:
     return MarkIndexWasRebuilt();
 }
 
@@ -688,4 +710,16 @@ TryAgainAnsi:
         return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
     return PDFSYNCERR_SUCCESS;
+}
+
+/* moved synctex logging here so that we can log it to our logs */
+extern "C" int _synctex_error(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    AutoFreeStr s = str::FmtV(fmt, args);
+    char* s2 = str::JoinTemp(s, "\n"); // synctex doesn't use '\n'
+    bool logAlways = true;
+    log(s2, logAlways);
+    va_end(args);
+    return 0;
 }
