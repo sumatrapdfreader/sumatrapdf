@@ -2450,21 +2450,20 @@ Size ButtonGetIdealSize(HWND hwnd) {
     return res;
 }
 
-std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id) {
+ByteSlice LockDataResource(int id) {
     auto h = GetModuleHandleW(nullptr);
     WCHAR* name = MAKEINTRESOURCEW(id);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
-        return {nullptr, 0, 0};
+        return {};
     }
     HGLOBAL res = LoadResource(nullptr, resSrc);
     if (!res) {
-        return {nullptr, 0, 0};
+        return {};
     }
-
-    auto* data = (const u8*)LockResource(res);
+    const u8* data = (const u8*)LockResource(res);
     DWORD dataSize = SizeofResource(nullptr, resSrc);
-    return {data, dataSize, res};
+    return {data, dataSize};
 }
 
 bool IsValidDelayType(int type) {

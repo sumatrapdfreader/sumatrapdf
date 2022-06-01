@@ -933,13 +933,13 @@ static bool OpenEmbeddedFilesArchive() {
         log("OpenEmbeddedFilesArchive: already opened\n");
         return true;
     }
-    auto [data, size, res] = LockDataResource(1);
-    if (data == nullptr) {
+    ByteSlice r = LockDataResource(1);
+    if (r.empty()) {
         ShowNoEmbeddedFiles(L"No embbedded files");
         return false;
     }
 
-    bool ok = lzma::ParseSimpleArchive(data, size, &gArchive);
+    bool ok = lzma::ParseSimpleArchive(r.data(), r.size(), &gArchive);
     if (!ok) {
         ShowNoEmbeddedFiles(L"Embedded lzsa archive is corrupted");
         return false;

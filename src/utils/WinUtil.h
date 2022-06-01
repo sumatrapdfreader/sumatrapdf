@@ -278,7 +278,7 @@ bool TrackMouseLeave(HWND);
 void TriggerRepaint(HWND);
 HINSTANCE GetInstance();
 Size ButtonGetIdealSize(HWND hwnd);
-std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id);
+ByteSlice LockDataResource(int id);
 bool IsValidDelayType(int type);
 
 void HwndResizeClientSize(HWND, int, int);
