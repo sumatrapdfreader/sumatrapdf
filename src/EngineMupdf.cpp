@@ -1548,6 +1548,8 @@ EngineMupdf::~EngineMupdf() {
     }
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
+
+    logfa("~EngineMupdf: 0x%p\n", this);
 }
 
 class PasswordCloner : public PasswordUI {
