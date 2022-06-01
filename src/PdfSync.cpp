@@ -78,7 +78,7 @@ class SyncTex : public Synchronizer {
     int RebuildIndex();
 
     EngineBase* engine; // needed for converting between coordinate systems
-    synctex_scanner_s* scanner;
+    synctex_scanner_t scanner;
 };
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
@@ -545,7 +545,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
         }
     }
-    CrashIf(!scanner);
+    CrashIf(!this->scanner);
 
     // Coverity: at this point, this->scanner->flags.has_parsed == 1 and thus
     // synctex_scanner_parse never gets the chance to freeing the scanner
@@ -553,12 +553,12 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    synctex_node_s* node = synctex_scanner_next_result(scanner);
+    synctex_node_t node = synctex_next_result(this->scanner);
     if (!node) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    const char* name = synctex_scanner_get_name(scanner, synctex_node_tag(node));
+    const char* name = synctex_scanner_get_name(this->scanner, synctex_node_tag(node));
     if (!name) {
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
@@ -618,7 +618,7 @@ TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
-    int ret = synctex_display_query(scanner, mb_srcfilepath, line, col, 0);
+    int ret = synctex_display_query(this->scanner, mb_srcfilepath, line, col);
     str::Free(mb_srcfilepath);
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
@@ -634,11 +634,11 @@ TryAgainAnsi:
         return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
 
-    synctex_node_s* node;
+    synctex_node_t node;
     int firstpage = -1;
     rects.Reset();
 
-    while ((node = synctex_scanner_next_result(scanner)) != nullptr) {
+    while ((node = synctex_next_result(this->scanner)) != nullptr) {
         if (firstpage == -1) {
             firstpage = synctex_node_page(node);
             if (firstpage <= 0 || firstpage > engine->PageCount()) {
