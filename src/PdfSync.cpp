@@ -534,12 +534,17 @@ int SyncTex::RebuildIndexIfNeeded() {
 
     {
         char* pathNoExt = path::GetPathNoExtTemp(syncFilePath);
-        char* pathSync = str::Join(pathNoExt, ".synctex");
-        char* pathSyncGz = str::Join(pathNoExt, ".synctex.gz");
-        bool psExist = file::Exists(pathSync);
-        bool psgzExist = file::Exists(pathSyncGz);
-        logf("SyncTex::RebuildIndexIfNeeded: %s, %s exists: %d, %s exists %d\n", pathNoExt, pathSync, (int)psExist,
-             pathSyncGz, (int)psgzExist);
+        char* pathSync = str::JoinTemp(pathNoExt, ".synctex");
+        i64 fsize;
+        if (file::Exists(pathSync)) {
+            fsize = file::GetSize(pathSync);
+            logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSync, (int)fsize);
+        }
+        char* pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
+        if (file::Exists(pathSyncGz)) {
+            fsize = file::GetSize(pathSyncGz);
+            logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
+        }
     }
 
     WCHAR* ws = ToWstrTemp(syncFilePath);
@@ -548,9 +553,12 @@ int SyncTex::RebuildIndexIfNeeded() {
           pathAnsi.Get());
     scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
     if (!scanner) {
+        logfa("synctex_scanner_new_with_output_file: '%s' failed'%s'\n", pathAnsi.Get(),
+          pathAnsi.Get());
         scanner = synctex_scanner_new_with_output_file(syncFilePath, nullptr, 1);
     }
     if (!scanner) {
+        logfa("synctex_scanner_new_with_output_file: '%s' failed'%s'\n", syncFilePath.Get());
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
     return MarkIndexWasRebuilt();
