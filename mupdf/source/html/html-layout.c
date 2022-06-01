@@ -1747,7 +1747,7 @@ fz_draw_restarted_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html_b
 		unlocked = 1;
 
 		for (box = top->down; box; box = box->next)
-			if (draw_box(ctx, top, page_top, page_bot, dev, ctm, hb_buf, restart))
+			if (draw_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
 				break;
 	}
 	fz_always(ctx)
