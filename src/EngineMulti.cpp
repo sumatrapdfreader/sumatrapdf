@@ -67,7 +67,6 @@ class EngineMulti : public EngineBase {
     char* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
-    bool Load(const char* fileName, PasswordUI* pwdUI);
     bool LoadFromFiles(const char* dir, StrVec& files);
     void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
@@ -322,7 +321,6 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     if (tocTree) {
         tocFileRoot = CloneTocItemRecur(tocTree->root, false);
     }
-
     int nPages = engine->PageCount();
     const char* title = path::GetBaseNameTemp(engine->FileName());
     TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
@@ -416,7 +414,7 @@ bool IsEngineMultiSupportedFileType(Kind kind) {
     return kind == kindDirectory;
 }
 
-EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
+static EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
         delete engine;
@@ -426,13 +424,11 @@ EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
 }
 
 // clang-format off
-// list of supported file extensions for which SumatraPDF.exe will
-// be registered as a candidate for the Open With dialog's suggestions
 static SeqStrings gSupportedExtsForMulti = 
     ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
     ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
     ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
-    ".jpg\0.jpeg\0.tga\0.gif\0";
+    ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0";
 // clang-format on
 
 static bool isSupportedForMultis(const char* path) {

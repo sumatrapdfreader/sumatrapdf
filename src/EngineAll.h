@@ -42,8 +42,7 @@ EngineBase* CreateEngineCbxFromStream(IStream* stream);
 /* EngineMulti.cpp */
 
 bool IsEngineMultiSupportedFileType(Kind);
-EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files);
-EngineBase* CreateEngineMultiFromDirectory(const char* dirW);
+EngineBase* CreateEngineMultiFromDirectory(const char* dir);
 TocItem* CreateWrapperItem(EngineBase* engine);
 
 /* EngineMupdf.cpp */
