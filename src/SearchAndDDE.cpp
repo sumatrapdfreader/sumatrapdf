@@ -494,11 +494,11 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     }
 
     char* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
-    char* toFree = nullptr;
     if (!inverseSearch) {
-        // Detect a text editor and use it as the default inverse search handler for now
-        inverseSearch = AutoDetectInverseSearchCommands(nullptr);
-        toFree = inverseSearch;
+        StrVec detectedInverseSearch;
+        AutoDetectInverseSearchCommands(detectedInverseSearch);
+        char* s = detectedInverseSearch[0];
+        inverseSearch = str::DupTemp(s);
     }
 
     AutoFreeStr cmdLine;
@@ -518,10 +518,6 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         }
     } else if (gGlobalPrefs->enableTeXEnhancements) {
         ShowNotification(args);
-    }
-
-    if (toFree) {
-        str::Free(toFree);
     }
 
     return true;

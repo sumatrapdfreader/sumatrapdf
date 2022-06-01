@@ -9,7 +9,7 @@ char* AppGenDataFilenameTemp(const char* fileName);
 
 void SetAppDataPath(const char* path);
 
-char* AutoDetectInverseSearchCommands(HWND);
+void AutoDetectInverseSearchCommands(StrVec&);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 

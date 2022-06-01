@@ -635,23 +635,28 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 // Fill the combo with the list of possible inverse search commands
                 // Try to select a correct default when first showing this dialog
                 const char* cmdLine = prefs->inverseSearchCmdLine;
-                WCHAR* cmdLineW = ToWstrTemp(cmdLine);
-                AutoFreeStr inverseSearch;
                 HWND hwndComboBox = GetDlgItem(hDlg, IDC_CMDLINE);
-                char* cmd = AutoDetectInverseSearchCommands(hwndComboBox);
-                if (!cmdLine) {
-                    inverseSearch.Set(cmd);
-                    cmdLine = inverseSearch;
+                StrVec detected;
+                AutoDetectInverseSearchCommands(detected);
+                if (cmdLine) {
+                    detected.AppendIfNotExists(cmdLine);
+                } else {
+                    cmdLine = detected[0];
                 }
+                for (char* s : detected) {
+                    WCHAR* ws = ToWstrTemp(s);
+                    // if no existing command was selected then set the user custom command in the combo
+                    ComboBox_AddString(hwndComboBox, ws);
+                }
+
+                WCHAR* cmdLineW = ToWstrTemp(cmdLine);
                 // Find the index of the active command line
                 LRESULT ind = SendMessageW(hwndComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLineW);
                 if (CB_ERR == ind) {
-                    // if no existing command was selected then set the user custom command in the combo
-                    ComboBox_AddItemData(hwndComboBox, cmdLineW);
                     SetDlgItemTextW(hDlg, IDC_CMDLINE, cmdLineW);
                 } else {
                     // select the active command
-                    SendMessageW(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM)ind, 0);
+                    SendMessageW(hwndComboBox, CB_SETCURSEL, (WPARAM)ind, 0);
                 }
             } else {
                 RemoveDialogItem(hDlg, IDC_SECTION_INVERSESEARCH, IDC_SECTION_ADVANCED);

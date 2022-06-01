@@ -185,14 +185,7 @@ static struct {
 
 // Detect TeX editors installed on the system and construct the
 // corresponding inverse search commands.
-//
-// Parameters:
-//      hwndCombo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search
-//      commands.
-// Returns:
-//      the inverse search command of the first detected editor (the caller needs to free() the result).
-char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
-    char* firstEditor = nullptr;
+void AutoDetectInverseSearchCommands(StrVec& res) {
     StrVec foundExes;
 
     for (auto& rule : editorRules) {
@@ -225,30 +218,21 @@ char* AutoDetectInverseSearchCommands(HWND hwndCombo) {
             continue;
         }
 
-        AutoFreeStr editorCmd = str::Format("\"%s\" %s", exePath, inverseSearchArgs);
+        AutoFreeStr cmd = str::Format("\"%s\" %s", exePath, inverseSearchArgs);
 
-        if (!hwndCombo) {
-            // no need to fill a combo box: return immeditately after finding an editor.
-            return editorCmd.StealData();
-        }
+        res.Append(cmd);
 
+#if 0
         WCHAR* ws = ToWstrTemp(editorCmd);
         ComboBox_AddString(hwndCombo, ws);
         if (!firstEditor) {
             firstEditor = editorCmd.StealData();
         }
+#endif
         foundExes.Append(exePath);
     }
 
-    // Fall back to notepad as a default handler
-    if (!firstEditor) {
-        firstEditor = str::Dup("notepad %f");
-        if (hwndCombo) {
-            WCHAR* ws = ToWstrTemp(firstEditor);
-            ComboBox_AddString(hwndCombo, ws);
-        }
-    }
-    return firstEditor;
+    res.Append("notepad %f");
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
