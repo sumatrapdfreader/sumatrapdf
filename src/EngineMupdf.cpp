@@ -2843,7 +2843,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
     }
     fz_catch(e->ctx) {
-        fz_warn(e->ctx, "fz_resolve_link() failed");
+        logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
     }
     if (pageNo < 0) {
         // TODO: more?
