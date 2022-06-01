@@ -106,8 +106,9 @@ struct AutoFree {
         other.data = nullptr;
         return *this;
     }
+    // takes ownership of the data
     AutoFree& operator=(const char* d) noexcept {
-        if (this->data == d) {
+        if (data == d) {
             return *this;
         }
         free(data);

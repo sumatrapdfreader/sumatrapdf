@@ -158,7 +158,7 @@ int Synchronizer::Create(const char* pdffilename, EngineBase* engine, Synchroniz
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
-char* Synchronizer::PrepareCommandline(const char* pattern, const char* path, int line, int col) {
+char* FormatInverseSearchCommand(const char* pattern, const char* path, int line, int col) {
     const char* perc;
     str::Str cmdline(256);
 

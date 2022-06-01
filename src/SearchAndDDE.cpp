@@ -503,7 +503,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     AutoFreeStr cmdLine;
     if (inverseSearch) {
-        cmdLine.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
+        cmdLine = FormatInverseSearchCommand(inverseSearch, srcfilepath, line, col);
     }
 
     NotificationCreateArgs args;

@@ -38,9 +38,6 @@ class Synchronizer {
     // The result is returned in page and rects (list of rectangles to highlight).
     virtual int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
 
-    // the caller must free() the command line
-    char* PrepareCommandline(const char* pattern, const char* filename, int line, int col);
-
   private:
     bool indexDiscarded; // true if the index needs to be recomputed (needs to be set to true when a change to the
                          // pdfsync file is detected)
@@ -56,3 +53,6 @@ class Synchronizer {
   public:
     static int Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync);
 };
+
+// the caller must free() the command line
+char* FormatInverseSearchCommand(const char* pattern, const char* filename, int line, int col);
