@@ -526,12 +526,11 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    char* syncfname = syncfilepath;
-    if (!syncfname) {
-        return PDFSYNCERR_OUTOFMEMORY;
-    }
+    WCHAR* ws = ToWstrTemp(syncfilepath);
+    char* path = strconv::WstrToAnsi(ws);
 
-    scanner = synctex_scanner_new_with_output_file(syncfname, nullptr, 1);
+    scanner = synctex_scanner_new_with_output_file(path, nullptr, 1);
+    str::Free(path);
     if (!scanner) {
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
     }
