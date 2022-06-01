@@ -1461,31 +1461,29 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
     this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
 }
 
-namespace menu {
-
-void SetChecked(HMENU m, int id, bool isChecked) {
+void MenuSetChecked(HMENU m, int id, bool isChecked) {
     CrashIf(id < 0);
     CheckMenuItem(m, (UINT)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
 }
 
-bool SetEnabled(HMENU m, int id, bool isEnabled) {
+bool MenuSetEnabled(HMENU m, int id, bool isEnabled) {
     CrashIf(id < 0);
     BOOL ret = EnableMenuItem(m, (UINT)id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
     return ret != -1;
 }
 
-void Remove(HMENU m, int id) {
+void MenuRemove(HMENU m, int id) {
     CrashIf(id < 0);
     RemoveMenu(m, (UINT)id, MF_BYCOMMAND);
 }
 
-void Empty(HMENU m) {
+void MenuEmpty(HMENU m) {
     while (RemoveMenu(m, 0, MF_BYPOSITION)) {
         // no-op
     }
 }
 
-void SetText(HMENU m, int id, const WCHAR* s) {
+void MenuSetText(HMENU m, int id, const WCHAR* s) {
     CrashIf(id < 0);
     MENUITEMINFOW mii{};
     mii.cbSize = sizeof(mii);
@@ -1502,16 +1500,16 @@ void SetText(HMENU m, int id, const WCHAR* s) {
     }
 }
 
-void SetText(HMENU m, int id, const char* s) {
+void MenuSetText(HMENU m, int id, const char* s) {
     WCHAR* ws = ToWstrTemp(s);
-    SetText(m, id, ws);
+    MenuSetText(m, id, ws);
 }
 
 /* Make a string safe to be displayed as a menu item
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-char* ToSafeStringTemp(const char* s) {
+char* MenuToSafeStringTemp(const char* s) {
     auto str = str::DupTemp(s);
     if (!str::FindChar(str, '&')) {
         return str;
@@ -1519,7 +1517,6 @@ char* ToSafeStringTemp(const char* s) {
     AutoFreeStr safe = str::Replace(str, "&", "&&");
     return str::DupTemp(safe.Get());
 }
-} // namespace menu
 
 HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {
     WCHAR* fontNameW = ToWstrTemp(fontName);
