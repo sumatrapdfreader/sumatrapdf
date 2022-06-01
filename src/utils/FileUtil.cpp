@@ -33,7 +33,7 @@ const char* GetBaseNameTemp(const char* path) {
     return s;
 }
 
-TempStr GetExtTemp(const char* path) {
+static const char* GetExtPos(const char* path) {
     const char* ext = nullptr;
     char c = *path;
     while (c) {
@@ -45,10 +45,24 @@ TempStr GetExtTemp(const char* path) {
         path++;
         c = *path;
     }
+    return ext;
+}
+
+TempStr GetExtTemp(const char* path) {
+    const char* ext = GetExtPos(path);
     if (nullptr == ext) {
         return TempStr("");
     }
     return str::DupTemp(ext);
+}
+
+TempStr GetPathNoExtTemp(const char* path) {
+    const char* ext = GetExtPos(path);
+    if (nullptr == ext) {
+        return str::DupTemp(path);
+    }
+    size_t n = ext - path;
+    return str::DupTemp(path, n);
 }
 
 TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2) {

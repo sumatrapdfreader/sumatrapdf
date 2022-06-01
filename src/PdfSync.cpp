@@ -12,6 +12,8 @@
 #include "EngineBase.h"
 #include "PdfSync.h"
 
+#include "utils/Log.h"
+
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE 10
 // maximum error in the source file line number when doing forward-search
@@ -107,7 +109,6 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    // save sync file timestamp
     WCHAR* path = ToWstrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
@@ -525,33 +526,48 @@ int Pdfsync::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
 
 int SyncTex::RebuildIndexIfNeeded() {
     if (!NeedsToRebuildIndex()) {
+        logfa("SyncTex::RebuildIndexIfNeeded: no need to rebuild\n");
         return PDFSYNCERR_SUCCESS;
     }
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    WCHAR* ws = ToWstrTemp(syncFilePath);
-    char* path = strconv::WstrToAnsi(ws);
-
-    scanner = synctex_scanner_new_with_output_file(path, nullptr, 1);
-    str::Free(path);
-    if (!scanner) {
-        return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
+    {
+        char* pathNoExt = path::GetPathNoExtTemp(syncFilePath);
+        char* pathSync = str::Join(pathNoExt, ".synctex");
+        char* pathSyncGz = str::Join(pathNoExt, ".synctex.gz");
+        bool psExist = file::Exists(pathSync);
+        bool psgzExist = file::Exists(pathSyncGz);
+        logf("SyncTex::RebuildIndexIfNeeded: %s, %s exists: %d, %s exists %d\n", pathNoExt, pathSync, (int)psExist,
+             pathSyncGz, (int)psgzExist);
     }
 
+    WCHAR* ws = ToWstrTemp(syncFilePath);
+    AutoFreeStr pathAnsi = strconv::WstrToAnsi(ws);
+    logfa("SyncTex::RebuildIndexIfNeeded(): rebuilding syncFilePath: '%s', pathAnsi: '%s'\n", syncFilePath.Get(),
+          pathAnsi.Get());
+    scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
+    if (!scanner) {
+        scanner = synctex_scanner_new_with_output_file(syncFilePath, nullptr, 1);
+    }
+    if (!scanner) {
+        return PDFSYNCERR_SYNCFILE_NOTFOUND;
+    }
     return MarkIndexWasRebuilt();
 }
 
 int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
+    logfa("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath.Get(), pageNo);
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
+        ReportIf(true);
         return res;
     }
-    CrashIf(!scanner);
+    ReportIf(!scanner);
 
     // Coverity: at this point, this->scanner->flags.has_parsed == 1 and thus
     // synctex_scanner_parse never gets the chance to freeing the scanner
-    if (synctex_edit_query(this->scanner, pageNo, (float)pt.x, (float)pt.y) <= 0) {
+    if (synctex_edit_query(scanner, pageNo, (float)pt.x, (float)pt.y) <= 0) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
@@ -596,8 +612,13 @@ TryAgainAnsi:
 }
 
 int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
-    RebuildIndexIfNeeded();
-    CrashIf(!scanner);
+    logfa("SyncTex::SourceToDoc: '%s', line: %d, col: %d\n", srcfilename, line, col);
+    int res = RebuildIndexIfNeeded();
+    if (res != PDFSYNCERR_SUCCESS) {
+        ReportIf(true);
+        return res;
+    }
+    ReportIf(!scanner);
 
     AutoFreeStr srcfilepath;
     // convert the source file to an absolute path
