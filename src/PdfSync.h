@@ -51,7 +51,7 @@ class Synchronizer {
     int RebuildIndex();
     char* PrependDir(const char* filename) const;
 
-    AutoFreeStr syncfilepath; // path to the synchronization file
+    AutoFreeStr syncFilePath; // path to the synchronization file
 
   public:
     static int Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync);

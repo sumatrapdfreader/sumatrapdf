@@ -83,7 +83,7 @@ class SyncTex : public Synchronizer {
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
     indexDiscarded = true;
-    syncfilepath = str::Dup(syncFilePathIn);
+    syncFilePath = str::Dup(syncFilePathIn);
     WCHAR* path = ToWstrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
@@ -96,7 +96,7 @@ bool Synchronizer::IsIndexDiscarded() const {
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    WCHAR* path = ToWstrTemp(syncfilepath);
+    WCHAR* path = ToWstrTemp(syncFilePath);
     if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
@@ -109,13 +109,13 @@ bool Synchronizer::IsIndexDiscarded() const {
 int Synchronizer::RebuildIndex() {
     indexDiscarded = false;
     // save sync file timestamp
-    WCHAR* path = ToWstrTemp(syncfilepath);
+    WCHAR* path = ToWstrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
 
 char* Synchronizer::PrependDir(const char* filename) const {
-    char* dir = path::GetDirTemp(syncfilepath);
+    char* dir = path::GetDirTemp(syncFilePath);
     return path::Join(dir, filename);
 }
 
@@ -200,7 +200,7 @@ static char* Advance0Line(char* line, char* end) {
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
 int Pdfsync::RebuildIndex() {
-    ByteSlice data = file::ReadFile(syncfilepath);
+    ByteSlice data = file::ReadFile(syncFilePath);
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
@@ -526,7 +526,7 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    WCHAR* ws = ToWstrTemp(syncfilepath);
+    WCHAR* ws = ToWstrTemp(syncFilePath);
     char* path = strconv::WstrToAnsi(ws);
 
     scanner = synctex_scanner_new_with_output_file(path, nullptr, 1);
