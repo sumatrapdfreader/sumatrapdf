@@ -187,6 +187,9 @@ FZ_NORETURN static void throw(fz_context *ctx, int code)
 		fz_flush_warnings(ctx);
 		if (ctx->error.print)
 			ctx->error.print(ctx->error.print_user, "aborting process from uncaught error!");
+		/* SumatraPDF: crash rather than exit */
+		char* p = 0;
+		*p = 0;
 		exit(EXIT_FAILURE);
 	}
 }
