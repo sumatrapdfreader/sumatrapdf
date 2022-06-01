@@ -47,7 +47,7 @@ class Pdfsync : public Synchronizer {
     int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
   private:
-    int RebuildIndex();
+    int RebuildIndexIfNeeded();
     UINT SourceToRecord(const char* srcfilename, int line, int col, Vec<size_t>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
@@ -75,22 +75,21 @@ class SyncTex : public Synchronizer {
     int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
   private:
-    int RebuildIndex();
+    int RebuildIndexIfNeeded();
 
     EngineBase* engine; // needed for converting between coordinate systems
     synctex_scanner_t scanner;
 };
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
-    indexDiscarded = true;
     syncFilePath = str::Dup(syncFilePathIn);
     WCHAR* path = ToWstrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
 
-bool Synchronizer::IsIndexDiscarded() const {
+bool Synchronizer::NeedsToRebuildIndex() const {
     // was the index manually discarded?
-    if (indexDiscarded) {
+    if (needsToRebuildIndex) {
         return true;
     }
 
@@ -106,8 +105,8 @@ bool Synchronizer::IsIndexDiscarded() const {
     return false;
 }
 
-int Synchronizer::RebuildIndex() {
-    indexDiscarded = false;
+int Synchronizer::MarkIndexWasRebuilt() {
+    needsToRebuildIndex = false;
     // save sync file timestamp
     WCHAR* path = ToWstrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
@@ -199,7 +198,11 @@ static char* Advance0Line(char* line, char* end) {
 }
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
-int Pdfsync::RebuildIndex() {
+int Pdfsync::RebuildIndexIfNeeded() {
+    if (!NeedsToRebuildIndex()) {
+        return PDFSYNCERR_SUCCESS;
+    }
+
     ByteSlice data = file::ReadFile(syncFilePath);
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -324,7 +327,7 @@ int Pdfsync::RebuildIndex() {
     fileIndex.at(0).end = lines.size();
     ReportIf(filestack.size() != 1);
 
-    return Synchronizer::RebuildIndex();
+    return MarkIndexWasRebuilt();
 }
 
 // convert a coordinate from the sync file into a PDF coordinate
@@ -335,10 +338,9 @@ static int cmpLineRecords(const void* a, const void* b) {
 }
 
 int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
-    if (IsIndexDiscarded()) {
-        if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
-            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-        }
+    int res = RebuildIndexIfNeeded();
+    if (res != PDFSYNCERR_SUCCESS) {
+        return res;
     }
 
     // find the entry in the index corresponding to this page
@@ -481,10 +483,9 @@ UINT Pdfsync::SourceToRecord(const char* srcfilename, int line, int, Vec<size_t>
 }
 
 int Pdfsync::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
-    if (IsIndexDiscarded()) {
-        if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
-            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-        }
+    int res = RebuildIndexIfNeeded();
+    if (res != PDFSYNCERR_SUCCESS) {
+        return res;
     }
 
     Vec<size_t> found_records;
@@ -522,7 +523,10 @@ int Pdfsync::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
 
 // SYNCTEX synchronizer
 
-int SyncTex::RebuildIndex() {
+int SyncTex::RebuildIndexIfNeeded() {
+    if (!NeedsToRebuildIndex()) {
+        return PDFSYNCERR_SUCCESS;
+    }
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
@@ -535,16 +539,15 @@ int SyncTex::RebuildIndex() {
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
     }
 
-    return Synchronizer::RebuildIndex();
+    return MarkIndexWasRebuilt();
 }
 
 int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
-    if (IsIndexDiscarded()) {
-        if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
-            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-        }
+    int res = RebuildIndexIfNeeded();
+    if (res != PDFSYNCERR_SUCCESS) {
+        return res;
     }
-    CrashIf(!this->scanner);
+    CrashIf(!scanner);
 
     // Coverity: at this point, this->scanner->flags.has_parsed == 1 and thus
     // synctex_scanner_parse never gets the chance to freeing the scanner
@@ -593,12 +596,8 @@ TryAgainAnsi:
 }
 
 int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
-    if (IsIndexDiscarded()) {
-        if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
-            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-        }
-    }
-    CrashIf(!this->scanner);
+    RebuildIndexIfNeeded();
+    CrashIf(!scanner);
 
     AutoFreeStr srcfilepath;
     // convert the source file to an absolute path

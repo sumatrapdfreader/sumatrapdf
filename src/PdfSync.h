@@ -39,13 +39,15 @@ class Synchronizer {
     virtual int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
 
   private:
-    bool indexDiscarded; // true if the index needs to be recomputed (needs to be set to true when a change to the
-                         // pdfsync file is detected)
-    struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
+    // true if the index needs to be recomputed (needs to be set to true when a change to the
+    // pdfsync file is detected)
+    bool needsToRebuildIndex = true;
+    // time stamp of sync file when index was last built
+    struct _stat syncfileTimestamp;
 
   protected:
-    bool IsIndexDiscarded() const;
-    int RebuildIndex();
+    bool NeedsToRebuildIndex() const;
+    int MarkIndexWasRebuilt();
     char* PrependDir(const char* filename) const;
 
     AutoFreeStr syncFilePath; // path to the synchronization file
