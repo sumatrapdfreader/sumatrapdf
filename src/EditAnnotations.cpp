@@ -863,7 +863,7 @@ static MainWindow* gMainWindowForRender = nullptr;
 
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* ew) {
-    auto txt = ew->editContents->GetText();
+    auto txt = ew->editContents->GetTextTemp();
     SetContents(ew->annot, txt);
     EnableSaveIfAnnotationsChanged(ew);
 

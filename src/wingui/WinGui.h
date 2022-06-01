@@ -70,9 +70,6 @@ struct Wnd : public ILayout {
     void SetBounds(Rect) override;
     void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 
-    HWND CreateEx(DWORD exStyle, LPCTSTR className, LPCTSTR windowName, DWORD style, int x, int y, int width,
-                  int height, HWND parent, HMENU idOrMenu, LPVOID lparam = NULL);
-
     void Attach(HWND hwnd);
     void AttachDlgItem(UINT id, HWND parent);
 
@@ -112,7 +109,7 @@ struct Wnd : public ILayout {
     bool IsVisible() const;
     void SetText(const WCHAR*);
     void SetText(const char*);
-    TempStr GetText();
+    TempStr GetTextTemp();
 
     HFONT GetFont() {
         return font;

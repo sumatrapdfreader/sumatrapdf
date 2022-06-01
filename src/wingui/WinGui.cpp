@@ -144,7 +144,7 @@ void Wnd::SetText(const char* s) {
     HwndInvalidate(hwnd); // TODO: move inside HwndSetText()?
 }
 
-TempStr Wnd::GetText() {
+TempStr Wnd::GetTextTemp() {
     char* s = HwndGetTextTemp(hwnd);
     return s;
 }
@@ -1388,12 +1388,13 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
         idealSizeLines = 1;
     }
     Wnd::CreateControl(args);
+    if (!hwnd) {
+        return nullptr;
+    }
     SizeToIdealSize(this);
 
-    if (hwnd) {
-        if (editArgs.cueText) {
-            EditSetCueText(hwnd, editArgs.cueText);
-        }
+    if (editArgs.cueText) {
+        EditSetCueText(hwnd, editArgs.cueText);
     }
     return hwnd;
 }
