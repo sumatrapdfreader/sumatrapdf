@@ -663,9 +663,8 @@ bool CommandPaletteWnd::Create(MainWindow* win) {
         dy = 480;
     }
     int dx = rc.dx - 256;
-    if (dx < 640) {
-        dx = 640;
-    }
+    dx = limitValue(dx, 640, 1024);
+    limitValue(dx, 640, 1024);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
