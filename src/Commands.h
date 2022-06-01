@@ -154,6 +154,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenNextFileInFolder, "Open Next File In Folder")                \
     V(CmdOpenPrevFileInFolder, "Open Previous File In Folder")            \
     V(CmdCommandPalette, "Command Palette")                               \
+    V(CmdCommandPaletteNoFiles, "Command Palette No Files")               \
     V(CmdShowLog, "Show Log")                                             \
     V(CmdClearHistory, "Clear History")                                   \
     V(CmdReopenLastClosedFile, "Reopen Last Closed")                      \

@@ -4634,7 +4634,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdCommandPalette:
-            RunCommandPallette(win);
+            RunCommandPallette(win, false);
+            break;
+
+        case CmdCommandPaletteNoFiles:
+            RunCommandPallette(win, true);
             break;
 
         case CmdClearHistory:

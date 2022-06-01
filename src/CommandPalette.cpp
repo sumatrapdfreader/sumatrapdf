@@ -37,6 +37,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithFirst,
     CmdOpenWithLast,
     CmdCommandPalette,
+    CmdCommandPaletteNoFiles,
 
     // managing frequently list in home tab
     CmdOpenSelectedDocument,
@@ -152,7 +153,7 @@ struct CommandPaletteWnd : Wnd {
     void CollectStrings(MainWindow*);
     void FilterStringsForQuery(const char*, StrVec&);
 
-    bool Create(MainWindow* win);
+    bool Create(MainWindow* win, bool);
     void QueryChanged();
     void ListDoubleClick();
 
@@ -595,7 +596,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-bool CommandPaletteWnd::Create(MainWindow* win) {
+bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -672,12 +673,18 @@ bool CommandPaletteWnd::Create(MainWindow* win) {
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
+    if (noFiles) {
+        // this will trigger filtering
+        editQuery->SetText(">");
+        editQuery->SetSelection(1, 1);
+    }
+
     SetIsVisible(true);
     ::SetFocus(editQuery->hwnd);
     return true;
 }
 
-void RunCommandPallette(MainWindow* win) {
+void RunCommandPallette(MainWindow* win, bool noFiles) {
     CrashIf(gCommandPaletteWnd);
 
     if (!gCommandPaletteFont) {
@@ -694,7 +701,7 @@ void RunCommandPallette(MainWindow* win) {
 
     auto wnd = new CommandPaletteWnd();
     wnd->win = win;
-    bool ok = wnd->Create(win);
+    bool ok = wnd->Create(win, noFiles);
     CrashIf(!ok);
     gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;
