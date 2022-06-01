@@ -553,8 +553,7 @@ int SyncTex::RebuildIndexIfNeeded() {
           pathAnsi.Get());
     scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
     if (!scanner) {
-        logfa("synctex_scanner_new_with_output_file: '%s' failed'%s'\n", pathAnsi.Get(),
-          pathAnsi.Get());
+        logfa("synctex_scanner_new_with_output_file: '%s' failed'%s'\n", pathAnsi.Get(), pathAnsi.Get());
         scanner = synctex_scanner_new_with_output_file(syncFilePath, nullptr, 1);
     }
     if (!scanner) {

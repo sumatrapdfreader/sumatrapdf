@@ -19,7 +19,7 @@ struct ContextMenuEvent {
     Point mouseScreen{};
 };
 
-using ContextMenuHandler2 = std::function<void(ContextMenuEvent*)>;
+using ContextMenuHandler = std::function<void(ContextMenuEvent*)>;
 
 struct CreateControlArgs {
     HWND parent = nullptr;
@@ -72,12 +72,12 @@ struct Wnd : public ILayout {
 
     void Attach(HWND hwnd);
     void AttachDlgItem(UINT id, HWND parent);
-
     HWND Detach();
-    void Cleanup();
 
     void Subclass();
-    // void UnSubclass();
+    void UnSubclass();
+
+    void Cleanup();
 
     // over-ride those to hook into message processing
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -111,12 +111,8 @@ struct Wnd : public ILayout {
     void SetText(const char*);
     TempStr GetTextTemp();
 
-    HFONT GetFont() {
-        return font;
-    }
-    void SetFont(HFONT font) {
-        this->font = font;
-    }
+    HFONT GetFont();
+    void SetFont(HFONT font);
 
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
@@ -141,16 +137,16 @@ struct Wnd : public ILayout {
     // data that can be set before calling Create()
     Visibility visibility{Visibility::Visible};
 
-    WNDPROC prevWindowProc = nullptr;
     HWND hwnd = nullptr;
     HFONT font = nullptr; // we don't own it
+    UINT_PTR subclassId = 0;
 
     COLORREF backgroundColor = ColorUnset;
     HBRUSH backgroundColorBrush = nullptr;
 
     ILayout* layout = nullptr;
 
-    ContextMenuHandler2 onContextMenu;
+    ContextMenuHandler onContextMenu;
 };
 
 bool PreTranslateMessage(MSG& msg);

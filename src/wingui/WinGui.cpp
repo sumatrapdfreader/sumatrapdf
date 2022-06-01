@@ -17,20 +17,13 @@
 
 #include "webview2.h"
 
-// TODO: move to premake
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "Shlwapi.lib")
-// TODO: delay load windowsapp ?
-//#pragma comment(lib, "windowsapp")
-#pragma comment(lib, "shell32.lib")
-
 Kind kindWnd = "wnd";
 
-static UINT_PTR gSubclassId = 0;
+static LONG gSubclassId = 0;
 
 UINT_PTR NextSubclassId() {
-    gSubclassId++;
-    return gSubclassId;
+    LONG res = InterlockedIncrement(&gSubclassId);
+    return (UINT_PTR)res;
 }
 
 // TODO:
@@ -97,7 +90,7 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
-LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     Wnd* window = WindowMapGetWindow(hwnd);
 
     if (msg == WM_NCCREATE) {
@@ -113,6 +106,11 @@ LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
     } else {
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
+}
+
+static LRESULT CALLBACK StaticWindowProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+                                                   DWORD_PTR data) {
+    return StaticWindowProc(hwnd, msg, wp, lp);
 }
 
 Wnd::Wnd() {
@@ -624,7 +622,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
 
         case WM_PAINT: {
-            if (prevWindowProc) {
+            if (subclassId) {
                 // Allow window controls to do their default drawing.
                 return FinalWindowProc(msg, wparam, lparam);
             }
@@ -754,9 +752,10 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 LRESULT Wnd::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (prevWindowProc) {
-        return ::CallWindowProc(prevWindowProc, hwnd, msg, wparam, lparam);
+    if (subclassId) {
+        return ::DefSubclassProc(hwnd, msg, wparam, lparam);
     } else {
+        // TODO: also DefSubclassProc?
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
 }
@@ -782,22 +781,18 @@ void Wnd::AttachDlgItem(UINT id, HWND parent) {
 }
 
 HWND Wnd::Detach() {
-    CrashIf(!prevWindowProc);
-    if (IsWindow(hwnd)) {
-        SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)(prevWindowProc));
-    }
+    UnSubclass();
 
-    HWND wnd = this->hwnd;
+    HWND wnd = hwnd;
     WindowMapRemove(this);
-    this->hwnd = nullptr;
-    prevWindowProc = nullptr;
+    hwnd = nullptr;
     return wnd;
 }
 
 void Wnd::Cleanup() {
     WindowMapRemove(this);
     hwnd = nullptr;
-    prevWindowProc = nullptr;
+    subclassId = 0;
 }
 
 static void WndRegisterClass(const WCHAR* className) {
@@ -822,6 +817,7 @@ static void WndRegisterClass(const WCHAR* className) {
 
 HWND Wnd::CreateControl(const CreateControlArgs& args) {
     CrashIf(!args.className);
+    // TODO: validate that className is one of the known controls?
 
     font = args.font;
     if (!font) {
@@ -851,6 +847,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     HwndSetFont(hwnd, font);
     CrashIf(!hwnd);
+
+    // TODO: validate that
     Subclass();
     OnAttach();
 
@@ -866,6 +864,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     font = args.font;
 
     const WCHAR* className = args.className;
+    // TODO: validate className is not win32 control class
     if (className == nullptr) {
         className = kDefaultClassName;
     }
@@ -944,15 +943,33 @@ void Wnd::SetInsetsPt(int top, int right, int bottom, int left) {
 
 void Wnd::Subclass() {
     CrashIf(!IsWindow(hwnd));
-    CrashIf(prevWindowProc); // don't subclass multiple times
-
-    WindowMapAdd(hwnd, this);
-    WNDPROC proc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC);
-    if (proc == StaticWindowProc) {
+    CrashIf(subclassId); // don't subclass multiple times
+    if (subclassId) {
         return;
     }
-    prevWindowProc = SubclassWindow(hwnd, StaticWindowProc);
-    CrashIf(!prevWindowProc);
+    WindowMapAdd(hwnd, this);
+
+    subclassId = NextSubclassId();
+    BOOL ok = SetWindowSubclass(hwnd, StaticWindowProcSubclassed, subclassId, (DWORD_PTR)this);
+    CrashIf(!ok);
+}
+
+void Wnd::UnSubclass() {
+    CrashIf(!subclassId);
+    if (!subclassId) {
+        return;
+    }
+    RemoveWindowSubclass(hwnd, StaticWindowProcSubclassed, subclassId);
+    subclassId = 0;
+}
+
+HFONT Wnd::GetFont() {
+    return font;
+}
+
+void Wnd::SetFont(HFONT fontIn) {
+    font = fontIn;
+    // TODO: for controls, send WM_SETFONT message to original wndproc function
 }
 
 void Wnd::SetIsEnabled(bool isEnabled) const {
