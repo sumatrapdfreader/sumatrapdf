@@ -315,7 +315,9 @@ static WORD gNotSafeKeys[] = {
     VK_RETURN,
     VK_INSERT,
     VK_DELETE,
-    VK_BACK
+    VK_BACK,
+    VK_HOME,
+    VK_END
 };
 // clang-format on
 
