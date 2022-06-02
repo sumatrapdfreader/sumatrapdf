@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cbcbe99ce16b6eef05cbe73b0a66afac876e9c94
+9b2e506235d9dda0fb21fad849534eb28f8b2f2d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -14,7 +14,7 @@ ca-xv:&Quant a...
 ca:&Quant a...
 cn:关于(&A)...
 co:&Apprupositu
-cy:&Ynghylch...
+cy:&Ynghylch
 cz:&O programu
 de:Über &SumatraPDF
 dk:&Om
@@ -75,8 +75,9 @@ vn:Giới thiệu
 br:&Tamanho real
 cn:实际大小(&A)
 co:&Dimensione attuale
+cy:&Maint Gwirioneddol
 de:&Tatsächliche Größe
-es:&Tamaño actual
+es:&Tamaño real
 eu:&Oraingo neurria
 fr:T&aille réelle
 it:Dimensione &attuale
@@ -84,6 +85,7 @@ nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 ru:Насто&ящий размер
 tl:&Totoong Sukat
+tr:Gercek boyut
 uk:Фактичний розмір
 vn:Kích Thước Thực
 :&Advanced Options...
@@ -223,8 +225,9 @@ vn:Tất cả các trang được chọn
 br:&Voltar
 cn:上一视图(B)
 co:&Precedente
+cy:&Nôl
 de:&Vorherige Ansicht
-es:&Volver
+es:&Atrás
 eu:A&tzera
 fr:Revenir (&b)
 it:&Indietro
@@ -233,12 +236,14 @@ nl:&Terug
 pl:&Wstecz
 ru:&Назад
 tl:&Bumalik
+tr:Geri
 uk:Назад
 vn:Quay Lại
 :&Book View
 br:&Ver como livro
 cn:书籍视图(&B)
 co:Cum’è un &libru
+cy:Golwg &Llyfr
 de:&Buchansicht
 es:&Vista de libro
 eu:&Liburu ikuspegia
@@ -247,6 +252,7 @@ nl:&Boek Tonen
 pl:Widok o&dczytu
 ru:В &разворот
 tl:&View ng libro
+tr:Kitap Görünümü
 uk:Подання книги
 vn:Đọc Sách
 :&Cancel
@@ -257,6 +263,7 @@ ca-xv:&Cancel·la
 ca:&Cancel·la
 cn:取消
 co:&Abbandunà
+cy:&Diddymu
 de:&Abbrechen
 el:&Άκυρο
 es:Cancelar
@@ -290,6 +297,7 @@ ca-xv:&Cursor
 ca:&Cursor
 cn:&插入符
 co:&Cursore
+cy:&Caret
 de:&Cursor
 el:Αγκύλη
 es:&Cursor
@@ -316,6 +324,7 @@ vn:&Bổ Sung
 br:&Fechar
 cn:关闭(&C)
 co:&Chjode
+cy:&Cau
 de:&Schließen
 es:&Cerrar
 eu:It&xi
@@ -326,6 +335,7 @@ nl:&Sluiten
 pl:&Zamknij
 ru:&Закрыть
 tl:&Isara
+tr:Kapat
 uk:Закрити
 vn:&Đóng
 :&Continue installing 32-bit version
@@ -335,6 +345,7 @@ ca-xv:&Continua amb la instal·lació de la versió de 32 bits
 ca:&Continua amb la instal·lació de la versió de 32 bits
 cn:继续安装 32 位版本(&C)
 co:&Cuntinuà l’installazione di a versione 32-bit
+cy:&Parhau i osod y fersiwn 32-did
 de:Installation der 32-Bit-Version fortsetzen
 el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
@@ -429,6 +440,7 @@ vn:&Chép phần đã chọn
 br:&Copiar para área de transferência
 cn:复制到剪贴版(&C)
 co:&Cupià in u preme’papei
+cy:&Copïo i'r Clipfwrdd
 de:&In Zwischenablage kopieren
 es:&Copiar a portapapeles
 eu:&Kopiatu gakora
@@ -439,6 +451,7 @@ nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 ru:С&копировать в буфер обмена
 tl:&Kopyahin sa clipboard
+tr:Panoya kopyala
 uk:Скопіювати до буфера обміну
 vn:&Lưu Sao Chép
 :&Discard changes
@@ -446,8 +459,9 @@ am:&Մերժել
 br:&Descartar
 ca-xv:&Descarta
 ca:&Descarta
-cn:取消(&D)
+cn:不保存注释(&D)
 co:&Scartà i cambiamenti
+cy:&Hepgor newidiadau
 de:&Änderungen verwerfen
 el:Απόρριψη
 es:&Descartar
@@ -609,13 +623,15 @@ vn:Chỉ những trang lẻ
 br:&Página dupla
 cn:双页视图(&F)
 co:Pagina d&oppia
+cy:&Wynebu
 de:&Doppelseite
-es:&Doble página
+es:&Caras opuestas
 it:Pagine a&ffiancate
 nl:&Gericht op
 pl:&Wiele stron
 ru:По &две страницы
 tl:Nakaharap
+tr:Her İki Yüz
 uk:По дві сторінки
 vn:&Trang kép
 :&File
@@ -760,6 +776,7 @@ vn:Tìm (các) từ sau:
 br:&Primeira página
 cn:第一页(&F)
 co:P&rima pagina
+cy:Tudalen &Gyntaf
 de:&Erste Seite
 es:&Primera página
 eu:&Lehen orrialdea
@@ -769,6 +786,7 @@ nl:&Eerste Pagina
 pl:&Pierwsza strona
 ru:Пер&вая страница
 tl:&Unang pahina
+tr:İlk sayfa
 uk:Перша сторінка
 vn:&Trang Đầu
 :&Fit pages to printable area
@@ -841,6 +859,7 @@ ca-xv:Text &lliure
 ca:Text &lliure
 cn:&自由文本
 co:Testu &liberu
+cy:&Testun Rhydd
 de:&Freitext
 el:Ελεύθερο κείμενο
 es:&Texto libre
@@ -1078,6 +1097,7 @@ vn:Trợ &giúp
 br:&Destacar
 cn:高亮(&H)
 co:&Sopralineà
+cy:&Amlygu
 de:Text &hervorheben
 es:&Destacar
 eu:&Nabarmendu
@@ -1086,12 +1106,14 @@ it:Eviden&zia
 nl:&Markeren
 pl:&Wyróżnienie
 ru:По&дсветка
+tr:&Vurgula
 uk:Виділити 
 vn:&Nổi Bật
 :&Last Page
 br:&Última página
 cn:最后一页(&L)
 co:&Ultima pagina
+cy:Tudalen &Olaf
 de:&Letzte Seite
 es:Última página
 eu:&Azken orrialdea
@@ -1101,6 +1123,7 @@ nl:&Laatste Pagina
 pl:&Ostatnia strona
 ru:Последня&я страница
 tl:Hu&ling pahina
+tr:Son sayfa
 uk:Остання сторінка 
 vn:&Trang Cuối
 :&Magnification:
@@ -1303,6 +1326,7 @@ vn:Phân biệt &HOA-thường
 br:&Próxima página
 cn:下一页(&N)
 co:Pagina &seguente
+cy:Tudalen &Nesaf
 de:&Nächste Seite
 es:&Página siguiente
 eu:&Hurrengo orrialdea
@@ -1311,6 +1335,7 @@ it:Pagina &successiva
 nl:&Volgende Pagina
 pl:&Następna strona
 ru:&Следующая страница
+tr:Sonraki sayfa
 uk:Наступна сторінка
 vn:&Trang Tiếp
 :&No
@@ -1514,6 +1539,7 @@ vn:Mở tập tin
 br:&Abrir
 cn:打开(&O)...
 co:&Apre…
+cy:&Agor...
 de:&Öffnen...
 es:&Abrir...
 eu:&Ireki...
@@ -1522,6 +1548,7 @@ it:&Apri
 nl:&Openen
 pl:&Otwórz...
 ru:&Открыть...
+tr:Aç...
 uk:Відкрити
 vn:&Mở...
 :&Options
@@ -1783,6 +1810,7 @@ vn:Ghim tập tin
 br:&Página anterior
 cn:上一页(&P)
 co:Pagina &precedente
+cy:Tudalen &Flaenorol
 de:&Vorherige Seite
 es:&Página anterior
 eu:A&urreko orrialdea
@@ -1791,6 +1819,7 @@ it:Pagina &precedente
 nl:&Vorige Pagina
 pl:&Poprzednia strona
 ru:Пр&едыдущая страница
+tr:Önceki sayfa
 uk:Попередня сторінка 
 vn:&Trang Trước
 :&Print...
@@ -2160,6 +2189,7 @@ ca-xv:Desa a un PDF &existent
 ca:Desa a un PDF &existent
 cn:保存到当前 PDF 文件(&S)
 co:&Arregistrà in u PDF esistente
+cy:Cadw i PDF &presennol
 de:In bestehendes PDF &speichern
 dk:&Gem i eksisterende PDF
 el:Αποθήκευση σε υπάρχον PDF
@@ -2170,7 +2200,7 @@ fr:&Sauvegarder dans le PDF existant
 hr:&Spremi u postojeći PDF
 hu:Meglévő PDF-be mentés
 id:&Simpan ke PDF yang sudah ada
-it:&Salva in un PDF esistente
+it:&Salva in questo PDF
 kr:기존 PDF에 저장(&S)
 kw:&Gwitha dhe PDF seulabrys
 nl:&Opslaan in bestaande PDF
@@ -2189,6 +2219,7 @@ ca-xv:&Cerca amb el Google
 ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
 co:&Circà cù Google
+cy:&Chwilio gyda Google
 de:Mit Google &suchen
 dk:&Søg med Google
 el:Αναζήτηση με Google
@@ -2342,6 +2373,7 @@ vn:Nén vừa trang in (nếu cần thiết)
 br:&Página única
 cn:单页视图(&S)
 co:&Una pagina sola
+cy:&Un Tudalen
 de:Einzel&seitenansicht
 es:&Una sola página
 fr:Page unique (&s)
@@ -2349,6 +2381,7 @@ it:Pagina &singola
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
 ru:По &одной странице
+tr:Tek sayfa
 uk:Одна сторінка
 vn:&Trang Đơn
 :&Stamp
@@ -2358,6 +2391,7 @@ ca-xv:&Segell
 ca:&Segell
 cn:&图章
 co:&Stampaghjolu
+cy:&Stamp
 de:&Stempel
 dk:&Frimærke
 el:Σφραγίδα
@@ -2385,6 +2419,7 @@ ca-xv:&Ratlla
 ca:&Ratlla
 cn:&删除线
 co:&Rigà
+cy:&Taro Allan
 de:Durchstreichen
 dk:&Gennemstreg
 el:Εξάλειψη
@@ -2415,6 +2450,7 @@ ca-xv:&Text
 ca:&Text
 cn:&文本
 co:&Testu
+cy:&Testun
 de:&Text
 dk:&Tekst
 el:Κείμενο
@@ -2502,6 +2538,7 @@ ca-xv:Tradueix amb el &Google
 ca:Tradueix amb el &Google
 cn:使用谷歌翻译(&T)
 co:&Traduce cù Google
+cy:&Cyfieithu gyda Google
 de:Mi&t Google übersetzen
 dk:&Oversæt med Google
 el:Μετάφραση με Google
@@ -2531,6 +2568,7 @@ ca-xv:&Subratlla
 ca:&Subratlla
 cn:&下划线
 co:&Sottulineatu
+cy:&Tanlinellu
 de:&Unterstreichen
 dk:&Understreg
 el:Υπογράμμιση
@@ -3944,6 +3982,7 @@ bn:গ্রন্থকার: %s
 br:Autor: %s
 cn:作者: %s
 co:Autore : %s
+cy:Awdur: %s
 de:Autor: %s
 el:Συγγραφέας: %s
 es:Autora: %s
@@ -4111,6 +4150,7 @@ ca-xv:Color de fons
 ca:Color de fons
 cn:背景色:
 co:Culore di u fondu :
+cy:Lliw'r Cefndir:
 de:Hintergrundfarbe:
 el:Χρώμα φόντου:
 es:Color de fondo
@@ -4220,7 +4260,7 @@ ca-xv:Dreceres de marcadors
 ca:Dreceres dels marcadors
 cn:书签快捷方式
 co:Accurtatoghji di l’indette
-cy:Llwybrau Byr Nodau Tudalen
+cy:Gosod Nodau Tudalen i Lwybrau Byr 
 cz:Zástupce záložky
 de:Lesezeichen-Verknüpfungen
 dk:Gem genveje
@@ -4286,7 +4326,7 @@ ca-xv:Drecera del marcador a la pàgina %s de %s
 ca:Drecera del marcador a la pàgina %s de %s
 cn:书签快捷方式：第 %s 页/共 %s 页
 co:Accurtatoghju di l’indetta di a pagina %s di %s
-cy:Llwybr byr nod tudalen i dudalen %s o %s
+cy:Gosod nod tudalen i lwybr byr tudalen %s o %s
 cz:Zástupce záložky na straně %s souboru %s
 de:Lesezeichen-Verknüpfung zu Seite %s von %s
 dk:Gem genvej til side %s af %s
@@ -4411,6 +4451,7 @@ bn:সীমানা: %d
 br:Borda: %d
 cn:边框: %d
 co:Bordu : %d
+cy:Border: %d
 de:Umrandung: %d
 el:Περιθώριο: %d
 es:Borde: %d
@@ -4920,7 +4961,7 @@ ca-xv:&Comprova si hi ha una versió nova
 ca:&Comprova si hi ha una versió nova
 cn:检查更新(&U)
 co:&Cuntrollà e nove versioni
-cy:Gwirio am &Ddiweddariad
+cy:Gwirio am &Ddiweddariadau
 cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
 dk:Tjek efter &opdateringer
@@ -4983,6 +5024,7 @@ ca-xv:S'està comprovant si hi ha actualitzacions...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
 co:Cuntrollu di e nove versioni…
+cy:Gwirio am ddiweddariad...
 de:Nach einem Update suchen...
 el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
@@ -5177,6 +5219,7 @@ ca-xv:Color
 ca:Color
 cn:颜色:
 co:Culore :
+cy:Lliw:
 de:Farbe:
 dk:Farve:
 el:Χρώμα:
@@ -5277,6 +5320,7 @@ vn:Truyện tranh
 br:Paleta de comandos
 cn:命令面板
 co:Tavuletta di cumande
+cy:Palet Gorchymyn
 de:Befehlspalette
 es:Paleta de comandos 
 et:Käsupalett
@@ -5288,6 +5332,7 @@ nl:Opdrachten
 pl:Paleta poleceń
 ru:Панель команд
 tl:Command Palette
+tr:Komut paleti
 uk:Палітра команд
 vn:Lệnh
 :Compatibility
@@ -5363,6 +5408,7 @@ bn:বিষয়:
 br:Conteúdo:
 cn:内容：
 co:Cuntenutu :
+cy:Cynnwys:
 de:Inhalte:
 el:Περιεχόμενα:
 es:Contenido:
@@ -5863,6 +5909,7 @@ vn:Chép chú thích
 br:Copiar para área de transferência
 cn:复制到剪贴版
 co:Cupià in u preme’papei
+cy:Copïo i'r Clipfwrdd
 de:In Zwischenablage kopieren
 es:Copiar a portapapeles
 et:Kopeeri lõikelauale
@@ -5874,6 +5921,7 @@ nl:Kopieer naar klembord
 pl:Kopiuj do schowka
 ru:Скопировать в буфер обмена
 tl:Kopyahin sa clipboard
+tr:Panoya kopyala
 uk:Скопіювати до буфера обміну
 vn:Lưu Sao Chép
 :Copying text was denied (copying as image only)
@@ -6143,6 +6191,7 @@ bg:Името на принтера не бе намерено
 br:Não foi possível ver o nome da impressora
 cn:无法获取打印机名称
 co:Impussibule d’ottene u nome di a stampetta
+cy:Methwyd cael enw argraffydd
 de:Druckername konnte nicht ermittelt werden
 el:Δεν ήταν δυνατή η λήψη του ονόματος του εκτυπωτή 
 es:No se ha podido encontrar el nombre de la impresora
@@ -6661,6 +6710,7 @@ ca-xv:Crea una anotació a sota del c&ursor
 ca:Crea una anotació a sota del c&ursor
 cn:在光标位置创建标注(&U)
 co:Scrive un’annutazione &sottu à u cursore
+cy:Creu Anodiad o &Dan y Cyrchwr
 de:Anmerkung &unter dem Cursor erstellen
 el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear una anotación &bajo el cursor
@@ -6692,6 +6742,7 @@ ca-xv:Crea una anotació amb la selecció
 ca:Crea una anotació amb la selecció
 cn:对所选内容创建标注
 co:Scrive un’annutazione da a selezzione
+cy:Creu Anodiad o'r Dewis
 de:Anmerkung aus Auswahl erstellen
 el:Δημιουργία σχολιασμού από επιλογή
 es:Crear una anotación con la selección
@@ -6922,6 +6973,7 @@ vn:Vị trí con trỏ:
 br:Zoom &personalizado...
 cn:自定义缩放(&Z)...
 co:&Ingrandamentu persunalizatu…
+cy:Chwyddo &Cyfaddas...
 de:Benutzerdefinierter &Zoom...
 es:Zoom &personalizado...
 eu:Norbere &Zooma...
@@ -6931,6 +6983,7 @@ nl:Aangepast & zoom...
 pl:&Własne powiększenie...
 ru:Свой &масштаб...
 tl:Pasadya &Mag-zoom
+tr:Özel yakınlaştır
 uk:Нетиповий масштаб...
 vn:Thiết Lập &Phóng...
 :Dark
@@ -7061,6 +7114,7 @@ bn:তারিখ:
 br:Data:
 cn:日期:
 co:Data :
+cy:Dyddiad:
 de:Datum:
 el:Ημερομηνία:
 es:Fetcha:
@@ -7216,6 +7270,7 @@ vn:Kích thước mặc định
 br:Apagar Anotação\tDel
 cn:删除标注\tDel
 co:Squassà l’annutazione\tSuppr
+cy:Dileu Anodiad\tDileu
 de:Anmerkung löschen\tDel
 el:Διαγραφή σχολίου\tDel
 es:Eliminar anotación\tDel
@@ -7439,6 +7494,7 @@ ca-xv:No ho instal·lis
 ca:No ho instal·lis
 cn:不安装
 co:Ùn micca installà
+cy:Peidio â gosod
 de:Nicht installieren
 el:Μη γίνει εγκατάσταση
 es:No instalar
@@ -7472,6 +7528,7 @@ ca-xv:Baixa la versió de 64 bits
 ca:Baixa la versió de 64 bits
 cn:下载 64 位版本
 co:Scaricà a versione 64-bit
+cy:Llwytho'r fersin 64-did i lawr
 de:64-Bit-Version herunterladen
 el:Λήψη έκδοσης 64-bit 
 es:Descargar la versión de 64 bits
@@ -7501,6 +7558,7 @@ vn:Tải phiên bản 64-bit
 br:S&air
 cn:退出(&X)
 co:&Esce
+cy:&Gadael
 de:&Beenden
 es:S&alir
 eu:I&rten
@@ -7511,6 +7569,7 @@ nl:A&fsluiten
 pl:&Wyjście
 ru:В&ыход
 tl:&Lumabas
+tr:Çık
 uk:Вийти 
 vn:T&hoát
 :E&xit Fullscreen
@@ -8044,8 +8103,9 @@ vn:Ưa thích
 br:A&vançar
 cn:下一视图(&O)
 co:&Dopu
+cy:&Ymlaen
 de:&Nächste Ansicht
-es:A&vanzar
+es:A&delante
 eu:A&urrera
 fr:Avancer (&o)
 it:&Avanti
@@ -8054,12 +8114,14 @@ nl:V&ooruit
 pl:&Dalej
 ru:В&перёд
 tl:&Pasulong
+tr:İleri
 uk:Вперед
 vn:Tiếp
 :F&ullscreen
 br:T&ela cheia
 cn:全屏(&U)
 co:&Screnu sanu
+cy:Sgrin &Lawn
 de:&Vollbild
 es:P&antalla completa
 eu:Ikusleiho-o&soa
@@ -8069,6 +8131,7 @@ ja:全画面表示(&U)
 nl:V&oledig Scherm
 pl:Pełny &ekran
 ru:Полный &экран
+tr:Tam ekran
 uk:Повноекранний
 vn:Toàn Màn Hình
 :Facing
@@ -8090,7 +8153,7 @@ cz:Dvojstránky
 de:Doppelseite
 dk:Modstående
 el:Δύο σελίδες
-es:Doble página
+es:Caras opuestas
 et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
@@ -8905,6 +8968,7 @@ vn:Tập tin:
 br:Locali&zar
 cn:查找(&D)...
 co:&Circà…
+cy:&Canfod...
 de:S&uchen...
 es:Busca&r...
 eu:&Bilatu...
@@ -8914,6 +8978,7 @@ nl:Zoe&k
 pl:&Znajdź...
 ru:На&йти...
 tl:&Hanapin
+tr:Bul
 uk:Знайти ...
 vn:Tìm
 :Find
@@ -9201,6 +9266,7 @@ vn:Tìm kiếm:
 br:Ajustar ao &conteúdo
 cn:适合内容(&C)
 co:&Adattà à u cuntenutu
+cy:&Ffitio'r Cynnwys
 de:An &Inhalt anpassen
 es:Ajustar al &contenido
 eu:Finkatu &edukia
@@ -9209,12 +9275,14 @@ nl:&Inhoud Aanpassen
 pl:Dopasuj do &zawartości
 ru:Вписать содер&жимое
 tl:akma sa &nilalaman
+tr:Sayfa düzeyine yakınlaştır
 uk:Підігнати вміст
 vn:Vừa &Nội Dung
 :Fit &Page
 br:Ajustar à &página
 cn:适合页面(&P)
 co:&Pagina sana
+cy:Ffitio &Tudalen
 de:An &Seite anpassen
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
@@ -9223,12 +9291,14 @@ nl:&Pagina Aanpassen
 pl:Dopasuj do s&trony
 ru:Вписать &страницу
 tl:Akma &Pahina
+tr:Tam Sayfayı Pencereye Sığdır
 uk:Підігнати сторінку
 vn:Vừa &Trang
 :Fit &Width
 br:Ajustar pela &largura
 cn:适合宽度(&W)
 co:&Larghezza sana
+cy:Ffitio &Lled
 de:An Fenster&breite anpassen
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
@@ -9236,6 +9306,7 @@ it:Adatta a &larghezza
 nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 ru:Вписать по &ширине
+tr:Genişliğe Sığdır
 uk:Підігнати ширину
 vn:Vừa &Chiều Ngang
 :Fit Content
@@ -9904,6 +9975,7 @@ vn:GB
 br:Informações da Fonte
 cn:显示字体信息
 co:Ottene infurmazioni di grafie
+cy:Derbyn Manylion Ffontiau
 de:Schriftarten-Infos erhalten
 es:Información sobre las fuentes
 et:Hangi fondi infot
@@ -9915,6 +9987,7 @@ nl:Informatie over lettertypen ophalen
 pl:Uzyskaj informacje o czcionkach
 ru:Получить информацию о шрифтах
 tl:Kumuha ng impormasyon ng mga font
+tr:Yazı tipi bilgisi
 uk:Отримати інформацію про шрифти
 vn:Lấy Thông Tin Fonts
 :Go to page
@@ -10187,6 +10260,7 @@ bn:আইকন
 br:Ícone
 cn:图标:
 co:Icona :
+cy:Eicon:
 de:Icon:
 el:Εικονίδιο:
 es:Icono:
@@ -10493,6 +10567,7 @@ ca-xv:Instal·la i reinicia
 ca:Instal·la i reinicia
 cn:安装并启动
 co:Installà è rilancià
+cy:Gosod ac ail gychwyn
 de:Installieren und neu starten
 el:Εγκατάσταση και επανεκκίνηση 
 es:Instalar y reiniciar
@@ -10520,6 +10595,7 @@ vn:Cài đặt và chạy chương trình
 br:Instalar para todos os usuários
 cn:为所有用户安装
 co:Installà per tutti l’utilizatori
+cy:Gosod ar gyfer pob defnyddiwr
 de:Für alle Benutzer installieren
 es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
@@ -10530,6 +10606,7 @@ nl:Installeer voor alle gebruikers
 pl:Zainstaluj dla wszystkich użytkowników
 ru:Установить для всех пользователей
 tl:I-install para sa lahat ng user
+tr:Tüm kullanıcılar için kur
 uk:Встановити для всіх користувачів
 vn:Cài đặt cho mọi người dùng
 :Installation failed!
@@ -10668,6 +10745,7 @@ ca-xv:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 
 ca:S'està instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits
 cn:在 64 位操作系统上安装 32 位 SumatraPDF
 co:Installazione di SumatraPDF 32-bit nant’à un sistema 64-bit
+cy:Yn gosod SumatraPDF 32-did ar OS 64-did
 de:32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem installieren
 el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστημα 64 bit 
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
@@ -10696,6 +10774,7 @@ am:Ներքին գույնը.
 br:Cor Interior:
 cn:填充颜色：
 co:Culore interiore :
+cy:Lliw Tu Mewn:
 de:Innenfarbe:
 el:Εσωτερικό Χρώμα:
 es:Color Interior
@@ -11014,6 +11093,7 @@ bn:লাইন শেষ:
 br:Fim da linha:
 cn:线段终点
 co:Fine di linea :
+cy:Diwedd Llinell:
 de:Zeilenende:
 el:Τέλος γραμμής:
 es:Fin de Línea:
@@ -11039,6 +11119,7 @@ bn:লাইন শুরু:
 br:Começo da linha:
 cn:线段起点
 co:Principiu di linea :
+cy:Cychwyn Llinell:
 de:Zeilenstart:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
@@ -11058,6 +11139,7 @@ tl:Simula ng linya:
 tr:Satır Başlangıcı:
 uk:Початок рядка: 
 vn:Dòng Bắt Đầu:
+:Loading %s ...
 :MB
 af:MB
 am:ՄԲ
@@ -11464,6 +11546,7 @@ vn:Ngày chỉnh sửa
 br:Nova &janela
 cn:新建窗口(&W)
 co:Nova &finestra
+cy:Ffenestr &newydd
 de:Neues &Fenster
 es:Nueva &ventana
 eu:&Leiho berria
@@ -11473,6 +11556,7 @@ ja:新しいウィンドウ(&W)
 nl:Nieuw &Kader
 pl:Nowe &okno
 ru:&Новое окно
+tr:Yeni pencere
 uk:Нове вікно
 vn:Cửa sổ &mới
 :New version available
@@ -11483,6 +11567,7 @@ ca-xv:Hi ha una versió nova disponible
 ca:Hi ha una versió nova disponible
 cn:有新版本
 co:Nova versione dispunibule
+cy:Mae fersiwn newydd ar gael
 de:Neue Version verfügbar
 el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
@@ -11981,6 +12066,7 @@ bn:অস্বচ্ছতা:
 br:Opacidade:
 cn:透明度:
 co:Opacità :
+cy:Anhryloywder
 de:Deckkraft:
 el:Διαφάνεια:
 es:Opacidad:
@@ -12008,6 +12094,7 @@ bn:অস্বচ্ছতা: %d
 br:Opacidade: %d
 cn:透明度: %d
 co:Opacità : %d
+cy:Anhryloywder: %d
 de:Deckkraft: %d
 el:Διαφάνεια: %d
 es:Opacidad: %d
@@ -12112,7 +12199,7 @@ ca-xv:Obre amb el PDF-XChange
 ca:Obre amb el PDF-&XChange
 cn:在 PDF-XChange 中打开(&I)
 co:Apre cù &PDF-XChange
-cy:Agor yn PDF-XChange
+cy:&Agor yn PDF-XChange
 cz:Otevřít v programu PDF-XChange
 de:Mit PDF-&XChange öffnen
 dk:Åbn med PDF-XChange
@@ -12984,6 +13071,7 @@ vn:Tập tin PDF
 br:Pá&gina
 cn:前往第 ... 页(&G)
 co:Pa&gina…
+cy:&Tudalen...
 de:&Seite...
 es:Pá&gina...
 eu:O&rrialdea...
@@ -12993,6 +13081,7 @@ ja:ページ(&G)...
 nl:Pa&gina
 pl:&Strona...
 ru:С&траница...
+tr:Sayfaya...
 uk:Сторінка
 vn:Trang...
 :Page %s
@@ -13597,6 +13686,7 @@ am:Ելնող. %d 0 R
 br:Aparecer: %d 0 R
 cn:弹出：%d 0 R
 co:Finestrinu : %d 0 R
+cy:Llamlen: %d 0 R
 de:Pop-up: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
@@ -13683,6 +13773,7 @@ vn:Tập tin Postscript
 br:A&presentação
 cn:幻灯片(&E)
 co:&Presentazione
+cy:C&yflwyniad
 de:Pr&äsentation
 es:Pr&esentación
 eu:Aur&kezpena
@@ -13692,6 +13783,7 @@ ja:プレゼンテーション(&E)
 nl:Pr&esentatie
 pl:&Prezentacja
 ru:Презента&ция
+tr:Sunum
 uk:Презентація
 vn:Trình Chiếu
 :Previous Page
@@ -14285,6 +14377,7 @@ vn:Lỗi in.
 br:Re&nomear...
 cn:重命名(&N)...
 co:&Rinuminà…
+cy:&Ailenwi...
 de:Umbe&nennen...
 es:Re&nombrar...
 eu:B&errizendatu...
@@ -14293,6 +14386,7 @@ it:Ri&nomina...
 nl:Her&noem
 pl:Zmień &nazwę...
 ru:Пере&именовать...
+tr:Yeniden adlandır
 uk:Перейменувати...
 vn:Đổi &Tên
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -14300,6 +14394,7 @@ am:Ուղղ. x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 co:Rett: x=%d y=%d dx=%d dy=%d
+cy:Rect: x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
@@ -14619,14 +14714,16 @@ vn:Đổi tên thành
 br:Girar à &esquerda
 cn:逆时针旋转(&L)
 co:Girà à &manca
+cy:Troi i'r &Chwith
 de:&Gegen UZS drehen
-es:Rotar &a la izquierda
+es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fr:Rotation vers &la gauche
 it:Ruota a &sinistra
 nl:&Linksom Roteren
 pl:Obróć w &lewo
 ru:Повернуть в&лево
+tr:Sola döndür
 uk:Повернути проти годинникової стрілки
 vn:Quay &Trái
 :Rotate &Left\tCtrl+Shift+-
@@ -14704,14 +14801,16 @@ vn:Quay trái\tCtrl+Shift+-
 br:Girar à &direita
 cn:顺时针旋转(&R)
 co:Girà à &diritta
+cy:Troi i'r &Dde
 de:Im &UZS drehen
-es:Rotar &a la derecha
+es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
 fr:Rotation vers la d&roite
 it:Ruota a &destra
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 ru:Повернуть в&право
+tr:Sağa döndür
 uk:Повернути за годинниковою стрілкою
 vn:Quay &Phải
 :Rotate &Right\tCtrl+Shift++
@@ -14792,6 +14891,7 @@ ca-xv:S&elecció
 ca:S&elecció
 cn:选择(&E)
 co:S&elezzione
+cy:&Dewis
 de:Auswahl
 el:Επιλογή
 es:S&elección
@@ -14821,6 +14921,7 @@ ca-xv:&Ondulat
 ca:&Ondulat
 cn:波浪线(&Q)
 co:&Undulà
+cy:&Sgwigli
 de:Verschnörkelt
 el:Στριφογυριστό
 es:&Ondulado
@@ -14849,6 +14950,7 @@ ca-xv:Documents SVG
 ca:Documents SVG
 cn:SVG 文件
 co:Ducumenti SVG
+cy:Dogfennau SVG
 de:SVG-Dokumente
 dk:SVG-dokumenter
 el:Έγγραφα SVG
@@ -14877,6 +14979,7 @@ bg:Запази Обясненията в съществуващ PDF
 br:Salvar anotações neste PDF
 cn:将标注保存到当前 PDF
 co:Arregistrà l’annutazioni in u PDF esistente
+cy:Cadw Anodiadau i PDF presennol
 de:Anmerkungen in bestehende PDF-Dateien speichern
 el:Αποθήκευση σχολίων σε υπάρχον PDF
 es:Guardar Anotaciones a PDF existente
@@ -14887,7 +14990,7 @@ gl:Gardar anotacións ó PDF existente
 hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
 id:Simpan catatan ke PDF terkini
-it:Salva annotazioni in PDF esistente
+it:Salva annotazioni in questo PDF
 nl:Notities opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 ru:Со&хранить аннотации в имеющемся PDF
@@ -14937,6 +15040,7 @@ vn:Lưu Tập Đã Nhúng...
 br:Salvar A&talho
 cn:保存快捷方式(&H)...
 co:Arregistrà l’&accurtatoghju…
+cy:Cadw &Llwybr Byr...
 de:Verknüpfung speichern...
 es:Guardar A&tajo...
 eu:Gorde &lastertekla...
@@ -14945,6 +15049,7 @@ it:Sal&va scorciatoia...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
 ru:Сохранить &ярлык...
+tr:Kısayolu kaydet
 uk:Зберегти ярлик...
 vn:Lưu Đ&ường Tắt
 :Save annotations?
@@ -14955,6 +15060,7 @@ ca-xv:Voleu desar les anotacions?
 ca:Voleu desar les anotacions?
 cn:是否保存标注
 co:Arregistrà l’annutazioni ?
+cy:Cadw anodiadau?
 de:Anmerkungen speichern?
 el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
@@ -14987,6 +15093,7 @@ ca-xv:Desa els canvis a un PDF nou
 ca:Desa els canvis a un PDF nou
 cn:另存为新的 PDF 文件
 co:Arregistrà i cambiamenti in un novu PDF
+cy:Cadw newidiadau i PDF newydd
 de:Änderungen in einer neuen PDF-Datei speichern
 el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar los cambios en un nuevo PDF
@@ -15021,6 +15128,7 @@ ca-xv:Desa els canvis a un PDF existent
 ca:Desa els canvis a un PDF existent
 cn:保存至当前 PDF 文件
 co:Arregistrà i cambiamenti in u PDF esistente
+cy:Cadw newidiadau i PDF presennol
 de:Änderungen an vorhandener PDF speichern
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
 es:Guardar los cambios en un PDF existente
@@ -15050,6 +15158,7 @@ ca-xv:Desa a un PDF &nou
 ca:Desa a un PDF &nou
 cn:保存至新的 PDF 文件(&N)
 co:Arregistrà in un &novu PDF
+cy:Cadw i PDF &newydd
 de:In &neue PDF speichern
 el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
@@ -15076,6 +15185,7 @@ am:Պահված մեկնաբանություններ '%s'-ում
 br:Anotações salvas em '%s'
 cn:保存注释到 '%s'
 co:Annutazioni arregistrate nant’à « %s »
+cy:Cadwyd anodiadau i '%s'
 de:Gespeicherte Anmerkungen zu '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
@@ -15100,6 +15210,7 @@ am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 br:Salvamento de '%s' falhou com: '%s'
 cn:保存 '%s' 失败: '%s'
 co:Arregistramentu di « %s » fiascatu cù : « %s »
+cy:Methodd cadw '%s' oherwydd: '%s'
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
@@ -15125,6 +15236,7 @@ ca-xv:Cerca amb el &Bing
 ca:Cerca amb el &Bing
 cn:使用必应搜索(&B)
 co:Circà cù &Bing
+cy:Chwilio gyda &Bing
 de:Mit &Bing suchen
 dk:Søg med &Bing
 el:Αναζήτηση με Bing
@@ -15155,6 +15267,7 @@ ca-xv:Cerca amb el &Google
 ca:Cerca amb el &Google
 cn:使用谷歌搜索(&G)
 co:Circà cù &Google
+cy:Chwilio gyda &Google
 de:Mit &Google suchen
 dk:Søg med &Google
 el:Αναζήτηση με Google
@@ -15312,6 +15425,7 @@ ca-xv:Selecciona l'anotació a l'editor
 ca:Selecciona l'anotació a l'editor
 cn:在编辑器中选择标注
 co:Selezziunà l’annutazione in l’editore
+cy:Dewis Anodiad yn y Golygydd
 de:Anmerkung im Editor auswählen
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 es:Seleccionar la anotación en el editor
@@ -15931,6 +16045,7 @@ vn:Hiện thanh công cụ
 br:Mostrar favo&ritos
 cn:显示书签(&M)
 co:Affissà l’&indette
+cy:Dangos &Nodau Tudalen
 de:Lesezeichen anzeigen
 es:Mostrar favo&ritos
 fr:Afficher les &marque-pages
@@ -15939,6 +16054,7 @@ ja:ブックマークを表示(&M)
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 ru:Показывать &закладки
+tr:Yer imleri
 uk:Показати закладки
 vn:Hiển thị Dấu &trang
 :Show Favorites
@@ -16290,6 +16406,7 @@ ca-xv:Omet aquesta versió
 ca:Omet aquesta versió
 cn:跳过该版本
 co:Tralascià sta versione
+cy:Hepgor y fersiwn yma
 de:Diese Version überspringen
 dk:Ignorer denne version
 el:Παράλειψη αυτής της έκδοσης
@@ -17180,6 +17297,7 @@ am:Գրվածքի հավասարեցում
 br:Alinhamento de Texto:
 cn:文本对齐:
 co:Aliniamentu di testu :
+cy:Aliniad Testun:
 de:Textausrichtung:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
@@ -17206,6 +17324,7 @@ bn:লেখার রং:
 br:Cor do Texto:
 cn:文本颜色:
 co:Culore di u testu :
+cy:Lliw Testun:
 de:Textfarbe:
 el:Text Color: 
 es:Color de Texto:
@@ -17233,6 +17352,7 @@ bn:লেখার আকার:
 br:Tamanho do Texto:
 cn:文本大小:
 co:Dimensione di testu :
+cy:Maint Testun:
 de:Textgröße:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
@@ -17259,6 +17379,7 @@ bn:লেখার আকার: %d
 br:Tamanho do Texto: %d
 cn:文本大小: %d
 co:Dimensione di testu : %d
+cy:Maint Testun: %d
 de:Textgröße: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
@@ -17667,6 +17788,7 @@ ca-xv:Tradueix amb el &Deepl
 ca:Tradueix amb el &Deepl
 cn:使用 DeepL 翻译(&D)
 co:Traduce cù &DeepL
+cy:Llinyn
 de:Mit &DeepL übersetzen
 dk:Oversæt med &DeepL
 el:Μετάφραση με DeepL
@@ -17949,6 +18071,7 @@ ca-xv:Anotacions sense desar
 ca:Anotacions sense desar
 cn:未保存的标注
 co:Annutazioni micca arregistrate
+cy:Anodiadau heb eu cadw
 de:Nicht gespeicherte Anmerkungen
 dk:Ikke-gemte annoteringer
 el:Μη αποθηκευμένα σχόλια
@@ -17980,6 +18103,7 @@ ca-xv:Anotacions sense desar a «%s».
 ca:Anotacions sense desar a «%s».
 cn:'%s' 中有未保存的标注
 co:Annutazioni micca arregistrate in « %s »
+cy:Anodiadau heb eu cadw yn '%s'
 de:Nicht gespeicherte Anmerkungen in '%s'
 dk:Ikke-gemte annoteringer i '%s'
 el:Μη αποθηκευμένα σχόλια στο '%s'
@@ -18407,6 +18531,7 @@ ca-xv:Teniu anotacions sense desar
 ca:Teniu anotacions sense desar
 cn:存在未保存的标注
 co:Avete annutazioni micca arregistrate
+cy:Mae gennych anodiadau heb eu cadw
 de:Sie haben ungespeicherte Anmerkungen.
 dk:Du har ikke-gemte annoteringer
 el:Έχετε μη αποθηκευμένα σχόλια
@@ -18439,6 +18564,7 @@ ca-xv:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu 
 ca:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
 co:Impiegate a versione « %s » è a versione « %s » hè dispunibule.\nVulete installà a nova versione ?
+cy:Mae fersiwn '%s' gennych ac mae fersiwn '%s' ar gael.\nHoffech chi osod y fersiwn newydd?
 de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
 dk:Du har version '%s' og version '%s' er tilgængelig. \nVil du installere ny version?
 el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε τη νέα έκδοση;
@@ -18467,6 +18593,7 @@ ca-xv:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bi
 ca:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
 cn:您正在 64 位操作系统上安装 32 位 SumatraPDF。\n是否下载\n64 位版本？
 co:Avete da installà SumatraPDF 32-bit\nnant’à un sistema 64-bit.\nVulete scaricà a versione 64-bit ?
+cy:Rydych yn gosodSumatraPDF 32-did ar OS 64-did.\nHoffech chi lwytho i lawr y\nfersiwn 64-did?
 de:Sie installieren die 32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem.\nMöchten Sie die 64-Bit-Version herunterladen?
 dk:Du installerer 32-bit SumatraPDF på 64-bit operativsystem. \nVil du hente \n64-bit version?
 el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σύστημα 64-bit.\nΘέλετε να κατεβάσετε\nτην έκδοση 64-bit;
