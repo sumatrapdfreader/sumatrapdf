@@ -277,9 +277,8 @@ static void StrVecTest() {
     }
     StrVecCheckIter(v, strs);
 
-    StrVecSortedView sortedView;
-    bool ok = v.GetSortedView(sortedView);
-    CrashIf(!ok);
+    StrVec sortedView = v;
+    sortedView.Sort();
 
     for (int i = 0; i < n; i++) {
         char* got = sortedView.at(i);
@@ -304,9 +303,7 @@ static void StrVecTest() {
         auto exp = strs[4];
         assertStrEq(got, exp);
     }
-
-    ok = v.GetSortedViewNoCase(sortedView);
-    CrashIf(!ok);
+    sortedView.SortNoCase();
 
     for (int i = 0; i < n; i++) {
         auto got = sortedView.at(i);

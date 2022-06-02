@@ -2771,53 +2771,6 @@ void StrVec::Sort(StrLessFunc lessFn) {
     });
 }
 
-bool StrVec::GetSortedView(StrVecSortedView& view, StrLessFunc lessFn) const {
-    view.v = (StrVec*)this;
-    view.sortedIndex = this->index; // TOOD: verify this works as expected
-
-    if (lessFn == nullptr) {
-        lessFn = strLess;
-    }
-
-    auto& sortedIndex = view.sortedIndex;
-    // sortedIndex is 0...Size()-1 value
-    // that points into index Vec
-    // starty by fillng sortedIndex with 0...Size()-1
-    // and then sort by swapping indexes
-    u32 n = (u32)index.size();
-    sortedIndex.Reset();
-    for (u32 i = 0; i < n; i++) {
-        sortedIndex.Append(i);
-    }
-    std::sort(sortedIndex.begin(), sortedIndex.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        const char* is1 = at((int)i1);
-        const char* is2 = at((int)i2);
-        bool ret = lessFn(is1, is2);
-        return ret;
-    });
-
-    return true;
-}
-
-bool StrVec::GetSortedViewNoCase(StrVecSortedView& view) const {
-    return GetSortedView(view, strLessNoCase);
-}
-
-int StrVecSortedView::Size() const {
-    return sortedIndex.isize();
-}
-
-char* StrVecSortedView::at(int i) const {
-    CrashIf(sortedIndex.size() != v->index.size());
-
-    u32 i2 = sortedIndex[i];
-    return v->at((int)i2);
-}
-
-char* StrVecSortedView::operator[](int i) const {
-    return at(i);
-}
-
 /* splits a string into several substrings, separated by the separator
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""

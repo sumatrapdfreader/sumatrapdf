@@ -388,11 +388,26 @@ void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 
+// TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
+char* ReverseTextTemp(char* s) {
+    WCHAR* ws = ToWstrTemp(s);
+    int n = (int)str::Len(ws);
+    for (int i = 0; i < n / 2; i++) {
+        WCHAR c1 = ws[i];
+        WCHAR c2 = ws[n - 1 - i];
+        ws[i] = c2;
+        ws[n - 1 - i] = c1;
+    }
+    return ToUtf8Temp(ws);
+}
+
 void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showProgress) {
-    char* text = HwndGetTextTemp(win->hwndFindEdit);
+    char* s = HwndGetTextTemp(win->hwndFindEdit);
+    // if document is rtl, need to reverse the text
+    // s = ReverseTextTemp(s);
     bool wasModified = Edit_GetModify(win->hwndFindEdit);
     Edit_SetModify(win->hwndFindEdit, FALSE);
-    FindTextOnThread(win, direction, text, wasModified, showProgress);
+    FindTextOnThread(win, direction, s, wasModified, showProgress);
 }
 
 void PaintForwardSearchMark(MainWindow* win, HDC hdc) {

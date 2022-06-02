@@ -403,17 +403,6 @@ typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 
 struct StrVec;
 
-struct StrVecSortedView {
-    StrVec* v; // not owned
-    Vec<u32> sortedIndex;
-    int Size() const;
-    char* at(int) const;
-    char* operator[](int) const;
-
-    StrVecSortedView() = default;
-    ~StrVecSortedView() = default;
-};
-
 // strings are stored linearly in strings, separated by 0
 // index is an array of indexes i.e. strings[index[2]] is
 // beginning of string at index 2
@@ -442,9 +431,6 @@ struct StrVec {
     char* RemoveAtFast(size_t idx);
     char* RemoveAt(int idx);
     bool Remove(const char*);
-
-    bool GetSortedView(StrVecSortedView&, StrLessFunc lessFn = nullptr) const;
-    bool GetSortedViewNoCase(StrVecSortedView&) const;
 
     void Sort(StrLessFunc lessFn = nullptr);
     void SortNoCase();
