@@ -931,7 +931,7 @@ static void ForceStartupLeaks() {
 
 int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR cmdLine,
                      __unused int nCmdShow) {
-    int retCode = 1; // by default it's error
+    int exitCode = 1; // by default it's error
     int nWithDde = 0;
     MainWindow* win = nullptr;
     bool showStartPage = false;
@@ -1043,14 +1043,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             HandleRedirectedConsoleOnShutdown();
             return 1;
         }
-        retCode = 0;
+        exitCode = 0;
         if (!ExtractInstallerFiles(gCli->installDir)) {
             log("failed to extract files");
             LogLastError();
-            retCode = 1;
+            exitCode = 1;
         }
         HandleRedirectedConsoleOnShutdown();
-        return retCode;
+        return exitCode;
     }
 
     if (isInstaller) {
@@ -1058,15 +1058,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
             ShowNotValidInstallerError();
             return 1;
         }
-        retCode = RunInstaller();
+        exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
-        return retCode;
+        return exitCode;
     }
 
     if (isUninstaller) {
-        retCode = RunUninstaller();
-        ::ExitProcess(retCode);
+        exitCode = RunUninstaller();
+        ::ExitProcess(exitCode);
     }
 
     if (flags.updateSelfTo) {
@@ -1211,10 +1211,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         for (char* path : flags.fileNames) {
             bool ok = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
             if (!ok) {
-                retCode++;
+                exitCode++;
             }
         }
-        --retCode; // was 1 if no print failures, turn 1 into 0
+        --exitCode; // was 1 if no print failures, turn 1 into 0
+        logf("Finished printing, exitCode: %d\n", exitCode);
         goto Exit;
     }
 
@@ -1301,7 +1302,7 @@ ContinueOpenWindow:
         }
         win = LoadOnStartup(path, flags, !win);
         if (!win) {
-            retCode++;
+            exitCode++;
             continue;
         }
         if (flags.printDialog) {
@@ -1319,7 +1320,7 @@ ContinueOpenWindow:
             }
             win = LoadOnStartup(path, flags, !win);
             if (!win) {
-                retCode++;
+                exitCode++;
             }
         }
         gDdeOpenOnStartup.Reset();
@@ -1379,11 +1380,12 @@ ContinueOpenWindow:
 
     BringWindowToTop(win->hwndFrame);
 
-    retCode = RunMessageLoop();
+    exitCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache(gFileHistory);
 
 Exit:
+    logf("Exiting with exit code: %d\n", exitCode);
     UnregisterSettingsForFileChanges();
 
     HandleRedirectedConsoleOnShutdown();
@@ -1395,7 +1397,7 @@ Exit:
     if (fastExit) {
         // leave all the remaining clean-up to the OS
         // (as recommended for a quick exit)
-        ::ExitProcess(retCode);
+        ::ExitProcess(exitCode);
     }
     str::Free(logFilePath);
 
@@ -1460,5 +1462,5 @@ Exit:
     }
 #endif
 
-    return retCode;
+    return exitCode;
 }

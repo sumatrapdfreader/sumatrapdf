@@ -54,7 +54,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdScrollUpPage, "Scroll Up By Page")                               \
     V(CmdScrollDownPage, "Scroll Down By Page")                           \
     V(CmdScrollDownHalfPage, "Scroll Down By Half Page")                  \
-    V(CmdScrollUpHalfPage, "Scroll Up By Half Page")                    \
+    V(CmdScrollUpHalfPage, "Scroll Up By Half Page")                      \
     V(CmdGoToNextPage, "Next Page")                                       \
     V(CmdGoToPrevPage, "Previous Page")                                   \
     V(CmdGoToFirstPage, "First Page")                                     \
