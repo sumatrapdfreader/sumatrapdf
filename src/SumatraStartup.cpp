@@ -1015,7 +1015,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     {
         char* s = ToUtf8Temp(GetCommandLineW());
-        logf("Starting SumatraPDF, GetCommandLineW():\n%s\n", s);
+        logf("Starting SumatraPDF %s, GetCommandLineW():\n%s\n", UPDATE_CHECK_VERA, s);
     }
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
