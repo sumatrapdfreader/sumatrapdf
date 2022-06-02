@@ -232,8 +232,8 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int CmpNatural(const char*, const char*);
 int CmpNatural(const WCHAR*, const WCHAR*);
 
-char* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAULT);
-char* FormatNumWithThousandSep(i64 num, LCID locale = LOCALE_USER_DEFAULT);
+char* FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
+char* FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 char* FormatRomanNumeral(int number);
 
 bool EmptyOrWhiteSpaceOnly(const char* sv);

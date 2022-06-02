@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/StrFormat.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
 #include "utils/CryptoUtil.h"
@@ -1925,7 +1926,7 @@ void LoadModelIntoTab(TabInfo* tab) {
 
 enum class MeasurementUnit { pt, mm, in };
 
-static char* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit unit) {
+static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, MeasurementUnit unit) {
     if (pt.x < 0) {
         pt.x = 0;
     }
@@ -1950,8 +1951,8 @@ static char* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit
             break;
     }
 
-    AutoFreeStr xPos = str::FormatFloatWithThousandSep((double)pt.x * (double)factor);
-    AutoFreeStr yPos = str::FormatFloatWithThousandSep((double)pt.y * (double)factor);
+    char* xPos = str::FormatFloatWithThousandSepTemp((double)pt.x * (double)factor);
+    char* yPos = str::FormatFloatWithThousandSepTemp((double)pt.y * (double)factor);
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
         if (str::IsDigit(xPos[str::Len(xPos) - 2])) {
@@ -1961,7 +1962,7 @@ static char* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit
             yPos[str::Len(yPos) - 1] = '\0';
         }
     }
-    return str::Format("%s x %s %s", xPos.Get(), yPos.Get(), unitName);
+    return fmt::FormatTemp("%s x %s %s", xPos, yPos, unitName);
 }
 
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd) {
@@ -1987,15 +1988,16 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
     CrashIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
     PointF pt = win->AsFixed()->CvtFromScreen(pos);
-    AutoFreeStr posStr(FormatCursorPosition(engine, pt, unit)), selStr;
+    char* posStr = FormatCursorPositionTemp(engine, pt, unit);
+    char* selStr = nullptr;
     if (!win->selectionMeasure.IsEmpty()) {
         pt = PointF(win->selectionMeasure.dx, win->selectionMeasure.dy);
-        selStr.Set(FormatCursorPosition(engine, pt, unit));
+        selStr = FormatCursorPositionTemp(engine, pt, unit);
     }
 
-    AutoFreeStr posInfo(str::Format("%s %s", _TRA("Cursor position:"), posStr.Get()));
+    char* posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:"), posStr);
     if (selStr) {
-        posInfo.Set(str::Format("%s - %s %s", posInfo.Get(), _TRA("Selection:"), selStr.Get()));
+        posInfo = fmt::FormatTemp("%s - %s %s", posInfo, _TRA("Selection:"), selStr);
     }
     if (!wnd) {
         NotificationCreateArgs args;
@@ -5455,8 +5457,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 static TempStr GetFileSizeAsStrTemp(const char* path) {
     i64 fileSize = file::GetSize(path);
-    AutoFreeStr fileSizeStr = FormatFileSizeNoTrans(fileSize);
-    return str::DupTemp(fileSizeStr);
+    return FormatFileSizeNoTransTemp(fileSize);
 }
 
 void GetProgramInfo(str::Str& s) {

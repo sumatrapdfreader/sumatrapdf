@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/StrFormat.h"
 #include "utils/WinDynCalls.h"
 #include "utils/CmdLineArgsIter.h"
 #include "utils/DbgHelpDyn.h"
@@ -603,8 +604,7 @@ constexpr double GB = (double)1024 * (double)1024 * (double)1024;
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
-// Caller needs to free the result.
-static char* FormatSizeSuccint(i64 size) {
+static TempStr FormatSizeSuccintTemp(i64 size) {
     const char* unit = nullptr;
     double s = (double)size;
 
@@ -619,30 +619,17 @@ static char* FormatSizeSuccint(i64 size) {
         unit = _TRA("KB");
     }
 
-    AutoFreeStr sizestr = str::FormatFloatWithThousandSep(s);
+    char* sizestr = str::FormatFloatWithThousandSepTemp(s);
     if (!unit) {
-        return sizestr.StealData();
+        return sizestr;
     }
-    return str::Format("%s %s", sizestr.Get(), unit);
-}
-
-// format file size in a readable way e.g. 1348258 is shown
-// as "1.29 MB (1,348,258 Bytes)"
-// Caller needs to free the result
-char* FormatFileSize(i64 size) {
-    if (size <= 0) {
-        return str::Format("%d", (int)size);
-    }
-    AutoFreeStr n1 = FormatSizeSuccint(size);
-    AutoFreeStr n2 = str::FormatNumWithThousandSep(size);
-    return str::Format("%s (%s %s)", n1.Get(), n2.Get(), _TRA("Bytes"));
+    return fmt::FormatTemp("%s %s", sizestr, unit);
 }
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // To be used in a context where translations are not yet available
-// Caller needs to free the result.
-static char* FormatSizeSuccintNoTrans(i64 size) {
+static TempStr FormatSizeSuccintNoTransTemp(i64 size) {
     const char* unit = nullptr;
     double s = (double)size;
 
@@ -657,23 +644,33 @@ static char* FormatSizeSuccintNoTrans(i64 size) {
         unit = "KB";
     }
 
-    AutoFreeStr sizestr = str::FormatFloatWithThousandSep(s);
+    char* sizestr = str::FormatFloatWithThousandSepTemp(s);
     if (!unit) {
-        return sizestr.StealData();
+        return sizestr;
     }
-    return str::Format("%s %s", sizestr.Get(), unit);
+    return fmt::FormatTemp("%s %s", sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
-// Caller needs to free the result
-char* FormatFileSizeNoTrans(i64 size) {
+TempStr FormatFileSizeTemp(i64 size) {
+    if (size <= 0) {
+        return fmt::FormatTemp("%d", size);
+    }
+    char* n1 = FormatSizeSuccintTemp(size);
+    char* n2 = str::FormatNumWithThousandSepTemp(size);
+    return fmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes"));
+}
+
+// format file size in a readable way e.g. 1348258 is shown
+// as "1.29 MB (1,348,258 Bytes)"
+TempStr FormatFileSizeNoTransTemp(i64 size) {
     if (size <= 0) {
         return str::Format("%d", (int)size);
     }
-    AutoFreeStr n1 = FormatSizeSuccintNoTrans(size);
-    AutoFreeStr n2 = str::FormatNumWithThousandSep(size);
-    return str::Format("%s (%s %s)", n1.Get(), n2.Get(), "Bytes");
+    char* n1 = FormatSizeSuccintNoTransTemp(size);
+    char* n2 = str::FormatNumWithThousandSepTemp(size);
+    return fmt::FormatTemp("%s (%s %s)", n1, n2, "Bytes");
 }
 
 // returns true if file exists

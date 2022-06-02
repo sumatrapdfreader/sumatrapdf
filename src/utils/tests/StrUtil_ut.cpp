@@ -661,7 +661,7 @@ void StrTest() {
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        AutoFreeStr tmp = str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT);
+        char* tmp = str::FormatNumWithThousandSepTemp(formatNumData[i].number, LOCALE_INVARIANT);
         utassert(str::Eq(tmp, formatNumData[i].result));
     }
 
@@ -674,7 +674,7 @@ void StrTest() {
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
-        AutoFreeStr tmp = str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT);
+        char* tmp = str::FormatFloatWithThousandSepTemp(formatFloatData[i].number, LOCALE_INVARIANT);
         utassert(str::Eq(tmp, formatFloatData[i].result));
     }
 

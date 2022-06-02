@@ -2274,7 +2274,7 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-char* FormatNumWithThousandSep(i64 num, LCID locale) {
+char* FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     WCHAR thousandSepW[4]{};
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
@@ -2282,11 +2282,8 @@ char* FormatNumWithThousandSep(i64 num, LCID locale) {
     char* thousandSep = ToUtf8Temp(thousandSepW);
     char* buf = fmt::FormatTemp("%d", num);
 
-    size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
-    char* res = AllocArray<char>(resLen);
-    if (!res) {
-        return nullptr;
-    }
+    char res[128] = {0};
+    int resLen = dimof(res);
     char* next = res;
     int i = 3 - (str::Len(buf) % 3);
     for (const char* src = buf; *src;) {
@@ -2298,15 +2295,15 @@ char* FormatNumWithThousandSep(i64 num, LCID locale) {
     }
     *next = '\0';
 
-    return res;
+    return str::DupTemp(res);
 }
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-char* FormatFloatWithThousandSep(double number, LCID locale) {
+char* FormatFloatWithThousandSepTemp(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
-    AutoFreeStr tmp = FormatNumWithThousandSep(num / 100, locale);
+    char* tmp = FormatNumWithThousandSepTemp(num / 100, locale);
     WCHAR decimalW[4] = {0};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
@@ -2319,12 +2316,12 @@ char* FormatFloatWithThousandSep(double number, LCID locale) {
     }
 
     // add between one and two decimals after the point
-    char* buf = fmt::FormatTemp("%s%s%02d", tmp.Get(), decimal, num % 100);
+    char* buf = fmt::FormatTemp("%s%s%02d", tmp, decimal, num % 100);
     if (str::EndsWith(buf, "0")) {
         buf[str::Len(buf) - 1] = '\0';
     }
 
-    return str::Dup(buf);
+    return buf;
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

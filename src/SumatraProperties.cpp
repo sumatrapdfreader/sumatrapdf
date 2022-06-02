@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/StrFormat.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
@@ -187,7 +188,8 @@ static void ConvDateToDisplay(char** s, bool (*DateParse)(const char* date, SYST
 // Caller needs to free the result
 static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
-    SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
+    float zoom = 1.0f / engine->GetFileDPI();
+    SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
 
     const char* formatName = "";
     switch (GetPaperFormatFromSizeApprox(size)) {
@@ -233,10 +235,10 @@ static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
         height += 0.01;
     }
 
-    AutoFreeStr strWidth = str::FormatFloatWithThousandSep(width);
-    AutoFreeStr strHeight = str::FormatFloatWithThousandSep(height);
+    char* strWidth = str::FormatFloatWithThousandSepTemp(width);
+    char* strHeight = str::FormatFloatWithThousandSepTemp(height);
 
-    return str::Format("%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
+    return fmt::Format("%s x %s %s%s", strWidth, strHeight, unit, formatName);
 }
 
 static char* FormatPdfFileStructure(DocController* ctrl) {
@@ -523,8 +525,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TRA("PDF Optimizations:"), str);
 
-    const char* pathA = ctrl->GetFilePath();
-    i64 fileSize = file::GetSize(pathA);
+    i64 fileSize = file::GetSize(path); // can be gPluginURL
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
         ByteSlice d = engine->GetFileData();
@@ -534,8 +535,8 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         d.Free();
     }
     if (-1 != fileSize) {
-        str = FormatFileSize((size_t)fileSize);
-        layoutData->AddProperty(_TRA("File Size:"), str);
+        char* tmp = FormatFileSizeTemp(fileSize);
+        layoutData->AddProperty(_TRA("File Size:"), str::Dup(tmp));
     }
 
     str = str::Format("%d", ctrl->PageCount());
