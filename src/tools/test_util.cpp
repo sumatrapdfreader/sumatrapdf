@@ -49,12 +49,12 @@ int main(__unused int argc, __unused char** argv) {
     SettingsUtilTest();
     SimpleLogTest();
     SquareTreeTest();
+    StrFormatTest();
     StrTest();
     TrivialHtmlParser_UnitTests();
     VecTest();
     WinUtilTest();
     SumatraPDF_UnitTests();
-    StrFormatTest();
 
     int res = utassert_print_results();
     DestroyTempAllocator();

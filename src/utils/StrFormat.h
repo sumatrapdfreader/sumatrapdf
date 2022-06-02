@@ -47,7 +47,7 @@ enum class Type {
     WStr,
 
     // for Inst.t
-    FormatStr, // from format string
+    RawStr, // copy part of format string
     Any,
 
     None,

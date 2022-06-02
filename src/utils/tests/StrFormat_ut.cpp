@@ -13,6 +13,18 @@ void check(const char* got, const char* expected) {
 
 void StrFormatTest() {
     char* s;
+    AutoFreeStr s2;
+
+    {
+        s = fmt::Format("c: {0}, i: {1}", 'x', -18);
+        check(s, "c: x, i: -18");
+        str::Free(s);
+    }
+
+    s = fmt::FormatTemp("%04d", 34);
+    s2 = str::Format("%04d", 34);
+    check(s, s2);
+
     {
         s = fmt::Format("int: %d, s: %s", 5, "foo");
         check(s, "int: 5, s: foo");
