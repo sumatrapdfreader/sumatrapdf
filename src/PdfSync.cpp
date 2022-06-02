@@ -532,16 +532,16 @@ int SyncTex::RebuildIndexIfNeeded() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
     bool synctexExists = false;
+    char* pathNoExt = path::GetPathNoExtTemp(syncFilePath);
+    char* pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
+    i64 fsize;
     {
-        char* pathNoExt = path::GetPathNoExtTemp(syncFilePath);
         char* pathSync = str::JoinTemp(pathNoExt, ".synctex");
-        i64 fsize;
         if (file::Exists(pathSync)) {
             fsize = file::GetSize(pathSync);
             logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSync, (int)fsize);
             synctexExists = true;
         }
-        char* pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
         if (file::Exists(pathSyncGz)) {
             fsize = file::GetSize(pathSyncGz);
             logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
@@ -579,6 +579,10 @@ Repeat:
     // retry with 1 sec delay once
     logfa("SyncTex::RebuildIndexIfNeeded: retrying with 1 sec delay\n");
     ::Sleep(1000);
+
+    fsize = file::GetSize(pathSyncGz);
+    logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
+
     didRepeat = true;
     goto Repeat;
 Exit:
