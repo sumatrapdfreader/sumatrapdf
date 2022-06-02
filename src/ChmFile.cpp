@@ -59,15 +59,15 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     }
 
     // +1 for 0 terminator for C string compatibility
-    u8* data = AllocArray<u8>(len + 1);
-    if (!data) {
+    u8* d = AllocArray<u8>(len + 1);
+    if (!d) {
         return {};
     }
-    if (!chm_retrieve_object(chmHandle, &info, data, 0, len)) {
+    if (!chm_retrieve_object(chmHandle, &info, d, 0, len)) {
         return {};
     }
 
-    return {data, len};
+    return {d, len};
 }
 
 char* ChmFile::ToUtf8(const char* text, uint overrideCP) const {
@@ -173,16 +173,16 @@ static uint LcidToCodepage(DWORD lcid) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmFile::ParseSystemData() {
-    ByteSlice data = GetData("/#SYSTEM");
-    if (data.empty()) {
+    ByteSlice d = GetData("/#SYSTEM");
+    if (d.empty()) {
         return false;
     }
-    AutoFree dataFree = data.Get();
+    AutoFree dataFree = d.Get();
 
-    ByteReader r(data);
+    ByteReader r(d);
     DWORD len = 0;
     // Note: skipping DWORD version at offset 0. It's supposed to be 2 or 3.
-    for (size_t off = 4; off + 4 < data.size(); off += len + (size_t)4) {
+    for (size_t off = 4; off + 4 < d.size(); off += len + (size_t)4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
         // many entries with type == 0 and len == 0. Seems harmless.
         len = r.WordLE(off + 2);
@@ -193,22 +193,22 @@ bool ChmFile::ParseSystemData() {
         switch (type) {
             case 0:
                 if (!tocPath) {
-                    tocPath.Set(GetCharZ(data, off + 4));
+                    tocPath.Set(GetCharZ(d, off + 4));
                 }
                 break;
             case 1:
                 if (!indexPath) {
-                    indexPath.Set(GetCharZ(data, off + 4));
+                    indexPath.Set(GetCharZ(d, off + 4));
                 }
                 break;
             case 2:
                 if (!homePath) {
-                    homePath.Set(GetCharZ(data, off + 4));
+                    homePath.Set(GetCharZ(d, off + 4));
                 }
                 break;
             case 3:
                 if (!title) {
-                    title.Set(GetCharZ(data, off + 4));
+                    title.Set(GetCharZ(d, off + 4));
                 }
                 break;
             case 4:
@@ -221,7 +221,7 @@ bool ChmFile::ParseSystemData() {
                 break;
             case 9:
                 if (!creator) {
-                    creator.Set(GetCharZ(data, off + 4));
+                    creator.Set(GetCharZ(d, off + 4));
                 }
                 break;
             case 16:

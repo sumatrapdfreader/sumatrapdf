@@ -18,8 +18,7 @@ class AutoCloseHandle {
   public:
     AutoCloseHandle() = default;
 
-    AutoCloseHandle(HANDLE h) { // NOLINT
-        handle = h;
+    AutoCloseHandle(HANDLE h) : handle(h) {
     }
 
     ~AutoCloseHandle() {
@@ -194,9 +193,9 @@ class ScopedSelectObject {
     HGDIOBJ prev = nullptr;
 
   public:
-    ScopedSelectObject(HDC hdc, HGDIOBJ obj) : hdc(hdc) {
-        prev = SelectObject(hdc, obj);
+    ScopedSelectObject(HDC hdc, HGDIOBJ obj) : hdc(hdc), prev(SelectObject(hdc, obj)) {
     }
+
     ~ScopedSelectObject() {
         SelectObject(hdc, prev);
     }
@@ -207,8 +206,7 @@ class ScopedSelectFont {
     HFONT prevFont = nullptr;
 
   public:
-    explicit ScopedSelectFont(HDC hdc, HFONT font) {
-        prevFont = (HFONT)SelectObject(hdc, font);
+    explicit ScopedSelectFont(HDC hdc, HFONT font) : prevFont((HFONT)SelectObject(hdc, font)) {
     }
 
     ~ScopedSelectFont() {

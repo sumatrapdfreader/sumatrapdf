@@ -131,15 +131,16 @@ class Vec {
     // TODO: write Vec(const Vec&& other)
 
     Vec& operator=(const Vec& other) {
-        els = buf;
-        Reset();
-
         if (this == &other) {
             return *this;
         }
+
+        els = buf;
+        Reset();
         EnsureCap(other.len);
         // using memcpy, as Vec only supports POD types
         len = other.len;
+        capacityHint = other.capacityHint;
         memcpy(els, other.els, kElSize * len);
         memset(els + len, 0, kElSize * (cap - len));
         return *this;

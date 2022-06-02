@@ -465,8 +465,7 @@ struct PoolAllocator : Allocator {
 struct HeapAllocator : Allocator {
     HANDLE allocHeap = nullptr;
 
-    explicit HeapAllocator(size_t initialSize = 128 * 1024) {
-        allocHeap = HeapCreate(0, initialSize, 0);
+    explicit HeapAllocator(size_t initialSize = 128 * 1024) : allocHeap(HeapCreate(0, initialSize, 0)) {
     }
     ~HeapAllocator() override {
         HeapDestroy(allocHeap);
