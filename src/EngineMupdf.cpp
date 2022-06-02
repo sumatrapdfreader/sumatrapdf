@@ -2834,6 +2834,8 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         return;
     }
 
+    ScopedCritSec cs(e->ctxAccess);
+
     float x, y;
     float zoom = 0.f; // TODO: used to have zoom but mupdf changed outline
     int pageNo = -1;
