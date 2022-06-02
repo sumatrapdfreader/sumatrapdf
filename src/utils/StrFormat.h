@@ -76,6 +76,16 @@ struct Arg {
 
     Arg(int arg) {
         t = Type::Int;
+        u.i = (i64)arg;
+    }
+
+    Arg(size_t arg) {
+        t = Type::Int;
+        u.i = (i64)arg;
+    }
+
+    Arg(i64 arg) {
+        t = Type::Int;
         u.i = arg;
     }
 
@@ -103,7 +113,8 @@ struct Arg {
 char* Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
              const Arg& a5 = Arg(), const Arg& a6 = Arg());
 
-char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                 const Arg& a6);
+char* FormatTemp(const char* s, const Arg);
+char* FormatTemp(const char* s, const Arg, const Arg);
+char* FormatTemp(const char* s, const Arg, const Arg, const Arg);
 
 } // namespace fmt

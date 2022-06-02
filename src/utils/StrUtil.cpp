@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "StrFormat.h"
 
 #if !defined(_MSC_VER)
 #define _strdup strdup
@@ -2279,7 +2280,7 @@ char* FormatNumWithThousandSep(i64 num, LCID locale) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
     char* thousandSep = ToUtf8Temp(thousandSepW);
-    AutoFreeStr buf(str::Format("%Iu", (size_t)num));
+    char* buf = fmt::FormatTemp("%d", num);
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     char* res = AllocArray<char>(resLen);
@@ -2305,7 +2306,7 @@ char* FormatNumWithThousandSep(i64 num, LCID locale) {
 char* FormatFloatWithThousandSep(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
-    AutoFreeStr tmp(FormatNumWithThousandSep(num / 100, locale));
+    AutoFreeStr tmp = FormatNumWithThousandSep(num / 100, locale);
     WCHAR decimalW[4];
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
@@ -2314,7 +2315,7 @@ char* FormatFloatWithThousandSep(double number, LCID locale) {
     char* decimal = ToUtf8Temp(decimalW);
 
     // always add between one and two decimals after the point
-    AutoFreeStr buf(str::Format("%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
+    AutoFreeStr buf = str::Format("%s%s%02d", tmp.Get(), decimal, (int)(num % 100));
     if (str::EndsWith(buf, "0")) {
         buf[str::Len(buf) - 1] = '\0';
     }

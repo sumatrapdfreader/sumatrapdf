@@ -41,6 +41,8 @@ static Type typeFromChar(char c) {
             return Type::Float;
         case 's': // string or wstring
             return Type::Str;
+        case 'v':
+            return Type::Any;
     }
     CrashIf(true);
     return Type::None;
@@ -276,17 +278,7 @@ char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const A
     return res;
 }
 
-char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                 const Arg& a6) {
-    const Arg* args[6];
-    int nArgs = 0;
-    args[nArgs++] = &a1;
-    args[nArgs++] = &a2;
-    args[nArgs++] = &a3;
-    args[nArgs++] = &a4;
-    args[nArgs++] = &a5;
-    args[nArgs++] = &a6;
-    CrashIf(nArgs > dimof(args));
+char* FormatTemp(const char* s, const Arg** args, int nArgs) {
     // arguments at the end could be empty
     while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
@@ -305,6 +297,35 @@ char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, con
     char* res = fmt.res.Get();
     size_t n = fmt.res.size();
     return str::DupTemp(res, n);
+}
+
+char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
+                 const Arg& a6) {
+    const Arg* args[6];
+    int nArgs = 0;
+    args[nArgs++] = &a1;
+    args[nArgs++] = &a2;
+    args[nArgs++] = &a3;
+    args[nArgs++] = &a4;
+    args[nArgs++] = &a5;
+    args[nArgs++] = &a6;
+    CrashIf(nArgs > dimof(args));
+    return FormatTemp(s, args, nArgs);
+}
+
+char* FormatTemp(const char* s, const Arg a1) {
+    const Arg* args[3] = {&a1};
+    return FormatTemp(s, args, 1);
+}
+
+char* FormatTemp(const char* s, const Arg a1, const Arg a2) {
+    const Arg* args[3] = {&a1, &a2};
+    return FormatTemp(s, args, 2);
+}
+
+char* FormatTemp(const char* s, const Arg a1, const Arg a2, const Arg a3) {
+    const Arg* args[3] = {&a1, &a2, &a3};
+    return FormatTemp(s, args, 3);
 }
 
 } // namespace fmt

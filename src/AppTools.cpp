@@ -671,8 +671,8 @@ char* FormatFileSizeNoTrans(i64 size) {
     if (size <= 0) {
         return str::Format("%d", (int)size);
     }
-    AutoFreeStr n1(FormatSizeSuccintNoTrans(size));
-    AutoFreeStr n2(str::FormatNumWithThousandSep(size));
+    AutoFreeStr n1 = FormatSizeSuccintNoTrans(size);
+    AutoFreeStr n2 = str::FormatNumWithThousandSep(size);
     return str::Format("%s (%s %s)", n1.Get(), n2.Get(), "Bytes");
 }
 
