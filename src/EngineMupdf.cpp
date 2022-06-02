@@ -1881,8 +1881,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
     float ldx = layoutA5DxPt;
     float ldy = layoutA5DyPt;
     float lfontDy = layoutFontEm;
-    char* ext = path::GetExtTemp(nameHint);
-    if (!str::EqI(ext, ".epub")) {
+    if (!str::EndsWithI(nameHint, ".epub")) {
         lfontDy = 8.f;
     }
 

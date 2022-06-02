@@ -123,7 +123,7 @@ static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
 static Kind GetKindByFileExt(const char* path) {
-    auto ext = path::GetExtTemp(path);
+    char* ext = path::GetExtTemp(path);
     int idx = seqstrings::StrToIdxIS(gFileExts, ext);
     if (idx < 0) {
         return nullptr;

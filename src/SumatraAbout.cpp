@@ -512,7 +512,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_LBUTTONUP:
             url = GetStaticLinkTemp(gStaticLinks, x, y, nullptr);
-            if (url && str::Eq(url,gClickedURL)) {
+            if (url && str::Eq(url, gClickedURL)) {
                 SumatraLaunchBrowser(url);
             }
             break;

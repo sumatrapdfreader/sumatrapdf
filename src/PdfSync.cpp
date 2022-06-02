@@ -122,29 +122,27 @@ char* Synchronizer::PrependDir(const char* filename) const {
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync) {
+int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sync) {
     if (!sync || !engine) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    char* fileExt = path::GetExtTemp(pdffilename);
-    if (!str::EqI(fileExt, ".pdf")) {
+    if (!str::EndsWithI(path, ".pdf")) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    size_t nBaseLen = str::Len(pdffilename) - str::Len(fileExt);
-    char* baseName = str::DupTemp(pdffilename, nBaseLen);
+    char* basePath = path::GetPathNoExtTemp(path);
 
     // Check if a PDFSYNC file is present
-    char* syncFile = str::JoinTemp(baseName, ".pdfsync");
+    char* syncFile = str::JoinTemp(basePath, ".pdfsync");
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    char* texGzFile = str::JoinTemp(baseName, ".synctex.gz");
-    char* texFile = str::JoinTemp(baseName, ".synctex");
+    char* texGzFile = str::JoinTemp(basePath, ".synctex.gz");
+    char* texFile = str::JoinTemp(basePath, ".synctex");
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
@@ -293,17 +291,18 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"') {
-                    filename.Set(str::Dup(filename + 1, str::Len(filename) - 2));
+                    size_t n = str::Len(filename) - 2;
+                    filename = str::Dup(filename + 1, n);
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransCharsInPlace(filename, "*/", " \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExtTemp(filename))) {
-                    filename.Set(str::Join(filename, ".tex"));
+                    filename = str::Join(filename, ".tex");
                 }
                 // ensure that the path is absolute
                 if (!path::IsAbsolute(filename)) {
-                    filename.Set(PrependDir(filename));
+                    filename = PrependDir(filename);
                 }
 
                 filestack.Append(srcfiles.size());

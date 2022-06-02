@@ -482,8 +482,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         embeddedFilePath = embeddedFile->path;
         // this is name of the file as set inside PDF file
         fileName = dti->dest->GetName();
-        char* ext = path::GetExtTemp(fileName);
-        bool canOpenEmbedded = str::EqI(ext, ".pdf");
+        bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
         }

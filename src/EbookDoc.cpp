@@ -812,11 +812,10 @@ static ByteSlice loadFromFile(Fb2Doc* doc) {
     // the file must contain a single .fb2 file and may only contain
     // .url files in addition (TODO: anything else?)
     for (auto&& fileInfo : fileInfos) {
-        auto fileName = fileInfo->name;
-        char* ext = path::GetExtTemp(fileName);
-        if (str::EqI(ext, ".fb2") && data.empty()) {
+        auto path = fileInfo->name;
+        if (str::EndsWithI(path, ".fb2") && data.empty()) {
             data = archive->GetFileDataById(fileInfo->fileId);
-        } else if (!str::EqI(ext, ".url")) {
+        } else if (!str::EndsWithI(path, ".url")) {
             return {};
         }
     }
