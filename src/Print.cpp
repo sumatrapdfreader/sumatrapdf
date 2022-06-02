@@ -1234,6 +1234,7 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
         PrintData pd(engine, printer, ranges, advanced);
         ok = PrintToDevice(pd);
         if (!ok) {
+            logfa("PrintToDevice: failed\n");
             MessageBoxWarningCond(displayErrors, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
         }
     }
