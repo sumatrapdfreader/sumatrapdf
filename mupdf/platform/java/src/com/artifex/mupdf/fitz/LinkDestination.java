@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -23,6 +23,8 @@
 package com.artifex.mupdf.fitz;
 
 import java.lang.annotation.Native;
+
+import java.lang.Float;
 
 public class LinkDestination extends Location
 {
@@ -56,41 +58,75 @@ public class LinkDestination extends Location
 
 	public static LinkDestination Fit(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT, 0, 0, 0, 0, 0);
+		return new LinkDestination(chapter, page, LINK_DEST_FIT, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
 	}
 
 	public static LinkDestination FitB(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT_B, 0, 0, 0, 0, 0);
+		return new LinkDestination(chapter, page, LINK_DEST_FIT_B, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
 	}
 
-	public static LinkDestination XYZ(int chapter, int page, float left, float top, float zoom)
+	public static LinkDestination XYZ(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_XYZ, left, top, 0, 0, zoom);
+		return XYZ(chapter, page, Float.NaN, Float.NaN, Float.NaN);
+	}
+	public static LinkDestination XYZ(int chapter, int page, float zoom)
+	{
+		return XYZ(chapter, page, Float.NaN, Float.NaN, zoom);
+	}
+	public static LinkDestination XYZ(int chapter, int page, float x, float y)
+	{
+		return XYZ(chapter, page, x, y, Float.NaN);
+	}
+	public static LinkDestination XYZ(int chapter, int page, float x, float y, float zoom)
+	{
+		return new LinkDestination(chapter, page, LINK_DEST_XYZ, x, y, Float.NaN, Float.NaN, zoom);
 	}
 
-	public static LinkDestination FitH(int chapter, int page, float top)
+	public static LinkDestination FitH(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT_H, 0, top, 0, 0, 0);
+		return FitH(chapter, page, Float.NaN);
+	}
+	public static LinkDestination FitH(int chapter, int page, float y)
+	{
+		return new LinkDestination(chapter, page, LINK_DEST_FIT_H, Float.NaN, y, Float.NaN, Float.NaN, Float.NaN);
 	}
 
-	public static LinkDestination FitBH(int chapter, int page, float top)
+	public static LinkDestination FitBH(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT_BH, 0, top, 0, 0, 0);
+		return FitBH(chapter, page, Float.NaN);
+	}
+	public static LinkDestination FitBH(int chapter, int page, float y)
+	{
+		return new LinkDestination(chapter, page, LINK_DEST_FIT_BH, Float.NaN, y, Float.NaN, Float.NaN, Float.NaN);
 	}
 
-	public static LinkDestination FitV(int chapter, int page, float left)
+	public static LinkDestination FitV(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT_V, left, 0, 0, 0, 0);
+		return FitV(chapter, page, Float.NaN);
+	}
+	public static LinkDestination FitV(int chapter, int page, float x)
+	{
+		return new LinkDestination(chapter, page, LINK_DEST_FIT_V, x, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
 	}
 
-	public static LinkDestination FitBV(int chapter, int page, float left)
+	public static LinkDestination FitBV(int chapter, int page)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT_BV, left, 0, 0, 0, 0);
+		return FitBV(chapter, page, Float.NaN);
+	}
+	public static LinkDestination FitBV(int chapter, int page, float x)
+	{
+		return new LinkDestination(chapter, page, LINK_DEST_FIT_BV, x, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
 	}
 
-	public static LinkDestination FitR(int chapter, int page, float left, float top, float width, float height)
+	public static LinkDestination FitR(int chapter, int page, float x, float y, float width, float height)
 	{
-		return new LinkDestination(chapter, page, LINK_DEST_FIT_R, left, top, width, height, 0);
+		return new LinkDestination(chapter, page, LINK_DEST_FIT_R, x, y, width, height, Float.NaN);
 	}
+
+	public boolean hasX() { return !Float.isNaN(x); }
+	public boolean hasY() { return !Float.isNaN(y); }
+	public boolean hasZoom() { return !Float.isNaN(zoom) && zoom != 0; }
+	public boolean hasWidth() { return !Float.isNaN(width); }
+	public boolean hasHeight() { return !Float.isNaN(height); }
 }

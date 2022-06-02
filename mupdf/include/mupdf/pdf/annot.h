@@ -297,6 +297,11 @@ fz_link_dest pdf_parse_link_uri(fz_context *ctx, const char *uri);
 fz_matrix pdf_annot_transform(fz_context *ctx, pdf_annot *annot);
 
 /*
+	Create a new link object.
+*/
+fz_link *pdf_new_link(fz_context *ctx, pdf_page *page, fz_rect rect, const char *uri, pdf_obj *obj);
+
+/*
 	create a new annotation of the specified type on the
 	specified page. The returned pdf_annot structure is owned by the
 	page and does not need to be freed.
@@ -308,6 +313,11 @@ pdf_annot *pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_
 	structure is owned by the page and does not need to be freed.
 */
 fz_link *pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri);
+
+/*
+	delete an existing link from the specified page.
+*/
+void pdf_delete_link(fz_context *ctx, pdf_page *page, fz_link *link);
 
 /*
 	create a new annotation of the specified type on the
@@ -738,7 +748,7 @@ int pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs);
 char *pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 char *pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *obj, int pagenum);
 pdf_obj *pdf_lookup_dest(fz_context *ctx, pdf_document *doc, pdf_obj *needle);
-fz_link *pdf_load_link_annots(fz_context *ctx, pdf_document *, pdf_obj *annots, int pagenum, fz_matrix page_ctm);
+fz_link *pdf_load_link_annots(fz_context *ctx, pdf_document *, pdf_page *, pdf_obj *annots, int pagenum, fz_matrix page_ctm);
 
 void pdf_annot_MK_BG(fz_context *ctx, pdf_annot *annot, int *n, float color[4]);
 void pdf_annot_MK_BC(fz_context *ctx, pdf_annot *annot, int *n, float color[4]);

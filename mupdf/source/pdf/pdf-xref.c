@@ -1973,7 +1973,9 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 
 			pdf_set_obj_parent(ctx, obj, numbuf[i]);
 
-			if (entry->type == 'o' && entry->ofs == num)
+			/* We may have set entry->type to be 'O' from being 'o' to avoid nasty
+			 * recursions in pdf_cache_object. Accept the type being 'O' here. */
+			if ((entry->type == 'o' || entry->type == 'O') && entry->ofs == num)
 			{
 				/* If we already have an entry for this object,
 				 * we'd like to drop it and use the new one -
@@ -2353,7 +2355,14 @@ object_updated:
 	{
 		if (!x->obj)
 		{
+			pdf_xref_entry *orig_x = x;
+			orig_x->type = 'O'; /* Mark this node so we know we're recursing. */
+			fz_try(ctx)
 			x = pdf_load_obj_stm(ctx, doc, x->ofs, &doc->lexbuf.base, num);
+			fz_always(ctx)
+				orig_x->type = 'o'; /* Not recursing any more. */
+			fz_catch(ctx)
+				fz_rethrow(ctx);
 			if (x == NULL)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot load object stream containing object (%d 0 R)", num);
 			if (!x->obj)

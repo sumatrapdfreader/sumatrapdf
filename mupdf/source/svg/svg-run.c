@@ -1022,9 +1022,9 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
 	if (fill_rule_att)
 	{
 		if (!strcmp(fill_rule_att, "nonzero"))
-			state->fill_rule = 1;
-		if (!strcmp(fill_rule_att, "evenodd"))
 			state->fill_rule = 0;
+		if (!strcmp(fill_rule_att, "evenodd"))
+			state->fill_rule = 1;
 	}
 
 	if (stroke_att)

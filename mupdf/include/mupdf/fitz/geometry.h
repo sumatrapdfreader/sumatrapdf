@@ -140,24 +140,24 @@ static inline int64_t fz_maxi64(int64_t a, int64_t b)
 	return (a > b ? a : b);
 }
 
-static inline float fz_clamp(float f, float min, float max)
+static inline float fz_clamp(float x, float min, float max)
 {
-	return (f > min ? (f < max ? f : max) : min);
+	return x < min ? min : x > max ? max : x;
 }
 
-static inline int fz_clampi(int i, int min, int max)
+static inline int fz_clampi(int x, int min, int max)
 {
-	return (i > min ? (i < max ? i : max) : min);
+	return x < min ? min : x > max ? max : x;
 }
 
-static inline double fz_clampd(double d, double min, double max)
+static inline double fz_clampd(double x, double min, double max)
 {
-	return (d > min ? (d < max ? d : max) : min);
+	return x < min ? min : x > max ? max : x;
 }
 
-static inline void *fz_clampp(void *p, void *min, void *max)
+static inline void *fz_clampp(void *x, void *min, void *max)
 {
-	return (p > min ? (p < max ? p : max) : min);
+	return x < min ? min : x > max ? max : x;
 }
 
 #define DIV_BY_ZERO(a, b, min, max) (((a) < 0) ^ ((b) < 0) ? (min) : (max))

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -24,6 +24,7 @@
 #include "mupdf/pdf.h"
 
 #include <string.h>
+#include <math.h>
 
 /*
 	The URI encoding format broadly follows that described in
@@ -620,28 +621,49 @@ pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *ur
 		case FZ_LINK_DEST_FIT_H:
 			p = fz_transform_point_xy(0, val.y, invctm);
 			pdf_array_push(ctx, dest, PDF_NAME(FitH));
+			if (isnan(p.y))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, p.y);
 			break;
 		case FZ_LINK_DEST_FIT_BH:
 			p = fz_transform_point_xy(0, val.y, invctm);
 			pdf_array_push(ctx, dest, PDF_NAME(FitBH));
+			if (isnan(p.y))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, p.y);
 			break;
 		case FZ_LINK_DEST_FIT_V:
 			p = fz_transform_point_xy(val.x, 0, invctm);
 			pdf_array_push(ctx, dest, PDF_NAME(FitV));
+			if (isnan(p.x))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, p.x);
 			break;
 		case FZ_LINK_DEST_FIT_BV:
 			p = fz_transform_point_xy(val.x, 0, invctm);
 			pdf_array_push(ctx, dest, PDF_NAME(FitBV));
+			if (isnan(p.x))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, p.x);
 			break;
 		case FZ_LINK_DEST_XYZ:
 			p = fz_transform_point_xy(val.x, val.y, invctm);
 			pdf_array_push(ctx, dest, PDF_NAME(XYZ));
+			if (isnan(p.x))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, p.x);
+			if (isnan(p.y))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, p.y);
+			if (isnan(val.zoom))
+				pdf_array_push(ctx, dest, PDF_NULL);
+			else
 			pdf_array_push_real(ctx, dest, val.zoom / 100);
 			break;
 		case FZ_LINK_DEST_FIT_R:

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -41,6 +41,13 @@ struct pdf_annot
 
 	pdf_annot *next;
 };
+
+typedef struct
+{
+	fz_link super;
+	pdf_page *page;
+	pdf_obj *obj;
+} pdf_link;
 
 void pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots);
 void pdf_drop_annots(fz_context *ctx, pdf_annot *annot_list);

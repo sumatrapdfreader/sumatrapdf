@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -24,15 +24,30 @@ package com.artifex.mupdf.fitz;
 
 public class Link
 {
-	public Rect bounds;
-	public String uri;
-
-	public Link(Rect bounds, String uri) {
-		this.bounds = bounds;
-		this.uri = uri;
+	static {
+		Context.init();
 	}
 
+	private long pointer;
+
+	protected native void finalize();
+
+	public void destroy() {
+		finalize();
+	}
+
+	protected Link(long p) {
+		pointer = p;
+	}
+
+	public native Rect getBounds();
+	public native void setBounds(Rect bbox);
+
+	public native String getURI();
+	public native void setURI(String uri);
+
 	public boolean isExternal() {
+		String uri = getURI();
 		char c = uri.charAt(0);
 		if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z'))
 			return false;
@@ -51,6 +66,6 @@ public class Link
 	}
 
 	public String toString() {
-		return "Link(bounds="+bounds+",uri="+uri+")";
+		return "Link(bounds="+getBounds()+",uri="+getURI()+")";
 	}
 }

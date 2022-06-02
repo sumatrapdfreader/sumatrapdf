@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -78,4 +78,5 @@ public class Page
 	public Link createLink(Rect bbox, LinkDestination dest) {
 		return createLink(bbox, getDocument().formatLinkURI(dest));
 	}
+	public native void deleteLink(Link link);
 }

@@ -90,6 +90,15 @@ static void jsB_propcon(js_State *J, const char *tag, const char *name, js_CFunc
 	js_defproperty(J, -2, realname, JS_DONTENUM);
 }
 
+static void jsB_propacc(js_State *J, const char *name, js_CFunction cgetfun, js_CFunction csetfun)
+{
+	const char *realname = strchr(name, '.');
+	realname = realname ? realname + 1 : name;
+	js_newcfunction(J, cgetfun, name, 0);
+	js_newcfunction(J, csetfun, name, 1);
+	js_defaccessor(J, -3, realname, JS_READONLY | JS_DONTENUM | JS_DONTCONF);
+}
+
 static void jsB_gc(js_State *J)
 {
 	int report = js_toboolean(J, 1);
@@ -630,7 +639,7 @@ static fz_link_dest_type link_dest_type_from_string(const char *str);
 
 static fz_link_dest ffi_tolinkdest(js_State *J, int idx)
 {
-	fz_link_dest dest = { { 0, -1 }, FZ_LINK_DEST_XYZ, 0, 0, 0, 0, 0 };
+	fz_link_dest dest = fz_make_link_dest_none();
 
 	if (js_hasproperty(J, idx, "chapter")) {
 		dest.loc.chapter = js_tointeger(J, -1);
@@ -814,15 +823,21 @@ static fz_link_dest_type link_dest_type_from_string(const char *str)
 	return FZ_LINK_DEST_FIT;
 }
 
+static void ffi_gc_fz_link(js_State *J, void *link)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_drop_link(ctx, link);
+}
+
+static fz_link *ffi_tolink(js_State *J, int idx)
+{
+	return js_touserdata(J, idx, "fz_link");
+}
+
 static void ffi_pushlink(js_State *J, fz_link *link)
 {
-	js_newobject(J);
-
-	ffi_pushrect(J, link->rect);
-	js_setproperty(J, -2, "bounds");
-
-	js_pushstring(J, link->uri);
-	js_setproperty(J, -2, "uri");
+	js_getregistry(J, "fz_link");
+	js_newuserdata(J, "fz_link", link, ffi_gc_fz_link);
 }
 
 static void ffi_pushlinkdest(js_State *J, const fz_link_dest dest)
@@ -3283,7 +3298,7 @@ static void ffi_Page_getLinks(js_State *J)
 
 	js_newarray(J);
 	for (link = links; link; link = link->next) {
-		ffi_pushlink(J, link);
+		ffi_pushlink(J, fz_keep_link(ctx, link));
 		js_setindex(J, -2, i++);
 	}
 
@@ -3304,15 +3319,55 @@ static void ffi_Page_createLink(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 
-	if (js_try(J)) {
-		fz_drop_link(ctx, link);
-		js_throw(J);
+	ffi_pushlink(J, link);
 	}
 
-	ffi_pushlink(J, link);
+static void ffi_Page_deleteLink(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_page *page = ffi_topage(J, 0);
+	fz_link *link = ffi_tolink(J, 1);
 
-	js_endtry(J);
-	fz_drop_link(ctx, link);
+	fz_try(ctx)
+		fz_delete_link(ctx, page, link);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_Link_get_bounds(js_State *J)
+{
+	fz_link *link = js_touserdata(J, 0, "fz_link");
+	ffi_pushrect(J, link->rect);
+}
+
+static void ffi_Link_set_bounds(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_link *link = js_touserdata(J, 0, "fz_link");
+	fz_rect rect = ffi_torect(J, 1);
+
+	fz_try(ctx)
+		fz_set_link_rect(ctx, link, rect);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_Link_get_uri(js_State *J)
+{
+	fz_link *link = js_touserdata(J, 0, "fz_link");
+	js_pushstring(J, link->uri);
+}
+
+static void ffi_Link_set_uri(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_link *link = js_touserdata(J, 0, "fz_link");
+	const char *uri = js_tostring(J, 1);
+
+	fz_try(ctx)
+		fz_set_link_uri(ctx, link, uri);
+	fz_catch(ctx)
+		rethrow(J);
 }
 
 static void ffi_ColorSpace_getNumberOfComponents(js_State *J)
@@ -8187,8 +8242,17 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Page.search", ffi_Page_search, 0);
 		jsB_propfun(J, "Page.getLinks", ffi_Page_getLinks, 0);
 		jsB_propfun(J, "Page.createLink", ffi_Page_createLink, 2);
+		jsB_propfun(J, "Page.deleteLink", ffi_Page_deleteLink, 1);
 	}
 	js_setregistry(J, "fz_page");
+
+	js_getregistry(J, "Userdata");
+	js_newobjectx(J);
+	{
+		jsB_propacc(J, "Link.bounds", ffi_Link_get_bounds, ffi_Link_set_bounds);
+		jsB_propacc(J, "Link.uri", ffi_Link_get_uri, ffi_Link_set_uri);
+	}
+	js_setregistry(J, "fz_link");
 
 	js_getregistry(J, "Userdata");
 	js_newobjectx(J);

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -912,6 +912,7 @@ pdf_new_page(fz_context *ctx, pdf_document *doc)
 	page->super.separations = (fz_page_separations_fn *)pdf_page_separations;
 	page->super.overprint = (fz_page_uses_overprint_fn *)pdf_page_uses_overprint;
 	page->super.create_link = (fz_page_create_link_fn *)pdf_create_link;
+	page->super.delete_link = (fz_page_delete_link_fn *)pdf_delete_link;
 
 	page->obj = NULL;
 
@@ -1063,7 +1064,7 @@ pdf_load_page_imp(fz_context *ctx, fz_document *doc_, int chapter, int number)
 			fz_rect page_mediabox;
 			fz_matrix page_ctm;
 			pdf_page_transform(ctx, page, &page_mediabox, &page_ctm);
-			page->links = pdf_load_link_annots(ctx, doc, obj, number, page_ctm);
+			page->links = pdf_load_link_annots(ctx, doc, page, obj, number, page_ctm);
 			pdf_load_annots(ctx, page, obj);
 		}
 	}

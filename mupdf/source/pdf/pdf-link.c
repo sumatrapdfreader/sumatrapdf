@@ -24,6 +24,7 @@
 #include "pdf-annot-imp.h"
 
 #include <string.h>
+#include <math.h>
 
 static pdf_obj *
 resolve_dest_rec(fz_context *ctx, pdf_document *doc, pdf_obj *dest, int depth)
@@ -64,7 +65,8 @@ resolve_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 char *
 pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 {
-	float arg1, arg2, arg3, arg4;
+	pdf_obj *arg1, *arg2, *arg3, *arg4;
+	float arg1v, arg2v, arg3v, arg4v;
 	fz_link_dest destination;
 	pdf_obj *pageobj, *typeobj;
 	fz_matrix page_ctm;
@@ -129,10 +131,15 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 	else
 		destination.type = FZ_LINK_DEST_XYZ;
 
-	arg1 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 2));
-	arg2 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 3));
-	arg3 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 4));
-	arg4 = pdf_to_real(ctx, pdf_array_get(ctx, dest, 5));
+	arg1 = pdf_array_get(ctx, dest, 2);
+	arg2 = pdf_array_get(ctx, dest, 3);
+	arg3 = pdf_array_get(ctx, dest, 4);
+	arg4 = pdf_array_get(ctx, dest, 5);
+
+	arg1v = pdf_to_real(ctx, arg1);
+	arg2v = pdf_to_real(ctx, arg2);
+	arg3v = pdf_to_real(ctx, arg3);
+	arg4v = pdf_to_real(ctx, arg4);
 
 	pdf_page_obj_transform(ctx, pageobj, NULL, &page_ctm);
 
@@ -144,25 +151,25 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 		break;
 	case FZ_LINK_DEST_FIT_H:
 	case FZ_LINK_DEST_FIT_BH:
-		p = fz_transform_point_xy(0, arg1, page_ctm);
-		destination.y = p.y;
+		p = fz_transform_point_xy(0, arg1v, page_ctm);
+		destination.y = arg1 ? p.y : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_V:
 	case FZ_LINK_DEST_FIT_BV:
-		p = fz_transform_point_xy(arg1, 0, page_ctm);
-		destination.x = p.x;
+		p = fz_transform_point_xy(arg1v, 0, page_ctm);
+		destination.x = arg1 ? p.x : NAN;
 		break;
 	case FZ_LINK_DEST_XYZ:
-		p = fz_transform_point_xy(arg1, arg2, page_ctm);
-		destination.x = p.x;
-		destination.y = p.y;
-		destination.zoom = arg3 * 100;
+		p = fz_transform_point_xy(arg1v, arg2v, page_ctm);
+		destination.x = arg1 ? p.x : NAN;
+		destination.y = arg2 ? p.y : NAN;
+		destination.zoom = arg3 ? (arg3v > 0 ? (arg3v * 100) : 100) : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_R:
-		rect.x0 = arg1;
-		rect.y0 = arg2;
-		rect.x1 = arg3;
-		rect.y1 = arg4;
+		rect.x0 = arg1v;
+		rect.y0 = arg2v;
+		rect.x1 = arg3v;
+		rect.y1 = arg4v;
 		fz_transform_rect(rect, page_ctm);
 		destination.x = rect.x0;
 		destination.y = rect.y0;
@@ -508,8 +515,64 @@ pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *action, int p
 	return NULL;
 }
 
+static void pdf_drop_link_imp(fz_context *ctx, fz_link *link)
+{
+	pdf_drop_obj(ctx, ((pdf_link *) link)->obj);
+}
+
+static void pdf_set_link_rect(fz_context *ctx, fz_link *link_, fz_rect rect)
+{
+	pdf_link *link = (pdf_link *) link_;
+	if (link == NULL)
+		return;
+
+	pdf_begin_operation(ctx, link->page->doc, "Set link rectangle");
+
+	fz_try(ctx)
+	{
+		pdf_dict_put_rect(ctx, link->obj, PDF_NAME(Rect), rect);
+		link->super.rect = rect;
+	}
+	fz_always(ctx)
+		pdf_end_operation(ctx, link->page->doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+static void pdf_set_link_uri(fz_context *ctx, fz_link *link_, const char *uri)
+{
+	pdf_link *link = (pdf_link *) link_;
+	if (link == NULL)
+		return;
+
+	pdf_begin_operation(ctx, link->page->doc, "Set link uri");
+
+	fz_try(ctx)
+	{
+		pdf_dict_put_drop(ctx, link->obj, PDF_NAME(A),
+				pdf_new_action_from_link(ctx, link->page->doc, uri));
+		fz_free(ctx, link->super.uri);
+		link->super.uri = fz_strdup(ctx, uri);
+	}
+	fz_always(ctx)
+		pdf_end_operation(ctx, link->page->doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+fz_link *pdf_new_link(fz_context *ctx, pdf_page *page, fz_rect rect, const char *uri, pdf_obj *obj)
+{
+	pdf_link *link = fz_new_derived_link(ctx, pdf_link, rect, uri);
+	link->super.drop = (fz_link_drop_link_fn*) pdf_drop_link_imp;
+	link->super.set_rect = pdf_set_link_rect;
+	link->super.set_uri = pdf_set_link_uri;
+	link->page = page; /* only borrowed, as the page owns the link */
+	link->obj = pdf_keep_obj(ctx, obj);
+	return &link->super;
+}
+
 static fz_link *
-pdf_load_link(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int pagenum, fz_matrix page_ctm)
+pdf_load_link(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj *dict, int pagenum, fz_matrix page_ctm)
 {
 	pdf_obj *action;
 	pdf_obj *obj;
@@ -544,7 +607,7 @@ pdf_load_link(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int pagenum, fz
 		return NULL;
 
 	fz_try(ctx)
-		link = fz_new_link(ctx, bbox, uri);
+		link = (fz_link *) pdf_new_link(ctx, page, bbox, uri, dict);
 	fz_always(ctx)
 		fz_free(ctx, uri);
 	fz_catch(ctx)
@@ -554,7 +617,7 @@ pdf_load_link(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int pagenum, fz
 }
 
 fz_link *
-pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_obj *annots, int pagenum, fz_matrix page_ctm)
+pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj *annots, int pagenum, fz_matrix page_ctm)
 {
 	fz_link *link, *head, *tail;
 	pdf_obj *obj;
@@ -570,7 +633,7 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_obj *annots, int pa
 		fz_try(ctx)
 		{
 			obj = pdf_array_get(ctx, annots, i);
-			link = pdf_load_link(ctx, doc, obj, pagenum, page_ctm);
+			link = pdf_load_link(ctx, doc, page, obj, pagenum, page_ctm);
 		}
 		fz_catch(ctx)
 		{
@@ -609,41 +672,59 @@ pdf_format_link_uri(fz_context *ctx, fz_link_dest dest)
 		uri = fz_asprintf(ctx, "#page=%d&view=FitB", dest.loc.page + 1);
 		break;
 	case FZ_LINK_DEST_FIT_H:
+		if (isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&view=FitH", dest.loc.page + 1);
+		else
 		uri = fz_asprintf(ctx, "#page=%d&view=FitH,%g", dest.loc.page + 1, dest.y);
 		break;
 	case FZ_LINK_DEST_FIT_BH:
+		if (isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&view=FitBH", dest.loc.page + 1);
+		else
 		uri = fz_asprintf(ctx, "#page=%d&view=FitBH,%g", dest.loc.page + 1, dest.y);
 		break;
 	case FZ_LINK_DEST_FIT_V:
+		if (isnan(dest.x))
+			uri = fz_asprintf(ctx, "#page=%d&view=FitV", dest.loc.page + 1);
+		else
 		uri = fz_asprintf(ctx, "#page=%d&view=FitV,%g", dest.loc.page + 1, dest.x);
 		break;
 	case FZ_LINK_DEST_FIT_BV:
+		if (isnan(dest.x))
+			uri = fz_asprintf(ctx, "#page=%d&view=FitBV", dest.loc.page + 1);
+		else
 		uri = fz_asprintf(ctx, "#page=%d&view=FitBV,%g", dest.loc.page + 1, dest.x);
 		break;
 	case FZ_LINK_DEST_XYZ:
-		if (dest.zoom == 0 && dest.x == 0 && dest.y == 0)
-			uri = fz_asprintf(ctx, "#page=%d", dest.loc.page + 1);
+		if (!isnan(dest.zoom) && !isnan(dest.x) && !isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,%g,%g", dest.loc.page + 1, dest.zoom, dest.x, dest.y);
+		else if (!isnan(dest.zoom) && !isnan(dest.x) && isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,%g,nan", dest.loc.page + 1, dest.zoom, dest.x);
+		else if (!isnan(dest.zoom) && isnan(dest.x) && !isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,nan,%g", dest.loc.page + 1, dest.zoom, dest.y);
+		else if (!isnan(dest.zoom) && isnan(dest.x) && isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,nan,nan", dest.loc.page + 1, dest.zoom);
+		else if (isnan(dest.zoom) && !isnan(dest.x) && !isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,%g,%g", dest.loc.page + 1, dest.x, dest.y);
+		else if (isnan(dest.zoom) && !isnan(dest.x) && isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,%g,nan", dest.loc.page + 1, dest.x);
+		else if (isnan(dest.zoom) && isnan(dest.x) && !isnan(dest.y))
+			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,nan,%g", dest.loc.page + 1, dest.y);
 		else
-			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,%g,%g", dest.loc.page + 1,
-				dest.zoom,
-				dest.x,
-				dest.y);
+			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,nan,nan", dest.loc.page + 1);
 		break;
 	case FZ_LINK_DEST_FIT_R:
 		uri = fz_asprintf(ctx, "#page=%d&viewrect=%g,%g,%g,%g", dest.loc.page + 1,
-			dest.x,
-			dest.y,
-			dest.w,
-			dest.h);
+			dest.x, dest.y, dest.w, dest.h);
 		break;
 	}
 
 	return uri;
 }
 
-static float next_float(const char *str, char **end)
+static float next_float(const char *str, int eatcomma, char **end)
 {
-	if (*str == ',')
+	if (eatcomma && *str == ',')
 		++str;
 	return fz_strtof(str, end);
 }
@@ -651,7 +732,7 @@ static float next_float(const char *str, char **end)
 fz_link_dest
 pdf_parse_link_uri(fz_context *ctx, const char *uri)
 {
-	fz_link_dest dest = fz_make_link_dest_xyz(0, 0, 0, 0, 0);
+	fz_link_dest dest = fz_make_link_dest_xyz(0, 0, NAN, NAN, NAN);
 	char *page_s, *view_s, *rect_s, *zoom_s;
 
 	if (!uri || uri[0] != '#')
@@ -672,18 +753,20 @@ pdf_parse_link_uri(fz_context *ctx, const char *uri)
 	{
 		rect_s += 9;
 		dest.type = FZ_LINK_DEST_FIT_R;
-		dest.x = next_float(rect_s, &rect_s);
-		dest.y = next_float(rect_s, &rect_s);
-		dest.w = next_float(rect_s, &rect_s);
-		dest.h = next_float(rect_s, &rect_s);
+		dest.x = next_float(rect_s, 0, &rect_s);
+		dest.y = next_float(rect_s, 1, &rect_s);
+		dest.w = next_float(rect_s, 1, &rect_s);
+		dest.h = next_float(rect_s, 1, &rect_s);
 	}
 	else if (zoom_s)
 	{
 		zoom_s += 5;
 		dest.type = FZ_LINK_DEST_XYZ;
-		dest.zoom = next_float(zoom_s, &zoom_s);
-		dest.x = next_float(zoom_s, &zoom_s);
-		dest.y = next_float(zoom_s, &zoom_s);
+		dest.zoom = next_float(zoom_s, 0, &zoom_s);
+		dest.x = next_float(zoom_s, 1, &zoom_s);
+		dest.y = next_float(zoom_s, 1, &zoom_s);
+		if (dest.zoom <= 0 || isinf(dest.zoom))
+			dest.zoom = 100;
 	}
 	else if (view_s)
 	{
@@ -692,25 +775,25 @@ pdf_parse_link_uri(fz_context *ctx, const char *uri)
 		{
 			view_s += 4;
 			dest.type = FZ_LINK_DEST_FIT_H;
-			dest.y = next_float(view_s, &view_s);
+			dest.y = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
 		}
 		else if (!fz_strncasecmp(view_s, "FitBH", 5))
 		{
 			view_s += 5;
 			dest.type = FZ_LINK_DEST_FIT_BH;
-			dest.y = next_float(view_s, &view_s);
+			dest.y = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
 		}
 		else if (!fz_strncasecmp(view_s, "FitV", 4))
 		{
 			view_s += 4;
 			dest.type = FZ_LINK_DEST_FIT_V;
-			dest.x = next_float(view_s, &view_s);
+			dest.x = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
 		}
 		else if (!fz_strncasecmp(view_s, "FitBV", 5))
 		{
 			view_s += 5;
 			dest.type = FZ_LINK_DEST_FIT_BV;
-			dest.x = next_float(view_s, &view_s);
+			dest.x = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
 		}
 		else if (!fz_strncasecmp(view_s, "FitB", 4))
 		{

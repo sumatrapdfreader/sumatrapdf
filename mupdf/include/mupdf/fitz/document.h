@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -284,6 +284,11 @@ typedef int (fz_page_uses_overprint_fn)(fz_context *ctx, fz_page *page);
 	Type for a function to create a link on a page.
 */
 typedef fz_link *(fz_page_create_link_fn)(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri);
+
+/**
+	Type for a function to delete a link on a page.
+*/
+typedef void (fz_page_delete_link_fn)(fz_context *ctx, fz_page *page, fz_link *link);
 
 /**
 	Function type to open a document from a file.
@@ -826,6 +831,11 @@ int fz_page_uses_overprint(fz_context *ctx, fz_page *page);
 fz_link *fz_create_link(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri);
 
 /**
+	Delete an existing link on a page.
+*/
+void fz_delete_link(fz_context *ctx, fz_page *page, fz_link *link);
+
+/**
 	Iterates over all opened pages of the document, calling the
 	provided callback for each page for processing. If the callback
 	returns non-NULL then the iteration stops and that value is returned
@@ -864,6 +874,7 @@ struct fz_page
 	fz_page_separations_fn *separations;
 	fz_page_uses_overprint_fn *overprint;
 	fz_page_create_link_fn *create_link;
+	fz_page_delete_link_fn *delete_link;
 	fz_page **prev, *next; /* linked list of currently open pages */
 };
 

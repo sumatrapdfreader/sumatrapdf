@@ -403,14 +403,28 @@ public class ViewerCore {
 	public void renderPage(final Matrix ctm, final Rect bbox, final boolean icc, final int antialias, final boolean invert, final boolean tint, final int tintBlack, final int tintWhite, final OnException onException) {
 		worker.add(new Worker.Task() {
 			Pixmap pixmap = null;
-			Link[] links = null;
+			Rect[] links = null;
+			String[] linkURIs = null;
 			Quad[][] hits = null;
 			public void work() {
-				links = page.getLinks();
-				if (links == null)
-					links = new Link[0];
-				for (Link link: links)
-					link.bounds.transform(ctm);
+				Link[] pageLinks = page.getLinks();
+				if (pageLinks == null)
+				{
+					links = new Rect[0];
+					linkURIs = new String[0];
+				}
+				else
+				{
+					int i = 0;
+					links = new Rect[pageLinks.length];
+					linkURIs = new String[pageLinks.length];
+					for (Link link: pageLinks)
+					{
+						links[i] = link.getBounds().transform(ctm);
+						linkURIs[i] = link.getURI();
+						i++;
+					}
+				}
 
 				if (currentPage.equals(searchHitPage))
 					hits = page.search(searchNeedle);
@@ -443,10 +457,10 @@ public class ViewerCore {
 					pixmap.tint(tintBlack, tintWhite);
 			}
 			public void run() {
-				callback.onPageContentsChange(pixmap, links, hits);
+				callback.onPageContentsChange(pixmap, links, linkURIs, hits);
 			}
 			public void exception(Throwable t) {
-				callback.onPageContentsChange(null, new Link[0], new Quad[0][]);
+				callback.onPageContentsChange(null, new Rect[0], new String[0], new Quad[0][]);
 				if (onException != null)
 					onException.run(t);
 			}
@@ -602,7 +616,7 @@ public class ViewerCore {
 		public void onOutlineChange(OutlineItem[] outline);
 		public void onOutlineItemChange(int index);
 		public void onPageChange(Location page, int chapterNumber, int pageNumber, Rect bbox);
-		public void onPageContentsChange(Pixmap pixmap, Link[] links, Quad[][] searchHits);
+		public void onPageContentsChange(Pixmap pixmap, Rect[] links, String[] linkURIs, Quad[][] searchHits);
 		public void onPageCountChange(int pages);
 		public void onPermissionsChange(boolean print, boolean copy, boolean edit, boolean annotate);
 		public void onReflowableChange(boolean reflowable);

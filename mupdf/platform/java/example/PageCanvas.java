@@ -32,14 +32,14 @@ public class PageCanvas extends Canvas
 {
 	protected float pixelScale;
 	protected BufferedImage image;
-	protected Link[] links;
+	protected Rect[] links;
 	protected Quad[][] hits;
 
 	public PageCanvas(float pixelScale) {
 		this.pixelScale = pixelScale;
 	}
 
-	public void setPage(BufferedImage image, Link[] links, Quad[][] hits) {
+	public void setPage(BufferedImage image, Rect[] links, Quad[][] hits) {
 		this.image = image;
 		this.links = links;
 		this.hits = hits;
@@ -75,10 +75,8 @@ public class PageCanvas extends Canvas
 
 		if (links != null) {
 			g2d.setColor(new Color(0, 0, 1, 0.1f));
-			for (Link link : links) {
-				Rect r = link.bounds;
-				g2d.fillRect((int)r.x0, (int)r.y0, (int)(r.x1-r.x0), (int)(r.y1-r.y0));
-			}
+			for (Rect link : links)
+				g2d.fillRect((int)link.x0, (int)link.y0, (int)(link.x1-link.x0), (int)(link.y1-link.y0));
 		}
 
 		g2d.dispose();

@@ -262,6 +262,20 @@ static inline jobject to_Image_safe(fz_context *ctx, JNIEnv *env, fz_image *img)
 	return jimg;
 }
 
+static inline jobject to_Link_safe(fz_context *ctx, JNIEnv *env, fz_link *link)
+{
+	jobject jlink;
+
+	if (!ctx || !link) return NULL;
+
+	fz_keep_link(ctx, link);
+	jlink = (*env)->NewObject(env, cls_Link, mid_Link_init, jlong_cast(link));
+	if (!jlink)
+		fz_drop_link(ctx, link);
+
+	return jlink;
+}
+
 static inline jobject to_Matrix_safe(fz_context *ctx, JNIEnv *env, fz_matrix mat)
 {
 	if (!ctx) return NULL;
@@ -672,26 +686,10 @@ static inline jobject to_Page_safe_own(fz_context *ctx, JNIEnv *env, fz_page *pa
 static inline jobject to_Link_safe_own(fz_context *ctx, JNIEnv *env, fz_link *link)
 {
 	jobject jobj;
-	jobject jbounds = NULL;
-	jobject juri = NULL;
 
 	if (!ctx || !link) return NULL;
 
-	jbounds = to_Rect_safe(ctx, env, link->rect);
-	if (!jbounds || (*env)->ExceptionCheck(env))
-	{
-		fz_drop_link(ctx, link);
-		return NULL;
-	}
-
-	juri = (*env)->NewStringUTF(env, link->uri);
-	if (!juri || (*env)->ExceptionCheck(env))
-	{
-		fz_drop_link(ctx, link);
-		return NULL;
-	}
-
-	jobj = (*env)->NewObject(env, cls_Link, mid_Link_init, jbounds, juri);
+	jobj = (*env)->NewObject(env, cls_Link, mid_Link_init, jlong_cast(link));
 	if (!jobj)
 		fz_drop_link(ctx, link);
 
@@ -857,6 +855,15 @@ static inline fz_image *from_Image(JNIEnv *env, jobject jobj)
 	image = CAST(fz_image *, (*env)->GetLongField(env, jobj, fid_Image_pointer));
 	if (!image) jni_throw_null(env, "cannot use already destroyed Image");
 	return image;
+}
+
+static inline fz_link *from_Link(JNIEnv *env, jobject jobj)
+{
+	fz_link *link;
+	if (!jobj) return NULL;
+	link = CAST(fz_link *, (*env)->GetLongField(env, jobj, fid_Link_pointer));
+	if (!link) jni_throw_null(env, "cannot use already destroyed Link");
+	return link;
 }
 
 static inline fz_outline_iterator *from_OutlineIterator(JNIEnv *env, jobject jobj)
@@ -1154,6 +1161,12 @@ static inline fz_image *from_Image_safe(JNIEnv *env, jobject jobj)
 {
 	if (!jobj) return NULL;
 	return CAST(fz_image *, (*env)->GetLongField(env, jobj, fid_Image_pointer));
+}
+
+static inline fz_link *from_Link_safe(JNIEnv *env, jobject jobj)
+{
+	if (!jobj) return NULL;
+	return CAST(fz_link *, (*env)->GetLongField(env, jobj, fid_Link_pointer));
 }
 
 static inline fz_page *from_Page_safe(JNIEnv *env, jobject jobj)

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,6 +28,11 @@
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/types.h"
 
+typedef struct fz_link fz_link;
+typedef void (fz_link_set_rect_fn)(fz_context *ctx, fz_link *link, fz_rect rect);
+typedef void (fz_link_set_uri_fn)(fz_context *ctx, fz_link *link, const char *uri);
+typedef void (fz_link_drop_link_fn)(fz_context *ctx, fz_link *link);
+
 /**
 	fz_link is a list of interactive links on a page.
 
@@ -53,6 +58,9 @@ typedef struct fz_link
 	struct fz_link *next;
 	fz_rect rect;
 	char *uri;
+	fz_link_set_rect_fn *set_rect;
+	fz_link_set_uri_fn *set_uri;
+	fz_link_drop_link_fn *drop;
 } fz_link;
 
 typedef enum
@@ -81,11 +89,15 @@ fz_link_dest fz_make_link_dest_xyz(int chapter, int page, float x, float y, floa
 	Create a new link record.
 
 	next is set to NULL with the expectation that the caller will
-	handle the linked list setup.
+	handle the linked list setup. Internal function.
 
-	Internal function.
+	Different document types will be implemented by deriving from
+	fz_link. This macro allocates such derived structures, and
+	initialises the base sections.
 */
-fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, const char *uri);
+fz_link *fz_new_link_of_size(fz_context *ctx, int size, fz_rect rect, const char *uri);
+#define fz_new_derived_link(CTX,TYPE,RECT,URI) \
+	   ((TYPE *)Memento_label(fz_new_link_of_size(CTX,sizeof(TYPE),RECT,URI),#TYPE))
 
 /**
 	Increment the reference count for a link. The same pointer is
@@ -111,5 +123,8 @@ void fz_drop_link(fz_context *ctx, fz_link *link);
 	separates the scheme from the scheme specific parts in URIs).
 */
 int fz_is_external_link(fz_context *ctx, const char *uri);
+
+void fz_set_link_rect(fz_context *ctx, fz_link *link, fz_rect rect);
+void fz_set_link_uri(fz_context *ctx, fz_link *link, const char *uri);
 
 #endif

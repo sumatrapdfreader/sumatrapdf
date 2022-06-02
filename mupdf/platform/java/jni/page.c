@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -219,32 +219,14 @@ FUN(Page_getLinks)(JNIEnv *env, jobject self)
 	link = links;
 	for (i = 0; link && i < link_count; i++)
 	{
-		jobject jbounds = NULL;
 		jobject jlink = NULL;
-		jobject juri = NULL;
 
-		jbounds = to_Rect_safe(ctx, env, link->rect);
-		if (!jbounds || (*env)->ExceptionCheck(env))
-		{
-			fz_drop_link(ctx, links);
-			return NULL;
-		}
-
-		juri = (*env)->NewStringUTF(env, link->uri);
-		if (!juri || (*env)->ExceptionCheck(env))
-		{
-			fz_drop_link(ctx, links);
-			return NULL;
-		}
-
-		jlink = (*env)->NewObject(env, cls_Link, mid_Link_init, jbounds, juri);
+		jlink = to_Link_safe(ctx, env, link);
 		if (!jlink || (*env)->ExceptionCheck(env))
 		{
 			fz_drop_link(ctx, links);
 			return NULL;
 		}
-		(*env)->DeleteLocalRef(env, juri);
-		(*env)->DeleteLocalRef(env, jbounds);
 
 		(*env)->SetObjectArrayElement(env, jlinks, i, jlink);
 		if ((*env)->ExceptionCheck(env))
@@ -435,6 +417,22 @@ FUN(Page_createLink)(JNIEnv *env, jobject self, jobject jrect, jstring juri)
 	}
 
 	return to_Link_safe_own(ctx, env, link);
+}
+
+JNIEXPORT void JNICALL
+FUN(Page_deleteLink)(JNIEnv *env, jobject self, jobject jlink)
+{
+	fz_context *ctx = get_context(env);
+	fz_page *page = from_Page(env, self);
+	fz_link *link = from_Link(env, jlink);
+
+	if (!ctx || !page)
+		return;
+
+	fz_try(ctx)
+		fz_delete_link(ctx, page, link);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jobject JNICALL

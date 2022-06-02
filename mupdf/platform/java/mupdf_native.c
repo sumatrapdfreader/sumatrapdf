@@ -189,6 +189,7 @@ static jfieldID fid_FitzInputStream_pointer;
 static jfieldID fid_Font_pointer;
 static jfieldID fid_HTMLStory_pointer;
 static jfieldID fid_Image_pointer;
+static jfieldID fid_Link_pointer;
 static jfieldID fid_LinkDestination_chapter;
 static jfieldID fid_LinkDestination_height;
 static jfieldID fid_LinkDestination_page;
@@ -840,8 +841,8 @@ static int find_fids(JNIEnv *env)
 	mid_DOM_init = get_method(&err, env, "<init>", "(J)V");
 
 	cls_DOMAttribute = get_class(&err, env, PKG"DOM$DOMAttribute");
-	fid_DOMAttribute_attribute = get_field(&err, env, "attribute", "Ljava/lang/string;");
-	fid_DOMAttribute_value = get_field(&err, env, "value", "Ljava/lang/string;");
+	fid_DOMAttribute_attribute = get_field(&err, env, "attribute", "Ljava/lang/String;");
+	fid_DOMAttribute_value = get_field(&err, env, "value", "Ljava/lang/String;");
 	mid_DOMAttribute_init = get_method(&err, env, "<init>", "()V");
 
 	cls_FitzInputStream = get_class(&err, env, PKG"FitzInputStream");
@@ -862,7 +863,8 @@ static int find_fids(JNIEnv *env)
 	mid_Image_init = get_method(&err, env, "<init>", "(J)V");
 
 	cls_Link = get_class(&err, env, PKG"Link");
-	mid_Link_init = get_method(&err, env, "<init>", "(L"PKG"Rect;Ljava/lang/String;)V");
+	fid_Link_pointer = get_field(&err, env, "pointer", "J");
+	mid_Link_init = get_method(&err, env, "<init>", "(J)V");
 
 	cls_Location = get_class(&err, env, PKG"Location");
 	mid_Location_init = get_method(&err, env, "<init>", "(II)V");
@@ -1279,6 +1281,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/fitzinputstream.c"
 #include "jni/font.c"
 #include "jni/image.c"
+#include "jni/link.c"
 #include "jni/outlineiterator.c"
 #include "jni/page.c"
 #include "jni/path.c"

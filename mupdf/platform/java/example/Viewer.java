@@ -69,7 +69,8 @@ public class Viewer extends Frame implements WindowListener, ActionListener, Ite
 
 	protected Pixmap pixmap;
 	protected Rect bbox;
-	protected Link[] links;
+	protected Rect[] links;
+	protected String[] linkURIs;
 	protected Quad[][] hits;
 
 	protected int pixmapWidth;
@@ -1894,9 +1895,10 @@ public class Viewer extends Frame implements WindowListener, ActionListener, Ite
 		if (hadOutline)
 			outlinePanel.setVisible(outline != null);
 	}
-	public void onPageContentsChange(Pixmap pixmap, Link[] links, Quad[][] hits) {
+	public void onPageContentsChange(Pixmap pixmap, Rect[] links, String[] linkURIs, Quad[][] hits) {
 		this.pixmap = pixmap;
 		this.links = links;
+		this.linkURIs = linkURIs;
 		this.hits = hits;
 		redraw();
 	}

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -199,7 +199,7 @@ public class Document
 		return resolveLink(link.uri);
 	}
 	public Location resolveLink(Link link) {
-		return resolveLink(link.uri);
+		return resolveLink(link.getURI());
 	}
 
 	public native LinkDestination resolveLinkDestination(String uri);
@@ -210,7 +210,7 @@ public class Document
 		return resolveLinkDestination(link.uri);
 	}
 	public LinkDestination resolveLinkDestination(Link link) {
-		return resolveLinkDestination(link.uri);
+		return resolveLinkDestination(link.getURI());
 	}
 
 	public native Outline[] loadOutline();

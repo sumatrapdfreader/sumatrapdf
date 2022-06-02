@@ -565,7 +565,7 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 		ind_obj = pdf_new_indirect(ctx, doc, ind_obj_num, 0);
 		pdf_array_push(ctx, annot_arr, ind_obj);
 
-		link = fz_new_link(ctx, bbox, uri);
+		link = (fz_link *) pdf_new_link(ctx, page, bbox, uri, annot_obj);
 
 		linkp = &page->links;
 
@@ -587,6 +587,47 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 	}
 
 	return fz_keep_link(ctx, link);
+}
+
+void pdf_delete_link(fz_context *ctx, pdf_page *page, fz_link *link)
+{
+	fz_link **linkptr;
+	pdf_obj *annots;
+	int i;
+
+	if (link == NULL || page == NULL || page != ((pdf_link *) link)->page)
+		return;
+
+	for (linkptr = &page->links; *linkptr; linkptr = &((*linkptr)->next))
+	{
+		if (*linkptr == link)
+			break;
+	}
+
+	if (*linkptr == NULL)
+		return;
+
+	pdf_begin_operation(ctx, page->doc, "Delete Link");
+
+	fz_try(ctx)
+	{
+
+		annots = pdf_dict_get(ctx, page->obj, PDF_NAME(Annots));
+		i = pdf_array_find(ctx, annots, ((pdf_link *) link)->obj);
+		if (i >= 0)
+			pdf_array_delete(ctx, annots, i);
+		*linkptr = link->next;
+		link->next = NULL;
+		fz_drop_link(ctx, link);
+	}
+	fz_always(ctx)
+	{
+		pdf_end_operation(ctx, page->doc);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 static pdf_obj *

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -22,16 +22,14 @@
 
 #include "mupdf/fitz.h"
 
-fz_link *
-fz_new_link(fz_context *ctx, fz_rect bbox, const char *uri)
-{
-	fz_link *link;
+#include <math.h>
 
-	link = fz_malloc_struct(ctx, fz_link);
+fz_link *
+fz_new_link_of_size(fz_context *ctx, int size, fz_rect rect, const char *uri)
+{
+	fz_link *link = Memento_label(fz_calloc(ctx, 1, size), "fz_link");
 	link->refs = 1;
-	link->rect = bbox;
-	link->next = NULL;
-	link->uri = NULL;
+	link->rect = rect;
 
 	fz_try(ctx)
 		link->uri = fz_strdup(ctx, uri);
@@ -56,6 +54,10 @@ fz_drop_link(fz_context *ctx, fz_link *link)
 	while (fz_drop_imp(ctx, link, &link->refs))
 	{
 		fz_link *next = link->next;
+
+		if (link->drop)
+			link->drop(ctx, link);
+
 		fz_free(ctx, link->uri);
 		fz_free(ctx, link);
 		link = next;
@@ -87,12 +89,12 @@ fz_is_external_link(fz_context *ctx, const char *uri)
 
 fz_link_dest fz_make_link_dest_none(void)
 {
-	fz_link_dest dest = { { -1, -1 }, FZ_LINK_DEST_XYZ, 0, 0, 0, 0, 0 };
+	fz_link_dest dest = { { -1, -1 }, FZ_LINK_DEST_XYZ, NAN, NAN, NAN, NAN, NAN };
 	return dest;
 }
 
 fz_link_dest fz_make_link_dest_xyz(int chapter, int page, float x, float y, float z)
 {
-	fz_link_dest dest = { { chapter, page }, FZ_LINK_DEST_XYZ, x, y, 0, 0, z };
+	fz_link_dest dest = { { chapter, page }, FZ_LINK_DEST_XYZ, x, y, NAN, NAN, z };
 	return dest;
 }
