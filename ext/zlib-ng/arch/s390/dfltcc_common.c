@@ -1,6 +1,6 @@
 /* dfltcc_deflate.c - IBM Z DEFLATE CONVERSION CALL general support. */
 
-#include "../../zbuild.h"
+#include "zbuild.h"
 #include "dfltcc_common.h"
 #include "dfltcc_detail.h"
 

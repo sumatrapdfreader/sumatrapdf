@@ -212,5 +212,72 @@ access to an IBM z15+ VM or LPAR in order to test DFLTCC support. Since
 DFLTCC is a non-privileged instruction, neither special VM/LPAR
 configuration nor root are required.
 
-Still, zlib-ng CI has a few QEMU TCG-based configurations that check
-whether fallback to software is working.
+zlib-ng CI uses an IBM-provided z15 self-hosted builder for the DFLTCC
+testing. There are no IBM Z builds of GitHub Actions runner, and
+stable qemu-user has problems with .NET apps, so the builder runs the
+x86_64 runner version with qemu-user built from the master branch.
+
+## Configuring the builder.
+
+### Install prerequisites.
+
+```
+$ sudo dnf install docker
+```
+
+### Add services.
+
+```
+$ sudo cp self-hosted-builder/*.service /etc/systemd/system/
+$ sudo systemctl daemon-reload
+```
+
+### Create a config file.
+
+```
+$ sudo tee /etc/actions-runner
+repo=<owner>/<name>
+access_token=<ghp_***>
+```
+
+Access token should have the repo scope, consult
+https://docs.github.com/en/rest/reference/actions#create-a-registration-token-for-a-repository
+for details.
+
+### Autostart the x86_64 emulation support.
+
+```
+$ sudo systemctl enable --now qemu-user-static
+```
+
+### Autostart the runner.
+
+```
+$ sudo systemctl enable --now actions-runner
+```
+
+## Rebuilding the image
+
+In order to update the `iiilinuxibmcom/actions-runner` image, e.g. to get the
+latest OS security fixes, use the following commands:
+
+```
+$ sudo docker build \
+      --pull \
+      -f self-hosted-builder/actions-runner.Dockerfile \
+      -t iiilinuxibmcom/actions-runner
+$ sudo systemctl restart actions-runner
+```
+
+## Removing persistent data
+
+The `actions-runner` service stores various temporary data, such as runner
+registration information, work directories and logs, in the `actions-runner`
+volume. In order to remove it and start from scratch, e.g. when switching the
+runner to a different repository, use the following commands:
+
+```
+$ sudo systemctl stop actions-runner
+$ sudo docker rm -f actions-runner
+$ sudo docker volume rm actions-runner
+```

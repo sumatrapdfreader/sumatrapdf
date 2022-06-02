@@ -18,7 +18,7 @@ Features
 
 * Zlib compatible API with support for dual-linking
 * Modernized native API based on zlib API for ease of porting
-* Modern C11 syntax and a clean code layout
+* Modern C99 syntax and a clean code layout
 * Deflate medium and quick algorithms based on Intels zlib fork
 * Support for CPU intrinsics when available
   * Adler32 implementation using SSSE3, AVX2, Neon & VSX
@@ -26,8 +26,7 @@ Features
   * Hash table implementation using CRC32-C intrinsics on x86 and ARM
   * Slide hash implementations using SSE2, AVX2, Neon & VSX
   * Compare256/258 implementations using SSE4.2 & AVX2
-  * Inflate chunk copying using SSE2, AVX2, Neon & VSX
-  * CRC32 implementation using IBM Z vector instructions
+  * Inflate chunk copying using SSE2, AVX2 & Neon
   * Support for hardware-accelerated deflate using IBM Z DFLTCC
 * Unaligned memory read/writes and large bit buffer improvements
 * Includes improvements from Cloudflare and Intel forks
@@ -203,7 +202,6 @@ Advanced Build Options
 | WITH_ACLE                       | --without-acle        | Build with ACLE intrinsics                                          | ON                     |
 | WITH_NEON                       | --without-neon        | Build with NEON intrinsics                                          | ON                     |
 | WITH_POWER8                     |                       | Build with POWER8 optimisations                                     | ON                     |
-| WITH_CRC32_VX                   | --without-crc32-vx    | Build with vectorized CRC32 on IBM Z                                | ON                     |
 | WITH_DFLTCC_DEFLATE             | --with-dfltcc-deflate | Build with DFLTCC intrinsics for compression on IBM Z               | OFF                    |
 | WITH_DFLTCC_INFLATE             | --with-dfltcc-inflate | Build with DFLTCC intrinsics for decompression on IBM Z             | OFF                    |
 | WITH_UNALIGNED                  |                       | Allow optimizations that use unaligned reads if safe on current arch| ON                     |
@@ -219,4 +217,3 @@ Related Projects
 * Python tool to benchmark minigzip/minideflate https://github.com/zlib-ng/deflatebench
 * Python tool to benchmark pigz                 https://github.com/zlib-ng/pigzbench
 * 3rd party patches for zlib-ng compatibility   https://github.com/zlib-ng/patches
-

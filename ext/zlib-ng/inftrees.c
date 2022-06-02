@@ -107,8 +107,8 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
     root = *bits;
     for (max = MAXBITS; max >= 1; max--)
         if (count[max] != 0) break;
-    root = MIN(root, max);
-    if (UNLIKELY(max == 0)) {           /* no symbols to code at all */
+    if (root > max) root = max;
+    if (max == 0) {                     /* no symbols to code at all */
         here.op = (unsigned char)64;    /* invalid code marker */
         here.bits = (unsigned char)1;
         here.val = (uint16_t)0;
@@ -119,7 +119,7 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
     }
     for (min = 1; min < max; min++)
         if (count[min] != 0) break;
-    root = MAX(root, min);
+    if (root < min) root = min;
 
     /* check for an over-subscribed or incomplete set of lengths */
     left = 1;
@@ -208,12 +208,12 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
     for (;;) {
         /* create table entry */
         here.bits = (unsigned char)(len - drop);
-        if (LIKELY(work[sym] >= match)) {
-            here.op = (unsigned char)(extra[work[sym] - match]);
-            here.val = base[work[sym] - match];
-        } else if (work[sym] + 1U < match) {
+        if (work[sym] + 1U < match) {
             here.op = (unsigned char)0;
             here.val = work[sym];
+        } else if (work[sym] >= match) {
+            here.op = (unsigned char)(extra[work[sym] - match]);
+            here.val = base[work[sym] - match];
         } else {
             here.op = (unsigned char)(32 + 64);         /* end of block */
             here.val = 0;
@@ -283,7 +283,7 @@ int Z_INTERNAL zng_inflate_table(codetype type, uint16_t *lens, unsigned codes,
     /* fill in remaining table entry if code is incomplete (guaranteed to have
        at most one remaining entry, since if the code is incomplete, the
        maximum code length that was allowed to get this far is one bit) */
-    if (UNLIKELY(huff != 0)) {
+    if (huff != 0) {
         here.op = (unsigned char)64;            /* invalid code marker */
         here.bits = (unsigned char)(len - drop);
         here.val = (uint16_t)0;

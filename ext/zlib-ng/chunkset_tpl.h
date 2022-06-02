@@ -20,18 +20,18 @@ Z_INTERNAL uint32_t CHUNKSIZE(void) {
 Z_INTERNAL uint8_t* CHUNKCOPY(uint8_t *out, uint8_t const *from, unsigned len) {
     Assert(len > 0, "chunkcopy should never have a length 0");
     chunk_t chunk;
-    int32_t align = ((len - 1) % sizeof(chunk_t)) + 1;
+    int32_t align = (--len % sizeof(chunk_t)) + 1;
     loadchunk(from, &chunk);
     storechunk(out, &chunk);
     out += align;
     from += align;
-    len -= align;
+    len /= sizeof(chunk_t);
     while (len > 0) {
         loadchunk(from, &chunk);
         storechunk(out, &chunk);
         out += sizeof(chunk_t);
         from += sizeof(chunk_t);
-        len -= sizeof(chunk_t);
+        --len;
     }
     return out;
 }
@@ -114,10 +114,10 @@ Z_INTERNAL uint8_t* CHUNKMEMSET(uint8_t *out, unsigned dist, unsigned len) {
     chunk_t chunk;
     unsigned sz = sizeof(chunk);
     if (len < sz) {
-        do {
+        while (len != 0) {
             *out++ = *from++;
             --len;
-        } while (len != 0);
+        }
         return out;
     }
 
@@ -176,9 +176,24 @@ Z_INTERNAL uint8_t* CHUNKMEMSET(uint8_t *out, unsigned dist, unsigned len) {
 }
 
 Z_INTERNAL uint8_t* CHUNKMEMSET_SAFE(uint8_t *out, unsigned dist, unsigned len, unsigned left) {
+#if !defined(UNALIGNED64_OK)
+#  if !defined(UNALIGNED_OK)
+    static const uint32_t align_mask = 7;
+#  else
+    static const uint32_t align_mask = 3;
+#  endif
+#endif
+
     len = MIN(len, left);
+    uint8_t *from = out - dist;
+#if !defined(UNALIGNED64_OK)
+    while (((uintptr_t)out & align_mask) && (len > 0)) {
+        *out++ = *from++;
+        --len;
+        --left;
+    }
+#endif
     if (left < (unsigned)(3 * sizeof(chunk_t))) {
-        uint8_t *from = out - dist;
         while (len > 0) {
             *out++ = *from++;
             --len;

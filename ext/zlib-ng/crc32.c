@@ -175,7 +175,7 @@ Z_INTERNAL uint32_t crc32_big(uint32_t crc, const unsigned char *buf, uint64_t l
 
 Z_INTERNAL void crc_finalize(deflate_state *const s) {
     if (x86_cpu_has_pclmulqdq)
-        s->strm->adler = crc_fold_512to32(s->crc0);
+        s->strm->adler = crc_fold_512to32(s);
 }
 #endif
 
@@ -183,7 +183,7 @@ Z_INTERNAL void crc_reset(deflate_state *const s) {
 #ifdef X86_PCLMULQDQ_CRC
     x86_check_features();
     if (x86_cpu_has_pclmulqdq) {
-        s->strm->adler = crc_fold_init(s->crc0);
+        crc_fold_init(s);
         return;
     }
 #endif
@@ -193,7 +193,7 @@ Z_INTERNAL void crc_reset(deflate_state *const s) {
 Z_INTERNAL void copy_with_crc(PREFIX3(stream) *strm, unsigned char *dst, unsigned long size) {
 #ifdef X86_PCLMULQDQ_CRC
     if (x86_cpu_has_pclmulqdq) {
-        crc_fold_copy(strm->state->crc0, dst, strm->next_in, size);
+        crc_fold_copy(strm->state, dst, strm->next_in, size);
         return;
     }
 #endif

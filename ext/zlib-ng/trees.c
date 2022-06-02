@@ -305,10 +305,10 @@ Z_INTERNAL void gen_codes(ct_data *tree, int max_code, uint16_t *bl_count) {
         if (len == 0)
             continue;
         /* Now reverse the bits */
-        tree[n].Code = bi_reverse(next_code[len]++, len);
+        tree[n].Code = (uint16_t)bi_reverse(next_code[len]++, len);
 
         Tracecv(tree != static_ltree, (stderr, "\nn %3d %c l %2d c %4x (%x) ",
-             n, (isgraph(n) ? n : ' '), len, tree[n].Code, next_code[len]-1));
+             n, (isgraph(n & 0xff) ? n : ' '), len, tree[n].Code, next_code[len]-1));
     }
 }
 
@@ -806,13 +806,17 @@ static void bi_flush(deflate_state *s) {
 }
 
 /* ===========================================================================
- * Reverse the first len bits of a code using bit manipulation
+ * Reverse the first len bits of a code, using straightforward code (a faster
+ * method would use a table)
+ * IN assertion: 1 <= len <= 15
  */
-Z_INTERNAL uint16_t bi_reverse(unsigned code, int len) {
+Z_INTERNAL unsigned bi_reverse(unsigned code, int len) {
     /* code: the value to invert */
     /* len: its bit length */
-    Assert(len >= 1 && len <= 15, "code length must be 1-15");
-#define bitrev8(b) \
-    (uint8_t)((((uint8_t)(b) * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32)
-    return (bitrev8(code >> 8) | (uint16_t)bitrev8(code) << 8) >> (16 - len);
+    Z_REGISTER unsigned res = 0;
+    do {
+        res |= code & 1;
+        code >>= 1, res <<= 1;
+    } while (--len > 0);
+    return res >> 1;
 }

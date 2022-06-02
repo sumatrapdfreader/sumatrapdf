@@ -10,10 +10,10 @@
 #ifndef CRC_FOLDING_H_
 #define CRC_FOLDING_H_
 
-#include "../../zutil.h"
+#include "../../deflate.h"
 
-Z_INTERNAL uint32_t crc_fold_init(unsigned int crc0[4 * 5]);
-Z_INTERNAL uint32_t crc_fold_512to32(unsigned int crc0[4 * 5]);
-Z_INTERNAL void crc_fold_copy(unsigned int crc0[4 * 5], unsigned char *, const unsigned char *, long);
+Z_INTERNAL void crc_fold_init(deflate_state *const);
+Z_INTERNAL uint32_t crc_fold_512to32(deflate_state *const);
+Z_INTERNAL void crc_fold_copy(deflate_state *const, unsigned char *, const unsigned char *, long);
 
 #endif

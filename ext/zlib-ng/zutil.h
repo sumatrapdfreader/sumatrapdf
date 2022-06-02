@@ -24,6 +24,10 @@
 #  define Z_REGISTER
 #endif
 
+#ifndef Z_TLS
+#  define Z_TLS
+#endif
+
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
@@ -66,16 +70,29 @@ extern z_const char * const PREFIX(z_errmsg)[10]; /* indexed by 2-zlib_error */
 #define DYN_TREES    2
 /* The three kinds of block type */
 
-#define STD_MIN_MATCH  3
-#define STD_MAX_MATCH  258
-/* The minimum and maximum match lengths mandated by the deflate standard */
-
-#define WANT_MIN_MATCH  4
-/* The minimum wanted match length, affects deflate_quick, deflate_fast, deflate_medium and deflate_slow  */
+#define MIN_MATCH  3
+#define MAX_MATCH  258
+/* The minimum and maximum match lengths */
 
 #define PRESET_DICT 0x20 /* preset dictionary flag in zlib header */
 
 #define ADLER32_INITIAL_VALUE 1 /* initial adler-32 hash value */
+
+#define ZLIB_WRAPLEN 6      /* zlib format overhead */
+#define GZIP_WRAPLEN 18     /* gzip format overhead */
+
+#define DEFLATE_HEADER_BITS 3
+#define DEFLATE_EOBS_BITS   15
+#define DEFLATE_PAD_BITS    6
+#define DEFLATE_BLOCK_OVERHEAD ((DEFLATE_HEADER_BITS + DEFLATE_EOBS_BITS + DEFLATE_PAD_BITS) >> 3)
+/* deflate block overhead: 3 bits for block start + 15 bits for block end + padding to nearest byte */
+
+#define DEFLATE_QUICK_LIT_MAX_BITS 9
+#define DEFLATE_QUICK_OVERHEAD(x) ((x * (DEFLATE_QUICK_LIT_MAX_BITS - 8) + 7) >> 3)
+/* deflate_quick worst-case overhead: 9 bits per literal, round up to next byte (+7) */
+
+
+#define ZLIB_WRAPLEN 6 /* zlib format overhead */
 
         /* target dependencies */
 
@@ -252,8 +269,6 @@ void Z_INTERNAL   zng_cfree(void *opaque, void *ptr);
 #  include "arch/arm/arm.h"
 #elif defined(POWER_FEATURES)
 #  include "arch/power/power.h"
-#elif defined(S390_FEATURES)
-#  include "arch/s390/s390.h"
 #endif
 
 #endif /* ZUTIL_H_ */

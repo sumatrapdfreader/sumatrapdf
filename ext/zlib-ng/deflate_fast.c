@@ -24,8 +24,8 @@ Z_INTERNAL block_state deflate_fast(deflate_state *s, int flush) {
 
     for (;;) {
         /* Make sure that we always have enough lookahead, except
-         * at the end of the input file. We need STD_MAX_MATCH bytes
-         * for the next match, plus WANT_MIN_MATCH bytes to insert the
+         * at the end of the input file. We need MAX_MATCH bytes
+         * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next match.
          */
         if (s->lookahead < MIN_LOOKAHEAD) {
@@ -40,14 +40,13 @@ Z_INTERNAL block_state deflate_fast(deflate_state *s, int flush) {
         /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
-        if (s->lookahead >= WANT_MIN_MATCH) {
+        if (s->lookahead >= MIN_MATCH) {
             hash_head = functable.quick_insert_string(s, s->strstart);
             dist = (int64_t)s->strstart - hash_head;
 
             /* Find the longest match, discarding those <= prev_length.
-             * At this point we have always match length < WANT_MIN_MATCH
+             * At this point we have always match length < MIN_MATCH
              */
-
             if (dist <= MAX_DIST(s) && dist > 0 && hash_head != 0) {
                 /* To simplify the code, we prevent matches with the string
                  * of window index 0 (in particular we have to avoid a match
@@ -58,17 +57,17 @@ Z_INTERNAL block_state deflate_fast(deflate_state *s, int flush) {
             }
         }
 
-        if (match_len >= WANT_MIN_MATCH) {
+        if (match_len >= MIN_MATCH) {
             check_match(s, s->strstart, s->match_start, match_len);
 
-            bflush = zng_tr_tally_dist(s, s->strstart - s->match_start, match_len - STD_MIN_MATCH);
+            bflush = zng_tr_tally_dist(s, s->strstart - s->match_start, match_len - MIN_MATCH);
 
             s->lookahead -= match_len;
 
             /* Insert new strings in the hash table only if the match length
              * is not too large. This saves time but degrades compression.
              */
-            if (match_len <= s->max_insert_length && s->lookahead >= WANT_MIN_MATCH) {
+            if (match_len <= s->max_insert_length && s->lookahead >= MIN_MATCH) {
                 match_len--; /* string at strstart already in table */
                 s->strstart++;
 
@@ -76,9 +75,12 @@ Z_INTERNAL block_state deflate_fast(deflate_state *s, int flush) {
                 s->strstart += match_len;
             } else {
                 s->strstart += match_len;
-                functable.quick_insert_string(s, s->strstart + 2 - STD_MIN_MATCH);
-
-                /* If lookahead < STD_MIN_MATCH, ins_h is garbage, but it does not
+#if MIN_MATCH != 3
+                functable.insert_string(s, s->strstart + 2 - MIN_MATCH, MIN_MATCH - 2);
+#else
+                functable.quick_insert_string(s, s->strstart + 2 - MIN_MATCH);
+#endif
+                /* If lookahead < MIN_MATCH, ins_h is garbage, but it does not
                  * matter since it will be recomputed at next deflate call.
                  */
             }
@@ -92,7 +94,7 @@ Z_INTERNAL block_state deflate_fast(deflate_state *s, int flush) {
         if (UNLIKELY(bflush))
             FLUSH_BLOCK(s, 0);
     }
-    s->insert = s->strstart < (STD_MIN_MATCH - 1) ? s->strstart : (STD_MIN_MATCH - 1);
+    s->insert = s->strstart < MIN_MATCH-1 ? s->strstart : MIN_MATCH-1;
     if (UNLIKELY(flush == Z_FINISH)) {
         FLUSH_BLOCK(s, 1);
         return finish_done;

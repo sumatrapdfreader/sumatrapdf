@@ -24,7 +24,7 @@ static int emit_match(deflate_state *s, struct match match) {
     int bflush = 0;
 
     /* matches that are not long enough we need to emit as literals */
-    if (match.match_length < WANT_MIN_MATCH) {
+    if (match.match_length < MIN_MATCH) {
         while (match.match_length) {
             bflush += zng_tr_tally_lit(s, s->window[match.strstart]);
             s->lookahead--;
@@ -36,18 +36,18 @@ static int emit_match(deflate_state *s, struct match match) {
 
     check_match(s, match.strstart, match.match_start, match.match_length);
 
-    bflush += zng_tr_tally_dist(s, match.strstart - match.match_start, match.match_length - STD_MIN_MATCH);
+    bflush += zng_tr_tally_dist(s, match.strstart - match.match_start, match.match_length - MIN_MATCH);
 
     s->lookahead -= match.match_length;
     return bflush;
 }
 
 static void insert_match(deflate_state *s, struct match match) {
-    if (UNLIKELY(s->lookahead <= (unsigned int)(match.match_length + WANT_MIN_MATCH)))
+    if (UNLIKELY(s->lookahead <= (unsigned int)(match.match_length + MIN_MATCH)))
         return;
 
     /* matches that are not long enough we need to emit as literals */
-    if (LIKELY(match.match_length < WANT_MIN_MATCH)) {
+    if (LIKELY(match.match_length < MIN_MATCH)) {
         match.strstart++;
         match.match_length--;
         if (UNLIKELY(match.match_length > 0)) {
@@ -67,7 +67,7 @@ static void insert_match(deflate_state *s, struct match match) {
     /* Insert new strings in the hash table only if the match length
      * is not too large. This saves time but degrades compression.
      */
-    if (match.match_length <= 16 * s->max_insert_length && s->lookahead >= WANT_MIN_MATCH) {
+    if (match.match_length <= 16* s->max_insert_length && s->lookahead >= MIN_MATCH) {
         match.match_length--; /* string at strstart already in table */
         match.strstart++;
 
@@ -85,11 +85,13 @@ static void insert_match(deflate_state *s, struct match match) {
     } else {
         match.strstart += match.match_length;
         match.match_length = 0;
-
-        if (match.strstart >= (STD_MIN_MATCH - 2))
-            functable.quick_insert_string(s, match.strstart + 2 - STD_MIN_MATCH);
-
-        /* If lookahead < WANT_MIN_MATCH, ins_h is garbage, but it does not
+        if (match.strstart >= (MIN_MATCH - 2))
+#if MIN_MATCH != 3
+            functable.insert_string(s, match.strstart + 2 - MIN_MATCH, MIN_MATCH - 2);
+#else
+            functable.quick_insert_string(s, match.strstart + 2 - MIN_MATCH);
+#endif
+        /* If lookahead < MIN_MATCH, ins_h is garbage, but it does not
          * matter since it will be recomputed at next deflate call.
          */
     }
@@ -163,9 +165,6 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
     ALIGNED_(16) struct match current_match;
                  struct match next_match;
 
-    /* For levels below 5, don't check the next position for a better match */
-    int early_exit = s->level < 5;
-
     memset(&current_match, 0, sizeof(struct match));
     memset(&next_match, 0, sizeof(struct match));
 
@@ -175,8 +174,8 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
         int64_t dist;
 
         /* Make sure that we always have enough lookahead, except
-         * at the end of the input file. We need STD_MAX_MATCH bytes
-         * for the next match, plus WANT_MIN_MATCH bytes to insert the
+         * at the end of the input file. We need MAX_MATCH bytes
+         * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next current_match.
          */
         if (s->lookahead < MIN_LOOKAHEAD) {
@@ -194,12 +193,12 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
          */
 
         /* If we already have a future match from a previous round, just use that */
-        if (!early_exit && next_match.match_length > 0) {
+        if (next_match.match_length > 0) {
             current_match = next_match;
             next_match.match_length = 0;
         } else {
             hash_head = 0;
-            if (s->lookahead >= WANT_MIN_MATCH) {
+            if (s->lookahead >= MIN_MATCH) {
                 hash_head = functable.quick_insert_string(s, s->strstart);
             }
 
@@ -207,7 +206,7 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
             current_match.orgstart = current_match.strstart;
 
             /* Find the longest match, discarding those <= prev_length.
-             * At this point we have always match_length < WANT_MIN_MATCH
+             * At this point we have always match_length < MIN_MATCH
              */
 
             dist = (int64_t)s->strstart - hash_head;
@@ -218,7 +217,7 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
                  */
                 current_match.match_length = (uint16_t)functable.longest_match(s, hash_head);
                 current_match.match_start = (uint16_t)s->match_start;
-                if (UNLIKELY(current_match.match_length < WANT_MIN_MATCH))
+                if (UNLIKELY(current_match.match_length < MIN_MATCH))
                     current_match.match_length = 1;
                 if (UNLIKELY(current_match.match_start >= current_match.strstart)) {
                     /* this can happen due to some restarts */
@@ -234,7 +233,7 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
         insert_match(s, current_match);
 
         /* now, look ahead one */
-        if (LIKELY(!early_exit && s->lookahead > MIN_LOOKAHEAD && (uint32_t)(current_match.strstart + current_match.match_length) < (s->window_size - MIN_LOOKAHEAD))) {
+        if (LIKELY(s->lookahead > MIN_LOOKAHEAD && (uint32_t)(current_match.strstart + current_match.match_length) < (s->window_size - MIN_LOOKAHEAD))) {
             s->strstart = current_match.strstart + current_match.match_length;
             hash_head = functable.quick_insert_string(s, s->strstart);
 
@@ -242,7 +241,7 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
             next_match.orgstart = next_match.strstart;
 
             /* Find the longest match, discarding those <= prev_length.
-             * At this point we have always match_length < WANT_MIN_MATCH
+             * At this point we have always match_length < MIN_MATCH
              */
 
             dist = (int64_t)s->strstart - hash_head;
@@ -257,7 +256,7 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
                     /* this can happen due to some restarts */
                     next_match.match_length = 1;
                 }
-                if (next_match.match_length < WANT_MIN_MATCH)
+                if (next_match.match_length < MIN_MATCH)
                     next_match.match_length = 1;
                 else
                     fizzle_matches(s, &current_match, &next_match);
@@ -281,7 +280,7 @@ Z_INTERNAL block_state deflate_medium(deflate_state *s, int flush) {
         if (UNLIKELY(bflush))
             FLUSH_BLOCK(s, 0);
     }
-    s->insert = s->strstart < (STD_MIN_MATCH - 1) ? s->strstart : (STD_MIN_MATCH - 1);
+    s->insert = s->strstart < MIN_MATCH-1 ? s->strstart : MIN_MATCH-1;
     if (flush == Z_FINISH) {
         FLUSH_BLOCK(s, 1);
         return finish_done;

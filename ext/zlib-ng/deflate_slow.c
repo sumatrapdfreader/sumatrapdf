@@ -19,18 +19,12 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
     int bflush;              /* set if current block must be flushed */
     int64_t dist;
     uint32_t match_len;
-    match_func longest_match;
-
-    if (s->max_chain_length <= 1024)
-        longest_match = functable.longest_match;
-    else
-        longest_match = functable.longest_match_slow;
 
     /* Process the input block. */
     for (;;) {
         /* Make sure that we always have enough lookahead, except
-         * at the end of the input file. We need STD_MAX_MATCH bytes
-         * for the next match, plus WANT_MIN_MATCH bytes to insert the
+         * at the end of the input file. We need MAX_MATCH bytes
+         * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next match.
          */
         if (s->lookahead < MIN_LOOKAHEAD) {
@@ -46,14 +40,14 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
          * dictionary, and set hash_head to the head of the hash chain:
          */
         hash_head = 0;
-        if (LIKELY(s->lookahead >= WANT_MIN_MATCH)) {
-            hash_head = s->quick_insert_string(s, s->strstart);
+        if (LIKELY(s->lookahead >= MIN_MATCH)) {
+            hash_head = functable.quick_insert_string(s, s->strstart);
         }
 
         /* Find the longest match, discarding those <= prev_length.
          */
         s->prev_match = (Pos)s->match_start;
-        match_len = STD_MIN_MATCH - 1;
+        match_len = MIN_MATCH-1;
         dist = (int64_t)s->strstart - hash_head;
 
         if (dist <= MAX_DIST(s) && dist > 0 && s->prev_length < s->max_lazy_match && hash_head != 0) {
@@ -61,41 +55,41 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
              * of window index 0 (in particular we have to avoid a match
              * of the string with itself at the start of the input file).
              */
-            match_len = longest_match(s, hash_head);
+            match_len = functable.longest_match(s, hash_head);
             /* longest_match() sets match_start */
 
             if (match_len <= 5 && (s->strategy == Z_FILTERED)) {
-                /* If prev_match is also WANT_MIN_MATCH, match_start is garbage
+                /* If prev_match is also MIN_MATCH, match_start is garbage
                  * but we will ignore the current match anyway.
                  */
-                match_len = STD_MIN_MATCH - 1;
+                match_len = MIN_MATCH-1;
             }
         }
         /* If there was a match at the previous step and the current
          * match is not better, output the previous match:
          */
-        if (s->prev_length >= STD_MIN_MATCH && match_len <= s->prev_length) {
-            unsigned int max_insert = s->strstart + s->lookahead - STD_MIN_MATCH;
+        if (s->prev_length >= MIN_MATCH && match_len <= s->prev_length) {
+            unsigned int max_insert = s->strstart + s->lookahead - MIN_MATCH;
             /* Do not insert strings in hash table beyond this. */
 
             check_match(s, s->strstart-1, s->prev_match, s->prev_length);
 
-            bflush = zng_tr_tally_dist(s, s->strstart -1 - s->prev_match, s->prev_length - STD_MIN_MATCH);
+            bflush = zng_tr_tally_dist(s, s->strstart -1 - s->prev_match, s->prev_length - MIN_MATCH);
 
             /* Insert in hash table all strings up to the end of the match.
              * strstart-1 and strstart are already inserted. If there is not
              * enough lookahead, the last two strings are not inserted in
              * the hash table.
              */
-            s->prev_length -= 1;
-            s->lookahead -= s->prev_length;
+            s->lookahead -= s->prev_length-1;
 
-            unsigned int mov_fwd = s->prev_length - 1;
+            unsigned int mov_fwd = s->prev_length - 2;
             if (max_insert > s->strstart) {
                 unsigned int insert_cnt = mov_fwd;
                 if (UNLIKELY(insert_cnt > max_insert - s->strstart))
                     insert_cnt = max_insert - s->strstart;
-                s->insert_string(s, s->strstart + 1, insert_cnt);
+
+                functable.insert_string(s, s->strstart + 1, insert_cnt);
             }
             s->prev_length = 0;
             s->match_available = 0;
@@ -132,7 +126,7 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
         (void) zng_tr_tally_lit(s, s->window[s->strstart-1]);
         s->match_available = 0;
     }
-    s->insert = s->strstart < (STD_MIN_MATCH - 1) ? s->strstart : (STD_MIN_MATCH - 1);
+    s->insert = s->strstart < MIN_MATCH-1 ? s->strstart : MIN_MATCH-1;
     if (UNLIKELY(flush == Z_FINISH)) {
         FLUSH_BLOCK(s, 1);
         return finish_done;

@@ -29,8 +29,8 @@ all: \
 	compare258_sse.o compare258_sse.lo \
 	insert_string_sse.o insert_string_sse.lo \
 	crc_folding.o crc_folding.lo \
-	slide_hash_avx.o slide_hash_avx.lo \
-	slide_hash_sse.o slide_hash_sse.lo
+	slide_avx.o slide_avx.lo \
+	slide_sse.o slide_sse.lo
 
 x86.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $(SRCDIR)/x86.c
@@ -74,17 +74,17 @@ crc_folding.o:
 crc_folding.lo:
 	$(CC) $(SFLAGS) $(PCLMULFLAG) $(SSE4FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/crc_folding.c
 
-slide_hash_avx.o:
-	$(CC) $(CFLAGS) $(AVX2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_avx.c
+slide_avx.o:
+	$(CC) $(CFLAGS) $(AVX2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_avx.c
 
-slide_hash_avx.lo:
-	$(CC) $(SFLAGS) $(AVX2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_avx.c
+slide_avx.lo:
+	$(CC) $(SFLAGS) $(AVX2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/slide_avx.c
 
-slide_hash_sse.o:
-	$(CC) $(CFLAGS) $(SSE2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_sse.c
+slide_sse.o:
+	$(CC) $(CFLAGS) $(SSE2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_sse.c
 
-slide_hash_sse.lo:
-	$(CC) $(SFLAGS) $(SSE2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_sse.c
+slide_sse.lo:
+	$(CC) $(SFLAGS) $(SSE2FLAG) $(NOLTOFLAG) -DPIC $(INCLUDES) -c -o $@ $(SRCDIR)/slide_sse.c
 
 adler32_avx.o: $(SRCDIR)/adler32_avx.c
 	$(CC) $(CFLAGS) $(AVX2FLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/adler32_avx.c

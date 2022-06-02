@@ -46,13 +46,12 @@
 extern "C" {
 #endif
 
-#define ZLIBNG_VERSION "2.1.0.devel"
-#define ZLIBNG_VERNUM 0x02010000L   /* MMNNRRMS: major minor revision status modified */
+#define ZLIBNG_VERSION "2.0.6"
+#define ZLIBNG_VERNUM 0x2060
 #define ZLIBNG_VER_MAJOR 2
-#define ZLIBNG_VER_MINOR 1
-#define ZLIBNG_VER_REVISION 0
-#define ZLIBNG_VER_STATUS 0         /* 0=devel, 1-E=beta, F=Release */
-#define ZLIBNG_VER_MODIFIED 0       /* non-zero if modified externally from zlib-ng */
+#define ZLIBNG_VER_MINOR 0
+#define ZLIBNG_VER_REVISION 6
+#define ZLIBNG_VER_SUBREVISION 0
 
 #define ZLIB_VERSION "1.2.11.zlib-ng"
 #define ZLIB_VERNUM 0x12bf
@@ -1767,6 +1766,7 @@ Z_EXTERN int Z_EXPORT inflateBackInit_(z_stream *strm, int windowBits, unsigned 
                         inflateBackInit_((strm), (windowBits), (window), ZLIB_VERSION, (int)sizeof(z_stream))
 
 
+#ifndef Z_SOLO
 /* gzgetc() macro and its supporting function and exposed data structure.  Note
  * that the real internal state is much larger than the exposed structure.
  * This abbreviated structure exposes just enough for the gzgetc() macro.  The
@@ -1796,6 +1796,7 @@ Z_EXTERN int Z_EXPORT gzgetc_(gzFile file);  /* backward compatibility */
    Z_EXTERN unsigned long Z_EXPORT adler32_combine64(unsigned long, unsigned long, z_off64_t);
    Z_EXTERN unsigned long Z_EXPORT crc32_combine64(unsigned long, unsigned long, z_off64_t);
    Z_EXTERN void Z_EXPORT crc32_combine_gen64(uint32_t *op, z_off64_t);
+#endif
 #endif
 
 #if !defined(Z_INTERNAL) && defined(Z_WANT64)
@@ -1835,10 +1836,12 @@ Z_EXTERN unsigned long    Z_EXPORT inflateCodesUsed (z_stream *);
 Z_EXTERN int              Z_EXPORT inflateResetKeep (z_stream *);
 Z_EXTERN int              Z_EXPORT deflateResetKeep (z_stream *);
 
+#ifndef Z_SOLO
 #if defined(_WIN32)
     Z_EXTERN gzFile Z_EXPORT gzopen_w(const wchar_t *path, const char *mode);
 #endif
 Z_EXTERN int Z_EXPORTVA gzvprintf(gzFile file, const char *format, va_list va);
+#endif
 
 #ifdef __cplusplus
 }

@@ -44,13 +44,12 @@
 extern "C" {
 #endif
 
-#define ZLIBNG_VERSION "2.1.0.devel"
-#define ZLIBNG_VERNUM 0x02010000L   /* MMNNRRMS: major minor revision status modified */
+#define ZLIBNG_VERSION "2.0.6"
+#define ZLIBNG_VERNUM 0x2060
 #define ZLIBNG_VER_MAJOR 2
-#define ZLIBNG_VER_MINOR 1
-#define ZLIBNG_VER_REVISION 0
-#define ZLIBNG_VER_STATUS 0         /* 0=devel, 1-E=beta, F=Release */
-#define ZLIBNG_VER_MODIFIED 0       /* non-zero if modified externally from zlib-ng */
+#define ZLIBNG_VER_MINOR 0
+#define ZLIBNG_VER_REVISION 6
+#define ZLIBNG_VER_SUBREVISION 0
 
 /*
     The 'zlib' compression library provides in-memory compression and

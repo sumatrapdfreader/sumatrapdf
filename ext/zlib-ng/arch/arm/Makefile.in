@@ -21,7 +21,7 @@ all: \
 	armfeature.o armfeature.lo \
 	chunkset_neon.o chunkset_neon.lo \
 	crc32_acle.o crc32_acle.lo \
-	slide_hash_neon.o slide_hash_neon.lo \
+	slide_neon.o slide_neon.lo \
 	insert_string_acle.o insert_string_acle.lo
 
 adler32_neon.o:
@@ -48,11 +48,11 @@ crc32_acle.o:
 crc32_acle.lo:
 	$(CC) $(SFLAGS) $(ACLEFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/crc32_acle.c
 
-slide_hash_neon.o:
-	$(CC) $(CFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_neon.c
+slide_neon.o:
+	$(CC) $(CFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_neon.c
 
-slide_hash_neon.lo:
-	$(CC) $(SFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_hash_neon.c
+slide_neon.lo:
+	$(CC) $(SFLAGS) $(NEONFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/slide_neon.c
 
 insert_string_acle.o:
 	$(CC) $(CFLAGS) $(ACLEFLAG) $(NOLTOFLAG) $(INCLUDES) -c -o $@ $(SRCDIR)/insert_string_acle.c

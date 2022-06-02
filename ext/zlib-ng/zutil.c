@@ -21,7 +21,7 @@ z_const char * const PREFIX(z_errmsg)[10] = {
 };
 
 const char zlibng_string[] =
-    " zlib-ng 2.1.0.devel forked from zlib";
+    " zlib-ng 2.0.6 forked from zlib";
 
 #ifdef ZLIB_COMPAT
 const char * Z_EXPORT zlibVersion(void) {

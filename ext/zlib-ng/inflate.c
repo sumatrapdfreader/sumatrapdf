@@ -657,8 +657,8 @@ int32_t Z_EXPORT PREFIX(inflate)(PREFIX3(stream) *strm, int32_t flush) {
             /* copy stored block from input to output */
             copy = state->length;
             if (copy) {
-                copy = MIN(copy, have);
-                copy = MIN(copy, left);
+                if (copy > have) copy = have;
+                if (copy > left) copy = left;
                 if (copy == 0) goto inf_leave;
                 memcpy(put, next, copy);
                 have -= copy;
@@ -928,8 +928,10 @@ int32_t Z_EXPORT PREFIX(inflate)(PREFIX3(stream) *strm, int32_t flush) {
 #ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
                     Trace((stderr, "inflate.c too far\n"));
                     copy -= state->whave;
-                    copy = MIN(copy, state->length);
-                    copy = MIN(copy, left);
+                    if (copy > state->length)
+                        copy = state->length;
+                    if (copy > left)
+                        copy = left;
                     left -= copy;
                     state->length -= copy;
                     do {
@@ -946,12 +948,16 @@ int32_t Z_EXPORT PREFIX(inflate)(PREFIX3(stream) *strm, int32_t flush) {
                 } else {
                     from = state->window + (state->wnext - copy);
                 }
-                copy = MIN(copy, state->length);
-                copy = MIN(copy, left);
+                if (copy > state->length)
+                    copy = state->length;
+                if (copy > left)
+                    copy = left;
 
                 put = functable.chunkcopy_safe(put, from, copy, put + left);
             } else {                             /* copy from output */
-                copy = MIN(state->length, left);
+                copy = state->length;
+                if (copy > left)
+                    copy = left;
 
                 put = functable.chunkmemset_safe(put, state->offset, copy, left);
             }
@@ -1206,8 +1212,8 @@ int32_t Z_EXPORT PREFIX(inflateSync)(PREFIX3(stream) *strm) {
     in = strm->total_in;
     out = strm->total_out;
     PREFIX(inflateReset)(strm);
-    strm->total_in = in;
-    strm->total_out = out;
+    strm->total_in = (z_size_t)in;
+    strm->total_out = (z_size_t)out;
     state->flags = flags;
     state->mode = TYPE;
     return Z_OK;

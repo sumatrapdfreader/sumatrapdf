@@ -9,15 +9,13 @@
 #include "deflate.h"
 
 struct functable_s {
-    uint32_t (* update_hash)        (deflate_state *const s, uint32_t h, uint32_t val);
-    void     (* insert_string)      (deflate_state *const s, uint32_t str, uint32_t count);
-    Pos      (* quick_insert_string)(deflate_state *const s, uint32_t str);
+    void     (* insert_string)      (deflate_state *const s, const uint32_t str, uint32_t count);
+    Pos      (* quick_insert_string)(deflate_state *const s, const uint32_t str);
     uint32_t (* adler32)            (uint32_t adler, const unsigned char *buf, size_t len);
     uint32_t (* crc32)              (uint32_t crc, const unsigned char *buf, uint64_t len);
     void     (* slide_hash)         (deflate_state *s);
     uint32_t (* compare258)         (const unsigned char *src0, const unsigned char *src1);
     uint32_t (* longest_match)      (deflate_state *const s, Pos cur_match);
-    uint32_t (* longest_match_slow) (deflate_state *const s, Pos cur_match);
     uint32_t (* chunksize)          (void);
     uint8_t* (* chunkcopy)          (uint8_t *out, uint8_t const *from, unsigned len);
     uint8_t* (* chunkcopy_safe)     (uint8_t *out, uint8_t const *from, unsigned len, uint8_t *safe);

@@ -147,7 +147,7 @@ uint32_t adler32_power8(uint32_t adler, const unsigned char* buf, size_t len) {
     s1 = vs1[0] % BASE;
     s2 = vs2[0] % BASE;
 
-    /* Process tail (len < 16).  */
+    /* Process tail (len < 16).and return  */
     return adler32_len_16(s1, buf, len, s2);
 }
 

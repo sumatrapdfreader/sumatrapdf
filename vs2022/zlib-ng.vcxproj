@@ -459,8 +459,8 @@
     <ClCompile Include="..\ext\zlib-ng\arch\x86\compare258_sse.c" />
     <ClCompile Include="..\ext\zlib-ng\arch\x86\crc_folding.c" />
     <ClCompile Include="..\ext\zlib-ng\arch\x86\insert_string_sse.c" />
-    <ClCompile Include="..\ext\zlib-ng\arch\x86\slide_hash_avx.c" />
-    <ClCompile Include="..\ext\zlib-ng\arch\x86\slide_hash_sse.c" />
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\slide_avx.c" />
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\slide_sse.c" />
     <ClCompile Include="..\ext\zlib-ng\arch\x86\x86.c" />
     <ClCompile Include="..\ext\zlib-ng\chunkset.c" />
     <ClCompile Include="..\ext\zlib-ng\compare258.c" />
@@ -469,12 +469,9 @@
     <ClCompile Include="..\ext\zlib-ng\crc32_comb.c" />
     <ClCompile Include="..\ext\zlib-ng\deflate.c" />
     <ClCompile Include="..\ext\zlib-ng\deflate_fast.c" />
-    <ClCompile Include="..\ext\zlib-ng\deflate_huff.c" />
     <ClCompile Include="..\ext\zlib-ng\deflate_medium.c" />
     <ClCompile Include="..\ext\zlib-ng\deflate_quick.c" />
-    <ClCompile Include="..\ext\zlib-ng\deflate_rle.c" />
     <ClCompile Include="..\ext\zlib-ng\deflate_slow.c" />
-    <ClCompile Include="..\ext\zlib-ng\deflate_stored.c" />
     <ClCompile Include="..\ext\zlib-ng\functable.c" />
     <ClCompile Include="..\ext\zlib-ng\gzlib.c" />
     <ClCompile Include="..\ext\zlib-ng\gzread.c" />
@@ -484,8 +481,6 @@
     <ClCompile Include="..\ext\zlib-ng\inflate.c" />
     <ClCompile Include="..\ext\zlib-ng\inftrees.c" />
     <ClCompile Include="..\ext\zlib-ng\insert_string.c" />
-    <ClCompile Include="..\ext\zlib-ng\insert_string_roll.c" />
-    <ClCompile Include="..\ext\zlib-ng\slide_hash.c" />
     <ClCompile Include="..\ext\zlib-ng\trees.c" />
     <ClCompile Include="..\ext\zlib-ng\uncompr.c" />
     <ClCompile Include="..\ext\zlib-ng\zutil.c" />

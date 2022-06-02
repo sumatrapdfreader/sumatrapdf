@@ -62,9 +62,9 @@ zlib            1.2.12
   https://www.zlib.net/
   https://git.ghostscript.com/?p=thirdparty-zlib.git;a=commit;h=801678bd53548d3ffa269443fa0e98c538ce11f5)
 
-zlib-ng         trunk      2021-07-23
+zlib-ng         2.0.6      2021-12-24
   https://github.com/zlib-ng/zlib-ng
-  https://github.com/zlib-ng/zlib-ng/commit/12a975ac9f19b3d2e362d0d783ea20400335d1c6
+  https://github.com/zlib-ng/zlib-ng/tree/2.0.x
 
 extract         trunk
   https://github.com/ArtifexSoftware/extract

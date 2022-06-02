@@ -10,6 +10,14 @@
 #  define _WIN32
 #endif
 
+#ifdef __STDC_VERSION__
+#  if __STDC_VERSION__ >= 199901L
+#    ifndef STDC99
+#      define STDC99
+#    endif
+#  endif
+#endif
+
 /* Clang macro for detecting declspec support
  * https://clang.llvm.org/docs/LanguageExtensions.html#has-declspec-attribute
  */

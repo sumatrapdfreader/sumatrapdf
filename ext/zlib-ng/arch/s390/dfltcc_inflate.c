@@ -13,10 +13,10 @@
         $ make
 */
 
-#include "../../zbuild.h"
-#include "../../zutil.h"
-#include "../../inftrees.h"
-#include "../../inflate.h"
+#include "zbuild.h"
+#include "zutil.h"
+#include "inftrees.h"
+#include "inflate.h"
 #include "dfltcc_inflate.h"
 #include "dfltcc_detail.h"
 
