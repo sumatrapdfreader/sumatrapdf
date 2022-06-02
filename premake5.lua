@@ -131,14 +131,24 @@ function zlib_ng_defines()
   }
 end
 
+function zlib_defines()
+  includedirs {
+    "ext/zlib-ng",
+  }
+end
+
+-- links_zlib and uses_zlib allows easy switching between zlib and zlib-ng
+
 -- add to a project that links zlib
 function links_zlib()
-  links { "zlib-ng" }
+  -- links { "zlib-ng" }
+  links { "zlib" }
 end
 
 -- add to a project that needs to see zlib headers
 function uses_zlib()
-  zlib_ng_defines()
+  --zlib_ng_defines()
+  zlib_defines()
 end
 
 workspace "SumatraPDF"

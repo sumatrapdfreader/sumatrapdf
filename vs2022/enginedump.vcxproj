@@ -475,8 +475,8 @@
     <ClCompile Include="..\src\mui\TextRender.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="zlib-ng.vcxproj">
-      <Project>{584D90B6-C42C-0F52-CD44-9A2839A375B3}</Project>
+    <ProjectReference Include="zlib.vcxproj">
+      <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>
     </ProjectReference>
     <ProjectReference Include="engines.vcxproj">
       <Project>{CE5B946A-3A3B-1306-4353-9EDCAFB17967}</Project>
