@@ -546,6 +546,15 @@ int SyncTex::RebuildIndexIfNeeded() {
             fsize = file::GetSize(pathSyncGz);
             logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
             synctexExists = true;
+
+            // to see if we can read when gzopen in synctex_scanner_new_with_output_file cannot
+            ByteSlice d = file::ReadFile(pathSyncGz);
+            if (d.empty()) {
+                logf("SyncTex::RebuildIndexIfNeeded: file::ReadFile() '%s' failed\n", pathSyncGz);
+            } else {
+                logf("SyncTex::RebuildIndexIfNeeded: file::ReadFile() did read '%s'\n", pathSyncGz);
+                d.Free();
+            }
         }
         if (!synctexExists) {
             logf("SyncTex::RebuildIndexIfNeeded: files %s and %s don't exist\n", pathSync, pathSyncGz);
