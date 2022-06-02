@@ -1950,8 +1950,8 @@ static char* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit
             break;
     }
 
-    AutoFreeStr xPos(str::FormatFloatWithThousandSep((double)pt.x * (double)factor));
-    AutoFreeStr yPos(str::FormatFloatWithThousandSep((double)pt.y * (double)factor));
+    AutoFreeStr xPos = str::FormatFloatWithThousandSep((double)pt.x * (double)factor);
+    AutoFreeStr yPos = str::FormatFloatWithThousandSep((double)pt.y * (double)factor);
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
         if (str::IsDigit(xPos[str::Len(xPos) - 2])) {

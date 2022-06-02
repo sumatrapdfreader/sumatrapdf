@@ -2307,20 +2307,24 @@ char* FormatFloatWithThousandSep(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
     AutoFreeStr tmp = FormatNumWithThousandSep(num / 100, locale);
-    WCHAR decimalW[4];
+    WCHAR decimalW[4] = {0};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
         decimalW[1] = 0;
     }
-    char* decimal = ToUtf8Temp(decimalW);
+    char decimal[4];
+    int i = 0;
+    for (WCHAR c : decimalW) {
+        decimal[i++] = (char)c;
+    }
 
-    // always add between one and two decimals after the point
-    AutoFreeStr buf = str::Format("%s%s%02d", tmp.Get(), decimal, (int)(num % 100));
+    // add between one and two decimals after the point
+    char* buf = fmt::FormatTemp("%s%s%02d", tmp.Get(), decimal, num % 100);
     if (str::EndsWith(buf, "0")) {
         buf[str::Len(buf) - 1] = '\0';
     }
 
-    return buf.StealData();
+    return str::Dup(buf);
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

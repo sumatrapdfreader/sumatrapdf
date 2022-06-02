@@ -233,8 +233,8 @@ static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
         height += 0.01;
     }
 
-    AutoFreeStr strWidth(str::FormatFloatWithThousandSep(width));
-    AutoFreeStr strHeight(str::FormatFloatWithThousandSep(height));
+    AutoFreeStr strWidth = str::FormatFloatWithThousandSep(width);
+    AutoFreeStr strHeight = str::FormatFloatWithThousandSep(height);
 
     return str::Format("%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
