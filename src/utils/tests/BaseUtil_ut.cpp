@@ -89,7 +89,6 @@ static void PoolAllocatorStringsTest(PoolAllocator& a, int nRounds) {
     }
 
     int nTotal = nStrings * nRounds;
-    int nString = 0;
     for (int i = 0; i < nTotal; i++) {
         const char* exp = strings[i % nStrings];
 

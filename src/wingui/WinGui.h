@@ -53,7 +53,7 @@ struct Wnd : public ILayout {
     Wnd();
     Wnd(HWND hwnd);
     virtual ~Wnd();
-    virtual void Destroy();
+    void Destroy();
 
     HWND CreateCustom(const CreateCustomArgs&);
     HWND CreateControl(const CreateControlArgs&);

@@ -170,10 +170,6 @@ void Free(const u8* s) {
     free((void*)s);
 }
 
-void Free(ByteSlice d) {
-    free((void*)d.data());
-}
-
 void Free(const WCHAR* s) {
     free((void*)s);
 }

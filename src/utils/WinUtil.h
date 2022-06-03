@@ -144,7 +144,7 @@ int GetSizeOfDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
 HFONT GetDefaultGuiFontOfSize(int size);
 
-IStream* CreateStreamFromData(ByteSlice);
+IStream* CreateStreamFromData(const ByteSlice&);
 ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt);
 ByteSlice GetStreamOrFileData(IStream* stream, const char* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);

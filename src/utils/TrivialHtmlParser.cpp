@@ -255,7 +255,7 @@ size_t HtmlParser::TotalAttrCount() const {
 
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
-HtmlElement* HtmlParser::ParseInPlace(ByteSlice d, uint codepage) {
+HtmlElement* HtmlParser::ParseInPlace(const ByteSlice& d, uint codepage) {
     if (this->html) {
         Reset();
     }

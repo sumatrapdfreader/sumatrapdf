@@ -190,14 +190,14 @@ Constraints Constraints::Inset(int width, int height) const {
     int deflatedMinWidth = GuardInf(minw, std::max(0, minw - width));
     int minh = min.dy;
     int deflatedMinHeight = GuardInf(minh, std::max(0, minh - height));
-    Size min{deflatedMinWidth, deflatedMinHeight};
+    Size min2{deflatedMinWidth, deflatedMinHeight};
     int maxw = max.dx;
     int maxh = max.dy;
-    Size max{
+    Size max2{
         std::max(deflatedMinWidth, GuardInf(maxw, maxw - width)),
         std::max(deflatedMinHeight, GuardInf(maxh, maxh - height)),
     };
-    return Constraints{min, max};
+    return Constraints{min2, max2};
 }
 
 bool Constraints::IsBounded() const {

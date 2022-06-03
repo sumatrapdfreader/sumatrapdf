@@ -1425,8 +1425,7 @@ void DoubleBuffer::Flush(HDC hdc) const {
     }
 }
 
-DeferWinPosHelper::DeferWinPosHelper() {
-    hdwp = ::BeginDeferWindowPos(32);
+DeferWinPosHelper::DeferWinPosHelper() : hdwp(::BeginDeferWindowPos(32)) {
 }
 
 DeferWinPosHelper::~DeferWinPosHelper() {
@@ -1555,7 +1554,7 @@ void SetMenuFontSize(int fontSize) {
     // CrashIf(true);
 }
 
-IStream* CreateStreamFromData(ByteSlice d) {
+IStream* CreateStreamFromData(const ByteSlice& d) {
     if (d.empty()) {
         return nullptr;
     }
@@ -1918,7 +1917,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     // color order in DIB is blue-green-red-alpha
     byte rt, gt, bt;
     UnpackColor(textColor, rt, gt, bt);
-    int base[4] = {bt, gt, rt, 0};
+    const int base[4] = {bt, gt, rt, 0};
     byte rb, gb, bb;
     UnpackColor(bgColor, rb, gb, bb);
     int diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};

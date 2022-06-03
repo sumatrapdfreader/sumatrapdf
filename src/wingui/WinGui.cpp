@@ -183,11 +183,7 @@ bool Wnd::IsVisible() const {
 
 void Wnd::Destroy() {
     HwndDestroyWindowSafe(&hwnd);
-    /*
-    if (prevWindowProc) {
-        UnSubclass();
-    }
-    */
+    UnSubclass();
     Cleanup();
 }
 
@@ -955,7 +951,6 @@ void Wnd::Subclass() {
 }
 
 void Wnd::UnSubclass() {
-    CrashIf(!subclassId);
     if (!subclassId) {
         return;
     }
