@@ -73,8 +73,9 @@ func runCppCheck(all bool) {
 	//winSdkIncludeDir := `C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um`
 	// "-I", winSdkIncludeDir
 	// "-D__RPCNDR_H_VERSION__=440"
+	// STDMETHODIMP_(type)=type
 
-	args := []string{"--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-DPRE_RELEASE_VER=3.4", "-q", "-v"}
+	args := []string{"--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-DPRE_RELEASE_VER=3.4", "-q", "-v"}
 	if all {
 		args = append(args, "--enable=style")
 		args = append(args, "--suppress=constParameter")

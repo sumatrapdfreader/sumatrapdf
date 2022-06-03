@@ -1097,7 +1097,7 @@ static bool AutoCloseOnOpen(HtmlTag curr, HtmlTag prev) {
 
 void HtmlFormatter::AutoCloseTags(size_t count) {
     keepTagNesting = true; // prevent recursion
-    HtmlToken tok;
+    HtmlToken tok{};
     tok.type = HtmlToken::EndTag;
     tok.sLen = 0;
     // let HandleHtmlTag clean up (in reverse order)

@@ -2713,7 +2713,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         ok = engine->SaveFileAs(realDstFileName);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
-        WCHAR* msgBuf;
+        WCHAR* msgBuf = nullptr;
         ok = file::Copy(realDstFileName, srcFileName, false);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
@@ -2725,7 +2725,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         } else if (FormatMessage(
                        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                        nullptr, GetLastError(), 0, (LPWSTR)&msgBuf, 0, nullptr)) {
-            errorMsg.Set(str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf));
+            errorMsg = str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf);
             LocalFree(msgBuf);
         }
     }

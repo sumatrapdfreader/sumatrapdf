@@ -28,9 +28,10 @@ struct PdfsyncFileIndex {
 };
 
 struct PdfsyncLine {
-    UINT record; // index for mapping line(s) to point(s)
-    size_t file; // index into srcfiles
-    UINT line, column;
+    UINT record = 0; // index for mapping line(s) to point(s)
+    size_t file = 0; // index into srcfiles
+    UINT line = 0;
+    UINT column = 0;
 };
 
 struct PdfsyncPoint {

@@ -299,7 +299,7 @@ WCHAR* Dialog_Find(HWND hwnd, const WCHAR* previousSearch, bool* matchCase) {
 
 /* For passing data to/from AssociateWithPdf dialog */
 struct Dialog_PdfAssociate_Data {
-    bool dontAskAgain;
+    bool dontAskAgain = false;
 };
 
 static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -505,9 +505,9 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
 }
 
 struct Dialog_CustomZoom_Data {
-    float zoomArg;
-    float zoomResult;
-    bool forChm;
+    float zoomArg = 0;
+    float zoomResult = 0;
+    bool forChm = false;
 };
 
 static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
