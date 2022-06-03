@@ -1783,7 +1783,7 @@ ScrollState DisplayModel::GetScrollState() {
     return state;
 }
 
-void DisplayModel::SetScrollState(const ScrollState state) {
+void DisplayModel::SetScrollState(const ScrollState& state) {
     GoToPage(state.page, 0);
     // Bail out, if the page wasn't scrolled
     if (state.x < 0 && state.y < 0) {

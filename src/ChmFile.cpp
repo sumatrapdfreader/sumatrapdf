@@ -92,7 +92,7 @@ WCHAR* ChmFile::ToWstr(const char* text) const {
     return strconv::StrToWstr(text, codepage);
 }
 
-static char* GetCharZ(ByteSlice d, size_t off) {
+static char* GetCharZ(const ByteSlice& d, size_t off) {
     u8* data = d.data();
     size_t len = d.size();
     if (off >= len) {

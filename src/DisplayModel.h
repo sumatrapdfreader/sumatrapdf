@@ -183,7 +183,7 @@ struct DisplayModel : DocController {
     bool ShowResultRectToScreen(TextSel* res);
 
     ScrollState GetScrollState();
-    void SetScrollState(const ScrollState state);
+    void SetScrollState(const ScrollState& state);
 
     void CopyNavHistory(DisplayModel& orig);
 

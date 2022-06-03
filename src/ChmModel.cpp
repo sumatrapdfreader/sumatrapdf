@@ -684,11 +684,9 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     }
 };
 
-// Create a thumbnail of chm document by loading it again and rendering
-// its first page to a hwnd specially created for it.
-void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
+static void CreateChmThumbnail(const char* path, const Size& size, const onBitmapRenderedCb& saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked
-    ChmFile* doc = ChmFile::CreateFromFile(fileName);
+    ChmFile* doc = ChmFile::CreateFromFile(path);
     if (!doc) {
         return;
     }
@@ -715,6 +713,12 @@ void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnai
         return;
     }
     thumbnailTask->CreateThumbnail(hw);
+}
+
+// Create a thumbnail of chm document by loading it again and rendering
+// its first page to a hwnd specially created for it.
+void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
+    CreateChmThumbnail(fileName, size, saveThumbnail);
 }
 
 bool ChmModel::IsSupportedFileType(Kind kind) {
