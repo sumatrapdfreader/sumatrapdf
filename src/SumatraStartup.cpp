@@ -1078,18 +1078,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         }
     }
 
-#ifdef DEBUG
-    if (flags.toEpubPath) {
-        RedirectIOToExistingConsole();
-        auto res = MobiToEpub(flags.toEpubPath);
-        DeleteVecMembers(res);
-        if (flags.exitWhenDone) {
-            fastExit = !gIsDebugBuild;
-            goto Exit;
-        }
-    }
-#endif
-
     if (flags.deleteFile) {
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
@@ -1148,14 +1136,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     LoadSettings();
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
-
-#if defined(DEBUG)
-    if (false) {
-        // LoadFile();
-        LoadRar();
-        return 0;
-    }
-#endif
 
 #if defined(DEBUG)
     void TestBrowser(); // scratch.cpp

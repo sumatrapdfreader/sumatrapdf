@@ -257,14 +257,26 @@ MultiFormatArchive* OpenRarArchive(IStream* stream) {
     return open(archive, stream);
 }
 
+struct Data {
+    u8* d = nullptr;
+    size_t sz = 0;
+    u8* curr = nullptr;
+};
+
+static size_t DataLeft(const Data& d) {
+    size_t consumed = (d.curr - d.d);
+    CrashIf(consumed > d.sz);
+    return d.sz - consumed;
+}
+
 // return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {
     if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
     }
-    ByteSlice* buf = (ByteSlice*)userData;
+    Data* buf = (Data*)userData;
     size_t bytesGot = (size_t)bytesProcessed;
-    if (bytesGot > buf->Left()) {
+    if (bytesGot > DataLeft(*buf)) {
         return -1;
     }
     memcpy(buf->curr, (char*)rarBuffer, bytesGot);
@@ -299,7 +311,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     auto rarPath = ToWstrTemp(rarFilePath_);
 
-    ByteSlice uncompressedBuf;
+    Data uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = rarPath;
@@ -333,9 +345,11 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
         ok = false;
         goto Exit;
     }
-    uncompressedBuf.Set(data, size);
+
+    uncompressedBuf.d = (u8*)data;
+    uncompressedBuf.sz = size;
     res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-    ok = (res == 0) && (uncompressedBuf.Left() == 0);
+    ok = (res == 0) && (DataLeft(uncompressedBuf) == 0);
 
 Exit:
     RARCloseArchive(hArc);
@@ -409,4 +423,16 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
 
     rarFilePath_ = str::Dup(&allocator_, rarPath);
     return true;
+}
+
+ByteSlice Ungzip(const ByteSlice& d) {
+    size_t len = d.size();
+    size_t lenUncr = len + len / 2;
+    u8* res = AllocArray<u8>(lenUncr);
+    if (!res) {
+        return {};
+    }
+
+    free((void*)res);
+    return {};
 }

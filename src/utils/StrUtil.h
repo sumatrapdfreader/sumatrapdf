@@ -13,44 +13,36 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 struct ByteSlice {
     u8* d = nullptr;
     size_t sz = 0;
-    u8* curr = nullptr;
 
     ByteSlice() = default;
     ~ByteSlice() = default;
     ByteSlice(const char* str) {
         d = (u8*)str;
-        curr = d;
         sz = strlen(str);
     }
     ByteSlice(char* str) {
         d = (u8*)str;
-        curr = d;
         sz = strlen(str);
     }
     ByteSlice(const u8* data, size_t size) {
         d = (u8*)data;
-        curr = d;
         sz = size;
     }
     ByteSlice(const ByteSlice& data) {
         d = data.data();
-        curr = d;
         sz = data.size();
     }
     ByteSlice& operator=(const ByteSlice& other) {
         d = other.d;
-        curr = d;
         sz = other.sz;
         return *this;
     }
     void Set(u8* data, size_t size) {
         d = data;
-        curr = d;
         sz = size;
     }
     void Set(char* data, size_t size) {
         d = (u8*)data;
-        curr = d;
         sz = size;
     }
     u8* data() const {
@@ -68,9 +60,6 @@ struct ByteSlice {
     bool empty() const {
         return !d;
     }
-    size_t Left() {
-        return sz - (curr - d);
-    }
     ByteSlice Clone() const {
         if (empty()) {
             return {};
@@ -82,7 +71,6 @@ struct ByteSlice {
         free(d);
         d = nullptr;
         sz = 0;
-        curr = nullptr;
     }
     operator const char*() {
         return (const char*)d;

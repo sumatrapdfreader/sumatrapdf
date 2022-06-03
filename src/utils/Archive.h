@@ -72,3 +72,5 @@ MultiFormatArchive* OpenZipArchive(IStream* stream, bool deflatedOnly);
 MultiFormatArchive* Open7zArchive(IStream* stream);
 MultiFormatArchive* OpenTarArchive(IStream* stream);
 MultiFormatArchive* OpenRarArchive(IStream* stream);
+
+ByteSlice Ungzip(const ByteSlice&);

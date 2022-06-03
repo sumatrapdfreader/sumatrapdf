@@ -79,7 +79,6 @@
     V(FwdSearchColor, "fwdsearch-color")         \
     V(FwdSearchPermanent, "fwdsearch-permanent") \
     V(MangaMode, "manga-mode")                   \
-    V(ToEpub, "to-epub")                         \
     V(Search, "search")                          \
     V(AllUsers, "all-users")                     \
     V(AllUsers2, "allusers")                     \
@@ -536,10 +535,6 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.installDir = str::Dup(param);
             continue;
         }
-        if (arg == Arg::ToEpub) {
-            i.toEpubPath = str::Dup(param);
-            continue;
-        }
         if (arg == Arg::DDE) {
             i.dde = str::Dup(param);
             continue;
@@ -614,7 +609,4 @@ Flags::~Flags() {
     str::Free(deleteFile);
     str::Free(search);
     str::Free(dde);
-
-    // TODO: temporary
-    str::Free(toEpubPath);
 }

@@ -84,8 +84,6 @@ struct Flags {
     char* updateSelfTo = nullptr;
     char* deleteFile = nullptr;
 
-    char* toEpubPath = nullptr;
-
     // for some commands, will sleep for sleepMs milliseconds
     // before proceeding
     int sleepMs = 0;
