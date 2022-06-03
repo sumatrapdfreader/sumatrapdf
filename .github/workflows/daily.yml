@@ -1,0 +1,24 @@
+name: Build
+on:
+  schedule:
+    -cron: '0 1 * * *'
+jobs:
+  build:
+    name: Build
+    runs-on: windows-2022
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
+      - name: Check out source code
+        uses: actions/checkout@v3
+        with:
+          # needed to calc build number via git log --oneline
+          fetch-depth: 0
+
+      - name: Build
+        env:
+          CERT_PWD: ${{ secrets.CERT_PWD }}
+        run: .\doit.bat -ci-daily

@@ -11,6 +11,6 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/net v0.0.0-20220526153639-5463443f8c37 // indirect
-	gopkg.in/ini.v1 v1.66.4 // indirect
+	golang.org/x/net v0.0.0-20220531201128-c960675eff93 // indirect
+	gopkg.in/ini.v1 v1.66.6 // indirect
 )

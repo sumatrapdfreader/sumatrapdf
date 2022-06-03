@@ -81,7 +81,7 @@ func copyBuiltManifest(dstDir string, prefix string) {
 	must(copyFile(dstPath, srcPath))
 }
 
-func build(dir, config, platform string) {
+func build(dir, config, platform string, sign bool) {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
@@ -90,7 +90,9 @@ func build(dir, config, platform string) {
 	runTestUtilMust(dir)
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
-	signFilesMust(dir)
+	if sign {
+		signFilesMust(dir)
+	}
 	createPdbZipMust(dir)
 	createPdbLzsaMust(dir)
 }
@@ -387,6 +389,20 @@ func signFilesOptional(dir string) {
 	signFilesMust(dir)
 }
 
+func buildDaily() {
+	detectSigntoolPath() // early exit if missing
+
+	ver := getVerForBuildType(buildTypePreRel)
+	s := fmt.Sprintf("buidling pre-release version %s", ver)
+	defer makePrintDuration(s)()
+
+	clean()
+	setBuildConfigPreRelease()
+	defer revertBuildConfig()
+	build(rel32Dir, "Release", "Win32", false)
+	build(rel64Dir, "Release", "x64", false)
+}
+
 func buildPreRelease() {
 	detectSigntoolPath() // early exit if missing
 
@@ -398,19 +414,14 @@ func buildPreRelease() {
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
-	build(rel32Dir, "Release", "Win32")
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", ver)
-	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
-
-	build(rel64Dir, "Release", "x64")
-	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s-64.exe", ver)
+	build(rel64Dir, "Release", "x64", true)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-prerel")
 	prefix := "SumatraPDF-prerel"
-	copyBuiltFiles(dstDir, rel32Dir, prefix)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 	copyBuiltManifest(dstDir, prefix)
 }
@@ -430,11 +441,11 @@ func buildRelease() {
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
-	build(rel32Dir, "Release", "Win32")
+	build(rel32Dir, "Release", "Win32", true)
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-32.exe", ver)
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 
-	build(rel64Dir, "Release", "x64")
+	build(rel64Dir, "Release", "x64", true)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 

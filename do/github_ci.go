@@ -29,6 +29,7 @@ func triggerBuildWebHook(typ string) {
 const (
 	githubEventTypeCodeQL = "codeql"
 	githubEventPush       = "push"
+	githubEventCron       = "schedule"
 )
 
 //  "action": "build-pre-rel"

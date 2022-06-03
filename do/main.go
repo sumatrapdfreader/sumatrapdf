@@ -186,6 +186,7 @@ func main() {
 		flgRegenPremake    bool
 		flgUpload          bool
 		flgCIBuild         bool
+		flgCIDailyBuild    bool
 		flgUploadCiBuild   bool
 		flgBuildPreRelease bool
 		flgBuildRelease    bool
@@ -204,7 +205,6 @@ func main() {
 		flgSmoke           bool
 		flgFileUpload      string
 		flgFilesList       bool
-		flgBuildDocs       bool
 	)
 
 	{
@@ -212,6 +212,7 @@ func main() {
 		flag.BoolVar(&flgFilesList, "files-list", false, "list uploaded files in s3 / spaces")
 		flag.BoolVar(&flgRegenPremake, "premake", false, "regenerate premake*.lua files")
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
+		flag.BoolVar(&flgCIDailyBuild, "ci-daily", false, "run CI daily steps")
 		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3 and do spaces")
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
@@ -236,7 +237,6 @@ func main() {
 		flag.BoolVar(&flgDrMem, "drmem", false, "run drmemory of rel 64")
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
-		flag.BoolVar(&flgBuildDocs, "build-docs", false, "build epub docs")
 		flag.Parse()
 	}
 
@@ -293,22 +293,15 @@ func main() {
 		opts.upload = true
 	}
 
-	if flgBuildPreRelease || flgBuildRelease {
+	if flgBuildRelease {
 		// only when building locally, not on GitHub CI
 		opts.verifyTranslationUpToDate = true
 		opts.doCleanCheck = true
-	}
-	//opts.doCleanCheck = false // for ad-hoc testing
-	if flgBuildRelease {
 		opts.releaseBuild = true
 	}
+	//opts.doCleanCheck = false // for ad-hoc testing
 
 	ensureBuildOptionsPreRequesites(opts)
-
-	if flgBuildDocs {
-		buildEpubDocs()
-		return
-	}
 
 	if flgDiff {
 		u.WinmergeDiffPreview()
@@ -384,15 +377,15 @@ func main() {
 		return
 	}
 
+	if flgCIDailyBuild {
+		buildDaily()
+		return
+	}
+
 	if flgCIBuild {
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
-			currBranch := getCurrentBranchMust()
-			if currBranch == "website-cf" {
-				logf(ctx(), "skipping build because on branch '%s'\n", currBranch)
-				return
-			}
 			buildPreRelease()
 		case githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
