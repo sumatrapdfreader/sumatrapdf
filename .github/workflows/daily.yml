@@ -1,7 +1,7 @@
 name: Daily build
 on:
   schedule:
-    -cron: "0 1 * * *"
+    - cron: "0 1 * * *"
 jobs:
   build:
     name: Build
