@@ -917,6 +917,9 @@ void TabsSelect(MainWindow* win, int tabIndex) {
 
 // Selects the next (or previous) tab.
 void TabsOnCtrlTab(MainWindow* win, bool reverse) {
+    if (!win) {
+        return;
+    }
     int count = (int)win->tabs.size();
     if (count < 2) {
         return;

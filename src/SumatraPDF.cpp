@@ -4655,6 +4655,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CloseCurrentTab(win);
             break;
 
+        case CmdNextTab:
+            TabsOnCtrlTab(win, false);
+            break;
+
+        case CmdPrevTab:
+            TabsOnCtrlTab(win, true);
+            break;
+
         case CmdExit:
             OnMenuExit();
             break;
