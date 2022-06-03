@@ -12,13 +12,13 @@
 
 static void HtmlParser00() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<a></A>"));
+    HtmlElement* root = p.Parse(ToByteSlice("<a></A>"));
     utassert(p.ElementsCount() == 1);
     utassert(root);
     utassert(Tag_A == root->tag && !root->name);
     utassert(root->NameIs("a"));
 
-    root = p.Parse(str::ToSpan("<b></B>"));
+    root = p.Parse(ToByteSlice("<b></B>"));
     utassert(p.ElementsCount() == 1);
     utassert(root);
     utassert(Tag_B == root->tag && !root->name);
@@ -27,7 +27,7 @@ static void HtmlParser00() {
 
 static void HtmlParser01() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<A><bAh></a>"));
+    HtmlElement* root = p.Parse(ToByteSlice("<A><bAh></a>"));
     utassert(p.ElementsCount() == 2);
     utassert(Tag_A == root->tag && !root->name);
     utassert(nullptr == root->up);
@@ -44,8 +44,8 @@ static void HtmlParser01() {
 static void HtmlParser05() {
     HtmlParser p;
     HtmlElement* root =
-        p.Parse(str::ToSpan("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo "
-                            "val=bar></object><ul><li></ul></object></body></Html>"));
+        p.Parse(ToByteSlice("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo "
+                                 "val=bar></object><ul><li></ul></object></body></Html>"));
     utassert(8 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("html"));
@@ -73,7 +73,7 @@ static void HtmlParser05() {
 
 static void HtmlParser04() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<el att=  va&apos;l></ el >"));
+    HtmlElement* root = p.Parse(ToByteSlice("<el att=  va&apos;l></ el >"));
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("el"));
@@ -87,7 +87,7 @@ static void HtmlParser04() {
 
 static void HtmlParser03() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<el   att  =v&quot;al/>"));
+    HtmlElement* root = p.Parse(ToByteSlice("<el   att  =v&quot;al/>"));
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("el"));
@@ -101,7 +101,7 @@ static void HtmlParser03() {
 
 static void HtmlParser02() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan(
+    HtmlElement* root = p.Parse(ToByteSlice(
         "<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>"));
     utassert(4 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
@@ -129,7 +129,7 @@ static void HtmlParser02() {
 
 static void HtmlParser06() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>"));
+    HtmlElement* root = p.Parse(ToByteSlice("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>"));
     utassert(9 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
     utassert(root->NameIs("ul"));
@@ -150,7 +150,7 @@ static void HtmlParser06() {
 
 static void HtmlParser07() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>"), CP_UTF8);
+    HtmlElement* root = p.Parse(ToByteSlice("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>"), CP_UTF8);
     utassert(1 == p.ElementsCount());
     AutoFreeWstr val(root->GetAttribute("umls"));
     utassert(str::Eq(val, L"\xE4\xF6\xFC"));
@@ -166,14 +166,14 @@ static void HtmlParser08() {
 static void HtmlParser09() {
     HtmlParser p;
     HtmlElement* root =
-        p.Parse(str::ToSpan("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />"));
+        p.Parse(ToByteSlice("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />"));
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("root"));
     AutoFreeWstr val(root->GetAttribute("attr"));
     utassert(str::Eq(val, L"<!-- comment -->"));
 
-    root = p.Parse(str::ToSpan("<!-- comment with \" and \' --><main />"));
+    root = p.Parse(ToByteSlice("<!-- comment with \" and \' --><main />"));
     utassert(1 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
     utassert(root->NameIs("main"));
@@ -181,8 +181,8 @@ static void HtmlParser09() {
 
 static void HtmlParser10() {
     HtmlParser p;
-    HtmlElement* root =
-        p.Parse(str::ToSpan("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>"));
+    HtmlElement* root = p.Parse(
+        ToByteSlice("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>"));
     utassert(2 == p.ElementsCount());
     utassert(2 == p.TotalAttrCount());
     utassert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));
@@ -201,12 +201,12 @@ static void HtmlParser10() {
 
 static void HtmlParser11() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<root/><!-- comment -->"));
+    HtmlElement* root = p.Parse(ToByteSlice("<root/><!-- comment -->"));
     utassert(1 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
     utassert(root && root->NameIs("root"));
 
-    root = p.Parse(str::ToSpan("<root><!---></root>"));
+    root = p.Parse(ToByteSlice("<root><!---></root>"));
     utassert(!root);
 }
 

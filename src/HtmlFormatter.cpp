@@ -87,7 +87,7 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
     return di;
 }
 
-DrawInstr DrawInstr::Image(ByteSlice img, RectF bbox) {
+DrawInstr DrawInstr::Image(const ByteSlice& img, RectF bbox) {
     DrawInstr di(DrawInstrType::Image);
     di.str.s = (const char*)img.data();
     di.str.len = img.size();
@@ -589,7 +589,7 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
     return imageY != -1;
 }
 
-bool HtmlFormatter::EmitImage(ByteSlice* img) {
+bool HtmlFormatter::EmitImage(const ByteSlice* img) {
     CrashIf(img->empty());
     Size imgSize = BitmapSizeFromData(*img);
     if (imgSize.IsEmpty()) {

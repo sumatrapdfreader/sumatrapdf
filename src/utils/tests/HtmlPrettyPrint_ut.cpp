@@ -9,28 +9,28 @@
 
 void HtmlPrettyPrintTest() {
     {
-        ByteSlice d = PrettyPrintHtml(str::ToSpan("<html><body><p>Content</p></body></html>"));
+        ByteSlice d = PrettyPrintHtml(ToByteSlice("<html><body><p>Content</p></body></html>"));
         char* data = (char*)d.data();
         utassert(str::Eq(data, "<html>\n\t<body>\n\t\t<p>Content</p>\n\t</body>\n</html>\n"));
         str::Free(data);
     }
 
     {
-        ByteSlice d = PrettyPrintHtml(str::ToSpan("<p><b>Test</b></p>"));
+        ByteSlice d = PrettyPrintHtml(ToByteSlice("<p><b>Test</b></p>"));
         char* data = (char*)d.data();
         utassert(str::Eq(data, "<p><b>Test</b></p>\n"));
         str::Free(data);
     }
 
     {
-        ByteSlice d = PrettyPrintHtml(str::ToSpan("<p><b>Test</p>"));
+        ByteSlice d = PrettyPrintHtml(ToByteSlice("<p><b>Test</p>"));
         char* data = (char*)d.data();
         utassert(str::Eq(data, "<p><b>Test</p>\n"));
         str::Free(data);
     }
 
     {
-        ByteSlice d = PrettyPrintHtml(str::ToSpan("<html><body><p>Content</html></body>"));
+        ByteSlice d = PrettyPrintHtml(ToByteSlice("<html><body><p>Content</html></body>"));
         char* data = (char*)d.data();
         // TODO: add newline before non-matching </html> ?
         // TODO: insert missing closing tags (</p> and </body>)?
@@ -39,7 +39,7 @@ void HtmlPrettyPrintTest() {
     }
 
     {
-        ByteSlice d = PrettyPrintHtml(str::ToSpan("<p  attr=' value '><b> bold  text </b> </p>"));
+        ByteSlice d = PrettyPrintHtml(ToByteSlice("<p  attr=' value '><b> bold  text </b> </p>"));
         char* data = (char*)d.data();
         // TODO: normalize whitespace?
         utassert(str::Eq(data, "<p  attr=' value '><b> bold  text </b></p>\n"));

@@ -55,7 +55,7 @@ bool ByteReader::Unpack(void* strct, size_t size, const char* format, size_t off
     return idx == size;
 }
 
-ByteReader::ByteReader(ByteSlice data) {
+ByteReader::ByteReader(const ByteSlice& data) {
     d = (const u8*)data.data();
     len = data.size();
 }

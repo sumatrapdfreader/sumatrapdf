@@ -208,7 +208,7 @@ char* Dup(const char* s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
 
-char* Dup(const ByteSlice d) {
+char* Dup(const ByteSlice& d) {
     return Dup(nullptr, (const char*)d.data(), d.size());
 }
 
@@ -234,7 +234,7 @@ bool Eq(const char* s1, const char* s2) {
     return 0 == strcmp(s1, s2);
 }
 
-bool Eq(ByteSlice sp1, ByteSlice sp2) {
+bool Eq(const ByteSlice& sp1, const ByteSlice& sp2) {
     if (sp1.size() != sp2.size()) {
         return false;
     }
@@ -330,11 +330,6 @@ bool StartsWithI(const char* s, const char* prefix) {
     return 0 == _strnicmp(s, prefix, str::Len(prefix));
 }
 
-ByteSlice ToSpan(const char* s) {
-    size_t n = str::Len(s);
-    return {(u8*)s, n};
-}
-
 bool Contains(const char* s, const char* txt) {
     const char* p = str::Find(s, txt);
     bool contains = p != nullptr;
@@ -418,6 +413,13 @@ void ReplaceWithCopy(const char** s, const char* snew) {
     if (*s != snew) {
         str::Free(*s);
         *s = str::Dup(snew);
+    }
+}
+
+void ReplaceWithCopy(const char** s, const ByteSlice& d) {
+    if (*s != (const char*)d.data()) {
+        str::Free(*s);
+        *s = str::Dup((const char*)d.data(), d.size());
     }
 }
 
@@ -1509,7 +1511,7 @@ bool Str::Append(const u8* src, size_t size) {
     return this->Append((const char*)src, size);
 }
 
-bool Str::AppendSlice(ByteSlice d) {
+bool Str::AppendSlice(const ByteSlice& d) {
     if (d.empty()) {
         return true;
     }
@@ -2808,4 +2810,9 @@ char* Join(const StrVec& v, const char* joint) {
         tmp.Append(s);
     }
     return tmp.StealData();
+}
+
+ByteSlice ToByteSlice(const char* s) {
+    size_t n = str::Len(s);
+    return {(u8*)s, n};
 }

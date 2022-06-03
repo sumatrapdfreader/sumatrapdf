@@ -1136,8 +1136,8 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
             tocItem = NewDjVuTocItem(parent, name, linkNo);
         } else {
             // ignore generic (name-less) entries
-            auto* tocTree = BuildTocTree(nullptr, miniexp_cddr(item), idCounter);
-            delete tocTree;
+            TocItem* tmp = BuildTocTree(nullptr, miniexp_cddr(item), idCounter);
+            delete tmp;
             continue;
         }
 

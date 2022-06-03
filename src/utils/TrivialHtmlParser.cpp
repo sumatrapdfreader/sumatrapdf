@@ -306,9 +306,9 @@ HtmlElement* HtmlParser::ParseInPlace(const ByteSlice& d, uint codepage) {
     return rootElement;
 }
 
-HtmlElement* HtmlParser::Parse(ByteSlice d, uint codepage) {
+HtmlElement* HtmlParser::Parse(const ByteSlice& d, uint codepage) {
     char* s = str::Dup(d);
-    HtmlElement* root = ParseInPlace(str::ToSpan(s), codepage);
+    HtmlElement* root = ParseInPlace(ToByteSlice(s), codepage);
     freeHtml = true;
     return root;
 }

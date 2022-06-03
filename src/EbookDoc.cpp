@@ -168,7 +168,7 @@ inline char decode64(char c) {
     return -1;
 }
 
-static ByteSlice Base64Decode(ByteSlice data) {
+static ByteSlice Base64Decode(const ByteSlice& data) {
     size_t sLen = data.size();
     u8* s = data.data();
     u8* end = data.data() + sLen;

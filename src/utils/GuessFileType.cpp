@@ -192,7 +192,7 @@ static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
-static bool IsPdfFileContent(ByteSlice d) {
+static bool IsPdfFileContent(const ByteSlice& d) {
     if (d.size() < 8) {
         return false;
     }
@@ -213,7 +213,7 @@ static bool IsPdfFileContent(ByteSlice d) {
     return false;
 }
 
-static bool IsPSFileContent(ByteSlice d) {
+static bool IsPSFileContent(const ByteSlice& d) {
     char* header = (char*)d.data();
     size_t n = d.size();
     if (n < 64) {

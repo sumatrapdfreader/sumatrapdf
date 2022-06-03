@@ -1054,7 +1054,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     bool FinishLoading();
 
     ByteSlice GetImageData(int pageNo);
-    void ParseComicInfoXml(ByteSlice xmlData);
+    void ParseComicInfoXml(const ByteSlice& xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
     MultiFormatArchive* cbxFile = nullptr;
@@ -1217,7 +1217,7 @@ bool EngineCbx::FinishLoading() {
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
     for (int i = 0; i < pageCount; i++) {
-        const char* fname = pageFiles[i]->name;
+        const char* fname = files[i]->name;
         const char* baseName = path::GetBaseNameTemp(fname);
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
@@ -1265,7 +1265,7 @@ static char* GetTextContent(HtmlPullParser& parser) {
 
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
-void EngineCbx::ParseComicInfoXml(ByteSlice xmlData) {
+void EngineCbx::ParseComicInfoXml(const ByteSlice& xmlData) {
     // TODO: convert UTF-16 data and skip UTF-8 BOM
     HtmlPullParser parser(xmlData);
     HtmlToken* tok;

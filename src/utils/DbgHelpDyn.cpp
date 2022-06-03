@@ -446,7 +446,7 @@ ByteSlice GetCallstacks() {
         return {};
     }
     char* s = str::Dup(gCallstackLogs->Get());
-    return str::ToSpan(s);
+    return ToByteSlice(s);
 }
 
 void LogCallstack() {

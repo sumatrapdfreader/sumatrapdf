@@ -298,7 +298,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-static Bitmap* DecodeWithWIC(ByteSlice bmpData) {
+static Bitmap* DecodeWithWIC(const ByteSlice& bmpData) {
     auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
@@ -308,7 +308,7 @@ static Bitmap* DecodeWithWIC(ByteSlice bmpData) {
     return bmp;
 }
 
-static Bitmap* DecodeWithGdiplus(ByteSlice bmpData) {
+static Bitmap* DecodeWithGdiplus(const ByteSlice& bmpData) {
     auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {

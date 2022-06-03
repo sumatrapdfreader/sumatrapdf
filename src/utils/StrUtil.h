@@ -108,7 +108,7 @@ void FreePtr(WCHAR** s);
 
 char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
-char* Dup(ByteSlice d);
+char* Dup(const ByteSlice&);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
@@ -117,6 +117,7 @@ void ReplacePtr(const char** s, const char* snew);
 void ReplacePtr(char** s, const char* snew);
 void ReplacePtr(const WCHAR** s, const WCHAR* snew);
 void ReplaceWithCopy(const char** s, const char* snew);
+void ReplaceWithCopy(const char** s, const ByteSlice&);
 void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew);
 void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
@@ -127,7 +128,7 @@ char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 
 bool Eq(const char* s1, const char* s2);
-bool Eq(ByteSlice sp1, ByteSlice sp2);
+bool Eq(const ByteSlice& sp1, const ByteSlice& sp2);
 bool EqI(const char* s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);
 bool EqN(const char* s1, const char* s2, size_t len);
@@ -135,7 +136,6 @@ bool EqNI(const char* s1, const char* s2, size_t len);
 bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* prefix);
 bool StartsWith(const u8* str, const char* prefix);
-ByteSlice ToSpan(const char* s);
 
 bool Eq(const WCHAR*, const WCHAR*);
 bool EqI(const WCHAR*, const WCHAR*);
@@ -310,7 +310,7 @@ struct Str {
     ByteSlice AsByteSlice() const;
     ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
-    bool AppendSlice(ByteSlice d);
+    bool AppendSlice(const ByteSlice& d);
     void AppendFmt(const char* fmt, ...);
     bool AppendAndFree(const char* s);
     void Set(const char*);
@@ -473,3 +473,4 @@ struct StrVec {
 
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
 char* Join(const StrVec& v, const char* joint = nullptr);
+ByteSlice ToByteSlice(const char* s);

@@ -2899,7 +2899,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     if (!pageInfo->page) {
         return nullptr;
     }
-    auto& images = pageInfo->images;
+    const auto& images = pageInfo->images;
     bool outOfBounds = imageIdx >= images.isize();
     fz_rect imgRect = images.at(imageIdx)->rect;
     bool badRect = ToRectF(imgRect) != rect;

@@ -49,7 +49,7 @@ static bool IsWsText(const char* s, size_t len) {
     return s == end;
 }
 
-ByteSlice PrettyPrintHtml(ByteSlice d) {
+ByteSlice PrettyPrintHtml(const ByteSlice& d) {
     size_t n = d.size();
     str::Str res(n);
     HtmlPullParser parser(d);

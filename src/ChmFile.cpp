@@ -541,7 +541,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
     // enforce the default codepage, so that pre-encoded text and
     // entities are in the same codepage and VisitChmTocItem yields
     // consistent results
-    HtmlElement* el = p.Parse(str::ToSpan(html), CP_CHM_DEFAULT);
+    HtmlElement* el = p.Parse(ToByteSlice(html), CP_CHM_DEFAULT);
     if (!el) {
         return false;
     }

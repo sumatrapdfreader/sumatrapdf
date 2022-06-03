@@ -1211,7 +1211,7 @@ class HtmlMoniker : public IMoniker {
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(ByteSlice);
+    HRESULT SetHtml(const ByteSlice&);
     HRESULT SetBaseUrl(const WCHAR* baseUrl);
 
     // IUnknown
@@ -1309,7 +1309,7 @@ HtmlMoniker::~HtmlMoniker() {
     free(baseUrl);
 }
 
-HRESULT HtmlMoniker::SetHtml(ByteSlice d) {
+HRESULT HtmlMoniker::SetHtml(const ByteSlice& d) {
     free(htmlData);
     htmlData = str::Dup(d);
     if (htmlStream) {
@@ -1686,7 +1686,7 @@ void HtmlWindow::NavigateToAboutBlank() {
     NavigateToUrl("about:blank");
 }
 
-void HtmlWindow::SetHtml(ByteSlice d, const char* url) {
+void HtmlWindow::SetHtml(const ByteSlice& d, const char* url) {
     FreeHtmlSetInProgressData();
     str::ReplaceWithCopy(&htmlSetInProgress, d);
     str::ReplaceWithCopy(&htmlSetInProgress, url);
@@ -1700,7 +1700,7 @@ void HtmlWindow::SetHtml(ByteSlice d, const char* url) {
 // TODO: IHtmlDocument2->write() seems like a simpler method
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtmlReal(ByteSlice d) {
+void HtmlWindow::SetHtmlReal(const ByteSlice& d) {
     if (htmlContent) {
         htmlContent->Release();
     }
@@ -1838,7 +1838,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
         if (htmlSetInProgress != nullptr) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
-            SetHtmlReal(str::ToSpan(htmlSetInProgress));
+            SetHtmlReal(ToByteSlice(htmlSetInProgress));
             if (htmlWinCb) {
                 if (htmlSetInProgressUrl) {
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);

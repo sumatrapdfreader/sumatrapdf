@@ -65,7 +65,7 @@ class HtmlWindow {
     void SubclassHwnd();
     void UnsubclassHwnd();
     void SetScrollbarToAuto();
-    void SetHtmlReal(ByteSlice);
+    void SetHtmlReal(const ByteSlice&);
     void FreeHtmlSetInProgressData();
 
   public:
@@ -75,7 +75,7 @@ class HtmlWindow {
     void SetVisible(bool visible);
     void NavigateToUrl(const char* url);
     void NavigateToDataUrl(const char* url);
-    void SetHtml(ByteSlice, const char* url = nullptr);
+    void SetHtml(const ByteSlice&, const char* url = nullptr);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);
@@ -84,7 +84,7 @@ class HtmlWindow {
     void FindInCurrentPage();
     void SelectAll();
     void CopySelection();
-    LRESULT SendMsg(uint msg, WPARAM wp, LPARAM lp);
+    LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
     HBITMAP TakeScreenshot(Rect area, Size finalSize);
 

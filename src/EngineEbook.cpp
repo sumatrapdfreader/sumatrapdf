@@ -314,9 +314,8 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto zoom = args.zoom;
     auto rotation = args.rotation;
-    auto pageRect = args.pageRect;
 
-    RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectF pageRc = args.pageRect ? *args.pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
@@ -501,7 +500,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     return els;
 }
 
-static RenderedBitmap* getImageFromData(ByteSlice imageData) {
+static RenderedBitmap* getImageFromData(const ByteSlice imageData) {
     HBITMAP hbmp = nullptr;
     Bitmap* bmp = BitmapFromData(imageData);
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
