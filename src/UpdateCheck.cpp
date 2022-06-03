@@ -340,6 +340,10 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         // shouldn't happen but it's fine, we just tell the user
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
         auto win = FindWindowInfoByHwnd(hwndParent);
+        // window could be destroyed since we issued update check
+        if (!win) {
+            return 0;
+        }
         win->notifications->RemoveForGroup(kindNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         return 0;
