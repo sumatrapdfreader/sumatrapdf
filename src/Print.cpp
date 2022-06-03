@@ -893,7 +893,7 @@ struct PaperSizeDesc {
 };
 
 // clang-format off
-static PaperSizeDesc paperSizes[] = {
+static PaperSizeDesc gPaperSizes[] = {
     // common ISO 216 formats (metric)
     {
         16.53f, 16.55f,
@@ -954,7 +954,7 @@ PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
     if (dx > dy) {
         std::swap(dx, dy);
     }
-    for (auto&& desc : paperSizes) {
+    for (const PaperSizeDesc& desc : gPaperSizes) {
         bool ok = fInRange(dx, desc.minDx, desc.maxDx) && fInRange(dy, desc.minDy, desc.maxDy);
         if (ok) {
             return desc.paperFormat;

@@ -1139,7 +1139,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
     int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst;
     int count = 0;
 
-    for (auto& ev : *gGlobalPrefs->externalViewers) {
+    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
         if (count >= maxEntries) {
             break;
         }

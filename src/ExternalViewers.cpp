@@ -116,9 +116,10 @@ static ExternalViewerInfo gExternalViewers[] = {
 // clang-format on
 
 static ExternalViewerInfo* FindExternalViewerInfoByCmd(int cmd) {
+    ExternalViewerInfo* info = nullptr;
     int n = dimof(gExternalViewers);
     for (int i = 0; i < n; i++) {
-        ExternalViewerInfo* info = &gExternalViewers[i];
+        info = &gExternalViewers[i];
         if (info->cmd == cmd) {
             return info;
         }
@@ -158,10 +159,8 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
 }
 
 void FreeExternalViewers() {
-    int n = dimof(gExternalViewers);
-    for (int i = 0; i < n; i++) {
-        ExternalViewerInfo* info = &gExternalViewers[i];
-        str::FreePtr(&info->exeFullPath);
+    for (ExternalViewerInfo& info : gExternalViewers) {
+        str::FreePtr(&info.exeFullPath);
     }
 }
 
@@ -224,7 +223,7 @@ void DetectExternalViewers() {
     CrashIf(gExternalViewersCount > 0); // only call once
 
     ExternalViewerInfo* info = nullptr;
-    for (auto& i : gExternalViewers) {
+    for (ExternalViewerInfo& i : gExternalViewers) {
         info = &i;
         bool didDetect = DetectExternalViewer(info);
         if (didDetect) {

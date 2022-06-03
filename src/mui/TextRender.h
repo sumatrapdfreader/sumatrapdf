@@ -96,14 +96,13 @@ class TextRenderGdi : public ITextRender {
 
 class TextRenderGdiplus : public ITextRender {
   private:
-    TextMeasureAlgorithm measureAlgo;
+    TextMeasureAlgorithm measureAlgo = nullptr;
 
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
     CachedFont* currFont = nullptr;
     Gdiplus::Color textColor{};
     Gdiplus::Brush* textColorBrush = nullptr;
-    WCHAR txtConvBuf[512]{};
 
     TextRenderGdiplus() = default;
 
@@ -145,7 +144,6 @@ class TextRenderHdc : public ITextRender {
     CachedFont* currFont = nullptr;
     Gdiplus::Color textColor{};
     Gdiplus::Color textBgColor{};
-    WCHAR txtConvBuf[512]{};
 
     TextRenderHdc() = default;
 

@@ -354,9 +354,9 @@ void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool i
 }
 
 void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    auto buf = ToWstrTemp(s, sLen);
+    WCHAR* buf = ToWstrTemp(s, sLen);
     size_t strLen = str::Len(buf);
-    Draw(txtConvBuf, strLen, bb, isRtl);
+    Draw(buf, strLen, bb, isRtl);
 }
 
 void TextRenderHdc::Lock() {
@@ -439,9 +439,9 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
 RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     CrashIf(!hdc);
-    auto buf = ToWstrTemp(s, sLen);
+    WCHAR* buf = ToWstrTemp(s, sLen);
     size_t strLen = str::Len(buf);
-    return Measure(txtConvBuf, strLen);
+    return Measure(buf, strLen);
 }
 
 RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
@@ -453,9 +453,9 @@ RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
 }
 
 void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    auto buf = ToWstrTemp(s, sLen);
+    WCHAR* buf = ToWstrTemp(s, sLen);
     size_t strLen = str::Len(buf);
-    return Draw(txtConvBuf, strLen, bb, isRtl);
+    return Draw(buf, strLen, bb, isRtl);
 }
 
 void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectF bb, __unused bool isRtl) {
@@ -468,7 +468,7 @@ void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectF bb, __unused b
         opts = opts | ETO_RTLREADING;
     }
 #endif
-    ExtTextOut(hdc, x, y, opts, nullptr, s, (uint)sLen, nullptr);
+    ExtTextOutW(hdc, x, y, opts, nullptr, s, (uint)sLen, nullptr);
 }
 
 TextRenderHdc::~TextRenderHdc() {

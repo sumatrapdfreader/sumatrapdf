@@ -16,13 +16,13 @@ name/val pointers inside Element/Attr structs refer to
 memory inside HtmlParser::s, so they don't need to be freed.
 */
 
-bool HtmlElement::NameIs(const char* name) const {
+bool HtmlElement::NameIs(const char* nameIn) const {
     if (!name) {
         CrashIf(Tag_NotFound == tag);
-        HtmlTag tg = FindHtmlTag(name, str::Len(name));
+        HtmlTag tg = FindHtmlTag(nameIn, str::Len(nameIn));
         return tg == tag;
     }
-    return str::EqI(name, name);
+    return str::EqI(name, nameIn);
 }
 
 // for now just ignores any namespace qualifier
