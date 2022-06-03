@@ -61,7 +61,7 @@ struct DocControllerCallback {
     // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
-    virtual void SaveDownload(const char* url, ByteSlice data) = 0;
+    virtual void SaveDownload(const char* url, const ByteSlice&) = 0;
 };
 
 struct DocController {

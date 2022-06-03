@@ -124,7 +124,6 @@ static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
             rect.x = topLeftMargin;
         }
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
-        int dy = rect.dy;
         SetWindowPos(wnd->hwnd, nullptr, rect.x, y, 0, 0, flags);
         y += rect.dy + dyPadding;
     }

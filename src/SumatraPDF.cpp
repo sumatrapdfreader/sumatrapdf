@@ -680,7 +680,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
         win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;
-    void SaveDownload(const char* url, ByteSlice data) override;
+    void SaveDownload(const char* url, const ByteSlice&) override;
 };
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb& saveThumbnail) {
@@ -766,7 +766,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const char* url, ByteSlice data) {
+void ControllerCallbackHandler::SaveDownload(const char* url, const ByteSlice& data) {
     char* path = url::GetFileName(url);
     // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, path, data);
@@ -2573,8 +2573,6 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
 
-    WCHAR* srcFileNameW = ToWstrTemp(srcFileName);
-
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != kindEngineTxt;
@@ -4034,7 +4032,6 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
     }
 
     bool isCtrl = IsCtrlPressed();
-    bool isShift = IsShiftPressed();
     bool isAlt = IsAltPressed();
 
     if (key >= 0x100 && info && !isCtrl && !isAlt) {

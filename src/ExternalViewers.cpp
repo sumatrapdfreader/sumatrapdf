@@ -20,7 +20,7 @@
 #include "Commands.h"
 
 struct ExternalViewerInfo {
-    const char* name; // shown to the user
+    const char* name; // shown to the user // NOLINT
     int cmd;
     const char* exts; // valid extensions
     const char* exePartialPath;
@@ -224,7 +224,6 @@ void DetectExternalViewers() {
     CrashIf(gExternalViewersCount > 0); // only call once
 
     ExternalViewerInfo* info = nullptr;
-    int n = dimof(gExternalViewers);
     for (auto& i : gExternalViewers) {
         info = &i;
         bool didDetect = DetectExternalViewer(info);

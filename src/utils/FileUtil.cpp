@@ -550,7 +550,7 @@ ByteSlice ReadFile(const char* path) {
     return ReadFileWithAllocator(path, nullptr);
 }
 
-bool WriteFile(const char* path, ByteSlice d) {
+bool WriteFile(const char* path, const ByteSlice& d) {
     WCHAR* pathW = ToWstrTemp(path);
     const void* data = d.data();
     size_t dataLen = d.size();

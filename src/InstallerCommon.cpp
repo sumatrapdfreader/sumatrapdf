@@ -147,8 +147,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     char* dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
     if (dirLM && dirCU) {
         info->typ = PreviousInstallationType::Both;
-    }
-    if (dirLM) {
+    } else if (dirLM) {
         info->typ = PreviousInstallationType::Machine;
     } else {
         info->typ = PreviousInstallationType::User;

@@ -1207,7 +1207,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     if (flags.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
-        auto nFiles = flags.fileNames.size();
         for (char* path : flags.fileNames) {
             bool ok = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
             if (!ok) {

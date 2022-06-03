@@ -2320,7 +2320,6 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         int pageNo = FzGetPageNo(ctx, _doc, nullptr, outline);
 
         IPageDestination* dest = nullptr;
-        Kind kind = nullptr;
         if (isAttachment) {
             dest = DestFromAttachment(this, outline);
         } else {
