@@ -171,8 +171,13 @@ bool MainWindow::IsAboutWindow() const {
 }
 
 bool MainWindow::IsDocLoaded() const {
-    CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
-    return this->ctrl != nullptr;
+    bool isLoaded = (ctrl != nullptr);
+    bool isTabLoaded = (currentTab && currentTab->ctrl != nullptr);
+    if (isLoaded != isTabLoaded) {
+        logfa("MainWindow::IsDocLoaded(): isLoaded: %d, isTabLoaded: %d\n", (int)isLoaded, (int)isTabLoaded);
+        ReportIf(true);
+    }
+    return isLoaded;
 }
 
 DisplayModel* MainWindow::AsFixed() const {

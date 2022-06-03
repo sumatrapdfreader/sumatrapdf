@@ -590,7 +590,7 @@ Repeat:
     ::Sleep(1000);
 
     fsize = file::GetSize(pathSyncGz);
-    logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
+    logfa("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
 
     didRepeat = true;
     goto Repeat;
