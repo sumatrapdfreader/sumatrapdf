@@ -464,7 +464,7 @@ ByteSlice ChmModel::GetDataForUrl(const char* url) {
     return e->data;
 }
 
-void ChmModel::DownloadData(const char* url, ByteSlice data) {
+void ChmModel::DownloadData(const char* url, const ByteSlice& data) {
     if (!cb) {
         return;
     }

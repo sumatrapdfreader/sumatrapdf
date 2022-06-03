@@ -1010,10 +1010,10 @@ int CmpNatural(const char* a, const char* b) {
     while (diff == 0) {
         // ignore leading and trailing spaces, and differences in whitespace only
         if (a == aStart || !*a || !*b || IsWs(*a) && IsWs(*b)) {
-            for (; IsWs(*a); a++) {
+            for (; a && IsWs(*a); a++) {
                 // do nothing
             }
-            for (; IsWs(*b); b++) {
+            for (; b && IsWs(*b); b++) {
                 // do nothing
             }
         }
@@ -1502,9 +1502,9 @@ ByteSlice Str::AsByteSlice() const {
 }
 
 ByteSlice Str::StealAsByteSlice() {
-    size_t len = size();
+    size_t n = size();
     char* d = StealData();
-    return {(u8*)d, len};
+    return {(u8*)d, n};
 }
 
 bool Str::Append(const u8* src, size_t size) {
@@ -2365,10 +2365,10 @@ int CmpNatural(const WCHAR* a, const WCHAR* b) {
     for (; 0 == diff; a++, b++) {
         // ignore leading and trailing spaces, and differences in whitespace only
         if (a == aStart || !*a || !*b || IsWs(*a) && IsWs(*b)) {
-            for (; IsWs(*a); a++) {
+            for (; a && IsWs(*a); a++) {
                 // do nothing
             }
-            for (; IsWs(*b); b++) {
+            for (; b && IsWs(*b); b++) {
                 // do nothing
             }
         }
@@ -2635,7 +2635,7 @@ char* StrVec::operator[](int idx) const {
 }
 
 char* StrVec::operator[](size_t idx) const {
-    CrashIf(idx < 0);
+    CrashIf((int)idx < 0);
     return at((int)idx);
 }
 
@@ -2645,10 +2645,6 @@ char* StrVec::at(int idx) const {
     u32 start = index.at(idx);
     if (start == kNullIdx) {
         return nullptr;
-    }
-    u32 end = (u32)strings.size();
-    if (idx + 1 < n) {
-        end = (u32)index.at(idx + 1);
     }
     char* s = strings.LendData() + start;
     return s;

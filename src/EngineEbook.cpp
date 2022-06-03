@@ -500,7 +500,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     return els;
 }
 
-static RenderedBitmap* getImageFromData(const ByteSlice imageData) {
+static RenderedBitmap* getImageFromData(const ByteSlice& imageData) {
     HBITMAP hbmp = nullptr;
     Bitmap* bmp = BitmapFromData(imageData);
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {

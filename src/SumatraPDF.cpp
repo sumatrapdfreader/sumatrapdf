@@ -4059,8 +4059,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
         key = (WPARAM)SingleCharLowerW((WCHAR)key);
     }
 
-    auto* ctrl = win->ctrl;
-    DisplayModel* dm = win->AsFixed();
+    DocController* ctrl = win->ctrl;
 
     switch (key) {
         // per https://en.wikipedia.org/wiki/Keyboard_layout

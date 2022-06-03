@@ -39,7 +39,7 @@ class ITextRender {
     virtual ~ITextRender() = default;
     ;
 
-    TextRenderMethod method;
+    TextRenderMethod method = TextRenderMethod::Hdc;
 };
 
 class TextRenderGdi : public ITextRender {

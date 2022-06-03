@@ -74,7 +74,6 @@ IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const char* 
 }
 
 bool IPageElement::Is(Kind expectedKind) {
-    Kind kind = GetKind();
     return kind == expectedKind;
 }
 
@@ -121,10 +120,10 @@ void TocItem::AddSiblingAtEnd(TocItem* sibling) {
 }
 
 void TocItem::AddChild(TocItem* newChild) {
-    TocItem* currChild = child;
+    TocItem* curr = child;
     child = newChild;
     newChild->parent = this;
-    newChild->next = currChild;
+    newChild->next = curr;
 }
 
 // regular delete is recursive, this deletes only this item

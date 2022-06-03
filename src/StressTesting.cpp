@@ -688,7 +688,7 @@ static void RandomizeViewingState(StressTest* st) {
             break;
         case 11:
             zoom = ctrl->GetNextZoomStep(kZoomMin);
-            ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
+            ctrl->SetZoomVirtual(zoom, nullptr);
             break;
     }
 }

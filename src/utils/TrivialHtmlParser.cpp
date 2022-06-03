@@ -17,28 +17,28 @@ memory inside HtmlParser::s, so they don't need to be freed.
 */
 
 bool HtmlElement::NameIs(const char* name) const {
-    if (!this->name) {
-        CrashIf(Tag_NotFound == this->tag);
-        HtmlTag tag = FindHtmlTag(name, str::Len(name));
-        return tag == this->tag;
+    if (!name) {
+        CrashIf(Tag_NotFound == tag);
+        HtmlTag tg = FindHtmlTag(name, str::Len(name));
+        return tg == tag;
     }
-    return str::EqI(this->name, name);
+    return str::EqI(name, name);
 }
 
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlElement::NameIsNS(const char* name, const char* ns) const {
+bool HtmlElement::NameIsNS(const char* nameIn, const char* ns) const {
     CrashIf(!ns);
     const char* nameStart = nullptr;
-    if (this->name) {
-        nameStart = str::FindChar(this->name, ':');
+    if (name) {
+        nameStart = str::FindChar(name, ':');
     }
     if (!nameStart) {
-        return NameIs(name);
+        return NameIs(nameIn);
     }
     ++nameStart;
-    return str::EqI(nameStart, name);
+    return str::EqI(nameStart, nameIn);
 }
 
 HtmlElement* HtmlElement::GetChildByTag(HtmlTag tag, int idx) const {
