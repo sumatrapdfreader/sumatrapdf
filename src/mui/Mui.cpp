@@ -85,7 +85,7 @@ class FontListItem {
     }
     ~FontListItem() {
         str::Free(cf.name);
-        ::delete cf.font;
+        delete cf.font;
         DeleteObject(cf.hFont);
         delete next;
     }
@@ -136,11 +136,11 @@ bool GraphicsCacheEntry::Create() {
     threadId = GetCurrentThreadId();
     // using a small bitmap under assumption that Graphics used only
     // for measuring text doesn't need the actual bitmap
-    bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
+    bmp = new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
     if (!bmp) {
         return false;
     }
-    gfx = ::new Graphics((Image*)bmp);
+    gfx = new Graphics((Image*)bmp);
     if (!gfx) {
         return false;
     }
@@ -150,8 +150,8 @@ bool GraphicsCacheEntry::Create() {
 
 void GraphicsCacheEntry::Free() const {
     CrashIf(0 != refCount);
-    ::delete gfx;
-    ::delete bmp;
+    delete gfx;
+    delete bmp;
 }
 
 void Initialize() {
@@ -212,13 +212,13 @@ CachedFont* GetCachedFont(const WCHAR* name, float sizePt, FontStyle style) {
         }
     }
 
-    Font* font = ::new Font(name, sizePt, style);
+    Font* font = new Font(name, sizePt, style);
     if (font->GetLastStatus() != Status::Ok) {
-        ::delete font;
-        font = ::new Font(L"Times New Roman", sizePt, style);
+        delete font;
+        font = new Font(L"Times New Roman", sizePt, style);
         if (font->GetLastStatus() != Status::Ok) {
             // if no font is available, return the last successfully created one
-            ::delete font;
+            delete font;
             if (gFontsCache) {
                 return &gFontsCache->cf;
             }

@@ -295,7 +295,6 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     bmp.SetResolution((float)xres, (float)yres);
 #undef HR
 
-    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 

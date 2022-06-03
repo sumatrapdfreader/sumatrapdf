@@ -329,7 +329,7 @@ RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
 }
 
 TextRenderGdiplus::~TextRenderGdiplus() {
-    ::delete textColorBrush;
+    delete textColorBrush;
 }
 
 void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
@@ -337,8 +337,8 @@ void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
         return;
     }
     textColor = col;
-    ::delete textColorBrush;
-    textColorBrush = ::new SolidBrush(col);
+    delete textColorBrush;
+    textColorBrush = new SolidBrush(col);
 }
 
 void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl) {

@@ -93,7 +93,6 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
         return nullptr;
     }
 
-    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, fmt);
 }
 
@@ -183,7 +182,6 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
         return nullptr;
     }
 
-    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 

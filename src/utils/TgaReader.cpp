@@ -380,7 +380,6 @@ Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
         return nullptr;
     }
     CopyMetadata(data, len, &bmp);
-    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, format);
 }
 
