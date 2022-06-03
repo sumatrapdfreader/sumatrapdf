@@ -89,7 +89,7 @@ class HtmlPullParser {
     }
     HtmlPullParser(const char* s, const char* end) : currPos(s), end(end), start(s), len(end - s) {
     }
-    explicit HtmlPullParser(ByteSlice d)
+    explicit HtmlPullParser(const ByteSlice& d)
         : currPos((char*)d.data()), end((char*)d.data() + d.size()), start((char*)d.data()), len(d.size()) {
     }
 

@@ -166,14 +166,14 @@ static char* BuildCrashInfoText(bool forCrash) {
     return s.StealData();
 }
 
-static void SaveCrashInfo(ByteSlice d) {
+static void SaveCrashInfo(const ByteSlice& d) {
     if (!gCrashFilePath) {
         return;
     }
     file::WriteFile(gCrashFilePath, d);
 }
 
-static void UploadCrashReport(ByteSlice d) {
+static void UploadCrashReport(const ByteSlice& d) {
     log("UploadCrashReport()\n");
     if (d.empty()) {
         return;

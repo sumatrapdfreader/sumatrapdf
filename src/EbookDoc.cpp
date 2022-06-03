@@ -454,8 +454,8 @@ bool EpubDoc::Load() {
             continue;
         }
 
-        const char* fileName = pathList.at(idList.Find(idref));
-        char* fullPath = str::JoinTemp(contentPath, fileName);
+        const char* fname = pathList.at(idList.Find(idref));
+        char* fullPath = str::JoinTemp(contentPath, fname);
         ByteSlice html = zip->GetFileDataByName(fullPath);
         if (!html) {
             continue;
@@ -1017,8 +1017,8 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     int titleCount = 0;
     int level = 0;
 
-    auto xmlData = GetXmlData();
-    HtmlPullParser parser(xmlData);
+    auto xmlData2 = GetXmlData();
+    HtmlPullParser parser(xmlData2);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Section == tok->tag) {

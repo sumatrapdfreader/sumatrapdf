@@ -67,7 +67,7 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     ByteSlice GetDataForUrl(const char* url) override {
         return cm->GetDataForUrl(url);
     }
-    void DownloadData(const char* url, ByteSlice data) override {
+    void DownloadData(const char* url, const ByteSlice& data) override {
         cm->DownloadData(url, data);
     }
 };
@@ -680,7 +680,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         return d;
     }
 
-    void DownloadData(const char*, ByteSlice) override {
+    void DownloadData(const char*, const ByteSlice&) override {
     }
 };
 

@@ -316,7 +316,8 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
         }
         ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, nullptr);
 
-        PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
+        // PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
+        //  TODO: should this be point on page?
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
             char* value = pageEl->GetValue();
