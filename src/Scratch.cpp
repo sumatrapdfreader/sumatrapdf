@@ -13,6 +13,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/Timer.h"
+#include "utils/ZipUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -30,6 +31,18 @@
 #include "utils/Log.h"
 
 // ----------------
+
+void TestUngzip() {
+    const char* pathGz = R"(C:\Users\kjk\Downloads\AUTOSAR_TPS_SoftwareComponentTemplate.synctex.gz)";
+    const char* path = R"(C:\Users\kjk\Downloads\AUTOSAR_TPS_SoftwareComponentTemplate.synctex)";
+    ByteSlice uncomprFile = file::ReadFile(path);
+    CrashIf(uncomprFile.empty());
+    ByteSlice compr = file::ReadFile(pathGz);
+    CrashIf(compr.empty());
+    ByteSlice uncompr = Ungzip(compr);
+    bool same = IsEqual(uncomprFile, uncompr);
+    CrashIf(!same);
+}
 
 struct BrowserTestWnd : Wnd {
     Webview2Wnd* webView = nullptr;

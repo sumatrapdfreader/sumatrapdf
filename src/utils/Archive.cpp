@@ -424,15 +424,3 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
     rarFilePath_ = str::Dup(&allocator_, rarPath);
     return true;
 }
-
-ByteSlice Ungzip(const ByteSlice& d) {
-    size_t len = d.size();
-    size_t lenUncr = len + len / 2;
-    u8* res = AllocArray<u8>(lenUncr);
-    if (!res) {
-        return {};
-    }
-
-    free((void*)res);
-    return {};
-}

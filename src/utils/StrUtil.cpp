@@ -152,6 +152,18 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
 
 // --- end of Unicode, Inc. utf8 code
 
+bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
+    if (d1.sz != d2.sz) {
+        return false;
+    }
+    if (d1.sz == 0) {
+        return true;
+    }
+    CrashIf(!d1.d || !d2.d);
+    int res = memcmp(d1.d, d2.d, d1.sz);
+    return res == 0;
+}
+
 namespace str {
 
 size_t Len(const char* s) {

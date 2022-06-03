@@ -30,3 +30,5 @@ class ZipCreator {
 };
 
 IStream* OpenDirAsZipStream(const char* dirPath, bool recursive = false);
+
+ByteSlice Ungzip(const ByteSlice&);

@@ -77,6 +77,8 @@ struct ByteSlice {
     }
 };
 
+bool IsEqual(const ByteSlice&, const ByteSlice&);
+
 namespace str {
 
 enum class TrimOpt { Left, Right, Both };

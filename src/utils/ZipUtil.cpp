@@ -271,3 +271,64 @@ IStream* OpenDirAsZipStream(const char* dirPath, bool recursive) {
     stream->AddRef();
     return stream;
 }
+
+// adapted from https://www.cocoanetics.com/2012/02/decompressing-files-into-memory/
+// d is a content of gzip file
+ByteSlice Ungzip(const ByteSlice& d) {
+    size_t len = d.size();
+    u8* dataCompr = d.d;
+    size_t lenUncr = len + len;
+
+    bool done = false;
+    int res;
+
+    z_stream strm;
+    strm.next_in = (Bytef*)dataCompr;
+    strm.avail_in = (uInt)len;
+    strm.total_out = 0;
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+
+    res = inflateInit2(&strm, (15 + 32));
+    if (res != Z_OK) {
+        return {};
+    }
+
+    u8* dataUncr = AllocArray<u8>(lenUncr);
+    if (!dataUncr) {
+        return {};
+    }
+
+    while (!done) {
+        if (strm.total_out >= lenUncr) {
+            size_t newLen = lenUncr + len;
+            u8* dataUncr2 = (u8*)realloc(dataUncr, newLen);
+            if (!dataUncr2) {
+                free((void*)dataUncr);
+                return {};
+            }
+            dataUncr = dataUncr2;
+            lenUncr = newLen;
+        }
+
+        strm.next_out = dataUncr + strm.total_out;
+        strm.avail_out = (uInt)lenUncr - (uInt)strm.total_out;
+
+        // Inflate another chunk.
+        res = inflate(&strm, Z_SYNC_FLUSH);
+
+        if (res == Z_STREAM_END) {
+            done = true;
+        } else if (res != Z_OK) {
+            break;
+        }
+    }
+    res = inflateEnd(&strm);
+    if (!done || res != Z_OK) {
+        free((void*)dataUncr);
+        return {};
+    }
+
+    lenUncr = strm.total_out;
+    return {dataUncr, lenUncr};
+}

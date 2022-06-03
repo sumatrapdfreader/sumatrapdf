@@ -1143,6 +1143,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         TestBrowser();
         return 0;
     }
+
+    void TestUngzip();
+    if (true) {
+        TestUngzip();
+        return 0;
+    }
 #endif
 
     if (flags.showConsole) {
