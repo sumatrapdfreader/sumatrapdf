@@ -20,7 +20,7 @@
 #include "Commands.h"
 
 struct ExternalViewerInfo {
-    const char* name; // shown to the user // NOLINT
+    const char* name; // shown to the user
     int cmd;
     const char* exts; // valid extensions
     const char* exePartialPath;

@@ -279,6 +279,9 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
 }
 
 static void RemoveDeletedAnnotations(Vec<Annotation*>* v) {
+    if (!v) {
+        return;
+    }
 again:
     auto n = v->isize();
     for (int i = 0; i < n; i++) {

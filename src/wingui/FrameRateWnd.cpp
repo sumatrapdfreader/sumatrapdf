@@ -154,9 +154,9 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWith) {
     // is WS_OVERLAPEPED or WS_POPUP). Owned window always shows up on top of owner in z-order
     // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
     // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
-    HWND hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle, 0, 0, 0, 0,
-                               this->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), this);
-    CrashIf(hwnd != this->hwnd);
+    HWND hwnd2 = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle, 0, 0, 0, 0,
+                                this->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), this);
+    CrashIf(hwnd2 != this->hwnd);
     if (!hwnd) {
         return false;
     }

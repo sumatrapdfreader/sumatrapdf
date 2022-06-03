@@ -15,7 +15,7 @@
 #define kPdbRecordHeaderLen 8
 
 // Takes ownership of d
-bool PdbReader::Parse(ByteSlice d) {
+bool PdbReader::Parse(const ByteSlice& d) {
     data = d.data();
     dataSize = d.size();
     return ParseHeader();
@@ -119,7 +119,7 @@ ByteSlice PdbReader::GetRecord(size_t recNo) {
     return {(u8*)data + off, size};
 }
 
-PdbReader* PdbReader::CreateFromData(ByteSlice d) {
+PdbReader* PdbReader::CreateFromData(const ByteSlice& d) {
     if (d.empty()) {
         return nullptr;
     }

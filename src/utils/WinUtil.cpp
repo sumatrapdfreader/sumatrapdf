@@ -1380,9 +1380,7 @@ int GetSizeOfDefaultGuiFont() {
     return res;
 }
 
-DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), rect(rect) {
-    hdcCanvas = ::GetDC(hwnd);
-
+DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::GetDC(hwnd)), rect(rect) {
     if (rect.IsEmpty()) {
         return;
     }
@@ -2644,18 +2642,18 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen) {
+bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen) {
     if (!s) {
         return false;
     }
     if (sLen <= 0) {
-        sLen = str::Len(s);
+        sLen = (int)str::Len(s);
     }
-    WCHAR* ws = ToWstrTemp(s, sLen);
+    WCHAR* ws = ToWstrTemp(s, (size_t)sLen);
     if (!ws) {
         return false;
     }
-    sLen = str::Len(ws); // TODO: can this be different after converting to WCHAR?
+    sLen = (int)str::Len(ws); // TODO: can this be different after converting to WCHAR?
     return TextOutW(hdc, x, y, ws, (int)sLen);
 }
 

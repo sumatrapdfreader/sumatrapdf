@@ -303,7 +303,7 @@ void HwndDestroyWindowSafe(HWND* hwnd);
 void HwndToForeground(HWND hwnd);
 void HwndSetVisibility(HWND hwnd, bool visible);
 
-bool TextOutUtf8(HDC hdc, int x, int y, const char* s, size_t sLen = 0);
+bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen = 0);
 bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
 int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format);
 Size HdcMeasureText(HDC hdc, const char* s, UINT format);

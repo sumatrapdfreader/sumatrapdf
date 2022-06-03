@@ -2646,12 +2646,12 @@ char* TreeView::GetDefaultTooltipTemp(TreeItem ti) {
     auto hItem = GetHandleByTreeItem(ti);
     WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
 
-    TVITEMW item{};
-    item.hItem = hItem;
-    item.mask = TVIF_TEXT;
-    item.pszText = buf;
-    item.cchTextMax = dimof(buf);
-    TreeView_GetItem(hwnd, &item);
+    TVITEMW it{};
+    it.hItem = hItem;
+    it.mask = TVIF_TEXT;
+    it.pszText = buf;
+    it.cchTextMax = dimof(buf);
+    TreeView_GetItem(hwnd, &it);
 
     return ToUtf8Temp(buf);
 }
@@ -2731,12 +2731,6 @@ void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
     if (n > dimof(tmp)) {
         size_t nBytes = (size_t)n * sizeof(TreeItem);
         a = (TreeItem*)malloc(nBytes);
-        nBytes = (size_t)n * sizeof(HTREEITEM);
-        if (a == nullptr) {
-            free(a);
-            a = &tmp[0];
-            n = (int)dimof(tmp);
-        }
     }
     // ChildAt() is optimized for sequential access and we need to
     // insert backwards, so gather the items in v first
@@ -2797,13 +2791,13 @@ bool TreeView::GetCheckState(TreeItem item) {
 TreeItemState TreeView::GetItemState(TreeItem ti) {
     TreeItemState res;
 
-    TVITEMW* item = GetTVITEM(this, ti);
-    CrashIf(!item);
-    if (!item) {
+    TVITEMW* it = GetTVITEM(this, ti);
+    CrashIf(!it);
+    if (!it) {
         return res;
     }
-    SetTreeItemState(item->state, res);
-    res.nChildren = item->cChildren;
+    SetTreeItemState(it->state, res);
+    res.nChildren = it->cChildren;
 
     return res;
 }
@@ -2817,7 +2811,7 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
     TreeModel* tm = treeView->treeModel;
     HWND hwnd = treeView->hwnd;
 
-    TreeItem ti = TreeModel::kNullItem;
+    TreeItem ti;
     pt = {args->mouseWindow.x, args->mouseWindow.y};
     if (pt.x == -1 || pt.y == -1) {
         // no mouse position when launched via keyboard shortcut
