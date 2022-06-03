@@ -564,6 +564,9 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent*);
 
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {
+    if (!root) {
+        return;
+    }
     if (root->next && root->next->next) {
         return;
     }
