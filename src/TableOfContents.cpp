@@ -571,7 +571,6 @@ static void AutoExpandTopLevelItems(TocItem* root) {
     if (!root) {
         return;
     }
-
     if (root->next && root->next->next) {
         return;
     }
