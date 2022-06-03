@@ -583,6 +583,11 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 	/* Protect modifications to the page list to cope with
 	 * destruction of pages on other threads. */
 	fz_lock(ctx, FZ_LOCK_ALLOC);
+	/* SumatraPDF: seen a crash */
+	if (doc == NULL) {
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			return NULL;
+	}
 	for (page = doc->open; page; page = page->next)
 		if (page->chapter == chapter && page->number == number)
 		{
