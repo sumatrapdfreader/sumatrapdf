@@ -1148,7 +1148,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         if (count >= maxEntries) {
             break;
         }
-        if (str::EmptyOrWhiteSpaceOnly(ev->commandLine)) {
+        if (!ev || !ev->commandLine || str::EmptyOrWhiteSpaceOnly(ev->commandLine)) {
             continue;
         }
         if (ev->filter && !(filePath && PathMatchFilter(filePath, ev->filter))) {
