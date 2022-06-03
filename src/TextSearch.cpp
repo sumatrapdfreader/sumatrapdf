@@ -97,14 +97,14 @@ void TextSearch::SetSensitive(bool sensitive) {
 }
 
 void TextSearch::SetDirection(TextSearchDirection direction) {
-    bool forward = TextSearchDirection::Forward == direction;
-    if (forward == this->forward) {
+    bool fwd = TextSearchDirection::Forward == direction;
+    if (fwd == forward) {
         return;
     }
-    this->forward = forward;
+    forward = fwd;
     if (findText) {
         int n = (int)str::Len(findText);
-        if (forward) {
+        if (fwd) {
             findIndex += n;
         } else {
             findIndex -= n;

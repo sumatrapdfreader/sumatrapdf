@@ -11,7 +11,6 @@
 Size AvifSizeFromData(const ByteSlice& d) {
     Size res;
     struct heif_image_handle* hdl = nullptr;
-    struct heif_image* img = nullptr;
 
     heif_context* ctx = heif_context_alloc();
 
@@ -25,7 +24,7 @@ Size AvifSizeFromData(const ByteSlice& d) {
         goto Exit;
     }
     res.dx = heif_image_handle_get_width(hdl);
-    res.dy = heif_image_handle_get_width(hdl);
+    res.dy = heif_image_handle_get_height(hdl);
 
 Exit:
     if (hdl) {

@@ -45,7 +45,7 @@ static void HtmlParser05() {
     HtmlParser p;
     HtmlElement* root =
         p.Parse(ToByteSlice("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo "
-                                 "val=bar></object><ul><li></ul></object></body></Html>"));
+                            "val=bar></object><ul><li></ul></object></body></Html>"));
     utassert(8 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("html"));
@@ -181,8 +181,8 @@ static void HtmlParser09() {
 
 static void HtmlParser10() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(
-        ToByteSlice("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>"));
+    HtmlElement* root =
+        p.Parse(ToByteSlice("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>"));
     utassert(2 == p.ElementsCount());
     utassert(2 == p.TotalAttrCount());
     utassert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));

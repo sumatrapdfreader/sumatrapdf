@@ -198,7 +198,7 @@ HtmlFormatter::~HtmlFormatter() {
     delete htmlParser;
 }
 
-void HtmlFormatter::AppendInstr(DrawInstr di) {
+void HtmlFormatter::AppendInstr(const DrawInstr& di) {
     currLineInstr.Append(di);
     if (-1 == currLineReparseIdx) {
         currLineReparseIdx = currReparseIdx;

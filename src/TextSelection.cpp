@@ -30,8 +30,8 @@ DocumentTextCache::DocumentTextCache(EngineBase* engine) : engine(engine) {
 DocumentTextCache::~DocumentTextCache() {
     EnterCriticalSection(&access);
 
-    int nPages = engine->PageCount();
-    for (int i = 0; i < nPages; i++) {
+    int n = engine->PageCount();
+    for (int i = 0; i < n; i++) {
         PageText* pageText = &pagesText[i];
         free(pageText->coords);
         free(pageText->text);

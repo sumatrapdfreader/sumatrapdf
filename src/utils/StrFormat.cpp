@@ -8,13 +8,13 @@ namespace fmt {
 
 // formatting instruction
 struct Inst {
-    Type t;
-    int width;     // length, for numbers e.g. %4d, length is 4
-    int prec;      // precision for floating numbers e.g. %.2f, prec is 2
-    char fill;     // filler, for number e.g. '%04d', filler is '0', '% 6d', filler is ' '
-    int argNo;     // <0 for strings that come from formatting string
-    const char* s; // if t is Type::FormatStr
-    int sLen;
+    Type t = Type::None;
+    int width = 0;           // length, for numbers e.g. %4d, length is 4
+    int prec = 0;            // precision for floating numbers e.g. %.2f, prec is 2
+    char fill = 0;           // filler, for number e.g. '%04d', filler is '0', '% 6d', filler is ' '
+    int argNo = 0;           // <0 for strings that come from formatting string
+    const char* s = nullptr; // if t is Type::FormatStr
+    int sLen = 0;
 };
 
 struct Fmt {
@@ -317,7 +317,7 @@ char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const A
     args[nArgs++] = &a6;
     CrashIf(nArgs > dimof(args));
     // arguments at the end could be empty
-    while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
+    while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
     }
 

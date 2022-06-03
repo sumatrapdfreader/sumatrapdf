@@ -221,7 +221,7 @@ class HtmlFormatter {
     StyleRule* FindStyleRule(HtmlTag tag, const char* clazz, size_t clazzLen);
     StyleRule ComputeStyleRule(HtmlToken* t);
 
-    void AppendInstr(DrawInstr di);
+    void AppendInstr(const DrawInstr& di);
     bool IsCurrLineEmpty();
     virtual bool IgnoreText();
 

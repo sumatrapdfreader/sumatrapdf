@@ -503,7 +503,6 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     log("UnregisterFromBeingDefaultViewer()\n");
     char* curr = LoggedReadRegStrTemp(hkey, kRegClassesPdf, nullptr);
     const char* regClassesApp = GetRegClassesAppTemp(kAppName);
-    char* prev = LoggedReadRegStrTemp(hkey, regClassesApp, "previous.pdf");
     if (!curr || !str::Eq(curr, kAppName)) {
         // not the default, do nothing
     } else {

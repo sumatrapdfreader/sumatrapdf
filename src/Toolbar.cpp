@@ -493,13 +493,13 @@ static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
     DWORD style = WS_VISIBLE | WS_CHILD;
     DWORD exStyle = WS_EX_STATICEDGE;
     int dy = iconDy + 2;
-    Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
+    // Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
     HWND findBg =
         CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
 
     int dx = findBoxDx - 2 * GetSystemMetrics(SM_CXEDGE);
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
-    dy = iconDy + DpiScale(win->hwndFrame, 2);
+    // dy = iconDy + DpiScale(win->hwndFrame, 2);
     dy = iconDy;
     exStyle = 0;
     HWND find = CreateWindowExW(exStyle, WC_EDIT, L"", style, 0, 1, dx, dy, p, (HMENU) nullptr, hmod, nullptr);

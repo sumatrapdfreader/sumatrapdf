@@ -177,7 +177,6 @@ Printer* NewPrinter(char* printerName) {
         printer->papers = AllocArray<WORD>(n);
         WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // +1 is "just in case"
         printer->paperSizes = AllocArray<POINT>(n);
-        printer->paperNames;
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
@@ -1084,7 +1083,6 @@ static short GetPaperSourceByName(Printer* printer, const char* binName) {
 static void ApplyPrintSettings(Printer* printer, const char* settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
     auto devMode = printer->devMode;
-    auto printerName = printer->name;
 
     StrVec rangeList;
     if (settings) {

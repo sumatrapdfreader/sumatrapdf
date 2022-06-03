@@ -205,7 +205,7 @@ struct MainWindow {
 
     // The target y offset for smooth scrolling.
     // We use a timer to gradually scroll there.
-    int scrollTargetY;
+    int scrollTargetY = 0;
 
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers

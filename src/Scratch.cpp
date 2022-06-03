@@ -307,6 +307,6 @@ void TestBrowser() {
     // first layout is triggered
     w->webView->Navigate("https://blog.kowalczyk.info/");
     w->SetIsVisible(true);
-    auto res = RunMessageLoop(nullptr, w->hwnd);
+    RunMessageLoop(nullptr, w->hwnd);
     delete w;
 }
