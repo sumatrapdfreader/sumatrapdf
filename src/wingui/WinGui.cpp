@@ -3094,6 +3094,9 @@ void TabPainter::Invalidate(int tabNo) const {
     if (tabNo < 0) {
         return;
     }
+#if 1
+    ScheduleRepaint(hwnd);
+#else
     Graphics gfx(hwnd);
     GraphicsPath shapes(data->Points, data->Types, data->Count);
     GraphicsPath shape;
@@ -3107,6 +3110,7 @@ void TabPainter::Invalidate(int tabNo) const {
     HRGN hRgn = region.GetHRGN(&gfx);
     InvalidateRgn(hwnd, hRgn, FALSE);
     DeleteObject(hRgn);
+#endif
 }
 
 // TODO: duplicated in Caption.cpp
