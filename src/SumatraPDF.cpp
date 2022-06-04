@@ -1452,7 +1452,7 @@ static MainWindow* CreateMainWindow() {
     }
 
     SetTabsInTitlebar(win, gGlobalPrefs->useTabs);
-    // TODO: this is hackish. in general we should diforce
+    // TODO: this is hackish. in general we should divorce
     // layout re-calculations from MainWindow and creation of windows
     win->UpdateCanvasSize();
     return win;
