@@ -3012,6 +3012,11 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     return 0;
 }
 
+#if 0
+LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+}
+#endif
+
 HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     createToolTipsHwnd = argsIn.createToolTipsHwnd;
 

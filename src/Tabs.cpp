@@ -349,7 +349,13 @@ static LRESULT TabsOnNotify(MainWindow* win, NMHDR* data, int tab1 = -1, int tab
             break;
 
         case kTabDrag:
-            SwapTabs(win, tab1, tab2);
+            if (win->tabsCtrl->onTabDragged) {
+                TabDraggedEvent ev;
+                ev.tabs = win->tabsCtrl;
+                ev.tab1 = tab1;
+                ev.tab2 = tab2;
+                win->tabsCtrl->onTabDragged(&ev);
+            }
             break;
         case TTN_GETDISPINFOA:
         case TTN_GETDISPINFOW:
@@ -719,6 +725,11 @@ void CreateTabbar(MainWindow* win) {
         int currentIdx = win->tabsCtrl->GetSelectedTabIndex();
         WindowTab* tab = win->tabs[currentIdx];
         LoadModelIntoTab(tab);
+    };
+    tabsCtrl->onTabDragged = [win](TabDraggedEvent* ev) {
+        int tab1 = ev->tab1;
+        int tab2 = ev->tab2;
+        SwapTabs(win, tab1, tab2);
     };
 
     TabsCreateArgs args;
