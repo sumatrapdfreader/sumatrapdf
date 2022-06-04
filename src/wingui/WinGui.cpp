@@ -3195,7 +3195,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
             xColor = tabHoveredCloseX;
             circleColor = tabHoveredCloseCircle;
         }
-        if (tabsCtrl->xClicked == i) {
+        if (tabsCtrl->tabBeingClosed == i) {
             xColor = tabClickedCloseX;
             circleColor = tabClickedCloseCircle;
         }
@@ -3222,7 +3222,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // paint "x"'s circle
         iterator.NextMarker(&shape);
         // bool closeCircleEnabled = true;
-        if ((tabsCtrl->xClicked == i || tabsCtrl->xHighlighted == i) /*&& closeCircleEnabled*/) {
+        if ((tabsCtrl->tabBeingClosed == i || tabsCtrl->xHighlighted == i) /*&& closeCircleEnabled*/) {
             br.SetColor(GdiRgbFromCOLORREF(circleColor));
             gfx.FillPath(&br, &shape);
         }
@@ -3286,16 +3286,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     TabPainter* tab = painter;
     switch (msg) {
-        case TCM_INSERTITEM:
-            index = (int)wp;
-            if (index <= selectedTabIdx) {
-                selectedTabIdx++;
-            }
-            xClicked = -1;
-            InvalidateRgn(hwnd, nullptr, FALSE);
-            UpdateWindow(hwnd);
-            break;
-
         case TCM_SETITEM:
             // TODO: this should not be necessary
             index = (int)wp;
@@ -3313,7 +3303,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             } else if (index == selectedTabIdx) {
                 selectedTabIdx = -1;
             }
-            xClicked = -1;
+            tabBeingClosed = -1;
             if (tab->Count()) {
                 InvalidateRgn(hwnd, nullptr, FALSE);
                 UpdateWindow(hwnd);
@@ -3323,13 +3313,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case TCM_DELETEALLITEMS:
             selectedTabIdx = -1;
             highlighted = -1;
-            xClicked = -1;
+            tabBeingClosed = -1;
             xHighlighted = -1;
             break;
 
         case TCM_SETITEMSIZE:
             if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
-                xClicked = -1;
+                tabBeingClosed = -1;
                 if (tab->Count()) {
                     InvalidateRgn(hwnd, nullptr, FALSE);
                     UpdateWindow(hwnd);
@@ -3417,7 +3407,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 xHighlighted = xHl;
             }
             if (!inX) {
-                xClicked = -1;
+                tabBeingClosed = -1;
             }
             if (didChangeTabs && highlighted >= 0) {
                 int idx = highlighted;
@@ -3432,7 +3422,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
                 tab->Invalidate(nextTab);
-                xClicked = nextTab;
+                tabBeingClosed = nextTab;
             } else if (nextTab != -1) {
                 if (nextTab != selectedTabIdx) {
                     // TODO: this is hacky
@@ -3452,16 +3442,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
 
         case WM_LBUTTONUP:
-            if (xClicked != -1) {
+            if (tabBeingClosed != -1) {
                 // send notification that the tab is closed
                 if (onTabClosed) {
                     TabClosedEvent ev;
                     ev.tabs = this;
-                    ev.tabIdx = xClicked;
+                    ev.tabIdx = tabBeingClosed;
                     onTabClosed(&ev);
                 }
-                tab->Invalidate(xClicked);
-                xClicked = -1;
+                tab->Invalidate(tabBeingClosed);
+                tabBeingClosed = -1;
             }
             if (isDragging) {
                 isDragging = false;
@@ -3472,22 +3462,22 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
             nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-            xClicked = nextTab;
+            tabBeingClosed = nextTab;
             tab->Invalidate(nextTab);
             return 0;
         }
 
         case WM_MBUTTONUP:
-            if (xClicked != -1) {
+            if (tabBeingClosed != -1) {
                 if (onTabClosed) {
                     TabClosedEvent ev;
                     ev.tabs = this;
-                    ev.tabIdx = xClicked;
+                    ev.tabIdx = tabBeingClosed;
                     onTabClosed(&ev);
                 }
-                int clicked = xClicked;
+                int clicked = tabBeingClosed;
                 tab->Invalidate(clicked);
-                xClicked = -1;
+                tabBeingClosed = -1;
             }
             return 0;
 
@@ -3574,6 +3564,16 @@ int TabsCtrl::InsertTab(int idx, const char* s) {
     item.pszText = ToWstrTemp(s);
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
     tooltips.InsertAt(idx, "");
+
+    // TODO: revise
+    if (insertedIdx <= selectedTabIdx) {
+        selectedTabIdx++;
+    }
+    tabBeingClosed = -1;
+    // Note: doesn't seem necessary
+    // InvalidateRgn(hwnd, nullptr, FALSE);
+    // UpdateWindow(hwnd);
+
     return insertedIdx;
 }
 

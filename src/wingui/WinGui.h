@@ -730,7 +730,7 @@ struct TabsCtrl : Wnd {
     // tracking state of which tab is currently selected, highlighted etc.
     int selectedTabIdx = -1;
     int highlighted = -1;
-    int xClicked = -1;
+    int tabBeingClosed = -1;
     int xHighlighted = -1;
     int nextTab = -1;
     bool isDragging = false;
