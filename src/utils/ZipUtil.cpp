@@ -281,7 +281,9 @@ IStream* OpenDirAsZipStream(const char* dirPath, bool recursive) {
 ByteSlice Ungzip(const ByteSlice& d) {
     size_t len = d.size();
     u8* dataCompr = d.d;
-    size_t lenUncr = len + len;
+    // aggressive growth for uncompressed buffer because I use this
+    // for .syntex files and they compress really well
+    size_t lenUncr = len * 2;
 
     bool done = false;
     int res;
@@ -298,15 +300,16 @@ ByteSlice Ungzip(const ByteSlice& d) {
         return {};
     }
 
-    u8* dataUncr = AllocArray<u8>(lenUncr);
+    // +2 for space for terminating char* or WCHAR*
+    u8* dataUncr = AllocArray<u8>(lenUncr + 2);
     if (!dataUncr) {
         return {};
     }
 
     while (!done) {
         if (strm.total_out >= lenUncr) {
-            size_t newLen = lenUncr + len;
-            u8* dataUncr2 = (u8*)realloc(dataUncr, newLen);
+            size_t newLen = lenUncr * 2;
+            u8* dataUncr2 = (u8*)realloc(dataUncr, newLen + 2);
             if (!dataUncr2) {
                 free((void*)dataUncr);
                 return {};
@@ -316,8 +319,7 @@ ByteSlice Ungzip(const ByteSlice& d) {
         }
 
         strm.next_out = dataUncr + strm.total_out;
-        // -2 so that there's space for terminating 0
-        strm.avail_out = (uInt)lenUncr - (uInt)strm.total_out - 2;
+        strm.avail_out = (uInt)lenUncr - (uInt)strm.total_out;
 
         // Inflate another chunk.
         res = inflate(&strm, Z_SYNC_FLUSH);
