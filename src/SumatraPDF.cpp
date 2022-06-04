@@ -1645,8 +1645,8 @@ static MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
         DeleteVecMembers(win->staticLinks);
         Rect rc = {};
         // TODO: a hack, need a way to clear tooltips
-        win->infotip->ShowOrUpdate("", rc, false);
-        win->HideToolTip();
+        win->infotip->Delete();
+        win->DeleteToolTip();
         // there's no tab to reuse at this point
         args->forceReuse = false;
     } else {

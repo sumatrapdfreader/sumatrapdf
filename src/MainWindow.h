@@ -238,7 +238,7 @@ struct MainWindow {
     void MoveDocBy(int dx, int dy) const;
 
     void ShowToolTip(const char* text, Rect& rc, bool multiline = false) const;
-    void HideToolTip() const;
+    void DeleteToolTip() const;
 
     bool CreateUIAProvider();
 };

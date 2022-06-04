@@ -116,13 +116,13 @@ static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
             win->ShowToolTip(linkInfo->infotip, linkInfo->rect);
             SetCursorCached(IDC_HAND);
         } else {
-            win->HideToolTip();
+            win->DeleteToolTip();
             SetCursorCached(IDC_ARROW);
         }
         return TRUE;
     }
 
-    win->HideToolTip();
+    win->DeleteToolTip();
     return FALSE;
 }
 

@@ -320,7 +320,7 @@ bool ReloadSettings() {
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
         MainWindow* win = gWindows.at(0);
-        win->HideToolTip();
+        win->DeleteToolTip();
         DeleteVecMembers(win->staticLinks);
         win->RedrawAll(true);
     }

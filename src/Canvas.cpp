@@ -1003,7 +1003,7 @@ static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
     DisplayModel* dm = win->AsFixed();
     Point pt = HwndGetCursorPos(hwnd);
     if (!dm || !GetCursor() || pt.IsEmpty()) {
-        win->HideToolTip();
+        win->DeleteToolTip();
         return FALSE;
     }
     if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
@@ -1015,7 +1015,7 @@ static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
     if (!pageEl) {
         SetTextOrArrorCursor(dm, pt);
-        win->HideToolTip();
+        win->DeleteToolTip();
         return TRUE;
     }
     char* text = pageEl->GetValue();
@@ -1042,7 +1042,7 @@ static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
 static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     CrashIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::Idle) {
-        win->HideToolTip();
+        win->DeleteToolTip();
     }
 
     switch (win->mouseAction) {
@@ -1479,7 +1479,7 @@ static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM w
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->HideToolTip();
+            win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
         default:
@@ -1514,7 +1514,7 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
 
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->HideToolTip();
+            win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
 
         default:

@@ -1599,7 +1599,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
 
     if (CmdPinSelectedDocument == cmd) {
         fs->isPinned = !fs->isPinned;
-        win->HideToolTip();
+        win->DeleteToolTip();
         win->RedrawAll(true);
         return;
     }
@@ -1613,7 +1613,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
             DeleteDisplayState(fs);
         }
         CleanUpThumbnailCache(gFileHistory);
-        win->HideToolTip();
+        win->DeleteToolTip();
         win->RedrawAll(true);
         return;
     }

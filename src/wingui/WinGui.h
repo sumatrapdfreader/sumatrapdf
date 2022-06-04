@@ -207,21 +207,27 @@ struct TooltipCreateArgs {
     HFONT font = nullptr;
 };
 
+// a tooltip manages multiple areas withing HWND
 struct Tooltip : Wnd {
     Tooltip();
     HWND Create(const TooltipCreateArgs&);
     Size GetIdealSize() override;
 
-    void ShowOrUpdate(const char* s, const Rect& rc, bool multiline);
-    void Hide();
+    int Add(const char* s, const Rect& rc, bool multiline);
+    void Update(int id, const char* s, const Rect& rc, bool multiline);
+    void Delete(int id = 0);
+
+    int SetSingle(const char* s, const Rect& rc, bool multiline);
+
+    int Count();
 
     void SetDelayTime(int type, int timeInMs);
     void SetMaxWidth(int dx);
-    int Count();
-    bool IsShowing();
 
     // window this tooltip is associated with
     HWND parent = nullptr;
+
+    Vec<int> tooltipIds;
 };
 
 //--- Edit

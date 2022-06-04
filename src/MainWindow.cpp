@@ -245,7 +245,7 @@ void MainWindow::RedrawAllIncludingNonClient(bool update) const {
 void MainWindow::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
-        HideToolTip();
+        DeleteToolTip();
     }
     RedrawAll();
 }
@@ -293,14 +293,14 @@ void MainWindow::MoveDocBy(int dx, int dy) const {
 
 void MainWindow::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
     if (str::IsEmpty(text)) {
-        HideToolTip();
+        DeleteToolTip();
         return;
     }
-    infotip->ShowOrUpdate(text, rc, multiline);
+    infotip->SetSingle(text, rc, multiline);
 }
 
-void MainWindow::HideToolTip() const {
-    infotip->Hide();
+void MainWindow::DeleteToolTip() const {
+    infotip->Delete();
 }
 
 bool MainWindow::CreateUIAProvider() {

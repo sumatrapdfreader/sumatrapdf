@@ -1240,6 +1240,13 @@ Button* CreateDefaultButton(HWND parent, const char* s) {
 
 Kind kindTooltip = "tooltip";
 
+LONG gTolltipID = 0;
+
+static int GetNextTooltipID() {
+    LONG res = InterlockedIncrement(&gTolltipID);
+    return (int)res;
+}
+
 Tooltip::Tooltip() {
     kind = kindTooltip;
 }
@@ -1258,7 +1265,8 @@ HWND Tooltip::Create(const TooltipCreateArgs& args) {
     return hwnd;
 }
 Size Tooltip::GetIdealSize() {
-    return {100, 32}; // not used as this is top-level window
+    // not used as this is top-level window
+    return {100, 32};
 }
 
 void Tooltip::SetMaxWidth(int dx) {
@@ -1276,59 +1284,86 @@ static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }
 
-void Tooltip::ShowOrUpdate(const char* s, const Rect& rc, bool multiline) {
-    WCHAR* ws = ToWstrTemp(s);
-    bool isShowing = IsShowing();
-    if (!isShowing) {
-        SetMaxWidthForText(hwnd, s, multiline);
-        TOOLINFOW ti = {0};
-        ti.cbSize = sizeof(ti);
-        ti.hwnd = parent;
-        ti.uFlags = TTF_SUBCLASS;
-        ti.rect = ToRECT(rc);
-        ti.lpszText = (WCHAR*)ws;
-        SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
-        return;
-    }
-
-    constexpr int bufSize = 512;
-    WCHAR buf[bufSize] = {0};
-    TOOLINFOW tiCurr = {0};
-    tiCurr.cbSize = sizeof(tiCurr);
-    tiCurr.hwnd = parent;
-    tiCurr.lpszText = buf;
-    SendMessageW(hwnd, TTM_GETTEXT, bufSize - 1, (LPARAM)&tiCurr);
-    // TODO: should also compare ti.rect wit rc
-    if (str::Eq(buf, ws)) {
-        return;
-    }
-
+int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
+    int id = GetNextTooltipID();
     SetMaxWidthForText(hwnd, s, multiline);
-    tiCurr.lpszText = (WCHAR*)ws;
-    tiCurr.uFlags = TTF_SUBCLASS;
-    tiCurr.rect = ToRECT(rc);
-    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&tiCurr);
-    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&tiCurr);
+    WCHAR* ws = ToWstrTemp(s);
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = parent;
+    ti.uId = (UINT_PTR)id;
+    ti.uFlags = TTF_SUBCLASS;
+    ti.rect = ToRECT(rc);
+    ti.lpszText = (WCHAR*)ws;
+    BOOL ok = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+    if (!ok) {
+        return -1;
+    }
+    tooltipIds.Append(id);
+    return id;
+}
+
+void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
+    SetMaxWidthForText(hwnd, s, multiline);
+    WCHAR* ws = ToWstrTemp(s);
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = parent;
+    ti.uId = (UINT_PTR)id;
+    ti.hwnd = parent;
+    ti.lpszText = (WCHAR*)ws;
+    ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
+    ti.rect = ToRECT(rc);
+    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&ti);
+}
+
+// this assumes we only have at most one tool per this tooltip
+int Tooltip::SetSingle(const char* s, const Rect& rc, bool multiline) {
+    WCHAR* ws = ToWstrTemp(s);
+    int n = Count();
+    // if want to use more tooltips, use Add() and Update()
+    ReportIf(n > 1);
+    if (n == 0) {
+        return Add(s, rc, multiline);
+    }
+    int id = tooltipIds[0];
+    Update(id, s, rc, multiline);
+    return id;
 }
 
 int Tooltip::Count() {
     int n = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    int n2 = tooltipIds.Size();
+    ReportIf(n != n2);
     return n;
 }
 
-bool Tooltip::IsShowing() {
-    return Count() > 0;
-}
-
-void Tooltip::Hide() {
-    if (!IsShowing()) {
+void Tooltip::Delete(int id) {
+    if (Count() == 0) {
         return;
     }
 
-    TOOLINFO ti{0};
+    int removeIdx = 0;
+    if (id == 0) {
+        // 0 means delete a single tool
+        // should only be used if we only have single tool
+        CrashIf(Count() > 1);
+        id = tooltipIds[0];
+    } else {
+        removeIdx = tooltipIds.Find(id);
+        CrashIf(removeIdx < 0);
+    }
+
+    TOOLINFOW ti{0};
     ti.cbSize = sizeof(ti);
-    ti.hwnd = hwnd;
-    SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+    ti.hwnd = parent;
+    ti.uId = (UINT_PTR)id;
+    int n1 = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    SendMessageW(hwnd, TTM_DELTOOLW, 0, (LPARAM)&ti);
+    int n2 = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    CrashIf(n1 != n2 + 1);
+    tooltipIds.RemoveAt(removeIdx);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime
