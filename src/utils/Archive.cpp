@@ -347,6 +347,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     }
 
     uncompressedBuf.d = (u8*)data;
+    uncompressedBuf.curr = (u8*)data;
     uncompressedBuf.sz = size;
     res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
     ok = (res == 0) && (DataLeft(uncompressedBuf) == 0);
