@@ -62,255 +62,6 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
     win->tabsCtrl->SetSelectedTabByIndex(newSelected);
 }
 
-static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __unused UINT_PTR uIdSubclass,
-                                   __unused DWORD_PTR dwRefData) {
-    PAINTSTRUCT ps;
-    HDC hdc;
-    int index;
-    LPTCITEM tcs;
-
-    TabPainter* tab = (TabPainter*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-    if (WM_NCDESTROY == msg) {
-        RemoveWindowSubclass(hwnd, TabBarProc, 0);
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
-    TabsCtrl* tabs = tab->tabsCtrl;
-
-    switch (msg) {
-        case WM_DESTROY:
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
-            break;
-
-        case TCM_INSERTITEM:
-            index = (int)wp;
-            if (index <= tab->selectedTabIdx) {
-                tab->selectedTabIdx++;
-            }
-            tab->xClicked = -1;
-            InvalidateRgn(hwnd, nullptr, FALSE);
-            UpdateWindow(hwnd);
-            break;
-
-        case TCM_SETITEM:
-            // TODO: this should not be necessary
-            index = (int)wp;
-            tcs = (LPTCITEM)lp;
-            if (TCIF_TEXT & tcs->mask) {
-                tab->Invalidate(index);
-            }
-            break;
-
-        case TCM_DELETEITEM:
-            // TODO: this should not be necessary
-            index = (int)wp;
-            if (index < tab->selectedTabIdx) {
-                tab->selectedTabIdx--;
-            } else if (index == tab->selectedTabIdx) {
-                tab->selectedTabIdx = -1;
-            }
-            tab->xClicked = -1;
-            if (tab->Count()) {
-                InvalidateRgn(hwnd, nullptr, FALSE);
-                UpdateWindow(hwnd);
-            }
-            break;
-
-        case TCM_DELETEALLITEMS:
-            tab->selectedTabIdx = -1;
-            tab->highlighted = -1;
-            tab->xClicked = -1;
-            tab->xHighlighted = -1;
-            break;
-
-        case TCM_SETITEMSIZE:
-            if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
-                tab->xClicked = -1;
-                if (tab->Count()) {
-                    InvalidateRgn(hwnd, nullptr, FALSE);
-                    UpdateWindow(hwnd);
-                }
-            }
-            break;
-
-        case TCM_GETCURSEL:
-            return tab->selectedTabIdx;
-
-        case TCM_SETCURSEL: {
-            index = (int)wp;
-            if (index >= tab->Count()) {
-                return -1;
-            }
-            int previous = tab->selectedTabIdx;
-            if (index != tab->selectedTabIdx) {
-                tab->Invalidate(tab->selectedTabIdx);
-                tab->Invalidate(index);
-                tab->selectedTabIdx = index;
-                UpdateWindow(hwnd);
-            }
-            return previous;
-        }
-
-        case WM_NCHITTEST: {
-            if (!tab->inTitlebar || hwnd == GetCapture()) {
-                return HTCLIENT;
-            }
-            POINT pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-            ScreenToClient(hwnd, &pt);
-            if (-1 != tab->IndexFromPoint(pt.x, pt.y)) {
-                return HTCLIENT;
-            }
-        }
-            return HTTRANSPARENT;
-
-        case WM_MOUSELEAVE:
-            PostMessageW(hwnd, WM_MOUSEMOVE, 0xFF, 0);
-            return 0;
-
-        case WM_MOUSEMOVE: {
-            tab->mouseCoordinates = lp;
-
-            if (0xff != wp) {
-                TrackMouseLeave(hwnd);
-            }
-
-            bool inX = false;
-            int hl = wp == 0xFF ? -1 : tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
-            bool didChangeTabs = false;
-            if (tab->isDragging && hl == -1) {
-                // preserve the highlighted tab if it's dragged outside the tabs' area
-                hl = tab->highlighted;
-                didChangeTabs = true;
-            }
-            if (tab->highlighted != hl) {
-                if (tab->isDragging) {
-                    // send notification if the highlighted tab is dragged over another
-                    MainWindow* win = FindMainWindowByHwnd(hwnd);
-                    int tabNo = tab->highlighted;
-                    if (tabs->onTabDragged) {
-                        TabDraggedEvent ev;
-                        ev.tabs = win->tabsCtrl;
-                        ev.tab1 = tabNo;
-                        ev.tab2 = hl;
-                        tabs->onTabDragged(&ev);
-                    }
-                }
-
-                tab->Invalidate(hl);
-                tab->Invalidate(tab->highlighted);
-                tab->highlighted = hl;
-                didChangeTabs = true;
-            }
-            int xHl = inX && !tab->isDragging ? hl : -1;
-            if (tab->xHighlighted != xHl) {
-                tab->Invalidate(xHl);
-                tab->Invalidate(tab->xHighlighted);
-                tab->xHighlighted = xHl;
-            }
-            if (!inX) {
-                tab->xClicked = -1;
-            }
-            if (didChangeTabs && tab->highlighted >= 0) {
-                int idx = tab->highlighted;
-                auto tabsCtrl = tab->tabsCtrl;
-                tabsCtrl->MaybeUpdateTooltipText(idx);
-            }
-        }
-            return 0;
-
-        case WM_LBUTTONDOWN:
-            bool inX;
-            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
-            if (inX) {
-                tab->Invalidate(tab->nextTab);
-                tab->xClicked = tab->nextTab;
-            } else if (tab->nextTab != -1) {
-                if (tab->nextTab != tab->selectedTabIdx) {
-                    // HWND hwndParent = ::GetParent(hwnd);
-                    NMHDR nmhdr = {hwnd, IDC_TABBAR, (UINT)TCN_SELCHANGING};
-                    BOOL stopChange = (BOOL)tabs->OnNotifyReflect(IDC_TABBAR, (LPARAM)&nmhdr);
-                    // TODO: why SendMessage doesn't work?
-                    // BOOL stopChange = SendMessageW(hwndParent, WM_NOTIFY, IDC_TABBAR, (LPARAM)&nmhdr);
-                    if (!stopChange) {
-                        TabCtrl_SetCurSel(hwnd, tab->nextTab);
-                        nmhdr = {hwnd, IDC_TABBAR, (UINT)TCN_SELCHANGE};
-                        tabs->OnNotifyReflect(IDC_TABBAR, (LPARAM)&nmhdr);
-                        return 0;
-                    }
-                    return 0;
-                }
-                tab->isDragging = true;
-                SetCapture(hwnd);
-            }
-            return 0;
-
-        case WM_LBUTTONUP:
-            if (tab->xClicked != -1) {
-                // send notification that the tab is closed
-                MainWindow* win = FindMainWindowByHwnd(hwnd);
-                if (tabs->onTabClosed) {
-                    TabClosedEvent ev;
-                    ev.tabs = tabs;
-                    ev.tabIdx = tab->xClicked;
-                    tabs->onTabClosed(&ev);
-                }
-                tab->Invalidate(tab->xClicked);
-                tab->xClicked = -1;
-            }
-            if (tab->isDragging) {
-                tab->isDragging = false;
-                ReleaseCapture();
-            }
-            return 0;
-
-        case WM_MBUTTONDOWN:
-            // middle-clicking unconditionally closes the tab
-            {
-                tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-                tab->xClicked = tab->nextTab;
-                tab->Invalidate(tab->nextTab);
-            }
-            return 0;
-
-        case WM_MBUTTONUP:
-            if (tab->xClicked != -1) {
-                if (tabs->onTabClosed) {
-                    TabClosedEvent ev;
-                    ev.tabs = tabs;
-                    ev.tabIdx = tab->xClicked;
-                    tabs->onTabClosed(&ev);
-                }
-                int clicked = tab->xClicked;
-                tab->Invalidate(clicked);
-                tab->xClicked = -1;
-            }
-            return 0;
-
-        case WM_ERASEBKGND:
-            return TRUE;
-
-        case WM_PAINT: {
-            RECT rc;
-            GetUpdateRect(hwnd, &rc, FALSE);
-            // TODO: when is wp != nullptr?
-            hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
-
-            DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
-            tab->Paint(buffer.GetDC(), rc);
-            buffer.Flush(hdc);
-
-            ValidateRect(hwnd, nullptr);
-            if (!wp) {
-                EndPaint(hwnd, &ps);
-            }
-            return 0;
-        }
-    }
-
-    return DefSubclassProc(hwnd, msg, wp, lp);
-}
-
 int GetTabbarHeight(HWND hwnd, float factor) {
     int dy = DpiScale(hwnd, kTabBarDy);
     return (int)(dy * factor);
@@ -421,12 +172,7 @@ void CreateTabbar(MainWindow* win) {
     args.createToolTipsHwnd = true;
     tabsCtrl->Create(args);
 
-    HWND hwndTabBar = tabsCtrl->hwnd;
-    SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);
-
     Size tabSize = GetTabSize(win->hwndFrame);
-    TabPainter* tp = new TabPainter(tabsCtrl, tabSize);
-    SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
     tabsCtrl->SetItemSize(tabSize);
     win->tabsCtrl = tabsCtrl;
 
@@ -503,7 +249,7 @@ void TabPainterSetColors(TabPainter* p) {
 }
 
 void UpdateCurrentTabBgColor(MainWindow* win) {
-    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
+    TabPainter* tab = win->tabsCtrl->painter;
     // TODO: match either the toolbar (if shown) or background
     tab->currBgCol = kTabDefaultBgCol;
     TabPainterSetColors(tab);
@@ -580,19 +326,18 @@ void TabsOnCloseWindow(MainWindow* win) {
     DeleteVecMembers(win->tabs);
 }
 
-void SetTabsInTitlebar(MainWindow* win, bool inTitlebar) {
-    if (inTitlebar == win->tabsInTitlebar) {
+void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
+    if (inTitleBar == win->tabsInTitlebar) {
         return;
     }
-    win->tabsInTitlebar = inTitlebar;
-    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
-    tab->inTitlebar = inTitlebar;
-    SetParent(win->tabsCtrl->hwnd, inTitlebar ? win->hwndCaption : win->hwndFrame);
-    ShowWindow(win->hwndCaption, inTitlebar ? SW_SHOW : SW_HIDE);
-    if (inTitlebar != win->isMenuHidden) {
+    win->tabsInTitlebar = inTitleBar;
+    win->tabsCtrl->painter->inTitleBar = inTitleBar;
+    SetParent(win->tabsCtrl->hwnd, inTitleBar ? win->hwndCaption : win->hwndFrame);
+    ShowWindow(win->hwndCaption, inTitleBar ? SW_SHOW : SW_HIDE);
+    if (inTitleBar != win->isMenuHidden) {
         ToggleMenuBar(win);
     }
-    if (inTitlebar) {
+    if (inTitleBar) {
         CaptionUpdateUI(win, win->caption);
         RelayoutCaption(win);
     } else if (dwm::IsCompositionEnabled()) {

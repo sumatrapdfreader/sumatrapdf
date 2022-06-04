@@ -3069,7 +3069,7 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
     iterator.NextMarker(&shape);
 
     Rect rClient = ClientRect(hwnd);
-    float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
+    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - height - 1);
     gfx.TranslateTransform(1.0f, yPosTab);
     for (int i = 0; i < Count(); i++) {
         Gdiplus::Point pt(point);
@@ -3090,11 +3090,10 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
 }
 
 // Invalidates the tab's region in the client area.
-void TabPainter::Invalidate(int index) const {
-    if (index < 0) {
+void TabPainter::Invalidate(int tabNo) const {
+    if (tabNo < 0) {
         return;
     }
-
     Graphics gfx(hwnd);
     GraphicsPath shapes(data->Points, data->Types, data->Count);
     GraphicsPath shape;
@@ -3103,8 +3102,8 @@ void TabPainter::Invalidate(int index) const {
     Region region(&shape);
 
     Rect rClient = ClientRect(hwnd);
-    float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
-    gfx.TranslateTransform(float((width + 1) * index) + 1.0f, yPosTab);
+    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - height - 1);
+    gfx.TranslateTransform(float((width + 1) * tabNo) + 1.0f, yPosTab);
     HRGN hRgn = region.GetHRGN(&gfx);
     InvalidateRgn(hwnd, hRgn, FALSE);
     DeleteObject(hRgn);
@@ -3128,7 +3127,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 0
         // paint the background
-        bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
+        bool isTranslucentMode = inTitleBar && dwm::IsCompositionEnabled();
         if (isTranslucentMode) {
             PaintParentBackground(hwnd, hdc);
         } else {
@@ -3166,7 +3165,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    float yPosTab = inTitlebar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
+    float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
     for (int i = 0; i < Count(); i++) {
         gfx.ResetTransform();
         gfx.TranslateTransform(1.f + (float)(width + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
@@ -3273,16 +3272,250 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
         case TTN_GETDISPINFOA:
         case TTN_GETDISPINFOW:
-            logfa("TabsCtrl::OnNotifyReflect: TTN_GETDISPINFO\n");
+            // logfa("TabsCtrl::OnNotifyReflect: TTN_GETDISPINFO\n");
             break;
     }
     return 0;
 }
 
-#if 0
-LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    int index;
+    PAINTSTRUCT ps;
+    HDC hdc;
+    TCITEMW* tcs = nullptr;
+
+    TabPainter* tab = painter;
+    switch (msg) {
+        case TCM_INSERTITEM:
+            index = (int)wp;
+            if (index <= tab->selectedTabIdx) {
+                tab->selectedTabIdx++;
+            }
+            tab->xClicked = -1;
+            InvalidateRgn(hwnd, nullptr, FALSE);
+            UpdateWindow(hwnd);
+            break;
+
+        case TCM_SETITEM:
+            // TODO: this should not be necessary
+            index = (int)wp;
+            tcs = (LPTCITEM)lp;
+            if (TCIF_TEXT & tcs->mask) {
+                tab->Invalidate(index);
+            }
+            break;
+
+        case TCM_DELETEITEM:
+            // TODO: this should not be necessary
+            index = (int)wp;
+            if (index < tab->selectedTabIdx) {
+                tab->selectedTabIdx--;
+            } else if (index == tab->selectedTabIdx) {
+                tab->selectedTabIdx = -1;
+            }
+            tab->xClicked = -1;
+            if (tab->Count()) {
+                InvalidateRgn(hwnd, nullptr, FALSE);
+                UpdateWindow(hwnd);
+            }
+            break;
+
+        case TCM_DELETEALLITEMS:
+            tab->selectedTabIdx = -1;
+            tab->highlighted = -1;
+            tab->xClicked = -1;
+            tab->xHighlighted = -1;
+            break;
+
+        case TCM_SETITEMSIZE:
+            if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
+                tab->xClicked = -1;
+                if (tab->Count()) {
+                    InvalidateRgn(hwnd, nullptr, FALSE);
+                    UpdateWindow(hwnd);
+                }
+            }
+            break;
+
+        case TCM_GETCURSEL:
+            return tab->selectedTabIdx;
+
+        case TCM_SETCURSEL: {
+            index = (int)wp;
+            if (index >= tab->Count()) {
+                return -1;
+            }
+            int previous = tab->selectedTabIdx;
+            if (index != tab->selectedTabIdx) {
+                tab->Invalidate(tab->selectedTabIdx);
+                tab->Invalidate(index);
+                tab->selectedTabIdx = index;
+                UpdateWindow(hwnd);
+            }
+            return previous;
+        }
+
+        case WM_NCHITTEST: {
+            if (!tab->inTitleBar || hwnd == GetCapture()) {
+                return HTCLIENT;
+            }
+            POINT pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            ScreenToClient(hwnd, &pt);
+            if (-1 != tab->IndexFromPoint(pt.x, pt.y)) {
+                return HTCLIENT;
+            }
+        }
+            return HTTRANSPARENT;
+
+        case WM_MOUSELEAVE:
+            wp = 0xff;
+            lp = 0;
+            [[fallthrough]];
+
+        case WM_MOUSEMOVE: {
+            tab->mouseCoordinates = lp;
+
+            if (0xff != wp) {
+                TrackMouseLeave(hwnd);
+            }
+
+            bool inX = false;
+            int x = GET_X_LPARAM(lp);
+            int y = GET_Y_LPARAM(lp);
+            int hl = wp == 0xFF ? -1 : tab->IndexFromPoint(x, y, &inX);
+            bool didChangeTabs = false;
+            if (tab->isDragging && hl == -1) {
+                // preserve the highlighted tab if it's dragged outside the tabs' area
+                hl = tab->highlighted;
+                didChangeTabs = true;
+            }
+            if (tab->highlighted != hl) {
+                if (tab->isDragging) {
+                    // send notification if the highlighted tab is dragged over another
+                    int tabNo = tab->highlighted;
+                    if (onTabDragged) {
+                        TabDraggedEvent ev;
+                        ev.tabs = this;
+                        ev.tab1 = tabNo;
+                        ev.tab2 = hl;
+                        onTabDragged(&ev);
+                    }
+                }
+
+                tab->Invalidate(hl);
+                tab->Invalidate(tab->highlighted);
+                tab->highlighted = hl;
+                didChangeTabs = true;
+            }
+            int xHl = -1;
+            if (inX && !tab->isDragging) {
+                xHl = hl;
+            }
+            // logfa("inX=%d, hl=%d, xHl=%d, xHighlighted=%d\n", (int)inX, hl, xHl, tab->xHighlighted);
+            if (tab->xHighlighted != xHl) {
+                // logfa("before invalidate, xHl=%d, xHighlited=%d\n", xHl, tab->xHighlighted);
+                tab->Invalidate(xHl);
+                tab->Invalidate(tab->xHighlighted);
+                tab->xHighlighted = xHl;
+            }
+            if (!inX) {
+                tab->xClicked = -1;
+            }
+            if (didChangeTabs && tab->highlighted >= 0) {
+                int idx = tab->highlighted;
+                auto tabsCtrl = tab->tabsCtrl;
+                tabsCtrl->MaybeUpdateTooltipText(idx);
+            }
+        }
+            return 0;
+
+        case WM_LBUTTONDOWN:
+            bool inX;
+            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
+            if (inX) {
+                tab->Invalidate(tab->nextTab);
+                tab->xClicked = tab->nextTab;
+            } else if (tab->nextTab != -1) {
+                if (tab->nextTab != tab->selectedTabIdx) {
+                    // TODO: this is hacky
+                    NMHDR nmhdr = {hwnd, (UINT_PTR)ctrlID, (UINT)TCN_SELCHANGING};
+                    BOOL stopChange = (BOOL)OnNotifyReflect(ctrlID, (LPARAM)&nmhdr);
+                    if (!stopChange) {
+                        TabCtrl_SetCurSel(hwnd, tab->nextTab);
+                        nmhdr = {hwnd, (UINT_PTR)ctrlID, (UINT)TCN_SELCHANGE};
+                        OnNotifyReflect(ctrlID, (LPARAM)&nmhdr);
+                        return 0;
+                    }
+                    return 0;
+                }
+                tab->isDragging = true;
+                SetCapture(hwnd);
+            }
+            return 0;
+
+        case WM_LBUTTONUP:
+            if (tab->xClicked != -1) {
+                // send notification that the tab is closed
+                if (onTabClosed) {
+                    TabClosedEvent ev;
+                    ev.tabs = this;
+                    ev.tabIdx = tab->xClicked;
+                    onTabClosed(&ev);
+                }
+                tab->Invalidate(tab->xClicked);
+                tab->xClicked = -1;
+            }
+            if (tab->isDragging) {
+                tab->isDragging = false;
+                ReleaseCapture();
+            }
+            return 0;
+
+        case WM_MBUTTONDOWN: {
+            // middle-clicking unconditionally closes the tab
+            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            tab->xClicked = tab->nextTab;
+            tab->Invalidate(tab->nextTab);
+            return 0;
+        }
+
+        case WM_MBUTTONUP:
+            if (tab->xClicked != -1) {
+                if (onTabClosed) {
+                    TabClosedEvent ev;
+                    ev.tabs = this;
+                    ev.tabIdx = tab->xClicked;
+                    onTabClosed(&ev);
+                }
+                int clicked = tab->xClicked;
+                tab->Invalidate(clicked);
+                tab->xClicked = -1;
+            }
+            return 0;
+
+        case WM_ERASEBKGND:
+            return TRUE;
+
+        case WM_PAINT: {
+            RECT rc;
+            GetUpdateRect(hwnd, &rc, FALSE);
+            // TODO: when is wp != nullptr?
+            hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
+
+            DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
+            tab->Paint(buffer.GetDC(), rc);
+            buffer.Flush(hdc);
+
+            ValidateRect(hwnd, nullptr);
+            if (!wp) {
+                EndPaint(hwnd, &ps);
+            }
+            return 0;
+        }
+    }
+
+    return WndProcDefault(hwnd, msg, wp, lp);
 }
-#endif
 
 HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     createToolTipsHwnd = argsIn.createToolTipsHwnd;
@@ -3303,12 +3536,12 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     if (sz.dx == 0) {
         sz.dx = DpiScale(args.parent, kTabMinDx);
     }
-    painter = new TabPainter(this, sz);
 
     HWND hwnd = CreateControl(args);
     if (!hwnd) {
         return nullptr;
     }
+    painter = new TabPainter(this, sz);
 
     if (createToolTipsHwnd) {
         HWND ttHwnd = GetToolTipsHwnd();
@@ -3395,8 +3628,10 @@ int TabsCtrl::SetSelectedTabByIndex(int idx) {
     return prevSelectedIdx;
 }
 
+// TODO: rename to SetTabSize?
 void TabsCtrl::SetItemSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
+    // painter->Reshape(sz.dx, sz.dy);
 }
 
 void TabsCtrl::SetToolTipsHwnd(HWND hwndTooltip) {

@@ -673,7 +673,7 @@ struct TabPainter {
     int xHighlighted = -1;
     int nextTab = -1;
     bool isDragging = false;
-    bool inTitlebar = false;
+    bool inTitleBar = false;
     LPARAM mouseCoordinates = 0;
 
     TabPainter(TabsCtrl* ctrl, Size tabSize);
@@ -726,6 +726,7 @@ struct TabsCreateArgs {
 struct TabPainter;
 
 struct TabsCtrl : Wnd {
+    int ctrlID = 0;
     TabPainter* painter = nullptr;
     str::Str lastTabText;
     bool createToolTipsHwnd = false;
@@ -743,7 +744,7 @@ struct TabsCtrl : Wnd {
 
     HWND Create(TabsCreateArgs&);
 
-    // LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
 
     Size GetIdealSize() override;
