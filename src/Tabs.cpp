@@ -350,14 +350,42 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
     win->tabsCtrl->SetSelectedTabByIndex(newSelected);
 }
 
+// On tab selection, we save the data for the tab which is losing selection and
+// load the data of the selected tab into the MainWindow.
+static LRESULT TabsOnNotify(MainWindow* win, NMHDR* data, int tab1 = -1, int tab2 = -1) {
+    int current;
+
+    switch (data->code) {
+        case TCN_SELCHANGING:
+            // TODO: Should we allow the switch of the tab if we are in process of printing?
+            SaveCurrentTabInfo(win);
+            return FALSE;
+
+        case TCN_SELCHANGE:
+            current = win->tabsCtrl->GetSelectedTabIndex();
+            LoadModelIntoTab(win->tabs.at(current));
+            break;
+
+        case kTabDrag:
+            SwapTabs(win, tab1, tab2);
+            break;
+        case TTN_GETDISPINFOA:
+        case TTN_GETDISPINFOW:
+            logf("TabsOnNotify TTN_GETDISPINFO\n");
+            break;
+    }
+    return TRUE;
+}
+
 static void TabNotification(MainWindow* win, UINT code, int idx1, int idx2) {
     if (!MainWindowStillValid(win)) {
         return;
     }
     NMHDR nmhdr = {nullptr, 0, code};
-    if (TabsOnNotify(win, (LPARAM)&nmhdr, idx1, idx2)) {
+    if (TabsOnNotify(win, &nmhdr, idx1, idx2)) {
         return;
     }
+#if 0
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
     if ((UINT)TCN_SELCHANGING == code) {
         // if we have permission to select the tab
@@ -368,14 +396,18 @@ static void TabNotification(MainWindow* win, UINT code, int idx1, int idx2) {
         nmhdr.code = (UINT)TCN_SELCHANGE;
         TabsOnNotify(win, (LPARAM)&nmhdr);
     }
+#endif
 }
 
-static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __unused UINT_PTR uIdSubclass,
-                                         DWORD_PTR dwRefData) {
-    if (msg == WM_NOTIFY && wp == IDC_TABBAR) {
-        MainWindow* win = (MainWindow*)dwRefData;
-        if (win) {
-            return TabsOnNotify(win, lp);
+static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dwRefData) {
+    if (msg == WM_NOTIFY) {
+        if (wp == IDC_TABBAR) {
+            NMHDR* hdr = (NMHDR*)lp;
+            MainWindow* win = FindMainWindowByHwnd(hwnd);
+            logfa("wp: %d, win: 0x%p, code: %d\n", (int)wp, win, (int)hdr->code);
+            if (win) {
+                return TabsOnNotify(win, hdr);
+            }
         }
     }
 
@@ -543,9 +575,20 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
                 tab->xClicked = tab->nextTab;
             } else if (tab->nextTab != -1) {
                 if (tab->nextTab != tab->selectedTabIdx) {
-                    // send request to select tab
                     MainWindow* win = FindMainWindowByHwnd(hwnd);
-                    uitask::Post([=] { TabNotification(win, (UINT)TCN_SELCHANGING, -1, -1); });
+                    // HWND hwndParent = ::GetParent(hwnd);
+                    NMHDR nmhdr = {hwnd, IDC_TABBAR, (UINT)TCN_SELCHANGING};
+                    BOOL stopChange = TabsOnNotify(win, &nmhdr);
+                    // TODO: why SendMessage doesn't work?
+                    // BOOL stopChange = SendMessageW(hwndParent, WM_NOTIFY, IDC_TABBAR, (LPARAM)&nmhdr);
+                    if (!stopChange) {
+                        TabCtrl_SetCurSel(hwnd, tab->nextTab);
+                        nmhdr = {hwnd, IDC_TABBAR, (UINT)TCN_SELCHANGE};
+                        TabsOnNotify(win, &nmhdr);
+                        // SendMessageW(hwndParent, WM_NOTIFY, IDC_TABBAR, (LPARAM)&nmhdr);
+                        return 0;
+                    }
+                    return 0;
                 }
                 tab->isDragging = true;
                 SetCapture(hwnd);
@@ -684,6 +727,10 @@ static void WinTabClosedHandler(MainWindow* win, TabsCtrl* tabs, int closedTabId
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
     tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) { WinTabClosedHandler(win, ev->tabs, ev->tabIdx); };
+    tabsCtrl->onSelectionChanging = [win](TabSelectionChangingEvent* ev) -> bool { return true; };
+    tabsCtrl->onSelectionChanged = [](TabSelectionChangedEvent* ev) {
+
+    };
 
     TabsCreateArgs args;
     args.parent = win->hwndFrame;
@@ -829,34 +876,6 @@ void TabsOnCloseWindow(MainWindow* win) {
     DeleteVecMembers(win->tabs);
 }
 
-// On tab selection, we save the data for the tab which is losing selection and
-// load the data of the selected tab into the MainWindow.
-LRESULT TabsOnNotify(MainWindow* win, LPARAM lp, int tab1, int tab2) {
-    LPNMHDR data = (LPNMHDR)lp;
-    int current;
-
-    switch (data->code) {
-        case TCN_SELCHANGING:
-            // TODO: Should we allow the switch of the tab if we are in process of printing?
-            SaveCurrentTabInfo(win);
-            return FALSE;
-
-        case TCN_SELCHANGE:
-            current = win->tabsCtrl->GetSelectedTabIndex();
-            LoadModelIntoTab(win->tabs.at(current));
-            break;
-
-        case kTabDrag:
-            SwapTabs(win, tab1, tab2);
-            break;
-        case TTN_GETDISPINFOA:
-        case TTN_GETDISPINFOW:
-            logf("TabsOnNotify TTN_GETDISPINFO\n");
-            break;
-    }
-    return TRUE;
-}
-
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar) {
     if (inTitlebar == win->tabsInTitlebar) {
         return;
@@ -888,8 +907,8 @@ void TabsSelect(MainWindow* win, int tabIndex) {
     if (count < 2 || tabIndex < 0 || tabIndex >= count) {
         return;
     }
-    NMHDR ntd = {nullptr, 0, (UINT)TCN_SELCHANGING};
-    if (TabsOnNotify(win, (LPARAM)&ntd)) {
+    NMHDR hdr = {nullptr, 0, (UINT)TCN_SELCHANGING};
+    if (TabsOnNotify(win, &hdr)) {
         return;
     }
     win->currentTab = win->tabs.at(tabIndex);
@@ -897,8 +916,8 @@ void TabsSelect(MainWindow* win, int tabIndex) {
     logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path);
     int prevIdx = win->tabsCtrl->SetSelectedTabByIndex(tabIndex);
     if (prevIdx != -1) {
-        ntd.code = (UINT)TCN_SELCHANGE;
-        TabsOnNotify(win, (LPARAM)&ntd);
+        hdr.code = (UINT)TCN_SELCHANGE;
+        TabsOnNotify(win, &hdr);
     }
 }
 
