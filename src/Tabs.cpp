@@ -76,7 +76,6 @@ using Gdiplus::Win32Error;
 
 #define kTabDefaultBgCol (COLORREF) - 1
 
-#define kTabClosing (TCN_LAST + 1)
 #define kTabClose (TCN_LAST + 2)
 #define kTabDrag (TCN_LAST + 3)
 
@@ -375,12 +374,6 @@ static void TabNotification(MainWindow* win, UINT code, int idx1, int idx2) {
         return;
     }
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
-    if ((UINT)kTabClosing == code) {
-        // if we have permission to close the tab
-        tab->Invalidate(tab->nextTab);
-        tab->xClicked = tab->nextTab;
-        return;
-    }
     if ((UINT)TCN_SELCHANGING == code) {
         // if we have permission to select the tab
         tab->Invalidate(tab->selectedTabIdx);
@@ -559,10 +552,8 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             bool inX;
             tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
-                // send request to close the tab
-                MainWindow* win = FindMainWindowByHwnd(hwnd);
-                int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
+                tab->Invalidate(tab->nextTab);
+                tab->xClicked = tab->nextTab;
             } else if (tab->nextTab != -1) {
                 if (tab->nextTab != tab->selectedTabIdx) {
                     // send request to select tab
@@ -593,10 +584,8 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             // middle-clicking unconditionally closes the tab
             {
                 tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-                // send request to close the tab
-                MainWindow* win = FindMainWindowByHwnd(hwnd);
-                int next = tab->nextTab;
-                uitask::Post([=] { TabNotification(win, (UINT)kTabClosing, next, -1); });
+                tab->xClicked = tab->nextTab;
+                tab->Invalidate(tab->nextTab);
             }
             return 0;
 
@@ -812,10 +801,6 @@ LRESULT TabsOnNotify(MainWindow* win, LPARAM lp, int tab1, int tab2) {
             current = win->tabsCtrl->GetSelectedTabIndex();
             LoadModelIntoTab(win->tabs.at(current));
             break;
-
-        case kTabClosing:
-            // allow the closure
-            return FALSE;
 
         case kTabClose:
             current = win->tabsCtrl->GetSelectedTabIndex();
