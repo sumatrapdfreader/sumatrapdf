@@ -52,7 +52,7 @@
 #include "SumatraPDF.h"
 #include "Notifications.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "UpdateCheck.h"
 #include "resource.h"
 #include "Commands.h"
@@ -339,11 +339,11 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
     UpdateToolbarState(win);
 }
 
-TabInfo* FindTabByFile(const char* file) {
+WindowTab* FindTabByFile(const char* file) {
     char* normFile = path::NormalizeTemp(file);
 
     for (MainWindow* win : gWindows) {
-        for (TabInfo* tab : win->tabs) {
+        for (WindowTab* tab : win->tabs) {
             char* fp = tab->filePath;
             if (!fp || !path::IsSame(fp, normFile)) {
                 continue;
@@ -355,7 +355,7 @@ TabInfo* FindTabByFile(const char* file) {
 }
 
 // ok for tab to be null
-void SelectTabInWindow(TabInfo* tab) {
+void SelectTabInWindow(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
@@ -368,7 +368,7 @@ void SelectTabInWindow(TabInfo* tab) {
 
 // Find the first window showing a given PDF file
 MainWindow* FindMainWindowByFile(const char* file, bool focusTab) {
-    TabInfo* tab = FindTabByFile(file);
+    WindowTab* tab = FindTabByFile(file);
     if (!tab) {
         return nullptr;
     }
@@ -389,7 +389,7 @@ MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
         }
         if (focusTab && win->tabs.size() > 1) {
             // bring a background tab to the foreground
-            for (TabInfo* tab : win->tabs) {
+            for (WindowTab* tab : win->tabs) {
                 if (tab != win->currentTab && tab->AsFixed() && tab->AsFixed()->pdfSync &&
                     tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
                     TabsSelect(win, win->tabs.Find(tab));
@@ -497,7 +497,7 @@ static void UpdateDisplayStateWindowRect(MainWindow* win, FileState* fs, bool up
     fs->sidebarDx = gGlobalPrefs->sidebarDx;
 }
 
-static void UpdateSidebarDisplayState(TabInfo* tab, FileState* fs) {
+static void UpdateSidebarDisplayState(WindowTab* tab, FileState* fs) {
     CrashIf(!tab);
     MainWindow* win = tab->win;
     fs->showToc = tab->showToc;
@@ -508,7 +508,7 @@ static void UpdateSidebarDisplayState(TabInfo* tab, FileState* fs) {
     *fs->tocState = tab->tocState;
 }
 
-void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
+void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     if (!tab || !tab->ctrl) {
         return;
     }
@@ -959,7 +959,7 @@ static DocController* CreateControllerForEngineOrFile(EngineBase* engine, const 
     return CreateControllerForChm(path, pwdUI, win);
 }
 
-static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
+static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     const char* titlePath = tab->filePath;
     if (!gGlobalPrefs->fullPathInTitle) {
         titlePath = path::GetBaseNameTemp(titlePath);
@@ -1041,7 +1041,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (!win) {
         return;
     }
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     CrashIf(!tab);
 
     // Never load settings from a preexisting state if the user doesn't wish to
@@ -1241,7 +1241,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 
 void ReloadDocument(MainWindow* win, bool autoRefresh) {
     // TODO: must disable reload for EngineMulti representing a directory
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
 
     // we can't reload while having annotations window open because
     // that invalidates the mupdf objects that we hold in editAnnotsWindow
@@ -1555,11 +1555,11 @@ bool DocumentPathExists(const char* path) {
     return false;
 }
 
-static void scheduleReloadTab(TabInfo* tab) {
+static void scheduleReloadTab(WindowTab* tab) {
     uitask::Post([=] {
         // tab might have been closed, so first ensure it's still valid
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
-        MainWindow* win = FindMainWindowByTabInfo(tab);
+        MainWindow* win = FindMainWindowByWindowTab(tab);
         if (win == nullptr) {
             return;
         }
@@ -1656,7 +1656,7 @@ static MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
         }
         ReportIf(!args->forceReuse && !openNewTab);
         if (openNewTab) {
-            SaveCurrentTabInfo(args->win);
+            SaveCurrentWindowTab(args->win);
         }
         CloseDocumentInCurrentTab(win, true, args->forceReuse);
     }
@@ -1859,7 +1859,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
 }
 
 // Loads document data into the MainWindow.
-void LoadModelIntoTab(TabInfo* tab) {
+void LoadModelIntoTab(WindowTab* tab) {
     if (!tab) {
         return;
     }
@@ -2168,7 +2168,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // SetFocus(win->hwndFrame);
 }
 
-bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
+bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
     OPENFILENAME ofn{};
@@ -2307,7 +2307,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
 
 // if returns true, can proceed with closing
 // if returns false, should cancel closing
-static bool MaybeSaveAnnotations(TabInfo* tab) {
+static bool MaybeSaveAnnotations(WindowTab* tab) {
     if (!tab) {
         return true;
     }
@@ -2376,7 +2376,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     AbortFinding(win, true);
     ClearFindBox(win);
 
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (tab) {
         RememberRecentlyClosedDocument(tab->filePath);
     }
@@ -2967,7 +2967,7 @@ static void OnDuplicateInNewWindow(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     char* path = tab->filePath;
     CrashIf(!path);
     if (!path) {
@@ -3153,7 +3153,7 @@ static void BrowseFolder(MainWindow* win, bool forward) {
         return;
     }
 
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     StrVec files;
     char* path = tab->filePath;
     char* pattern = path::GetDirTemp(path);
@@ -3623,7 +3623,7 @@ void ExitFullScreen(MainWindow* win) {
         KillTimer(win->hwndCanvas, kHideCursorTimerID);
         SetCursorCached(IDC_ARROW);
         // ensure that no ToC is shown when entering presentation mode the next time
-        for (TabInfo* tab : win->tabs) {
+        for (WindowTab* tab : win->tabs) {
             tab->showTocPresentation = false;
         }
     } else {
@@ -3949,7 +3949,7 @@ static void AddUniquePageNo(Vec<int>& v, int pageNo) {
     v.Append(pageNo);
 }
 
-Vec<Annotation*> MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType) {
+Vec<Annotation*> MakeAnnotationFromSelection(WindowTab* tab, AnnotationType annotType) {
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
     Vec<Annotation*> annots;
@@ -4257,7 +4257,7 @@ static int TestBigNew()
 }
 #endif
 
-static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
+static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     const char* path = engine->FileName();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
@@ -4319,7 +4319,7 @@ static str::WStr URLEncode(const WCHAR* s) {
 constexpr const WCHAR* kUserLangStr = L"${userlang}";
 constexpr const WCHAR* kSelectionStr = L"${selection}";
 
-static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
+static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) {
     if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
     }
@@ -4356,7 +4356,7 @@ static void LaunchBrowserWithSelection(TabInfo* tab, const WCHAR* urlPattern) {
 }
 
 // TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
-static void CopySelectionInTabToClipboard(TabInfo* tab) {
+static void CopySelectionInTabToClipboard(WindowTab* tab) {
     // Don't break the shortcut for text boxes
     if (!tab || !tab->win) {
         return;
@@ -4539,7 +4539,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (!win->IsAboutWindow()) {
         if (CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
             size_t idx = (size_t)wmId - (size_t)CmdOpenWithExternalFirst;

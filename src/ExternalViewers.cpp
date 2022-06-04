@@ -15,7 +15,7 @@
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "ExternalViewers.h"
 #include "Commands.h"
 
@@ -128,7 +128,7 @@ static ExternalViewerInfo* FindExternalViewerInfoByCmd(int cmd) {
     return nullptr;
 }
 
-static bool CanViewExternally(TabInfo* tab) {
+static bool CanViewExternally(WindowTab* tab) {
     if (!HasPermission(Perm::DiskAccess)) {
         return false;
     }
@@ -247,7 +247,7 @@ void DetectExternalViewers() {
     }
 }
 
-bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
+bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     if (!tab || !CanViewExternally(tab)) {
         return false;
     }
@@ -273,12 +273,12 @@ bool CanViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
     return true;
 }
 
-bool CouldBePDFDoc(TabInfo* tab) {
+bool CouldBePDFDoc(WindowTab* tab) {
     // consider any error state a potential PDF document
     return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
-static char* FormatParams(const char* cmdLine, TabInfo* tab) {
+static char* FormatParams(const char* cmdLine, WindowTab* tab) {
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
     AutoFreeStr params;
@@ -304,7 +304,7 @@ static char* FormatParams(const char* cmdLine, TabInfo* tab) {
     return params.StealData();
 }
 
-bool ViewWithKnownExternalViewer(TabInfo* tab, int cmd) {
+bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmd);
     ReportIf(!canView); // TODO: with command palette can send un-enforcable command
     if (!canView) {
@@ -330,7 +330,7 @@ bool PathMatchFilter(const char* path, char* filter) {
     return matches;
 }
 
-bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
+bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     if (!HasPermission(Perm::DiskAccess) || !tab || !file::Exists(tab->filePath)) {
         return false;
     }
@@ -371,7 +371,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     static const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
 
-bool CanSendAsEmailAttachment(TabInfo* tab) {
+bool CanSendAsEmailAttachment(WindowTab* tab) {
     // Requirements: a valid filename and access to SendMail's IDropTarget interface
     if (!CanViewExternally(tab)) {
         return false;
@@ -383,7 +383,7 @@ bool CanSendAsEmailAttachment(TabInfo* tab) {
 
 // TODO: maybe use
 // https://stackoverflow.com/questions/47639267/win32-c-sending-email-in-windows-10-by-invoking-default-mail-client
-bool SendAsEmailAttachment(TabInfo* tab, HWND hwndParent) {
+bool SendAsEmailAttachment(WindowTab* tab, HWND hwndParent) {
     if (!tab || !CanSendAsEmailAttachment(tab)) {
         return false;
     }

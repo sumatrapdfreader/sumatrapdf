@@ -23,7 +23,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "Selection.h"
 #include "Toolbar.h"
 #include "Translations.h"
@@ -95,7 +95,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     win->showSelection = false;
     win->selectionMeasure = SizeF();
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (!tab) {
         return;
     }
@@ -260,7 +260,7 @@ void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit, bool relat
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
 // caller needs to str::Free() the result
-char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
+char* GetSelectedText(WindowTab* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
         return nullptr;
     }
@@ -299,7 +299,7 @@ char* GetSelectedText(TabInfo* tab, const char* lineSep, bool& isTextOnlySelecti
 }
 
 void CopySelectionToClipboard(MainWindow* win) {
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     CrashIf(tab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
 
     if (!OpenClipboard(nullptr)) {

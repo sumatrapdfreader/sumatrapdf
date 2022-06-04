@@ -74,7 +74,7 @@ struct FileHistory;
 struct MainWindow;
 struct NotificationWnd;
 struct RenderCache;
-struct TabInfo;
+struct WindowTab;
 struct LabelWithCloseWnd;
 struct SessionData;
 struct Flags;
@@ -116,7 +116,7 @@ void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
-void UpdateTabFileDisplayStateForTab(TabInfo* tab);
+void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 void RelayoutWindow(MainWindow* win);
@@ -124,8 +124,8 @@ void RelayoutWindow(MainWindow* win);
 // note: background tabs are only searched if focusTab is true
 MainWindow* FindMainWindowByFile(const char* file, bool focusTab);
 MainWindow* FindMainWindowBySyncFile(const char* file, bool focusTab);
-TabInfo* FindTabByFile(const char* file);
-void SelectTabInWindow(TabInfo*);
+WindowTab* FindTabByFile(const char* file);
+void SelectTabInWindow(WindowTab*);
 
 class EngineBase;
 struct DocController;

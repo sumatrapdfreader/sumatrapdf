@@ -7,9 +7,9 @@ struct EditAnnotationsWindow;
 struct MainWindow;
 
 /* Data related to a single document loaded into a tab/window */
-/* (none of these depend on MainWindow, so that a TabInfo could
+/* (none of these depend on MainWindow, so that a WindowTab could
    be moved between windows once this is supported) */
-struct TabInfo {
+struct WindowTab {
     AutoFreeStr filePath;
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
@@ -38,8 +38,8 @@ struct TabInfo {
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
 
-    TabInfo(MainWindow* win, const char* filePath);
-    ~TabInfo();
+    WindowTab(MainWindow* win, const char* filePath);
+    ~WindowTab();
 
     DisplayModel* AsFixed() const;
 

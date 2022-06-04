@@ -10,9 +10,6 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\docs">
-      <UniqueIdentifier>{45EA2ECF-31B7-89DA-5AD0-778246FCBE68}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\ext">
       <UniqueIdentifier>{0DFD2FA9-79DC-AE44-82F4-391BEE5215A6}</UniqueIdentifier>
     </Filter>
@@ -162,9 +159,6 @@
     <ClInclude Include="..\src\SvgIcons.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TabInfo.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TableOfContents.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -190,6 +184,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Version.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\WindowTab.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
@@ -383,9 +380,6 @@
     <ClCompile Include="..\src\SvgIcons.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TabInfo.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TableOfContents.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -420,6 +414,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UpdateCheck.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\WindowTab.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
@@ -529,18 +526,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\docs\releasenotes.txt">
-      <Filter>src\docs</Filter>
-    </None>
-    <None Include="..\src\docs\todo.txt">
-      <Filter>src\docs</Filter>
-    </None>
-    <None Include="..\src\docs\translations.txt">
-      <Filter>src\docs</Filter>
-    </None>
-    <None Include="..\src\docs\wishlist.txt">
-      <Filter>src\docs</Filter>
-    </None>
     <None Include="..\src\ext\versions.txt">
       <Filter>src\ext</Filter>
     </None>

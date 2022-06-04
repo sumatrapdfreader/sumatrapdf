@@ -32,7 +32,7 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraConfig.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "EditAnnotations.h"
 #include "Notifications.h"
@@ -522,7 +522,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
 
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (didDragMouse) {
         // no-op
         return;

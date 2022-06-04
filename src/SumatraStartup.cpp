@@ -40,7 +40,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "UpdateCheck.h"
 #include "resource.h"
 #include "Commands.h"
@@ -310,7 +310,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload 
     if (!LoadDocument(&args, lazyload)) {
         return;
     }
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (!tab || !tab->ctrl) {
         return;
     }
@@ -938,7 +938,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     bool restoreSession = false;
     HANDLE hMutex = nullptr;
     HWND existingHwnd = nullptr;
-    TabInfo* tabToSelect = nullptr;
+    WindowTab* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
 
     CrashIf(hInstance != GetInstance());

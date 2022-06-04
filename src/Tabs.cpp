@@ -23,7 +23,7 @@
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Caption.h"
@@ -320,7 +320,7 @@ int TabPainter::Count() const {
     return n;
 }
 
-static void SetTabTitle(TabInfo* tab) {
+static void SetTabTitle(WindowTab* tab) {
     if (!tab) {
         return;
     }
@@ -358,7 +358,7 @@ static LRESULT TabsOnNotify(MainWindow* win, NMHDR* data, int tab1 = -1, int tab
     switch (data->code) {
         case TCN_SELCHANGING:
             // TODO: Should we allow the switch of the tab if we are in process of printing?
-            SaveCurrentTabInfo(win);
+            SaveCurrentWindowTab(win);
             return FALSE;
 
         case TCN_SELCHANGE:
@@ -702,7 +702,7 @@ void UpdateTabWidth(MainWindow* win) {
 }
 
 static void RemoveTab(MainWindow* win, int idx) {
-    TabInfo* tab = win->tabs.at(idx);
+    WindowTab* tab = win->tabs.at(idx);
     UpdateTabFileDisplayStateForTab(tab);
     win->tabSelectionHistory->Remove(tab);
     win->tabs.Remove(tab);
@@ -748,18 +748,18 @@ void CreateTabbar(MainWindow* win) {
     tabsCtrl->SetItemSize(tabSize);
     win->tabsCtrl = tabsCtrl;
 
-    win->tabSelectionHistory = new Vec<TabInfo*>();
+    win->tabSelectionHistory = new Vec<WindowTab*>();
 }
 
-// verifies that TabInfo state is consistent with MainWindow state
-static NO_INLINE void VerifyTabInfo(MainWindow* win, TabInfo* tdata) {
+// verifies that WindowTab state is consistent with MainWindow state
+static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
     CrashIf(tdata->ctrl != win->ctrl);
 #if 0
     // disabling this check. best I can tell, external apps can change window
     // title and trigger this
     auto winTitle = win::GetTextTemp(win->hwndFrame);
     if (!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
-        logf(L"VerifyTabInfo: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle.Get());
+        logf(L"VerifyWindowTab: winTitle: '%s', tdata->frameTitle: '%s'\n", winTitle.Get(), tdata->frameTitle.Get());
         ReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     }
 #endif
@@ -776,7 +776,7 @@ static NO_INLINE void VerifyTabInfo(MainWindow* win, TabInfo* tdata) {
 
 // Must be called when the active tab is losing selection.
 // This happens when a new document is loaded or when another tab is selected.
-void SaveCurrentTabInfo(MainWindow* win) {
+void SaveCurrentWindowTab(MainWindow* win) {
     if (!win) {
         return;
     }
@@ -787,12 +787,12 @@ void SaveCurrentTabInfo(MainWindow* win) {
     }
     CrashIf(win->currentTab != win->tabs.at(current));
 
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (win->tocLoaded) {
         TocTree* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
     }
-    VerifyTabInfo(win, tab);
+    VerifyWindowTab(win, tab);
 
     // update the selection history
     win->tabSelectionHistory->Remove(tab);
@@ -807,13 +807,13 @@ void UpdateCurrentTabBgColor(MainWindow* win) {
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
-TabInfo* CreateNewTab(MainWindow* win, const char* filePath) {
+WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     CrashIf(!win);
     if (!win) {
         return nullptr;
     }
 
-    TabInfo* tab = new TabInfo(win, filePath);
+    WindowTab* tab = new WindowTab(win, filePath);
     win->tabs.Append(tab);
     tab->canvasRc = win->canvasRc;
 
@@ -828,14 +828,14 @@ TabInfo* CreateNewTab(MainWindow* win, const char* filePath) {
 
 // Refresh the tab's title
 void TabsOnChangedDoc(MainWindow* win) {
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     CrashIf(!tab != !win->tabs.size());
     if (!tab) {
         return;
     }
 
     CrashIf(win->tabs.Find(tab) != win->tabsCtrl->GetSelectedTabIndex());
-    VerifyTabInfo(win, tab);
+    VerifyWindowTab(win, tab);
     SetTabTitle(tab);
 }
 
@@ -860,7 +860,7 @@ void TabsOnCloseDoc(MainWindow* win) {
     RemoveTab(win, current);
 
     if (win->tabs.size() > 0) {
-        TabInfo* tab = win->tabSelectionHistory->Pop();
+        WindowTab* tab = win->tabSelectionHistory->Pop();
         int idx = win->tabs.Find(tab);
         win->tabsCtrl->SetSelectedTabByIndex(idx);
         LoadModelIntoTab(tab);

@@ -604,7 +604,6 @@
     <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraProperties.h" />
     <ClInclude Include="..\src\SvgIcons.h" />
-    <ClInclude Include="..\src\TabInfo.h" />
     <ClInclude Include="..\src\TableOfContents.h" />
     <ClInclude Include="..\src\Tabs.h" />
     <ClInclude Include="..\src\TextSearch.h" />
@@ -614,6 +613,7 @@
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />
     <ClInclude Include="..\src\Version.h" />
+    <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\resource.h" />
@@ -687,7 +687,6 @@
     <ClCompile Include="..\src\SumatraProperties.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
     <ClCompile Include="..\src\SvgIcons.cpp" />
-    <ClCompile Include="..\src\TabInfo.cpp" />
     <ClCompile Include="..\src\TableOfContents.cpp" />
     <ClCompile Include="..\src\Tabs.cpp" />
     <ClCompile Include="..\src\Tester.cpp" />
@@ -707,6 +706,7 @@
     <ClCompile Include="..\src\Translations.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
+    <ClCompile Include="..\src\WindowTab.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\regress\Regress.cpp">
@@ -898,10 +898,6 @@
     <ClCompile Include="..\src\wingui\WinGui.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\docs\releasenotes.txt" />
-    <None Include="..\src\docs\todo.txt" />
-    <None Include="..\src\docs\translations.txt" />
-    <None Include="..\src\docs\wishlist.txt" />
     <None Include="..\src\ext\versions.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -29,7 +29,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
 #include "AppTools.h"
@@ -447,7 +447,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;
     }
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     if (!tab || tab->GetEngineType() != kindEngineMupdf) {
         return false;
     }

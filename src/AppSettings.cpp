@@ -22,7 +22,7 @@
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "SumatraPDF.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "Flags.h"
 #include "MainWindow.h"
 #include "AppSettings.h"
@@ -203,7 +203,7 @@ static void RememberSessionState() {
             continue;
         }
         SessionData* data = NewSessionData();
-        for (TabInfo* tab : win->tabs) {
+        for (WindowTab* tab : win->tabs) {
             char* fp = tab->filePath;
             FileState* fs = NewDisplayState(fp);
             if (tab->ctrl) {
@@ -235,7 +235,7 @@ bool SaveSettings() {
 
     // update display states for all tabs
     for (MainWindow* win : gWindows) {
-        for (TabInfo* tab : win->tabs) {
+        for (WindowTab* tab : win->tabs) {
             UpdateTabFileDisplayStateForTab(tab);
         }
     }
