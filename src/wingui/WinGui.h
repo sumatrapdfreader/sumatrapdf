@@ -631,7 +631,59 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);
 
 //--- TabsCtrl
 
+using Gdiplus::PathData;
+
+#define kTabBarDy 24
+#define kTabMinDx 100
+
 struct TabsCtrl;
+
+#define kTabDefaultBgCol (COLORREF) - 1
+
+// TODO: make it private to WinGui.cpp
+struct TabPainter {
+    TabsCtrl* tabsCtrl = nullptr;
+    PathData* data = nullptr;
+    int width = -1;
+    int height = -1;
+    HWND hwnd = nullptr;
+
+    // TODO: set those to reasonable defaults
+    COLORREF currBgCol = kTabDefaultBgCol;
+    COLORREF tabBackgroundBg = 0;
+    COLORREF tabBackgroundText = 0;
+    COLORREF tabBackgroundCloseX = 0;
+    COLORREF tabBackgroundCloseCircle = 0;
+    COLORREF tabSelectedBg = 0;
+    COLORREF tabSelectedText = 0;
+    COLORREF tabSelectedCloseX = 0;
+    COLORREF tabSelectedCloseCircle = 0;
+    COLORREF tabHighlightedBg = 0;
+    COLORREF tabHighlightedText = 0;
+    COLORREF tabHighlightedCloseX = 0;
+    COLORREF tabHighlightedCloseCircle = 0;
+    COLORREF tabHoveredCloseX = 0;
+    COLORREF tabHoveredCloseCircle = 0;
+    COLORREF tabClickedCloseX = 0;
+    COLORREF tabClickedCloseCircle = 0;
+
+    int selectedTabIdx = -1;
+    int highlighted = -1;
+    int xClicked = -1;
+    int xHighlighted = -1;
+    int nextTab = -1;
+    bool isDragging = false;
+    bool inTitlebar = false;
+    LPARAM mouseCoordinates = 0;
+
+    TabPainter(TabsCtrl* ctrl, Size tabSize);
+    ~TabPainter();
+    bool Reshape(int dx, int dy);
+    int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) const;
+    void Invalidate(int index) const;
+    void Paint(HDC hdc, RECT& rc) const;
+    int Count() const;
+};
 
 struct TabClosedEvent {
     TabsCtrl* tabs = nullptr;
@@ -668,9 +720,13 @@ struct TabsCreateArgs {
     HFONT font = nullptr;
     bool createToolTipsHwnd = false;
     int ctrlID = 0;
+    Size tabSize = {};
 };
 
+struct TabPainter;
+
 struct TabsCtrl : Wnd {
+    TabPainter* painter = nullptr;
     str::Str lastTabText;
     bool createToolTipsHwnd = false;
     str::Str currTooltipText;
