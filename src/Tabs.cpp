@@ -18,7 +18,6 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "AppColors.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
@@ -58,6 +57,25 @@ struct TabPainter {
     int height = -1;
     HWND hwnd = nullptr;
 
+    // TODO: set those to reasonable defaults
+    COLORREF currBgCol = kTabDefaultBgCol;
+    COLORREF tabBackgroundBg = 0;
+    COLORREF tabBackgroundText = 0;
+    COLORREF tabBackgroundCloseX = 0;
+    COLORREF tabBackgroundCloseCircle = 0;
+    COLORREF tabSelectedBg = 0;
+    COLORREF tabSelectedText = 0;
+    COLORREF tabSelectedCloseX = 0;
+    COLORREF tabSelectedCloseCircle = 0;
+    COLORREF tabHighlightedBg = 0;
+    COLORREF tabHighlightedText = 0;
+    COLORREF tabHighlightedCloseX = 0;
+    COLORREF tabHighlightedCloseCircle = 0;
+    COLORREF tabHoveredCloseX = 0;
+    COLORREF tabHoveredCloseCircle = 0;
+    COLORREF tabClickedCloseX = 0;
+    COLORREF tabClickedCloseCircle = 0;
+
     int selectedTabIdx = -1;
     int highlighted = -1;
     int xClicked = -1;
@@ -66,7 +84,6 @@ struct TabPainter {
     bool isDragging = false;
     bool inTitlebar = false;
     LPARAM mouseCoordinates = 0;
-    COLORREF currBgCol{kTabDefaultBgCol};
 
     TabPainter(TabsCtrl* ctrl, Size tabSize);
     ~TabPainter();
@@ -228,29 +245,29 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         }
 
         // Get the correct colors based on the state and the current theme
-        COLORREF bgCol = GetAppColor(AppColor::TabBackgroundBg);
-        COLORREF textCol = GetAppColor(AppColor::TabBackgroundText);
-        COLORREF xColor = GetAppColor(AppColor::TabBackgroundCloseX);
-        COLORREF circleColor = GetAppColor(AppColor::TabBackgroundCloseCircle);
+        COLORREF bgCol = tabBackgroundBg;
+        COLORREF textCol = tabBackgroundText;
+        COLORREF xColor = tabBackgroundCloseX;
+        COLORREF circleColor = tabBackgroundCloseCircle;
 
         if (selectedTabIdx == i) {
-            bgCol = GetAppColor(AppColor::TabSelectedBg);
-            textCol = GetAppColor(AppColor::TabSelectedText);
-            xColor = GetAppColor(AppColor::TabSelectedCloseX);
-            circleColor = GetAppColor(AppColor::TabSelectedCloseCircle);
+            bgCol = tabSelectedBg;
+            textCol = tabSelectedText;
+            xColor = tabSelectedCloseX;
+            circleColor = tabSelectedCloseCircle;
         } else if (highlighted == i) {
-            bgCol = GetAppColor(AppColor::TabHighlightedBg);
-            textCol = GetAppColor(AppColor::TabHighlightedText);
-            xColor = GetAppColor(AppColor::TabHighlightedCloseX);
-            circleColor = GetAppColor(AppColor::TabHighlightedCloseCircle);
+            bgCol = tabHighlightedBg;
+            textCol = tabHighlightedText;
+            xColor = tabHighlightedCloseX;
+            circleColor = tabHighlightedCloseCircle;
         }
         if (xHighlighted == i) {
-            xColor = GetAppColor(AppColor::TabHoveredCloseX);
-            circleColor = GetAppColor(AppColor::TabHoveredCloseCircle);
+            xColor = tabHoveredCloseX;
+            circleColor = tabHoveredCloseCircle;
         }
         if (xClicked == i) {
-            xColor = GetAppColor(AppColor::TabClickedCloseX);
-            circleColor = GetAppColor(AppColor::TabClickedCloseCircle);
+            xColor = tabClickedCloseX;
+            circleColor = tabClickedCloseCircle;
         }
 
         // paint tab's body
@@ -746,10 +763,32 @@ void SaveCurrentWindowTab(MainWindow* win) {
     win->tabSelectionHistory->Append(tab);
 }
 
+#include "AppColors.h"
+
+void TabPainterSetColors(TabPainter* p) {
+    p->tabBackgroundBg = GetAppColor(AppColor::TabBackgroundBg);
+    p->tabBackgroundText = GetAppColor(AppColor::TabBackgroundText);
+    p->tabBackgroundCloseX = GetAppColor(AppColor::TabBackgroundCloseX);
+    p->tabBackgroundCloseCircle = GetAppColor(AppColor::TabBackgroundCloseCircle);
+    p->tabSelectedBg = GetAppColor(AppColor::TabSelectedBg);
+    p->tabSelectedText = GetAppColor(AppColor::TabSelectedText);
+    p->tabSelectedCloseX = GetAppColor(AppColor::TabSelectedCloseX);
+    p->tabSelectedCloseCircle = GetAppColor(AppColor::TabSelectedCloseCircle);
+    p->tabHighlightedBg = GetAppColor(AppColor::TabHighlightedBg);
+    p->tabHighlightedText = GetAppColor(AppColor::TabHighlightedText);
+    p->tabHighlightedCloseX = GetAppColor(AppColor::TabHighlightedCloseX);
+    p->tabHighlightedCloseCircle = GetAppColor(AppColor::TabHighlightedCloseCircle);
+    p->tabHoveredCloseX = GetAppColor(AppColor::TabHoveredCloseX);
+    p->tabHoveredCloseCircle = GetAppColor(AppColor::TabHoveredCloseCircle);
+    p->tabClickedCloseX = GetAppColor(AppColor::TabClickedCloseX);
+    p->tabClickedCloseCircle = GetAppColor(AppColor::TabClickedCloseCircle);
+}
+
 void UpdateCurrentTabBgColor(MainWindow* win) {
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabsCtrl->hwnd, GWLP_USERDATA);
     // TODO: match either the toolbar (if shown) or background
     tab->currBgCol = kTabDefaultBgCol;
+    TabPainterSetColors(tab);
     RepaintNow(win->tabsCtrl->hwnd);
 }
 
