@@ -1145,7 +1145,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
     }
 
     void TestUngzip();
-    if (true) {
+    if (false) {
         TestUngzip();
         return 0;
     }

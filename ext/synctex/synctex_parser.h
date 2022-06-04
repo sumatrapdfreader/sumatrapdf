@@ -100,6 +100,9 @@ typedef _synctex_scanner_t *  synctex_scanner_t;
  */
 synctex_scanner_t synctex_scanner_new_with_output_file(const char * output, const char * build_directory, int parse);
 
+/* SumatraPDF */
+synctex_scanner_t synctex_scanner_new_with_data(char* path, char* data, size_t len);
+
 /*  This is the designated method to delete a synctex scanner object.
  *  Frees all the memory, you must call it when you are finished with the scanner.
  */

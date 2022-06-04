@@ -1055,7 +1055,7 @@ typedef int synctex_status_t;
 #   define SYNCTEX_FILE (scanner->file)
 
 /*  Actually, the minimum buffer size is driven by integer and float parsing.
- *  ±0.123456789e123
+ *  ï¿½0.123456789e123
  */
 #   define SYNCTEX_BUFFER_MIN_SIZE 16
 #   define SYNCTEX_BUFFER_SIZE 32768
@@ -2569,6 +2569,17 @@ bail:
 }
 
 int _synctex_open(const char * output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, synctex_bool_t add_quotes, synctex_io_mode_t * io_modeRef);
+
+/* SumatraPDF */
+synctex_scanner_t synctex_scanner_new_with_data(char* path, char* data, size_t len) {
+    synctex_scanner_t scanner = (synctex_scanner_t)_synctex_malloc(sizeof(_synctex_scanner_t));
+    scanner->buffer_start = data;
+    scanner->buffer_end = data + len;
+    scanner->buffer_cur = data;
+	scanner->output = path; // takes ownership
+    synctex_scanner_parse(scanner);
+	return scanner;
+}
 
 /*  Where the synctex scanner is created. */
 synctex_scanner_t synctex_scanner_new_with_output_file(const char * output, const char * build_directory, int parse) {

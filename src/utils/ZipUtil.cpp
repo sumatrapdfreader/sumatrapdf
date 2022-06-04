@@ -274,6 +274,10 @@ IStream* OpenDirAsZipStream(const char* dirPath, bool recursive) {
 
 // adapted from https://www.cocoanetics.com/2012/02/decompressing-files-into-memory/
 // d is a content of gzip file
+// returns uncpmpressed data
+// the returned data will have 2 zero bytes at end to make sure it's also
+// a 0-terminated char* or WCHA* string
+// those 2 bytes are not reported as
 ByteSlice Ungzip(const ByteSlice& d) {
     size_t len = d.size();
     u8* dataCompr = d.d;
@@ -312,7 +316,8 @@ ByteSlice Ungzip(const ByteSlice& d) {
         }
 
         strm.next_out = dataUncr + strm.total_out;
-        strm.avail_out = (uInt)lenUncr - (uInt)strm.total_out;
+        // -2 so that there's space for terminating 0
+        strm.avail_out = (uInt)lenUncr - (uInt)strm.total_out - 2;
 
         // Inflate another chunk.
         res = inflate(&strm, Z_SYNC_FLUSH);
@@ -330,5 +335,8 @@ ByteSlice Ungzip(const ByteSlice& d) {
     }
 
     lenUncr = strm.total_out;
+    // also make it a valid 0-terminated char* or WCHAR* string
+    dataUncr[lenUncr] = 0;
+    dataUncr[lenUncr + 1] = 0;
     return {dataUncr, lenUncr};
 }
