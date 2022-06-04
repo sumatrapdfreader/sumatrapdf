@@ -629,6 +629,17 @@ struct TreeView : Wnd {
 
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);
 
+//--- TabsCtrl
+
+struct TabsCtrl;
+
+struct TabClosedEvent {
+    TabsCtrl* tabs = nullptr;
+    int tabIdx = 0;
+};
+
+using TabClosedHandler = std::function<void(TabClosedEvent*)>;
+
 struct TabsCreateArgs {
     HWND parent = nullptr;
     HFONT font = nullptr;
@@ -642,6 +653,8 @@ struct TabsCtrl : Wnd {
     str::Str currTooltipText;
 
     StrVec tooltips;
+
+    TabClosedHandler onTabClosed = nullptr;
 
     TabsCtrl();
     ~TabsCtrl() override;

@@ -7,6 +7,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
