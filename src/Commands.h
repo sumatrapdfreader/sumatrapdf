@@ -27,6 +27,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdRotateLeft, "Rotate Left")                                       \
     V(CmdRotateRight, "Rotate Right")                                     \
     V(CmdToggleBookmarks, "Toggle Bookmarks")                             \
+    V(CmdToggleTableOfContents, "Toggle Table Of Contents")               \
     V(CmdToggleFullscreen, "Toggle Fullscreen")                           \
     V(CmdPresentationWhiteBackground, "Presentation White Background")    \
     V(CmdPresentationBlackBackground, "Presentation Black Background")    \

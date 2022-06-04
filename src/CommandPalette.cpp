@@ -267,7 +267,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (!ctx.cursorOnImage && (cmdId == CmdCopyImage)) {
         return false;
     }
-    if (!ctx.hasToc && (cmdId == CmdToggleBookmarks)) {
+    if (!ctx.hasToc && (cmdId == CmdToggleBookmarks) || (cmdId == CmdToggleTableOfContents)) {
         return false;
     }
     if ((cmdId == CmdToggleScrollbars) && !gGlobalPrefs->fixedPageUI.hideScrollbars) {

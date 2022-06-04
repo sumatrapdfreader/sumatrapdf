@@ -1731,6 +1731,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdSaveAs:
         case CmdPrint:
         case CmdToggleBookmarks:
+        case CmdToggleTableOfContents:
         case CmdFavoriteToggle:
         case CmdProperties:
         case CmdToggleToolbar:
