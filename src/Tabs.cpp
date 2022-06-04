@@ -76,22 +76,7 @@ using Gdiplus::Win32Error;
 
 #define kTabDefaultBgCol (COLORREF) - 1
 
-#define kTabClose (TCN_LAST + 2)
 #define kTabDrag (TCN_LAST + 3)
-
-#define kTabBarDy 24
-#define kTabMinDx 100
-
-int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScale(hwnd, kTabBarDy);
-    return (int)(dy * factor);
-}
-
-static inline Size GetTabSize(HWND hwnd) {
-    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, kTabMinDx));
-    int dy = DpiScale(hwnd, kTabBarDy);
-    return Size(dx, dy);
-}
 
 struct TabPainter {
     TabsCtrl* tabsCtrl = nullptr;
@@ -412,6 +397,8 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
+    TabsCtrl* tabs = tab->tabsCtrl;
+
     switch (msg) {
         case WM_DESTROY:
             delete tab;
@@ -569,9 +556,13 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             if (tab->xClicked != -1) {
                 // send notification that the tab is closed
                 MainWindow* win = FindMainWindowByHwnd(hwnd);
-                int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
-                tab->Invalidate(clicked);
+                if (tabs->onTabClosed) {
+                    TabClosedEvent ev;
+                    ev.tabs = tabs;
+                    ev.tabIdx = tab->xClicked;
+                    tabs->onTabClosed(&ev);
+                }
+                tab->Invalidate(tab->xClicked);
                 tab->xClicked = -1;
             }
             if (tab->isDragging) {
@@ -591,10 +582,13 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
 
         case WM_MBUTTONUP:
             if (tab->xClicked != -1) {
-                // send notification that the tab is closed
-                MainWindow* win = FindMainWindowByHwnd(hwnd);
+                if (tabs->onTabClosed) {
+                    TabClosedEvent ev;
+                    ev.tabs = tabs;
+                    ev.tabIdx = tab->xClicked;
+                    tabs->onTabClosed(&ev);
+                }
                 int clicked = tab->xClicked;
-                uitask::Post([=] { TabNotification(win, (UINT)kTabClose, clicked, -1); });
                 tab->Invalidate(clicked);
                 tab->xClicked = -1;
             }
@@ -624,8 +618,72 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
+#define kTabMinDx 100
+#define kTabBarDy 24
+
+int GetTabbarHeight(HWND hwnd, float factor) {
+    int dy = DpiScale(hwnd, kTabBarDy);
+    return (int)(dy * factor);
+}
+
+static inline Size GetTabSize(HWND hwnd) {
+    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, kTabMinDx));
+    int dy = DpiScale(hwnd, kTabBarDy);
+    return Size(dx, dy);
+}
+
+static void ShowTabBar(MainWindow* win, bool show) {
+    if (show == win->tabsVisible) {
+        return;
+    }
+    win->tabsVisible = show;
+    win->tabsCtrl->SetIsVisible(show);
+    RelayoutWindow(win);
+}
+
+void UpdateTabWidth(MainWindow* win) {
+    int count = (int)win->tabs.size();
+    bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
+    bool showTabs = (count > 1) || (showSingleTab && (count > 0));
+    if (!showTabs) {
+        ShowTabBar(win, false);
+        return;
+    }
+    ShowTabBar(win, true);
+    Rect rect = ClientRect(win->tabsCtrl->hwnd);
+    Size tabSize = GetTabSize(win->hwndFrame);
+    auto maxDx = (rect.dx - 3) / count;
+    tabSize.dx = std::min(tabSize.dx, maxDx);
+    win->tabsCtrl->SetItemSize(tabSize);
+    win->tabsCtrl->MaybeUpdateTooltip();
+}
+
+static void RemoveTab(MainWindow* win, int idx) {
+    TabInfo* tab = win->tabs.at(idx);
+    UpdateTabFileDisplayStateForTab(tab);
+    win->tabSelectionHistory->Remove(tab);
+    win->tabs.Remove(tab);
+    if (tab == win->currentTab) {
+        win->ctrl = nullptr;
+        win->currentTab = nullptr;
+    }
+    delete tab;
+    win->tabsCtrl->RemoveTab(idx);
+    UpdateTabWidth(win);
+}
+
+static void WinTabClosedHandler(MainWindow* win, TabsCtrl* tabs, int closedTabIdx) {
+    int current = win->tabsCtrl->GetSelectedTabIndex();
+    if (closedTabIdx == current) {
+        CloseCurrentTab(win);
+    } else {
+        RemoveTab(win, closedTabIdx);
+    }
+}
+
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
+    tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) { WinTabClosedHandler(win, ev->tabs, ev->tabIdx); };
 
     TabsCreateArgs args;
     args.parent = win->hwndFrame;
@@ -734,20 +792,6 @@ void TabsOnChangedDoc(MainWindow* win) {
     SetTabTitle(tab);
 }
 
-static void RemoveTab(MainWindow* win, int idx) {
-    TabInfo* tab = win->tabs.at(idx);
-    UpdateTabFileDisplayStateForTab(tab);
-    win->tabSelectionHistory->Remove(tab);
-    win->tabs.Remove(tab);
-    if (tab == win->currentTab) {
-        win->ctrl = nullptr;
-        win->currentTab = nullptr;
-    }
-    delete tab;
-    win->tabsCtrl->RemoveTab(idx);
-    UpdateTabWidth(win);
-}
-
 // Called when we're closing a document
 void TabsOnCloseDoc(MainWindow* win) {
     if (win->tabs.size() == 0) {
@@ -802,15 +846,6 @@ LRESULT TabsOnNotify(MainWindow* win, LPARAM lp, int tab1, int tab2) {
             LoadModelIntoTab(win->tabs.at(current));
             break;
 
-        case kTabClose:
-            current = win->tabsCtrl->GetSelectedTabIndex();
-            if (tab1 == current) {
-                CloseCurrentTab(win);
-            } else {
-                RemoveTab(win, tab1);
-            }
-            break;
-
         case kTabDrag:
             SwapTabs(win, tab1, tab2);
             break;
@@ -820,32 +855,6 @@ LRESULT TabsOnNotify(MainWindow* win, LPARAM lp, int tab1, int tab2) {
             break;
     }
     return TRUE;
-}
-
-static void ShowTabBar(MainWindow* win, bool show) {
-    if (show == win->tabsVisible) {
-        return;
-    }
-    win->tabsVisible = show;
-    win->tabsCtrl->SetIsVisible(show);
-    RelayoutWindow(win);
-}
-
-void UpdateTabWidth(MainWindow* win) {
-    int count = (int)win->tabs.size();
-    bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
-    bool showTabs = (count > 1) || (showSingleTab && (count > 0));
-    if (!showTabs) {
-        ShowTabBar(win, false);
-        return;
-    }
-    ShowTabBar(win, true);
-    Rect rect = ClientRect(win->tabsCtrl->hwnd);
-    Size tabSize = GetTabSize(win->hwndFrame);
-    auto maxDx = (rect.dx - 3) / count;
-    tabSize.dx = std::min(tabSize.dx, maxDx);
-    win->tabsCtrl->SetItemSize(tabSize);
-    win->tabsCtrl->MaybeUpdateTooltip();
 }
 
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar) {
