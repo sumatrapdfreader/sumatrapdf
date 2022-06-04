@@ -667,12 +667,6 @@ struct TabPainter {
     COLORREF tabClickedCloseX = 0;
     COLORREF tabClickedCloseCircle = 0;
 
-    int selectedTabIdx = -1;
-    int highlighted = -1;
-    int xClicked = -1;
-    int xHighlighted = -1;
-    int nextTab = -1;
-    bool isDragging = false;
     bool inTitleBar = false;
 
     TabPainter(TabsCtrl* ctrl, Size tabSize);
@@ -732,6 +726,14 @@ struct TabsCtrl : Wnd {
     str::Str currTooltipText;
 
     StrVec tooltips;
+
+    // tracking state of which tab is currently selected, highlighted etc.
+    int selectedTabIdx = -1;
+    int highlighted = -1;
+    int xClicked = -1;
+    int xHighlighted = -1;
+    int nextTab = -1;
+    bool isDragging = false;
 
     TabClosedHandler onTabClosed = nullptr;
     TabsSelectionChangingHandler onSelectionChanging = nullptr;
