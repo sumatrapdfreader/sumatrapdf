@@ -655,6 +655,14 @@ struct TabsSelectionChangedEvent {
 
 using TabsSelectionChangedHandler = std::function<void(TabsSelectionChangedEvent*)>;
 
+struct TabDraggedEvent {
+    TabsCtrl* tabs = nullptr;
+    int tab1 = -1;
+    int tab2 = -1;
+};
+
+using TabDraggedHandler = std::function<void(TabDraggedEvent*)>;
+
 struct TabsCreateArgs {
     HWND parent = nullptr;
     HFONT font = nullptr;
@@ -672,11 +680,14 @@ struct TabsCtrl : Wnd {
     TabClosedHandler onTabClosed = nullptr;
     TabsSelectionChangingHandler onSelectionChanging = nullptr;
     TabsSelectionChangedHandler onSelectionChanged = nullptr;
+    TabDraggedHandler onTabDragged = nullptr;
 
     TabsCtrl();
     ~TabsCtrl() override;
 
     HWND Create(TabsCreateArgs&);
+
+    // LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
 
     Size GetIdealSize() override;
