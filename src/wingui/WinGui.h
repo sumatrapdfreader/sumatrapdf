@@ -640,20 +640,20 @@ struct TabClosedEvent {
 
 using TabClosedHandler = std::function<void(TabClosedEvent*)>;
 
-struct TabSelectionChangingEvent {
+struct TabsSelectionChangingEvent {
     TabsCtrl* tabs = nullptr;
     int tabIdx;
 };
 
-// return true to prevent selection
-using TabSelectionChangingHandler = std::function<bool(TabSelectionChangingEvent*)>;
+// return true to prevent changing tabs
+using TabsSelectionChangingHandler = std::function<bool(TabsSelectionChangingEvent*)>;
 
-struct TabSelectionChangedEvent {
+struct TabsSelectionChangedEvent {
     TabsCtrl* tabs = nullptr;
     int tabIdx;
 };
 
-using TabSelectionChangedHandler = std::function<void(TabSelectionChangedEvent*)>;
+using TabsSelectionChangedHandler = std::function<void(TabsSelectionChangedEvent*)>;
 
 struct TabsCreateArgs {
     HWND parent = nullptr;
@@ -670,8 +670,8 @@ struct TabsCtrl : Wnd {
     StrVec tooltips;
 
     TabClosedHandler onTabClosed = nullptr;
-    TabSelectionChangingHandler onSelectionChanging = nullptr;
-    TabSelectionChangedHandler onSelectionChanged = nullptr;
+    TabsSelectionChangingHandler onSelectionChanging = nullptr;
+    TabsSelectionChangedHandler onSelectionChanged = nullptr;
 
     TabsCtrl();
     ~TabsCtrl() override;
