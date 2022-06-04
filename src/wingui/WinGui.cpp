@@ -3180,22 +3180,22 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         COLORREF xColor = tabBackgroundCloseX;
         COLORREF circleColor = tabBackgroundCloseCircle;
 
-        if (selectedTabIdx == i) {
+        if (tabsCtrl->selectedTabIdx == i) {
             bgCol = tabSelectedBg;
             textCol = tabSelectedText;
             xColor = tabSelectedCloseX;
             circleColor = tabSelectedCloseCircle;
-        } else if (highlighted == i) {
+        } else if (tabsCtrl->highlighted == i) {
             bgCol = tabHighlightedBg;
             textCol = tabHighlightedText;
             xColor = tabHighlightedCloseX;
             circleColor = tabHighlightedCloseCircle;
         }
-        if (xHighlighted == i) {
+        if (tabsCtrl->xHighlighted == i) {
             xColor = tabHoveredCloseX;
             circleColor = tabHoveredCloseCircle;
         }
-        if (xClicked == i) {
+        if (tabsCtrl->xClicked == i) {
             xColor = tabClickedCloseX;
             circleColor = tabClickedCloseCircle;
         }
@@ -3222,7 +3222,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // paint "x"'s circle
         iterator.NextMarker(&shape);
         // bool closeCircleEnabled = true;
-        if ((xClicked == i || xHighlighted == i) /*&& closeCircleEnabled*/) {
+        if ((tabsCtrl->xClicked == i || tabsCtrl->xHighlighted == i) /*&& closeCircleEnabled*/) {
             br.SetColor(GdiRgbFromCOLORREF(circleColor));
             gfx.FillPath(&br, &shape);
         }
@@ -3288,10 +3288,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case TCM_INSERTITEM:
             index = (int)wp;
-            if (index <= tab->selectedTabIdx) {
-                tab->selectedTabIdx++;
+            if (index <= selectedTabIdx) {
+                selectedTabIdx++;
             }
-            tab->xClicked = -1;
+            xClicked = -1;
             InvalidateRgn(hwnd, nullptr, FALSE);
             UpdateWindow(hwnd);
             break;
@@ -3308,12 +3308,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case TCM_DELETEITEM:
             // TODO: this should not be necessary
             index = (int)wp;
-            if (index < tab->selectedTabIdx) {
-                tab->selectedTabIdx--;
-            } else if (index == tab->selectedTabIdx) {
-                tab->selectedTabIdx = -1;
+            if (index < selectedTabIdx) {
+                selectedTabIdx--;
+            } else if (index == selectedTabIdx) {
+                selectedTabIdx = -1;
             }
-            tab->xClicked = -1;
+            xClicked = -1;
             if (tab->Count()) {
                 InvalidateRgn(hwnd, nullptr, FALSE);
                 UpdateWindow(hwnd);
@@ -3321,15 +3321,15 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case TCM_DELETEALLITEMS:
-            tab->selectedTabIdx = -1;
-            tab->highlighted = -1;
-            tab->xClicked = -1;
-            tab->xHighlighted = -1;
+            selectedTabIdx = -1;
+            highlighted = -1;
+            xClicked = -1;
+            xHighlighted = -1;
             break;
 
         case TCM_SETITEMSIZE:
             if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
-                tab->xClicked = -1;
+                xClicked = -1;
                 if (tab->Count()) {
                     InvalidateRgn(hwnd, nullptr, FALSE);
                     UpdateWindow(hwnd);
@@ -3338,18 +3338,18 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case TCM_GETCURSEL:
-            return tab->selectedTabIdx;
+            return selectedTabIdx;
 
         case TCM_SETCURSEL: {
             index = (int)wp;
             if (index >= tab->Count()) {
                 return -1;
             }
-            int previous = tab->selectedTabIdx;
-            if (index != tab->selectedTabIdx) {
-                tab->Invalidate(tab->selectedTabIdx);
+            int previous = selectedTabIdx;
+            if (index != selectedTabIdx) {
+                tab->Invalidate(selectedTabIdx);
                 tab->Invalidate(index);
-                tab->selectedTabIdx = index;
+                selectedTabIdx = index;
                 UpdateWindow(hwnd);
             }
             return previous;
@@ -3382,15 +3382,15 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int y = GET_Y_LPARAM(lp);
             int hl = wp == 0xFF ? -1 : tab->IndexFromPoint(x, y, &inX);
             bool didChangeTabs = false;
-            if (tab->isDragging && hl == -1) {
+            if (isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
-                hl = tab->highlighted;
+                hl = highlighted;
                 didChangeTabs = true;
             }
-            if (tab->highlighted != hl) {
-                if (tab->isDragging) {
+            if (highlighted != hl) {
+                if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
-                    int tabNo = tab->highlighted;
+                    int tabNo = highlighted;
                     if (onTabDragged) {
                         TabDraggedEvent ev;
                         ev.tabs = this;
@@ -3401,26 +3401,26 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
 
                 tab->Invalidate(hl);
-                tab->Invalidate(tab->highlighted);
-                tab->highlighted = hl;
+                tab->Invalidate(highlighted);
+                highlighted = hl;
                 didChangeTabs = true;
             }
             int xHl = -1;
-            if (inX && !tab->isDragging) {
+            if (inX && !isDragging) {
                 xHl = hl;
             }
             // logfa("inX=%d, hl=%d, xHl=%d, xHighlighted=%d\n", (int)inX, hl, xHl, tab->xHighlighted);
-            if (tab->xHighlighted != xHl) {
+            if (xHighlighted != xHl) {
                 // logfa("before invalidate, xHl=%d, xHighlited=%d\n", xHl, tab->xHighlighted);
                 tab->Invalidate(xHl);
-                tab->Invalidate(tab->xHighlighted);
-                tab->xHighlighted = xHl;
+                tab->Invalidate(xHighlighted);
+                xHighlighted = xHl;
             }
             if (!inX) {
-                tab->xClicked = -1;
+                xClicked = -1;
             }
-            if (didChangeTabs && tab->highlighted >= 0) {
-                int idx = tab->highlighted;
+            if (didChangeTabs && highlighted >= 0) {
+                int idx = highlighted;
                 auto tabsCtrl = tab->tabsCtrl;
                 tabsCtrl->MaybeUpdateTooltipText(idx);
             }
@@ -3429,65 +3429,65 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_LBUTTONDOWN:
             bool inX;
-            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
+            nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
-                tab->Invalidate(tab->nextTab);
-                tab->xClicked = tab->nextTab;
-            } else if (tab->nextTab != -1) {
-                if (tab->nextTab != tab->selectedTabIdx) {
+                tab->Invalidate(nextTab);
+                xClicked = nextTab;
+            } else if (nextTab != -1) {
+                if (nextTab != selectedTabIdx) {
                     // TODO: this is hacky
                     NMHDR nmhdr = {hwnd, (UINT_PTR)ctrlID, (UINT)TCN_SELCHANGING};
                     BOOL stopChange = (BOOL)OnNotifyReflect(ctrlID, (LPARAM)&nmhdr);
                     if (!stopChange) {
-                        TabCtrl_SetCurSel(hwnd, tab->nextTab);
+                        TabCtrl_SetCurSel(hwnd, nextTab);
                         nmhdr = {hwnd, (UINT_PTR)ctrlID, (UINT)TCN_SELCHANGE};
                         OnNotifyReflect(ctrlID, (LPARAM)&nmhdr);
                         return 0;
                     }
                     return 0;
                 }
-                tab->isDragging = true;
+                isDragging = true;
                 SetCapture(hwnd);
             }
             return 0;
 
         case WM_LBUTTONUP:
-            if (tab->xClicked != -1) {
+            if (xClicked != -1) {
                 // send notification that the tab is closed
                 if (onTabClosed) {
                     TabClosedEvent ev;
                     ev.tabs = this;
-                    ev.tabIdx = tab->xClicked;
+                    ev.tabIdx = xClicked;
                     onTabClosed(&ev);
                 }
-                tab->Invalidate(tab->xClicked);
-                tab->xClicked = -1;
+                tab->Invalidate(xClicked);
+                xClicked = -1;
             }
-            if (tab->isDragging) {
-                tab->isDragging = false;
+            if (isDragging) {
+                isDragging = false;
                 ReleaseCapture();
             }
             return 0;
 
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
-            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-            tab->xClicked = tab->nextTab;
-            tab->Invalidate(tab->nextTab);
+            nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            xClicked = nextTab;
+            tab->Invalidate(nextTab);
             return 0;
         }
 
         case WM_MBUTTONUP:
-            if (tab->xClicked != -1) {
+            if (xClicked != -1) {
                 if (onTabClosed) {
                     TabClosedEvent ev;
                     ev.tabs = this;
-                    ev.tabIdx = tab->xClicked;
+                    ev.tabIdx = xClicked;
                     onTabClosed(&ev);
                 }
-                int clicked = tab->xClicked;
+                int clicked = xClicked;
                 tab->Invalidate(clicked);
-                tab->xClicked = -1;
+                xClicked = -1;
             }
             return 0;
 
