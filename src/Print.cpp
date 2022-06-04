@@ -1214,7 +1214,11 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
         }
     }
 
-    delete printer;
+    // TODO: I saw a crash in crash report where we crash inside ~Printer
+    // in str::Free(name)
+    // I can't see why this could happen but maybe it's just a random memory corruption
+    // if it's memory corruption then we'll crash anyway
+    // delete printer;
     return ok;
 }
 
