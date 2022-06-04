@@ -3373,8 +3373,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             [[fallthrough]];
 
         case WM_MOUSEMOVE: {
-            tab->mouseCoordinates = lp;
-
             if (0xff != wp) {
                 TrackMouseLeave(hwnd);
             }

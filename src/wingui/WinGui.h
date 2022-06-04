@@ -674,7 +674,6 @@ struct TabPainter {
     int nextTab = -1;
     bool isDragging = false;
     bool inTitleBar = false;
-    LPARAM mouseCoordinates = 0;
 
     TabPainter(TabsCtrl* ctrl, Size tabSize);
     ~TabPainter();
