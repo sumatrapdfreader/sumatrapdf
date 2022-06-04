@@ -23,7 +23,7 @@
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
@@ -680,7 +680,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
     if (needsLabel) {
         pl = pageLabel;
     }
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     char* path = tab->filePath;
     gFavorites.AddOrReplace(path, pageNo, name, pl);
     // expand newly added favorites by default

@@ -22,7 +22,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "Print.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"

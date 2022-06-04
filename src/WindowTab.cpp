@@ -18,17 +18,17 @@
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "Selection.h"
 #include "Translations.h"
 #include "EditAnnotations.h"
 
-TabInfo::TabInfo(MainWindow* win, const char* filePath) {
+WindowTab::WindowTab(MainWindow* win, const char* filePath) {
     this->win = win;
     this->filePath.SetCopy(filePath);
 }
 
-TabInfo::~TabInfo() {
+WindowTab::~WindowTab() {
     FileWatcherUnsubscribe(watcher);
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
@@ -38,40 +38,40 @@ TabInfo::~TabInfo() {
     CloseAndDeleteEditAnnotationsWindow(editAnnotsWindow);
 }
 
-bool TabInfo::IsDocLoaded() const {
+bool WindowTab::IsDocLoaded() const {
     return ctrl != nullptr;
 }
 
-DisplayModel* TabInfo::AsFixed() const {
+DisplayModel* WindowTab::AsFixed() const {
     return ctrl ? ctrl->AsFixed() : nullptr;
 }
 
-ChmModel* TabInfo::AsChm() const {
+ChmModel* WindowTab::AsChm() const {
     return ctrl ? ctrl->AsChm() : nullptr;
 }
 
-Kind TabInfo::GetEngineType() const {
+Kind WindowTab::GetEngineType() const {
     if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->GetEngine()->kind;
     }
     return nullptr;
 }
 
-EngineBase* TabInfo::GetEngine() const {
+EngineBase* WindowTab::GetEngine() const {
     if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->GetEngine();
     }
     return nullptr;
 }
 
-const char* TabInfo::GetTabTitle() const {
+const char* WindowTab::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }
     return path::GetBaseNameTemp(filePath);
 }
 
-void TabInfo::MoveDocBy(int dx, int dy) const {
+void WindowTab::MoveDocBy(int dx, int dy) const {
     if (!ctrl) {
         return;
     }
@@ -92,7 +92,7 @@ void TabInfo::MoveDocBy(int dx, int dy) const {
     }
 }
 
-void TabInfo::ToggleZoom() const {
+void WindowTab::ToggleZoom() const {
     CrashIf(!ctrl);
     if (!IsDocLoaded()) {
         return;
@@ -110,7 +110,7 @@ void TabInfo::ToggleZoom() const {
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
-LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
+LinkSaver::LinkSaver(WindowTab* tab, HWND parentHwnd, const WCHAR* fileName) {
     this->tab = tab;
     this->parentHwnd = parentHwnd;
     this->fileName = fileName;

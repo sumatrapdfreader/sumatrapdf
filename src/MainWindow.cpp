@@ -31,7 +31,7 @@
 #include "Annotation.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "TableOfContents.h"
 #include "resource.h"
 #include "Commands.h"
@@ -626,11 +626,11 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
-// Find MainWindow using TabInfo. Diffrent than TabInfo->win in that
-// it validates that TabInfo is still valid
-MainWindow* FindMainWindowByTabInfo(TabInfo* tabToFind) {
+// Find MainWindow using WindowTab. Diffrent than WindowTab->win in that
+// it validates that WindowTab is still valid
+MainWindow* FindMainWindowByWindowTab(WindowTab* tabToFind) {
     for (MainWindow* win : gWindows) {
-        for (TabInfo* tab : win->tabs) {
+        for (WindowTab* tab : win->tabs) {
             if (tab == tabToFind) {
                 return win;
             }

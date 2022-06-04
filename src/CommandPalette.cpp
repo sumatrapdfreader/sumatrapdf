@@ -17,7 +17,7 @@
 #include "GlobalPrefs.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "SumatraConfig.h"
 #include "Commands.h"
 #include "CommandPalette.h"
@@ -298,7 +298,7 @@ static char* ConvertPathForDisplayTemp(const char* s) {
 void CommandPaletteWnd::CollectStrings(MainWindow* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     ctx.hasSelection = ctx.isDocLoaded && tab && win->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !win->tabsInTitlebar;
@@ -331,7 +331,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
 
     // append paths of opened files
     for (MainWindow* w : gWindows) {
-        for (TabInfo* tab2 : win->tabs) {
+        for (WindowTab* tab2 : win->tabs) {
             if (!tab2->IsDocLoaded()) {
                 continue;
             }
@@ -514,9 +514,9 @@ void CommandPaletteWnd::ScheduleDelete() {
     uitask::Post(&SafeDeleteCommandPaletteWnd);
 }
 
-static TabInfo* FindOpenedFile(const char* s) {
+static WindowTab* FindOpenedFile(const char* s) {
     for (MainWindow* win : gWindows) {
-        for (TabInfo* tab : win->tabs) {
+        for (WindowTab* tab : win->tabs) {
             if (!tab->IsDocLoaded()) {
                 continue;
             }
@@ -550,7 +550,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
 
     bool isFromTab = filesInTabs.Contains(s);
     if (isFromTab) {
-        TabInfo* tab = FindOpenedFile(s);
+        WindowTab* tab = FindOpenedFile(s);
         if (tab) {
             if (tab->win->currentTab != tab) {
                 SelectTabInWindow(tab);

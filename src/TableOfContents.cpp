@@ -28,7 +28,7 @@
 #include "MainWindow.h"
 #include "DisplayModel.h"
 #include "Favorites.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
 #include "AppTools.h"
@@ -172,7 +172,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 }
 #endif
 
-static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, DocController* ctrl) {
+static void GoToTocLinkTask(TocItem* tocItem, WindowTab* tab, DocController* ctrl) {
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
     if (!MainWindowStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl) {
@@ -209,7 +209,7 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
-        TabInfo* tab = win->currentTab;
+        WindowTab* tab = win->currentTab;
         DocController* ctrl = win->ctrl;
         uitask::Post([=] { GoToTocLinkTask(tocItem, tab, ctrl); });
     }
@@ -416,7 +416,7 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
 
-static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
+static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     CrashIf(!tab || !dest);
     if (!tab || !dest) {
         return;
@@ -438,7 +438,7 @@ static void OpenEmbeddedFile(TabInfo* tab, IPageDestination* dest) {
     }
 }
 
-static void SaveEmbeddedFile(TabInfo* tab, const char* srcPath, const char* fileName) {
+static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fileName) {
     ByteSlice data = LoadEmbeddedPDFFile(srcPath);
     if (data.empty()) {
         // TODO: show an error message
@@ -470,7 +470,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         pageNo = dti->dest->GetPageNo();
     }
 
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
     const char* embeddedFilePath = nullptr;
@@ -587,7 +587,7 @@ static void AutoExpandTopLevelItems(TocItem* root) {
 }
 
 void LoadTocTree(MainWindow* win) {
-    TabInfo* tab = win->currentTab;
+    WindowTab* tab = win->currentTab;
     CrashIf(!tab);
 
     if (win->tocLoaded) {

@@ -25,7 +25,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
 #include "StressTesting.h"

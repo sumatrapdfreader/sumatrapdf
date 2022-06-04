@@ -21,7 +21,7 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
 #include "AppTools.h"

@@ -31,7 +31,7 @@ extern "C" {
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "Toolbar.h"
-#include "TabInfo.h"
+#include "WindowTab.h"
 #include "EditAnnotations.h"
 #include "SumatraPDF.h"
 
@@ -114,7 +114,7 @@ struct EditAnnotationsWindow : Wnd {
     void OnSize(UINT msg, UINT type, SIZE size) override;
     void OnClose() override;
 
-    TabInfo* tab = nullptr;
+    WindowTab* tab = nullptr;
     LayoutBase* mainLayout = nullptr;
 
     ListBox* listBox = nullptr;
@@ -335,12 +335,12 @@ void EditAnnotationsWindow::OnClose() {
     delete this; // sketchy
 }
 
-extern bool SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
-static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, TabInfo* tab);
+extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab);
+static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, WindowTab* tab);
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo);
 
 static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
-    TabInfo* tab = ew->tab;
+    WindowTab* tab = ew->tab;
     bool ok = SaveAnnotationsToMaybeNewPdfFile(tab);
     if (!ok) {
         return;
@@ -348,7 +348,7 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 }
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
-    TabInfo* tab = ew->tab;
+    WindowTab* tab = ew->tab;
     EngineMupdf* engine = GetEngineMupdf(ew);
     const char* path = engine->FileName();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
@@ -838,7 +838,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     MessageBoxNYI(ew->hwnd);
 }
 
-void DeleteAnnotationAndUpdateUI(TabInfo* tab, EditAnnotationsWindow* ew, Annotation* annot) {
+void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Annotation* annot) {
     annot = FindMatchingAnnotation(ew, annot);
     DeleteAnnotation(annot);
     if (ew != nullptr) {
@@ -1300,7 +1300,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HidePerAnnotControls(ew);
 }
 
-static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, TabInfo* tab) {
+static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, WindowTab* tab) {
     Vec<Annotation*>* annots = new Vec<Annotation*>();
     EngineMupdf* engine = GetEngineMupdf(ew);
     EngineGetAnnotations(engine, annots);
@@ -1356,14 +1356,14 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
     SelectAnnotationInListBox(ew, annot);
 }
 
-void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
+void StartEditAnnotations(WindowTab* tab, Annotation* annot) {
     Vec<Annotation*> annots;
     annots.Append(annot);
     StartEditAnnotations(tab, annots);
 }
 
 // takes ownership of annots
-void StartEditAnnotations(TabInfo* tab, Vec<Annotation*>& annots) {
+void StartEditAnnotations(WindowTab* tab, Vec<Annotation*>& annots) {
     CrashIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {

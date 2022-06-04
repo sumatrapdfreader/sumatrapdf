@@ -608,7 +608,7 @@ function sumatrapdf_files()
     "GlobalPrefs.*",
     "Installer.*",
     "InstallerCommon.cpp",
-    "Uninstaller.cpp",
+    "MainWindow.*",
     "MemLeakDetect.*",
     "Menu.*",
     "Notifications.*",
@@ -634,7 +634,6 @@ function sumatrapdf_files()
     "SumatraProperties.*",
     "StressTesting.*",
     "SvgIcons.*",
-    "TabInfo.*",
     "TableOfContents.*",
     "Tabs.*",
     "Tester.*",
@@ -646,10 +645,10 @@ function sumatrapdf_files()
     "TranslationLangs.cpp",
     "UpdateCheck.*",
     "Version.h",
-    "MainWindow.*",
+    "Uninstaller.cpp",
+    "WindowTab.*",
 
     "ext/versions.txt",
-    "docs/*.txt",
   })
   filter {"configurations:Debug"}
     files_in_dir("src", {
