@@ -34,20 +34,20 @@
 #include "utils/Log.h"
 
 using Gdiplus::Color;
+using Gdiplus::CompositingQualityHighQuality;
 using Gdiplus::Font;
 using Gdiplus::Graphics;
 using Gdiplus::GraphicsPath;
 using Gdiplus::Ok;
 using Gdiplus::PathData;
 using Gdiplus::Pen;
-using Gdiplus::CompositingQualityHighQuality;
-using Gdiplus::TextRenderingHintClearTypeGridFit;
-using Gdiplus::UnitPixel;
-using Gdiplus::StringAlignmentCenter;
 using Gdiplus::Region;
 using Gdiplus::SolidBrush;
 using Gdiplus::Status;
+using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
+using Gdiplus::TextRenderingHintClearTypeGridFit;
+using Gdiplus::UnitPixel;
 
 #define kTabDefaultBgCol (COLORREF) - 1
 
@@ -328,17 +328,24 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
 // On tab selection, we save the data for the tab which is losing selection and
 // load the data of the selected tab into the MainWindow.
 static LRESULT TabsOnNotify(MainWindow* win, NMHDR* data, int tab1 = -1, int tab2 = -1) {
-    int current;
-
     switch (data->code) {
         case TCN_SELCHANGING:
-            // TODO: Should we allow the switch of the tab if we are in process of printing?
-            SaveCurrentWindowTab(win);
-            return FALSE;
+            if (win->tabsCtrl->onSelectionChanging) {
+                TabsSelectionChangingEvent ev;
+                ev.tabs = win->tabsCtrl;
+                // TODO: ev.tabIdx
+                bool res = win->tabsCtrl->onSelectionChanging(&ev);
+                return (LRESULT)res;
+            }
+            return FALSE; // allow changing
 
         case TCN_SELCHANGE:
-            current = win->tabsCtrl->GetSelectedTabIndex();
-            LoadModelIntoTab(win->tabs.at(current));
+            if (win->tabsCtrl->onSelectionChanged) {
+                TabsSelectionChangedEvent ev;
+                ev.tabs = win->tabsCtrl;
+                // TODO: ev.tabIdx
+                win->tabsCtrl->onSelectionChanged(&ev);
+            }
             break;
 
         case kTabDrag:
@@ -702,9 +709,16 @@ static void WinTabClosedHandler(MainWindow* win, TabsCtrl* tabs, int closedTabId
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
     tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) { WinTabClosedHandler(win, ev->tabs, ev->tabIdx); };
-    tabsCtrl->onSelectionChanging = [win](TabSelectionChangingEvent* ev) -> bool { return true; };
-    tabsCtrl->onSelectionChanged = [](TabSelectionChangedEvent* ev) {
+    tabsCtrl->onSelectionChanging = [win](TabsSelectionChangingEvent* ev) -> bool {
+        // TODO: Should we allow the switch of the tab if we are in process of printing?
+        SaveCurrentWindowTab(win);
+        return false;
+    };
 
+    tabsCtrl->onSelectionChanged = [win](TabsSelectionChangedEvent* ev) {
+        int currentIdx = win->tabsCtrl->GetSelectedTabIndex();
+        WindowTab* tab = win->tabs[currentIdx];
+        LoadModelIntoTab(tab);
     };
 
     TabsCreateArgs args;
