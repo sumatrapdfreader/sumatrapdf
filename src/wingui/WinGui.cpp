@@ -3003,11 +3003,31 @@ TabsCtrl::TabsCtrl() {
 TabsCtrl::~TabsCtrl() = default;
 
 LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
-    LPNMHDR hdr = (LPNMHDR)lp;
-    if (hdr->code == TTN_GETDISPINFOA) {
-        logf("TabsCtrl::OnNotifyReflec: TTN_GETDISPINFOA\n");
-    } else if (hdr->code == TTN_GETDISPINFOW) {
-        logf("TabsCtrl::OnNotifyReflec: TTN_GETDISPINFOW\n");
+    NMHDR* hdr = (NMHDR*)lp;
+    switch (hdr->code) {
+        case TCN_SELCHANGING:
+            if (onSelectionChanging) {
+                TabsSelectionChangingEvent ev;
+                ev.tabs = this;
+                // TODO: ev.tabIdx
+                bool res = onSelectionChanging(&ev);
+                return (LRESULT)res;
+            }
+            return FALSE; // allow changing
+
+        case TCN_SELCHANGE:
+            if (onSelectionChanged) {
+                TabsSelectionChangedEvent ev;
+                ev.tabs = this;
+                // TODO: ev.tabIdx
+                onSelectionChanged(&ev);
+            }
+            break;
+
+        case TTN_GETDISPINFOA:
+        case TTN_GETDISPINFOW:
+            logfa("TabsCtrl::OnNotifyReflect: TTN_GETDISPINFO\n");
+            break;
     }
     return 0;
 }
