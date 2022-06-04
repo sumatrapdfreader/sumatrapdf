@@ -630,13 +630,6 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, __
             }
             return 0;
         }
-
-        case WM_SIZE: {
-            MainWindow* win = FindMainWindowByHwnd(hwnd);
-            if (win) {
-                UpdateTabWidth(win);
-            }
-        } break;
     }
 
     return DefSubclassProc(hwnd, msg, wp, lp);
