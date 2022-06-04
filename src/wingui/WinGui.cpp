@@ -1276,7 +1276,7 @@ static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }
 
-void Tooltip::ShowOrUpdate(const char* s, Rect& rc, bool multiline) {
+void Tooltip::ShowOrUpdate(const char* s, const Rect& rc, bool multiline) {
     WCHAR* ws = ToWstrTemp(s);
     bool isShowing = IsShowing();
     if (!isShowing) {

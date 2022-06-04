@@ -1640,8 +1640,13 @@ static MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
     CrashIf(openNewTab && args->forceReuse);
 
     if (win->IsAboutWindow()) {
+        // TODO: probably need to do it when switching tabs
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
+        Rect rc = {};
+        // TODO: a hack, need a way to clear tooltips
+        win->infotip->ShowOrUpdate("", rc, false);
+        win->HideToolTip();
         // there's no tab to reuse at this point
         args->forceReuse = false;
     } else {

@@ -212,7 +212,7 @@ struct Tooltip : Wnd {
     HWND Create(const TooltipCreateArgs&);
     Size GetIdealSize() override;
 
-    void ShowOrUpdate(const char* s, Rect& rc, bool multiline);
+    void ShowOrUpdate(const char* s, const Rect& rc, bool multiline);
     void Hide();
 
     void SetDelayTime(int type, int timeInMs);
