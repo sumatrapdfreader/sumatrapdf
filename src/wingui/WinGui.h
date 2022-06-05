@@ -672,7 +672,7 @@ struct TabPainter {
     TabPainter(TabsCtrl* ctrl, Size tabSize);
     ~TabPainter();
     bool Reshape(int dx, int dy);
-    int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) const;
+    int TabFromMousePosition(const Point& p, bool& overClose) const;
     void Paint(HDC hdc, RECT& rc) const;
     int Count() const;
 };

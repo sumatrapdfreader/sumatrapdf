@@ -3064,14 +3064,15 @@ bool TabPainter::Reshape(int dx, int dy) {
 }
 
 // Finds the index of the tab, which contains the given point.
-int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
+int TabPainter::TabFromMousePosition(const Point& p, bool& overClose) const {
+    overClose = false;
     if (!data) {
         return -1;
     }
 
     int dx = tabSize.dx;
     int dy = tabSize.dy;
-    Gdiplus::Point point(x, y);
+    Gdiplus::Point point(p.x, p.y);
     Graphics gfx(hwnd);
     GraphicsPath shapes(data->Points, data->Types, data->Count);
     GraphicsPath shape;
@@ -3086,16 +3087,12 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
         gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
         if (shape.IsVisible(pt, &gfx)) {
             iterator.NextMarker(&shape);
-            if (inXbutton) {
-                *inXbutton = shape.IsVisible(pt, &gfx) != 0;
-            }
+            overClose = shape.IsVisible(pt, &gfx) != 0;
             return i;
         }
         gfx.TranslateTransform(float(dx + 1), 0.0f);
     }
-    if (inXbutton) {
-        *inXbutton = false;
-    }
+    overClose = false;
     return -1;
 }
 
@@ -3382,11 +3379,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // for mouse messages
     int x = GET_X_LPARAM(lp);
     int y = GET_Y_LPARAM(lp);
-    bool overX = false; // if mouse cursor is over X
+    Point mousePos = {x, y};
+    bool overClose = false; // if mouse cursor is over X
     int tabUnderMouse = -1;
+    bool isMouseLeave = false;
 
     if (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) {
-        tabUnderMouse = tab->IndexFromPoint(x, y, &overX);
+        tabUnderMouse = tab->TabFromMousePosition(mousePos, overClose);
     }
 
     switch (msg) {
@@ -3394,25 +3393,23 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (!tab->inTitleBar || hwnd == GetCapture()) {
                 return HTCLIENT;
             }
-            POINT pt = {x, y};
-            ScreenToClient(hwnd, &pt);
-            if (-1 != tab->IndexFromPoint(pt.x, pt.y)) {
+            HwndScreenToClient(hwnd, mousePos);
+            if (-1 != tab->TabFromMousePosition(mousePos, overClose)) {
                 return HTCLIENT;
             }
             return HTTRANSPARENT;
         }
 
         case WM_MOUSELEAVE:
-            wp = 0xff;
-            lp = 0;
+            isMouseLeave = true;
             [[fallthrough]];
 
         case WM_MOUSEMOVE: {
-            if (0xff != wp) {
+            if (!isMouseLeave) {
                 TrackMouseLeave(hwnd);
             }
 
-            int hl = wp == 0xFF ? -1 : tabUnderMouse;
+            int hl = isMouseLeave ? -1 : tabUnderMouse;
             bool didChangeTabs = false;
             if (isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
@@ -3430,7 +3427,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 didChangeTabs = true;
             }
             int xHl = -1;
-            if (overX && !isDragging) {
+            if (overClose && !isDragging) {
                 xHl = hl;
             }
             // logfa("inX=%d, hl=%d, xHl=%d, xHighlighted=%d\n", (int)inX, hl, xHl, tab->xHighlighted);
@@ -3439,7 +3436,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabHighlightedClose = xHl;
             }
-            if (!overX) {
+            if (!overClose) {
                 tabBeingClosed = -1;
             }
             if (didChangeTabs && tabHighlighted >= 0) {
@@ -3450,7 +3447,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONDOWN:
-            if (overX) {
+            if (overClose) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = tabUnderMouse;
             } else if (tabUnderMouse != -1) {
@@ -3484,7 +3481,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
-            tabBeingClosed = tab->IndexFromPoint(x, y);
+            tabBeingClosed = tab->TabFromMousePosition(mousePos, overClose);
             HwndScheduleRepaint(hwnd);
             return 0;
         }

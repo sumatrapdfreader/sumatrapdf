@@ -161,6 +161,13 @@ int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
     return res;
 }
 
+void HwndScreenToClient(HWND hwnd, Point& p) {
+    POINT pt = {p.x, p.y};
+    ScreenToClient(hwnd, &pt);
+    p.x = pt.x;
+    p.y = pt.y;
+}
+
 void MoveWindow(HWND hwnd, Rect rect) {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }
