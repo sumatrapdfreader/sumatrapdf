@@ -673,7 +673,7 @@ struct TabPainter {
     ~TabPainter();
     bool Reshape(int dx, int dy);
     int TabFromMousePosition(const Point& p, bool& overClose) const;
-    void Paint(HDC hdc, RECT& rc) const;
+    void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const;
     int Count() const;
 };
 
@@ -738,6 +738,7 @@ struct TabsCtrl : Wnd {
     int tabHighlighted = -1;
     int tabHighlightedClose = -1;
     int tabBeingClosed = -1;
+    Point lastMousePos;
     bool isDragging = false;
 
     TabClosedHandler onTabClosed = nullptr;

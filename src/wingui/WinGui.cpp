@@ -3069,7 +3069,9 @@ int TabPainter::TabFromMousePosition(const Point& p, bool& overClose) const {
     if (!data) {
         return -1;
     }
-
+    if (p.x < 0 || p.y < 0) {
+        return -1;
+    }
     int dx = tabSize.dx;
     int dy = tabSize.dy;
     Gdiplus::Point point(p.x, p.y);
@@ -3110,7 +3112,7 @@ static void PaintParentBackground(HWND hwnd, HDC hdc) {
 }
 
 // Paints the tabs that intersect the window's update rectangle.
-void TabPainter::Paint(HDC hdc, RECT& rc) const {
+void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const {
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 0
         // paint the background
@@ -3154,7 +3156,6 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    int selectedTab = tabsCtrl->GetSelected();
     float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
     for (int i = 0; i < Count(); i++) {
         TabInfo* tab = tabsCtrl->GetTab(i);
@@ -3171,25 +3172,27 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         COLORREF xColor = tabBackgroundCloseX;
         COLORREF circleColor = tabBackgroundCloseCircle;
 
-        if (selectedTab == i) {
+        if (tabSelected == i) {
             bgCol = tabSelectedBg;
             textCol = tabSelectedText;
             xColor = tabSelectedCloseX;
             circleColor = tabSelectedCloseCircle;
-        } else if (tabsCtrl->tabHighlighted == i) {
+        } else if (tabUnderMouse == i) {
             bgCol = tabHighlightedBg;
             textCol = tabHighlightedText;
             xColor = tabHighlightedCloseX;
             circleColor = tabHighlightedCloseCircle;
         }
-        if (tabsCtrl->tabHighlightedClose == i) {
+        if ((tabUnderMouse == i) && underMouseOverClose) {
             xColor = tabHoveredCloseX;
             circleColor = tabHoveredCloseCircle;
         }
+#if 0
         if (tabsCtrl->tabBeingClosed == i) {
             xColor = tabClickedCloseX;
             circleColor = tabClickedCloseCircle;
         }
+#endif
 
         // paint tab's body
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
@@ -3213,7 +3216,9 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // paint "x"'s circle
         iterator.NextMarker(&shape);
         // bool closeCircleEnabled = true;
-        if ((tabsCtrl->tabBeingClosed == i || tabsCtrl->tabHighlightedClose == i) /*&& closeCircleEnabled*/) {
+        bool paintOverClose = (tabUnderMouse == i) && underMouseOverClose;
+        // TODO: (tabsCtrl->tabBeingClosed == i
+        if (paintOverClose /*&& closeCircleEnabled*/) {
             br.SetColor(GdiRgbFromCOLORREF(circleColor));
             gfx.FillPath(&br, &shape);
         }
@@ -3316,7 +3321,7 @@ static bool TriggerSelectionChanging(TabsCtrl* tabs) {
 }
 
 static void TriggerTabClosed(TabsCtrl* tabs, int tabIdx) {
-    if (!tabs->onTabClosed) {
+    if ((tabIdx < 0) || !tabs->onTabClosed) {
         return;
     }
     TabClosedEvent ev;
@@ -3376,16 +3381,20 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TCITEMW* tcs = nullptr;
 
     TabPainter* tab = painter;
-    // for mouse messages
-    int x = GET_X_LPARAM(lp);
-    int y = GET_Y_LPARAM(lp);
-    Point mousePos = {x, y};
-    bool overClose = false; // if mouse cursor is over X
+    Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)}; // for mouse messages
+    bool overClose = false;                                // if mouse cursor is over close X
     int tabUnderMouse = -1;
     bool isMouseLeave = false;
 
+    if (WM_MOUSELEAVE == msg) {
+        mousePos = {-1, -1};
+    }
+    if (WM_MOUSEMOVE == msg) {
+        TrackMouseLeave(hwnd);
+    }
     if (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) {
         tabUnderMouse = tab->TabFromMousePosition(mousePos, overClose);
+        lastMousePos = mousePos;
     }
 
     switch (msg) {
@@ -3401,15 +3410,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MOUSELEAVE:
-            isMouseLeave = true;
             [[fallthrough]];
 
         case WM_MOUSEMOVE: {
-            if (!isMouseLeave) {
-                TrackMouseLeave(hwnd);
-            }
-
-            int hl = isMouseLeave ? -1 : tabUnderMouse;
+            int hl = tabUnderMouse;
             bool didChangeTabs = false;
             if (isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
@@ -3446,7 +3450,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
         }
 
-        case WM_LBUTTONDOWN:
+        case WM_LBUTTONDOWN: {
             if (overClose) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = tabUnderMouse;
@@ -3463,10 +3467,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 isDragging = true;
                 SetCapture(hwnd);
-                return 0;
             }
+            return 0;
+        }
 
-        case WM_LBUTTONUP:
+        case WM_LBUTTONUP: {
             if (tabBeingClosed != -1) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
@@ -3478,6 +3483,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ReleaseCapture();
             }
             return 0;
+        }
 
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
@@ -3486,19 +3492,14 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
         }
 
-        case WM_MBUTTONUP:
+        case WM_MBUTTONUP: {
             if (tabBeingClosed != -1) {
-                if (onTabClosed) {
-                    TabClosedEvent ev;
-                    ev.tabs = this;
-                    ev.tabIdx = tabBeingClosed;
-                    onTabClosed(&ev);
-                }
-                int clicked = tabBeingClosed;
+                TriggerTabClosed(this, tabBeingClosed);
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = -1;
             }
             return 0;
+        }
 
         case WM_ERASEBKGND:
             return TRUE;
@@ -3509,8 +3510,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TODO: when is wp != nullptr?
             hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
 
+            tabUnderMouse = tab->TabFromMousePosition(lastMousePos, overClose);
+
             DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
-            tab->Paint(buffer.GetDC(), rc);
+            int tabSelected = GetSelected();
+            tab->Paint(buffer.GetDC(), rc, tabSelected, tabUnderMouse, overClose);
             buffer.Flush(hdc);
 
             ValidateRect(hwnd, nullptr);
