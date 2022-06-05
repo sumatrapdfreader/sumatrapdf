@@ -98,7 +98,8 @@ static void RemoveTab(MainWindow* win, int idx) {
         win->currentTabTemp = nullptr;
     }
     delete tab;
-    win->tabsCtrl->RemoveTab(idx);
+    WindowTab* tab2 = (WindowTab*)win->tabsCtrl->RemoveTab(idx);
+    CrashIf(tab2 != tab);
     UpdateTabWidth(win);
 }
 
@@ -263,6 +264,8 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
     newTab->tooltip = str::Dup(tab->filePath.Get());
+    newTab->userData = (UINT_PTR)tab;
+
     int insertedIdx = tabs->InsertTab(idx, newTab);
     CrashIf(insertedIdx == -1);
     tabs->SetSelected(idx);
