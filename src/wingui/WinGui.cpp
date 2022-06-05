@@ -3608,12 +3608,14 @@ void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip)
     HwndScheduleRepaint(hwnd);
 }
 
-void TabsCtrl::RemoveTab(int idx) {
+// returns userData because it's not owned by TabsCtrl
+UINT_PTR TabsCtrl::RemoveTab(int idx) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
     BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
     CrashIf(!ok);
     TabInfo* tab = tabs[idx];
+    UINT_PTR userData = tab->userData;
     tabs.RemoveAt(idx);
     delete tab;
     tabBeingClosed = -1;
@@ -3623,12 +3625,14 @@ void TabsCtrl::RemoveTab(int idx) {
     } else if (idx == selectedTab) {
         SetSelected(0);
     }
+    return userData;
 }
 
 TabInfo* TabsCtrl::GetTab(int idx) {
     return tabs[idx];
 }
 
+// Note: the caller should take care of deleting userData
 void TabsCtrl::RemoveAllTabs() {
     TabCtrl_DeleteAllItems(hwnd);
     tabHighlighted = -1;

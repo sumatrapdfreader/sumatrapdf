@@ -762,7 +762,7 @@ struct TabsCtrl : Wnd {
 
     int GetTabCount();
 
-    void RemoveTab(int idx);
+    UINT_PTR RemoveTab(int idx);
     void RemoveAllTabs();
 
     int GetSelected();
