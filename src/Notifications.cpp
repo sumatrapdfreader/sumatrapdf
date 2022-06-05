@@ -408,7 +408,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (WM_MOUSEMOVE == msg) {
-        ScheduleRepaint(hwnd);
+        HwndScheduleRepaint(hwnd);
 
         if (IsMouseOverRect(hwnd, rClose)) {
             TrackMouseLeave(hwnd);
@@ -417,7 +417,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (WM_MOUSELEAVE == msg) {
-        ScheduleRepaint(hwnd);
+        HwndScheduleRepaint(hwnd);
         return 0;
     }
 

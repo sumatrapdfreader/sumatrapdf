@@ -674,7 +674,6 @@ struct TabPainter {
     ~TabPainter();
     bool Reshape(int dx, int dy);
     int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) const;
-    void Invalidate(int index) const;
     void Paint(HDC hdc, RECT& rc) const;
     int Count() const;
 };
@@ -766,7 +765,7 @@ struct TabsCtrl : Wnd {
     int GetSelectedTabIndex();
     int SetSelectedTabByIndex(int idx);
 
-    void SetItemSize(Size sz);
+    void SetTabSize(Size sz);
     int GetTabCount();
 
     void SetToolTipsHwnd(HWND);

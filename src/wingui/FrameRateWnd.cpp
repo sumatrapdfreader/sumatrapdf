@@ -175,7 +175,7 @@ void FrameRateWnd::ShowFrameRate(int frameRate) {
     this->frameRate = frameRate;
     SIZE s = GetIdealSize(this);
     PositionWindow(this, s);
-    ScheduleRepaint(this->hwnd);
+    HwndScheduleRepaint(this->hwnd);
 }
 
 void FrameRateWnd::ShowFrameRateDur(double durMs) {

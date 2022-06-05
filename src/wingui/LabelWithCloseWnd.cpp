@@ -98,12 +98,12 @@ LRESULT LabelWithCloseWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         int dx = LOWORD(lp);
         int dy = HIWORD(lp);
         CalcCloseButtonPos(this, dx, dy);
-        ScheduleRepaint(hwnd);
+        HwndScheduleRepaint(hwnd);
         return 0;
     }
 
     if (WM_MOUSEMOVE == msg) {
-        ScheduleRepaint(hwnd);
+        HwndScheduleRepaint(hwnd);
 
         if (IsMouseOverRect(hwnd, closeBtnPos)) {
             TrackMouseLeave(hwnd);
@@ -112,7 +112,7 @@ LRESULT LabelWithCloseWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (WM_MOUSELEAVE == msg) {
-        ScheduleRepaint(hwnd);
+        HwndScheduleRepaint(hwnd);
         return 0;
     }
 
@@ -130,17 +130,17 @@ DoDefault:
 
 void LabelWithCloseWnd::SetLabel(const WCHAR* label) const {
     HwndSetText(this->hwnd, label);
-    ScheduleRepaint(this->hwnd);
+    HwndScheduleRepaint(this->hwnd);
 }
 
 void LabelWithCloseWnd::SetBgCol(COLORREF c) {
     this->bgCol = c;
-    ScheduleRepaint(this->hwnd);
+    HwndScheduleRepaint(this->hwnd);
 }
 
 void LabelWithCloseWnd::SetTextCol(COLORREF c) {
     this->txtCol = c;
-    ScheduleRepaint(this->hwnd);
+    HwndScheduleRepaint(this->hwnd);
 }
 
 // cmd is both the id of the window as well as id of WM_COMMAND sent
@@ -185,5 +185,5 @@ void LabelWithCloseWnd::SetFont(HFONT f) {
 void LabelWithCloseWnd::SetPaddingXY(int x, int y) {
     this->padX = x;
     this->padY = y;
-    ScheduleRepaint(this->hwnd);
+    HwndScheduleRepaint(this->hwnd);
 }

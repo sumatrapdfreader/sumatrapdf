@@ -2191,7 +2191,7 @@ void MessageBoxNYI(HWND hwnd) {
     MessageBoxWarningSimple(hwnd, L"Not Yet Implemented!", L"NYI");
 }
 
-void ScheduleRepaint(HWND hwnd) {
+void HwndScheduleRepaint(HWND hwnd) {
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 

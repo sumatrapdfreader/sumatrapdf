@@ -95,7 +95,7 @@ void UpdateTabWidth(MainWindow* win) {
     Size tabSize = GetTabSize(win->hwndFrame);
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);
-    win->tabsCtrl->SetItemSize(tabSize);
+    win->tabsCtrl->SetTabSize(tabSize);
     win->tabsCtrl->MaybeUpdateTooltip();
 }
 
@@ -173,7 +173,7 @@ void CreateTabbar(MainWindow* win) {
     tabsCtrl->Create(args);
 
     Size tabSize = GetTabSize(win->hwndFrame);
-    tabsCtrl->SetItemSize(tabSize);
+    tabsCtrl->SetTabSize(tabSize);
     win->tabsCtrl = tabsCtrl;
 
     win->tabSelectionHistory = new Vec<WindowTab*>();

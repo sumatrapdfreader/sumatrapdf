@@ -2124,7 +2124,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         arg.w = this;
         arg.done = true;
         onSplitterMove(&arg);
-        ScheduleRepaint(hwnd);
+        HwndScheduleRepaint(hwnd);
         return 0;
     }
 
@@ -3089,30 +3089,6 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
     return -1;
 }
 
-// Invalidates the tab's region in the client area.
-void TabPainter::Invalidate(int tabNo) const {
-    if (tabNo < 0) {
-        return;
-    }
-#if 1
-    ScheduleRepaint(hwnd);
-#else
-    Graphics gfx(hwnd);
-    GraphicsPath shapes(data->Points, data->Types, data->Count);
-    GraphicsPath shape;
-    Gdiplus::GraphicsPathIterator iterator(&shapes);
-    iterator.NextMarker(&shape);
-    Region region(&shape);
-
-    Rect rClient = ClientRect(hwnd);
-    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - height - 1);
-    gfx.TranslateTransform(float((width + 1) * tabNo) + 1.0f, yPosTab);
-    HRGN hRgn = region.GetHRGN(&gfx);
-    InvalidateRgn(hwnd, hRgn, FALSE);
-    DeleteObject(hRgn);
-#endif
-}
-
 // TODO: duplicated in Caption.cpp
 static void PaintParentBackground(HWND hwnd, HDC hdc) {
     HWND parent = GetParent(hwnd);
@@ -3295,23 +3271,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     TabPainter* tab = painter;
     switch (msg) {
-        case TCM_DELETEALLITEMS:
-            selectedTabIdx = -1;
-            highlighted = -1;
-            tabBeingClosed = -1;
-            xHighlighted = -1;
-            break;
-
-        case TCM_SETITEMSIZE:
-            if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
-                tabBeingClosed = -1;
-                if (tab->Count()) {
-                    InvalidateRgn(hwnd, nullptr, FALSE);
-                    UpdateWindow(hwnd);
-                }
-            }
-            break;
-
         case WM_NCHITTEST: {
             if (!tab->inTitleBar || hwnd == GetCapture()) {
                 return HTCLIENT;
@@ -3356,9 +3315,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                         onTabDragged(&ev);
                     }
                 }
-
-                tab->Invalidate(hl);
-                tab->Invalidate(highlighted);
+                HwndScheduleRepaint(hwnd);
                 highlighted = hl;
                 didChangeTabs = true;
             }
@@ -3369,8 +3326,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // logfa("inX=%d, hl=%d, xHl=%d, xHighlighted=%d\n", (int)inX, hl, xHl, tab->xHighlighted);
             if (xHighlighted != xHl) {
                 // logfa("before invalidate, xHl=%d, xHighlited=%d\n", xHl, tab->xHighlighted);
-                tab->Invalidate(xHl);
-                tab->Invalidate(xHighlighted);
+                HwndScheduleRepaint(hwnd);
                 xHighlighted = xHl;
             }
             if (!inX) {
@@ -3388,7 +3344,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             bool inX;
             nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
-                tab->Invalidate(nextTab);
+                HwndScheduleRepaint(hwnd);
                 tabBeingClosed = nextTab;
             } else if (nextTab != -1) {
                 if (nextTab != selectedTabIdx) {
@@ -3414,7 +3370,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     ev.tabIdx = tabBeingClosed;
                     onTabClosed(&ev);
                 }
-                tab->Invalidate(tabBeingClosed);
+                HwndScheduleRepaint(hwnd);
                 tabBeingClosed = -1;
             }
             if (isDragging) {
@@ -3427,7 +3383,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // middle-clicking unconditionally closes the tab
             nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
             tabBeingClosed = nextTab;
-            tab->Invalidate(nextTab);
+            HwndScheduleRepaint(hwnd);
             return 0;
         }
 
@@ -3440,7 +3396,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     onTabClosed(&ev);
                 }
                 int clicked = tabBeingClosed;
-                tab->Invalidate(clicked);
+                HwndScheduleRepaint(hwnd);
                 tabBeingClosed = -1;
             }
             return 0;
@@ -3537,10 +3493,6 @@ int TabsCtrl::InsertTab(int idx, const char* s) {
         selectedTabIdx++;
     }
     tabBeingClosed = -1;
-    // Note: doesn't seem necessary
-    // InvalidateRgn(hwnd, nullptr, FALSE);
-    // UpdateWindow(hwnd);
-
     return insertedIdx;
 }
 
@@ -3560,6 +3512,10 @@ void TabsCtrl::RemoveTab(int idx) {
 
 void TabsCtrl::RemoveAllTabs() {
     TabCtrl_DeleteAllItems(hwnd);
+    selectedTabIdx = -1;
+    highlighted = -1;
+    tabBeingClosed = -1;
+    xHighlighted = -1;
     tooltips.Reset();
 }
 
@@ -3598,33 +3554,13 @@ int TabsCtrl::SetSelectedTabByIndex(int idx) {
     CrashIf(idx < 0 || idx >= GetTabCount());
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     selectedTabIdx = idx;
-    // painter->Invalidate(idx);
-    // UpdateWindow(hwnd);
     return prevSelectedIdx;
 }
 
-/*
-    case TCM_SETCURSEL: {
-        index = (int)wp;
-        if (index >= tab->Count()) {
-            return -1;
-        }
-        int previous = selectedTabIdx;
-        if (index != selectedTabIdx) {
-            tab->Invalidate(selectedTabIdx);
-            tab->Invalidate(index);
-            selectedTabIdx = index;
-            UpdateWindow(hwnd);
-        }
-        return previous;
-    }
-
-*/
-
-// TODO: rename to SetTabSize?
-void TabsCtrl::SetItemSize(Size sz) {
+void TabsCtrl::SetTabSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
-    // painter->Reshape(sz.dx, sz.dy);
+    painter->Reshape(sz.dx, sz.dy);
+    tabBeingClosed = -1;
 }
 
 void TabsCtrl::SetToolTipsHwnd(HWND hwndTooltip) {
@@ -3638,7 +3574,7 @@ HWND TabsCtrl::GetToolTipsHwnd() {
 
 // TODO: this is a nasty implementation
 // should probably TTM_ADDTOOL for each tab item
-// we could re-calculate it in SetItemSize()
+// we could re-calculate it in SetTabSize()
 void TabsCtrl::MaybeUpdateTooltip() {
     // logf("MaybeUpdateTooltip() start\n");
     HWND ttHwnd = GetToolTipsHwnd();

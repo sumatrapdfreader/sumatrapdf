@@ -157,7 +157,7 @@ void MessageBoxWarningSimple(HWND hwnd, const WCHAR* msg, const WCHAR* title = n
 void MessageBoxNYI(HWND hwnd);
 
 // schedule WM_PAINT at window's leasure
-void ScheduleRepaint(HWND hwnd);
+void HwndScheduleRepaint(HWND hwnd);
 
 // do WM_PAINT immediately
 void RepaintNow(HWND hwnd);
