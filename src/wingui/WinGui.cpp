@@ -3252,26 +3252,32 @@ TabsCtrl::~TabsCtrl() {
     delete painter;
 }
 
+static void TriggerSelectionChanged(TabsCtrl* tabs) {
+    if (tabs->onSelectionChanged) {
+        TabsSelectionChangedEvent ev;
+        ev.tabs = tabs;
+        tabs->onSelectionChanged(&ev);
+    }
+}
+
+static bool TriggerSelectionChanging(TabsCtrl* tabs) {
+    if (tabs->onSelectionChanging) {
+        TabsSelectionChangingEvent ev;
+        ev.tabs = tabs;
+        bool res = tabs->onSelectionChanging(&ev);
+        return (LRESULT)res;
+    }
+    return false; // allow changing
+}
+
 LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     NMHDR* hdr = (NMHDR*)lp;
     switch (hdr->code) {
         case TCN_SELCHANGING:
-            if (onSelectionChanging) {
-                TabsSelectionChangingEvent ev;
-                ev.tabs = this;
-                // TODO: ev.tabIdx
-                bool res = onSelectionChanging(&ev);
-                return (LRESULT)res;
-            }
-            return FALSE; // allow changing
+            return (LRESULT)TriggerSelectionChanging(this);
 
         case TCN_SELCHANGE:
-            if (onSelectionChanged) {
-                TabsSelectionChangedEvent ev;
-                ev.tabs = this;
-                // TODO: ev.tabIdx
-                onSelectionChanged(&ev);
-            }
+            TriggerSelectionChanged(this);
             break;
 
         case TTN_GETDISPINFOA:
@@ -3283,37 +3289,12 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 }
 
 LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    int index;
     PAINTSTRUCT ps;
     HDC hdc;
     TCITEMW* tcs = nullptr;
 
     TabPainter* tab = painter;
     switch (msg) {
-        case TCM_SETITEM:
-            // TODO: this should not be necessary
-            index = (int)wp;
-            tcs = (LPTCITEM)lp;
-            if (TCIF_TEXT & tcs->mask) {
-                tab->Invalidate(index);
-            }
-            break;
-
-        case TCM_DELETEITEM:
-            // TODO: this should not be necessary
-            index = (int)wp;
-            if (index < selectedTabIdx) {
-                selectedTabIdx--;
-            } else if (index == selectedTabIdx) {
-                selectedTabIdx = -1;
-            }
-            tabBeingClosed = -1;
-            if (tab->Count()) {
-                InvalidateRgn(hwnd, nullptr, FALSE);
-                UpdateWindow(hwnd);
-            }
-            break;
-
         case TCM_DELETEALLITEMS:
             selectedTabIdx = -1;
             highlighted = -1;
@@ -3330,24 +3311,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
             }
             break;
-
-        case TCM_GETCURSEL:
-            return selectedTabIdx;
-
-        case TCM_SETCURSEL: {
-            index = (int)wp;
-            if (index >= tab->Count()) {
-                return -1;
-            }
-            int previous = selectedTabIdx;
-            if (index != selectedTabIdx) {
-                tab->Invalidate(selectedTabIdx);
-                tab->Invalidate(index);
-                selectedTabIdx = index;
-                UpdateWindow(hwnd);
-            }
-            return previous;
-        }
 
         case WM_NCHITTEST: {
             if (!tab->inTitleBar || hwnd == GetCapture()) {
@@ -3429,15 +3392,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 tabBeingClosed = nextTab;
             } else if (nextTab != -1) {
                 if (nextTab != selectedTabIdx) {
-                    // TODO: this is hacky
-                    NMHDR nmhdr = {hwnd, (UINT_PTR)ctrlID, (UINT)TCN_SELCHANGING};
-                    BOOL stopChange = (BOOL)OnNotifyReflect(ctrlID, (LPARAM)&nmhdr);
-                    if (!stopChange) {
-                        TabCtrl_SetCurSel(hwnd, nextTab);
-                        nmhdr = {hwnd, (UINT_PTR)ctrlID, (UINT)TCN_SELCHANGE};
-                        OnNotifyReflect(ctrlID, (LPARAM)&nmhdr);
+                    bool stopChange = TriggerSelectionChanging(this);
+                    if (stopChange) {
                         return 0;
                     }
+                    SetSelectedTabByIndex(nextTab);
+                    TriggerSelectionChanged(this);
                     return 0;
                 }
                 isDragging = true;
@@ -3503,6 +3463,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 EndPaint(hwnd, &ps);
             }
             return 0;
+        }
+        case TCM_SETCURSEL: {
+            logf("TCM_SETURSEL\n");
         }
     }
 
@@ -3587,6 +3550,12 @@ void TabsCtrl::RemoveTab(int idx) {
     BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
     CrashIf(!ok);
     tooltips.RemoveAt(idx);
+    tabBeingClosed = -1;
+    if (idx < selectedTabIdx) {
+        SetSelectedTabByIndex(selectedTabIdx - 1);
+    } else if (idx == selectedTabIdx) {
+        SetSelectedTabByIndex(0);
+    }
 }
 
 void TabsCtrl::RemoveAllTabs() {
@@ -3626,9 +3595,31 @@ int TabsCtrl::GetSelectedTabIndex() {
 }
 
 int TabsCtrl::SetSelectedTabByIndex(int idx) {
+    CrashIf(idx < 0 || idx >= GetTabCount());
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
+    selectedTabIdx = idx;
+    // painter->Invalidate(idx);
+    // UpdateWindow(hwnd);
     return prevSelectedIdx;
 }
+
+/*
+    case TCM_SETCURSEL: {
+        index = (int)wp;
+        if (index >= tab->Count()) {
+            return -1;
+        }
+        int previous = selectedTabIdx;
+        if (index != selectedTabIdx) {
+            tab->Invalidate(selectedTabIdx);
+            tab->Invalidate(index);
+            selectedTabIdx = index;
+            UpdateWindow(hwnd);
+        }
+        return previous;
+    }
+
+*/
 
 // TODO: rename to SetTabSize?
 void TabsCtrl::SetItemSize(Size sz) {

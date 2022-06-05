@@ -646,6 +646,7 @@ struct TabPainter {
     PathData* data = nullptr;
     int width = -1;
     int height = -1;
+
     HWND hwnd = nullptr;
 
     // TODO: set those to reasonable defaults
