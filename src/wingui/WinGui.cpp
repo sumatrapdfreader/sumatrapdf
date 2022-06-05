@@ -3229,6 +3229,61 @@ int TabPainter::Count() const {
     return n;
 }
 
+// TODO: this is a nasty implementation
+// should probably TTM_ADDTOOL for each tab item
+// we could re-calculate it in SetTabSize()
+static void MaybeUpdateTooltip(HWND hwnd, HWND ttHwnd, const char* text) {
+    if (!ttHwnd) {
+        return;
+    }
+
+    {
+        TOOLINFO ti{0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = hwnd;
+        ti.uId = 0;
+        SendMessage(ttHwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+    }
+
+    {
+        TOOLINFO ti{0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = hwnd;
+        ti.uFlags = TTF_SUBCLASS;
+        // ti.lpszText = LPSTR_TEXTCALLBACK;
+        WCHAR* ws = ToWstrTemp(text);
+        ti.lpszText = ws;
+        ti.uId = 0;
+        ti.rect = ClientRECT(hwnd);
+        SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    }
+}
+
+static void MaybeUpdateTooltipText(TabsCtrl* tabsCtrl, int idx) {
+    TabInfo* tab = tabsCtrl->GetTab(idx);
+    char* tooltip = tab->tooltip;
+    if (str::Eq(tabsCtrl->currTooltipText, tooltip)) {
+        return;
+    }
+    tabsCtrl->currTooltipText = tooltip;
+#if 1
+    HWND ttHwnd = tabsCtrl->GetToolTipsHwnd();
+    MaybeUpdateTooltip(tabsCtrl->hwnd, ttHwnd, tooltip);
+#else
+    // TODO: why this doesn't work?
+    TOOLINFO ti{0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = hwnd;
+    ti.uFlags = TTF_SUBCLASS;
+    ti.lpszText = currTooltipText.Get();
+    ti.uId = 0;
+    ti.rect = ClientRECT(hwnd);
+    SendMessage(ttHwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+#endif
+    SendMessage(ttHwnd, TTM_POP, 0, 0);
+    SendMessage(ttHwnd, TTM_POPUP, 0, 0);
+}
+
 TabsCtrl::TabsCtrl() {
     kind = kindTabs;
 }
@@ -3344,7 +3399,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (didChangeTabs && highlighted >= 0) {
                 int idx = highlighted;
                 auto tabsCtrl = tab->tabsCtrl;
-                tabsCtrl->MaybeUpdateTooltipText(idx);
+                MaybeUpdateTooltipText(tabsCtrl, idx);
             }
         }
             return 0;
@@ -3544,36 +3599,6 @@ void TabsCtrl::RemoveAllTabs() {
     tabs.Reset();
 }
 
-#if 0
-void TabsCtrl::SetTabText(int idx, const char* s) {
-    CrashIf(idx < 0);
-    CrashIf(idx >= GetTabCount());
-
-    TCITEMW item{0};
-    item.mask = TCIF_TEXT;
-    item.pszText = ToWstrTemp(s);
-    TabCtrl_SetItem(hwnd, idx, &item);
-}
-#endif
-
-#if 0
-// result is valid until next call to GetTabText()
-char* TabsCtrl::GetTabText(int idx) {
-    CrashIf(idx < 0);
-    CrashIf(idx >= GetTabCount());
-
-    WCHAR buf[512]{};
-    TCITEMW item{0};
-    item.mask = TCIF_TEXT;
-    item.pszText = buf;
-    item.cchTextMax = dimof(buf) - 1; // -1 just in case
-    TabCtrl_GetItem(hwnd, idx, &item);
-    char* s = ToUtf8Temp(buf);
-    lastTabText.Set(s);
-    return lastTabText.Get();
-}
-#endif
-
 int TabsCtrl::GetSelectedTabIndex() {
     int idx = TabCtrl_GetCurSel(hwnd);
     return idx;
@@ -3590,78 +3615,12 @@ void TabsCtrl::SetTabSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
     painter->Reshape(sz.dx, sz.dy);
     tabBeingClosed = -1;
-}
-
-void TabsCtrl::SetToolTipsHwnd(HWND hwndTooltip) {
-    TabCtrl_SetToolTips(hwnd, hwndTooltip);
+    // MaybeUpdateTooltipText(this);
 }
 
 HWND TabsCtrl::GetToolTipsHwnd() {
     HWND res = TabCtrl_GetToolTips(hwnd);
     return res;
-}
-
-// TODO: this is a nasty implementation
-// should probably TTM_ADDTOOL for each tab item
-// we could re-calculate it in SetTabSize()
-void TabsCtrl::MaybeUpdateTooltip() {
-    // logf("MaybeUpdateTooltip() start\n");
-    HWND ttHwnd = GetToolTipsHwnd();
-    if (!ttHwnd) {
-        return;
-    }
-
-    {
-        TOOLINFO ti{0};
-        ti.cbSize = sizeof(ti);
-        ti.hwnd = hwnd;
-        ti.uId = 0;
-        SendMessage(ttHwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
-    }
-
-    {
-        TOOLINFO ti{0};
-        ti.cbSize = sizeof(ti);
-        ti.hwnd = hwnd;
-        ti.uFlags = TTF_SUBCLASS;
-        // ti.lpszText = LPSTR_TEXTCALLBACK;
-        WCHAR* ws = ToWstrTemp(currTooltipText);
-        ti.lpszText = ws;
-        ti.uId = 0;
-        ti.rect = ClientRECT(hwnd);
-        SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
-    }
-}
-
-void TabsCtrl::MaybeUpdateTooltipText(int idx) {
-    HWND ttHwnd = GetToolTipsHwnd();
-    if (!ttHwnd) {
-        return;
-    }
-    TabInfo* tab = GetTab(idx);
-    char* tooltip = tab->tooltip;
-    if (str::Eq(currTooltipText, tooltip)) {
-        return;
-    }
-    currTooltipText = tooltip;
-#if 1
-    MaybeUpdateTooltip();
-#else
-    // TODO: why this doesn't work?
-    TOOLINFO ti{0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = hwnd;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = currTooltipText.Get();
-    ti.uId = 0;
-    ti.rect = ClientRECT(hwnd);
-    SendMessage(ttHwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
-#endif
-    // SendMessage(ttHwnd, TTM_UPDATE, 0, 0);
-
-    SendMessage(ttHwnd, TTM_POP, 0, 0);
-    SendMessage(ttHwnd, TTM_POPUP, 0, 0);
-    // logf("MaybeUpdateTooltipText: %s\n", tooltip);
 }
 
 //--- misc code

@@ -95,7 +95,6 @@ void UpdateTabWidth(MainWindow* win) {
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);
     win->tabsCtrl->SetTabSize(tabSize);
-    win->tabsCtrl->MaybeUpdateTooltip();
 }
 
 static void RemoveTab(MainWindow* win, int idx) {

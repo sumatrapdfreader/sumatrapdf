@@ -759,8 +759,6 @@ struct TabsCtrl : Wnd {
 
     int InsertTab(int idx, TabInfo*);
     TabInfo* GetTab(int idx);
-    // void SetTabText(int idx, const char* s);
-    // char* GetTabText(int idx);
 
     void SetTextAndTooltip(int idx, const char* text, const char* tooltip);
 
@@ -774,11 +772,7 @@ struct TabsCtrl : Wnd {
 
     void SetTabSize(Size sz);
 
-    void SetToolTipsHwnd(HWND);
     HWND GetToolTipsHwnd();
-
-    void MaybeUpdateTooltip();
-    void MaybeUpdateTooltipText(int idx);
 };
 
 void DeleteWnd(Static**);
