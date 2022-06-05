@@ -644,8 +644,7 @@ struct TabsCtrl;
 struct TabPainter {
     TabsCtrl* tabsCtrl = nullptr;
     PathData* data = nullptr;
-    int width = -1;
-    int height = -1;
+    Size tabSize;
 
     HWND hwnd = nullptr;
 

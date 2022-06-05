@@ -3026,24 +3026,23 @@ TabPainter::~TabPainter() {
 // Generates a GraphicsPath, which is used for painting the tab, etc.
 bool TabPainter::Reshape(int dx, int dy) {
     dx--;
-    if (width == dx && height == dy) {
+    if (tabSize.dx == dx && tabSize.dy == dy) {
         return false;
     }
-    width = dx;
-    height = dy;
+    tabSize = {dx, dy};
 
     GraphicsPath shape;
     // define tab's body
-    shape.AddRectangle(Gdiplus::Rect(0, 0, width, height));
+    shape.AddRectangle(Gdiplus::Rect(0, 0, dx, dy));
     shape.SetMarker();
 
     // define "x"'s circle
-    int c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
+    int c = int((float)dy * 0.78f + 0.5f); // size of bounding square for the circle
     int maxC = DpiScale(hwnd, 17);
-    if (height > maxC) {
+    if (dx > maxC) {
         c = DpiScale(hwnd, 17);
     }
-    Gdiplus::Point p(width - c - DpiScale(hwnd, 3), (height - c) / 2); // circle's position
+    Gdiplus::Point p(dx - c - DpiScale(hwnd, 3), (dy - c) / 2); // circle's position
     shape.AddEllipse(p.X, p.Y, c, c);
     shape.SetMarker();
     // define "x"
@@ -3061,6 +3060,8 @@ bool TabPainter::Reshape(int dx, int dy) {
 
 // Finds the index of the tab, which contains the given point.
 int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
+    int dx = tabSize.dx;
+    int dy = tabSize.dy;
     Gdiplus::Point point(x, y);
     Graphics gfx(hwnd);
     GraphicsPath shapes(data->Points, data->Types, data->Count);
@@ -3069,7 +3070,7 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
     iterator.NextMarker(&shape);
 
     Rect rClient = ClientRect(hwnd);
-    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - height - 1);
+    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
     gfx.TranslateTransform(1.0f, yPosTab);
     for (int i = 0; i < Count(); i++) {
         Gdiplus::Point pt(point);
@@ -3081,7 +3082,7 @@ int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) const {
             }
             return i;
         }
-        gfx.TranslateTransform(float(width + 1), 0.0f);
+        gfx.TranslateTransform(float(dx + 1), 0.0f);
     }
     if (inXbutton) {
         *inXbutton = false;
@@ -3139,18 +3140,20 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
 
     Font f(hdc, GetDefaultGuiFont());
     // TODO: adjust these constant values for DPI?
-    Gdiplus::RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
+    int dx = tabSize.dx;
+    int dy = tabSize.dy;
+    Gdiplus::RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(dx - DpiScale(hwnd, 20)), (float)dy);
     StringFormat sf(StringFormat::GenericDefault());
     sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
+    float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
     for (int i = 0; i < Count(); i++) {
         gfx.ResetTransform();
-        gfx.TranslateTransform(1.f + (float)(width + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
+        gfx.TranslateTransform(1.f + (float)(dx + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
 
-        if (!gfx.IsVisible(0, 0, width + 1, height + 1)) {
+        if (!gfx.IsVisible(0, 0, dx + 1, dy + 1)) {
             continue;
         }
 
