@@ -3656,7 +3656,10 @@ int TabsCtrl::SetSelected(int idx) {
 
 void TabsCtrl::SetTabSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
-    painter->Reshape(sz.dx, sz.dy);
+    bool didReshape = painter->Reshape(sz.dx, sz.dy);
+    if (didReshape) {
+        HwndScheduleRepaint(hwnd);
+    }
     tabBeingClosed = -1;
     // MaybeUpdateTooltipText(this);
 }
