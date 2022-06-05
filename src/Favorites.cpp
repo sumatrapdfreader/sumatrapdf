@@ -680,7 +680,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
     if (needsLabel) {
         pl = pageLabel;
     }
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     char* path = tab->filePath;
     gFavorites.AddOrReplace(path, pageNo, name, pl);
     // expand newly added favorites by default
@@ -694,7 +694,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
 
 void AddFavoriteForCurrentPage(MainWindow* win, int pageNo) {
     char* name = nullptr;
-    auto tab = win->currentTab;
+    auto tab = win->CurrentTab();
     auto* ctrl = tab->ctrl;
     if (ctrl->HasToc()) {
         // use the current ToC heading as default name

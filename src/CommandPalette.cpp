@@ -298,7 +298,7 @@ static char* ConvertPathForDisplayTemp(const char* s) {
 void CommandPaletteWnd::CollectStrings(MainWindow* win) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = win->IsDocLoaded();
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     ctx.hasSelection = ctx.isDocLoaded && tab && win->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !win->tabsInTitlebar;
@@ -552,7 +552,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     if (isFromTab) {
         WindowTab* tab = FindOpenedFile(s);
         if (tab) {
-            if (tab->win->currentTab != tab) {
+            if (tab->win->CurrentTab() != tab) {
                 SelectTabInWindow(tab);
             }
             gHwndToActivateOnClose = tab->win->hwndFrame;

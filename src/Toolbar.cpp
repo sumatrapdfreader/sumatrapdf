@@ -482,7 +482,7 @@ void UpdateToolbarState(MainWindow* win) {
 
     isChecked |= (state & TBSTATE_CHECKED);
     if (!isChecked) {
-        win->currentTab->prevZoomVirtual = kInvalidZoom;
+        win->CurrentTab()->prevZoomVirtual = kInvalidZoom;
     }
 }
 

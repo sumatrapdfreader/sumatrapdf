@@ -310,7 +310,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload 
     if (!LoadDocument(&args, lazyload)) {
         return;
     }
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     if (!tab || !tab->ctrl) {
         return;
     }

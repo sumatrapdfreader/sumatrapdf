@@ -95,7 +95,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     win->showSelection = false;
     win->selectionMeasure = SizeF();
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     if (!tab) {
         return;
     }
@@ -155,21 +155,21 @@ void PaintSelection(MainWindow* win, HDC hdc) {
         // during text selection or after selection is done
         if (MouseAction::SelectingText == win->mouseAction) {
             UpdateTextSelection(win);
-            if (!win->currentTab->selectionOnPage) {
+            if (!win->CurrentTab()->selectionOnPage) {
                 // prevent the selection from disappearing while the
                 // user is still at it (OnSelectionStop removes it
                 // if it is still empty at the end)
-                win->currentTab->selectionOnPage = new Vec<SelectionOnPage>();
+                win->CurrentTab()->selectionOnPage = new Vec<SelectionOnPage>();
                 win->showSelection = true;
             }
         }
 
-        CrashIf(!win->currentTab->selectionOnPage);
-        if (!win->currentTab->selectionOnPage) {
+        CrashIf(!win->CurrentTab()->selectionOnPage);
+        if (!win->CurrentTab()->selectionOnPage) {
             return;
         }
 
-        for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+        for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
             rects.Append(sel.GetRect(win->AsFixed()));
         }
     }
@@ -193,8 +193,8 @@ void UpdateTextSelection(MainWindow* win, bool select) {
     }
 
     DeleteOldSelectionInfo(win);
-    win->currentTab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
-    win->showSelection = win->currentTab->selectionOnPage != nullptr;
+    win->CurrentTab()->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
 
     if (win->uiaProvider) {
         win->uiaProvider->OnSelectionChanged();
@@ -216,9 +216,9 @@ void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit, bool relat
             zoomToPt = false;
         }
         // either scroll towards the center of the current selection (if there is any) ...
-        else if (win->showSelection && win->currentTab->selectionOnPage) {
+        else if (win->showSelection && win->CurrentTab()->selectionOnPage) {
             Rect selRect;
-            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+            for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
                 selRect = selRect.Union(sel.GetRect(dm));
             }
 
@@ -299,7 +299,7 @@ char* GetSelectedText(WindowTab* tab, const char* lineSep, bool& isTextOnlySelec
 }
 
 void CopySelectionToClipboard(MainWindow* win) {
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     CrashIf(tab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
 
     if (!OpenClipboard(nullptr)) {
@@ -382,10 +382,10 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     } else {
         DeleteOldSelectionInfo(win, true);
         win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
-        win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
+        win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
     }
 
-    win->showSelection = win->currentTab->selectionOnPage != nullptr;
+    win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
     RepaintAsync(win, 0);
 }
 
@@ -467,11 +467,11 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
 
     win->selectionRect = Rect::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
     if (aborted || (MouseAction::Selecting == win->mouseAction ? win->selectionRect.IsEmpty()
-                                                               : !win->currentTab->selectionOnPage)) {
+                                                               : !win->CurrentTab()->selectionOnPage)) {
         DeleteOldSelectionInfo(win, true);
     } else if (win->mouseAction == MouseAction::Selecting) {
-        win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
-        win->showSelection = win->currentTab->selectionOnPage != nullptr;
+        win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
+        win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
     }
     RepaintAsync(win, 0);
 }

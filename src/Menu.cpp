@@ -1496,14 +1496,14 @@ void MenuUpdateDisplayMode(MainWindow* win) {
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
     MenuSetChecked(win->menu, CmdToggleContinuousView, IsContinuous(displayMode));
 
-    if (win->currentTab && win->currentTab->GetEngineType() == kindEngineComicBooks) {
+    if (win->CurrentTab() && win->CurrentTab()->GetEngineType() == kindEngineComicBooks) {
         bool mangaMode = win->AsFixed()->GetDisplayR2L();
         MenuSetChecked(win->menu, CmdToggleMangaMode, mangaMode);
     }
 }
 
 static void MenuUpdateStateForWindow(MainWindow* win) {
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
 
     bool hasDocument = tab && tab->IsDocLoaded();
     for (int id : disableIfNoDocument) {
@@ -1627,7 +1627,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     Point cursorPos{x, y};
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
 
     char* value = nullptr;
@@ -2098,7 +2098,7 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
 }
 
 HMENU BuildMenu(MainWindow* win) {
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
 
     BuildMenuCtx buildCtx;
     FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
@@ -2128,7 +2128,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
     }
     UINT_PTR id = (UINT_PTR)GetMenuItemID(m, 0);
     if (id == menuDefFile[0].idOrSubmenu) {
-        RebuildFileMenu(win->currentTab, m);
+        RebuildFileMenu(win->CurrentTab(), m);
     } else if (id == menuDefFavorites[0].idOrSubmenu) {
         MenuEmpty(m);
         BuildMenuFromMenuDef(menuDefFavorites, m, nullptr);

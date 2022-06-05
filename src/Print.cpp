@@ -754,7 +754,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     pdex.lStructSize = sizeof(PRINTDLGEXW);
     pdex.hwndOwner = win->hwndFrame;
     pdex.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
-    if (!win->currentTab->selectionOnPage) {
+    if (!win->CurrentTab()->selectionOnPage) {
         pdex.Flags |= PD_NOSELECTION;
     }
     pdex.nCopies = 1;
@@ -840,7 +840,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     if (pdex.Flags & PD_CURRENTPAGE) {
         PRINTPAGERANGE pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
         ranges.Append(pr);
-    } else if (win->currentTab->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
+    } else if (win->CurrentTab()->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pdex.Flags & PD_PAGENUMS)) {
         PRINTPAGERANGE pr = {1, (DWORD)nPages};
@@ -852,7 +852,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         }
     }
 
-    sel = printSelection ? win->currentTab->selectionOnPage : nullptr;
+    sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
     pd = new PrintData(engine, printer, ranges, advanced, rotation, sel);
 
     // if a file is missing and the engine can't thus be cloned,

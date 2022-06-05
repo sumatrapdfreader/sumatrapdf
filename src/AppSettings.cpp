@@ -214,7 +214,7 @@ static void RememberSessionState() {
             data->tabStates->Append(NewTabState(fs));
             DeleteDisplayState(fs);
         }
-        data->tabIndex = win->tabs.Find(win->currentTab) + 1;
+        data->tabIndex = win->tabs.Find(win->CurrentTab()) + 1;
         // TODO: allow recording this state without changing gGlobalPrefs
         RememberDefaultWindowPosition(win);
         data->windowState = gGlobalPrefs->windowState;

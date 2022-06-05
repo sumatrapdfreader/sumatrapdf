@@ -826,12 +826,12 @@ void GetStressTestInfo(str::Str* s) {
 
     for (size_t i = 0; i < gWindows.size(); i++) {
         MainWindow* w = gWindows.at(i);
-        if (!w || !w->currentTab || !w->currentTab->filePath) {
+        if (!w || !w->CurrentTab() || !w->CurrentTab()->filePath) {
             continue;
         }
 
         s->Append("File: ");
-        char* filePath = w->currentTab->filePath;
+        char* filePath = w->CurrentTab()->filePath;
         s->Append(filePath);
         GetLogInfo(w->stressTest, s);
         s->Append("\r\n");

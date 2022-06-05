@@ -249,7 +249,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         SetRect(annot, r);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
-        StartEditAnnotations(win->currentTab, annot);
+        StartEditAnnotations(win->CurrentTab(), annot);
     } else {
         delete annot;
     }
@@ -522,7 +522,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
 
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     if (didDragMouse) {
         // no-op
         return;
@@ -617,8 +617,8 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         Rect rc = dm->CvtToScreen(pageNo, pageEl->GetRect());
 
         DeleteOldSelectionInfo(win, true);
-        win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
-        win->showSelection = win->currentTab->selectionOnPage != nullptr;
+        win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
+        win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
         RepaintAsync(win, 0);
     }
 }
@@ -1499,7 +1499,7 @@ static void OnPaintError(MainWindow* win) {
     ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));
     FillRect(hdc, &ps.rcPaint, bgBrush);
     // TODO: should this be "Error opening %s"?
-    AutoFreeWstr msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath.Get()));
+    AutoFreeWstr msg(str::Format(_TR("Error loading %s"), win->CurrentTab()->filePath.Get()));
     DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRightToLeft());
     SelectObject(hdc, hPrevFont);
 
@@ -1588,7 +1588,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 
         case AUTO_RELOAD_TIMER_ID:
             KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-            if (win->currentTab && win->currentTab->reloadOnFocus) {
+            if (win->CurrentTab() && win->CurrentTab()->reloadOnFocus) {
                 ReloadDocument(win, true);
             }
             break;

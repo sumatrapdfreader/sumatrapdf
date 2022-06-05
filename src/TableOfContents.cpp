@@ -175,7 +175,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 static void GoToTocLinkTask(TocItem* tocItem, WindowTab* tab, DocController* ctrl) {
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
-    if (!MainWindowStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl) {
+    if (!MainWindowStillValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
         return;
     }
 
@@ -209,7 +209,7 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
-        WindowTab* tab = win->currentTab;
+        WindowTab* tab = win->CurrentTab();
         DocController* ctrl = win->ctrl;
         uitask::Post([=] { GoToTocLinkTask(tocItem, tab, ctrl); });
     }
@@ -470,7 +470,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         pageNo = dti->dest->GetPageNo();
     }
 
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
     const char* embeddedFilePath = nullptr;
@@ -587,7 +587,7 @@ static void AutoExpandTopLevelItems(TocItem* root) {
 }
 
 void LoadTocTree(MainWindow* win) {
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     CrashIf(!tab);
 
     if (win->tocLoaded) {

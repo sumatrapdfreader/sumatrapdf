@@ -157,7 +157,7 @@ void FindSelection(MainWindow* win, TextSearchDirection direction) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
-    if (!win->currentTab->selectionOnPage || 0 == dm->textSelection->result.len) {
+    if (!win->CurrentTab()->selectionOnPage || 0 == dm->textSelection->result.len) {
         return;
     }
 
@@ -447,7 +447,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;
     }
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     if (!tab || tab->GetEngineType() != kindEngineMupdf) {
         return false;
     }
@@ -667,12 +667,12 @@ static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
         // check if any opened PDF has sync information for the source file
         win = FindMainWindowBySyncFile(srcFile, true);
         if (win && newWindow) {
-            LoadArgs args(win->currentTab->filePath, nullptr);
+            LoadArgs args(win->CurrentTab()->filePath, nullptr);
             win = LoadDocument(&args);
         }
     }
 
-    if (!win || !win->currentTab || win->currentTab->GetEngineType() != kindEngineMupdf) {
+    if (!win || !win->CurrentTab() || win->CurrentTab()->GetEngineType() != kindEngineMupdf) {
         return next;
     }
 

@@ -83,11 +83,14 @@ struct MainWindow {
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;
 
-    // TODO: use currentTab->ctrl instead
-    DocController* ctrl = nullptr; // owned by currentTab
+    // TODO: use CurrentTab()->ctrl instead
+    DocController* ctrl = nullptr; // owned by CurrentTab()
 
     Vec<WindowTab*> tabs;
-    WindowTab* currentTab = nullptr; // points into tabs
+    WindowTab* currentTabTemp = nullptr; // points into tabs
+    WindowTab* CurrentTab() const {
+        return currentTabTemp;
+    }
 
     HWND hwndFrame = nullptr;
     HWND hwndCanvas = nullptr;
@@ -163,7 +166,7 @@ struct MainWindow {
     int xScrollSpeed = 0;
     int yScrollSpeed = 0;
 
-    // true while selecting and when currentTab->selectionOnPage != nullptr
+    // true while selecting and when CurrentTab()->selectionOnPage != nullptr
     bool showSelection = false;
     // selection rectangle in screen coordinates (only needed while selecting)
     Rect selectionRect;

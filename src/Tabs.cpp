@@ -93,9 +93,9 @@ static void RemoveTab(MainWindow* win, int idx) {
     UpdateTabFileDisplayStateForTab(tab);
     win->tabSelectionHistory->Remove(tab);
     win->tabs.Remove(tab);
-    if (tab == win->currentTab) {
+    if (tab == win->CurrentTab()) {
         win->ctrl = nullptr;
-        win->currentTab = nullptr;
+        win->currentTabTemp = nullptr;
     }
     delete tab;
     win->tabsCtrl->RemoveTab(idx);
@@ -202,11 +202,11 @@ void SaveCurrentWindowTab(MainWindow* win) {
     if (-1 == current) {
         return;
     }
-    if (win->currentTab != win->tabs.at(current)) {
+    if (win->CurrentTab() != win->tabs.at(current)) {
         return; // TODO: restore CrashIf() ?
     }
 
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     if (win->tocLoaded) {
         TocTree* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
@@ -272,7 +272,7 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
 
 // Refresh the tab's title
 void TabsOnChangedDoc(MainWindow* win) {
-    WindowTab* tab = win->currentTab;
+    WindowTab* tab = win->CurrentTab();
     CrashIf(!tab != !win->tabs.size());
     if (!tab) {
         return;
@@ -315,7 +315,7 @@ void TabsOnCloseDoc(MainWindow* win) {
 void TabsOnCloseWindow(MainWindow* win) {
     win->tabsCtrl->RemoveAllTabs();
     win->tabSelectionHistory->Reset();
-    win->currentTab = nullptr;
+    win->currentTabTemp = nullptr;
     win->ctrl = nullptr;
     DeleteVecMembers(win->tabs);
 }

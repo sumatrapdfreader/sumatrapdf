@@ -168,12 +168,12 @@ void ClearMouseState(MainWindow* win) {
 }
 
 bool MainWindow::IsAboutWindow() const {
-    return nullptr == currentTab;
+    return nullptr == CurrentTab();
 }
 
 bool MainWindow::IsDocLoaded() const {
     bool isLoaded = (ctrl != nullptr);
-    bool isTabLoaded = (currentTab && currentTab->ctrl != nullptr);
+    bool isTabLoaded = (CurrentTab() && CurrentTab()->ctrl != nullptr);
     if (isLoaded != isTabLoaded) {
         logfa("MainWindow::IsDocLoaded(): isLoaded: %d, isTabLoaded: %d\n", (int)isLoaded, (int)isTabLoaded);
         ReportIf(true);
@@ -207,8 +207,8 @@ void MainWindow::UpdateCanvasSize() {
         // the display model needs to know the full size (including scroll bars)
         ctrl->SetViewPortSize(GetViewPortSize());
     }
-    if (currentTab) {
-        currentTab->canvasRc = canvasRc;
+    if (CurrentTab()) {
+        CurrentTab()->canvasRc = canvasRc;
     }
 
     RelayoutNotifications(hwndCanvas);
@@ -282,14 +282,14 @@ void MainWindow::Focus() const {
 }
 
 void MainWindow::ToggleZoom() const {
-    if (currentTab) {
-        currentTab->ToggleZoom();
+    if (CurrentTab()) {
+        CurrentTab()->ToggleZoom();
     }
 }
 
 void MainWindow::MoveDocBy(int dx, int dy) const {
-    CrashIf(!currentTab);
-    currentTab->MoveDocBy(dx, dy);
+    CrashIf(!CurrentTab());
+    CurrentTab()->MoveDocBy(dx, dy);
 }
 
 void MainWindow::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
