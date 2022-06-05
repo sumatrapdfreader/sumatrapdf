@@ -3339,6 +3339,22 @@ static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
     tabs->onTabDragged(&ev);
 }
 
+static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
+    int nTabs = tabsCtrl->GetTabCount();
+    CrashIf(tab1 == tab2 || tab1 < 0 || tab2 < 0 || tab1 >= nTabs || tab2 >= nTabs);
+
+    auto&& tabs = tabsCtrl->tabs;
+    std::swap(tabs.at(tab1), tabs.at(tab2));
+
+    // TODO: simplify?
+    int current = tabsCtrl->GetSelected();
+    int newSelected = tab1;
+    if (tab1 == current) {
+        newSelected = tab2;
+    }
+    tabsCtrl->SetSelected(newSelected);
+}
+
 LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     NMHDR* hdr = (NMHDR*)lp;
     switch (hdr->code) {
@@ -3383,8 +3399,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (-1 != tab->IndexFromPoint(pt.x, pt.y)) {
                 return HTCLIENT;
             }
-        }
             return HTTRANSPARENT;
+        }
 
         case WM_MOUSELEAVE:
             wp = 0xff;
@@ -3407,6 +3423,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
                     TriggerTabDragged(this, tabHighlighted, hl);
+                    UpdateAfterDrag(this, tabHighlighted, hl);
                 }
                 HwndScheduleRepaint(hwnd);
                 tabHighlighted = hl;
@@ -3429,8 +3446,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 auto tabsCtrl = tab->tabsCtrl;
                 MaybeUpdateTooltipText(tabsCtrl, tabHighlighted);
             }
-        }
             return 0;
+        }
 
         case WM_LBUTTONDOWN:
             if (overX) {
@@ -3449,8 +3466,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 isDragging = true;
                 SetCapture(hwnd);
+                return 0;
             }
-            return 0;
 
         case WM_LBUTTONUP:
             if (tabBeingClosed != -1) {
@@ -3504,9 +3521,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 EndPaint(hwnd, &ps);
             }
             return 0;
-        }
-        case TCM_SETCURSEL: {
-            logf("TCM_SETURSEL\n");
         }
     }
 

@@ -32,7 +32,7 @@
 
 #include "utils/Log.h"
 
-static void SetTabTitle(WindowTab* tab) {
+static void UpdateTabTitle(WindowTab* tab) {
     if (!tab) {
         return;
     }
@@ -50,15 +50,6 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
 
     auto&& tabs = win->tabs;
     std::swap(tabs.at(tab1), tabs.at(tab2));
-    SetTabTitle(tabs.at(tab1));
-    SetTabTitle(tabs.at(tab2));
-
-    int current = win->tabsCtrl->GetSelected();
-    int newSelected = tab1;
-    if (tab1 == current) {
-        newSelected = tab2;
-    }
-    win->tabsCtrl->SetSelected(newSelected);
 }
 
 int GetTabbarHeight(HWND hwnd, float factor) {
@@ -289,7 +280,7 @@ void TabsOnChangedDoc(MainWindow* win) {
 
     CrashIf(win->tabs.Find(tab) != win->tabsCtrl->GetSelected());
     VerifyWindowTab(win, tab);
-    SetTabTitle(tab);
+    UpdateTabTitle(tab);
 }
 
 // Called when we're closing a document
