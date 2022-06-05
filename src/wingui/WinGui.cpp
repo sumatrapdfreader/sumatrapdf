@@ -3157,6 +3157,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
+    int selectedTab = tabsCtrl->GetSelected();
     float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
     for (int i = 0; i < Count(); i++) {
         TabInfo* tab = tabsCtrl->GetTab(i);
@@ -3173,18 +3174,18 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         COLORREF xColor = tabBackgroundCloseX;
         COLORREF circleColor = tabBackgroundCloseCircle;
 
-        if (tabsCtrl->selectedTabIdx == i) {
+        if (selectedTab == i) {
             bgCol = tabSelectedBg;
             textCol = tabSelectedText;
             xColor = tabSelectedCloseX;
             circleColor = tabSelectedCloseCircle;
-        } else if (tabsCtrl->highlighted == i) {
+        } else if (tabsCtrl->tabHighlighted == i) {
             bgCol = tabHighlightedBg;
             textCol = tabHighlightedText;
             xColor = tabHighlightedCloseX;
             circleColor = tabHighlightedCloseCircle;
         }
-        if (tabsCtrl->xHighlighted == i) {
+        if (tabsCtrl->tabHighlightedClose == i) {
             xColor = tabHoveredCloseX;
             circleColor = tabHoveredCloseCircle;
         }
@@ -3215,7 +3216,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // paint "x"'s circle
         iterator.NextMarker(&shape);
         // bool closeCircleEnabled = true;
-        if ((tabsCtrl->tabBeingClosed == i || tabsCtrl->xHighlighted == i) /*&& closeCircleEnabled*/) {
+        if ((tabsCtrl->tabBeingClosed == i || tabsCtrl->tabHighlightedClose == i) /*&& closeCircleEnabled*/) {
             br.SetColor(GdiRgbFromCOLORREF(circleColor));
             gfx.FillPath(&br, &shape);
         }
@@ -3399,17 +3400,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             bool didChangeTabs = false;
             if (isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
-                hl = highlighted;
+                hl = tabHighlighted;
                 didChangeTabs = true;
             }
-            if (highlighted != hl) {
+            if (tabHighlighted != hl) {
                 if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
-                    int tabNo = highlighted;
-                    TriggerTabDragged(this, tabNo, hl);
+                    TriggerTabDragged(this, tabHighlighted, hl);
                 }
                 HwndScheduleRepaint(hwnd);
-                highlighted = hl;
+                tabHighlighted = hl;
                 didChangeTabs = true;
             }
             int xHl = -1;
@@ -3417,18 +3417,17 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 xHl = hl;
             }
             // logfa("inX=%d, hl=%d, xHl=%d, xHighlighted=%d\n", (int)inX, hl, xHl, tab->xHighlighted);
-            if (xHighlighted != xHl) {
+            if (tabHighlightedClose != xHl) {
                 // logfa("before invalidate, xHl=%d, xHighlited=%d\n", xHl, tab->xHighlighted);
                 HwndScheduleRepaint(hwnd);
-                xHighlighted = xHl;
+                tabHighlightedClose = xHl;
             }
             if (!overX) {
                 tabBeingClosed = -1;
             }
-            if (didChangeTabs && highlighted >= 0) {
-                int idx = highlighted;
+            if (didChangeTabs && tabHighlighted >= 0) {
                 auto tabsCtrl = tab->tabsCtrl;
-                MaybeUpdateTooltipText(tabsCtrl, idx);
+                MaybeUpdateTooltipText(tabsCtrl, tabHighlighted);
             }
         }
             return 0;
@@ -3438,12 +3437,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = tabUnderMouse;
             } else if (tabUnderMouse != -1) {
-                if (tabUnderMouse != selectedTabIdx) {
+                int selectedTab = GetSelected();
+                if (tabUnderMouse != selectedTab) {
                     bool stopChange = TriggerSelectionChanging(this);
                     if (stopChange) {
                         return 0;
                     }
-                    SetSelectedTabByIndex(tabUnderMouse);
+                    SetSelected(tabUnderMouse);
                     TriggerSelectionChanged(this);
                     return 0;
                 }
@@ -3574,9 +3574,13 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
     tabs.InsertAt(idx, tab);
 
-    // TODO: revise
-    if (insertedIdx <= selectedTabIdx) {
-        selectedTabIdx++;
+    if (insertedIdx == 0) {
+        SetSelected(0);
+    } else {
+        int selectedTab = GetSelected();
+        if (insertedIdx <= selectedTab) {
+            SetSelected(selectedTab + 1);
+        }
     }
     tabBeingClosed = -1;
     currTooltipText = tab->tooltip;
@@ -3599,10 +3603,11 @@ void TabsCtrl::RemoveTab(int idx) {
     tabs.RemoveAt(idx);
     delete tab;
     tabBeingClosed = -1;
-    if (idx < selectedTabIdx) {
-        SetSelectedTabByIndex(selectedTabIdx - 1);
-    } else if (idx == selectedTabIdx) {
-        SetSelectedTabByIndex(0);
+    int selectedTab = GetSelected();
+    if (idx < selectedTab) {
+        SetSelected(selectedTab - 1);
+    } else if (idx == selectedTab) {
+        SetSelected(0);
     }
 }
 
@@ -3612,23 +3617,21 @@ TabInfo* TabsCtrl::GetTab(int idx) {
 
 void TabsCtrl::RemoveAllTabs() {
     TabCtrl_DeleteAllItems(hwnd);
-    selectedTabIdx = -1;
-    highlighted = -1;
+    tabHighlighted = -1;
     tabBeingClosed = -1;
-    xHighlighted = -1;
+    tabHighlightedClose = -1;
     DeleteVecMembers(tabs);
     tabs.Reset();
 }
 
-int TabsCtrl::GetSelectedTabIndex() {
+int TabsCtrl::GetSelected() {
     int idx = TabCtrl_GetCurSel(hwnd);
     return idx;
 }
 
-int TabsCtrl::SetSelectedTabByIndex(int idx) {
+int TabsCtrl::SetSelected(int idx) {
     CrashIf(idx < 0 || idx >= GetTabCount());
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
-    selectedTabIdx = idx;
     return prevSelectedIdx;
 }
 

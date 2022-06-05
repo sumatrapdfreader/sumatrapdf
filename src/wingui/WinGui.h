@@ -734,11 +734,10 @@ struct TabsCtrl : Wnd {
 
     Vec<TabInfo*> tabs;
 
-    // tracking state of which tab is currently selected, highlighted etc.
-    int selectedTabIdx = -1;
-    int highlighted = -1;
+    // tracking state of which tab is highlighted etc.
+    int tabHighlighted = -1;
+    int tabHighlightedClose = -1;
     int tabBeingClosed = -1;
-    int xHighlighted = -1;
     bool isDragging = false;
 
     TabClosedHandler onTabClosed = nullptr;
@@ -766,8 +765,8 @@ struct TabsCtrl : Wnd {
     void RemoveTab(int idx);
     void RemoveAllTabs();
 
-    int GetSelectedTabIndex();
-    int SetSelectedTabByIndex(int idx);
+    int GetSelected();
+    int SetSelected(int idx);
 
     void SetTabSize(Size sz);
 

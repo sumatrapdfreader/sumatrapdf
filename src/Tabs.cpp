@@ -53,12 +53,12 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
     SetTabTitle(tabs.at(tab1));
     SetTabTitle(tabs.at(tab2));
 
-    int current = win->tabsCtrl->GetSelectedTabIndex();
+    int current = win->tabsCtrl->GetSelected();
     int newSelected = tab1;
     if (tab1 == current) {
         newSelected = tab2;
     }
-    win->tabsCtrl->SetSelectedTabByIndex(newSelected);
+    win->tabsCtrl->SetSelected(newSelected);
 }
 
 int GetTabbarHeight(HWND hwnd, float factor) {
@@ -112,7 +112,7 @@ static void RemoveTab(MainWindow* win, int idx) {
 }
 
 static void WinTabClosedHandler(MainWindow* win, TabsCtrl* tabs, int closedTabIdx) {
-    int current = win->tabsCtrl->GetSelectedTabIndex();
+    int current = win->tabsCtrl->GetSelected();
     if (closedTabIdx == current) {
         CloseCurrentTab(win);
     } else {
@@ -129,14 +129,14 @@ void TabsSelect(MainWindow* win, int tabIndex) {
         return;
     }
     TabsCtrl* tabsCtrl = win->tabsCtrl;
-    int currIdx = tabsCtrl->GetSelectedTabIndex();
+    int currIdx = tabsCtrl->GetSelected();
     if (tabIndex == currIdx) {
         return;
     }
 
     // same work as in onSelectionChanging and onSelectionChanged
     SaveCurrentWindowTab(win);
-    int prevIdx = tabsCtrl->SetSelectedTabByIndex(tabIndex);
+    int prevIdx = tabsCtrl->SetSelected(tabIndex);
     if (prevIdx < 0) {
         return;
     }
@@ -154,7 +154,7 @@ void CreateTabbar(MainWindow* win) {
     };
 
     tabsCtrl->onSelectionChanged = [win](TabsSelectionChangedEvent* ev) {
-        int currentIdx = win->tabsCtrl->GetSelectedTabIndex();
+        int currentIdx = win->tabsCtrl->GetSelected();
         WindowTab* tab = win->tabs[currentIdx];
         LoadModelIntoTab(tab);
     };
@@ -207,11 +207,13 @@ void SaveCurrentWindowTab(MainWindow* win) {
         return;
     }
 
-    int current = win->tabsCtrl->GetSelectedTabIndex();
+    int current = win->tabsCtrl->GetSelected();
     if (-1 == current) {
         return;
     }
-    CrashIf(win->currentTab != win->tabs.at(current));
+    if (win->currentTab != win->tabs.at(current)) {
+        return; // TODO: restore CrashIf() ?
+    }
 
     WindowTab* tab = win->currentTab;
     if (win->tocLoaded) {
@@ -272,7 +274,7 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     newTab->tooltip = str::Dup(tab->filePath.Get());
     int insertedIdx = tabs->InsertTab(idx, newTab);
     CrashIf(insertedIdx == -1);
-    tabs->SetSelectedTabByIndex(idx);
+    tabs->SetSelected(idx);
     UpdateTabWidth(win);
     return tab;
 }
@@ -285,7 +287,7 @@ void TabsOnChangedDoc(MainWindow* win) {
         return;
     }
 
-    CrashIf(win->tabs.Find(tab) != win->tabsCtrl->GetSelectedTabIndex());
+    CrashIf(win->tabs.Find(tab) != win->tabsCtrl->GetSelected());
     VerifyWindowTab(win, tab);
     SetTabTitle(tab);
 }
@@ -307,13 +309,13 @@ void TabsOnCloseDoc(MainWindow* win) {
     }
     */
 
-    int current = win->tabsCtrl->GetSelectedTabIndex();
+    int current = win->tabsCtrl->GetSelected();
     RemoveTab(win, current);
 
     if (win->tabs.size() > 0) {
         WindowTab* tab = win->tabSelectionHistory->Pop();
         int idx = win->tabs.Find(tab);
-        win->tabsCtrl->SetSelectedTabByIndex(idx);
+        win->tabsCtrl->SetSelected(idx);
         LoadModelIntoTab(tab);
     }
 }
@@ -360,7 +362,7 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     if (count < 2) {
         return;
     }
-    int idx = win->tabsCtrl->GetSelectedTabIndex() + 1;
+    int idx = win->tabsCtrl->GetSelected() + 1;
     if (reverse) {
         idx -= 2;
     }
