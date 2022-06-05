@@ -739,7 +739,6 @@ struct TabsCtrl : Wnd {
     int tabHighlightedClose = -1;
     int tabBeingClosed = -1;
     Point lastMousePos;
-    bool isDragging = false;
 
     TabClosedHandler onTabClosed = nullptr;
     TabsSelectionChangingHandler onSelectionChanging = nullptr;

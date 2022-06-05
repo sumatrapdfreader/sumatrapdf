@@ -3413,6 +3413,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             [[fallthrough]];
 
         case WM_MOUSEMOVE: {
+            bool isDragging = (GetCapture() == hwnd);
             int hl = tabUnderMouse;
             bool didChangeTabs = false;
             if (isDragging && hl == -1) {
@@ -3465,7 +3466,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     TriggerSelectionChanged(this);
                     return 0;
                 }
-                isDragging = true;
                 SetCapture(hwnd);
             }
             return 0;
@@ -3478,6 +3478,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = -1;
             }
+            bool isDragging = (GetCapture() == hwnd);
             if (isDragging) {
                 isDragging = false;
                 ReleaseCapture();
@@ -3487,17 +3488,17 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
-            tabBeingClosed = tab->TabFromMousePosition(mousePos, overClose);
+            tabBeingClosed = tabUnderMouse;
             HwndScheduleRepaint(hwnd);
             return 0;
         }
 
         case WM_MBUTTONUP: {
-            if (tabBeingClosed != -1) {
-                TriggerTabClosed(this, tabBeingClosed);
-                HwndScheduleRepaint(hwnd);
-                tabBeingClosed = -1;
+            if (tabBeingClosed < 0) {
+                return 0;
             }
+            TriggerTabClosed(this, tabBeingClosed);
+            HwndScheduleRepaint(hwnd);
             return 0;
         }
 
