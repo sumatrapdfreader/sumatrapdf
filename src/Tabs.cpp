@@ -97,9 +97,9 @@ static void RemoveTab(MainWindow* win, int idx) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
     }
-    delete tab;
-    WindowTab* tab2 = (WindowTab*)win->tabsCtrl->RemoveTab(idx);
+    WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab>(idx);
     CrashIf(tab2 != tab);
+    delete tab;
     UpdateTabWidth(win);
 }
 

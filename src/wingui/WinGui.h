@@ -763,6 +763,12 @@ struct TabsCtrl : Wnd {
     int GetTabCount();
 
     UINT_PTR RemoveTab(int idx);
+
+    template <typename T>
+    T* RemoveTab(int idx) {
+        UINT_PTR res = RemoveTab(idx);
+        return (T*)res;
+    }
     void RemoveAllTabs();
 
     int GetSelected();
@@ -772,6 +778,12 @@ struct TabsCtrl : Wnd {
 
     HWND GetToolTipsHwnd();
 };
+
+template <typename T>
+T* GetTabsUserData(TabsCtrl* tabs, int idx) {
+    TabInfo* tabInfo = tabs->GetTab(idx);
+    return (T*)tabInfo->userData;
+}
 
 void DeleteWnd(Static**);
 void DeleteWnd(Button**);
