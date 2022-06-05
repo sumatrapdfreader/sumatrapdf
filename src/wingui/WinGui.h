@@ -739,7 +739,6 @@ struct TabsCtrl : Wnd {
     int highlighted = -1;
     int tabBeingClosed = -1;
     int xHighlighted = -1;
-    int nextTab = -1;
     bool isDragging = false;
 
     TabClosedHandler onTabClosed = nullptr;
