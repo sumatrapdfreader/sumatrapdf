@@ -103,10 +103,6 @@ Printer::~Printer() {
     str::Free(name);
     free((void*)devMode);
 
-    for (int i = 0; i < nPaperSizes; i++) {
-        str::Free(paperNames[i]);
-    }
-
     for (int i = 0; i < nBins; i++) {
         str::Free(binNames[i]);
     }
@@ -1229,6 +1225,7 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
             }
         }
 
+        // takes ownership of printer
         PrintData pd(engine, printer, ranges, advanced);
         ok = PrintToDevice(pd);
         if (!ok) {
@@ -1236,12 +1233,6 @@ bool PrintFile(EngineBase* engine, char* printerName, bool displayErrors, const 
             MessageBoxWarningCond(displayErrors, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
         }
     }
-
-    // TODO: I saw a crash in crash report where we crash inside ~Printer
-    // in str::Free(name)
-    // I can't see why this could happen but maybe it's just a random memory corruption
-    // if it's memory corruption then we'll crash anyway
-    // delete printer;
     return ok;
 }
 
