@@ -3012,6 +3012,11 @@ using Gdiplus::StringFormat;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
+TabInfo::~TabInfo() {
+    str::Free(text);
+    str::Free(tooltip);
+}
+
 TabPainter::TabPainter(TabsCtrl* ctrl, Size tabSize) {
     tabsCtrl = ctrl;
     hwnd = tabsCtrl->hwnd;
@@ -3150,6 +3155,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
 
     float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
     for (int i = 0; i < Count(); i++) {
+        TabInfo* tab = tabsCtrl->GetTab(i);
         gfx.ResetTransform();
         gfx.TranslateTransform(1.f + (float)(dx + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
 
@@ -3199,7 +3205,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc) const {
         // draw tab's text
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
         br.SetColor(GdiRgbFromCOLORREF(textCol));
-        char* text = tabsCtrl->GetTabText(i);
+        char* text = tab->text;
         gfx.DrawString(ToWstrTemp(text), -1, &f, layout, &sf, &br);
 
         // paint "x"'s circle
@@ -3482,21 +3488,30 @@ int TabsCtrl::GetTabCount() {
     return n;
 }
 
-int TabsCtrl::InsertTab(int idx, const char* s) {
+// takes ownership of tab
+int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     CrashIf(idx < 0);
 
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
-    item.pszText = ToWstrTemp(s);
+    item.pszText = ToWstrTemp(tab->text);
     int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
-    tooltips.InsertAt(idx, "");
+    tabs.InsertAt(idx, tab);
 
     // TODO: revise
     if (insertedIdx <= selectedTabIdx) {
         selectedTabIdx++;
     }
     tabBeingClosed = -1;
+    currTooltipText = tab->tooltip;
     return insertedIdx;
+}
+
+void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip) {
+    TabInfo* tab = GetTab(idx);
+    str::ReplaceWithCopy(&tab->text, text);
+    str::ReplaceWithCopy(&tab->tooltip, tooltip);
+    HwndScheduleRepaint(hwnd);
 }
 
 void TabsCtrl::RemoveTab(int idx) {
@@ -3504,7 +3519,9 @@ void TabsCtrl::RemoveTab(int idx) {
     CrashIf(idx >= GetTabCount());
     BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
     CrashIf(!ok);
-    tooltips.RemoveAt(idx);
+    TabInfo* tab = tabs[idx];
+    tabs.RemoveAt(idx);
+    delete tab;
     tabBeingClosed = -1;
     if (idx < selectedTabIdx) {
         SetSelectedTabByIndex(selectedTabIdx - 1);
@@ -3513,15 +3530,21 @@ void TabsCtrl::RemoveTab(int idx) {
     }
 }
 
+TabInfo* TabsCtrl::GetTab(int idx) {
+    return tabs[idx];
+}
+
 void TabsCtrl::RemoveAllTabs() {
     TabCtrl_DeleteAllItems(hwnd);
     selectedTabIdx = -1;
     highlighted = -1;
     tabBeingClosed = -1;
     xHighlighted = -1;
-    tooltips.Reset();
+    DeleteVecMembers(tabs);
+    tabs.Reset();
 }
 
+#if 0
 void TabsCtrl::SetTabText(int idx, const char* s) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
@@ -3531,7 +3554,9 @@ void TabsCtrl::SetTabText(int idx, const char* s) {
     item.pszText = ToWstrTemp(s);
     TabCtrl_SetItem(hwnd, idx, &item);
 }
+#endif
 
+#if 0
 // result is valid until next call to GetTabText()
 char* TabsCtrl::GetTabText(int idx) {
     CrashIf(idx < 0);
@@ -3547,6 +3572,7 @@ char* TabsCtrl::GetTabText(int idx) {
     lastTabText.Set(s);
     return lastTabText.Get();
 }
+#endif
 
 int TabsCtrl::GetSelectedTabIndex() {
     int idx = TabCtrl_GetCurSel(hwnd);
@@ -3599,7 +3625,7 @@ void TabsCtrl::MaybeUpdateTooltip() {
         ti.hwnd = hwnd;
         ti.uFlags = TTF_SUBCLASS;
         // ti.lpszText = LPSTR_TEXTCALLBACK;
-        WCHAR* ws = ToWstrTemp(currTooltipText.Get());
+        WCHAR* ws = ToWstrTemp(currTooltipText);
         ti.lpszText = ws;
         ti.uId = 0;
         ti.rect = ClientRECT(hwnd);
@@ -3612,12 +3638,12 @@ void TabsCtrl::MaybeUpdateTooltipText(int idx) {
     if (!ttHwnd) {
         return;
     }
-    const char* tooltip = GetTooltip(idx);
-    if (!tooltip) {
-        // TODO: remove tooltip
+    TabInfo* tab = GetTab(idx);
+    char* tooltip = tab->tooltip;
+    if (str::Eq(currTooltipText, tooltip)) {
         return;
     }
-    currTooltipText.Set(tooltip);
+    currTooltipText = tooltip;
 #if 1
     MaybeUpdateTooltip();
 #else
@@ -3636,18 +3662,6 @@ void TabsCtrl::MaybeUpdateTooltipText(int idx) {
     SendMessage(ttHwnd, TTM_POP, 0, 0);
     SendMessage(ttHwnd, TTM_POPUP, 0, 0);
     // logf("MaybeUpdateTooltipText: %s\n", tooltip);
-}
-
-void TabsCtrl::SetTooltip(int idx, const char* s) {
-    tooltips.SetAt(idx, s);
-}
-
-const char* TabsCtrl::GetTooltip(int idx) {
-    if (idx >= tooltips.Size()) {
-        return nullptr;
-    }
-    char* res = tooltips.at(idx);
-    return res;
 }
 
 //--- misc code

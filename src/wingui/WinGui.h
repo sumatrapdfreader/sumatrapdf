@@ -717,14 +717,22 @@ struct TabsCreateArgs {
 
 struct TabPainter;
 
+struct TabInfo {
+    char* text = nullptr;
+    char* tooltip = nullptr;
+    UINT_PTR userData = 0;
+
+    TabInfo() = default;
+    ~TabInfo();
+};
+
 struct TabsCtrl : Wnd {
     int ctrlID = 0;
     TabPainter* painter = nullptr;
-    str::Str lastTabText;
     bool createToolTipsHwnd = false;
-    str::Str currTooltipText;
+    char* currTooltipText = nullptr; // not owned by us
 
-    StrVec tooltips;
+    Vec<TabInfo*> tabs;
 
     // tracking state of which tab is currently selected, highlighted etc.
     int selectedTabIdx = -1;
@@ -749,23 +757,22 @@ struct TabsCtrl : Wnd {
 
     Size GetIdealSize() override;
 
-    int InsertTab(int idx, const char* sv);
+    int InsertTab(int idx, TabInfo*);
+    TabInfo* GetTab(int idx);
+    // void SetTabText(int idx, const char* s);
+    // char* GetTabText(int idx);
+
+    void SetTextAndTooltip(int idx, const char* text, const char* tooltip);
+
+    int GetTabCount();
 
     void RemoveTab(int idx);
     void RemoveAllTabs();
-
-    void SetTabText(int idx, const char* sv);
-
-    void SetTooltip(int idx, const char*);
-    const char* GetTooltip(int idx);
-
-    char* GetTabText(int idx);
 
     int GetSelectedTabIndex();
     int SetSelectedTabByIndex(int idx);
 
     void SetTabSize(Size sz);
-    int GetTabCount();
 
     void SetToolTipsHwnd(HWND);
     HWND GetToolTipsHwnd();

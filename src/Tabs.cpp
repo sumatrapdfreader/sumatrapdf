@@ -39,9 +39,8 @@ static void SetTabTitle(WindowTab* tab) {
     MainWindow* win = tab->win;
     int idx = win->tabs.Find(tab);
     const char* title = tab->GetTabTitle();
-    win->tabsCtrl->SetTabText(idx, title);
-    auto tooltip = tab->filePath.Get();
-    win->tabsCtrl->SetTooltip(idx, tooltip);
+    const char* tooltip = tab->filePath.Get();
+    win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
 }
 
 static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
@@ -269,7 +268,10 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
 
     int idx = (int)win->tabs.size() - 1;
     auto tabs = win->tabsCtrl;
-    int insertedIdx = tabs->InsertTab(idx, tab->GetTabTitle());
+    TabInfo* newTab = new TabInfo();
+    newTab->text = str::Dup(tab->GetTabTitle());
+    newTab->tooltip = str::Dup(tab->filePath.Get());
+    int insertedIdx = tabs->InsertTab(idx, newTab);
     CrashIf(insertedIdx == -1);
     tabs->SetSelectedTabByIndex(idx);
     UpdateTabWidth(win);
