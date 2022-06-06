@@ -1740,7 +1740,7 @@ static NotificationWnd* ShowLoadingNotif(MainWindow* win, const char* path) {
     return ShowNotification(nargs);
 }
 
-static MainWindow* LoadDocumentMaybeCreateWindow(LoadArgs* args) {
+static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
     MainWindow* win = args->win;
     bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
     if (openNewTab && !args->win) {
@@ -1782,7 +1782,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
         return;
     }
 
-    win = LoadDocumentMaybeCreateWindow(argsIn);
+    win = MaybeCreateWindowForFileLoad(argsIn);
     if (!win) {
         return;
     }
@@ -1819,21 +1819,25 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
     });
 }
 
+// remember which files failed to open so that a failure to
+// open a file doesn't block next/prev file in
+static StrVec gFilesFailedToOpen;
+
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
     MainWindow* win = args->win;
     bool failEarly = AdjustPathForMaybeMovedFile(args);
-    const char* fullPath = args->FilePath();
+    const char* path = args->FilePath();
 
     // fail fast if the file doesn't exist and there is a window the user
     // has just been interacting with
     if (failEarly) {
-        ShowFileNotFound(win, fullPath, args->noSavePrefs);
+        ShowFileNotFound(win, path, args->noSavePrefs);
         return nullptr;
     }
 
-    win = LoadDocumentMaybeCreateWindow(args);
+    win = MaybeCreateWindowForFileLoad(args);
     if (!win) {
         return nullptr;
     }
@@ -1842,19 +1846,20 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     HwndPasswordUI pwdUI(win->hwndFrame);
     DocController* ctrl = nullptr;
     if (!lazyload) {
-        ctrl = CreateControllerForEngineOrFile(args->engine, fullPath, &pwdUI, win);
+        ctrl = CreateControllerForEngineOrFile(args->engine, path, &pwdUI, win);
         {
             auto durMs = TimeSinceInMs(timeStart);
             if (ctrl) {
                 int nPages = ctrl->PageCount();
-                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, fullPath);
+                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
             } else {
-                logf("LoadDocument: failed to load '%s' in %.2f ms\n", fullPath, (float)durMs);
+                logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
+                gFilesFailedToOpen.AppendIfNotExists(path);
             }
         }
 
         if (!ctrl) {
-            ShowErrorLoading(win, fullPath, args->noSavePrefs);
+            ShowErrorLoading(win, path, args->noSavePrefs);
             return win;
         }
     }
@@ -2757,7 +2762,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
 #endif
 }
 
-static void OnMenuShowInFolder(MainWindow* win) {
+static void ShowCurrentFileInFolder(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
@@ -2960,13 +2965,9 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM l
 }
 #endif
 
-static void OnMenuNewWindow() {
-    CreateAndShowMainWindow(nullptr);
-}
-
 // create a new window and load currently shown document into it
 // meant to make it easy to compare 2 documents
-static void OnDuplicateInNewWindow(MainWindow* win) {
+static void DuplicateInNewWindow(MainWindow* win) {
     if (win->IsAboutWindow()) {
         return;
     }
@@ -3057,7 +3058,7 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     }
 }
 
-static void OnMenuOpen(MainWindow* win) {
+static void OpenFile(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
@@ -3150,7 +3151,55 @@ static void OnMenuOpen(MainWindow* win) {
     }
 }
 
-static void BrowseFolder(MainWindow* win, bool forward) {
+static StrVec gLastNextPrevFiles;
+const char* lastNextPrevFilesPattern = nullptr;
+
+static void RemoveFailedFiles(StrVec& files) {
+    for (char* path : gFilesFailedToOpen) {
+        int idx = files.Find(path);
+        if (idx >= 0) {
+            files.RemoveAt(idx);
+        }
+    }
+}
+
+static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
+    StrVec& files = gLastNextPrevFiles;
+
+    char* pattern = path::GetDirTemp(path);
+    // TODO: make pattern configurable (for users who e.g. want to skip single images)?
+    pattern = path::JoinTemp(pattern, "*");
+    if (str::Eq(pattern, lastNextPrevFilesPattern)) {
+        // failed files could have changed
+        RemoveFailedFiles(files);
+        return files;
+    }
+    str::ReplaceWithCopy(&lastNextPrevFilesPattern, pattern);
+    if (!CollectPathsFromDirectory(pattern, files)) {
+        return files;
+    }
+    RemoveFailedFiles(files);
+
+    // remove unsupported files that have never been successfully loaded
+    int nFiles = files.Size();
+    // remove unsupported files
+    // traverse from the end so that removing doesn't change iterator
+    for (int i = nFiles - 1; i >= 0; i--) {
+        char* path2 = files[i];
+        Kind kind = GuessFileTypeFromName(path2);
+        bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+        bool inHistory = gFileHistory.Find(path2, nullptr);
+        if (isSupported || inHistory) {
+            continue;
+        }
+        files.RemoveAt(i);
+    }
+    files.AppendIfNotExists(path);
+    files.SortNatural();
+    return files;
+}
+
+static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     CrashIf(win->IsAboutWindow());
     if (win->IsAboutWindow()) {
         return;
@@ -3160,39 +3209,26 @@ static void BrowseFolder(MainWindow* win, bool forward) {
     }
 
     WindowTab* tab = win->CurrentTab();
-    StrVec files;
     char* path = tab->filePath;
-    char* pattern = path::GetDirTemp(path);
-    // TODO: make pattern configurable (for users who e.g. want to skip single images)?
-    pattern = path::JoinTemp(pattern, "*");
-    if (!CollectPathsFromDirectory(pattern, files)) {
+    StrVec files = CollectNextPrevFilesIfChanged(path);
+    if (files.Size() < 2) {
         return;
     }
 
-    // remove unsupported files that have never been successfully loaded
-    for (size_t i = files.size(); i > 0; i--) {
-        char* pathTmp = files[i - 1];
-        Kind kind = GuessFileTypeFromName(path);
-        if (!IsSupportedFileType(kind, true) && !DocIsSupportedFileType(kind) && !gFileHistory.Find(pathTmp, nullptr)) {
-            files.RemoveAt(i - 1);
-        }
-    }
-
-    if (!files.Contains(path)) {
-        files.Append(path);
-    }
-    files.SortNatural();
-
-    int index = files.Find(path);
+    int nFiles = files.Size();
+    int idx = files.Find(path);
     if (forward) {
-        index = (index + 1) % (int)files.size();
+        idx = (idx + 1) % nFiles;
     } else {
-        index = (int)(index + files.size() - 1) % files.size();
+        idx = (idx + nFiles - 1) % nFiles;
     }
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForTab(tab);
-    LoadArgs args(files.at(index), win);
+    path = files[idx];
+    // TODO: should take onFinish() callback so that if failed
+    // we could automatically go to next file
+    LoadArgs args(path, win);
     args.forceReuse = true;
     LoadDocument(&args);
 }
@@ -4601,15 +4637,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
         case CmdNewWindow:
-            OnMenuNewWindow();
+            CreateAndShowMainWindow(nullptr);
             break;
 
         case CmdDuplicateInNewWindow:
-            OnDuplicateInNewWindow(win);
+            DuplicateInNewWindow(win);
             break;
 
         case CmdOpenFile:
-            OnMenuOpen(win);
+            OpenFile(win);
             break;
 
         case CmdOpenFolder:
@@ -4617,7 +4653,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdShowInFolder:
-            OnMenuShowInFolder(win);
+            ShowCurrentFileInFolder(win);
             break;
 
         case CmdOpenPrevFileInFolder:
@@ -4626,7 +4662,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // folder browsing should also work when an error page is displayed,
                 // so special-case it before the win->IsDocLoaded() check
                 bool forward = wmId == CmdOpenNextFileInFolder;
-                BrowseFolder(win, forward);
+                OpenNextPrevFileInFolder(win, forward);
             }
             break;
 
