@@ -16,15 +16,8 @@ class TextSearch : public TextSelection {
     TextSel* FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tracker = nullptr);
     TextSel* FindNext(ProgressUpdateUI* tracker = nullptr);
 
-    // note: the result might not be a valid page number!
-    int GetCurrentPageNo() const {
-        return findPage;
-    }
-
-    // note: the result might not be a valid page number!
-    int GetSearchHitStartPageNo() const {
-        return searchHitStartAt;
-    }
+    int GetCurrentPageNo() const;
+    int GetSearchHitStartPageNo() const;
 
   protected:
     // Lightweight container for page and offset within the page to use as return value of MatchEnd
@@ -50,12 +43,7 @@ class TextSearch : public TextSelection {
     bool FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker);
     PageAndOffset MatchEnd(const WCHAR* start) const;
 
-    void Clear() {
-        str::ReplaceWithCopy(&findText, nullptr);
-        str::ReplaceWithCopy(&anchor, nullptr);
-        str::ReplaceWithCopy(&lastText, nullptr);
-        Reset();
-    }
+    void Clear();
     void Reset();
 
   private:

@@ -34,9 +34,25 @@ TextSearch::~TextSearch() {
     Clear();
 }
 
+void TextSearch::Clear() {
+    str::ReplaceWithCopy(&findText, nullptr);
+    str::ReplaceWithCopy(&anchor, nullptr);
+    str::ReplaceWithCopy(&lastText, nullptr);
+    Reset();
+}
+
 void TextSearch::Reset() {
     pageText = nullptr;
     TextSelection::Reset();
+}
+
+int TextSearch::GetCurrentPageNo() const {
+    return findPage;
+}
+
+// note: the result might not be a valid page number!
+int TextSearch::GetSearchHitStartPageNo() const {
+    return searchHitStartAt;
 }
 
 void TextSearch::SetText(const WCHAR* text) {
