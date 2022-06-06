@@ -26,6 +26,151 @@ UINT_PTR NextSubclassId() {
     return (UINT_PTR)res;
 }
 
+#define WIN_MESSAGES(V)          \
+    V(WM_CREATE)                 \
+    V(WM_DESTROY)                \
+    V(WM_MOVE)                   \
+    V(WM_SIZE)                   \
+    V(WM_ACTIVATE)               \
+    V(WM_SETFOCUS)               \
+    V(WM_KILLFOCUS)              \
+    V(WM_ENABLE)                 \
+    V(WM_SETREDRAW)              \
+    V(WM_SETTEXT)                \
+    V(WM_GETTEXT)                \
+    V(WM_GETTEXTLENGTH)          \
+    V(WM_PAINT)                  \
+    V(WM_CLOSE)                  \
+    V(WM_QUERYENDSESSION)        \
+    V(WM_QUERYOPEN)              \
+    V(WM_ENDSESSION)             \
+    V(WM_QUIT)                   \
+    V(WM_ERASEBKGND)             \
+    V(WM_SYSCOLORCHANGE)         \
+    V(WM_SHOWWINDOW)             \
+    V(WM_WININICHANGE)           \
+    V(WM_SETTINGCHANGE)          \
+    V(WM_DEVMODECHANGE)          \
+    V(WM_ACTIVATEAPP)            \
+    V(WM_FONTCHANGE)             \
+    V(WM_TIMECHANGE)             \
+    V(WM_CANCELMODE)             \
+    V(WM_SETCURSOR)              \
+    V(WM_MOUSEACTIVATE)          \
+    V(WM_CHILDACTIVATE)          \
+    V(WM_QUEUESYNC)              \
+    V(WM_GETMINMAXINFO)          \
+    V(WM_PAINTICON)              \
+    V(WM_ICONERASEBKGND)         \
+    V(WM_NEXTDLGCTL)             \
+    V(WM_SPOOLERSTATUS)          \
+    V(WM_DRAWITEM)               \
+    V(WM_MEASUREITEM)            \
+    V(WM_DELETEITEM)             \
+    V(WM_VKEYTOITEM)             \
+    V(WM_CHARTOITEM)             \
+    V(WM_SETFONT)                \
+    V(WM_GETFONT)                \
+    V(WM_SETHOTKEY)              \
+    V(WM_GETHOTKEY)              \
+    V(WM_QUERYDRAGICON)          \
+    V(WM_COMPAREITEM)            \
+    V(WM_GETOBJECT)              \
+    V(WM_COMPACTING)             \
+    V(WM_COMMNOTIFY)             \
+    V(WM_WINDOWPOSCHANGING)      \
+    V(WM_WINDOWPOSCHANGED)       \
+    V(WM_POWER)                  \
+    V(WM_COPYDATA)               \
+    V(WM_CANCELJOURNAL)          \
+    V(WM_NOTIFY)                 \
+    V(WM_INPUTLANGCHANGEREQUEST) \
+    V(WM_INPUTLANGCHANGE)        \
+    V(WM_TCARD)                  \
+    V(WM_HELP)                   \
+    V(WM_USERCHANGED)            \
+    V(WM_NOTIFYFORMAT)           \
+    V(WM_CONTEXTMENU)            \
+    V(WM_STYLECHANGING)          \
+    V(WM_STYLECHANGED)           \
+    V(WM_DISPLAYCHANGE)          \
+    V(WM_GETICON)                \
+    V(WM_SETICON)                \
+    V(WM_NCCREATE)               \
+    V(WM_NCDESTROY)              \
+    V(WM_NCCALCSIZE)             \
+    V(WM_NCHITTEST)              \
+    V(WM_NCPAINT)                \
+    V(WM_NCACTIVATE)             \
+    V(WM_GETDLGCODE)             \
+    V(WM_MOUSEMOVE)              \
+    V(WM_LBUTTONDOWN)            \
+    V(WM_LBUTTONUP)              \
+    V(WM_LBUTTONDBLCLK)          \
+    V(WM_RBUTTONDOWN)            \
+    V(WM_RBUTTONUP)              \
+    V(WM_RBUTTONDBLCLK)          \
+    V(WM_MBUTTONDOWN)            \
+    V(WM_MBUTTONUP)              \
+    V(WM_MBUTTONDBLCLK)          \
+    V(WM_MOUSEWHEEL)             \
+    V(WM_XBUTTONDOWN)            \
+    V(WM_XBUTTONUP)              \
+    V(WM_XBUTTONDBLCLK)          \
+    V(WM_MOUSEHWHEEL)            \
+    V(WM_PARENTNOTIFY)           \
+    V(WM_ENTERMENULOOP)          \
+    V(WM_EXITMENULOOP)           \
+    V(WM_NEXTMENU)               \
+    V(WM_SIZING)                 \
+    V(WM_CAPTURECHANGED)         \
+    V(WM_MOVING)                 \
+    V(TCM_GETITEMCOUNT)          \
+    V(TCM_GETITEMW)              \
+    V(TCM_SETITEMW)              \
+    V(TCM_INSERTITEMW)           \
+    V(TCM_DELETEITEM)            \
+    V(TCM_DELETEALLITEMS)        \
+    V(TCM_GETITEMRECT)           \
+    V(TCM_GETCURSEL)             \
+    V(TCM_SETCURSEL)             \
+    V(TCM_HITTEST)               \
+    V(TCM_SETITEMEXTRA)          \
+    V(TCM_ADJUSTRECT)            \
+    V(TCM_SETITEMSIZE)           \
+    V(TCM_REMOVEIMAGE)           \
+    V(TCM_SETPADDING)            \
+    V(TCM_GETROWCOUNT)           \
+    V(TCM_GETTOOLTIPS)           \
+    V(TCM_SETTOOLTIPS)           \
+    V(TCM_GETCURFOCUS)           \
+    V(TCM_SETCURFOCUS)           \
+    V(TCM_SETMINTABWIDTH)        \
+    V(TCM_DESELECTALL)           \
+    V(TCM_HIGHLIGHTITEM)
+
+#define MSG_ID(id) id,
+UINT gWinMessageIDs[] = {WIN_MESSAGES(MSG_ID)};
+#undef MSG_ID
+
+#define MSG_NAME(id) #id "\0"
+SeqStrings gWinMessageNames = WIN_MESSAGES(MSG_NAME) "\0";
+#undef MSG_NAME
+
+const char* WinMsgName(UINT msg) {
+    int n = dimof(gWinMessageIDs);
+    for (int i = 0; i < n; i++) {
+        UINT m = gWinMessageIDs[i];
+        if (m == msg) {
+            return seqstrings::IdxToStr(gWinMessageNames, i);
+        }
+    }
+    char* s = str::Format("0x%x", (int)msg);
+    char* res = str::DupTemp(s);
+    str::Free(s);
+    return res;
+}
+
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 

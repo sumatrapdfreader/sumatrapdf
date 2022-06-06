@@ -5,6 +5,8 @@
 
 UINT_PTR NextSubclassId();
 
+const char* WinMsgName(UINT);
+
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
 
