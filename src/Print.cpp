@@ -1250,8 +1250,8 @@ bool PrintFile(const char* fileName, char* printerName, bool displayErrors, cons
         MessageBoxWarningCond(displayErrors, msg, "Error");
         return false;
     }
+    // takes ownership of engine
     bool ok = PrintFile2(engine, printerName, displayErrors, settings);
-    delete engine;
     logfa("PrintFile: finished ok\n");
     return ok;
 }
