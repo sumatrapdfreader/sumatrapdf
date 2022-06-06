@@ -208,7 +208,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     HdcDrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
-        PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
+        DrawLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     }
 
     // make the click target larger
@@ -250,8 +250,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
     FillRect(hdc, &rcLogoBg, bgBrush);
-    PaintLine(hdc, Rect(0, rect.y, rc.dx, 0));
-    PaintLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
+    DrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
+    DrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
 
     titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
@@ -294,7 +294,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
-            PaintLine(hdc, Rect(el->rightPos.x, underlineY, el->rightPos.dx, 0));
+            DrawLine(hdc, Rect(el->rightPos.x, underlineY, el->rightPos.dx, 0));
             auto sl = new StaticLinkInfo(el->rightPos, el->url, el->url);
             staticLinks.Append(sl);
         }
@@ -303,7 +303,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     SelectObject(hdc, penDivideLine);
     Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, ABOUT_LEFT_RIGHT_SPACE_DX),
                     rect.y + titleRect.dy + 4, 0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
-    PaintLine(hdc, divideLine);
+    DrawLine(hdc, divideLine);
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
@@ -647,7 +647,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     Rect titleBox = Rect(Point(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(win->hwndCanvas, hdc, titleBox);
-    PaintLine(hdc, Rect(0, titleBox.dy, rc.dx, 0));
+    DrawLine(hdc, Rect(0, titleBox.dy, rc.dx, 0));
 
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
@@ -788,7 +788,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     }
     rTmp = ToRECT(rect);
     HdcDrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
-    PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
+    DrawLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);

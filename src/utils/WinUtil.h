@@ -108,8 +108,8 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
 Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 
-void PaintRect(HDC, Rect);
-void PaintLine(HDC, Rect);
+void DrawRect(HDC, Rect);
+void DrawLine(HDC, Rect);
 void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);

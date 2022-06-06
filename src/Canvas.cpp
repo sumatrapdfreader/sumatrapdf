@@ -772,7 +772,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             Rect rect = dm->CvtToScreen(pageNo, el->GetRect());
             Rect isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty()) {
-                PaintRect(hdc, isect);
+                DrawRect(hdc, isect);
             }
         }
     }
@@ -792,7 +792,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
 
             auto cbbox = dm->GetEngine()->PageContentBox(pageNo);
             Rect rect = dm->CvtToScreen(pageNo, cbbox);
-            PaintRect(hdc, rect);
+            DrawRect(hdc, rect);
         }
 
         DeletePen(SelectObject(hdc, oldPen));

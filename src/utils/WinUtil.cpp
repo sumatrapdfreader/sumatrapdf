@@ -1123,7 +1123,7 @@ Rect GetVirtualScreenRect() {
     return result;
 }
 
-void PaintRect(HDC hdc, const Rect rect) {
+void DrawRect(HDC hdc, const Rect rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
@@ -1131,7 +1131,7 @@ void PaintRect(HDC hdc, const Rect rect) {
     LineTo(hdc, rect.x, rect.y);
 }
 
-void PaintLine(HDC hdc, const Rect rect) {
+void DrawLine(HDC hdc, const Rect rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }

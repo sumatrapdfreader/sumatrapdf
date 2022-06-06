@@ -3957,3 +3957,66 @@ void DeleteWnd(Progress** wnd) {
     delete *wnd;
     *wnd = nullptr;
 }
+
+void DrawCloseButton(const DrawCloseButtonArgs& args) {
+    bool isHover = args.isHover;
+    const Rect& r = args.r;
+    Gdiplus::Graphics g(args.hdc);
+    g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    g.SetPageUnit(Gdiplus::UnitPixel);
+    HWND hwnd = WindowFromDC(args.hdc);
+    // GDI+ doesn't pick up the window's orientation through the device context,
+    // so we have to explicitly mirror all rendering horizontally
+    if (IsRtl(hwnd)) {
+        g.ScaleTransform(-1, 1);
+        g.TranslateTransform((float)ClientRect(hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
+    }
+    Gdiplus::Color c;
+
+    // in onhover state, background is a red-ish circle
+    if (args.isHover) {
+        c.SetFromCOLORREF(args.colHoverBg);
+        Gdiplus::SolidBrush b(c);
+        g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
+    }
+
+    // draw 'x'
+    c.SetFromCOLORREF(args.isHover ? args.colXHover : args.colX);
+    g.TranslateTransform((float)r.x, (float)r.y);
+    Gdiplus::Pen p(c, 2);
+    if (isHover) {
+        g.DrawLine(&p, Gdiplus::Point(4, 4), Gdiplus::Point(r.dx - 6, r.dy - 6));
+        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 4), Gdiplus::Point(4, r.dy - 6));
+    } else {
+        g.DrawLine(&p, Gdiplus::Point(4, 5), Gdiplus::Point(r.dx - 6, r.dy - 5));
+        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 5), Gdiplus::Point(4, r.dy - 5));
+    }
+}
+
+void DrawCloseButton2(const DrawCloseButtonArgs& args) {
+    bool isHover = args.isHover;
+    HDC hdc = args.hdc;
+    const Rect& r = args.r;
+    COLORREF lineCol = args.colX;
+    if (args.isHover) {
+        lineCol = args.colXHover;
+        int p = 3;
+        HWND hwnd = WindowFromDC(hdc);
+        DpiScale(hwnd, p);
+        AutoDeleteBrush brush(CreateSolidBrush(args.colHoverBg));
+        RECT r2 = ToRECT(r);
+        r2.left -= p;
+        r2.right += p;
+        r2.top -= p;
+        r2.bottom += p;
+        FillRect(hdc, &r2, brush);
+    }
+    AutoDeletePen pen(CreatePen(PS_SOLID, 2, lineCol));
+    ScopedSelectPen p(hdc, pen);
+    MoveToEx(hdc, r.x, r.y, nullptr);
+    LineTo(hdc, r.x + r.dx, r.y + r.dy);
+
+    MoveToEx(hdc, r.x + r.dx, r.y, nullptr);
+    LineTo(hdc, r.x, r.y + r.dy);
+}

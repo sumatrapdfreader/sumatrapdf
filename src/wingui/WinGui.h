@@ -800,3 +800,19 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 // TODO: those are hacks
 HWND GetCurrentModelessDialog();
 void SetCurrentModelessDialog(HWND);
+
+#define kColCloseX RGB(0xa0, 0xa0, 0xa0)
+#define kColCloseXHover RGB(0xf9, 0xeb, 0xeb)   // white-ish
+#define kColCloseXHoverBg RGB(0xC1, 0x35, 0x35) // red-ish
+
+struct DrawCloseButtonArgs {
+    HDC hdc = nullptr;
+    Rect r;
+    bool isHover = false;
+    COLORREF colHoverBg = kColCloseXHoverBg;
+    COLORREF colX = kColCloseX;
+    COLORREF colXHover = kColCloseXHover;
+};
+
+void DrawCloseButton(const DrawCloseButtonArgs& args);
+void DrawCloseButton2(const DrawCloseButtonArgs&);

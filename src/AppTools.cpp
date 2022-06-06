@@ -10,10 +10,14 @@
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
 
-#include "AppTools.h"
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+
 #include "SumatraConfig.h"
 #include "Translations.h"
 #include "Version.h"
+#include "AppTools.h"
 
 #include "utils/Log.h"
 
@@ -792,43 +796,13 @@ bool IsUntrustedFile(const char* filePath, const char* fileURL) {
     return false;
 }
 
-#define kColCloseX RGB(0xa0, 0xa0, 0xa0)
-#define kColCloseXHover RGB(0xf9, 0xeb, 0xeb)   // white-ish
-#define kColCloseXHoverBg RGB(0xC1, 0x35, 0x35) // red-ish
-
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic visual style of Chrome tab close button
 void DrawCloseButton(HWND hwnd, HDC hdc, Rect& r) {
     Point curPos = HwndGetCursorPos(hwnd);
-    bool isHover = r.Contains(curPos);
-    Gdiplus::Graphics g(hdc);
-    g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    g.SetPageUnit(Gdiplus::UnitPixel);
-    // GDI+ doesn't pick up the window's orientation through the device context,
-    // so we have to explicitly mirror all rendering horizontally
-    if (IsRtl(hwnd)) {
-        g.ScaleTransform(-1, 1);
-        g.TranslateTransform((float)ClientRect(hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
-    }
-    Gdiplus::Color c;
-
-    // in onhover state, background is a red-ish circle
-    if (isHover) {
-        c.SetFromCOLORREF(kColCloseXHoverBg);
-        Gdiplus::SolidBrush b(c);
-        g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
-    }
-
-    // draw 'x'
-    c.SetFromCOLORREF(isHover ? kColCloseXHover : kColCloseX);
-    g.TranslateTransform((float)r.x, (float)r.y);
-    Gdiplus::Pen p(c, 2);
-    if (isHover) {
-        g.DrawLine(&p, Gdiplus::Point(4, 4), Gdiplus::Point(r.dx - 6, r.dy - 6));
-        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 4), Gdiplus::Point(4, r.dy - 6));
-    } else {
-        g.DrawLine(&p, Gdiplus::Point(4, 5), Gdiplus::Point(r.dx - 6, r.dy - 5));
-        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 5), Gdiplus::Point(4, r.dy - 5));
-    }
+    DrawCloseButtonArgs args;
+    args.isHover = r.Contains(curPos);
+    args.hdc = hdc;
+    args.r = r;
+    DrawCloseButton(args);
 }
