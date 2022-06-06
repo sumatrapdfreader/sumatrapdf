@@ -252,11 +252,24 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
         return nullptr;
     }
 
+    auto tabs = win->tabsCtrl;
+    int idx = win->TabsCount();
+    if (idx == 0) {
+        // create about tab
+        WindowTab* tab = new WindowTab(win, nullptr);
+        tab->canvasRc = win->canvasRc;
+        TabInfo* newTab = new TabInfo();
+        newTab->text = str::Dup("Home");
+        newTab->tooltip = nullptr;
+        newTab->isPinned = true;
+        newTab->userData = (UINT_PTR)tab;
+        int insertedIdx = tabs->InsertTab(idx, newTab);
+        CrashIf(insertedIdx != 0);
+        idx++;
+    }
+
     WindowTab* tab = new WindowTab(win, filePath);
     tab->canvasRc = win->canvasRc;
-
-    int idx = win->TabsCount();
-    auto tabs = win->tabsCtrl;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
     newTab->tooltip = str::Dup(tab->filePath.Get());

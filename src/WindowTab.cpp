@@ -28,6 +28,13 @@ WindowTab::WindowTab(MainWindow* win, const char* filePath) {
     this->filePath.SetCopy(filePath);
 }
 
+bool WindowTab::IsAboutTab() const {
+    if (!filePath) {
+        return true;
+    }
+    return ctrl == nullptr;
+}
+
 WindowTab::~WindowTab() {
     FileWatcherUnsubscribe(watcher);
     if (AsChm()) {

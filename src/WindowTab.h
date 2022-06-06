@@ -41,6 +41,8 @@ struct WindowTab {
     WindowTab(MainWindow* win, const char* filePath);
     ~WindowTab();
 
+    bool IsAboutTab() const;
+
     DisplayModel* AsFixed() const;
 
     // only if AsFixed()

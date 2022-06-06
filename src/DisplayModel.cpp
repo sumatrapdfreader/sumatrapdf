@@ -1756,6 +1756,7 @@ ScrollState DisplayModel::GetScrollState() {
     ScrollState state(FirstVisiblePageNo(), -1, -1);
     if (!ValidPageNo(state.page)) {
         state.page = CurrentPageNo();
+        CrashIf(!ValidPageNo(state.page));
     }
 
     PageInfo* pageInfo = GetPageInfo(state.page);

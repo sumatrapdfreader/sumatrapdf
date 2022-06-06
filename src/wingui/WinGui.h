@@ -727,6 +727,7 @@ struct TabPainter;
 struct TabInfo {
     char* text = nullptr;
     char* tooltip = nullptr;
+    bool isPinned = false;
     UINT_PTR userData = 0;
 
     TabInfo() = default;

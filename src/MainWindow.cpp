@@ -169,7 +169,7 @@ void ClearMouseState(MainWindow* win) {
 }
 
 bool MainWindow::IsAboutWindow() const {
-    return nullptr == CurrentTab();
+    return nullptr == CurrentTab() || CurrentTab()->IsAboutTab();
 }
 
 bool MainWindow::IsDocLoaded() const {
