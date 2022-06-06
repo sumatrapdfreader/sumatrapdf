@@ -624,7 +624,7 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
-     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-4-5.html"},
+     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-4-6.html"},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
