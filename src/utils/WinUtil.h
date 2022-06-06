@@ -271,7 +271,6 @@ void DeleteCachedCursors();
 int GetMeasurementSystem();
 bool TrackMouseLeave(HWND);
 
-void TriggerRepaint(HWND);
 HINSTANCE GetInstance();
 Size ButtonGetIdealSize(HWND hwnd);
 ByteSlice LockDataResource(int id);

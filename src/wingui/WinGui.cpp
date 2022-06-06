@@ -3165,7 +3165,7 @@ TabInfo::~TabInfo() {
 TabPainter::TabPainter(TabsCtrl* ctrl, Size tabSize) {
     tabsCtrl = ctrl;
     hwnd = tabsCtrl->hwnd;
-    Reshape(tabSize.dx, tabSize.dy);
+    Layout(tabSize.dx, tabSize.dy);
 }
 
 TabPainter::~TabPainter() {
@@ -3174,7 +3174,7 @@ TabPainter::~TabPainter() {
 
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
-bool TabPainter::Reshape(int dx, int dy) {
+bool TabPainter::Layout(int dx, int dy) {
     dx--;
     if (tabSize.dx == dx && tabSize.dy == dy) {
         return false;
@@ -3209,13 +3209,13 @@ bool TabPainter::Reshape(int dx, int dy) {
 }
 
 // Finds the index of the tab, which contains the given point.
-int TabPainter::TabFromMousePosition(const Point& p, bool& overClose) const {
-    overClose = false;
+TabMouseState TabPainter::TabStateFromMousePosition(const Point& p) const {
+    TabMouseState res;
     if (!data) {
-        return -1;
+        return res;
     }
     if (p.x < 0 || p.y < 0) {
-        return -1;
+        return res;
     }
     int dx = tabSize.dx;
     int dy = tabSize.dy;
@@ -3229,18 +3229,20 @@ int TabPainter::TabFromMousePosition(const Point& p, bool& overClose) const {
     Rect rClient = ClientRect(hwnd);
     float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
     gfx.TranslateTransform(1.0f, yPosTab);
-    for (int i = 0; i < Count(); i++) {
+    int nTabs = tabsCtrl->GetTabCount();
+    for (int i = 0; i < nTabs; i++) {
         Gdiplus::Point pt(point);
         gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
-        if (shape.IsVisible(pt, &gfx)) {
-            iterator.NextMarker(&shape);
-            overClose = shape.IsVisible(pt, &gfx) != 0;
-            return i;
+        if (!shape.IsVisible(pt, &gfx)) {
+            gfx.TranslateTransform(float(dx + 1), 0.0f);
+            continue;
         }
-        gfx.TranslateTransform(float(dx + 1), 0.0f);
+        iterator.NextMarker(&shape);
+        res.tabIdx = i;
+        res.overClose = shape.IsVisible(pt, &gfx) != 0;
+        return res;
     }
-    overClose = false;
-    return -1;
+    return res;
 }
 
 // TODO: duplicated in Caption.cpp
@@ -3526,10 +3528,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TCITEMW* tcs = nullptr;
 
     TabPainter* tab = painter;
-    Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)}; // for mouse messages
-    bool overClose = false;                                // if mouse cursor is over close X
+    Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+    TabMouseState tabState;
+
+    bool overClose = false;
     int tabUnderMouse = -1;
-    bool isMouseLeave = false;
 
     if (WM_MOUSELEAVE == msg) {
         mousePos = {-1, -1};
@@ -3537,9 +3540,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_MOUSEMOVE == msg) {
         TrackMouseLeave(hwnd);
     }
-    if (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) {
-        tabUnderMouse = tab->TabFromMousePosition(mousePos, overClose);
+    if ((msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || (msg == WM_MOUSELEAVE)) {
+        tabState = tab->TabStateFromMousePosition(mousePos);
+        tabUnderMouse = tabState.tabIdx;
+        overClose = tabState.overClose;
         lastMousePos = mousePos;
+        const char* msgName = WinMsgName(msg);
+        //logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
     }
 
     switch (msg) {
@@ -3548,7 +3555,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return HTCLIENT;
             }
             HwndScreenToClient(hwnd, mousePos);
-            if (-1 != tab->TabFromMousePosition(mousePos, overClose)) {
+            tabState = tab->TabStateFromMousePosition(mousePos);
+            if (tabState.tabIdx >= 0) {
                 return HTCLIENT;
             }
             return HTTRANSPARENT;
@@ -3656,7 +3664,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TODO: when is wp != nullptr?
             hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
 
-            tabUnderMouse = tab->TabFromMousePosition(lastMousePos, overClose);
+            tabState = tab->TabStateFromMousePosition(lastMousePos);
+            tabUnderMouse = tabState.tabIdx;
+            overClose = tabState.overClose;
 
             DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
             int tabSelected = GetSelected();
@@ -3802,8 +3812,8 @@ int TabsCtrl::SetSelected(int idx) {
 
 void TabsCtrl::SetTabSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
-    bool didReshape = painter->Reshape(sz.dx, sz.dy);
-    if (didReshape) {
+    bool didLayout = painter->Layout(sz.dx, sz.dy);
+    if (didLayout) {
         HwndScheduleRepaint(hwnd);
     }
     tabBeingClosed = -1;

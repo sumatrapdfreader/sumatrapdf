@@ -642,6 +642,11 @@ struct TabsCtrl;
 
 #define kTabDefaultBgCol (COLORREF) - 1
 
+struct TabMouseState {
+    int tabIdx = -1;
+    bool overClose = false;
+};
+
 // TODO: make it private to WinGui.cpp
 struct TabPainter {
     TabsCtrl* tabsCtrl = nullptr;
@@ -673,8 +678,8 @@ struct TabPainter {
 
     TabPainter(TabsCtrl* ctrl, Size tabSize);
     ~TabPainter();
-    bool Reshape(int dx, int dy);
-    int TabFromMousePosition(const Point& p, bool& overClose) const;
+    bool Layout(int dx, int dy);
+    TabMouseState TabStateFromMousePosition(const Point& p) const;
     void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const;
     int Count() const;
 };

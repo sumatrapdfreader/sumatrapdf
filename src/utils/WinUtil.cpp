@@ -2426,10 +2426,6 @@ bool TrackMouseLeave(HWND hwnd) {
     return true;
 }
 
-void TriggerRepaint(HWND hwnd) {
-    InvalidateRect(hwnd, nullptr, FALSE);
-}
-
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
