@@ -16,6 +16,7 @@
 
 #include "Settings.h"
 #include "DocController.h"
+#include "AppColors.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
@@ -201,33 +202,24 @@ void SaveCurrentWindowTab(MainWindow* win) {
     win->tabSelectionHistory->Append(tab);
 }
 
-#include "AppColors.h"
-
-void TabPainterSetColors(TabsCtrl* p) {
-    p->tabBackgroundBg = GetAppColor(AppColor::TabBackgroundBg);
-    p->tabBackgroundText = GetAppColor(AppColor::TabBackgroundText);
-    p->tabBackgroundCloseX = GetAppColor(AppColor::TabBackgroundCloseX);
-    p->tabBackgroundCloseCircle = GetAppColor(AppColor::TabBackgroundCloseCircle);
-    p->tabSelectedBg = GetAppColor(AppColor::TabSelectedBg);
-    p->tabSelectedText = GetAppColor(AppColor::TabSelectedText);
-    p->tabSelectedCloseX = GetAppColor(AppColor::TabSelectedCloseX);
-    p->tabSelectedCloseCircle = GetAppColor(AppColor::TabSelectedCloseCircle);
-    p->tabHighlightedBg = GetAppColor(AppColor::TabHighlightedBg);
-    p->tabHighlightedText = GetAppColor(AppColor::TabHighlightedText);
-    p->tabHighlightedCloseX = GetAppColor(AppColor::TabHighlightedCloseX);
-    p->tabHighlightedCloseCircle = GetAppColor(AppColor::TabHighlightedCloseCircle);
-    p->tabHoveredCloseX = GetAppColor(AppColor::TabHoveredCloseX);
-    p->tabHoveredCloseCircle = GetAppColor(AppColor::TabHoveredCloseCircle);
-    p->tabClickedCloseX = GetAppColor(AppColor::TabClickedCloseX);
-    p->tabClickedCloseCircle = GetAppColor(AppColor::TabClickedCloseCircle);
-}
-
-void UpdateCurrentTabBgColor(MainWindow* win) {
-    TabsCtrl* tab = win->tabsCtrl;
-    // TODO: match either the toolbar (if shown) or background
+void UpdateTabsColors(TabsCtrl* tab) {
     tab->currBgCol = kTabDefaultBgCol;
-    TabPainterSetColors(tab);
-    RepaintNow(win->tabsCtrl->hwnd);
+    tab->tabBackgroundBg = GetAppColor(AppColor::TabBackgroundBg);
+    tab->tabBackgroundText = GetAppColor(AppColor::TabBackgroundText);
+    tab->tabBackgroundCloseX = GetAppColor(AppColor::TabBackgroundCloseX);
+    tab->tabBackgroundCloseCircle = GetAppColor(AppColor::TabBackgroundCloseCircle);
+    tab->tabSelectedBg = GetAppColor(AppColor::TabSelectedBg);
+    tab->tabSelectedText = GetAppColor(AppColor::TabSelectedText);
+    tab->tabSelectedCloseX = GetAppColor(AppColor::TabSelectedCloseX);
+    tab->tabSelectedCloseCircle = GetAppColor(AppColor::TabSelectedCloseCircle);
+    tab->tabHighlightedBg = GetAppColor(AppColor::TabHighlightedBg);
+    tab->tabHighlightedText = GetAppColor(AppColor::TabHighlightedText);
+    tab->tabHighlightedCloseX = GetAppColor(AppColor::TabHighlightedCloseX);
+    tab->tabHighlightedCloseCircle = GetAppColor(AppColor::TabHighlightedCloseCircle);
+    tab->tabHoveredCloseX = GetAppColor(AppColor::TabHoveredCloseX);
+    tab->tabHoveredCloseCircle = GetAppColor(AppColor::TabHoveredCloseCircle);
+    tab->tabClickedCloseX = GetAppColor(AppColor::TabClickedCloseX);
+    tab->tabClickedCloseCircle = GetAppColor(AppColor::TabClickedCloseCircle);
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
@@ -330,7 +322,7 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
         return;
     }
     win->tabsInTitlebar = inTitleBar;
-    win->tabsCtrl->painter->inTitleBar = inTitleBar;
+    win->tabsCtrl->inTitleBar = inTitleBar;
     SetParent(win->tabsCtrl->hwnd, inTitleBar ? win->hwndCaption : win->hwndFrame);
     ShowWindow(win->hwndCaption, inTitleBar ? SW_SHOW : SW_HIDE);
     if (inTitleBar != win->isMenuHidden) {

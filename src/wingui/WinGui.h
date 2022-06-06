@@ -647,23 +647,7 @@ struct TabMouseState {
     bool overClose = false;
 };
 
-// TODO: make it private to WinGui.cpp
-struct TabPainter {
-    TabsCtrl* tabsCtrl = nullptr;
-    PathData* data = nullptr;
-    Size tabSize;
-
-    HWND hwnd = nullptr;
-
-    bool inTitleBar = false;
-
-    TabPainter(TabsCtrl* ctrl, Size tabSize);
-    ~TabPainter();
-    bool Layout(int dx, int dy);
-    TabMouseState TabStateFromMousePosition(const Point& p) const;
-    void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const;
-    int Count() const;
-};
+struct TabPainter;
 
 struct TabClosedEvent {
     TabsCtrl* tabs = nullptr;
@@ -724,6 +708,7 @@ struct TabsCtrl : Wnd {
     TabPainter* painter = nullptr;
     bool createToolTipsHwnd = false;
     char* currTooltipText = nullptr; // not owned by us
+    bool inTitleBar = false;
 
     Vec<TabInfo*> tabs;
 

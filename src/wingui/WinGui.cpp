@@ -3162,6 +3162,22 @@ TabInfo::~TabInfo() {
     str::Free(tooltip);
 }
 
+// TODO: make it private to WinGui.cpp
+struct TabPainter {
+    TabsCtrl* tabsCtrl = nullptr;
+    PathData* data = nullptr;
+    Size tabSize;
+
+    HWND hwnd = nullptr;
+
+    TabPainter(TabsCtrl* ctrl, Size tabSize);
+    ~TabPainter();
+    bool Layout(int dx, int dy);
+    TabMouseState TabStateFromMousePosition(const Point& p) const;
+    void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const;
+    int Count() const;
+};
+
 TabPainter::TabPainter(TabsCtrl* ctrl, Size tabSize) {
     tabsCtrl = ctrl;
     hwnd = tabsCtrl->hwnd;
@@ -3227,7 +3243,7 @@ TabMouseState TabPainter::TabStateFromMousePosition(const Point& p) const {
     iterator.NextMarker(&shape);
 
     Rect rClient = ClientRect(hwnd);
-    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
+    float yPosTab = tabsCtrl->inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
     gfx.TranslateTransform(1.0f, yPosTab);
     int nTabs = tabsCtrl->GetTabCount();
     for (int i = 0; i < nTabs; i++) {
@@ -3304,7 +3320,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bo
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
     TabsCtrl& c = *tabsCtrl;
-    float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
+    float yPosTab = c.inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
     for (int i = 0; i < Count(); i++) {
         TabInfo* tab = tabsCtrl->GetTab(i);
         gfx.ResetTransform();
@@ -3552,7 +3568,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     switch (msg) {
         case WM_NCHITTEST: {
-            if (!tab->inTitleBar || hwnd == GetCapture()) {
+            if (!inTitleBar || hwnd == GetCapture()) {
                 return HTCLIENT;
             }
             HwndScreenToClient(hwnd, mousePos);

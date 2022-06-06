@@ -1011,7 +1011,10 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     UpdateFindbox(win);
 
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
-    UpdateCurrentTabBgColor(win);
+
+    // TODO: match either the toolbar (if shown) or background
+    UpdateTabsColors(win->tabsCtrl);
+    HwndScheduleRepaint(win->tabsCtrl->hwnd); // TODO: was RepaintNow() ?
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
     SetWindowStyle(win->hwndPageEdit, ES_NUMBER, onlyNumbers);

@@ -16,4 +16,4 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse);
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(MainWindow* win);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
-void UpdateCurrentTabBgColor(MainWindow* win);
+void UpdateTabsColors(TabsCtrl* tab);
