@@ -2834,6 +2834,10 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         return;
     }
 
+    // those locks must be taken in this order
+    // we need to lock pagesAccess because it might
+    // be taken below
+    ScopedCritSec csPages(&e->pagesAccess);
     ScopedCritSec cs(e->ctxAccess);
 
     float x, y;
