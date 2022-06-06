@@ -1864,6 +1864,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (!tab) {
         return;
     }
+
     MainWindow* win = tab->win;
     if (gEnableLazyLoad && win->ctrl && !tab->ctrl) {
         char* msg = str::Format(_TRA("Please wait - rendering..."));

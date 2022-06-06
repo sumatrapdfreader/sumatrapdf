@@ -43,15 +43,6 @@ static void UpdateTabTitle(WindowTab* tab) {
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
 }
 
-static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
-    if (tab1 == tab2 || tab1 < 0 || tab2 < 0) {
-        return;
-    }
-
-    auto&& tabs = win->Tabs();
-    std::swap(tabs.at(tab1), tabs.at(tab2));
-}
-
 int GetTabbarHeight(HWND hwnd, float factor) {
     int dy = DpiScale(hwnd, kTabBarDy);
     return (int)(dy * factor);
@@ -147,15 +138,9 @@ void CreateTabbar(MainWindow* win) {
         WindowTab* tab = win->Tabs()[currentIdx];
         LoadModelIntoTab(tab);
     };
-    tabsCtrl->onTabDragged = [win](TabDraggedEvent* ev) {
-        int tab1 = ev->tab1;
-        int tab2 = ev->tab2;
-        SwapTabs(win, tab1, tab2);
-    };
 
     TabsCreateArgs args;
     args.parent = win->hwndFrame;
-    args.ctrlID = IDC_TABBAR;
     args.createToolTipsHwnd = true;
     tabsCtrl->Create(args);
 
@@ -315,10 +300,17 @@ void TabsOnCloseDoc(MainWindow* win) {
     int current = win->tabsCtrl->GetSelected();
     RemoveTab(win, current);
 
-    if (win->TabsCount() > 0) {
-        WindowTab* tab = win->tabSelectionHistory->Pop();
-        int idx = win->Tabs().Find(tab);
-        win->tabsCtrl->SetSelected(idx);
+    // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
+    if ((win->TabsCount() > 0)) {
+        WindowTab* tab = nullptr;
+        int toSelect = 0;
+        if (win->tabSelectionHistory->Size() > 0) {
+            tab = win->tabSelectionHistory->Pop();
+            toSelect = win->Tabs().Find(tab);
+        } else {
+            tab = win->Tabs()[toSelect];
+        }
+        win->tabsCtrl->SetSelected(toSelect);
         LoadModelIntoTab(tab);
     }
 }
