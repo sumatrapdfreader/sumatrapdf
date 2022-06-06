@@ -742,6 +742,9 @@ struct TabsCtrl : Wnd {
     COLORREF tabClickedCloseX = 0;
     COLORREF tabClickedCloseCircle = 0;
 
+    PathData* data = nullptr;
+    Size tabSize;
+
     TabsCtrl();
     ~TabsCtrl() override;
 
@@ -774,6 +777,10 @@ struct TabsCtrl : Wnd {
     void SetTabSize(Size sz);
 
     HWND GetToolTipsHwnd();
+
+    bool Layout(int dx, int dy);
+    TabMouseState TabStateFromMousePosition(const Point& p);
+    void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose);
 };
 
 template <typename T>

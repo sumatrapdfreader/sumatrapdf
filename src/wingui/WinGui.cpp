@@ -3162,35 +3162,9 @@ TabInfo::~TabInfo() {
     str::Free(tooltip);
 }
 
-// TODO: make it private to WinGui.cpp
-struct TabPainter {
-    TabsCtrl* tabsCtrl = nullptr;
-    PathData* data = nullptr;
-    Size tabSize;
-
-    HWND hwnd = nullptr;
-
-    TabPainter(TabsCtrl* ctrl, Size tabSize);
-    ~TabPainter();
-    bool Layout(int dx, int dy);
-    TabMouseState TabStateFromMousePosition(const Point& p) const;
-    void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const;
-    int Count() const;
-};
-
-TabPainter::TabPainter(TabsCtrl* ctrl, Size tabSize) {
-    tabsCtrl = ctrl;
-    hwnd = tabsCtrl->hwnd;
-    Layout(tabSize.dx, tabSize.dy);
-}
-
-TabPainter::~TabPainter() {
-    delete data;
-}
-
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
-bool TabPainter::Layout(int dx, int dy) {
+bool TabsCtrl::Layout(int dx, int dy) {
     dx--;
     if (tabSize.dx == dx && tabSize.dy == dy) {
         return false;
@@ -3225,7 +3199,7 @@ bool TabPainter::Layout(int dx, int dy) {
 }
 
 // Finds the index of the tab, which contains the given point.
-TabMouseState TabPainter::TabStateFromMousePosition(const Point& p) const {
+TabMouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     TabMouseState res;
     if (!data) {
         return res;
@@ -3243,9 +3217,9 @@ TabMouseState TabPainter::TabStateFromMousePosition(const Point& p) const {
     iterator.NextMarker(&shape);
 
     Rect rClient = ClientRect(hwnd);
-    float yPosTab = tabsCtrl->inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
+    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
     gfx.TranslateTransform(1.0f, yPosTab);
-    int nTabs = tabsCtrl->GetTabCount();
+    int nTabs = GetTabCount();
     for (int i = 0; i < nTabs; i++) {
         Gdiplus::Point pt(point);
         gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
@@ -3275,7 +3249,7 @@ static void PaintParentBackground(HWND hwnd, HDC hdc) {
 }
 
 // Paints the tabs that intersect the window's update rectangle.
-void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) const {
+void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) {
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 0
         // paint the background
@@ -3319,10 +3293,10 @@ void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bo
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    TabsCtrl& c = *tabsCtrl;
-    float yPosTab = c.inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
-    for (int i = 0; i < Count(); i++) {
-        TabInfo* tab = tabsCtrl->GetTab(i);
+    float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
+    int nTabs = GetTabCount();
+    for (int i = 0; i < nTabs; i++) {
+        TabInfo* tab = GetTab(i);
         gfx.ResetTransform();
         gfx.TranslateTransform(1.f + (float)(dx + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
 
@@ -3331,25 +3305,25 @@ void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bo
         }
 
         // Get the correct colors based on the state and the current theme
-        COLORREF bgCol = c.tabBackgroundBg;
-        COLORREF textCol = c.tabBackgroundText;
-        COLORREF xColor = c.tabBackgroundCloseX;
-        COLORREF circleColor = c.tabBackgroundCloseCircle;
+        COLORREF bgCol = tabBackgroundBg;
+        COLORREF textCol = tabBackgroundText;
+        COLORREF xColor = tabBackgroundCloseX;
+        COLORREF circleColor = tabBackgroundCloseCircle;
 
         if (tabSelected == i) {
-            bgCol = c.tabSelectedBg;
-            textCol = c.tabSelectedText;
-            xColor = c.tabSelectedCloseX;
-            circleColor = c.tabSelectedCloseCircle;
+            bgCol = tabSelectedBg;
+            textCol = tabSelectedText;
+            xColor = tabSelectedCloseX;
+            circleColor = tabSelectedCloseCircle;
         } else if (tabUnderMouse == i) {
-            bgCol = c.tabHighlightedBg;
-            textCol = c.tabHighlightedText;
-            xColor = c.tabHighlightedCloseX;
-            circleColor = c.tabHighlightedCloseCircle;
+            bgCol = tabHighlightedBg;
+            textCol = tabHighlightedText;
+            xColor = tabHighlightedCloseX;
+            circleColor = tabHighlightedCloseCircle;
         }
         if ((tabUnderMouse == i) && underMouseOverClose) {
-            xColor = c.tabHoveredCloseX;
-            circleColor = c.tabHoveredCloseCircle;
+            xColor = tabHoveredCloseX;
+            circleColor = tabHoveredCloseCircle;
         }
 #if 0
         if (tabsCtrl->tabBeingClosed == i) {
@@ -3393,11 +3367,6 @@ void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bo
         gfx.DrawPath(&pen, &shape);
         iterator.Rewind();
     }
-}
-
-int TabPainter::Count() const {
-    int n = tabsCtrl->GetTabCount();
-    return n;
 }
 
 // TODO: this is a nasty implementation
@@ -3460,7 +3429,7 @@ TabsCtrl::TabsCtrl() {
 }
 
 TabsCtrl::~TabsCtrl() {
-    delete painter;
+    delete data;
 }
 
 static void TriggerSelectionChanged(TabsCtrl* tabs) {
@@ -3558,7 +3527,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         TrackMouseLeave(hwnd);
     }
     if ((msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || (msg == WM_MOUSELEAVE)) {
-        tabState = tab->TabStateFromMousePosition(mousePos);
+        tabState = TabStateFromMousePosition(mousePos);
         tabUnderMouse = tabState.tabIdx;
         overClose = tabState.overClose;
         lastMousePos = mousePos;
@@ -3572,7 +3541,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return HTCLIENT;
             }
             HwndScreenToClient(hwnd, mousePos);
-            tabState = tab->TabStateFromMousePosition(mousePos);
+            tabState = TabStateFromMousePosition(mousePos);
             if (tabState.tabIdx >= 0) {
                 return HTCLIENT;
             }
@@ -3615,8 +3584,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 tabBeingClosed = -1;
             }
             if (didChangeTabs && tabHighlighted >= 0) {
-                auto tabsCtrl = tab->tabsCtrl;
-                MaybeUpdateTooltipText(tabsCtrl, tabHighlighted);
+                MaybeUpdateTooltipText(this, tabHighlighted);
             }
             return 0;
         }
@@ -3681,13 +3649,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TODO: when is wp != nullptr?
             hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
 
-            tabState = tab->TabStateFromMousePosition(lastMousePos);
+            tabState = TabStateFromMousePosition(lastMousePos);
             tabUnderMouse = tabState.tabIdx;
             overClose = tabState.overClose;
 
             DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
             int tabSelected = GetSelected();
-            tab->Paint(buffer.GetDC(), rc, tabSelected, tabUnderMouse, overClose);
+            Paint(buffer.GetDC(), rc, tabSelected, tabUnderMouse, overClose);
             buffer.Flush(hdc);
 
             ValidateRect(hwnd, nullptr);
@@ -3725,7 +3693,8 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     if (!hwnd) {
         return nullptr;
     }
-    painter = new TabPainter(this, sz);
+
+    Layout(sz.dx, sz.dy);
 
     if (createToolTipsHwnd) {
         HWND ttHwnd = GetToolTipsHwnd();
@@ -3829,7 +3798,7 @@ int TabsCtrl::SetSelected(int idx) {
 
 void TabsCtrl::SetTabSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
-    bool didLayout = painter->Layout(sz.dx, sz.dy);
+    bool didLayout = Layout(sz.dx, sz.dy);
     if (didLayout) {
         HwndScheduleRepaint(hwnd);
     }
