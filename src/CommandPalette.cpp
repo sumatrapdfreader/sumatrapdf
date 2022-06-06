@@ -591,10 +591,10 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     Rect r = WindowRect(hwnd);
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
-
-    Rect rc = ShiftRectToWorkArea(Rect{x, y, r.dx, r.dy}, hwnd, true);
-    rc.y = rRelative.y + 32;
-    SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    r = {x, y, r.dx, r.dy};
+    Rect r2 = ShiftRectToWorkArea(r, hwndRelative, true);
+    r2.y = rRelative.y + 32;
+    SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
