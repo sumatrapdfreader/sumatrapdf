@@ -655,25 +655,6 @@ struct TabPainter {
 
     HWND hwnd = nullptr;
 
-    // TODO: set those to reasonable defaults
-    COLORREF currBgCol = kTabDefaultBgCol;
-    COLORREF tabBackgroundBg = 0;
-    COLORREF tabBackgroundText = 0;
-    COLORREF tabBackgroundCloseX = 0;
-    COLORREF tabBackgroundCloseCircle = 0;
-    COLORREF tabSelectedBg = 0;
-    COLORREF tabSelectedText = 0;
-    COLORREF tabSelectedCloseX = 0;
-    COLORREF tabSelectedCloseCircle = 0;
-    COLORREF tabHighlightedBg = 0;
-    COLORREF tabHighlightedText = 0;
-    COLORREF tabHighlightedCloseX = 0;
-    COLORREF tabHighlightedCloseCircle = 0;
-    COLORREF tabHoveredCloseX = 0;
-    COLORREF tabHoveredCloseCircle = 0;
-    COLORREF tabClickedCloseX = 0;
-    COLORREF tabClickedCloseCircle = 0;
-
     bool inTitleBar = false;
 
     TabPainter(TabsCtrl* ctrl, Size tabSize);
@@ -732,6 +713,10 @@ struct TabInfo {
 
     TabInfo() = default;
     ~TabInfo();
+
+    // for internal use
+    Rect pos;
+    Rect closePos;
 };
 
 struct TabsCtrl : Wnd {
@@ -752,6 +737,25 @@ struct TabsCtrl : Wnd {
     TabsSelectionChangingHandler onSelectionChanging = nullptr;
     TabsSelectionChangedHandler onSelectionChanged = nullptr;
     TabDraggedHandler onTabDragged = nullptr;
+
+    // TODO: set those to reasonable defaults
+    COLORREF currBgCol = kTabDefaultBgCol;
+    COLORREF tabBackgroundBg = 0;
+    COLORREF tabBackgroundText = 0;
+    COLORREF tabBackgroundCloseX = 0;
+    COLORREF tabBackgroundCloseCircle = 0;
+    COLORREF tabSelectedBg = 0;
+    COLORREF tabSelectedText = 0;
+    COLORREF tabSelectedCloseX = 0;
+    COLORREF tabSelectedCloseCircle = 0;
+    COLORREF tabHighlightedBg = 0;
+    COLORREF tabHighlightedText = 0;
+    COLORREF tabHighlightedCloseX = 0;
+    COLORREF tabHighlightedCloseCircle = 0;
+    COLORREF tabHoveredCloseX = 0;
+    COLORREF tabHoveredCloseCircle = 0;
+    COLORREF tabClickedCloseX = 0;
+    COLORREF tabClickedCloseCircle = 0;
 
     TabsCtrl();
     ~TabsCtrl() override;

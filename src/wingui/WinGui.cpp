@@ -3303,6 +3303,7 @@ void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bo
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
+    TabsCtrl& c = *tabsCtrl;
     float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
     for (int i = 0; i < Count(); i++) {
         TabInfo* tab = tabsCtrl->GetTab(i);
@@ -3314,25 +3315,25 @@ void TabPainter::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bo
         }
 
         // Get the correct colors based on the state and the current theme
-        COLORREF bgCol = tabBackgroundBg;
-        COLORREF textCol = tabBackgroundText;
-        COLORREF xColor = tabBackgroundCloseX;
-        COLORREF circleColor = tabBackgroundCloseCircle;
+        COLORREF bgCol = c.tabBackgroundBg;
+        COLORREF textCol = c.tabBackgroundText;
+        COLORREF xColor = c.tabBackgroundCloseX;
+        COLORREF circleColor = c.tabBackgroundCloseCircle;
 
         if (tabSelected == i) {
-            bgCol = tabSelectedBg;
-            textCol = tabSelectedText;
-            xColor = tabSelectedCloseX;
-            circleColor = tabSelectedCloseCircle;
+            bgCol = c.tabSelectedBg;
+            textCol = c.tabSelectedText;
+            xColor = c.tabSelectedCloseX;
+            circleColor = c.tabSelectedCloseCircle;
         } else if (tabUnderMouse == i) {
-            bgCol = tabHighlightedBg;
-            textCol = tabHighlightedText;
-            xColor = tabHighlightedCloseX;
-            circleColor = tabHighlightedCloseCircle;
+            bgCol = c.tabHighlightedBg;
+            textCol = c.tabHighlightedText;
+            xColor = c.tabHighlightedCloseX;
+            circleColor = c.tabHighlightedCloseCircle;
         }
         if ((tabUnderMouse == i) && underMouseOverClose) {
-            xColor = tabHoveredCloseX;
-            circleColor = tabHoveredCloseCircle;
+            xColor = c.tabHoveredCloseX;
+            circleColor = c.tabHoveredCloseCircle;
         }
 #if 0
         if (tabsCtrl->tabBeingClosed == i) {

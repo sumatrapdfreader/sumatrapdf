@@ -203,7 +203,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
 
 #include "AppColors.h"
 
-void TabPainterSetColors(TabPainter* p) {
+void TabPainterSetColors(TabsCtrl* p) {
     p->tabBackgroundBg = GetAppColor(AppColor::TabBackgroundBg);
     p->tabBackgroundText = GetAppColor(AppColor::TabBackgroundText);
     p->tabBackgroundCloseX = GetAppColor(AppColor::TabBackgroundCloseX);
@@ -223,7 +223,7 @@ void TabPainterSetColors(TabPainter* p) {
 }
 
 void UpdateCurrentTabBgColor(MainWindow* win) {
-    TabPainter* tab = win->tabsCtrl->painter;
+    TabsCtrl* tab = win->tabsCtrl;
     // TODO: match either the toolbar (if shown) or background
     tab->currBgCol = kTabDefaultBgCol;
     TabPainterSetColors(tab);
