@@ -262,8 +262,8 @@ class EnginePs : public EngineBase {
             return nullptr;
         }
         EnginePs* clone = new EnginePs();
-        if (FileName()) {
-            clone->SetFileName(FileName());
+        if (FilePath()) {
+            clone->SetFilePath(FilePath());
         }
         clone->pdfEngine = newEngine;
         return clone;
@@ -286,12 +286,12 @@ class EnginePs : public EngineBase {
     }
 
     ByteSlice GetFileData() override {
-        const char* path = FileName();
+        const char* path = FilePath();
         return file::ReadFile(path);
     }
 
     bool SaveFileAs(const char* dstPath) override {
-        const char* srcPath = FileName();
+        const char* srcPath = FilePath();
         if (!srcPath) {
             return false;
         }
@@ -352,18 +352,18 @@ class EnginePs : public EngineBase {
 
     bool Load(const char* fileName) {
         pageCount = 0;
-        CrashIf(FileName() || pdfEngine);
+        CrashIf(FilePath() || pdfEngine);
         if (!fileName) {
             return false;
         }
-        SetFileName(fileName);
+        SetFilePath(fileName);
         if (file::StartsWith(fileName, "\x1F\x8B")) {
             pdfEngine = psgz2pdf(fileName);
         } else {
             pdfEngine = ps2pdf(fileName);
         }
 
-        if (str::EndsWithI(FileName(), ".eps")) {
+        if (str::EndsWithI(FilePath(), ".eps")) {
             defaultExt = str::Dup(".eps");
         }
 

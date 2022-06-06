@@ -330,7 +330,7 @@ EngineBase* EngineDjVu::Clone() {
     if (stream != nullptr) {
         return CreateFromStream(stream);
     }
-    const char* path = FilePathTemp();
+    const char* path = FilePath();
     if (path) {
         return CreateFromFile(path);
     }
@@ -390,7 +390,7 @@ struct DjVuInfoChunk {
 static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 
 bool EngineDjVu::LoadMediaboxes() {
-    const char* path = FileName();
+    const char* path = FilePath();
     if (!path) {
         return false;
     }
@@ -447,7 +447,7 @@ bool EngineDjVu::LoadMediaboxes() {
 }
 
 bool EngineDjVu::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
     doc = gDjVuContext->OpenFile(fileName);
     return FinishLoading();
 }
@@ -762,7 +762,7 @@ RectF EngineDjVu::Transform(const RectF& rect, int pageNo, float zoom, int rotat
 }
 
 ByteSlice EngineDjVu::GetFileData() {
-    return GetStreamOrFileData(stream, FileName());
+    return GetStreamOrFileData(stream, FilePath());
 }
 
 bool EngineDjVu::SaveFileAs(const char* dstPath) {
@@ -774,7 +774,7 @@ bool EngineDjVu::SaveFileAs(const char* dstPath) {
             return true;
         }
     }
-    const char* srcPath = FileName();
+    const char* srcPath = FilePath();
     if (!srcPath) {
         return false;
     }

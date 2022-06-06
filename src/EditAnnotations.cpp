@@ -350,7 +350,7 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     WindowTab* tab = ew->tab;
     EngineMupdf* engine = GetEngineMupdf(ew);
-    const char* path = engine->FileName();
+    const char* path = engine->FilePath();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
         str::Str msg;
         // TODO: duplicated message

@@ -1591,7 +1591,7 @@ class PasswordCloner : public PasswordUI {
 
 EngineBase* EngineMupdf::Clone() {
     ScopedCritSec scope(ctxAccess);
-    if (!FileName()) {
+    if (!FilePath()) {
         // before port we could clone streams but it's no longer possible
         return nullptr;
     }
@@ -1605,7 +1605,7 @@ EngineBase* EngineMupdf::Clone() {
     }
 
     EngineMupdf* clone = new EngineMupdf();
-    bool ok = clone->Load(FilePathTemp(), pwdUI);
+    bool ok = clone->Load(FilePath(), pwdUI);
     if (!ok) {
         delete clone;
         delete pwdUI;
@@ -1732,8 +1732,8 @@ static ByteSlice PalmDocToHTML(const char* path) {
 
 bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     const char* pathA = path;
-    CrashIf(FileName() || _doc || !ctx);
-    SetFileName(path);
+    CrashIf(FilePath() || _doc || !ctx);
+    SetFilePath(path);
 
     auto ext = path::GetExtTemp(path);
     str::ReplaceWithCopy(&defaultExt, ext);
@@ -1788,7 +1788,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
         file = nullptr;
     }
 
-    if (!LoadFromStream(file, FileName(), pwdUI)) {
+    if (!LoadFromStream(file, FilePath(), pwdUI)) {
         return false;
     }
 
@@ -1819,7 +1819,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     fz_drop_document(ctx, _doc);
     _doc = nullptr;
 
-    if (!LoadFromStream(file, FileName(), pwdUI)) {
+    if (!LoadFromStream(file, FilePath(), pwdUI)) {
         return false;
     }
 
@@ -1851,7 +1851,7 @@ font-family: "Consolas";
 
 // TODO: need to do stuff to support .txt etc.
 bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
-    CrashIf(FileName() || _doc || !ctx);
+    CrashIf(FilePath() || _doc || !ctx);
     if (!ctx) {
         return false;
     }
@@ -1948,7 +1948,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         if (pdfdoc) {
             decryptKey = pdf_crypt_key(ctx, pdfdoc->crypt);
         }
-        AutoFreeStr pwd(pwdUI->GetPassword(FilePathTemp(), digest, decryptKey, &saveKey));
+        AutoFreeStr pwd(pwdUI->GetPassword(FilePath(), digest, decryptKey, &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -2212,7 +2212,7 @@ bool EngineMupdf::FinishLoading() {
         }
     }
     if (loadPageTreeFailed) {
-        logfa("Failed to load page tree for '%s'\n", FileName());
+        logfa("Failed to load page tree for '%s'\n", FilePath());
     }
 
     fz_try(ctx) {
@@ -2223,10 +2223,10 @@ bool EngineMupdf::FinishLoading() {
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
         // otherwise get displayed
-        logfa("Couldn't load outline for '%s'\n", FileName());
+        logfa("Couldn't load outline for '%s'\n", FilePath());
     }
 
-    attachments = PdfLoadAttachments(ctx, pdfdoc, FileName());
+    attachments = PdfLoadAttachments(ctx, pdfdoc, FilePath());
 
     pdf_obj* origInfo = nullptr;
     fz_var(origInfo);
@@ -2305,7 +2305,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // WCHAR* path = ToWstr(outline->uri);
     dest->name = str::Dup(outline->title);
     // page is really a stream number
-    dest->value = str::Format("%s:%d", engine->FileName(), outline->page);
+    dest->value = str::Format("%s:%d", engine->FilePath(), outline->page);
     return dest;
 }
 
@@ -2696,7 +2696,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
 
 RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
-        const char* name = FileName();
+        const char* name = FilePath();
         if (!name) {
             name = "";
         }
@@ -3273,7 +3273,7 @@ ByteSlice EngineMupdf::GetFileData() {
         return res;
     }
 
-    auto path = FileName();
+    auto path = FilePath();
     if (!path) {
         return {};
     }
@@ -3287,7 +3287,7 @@ bool EngineMupdf::SaveFileAs(const char* dstPath) {
         d.Free();
         return ok;
     }
-    auto srcPath = FileName();
+    auto srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
@@ -3331,7 +3331,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
     }
 
     auto timeStart = TimeGet();
-    const char* currPath = engine->FileName();
+    const char* currPath = engine->FilePath();
     if (str::IsEmpty(path)) {
         path = currPath;
     }
@@ -3517,7 +3517,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
             delete engine;
             return nullptr;
         }
-        engine->SetFileName(path);
+        engine->SetFilePath(path);
         return engine;
     }
     EngineMupdf* engine = new EngineMupdf();

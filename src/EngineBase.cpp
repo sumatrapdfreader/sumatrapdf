@@ -370,11 +370,7 @@ char* EngineBase::GetDecryptionKey() const {
     return str::Dup(decryptionKey);
 }
 
-const char* EngineBase::FileName() const {
-    return fileNameBase;
-}
-
-const char* EngineBase::FilePathTemp() const {
+const char* EngineBase::FilePath() const {
     return fileNameBase;
 }
 
@@ -383,7 +379,7 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
     return nullptr;
 }
 
-void EngineBase::SetFileName(const char* s) {
+void EngineBase::SetFilePath(const char* s) {
     fileNameBase.SetCopy(s);
 }
 

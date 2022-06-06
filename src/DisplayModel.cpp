@@ -82,7 +82,7 @@ bool ScrollState::operator==(const ScrollState& other) const {
 }
 
 const char* DisplayModel::GetFilePath() const {
-    return engine->FileName();
+    return engine->FilePath();
 }
 
 const char* DisplayModel::GetDefaultFileExt() const {
@@ -216,7 +216,7 @@ bool DisplayModel::GetPresentationMode() const {
 }
 
 void DisplayModel::GetDisplayState(FileState* fs) {
-    const char* fileNameA = engine->FileName();
+    const char* fileNameA = engine->FilePath();
     SetFileStatePath(fs, fileNameA);
 
     fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;

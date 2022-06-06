@@ -322,11 +322,11 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
         tocFileRoot = CloneTocItemRecur(tocTree->root, false);
     }
     int nPages = engine->PageCount();
-    const char* title = path::GetBaseNameTemp(engine->FileName());
+    const char* title = path::GetBaseNameTemp(engine->FilePath());
     TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocFileRoot;
-    char* filePath = (char*)engine->FileName();
+    char* filePath = (char*)engine->FilePath();
     tocWrapper->engineFilePath = str::Dup(filePath);
     tocWrapper->nPages = nPages;
     tocWrapper->pageNo = 1;
@@ -369,7 +369,7 @@ bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
 
-    SetFileName(dir);
+    SetFilePath(dir);
 
     return true;
 }

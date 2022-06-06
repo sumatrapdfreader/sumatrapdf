@@ -493,8 +493,7 @@ class EngineBase {
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    const char* FileName() const;
-    const char* FilePathTemp() const;
+    const char* FilePath() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
@@ -503,7 +502,7 @@ class EngineBase {
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
 
     // protected:
-    void SetFileName(const char* s);
+    void SetFilePath(const char* s);
 };
 
 struct PasswordUI {

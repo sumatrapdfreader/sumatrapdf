@@ -224,7 +224,7 @@ RectF EngineEbook::PageContentBox(int pageNo, __unused RenderTarget target) {
 }
 
 ByteSlice EngineEbook::GetFileData() {
-    const char* fileName = FilePathTemp();
+    const char* fileName = FilePath();
     if (!fileName) {
         return {};
     }
@@ -232,7 +232,7 @@ ByteSlice EngineEbook::GetFileData() {
 }
 
 bool EngineEbook::SaveFileAs(const char* dstPath) {
-    const char* srcPath = FileName();
+    const char* srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
@@ -746,7 +746,7 @@ EngineBase* EngineEpub::Clone() {
     if (stream) {
         return CreateFromStream(stream);
     }
-    const char* path = FilePathTemp();
+    const char* path = FilePath();
     if (path) {
         return CreateFromFile(path);
     }
@@ -754,7 +754,7 @@ EngineBase* EngineEpub::Clone() {
 }
 
 bool EngineEpub::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
@@ -805,7 +805,7 @@ bool EngineEpub::FinishLoading() {
 }
 
 ByteSlice EngineEpub::GetFileData() {
-    const char* path = FileName();
+    const char* path = FilePath();
     return GetStreamOrFileData(stream, path);
 }
 
@@ -818,7 +818,7 @@ bool EngineEpub::SaveFileAs(const char* dstPath) {
             return true;
         }
     }
-    const char* srcPath = FileName();
+    const char* srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
@@ -880,7 +880,7 @@ class EngineFb2 : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePathTemp();
+        const char* fileName = FilePath();
         if (!fileName) {
             return nullptr;
         }
@@ -906,7 +906,7 @@ class EngineFb2 : public EngineEbook {
 };
 
 bool EngineFb2::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
     doc = Fb2Doc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -1000,7 +1000,7 @@ class EngineMobi : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePathTemp();
+        const char* fileName = FilePath();
         if (!fileName) {
             return nullptr;
         }
@@ -1027,7 +1027,7 @@ class EngineMobi : public EngineEbook {
 };
 
 bool EngineMobi::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
     doc = MobiDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -1152,7 +1152,7 @@ class EnginePdb : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePathTemp();
+        const char* fileName = FilePath();
         if (!fileName) {
             return nullptr;
         }
@@ -1175,7 +1175,7 @@ class EnginePdb : public EngineEbook {
 };
 
 bool EnginePdb::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
 
     doc = PalmDoc::CreateFromFile(fileName);
     if (!doc) {
@@ -1371,7 +1371,7 @@ class EngineChm : public EngineEbook {
         delete tocTree;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePathTemp();
+        const char* fileName = FilePath();
         if (!fileName) {
             return nullptr;
         }
@@ -1500,7 +1500,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
 };
 
 bool EngineChm::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
     doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;
@@ -1620,7 +1620,7 @@ class EngineHtml : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePathTemp();
+        const char* fileName = FilePath();
         if (!fileName) {
             return nullptr;
         }
@@ -1642,7 +1642,7 @@ class EngineHtml : public EngineEbook {
 };
 
 bool EngineHtml::Load(const char* fileName) {
-    SetFileName(fileName);
+    SetFilePath(fileName);
 
     doc = HtmlDoc::CreateFromFile(fileName);
     if (!doc) {
@@ -1723,7 +1723,7 @@ class EngineTxt : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePathTemp();
+        const char* fileName = FilePath();
         if (!fileName) {
             return nullptr;
         }
@@ -1750,7 +1750,7 @@ bool EngineTxt::Load(const char* fileName) {
         return false;
     }
 
-    SetFileName(fileName);
+    SetFilePath(fileName);
 
     str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileName));
 
