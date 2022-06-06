@@ -102,11 +102,6 @@ void Printer::SetDevMode(DEVMODEW* dm) {
 Printer::~Printer() {
     str::Free(name);
     free((void*)devMode);
-
-    for (int i = 0; i < nBins; i++) {
-        str::Free(binNames[i]);
-    }
-
     free((void*)papers);
     free((void*)paperSizes);
     free((void*)bins);
@@ -1250,8 +1245,8 @@ bool PrintFile(const char* fileName, char* printerName, bool displayErrors, cons
         MessageBoxWarningCond(displayErrors, msg, "Error");
         return false;
     }
-    // takes ownership of engine
     bool ok = PrintFile2(engine, printerName, displayErrors, settings);
+    delete engine;
     logfa("PrintFile: finished ok\n");
     return ok;
 }
