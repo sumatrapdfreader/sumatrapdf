@@ -37,7 +37,7 @@ static void UpdateTabTitle(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
-    int idx = win->tabs.Find(tab);
+    int idx = win->Tabs().Find(tab);
     const char* title = tab->GetTabTitle();
     const char* tooltip = tab->filePath.Get();
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
@@ -48,7 +48,7 @@ static void NO_INLINE SwapTabs(MainWindow* win, int tab1, int tab2) {
         return;
     }
 
-    auto&& tabs = win->tabs;
+    auto&& tabs = win->Tabs();
     std::swap(tabs.at(tab1), tabs.at(tab2));
 }
 
@@ -73,7 +73,7 @@ static void ShowTabBar(MainWindow* win, bool show) {
 }
 
 void UpdateTabWidth(MainWindow* win) {
-    int count = (int)win->tabs.size();
+    int count = (int)win->TabsCount();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     bool showTabs = (count > 1) || (showSingleTab && (count > 0));
     if (!showTabs) {
@@ -89,16 +89,13 @@ void UpdateTabWidth(MainWindow* win) {
 }
 
 static void RemoveTab(MainWindow* win, int idx) {
-    WindowTab* tab = win->tabs.at(idx);
+    WindowTab* tab = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     UpdateTabFileDisplayStateForTab(tab);
     win->tabSelectionHistory->Remove(tab);
-    win->tabs.Remove(tab);
     if (tab == win->CurrentTab()) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
     }
-    WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab>(idx);
-    CrashIf(tab2 != tab);
     delete tab;
     UpdateTabWidth(win);
 }
@@ -115,7 +112,7 @@ static void WinTabClosedHandler(MainWindow* win, TabsCtrl* tabs, int closedTabId
 // Selects the given tab (0-based index)
 // TODO: this shouldn't go through the same notifications, just do it
 void TabsSelect(MainWindow* win, int tabIndex) {
-    auto& tabs = win->tabs;
+    auto tabs = win->Tabs();
     int count = tabs.Size();
     if (count < 2 || tabIndex < 0 || tabIndex >= count) {
         return;
@@ -147,7 +144,7 @@ void CreateTabbar(MainWindow* win) {
 
     tabsCtrl->onSelectionChanged = [win](TabsSelectionChangedEvent* ev) {
         int currentIdx = win->tabsCtrl->GetSelected();
-        WindowTab* tab = win->tabs[currentIdx];
+        WindowTab* tab = win->Tabs()[currentIdx];
         LoadModelIntoTab(tab);
     };
     tabsCtrl->onTabDragged = [win](TabDraggedEvent* ev) {
@@ -203,7 +200,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     if (-1 == current) {
         return;
     }
-    if (win->CurrentTab() != win->tabs.at(current)) {
+    if (win->CurrentTab() != win->Tabs().at(current)) {
         return; // TODO: restore CrashIf() ?
     }
 
@@ -256,10 +253,9 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     }
 
     WindowTab* tab = new WindowTab(win, filePath);
-    win->tabs.Append(tab);
     tab->canvasRc = win->canvasRc;
 
-    int idx = (int)win->tabs.size() - 1;
+    int idx = win->TabsCount();
     auto tabs = win->tabsCtrl;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
@@ -276,19 +272,19 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
 // Refresh the tab's title
 void TabsOnChangedDoc(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-    CrashIf(!tab != !win->tabs.size());
+    CrashIf(!tab != !win->TabsCount());
     if (!tab) {
         return;
     }
 
-    CrashIf(win->tabs.Find(tab) != win->tabsCtrl->GetSelected());
+    CrashIf(win->Tabs().Find(tab) != win->tabsCtrl->GetSelected());
     VerifyWindowTab(win, tab);
     UpdateTabTitle(tab);
 }
 
 // Called when we're closing a document
 void TabsOnCloseDoc(MainWindow* win) {
-    if (win->tabs.size() == 0) {
+    if (win->TabsCount() == 0) {
         return;
     }
 
@@ -306,9 +302,9 @@ void TabsOnCloseDoc(MainWindow* win) {
     int current = win->tabsCtrl->GetSelected();
     RemoveTab(win, current);
 
-    if (win->tabs.size() > 0) {
+    if (win->TabsCount() > 0) {
         WindowTab* tab = win->tabSelectionHistory->Pop();
-        int idx = win->tabs.Find(tab);
+        int idx = win->Tabs().Find(tab);
         win->tabsCtrl->SetSelected(idx);
         LoadModelIntoTab(tab);
     }
@@ -316,11 +312,12 @@ void TabsOnCloseDoc(MainWindow* win) {
 
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(MainWindow* win) {
+    auto tabs = win->Tabs();
+    DeleteVecMembers(tabs);
     win->tabsCtrl->RemoveAllTabs();
     win->tabSelectionHistory->Reset();
     win->currentTabTemp = nullptr;
     win->ctrl = nullptr;
-    DeleteVecMembers(win->tabs);
 }
 
 void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
@@ -352,7 +349,7 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     if (!win) {
         return;
     }
-    int count = (int)win->tabs.size();
+    int count = (int)win->TabsCount();
     if (count < 2) {
         return;
     }

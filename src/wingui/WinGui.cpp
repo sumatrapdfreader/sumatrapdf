@@ -3546,7 +3546,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         overClose = tabState.overClose;
         lastMousePos = mousePos;
         const char* msgName = WinMsgName(msg);
-        //logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
+        // logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
     }
 
     switch (msg) {

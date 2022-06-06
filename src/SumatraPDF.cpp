@@ -343,7 +343,7 @@ WindowTab* FindTabByFile(const char* file) {
     char* normFile = path::NormalizeTemp(file);
 
     for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->tabs) {
+        for (WindowTab* tab : win->Tabs()) {
             char* fp = tab->filePath;
             if (!fp || !path::IsSame(fp, normFile)) {
                 continue;
@@ -363,7 +363,7 @@ void SelectTabInWindow(WindowTab* tab) {
     if (tab == win->CurrentTab()) {
         return;
     }
-    TabsSelect(win, win->tabs.Find(tab));
+    TabsSelect(win, win->Tabs().Find(tab));
 }
 
 // Find the first window showing a given PDF file
@@ -387,12 +387,12 @@ MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
-        if (focusTab && win->tabs.size() > 1) {
+        if (focusTab && win->TabsCount() > 1) {
             // bring a background tab to the foreground
-            for (WindowTab* tab : win->tabs) {
+            for (WindowTab* tab : win->Tabs()) {
                 if (tab != win->CurrentTab() && tab->AsFixed() && tab->AsFixed()->pdfSync &&
                     tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-                    TabsSelect(win, win->tabs.Find(tab));
+                    TabsSelect(win, win->Tabs().Find(tab));
                     return win;
                 }
             }
@@ -2161,7 +2161,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
         HwndSetText(win->hwndFrame, kSumatraWindowTitle);
-        CrashIf(win->tabs.size() != 0 || win->CurrentTab());
+        CrashIf(win->TabsCount() != 0 || win->CurrentTab());
     }
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
@@ -2389,7 +2389,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     }
 
     bool didSavePrefs = false;
-    size_t tabCount = win->tabs.size();
+    size_t tabCount = win->TabsCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (CanCloseWindow(win)) {
             CloseWindow(win, quitIfLast, false);
@@ -2449,7 +2449,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     AbortFinding(win, true);
     AbortPrinting(win);
 
-    for (auto& tab : win->tabs) {
+    for (auto& tab : win->Tabs()) {
         if (tab->AsFixed()) {
             tab->AsFixed()->dontRenderFlag = true;
         }
@@ -2460,7 +2460,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     }
 
     bool canCloseWindow = true;
-    for (auto& tab : win->tabs) {
+    for (auto& tab : win->Tabs()) {
         bool canCloseTab = MaybeSaveAnnotations(tab);
         if (!canCloseTab) {
             canCloseWindow = false;
@@ -3625,7 +3625,7 @@ void ExitFullScreen(MainWindow* win) {
         KillTimer(win->hwndCanvas, kHideCursorTimerID);
         SetCursorCached(IDC_ARROW);
         // ensure that no ToC is shown when entering presentation mode the next time
-        for (WindowTab* tab : win->tabs) {
+        for (WindowTab* tab : win->Tabs()) {
             tab->showTocPresentation = false;
         }
     } else {
@@ -4100,7 +4100,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
 static bool FrameOnSysChar(MainWindow* win, WPARAM key) {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
     if (win->tabsVisible && ('1' <= key && key <= '9')) {
-        TabsSelect(win, key < '9' ? (int)(key - '1') : (int)win->tabs.size() - 1);
+        TabsSelect(win, key < '9' ? (int)(key - '1') : (int)win->TabsCount() - 1);
         return true;
     }
     // Alt + Space opens a sys menu

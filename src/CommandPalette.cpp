@@ -331,7 +331,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
 
     // append paths of opened files
     for (MainWindow* w : gWindows) {
-        for (WindowTab* tab2 : win->tabs) {
+        for (WindowTab* tab2 : win->Tabs()) {
             if (!tab2->IsDocLoaded()) {
                 continue;
             }
@@ -516,7 +516,7 @@ void CommandPaletteWnd::ScheduleDelete() {
 
 static WindowTab* FindOpenedFile(const char* s) {
     for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->tabs) {
+        for (WindowTab* tab : win->Tabs()) {
             if (!tab->IsDocLoaded()) {
                 continue;
             }

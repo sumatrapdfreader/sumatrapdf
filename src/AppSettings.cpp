@@ -194,16 +194,16 @@ static void RememberSessionState() {
 
     // don't remember the state if there's only one window with 1 or less
     // opened document.
-    if (gWindows.size() == 1 && gWindows[0]->tabs.size() < 2) {
+    if (gWindows.size() == 1 && gWindows[0]->TabsCount() < 2) {
         return;
     }
 
     for (auto* win : gWindows) {
-        if (win->tabs.size() == 0) {
+        if (win->TabsCount() == 0) {
             continue;
         }
         SessionData* data = NewSessionData();
-        for (WindowTab* tab : win->tabs) {
+        for (WindowTab* tab : win->Tabs()) {
             char* fp = tab->filePath;
             FileState* fs = NewDisplayState(fp);
             if (tab->ctrl) {
@@ -214,7 +214,7 @@ static void RememberSessionState() {
             data->tabStates->Append(NewTabState(fs));
             DeleteDisplayState(fs);
         }
-        data->tabIndex = win->tabs.Find(win->CurrentTab()) + 1;
+        data->tabIndex = win->Tabs().Find(win->CurrentTab()) + 1;
         // TODO: allow recording this state without changing gGlobalPrefs
         RememberDefaultWindowPosition(win);
         data->windowState = gGlobalPrefs->windowState;
@@ -235,7 +235,7 @@ bool SaveSettings() {
 
     // update display states for all tabs
     for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->tabs) {
+        for (WindowTab* tab : win->Tabs()) {
             UpdateTabFileDisplayStateForTab(tab);
         }
     }
