@@ -3507,7 +3507,12 @@ static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
 
 static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
     int nTabs = tabsCtrl->GetTabCount();
-    CrashIf(tab1 == tab2 || tab1 < 0 || tab2 < 0 || tab1 >= nTabs || tab2 >= nTabs);
+    bool badState = (tab1 == tab2) || (tab1 < 0) || (tab2 < 0) || (tab1 >= nTabs) || (tab2 >= nTabs);
+    if (badState) {
+        logfa("tab1: %d, tab2: %d, nTabs: %d\n", tab1, tab2, nTabs);
+        ReportIf(true);
+        return;
+    }
 
     auto&& tabs = tabsCtrl->tabs;
     std::swap(tabs.at(tab1), tabs.at(tab2));
