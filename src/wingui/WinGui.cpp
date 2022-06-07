@@ -3610,6 +3610,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabHighlighted = hl;
                 didChangeTabs = true;
+                return 0;
             }
             int xHl = -1;
             if (overClose && !isDragging) {
