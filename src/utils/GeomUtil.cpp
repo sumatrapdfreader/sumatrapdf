@@ -412,10 +412,6 @@ RectF ToRectF(const Rect r) {
     return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
 }
 
-RECT RECTFromRect(Gdiplus::Rect r) {
-    return {r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom()};
-}
-
 RECT ToRECT(const Rect r) {
     return {r.x, r.y, r.x + r.dx, r.y + r.dy};
 }
@@ -438,6 +434,18 @@ Rect ToRect(const RectF r) {
     int dx = (int)floor(r.dx + 0.5);
     int dy = (int)floor(r.dy + 0.5);
     return Rect(x, y, dx, dy);
+}
+
+int RectDx(const RECT& r) {
+    return r.right - r.left;
+}
+int RectDy(const RECT& r) {
+    return r.bottom - r.top;
+}
+
+Rect ToRect(const RECT& r) {
+    Rect r2 = {r.left, r.top, RectDx(r), RectDy(r)};
+    return r2;
 }
 
 Gdiplus::Rect ToGdipRect(const RectF r) {

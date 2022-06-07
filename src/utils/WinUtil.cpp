@@ -50,13 +50,6 @@ Size RenderedBitmap::Size() const {
     return size;
 }
 
-int RectDx(const RECT& r) {
-    return r.right - r.left;
-}
-int RectDy(const RECT& r) {
-    return r.bottom - r.top;
-}
-
 POINT MakePoint(long x, long y) {
     POINT p = {x, y};
     return p;

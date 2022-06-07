@@ -3264,7 +3264,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
 
     int tabSelected = GetSelected();
 
-    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+    // IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 1
     // paint the background
     bool isTranslucentMode = inTitleBar && dwm::IsCompositionEnabled();
@@ -3280,6 +3280,19 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
 #else
     PaintParentBackground(hwnd, hdc);
 #endif
+
+    if (false) {
+        // TODO: why doesn't this work? Should just paint the rectangle
+        logfa("Paint(): x: %d, y: %d, dx: %d, dy: %d\n", rc.left, rc.top, RectDx(rc), RectDy(rc));
+        COLORREF col = RGB(0xff, 0, 0);
+        HBRUSH brush = CreateSolidBrush(col);
+        FillRect(hdc, &rc, brush);
+        DeleteObject(brush);
+        Rect r = ToRect(rc);
+        DrawLine(hdc, r);
+        return;
+    }
+
     if (!data) {
         return;
     }
@@ -3555,6 +3568,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     switch (msg) {
         case WM_NCHITTEST: {
+            if (false) {
+                return HTCLIENT;
+            }
             // parts that are HTTRANSPARENT are used to move the window
             if (!inTitleBar || hwnd == GetCapture()) {
                 return HTCLIENT;
@@ -3671,11 +3687,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             GetUpdateRect(hwnd, &rc, FALSE);
             // TODO: when is wp != nullptr?
             hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
-
-            DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
+#if 1
+            DoubleBuffer buffer(hwnd, ToRect(rc));
             Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
-
+#else
+            Paint(hdc, rc);
+#endif
             ValidateRect(hwnd, nullptr);
             if (!wp) {
                 EndPaint(hwnd, &ps);
