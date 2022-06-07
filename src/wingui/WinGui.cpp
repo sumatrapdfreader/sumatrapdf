@@ -3257,7 +3257,13 @@ static void PaintParentBackground(HWND hwnd, HDC hdc) {
 }
 
 // Paints the tabs that intersect the window's update rectangle.
-void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) {
+void TabsCtrl::Paint(HDC hdc, RECT& rc) {
+    TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
+    int tabUnderMouse = tabState.tabIdx;
+    bool overClose = tabState.overClose;
+
+    int tabSelected = GetSelected();
+
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 1
     // paint the background
@@ -3267,7 +3273,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool
     } else {
         // note: not sure what color should be used here and painting
         // background works fine
-        HBRUSH brush = CreateSolidBrush(RGB(0xff,0xff,0xff));
+        HBRUSH brush = CreateSolidBrush(RGB(0xff, 0xff, 0xff));
         FillRect(hdc, &rc, brush);
         DeleteObject(brush);
     }
@@ -3333,7 +3339,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool
             xColor = tabHighlightedCloseX;
             circleColor = tabHighlightedCloseCircle;
         }
-        if ((tabUnderMouse == i) && underMouseOverClose) {
+        if ((tabUnderMouse == i) && overClose) {
             xColor = tabHoveredCloseX;
             circleColor = tabHoveredCloseCircle;
         }
@@ -3366,7 +3372,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool
         // paint "x"'s circle
         iterator.NextMarker(&shape);
         // bool closeCircleEnabled = true;
-        bool paintOverClose = (tabUnderMouse == i) && underMouseOverClose;
+        bool paintOverClose = (tabUnderMouse == i) && overClose;
         // TODO: (tabsCtrl->tabBeingClosed == i
         if (paintOverClose /*&& closeCircleEnabled*/) {
             br.SetColor(GdiRgbFromCOLORREF(circleColor));
@@ -3548,8 +3554,18 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     switch (msg) {
-        case WM_NCHITTEST:
-            return HTCLIENT;
+        case WM_NCHITTEST: {
+            // parts that are HTTRANSPARENT are used to move the window
+            if (!inTitleBar || hwnd == GetCapture()) {
+                return HTCLIENT;
+            }
+            HwndScreenToClient(hwnd, mousePos);
+            tabState = TabStateFromMousePosition(mousePos);
+            if (tabState.tabIdx >= 0) {
+                return HTCLIENT;
+            }
+            return HTTRANSPARENT;
+        }
 
         case WM_SIZE:
             Layout();
@@ -3656,13 +3672,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TODO: when is wp != nullptr?
             hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
 
-            tabState = TabStateFromMousePosition(lastMousePos);
-            tabUnderMouse = tabState.tabIdx;
-            overClose = tabState.overClose;
-
             DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
-            int tabSelected = GetSelected();
-            Paint(buffer.GetDC(), rc, tabSelected, tabUnderMouse, overClose);
+            Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
 
             ValidateRect(hwnd, nullptr);
@@ -4001,7 +4012,7 @@ void DrawCloseButton2(const DrawCloseButtonArgs& args) {
         r2.top -= p;
         r2.bottom += p;
         FillRect(hdc, &r2, brush);
-        //Ellipse(hdc, r2.left, r2.top, r2.right, r2.bottom); 
+        // Ellipse(hdc, r2.left, r2.top, r2.right, r2.bottom);
     }
     AutoDeletePen pen(CreatePen(PS_SOLID, 2, lineCol));
     ScopedSelectPen p(hdc, pen);
