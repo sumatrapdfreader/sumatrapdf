@@ -136,7 +136,7 @@ Rect WindowRect(HWND hwnd) {
 Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     RECT rc = ToRECT(rect);
     MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
-    return Rect::FromRECT(rc);
+    return ToRect(rc);
 }
 
 int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
@@ -1089,7 +1089,7 @@ Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
     if (!ok) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
     }
-    return Rect::FromRECT(mi.rcWork);
+    return ToRect(mi.rcWork);
 }
 
 // returns the dimensions the given window has to have in order to be a fullscreen window
@@ -1097,7 +1097,7 @@ Rect GetFullscreenRect(HWND hwnd) {
     MONITORINFO mi{};
     mi.cbSize = sizeof(mi);
     if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
-        return Rect::FromRECT(mi.rcMonitor);
+        return ToRect(mi.rcMonitor);
     }
     // fall back to the primary monitor
     return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
@@ -1105,7 +1105,7 @@ Rect GetFullscreenRect(HWND hwnd) {
 
 static BOOL CALLBACK GetMonitorRectProc(__unused HMONITOR hMonitor, __unused HDC hdc, LPRECT rcMonitor, LPARAM data) {
     Rect* rcAll = (Rect*)data;
-    *rcAll = rcAll->Union(Rect::FromRECT(*rcMonitor));
+    *rcAll = rcAll->Union(ToRect(*rcMonitor));
     return TRUE;
 }
 
@@ -2718,7 +2718,7 @@ void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
 }
 
 void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
-    Rect rc = Rect::FromRECT(r);
+    Rect rc = ToRect(r);
     DrawCenteredText(hdc, rc, txt, isRTL);
 }
 

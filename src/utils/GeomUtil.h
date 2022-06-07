@@ -86,7 +86,6 @@ struct Rect {
     Point TL() const;
     Point BR() const;
     Size Size() const;
-    static Rect FromRECT(const RECT& rect);
     bool Equals(const Rect& other) const;
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
@@ -121,7 +120,6 @@ struct RectF {
     PointF TL() const;
     PointF BR() const;
     SizeF Size() const;
-    static RectF FromRECT(const RECT& rect);
     bool operator==(const RectF& other) const;
     bool operator!=(const RectF& other) const;
 };

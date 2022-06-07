@@ -63,7 +63,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
 }
 
 void LabelWithCloseWnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
-    DoubleBuffer buffer(hwnd, Rect::FromRECT(ps->rcPaint));
+    DoubleBuffer buffer(hwnd, ToRect(ps->rcPaint));
     PaintHDC(this, buffer.GetDC(), *ps);
     buffer.Flush(hdc);
 }

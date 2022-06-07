@@ -464,7 +464,7 @@ void EnsureAreaVisibility(Rect& r) {
 Rect GetDefaultWindowPos() {
     RECT workArea;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    Rect work = Rect::FromRECT(workArea);
+    Rect work = ToRect(workArea);
 
     Rect r = work;
     r.dx = std::min((int)((double)r.dy * DEF_PAGE_RATIO), work.dx);

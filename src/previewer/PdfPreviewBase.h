@@ -114,7 +114,7 @@ class PreviewBase : public IThumbnailProvider,
         if (!prc) {
             return E_INVALIDARG;
         }
-        m_rcParent = Rect::FromRECT(*prc);
+        m_rcParent = ToRect(*prc);
         if (m_hwnd) {
             UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE;
             int x = m_rcParent.x;

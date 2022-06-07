@@ -466,7 +466,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, MainWindow* win) {
         return;
     }
 
-    Rect rButton = Rect::FromRECT(item->rcItem);
+    Rect rButton = ToRect(item->rcItem);
 
     DoubleBuffer buffer(item->hwndItem, rButton);
     HDC memDC = buffer.GetDC();
@@ -592,7 +592,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
 static void PaintCaptionBackground(HDC hdc, MainWindow* win, bool useDoubleBuffer) {
     RECT rClip;
     GetClipBox(hdc, &rClip);
-    Rect rect = Rect::FromRECT(rClip);
+    Rect rect = ToRect(rClip);
 
     COLORREF c = win->caption->bgColor;
 

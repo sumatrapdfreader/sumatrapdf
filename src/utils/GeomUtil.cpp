@@ -209,10 +209,6 @@ Size Rect::Size() const {
     return {dx, dy};
 }
 
-Rect Rect::FromRECT(const RECT& rect) {
-    return FromXY(rect.left, rect.top, rect.right, rect.bottom);
-}
-
 bool Rect::Equals(const Rect& other) const {
     return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
 }
@@ -362,10 +358,6 @@ PointF RectF::BR() const {
 
 SizeF RectF::Size() const {
     return SizeF(dx, dy);
-}
-
-RectF RectF::FromRECT(const RECT& rect) {
-    return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
 }
 
 bool RectF::operator==(const RectF& other) const {
