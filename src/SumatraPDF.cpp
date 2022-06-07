@@ -4124,6 +4124,9 @@ static int TestBigNew()
 #endif
 
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(TabInfo* tab) {
+    if (!tab || !tab->AsFixed()) {
+        return;
+    }
     EngineBase* engine = tab->AsFixed()->GetEngine();
     auto path = ToUtf8Temp(engine->FileName());
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](std::string_view mupdfErr) {
