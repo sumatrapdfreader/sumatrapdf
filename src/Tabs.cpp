@@ -65,19 +65,14 @@ static void ShowTabBar(MainWindow* win, bool show) {
 }
 
 void UpdateTabWidth(MainWindow* win) {
-    int count = (int)win->TabsCount();
+    int nTabs = (int)win->TabsCount();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
-    bool showTabs = (count > 1) || (showSingleTab && (count > 0));
+    bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
     if (!showTabs) {
         ShowTabBar(win, false);
         return;
     }
     ShowTabBar(win, true);
-    Rect rect = ClientRect(win->tabsCtrl->hwnd);
-    Size tabSize = GetTabSize(win->hwndFrame);
-    auto maxDx = (rect.dx - 3) / count;
-    tabSize.dx = std::min(tabSize.dx, maxDx);
-    win->tabsCtrl->SetTabSize(tabSize);
 }
 
 static void RemoveTab(MainWindow* win, int idx) {
@@ -144,11 +139,7 @@ void CreateTabbar(MainWindow* win) {
     args.parent = win->hwndFrame;
     args.createToolTipsHwnd = true;
     tabsCtrl->Create(args);
-
-    Size tabSize = GetTabSize(win->hwndFrame);
-    tabsCtrl->SetTabSize(tabSize);
     win->tabsCtrl = tabsCtrl;
-
     win->tabSelectionHistory = new Vec<WindowTab*>();
 }
 

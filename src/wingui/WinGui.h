@@ -684,7 +684,7 @@ struct TabsCreateArgs {
     HFONT font = nullptr;
     bool createToolTipsHwnd = false;
     int ctrlID = 0;
-    Size tabSize = {};
+    int tabDefaultDx = 300;
 };
 
 struct TabPainter;
@@ -709,6 +709,8 @@ struct TabsCtrl : Wnd {
     bool createToolTipsHwnd = false;
     char* currTooltipText = nullptr; // not owned by us
     bool inTitleBar = false;
+    // dx of tab if there's more space available
+    int tabDefaultDx = 300;
 
     Vec<TabInfo*> tabs;
 
@@ -743,7 +745,7 @@ struct TabsCtrl : Wnd {
     COLORREF tabClickedCloseCircle = 0;
 
     PathData* data = nullptr;
-    Size tabSize;
+    Size tabSize{-1,-1};
 
     TabsCtrl();
     ~TabsCtrl() override;
@@ -774,11 +776,9 @@ struct TabsCtrl : Wnd {
     int GetSelected();
     int SetSelected(int idx);
 
-    void SetTabSize(Size sz);
-
     HWND GetToolTipsHwnd();
 
-    bool Layout(int dx, int dy);
+    void Layout();
     TabMouseState TabStateFromMousePosition(const Point& p);
     void Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose);
 };

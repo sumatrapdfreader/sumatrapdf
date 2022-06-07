@@ -3164,10 +3164,19 @@ TabInfo::~TabInfo() {
 
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
-bool TabsCtrl::Layout(int dx, int dy) {
+void TabsCtrl::Layout() {
+    HwndScheduleRepaint(hwnd);
+    Rect rect = ClientRect(hwnd);
+    int dy = rect.dy;
+    int nTabs = GetTabCount();
+    if (nTabs == 0) {
+        return;
+    }
+    auto maxDx = (rect.dx - 3) / nTabs;
+    int dx = std::min(tabDefaultDx, maxDx);
     dx--;
     if (tabSize.dx == dx && tabSize.dy == dy) {
-        return false;
+        return;
     }
     tabSize = {dx, dy};
 
@@ -3195,7 +3204,6 @@ bool TabsCtrl::Layout(int dx, int dy) {
     delete data;
     data = new PathData();
     shape.GetPathData(data);
-    return true;
 }
 
 // Finds the index of the tab, which contains the given point.
@@ -3266,6 +3274,10 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool
 #else
     PaintParentBackground(hwnd, hdc);
 #endif
+    if (!data) {
+        return;
+    }
+
     // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
     XFORM ctm = {1.0, 0, 0, 1.0, 0, 0};
     SetWorldTransform(hdc, &ctm);
@@ -3536,17 +3548,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     switch (msg) {
-        case WM_NCHITTEST: {
-            if (!inTitleBar || hwnd == GetCapture()) {
-                return HTCLIENT;
-            }
-            HwndScreenToClient(hwnd, mousePos);
-            tabState = TabStateFromMousePosition(mousePos);
-            if (tabState.tabIdx >= 0) {
-                return HTCLIENT;
-            }
-            return HTTRANSPARENT;
-        }
+        case WM_NCHITTEST:
+            return HTCLIENT;
+
+        case WM_SIZE:
+            Layout();
+            break;
 
         case WM_MOUSELEAVE:
             [[fallthrough]];
@@ -3676,25 +3683,15 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     args.parent = argsIn.parent;
     args.font = argsIn.font;
     args.className = WC_TABCONTROLW;
-    args.style = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
+    args.style = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | WS_VISIBLE;
     if (createToolTipsHwnd) {
         args.style |= TCS_TOOLTIPS;
-    }
-
-    Size sz = argsIn.tabSize;
-    if (sz.dy == 0) {
-        sz.dy = DpiScale(args.parent, kTabBarDy);
-    }
-    if (sz.dx == 0) {
-        sz.dx = DpiScale(args.parent, kTabMinDx);
     }
 
     HWND hwnd = CreateControl(args);
     if (!hwnd) {
         return nullptr;
     }
-
-    Layout(sz.dx, sz.dy);
 
     if (createToolTipsHwnd) {
         HWND ttHwnd = GetToolTipsHwnd();
@@ -3748,7 +3745,7 @@ void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip)
     TabInfo* tab = GetTab(idx);
     str::ReplaceWithCopy(&tab->text, text);
     str::ReplaceWithCopy(&tab->tooltip, tooltip);
-    HwndScheduleRepaint(hwnd);
+    Layout();
 }
 
 // returns userData because it's not owned by TabsCtrl
@@ -3768,11 +3765,8 @@ UINT_PTR TabsCtrl::RemoveTab(int idx) {
     } else if (idx == selectedTab) {
         SetSelected(0);
     }
+    Layout();
     return userData;
-}
-
-TabInfo* TabsCtrl::GetTab(int idx) {
-    return tabs[idx];
 }
 
 // Note: the caller should take care of deleting userData
@@ -3783,6 +3777,11 @@ void TabsCtrl::RemoveAllTabs() {
     tabHighlightedClose = -1;
     DeleteVecMembers(tabs);
     tabs.Reset();
+    Layout();
+}
+
+TabInfo* TabsCtrl::GetTab(int idx) {
+    return tabs[idx];
 }
 
 int TabsCtrl::GetSelected() {
@@ -3794,16 +3793,6 @@ int TabsCtrl::SetSelected(int idx) {
     CrashIf(idx < 0 || idx >= GetTabCount());
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     return prevSelectedIdx;
-}
-
-void TabsCtrl::SetTabSize(Size sz) {
-    TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
-    bool didLayout = Layout(sz.dx, sz.dy);
-    if (didLayout) {
-        HwndScheduleRepaint(hwnd);
-    }
-    tabBeingClosed = -1;
-    // MaybeUpdateTooltipText(this);
 }
 
 HWND TabsCtrl::GetToolTipsHwnd() {
