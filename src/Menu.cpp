@@ -1156,18 +1156,15 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         }
 
         WCHAR* name = ToWstrTemp(ev->name);
-        if (str::EmptyOrWhiteSpaceOnly(ev->name)) {
+        if (!ev->name || str::EmptyOrWhiteSpaceOnly(ev->name)) {
             CmdLineArgsIter args(ToWstrTemp(ev->commandLine));
-            int nArgs = args.nArgs - 2;
-            if (nArgs <= 0) {
+            int nArgs = args.nArgs;
+            if (nArgs < 1) {
                 continue;
             }
-            WCHAR* arg0 = args.at(2 + 0);
-            name = str::DupTemp(path::GetBaseNameTemp(arg0));
-            WCHAR* ext = (WCHAR*)path::GetExtTemp(name);
-            if (ext) {
-                *ext = 0;
-            }
+            WCHAR* exePath = args.at(0);
+            const WCHAR* exeName = path::GetBaseNameTemp(exePath);
+            name = str::DupTemp(exeName);
         }
 
         AutoFreeWstr menuString(str::Format(_TR("Open in %s"), name));
