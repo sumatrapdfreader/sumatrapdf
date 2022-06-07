@@ -52,7 +52,9 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     RECT r = ToRECT(ri);
     FillRect(hdc, &r, br);
 
-    DrawCloseButton(w->hwnd, hdc, w->closeBtnPos);
+    Point curPos = HwndGetCursorPos(w->hwnd);
+    bool isHover = w->closeBtnPos.Contains(curPos);
+    DrawCloseButton(hdc, w->closeBtnPos, isHover);
     DeleteObject(br);
 
     if (w->font) {

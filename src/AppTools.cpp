@@ -798,11 +798,10 @@ bool IsUntrustedFile(const char* filePath, const char* fileURL) {
 
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic visual style of Chrome tab close button
-void DrawCloseButton(HWND hwnd, HDC hdc, Rect& r) {
-    Point curPos = HwndGetCursorPos(hwnd);
+void DrawCloseButton(HDC hdc, Rect& r, bool isHover) {
     DrawCloseButtonArgs args;
-    args.isHover = r.Contains(curPos);
     args.hdc = hdc;
     args.r = r;
+    args.isHover = isHover;
     DrawCloseButton(args);
 }

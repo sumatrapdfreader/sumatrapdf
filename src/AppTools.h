@@ -27,4 +27,4 @@ int CompareVersion(const char* txt1, const char* txt2);
 bool AdjustVariableDriveLetter(char* path);
 
 bool IsUntrustedFile(const char* filePath, const char* fileUrl = nullptr);
-void DrawCloseButton(HWND hwnd, HDC hdc, Rect& r);
+void DrawCloseButton(HDC hdc, Rect& r, bool isHover);

@@ -3251,18 +3251,18 @@ static void PaintParentBackground(HWND hwnd, HDC hdc) {
 // Paints the tabs that intersect the window's update rectangle.
 void TabsCtrl::Paint(HDC hdc, RECT& rc, int tabSelected, int tabUnderMouse, bool underMouseOverClose) {
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
-#if 0
-        // paint the background
-        bool isTranslucentMode = inTitleBar && dwm::IsCompositionEnabled();
-        if (isTranslucentMode) {
-            PaintParentBackground(hwnd, hdc);
-        } else {
-            // note: not sure what color should be used here and painting
-            // background works fine
-            /*HBRUSH brush = CreateSolidBrush(colors.bar);
-            FillRect(hdc, &rc, brush);
-            DeleteObject(brush);*/
-        }
+#if 1
+    // paint the background
+    bool isTranslucentMode = inTitleBar && dwm::IsCompositionEnabled();
+    if (isTranslucentMode) {
+        PaintParentBackground(hwnd, hdc);
+    } else {
+        // note: not sure what color should be used here and painting
+        // background works fine
+        HBRUSH brush = CreateSolidBrush(RGB(0xff,0xff,0xff));
+        FillRect(hdc, &rc, brush);
+        DeleteObject(brush);
+    }
 #else
     PaintParentBackground(hwnd, hdc);
 #endif
@@ -4005,12 +4005,14 @@ void DrawCloseButton2(const DrawCloseButtonArgs& args) {
         HWND hwnd = WindowFromDC(hdc);
         DpiScale(hwnd, p);
         AutoDeleteBrush brush(CreateSolidBrush(args.colHoverBg));
+        ScopedSelectBrush br(hdc, brush);
         RECT r2 = ToRECT(r);
         r2.left -= p;
         r2.right += p;
         r2.top -= p;
         r2.bottom += p;
         FillRect(hdc, &r2, brush);
+        //Ellipse(hdc, r2.left, r2.top, r2.right, r2.bottom); 
     }
     AutoDeletePen pen(CreatePen(PS_SOLID, 2, lineCol));
     ScopedSelectPen p(hdc, pen);
