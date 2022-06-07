@@ -824,6 +824,27 @@ static MenuDef menuDefContextStart[] = {
 
 //] ACCESSKEY_GROUP Context Menu (Start)
 
+
+MenuDef menuDefContextTab[] = {
+    {
+        _TRN("Close"),
+        CmdClose,
+    },
+    {
+        _TRN("Close Other Tabs"),
+        CmdCloseOtherTabs,
+    },
+    {
+        _TRN("Close Tabs To The Right"),
+        CmdCloseTabsToTheRight,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+
+
 // clang-format off
 // those menu items will be disabled if no document is opened, enabled otherwise
 static UINT_PTR disableIfNoDocument[] = {

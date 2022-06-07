@@ -7,6 +7,7 @@ struct MenuDef;
 
 extern MenuDef menuDefContextToc[];
 extern MenuDef menuDefContextFav[];
+extern MenuDef menuDefContextTab[];
 
 extern bool gShowDebugMenu;
 extern bool gAddCrashMeMenu;

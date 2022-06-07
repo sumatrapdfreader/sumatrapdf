@@ -107,6 +107,7 @@ bool IsUIRightToLeft();
 bool SumatraLaunchBrowser(const char* url);
 bool OpenFileExternally(const char* path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast = false);
+void CloseTab(WindowTab* tab, bool quitIfLast);
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);

@@ -131,6 +131,7 @@ PointF ToPointFl(Point p);
 Gdiplus::Point ToGdipPoint(Point p);
 Point ToPoint(PointF p);
 Gdiplus::PointF ToGdipPointF(PointF p);
+POINT ToPOINT(const Point& p);
 
 SIZE ToSIZE(Size s);
 SizeF ToSizeFl(Size s);

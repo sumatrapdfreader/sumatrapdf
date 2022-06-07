@@ -411,7 +411,7 @@ void Wnd::OnContextMenu(Point ptScreen) {
     ev.w = this;
     ev.mouseScreen = ptScreen;
 
-    POINT ptW{ptScreen.x, ptScreen.y};
+    POINT ptW = ToPOINT(ptScreen);
     if (ptScreen.x != -1) {
         MapWindowPoints(HWND_DESKTOP, hwnd, &ptW, 1);
     }
@@ -3100,7 +3100,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         DWORD pos = GetMessagePos();
         ev.mouseScreen.x = GET_X_LPARAM(pos);
         ev.mouseScreen.y = GET_Y_LPARAM(pos);
-        POINT pt{ev.mouseScreen.x, ev.mouseScreen.y};
+        POINT pt = ToPOINT(ev.mouseScreen);
         if (pt.x != -1) {
             MapWindowPoints(HWND_DESKTOP, nmhdr->hwndFrom, &pt, 1);
         }

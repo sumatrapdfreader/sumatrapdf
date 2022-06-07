@@ -50,25 +50,6 @@ Size RenderedBitmap::Size() const {
     return size;
 }
 
-POINT MakePoint(long x, long y) {
-    POINT p = {x, y};
-    return p;
-}
-
-SIZE MakeSize(long dx, long dy) {
-    SIZE sz = {dx, dy};
-    return sz;
-}
-
-RECT MakeRect(long x, long y, long dx, long dy) {
-    RECT r;
-    r.left = x;
-    r.right = x + dx;
-    r.top = y;
-    r.bottom = y + dy;
-    return r;
-}
-
 void EditSelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
 }

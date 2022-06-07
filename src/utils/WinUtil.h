@@ -9,9 +9,6 @@
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
 bool ToBool(BOOL b);
-POINT MakePoint(long x, long y);
-SIZE MakeSize(long dx, long dy);
-RECT MakeRect(long x, long y, long dx, long dy);
 
 RECT ClientRECT(HWND);
 Rect ClientRect(HWND);

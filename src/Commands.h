@@ -10,6 +10,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenFile, "Open File...")                                        \
     V(CmdOpenFolder, "Open Folder...")                                    \
     V(CmdClose, "Close Document")                                         \
+    V(CmdCloseCurrentDocument, "Close Current Document")                  \
+    V(CmdCloseOtherTabs, "Close Other Tabs")                              \
+    V(CmdCloseTabsToTheRight, "Close Tabs To The Right")                  \
     V(CmdSaveAs, "Save File As...")                                       \
     V(CmdPrint, "Print Document...")                                      \
     V(CmdShowInFolder, "Show File In Folder...")                          \
@@ -147,7 +150,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCreateAnnotFileAttachment, "Create File Attachment Annotation")  \
     V(CmdInvertColors, "Invert Colors")                                   \
     V(CmdTogglePageInfo, "Toggle Page Info")                              \
-    V(CmdCloseCurrentDocument, "Close Current Document")                  \
     V(CmdToggleZoom, "Toggle Zoom")                                       \
     V(CmdNavigateBack, "Navigate Back")                                   \
     V(CmdNavigateForward, "Navigate Forward")                             \

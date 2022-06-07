@@ -75,6 +75,8 @@ void UpdateTabWidth(MainWindow* win) {
     ShowTabBar(win, true);
 }
 
+// TODO: leaks document? Need to do equivalent of CloseCurrentTab()
+// but with arbitrary tab
 static void RemoveTab(MainWindow* win, int idx) {
     WindowTab* tab = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     UpdateTabFileDisplayStateForTab(tab);
@@ -85,15 +87,6 @@ static void RemoveTab(MainWindow* win, int idx) {
     }
     delete tab;
     UpdateTabWidth(win);
-}
-
-static void WinTabClosedHandler(MainWindow* win, TabsCtrl* tabs, int closedTabIdx) {
-    int current = win->tabsCtrl->GetSelected();
-    if (closedTabIdx == current) {
-        CloseCurrentTab(win);
-    } else {
-        RemoveTab(win, closedTabIdx);
-    }
 }
 
 // Selects the given tab (0-based index)
@@ -120,9 +113,76 @@ void TabsSelect(MainWindow* win, int tabIndex) {
     LoadModelIntoTab(tab);
 }
 
+// TODO: add "Move to another window" sub-menu
+static void TabsContextMenu(ContextMenuEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
+    TabsCtrl* tabsCtrl = (TabsCtrl*)ev->w;
+    TabMouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->mouseWindow);
+    int tabIdx = tabState.tabIdx;
+    if (tabIdx < 0) {
+        return;
+    }
+    int nTabs = tabsCtrl->GetTabCount();
+    WindowTab* tab = win->Tabs()[tabIdx];
+    POINT pt = ToPOINT(ev->mouseScreen);
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextTab, CreatePopupMenu(), nullptr);
+    Vec<WindowTab*> toCloseOther;
+    Vec<WindowTab*> toCloseRight;
+
+    for (int i = 0; i < nTabs; i++) {
+        if (i == tabIdx) {
+            continue;
+        }
+        tab = win->Tabs()[i];
+        if (tab->IsAboutTab()) {
+            continue;
+        }
+        toCloseOther.Append(tab);
+        if (i > tabIdx) {
+            toCloseRight.Append(tab);
+        }
+    }
+
+    if (toCloseOther.IsEmpty()) {
+        MenuSetEnabled(popup, CmdCloseOtherTabs, false);
+    }
+    if (toCloseRight.IsEmpty()) {
+        MenuSetEnabled(popup, CmdCloseTabsToTheRight, false);
+    }
+    MarkMenuOwnerDraw(popup);
+    uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    FreeMenuOwnerDrawInfoData(popup);
+    DestroyMenu(popup);
+    switch (cmd) {
+        case CmdClose:
+            CloseTab(tab, false);
+            break;
+
+        case CmdCloseOtherTabs: {
+            for (WindowTab* t : toCloseOther) {
+                CloseTab(t, false);
+            }
+            break;
+        }
+        case CmdCloseTabsToTheRight: {
+            for (WindowTab* t : toCloseRight) {
+                CloseTab(t, false);
+            }
+            break;
+        }
+    }
+}
+
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
-    tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) { WinTabClosedHandler(win, ev->tabs, ev->tabIdx); };
+
+    tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) {
+        int closedTabIdx = ev->tabIdx;
+        WindowTab* tab = win->Tabs()[closedTabIdx];
+        CloseTab(tab, false);
+    };
+
     tabsCtrl->onSelectionChanging = [win](TabsSelectionChangingEvent* ev) -> bool {
         // TODO: Should we allow the switch of the tab if we are in process of printing?
         SaveCurrentWindowTab(win);
@@ -134,6 +194,7 @@ void CreateTabbar(MainWindow* win) {
         WindowTab* tab = win->Tabs()[currentIdx];
         LoadModelIntoTab(tab);
     };
+    tabsCtrl->onContextMenu = TabsContextMenu;
 
     TabsCreateArgs args;
     args.parent = win->hwndFrame;

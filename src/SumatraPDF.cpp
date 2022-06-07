@@ -2375,18 +2375,12 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     return true;
 }
 
-// closes the current tab, selecting the next one
-// if there's only a single tab left, the window is closed if there
-// are other windows, else the Frequently Read page is displayed
-void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
-    CrashIf(!win);
-    if (!win) {
-        return;
-    }
+// TODO: better name
+void CloseTab(WindowTab* tab, bool quitIfLast) {
+    MainWindow* win = tab->win;
     AbortFinding(win, true);
     ClearFindBox(win);
 
-    WindowTab* tab = win->CurrentTab();
     if (tab) {
         RememberRecentlyClosedDocument(tab->filePath);
     }
@@ -2411,6 +2405,18 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     if (!didSavePrefs) {
         SaveSettings();
     }
+}
+
+// closes the current tab, selecting the next one
+// if there's only a single tab left, the window is closed if there
+// are other windows, else the Frequently Read page is displayed
+void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
+    CrashIf(!win);
+    if (!win) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    CloseTab(tab, quitIfLast);
 }
 
 bool CanCloseWindow(MainWindow* win) {

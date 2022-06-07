@@ -91,7 +91,7 @@ struct MainWindow {
         return currentTabTemp;
     }
     int TabsCount() const;
-    Vec<WindowTab*> Tabs() const;
+    Vec<WindowTab*> Tabs() const;    
 
     HWND hwndFrame = nullptr;
     HWND hwndCanvas = nullptr;

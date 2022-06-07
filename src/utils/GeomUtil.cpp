@@ -382,6 +382,10 @@ Point ToPoint(const PointF p) {
     return Point{(int)p.x, (int)p.y};
 }
 
+POINT ToPOINT(const Point& p) {
+    return {p.x, p.y};
+}
+
 Gdiplus::PointF ToGdipPointF(const PointF p) {
     return Gdiplus::PointF(p.x, p.y);
 }
