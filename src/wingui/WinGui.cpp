@@ -3721,14 +3721,14 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
-    createToolTipsHwnd = argsIn.createToolTipsHwnd;
+    witToolTips = argsIn.witToolTips;
 
     CreateControlArgs args;
     args.parent = argsIn.parent;
     args.font = argsIn.font;
     args.className = WC_TABCONTROLW;
     args.style = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | WS_VISIBLE;
-    if (createToolTipsHwnd) {
+    if (witToolTips) {
         args.style |= TCS_TOOLTIPS;
     }
 
@@ -3737,7 +3737,7 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
         return nullptr;
     }
 
-    if (createToolTipsHwnd) {
+    if (witToolTips) {
         HWND ttHwnd = GetToolTipsHwnd();
         TOOLINFO ti{0};
         ti.cbSize = sizeof(ti);
