@@ -647,8 +647,6 @@ struct TabMouseState {
     bool overClose = false;
 };
 
-struct TabPainter;
-
 struct TabClosedEvent {
     TabsCtrl* tabs = nullptr;
     int tabIdx = 0;
@@ -687,8 +685,6 @@ struct TabsCreateArgs {
     int tabDefaultDx = 300;
 };
 
-struct TabPainter;
-
 struct TabInfo {
     char* text = nullptr;
     char* tooltip = nullptr;
@@ -705,7 +701,6 @@ struct TabInfo {
 
 struct TabsCtrl : Wnd {
     int ctrlID = 0;
-    TabPainter* painter = nullptr;
     bool createToolTipsHwnd = false;
     char* currTooltipText = nullptr; // not owned by us
     bool inTitleBar = false;

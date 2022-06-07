@@ -3258,6 +3258,18 @@ static void PaintParentBackground(HWND hwnd, HDC hdc) {
 
 // Paints the tabs that intersect the window's update rectangle.
 void TabsCtrl::Paint(HDC hdc, RECT& rc) {
+    if (false) {
+        // TODO: why doesn't this work? Should just paint the rectangle
+        logfa("Paint(): x: %d, y: %d, dx: %d, dy: %d\n", rc.left, rc.top, RectDx(rc), RectDy(rc));
+        COLORREF col = RGB(0xff, 0, 0);
+        HBRUSH brush = CreateSolidBrush(col);
+        FillRect(hdc, &rc, brush);
+        DeleteObject(brush);
+        Rect r = ToRect(rc);
+        DrawLine(hdc, r);
+        return;
+    }
+
     TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
     bool overClose = tabState.overClose;
@@ -3280,18 +3292,6 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
 #else
     PaintParentBackground(hwnd, hdc);
 #endif
-
-    if (false) {
-        // TODO: why doesn't this work? Should just paint the rectangle
-        logfa("Paint(): x: %d, y: %d, dx: %d, dy: %d\n", rc.left, rc.top, RectDx(rc), RectDy(rc));
-        COLORREF col = RGB(0xff, 0, 0);
-        HBRUSH brush = CreateSolidBrush(col);
-        FillRect(hdc, &rc, brush);
-        DeleteObject(brush);
-        Rect r = ToRect(rc);
-        DrawLine(hdc, r);
-        return;
-    }
 
     if (!data) {
         return;
@@ -3545,11 +3545,8 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 }
 
 LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PAINTSTRUCT ps;
-    HDC hdc;
     TCITEMW* tcs = nullptr;
 
-    TabPainter* tab = painter;
     Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
     TabMouseState tabState;
 
@@ -3685,8 +3682,20 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_ERASEBKGND:
-            return TRUE;
+            return TRUE; // we handled it so don't erase
 
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            RECT rc = ClientRECT(hwnd);
+            HDC hdc = BeginPaint(hwnd, &ps);
+            DoubleBuffer buffer(hwnd, ToRect(rc));
+            Paint(buffer.GetDC(), rc);
+            buffer.Flush(hdc);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+
+#if 0
         case WM_PAINT: {
             RECT rc;
             GetUpdateRect(hwnd, &rc, FALSE);
@@ -3705,6 +3714,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             return 0;
         }
+#endif
     }
 
     return WndProcDefault(hwnd, msg, wp, lp);
