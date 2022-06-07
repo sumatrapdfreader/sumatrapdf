@@ -4300,6 +4300,9 @@ static int TestBigNew()
 #endif
 
 static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
     EngineBase* engine = tab->AsFixed()->GetEngine();
     const char* path = engine->FilePath();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
