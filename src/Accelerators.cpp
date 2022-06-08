@@ -90,21 +90,23 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FVIRTKEY, VK_LEFT, CmdScrollLeftPage},
     {FSHIFT | FVIRTKEY, VK_RIGHT, CmdScrollRightPage},
 
+    // TODO: maybe CmdGoToNextPage / CmdGoToPrevPage is better
     {FVIRTKEY, VK_NEXT, CmdScrollDownPage},
+    {FVIRTKEY, VK_PRIOR, CmdScrollUpPage},
+
     {FVIRTKEY, VK_SPACE, CmdScrollDownPage},
     {FVIRTKEY, VK_RETURN, CmdScrollDownPage},
     {FCONTROL | FVIRTKEY, VK_DOWN, CmdScrollDownPage},
 
-    {FVIRTKEY, VK_PRIOR, CmdScrollUpPage},
     {FSHIFT | FVIRTKEY, VK_SPACE, CmdScrollUpPage},
     {FSHIFT | FVIRTKEY, VK_RETURN, CmdScrollUpPage},
     {FCONTROL | FVIRTKEY, VK_UP, CmdScrollUpPage},
 
     {0, 'n', CmdGoToNextPage},
-    {FCONTROL | FVIRTKEY, VK_NEXT, CmdGoToNextPage},
+    //{FCONTROL | FVIRTKEY, VK_NEXT, CmdGoToNextPage},
 
     {0, 'p', CmdGoToPrevPage},
-    {FCONTROL | FVIRTKEY, VK_PRIOR, CmdGoToPrevPage},
+    //{FCONTROL | FVIRTKEY, VK_PRIOR, CmdGoToPrevPage},
 
     {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
     {FCONTROL | FVIRTKEY, VK_HOME, CmdGoToFirstPage},
@@ -178,6 +180,8 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdRotateLeft},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdRotateLeft},
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},
+    {FCONTROL | FVIRTKEY, VK_NEXT, CmdNextTab},
+    {FCONTROL | FVIRTKEY, VK_PRIOR, CmdPrevTab},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
@@ -456,10 +460,16 @@ static WORD gNotSafeKeys[] = {
 };
 // clang-format on
 
+// a hackish way to determine if we should allow processing a given
+// accelerator in custom controls. This is to disable accelerators
+// like 'n' or 'left arrow' in e.g. edit control so that they don't
+// block regular processing of key events and mess up edit control
+// at the same time, we do want most accelerators to be enabed even
+// if edit or tree view control has focus
 static bool IsSafeAccel(const ACCEL& a) {
-    BYTE fv = a.fVirt;
     WORD k = a.key;
-    if (fv == 0) {
+    if (a.fVirt == 0) {
+        // regular keys like 'n', without any shift / alt modifier
         return false;
     }
 
