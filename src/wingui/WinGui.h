@@ -702,7 +702,7 @@ struct TabInfo {
 struct TabsCtrl : Wnd {
     int ctrlID = 0;
     bool witToolTips = false;
-    char* currTooltipText = nullptr; // not owned by us
+    AutoFreeStr currTooltipText;
     bool inTitleBar = false;
     // dx of tab if there's more space available
     int tabDefaultDx = 300;

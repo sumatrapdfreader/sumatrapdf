@@ -3436,7 +3436,7 @@ static void MaybeUpdateTooltipText(TabsCtrl* tabsCtrl, int idx) {
     if (str::Eq(tabsCtrl->currTooltipText, tooltip)) {
         return;
     }
-    tabsCtrl->currTooltipText = tooltip;
+    tabsCtrl->currTooltipText.SetCopy(tooltip);
 #if 1
     HWND ttHwnd = tabsCtrl->GetToolTipsHwnd();
     MaybeUpdateTooltip(tabsCtrl->hwnd, ttHwnd, tooltip);
@@ -3781,7 +3781,7 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
         }
     }
     tabBeingClosed = -1;
-    currTooltipText = tab->tooltip;
+    currTooltipText.SetCopy(tab->tooltip);
     return insertedIdx;
 }
 
