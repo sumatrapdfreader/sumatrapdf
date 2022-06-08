@@ -2415,6 +2415,9 @@ void TabsOnCloseDoc(WindowTab* tab) {
 
 // TODO: better name
 void CloseTab(WindowTab* tab, bool quitIfLast) {
+    if (!tab) {
+        return;
+    }
     MainWindow* win = tab->win;
     AbortFinding(win, true);
     ClearFindBox(win);
