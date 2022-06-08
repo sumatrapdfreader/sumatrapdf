@@ -1869,7 +1869,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
 
 // Loads document data into the MainWindow.
 void LoadModelIntoTab(WindowTab* tab) {
-    if (!tab || tab->IsAboutTab()) {
+    if (!tab) {
         return;
     }
 
@@ -4705,9 +4705,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowLogFileSmart();
             break;
 
-        case CmdClose:
-            CloseCurrentTab(win);
+        case CmdClose: {
+            bool quitIfLast = false;
+            CloseCurrentTab(win, quitIfLast);
             break;
+        }
 
         case CmdNextTab:
             TabsOnCtrlTab(win, false);
@@ -5216,11 +5218,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdCloseCurrentDocument:
-            // close the current document (it's too easy to press for discarding multiple tabs)
-            // quit if this is the last window
-            CloseCurrentTab(win, true);
+        case CmdCloseCurrentDocument: {
+            bool quitIfLast = true;
+            CloseCurrentTab(win, quitIfLast);
             break;
+        }
 
         // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
