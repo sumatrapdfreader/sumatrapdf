@@ -436,7 +436,10 @@ void ReplaceWithCopy(const char** s, const ByteSlice& d) {
 }
 
 void ReplaceWithCopy(char** s, const char* snew) {
-    ReplaceWithCopy((const char**)s, snew);
+    if (*s != snew) {
+        str::Free(*s);
+        *s = str::Dup(snew);
+    }
 }
 
 void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew) {

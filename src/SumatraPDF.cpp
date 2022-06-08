@@ -363,7 +363,7 @@ void SelectTabInWindow(WindowTab* tab) {
     if (tab == win->CurrentTab()) {
         return;
     }
-    TabsSelect(win, win->Tabs().Find(tab));
+    TabsSelect(win, win->GetTabIdx(tab));
 }
 
 // Find the first window showing a given PDF file
@@ -392,7 +392,7 @@ MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
             for (WindowTab* tab : win->Tabs()) {
                 if (tab != win->CurrentTab() && tab->AsFixed() && tab->AsFixed()->pdfSync &&
                     tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-                    TabsSelect(win, win->Tabs().Find(tab));
+                    TabsSelect(win, win->GetTabIdx(tab));
                     return win;
                 }
             }

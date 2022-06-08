@@ -212,7 +212,7 @@ static void RememberSessionState() {
         if (data->tabStates->Size() == 0) {
             continue;
         }
-        data->tabIndex = win->Tabs().Find(win->CurrentTab()) + 1;
+        data->tabIndex = win->GetTabIdx(win->CurrentTab()) + 1;
         if (data->tabIndex < 0) {
             data->tabIndex = 0;
         }

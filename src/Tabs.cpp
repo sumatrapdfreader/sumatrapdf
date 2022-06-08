@@ -38,7 +38,7 @@ static void UpdateTabTitle(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
-    int idx = win->Tabs().Find(tab);
+    int idx = win->GetTabIdx(tab);
     const char* title = tab->GetTabTitle();
     const char* tooltip = tab->filePath.Get();
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
@@ -322,7 +322,7 @@ void TabsOnChangedDoc(MainWindow* win) {
         return;
     }
 
-    CrashIf(win->Tabs().Find(tab) != win->tabsCtrl->GetSelected());
+    CrashIf(win->GetTabIdx(tab) != win->tabsCtrl->GetSelected());
     VerifyWindowTab(win, tab);
     UpdateTabTitle(tab);
 }
@@ -351,7 +351,7 @@ void TabsOnCloseDoc(WindowTab* tab) {
         return;
     }
     WindowTab* newCurrent = curr;
-    if (newCurrent == tab) {
+    if (!newCurrent || newCurrent == tab) {
         // a current tab was closed so need to find new current tab
         // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
         if (win->tabSelectionHistory->Size() > 0) {
@@ -362,7 +362,7 @@ void TabsOnCloseDoc(WindowTab* tab) {
     }
     int idx = win->GetTabIdx(newCurrent);
     win->tabsCtrl->SetSelected(idx);
-    LoadModelIntoTab(tab);
+    //LoadModelIntoTab(tab);
 }
 
 // Called when we're closing an entire window (quitting)
