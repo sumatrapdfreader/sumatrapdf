@@ -3157,6 +3157,10 @@ using Gdiplus::StringFormat;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
+static void HwndTabsSetItemSize(HWND hwnd, Size sz) {
+    TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
+}
+
 TabInfo::~TabInfo() {
     str::Free(text);
     str::Free(tooltip);
@@ -3172,13 +3176,14 @@ void TabsCtrl::Layout() {
     if (nTabs == 0) {
         return;
     }
-    auto maxDx = (rect.dx - 3) / nTabs;
+    auto maxDx = (rect.dx - 5) / nTabs;
     int dx = std::min(tabDefaultDx, maxDx);
     dx--;
     if (tabSize.dx == dx && tabSize.dy == dy) {
         return;
     }
     tabSize = {dx, dy};
+    HwndTabsSetItemSize(hwnd, tabSize);
 
     GraphicsPath shape;
     // define tab's body
@@ -3728,7 +3733,7 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     args.parent = argsIn.parent;
     args.font = argsIn.font;
     args.className = WC_TABCONTROLW;
-    args.style = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | WS_VISIBLE;
+    args.style = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
     if (witToolTips) {
         args.style |= TCS_TOOLTIPS;
     }
