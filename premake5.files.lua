@@ -12,6 +12,7 @@ function logview_files()
   files_in_dir("src/utils", {
     "BaseUtil.*",
     "TempAllocator.*",
+    "StrFormat.*",
     "StrUtil.*",
     "StrconvUtil.*",
   })

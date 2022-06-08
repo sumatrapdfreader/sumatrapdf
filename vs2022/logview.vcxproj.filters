@@ -12,6 +12,9 @@
     <ClInclude Include="..\src\utils\BaseUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\StrFormat.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -27,6 +30,9 @@
       <Filter>tools</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrFormat.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">
