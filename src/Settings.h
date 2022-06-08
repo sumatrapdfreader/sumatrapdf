@@ -368,6 +368,8 @@ struct GlobalPrefs {
     // if true, we show table of contents (Bookmarks) sidebar if it's
     // present in the document
     bool showToc;
+    // if true, doesn't open Home tab
+    bool noHomeTab;
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
     int tocDy;
@@ -661,6 +663,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, noHomeTab), SettingType::Bool, false},
     {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0},
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
@@ -685,13 +688,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 57, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 58, gGlobalPrefsFields,
     "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDef"
     "aults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSessi"
     "on\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExit"
     "\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar\0ShowF"
-    "avorites\0ShowToc\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0SmoothScroll\0ShowStartPage\0CheckForUpd"
-    "ates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0Re"
-    "openOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0SmoothScroll\0ShowStartPage\0"
+    "CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0Sess"
+    "ionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

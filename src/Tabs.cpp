@@ -359,8 +359,9 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     auto tabs = win->tabsCtrl;
     int idx = win->TabsCount();
     bool useTabs = gGlobalPrefs->useTabs;
-    if (useTabs && idx == 0) {
-        // create about tab
+    bool noHomeTab = gGlobalPrefs->noHomeTab;
+    bool createHomeTab = useTabs && !noHomeTab && (idx == 0);
+    if (createHomeTab) {
         WindowTab* tab = new WindowTab(win);
         tab->type = WindowTab::Type::About;
         tab->canvasRc = win->canvasRc;
