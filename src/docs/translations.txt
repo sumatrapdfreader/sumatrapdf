@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d68399fc48003f7934e55db9753b6fb314a39621
+94f79e18c3d7546f7a1d87048690cfd696cbe284
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5180,6 +5180,8 @@ tw:關閉
 uk:Закрити
 uz:Yopish
 vn:Đóng lại
+:Close Other Tabs
+:Close Tabs To The Right
 :Collapse All
 am:Կոծկել բոլորը
 ar:طي الكل
@@ -11173,6 +11175,8 @@ tr:Satır Başlangıcı:
 uk:Початок рядка: 
 vn:Dòng Bắt Đầu:
 :Loading %s ...
+cn:载入 %s ...
+de:Lädt %s ..,
 nl:Laden %s...
 pl:Ładowanie %s ...
 :MB
