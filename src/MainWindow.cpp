@@ -182,6 +182,31 @@ bool MainWindow::IsDocLoaded() const {
     return isLoaded;
 }
 
+
+WindowTab* MainWindow::CurrentTab() const {
+    WindowTab* curr = currentTabTemp;
+    if (curr != nullptr) {
+        return curr;
+    }
+    if (!tabsCtrl) {
+        return nullptr;
+    }
+    int idx = tabsCtrl->GetSelected();
+    if (idx >= 0) {
+        curr = GetTab(idx);
+        return curr;
+    }
+#if 0
+    int nTabs = TabsCount();
+    CrashIf(nTabs > 0);
+    if (nTabs > 0) {
+        curr = GetTab(0);
+        return curr;
+    }
+#endif
+    return nullptr;
+}
+
 int MainWindow::TabsCount() const {
     return tabsCtrl->GetTabCount();
 }

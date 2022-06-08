@@ -75,7 +75,7 @@ void UpdateTabWidth(MainWindow* win) {
     ShowTabBar(win, true);
 }
 
-static void RemoveAndDeleteTab(WindowTab* tab) {
+void RemoveAndDeleteTab(WindowTab* tab) {
     UpdateTabFileDisplayStateForTab(tab);
     MainWindow* win = tab->win;
     win->tabSelectionHistory->Remove(tab);
@@ -309,7 +309,7 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
 
     int insertedIdx = tabs->InsertTab(idx, newTab);
     CrashIf(insertedIdx == -1);
-    tabs->SetSelected(idx);
+    tabs->SetSelected(insertedIdx);
     UpdateTabWidth(win);
     return tab;
 }
@@ -325,44 +325,6 @@ void TabsOnChangedDoc(MainWindow* win) {
     CrashIf(win->GetTabIdx(tab) != win->tabsCtrl->GetSelected());
     VerifyWindowTab(win, tab);
     UpdateTabTitle(tab);
-}
-
-// Called when we're closing a document
-void TabsOnCloseDoc(WindowTab* tab) {
-    if (!tab) {
-        return;
-    }
-
-    /*
-    DisplayModel* dm = win->AsFixed();
-    if (dm) {
-        EngineBase* engine = dm->GetEngine();
-        if (EngineHasUnsavedAnnotations(engine)) {
-            // TODO: warn about unsaved annotations
-            logf("File has unsaved annotations\n");
-        }
-    }
-    */
-
-    RemoveAndDeleteTab(tab);
-    MainWindow* win = tab->win;
-    WindowTab* curr = win->CurrentTab();
-    if (win->TabsCount() < 1) {
-        return;
-    }
-    WindowTab* newCurrent = curr;
-    if (!newCurrent || newCurrent == tab) {
-        // a current tab was closed so need to find new current tab
-        // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
-        if (win->tabSelectionHistory->Size() > 0) {
-            newCurrent = win->tabSelectionHistory->Pop();
-        } else {
-            newCurrent = win->Tabs()[0];
-        }
-    }
-    int idx = win->GetTabIdx(newCurrent);
-    win->tabsCtrl->SetSelected(idx);
-    //LoadModelIntoTab(tab);
 }
 
 // Called when we're closing an entire window (quitting)

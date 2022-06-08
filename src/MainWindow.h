@@ -87,9 +87,7 @@ struct MainWindow {
     DocController* ctrl = nullptr; // owned by CurrentTab()
 
     WindowTab* currentTabTemp = nullptr; // points into tabs
-    WindowTab* CurrentTab() const {
-        return currentTabTemp;
-    }
+    WindowTab* CurrentTab() const;
     int TabsCount() const;
     Vec<WindowTab*> Tabs() const;    
     WindowTab* GetTab(int idx) const;

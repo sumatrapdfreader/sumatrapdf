@@ -2373,6 +2373,46 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     return true;
 }
 
+// Called when we're closing a document
+void TabsOnCloseDoc(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+
+    /*
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        EngineBase* engine = dm->GetEngine();
+        if (EngineHasUnsavedAnnotations(engine)) {
+            // TODO: warn about unsaved annotations
+            logf("File has unsaved annotations\n");
+        }
+    }
+    */
+
+    RemoveAndDeleteTab(tab);
+    MainWindow* win = tab->win;
+    if (win->TabsCount() < 1) {
+        return;
+    }
+
+    WindowTab* curr = win->CurrentTab();
+    WindowTab* newCurrent = curr;
+    if (!curr || newCurrent == tab) {
+        // a current tab was closed so need to find new current tab
+        // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
+        if (win->tabSelectionHistory->Size() > 0) {
+            newCurrent = win->tabSelectionHistory->Pop();
+        } else {
+            newCurrent = win->GetTab(0);
+        }
+    }
+    int idx = win->GetTabIdx(newCurrent);
+    win->tabsCtrl->SetSelected(idx);
+    tab = win->CurrentTab();
+    LoadModelIntoTab(tab);
+}
+
 // TODO: better name
 void CloseTab(WindowTab* tab, bool quitIfLast) {
     MainWindow* win = tab->win;
@@ -2409,10 +2449,6 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
 // if there's only a single tab left, the window is closed if there
 // are other windows, else the Frequently Read page is displayed
 void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
-    CrashIf(!win);
-    if (!win) {
-        return;
-    }
     WindowTab* tab = win->CurrentTab();
     CloseTab(tab, quitIfLast);
 }
