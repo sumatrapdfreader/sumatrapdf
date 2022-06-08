@@ -8,7 +8,7 @@ void LoadModelIntoTab(WindowTab* tab);
 
 void CreateTabbar(MainWindow* win);
 WindowTab* CreateNewTab(MainWindow* win, const char* filePath);
-void TabsOnCloseDoc(MainWindow* win);
+void TabsOnCloseDoc(WindowTab*);
 void TabsOnCloseWindow(MainWindow* win);
 void TabsOnChangedDoc(MainWindow* win);
 void TabsSelect(MainWindow* win, int tabIndex);

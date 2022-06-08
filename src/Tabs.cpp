@@ -75,12 +75,13 @@ void UpdateTabWidth(MainWindow* win) {
     ShowTabBar(win, true);
 }
 
-// TODO: leaks document? Need to do equivalent of CloseCurrentTab()
-// but with arbitrary tab
-static void RemoveTab(MainWindow* win, int idx) {
-    WindowTab* tab = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
+static void RemoveAndDeleteTab(WindowTab* tab) {
     UpdateTabFileDisplayStateForTab(tab);
+    MainWindow* win = tab->win;
     win->tabSelectionHistory->Remove(tab);
+    int idx = win->GetTabIdx(tab);
+    WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
+    CrashIf(tab != tab2);
     if (tab == win->CurrentTab()) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
@@ -90,7 +91,6 @@ static void RemoveTab(MainWindow* win, int idx) {
 }
 
 // Selects the given tab (0-based index)
-// TODO: this shouldn't go through the same notifications, just do it
 void TabsSelect(MainWindow* win, int tabIndex) {
     auto tabs = win->Tabs();
     int count = tabs.Size();
@@ -179,7 +179,7 @@ void CreateTabbar(MainWindow* win) {
 
     tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) {
         int closedTabIdx = ev->tabIdx;
-        WindowTab* tab = win->Tabs()[closedTabIdx];
+        WindowTab* tab = win->GetTab(closedTabIdx);
         CloseTab(tab, false);
     };
 
@@ -286,7 +286,8 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     bool useTabs = gGlobalPrefs->useTabs;
     if (useTabs && idx == 0) {
         // create about tab
-        WindowTab* tab = new WindowTab(win, nullptr);
+        WindowTab* tab = new WindowTab(win);
+        tab->type = WindowTab::Type::About;
         tab->canvasRc = win->canvasRc;
         TabInfo* newTab = new TabInfo();
         newTab->text = str::Dup("Home");
@@ -298,7 +299,8 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
         idx++;
     }
 
-    WindowTab* tab = new WindowTab(win, filePath);
+    WindowTab* tab = new WindowTab(win);
+    tab->SetFilePath(filePath);
     tab->canvasRc = win->canvasRc;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
@@ -326,8 +328,8 @@ void TabsOnChangedDoc(MainWindow* win) {
 }
 
 // Called when we're closing a document
-void TabsOnCloseDoc(MainWindow* win) {
-    if (win->TabsCount() == 0) {
+void TabsOnCloseDoc(WindowTab* tab) {
+    if (!tab) {
         return;
     }
 
@@ -342,22 +344,25 @@ void TabsOnCloseDoc(MainWindow* win) {
     }
     */
 
-    int current = win->tabsCtrl->GetSelected();
-    RemoveTab(win, current);
-
-    // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
-    if ((win->TabsCount() > 0)) {
-        WindowTab* tab = nullptr;
-        int toSelect = 0;
-        if (win->tabSelectionHistory->Size() > 0) {
-            tab = win->tabSelectionHistory->Pop();
-            toSelect = win->Tabs().Find(tab);
-        } else {
-            tab = win->Tabs()[toSelect];
-        }
-        win->tabsCtrl->SetSelected(toSelect);
-        LoadModelIntoTab(tab);
+    RemoveAndDeleteTab(tab);
+    MainWindow* win = tab->win;
+    WindowTab* curr = win->CurrentTab();
+    if (win->TabsCount() < 1) {
+        return;
     }
+    WindowTab* newCurrent = curr;
+    if (newCurrent == tab) {
+        // a current tab was closed so need to find new current tab
+        // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
+        if (win->tabSelectionHistory->Size() > 0) {
+            newCurrent = win->tabSelectionHistory->Pop();
+        } else {
+            newCurrent = win->Tabs()[0];
+        }
+    }
+    int idx = win->GetTabIdx(newCurrent);
+    win->tabsCtrl->SetSelected(idx);
+    LoadModelIntoTab(tab);
 }
 
 // Called when we're closing an entire window (quitting)

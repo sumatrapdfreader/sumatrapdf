@@ -186,6 +186,22 @@ int MainWindow::TabsCount() const {
     return tabsCtrl->GetTabCount();
 }
 
+WindowTab* MainWindow::GetTab(int idx) const {
+    WindowTab* tab = GetTabsUserData<WindowTab*>(tabsCtrl, idx);
+    return tab;
+}
+
+int MainWindow::GetTabIdx(WindowTab* tab) const {
+    int nTabs = tabsCtrl->GetTabCount();
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* t = GetTabsUserData<WindowTab*>(tabsCtrl, i);
+        if (t == tab) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 Vec<WindowTab*> MainWindow::Tabs() const {
     Vec<WindowTab*> res;
     int nTabs = tabsCtrl->GetTabCount();

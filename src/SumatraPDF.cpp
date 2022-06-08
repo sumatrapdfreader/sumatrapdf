@@ -1869,7 +1869,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
 
 // Loads document data into the MainWindow.
 void LoadModelIntoTab(WindowTab* tab) {
-    if (!tab) {
+    if (!tab || tab->IsAboutTab()) {
         return;
     }
 
@@ -1928,15 +1928,13 @@ void LoadModelIntoTab(WindowTab* tab) {
     SetFocus(win->hwndFrame);
     if (gEnableLazyLoad && !tab->ctrl) {
         ReloadDocument(win, false);
-        win->RedrawAll(true);
     } else {
-        win->RedrawAll(true);
-
         if (tab->reloadOnFocus) {
             tab->reloadOnFocus = false;
             ReloadDocument(win, true);
         }
     }
+    win->RedrawAll(true);
 }
 
 enum class MeasurementUnit { pt, mm, in };
@@ -2400,7 +2398,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         }
     } else {
         CrashIf(gPluginMode && !gWindows.Contains(win));
-        TabsOnCloseDoc(win);
+        TabsOnCloseDoc(tab);
     }
     if (!didSavePrefs) {
         SaveSettings();

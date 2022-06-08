@@ -23,16 +23,18 @@
 #include "Translations.h"
 #include "EditAnnotations.h"
 
-WindowTab::WindowTab(MainWindow* win, const char* filePath) {
+WindowTab::WindowTab(MainWindow* win) {
     this->win = win;
-    this->filePath.SetCopy(filePath);
+}
+
+void WindowTab::SetFilePath(const char* path) {
+    type = Type::Document;
+    this->filePath.SetCopy(path);
 }
 
 bool WindowTab::IsAboutTab() const {
-    if (!filePath) {
-        return true;
-    }
-    return ctrl == nullptr;
+    CrashIf(type == WindowTab::Type::None);
+    return type == WindowTab::Type::About;
 }
 
 WindowTab::~WindowTab() {

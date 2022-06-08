@@ -10,6 +10,12 @@ struct MainWindow;
 /* (none of these depend on MainWindow, so that a WindowTab could
    be moved between windows once this is supported) */
 struct WindowTab {
+    enum class Type {
+        None,
+        About,
+        Document,
+    };
+    Type type = Type::None;
     AutoFreeStr filePath;
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
@@ -38,12 +44,14 @@ struct WindowTab {
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
 
-    WindowTab(MainWindow* win, const char* filePath);
+    WindowTab(MainWindow* win);
     ~WindowTab();
 
     bool IsAboutTab() const;
 
     DisplayModel* AsFixed() const;
+
+    void SetFilePath(const char* path);
 
     // only if AsFixed()
     EngineBase* GetEngine() const;
