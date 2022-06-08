@@ -3005,16 +3005,10 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM l
 }
 #endif
 
-// create a new window and load currently shown document into it
-// meant to make it easy to compare 2 documents
-static void DuplicateInNewWindow(MainWindow* win) {
-    if (win->IsAboutWindow()) {
+void DuplicateTabInNewWindow(WindowTab* tab) {
+    if (!tab || tab->IsAboutTab()) {
         return;
     }
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-    WindowTab* tab = win->CurrentTab();
     char* path = tab->filePath;
     CrashIf(!path);
     if (!path) {
@@ -3030,6 +3024,19 @@ static void DuplicateInNewWindow(MainWindow* win) {
     args.showWin = true;
     args.noPlaceWindow = true;
     LoadDocument(&args);
+}
+
+// create a new window and load currently shown document into it
+// meant to make it easy to compare 2 documents
+static void DuplicateInNewWindow(MainWindow* win) {
+    if (win->IsAboutWindow()) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    DuplicateTabInNewWindow(tab);
 }
 
 // TODO: similar to Installer.cpp
@@ -5083,9 +5090,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SendAsEmailAttachment(tab, win->hwndFrame);
             break;
 
-        case CmdProperties:
-            ShowPropertiesWindow(win);
+        case CmdProperties: {
+            bool extended = false;
+            ShowProperties(win->hwndFrame, win->ctrl, extended);
             break;
+        }
 
         case CmdMoveFrameFocus:
             if (!IsFocused(win->hwndFrame)) {

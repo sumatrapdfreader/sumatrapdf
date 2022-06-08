@@ -182,7 +182,6 @@ bool MainWindow::IsDocLoaded() const {
     return isLoaded;
 }
 
-
 WindowTab* MainWindow::CurrentTab() const {
     WindowTab* curr = currentTabTemp;
     if (curr != nullptr) {

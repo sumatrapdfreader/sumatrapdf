@@ -22,6 +22,7 @@
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
+#include "SumatraProperties.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "resource.h"
@@ -30,6 +31,7 @@
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
+#include "Translations.h"
 
 #include "utils/Log.h"
 
@@ -113,6 +115,63 @@ void TabsSelect(MainWindow* win, int tabIndex) {
     LoadModelIntoTab(tab);
 }
 
+// clang-format off
+static MenuDef menuDefContextTab[] = {
+    {
+        // TODO: translate
+        "Properties...",
+        CmdProperties,
+    },
+    {
+        _TRN("Show in folder"),
+        CmdShowInFolder,
+    },
+    {
+        // TODO: translate
+        "Open In New Window",
+        CmdDuplicateInNewWindow,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Close"),
+        CmdClose,
+    },
+    {
+        _TRN("Close Other Tabs"),
+        CmdCloseOtherTabs,
+    },
+    {
+        _TRN("Close Tabs To The Right"),
+        CmdCloseTabsToTheRight,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+// clang-format on
+
+static void ShowFileInFolder(WindowTab* tab) {
+    if (!HasPermission(Perm::DiskAccess)) {
+        return;
+    }
+    DocController* ctrl = tab->ctrl;
+    if (!ctrl) {
+        return;
+    }
+    const char* path = ctrl->GetFilePath();
+    if (!path) {
+        return;
+    }
+
+    const char* process = "explorer.exe";
+    AutoFreeStr args = str::Format("/select,\"%s\"", path);
+    CreateProcessHelper(process, args);
+}
+
 // TODO: add "Move to another window" sub-menu
 static void TabsContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
@@ -123,7 +182,10 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         return;
     }
     int nTabs = tabsCtrl->GetTabCount();
-    WindowTab* tab = win->Tabs()[tabIdx];
+    WindowTab* selectedTab = win->Tabs()[tabIdx];
+    if (selectedTab->IsAboutTab()) {
+        return;
+    }
     POINT pt = ToPOINT(ev->mouseScreen);
     HMENU popup = BuildMenuFromMenuDef(menuDefContextTab, CreatePopupMenu(), nullptr);
     Vec<WindowTab*> toCloseOther;
@@ -133,7 +195,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         if (i == tabIdx) {
             continue;
         }
-        tab = win->Tabs()[i];
+        WindowTab* tab = win->Tabs()[i];
         if (tab->IsAboutTab()) {
             continue;
         }
@@ -156,7 +218,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     DestroyMenu(popup);
     switch (cmd) {
         case CmdClose:
-            CloseTab(tab, false);
+            CloseTab(selectedTab, false);
             break;
 
         case CmdCloseOtherTabs: {
@@ -169,6 +231,19 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             for (WindowTab* t : toCloseRight) {
                 CloseTab(t, false);
             }
+            break;
+        }
+        case CmdShowInFolder: {
+            ShowFileInFolder(selectedTab);
+            break;
+        }
+        case CmdDuplicateInNewWindow: {
+            DuplicateTabInNewWindow(selectedTab);
+            break;
+        }
+        case CmdProperties: {
+            bool extended = false;
+            ShowProperties(win->hwndFrame, selectedTab->ctrl, extended);
             break;
         }
     }

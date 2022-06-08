@@ -74,12 +74,6 @@ struct MenuOwnerDrawInfo {
     HBITMAP hbmpItem = nullptr;
 };
 
-struct MenuDef {
-    const char* title = nullptr;
-    UINT_PTR idOrSubmenu = 0;
-};
-
-constexpr const char* kMenuSeparator = "-----";
 constexpr UINT kMenuSeparatorID = (UINT)-13;
 
 bool gAddCrashMeMenu = false;
@@ -95,6 +89,7 @@ bool gShowDebugMenu = false;
 static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
+// clang-format off
 MenuDef menuDefContextToc[] = {
     {
         _TRN("Expand All"),
@@ -131,11 +126,16 @@ MenuDef menuDefContextToc[] = {
     },
 };
 
-MenuDef menuDefContextFav[] = {{_TRN("Remove from favorites"), CmdFavoriteDel},
-                               {
-                                   nullptr,
-                                   0,
-                               }};
+MenuDef menuDefContextFav[] = {
+    {
+        _TRN("Remove from favorites"),
+        CmdFavoriteDel
+    },
+    {
+        nullptr,
+        0,
+    }
+};
 
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
@@ -761,7 +761,7 @@ static MenuDef menuDefContext[] = {
     },
     {
         kMenuSeparator,
-        0,
+        kMenuSeparatorID,
     },
     {
         _TRN("Select Annotation in Editor"),
@@ -823,27 +823,7 @@ static MenuDef menuDefContextStart[] = {
 };
 
 //] ACCESSKEY_GROUP Context Menu (Start)
-
-
-MenuDef menuDefContextTab[] = {
-    {
-        _TRN("Close"),
-        CmdClose,
-    },
-    {
-        _TRN("Close Other Tabs"),
-        CmdCloseOtherTabs,
-    },
-    {
-        _TRN("Close Tabs To The Right"),
-        CmdCloseTabsToTheRight,
-    },
-    {
-        nullptr,
-        0,
-    },
-};
-
+// clang-format on
 
 // clang-format off
 // those menu items will be disabled if no document is opened, enabled otherwise

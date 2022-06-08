@@ -89,7 +89,7 @@ struct MainWindow {
     WindowTab* currentTabTemp = nullptr; // points into tabs
     WindowTab* CurrentTab() const;
     int TabsCount() const;
-    Vec<WindowTab*> Tabs() const;    
+    Vec<WindowTab*> Tabs() const;
     WindowTab* GetTab(int idx) const;
     int GetTabIdx(WindowTab*) const;
 

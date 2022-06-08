@@ -588,10 +588,6 @@ void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
     }
 }
 
-void ShowPropertiesWindow(MainWindow* win) {
-    ShowProperties(win->hwndFrame, win->ctrl, false);
-}
-
 static void DrawProperties(HWND hwnd, HDC hdc) {
     PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
 

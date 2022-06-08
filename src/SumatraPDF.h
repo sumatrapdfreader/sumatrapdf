@@ -121,6 +121,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 void RelayoutWindow(MainWindow* win);
+void DuplicateTabInNewWindow(WindowTab* tab);
 
 // note: background tabs are only searched if focusTab is true
 MainWindow* FindMainWindowByFile(const char* file, bool focusTab);
