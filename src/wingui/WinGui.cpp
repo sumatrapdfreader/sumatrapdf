@@ -13,9 +13,9 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "utils/Log.h"
-
 #include "webview2.h"
+
+#include "utils/Log.h"
 
 Kind kindWnd = "wnd";
 

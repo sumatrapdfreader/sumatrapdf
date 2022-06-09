@@ -234,6 +234,9 @@
     <ClInclude Include="..\src\wingui\UIModels.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\VirtWnd.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\WinGui.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -519,6 +522,9 @@
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\UIModels.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\VirtWnd.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\WinGui.cpp">

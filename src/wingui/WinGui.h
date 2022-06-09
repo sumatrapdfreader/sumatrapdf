@@ -70,6 +70,7 @@ struct Wnd : public ILayout {
     int MinIntrinsicWidth(int height) override;
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
+
     void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 
     void Attach(HWND hwnd);

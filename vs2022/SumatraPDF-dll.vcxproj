@@ -629,6 +629,7 @@
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
+    <ClInclude Include="..\src\wingui\VirtWnd.h" />
     <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
@@ -895,6 +896,7 @@
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
+    <ClCompile Include="..\src\wingui\VirtWnd.cpp" />
     <ClCompile Include="..\src\wingui\WinGui.cpp" />
   </ItemGroup>
   <ItemGroup>
