@@ -108,7 +108,7 @@ Defining `HB_NO_FALLBACK_SHAPE` however is pretty harmless.  That removes the
 By default HarfBuzz builds as a thread-safe library.  The exception is that
 the `HB_TINY` predefined configuring (more below) disables thread-safety.
 
-If you do /not/ need thread-safety in the library (eg. you always call into
+If you do *not* need thread-safety in the library (eg. you always call into
 HarfBuzz from the same thread), you can disable thread-safety by defining
 `HB_NO_MT`.  As noted already, this is enabled by `HB_TINY`.
 
@@ -135,16 +135,23 @@ The pre-defined configurations are:
 Most of the time, one of the pre-defined configuration is exactly what one needs.
 Sometimes, however, the pre-defined configuration cuts out features that might
 be desired in the library.  Unfortunately there is no quick way to undo those
-configurations from the command-line.  But one can add a header file called
-`config-override.h` to undefine certain `HB_NO_*` symbols as desired.  Then
-define `HAVE_CONFIG_OVERRIDE_H` to make `hb-config.hh` include your configuration
-overrides at the end.
+configurations from the command-line.
+
+However, configuration can still be overridden from a file.  To do that, add your
+override instructions (mostly `undef` instructions) to a header file and define
+the macro `HB_CONFIG_OVERRIDE_H` to the string containing to that header file's
+name.  HarfBuzz will then include that file at appropriate right place during
+configuration.
+
+Up until HarfBuzz 3.1.2 the the configuration override header file's name was
+fixed and called `config-override.h`, and was activated by defining the macro
+`HAVE_CONFIG_OVERRIDE_H`.  That still works.
 
 
 ## Notes
 
 Note that the config option `HB_NO_CFF`, which is enabled by `HB_LEAN` and
-`HB_TINY` does /not/ mean that the resulting library won't work with CFF fonts.
+`HB_TINY` does *not* mean that the resulting library won't work with CFF fonts.
 The library can shape valid CFF fonts just fine, with or without this option.
-This option disables (among other things) the code to calculate glyph exntents
+This option disables (among other things) the code to calculate glyph extents
 for CFF fonts.

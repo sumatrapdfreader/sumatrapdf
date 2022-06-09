@@ -16,6 +16,7 @@ cp ../build/docs/html/* .
 #cp ../build/docs/CNAME .
 
 git init
+git branch -m main
 git config user.name "Travis CI"
 git config user.email "travis@harfbuzz.org"
 set +x
@@ -23,12 +24,12 @@ echo "git remote add upstream \"https://\$GH_TOKEN@github.com/harfbuzz/harfbuzz.
 git remote add upstream "https://$GH_TOKEN@github.com/harfbuzz/harfbuzz.github.io.git"
 set -x
 git fetch upstream
-git reset upstream/master
+git reset upstream/main
 
 touch .
 git add -A .
 
 if [[ $(git status -s) ]]; then
   git commit -m "Rebuild docs for https://github.com/harfbuzz/harfbuzz/commit/$REVISION"
-  git push -q upstream HEAD:master
+  git push -q upstream HEAD:main
 fi

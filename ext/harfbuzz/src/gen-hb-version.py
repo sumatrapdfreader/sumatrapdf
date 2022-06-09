@@ -15,7 +15,7 @@ INPUT = sys.argv[3]
 CURRENT_SOURCE_DIR = os.path.dirname(INPUT)
 
 try:
-	with open (OUTPUT, "r") as old_output:
+	with open (OUTPUT, "r", encoding='utf-8') as old_output:
 		for line in old_output:
 			old_version = re.match (r"#define HB_VERSION_STRING \"(\d.\d.\d)\"", line)
 			if old_version and old_version[1] == version:
@@ -32,5 +32,9 @@ with open (INPUT, "r", encoding='utf-8') as template:
 			.replace ("@HB_VERSION@", version)
 			.encode ())
 
-# copy it also to src/
-shutil.copyfile (OUTPUT, os.path.join (CURRENT_SOURCE_DIR, os.path.basename (OUTPUT)))
+# copy it also to the source tree, but only if it has changed
+baseline_filename = os.path.join (CURRENT_SOURCE_DIR, os.path.basename (OUTPUT))
+with open(baseline_filename, "rb") as baseline:
+	with open(OUTPUT, "rb") as generated:
+		if baseline.read() != generated.read():
+			shutil.copyfile (OUTPUT, baseline_filename)

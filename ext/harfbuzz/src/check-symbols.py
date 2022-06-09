@@ -9,9 +9,10 @@ libs = os.getenv ('libs', '.libs')
 
 IGNORED_SYMBOLS = '|'.join(['_fini', '_init', '_fdata', '_ftext', '_fbss',
 	'__bss_start', '__bss_start__', '__bss_end__', '_edata', '_end', '_bss_end__',
-	'__end__', '__gcov_.*', 'llvm_.*', 'flush_fn_list', 'writeout_fn_list', 'mangle_path'])
+	'__end__', '__gcov_.*', 'llvm_.*', 'flush_fn_list', 'writeout_fn_list', 'mangle_path',
+	'lprofDirMode', 'reset_fn_list'])
 
-nm = shutil.which ('nm')
+nm = os.getenv ('NM', shutil.which ('nm'))
 if not nm:
 	print ('check-symbols.py: \'nm\' not found; skipping test')
 	sys.exit (77)
@@ -30,8 +31,8 @@ for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject'
 		symprefix = '_' if suffix == 'dylib' else ''
 
 		EXPORTED_SYMBOLS = [s.split ()[2]
-							for s in re.findall (r'^.+ [BCDGIRST] .+$', subprocess.check_output ([nm, so]).decode ('utf-8'), re.MULTILINE)
-							if not re.match (r'.* %s(%s)\b' % (symprefix, IGNORED_SYMBOLS), s)]
+				    for s in re.findall (r'^.+ [BCDGIRST] .+$', subprocess.check_output (nm.split() + [so]).decode ('utf-8'), re.MULTILINE)
+				    if not re.match (r'.* %s(%s)\b' % (symprefix, IGNORED_SYMBOLS), s)]
 
 		# run again c++flit also if is available
 		if cxxflit:
@@ -67,7 +68,7 @@ for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject'
 			tested = True
 
 if not tested:
-	print ('check-symbols.sh: no shared libraries found; skipping test')
+	print ('check-symbols.py: no shared libraries found; skipping test')
 	sys.exit (77)
 
 sys.exit (stat)

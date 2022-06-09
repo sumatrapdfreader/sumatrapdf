@@ -79,6 +79,7 @@ HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-aat-layout.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-aat-map.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-blob.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-buffer.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-buffer-verify.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-buffer-serialize.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-common.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-face.cc
@@ -107,9 +108,9 @@ HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic-table.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-khmer.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-myanmar.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-syllabic.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-thai.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use.cc
-HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use-table.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-vowel-constraints.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-fallback.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shape-normalize.cc
@@ -731,8 +732,12 @@ endif
 ifeq ($(HAVE_NEON),yes)
 TESSERACT_DEFINES += -DHAVE_NEON
 TESSERACT_BUILD_CFLAGS += $(NEONFLAGS)
-TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
 endif
+# Always include the neon code - it will compile to nothing if
+# neon isn't enabled. We need to always include it, because it
+# will be used if __aarch64__ is defined, which implies the
+# presence of NEON even without the HAVE_NEON flags.
+TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
 
 TESSERACT_BUILD_CFLAGS += $(TESSERACT_DEFINES)
 

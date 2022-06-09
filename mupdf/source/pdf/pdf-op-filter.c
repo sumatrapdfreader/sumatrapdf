@@ -1538,7 +1538,7 @@ pdf_filter_d1(fz_context *ctx, pdf_processor *proc, float wx, float wy, float ll
 static void
 set_default_cs_values(pdf_filter_gstate_sc *sc, const char *name, fz_colorspace *cs)
 {
-	int n = cs->n;
+	int n = cs ? cs->n : 0;
 	int i;
 	if (strcmp(name, "Separation") == 0 || strcmp(name, "DeviceN") == 0) {
 		for (i = 0; i < n; ++i)

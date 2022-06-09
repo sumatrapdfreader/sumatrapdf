@@ -3320,7 +3320,7 @@ static void ffi_Page_createLink(js_State *J)
 		rethrow(J);
 
 	ffi_pushlink(J, link);
-	}
+}
 
 static void ffi_Page_deleteLink(js_State *J)
 {

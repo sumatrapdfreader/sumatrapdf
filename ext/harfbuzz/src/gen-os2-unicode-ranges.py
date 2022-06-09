@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """Generates the code for a sorted unicode range array as used in hb-ot-os2-unicode-ranges.hh
-Input is a tab seperated list of unicode ranges from the otspec
+Input is a tab separated list of unicode ranges from the otspec
 (https://docs.microsoft.com/en-us/typography/opentype/spec/os2#ur).
 """
 

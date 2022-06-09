@@ -29,6 +29,7 @@
 #ifndef HB_NO_OT_SHAPE
 
 #include "hb-ot-shape-complex-indic.hh"
+#include "hb-ot-shape-complex-indic-machine.hh"
 #include "hb-ot-shape-complex-vowel-constraints.hh"
 #include "hb-ot-layout.hh"
 
@@ -105,32 +106,33 @@ indic_features[] =
 {
   /*
    * Basic features.
-   * These features are applied in order, one at a time, after initial_reordering.
+   * These features are applied in order, one at a time, after initial_reordering,
+   * constrained to the syllable.
    */
-  {HB_TAG('n','u','k','t'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('a','k','h','n'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('r','p','h','f'),        F_MANUAL_JOINERS},
-  {HB_TAG('r','k','r','f'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('p','r','e','f'),        F_MANUAL_JOINERS},
-  {HB_TAG('b','l','w','f'),        F_MANUAL_JOINERS},
-  {HB_TAG('a','b','v','f'),        F_MANUAL_JOINERS},
-  {HB_TAG('h','a','l','f'),        F_MANUAL_JOINERS},
-  {HB_TAG('p','s','t','f'),        F_MANUAL_JOINERS},
-  {HB_TAG('v','a','t','u'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('c','j','c','t'), F_GLOBAL_MANUAL_JOINERS},
+  {HB_TAG('n','u','k','t'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('a','k','h','n'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('r','p','h','f'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('r','k','r','f'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('p','r','e','f'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('b','l','w','f'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('a','b','v','f'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('h','a','l','f'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('p','s','t','f'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('v','a','t','u'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('c','j','c','t'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
   /*
    * Other features.
-   * These features are applied all at once, after final_reordering
-   * but before clearing syllables.
+   * These features are applied all at once, after final_reordering, constrained
+   * to the syllable.
    * Default Bengali font in Windows for example has intermixed
    * lookups for init,pres,abvs,blws features.
    */
-  {HB_TAG('i','n','i','t'),        F_MANUAL_JOINERS},
-  {HB_TAG('p','r','e','s'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('a','b','v','s'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('b','l','w','s'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('p','s','t','s'), F_GLOBAL_MANUAL_JOINERS},
-  {HB_TAG('h','a','l','n'), F_GLOBAL_MANUAL_JOINERS},
+  {HB_TAG('i','n','i','t'),        F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('p','r','e','s'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('a','b','v','s'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('b','l','w','s'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('p','s','t','s'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('h','a','l','n'), F_GLOBAL_MANUAL_JOINERS | F_PER_SYLLABLE},
 };
 
 /*
@@ -181,10 +183,10 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
   /* Do this before any lookups have been applied. */
   map->add_gsub_pause (setup_syllables_indic);
 
-  map->enable_feature (HB_TAG('l','o','c','l'));
+  map->enable_feature (HB_TAG('l','o','c','l'), F_PER_SYLLABLE);
   /* The Indic specs do not require ccmp, but we apply it here since if
    * there is a use of it, it's typically at the beginning. */
-  map->enable_feature (HB_TAG('c','c','m','p'));
+  map->enable_feature (HB_TAG('c','c','m','p'), F_PER_SYLLABLE);
 
 
   unsigned int i = 0;
@@ -199,11 +201,6 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
 
   for (; i < INDIC_NUM_FEATURES; i++)
     map->add_feature (indic_features[i]);
-
-  map->enable_feature (HB_TAG('c','a','l','t'));
-  map->enable_feature (HB_TAG('c','l','i','g'));
-
-  map->add_gsub_pause (_hb_clear_syllables);
 }
 
 static void
@@ -256,7 +253,7 @@ struct indic_shape_plan_t
 static void *
 data_create_indic (const hb_ot_shape_plan_t *plan)
 {
-  indic_shape_plan_t *indic_plan = (indic_shape_plan_t *) calloc (1, sizeof (indic_shape_plan_t));
+  indic_shape_plan_t *indic_plan = (indic_shape_plan_t *) hb_calloc (1, sizeof (indic_shape_plan_t));
   if (unlikely (!indic_plan))
     return nullptr;
 
@@ -299,7 +296,7 @@ data_create_indic (const hb_ot_shape_plan_t *plan)
 static void
 data_destroy_indic (void *data)
 {
-  free (data);
+  hb_free (data);
 }
 
 static indic_position_t
@@ -336,19 +333,6 @@ consonant_position_from_face (const indic_shape_plan_t *indic_plan,
     return POS_POST_C;
   return POS_BASE_C;
 }
-
-
-enum indic_syllable_type_t {
-  indic_consonant_syllable,
-  indic_vowel_syllable,
-  indic_standalone_cluster,
-  indic_symbol_cluster,
-  indic_broken_cluster,
-  indic_non_indic_cluster,
-};
-
-#include "hb-ot-shape-complex-indic-machine.hh"
-
 
 static void
 setup_masks_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
@@ -764,7 +748,28 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
      * We could use buffer->sort() for this, if there was no special
      * reordering of pre-base stuff happening later...
      * We don't want to merge_clusters all of that, which buffer->sort()
-     * would.
+     * would.  Here's a concrete example:
+     *
+     * Assume there's a pre-base consonant and explicit Halant before base,
+     * followed by a prebase-reordering (left) Matra:
+     *
+     *   C,H,ZWNJ,B,M
+     *
+     * At this point in reordering we would have:
+     *
+     *   M,C,H,ZWNJ,B
+     *
+     * whereas in final reordering we will bring the Matra closer to Base:
+     *
+     *   C,H,ZWNJ,M,B
+     *
+     * That's why we don't want to merge-clusters anything before the Base
+     * at this point.  But if something moved from after Base to before it,
+     * we should merge clusters from base to them.  In final-reordering, we
+     * only move things around before base, and merge-clusters up to base.
+     * These two merge-clusters from the two sides of base will interlock
+     * to merge things correctly.  See:
+     * https://github.com/harfbuzz/harfbuzz/issues/2272
      */
     if (indic_plan->is_old_spec || end - start > 127)
       buffer->merge_clusters (base, end);
@@ -774,17 +779,18 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
       for (unsigned int i = base; i < end; i++)
 	if (info[i].syllable() != 255)
 	{
+	  unsigned int min = i;
 	  unsigned int max = i;
 	  unsigned int j = start + info[i].syllable();
 	  while (j != i)
 	  {
+	    min = hb_min (min, j);
 	    max = hb_max (max, j);
 	    unsigned int next = start + info[j].syllable();
 	    info[j].syllable() = 255; /* So we don't process j later again. */
 	    j = next;
 	  }
-	  if (i != max)
-	    buffer->merge_clusters (i, max + 1);
+	  buffer->merge_clusters (hb_max (base, min), max + 1);
 	}
     }
 
@@ -938,69 +944,6 @@ initial_reordering_syllable_indic (const hb_ot_shape_plan_t *plan,
   }
 }
 
-static inline void
-insert_dotted_circles_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
-			     hb_font_t *font,
-			     hb_buffer_t *buffer)
-{
-  if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
-    return;
-
-  /* Note: This loop is extra overhead, but should not be measurable.
-   * TODO Use a buffer scratch flag to remove the loop. */
-  bool has_broken_syllables = false;
-  unsigned int count = buffer->len;
-  hb_glyph_info_t *info = buffer->info;
-  for (unsigned int i = 0; i < count; i++)
-    if ((info[i].syllable() & 0x0F) == indic_broken_cluster)
-    {
-      has_broken_syllables = true;
-      break;
-    }
-  if (likely (!has_broken_syllables))
-    return;
-
-
-  hb_codepoint_t dottedcircle_glyph;
-  if (!font->get_nominal_glyph (0x25CCu, &dottedcircle_glyph))
-    return;
-
-  hb_glyph_info_t dottedcircle = {0};
-  dottedcircle.codepoint = 0x25CCu;
-  set_indic_properties (dottedcircle);
-  dottedcircle.codepoint = dottedcircle_glyph;
-
-  buffer->clear_output ();
-
-  buffer->idx = 0;
-  unsigned int last_syllable = 0;
-  while (buffer->idx < buffer->len && buffer->successful)
-  {
-    unsigned int syllable = buffer->cur().syllable();
-    indic_syllable_type_t syllable_type = (indic_syllable_type_t) (syllable & 0x0F);
-    if (unlikely (last_syllable != syllable && syllable_type == indic_broken_cluster))
-    {
-      last_syllable = syllable;
-
-      hb_glyph_info_t ginfo = dottedcircle;
-      ginfo.cluster = buffer->cur().cluster;
-      ginfo.mask = buffer->cur().mask;
-      ginfo.syllable() = buffer->cur().syllable();
-
-      /* Insert dottedcircle after possible Repha. */
-      while (buffer->idx < buffer->len && buffer->successful &&
-	     last_syllable == buffer->cur().syllable() &&
-	     buffer->cur().indic_category() == OT_Repha)
-	buffer->next_glyph ();
-
-      buffer->output_info (ginfo);
-    }
-    else
-      buffer->next_glyph ();
-  }
-  buffer->swap_buffers ();
-}
-
 static void
 initial_reordering_indic (const hb_ot_shape_plan_t *plan,
 			  hb_font_t *font,
@@ -1008,11 +951,17 @@ initial_reordering_indic (const hb_ot_shape_plan_t *plan,
 {
   if (!buffer->message (font, "start reordering indic initial"))
     return;
+
   update_consonant_positions_indic (plan, font, buffer);
-  insert_dotted_circles_indic (plan, font, buffer);
+  hb_syllabic_insert_dotted_circles (font, buffer,
+				     indic_broken_cluster,
+				     OT_DOTTEDCIRCLE,
+				     OT_Repha,
+				     POS_END);
 
   foreach_syllable (buffer, start, end)
     initial_reordering_syllable_indic (plan, font->face, buffer, start, end);
+
   (void) buffer->message (font, "end reordering indic initial");
 }
 

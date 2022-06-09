@@ -56,7 +56,7 @@ action ensure_glyphs { if (unlikely (!buffer->ensure_glyphs ())) return false; }
 action ensure_unicode { if (unlikely (!buffer->ensure_unicode ())) return false; }
 
 action parse_glyph {
-	/* TODO Unescape delimeters. */
+	/* TODO Unescape delimiters. */
 	if (!hb_font_glyph_from_string (font,
 					tok, p - tok,
 					&info.codepoint))

@@ -6,13 +6,11 @@ os.chdir (os.getenv ('srcdir', os.path.dirname (__file__)))
 
 libs = os.getenv ('libs', '.libs')
 
-ldd = shutil.which ('ldd')
-if ldd:
-	ldd = [ldd]
-else:
-	ldd = shutil.which ('otool')
-	if ldd:
-		ldd = [ldd, '-L'] # otool -L
+ldd = os.getenv ('LDD', shutil.which ('ldd'))
+if not ldd:
+	otool = os.getenv ('OTOOL', shutil.which ('otool'))
+	if otool:
+		ldd = otool + ' -L'
 	else:
 		print ('check-libstdc++.py: \'ldd\' not found; skipping test')
 		sys.exit (77)
@@ -27,7 +25,7 @@ for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-gobject']:
 		if not os.path.exists (so): continue
 
 		print ('Checking that we are not linking to libstdc++ or libc++ in %s' % so)
-		ldd_result = subprocess.check_output (ldd + [so])
+		ldd_result = subprocess.check_output (ldd.split() + [so])
 		if (b'libstdc++' in ldd_result) or (b'libc++' in ldd_result):
 			print ('Ouch, %s is linked to libstdc++ or libc++' % so)
 			stat = 1

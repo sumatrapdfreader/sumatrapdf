@@ -31,8 +31,32 @@
 
 #include "hb.hh"
 
+enum khmer_syllable_type_t {
+  khmer_consonant_syllable,
+  khmer_broken_cluster,
+  khmer_non_khmer_cluster,
+};
 
-#line 36 "hb-ot-shape-complex-khmer-machine.hh"
+
+#line 42 "hb-ot-shape-complex-khmer-machine.hh"
+#define khmer_syllable_machine_ex_C 1u
+#define khmer_syllable_machine_ex_Coeng 14u
+#define khmer_syllable_machine_ex_DOTTEDCIRCLE 12u
+#define khmer_syllable_machine_ex_PLACEHOLDER 11u
+#define khmer_syllable_machine_ex_Ra 16u
+#define khmer_syllable_machine_ex_Robatic 20u
+#define khmer_syllable_machine_ex_V 2u
+#define khmer_syllable_machine_ex_VAbv 26u
+#define khmer_syllable_machine_ex_VBlw 27u
+#define khmer_syllable_machine_ex_VPre 28u
+#define khmer_syllable_machine_ex_VPst 29u
+#define khmer_syllable_machine_ex_Xgroup 21u
+#define khmer_syllable_machine_ex_Ygroup 22u
+#define khmer_syllable_machine_ex_ZWJ 6u
+#define khmer_syllable_machine_ex_ZWNJ 5u
+
+
+#line 60 "hb-ot-shape-complex-khmer-machine.hh"
 static const unsigned char _khmer_syllable_machine_trans_keys[] = {
 	5u, 26u, 5u, 21u, 5u, 26u, 5u, 21u, 1u, 16u, 5u, 21u, 5u, 26u, 5u, 21u, 
 	5u, 26u, 5u, 21u, 5u, 21u, 5u, 26u, 5u, 21u, 1u, 16u, 5u, 21u, 5u, 26u, 
@@ -215,18 +239,18 @@ static const int khmer_syllable_machine_error = -1;
 static const int khmer_syllable_machine_en_main = 20;
 
 
-#line 36 "hb-ot-shape-complex-khmer-machine.rl"
+#line 43 "hb-ot-shape-complex-khmer-machine.rl"
 
 
 
-#line 80 "hb-ot-shape-complex-khmer-machine.rl"
+#line 86 "hb-ot-shape-complex-khmer-machine.rl"
 
 
 #define found_syllable(syllable_type) \
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
-      info[i].syllable() = (syllable_serial << 4) | khmer_##syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
@@ -238,7 +262,7 @@ find_syllables_khmer (hb_buffer_t *buffer)
   int cs;
   hb_glyph_info_t *info = buffer->info;
   
-#line 242 "hb-ot-shape-complex-khmer-machine.hh"
+#line 266 "hb-ot-shape-complex-khmer-machine.hh"
 	{
 	cs = khmer_syllable_machine_start;
 	ts = 0;
@@ -246,7 +270,7 @@ find_syllables_khmer (hb_buffer_t *buffer)
 	act = 0;
 	}
 
-#line 100 "hb-ot-shape-complex-khmer-machine.rl"
+#line 106 "hb-ot-shape-complex-khmer-machine.rl"
 
 
   p = 0;
@@ -254,7 +278,7 @@ find_syllables_khmer (hb_buffer_t *buffer)
 
   unsigned int syllable_serial = 1;
   
-#line 258 "hb-ot-shape-complex-khmer-machine.hh"
+#line 282 "hb-ot-shape-complex-khmer-machine.hh"
 	{
 	int _slen;
 	int _trans;
@@ -268,7 +292,7 @@ _resume:
 #line 1 "NONE"
 	{ts = p;}
 	break;
-#line 272 "hb-ot-shape-complex-khmer-machine.hh"
+#line 296 "hb-ot-shape-complex-khmer-machine.hh"
 	}
 
 	_keys = _khmer_syllable_machine_trans_keys + (cs<<1);
@@ -291,37 +315,37 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 8:
-#line 76 "hb-ot-shape-complex-khmer-machine.rl"
-	{te = p+1;{ found_syllable (non_khmer_cluster); }}
+#line 82 "hb-ot-shape-complex-khmer-machine.rl"
+	{te = p+1;{ found_syllable (khmer_non_khmer_cluster); }}
 	break;
 	case 10:
-#line 74 "hb-ot-shape-complex-khmer-machine.rl"
-	{te = p;p--;{ found_syllable (consonant_syllable); }}
+#line 80 "hb-ot-shape-complex-khmer-machine.rl"
+	{te = p;p--;{ found_syllable (khmer_consonant_syllable); }}
 	break;
 	case 12:
-#line 75 "hb-ot-shape-complex-khmer-machine.rl"
-	{te = p;p--;{ found_syllable (broken_cluster); }}
+#line 81 "hb-ot-shape-complex-khmer-machine.rl"
+	{te = p;p--;{ found_syllable (khmer_broken_cluster); }}
 	break;
 	case 11:
-#line 76 "hb-ot-shape-complex-khmer-machine.rl"
-	{te = p;p--;{ found_syllable (non_khmer_cluster); }}
+#line 82 "hb-ot-shape-complex-khmer-machine.rl"
+	{te = p;p--;{ found_syllable (khmer_non_khmer_cluster); }}
 	break;
 	case 1:
-#line 74 "hb-ot-shape-complex-khmer-machine.rl"
-	{{p = ((te))-1;}{ found_syllable (consonant_syllable); }}
+#line 80 "hb-ot-shape-complex-khmer-machine.rl"
+	{{p = ((te))-1;}{ found_syllable (khmer_consonant_syllable); }}
 	break;
 	case 5:
-#line 75 "hb-ot-shape-complex-khmer-machine.rl"
-	{{p = ((te))-1;}{ found_syllable (broken_cluster); }}
+#line 81 "hb-ot-shape-complex-khmer-machine.rl"
+	{{p = ((te))-1;}{ found_syllable (khmer_broken_cluster); }}
 	break;
 	case 3:
 #line 1 "NONE"
 	{	switch( act ) {
 	case 2:
-	{{p = ((te))-1;} found_syllable (broken_cluster); }
+	{{p = ((te))-1;} found_syllable (khmer_broken_cluster); }
 	break;
 	case 3:
-	{{p = ((te))-1;} found_syllable (non_khmer_cluster); }
+	{{p = ((te))-1;} found_syllable (khmer_non_khmer_cluster); }
 	break;
 	}
 	}
@@ -329,16 +353,16 @@ _eof_trans:
 	case 4:
 #line 1 "NONE"
 	{te = p+1;}
-#line 75 "hb-ot-shape-complex-khmer-machine.rl"
+#line 81 "hb-ot-shape-complex-khmer-machine.rl"
 	{act = 2;}
 	break;
 	case 9:
 #line 1 "NONE"
 	{te = p+1;}
-#line 76 "hb-ot-shape-complex-khmer-machine.rl"
+#line 82 "hb-ot-shape-complex-khmer-machine.rl"
 	{act = 3;}
 	break;
-#line 342 "hb-ot-shape-complex-khmer-machine.hh"
+#line 366 "hb-ot-shape-complex-khmer-machine.hh"
 	}
 
 _again:
@@ -347,7 +371,7 @@ _again:
 #line 1 "NONE"
 	{ts = 0;}
 	break;
-#line 351 "hb-ot-shape-complex-khmer-machine.hh"
+#line 375 "hb-ot-shape-complex-khmer-machine.hh"
 	}
 
 	if ( ++p != pe )
@@ -363,7 +387,7 @@ _again:
 
 	}
 
-#line 108 "hb-ot-shape-complex-khmer-machine.rl"
+#line 114 "hb-ot-shape-complex-khmer-machine.rl"
 
 }
 

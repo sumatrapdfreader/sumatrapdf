@@ -19,25 +19,7 @@ symbols = sorted (re.findall (r"^hb_\w+(?= \()", "\n".join (headers_content), re
 if '--experimental-api' not in sys.argv:
 	# Move these to harfbuzz-sections.txt when got stable
 	experimental_symbols = \
-"""hb_font_draw_glyph
-hb_draw_funcs_t
-hb_draw_close_path_func_t
-hb_draw_cubic_to_func_t
-hb_draw_line_to_func_t
-hb_draw_move_to_func_t
-hb_draw_quadratic_to_func_t
-hb_draw_funcs_create
-hb_draw_funcs_destroy
-hb_draw_funcs_is_immutable
-hb_draw_funcs_make_immutable
-hb_draw_funcs_reference
-hb_draw_funcs_set_close_path_func
-hb_draw_funcs_set_cubic_to_func
-hb_draw_funcs_set_line_to_func
-hb_draw_funcs_set_move_to_func
-hb_draw_funcs_set_quadratic_to_func
-hb_style_get_value
-hb_font_get_var_coords_design""".splitlines ()
+"""hb_subset_repack_or_fail""".splitlines ()
 	symbols = [x for x in symbols if x not in experimental_symbols]
 symbols = "\n".join (symbols)
 

@@ -1,38 +1,51 @@
 HB_VIEW_sources = \
-	hb-view.cc \
-	options.cc \
-	options.hh \
-	main-font-text.hh \
-	shape-consumer.hh \
-	ansi-print.cc \
 	ansi-print.hh \
-	helper-cairo.cc \
-	helper-cairo.hh \
-	helper-cairo-ansi.cc \
+	face-options.hh \
+	font-options.hh \
+	hb-view.cc \
 	helper-cairo-ansi.hh \
-	view-cairo.cc \
+	helper-cairo-ft.hh \
+	helper-cairo-user.hh \
+	helper-cairo.hh \
+	main-font-text.hh \
+	options.hh \
+	output-options.hh \
+	shape-consumer.hh \
+	shape-options.hh \
+	text-options.hh \
 	view-cairo.hh \
+	view-options.hh \
 	$(NULL)
 
 HB_SHAPE_sources = \
+	batch.hh \
+	face-options.hh \
+	font-options.hh \
 	hb-shape.cc \
-	options.cc \
-	options.hh \
 	main-font-text.hh \
+	options.hh \
+	output-options.hh \
 	shape-consumer.hh \
-	$(NULL)
-
-HB_OT_SHAPE_CLOSURE_sources = \
-	hb-ot-shape-closure.cc \
-	options.cc \
-	options.hh \
-	main-font-text.hh \
+	shape-format.hh \
+	shape-options.hh \
+	text-options.hh \
 	$(NULL)
 
 HB_SUBSET_CLI_sources = \
+	batch.hh \
+	face-options.hh \
 	hb-subset.cc \
-	options.cc \
-	options-subset.cc \
-	options.hh \
 	main-font-text.hh \
+	options.hh \
+	output-options.hh \
+	text-options.hh \
+	$(NULL)
+
+HB_OT_SHAPE_CLOSURE_sources = \
+	face-options.hh \
+	font-options.hh \
+	hb-ot-shape-closure.cc \
+	main-font-text.hh \
+	options.hh \
+	text-options.hh \
 	$(NULL)

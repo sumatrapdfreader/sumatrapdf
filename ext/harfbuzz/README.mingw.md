@@ -4,17 +4,33 @@ implementation and that specially is important where OpenType specification
 is or wasn't that clear. For having access to Uniscribe on Linux/macOS these
 steps are recommended:
 
-1. Install Wine from your favorite package manager.  On Fedora that's `dnf install wine`.
+You want to follow the 32bit instructions. The 64bit equivalents are included
+for reference.
 
-2. And `mingw-w64` compiler.
-   With `brew` on macOS, you can have it like `brew install mingw-w64`.
-   On Fedora, with `dnf install mingw32-gcc-c++`, or `dnf install mingw64-gcc-c++` for the
-   64-bit Windows. Use `apt install g++-mingw-w64` on Debian.
+1. Install Wine.
+   - Fedora: `dnf install wine`.
 
-3. See how `.ci/build-win32.sh` uses meson or run that script anyway.
+2. Install `mingw-w64` compiler.
+   - Fedora, 32bit: `dnf install mingw32-gcc-c++`
+   - Fedora, 64bit: `dnf install mingw64-gcc-c++`
+   - Debian: `apt install g++-mingw-w64`
+   - Mac: `brew install mingw-w64`
 
-Now you can use hb-shape by `(cd win32build/harfbuzz-win32 && wine hb-shape.exe)`
-but if you like to shape with the Microsoft Uniscribe,
+3. If you have drank the `meson` koolaid, look at `.ci/build-win32.sh` to see how to
+   invoke `meson` now, or just run that script.  Otherwise, here's how to use the
+   old trusty autotools instead:
+
+   a) Install dependencies.
+      - Fedora, 32bit: `dnf install mingw32-glib2 mingw32-cairo mingw32-freetype`
+      - Fedora, 64bit: `dnf install mingw64-glib2 mingw64-cairo mingw64-freetype`
+
+   b) Configure:
+     - `NOCONFIGURE=1 ./autogen.sh && mkdir winbuild && cd winbuild`
+     - 32bit: `../mingw-configure.sh i686`
+     - 64bit: `../mingw-configure.sh x86_64`
+
+Now you can use `hb-shape` by `(cd win32build/util && wine hb-shape.exe)`
+but if you like to shape with the Microsoft Uniscribe:
 
 4. Bring a 32bit version of `usp10.dll` for yourself from `C:\Windows\SysWOW64\usp10.dll` of your
    Windows installation (assuming you have a 64-bit installation, otherwise

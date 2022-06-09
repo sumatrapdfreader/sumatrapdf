@@ -29,6 +29,7 @@
 #include "hb.hh"
 
 #include "hb-font.hh"
+#include "hb-draw.hh"
 #include "hb-machinery.hh"
 
 #include "hb-ot.h"
@@ -501,6 +502,136 @@ hb_font_get_glyph_from_name_default (hb_font_t      *font,
   return font->parent->get_glyph_from_name (name, len, glyph);
 }
 
+static void
+hb_font_get_glyph_shape_nil (hb_font_t       *font HB_UNUSED,
+			     void            *font_data HB_UNUSED,
+			     hb_codepoint_t   glyph,
+			     hb_draw_funcs_t *draw_funcs,
+			     void            *draw_data,
+			     void            *user_data HB_UNUSED)
+{
+}
+
+
+typedef struct hb_font_get_glyph_shape_default_adaptor_t {
+  hb_draw_funcs_t *draw_funcs;
+  void		  *draw_data;
+  float		   x_scale;
+  float		   y_scale;
+} hb_font_get_glyph_shape_default_adaptor_t;
+
+static void
+hb_draw_move_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED,
+			 void *draw_data,
+			 hb_draw_state_t *st,
+			 float to_x, float to_y,
+			 void *user_data HB_UNUSED)
+{
+  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  float x_scale = adaptor->x_scale;
+  float y_scale = adaptor->y_scale;
+
+  adaptor->draw_funcs->emit_move_to (adaptor->draw_data, *st,
+				     x_scale * to_x, y_scale * to_y);
+}
+
+static void
+hb_draw_line_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
+			 hb_draw_state_t *st,
+			 float to_x, float to_y,
+			 void *user_data HB_UNUSED)
+{
+  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  float x_scale = adaptor->x_scale;
+  float y_scale = adaptor->y_scale;
+
+  st->current_x *= x_scale;
+  st->current_y *= y_scale;
+
+  adaptor->draw_funcs->emit_line_to (adaptor->draw_data, *st,
+				     x_scale * to_x, y_scale * to_y);
+}
+
+static void
+hb_draw_quadratic_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
+			      hb_draw_state_t *st,
+			      float control_x, float control_y,
+			      float to_x, float to_y,
+			      void *user_data HB_UNUSED)
+{
+  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  float x_scale = adaptor->x_scale;
+  float y_scale = adaptor->y_scale;
+
+  st->current_x *= x_scale;
+  st->current_y *= y_scale;
+
+  adaptor->draw_funcs->emit_quadratic_to (adaptor->draw_data, *st,
+					  x_scale * control_x, y_scale * control_y,
+					  x_scale * to_x, y_scale * to_y);
+}
+
+static void
+hb_draw_cubic_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
+			  hb_draw_state_t *st,
+			  float control1_x, float control1_y,
+			  float control2_x, float control2_y,
+			  float to_x, float to_y,
+			  void *user_data HB_UNUSED)
+{
+  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  float x_scale = adaptor->x_scale;
+  float y_scale = adaptor->y_scale;
+
+  st->current_x *= x_scale;
+  st->current_y *= y_scale;
+
+  adaptor->draw_funcs->emit_cubic_to (adaptor->draw_data, *st,
+				      x_scale * control1_x, y_scale * control1_y,
+				      x_scale * control2_x, y_scale * control2_y,
+				      x_scale * to_x, y_scale * to_y);
+}
+
+static void
+hb_draw_close_path_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
+			    hb_draw_state_t *st,
+			    void *user_data HB_UNUSED)
+{
+  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+
+  adaptor->draw_funcs->emit_close_path (adaptor->draw_data, *st);
+}
+
+static const hb_draw_funcs_t _hb_draw_funcs_default = {
+  HB_OBJECT_HEADER_STATIC,
+
+  {
+#define HB_DRAW_FUNC_IMPLEMENT(name) hb_draw_##name##_default,
+    HB_DRAW_FUNCS_IMPLEMENT_CALLBACKS
+#undef HB_DRAW_FUNC_IMPLEMENT
+  }
+};
+
+static void
+hb_font_get_glyph_shape_default (hb_font_t       *font,
+				 void            *font_data HB_UNUSED,
+				 hb_codepoint_t   glyph,
+				 hb_draw_funcs_t *draw_funcs,
+				 void            *draw_data,
+				 void            *user_data HB_UNUSED)
+{
+  hb_font_get_glyph_shape_default_adaptor_t adaptor = {
+    draw_funcs,
+    draw_data,
+    (float) font->x_scale / (float) font->parent->x_scale,
+    (float) font->y_scale / (float) font->parent->y_scale
+  };
+
+  font->parent->get_glyph_shape (glyph,
+				 const_cast<hb_draw_funcs_t *> (&_hb_draw_funcs_default),
+				 &adaptor);
+}
+
 DEFINE_NULL_INSTANCE (hb_font_funcs_t) =
 {
   HB_OBJECT_HEADER_STATIC,
@@ -620,7 +751,7 @@ hb_font_funcs_destroy (hb_font_funcs_t *ffuncs)
   HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
 
-  free (ffuncs);
+  hb_free (ffuncs);
 }
 
 /**
@@ -628,10 +759,10 @@ hb_font_funcs_destroy (hb_font_funcs_t *ffuncs)
  * @ffuncs: The font-functions structure
  * @key: The user-data key to set
  * @data: A pointer to the user data set
- * @destroy: (optional): A callback to call when @data is not needed anymore
+ * @destroy: (nullable): A callback to call when @data is not needed anymore
  * @replace: Whether to replace an existing data with the same key
  *
- * Attaches a user-data key/data pair to the specified font-functions structure. 
+ * Attaches a user-data key/data pair to the specified font-functions structure.
  *
  * Return value: %true if success, %false otherwise
  *
@@ -690,7 +821,7 @@ hb_font_funcs_make_immutable (hb_font_funcs_t *ffuncs)
  *
  * Tests whether a font-functions structure is immutable.
  *
- * Return value: %true if @ffuncs is immutable, false otherwise
+ * Return value: %true if @ffuncs is immutable, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -753,10 +884,10 @@ hb_font_t::has_func (unsigned int i)
  * @font: #hb_font_t to work upon
  * @extents: (out): The font extents retrieved
  *
- * Fetches the extents for a specified font, in horizontal
+ * Fetches the extents for a specified font, for horizontal
  * text segments.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 1.1.3
  **/
@@ -772,10 +903,10 @@ hb_font_get_h_extents (hb_font_t         *font,
  * @font: #hb_font_t to work upon
  * @extents: (out): The font extents retrieved
  *
- * Fetches the extents for a specified font, in vertical
+ * Fetches the extents for a specified font, for vertical
  * text segments.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 1.1.3
  **/
@@ -790,7 +921,7 @@ hb_font_get_v_extents (hb_font_t         *font,
  * hb_font_get_glyph:
  * @font: #hb_font_t to work upon
  * @unicode: The Unicode code point to query
- * @variation_selector: (optional): A variation-selector code point
+ * @variation_selector: A variation-selector code point
  * @glyph: (out): The glyph ID retrieved
  *
  * Fetches the glyph ID for a Unicode code point in the specified
@@ -799,7 +930,7 @@ hb_font_get_v_extents (hb_font_t         *font,
  * If @variation_selector is 0, calls hb_font_get_nominal_glyph();
  * otherwise calls hb_font_get_variation_glyph().
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -821,13 +952,13 @@ hb_font_get_glyph (hb_font_t      *font,
  * @glyph: (out): The glyph ID retrieved
  *
  * Fetches the nominal glyph ID for a Unicode code point in the
- * specified font. 
+ * specified font.
  *
  * This version of the function should not be used to fetch glyph IDs
  * for code points modified by variation selectors. For variation-selector
  * support, user hb_font_get_variation_glyph() or use hb_font_get_glyph().
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 1.2.3
  **/
@@ -841,11 +972,17 @@ hb_font_get_nominal_glyph (hb_font_t      *font,
 
 /**
  * hb_font_get_nominal_glyphs:
- * @font: a font.
+ * @font: #hb_font_t to work upon
+ * @count: number of code points to query
+ * @first_unicode: The first Unicode code point to query
+ * @unicode_stride: The stride between successive code points
+ * @first_glyph: (out): The first glyph ID retrieved
+ * @glyph_stride: The stride between successive glyph IDs
  *
+ * Fetches the nominal glyph IDs for a sequence of Unicode code points. Glyph
+ * IDs must be returned in a #hb_codepoint_t output parameter.
  *
- *
- * Return value:
+ * Return value: the number of code points processed
  *
  * Since: 2.6.3
  **/
@@ -873,7 +1010,7 @@ hb_font_get_nominal_glyphs (hb_font_t *font,
  * by the specified variation-selector code point, in the specified
  * font.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 1.2.3
  **/
@@ -931,10 +1068,10 @@ hb_font_get_glyph_v_advance (hb_font_t      *font,
  * @first_glyph: The first glyph ID to query
  * @glyph_stride: The stride between successive glyph IDs
  * @first_advance: (out): The first advance retrieved
- * @advance_stride: (out): The stride between successive advances
+ * @advance_stride: The stride between successive advances
  *
  * Fetches the advances for a sequence of glyph IDs in the specified
- * font, for horizontal text segments. 
+ * font, for horizontal text segments.
  *
  * Since: 1.8.6
  **/
@@ -958,7 +1095,7 @@ hb_font_get_glyph_h_advances (hb_font_t*            font,
  * @advance_stride: (out): The stride between successive advances
  *
  * Fetches the advances for a sequence of glyph IDs in the specified
- * font, for vertical text segments.  
+ * font, for vertical text segments.
  *
  * Since: 1.8.6
  **/
@@ -983,7 +1120,7 @@ hb_font_get_glyph_v_advances (hb_font_t*            font,
  * Fetches the (X,Y) coordinates of the origin for a glyph ID
  * in the specified font, for horizontal text segments.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1006,7 +1143,7 @@ hb_font_get_glyph_h_origin (hb_font_t      *font,
  * Fetches the (X,Y) coordinates of the origin for a glyph ID
  * in the specified font, for vertical text segments.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1026,7 +1163,7 @@ hb_font_get_glyph_v_origin (hb_font_t      *font,
  * @right_glyph: The glyph ID of the right glyph in the glyph pair
  *
  * Fetches the kerning-adjustment value for a glyph-pair in
- * the specified font, in horizontal text segments.
+ * the specified font, for horizontal text segments.
  *
  * <note>It handles legacy kerning only (as returned by the corresponding
  * #hb_font_funcs_t function).</note>
@@ -1051,7 +1188,7 @@ hb_font_get_glyph_h_kerning (hb_font_t      *font,
  * @bottom_glyph: The glyph ID of the bottom glyph in the glyph pair
  *
  * Fetches the kerning-adjustment value for a glyph-pair in
- * the specified font, in vertical text segments.
+ * the specified font, for vertical text segments.
  *
  * <note>It handles legacy kerning only (as returned by the corresponding
  * #hb_font_funcs_t function).</note>
@@ -1079,7 +1216,7 @@ hb_font_get_glyph_v_kerning (hb_font_t      *font,
  * Fetches the #hb_glyph_extents_t data for a glyph ID
  * in the specified font.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1102,7 +1239,7 @@ hb_font_get_glyph_extents (hb_font_t          *font,
  * Fetches the (x,y) coordinates of a specified contour-point index
  * in the specified glyph, within the specified font.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1125,7 +1262,7 @@ hb_font_get_glyph_contour_point (hb_font_t      *font,
  *
  * Fetches the glyph-name string for a glyph ID in the specified @font.
  *
- * Return value: %true if data found, zero otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1149,7 +1286,7 @@ hb_font_get_glyph_name (hb_font_t      *font,
  *
  * <note>Note: @len == -1 means the name string is null-terminated.</note>
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1162,6 +1299,26 @@ hb_font_get_glyph_from_name (hb_font_t      *font,
   return font->get_glyph_from_name (name, len, glyph);
 }
 
+/**
+ * hb_font_get_glyph_shape:
+ * @font: #hb_font_t to work upon
+ * @glyph: : The glyph ID
+ * @dfuncs: #hb_draw_funcs_t to draw to
+ * @draw_data: User data to pass to draw callbacks
+ *
+ * Fetches the glyph shape that corresponds to a glyph in the specified @font.
+ * The shape is returned by way of calls to the callsbacks of the @dfuncs
+ * objects, with @draw_data passed to them.
+ *
+ * Since: 4.0.0
+ **/
+void
+hb_font_get_glyph_shape (hb_font_t *font,
+			 hb_codepoint_t glyph,
+			 hb_draw_funcs_t *dfuncs, void *draw_data)
+{
+  font->get_glyph_shape (glyph, dfuncs, draw_data);
+}
 
 /* A bit higher-level, and with fallback */
 
@@ -1169,7 +1326,7 @@ hb_font_get_glyph_from_name (hb_font_t      *font,
  * hb_font_get_extents_for_direction:
  * @font: #hb_font_t to work upon
  * @direction: The direction of the text segment
- * @extents: (out): The #hb_glyph_extents_t retrieved
+ * @extents: (out): The #hb_font_extents_t retrieved
  *
  * Fetches the extents for a font in a text segment of the
  * specified direction.
@@ -1184,7 +1341,7 @@ hb_font_get_extents_for_direction (hb_font_t         *font,
 				   hb_direction_t     direction,
 				   hb_font_extents_t *extents)
 {
-  return font->get_extents_for_direction (direction, extents);
+  font->get_extents_for_direction (direction, extents);
 }
 /**
  * hb_font_get_glyph_advance_for_direction:
@@ -1209,7 +1366,7 @@ hb_font_get_glyph_advance_for_direction (hb_font_t      *font,
 					 hb_position_t  *x,
 					 hb_position_t  *y)
 {
-  return font->get_glyph_advance_for_direction (glyph, direction, x, y);
+  font->get_glyph_advance_for_direction (glyph, direction, x, y);
 }
 /**
  * hb_font_get_glyph_advances_for_direction:
@@ -1272,7 +1429,7 @@ hb_font_get_glyph_origin_for_direction (hb_font_t      *font,
  * @font: #hb_font_t to work upon
  * @glyph: The glyph ID to query
  * @direction: The direction of the text segment
- * @x: (inout): Input = The original X coordinate 
+ * @x: (inout): Input = The original X coordinate
  *     Output = The X coordinate plus the X-coordinate of the origin
  * @y: (inout): Input = The original Y coordinate
  *     Output = The Y coordinate plus the Y-coordinate of the origin
@@ -1300,7 +1457,7 @@ hb_font_add_glyph_origin_for_direction (hb_font_t      *font,
  * @font: #hb_font_t to work upon
  * @glyph: The glyph ID to query
  * @direction: The direction of the text segment
- * @x: (inout): Input = The original X coordinate 
+ * @x: (inout): Input = The original X coordinate
  *     Output = The X coordinate minus the X-coordinate of the origin
  * @y: (inout): Input = The original Y coordinate
  *     Output = The Y coordinate minus the Y-coordinate of the origin
@@ -1364,7 +1521,7 @@ hb_font_get_glyph_kerning_for_direction (hb_font_t      *font,
  * Calls the appropriate direction-specific variant (horizontal
  * or vertical) depending on the value of @direction.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1393,7 +1550,7 @@ hb_font_get_glyph_extents_for_origin (hb_font_t          *font,
  * Calls the appropriate direction-specific variant (horizontal
  * or vertical) depending on the value of @direction.
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1444,7 +1601,7 @@ hb_font_glyph_to_string (hb_font_t      *font,
  *
  * <note>Note: @len == -1 means the string is null-terminated.</note>
  *
- * Return value: %true if data found, false otherwise
+ * Return value: %true if data found, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1471,6 +1628,8 @@ DEFINE_NULL_INSTANCE (hb_font_t) =
 
   1000, /* x_scale */
   1000, /* y_scale */
+  0., /* slant */
+  0., /* slant_xy; */
   1<<16, /* x_mult */
   1<<16, /* y_mult */
 
@@ -1515,6 +1674,13 @@ _hb_font_create (hb_face_t *face)
  *
  * Constructs a new font object from the specified face.
  *
+ * <note>Note: If @face's index value (as passed to hb_face_create()
+ * has non-zero top 16-bits, those bits minus one are passed to
+ * hb_font_set_var_named_instance(), effectively loading a named-instance
+ * of a variable font, instead of the default-instance.  This allows
+ * specifying which named-instance to load by default when creating the
+ * face.</note>
+ *
  * Return value: (transfer full): The new font object
  *
  * Since: 0.9.2
@@ -1529,6 +1695,11 @@ hb_font_create (hb_face_t *face)
   hb_ot_font_set_funcs (font);
 #endif
 
+#ifndef HB_NO_VAR
+  if (face && face->index >> 16)
+    hb_font_set_var_named_instance (font, (face->index >> 16) - 1);
+#endif
+
   return font;
 }
 
@@ -1538,8 +1709,8 @@ _hb_font_adopt_var_coords (hb_font_t *font,
 			   float *design_coords,
 			   unsigned int coords_length)
 {
-  free (font->coords);
-  free (font->design_coords);
+  hb_free (font->coords);
+  hb_free (font->design_coords);
 
   font->coords = coords;
   font->design_coords = design_coords;
@@ -1572,6 +1743,7 @@ hb_font_create_sub_font (hb_font_t *parent)
 
   font->x_scale = parent->x_scale;
   font->y_scale = parent->y_scale;
+  font->slant = parent->slant;
   font->mults_changed ();
   font->x_ppem = parent->x_ppem;
   font->y_ppem = parent->y_ppem;
@@ -1580,8 +1752,8 @@ hb_font_create_sub_font (hb_font_t *parent)
   unsigned int num_coords = parent->num_coords;
   if (num_coords)
   {
-    int *coords = (int *) calloc (num_coords, sizeof (parent->coords[0]));
-    float *design_coords = (float *) calloc (num_coords, sizeof (parent->design_coords[0]));
+    int *coords = (int *) hb_calloc (num_coords, sizeof (parent->coords[0]));
+    float *design_coords = (float *) hb_calloc (num_coords, sizeof (parent->design_coords[0]));
     if (likely (coords && design_coords))
     {
       memcpy (coords, parent->coords, num_coords * sizeof (parent->coords[0]));
@@ -1590,8 +1762,8 @@ hb_font_create_sub_font (hb_font_t *parent)
     }
     else
     {
-      free (coords);
-      free (design_coords);
+      hb_free (coords);
+      hb_free (design_coords);
     }
   }
 
@@ -1653,23 +1825,23 @@ hb_font_destroy (hb_font_t *font)
   hb_face_destroy (font->face);
   hb_font_funcs_destroy (font->klass);
 
-  free (font->coords);
-  free (font->design_coords);
+  hb_free (font->coords);
+  hb_free (font->design_coords);
 
-  free (font);
+  hb_free (font);
 }
 
 /**
  * hb_font_set_user_data: (skip)
  * @font: #hb_font_t to work upon
- * @key: The user-data key 
+ * @key: The user-data key
  * @data: A pointer to the user data
- * @destroy: (optional): A callback to call when @data is not needed anymore
+ * @destroy: (nullable): A callback to call when @data is not needed anymore
  * @replace: Whether to replace an existing data with the same key
  *
- * Attaches a user-data key/data pair to the specified font object. 
+ * Attaches a user-data key/data pair to the specified font object.
  *
- * Return value:
+ * Return value: %true if success, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1728,7 +1900,7 @@ hb_font_make_immutable (hb_font_t *font)
  *
  * Tests whether a font object is immutable.
  *
- * Return value: %true if @font is immutable, false otherwise
+ * Return value: %true if @font is immutable, %false otherwise
  *
  * Since: 0.9.2
  **/
@@ -1828,9 +2000,9 @@ hb_font_get_face (hb_font_t *font)
 /**
  * hb_font_set_funcs:
  * @font: #hb_font_t to work upon
- * @klass: (closure font_data) (destroy destroy) (scope notified):
+ * @klass: (closure font_data) (destroy destroy) (scope notified): The font-functions structure.
  * @font_data: Data to attach to @font
- * @destroy: (optional): The function to call when @font_data is not needed anymore
+ * @destroy: (nullable): The function to call when @font_data is not needed anymore
  *
  * Replaces the font-functions structure attached to a font, updating
  * the font's user-data with @font-data and the @destroy callback.
@@ -1867,9 +2039,9 @@ hb_font_set_funcs (hb_font_t         *font,
  * hb_font_set_funcs_data:
  * @font: #hb_font_t to work upon
  * @font_data: (destroy destroy) (scope notified): Data to attach to @font
- * @destroy: (optional): The function to call when @font_data is not needed anymore
+ * @destroy: (nullable): The function to call when @font_data is not needed anymore
  *
- * Replaces the user data attached to a font, updating the font's 
+ * Replaces the user data attached to a font, updating the font's
  * @destroy callback.
  *
  * Since: 0.9.2
@@ -1943,7 +2115,7 @@ hb_font_get_scale (hb_font_t *font,
  * @x_ppem: Horizontal ppem value to assign
  * @y_ppem: Vertical ppem value to assign
  *
- * Sets the horizontal and vertical pixels-per-em (ppem) of a font. 
+ * Sets the horizontal and vertical pixels-per-em (ppem) of a font.
  *
  * Since: 0.9.2
  **/
@@ -1965,7 +2137,7 @@ hb_font_set_ppem (hb_font_t    *font,
  * @x_ppem: (out): Horizontal ppem value
  * @y_ppem: (out): Vertical ppem value
  *
- * Fetches the horizontal and vertical points-per-em (ppem) of a font. 
+ * Fetches the horizontal and vertical points-per-em (ppem) of a font.
  *
  * Since: 0.9.2
  **/
@@ -2009,12 +2181,59 @@ hb_font_set_ptem (hb_font_t *font,
  *
  * Return value: Point size.  A value of zero means "not set."
  *
- * Since: 0.9.2
+ * Since: 1.6.0
  **/
 float
 hb_font_get_ptem (hb_font_t *font)
 {
   return font->ptem;
+}
+
+/**
+ * hb_font_set_synthetic_slant:
+ * @font: #hb_font_t to work upon
+ * @slant: synthetic slant value.
+ *
+ * Sets the "synthetic slant" of a font.  By default is zero.
+ * Synthetic slant is the graphical skew applied to the font
+ * at rendering time.
+ *
+ * HarfBuzz needs to know this value to adjust shaping results,
+ * metrics, and style values to match the slanted rendering.
+ *
+ * <note>Note: The glyph shape fetched via the
+ * hb_font_get_glyph_shape() is slanted to reflect this value
+ * as well.</note>
+ *
+ * <note>Note: The slant value is a ratio.  For example, a
+ * 20% slant would be represented as a 0.2 value.</note>
+ *
+ * Since: 3.3.0
+ **/
+HB_EXTERN void
+hb_font_set_synthetic_slant (hb_font_t *font, float slant)
+{
+  if (hb_object_is_immutable (font))
+    return;
+
+  font->slant = slant;
+  font->mults_changed ();
+}
+
+/**
+ * hb_font_get_synthetic_slant:
+ * @font: #hb_font_t to work upon
+ *
+ * Fetches the "synthetic slant" of a font.
+ *
+ * Return value: Synthetic slant.  By default is zero.
+ *
+ * Since: 3.3.0
+ **/
+HB_EXTERN float
+hb_font_get_synthetic_slant (hb_font_t *font)
+{
+  return font->slant;
 }
 
 #ifndef HB_NO_VAR
@@ -2029,6 +2248,10 @@ hb_font_get_ptem (hb_font_t *font)
  * @variations_length: Number of variations to apply
  *
  * Applies a list of font-variation settings to a font.
+ *
+ * Note that this overrides all existing variations set on @font.
+ * Axes not included in @variations will be effectively set to their
+ * default values.
  *
  * Since: 1.4.2
  */
@@ -2046,29 +2269,30 @@ hb_font_set_variations (hb_font_t            *font,
     return;
   }
 
-  unsigned int coords_length = hb_ot_var_get_axis_count (font->face);
+  const OT::fvar &fvar = *font->face->table.fvar;
+  auto axes = fvar.get_axes ();
+  const unsigned coords_length = axes.length;
 
-  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : nullptr;
-  float *design_coords = coords_length ? (float *) calloc (coords_length, sizeof (float)) : nullptr;
+  int *normalized = coords_length ? (int *) hb_calloc (coords_length, sizeof (int)) : nullptr;
+  float *design_coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (float)) : nullptr;
 
   if (unlikely (coords_length && !(normalized && design_coords)))
   {
-    free (normalized);
-    free (design_coords);
+    hb_free (normalized);
+    hb_free (design_coords);
     return;
   }
 
-  const OT::fvar &fvar = *font->face->table.fvar;
   for (unsigned int i = 0; i < variations_length; i++)
   {
-    hb_ot_var_axis_info_t info;
-    if (hb_ot_var_find_axis_info (font->face, variations[i].tag, &info) &&
-	info.axis_index < coords_length)
-    {
-      float v = variations[i].value;
-      design_coords[info.axis_index] = v;
-      normalized[info.axis_index] = fvar.normalize_axis_value (info.axis_index, v);
-    }
+    const auto tag = variations[i].tag;
+    const auto v = variations[i].value;
+    for (unsigned axis_index = 0; axis_index < coords_length; axis_index++)
+      if (axes[axis_index].axisTag == tag)
+      {
+	design_coords[axis_index] = v;
+	normalized[axis_index] = fvar.normalize_axis_value (axis_index, v);
+      }
   }
   font->face->table.avar->map_coords (normalized, coords_length);
 
@@ -2084,6 +2308,10 @@ hb_font_set_variations (hb_font_t            *font,
  * Applies a list of variation coordinates (in design-space units)
  * to a font.
  *
+ * Note that this overrides all existing variations set on @font.
+ * Axes not included in @coords will be effectively set to their
+ * default values.
+ *
  * Since: 1.4.2
  */
 void
@@ -2094,13 +2322,13 @@ hb_font_set_var_coords_design (hb_font_t    *font,
   if (hb_object_is_immutable (font))
     return;
 
-  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : nullptr;
-  float *design_coords = coords_length ? (float *) calloc (coords_length, sizeof (float)) : nullptr;
+  int *normalized = coords_length ? (int *) hb_calloc (coords_length, sizeof (int)) : nullptr;
+  float *design_coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (float)) : nullptr;
 
   if (unlikely (coords_length && !(normalized && design_coords)))
   {
-    free (normalized);
-    free (design_coords);
+    hb_free (normalized);
+    hb_free (design_coords);
     return;
   }
 
@@ -2129,13 +2357,13 @@ hb_font_set_var_named_instance (hb_font_t *font,
 
   unsigned int coords_length = hb_ot_var_named_instance_get_design_coords (font->face, instance_index, nullptr, nullptr);
 
-  float *coords = coords_length ? (float *) calloc (coords_length, sizeof (float)) : nullptr;
+  float *coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (float)) : nullptr;
   if (unlikely (coords_length && !coords))
     return;
 
   hb_ot_var_named_instance_get_design_coords (font->face, instance_index, &coords_length, coords);
   hb_font_set_var_coords_design (font, coords, coords_length);
-  free (coords);
+  hb_free (coords);
 }
 
 /**
@@ -2146,6 +2374,10 @@ hb_font_set_var_named_instance (hb_font_t *font,
  *
  * Applies a list of variation coordinates (in normalized units)
  * to a font.
+ *
+ * Note that this overrides all existing variations set on @font.
+ * Axes not included in @coords will be effectively set to their
+ * default values.
  *
  * <note>Note: Coordinates should be normalized to 2.14.</note>
  *
@@ -2159,15 +2391,15 @@ hb_font_set_var_coords_normalized (hb_font_t    *font,
   if (hb_object_is_immutable (font))
     return;
 
-  int *copy = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : nullptr;
-  int *unmapped = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : nullptr;
-  float *design_coords = coords_length ? (float *) calloc (coords_length, sizeof (design_coords[0])) : nullptr;
+  int *copy = coords_length ? (int *) hb_calloc (coords_length, sizeof (coords[0])) : nullptr;
+  int *unmapped = coords_length ? (int *) hb_calloc (coords_length, sizeof (coords[0])) : nullptr;
+  float *design_coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (design_coords[0])) : nullptr;
 
   if (unlikely (coords_length && !(copy && unmapped && design_coords)))
   {
-    free (copy);
-    free (unmapped);
-    free (design_coords);
+    hb_free (copy);
+    hb_free (unmapped);
+    hb_free (design_coords);
     return;
   }
 
@@ -2181,7 +2413,7 @@ hb_font_set_var_coords_normalized (hb_font_t    *font,
   font->face->table.avar->unmap_coords (unmapped, coords_length);
   for (unsigned int i = 0; i < coords_length; ++i)
     design_coords[i] = font->face->table.fvar->unnormalize_axis_value (i, unmapped[i]);
-  free (unmapped);
+  hb_free (unmapped);
 
   _hb_font_adopt_var_coords (font, copy, design_coords, coords_length);
 }
@@ -2189,13 +2421,18 @@ hb_font_set_var_coords_normalized (hb_font_t    *font,
 /**
  * hb_font_get_var_coords_normalized:
  * @font: #hb_font_t to work upon
- * @length: Number of coordinates retrieved
+ * @length: (out): Number of coordinates retrieved
  *
  * Fetches the list of normalized variation coordinates currently
  * set on a font.
  *
+ * Note that this returned array may only contain values for some
+ * (or none) of the axes; omitted axes effectively have zero values.
+ *
  * Return value is valid as long as variation coordinates of the font
  * are not modified.
+ *
+ * Return value: coordinates array
  *
  * Since: 1.4.2
  */
@@ -2209,14 +2446,24 @@ hb_font_get_var_coords_normalized (hb_font_t    *font,
   return font->coords;
 }
 
-#ifdef HB_EXPERIMENTAL_API
 /**
  * hb_font_get_var_coords_design:
+ * @font: #hb_font_t to work upon
+ * @length: (out): Number of coordinates retrieved
+ *
+ * Fetches the list of variation coordinates (in design-space units) currently
+ * set on a font.
+ *
+ * Note that this returned array may only contain values for some
+ * (or none) of the axes; omitted axes effectively have their default
+ * values.
  *
  * Return value is valid as long as variation coordinates of the font
  * are not modified.
  *
- * Since: EXPERIMENTAL
+ * Return value: coordinates array
+ *
+ * Since: 3.3.0
  */
 const float *
 hb_font_get_var_coords_design (hb_font_t *font,
@@ -2227,7 +2474,6 @@ hb_font_get_var_coords_design (hb_font_t *font,
 
   return font->design_coords;
 }
-#endif
 #endif
 
 #ifndef HB_DISABLE_DEPRECATED
@@ -2257,7 +2503,7 @@ trampoline_create (FuncType           func,
 {
   typedef hb_trampoline_t<FuncType> trampoline_t;
 
-  trampoline_t *trampoline = (trampoline_t *) calloc (1, sizeof (trampoline_t));
+  trampoline_t *trampoline = (trampoline_t *) hb_calloc (1, sizeof (trampoline_t));
 
   if (unlikely (!trampoline))
     return nullptr;
@@ -2286,7 +2532,7 @@ trampoline_destroy (void *user_data)
 
   if (closure->destroy)
     closure->destroy (closure->user_data);
-  free (closure);
+  hb_free (closure);
 }
 
 typedef hb_trampoline_t<hb_font_get_glyph_func_t> hb_font_get_glyph_trampoline_t;
@@ -2319,7 +2565,7 @@ hb_font_get_variation_glyph_trampoline (hb_font_t      *font,
  * @ffuncs: The font-functions structure
  * @func: (closure user_data) (destroy destroy) (scope notified): callback function
  * @user_data: data to pass to @func
- * @destroy: (optional): function to call when @user_data is not needed anymore
+ * @destroy: (nullable): function to call when @user_data is not needed anymore
  *
  * Deprecated.  Use hb_font_funcs_set_nominal_glyph_func() and
  * hb_font_funcs_set_variation_glyph_func() instead.
@@ -2350,12 +2596,14 @@ hb_font_funcs_set_glyph_func (hb_font_funcs_t          *ffuncs,
     return;
   }
 
+  /* Since we pass it to two destroying functions. */
+  trampoline_reference (&trampoline->closure);
+
   hb_font_funcs_set_nominal_glyph_func (ffuncs,
 					hb_font_get_nominal_glyph_trampoline,
 					trampoline,
 					trampoline_destroy);
 
-  trampoline_reference (&trampoline->closure);
   hb_font_funcs_set_variation_glyph_func (ffuncs,
 					  hb_font_get_variation_glyph_trampoline,
 					  trampoline,

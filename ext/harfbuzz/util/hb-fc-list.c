@@ -199,7 +199,7 @@ main (int argc, char **argv)
 	    }
 	    else
 	    {
-	        FcChar8 *s;
+		FcChar8 *s;
 
 		s = FcPatternFormat (fs->fonts[j], format);
 		if (s)

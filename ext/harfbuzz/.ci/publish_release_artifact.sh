@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 set -o pipefail
 
@@ -7,11 +8,13 @@ if [[ -z $GITHUB_TOKEN ]]; then
 	exit
 fi
 
-mkdir -p $HOME/.local/bin
-export _GHR_VER=v0.13.0
-export _GHR=ghr_${_GHR_VER}_linux_amd64
-curl -sfL https://github.com/tcnksm/ghr/releases/download/$_GHR_VER/$_GHR.tar.gz |
-	tar xz -C $HOME/.local/bin --strip-components=1 $_GHR/ghr
+if ! hash ghr 2> /dev/null; then
+	_GHR_VER=v0.14.0
+	_GHR=ghr_${_GHR_VER}_linux_amd64
+	mkdir -p $HOME/.local/bin
+	curl -sfL https://github.com/tcnksm/ghr/releases/download/$_GHR_VER/$_GHR.tar.gz |
+		tar xz -C $HOME/.local/bin --strip-components=1 $_GHR/ghr
+fi
 
 ghr -replace \
 	-u $CIRCLE_PROJECT_USERNAME \

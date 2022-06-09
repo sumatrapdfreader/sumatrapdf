@@ -29,6 +29,7 @@
 #ifndef HB_NO_OT_SHAPE
 
 #include "hb-ot-shape-complex-khmer.hh"
+#include "hb-ot-shape-complex-khmer-machine.hh"
 #include "hb-ot-layout.hh"
 
 
@@ -41,13 +42,14 @@ khmer_features[] =
 {
   /*
    * Basic features.
-   * These features are applied in order, one at a time, after reordering.
+   * These features are applied all at once, before reordering, constrained
+   * to the syllable.
    */
-  {HB_TAG('p','r','e','f'), F_MANUAL_JOINERS},
-  {HB_TAG('b','l','w','f'), F_MANUAL_JOINERS},
-  {HB_TAG('a','b','v','f'), F_MANUAL_JOINERS},
-  {HB_TAG('p','s','t','f'), F_MANUAL_JOINERS},
-  {HB_TAG('c','f','a','r'), F_MANUAL_JOINERS},
+  {HB_TAG('p','r','e','f'), F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('b','l','w','f'), F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('a','b','v','f'), F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('p','s','t','f'), F_MANUAL_JOINERS | F_PER_SYLLABLE},
+  {HB_TAG('c','f','a','r'), F_MANUAL_JOINERS | F_PER_SYLLABLE},
   /*
    * Other features.
    * These features are applied all at once after clearing syllables.
@@ -105,14 +107,15 @@ collect_features_khmer (hb_ot_shape_planner_t *plan)
    *
    * https://github.com/harfbuzz/harfbuzz/issues/974
    */
-  map->enable_feature (HB_TAG('l','o','c','l'));
-  map->enable_feature (HB_TAG('c','c','m','p'));
+  map->enable_feature (HB_TAG('l','o','c','l'), F_PER_SYLLABLE);
+  map->enable_feature (HB_TAG('c','c','m','p'), F_PER_SYLLABLE);
 
   unsigned int i = 0;
   for (; i < KHMER_BASIC_FEATURES; i++)
     map->add_feature (khmer_features[i]);
 
-  map->add_gsub_pause (_hb_clear_syllables);
+  /* https://github.com/harfbuzz/harfbuzz/issues/3531 */
+  map->add_gsub_pause (nullptr);
 
   for (; i < KHMER_NUM_FEATURES; i++)
     map->add_feature (khmer_features[i]);
@@ -140,38 +143,15 @@ override_features_khmer (hb_ot_shape_planner_t *plan)
 
 struct khmer_shape_plan_t
 {
-  bool get_virama_glyph (hb_font_t *font, hb_codepoint_t *pglyph) const
-  {
-    hb_codepoint_t glyph = virama_glyph;
-    if (unlikely (virama_glyph == (hb_codepoint_t) -1))
-    {
-      if (!font->get_nominal_glyph (0x17D2u, &glyph))
-	glyph = 0;
-      /* Technically speaking, the spec says we should apply 'locl' to virama too.
-       * Maybe one day... */
-
-      /* Our get_nominal_glyph() function needs a font, so we can't get the virama glyph
-       * during shape planning...  Instead, overwrite it here.  It's safe.  Don't worry! */
-      virama_glyph = glyph;
-    }
-
-    *pglyph = glyph;
-    return glyph != 0;
-  }
-
-  mutable hb_codepoint_t virama_glyph;
-
   hb_mask_t mask_array[KHMER_NUM_FEATURES];
 };
 
 static void *
 data_create_khmer (const hb_ot_shape_plan_t *plan)
 {
-  khmer_shape_plan_t *khmer_plan = (khmer_shape_plan_t *) calloc (1, sizeof (khmer_shape_plan_t));
+  khmer_shape_plan_t *khmer_plan = (khmer_shape_plan_t *) hb_calloc (1, sizeof (khmer_shape_plan_t));
   if (unlikely (!khmer_plan))
     return nullptr;
-
-  khmer_plan->virama_glyph = (hb_codepoint_t) -1;
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (khmer_plan->mask_array); i++)
     khmer_plan->mask_array[i] = (khmer_features[i].flags & F_GLOBAL) ?
@@ -183,17 +163,8 @@ data_create_khmer (const hb_ot_shape_plan_t *plan)
 static void
 data_destroy_khmer (void *data)
 {
-  free (data);
+  hb_free (data);
 }
-
-
-enum khmer_syllable_type_t {
-  khmer_consonant_syllable,
-  khmer_broken_cluster,
-  khmer_non_khmer_cluster,
-};
-
-#include "hb-ot-shape-complex-khmer-machine.hh"
 
 static void
 setup_masks_khmer (const hb_ot_shape_plan_t *plan HB_UNUSED,
@@ -321,76 +292,17 @@ reorder_syllable_khmer (const hb_ot_shape_plan_t *plan,
   }
 }
 
-static inline void
-insert_dotted_circles_khmer (const hb_ot_shape_plan_t *plan HB_UNUSED,
-			     hb_font_t *font,
-			     hb_buffer_t *buffer)
-{
-  if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
-    return;
-
-  /* Note: This loop is extra overhead, but should not be measurable.
-   * TODO Use a buffer scratch flag to remove the loop. */
-  bool has_broken_syllables = false;
-  unsigned int count = buffer->len;
-  hb_glyph_info_t *info = buffer->info;
-  for (unsigned int i = 0; i < count; i++)
-    if ((info[i].syllable() & 0x0F) == khmer_broken_cluster)
-    {
-      has_broken_syllables = true;
-      break;
-    }
-  if (likely (!has_broken_syllables))
-    return;
-
-
-  hb_codepoint_t dottedcircle_glyph;
-  if (!font->get_nominal_glyph (0x25CCu, &dottedcircle_glyph))
-    return;
-
-  hb_glyph_info_t dottedcircle = {0};
-  dottedcircle.codepoint = 0x25CCu;
-  set_khmer_properties (dottedcircle);
-  dottedcircle.codepoint = dottedcircle_glyph;
-
-  buffer->clear_output ();
-
-  buffer->idx = 0;
-  unsigned int last_syllable = 0;
-  while (buffer->idx < buffer->len && buffer->successful)
-  {
-    unsigned int syllable = buffer->cur().syllable();
-    khmer_syllable_type_t syllable_type = (khmer_syllable_type_t) (syllable & 0x0F);
-    if (unlikely (last_syllable != syllable && syllable_type == khmer_broken_cluster))
-    {
-      last_syllable = syllable;
-
-      hb_glyph_info_t ginfo = dottedcircle;
-      ginfo.cluster = buffer->cur().cluster;
-      ginfo.mask = buffer->cur().mask;
-      ginfo.syllable() = buffer->cur().syllable();
-
-      /* Insert dottedcircle after possible Repha. */
-      while (buffer->idx < buffer->len && buffer->successful &&
-	     last_syllable == buffer->cur().syllable() &&
-	     buffer->cur().khmer_category() == OT_Repha)
-	buffer->next_glyph ();
-
-      buffer->output_info (ginfo);
-    }
-    else
-      buffer->next_glyph ();
-  }
-  buffer->swap_buffers ();
-}
-
 static void
 reorder_khmer (const hb_ot_shape_plan_t *plan,
 	       hb_font_t *font,
 	       hb_buffer_t *buffer)
 {
-  if (buffer->message (font, "start reordering khmer")) {
-    insert_dotted_circles_khmer (plan, font, buffer);
+  if (buffer->message (font, "start reordering khmer"))
+  {
+    hb_syllabic_insert_dotted_circles (font, buffer,
+				       khmer_broken_cluster,
+				       OT_DOTTEDCIRCLE,
+				       OT_Repha);
 
     foreach_syllable (buffer, start, end)
       reorder_syllable_khmer (plan, font->face, buffer, start, end);

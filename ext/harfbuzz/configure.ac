@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [2.7.4],
+        [4.3.0],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -68,8 +68,8 @@ GTK_DOC_CHECK([1.15],[--flavour no-tmpl])
 ])
 
 # Functions and headers
-AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty)
-AC_CHECK_HEADERS(unistd.h sys/mman.h stdbool.h)
+AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty newlocale uselocale)
+AC_CHECK_HEADERS(unistd.h sys/mman.h stdbool.h xlocale.h)
 
 # Compiler flags
 AC_CANONICAL_HOST
@@ -194,6 +194,10 @@ AC_ARG_WITH(cairo,
 have_cairo=false
 if test "x$with_cairo" = "xyes" -o "x$with_cairo" = "xauto"; then
 	PKG_CHECK_MODULES(CAIRO, cairo >= 1.8.0, have_cairo=true, :)
+	save_libs=$LIBS
+	LIBS="$LIBS $CAIRO_LIBS"
+	AC_CHECK_FUNCS(cairo_user_font_face_set_render_color_glyph_func)
+	LIBS=$save_libs
 fi
 if test "x$with_cairo" = "xyes" -a "x$have_cairo" != "xtrue"; then
 	AC_MSG_ERROR([cairo support requested but not found])
@@ -214,21 +218,21 @@ AM_CONDITIONAL(HAVE_CAIRO_FT, $have_cairo_ft)
 
 dnl ==========================================================================
 
-AC_ARG_WITH(fontconfig,
-	[AS_HELP_STRING([--with-fontconfig=@<:@yes/no/auto@:>@],
-			[Use fontconfig @<:@default=auto@:>@])],,
-	[with_fontconfig=auto])
-have_fontconfig=false
-if test "x$with_fontconfig" = "xyes" -o "x$with_fontconfig" = "xauto"; then
-	PKG_CHECK_MODULES(FONTCONFIG, fontconfig, have_fontconfig=true, :)
+AC_ARG_WITH(chafa,
+	[AS_HELP_STRING([--with-chafa=@<:@yes/no/auto@:>@],
+			[Use chafa @<:@default=auto@:>@])],,
+	[with_chafa=auto])
+have_chafa=false
+if test "x$with_chafa" = "xyes" -o "x$with_chafa" = "xauto"; then
+	PKG_CHECK_MODULES(CHAFA, chafa >= 1.6.0, have_chafa=true, :)
 fi
-if test "x$with_fontconfig" = "xyes" -a "x$have_fontconfig" != "xtrue"; then
-	AC_MSG_ERROR([fontconfig support requested but not found])
+if test "x$with_chafa" = "xyes" -a "x$have_chafa" != "xtrue"; then
+	AC_MSG_ERROR([chafa support requested but not found])
 fi
-if $have_fontconfig; then
-	AC_DEFINE(HAVE_FONTCONFIG, 1, [Have fontconfig library])
+if $have_chafa; then
+	AC_DEFINE(HAVE_CHAFA, 1, [Have chafa terminal graphics library])
 fi
-AM_CONDITIONAL(HAVE_FONTCONFIG, $have_fontconfig)
+AM_CONDITIONAL(HAVE_CHAFA, $have_chafa)
 
 dnl ==========================================================================
 
@@ -417,45 +421,6 @@ AM_CONDITIONAL(HAVE_CORETEXT, $have_coretext)
 
 dnl ===========================================================================
 
-AC_CACHE_CHECK([for Intel atomic primitives], hb_cv_have_intel_atomic_primitives, [
-	hb_cv_have_intel_atomic_primitives=false
-	AC_TRY_LINK([
-		void memory_barrier (void) { __sync_synchronize (); }
-		int atomic_add (int *i) { return __sync_fetch_and_add (i, 1); }
-		int mutex_trylock (int *m) { return __sync_lock_test_and_set (m, 1); }
-		void mutex_unlock (int *m) { __sync_lock_release (m); }
-		], [], hb_cv_have_intel_atomic_primitives=true
-	)
-])
-if $hb_cv_have_intel_atomic_primitives; then
-	AC_DEFINE(HAVE_INTEL_ATOMIC_PRIMITIVES, 1, [Have Intel __sync_* atomic primitives])
-fi
-
-dnl ===========================================================================
-
-AC_CACHE_CHECK([for Solaris atomic operations], hb_cv_have_solaris_atomic_ops, [
-	hb_cv_have_solaris_atomic_ops=false
-	AC_TRY_LINK([
-		#include <atomic.h>
-		/* This requires Solaris Studio 12.2 or newer: */
-		#include <mbarrier.h>
-		void memory_barrier (void) { __machine_rw_barrier (); }
-		int atomic_add (volatile unsigned *i) { return atomic_add_int_nv (i, 1); }
-		void *atomic_ptr_cmpxchg (volatile void **target, void *cmp, void *newval) { return atomic_cas_ptr (target, cmp, newval); }
-		], [], hb_cv_have_solaris_atomic_ops=true
-	)
-])
-if $hb_cv_have_solaris_atomic_ops; then
-	AC_DEFINE(HAVE_SOLARIS_ATOMIC_OPS, 1, [Have Solaris __machine_*_barrier and atomic_* operations])
-fi
-
-if test "$os_win32" = no && ! $have_pthread; then
-	AC_CHECK_HEADERS(sched.h)
-	AC_SEARCH_LIBS(sched_yield,rt,AC_DEFINE(HAVE_SCHED_YIELD, 1, [Have sched_yield]))
-fi
-
-dnl ===========================================================================
-
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
@@ -464,13 +429,15 @@ util/Makefile
 test/Makefile
 test/api/Makefile
 test/fuzzing/Makefile
-test/shaping/Makefile
-test/shaping/data/Makefile
-test/shaping/data/aots/Makefile
-test/shaping/data/in-house/Makefile
-test/shaping/data/text-rendering-tests/Makefile
+test/shape/Makefile
+test/shape/data/Makefile
+test/shape/data/aots/Makefile
+test/shape/data/in-house/Makefile
+test/shape/data/text-rendering-tests/Makefile
 test/subset/Makefile
 test/subset/data/Makefile
+test/subset/data/repack_tests/Makefile
+perf/Makefile
 docs/Makefile
 docs/version.xml
 ])
@@ -504,7 +471,7 @@ Font callbacks (the more the merrier):
 
 Tools used for command-line utilities:
 	Cairo:			${have_cairo}
-	Fontconfig:		${have_fontconfig}
+	Chafa:			${have_chafa}
 
 Additional shapers:
 	Graphite2:		${have_graphite2}

@@ -29,30 +29,36 @@
 
 #include "hb.hh"
 
+enum khmer_syllable_type_t {
+  khmer_consonant_syllable,
+  khmer_broken_cluster,
+  khmer_non_khmer_cluster,
+};
+
 %%{
   machine khmer_syllable_machine;
   alphtype unsigned char;
+  write exports;
   write data;
 }%%
 
 %%{
 
-# Same order as enum khmer_category_t.  Not sure how to avoid duplication.
-C    = 1;
-V    = 2;
-ZWNJ = 5;
-ZWJ  = 6;
-PLACEHOLDER = 11;
-DOTTEDCIRCLE = 12;
-Coeng= 14;
-Ra   = 16;
-Robatic = 20;
-Xgroup  = 21;
-Ygroup  = 22;
-VAbv = 26;
-VBlw = 27;
-VPre = 28;
-VPst = 29;
+export C    = 1;
+export V    = 2;
+export ZWNJ = 5;
+export ZWJ  = 6;
+export PLACEHOLDER = 11;
+export DOTTEDCIRCLE = 12;
+export Coeng= 14;
+export Ra   = 16;
+export Robatic = 20;
+export Xgroup  = 21;
+export Ygroup  = 22;
+export VAbv = 26;
+export VBlw = 27;
+export VPre = 28;
+export VPst = 29;
 
 c = (C | Ra | V);
 cn = c.((ZWJ|ZWNJ)?.Robatic)?;
@@ -71,9 +77,9 @@ consonant_syllable =	(cn|PLACEHOLDER|DOTTEDCIRCLE) broken_cluster;
 other =			any;
 
 main := |*
-	consonant_syllable	=> { found_syllable (consonant_syllable); };
-	broken_cluster		=> { found_syllable (broken_cluster); };
-	other			=> { found_syllable (non_khmer_cluster); };
+	consonant_syllable	=> { found_syllable (khmer_consonant_syllable); };
+	broken_cluster		=> { found_syllable (khmer_broken_cluster); };
+	other			=> { found_syllable (khmer_non_khmer_cluster); };
 *|;
 
 
@@ -83,7 +89,7 @@ main := |*
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
-      info[i].syllable() = (syllable_serial << 4) | khmer_##syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END

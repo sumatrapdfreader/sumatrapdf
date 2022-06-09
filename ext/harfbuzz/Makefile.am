@@ -4,7 +4,7 @@ NULL =
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src util test docs
+SUBDIRS = src util test perf docs
 
 EXTRA_DIST = \
 	autogen.sh \
@@ -19,29 +19,14 @@ EXTRA_DIST = \
 	replace-enum-strings.cmake \
 	meson.build \
 	meson_options.txt \
-	subprojects/expat.wrap \
-	subprojects/fontconfig.wrap \
+	subprojects/cairo.wrap \
 	subprojects/freetype2.wrap \
 	subprojects/glib.wrap \
-	subprojects/libffi.wrap \
-	subprojects/proxy-libintl.wrap \
-	subprojects/zlib.wrap \
 	subprojects/google-benchmark.wrap \
-	perf/meson.build \
-	perf/perf-draw.hh \
-	perf/perf-extents.hh \
-	perf/perf-shaping.hh \
-	perf/perf.cc \
-	perf/fonts/Amiri-Regular.ttf \
-	perf/fonts/NotoNastaliqUrdu-Regular.ttf \
-	perf/fonts/NotoSansDevanagari-Regular.ttf \
-	perf/fonts/Roboto-Regular.ttf \
-	perf/texts/en-thelittleprince.txt \
-	perf/texts/en-words.txt \
-	perf/texts/fa-monologue.txt \
-	perf/texts/fa-thelittleprince.txt \
-	meson-cc-tests/intel-atomic-primitives-test.c \
-	meson-cc-tests/solaris-atomic-operations.c \
+	subprojects/ragel.wrap \
+	subprojects/packagefiles/ragel/meson.build \
+	subprojects/ttf-parser.wrap \
+	mingw-configure.sh \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \

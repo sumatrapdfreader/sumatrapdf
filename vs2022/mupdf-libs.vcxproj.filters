@@ -482,6 +482,9 @@
     <ClCompile Include="..\ext\harfbuzz\src\hb-buffer-serialize.cc">
       <Filter>harfbuzz\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\harfbuzz\src\hb-buffer-verify.cc">
+      <Filter>harfbuzz\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\harfbuzz\src\hb-buffer.cc">
       <Filter>harfbuzz\src</Filter>
     </ClCompile>
@@ -563,10 +566,10 @@
     <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-myanmar.cc">
       <Filter>harfbuzz\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-thai.cc">
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-syllabic.cc">
       <Filter>harfbuzz\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-use-table.cc">
+    <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-thai.cc">
       <Filter>harfbuzz\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shape-complex-use.cc">

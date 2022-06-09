@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1361,7 +1361,7 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 	FT_Face face = font->ft_face;
 	int fterr;
 
-	const int scale = face->units_per_EM;
+	const int scale = 65536;
 	const float recip = 1.0f / scale;
 	const float strength = 0.02f;
 
@@ -1372,10 +1372,14 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 
 	fz_lock(ctx, FZ_LOCK_FREETYPE);
 
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM);
+	fterr = FT_Set_Char_Size(face, scale, scale, 72, 72);
+	if (fterr)
+		fz_warn(ctx, "FT_Set_Char_Size(%s,%d,72): %s", font->name, scale, ft_error_string(fterr));
+
+	fterr = FT_Load_Glyph(face, gid, FT_LOAD_IGNORE_TRANSFORM);
 	if (fterr)
 	{
-		fz_warn(ctx, "FT_Load_Glyph(%s,%d,FT_LOAD_NO_SCALE|FT_LOAD_IGNORE_TRANSFORM): %s", font->name, gid, ft_error_string(fterr));
+		fz_warn(ctx, "FT_Load_Glyph(%s,%d,FT_LOAD_IGNORE_TRANSFORM): %s", font->name, gid, ft_error_string(fterr));
 		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}

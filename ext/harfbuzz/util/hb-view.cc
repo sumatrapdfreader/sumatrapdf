@@ -25,16 +25,19 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "batch.hh"
+#include "font-options.hh"
 #include "main-font-text.hh"
 #include "shape-consumer.hh"
+#include "text-options.hh"
 #include "view-cairo.hh"
 
-#define DEFAULT_FONT_SIZE 256
-#define SUBPIXEL_BITS 6
+const unsigned DEFAULT_FONT_SIZE = 256;
+const unsigned SUBPIXEL_BITS = 6;
 
 int
 main (int argc, char **argv)
 {
-  main_font_text_t<shape_consumer_t<view_cairo_t>, DEFAULT_FONT_SIZE, SUBPIXEL_BITS> driver;
-  return driver.main (argc, argv);
+  using main_t = main_font_text_t<shape_consumer_t<view_cairo_t>, font_options_t, shape_text_options_t>;
+  return batch_main<main_t> (argc, argv);
 }

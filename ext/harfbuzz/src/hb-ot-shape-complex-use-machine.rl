@@ -30,67 +30,89 @@
 #define HB_OT_SHAPE_COMPLEX_USE_MACHINE_HH
 
 #include "hb.hh"
-#include "hb-ot-shape-complex-machine-index.hh"
+
+#include "hb-ot-shape-complex-syllabic.hh"
+
+/* buffer var allocations */
+#define use_category() complex_var_u8_category()
+
+#define USE(Cat) use_syllable_machine_ex_##Cat
+
+enum use_syllable_type_t {
+  use_virama_terminated_cluster,
+  use_sakot_terminated_cluster,
+  use_standard_cluster,
+  use_number_joiner_terminated_cluster,
+  use_numeral_cluster,
+  use_symbol_cluster,
+  use_hieroglyph_cluster,
+  use_broken_cluster,
+  use_non_cluster,
+};
 
 %%{
   machine use_syllable_machine;
   alphtype unsigned char;
+  write exports;
   write data;
 }%%
 
 %%{
 
-# Same order as enum use_category_t.  Not sure how to avoid duplication.
+# Categories used in the Universal Shaping Engine spec:
+# https://docs.microsoft.com/en-us/typography/script-development/use
 
-O	= 0; # OTHER
+export O	= 0; # OTHER
 
-B	= 1; # BASE
-N	= 4; # BASE_NUM
-GB	= 5; # BASE_OTHER
-SUB	= 11; # CONS_SUB
-H	= 12; # HALANT
+export B	= 1; # BASE
+export N	= 4; # BASE_NUM
+export GB	= 5; # BASE_OTHER
+export CGJ	= 6; # CGJ
+export SUB	= 11; # CONS_SUB
+export H	= 12; # HALANT
 
-HN	= 13; # HALANT_NUM
-ZWNJ	= 14; # Zero width non-joiner
-R	= 18; # REPHA
-S	= 19; # SYM
-CS	= 43; # CONS_WITH_STACKER
-HVM	= 44; # HALANT_OR_VOWEL_MODIFIER
-Sk	= 48; # SAKOT
-G	= 49; # HIEROGLYPH
-J	= 50; # HIEROGLYPH_JOINER
-SB	= 51; # HIEROGLYPH_SEGMENT_BEGIN
-SE	= 52; # HIEROGLYPH_SEGMENT_END
+export HN	= 13; # HALANT_NUM
+export ZWNJ	= 14; # Zero width non-joiner
+export WJ	= 16; # Word joiner
+export R	= 18; # REPHA
+export CS	= 43; # CONS_WITH_STACKER
+export IS	= 44; # INVISIBLE_STACKER
+export Sk	= 48; # SAKOT
+export G	= 49; # HIEROGLYPH
+export J	= 50; # HIEROGLYPH_JOINER
+export SB	= 51; # HIEROGLYPH_SEGMENT_BEGIN
+export SE	= 52; # HIEROGLYPH_SEGMENT_END
 
-FAbv	= 24; # CONS_FINAL_ABOVE
-FBlw	= 25; # CONS_FINAL_BELOW
-FPst	= 26; # CONS_FINAL_POST
-MAbv	= 27; # CONS_MED_ABOVE
-MBlw	= 28; # CONS_MED_BELOW
-MPst	= 29; # CONS_MED_POST
-MPre	= 30; # CONS_MED_PRE
-CMAbv	= 31; # CONS_MOD_ABOVE
-CMBlw	= 32; # CONS_MOD_BELOW
-VAbv	= 33; # VOWEL_ABOVE / VOWEL_ABOVE_BELOW / VOWEL_ABOVE_BELOW_POST / VOWEL_ABOVE_POST
-VBlw	= 34; # VOWEL_BELOW / VOWEL_BELOW_POST
-VPst	= 35; # VOWEL_POST	UIPC = Right
-VPre	= 22; # VOWEL_PRE / VOWEL_PRE_ABOVE / VOWEL_PRE_ABOVE_POST / VOWEL_PRE_POST
-VMAbv	= 37; # VOWEL_MOD_ABOVE
-VMBlw	= 38; # VOWEL_MOD_BELOW
-VMPst	= 39; # VOWEL_MOD_POST
-VMPre	= 23; # VOWEL_MOD_PRE
-SMAbv	= 41; # SYM_MOD_ABOVE
-SMBlw	= 42; # SYM_MOD_BELOW
-FMAbv	= 45; # CONS_FINAL_MOD	UIPC = Top
-FMBlw	= 46; # CONS_FINAL_MOD	UIPC = Bottom
-FMPst	= 47; # CONS_FINAL_MOD	UIPC = Not_Applicable
+export FAbv	= 24; # CONS_FINAL_ABOVE
+export FBlw	= 25; # CONS_FINAL_BELOW
+export FPst	= 26; # CONS_FINAL_POST
+export MAbv	= 27; # CONS_MED_ABOVE
+export MBlw	= 28; # CONS_MED_BELOW
+export MPst	= 29; # CONS_MED_POST
+export MPre	= 30; # CONS_MED_PRE
+export CMAbv	= 31; # CONS_MOD_ABOVE
+export CMBlw	= 32; # CONS_MOD_BELOW
+export VAbv	= 33; # VOWEL_ABOVE / VOWEL_ABOVE_BELOW / VOWEL_ABOVE_BELOW_POST / VOWEL_ABOVE_POST
+export VBlw	= 34; # VOWEL_BELOW / VOWEL_BELOW_POST
+export VPst	= 35; # VOWEL_POST	UIPC = Right
+export VPre	= 22; # VOWEL_PRE / VOWEL_PRE_ABOVE / VOWEL_PRE_ABOVE_POST / VOWEL_PRE_POST
+export VMAbv	= 37; # VOWEL_MOD_ABOVE
+export VMBlw	= 38; # VOWEL_MOD_BELOW
+export VMPst	= 39; # VOWEL_MOD_POST
+export VMPre	= 23; # VOWEL_MOD_PRE
+export SMAbv	= 41; # SYM_MOD_ABOVE
+export SMBlw	= 42; # SYM_MOD_BELOW
+export FMAbv	= 45; # CONS_FINAL_MOD	UIPC = Top
+export FMBlw	= 46; # CONS_FINAL_MOD	UIPC = Bottom
+export FMPst	= 47; # CONS_FINAL_MOD	UIPC = Not_Applicable
 
-h = H | HVM | Sk;
+
+h = H | IS | Sk;
 
 consonant_modifiers = CMAbv* CMBlw* ((h B | SUB) CMAbv? CMBlw*)*;
 medial_consonants = MPre? MAbv? MBlw? MPst?;
-dependent_vowels = VPre* VAbv* VBlw* VPst*;
-vowel_modifiers = HVM? VMPre* VMAbv* VMBlw* VMPst*;
+dependent_vowels = VPre* VAbv* VBlw* VPst* | H;
+vowel_modifiers = VMPre* VMAbv* VMBlw* VMPst*;
 final_consonants = FAbv* FBlw* FPst*;
 final_modifiers = FMAbv* FMBlw* | FMPst?;
 
@@ -111,43 +133,48 @@ number_joiner_terminated_cluster_tail = (HN N)* HN;
 numeral_cluster_tail = (HN N)+;
 symbol_cluster_tail = SMAbv+ SMBlw* | SMBlw+;
 
+virama_terminated_cluster_tail =
+	consonant_modifiers
+	IS
+;
 virama_terminated_cluster =
 	complex_syllable_start
-	consonant_modifiers
-	h
+	virama_terminated_cluster_tail
+;
+sakot_terminated_cluster_tail =
+	complex_syllable_middle
+	Sk
 ;
 sakot_terminated_cluster =
 	complex_syllable_start
-	complex_syllable_middle
-	Sk
+	sakot_terminated_cluster_tail
 ;
 standard_cluster =
 	complex_syllable_start
 	complex_syllable_tail
 ;
+tail = complex_syllable_tail | sakot_terminated_cluster_tail | symbol_cluster_tail | virama_terminated_cluster_tail;
 broken_cluster =
 	R?
-	(complex_syllable_tail | number_joiner_terminated_cluster_tail | numeral_cluster_tail | symbol_cluster_tail)
+	(tail | number_joiner_terminated_cluster_tail | numeral_cluster_tail)
 ;
 
 number_joiner_terminated_cluster = N number_joiner_terminated_cluster_tail;
 numeral_cluster = N numeral_cluster_tail?;
-symbol_cluster = (S | GB) symbol_cluster_tail?;
+symbol_cluster = (O | GB) tail?;
 hieroglyph_cluster = SB+ | SB* G SE* (J SE* (G SE*)?)*;
-independent_cluster = O;
 other = any;
 
 main := |*
-	independent_cluster			=> { found_syllable (independent_cluster); };
-	virama_terminated_cluster		=> { found_syllable (virama_terminated_cluster); };
-	sakot_terminated_cluster		=> { found_syllable (sakot_terminated_cluster); };
-	standard_cluster			=> { found_syllable (standard_cluster); };
-	number_joiner_terminated_cluster	=> { found_syllable (number_joiner_terminated_cluster); };
-	numeral_cluster				=> { found_syllable (numeral_cluster); };
-	symbol_cluster				=> { found_syllable (symbol_cluster); };
-	hieroglyph_cluster			=> { found_syllable (hieroglyph_cluster); };
-	broken_cluster				=> { found_syllable (broken_cluster); };
-	other					=> { found_syllable (non_cluster); };
+	virama_terminated_cluster		=> { found_syllable (use_virama_terminated_cluster); };
+	sakot_terminated_cluster		=> { found_syllable (use_sakot_terminated_cluster); };
+	standard_cluster			=> { found_syllable (use_standard_cluster); };
+	number_joiner_terminated_cluster	=> { found_syllable (use_number_joiner_terminated_cluster); };
+	numeral_cluster				=> { found_syllable (use_numeral_cluster); };
+	symbol_cluster				=> { found_syllable (use_symbol_cluster); };
+	hieroglyph_cluster			=> { found_syllable (use_hieroglyph_cluster); };
+	broken_cluster				=> { found_syllable (use_broken_cluster); };
+	other					=> { found_syllable (use_non_cluster); };
 *|;
 
 
@@ -157,29 +184,85 @@ main := |*
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", (*ts).second.first, (*te).second.first, #syllable_type); \
     for (unsigned i = (*ts).second.first; i < (*te).second.first; ++i) \
-      info[i].syllable() = (syllable_serial << 4) | use_##syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
 
-static bool
-not_standard_default_ignorable (const hb_glyph_info_t &i)
-{ return !(i.use_category() == USE_O && _hb_glyph_info_is_default_ignorable (&i)); }
 
-static void
+template <typename Iter>
+struct machine_index_t :
+  hb_iter_with_fallback_t<machine_index_t<Iter>,
+			  typename Iter::item_t>
+{
+  machine_index_t (const Iter& it) : it (it) {}
+  machine_index_t (const machine_index_t& o) : hb_iter_with_fallback_t<machine_index_t<Iter>,
+								       typename Iter::item_t> (),
+					       it (o.it), is_null (o.is_null) {}
+
+  static constexpr bool is_random_access_iterator = Iter::is_random_access_iterator;
+  static constexpr bool is_sorted_iterator = Iter::is_sorted_iterator;
+
+  typename Iter::item_t __item__ () const { return *it; }
+  typename Iter::item_t __item_at__ (unsigned i) const { return it[i]; }
+  unsigned __len__ () const { return it.len (); }
+  void __next__ () { ++it; }
+  void __forward__ (unsigned n) { it += n; }
+  void __prev__ () { --it; }
+  void __rewind__ (unsigned n) { it -= n; }
+
+  void operator = (unsigned n)
+  {
+    assert (n == 0);
+    is_null = true;
+  }
+  explicit operator bool () { return !is_null; }
+
+  void operator = (const machine_index_t& o)
+  {
+    is_null = o.is_null;
+    unsigned index = (*it).first;
+    unsigned n = (*o.it).first;
+    if (index < n) it += n - index; else if (index > n) it -= index - n;
+  }
+  bool operator == (const machine_index_t& o) const
+  { return is_null ? o.is_null : !o.is_null && (*it).first == (*o.it).first; }
+  bool operator != (const machine_index_t& o) const { return !(*this == o); }
+
+  private:
+  Iter it;
+  bool is_null = false;
+};
+struct
+{
+  template <typename Iter,
+	    hb_requires (hb_is_iterable (Iter))>
+  machine_index_t<hb_iter_type<Iter>>
+  operator () (Iter&& it) const
+  { return machine_index_t<hb_iter_type<Iter>> (hb_iter (it)); }
+}
+HB_FUNCOBJ (machine_index);
+
+
+
+static bool
+not_ccs_default_ignorable (const hb_glyph_info_t &i)
+{ return i.use_category() != USE(CGJ); }
+
+static inline void
 find_syllables_use (hb_buffer_t *buffer)
 {
   hb_glyph_info_t *info = buffer->info;
   auto p =
     + hb_iter (info, buffer->len)
     | hb_enumerate
-    | hb_filter ([] (const hb_glyph_info_t &i) { return not_standard_default_ignorable (i); },
+    | hb_filter ([] (const hb_glyph_info_t &i) { return not_ccs_default_ignorable (i); },
 		 hb_second)
     | hb_filter ([&] (const hb_pair_t<unsigned, const hb_glyph_info_t &> p)
 		 {
-		   if (p.second.use_category() == USE_ZWNJ)
+		   if (p.second.use_category() == USE(ZWNJ))
 		     for (unsigned i = p.first + 1; i < buffer->len; ++i)
-		       if (not_standard_default_ignorable (info[i]))
+		       if (not_ccs_default_ignorable (info[i]))
 			 return !_hb_glyph_info_is_unicode_mark (&info[i]);
 		   return true;
 		 })

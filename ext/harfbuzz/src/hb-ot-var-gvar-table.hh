@@ -374,7 +374,7 @@ struct GlyphVariationData
 				 * low 12 bits are the number of tuple variation tables
 				 * for this glyph. The number of tuple variation tables
 				 * can be any number between 1 and 4095. */
-  OffsetTo<HBUINT8>
+  Offset16To<HBUINT8>
 		data;		/* Offset from the start of the GlyphVariationData table
 				 * to the serialized data. */
   /* TupleVariationHeader tupleVariationHeaders[] *//* Array of tuple variation headers. */
@@ -390,16 +390,13 @@ struct gvar
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) && (version.major == 1) &&
-		  (glyphCount == c->get_num_glyphs ()) &&
 		  sharedTuples.sanitize (c, this, axisCount * sharedTupleCount) &&
 		  (is_long_offset () ?
 		     c->check_array (get_long_offset_array (), glyphCount+1) :
-		     c->check_array (get_short_offset_array (), glyphCount+1)) &&
-		  c->check_array (((const HBUINT8*)&(this+dataZ)) + get_offset (0),
-				  get_offset (glyphCount) - get_offset (0)));
+		     c->check_array (get_short_offset_array (), glyphCount+1)));
   }
 
-  /* GlyphVariationData not sanitized here; must be checked while accessing each glyph varation data */
+  /* GlyphVariationData not sanitized here; must be checked while accessing each glyph variation data */
   bool sanitize (hb_sanitize_context_t *c) const
   { return sanitize_shallow (c); }
 
@@ -419,7 +416,9 @@ struct gvar
     out->glyphCount = num_glyphs;
 
     unsigned int subset_data_size = 0;
-    for (hb_codepoint_t gid = 0; gid < num_glyphs; gid++)
+    for (hb_codepoint_t gid = (c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE) ? 0 : 1;
+         gid < num_glyphs;
+         gid++)
     {
       hb_codepoint_t old_gid;
       if (!c->plan->old_gid_for_new_gid (gid, &old_gid)) continue;
@@ -449,7 +448,9 @@ struct gvar
     out->dataZ = subset_data - (char *) out;
 
     unsigned int glyph_offset = 0;
-    for (hb_codepoint_t gid = 0; gid < num_glyphs; gid++)
+    for (hb_codepoint_t gid = (c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE) ? 0 : 1;
+         gid < num_glyphs;
+         gid++)
     {
       hb_codepoint_t old_gid;
       hb_bytes_t var_data_bytes = c->plan->old_gid_for_new_gid (gid, &old_gid)
@@ -478,7 +479,9 @@ struct gvar
   const hb_bytes_t get_glyph_var_data_bytes (hb_blob_t *blob, hb_codepoint_t glyph) const
   {
     unsigned start_offset = get_offset (glyph);
-    unsigned length = get_offset (glyph+1) - start_offset;
+    unsigned end_offset = get_offset (glyph+1);
+    if (unlikely (end_offset < start_offset)) return hb_bytes_t ();
+    unsigned length = end_offset - start_offset;
     hb_bytes_t var_data = blob->as_bytes ().sub_array (((unsigned) dataZ) + start_offset, length);
     return likely (var_data.length >= GlyphVariationData::min_size) ? var_data : hb_bytes_t ();
   }
@@ -486,7 +489,10 @@ struct gvar
   bool is_long_offset () const { return flags & 1; }
 
   unsigned get_offset (unsigned i) const
-  { return is_long_offset () ? get_long_offset_array ()[i] : get_short_offset_array ()[i] * 2; }
+  {
+    if (unlikely (i > glyphCount)) return 0;
+    return is_long_offset () ? get_long_offset_array ()[i] : get_short_offset_array ()[i] * 2;
+  }
 
   const HBUINT32 * get_long_offset_array () const { return (const HBUINT32 *) &offsetZ; }
   const HBUINT16 *get_short_offset_array () const { return (const HBUINT16 *) &offsetZ; }
@@ -494,9 +500,9 @@ struct gvar
   public:
   struct accelerator_t
   {
-    void init (hb_face_t *face)
+    accelerator_t (hb_face_t *face)
     { table = hb_sanitize_context_t ().reference_table<gvar> (face); }
-    void fini () { table.destroy (); }
+    ~accelerator_t () { table.destroy (); }
 
     private:
     struct x_getter { static float get (const contour_point_t &p) { return p.x; } };
@@ -573,10 +579,11 @@ struct gvar
 
 	hb_bytes_t bytes ((const char *) p, length);
 	hb_vector_t<unsigned int> private_indices;
-	if (iterator.current_tuple->has_private_points () &&
+	bool has_private_points = iterator.current_tuple->has_private_points ();
+	if (has_private_points &&
 	    !GlyphVariationData::unpack_points (p, private_indices, bytes))
 	  return false;
-	const hb_array_t<unsigned int> &indices = private_indices.length ? private_indices : shared_indices;
+	const hb_array_t<unsigned int> &indices = has_private_points ? private_indices : shared_indices;
 
 	bool apply_to_all = (indices.length == 0);
 	unsigned int num_deltas = apply_to_all ? points.length : indices.length;
@@ -652,8 +659,8 @@ no_more_gaps:
 	/* apply specified / inferred deltas to points */
 	for (unsigned int i = 0; i < points.length; i++)
 	{
-	  points[i].x += roundf (deltas[i].x);
-	  points[i].y += roundf (deltas[i].y);
+	  points[i].x += deltas[i].x;
+	  points[i].y += deltas[i].y;
 	}
       } while (iterator.move_to_next ());
 
@@ -676,7 +683,7 @@ no_more_gaps:
 				 * can be referenced within glyph variation data tables for
 				 * multiple glyphs, as opposed to other tuple records stored
 				 * directly within a glyph variation data table. */
-  LNNOffsetTo<UnsizedArrayOf<F2DOT14>>
+  NNOffset32To<UnsizedArrayOf<F2DOT14>>
 		sharedTuples;	/* Offset from the start of this table to the shared tuple records.
 				 * Array of tuple records shared across all glyph variation data tables. */
   HBUINT16	glyphCount;	/* The number of glyphs in this font. This must match the number of
@@ -684,17 +691,19 @@ no_more_gaps:
   HBUINT16	flags;		/* Bit-field that gives the format of the offset array that follows.
 				 * If bit 0 is clear, the offsets are uint16; if bit 0 is set, the
 				 * offsets are uint32. */
-  LOffsetTo<GlyphVariationData>
+  Offset32To<GlyphVariationData>
 		dataZ;		/* Offset from the start of this table to the array of
 				 * GlyphVariationData tables. */
   UnsizedArrayOf<HBUINT8>
 		offsetZ;	/* Offsets from the start of the GlyphVariationData array
 				 * to each GlyphVariationData table. */
   public:
-  DEFINE_SIZE_MIN (20);
+  DEFINE_SIZE_ARRAY (20, offsetZ);
 };
 
-struct gvar_accelerator_t : gvar::accelerator_t {};
+struct gvar_accelerator_t : gvar::accelerator_t {
+  gvar_accelerator_t (hb_face_t *face) : gvar::accelerator_t (face) {}
+};
 
 } /* namespace OT */
 

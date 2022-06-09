@@ -27,70 +27,78 @@
 #ifndef HB_MAIN_FONT_TEXT_HH
 #define HB_MAIN_FONT_TEXT_HH
 
-#include "hb.hh"
 #include "options.hh"
 
 /* main() body for utilities taking font and processing text.*/
 
-static char *
-locale_to_utf8 (char *s)
+template <typename consumer_t,
+	  typename font_options_type,
+	  typename text_options_type>
+struct main_font_text_t :
+       option_parser_t,
+       font_options_type,
+       text_options_type,
+       consumer_t
 {
-  char *t;
-  GError *error = nullptr;
-
-  t = g_locale_to_utf8 (s, -1, nullptr, nullptr, &error);
-  if (!t)
+  int operator () (int argc, char **argv)
   {
-     fail (true, "Failed converting text to UTF-8");
-  }
+    add_options ();
+    parse (&argc, &argv);
 
-  return t;
-}
+    this->init (this);
 
-template <typename consumer_t, int default_font_size, int subpixel_bits>
-struct main_font_text_t
-{
-  main_font_text_t ()
-		  : options ("[FONT-FILE] [TEXT]"),
-		    font_opts (&options, default_font_size, subpixel_bits),
-		    input (&options),
-		    consumer (&options) {}
+    while (this->consume_line (*this))
+      ;
 
-  int
-  main (int argc, char **argv)
-  {
-    options.parse (&argc, &argv);
+    this->finish (this);
 
-    argc--, argv++;
-    if (argc && !font_opts.font_file) font_opts.font_file = locale_to_utf8 (argv[0]), argc--, argv++;
-    if (argc && !input.text && !input.text_file) input.text = locale_to_utf8 (argv[0]), argc--, argv++;
-    if (argc)
-      fail (true, "Too many arguments on the command line");
-    if (!font_opts.font_file)
-      options.usage ();
-    if (!input.text && !input.text_file)
-      input.text_file = g_strdup ("-");
-
-    hb_buffer_t *buffer = hb_buffer_create ();
-    consumer.init (buffer, &font_opts);
-    hb_buffer_destroy (buffer);
-
-    unsigned int text_len;
-    const char *text;
-    while ((text = input.get_line (&text_len)))
-      consumer.consume_line (text, text_len, input.text_before, input.text_after);
-
-    consumer.finish (&font_opts);
-
-    return consumer.failed ? 1 : 0;
+    return this->failed ? 1 : 0;
   }
 
   protected:
-  option_parser_t options;
-  font_options_t font_opts;
-  text_options_t input;
-  consumer_t consumer;
+
+  void add_options ()
+  {
+    font_options_type::add_options (this);
+    text_options_type::add_options (this);
+    consumer_t::add_options (this);
+
+    GOptionEntry entries[] =
+    {
+      {G_OPTION_REMAINING,	0, G_OPTION_FLAG_IN_MAIN,
+				G_OPTION_ARG_CALLBACK,	(gpointer) &collect_rest,	nullptr,	"[FONT-FILE] [TEXT]"},
+      {nullptr}
+    };
+    add_main_group (entries, this);
+    option_parser_t::add_options ();
+  }
+
+  private:
+
+  static gboolean
+  collect_rest (const char *name G_GNUC_UNUSED,
+		const char *arg,
+		gpointer    data,
+		GError    **error)
+  {
+    main_font_text_t *thiz = (main_font_text_t *) data;
+
+    if (!thiz->font_file)
+    {
+      thiz->font_file = g_strdup (arg);
+      return true;
+    }
+
+    if (!thiz->text && !thiz->text_file)
+    {
+      thiz->text = g_strdup (arg);
+      return true;
+    }
+
+    g_set_error (error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED,
+		 "Too many arguments on the command line");
+    return false;
+  }
 };
 
 #endif
-

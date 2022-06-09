@@ -675,25 +675,25 @@ pdf_format_link_uri(fz_context *ctx, fz_link_dest dest)
 		if (isnan(dest.y))
 			uri = fz_asprintf(ctx, "#page=%d&view=FitH", dest.loc.page + 1);
 		else
-		uri = fz_asprintf(ctx, "#page=%d&view=FitH,%g", dest.loc.page + 1, dest.y);
+			uri = fz_asprintf(ctx, "#page=%d&view=FitH,%g", dest.loc.page + 1, dest.y);
 		break;
 	case FZ_LINK_DEST_FIT_BH:
 		if (isnan(dest.y))
 			uri = fz_asprintf(ctx, "#page=%d&view=FitBH", dest.loc.page + 1);
 		else
-		uri = fz_asprintf(ctx, "#page=%d&view=FitBH,%g", dest.loc.page + 1, dest.y);
+			uri = fz_asprintf(ctx, "#page=%d&view=FitBH,%g", dest.loc.page + 1, dest.y);
 		break;
 	case FZ_LINK_DEST_FIT_V:
 		if (isnan(dest.x))
 			uri = fz_asprintf(ctx, "#page=%d&view=FitV", dest.loc.page + 1);
 		else
-		uri = fz_asprintf(ctx, "#page=%d&view=FitV,%g", dest.loc.page + 1, dest.x);
+			uri = fz_asprintf(ctx, "#page=%d&view=FitV,%g", dest.loc.page + 1, dest.x);
 		break;
 	case FZ_LINK_DEST_FIT_BV:
 		if (isnan(dest.x))
 			uri = fz_asprintf(ctx, "#page=%d&view=FitBV", dest.loc.page + 1);
 		else
-		uri = fz_asprintf(ctx, "#page=%d&view=FitBV,%g", dest.loc.page + 1, dest.x);
+			uri = fz_asprintf(ctx, "#page=%d&view=FitBV,%g", dest.loc.page + 1, dest.x);
 		break;
 	case FZ_LINK_DEST_XYZ:
 		if (!isnan(dest.zoom) && !isnan(dest.x) && !isnan(dest.y))

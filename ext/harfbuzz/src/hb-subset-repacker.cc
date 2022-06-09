@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018  Google, Inc.
+ * Copyright © 2022  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,23 +21,29 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Google Author(s): Behdad Esfahbod
  */
+#include "hb-repacker.hh"
 
-#include "hb-ot-shape-complex-indic.hh"
-
-int
-main ()
+#ifdef HB_EXPERIMENTAL_API
+/**
+ * hb_subset_repack_or_fail:
+ * @hb_objects: raw array of struct hb_object_t, which provides
+ * object graph info
+ * @num_hb_objs: number of hb_object_t in the hb_objects array.
+ *
+ * Given the input object graph info, repack a table to eliminate
+ * offset overflows. A nullptr is returned if the repacking attempt fails.
+ *
+ * Since: EXPERIMENTAL
+ **/
+hb_blob_t* hb_subset_repack_or_fail (hb_object_t* hb_objects, unsigned num_hb_objs)
 {
-  for (hb_codepoint_t u = 0; u <= 0x10FFFF; u++)
-  {
-    hb_glyph_info_t info;
-    info.codepoint = u;
-    set_indic_properties (info);
-    if (info.indic_category() != INDIC_SYLLABIC_CATEGORY_OTHER ||
-	info.indic_position() != INDIC_MATRA_CATEGORY_NOT_APPLICABLE)
-      printf("U+%04X	%u	%u\n", u,
-	     info.indic_category(),
-	     info.indic_position());
-  }
+  hb_vector_t<const hb_object_t *> packed;
+  packed.alloc (num_hb_objs + 1);
+  packed.push (nullptr);
+  for (unsigned i = 0 ; i < num_hb_objs ; i++)
+    packed.push (&(hb_objects[i]));
+  return hb_resolve_overflows (packed, HB_OT_TAG_GSUB);
 }
+#endif
+

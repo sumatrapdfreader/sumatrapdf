@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018  Google, Inc.
+ * Copyright © 2022  Behdad Esfahbod
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,22 +20,27 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-khmer.hh"
+#include "hb.hh"
+#include "hb-machinery.hh"
+
+struct hb_intp_lazy_loader_t : hb_lazy_loader_t<int, hb_intp_lazy_loader_t>
+{
+  static int* create () { return nullptr; }
+  static void destroy (int* l) {}
+  static int* get_null () { return nullptr; }
+};
+
+struct hb_void_lazy_loader_t : hb_lazy_loader_t<void, hb_void_lazy_loader_t>
+{
+  static void* create () { return nullptr; }
+  static void destroy (void* l) {}
+  static void* get_null () { return nullptr; }
+};
 
 int
-main ()
+main (int argc, char **argv)
 {
-  for (hb_codepoint_t u = 0; u <= 0x10FFFF; u++)
-  {
-    hb_glyph_info_t info;
-    info.codepoint = u;
-    set_khmer_properties (info);
-    if (info.khmer_category() != INDIC_SYLLABIC_CATEGORY_OTHER)
-      printf("U+%04X	%u\n", u,
-	     info.khmer_category());
-  }
+  return 0;
 }

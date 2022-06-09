@@ -29,32 +29,41 @@
 
 #include "hb.hh"
 
+enum indic_syllable_type_t {
+  indic_consonant_syllable,
+  indic_vowel_syllable,
+  indic_standalone_cluster,
+  indic_symbol_cluster,
+  indic_broken_cluster,
+  indic_non_indic_cluster,
+};
+
 %%{
   machine indic_syllable_machine;
   alphtype unsigned char;
+  write exports;
   write data;
 }%%
 
 %%{
 
-# Same order as enum indic_category_t.  Not sure how to avoid duplication.
-C    = 1;
-V    = 2;
-N    = 3;
-H    = 4;
-ZWNJ = 5;
-ZWJ  = 6;
-M    = 7;
-SM   = 8;
-A    = 10;
-PLACEHOLDER = 11;
-DOTTEDCIRCLE = 12;
-RS    = 13;
-Repha = 15;
-Ra    = 16;
-CM    = 17;
-Symbol= 18;
-CS    = 19;
+export C    = 1;
+export V    = 2;
+export N    = 3;
+export H    = 4;
+export ZWNJ = 5;
+export ZWJ  = 6;
+export M    = 7;
+export SM   = 8;
+export A    = 10;
+export PLACEHOLDER = 11;
+export DOTTEDCIRCLE = 12;
+export RS    = 13;
+export Repha = 15;
+export Ra    = 16;
+export CM    = 17;
+export Symbol= 18;
+export CS    = 19;
 
 c = (C | Ra);			# is_consonant
 n = ((ZWNJ?.RS)? (N.N?)?);	# is_consonant_modifier
@@ -76,17 +85,17 @@ complex_syllable_tail = (halant_group.cn)* medial_group halant_or_matra_group sy
 consonant_syllable =	(Repha|CS)? cn complex_syllable_tail;
 vowel_syllable =	reph? V.n? (ZWJ | complex_syllable_tail);
 standalone_cluster =	((Repha|CS)? PLACEHOLDER | reph? DOTTEDCIRCLE).n? complex_syllable_tail;
-symbol_cluster = 	symbol syllable_tail;
+symbol_cluster =	symbol syllable_tail;
 broken_cluster =	reph? n? complex_syllable_tail;
 other =			any;
 
 main := |*
-	consonant_syllable	=> { found_syllable (consonant_syllable); };
-	vowel_syllable		=> { found_syllable (vowel_syllable); };
-	standalone_cluster	=> { found_syllable (standalone_cluster); };
-	symbol_cluster		=> { found_syllable (symbol_cluster); };
-	broken_cluster		=> { found_syllable (broken_cluster); };
-	other			=> { found_syllable (non_indic_cluster); };
+	consonant_syllable	=> { found_syllable (indic_consonant_syllable); };
+	vowel_syllable		=> { found_syllable (indic_vowel_syllable); };
+	standalone_cluster	=> { found_syllable (indic_standalone_cluster); };
+	symbol_cluster		=> { found_syllable (indic_symbol_cluster); };
+	broken_cluster		=> { found_syllable (indic_broken_cluster); };
+	other			=> { found_syllable (indic_non_indic_cluster); };
 *|;
 
 
@@ -96,7 +105,7 @@ main := |*
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
-      info[i].syllable() = (syllable_serial << 4) | indic_##syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END

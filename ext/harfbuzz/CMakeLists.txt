@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.0)
+cmake_minimum_required(VERSION 3.1)
 project(harfbuzz)
 
 message(WARN "HarfBuzz has a Meson port and tries to migrate all the other build systems to it, please consider using it as we might remove our cmake port soon.")
@@ -37,6 +37,10 @@ option(HB_HAVE_FREETYPE "Enable freetype interop helpers" OFF)
 option(HB_HAVE_GRAPHITE2 "Enable Graphite2 complementary shaper" OFF)
 option(HB_HAVE_GLIB "Enable glib unicode functions" OFF)
 option(HB_HAVE_ICU "Enable icu unicode functions" OFF)
+if (TARGET freetype)
+  set (HB_HAVE_FREETYPE ON)
+  add_definitions(-DHAVE_FREETYPE=1)
+endif ()
 if (APPLE)
   option(HB_HAVE_CORETEXT "Enable CoreText shaper backend on macOS" ON)
   set (CMAKE_MACOSX_RPATH ON)
@@ -102,6 +106,14 @@ if (${HAVE_STDBOOL_H})
   add_definitions(-DHAVE_STDBOOL_H)
 endif ()
 
+if (NOT MSVC)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads)
+  if (CMAKE_USE_PTHREADS_INIT)
+    add_definitions("-DHAVE_PTHREAD")
+    list(APPEND THIRD_PARTY_LIBS Threads::Threads)
+  endif ()
+endif ()
 
 if (MSVC)
   add_definitions(-wd4244 -wd4267 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
@@ -176,7 +188,7 @@ set (project_headers ${HB_BASE_headers})
 set (subset_project_headers ${HB_SUBSET_headers})
 
 ## Find and include needed header folders and libraries
-if (HB_HAVE_FREETYPE)
+if (HB_HAVE_FREETYPE AND NOT TARGET freetype)
   include (FindFreetype)
   if (NOT FREETYPE_FOUND)
     message(FATAL_ERROR "HB_HAVE_FREETYPE was set, but we failed to find it. Maybe add a CMAKE_PREFIX_PATH= to your Freetype2 install prefix")
@@ -406,41 +418,16 @@ if (HB_HAVE_GOBJECT)
   )
 endif ()
 
-## Atomic ops availability detection
-file(WRITE "${PROJECT_BINARY_DIR}/try_compile_intel_atomic_primitives.c"
-"		void memory_barrier (void) { __sync_synchronize (); }
-		int atomic_add (int *i) { return __sync_fetch_and_add (i, 1); }
-		int mutex_trylock (int *m) { return __sync_lock_test_and_set (m, 1); }
-		void mutex_unlock (int *m) { __sync_lock_release (m); }
-		int main () { return 0; }
-")
-try_compile(HB_HAVE_INTEL_ATOMIC_PRIMITIVES
-  ${PROJECT_BINARY_DIR}/try_compile_intel_atomic_primitives
-  ${PROJECT_BINARY_DIR}/try_compile_intel_atomic_primitives.c)
-if (HB_HAVE_INTEL_ATOMIC_PRIMITIVES)
-  add_definitions(-DHAVE_INTEL_ATOMIC_PRIMITIVES)
-endif ()
-
-file(WRITE "${PROJECT_BINARY_DIR}/try_compile_solaris_atomic_ops.c"
-"		#include <atomic.h>
-		/* This requires Solaris Studio 12.2 or newer: */
-		#include <mbarrier.h>
-		void memory_barrier (void) { __machine_rw_barrier (); }
-		int atomic_add (volatile unsigned *i) { return atomic_add_int_nv (i, 1); }
-		void *atomic_ptr_cmpxchg (volatile void **target, void *cmp, void *newval) { return atomic_cas_ptr (target, cmp, newval); }
-		int main () { return 0; }
-")
-try_compile(HB_HAVE_SOLARIS_ATOMIC_OPS
-  ${PROJECT_BINARY_DIR}/try_compile_solaris_atomic_ops
-  ${PROJECT_BINARY_DIR}/try_compile_solaris_atomic_ops.c)
-if (HB_HAVE_SOLARIS_ATOMIC_OPS)
-  add_definitions(-DHAVE_SOLARIS_ATOMIC_OPS)
-endif ()
-
 
 ## Define harfbuzz library
 add_library(harfbuzz ${project_sources} ${project_extra_sources} ${project_headers})
 target_link_libraries(harfbuzz ${THIRD_PARTY_LIBS})
+target_include_directories(harfbuzz PUBLIC
+                           "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+                           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/harfbuzz>")
+if (HB_HAVE_FREETYPE AND TARGET freetype)
+  target_link_libraries(harfbuzz PUBLIC freetype)
+endif ()
 
 
 ## Define harfbuzz-icu library
@@ -458,6 +445,7 @@ endif ()
 ## Define harfbuzz-subset library
 if (HB_BUILD_SUBSET)
   add_library(harfbuzz-subset ${subset_project_sources} ${subset_project_headers})
+  list(APPEND project_headers ${PROJECT_SOURCE_DIR}/src/hb-subset.h)
   add_dependencies(harfbuzz-subset harfbuzz)
   target_link_libraries(harfbuzz-subset harfbuzz ${THIRD_PARTY_LIBS})
 
@@ -474,7 +462,9 @@ if (UNIX OR MINGW)
     link_libraries(-Bsymbolic-functions)
   endif ()
 
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # As of CMake 3.0.0, the compiler id for Apple-provided Clang is now "AppleClang";
+  # thus we use MATCHES instead of STREQUAL to include either regular Clang or AppleClang
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Make sure we don't link to libstdc++
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
     set (CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "m") # libm
@@ -722,6 +712,11 @@ if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
       FRAMEWORK DESTINATION Library/Frameworks
     )
+  endif ()
+  if (HB_BUILD_SUBSET)
+    install(TARGETS harfbuzz-subset
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
   endif ()
   if (HB_BUILD_UTILS)
     if (WIN32 AND BUILD_SHARED_LIBS)

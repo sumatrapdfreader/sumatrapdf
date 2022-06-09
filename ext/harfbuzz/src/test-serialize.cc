@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018  Google, Inc.
+ * Copyright © 2022  Behdad Esfahbod
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,23 +21,31 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-myanmar.hh"
+#include "hb.hh"
+#include "hb-serialize.hh"
+#include "hb-ot-layout-common.hh"
+
 
 int
-main ()
+main (int argc, char **argv)
 {
-  for (hb_codepoint_t u = 0; u <= 0x10FFFF; u++)
-  {
-    hb_glyph_info_t info;
-    info.codepoint = u;
-    set_myanmar_properties (info);
-    if (info.myanmar_category() != INDIC_SYLLABIC_CATEGORY_OTHER ||
-	info.myanmar_position() != INDIC_MATRA_CATEGORY_NOT_APPLICABLE)
-      printf("U+%04X	%u	%u\n", u,
-	     info.myanmar_category(),
-	     info.myanmar_position());
-  }
+  char buf[16384];
+
+  hb_serialize_context_t s (buf, sizeof (buf));
+
+  hb_sorted_vector_t<hb_codepoint_t> v{1, 2, 5};
+
+  auto c = s.start_serialize<OT::Coverage> ();
+
+  c->serialize (&s, hb_iter (v));
+
+  s.end_serialize ();
+
+  hb_bytes_t bytes = s.copy_bytes ();
+  assert (bytes.length == 10);
+  bytes.fini ();
+
+  return 0;
 }

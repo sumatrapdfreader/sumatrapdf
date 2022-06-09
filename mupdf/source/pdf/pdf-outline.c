@@ -624,7 +624,7 @@ pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *ur
 			if (isnan(p.y))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, p.y);
+				pdf_array_push_real(ctx, dest, p.y);
 			break;
 		case FZ_LINK_DEST_FIT_BH:
 			p = fz_transform_point_xy(0, val.y, invctm);
@@ -632,7 +632,7 @@ pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *ur
 			if (isnan(p.y))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, p.y);
+				pdf_array_push_real(ctx, dest, p.y);
 			break;
 		case FZ_LINK_DEST_FIT_V:
 			p = fz_transform_point_xy(val.x, 0, invctm);
@@ -640,7 +640,7 @@ pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *ur
 			if (isnan(p.x))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, p.x);
+				pdf_array_push_real(ctx, dest, p.x);
 			break;
 		case FZ_LINK_DEST_FIT_BV:
 			p = fz_transform_point_xy(val.x, 0, invctm);
@@ -648,7 +648,7 @@ pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *ur
 			if (isnan(p.x))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, p.x);
+				pdf_array_push_real(ctx, dest, p.x);
 			break;
 		case FZ_LINK_DEST_XYZ:
 			p = fz_transform_point_xy(val.x, val.y, invctm);
@@ -656,15 +656,15 @@ pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *ur
 			if (isnan(p.x))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, p.x);
+				pdf_array_push_real(ctx, dest, p.x);
 			if (isnan(p.y))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, p.y);
+				pdf_array_push_real(ctx, dest, p.y);
 			if (isnan(val.zoom))
 				pdf_array_push(ctx, dest, PDF_NULL);
 			else
-			pdf_array_push_real(ctx, dest, val.zoom / 100);
+				pdf_array_push_real(ctx, dest, val.zoom / 100);
 			break;
 		case FZ_LINK_DEST_FIT_R:
 			r.x0 = val.x;

@@ -74,7 +74,7 @@ static pdf_js *unpack_arguments(js_State *J, ...)
 
 static void app_alert(js_State *J)
 {
-	pdf_js *js = unpack_arguments(J, "cMsg", "nIcon", "nType", "cTitle", "oDoc", "oCheckbox", 0);
+	pdf_js *js = unpack_arguments(J, "cMsg", "nIcon", "nType", "cTitle", "oDoc", "oCheckbox", NULL);
 	pdf_alert_event evt;
 
 	/* TODO: Currently we do not support app.openDoc() in javascript actions, hence
@@ -555,7 +555,7 @@ static void doc_print(js_State *J)
 
 static void doc_mailDoc(js_State *J)
 {
-	pdf_js *js = unpack_arguments(J, "bUI", "cTo", "cCc", "cBcc", "cSubject", "cMessage", 0);
+	pdf_js *js = unpack_arguments(J, "bUI", "cTo", "cCc", "cBcc", "cSubject", "cMessage", NULL);
 	pdf_mail_doc_event evt;
 
 	evt.ask_user = js_isdefined(J, 1) ? js_toboolean(J, 1) : 1;
@@ -1305,5 +1305,7 @@ int pdf_js_event_result(pdf_js *js) { return 1; }
 char *pdf_js_event_value(pdf_js *js) { return ""; }
 void pdf_js_execute(pdf_js *js, const char *name, const char *source, char **result) { }
 int pdf_js_event_result_validate(pdf_js *js, char **newvalue) { *newvalue=NULL; return 1; }
+pdf_js_console *pdf_js_get_console(fz_context *ctx, pdf_document *doc) { return NULL; }
+void pdf_js_set_console(fz_context *ctx, pdf_document *doc, pdf_js_console *console, void *user) { }
 
 #endif /* FZ_ENABLE_JS */

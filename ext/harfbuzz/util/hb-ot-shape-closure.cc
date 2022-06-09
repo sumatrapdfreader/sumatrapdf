@@ -24,23 +24,22 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "batch.hh"
+#include "font-options.hh"
 #include "main-font-text.hh"
+#include "shape-options.hh"
+#include "text-options.hh"
 
-#ifdef HAVE_FREETYPE
-#include <hb-ft.h>
-#endif
+const unsigned DEFAULT_FONT_SIZE = FONT_SIZE_NONE;
+const unsigned SUBPIXEL_BITS = 0;
 
-struct shape_closure_consumer_t : option_group_t
+struct shape_closure_consumer_t
 {
-  shape_closure_consumer_t (option_parser_t *parser) :
-			    shaper (parser),
-			    show_glyph_names (true)
+  void add_options (struct option_parser_t *parser)
   {
-    add_options (parser);
-  }
+    parser->set_summary ("Find glyph set from input text under shaping closure.");
+    shaper.add_options (parser);
 
-  void add_options (struct option_parser_t *parser) override
-  {
     GOptionEntry entries[] =
     {
       {"no-glyph-names",	0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,	&this->show_glyph_names,	"Use glyph indices instead of names",	nullptr},
@@ -53,24 +52,26 @@ struct shape_closure_consumer_t : option_group_t
 		       this);
   }
 
-  void init (hb_buffer_t  *buffer_,
-	     const font_options_t *font_opts)
+  void init (const font_options_t *font_opts)
   {
     glyphs = hb_set_create ();
-    font = hb_font_reference (font_opts->get_font ());
+    font = hb_font_reference (font_opts->font);
     failed = false;
-    buffer = hb_buffer_reference (buffer_);
+    buffer = hb_buffer_create ();
   }
-  void consume_line (const char   *text,
-		     unsigned int  text_len,
-		     const char   *text_before,
-		     const char   *text_after)
+  template <typename text_options_type>
+  bool consume_line (text_options_type &text_opts)
   {
+    unsigned int text_len;
+    const char *text;
+    if (!(text = text_opts.get_line (&text_len)))
+      return false;
+
     hb_set_clear (glyphs);
     shaper.shape_closure (text, text_len, font, buffer, glyphs);
 
     if (hb_set_is_empty (glyphs))
-      return;
+      return true;
 
     /* Print it out! */
     bool first = true;
@@ -88,6 +89,8 @@ struct shape_closure_consumer_t : option_group_t
       } else
 	printf ("%u", i);
     }
+
+    return true;
   }
   void finish (const font_options_t *font_opts)
   {
@@ -104,16 +107,16 @@ struct shape_closure_consumer_t : option_group_t
 
   protected:
   shape_options_t shaper;
-  hb_bool_t show_glyph_names;
+  hb_bool_t show_glyph_names = false;
 
-  hb_set_t *glyphs;
-  hb_font_t *font;
-  hb_buffer_t *buffer;
+  hb_set_t *glyphs = nullptr;
+  hb_font_t *font = nullptr;
+  hb_buffer_t *buffer = nullptr;
 };
 
 int
 main (int argc, char **argv)
 {
-  main_font_text_t<shape_closure_consumer_t, FONT_SIZE_NONE, 0> driver;
-  return driver.main (argc, argv);
+  using main_t = main_font_text_t<shape_closure_consumer_t, font_options_t, text_options_t>;
+  return batch_main<main_t> (argc, argv);
 }

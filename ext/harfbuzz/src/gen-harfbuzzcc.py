@@ -14,5 +14,9 @@ sources = sys.argv[3:]
 with open (OUTPUT, "wb") as f:
 	f.write ("".join ('#include "{}"\n'.format (os.path.basename (x)) for x in sources if x.endswith (".cc")).encode ())
 
-# copy it also to src/
-shutil.copyfile (OUTPUT, os.path.join (CURRENT_SOURCE_DIR, os.path.basename (OUTPUT)))
+# copy it also to the source tree, but only if it has changed
+baseline_filename = os.path.join (CURRENT_SOURCE_DIR, os.path.basename (OUTPUT))
+with open(baseline_filename, "rb") as baseline:
+	with open(OUTPUT, "rb") as generated:
+		if baseline.read() != generated.read():
+			shutil.copyfile (OUTPUT, baseline_filename)

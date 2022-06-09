@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
-"""usage: ./gen-emoji-table.py emoji-data.txt
+"""usage: ./gen-emoji-table.py emoji-data.txt emoji-test.txt
 
 Input file:
 * https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt
+* https://www.unicode.org/Public/emoji/latest/emoji-test.txt
 """
 
 import sys
 from collections import OrderedDict
 import packTab
 
-if len (sys.argv) != 2:
+if len (sys.argv) != 3:
 	sys.exit (__doc__)
 
 f = open(sys.argv[1])
@@ -61,7 +62,7 @@ for typ, s in ranges.items():
 
 	arr = dict()
 	for start,end in s:
-		for i in range(start,end):
+		for i in range(start, end + 1):
 			arr[i] = 1
 
 	sol = packTab.pack_table(arr, 0, compression=3)
@@ -74,3 +75,24 @@ print ()
 print ("#endif /* HB_UNICODE_EMOJI_TABLE_HH */")
 print ()
 print ("/* == End of generated table == */")
+
+
+# Generate test file.
+sequences = []
+with open(sys.argv[2]) as f:
+    for line in f.readlines():
+        if "#" in line:
+            line = line[:line.index("#")]
+        if ";" in line:
+            line = line[:line.index(";")]
+        line = line.strip()
+        line = line.split(" ")
+        if len(line) < 2:
+            continue
+        sequences.append(line)
+
+with open("../test/shaping/data/in-house/tests/emoji-clusters.tests", "w") as f:
+    for sequence in sequences:
+        f.write("../fonts/AdobeBlank2.ttf:--no-glyph-names --no-positions --font-funcs=ot")
+        f.write(":" + ",".join(sequence))
+        f.write(":[" + "|".join("1=0" for c in sequence) + "]\n")

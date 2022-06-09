@@ -218,7 +218,7 @@ pdf_add_cid_system_info(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, const
 }
 
 /* Different states of starting, same width as last, or consecutive glyph */
-enum { FW_START, FW_SAME, FW_RUN };
+enum { FW_START = 0, FW_SAME, FW_DIFFER };
 
 /* ToDo: Ignore the default sized characters */
 static void
@@ -228,64 +228,72 @@ pdf_add_cid_font_widths(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, fz_fo
 	pdf_obj *run_obj = NULL;
 	pdf_obj *fw;
 	int curr_code;
-	int prev_code;
 	int curr_size;
-	int prev_size;
 	int first_code;
-	int new_first_code;
 	int state = FW_START;
-	int new_state = FW_START;
-	int publish = 0;
 
 	fz_var(run_obj);
 
 	fw = pdf_add_new_array(ctx, doc, 10);
 	fz_try(ctx)
 	{
-		prev_code = 0;
-		prev_size = fz_advance_glyph(ctx, font, 0, 0) * 1000;
-		first_code = prev_code;
+		curr_code = 0;
+		curr_size = fz_advance_glyph(ctx, font, 0, 0) * 1000;
+		first_code = 0;
 
-		for (;;)
+		for (curr_code = 1; curr_code < face->num_glyphs; curr_code++)
 		{
-			curr_code = prev_code + 1;
-			if (curr_code >= face->num_glyphs)
-				break;
+			int prev_size = curr_size;
+
 			curr_size = fz_advance_glyph(ctx, font, curr_code, 0) * 1000;
 
+			/* So each time around the loop when we reach here, we have sizes
+			 * for curr_code-1 (prev_size) and curr_code (curr_size), neither
+			 * of which have been published yet. By the time we reach the end
+			 * of the loop we must have disposed of prev_size. */
 			switch (state)
 			{
 			case FW_SAME:
+				/* Until now, we've been in a run of identical values, extending
+				 * from first_code to curr_code-1. If the current and prev sizes
+				 * match, then this now extends from first_code to curr_code and
+				 * we don't need to do anything. If not, we need to flush and
+				 * restart. */
 				if (curr_size != prev_size)
 				{
-					/* End of same widths for consecutive ids. Current will
-					 * be pushed as prev. below during next iteration */
-					publish = 1;
-					if (curr_code < face->num_glyphs)
-						run_obj = pdf_new_array(ctx, doc, 10);
-					new_state = FW_RUN;
-					/* And the new first code is our current code */
-					new_first_code = curr_code;
+					/* Add three entries. First cid, last cid and width */
+					pdf_array_push_int(ctx, fw, first_code);
+					pdf_array_push_int(ctx, fw, curr_code-1);
+					pdf_array_push_int(ctx, fw, prev_size);
+					/* And the new first code is our current code. */
+					first_code = curr_code;
+					state = FW_START;
 				}
 				break;
-			case FW_RUN:
+			case FW_DIFFER:
+				/* Until now, we've been in a run of differing values, extending
+				 * from first_code to curr_code-1 (though prev_size, the size for
+				 * curr_code-1 has not yet been pushed). */
 				if (curr_size == prev_size)
 				{
-					/* Same width, so start a new same entry starting with
-					 * the previous code. i.e. the prev size is not put
-					 * in the run */
-					publish = 1;
-					new_state = FW_SAME;
-					new_first_code = prev_code;
+					/* Same width, so flush the run of differences. */
+					pdf_array_push_int(ctx, fw, first_code);
+					pdf_array_push(ctx, fw, run_obj);
+					pdf_drop_obj(ctx, run_obj);
+					run_obj = NULL;
+					/* Start a new 'same' entry starting with curr_code-1.
+					 * i.e. the prev size is not put in the run. */
+					state = FW_SAME;
+					first_code = curr_code-1;
 				}
 				else
 				{
-					/* Add prev size to run_obj */
+					/* Continue our differing run by adding prev size to run_obj. */
 					pdf_array_push_int(ctx, run_obj, prev_size);
 				}
 				break;
 			case FW_START:
-				/* Starting fresh. Determine our state */
+				/* Starting fresh. Determine our state. */
 				if (curr_size == prev_size)
 				{
 					state = FW_SAME;
@@ -294,55 +302,38 @@ pdf_add_cid_font_widths(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, fz_fo
 				{
 					run_obj = pdf_new_array(ctx, doc, 10);
 					pdf_array_push_int(ctx, run_obj, prev_size);
-					state = FW_RUN;
+					state = FW_DIFFER;
 				}
-				new_first_code = prev_code;
 				break;
 			}
-
-			if (publish || curr_code == face->num_glyphs)
-			{
-				switch (state)
-				{
-				case FW_SAME:
-					/* Add three entries. First cid, last cid and width */
-					pdf_array_push_int(ctx, fw, first_code);
-					pdf_array_push_int(ctx, fw, prev_code);
-					pdf_array_push_int(ctx, fw, prev_size);
-					break;
-				case FW_RUN:
-					if (pdf_array_len(ctx, run_obj) > 0)
-					{
-						pdf_array_push_int(ctx, fw, first_code);
-						pdf_array_push(ctx, fw, run_obj);
-					}
-					pdf_drop_obj(ctx, run_obj);
-					run_obj = NULL;
-					break;
-				case FW_START:
-					/* Lone wolf. Not part of a consecutive run */
-					pdf_array_push_int(ctx, fw, prev_code);
-					pdf_array_push_int(ctx, fw, prev_code);
-					pdf_array_push_int(ctx, fw, prev_size);
-					break;
-				}
-
-				if (curr_code < face->num_glyphs)
-				{
-					state = new_state;
-					first_code = new_first_code;
-					publish = 0;
-				}
-			}
-
-			prev_size = curr_size;
-			prev_code = curr_code;
 		}
 
-		if (pdf_array_len(ctx, run_obj) > 0)
+		/* So curr_code-1 is the last valid char, and curr_size was its size. */
+		switch (state)
 		{
+		case FW_SAME:
+			/* We have an unflushed run of same entries. */
+			if (first_code != curr_code-1)
+			{
+				pdf_array_push_int(ctx, fw, first_code);
+				pdf_array_push_int(ctx, fw, curr_code-1);
+				pdf_array_push_int(ctx, fw, curr_size);
+			}
+			break;
+		case FW_DIFFER:
+			/* We have not yet pushed curr_size to the object. */
 			pdf_array_push_int(ctx, fw, first_code);
+			pdf_array_push_int(ctx, run_obj, curr_size);
 			pdf_array_push(ctx, fw, run_obj);
+			pdf_drop_obj(ctx, run_obj);
+			run_obj = NULL;
+			break;
+		case FW_START:
+			/* Lone wolf! */
+			pdf_array_push_int(ctx, fw, curr_code-1);
+			pdf_array_push_int(ctx, fw, curr_code-1);
+			pdf_array_push_int(ctx, fw, curr_size);
+			break;
 		}
 
 		if (font->width_table != NULL)

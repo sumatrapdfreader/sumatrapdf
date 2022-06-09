@@ -3,7 +3,7 @@ hb_version_h = configure_file(
                input: 'hb-version.h.in',
                output: 'hb-version.h',
                install: true,
-               install_dir: join_paths(get_option('includedir'), meson.project_name()))
+               install_dir: get_option('includedir') / meson.project_name())
 
 # Base and default-included sources and headers
 hb_base_sources = files(
@@ -25,9 +25,11 @@ hb_base_sources = files(
   'hb-array.hh',
   'hb-atomic.hh',
   'hb-bimap.hh',
+  'hb-bit-page.hh',
   'hb-blob.cc',
   'hb-blob.hh',
   'hb-buffer-serialize.cc',
+  'hb-buffer-verify.cc',
   'hb-buffer.cc',
   'hb-buffer.hh',
   'hb-cache.hh',
@@ -53,6 +55,7 @@ hb_base_sources = files(
   'hb-map.cc',
   'hb-map.hh',
   'hb-meta.hh',
+  'hb-ms-feature-ranges.hh',
   'hb-mutex.hh',
   'hb-null.hh',
   'hb-number.cc',
@@ -89,6 +92,28 @@ hb_base_sources = files(
   'hb-ot-layout-gdef-table.hh',
   'hb-ot-layout-gpos-table.hh',
   'hb-ot-layout-gsub-table.hh',
+  'OT/Layout/GSUB/Common.hh',
+  'OT/Layout/GSUB/Sequence.hh',
+  'OT/Layout/GSUB/SingleSubstFormat1.hh',
+  'OT/Layout/GSUB/SingleSubstFormat2.hh',
+  'OT/Layout/GSUB/SingleSubst.hh',
+  'OT/Layout/GSUB/MultipleSubstFormat1.hh',
+  'OT/Layout/GSUB/MultipleSubst.hh',
+  'OT/Layout/GSUB/AlternateSubstFormat1.hh',
+  'OT/Layout/GSUB/AlternateSubst.hh',
+  'OT/Layout/GSUB/AlternateSet.hh',
+  'OT/Layout/GSUB/LigatureSubstFormat1.hh',
+  'OT/Layout/GSUB/LigatureSubst.hh',
+  'OT/Layout/GSUB/LigatureSet.hh',
+  'OT/Layout/GSUB/Ligature.hh',
+  'OT/Layout/GSUB/ReverseChainSingleSubst.hh',
+  'OT/Layout/GSUB/ReverseChainSingleSubstFormat1.hh',
+  'OT/Layout/GSUB/ContextSubst.hh',
+  'OT/Layout/GSUB/ChainContextSubst.hh',
+  'OT/Layout/GSUB/ExtensionSubst.hh',
+  'OT/Layout/GSUB/SubstLookupSubTable.hh',
+  'OT/Layout/GSUB/SubstLookup.hh',
+  'OT/Layout/GSUB/GSUB.hh',
   'hb-ot-layout-gsubgpos.hh',
   'hb-ot-layout-jstf-table.hh',
   'hb-ot-layout.cc',
@@ -126,10 +151,11 @@ hb_base_sources = files(
   'hb-ot-shape-complex-khmer.hh',
   'hb-ot-shape-complex-myanmar.cc',
   'hb-ot-shape-complex-myanmar.hh',
+  'hb-ot-shape-complex-syllabic.cc',
+  'hb-ot-shape-complex-syllabic.hh',
   'hb-ot-shape-complex-thai.cc',
-  'hb-ot-shape-complex-use-table.cc',
+  'hb-ot-shape-complex-use-table.hh',
   'hb-ot-shape-complex-use.cc',
-  'hb-ot-shape-complex-use.hh',
   'hb-ot-shape-complex-vowel-constraints.cc',
   'hb-ot-shape-complex-vowel-constraints.hh',
   'hb-ot-shape-complex.hh',
@@ -143,6 +169,7 @@ hb_base_sources = files(
   'hb-ot-tag-table.hh',
   'hb-ot-tag.cc',
   'hb-ot-var-avar-table.hh',
+  'hb-ot-var-common.hh',
   'hb-ot-var-fvar-table.hh',
   'hb-ot-var-gvar-table.hh',
   'hb-ot-var-hvar-table.hh',
@@ -271,13 +298,15 @@ hb_subset_sources = files(
   'hb-subset-input.hh',
   'hb-subset-plan.cc',
   'hb-subset-plan.hh',
-  'hb-subset-plan.hh',
+  'hb-subset-repacker.cc',
   'hb-subset.cc',
-  'hb-subset.hh',
   'hb-subset.hh',
 )
 
-hb_subset_headers = files('hb-subset.h')
+hb_subset_headers = files(
+  'hb-subset.h',
+  'hb-subset-repacker.h'
+)
 
 hb_gobject_sources = files(
   'hb-gobject-structs.cc'
@@ -288,8 +317,13 @@ hb_gobject_headers = files(
   'hb-gobject-structs.h',
 )
 
-ragel = find_program('ragel', required: false)
-if not ragel.found()
+ragel = find_program('ragel', version: '6.10', required: false)
+has_ragel = ragel.found()
+if not has_ragel and get_option('ragel_subproject')
+    ragel = subproject('ragel').get_variable('ragel')
+    has_ragel = true
+endif
+if not has_ragel
   warning('You have to install ragel if you are going to develop HarfBuzz itself')
 else
   ragel_helper = find_program('gen-ragel-artifacts.py')
@@ -299,7 +333,7 @@ else
       build_by_default: true,
       input: rl,
       output: hh,
-      command: [ragel_helper, '@OUTPUT@', meson.current_source_dir(), '@INPUT@'],
+      command: [ragel_helper, ragel, '@OUTPUT@', meson.current_source_dir(), '@INPUT@'],
     )
   endforeach
 endif
@@ -338,7 +372,7 @@ endif
 if conf.get('HAVE_GRAPHITE2', 0) == 1
   hb_sources += hb_graphite2_sources
   hb_headers += hb_graphite2_headers
-  harfbuzz_deps += [graphite2_dep]
+  harfbuzz_deps += [graphite2_dep, graphite_dep]
 endif
 
 if conf.get('HAVE_GLIB', 0) == 1
@@ -475,29 +509,20 @@ if get_option('tests').enabled()
     endforeach
   endif
 
-  check_programs = {
-    'dump-indic-data': ['dump-indic-data.cc', 'hb-ot-shape-complex-indic-table.cc'],
-    'dump-khmer-data': ['dump-khmer-data.cc', 'hb-ot-shape-complex-indic-table.cc'],
-    'dump-myanmar-data': ['dump-myanmar-data.cc', 'hb-ot-shape-complex-indic-table.cc'],
-    'dump-use-data': ['dump-use-data.cc', 'hb-ot-shape-complex-use-table.cc'],
-  }
-  foreach name, source : check_programs
-    executable(name, source,
-      include_directories: incconfig,
-      cpp_args: cpp_args,
-      dependencies: libharfbuzz_dep,
-      install: false,
-    )
-  endforeach
-
   compiled_tests = {
     'test-algs': ['test-algs.cc', 'hb-static.cc'],
     'test-array': ['test-array.cc'],
     'test-iter': ['test-iter.cc', 'hb-static.cc'],
-    'test-meta': ['test-meta.cc', 'hb-static.cc'],
+    'test-machinery': ['test-machinery.cc', 'hb-static.cc'],
+    'test-map': ['test-map.cc', 'hb-static.cc'],
     'test-number': ['test-number.cc', 'hb-number.cc'],
     'test-ot-tag': ['hb-ot-tag.cc'],
+    'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
+    'test-repacker': ['test-repacker.cc', 'hb-static.cc'],
+    'test-set': ['test-set.cc', 'hb-static.cc'],
+    'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
+    'test-vector': ['test-vector.cc', 'hb-static.cc'],
     'test-bimap': ['test-bimap.cc', 'hb-static.cc'],
   }
   foreach name, source : compiled_tests
@@ -573,7 +598,7 @@ cmake_config.set('have_gobject', '@0@'.format(have_gobject))
 configure_file(input: 'harfbuzz-config.cmake.in',
   output: 'harfbuzz-config.cmake',
   configuration: cmake_config,
-  install_dir: join_paths(get_option('libdir'), 'cmake', 'harfbuzz'),
+  install_dir: get_option('libdir') / 'cmake' / 'harfbuzz',
 )
 
 libharfbuzz_gobject_dep = null_dep
@@ -583,14 +608,12 @@ if have_gobject
   h_templ = configure_file(
     input: 'hb-gobject-enums.h.tmpl',
     output: 'hb-gobject-enums-tmp.h.tmpl',
-    configuration: configuration_data(),
-    format: 'cmake')
+    copy: true)
 
   cc_templ = configure_file(
     input: 'hb-gobject-enums.cc.tmpl',
     output: 'hb-gobject-enums-tmp.cc.tmpl',
-    configuration: configuration_data(),
-    format: 'cmake')
+    copy: true)
 
   enums = gnome.mkenums('hb-gobject',
     sources: hb_headers,
@@ -611,7 +634,7 @@ if have_gobject
     output: 'hb-gobject-enums.h',
     command: [find_program('fix_get_types.py'), '@INPUT@', '@OUTPUT@'],
     install: true,
-    install_dir: join_paths(get_option('prefix'), get_option('includedir'), meson.project_name()),
+    install_dir: get_option('prefix') / get_option('includedir') / meson.project_name(),
   )
 
   hb_gobject_sources += [enum_c]
@@ -656,28 +679,16 @@ if have_gobject
       header: 'hb-gobject.h',
       install: true,
       extra_args:  ['--cflags-begin',
-                    '-DHB_H',
-                    '-DHB_H_IN',
-                    '-DHB_OT_H',
-                    '-DHB_OT_H_IN',
-                    '-DHB_AAT_H',
-                    '-DHB_AAT_H_IN',
-                    '-DHB_GOBJECT_H',
-                    '-DHB_GOBJECT_H_IN',
+                    '-DHB_NO_SINGLE_HEADER_ERROR',
+                    '-DHAVE_GOBJECT',
                     '-DHB_EXTERN=',
                     '--cflags-end'])
-  endif
-
-  if build_gir
-    libharfbuzz_gobject_sources = hb_gen_files_gir
-  else
-    libharfbuzz_gobject_sources = hb_gobject_sources
   endif
 
   libharfbuzz_gobject_dep = declare_dependency(
     link_with: libharfbuzz_gobject,
     include_directories: incsrc,
-    sources: libharfbuzz_gobject_sources,
+    sources: build_gir ? hb_gen_files_gir : hb_gobject_sources,
     dependencies: [glib_dep, gobject_dep])
 
   pkgmod.generate(libharfbuzz_gobject,
@@ -718,21 +729,13 @@ if get_option('tests').enabled()
   env.set('HBHEADERS', ' '.join(HBHEADERS))
 
   if cpp.get_id() != 'msvc' and not meson.is_cross_build() # ensure the local tools are usable
-    if meson.version().version_compare('>=0.55')
-      dist_check_script += 'check-libstdc++'
-    endif
-    dist_check_script += ['check-static-inits', 'check-symbols']
+    dist_check_script += ['check-libstdc++', 'check-static-inits', 'check-symbols']
   endif
 
   foreach name : dist_check_script
-    if name == 'check-symbols'
-      test_depends = defs_list
-    else
-      test_depends = []
-    endif
     test(name, find_program(name + '.py'),
       env: env,
-      depends: test_depends,
+      depends: name == 'check-symbols' ? defs_list : [],
       suite: ['src'],
     )
   endforeach

@@ -105,13 +105,85 @@ test_iterator (Iter it)
 template <typename Iterable,
 	  hb_requires (hb_is_iterable (Iterable))>
 static void
-test_iterable (const Iterable &lst = Null(Iterable))
+test_iterable (const Iterable &lst = Null (Iterable))
 {
   for (auto _ : lst)
     (void) _;
 
   // Test that can take iterator from.
   test_iterator (lst.iter ());
+}
+
+template <typename It>
+static void check_sequential (It it)
+{
+  int i = 1;
+  for (int v : +it) {
+    assert (v == i++);
+  }
+}
+
+static void test_concat ()
+{
+  hb_vector_t<int> a = {1, 2, 3};
+  hb_vector_t<int> b = {4, 5};
+
+  hb_vector_t<int> c = {};
+  hb_vector_t<int> d = {1, 2, 3, 4, 5};
+
+  auto it1 = hb_concat (a, b);
+  assert (it1.len () == 5);
+  assert (it1.is_random_access_iterator);
+  auto it2 = hb_concat (c, d);
+  assert (it2.len () == 5);
+  auto it3 = hb_concat (d, c);
+  assert (it3.len () == 5);
+  for (int i = 0; i < 5; i++) {
+    assert(it1[i] == i + 1);
+    assert(it2[i] == i + 1);
+    assert(it3[i] == i + 1);
+  }
+
+  check_sequential (it1);
+  check_sequential (it2);
+  check_sequential (it3);
+
+  auto it4 = +it1;
+  it4 += 0;
+  assert (*it4 == 1);
+
+  it4 += 2;
+  assert (*it4 == 3);
+  assert (it4);
+  assert (it4.len () == 3);
+
+  it4 += 2;
+  assert (*it4 == 5);
+  assert (it4);
+  assert (it4.len () == 1);
+
+  it4++;
+  assert (!it4);
+  assert (it4.len () == 0);
+
+  auto it5 = +it1;
+  it5 += 3;
+  assert (*it5 == 4);
+
+  hb_set_t s_a = {1, 2, 3};
+  hb_set_t s_b = {4, 5};
+  auto it6 = hb_concat (s_a, s_b);
+  assert (!it6.is_random_access_iterator);
+  check_sequential (it6);
+  assert (it6.len () == 5);
+
+  it6 += 0;
+  assert (*it6 == 1);
+
+  it6 += 3;
+  assert (*it6 == 4);
+  assert (it6);
+  assert (it6.len () == 2);
 }
 
 int
@@ -281,6 +353,8 @@ main (int argc, char **argv)
   assert (hb_range (-2, -9, -3).len () == 3);
   assert (hb_range (-2, -8, -3).len () == 2);
   assert (hb_range (-2, -7, -3).len () == 2);
+
+  test_concat ();
 
   return 0;
 }
