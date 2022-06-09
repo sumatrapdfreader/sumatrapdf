@@ -326,7 +326,21 @@ static bool PrintToDevice(const PrintData& pd) {
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
     WCHAR* printerName = ToWstrTemp(pd.printer->name);
-    AutoDeleteDC hdc(CreateDCW(nullptr, printerName, nullptr, devMode));
+
+    {
+        // validate printer settings as per
+        // https://docs.microsoft.com/en-us/windows/win32/printdocs/documentproperties
+        // TODO: maybe do this in NewPrinter?
+        DWORD mode = DM_IN_BUFFER | DM_OUT_BUFFER;
+        HANDLE hPrinter = nullptr;
+        BOOL ok = OpenPrinterW(printerName, &hPrinter, nullptr);
+        if (ok && hPrinter) {
+            DocumentPropertiesW(nullptr, hPrinter, printerName, devMode, devMode, mode);
+        }
+        ClosePrinter(hPrinter);
+    }
+
+    AutoDeleteDC hdc = CreateDCW(nullptr, printerName, nullptr, devMode);
     if (!hdc) {
         logf("PrintToDevice: CreateDCW('%s') failed\n", pd.printer->name);
         return false;
