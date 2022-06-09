@@ -478,6 +478,8 @@ struct Splitter : public Wnd {
 
 //--- Webview2
 
+char* GetWebView2VersionTemp();
+
 // TODO: maybe hide those inside a private struct
 typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;

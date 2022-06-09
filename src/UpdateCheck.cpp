@@ -9,6 +9,10 @@
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
 
+#include "wingui/Layout.h"
+#include "wingui/UIModels.h"
+#include "wingui/WinGui.h"
+
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppTools.h"
@@ -411,6 +415,11 @@ void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
     const char* lang = trans::GetCurrentLangCode();
     url.Append("&lang=");
     url.Append(lang);
+    char* webView2ver = GetWebView2VersionTemp();
+    if (webView2ver) {
+        url.Append("&webview=");
+        url.Append(webView2ver);
+    }
     if (gIsStoreBuild) {
         url.Append("&store");
     }

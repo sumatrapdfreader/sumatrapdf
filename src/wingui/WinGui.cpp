@@ -2367,6 +2367,16 @@ std::string html_from_uri(const std::string s) {
 
 Kind kindWebView = "webView";
 
+char* GetWebView2VersionTemp() {
+    WCHAR* ver = nullptr;
+    HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
+    if (FAILED(hr) || (ver == nullptr)) {
+        return nullptr;
+    }
+    char* res = ToUtf8Temp(ver);
+    return res;
+}
+
 class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
                              public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
                              public ICoreWebView2WebMessageReceivedEventHandler,
