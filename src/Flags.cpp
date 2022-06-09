@@ -84,6 +84,7 @@
     V(AllUsers2, "allusers")                     \
     V(RunInstallNow, "run-install-now")          \
     V(TestBrowser, "test-browser")               \
+    V(Adobe, "a")                                \
     V(DDE, "dde")                                \
     V(SetColorRange, "set-color-range")
 
@@ -250,6 +251,66 @@ static Arg GetArg(const char* s) {
         return Arg::Unknown;
     }
     return (Arg)idx;
+}
+
+// https://stackoverflow.com/questions/619158/adobe-reader-command-line-reference
+// https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
+void ParseAdobeFlags(Flags& i, const char* s) {
+    StrVec parts;
+    StrVec parts2;
+    char* name;
+    char* val;
+    int n;
+    Split(parts, s, "&", true);
+    for (char* part : parts) {
+        parts2.Reset();
+        Split(parts2, part, "=", true);
+        if (parts2.Size() != 2) {
+            continue;
+        }
+        name = parts2[0];
+        val = parts2[1];
+
+        // https://pdfobject.com/pdf/pdf_open_parameters_acro8.pdf
+        if (str::EqI("name", "nameddest")) {
+            i.destName = str::Dup(val);
+            continue;
+        }
+        if (str::EqI(name, "page")) {
+            n = atoi(val);
+            if (n >= 1) {
+                i.pageNumber = n;
+            }
+            continue;
+        }
+        // comment=
+        // collab=setting
+        if (str::EqI(name, "zoom")) {
+            // TODO: handle zoom
+            // 100 is 100%
+            continue;
+        }
+        if (str::EqI(name, "view")) {
+            // TODO: Fit FitH FitH,top FitV FitV,left
+            // FitB FitBH FitBH,top FitBV, FitBV,left
+            continue;
+        }
+        // viewrect
+        // pagemode=bookmarks, thumbs, none
+        // scrollbar=1|0
+        if (str::EqI(name, "search")) {
+            if (str::Len(val) > 0) {
+                i.search = str::Dup(val);
+            }
+            continue;
+        }
+        // toolbar=1|0
+        // statusbar=1|0
+        // messages=1|0
+        // navpanes=1|0
+        // highlight=lrt,rt,top,btm
+        // fdf=URL
+    }
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
@@ -555,6 +616,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::Search) {
             i.search = str::Dup(param);
+            continue;
+        }
+        if (arg == Arg::Adobe) {
+            ParseAdobeFlags(i, param);
             continue;
         }
         if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||
