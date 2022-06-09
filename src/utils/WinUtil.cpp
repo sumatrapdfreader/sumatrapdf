@@ -1152,7 +1152,7 @@ void CenterDialog(HWND hDlg, HWND hParent) {
     rcDialog.Offset(rcOwner.x + (rcRect.x - rcDialog.x + rcRect.dx - rcDialog.dx) / 2,
                     rcOwner.y + (rcRect.y - rcDialog.y + rcRect.dy - rcDialog.dy) / 2);
     // ensure that the dialog is fully visible on one monitor
-    rcDialog = ShiftRectToWorkArea(rcDialog, hDlg, true);
+    rcDialog = ShiftRectToWorkArea(rcDialog, hParent, true);
 
     SetWindowPos(hDlg, nullptr, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
@@ -2536,7 +2536,7 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     if (dyDiff > 0) {
         rHwnd.y += dyDiff / 2;
     }
-    Rect r = ShiftRectToWorkArea(rHwnd, hwnd, true);
+    Rect r = ShiftRectToWorkArea(rHwnd, hwndRelative, true);
     SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
@@ -2546,8 +2546,9 @@ void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
     int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
 
-    Rect rc = ShiftRectToWorkArea(Rect{x, y, r.dx, r.dy}, hwnd, true);
-    SetWindowPos(hwnd, nullptr, rc.x, rc.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    Rect r2 = {x, y, r.dx, r.dy};
+    r = ShiftRectToWorkArea(r2, hwndRelative, true);
+    SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void HwndSendCommand(HWND hwnd, int cmdId) {
