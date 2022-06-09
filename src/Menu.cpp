@@ -90,53 +90,6 @@ static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are 
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
 // clang-format off
-MenuDef menuDefContextToc[] = {
-    {
-        _TRN("Expand All"),
-        CmdExpandAll,
-    },
-    {
-        _TRN("Collapse All"),
-        CmdCollapseAll,
-    },
-    {
-        kMenuSeparator,
-        0,
-    },
-    {
-        _TRN("Open Embedded PDF"),
-        CmdOpenEmbeddedPDF,
-    },
-    {
-        _TRN("Save Embedded File..."),
-        CmdSaveEmbeddedFile,
-    },
-    // note: strings cannot be "" or else items are not there
-    {
-        "Add to favorites",
-        CmdFavoriteAdd,
-    },
-    {
-        "Remove from favorites",
-        CmdFavoriteDel,
-    },
-    {
-        nullptr,
-        0,
-    },
-};
-
-MenuDef menuDefContextFav[] = {
-    {
-        _TRN("Remove from favorites"),
-        CmdFavoriteDel
-    },
-    {
-        nullptr,
-        0,
-    }
-};
-
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
     {

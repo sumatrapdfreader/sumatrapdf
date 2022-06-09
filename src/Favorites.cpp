@@ -781,6 +781,19 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     GoToFavForTreeItem(win, ev->selectedItem);
 }
 
+// clang-format off
+static MenuDef menuDefContextFav[] = {
+    {
+        _TRN("Remove from favorites"),
+        CmdFavoriteDel
+    },
+    {
+        nullptr,
+        0,
+    }
+};
+// clang-format on
+
 static void FavTreeContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     TreeView* treeView = (TreeView*)ev->w;

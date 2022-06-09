@@ -11,9 +11,6 @@ struct MenuDef {
 
 constexpr const char* kMenuSeparator = "-----";
 
-extern MenuDef menuDefContextToc[];
-extern MenuDef menuDefContextFav[];
-
 extern bool gShowDebugMenu;
 extern bool gAddCrashMeMenu;
 

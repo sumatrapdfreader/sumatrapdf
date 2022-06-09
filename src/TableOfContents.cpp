@@ -451,6 +451,45 @@ static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fi
     str::Free(data.data());
 }
 
+// clang-format off
+static MenuDef menuDefContextToc[] = {
+    {
+        _TRN("Expand All"),
+        CmdExpandAll,
+    },
+    {
+        _TRN("Collapse All"),
+        CmdCollapseAll,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Open Embedded PDF"),
+        CmdOpenEmbeddedPDF,
+    },
+    {
+        _TRN("Save Embedded File..."),
+        CmdSaveEmbeddedFile,
+    },
+    // note: strings cannot be "" or else items are not there
+    {
+        "Add to favorites",
+        CmdFavoriteAdd,
+    },
+    {
+        "Remove from favorites",
+        CmdFavoriteDel,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+// clang-format on
+
+
 static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     const char* filePath = win->ctrl->GetFilePath();
