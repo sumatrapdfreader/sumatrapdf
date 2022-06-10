@@ -489,7 +489,6 @@ static MenuDef menuDefContextToc[] = {
 };
 // clang-format on
 
-
 static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     const char* filePath = win->ctrl->GetFilePath();
@@ -525,8 +524,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
         }
-    }
-    else {
+    } else {
         // TODO: maybe move this to BuildMenuFromMenuDef
         MenuRemove(popup, CmdSaveEmbeddedFile);
         MenuRemove(popup, CmdOpenEmbeddedPDF);
@@ -811,7 +809,7 @@ static void TocTreeMsgFilter(__unused WndEvent* ev) {
 void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
     HWND hwndContainer = GetParent(hwndTree);
     Size labelSize = l->GetIdealSize();
-    Rect rc = WindowRect (hwndContainer);
+    Rect rc = WindowRect(hwndContainer);
     int dy = rc.dy;
     int y = 0;
     MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
@@ -929,7 +927,7 @@ void CreateToc(MainWindow* win) {
     auto treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndTocBox;
-    args.font =  GetTreeFont();
+    args.font = GetTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
@@ -937,12 +935,13 @@ void CreateToc(MainWindow* win) {
     treeView->onTreeSelectionChanged = TocTreeSelectionChanged;
     treeView->onTreeKeyDown = TocTreeKeyDown2;
     treeView->onGetTooltip = TocCustomizeTooltip;
-    //treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary
-    //treeView->onChar = TocTreeCharHandler;
-    //treeView->onMouseWheel = TocTreeMouseWheelHandler;
+    // treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary
+    // treeView->onChar = TocTreeCharHandler;
+    // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeView->Create(args);
-    CrashIf(!treeView->hwnd);;
+    CrashIf(!treeView->hwnd);
+    ;
     win->tocTreeView = treeView;
 
     SubclassToc(win);

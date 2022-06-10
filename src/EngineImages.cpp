@@ -636,7 +636,6 @@ bool EngineImage::FinishLoading() {
     return pageCount > 0;
 }
 
-// http://www.universalthread.com/ViewPageArticle.aspx?ID=831
 #ifndef PropertyTagXPTitle
 #define PropertyTagXPTitle 0x9c9b
 #define PropertyTagXPComment 0x9c9c

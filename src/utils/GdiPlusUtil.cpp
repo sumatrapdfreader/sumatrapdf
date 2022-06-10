@@ -298,6 +298,39 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
+static Gdiplus::RotateFlipType rfts[] = {
+    Gdiplus::RotateNoneFlipX,  Gdiplus::Rotate180FlipNone, Gdiplus::Rotate180FlipX,    Gdiplus::Rotate90FlipX,
+    Gdiplus::Rotate90FlipNone, Gdiplus::Rotate270FlipX,    Gdiplus::Rotate270FlipNone,
+};
+
+static void MaybeFlipBitmap(Bitmap* bmp) {
+    u8 buf[64] = {0}; // empirically is 26
+
+    UINT propSize = bmp->GetPropertyItemSize(PropertyTagOrientation);
+    if (propSize == 0) {
+        bmp->GetLastStatus(); // clear last status
+        return;
+    }
+    CrashIf(propSize > dimof(buf));
+
+    auto status = bmp->GetPropertyItem(PropertyTagOrientation, propSize, (Gdiplus::PropertyItem*)buf);
+    if (status != Status::Ok) {
+        bmp->GetLastStatus(); // clear last status
+        return;
+    }
+    auto propItem = (Gdiplus::PropertyItem*)buf;
+    u16* propValPtr = (u16*)propItem->value;
+    u16 iRot = propValPtr[0] - 2;
+    // https://stackoverflow.com/questions/6222053/problem-reading-jpeg-metadata-orientation
+    // Note: flip values are different than http://www.ionicwind.com/forums/index.php?topic=3267.0
+    // and https://github.com/larryli/PhotoTime/blob/3c77913e4c5ee46ab25dcc6e74a3f4c7502dbec2/gdip.c#L111
+    // is different still
+    // https://github.com/larryli/PhotoTime/blob/3c77913e4c5ee46ab25dcc6e74a3f4c7502dbec2/gdip.c#L130
+    if (iRot >= 0 && iRot < dimof(rfts)) {
+        bmp->RotateFlip(rfts[iRot]);
+    }
+}
+
 static Bitmap* DecodeWithWIC(const ByteSlice& bmpData) {
     auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
@@ -322,6 +355,7 @@ static Bitmap* DecodeWithGdiplus(const ByteSlice& bmpData) {
         delete bmp;
         return nullptr;
     }
+    MaybeFlipBitmap(bmp);
     return bmp;
 }
 
@@ -350,6 +384,11 @@ Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
     // doesn't support that
     // TODO: more formats? webp?
     bool tryGdiplusFirst = (kindFileTiff == kind) || (kindFileGif == kind);
+
+    // TODO: need to figure out how to flip images decoded with WIC
+    if (kindFileJpeg == kind) {
+        tryGdiplusFirst = true;
+    }
 
     if (tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
