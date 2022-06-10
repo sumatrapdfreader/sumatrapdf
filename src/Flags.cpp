@@ -262,6 +262,10 @@ void ParseAdobeFlags(Flags& i, const char* s) {
     char* val;
     int n;
     Split(parts, s, "&", true);
+    if (parts.Size() == 1) {
+        parts.Reset();
+        Split(parts, s, "#", true);
+    }
     for (char* part : parts) {
         parts2.Reset();
         Split(parts2, part, "=", true);
