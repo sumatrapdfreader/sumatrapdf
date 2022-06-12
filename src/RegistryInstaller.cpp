@@ -14,6 +14,16 @@
 
 // All registry manipulation needed for installer / uninstaller
 
+// clang-format off
+// list of supported file extensions for which SumatraPDF.exe will
+// be registered as a candidate for the Open With dialog's suggestions
+static SeqStrings gSupportedExts = 
+    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
+    ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
+    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
+    ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0";
+// clang-format on
+
 // notifies Shell that file associations changed.
 // Invalidates the icon and thumbnail cache.
 // https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shchangenotify
@@ -84,16 +94,6 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     }
     return ok;
 }
-
-// clang-format off
-// list of supported file extensions for which SumatraPDF.exe will
-// be registered as a candidate for the Open With dialog's suggestions
-static SeqStrings gSupportedExts = 
-    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
-    ".djvu\0.chm\0.mobi\0.epub\0.azw\0.azw3\0.azw4\0" \
-    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
-    ".jpg\0.jpeg\0.tga\0.gif\0";
-// clang-format on
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
 // http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794

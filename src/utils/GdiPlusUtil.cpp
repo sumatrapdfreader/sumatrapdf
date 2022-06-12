@@ -315,6 +315,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     bmp.UnlockBits(&bmpData);
     bmp.SetResolution((float)xres, (float)yres);
 #undef HR
+    // TODO: maybe use IWICBitmapFlipRotator
     if (iRot >= 0 && iRot < dimof(rfts)) {
         bmp.RotateFlip(rfts[iRot]);
     }
