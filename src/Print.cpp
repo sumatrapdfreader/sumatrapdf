@@ -582,12 +582,12 @@ class PrintThreadData : public ProgressUpdateUI {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.timeoutMs = 0;
-        args.onRemoved = [this](NotificationWnd* wnd) { RemoveNotification(wnd); };
+        args.onRemoved = [this](NotificationWnd* wnd) { RemovePrintNotification(); };
         args.progressMsg = _TRA("Printing page %d of %d...");
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
         args.groupId = nullptr;
-        ShowNotification(args);
+        this->wnd = ShowNotification(args);
     }
     PrintThreadData(PrintThreadData const&) = delete;
     PrintThreadData& operator=(PrintThreadData const&) = delete;
@@ -595,17 +595,17 @@ class PrintThreadData : public ProgressUpdateUI {
     ~PrintThreadData() override {
         CloseHandle(thread);
         delete data;
-        RemoveNotification(wnd);
+        RemovePrintNotification();
     }
 
     // called when printing has been canceled
-    void RemoveNotification(NotificationWnd* wnd) {
+    void RemovePrintNotification() {
         isCanceled = true;
         cookie.Abort();
-        this->wnd = nullptr;
-        if (MainWindowStillValid(win)) {
-            RemoveNotification(wnd);
+        if (this->wnd && MainWindowStillValid(win)) {
+            RemoveNotification(this->wnd);
         }
+        this->wnd = nullptr;
     }
 
     void UpdateProgress(int current, int total) override {
