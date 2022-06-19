@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-94f79e18c3d7546f7a1d87048690cfd696cbe284
+e14f6d0830d26d1ae81bce9da95d2ae3cd6e8d78
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -76,10 +76,13 @@ br:&Tamanho real
 cn:实际大小(&A)
 co:&Dimensione attuale
 cy:&Maint Gwirioneddol
+cz:&Skutečná velikost
 de:&Tatsächliche Größe
+el:Πραγματικό μέγεθος
 es:&Tamaño real
 eu:&Oraingo neurria
 fr:T&aille réelle
+hi:वास्तविक आकार
 it:Dimensione &attuale
 ja:実際のサイズ(&A)
 nl:&Werkelijke grootte
@@ -227,10 +230,13 @@ br:&Voltar
 cn:上一视图(B)
 co:&Precedente
 cy:&Nôl
+cz:&Zpět
 de:&Vorherige Ansicht
+el:Πίσω
 es:&Atrás
 eu:A&tzera
 fr:Revenir (&b)
+hi:&पीछे
 it:&Indietro
 ja:戻る(&B)
 nl:&Terug
@@ -246,8 +252,10 @@ cn:书籍视图(&B)
 co:Cum’è un &libru
 cy:Golwg &Llyfr
 de:&Buchansicht
+el:Προβολή βιβλίου
 es:&Vista de libro
 eu:&Liburu ikuspegia
+hi:&बुक व्यू
 it:&Libro
 ja:ブック ビュー(&B)
 nl:&Boek Tonen
@@ -272,6 +280,7 @@ es:Cancelar
 et:&Loobu
 eu:E&zeztatu
 fr:Annuler (&c)
+hi:&रद्द करें
 hr:&Odustani
 hu:&Mégse
 id:&Membatalkan
@@ -305,6 +314,7 @@ el:Αγκύλη
 es:&Cursor
 et:&Caret
 fr:&Curseur
+hi:&कैरेट
 hr:&Znak za umetanje
 hu:Kurzor
 id:&Sisipan
@@ -329,9 +339,11 @@ cn:关闭(&C)
 co:&Chjode
 cy:&Cau
 de:&Schließen
+el:Κλείσιμο
 es:&Cerrar
 eu:It&xi
 fr:Fermer (&c)
+hi:&बंद करे
 it:&Chiudi
 ja:閉じる(&C)
 nl:&Sluiten
@@ -356,6 +368,7 @@ et:&Jätka 32-bitise versiooni paigaldamist
 eu:&Jarraitu 32-biteko bertsioa ezartzen
 fr:Continuer l'installation de la version 32-bits
 gl:Continuar instalando a versión de 32 bits
+hi:32-बिट संस्करण को स्थापित करना जारी रखें
 hr:&Nastavi instalirati 32-bit verziju 
 hu:Folytatás a 32-bites verzió telepítésével
 id:&Lanjutkan pemasangan versi 32-bit
@@ -386,7 +399,7 @@ bs:&Kopiraj označeno
 by:&Капіяваць выбранае
 ca-xv:&Copia la selecció
 ca:&Copia la selecció
-cn:复制选定范围(&C)
+cn:复制所选内容(&C)
 co:Cupià a sele&zzione
 cy:Copïo &Dewis
 cz:&Kopírovat výběr
@@ -442,13 +455,15 @@ uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy To Clipboard
 br:&Copiar para área de transferência
-cn:复制到剪贴版(&C)
+cn:复制到剪贴板(&C)
 co:&Cupià in u preme’papei
 cy:&Copïo i'r Clipfwrdd
 de:&In Zwischenablage kopieren
+el:Αντιγραφή στο πρόχειρο
 es:&Copiar a portapapeles
 eu:&Kopiatu gakora
 fr:&Copier dans le Presse-Papiers
+hi:क्लिपबोर्ड पर कॉपी करें
 it:&Copia negli Appunti
 ja:クリップボードへコピー(&C)
 nl:&Kopieer Naar Klembord
@@ -463,7 +478,7 @@ am:&Մերժել
 br:&Descartar
 ca-xv:&Descarta
 ca:&Descarta
-cn:不保存注释(&D)
+cn:不保存更改(&D)
 co:&Scartà i cambiamenti
 cy:&Hepgor newidiadau
 de:&Änderungen verwerfen
@@ -472,6 +487,7 @@ es:&Descartar
 et:&Loobu muudatustest
 eu:&Baztertu aldaketak
 fr:&Abandonner les modifications
+hi:परिवर्तनों को निरस्त करें
 hr:&Odbaci promjene
 hu:Változtatások elvetése
 id:Abaikan perubahan
@@ -630,6 +646,7 @@ cn:双页视图(&F)
 co:Pagina d&oppia
 cy:&Wynebu
 de:&Doppelseite
+el:Προσανατολισμός
 es:&Caras opuestas
 it:Pagine a&ffiancate
 ja:見開き(&F)
@@ -784,6 +801,7 @@ cn:第一页(&F)
 co:P&rima pagina
 cy:Tudalen &Gyntaf
 de:&Erste Seite
+el:Πρώτη σελίδα
 es:&Primera página
 eu:&Lehen orrialdea
 fr:Première page (&f)
@@ -1107,6 +1125,7 @@ cn:高亮(&H)
 co:&Sopralineà
 cy:&Amlygu
 de:Text &hervorheben
+el:Επισήμανση
 es:&Destacar
 eu:&Nabarmendu
 fr:Surligner (&h)
@@ -1124,6 +1143,7 @@ cn:最后一页(&L)
 co:&Ultima pagina
 cy:Tudalen &Olaf
 de:&Letzte Seite
+el:Τελευταία σελίδα
 es:Última página
 eu:&Azken orrialdea
 fr:Dernière page (&l)
@@ -1338,6 +1358,7 @@ cn:下一页(&N)
 co:Pagina &seguente
 cy:Tudalen &Nesaf
 de:&Nächste Seite
+el:Επόμενη σελίδα
 es:&Página siguiente
 eu:&Hurrengo orrialdea
 fr:Page Suiva&nte
@@ -1552,6 +1573,7 @@ cn:打开(&O)...
 co:&Apre…
 cy:&Agor...
 de:&Öffnen...
+el:Άνοιγμα
 es:&Abrir...
 eu:&Ireki...
 fr:&Ouvrir
@@ -1824,6 +1846,7 @@ cn:上一页(&P)
 co:Pagina &precedente
 cy:Tudalen &Flaenorol
 de:&Vorherige Seite
+el:Προηγούμενη σελίδα
 es:&Página anterior
 eu:A&urreko orrialdea
 fr:Page &Précédente
@@ -2248,7 +2271,7 @@ ja:Google で検索(&S)
 kw:&Hwilas Gans Google
 nl:&Zoeken Met Google
 pl:&Szukaj za pomocą Google
-ru:&Найти с помощью Google
+ru:&Найти в Google
 sk:&Hľadať pomocou Google
 sl:&Išči z Google
 th:&ค้นหาด้วย Google
@@ -2389,6 +2412,7 @@ cn:单页视图(&S)
 co:&Una pagina sola
 cy:&Un Tudalen
 de:Einzel&seitenansicht
+el:Μία σελίδα 
 es:&Una sola página
 fr:Page unique (&s)
 it:Pagina &singola
@@ -2570,7 +2594,7 @@ kr:Google로 번역(&T)
 kw:&Treylya Gans Google
 nl:&Vertalen Met Google
 pl:&Tłumacz za pomocą Google
-ru:&Перевести с помощью Google
+ru:&Перевести в Google
 sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
 th:&แปลด้วย Google
@@ -2808,7 +2832,7 @@ bs:&Da
 by:Да
 ca-xv:&Sí
 ca:&Sí
-cn:是(&Y)
+cn:确定(&Y)
 co:&Iè
 cy:&Iawn
 cz:&Ano
@@ -3626,6 +3650,7 @@ eu:Oharrak
 fr:Annotations
 ga:Nótaí mínithe
 gl:Anotacións
+hi:एनोटेशन \r\nटिप्पणी\r\n
 hr:Bilješke
 hu:Megjegyzések
 id:Catatan
@@ -4000,12 +4025,14 @@ br:Autor: %s
 cn:作者: %s
 co:Autore : %s
 cy:Awdur: %s
+cz:Autor: %s
 de:Autor: %s
 el:Συγγραφέας: %s
 es:Autora: %s
 et:Autor: %s
 eu:Egilea: %s
 fr:Auteur : %s
+hi:लेखक: %s
 hr:Autor: %s
 id:Penulis: %s
 it:Autore: %s
@@ -4168,6 +4195,7 @@ ca:Color de fons
 cn:背景色:
 co:Culore di u fondu :
 cy:Lliw'r Cefndir:
+cz:Barva pozadí:
 de:Hintergrundfarbe:
 el:Χρώμα φόντου:
 es:Color de fondo
@@ -4175,6 +4203,7 @@ et:Taustavärv:
 eu:Barrenaren margoa:
 fr:Couleur d'arrière-plan
 gl:Cor de fondo
+hi:बैकग्राउंड कलर:
 hr:Boja pozadine:
 hu:Háttérszín:
 id:Warna Latar:
@@ -4469,12 +4498,14 @@ br:Borda: %d
 cn:边框: %d
 co:Bordu : %d
 cy:Border: %d
+cz:Okraj: %d
 de:Umrandung: %d
 el:Περιθώριο: %d
 es:Borde: %d
 et:Ääris: %d
 eu:Ertza: %d
 fr:Bordure : %d
+hi:बॉर्डर: %d
 hr:Rub: %d
 id:Garis Tepi: %d
 it:Bordo: %d
@@ -4570,7 +4601,7 @@ bs:CHM dokumenti
 by:Дакумент CHM
 ca-xv:Documents CHM
 ca:Documents CHM
-cn:CHM 文件
+cn:CHM 文档
 co:Ducumenti d’aiutu CHM
 cy:Dogfennau CHM
 cz:Dokumenty CHM
@@ -5050,6 +5081,7 @@ et:Uuenduste otsimine...
 eu:Eguneraketak egiaztatzen...
 fr:Vérifier les mises à jour
 gl:Comprobar actualizacións
+hi:अपडेट की जांच की जा रही है...
 hr:Provjera dostupnosti ažuriranja...
 hu:Frissítés keresése...
 id:Mencari pembaruan...
@@ -5089,6 +5121,7 @@ eu:Zirkulua
 fr:Cercle
 ga:Ciorcal
 gl:Círculo
+hi:सर्कल
 hr:Krug
 hu:Kör
 id:Lingkaran
@@ -5181,7 +5214,11 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Close Other Tabs
+de:Andere Tabs schließen
+pl:Zamknij inne karty
 :Close Tabs To The Right
+de:Tabs rechts schließen
+pl:Zamknij karty po prawej stronie
 :Collapse All
 am:Կոծկել բոլորը
 ar:طي الكل
@@ -5205,6 +5242,7 @@ fr:Tout réduire
 ga:Laghdaigh Gach
 gl:Contraer todo
 he:כווץ הכל
+hi:सभी को छोटा करें
 hr:Sažmi sve
 hu:Összes összecsukása
 id:Tutup Semua
@@ -5248,6 +5286,7 @@ et:Värv:
 eu:Margoa:
 fr:Couleur
 gl:cor
+hi:रंग:
 hr:Boja:
 hu:Szín:
 id:Warna:
@@ -5340,12 +5379,14 @@ vn:Truyện tranh
 br:Paleta de comandos
 cn:命令面板
 co:Tavuletta di cumande
-cy:Palet Gorchymyn
+cy:Palet Gorchmynion
 de:Befehlspalette
+el:Παλέτα εντολών
 es:Paleta de comandos 
 et:Käsupalett
 eu:Agindu paleta
 fr:Palette de commande
+hi:कमांड पैलेट
 it:Elenco comandi
 ja:コマンドパレット
 nl:Opdrachten
@@ -5435,6 +5476,7 @@ es:Contenido:
 et:Sisu:
 eu:Edukiak:
 fr:Contenu :
+hi:विषयवस्तु:
 hr:Sadržaj:
 id:Isi:
 it:Contenuti:
@@ -5464,7 +5506,7 @@ ca-xv:Contínua
 ca:Contínua
 cn:连续页面
 co:Vista in cuntinuu
-cy:Didor
+cy:Parhaus
 cz:Jedna stránka průběžně
 de:Fortlaufend
 dk:Fortløbende
@@ -5534,7 +5576,7 @@ ca-xv:Visualització contínua de llibre
 ca:Vista de llibre contínua
 cn:连续书籍视图
 co:Vista in cuntinuu, cum’è un libru
-cy:Golwg Llyfr Didor
+cy:Golwg Llyfr Parhaus
 cz:Kniha průběžně
 de:Fortlaufende Buchansicht
 dk:Fortløbende bogvisning
@@ -5602,7 +5644,7 @@ ca-xv:Pàgina doble contínua
 ca:Pàgina doble contínua
 cn:连续对页视图
 co:Vista in cuntinuu, pagina doppia
-cy:Wynebu'n Ddidor
+cy:Wynebu'n Barhaus
 cz:Dvojstránky průběžně
 de:Fortlaufende Doppelseiten
 dk:Fortløbende modstående
@@ -5927,14 +5969,16 @@ uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
 br:Copiar para área de transferência
-cn:复制到剪贴版
+cn:复制到剪贴板
 co:Cupià in u preme’papei
 cy:Copïo i'r Clipfwrdd
 de:In Zwischenablage kopieren
+el:Αντιγραφή στο πρόχειρο
 es:Copiar a portapapeles
 et:Kopeeri lõikelauale
 eu:Kopiatu gakora
 fr:Copier dans le Presse-Papiers
+hi:क्लिपबोर्ड पर कॉपी करें
 it:Copia negli Appunti
 ja:クリップボードへコピー
 nl:Kopieer naar klembord
@@ -6218,6 +6262,7 @@ es:No se ha podido encontrar el nombre de la impresora
 et:Printeri nime hankimine ebaõnnestus
 eu:Ezinezkoa irarkailuaren izena lortzea
 fr:Impossible d'obtenir le nom de l'imprimante
+hi:प्रिंटर नाम नहीं मिला
 hr:Nemoguće dobiti naziv printera
 hu:Nem sikerült lekérni a nyomtató nevét
 id:Tidak dapat menemukan printer
@@ -6576,6 +6621,7 @@ eu:Ezin da Sumatraren bilaketa iragazkia kendu
 fr:Impossible de désinstaller le filtre de recherche de Sumatra
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
 gl:Non se pode desinstalar o filtro de busca do Sumatra
+hi:सुमात्रा खोज फ़िल्टर को अनइंस्टॉल नहीं किया जा सका
 hr:Nije moguće deinstalirati Sumatra filtar za pretraživanje
 hu:Nem tudtam eltávolítani a Sumatra keresőszűrőt
 id:Tidak bisa mencopot filter pencarian Sumatra 
@@ -6739,6 +6785,7 @@ es:Crear una anotación &bajo el cursor
 et:Lisa kursori &juurde märkus
 eu:Sortu oharra &kurtsorearen azpian
 fr:Créer une annotation &sous le curseur
+hi:एनोटेशन और कर्सर के तहत बनाएं
 hr:Napravi bilješku &ispod kursora
 hu:Új megjegyzés &Kurzor alatt
 id:Buat catatan dengan kursor
@@ -6773,6 +6820,7 @@ et:Loo valitust märkus
 eu:Sortu oharra hautapenetik
 fr:Créer une annotation à partir de la sélection
 gl:Crear anotacion a partir da selección
+hi:चयन से एनोटेशन बनाएं
 hr:Napravite bilješku iz odabira
 hu:Megjegyzés készítése a kiválasztásból
 id:Buat catatan dari pilihan
@@ -6999,9 +7047,11 @@ cn:自定义缩放(&Z)...
 co:&Ingrandamentu persunalizatu…
 cy:Chwyddo &Cyfaddas...
 de:Benutzerdefinierter &Zoom...
+el:Ορισμός Ζουμ
 es:Zoom &personalizado...
 eu:Norbere &Zooma...
 fr:&Zoom personnalisé...
+hi:कस्टम &ज़ूम करें...
 it:&Zoom personalizzato
 ja:拡大率の指定(&Z)...
 nl:Aangepast & zoom...
@@ -7146,6 +7196,7 @@ es:Fetcha:
 et:Kuupäev:
 eu:Eguna:
 fr:Date :
+hi:तारीख:
 hr:Datum:
 id:Tanggal:
 it:Data:
@@ -7303,6 +7354,7 @@ et:Kustuta märkus\tDel
 eu:Ezabatu oharra\tDel
 fr:Supprimer l'annotation\tDel
 gl:Borrar anotación
+hi:व्याख्या हटाएं\tDel
 hr:Obriši bilješku\tDel
 id:Hapus Catatan\tDel
 it:Elimina annotazione\tCanc
@@ -7392,7 +7444,7 @@ bs:DjVu dokumenti
 by:Дакумент DjVu
 ca-xv:Documents djvu
 ca:Documents DjVu
-cn:DjVu 文件
+cn:DjVu 文档
 co:Ducumenti DjVu
 cy:Dogfennau DjVu
 cz:Dokumenty DjVu
@@ -7458,7 +7510,7 @@ bs:Svojstva dokumenta
 by:Уласцівасці дакумента
 ca-xv:Propietats del document
 ca:Propietats del document
-cn:文件属性
+cn:文档属性
 co:Pruprietà di u ducumentu
 cy:Priodweddau Dogfen
 cz:Vlastnosti dokumentu
@@ -7528,6 +7580,7 @@ et:Ära paigalda
 eu:Ez ezarri
 fr:Ne pas installer
 gl:Non instalar
+hi:इंस्टॉल न करें
 hr:Nemoj instalirati
 hu:Ne telepítsd
 id:Jangan memasang
@@ -7562,6 +7615,7 @@ et:Laadi alla 64-bitine versioon
 eu:Jeitsi 64-biteko bertsioa
 fr:Télécharger la version 64-bits
 gl:Baixar versión de 64 bits
+hi:64-बिट वर्जन डाउनलोड करें
 hr:Preuzmite 64-bitnu verziju
 hu:64-bites verzió letöltése
 id:Unduh versi 64-bit
@@ -7586,9 +7640,11 @@ cn:退出(&X)
 co:&Esce
 cy:&Gadael
 de:&Beenden
+el:Έξοδος
 es:S&alir
 eu:I&rten
 fr:Quitter (&x)
+hi:निकास
 it:&Esci
 ja:終了(&X)
 nl:A&fsluiten
@@ -7617,6 +7673,7 @@ eu:Irten ikusleiho-o&sotik
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
 gl:Sa&ír da pantalla completa
+hi:पूर्ण स्क्रीन से बाहर निकलें
 hr:I&zlaz iz cijelog ekrana
 hu:Kilépés a teljes képernyőből
 id:Keluar dari layar penuh
@@ -7725,6 +7782,7 @@ eu:Editatu oharrak
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
+hi:टिप्पणियां संपादित करें
 hr:Uredi bilješke
 hu:Megjegyzések szerkesztése
 id:Tambah catatan
@@ -8038,6 +8096,7 @@ fr:Tout développer
 ga:Leathnaigh Gach
 gl:Expandir todo
 he:הרחב הכל
+hi:सभी का विस्तार
 hr:Proširi sve
 hu:Összes kibontása
 id:Buka Semua
@@ -8131,9 +8190,11 @@ cn:下一视图(&O)
 co:&Dopu
 cy:&Ymlaen
 de:&Nächste Ansicht
+el:Εμπρός
 es:A&delante
 eu:A&urrera
 fr:Avancer (&o)
+hi:आगे
 it:&Avanti
 ja:進む(&O)
 nl:V&ooruit
@@ -8149,9 +8210,11 @@ cn:全屏(&U)
 co:&Screnu sanu
 cy:Sgrin &Lawn
 de:&Vollbild
+el:Πλήρης οθόνη
 es:P&antalla completa
 eu:Ikusleiho-o&soa
 fr:Plein écran (&u)
+hi:पूर्ण स्क्रीन
 it:Sc&hermo pieno
 ja:全画面表示(&U)
 nl:V&oledig Scherm
@@ -8241,7 +8304,7 @@ bs:Neuspješno brisanje registarskih ključeva deinstalera
 by:Немагчыма знішчыць ключы рэестру знішчальніка
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
 ca:S'ha produït un error en suprimir les claus del registre del desinstal·lador
-cn:删除卸载程序注册项失败
+cn:未能删除卸载程序注册表项
 co:Fiascu per squassà e chjave di registru di u disinstalladore
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
@@ -8305,7 +8368,7 @@ bs:Neuspješna promjena naziva faja!
 by:Немагчыма перайменаваць файл!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
 ca:S'ha produït un error en canviar el nom del fitxer!
-cn:无法重命名！
+cn:无法重命名文件！
 co:Fiascu per rinumà u schedariu !
 cy:Methwyd ailenwi'r ffeil!
 cz:Přejmenování souboru se nezdařilo!
@@ -8439,7 +8502,7 @@ bs:Neuspješno zapisivanje informacije o ekstenziji proširenog fajla u registar
 by:Немагчыма запісаць у рэестр інфармацыю аб пашырэннях файлаў
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
 ca:S'ha produït un error en escriure la informació de l'extensió del fitxer al registre
-cn:写入扩展名信息到注册表失败
+cn:未能将扩展名信息写入注册表
 co:Fiascu per scrive l’infurmazioni di l’estensione di schedariu ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
@@ -8455,6 +8518,7 @@ fr:L'écriture dans la base de registre des informations étendues de l'extensio
 ga:Theip air faisnéis fhairsingthe iarmhír comhadainm a scríobh chuig an chlárlann
 gl:Non se puido escribir a información de extensión do ficheiro no rexistro
 he:כתיבת נתוני סיומת קבצים ברישום נכשלה.
+hi:रजिस्ट्री में विस्तारित फ़ाइल एक्सटेंशन जानकारी लिखने में विफल
 hr:Neuspjeh kod zapisivanja produženih informacija nastavka datoteke u registru
 hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a rendszerleíró adatbázisban
 id:Gagal menulis info ekstensi berkas yang diperluas ke registry
@@ -8501,7 +8565,7 @@ bs:Neuspješno zapisivanje deinstalacijske informacije u registar
 by:Немагчыма запісаць у рэестр інфармацыю аб знішчальніку
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:S'ha produït un error en escriure la informació de desinstal·lació al registre
-cn:写入卸载信息到注册表失败
+cn:未能将卸载信息写入注册表
 co:Fiascu per scrive l’infurmazioni di disinstallazione ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
@@ -8517,6 +8581,7 @@ fr:L'écriture des informations de désinstallation dans la base de registre a �
 ga:Theip air an fhaisnéis díshuiteálaithe a scríobh chuig an chlárlann
 gl:Fallouse ao escribir a información de desintalación no rexistro
 he:כתיבת נתוני הסרת התוכנה ברישום נכשלה.
+hi:रजिस्ट्री को अनइंस्टॉल करने की जानकारी लिखने में विफल
 hr:Neuspjeh kod zapisivanja deinstalacijskih informacija u registar
 hu:Eltávolítással kapcsolatos információk rendszerleíró adatbázisba írása sikertelen
 id:Gagal menulis info penghapusan program ke registry
@@ -8694,7 +8759,7 @@ bs:FictionBook dokumenti
 by:Дакумент FictionBook
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
-cn:小说文件
+cn:小说文档
 co:Ducumenti FictionBook
 cy:Dogfennau FictionBook
 cz:Dokumenty FictionBook
@@ -8758,7 +8823,7 @@ bs:Fajl %s nije pronađen
 by:Файл %s не знойдзены
 ca-xv:No s'ha trobat el fitxer %s
 ca:No es troba el fitxer %s
-cn:无法找到文件 %s
+cn:未找到文件 %s
 co:Schedariu %s micca trovu
 cy:Heb ganfod ffeil %s
 cz:Soubor %s nebyl nalezen
@@ -8833,6 +8898,7 @@ eu:Agiri eranspena
 fr:Pièce jointe
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
+hi:फ़ाइल अटैचमेंट
 hr:Prilog
 hu:Fájl melléklet
 id:Lampiran File
@@ -8997,6 +9063,7 @@ cn:查找(&D)...
 co:&Circà…
 cy:&Canfod...
 de:S&uchen...
+el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
 fr:Rechercher... (&d)
@@ -9296,6 +9363,7 @@ cn:适合内容(&C)
 co:&Adattà à u cuntenutu
 cy:&Ffitio'r Cynnwys
 de:An &Inhalt anpassen
+el:Προσαρμογή περιεχομένου
 es:Ajustar al &contenido
 eu:Finkatu &edukia
 it:Adatta al &contenuto
@@ -9313,6 +9381,7 @@ cn:适合页面(&P)
 co:&Pagina sana
 cy:Ffitio &Tudalen
 de:An &Seite anpassen
+el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
 it:Adatta alla &pagina
@@ -9330,6 +9399,7 @@ cn:适合宽度(&W)
 co:&Larghezza sana
 cy:Ffitio &Lled
 de:An Fenster&breite anpassen
+el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
 it:Adatta a &larghezza
@@ -9488,7 +9558,7 @@ ca-xv:Ajusta a l'amplada
 ca:Ajusta a l'amplada
 cn:适合宽度
 co:Larghezza sana
-cy:Fitio'r Lled
+cy:Ffitio'r Lled
 cz:Podle šířky
 de:An Fensterbreite anpassen
 dk:Tilpas bredde
@@ -9620,7 +9690,7 @@ ca-xv:Ajusta a una única pàgina
 ca:Ajusta a una sola pàgina
 cn:单页视图
 co:Pagina unica
-cy:Ffitio Tudalen Unigol
+cy:Ffitio Un Tudalen
 cz:Přizpůsobit pro jednu celou stránku v okně
 de:An eine einzelne Seite anpassen
 dk:Vis en side ad gangen
@@ -10008,10 +10078,12 @@ cn:显示字体信息
 co:Ottene infurmazioni di grafie
 cy:Derbyn Manylion Ffontiau
 de:Schriftarten-Infos erhalten
+el:Πληροφορίες γραμματοσειρών
 es:Información sobre las fuentes
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
 fr:Obtenir les Informations sur les Polices
+hi:फ़ॉन्ट जानकारी प्राप्त करें
 it:Ottieni informazioni sui font
 ja:フォント情報を取得
 nl:Informatie over lettertypen ophalen
@@ -10298,6 +10370,7 @@ es:Icono:
 et:Ikoon:
 eu:Ikurra:
 fr:Icône :
+hi:आइकॉन
 hr:Ikona:
 id:Ikon:
 it:Icona:
@@ -10397,6 +10470,7 @@ eu:Irudiak
 fr:Images
 ga:Íomhánna
 gl:Imaxes
+hi:इमेजिस
 hr:Slike
 hu:Képek
 id:Gambar
@@ -10440,6 +10514,7 @@ et:Tint
 fr:Encre
 ga:Dúch
 gl:Trazo
+hi:स्याही
 hr:Tinta
 hu:Tinta
 id:Tinta
@@ -10555,6 +10630,7 @@ fr:Installer SumatraPDF dans le répertoire :
 ga:Suiteáil SumatraPDF sa bh&fillteán seo:
 gl:Instalar SumatraPDF no &cartafol:
 he:התקן את SumatraPDF בתיקייה:
+hi:सुमात्रापीडीएफ को फ़ोल्डर में स्थापित करें:
 hr:Instaliraj SumatraPDF u &mapu:
 hu:SumatraPDF telepítése a következő &könyvtárba:
 id:Install SumatraPDF ke &folder:
@@ -10606,6 +10682,7 @@ es:Instalar y reiniciar
 et:Paigalda ja kävita uuesti
 eu:Ezarri eta berrabiarazi
 fr:Installer et redémarrer
+hi:इंस्टाल और रीलॉन्च
 hr:Instaliraj i ponovno pokreni
 hu:Telepítés és újraindítás
 id:Pasang dan buka kembali
@@ -10629,9 +10706,11 @@ cn:为所有用户安装
 co:Installà per tutti l’utilizatori
 cy:Gosod ar gyfer pob defnyddiwr
 de:Für alle Benutzer installieren
+el:Εγκατάσταση για όλους τους χρήστες
 es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
 fr:Installer pour tous les utilisateurs
+hi:सभी उपयोगकर्ताओं के लिए इंस्टॉल करें
 it:Installa per tutti gli utenti
 ja:すべてのユーザーに対してインストール
 nl:Installeer voor alle gebruikers
@@ -10668,6 +10747,7 @@ fr:Échec de l'installation !
 ga:Theip ar an suiteáil!
 gl:Fallou a instalación!
 he:התקנת SumatraPDF נכשלה.
+hi:इंस्टॉलेशन विफल!
 hr:Instalacija nije uspjela!
 hu:Telepítés sikertelen!
 id:Instalasi gagal!
@@ -10732,6 +10812,7 @@ fr:Installation en cours…
 ga:Suiteáil ar siúl...
 gl:Instalación en curso...
 he:מתקין את SumatraPDF...
+hi:इंस्टालेशन चल रहा है...
 hr:Instaliranje...
 hu:Telepítés folyamatban...
 id:Instalasi sedang berlangsung...
@@ -10784,6 +10865,7 @@ es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
 eu:32-biteko Sumatra ezartzen 64-biteko SE-n
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits
+hi:64-बिट ओएस पर 32-बिट सुमात्रापीडीएफ स्थापित करना।
 hr:Instaliranje 32-bitne SumatraPDF na 64-bit OS
 hu:32-bites SumatraPDF telepítése 64-bites operációs rendszerre
 id:Memasang SumatraPDF versi 32-bit pada OS 64-bit
@@ -10908,7 +10990,7 @@ bs:Omogući Windows Desktop Search-u da &pretražuje PDF dokumente
 by:Шукаць дакументы PDF ў Windows Desktop Search
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet que la &cerca d'escriptori del Windows cerqui els documents PDF
-cn:让 Windows “桌面搜索”搜索 PDF 文件(&S)
+cn:让 Windows “桌面搜索”搜索 PDF 文档(&S)
 co:Permette à Windows Desktop Search di &ricercà in i ducumenti PDF
 cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
@@ -10924,6 +11006,7 @@ fr:Permettre à Windows Desktop Search la recherche de documents PDF
 ga:Lig do Chuardach Deasca Windows cáipéisí PDF a chuardach
 gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
 he:אפשר חיפוש קובצי PDF במערכת החיפוש של Windows
+hi:Windows डेस्कटॉप को PDF दस्तावेज़ खोजने और खोजने दें
 hr:Neka Windows pretraga radne površine &pretražuje PDF dokumente
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 id:Izinkan Windows Desktop Search mencari dokumen PDF
@@ -10969,7 +11052,7 @@ bs:Omogući Windows-ima da prikažu &pregled PDF dokumenata
 by:Паказваць &перадпрагляд дакументаў PDF у Windows
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar les &vistes prèvies dels documents PDF
-cn:让 Windows 显示 PDF 文件的预览(&P)
+cn:让 Windows 显示 PDF 文档缩略图(&P)
 co:Permette à Windows d’affissà a &fighjulata di i ducumenti PDF
 cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
@@ -10985,6 +11068,7 @@ fr:Permettre à Windows de montrer des a&perçus des documents PDF
 ga:Lig do Windows réamhamhairc de cháipéisí PDF a thaispeáint
 gl:Deixar que Windows mostre &previsualizacións de documentos PDF
 he:אפשר תצוגה מקדימה של קובצי PDF
+hi:विंडोज़ को PDF दस्तावेज़ों के पूर्वावलोकन और दिखाने दें
 hr:Neka Windows prikazuje &pregled PDF dokumenata
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 id:Izinkan Windows menampilkan dokumen PDF
@@ -11459,7 +11543,7 @@ bs:Mobi dokumenti
 by:Дакумент Mobi
 ca-xv:Documents Mobi
 ca:Documents Mobi
-cn:Mobi 文件
+cn:Mobi 文档
 co:Ducumenti Mobi
 cy:Dogfennau Mobi
 cz:Dokumenty Mobi
@@ -11587,6 +11671,7 @@ cn:新建窗口(&W)
 co:Nova &finestra
 cy:Ffenestr &newydd
 de:Neues &Fenster
+el:Νέο παράθυρο
 es:Nueva &ventana
 eu:&Leiho berria
 fr:Nouvelle fenêtre (&w)
@@ -12112,6 +12197,7 @@ es:Opacidad:
 et:Läbipaistvus:
 eu:Iragazkaiztasuna:
 fr:Opacité :
+hi:अपारदर्शिता:
 hr:Neprozirnost:
 id:Kegelapan:
 it:Opacità:
@@ -13113,6 +13199,7 @@ cn:前往第 ... 页(&G)
 co:Pa&gina…
 cy:&Tudalen...
 de:&Seite...
+el:Σελίδα
 es:Pá&gina...
 eu:O&rrialdea...
 fr:Pa&ge...
@@ -13463,7 +13550,7 @@ bs:PalmDoc dokumenti
 by:Дакумент PalmDoc
 ca-xv:Documents PalmDoc
 ca:Documents PalmDoc
-cn:PalmDoc 文件
+cn:PalmDoc 文档
 co:Ducumenti PalmDoc
 cy:Dogfennau PalmDoc
 cz:Dokumenty PalmDoc
@@ -13815,6 +13902,7 @@ cn:幻灯片(&E)
 co:&Presentazione
 cy:C&yflwyniad
 de:Pr&äsentation
+el:Παρουσίαση
 es:Pr&esentación
 eu:Aur&kezpena
 fr:Prés&entation
@@ -14419,6 +14507,7 @@ cn:重命名(&N)...
 co:&Rinuminà…
 cy:&Ailenwi...
 de:Umbe&nennen...
+el:Μετονομασία
 es:Re&nombrar...
 eu:B&errizendatu...
 fr:Re&nommer...
@@ -14758,6 +14847,7 @@ cn:逆时针旋转(&L)
 co:Girà à &manca
 cy:Troi i'r &Chwith
 de:&Gegen UZS drehen
+el:Περιστροφή αριστερά
 es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fr:Rotation vers &la gauche
@@ -14846,6 +14936,7 @@ cn:顺时针旋转(&R)
 co:Girà à &diritta
 cy:Troi i'r &Dde
 de:Im &UZS drehen
+el:Περιστροφή δεξιά
 es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
 fr:Rotation vers la d&roite
@@ -15089,6 +15180,7 @@ cn:保存快捷方式(&H)...
 co:Arregistrà l’&accurtatoghju…
 cy:Cadw &Llwybr Byr...
 de:Verknüpfung speichern...
+el:Αποθήκευση συντόμευσης
 es:Guardar A&tajo...
 eu:Gorde &lastertekla...
 fr:Enregistrer le raccourci (&h)
@@ -15305,7 +15397,7 @@ kr:Bing으로 검색(&B)
 kw:Hwilas Gans &Bing
 nl:Zoeken Met &Bing
 pl:Szukaj za pomocą &Bing
-ru:Н&айти с помощью Bing
+ru:Н&айти в Bing
 sk:Vyhľadávanie pomocou &Bing
 sl:Išči z &Bing
 th:ค้นหาด้วย &​Bing
@@ -15336,7 +15428,7 @@ kr:Google로 검색(&G)
 kw:Hwilas Gans &Google
 nl:Zoeken Met &Google
 pl:Szukaj za pomocą &Google
-ru:&Найти с помощью Google
+ru:&Найти в Google
 sk:Hľadať pomocou &Google
 sl:Išči z &Google
 th:ค้นหาด้วย &​Google
@@ -15936,7 +16028,7 @@ ca-xv:Mostra les &pàgines de forma contínua
 ca:Mostra les &pàgines de forma contínua
 cn:连续显示页面(&P)
 co:&Vista in cuntinuu
-cy:Dangos &tudalennau'n ddidor
+cy:Dangos &tudalennau'n barhaus
 cz:Zobrazit stránky &průběžně
 de:Seiten &fortlaufend anzeigen
 dk:Vis &sider fortløbende
@@ -16101,6 +16193,7 @@ cn:显示书签(&M)
 co:Affissà l’&indette
 cy:Dangos &Nodau Tudalen
 de:Lesezeichen anzeigen
+el:Εμφάνιση σελιδοδεικτών
 es:Mostrar favo&ritos
 fr:Afficher les &marque-pages
 it:Visualizza &Preferiti
@@ -16318,6 +16411,7 @@ tr:&Klasörde göster
 tw:打開所在資料夾(&F)
 uk:Показати в п&апці
 vn:Hiển thị trong &thư mục
+:Show in folder
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
@@ -16396,7 +16490,7 @@ ca-xv:Pàgina única
 ca:Una sola pàgina
 cn:单页视图
 co:Pagina sola
-cy:Tudalen unigol
+cy:Un Tudalen
 cz:Jedna stránka
 de:Einzelne Seite
 dk:Enkelt side
@@ -16807,6 +16901,7 @@ fr:Installeur de SumatraPDF %s
 ga:Suiteálaí %s SumatraPDF
 gl:Instalador %s SumatraPDF
 he:התקנת SumatraPDF %s
+hi:सुमात्रापीडीएफ %s इंस्टालर
 hr:SumatraPDF %s instaler
 hu:SumatraPDF %s telepítő
 id:Pemasang instalasi SumatraPDF %s
@@ -17858,7 +17953,7 @@ kr:DeepL로 번역(&D)
 kw:Treylya gans &DeepL
 nl:Vertalen Met &Deepl
 pl:Tłumacz za pomocą &DeepL
-ru:П&еревести с помощью DeepL
+ru:П&еревести в DeepL
 sk:Preložiť pomocou &DeepL
 sl:Prevedi z &DeepL
 th:แปลด้วย &​DeepL
@@ -18457,7 +18552,7 @@ bs:XPS dokumenti
 by:Дакумент XPS
 ca-xv:Documents XPS
 ca:Documents XPS
-cn:XPS 文件
+cn:XPS 文档
 co:Ducumenti XPS
 cy:Dogfennau XPS
 cz:Dokumenty XPS
@@ -18956,9 +19051,9 @@ bs:[Uočena promjena; osvježavam] %s
 by:[Выяўлены змены; адбываецца абнаўленне] %s
 ca-xv:[S'han detectat canvis; s'està actualitzant] %s
 ca:[S'han detectat canvis; s'està actualitzant] %s
-cn:[已检测到更改，正在更新] %s
+cn:[已检测到更改，正在刷新] %s
 co:[Cambiamenti abbentati ; attualizazione] %s
-cy:[Wedi canfod newidiadau: adnewyddu] %s
+cy:[Wedi canfod newidiadau; yn adnewyddu] %s
 cz:[Zjištěna změna; probíhá aktualizace] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 dk:[Ændringer konstateret; opdaterer] %s
