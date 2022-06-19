@@ -279,7 +279,7 @@ void fz_dom_append_child(fz_context *ctx, fz_xml *parent, fz_xml *child)
 
 	/* First unlink child from anywhere it's currently linked in. */
 	if (child->u.node.prev)
-		child->u.node.next = child->u.node.next;
+		child->u.node.prev->u.node.next = child->u.node.next;
 	else if (child->up->down == child && !FZ_DOCUMENT_ITEM(child->up))
 		child->up->down = child->u.node.next;
 	if (child->u.node.next)

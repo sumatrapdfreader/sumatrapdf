@@ -120,6 +120,7 @@ static void app_alert(js_State *J)
 	when the dialog box window is closed in Acrobat. */
 	switch (evt.button_group_type)
 	{
+	default:
 	case PDF_ALERT_BUTTON_GROUP_OK:
 		evt.button_pressed = PDF_ALERT_BUTTON_OK;
 		break;

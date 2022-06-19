@@ -1784,11 +1784,12 @@ void fz_draw_story(fz_context *ctx, fz_html_story *story, fz_device *dev, fz_mat
 	float page_top, page_bot;
 	fz_html_box *b;
 	fz_path *clip;
-	fz_rect bbox = story->bbox;
+	fz_rect bbox;
 
 	if (story == NULL || story->complete)
 		return;
 
+	bbox = story->bbox;
 	b = story->tree.root;
 	page_top = b->y - b->margin[T] - b->border[T] - b->padding[T];
 	page_bot = b->b + b->margin[B] + b->border[B] + b->padding[B];

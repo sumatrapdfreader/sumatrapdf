@@ -2675,6 +2675,135 @@ intermediate_run:
 	}
 }
 
+static inline void
+fz_paint_glyph_mask_alpha(int span, unsigned char *dp, int da, const fz_glyph *glyph, int w, int h, int skip_x, int skip_y, unsigned char alpha)
+{
+	while (h--)
+	{
+		int skip_xx, ww, len, extend;
+		const unsigned char *runp;
+		unsigned char *ddp = dp;
+		int offset = ((const int *)(glyph->data))[skip_y++];
+		if (offset >= 0)
+		{
+			int eol = 0;
+			runp = &glyph->data[offset];
+			extend = 0;
+			ww = w;
+			skip_xx = skip_x;
+			while (skip_xx)
+			{
+				int v = *runp++;
+				switch (v & 3)
+				{
+				case 0: /* Extend */
+					extend = v>>2;
+					len = 0;
+					break;
+				case 1: /* Transparent */
+					len = (v>>2) + 1 + (extend<<6);
+					extend = 0;
+					if (len > skip_xx)
+					{
+						len -= skip_xx;
+						goto transparent_run;
+					}
+					break;
+				case 2: /* Solid */
+					eol = v & 4;
+					len = (v>>3) + 1 + (extend<<5);
+					extend = 0;
+					if (len > skip_xx)
+					{
+						len -= skip_xx;
+						goto solid_run;
+					}
+					break;
+				default: /* Intermediate */
+					eol = v & 4;
+					len = (v>>3) + 1 + (extend<<5);
+					extend = 0;
+					if (len > skip_xx)
+					{
+						runp += skip_xx;
+						len -= skip_xx;
+						goto intermediate_run;
+					}
+					runp += len;
+					break;
+				}
+				if (eol)
+				{
+					ww = 0;
+					break;
+				}
+				skip_xx -= len;
+			}
+			while (ww > 0)
+			{
+				int v = *runp++;
+				switch(v & 3)
+				{
+				case 0: /* Extend */
+					extend = v>>2;
+					break;
+				case 1: /* Transparent */
+					len = (v>>2) + 1 + (extend<<6);
+					extend = 0;
+transparent_run:
+					if (len > ww)
+						len = ww;
+					ww -= len;
+					ddp += len;
+					break;
+				case 2: /* Solid */
+					eol = v & 4;
+					len = (v>>3) + 1 + (extend<<5);
+					extend = 0;
+solid_run:
+					if (len > ww)
+						len = ww;
+					ww -= len;
+					do
+					{
+						*ddp++ = alpha;
+					}
+					while (--len);
+					break;
+				default: /* Intermediate */
+					eol = v & 4;
+					len = (v>>3) + 1 + (extend<<5);
+					extend = 0;
+intermediate_run:
+					if (len > ww)
+						len = ww;
+					ww -= len;
+					do
+					{
+						int v = *ddp;
+						int a = *runp++;
+						if (v == 0)
+						{
+							*ddp++ = fz_mul255(a, alpha);
+						}
+						else
+						{
+							a = FZ_EXPAND(a);
+							*ddp = FZ_BLEND(alpha, v, a);
+							ddp++;
+						}
+					}
+					while (--len);
+					break;
+				}
+				if (eol)
+					break;
+			}
+		}
+		dp += span;
+	}
+}
+
 #define N 1
 #include "paint-glyph.h"
 
@@ -2890,6 +3019,9 @@ fz_paint_glyph(const unsigned char * FZ_RESTRICT colorbv, fz_pixmap * FZ_RESTRIC
 	else
 	{
 		assert(dst->alpha && dst->n == 1 && dst->colorspace == NULL && !fz_overprint_required(eop));
+		if (colorbv == NULL || colorbv[0] == 255)
 		fz_paint_glyph_mask(dst->stride, dp, dst->alpha, glyph, w, h, skip_x, skip_y);
+		else
+			fz_paint_glyph_mask_alpha(dst->stride, dp, dst->alpha, glyph, w, h, skip_x, skip_y, colorbv[0]);
 	}
 }

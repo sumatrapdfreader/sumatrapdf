@@ -972,13 +972,14 @@ draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_glyph *glyph,
 		else
 		{
 			fz_span_painter_t *fn;
+			int col = colorbv ? colorbv[0] : 255;
 
-			fn = fz_get_span_painter(da, 1, 0, 255, eop);
+			fn = fz_get_span_painter(da, 1, 0, col, eop);
 			if (fn == NULL)
 				return;
 			while (h--)
 			{
-				(*fn)(dp, da, mp, 1, 0, w, 255, eop);
+				(*fn)(dp, da, mp, 1, 0, w, col, eop);
 				dp += dst->stride;
 				mp += msk->stride;
 			}

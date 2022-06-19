@@ -522,12 +522,14 @@ pdf_redact_text_filter(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, f
 }
 
 static fz_pixmap *
-pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap *pixmap, fz_quad q)
+pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap *pixmap, fz_pixmap **pmask, fz_quad q)
 {
 	fz_matrix inv_ctm;
 	fz_irect r;
 	int x, y, k, n, bpp;
 	unsigned char white;
+	fz_pixmap *mask = *pmask;
+	int pixmap_cloned = 0;
 
 	if (!pixmap)
 	{
@@ -542,6 +544,26 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 		}
 		fz_always(ctx)
 			fz_drop_pixmap(ctx, original);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+		pixmap_cloned = 1;
+	}
+
+	if (!mask && image->mask)
+	{
+		fz_pixmap *original = fz_get_pixmap_from_image(ctx, image->mask, NULL, NULL, NULL, NULL);
+
+		fz_try(ctx)
+		{
+			mask = fz_clone_pixmap(ctx, original);
+			*pmask = mask;
+		}
+		fz_always(ctx)
+		{
+			fz_drop_pixmap(ctx, original);
+			if (pixmap_cloned)
+				fz_drop_pixmap(ctx, pixmap);
+		}
 		fz_catch(ctx)
 			fz_rethrow(ctx);
 	}
@@ -568,6 +590,21 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 				s[k] = white;
 			if (pixmap->alpha)
 				s[k] = 255;
+		}
+	}
+
+	if (mask)
+	{
+		inv_ctm = fz_post_scale(fz_invert_matrix(ctm), mask->w, mask->h);
+		r = fz_round_rect(fz_transform_rect(fz_rect_from_quad(q), inv_ctm));
+		r.x0 = fz_clampi(r.x0, 0, mask->w);
+		r.x1 = fz_clampi(r.x1, 0, mask->w);
+		r.y1 = fz_clampi(mask->h - r.y1, 0, mask->h);
+		r.y0 = fz_clampi(mask->h - r.y0, 0, mask->h);
+		for (y = r.y1; y < r.y0; ++y)
+		{
+			unsigned char *s = &mask->samples[(size_t)y * mask->stride + (size_t)r.x0];
+			memset(s, 0xff, r.x1-r.x0);
 		}
 	}
 
@@ -622,6 +659,7 @@ static fz_image *
 pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
 {
 	fz_pixmap *redacted = NULL;
+	fz_pixmap *mask = NULL;
 	pdf_page *page = opaque;
 	pdf_annot *annot;
 	pdf_obj *qp;
@@ -630,6 +668,7 @@ pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, con
 	int i, n;
 
 	fz_var(redacted);
+	fz_var(mask);
 
 	area = fz_transform_quad(fz_quad_from_rect(fz_unit_rect), ctm);
 
@@ -674,7 +713,7 @@ pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, con
 					{
 						q = pdf_to_quad(ctx, qp, i);
 						if (fz_is_quad_intersecting_quad(area, q))
-							redacted = pdf_redact_image_imp(ctx, ctm, image, redacted, q);
+							redacted = pdf_redact_image_imp(ctx, ctm, image, redacted, &mask, q);
 					}
 				}
 				else
@@ -682,7 +721,7 @@ pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, con
 					r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
 					q = fz_quad_from_rect(r);
 					if (fz_is_quad_intersecting_quad(area, q))
-						redacted = pdf_redact_image_imp(ctx, ctm, image, redacted, q);
+						redacted = pdf_redact_image_imp(ctx, ctm, image, redacted, &mask, q);
 				}
 			}
 		}
@@ -690,20 +729,36 @@ pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, con
 	fz_catch(ctx)
 	{
 		fz_drop_pixmap(ctx, redacted);
+		fz_drop_pixmap(ctx, mask);
 		fz_rethrow(ctx);
 	}
 
 	if (redacted)
 	{
 		int imagemask = image->imagemask;
+		fz_image *imask = fz_keep_image(ctx, image->mask);
+
+		fz_var(imask);
 
 		fz_try(ctx)
 		{
+			if (mask)
+			{
+				fz_drop_image(ctx, imask);
+				imask = NULL;
+				imask = fz_new_image_from_pixmap(ctx, mask, NULL);
+			}
 			image = fz_new_image_from_pixmap(ctx, redacted, NULL);
 			image->imagemask = imagemask;
+			image->mask = imask;
+			imask = NULL;
 		}
 		fz_always(ctx)
+		{
 			fz_drop_pixmap(ctx, redacted);
+			fz_drop_pixmap(ctx, mask);
+			fz_drop_image(ctx, imask);
+		}
 		fz_catch(ctx)
 			fz_rethrow(ctx);
 		return image;
