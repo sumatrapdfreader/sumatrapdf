@@ -1212,6 +1212,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
         existingHwnd = FindPrevInstWindow(&hMutex);
     }
 
+    // call before creating first window and menu. Otherwise menu shortcuts will be missing
+    CreateSumatraAcceleratorTable();
+
     if (flags.dde) {
         logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde, existingHwnd);
         SendMyselfDDE(flags.dde, existingHwnd);
@@ -1324,9 +1327,6 @@ ContinueOpenWindow:
     if (flags.printDialog && flags.exitWhenDone) {
         goto Exit;
     }
-
-    // call before creating first window and menu
-    CreateSumatraAcceleratorTable();
 
     if (!win) {
         win = CreateAndShowMainWindow();
