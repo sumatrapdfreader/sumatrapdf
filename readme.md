@@ -1,5 +1,4 @@
-![](https://github.com/sumatrapdfreader/sumatrapdf/workflows/Build/badge.svg)
-
+[![Build](https://github.com/sumatrapdfreader/sumatrapdf/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sumatrapdfreader/sumatrapdf/actions/workflows/build.yml)
 ## SumatraPDF Reader
 
 SumatraPDF is a multi-format (PDF, EPUB, MOBI, CBZ, CBR, FB2, CHM, XPS, DjVu) reader
