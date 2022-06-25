@@ -2905,7 +2905,18 @@ fz_matrix EngineMupdf::viewctm(int pageNo, float zoom, int rotation) {
 }
 
 fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
-    return FzCreateViewCtm(fz_bound_page(ctx, page), zoom, rotation);
+    fz_rect bounds;
+    fz_var(bounds);
+    fz_try(ctx) {
+        bounds = fz_bound_page(ctx, page);
+    }
+    fz_catch(ctx) {
+        bounds = {};
+    }
+    if (fz_is_empty_rect(bounds)) {
+        bounds = {0, 0, 612, 792};
+    }
+    return FzCreateViewCtm(bounds, zoom, rotation);
 }
 
 RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
