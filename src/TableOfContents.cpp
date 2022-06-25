@@ -77,7 +77,8 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
     }
 
     bool isOk = (k == kindDestinationLaunchURL) || (k == kindDestinationLaunchFile) ||
-                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu);
+                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu) ||
+                (k == kindDestinationAttachment);
     CrashIf(!isOk);
 
     str::Str infotip;
@@ -94,7 +95,7 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
         infotip.Append("\r\n");
     }
 
-    if (kindDestinationLaunchEmbedded == k) {
+    if (kindDestinationLaunchEmbedded == k || kindDestinationAttachment == k) {
         AutoFreeStr tmp = str::Format(_TRA("Attachment: %s"), path);
         infotip.Append(tmp.Get());
     } else {
@@ -416,12 +417,40 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
 
+static void SaveAttachment(WindowTab* tab, const char* fileName, int attachmentNo) {
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    ByteSlice data = EngineMupdfLoadAttachment(engine, attachmentNo);
+    if (data.empty()) {
+        return;
+    }
+    char* dir = path::GetDirTemp(tab->filePath);
+    fileName = path::GetBaseNameTemp(fileName);
+    AutoFreeStr dstPath = path::Join(dir, fileName);
+    SaveDataToFile(tab->win->hwndFrame, dstPath, data);
+    str::Free(data.data());
+}
+
+static void OpenAttachment(WindowTab* tab, const char* fileName, int attachmentNo) {
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    ByteSlice data = EngineMupdfLoadAttachment(engine, attachmentNo);
+    if (data.empty()) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    EngineBase* newEngine = CreateEngineMupdfFromData(data, fileName, nullptr);
+    DocController* ctrl = CreateControllerForEngineOrFile(newEngine, nullptr, nullptr, win);
+    LoadArgs* args = new LoadArgs(tab->filePath, win);    
+    args->ctrl = ctrl;
+    LoadDocumentFinish(args, false);
+    str::Free(data.data());
+}
+
 static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     CrashIf(!tab || !dest);
     if (!tab || !dest) {
         return;
     }
-    auto win = tab->win;
+    MainWindow* win = tab->win;
     PageDestinationFile *destFile = (PageDestinationFile*)dest;
     char* path = destFile->path;
     char* tabPath = tab->filePath.Get();
@@ -473,6 +502,14 @@ static MenuDef menuDefContextToc[] = {
         _TRN("Save Embedded File..."),
         CmdSaveEmbeddedFile,
     },
+    {
+        _TRN("Open Attachment"),
+        CmdOpenAttachment,
+    },
+    {
+        _TRN("Save Attachment..."),
+        CmdSaveAttachment,
+    },
     // note: strings cannot be "" or else items are not there
     {
         "Add to favorites",
@@ -511,15 +548,18 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     WindowTab* tab = win->CurrentTab();
     HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
-    const char* embeddedFilePath = nullptr;
+    const char* path = nullptr;
     char* fileName = nullptr;
-    if (dest && dest->GetKind() == kindDestinationLaunchEmbedded) {
+    Kind destKind = dest ? dest->GetKind() : nullptr;
+
+    // TODO: this is pontentially not used at all
+    if (destKind == kindDestinationLaunchEmbedded) {
         auto embeddedFile = (PageDestinationFile*)dest;
         // this is a path to a file on disk, e.g. a path to opened PDF
         // with the embedded stream number
-        embeddedFilePath = embeddedFile->path;
+        path = embeddedFile->path;
         // this is name of the file as set inside PDF file
-        fileName = dti->dest->GetName();
+        fileName = dest->GetName();
         bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
@@ -528,6 +568,27 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         // TODO: maybe move this to BuildMenuFromMenuDef
         MenuRemove(popup, CmdSaveEmbeddedFile);
         MenuRemove(popup, CmdOpenEmbeddedPDF);
+    }
+
+    int attachmentNo = -1;
+    if (destKind == kindDestinationAttachment) {
+        auto attachment = (PageDestinationFile*)dest;
+        // this is a path to a file on disk, e.g. a path to opened PDF
+        // with the embedded stream number
+        path = attachment->path;
+        // this is name of the file as set inside PDF file
+        fileName = dest->GetName();
+        // hack: attachmentNo is saved in pageNo see
+        // PdfLoadAttachments and DestFromAttachment
+        attachmentNo = pageNo;
+        bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
+        if (!canOpenEmbedded) {
+            MenuRemove(popup, CmdOpenAttachment);
+        }
+    } else {
+        // TODO: maybe move this to BuildMenuFromMenuDef
+        MenuRemove(popup, CmdSaveAttachment);
+        MenuRemove(popup, CmdOpenAttachment);
     }
 
     if (pageNo > 0) {
@@ -576,13 +637,19 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             DelFavorite(filePath, pageNo);
             break;
         case CmdSaveEmbeddedFile: {
-            SaveEmbeddedFile(tab, embeddedFilePath, fileName);
+            SaveEmbeddedFile(tab, path, fileName);
         } break;
-
         case CmdOpenEmbeddedPDF:
             // TODO: maybe also allow for a fileName hint
             OpenEmbeddedFile(tab, dest);
             break;
+        case CmdSaveAttachment: {
+            SaveAttachment(tab, fileName, attachmentNo);
+            break;
+        }
+        case CmdOpenAttachment: {
+            OpenAttachment(tab, fileName, attachmentNo);
+        }
     }
 }
 

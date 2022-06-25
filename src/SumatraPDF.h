@@ -164,9 +164,14 @@ struct LoadArgs {
     AutoFreeStr fileName;
 };
 
+struct PasswordUI;
+
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload = false);
+MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload);
 void LoadDocumentAsync(LoadArgs* args);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);
+DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
+                                               MainWindow* win);
 
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);

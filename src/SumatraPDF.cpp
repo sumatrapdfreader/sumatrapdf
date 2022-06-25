@@ -935,8 +935,8 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
     return ctrl;
 }
 
-static DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
-                                                      MainWindow* win) {
+DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
+                                               MainWindow* win) {
     // TODO: move this to MainWindow constructor
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
@@ -1636,7 +1636,7 @@ static void ShowErrorLoading(MainWindow* win, const char* path, bool noSavePrefs
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
 
-static MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
+MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
     MainWindow* win = args->win;
     const char* fullPath = args->FilePath();
 

@@ -1277,6 +1277,44 @@ pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
 }
 
 // Note: make sure to only call with ctxAccess
+// PdfLoadAttachment && PdfLoadAttachments must traverse in the same order
+static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
+    pdf_obj* dict;
+    fz_var(dict);
+    ByteSlice res;
+
+    fz_try(ctx) {
+        dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
+        if (!dict) {
+            break;
+        }
+
+        int n = pdf_dict_len(ctx, dict);
+        for (int i = 0; i < n; i++) {
+            pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
+
+            if (!pdf_is_embedded_file(ctx, fs)) {
+                continue;
+            }
+            if (no == i + 1) {
+                fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
+                res.d = (u8*)memdup(buf->data, buf->len);
+                res.sz = buf->len;
+                fz_drop_buffer(ctx, buf);
+                i = n + 1; // exit for loop
+            }
+        }
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ctx, dict);
+    }
+    fz_catch(ctx) {
+        logfa("PdfLoadAttachment() failed\n");
+    }
+    return res;
+}
+
+// Note: make sure to only call with ctxAccess
 static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const char* path) {
     fz_outline root{};
     pdf_obj* dict;
@@ -1305,7 +1343,8 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const 
             }
             fz_outline* link = fz_new_outline(ctx);
             link->title = fz_strdup(ctx, nameStr);
-            link->uri = fz_strdup(ctx, nameStr); // TODO: maybe make file:// ?
+            link->page.page = i + 1;
+            link->uri = fz_strdup(ctx, nameStr);
             curr->next = link;
             curr = link;
         }
@@ -2301,11 +2340,12 @@ bool EngineMupdf::FinishLoading() {
 
 static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
-    dest->kind = kindDestinationLaunchEmbedded;
+    dest->kind = kindDestinationAttachment;
     // WCHAR* path = ToWstr(outline->uri);
     dest->name = str::Dup(outline->title);
     // page is really a stream number
-    dest->value = str::Format("%s:%d", engine->FilePath(), outline->page);
+    dest->value = str::Format("%s:%d", engine->FilePath(), outline->page.page);
+    dest->pageNo = outline->page.page;
     return dest;
 }
 
@@ -2531,6 +2571,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
             logf("attachement: %s\n", attname);
 
             auto dest = new PageDestination();
+            // TODO: kindDestinationAttachment ?
             dest->kind = kindDestinationLaunchEmbedded;
             dest->value = str::Dup(attname);
 
@@ -3556,6 +3597,16 @@ EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, P
     return engine;
 }
 
+EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHint, PasswordUI* pwdUI) {
+    EngineMupdf* engine = new EngineMupdf();
+    IStream* stream = CreateStreamFromData(data);
+    if (!engine->Load(stream, nameHint, pwdUI)) {
+        delete engine;
+        return nullptr;
+    }
+    return engine;
+}
+
 int EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     return epdf->GetAnnotations(annotsOut);
@@ -3591,6 +3642,17 @@ static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
         ++i;
     }
     return false;
+}
+
+// caller must free
+ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachementNo) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf->pdfdoc) {
+        return {};
+    }
+
+    ByteSlice res = PdfLoadAttachment(epdf->ctx, epdf->pdfdoc, attachementNo);
+    return res;
 }
 
 // caller must delete

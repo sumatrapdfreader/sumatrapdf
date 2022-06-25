@@ -32,6 +32,7 @@
 static HFONT gCommandPaletteFont = nullptr;
 
 // clang-format off
+// those commands never show up in command palette
 static i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
     CmdOpenWithFirst,
@@ -55,6 +56,10 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdPresentationBlackBackground,
 
     CmdSaveEmbeddedFile, // TODO: figure proper context for it
+    CmdOpenEmbeddedPDF,
+    CmdSaveAttachment,
+    CmdOpenAttachment,
+
     CmdCreateShortcutToFile, // not sure I want this at all
 };
 

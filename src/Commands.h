@@ -113,6 +113,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCollapseAll, "Collapse All")                                     \
     V(CmdSaveEmbeddedFile, "Save Embedded File...")                       \
     V(CmdOpenEmbeddedPDF, "Open Embedded PDF")                            \
+    V(CmdSaveAttachment, "Save Attachment...")                            \
+    V(CmdOpenAttachment, "Open Attachment")                               \
     V(CmdOptions, "Options...")                                           \
     V(CmdAdvancedOptions, "Advanced Options...")                          \
     V(CmdChangeLanguage, "Change Language...")                            \

@@ -44,6 +44,7 @@ extern Kind kindDestinationNone;
 extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;
 extern Kind kindDestinationLaunchEmbedded;
+extern Kind kindDestinationAttachment;
 extern Kind kindDestinationLaunchFile;
 extern Kind kindDestinationDjVu;
 extern Kind kindDestinationMupdf;

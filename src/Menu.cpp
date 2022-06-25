@@ -972,7 +972,7 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 #define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
 static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
-    CrashIf(!filePath || !menuFile);
+    ReportIf(!filePath || !menuFile);
     if (!filePath || !menuFile) {
         return;
     }

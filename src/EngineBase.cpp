@@ -37,13 +37,23 @@ Kind kindDestinationNone = "none";
 Kind kindDestinationScrollTo = "scrollTo";
 Kind kindDestinationLaunchURL = "launchURL";
 Kind kindDestinationLaunchEmbedded = "launchEmbedded";
+Kind kindDestinationAttachment = "launchAttachment";
 Kind kindDestinationLaunchFile = "launchFile";
 Kind kindDestinationDjVu = "destinationDjVu";
 Kind kindDestinationMupdf = "destinationMupdf";
 
-static Kind destKinds[] = {kindDestinationNone,           kindDestinationScrollTo,   kindDestinationLaunchURL,
-                           kindDestinationLaunchEmbedded, kindDestinationLaunchFile, kindDestinationDjVu,
-                           kindDestinationMupdf};
+// clang-format off
+static Kind destKinds[] = {
+    kindDestinationNone,
+    kindDestinationScrollTo,
+    kindDestinationLaunchURL,
+    kindDestinationLaunchEmbedded,
+    kindDestinationAttachment,
+    kindDestinationLaunchFile,
+    kindDestinationDjVu,
+    kindDestinationMupdf
+};
+// clang-format on
 
 PageDestination::~PageDestination() {
     free(value);
