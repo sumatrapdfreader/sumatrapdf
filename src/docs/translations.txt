@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e14f6d0830d26d1ae81bce9da95d2ae3cd6e8d78
+ebece44929a1cdf6fd7f9d9cf39cce142464b243
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3650,7 +3650,7 @@ eu:Oharrak
 fr:Annotations
 ga:Nótaí mínithe
 gl:Anotacións
-hi:एनोटेशन \r\nटिप्पणी\r\n
+hi:एनोटेशन
 hr:Bilješke
 hu:Megjegyzések
 id:Catatan
@@ -3754,7 +3754,7 @@ by:Вы сапраўды ўпэўнены, что трэба знішчыць Su
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
 ca:Segur que voleu desinstal·lar el SumatraPDF?
 cn:您确定要卸载 SumatraPDF 吗？
-co:Site sicuru di vulè disinstallà SumatraPDF ?
+co:Vulete veramente disinstallà SumatraPDF ?
 cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
@@ -5214,10 +5214,18 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Close Other Tabs
+cn:关闭其他标签页
+co:Chjode d’altre unghjette
 de:Andere Tabs schließen
+it:Chiudi altre schede
+nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
 :Close Tabs To The Right
+cn:关闭右侧标签页
+co:Chjode l’unghjette versu a diritta
 de:Tabs rechts schließen
+it:Chiudi scheda sulla destra
+nl:Sluit Tabbladen Rechts
 pl:Zamknij karty po prawej stronie
 :Collapse All
 am:Կոծկել բոլորը
@@ -8369,7 +8377,7 @@ by:Немагчыма перайменаваць файл!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
 ca:S'ha produït un error en canviar el nom del fitxer!
 cn:无法重命名文件！
-co:Fiascu per rinumà u schedariu !
+co:Fiascu per rinuminà u schedariu !
 cy:Methwyd ailenwi'r ffeil!
 cz:Přejmenování souboru se nezdařilo!
 de:Die Datei konnte nicht umbenannt werden!
@@ -8503,7 +8511,7 @@ by:Немагчыма запісаць у рэестр інфармацыю аб
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
 ca:S'ha produït un error en escriure la informació de l'extensió del fitxer al registre
 cn:未能将扩展名信息写入注册表
-co:Fiascu per scrive l’infurmazioni di l’estensione di schedariu ver di u registru
+co:Fiascu per scrive l’infurmazioni di l’estensione di schedariu versu u registru
 cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
 de:Fehler beim Schreiben der erweiterten Dateierweiterungsinformationen in die Registry
@@ -8566,7 +8574,7 @@ by:Немагчыма запісаць у рэестр інфармацыю аб
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:S'ha produït un error en escriure la informació de desinstal·lació al registre
 cn:未能将卸载信息写入注册表
-co:Fiascu per scrive l’infurmazioni di disinstallazione ver di u registru
+co:Fiascu per scrive l’infurmazioni di disinstallazione versu u registru
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
 de:Fehler beim Schreiben der Deinstallationsinformationen in die Registry
@@ -11260,7 +11268,9 @@ uk:Початок рядка:
 vn:Dòng Bắt Đầu:
 :Loading %s ...
 cn:载入 %s ...
+co:Caricamentu di %s …
 de:Lädt %s ..,
+it:Caricamento %s...
 nl:Laden %s...
 pl:Ładowanie %s ...
 :MB
@@ -14787,7 +14797,7 @@ by:Перайменаваць у
 ca-xv:Canvia el nom a
 ca:Canvia el nom a
 cn:重命名到
-co:Rinumà ver di
+co:Rinuminà versu
 cy:Ailenwi i
 cz:Přejmenovat na
 de:Umbenennen zu
@@ -16289,7 +16299,7 @@ gl:Amosar barras de desprazament&o
 hr:Prikaži &klizače
 hu:Gör&getősávok megjelenítése
 id:Tampilkan Scr&ollbars
-it:Visualizza barre sc&orrimento
+it:Barre sc&orrimento
 ja:スクロールバーを表示(&O)
 ka:საცოცი პან&ელის ჩვენება
 kr:스크롤바 보이기(&o)
@@ -16412,6 +16422,11 @@ tw:打開所在資料夾(&F)
 uk:Показати в п&апці
 vn:Hiển thị trong &thư mục
 :Show in folder
+cn:在文件夹中显示
+co:Affissà in u cartulare
+it:Visualizza nella cartella
+nl:Toon in map
+pl:Pokaż w folderze
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
@@ -16588,7 +16603,7 @@ by:Даруйqt, гэтага не павінна было здарыцца!\n\n
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
 ca:Això no hauria d'haver passat!\n\nFeu clic a Cancel·la, si voleu ajudar a corregir la causa d'aquest error.
 cn:抱歉，出现错误！\n\n如果您希望帮助我们解决这个问题，请点击“取消”。
-co:Quessu ùn duveria mai accade !\n\nCi vole à sceglie « Abbandunà » s’è voi vulete aiutacci à currege a causa di stu penseru.
+co:Què ùn duveria mai accade !\n\nCi vole à sceglie « Abbandunà » s’è vo vulete aiutacci à currege a causa di st’accidente.
 cy:Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
 de:Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
@@ -19052,7 +19067,7 @@ by:[Выяўлены змены; адбываецца абнаўленне] %s
 ca-xv:[S'han detectat canvis; s'està actualitzant] %s
 ca:[S'han detectat canvis; s'està actualitzant] %s
 cn:[已检测到更改，正在刷新] %s
-co:[Cambiamenti abbentati ; attualizazione] %s
+co:[Cambiamenti avventati ; attualizazione] %s
 cy:[Wedi canfod newidiadau; yn adnewyddu] %s
 cz:[Zjištěna změna; probíhá aktualizace] %s
 de:[Datei wurde geändert; aktualisiere…] %s
