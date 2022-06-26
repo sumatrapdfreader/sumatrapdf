@@ -256,7 +256,7 @@ static Arg GetArg(const char* s) {
 // https://stackoverflow.com/questions/619158/adobe-reader-command-line-reference
 // https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
 // with Sumatra extensions
-void ParseAdobeFlags(ParsedFileArgs& i, const char* s) {
+void ParseAdobeFlags(FileArgs& i, const char* s) {
     StrVec parts;
     StrVec parts2;
     char* name;
@@ -339,7 +339,7 @@ void ParseAdobeFlags(ParsedFileArgs& i, const char* s) {
     }
 }
 
-ParsedFileArgs::~ParsedFileArgs() {
+FileArgs::~FileArgs() {
     str::FreePtr(&origPath);
     str::FreePtr(&cleanPath);
     str::FreePtr(&destName);
@@ -347,14 +347,14 @@ ParsedFileArgs::~ParsedFileArgs() {
 }
 
 // given file path `foo.pdf#page=4;dest=foo` etc., extract `#page=4;dest=foo`
-// args into ParsedFileArgs
+// args into FileArgs
 // returns nullptr if there are not args
-ParsedFileArgs* ParseFileArgs(const char* path) {
+FileArgs* ParseFileArgs(const char* path) {
     const char* hashPos = str::FindChar(path, '#');
     if (!hashPos) {
         return nullptr;
     }
-    ParsedFileArgs* res = new ParsedFileArgs();
+    FileArgs* res = new FileArgs();
     res->origPath = str::Dup(path);
     char* s = str::DupTemp(path);
     size_t n = hashPos - path;
@@ -669,7 +669,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Adobe) {
-            ParsedFileArgs fargs;
+            FileArgs fargs;
             ParseAdobeFlags(fargs, param);
             i.search = fargs.search ? str::Dup(fargs.search) : i.search;
             i.destName = fargs.destName ? str::Dup(fargs.destName) : i.destName;

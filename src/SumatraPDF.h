@@ -131,7 +131,7 @@ void SelectTabInWindow(WindowTab*);
 
 class EngineBase;
 struct DocController;
-struct ParsedFileArgs;
+struct FileArgs;
 
 // LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
@@ -161,7 +161,7 @@ struct LoadArgs {
 
     DocController* ctrl = nullptr;
 
-    ParsedFileArgs* fileArgs = nullptr;
+    FileArgs* fileArgs = nullptr;
 
   private:
     AutoFreeStr fileName;

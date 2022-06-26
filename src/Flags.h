@@ -7,7 +7,7 @@ struct PageRange {
     int end = INT_MAX;
 };
 
-struct ParsedFileArgs {
+struct FileArgs {
     const char* origPath = nullptr;
     const char* cleanPath = nullptr;
 
@@ -24,10 +24,10 @@ struct ParsedFileArgs {
     // attachno=%d
     int attachmentNo = 0;
 
-    ~ParsedFileArgs();
+    ~FileArgs();
 };
 
-ParsedFileArgs* ParseFileArgs(const char* path);
+FileArgs* ParseFileArgs(const char* path);
 
 struct Flags {
     StrVec fileNames;
