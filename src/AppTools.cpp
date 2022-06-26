@@ -152,7 +152,7 @@ static TextEditor editorRules[] = {
         // TODO: change back to Code.exe
         // the way vscode saves a file seems to break
         // our reloading of settings
-        "DisplayIcon-not-valid"
+        "DisplayIcon"
     },
     {
         "WinEdt.exe",

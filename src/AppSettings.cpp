@@ -281,27 +281,30 @@ bool SaveSettings() {
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
 bool ReloadSettings() {
-    char* path = GetSettingsPathTemp();
-    if (!file::Exists(path)) {
+    char* settingsPath = GetSettingsPathTemp();
+    if (!file::Exists(settingsPath)) {
         return false;
     }
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss
-    int tryAgainCount = 5;
-    HANDLE h = file::OpenReadOnly(path);
-    while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
+    // this is triggered when e.g. saving the file with VS Code
+    bool ok = false;
+    for (int i = 0; !ok && i < 5; i++) {
         Sleep(200);
-        h = file::OpenReadOnly(path);
+        ByteSlice prefsData = file::ReadFile(settingsPath);
+        if (prefsData.size() > 0) {
+            ok = true;
+            prefsData.Free();
+        } else {
+            logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath, i);
+        }
     }
-    if (INVALID_HANDLE_VALUE == h) {
-        // prefer not reloading to resetting all settings
+    if (!ok) {
         return false;
     }
 
-    AutoCloseHandle hScope(h);
-
-    FILETIME time = file::GetModificationTime(path);
+    FILETIME time = file::GetModificationTime(settingsPath);
     if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
         return true;
     }
@@ -313,7 +316,7 @@ bool ReloadSettings() {
     gFileHistory.UpdateStatesSource(nullptr);
     CleanUpSettings();
 
-    bool ok = LoadSettings();
+    ok = LoadSettings();
     CrashAlwaysIf(!ok || !gGlobalPrefs);
 
     gGlobalPrefs->fixedPageUI.invertColors = invertColors;
