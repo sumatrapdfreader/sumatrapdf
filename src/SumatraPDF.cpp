@@ -930,7 +930,7 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
     DocController* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
         delete chmModel;
-        EngineBase* engine = CreateEngine(path, pwdUI, true);
+        EngineBase* engine = CreateEngineFromFile(path, pwdUI, true);
         if (!engine) {
             return nullptr;
         }
@@ -958,7 +958,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
     // TODO: sniff file content only once
     if (!engine) {
-        engine = CreateEngine(path, pwdUI, chmInFixedUI);
+        engine = CreateEngineFromFile(path, pwdUI, chmInFixedUI);
     }
     if (engine) {
         int nPages = engine ? engine->PageCount() : 0;

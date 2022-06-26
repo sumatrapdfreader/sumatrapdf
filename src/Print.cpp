@@ -1253,7 +1253,7 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
 bool PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
     logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     fileName = path::NormalizeTemp(fileName);
-    EngineBase* engine = CreateEngine(fileName, nullptr, true);
+    EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
         AutoFreeStr msg = str::Format("Couldn't open file '%s' for printing", fileName);
         MessageBoxWarningCond(displayErrors, msg, "Error");

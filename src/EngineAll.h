@@ -4,6 +4,7 @@
 struct Annotation;
 enum class AnnotationType;
 struct PasswordUI;
+struct FileArgs;
 
 /* EngineDjVu.cpp */
 void CleanupEngineDjVu();
@@ -71,7 +72,7 @@ EngineBase* CreateEnginePsFromFile(const char* fileName);
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks);
 
-EngineBase* CreateEngine(const char* filePath, PasswordUI* pwdUI, bool enableChmEngine);
+EngineBase* CreateEngineFromFile(const char* filePath, PasswordUI* pwdUI, bool enableChmEngine);
 
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>*);

@@ -34,7 +34,7 @@ void TestRenderPage(const Flags& i) {
     }
     for (auto fileName : files) {
         printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileName, zoom);
-        auto engine = CreateEngine(fileName, nullptr, true);
+        auto engine = CreateEngineFromFile(fileName, nullptr, true);
         if (engine == nullptr) {
             printf("failed to create engine\n");
             continue;
@@ -81,7 +81,7 @@ void TestExtractPage(const Flags& ci) {
         return;
     }
     for (auto fileName : files) {
-        auto engine = CreateEngine(fileName, nullptr, true);
+        auto engine = CreateEngineFromFile(fileName, nullptr, true);
         if (engine == nullptr) {
             printf("failed to create engine for file '%s'\n", fileName);
             continue;

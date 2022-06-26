@@ -11,9 +11,11 @@
 
 #include "SumatraConfig.h"
 #include "Annotation.h"
+#include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "Flags.h"
 
 static bool gEnableEpubWithPdfEngine = true;
 
@@ -136,7 +138,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const char* path, PasswordUI* 
     return nullptr;
 }
 
-EngineBase* CreateEngine(const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
+EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
     CrashIf(!path);
 
     // try to open with the engine guess from file name

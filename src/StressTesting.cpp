@@ -127,7 +127,7 @@ static void BenchFile(const char* path, const char* pagesSpec) {
     logf("Starting: %s\n", path);
 
     auto t = TimeGet();
-    EngineBase* engine = CreateEngine(path, nullptr, true);
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, true);
     if (!engine) {
         logf("Error: failed to load %s\n", path);
         return;

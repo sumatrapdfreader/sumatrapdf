@@ -597,7 +597,7 @@ int main(__unused int argc, __unused char** argv) {
     }
 
     PasswordHolder pwdUI(password);
-    EngineBase* engine = CreateEngine(filePath, &pwdUI, false);
+    EngineBase* engine = CreateEngineFromFile(filePath, &pwdUI, false);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath));
         return 1;

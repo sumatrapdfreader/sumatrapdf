@@ -14,7 +14,9 @@ extern "C" {
 
 #include "wingui/UIModels.h"
 
+#include "Settings.h"
 #include "DocController.h"
+#include "Flags.h"
 #include "EngineBase.h"
 #include "EngineMupdfImpl.h"
 #include "EngineAll.h"
@@ -341,7 +343,7 @@ bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
         char* path = files.at(i);
-        EngineBase* engine = CreateEngine(path, nullptr, true);
+        EngineBase* engine = CreateEngineFromFile(path, nullptr, true);
         if (!engine) {
             continue;
         }
