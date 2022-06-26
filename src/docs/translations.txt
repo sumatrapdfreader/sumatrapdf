@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7422e8af541ccc5e3d474625ffbb81d6bea98f0a
+a7cc38e15637d9ab435b6029369fb0aed93c5f97
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -12402,6 +12402,8 @@ uk:Відкрити у PDF-XChange
 uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
 :Open Attachment
+it:Apri allegato
+pl:Otwórz załącznik
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -15162,6 +15164,8 @@ tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
 vn:Lưu Chú Thích và thoát PDF
 :Save Attachment...
+it:Salva allegato
+pl:Zapisz załącznik...
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -16262,7 +16266,7 @@ hi:पसंदीदा दिखाएँ
 hr:Prikaži favorite
 hu:Kedvencek megjelenítése
 id:Tampilkan Favorit
-it:Visualizza Preferiti
+it:Preferiti
 ja:お気に入りの表示
 ka:რჩეულების ჩვენება
 kr:즐겨찾기 보이기
