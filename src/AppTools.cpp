@@ -146,10 +146,13 @@ char* AppGenDataFilenameTemp(const char* fileName) {
 static TextEditor editorRules[] = {
     {
         "Code.exe",
-        "--goto \"%f:%l:%c\"",
+        R"(--goto %f:%l)",
         RegType::BinaryPath,
         kRegCurrentVer "\\Uninstall\\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1",
-        "DisplayIcon"
+        // TODO: change back to Code.exe
+        // the way vscode saves a file seems to break
+        // our reloading of settings
+        "DisplayIcon-not-valid"
     },
     {
         "WinEdt.exe",
@@ -299,8 +302,8 @@ static TextEditor editorRules[] = {
         "notepad.exe",
         "\"%f\"",
         RegType::None,
-        "",
-        ""
+        nullptr,
+        nullptr,
         "notepad.exe",
         "notepad.exe \"%f\""
     }
@@ -314,6 +317,7 @@ static void FindTextEditors() {
         return;
     }
     StrVec found;
+    // all but last entry, which is notepad.exe
     int n = (int)dimof(editorRules) - 1;
     for (int i = 0; i < n; i++) {
         auto& rule = editorRules[i];
@@ -360,6 +364,9 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
     int n = (int)dimof(editorRules);
     for (int i = 0; i < n; i++) {
         TextEditor* e = &editorRules[i];
+        if (!e->openFileCmd) {
+            continue;
+        }
         res.Append(e);
     }
 }
@@ -370,6 +377,7 @@ char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col)
     const char* perc;
     str::Str cmdline(256);
 
+    logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path, pattern);
     const char* s = pattern;
     while ((perc = str::FindChar(s, '%')) != nullptr) {
         cmdline.Append(s, perc - s);
@@ -399,9 +407,11 @@ void OpenFileWithTextEditor(const char* path) {
     DetectTextEditors(editors);
     const char* cmd = editors[0]->openFileCmd;
 
-    AutoFreeStr cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
+    char* cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
+    logf("OpenFileWithTextEditor: '%s'\n", cmdLine);
     char* appDir = GetExeDirTemp();
     AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
+    str::Free(cmdLine);
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
