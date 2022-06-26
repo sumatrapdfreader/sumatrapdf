@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ebece44929a1cdf6fd7f9d9cf39cce142464b243
+7422e8af541ccc5e3d474625ffbb81d6bea98f0a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -72,6 +72,7 @@ uk:&Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size
+bg:&Реална големина
 br:&Tamanho real
 cn:实际大小(&A)
 co:&Dimensione attuale
@@ -226,6 +227,7 @@ uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
 vn:Tất cả các trang được chọn
 :&Back
+bg:&Назад
 br:&Voltar
 cn:上一视图(B)
 co:&Precedente
@@ -247,6 +249,7 @@ tr:Geri
 uk:Назад
 vn:Quay Lại
 :&Book View
+bg:&Като Книга
 br:&Ver como livro
 cn:书籍视图(&B)
 co:Cum’è un &libru
@@ -302,6 +305,7 @@ uk:&Скасувати
 vn:&Hủy
 :&Caret
 am:&Ստեղն
+bg:&коректорски знак
 bn:&Caret
 br:&Circunflexo
 ca-xv:&Cursor
@@ -334,6 +338,7 @@ tr:&Karet
 uk:&Каретка
 vn:&Bổ Sung
 :&Close
+bg:&Затвори
 br:&Fechar
 cn:关闭(&C)
 co:&Chjode
@@ -1568,6 +1573,7 @@ uk:Відкрити документ
 uz:&Hujjatni ochish
 vn:Mở tập tin
 :&Open...
+bg:&Отвори...
 br:&Abrir
 cn:打开(&O)...
 co:&Apre…
@@ -2485,6 +2491,7 @@ vn:&Làm Văng Ra
 :&Text
 am:&Գրվածք
 az:Mə&tn
+bg:&Текст
 br:&Texto
 ca-xv:&Text
 ca:&Text
@@ -2603,6 +2610,7 @@ uk:Перекласти за допомогою Google
 vn:&Dịch Với Google
 :&Underline
 am:&Ընդգծված
+bg:&Подчертавка
 br:S&ublinhar
 ca-xv:&Subratlla
 ca:&Subratlla
@@ -4020,6 +4028,7 @@ vn:Tác Giả
 :Author: %s
 am:Հեղինակ՝ %s
 az:Müəllif: %s
+bg:Автор: %s
 bn:গ্রন্থকার: %s
 br:Autor: %s
 cn:作者: %s
@@ -4493,6 +4502,7 @@ uz:Xatcho'plar
 vn:Chỉ dấu sách
 :Border: %d
 am:Եզրագիծ. %d
+bg:Окантовка: %d
 bn:সীমানা: %d
 br:Borda: %d
 cn:边框: %d
@@ -5214,6 +5224,7 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Close Other Tabs
+bg:Затвори другите отметки
 cn:关闭其他标签页
 co:Chjode d’altre unghjette
 de:Andere Tabs schließen
@@ -5473,6 +5484,7 @@ vn:Tính tương thích
 :Contents:
 am:Բովանդակություններ.
 az:Məzmun:
+bg:Съдържание:
 bn:বিষয়:
 br:Conteúdo:
 cn:内容：
@@ -7193,6 +7205,7 @@ vn:Tối hơn
 :Date:
 am:Ամսաթիվ.
 az:Tarix:
+bg:Дата:
 bn:তারিখ:
 br:Data:
 cn:日期:
@@ -7643,6 +7656,7 @@ tr:64 bit sürümü indir
 uk:Завантажити 64-bit версію
 vn:Tải phiên bản 64-bit
 :E&xit
+bg:&Изход
 br:S&air
 cn:退出(&X)
 co:&Esce
@@ -9066,6 +9080,7 @@ uk:Файл:
 uz:Fayl:
 vn:Tập tin:
 :Fin&d...
+bg:&Търси
 br:Locali&zar
 cn:查找(&D)...
 co:&Circà…
@@ -12386,6 +12401,7 @@ tw:於 PDF-XChange 開啟(&I)
 uk:Відкрити у PDF-XChange
 uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
+:Open Attachment
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -15145,6 +15161,7 @@ sl:Shrani pripombe v obstoječi PDF
 tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
 vn:Lưu Chú Thích và thoát PDF
+:Save Attachment...
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -17947,6 +17964,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
+bg:Превод с &DeepL
 br:Traduzir com &DeepL
 ca-xv:Tradueix amb el &Deepl
 ca:Tradueix amb el &Deepl
