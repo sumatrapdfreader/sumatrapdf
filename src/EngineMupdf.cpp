@@ -1353,7 +1353,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const 
         pdf_drop_obj(ctx, dict);
     }
     fz_catch(ctx) {
-        logfa("PdfLoadAttachements() failed for '%s'\n", path);
+        logfa("PdfLoadAttachments() failed for '%s'\n", path);
     }
     return root.next;
 }
@@ -2568,7 +2568,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
                 continue;
             }
 
-            logf("attachement: %s\n", attname);
+            logf("attachment: %s\n", attname);
 
             auto dest = new PageDestination();
             // TODO: kindDestinationAttachment ?
@@ -3645,13 +3645,13 @@ static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
 }
 
 // caller must free
-ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachementNo) {
+ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return {};
     }
 
-    ByteSlice res = PdfLoadAttachment(epdf->ctx, epdf->pdfdoc, attachementNo);
+    ByteSlice res = PdfLoadAttachment(epdf->ctx, epdf->pdfdoc, attachmentNo);
     return res;
 }
 

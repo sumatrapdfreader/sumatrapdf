@@ -59,7 +59,7 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc);
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, AnnotationType* allowedAnnots);
-ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachementNo);
+ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 
 /* EnginePs.cpp */
 

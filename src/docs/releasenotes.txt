@@ -300,7 +300,7 @@ Next version:
 * add Ctrl+A as a shortcut for Select All Text
 * improved full screen mode
 * open embedded PDF documents
-* allow saving PDF document attachements to disk
+* allow saving PDF document attachments to disk
 * latest fixes and improvements to PDF rendering from mupdf project
 
 1.1 (2010-05-20):
