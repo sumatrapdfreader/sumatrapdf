@@ -149,10 +149,23 @@ static void OnSidebarSplitterMove(SplitterMoveEvent*);
 static void OnFavSplitterMove(SplitterMoveEvent*);
 static void DownloadDebugSymbols();
 
-LoadArgs::LoadArgs(const char* fileName, MainWindow* win) {
-    char* path = path::NormalizeTemp(fileName);
+LoadArgs::LoadArgs(const char* origPath, MainWindow* win) {
+    this->fileArgs = ParseFileArgs(origPath);
+    const char* cleanPath = origPath;
+    if (fileArgs) {
+        cleanPath = fileArgs->cleanPath;
+        logf("LoadArgs: origPath='%s', cleanPath='%s'\n", origPath, cleanPath);
+    }
+    char* path = path::NormalizeTemp(cleanPath);
+    if (!str::EqI(path, cleanPath)) {
+        logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath, path);
+    }
     this->fileName.SetCopy(path);
     this->win = win;
+}
+
+LoadArgs::~LoadArgs() {
+    delete fileArgs;
 }
 
 const char* LoadArgs::FilePath() const {

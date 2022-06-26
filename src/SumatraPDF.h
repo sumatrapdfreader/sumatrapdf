@@ -131,11 +131,12 @@ void SelectTabInWindow(WindowTab*);
 
 class EngineBase;
 struct DocController;
+struct ParsedFileArgs;
 
 // LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
-    explicit LoadArgs(const char* fileName, MainWindow* win);
-    ~LoadArgs() = default;
+    explicit LoadArgs(const char* origPath, MainWindow* win);
+    ~LoadArgs();
 
     const char* FilePath() const;
     void SetFilePath(const char* path);
@@ -159,6 +160,8 @@ struct LoadArgs {
     bool noSavePrefs = false;
 
     DocController* ctrl = nullptr;
+
+    ParsedFileArgs* fileArgs = nullptr;
 
   private:
     AutoFreeStr fileName;

@@ -255,17 +255,26 @@ static Arg GetArg(const char* s) {
 
 // https://stackoverflow.com/questions/619158/adobe-reader-command-line-reference
 // https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
-void ParseAdobeFlags(Flags& i, const char* s) {
+// with Sumatra extensions
+void ParseAdobeFlags(ParsedFileArgs& i, const char* s) {
     StrVec parts;
     StrVec parts2;
     char* name;
     char* val;
-    int n;
+    int valN;
+
+    // tha args can be separated with `&` or `#` or `:`
+    // i.e. `foo#bar` or foo&bar` or `foo:bar`
     Split(parts, s, "&", true);
     if (parts.Size() == 1) {
         parts.Reset();
         Split(parts, s, "#", true);
     }
+    if (parts.Size() == 1) {
+        parts.Reset();
+        Split(parts, s, ";", true);
+    }
+
     for (char* part : parts) {
         parts2.Reset();
         Split(parts2, part, "=", true);
@@ -274,17 +283,15 @@ void ParseAdobeFlags(Flags& i, const char* s) {
         }
         name = parts2[0];
         val = parts2[1];
+        valN = atoi(val);
 
         // https://pdfobject.com/pdf/pdf_open_parameters_acro8.pdf
         if (str::EqI("name", "nameddest")) {
             i.destName = str::Dup(val);
             continue;
         }
-        if (str::EqI(name, "page")) {
-            n = atoi(val);
-            if (n >= 1) {
-                i.pageNumber = n;
-            }
+        if (str::EqI(name, "page") && valN >= 1) {
+            i.pageNumber = valN;
             continue;
         }
         // comment=
@@ -314,7 +321,46 @@ void ParseAdobeFlags(Flags& i, const char* s) {
         // navpanes=1|0
         // highlight=lrt,rt,top,btm
         // fdf=URL
+
+        // those are Sumatra additions
+
+        if (str::EqI(name, "annotatt") && valN > 0) {
+            // for annotations that are attachments this is pdf object number
+            // representing the attachment
+            i.annotAttObjNum = valN;
+            continue;
+        }
+
+        if (str::EqI(name, "attachno") && valN > 0) {
+            // this is attachment number, use PdfLoadAttachment() to load it
+            i.attachmentNo = valN;
+            continue;
+        }
     }
+}
+
+ParsedFileArgs::~ParsedFileArgs() {
+    str::FreePtr(&origPath);
+    str::FreePtr(&cleanPath);
+    str::FreePtr(&destName);
+    str::FreePtr(&search);
+}
+
+// given file path `foo.pdf#page=4;dest=foo` etc., extract `#page=4;dest=foo`
+// args into ParsedFileArgs
+// returns nullptr if there are not args
+ParsedFileArgs* ParseFileArgs(const char* path) {
+    const char* hashPos = str::FindChar(path, '#');
+    if (!hashPos) {
+        return nullptr;
+    }
+    ParsedFileArgs* res = new ParsedFileArgs();
+    res->origPath = str::Dup(path);
+    char* s = str::DupTemp(path);
+    size_t n = hashPos - path;
+    res->cleanPath = str::Dup(s, n);
+    ParseAdobeFlags(*res, hashPos + 1);
+    return res;
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
@@ -623,7 +669,12 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Adobe) {
-            ParseAdobeFlags(i, param);
+            ParsedFileArgs fargs;
+            ParseAdobeFlags(fargs, param);
+            i.search = fargs.search ? str::Dup(fargs.search) : i.search;
+            i.destName = fargs.destName ? str::Dup(fargs.destName) : i.destName;
+            i.pageNumber = fargs.pageNumber > 0 ? fargs.pageNumber : i.pageNumber;
+            // TODO: annotAttObjNum and attachmentNo?
             continue;
         }
         if (arg == Arg::BgCol || arg == Arg::BgCol2 || arg == Arg::FwdSearchOffset || arg == Arg::FwdSearchWidth ||
