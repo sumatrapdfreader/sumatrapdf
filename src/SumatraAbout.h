@@ -10,7 +10,7 @@ constexpr int kLeftTextFontSize = 12;
 constexpr const char* kRightTextFont = "Arial Black";
 constexpr int kRightTextFontSize = 12;
 
-void OnMenuAbout(MainWindow*);
+void ShowAboutWindow(MainWindow*);
 
 void DrawAboutPage(MainWindow* win, HDC hdc);
 

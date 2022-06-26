@@ -9,6 +9,7 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
+#include "utils/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -139,147 +140,133 @@ char* AppGenDataFilenameTemp(const char* fileName) {
 
 // List of rules used to detect TeX editors.
 
-// type of path information retrieved from the registy
-enum EditorPathType {
-    BinaryPath,  // full path to the editor's binary file
-    BinaryDir,   // directory containing the editor's binary file
-    SiblingPath, // full path to a sibling file of the editor's binary file
-};
-
 #define kRegCurrentVer "Software\\Microsoft\\Windows\\CurrentVersion"
 
 // clang-format off
-static struct {
-    const char* binaryFilename;    // Editor's binary file name
-    const char* inverseSearchArgs; // Parameters to be passed to the editor;
-                                   // use placeholder '%f' for path to source file and '%l' for line number.
-    EditorPathType type;           // Type of the path information obtained from the registry
-    const char* regKey;            // Registry key path
-    const char* regValue;          // Registry value name
-} editorRules[] = {
+static TextEditor editorRules[] = {
     {
         "Code.exe",
         "--goto \"%f:%l:%c\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\Uninstall\\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1",
         "DisplayIcon"
     },
     {
         "WinEdt.exe",
          "\"[Open(|%f|);SelPar(%l,8)]\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\App Paths\\WinEdt.exe",
         nullptr
     },
     {
         "WinEdt.exe",
         "\"[Open(|%f|);SelPar(%l,8)]\"",
-        BinaryDir,
+        RegType::BinaryDir,
         "Software\\WinEdt",
         "Install Root"
     },
     {
         "notepad++.exe",
         "-n%l \"%f\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\App Paths\\notepad++.exe",
         nullptr
     },
     {
         "notepad++.exe",
         "-n%l \"%f\"",
-        BinaryDir,
+        RegType::BinaryDir,
         "Software\\Notepad++",
         nullptr
     },
     {
         "notepad++.exe",
         "-n%l \"%f\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\Uninstall\\Notepad++",
         "DisplayIcon"
     },
     {
         "sublime_text.exe",
         "\"%f:%l:%c\"",
-        BinaryDir,
+       RegType:: BinaryDir,
         kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
         "InstallLocation"
     },
     {
         "sublime_text.exe",
         "\"%f:%l:%c\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
         "DisplayIcon"
     },
     {
         "sublime_text.exe",
         "\"%f:%l:%c\"",
-        BinaryDir,
+        RegType::BinaryDir,
         kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
          "InstallLocation"
     },
     {
         "sublime_text.exe",
         "\"%f:%l:%c\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
         "DisplayIcon"
     },
     {
         "sublime_text.exe",
         "\"%f:%l:%c\"",
-        BinaryPath,
+        RegType::BinaryPath,
         kRegCurrentVer "\\Uninstall\\Sublime Text_is1",
         "DisplayIcon"
     },
     {
         "TeXnicCenter.exe",
         "/ddecmd \"[goto('%f', '%l')]\"",
-        BinaryDir,
+        RegType::BinaryDir,
         "Software\\ToolsCenter\\TeXnicCenterNT",
         "AppPath"
     },
     {
         "TeXnicCenter.exe",
         "/ddecmd \"[goto('%f', '%l')]\"",
-        BinaryDir,
+        RegType::BinaryDir,
         kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
         "InstallLocation"
     },
     {
         "TeXnicCenter.exe",
         "/ddecmd \"[goto('%f', '%l')]\"",
-        BinaryDir,
+        RegType::BinaryDir,
         kRegCurrentVer "\\Uninstall\\TeXnicCenter Alpha_is1",
         "InstallLocation"
     },
     {
         "TEXCNTR.exe",
         "/ddecmd \"[goto('%f', '%l')]\"",
-        BinaryDir,
+        RegType::BinaryDir,
         "Software\\ToolsCenter\\TeXnicCenter",
         "AppPath"
     },
     {
         "TEXCNTR.exe",
         "/ddecmd \"[goto('%f', '%l')]\"",
-        BinaryDir,
+        RegType::BinaryDir,
         kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
         "InstallLocation"
     },
     {
         "WinShell.exe",
         "-c \"%f\" -l %l",
-        BinaryDir,
+        RegType::BinaryDir,
         kRegCurrentVer "\\Uninstall\\WinShell_is1",
         "InstallLocation"
     },
     {
         "gvim.exe",
         "\"%f\" +%l",
-        BinaryPath,
+        RegType::BinaryPath,
         "Software\\Vim\\Gvim",
         "path"
     },
@@ -288,36 +275,48 @@ static struct {
         // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
         "gvim.exe",
         "-c \":RemoteOpen +%l %f\"",
-        BinaryPath,
+        RegType::BinaryPath,
         "Software\\Vim\\Gvim",
         "path"
     },
     {
         "texmaker.exe",
         "\"%f\" -line %l",
-        SiblingPath,
+        RegType::SiblingPath,
         kRegCurrentVer "\\Uninstall\\Texmaker",
         "UninstallString"
     },
     {
         "TeXworks.exe",
         "-p=%l \"%f\"",
-        BinaryDir,
+        RegType::BinaryDir,
         kRegCurrentVer "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1",
         "InstallLocation",
         // TODO: find a way to detect where emacs is installed
         // "emacsclientw.exe","+%l \"%f\"", BinaryPath, "???", "???",
+    },
+    {
+        "notepad.exe",
+        "\"%f\"",
+        RegType::None,
+        "",
+        ""
+        "notepad.exe",
+        "notepad.exe \"%f\""
     }
 };
 
 // clang-format on
 
-// Detect TeX editors installed on the system and construct the
-// corresponding inverse search commands.
-void AutoDetectInverseSearchCommands(StrVec& res) {
-    StrVec foundExes;
-
-    for (auto& rule : editorRules) {
+static bool didFindTextEditors = false;
+static void FindTextEditors() {
+    if (didFindTextEditors) {
+        return;
+    }
+    StrVec found;
+    int n = (int)dimof(editorRules) - 1;
+    for (int i = 0; i < n; i++) {
+        auto& rule = editorRules[i];
         const char* regKey = rule.regKey;
         const char* regValue = rule.regValue;
         char* path = LoggedReadRegStr2Temp(regKey, regValue);
@@ -328,40 +327,81 @@ void AutoDetectInverseSearchCommands(StrVec& res) {
         char* exePath = nullptr;
         const char* binaryFileName = rule.binaryFilename;
         const char* inverseSearchArgs = rule.inverseSearchArgs;
-        if (rule.type == SiblingPath) {
+        if (rule.type == RegType::SiblingPath) {
             // remove file part
             char* dir = path::GetDirTemp(path);
             exePath = path::JoinTemp(dir, binaryFileName);
-        } else if (rule.type == BinaryDir) {
+        } else if (rule.type == RegType::BinaryDir) {
             exePath = path::JoinTemp(path, binaryFileName);
         } else { // if (editor_rules[i].Type == BinaryPath)
             exePath = path;
         }
         // don't show duplicate entries
-        if (foundExes.FindI(exePath) != -1) {
+        if (found.FindI(exePath) != -1) {
             continue;
         }
         // don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {
-            foundExes.Append(exePath);
+            found.Append(exePath);
             continue;
         }
 
-        AutoFreeStr cmd = str::Format("\"%s\" %s", exePath, inverseSearchArgs);
-
-        res.Append(cmd);
-
-#if 0
-        WCHAR* ws = ToWstrTemp(editorCmd);
-        ComboBox_AddString(hwndCombo, ws);
-        if (!firstEditor) {
-            firstEditor = editorCmd.StealData();
-        }
-#endif
-        foundExes.Append(exePath);
+        rule.fullPath = str::Dup(exePath);
+        rule.openFileCmd = str::Format("\"%s\" %s", exePath, inverseSearchArgs);
+        found.Append(exePath);
     }
+    didFindTextEditors = true;
+}
 
-    res.Append("notepad %f");
+// Detect TeX editors installed on the system and construct the
+// corresponding inverse search commands.
+void DetectTextEditors(Vec<TextEditor*>& res) {
+    FindTextEditors();
+    int n = (int)dimof(editorRules);
+    for (int i = 0; i < n; i++) {
+        TextEditor* e = &editorRules[i];
+        res.Append(e);
+    }
+}
+
+// Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
+// the caller must free() the result
+char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col) {
+    const char* perc;
+    str::Str cmdline(256);
+
+    const char* s = pattern;
+    while ((perc = str::FindChar(s, '%')) != nullptr) {
+        cmdline.Append(s, perc - s);
+        s = perc + 2;
+        perc++;
+
+        if (*perc == 'f') {
+            char* fname = path::NormalizeTemp(path);
+            cmdline.Append(fname);
+        } else if (*perc == 'l') {
+            cmdline.AppendFmt("%d", line);
+        } else if (*perc == 'c') {
+            cmdline.AppendFmt("%d", col);
+        } else if (*perc == '%') {
+            cmdline.AppendChar('%');
+        } else {
+            cmdline.Append(perc - 1, 2);
+        }
+    }
+    cmdline.Append(s);
+
+    return cmdline.StealData();
+}
+
+void OpenFileWithTextEditor(const char* path) {
+    Vec<TextEditor*> editors;
+    DetectTextEditors(editors);
+    const char* cmd = editors[0]->openFileCmd;
+
+    AutoFreeStr cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
+    char* appDir = GetExeDirTemp();
+    AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)

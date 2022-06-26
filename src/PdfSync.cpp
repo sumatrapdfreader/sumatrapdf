@@ -155,36 +155,6 @@ int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sy
     return PDFSYNCERR_SYNCFILE_NOTFOUND;
 }
 
-// Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
-// the caller must free() the result
-char* FormatInverseSearchCommand(const char* pattern, const char* path, int line, int col) {
-    const char* perc;
-    str::Str cmdline(256);
-
-    const char* s = pattern;
-    while ((perc = str::FindChar(s, '%')) != nullptr) {
-        cmdline.Append(s, perc - s);
-        s = perc + 2;
-        perc++;
-
-        if (*perc == 'f') {
-            char* fname = path::NormalizeTemp(path);
-            cmdline.Append(fname);
-        } else if (*perc == 'l') {
-            cmdline.AppendFmt("%d", line);
-        } else if (*perc == 'c') {
-            cmdline.AppendFmt("%d", col);
-        } else if (*perc == '%') {
-            cmdline.AppendChar('%');
-        } else {
-            cmdline.Append(perc - 1, 2);
-        }
-    }
-    cmdline.Append(s);
-
-    return cmdline.StealData();
-}
-
 // PDFSYNC synchronizer
 
 // move to the next line in a list of zero-terminated lines

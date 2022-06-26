@@ -510,15 +510,14 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     char* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
     if (!inverseSearch) {
-        StrVec detectedInverseSearch;
-        AutoDetectInverseSearchCommands(detectedInverseSearch);
-        char* s = detectedInverseSearch[0];
-        inverseSearch = str::DupTemp(s);
+        Vec<TextEditor*> editors;
+        DetectTextEditors(editors);
+        inverseSearch = str::DupTemp(editors[0]->openFileCmd);
     }
 
     AutoFreeStr cmdLine;
     if (inverseSearch) {
-        cmdLine = FormatInverseSearchCommand(inverseSearch, srcfilepath, line, col);
+        cmdLine = BuildOpenFileCmd(inverseSearch, srcfilepath, line, col);
     }
 
     NotificationCreateArgs args;

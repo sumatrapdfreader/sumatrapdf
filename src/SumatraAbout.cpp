@@ -543,7 +543,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 constexpr const WCHAR* kAboutClassName = L"SUMATRA_PDF_ABOUT";
 
-void OnMenuAbout(MainWindow* win) {
+void ShowAboutWindow(MainWindow* win) {
     if (gHwndAbout) {
         SetActiveWindow(gHwndAbout);
         return;

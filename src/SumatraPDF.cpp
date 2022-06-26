@@ -3478,18 +3478,18 @@ static void OnMenuViewShowHideScrollbars() {
     UpdateFixedPageScrollbarsVisibility();
 }
 
-static void OnMenuAdvancedOptions() {
+static void OpenAdvancedOptions() {
     if (!HasPermission(Perm::DiskAccess) || !HasPermission(Perm::SavePreferences)) {
         return;
     }
 
-    char* path = GetSettingsPathTemp();
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
-    LaunchFile(path, nullptr, "open");
+    char* path = GetSettingsPathTemp();
+    OpenFileWithTextEditor(path);
 }
 
-static void OnMenuOptions(HWND hwnd) {
+static void ShowOptionsDialog(HWND hwnd) {
     if (!HasPermission(Perm::SavePreferences)) {
         return;
     }
@@ -3511,8 +3511,8 @@ static void OnMenuOptions(HWND hwnd) {
     SaveSettings();
 }
 
-static void OnMenuOptions(MainWindow* win) {
-    OnMenuOptions(win->hwndFrame);
+static void ShowOptionsDialog(MainWindow* win) {
+    ShowOptionsDialog(win->hwndFrame);
     if (!gWindows.empty() && gWindows.at(0)->IsAboutWindow()) {
         gWindows.at(0)->RedrawAll(true);
     }
@@ -5074,7 +5074,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpAbout:
-            OnMenuAbout(win);
+            ShowAboutWindow(win);
             break;
 
         case CmdCheckUpdate:
@@ -5082,11 +5082,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdOptions:
-            OnMenuOptions(win);
+            ShowOptionsDialog(win);
             break;
 
         case CmdAdvancedOptions:
-            OnMenuAdvancedOptions();
+            OpenAdvancedOptions();
             break;
 
         case CmdSendByEmail:

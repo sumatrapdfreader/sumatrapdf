@@ -636,8 +636,13 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 // Try to select a correct default when first showing this dialog
                 const char* cmdLine = prefs->inverseSearchCmdLine;
                 HWND hwndComboBox = GetDlgItem(hDlg, IDC_CMDLINE);
+                Vec<TextEditor*> textEditors;
+                DetectTextEditors(textEditors);
                 StrVec detected;
-                AutoDetectInverseSearchCommands(detected);
+                for (auto e : textEditors) {
+                    const char* open = e->openFileCmd;
+                    detected.AppendIfNotExists(open);
+                }
                 if (cmdLine) {
                     detected.AppendIfNotExists(cmdLine);
                 } else {

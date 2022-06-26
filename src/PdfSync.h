@@ -55,6 +55,3 @@ class Synchronizer {
   public:
     static int Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync);
 };
-
-// the caller must free() the command line
-char* FormatInverseSearchCommand(const char* pattern, const char* filename, int line, int col);
