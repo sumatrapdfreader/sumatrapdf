@@ -2,6 +2,7 @@
 
 LIBRARY libmupdf
 EXPORTS
+	pdf_annot_filespec
 	pdf_load_embedded_file_contents
 	pdf_get_embedded_file_params
 	fz_new_odt_writer
