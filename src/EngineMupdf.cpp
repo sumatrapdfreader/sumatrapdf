@@ -2382,7 +2382,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         item->id = ++idCounter;
         item->fontFlags = 0; // TODO: had outline->flags; but mupdf changed outline
         item->pageNo = pageNo;
-        CrashIf(!item->PageNumbersMatch());
+        ReportIf(!isAttachment && !item->PageNumbersMatch());
 
         // TODO: had outline->n_color and outline->color but mupdf changed outline
         /*
