@@ -2560,7 +2560,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
             logf("found file attachment annotation\n");
 
             pdf_embedded_file_params fileParams = {};
-            pdf_obj* fs = pdf_annot_obj(ctx, annot);
+            pdf_obj* fs = pdf_annot_filespec(ctx, annot);
             pdf_get_embedded_file_params(ctx, fs, &fileParams);
             const char* attname = fileParams.filename;
             fz_rect rect = pdf_annot_rect(ctx, annot);
