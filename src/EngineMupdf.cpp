@@ -2561,6 +2561,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
             pdf_embedded_file_params fileParams = {};
             pdf_obj* fs = pdf_annot_filespec(ctx, annot);
+            int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
             pdf_get_embedded_file_params(ctx, fs, &fileParams);
             const char* attname = fileParams.filename;
             fz_rect rect = pdf_annot_rect(ctx, annot);
@@ -2568,7 +2569,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
                 continue;
             }
 
-            logf("attachment: %s\n", attname);
+            logf("attachment: %s, num: %d\n", attname, num);
 
             auto dest = new PageDestination();
             // TODO: kindDestinationAttachment ?
