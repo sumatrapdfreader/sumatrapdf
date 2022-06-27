@@ -9,6 +9,7 @@
 
 #include "wingui/UIModels.h"
 
+#include "Accelerators.h"
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -188,8 +189,6 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
     }
     return info;
 }
-
-#include "Accelerators.h"
 
 // Set toolbar button tooltips taking current language into account.
 void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
