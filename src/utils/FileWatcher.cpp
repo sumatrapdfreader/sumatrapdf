@@ -90,7 +90,9 @@ struct WatchedFile {
 };
 
 void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
-    wf->ignore = ignore;
+    if (wf) {
+        wf->ignore = ignore;
+    }
 }
 
 static HANDLE g_threadHandle = nullptr;
