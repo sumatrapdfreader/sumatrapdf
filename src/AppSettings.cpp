@@ -233,7 +233,6 @@ bool SaveSettings() {
         return false;
     }
 
-
     // update display states for all tabs
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {

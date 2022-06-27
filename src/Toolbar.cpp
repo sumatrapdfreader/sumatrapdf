@@ -69,8 +69,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::None, 0, nullptr}, // separator
     {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
     {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
-    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left\tCtrl+Shift+-")},
-    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right\tCtrl+Shift++")},
+    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
+    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
     {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
     {TbIcon::None, CmdFindFirst, nullptr},
@@ -189,20 +189,38 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
     return info;
 }
 
+#include "Accelerators.h"
+
 // Set toolbar button tooltips taking current language into account.
 void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     TBBUTTONINFO binfo{};
     HWND hwnd = win->hwndToolbar;
+    ACCEL accel;
     for (int i = 0; i < kButtonsCount; i++) {
-        WPARAM buttonId = (WPARAM)i;
-        const char* txt = gToolbarButtons[i].toolTip;
-        if (nullptr == txt) {
+        auto& tb = gToolbarButtons[i];
+
+        if (!tb.toolTip) {
             continue;
         }
-        const WCHAR* translation = trans::GetTranslation(txt);
+
+        str::Str accelStr;
+        if (GetAccelByCmd(tb.cmdId, accel)) {
+            AppendAccelKeyToMenuString(accelStr, accel);
+        }
+
+        const char* s = trans::GetTranslationA(tb.toolTip);
+        if (accelStr.size() > 0) {
+            accelStr[0] = '(';
+            accelStr.Append(")");
+            s = str::JoinTemp(s, "  ", accelStr.Get());
+        }
+
+        WCHAR* tmp = ToWstrTemp(s);
+
         binfo.cbSize = sizeof(TBBUTTONINFO);
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-        binfo.pszText = (WCHAR*)translation;
+        binfo.pszText = tmp;
+        WPARAM buttonId = (WPARAM)i;
         TbSetButtonInfo(hwnd, buttonId, &binfo);
     }
 }

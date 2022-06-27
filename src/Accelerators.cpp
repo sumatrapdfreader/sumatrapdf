@@ -306,6 +306,62 @@ again:
     return true;
 }
 
+static const char* getVirt(BYTE key, bool isEng) {
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    // Note: might need to add if we add more shortcuts
+    switch (key) {
+        case VK_END:
+            return "End";
+        case VK_HOME:
+            return "Home";
+        case VK_LEFT:
+            if (!isEng) {
+                return "<-";
+            }
+            return "Left";
+        case VK_RIGHT:
+            if (!isEng) {
+                return "->";
+            }
+            return "Right";
+        case VK_UP:
+            return "Up";
+        case VK_DOWN:
+            return "Down";
+        case VK_NEXT:
+            return "PageDown";
+        case VK_PRIOR:
+            return "PageUp";
+        case VK_BACK:
+            return "Backspace";
+        case VK_DELETE:
+            return "Del";
+        case VK_INSERT:
+            return "Insert";
+        case VK_ESCAPE:
+            return "Esc";
+        case VK_RETURN:
+            return "Return";
+        case VK_SPACE:
+            return "Space";
+        case VK_MULTIPLY:
+            return "*";
+        case VK_ADD:
+        case VK_OEM_PLUS:
+            return "+";
+        case VK_SUBTRACT:
+        case VK_OEM_MINUS:
+            return "-";
+        case VK_DIVIDE:
+            return "/";
+        case VK_HELP:
+            return "Help";
+        case VK_SELECT:
+            return "Select";
+    }
+    return nullptr;
+}
+
 void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
     bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
@@ -314,23 +370,23 @@ void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
     str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if (virt & FALT) {
-        const char* s = "Alt+";
+        const char* s = "Alt + ";
         if (isGerman) {
-            s = "Größe+";
+            s = "Größe + ";
         }
         str.Append(s);
     }
     if (virt & FCONTROL) {
-        const char* s = "Ctrl+";
+        const char* s = "Ctrl + ";
         if (isGerman) {
-            s = "Strg+";
+            s = "Strg + ";
         }
         str.Append(s);
     }
     if (virt & FSHIFT) {
-        const char* s = "Shift+";
+        const char* s = "Shift + ";
         if (isGerman) {
-            s = "Umschalt+";
+            s = "Umschalt + ";
         }
         str.Append(s);
     }
@@ -348,94 +404,24 @@ void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
         return;
     }
 
+    if (isVirt) {
+        const char* s = getVirt(key, isEng);
+        if (s) {
+            str.Append(s);
+            return;
+        }
+    }
+
     // virtual codes overlap with some ascii chars like '-' is VK_INSERT
     // so for non-virtual assume it's a single char
     bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
-    if (isAscii || !isVirt) {
+    if (isAscii) {
         str.AppendChar((char)key);
         return;
     }
 
-    // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-    // Note: might need to add if we add more shortcuts
-    const char* keyStr = nullptr;
-    switch (key) {
-        case VK_END:
-            keyStr = "End";
-            break;
-        case VK_HOME:
-            keyStr = "Home";
-            break;
-        case VK_LEFT:
-            keyStr = "Left";
-            if (!isEng) {
-                keyStr = "<-";
-            }
-            break;
-        case VK_RIGHT:
-            keyStr = "Right";
-            if (!isEng) {
-                keyStr = "->";
-            }
-            break;
-        case VK_UP:
-            keyStr = "Up";
-            break;
-        case VK_DOWN:
-            keyStr = "Down";
-            break;
-        case VK_NEXT:
-            keyStr = "PageDown";
-            break;
-        case VK_PRIOR:
-            keyStr = "PageUp";
-            break;
-        case VK_BACK:
-            keyStr = "Backspace";
-            break;
-        case VK_DELETE:
-            keyStr = "Del";
-            break;
-        case VK_INSERT:
-            keyStr = "Insert";
-            break;
-        case VK_ESCAPE:
-            keyStr = "Esc";
-            break;
-        case VK_RETURN:
-            keyStr = "Return";
-            break;
-        case VK_SPACE:
-            keyStr = "Space";
-            break;
-        case VK_MULTIPLY:
-            keyStr = "*";
-            break;
-        case VK_ADD:
-        case VK_OEM_PLUS:
-            keyStr = "+";
-            break;
-        case VK_SUBTRACT:
-        case VK_OEM_MINUS:
-            keyStr = "-";
-            break;
-        case VK_DIVIDE:
-            keyStr = "/";
-            break;
-        case VK_HELP:
-            keyStr = "Help";
-            break;
-        case VK_SELECT:
-            keyStr = "Select";
-            break;
-    }
-    if (!keyStr) {
-        logf("Unknown key: 0x%x, virt: 0x%x\n", virt, key);
-        ReportIf(!keyStr);
-    }
-    if (keyStr) {
-        str.Append(keyStr);
-    }
+    logf("Unknown key: 0x%x, virt: 0x%x\n", virt, key);
+    ReportIf(true);
 }
 
 static bool SameAccelKey(const ACCEL& a1, const ACCEL& a2) {
