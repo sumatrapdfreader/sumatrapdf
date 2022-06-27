@@ -79,7 +79,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
-        AutoFreeWstr txt(str::Format(_TR("Enter password for %s"), data->fileName));
+        AutoFreeWstr txt(str::Format(_TR("Enter password for %s"), ToWstrTemp(data->fileName)));
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, L"");
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
