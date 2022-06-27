@@ -85,10 +85,6 @@ bool LoadSettings() {
     CrashIf(gGlobalPrefs);
 
     auto timeStart = TimeGet();
-    defer {
-        auto dur = TimeSinceInMs(timeStart);
-        logf("LoadSettings() took %.2f ms\n", dur);
-    };
 
     GlobalPrefs* gprefs = nullptr;
     char* settingsPath = GetSettingsPathTemp();
@@ -177,6 +173,9 @@ bool LoadSettings() {
     if (!file::Exists(settingsPath)) {
         SaveSettings();
     }
+
+    logf("LoadSettings() took %.2f ms\n", TimeSinceInMs(timeStart));
+
     return true;
 }
 
@@ -234,6 +233,7 @@ bool SaveSettings() {
         return false;
     }
 
+
     // update display states for all tabs
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
@@ -270,12 +270,13 @@ bool SaveSettings() {
         return true;
     }
 
+    WatchedFileSetIgnore(gWatchedSettingsFile, true);
     bool ok = file::WriteFile(path, prefs);
-    if (!ok) {
-        return false;
+    if (ok) {
+        gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     }
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
-    return true;
+    WatchedFileSetIgnore(gWatchedSettingsFile, false);
+    return ok;
 }
 
 // refresh the preferences when a different SumatraPDF process saves them
@@ -368,4 +369,5 @@ void RegisterSettingsForFileChanges() {
 
 void UnregisterSettingsForFileChanges() {
     FileWatcherUnsubscribe(gWatchedSettingsFile);
+    // TODO: memleak of gWatchedSettingsFile
 }

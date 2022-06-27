@@ -85,7 +85,13 @@ struct WatchedFile {
     // file state for changes
     bool isManualCheck = false;
     FileWatcherState fileState;
+
+    bool ignore = false;
 };
+
+void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
+    wf->ignore = ignore;
+}
 
 static HANDLE g_threadHandle = nullptr;
 static DWORD g_threadId = 0;
@@ -148,9 +154,13 @@ static bool FileStateChanged(const char* filePath, FileWatcherState* fs) {
 // get notified again before timeout expires, call OnFileChanges() when
 // timeout expires
 static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
-    // logf("NotifyAboutFile(): %s", fileName);
+    int i = 0;
 
     for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
+        if (wf->ignore) {
+            logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath);
+            continue;
+        }
         if (wf->watchedDir != d) {
             continue;
         }
@@ -159,6 +169,8 @@ static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
         if (!str::EqI(fileName, path)) {
             continue;
         }
+        logf("NotifyAboutFile(): i=%d '%s' '%s'\n", i, wf->filePath, fileName);
+        i++;
 
         // NOTE: It is not recommended to check whether the timestamp has changed
         // because the time granularity is so big that this can cause genuine
@@ -171,6 +183,23 @@ static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
 static void DeleteWatchedDir(WatchedDir* wd) {
     str::Free(wd->dirPath);
     free(wd);
+}
+
+// clang-format off
+SeqStrings gFileActionNames =
+    "FILE_ACTION_ADDED\0" \
+    "FILE_ACTION_REMOVED\0" \
+    "FILE_ACTION_MODIFIED\0" \
+    "FILE_ACTION_RENAMED_OLD_NAME\0" \
+    "FILE_ACTION_RENAMED_NEW_NAME\0";
+// clang-format on
+
+const char* GetFileActionName(int actionId) {
+    if (actionId < 1 || actionId > 5) {
+        return "(unknown)";
+    }
+    int n = actionId - 1;
+    return seqstrings::IdxToStr(gFileActionNames, n);
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
@@ -205,18 +234,10 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // files can get updated either by writing to them directly or
         // by writing to a .tmp file first and then moving that file in place
         // (the latter only yields a RENAMED action with the expected file name)
+        const char* actionName = GetFileActionName(notify->Action);
+        logf("ReadDirectoryChangesNotification: %s '%s'\n", actionName, fileName);
         if (notify->Action == FILE_ACTION_MODIFIED || notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
-            if (!changedFiles.Contains(fileName)) {
-#if 0
-                logf("ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName,
-                     wd->dirPath);
-#endif
-                changedFiles.Append(fileName);
-            } else {
-                // logf("ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
-            }
-        } else {
-            // logf("ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName);
+            changedFiles.AppendIfNotExists(fileName);
         }
 
         // step to the next entry if there is one
