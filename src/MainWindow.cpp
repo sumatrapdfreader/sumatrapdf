@@ -414,12 +414,6 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
 
-    if (kindDestinationAttachment == kind) {
-        // Not handled here. Must use context menu to trigger launching
-        // embedded files
-        return;
-    }
-
     if (kindDestinationLaunchURL == kind) {
         return;
     }

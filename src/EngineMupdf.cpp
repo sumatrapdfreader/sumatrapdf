@@ -570,15 +570,15 @@ static WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
 }
 
 static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, Rect* coords) {
+    size_t idx = pos - pageText;
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http or a footnote numeral)
     return '\n' == *pos && pos > pageText && *(pos + 1) && !iswalnum(pos[-1]) && !str::IsWs(pos[1]) &&
-           coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
-           coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y + coords[pos - pageText - 1].dy * 0.35 &&
-           coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
-           coords[pos - pageText + 1].dy >= coords[pos - pageText - 1].dy * 0.85 &&
-           coords[pos - pageText + 1].dy <= coords[pos - pageText - 1].dy * 1.2 && !str::StartsWith(pos + 1, L"http");
+           coords[idx + 1].BR().y > coords[idx - 1].y &&
+           coords[idx + 1].y <= coords[idx - 1].BR().y + coords[idx - 1].dy * 0.35 &&
+           coords[idx + 1].x < coords[idx - 1].BR().x && coords[idx + 1].dy >= coords[idx - 1].dy * 0.85 &&
+           coords[idx + 1].dy <= coords[idx - 1].dy * 1.2 && !str::StartsWith(pos + 1, L"http");
 }
 
 static bool EndsURL(WCHAR c) {
@@ -654,7 +654,6 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
     return end;
 }
 
-// cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(WCHAR c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
@@ -1221,7 +1220,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const 
             fz_outline* link = fz_new_outline(ctx);
             link->title = fz_strdup(ctx, nameStr);
             link->page.page = i + 1;
-            link->uri = fz_strdup(ctx, nameStr);
+            link->uri = str::Format("%s#attachno=%d", path, i);
             curr->next = link;
             curr = link;
         }
@@ -1526,7 +1525,6 @@ EngineBase* EngineMupdf::Clone() {
     return clone;
 }
 
-// File names ending in :<digits> are interpreted as containing
 // embedded PDF documents (the digits is stream number of the embedded file stream)
 // the caller must free()
 const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
@@ -1547,6 +1545,7 @@ const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
     return path2;
 }
 
+#if 0
 ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
     int streamNo = -1;
     AutoFreeStr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
@@ -1590,6 +1589,7 @@ ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
     delete engine;
     return res;
 }
+#endif
 
 static ByteSlice TxtFileToHTML(const char* path) {
     ByteSlice fd = file::ReadFile(path);
@@ -2206,7 +2206,7 @@ bool EngineMupdf::FinishLoading() {
 
 static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
-    dest->kind = kindDestinationAttachment;
+    dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = ToWstr(outline->uri);
     dest->name = str::Dup(outline->title);
     // page is really a stream number
@@ -2398,7 +2398,7 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     return NewFzComment(s, pageNo, rd);
 }
 
-static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
+static void MakePageElementCommentsFromAnnotations(fz_context* ctx, const char* filePath, FzPageInfo* pageInfo) {
     Vec<IPageElement*>& comments = pageInfo->comments;
 
     auto page = pageInfo->page;
@@ -2427,7 +2427,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
             pdf_embedded_file_params fileParams = {};
             pdf_obj* fs = pdf_annot_filespec(ctx, annot);
-            int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
+            int attachNo = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
             pdf_get_embedded_file_params(ctx, fs, &fileParams);
             const char* attname = fileParams.filename;
             fz_rect rect = pdf_annot_rect(ctx, annot);
@@ -2435,21 +2435,19 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
                 continue;
             }
 
-            logf("attachment: %s, num: %d\n", attname, num);
+            logf("attachment: %s, num: %d\n", attname, attachNo);
 
             auto dest = new PageDestination();
-            // TODO: kindDestinationAttachment ?
             dest->kind = kindDestinationLaunchEmbedded;
-            dest->value = str::Dup(attname);
+            dest->name = str::Dup(attname);
+            const char* path = 
+            dest->value = str::Format("%s#attachno=%d", filePath, attachNo);
 
             auto el = new PageElementDestination(dest);
             el->pageNo = pageNo;
             el->rect = ToRectF(rect);
 
             comments.Append(el);
-            // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-            // for saving the attachment to a file
-            // TODO: expose /Contents in addition to the file path
             continue;
         }
 
@@ -2500,7 +2498,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
 
     if (pdfdoc && pageInfo->commentsNeedRebuilding) {
         DeleteVecMembers(pageInfo->comments);
-        MakePageElementCommentsFromAnnotations(ctx, pageInfo);
+        MakePageElementCommentsFromAnnotations(ctx, FilePath(), pageInfo);
         pageInfo->commentsNeedRebuilding = false;
     }
 
@@ -2532,7 +2530,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     if (pdfdoc) {
-        MakePageElementCommentsFromAnnotations(ctx, pageInfo);
+        MakePageElementCommentsFromAnnotations(ctx, FilePath(), pageInfo);
     }
     if (!stext) {
         return pageInfo;

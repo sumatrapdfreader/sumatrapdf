@@ -77,8 +77,7 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
     }
 
     bool isOk = (k == kindDestinationLaunchURL) || (k == kindDestinationLaunchFile) ||
-                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu) ||
-                (k == kindDestinationAttachment);
+                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu);
     CrashIf(!isOk);
 
     str::Str infotip;
@@ -95,7 +94,7 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
         infotip.Append("\r\n");
     }
 
-    if (kindDestinationLaunchEmbedded == k || kindDestinationAttachment == k) {
+    if (kindDestinationLaunchEmbedded == k) {
         AutoFreeStr tmp = str::Format(_TRA("Attachment: %s"), path);
         infotip.Append(tmp.Get());
     } else {
@@ -445,6 +444,7 @@ static void OpenAttachment(WindowTab* tab, const char* fileName, int attachmentN
     str::Free(data.data());
 }
 
+#if 0
 static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     CrashIf(!tab || !dest);
     if (!tab || !dest) {
@@ -479,6 +479,7 @@ static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fi
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }
+#endif
 
 // clang-format off
 static MenuDef menuDefContextToc[] = {
@@ -495,20 +496,12 @@ static MenuDef menuDefContextToc[] = {
         0,
     },
     {
-        _TRN("Open Embedded PDF"),
-        CmdOpenEmbeddedPDF,
+        _TRN("Open Embedded File"),
+        CmdOpenEmbeddedFile,
     },
     {
         _TRN("Save Embedded File..."),
         CmdSaveEmbeddedFile,
-    },
-    {
-        _TRN("Open Attachment"),
-        CmdOpenAttachment,
-    },
-    {
-        _TRN("Save Attachment..."),
-        CmdSaveAttachment,
     },
     // note: strings cannot be "" or else items are not there
     {
@@ -552,7 +545,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     char* fileName = nullptr;
     Kind destKind = dest ? dest->GetKind() : nullptr;
 
-    // TODO: this is pontentially not used at all
+    int attachmentNo = -1;
     if (destKind == kindDestinationLaunchEmbedded) {
         auto embeddedFile = (PageDestinationFile*)dest;
         // this is a path to a file on disk, e.g. a path to opened PDF
@@ -560,35 +553,15 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         path = embeddedFile->path;
         // this is name of the file as set inside PDF file
         fileName = dest->GetName();
+        attachmentNo = pageNo;
         bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
         if (!canOpenEmbedded) {
-            MenuRemove(popup, CmdOpenEmbeddedPDF);
+            MenuRemove(popup, CmdOpenEmbeddedFile);
         }
     } else {
         // TODO: maybe move this to BuildMenuFromMenuDef
         MenuRemove(popup, CmdSaveEmbeddedFile);
-        MenuRemove(popup, CmdOpenEmbeddedPDF);
-    }
-
-    int attachmentNo = -1;
-    if (destKind == kindDestinationAttachment) {
-        auto attachment = (PageDestinationFile*)dest;
-        // this is a path to a file on disk, e.g. a path to opened PDF
-        // with the embedded stream number
-        path = attachment->path;
-        // this is name of the file as set inside PDF file
-        fileName = dest->GetName();
-        // hack: attachmentNo is saved in pageNo see
-        // PdfLoadAttachments and DestFromAttachment
-        attachmentNo = pageNo;
-        bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
-        if (!canOpenEmbedded) {
-            MenuRemove(popup, CmdOpenAttachment);
-        }
-    } else {
-        // TODO: maybe move this to BuildMenuFromMenuDef
-        MenuRemove(popup, CmdSaveAttachment);
-        MenuRemove(popup, CmdOpenAttachment);
+        MenuRemove(popup, CmdOpenEmbeddedFile);
     }
 
     if (pageNo > 0) {
@@ -637,17 +610,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             DelFavorite(filePath, pageNo);
             break;
         case CmdSaveEmbeddedFile: {
-            SaveEmbeddedFile(tab, path, fileName);
-        } break;
-        case CmdOpenEmbeddedPDF:
-            // TODO: maybe also allow for a fileName hint
-            OpenEmbeddedFile(tab, dest);
-            break;
-        case CmdSaveAttachment: {
             SaveAttachment(tab, fileName, attachmentNo);
             break;
         }
-        case CmdOpenAttachment: {
+        case CmdOpenEmbeddedFile: {
             OpenAttachment(tab, fileName, attachmentNo);
         }
     }

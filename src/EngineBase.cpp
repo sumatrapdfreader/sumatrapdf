@@ -37,7 +37,6 @@ Kind kindDestinationNone = "none";
 Kind kindDestinationScrollTo = "scrollTo";
 Kind kindDestinationLaunchURL = "launchURL";
 Kind kindDestinationLaunchEmbedded = "launchEmbedded";
-Kind kindDestinationAttachment = "launchAttachment";
 Kind kindDestinationLaunchFile = "launchFile";
 Kind kindDestinationDjVu = "destinationDjVu";
 Kind kindDestinationMupdf = "destinationMupdf";
@@ -48,7 +47,6 @@ static Kind destKinds[] = {
     kindDestinationScrollTo,
     kindDestinationLaunchURL,
     kindDestinationLaunchEmbedded,
-    kindDestinationAttachment,
     kindDestinationLaunchFile,
     kindDestinationDjVu,
     kindDestinationMupdf

@@ -56,9 +56,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdPresentationBlackBackground,
 
     CmdSaveEmbeddedFile, // TODO: figure proper context for it
-    CmdOpenEmbeddedPDF,
-    CmdSaveAttachment,
-    CmdOpenAttachment,
+    CmdOpenEmbeddedFile,
 
     CmdCreateShortcutToFile, // not sure I want this at all
 };
