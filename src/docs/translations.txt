@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a7cc38e15637d9ab435b6029369fb0aed93c5f97
+7ce5e5a5e7be4e57c51c417eb62feae9ebb21672
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -90,7 +90,7 @@ nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 ru:Насто&ящий размер
 tl:&Totoong Sukat
-tr:Gercek boyut
+tr:&Gercek boyut
 uk:Фактичний розмір
 vn:Kích Thước Thực
 :&Advanced Options...
@@ -221,7 +221,7 @@ sv:&Alla valda sidor
 ta:அனைத்து தேர்ந்தெடுக்கப்பட்ட பக்கங்கள் (&A)
 th:&หน้าที่เลือกทั้งหมด
 tl:&Lahat ng napiling pahina
-tr:Tüm seçilen &sayfalar
+tr:&Tüm seçilen sayfalar
 tw:所有已選取頁面(&A)
 uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
@@ -245,7 +245,7 @@ nl:&Terug
 pl:&Wstecz
 ru:&Назад
 tl:&Bumalik
-tr:Geri
+tr:&Geri
 uk:Назад
 vn:Quay Lại
 :&Book View
@@ -258,6 +258,7 @@ de:&Buchansicht
 el:Προβολή βιβλίου
 es:&Vista de libro
 eu:&Liburu ikuspegia
+fr:&Comme un livre
 hi:&बुक व्यू
 it:&Libro
 ja:ブック ビュー(&B)
@@ -265,7 +266,7 @@ nl:&Boek Tonen
 pl:Widok o&dczytu
 ru:В &разворот
 tl:&View ng libro
-tr:Kitap Görünümü
+tr:&Kitap Görünümü
 uk:Подання книги
 vn:Đọc Sách
 :&Cancel
@@ -299,7 +300,7 @@ sk:&Zrušiť
 sl:&Prekliči
 th:&ยกเลิก
 tl:&Kanselahin
-tr:İptal Et
+tr:&İptal Et
 tw:取消(&C)
 uk:&Скасувати
 vn:&Hủy
@@ -355,7 +356,7 @@ nl:&Sluiten
 pl:&Zamknij
 ru:&Закрыть
 tl:&Isara
-tr:Kapat
+tr:&Kapat
 uk:Закрити
 vn:&Đóng
 :&Continue installing 32-bit version
@@ -475,7 +476,7 @@ nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 ru:С&копировать в буфер обмена
 tl:&Kopyahin sa clipboard
-tr:Panoya kopyala
+tr:Panoya &kopyala
 uk:Скопіювати до буфера обміну
 vn:&Lưu Sao Chép
 :&Discard changes
@@ -653,6 +654,7 @@ cy:&Wynebu
 de:&Doppelseite
 el:Προσανατολισμός
 es:&Caras opuestas
+fr:&Deux pages
 it:Pagine a&ffiancate
 ja:見開き(&F)
 nl:&Gericht op
@@ -895,6 +897,7 @@ el:Ελεύθερο κείμενο
 es:&Texto libre
 et:&Vaba tekst
 eu:&Idazki askea
+fr:&Texte libre
 hr:&Slobodni tekst
 hu:Szabad szöveg
 id:Teks Bebas
@@ -2442,6 +2445,7 @@ dk:&Frimærke
 el:Σφραγίδα
 es:&Estampa
 et:&Tempel
+fr:&Tampon
 hr:&Pečat
 hu:Bélyeg
 id:&Stempel
@@ -5228,16 +5232,20 @@ bg:Затвори другите отметки
 cn:关闭其他标签页
 co:Chjode d’altre unghjette
 de:Andere Tabs schließen
+fr:Fermer les autres onglets
 it:Chiudi altre schede
 nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
+tr:Diğer Sekmeleri Kapat
 :Close Tabs To The Right
 cn:关闭右侧标签页
 co:Chjode l’unghjette versu a diritta
 de:Tabs rechts schließen
+fr:Fermer les onglets sur la droite
 it:Chiudi scheda sulla destra
 nl:Sluit Tabbladen Rechts
 pl:Zamknij karty po prawej stronie
+tr:Sağdaki sekmeleri kapat
 :Collapse All
 am:Կոծկել բոլորը
 ar:طي الكل
@@ -7078,7 +7086,7 @@ nl:Aangepast & zoom...
 pl:&Własne powiększenie...
 ru:Свой &масштаб...
 tl:Pasadya &Mag-zoom
-tr:Özel yakınlaştır
+tr:Özel &yakınlaştır
 uk:Нетиповий масштаб...
 vn:Thiết Lập &Phóng...
 :Dark
@@ -9389,6 +9397,7 @@ de:An &Inhalt anpassen
 el:Προσαρμογή περιεχομένου
 es:Ajustar al &contenido
 eu:Finkatu &edukia
+fr:Ajuster au &contenu
 it:Adatta al &contenuto
 ja:内容に合わせる(&C)
 nl:&Inhoud Aanpassen
@@ -9407,6 +9416,7 @@ de:An &Seite anpassen
 el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
+fr:Ajuster à la &page
 it:Adatta alla &pagina
 ja:ページに合わせる(&P)
 nl:&Pagina Aanpassen
@@ -9425,6 +9435,7 @@ de:An Fenster&breite anpassen
 el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
+fr:Ajuster à la &largeur
 it:Adatta a &larghezza
 ja:幅に合わせる(&W)
 nl:&Breedte Aanpassen
@@ -10105,7 +10116,7 @@ el:Πληροφορίες γραμματοσειρών
 es:Información sobre las fuentes
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
-fr:Obtenir les Informations sur les Polices
+fr:Liste des polices
 hi:फ़ॉन्ट जानकारी प्राप्त करें
 it:Ottieni informazioni sui font
 ja:フォント情報を取得
@@ -10641,7 +10652,7 @@ cn:SumatraPDF 安装位置(&F):
 co:Installà SumatraPDF in u &cartulare :
 cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
-de:&Installationsverzeichnis:
+de:&Installationsordner:
 dk:Installer SumatraPDF i &mappe:
 el:Εγκατάσταση SumatraPDF στο φάκελο:
 es:&Instalar SumatraPDF en la siguiente carpeta:
@@ -11285,9 +11296,11 @@ vn:Dòng Bắt Đầu:
 cn:载入 %s ...
 co:Caricamentu di %s …
 de:Lädt %s ..,
+fr:Chargement de %s ...
 it:Caricamento %s...
 nl:Laden %s...
 pl:Ładowanie %s ...
+tr:Yükleniyor %s ...
 :MB
 af:MB
 am:ՄԲ
@@ -12402,8 +12415,12 @@ uk:Відкрити у PDF-XChange
 uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
 :Open Attachment
+cn:打开附件
+de:Anhang öffnen
+fr:Ouvrir la pièce jointe
 it:Apri allegato
 pl:Otwórz załącznik
+tr:Eki aç
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -14887,77 +14904,6 @@ ru:Повернуть в&лево
 tr:Sola döndür
 uk:Повернути проти годинникової стрілки
 vn:Quay &Trái
-:Rotate &Left\tCtrl+Shift+-
-af:Draai Links\tCtrl+Shift+-
-am:Պտտել ձախ\tCtrl+Shift+-
-ar:دوران لليسار\tCtrl+Shift+-
-az:So&la döndər\tCtrl+Shift+-
-bg:Завъртане на&ляво\tCtrl+Shift+-
-bn:বামদিকে বিবর্তন\tCtrl+Shift+-
-br:Girar à esquerda\tCtrl+Shift+-
-bs:Rotiraj nalijevo\tCtrl+Shift+-
-by:Павярнуць супраць гадзінніка\tCtrl+Shift+-
-ca-xv:Gira a l'esquerra\tCtrl+Maj+-
-ca:Gira a l'esquerra\tCtrl+Maj+-
-cn:逆时针旋转(&L)\tCtrl+Shift+-
-co:Girà à &manca\tCtrl+Maiusc+-
-cy:Troi &Gwrthglocwedd\tCtrl+Shift+-
-cz:Otočit do&leva\tCtrl+Shift+Num-
-de:&Gegen UZS drehen\tStrg+Umschalt+-
-dk:Roter mod &venstre\tCtrl+skift+-
-el:Περιστροφή αριστερά\tCtrl+Shift+-
-es:Girar a la &izquierda\tCtrl+Mayús+-
-et:Pööra &vasemale\tCtrl+Shift+-
-eu:Itzulikatu E&zkerrerantz\tKtrl+Shift+-
-fa:چرخاندن به &چپ\tCtrl+Shift+-‎
-fi:Käännä &vasemmalle\tCtrl+Shift+-
-fr:Rotation &antihoraire\tCtrl+Maj+-
-fy-nl:Linksom draaie\tCtrl+Shift+-
-ga:Rothlaigh tuathalach\tCtrl+Shift+-
-gl:Xirar á esquerda\tCtrl+Shift+-
-he:סובב שמאלה
-hi:बांयी ओर घूमाओ\tCtrl+Shift+-
-hr:Zaokreni nalijevo\tCtrl+Shift+-
-hu:Forgatás balra\tCtrl+Shift+-
-id:Putar Ke Kiri\tCtrl+Shift+-
-it:Ruota a &sinistra\tCtrl+Maiusc+-
-ja:左に回転(&L)\tCtrl+Shift+-
-jv:Muter &Ngiri\tCtrl+Shift+-
-ka:მარ&ცხნივ გადაბრუნება\tCtrl+Shift+-
-kr:반시계 방향으로 회전(&L)\tCtrl+Shift+-
-ku:سوڕانەوە بۆلای &چەپ\tCtrl+Shift+-
-kw:Treylya a-gledh\tCtrl+Shift+-
-lt:Pasukti į &kairę\tCtrl+Shift+-
-lv:Pagriezt pa &kreisi\tCtrl+Shift+-
-mk:Ротирај на лево\tCtrl+Shift+-
-ml: ഇടത്തേക്കു ചരിക്കുക\tCtrl+Shift+-
-mm:ဘယ်သို့ လှဲ့\tCtrl+Shift+-
-my:Ubah ke kiri\tCtrl+Shift+-
-ne:&बायाँ घुमाउनुहोस्\tCtrl+Shift+-
-nl:Linksom draaien\tCtrl+Shift+-
-nn:Roter til venstre\tCtrl+Shift+-
-no:Roter mot klokken\tCtrl+Shift+Strek
-pa:ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl+Shift+-
-pl:Obróć w &lewo\tCtrl+Shift+Minus
-pt:Rodar à &esquerda\tCtrl+Shift+-
-ro:Rotește spre stânga\tCtrl+Shift+-
-ru:Повернуть в&лево\tCtrl+Shift+-
-si:&වමට හරවන්න\tCtrl+Shift+-
-sk:Otočiť &vľavo\tCtrl+Shift+-
-sl:Zasukaj v levo\tCtrl+Shift+-
-sn:Tenderedza kuruboshwe\tCtrl+Shift+-
-sp-rs:Rotiraj ulevo\tCtrl+Shift+-
-sq:Kthej &majtas\tCtrl+Shift+-
-sr-rs:Ротирај улево\tCtrl+Shift+-
-sv:Rotera åt vänster\tCtrl+Shift+-
-ta:இடதுப்புறம் சுழற்று\tCtrl+Shift+-
-th:หมุน &ซ้าย Ctrl+Shift+-
-tl:Iikot Pakaliwa\tCtrl+Shift+-
-tr:S&ola Döndür\tCtrl+Shift+-
-tw:頁面左旋(&L)\tCtrl+Shift+-
-uk:Повернути ліворуч\tCtrl+Shift+-
-uz:&Chapga burish\tCtrl+Shift+-
-vn:Quay trái\tCtrl+Shift+-
 :Rotate &Right
 br:Girar à &direita
 cn:顺时针旋转(&R)
@@ -14976,77 +14922,6 @@ ru:Повернуть в&право
 tr:Sağa döndür
 uk:Повернути за годинниковою стрілкою
 vn:Quay &Phải
-:Rotate &Right\tCtrl+Shift++
-af:Draai Regs\tCtrl+Shift++
-am:Պտտել աջ\tCtrl+Shift++
-ar:دوران لليمين\tCtrl+Shift++
-az:Sa&ğa döndər\tCtrl+Shift++
-bg:Завъртане на&дясно\tCtrl+Shift++
-bn:ডানদিকে বিবর্তন\tCtrl+Shift++
-br:Girar à direita\tCtrl+Shift++
-bs:Rotiraj nadesno\tCtrl+Shift++
-by:Павярнуць па гадзінніку\tCtrl+Shift++
-ca-xv:Gira a la dreta\tCtrl+Maj++
-ca:Gira a la dreta\tCtrl+Maj++
-cn:顺时针旋转(&R)\tCtrl+Shift++
-co:Girà à &diritta\tCtrl+Maiusc++
-cy:Troi &Clocwedd\tCtrl+Shift++
-cz:Otočit dop&rava\tCtrl+Shift+Num+
-de:Im &UZS drehen\tStrg+Umschalt++
-dk:Roter mod &højre\tCtrl+skift++
-el:Περιστροφή δεξιά\tCtrl+Shift++
-es:Girar a la &derecha\tCtrl+Mayús++
-et:Pööra &paremale\tCtrl+Shift++
-eu:Itzulikatu E&skuinera\tKtrl+Shift++
-fa:چرخاندن به &راست\tCtrl+Shift++‎
-fi:Käännä &oikealle\tCtrl+Shift++
-fr:Rotation &horaire\tCtrl+Maj++
-fy-nl:Rjochtsom draaie\tCtrl+Shift++
-ga:Rothlaigh deiseal\tCtrl+Shift++
-gl:Xirar á dereita\tCtrl+Shift++
-he:סובב ימינה
-hi:दांयी ओर घूमाओ\tCtrl+Shift++
-hr:Zaokreni nadesno\tCtrl+Shift++
-hu:Forgatás jobbra\tCtrl+Shift++
-id:Putar Ke Kanan\tCtrl+Shift++
-it:Ruota a &destra\tCtrl+Maiusc++
-ja:右に回転(&R)\tCtrl+Shift++
-jv:Muter &Nganan\\tCtrl+Shift++
-ka:მარ&ჯვნივ გადაბრუნება\tCtrl+Shift++
-kr:시계 방향으로 회전(&R)\tCtrl+Shift++
-ku:سوڕانەوە بۆلای &ڕاست\tCtrl+Shift++
-kw:Treylya a-dhyhow\tCtrl+Shift++
-lt:Pasukti į d&ešinę\tCtrl+Shift++
-lv:Pagriezt pa &labi\tCtrl+Shift++
-mk:Ротирај на десно\tCtrl+Shift++
-ml:വലത്തേക്കു ചരിക്കുക\tCtrl+Shift++
-mm:ညာသို့ လှဲ့\tCtrl+Shift++
-my:Ubah ke kanan\tCtrl+Shift++
-ne:&दायाँ घुमाउनुहोस्\tCtrl+Shift++
-nl:Rechtsom draaien\tCtrl+Shift++
-nn:Roter til høgre\tCtrl+Shift++
-no:Roter med klokken\tCtrl+Shift+Pluss
-pa:ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl+Shift++
-pl:Obróć w &prawo\tCtrl+Shift+Plus
-pt:Rodar à &direita\tCtrl+Shift++
-ro:Rotește spre dreapta\tCtrl+Shift++
-ru:Повернуть в&право\tCtrl+Shift++
-si:&දකුණට හරවන්න\tCtrl+Shift++
-sk:Otočiť vpravo\tCtrl+Shift++
-sl:Zasukaj v desno\tCtrl+Shift++
-sn:Tenderedza kurudyi\tCtrl+Shift++
-sp-rs:Rotiraj udesno\tCtrl+Shift++
-sq:Kthej &djathtas\tCtrl+Shift++
-sr-rs:Ротирај удесно\tCtrl+Shift++
-sv:Rotera åt höger\tCtrl+Shift++
-ta:வலப்புறம் சுழற்று\tCtrl+Shift++
-th:หมุน &ขวา Ctrl+Shift++
-tl:Iikot Pakanan\tCtrl+Shift++
-tr:&Sağa Döndür\tCtrl+Shift++
-tw:頁面右旋(&R)\tCtrl+Shift++
-uk:Повернути праворуч\tCtrl+Shift++
-uz:&O'ngga burish\tCtrl+Shift++
-vn:Quay phải\tCtrl+Shift++
 :S&election
 am:Ը&նտրում
 br:S&eleção
@@ -15164,8 +15039,12 @@ tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
 vn:Lưu Chú Thích và thoát PDF
 :Save Attachment...
+cn:保存附件...
+de:Anhang speichern…
+fr:Enregistrer la pièce jointe...
 it:Salva allegato
 pl:Zapisz załącznik...
+tr:Eki kaydet
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
 ar:حفظ الملف المدمج
@@ -16445,9 +16324,12 @@ vn:Hiển thị trong &thư mục
 :Show in folder
 cn:在文件夹中显示
 co:Affissà in u cartulare
+de:Im Ordner anzeigen
+fr:Voir dans le dossier
 it:Visualizza nella cartella
 nl:Toon in map
 pl:Pokaż w folderze
+tr:Klasörde göster
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
