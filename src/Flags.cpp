@@ -263,7 +263,7 @@ void ParseAdobeFlags(FileArgs& i, const char* s) {
     char* val;
     int valN;
 
-    // tha args can be separated with `&` or `#` or `:`
+    // tha args can be separated with `#` or `?` or `:`
     // i.e. `foo#bar` or foo&bar` or `foo:bar`
     Split(parts, s, "&", true);
     if (parts.Size() == 1) {
@@ -346,11 +346,11 @@ FileArgs::~FileArgs() {
     str::FreePtr(&search);
 }
 
-// given file path `foo.pdf#page=4;dest=foo` etc., extract `#page=4;dest=foo`
+// given file path `foo.pdf?page=4;dest=foo` etc., extract `?page=4;dest=foo`
 // args into FileArgs
 // returns nullptr if there are not args
 FileArgs* ParseFileArgs(const char* path) {
-    const char* hashPos = str::FindChar(path, '#');
+    const char* hashPos = str::FindChar(path, '?');
     if (!hashPos) {
         return nullptr;
     }
