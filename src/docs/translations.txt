@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7ce5e5a5e7be4e57c51c417eb62feae9ebb21672
+1920264c5817315f0ad22de5e71176bf5d9c5fdd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -237,7 +237,7 @@ de:&Vorherige Ansicht
 el:Πίσω
 es:&Atrás
 eu:A&tzera
-fr:Revenir (&b)
+fr:R&evenir
 hi:&पीछे
 it:&Indietro
 ja:戻る(&B)
@@ -348,7 +348,7 @@ de:&Schließen
 el:Κλείσιμο
 es:&Cerrar
 eu:It&xi
-fr:Fermer (&c)
+fr:&Fermer
 hi:&बंद करे
 it:&Chiudi
 ja:閉じる(&C)
@@ -468,7 +468,7 @@ de:&In Zwischenablage kopieren
 el:Αντιγραφή στο πρόχειρο
 es:&Copiar a portapapeles
 eu:&Kopiatu gakora
-fr:&Copier dans le Presse-Papiers
+fr:&Copier dans le presse-papiers
 hi:क्लिपबोर्ड पर कॉपी करें
 it:&Copia negli Appunti
 ja:クリップボードへコピー(&C)
@@ -811,7 +811,7 @@ de:&Erste Seite
 el:Πρώτη σελίδα
 es:&Primera página
 eu:&Lehen orrialdea
-fr:Première page (&f)
+fr:P&remière page
 it:&Prima pagina
 ja:最初のページ(&F)
 nl:&Eerste Pagina
@@ -1136,7 +1136,7 @@ de:Text &hervorheben
 el:Επισήμανση
 es:&Destacar
 eu:&Nabarmendu
-fr:Surligner (&h)
+fr:&Surligner
 it:Eviden&zia
 ja:ハイライト(&H)
 nl:&Markeren
@@ -1154,7 +1154,7 @@ de:&Letzte Seite
 el:Τελευταία σελίδα
 es:Última página
 eu:&Azken orrialdea
-fr:Dernière page (&l)
+fr:&Dernière page
 it:&Ultima pagina
 ja:最後のページ(&L)
 nl:&Laatste Pagina
@@ -2423,7 +2423,7 @@ cy:&Un Tudalen
 de:Einzel&seitenansicht
 el:Μία σελίδα 
 es:&Una sola página
-fr:Page unique (&s)
+fr:&Page unique
 it:Pagina &singola
 ja:単一のページ(&S)
 nl:&Enkele Pagina
@@ -4963,7 +4963,7 @@ et:Vali keel (Change Language)
 eu:Aldatu Hizkuntza (Change Language)
 fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
-fr:Changer de langue (Change Language)
+fr:Changer de langue
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
 gl:Cambiar lingua
@@ -6005,7 +6005,7 @@ el:Αντιγραφή στο πρόχειρο
 es:Copiar a portapapeles
 et:Kopeeri lõikelauale
 eu:Kopiatu gakora
-fr:Copier dans le Presse-Papiers
+fr:Copier dans le presse-papiers
 hi:क्लिपबोर्ड पर कॉपी करें
 it:Copia negli Appunti
 ja:クリップボードへコピー
@@ -8223,7 +8223,7 @@ de:&Nächste Ansicht
 el:Εμπρός
 es:A&delante
 eu:A&urrera
-fr:Avancer (&o)
+fr:&Avancer
 hi:आगे
 it:&Avanti
 ja:進む(&O)
@@ -8243,7 +8243,7 @@ de:&Vollbild
 el:Πλήρης οθόνη
 es:P&antalla completa
 eu:Ikusleiho-o&soa
-fr:Plein écran (&u)
+fr:P&lein écran
 hi:पूर्ण स्क्रीन
 it:Sc&hermo pieno
 ja:全画面表示(&U)
@@ -9097,7 +9097,7 @@ de:S&uchen...
 el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
-fr:Rechercher... (&d)
+fr:&Rechercher...
 it:&Trova
 ja:検索(&D)...
 nl:Zoe&k
@@ -11712,7 +11712,7 @@ de:Neues &Fenster
 el:Νέο παράθυρο
 es:Nueva &ventana
 eu:&Leiho berria
-fr:Nouvelle fenêtre (&w)
+fr:Nouvelle &fenêtre
 it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 nl:Nieuw &Kader
@@ -15848,7 +15848,7 @@ et:Näita &järjehoidjaid
 eu:Erakutsi Laster&markak
 fa:ن&شانک‌ها را نشان بده
 fi:Näytä &Kirjanmerkit
-fr:Voir les &Marque-pages
+fr:Voir les &marque-pages
 ga:Lea&bharmharcanna a taispeáint
 gl:Amosar &marcadores
 he:הצג סימניות
