@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1920264c5817315f0ad22de5e71176bf5d9c5fdd
+82637b3d29162927172dd2aa6433ae91224a6396
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -82,7 +82,7 @@ de:&Tatsächliche Größe
 el:Πραγματικό μέγεθος
 es:&Tamaño real
 eu:&Oraingo neurria
-fr:T&aille réelle
+fr:&Taille réelle
 hi:वास्तविक आकार
 it:Dimensione &attuale
 ja:実際のサイズ(&A)
@@ -941,7 +941,7 @@ et:&Liigu
 eu:&Joan Hona
 fa:&برو به
 fi:&Siirry
-fr:A&ller …
+fr:A&ller…
 fy-nl:&Gean nei
 ga:&Téigh Chuig
 gl:Ir &a
@@ -1369,7 +1369,7 @@ de:&Nächste Seite
 el:Επόμενη σελίδα
 es:&Página siguiente
 eu:&Hurrengo orrialdea
-fr:Page Suiva&nte
+fr:Page &suivante
 it:Pagina &successiva
 ja:次のページ(&N)
 nl:&Volgende Pagina
@@ -1858,7 +1858,7 @@ de:&Vorherige Seite
 el:Προηγούμενη σελίδα
 es:&Página anterior
 eu:A&urreko orrialdea
-fr:Page &Précédente
+fr:Page &précédente
 it:Pagina &precedente
 ja:前のページ(&P)
 nl:&Vorige Pagina
@@ -4963,7 +4963,7 @@ et:Vali keel (Change Language)
 eu:Aldatu Hizkuntza (Change Language)
 fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
-fr:Changer de langue
+fr:Changer la langue
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
 gl:Cambiar lingua
@@ -9097,7 +9097,7 @@ de:S&uchen...
 el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
-fr:&Rechercher...
+fr:R&echercher...
 it:&Trova
 ja:検索(&D)...
 nl:Zoe&k
@@ -9416,7 +9416,7 @@ de:An &Seite anpassen
 el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
-fr:Ajuster à la &page
+fr:&Page entière
 it:Adatta alla &pagina
 ja:ページに合わせる(&P)
 nl:&Pagina Aanpassen
@@ -9435,7 +9435,7 @@ de:An Fenster&breite anpassen
 el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
-fr:Ajuster à la &largeur
+fr:Pleine &largeur
 it:Adatta a &larghezza
 ja:幅に合わせる(&W)
 nl:&Breedte Aanpassen
@@ -10116,7 +10116,7 @@ el:Πληροφορίες γραμματοσειρών
 es:Información sobre las fuentes
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
-fr:Liste des polices
+fr:Infos sur les polices
 hi:फ़ॉन्ट जानकारी प्राप्त करें
 it:Ottieni informazioni sui font
 ja:フォント情報を取得
@@ -12419,6 +12419,7 @@ cn:打开附件
 de:Anhang öffnen
 fr:Ouvrir la pièce jointe
 it:Apri allegato
+nl:Open Bijlage
 pl:Otwórz załącznik
 tr:Eki aç
 :Open Embedded PDF
@@ -14935,7 +14936,7 @@ el:Επιλογή
 es:S&elección
 et:V&alik
 eu:&Hautapena
-fr:S&élection
+fr:&Sélection
 hr:O&dabir
 hu:K&iválasztás
 id:Pilihan
@@ -15043,6 +15044,7 @@ cn:保存附件...
 de:Anhang speichern…
 fr:Enregistrer la pièce jointe...
 it:Salva allegato
+nl:Bijlage Opslaan...
 pl:Zapisz załącznik...
 tr:Eki kaydet
 :Save Embedded File...
