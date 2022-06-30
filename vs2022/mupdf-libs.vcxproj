@@ -528,6 +528,7 @@
   <ItemGroup>
     <ClCompile Include="..\ext\extract\src\alloc.c" />
     <ClCompile Include="..\ext\extract\src\astring.c" />
+    <ClCompile Include="..\ext\extract\src\boxer.c" />
     <ClCompile Include="..\ext\extract\src\buffer.c" />
     <ClCompile Include="..\ext\extract\src\document.c" />
     <ClCompile Include="..\ext\extract\src\docx.c" />
@@ -540,6 +541,7 @@
     <ClCompile Include="..\ext\extract\src\odt.c" />
     <ClCompile Include="..\ext\extract\src\odt_template.c" />
     <ClCompile Include="..\ext\extract\src\outf.c" />
+    <ClCompile Include="..\ext\extract\src\rect.c" />
     <ClCompile Include="..\ext\extract\src\sys.c" />
     <ClCompile Include="..\ext\extract\src\text.c" />
     <ClCompile Include="..\ext\extract\src\xml.c" />

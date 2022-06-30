@@ -1941,7 +1941,7 @@ pdf_set_annot_vertices(fz_context *ctx, pdf_annot *annot, int n, const fz_point 
 
 void pdf_clear_annot_vertices(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_annot_push_local_xref(ctx, annot);
+	begin_annot_op(ctx, annot, "Clear vertices");
 
 	fz_try(ctx)
 	{
@@ -1949,7 +1949,7 @@ void pdf_clear_annot_vertices(fz_context *ctx, pdf_annot *annot)
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(Vertices));
 	}
 	fz_always(ctx)
-		pdf_annot_pop_local_xref(ctx, annot);
+		end_annot_op(ctx, annot);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
@@ -2336,12 +2336,12 @@ pdf_set_annot_ink_list(fz_context *ctx, pdf_annot *annot, int n, const int *coun
 void
 pdf_clear_annot_ink_list(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_annot_push_local_xref(ctx, annot);
+	begin_annot_op(ctx, annot, "Clear ink list");
 
 	fz_try(ctx)
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(InkList));
 	fz_always(ctx)
-		pdf_annot_pop_local_xref(ctx, annot);
+		end_annot_op(ctx, annot);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 

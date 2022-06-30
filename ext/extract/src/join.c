@@ -307,6 +307,8 @@ are no empty spans. */
                     )
             {
                 if (extract_span_append_c(alloc, o_span, char_->ucs))   return -1;
+                /* Coverity warns, but o_span must have at least one item. */
+                /* coverity[var_deref_op] */
                 *extract_span_char_last(o_span) = *char_;
                 char_->ucs = ucs_NONE; /* Mark for removal below, so it is not used again. */
                 break;
@@ -673,7 +675,7 @@ static int make_lines(
                 the new extended line_a needs checking again. */
                 a -= 1;
             }
-            outfx("new line is:\n    %s", line_string2(line_a));
+            outfx("num_joins=%i new line is:\n    %s", num_joins, line_string2(line_a));
         }
     }
 
@@ -1106,9 +1108,10 @@ static int make_paragraphs(
 
                 num_joins += 1;
                 outfx(
-                        "have joined paragraph a=%i to snearest_paragraph_b=%i",
+                        "have joined paragraph a=%i to nearest_paragraph_b=%i. num_joins=%i.",
                         a,
-                        nearest_paragraph_b
+                        nearest_paragraph_b,
+                        num_joins
                         );
 
                 if (nearest_paragraph_b > a) {
@@ -1180,9 +1183,9 @@ static int make_paragraphs(
     return ret;
 }
 
-static int s_join_page_rects(
+static int s_join_subpage_rects(
         extract_alloc_t*    alloc,
-        extract_page_t*     page,
+        subpage_t*          subpage,
         rect_t*             rects,
         int                 rects_num,
         line_t***           lines,
@@ -1195,8 +1198,8 @@ rects_num is zero. */
 {
     if (make_lines(
             alloc,
-            page->spans,
-            &page->spans_num,
+            subpage->spans,
+            &subpage->spans_num,
             rects,
             rects_num,
             lines,
@@ -1381,7 +1384,7 @@ static int table_find_extend(cell_t** cells, int cells_num_x, int cells_num_y)
 }
 
 
-static int table_find_cells_text(extract_alloc_t* alloc, extract_page_t* page,
+static int table_find_cells_text(extract_alloc_t* alloc, subpage_t* subpage,
         cell_t** cells, int cells_num_x, int cells_num_y)
 /* Sets each cell to contain the text that is within the cell's boundary. We
 remove any found text from the page. */
@@ -1395,9 +1398,9 @@ remove any found text from the page. */
     {
         cell_t* cell = cells[i];
         if (!cell->above || !cell->left) continue;
-        if (s_join_page_rects(
+        if (s_join_subpage_rects(
                 alloc,
-                page,
+                subpage,
                 &cell->rect,
                 1 /*rects_num*/,
                 &cell->lines,
@@ -1408,14 +1411,14 @@ remove any found text from the page. */
     }
     
     /* Append the table we have found to page->tables[]. */
-    if (extract_realloc(alloc, &page->tables, sizeof(*page->tables) * (page->tables_num + 1))) goto end;
-    if (extract_malloc(alloc, &page->tables[page->tables_num], sizeof(*page->tables[page->tables_num]))) goto end;
-    page->tables[page->tables_num]->pos.x = cells[0]->rect.min.x;
-    page->tables[page->tables_num]->pos.y = cells[0]->rect.min.y;
-    page->tables[page->tables_num]->cells = cells;
-    page->tables[page->tables_num]->cells_num_x = cells_num_x;
-    page->tables[page->tables_num]->cells_num_y = cells_num_y;
-    page->tables_num += 1;
+    if (extract_realloc(alloc, &subpage->tables, sizeof(*subpage->tables) * (subpage->tables_num + 1))) goto end;
+    if (extract_malloc(alloc, &subpage->tables[subpage->tables_num], sizeof(*subpage->tables[subpage->tables_num]))) goto end;
+    subpage->tables[subpage->tables_num]->pos.x = cells[0]->rect.min.x;
+    subpage->tables[subpage->tables_num]->pos.y = cells[0]->rect.min.y;
+    subpage->tables[subpage->tables_num]->cells = cells;
+    subpage->tables[subpage->tables_num]->cells_num_x = cells_num_x;
+    subpage->tables[subpage->tables_num]->cells_num_y = cells_num_y;
+    subpage->tables_num += 1;
     
     if (0)
     {
@@ -1448,12 +1451,12 @@ remove any found text from the page. */
 }
 
 
-static int table_find(extract_alloc_t* alloc, extract_page_t* page, double y_min, double y_max)
+static int table_find(extract_alloc_t* alloc, subpage_t* subpage, double y_min, double y_max)
 /* Finds single table made from lines whose y coordinates are in the range
 y_min..y_max. */
 {
-    tablelines_t* all_h = &page->tablelines_horizontal;
-    tablelines_t* all_v = &page->tablelines_vertical;
+    tablelines_t* all_h = &subpage->tablelines_horizontal;
+    tablelines_t* all_v = &subpage->tablelines_vertical;
     int e = -1;
     int i;
     
@@ -1472,6 +1475,9 @@ y_min..y_max. */
     
     if (table_find_y_range(alloc, all_h, y_min, y_max, &tl_h)) goto end;
     if (table_find_y_range(alloc, all_v, y_min, y_max, &tl_v)) goto end;
+    /* Suppress false coverity warning - qsort() does not dereference null
+    pointer if nmemb is zero. */
+    /* coverity[var_deref_model] */
     qsort(tl_v.tablelines, tl_v.tablelines_num, sizeof(*tl_v.tablelines), tablelines_compare_x);
     
     if (0)
@@ -1632,7 +1638,7 @@ y_min..y_max. */
 
     if (table_find_extend(cells, cells_num_x, cells_num_y)) goto end;
     
-    if (table_find_cells_text(alloc, page, cells, cells_num_x, cells_num_y)) goto end;
+    if (table_find_cells_text(alloc, subpage, cells, cells_num_x, cells_num_y)) goto end;
     
     e = 0;
     end:
@@ -1650,9 +1656,9 @@ y_min..y_max. */
 }
 
 
-static int extract_page_tables_find_lines(
+static int extract_subpage_tables_find_lines(
         extract_alloc_t*    alloc,
-        extract_page_t*     page
+        subpage_t*          subpage
         )
 /* Finds tables in <page> by looking for lines in page->tablelines_horizontal
 and page->tablelines_vertical that look like table dividers.
@@ -1665,20 +1671,20 @@ Any text found inside tables is removed from page->spans[].
     double margin = 1;
     int iv;
     int ih;
-    outf("page->tablelines_horizontal.tablelines_num=%i", page->tablelines_horizontal.tablelines_num);
-    outf("page->tablelines_vertical.tablelines_num=%i", page->tablelines_vertical.tablelines_num);
+    outf("page->tablelines_horizontal.tablelines_num=%i", subpage->tablelines_horizontal.tablelines_num);
+    outf("page->tablelines_vertical.tablelines_num=%i", subpage->tablelines_vertical.tablelines_num);
     
     /* Sort all lines by y coordinate. */
     qsort(
-            page->tablelines_horizontal.tablelines,
-            page->tablelines_horizontal.tablelines_num,
-            sizeof(*page->tablelines_horizontal.tablelines),
+            subpage->tablelines_horizontal.tablelines,
+            subpage->tablelines_horizontal.tablelines_num,
+            sizeof(*subpage->tablelines_horizontal.tablelines),
             tablelines_compare_y
             );
     qsort(
-            page->tablelines_vertical.tablelines,
-            page->tablelines_vertical.tablelines_num,
-            sizeof(*page->tablelines_vertical.tablelines),
+            subpage->tablelines_vertical.tablelines,
+            subpage->tablelines_vertical.tablelines_num,
+            sizeof(*subpage->tablelines_vertical.tablelines),
             tablelines_compare_y
             );
     
@@ -1687,19 +1693,19 @@ Any text found inside tables is removed from page->spans[].
         /* Show info about lines. */
         int i;
         outf0("tablelines_horizontal:");
-        for (i=0; i<page->tablelines_horizontal.tablelines_num; ++i)
+        for (i=0; i<subpage->tablelines_horizontal.tablelines_num; ++i)
         {
             outf0("    color=%f: %s",
-                    page->tablelines_horizontal.tablelines[i].color,
-                    extract_rect_string(&page->tablelines_horizontal.tablelines[i].rect)
+                    subpage->tablelines_horizontal.tablelines[i].color,
+                    extract_rect_string(&subpage->tablelines_horizontal.tablelines[i].rect)
                     );
         }
         outf0("tablelines_vertical:");
-        for (i=0; i<page->tablelines_vertical.tablelines_num; ++i)
+        for (i=0; i<subpage->tablelines_vertical.tablelines_num; ++i)
         {
             outf0("    color=%f: %s",
-                    page->tablelines_vertical.tablelines[i].color,
-                    extract_rect_string(&page->tablelines_vertical.tablelines[i].rect)
+                    subpage->tablelines_vertical.tablelines[i].color,
+                    extract_rect_string(&subpage->tablelines_vertical.tablelines[i].rect)
                     );
         }
     }
@@ -1716,22 +1722,22 @@ Any text found inside tables is removed from page->spans[].
         tableline_t* tlv = NULL;
         tableline_t* tlh = NULL;
         tableline_t* tl;
-        if (iv < page->tablelines_vertical.tablelines_num)
+        if (iv < subpage->tablelines_vertical.tablelines_num)
         {
-            tlv = &page->tablelines_vertical.tablelines[iv];
+            tlv = &subpage->tablelines_vertical.tablelines[iv];
         }
         /* We only consider horizontal lines that are not white. This is a bit
         of a cheat to get the right behaviour with twotables_2.pdf. */
-        while (ih < page->tablelines_horizontal.tablelines_num)
+        while (ih < subpage->tablelines_horizontal.tablelines_num)
         {
-            if (page->tablelines_horizontal.tablelines[ih].color == 1)
+            if (subpage->tablelines_horizontal.tablelines[ih].color == 1)
             {
                 /* Ignore white horizontal lines. */
                 ++ih;
             }
             else
             {
-                tlh = &page->tablelines_horizontal.tablelines[ih];
+                tlh = &subpage->tablelines_horizontal.tablelines[ih];
                 break;
             }
         }
@@ -1750,7 +1756,7 @@ Any text found inside tables is removed from page->spans[].
             {
                 outf("New table. maxy=%f miny=%f", maxy, miny);
                 /* Find table. */
-                table_find(alloc, page, miny - margin, maxy + margin);
+                table_find(alloc, subpage, miny - margin, maxy + margin);
             }
             miny = tl->rect.min.y;
         }
@@ -1758,7 +1764,7 @@ Any text found inside tables is removed from page->spans[].
     }
     
     /* Find last table. */
-    table_find(alloc, page, miny - margin, maxy + margin);
+    table_find(alloc, subpage, miny - margin, maxy + margin);
     
     return 0;
 }
@@ -1787,9 +1793,9 @@ static void show_tables(table_t** tables, int tables_num)
     }
 }
 
-static int extract_page_tables_find(
+static int extract_subpage_tables_find(
         extract_alloc_t*    alloc,
-        extract_page_t*     page
+        subpage_t*          subpage
         )
 /* Find tables in <page>.
 
@@ -1798,44 +1804,44 @@ will call other functions that find tables in different ways, e.g. by analysing
 an image of a page, or looking for blocks of whitespace in between chunks of
 text. */
 {
-    if (extract_page_tables_find_lines(alloc, page)) return -1;
+    if (extract_subpage_tables_find_lines(alloc, subpage)) return -1;
 
     if (0)
     {
         outf0("=== tables from extract_page_tables_find_lines():");
-        show_tables(page->tables, page->tables_num);
+        show_tables(subpage->tables, subpage->tables_num);
     }
 
     return 0;
 }
 
-static int extract_document_join_page(
+static int extract_join_subpage(
         extract_alloc_t*    alloc,
-        extract_page_t*     page
+        subpage_t*          subpage
         )
 /* Finds tables and paragraphs on <page>. */
 {
     /* Find tables on this page first. This will remove text that is within
     tables from page->spans, so that text doesn't appearing more than once in
     the final output. */
-    if (extract_page_tables_find(alloc, page)) return -1;
+    if (extract_subpage_tables_find(alloc, subpage)) return -1;
 
     /* Now join remaining spans into lines and paragraphs. */
-    if (s_join_page_rects(
+    if (s_join_subpage_rects(
             alloc,
-            page,
+            subpage,
             NULL /*rects*/,
             0 /*rects_num*/,
-            &page->lines,
-            &page->lines_num,
-            &page->paragraphs,
-            &page->paragraphs_num
+            &subpage->lines,
+            &subpage->lines_num,
+            &subpage->paragraphs,
+            &subpage->paragraphs_num
             ))
     {
-        outf0("s_join_page_rects failed. page->spans_num=%i page->lines_num=%i page->paragraphs_num=%i",
-                page->spans_num,
-                page->lines_num,
-                page->paragraphs_num
+        outf0("s_join_subpage_rects failed. subpage->spans_num=%i subpage->lines_num=%i subpage->paragraphs_num=%i",
+                subpage->spans_num,
+                subpage->lines_num,
+                subpage->paragraphs_num
                 );
         return -1;
     }
@@ -1844,7 +1850,7 @@ static int extract_document_join_page(
 }
 
 
-int extract_document_join(extract_alloc_t* alloc, document_t* document)
+int extract_document_join(extract_alloc_t* alloc, document_t* document, int layout_analysis)
 {
     /* For each page in <document> we find tables and join spans into lines and paragraphs.
 
@@ -1855,9 +1861,16 @@ int extract_document_join(extract_alloc_t* alloc, document_t* document)
     int p;
     for (p=0; p<document->pages_num; ++p) {
         extract_page_t* page = document->pages[p];
+        int c;
+
+        if (layout_analysis && extract_page_analyse(alloc, page)) return -1;
+
+        for (c=0; c<page->subpages_num; ++c) {
+            subpage_t* subpage = page->subpages[c];
         
-        outf("processing page %i: num_spans=%i", p, page->spans_num);
-        if (extract_document_join_page(alloc, page)) return -1;
+            outf("processing page %i, subpage %i: num_spans=%i", p, c, subpage->spans_num);
+            if (extract_join_subpage(alloc, subpage)) return -1;
+        }
     }
 
     return 0;

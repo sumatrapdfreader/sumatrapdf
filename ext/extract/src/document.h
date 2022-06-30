@@ -26,6 +26,17 @@ typedef struct
     point_t max;
 } rect_t;
 
+extern const rect_t extract_rect_infinite;
+extern const rect_t extract_rect_empty;
+
+rect_t extract_rect_intersect(rect_t a, rect_t b);
+
+rect_t extract_rect_union(rect_t a, rect_t b);
+
+int extract_rect_contains_rect(rect_t a, rect_t b);
+
+int extract_rect_valid(rect_t a);
+
 const char* extract_rect_string(const rect_t* rect);
 
 typedef struct
@@ -63,6 +74,8 @@ typedef struct
     
     unsigned    ucs;
     double      adv;
+
+    rect_t bbox;
 } char_t;
 /* A single char in a span.
 */
@@ -202,8 +215,27 @@ typedef struct
 } table_t;
 
 
+typedef enum
+{
+    SPLIT_NONE = 0,
+    SPLIT_HORIZONTAL,
+    SPLIT_VERTICAL
+} split_type_t;
+
+
+typedef struct split_t
+{
+    split_type_t type;
+    double weight;
+    int count;
+    struct split_t *split[1];
+} split_t;
+
+
 typedef struct
 {
+    rect_t      mediabox;
+
     span_t**    spans;
     int         spans_num;
     
@@ -225,10 +257,21 @@ typedef struct
     
     table_t**   tables;
     int         tables_num;
+} subpage_t;
+/* A subpage. Contains different representations of the list of spans. */
 
+
+typedef struct
+{
+    rect_t      mediabox;
+
+    subpage_t** subpages;
+    int         subpages_num;
+
+    split_t*    split;
 } extract_page_t;
-/* A page. Contains different representations of the list of spans. NB not
-+called page_t because this clashes with a system type on hpux. */
+/* A page. Contains a list of subpages. NB not
+called page_t because this clashes with a system type on hpux. */
 
 
 typedef struct
@@ -248,7 +291,7 @@ typedef struct
 } images_t;
 
 
-int extract_document_join(extract_alloc_t* alloc, document_t* document);
+int extract_document_join(extract_alloc_t* alloc, document_t* document, int layout_analysis);
 /* This does all the work of finding paragraphs and tables. */
 
 double extract_matrices_to_font_size(matrix_t* ctm, matrix_t* trm);
@@ -273,5 +316,21 @@ typedef struct
 content, e.g. so we know whether a font has changed so need to start a new odt
 span. */
 
+int extract_page_analyse(extract_alloc_t* alloc, extract_page_t* page);
+/* Analyse page content for layouts. */
+
+int extract_subpage_alloc(extract_alloc_t* extract, rect_t mediabox, extract_page_t* page, subpage_t** psubpage);
+/* content_t constructor. */
+
+void extract_subpage_free(extract_alloc_t* alloc, subpage_t** psubpage);
+/* subpage_t destructor. */
+
+int subpage_span_append(extract_alloc_t* alloc, subpage_t* subpage, span_t* span);
+/* Push span onto the end of subpage. */
+
+int extract_split_alloc(extract_alloc_t* alloc, split_type_t type, int count, split_t** psplit);
+/* Allocate a split_t. */
+
+void extract_split_free(extract_alloc_t* alloc, split_t** psplit);
 
 #endif

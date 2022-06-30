@@ -136,7 +136,9 @@ ifneq ($(mutool),)
     tests_exe := $(tests_exe) $(patsubst %, %.intermediate-mu.xml, $(pdfs_generated))
 endif
 ifneq ($(gs),)
-    tests_exe := $(tests_exe) $(patsubst %, %.intermediate-gs.xml, $(pdfs_generated))
+# 2022-02-23: don't check intermediate-gs, because gs's txtwrite device doesn't
+# work easily with multi-page documents since the change to pdfi.
+#    tests_exe := $(tests_exe) $(patsubst %, %.intermediate-gs.xml, $(pdfs_generated))
 endif
 
 tests_exe := \
@@ -282,6 +284,7 @@ exe = src/build/extract-$(build).exe
 exe_src = \
         src/alloc.c \
         src/astring.c \
+        src/boxer.c \
         src/buffer.c \
         src/document.c \
         src/docx.c \
@@ -294,6 +297,7 @@ exe_src = \
         src/odt.c \
         src/odt_template.c \
         src/outf.c \
+        src/rect.c \
         src/sys.c \
         src/text.c \
         src/xml.c \

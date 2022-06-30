@@ -204,8 +204,16 @@ def main():
                 #
                 for tag in 'dc:creator', 'cp:lastModifiedBy':
                     text = re.sub(f'[<]{tag}[>][^<]*[<]/{tag}[>]', f'<{tag}></{tag}>', text)
-
-                out_c.write(f'        "{text}"\n')
+                
+                out_c.write(f'        "')
+                # Represent non-ascii utf-8 bytes as C escape sequences.
+                for c in text:
+                    if ord( c) <= 127:
+                        out_c.write( c)
+                    else:
+                        for cc in c.encode( 'utf-8'):
+                            out_c.write( f'\\x{cc:02x}')
+                out_c.write(f'"\n')
             else:
                 data = read(os.path.join(dirpath, filename), encoding=None)
                 out_c.write(f'        "')

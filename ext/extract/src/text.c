@@ -18,23 +18,6 @@ int extract_content_insert(
         int                 contentss_num,
         char**              o_out
         )
-/* Creates a new string by inserting sequence of strings into a template
-string.
-
-If <single_name> is in <original>, it is replaced by <contentss>.
-
-Otherwise the text between the end of <mid_begin_name> and beginning of
-<mid_end_name> is replaced by <contentss>.
-
-If <mid_begin_name> is NULL, we insert into the zero-length region before
-<mid_end_name>.
-
-If <mid_end_name> is NULL, we insert into the zero-length region after
-<mid_begin_name>.
-
-At least one of <single_name>, <mid_begin_name> and <mid_end_name> must be
-non-NULL.
-*/
 {
     int e = -1;
     const char* mid_begin = NULL;
@@ -92,6 +75,11 @@ non-NULL.
             if (extract_astring_catl(alloc, &out, contentss[i].chars, contentss[i].chars_num)) goto end;
         }
     }
+    assert( mid_end);
+    /* As per docs, at least one of <single_name>, <mid_begin_name> and
+    <mid_end_name> is non-null, and this ensures that mid_end must not be null.
+    */
+    /* coverity[var_deref_model] */
     if (extract_astring_cat(alloc, &out, mid_end)) goto end;
     
     *o_out = out.chars;

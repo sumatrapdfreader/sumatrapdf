@@ -413,7 +413,9 @@ int extract_xml_pparse_next(extract_buffer_t* buffer, extract_xml_tag_t* out)
     assert(buffer);
     extract_xml_tag_free(alloc, out);
 
-    /* Read tag name. */
+    /* Read tag name. Initialise it to empty string so we never return
+    out->name==null on success. */
+    if (str_catl( alloc, &out->name, NULL, 0)) goto end;
     for( i=0;; ++i) {
         int e = extract_buffer_read(buffer, &c, 1, NULL);
         if (e) {
@@ -441,6 +443,7 @@ int extract_xml_pparse_next(extract_buffer_t* buffer, extract_xml_tag_t* out)
                 int quote_single = 0;
                 int quote_double = 0;
                 size_t l;
+                if (str_catl( alloc, &attribute_value, NULL, 0)) goto end;
                 for(;;) {
                     if (s_next(buffer, &ret, &c)) goto end;
                     if (c == '\'')      quote_single = !quote_single;
@@ -471,6 +474,10 @@ int extract_xml_pparse_next(extract_buffer_t* buffer, extract_xml_tag_t* out)
                     }
                 }
             }
+
+            /* Ensure name and value are not NULL. */
+            if (str_catl( alloc, &attribute_name, NULL, 0)) goto end;
+            if (str_catl( alloc, &attribute_value, NULL, 0)) goto end;
 
             if (extract_xml_tag_attributes_append(alloc, out, attribute_name, attribute_value)) goto end;
             attribute_name = NULL;

@@ -82,7 +82,7 @@ int  extract_read_all_path(extract_alloc_t* alloc, const char* path, char** o_te
     e = 0;
     end:
     if (f) fclose(f);
-    if (e) extract_free(alloc, &o_text);
+    if (e) extract_free(alloc, o_text);
     return e;
 }
 

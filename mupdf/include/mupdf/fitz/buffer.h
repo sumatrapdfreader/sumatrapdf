@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -145,6 +145,16 @@ void fz_clear_buffer(fz_context *ctx, fz_buffer *buf);
 	Ownership of buffers does not change.
 */
 void fz_append_buffer(fz_context *ctx, fz_buffer *destination, fz_buffer *source);
+
+/**
+	Write a base64 encoded data block, optionally with periodic newlines.
+*/
+void fz_append_base64(fz_context *ctx, fz_buffer *out, const unsigned char *data, size_t size, int newline);
+
+/**
+	Append a base64 encoded fz_buffer, optionally with periodic newlines.
+*/
+void fz_append_base64_buffer(fz_context *ctx, fz_buffer *out, fz_buffer *data, int newline);
 
 /**
 	fz_append_*: Append data to a buffer.

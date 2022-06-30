@@ -84,13 +84,14 @@ static int s_docx_paragraph_empty(extract_alloc_t* alloc, extract_astring_t* con
 /* Append an empty paragraph to *content. */
 {
     int e = -1;
+    static char fontname[] = "OpenSans";
     content_state_t content_state = {0};
     if (s_docx_paragraph_start(alloc, content)) goto end;
     /* It seems like our choice of font size here doesn't make any difference
     to the ammount of vertical space, unless we include a non-space
     character. Presumably something to do with the styles in the template
     document. */
-    content_state.font.name = "OpenSans";
+    content_state.font.name = fontname;
     content_state.font.size = 10;
     content_state.font.bold = 0;
     content_state.font.italic = 0;
@@ -244,7 +245,7 @@ static int s_docx_append_image(
 
 static int s_docx_output_rotated_paragraphs(
         extract_alloc_t*    alloc,
-        extract_page_t*     page,
+        subpage_t*          subpage,
         int                 paragraph_begin,
         int                 paragraph_end,
         int                 rot,
@@ -329,7 +330,7 @@ static int s_docx_output_rotated_paragraphs(
 
     /* Output paragraphs p0..p2-1. */
     for (p=paragraph_begin; p<paragraph_end; ++p) {
-        paragraph_t* paragraph = page->paragraphs[p];
+        paragraph_t* paragraph = subpage->paragraphs[p];
         if (s_document_to_docx_content_paragraph(alloc, state, paragraph, content)) goto end;
     }
 
@@ -363,7 +364,7 @@ static int s_docx_output_rotated_paragraphs(
     extract_astring_cat(alloc, content, "              <w:txbxContent>");
 
     for (p=paragraph_begin; p<paragraph_end; ++p) {
-        paragraph_t* paragraph = page->paragraphs[p];
+        paragraph_t* paragraph = subpage->paragraphs[p];
         if (s_document_to_docx_content_paragraph(alloc, state, paragraph, content)) goto end;
     }
 
@@ -482,13 +483,13 @@ to the application. */
 
 static int s_docx_append_rotated_paragraphs(
         extract_alloc_t*    alloc,
-        extract_page_t*     page,
+        subpage_t*          subpage,
         content_state_t*    state,
         int*                p,
         int*                text_box_id,
         const matrix_t*     ctm,
         double              rotate,
-        extract_astring_t*  content
+        extract_astring_t*  output
         )
 /* Appends paragraphs with same rotation, starting with page->paragraphs[*p]
 and updates *p. */
@@ -500,7 +501,7 @@ and updates *p. */
     point_t extent = {0, 0};
     int p0 = *p;
     int p1;
-    paragraph_t* paragraph = page->paragraphs[*p];
+    paragraph_t* paragraph = subpage->paragraphs[*p];
     
     outf("rotate=%.2frad=%.1fdeg ctm: ef=(%f %f) abcd=(%f %f %f %f)",
             rotate, rotate * 180 / pi,
@@ -534,8 +535,8 @@ and updates *p. */
                     ctm->a, ctm->b, ctm->c, ctm->d);
         }
 
-        for (*p=p0; *p<page->paragraphs_num; ++(*p)) {
-            paragraph = page->paragraphs[*p];
+        for (*p=p0; *p<subpage->paragraphs_num; ++(*p)) {
+            paragraph = subpage->paragraphs[*p];
             ctm = &paragraph->lines[0]->spans[0]->ctm;
             rotate = atan2(ctm->b, ctm->a);
             if (rotate != rotate0) {
@@ -624,7 +625,7 @@ and updates *p. */
         x -= dx;
         y -= -dy;
 
-        if (s_docx_output_rotated_paragraphs(alloc, page, p0, p1, rot, x, y, w, h, *text_box_id, content, state)) goto end;
+        if (s_docx_output_rotated_paragraphs(alloc, subpage, p0, p1, rot, x, y, w, h, *text_box_id, output, state)) goto end;
     }
     *p = p1 - 1;
     e = 0;
@@ -650,34 +651,36 @@ int extract_document_to_docx_content(
     /* Write paragraphs into <content>. */
     for (p=0; p<document->pages_num; ++p) {
         extract_page_t* page = document->pages[p];
-        
-        int p = 0;
-        int t = 0;
-        
-        content_state_t content_state;
-        content_state.font.name = NULL;
-        content_state.font.size = 0;
-        content_state.font.bold = 0;
-        content_state.font.italic = 0;
-        content_state.ctm_prev = NULL;
-        
-        /* Output paragraphs and tables in order of y coordinate. */
-        for(;;)
-        {
-            paragraph_t* paragraph = (p == page->paragraphs_num) ? NULL : page->paragraphs[p];
-            table_t* table = (t == page->tables_num) ? NULL : page->tables[t];
-            double y_paragraph;
-            double y_table;
-            if (!paragraph && !table)   break;
-            y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
-            y_table = (table) ? table->pos.y : DBL_MAX;
-            
-            if (paragraph && y_paragraph < y_table)
-            {
-                const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
-                double rotate = atan2(ctm->b, ctm->a);
+	int c;
 
-                if (spacing
+        for (c=0; c<page->subpages_num; ++c) {
+            subpage_t* subpage = page->subpages[c];
+
+            int p = 0;
+            int t = 0;
+        
+            content_state_t content_state;
+            content_state.font.name = NULL;
+            content_state.font.size = 0;
+            content_state.font.bold = 0;
+            content_state.font.italic = 0;
+            content_state.ctm_prev = NULL;
+        
+            /* Output paragraphs and tables in order of y coordinate. */
+            for(;;) {
+                paragraph_t* paragraph = (p == subpage->paragraphs_num) ? NULL : subpage->paragraphs[p];
+                table_t* table = (t == subpage->tables_num) ? NULL : subpage->tables[t];
+                double y_paragraph;
+                double y_table;
+                if (!paragraph && !table)   break;
+                y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
+                y_table = (table) ? table->pos.y : DBL_MAX;
+            
+                if (paragraph && y_paragraph < y_table) {
+                    const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
+                    double rotate = atan2(ctm->b, ctm->a);
+
+                    if (spacing
                         && content_state.ctm_prev
                         && paragraph->lines_num
                         && paragraph->lines[0]->spans_num
@@ -686,37 +689,38 @@ int extract_document_to_docx_content(
                                 &paragraph->lines[0]->spans[0]->ctm
                                 )
                         ) {
-                    /* Extra vertical space between paragraphs that were at
-                    different angles in the original document. */
-                    if (s_docx_paragraph_empty(alloc, content)) goto end;
-                }
+                        /* Extra vertical space between paragraphs that were at
+                        different angles in the original document. */
+                        if (s_docx_paragraph_empty(alloc, content)) goto end;
+                    }
 
-                if (spacing) {
-                    /* Extra vertical space between paragraphs. */
-                    if (s_docx_paragraph_empty(alloc, content)) goto end;
-                }
+                    if (spacing) {
+                        /* Extra vertical space between paragraphs. */
+                        if (s_docx_paragraph_empty(alloc, content)) goto end;
+                    }
 
-                if (rotation && rotate != 0)
-                {
-                    if (s_docx_append_rotated_paragraphs(alloc, page, &content_state, &p, &text_box_id, ctm, rotate, content)) goto end;
+                    if (rotation && rotate != 0)
+                    {
+                        if (s_docx_append_rotated_paragraphs(alloc, subpage, &content_state, &p, &text_box_id, ctm, rotate, content)) goto end;
+                    }
+                    else
+                    {
+                        if (s_document_to_docx_content_paragraph(alloc, &content_state, paragraph, content)) goto end;
+                    }
+                    p += 1;
                 }
-                else
+                else if (table)
                 {
-                    if (s_document_to_docx_content_paragraph(alloc, &content_state, paragraph, content)) goto end;
+                    if (s_docx_append_table(alloc, table, content)) goto end;
+                    t += 1;
                 }
-                p += 1;
             }
-            else if (table)
-            {
-                if (s_docx_append_table(alloc, table, content)) goto end;
-                t += 1;
-            }
-        }
         
-        if (images) {
-            int i;
-            for (i=0; i<page->images_num; ++i) {
-                s_docx_append_image(alloc, content, &page->images[i]);
+            if (images) {
+                int i;
+                for (i=0; i<subpage->images_num; ++i) {
+                    s_docx_append_image(alloc, content, &subpage->images[i]);
+                }
             }
         }
     }

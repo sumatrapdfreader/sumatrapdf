@@ -747,6 +747,7 @@ EXTRACT_CFLAGS += -Ithirdparty/extract/include
 
 EXTRACT_SRC += thirdparty/extract/src/alloc.c
 EXTRACT_SRC += thirdparty/extract/src/astring.c
+EXTRACT_SRC += thirdparty/extract/src/boxer.c
 EXTRACT_SRC += thirdparty/extract/src/buffer.c
 EXTRACT_SRC += thirdparty/extract/src/document.c
 EXTRACT_SRC += thirdparty/extract/src/docx.c
@@ -758,6 +759,7 @@ EXTRACT_SRC += thirdparty/extract/src/html.c
 EXTRACT_SRC += thirdparty/extract/src/odt.c
 EXTRACT_SRC += thirdparty/extract/src/odt_template.c
 EXTRACT_SRC += thirdparty/extract/src/outf.c
+EXTRACT_SRC += thirdparty/extract/src/rect.c
 EXTRACT_SRC += thirdparty/extract/src/sys.c
 EXTRACT_SRC += thirdparty/extract/src/text.c
 EXTRACT_SRC += thirdparty/extract/src/xml.c

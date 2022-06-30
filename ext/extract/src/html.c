@@ -51,7 +51,7 @@ static int content_state_reset(extract_alloc_t* alloc, content_state_t* content_
         content_state->font.italic = 0;
     }
     e = 0;
-    
+
     end:
     return e;
 }
@@ -65,7 +65,7 @@ static int paragraph_to_html_content(
         )
 {
     int e = -1;
-    char* endl = (single_line) ? "" : "\n";
+    const char* endl = (single_line) ? "" : "\n";
     int l;
     if (extract_astring_catf(alloc, content, "%s%s<p>", endl, endl)) goto end;
 
@@ -110,9 +110,9 @@ static int paragraph_to_html_content(
         }
     }
     if (extract_astring_catf(alloc, content, "%s</p>", endl)) goto end;
-    
+
     e = 0;
-    
+
     end:
     return e;
 }
@@ -136,10 +136,10 @@ etc. */
         paragraph_t* paragraph = paragraphs[p];
         if (paragraph_to_html_content(alloc, state, paragraph, single_line, content)) goto end;
     }
-    
+
     if (content_state_reset(alloc, state, content)) goto end;
     e = 0;
-    
+
     end:
     return e;
 }
@@ -148,19 +148,14 @@ static int append_table(extract_alloc_t* alloc, content_state_t* state, table_t*
 {
     int e = -1;
     int y;
-    
+
     if (extract_astring_cat(alloc, content, "\n\n<table border=\"1\" style=\"border-collapse:collapse\">\n")) goto end;
-    
+
     for (y=0; y<table->cells_num_y; ++y)
     {
         /* If 1, we put each <td>...</td> on a separate line. */
-        int multiline = 0;
         int x;
         if (extract_astring_cat(alloc, content, "    <tr>\n")) goto end;
-        if (!multiline)
-        {
-            if (extract_astring_cat(alloc, content, "        ")) goto end;
-        }
         for (x=0; x<table->cells_num_x; ++x)
         {
             cell_t* cell = table->cells[y*table->cells_num_x + x];
@@ -170,12 +165,9 @@ static int append_table(extract_alloc_t* alloc, content_state_t* state, table_t*
                 by other cells that extend horizontally and vertically. */
                 continue;
             }
-            if (multiline)
-            {
-                if (extract_astring_cat(alloc, content, "        ")) goto end;
-            }
+            if (extract_astring_cat(alloc, content, "        ")) goto end;
             if (extract_astring_cat(alloc, content, "<td")) goto end;
-            
+
             if (cell->extend_right > 1)
             {
                 if (extract_astring_catf(alloc, content, " colspan=\"%i\"", cell->extend_right)) goto end;
@@ -184,27 +176,20 @@ static int append_table(extract_alloc_t* alloc, content_state_t* state, table_t*
             {
                 if (extract_astring_catf(alloc, content, " rowspan=\"%i\"", cell->extend_down)) goto end;
             }
-            
+
             if (extract_astring_cat(alloc, content, ">")) goto end;
 
             if (paragraphs_to_html_content(alloc, state, cell->paragraphs, cell->paragraphs_num, 1 /* single_line*/, content)) goto end;
             if (extract_astring_cat(alloc, content, "</td>")) goto end;
-            if (multiline)
-            {
-                if (extract_astring_cat(alloc, content, "\n")) goto end;
-            }
+            if (extract_astring_cat(alloc, content, "\n")) goto end;
 
             if (content_state_reset(alloc, state, content)) goto end;
-        }
-        if (!multiline)
-        {
-            if (extract_astring_cat(alloc, content, "\n")) goto end;
         }
         if (extract_astring_cat(alloc, content, "    </tr>\n")) goto end;
     }
     if (extract_astring_cat(alloc, content, "</table>\n\n")) goto end;
     e = 0;
-    
+
     end:
     return e;
 }
@@ -228,6 +213,126 @@ static int compare_paragraph_y(const void* a, const void* b)
     return 0;
 }
 
+/*
+*/
+static int
+split_to_html(extract_alloc_t *alloc, split_t* split, subpage_t*** ppsubpage, extract_astring_t *output)
+{
+    int p;
+    int s;
+    int t;
+    subpage_t* subpage;
+    paragraph_t** paragraphs = NULL;
+    content_state_t state;
+    content_state_init(&state);
+
+    if (split == NULL) {
+        /* fall through to below - SPLIT_NONE */
+    } else if (split->type == SPLIT_HORIZONTAL) {
+        int ret = 0;
+        double total = 0;
+        for (s = 0; s < split->count; s++) {
+            total += split->split[s]->weight;
+        }
+        if (split->count > 1)
+            extract_astring_cat(alloc, output, "<div style=\"display:flex;\">\n");
+        for (s = 0; s < split->count; s++) {
+            if (split->count > 1)
+            {
+                if (total == 0)
+                {
+                    extract_astring_catf(alloc, output, "<div>\n");
+                }
+                else
+                {
+                    extract_astring_catf(alloc, output, "<div style=\"width:%g%%;\">\n", 100.0*split->split[s]->weight/total);
+                }
+            }
+            ret = split_to_html(alloc, split->split[s], ppsubpage, output);
+            if (ret)
+                break;
+            if (split->count > 1)
+                extract_astring_cat(alloc, output, "</div>\n");
+        }
+        if (split->count > 1)
+            extract_astring_cat(alloc, output, "</div>\n");
+        return ret;
+    } else if (split->type == SPLIT_VERTICAL) {
+        int ret = 0;
+        for (s = 0; s < split->count; s++) {
+            ret = split_to_html(alloc, split->split[s], ppsubpage, output);
+            if (ret)
+                break;
+        }
+        return ret;
+    }
+
+    /* We'll deal with the next subpage entry. Increment the pointer for the
+     * next caller. */
+    subpage = **ppsubpage;
+    *ppsubpage = (*ppsubpage)+1;
+
+    /* Output paragraphs and tables in order of increasing <y> coordinate.
+
+        Unfortunately the paragraph ordering we do in page->paragraphs[]
+        isn't quite right and results in bad ordering if ctm/trm matrices are
+        inconsistent. So we create our own list of paragraphs sorted strictly
+        by y coordinate of the first char of each paragraph. */
+    if (extract_malloc(alloc, &paragraphs, sizeof(*paragraphs) * subpage->paragraphs_num)) goto end;
+    for (p = 0; p < subpage->paragraphs_num; ++p)
+    {
+        paragraphs[p] = subpage->paragraphs[p];
+    }
+    qsort(paragraphs, subpage->paragraphs_num, sizeof(*paragraphs), compare_paragraph_y);
+
+    if (0)
+    {
+        int p;
+        outf0("paragraphs are:");
+        for (p=0; p<subpage->paragraphs_num; ++p)
+        {
+            paragraph_t* paragraph = subpage->paragraphs[p];
+            line_t* line = paragraph->lines[0];
+            span_t* span = line->spans[0];
+            outf0("    p=%i: %s", p, extract_span_string(NULL, span));
+        }
+    }
+
+    p = 0;
+    t = 0;
+    for(;;)
+    {
+        double y_paragraph;
+        double y_table;
+        paragraph_t* paragraph = (p == subpage->paragraphs_num) ? NULL : paragraphs[p];
+        table_t* table = (t == subpage->tables_num) ? NULL : subpage->tables[t];
+        if (!paragraph && !table) break;
+        y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
+        y_table = (table) ? table->pos.y : DBL_MAX;
+        outf("p=%i y_paragraph=%f", p, y_paragraph);
+        outf("t=%i y_table=%f", t, y_table);
+        if (paragraph && y_paragraph < y_table)
+        {
+            //extract_astring_catf(alloc, output, "<p>@@@ paragraph %i y=%f @@@)</p>\n", p, y_paragraph);
+            if (paragraph_to_html_content(alloc, &state, paragraph, 0 /*single_line*/, output)) goto end;
+            if (content_state_reset(alloc, &state, output)) goto end;
+            p += 1;
+        }
+        else if (table)
+        {
+            //extract_astring_catf(alloc, output, "<p>@@@ table %t y=%f @@@)</p>\n", p, y_table);
+            if (append_table(alloc, &state, table, output)) goto end;
+            t += 1;
+        }
+    }
+    extract_free(alloc, &paragraphs);
+    return 0;
+
+end:
+    extract_free(alloc, &paragraphs);
+    return -1;
+}
+
 int extract_document_to_html_content(
         extract_alloc_t*    alloc,
         document_t*         document,
@@ -237,84 +342,35 @@ int extract_document_to_html_content(
         )
 {
     int ret = -1;
-    int p;
+    int n;
     paragraph_t** paragraphs = NULL;
-    
+
     (void) rotation;
     (void) images;
-    
+
     extract_astring_cat(alloc, content, "<html>\n");
     extract_astring_cat(alloc, content, "<body>\n");
-    
+
     /* Write paragraphs into <content>. */
-    for (p=0; p<document->pages_num; ++p)
+    for (n=0; n<document->pages_num; ++n)
     {
-        extract_page_t* page = document->pages[p];
-        int p;
-        int t;
-        content_state_t state;
-        content_state_init(&state);
-        extract_free(alloc, &paragraphs);
-        
-        /* Output paragraphs and tables in order of increasing <y> coordinate.
+        extract_page_t* page = document->pages[n];
+        subpage_t **psubpage = page->subpages;
 
-        Unfortunately the paragraph ordering we do in page->paragraphs[]
-        isn't quite right and results in bad ordering if ctm/trm matrices are
-        inconsistent. So we create our own list of paragraphs sorted strictly
-        by y coordinate of the first char of each paragraph. */
-        if (extract_malloc(alloc, &paragraphs, sizeof(*paragraphs) * page->paragraphs_num)) goto end;
-        for (p = 0; p < page->paragraphs_num; ++p)
-        {
-            paragraphs[p] = page->paragraphs[p];
-        }
-        qsort(paragraphs, page->paragraphs_num, sizeof(*paragraphs), compare_paragraph_y);
-        
-        if (0)
-        {
-            int p;
-            outf0("paragraphs are:");
-            for (p=0; p<page->paragraphs_num; ++p)
-            {
-                paragraph_t* paragraph = page->paragraphs[p];
-                line_t* line = paragraph->lines[0];
-                span_t* span = line->spans[0];
-                outf0("    p=%i: %s", p, extract_span_string(NULL, span));
-            }
-        }
+        /* Every page gets its own div. */
+        extract_astring_cat(alloc, content, "<div>\n");
 
-        p = 0;
-        t = 0;        
-        for(;;)
-        {
-            double y_paragraph;
-            double y_table;
-            paragraph_t* paragraph = (p == page->paragraphs_num) ? NULL : paragraphs[p];
-            table_t* table = (t == page->tables_num) ? NULL : page->tables[t];
-            if (!paragraph && !table) break;
-            y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
-            y_table = (table) ? table->pos.y : DBL_MAX;
-            outf("p=%i y_paragraph=%f", p, y_paragraph);
-            outf("t=%i y_table=%f", t, y_table);
-            if (paragraph && y_paragraph < y_table)
-            {
-                //extract_astring_catf(alloc, content, "<p>@@@ paragraph %i y=%f @@@)</p>\n", p, y_paragraph);
-                if (paragraph_to_html_content(alloc, &state, paragraph, 0 /*single_line*/, content)) goto end;
-                if (content_state_reset(alloc, &state, content)) goto end;
-                p += 1;
-            }
-            else if (table)
-            {
-                //extract_astring_catf(alloc, content, "<p>@@@ table %t y=%f @@@)</p>\n", p, y_table);
-                if (append_table(alloc, &state, table, content)) goto end;
-                t += 1;
-            }
-        }
+        ret = split_to_html(alloc, page->split, &psubpage, content);
+        if (ret)
+            goto end;
+
+        extract_astring_cat(alloc, content, "</div>\n");
     }
     extract_astring_cat(alloc, content, "</body>\n");
     extract_astring_cat(alloc, content, "</html>\n");
     ret = 0;
 
-    end:
+end:
     extract_free(alloc, &paragraphs);
     return ret;
 }

@@ -34,7 +34,7 @@ int extract_docx_write_template(
 
 Uses the 'zip' and 'unzip' commands internally.
 
-contents
+contentss
 contentss_num
     Content to be inserted into word/document.xml.
 document

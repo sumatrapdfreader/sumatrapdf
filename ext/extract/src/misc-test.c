@@ -35,6 +35,15 @@ static void s_check(
     if (!ok) s_num_fails += 1;
 }
 
+static void s_check_e( int e, const char* text)
+{
+    if (e)
+    {
+        s_num_fails += 1;
+        printf( "Error: e=%i: %s\n", e, text);
+    }
+}
+
 static void s_check_int(const char* text, int value_expected, int expected_errno)
 {
     int     value;
@@ -59,6 +68,53 @@ static void s_check_uint(const char* text, unsigned expected_value, int expected
     return;
 }
 
+static void s_check_xml_parse()
+{
+    int e;
+    extract_buffer_t* buffer;
+    extract_xml_tag_t tag;
+    unsigned i;
+    const char* texts[] = {
+            "<foo a=1>text</foo>",
+            "< >",
+            "<foo bar=>",
+            "< bar=>",
+            "< =>",
+            };
+    
+    extract_xml_tag_init( &tag);
+    
+    for (i=0; i<sizeof(texts) / sizeof(texts[0]); ++i)
+    {
+        const char* text = texts[i];
+        printf("testing extract_xml_pparse_*(): %s\n", text);
+        e = extract_buffer_open_simple(
+                NULL /*alloc*/,
+                text,
+                strlen(text),
+                NULL /*handle*/,
+                NULL /*fn_close*/,
+                &buffer
+                );
+        s_check_e( e, "extract_buffer_open_simple()");
+        e = extract_xml_pparse_init( NULL /*alloc*/, buffer, NULL /*first_line*/);
+        s_check_e( e, "extract_xml_pparse_init()");
+
+        e = extract_xml_pparse_next( buffer, &tag);
+        s_check_e( e, "extract_xml_pparse_next()");
+        s_check_e( tag.name ? 0 : 1, "tag.name is not null");
+        
+        {
+            int j;
+            for (j=0; j<tag.attributes_num; ++j)
+            {
+                s_check_e( tag.attributes[j].name ? 0 : 1, "attribute is non-null");
+                s_check_e( tag.attributes[j].value ? 0 : 1, "attribute is non-null");
+            }
+        }
+    }
+}
+
 int main(void)
 {
     printf("testing extract_xml_str_to_int():\n");
@@ -72,6 +128,8 @@ int main(void)
     s_check_uint("-20", 0, ERANGE);
     s_check_uint("-20b", 0, EINVAL);
     s_check_uint("123456789123", 0, ERANGE);
+    
+    s_check_xml_parse();
     
     printf("s_num_fails=%i\n", s_num_fails);
     

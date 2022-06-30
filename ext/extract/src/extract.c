@@ -25,6 +25,9 @@
 
 
 
+const rect_t extract_rect_infinite = { { DBL_MIN, DBL_MIN }, { DBL_MAX, DBL_MAX } };
+const rect_t extract_rect_empty    = { { DBL_MAX, DBL_MAX }, { DBL_MIN, DBL_MIN } };
+
 
 double extract_matrix_expansion(matrix_t m)
 {
@@ -200,74 +203,97 @@ static void table_free(extract_alloc_t* alloc, table_t** ptable)
     extract_free(alloc, ptable);
 }
 
-static void page_free(extract_alloc_t* alloc, extract_page_t** ppage)
+void extract_subpage_free(extract_alloc_t* alloc, subpage_t** psubpage)
 {
-    extract_page_t* page = *ppage;
-    if (!page) return;
+    subpage_t* subpage = *psubpage;
+    if (!subpage) return;
 
-    outf0("page=%p page->spans_num=%i page->lines_num=%i",
-            page, page->spans_num, page->lines_num);
-    extract_spans_free(alloc, &page->spans, page->spans_num);
+    outf0("subpage=%p subpage->spans_num=%i subpage->lines_num=%i",
+            subpage, subpage->spans_num, subpage->lines_num);
+    extract_spans_free(alloc, &subpage->spans, subpage->spans_num);
 
-    extract_lines_free(alloc, &page->lines, page->lines_num);
+    extract_lines_free(alloc, &subpage->lines, subpage->lines_num);
 
     {
         int p;
-        for (p=0; p<page->paragraphs_num; ++p) {
-            paragraph_t* paragraph = page->paragraphs[p];
+        for (p=0; p<subpage->paragraphs_num; ++p) {
+            paragraph_t* paragraph = subpage->paragraphs[p];
             /* We don't call extract_lines_free(&paragraph->lines) because
-            these point into the same data as page->lines, which we have
+            these point into the same data as subpage->lines, which we have
             already freed above. */
             if (paragraph) extract_free(alloc, &paragraph->lines);
-            extract_free(alloc, &page->paragraphs[p]);
+            extract_free(alloc, &subpage->paragraphs[p]);
         }
     }
-    extract_free(alloc, &page->paragraphs);
-    
+    extract_free(alloc, &subpage->paragraphs);
+
     {
         int i;
-        for (i=0; i<page->images_num; ++i) {
-            extract_image_clear(alloc, &page->images[i]);
+        for (i=0; i<subpage->images_num; ++i) {
+            extract_image_clear(alloc, &subpage->images[i]);
         }
-        extract_free(alloc, &page->images);
+        extract_free(alloc, &subpage->images);
     }
-    extract_free(alloc, &page->images);
+    extract_free(alloc, &subpage->images);
 
-    extract_free(alloc, &page->tablelines_horizontal.tablelines);
-    extract_free(alloc, &page->tablelines_vertical.tablelines);
-    
+    extract_free(alloc, &subpage->tablelines_horizontal.tablelines);
+    extract_free(alloc, &subpage->tablelines_vertical.tablelines);
+
     {
         int t;
-        outf("page=%p page->tables_num=%i", page, page->tables_num);
-        for (t=0; t<page->tables_num; ++t)
+        outf("subpage=%p subpage->tables_num=%i", subpage, subpage->tables_num);
+        for (t=0; t<subpage->tables_num; ++t)
         {
-            table_free(alloc, &page->tables[t]);
+            table_free(alloc, &subpage->tables[t]);
         }
-        extract_free(alloc, &page->tables);
+        extract_free(alloc, &subpage->tables);
     }
-    
+
+    extract_free(alloc, psubpage);
+}
+
+static void page_free(extract_alloc_t* alloc, extract_page_t** ppage)
+{
+    int c;
+    extract_page_t* page = *ppage;
+    if (!page) return;
+
+    for (c=0; c<page->subpages_num; ++c)
+    {
+        subpage_t *subpage = page->subpages[c];
+        extract_subpage_free(alloc, &subpage);
+    }
+    extract_free(alloc, &page->subpages);
     extract_free(alloc, ppage);
 }
 
-static span_t* page_span_append(extract_alloc_t* alloc, extract_page_t* page)
-/* Appends new empty span_ to an extract_page_t; returns NULL with errno set on
-error. */
+int subpage_span_append(extract_alloc_t *alloc, subpage_t *subpage, span_t *span)
 {
-    span_t* span;
-    if (extract_malloc(alloc, &span, sizeof(*span))) return NULL;
-    extract_span_init(span);
     if (extract_realloc2(
             alloc,
-            &page->spans,
-            sizeof(*page->spans) * page->spans_num,
-            sizeof(*page->spans) * (page->spans_num + 1)
+            &subpage->spans,
+            sizeof(*subpage->spans) * subpage->spans_num,
+            sizeof(*subpage->spans) * (subpage->spans_num + 1)
             )) {
-        extract_free(alloc, &span);
-        return NULL;
+        return -1;
     }
-    page->spans[page->spans_num] = span;
-    page->spans_num += 1;
-    return span;
+    subpage->spans[subpage->spans_num] = span;
+    subpage->spans_num += 1;
+
+    return 0;
+}
+
+
+static int subpage_span_append_new(extract_alloc_t* alloc, subpage_t *subpage, span_t** pspan)
+/* Appends new empty span_ to a subpage_t; returns -1 with errno set on error. */
+{
+    if (extract_malloc(alloc, pspan, sizeof(**pspan))) return -1;
+    extract_span_init(*pspan);
+    if (subpage_span_append(alloc, subpage, *pspan)) {
+        extract_free(alloc, pspan);
+        return -1;
+    }
+    return 0;
 }
 
 
@@ -285,9 +311,9 @@ static void extract_images_free(extract_alloc_t* alloc, images_t* images)
 
 
 static int extract_document_images(extract_alloc_t* alloc, document_t* document, images_t* o_images)
-/* Moves image_t's from document->page[] to *o_images.
+/* Moves image_t's from document->subpage[] to *o_images.
 
-On return document->page[].images* will be NULL etc.
+On return document->subpage[].images* will be NULL etc.
 */
 {
     int e = -1;
@@ -297,59 +323,65 @@ On return document->page[].images* will be NULL etc.
     for (p=0; p<document->pages_num; ++p)
     {
         extract_page_t* page = document->pages[p];
-        int i;
-        for (i=0; i<page->images_num; ++i)
+        int c;
+        for (c=0; c<page->subpages_num; ++c)
         {
-            image_t* image;
-            if (extract_realloc2(
-                    alloc,
-                    &images.images,
-                    sizeof(image_t) * images.images_num,
-                    sizeof(image_t) * (images.images_num + 1)
-                    )) goto end;
-            image = &page->images[i];
-            outf("p=%i i=%i image->name=%s image->id=%s", p, i, image->name, image->id);
-            assert(image->name);
-            images.images[images.images_num] = *image;
-            images.images_num += 1;
-            
-            /* Add image type if we haven't seen it before. */
+            subpage_t* subpage = page->subpages[p];
+            int i;
+            for (i=0; i<subpage->images_num; ++i)
             {
-                int it;
-                for (it=0; it<images.imagetypes_num; ++it)
+                image_t* image;
+                if (extract_realloc2(
+                        alloc,
+                        &images.images,
+                        sizeof(image_t) * images.images_num,
+                        sizeof(image_t) * (images.images_num + 1)
+                    )) goto end;
+                image = &subpage->images[i];
+                outf("p=%i i=%i image->name=%s image->id=%s", p, i, image->name, image->id);
+                assert(image->name);
+                images.images[images.images_num] = *image;
+                images.images_num += 1;
+
+                /* Add image type if we haven't seen it before. */
                 {
-                    outf("it=%i images.imagetypes[it]=%s image->type=%s",
-                            it, images.imagetypes[it], image->type);
-                    if (!strcmp(images.imagetypes[it], image->type)) {
-                        break;
+                    int it;
+                    for (it=0; it<images.imagetypes_num; ++it)
+                    {
+                        outf("it=%i images.imagetypes[it]=%s image->type=%s",
+                                it, images.imagetypes[it], image->type);
+                        if (!strcmp(images.imagetypes[it], image->type))
+                        {
+                            break;
+                        }
+                    }
+                    if (it == images.imagetypes_num)
+                    {
+                        /* We haven't seen this image type before. */
+                        if (extract_realloc2(
+                                alloc,
+                                &images.imagetypes,
+                                sizeof(char*) * images.imagetypes_num,
+                                sizeof(char*) * (images.imagetypes_num + 1)
+                            )) goto end;
+                        assert(image->type);
+                        images.imagetypes[images.imagetypes_num] = image->type;
+                        images.imagetypes_num += 1;
+                        outf("have added images.imagetypes_num=%i", images.imagetypes_num);
                     }
                 }
-                if (it == images.imagetypes_num)
-                {
-                    /* We haven't seen this image type before. */
-                    if (extract_realloc2(
-                            alloc,
-                            &images.imagetypes,
-                            sizeof(char*) * images.imagetypes_num,
-                            sizeof(char*) * (images.imagetypes_num + 1)
-                            )) goto end;
-                    assert(image->type);
-                    images.imagetypes[images.imagetypes_num] = image->type;
-                    images.imagetypes_num += 1;
-                    outf("have added images.imagetypes_num=%i", images.imagetypes_num);
-                }
+
+                /* We've taken ownership of image->* so NULL the original values
+                here to ensure we can't use things after free. */
+                image->type = NULL;
+                image->name = NULL;
+                image->id = NULL;
+                image->data = NULL;
+                image->data_size = 0;
             }
-            
-            /* We've taken ownership of image->* so NULL the original values
-            here to ensure we can't use things after free. */
-            image->type = NULL;
-            image->name = NULL;
-            image->id = NULL;
-            image->data = NULL;
-            image->data_size = 0;
+            extract_free(alloc, &subpage->images);
+            subpage->images_num = 0;
         }
-        extract_free(alloc, &page->images);
-        page->images_num = 0;
     }
     e = 0;
     end:
@@ -367,12 +399,11 @@ On return document->page[].images* will be NULL etc.
 static void extract_document_free(extract_alloc_t* alloc, document_t* document)
 {
     int p;
-    if (!document) {
-        return;
-    }
-    for (p=0; p<document->pages_num; ++p) {
-        extract_page_t* page = document->pages[p];
-        page_free(alloc, &page);
+    if (!document) return;
+
+    for (p=0; p<document->pages_num; ++p)
+    {
+        page_free(alloc, &document->pages[p]);
     }
     extract_free(alloc, &document->pages);
     document->pages = NULL;
@@ -451,11 +482,11 @@ static void s_document_init(document_t* document)
 }
 
 
-static int page_span_end_clean(extract_alloc_t* alloc, extract_page_t* page)
-/* Does preliminary processing of the end of the last span in a page; intended
+static int subpage_span_end_clean(extract_alloc_t* alloc, subpage_t* subpage)
+/* Does preliminary processing of the end of the last span in a subpage; intended
 to be called as we load span information.
 
-Looks at last two char_t's in last span_t of <page>, and either
+Looks at last two char_t's in last span_t of <subpage>, and either
 leaves unchanged, or removes space in last-but-one position, or moves last
 char_t into a new span_t. */
 {
@@ -468,9 +499,9 @@ char_t into a new span_t. */
     double err_x;
     double err_y;
     point_t dir;
-    
-    assert(page->spans_num);
-    span = page->spans[page->spans_num-1];
+
+    assert(subpage->spans_num);
+    span = subpage->spans[subpage->spans_num-1];
     assert(span->chars_num);
 
     /* Last two char_t's are char_[-2] and char_[-1]. */
@@ -547,8 +578,8 @@ char_t into a new span_t. */
                 span_string2(span)
                 );
         {
-            span_t* span2 = page_span_append(alloc, page);
-            if (!span2) goto end;
+            span_t* span2;
+            if (subpage_span_append_new(alloc, subpage, &span2)) goto end;
             *span2 = *span;
             if (extract_strdup(alloc, span->font_name, &span2->font_name)) goto end;
             span2->chars_num = 1;
@@ -567,42 +598,44 @@ char_t into a new span_t. */
 struct extract_t
 {
     extract_alloc_t*    alloc;
-    
+
+    int                 layout_analysis;
+
     document_t          document;
-    
+
     int                 num_spans_split;
-    /* Number of extra spans from page_span_end_clean(). */
-    
+    /* Number of extra spans from subpage_span_end_clean(). */
+
     int                 num_spans_autosplit;
     /* Number of extra spans from autosplit=1. */
-    
+
     double              span_offset_x;
     double              span_offset_y;
     /* Only used if autosplit is non-zero. */
-    
+
     int                 image_n;
     /* Used to generate unique ids for images. */
-    
+
     /* List of strings that are the generated docx content for each page. When
     zip_* can handle appending of data, we will be able to remove this list. */
     extract_astring_t*  contentss;
     int                 contentss_num;
-    
+
     images_t            images;
-    
+
     extract_format_t    format;
     extract_odt_styles_t odt_styles;
-    
+
     char*               tables_csv_format;
     int                 tables_csv_i;
-    
+
     enum
     {
         path_type_NONE,
         path_type_FILL,
         path_type_STROKE,
     } path_type;
-    
+
     union
     {
         struct
@@ -612,7 +645,7 @@ struct extract_t
             point_t     points[4];
             int         n;
         } fill;
-        
+
         struct
         {
             matrix_t    ctm;
@@ -623,7 +656,7 @@ struct extract_t
             point_t     point;
             int         point_set;
         } stroke;
-    
+
     } path;
 };
 
@@ -636,7 +669,7 @@ int extract_begin(
 {
     int e = -1;
     extract_t*  extract;
-    
+
     if (1
             && format != extract_format_ODT
             && format != extract_format_DOCX
@@ -648,27 +681,33 @@ int extract_begin(
         errno = EINVAL;
         return -1;
     }
-    
+
     /* Use a temporary extract_alloc_t to allocate space for the extract_t. */
     if (extract_malloc(alloc, &extract, sizeof(*extract))) goto end;
-    
+
     extract_bzero(extract, sizeof(*extract));
     extract->alloc = alloc;
     s_document_init(&extract->document);
-    
+
     /* Start at 10 because template document might use some low-numbered IDs.
     */
     extract->image_n = 10;
-    
+
     extract->format = format;
     extract->tables_csv_format = NULL;
     extract->tables_csv_i = 0;
-    
+
     e = 0;
-    
+
     end:
     *pextract = (e) ? NULL : extract;
     return e;
+}
+
+int extract_set_layout_analysis(extract_t *extract, int enable)
+{
+    extract->layout_analysis = enable;
+    return 0;
 }
 
 int extract_tables_csv_format(extract_t* extract, const char* path_format)
@@ -686,7 +725,7 @@ static void image_free_fn(void* handle, void* image_data)
 int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int autosplit)
 {
     int ret = -1;
-    
+
     document_t* document = &extract->document;
     char*   image_data = NULL;
     int     num_spans = 0;
@@ -716,16 +755,18 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
     </page>
     ...
 
-    We convert this into a list of extract_page_t's, each containing a list of
+    We convert this into a list of subpage_t's, each containing a list of
     span_t's, each containing a list of char_t's.
 
     While doing this, we do some within-span processing by calling
-    page_span_end_clean():
+    subpage_span_end_clean():
         Remove spurious spaces.
         Split spans in two where there seem to be large gaps between glyphs.
     */
     for(;;) {
         extract_page_t* page;
+        subpage_t* subpage;
+        rect_t mediabox = extract_rect_infinite; /* Fake mediabox */
         int e = extract_xml_pparse_next(buffer, &tag);
         if (e == 1) break; /* EOF. */
         if (e) goto end;
@@ -741,14 +782,16 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
             goto end;
         }
         outfx("loading spans for page %i...", document->pages_num);
-        if (extract_page_begin(extract)) goto end;
+        if (extract_page_begin(extract, mediabox.min.x, mediabox.min.y, mediabox.max.x, mediabox.max.y)) goto end;
         page = extract->document.pages[extract->document.pages_num-1];
         if (!page) goto end;
+        subpage = page->subpages[page->subpages_num-1];
+        if (!subpage) goto end;
 
         for(;;) {
             if (extract_xml_pparse_next(buffer, &tag)) goto end;
             if (!strcmp(tag.name, "/page")) {
-                num_spans += page->spans_num;
+                num_spans += subpage->spans_num;
                 break;
             }
             if (!strcmp(tag.name, "image")) {
@@ -804,20 +847,20 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
                         else if (cc >= 'a' && cc <= 'f') byte += 10 + cc - 'a';
                         else goto compressed_error;
                         byte *= 16;
-                        
+
                         cc = *c;
                         c += 1;
                         if (cc >= '0' && cc <= '9') byte += cc-'0';
                         else if (cc >= 'a' && cc <= 'f') byte += 10 + cc - 'a';
                         else goto compressed_error;
-                        
+
                         image_data[i] = (char) byte;
                         i += 1;
                         if (i == image_data_size) {
                             break;
                         }
                         continue;
-                        
+
                         compressed_error:
                         outf("Unrecognised hex character '%x' at offset %lli in image data", cc, (long long) (c-tag.text.chars));
                         errno = EINVAL;
@@ -893,12 +936,12 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
                         trm.e,
                         trm.f
                         )) goto end;
-                
+
                 for(;;) {
-                    double      x;
-                    double      y;
-                    double      adv;
-                    unsigned    ucs;
+                    double         x;
+                    double         y;
+                    double         adv;
+                    unsigned       ucs;
 
                     if (extract_xml_pparse_next(buffer, &tag)) {
                         outf("Failed to find <char or </span");
@@ -917,16 +960,17 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
                     if (extract_xml_tag_attributes_find_double(&tag, "y", &y)) goto end;
                     if (extract_xml_tag_attributes_find_double(&tag, "adv", &adv)) goto end;
                     if (extract_xml_tag_attributes_find_uint(&tag, "ucs", &ucs)) goto end;
-                    
-                    if (extract_add_char(extract, x, y, ucs, adv, autosplit)) goto end;
+
+                    /* BBox is bogus here. Analysis will fail. */
+                    if (extract_add_char(extract, x, y, ucs, adv, autosplit, x, y, x + adv, y + adv)) goto end;
                 }
 
                 extract_xml_tag_free(extract->alloc, &tag);
             }
         }
         if (extract_page_end(extract)) goto end;
-        outf("page=%i page->num_spans=%i",
-                document->pages_num, page->spans_num);
+        outf("page=%i subpage->num_spans=%i",
+                document->pages_num, subpage->spans_num);
     }
 
     outf("num_spans=%i num_spans_split=%i num_spans_autosplit=%i",
@@ -940,7 +984,7 @@ int extract_read_intermediate(extract_t* extract, extract_buffer_t* buffer, int 
     end:
     extract_xml_tag_free(extract->alloc, &tag);
     extract_free(extract->alloc, &image_data);
-    
+
     return ret;
 }
 
@@ -967,9 +1011,11 @@ int extract_span_begin(
 {
     int e = -1;
     extract_page_t* page;
+    subpage_t* subpage;
     span_t* span;
     assert(extract->document.pages_num > 0);
     page = extract->document.pages[extract->document.pages_num-1];
+    subpage = page->subpages[page->subpages_num-1];
     outf("extract_span_begin(): ctm=(%f %f %f %f %f %f) trm=(%f %f %f %f %f %f) font_name=%s, wmode=%i",
             ctm_a,
             ctm_b,
@@ -986,22 +1032,21 @@ int extract_span_begin(
             font_name,
             wmode
             );
-    span = page_span_append(extract->alloc, page);
-    if (!span) goto end;
+    if (subpage_span_append_new(extract->alloc, subpage, &span)) goto end;
     span->ctm.a = ctm_a;
     span->ctm.b = ctm_b;
     span->ctm.c = ctm_c;
     span->ctm.d = ctm_d;
     span->ctm.e = ctm_e;
     span->ctm.f = ctm_f;
-    
+
     span->trm.a = trm_a;
     span->trm.b = trm_b;
     span->trm.c = trm_c;
     span->trm.d = trm_d;
     span->trm.e = trm_e;
     span->trm.f = trm_f;
-    
+
     {
         const char* ff = strchr(font_name, '+');
         const char* f = (ff) ? ff+1 : font_name;
@@ -1019,25 +1064,30 @@ int extract_span_begin(
 
 
 int extract_add_char(
-        extract_t*  extract,
-        double      x,
-        double      y,
-        unsigned    ucs,
-        double      adv,
-        int         autosplit
+        extract_t*     extract,
+        double         x,
+        double         y,
+        unsigned       ucs,
+        double         adv,
+        int            autosplit,
+        double         x0,
+        double         y0,
+        double         x1,
+        double         y1
         )
 {
     int e = -1;
     char_t* char_;
     extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
-    span_t* span = page->spans[page->spans_num - 1];
-    
+    subpage_t* subpage = page->subpages[page->subpages_num-1];
+    span_t* span = subpage->spans[subpage->spans_num - 1];
+
     outf("(%f %f) ucs=% 5i=%c adv=%f", x, y, ucs, (ucs >=32 && ucs< 127) ? ucs : ' ', adv);
     /* Ignore the specified <autosplit> - there seems no advantage to not
     splitting spans on multiple lines, and not doing so causes problems with
     missing spaces in the output. */
     autosplit = 1;
-    
+
     if (span->chars_num)
     {
         char_t* char_prev = &span->chars[span->chars_num - 1];
@@ -1065,17 +1115,16 @@ int extract_add_char(
                     dir.x, dir.y, span_a
                     );
             extract->num_spans_autosplit += 1;
-            span = page_span_append(extract->alloc, page);
-            if (!span) goto end;
+            if (subpage_span_append_new(extract->alloc, subpage, &span)) goto end;
             *span = *span0;
             span->chars = NULL;
             span->chars_num = 0;
             if (extract_strdup(extract->alloc, span0->font_name, &span->font_name)) goto end;
         }
     }
-    
+
     if (0 && autosplit && y - extract->span_offset_y != 0) {
-        
+
         double e = span->ctm.e + span->ctm.a * (x - extract->span_offset_x)
                 + span->ctm.b * (y - extract->span_offset_y);
         double f = span->ctm.f + span->ctm.c * (x - extract->span_offset_x)
@@ -1094,8 +1143,7 @@ int extract_add_char(
             /* Create new span. */
             span_t* span0 = span;
             extract->num_spans_autosplit += 1;
-            span = page_span_append(extract->alloc, page);
-            if (!span) goto end;
+            if (subpage_span_append_new(extract->alloc, subpage, &span)) goto end;
             *span = *span0;
             span->chars = NULL;
             span->chars_num = 0;
@@ -1106,29 +1154,35 @@ int extract_add_char(
         outfx("autosplit: char_pre_y=%f offset_y=%f",
                 char_pre_y, offset_y);
     }
-    
+
     if (extract_span_append_c(extract->alloc, span, 0 /*c*/)) goto end;
+    /* Coverity warns, but extract_span_append_c() will have appended an item. */
+    /* coverity[var_deref_op] */
     char_ = &span->chars[ span->chars_num-1];
-    
+
     char_->pre_x = x;
     char_->pre_y = y;
 
     char_->x = span->ctm.a * char_->pre_x + span->ctm.c * char_->pre_y + span->ctm.e;
     char_->y = span->ctm.b * char_->pre_x + span->ctm.d * char_->pre_y + span->ctm.f;
-    
+
     char_->adv = adv;
     char_->ucs = ucs;
+    char_->bbox.min.x = x0;
+    char_->bbox.min.y = y0;
+    char_->bbox.max.x = x1;
+    char_->bbox.max.y = y1;
 
     {
-        int page_spans_num_old = page->spans_num;
-        if (page_span_end_clean(extract->alloc, page)) goto end;
-        span = page->spans[page->spans_num-1];  /* fixme: unnecessary. */
-        if (page->spans_num != page_spans_num_old) {
+        int subpage_spans_num_old = subpage->spans_num;
+        if (subpage_span_end_clean(extract->alloc, subpage)) goto end;
+        span = subpage->spans[subpage->spans_num-1];  /* fixme: unnecessary. */
+        if (subpage->spans_num != subpage_spans_num_old) {
             extract->num_spans_split += 1;
         }
     }
     e = 0;
-    
+
     end:
     return e;
 }
@@ -1137,13 +1191,14 @@ int extract_add_char(
 int extract_span_end(extract_t* extract)
 {
     extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
-    span_t* span = page->spans[page->spans_num - 1];
+    subpage_t* subpage = page->subpages[page->subpages_num-1];
+    span_t* span = subpage->spans[subpage->spans_num - 1];
     if (span->chars_num == 0) {
         /* Calling code called extract_span_begin() then extract_span_end()
         without any call to extract_add_char(). Our joining code assumes that
         all spans are non-empty, so we need to delete this span. */
-        extract_free(extract->alloc, &page->spans[page->spans_num - 1]);
-        page->spans_num -= 1;
+        extract_free(extract->alloc, &subpage->spans[subpage->spans_num - 1]);
+        subpage->spans_num -= 1;
     }
     return 0;
 }
@@ -1164,8 +1219,9 @@ int extract_add_image(
 {
     int e = -1;
     extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
+    subpage_t* subpage = page->subpages[page->subpages_num-1];
     image_t image_temp = {0};
-    
+
     extract->image_n += 1;
     image_temp.x = x;
     image_temp.y = y;
@@ -1178,29 +1234,29 @@ int extract_add_image(
     if (extract_strdup(extract->alloc, type, &image_temp.type)) goto end;
     if (extract_asprintf(extract->alloc, &image_temp.id, "rId%i", extract->image_n) < 0) goto end;
     if (extract_asprintf(extract->alloc, &image_temp.name, "image%i.%s", extract->image_n, image_temp.type) < 0) goto end;
-    
+
     if (extract_realloc2(
             extract->alloc,
-            &page->images,
-            sizeof(image_t) * page->images_num,
-            sizeof(image_t) * (page->images_num + 1)
+            &subpage->images,
+            sizeof(image_t) * subpage->images_num,
+            sizeof(image_t) * (subpage->images_num + 1)
             )) goto end;
-    
-    page->images[page->images_num] = image_temp;
-    page->images_num += 1;
-    outf("page->images_num=%i", page->images_num);
-    
+
+    subpage->images[subpage->images_num] = image_temp;
+    subpage->images_num += 1;
+    outf("subpage->images_num=%i", subpage->images_num);
+
     e = 0;
-    
+
     end:
-    
+
     if (e) {
         extract_free(extract->alloc, &image_temp.type);
         extract_free(extract->alloc, &image_temp.data);
         extract_free(extract->alloc, &image_temp.id);
         extract_free(extract->alloc, &image_temp.name);
     }
-    
+
     return e;
 }
 
@@ -1218,7 +1274,7 @@ static int tablelines_append(extract_alloc_t* alloc, tablelines_t* tablelines, r
     return 0;
 }
 
-static point_t transform(double x, double y, 
+static point_t transform(double x, double y,
         double ctm_a,
         double ctm_b,
         double ctm_c,
@@ -1263,6 +1319,7 @@ int extract_add_path4(
         )
 {
     extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
+    subpage_t* subpage = page->subpages[page->subpages_num-1];
     point_t points[4] = {
             transform(x0, y0, ctm_a, ctm_b, ctm_c, ctm_d, ctm_e, ctm_f),
             transform(x1, y1, ctm_a, ctm_b, ctm_c, ctm_d, ctm_e, ctm_f),
@@ -1301,20 +1358,20 @@ int extract_add_path4(
     if (points[(i+4) % 4].y != y0)  return 0;
     rect.min.y = (y1 > y0) ? y0 : y1;
     rect.max.y = (y1 > y0) ? y1 : y0;
-    
+
     dx = rect.max.x - rect.min.x;
     dy = rect.max.y - rect.min.y;
     if (dx / dy > 5)
     {
         /* Horizontal line. */
         outf("have found horizontal line: %s", extract_rect_string(&rect));
-        if (tablelines_append(extract->alloc, &page->tablelines_horizontal, &rect, color)) return -1;
+        if (tablelines_append(extract->alloc, &subpage->tablelines_horizontal, &rect, color)) return -1;
     }
     else if (dy / dx > 5)
     {
         /* Vertical line. */
         outf("have found vertical line: %s", extract_rect_string(&rect));
-        if (tablelines_append(extract->alloc, &page->tablelines_vertical, &rect, color)) return -1;
+        if (tablelines_append(extract->alloc, &subpage->tablelines_vertical, &rect, color)) return -1;
     }
     return 0;
 }
@@ -1337,6 +1394,7 @@ int extract_add_line(
         )
 {
     extract_page_t* page = extract->document.pages[extract->document.pages_num-1];
+    subpage_t* subpage = page->subpages[page->subpages_num-1];
     point_t p0 = transform(x0, y0, ctm_a, ctm_b, ctm_c, ctm_d, ctm_e, ctm_f);
     point_t p1 = transform(x1, y1, ctm_a, ctm_b, ctm_c, ctm_d, ctm_e, ctm_f);
     double width2 = width * sqrt( fabs( ctm_a * ctm_d - ctm_b * ctm_c));
@@ -1346,7 +1404,7 @@ int extract_add_line(
     rect.min.y = s_min(p0.y, p1.y);
     rect.max.x = s_max(p0.x, p1.x);
     rect.max.y = s_max(p0.y, p1.y);
-    
+
     outf("%s: width=%f ((%f %f)(%f %f)) rect=%s",
             extract_FUNCTION,
             width,
@@ -1360,49 +1418,98 @@ int extract_add_line(
     {
         rect.min.x -= width2 / 2;
         rect.max.x += width2 / 2;
-        return tablelines_append(extract->alloc, &page->tablelines_vertical, &rect, color);
+        return tablelines_append(extract->alloc, &subpage->tablelines_vertical, &rect, color);
     }
     else if (rect.min.y == rect.max.y)
     {
         rect.min.y -= width2 / 2;
         rect.max.y += width2 / 2;
-        return tablelines_append(extract->alloc, &page->tablelines_horizontal, &rect, color);
+        return tablelines_append(extract->alloc, &subpage->tablelines_horizontal, &rect, color);
     }
     return 0;
 }
 
-
-int extract_page_begin(extract_t* extract)
+int extract_subpage_alloc(extract_alloc_t* alloc, rect_t mediabox, extract_page_t* page, subpage_t** psubpage)
 {
-    /* Appends new empty extract_page_t to an extract->document. */
+    subpage_t* subpage;
+    if (extract_malloc(alloc, psubpage, sizeof(subpage_t)))
+    {
+        return -1;
+    }
+    subpage = *psubpage;
+    subpage->mediabox = mediabox;
+    subpage->spans = NULL;
+    subpage->spans_num = 0;
+    subpage->lines = NULL;
+    subpage->lines_num = 0;
+    subpage->paragraphs = NULL;
+    subpage->paragraphs_num = 0;
+    subpage->images = NULL;
+    subpage->images_num = 0;
+    subpage->tablelines_horizontal.tablelines = NULL;
+    subpage->tablelines_horizontal.tablelines_num = 0;
+    subpage->tablelines_vertical.tablelines = NULL;
+    subpage->tablelines_vertical.tablelines_num = 0;
+    subpage->tables = NULL;
+    subpage->tables_num = 0;
+
+    if (extract_realloc2(
+            alloc,
+            &page->subpages,
+            sizeof(subpage_t*) * page->subpages_num,
+            sizeof(subpage_t*) * (page->subpages_num + 1)
+            )) {
+        extract_free(alloc, psubpage);
+        return -1;
+    }
+    page->subpages[page->subpages_num] = subpage;
+    page->subpages_num += 1;
+    return 0;
+}
+
+static int extract_subpage_begin(extract_t* extract, double x0, double y0, double x1, double y1)
+/* Appends new empty subpage_t to the last page of an extract->document. */
+{
+    extract_page_t* page = extract->document.pages[extract->document.pages_num - 1];
+    subpage_t* subpage;
+    rect_t mediabox = { { x0, y0 }, { x1, y1 } };
+
+    return extract_subpage_alloc(extract->alloc, mediabox, page, &subpage);
+}
+
+int extract_page_begin(extract_t *extract, double x0, double y0, double x1, double y1)
+{
+    /* Appends new empty page_t to an extract->document. */
     extract_page_t* page;
-    if (extract_malloc(extract->alloc, &page, sizeof(extract_page_t))) return -1;
-    page->spans = NULL;
-    page->spans_num = 0;
-    page->lines = NULL;
-    page->lines_num = 0;
-    page->paragraphs = NULL;
-    page->paragraphs_num = 0;
-    page->images = NULL;
-    page->images_num = 0;
-    page->tablelines_horizontal.tablelines = NULL;
-    page->tablelines_horizontal.tablelines_num = 0;
-    page->tablelines_vertical.tablelines = NULL;
-    page->tablelines_vertical.tablelines_num = 0;
-    page->tables = NULL;
-    page->tables_num = 0;
-    
+
+    if (extract_malloc(extract->alloc, &page, sizeof(*page))) return -1;
+    page->mediabox.min.x = x0;
+    page->mediabox.min.y = y0;
+    page->mediabox.max.x = x1;
+    page->mediabox.max.y = y1;
+    page->subpages = NULL;
+    page->subpages_num = 0;
+    page->split = NULL;
+
     if (extract_realloc2(
             extract->alloc,
             &extract->document.pages,
-            sizeof(extract_page_t*) * extract->document.pages_num + 1,
-            sizeof(extract_page_t*) * (extract->document.pages_num + 1)
+            sizeof(subpage_t*) * extract->document.pages_num,
+            sizeof(subpage_t*) * (extract->document.pages_num + 1)
             )) {
         extract_free(extract->alloc, &page);
         return -1;
     }
+
     extract->document.pages[extract->document.pages_num] = page;
     extract->document.pages_num += 1;
+
+    if (extract_subpage_begin(extract, x0, y0, x1, y1)) {
+        extract->document.pages_num--;
+        page_free(extract->alloc, &extract->document.pages[extract->document.pages_num]);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -1632,9 +1739,18 @@ int extract_stroke_end(extract_t* extract)
 
 
 
-int extract_page_end(extract_t* extract)
+static int extract_subpage_end(extract_t* extract)
 {
     (void) extract;
+    return 0;
+}
+
+
+int extract_page_end(extract_t* extract)
+{
+    if (extract_subpage_end(extract))
+        return -1;
+
     return 0;
 }
 
@@ -1690,54 +1806,59 @@ static int extract_write_tables_csv(extract_t* extract)
     FILE* f = NULL;
     extract_astring_t text = {NULL, 0};
     if (!extract->tables_csv_format) return 0;
-    
+
     outf("extract_write_tables_csv(): path_format=%s", extract->tables_csv_format);
     outf("extract->document.pages_num=%i", extract->document.pages_num);
     for (p=0; p<extract->document.pages_num; ++p)
     {
+        int c;
         extract_page_t* page = extract->document.pages[p];
-        int t;
-        outf("p=%i page->tables_num=%i", p, page->tables_num);
-        for (t=0; t<page->tables_num; ++t)
+        for (c=0; c<page->subpages_num; ++c)
         {
-            table_t* table = page->tables[t];
-            int y;
-            if (f) fclose(f);
-            extract_free(extract->alloc, &path);
-            if (extract_asprintf(extract->alloc, &path, extract->tables_csv_format, extract->tables_csv_i) < 0) goto end;
-            extract->tables_csv_i += 1;
-            outf("Writing table %i to: %s", t, path);
-            outf("table->cells_num_x=%i", table->cells_num_x);
-            outf("table->cells_num_y=%i", table->cells_num_y);
-            f = fopen(path, "w");
-            if (!f) goto end;
-            for (y=0; y<table->cells_num_y; ++y)
+            subpage_t* subpage = page->subpages[c];
+            int t;
+            outf("p=%i subpage->tables_num=%i", p, subpage->tables_num);
+            for (t=0; t<subpage->tables_num; ++t)
             {
-                int x;
-                int have_output = 0;
-                for (x=0; x<table->cells_num_x; ++x)
+                table_t* table = subpage->tables[t];
+                int y;
+                extract_free(extract->alloc, &path);
+                if (extract_asprintf(extract->alloc, &path, extract->tables_csv_format, extract->tables_csv_i) < 0) goto end;
+                extract->tables_csv_i += 1;
+                outf("Writing table %i to: %s", t, path);
+                outf("table->cells_num_x=%i", table->cells_num_x);
+                outf("table->cells_num_y=%i", table->cells_num_y);
+                f = fopen(path, "w");
+                if (!f) goto end;
+                for (y=0; y<table->cells_num_y; ++y)
                 {
-                    cell_t* cell = table->cells[table->cells_num_x * y + x];
-                    extract_astring_free(extract->alloc, &text);
-                    if (y==0)
+                    int x;
+                    int have_output = 0;
+                    for (x=0; x<table->cells_num_x; ++x)
                     {
-                        outf("y=0 x=%i cell->rect=%s", x, extract_rect_string(&cell->rect));
+                        cell_t* cell = table->cells[table->cells_num_x * y + x];
+                        extract_astring_free(extract->alloc, &text);
+                        if (y==0)
+                        {
+                            outf("y=0 x=%i cell->rect=%s", x, extract_rect_string(&cell->rect));
+                        }
+                        if (have_output) fprintf(f, ",");
+                        have_output = 1;
+                        if (paragraphs_to_text_content(
+                                extract->alloc,
+                                cell->paragraphs,
+                                cell->paragraphs_num,
+                                &text
+                                )) goto end;
+                        /* Reference cvs output trims trailing spaces. */
+                        extract_astring_char_truncate_if(&text, ' ');
+                        fprintf(f, "\"%s\"", text.chars ? text.chars : "");
                     }
-                    if (have_output) fprintf(f, ",");
-                    have_output = 1;
-                    if (paragraphs_to_text_content(
-                            extract->alloc,
-                            cell->paragraphs,
-                            cell->paragraphs_num,
-                            &text
-                            )) goto end;
-                    /* Reference cvs output trims trailing spaces. */
-                    extract_astring_char_truncate_if(&text, ' ');
-                    fprintf(f, "\"%s\"", text.chars ? text.chars : "");
+                    fprintf(f, "\n");
                 }
-                fprintf(f, "\n");
+                fclose(f);
+                f = NULL;
             }
-            fclose(f);
         }
     }
     ret = 0;
@@ -1758,7 +1879,7 @@ int extract_process(
         )
 {
     int e = -1;
-    
+
     if (extract_realloc2(
             extract->alloc,
             &extract->contentss,
@@ -1767,9 +1888,9 @@ int extract_process(
             )) goto end;
     extract_astring_init(&extract->contentss[extract->contentss_num]);
     extract->contentss_num += 1;
-    
-    if (extract_document_join(extract->alloc, &extract->document)) goto end;
-    
+
+    if (extract_document_join(extract->alloc, &extract->document, extract->layout_analysis)) goto end;
+
     if (extract->format == extract_format_ODT)
     {
         if (extract_document_to_odt_content(
@@ -1809,12 +1930,17 @@ int extract_process(
         for (p=0; p<extract->document.pages_num; ++p)
         {
             extract_page_t* page = extract->document.pages[p];
-            if (paragraphs_to_text_content(
-                    extract->alloc,
-                    page->paragraphs,
-                    page->paragraphs_num,
-                    &extract->contentss[extract->contentss_num - 1]
+            int c;
+            for (c=0; c<page->subpages_num; ++c)
+            {
+                subpage_t* subpage = page->subpages[c];
+                if (paragraphs_to_text_content(
+                        extract->alloc,
+                        subpage->paragraphs,
+                        subpage->paragraphs_num,
+                        &extract->contentss[extract->contentss_num - 1]
                     )) goto end;
+            }
         }
     }
     else
@@ -1826,23 +1952,23 @@ int extract_process(
     }
 
     if (extract_document_images(extract->alloc, &extract->document, &extract->images)) goto end;
-    
+
     if (extract->tables_csv_format)
     {
         extract_write_tables_csv(extract);
     }
-    
+
     {
-        int i;
-        for (i=0; i<extract->document.pages_num; ++i) {
-            page_free(extract->alloc, &extract->document.pages[i]);
+        int p;
+        for (p=0; p<extract->document.pages_num; ++p) {
+            page_free(extract->alloc, &extract->document.pages[p]);
         }
         extract_free(extract->alloc, &extract->document.pages);
         extract->document.pages_num = 0;
     }
-    
+
     e = 0;
-    
+
     end:
     return e;
 }
@@ -1853,7 +1979,7 @@ int extract_write(extract_t* extract, extract_buffer_t* buffer)
     extract_zip_t*  zip = NULL;
     char*           text2 = NULL;
     int             i;
-    
+
     if (extract->format == extract_format_ODT)
     {
         if (extract_zip_open(buffer, &zip)) goto end;
@@ -1920,7 +2046,7 @@ int extract_write(extract_t* extract, extract_buffer_t* buffer)
             if (extract_zip_write_file(zip, image->data, image->data_size, text2)) goto end;
         }
         if (extract_zip_close(&zip)) goto end;
-        
+
     }
     else if (extract->format == extract_format_HTML)
     {
@@ -1943,9 +2069,9 @@ int extract_write(extract_t* extract, extract_buffer_t* buffer)
         errno = EINVAL;
         return 1;
     }
-    
+
     e = 0;
-    
+
     end:
     if (e)
     {
@@ -1953,7 +2079,7 @@ int extract_write(extract_t* extract, extract_buffer_t* buffer)
         extract_zip_close(&zip);
     }
     extract_free(extract->alloc, &text2);
-    
+
     return e;
 }
 
@@ -1980,7 +2106,7 @@ static int string_ends_with(const char* string, const char* end)
 }
 
 int extract_write_template(
-        extract_t*  extract, 
+        extract_t*  extract,
         const char* path_template,
         const char* path_out,
         int         preserve_dir
@@ -2019,7 +2145,7 @@ void extract_end(extract_t** pextract)
     extract_t* extract = *pextract;
     if (!extract) return;
     extract_document_free(extract->alloc, &extract->document);
-    
+
     {
         int i;
         for (i=0; i<extract->contentss_num; ++i) {

@@ -85,4 +85,34 @@ void extract_cell_free(extract_alloc_t* alloc, cell_t** pcell)
     extract_free(alloc, pcell);
 }
 
+int
+extract_split_alloc(extract_alloc_t* alloc, split_type_t type, int count, split_t** psplit)
+{
+    split_t *split;
 
+    if (extract_malloc(alloc, psplit, sizeof(*split) + (count-1) * sizeof(split_t *)))
+    {
+        return -1;
+    }
+
+    split = *psplit;
+    split->type = type;
+    split->weight = 0;
+    split->count = count;
+    memset(&split->split[0], 0, sizeof(split_t *) * count);
+
+    return 0;
+}
+
+void extract_split_free(extract_alloc_t *alloc, split_t **psplit)
+{
+    int i;
+    split_t *split = *psplit;
+
+    if (!split)
+        return;
+
+    for (i = 0; i < split->count; i++)
+        extract_split_free(alloc, &split->split[i]);
+    extract_free(alloc, psplit);
+}

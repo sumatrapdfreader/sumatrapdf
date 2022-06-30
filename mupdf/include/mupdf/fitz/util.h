@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -128,6 +128,8 @@ fz_image *fz_new_image_from_svg_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml 
 */
 void fz_write_image_as_data_uri(fz_context *ctx, fz_output *out, fz_image *image);
 void fz_write_pixmap_as_data_uri(fz_context *ctx, fz_output *out, fz_pixmap *pixmap);
+void fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image);
+void fz_append_pixmap_as_data_uri(fz_context *ctx, fz_buffer *out, fz_pixmap *pixmap);
 
 /**
 	Use text extraction to convert the input document into XHTML,

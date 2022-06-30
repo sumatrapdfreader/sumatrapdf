@@ -35,6 +35,9 @@ void extract_xml_tag_free(extract_alloc_t* alloc, extract_xml_tag_t* tag);
 int extract_xml_pparse_init(extract_alloc_t* alloc, extract_buffer_t* buffer, const char* first_line);
 /* extract_xml_pparse_*(): simple XML 'pull' parser.
 
+If <first_line> is not NULL, we require that <buffer> starts with the specified
+text. Usually one would include a final newline in <first_line>.
+
 extract_xml_pparse_init() merely consumes the initial '<'. Thereafter
 extract_xml_pparse_next() consumes the next '<' before returning the previous
 tag. */
@@ -52,6 +55,9 @@ int extract_xml_pparse_next(extract_buffer_t* buffer, extract_xml_tag_t* out);
 
 Returns 0 with *out containing next tag; or -1 with errno set if error; or +1
 with errno=ESRCH if EOF.
+
+If we return 0, we guarantee that out->name points to valid string and that
+each item in out->attributes has similarly valid name and value members.
 
 *out is initially passed to extract_xml_tag_free(), so *out must have been
 initialised, e.g. by by extract_xml_tag_init(). */

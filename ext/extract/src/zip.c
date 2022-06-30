@@ -181,7 +181,7 @@ static int s_write_compressed(
 /* Uses zlib to write raw deflate compressed data to zip->buffer. */
 {
     int ze;
-    z_stream    zstream;
+    z_stream    zstream = {0};  /* Initialise to keep Coverity quiet. */
     if (zip->errno_)    return -1;
     if (zip->eof)       return +1;
     

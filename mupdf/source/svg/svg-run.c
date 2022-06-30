@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1052,7 +1052,7 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
 	}
 	else
 	{
-		stroke->linewidth = svg_parse_number_from_style(ctx, doc, style_att, "stroke-width", 1);
+		stroke->linewidth = svg_parse_number_from_style(ctx, doc, style_att, "stroke-width", state->stroke.linewidth);
 	}
 
 	if (stroke_linecap_att)
@@ -1097,7 +1097,7 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
 	}
 	else
 	{
-		stroke->miterlimit = svg_parse_number_from_style(ctx, doc, style_att, "stroke-miterlimit", 4);
+		stroke->miterlimit = svg_parse_number_from_style(ctx, doc, style_att, "stroke-miterlimit", state->stroke.miterlimit);
 	}
 }
 

@@ -388,6 +388,7 @@ function extract_files()
   files_in_dir("ext/extract/src", {
     "alloc.*",
     "astring.*",
+    "boxer.*",
     "buffer.*",
     "document.*",
     "docx.*",
@@ -400,6 +401,7 @@ function extract_files()
     "odt_template.*",
     "odt.*",
     "outf.*",
+    "rect.*",
     "sys.*",
     "text.*",
     "xml.*",

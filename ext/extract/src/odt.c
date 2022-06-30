@@ -228,13 +228,14 @@ static int s_odt_append_empty_paragraph(extract_alloc_t* alloc, extract_astring_
 /* Append an empty paragraph to *content. */
 {
     int e = -1;
+    static char fontname[] = "OpenSans";
     content_state_t content_state = {0};
     if (s_odt_paragraph_start(alloc, content)) goto end;
     /* [This comment is from docx, haven't checked odt.] It seems like our
-    choice of font size here doesn't make any difference to the ammount of
+    choice of font size here doesn't make any difference to the amount of
     vertical space, unless we include a non-space character. Presumably
     something to do with the styles in the template document. */
-    content_state.font.name = "OpenSans";
+    content_state.font.name = fontname;
     content_state.font.size = 10;
     content_state.font.bold = 0;
     content_state.font.italic = 0;
@@ -341,7 +342,7 @@ static int s_odt_append_image(
 
 static int s_odt_output_rotated_paragraphs(
         extract_alloc_t*    alloc,
-        extract_page_t*     page,
+        subpage_t*          subpage,
         int                 paragraph_begin,
         int                 paragraph_end,
         double              rotation_rad,
@@ -390,7 +391,7 @@ static int s_odt_output_rotated_paragraphs(
     
     for (p=paragraph_begin; p<paragraph_end; ++p)
     {
-        paragraph_t* paragraph = page->paragraphs[p];
+        paragraph_t* paragraph = subpage->paragraphs[p];
         if (!e) e = s_document_to_odt_content_paragraph(alloc, content_state, paragraph, content, styles);
     }
     
@@ -489,7 +490,7 @@ static int s_odt_append_table(extract_alloc_t* alloc, table_t* table, extract_as
 
 static int s_odt_append_rotated_paragraphs(
         extract_alloc_t*    alloc,
-        extract_page_t*     page,
+        subpage_t*          subpage,
         content_state_t*    content_state,
         int*                p,
         int*                text_box_id,
@@ -498,7 +499,7 @@ static int s_odt_append_rotated_paragraphs(
         extract_astring_t*  content,
         extract_odt_styles_t* styles
         )
-/* Appends paragraphs with same rotation, starting with page->paragraphs[*p]
+/* Appends paragraphs with same rotation, starting with subpage->paragraphs[*p]
 and updates *p. */
 {
     /* Find extent of paragraphs with this same rotation. extent
@@ -508,7 +509,7 @@ and updates *p. */
     point_t extent = {0, 0};
     int p0 = *p;
     int p1;
-    paragraph_t* paragraph = page->paragraphs[*p];
+    paragraph_t* paragraph = subpage->paragraphs[*p];
 
     outf("rotate=%.2frad=%.1fdeg ctm: ef=(%f %f) abcd=(%f %f %f %f)",
             rotate, rotate * 180 / pi,
@@ -545,9 +546,9 @@ and updates *p. */
                     ctm->a, ctm->b, ctm->c, ctm->d);
         }
 
-        for (*p=p0; *p<page->paragraphs_num; ++*p)
+        for (*p=p0; *p<subpage->paragraphs_num; ++*p)
         {
-            paragraph = page->paragraphs[*p];
+            paragraph = subpage->paragraphs[*p];
             ctm = &paragraph->lines[0]->spans[0]->ctm;
             rotate = atan2(ctm->b, ctm->a);
             if (rotate != rotate0)
@@ -596,7 +597,7 @@ and updates *p. */
 
     if (s_odt_output_rotated_paragraphs(
             alloc,
-            page,
+            subpage,
             p0,
             p1,
             rotate,
@@ -617,9 +618,9 @@ and updates *p. */
 }
 
 
-int extract_document_to_odt_content(
+static int extract_page_to_odt_content(
         extract_alloc_t*    alloc,
-        document_t*         document,
+        extract_page_t*     page,
         int                 spacing,
         int                 rotation,
         int                 images,
@@ -629,12 +630,12 @@ int extract_document_to_odt_content(
 {
     int ret = -1;
     int text_box_id = 0;
-    int p;
+    int c;
 
     /* Write paragraphs into <content>. */
-    for (p=0; p<document->pages_num; ++p)
+    for (c=0; c<page->subpages_num; ++c)
     {
-        extract_page_t* page = document->pages[p];
+        subpage_t* subpage = page->subpages[c];
         int p = 0;
         int t = 0;
         content_state_t content_state;
@@ -646,15 +647,15 @@ int extract_document_to_odt_content(
         
         for(;;)
         {
-            paragraph_t* paragraph = (p == page->paragraphs_num) ? NULL : page->paragraphs[p];
-            table_t* table = (t == page->tables_num) ? NULL : page->tables[t];
+            paragraph_t* paragraph = (p == subpage->paragraphs_num) ? NULL : subpage->paragraphs[p];
+            table_t* table = (t == subpage->tables_num) ? NULL : subpage->tables[t];
             double y_paragraph;
             double y_table;
             if (!paragraph && !table)   break;
             y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
             y_table = (table) ? table->pos.y : DBL_MAX;
             
-            if (y_paragraph < y_table)
+            if (paragraph && y_paragraph < y_table)
             {
                 const matrix_t* ctm = &paragraph->lines[0]->spans[0]->ctm;
                 double rotate = atan2(ctm->b, ctm->a);
@@ -682,7 +683,7 @@ int extract_document_to_odt_content(
 
                 if (rotation && rotate != 0)
                 {
-                    if (s_odt_append_rotated_paragraphs(alloc, page, &content_state, &p, &text_box_id, ctm, rotate, content, styles)) goto end;
+                    if (s_odt_append_rotated_paragraphs(alloc, subpage, &content_state, &p, &text_box_id, ctm, rotate, content, styles)) goto end;
                 }
                 else
                 {
@@ -701,10 +702,10 @@ int extract_document_to_odt_content(
         if (images)
         {
             int i;
-            outf("page->images_num=%i", page->images_num);
-            for (i=0; i<page->images_num; ++i)
+            outf("subpage->images_num=%i", subpage->images_num);
+            for (i=0; i<subpage->images_num; ++i)
             {
-                s_odt_append_image(alloc, content, &page->images[i]);
+                s_odt_append_image(alloc, content, &subpage->images[i]);
             }
         }
     }
@@ -715,6 +716,38 @@ int extract_document_to_odt_content(
     return ret;
 }
 
+int extract_document_to_odt_content(
+        extract_alloc_t*    alloc,
+        document_t*         document,
+        int                 spacing,
+        int                 rotation,
+        int                 images,
+        extract_astring_t*  content,
+        extract_odt_styles_t* styles
+        )
+{
+    int p;
+    int ret = 0;
+
+    /* Write paragraphs into <content>. */
+    for (p=0; p<document->pages_num; ++p)
+    {
+        extract_page_t* page = document->pages[p];
+
+        ret = extract_page_to_odt_content(
+                  alloc,
+                  page,
+                  spacing,
+                  rotation,
+                  images,
+                  content,
+                  styles
+            );
+        if (ret) break;
+    };
+
+    return ret;
+}
 
 #if 0
 static int s_find_mid(const char* text, const char* begin, const char* end, const char** o_begin, const char** o_end)

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -253,6 +253,7 @@ void fz_truncate_output(fz_context *, fz_output *);
 	size: Size of data to write in bytes.
 */
 void fz_write_data(fz_context *ctx, fz_output *out, const void *data, size_t size);
+void fz_write_buffer(fz_context *ctx, fz_output *out, fz_buffer *data);
 
 /**
 	Write a string. Does not write zero terminator.

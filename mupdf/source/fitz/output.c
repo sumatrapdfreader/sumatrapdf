@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -494,6 +494,12 @@ fz_write_data(fz_context *ctx, fz_output *out, const void *data_, size_t size)
 }
 
 void
+fz_write_buffer(fz_context *ctx, fz_output *out, fz_buffer *buf)
+{
+	fz_write_data(ctx, out, buf->data, buf->len);
+}
+
+void
 fz_write_string(fz_context *ctx, fz_output *out, const char *s)
 {
 	fz_write_data(ctx, out, s, strlen(s));
@@ -637,6 +643,51 @@ fz_write_base64_buffer(fz_context *ctx, fz_output *out, fz_buffer *buf, int newl
 	size_t size = fz_buffer_storage(ctx, buf, &data);
 	fz_write_base64(ctx, out, data, size, newline);
 }
+
+void
+fz_append_base64(fz_context *ctx, fz_buffer *out, const unsigned char *data, size_t size, int newline)
+{
+	static const char set[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	size_t i;
+	for (i = 0; i + 3 <= size; i += 3)
+	{
+		int c = data[i];
+		int d = data[i+1];
+		int e = data[i+2];
+		if (newline && (i & 15) == 0)
+			fz_append_byte(ctx, out, '\n');
+		fz_append_byte(ctx, out, set[c>>2]);
+		fz_append_byte(ctx, out, set[((c&3)<<4)|(d>>4)]);
+		fz_append_byte(ctx, out, set[((d&15)<<2)|(e>>6)]);
+		fz_append_byte(ctx, out, set[e&63]);
+	}
+	if (size - i == 2)
+	{
+		int c = data[i];
+		int d = data[i+1];
+		fz_append_byte(ctx, out, set[c>>2]);
+		fz_append_byte(ctx, out, set[((c&3)<<4)|(d>>4)]);
+		fz_append_byte(ctx, out, set[((d&15)<<2)]);
+		fz_append_byte(ctx, out, '=');
+	}
+	else if (size - i == 1)
+	{
+		int c = data[i];
+		fz_append_byte(ctx, out, set[c>>2]);
+		fz_append_byte(ctx, out, set[((c&3)<<4)]);
+		fz_append_byte(ctx, out, '=');
+		fz_append_byte(ctx, out, '=');
+	}
+}
+
+void
+fz_append_base64_buffer(fz_context *ctx, fz_buffer *out, fz_buffer *buf, int newline)
+{
+	unsigned char *data;
+	size_t size = fz_buffer_storage(ctx, buf, &data);
+	fz_append_base64(ctx, out, data, size, newline);
+}
+
 
 void
 fz_save_buffer(fz_context *ctx, fz_buffer *buf, const char *filename)
