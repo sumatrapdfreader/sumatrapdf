@@ -836,6 +836,7 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 	epub_document *doc = NULL;
 
 	fz_var(doc);
+	fz_var(zip);
 
 	fz_try(ctx)
 	{

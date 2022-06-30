@@ -565,6 +565,8 @@ static int drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_ma
 
 	*bit = NULL;
 
+	fz_var(dev);
+
 	fz_try(ctx)
 	{
 		fz_clear_pixmap_with_value(ctx, pix, 255);

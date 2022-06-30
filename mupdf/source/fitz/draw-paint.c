@@ -3020,7 +3020,7 @@ fz_paint_glyph(const unsigned char * FZ_RESTRICT colorbv, fz_pixmap * FZ_RESTRIC
 	{
 		assert(dst->alpha && dst->n == 1 && dst->colorspace == NULL && !fz_overprint_required(eop));
 		if (colorbv == NULL || colorbv[0] == 255)
-		fz_paint_glyph_mask(dst->stride, dp, dst->alpha, glyph, w, h, skip_x, skip_y);
+			fz_paint_glyph_mask(dst->stride, dp, dst->alpha, glyph, w, h, skip_x, skip_y);
 		else
 			fz_paint_glyph_mask_alpha(dst->stride, dp, dst->alpha, glyph, w, h, skip_x, skip_y, colorbv[0]);
 	}

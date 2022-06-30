@@ -531,11 +531,9 @@ svg_add_arc(fz_context *ctx, fz_path *path,
 	fz_lineto(ctx, path, point_x, point_y);
 }
 
-static fz_path *
-svg_parse_path_data(fz_context *ctx, svg_document *doc, const char *str)
+static void
+svg_parse_path_data(fz_context *ctx, fz_path *path, const char *str)
 {
-	fz_path *path;
-
 	fz_point p;
 	float x1, y1, x2, y2;
 
@@ -552,293 +550,298 @@ svg_parse_path_data(fz_context *ctx, svg_document *doc, const char *str)
 	cmd = 0;
 	nargs = 0;
 
-	path = fz_new_path(ctx);
-	fz_try(ctx)
+	fz_moveto(ctx, path, 0.0f, 0.0f); /* for the case of opening 'm' */
+
+	while (*str)
 	{
-		fz_moveto(ctx, path, 0.0f, 0.0f); /* for the case of opening 'm' */
+		while (svg_is_whitespace_or_comma(*str))
+			str ++;
 
-		while (*str)
+		/* arcto flag arguments are 1-character 0 or 1 */
+		if ((cmd == 'a' || cmd == 'A') && (nargs == 3 || nargs == 4) && (*str == '0' || *str == '1'))
 		{
-			while (svg_is_whitespace_or_comma(*str))
-				str ++;
-
-			if (svg_is_digit(*str))
+			args[nargs++] = *str++ - '0';
+		}
+		else if (svg_is_digit(*str))
+		{
+			str = svg_lex_number(&number, str);
+			if (nargs == nelem(args))
 			{
-				str = svg_lex_number(&number, str);
-				if (nargs == nelem(args))
-					fz_throw(ctx, FZ_ERROR_GENERIC, "stack overflow in path data");
-				args[nargs++] = number;
+				fz_warn(ctx, "stack overflow in path data");
+				return;
 			}
-			else if (svg_is_alpha(*str))
+			args[nargs++] = number;
+		}
+		else if (svg_is_alpha(*str))
+		{
+			if (nargs != 0)
 			{
-				if (nargs != 0)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error in path data (wrong number of parameters to '%c')", cmd);
-				cmd = *str++;
+				fz_warn(ctx, "syntax error in path data (wrong number of parameters to '%c')", cmd);
+				return;
 			}
-			else if (*str == 0)
+			cmd = *str++;
+		}
+		else if (*str == 0)
+		{
+			return;
+		}
+		else
+		{
+			fz_warn(ctx, "syntax error in path data: '%c'", *str);
+			return;
+		}
+
+		if (reset_smooth)
+		{
+			smooth_x = 0.0f;
+			smooth_y = 0.0f;
+		}
+
+		reset_smooth = 1;
+
+		switch (cmd)
+		{
+		case 'M':
+			if (nargs == 2)
 			{
-				break;
+				fz_moveto(ctx, path, args[0], args[1]);
+				nargs = 0;
+				cmd = 'L'; /* implicit lineto after */
 			}
-			else
+			break;
+
+		case 'm':
+			if (nargs == 2)
 			{
-				fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error in path data: '%c'", *str);
+				p = fz_currentpoint(ctx, path);
+				fz_moveto(ctx, path, p.x + args[0], p.y + args[1]);
+				nargs = 0;
+				cmd = 'l'; /* implicit lineto after */
 			}
+			break;
 
-			if (reset_smooth)
+		case 'Z':
+		case 'z':
+			if (nargs == 0)
 			{
-				smooth_x = 0.0f;
-				smooth_y = 0.0f;
+				fz_closepath(ctx, path);
 			}
+			break;
 
-			reset_smooth = 1;
-
-			switch (cmd)
+		case 'L':
+			if (nargs == 2)
 			{
-			case 'M':
-				if (nargs == 2)
-				{
-					fz_moveto(ctx, path, args[0], args[1]);
-					nargs = 0;
-					cmd = 'L'; /* implicit lineto after */
-				}
-				break;
-
-			case 'm':
-				if (nargs == 2)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_moveto(ctx, path, p.x + args[0], p.y + args[1]);
-					nargs = 0;
-					cmd = 'l'; /* implicit lineto after */
-				}
-				break;
-
-			case 'Z':
-			case 'z':
-				if (nargs == 0)
-				{
-					fz_closepath(ctx, path);
-				}
-				break;
-
-			case 'L':
-				if (nargs == 2)
-				{
-					fz_lineto(ctx, path, args[0], args[1]);
-					nargs = 0;
-				}
-				break;
-
-			case 'l':
-				if (nargs == 2)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_lineto(ctx, path, p.x + args[0], p.y + args[1]);
-					nargs = 0;
-				}
-				break;
-
-			case 'H':
-				if (nargs == 1)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_lineto(ctx, path, args[0], p.y);
-					nargs = 0;
-				}
-				break;
-
-			case 'h':
-				if (nargs == 1)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_lineto(ctx, path, p.x + args[0], p.y);
-					nargs = 0;
-				}
-				break;
-
-			case 'V':
-				if (nargs == 1)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_lineto(ctx, path, p.x, args[0]);
-					nargs = 0;
-				}
-				break;
-
-			case 'v':
-				if (nargs == 1)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_lineto(ctx, path, p.x, p.y + args[0]);
-					nargs = 0;
-				}
-				break;
-
-			case 'C':
-				reset_smooth = 0;
-				if (nargs == 6)
-				{
-					fz_curveto(ctx, path, args[0], args[1], args[2], args[3], args[4], args[5]);
-					smooth_x = args[4] - args[2];
-					smooth_y = args[5] - args[3];
-					nargs = 0;
-				}
-				break;
-
-			case 'c':
-				reset_smooth = 0;
-				if (nargs == 6)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_curveto(ctx, path,
-						p.x + args[0], p.y + args[1],
-						p.x + args[2], p.y + args[3],
-						p.x + args[4], p.y + args[5]);
-					smooth_x = args[4] - args[2];
-					smooth_y = args[5] - args[3];
-					nargs = 0;
-				}
-				break;
-
-			case 'S':
-				reset_smooth = 0;
-				if (nargs == 4)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_curveto(ctx, path,
-							p.x + smooth_x, p.y + smooth_y,
-							args[0], args[1],
-							args[2], args[3]);
-					smooth_x = args[2] - args[0];
-					smooth_y = args[3] - args[1];
-					nargs = 0;
-				}
-				break;
-
-			case 's':
-				reset_smooth = 0;
-				if (nargs == 4)
-				{
-					p = fz_currentpoint(ctx, path);
-					fz_curveto(ctx, path,
-							p.x + smooth_x, p.y + smooth_y,
-							p.x + args[0], p.y + args[1],
-							p.x + args[2], p.y + args[3]);
-					smooth_x = args[2] - args[0];
-					smooth_y = args[3] - args[1];
-					nargs = 0;
-				}
-				break;
-
-			case 'Q':
-				reset_smooth = 0;
-				if (nargs == 4)
-				{
-					p = fz_currentpoint(ctx, path);
-					x1 = args[0];
-					y1 = args[1];
-					x2 = args[2];
-					y2 = args[3];
-					fz_curveto(ctx, path,
-							(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
-							(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
-							x2, y2);
-					smooth_x = x2 - x1;
-					smooth_y = y2 - y1;
-					nargs = 0;
-				}
-				break;
-
-			case 'q':
-				reset_smooth = 0;
-				if (nargs == 4)
-				{
-					p = fz_currentpoint(ctx, path);
-					x1 = args[0] + p.x;
-					y1 = args[1] + p.y;
-					x2 = args[2] + p.x;
-					y2 = args[3] + p.y;
-					fz_curveto(ctx, path,
-							(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
-							(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
-							x2, y2);
-					smooth_x = x2 - x1;
-					smooth_y = y2 - y1;
-					nargs = 0;
-				}
-				break;
-
-			case 'T':
-				reset_smooth = 0;
-				if (nargs == 2)
-				{
-					p = fz_currentpoint(ctx, path);
-					x1 = p.x + smooth_x;
-					y1 = p.y + smooth_y;
-					x2 = args[0];
-					y2 = args[1];
-					fz_curveto(ctx, path,
-							(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
-							(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
-							x2, y2);
-					smooth_x = x2 - x1;
-					smooth_y = y2 - y1;
-					nargs = 0;
-				}
-				break;
-
-			case 't':
-				reset_smooth = 0;
-				if (nargs == 2)
-				{
-					p = fz_currentpoint(ctx, path);
-					x1 = p.x + smooth_x;
-					y1 = p.y + smooth_y;
-					x2 = args[0] + p.x;
-					y2 = args[1] + p.y;
-					fz_curveto(ctx, path,
-							(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
-							(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
-							x2, y2);
-					smooth_x = x2 - x1;
-					smooth_y = y2 - y1;
-					nargs = 0;
-				}
-				break;
-
-			case 'A':
-				if (nargs == 7)
-				{
-					svg_add_arc(ctx, path, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
-					nargs = 0;
-				}
-				break;
-			case 'a':
-				if (nargs == 7)
-				{
-					p = fz_currentpoint(ctx, path);
-					svg_add_arc(ctx, path, args[0], args[1], args[2], args[3], args[4], args[5] + p.x, args[6] + p.y);
-					nargs = 0;
-				}
-				break;
-
-			case 0:
-				if (nargs != 0)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "path data must begin with a command");
-				break;
-
-			default:
-				fz_throw(ctx, FZ_ERROR_GENERIC, "unrecognized command in path data: '%c'", cmd);
+				fz_lineto(ctx, path, args[0], args[1]);
+				nargs = 0;
 			}
+			break;
+
+		case 'l':
+			if (nargs == 2)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_lineto(ctx, path, p.x + args[0], p.y + args[1]);
+				nargs = 0;
+			}
+			break;
+
+		case 'H':
+			if (nargs == 1)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_lineto(ctx, path, args[0], p.y);
+				nargs = 0;
+			}
+			break;
+
+		case 'h':
+			if (nargs == 1)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_lineto(ctx, path, p.x + args[0], p.y);
+				nargs = 0;
+			}
+			break;
+
+		case 'V':
+			if (nargs == 1)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_lineto(ctx, path, p.x, args[0]);
+				nargs = 0;
+			}
+			break;
+
+		case 'v':
+			if (nargs == 1)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_lineto(ctx, path, p.x, p.y + args[0]);
+				nargs = 0;
+			}
+			break;
+
+		case 'C':
+			reset_smooth = 0;
+			if (nargs == 6)
+			{
+				fz_curveto(ctx, path, args[0], args[1], args[2], args[3], args[4], args[5]);
+				smooth_x = args[4] - args[2];
+				smooth_y = args[5] - args[3];
+				nargs = 0;
+			}
+			break;
+
+		case 'c':
+			reset_smooth = 0;
+			if (nargs == 6)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_curveto(ctx, path,
+					p.x + args[0], p.y + args[1],
+					p.x + args[2], p.y + args[3],
+					p.x + args[4], p.y + args[5]);
+				smooth_x = args[4] - args[2];
+				smooth_y = args[5] - args[3];
+				nargs = 0;
+			}
+			break;
+
+		case 'S':
+			reset_smooth = 0;
+			if (nargs == 4)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_curveto(ctx, path,
+					p.x + smooth_x, p.y + smooth_y,
+					args[0], args[1],
+					args[2], args[3]);
+				smooth_x = args[2] - args[0];
+				smooth_y = args[3] - args[1];
+				nargs = 0;
+			}
+			break;
+
+		case 's':
+			reset_smooth = 0;
+			if (nargs == 4)
+			{
+				p = fz_currentpoint(ctx, path);
+				fz_curveto(ctx, path,
+					p.x + smooth_x, p.y + smooth_y,
+					p.x + args[0], p.y + args[1],
+					p.x + args[2], p.y + args[3]);
+				smooth_x = args[2] - args[0];
+				smooth_y = args[3] - args[1];
+				nargs = 0;
+			}
+			break;
+
+		case 'Q':
+			reset_smooth = 0;
+			if (nargs == 4)
+			{
+				p = fz_currentpoint(ctx, path);
+				x1 = args[0];
+				y1 = args[1];
+				x2 = args[2];
+				y2 = args[3];
+				fz_curveto(ctx, path,
+					(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
+					(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
+					x2, y2);
+				smooth_x = x2 - x1;
+				smooth_y = y2 - y1;
+				nargs = 0;
+			}
+			break;
+
+		case 'q':
+			reset_smooth = 0;
+			if (nargs == 4)
+			{
+				p = fz_currentpoint(ctx, path);
+				x1 = args[0] + p.x;
+				y1 = args[1] + p.y;
+				x2 = args[2] + p.x;
+				y2 = args[3] + p.y;
+				fz_curveto(ctx, path,
+					(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
+					(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
+					x2, y2);
+				smooth_x = x2 - x1;
+				smooth_y = y2 - y1;
+				nargs = 0;
+			}
+			break;
+
+		case 'T':
+			reset_smooth = 0;
+			if (nargs == 2)
+			{
+				p = fz_currentpoint(ctx, path);
+				x1 = p.x + smooth_x;
+				y1 = p.y + smooth_y;
+				x2 = args[0];
+				y2 = args[1];
+				fz_curveto(ctx, path,
+					(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
+					(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
+					x2, y2);
+				smooth_x = x2 - x1;
+				smooth_y = y2 - y1;
+				nargs = 0;
+			}
+			break;
+
+		case 't':
+			reset_smooth = 0;
+			if (nargs == 2)
+			{
+				p = fz_currentpoint(ctx, path);
+				x1 = p.x + smooth_x;
+				y1 = p.y + smooth_y;
+				x2 = args[0] + p.x;
+				y2 = args[1] + p.y;
+				fz_curveto(ctx, path,
+					(p.x + 2 * x1) / 3, (p.y + 2 * y1) / 3,
+					(x2 + 2 * x1) / 3, (y2 + 2 * y1) / 3,
+					x2, y2);
+				smooth_x = x2 - x1;
+				smooth_y = y2 - y1;
+				nargs = 0;
+			}
+			break;
+
+		case 'A':
+			if (nargs == 7)
+			{
+				svg_add_arc(ctx, path, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+				nargs = 0;
+			}
+			break;
+		case 'a':
+			if (nargs == 7)
+			{
+				p = fz_currentpoint(ctx, path);
+				svg_add_arc(ctx, path, args[0], args[1], args[2], args[3], args[4], args[5] + p.x, args[6] + p.y);
+				nargs = 0;
+			}
+			break;
+
+		case 0:
+			if (nargs != 0)
+			{
+				fz_warn(ctx, "path data must begin with a command");
+				return;
+			}
+			break;
+
+		default:
+			fz_warn(ctx, "unrecognized command in path data: '%c'", cmd);
+			return;
 		}
 	}
-	fz_catch(ctx)
-	{
-		fz_drop_path(ctx, path);
-		fz_rethrow(ctx);
-	}
-
-	return path;
 }
 
 static void
@@ -853,9 +856,12 @@ svg_run_path(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *node, c
 
 	if (d_att)
 	{
-		fz_path *path = svg_parse_path_data(ctx, doc, d_att);
+		fz_path *path = fz_new_path(ctx);
 		fz_try(ctx)
+		{
+			svg_parse_path_data(ctx, path, d_att);
 			svg_draw_path(ctx, dev, doc, path, &local_state);
+		}
 		fz_always(ctx)
 			fz_drop_path(ctx, path);
 		fz_catch(ctx)

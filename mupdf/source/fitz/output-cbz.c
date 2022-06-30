@@ -95,6 +95,7 @@ fz_new_cbz_writer_with_output(fz_context *ctx, fz_output *out, const char *optio
 	fz_cbz_writer *wri = NULL;
 
 	fz_var(wri);
+	fz_var(out);
 
 	fz_try(ctx)
 	{

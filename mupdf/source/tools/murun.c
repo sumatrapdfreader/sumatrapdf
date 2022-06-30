@@ -4432,10 +4432,10 @@ static void ffi_HTMLStory_place(js_State *J)
 	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
 	fz_rect rect = ffi_torect(J, 1);
 	fz_rect filled = fz_empty_rect;
-	int done;
+	int more;
 
 	fz_try(ctx)
-		done = fz_place_story(ctx, story, rect, &filled);
+		more = fz_place_story(ctx, story, rect, &filled);
 	fz_catch(ctx)
 		rethrow(J);
 
@@ -4444,8 +4444,8 @@ static void ffi_HTMLStory_place(js_State *J)
 	ffi_pushrect(J, filled);
 	js_setproperty(J, -2, "filled");
 
-	js_pushboolean(J, !!done);
-	js_setproperty(J, -2, "done");
+	js_pushboolean(J, !!more);
+	js_setproperty(J, -2, "more");
 }
 
 static void ffi_HTMLStory_draw(js_State *J)

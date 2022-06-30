@@ -94,7 +94,7 @@ start_def(fz_context *ctx, svg_device *sdev, int need_tag)
 			fz_append_string(ctx, sdev->defs, "<defs>\n");
 	}
 	else
-		{
+	{
 		sdev->out = sdev->defs;
 	}
 	sdev->in_defs++;

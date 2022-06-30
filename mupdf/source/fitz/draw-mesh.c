@@ -291,6 +291,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 	fz_var(conv);
 	fz_var(recache);
 	fz_var(recache2);
+	fz_var(cc);
 
 	if (colorspace == NULL)
 		colorspace = shade->colorspace;

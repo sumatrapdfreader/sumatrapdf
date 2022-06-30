@@ -2894,6 +2894,8 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 	char *buf = NULL, *ptr;
 	int s;
 	fz_stream *stm = NULL;
+
+	fz_var(byte_range);
 	fz_var(stm);
 	fz_var(buf);
 
