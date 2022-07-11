@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4462c51dafdfb3679e9ba80165630ad942a16753
+b60b8cd51c2dda7b86f6e74eb0fa7ece91a40763
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -74,6 +74,7 @@ vn:Giới thiệu
 :&Actual Size
 bg:&Реална големина
 br:&Tamanho real
+by:&Фактычны памер
 cn:实际大小(&A)
 co:&Dimensione attuale
 cy:&Maint Gwirioneddol
@@ -229,6 +230,7 @@ vn:Tất cả các trang được chọn
 :&Back
 bg:&Назад
 br:&Voltar
+by:&Назад
 cn:上一视图(B)
 co:&Precedente
 cy:&Nôl
@@ -251,6 +253,7 @@ vn:Quay Lại
 :&Book View
 bg:&Като Книга
 br:&Ver como livro
+by:У выглядзе &кнігі
 cn:书籍视图(&B)
 co:Cum’è un &libru
 cy:Golwg &Llyfr
@@ -273,6 +276,7 @@ vn:Đọc Sách
 am:Չեղարկել
 bg:&Отказ
 br:&Cancelar
+by:&Адмяніць
 ca-xv:&Cancel·la
 ca:&Cancel·la
 cn:取消
@@ -341,6 +345,7 @@ vn:&Bổ Sung
 :&Close
 bg:&Затвори
 br:&Fechar
+by:&Закрыць
 cn:关闭(&C)
 co:&Chjode
 cy:&Cau
@@ -1522,7 +1527,7 @@ bs:&Otvori dokument
 by:&Адкрыць Дакумент
 ca-xv:&Obri el document
 ca:&Obre un document
-cn:打开文件(&O)
+cn:打开文档(&O)
 co:&Apre u ducumentu
 cy:Agor &Dogfen
 cz:&Otevřít dokument
@@ -1797,7 +1802,7 @@ bs:&Pričvrsti dokument
 by:&Замацаваць Дакумент
 ca-xv:&Marca el document
 ca:&Marca el document
-cn:固定文件(&P)
+cn:固定文档(&P)
 co:&Spirlà u ducumentu
 cy:&Pinio Dogfen
 cz:&Připnout dokument
@@ -2006,7 +2011,7 @@ bs:&Zapamti lozinku za ovaj dokument
 by:&Запомніць пароль для гэтага дакументу
 ca-xv:&Recorda la contrasenya per a aquest document
 ca:&Recorda la contrasenya per a aquest document
-cn:记住本文件的密码(&R)
+cn:记住本文档的密码(&R)
 co:Arricurdassi di a &parolla d’intesa per stu ducumentu
 cy:&Cofio cyfrinair y ddogfen
 cz:P&amatovat si heslo tohoto dokumentu
@@ -2069,7 +2074,7 @@ bs:&Upamti ove postavke za svaki pojedini dokument
 by:Запомніць гэтыя параметры для &кожнага дакумента
 ca-xv:Conserva estes &preferències per a cada document
 ca:Recorda aquestes &preferències per a cada document
-cn:为每一个文件记住这些设置(&R)
+cn:为每一个文档记住这些设置(&R)
 co:Arricurdassi di ste &preferenze per ogni ducumentu
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 cz:&Pamatovat si tato nastavení pro každý dokument
@@ -2475,7 +2480,7 @@ dk:&Gennemstreg
 el:Εξάλειψη
 es:&Tachar
 et:&Tõmba maha
-fr:Rayer
+fr:&Rayer
 hr:Za&crtati
 hu:Kihúzás
 id:Coret
@@ -3585,7 +3590,7 @@ bs:Svi podržani dokumenti
 by:Усе падтрымліваемыя дакументы
 ca-xv:Tots els documents suportats
 ca:Tots els documents compatibles
-cn:所有支持的文件
+cn:所有支持的文档
 co:Tutti i ducumenti accettati
 cy:Pob dogfen sy'n cael ei chynnal
 cz:Všechny podporované dokumenty
@@ -3648,6 +3653,7 @@ az:Qeydlər
 bg:Обяснения
 bn:ব্যখা
 br:Anotações
+by:Анатацыі
 ca-xv:Anotacions
 ca:Anotacions
 cn:标注
@@ -4035,6 +4041,7 @@ az:Müəllif: %s
 bg:Автор: %s
 bn:গ্রন্থকার: %s
 br:Autor: %s
+by:Аўтар: %s
 cn:作者: %s
 co:Autore : %s
 cy:Awdur: %s
@@ -4203,6 +4210,7 @@ am:Խորքի գույնը.
 bg:Цвят на фона
 bn:পটভূমির রং:
 br:Cor de fundo
+by:Колер фону
 ca-xv:Color de fons
 ca:Color de fons
 cn:背景色:
@@ -5083,6 +5091,7 @@ vn:Kiểm tra cập nhật
 am:Արդիացումների ստուգում...
 bg:Проверявам за обновления
 br:Verificando por atualizações...
+by:Праверка абнаўлення…
 ca-xv:S'està comprovant si hi ha actualitzacions...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
@@ -5229,6 +5238,8 @@ uz:Yopish
 vn:Đóng lại
 :Close Other Tabs
 bg:Затвори другите отметки
+br:Fechar outras abas
+by:Закрыць іншыя ўкладкі
 cn:关闭其他标签页
 co:Chjode d’altre unghjette
 de:Andere Tabs schließen
@@ -5238,6 +5249,7 @@ nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
 tr:Diğer Sekmeleri Kapat
 :Close Tabs To The Right
+br:Fechar abas à direita
 cn:关闭右侧标签页
 co:Chjode l’unghjette versu a diritta
 de:Tabs rechts schließen
@@ -5997,6 +6009,7 @@ uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
 br:Copiar para área de transferência
+by:Скапіраваць у буфер абмену
 cn:复制到剪贴板
 co:Cupià in u preme’papei
 cy:Copïo i'r Clipfwrdd
@@ -7216,6 +7229,7 @@ az:Tarix:
 bg:Дата:
 bn:তারিখ:
 br:Data:
+by:Дата:
 cn:日期:
 co:Data :
 cy:Dyddiad:
@@ -7985,7 +7999,7 @@ bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF doku
 by:Увядзіце каманду для выкліку пры падвойнай пстрычцы па дакуменце PDF:
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
-cn:请输入您双击 PDF 文件后调用的命令行:
+cn:请输入您双击 PDF 文档后调用的命令行:
 co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
@@ -11293,6 +11307,7 @@ tr:Satır Başlangıcı:
 uk:Початок рядка: 
 vn:Dòng Bắt Đầu:
 :Loading %s ...
+br:Carregando %s ...
 cn:载入 %s ...
 co:Caricamentu di %s …
 de:Lädt %s ..,
@@ -12415,6 +12430,7 @@ uk:Відкрити у PDF-XChange
 uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
 :Open Attachment
+br:Abrir Anexo
 cn:打开附件
 de:Anhang öffnen
 fr:Ouvrir la pièce jointe
@@ -12472,7 +12488,7 @@ bs:Otvori dokument...
 by:Адкрыць дакумент...
 ca-xv:Obri un document...
 ca:Obre un document...
-cn:打开文件...
+cn:打开文档...
 co:Apre un ducumentu…
 cy:Agor dogfen...
 cz:Otevřít dokument...
@@ -12923,7 +12939,7 @@ bs:PDF dokument
 by:Дакумент PDF
 ca-xv:Document PDF
 ca:Document PDF
-cn:PDF 文件
+cn:PDF 文档
 co:Ducumentu PDF
 cy:Dogfen PDF
 cz:Dokument PDF
@@ -13183,7 +13199,7 @@ bs:PDF dokumenti
 by:PDF-дакументы
 ca-xv:Documents PDF
 ca:Documents PDF
-cn:PDF 文件
+cn:PDF 文档
 co:Ducumenti PDF
 cy:Dogfennau PDF
 cz:Dokumenty PDF
@@ -13791,6 +13807,7 @@ el:Πολυγραμμή
 es:Polilínea
 et:Murdjoon
 eu:Poli lerroa
+fr:Ligne polygonale
 ga:Líne iolrach
 gl:Liña polivinílica
 hr:Poli-linija
@@ -15040,6 +15057,7 @@ tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
 vn:Lưu Chú Thích và thoát PDF
 :Save Attachment...
+br:Salvar Anexo...
 cn:保存附件...
 de:Anhang speichern…
 fr:Enregistrer la pièce jointe...
@@ -16240,7 +16258,7 @@ et:Näita sageli loetud dokumente
 eu:Erakutsi Sarri irakurriak
 fa:نشان دادن آخرین چیزهایی که خوانده‌اید
 fi:Näytä usein luetut
-fr:Montrer les documents fréquemment lus
+fr:Montrer les documents lus fréquemment
 ga:Taispeáin cinn léite go minic
 gl:Amosar lidos decote
 he:הצג 'נקרא תכופות'
@@ -16324,6 +16342,7 @@ tw:打開所在資料夾(&F)
 uk:Показати в п&апці
 vn:Hiển thị trong &thư mục
 :Show in folder
+br:Mostrar na pasta
 cn:在文件夹中显示
 co:Affissà in u cartulare
 de:Im Ordner anzeigen
@@ -17731,7 +17750,7 @@ bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda ne�
 by:Гэты дакумент выкарыстоўвае магчымасці, якія не падтрымліваюцца (%s) і можа няправільна адлюстроўвацца
 ca-xv:Aquest document utilitza característiques no suportades (%s) i pot no mostrar-se correctament
 ca:Aquest document utilitza característiques no compatibles (%s) i potser no es pot mostrar correctament
-cn:该文件使用了不支持的特性 (%s)，可能无法正确渲染。
+cn:该文档使用了不支持的特性 (%s)，可能无法正确渲染。
 co:Stu ducumentu impiegheghja funzioni micca accettate (%s) è u risultatu puderia ùn esse cusì bè
 cy:Mae'r ddogfen hon yn defnyddio nodweddion sydd ddim yn cael eu cynnal (%s) ac efallai na fyddant yn rendro'n gywir
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
@@ -18673,7 +18692,7 @@ dk:Du installerer 32-bit SumatraPDF på 64-bit operativsystem. \nVil du hente \n
 el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σύστημα 64-bit.\nΘέλετε να κατεβάσετε\nτην έκδοση 64-bit;
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 et:Paigaldad 64-bitisele operatsioonisüsteemile 32-bitist SumatraPDF-i versiooni.\nKas soovid alla laadida\nhoopis 64-bitise versiooni?
-fr:Installation de SumatraPDF 32-bits sur un  système 64-bits. \nVoulez-vous télécharger la  version \n64-bits
+fr:Installation de SumatraPDF 32-bits sur un système 64-bits.\nVoulez-vous télécharger la version 64-bits ?
 hr:Instalirate 32-bitnu SumatraPDF on 64-bitni OS.\nŽelite li preuzeti 64-bit verziju?
 hu:A SumatraPDF 32-bites verzióját telepíted éppen egy 64-bites operációs rendszerre.\nSzeretnéd inkább letölteni a\n64-bites verziót?
 id:Anda memasang SumatraPDF versi 32-bit pada OS 64-bit.\nApakah Anda ingin mengunduh versi 64-bit?
@@ -19103,7 +19122,7 @@ bs:štampam dokument
 by:дакумент друкуецца
 ca-xv:s'està imprimint el document
 ca:s'està imprimint el document
-cn:正在打印文件
+cn:正在打印文档
 co:stampa di ducumentu
 cy:argraffu dogfen
 cz:tisk dokumentu
