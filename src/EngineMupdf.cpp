@@ -2043,7 +2043,7 @@ bool EngineMupdf::FinishLoading() {
         loadPageTreeFailed = true;
     }
 
-    int nPages = pdfdoc->rev_page_count;
+    int nPages = pdfdoc->map_page_count;
     if (nPages != pageCount) {
         fz_warn(ctx, "mismatch between fz_count_pages() and doc->rev_page_count");
         return false;

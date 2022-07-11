@@ -29,7 +29,25 @@ int pdf_lookup_page_number(fz_context *ctx, pdf_document *doc, pdf_obj *pageobj)
 int pdf_count_pages(fz_context *ctx, pdf_document *doc);
 int pdf_count_pages_imp(fz_context *ctx, fz_document *doc, int chapter);
 pdf_obj *pdf_lookup_page_obj(fz_context *ctx, pdf_document *doc, int needle);
+
+/*
+	Cache the page tree for fast forward/reverse page lookups.
+
+	It is the caller's responsibility to ensure that nothing alters
+	the page tree between this call and the matching pdf_drop_page_tree
+	or undefined behaviour may occur.
+
+	Any successful call to pdf_load_page_tree MUST be matched with
+	a call to pdf_drop_page_tree.
+*/
 void pdf_load_page_tree(fz_context *ctx, pdf_document *doc);
+
+/*
+	Discard the page tree maps.
+
+	Calls to this should exactly match successful calls to
+	pdf_load_page_tree.
+*/
 void pdf_drop_page_tree(fz_context *ctx, pdf_document *doc);
 
 /*

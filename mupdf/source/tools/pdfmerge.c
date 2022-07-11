@@ -230,15 +230,19 @@ static void merge_range(fz_context *ctx, const char *range)
 	fz_outline_iterator *it_src = NULL;
 	fz_outline_iterator *it_dst = NULL;
 	int pages_merged = 0;
+	int page_tree_loaded = 0;
 
 	count = pdf_count_pages(ctx, doc_src);
 	graft_map = pdf_new_graft_map(ctx, doc_des);
 
 	fz_var(it_src);
 	fz_var(it_dst);
+	fz_var(page_tree_loaded);
 
 	fz_try(ctx)
 	{
+		pdf_load_page_tree(ctx, doc_src);
+		page_tree_loaded = 1;
 		r = range;
 		while ((r = fz_parse_page_range(ctx, r, &start, &end, count)))
 		{
@@ -279,6 +283,8 @@ static void merge_range(fz_context *ctx, const char *range)
 		fz_drop_outline_iterator(ctx, it_src);
 		fz_drop_outline_iterator(ctx, it_dst);
 		pdf_drop_graft_map(ctx, graft_map);
+		if (page_tree_loaded)
+			pdf_drop_page_tree(ctx, doc_src);
 	}
 	fz_catch(ctx)
 	{

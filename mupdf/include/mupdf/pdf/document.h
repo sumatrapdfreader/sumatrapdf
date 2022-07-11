@@ -428,8 +428,10 @@ struct pdf_document
 	int has_old_style_xrefs;
 	int has_linearization_object;
 
-	int rev_page_count;
+	int page_map_nesting;
+	int map_page_count;
 	pdf_rev_page_map *rev_page_map;
+	int *fwd_page_map;
 
 	int repair_attempted;
 	int repair_in_progress;

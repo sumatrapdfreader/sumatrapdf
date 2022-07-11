@@ -368,7 +368,7 @@ static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline
 			if (node->h > max_a)
 				max_a = node->h;
 		}
-		else
+		else if (node->type != FLOW_SBREAK && node->type != FLOW_BREAK)
 		{
 			float a = node->box->em * 0.8f;
 			float d = node->box->em * 0.2f;
@@ -539,6 +539,8 @@ static int flush_line(fz_context *ctx, fz_html_box *box, float page_h, float pag
 	if (page_h > 0)
 	{
 		avail = page_h - fmodf(box->b, page_h);
+		/* If the line is larger than the available space skip to the start
+		 * of the next page. */
 		if (line_h > avail)
 		{
 			if (restart)
