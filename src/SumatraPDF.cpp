@@ -2851,9 +2851,9 @@ static void RenameCurrentFile(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeStr srcFileName = ctrl->GetFilePath();
+    const char* srcPath = ctrl->GetFilePath();
     // this happens e.g. for embedded documents and directories
-    if (!file::Exists(srcFileName)) {
+    if (!file::Exists(srcPath)) {
         return;
     }
 
@@ -2868,13 +2868,14 @@ static void RenameCurrentFile(MainWindow* win) {
     str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcFileName));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcPath));
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
 
-    WCHAR* initDir = path::GetDirTemp(ToWstrTemp(srcFileName));
+    WCHAR* srcPathW = ToWstrTemp(srcPath);
+    WCHAR* initDir = path::GetDirTemp(srcPathW);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -2899,10 +2900,10 @@ static void RenameCurrentFile(MainWindow* win) {
     SetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
-    BOOL moveOk = MoveFileExW(ToWstrTemp(srcFileName.Get()), dstFileName, flags);
+    BOOL moveOk = MoveFileExW(srcPathW, dstFileName, flags);
     if (!moveOk) {
         LogLastError();
-        LoadArgs args(srcFileName, win);
+        LoadArgs args(srcPath, win);
         args.forceReuse = true;
         LoadDocument(&args);
         NotificationCreateArgs nargs;
@@ -2915,7 +2916,7 @@ static void RenameCurrentFile(MainWindow* win) {
     }
     char* dstFilePath = ToUtf8Temp(dstFileName);
     char* newPath = path::NormalizeTemp(dstFilePath);
-    RenameFileInHistory(srcFileName, newPath);
+    RenameFileInHistory(srcPath, newPath);
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
