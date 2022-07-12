@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b60b8cd51c2dda7b86f6e74eb0fa7ece91a40763
+c7473a6c59082854a000b5b195c56555ca20251e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -10351,7 +10351,7 @@ bs:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
 by:Падказка: Націсніце F3 каб працягнуць пошук
 ca-xv:Suggeriment: feu servir la tecla F3 per tornar a cercar
 ca:Suggeriment: feu servir la tecla F3 per tornar a cercar
-cn:提示: 按 F3 重新查找。
+cn:提示：按 F3 重新查找。
 co:Indiziu : Impiegà u tastu F3 per circà torna
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 cz:Nápověda: Klávesou F3 vyhledáte další výskyt
@@ -13906,7 +13906,7 @@ bs:Postscript dokumenti
 by:Дакумент Postscript
 ca-xv:Documents Postscript
 ca:Documents Postscript
-cn:Postscript 文件
+cn:Postscript 文档
 co:Ducumenti Postscript
 cy:Dogfennau postscript
 cz:Dokumenty PostScript
@@ -15005,7 +15005,7 @@ bg:SVG документи
 br:Documentos SVG
 ca-xv:Documents SVG
 ca:Documents SVG
-cn:SVG 文件
+cn:SVG 文档
 co:Ducumenti SVG
 cy:Dogfennau SVG
 de:SVG-Dokumente
@@ -15282,7 +15282,7 @@ vn:Đã lưu chú thích tới '%s'
 :Saving of '%s' failed with: '%s'
 am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 br:Salvamento de '%s' falhou com: '%s'
-cn:保存 '%s' 失败: '%s'
+cn:保存 '%s' 失败：'%s'
 co:Arregistramentu di « %s » fiascatu cù : « %s »
 cy:Methodd cadw '%s' oherwydd: '%s'
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
@@ -17498,7 +17498,7 @@ bs:Tekstualni dokumenti
 by:Тэкставы дакумент
 ca-xv:Documents de text
 ca:Documents de text
-cn:文本文件
+cn:文本文档
 co:Ducumenti di testu
 cy:Dogfennau testun
 cz:Textové dokumenty
