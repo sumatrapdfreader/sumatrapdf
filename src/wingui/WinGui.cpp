@@ -1448,7 +1448,26 @@ int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     return id;
 }
 
+TempStr Tooltip::GetTextTemp(int id) {
+    WCHAR buf[512];
+
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = parent;
+    ti.uId = (UINT_PTR)id;
+    ti.hwnd = parent;
+    ti.lpszText = buf;
+    SendMessageW(hwnd, TTM_GETTEXT, 512, (LPARAM)&ti);
+    return ToUtf8Temp(buf);
+}
+
 void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
+    // avoid flickering
+    char* s2 = GetTextTemp(id);
+    if (str::Eq(s, s2)) {
+        return;
+    }
+
     SetMaxWidthForText(hwnd, s, multiline);
     WCHAR* ws = ToWstrTemp(s);
     TOOLINFOW ti = {0};

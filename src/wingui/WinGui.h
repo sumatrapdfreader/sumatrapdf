@@ -224,6 +224,8 @@ struct Tooltip : Wnd {
 
     int Count();
 
+    TempStr GetTextTemp(int id = 0);
+
     void SetDelayTime(int type, int timeInMs);
     void SetMaxWidth(int dx);
 
