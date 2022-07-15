@@ -685,7 +685,7 @@ using TabDraggedHandler = std::function<void(TabDraggedEvent*)>;
 struct TabsCreateArgs {
     HWND parent = nullptr;
     HFONT font = nullptr;
-    bool witToolTips = false;
+    bool withToolTips = false;
     int ctrlID = 0;
     int tabDefaultDx = 300;
 };
@@ -706,8 +706,7 @@ struct TabInfo {
 
 struct TabsCtrl : Wnd {
     int ctrlID = 0;
-    bool witToolTips = false;
-    AutoFreeStr currTooltipText;
+    bool withToolTips = false;
     bool inTitleBar = false;
     // dx of tab if there's more space available
     int tabDefaultDx = 300;

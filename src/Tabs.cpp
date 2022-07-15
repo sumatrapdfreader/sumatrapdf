@@ -273,7 +273,7 @@ void CreateTabbar(MainWindow* win) {
 
     TabsCreateArgs args;
     args.parent = win->hwndFrame;
-    args.witToolTips = true;
+    args.withToolTips = true;
     tabsCtrl->Create(args);
     win->tabsCtrl = tabsCtrl;
     win->tabSelectionHistory = new Vec<WindowTab*>();

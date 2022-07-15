@@ -1448,38 +1448,55 @@ int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     return id;
 }
 
-TempStr Tooltip::GetTextTemp(int id) {
+TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
     WCHAR buf[512];
-
     TOOLINFOW ti = {0};
     ti.cbSize = sizeof(ti);
-    ti.hwnd = parent;
+    ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
-    ti.hwnd = parent;
     ti.lpszText = buf;
     SendMessageW(hwnd, TTM_GETTEXT, 512, (LPARAM)&ti);
     return ToUtf8Temp(buf);
 }
 
-void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
+TempStr Tooltip::GetTextTemp(int id) {
+    return TooltipGetTextTemp(hwnd, parent, id);
+}
+
+bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool multiline) {
     // avoid flickering
-    char* s2 = GetTextTemp(id);
+    char* s2 = TooltipGetTextTemp(hwnd, owner, id);
     if (str::Eq(s, s2)) {
-        return;
+        //logf("TooltipUpdateText: same: '%s'\n", s);
+        return false;
     }
+    //logf("TooltipUpdateText: changed from '%s' => '%s'\n", s2, s);
 
     SetMaxWidthForText(hwnd, s, multiline);
     WCHAR* ws = ToWstrTemp(s);
     TOOLINFOW ti = {0};
     ti.cbSize = sizeof(ti);
-    ti.hwnd = parent;
+    ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
-    ti.hwnd = parent;
     ti.lpszText = (WCHAR*)ws;
     ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
-    ti.rect = ToRECT(rc);
     SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+    return true;
+}
+
+void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
+    //logf("TooltipUpdateRect: pos: (%d, %d) size: (%d, %d)\n", rc.x, rc.y, rc.dx, rc.dy);
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.rect = ToRECT(rc);
     SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&ti);
+}
+
+void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
+    TooltipUpdateText(hwnd, parent, id, s, multiline);
+    TooltipUpdateRect(hwnd, parent, id, rc);
 }
 
 // this assumes we only have at most one tool per this tooltip
@@ -3238,6 +3255,11 @@ void TabsCtrl::Layout() {
     delete data;
     data = new PathData();
     shape.GetPathData(data);
+
+    if (withToolTips) {
+        HWND ttHwnd = GetToolTipsHwnd();
+        TooltipUpdateRect(ttHwnd, hwnd, 0, rect);
+    }
 }
 
 // Finds the index of the tab, which contains the given point.
@@ -3434,59 +3456,16 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     }
 }
 
-// TODO: this is a nasty implementation
-// should probably TTM_ADDTOOL for each tab item
-// we could re-calculate it in SetTabSize()
-static void MaybeUpdateTooltip(HWND hwnd, HWND ttHwnd, const char* text) {
-    if (!ttHwnd) {
-        return;
-    }
-
-    {
-        TOOLINFO ti{0};
-        ti.cbSize = sizeof(ti);
-        ti.hwnd = hwnd;
-        ti.uId = 0;
-        SendMessage(ttHwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
-    }
-
-    {
-        TOOLINFO ti{0};
-        ti.cbSize = sizeof(ti);
-        ti.hwnd = hwnd;
-        ti.uFlags = TTF_SUBCLASS;
-        // ti.lpszText = LPSTR_TEXTCALLBACK;
-        WCHAR* ws = ToWstrTemp(text);
-        ti.lpszText = ws;
-        ti.uId = 0;
-        ti.rect = ClientRECT(hwnd);
-        SendMessage(ttHwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
-    }
-}
-
-static void MaybeUpdateTooltipText(TabsCtrl* tabsCtrl, int idx) {
+static void MaybeUpdateTooltipText(TabsCtrl* tabsCtrl, int idx, bool forceShow) {
     TabInfo* tab = tabsCtrl->GetTab(idx);
     char* tooltip = tab->tooltip;
-    if (str::Eq(tabsCtrl->currTooltipText, tooltip)) {
-        return;
-    }
-    tabsCtrl->currTooltipText.SetCopy(tooltip);
-#if 1
     HWND ttHwnd = tabsCtrl->GetToolTipsHwnd();
-    MaybeUpdateTooltip(tabsCtrl->hwnd, ttHwnd, tooltip);
-#else
-    // TODO: why this doesn't work?
-    TOOLINFO ti{0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = hwnd;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = currTooltipText.Get();
-    ti.uId = 0;
-    ti.rect = ClientRECT(hwnd);
-    SendMessage(ttHwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
-#endif
-    SendMessage(ttHwnd, TTM_POP, 0, 0);
-    SendMessage(ttHwnd, TTM_POPUP, 0, 0);
+    bool didChange = TooltipUpdateText(ttHwnd, tabsCtrl->hwnd, 0, tooltip, false);
+    logf("MaybeUpdateTooltipText: idx: %d, forceShow: %d, didChange: %d\n", idx, (int)forceShow, (int)didChange);
+    if (didChange || forceShow || true) {
+        SendMessage(ttHwnd, TTM_POP, 0, 0);
+        SendMessage(ttHwnd, TTM_POPUP, 0, 0);
+    }
 }
 
 TabsCtrl::TabsCtrl() {
@@ -3624,9 +3603,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSELEAVE:
+            logf("TabsCtrl::WndProc: WM_MOUSELEAVE\n");
             [[fallthrough]];
 
         case WM_MOUSEMOVE: {
+            logf("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d\n", tabUnderMouse);
             bool isDragging = (GetCapture() == hwnd);
             int hl = tabUnderMouse;
             bool didChangeTabs = false;
@@ -3644,6 +3625,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabHighlighted = hl;
                 didChangeTabs = true;
+                if (tabUnderMouse >= 0) {
+                    MaybeUpdateTooltipText(this, tabUnderMouse, true);
+                }
                 return 0;
             }
             int xHl = -1;
@@ -3659,8 +3643,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (!overClose) {
                 tabBeingClosed = -1;
             }
-            if (didChangeTabs && tabHighlighted >= 0) {
-                MaybeUpdateTooltipText(this, tabHighlighted);
+            if (tabUnderMouse >= 0) {
+                MaybeUpdateTooltipText(this, tabUnderMouse, didChangeTabs);
             }
             return 0;
         }
@@ -3756,14 +3740,14 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
-    witToolTips = argsIn.witToolTips;
+    withToolTips = argsIn.withToolTips;
 
     CreateControlArgs args;
     args.parent = argsIn.parent;
     args.font = argsIn.font;
     args.className = WC_TABCONTROLW;
     args.style = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
-    if (witToolTips) {
+    if (withToolTips) {
         args.style |= TCS_TOOLTIPS;
     }
 
@@ -3772,7 +3756,7 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
         return nullptr;
     }
 
-    if (witToolTips) {
+    if (withToolTips) {
         HWND ttHwnd = GetToolTipsHwnd();
         TOOLINFO ti{0};
         ti.cbSize = sizeof(ti);
@@ -3816,7 +3800,6 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
         }
     }
     tabBeingClosed = -1;
-    currTooltipText.SetCopy(tab->tooltip);
     return insertedIdx;
 }
 
