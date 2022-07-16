@@ -1392,6 +1392,118 @@ static int GetNextTooltipID() {
     return (int)res;
 }
 
+int TooltipGetCount(HWND hwnd) {
+    int n = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    return n;
+}
+
+void TooltipoRemoveTool(HWND hwnd, HWND owner, int id) {
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+}
+
+int TooltipGetId(HWND hwnd, int idx) {
+    WCHAR buf[90]; // per docs returns max 80 chars
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.lpszText = buf;
+    BOOL ok = SendMessageW(hwnd, TTM_ENUMTOOLS, idx, (LPARAM)&ti);
+    ReportIf(!ok);
+    if (!ok) {
+        return -1;
+    }
+    return (int)ti.uId;
+}
+
+void TooltipRemoveAll(HWND hwnd, HWND owner) {
+    for (;;) {
+        int n = TooltipGetCount(hwnd);
+        if (n <= 0) {
+            return;
+        }
+        int id = TooltipGetId(hwnd, 0);
+        if (id < 0) {
+            return;
+        }
+        TooltipoRemoveTool(hwnd, owner, id);
+    }
+}
+
+struct TooltipInfo {
+    const char* s;
+    Rect r;
+    int id;
+};
+
+void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
+    for (int i = 0; i < nTools; i++) {
+        TooltipInfo& tti = tools[i];
+
+        WCHAR* ws = ToWstrTemp(tti.s);
+        TOOLINFOW ti = {0};
+        ti.cbSize = sizeof(ti);
+        ti.hwnd = owner;
+        ti.uId = (UINT_PTR)tti.id;
+        ti.lpszText = (WCHAR*)ws;
+        ti.rect = ToRECT(tti.r);
+        ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
+        SendMessageW(hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    }
+}
+
+static TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
+    WCHAR buf[512];
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.lpszText = buf;
+    SendMessageW(hwnd, TTM_GETTEXT, 512, (LPARAM)&ti);
+    return ToUtf8Temp(buf);
+}
+
+static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
+
+static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
+    int dx = -1;
+    if (multiline || str::FindChar(s, '\n')) {
+        // TODO: dpi scale
+        dx = MULTILINE_INFOTIP_WIDTH_PX;
+    }
+    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
+}
+
+static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool multiline) {
+    // avoid flickering
+    char* s2 = TooltipGetTextTemp(hwnd, owner, id);
+    if (str::Eq(s, s2)) {
+        return false;
+    }
+
+    SetMaxWidthForText(hwnd, s, multiline);
+    WCHAR* ws = ToWstrTemp(s);
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.lpszText = (WCHAR*)ws;
+    ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
+    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+    return true;
+}
+
+void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
+    TOOLINFOW ti = {0};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.rect = ToRECT(rc);
+    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&ti);
+}
+
 Tooltip::Tooltip() {
     kind = kindTooltip;
 }
@@ -1418,17 +1530,6 @@ void Tooltip::SetMaxWidth(int dx) {
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }
 
-static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
-
-static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
-    int dx = -1;
-    if (multiline || str::FindChar(s, '\n')) {
-        // TODO: dpi scale
-        dx = MULTILINE_INFOTIP_WIDTH_PX;
-    }
-    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
-}
-
 int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     int id = GetNextTooltipID();
     SetMaxWidthForText(hwnd, s, multiline);
@@ -1448,50 +1549,8 @@ int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     return id;
 }
 
-TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
-    WCHAR buf[512];
-    TOOLINFOW ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = owner;
-    ti.uId = (UINT_PTR)id;
-    ti.lpszText = buf;
-    SendMessageW(hwnd, TTM_GETTEXT, 512, (LPARAM)&ti);
-    return ToUtf8Temp(buf);
-}
-
 TempStr Tooltip::GetTextTemp(int id) {
     return TooltipGetTextTemp(hwnd, parent, id);
-}
-
-bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool multiline) {
-    // avoid flickering
-    char* s2 = TooltipGetTextTemp(hwnd, owner, id);
-    if (str::Eq(s, s2)) {
-        //logf("TooltipUpdateText: same: '%s'\n", s);
-        return false;
-    }
-    //logf("TooltipUpdateText: changed from '%s' => '%s'\n", s2, s);
-
-    SetMaxWidthForText(hwnd, s, multiline);
-    WCHAR* ws = ToWstrTemp(s);
-    TOOLINFOW ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = owner;
-    ti.uId = (UINT_PTR)id;
-    ti.lpszText = (WCHAR*)ws;
-    ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
-    SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
-    return true;
-}
-
-void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
-    //logf("TooltipUpdateRect: pos: (%d, %d) size: (%d, %d)\n", rc.x, rc.y, rc.dx, rc.dy);
-    TOOLINFOW ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = owner;
-    ti.uId = (UINT_PTR)id;
-    ti.rect = ToRECT(rc);
-    SendMessageW(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM)&ti);
 }
 
 void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
@@ -1514,7 +1573,7 @@ int Tooltip::SetSingle(const char* s, const Rect& rc, bool multiline) {
 }
 
 int Tooltip::Count() {
-    int n = (int)SendMessageW(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+    int n = TooltipGetCount(hwnd);
     int n2 = tooltipIds.Size();
     ReportIf(n != n2);
     return n;
@@ -3212,14 +3271,22 @@ TabInfo::~TabInfo() {
     str::Free(tooltip);
 }
 
+void TooltipRemoveAll(HWND hwnd) {
+    int n = TooltipGetCount(hwnd);
+    if (n == 0) {
+        return;
+    }
+}
+
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
 void TabsCtrl::Layout() {
-    HwndScheduleRepaint(hwnd);
     Rect rect = ClientRect(hwnd);
     int dy = rect.dy;
     int nTabs = GetTabCount();
     if (nTabs == 0) {
+        //logfa("TabsCtrl::Layout size: (%d, %d), no tabs\n", rect.dx, rect.dy);
+        HwndScheduleRepaint(hwnd);
         return;
     }
     auto maxDx = (rect.dx - 5) / nTabs;
@@ -3229,73 +3296,64 @@ void TabsCtrl::Layout() {
         return;
     }
     tabSize = {dx, dy};
+    //logfa("TabsCtrl::Layout size: (%d, %d), tab size: (%d, %d)\n", rect.dx, rect.dy, tabSize.dx, tabSize.dy);
+
     HwndTabsSetItemSize(hwnd, tabSize);
 
-    GraphicsPath shape;
-    // define tab's body
-    shape.AddRectangle(Gdiplus::Rect(0, 0, dx, dy));
-    shape.SetMarker();
+    int closeDy = DpiScale(hwnd, 8);
+    int closeDx = closeDy;
+    int closeY = (dy - closeDy) / 2;
+    //logfa("  closeDx: %d, closeDy: %d\n", closeDx, closeDy);
 
-    // define "x"'s circle
-    int c = int((float)dy * 0.78f + 0.5f); // size of bounding square for the circle
-    int maxC = DpiScale(hwnd, 17);
-    if (dx > maxC) {
-        c = DpiScale(hwnd, 17);
+    HFONT hfont = GetFont();
+    int x = 0;
+    int xEnd;
+    TooltipInfo* tools = AllocArray<TooltipInfo>(nTabs);
+    for (int i = 0; i < nTabs; i++) {
+        TabInfo* ti = GetTab(i);
+        xEnd = x + dx;
+        ti->r = {x, 0, dx, dy};
+        ti->rClose = {xEnd - closeDx - 8, closeY, closeDx, closeDy};
+        ti->titleSize = HwndMeasureText(hwnd, ti->text, hfont);
+        int y = (dy - ti->titleSize.dy) / 2;
+        //logfa("  ti->titleSize.dy: %d\n", ti->titleSize.dy);
+        if (y < 0) {
+            y = 0;
+        }
+        ti->titlePos = {x + 2, y};
+        if (withToolTips) {
+            tools[i].s = ti->tooltip;
+            tools[i].id = i;
+            tools[i].r = ti->r;
+        }
+        x = xEnd;
     }
-    Gdiplus::Point p(dx - c - DpiScale(hwnd, 3), (dy - c) / 2); // circle's position
-    shape.AddEllipse(p.X, p.Y, c, c);
-    shape.SetMarker();
-    // define "x"
-    int o = int((float)c * 0.286f + 0.5f); // "x"'s offset
-    shape.AddLine(p.X + o, p.Y + o, p.X + c - o, p.Y + c - o);
-    shape.StartFigure();
-    shape.AddLine(p.X + c - o, p.Y + o, p.X + o, p.Y + c - o);
-    shape.SetMarker();
-
-    delete data;
-    data = new PathData();
-    shape.GetPathData(data);
-
     if (withToolTips) {
         HWND ttHwnd = GetToolTipsHwnd();
-        TooltipUpdateRect(ttHwnd, hwnd, 0, rect);
+        TooltipAddTools(ttHwnd, hwnd, tools, nTabs);
     }
+    free(tools);
+
+    HwndScheduleRepaint(hwnd);
 }
 
 // Finds the index of the tab, which contains the given point.
 TabMouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     TabMouseState res;
-    if (!data) {
-        return res;
-    }
     if (p.x < 0 || p.y < 0) {
         return res;
     }
-    int dx = tabSize.dx;
-    int dy = tabSize.dy;
-    Gdiplus::Point point(p.x, p.y);
-    Graphics gfx(hwnd);
-    GraphicsPath shapes(data->Points, data->Types, data->Count);
-    GraphicsPath shape;
-    Gdiplus::GraphicsPathIterator iterator(&shapes);
-    iterator.NextMarker(&shape);
-
-    Rect rClient = ClientRect(hwnd);
-    float yPosTab = inTitleBar ? 0.0f : float(rClient.dy - dy - 1);
-    gfx.TranslateTransform(1.0f, yPosTab);
     int nTabs = GetTabCount();
     for (int i = 0; i < nTabs; i++) {
-        Gdiplus::Point pt(point);
-        gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
-        if (!shape.IsVisible(pt, &gfx)) {
-            gfx.TranslateTransform(float(dx + 1), 0.0f);
+        TabInfo* ti = tabs[i];
+        if (!ti->r.Contains(p)) {
             continue;
         }
-        iterator.NextMarker(&shape);
         res.tabIdx = i;
-        res.overClose = shape.IsVisible(pt, &gfx) != 0;
+        res.overClose = ti->rClose.Contains(p);
         return res;
     }
+
     return res;
 }
 
@@ -3312,50 +3370,21 @@ static void PaintParentBackground(HWND hwnd, HDC hdc) {
     InvalidateRect(parent, nullptr, TRUE);
 }
 
-// Paints the tabs that intersect the window's update rectangle.
-void TabsCtrl::Paint(HDC hdc, RECT& rc) {
-    if (false) {
-        // TODO: why doesn't this work? Should just paint the rectangle
-        logfa("Paint(): x: %d, y: %d, dx: %d, dy: %d\n", rc.left, rc.top, RectDx(rc), RectDy(rc));
-        COLORREF col = RGB(0xff, 0, 0);
-        HBRUSH brush = CreateSolidBrush(col);
-        FillRect(hdc, &rc, brush);
-        DeleteObject(brush);
-        Rect r = ToRect(rc);
-        DrawLine(hdc, r);
-        return;
-    }
+Gdiplus::Color GdipCol(COLORREF c) {
+    return GdiRgbFromCOLORREF(c);
+}
 
+void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
     bool overClose = tabState.overClose;
-
     int tabSelected = GetSelected();
+    //logfa("TabsCtrl::Paint, underMouse: %d, overClose: %d, selected: %d, rc: pos: (%d, %d), size: (%d, %d)\n", tabUnderMouse, (int)overClose, tabSelected, rc.left, rc.top, RectDx(rc), RectDy(rc));
 
-    // IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
-#if 1
-    // paint the background
     bool isTranslucentMode = inTitleBar && dwm::IsCompositionEnabled();
     if (isTranslucentMode) {
         PaintParentBackground(hwnd, hdc);
-    } else {
-        // note: not sure what color should be used here and painting
-        // background works fine
-        HBRUSH brush = CreateSolidBrush(RGB(0xff, 0xff, 0xff));
-        FillRect(hdc, &rc, brush);
-        DeleteObject(brush);
     }
-#else
-    PaintParentBackground(hwnd, hdc);
-#endif
-
-    if (!data) {
-        return;
-    }
-
-    // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
-    XFORM ctm = {1.0, 0, 0, 1.0, 0, 0};
-    SetWorldTransform(hdc, &ctm);
 
     Graphics gfx(hdc);
     gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
@@ -3363,108 +3392,83 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
     gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     gfx.SetPageUnit(UnitPixel);
-    GraphicsPath shapes(data->Points, data->Types, data->Count);
-    GraphicsPath shape;
-    Gdiplus::GraphicsPathIterator iterator(&shapes);
 
-    SolidBrush br(Color(0, 0, 0));
-    Pen pen(&br, 2.0f);
+    SolidBrush br(GdipCol(currBgCol));
 
     Font f(hdc, GetDefaultGuiFont());
-    // TODO: adjust these constant values for DPI?
-    int dx = tabSize.dx;
-    int dy = tabSize.dy;
-    Gdiplus::RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(dx - DpiScale(hwnd, 20)), (float)dy);
+
+    Gdiplus::Rect gr = ToGdipRect(rc);
+    gfx.FillRectangle(&br, gr);
+
     StringFormat sf(StringFormat::GenericDefault());
     sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    float yPosTab = inTitleBar ? 0.0f : float(ClientRect(hwnd).dy - dy - 1);
-    int nTabs = GetTabCount();
-    for (int i = 0; i < nTabs; i++) {
-        TabInfo* tab = GetTab(i);
-        gfx.ResetTransform();
-        gfx.TranslateTransform(1.f + (float)(dx + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
+    TabInfo* ti;
+    int n = GetTabCount();
+    Rect r;
+    Gdiplus::RectF rTxt;
 
-        if (!gfx.IsVisible(0, 0, dx + 1, dy + 1)) {
-            continue;
-        }
-
+    for (int i = 0; i < n; i++) {
         // Get the correct colors based on the state and the current theme
         COLORREF bgCol = tabBackgroundBg;
         COLORREF textCol = tabBackgroundText;
-        COLORREF xColor = tabBackgroundCloseX;
         COLORREF circleColor = tabBackgroundCloseCircle;
+        COLORREF xColor = RGB(0,0,0);
 
         if (tabSelected == i) {
             bgCol = tabSelectedBg;
             textCol = tabSelectedText;
-            xColor = tabSelectedCloseX;
             circleColor = tabSelectedCloseCircle;
         } else if (tabUnderMouse == i) {
             bgCol = tabHighlightedBg;
             textCol = tabHighlightedText;
-            xColor = tabHighlightedCloseX;
             circleColor = tabHighlightedCloseCircle;
         }
         if ((tabUnderMouse == i) && overClose) {
             xColor = tabHoveredCloseX;
             circleColor = tabHoveredCloseCircle;
         }
-#if 0
-        if (tabsCtrl->tabBeingClosed == i) {
-            xColor = tabClickedCloseX;
-            circleColor = tabClickedCloseCircle;
-        }
-#endif
 
-        // paint tab's body
+        ti = GetTab(i);
+        //logfa("rClose: pos: (%d, %d) size: (%d, %d)\n", r.x, r.y, r.dx, r.dy);
+
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
-        iterator.NextMarker(&shape);
-        br.SetColor(GdiRgbFromCOLORREF(bgCol));
-        Gdiplus::Point points[4];
-        shape.GetPathPoints(points, 4);
-        Gdiplus::Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
-        body.Inflate(0, 0);
-        gfx.SetClip(body);
-        body.Inflate(5, 5);
-        gfx.FillRectangle(&br, body);
-        gfx.ResetClip();
 
-        // draw tab's text
-        gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
-        br.SetColor(GdiRgbFromCOLORREF(textCol));
-        char* text = tab->text;
-        gfx.DrawString(ToWstrTemp(text), -1, &f, layout, &sf, &br);
+        // draw background
+        br.SetColor(GdipCol(bgCol));
+        gr = ToGdipRect(ti->r);
+        gfx.FillRectangle(&br, gr);
 
-        // paint "x"'s circle
-        iterator.NextMarker(&shape);
-        // bool closeCircleEnabled = true;
-        bool paintOverClose = (tabUnderMouse == i) && overClose;
-        // TODO: (tabsCtrl->tabBeingClosed == i
-        if (paintOverClose /*&& closeCircleEnabled*/) {
-            br.SetColor(GdiRgbFromCOLORREF(circleColor));
-            gfx.FillPath(&br, &shape);
+        r = ti->rClose;
+        if (i == tabUnderMouse && overClose) {
+            // draw bacground of X
+            Rect cr = r;
+            cr.Inflate(3, 3);
+            gr = ToGdipRect(cr);
+            br.SetColor(GdipCol(circleColor));
+            gfx.FillRectangle(&br, gr);
         }
 
-        // paint "x"
-        iterator.NextMarker(&shape);
-        pen.SetColor(GdiRgbFromCOLORREF(xColor));
-        gfx.DrawPath(&pen, &shape);
-        iterator.Rewind();
-    }
-}
+        // draw X
+        br.SetColor(GdipCol(xColor));
+        Pen penX(&br, 1.f);
+        Gdiplus::Point p1(r.x, r.y);
+        Gdiplus::Point p2(r.x+r.dx, r.y+r.dy);
+        gfx.DrawLine(&penX, p1, p2);
+        p1 = {r.x + r.dx, r.y};
+        p2 = {r.x, r.y + r.dy};
+        gfx.DrawLine(&penX, p1, p2);
 
-static void MaybeUpdateTooltipText(TabsCtrl* tabsCtrl, int idx, bool forceShow) {
-    TabInfo* tab = tabsCtrl->GetTab(idx);
-    char* tooltip = tab->tooltip;
-    HWND ttHwnd = tabsCtrl->GetToolTipsHwnd();
-    bool didChange = TooltipUpdateText(ttHwnd, tabsCtrl->hwnd, 0, tooltip, false);
-    logf("MaybeUpdateTooltipText: idx: %d, forceShow: %d, didChange: %d\n", idx, (int)forceShow, (int)didChange);
-    if (didChange || forceShow || true) {
-        SendMessage(ttHwnd, TTM_POP, 0, 0);
-        SendMessage(ttHwnd, TTM_POPUP, 0, 0);
+        // draw text
+        gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+        rTxt = ToGdipRectF(ti->r);
+        rTxt.X += 8;
+        rTxt.Width -= (8 + r.dx + 8);
+        br.SetColor(GdipCol(textCol));
+        WCHAR* ws = ToWstrTemp(ti->text);
+        gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
     }
 }
 
@@ -3473,7 +3477,6 @@ TabsCtrl::TabsCtrl() {
 }
 
 TabsCtrl::~TabsCtrl() {
-    delete data;
 }
 
 static void TriggerSelectionChanged(TabsCtrl* tabs) {
@@ -3603,12 +3606,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSELEAVE:
-            logf("TabsCtrl::WndProc: WM_MOUSELEAVE\n");
+            //logfa("TabsCtrl::WndProc: WM_MOUSELEAVE\n");
             [[fallthrough]];
 
         case WM_MOUSEMOVE: {
-            logf("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d\n", tabUnderMouse);
             bool isDragging = (GetCapture() == hwnd);
+            //logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, isDragging: %d\n", tabUnderMouse, (int)isDragging);
             int hl = tabUnderMouse;
             bool didChangeTabs = false;
             if (isDragging && hl == -1) {
@@ -3625,9 +3628,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabHighlighted = hl;
                 didChangeTabs = true;
-                if (tabUnderMouse >= 0) {
-                    MaybeUpdateTooltipText(this, tabUnderMouse, true);
-                }
                 return 0;
             }
             int xHl = -1;
@@ -3642,9 +3642,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             if (!overClose) {
                 tabBeingClosed = -1;
-            }
-            if (tabUnderMouse >= 0) {
-                MaybeUpdateTooltipText(this, tabUnderMouse, didChangeTabs);
             }
             return 0;
         }

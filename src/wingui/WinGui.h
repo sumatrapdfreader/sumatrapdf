@@ -700,8 +700,11 @@ struct TabInfo {
     ~TabInfo();
 
     // for internal use
-    Rect pos;
-    Rect closePos;
+    Rect r;
+    Rect rClose;
+    Size titleSize;
+    Point titlePos;
+
 };
 
 struct TabsCtrl : Wnd {
@@ -743,7 +746,6 @@ struct TabsCtrl : Wnd {
     COLORREF tabClickedCloseX = 0;
     COLORREF tabClickedCloseCircle = 0;
 
-    PathData* data = nullptr;
     Size tabSize{-1, -1};
 
     TabsCtrl();

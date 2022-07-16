@@ -329,6 +329,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     win->tabSelectionHistory->Append(tab);
 }
 
+// TODO: most CloseX colors are not used
 void UpdateTabsColors(TabsCtrl* tab) {
     tab->currBgCol = kTabDefaultBgCol;
     tab->tabBackgroundBg = GetAppColor(AppColor::TabBackgroundBg);
