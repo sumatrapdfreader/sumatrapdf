@@ -58,9 +58,12 @@ public final class AndroidDrawDevice extends NativeDevice
 		int h = ibox.y1 - ibox.y0;
 		Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
 		AndroidDrawDevice dev = new AndroidDrawDevice(bmp, ibox.x0, ibox.y0);
+		try {
 		page.run(dev, ctm, null);
 		dev.close();
+		} finally {
 		dev.destroy();
+		}
 		return bmp;
 	}
 

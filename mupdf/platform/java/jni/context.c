@@ -107,6 +107,8 @@ static void log_callback(void *user, const char *message)
 		(*env)->CallVoidMethod(env, jcallback, mid, jmessage);
 		(*env)->DeleteLocalRef(env, jmessage);
 		(*env)->MonitorExit(env, jlock);
+		(*env)->DeleteLocalRef(env, jcallback);
+		(*env)->DeleteLocalRef(env, jlock);
 	}
 
 	jni_detach_thread(detach);

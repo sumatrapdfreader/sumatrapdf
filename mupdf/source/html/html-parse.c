@@ -584,12 +584,17 @@ static void fz_drop_html_story_imp(fz_context *ctx, fz_storable *stor)
 {
 	fz_html_story *story = (fz_html_story *)stor;
 	fz_free(ctx, story->user_css);
-	fz_drop_html_box(ctx, story->tree.root);
 	fz_drop_html_font_set(ctx, story->font_set);
+	fz_drop_xml(ctx, story->dom);
+	fz_drop_html_box(ctx, story->tree.root);
 	fz_drop_pool(ctx, story->tree.pool);
 }
 
-void fz_drop_html_tree(fz_context *ctx, fz_html_tree *tree)
+/* Drop a structure derived from an html_tree. The exact things
+ * freed here will depend upon the drop function with which it
+ * was created. */
+static void
+fz_drop_html_tree(fz_context *ctx, fz_html_tree *tree)
 {
 	fz_defer_reap_start(ctx);
 	fz_drop_storable(ctx, &tree->storable);
@@ -1553,16 +1558,37 @@ fz_parse_html_tree(fz_context *ctx,
 		fz_rethrow(ctx);
 }
 
+#define fz_new_derived_html_tree(CTX, TYPE, DROP) \
+ ((TYPE *)Memento_label(fz_new_html_tree_of_size(CTX, sizeof(TYPE), DROP), #TYPE))
+
+static fz_html_tree *
+fz_new_html_tree_of_size(fz_context *ctx, size_t size, fz_store_drop_fn *drop)
+{
+	fz_pool *pool = fz_new_pool(ctx);
+	fz_html_tree *tree;
+
+	fz_try(ctx)
+	{
+		tree = fz_pool_alloc(ctx, pool, size);
+		FZ_INIT_STORABLE(tree, 1, drop);
+		tree->pool = pool;
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pool(ctx, pool);
+		fz_rethrow(ctx);
+	}
+
+	return tree;
+}
+
 static fz_html *
 fz_parse_html_imp(fz_context *ctx,
 	fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css,
 	int try_xml, int try_html5)
 {
-	fz_pool *pool = fz_new_pool(ctx);
-	fz_html *html = fz_pool_alloc(ctx, pool, sizeof *html); /* Can't fail */
+	fz_html *html = fz_new_derived_html_tree(ctx, fz_html, fz_drop_html_imp);
 
-	html->tree.pool = pool;
-	FZ_INIT_STORABLE(&(html->tree), 1, fz_drop_html_imp);
 	html->layout_w = 0;
 	html->layout_h = 0;
 	html->layout_em = 0;
@@ -1575,36 +1601,20 @@ fz_parse_html_imp(fz_context *ctx,
 fz_html_story *
 fz_new_html_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em)
 {
-	fz_pool *pool = fz_new_pool(ctx);
-	fz_html_story *story = NULL;
-
-	fz_var(story);
+	fz_html_story *story = fz_new_derived_html_tree(ctx, fz_html_story, fz_drop_html_story_imp);
 
 	fz_try(ctx)
 	{
-		story = fz_pool_alloc(ctx, pool, sizeof *story);
-		memset(story, 0, sizeof(*story));
-		FZ_INIT_STORABLE(&(story->tree), 1, fz_drop_html_story_imp);
-		story->tree.pool = pool;
 		story->font_set = fz_new_html_font_set(ctx);
 		story->em = em;
 		story->user_css = user_css ? fz_strdup(ctx, user_css) : NULL;
 		story->dom = parse_to_xml(ctx, buf, 0, 1);
-
 	}
 	fz_catch(ctx)
 	{
-		if (story != NULL)
-		{
-			fz_drop_html_font_set(ctx, story->font_set);
 			fz_drop_html_tree(ctx, &story->tree);
-			fz_drop_xml(ctx, story->dom);
-		}
-		fz_drop_pool(ctx, pool);
 		fz_rethrow(ctx);
 	}
-
-	fz_parse_html_tree(ctx, story->font_set, NULL, ".", buf, user_css, 0, 1, &story->tree, NULL, 0);
 
 	return story;
 }

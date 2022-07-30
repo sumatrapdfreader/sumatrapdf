@@ -1797,12 +1797,19 @@ void fz_draw_story(fz_context *ctx, fz_html_story *story, fz_device *dev, fz_mat
 	page_bot = b->b + b->margin[B] + b->border[B] + b->padding[B];
 
 	clip = fz_new_path(ctx);
+	fz_try(ctx)
+	{
 	fz_moveto(ctx, clip, bbox.x0, bbox.y0);
 	fz_lineto(ctx, clip, bbox.x1, bbox.y0);
 	fz_lineto(ctx, clip, bbox.x1, bbox.y1);
 	fz_lineto(ctx, clip, bbox.x0, bbox.y1);
 	fz_closepath(ctx, clip);
 	fz_clip_path(ctx, dev, clip, 0, ctm, bbox);
+	}
+	fz_always(ctx)
+		fz_drop_path(ctx, clip);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	story->restart_place = story->restart_draw;
 	fz_draw_restarted_html(ctx, dev, ctm, story->tree.root->down, 0, page_bot+page_top, &story->restart_place);

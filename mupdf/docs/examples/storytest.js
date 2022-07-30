@@ -221,7 +221,7 @@ var margin = 10;
 
 		writer.endPage();
 	}
-	while (!placed.done);
+	while (placed.more);
 
 	writer.close();
 }
@@ -259,7 +259,7 @@ var margin = 10;
 
 		writer.endPage(writer);
 	}
-	while (!placed.done);
+	while (placed.more);
 
 	writer.close();
 }
@@ -322,7 +322,7 @@ var margin = 10;
 
 		writer.endPage();
 	}
-	while (!placed.done);
+	while (placed.more);
 
 	writer.close();
 }

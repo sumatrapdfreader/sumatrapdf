@@ -762,14 +762,19 @@ static int find_fids(JNIEnv *env)
 	int err = 0;
 	int getvmErr;
 
-	cls_Buffer = get_class(&err, env, PKG"Buffer");
-	mid_Buffer_init = get_method(&err, env, "<init>", "(J)V");
-	fid_Buffer_pointer = get_field(&err, env, "pointer", "J");
+	/* Get and store the main JVM pointer. We need this in order to get
+	 * JNIEnv pointers on callback threads. This is specifically
+	 * guaranteed to be safe to store in a static var. */
 
-	cls_ColorSpace = get_class(&err, env, PKG"ColorSpace");
-	fid_ColorSpace_pointer = get_field(&err, env, "pointer", "J");
-	mid_ColorSpace_init = get_method(&err, env, "<init>", "(J)V");
-	mid_ColorSpace_fromPointer = get_static_method(&err, env, "fromPointer", "(J)L"PKG"ColorSpace;");
+	getvmErr = (*env)->GetJavaVM(env, &jvm);
+	if (getvmErr < 0)
+	{
+		LOGE("cannot get JVM interface (error %d)", getvmErr);
+		return -1;
+	}
+
+	/* Look up Context first as it is required for logging. E.g. when
+	 * classes' statics are being executed which may cause logging. */
 
 	cls_Context = get_class(&err, env, PKG"Context");
 	fid_Context_log = get_static_field(&err, env, "log", "L"PKG"Context$Log;");
@@ -785,6 +790,17 @@ static int find_fids(JNIEnv *env)
 	fid_Context_Version_patch = get_field(&err, env, "patch", "I");
 	fid_Context_Version_version = get_field(&err, env, "version", "Ljava/lang/String;");
 	mid_Context_Version_init = get_method(&err, env, "<init>", "()V");
+
+	/* MuPDF classes */
+
+	cls_Buffer = get_class(&err, env, PKG"Buffer");
+	mid_Buffer_init = get_method(&err, env, "<init>", "(J)V");
+	fid_Buffer_pointer = get_field(&err, env, "pointer", "J");
+
+	cls_ColorSpace = get_class(&err, env, PKG"ColorSpace");
+	fid_ColorSpace_pointer = get_field(&err, env, "pointer", "J");
+	mid_ColorSpace_init = get_method(&err, env, "<init>", "(J)V");
+	mid_ColorSpace_fromPointer = get_static_method(&err, env, "fromPointer", "(J)L"PKG"ColorSpace;");
 
 	cls_Cookie = get_class(&err, env, PKG"Cookie");
 	fid_Cookie_pointer = get_field(&err, env, "pointer", "J");
@@ -1105,17 +1121,6 @@ static int find_fids(JNIEnv *env)
 	if (err)
 	{
 		LOGE("one or more class, member or field IDs could not be found");
-		return -1;
-	}
-
-	/* Get and store the main JVM pointer. We need this in order to get
-	 * JNIEnv pointers on callback threads. This is specifically
-	 * guaranteed to be safe to store in a static var. */
-
-	getvmErr = (*env)->GetJavaVM(env, &jvm);
-	if (getvmErr < 0)
-	{
-		LOGE("cannot get JVM interface (error %d)", getvmErr);
 		return -1;
 	}
 

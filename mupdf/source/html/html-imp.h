@@ -300,7 +300,10 @@ typedef struct
 
 struct fz_html_s
 {
+	/* fz_html is derived from fz_html_tree, so must start with that. */
+	/* Arguably 'tree' should be called 'super'. */
 	fz_html_tree tree;
+
 	float page_w, page_h;
 	float layout_w, layout_h, layout_em;
 	float page_margin[4];
@@ -339,14 +342,15 @@ typedef struct {
 
 struct fz_html_story_s
 {
+	/* fz_html_story is derived from fz_html_tree, so must start with */
+	/* that. Argubly 'tree' should be called 'super'. */
+	fz_html_tree tree;
+
 	/* The user_css (or NULL) */
 	char *user_css;
 
 	/* The HTML story as XML nodes with a DOM */
 	fz_xml *dom;
-
-	/* The HTML tree of content. */
-	fz_html_tree tree;
 
 	/* The fontset for the content. */
 	fz_html_font_set *font_set;

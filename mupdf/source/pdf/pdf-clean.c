@@ -561,11 +561,13 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 		fz_always(ctx)
 		{
 			fz_drop_pixmap(ctx, original);
-			if (pixmap_cloned)
-				fz_drop_pixmap(ctx, pixmap);
 		}
 		fz_catch(ctx)
+		{
+			if (pixmap_cloned)
+				fz_drop_pixmap(ctx, pixmap);
 			fz_rethrow(ctx);
+		}
 	}
 
 	n = pixmap->n - pixmap->alpha;

@@ -216,7 +216,7 @@ int main(int argc, const char *argv[])
 	fz_device *dev = NULL;
 	fz_rect mediabox = { 0, 0, 512, 640 };
 	float margin = 10;
-	int done;
+	int more;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (ctx == NULL)
@@ -251,13 +251,13 @@ int main(int argc, const char *argv[])
 
 			dev = fz_begin_page(ctx, writer, mediabox);
 
-			done = fz_place_story(ctx, story, where, &filled);
+			more = fz_place_story(ctx, story, where, &filled);
 
 			fz_draw_story(ctx, story, dev, fz_identity);
 
 			fz_end_page(ctx, writer);
 		}
-		while (!done);
+		while (more);
 
 		fz_close_document_writer(ctx, writer);
 	}
@@ -308,13 +308,13 @@ int main(int argc, const char *argv[])
 
 			dev = fz_begin_page(ctx, writer, mediabox);
 
-			done = fz_place_story(ctx, story, where, &filled);
+			more = fz_place_story(ctx, story, where, &filled);
 
 			fz_draw_story(ctx, story, dev, fz_identity);
 
 			fz_end_page(ctx, writer);
 		}
-		while (!done);
+		while (more);
 
 		fz_close_document_writer(ctx, writer);
 	}
@@ -392,13 +392,13 @@ int main(int argc, const char *argv[])
 
 			dev = fz_begin_page(ctx, writer, mediabox);
 
-			done = fz_place_story(ctx, story, where, &filled);
+			more = fz_place_story(ctx, story, where, &filled);
 
 			fz_draw_story(ctx, story, dev, fz_identity);
 
 			fz_end_page(ctx, writer);
 		}
-		while (!done);
+		while (more);
 
 		fz_close_document_writer(ctx, writer);
 	}

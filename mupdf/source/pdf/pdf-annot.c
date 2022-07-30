@@ -2847,6 +2847,8 @@ pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, co
 	fz_var(contents);
 	fz_var(res);
 
+	begin_annot_op(ctx, annot, "Set appearance stream");
+
 	fz_try(ctx)
 	{
 		res = pdf_new_dict(ctx, doc, 1);
@@ -2864,6 +2866,7 @@ pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, co
 		fz_drop_device(ctx, dev);
 		fz_drop_buffer(ctx, contents);
 		pdf_drop_obj(ctx, res);
+		end_annot_op(ctx, annot);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
