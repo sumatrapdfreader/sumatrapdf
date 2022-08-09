@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f57a86a594de9a2ce0de9ae5840117bdabda8698
+20de9b5cad5dbb67fffc45d66a45a4067ac8e7b4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -85,6 +85,7 @@ es:&Tamaño real
 eu:&Oraingo neurria
 fr:&Taille réelle
 hi:वास्तविक आकार
+hr:Stv&arna veličina
 it:Dimensione &attuale
 ja:実際のサイズ(&A)
 nl:&Werkelijke grootte
@@ -241,6 +242,7 @@ es:&Atrás
 eu:A&tzera
 fr:R&evenir
 hi:&पीछे
+hr:&Natrag
 it:&Indietro
 ja:戻る(&B)
 nl:&Terug
@@ -263,6 +265,7 @@ es:&Vista de libro
 eu:&Liburu ikuspegia
 fr:&Comme un livre
 hi:&बुक व्यू
+hr:&Knjiški pregled
 it:&Libro
 ja:ブック ビュー(&B)
 nl:&Boek Tonen
@@ -313,6 +316,7 @@ am:&Ստեղն
 bg:&коректорски знак
 bn:&Caret
 br:&Circunflexo
+by:&Карэт
 ca-xv:&Cursor
 ca:&Cursor
 cn:&插入符
@@ -356,6 +360,7 @@ es:&Cerrar
 eu:It&xi
 fr:&Fermer
 hi:&बंद करे
+hr:&Zatvori
 it:&Chiudi
 ja:閉じる(&C)
 nl:&Sluiten
@@ -478,6 +483,7 @@ es:&Copiar a portapapeles
 eu:&Kopiatu gakora
 fr:&Copier dans le presse-papiers
 hi:क्लिपबोर्ड पर कॉपी करें
+hr:Kopiraj u &međuspremnik
 it:&Copia negli Appunti
 ja:クリップボードへコピー(&C)
 nl:&Kopieer Naar Klembord
@@ -657,6 +663,7 @@ uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
 :&Facing
 br:&Página dupla
+by:&Экспазіцыя
 cn:双页视图(&F)
 co:Pagina d&oppia
 cy:&Wynebu
@@ -665,6 +672,7 @@ el:Προσανατολισμός
 es:&Caras opuestas
 eu:A&urrean
 fr:&Deux pages
+hr:&Dvije stranice
 it:Pagine a&ffiancate
 ja:見開き(&F)
 nl:&Gericht op
@@ -814,6 +822,7 @@ uz:&Qidirish:
 vn:Tìm (các) từ sau:
 :&First Page
 br:&Primeira página
+by:&Першая старонка
 cn:第一页(&F)
 co:P&rima pagina
 cy:Tudalen &Gyntaf
@@ -822,6 +831,7 @@ el:Πρώτη σελίδα
 es:&Primera página
 eu:&Lehen orrialdea
 fr:P&remière page
+hr:&Prva stranica
 it:&Prima pagina
 ja:最初のページ(&F)
 nl:&Eerste Pagina
@@ -1147,6 +1157,7 @@ el:Επισήμανση
 es:&Destacar
 eu:&Nabarmendu
 fr:&Surligner
+hr:&Istakni
 it:Eviden&zia
 ja:ハイライト(&H)
 nl:&Markeren
@@ -1166,6 +1177,7 @@ el:Τελευταία σελίδα
 es:Última página
 eu:&Azken orrialdea
 fr:&Dernière page
+hr:&Zadnja stranica
 it:&Ultima pagina
 ja:最後のページ(&L)
 nl:&Laatste Pagina
@@ -1382,6 +1394,7 @@ el:Επόμενη σελίδα
 es:&Página siguiente
 eu:&Hurrengo orrialdea
 fr:Page &suivante
+hr:Sljedeća stra&nica
 it:Pagina &successiva
 ja:次のページ(&N)
 nl:&Volgende Pagina
@@ -1599,6 +1612,7 @@ el:Άνοιγμα
 es:&Abrir...
 eu:&Ireki...
 fr:&Ouvrir...
+hr:&Otvori...
 it:&Apri
 ja:開く(&O)...
 nl:&Openen
@@ -1873,6 +1887,7 @@ el:Προηγούμενη σελίδα
 es:&Página anterior
 eu:A&urreko orrialdea
 fr:Page &précédente
+hr:&Prethodna stranica
 it:Pagina &precedente
 ja:前のページ(&P)
 nl:&Vorige Pagina
@@ -2440,6 +2455,7 @@ el:Μία σελίδα
 es:&Una sola página
 eu:&Orrialde bakarra
 fr:&Une page
+hr:Jedna &stranica
 it:Pagina &singola
 ja:単一のページ(&S)
 nl:&Enkele Pagina
@@ -3269,7 +3285,7 @@ ca-xv:Afegeix la pàgina %s als preferits
 ca:Afegeix la pàgina %s als preferits
 cn:将第 %s 页添加到收藏夹
 co:Aghjunghje a pagina %s à i favuriti
-cy:Ychwanegu tudalen %s i'r Ffefrynnau
+cy:Ychwanegu tudalen %s i'r ffefrynnau
 cz:Přidat stránku %s k oblíbeným...
 de:Seite %s zu Favoriten hinzufügen…
 dk:Føj side %s til foretrukne
@@ -4231,7 +4247,7 @@ ca-xv:Color de fons
 ca:Color de fons
 cn:背景色:
 co:Culore di u fondu :
-cy:Lliw'r Cefndir:
+cy:Lliw Cefndir:
 cz:Barva pozadí:
 de:Hintergrundfarbe:
 el:Χρώμα φόντου:
@@ -4533,6 +4549,7 @@ am:Եզրագիծ. %d
 bg:Окантовка: %d
 bn:সীমানা: %d
 br:Borda: %d
+by:Поле: %d
 cn:边框: %d
 co:Bordu : %d
 cy:Border: %d
@@ -5264,7 +5281,9 @@ de:Andere Tabs schließen
 es:Cerrar otras pestañas
 eu:Itxi beste hegatsak
 fr:Fermer les autres onglets
+hr:Zatvori ostale kartice
 it:Chiudi altre schede
+ja:他のタブを閉じる
 nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
 tr:Diğer Sekmeleri Kapat
@@ -5279,7 +5298,9 @@ de:Tabs rechts schließen
 es:Cerrar pestañas a la derecha
 eu:Itxi eskuineko hegatsak
 fr:Fermer les onglets sur la droite
+hr:Zatvori kartice zdesna
 it:Chiudi scheda sulla destra
+ja:右側のタブを閉じる
 nl:Sluit Tabbladen Rechts
 pl:Zamknij karty po prawej stronie
 tr:Sağdaki sekmeleri kapat
@@ -5444,6 +5465,7 @@ uz:Komikslar
 vn:Truyện tranh
 :Command Palette
 br:Paleta de comandos
+by:Набор каманд
 cn:命令面板
 co:Tavuletta di cumande
 cy:Palet Gorchmynion
@@ -5454,6 +5476,7 @@ et:Käsupalett
 eu:Agindu paleta
 fr:Palette de commande
 hi:कमांड पैलेट
+hr:Paleta naredbi
 it:Elenco comandi
 ja:コマンドパレット
 nl:Opdrachten
@@ -6049,6 +6072,7 @@ et:Kopeeri lõikelauale
 eu:Kopiatu gakora
 fr:Copier dans le presse-papiers
 hi:क्लिपबोर्ड पर कॉपी करें
+hr:Kopiraj u međuspremnik
 it:Copia negli Appunti
 ja:クリップボードへコピー
 nl:Kopieer naar klembord
@@ -7127,6 +7151,7 @@ es:Zoom &personalizado...
 eu:Norbere &Zooma...
 fr:&Zoom personnalisé...
 hi:कस्टम &ज़ूम करें...
+hr:Prilagođeno &uvećanje...
 it:&Zoom personalizzato
 ja:拡大率の指定(&Z)...
 nl:Aangepast & zoom...
@@ -7727,6 +7752,7 @@ es:S&alir
 eu:I&rten
 fr:&Quitter
 hi:निकास
+hr:I&zlaz
 it:&Esci
 ja:終了(&X)
 nl:A&fsluiten
@@ -7741,6 +7767,7 @@ am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
 br:Sair da tela &cheia
+by:В&ыйсці з поўнаэкраннага рэжыму
 ca-xv:Surt de &la pantalla completa
 ca:Surt de &la pantalla completa
 cn:退出全屏(&X)
@@ -8270,6 +8297,7 @@ uz:&Tanlanganlar
 vn:Ưa thích
 :F&orward
 br:A&vançar
+by:Н&аперад
 cn:下一视图(&O)
 co:&Dopu
 cy:&Ymlaen
@@ -8279,6 +8307,7 @@ es:A&delante
 eu:A&urrera
 fr:&Avancer
 hi:आगे
+hr:Na&prijed
 it:&Avanti
 ja:進む(&O)
 nl:V&ooruit
@@ -8290,6 +8319,7 @@ uk:Вперед
 vn:Tiếp
 :F&ullscreen
 br:T&ela cheia
+by:П&оўнаэкранны рэжым
 cn:全屏(&U)
 co:&Screnu sanu
 cy:Sgrin &Lawn
@@ -8299,6 +8329,7 @@ es:P&antalla completa
 eu:Ikusleiho-o&soa
 fr:P&lein écran
 hi:पूर्ण स्क्रीन
+hr:P&uni zaslon
 it:Sc&hermo pieno
 ja:全画面表示(&U)
 nl:V&oledig Scherm
@@ -8968,6 +8999,7 @@ az:Qoşma fayl
 bg:Прикачен файл
 bn:নথি সংযুক্তি
 br:Anexo de Arquivo
+by:Далучаны файл
 ca-xv:Fitxer adjunt
 ca:Fitxer adjunt
 cn:文件附件
@@ -9153,6 +9185,7 @@ el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
 fr:R&echercher...
+hr:&Traži...
 it:&Trova
 ja:検索(&D)...
 nl:Zoe&k
@@ -9445,6 +9478,7 @@ uz:Qidirish:
 vn:Tìm kiếm:
 :Fit &Content
 br:Ajustar ao &conteúdo
+by:Падагнаць &змесціва
 cn:适合内容(&C)
 co:&Adattà à u cuntenutu
 cy:&Ffitio'r Cynnwys
@@ -9453,6 +9487,7 @@ el:Προσαρμογή περιεχομένου
 es:Ajustar al &contenido
 eu:Finkatu &edukia
 fr:Ajuster au &contenu
+hr:Prilagodi &sadržaju
 it:Adatta al &contenuto
 ja:内容に合わせる(&C)
 nl:&Inhoud Aanpassen
@@ -9464,6 +9499,7 @@ uk:Підігнати вміст
 vn:Vừa &Nội Dung
 :Fit &Page
 br:Ajustar à &página
+by:Падагнаць &старонку
 cn:适合页面(&P)
 co:&Pagina sana
 cy:Ffitio &Tudalen
@@ -9472,6 +9508,7 @@ el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
 fr:&Page entière
+hr:&Prilagodi stranici
 it:Adatta alla &pagina
 ja:ページに合わせる(&P)
 nl:&Pagina Aanpassen
@@ -9483,6 +9520,7 @@ uk:Підігнати сторінку
 vn:Vừa &Trang
 :Fit &Width
 br:Ajustar pela &largura
+by:Дапасаваць па &шырыні
 cn:适合宽度(&W)
 co:&Larghezza sana
 cy:Ffitio &Lled
@@ -9491,6 +9529,7 @@ el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
 fr:Pleine &largeur
+hr: Nam&jesti po širini
 it:Adatta a &larghezza
 ja:幅に合わせる(&W)
 nl:&Breedte Aanpassen
@@ -9642,7 +9681,7 @@ bg:Оразмери по ширина
 bn:প্রস্থ অনুরূপ
 br:Ajustar pela largura
 bs:Uklopi po širini
-by:Падагнаць па шырыне
+by:Падагнаць па шырыні
 ca-xv:Ajusta a l'amplada
 ca:Ajusta a l'amplada
 cn:适合宽度
@@ -9710,7 +9749,7 @@ az:Səhifənin genişliyinə görə sığışdır və səhifələri ardıcıl g�
 bg:Оразмери по широчина и покажи страниците непрекъснато
 br:Ajustar pela largura e exibir páginas em modo contínuo
 bs:Uklopi po širini i prikaži stranice slijedno
-by:Падагнаць па шырыне і Паказаць бесперапынную старонку
+by:Падагнаць па шырыні і паказваць непарыўную старонку
 ca-xv:Ajusta l'amplada i mostra les pàgines de forma contínua
 ca:Ajusta a l'amplada i mostra les pàgines de forma contínua
 cn:适合宽度连续页面模式(&W)
@@ -10174,6 +10213,7 @@ et:Hangi fondi infot
 eu:Lortu hizkien argibideak
 fr:Infos sur les polices
 hi:फ़ॉन्ट जानकारी प्राप्त करें
+hr:Informacije o fontovima
 it:Ottieni informazioni sui font
 ja:フォント情報を取得
 nl:Informatie over lettertypen ophalen
@@ -10806,6 +10846,7 @@ es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
 fr:Installer pour tous les utilisateurs
 hi:सभी उपयोगकर्ताओं के लिए इंस्टॉल करें
+hr:Instaliraj za sve korisnike
 it:Installa per tutti gli utenti
 ja:すべてのユーザーに対してインストール
 nl:Installeer voor alle gebruikers
@@ -11363,6 +11404,7 @@ de:Lädt %s ..,
 es:Cargando %s ...
 eu:Gertatzen %s ...
 fr:Chargement de %s ...
+hr:Učitavanje %s ...
 it:Caricamento %s...
 nl:Laden %s...
 pl:Ładowanie %s ...
@@ -11780,6 +11822,7 @@ el:Νέο παράθυρο
 es:Nueva &ventana
 eu:&Leiho berria
 fr:Nouvelle &fenêtre
+hr:Novi p&rozor
 it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 nl:Nieuw &Kader
@@ -12229,7 +12272,7 @@ bg:OK
 bn:ঠিক আছে
 br:OK
 bs:OK
-by:ДА
+by:ОК
 ca-xv:D'acord
 ca:D'acord
 cn:确定
@@ -12491,7 +12534,9 @@ de:Anhang öffnen
 es:Abrir archivo adjunto
 eu:Ireki eranskina
 fr:Ouvrir la pièce jointe
+hr:Otvori prilog
 it:Apri allegato
+ja:添付を開く
 nl:Open Bijlage
 pl:Otwórz załącznik
 tr:Eki aç
@@ -13324,6 +13369,7 @@ el:Σελίδα
 es:Pá&gina...
 eu:O&rrialdea...
 fr:Pa&ge...
+hr:St&ranica...
 it:Pa&gina...
 ja:ページ(&G)...
 nl:Pa&gina
@@ -14028,6 +14074,7 @@ el:Παρουσίαση
 es:Pr&esentación
 eu:Aur&kezpena
 fr:Prés&entation
+hr:Pr&ezentacija
 it:Presentazione
 ja:プレゼンテーション(&E)
 nl:Pr&esentatie
@@ -14633,6 +14680,7 @@ el:Μετονομασία
 es:Re&nombrar...
 eu:B&errizendatu...
 fr:Re&nommer...
+hr:Preime&nuj
 it:Ri&nomina...
 ja:ファイル名の変更(&N)...
 nl:Her&noem
@@ -14975,6 +15023,7 @@ el:Περιστροφή αριστερά
 es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fr:Rotation vers la &gauche
+hr:Rotiraj &lijevo
 it:Ruota a &sinistra
 ja:左に回転(&L)
 nl:&Linksom Roteren
@@ -14994,6 +15043,7 @@ el:Περιστροφή δεξιά
 es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
 fr:Rotation vers la d&roite
+hr:&Rotiraj desno
 it:Ruota a &destra
 ja:右に回転(&R)
 nl:&Rechtsom Roteren
@@ -15130,7 +15180,9 @@ de:Anhang speichern…
 es:Guarda archivo adjunto...
 eu:Gorde eranskina...
 fr:Enregistrer la pièce jointe...
+hr:Spremi prilog...
 it:Salva allegato
+ja:添付を保存
 nl:Bijlage Opslaan...
 pl:Zapisz załącznik...
 tr:Eki kaydet
@@ -15184,6 +15236,7 @@ el:Αποθήκευση συντόμευσης
 es:Guardar A&tajo...
 eu:Gorde &lastertekla...
 fr:Enregistrer le raccourci (&h)
+hr:Spre&mi prečac...
 it:Sal&va scorciatoia...
 ja:ショートカットを保存(&H)...
 nl:S&neltoets Opslaan
@@ -16206,6 +16259,7 @@ el:Εμφάνιση σελιδοδεικτών
 es:Mostrar favo&ritos
 eu:Erakutsi &Lastermarkak
 fr:&Afficher les signets
+hr:Prikaži fa&vorite
 it:Visualizza &Preferiti
 ja:ブックマークを表示(&M)
 nl:Toon Blad&wijzers
@@ -16432,7 +16486,9 @@ de:Im Ordner anzeigen
 es:mostrar en la carpeta
 eu:Erakutsi agiritegian
 fr:Afficher dans le dossier
+hr:Prikaži u mapi
 it:Visualizza nella cartella
+ja:フォルダを表示
 nl:Toon in map
 pl:Pokaż w folderze
 tr:Klasörde göster
@@ -17967,6 +18023,7 @@ vn:Tựa đề
 am:Թարգմանել &DeepL-ով
 bg:Превод с &DeepL
 br:Traduzir com &DeepL
+by:Перакласці ў &DeepL
 ca-xv:Tradueix amb el &Deepl
 ca:Tradueix amb el &Deepl
 cn:使用 DeepL 翻译(&D)
