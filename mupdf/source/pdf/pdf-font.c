@@ -434,16 +434,12 @@ static struct { int ros, serif; const char *name; } known_cjk_fonts[] = {
 	{ FZ_ADOBE_GB, 1, "SimKai" },
 	{ FZ_ADOBE_GB, 1, "SimLi" },
 	{ FZ_ADOBE_GB, 1, "SimSun" },
-	{ FZ_ADOBE_GB, 1, "NSimSun" },
 	{ FZ_ADOBE_GB, 1, "Song" },
 
 	{ FZ_ADOBE_CNS, 1, "MingLiU" },
-	{ FZ_ADOBE_CNS, 1, "PMingLiU" },
 
 	{ FZ_ADOBE_JAPAN, 0, "Gothic" },
-	{ FZ_ADOBE_JAPAN, 0, "PGothic" },
 	{ FZ_ADOBE_JAPAN, 1, "Mincho" },
-	{ FZ_ADOBE_JAPAN, 1, "PMincho" },
 
 	{ FZ_ADOBE_KOREA, 1, "Batang" },
 	{ FZ_ADOBE_KOREA, 0, "Gulim" },
@@ -452,10 +448,7 @@ static struct { int ros, serif; const char *name; } known_cjk_fonts[] = {
 
 static int match_font_name(const char *s, const char *ref)
 {
-	/* Skip "MS-" prefix if present. */
-	if (s[0] == 'M' && s[1] == 'S' && s[2] == '-')
-		return !strncmp(s+3, ref, strlen(ref));
-	return !strncmp(s, ref, strlen(ref));
+	return !!strstr(s, ref);
 }
 
 static void

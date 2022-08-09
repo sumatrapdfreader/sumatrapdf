@@ -1045,6 +1045,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 					workers[band].error = 0;
 					workers[band].ctm = ctm;
 					workers[band].tbounds = tbounds;
+					tbounds.y0 += band_height;
+					tbounds.y1 += band_height;
 					memset(&workers[band].cookie, 0, sizeof(fz_cookie));
 					workers[band].list = list;
 					workers[band].pix = fz_new_pixmap_with_bbox(ctx, colorspace, band_ibounds, seps, alpha);
@@ -1146,6 +1148,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				}
 				if (num_workers <= 0)
 					pix->y += band_height;
+				tbounds.y0 += band_height;
+				tbounds.y1 += band_height;
 			}
 
 			if (output_format != OUT_PCLM && output_format != OUT_OCR_PDF)

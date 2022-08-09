@@ -819,6 +819,8 @@ static int should_edit_icolor(enum pdf_annot_type subtype)
 	default:
 		return 0;
 	case PDF_ANNOT_LINE:
+	case PDF_ANNOT_POLYGON:
+	case PDF_ANNOT_POLY_LINE:
 	case PDF_ANNOT_SQUARE:
 	case PDF_ANNOT_CIRCLE:
 		return 1;
@@ -1057,7 +1059,7 @@ void do_annotate_panel(void)
 			ui_spacer();
 		}
 
-		if (subtype == PDF_ANNOT_LINE)
+		if (subtype == PDF_ANNOT_LINE || subtype == PDF_ANNOT_POLY_LINE)
 		{
 			enum pdf_line_ending s, e;
 			int s_choice, e_choice;

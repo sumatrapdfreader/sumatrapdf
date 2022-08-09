@@ -25,8 +25,8 @@ def readlist(filename):
 			for ucs in list:
 				if ucs > 0xffff:
 					okay = False
-				if ucs >= 0xe000 and ucs <= 0xf8ff:
-					okay = False
+				#if ucs >= 0xe000 and ucs <= 0xf8ff:
+				#	okay = False
 			if okay and name not in aglseen:
 				agl.append((name, list))
 				aglseen[name] = True

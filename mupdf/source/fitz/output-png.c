@@ -108,7 +108,7 @@ typedef struct png_band_writer_s
 	fz_band_writer super;
 	unsigned char *udata;
 	unsigned char *cdata;
-	uLong usize, csize;
+	size_t usize, csize;
 	z_stream stream;
 	int stream_ended;
 } png_band_writer;
@@ -213,6 +213,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 	unsigned char *dp;
 	int y, x, k, err, finalband;
 	int w, h, n;
+	size_t remain;
 
 	if (!out)
 		return;
@@ -227,13 +228,21 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 
 	if (writer->udata == NULL)
 	{
-		writer->usize = ((uLong)w * n + 1) * band_height;
-		/* Sadly the bound returned by compressBound is just for a
-		 * single usize chunk; if you compress a sequence of them
-		 * the buffering can result in you suddenly getting a block
-		 * larger than compressBound outputted in one go, even if you
-		 * take all the data out each time. */
-		writer->csize = compressBound(writer->usize);
+		size_t usize = w;
+
+		if (usize > SIZE_MAX / n - 1)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
+		usize = usize * n + 1;
+		if (usize > SIZE_MAX / band_height)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
+		usize *= band_height;
+		writer->usize = usize;
+		/* Now figure out how large a buffer we need to compress into.
+		 * deflateBound always expands a bit, and it's limited by being
+		 * a uLong rather than a size_t. */
+		writer->csize = writer->usize >= UINT32_MAX ? UINT32_MAX : deflateBound(&writer->stream, writer->usize);
+		if (writer->csize < writer->usize || writer->csize > UINT32_MAX) /* Check for overflow */
+			writer->csize = UINT32_MAX;
 		writer->udata = Memento_label(fz_malloc(ctx, writer->usize), "png_write_udata");
 		writer->cdata = Memento_label(fz_malloc(ctx, writer->csize), "png_write_cdata");
 		writer->stream.opaque = ctx;
@@ -297,38 +306,38 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		}
 	}
 
-	writer->stream.next_in = (Bytef*)writer->udata;
-	writer->stream.avail_in = (uInt)(dp - writer->udata);
+	remain = dp - writer->udata;
+	dp = writer->udata;
+
 	do
 	{
+		size_t eaten;
+
+		writer->stream.next_in = dp;
+		writer->stream.avail_in = remain <= UINT32_MAX ? remain : UINT32_MAX;
 		writer->stream.next_out = writer->cdata;
-		writer->stream.avail_out = (uInt)writer->csize;
+		writer->stream.avail_out = writer->csize <= UINT32_MAX ? (uInt)writer->csize : UINT32_MAX;
 
-		if (!finalband)
-		{
-			err = deflate(&writer->stream, Z_NO_FLUSH);
-			if (err != Z_OK)
+		err = deflate(&writer->stream, (finalband && remain == writer->stream.avail_in) ? Z_FINISH : Z_NO_FLUSH);
+		if (err != Z_OK && err != Z_STREAM_END)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
-		}
-		else
-		{
-			err = deflate(&writer->stream, Z_FINISH);
-			if (err == Z_OK)
-			{
-				/* more output space needed, try again */
-				writer->cdata = Memento_label(fz_realloc(ctx, writer->cdata, writer->csize << 2), "realloc png_write_cdata");
-				writer->csize <<= 2;
-				continue;
-			}
 
-			if (err != Z_STREAM_END)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
-		}
+		/* We are guaranteed that writer->stream.next_in will have been updated for the
+		 * data that has been eaten. */
+		eaten = (writer->stream.next_in - dp);
+		remain -= eaten;
+		dp += eaten;
 
+		/* We are guaranteed that writer->stream.next_out will have been updated for the
+		 * data that has been written. */
 		if (writer->stream.next_out != writer->cdata)
 			putchunk(ctx, out, "IDAT", writer->cdata, writer->stream.next_out - writer->cdata);
+
+		/* Zlib only guarantees to have finished when we have no more data to feed in, and
+		 * the last call to deflate did not return with avail_out == 0. (i.e. no more is
+		 * buffered internally.) */
 	}
-	while (writer->stream.avail_out == 0);
+	while (remain != 0 || writer->stream.avail_out == 0);
 }
 
 static void

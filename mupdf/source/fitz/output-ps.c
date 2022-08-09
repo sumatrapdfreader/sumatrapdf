@@ -29,9 +29,9 @@ typedef struct ps_band_writer_s
 	fz_band_writer super;
 	z_stream stream;
 	int stream_ended;
-	int input_size;
+	size_t input_size;
 	unsigned char *input;
-	int output_size;
+	size_t output_size;
 	unsigned char *output;
 } ps_band_writer;
 
@@ -143,14 +143,6 @@ ps_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 	fz_output *out = writer->super.out;
 	int err;
 
-	writer->stream.next_in = NULL;
-	writer->stream.avail_in = 0;
-	writer->stream.next_out = (Bytef*)writer->output;
-	writer->stream.avail_out = (uInt)writer->output_size;
-
-	err = deflate(&writer->stream, Z_FINISH);
-	if (err != Z_STREAM_END)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
 	writer->stream_ended = 1;
 	err = deflateEnd(&writer->stream);
 	if (err != Z_OK)
@@ -224,19 +216,30 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 	int w = writer->super.w;
 	int h = writer->super.h;
 	int n = writer->super.n;
-	int x, y, i, err;
-	int required_input;
-	int required_output;
+	int x, y, i, err, finalband;
+	size_t required_input;
+	size_t required_output;
+	size_t remain;
 	unsigned char *o;
 
 	if (!out)
 		return;
 
-	if (band_start+band_height >= h)
+
+	finalband = (band_start+band_height >= h);
+	if (finalband)
 		band_height = h - band_start;
 
-	required_input = w*n*band_height;
-	required_output = (int)deflateBound(&writer->stream, required_input);
+	required_input = w;
+	if (required_input > SIZE_MAX / n)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "ps data too large.");
+	required_input = required_input * n;
+	if (required_input > SIZE_MAX / band_height)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
+	required_input *= band_height;
+	required_output = required_input >= UINT_MAX ? UINT_MAX : deflateBound(&writer->stream, required_input);
+	if (required_output < required_input || required_output > UINT_MAX)
+		required_output = UINT_MAX;
 
 	if (writer->input == NULL || writer->input_size < required_input)
 	{
@@ -265,16 +268,38 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 		samples += stride - w*n;
 	}
 
-	writer->stream.next_in = (Bytef*)writer->input;
-	writer->stream.avail_in = required_input;
-	writer->stream.next_out = (Bytef*)writer->output;
-	writer->stream.avail_out = (uInt)writer->output_size;
+	remain = o - writer->input;
+	o = writer->input;
 
-	err = deflate(&writer->stream, Z_NO_FLUSH);
-	if (err != Z_OK)
+	do
+	{
+		size_t eaten;
+
+		writer->stream.next_in = o;
+		writer->stream.avail_in = remain <= UINT_MAX ? remain : UINT_MAX;
+		writer->stream.next_out = writer->output;
+		writer->stream.avail_out = writer->output_size <= UINT_MAX ? (uInt)writer->output_size : UINT_MAX;
+
+		err = deflate(&writer->stream, (finalband && remain == writer->stream.avail_in) ? Z_FINISH : Z_NO_FLUSH);
+		if (err != Z_OK && err != Z_STREAM_END)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
 
+		/* We are guaranteed that writer->stream.next_in will have been updated for the
+		 * data that has been eaten. */
+		eaten = (writer->stream.next_in - o);
+		remain -= eaten;
+		o += eaten;
+
+		/* We are guaranteed that writer->stream.next_out will have been updated for the
+		 * data that has been written. */
+		if (writer->stream.next_out != writer->output)
 	fz_write_data(ctx, out, writer->output, writer->output_size - writer->stream.avail_out);
+
+		/* Zlib only guarantees to have finished when we have no more data to feed in, and
+		 * the last call to deflate did not return with avail_out == 0. (i.e. no more is
+		 * buffered internally.) */
+	}
+	while (remain != 0 || writer->stream.avail_out == 0);
 }
 
 fz_band_writer *fz_new_ps_band_writer(fz_context *ctx, fz_output *out)
