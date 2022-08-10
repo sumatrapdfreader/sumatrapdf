@@ -725,7 +725,10 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
     signal(SIGABRT, onSignalAbort);
 #if COMPILER_MSVC
     ::set_terminate(onTerminate);
-    ::set_unexpected(onUnexpected);
+    // TODO: breaks starting in 17.3. Requires _HAS_EXCEPTION
+    // but it is disabled by _HAS_CXX17 because P0003R5
+    // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0003r5.html
+    //::set_unexpected(onUnexpected);
 #endif
 }
 
