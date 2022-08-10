@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-20de9b5cad5dbb67fffc45d66a45a4067ac8e7b4
+aff92e11b4b37eab62fa1c537bb81549135cc8bd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5278,6 +5278,7 @@ cn:关闭其他标签页
 co:Chjode d’altre unghjette
 cy:Cau Tabiau Eraill
 de:Andere Tabs schließen
+el:Κλείσιμο άλλων καρτελών
 es:Cerrar otras pestañas
 eu:Itxi beste hegatsak
 fr:Fermer les autres onglets
@@ -5295,6 +5296,7 @@ cn:关闭右侧标签页
 co:Chjode l’unghjette versu a diritta
 cy:Cau Tabiau i'r Dde
 de:Tabs rechts schließen
+el:Κλείσιμο καρτελών στα δεξιά
 es:Cerrar pestañas a la derecha
 eu:Itxi eskuineko hegatsak
 fr:Fermer les onglets sur la droite
@@ -11401,6 +11403,7 @@ cn:载入 %s ...
 co:Caricamentu di %s …
 cy:Wrthi'n llwytho %s ...
 de:Lädt %s ..,
+el:Φόρτωση %s...
 es:Cargando %s ...
 eu:Gertatzen %s ...
 fr:Chargement de %s ...
@@ -12531,6 +12534,7 @@ cn:打开附件
 co:Apre u schedariu assuciatu
 cy:Agor Atodiad
 de:Anhang öffnen
+el:Αποθήκευση συνημμένου
 es:Abrir archivo adjunto
 eu:Ireki eranskina
 fr:Ouvrir la pièce jointe
@@ -15177,6 +15181,7 @@ cn:保存附件...
 co:Arregistrà u schedariu assuciatu…
 cy:Cadw Atodiad
 de:Anhang speichern…
+el:Αποθήκευση συνημμένου...
 es:Guarda archivo adjunto...
 eu:Gorde eranskina...
 fr:Enregistrer la pièce jointe...
@@ -16483,6 +16488,7 @@ cn:在文件夹中显示
 co:Affissà in u cartulare
 cy:Dangos mewn ffolder
 de:Im Ordner anzeigen
+el:Εμφάνιση στο φάκελο 
 es:mostrar en la carpeta
 eu:Erakutsi agiritegian
 fr:Afficher dans le dossier
