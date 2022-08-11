@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -199,6 +199,17 @@ fz_dirname(char *dir, const char *path, size_t n)
 	for(; dir[i] != '/'; --i) if (!i) { fz_strlcpy(dir, ".", n); return; }
 	for(; dir[i] == '/'; --i) if (!i) { fz_strlcpy(dir, "/", n); return; }
 	dir[i+1] = 0;
+}
+
+const char *
+fz_basename(const char *path)
+{
+	const char *name = strrchr(path, '/');
+	if (!name)
+		name = strrchr(path, '\\');
+	if (!name)
+		return path;
+	return name + 1;
 }
 
 #ifdef _WIN32

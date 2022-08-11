@@ -903,6 +903,16 @@ classextras = ClassExtras(
                 ),
 
         fz_link = ClassExtra(
+                constructors_extra = [
+                    ExtraConstructor( f'({util.rename.class_("fz_rect")}& rect, const char *uri)',
+                        f'''
+                        {{
+                            m_internal = {util.rename.function_call('fz_new_link_of_size')}( sizeof(fz_link), *rect.internal(), uri);
+                        }}
+                        ''',
+                        '/* Construct by calling fz_new_link_of_size() with size=sizeof(fz_link). */',
+                        )
+                    ],
                 accessors = True,
                 iterator_next = ('', ''),
                 constructor_raw = True,
@@ -1698,6 +1708,9 @@ classextras = ClassExtras(
 
         pdf_filter_options = ClassExtra(
                 pod = 'inline',
+                # We don't need to allocate extra space, and because we are a
+                # POD class, we can simply let our default constructor run.
+                #
                 virtual_fnptrs = (
                         lambda name: f'(PdfFilterOptions2*) {name}',
                         f'this->opaque = this;\n'

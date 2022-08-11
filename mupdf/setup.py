@@ -8,8 +8,8 @@ Notes:
     When building an sdist (e.g. with 'pip sdist'), we use clang-python to
     generate C++ source which is then included in the sdist.
 
-    Thus when we are in an sdist and are installing or building a wheel, we
-    don't need clang-python .
+    This allows wheels to be built from an sdist without requiring clang-python
+    to be installed.
 
 
 Internal testing only - environmental variables:
@@ -225,12 +225,7 @@ def sdist():
     paths += [
             'build/shared-release/mupdf.py',
             'git-info',
-            'platform/c++/c_enums.pickle',
-            'platform/c++/c_functions.pickle',
-            'platform/c++/c_globals.pickle',
-            'platform/c++/container_classnames.pickle',
-            'platform/c++/cpp_files.pickle',
-            'platform/c++/h_files.pickle',
+            'platform/c++/generated.pickle',
             'platform/c++/implementation/classes.cpp',
             'platform/c++/implementation/classes2.cpp',
             'platform/c++/implementation/exceptions.cpp',
@@ -241,11 +236,6 @@ def sdist():
             'platform/c++/include/mupdf/exceptions.h',
             'platform/c++/include/mupdf/functions.h',
             'platform/c++/include/mupdf/internal.h',
-            'platform/c++/swig_cpp.pickle',
-            'platform/c++/swig_csharp.pickle',
-            'platform/c++/swig_python.pickle',
-            'platform/c++/to_string_structnames.pickle',
-            'platform/c++/virtual_fnptrs.pickle',
             'platform/c++/windows_mupdf.def',
             'platform/python/mupdfcpp_swig.cpp',
             ]

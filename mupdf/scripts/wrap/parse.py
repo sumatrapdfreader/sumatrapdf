@@ -515,6 +515,11 @@ find_wrappable_function_with_arg0_type_cache = None
 #
 find_wrappable_function_with_arg0_type_excluded_cache = None
 
+# Maps from function name to the class that has a method that wraps this
+# function.
+#
+fnname_to_method_structname = dict()
+
 def find_wrappable_function_with_arg0_type_cache_populate( tu):
     '''
     Populates caches with wrappable functions.
@@ -621,10 +626,14 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
                 arg0 = arg0_cursor.type.get_canonical().spelling
                 arg0 = util.clip( arg0, 'struct ')
 
+                #jlib.log( '=== Adding to {arg0=}: {fnname=}. {len(fnname_to_method_structname)=}')
+
                 items = find_wrappable_function_with_arg0_type_cache.setdefault( arg0, [])
                 items.append( fnname)
 
-    jlib.logx( f'populating find_wrappable_function_with_arg0_type_cache took {time.time()-t0}s')
+                fnname_to_method_structname[ fnname] = arg0
+
+    jlib.log( f'populating find_wrappable_function_with_arg0_type_cache took {time.time()-t0}s')
 
 
 def find_wrappable_function_with_arg0_type( tu, structname):
@@ -648,6 +657,16 @@ def find_wrappable_function_with_arg0_type( tu, structname):
             jlib.log('    {i}')
     return ret
 find_struct_cache = None
+
+
+def find_class_for_wrappable_function( fn_name):
+    '''
+    If <fn_name>'s first arg is a struct and our wrapper class for this struct
+    has a method that wraps <fn_name>, return name of wrapper class.
+
+    Otherwise return None.
+    '''
+    return fnname_to_method_structname.get( fn_name)
 
 
 def find_struct( tu, structname, require_definition=True):

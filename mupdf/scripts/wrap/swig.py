@@ -102,19 +102,31 @@ def build_swig(
 
     if language == 'python':
         common += textwrap.dedent(f'''
-                /* Support for extracting buffer data into a Python bytes. */
-                PyObject* buffer_extract_bytes(fz_buffer* buffer)
+                /* Support for extracting buffer data into a Python bytes. If
+                <clear> is true we clear and trim the buffer. */
+                PyObject* buffer_to_bytes(fz_buffer* buffer, int clear)
                 {{
                     unsigned char* c = NULL;
                     /* We mimic the affects of fz_buffer_extract(), which leaves
                     the buffer with zero capacity. */
                     size_t len = mupdf::buffer_storage(buffer, &c);
                     PyObject* ret = PyBytes_FromStringAndSize((const char*) c, (Py_ssize_t) len);
-                    if (ret) {{
+                    if (clear)
+                    {{
                         mupdf::clear_buffer(buffer);
                         mupdf::trim_buffer(buffer);
                     }}
                     return ret;
+                }}
+
+                /* Returns a Python memoryview for specified memory. */
+                PyObject* python_memoryview_from_memory( void* data, size_t size, int writable)
+                {{
+                    return PyMemoryView_FromMemory(
+                            (char*) data,
+                            (Py_ssize_t) size,
+                            writable ? PyBUF_WRITE : PyBUF_READ
+                            );
                 }}
 
                 /* Creates Python bytes from copy of raw data. */
@@ -159,11 +171,11 @@ def build_swig(
                 }}
 
 
-                /* SWIG-friendly alternative to ppdf_set_annot_color(). */
+                /* SWIG-friendly alternative to ppdf_set_annot_interior_color(). */
                 void ppdf_set_annot_interior_color2(pdf_annot *annot, int n, float color0, float color1, float color2, float color3)
                 {{
                     float color[] = {{ color0, color1, color2, color3 }};
-                    return mupdf::ppdf_set_annot_color(annot, n, color);
+                    return mupdf::ppdf_set_annot_interior_color(annot, n, color);
                 }}
 
                 /* SWIG-friendly alternative to mfz_fill_text(). */
@@ -189,6 +201,43 @@ def build_swig(
                     std::vector<unsigned char>  ret(length);
                     mupdf::mfz_memrnd(&ret[0], length);
                     return ret;
+                }}
+
+
+                /* mupdfpy optimisation for copying pixmap. Copies first <n>
+                bytes of each pixel from <src> to <pm>. <pm> and <src> should
+                have same .w and .h */
+                void mupdfpy_pixmap_copy( fz_pixmap* pm, const fz_pixmap* src, int n)
+                {{
+                    assert( pm->w == src->w);
+                    assert( pm->h == src->h);
+                    assert( n <= pm->n);
+                    assert( n <= src->n);
+
+                    if (pm->n == src->n)
+                    {{
+                        // identical samples
+                        assert( pm->stride == src->stride);
+                        memcpy( pm->samples, src->samples, pm->w * pm->h * pm->n);
+                    }}
+                    else
+                    {{
+                        for ( int y=0; y<pm->h; ++y)
+                        {{
+                            for ( int x=0; x<pm->w; ++x)
+                            {{
+                                memcpy(
+                                        pm->samples + pm->stride * y + pm->n * x,
+                                        src->samples + src->stride * y + src->n * x,
+                                        n
+                                        );
+                                if (pm->alpha)
+                                {{
+                                    src->samples[ src->stride * y + src->n * x] = 255;
+                                }}
+                            }}
+                        }}
+                    }}
                 }}
                 ''')
 
@@ -226,25 +275,25 @@ def build_swig(
                 return lookup_bookmark2(doc, mark);
             }}
 
-            struct convert_color2_dv
+            struct convert_color2_v
             {{
-                float dv0;
-                float dv1;
-                float dv2;
-                float dv3;
+                float v0;
+                float v1;
+                float v2;
+                float v3;
             }};
 
             /* SWIG-friendly alternative for fz_convert_color(). */
             void convert_color2(
                     fz_colorspace *ss,
-                    const float *sv,
+                    float *sv,
                     fz_colorspace *ds,
-                    convert_color2_dv* dv,
+                    convert_color2_v* dv,
                     fz_colorspace *is,
                     fz_color_params params
                     )
             {{
-                mupdf::convert_color(ss, sv, ds, &dv->dv0, is, params);
+                mupdf::convert_color(ss, sv, ds, &dv->v0, is, params);
             }}
 
             /* SWIG-friendly support for fz_set_warning_callback() and
@@ -285,6 +334,92 @@ def build_swig(
                 }}
                 void* user;
             }};
+
+            void Pixmap_set_alpha_helper(
+                int balen,
+                int n,
+                int data_len,
+                int zero_out,
+                unsigned char* data,
+                fz_pixmap* pix,
+                int premultiply,
+                int bground,
+                const std::vector<int>& colors,
+                const std::vector<int>& bgcolor
+                )
+            {{
+                int i = 0;
+                int j = 0;
+                int k = 0;
+                int data_fix = 255;
+                while (i < balen) {{
+                    unsigned char alpha = data[k];
+                    if (zero_out) {{
+                        for (j = i; j < i+n; j++) {{
+                            if (pix->samples[j] != (unsigned char) colors[j - i]) {{
+                                data_fix = 255;
+                                break;
+                            }} else {{
+                                data_fix = 0;
+                            }}
+                        }}
+                    }}
+                    if (data_len) {{
+                        if (data_fix == 0) {{
+                            pix->samples[i+n] = 0;
+                        }} else {{
+                            pix->samples[i+n] = alpha;
+                        }}
+                        if (premultiply && !bground) {{
+                            for (j = i; j < i+n; j++) {{
+                                pix->samples[j] = fz_mul255(pix->samples[j], alpha);
+                            }}
+                        }} else if (bground) {{
+                            for (j = i; j < i+n; j++) {{
+                                int m = (unsigned char) bgcolor[j - i];
+                                pix->samples[j] = m + fz_mul255((pix->samples[j] - m), alpha);
+                            }}
+                        }}
+                    }} else {{
+                        pix->samples[i+n] = data_fix;
+                    }}
+                    i += n+1;
+                    k += 1;
+                }}
+            }}
+
+            void page_merge_helper(
+                    mupdf::PdfObj& old_annots,
+                    mupdf::PdfGraftMap& graft_map,
+                    mupdf::PdfDocument& doc_des,
+                    mupdf::PdfObj& new_annots,
+                    int n
+                    )
+            {{
+                for ( int i=0; i<n; ++i)
+                {{
+                    mupdf::PdfObj o = mupdf::mpdf_array_get( old_annots, i);
+                    if (mupdf::mpdf_dict_gets( o, "IRT").m_internal)
+                        continue;
+                    mupdf::PdfObj subtype = mupdf::mpdf_dict_get( o, PDF_NAME(Subtype));
+                    if ( mupdf::mpdf_name_eq( subtype, PDF_NAME(Link)))
+                        continue;
+                    if ( mupdf::mpdf_name_eq( subtype, PDF_NAME(Popup)))
+                        continue;
+                    if ( mupdf::mpdf_name_eq( subtype, PDF_NAME(Widget)))
+                    {{
+                        /* fixme: C++ API doesn't yet wrap fz_warn() - it
+                        excludes all variadic fns. */
+                        //mupdf::mfz_warn( "skipping widget annotation");
+                        continue;
+                    }}
+                    mupdf::mpdf_dict_del( o, PDF_NAME(Popup));
+                    mupdf::mpdf_dict_del( o, PDF_NAME(P));
+                    mupdf::PdfObj copy_o = mupdf::mpdf_graft_mapped_object( graft_map, o);
+                    mupdf::PdfObj annot = mupdf::mpdf_new_indirect( doc_des, mupdf::mpdf_to_num( copy_o), 0);
+                    mupdf::mpdf_array_push( new_annots, annot);
+                }}
+            }}
             ''')
 
     common += generated.swig_cpp
@@ -583,46 +718,36 @@ def build_swig(
                     def next( self):    # for python3.
                         return self.__next__()
 
-                # The auto-generated Python class method Buffer.buffer_extract()
-                # returns (size, data).
+                # The auto-generated Python class method
+                # Buffer.buffer_extract() returns (size, data).
                 #
-                # But these raw values aren't particularly useful to Python code so
-                # we change the method to return a Python bytes instance instead,
-                # using the special C function buffer_storage_bytes() defined
-                # above.
+                # But these raw values aren't particularly useful to
+                # Python code so we change the method to return a Python
+                # bytes instance instead, using the special C function
+                # buffer_extract_bytes() defined above.
                 #
-                # We make the original method available as
-                # Buffer.buffer_extract_raw(); this can be used to create a
-                # mupdf.Stream by passing the raw values back to C++ with:
-                #
-                #   data, size = buffer_.buffer_extract_raw()
-                #   stream = mupdf.Stream(data, size))
-                #
-                # We don't provide a similar wrapper for Buffer.buffer_storage()
-                # because we can't create a Python bytes object that
-                # points into the buffer's storage. We still provide
-                # Buffer.buffer_storage_raw() just in case there is a need for
-                # Python code that can pass the raw (data, size) back in to C.
-                #
-
-                Buffer.buffer_extract_raw = Buffer.buffer_extract
+                # The raw values for a buffer are available via
+                # fz_buffer_storage().
 
                 def Buffer_buffer_extract(self):
                     """
                     Returns buffer data as a Python bytes instance, leaving the
-                    buffer empty. Note that this will make a copy of the underlying
-                    data.
+                    buffer empty.
                     """
-                    return buffer_extract_bytes(self.m_internal)
-
+                    assert isinstance( self, Buffer)
+                    return buffer_to_bytes(self.m_internal, clear=1)
                 Buffer.buffer_extract = Buffer_buffer_extract
+                mfz_buffer_extract      = Buffer_buffer_extract
 
-                Buffer.buffer_storage_raw = Buffer.buffer_storage
-                #delattr(Buffer, 'buffer_storage')
-                def Buffer_buffer_storage(self):
-                    raise Exception("Buffer.buffer_storage() is not available; use Buffer.buffer_storage_raw() to get (size, data) where <data> is SWIG wrapper for buffer's 'unsigned char*' storage")
-                Buffer.buffer_storage = Buffer_buffer_storage
-
+                def Buffer_buffer_extract_copy( self):
+                    """
+                    Returns buffer data as a Python bytes instance, leaving the
+                    buffer unchanged.
+                    """
+                    assert isinstance( self, Buffer)
+                    return buffer_to_bytes(self.m_internal, clear=0)
+                Buffer.buffer_extract_copy  = Buffer_buffer_extract_copy
+                mfz_buffer_extract_copy     = Buffer_buffer_extract_copy
 
                 # Overwrite Buffer.new_buffer_from_copied_data() to take Python Bytes instance.
                 #
@@ -731,6 +856,13 @@ def build_swig(
 
                 Device.fill_text = mfz_fill_text
 
+                # Override mupdf_convert_color() to return (rgb0, rgb1, rgb2, rgb3).
+                def convert_color( ss, sv, ds, is_, params):
+                    # Note that <sv> should be a SWIG representation of a float*.
+                    dv = convert_color2_v()
+                    convert_color2( ss, sv, ds, dv, is_, params)
+                    return dv.v0, dv.v1, dv.v2, dv.v3
+
                 # Override set_warning_callback() and set_error_callback() to
                 # use Python classes derived from our SWIG Director classes
                 # SetWarningCallback and SetErrorCallback (defined in C), so
@@ -756,6 +888,28 @@ def build_swig(
 
                 set_warning_callback = set_warning_callback2
                 set_error_callback = set_error_callback2
+
+                # Direct access to fz_pixmap samples.
+                def mfz_pixmap_samples2( pixmap):
+                    assert isinstance( pixmap, Pixmap)
+                    ret = python_memoryview_from_memory(
+                            mfz_pixmap_samples( pixmap),
+                            mfz_pixmap_stride( pixmap) * mfz_pixmap_height( pixmap),
+                            1, # writable
+                            )
+                    return ret
+                Pixmap.pixmap_samples2 = mfz_pixmap_samples2
+
+                # Avoid potential unsafe use of variadic args by forcing a
+                # single arg and escaping all '%' characters. (Passing ('%s',
+                # text) does not work - results in "(null)" being output.)
+                #
+                mfz_warn_original = mfz_warn
+                def mfz_warn( text):
+                    assert isinstance( text, str)
+                    text = text.replace( '%', '%%')
+                    return mfz_warn_original( text)
+                warn = mfz_warn
                 ''')
 
         # Add __iter__() methods for all classes with begin() and end() methods.
@@ -784,6 +938,32 @@ def build_swig(
             text += f'{util.rename.class_(struct_name)}.__str__ = lambda self: self.to_string()\n'
 
         text += '%}\n'
+
+    text2_code = textwrap.dedent( '''
+            ''')
+
+    if text2_code.strip():
+        text2 = textwrap.dedent( f'''
+                %{{
+                    #include "mupdf/fitz.h"
+                    #include "mupdf/classes.h"
+                    #include "mupdf/classes2.h"
+                    #include <vector>
+
+                    {text2_code}
+                %}}
+
+                %include std_vector.i
+
+                namespace std
+                {{
+                    %template(vectori) vector<int>;
+                }};
+
+                {text2_code}
+                ''')
+    else:
+        text2 = ''
 
     if 1:   # lgtm [py/constant-conditional-expression]
         # This is a horrible hack to avoid swig failing because
@@ -815,9 +995,17 @@ def build_swig(
     swig_cpp    = f'{build_dirs.dir_mupdf}/platform/{language}/mupdfcpp_swig.cpp'
     swig_py     = f'{build_dirs.dir_so}/mupdf.py'
 
+    swig2_i     = f'{build_dirs.dir_mupdf}/platform/{language}/mupdfcpp2_swig.i'
+    swig2_cpp   = f'{build_dirs.dir_mupdf}/platform/{language}/mupdfcpp2_swig.cpp'
+    swig2_py    = f'{build_dirs.dir_so}/mupdf2.py'
+
     os.makedirs( f'{build_dirs.dir_mupdf}/platform/{language}', exist_ok=True)
     os.makedirs( f'{build_dirs.dir_so}', exist_ok=True)
     util.update_file_regress( text, swig_i, check_regress)
+    if text2:
+        util.update_file_regress( text2, swig2_i, check_regress)
+    else:
+        jlib.update_file( '', swig2_i)
 
     # Try to disable some unhelpful SWIG warnings;. unfortunately this doesn't
     # seem to have any effect.
@@ -841,6 +1029,9 @@ def build_swig(
         #
         # Maybe use '^' on windows as equivalent to unix '\\' for multiline
         # ending?
+        def make_command( module, cpp, swig_i):
+            cpp = os.path.relpath( cpp)
+            swig_i = os.path.relpath( swig_i)
         command = (
                 textwrap.dedent(
                 f'''
@@ -851,25 +1042,25 @@ def build_swig(
                     {"-doxygen" if swig_major >= 4 else ""}
                     -python
                     {disable_swig_warnings}
-                    -module mupdf
+                        -module {module}
                     -outdir {os.path.relpath(build_dirs.dir_so)}
-                    -o {os.path.relpath(swig_cpp)}
+                        -o {cpp}
                     -includeall
                     -I{os.path.relpath(build_dirs.dir_mupdf)}/platform/python/include
                     -I{os.path.relpath(include1)}
                     -I{os.path.relpath(include2)}
                     -ignoremissing
-                    {os.path.relpath(swig_i)}
+                        {swig_i}
                 ''').strip().replace( '\n', "" if state_.windows else "\\\n")
                 )
-        rebuilt = jlib.build(
-                (swig_i, include1, include2),
-                (swig_cpp, swig_py),
-                command,
-                force_rebuild,
-                )
-        jlib.log('{rebuilt=}')
-        if rebuilt:
+            return command
+
+        def modify_py( rebuilt, swig_py, do_enums):
+            if not rebuilt:
+                return
+            swig_py_leaf = os.path.basename( swig_py)
+            assert swig_py_leaf.endswith( '.py')
+            so = f'_{swig_py_leaf[:-3]}.so'
             swig_py_tmp = f'{swig_py}-'
             jlib.remove( swig_py_tmp)
             os.rename( swig_py, swig_py_tmp)
@@ -893,7 +1084,7 @@ def build_swig(
                         #
                         # Unfortunately this doesn't work on Linux.
                         #
-                        for leaf in ('libmupdf.so', 'libmupdfcpp.so', '_mupdf.so'):
+                        for leaf in ('libmupdf.so', 'libmupdfcpp.so', '{so}'):
                             path = os.path.abspath(f'{{__file__}}/../{{leaf}}')
                             #print(f'path={{path}}')
                             #print(f'exists={{os.path.exists(path)}}')
@@ -909,6 +1100,7 @@ def build_swig(
                 with open( swig_cpp) as f:
                     swig_py_content = prefix + swig_py_content + postfix
 
+            if do_enums:
             # Change all our PDF_ENUM_NAME_* enums so that they are actually
             # PdfObj instances so that they can be used like any other PdfObj.
             #
@@ -921,6 +1113,32 @@ def build_swig(
             with open( swig_py_tmp, 'w') as f:
                 f.write( swig_py_content)
             os.rename( swig_py_tmp, swig_py)
+
+        if text2:
+            # Make mupdf2, for mupdfpy optimisations.
+            jlib.log( 'Running SWIG to generate mupdf2 .cpp')
+            command = make_command( 'mupdf2', swig2_cpp, swig2_i)
+            rebuilt = jlib.build(
+                    (swig2_i, include1, include2),
+                    (swig2_cpp, swig2_py),
+                    command,
+                    force_rebuild,
+                    )
+            modify_py( rebuilt, swig2_py, do_enums=False)
+        else:
+            jlib.update_file( '', swig2_cpp)
+            jlib.remove( swig2_py)
+
+        # Make main mupdf .so.
+        command = make_command( 'mupdf', swig_cpp, swig_i)
+        rebuilt = jlib.build(
+                (swig_i, include1, include2),
+                (swig_cpp, swig_py),
+                command,
+                force_rebuild,
+                )
+        modify_py( rebuilt, swig_py, do_enums=True)
+
 
     elif language == 'csharp':
         outdir = os.path.relpath(f'{build_dirs.dir_mupdf}/platform/csharp')

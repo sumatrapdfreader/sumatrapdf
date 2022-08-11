@@ -146,7 +146,7 @@ char *pdfapp_version(pdfapp_t *app)
 {
 	return
 		"MuPDF " FZ_VERSION "\n"
-		"Copyright 2006-2020 Artifex Software, Inc.\n";
+		"Copyright 2006-2022 Artifex Software, Inc.\n";
 }
 
 char *pdfapp_usage(pdfapp_t *app)
@@ -490,12 +490,7 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 		}
 
 		app->docpath = fz_strdup(ctx, filename);
-		app->doctitle = filename;
-		if (strrchr(app->doctitle, '\\'))
-			app->doctitle = strrchr(app->doctitle, '\\') + 1;
-		if (strrchr(app->doctitle, '/'))
-			app->doctitle = strrchr(app->doctitle, '/') + 1;
-		app->doctitle = fz_strdup(ctx, app->doctitle);
+		app->doctitle = fz_strdup(ctx, fz_basename(filename));
 
 		fz_layout_document(app->ctx, app->doc, app->layout_w, app->layout_h, app->layout_em);
 

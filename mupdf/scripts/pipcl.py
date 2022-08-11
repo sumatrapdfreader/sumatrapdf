@@ -13,6 +13,7 @@ import site
 import subprocess
 import sys
 import tarfile
+import textwrap
 import time
 import zipfile
 
@@ -29,7 +30,7 @@ class Package:
     PEP-517 backend and/or minimal setup.py support for use with a legacy
     (pre-PEP-517) pip.
 
-    A PEP-517 backend can be implemented with:
+    A PEP-517 backend can be implemented with::
 
         import pipcl
         import subprocess
@@ -41,7 +42,7 @@ class Package:
         def sdist():
             return ['foo.py', 'foo.c', 'pyproject.toml', ...]
 
-        p = pipcl.Package('foo', '1.2.3', fn_build=build, fsdist=sdist, ...)
+        p = pipcl.Package('foo', '1.2.3', fn_build=build, fn_sdist=sdist, ...)
 
         def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             return p.build_wheel(wheel_directory, config_settings, metadata_directory)
@@ -49,7 +50,7 @@ class Package:
         def build_sdist(sdist_directory, config_settings=None):
             return p.build_sdist(sdist_directory, config_settings)
 
-    Work as a setup.py script by appending:
+    Work as a setup.py script by appending::
 
         import sys
         if __name__ == '__main__':
@@ -69,67 +70,72 @@ class Package:
             url_home = None,
             url_source = None,
             url_tracker = None,
+            url_changelog = None,
             keywords = None,
             platform = None,
+            license = None,
             license_files = None,
             fn_build = None,
             fn_clean = None,
             fn_sdist = None,
             ):
         '''
-        name
+        name:
             A string, the name of the Python package.
-        version
+        version:
             A string containing only 0-9 and '.'.
         root:
             Root of package, defaults to current directory.
-        summary
+        summary:
             A string.
-        description
+        description:
             A string.
-        classifiers
+        classifiers:
             A list of strings.
-        url_home
-        url_source
-        url_docs
-        url_tracker
+        url_home:
+        url_source:
+        url_docs:
+        url_tracker:
+        url_changelog:
             A string containing a URL.
-        keywords
+        keywords:
             A string containing space-separated keywords.
-        platform
+        platform:
             A string, used in metainfo.
-        license_files
+        license:
+            License text.
+        license_files:
             List of string names of license files.
-        fn_build
+        fn_build:
             A function taking no args that builds the package.
 
             Should return a list of items; each item should be a tuple of two
-            strings (from_, to_) or a single string <path> which is treated as
-            the tuple (path, path).
+            strings `(from_, to_)` or a single string `path` which is treated
+            as the tuple `(path, path)`.
 
-            <from_> should be the path to a file; if a relative path it is
-            assumed to be relative to <root>. <to_> identifies what the file
+            `from_` should be the path to a file; if a relative path it is
+            assumed to be relative to `root`. `to_` identifies what the file
             should be called within a wheel or when installing.
 
             If we are building a wheel (e.g. 'bdist_wheel' in the argv passed
-            to self.handle_argv() or PEP-517 pip calls self.build_wheel()), we
-            copy file <from_> to <to_> inside the wheel archive.
+            to `self.handle_argv()` or PEP-517 pip calls `self.build_wheel()`),
+            we copy file `from_` to `to_` inside the wheel archive.
 
-            If we are installing (e.g. 'install' command in the argv passed to
-            self.handle_argv()), we copy <from_> to <sitepackages>/<to_>, where
-            <sitepackages> is the first item in site.getsitepackages()[] that
-            exists.
-        fn_clean
-            A function taking a single arg <all_> that cleans generated files.
-            <all_> is true iff --all is in argv.
+            If we are installing (e.g. 'install' command in the argv
+            passed to `self.handle_argv()`), we copy `from_` to
+            `sitepackages`/`to_`, where `sitepackages` is the first item in
+            `site.getsitepackages()[]` that exists.
+        fn_clean:
+            A function taking a single arg `all_` that cleans generated files.
+            `all_` is true iff '--all' is in argv.
 
-            Can also returns a list of files/directories to be deleted.
-            Relative paths are interpreted as relative to <root>. Paths are
-            asserted to be within <root>.
-        fn_sdist
-            A function taking no args that returns a list of paths, e.g.
-            using pipcl.git_items(), for files that should be copied into the
-            sdist. Relative paths are interpreted as relative to <root>. It is
+            For safety and convenience, can also returns a list of
+            files/directory paths to be deleted. Relative paths are interpreted
+            as relative to `root`. Paths are asserted to be within `root`.
+        fn_sdist:
+            A function taking no args that returns a list of paths, e.g. using
+            `pipcl.git_items()`, for files that should be copied into the
+            sdist. Relative paths are interpreted as relative to `root`. It is
             an error if a path does not exist or is not a file.
         '''
         self.name = name
@@ -144,8 +150,10 @@ class Package:
         self.url_home  = url_home
         self.url_source = url_source
         self.url_tracker = url_tracker
+        self.url_changelog = url_changelog
         self.keywords = keywords
         self.platform = platform
+        self.license = license
         self.license_files = license_files
         self.fn_build = fn_build
         self.fn_clean = fn_clean
@@ -154,11 +162,11 @@ class Package:
 
     def build_wheel(self, wheel_directory, config_settings=None, metadata_directory=None):
         '''
-        Helper for implementing a PEP-517 backend's build_wheel() function.
+        Helper for implementing a PEP-517 backend's `build_wheel()` function.
 
-        Also called by handle_argv() to handle the 'bdist_wheel' command.
+        Also called by `handle_argv()` to handle the 'bdist_wheel' command.
 
-        Returns leafname of generated wheel within <wheel_directory>.
+        Returns leafname of generated wheel within `wheel_directory`.
         '''
         _log('build_wheel():'
                 f' wheel_directory={wheel_directory}'
@@ -192,7 +200,7 @@ class Package:
         _log(f'build_wheel(): Writing wheel {path} ...')
         os.makedirs(wheel_directory, exist_ok=True)
         record = _Record()
-        with zipfile.ZipFile(path, 'w') as z:
+        with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
 
             def add_file(from_, to_):
                 z.write(from_, to_)
@@ -237,14 +245,14 @@ class Package:
 
     def build_sdist(self, sdist_directory, config_settings=None):
         '''
-        Helper for implementing a PEP-517 backend's build_sdist() function.
+        Helper for implementing a PEP-517 backend's `build_sdist()` function.
 
         [Though as of 2021-03-24 pip doesn't actually seem to ever call the
-        backend's build_sdist() function?]
+        backend's `build_sdist()` function?]
 
-        Also called by handle_argv() to handle the 'sdist' command.
+        Also called by `handle_argv()` to handle the 'sdist' command.
 
-        Returns leafname of generated archive within <sdist_directory>.
+        Returns leafname of generated archive within `sdist_directory`.
         '''
         paths = []
         if self.fn_sdist:
@@ -253,8 +261,8 @@ class Package:
         manifest = []
         def add(tar, name, contents):
             '''
-            Adds item called <name> to tarfile.TarInfo <tar>, containing
-            <contents>. If contents is a string, it is encoded using utf8.
+            Adds item called `name` to `tarfile.TarInfo` `tar`, containing
+            `contents`. If contents is a string, it is encoded using utf8.
             '''
             if isinstance(contents, str):
                 contents = contents.encode('utf8')
@@ -314,7 +322,7 @@ class Package:
 
     def argv_clean(self, all_):
         '''
-        Called by handle_argv().
+        Called by `handle_argv()`.
         '''
         if not self.fn_clean:
             return
@@ -332,7 +340,7 @@ class Package:
 
     def argv_install(self, record_path):
         '''
-        Called by handle_argv().
+        Called by `handle_argv()`.
         '''
         items = []
         if self.fn_build:
@@ -370,8 +378,8 @@ class Package:
 
     def argv_dist_info(self, egg_base):
         '''
-        Called by handle_argv(). There doesn't seem to be any documentation
-        for 'setup.py dist_info', but it appears to be like egg_info except it
+        Called by `handle_argv()`. There doesn't seem to be any documentation
+        for 'setup.py dist_info', but it appears to be like 'egg_info' except it
         writes to a slightly different directory.
         '''
         self._write_info(f'{egg_base}/{self.name}.dist-info')
@@ -379,7 +387,7 @@ class Package:
 
     def argv_egg_info(self, egg_base):
         '''
-        Called by handle_argv().
+        Called by `handle_argv()`.
         '''
         if egg_base is None:
             egg_base = '.'
@@ -388,8 +396,8 @@ class Package:
 
     def _write_info(self, dirpath=None):
         '''
-        Writes egg/dist info to files in directory <dirpath> or self.root_sep
-        if None.
+        Writes egg/dist info to files in directory `dirpath` or `self.root_sep`
+        if `None`.
         '''
         if dirpath is None:
             dirpath = self.root_sep
@@ -413,7 +421,7 @@ class Package:
     def handle_argv(self, argv):
         '''
         Handles old-style (pre PEP-517) command line passed by old releases of pip to a
-        setup.py script.
+        `setup.py` script.
 
         We only handle those args that seem to be used by pre-PEP-517 pip.
         '''
@@ -445,7 +453,6 @@ class Package:
         opt_dist_dir = 'dist'
         opt_egg_base = None
         opt_install_headers = None
-        opt_python_tag = None
         opt_record = None
 
         args = Args(argv[1:])
@@ -456,77 +463,67 @@ class Package:
                 break
 
             elif arg in ('-h', '--help', '--help-commands'):
-                _log(
-                        'Options:\n'
-                        '    bdist_wheel\n'
-                        '        Creates a wheel called\n'
-                        '        <dist-dir>/<name>-<version>-<details>.whl, where\n'
-                        '        <dist-dir> is "dist" or as specified by --dist-dir,\n'
-                        '        and <details> encodes ABI and platform etc.\n'
-                        '    clean\n'
-                        '        Cleans build files.\n'
-                        '    egg_info\n'
-                        '        Creates files in <egg-base>/.egg-info/, where\n'
-                        '        <egg-base> is as specified with --egg-base.\n'
-                        '    install\n'
-                        '        Installs into location from Python\'s\n'
-                        '        site.getsitepackages() array. Writes installation\n'
-                        '        information to <record> if --record\n'
-                        '        was specified.\n'
-                        '    sdist\n'
-                        '        Make a source distribution:\n'
-                        '            <dist-dir>/<name>-<version>.tar.gz\n'
-                        '    dist_info\n'
-                        '        Like <egg_info> but creates files in\n'
-                        '        <egg-base>/<name>.dist-info/\n'
-                        '    --dist-dir | -d <dist-dir>\n'
-                        '        Default is "dist".\n'
-                        '    --egg-base <egg-base>\n'
-                        '        Used by "egg_info".\n'
-                        '    --record <record>\n'
-                        '        Used by "install".\n'
-                        '    --single-version-externally-managed\n'
-                        '        Ignored.\n'
-                        '    --compile\n'
-                        '        Ignored.\n'
-                        '    --install-headers <directory>\n'
-                        '        Ignored.\n'
-                        )
+                _log(textwrap.dedent('''
+                        Usage:
+                            [<options>...] <command> [<options>...]
+                        commands:
+                            bdist_wheel
+                                Creates a wheel called
+                                <dist-dir>/<name>-<version>-<details>.whl, where
+                                <dist-dir> is "dist" or as specified by --dist-dir,
+                                and <details> encodes ABI and platform etc.
+                            clean
+                                Cleans build files.
+                            egg_info
+                                Creates files in <egg-base>/.egg-info/, where
+                                <egg-base> is as specified with --egg-base.
+                            install
+                                Installs into location from Python's
+                                site.getsitepackages() array. Writes installation
+                                information to <record> if --record
+                                was specified.
+                            sdist
+                                Make a source distribution:
+                                    <dist-dir>/<name>-<version>.tar.gz
+                            dist_info
+                                Like <egg_info> but creates files in
+                                <egg-base>/<name>.dist-info/
+                        Options:
+                            --all
+                                Used by "clean".
+                            --compile
+                                Ignored.
+                            --dist-dir | -d <dist-dir>
+                                Default is "dist".
+                            --egg-base <egg-base>
+                                Used by "egg_info".
+                            --install-headers <directory>
+                                Ignored.
+                            --python-tag <python-tag>
+                                Ignored.
+                            --record <record>
+                                Used by "install".
+                            --single-version-externally-managed
+                                Ignored.
+                        '''))
                 return
 
-            elif arg in ('bdist_wheel', 'clean', 'egg_info', 'install', 'sdist', 'dist_info'):
+            elif arg in ('bdist_wheel', 'clean', 'dist_info', 'egg_info', 'install', 'sdist'):
                 assert command is None, 'Two commands specified: {command} and {arg}.'
                 command = arg
 
-            elif arg == '--all':
-                opt_all = True
-
-            elif arg == '--compile':
-                pass
-
-            elif arg == '--dist-dir' or arg == '-d':
-                opt_dist_dir = args.next()
-
-            elif arg == '--egg-base':
-                opt_egg_base = args.next()
-
-            elif arg == '--install-headers':
-                opt_install_headers = args.next()
-
-            elif arg == '--python-tag':
-                opt_python_tag = args.next()
-
-            elif arg == '--record':
-                opt_record = args.next()
-
-            elif arg == '--single-version-externally-managed':
-                pass
-
+            elif arg == '--all':                                opt_all = True
+            elif arg == '--compile':                            pass
+            elif arg == '--dist-dir' or arg == '-d':            opt_dist_dir = args.next()
+            elif arg == '--egg-base':                           opt_egg_base = args.next()
+            elif arg == '--install-headers':                    opt_install_headers = args.next()
+            elif arg == '--python-tag':                         pass
+            elif arg == '--record':                             opt_record = args.next()
+            elif arg == '--single-version-externally-managed':  pass
             else:
                raise Exception(f'Unrecognised arg: {arg}')
 
-        if not command:
-            return
+        assert command, 'No command specified'
 
         _log(f'handle_argv(): Handling command={command}')
         if 0:   pass
@@ -556,8 +553,10 @@ class Package:
             f' url_home ={self.url_home!r}'
             f' url_source={self.url_source!r}'
             f' url_tracker={self.url_tracker!r}'
+            f' url_changelog={self.url_changelog!r}'
             f' keywords={self.keywords!r}'
             f' platform={self.platform!r}'
+            f' license={self.license!r}'
             f' license_files={self.license_files!r}'
             f' fn_build={self.fn_build!r}'
             f' fn_sdist={self.fn_sdist!r}'
@@ -568,8 +567,8 @@ class Package:
 
     def _metainfo(self):
         '''
-        Returns text for .egg-info/PKG-INFO file, or PKG-INFO in an sdist
-        tar.gz file, or ...dist-info/METADATA in a wheel.
+        Returns text for `.egg-info/PKG-INFO` file, or `PKG-INFO` in an sdist
+        `.tar.gz` file, or `...dist-info/METADATA` in a wheel.
         '''
         # 2021-04-30: Have been unable to get multiline content working on
         # test.pypi.org so we currently put the description as the body after
@@ -589,9 +588,11 @@ class Package:
         add('Platform', self.platform)
         add('Author', self.author)
         add('Author-email', self.author_email)
+        if self.license:        add('License', self.license)
         if self.url_source:  add('Home-page', f'Source, {self.url_source}')
         if self.url_docs:    add('Home-page', f'Source, {self.url_docs}')
         if self.url_tracker: add('Home-page', f'Source, {self.url_tracker}')
+        if self.url_changelog:  add('Home-page', f'Source, {self.url_changelog}')
         if self.keywords:
             add('Keywords', self.keywords)
         if self.classifiers:
@@ -611,14 +612,14 @@ class Package:
 
     def _path_relative_to_root(self, path):
         '''
-        Returns (path_abs, path_rel), where <path_abs> is absolute path and
-        <path_rel> is relative to self.root_sep.
+        Returns `(path_abs, path_rel)`, where `path_abs` is absolute path and
+        `path_rel` is relative to `self.root_sep`.
 
-        Interprets <path> as relative to self.root_sep if not absolute.
+        Interprets `path` as relative to `self.root_sep` if not absolute.
 
-        We use os.path.realpath() to resolve any links.
+        We use `os.path.realpath()` to resolve any links.
 
-        Assert-fails if path is not within self.root_sep.
+        Assert-fails if `path` is not within `self.root_sep`.
         '''
         if os.path.isabs(path):
             p = path
@@ -631,17 +632,17 @@ class Package:
 
     def _fromto(self, p):
         '''
-        Returns ((from_abs, from_rel), (to_abs, to_rel)).
+        Returns `((from_abs, from_rel), (to_abs, to_rel))`.
 
-        If <p> is a string we convert to (p, p). Otherwise we assert that
-        <p> is a tuple of two strings. Non-absolute paths are assumed to be
-        relative to self.root_sep.
+        If `p` is a string we convert to `(p, p)`. Otherwise we assert that
+        `p` is a tuple of two strings. Non-absolute paths are assumed to be
+        relative to `self.root_sep`.
 
-        from_abs and to_abs are absolute paths, asserted to be within
-        self.root_sep.
+        `from_abs` and `to_abs` are absolute paths, asserted to be within
+        `self.root_sep`.
 
-        from_rel and to_rel are derived from the _abs paths and are relative to
-        self.root_sep.
+        `from_rel` and `to_rel` are derived from the `_abs` paths and are
+        `relative to self.root_sep`.
         '''
         ret = None
         if isinstance(p, str):
@@ -660,12 +661,12 @@ class Package:
 
 def git_items( directory, submodules=False):
     '''
-    Helper for pipcl.Package's fn_sdist() callback.
+    Helper for `pipcl.Package`'s `fn_sdist()` callback.
 
-    Returns list of paths for all files known to git within <directory>. Each
-    path is relative to <directory>.
+    Returns list of paths for all files known to git within `directory`. Each
+    path is relative to `directory`.
 
-    <directory> must be somewhere within a git checkout.
+    `directory` must be somewhere within a git checkout.
 
     We run a 'git ls-files' command internally.
     '''
@@ -690,7 +691,7 @@ def git_items( directory, submodules=False):
 
 def parse_pkg_info(path):
     '''
-    Parses a PKJG-INFO file, each line is '<key>: <value>\n'. Returns a dict.
+    Parses a `PKJG-INFO` file, each line is `<key>: <value>\n`. Returns a dict.
     '''
     ret = dict()
     with open(path) as f:
@@ -725,7 +726,7 @@ class _Record:
 
     def add_content(self, content, to_):
         if isinstance(content, str):
-            content = content.encode('latin1')
+            content = content.encode('utf8')
         h = hashlib.sha256(content)
         digest = h.digest()
         digest = base64.urlsafe_b64encode(digest)

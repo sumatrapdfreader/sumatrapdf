@@ -499,17 +499,10 @@ static void open_attachment_dialog(void)
 			{
 				int64_t created, modified;
 				fz_buffer *contents;
-				char *filename;
+				const char *filename;
 				pdf_obj *fs;
 
-				filename = strrchr(attach_filename, '/');
-				if (!filename)
-					filename = strrchr(attach_filename, '\\');
-				if (filename)
-					++filename;
-				else
-					filename = attach_filename;
-
+				filename = fz_basename(attach_filename);
 				contents = fz_read_file(ctx, attach_filename);
 				created = fz_stat_ctime(attach_filename);
 				modified = fz_stat_mtime(attach_filename);
@@ -523,6 +516,35 @@ static void open_attachment_dialog(void)
 			fz_always(ctx)
 			{
 				pdf_end_operation(ctx, pdf);
+			}
+			fz_catch(ctx)
+			{
+				ui_show_warning_dialog("%s", fz_caught_message(ctx));
+			}
+		}
+	}
+}
+
+static char stamp_image_filename[PATH_MAX];
+
+static void open_stamp_image_dialog(void)
+{
+	if (ui_open_file(stamp_image_filename, "Select file for customized stamp:"))
+	{
+		ui.dialog = NULL;
+		if (stamp_image_filename[0] != 0)
+		{
+			fz_image *img = NULL;
+			fz_var(img);
+			fz_try(ctx)
+			{
+				img = fz_new_image_from_file(ctx, stamp_image_filename);
+				pdf_set_annot_stamp_image(ctx, ui.selected_annot, img);
+				pdf_set_annot_icon_name(ctx, ui.selected_annot, fz_basename(stamp_image_filename));
+			}
+			fz_always(ctx)
+			{
+				fz_drop_image(ctx, img);
 			}
 			fz_catch(ctx)
 			{
@@ -1217,6 +1239,17 @@ void do_annotate_panel(void)
 			}
 		}
 
+		if (pdf_annot_type(ctx, ui.selected_annot) == PDF_ANNOT_STAMP)
+		{
+			char attname[PATH_MAX];
+			if (ui_button("Image..."))
+			{
+				fz_dirname(attname, filename, sizeof attname);
+				ui_init_open_file(attname, NULL);
+				ui.dialog = open_stamp_image_dialog;
+			}
+		}
+
 		if (pdf_annot_type(ctx, ui.selected_annot) == PDF_ANNOT_FILE_ATTACHMENT)
 		{
 			pdf_embedded_file_params params;
@@ -1525,7 +1558,7 @@ static void do_edit_icon(fz_irect canvas_area, fz_irect area, fz_rect *rect)
 	}
 }
 
-static void do_edit_rect(fz_irect canvas_area, fz_irect area, fz_rect *rect)
+static void do_edit_rect(fz_irect canvas_area, fz_irect area, fz_rect *rect, int lock_aspect)
 {
 	enum {
 		ER_N=1, ER_E=2, ER_S=4, ER_W=8,
@@ -1567,6 +1600,28 @@ static void do_edit_rect(fz_irect canvas_area, fz_irect area, fz_rect *rect)
 		if (rect->y1 < rect->y0) { float t = rect->y1; rect->y1 = rect->y0; rect->y0 = t; }
 		if (rect->x1 < rect->x0 + 10) rect->x1 = rect->x0 + 10;
 		if (rect->y1 < rect->y0 + 10) rect->y1 = rect->y0 + 10;
+
+		if (lock_aspect)
+		{
+			float aspect = (start_rect.x1 - start_rect.x0) / (start_rect.y1 - start_rect.y0);
+			switch (state)
+			{
+			case ER_SW:
+			case ER_NW:
+				rect->x0 = rect->x1 - (rect->y1 - rect->y0) * aspect;
+				break;
+			case ER_NE:
+			case ER_SE:
+			case ER_N:
+			case ER_S:
+				rect->x1 = rect->x0 + (rect->y1 - rect->y0) * aspect;
+				break;
+			case ER_E:
+			case ER_W:
+				rect->y1 = rect->y0 + (rect->x1 - rect->x0) / aspect;
+				break;
+			}
+		}
 
 		/* cancel on right click */
 		if (ui.right)
@@ -1937,7 +1992,7 @@ void do_annotate_canvas(fz_irect canvas_area)
 
 			/* Popup window */
 			case PDF_ANNOT_POPUP:
-				do_edit_rect(canvas_area, area, &bounds);
+				do_edit_rect(canvas_area, area, &bounds, 0);
 				break;
 
 			/* Icons */
@@ -1949,11 +2004,11 @@ void do_annotate_canvas(fz_irect canvas_area)
 				break;
 
 			case PDF_ANNOT_STAMP:
-				do_edit_rect(canvas_area, area, &bounds);
+				do_edit_rect(canvas_area, area, &bounds, 1);
 				break;
 
 			case PDF_ANNOT_FREE_TEXT:
-				do_edit_rect(canvas_area, area, &bounds);
+				do_edit_rect(canvas_area, area, &bounds, 0);
 				break;
 
 			/* Drawings */
@@ -1962,7 +2017,7 @@ void do_annotate_canvas(fz_irect canvas_area)
 				break;
 			case PDF_ANNOT_CIRCLE:
 			case PDF_ANNOT_SQUARE:
-				do_edit_rect(canvas_area, area, &bounds);
+				do_edit_rect(canvas_area, area, &bounds, 0);
 				break;
 			case PDF_ANNOT_POLYGON:
 				if (is_draw_mode)

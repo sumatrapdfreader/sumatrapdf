@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -749,6 +749,47 @@ static int startswith(const char *a, const char *b)
 	return !fz_strncasecmp(a, b, strlen(b));
 }
 
+// Look for encoding in <meta http-equiv="content-type" content="text/html; charset=XXX"> tags
+static const unsigned short *find_meta_encoding(char *s)
+{
+	const unsigned short *table = NULL;
+	char *end, *meta;
+
+	meta = strstr(s, "<meta");
+	while (meta && !table)
+	{
+		end = strchr(meta, '>');
+		if (end)
+		{
+			*end = 0;
+			if (strstr(meta, "http-equiv") && strstr(meta, "content-type"))
+			{
+				char *charset = strstr(meta, "charset=");
+				if (charset)
+				{
+					char *enc = charset + 8;
+					if (startswith(enc, "iso-8859-1") || startswith(enc, "latin1"))
+						table = fz_unicode_from_iso8859_1;
+					else if (startswith(enc, "iso-8859-7") || startswith(enc, "greek"))
+						table = fz_unicode_from_iso8859_7;
+					else if (startswith(enc, "koi8"))
+						table = fz_unicode_from_koi8u;
+					else if (startswith(enc, "windows-1250"))
+						table = fz_unicode_from_windows_1250;
+					else if (startswith(enc, "windows-1251"))
+						table = fz_unicode_from_windows_1251;
+					else if (startswith(enc, "windows-1252"))
+						table = fz_unicode_from_windows_1252;
+				}
+			}
+			*end = '>';
+		}
+		meta = strstr(meta + 5, "<meta");
+	}
+
+	return table;
+}
+
 static const unsigned short *find_xml_encoding(char *s)
 {
 	const unsigned short *table = NULL;
@@ -781,6 +822,9 @@ static const unsigned short *find_xml_encoding(char *s)
 		}
 		*end = '>';
 	}
+
+	if (!table)
+		table = find_meta_encoding(s);
 
 	return table;
 }

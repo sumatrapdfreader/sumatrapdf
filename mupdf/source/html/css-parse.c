@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -386,7 +386,7 @@ restart:
 	{
 		if (css_lex_accept(buf, '-'))
 		{
-			css_lex_expect(buf, '>');
+			if (css_lex_accept(buf, '>'))
 			goto restart; /* ignore CDC */
 		}
 		if (isnmstart(buf->c))

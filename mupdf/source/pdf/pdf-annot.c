@@ -262,16 +262,6 @@ pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot)
 	if (annot == NULL)
 		return;
 
-	/* Some appearances can NEVER be resynthesised. Spot those here. */
-	if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Stamp)))
-	{
-		/* We can't resynthesise a stamp if we don't have the name! */
-		/* In particular, this is the case we hit when we are asked to
-		 * resynthesise an e-sig. Just exit and do nothing. */
-		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Name)) == NULL)
-			return;
-	}
-
 	/* If there are no changes, there is no need to request a resynthesis
 	 * (and indeed, we must not, because any changes caused by the resynth
 	 * will go in as implicit changes into a potentially-non-existent
@@ -735,6 +725,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 				fz_rect stamp_rect = { 12, 12, 12+190, 12+50 };
 				pdf_set_annot_rect(ctx, annot, stamp_rect);
 				pdf_set_annot_color(ctx, annot, 3, red);
+				pdf_set_annot_icon_name(ctx, annot, "Draft");
 			}
 			break;
 
@@ -970,13 +961,50 @@ pdf_set_annot_flags(fz_context *ctx, pdf_annot *annot, int flags)
 	pdf_dirty_annot(ctx, annot);
 }
 
+static pdf_obj *rect_subtypes[] = {
+	PDF_NAME(Text),
+	PDF_NAME(FreeText),
+	PDF_NAME(Square),
+	PDF_NAME(Circle),
+	PDF_NAME(Redact),
+	PDF_NAME(Stamp),
+	PDF_NAME(Caret),
+	PDF_NAME(Popup),
+	PDF_NAME(FileAttachment),
+	PDF_NAME(Sound),
+	PDF_NAME(Movie),
+	PDF_NAME(Widget),
+	NULL,
+};
+
+int
+pdf_annot_has_rect(fz_context *ctx, pdf_annot *annot)
+{
+	/* True for annotations where the user can manipulate the size or location
+	 * of the annotation through the Rect.
+	 * False for annotations where the Rect is computed from other
+	 * annotation data such as InkList, QuadPoints, and Vertices.
+	 */
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(Rect), rect_subtypes);
+}
+
 fz_rect
 pdf_annot_rect(fz_context *ctx, pdf_annot *annot)
 {
 	fz_matrix page_ctm;
 	fz_rect annot_rect;
+
+	pdf_annot_push_local_xref(ctx, annot);
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(Rect), rect_subtypes);
 	pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
 	annot_rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 	return fz_transform_rect(annot_rect, page_ctm);
 }
 
@@ -989,6 +1017,8 @@ pdf_set_annot_rect(fz_context *ctx, pdf_annot *annot, fz_rect rect)
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(Rect), rect_subtypes);
+
 		pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
 		inv_page_ctm = fz_invert_matrix(page_ctm);
 		rect = fz_transform_rect(rect, inv_page_ctm);
@@ -1132,7 +1162,7 @@ pdf_annot_icon_name(fz_context *ctx, pdf_annot *annot)
 			}
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(Stamp)))
 			{
-				ret = "Draft";
+				ret = ""; // Should be "Draft" according to spec
 				break;
 			}
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(FileAttachment)))
@@ -1164,7 +1194,10 @@ pdf_set_annot_icon_name(fz_context *ctx, pdf_annot *annot, const char *name)
 	fz_try(ctx)
 	{
 		check_allowed_subtypes(ctx, annot, PDF_NAME(Name), icon_name_subtypes);
+		if (name)
 		pdf_dict_put_name(ctx, annot->obj, PDF_NAME(Name), name);
+		else
+			pdf_dict_del(ctx, annot->obj, PDF_NAME(Name));
 	}
 	fz_always(ctx)
 		end_annot_op(ctx, annot);
@@ -1172,6 +1205,27 @@ pdf_set_annot_icon_name(fz_context *ctx, pdf_annot *annot, const char *name)
 		fz_rethrow(ctx);
 
 	pdf_dirty_annot(ctx, annot);
+}
+
+int
+pdf_annot_is_standard_stamp(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *name = pdf_dict_get(ctx, annot->obj, PDF_NAME(Name));
+	if (pdf_name_eq(ctx, name, PDF_NAME(Approved))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(AsIs))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Confidential))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Departmental))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Draft))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Experimental))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Expired))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Final))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(ForComment))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(ForPublicRelease))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(NotApproved))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(NotForPublicRelease))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(Sold))) return 1;
+	else if (pdf_name_eq(ctx, name, PDF_NAME(TopSecret))) return 1;
+	else return 0;
 }
 
 enum pdf_line_ending pdf_line_ending_from_name(fz_context *ctx, pdf_obj *end)
@@ -2870,6 +2924,48 @@ pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, co
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+}
+
+void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *img)
+{
+	pdf_document *doc = annot->page->doc;
+	fz_buffer *buf = NULL;
+	pdf_obj *res = NULL;
+	pdf_obj *res_xobj;
+
+	begin_annot_op(ctx, annot, "Set stamp image");
+
+	fz_var(res);
+	fz_var(buf);
+
+	fz_try(ctx)
+	{
+		// Shrink Rect to fit image, maintaining aspect ratio.
+		fz_rect rect = pdf_bound_annot(ctx, annot);
+		float s = fz_min((rect.x1 - rect.x0) / img->w, (rect.y1 - rect.y0) / img->h);
+		rect.x1 = rect.x0 + img->w * s;
+		rect.y1 = rect.y0 + img->h * s;
+
+		// Add image resource
+		res = pdf_add_new_dict(ctx, doc, 1);
+		res_xobj = pdf_dict_put_dict(ctx, res, PDF_NAME(XObject), 1);
+		pdf_dict_put_drop(ctx, res_xobj, PDF_NAME(I), pdf_add_image(ctx, doc, img));
+
+		buf = fz_new_buffer_from_shared_data(ctx, (const unsigned char*)"/I Do\n", 6);
+
+		pdf_set_annot_appearance(ctx, annot, "N", NULL, fz_identity, fz_unit_rect, res, buf);
+		pdf_set_annot_rect(ctx, annot, rect);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		pdf_drop_obj(ctx, res);
+		end_annot_op(ctx, annot);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 static pdf_obj *filespec_subtypes[] = {

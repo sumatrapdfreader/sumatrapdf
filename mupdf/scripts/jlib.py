@@ -5,20 +5,29 @@ import io
 import os
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import sys
+import tarfile
 import textwrap
 import time
 import traceback
 import types
+import typing
 
 
-def place( frame_record):
+def place( frame_record=1):
     '''
     Useful debugging function - returns representation of source position of
     caller.
+
+    frame_record:
+        Integer number of frames up stack, or a FrameInfo (for example from
+        inspect.stack()).
     '''
+    if isinstance( frame_record, int):
+        frame_record = inspect.stack( context=0)[ frame_record+1]
     filename    = frame_record.filename
     line        = frame_record.lineno
     function    = frame_record.function
@@ -337,6 +346,8 @@ def log_levels_add( delta, filename_prefix, function_prefix):
     s_log_levels_items.sort( reverse=True)
 
 
+s_log_out = sys.stdout
+
 def log( text, level=0, caller=1, nv=True, out=None, raw=False):
     '''
     Writes log text, with special handling of {<expression>} items in <text>
@@ -376,7 +387,7 @@ def log( text, level=0, caller=1, nv=True, out=None, raw=False):
     str.format().
     '''
     if out is None:
-        out = sys.stdout
+        out = s_log_out
     level += g_log_delta
     if isinstance( caller, int):
         caller += 1
@@ -437,6 +448,23 @@ def logx( text, caller=1, nv=True, out=None):
     pass
 
 
+_log_interval_t0 = 0
+
+def log_interval( text, level=0, caller=1, nv=True, out=None, raw=False, interval=10):
+    '''
+    Like log() but outputs no more than one diagnostic every <interval>
+    seconds, and <text> can be a callable taking no args and returning a
+    string.
+    '''
+    global _log_interval_t0
+    t = time.time()
+    if t - _log_interval_t0 > interval:
+        _log_interval_t0 = t
+        if callable( text):
+            text = text()
+        log( text, level=level, caller=caller+1, nv=nv, out=out, raw=raw)
+
+
 def log_levels_add_env( name='JLIB_log_levels'):
     '''
     Added log levels encoded in an environmental variable.
@@ -457,6 +485,200 @@ def log_levels_add_env( name='JLIB_log_levels'):
             else:
                 assert 0
             log_levels_add( delta, filename, function)
+
+
+class TimingsItem:
+    '''
+    Helper for Timings class.
+    '''
+    def __init__( self, name):
+        self.name = name
+        self.children = dict()
+        self.t_begin = None
+        self.t = 0
+        self.n = 0
+    def begin( self, t):
+        assert self.t_begin is None
+        self.t_begin = t
+    def end( self, t):
+        assert self.t_begin is not None, f't_begin is None, .name={self.name}'
+        self.t += t - self.t_begin
+        self.n += 1
+        self.t_begin = None
+    def __str__( self):
+        return f'[name={self.name} t={self.t} n={self.n} t_begin={self.t_begin}]'
+    def __repr__( self):
+        return self.__str__()
+
+class Timings:
+    '''
+    Allows gathering of hierachical timing information. Can also generate useful
+    diagnostics.
+
+    Caller can generate a tree of TimingsItem items via our begin() and end() methods.
+
+    >>> ts = Timings()
+    >>> ts.begin('a')
+    >>> time.sleep(0.1)
+    >>> ts.begin('b')
+    >>> time.sleep(0.2)
+    >>> ts.begin('c')
+    >>> time.sleep(0.3)
+    >>> ts.end('c')
+    >>> ts.begin('c')
+    >>> time.sleep(0.3)
+    >>> ts.end('b') # will also end 'c'.
+    >>> ts.begin('d')
+    >>> ts.begin('e')
+    >>> time.sleep(0.1)
+    >>> ts.end_all()    # will end everything.
+    >>> print(ts)
+    Timings (in seconds):
+        1.0 a
+            0.8 b
+                0.6/2 c
+            0.1 d
+                0.1 e
+    <BLANKLINE>
+
+    One can also use as a context manager:
+    >>> ts = Timings()
+    >>> with ts( 'foo'):
+    ...     time.sleep(1)
+    ...     with ts( 'bar'):
+    ...         time.sleep(1)
+    >>> print( ts)
+    Timings (in seconds):
+        2.0 foo
+            1.0 bar
+    <BLANKLINE>
+
+    Must specify name, otherwise we assert-fail.
+    >>> with ts:
+    ...     pass
+    Traceback (most recent call last):
+    AssertionError: Must specify <name> etc when using "with ...".
+    '''
+    def __init__( self, name='', active=True):
+        '''
+        If <active> is False, returned instance does nothing.
+        '''
+        self.active = active
+        self.root_item = TimingsItem( name)
+        self.nest = [ self.root_item]
+        self.nest[0].begin( time.time())
+        self.name_max_len = 0
+        self.call_enter_state = None
+        self.call_enter_stack = []
+
+    def begin( self, name=None, text=None, level=0, t=None):
+        '''
+        Starts a new timing item as child of most recent in-progress timing
+        item.
+
+        name:
+            Used in final statistics. If None, we use jlib.place().
+        text:
+            If not None, this is output here with jlib.log().
+        level:
+            Verbosity. Added to g_verbose.
+        '''
+        if not self.active:
+            return
+        if t is None:
+            t = time.time()
+        if name is None:
+            name = place(2)
+        self.name_max_len = max( self.name_max_len, len(name))
+        leaf = self.nest[-1].children.setdefault( name, TimingsItem( name))
+        self.nest.append( leaf)
+        leaf.begin( t)
+        if text:
+            log( text, nv=0)
+
+    def end( self, name=None, t=None):
+        '''
+        Repeatedly ends the most recent item until we have ended item called
+        <name>. Ends just the most recent item if name is None.
+        '''
+        if not self.active:
+            return
+        if t is None:
+            t = time.time()
+        if name is None:
+            name = self.nest[-1].name
+        while self.nest:
+            leaf = self.nest.pop()
+            leaf.end( t)
+            if leaf.name == name:
+                break
+        else:
+            if name is not None:
+                log( f'*** Warning: cannot end timing item called {name} because not found.')
+
+    def end_all( self):
+        self.end( self.nest[0].name)
+
+    def mid( self, name=None):
+        '''
+        Ends current leaf item and starts a new item called <name>. Useful to
+        define multiple timing blocks at same level.
+        '''
+        if not self.active:
+            return
+        t = time.time()
+        if len( self.nest) > 1:
+            self.end( self.nest[-1].name, t)
+        self.begin( name, t=t)
+
+    def __enter__( self):
+        if not self.active:
+            return
+        assert self.call_enter_state, 'Must specify <name> etc when using "with ...".'
+        name, text, level = self.call_enter_state
+        self.begin( name, text, level)
+        self.call_enter_state = None
+        self.call_enter_stack.append( name)
+
+    def __exit__( self, type, value, traceback):
+        if not self.active:
+            return
+        assert not self.call_enter_state, f'self.call_enter_state is not false: {self.call_enter_state}'
+        name = self.call_enter_stack.pop()
+        self.end( name)
+
+    def __call__( self, name=None, text=None, level=0):
+        '''
+        Allow scoped timing.
+        '''
+        if not self.active:
+            return self
+        assert not self.call_enter_state, f'self.call_enter_state is not false: {self.call_enter_state}'
+        self.call_enter_state = ( name, text, level)
+        return self
+
+    def text( self, item, depth=0, precision=1):
+        '''
+        Returns text showing hierachical timing information.
+        '''
+        if not self.active:
+            return ''
+        if item is self.root_item and not item.name:
+            # Don't show top-level.
+            ret = ''
+        else:
+            tt = '  None' if item.t is None else f'{item.t:6.{precision}f}'
+            n = f'/{item.n}' if item.n >= 2 else ''
+            ret = f'{" " * 4 * depth} {tt}{n} {item.name}\n'
+            depth += 1
+        for _, timing2 in item.children.items():
+            ret += self.text( timing2, depth, precision)
+        return ret
+
+    def __str__( self):
+        ret = 'Timings (in seconds):\n'
+        ret += self.text( self.root_item, 0)
+        return ret
 
 
 def strpbrk( text, substrings):
@@ -522,14 +744,15 @@ def exception_info(
         traceback.print_exception()
 
     Install as system default with:
-        sys.excepthook = lambda type_, exception, traceback: exception_info( exception, chain='reverse')
+        sys.excepthook = lambda type_, exception, traceback: jlib.exception_info( exception)
 
     Returns None, or the generated text if <file> is 'return'.
 
     Args:
         exception_or_traceback:
-            None, an Exception or a types.TracebackType. If None we use current
-            exception from sys.exc_info(), otherwise the current backtrace from
+            None, a BaseException, a types.TracebackType or a list of
+            inspect.FrameInfo's. If None we use current exception from
+            sys.exc_info() if set, otherwise the current backtrace from
             inspect.stack().
         limit:
             As in traceback.* functions: None to show all frames, positive to
@@ -540,17 +763,17 @@ def exception_info(
             output, or sys.stderr if None. Special value 'return' makes us
             return our output as a string.
         chain:
-            As in traceback.* functions: if true we show chained exceptions as
-            described in PEP-3134. Special value 'because' reverses the usual
-            ordering, showing higher-level exceptions first and joining with
-            'Because:' text.
+            As in traceback.* functions: if true (the default) we show chained
+            exceptions as described in PEP-3134. Special value 'because'
+            reverses the usual ordering, showing higher-level exceptions first
+            and joining with 'Because:' text.
         outer:
             If true (the default) we also show an exception's outer frames
-            above the catch block (see below for details). We use outer=false
-            for chained exceptions to avoid duplication.
+            above the catch block (see next section for details). We use
+            outer=false internally for chained exceptions to avoid duplication.
         _filelinefn:
-            Internal only; used with doctest - makes us omit file:line:
-            information to allow simple comparison with expected output.
+            Internal only; makes us omit file:line: information to allow simple
+            doctest comparison with expected output.
 
     Differences from traceback.* functions:
 
@@ -563,7 +786,7 @@ def exception_info(
         Inclusion of outer frames:
             Unlike traceback.* functions, stack traces for exceptions include
             outer stack frames above the point at which an exception was caught
-            - frames from the top-level <module> or thread creation to the
+            - i.e. frames from the top-level <module> or thread creation to the
             catch block. [Search for 'sys.exc_info backtrace incomplete' for
             more details.]
 
@@ -576,41 +799,62 @@ def exception_info(
 
                 <file>:<line>:<fn>: <text>  [in root module.]
                 ...                         [... other frames]
-                <file>:<line>:<fn>: <text>  [the except: block where exception was caught.]
+                <file>:<line>:<fn>: <text>  [in except: block where exception was caught.]
                 ^except raise:              [marker line]
-                <file>:<line>:<fn>: <text>  [try: block.]
+                <file>:<line>:<fn>: <text>  [in try: block.]
                 ...                         [... other frames]
                 <file>:<line>:<fn>: <text>  [where the exception was raised.]
 
     Examples:
 
-        Define some nested function calls which raise and except and call
-        exception_info(). We use file=sys.stdout so we can check the output
+        In these examples we use file=sys.stdout so we can check the output
         with doctest, and set _filelinefn=0 so that the output can be matched
-        easily.
+        easily. We also use +ELLIPSIS and '...' to match arbitrary outer frames
+        from the doctest code itself.
 
-        >>> def a():
-        ...     b()
+        Basic handling of an exception:
+
+            >>> def c():
+            ...     raise Exception( 'c() failed')
         >>> def b():
         ...     try:
         ...         c()
         ...     except Exception as e:
-        ...         exception_info( file=sys.stdout, chain=g_chain, _filelinefn=0)
+            ...         exception_info( e, file=sys.stdout, _filelinefn=0)
+            >>> def a():
+            ...     b()
+
+            >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
+            Traceback (most recent call last):
+                ...
+                a(): b()
+                b(): exception_info( e, file=sys.stdout, _filelinefn=0)
+                ^except raise:
+                b(): c()
+                c(): raise Exception( 'c() failed')
+            Exception: c() failed
+
+        Handling of chained exceptions:
+
+            >>> def e():
+            ...     raise Exception( 'e(): deliberate error')
+            >>> def d():
+            ...     e()
         >>> def c():
         ...     try:
         ...         d()
         ...     except Exception as e:
         ...         raise Exception( 'c: d() failed') from e
-        >>> def d():
-        ...     e()
-        >>> def e():
-        ...     raise Exception('e(): deliberate error')
+            >>> def b():
+            ...     try:
+            ...         c()
+            ...     except Exception as e:
+            ...         exception_info( file=sys.stdout, chain=g_chain, _filelinefn=0)
+            >>> def a():
+            ...     b()
 
-        We use +ELLIPSIS to allow '...' to match arbitrary outer frames from
-        the doctest code itself.
-
-        With chain=True (the default), we output low-level exceptions first,
-        matching the behaviour of traceback.* functions:
+            With chain=True (the default), we output low-level exceptions
+            first, matching the behaviour of traceback.* functions:
 
         >>> g_chain = True
         >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
@@ -631,9 +875,7 @@ def exception_info(
             c(): raise Exception( 'c: d() failed') from e
         Exception: c: d() failed
 
-
         With chain='because', we output high-level exceptions first:
-
         >>> g_chain = 'because'
         >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
         Traceback (most recent call last):
@@ -652,18 +894,56 @@ def exception_info(
             d(): e()
             e(): raise Exception('e(): deliberate error')
         Exception: e(): deliberate error
+
+        Show current backtrace by passing exception_or_traceback=None:
+            >>> def c():
+            ...     exception_info( None, file=sys.stdout, _filelinefn=0)
+            >>> def b():
+            ...     return c()
+            >>> def a():
+            ...     return b()
+
+            >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
+            Traceback (most recent call last):
+                ...
+                <module>(): a() # doctest: +REPORT_UDIFF +ELLIPSIS
+                a(): return b()
+                b(): return c()
+                c(): exception_info( None, file=sys.stdout, _filelinefn=0)
+
+        Show an exception's .__traceback__ backtrace:
+            >>> def c():
+            ...     raise Exception( 'foo') # raise
+            >>> def b():
+            ...     return c()  # call c
+            >>> def a():
+            ...     try:
+            ...         b() # call b
+            ...     except Exception as e:
+            ...         exception_info( e.__traceback__, file=sys.stdout, _filelinefn=0)
+
+            >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
+            Traceback (most recent call last):
+                ...
+                a(): b() # call b
+                b(): return c()  # call c
+                c(): raise Exception( 'foo') # raise
     '''
-    if isinstance( exception_or_traceback, types.TracebackType):
+    # Set exactly one of <exception> and <tb>.
+    #
+    if isinstance( exception_or_traceback, (types.TracebackType, inspect.FrameInfo)):
+        # Simple backtrace, no Exception information.
         exception = None
         tb = exception_or_traceback
     elif isinstance( exception_or_traceback, BaseException):
         exception = exception_or_traceback
-    elif exception_or_traceback:
-        assert 0, f'Unrecognised exception_or_traceback type: {type(exception_or_traceback)}'
-    else:
+        tb = None
+    elif exception_or_traceback is None:
+        # Show exception if available, else backtrace.
         _, exception, tb = sys.exc_info()
-        if not exception:
-            tb = inspect.stack()[1:]
+        tb = None if exception else inspect.stack()[1:]
+    else:
+        assert 0, f'Unrecognised exception_or_traceback type: {type(exception_or_traceback)}'
 
     if file == 'return':
         out = io.StringIO()
@@ -674,6 +954,7 @@ def exception_info(
         exception_info( exception, limit, out, chain, outer=False, _filelinefn=_filelinefn)
 
     if exception and chain and chain != 'because':
+        # Output current exception first.
         if exception.__cause__:
             do_chain( exception.__cause__)
             out.write( '\nThe above exception was the direct cause of the following exception:\n')
@@ -685,6 +966,7 @@ def exception_info(
 
     def output_frames( frames, reverse, limit):
         if reverse:
+            assert isinstance( frames, list)
             frames = reversed( frames)
         if limit is not None:
             frames = list( frames)
@@ -704,11 +986,17 @@ def exception_info(
     out.write( 'Traceback (most recent call last):\n')
     if exception:
         tb = exception.__traceback__
+        assert tb
         if outer:
             output_frames( inspect.getouterframes( tb.tb_frame), reverse=True, limit=limit)
             out.write( '    ^except raise:\n')
         output_frames( inspect.getinnerframes( tb), reverse=False, limit=None)
     else:
+        if not isinstance( tb, list):
+            inner = inspect.getinnerframes(tb)
+            outer = inspect.getouterframes(tb.tb_frame)
+            tb = outer + inner
+            tb.reverse()
         output_frames( tb, reverse=True, limit=limit)
 
     if exception:
@@ -717,6 +1005,7 @@ def exception_info(
             out.write( line)
 
     if exception and chain == 'because':
+        # Output current exception afterwards.
         if exception.__cause__:
             out.write( '\nBecause:\n')
             do_chain( exception.__cause__)
@@ -810,20 +1099,6 @@ class StreamPrefix:
 
     def flush( self):
         self.stream_flush()
-
-
-def debug( text):
-    if callable(text):
-        text = text()
-    print( text)
-
-debug_periodic_t0 = [0]
-def debug_periodic( text, override=0):
-    interval = 10
-    t = time.time()
-    if t - debug_periodic_t0[0] > interval or override:
-        debug_periodic_t0[0] = t
-        debug(text)
 
 
 def time_duration( seconds, verbose=False, s_format='%i'):
@@ -948,6 +1223,14 @@ def make_out_callable( out):
         ret.write = lambda text: out.write( text)
     return ret
 
+def _env_extra_text( env_extra):
+    ret = ''
+    if env_extra:
+        for n, v in env_extra.items():
+            assert isinstance( n, str), f'env_extra has non-string name {n!r}: {env_extra!r}'
+            assert isinstance( v, str), f'env_extra name={n!r} has non-string value {v!r}: {env_extra!r}'
+            ret += f'{n}={shlex.quote(v)} '
+    return ret
 
 def system(
         command,
@@ -970,7 +1253,7 @@ def system(
     the output and/or exit code, and whether to raise an exception if the
     command fails.
 
-    We also support the use of /usr/bin/time to gather rusage information.
+    Args:
 
         command:
             The command to run.
@@ -1059,9 +1342,9 @@ def system(
     >>> system('echo hello b', prefix='foo:', out='return', raise_errors=False)
     (0, 'foo:hello b\\nfoo:')
 
-    >>> system('echo hello c && false', prefix='foo:', out='return')
+    >>> system('echo hello c && false', prefix='foo:', out='return', env_extra=dict(FOO='bar qwerty'))
     Traceback (most recent call last):
-    Exception: Command failed: echo hello c && false
+    Exception: Command failed: FOO='bar qwerty' echo hello c && false
     Output was:
     foo:hello c
     foo:
@@ -1122,11 +1405,7 @@ def system(
         assert 0, f'Inconsistent out: {out}'
 
     if verbose:
-        env_text = ''
-        if env_extra:
-            for n, v in env_extra.items():
-                env_text += f' {n}={v}'
-        log(f'running:{env_text} {command}', nv=0, caller=caller+1)
+        log(f'running: {_env_extra_text(env_extra)}{command}', nv=0, caller=caller+1)
 
     env = None
     if env_extra:
@@ -1178,9 +1457,11 @@ def system(
     e = child.wait()
 
     if out_log:
+        global _log_text_line_start
         if not _log_text_line_start:
             # Terminate last incomplete line of log outputs.
             sys.stdout.write('\n')
+            _log_text_line_start = True
     if verbose:
         log(f'[returned e={e}]', nv=0, caller=caller+1)
 
@@ -1189,20 +1470,17 @@ def system(
 
     if raise_errors:
         if e:
-            env_string = ''
-            if env_extra:
-                for n, v in env_extra.items():
-                    env_string += f'{n}={v} '
+            message = f'Command failed: {_env_extra_text(env_extra)}{command}'
             if out_return is not None:
                 if not out_return.endswith('\n'):
                     out_return += '\n'
                 raise Exception(
-                        f'Command failed: {env_string}{command}\n'
-                        f'Output was:\n'
-                        f'{out_return}'
+                        message + '\n'
+                        + 'Output was:\n'
+                        + out_return
                         )
             else:
-                raise Exception( f'command failed: {env_string}{command}')
+                raise Exception( message)
         elif out_return is not None:
             return out_return
         else:
@@ -1272,7 +1550,16 @@ def get_gitfiles( directory, submodules=False):
 
     Otherwise we require that <directory>/jtest-git-files already exists.
     '''
-    if os.path.isdir( '%s/.git' % directory):
+    def is_within_git_checkout( d):
+        while 1:
+            #log( '{d=}')
+            if not d:
+                break
+            if os.path.isdir( f'{d}/.git'):
+                return True
+            d = os.path.dirname( d)
+
+    if is_within_git_checkout( directory):
         command = 'cd ' + directory + ' && git ls-files'
         if submodules:
             command += ' --recurse-submodules'
@@ -1383,6 +1670,14 @@ def mtime( filename, default=0):
     except OSError:
         return default
 
+
+def filesize( filename, default=0):
+    try:
+        return os.path.getsize( filename)
+    except OSError:
+        return default
+
+
 def get_filenames( paths):
     '''
     Yields each file in <paths>, walking any directories.
@@ -1406,13 +1701,28 @@ def get_filenames( paths):
             if filter_( name):
                 yield name
 
-def remove( path):
+def remove( path, backup=False):
     '''
     Removes file or directory, without raising exception if it doesn't exist.
+
+    path:
+        The path to remove.
+    backup:
+        If true, we rename any existing file/directory called <path> to
+        <path>-<datetime>.
 
     We assert-fail if the path still exists when we return, in case of
     permission problems etc.
     '''
+    if backup and os.path.exists( path):
+        datetime = date_time()
+        if platform.system() == 'Windows' or platform.system().startswith( 'CYGWIN'):
+            # os.rename() fails if destination contains colons, with:
+            #   [WinError87] The parameter is incorrect ...
+            datetime = datetime.replace( ':', '')
+        p = f'{path}-{datetime}'
+        log( 'Moving out of way: {path} => {p}')
+        os.rename( path, p)
     try:
         os.remove( path)
     except Exception:
@@ -1454,6 +1764,43 @@ def copy(src, dest, verbose=False):
     if dirname:
         os.makedirs( dirname, exist_ok=True)
     shutil.copy2( src, dest)
+
+
+def untar(path, mode='r:gz', prefix=None):
+    '''
+    Extracts tar file.
+
+    We fail if items in tar file have different top-level directory names, or
+    if tar file's top-level directory name already exists locally.
+
+    path:
+        The tar file.
+    mode:
+        As tarfile.open().
+    prefix:
+        If not None, we fail if tar file's top-level directory name is not
+        <prefix>.
+
+    Returns the directory name (which will be <prefix> if not None).
+    '''
+    with tarfile.open( path, mode) as t:
+        items = t.getnames()
+        assert items
+        item = items[0]
+        assert not item.startswith('.')
+        s = item.find('/')
+        if s == -1:
+            prefix_actual = item + '/'
+        else:
+            prefix_actual = item[:s+1]
+        if prefix:
+            assert prefix == prefix_actual, f'prefix={prefix} prefix_actual={prefix_actual}'
+        for item in items[1:]:
+            assert item.startswith( prefix_actual), f'prefix_actual={prefix_actual!r} != item={item!r}'
+        assert not os.path.exists( prefix_actual)
+        t.extractall()
+    return prefix_actual
+
 
 # Things for figuring out whether files need updating, using mtimes.
 #
@@ -1522,7 +1869,7 @@ def build(
     determinism of dependencies.
 
     Rebuilds <outfiles> by running <command> if we determine that any of them
-    are out of date.
+    are out of date, or if <comand> has changed.
 
     infiles:
         Names of files that are read by <command>. Can be a single filename. If
@@ -2401,6 +2748,8 @@ class Arg:
             for i, item in enumerate(self.syntax_items):
                 if i: text += ' '
                 text += item.text if item.literal else f'<{item.text}>'
+            if self.match_remaining:
+                text += ' ...'
             # Show flags, if any.
             extra = []
             if self.required:   extra.append('required')

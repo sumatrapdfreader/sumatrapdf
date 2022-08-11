@@ -790,19 +790,13 @@ static int document_shown_as_dirty = 0;
 void update_title(void)
 {
 	char buf[256];
-	char *title = "MuPDF/GL";
+	const char *title = "MuPDF/GL";
 	char *extra = "";
 	size_t n;
 
 	int nc = fz_count_chapters(ctx, doc);
 
-	title = strrchr(filename, '/');
-	if (!title)
-		title = strrchr(filename, '\\');
-	if (title)
-		++title;
-	else
-		title = filename;
+	title = fz_basename(filename);
 
 	document_shown_as_dirty = pdf && pdf_has_unsaved_changes(ctx, pdf);
 	if (document_shown_as_dirty)

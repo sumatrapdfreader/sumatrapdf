@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -97,6 +97,11 @@ void *fz_memmem(const void *haystack, size_t haystacklen, const void *needle, si
 	extract the directory component from a path.
 */
 void fz_dirname(char *dir, const char *path, size_t dirsize);
+
+/**
+	Find the filename component in a path.
+*/
+const char *fz_basename(const char *path);
 
 /**
 	decode url escapes.

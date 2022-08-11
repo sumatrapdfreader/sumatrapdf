@@ -9,6 +9,8 @@ Overview:
     sdist and wheels to pypi.org, testing that 'pip install <package-name>'
     works.
 
+    Requires a setup.py in the root of the tree.
+
     When building wheels, on Unix we use a manylinux docker container, on
     Windows we use the 'py' command to find different installed Pythons.
 
@@ -21,10 +23,12 @@ Overview:
 
 
 import distutils.util
+import doctest
 import glob
 import os
 import platform
 import re
+import shlex
 import shutil
 import sys
 import tarfile
@@ -43,18 +47,20 @@ def system(
         prefix=None,
         caller=1,
         bufsize=-1,
+        env_extra=None,
         ):
     '''
     Runs a command. See jlib.system()'s docs for details.
     '''
     return jlib.system(
             command,
-            verbose=not return_output,
+            verbose=True,
             raise_errors=raise_errors,
             out='return' if return_output else 'log',
             prefix=prefix,
             caller=caller+1,
             bufsize=bufsize,
+            env_extra=env_extra,
             )
 
 
@@ -62,8 +68,36 @@ def windows():
     s = platform.system()
     return s == 'Windows' or s.startswith('CYGWIN')
 
-def unix():
-    return not windows()
+def linux():
+    s = platform.system()
+    return s == 'Linux'
+
+def macos():
+    s = platform.system()
+    return s == 'Darwin'
+
+def openbsd():
+    s = platform.system()
+    return s == 'OpenBSD'
+
+
+def env_string_to_dict( text):
+    '''
+    Converts string containing shell-style space-separated name=value pairs,
+    into a dict. <text> can also be a list of strings, or a dict.
+    '''
+    if isinstance( text, dict):
+        return text
+    ret = dict()
+    if text:
+        if isinstance( text, str):
+            text = text,
+        for t in text:
+            for item in shlex.split( t):
+                n, v = item.split( '=', 1)
+                assert n not in ret
+                ret[ n] = v
+    return ret
 
 
 def make_tag(py_version=None):
@@ -105,6 +139,7 @@ def venv_run(
         pip_upgrade=True,
         bufsize=-1,
         raise_errors=True,
+        env_extra=None,
         ):
     '''
     Runs commands inside Python venv, joined by &&.
@@ -134,20 +169,25 @@ def venv_run(
         commands = [commands]
     if py is None:
         py = 'py' if windows() else sys.executable
+
+    def make_command( commands):
     if windows():
-        # Run under cmd.exe with all commands inside "...".
-        pre = [
-                f'cmd.exe /c "{"cd "+directory if directory else "true"}',
-                f'{py} -m venv {venv}',
-                f'{venv}\\Scripts\\activate.bat',
-                ]
-        post = [f'deactivate"']
+            command = '&&'.join( commands)
+            if platform.system().startswith('CYGWIN'):
+                command = f'cmd.exe /c {shlex.quote(command)}'
     else:
-        pre = [
-                f'{"cd "+directory if directory else "true"}',
-                f'{py} -m venv {venv}',
-                f'. {venv}/bin/activate',
-                ]
+            command = ' && '.join( commands)
+        return command
+
+    pre = []
+    if directory:
+        pre.append( f'cd {directory}')
+    pre.append( f'{py} -m venv {venv}')
+
+    if windows():
+        pre.append( f'{venv}\\Scripts\\activate.bat')
+    else:
+        pre.append( f'. {venv}/bin/activate')
         post = [f'deactivate']
 
     if clean or venv not in venv_installed:
@@ -158,35 +198,23 @@ def venv_run(
         venv_installed.add(venv)
 
         if pip_upgrade:
-            pre += [
-                    'pip install --upgrade pip',
-                    ]
+            pre.append( 'pip install --upgrade pip')
             if windows():
                 # It looks like first attempt to upgrade pip can fail with
                 # 'EnvironmentError: [WinError 5] Access is denied'. So we make an
                 # extra first attempt.
-                #
-                commands0 = pre + post
-                command0 = '&&'.join(commands0)
-                log(f'Running pre-install of pip: {command0}')
-                e = system(command0, raise_errors=False, prefix=prefix)
+                log( f'Running dummy install/upgrade of pip.')
+                e = system(make_command( pre + post), raise_errors=False, prefix=prefix)
                 if e:
-                    log(f'[Ignoring error from dummy run of pip install on Windows.]')
-
-    commands = pre + commands + post
-
-    if windows():
-        # Spaces mess things up on Windows.
-        command = '&&'.join(commands)
-    else:
-        command = ' && '.join(commands)
+                    log(f'[Ignoring error from dummy run of pip install/upgrade on Windows.]')
 
     return system(
-            command,
+            make_command( pre + commands + post),
             raise_errors=raise_errors,
             return_output=return_output,
             prefix=prefix,
             bufsize=bufsize,
+            env_extra=env_extra,
             )
 
 
@@ -213,10 +241,9 @@ def check_wheel(wheel):
             ])
 
 
-def find_new_file(pattern, t):
+def find_new_files(pattern, t):
     '''
-    Finds file matching <pattern> whose mtime is >= t. Raises exception if
-    there isn't exactly one such file.
+    Returns list of files matching <pattern> whose mtime is >= t.
     '''
     paths = glob.glob(pattern)
     paths_new = []
@@ -224,11 +251,20 @@ def find_new_file(pattern, t):
         tt = os.path.getmtime(path)
         if tt >= t:
             paths_new.append(path)
+    return paths_new
+
+
+def find_new_file(pattern, t):
+    '''
+    Finds file matching <pattern> whose mtime is >= t. Raises exception if
+    there isn't exactly one such file.
+    '''
+    paths_new = find_new_files(pattern, t)
 
     if len(paths_new) == 0:
         raise Exception(f'No new file found matching glob: {pattern}')
     elif len(paths_new) > 1:
-        text = 'More than one file found matching glob: {pattern}\n'
+        text = f'More than one file found matching glob: {pattern}\n'
         for path in paths_new:
             text += f'    {path}\n'
         raise Exception(text)
@@ -236,18 +272,19 @@ def find_new_file(pattern, t):
     return paths_new[0]
 
 
-def make_sdist(package_directory, out_directory):
+def make_sdist(package_directory, out_directory, env=''):
     '''
     Creates sdist from source tree <package_directory>, in <out_directory>. Returns
     the path of the generated sdist.
     '''
     os.makedirs(out_directory, exist_ok=True)
+    env_extra = env_string_to_dict( env)
     t = time.time()
     command = (
             f'cd {os.path.relpath(package_directory)}'
-            f' && ./setup.py sdist -d "{os.path.relpath(out_directory, package_directory)}"'
+            f' && {sys.executable} ./setup.py sdist -d "{os.path.relpath(out_directory, package_directory)}"'
             )
-    system(command)
+    system(command, env_extra=env_extra)
 
     # Find new file in <sdist_directory>.
     sdist = find_new_file(f'{out_directory}/*.tar.gz', t)
@@ -256,7 +293,7 @@ def make_sdist(package_directory, out_directory):
     return sdist
 
 
-def make_unix(
+def make_linux(
         sdist,
         abis=None,
         out_dir=None,
@@ -361,8 +398,9 @@ def make_unix(
 
     def docker_system(command, prefix='', return_output=False):
         '''
-        Runs specified command inside container. Runs via bash so <command> can
-        contain shell constructs. If out is 'capture', we return the output text.
+        Runs specified command inside container. Runs via bash so <command>
+        can contain shell constructs. If return_output is true, we return the
+        output text.
         '''
         command = command.replace('"', '\\"')
         # Manylinux container doesn't seem to have a python3
@@ -437,6 +475,36 @@ def make_unix(
     return wheels
 
 
+def make_unix_native(
+        sdist,
+        out_dir=None,
+        test_direct_install=False,
+        ):
+    '''
+    Makes wheel on native system.
+    '''
+    assert sdist.endswith('.tar.gz')
+    sdist_leaf = os.path.basename(sdist)    # e.g. mupdf-1.18.0.20210504.1544.tar.gz
+    package_root = sdist_leaf[ : -len('.tar.gz')]   # e.g. mupdf-1.18.0.20210504.1544
+
+    check_sdist(sdist)
+    # Extact sdist and run setup.py to build wheel inside the extracted
+    # tree. We make basic checks that extraction will extract to a single
+    # subdirectory.
+    #
+    log(f'Extracting sdist={sdist}')
+    directory = jlib.untar( sdist)
+
+    if out_dir is None:
+        out_dir = 'pypackage-out'
+    out_dir2 = os.path.relpath(os.path.abspath(out_dir), directory)
+    t = time.time()
+    system( f'cd {directory} && {sys.executable} setup.py -d {out_dir2} bdist_wheel')
+    wheel = find_new_file(f'{out_dir}/*.whl', t)
+    check_wheel(wheel)
+    return [wheel]
+
+
 def windows_python_from_abi(abi):
     '''
     Returns (cpu, python_version, py).
@@ -486,19 +554,7 @@ def make_windows(
     # subdirectory.
     #
     log(f'Extracting sdist={sdist}')
-    with tarfile.open(sdist, 'r:gz') as t:
-        items = t.getnames()
-        assert items
-        item = items[0]
-        #log(f'item={item}')
-        assert not item.startswith('.')
-        s = item.find('/')
-        assert s > 0
-        prefix = item[:s+1]
-        for item in items:
-            assert item.startswith(prefix)
-        t.extractall()
-        directory = prefix
+    directory = jlib.untar( sdist)
 
     os.makedirs(out_dir, exist_ok=True)
     out_dir2 = os.path.relpath(os.path.abspath(out_dir), directory)
@@ -528,7 +584,7 @@ def test_internal(test_command, package_name, pip_install_arg, py):
     if test_command == '.':
         test_command = ''
 
-    jlib.log('Testing {package_name=} {pip_install_arg=} {py=}')
+    jlib.log('Testing {package_name=} {pip_install_arg=} {py=} {test_command!r=}')
     if not test_command:
         test_command = 'pypackage_test.py'
         code = (
@@ -550,7 +606,7 @@ def test_internal(test_command, package_name, pip_install_arg, py):
             )
 
 def test_local(test_command, wheels, py):
-    # Find wheel matching tag output by running <py> ourselves with --tag
+    # Find wheel matching tag output by running <py> ourselves with 'tag' arg.
     # inside a venv running <py>:
     log(f'Finding wheel tag for {py!r}')
     text = venv_run(
@@ -564,12 +620,17 @@ def test_local(test_command, wheels, py):
     m = re.search('tag: (.+)', text)
     assert m, f'Failed to find expected tag: ... in output text: {text!r}'
     tag = m.group(1).strip()    # Sometimes we get \r at end, so remove it here.
+    py_py, py_abi, py_cpu = tag.split( '-')
     log(f'Looking for wheel matching tag {tag!r}')
     for wheel in wheels:
-        name, version, py_, none, cpu = parse_wheel(wheel)
-        if '-'.join((py_, none, cpu)) == tag:
+        wheel_name, wheel_version, wheel_py, wheel_abi, wheel_cpu = parse_wheel(wheel)
+        if py_abi == 'none':
+            eq = (wheel_py, wheel_cpu) == (py_py, py_cpu)
+        else:
+            eq = (wheel_py, wheel_abi, wheel_cpu) == (py_py, py_abi, py_cpu)
+        if eq:
             log( f'Matching wheel: {wheel}')
-            package_name = name
+            package_name = wheel_name
             pip_install_arg = wheel
             break
     else:
@@ -638,7 +699,7 @@ def test(test_command, package_name, wheels, abis, pypi, pypi_test, py):
                 log('Using default python "py".')
                 py = 'py'
             else:
-                log('Using default python {sys.executable=}.')
+                log('Using default python: {sys.executable=}')
                 py = sys.executable
         if pypi:
             test_pypi(test_command, package_name, pypi_test, py)
@@ -648,28 +709,53 @@ def test(test_command, package_name, wheels, abis, pypi, pypi_test, py):
 
 def parse_remote(remote):
     '''
-    remote:
-        [<user>@]<host>:[<directory>]
+    Specification of remote machine and directory.
 
-    Returns <user>@, <host>, <directory>.
+    text:
+        Optional jump host, remote host, directory, sync directories:
+            [ssh <extra>] [<jump-host>::][<user>@]<host>[:<port>][:<remote-dir>]
 
-    directory will have '/' appended if
-    not already present.
+    Basic user at remote host:
+        >>> parse_remote( 'user@host:')
+        ('ssh user@host', '')
 
-    user: if not '', will end with '@'.
-    host>: does not end with ':'.
-    directory: if not '', will end with '/'. Does not start with ':'.
+    Specify remote directory:
+        >>> parse_remote( 'user@host:dir')
+        ('ssh user@host', 'dir/')
+
+    Specify a jump host:
+        >>> parse_remote( 'juser@jhost::user@host:dir')
+        ('ssh -J juser@jhost user@host', 'dir/')
+
+    Specify extra ssh args, and a port for the jump host:
+        >>> parse_remote( 'ssh -F julian-tools/ssh-config julian@miles.ghostscript.com:5222::julian@mac2019:foo')
+        ('ssh -F julian-tools/ssh-config -J julian@miles.ghostscript.com:5222 julian@mac2019', 'foo/')
     '''
-    m = re.match('^(([^@]+@))?([^:]+):(.*)$', remote)
-    assert m, f'Expected [<user>@]<hostname>:[<directory>] but: {remote!r}'
-    user, host, directory = m.group(1), m.group(3), m.group(4)
-    if user is None:
-        user = ''
-    if directory is None:
-        directory = ''
+    re_user_at = '(?P<user_at>[^@]+@)'                          # <user>@
+    re_host = '(?P<host>[^:@]+)'                                # <host>
+    re_user_host = f'(?P<user_at_host>{re_user_at}?{re_host})'  # [<user>@]<host>
+    re_directory = '(:(?P<directory_name>[^:,]*))'              # :<directory>
+    re_sync_directories = '(?P<directories>(,[^,:]*)*)'         # [,<sync-directory>]*
+    re_ssh_extra = '((?P<ssh_extra>ssh [^@]+) )'                # ssh *
+    re_port = '(:(?P<port>[0-9]+))'                             # :<port>
+    re_jump = f'((?P<jump>{re_user_at}{re_host}{re_port}?)::)'  # [<juser>@]<jhost>::
+    re_jump = re_jump.replace( 'user_at', 'jump_user_at')
+    re_jump = re_jump.replace( 'host', 'jump_host')
+
+    m = re.match( f'^{re_ssh_extra}?{re_jump}?{re_user_host}{re_directory}?$', remote)
+    assert m, f'Expected [[<user>@]<jumphost>::][<user>@]<hostname>:[<directory>] but: {text!r}'
+
+    ssh_extra = m.group('ssh_extra')
+    jump = m.group('jump')
+    user_at = m.group('user_at') or ''
+    host = m.group('host')
+    directory = m.group('directory_name')
+    jump = f' -J {jump}' if jump else ''
+    ssh = ssh_extra if ssh_extra else 'ssh'
+    ssh += f'{jump} {user_at}{host}'
     if directory and not directory.endswith('/'):
         directory += '/'
-    return user, host, directory
+    return ssh, directory
 
 
 def wheels_for_sdist(sdist, outdir):
@@ -701,6 +787,127 @@ def parse_wheel(wheel):
     name, version, py, none, cpu = m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)
     return name, version, py, none, cpu
 
+def upload( files, pypi_test):
+    log(f'Uploading ({len(files)}')
+    for file_ in files:
+        log(f'    {file_}')
+    while 1:
+        try:
+            venv_run([
+                    f'pip install twine',
+                    f'python -m twine upload --disable-progress-bar {"--repository testpypi" if pypi_test else ""} {" ".join(files)}',
+                    ],
+                    bufsize=0,  # So we see login/password prompts.
+                    raise_errors=True,
+                    )
+        except Exception  as e:
+            jlib.log( 'Failed to upload: {e=}')
+            input( jlib.log_text( 'Press <enter> to retry... ').strip())
+        else:
+            break
+
+def ensure_swig_windows():
+    '''
+    Downloads and extracts swig on windows, and adds to $PATH.
+    '''
+    assert windows()
+    import stat
+    import urllib.request
+    import zipfile
+    import subprocess
+    name = 'swigwin-4.0.2'
+    swig_local = f'{name}/swig.exe'
+
+    if not os.path.exists( swig_local):
+        if not os.path.exists( f'{name}.zip'):
+            # Download swig .zip file/
+            url = f'http://prdownloads.sourceforge.net/swig/{name}.zip'
+            log( 'Downloading Windows SWIG from: {url}')
+            with urllib.request.urlopen( url) as response:
+                with open( f'{name}.zip-', 'wb') as f:
+                    shutil.copyfileobj(response, f)
+            os.rename( f'{name}.zip-', f'{name}.zip')
+
+        # Extract swig from .zip file.
+        log( 'Extracting {name}.zip')
+        z = zipfile.ZipFile(f'{name}.zip')
+        name0 = f'{name}-0'
+        os.mkdir( name0)
+        z.extractall( name0)
+        os.rename( f'{name0}/{name}', name)
+        remove( name0)
+
+        # Need to make swig.exe executable.
+        swig_local_stat = os.stat( swig_local)
+        os.chmod( swig_local, swig_local_stat.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+    # Add to $PATH if necessary.
+    path_element = os.path.abspath( name)
+    sep = ';' if platform.system() == 'Windows' else ':'
+    if path_element not in os.environ[ 'PATH'].split( sep):
+        log( 'Adding to $PATH: {sep}{path_element}')
+        os.environ[ 'PATH'] += f'{sep}{path_element}'
+
+    if 0:
+        swig_local_dir_abs = os.path.abspath( name)
+        sep = ';' if platform.system() == 'Windows' else ':'
+        os.environ[ 'PATH'] += f'{sep}{swig_local_dir_abs}'
+        print( f'$PATH: {os.environ["PATH"]}', file=sys.stderr)
+    if 0:
+        shutil.copy2( swig_local, 'swig.exe')
+
+    if 0:
+        # Test swig runs ok.
+        log( 'Checking we can run swig.')
+        subprocess.run( 'swig -help', shell=True, check=True,  env=os.environ)
+
+
+def build_cibuildwheel( sdist, args, env, outdir):
+    '''
+    Builds wheels by running cibuildwheel in a venv.
+
+    sdist:
+        An sdist file.
+    args:
+        None or string of extra args to pass to cibuildwheel.
+    env:
+        Extra of environmental variable settings, as dict of name=value pairs
+        or string of space-separated name=value pairs or sequence of such
+        strings.
+
+        For example: 'CIBW_BUILD="*-cp39-*x86_64*" CIBW_SKIP="*musllinux*"'
+
+    Returns list of created wheel filenames.
+    '''
+    log( 'Building wheels using cibuildwheel from {sdist=}. {=args env outdir}')
+    # We always need to specify 'cibuildwheel --platform ...'
+    # because auto always seems to fail even on devuan.
+    if linux():
+        platform = 'linux'
+    elif windows():
+        platform = 'windows'
+        ensure_swig_windows()
+    elif macos():
+        platform = 'macos'
+    else:
+        platform = 'auto'
+    env_extra = env_string_to_dict( env)
+    jlib.log( '{env_extra=}')
+    t = time.time()
+    command = f'cibuildwheel --output-dir {outdir} --platform {platform}'
+    if args:
+        command += f' {args}'
+    command += f' {sdist}'
+    venv_run(
+            [
+                f'pip install cibuildwheel',
+                command,
+            ],
+            env_extra=env_extra,
+            )
+    wheels = find_new_files( f'{outdir}/*.whl', t)
+    return wheels
+
 
 def main():
 
@@ -710,10 +917,10 @@ def main():
     abis = None
     outdir = 'pypackage-out'
     remote = None
+
     if windows():
-        abis = ['x32-38', 'x32-39', 'x64-38', 'x64-39']
+        pass
     else:
-        abis = ['37', '38', '39']
         manylinux_container_name = None
         manylinux_install_docker = False
         manylinux_docker_image = None
@@ -724,6 +931,13 @@ def main():
                 jlib.Arg('abis <abis>',
                         help=f'''
                         Set ABIs to build, comma-separated. Default is {abis}.
+
+                        If 'build --cibuild' is to be used, these items should
+                        be cibuildwheel style and separators can be commas or
+                        spaces. For example:
+
+                            abis cp39-manylinux_x86_64,cp310-manylinux_x86_64
+                            abis 'cp39-manylinux_x86_64 cp310-manylinux_x86_64'
                         ''',
                         ),
                 jlib.Arg('build', help='Build wheels.', multi=True,
@@ -736,7 +950,9 @@ def main():
                                     ''',
                                     ),
                             jlib.Arg('-a <abis>',
-                                    help='Set ABIs to build remotely, comma-separated.'
+                                    help='''
+                                        Set ABIs to build remotely, comma-separated.
+                                        '''
                                     ),
                             jlib.Arg('-t',
                                     help='''
@@ -746,8 +962,36 @@ def main():
                                     only test with native python.
                                     ''',
                                     ),
+                            jlib.Arg('--cibuildwheel',
+                                    help='''
+                                        Use cibuildwheel instead of our own
+                                        Linux docker/manylinux and Windows-py
+                                        code.
+                                        ''',
+                                    subargs = [
+                                        jlib.Arg('--args <args>',
+                                            help='''
+                                                Extra args to specify to
+                                                cibuildwheel.
+                                                ''',
+                                            ),
+                                        jlib.Arg('--env <env>',
+                                            multi=True,
+                                            help='''
+                                                Extra environmental
+                                                variables to specify when
+                                                running cibuildwheel, as
+                                                space-separated name=value
+                                                items. For example:
+
+                                                    --env 'CIBW_BUILD=cp* CIBW_SKIP="*musllinux* pp*"'
+                                                ''',
+                                            ),
+                                        ]
+                                    ),
                             ],
                         ),
+                jlib.Arg('doctest', help='Run doctest'),
                 jlib.Arg('pypi-test <test>',
                         help='Whether to use test.pypi.org.',
                         ),
@@ -814,7 +1058,14 @@ def main():
                                     ),
                             ],
                         ),
-                jlib.Arg('upload', help='Upload sdist and wheels to pypi.'),
+                jlib.Arg('upload',
+                        help='Upload sdist and all matching wheels to pypi.',
+                        ),
+                jlib.Arg('upload-wheels',
+                        help='''
+                        Upload specific wheels to pypi, as specified by 'wheels ...'.
+                        '''
+                        ),
                 jlib.Arg('wheels <pattern>',
                         help='''
                         Specify pre-existing wheels using glob pattern. A "*"
@@ -833,6 +1084,8 @@ def main():
         abis = args.abis.split(',')
         log(f'Changing abis from {abis_prev} to {abis}')
 
+    if args.doctest:
+        doctest.testmod()
     if args.sdist:
         if os.path.isfile(args.sdist.path):
             parse_sdist(args.sdist.path)
@@ -847,50 +1100,103 @@ def main():
     for build in args.build:
         assert sdist, f'build requires sdist'
         if build.r:
-            # Remote build.
-            user, host, directory = parse_remote(build.r.uri)
+            # Do remote build.
+            ssh_command, directory = parse_remote(build.r.uri)
             local_dir = os.path.dirname(__file__)
+
+            # Rsync to remote.
             command = (''
-                    f'rsync -aP {local_dir}/pypackage.py {local_dir}/jlib.py {sdist} {user}{host}:{directory}'
-                    f' && echo rsync finished'
-                    f' && ssh {user}{host} '
-                    f'"'
-                    f'{"cd "+directory if directory else "true"}'
-                    f' && ./pypackage.py sdist {os.path.basename(sdist)}'
+                    f'rsync -aP --rsh {shlex.quote(ssh_command)} {local_dir}/pypackage.py {local_dir}/jlib.py {sdist} :{directory}'
                     )
+            system(command, prefix=f'{build.r.uri}:rsync-to: ')
+
+            # Run build on remote.
+            command_remote = ''
+            if directory:
+                command_remote += f'cd {directory} && '
+            command_remote += f'./pypackage.py sdist {os.path.basename(sdist)}'
             if build.a:
-                command += f' abis {build.a.abis}'
+                command_remote += f' abis {build.a.abis}'
+            command_remote += ' build'
 
-            command += (
-                    f' build'
-                    )
-
+            if build.cibuildwheel:
+                command_remote += f' --cibuildwheel'
+                for env in build.cibuildwheel.env:
+                    command_remote += ' --env ' + shlex.quote( env.env)
+                if build.cibuildwheel.args:
+                    command_remote += f' --args ' + shlex.quote(build.cibuildwheel.args.args)
             if build.t:
                 # Also run basic import test.
-                command += " -t"
+                command_remote += ' -t'
+            command = f'{ssh_command} {shlex.quote( command_remote)}'
+            system(command, prefix=f'{build.r.uri}:ssh: ')
 
-            # Add a command to rsync remote wheels back to local machine.
+            # Copy remote wheels back to local machine.
             #
-            #log( '{sdist=}')
             sdist_prefix = os.path.basename( sdist)
             sdist_suffix = '.tar.gz'
             assert sdist_prefix.endswith( sdist_suffix)
             sdist_prefix = sdist_prefix[ : -len( sdist_suffix)]
-            command += (
-                    f'"'
-                    f' && rsync -ai \'{user}{host}:{directory}pypackage-out/{sdist_prefix}*\' {outdir}/'
-                    )
-
-            system(command, prefix=f'{user}{host}:{directory}: ')
+            remote_pattern = f':{directory}pypackage-out/{sdist_prefix}*'
+            command = f'rsync -ai --rsh {shlex.quote(ssh_command)} {shlex.quote(remote_pattern)} {outdir}/'
+            system(command, prefix=f'{build.r.uri}:rsync-from: ')
 
         else:
             # Local build.
-            if windows():
-                wheels = make_windows(sdist, abis, outdir)
+            if build.cibuildwheel is not None:
+                # Use cibuildwheel.
+                if 1:
+                    env_extra = dict()
+                    for env in build.cibuildwheel.env:
+                        env_extra.update( env_string_to_dict( env.env))
+                    wheels = build_cibuildwheel(
+                            sdist,
+                            build.cibuildwheel.args,
+                            env_extra,
+                            outdir,
+                            )
+                else:
+                    log( 'Building wheels using cibuildwheel from sdist: {sdist}')
+                    # We always need to specify 'cibuildwheel --platform ...'
+                    # because auto always seems to fail even on devuan.
+                    if linux():
+                        platform = 'linux'
+                    elif windows():
+                        platform = 'windows'
+                        ensure_swig_windows()
+                    elif macos():
+                        platform = 'macos'
+                    else:
+                        platform = 'auto'
+                    env_extra = dict()
+                    for env in build.cibuildwheel.env:
+                        env_extra.update( env_string_to_dict( env.env))
+                    t = time.time()
+                    command = f'cibuildwheel --output-dir {outdir} --platform {platform}'
+                    if build.cibuildwheel.args:
+                        command += f' {build.cibuildwheel.args}'
+                    command += f' {sdist}'
+                    venv_run(
+                            [
+                                f'pip install cibuildwheel',
+                                command,
+                            ],
+                            env_extra=env_extra,
+                            )
+                    wheels = find_new_files( f'{outdir}/*.whl', t)
             else:
-                wheels = make_unix(
+                # Do builds ourselves.
+                abis2 = abis
+            if windows():
+                    if not abis2:
+                        abis2 = ['x32-38', 'x32-39', 'x64-38', 'x64-39']
+                    wheels = make_windows(sdist, abis2, outdir)
+                elif linux():
+                    if not abis2:
+                        abis2 = ['37', '38', '39']
+                    wheels = make_linux(
                         sdist,
-                        abis,
+                            abis2,
                         outdir,
                         test_direct_install = False,
                         install_docker = manylinux_install_docker,
@@ -898,14 +1204,16 @@ def main():
                         pull_docker_image = manylinux_pull_docker_image,
                         container_name = manylinux_container_name,
                         )
-            if build.t:
-                # Run basic import test.
-                package_name, _ = parse_sdist(sdist)
-                test('', package_name, wheels, abis, pypi=False, pypi_test=None, py=None)
+                else:
+                    wheels = make_unix_native( sdist, outdir)
 
             log(f'sdist: {sdist}')
             for wheel in wheels:
                 log(f'    wheel: {wheel}')
+            if build.t:
+                # Run basic import test.
+                package_name, _ = parse_sdist(sdist)
+                test('', package_name, wheels, abis, pypi=False, pypi_test=None, py=None)
 
     if args.tag:
         print(f'tag: {make_tag()}')
@@ -939,45 +1247,34 @@ def main():
     if args.upload:
         assert sdist, f'Cannot upload because no sdist specified; use "sdist ...".'
         wheels = wheels_for_sdist(sdist, outdir)
-        log(f'Uploading wheels ({len(wheels)} for sdist: {sdist!r}')
+        log(f'Uploading wheels ({len(wheels)} and sdist: {sdist!r}')
         for wheel in wheels:
             log(f'    {wheel}')
-        # We repeated on error, in case user enters the wrong password.
-        while 1:
-            try:
-                venv_run([
-                        f'pip install twine',
-                        f'python -m twine upload --disable-progress-bar {"--repository testpypi" if pypi_test else ""} {sdist} {" ".join(wheels)}',
-                        ],
-                        bufsize=0,  # So we see login/password prompts.
-                        raise_errors=True,
-                        )
-            except Exception  as e:
-                jlib.log( 'Failed to upload: {e=}')
-                input( jlib.log_text( 'Press <enter> to retry... ').strip())
-            else:
-                break
+        files = [sdist] + wheels
+        upload( files, pypi_test)
+
+    if args.upload_wheels:
+        log(f'Uploading wheels ({len(wheels)}')
+        upload( wheels, pypi_test)
 
     for remote in args.remote:
-        user, host, directory = parse_remote(remote.uri)
+        ssh_command, directory = parse_remote(remote.uri)
         local_dir = os.path.dirname(__file__)
         sync_files = f'{local_dir}/pypackage.py,{local_dir}/jlib.py'
         if remote.s:
             sync_files += f',{remote.s.files}'
         system(
-                f'rsync -ai {sync_files.replace(",", " ")} {sdist if sdist else ""} {user}{host}:{directory}',
-                prefix=f'rsync to {user}{host}:{directory}: ',
+                f'rsync -ai --rsh {shlex.quote(ssh_command)} {sync_files.replace(",", " ")} {sdist if sdist else ""} :{directory}',
+                prefix=f'{remote.uri}: ',
                 )
         if remote.a:
             remote_args = f'pypi-test {pypi_test} {remote.a.args}'
-            system(
-                    f'ssh {user}{host} '
-                    f'"'
-                    f'{"cd "+directory+" && " if directory else ""}'
-                    f'./pypackage.py {remote_args}'
-                    f'"'
-                    ,
-                    prefix=f'{user}{host}:{directory}: ',
+            remote_command = ''
+            if directory:
+                remote_command += f'cd {directory} && '
+            remote_command += f'./pypackage.py {remote_args}'
+            system( f'{ssh_command} {shlex.quote( remote_command)}',
+                    prefix=f'{remote.uri}: ',
                     )
 
 
@@ -985,5 +1282,5 @@ if __name__ == '__main__':
     try:
         main()
     except Exception:
-        sys.stderr.write(jlib.exception_info())
+        jlib.exception_info()
         sys.exit(1)
