@@ -3291,10 +3291,6 @@ void TabsCtrl::Layout() {
     }
     auto maxDx = (rect.dx - 5) / nTabs;
     int dx = std::min(tabDefaultDx, maxDx);
-    dx--;
-    if (tabSize.dx == dx && tabSize.dy == dy) {
-        return;
-    }
     tabSize = {dx, dy};
     //logfa("TabsCtrl::Layout size: (%d, %d), tab size: (%d, %d)\n", rect.dx, rect.dy, tabSize.dx, tabSize.dy);
 
