@@ -517,6 +517,8 @@
     <ClInclude Include="..\mupdf\source\fitz\utfdata.h" />
     <ClInclude Include="..\mupdf\source\fitz\xml-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h" />
+    <ClInclude Include="..\mupdf\source\html\css-properties.h" />
+    <ClInclude Include="..\mupdf\source\html\html-imp.h" />
     <ClInclude Include="..\mupdf\source\pdf\annotation-icons.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-annot-imp.h" />
   </ItemGroup>
@@ -648,6 +650,8 @@
     <ClCompile Include="..\mupdf\source\html\html-layout.c" />
     <ClCompile Include="..\mupdf\source\html\html-outline.c" />
     <ClCompile Include="..\mupdf\source\html\html-parse.c" />
+    <ClCompile Include="..\mupdf\source\html\mobi.c" />
+    <ClCompile Include="..\mupdf\source\html\xml-dom.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-clean-file.c" />

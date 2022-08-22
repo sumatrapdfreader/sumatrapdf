@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,7 +28,7 @@
 
 enum { T, R, B, L };
 
-enum { FORMAT_FB2, FORMAT_XHTML, FORMAT_HTML5 };
+enum { FORMAT_FB2, FORMAT_XHTML, FORMAT_HTML5, FORMAT_MOBI };
 
 typedef struct
 {
@@ -78,8 +78,8 @@ static int
 htdoc_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 {
 	html_document *doc = (html_document*)doc_;
-	if (doc->html->tree.root->b > 0)
-		return ceilf(doc->html->tree.root->b / doc->html->page_h);
+	if (doc->html->tree.root->s.layout.b > 0)
+		return ceilf(doc->html->tree.root->s.layout.b / doc->html->page_h);
 	return 1;
 }
 
@@ -209,8 +209,19 @@ xhtdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char
 	return -1;
 }
 
+static int
+mobi_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
+{
+	html_document *doc = (html_document*)doc_;
+	if (!strcmp(key, FZ_META_FORMAT))
+		return (int)fz_strlcpy(buf, "MOBI", size);
+	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
+		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
+	return -1;
+}
+
 static fz_document *
-htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer *buf, int format)
+htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *zip, fz_buffer *buf, int format)
 {
 	html_document *doc = fz_new_derived_document(ctx, html_document);
 	doc->super.drop_document = htdoc_drop_document;
@@ -226,18 +237,20 @@ htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer 
 	case FORMAT_FB2: doc->super.lookup_metadata = fb2doc_lookup_metadata; break;
 	case FORMAT_HTML5: doc->super.lookup_metadata = htdoc_lookup_metadata; break;
 	case FORMAT_XHTML: doc->super.lookup_metadata = xhtdoc_lookup_metadata; break;
+	case FORMAT_MOBI: doc->super.lookup_metadata = mobi_lookup_metadata; break;
 	}
 	doc->super.is_reflowable = 1;
 
 	fz_try(ctx)
 	{
-		doc->zip = fz_open_directory(ctx, dirname);
+		doc->zip = zip;
 		doc->set = fz_new_html_font_set(ctx);
 		switch (format)
 		{
 		case FORMAT_FB2: doc->html = fz_parse_fb2(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
 		case FORMAT_HTML5: doc->html = fz_parse_html5(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
 		case FORMAT_XHTML: doc->html = fz_parse_xhtml(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
+		case FORMAT_MOBI: doc->html = fz_parse_mobi(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
 		}
 		doc->outline = fz_load_html_outline(ctx, doc->html);
 	}
@@ -255,7 +268,7 @@ htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer 
 static fz_document *
 htdoc_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
-	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0), FORMAT_HTML5);
+	return htdoc_open_document_with_buffer(ctx, fz_open_directory(ctx, "."), fz_read_all(ctx, file, 0), FORMAT_HTML5);
 }
 
 static fz_document *
@@ -263,7 +276,7 @@ htdoc_open_document(fz_context *ctx, const char *filename)
 {
 	char dirname[2048];
 	fz_dirname(dirname, filename, sizeof dirname);
-	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename), FORMAT_HTML5);
+	return htdoc_open_document_with_buffer(ctx, fz_open_directory(ctx, dirname), fz_read_file(ctx, filename), FORMAT_HTML5);
 }
 
 static const char *htdoc_extensions[] =
@@ -293,7 +306,7 @@ fz_document_handler html_document_handler =
 static fz_document *
 xhtdoc_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
-	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0), FORMAT_XHTML);
+	return htdoc_open_document_with_buffer(ctx, fz_open_directory(ctx, "."), fz_read_all(ctx, file, 0), FORMAT_XHTML);
 }
 
 static fz_document *
@@ -301,7 +314,7 @@ xhtdoc_open_document(fz_context *ctx, const char *filename)
 {
 	char dirname[2048];
 	fz_dirname(dirname, filename, sizeof dirname);
-	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename), FORMAT_XHTML);
+	return htdoc_open_document_with_buffer(ctx, fz_open_directory(ctx, dirname), fz_read_file(ctx, filename), FORMAT_XHTML);
 }
 
 static const char *xhtdoc_extensions[] =
@@ -328,15 +341,13 @@ fz_document_handler xhtml_document_handler =
 static fz_document *
 fb2doc_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
-	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0), FORMAT_FB2);
+	return htdoc_open_document_with_buffer(ctx, NULL, fz_read_all(ctx, file, 0), FORMAT_FB2);
 }
 
 static fz_document *
 fb2doc_open_document(fz_context *ctx, const char *filename)
 {
-	char dirname[2048];
-	fz_dirname(dirname, filename, sizeof dirname);
-	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename), FORMAT_FB2);
+	return htdoc_open_document_with_buffer(ctx, NULL, fz_read_file(ctx, filename), FORMAT_FB2);
 }
 
 static const char *fb2doc_extensions[] =
@@ -361,4 +372,62 @@ fz_document_handler fb2_document_handler =
 	fb2doc_open_document_with_stream,
 	fb2doc_extensions,
 	fb2doc_mimetypes
+};
+
+static fz_document *
+mobi_open_document_with_buffer(fz_context *ctx, fz_buffer *mobi)
+{
+	fz_archive *zip = NULL;
+	fz_buffer *html;
+	fz_var(zip);
+	fz_try(ctx)
+	{
+		zip = fz_extract_html_from_mobi(ctx, mobi);
+		html = fz_read_archive_entry(ctx, zip, "index.html");
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, mobi);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_archive(ctx, zip);
+		fz_rethrow(ctx);
+	}
+	return htdoc_open_document_with_buffer(ctx, zip, html, FORMAT_MOBI);
+}
+
+static fz_document *
+mobi_open_document_with_stream(fz_context *ctx, fz_stream *file)
+{
+	return mobi_open_document_with_buffer(ctx, fz_read_all(ctx, file, 0));
+}
+
+static fz_document *
+mobi_open_document(fz_context *ctx, const char *filename)
+{
+	return mobi_open_document_with_buffer(ctx, fz_read_file(ctx, filename));
+}
+
+static const char *mobi_extensions[] =
+{
+	"mobi",
+	"prc",
+	"pdb",
+	NULL
+};
+
+static const char *mobi_mimetypes[] =
+{
+	"application/x-mobipocket-ebook",
+	NULL
+};
+
+fz_document_handler mobi_document_handler =
+{
+	NULL,
+	mobi_open_document,
+	mobi_open_document_with_stream,
+	mobi_extensions,
+	mobi_mimetypes
 };

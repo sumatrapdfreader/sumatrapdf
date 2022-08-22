@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -126,4 +126,60 @@ fz_drop_archive(fz_context *ctx, fz_archive *arch)
 		arch->drop_archive(ctx, arch);
 	fz_drop_stream(ctx, arch->file);
 	fz_free(ctx, arch);
+}
+
+/* In-memory archive using a fz_tree holding fz_buffers */
+
+typedef struct
+{
+	fz_archive super;
+	fz_tree *tree;
+} fz_tree_archive;
+
+static int has_tree_entry(fz_context *ctx, fz_archive *arch, const char *name)
+{
+	fz_tree *tree = ((fz_tree_archive*)arch)->tree;
+	fz_buffer *ent = fz_tree_lookup(ctx, tree, name);
+	return ent != NULL;
+}
+
+static fz_buffer *read_tree_entry(fz_context *ctx, fz_archive *arch, const char *name)
+{
+	fz_tree *tree = ((fz_tree_archive*)arch)->tree;
+	fz_buffer *ent = fz_tree_lookup(ctx, tree, name);
+	return fz_keep_buffer(ctx, ent);
+}
+
+static fz_stream *open_tree_entry(fz_context *ctx, fz_archive *arch, const char *name)
+{
+	fz_tree *tree = ((fz_tree_archive*)arch)->tree;
+	fz_buffer *ent = fz_tree_lookup(ctx, tree, name);
+	return fz_open_buffer(ctx, ent);
+}
+
+static void drop_tree_archive_entry(fz_context *ctx, void *ent)
+{
+	fz_drop_buffer(ctx, ent);
+}
+
+static void drop_tree_archive(fz_context *ctx, fz_archive *arch)
+{
+	fz_tree *tree = ((fz_tree_archive*)arch)->tree;
+	fz_drop_tree(ctx, tree, drop_tree_archive_entry);
+}
+
+fz_archive *
+fz_new_tree_archive(fz_context *ctx, fz_tree *tree)
+{
+	fz_tree_archive *arch;
+
+	arch = fz_new_derived_archive(ctx, NULL, fz_tree_archive);
+	arch->super.format = "tree";
+	arch->super.has_entry = has_tree_entry;
+	arch->super.read_entry = read_tree_entry;
+	arch->super.open_entry = open_tree_entry;
+	arch->super.drop_archive = drop_tree_archive;
+	arch->tree = tree;
+
+	return &arch->super;
 }

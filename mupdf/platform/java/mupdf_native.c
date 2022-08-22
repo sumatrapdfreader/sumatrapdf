@@ -106,7 +106,7 @@ static jclass cls_DOMAttribute;
 static jclass cls_FitzInputStream;
 static jclass cls_FloatArray;
 static jclass cls_Font;
-static jclass cls_HTMLStory;
+static jclass cls_Story;
 static jclass cls_IOException;
 static jclass cls_IllegalArgumentException;
 static jclass cls_Image;
@@ -187,7 +187,7 @@ static jfieldID fid_FitzInputStream_closed;
 static jfieldID fid_FitzInputStream_markpos;
 static jfieldID fid_FitzInputStream_pointer;
 static jfieldID fid_Font_pointer;
-static jfieldID fid_HTMLStory_pointer;
+static jfieldID fid_Story_pointer;
 static jfieldID fid_Image_pointer;
 static jfieldID fid_Link_pointer;
 static jfieldID fid_LinkDestination_chapter;
@@ -871,8 +871,8 @@ static int find_fids(JNIEnv *env)
 	fid_Font_pointer = get_field(&err, env, "pointer", "J");
 	mid_Font_init = get_method(&err, env, "<init>", "(J)V");
 
-	cls_HTMLStory = get_class(&err, env, PKG"HTMLStory");
-	fid_HTMLStory_pointer = get_field(&err, env, "pointer", "J");
+	cls_Story = get_class(&err, env, PKG"Story");
+	fid_Story_pointer = get_field(&err, env, "pointer", "J");
 
 	cls_Image = get_class(&err, env, PKG"Image");
 	fid_Image_pointer = get_field(&err, env, "pointer", "J");
@@ -1174,7 +1174,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_FitzInputStream);
 	(*env)->DeleteGlobalRef(env, cls_FloatArray);
 	(*env)->DeleteGlobalRef(env, cls_Font);
-	(*env)->DeleteGlobalRef(env, cls_HTMLStory);
+	(*env)->DeleteGlobalRef(env, cls_Story);
 	(*env)->DeleteGlobalRef(env, cls_IOException);
 	(*env)->DeleteGlobalRef(env, cls_IllegalArgumentException);
 	(*env)->DeleteGlobalRef(env, cls_Image);

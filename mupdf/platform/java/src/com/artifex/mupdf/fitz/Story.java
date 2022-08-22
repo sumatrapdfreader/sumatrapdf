@@ -22,7 +22,7 @@
 
 package com.artifex.mupdf.fitz;
 
-public class HTMLStory
+public class Story
 {
 	static {
 		Context.init();
@@ -36,26 +36,26 @@ public class HTMLStory
 		finalize();
 	}
 
-	private static native long newHTMLStory(byte[] content, byte[] user_css, float em);
+	private static native long newStory(byte[] content, byte[] user_css, float em);
 
-	public HTMLStory(String content, String user_css, float em)
+	public Story(String content, String user_css, float em)
 	{
-		pointer = newHTMLStory(content.getBytes(), user_css.getBytes(), em);
+		pointer = newStory(content.getBytes(), user_css.getBytes(), em);
 	}
 
-	public HTMLStory(byte[] content, String user_css, float em)
+	public Story(byte[] content, String user_css, float em)
 	{
-		pointer = newHTMLStory(content, user_css.getBytes(), em);
+		pointer = newStory(content, user_css.getBytes(), em);
 	}
 
-	public HTMLStory(String content, byte[] user_css, float em)
+	public Story(String content, byte[] user_css, float em)
 	{
-		pointer = newHTMLStory(content.getBytes(), user_css, em);
+		pointer = newStory(content.getBytes(), user_css, em);
 	}
 
-	public HTMLStory(byte[] content, byte[] user_css, float em)
+	public Story(byte[] content, byte[] user_css, float em)
 	{
-		pointer = newHTMLStory(content, user_css, em);
+		pointer = newStory(content, user_css, em);
 	}
 
 	public native boolean place(Rect rect, Rect filled);

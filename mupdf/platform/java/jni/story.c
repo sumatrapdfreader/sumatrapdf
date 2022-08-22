@@ -20,26 +20,26 @@
 // Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
-/* HTMLStory interface */
+/* Story interface */
 
 JNIEXPORT void JNICALL
-FUN(HTMLStory_finalize)(JNIEnv *env, jobject self)
+FUN(Story_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	fz_html_story *story = from_HTMLStory_safe(env, self);
+	fz_story *story = from_Story_safe(env, self);
 	if (!ctx || !story) return;
-	(*env)->SetLongField(env, self, fid_HTMLStory_pointer, 0);
-	fz_drop_html_story(ctx, story);
+	(*env)->SetLongField(env, self, fid_Story_pointer, 0);
+	fz_drop_story(ctx, story);
 }
 
 JNIEXPORT jlong JNICALL
-FUN(HTMLStory_newHTMLStory)(JNIEnv *env, jclass cls, jbyteArray content, jbyteArray css, float em)
+FUN(Story_newStory)(JNIEnv *env, jclass cls, jbyteArray content, jbyteArray css, float em)
 {
 	fz_context *ctx = get_context(env);
 	int content_len, css_len;
 	jbyte *content_bytes = NULL;
 	jbyte *css_bytes = NULL;
-	fz_html_story *story = NULL;
+	fz_story *story = NULL;
 	fz_buffer *content_buf = NULL;
 	fz_buffer *css_buf = NULL;
 
@@ -76,7 +76,7 @@ FUN(HTMLStory_newHTMLStory)(JNIEnv *env, jclass cls, jbyteArray content, jbyteAr
 		css_buf = fz_new_buffer_from_copied_data(ctx, (const unsigned char *)css_bytes, css_len);
 		fz_terminate_buffer(ctx, css_buf);
 
-		story = fz_new_html_story(ctx, content_buf, (const char *)css_buf->data, em);
+		story = fz_new_story(ctx, content_buf, (const char *)css_buf->data, em);
 	}
 	fz_always(ctx)
 	{
@@ -91,10 +91,10 @@ FUN(HTMLStory_newHTMLStory)(JNIEnv *env, jclass cls, jbyteArray content, jbyteAr
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(HTMLStory_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled)
+FUN(Story_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled)
 {
 	fz_context *ctx = get_context(env);
-	fz_html_story *story = from_HTMLStory_safe(env, self);
+	fz_story *story = from_Story_safe(env, self);
 	fz_rect rect = from_Rect(env, jrect);
 	fz_rect filled = fz_empty_rect;
 	int more;
@@ -115,10 +115,10 @@ FUN(HTMLStory_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled)
 }
 
 JNIEXPORT void JNICALL
-FUN(HTMLStory_draw)(JNIEnv *env, jobject self, jobject jdev, jobject jctm)
+FUN(Story_draw)(JNIEnv *env, jobject self, jobject jdev, jobject jctm)
 {
 	fz_context *ctx = get_context(env);
-	fz_html_story *story = from_HTMLStory_safe(env, self);
+	fz_story *story = from_Story_safe(env, self);
 	fz_device *dev = from_Device(env, jdev);
 	fz_matrix ctm = from_Matrix(env, jctm);
 	NativeDeviceInfo *info;
@@ -139,10 +139,10 @@ FUN(HTMLStory_draw)(JNIEnv *env, jobject self, jobject jdev, jobject jctm)
 }
 
 JNIEXPORT jobject JNICALL
-FUN(HTMLStory_document)(JNIEnv *env, jobject self)
+FUN(Story_document)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	fz_html_story *story = from_HTMLStory_safe(env, self);
+	fz_story *story = from_Story_safe(env, self);
 
-	return to_DOM_safe(ctx, env, fz_html_story_document(ctx, story));
+	return to_DOM_safe(ctx, env, fz_story_document(ctx, story));
 }

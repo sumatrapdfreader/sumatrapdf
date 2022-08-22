@@ -208,7 +208,7 @@ class StoryTest
 		/* First, one with precooked content. */
 		DocumentWriter writer = new DocumentWriter("out.pdf", "PDF", "");
 
-		HTMLStory story = new HTMLStory(snark, "", 11);
+		Story story = new Story(snark, "", 11);
 
 		boolean more;
 
@@ -234,7 +234,7 @@ class StoryTest
 		/* Now one with programmatic content */
 		writer = new DocumentWriter("out2.pdf", "PDF", "");
 
-		story = new HTMLStory("", "", 11);
+		story = new Story("", "", 11);
 
 		DOM dom = story.document();
 
@@ -271,7 +271,7 @@ class StoryTest
 		/* Now a combination of the two */
 		writer = new DocumentWriter("out3.pdf", "PDF", "");
 
-		story = new HTMLStory(festival_template, "", 11);
+		story = new Story(festival_template, "", 11);
 
 		dom = story.document();
 

@@ -31,6 +31,7 @@ struct lexbuf
 {
 	fz_context *ctx;
 	fz_pool *pool;
+	const unsigned char *start;
 	const unsigned char *s;
 	const char *file;
 	int line;
@@ -45,7 +46,81 @@ static fz_css_selector *parse_selector(struct lexbuf *buf);
 
 FZ_NORETURN static void fz_css_error(struct lexbuf *buf, const char *msg)
 {
-	fz_throw(buf->ctx, FZ_ERROR_SYNTAX, "css syntax error: %s (%s:%d)", msg, buf->file, buf->line);
+#define PRE_POST_SIZE 30
+	unsigned char text[PRE_POST_SIZE * 2 + 4];
+	unsigned char *d = text;
+	const unsigned char *s = buf->start;
+	int n = sizeof(text)-1;
+
+	/* We want to make a helpful fragment for the error message.
+	 * We want err_pos to be the point at which we just tripped
+	 * the error. err_pos needs to be at least 1 byte behind
+	 * our read pointer, as we've read that char. */
+	const unsigned char *err_pos = buf->s-1;
+
+	/* And if we're using lookahead, it's further behind. */
+	if (buf->lookahead >= CSS_KEYWORD)
+		err_pos -= strlen(buf->string);
+	else if (buf->lookahead != EOF)
+		err_pos--;
+
+	/* We're going to try to output:
+	 * <section prior to the error> ">" <the char that tripped> "<" <section after the error>
+	 */
+	/* Is the section prior to the error too long? If so, truncate it with an elipsis. */
+	if (err_pos - s > n-PRE_POST_SIZE)
+	{
+		*d++ = '.';
+		*d++ = '.';
+		*d++ = '.';
+		n -= 3;
+		s = err_pos - (n-PRE_POST_SIZE);
+	}
+
+	/* Copy the prefix (if there is one) */
+	if (err_pos > s)
+	{
+		n = err_pos - s;
+		while (n)
+		{
+			unsigned char c = *s++;
+			*d++ = (c < 32 || c > 127) ? ' ' : c;
+			n--;
+		}
+	}
+
+	/* Marker, char, end marker */
+	*d++ = '>', n--;
+	if (*err_pos)
+		*d++ = *err_pos, n--;
+	*d++ = '<', n--;
+
+	/* Postfix */
+	n = (int)strlen((const char *)err_pos);
+	if (n <= PRE_POST_SIZE)
+	{
+		while (n > 0)
+		{
+			unsigned char c = *err_pos++;
+			*d++ =  (c < 32 || c > 127) ? ' ' : c;
+			n--;
+		}
+	}
+	else
+	{
+		for (n = PRE_POST_SIZE-3; n > 0; n--)
+		{
+			unsigned char c = *err_pos++;
+			*d =  (c < 32 || c > 127) ? ' ' : c;
+		}
+
+		*d++ = '.';
+		*d++ = '.';
+		*d++ = '.';
+	}
+	*d = 0;
+
+	fz_throw(buf->ctx, FZ_ERROR_SYNTAX, "css syntax error: %s (%s:%d) (%s)", msg, buf->file, buf->line, text);
 }
 
 fz_css *fz_new_css(fz_context *ctx)
@@ -146,6 +221,7 @@ static void css_lex_next(struct lexbuf *buf)
 	buf->c = *(buf->s++);
 	if (buf->c == '\n')
 		++buf->line;
+	buf->lookahead = EOF;
 }
 
 static void css_lex_init(fz_context *ctx, struct lexbuf *buf, fz_pool *pool, const char *s, const char *file)
@@ -153,6 +229,8 @@ static void css_lex_init(fz_context *ctx, struct lexbuf *buf, fz_pool *pool, con
 	buf->ctx = ctx;
 	buf->pool = pool;
 	buf->s = (const unsigned char *)s;
+	buf->lookahead = EOF;
+	buf->start = buf->s;
 	buf->c = 0;
 	buf->file = file;
 	buf->line = 1;

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -122,6 +122,11 @@ char *fz_xml_att_alt(fz_xml *item, const char *one, const char *two);
 	matches (match) then return 1. Otherwise, 0.
 */
 int fz_xml_att_eq(fz_xml *item, const char *name, const char *match);
+
+/**
+	Add an attribute to an XML node.
+*/
+void fz_xml_add_att(fz_context *ctx, fz_pool *pool, fz_xml *node, const char *key, const char *val);
 
 /**
 	Return the text content of an XML node.

@@ -943,12 +943,16 @@ function mupdf_files()
   files_in_dir("mupdf/source/html", {
     "css-apply.c",
     "css-parse.c",
+    "css-properties.h",
     "epub-doc.c",
     "html-doc.c",
     "html-font.c",
+    "html-imp.h",
     "html-layout.c",
     "html-outline.c",
     "html-parse.c",
+    "mobi.c",
+    "xml-dom.c",
   })
 
   files_in_dir("mupdf/source/pdf", {

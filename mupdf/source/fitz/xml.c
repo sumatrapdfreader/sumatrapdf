@@ -503,6 +503,17 @@ static void xml_emit_att_name(fz_context *ctx, struct parser *parser, const char
 	head->u.node.u.d.atts = att;
 }
 
+void fz_xml_add_att(fz_context *ctx, fz_pool *pool, fz_xml *node, const char *key, const char *val)
+{
+	size_t size = offsetof(struct attribute, name) + strlen(key) + 1;
+	struct attribute *att = fz_pool_alloc(ctx, pool, size);
+	memcpy(att->name, key, strlen(key)+1);
+	att->value = fz_pool_alloc(ctx, pool, strlen(val) + 1);
+	memcpy(att->value, val, strlen(val)+1);
+	att->next = node->u.node.u.d.atts;
+	node->u.node.u.d.atts = att;
+}
+
 static void xml_emit_att_value(fz_context *ctx, struct parser *parser, const char *a, const char *b)
 {
 	fz_xml *head = parser->head;
@@ -733,9 +744,17 @@ parse_attribute_name:
 parse_attribute_value:
 	while (iswhite(*p)) ++p;
 	quote = *p++;
+	mark = p;
+
+	/* special case for handling MOBI filepos=00000 syntax */
+	if (quote >= '0' && quote <= '9') {
+		while (*p >= '0' && *p <= '9') ++p;
+		xml_emit_att_value(ctx, parser, mark, p);
+		goto parse_attributes;
+	}
+
 	if (quote != '"' && quote != '\'')
 		return "missing quote character";
-	mark = p;
 	while (*p && *p != quote) ++p;
 	if (*p == quote) {
 		xml_emit_att_value(ctx, parser, mark, p++);
@@ -744,9 +763,37 @@ parse_attribute_value:
 	return "end of data in attribute value";
 }
 
+static int fast_tolower(int c) {
+	if ((unsigned)c - 'A' < 26)
+		return c | 32;
+	return c;
+}
+
+static int fast_strncasecmp(const char *a, const char *b, size_t n)
+{
+	if (!n--)
+		return 0;
+	for (; *a && *b && n && fast_tolower(*a) == fast_tolower(*b); a++, b++, n--)
+		;
+	return fast_tolower(*a) - fast_tolower(*b);
+}
+
+static char *fast_strcasestr(char *h, char *n)
+{
+	int n0 = fast_tolower(*n++);
+	int nn = strlen(n);
+	while (*h != 0)
+	{
+		if (fast_tolower(*h) == n0 && fast_strncasecmp(h+1, n, nn) == 0)
+			return h;
+		++h;
+	}
+	return NULL;
+}
+
 static int startswith(const char *a, const char *b)
 {
-	return !fz_strncasecmp(a, b, strlen(b));
+	return !fast_strncasecmp(a, b, strlen(b));
 }
 
 // Look for encoding in <meta http-equiv="content-type" content="text/html; charset=XXX"> tags
@@ -755,16 +802,16 @@ static const unsigned short *find_meta_encoding(char *s)
 	const unsigned short *table = NULL;
 	char *end, *meta;
 
-	meta = strstr(s, "<meta");
+	meta = fast_strcasestr(s, "<meta");
 	while (meta && !table)
 	{
 		end = strchr(meta, '>');
 		if (end)
 		{
 			*end = 0;
-			if (strstr(meta, "http-equiv") && strstr(meta, "content-type"))
+			if (fast_strcasestr(meta, "http-equiv") && fast_strcasestr(meta, "content-type"))
 			{
-				char *charset = strstr(meta, "charset=");
+				char *charset = fast_strcasestr(meta, "charset=");
 				if (charset)
 				{
 					char *enc = charset + 8;
@@ -784,7 +831,7 @@ static const unsigned short *find_meta_encoding(char *s)
 			}
 			*end = '>';
 		}
-		meta = strstr(meta + 5, "<meta");
+		meta = fast_strcasestr(meta + 5, "<meta");
 	}
 
 	return table;

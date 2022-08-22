@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -264,6 +264,8 @@ void fz_close_zip_writer(fz_context *ctx, fz_zip_writer *zip);
 	exception.
 */
 void fz_drop_zip_writer(fz_context *ctx, fz_zip_writer *zip);
+
+fz_archive *fz_new_tree_archive(fz_context *ctx, fz_tree *tree);
 
 /**
 	Implementation details: Subject to change.

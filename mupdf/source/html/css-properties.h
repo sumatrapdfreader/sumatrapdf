@@ -54,12 +54,12 @@
 #line 1 "source/html/css-properties.gperf"
 struct css_property_info { const char *name; int key; };
 
-#define TOTAL_KEYWORDS 61
+#define TOTAL_KEYWORDS 62
 #define MIN_WORD_LENGTH 3
 #define MAX_WORD_LENGTH 19
 #define MIN_HASH_VALUE 11
-#define MAX_HASH_VALUE 106
-/* maximum key range = 96, duplicates = 0 */
+#define MAX_HASH_VALUE 109
+/* maximum key range = 99, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -73,32 +73,32 @@ css_property_hash (register const char *str, register size_t len)
 {
   static unsigned char asso_values[] =
     {
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107,  10, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107,  35,   5,  55,
-       35,  10,  51,  31,  55,  22, 107, 107,   0,  20,
-       40,   0,   0,  10,   0,  45,  20,   5,  35,  20,
-      107,  30, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
-      107, 107, 107, 107, 107, 107
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110,  10, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110,  35,   5,  55,
+       35,  10,  51,  31,  55,  22, 110, 110,   0,  20,
+       40,   0,   0,  10,   0,  45,  20,   5,  45,  20,
+      110,  30, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110
     };
   return len + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]] + asso_values[(unsigned char)str[len - 1]];
 }
@@ -147,14 +147,14 @@ static struct css_property_info css_property_list[] =
 #line 41 "source/html/css-properties.gperf"
     {"list-style",PRO_LIST_STYLE},
     {""}, {""}, {""},
-#line 55 "source/html/css-properties.gperf"
+#line 56 "source/html/css-properties.gperf"
     {"padding-top",PRO_PADDING_TOP},
 #line 44 "source/html/css-properties.gperf"
     {"list-style-type",PRO_LIST_STYLE_TYPE},
 #line 42 "source/html/css-properties.gperf"
     {"list-style-image",PRO_LIST_STYLE_IMAGE},
     {""}, {""},
-#line 56 "source/html/css-properties.gperf"
+#line 57 "source/html/css-properties.gperf"
     {"page-break-after",PRO_PAGE_BREAK_AFTER},
 #line 50 "source/html/css-properties.gperf"
     {"orphans",PRO_ORPHANS},
@@ -165,26 +165,29 @@ static struct css_property_info css_property_list[] =
     {"letter-spacing",PRO_LETTER_SPACING},
 #line 9 "source/html/css-properties.gperf"
     {"background-color",PRO_BACKGROUND_COLOR},
-    {""}, {""}, {""},
+    {""},
+#line 51 "source/html/css-properties.gperf"
+    {"overflow-wrap",PRO_OVERFLOW_WRAP},
+    {""},
 #line 30 "source/html/css-properties.gperf"
     {"color",PRO_COLOR},
-#line 61 "source/html/css-properties.gperf"
-    {"text-indent",PRO_TEXT_INDENT},
-#line 57 "source/html/css-properties.gperf"
-    {"page-break-before",PRO_PAGE_BREAK_BEFORE},
-#line 68 "source/html/css-properties.gperf"
-    {"word-spacing",PRO_WORD_SPACING},
 #line 62 "source/html/css-properties.gperf"
+    {"text-indent",PRO_TEXT_INDENT},
+#line 58 "source/html/css-properties.gperf"
+    {"page-break-before",PRO_PAGE_BREAK_BEFORE},
+#line 69 "source/html/css-properties.gperf"
+    {"word-spacing",PRO_WORD_SPACING},
+#line 63 "source/html/css-properties.gperf"
     {"text-transform",PRO_TEXT_TRANSFORM},
 #line 49 "source/html/css-properties.gperf"
     {"margin-top",PRO_MARGIN_TOP},
-#line 58 "source/html/css-properties.gperf"
+#line 59 "source/html/css-properties.gperf"
     {"quotes",PRO_QUOTES},
-#line 53 "source/html/css-properties.gperf"
-    {"padding-left",PRO_PADDING_LEFT},
 #line 54 "source/html/css-properties.gperf"
+    {"padding-left",PRO_PADDING_LEFT},
+#line 55 "source/html/css-properties.gperf"
     {"padding-right",PRO_PADDING_RIGHT},
-#line 52 "source/html/css-properties.gperf"
+#line 53 "source/html/css-properties.gperf"
     {"padding-bottom",PRO_PADDING_BOTTOM},
 #line 34 "source/html/css-properties.gperf"
     {"font-size",PRO_FONT_SIZE},
@@ -192,7 +195,7 @@ static struct css_property_info css_property_list[] =
     {"font-style",PRO_FONT_STYLE},
 #line 29 "source/html/css-properties.gperf"
     {"border-width",PRO_BORDER_WIDTH},
-#line 51 "source/html/css-properties.gperf"
+#line 52 "source/html/css-properties.gperf"
     {"padding",PRO_PADDING},
     {""},
 #line 8 "source/html/css-properties.gperf"
@@ -205,7 +208,7 @@ static struct css_property_info css_property_list[] =
     {"border-right-width",PRO_BORDER_RIGHT_WIDTH},
 #line 14 "source/html/css-properties.gperf"
     {"border-bottom-width",PRO_BORDER_BOTTOM_WIDTH},
-#line 60 "source/html/css-properties.gperf"
+#line 61 "source/html/css-properties.gperf"
     {"text-align",PRO_TEXT_ALIGN},
 #line 43 "source/html/css-properties.gperf"
     {"list-style-position",PRO_LIST_STYLE_POSITION},
@@ -225,28 +228,28 @@ static struct css_property_info css_property_list[] =
     {"height",PRO_HEIGHT},
 #line 33 "source/html/css-properties.gperf"
     {"font-family",PRO_FONT_FAMILY},
-#line 66 "source/html/css-properties.gperf"
+#line 67 "source/html/css-properties.gperf"
     {"widows",PRO_WIDOWS},
 #line 32 "source/html/css-properties.gperf"
     {"display",PRO_DISPLAY},
     {""},
-#line 65 "source/html/css-properties.gperf"
+#line 66 "source/html/css-properties.gperf"
     {"white-space",PRO_WHITE_SPACE},
-#line 64 "source/html/css-properties.gperf"
-    {"visibility",PRO_VISIBILITY},
-    {""},
-#line 63 "source/html/css-properties.gperf"
-    {"vertical-align",PRO_VERTICAL_ALIGN},
-    {""},
+    {""}, {""}, {""}, {""},
 #line 45 "source/html/css-properties.gperf"
     {"margin",PRO_MARGIN},
-#line 67 "source/html/css-properties.gperf"
+#line 68 "source/html/css-properties.gperf"
     {"width",PRO_WIDTH},
-#line 59 "source/html/css-properties.gperf"
+#line 60 "source/html/css-properties.gperf"
     {"src",PRO_SRC},
     {""}, {""},
 #line 31 "source/html/css-properties.gperf"
-    {"direction",PRO_DIRECTION}
+    {"direction",PRO_DIRECTION},
+#line 65 "source/html/css-properties.gperf"
+    {"visibility",PRO_VISIBILITY},
+    {""},
+#line 64 "source/html/css-properties.gperf"
+    {"vertical-align",PRO_VERTICAL_ALIGN}
   };
 
 struct css_property_info *

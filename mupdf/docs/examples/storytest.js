@@ -201,7 +201,7 @@ var margin = 10;
 	var writer = new DocumentWriter("out.pdf", "PDF", "");
 	var buf = new Buffer(snark.length);
 	buf.write(snark);
-	var story = new HTMLStory(buf, "", 11);
+	var story = new Story(buf, "", 11);
 	var placed;
 
 	do
@@ -229,7 +229,7 @@ var margin = 10;
 /* Now one made with programmatic content. */
 {
 	var writer = new DocumentWriter("out2.pdf", "PDF", "");
-	var story = new HTMLStory(null, "", 11);
+	var story = new Story(null, "", 11);
 
 	var dom = story.document();
 	var body = dom.body();
@@ -270,7 +270,7 @@ var margin = 10;
 
 	var buf = new Buffer(festival_template.length);
 	buf.write(festival_template);
-	var story = new HTMLStory(buf, "", 11);
+	var story = new Story(buf, "", 11);
 
 	var dom = story.document();
 	var body = dom.body();

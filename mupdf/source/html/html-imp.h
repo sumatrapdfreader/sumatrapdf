@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -158,6 +158,7 @@ enum
 	PRO_MARGIN_RIGHT,
 	PRO_MARGIN_TOP,
 	PRO_ORPHANS,
+	PRO_OVERFLOW_WRAP,
 	PRO_PADDING_BOTTOM,
 	PRO_PADDING_LEFT,
 	PRO_PADDING_RIGHT,
@@ -200,7 +201,7 @@ struct fz_css_match_s
 	fz_css_value *value[NUM_PROPERTIES];
 };
 
-enum { DIS_NONE, DIS_BLOCK, DIS_INLINE, DIS_LIST_ITEM, DIS_INLINE_BLOCK, DIS_TABLE, DIS_TABLE_ROW, DIS_TABLE_CELL };
+enum { DIS_NONE, DIS_BLOCK, DIS_INLINE, DIS_LIST_ITEM, DIS_INLINE_BLOCK, DIS_TABLE, DIS_TABLE_GROUP, DIS_TABLE_ROW, DIS_TABLE_CELL };
 enum { POS_STATIC, POS_RELATIVE, POS_ABSOLUTE, POS_FIXED };
 enum { TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY };
 enum { VA_BASELINE, VA_SUB, VA_SUPER, VA_TOP, VA_BOTTOM, VA_TEXT_TOP, VA_TEXT_BOTTOM };
@@ -228,6 +229,12 @@ enum {
 	LST_LC_LATIN, LST_UC_LATIN,
 	LST_LC_ALPHA, LST_UC_ALPHA,
 	LST_ARMENIAN, LST_GEORGIAN,
+};
+
+enum {
+	OVERFLOW_WRAP_NORMAL = 0,
+	OVERFLOW_WRAP_BREAK_WORD = 1
+	/* We do not support 'anywhere'. */
 };
 
 enum { N_NUMBER='u', N_LENGTH='p', N_SCALE='m', N_PERCENT='%', N_AUTO='a', N_UNDEFINED='x' };
@@ -263,9 +270,10 @@ struct fz_css_style_s
 	unsigned int border_style_2 : 1;
 	unsigned int border_style_3 : 1;
 	unsigned int small_caps : 1;
+	unsigned int overflow_wrap : 1;
 	/* Ensure the extra bits in the bitfield are copied
 	 * on structure copies. */
-	unsigned int blank : 6;
+	unsigned int blank : 5;
 	fz_css_number line_height;
 	fz_css_number leading;
 	fz_css_color background_color;
@@ -340,9 +348,9 @@ typedef struct {
 	fz_html_box *potential;
 } fz_html_restarter;
 
-struct fz_html_story_s
+struct fz_story_s
 {
-	/* fz_html_story is derived from fz_html_tree, so must start with */
+	/* fz_story is derived from fz_html_tree, so must start with */
 	/* that. Argubly 'tree' should be called 'super'. */
 	fz_html_tree tree;
 
@@ -373,6 +381,12 @@ struct fz_html_story_s
 
 	/* The default 'em' size. */
 	float em;
+
+	/* Collected parsing warnings. */
+	fz_buffer *warnings;
+
+	/* Rectangle layout count. */
+	int rect_count;
 };
 
 struct fz_html_box_s
@@ -382,20 +396,42 @@ struct fz_html_box_s
 	unsigned int markup_dir : 2;
 	unsigned int heading : 3; /* h1..h6 */
 	unsigned int list_item : 23;
+
+	fz_html_box *up, *down, *next;
+
+#ifndef NDEBUG
+	const char *tag;
+#endif
+	const char *id, *href;
+	const fz_css_style *style;
+
+	union {
+		/* Only needed during build stage */
+		struct {
+			fz_html_box *last_child;
+			fz_html_flow **flow_tail;
+		} build;
+
+		/* Only needed during layout */
+		struct {
 	float x, y, w, b; /* content */
 	float em;
-	/* During construction, 'next' plays double duty; as well
-	 * as its normal meaning of 'next sibling', the last sibling
-	 * has next meaning "the last of my children". We correct
-	 * this as a post-processing pass after construction. */
-	fz_html_box *up, *down, *next;
-	fz_html_flow *flow_head, **flow_tail;
-	char *id, *href;
-	const fz_css_style *style;
-	/* Only BOX_{BLOCK,TABLE,TABLE_ROW,TABLE_CELL} actually use the following */
+		} layout;
+	} s;
+
+	union {
+		/* Only BOX_FLOW use the following */
+		struct {
+			fz_html_flow *head;
+		} flow;
+
+		/* Only BOX_{BLOCK,TABLE,TABLE_ROW,TABLE_CELL} use the following */
+		struct {
 	float padding[4];
 	float margin[4];
 	float border[4];
+		} block;
+	} u;
 };
 
 static inline int
@@ -481,6 +517,7 @@ void fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *z
 fz_html *fz_parse_fb2(fz_context *ctx, fz_html_font_set *htx, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css);
 fz_html *fz_parse_html5(fz_context *ctx, fz_html_font_set *htx, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css);
 fz_html *fz_parse_xhtml(fz_context *ctx, fz_html_font_set *htx, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css);
+fz_html *fz_parse_mobi(fz_context *ctx, fz_html_font_set *htx, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css);
 
 void fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em);
 void fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html, int page);
@@ -498,6 +535,10 @@ fz_html *fz_store_html(fz_context *ctx, fz_html *html, void *doc, int chapter);
 fz_html *fz_find_html(fz_context *ctx, void *doc, int chapter);
 void fz_purge_stored_html(fz_context *ctx, void *doc);
 
-void fz_restartable_layout_html(fz_context *ctx, fz_html_box *box, float w, float h, float page_w, float page_h, float em, fz_html_restarter *restart);
+void fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, float start_y, float page_w, float page_h, float em, fz_html_restarter *restart);
+
+fz_html_flow *fz_html_split_flow(fz_context *ctx, fz_pool *pool, fz_html_flow *flow, size_t offset);
+
+fz_archive *fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi);
 
 #endif

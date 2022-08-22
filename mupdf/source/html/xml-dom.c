@@ -24,7 +24,7 @@
 
 #include "string.h"
 
-fz_xml *fz_html_story_document(fz_context *ctx, fz_html_story *story)
+fz_xml *fz_story_document(fz_context *ctx, fz_story *story)
 {
 	if (story == NULL || story->dom == NULL)
 		return NULL;

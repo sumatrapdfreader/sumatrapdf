@@ -1151,10 +1151,10 @@ static inline fz_font *from_Font_safe(JNIEnv *env, jobject jobj)
 	return CAST(fz_font *, (*env)->GetLongField(env, jobj, fid_Font_pointer));
 }
 
-static inline fz_html_story *from_HTMLStory_safe(JNIEnv *env, jobject jobj)
+static inline fz_story *from_Story_safe(JNIEnv *env, jobject jobj)
 {
 	if (!jobj) return NULL;
-	return CAST(fz_html_story *, (*env)->GetLongField(env, jobj, fid_HTMLStory_pointer));
+	return CAST(fz_story *, (*env)->GetLongField(env, jobj, fid_Story_pointer));
 }
 
 static inline fz_image *from_Image_safe(JNIEnv *env, jobject jobj)

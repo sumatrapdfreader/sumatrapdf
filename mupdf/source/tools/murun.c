@@ -327,10 +327,10 @@ static void ffi_gc_fz_outline_iterator(js_State *J, void *iter)
 	fz_drop_outline_iterator(ctx, iter);
 }
 
-static void ffi_gc_fz_html_story(js_State *J, void *story)
+static void ffi_gc_fz_story(js_State *J, void *story)
 {
 	fz_context *ctx = js_getcontext(J);
-	fz_drop_html_story(ctx, story);
+	fz_drop_story(ctx, story);
 }
 
 static void ffi_gc_fz_xml(js_State *J, void *xml)
@@ -4409,27 +4409,27 @@ static void ffi_DocumentWriter_close(js_State *J)
 		rethrow(J);
 }
 
-static void ffi_new_HTMLStory(js_State *J)
+static void ffi_new_Story(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	fz_buffer *contents = ffi_tobuffer(J, 1);
 	const char *user_css = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
 	double em = js_tonumber(J, 3);
-	fz_html_story *story = NULL;
+	fz_story *story = NULL;
 
 	fz_try(ctx)
-		story = fz_new_html_story(ctx, contents, user_css, em);
+		story = fz_new_story(ctx, contents, user_css, em);
 	fz_catch(ctx)
 		rethrow(J);
 
-	js_getregistry(J, "fz_html_story");
-	js_newuserdata(J, "fz_html_story", story, ffi_gc_fz_html_story);
+	js_getregistry(J, "fz_story");
+	js_newuserdata(J, "fz_story", story, ffi_gc_fz_story);
 }
 
-static void ffi_HTMLStory_place(js_State *J)
+static void ffi_Story_place(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
+	fz_story *story = js_touserdata(J, 0, "fz_story");
 	fz_rect rect = ffi_torect(J, 1);
 	fz_rect filled = fz_empty_rect;
 	int more;
@@ -4448,10 +4448,10 @@ static void ffi_HTMLStory_place(js_State *J)
 	js_setproperty(J, -2, "more");
 }
 
-static void ffi_HTMLStory_draw(js_State *J)
+static void ffi_Story_draw(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
+	fz_story *story = js_touserdata(J, 0, "fz_story");
 	fz_device *device;
 	int drop = 1;
 	fz_matrix ctm = ffi_tomatrix(J, 2);
@@ -4476,14 +4476,14 @@ static void ffi_HTMLStory_draw(js_State *J)
 		rethrow(J);
 }
 
-static void ffi_HTMLStory_document(js_State *J)
+static void ffi_Story_document(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	fz_html_story *story = js_touserdata(J, 0, "fz_html_story");
+	fz_story *story = js_touserdata(J, 0, "fz_story");
 	fz_xml *dom;
 
 	fz_try(ctx)
-		dom = fz_html_story_document(ctx, story);
+		dom = fz_story_document(ctx, story);
 	fz_catch(ctx)
 		rethrow(J);
 
@@ -8185,11 +8185,11 @@ int murun_main(int argc, char **argv)
 	js_getregistry(J, "Userdata");
 	js_newobjectx(J);
 	{
-		jsB_propfun(J, "HTMLStory.place", ffi_HTMLStory_place, 1);
-		jsB_propfun(J, "HTMLStory.draw", ffi_HTMLStory_draw, 2);
-		jsB_propfun(J, "HTMLStory.document", ffi_HTMLStory_document, 0);
+		jsB_propfun(J, "Story.place", ffi_Story_place, 1);
+		jsB_propfun(J, "Story.draw", ffi_Story_draw, 2);
+		jsB_propfun(J, "Story.document", ffi_Story_document, 0);
 	}
-	js_setregistry(J, "fz_html_story");
+	js_setregistry(J, "fz_story");
 
 	js_getregistry(J, "DOM");
 	js_newobjectx(J);
@@ -8722,7 +8722,7 @@ int murun_main(int argc, char **argv)
 		jsB_propcon(J, "fz_device", "DrawDevice", ffi_new_DrawDevice, 2);
 		jsB_propcon(J, "fz_device", "DisplayListDevice", ffi_new_DisplayListDevice, 1);
 		jsB_propcon(J, "fz_document_writer", "DocumentWriter", ffi_new_DocumentWriter, 3);
-		jsB_propcon(J, "fz_html_story", "HTMLStory", ffi_new_HTMLStory, 3);
+		jsB_propcon(J, "fz_story", "Story", ffi_new_Story, 3);
 #if FZ_ENABLE_PDF
 		jsB_propcon(J, "pdf_pkcs7_signer", "PDFPKCS7Signer", ffi_new_PDFPKCS7Signer, 2);
 #endif

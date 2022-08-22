@@ -48,6 +48,7 @@ margin-left,PRO_MARGIN_LEFT
 margin-right,PRO_MARGIN_RIGHT
 margin-top,PRO_MARGIN_TOP
 orphans,PRO_ORPHANS
+overflow-wrap,PRO_OVERFLOW_WRAP
 padding,PRO_PADDING
 padding-bottom,PRO_PADDING_BOTTOM
 padding-left,PRO_PADDING_LEFT
