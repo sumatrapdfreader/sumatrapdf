@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-aff92e11b4b37eab62fa1c537bb81549135cc8bd
+40b2c9874138dea503ff6e42cdd26bdc36643e9c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -93,6 +93,7 @@ pl:&Rozmiar rzeczywisty
 ru:Насто&ящий размер
 tl:&Totoong Sukat
 tr:&Gercek boyut
+tw:實際尺寸(&A)
 uk:Фактичний розмір
 vn:Kích Thước Thực
 :&Advanced Options...
@@ -250,6 +251,7 @@ pl:&Wstecz
 ru:&Назад
 tl:&Bumalik
 tr:&Geri
+tw:上一個跳轉點(&B)
 uk:Назад
 vn:Quay Lại
 :&Book View
@@ -273,6 +275,7 @@ pl:Widok o&dczytu
 ru:В &разворот
 tl:&View ng libro
 tr:&Kitap Görünümü
+tw:書本檢視(&B)
 uk:Подання книги
 vn:Đọc Sách
 :&Cancel
@@ -368,6 +371,7 @@ pl:&Zamknij
 ru:&Закрыть
 tl:&Isara
 tr:&Kapat
+tw:關閉(&C)
 uk:Закрити
 vn:&Đóng
 :&Continue installing 32-bit version
@@ -491,6 +495,7 @@ pl:Kopiuj do s&chowka
 ru:С&копировать в буфер обмена
 tl:&Kopyahin sa clipboard
 tr:Panoya &kopyala
+tw:複製到剪貼簿(&C)
 uk:Скопіювати до буфера обміну
 vn:&Lưu Sao Chép
 :&Discard changes
@@ -680,6 +685,7 @@ pl:&Wiele stron
 ru:По &две страницы
 tl:Nakaharap
 tr:Her İki Yüz
+tw:對頁模式(&F)
 uk:По дві сторінки
 vn:&Trang kép
 :&File
@@ -1401,6 +1407,7 @@ nl:&Volgende Pagina
 pl:&Następna strona
 ru:&Следующая страница
 tr:Sonraki sayfa
+tw:下一頁(&N)
 uk:Наступна сторінка
 vn:&Trang Tiếp
 :&No
@@ -1619,6 +1626,7 @@ nl:&Openen
 pl:&Otwórz...
 ru:&Открыть...
 tr:Aç...
+tw:開啟(&O)
 uk:Відкрити
 vn:&Mở...
 :&Options
@@ -1894,6 +1902,7 @@ nl:&Vorige Pagina
 pl:&Poprzednia strona
 ru:Пр&едыдущая страница
 tr:Önceki sayfa
+tw:上一頁(&P)
 uk:Попередня сторінка 
 vn:&Trang Trước
 :&Print...
@@ -2189,7 +2198,7 @@ sl:Odst&rani iz zgodovine
 ta:வரலாற்றிலிருந்து நீக்கு 
 th:&ย้ายออกจากประวัติ
 tr:Geçmişten &Kaldır
-tw:从历史记录删除
+tw:從歷史紀錄刪除(&R)
 uk:&Видалити з історії
 vn:&Xoá Khỏi Lịch Sử
 :&Save As...
@@ -2315,6 +2324,7 @@ sk:&Hľadať pomocou Google
 sl:&Išči z Google
 th:&ค้นหาด้วย Google
 tr:Google İle &Ara
+tw:使用Google搜尋(&S)
 uk:Пошук за допомогою Google
 vn:&Tìm Kiếm Với Google
 :&Settings
@@ -2462,6 +2472,7 @@ nl:&Enkele Pagina
 pl:&Pojedyncza strona
 ru:По &одной странице
 tr:Tek sayfa
+tw:單頁模式(&S)
 uk:Одна сторінка
 vn:&Trang Đơn
 :&Stamp
@@ -2493,6 +2504,7 @@ ru:&Штамп
 sl:&Žig
 th:&ประทับตรา
 tr:&Damga
+tw:圖章(&S)
 uk:Штамп
 vn:&Tem
 :&Strike Out
@@ -2646,6 +2658,7 @@ sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
 th:&แปลด้วย Google
 tr:Google İle &Çevir
+tw:使用Google翻譯(&T)
 uk:Перекласти за допомогою Google
 vn:&Dịch Với Google
 :&Underline
@@ -2675,6 +2688,7 @@ pl:&Podkreślenie
 ru:Под&чёркнутый
 th:&ขีดเส้นใต้
 tr:&Altını Çiz
+tw:底線(&U)
 uk:Підкреслити
 vn:&Gạch Chân
 :&Use original page sizes
@@ -4098,6 +4112,7 @@ ru:Автор: %s
 sl:Avtor: %s
 tl:May-akda: %s
 tr:Yazar: %s
+tw:作者: %s
 uk:Автор: %s
 vn:Tác Giả: %s
 :Automatic
@@ -4574,6 +4589,7 @@ ru:Рамка: %d
 sl:Rob: %d
 tl:Gilid: %d
 tr:Kenarlık: %d
+tw:邊界: %d
 uk:Межа: %d
 vn:Viền: %d
 :Bytes
@@ -5199,7 +5215,7 @@ ta:வட்டம்
 th:วงกลม
 tl:Bilog
 tr:Çember
-tw:圆
+tw:圓
 uk:Коло
 vn:Vòng tròn
 :Close
@@ -5288,6 +5304,7 @@ ja:他のタブを閉じる
 nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
 tr:Diğer Sekmeleri Kapat
+tw:關閉其他分頁
 uk:Закрити інші вкладки
 :Close Tabs To The Right
 br:Fechar abas à direita
@@ -5486,6 +5503,7 @@ pl:Paleta poleceń
 ru:Панель команд
 tl:Command Palette
 tr:Komut paleti
+tw:指令面板
 uk:Палітра команд
 vn:Lệnh
 :Compatibility
@@ -6082,6 +6100,7 @@ pl:Kopiuj do schowka
 ru:Скопировать в буфер обмена
 tl:Kopyahin sa clipboard
 tr:Panoya kopyala
+tw:複製到剪貼簿
 uk:Скопіювати до буфера обміну
 vn:Lưu Sao Chép
 :Copying text was denied (copying as image only)
@@ -7161,6 +7180,7 @@ pl:&Własne powiększenie...
 ru:Свой &масштаб...
 tl:Pasadya &Mag-zoom
 tr:Özel &yakınlaştır
+tw:自訂縮放(&Z)
 uk:Нетиповий масштаб...
 vn:Thiết Lập &Phóng...
 :Dark
@@ -7739,6 +7759,7 @@ sl:Prenesi 64-bitno različico
 th:ดาวน์โหลดรุ่น 64 บิต
 tl:I-download ang 64-bit na bersyon
 tr:64 bit sürümü indir
+tw:下載64位元版本
 uk:Завантажити 64-bit версію
 vn:Tải phiên bản 64-bit
 :E&xit
@@ -7762,6 +7783,7 @@ pl:&Wyjście
 ru:В&ыход
 tl:&Lumabas
 tr:Çık
+tw:離開本程式(&X)
 uk:Вийти 
 vn:T&hoát
 :E&xit Fullscreen
@@ -8317,6 +8339,7 @@ pl:&Dalej
 ru:В&перёд
 tl:&Pasulong
 tr:İleri
+tw:下一個跳轉點(&O)
 uk:Вперед
 vn:Tiếp
 :F&ullscreen
@@ -8338,6 +8361,7 @@ nl:V&oledig Scherm
 pl:Pełny &ekran
 ru:Полный &экран
 tr:Tam ekran
+tw:全螢幕模式(&U)
 uk:Повноекранний
 vn:Toàn Màn Hình
 :Facing
@@ -8407,7 +8431,7 @@ ta:முகப்பு
 th:เป็นหน้า
 tl:Magkaharap
 tr:Her İki Yüz
-tw:雙頁模式
+tw:對頁模式
 uk:Дві сторінки
 uz:Ikkita betdan
 vn:Trang kép
@@ -9195,6 +9219,7 @@ pl:&Znajdź...
 ru:На&йти...
 tl:&Hanapin
 tr:Bul
+tw:尋找(&D)
 uk:Знайти ...
 vn:Tìm
 :Find
@@ -9497,6 +9522,7 @@ pl:Dopasuj do &zawartości
 ru:Вписать содер&жимое
 tl:akma sa &nilalaman
 tr:Sayfa düzeyine yakınlaştır
+tw:符合內容(&C)
 uk:Підігнати вміст
 vn:Vừa &Nội Dung
 :Fit &Page
@@ -9518,6 +9544,7 @@ pl:Dopasuj do s&trony
 ru:Вписать &страницу
 tl:Akma &Pahina
 tr:Tam Sayfayı Pencereye Sığdır
+tw:符合頁面(&P)
 uk:Підігнати сторінку
 vn:Vừa &Trang
 :Fit &Width
@@ -9538,6 +9565,7 @@ nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 ru:Вписать по &ширине
 tr:Genişliğe Sığdır
+tw:符合寬度(&W)
 uk:Підігнати ширину
 vn:Vừa &Chiều Ngang
 :Fit Content
@@ -10223,6 +10251,7 @@ pl:Uzyskaj informacje o czcionkach
 ru:Получить информацию о шрифтах
 tl:Kumuha ng impormasyon ng mga font
 tr:Yazı tipi bilgisi
+tw:字型資訊
 uk:Отримати інформацію про шрифти
 vn:Lấy Thông Tin Fonts
 :Go to page
@@ -10834,6 +10863,7 @@ sl:Namesti in ponovno zaženi
 th:ติดตั้ง และ เรียกใช้งาน
 tl:I-install at muling ilunsad
 tr:Kur ve yeniden başlat
+tw:安裝並重啟
 uk:Встановити та перезапустити
 vn:Cài đặt và chạy chương trình 
 :Install for all users
@@ -10856,6 +10886,7 @@ pl:Zainstaluj dla wszystkich użytkowników
 ru:Установить для всех пользователей
 tl:I-install para sa lahat ng user
 tr:Tüm kullanıcılar için kur
+tw:為所有使用者安裝
 uk:Встановити для всіх користувачів
 vn:Cài đặt cho mọi người dùng
 :Installation failed!
@@ -11832,6 +11863,7 @@ nl:Nieuw &Kader
 pl:Nowe &okno
 ru:&Новое окно
 tr:Yeni pencere
+tw:新視窗(&W)
 uk:Нове вікно
 vn:Cửa sổ &mới
 :New version available
@@ -11867,6 +11899,7 @@ sl:Na voljo je nova različica
 th:มีรุ่นใหม่พร้อมให้บริการ
 tl:Bagong bersyon na magagamit
 tr:Yeni sürüm var
+tw:有新的版本!
 uk:Доступна нова версія
 vn:Phiên bản mới sẵn sàng
 :Next Page
@@ -12363,6 +12396,7 @@ ru:Непрозрачность:
 sl:Motnost:
 tl:Kalabuan:
 tr:Opaklık:
+tw:透明度
 uk:Непрозорість
 vn:Làm mờ:
 :Opacity: %d
@@ -12391,6 +12425,7 @@ ru:Непрозрачность: %d
 sl:Motnost: %d
 tl:Kalabuan: %d
 tr:Opaklık: %d
+tw:透明度: %d
 uk:Непрозорість: %d
 vn:Làm mờ: %d
 :Open
@@ -13380,6 +13415,7 @@ nl:Pa&gina
 pl:&Strona...
 ru:С&траница...
 tr:Sayfaya...
+tw:前往頁面...(&G)
 uk:Сторінка
 vn:Trang...
 :Page %s
@@ -14085,6 +14121,7 @@ nl:Pr&esentatie
 pl:&Prezentacja
 ru:Презента&ция
 tr:Sunum
+tw:簡報模式(&E)
 uk:Презентація
 vn:Trình Chiếu
 :Previous Page
@@ -14691,6 +14728,7 @@ nl:Her&noem
 pl:Zmień &nazwę...
 ru:Пере&именовать...
 tr:Yeniden adlandır
+tw:重新命名(&N)
 uk:Перейменувати...
 vn:Đổi &Tên
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -15034,6 +15072,7 @@ nl:&Linksom Roteren
 pl:Obróć w &lewo
 ru:Повернуть в&лево
 tr:Sola döndür
+tw:逆時鐘旋轉(&L)
 uk:Повернути проти годинникової стрілки
 vn:Quay &Trái
 :Rotate &Right
@@ -15054,6 +15093,7 @@ nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 ru:Повернуть в&право
 tr:Sağa döndür
+tw:順時鐘旋轉(&R)
 uk:Повернути за годинниковою стрілкою
 vn:Quay &Phải
 :S&election
@@ -15083,6 +15123,7 @@ ru:В&ыделение
 sl:I&zbor
 th:&การเลือก
 tr:S&eçim
+tw:選取範圍(&E)
 uk:Виділення 
 vn:Chọn
 :S&quiggly
@@ -15147,6 +15188,7 @@ sl:SVG dokumenti
 th:เอกสาร SVG
 tl:SVG na mga dokumento
 tr:SVG belgeleri
+tw:SVG 文件
 uk:SVG документи
 vn:Các Tài Liệu SVG
 :Save Annotations to existing PDF
@@ -15466,6 +15508,7 @@ sl:Išči z &Bing
 th:ค้นหาด้วย &​Bing
 tl:Maghanap Gamit ang &Bing
 tr:&Bing İle Ara
+tw:使用Bing搜尋(&B)
 uk:Пошук за допомогою &Bing
 vn:Tìm Kiếm Với &Bing
 :Search With &Google
@@ -15497,6 +15540,7 @@ sk:Hľadať pomocou &Google
 sl:Išči z &Google
 th:ค้นหาด้วย &​Google
 tr:&Google İle Ara
+tw:使用Google搜尋(&G)
 uk:Пошук за допомогою &Google
 vn:Tìm Kiếm Với &Google
 :Searching %d of %d...
@@ -16037,7 +16081,7 @@ sr-rs:Прикажи обележене
 sv:Visa &Bokmärken
 ta:புத்தகக்குறிகளை காட்டுக
 tr:Göster &Sık Kullanılanlar
-tw:顯示書籤 (&B)
+tw:顯示書籤(&B)
 uk:Показати закладки
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
@@ -16271,6 +16315,7 @@ nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 ru:Показывать &закладки
 tr:Yer imleri
+tw:顯示書籤(&M)
 uk:Показати закладки
 vn:Hiển thị Dấu &trang
 :Show Favorites
@@ -16498,6 +16543,7 @@ ja:フォルダを表示
 nl:Toon in map
 pl:Pokaż w folderze
 tr:Klasörde göster
+tw:打開所在資料夾
 uk:Показати в папці
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
@@ -16664,6 +16710,7 @@ sl:Preskoči to različico
 th:ข้ามรุ่นนี้
 tl:Laktawan ang bersyong ito
 tr:Bu sürümü atla
+tw:跳過這個版本
 uk:Пропустити цю версію
 vn:Bỏ qua phiên bản này
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
@@ -18056,6 +18103,7 @@ sk:Preložiť pomocou &DeepL
 sl:Prevedi z &DeepL
 th:แปลด้วย &​DeepL
 tr:&DeepL İle Çevir
+tw:使用DeepL翻譯(&D)
 uk:Перекласти за допомогою &DeepL
 vn:Dịch với &DeepL
 :Uninstall SumatraPDF
@@ -18839,6 +18887,7 @@ sl:Imaš nameščeno različico '%s'; na voljo pa je različica '%s'.\nAli želi
 th:คุณมีรุ่น '%s'​ และรุ่น '%s'​ ใช่ได้ \nคุณต้องการจะติดตั้งรุ่นใหม่หรือไม่
 tl:Mayroon kang bersyon na '%s' at available ang bersyon na '%s'.\nGusto mo bang mag-install ng bagong bersyon?
 tr:'%s' sürümünüz var ve '%s' sürümü kullanılabilir.\nYeni sürümü kurmak ister misiniz?
+tw:目前版本: '%s' ．最新版本: '%s' \n請問要下載新版本嗎?
 uk:У вас є версія '%s'.Версія '%s' доступна.\nВи хочете встановити нову версію?
 vn:Bạn có phiên bản '%s' và phiên bản '%s' sẵn sàng. \nBạn muốn cài đặt phiên bản mới?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
@@ -18871,6 +18920,7 @@ sl:Nameščaš 32-bitni SumatraPDF na 64-bitni OS.\nAli želiš prenesti 64-bitn
 th:คุณกำลังติดตั้ง SumatraPDF รุ่น 32-บิต บนระบปฏิบัติการ 64-บิต.\nคุณต้องการดาวน์โหลดหรือไม่\nรุ่น 64-บิต
 tl:Nag-i-install ka ng 32-bit na SumatraPDF sa 64-bit na OS.\nGusto mo bang mag-download ng\n64-bit na bersyon?
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruyorsunuz.\n64 bit sürümü indirmek\nister misiniz?
+tw:您正在一台64位元的電腦上安裝32位元的SumatraPDF。\n您想下載\n64位元的版本嗎?
 uk:Ви встановлюєте 32-розрядну версію SumatraPDF на 64-розрядну ОС.\nБажаєте завантажити\n64-розрядну версію?
 vn:Bạn đang cài đặt SumatraPDF 32-bit trên hệ điều hành 64-bit.\nBạn có muốn tả \nphiên bản 64-bit?
 :Zoom
