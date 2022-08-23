@@ -83,7 +83,6 @@ static const char *html_default_css =
 "ul ul{list-style-type:circle}"
 "ul ul ul{list-style-type:square}"
 "var{font-style:italic}"
-"svg{display:none}"
 "colgroup{display:table-column-group}"
 "col{display:table-column}"
 "caption{display:block;text-align:center}"
@@ -849,9 +848,11 @@ static void gen2_image_common(fz_context *ctx, struct genstate *g, fz_html_box *
 			{
 		root_box = find_block_context(ctx, root_box);
 		img_block_box = new_box(ctx, g, node, BOX_BLOCK, style);
-		img_inline_box = new_box(ctx, g, NULL, BOX_INLINE, style);
 		append_box(ctx, root_box, img_block_box);
-		append_box(ctx, img_block_box, img_inline_box);
+
+		root_box = find_inline_context(ctx, g, img_block_box);
+		img_inline_box = new_box(ctx, g, NULL, BOX_INLINE, style);
+		append_box(ctx, root_box, img_inline_box);
 		generate_image(ctx, img_inline_box, img, g);
 				}
 

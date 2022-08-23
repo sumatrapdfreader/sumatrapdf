@@ -1304,7 +1304,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/strokestate.c"
 #include "jni/structuredtext.c"
 #include "jni/text.c"
-#include "jni/htmlstory.c"
+#include "jni/story.c"
 #include "jni/dom.c"
 
 #ifdef HAVE_ANDROID

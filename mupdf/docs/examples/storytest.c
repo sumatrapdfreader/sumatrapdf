@@ -211,7 +211,7 @@ int main(int argc, const char *argv[])
 {
 	fz_context *ctx;
 	fz_document_writer *writer = NULL;
-	fz_html_story *story = NULL;
+	fz_story *story = NULL;
 	fz_buffer *buf = NULL;
 	fz_device *dev = NULL;
 	fz_rect mediabox = { 0, 0, 512, 640 };
@@ -237,7 +237,7 @@ int main(int argc, const char *argv[])
 
 		buf = fz_new_buffer_from_copied_data(ctx, snark, strlen(snark)+1);
 
-		story = fz_new_html_story(ctx, buf, "", 11);
+		story = fz_new_story(ctx, buf, "", 11);
 
 		do
 		{
@@ -263,7 +263,7 @@ int main(int argc, const char *argv[])
 	}
 	fz_always(ctx)
 	{
-		fz_drop_html_story(ctx, story);
+		fz_drop_story(ctx, story);
 		fz_drop_buffer(ctx, buf);
 		fz_drop_document_writer(ctx, writer);
 	}
@@ -284,9 +284,9 @@ int main(int argc, const char *argv[])
 
 		writer = fz_new_pdf_writer(ctx, "out2.pdf", "");
 
-		story = fz_new_html_story(ctx, NULL, "", 11);
+		story = fz_new_story(ctx, NULL, "", 11);
 
-		dom = fz_html_story_document(ctx, story);
+		dom = fz_story_document(ctx, story);
 
 		body = fz_dom_body(ctx, dom);
 
@@ -320,7 +320,7 @@ int main(int argc, const char *argv[])
 	}
 	fz_always(ctx)
 	{
-		fz_drop_html_story(ctx, story);
+		fz_drop_story(ctx, story);
 		fz_drop_buffer(ctx, buf);
 		fz_drop_document_writer(ctx, writer);
 	}
@@ -343,9 +343,9 @@ int main(int argc, const char *argv[])
 		writer = fz_new_pdf_writer(ctx, "out3.pdf", "");
 
 		buf = fz_new_buffer_from_copied_data(ctx, festival_template, strlen(festival_template)+1);
-		story = fz_new_html_story(ctx, buf, "", 11);
+		story = fz_new_story(ctx, buf, "", 11);
 
-		dom = fz_html_story_document(ctx, story);
+		dom = fz_story_document(ctx, story);
 
 		body = fz_dom_body(ctx, dom);
 
@@ -404,7 +404,7 @@ int main(int argc, const char *argv[])
 	}
 	fz_always(ctx)
 	{
-		fz_drop_html_story(ctx, story);
+		fz_drop_story(ctx, story);
 		fz_drop_buffer(ctx, buf);
 		fz_drop_document_writer(ctx, writer);
 	}
