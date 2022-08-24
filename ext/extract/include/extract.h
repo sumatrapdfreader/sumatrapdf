@@ -14,16 +14,9 @@ set.
 
 
 
-typedef struct extract_t extract_t;
 /* Abstract state for processing a document. */
+typedef struct extract_t extract_t;
 
-typedef enum
-{
-    extract_format_ODT,
-    extract_format_DOCX,
-    extract_format_HTML,
-    extract_format_TEXT
-} extract_format_t;
 /* Specifies the output document type.
 
 extract_format_ODT
@@ -38,41 +31,27 @@ extract_format_TEXT:
     some unicode characters such as dash (0x2212) are converted into ascii
     equvalents.
 */
+typedef enum
+{
+    extract_format_ODT,
+    extract_format_DOCX,
+    extract_format_HTML,
+    extract_format_TEXT
+} extract_format_t;
 
 
-int extract_begin(
-        extract_alloc_t*    alloc,
-        extract_format_t    format,
-        extract_t**         pextract
-        );
 /* Creates a new extract_t* for use by other extract_*() functions. All
 allocation will be done with <alloc> (which can be NULL in which case we use
 malloc/free, or from extract_alloc_create()). */
+int extract_begin(extract_alloc_t    *alloc,
+                  extract_format_t   format,
+                  extract_t        **pextract);
 
 
-int extract_page_begin(extract_t* extract, double minx, double miny, double maxx, double maxy);
 /* Must be called before extract_span_begin(). */
+int extract_page_begin(extract_t* extract, double minx, double miny, double maxx, double maxy);
 
 
-int extract_span_begin(
-        extract_t*  extract,
-        const char* font_name,
-        int         font_bold,
-        int         font_italic,
-        int         wmode,
-        double      ctm_a,
-        double      ctm_b,
-        double      ctm_c,
-        double      ctm_d,
-        double      ctm_e,
-        double      ctm_f,
-        double      trm_a,
-        double      trm_b,
-        double      trm_c,
-        double      trm_d,
-        double      trm_e,
-        double      trm_f
-        );
 /* Starts a new span. 
 extract
     As passed to earlier call to extract_begin().
@@ -86,23 +65,24 @@ wmode
     0 or 1.
 ctm_*
     Matrix values.
-trm_*
-    Matrix values.
+bbox_*
+   font bounding box (unscaled)
 */
+int extract_span_begin(extract_t  *extract,
+                       const char *font_name,
+                       int         font_bold,
+                       int         font_italic,
+                       int         wmode,
+                       double      ctm_a,
+                       double      ctm_b,
+                       double      ctm_c,
+                       double      ctm_d,
+                       double      bbox_x0,
+                       double      bbox_y0,
+                       double      bbox_x1,
+                       double      bbox_y1);
 
 
-int extract_add_char(
-        extract_t*  extract,
-        double      x,
-        double      y,
-        unsigned    ucs,
-        double      adv,
-        int            autosplit,
-        double         minx,
-        double         miny,
-        double         maxx,
-        double         maxy
-        );
 /* Appends specified character to current span.
 extract
     As passed to earlier call to extract_begin().
@@ -114,33 +94,28 @@ ucs
     Unicode value.
 adv
     Advance of this character.
-autosplit
-    Ignored as of 2021-07-02.
 minx, miny, maxx, maxy
     Glyph bbox
 */
+int extract_add_char(extract_t *extract,
+                     double     x,
+                     double     y,
+                     unsigned   ucs,
+                     double     adv,
+                     double     minx,
+                     double     miny,
+                     double     maxx,
+                     double     maxy);
 
 
-int extract_span_end(extract_t* extract);
 /* Must be called before starting a new span or ending current page. */
+int extract_span_end(extract_t* extract);
 
 
-typedef void (*extract_image_data_free)(void* handle, void* image_data);
 /* Callback for freeing image data. See extract_add_image(). */
+typedef void (extract_image_data_free)(void *handle, void *image_data);
 
 
-int extract_add_image(
-        extract_t*              extract,
-        const char*             type,
-        double                  x,
-        double                  y,
-        double                  w,
-        double                  h,
-        void*                   data,
-        size_t                  data_size,
-        extract_image_data_free data_free,
-        void*                   data_free_handle
-        );
 /* Adds an image to the current page.
 
 type
@@ -154,10 +129,21 @@ data_free
     with <data>. Otherwise the lifetime of <data> is the responsibility of the
     caller and it must persist for at least the lifetime of <extract>.
 */
+int extract_add_image(extract_t               *extract,
+                      const char              *type,
+                      double                   x,
+                      double                   y,
+                      double                   w,
+                      double                   h,
+                      void                    *data,
+                      size_t                   data_size,
+                      extract_image_data_free *data_free,
+                      void                    *data_free_handle);
 
 
-int extract_add_path4(
-        extract_t*  extract,
+/* Adds a four-element path. Paths that define thin vertical/horizontal
+rectangles are used to find tables. */
+int extract_add_path4(extract_t *extract,
         double ctm_a,
         double ctm_b,
         double ctm_c,
@@ -172,14 +158,11 @@ int extract_add_path4(
         double y2,
         double x3,
         double y3,
-        double color
-        );
-/* Adds a four-element path. Paths that define thin vertical/horizontal
-rectangles are used to find tables. */
+                      double     color);
 
 
-int extract_add_line(
-        extract_t*  extract,
+/* Adds a stroked line. Vertical/horizontal lines are used to find tables. */
+int extract_add_line(extract_t *extract,
         double ctm_a,
         double ctm_b,
         double ctm_c,
@@ -191,28 +174,27 @@ int extract_add_line(
         double y0,
         double x1,
         double y1,
-        double color
-        );
-/* Adds a stroked line. Vertical/horizontal lines are used to find tables. */
+                     double     color);
 
 
-int extract_fill_begin(
-        extract_t*  extract,
+/* Alternative to extract_add_path4(). Should be followed by calls to
+extract_moveto(), extract_lineto() and extract_closepath(), which are used
+to find lines that may define tables. extract_fill_end() should be called
+afterwards. */
+int extract_fill_begin(extract_t *extract,
         double ctm_a,
         double ctm_b,
         double ctm_c,
         double ctm_d,
         double ctm_e,
         double ctm_f,
-        double color
-        );
-/* Alternative to extract_add_path4(). Should be followed by calls to
+                       double     color);
+
+/* Alternative to extract_add_line(). Should be followed by calls to
 extract_moveto(), extract_lineto() and extract_closepath(), which are used
 to find lines that may define tables. extract_fill_end() should be called
 afterwards. */
-
-int extract_stroke_begin(
-        extract_t*  extract,
+int extract_stroke_begin(extract_t *extract,
         double ctm_a,
         double ctm_b,
         double ctm_c,
@@ -220,12 +202,7 @@ int extract_stroke_begin(
         double ctm_e,
         double ctm_f,
         double line_width,
-        double color
-        );
-/* Alternative to extract_add_line(). Should be followed by calls to
-extract_moveto(), extract_lineto() and extract_closepath(), which are used
-to find lines that may define tables. extract_fill_end() should be called
-afterwards. */
+                         double     color);
 
 int extract_moveto(extract_t* extract, double x, double y);
 
@@ -238,41 +215,33 @@ int extract_fill_end(extract_t* extract);
 int extract_stroke_end(extract_t* extract);
 
 
-int extract_page_end(extract_t* extract);
 /* Must be called to finish page started by extract_page_begin(). */
+int extract_page_end(extract_t* extract);
 
 
-int extract_process(
-        extract_t*  extract,
-        int         spacing,
-        int         rotation,
-        int         images
-        );
 /* Evaluates all un-processed pages to generate output data and frees internal
 page data (individual spans, lines, paragraphs etc). E.g. call this after
 extract_page_end() to reduce internal data use. */
+int extract_process(extract_t *extract,
+                    int        spacing,
+                    int        rotation,
+                    int        images);
 
 
-int extract_write(extract_t* extract, extract_buffer_t* buffer);
 /* Writes output document to buffer.
 
 For docx and odt, uses an internal template document. */
+int extract_write(extract_t *extract, extract_buffer_t *buffer);
 
 
-int extract_write_content(extract_t* extract, extract_buffer_t* buffer);
 /* Writes paragraph content only into buffer.
 
 For docx and odt, this is the xml containing paragraphs of text that is
 inserted into the template word/document.xml object within the docx/odt zip
 archive by extract_write()). */
+int extract_write_content(extract_t *extract, extract_buffer_t *buffer);
 
 
-int extract_write_template(
-        extract_t*  extract, 
-        const char* path_template,
-        const char* path_out,
-        int         preserve_dir
-        );
 /* Like extract_write() but uses a provided template document. Only works with
 docx and odt output.
 
@@ -290,45 +259,46 @@ preserve_dir:
     If true, we don't delete the temporary directory <path_out>.dir containing
     the output document contents prior to zipping.
 */
+int extract_write_template(extract_t  *extract,
+                           const char *path_template,
+                           const char *path_out,
+                           int         preserve_dir);
 
 
-void extract_end( extract_t** pextract);
 /* Frees all data associated with *pextract and sets *pextract to NULL. */
+void extract_end( extract_t** pextract);
 
 
-int extract_set_layout_analysis(extract_t* extract, int enable);
 /* Enables/Disables the layout analysis phase. */
+int extract_set_layout_analysis(extract_t* extract, int enable);
 
 
 /* Things below are not generally used. */
 
-int extract_tables_csv_format(extract_t* extract, const char* path_format);
 /* Causes extract_process() to also write each tableas CSV to a file with path
 asprintf(path_format, n) where <n> is the table number, starting from 0. */
+int extract_tables_csv_format(extract_t *extract, const char *path_format);
 
-int extract_read_intermediate(
-        extract_t*          extract,
-        extract_buffer_t*   buffer,
-        int                 autosplit
-        );
 /* Reads XML specification of spans and images from <buffer> and adds to
 <extract>.
 
 (Makes internal calls to extract_span_begin(), extract_add_image() etc.) */
+int extract_read_intermediate(extract_t        *extract,
+                              extract_buffer_t *buffer);
 
 
-void extract_internal_end(void);
 /* Cleans up internal singelton state that can look like a memory leak when
 running under Memento or valgrind. */
+void extract_internal_end(void);
 
 
-void extract_exp_min(extract_t* extract, size_t size);
 /* If size is non-zero, sets minimum actual allocation size, and we only
 allocate in powers of two times this size. This is an attempt to improve speed
 with memento squeeze. Default is 0 (every call to extract_realloc() calls
 realloc(). */
+void extract_exp_min(extract_t *extract, size_t size);
 
-void extract_analyse(extract_t *extract);
 /* Analyse the structure of the current page. */
+void extract_analyse(extract_t *extract);
 
 #endif

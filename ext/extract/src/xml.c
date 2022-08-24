@@ -25,38 +25,39 @@
 errno set. */
 
 /* Appends first <s_len> chars of string <s> to *p. */
-static int str_catl(extract_alloc_t* alloc, char** p, const char* s, int s_len)
+static int str_catl(extract_alloc_t *alloc, char **p, const char *s, int s_len)
 {
     size_t p_len = (*p) ? strlen(*p) : 0;
-    if (extract_realloc2(
-            alloc,
-            p,
-            p_len + 1,
-            p_len + s_len + 1
-            )) return -1;
+
+    if (extract_realloc2(alloc,
+                         p,
+                         p_len + 1,
+                         p_len + s_len + 1)) return -1;
     memcpy(*p + p_len, s, s_len);
     (*p)[p_len + s_len] = 0;
+
     return 0;
 }
 
 /* Appends a char.  */
-static int str_catc(extract_alloc_t* alloc, char** p, char c)
+static int str_catc(extract_alloc_t *alloc, char **p, char c)
 {
     return str_catl(alloc, p, &c, 1);
 }
 
-/* Unused but usefult o keep code here. */
+/* Unused but useful to keep code here. */
 #if 0
 /* Appends a string. */
-static int str_cat(extract_alloc_t* alloc, char** p, const char* s)
+static int str_cat(extract_alloc_t *alloc, char **p, const char *s)
 {
     return str_catl(alloc, p, s, strlen(s));
 }
 #endif
 
-char* extract_xml_tag_attributes_find(extract_xml_tag_t* tag, const char* name)
+char *extract_xml_tag_attributes_find(extract_xml_tag_t *tag, const char *name)
 {
     int i;
+
     for (i=0; i<tag->attributes_num; ++i) {
         if (!strcmp(tag->attributes[i].name, name)) {
             char* ret = tag->attributes[i].value;
@@ -64,73 +65,72 @@ char* extract_xml_tag_attributes_find(extract_xml_tag_t* tag, const char* name)
         }
     }
     outf("Failed to find attribute '%s'",name);
+
     return NULL;
 }
 
-int extract_xml_tag_attributes_find_float(
-        extract_xml_tag_t*  tag,
-        const char*         name,
-        float*              o_out
-        )
+int extract_xml_tag_attributes_find_float(extract_xml_tag_t *tag,
+                                          const char        *name,
+                                          float             *o_out)
 {
-    const char* value = extract_xml_tag_attributes_find(tag, name);
+    const char *value = extract_xml_tag_attributes_find(tag, name);
+
     if (!value) {
         errno = ESRCH;
         return -1;
     }
     if (extract_xml_str_to_float(value, o_out)) return -1;
+
     return 0;
 }
 
-int extract_xml_tag_attributes_find_double(
-        extract_xml_tag_t*  tag,
-        const char*         name,
-        double*             o_out
-        )
+int extract_xml_tag_attributes_find_double(extract_xml_tag_t *tag,
+                                           const char        *name,
+                                           double            *o_out)
 {
-    const char* value = extract_xml_tag_attributes_find(tag, name);
+    const char *value = extract_xml_tag_attributes_find(tag, name);
+
     if (!value) {
         errno = ESRCH;
         return -1;
     }
     if (extract_xml_str_to_double(value, o_out)) return -1;
+
     return 0;
 }
 
-int extract_xml_tag_attributes_find_int(
-        extract_xml_tag_t*  tag,
-        const char*         name,
-        int*                o_out
-        )
+int extract_xml_tag_attributes_find_int(extract_xml_tag_t *tag,
+                                        const char        *name,
+                                        int               *o_out)
 {
-    const char* text = extract_xml_tag_attributes_find(tag, name);
+    const char *text = extract_xml_tag_attributes_find(tag, name);
+
     return extract_xml_str_to_int(text, o_out);
 }
 
-int extract_xml_tag_attributes_find_uint(
-        extract_xml_tag_t*  tag,
-        const char*         name,
-        unsigned*           o_out
-        )
+int extract_xml_tag_attributes_find_uint(extract_xml_tag_t *tag,
+                                         const char        *name,
+                                         unsigned          *o_out)
 {
-    const char* text = extract_xml_tag_attributes_find(tag, name);
+    const char *text = extract_xml_tag_attributes_find(tag, name);
+
     return extract_xml_str_to_uint(text, o_out);
 }
 
-int extract_xml_tag_attributes_find_size(
-        extract_xml_tag_t*  tag,
-        const char*         name,
-        size_t*             o_out
-        )
+int extract_xml_tag_attributes_find_size(extract_xml_tag_t *tag,
+                                         const char        *name,
+                                         size_t            *o_out)
 {
-    const char* text = extract_xml_tag_attributes_find(tag, name);
+    const char *text = extract_xml_tag_attributes_find(tag, name);
+
     return extract_xml_str_to_size(text, o_out);
 }
 
-int extract_xml_str_to_llint(const char* text, long long* o_out)
+int extract_xml_str_to_llint(const char *text, long long*o_out)
 {
-    char* endptr;
-    long long x;
+    char      *endptr;
+    long long  x;
+
     if (!text) {
         errno = ESRCH;
         return -1;
@@ -149,13 +149,15 @@ int extract_xml_str_to_llint(const char* text, long long* o_out)
         return -1;
     }
     *o_out = x;
+
     return 0;
 }
 
-int extract_xml_str_to_ullint(const char* text, unsigned long long* o_out)
+int extract_xml_str_to_ullint(const char *text, unsigned long long *o_out)
 {
-    char* endptr;
-    unsigned long long x;
+    char               *endptr;
+    unsigned long long  x;
+
     if (!text) {
         errno = ESRCH;
         return -1;
@@ -174,49 +176,57 @@ int extract_xml_str_to_ullint(const char* text, unsigned long long* o_out)
         return -1;
     }
     *o_out = x;
+
     return 0;
 }
 
-int extract_xml_str_to_int(const char* text, int* o_out)
+int extract_xml_str_to_int(const char *text, int *o_out)
 {
     long long x;
+
     if (extract_xml_str_to_llint(text, &x)) return -1;
     if (x > INT_MAX || x < INT_MIN) {
         errno = ERANGE;
         return -1;
     }
     *o_out = (int) x;
+
     return 0;
 }
 
-int extract_xml_str_to_uint(const char* text, unsigned* o_out)
+int extract_xml_str_to_uint(const char *text, unsigned *o_out)
 {
     unsigned long long x;
+
     if (extract_xml_str_to_ullint(text, &x)) return -1;
     if (x > UINT_MAX) {
         errno = ERANGE;
         return -1;
     }
     *o_out = (unsigned) x;
+
     return 0;
 }
 
-int extract_xml_str_to_size(const char* text, size_t* o_out)
+int extract_xml_str_to_size(const char *text, size_t *o_out)
 {
     unsigned long long x;
+
     if (extract_xml_str_to_ullint(text, &x)) return -1;
     if (x > SIZE_MAX) {
         errno = ERANGE;
         return -1;
     }
     *o_out = (size_t) x;
+
     return 0;
 }
 
-int extract_xml_str_to_double(const char* text, double* o_out)
+int extract_xml_str_to_double(const char *text, double *o_out)
 {
-    char* endptr;
-    double x;
+    char   *endptr;
+    double  x;
+
     if (!text) {
         errno = ESRCH;
         return -1;
@@ -235,12 +245,14 @@ int extract_xml_str_to_double(const char* text, double* o_out)
         return -1;
     }
     *o_out = x;
+
     return 0;
 }
 
-int extract_xml_str_to_float(const char* text, float* o_out)
+int extract_xml_str_to_float(const char *text, float *o_out)
 {
     double x;
+
     if (extract_xml_str_to_double(text, &x)) {
         return -1;
     }
@@ -249,29 +261,31 @@ int extract_xml_str_to_float(const char* text, float* o_out)
         return -1;
     }
     *o_out = (float) x;
+
     return 0;
 }
 
-static int extract_xml_tag_attributes_append(
-        extract_alloc_t* alloc,
-        extract_xml_tag_t*  tag,
-        char*               name,
-        char*               value
-        )
+static int
+extract_xml_tag_attributes_append(extract_alloc_t   *alloc,
+                                  extract_xml_tag_t *tag,
+                                  char              *name,
+                                  char              *value)
 {
-    if (extract_realloc2(
-            alloc,
-            &tag->attributes,
-            sizeof(extract_xml_attribute_t) * tag->attributes_num,
-            sizeof(extract_xml_attribute_t) * (tag->attributes_num+1)
-            )) return -1;
+    if (extract_realloc2(alloc,
+                         &tag->attributes,
+                         sizeof(extract_xml_attribute_t) * tag->attributes_num,
+                         sizeof(extract_xml_attribute_t) * (tag->attributes_num+1)))
+    {
+        return -1;
+    }
     tag->attributes[tag->attributes_num].name = name;
     tag->attributes[tag->attributes_num].value = value;
     tag->attributes_num += 1;
+
     return 0;
 }
 
-void extract_xml_tag_init(extract_xml_tag_t* tag)
+void extract_xml_tag_init(extract_xml_tag_t *tag)
 {
     tag->name = NULL;
     tag->attributes = NULL;
@@ -279,9 +293,13 @@ void extract_xml_tag_init(extract_xml_tag_t* tag)
     extract_astring_init(&tag->text);
 }
 
-void extract_xml_tag_free(extract_alloc_t* alloc, extract_xml_tag_t* tag)
+void extract_xml_tag_free(extract_alloc_t *alloc, extract_xml_tag_t *tag)
 {
     int i;
+
+    if (tag == NULL)
+        return;
+
     extract_free(alloc, &tag->name);
     for (i=0; i<tag->attributes_num; ++i) {
         extract_xml_attribute_t* attribute = &tag->attributes[i];
@@ -296,7 +314,7 @@ void extract_xml_tag_free(extract_alloc_t* alloc, extract_xml_tag_t* tag)
 /* Unused but useful to keep code here. */
 #if 0
 /* Like strcmp() but also handles NULL. */
-static int extract_xml_strcmp_null(const char* a, const char* b)
+static int extract_xml_strcmp_null(const char *a, const char *b)
 {
     if (!a && !b) return 0;
     if (!a) return -1;
@@ -305,11 +323,11 @@ static int extract_xml_strcmp_null(const char* a, const char* b)
 }
 #endif
 
-/* Unused but usefult o keep code here. */
+/* Unused but useful to keep code here. */
 #if 0
 /* Compares tag name, then attributes; returns -1, 0 or +1. Does not compare
 extract_xml_tag_t::text members. */
-int extract_xml_compare_tags(const extract_xml_tag_t* lhs, const extract_xml_tag_t* rhs)
+int extract_xml_compare_tags(const extract_xml_tag_t *lhs, const extract_xml_tag_t *rhs)
 {
     int d;
     int i;
@@ -333,10 +351,10 @@ int extract_xml_compare_tags(const extract_xml_tag_t* lhs, const extract_xml_tag
 #endif
 
 
-int extract_xml_pparse_init(extract_alloc_t* alloc, extract_buffer_t* buffer, const char* first_line)
+int extract_xml_pparse_init(extract_alloc_t *alloc, extract_buffer_t *buffer, const char *first_line)
 {
-    char* first_line_buffer = NULL;
-    int e = -1;
+    char *first_line_buffer = NULL;
+    int   e = -1;
 
     if (first_line) {
         size_t first_line_len = strlen(first_line);
@@ -371,44 +389,51 @@ int extract_xml_pparse_init(extract_alloc_t* alloc, extract_buffer_t* buffer, co
             goto end;
         }
     }
-    e = 0;
 
-    end:
+    e = 0;
+end:
+
     extract_free(alloc, &first_line_buffer);
+
     return e;
 }
 
-static int s_next(extract_buffer_t* buffer, int* ret, char* o_c)
+static int s_next(extract_buffer_t *buffer, int *ret, char *o_c)
 /* Reads next char, but if EOF sets *ret=+1, errno=ESRCH and returns +1. */
 {
     int e = extract_buffer_read(buffer, o_c, 1, NULL);
+
     if (e == +1) {
         *ret = +1;
         errno = ESRCH;
     }
+
     return e;
 }
 
-static const char* extract_xml_tag_string(extract_alloc_t* alloc, extract_xml_tag_t* tag)
+static const char *
+extract_xml_tag_string(extract_alloc_t *alloc, extract_xml_tag_t *tag)
 {
-    static char* buffer = NULL;
+    static char *buffer = NULL;
+
     extract_free(alloc, &buffer);
     if (extract_asprintf(alloc, &buffer, "<name=%s>", tag->name ? tag->name : ""))
     {
         return "";
     }
+
     return buffer;
 }
 
-int extract_xml_pparse_next(extract_buffer_t* buffer, extract_xml_tag_t* out)
+int extract_xml_pparse_next(extract_buffer_t *buffer, extract_xml_tag_t *out)
 {
-    int     ret = -1;
-    char*   attribute_name = NULL;
-    char*   attribute_value = NULL;
-    char    c;
-    int     i;
-    extract_alloc_t* alloc = extract_buffer_alloc(buffer);
-    
+    int              ret = -1;
+    char            *attribute_name = NULL;
+    char            *attribute_value = NULL;
+    char             c;
+    int              i;
+    extract_alloc_t *alloc = extract_buffer_alloc(buffer);
+
     if (0) outf("out is: %s", extract_xml_tag_string(extract_buffer_alloc(buffer), out));
     assert(buffer);
     extract_xml_tag_free(alloc, out);
@@ -502,14 +527,13 @@ int extract_xml_pparse_next(extract_buffer_t* buffer, extract_xml_tag_t* out)
     }
 
     ret = 0;
-
-    end:
+end:
 
     extract_free(alloc, &attribute_name);
     extract_free(alloc, &attribute_value);
     if (ret) {
         extract_xml_tag_free(alloc, out);
     }
+
     return ret;
 }
-

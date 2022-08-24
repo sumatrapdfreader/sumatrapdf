@@ -461,6 +461,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\separation.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\shade.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\store.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\story-writer.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\story.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\stream.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\string-util.h" />
@@ -651,6 +652,7 @@
     <ClCompile Include="..\mupdf\source\html\html-outline.c" />
     <ClCompile Include="..\mupdf\source\html\html-parse.c" />
     <ClCompile Include="..\mupdf\source\html\mobi.c" />
+    <ClCompile Include="..\mupdf\source\html\story-writer.c" />
     <ClCompile Include="..\mupdf\source\html\xml-dom.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />

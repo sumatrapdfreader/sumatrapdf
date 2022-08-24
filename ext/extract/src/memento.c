@@ -1448,7 +1448,10 @@ int Memento_listBlocksNested(void)
         size_t end = (b->rawsize < MEMENTO_PTRSEARCH ? b->rawsize : MEMENTO_PTRSEARCH);
         size_t z;
         VALGRIND_MAKE_MEM_DEFINED(p, end);
-        end -= sizeof(void *)-1;
+        if (end > sizeof(void *)-1)
+            end -= sizeof(void *)-1;
+        else
+            end = 0;
         for (z = MEMENTO_SEARCH_SKIP; z < end; z += sizeof(void *)) {
             void *q = *(void **)(&p[z]);
             void **r;

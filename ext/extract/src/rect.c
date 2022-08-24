@@ -37,6 +37,18 @@ rect_t extract_rect_union(rect_t a, rect_t b)
     return r;
 }
 
+rect_t extract_rect_union_point(rect_t a, point_t b)
+{
+    rect_t r;
+
+    r.min.x = mind(a.min.x, b.x);
+    r.min.y = mind(a.min.y, b.y);
+    r.max.x = maxd(a.max.x, b.x);
+    r.max.y = maxd(a.max.y, b.y);
+
+    return r;
+}
+
 int extract_rect_contains_rect(rect_t a, rect_t b)
 {
     if (a.min.x > b.min.x)

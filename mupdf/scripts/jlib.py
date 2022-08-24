@@ -1,5 +1,5 @@
 import codecs
-import doctest
+#import doctest # This import is slow, so we only import when necessary.
 import inspect
 import io
 import os
@@ -2871,6 +2871,7 @@ class Arg:
 
 if __name__ == '__main__':
 
+    import doctest
     doctest.testmod(
             optionflags=doctest.FAIL_FAST,
             )

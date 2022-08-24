@@ -72,35 +72,41 @@ static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_m
 		for (span = text->head; span; span = span->next)
 		{
 			int i;
+			fz_matrix combined, trm;
+			fz_rect bbox;
 
+			combined = fz_concat(span->trm, ctm);
+
+			bbox = span->font->bbox;
 			if (extract_span_begin(
 					dev->writer->extract,
 					span->font->name,
 					span->font->flags.is_bold,
 					span->font->flags.is_italic,
 					span->wmode,
-					ctm.a,
-					ctm.b,
-					ctm.c,
-					ctm.d,
-					ctm.e,
-					ctm.f,
-					span->trm.a,
-					span->trm.b,
-					span->trm.c,
-					span->trm.d,
-					span->trm.e,
-					span->trm.f
-					))
+					combined.a,
+					combined.b,
+					combined.c,
+					combined.d,
+					bbox.x0,
+					bbox.y0,
+					bbox.x1,
+					bbox.y1))
 			{
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin span");
 			}
 
+			trm = span->trm;
 			for (i=0; i<span->len; ++i)
 			{
 				fz_text_item *item = &span->items[i];
 				float adv = 0;
 				fz_rect bounds;
+				fz_matrix combined;
+
+				trm.e = item->x;
+				trm.f = item->y;
+				combined = fz_concat(trm, ctm);
 
 				if (dev->writer->mediabox_clip)
 					if (fz_glyph_entirely_outside_box(ctx, &ctm, span, item, &dev->writer->mediabox))
@@ -109,10 +115,8 @@ static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_m
 				if (span->items[i].gid >= 0)
 					adv = fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode);
 
-				bounds = fz_bound_glyph(ctx, span->font, span->items[i].gid, span->trm);
-				bounds = fz_translate_rect(bounds, item->x, item->y);
-				bounds = fz_transform_rect(bounds, ctm);
-				if (extract_add_char(dev->writer->extract, item->x, item->y, item->ucs, adv, 0 /*autosplit*/,
+				bounds = fz_bound_glyph(ctx, span->font, span->items[i].gid, combined);
+				if (extract_add_char(dev->writer->extract, combined.e, combined.f, item->ucs, adv,
 							bounds.x0, bounds.y0, bounds.x1, bounds.y1))
 					fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to add char");
 			}

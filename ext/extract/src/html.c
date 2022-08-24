@@ -28,7 +28,7 @@ docx_paragraph_finish(). */
 #include <sys/stat.h>
 
 
-static void content_state_init(content_state_t* content_state)
+static void content_state_init(content_state_t *content_state)
 {
     content_state->font.name = NULL;
     content_state->font.size = 0;
@@ -37,9 +37,11 @@ static void content_state_init(content_state_t* content_state)
     content_state->ctm_prev = NULL;
 }
 
-static int content_state_reset(extract_alloc_t* alloc, content_state_t* content_state, extract_astring_t* content)
+static int
+content_state_reset(extract_alloc_t *alloc, content_state_t *content_state, extract_astring_t *content)
 {
     int e = -1;
+
     if (content_state->font.bold)
     {
         if (extract_astring_cat(alloc, content, "</b>")) goto end;
@@ -50,33 +52,36 @@ static int content_state_reset(extract_alloc_t* alloc, content_state_t* content_
         if (extract_astring_cat(alloc, content, "</i>")) goto end;
         content_state->font.italic = 0;
     }
-    e = 0;
 
-    end:
+    e = 0;
+end:
+
     return e;
 }
 
-static int paragraph_to_html_content(
-        extract_alloc_t*    alloc,
-        content_state_t*    content_state,
-        paragraph_t*        paragraph,
-        int                 single_line,
-        extract_astring_t*  content
-        )
+static int
+paragraph_to_html_content(extract_alloc_t   *alloc,
+                          content_state_t   *content_state,
+                          paragraph_t       *paragraph,
+                          int                single_line,
+                          extract_astring_t *content)
 {
-    int e = -1;
-    const char* endl = (single_line) ? "" : "\n";
-    int l;
+    int                    e = -1;
+    const char            *endl = (single_line) ? "" : "\n";
+    content_line_iterator  lit;
+    line_t                *line;
+
     if (extract_astring_catf(alloc, content, "%s%s<p>", endl, endl)) goto end;
 
-    for (l=0; l<paragraph->lines_num; ++l)
+    for (line = content_line_iterator_init(&lit, &paragraph->content); line != NULL; line = content_line_iterator_next(&lit))
     {
-        line_t* line = paragraph->lines[l];
-        int s;
-        for (s=0; s<line->spans_num; ++s)
+        content_span_iterator  sit;
+        span_t                *span;
+
+        for (span = content_span_iterator_init(&sit, &line->content); span != NULL; span = content_span_iterator_next(&sit))
         {
             int c;
-            span_t* span = line->spans[s];
+
             content_state->ctm_prev = &span->ctm;
             if (span->flags.font_bold != content_state->font.bold)
             {
@@ -100,7 +105,7 @@ static int paragraph_to_html_content(
             }
         }
 
-        if (content->chars_num && l+1 < paragraph->lines_num)
+        if (content->chars_num && lit.next->type != content_root)
         {
             if (content->chars[content->chars_num-1] == '-')    content->chars_num -= 1;
             else if (content->chars[content->chars_num-1] != ' ')
@@ -118,24 +123,21 @@ static int paragraph_to_html_content(
 }
 
 
-static int paragraphs_to_html_content(
-        extract_alloc_t*    alloc,
-        content_state_t*    state,
-        paragraph_t**       paragraphs,
-        int                 paragraphs_num,
-        int                 single_line,
-        extract_astring_t*  content
-        )
 /* Append html for paragraphs[] to <content>. Updates *state if we change font
 etc. */
+static int
+paragraphs_to_html_content(extract_alloc_t    *alloc,
+                           content_state_t    *state,
+                           content_t          *paragraphs,
+                           int                 single_line,
+                           extract_astring_t  *content)
 {
+    content_paragraph_iterator  pit;
+    paragraph_t                *paragraph;
     int e = -1;
-    int p;
-    for (p=0; p<paragraphs_num; ++p)
-    {
-        paragraph_t* paragraph = paragraphs[p];
+
+    for (paragraph = content_paragraph_iterator_init(&pit, paragraphs); paragraph != NULL; paragraph = content_paragraph_iterator_next(&pit))
         if (paragraph_to_html_content(alloc, state, paragraph, single_line, content)) goto end;
-    }
 
     if (content_state_reset(alloc, state, content)) goto end;
     e = 0;
@@ -144,7 +146,8 @@ etc. */
     return e;
 }
 
-static int append_table(extract_alloc_t* alloc, content_state_t* state, table_t* table, extract_astring_t* content)
+static int
+append_table(extract_alloc_t *alloc, content_state_t *state, table_t *table, extract_astring_t *content)
 {
     int e = -1;
     int y;
@@ -179,7 +182,7 @@ static int append_table(extract_alloc_t* alloc, content_state_t* state, table_t*
 
             if (extract_astring_cat(alloc, content, ">")) goto end;
 
-            if (paragraphs_to_html_content(alloc, state, cell->paragraphs, cell->paragraphs_num, 1 /* single_line*/, content)) goto end;
+            if (paragraphs_to_html_content(alloc, state, &cell->content, 1 /* single_line*/, content)) goto end;
             if (extract_astring_cat(alloc, content, "</td>")) goto end;
             if (extract_astring_cat(alloc, content, "\n")) goto end;
 
@@ -194,36 +197,43 @@ static int append_table(extract_alloc_t* alloc, content_state_t* state, table_t*
     return e;
 }
 
-
-static char_t* paragraph_first_char(const paragraph_t* paragraph)
+/* FIXME: Badly named! first_char_of_last_span_of_paragraph! */
+static char_t *
+paragraph_first_char(const paragraph_t *paragraph)
 {
-    line_t* line = paragraph->lines[paragraph->lines_num - 1];
-    span_t* span = line->spans[line->spans_num - 1];
+    line_t *line = content_last_line(&paragraph->content);
+    span_t *span = content_last_span(&line->content);
     return &span->chars[0];
 }
 
-static int compare_paragraph_y(const void* a, const void* b)
+static int compare_paragraph_y(const void *a, const void *b)
 {
-    const paragraph_t* const* a_paragraph = a;
-    const paragraph_t* const* b_paragraph = b;
+    const paragraph_t *const *a_paragraph = a;
+    const paragraph_t *const *b_paragraph = b;
     double a_y = paragraph_first_char(*a_paragraph)->y;
     double b_y = paragraph_first_char(*b_paragraph)->y;
+
     if (a_y > b_y)  return +1;
     if (a_y < b_y)  return -1;
+
     return 0;
 }
 
 /*
 */
 static int
-split_to_html(extract_alloc_t *alloc, split_t* split, subpage_t*** ppsubpage, extract_astring_t *output)
+split_to_html(extract_alloc_t *alloc, split_t *split, subpage_t ***ppsubpage, extract_astring_t *output)
 {
-    int p;
-    int s;
-    int t;
-    subpage_t* subpage;
-    paragraph_t** paragraphs = NULL;
-    content_state_t state;
+    int                          p;
+    int                          s;
+    subpage_t                   *subpage;
+    int                          paragraphs_num;
+    paragraph_t                **paragraphs = NULL;
+    content_paragraph_iterator   pit;
+    paragraph_t                 *paragraph;
+    content_table_iterator       tit;
+    table_t                     *table;
+    content_state_t              state;
     content_state_init(&state);
 
     if (split == NULL) {
@@ -278,39 +288,37 @@ split_to_html(extract_alloc_t *alloc, split_t* split, subpage_t*** ppsubpage, ex
         isn't quite right and results in bad ordering if ctm/trm matrices are
         inconsistent. So we create our own list of paragraphs sorted strictly
         by y coordinate of the first char of each paragraph. */
-    if (extract_malloc(alloc, &paragraphs, sizeof(*paragraphs) * subpage->paragraphs_num)) goto end;
-    for (p = 0; p < subpage->paragraphs_num; ++p)
-    {
-        paragraphs[p] = subpage->paragraphs[p];
-    }
-    qsort(paragraphs, subpage->paragraphs_num, sizeof(*paragraphs), compare_paragraph_y);
+    paragraphs_num = content_count_paragraphs(&subpage->content);
+    if (extract_malloc(alloc, &paragraphs, sizeof(*paragraphs) * paragraphs_num)) goto end;
+    for (p = 0, paragraph = content_paragraph_iterator_init(&pit, &subpage->content); paragraph != NULL; p++, paragraph = content_paragraph_iterator_next(&pit))
+        paragraphs[p] = paragraph;
+    qsort(paragraphs, paragraphs_num, sizeof(*paragraphs), compare_paragraph_y);
 
     if (0)
     {
         int p;
         outf0("paragraphs are:");
-        for (p=0; p<subpage->paragraphs_num; ++p)
+        for (p=0; p<paragraphs_num; ++p)
         {
-            paragraph_t* paragraph = subpage->paragraphs[p];
-            line_t* line = paragraph->lines[0];
-            span_t* span = line->spans[0];
+            paragraph_t* paragraph = paragraphs[p];
+            line_t *line = content_first_line(&paragraph->content);
+            span_t *span = content_first_span(&line->content);
             outf0("    p=%i: %s", p, extract_span_string(NULL, span));
         }
     }
 
     p = 0;
-    t = 0;
+    table = content_table_iterator_init(&tit, &subpage->tables);
     for(;;)
     {
         double y_paragraph;
         double y_table;
-        paragraph_t* paragraph = (p == subpage->paragraphs_num) ? NULL : paragraphs[p];
-        table_t* table = (t == subpage->tables_num) ? NULL : subpage->tables[t];
+        paragraph_t* paragraph = (p == paragraphs_num) ? NULL : paragraphs[p];
         if (!paragraph && !table) break;
-        y_paragraph = (paragraph) ? paragraph->lines[0]->spans[0]->chars[0].y : DBL_MAX;
+        y_paragraph = (paragraph) ? content_first_span(&content_first_line(&paragraph->content)->content)->chars[0].y : DBL_MAX;
         y_table = (table) ? table->pos.y : DBL_MAX;
         outf("p=%i y_paragraph=%f", p, y_paragraph);
-        outf("t=%i y_table=%f", t, y_table);
+        outf("y_table=%f", y_table);
         if (paragraph && y_paragraph < y_table)
         {
             //extract_astring_catf(alloc, output, "<p>@@@ paragraph %i y=%f @@@)</p>\n", p, y_paragraph);
@@ -322,7 +330,7 @@ split_to_html(extract_alloc_t *alloc, split_t* split, subpage_t*** ppsubpage, ex
         {
             //extract_astring_catf(alloc, output, "<p>@@@ table %t y=%f @@@)</p>\n", p, y_table);
             if (append_table(alloc, &state, table, output)) goto end;
-            t += 1;
+            table = content_table_iterator_next(&tit);
         }
     }
     extract_free(alloc, &paragraphs);
@@ -333,17 +341,15 @@ end:
     return -1;
 }
 
-int extract_document_to_html_content(
-        extract_alloc_t*    alloc,
-        document_t*         document,
-        int                 rotation,
-        int                 images,
-        extract_astring_t*  content
-        )
+int extract_document_to_html_content(extract_alloc_t   *alloc,
+                                     document_t        *document,
+                                     int                rotation,
+                                     int                images,
+                                     extract_astring_t *content)
 {
     int ret = -1;
     int n;
-    paragraph_t** paragraphs = NULL;
+    paragraph_t **paragraphs = NULL;
 
     (void) rotation;
     (void) images;
@@ -354,8 +360,8 @@ int extract_document_to_html_content(
     /* Write paragraphs into <content>. */
     for (n=0; n<document->pages_num; ++n)
     {
-        extract_page_t* page = document->pages[n];
-        subpage_t **psubpage = page->subpages;
+        extract_page_t  *page     = document->pages[n];
+        subpage_t      **psubpage = page->subpages;
 
         /* Every page gets its own div. */
         extract_astring_cat(alloc, content, "<div>\n");
@@ -368,9 +374,11 @@ int extract_document_to_html_content(
     }
     extract_astring_cat(alloc, content, "</body>\n");
     extract_astring_cat(alloc, content, "</html>\n");
-    ret = 0;
 
+    ret = 0;
 end:
+
     extract_free(alloc, &paragraphs);
+
     return ret;
 }

@@ -364,29 +364,22 @@ extract_span_bbox(span_t *span)
 static int
 extract_subpage_subset(extract_alloc_t *alloc, extract_page_t *page, subpage_t *subpage, rect_t mediabox)
 {
-    subpage_t *target;
-    int s;
+    content_span_iterator  sit;
+    span_t                *span;
+    subpage_t             *target;
 
     if (extract_subpage_alloc(alloc, mediabox, page, &target))
     {
         return -1;
     }
 
-    for (s = 0; s < subpage->spans_num; s++)
+    for (span = content_span_iterator_init(&sit, &subpage->content); span != NULL; span = content_span_iterator_next(&sit))
     {
-        rect_t bbox;
-        span_t *span = subpage->spans[s];
-        if (!span)
-            continue;
-
-        bbox = extract_span_bbox(span);
+        rect_t bbox = extract_span_bbox(span);
 
         if (bbox.min.x >= mediabox.min.x && bbox.min.y >= mediabox.min.y && bbox.max.x <= mediabox.max.x && bbox.max.y <= mediabox.max.y) {
-            if (subpage_span_append(alloc, target, span))
-            {
-                return -1;
-            }
-            subpage->spans[s] = NULL;
+            content_unlink(&span->base);
+            content_append_span(&target->content, span);
         }
     }
 
@@ -564,9 +557,10 @@ collate_splits(extract_alloc_t *alloc, split_t **psplit)
 
 int extract_page_analyse(extract_alloc_t *alloc, extract_page_t *page)
 {
-    boxer_t *boxer;
-    int i;
-    subpage_t *subpage = page->subpages[0];
+    boxer_t               *boxer;
+    subpage_t             *subpage = page->subpages[0];
+    content_span_iterator  sit;
+    span_t                *span;
 
     /* This code will only work if the page contains a single subpage.
      * This should always be the case if we're called from a page
@@ -583,14 +577,11 @@ int extract_page_analyse(extract_alloc_t *alloc, extract_page_t *page)
 
     boxer = boxer_create(alloc, (rect_t *)&subpage->mediabox);
 
-    for (i = 0; i < subpage->spans_num; i++)
+    for (span = content_span_iterator_init(&sit, &subpage->content); span != NULL; span = content_span_iterator_next(&sit))
     {
-        span_t *span = subpage->spans[i];
         rect_t bbox = extract_span_bbox(span);
         if (boxer_feed(boxer, &bbox))
-        {
             goto fail;
-        }
     }
 
     if (analyse_sub(page, subpage, boxer, &page->split, 0))

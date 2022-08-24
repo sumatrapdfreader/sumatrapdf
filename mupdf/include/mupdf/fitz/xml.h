@@ -26,6 +26,7 @@
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/buffer.h"
+#include "mupdf/fitz/pool.h"
 
 /**
 	XML document model

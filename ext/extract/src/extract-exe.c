@@ -1,5 +1,9 @@
 /* Command-line programme for extract_ API. */
 
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "../include/extract.h"
 #include "../include/extract_alloc.h"
 
@@ -67,13 +71,13 @@ int main(int argc, char** argv)
     extract_buffer_t*   out_buffer = NULL;
     extract_buffer_t*   intermediate = NULL;
     extract_t*          extract = NULL;
-    
+
     /* Create an allocator so we test the allocation code. */
     if (extract_alloc_create(s_realloc, (void*) 123, &alloc))
     {
         assert(0);
     }
-    
+
     for (i=1; i<argc; ++i) {
         const char* arg = argv[i];
         if (!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
@@ -185,7 +189,7 @@ int main(int argc, char** argv)
 
         assert(i < argc);
     }
-    
+
     if (format == -1)
     {
         printf("'-f odt | docx' must be specified\n");
@@ -198,17 +202,17 @@ int main(int argc, char** argv)
         errno = EINVAL;
         goto end;
     }
-    
+
     if (extract_buffer_open_file(alloc, input_path, 0 /*writable*/, &intermediate)) {
         printf("Failed to open intermediate file: %s\n", input_path);
         goto end;
     }
-    
+
     if (extract_begin(alloc, format, &extract)) goto end;
-    if (extract_read_intermediate(extract, intermediate, autosplit)) goto end;
-    
+    if (extract_read_intermediate(extract, intermediate)) goto end;
+
     if (extract_process(extract, spacing, rotation, images)) goto end;
-    
+
     if (content_path) {
         if (extract_buffer_open_file(alloc, content_path, 1 /*writable*/, &out_buffer)) goto end;
         if (extract_write_content(extract, out_buffer)) goto end;
@@ -247,9 +251,9 @@ int main(int argc, char** argv)
         printf("Failed (errno=%i): %s\n", errno, strerror(errno));
         return 1;
     }
-    
+
     extract_internal_end();
-    
+
     if (alloc_stats) {
         extract_alloc_stats_t* stats = extract_alloc_stats(alloc);
         printf("Alloc stats: num_malloc=%i num_realloc=%i num_free=%i num_libc_realloc=%i\n",
@@ -259,9 +263,9 @@ int main(int argc, char** argv)
                 stats->num_libc_realloc
                 );
     }
-    
+
     extract_alloc_destroy(&alloc);
-    assert(alloc == NULL);    
+    assert(alloc == NULL);
 
     printf("Finished.\n");
     return 0;

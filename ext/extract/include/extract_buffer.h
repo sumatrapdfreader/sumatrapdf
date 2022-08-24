@@ -17,19 +17,13 @@ using a cache.
 #endif
 
 
-typedef struct extract_buffer_t extract_buffer_t;
 /* Abstract state for a buffer. */
+typedef struct extract_buffer_t extract_buffer_t;
 
 
-static inline int extract_buffer_read(
-        extract_buffer_t*   buffer,
-        void*               data,
-        size_t              numbytes,
-        size_t*             o_actual
-        );
-/* Reads specified number of bytes from buffer into data..+bytes, making
+/* Read specified number of bytes from buffer into data..+bytes, making
 multiple calls to the underlying extract_buffer_fn_read function until we have
-read <numbytes> or reached EOF. If we reach EOF, . Returns +1 if short read due
+read <numbytes> or reached EOF. If we reach EOF, . Return +1 if short read due
 to EOF.
 
 buffer:
@@ -45,15 +39,14 @@ o_actual:
 For speed reasons, this is implemented in extract_buffer_impl.h and uses only
 inline code if the requested data can be read from the cache.
 */
+static inline int
+extract_buffer_read(extract_buffer_t *buffer,
+                    void             *data,
+                    size_t            numbytes,
+                    size_t           *o_actual);
 
 
-static inline int extract_buffer_write(
-        extract_buffer_t*   buffer,
-        const void*         data,
-        size_t              numbytes,
-        size_t*             o_actual
-        );
-/* Writes specified data into buffer. Returns +1 if short write due to EOF.
+/* Write specified data into buffer. Returns +1 if short write due to EOF.
 
 buffer:
     As returned by earlier call to extract_buffer_open().
@@ -70,23 +63,27 @@ out_actual:
 For speed reasons, this is implemented in extract_buffer_impl.h and uses only
 inline code if there is space in the cache for the data.
 */
+static inline int
+extract_buffer_write(extract_buffer_t *buffer,
+                     const void       *data,
+                     size_t            numbytes,
+                     size_t           *o_actual);
 
 
-size_t extract_buffer_pos(extract_buffer_t* buffer);
-/* Returns number of bytes read or number of bytes written so far. */
+/* Return number of bytes read or written so far. */
+size_t extract_buffer_pos(extract_buffer_t *buffer);
 
 
-int extract_buffer_close(extract_buffer_t** io_buffer);
-/* Closes down an extract_buffer_t and frees all internal resources.
+/* Close down an extract_buffer_t and free all internal resources.
 
 Can return error or +1 for EOF if write buffer and fn_write() fails when
 flushing cache.
 
 Always sets *io_buffer to NULL. Does nothing if *io_buffer is already NULL.
 */
+int extract_buffer_close(extract_buffer_t **io_buffer);
 
 
-typedef int (*extract_buffer_fn_read)(void* handle, void* destination, size_t numbytes, size_t* o_actual);
 /* Callback used by read buffer. Should read data from buffer into the supplied
 destination. Short reads are not an error.
 
@@ -104,8 +101,8 @@ o_actual:
     Out-param, set to zero if EOF. Otherwise set to the number of bytes
     transferred in the range 1..<numbytes> inclusive.
 */
+typedef int (extract_buffer_fn_read)(void *handle, void *destination, size_t numbytes, size_t *o_actual);
 
-typedef int (*extract_buffer_fn_write)(void* handle, const void* source, size_t numbytes, size_t* o_actual);
 /* Callback used by write buffer. Should write data from the supplied source
 into the buffer; short writes are not an error.
 
@@ -123,8 +120,8 @@ o_actual:
     Out-param, set to zero if EOF. Otherwise set to the number of bytes
     transferred in the range 1..<numbytes> inclusive.
 */
+typedef int (extract_buffer_fn_write)(void *handle, const void *source, size_t numbytes, size_t *o_actual);
 
-typedef int (*extract_buffer_fn_cache)(void* handle, void** o_cache, size_t* o_numbytes);
 /* Callback to flush/populate cache.
 
 If the buffer is for writing:
@@ -146,27 +143,19 @@ o_numbytes:
 
 If no data is available due to EOF, should return with *o_numbytes set to zero.
 */
+typedef int (extract_buffer_fn_cache)(void *handle, void **o_cache, size_t *o_numbytes);
 
-typedef void (*extract_buffer_fn_close)(void* handle);
 /* Called by extract_buffer_close().
 
 handle:
     As passed to extract_buffer_open().
 */
+typedef void (extract_buffer_fn_close)(void *handle);
 
-extract_alloc_t* extract_buffer_alloc(extract_buffer_t* buffer);
 /* Returns the extract_alloc_t* originally passed to extract_buffer_open*(). */
+extract_alloc_t *extract_buffer_alloc(extract_buffer_t *buffer);
 
 
-int extract_buffer_open(
-        extract_alloc_t*        alloc, 
-        void*                   handle,
-        extract_buffer_fn_read  fn_read,
-        extract_buffer_fn_write fn_write,
-        extract_buffer_fn_cache fn_cache,
-        extract_buffer_fn_close fn_close,
-        extract_buffer_t**      o_buffer
-        );
 /* Creates an extract_buffer_t that uses specified callbacks.
 
 If fn_read is non-NULL the buffer is a read buffer, else if fn_write is
@@ -189,17 +178,16 @@ fn_close:
 o_buffer:
     Out-param. Set to NULL on error.
 */
+int extract_buffer_open(extract_alloc_t          *alloc, 
+                        void                     *handle,
+                        extract_buffer_fn_read   *fn_read,
+                        extract_buffer_fn_write  *fn_write,
+                        extract_buffer_fn_cache  *fn_cache,
+                        extract_buffer_fn_close  *fn_close,
+                        extract_buffer_t        **o_buffer);
 
 
-int extract_buffer_open_simple(
-        extract_alloc_t*        alloc,
-        const void*             data,
-        size_t                  numbytes,
-        void*                   handle,
-        extract_buffer_fn_close fn_close,
-        extract_buffer_t**      o_buffer
-        );
-/* Creates an extract_buffer_t that reads from or writes to a single fixed
+/* Create an extract_buffer_t that reads from or writes to a single fixed
 block of memory.
 
 The address region data..+data_length must exist for the lifetime of the
@@ -223,14 +211,14 @@ fn_close:
 o_buffer:
     Out-param.
 */
+int extract_buffer_open_simple(extract_alloc_t          *alloc,
+                               const void               *data,
+                               size_t                    numbytes,
+                               void                     *handle,
+                               extract_buffer_fn_close  *fn_close,
+                               extract_buffer_t        **o_buffer);
 
 
-int extract_buffer_open_file(
-        extract_alloc_t*    alloc,
-        const char*         path,
-        int                 writable,
-        extract_buffer_t**  o_buffer
-        );
 /* Creates a buffer that reads from, or writes to, a file. For portability
 uses an internal FILE* rather than an integer file descriptor, so doesn't use
 extract_buffer's caching support because FILE* already provides caching.
@@ -242,23 +230,23 @@ writable:
 o_buffer:
     Out-param. Set to NULL on error.
 */
+int extract_buffer_open_file(extract_alloc_t   *alloc,
+                             const char        *path,
+                             int                writable,
+                             extract_buffer_t **o_buffer);
 
 
-typedef struct
-{
-    extract_buffer_t*   buffer;
-    char*               data;
-    size_t              alloc_size;
-    size_t              data_size;
-} extract_buffer_expanding_t;
 /* A write buffer that writes to an automatically-growing contiguous area of
 memory. */
+typedef struct
+{
+    extract_buffer_t *buffer;
+    char             *data;
+    size_t            alloc_size;
+    size_t            data_size;
+} extract_buffer_expanding_t;
 
-int extract_buffer_expanding_create(
-        extract_alloc_t*            alloc,
-        extract_buffer_expanding_t* buffer_expanding
-        );
-/* Creates a writable buffer that writes into an automatically-growing
+/* Create a writable buffer that writes into an automatically-growing
 contiguous area of memory.
 
 alloc:
@@ -270,6 +258,8 @@ Initialises buffer_expanding. buffer_expanding->buffer can be passed to
 extract_buffer_*() functions. After buffer_close(), the written data is
 available in buffer_expanding->data..+data_size, which will have been allocated
 using <alloc>. */
+int extract_buffer_expanding_create(extract_alloc_t            *alloc,
+                                    extract_buffer_expanding_t *buffer_expanding);
 
 
 /* Include implementations of inline-functions. */

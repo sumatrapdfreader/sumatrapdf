@@ -19,19 +19,20 @@
     #endif
 #endif
 
-int extract_systemf(extract_alloc_t* alloc, const char* format, ...)
+int extract_systemf(extract_alloc_t *alloc, const char *format, ...)
 {
-    #ifdef extract_APPLE_IOS
-        /* system() not available on iOS. */
-        (void) alloc;
-        (void) format;
-        errno = ENOTSUP;
-        return -1;
-    #else
+#ifdef extract_APPLE_IOS
+    /* system() not available on iOS. */
+    (void) alloc;
+    (void) format;
+    errno = ENOTSUP;
+    return -1;
+#else
 
-    int e;
-    char* command;
-    va_list va;
+    int      e;
+    char    *command;
+    va_list  va;
+
     va_start(va, format);
     e = extract_vasprintf(alloc, &command, format, va);
     va_end(va);
@@ -44,7 +45,7 @@ int extract_systemf(extract_alloc_t* alloc, const char* format, ...)
     }
     return e;
 
-    #endif
+#endif
 }
 
 int  extract_read_all(extract_alloc_t* alloc, FILE* in, char** o_out)

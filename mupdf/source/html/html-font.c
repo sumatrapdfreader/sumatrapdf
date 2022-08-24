@@ -55,6 +55,9 @@ fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
 	const char *src, fz_font *font)
 {
 	fz_html_font_face *custom = fz_malloc_struct(ctx, fz_html_font_face);
+
+	fz_try(ctx)
+	{
 	custom->font = fz_keep_font(ctx, font);
 	custom->src = fz_strdup(ctx, src);
 	custom->family = fz_strdup(ctx, family);
@@ -63,6 +66,14 @@ fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
 	custom->is_small_caps = is_small_caps;
 	custom->next = set->custom;
 	set->custom = custom;
+}
+	fz_catch(ctx)
+	{
+		fz_drop_font(ctx, custom->font);
+		fz_free(ctx, custom->src);
+		fz_free(ctx, custom->family);
+		fz_rethrow(ctx);
+	}
 }
 
 fz_font *

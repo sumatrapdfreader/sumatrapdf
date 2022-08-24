@@ -15,37 +15,36 @@ struct extract_buffer_t
 {
     /* First member must be extract_buffer_cache_t - required by inline
     implementations of extract_buffer_read() and extract_buffer_write(). */
-    extract_buffer_cache_t  cache;
-    extract_alloc_t*        alloc;
-    void*                   handle;
-    extract_buffer_fn_read  fn_read;
-    extract_buffer_fn_write fn_write;
-    extract_buffer_fn_cache fn_cache;
-    extract_buffer_fn_close fn_close;
-    size_t                  pos;    /* Does not include bytes currently read/written to cache. */
+    extract_buffer_cache_t   cache;
+    extract_alloc_t         *alloc;
+    void                    *handle;
+    extract_buffer_fn_read  *fn_read;
+    extract_buffer_fn_write *fn_write;
+    extract_buffer_fn_cache *fn_cache;
+    extract_buffer_fn_close *fn_close;
+    size_t                   pos;    /* Does not include bytes currently read/written to cache. */
 };
 
 
-extract_alloc_t* extract_buffer_alloc(extract_buffer_t* buffer)
+extract_alloc_t *extract_buffer_alloc(extract_buffer_t* buffer)
 {
     return buffer->alloc;
 }
 
 
-int extract_buffer_open(
-        extract_alloc_t*        alloc, 
-        void*                   handle,
-        extract_buffer_fn_read  fn_read,
-        extract_buffer_fn_write fn_write,
-        extract_buffer_fn_cache fn_cache,
-        extract_buffer_fn_close fn_close,
-        extract_buffer_t**      o_buffer
-        )
+int extract_buffer_open(extract_alloc_t          *alloc,
+                        void                     *handle,
+                        extract_buffer_fn_read   *fn_read,
+                        extract_buffer_fn_write  *fn_write,
+                        extract_buffer_fn_cache  *fn_cache,
+                        extract_buffer_fn_close  *fn_close,
+                        extract_buffer_t        **o_buffer)
 {
     int e = -1;
-    extract_buffer_t* buffer;
+    extract_buffer_t *buffer;
+
     if (extract_malloc(alloc, &buffer, sizeof(*buffer))) goto end;
-    
+
     buffer->alloc = alloc;
     buffer->handle = handle;
     buffer->fn_read = fn_read;
@@ -56,15 +55,17 @@ int extract_buffer_open(
     buffer->cache.numbytes = 0;
     buffer->cache.pos = 0;
     buffer->pos = 0;
+
     e = 0;
-    
-    end:
+end:
+
     if (e) {
         extract_free(alloc, &buffer);
     }
     else {
         *o_buffer = buffer;
     }
+
     return e;
 }
 
@@ -72,25 +73,30 @@ int extract_buffer_open(
 size_t extract_buffer_pos(extract_buffer_t* buffer)
 {
     size_t ret = buffer->pos;
+
     if (buffer->cache.cache) {
         ret += buffer->cache.pos;
     }
+
     return ret;
 }
 
 
-static int s_cache_flush(extract_buffer_t* buffer, size_t* o_actual)
-/* Sends contents of cache to fn_write() using a loop to cope with short
+/* Send contents of cache to fn_write() using a loop to cope with short
 writes. Returns with *o_actual containing the number of bytes successfully
 sent, and buffer->cache.{cache,numbytes,pos} all set to zero.
 
 If we return zero but *actual is less than original buffer->cache.numbytes,
 then fn_write returned EOF. */
+static int cache_flush(extract_buffer_t *buffer, size_t *o_actual)
 {
     int e = -1;
     size_t p = 0;
+
     assert(buffer->cache.pos <= buffer->cache.numbytes);
-    for(;;) {
+
+    for(;;)
+    {
         size_t actual;
         if (p == buffer->cache.pos) break;
         if (buffer->fn_write(
@@ -101,7 +107,8 @@ then fn_write returned EOF. */
                 )) goto end;
         buffer->pos += actual;
         p += actual;
-        if (actual == 0) {
+        if (actual == 0)
+        {
             /* EOF while flushing cache. We set <pos> to the number of bytes
             in data..+numbytes that we know have been successfully handled by
             buffer->fn_write(). This can be negative if we failed to flush
@@ -117,10 +124,12 @@ then fn_write returned EOF. */
     buffer->cache.cache = NULL;
     buffer->cache.numbytes = 0;
     buffer->cache.pos = 0;
+
     e = 0;
-    end:
-    
+end:
+
     *o_actual = p;
+
     return e;
 }
 
@@ -128,50 +137,55 @@ int extract_buffer_close(extract_buffer_t** p_buffer)
 {
     extract_buffer_t* buffer = *p_buffer;
     int e = -1;
-    
+
     if (!buffer) {
         return 0;
     }
-    
+
     if (buffer->cache.cache && buffer->fn_write) {
         /* Flush cache. */
         size_t cache_bytes = buffer->cache.pos;
         size_t actual;
-        if (s_cache_flush(buffer, &actual)) goto end;
+        if (cache_flush(buffer, &actual)) goto end;
         if (actual != cache_bytes) {
             e = +1;
             goto end;
         }
     }
-    if (buffer->fn_close) buffer->fn_close(buffer->handle);
+
+    if (buffer->fn_close)
+        buffer->fn_close(buffer->handle);
+
     e = 0;
-    end:
+end:
+
     extract_free(buffer->alloc, &buffer);
     *p_buffer = NULL;
+
     return e;
 }
 
-static int s_simple_cache(void* handle, void** o_cache, size_t* o_numbytes)
+static int simple_cache(void *handle, void **o_cache, size_t *o_numbytes)
 {
     /* Indicate EOF. */
     (void) handle;
     *o_cache = NULL;
     *o_numbytes = 0;
+
     return 0;
 }
 
-int extract_buffer_open_simple(
-        extract_alloc_t*        alloc,
-        const void*             data,
-        size_t                  numbytes,
-        void*                   handle,
-        extract_buffer_fn_close fn_close,
-        extract_buffer_t**      o_buffer
-        )
+int extract_buffer_open_simple(extract_alloc_t          *alloc,
+                               const void               *data,
+                               size_t                    numbytes,
+                               void                     *handle,
+                               extract_buffer_fn_close  *fn_close,
+                               extract_buffer_t        **o_buffer)
 {
-    extract_buffer_t* buffer;
+    extract_buffer_t *buffer;
+
     if (extract_malloc(alloc, &buffer, sizeof(*buffer))) return -1;
-    
+
     /* We need cast away the const here. data[] will be written-to if caller
     uses us as a write buffer. */
     buffer->alloc = alloc;
@@ -181,92 +195,99 @@ int extract_buffer_open_simple(
     buffer->handle = handle;
     buffer->fn_read = NULL;
     buffer->fn_write = NULL;
-    buffer->fn_cache = s_simple_cache;
+    buffer->fn_cache = simple_cache;
     buffer->fn_close = fn_close;
     *o_buffer = buffer;
+
     return 0;
 }
 
 
 /* Implementation of extract_buffer_file*. */
 
-static int s_file_read(void* handle, void* data, size_t numbytes, size_t* o_actual)
+static int file_read(void *handle, void *data, size_t numbytes, size_t *o_actual)
 {
-    FILE* file = handle;
-    size_t n = fread(data, 1, numbytes, file);
+    FILE   *file = handle;
+    size_t  n    = fread(data, 1, numbytes, file);
+
     outfx("file=%p numbytes=%i => n=%zi", file, numbytes, n);
     assert(o_actual); /* We are called by other extract_buffer fns, not by user code. */
+
     *o_actual = n;
     if (!n && ferror(file)) {
         errno = EIO;
         return -1;
     }
+
     return 0;
 }
 
-static int s_file_write(void* handle, const void* data, size_t numbytes, size_t* o_actual)
+static int file_write(void *handle, const void *data, size_t numbytes, size_t *o_actual)
 {
-    FILE* file = handle;
-    size_t n = fwrite(data, 1 /*size*/, numbytes /*nmemb*/, file);
+    FILE   *file = handle;
+    size_t  n    = fwrite(data, 1 /*size*/, numbytes /*nmemb*/, file);
+
     outfx("file=%p numbytes=%i => n=%zi", file, numbytes, n);
     assert(o_actual); /* We are called by other extract_buffer fns, not by user code. */
+
     *o_actual = n;
     if (!n && ferror(file)) {
         errno = EIO;
         return -1;
     }
+
     return 0;
 }
 
-static void s_file_close(void* handle)
+static void file_close(void *handle)
 {
-    FILE* file = handle;
+    FILE *file = handle;
+
     if (!file) return;
     fclose(file);
 }
 
-int extract_buffer_open_file(extract_alloc_t* alloc, const char* path, int writable, extract_buffer_t** o_buffer)
+int extract_buffer_open_file(extract_alloc_t *alloc, const char *path, int writable, extract_buffer_t **o_buffer)
 {
-    int e = -1;
-    FILE* file = fopen(path, (writable) ? "wb" : "rb");
+    int   e    = -1;
+    FILE *file = fopen(path, (writable) ? "wb" : "rb");
+
     if (!file) {
         outf("failed to open '%s': %s", path, strerror(errno));
         goto end;
     }
-    
-    if (extract_buffer_open(
-            alloc,
-            file /*handle*/,
-            writable ? NULL : s_file_read,
-            writable ? s_file_write : NULL,
-            NULL /*fn_cache*/,
-            s_file_close,
-            o_buffer
-            )) goto end;
+
+    if (extract_buffer_open(alloc,
+                            file /*handle*/,
+                            writable ? NULL : file_read,
+                            writable ? file_write : NULL,
+                            NULL /*fn_cache*/,
+                            file_close,
+                            o_buffer)) goto end;
+
     e = 0;
-    
-    end:
+end:
+
     if (e) {
         if (file) fclose(file);
         *o_buffer = NULL;
     }
+
     return e;
 }
 
 
 /* Support for read/write. */
 
-int extract_buffer_read_internal(
-        extract_buffer_t*   buffer,
-        void*               destination,
-        size_t              numbytes,
-        size_t*             o_actual
-        )
 /* Called by extract_buffer_read() if not enough space in buffer->cache. */
+int extract_buffer_read_internal(extract_buffer_t *buffer,
+                                 void             *destination,
+                                 size_t            numbytes,
+                                 size_t           *o_actual)
 {
-    int e = -1;
+    int    e   = -1;
     size_t pos = 0;    /* Number of bytes read so far. */
-    
+
     /* In each iteration we either read from cache, or use buffer->fn_read()
     directly or repopulate the cache. */
     for(;;) {
@@ -314,30 +335,30 @@ int extract_buffer_read_internal(
             }
         }
     }
+
     e = 0;
-    
-    end:
+end:
+
     if (o_actual) *o_actual = pos;
     if (e == 0 && pos != numbytes) return +1; /* EOF. */
+
     return e;
 }
 
 
-int extract_buffer_write_internal(
-        extract_buffer_t*   buffer,
-        const void*         source,
-        size_t              numbytes,
-        size_t*             o_actual
-        )
+int extract_buffer_write_internal(extract_buffer_t *buffer,
+                                  const void       *source,
+                                  size_t            numbytes,
+                                  size_t           *o_actual)
 {
-    int e = -1;
+    int    e   = -1;
     size_t pos = 0;    /* Number of bytes written so far. */
-    
+
     if (!buffer->fn_write) {
         errno = EINVAL;
         return -1;
     }
-    
+
     /* In each iteration we either write to cache, or use buffer->fn_write()
     directly or flush the cache. */
     for(;;) {
@@ -365,7 +386,7 @@ int extract_buffer_write_internal(
                 int ee;
                 size_t b = buffer->cache.numbytes;
                 ptrdiff_t delta;
-                ee = s_cache_flush(buffer, &actual);
+                ee = cache_flush(buffer, &actual);
                 assert(actual <= b);
                 delta = actual - b;
                 pos += delta;
@@ -381,7 +402,7 @@ int extract_buffer_write_internal(
                 }
                 if (ee) goto end;
             }
-            
+
             if (!buffer->fn_cache) {
                 use_write = 1;
             }
@@ -411,29 +432,31 @@ int extract_buffer_write_internal(
             }
         }
     }
+
     e = 0;
-    
-    end:
+end:
+
     if (o_actual) *o_actual = pos;
     if (e == 0 && pos != numbytes) e = +1; /* EOF. */
+
     return e;
 }
 
 
-static int expanding_memory_buffer_write(void* handle, const void* source, size_t numbytes, size_t* o_actual)
+static int expanding_memory_buffer_write(void *handle, const void *source, size_t numbytes, size_t *o_actual)
 {
     /* We realloc our memory region as required. For efficiency, we also use
     any currently-unused region of our memory buffer as an extract_buffer
     cache. So we can be called either to 'flush the cache' (in which case we
     don't actually copy any data) or to accept data from somewhere else (in
     which case we need to increase the size of our memory region. */
-    extract_buffer_expanding_t*  ebe = handle;
-    if ((char*) source >= ebe->data && (char*) source < ebe->data + ebe->alloc_size) {
+    extract_buffer_expanding_t *ebe = handle;
+    if ((char *)source >= ebe->data && (char *)source < ebe->data + ebe->alloc_size) {
         /* Source is inside our memory region so we are being called by
         extract_buffer_write_internal() to re-populate the cache. We don't
         actually have to copy anything. */
-        assert((size_t) ((char*) source - ebe->data) == ebe->data_size);
-        assert((size_t) ((char*) source - ebe->data + numbytes) <= ebe->alloc_size);
+        assert((size_t) ((char *)source - ebe->data) == ebe->data_size);
+        assert((size_t) ((char *)source - ebe->data + numbytes) <= ebe->alloc_size);
         ebe->data_size += numbytes;
     }
     else {
@@ -445,33 +468,35 @@ static int expanding_memory_buffer_write(void* handle, const void* source, size_
         ebe->data_size += numbytes;
     }
     *o_actual = numbytes;
+
     return 0;
 }
 
-static int expanding_memory_buffer_cache(void* handle, void** o_cache, size_t* o_numbytes)
+static int expanding_memory_buffer_cache(void *handle, void **o_cache, size_t *o_numbytes)
 {
-    extract_buffer_expanding_t*  ebe = handle;
-    size_t  delta = 4096;
+    extract_buffer_expanding_t *ebe   = handle;
+    size_t                      delta = 4096;
+
     if (extract_realloc2(ebe->buffer->alloc, &ebe->data, ebe->alloc_size, ebe->data_size + delta)) return -1;
     ebe->alloc_size = ebe->data_size + delta;
     *o_cache = ebe->data + ebe->data_size;
     *o_numbytes = delta;
+
     return 0;
 }
 
-int extract_buffer_expanding_create(extract_alloc_t* alloc, extract_buffer_expanding_t* ebe)
+int extract_buffer_expanding_create(extract_alloc_t *alloc, extract_buffer_expanding_t *ebe)
 {
     ebe->data = NULL;
     ebe->data_size = 0;
     ebe->alloc_size = 0;
-    if (extract_buffer_open(
-            alloc,
-            ebe,
-            NULL /*fn_read*/,
-            expanding_memory_buffer_write,
-            expanding_memory_buffer_cache,
-            NULL /*fn_close*/,
-            &ebe->buffer
-            )) return -1;
+    if (extract_buffer_open(alloc,
+                            ebe,
+                            NULL /*fn_read*/,
+                            expanding_memory_buffer_write,
+                            expanding_memory_buffer_cache,
+                            NULL /*fn_close*/,
+                            &ebe->buffer)) return -1;
+
     return 0;
 }

@@ -29,6 +29,15 @@
 #
 #   make build=memento msqueeze
 #       Run memento squeeze test.
+#
+#   Assuming we are in mupdf/thirdparty/extract, and there is a ghostpdl at
+#   the same level as mupdf, with a softlink from ghostpdl to extract:
+#
+#   make test-rebuild-dependent-binaries
+#       Clean/Configure/Rebuild the required mupdf and gs binaries.
+#
+#   make test-build-dependent-binaries
+#       Build the required mupdf and gs binaries.
 
 
 # Build flags.
@@ -61,6 +70,13 @@ else ifeq ($(build),memento)
     flags_compile   += -g -D MEMENTO
 else
     $(error unrecognised $$(build)=$(build))
+endif
+
+regenerate ?= no
+ifeq ($(regenerate),yes)
+    DIFF_OR_CP = rm -rf $(word 2,%$^); cp -r
+else
+    DIFF_OR_CP = diff -ru
 endif
 
 gdb = gdb
@@ -128,19 +144,6 @@ test: test-buffer test-misc test-src test-exe test-mutool test-gs test-html test
 pdfs = test/Python2.pdf test/Python2clipped.pdf test/zlib.3.pdf test/text_graphic_image.pdf
 pdfs_generated = $(patsubst test/%, test/generated/%, $(pdfs))
 
-# Generate targets that check all combinations of mu/gs and the various
-# rotate/autosplit options of extract-exe.
-#
-tests_exe :=
-ifneq ($(mutool),)
-    tests_exe := $(tests_exe) $(patsubst %, %.intermediate-mu.xml, $(pdfs_generated))
-endif
-ifneq ($(gs),)
-# 2022-02-23: don't check intermediate-gs, because gs's txtwrite device doesn't
-# work easily with multi-page documents since the change to pdfi.
-#    tests_exe := $(tests_exe) $(patsubst %, %.intermediate-gs.xml, $(pdfs_generated))
-endif
-
 tests_exe := \
         $(patsubst %, %.extract.docx,                   $(tests_exe)) \
         $(patsubst %, %.extract-rotate.docx,            $(tests_exe)) \
@@ -154,9 +157,9 @@ ifneq ($(mutool),)
 # Targets that test direct conversion with mutool.
 #
     tests_mutool := \
-            $(patsubst %, %.mutool.docx.diff, $(pdfs_generated)) \
-            $(patsubst %, %.mutool-norotate.docx.diff, $(pdfs_generated)) \
-            $(patsubst %, %.mutool.odt.diff, $(pdfs_generated)) \
+            $(patsubst %, %.mutool.docx.dir.diff, $(pdfs_generated)) \
+            $(patsubst %, %.mutool-norotate.docx.dir.diff, $(pdfs_generated)) \
+            $(patsubst %, %.mutool.odt.dir.diff, $(pdfs_generated)) \
             $(patsubst %, %.mutool.text.diff, $(pdfs_generated)) \
 
     tests_mutool_odt := \
@@ -171,7 +174,7 @@ ifneq ($(gs),)
 # Targets that test direct conversion with gs.
 #
     tests_gs := \
-            $(patsubst %, %.gs.docx.diff, $(pdfs_generated)) \
+            $(patsubst %, %.gs.docx.dir.diff, $(pdfs_generated)) \
             test_gs_fpp
     
     # We don't yet do clipping with gs so exclude Python2clipped.pdf.*:
@@ -179,7 +182,6 @@ ifneq ($(gs),)
 
     #$(warning tests_gs: $(tests_gs))
 endif
-#$(warning $(pdfs_generated_intermediate_docx_diffs))
 #$(warning $(tests))
 
 test-exe: $(tests_exe)
@@ -228,6 +230,17 @@ test_gs_fpp: $(gs)
 
 test-html: $(tests_html)
 
+test-rebuild-dependent-binaries:
+	@echo == Rebuilding gs and mupdf binaries
+	cd ../../../ghostpdl && ./autogen.sh --with-extract-dir=extract && make -j 8 debugclean DEBUGDIRPREFIX=debug-extract- && make -j 8 debug DEBUGDIRPREFIX=debug-extract-
+	cd ../.. && make -j 8 build=debug clean && make -j 8 build=debug
+
+test-build-dependent-binaries:
+	@echo == Building gs and mupdf binaries
+	cd ../../../ghostpdl && make -j 8 debug DEBUGDIRPREFIX=debug-extract-
+	cd ../.. && make -j 8 build=debug
+
+
 ifneq ($(mutool),)
     test_tables_pdfs = \
             test/agstat.pdf \
@@ -245,8 +258,8 @@ ifneq ($(mutool),)
     test_tables_generated = $(patsubst test/%, test/generated/%, $(test_tables_pdfs))
 
     test_tables_html    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.html.diff, $(test_tables_pdfs))
-    test_tables_docx    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.docx.diff, $(test_tables_pdfs))
-    test_tables_odt     = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.odt.diff,  $(test_tables_pdfs))
+    test_tables_docx    = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.docx.dir.diff, $(test_tables_pdfs))
+    test_tables_odt     = $(patsubst test/%.pdf, test/generated/%.pdf.mutool.odt.dir.diff,  $(test_tables_pdfs))
 
     test_tables = $(test_tables_html) $(test_tables_docx) $(test_tables_odt)
 endif
@@ -261,12 +274,12 @@ test-tables:            $(test_tables)
 test/generated/%.pdf.mutool.html.diff: test/generated/%.pdf.mutool.html test/%.pdf.mutool.html.ref
 	@echo
 	@echo == Checking $<
-	diff -u $^
+	$(DIFF_OR_CP) $^
 
 test/generated/%.pdf.mutool.cv.html.diff: test/generated/%.pdf.mutool.cv.html test/%.pdf.mutool.html.ref
 	@echo
 	@echo == Checking $<
-	diff -u $^
+	$(DIFF_OR_CP) $^
 
 test/generated/%.pdf.mutool.cv.html: test/%.pdf $(mutool)
 	$(mutool) convert -O resolution=300 -o $<..png $<
@@ -275,7 +288,7 @@ test/generated/%.pdf.mutool.cv.html: test/%.pdf $(mutool)
 test/generated/%.pdf.mutool.text.diff: test/generated/%.pdf.mutool.text test/%.pdf.mutool.text.ref
 	@echo
 	@echo == Checking $<
-	diff -u $^
+	$(DIFF_OR_CP) $^
 
 
 # Main executable.
@@ -362,18 +375,6 @@ endif
 # Rules that make the various intermediate targets required by $(tests).
 #
 
-test/generated/%.pdf.intermediate-mu.xml: test/%.pdf $(mutool)
-	@echo
-	@echo == Generating intermediate file for $< with mutool.
-	@mkdir -p test/generated
-	$(mutool_run) draw -F xmltext -o $@ $<
-
-test/generated/%.pdf.intermediate-gs.xml: test/%.pdf $(gs)
-	@echo
-	@echo == Generating intermediate file for $< with gs.
-	@mkdir -p test/generated
-	$(gs) -sDEVICE=txtwrite -dTextFormat=4 -o $@ $<
-
 %.extract.docx: % $(exe)
 	@echo
 	@echo == Generating docx with extract.exe
@@ -404,39 +405,33 @@ test/generated/%.pdf.intermediate-gs.xml: test/%.pdf $(gs)
 	@echo == Generating docx using src/template.docx with extract.exe
 	$(run_exe) -r 0 -i $< -f docx -t src/template.docx -o $@
 
-test/generated/%.diff: test/generated/%.dir/ test/%.dir.ref/
+test/generated/%.dir.diff: test/generated/%.dir test/%.dir.ref
 	@echo
 	@echo == Checking $<
-	diff -ru $^
+	$(DIFF_OR_CP) $^
 #if diff -ruq $^; then true; else echo "@@@ failure... fix with: rsync -ai" $^; false; fi
 
 test/generated/%.html.diff: test/generated/%.html test/%.html.ref
 	@echo
 	@echo == Checking $<
-	diff -u $^
+	$(DIFF_OR_CP) $^
 
 # This checks that -t src/template.docx gives identical results.
 #
-test/generated/%.extract-template.docx.diff: test/generated/%.extract-template.docx.dir/ test/%.extract.docx.dir.ref/
+test/generated/%.extract-template.docx.diff: test/generated/%.extract-template.docx.dir test/%.extract.docx.dir.ref
 	@echo
 	@echo == Checking $<
-	diff -ru $^
+	$(DIFF_OR_CP) $^
 
 # Unzips .docx into .docx.dir/ directory, and prettyfies the .xml files.
-#
-# Note that we requires a trailing '/' in target.
-#
-%.docx.dir/: %.docx .ALWAYS
+%.docx.dir: %.docx .ALWAYS
 	@echo
 	@echo == Extracting .docx into directory.
 	@rm -r $@ 2>/dev/null || true
 	unzip -q -d $@ $<
 
 # Unzips .odt into .odt.dir/ directory, and prettyfies the .xml files.
-#
-# Note that we requires a trailing '/' in target.
-#
-%.odt.dir/: %.odt
+%.odt.dir: %.odt
 	@echo
 	@echo == Extracting .odt into directory.
 	@rm -r $@ 2>/dev/null || true
@@ -517,9 +512,9 @@ test/generated/%.pdf.mutool.text: test/%.pdf $(mutool)
 
 # Valgrind test
 #
-valgrind: $(exe) test/generated/Python2.pdf.intermediate-mu.xml
-	valgrind --leak-check=full $(exe) -h -r 1 -s 0 -i test/generated/Python2.pdf.intermediate-mu.xml -o test/generated/valgrind-out.docx
-	@echo $@: passed
+#valgrind: $(exe) test/generated/Python2.pdf.intermediate-mu.xml
+#	valgrind --leak-check=full $(exe) -h -r 1 -s 0 -i test/generated/Python2.pdf.intermediate-mu.xml -o test/generated/valgrind-out.docx
+#	@echo $@: passed
 
 # Memento tests.
 #
@@ -552,11 +547,6 @@ endif
 
 # Temporary rules for generating reference files.
 #
-#temp_ersdr = \
-#        $(patsubst %, %.intermediate-mu.xml.extract-rotate-spacing.docx.dir.ref, $(pdfs)) \
-#        $(patsubst %, %.intermediate-gs.xml.extract-rotate-spacing.docx.dir.ref, $(pdfs)) \
-#
-#temp: $(temp_ersdr)
 #test/%.xml.extract-rotate-spacing.docx.dir.ref: test/generated/%.xml.extract-rotate-spacing.docx.dir
 #	@echo
 #	@echo copying $< to %@
@@ -689,7 +679,6 @@ clean:
 # Cleans test/generated except for intermediate files, which are slow to create
 # (when using gs).
 clean2:
-	rm -r test/generated/*.pdf.intermediate-*.xml.* 2>/dev/null || true
 	rm -r test/generated/*.pdf.mutool*.docx* 2>/dev/null || true
 	rm -r src/build 2>/dev/null || true
 .PHONY: clean
