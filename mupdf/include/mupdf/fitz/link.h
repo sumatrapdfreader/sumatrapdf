@@ -58,8 +58,8 @@ typedef struct fz_link
 	struct fz_link *next;
 	fz_rect rect;
 	char *uri;
-	fz_link_set_rect_fn *set_rect;
-	fz_link_set_uri_fn *set_uri;
+	fz_link_set_rect_fn *set_rect_fn;
+	fz_link_set_uri_fn *set_uri_fn;
 	fz_link_drop_link_fn *drop;
 } fz_link;
 

@@ -76,7 +76,8 @@ FUN(Story_newStory)(JNIEnv *env, jclass cls, jbyteArray content, jbyteArray css,
 		css_buf = fz_new_buffer_from_copied_data(ctx, (const unsigned char *)css_bytes, css_len);
 		fz_terminate_buffer(ctx, css_buf);
 
-		story = fz_new_story(ctx, content_buf, (const char *)css_buf->data, em);
+		/* TODO: Expose archive here. */
+		story = fz_new_story(ctx, content_buf, (const char *)css_buf->data, em, NULL);
 	}
 	fz_always(ctx)
 	{

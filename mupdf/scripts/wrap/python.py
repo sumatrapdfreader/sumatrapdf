@@ -6,6 +6,7 @@ import jlib
 
 from . import cpp
 from . import parse
+from . import rename
 from . import util
 
 
@@ -143,8 +144,8 @@ def cppyy_add_outparams_wrapper(
         #Generated
         struct_name = parse.find_class_for_wrappable_function( fn_name)
         if struct_name:
-            class_name = util.rename.class_( struct_name)
-            method_name = util.rename.method( struct_name, fn_name)
+            class_name = rename.class_( struct_name)
+            method_name = rename.method( struct_name, fn_name)
             text += f'# Also patch Python version of {fn_name}() in class wrapper for {struct_name} method {class_name}::{method_name}()\n'
             text += f'cppyy.gbl.mupdf.{class_name}.{method_name}_original = cppyy.gbl.mupdf.{class_name}.{method_name}\n'
             text += f'cppyy.gbl.mupdf.{class_name}.{method_name} = mupdf_m{fn_name}\n'

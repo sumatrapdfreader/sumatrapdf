@@ -12,6 +12,7 @@ generated/resources/fonts/noto
 generated/resources/fonts/sil
 tags
 cscope.*
+node_modules
 
 # Editor and file browser turds:
 *~

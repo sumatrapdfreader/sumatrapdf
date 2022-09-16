@@ -27,15 +27,15 @@ script to point to the appropriate location.
 
 <p>
 From the MuPDF project, you can run <tt>make wasm</tt> to build the WebAssembly
-library. The results of the build are a libmupdf.wasm binary and
-libmupdf.js script, placed in platform/wasm/.
+library. The results of the build are a mupdf-wasm.wasm binary and
+mupdf-wasm.js script, placed in platform/wasm/.
 
 <p>
 In order to build a web application based on MuPDF, you will need to copy
 these two files and make them available to your page.
 
 <p>
-The libmupdf.wasm binary is quite large, because it contains not only the MuPDF
+The mupdf-wasm.wasm binary is quite large, because it contains not only the MuPDF
 library code, but also the 14 core PDF fonts, various CJK mapping resources,
 and ICC profiles. In order to keep it as small as possible, it is built with a
 minimal features set that does not include CJK fonts, EPUB support, etc.
@@ -43,15 +43,15 @@ minimal features set that does not include CJK fonts, EPUB support, etc.
 <h2>Using</h2>
 
 <p>
-The example script in platform/wasm/view.html shows how to use the
+The example script in platform/wasm/mupdf-view.html shows how to use the
 MuPDF WebAssembly library.
 
 <p>
-The first part is including the libmupdf.js script, which pulls in
+The first part is including the mupdf-wasm.js script, which pulls in
 and instantiates the WebAssembly module:
 
 <pre>
-&lt;script src="libmupdf.js"&gt;&lt;/script&gt;
+&lt;script src="mupdf-wasm.js"&gt;&lt;/script&gt;
 </pre>
 
 <p>
@@ -109,7 +109,7 @@ Here is a very simple example of loading a document and drawing its first page:
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
-&lt;script src="libmupdf.js"&gt;&lt;/script&gt;
+&lt;script src="mupdf-wasm.js"&gt;&lt;/script&gt;
 &lt;script&gt;
 Module.preRun = function () {
 	FS.createPreloadedFile(".", "input.pdf", "input.pdf", true, false);

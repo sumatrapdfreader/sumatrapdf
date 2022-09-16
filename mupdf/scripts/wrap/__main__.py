@@ -12,49 +12,132 @@ C++ wrapping:
 
     Namespaces:
 
-        All generated functions and classes are in the 'mupdf' namespace, e.g.
-        mupdf::atof() is the wrapper for fz_atof().
+        All generated functions and classes are in the 'mupdf' namespace.
 
-    Functions:
+    Wrapper classes:
 
-        We provide a wrapper for each fz_*() and pdf_*() function.
+        For each MuPDF C struct, we provide a wrapper class with a CamelCase
+        version of the struct name, e.g. the wrapper for fz_display_list is
+        mupdf::FzDisplayList.
 
-        These wrappers do not take a 'fz_context* ctx' arg, and convert any
-        fz_try..fz_catch exceptions into C++ exceptions.
+        These wrapper classes generally have a member `m_internal` that is a
+        pointer to an instance of the underlying struct.
 
-        Wrappers for fz_*() functions are named by omitting the leading 'fz_'. Wrappers
-        for pdf_*() functions are named by prefixing a 'p'.
+        Member functions:
 
-        Examples:
+            Member functions are provided which wrap all relevant MuPDF C
+            functions (those with first arg being a pointer to an instance of
+            the C struct). These methods have the same name as the wrapped
+            function.
 
-            The wrappers for these functions:
+            They generally take args that are references to wrapper classes
+            instead of pointers to MuPDF C structs, and similarly return
+            wrapper classes by value instead of returning a pointer to a MuPDF
+            C struct.
 
-                fz_device *fz_begin_page(fz_context *ctx, fz_document_writer *wri, fz_rect mediabox);
+        Reference counting:
 
-                void pdf_insert_page(fz_context *ctx, pdf_document *doc, int at, pdf_obj *page);
+            Wrapper classes automatically take care of reference counting, so
+            user code can freely use instances of wrapper classes as required,
+            for example making copies and allowing instances to go out of
+            scope.
 
-            are:
+            Lifetime-related functions - constructors, copy constructors,
+            operator= and destructors - make internal calls to
+            `fz_keep_<structname>()` and `fz_drop_<structname>()` as required.
 
-                namespace mupdf
+            Raw constructors that take a pointer to an underlying MuPDF struct
+            do not call `fz_keep_*()` - it is expected that any supplied MuPDF
+            struct is already owned. Most of the time user code will not need
+            to use raw constructors directly.
+
+            Debugging reference counting:
+
+                If environmental variable MUPDF_check_refs is "1", we do
+                runtime checks of the generated code's handling of structs that
+                have a reference count (i.e. they have a `int refs;` member).
+
+                If the number of wrapper class instances for a particular MuPDF
+                struct instance is more than the `.ref` value for that struct
+                instance, we generate a diagnostic and call `abort()`.
+
+                We also output reference-counting diagnostics each time a
+                wrapper class constructor, member function or destructor is
+                called.
+
+        POD wrappers:
+
+            For simple POD structs such as `fz_rect` which are not reference
+            counted, the wrapper class's `m_internal` can be an instance of
+            the underlying struct instead of a pointer. Some wrappers for POD
+            structs take this one step further and embed the struct members
+            directly in the wrapper class.
+
+    Wrapper functions:
+
+        Class-aware wrappers:
+
+            We provide a class-aware wrapper for each MuPDF C function; these
+            have the same name as the MuPDF C function and are identical to
+            the corresponding class member function except that they take an
+            explicit first arg instead of the implicit C++ `this`.
+
+        Low-level wrappers:
+
+            We provide a low-level wrapper for each C MuPDF function; these
+            have a `ll_` prefix, do not take a 'fz_context* ctx' arg, and
+            convert any fz_try..fz_catch exceptions into C++ exceptions.
+
+            Most calling code should use class-aware wrapper functions or
+            wrapper class methods in preference to these low-level wrapper
+            funtions.
+
+    Text representation of POD data:
+
+        For selected POD MuPDF structs, we provide functions that give a
+        labelled text representation of the data, for example a `fz_rect` will
+        be represented like:
+
+            (x0=90.51 y0=160.65 x1=501.39 y1=215.6)
+
+        Text representation of a POD wrapper class:
+
+            * An `operator<< (std::ostream&, <wrapperclass>&)` overload for the wrapper class.
+            * A member function `std::string to_string();` in the wrapper class.
+
+        Text representation of a MuPDF POD C struct:
+
+            * Function `std::string to_string( const <structname>&);`.
+            * Function `std::string to_string_<structname>( const <structname>&);`.
+
+    Examples:
+
+        MuPDF C API:
+
+            fz_device *fz_begin_page(fz_context *ctx, fz_document_writer *wri, fz_rect mediabox);
+
+        MuPDF C++ API:
+
+            namespace mupdf
+            {
+                struct FzDevice
                 {
-                    fz_device *begin_page(fz_document_writer *wri, fz_rect mediabox);
+                    ...
+                    fz_device* m_internal;
+                };
 
-                    void ppdf_insert_page(pdf_document *doc, int at, pdf_obj *page);
-                }
+                struct FzDocumentWriter
+                {
+                    ...
+                    FzDevice fz_begin_page(FzRect& mediabox);
+                    ...
+                    fz_document_writer* m_internal;
+                };
 
-        Text representation of structs:
+                FzDevice fz_begin_page(const FzDocumentWriter& wri, FzRect& mediabox);
 
-            For selected POD structs, we provide an operator<< (std::ostream&)
-            function which writes a labelled representation of the struct's
-            members.
-
-            For example for a fz_rect it will write text such as:
-
-                (x0=90.51 y0=160.65 x1=501.39 y1=215.6)
-
-            We also provide to_string() overloads and individual
-            to_string_<structname>() functions that return this text
-            representation as a std::string.
+                fz_device *ll_fz_begin_page(fz_document_writer *wri, fz_rect mediabox);
+            }
 
         Environmental variabes control runtime diagnostics in generated code:
 
@@ -75,99 +158,37 @@ C++ wrapping:
                 If "1", generated code checks MuPDF struct reference counts at
                 runtime. See below for details.
 
-    Classes:
-
-        For each fz_* and pdf_* struct, we provide a wrapper class with
-        a CamelCase version of the struct name, e.g. the wrapper for
-        fz_display_list is called mupdf::DisplayList.
-
-        These wrapper classes generally have a member <m_internal> that is a
-        pointer to an instance of the underlying struct.
-
-        Member functions:
-
-            Member functions are provided which wrap all relevant fz_*() and
-            pdf_*() functions. These methods have the same name as the wrapped
-            function but without the initial fz_ or pdf_. They generally take
-            args that are references to wrapper classes instead of pointers to
-            fz_* and pdf_* structs, and similarly return wrapper classes by
-            value instead of returning a pointer to a fz_* or pdf_* struct.
-
-        Reference counting:
-
-            Wrapper classes automatically take care of reference counting, so
-            user code can freely use instances of wrapper classes as required,
-            for example making copies and allowing instances to go out of
-            scope.
-
-            Lifetime-related functions - constructors, copy constructors,
-            operator= and destructors - make internal calls to
-            fz_keep_<structname>() and fz_drop_<structname>() as required.
-
-            Constructors that take a raw pointer to an underlying fz_* struct
-            do not call fz_keep_*() - it is expected that any supplied fz_*
-            pointer is already owned. Most of the time user code will not need
-            to use these low-level constructors directly.
-
-            Debugging reference counting:
-
-                If environmental variable MUPDF_check_refs is "1", we do
-                runtime checks of the generated code's handling of structs that
-                have a reference count (i.e. they have a 'int refs;' member).
-
-                If the number of wrapper class instances for a particular MuPDF
-                struct instance is more than the .ref value for that struct
-                instance, we generate a diagnostic and call abort().
-
-                We also output reference-counting diagnostics each time a
-                wrapper class constructor, member function or destructor is
-                called.
-
-        POD wrappers:
-
-            For simple POD structs such as fz_rect where reference counting
-            is not used, the wrapper class's m_internal can be an instance of
-            the underlying struct instead of a pointer. Some wrappers for POD
-            structs take this one step further and embed the struct members
-            directly in the wrapper class.
-
-        Text representation of wrapper classes:
-
-            For wrappers of POD structs where we provide a
-            to_string_<structname>() function as described above, we provide a
-            similar to_string() member function.
-
     Details:
 
-        We use clang-python to parse the fz header files, and generate C++
-        headers and source code that gives wrappers for all fz_* functions.
+        We use clang-python to parse the MuPDF header files, and generate C++
+        headers and source code that gives wrappers for all MuPDF functions.
 
-        We also generate C++ classes that wrap all fz_* structs, adding
-        in various constructors and methods that wrap auto-detected fz_*
-        functions, plus explicitly-specified methods that wrap/use fz_*
+        We also generate C++ classes that wrap all MuPDF structs, adding in
+        various constructors and methods that wrap auto-detected MuPDF C
+        functions, plus explicitly-specified methods that wrap/use MuPDF C
         functions.
 
         More specifically, for each wrapper class:
 
             Copy constructors/operator=:
 
-                If fz_keep_<name>() and fz_drop_<name>() exist, we generate
-                copy constructor and operator= that use these functions.
+                If `fz_keep_<name>()` and `fz_drop_<name>()` exist, we generate
+                copy constructor and `operator=()` that use these functions.
 
             Constructors:
 
-                We look for all fz_*() functions called fz_new_*() that
-                return a pointer to the wrapped class, and wrap these into
-                constructors. If any of these constructors have duplicate
-                prototypes, we cannot provide them as constructors so instead
-                we provide them as static methods. This is not possible if the
-                class is not copyable, in which case we include the constructor
-                code but commented-out and with an explanation.
+                We look for all MuPDF functions called `fz_new_*()` or
+                `pdf_new_*()` that return a pointer to the wrapped class, and
+                wrap these into constructors. If any of these constructors have
+                duplicate prototypes, we cannot provide them as constructors so
+                instead we provide them as static methods. This is not possible
+                if the class is not copyable, in which case we include the
+                constructor code but commented-out and with an explanation.
 
             Methods:
 
-                We look for all fz_*() functions that take the wrapped struct
-                as a first arg (ignoring any fz_context* arg), and wrap these
+                We look for all MuPDF functions that take the wrapped struct as
+                a first arg (ignoring any `fz_context*` arg), and wrap these
                 into auto-generated class methods. If there are duplicate
                 prototypes, we comment-out all but the first.
 
@@ -179,20 +200,19 @@ C++ wrapping:
                 There are various subleties with wrapper classes for MuPDF
                 structs that are not copyable etc.
 
-        Internal fz_context's:
+        Internal `fz_context*`'s:
 
-            mupdf::* functions methods generally have the same args as
-            the fz_* functions that they wrap except that they don't
-            take any fz_context* parameter. When required, per-thread
-            fz_context's are generated automatically at runtime, using
-            platform/c++/implementation/internal.cpp:internal_context_get().
+            `mupdf::*` functions and methods generally have the same args
+            as the MuPDF functions that they wrap except that they don't
+            take any `fz_context*` parameter. When required, per-thread
+            `fz_context`'s are generated automatically at runtime, using
+            `platform/c++/implementation/internal.cpp:internal_context_get()`.
 
         Extra items:
 
-            metadata_keys: This is a global const vector of strings
-            contains the keys that are suitable for passing to
-            fz_lookup_metadata() and its wrappers, mupdf::fz_lookup_metadata()
-            and mupdf::Document::lookup_metadata().
+            `mupdf::metadata_keys`: This is a global const vector of
+            strings contains the keys that are suitable for passing to
+            `fz_lookup_metadata()` and its wrappers.
 
         Output parameters:
 
@@ -201,16 +221,16 @@ C++ wrapping:
 
             Using SWIG OUTPUT markers:
 
-                First, in generated C++ prototypes, we use OUTPUT as the
-                name of out-params, which tells SWIG to treat them as
-                out-params. This works for basic out-params such as int*, so
+                First, in generated C++ prototypes, we use `OUTPUT` as
+                the name of out-params, which tells SWIG to treat them as
+                out-params. This works for basic out-params such as `int*`, so
                 SWIG will generate Python code that returns a tuple and C# code
-                that takes args marked with the C# keyword 'out'.
+                that takes args marked with the C# keyword `out`.
 
             Unfortunately SWIG doesn't appear to handle out-params that
-            are zero terminated strings (char**) and cannot generically
-            handle binary data out-params (often indicated with unsigned
-            char**). Also, SWIG-generated C# out-params are a little
+            are zero terminated strings (`char**`) and cannot generically
+            handle binary data out-params (often indicated with `unsigned
+            char**`). Also, SWIG-generated C# out-params are a little
             inconvenient compared to returning a C# tuple (requires C# 7 or
             later).
 
@@ -230,17 +250,17 @@ C++ wrapping:
             Binary out-param data:
 
                 Some MuPDF functions return binary data, typically with an
-                'unsigned char**' out-param. It is not possible to generically
+                `unsigned char**` out-param. It is not possible to generically
                 handle these in Python or C# because the size of the returned
                 buffer is specified elsewhere (for example in a different
                 out-param or in the return value). So we generate custom Python
                 and C# code to give a convenient interface, e.g. copying the
-                returned data into a Python bytes object or a C# byte array.
+                returned data into a Python `bytes` object or a C# byte array.
 
 
 Python wrapping:
 
-    We generate a Python module called 'mupdf' which directly wraps the C++ API,
+    We generate a Python module called `mupdf` which directly wraps the C++ API,
     using identical names for functions, classes and methods.
 
     Out-parameters:
@@ -250,88 +270,88 @@ Python wrapping:
 
         Examples:
 
-            fz_read_best():
+            `fz_read_best()`:
 
-                The MuPDF C function is:
+                MuPDF C function:
 
-                    fz_buffer *fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated);
+                    `fz_buffer *fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated);`
 
-                The C++ wrapper is:
+                Class-aware C++ wrapper:
 
-                    fz_buffer *read_best(fz_stream *stm, size_t initial, int *truncated);
+                    `FzBuffer read_best(FzStream& stm, size_t initial, int *truncated);`
 
-                The python wrapper is:
+                Class-aware python wrapper:
 
-                    def read_best(stm, initial)
+                    `def read_best(stm, initial)`
 
-                and returns: (buffer, truncated), where <buffer> is a SWIG
-                proxy for a fz_buffer instance and <truncated> is an integer.
+                and returns: `(buffer, truncated)`, where `buffer` is a SWIG
+                proxy for a `FzBuffer` instance and `truncated` is an integer.
 
-            pdf_parse_ind_obj():
+            `pdf_parse_ind_obj()`:
 
-                The MuPDF C function is:
+                MuPDF C function:
 
-                    pdf_obj *pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int64_t *stm_ofs, int *try_repair);
+                    `pdf_obj *pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, int *num, int *gen, int64_t *stm_ofs, int *try_repair);`
 
-                The C++ wrapper is:
+                Class-aware C++ wrapper:
 
-                    pdf_obj *ppdf_parse_ind_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int64_t *stm_ofs, int *try_repair);
+                    `PdfObj pdf_parse_ind_obj(PdfDocument& doc, const FzStream& f, int *num, int *gen, int64_t *stm_ofs, int *try_repair);`
 
-                The Python wrapper is:
+                Class-aware Python wrapper:
 
-                    def ppdf_parse_ind_obj(doc, f, buf)
+                    `def pdf_parse_ind_obj(doc, f)`
 
                 and returns: (ret, num, gen, stm_ofs, try_repair)
 
-            Where MuPDF functions are wrapped as C++ class methods, the python class methods
-            return out-parameters in a similar way.
-
-    Raw access to buffer data:
+    Special handing if `fz_buffer` data:
 
         Generic data access:
 
-            mupdf.python_bytes_data(b: bytes):
-                Returns SWIG proxy for an unsigned char*' that points to <b>'s
-                data.
+            `mupdf.python_bytes_data(b: bytes)`:
+                Returns SWIG proxy for an `unsigned char*` that points to
+                `<b>`'s data.
 
-            mupdf.raw_to_python_bytes(data, size):
-                Returns Python bytes instance containing copy of data specified
-                by <data> (a SWIG proxy for a const unsigned char* c) and
-                <size> (the length of the data).
+            `mupdf.raw_to_python_bytes(data, size):`
+                Returns Python `bytes` instance containing copy of data
+                specified by `data` (a SWIG proxy for a `const unsigned char*
+                c`) and `size` (the length of the data).
 
-        Wrappers for fz_buffer_extract():
+        Wrappers for `fz_buffer_extract()`:
 
-            mupdf.Buffer.buffer_extract() returns a Python bytes instance.
+            These return a Python `bytes` instance containing a copy of the
+            buffer's data and the buffer is left empty. This is equivalent to
+            the underlying fz_buffer_extract() function, but it involves an
+            internal copy of the data.
 
-            An extra method mupdf.Buffer.buffer_extract_raw() is provided
-            which returns (size, data) from the underlying fz_buffer_extract()
-            function. One use for this is to pass back into C/C++ with a call
-            to mupdf.Stream(data, size).
+            New function `fz_buffer_extract_copy` and new method
+            `FzBuffer.fz_buffer_extract_copy()` are like `fz_buffer_extract()`
+            except that they don't clear the buffer. They have no direct
+            analogy in the C API.
 
-        Wrappers for fz_buffer_storage():
+        Wrappers for `fz_buffer_storage()`:
 
-            mupdf.Buffer.buffer_storage() is not provided to Python because the
-            semantics are not useful - creating a Python bytes object always
-            takes a copy of the underlying data.
+            These return `(size, data)` where `data` is a low-level
+            SWIG representation of the buffer's storage. One can call
+            `mupdf.raw_to_python_bytes(data, size)` to get a Python `bytes`
+            object containing a copy of this data.
 
-            An extra method mupdf.Buffer.buffer_extract_raw() is provided
-            which returns (size, data) from the underlying fz_buffer_extract()
-            function. And one can then call mupdf.raw_to_python_bytes(data,
-            size) to get a Python bytes object containing a copy of this data.
+        Wrappers for `fz_new_buffer_from_copied_data()`:
 
-        Wrappers for fz_new_buffer_from_copied_data():
+            These take a Python `bytes` instance.
 
             One can create an MuPDF buffer that contains a copy of a Python
-            bytes by using the special mupdf.python_bytes_data() function. This
-            returns an SWIG proxy for an unsigned char*' that points to the
-            bytes instance's data:
+            `bytes` by using the special `mupdf.python_bytes_data()`
+            function. This returns a SWIG proxy for an `unsigned char*` that
+            points to the `bytes` instance's data:
 
+                ```
                 bs = b'qwerty'
                 buffer_ = mupdf.new_buffer_from_copied_data(mupdf.python_bytes_data(bs), len(bs))
+                ```
 
-    Functions taking a va_list arg:
+    Functions taking a `va_list` arg:
 
-        We do not provide Python wrappers for functions such as fz_vsnprintf().
+        We do not provide Python wrappers for functions such as `fz_vsnprintf()`.
 
     Details:
 
@@ -360,10 +380,10 @@ Tools required to build:
 
         Clang versions:
 
-            We work with clang-6 or clang-7, but clang-6 appears to not be
-            able to cope with function args that are themselves function
-            pointers, so wrappers for these fz_*() functions are ommited from
-            the generated C++ code.
+            We work with clang-6 or clang-7, but clang-6 appears to not be able
+            to cope with function args that are themselves function pointers,
+            so wrappers for MuPDF functions are ommited from the generated C++
+            code.
 
         Unix:
 
@@ -381,17 +401,19 @@ Tools required to build:
 
             pip install libclang
 
-    SWIG:
+    SWIG for Python bindings:
 
         We work with swig-3 and swig-4. If swig-4 is used, we propogate
         doxygen-style comments for structures and functions into the generated
         C++ code.
 
+    Mono for C# bindings on Unix.
+
 
 Building Python bindings:
 
-    Build and install the MuPDF Python bindings as module 'mupdf' in a Python
-    virtual environment, using MuPDF's setup.py script:
+    Build and install the MuPDF Python bindings as module `mupdf` in a Python
+    virtual environment, using MuPDF's `setup.py` script:
 
         Linux:
             > python3 -m venv pylocal
@@ -408,7 +430,7 @@ Building Python bindings:
             (pylocal) > python setup.py install
 
         OpenBSD:
-            [It seems that pip can't install py1t5 or libclang so instead we
+            [It seems that pip can't install pyqt5 or libclang so instead we
             install system packages and use --system-site-packages.]
 
             > sudo pkg_add py3-llvm py3-qt5
@@ -432,18 +454,35 @@ Building Python bindings:
 
         Install required packages:
             Debian:
-                > sudo apt install clang clang-python python3-dev swig
+                > sudo apt install clang python3-clang python3-dev swig
 
             OpenBSD:
                 > pkg_add py3-llvm py3-qt5
 
-        Build:
-            > ./scripts/mupdfwrap.py -d build/shared-release -b all
+        Build and test:
+            > ./scripts/mupdfwrap.py -d build/shared-release -b all --test-python
 
         Use the mupdf module by setting PYTHONPATH:
             > PYTHONPATH=build/shared-release python3
             >>> import mupdf
             >>>
+
+
+Building C# bindings:
+
+    Build MuPDF C# bindings using scripts/mupdfwrap.py:
+
+        > cd .../mupdf
+
+        Install required packages:
+            Debian:
+                > sudo apt install clang python3-clang python3-dev mono-devel
+
+            OpenBSD:
+                > sudo pkg_add py3-llvm py3-qt5 mono
+
+        Build and test:
+            > ./scripts/mupdfwrap.py -d build/shared-release -b --csharp all --test-csharp
 
 
 Generated files:
@@ -584,7 +623,8 @@ Usage:
             args:
                 -d <details>
                     If specified, we show extra diagnostics when wrapping
-                    functions whose name contains <details>.
+                    functions whose name contains <details>. Can be specified
+                    multiple times.
                 --devenv <path>
                     Set path of devenv.com script on Windows. If not specified,
                     as default is used.
@@ -1054,6 +1094,7 @@ def build( build_dirs, swig_command, args):
                 break
 
     jlib.log('{build_dirs.dir_so=}')
+    details = list()
 
     while 1:
         actions = args.next()
@@ -1063,8 +1104,13 @@ def build( build_dirs, swig_command, args):
             force_rebuild = True
         elif actions == '-d':
             d = args.next()
+            details.append( d)
             def fn(name):
-                return name and (d in name)
+                if not name:
+                    return
+                for detail in details:
+                    if detail in name:
+                        return True
             state.state_.show_details = fn
         elif actions == '--devenv':
             devenv = args.next()
@@ -1464,10 +1510,10 @@ def build( build_dirs, swig_command, args):
                         required = 2 * 2**30
                         if soft < required:
                             if hard < required:
-                                jlib.log( 'Warning: RLIMIT_DATA {hard=} is less than {required=}')
+                                jlib.log( 'Warning: RLIMIT_DATA {hard=} is less than {required=}.')
                             soft_new = min(hard, required)
                             resource.setrlimit( resource.RLIMIT_DATA, (soft_new, hard))
-                            jlib.log( 'Have changed RLIMIT_DATA from {soft} to {soft_new}')
+                            jlib.log( 'Have changed RLIMIT_DATA from {jlib.number_sep(soft)} to {jlib.number_sep(soft_new)}.')
 
                     # We use jlib.link_l_flags() to add -L options
                     # to search parent directories of each .so that
@@ -2106,7 +2152,7 @@ def main2():
 
                 # Our tests look for zlib.3.pdf in their current directory.
                 jlib.copy(
-                        f'thirdparty/zlib/zlib.3.pdf',
+                        f'{build_dirs.dir_mupdf}/thirdparty/zlib/zlib.3.pdf',
                         f'{build_dirs.dir_so}/zlib.3.pdf' if state.state_.windows else 'zlib.3.pdf'
                         )
 
@@ -2121,11 +2167,11 @@ def main2():
                                             System.Console.WriteLine("MuPDF C# test starting.");
 
                                             // Check we can load a document.
-                                            mupdf.Document document = new mupdf.Document("zlib.3.pdf");
+                                            mupdf.FzDocument document = new mupdf.FzDocument("zlib.3.pdf");
                                             System.Console.WriteLine("document: " + document);
-                                            System.Console.WriteLine("num chapters: " + document.count_chapters());
-                                            mupdf.Page page = document.load_page(0);
-                                            mupdf.Rect rect = page.bound_page();
+                                            System.Console.WriteLine("num chapters: " + document.fz_count_chapters());
+                                            mupdf.FzPage page = document.fz_load_page(0);
+                                            mupdf.FzRect rect = page.fz_bound_page();
                                             System.Console.WriteLine("rect: " + rect);
                                             if ("" + rect != rect.to_string())
                                             {
@@ -2133,13 +2179,13 @@ def main2():
                                             }
 
                                             // Test conversion to html using docx device.
-                                            var buffer = page.new_buffer_from_page_with_format(
+                                            var buffer = page.fz_new_buffer_from_page_with_format(
                                                     "docx",
                                                     "html",
-                                                    new mupdf.Matrix(1, 0, 0, 1, 0, 0),
-                                                    new mupdf.Cookie()
+                                                    new mupdf.FzMatrix(1, 0, 0, 1, 0, 0),
+                                                    new mupdf.FzCookie()
                                                     );
-                                            var data = buffer.buffer_extract();
+                                            var data = buffer.fz_buffer_extract();
                                             var s = System.Text.Encoding.UTF8.GetString(data, 0, data.Length);
                                             if (s.Length < 100) {
                                                 throw new System.Exception("HTML text is too short");
@@ -2147,31 +2193,31 @@ def main2():
                                             System.Console.WriteLine("s=" + s);
 
                                             // Check that previous buffer.buffer_extract() cleared the buffer.
-                                            data = buffer.buffer_extract();
+                                            data = buffer.fz_buffer_extract();
                                             s = System.Text.Encoding.UTF8.GetString(data, 0, data.Length);
                                             if (s.Length > 0) {
                                                 throw new System.Exception("Buffer was not cleared.");
                                             }
 
                                             // Check we can create pixmap from page.
-                                            var pixmap = page.new_pixmap_from_page_contents(
-                                                    new mupdf.Matrix(1, 0, 0, 1, 0, 0),
-                                                    new mupdf.Colorspace(mupdf.Colorspace.Fixed.Fixed_RGB),
+                                            var pixmap = page.fz_new_pixmap_from_page_contents(
+                                                    new mupdf.FzMatrix(1, 0, 0, 1, 0, 0),
+                                                    new mupdf.FzColorspace(mupdf.FzColorspace.Fixed.Fixed_RGB),
                                                     0 /*alpha*/
                                                     );
 
-                                            // Check returned tuple from bitmap.bitmap_details().
+                                            // Check returned tuple from bitmap.fz_bitmap_details().
                                             var w = 100;
                                             var h = 200;
                                             var n = 4;
                                             var xres = 300;
                                             var yres = 300;
-                                            var bitmap = new mupdf.Bitmap(w, h, n, xres, yres);
-                                            (var w2, var h2, var n2, var stride) = bitmap.bitmap_details();
-                                            System.Console.WriteLine("bitmap.bitmap_details() returned:"
+                                            var bitmap = new mupdf.FzBitmap(w, h, n, xres, yres);
+                                            (var w2, var h2, var n2, var stride) = bitmap.fz_bitmap_details();
+                                            System.Console.WriteLine("bitmap.fz_bitmap_details() returned:"
                                                     + " " + w2 + " " + h2 + " " + n2 + " " + stride);
                                             if (w2 != w || h2 != h) {
-                                                throw new System.Exception("Unexpected tuple values from bitmap.bitmap_details().");
+                                                throw new System.Exception("Unexpected tuple values from bitmap.fz_bitmap_details().");
                                             }
                                             System.Console.WriteLine("MuPDF C# test finished.");
                                         }
@@ -2220,11 +2266,11 @@ def main2():
                     # Don't know how to mimic Unix's LD_LIBRARY_PATH, so for
                     # now we cd into the directory containing our generated
                     # libraries.
-                    jlib.copy(f'thirdparty/zlib/zlib.3.pdf', f'{build_dirs.dir_so}/zlib.3.pdf')
+                    jlib.copy(f'{build_dirs.dir_mupdf}/thirdparty/zlib/zlib.3.pdf', f'{build_dirs.dir_so}/zlib.3.pdf')
                     # Note that this doesn't work remotely.
                     jlib.system(f'cd {build_dirs.dir_so} && {mono} ../../{out}', verbose=1)
                 else:
-                    jlib.copy(f'thirdparty/zlib/zlib.3.pdf', f'zlib.3.pdf')
+                    jlib.copy(f'{build_dirs.dir_mupdf}/thirdparty/zlib/zlib.3.pdf', f'zlib.3.pdf')
                     jlib.system(f'LD_LIBRARY_PATH={build_dirs.dir_so} {mono} ./{out}', verbose=1)
 
             elif arg == '--test-python-fitz':

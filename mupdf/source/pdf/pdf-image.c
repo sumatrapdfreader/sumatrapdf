@@ -191,7 +191,9 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 		if (cstm == NULL)
 		{
 			/* Just load the compressed image data now and we can decode it on demand. */
-			buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict));
+			size_t worst_case = w * (size_t)h;
+			worst_case = (worst_case * bpc + 7) >> 3;
+			buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict), worst_case);
 			image = fz_new_image_from_compressed_buffer(ctx, w, h, bpc, colorspace, 96, 96, interpolate, imagemask, decode, use_colorkey ? colorkey : NULL, buffer, mask);
 			image->invert_cmyk_jpeg = 0;
 		}
@@ -527,18 +529,21 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 	fz_image *smask_image = NULL;
 	int i, n;
 
-	/* If we can maintain compression, do so */
-	cbuffer = fz_compressed_image_buffer(ctx, image);
-
 	fz_var(pixmap);
 	fz_var(buffer);
 	fz_var(imobj);
 	fz_var(smask_pixmap);
 	fz_var(smask_image);
 
-	imobj = pdf_add_new_dict(ctx, doc, 3);
+	pdf_begin_operation(ctx, doc, "Add image");
+
 	fz_try(ctx)
 	{
+		/* If we can maintain compression, do so */
+		cbuffer = fz_compressed_image_buffer(ctx, image);
+
+		imobj = pdf_add_new_dict(ctx, doc, 3);
+
 		dp = pdf_dict_put_dict(ctx, imobj, PDF_NAME(DecodeParms), 3);
 		pdf_dict_put(ctx, imobj, PDF_NAME(Type), PDF_NAME(XObject));
 		pdf_dict_put(ctx, imobj, PDF_NAME(Subtype), PDF_NAME(Image));
@@ -828,6 +833,7 @@ unknown_compression:
 		fz_drop_pixmap(ctx, smask_pixmap);
 		fz_drop_pixmap(ctx, pixmap);
 		fz_drop_buffer(ctx, buffer);
+		pdf_end_operation(ctx, doc);
 	}
 	fz_catch(ctx)
 	{

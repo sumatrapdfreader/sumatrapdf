@@ -4417,8 +4417,9 @@ static void ffi_new_Story(js_State *J)
 	double em = js_tonumber(J, 3);
 	fz_story *story = NULL;
 
+	/* TODO Fix archive. */
 	fz_try(ctx)
-		story = fz_new_story(ctx, contents, user_css, em);
+		story = fz_new_story(ctx, contents, user_css, em, NULL);
 	fz_catch(ctx)
 		rethrow(J);
 

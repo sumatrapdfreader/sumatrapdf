@@ -3,10 +3,13 @@ Things for generating C#-specific output.
 '''
 from . import cpp
 from . import parse
+from . import rename
 from . import state
 from . import util
 
 import jlib
+
+import textwrap
 
 
 def make_outparam_helper_csharp(
@@ -29,35 +32,37 @@ def make_outparam_helper_csharp(
     def write(text):
         generated.swig_csharp.write(text)
 
-    main_name = util.rename.function(cursor.mangled_name)
+    main_name = rename.ll_fn(cursor.mangled_name)
     return_void = cursor.result_type.spelling == 'void'
-
     if fnname == 'fz_buffer_extract':
         # Write custom wrapper that returns the binary data as a C# bytes
         # array, using the C# wrapper for buffer_extract_outparams_fn(fz_buffer
         # buf, buffer_extract_outparams outparams).
         #
-        write('\n')
-        write('// Custom C# wrapper for fz_buffer_extract().\n')
-        write('public static class mupdf_Buffer_extract\n')
-        write('{\n')
-        write('    public static byte[] buffer_extract(this mupdf.Buffer buffer)\n')
-        write('    {\n')
-        write('        var outparams = new mupdf.buffer_storage_outparams();\n')
-        write('        uint n = mupdf.mupdf.buffer_storage_outparams_fn(buffer.m_internal, outparams);\n')
-        write('        var raw1 = mupdf.SWIGTYPE_p_unsigned_char.getCPtr(outparams.datap);\n')
-        write('        System.IntPtr raw2 = System.Runtime.InteropServices.HandleRef.ToIntPtr(raw1);\n')
-        write('        byte[] ret = new byte[n];\n')
-        write('        // Marshal.Copy() raises exception if <raw2> is null even if <n> is zero.\n')
-        write('        if (n == 0) return ret;\n')
-        write('        System.Runtime.InteropServices.Marshal.Copy(raw2, ret, 0, (int) n);\n')
-        write('        buffer.clear_buffer();\n')
-        write('        buffer.trim_buffer();\n')
-        write('        return ret;\n')
-        write('    }\n')
-        write('}\n')
-        write('\n')
+        write(
+                textwrap.dedent(
+                f'''
 
+                // Custom C# wrapper for fz_buffer_extract().
+                public static class mupdf_{rename.class_('fz_buffer')}_extract
+                {{
+                    public static byte[] fz_buffer_extract(this mupdf.{rename.class_('fz_buffer')} buffer)
+                    {{
+                        var outparams = new mupdf.{rename.ll_fn('fz_buffer_storage')}_outparams();
+                        uint n = mupdf.mupdf.{rename.ll_fn('fz_buffer_storage')}_outparams_fn(buffer.m_internal, outparams);
+                        var raw1 = mupdf.SWIGTYPE_p_unsigned_char.getCPtr(outparams.datap);
+                        System.IntPtr raw2 = System.Runtime.InteropServices.HandleRef.ToIntPtr(raw1);
+                        byte[] ret = new byte[n];
+                        // Marshal.Copy() raises exception if <raw2> is null even if <n> is zero.
+                        if (n == 0) return ret;
+                        System.Runtime.InteropServices.Marshal.Copy(raw2, ret, 0, (int) n);
+                        buffer.{rename.method( 'fz_buffer', 'fz_clear_buffer')}();
+                        buffer.{rename.method( 'fz_buffer', 'fz_trim_buffer')}();
+                        return ret;
+                    }}
+                }}
+                ''')
+                )
         return
 
     # We don't attempt to generate wrappers for fns that take or return
@@ -114,9 +119,11 @@ def make_outparam_helper_csharp(
     if not arg0.alt:
         return
 
+    method_name = rename.method( arg0.alt.type.spelling, fnname)
+
     write(f'\n')
-    write(f'// Out-params extension method for C# class {util.rename.class_(arg0.alt.type.spelling)} (wrapper for MuPDF {arg0.alt.type.spelling}),\n')
-    write(f'// adding class method {fnname_wrapper}() (wrapper for {fnname}())\n')
+    write(f'// Out-params extension method for C# class {rename.class_(arg0.alt.type.spelling)} (wrapper for MuPDF struct {arg0.alt.type.spelling}),\n')
+    write(f'// adding class method {method_name}() (wrapper for {fnname}())\n')
     write(f'// which returns out-params directly.\n')
     write(f'//\n')
     write(f'public static class mupdf_{main_name}_outparams_helper\n')
@@ -125,7 +132,7 @@ def make_outparam_helper_csharp(
 
     def write_type(alt, type_):
         if alt:
-            write(f'mupdf.{util.rename.class_(alt.type.spelling)}')
+            write(f'mupdf.{rename.class_(alt.type.spelling)}')
         elif parse.is_pointer_to(type_, 'char'):
             write( f'string')
         else:
@@ -175,7 +182,7 @@ def make_outparam_helper_csharp(
     # class.
     #jlib.log('outputs fn {fnname=}: is member: {"yes" if arg0.alt else "no"}')
     write(f' ')
-    write(fnname_wrapper if arg0.alt else 'fn')
+    write( method_name if arg0.alt else 'fn')
     write(f'(')
     if arg0.alt: write('this ')
     sep = ''
@@ -185,7 +192,7 @@ def make_outparam_helper_csharp(
         write(sep)
         if arg.alt:
             # E.g. 'Document doc'.
-            write(f'mupdf.{util.rename.class_(arg.alt.type.spelling)} {arg.name_csharp}')
+            write(f'mupdf.{rename.class_(arg.alt.type.spelling)} {arg.name_csharp}')
         elif parse.is_pointer_to(arg.cursor.type, 'char'):
             write(f'string {arg.name_csharp}')
         else:
@@ -239,7 +246,7 @@ def make_outparam_helper_csharp(
     sep = ''
     if not return_void:
         if return_alt:
-            write(f'new mupdf.{util.rename.class_(return_alt.type.spelling)}(ret)')
+            write(f'new mupdf.{rename.class_(return_alt.type.spelling)}(ret)')
         else:
             write(f'ret')
         sep = ', '
@@ -248,7 +255,7 @@ def make_outparam_helper_csharp(
             write(f'{sep}')
             type_ = arg.cursor.type.get_pointee()
             if arg.alt:
-                    write(f'new mupdf.{util.rename.class_(arg.alt.type.spelling)}(outparams.{arg.name_csharp})')
+                    write(f'new mupdf.{rename.class_(arg.alt.type.spelling)}(outparams.{arg.name_csharp})')
             elif 0 and parse.is_pointer_to(type_, 'char'):
                 # This was intended to convert char* to string, but swig
                 # will have already done that when making a C# version of

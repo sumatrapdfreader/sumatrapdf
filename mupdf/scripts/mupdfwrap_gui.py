@@ -149,13 +149,13 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
         Convert to HTML using Extract, and show in new window using
         PyQt5.QtWebKitWidgets.QWebView.
         '''
-        buffer_ = self.page.new_buffer_from_page_with_format(
+        buffer_ = self.page.fz_new_buffer_from_page_with_format(
                 format="docx",
                 options="html",
-                transform=mupdf.Matrix(1, 0, 0, 1, 0, 0),
-                cookie=mupdf.Cookie(),
+                transform=mupdf.FzMatrix(1, 0, 0, 1, 0, 0),
+                cookie=mupdf.FzCookie(),
                 )
-        html_content = buffer_.buffer_extract().decode('utf8')
+        html_content = buffer_.fz_buffer_extract().decode('utf8')
         # Show in a new window using Qt's QWebView.
         self.webview = PyQt5.QtWebKitWidgets.QWebView()
         self.webview.setHtml(html_content)
@@ -172,7 +172,7 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
     def open_path(self, path):
         path = os.path.abspath(path)
         try:
-            self.document = mupdf.Document(path)
+            self.document = mupdf.FzDocument(path)
         except Exception as e:
             print(f'Failed to open path={path!r}: {e}')
             return
@@ -191,7 +191,7 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
         Updates self.page_number and self.zoom if we are successful.
         '''
         # Recreate the bitmap that we are displaying. We should probably use a
-        # mupdf.DisplayList to avoid processing the page each time we need to
+        # mupdf.FzDisplayList to avoid processing the page each time we need to
         # change zoom etc.
         #
         # We can run out of memory for large zoom values; should probably only
@@ -202,10 +202,10 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
             page_number = self.page_number
         if zoom is None:
             zoom = self.zoom
-        if page_number is None or page_number < 0 or page_number >= self.document.count_pages():
+        if page_number is None or page_number < 0 or page_number >= self.document.fz_count_pages():
             return
-        self.page = mupdf.Page(self.document, page_number)
-        page_rect = self.page.bound_page()
+        self.page = mupdf.FzPage(self.document, page_number)
+        page_rect = self.page.fz_bound_page()
         z = 2**(zoom / self.zoom_multiple)
 
         # For now we always use 'fit width' view semantics.
@@ -217,19 +217,19 @@ class MainWindow(PyQt5.QtWidgets.QMainWindow):
         # Need to preserve the pixmap after we return because the Qt image will
         # refer to it, so we use self.pixmap.
         try:
-            self.pixmap = self.page.new_pixmap_from_page_contents(
-                    ctm=mupdf.Matrix(z, 0, 0, z, 0, 0),
-                    cs=mupdf.Colorspace(mupdf.Colorspace.Fixed_RGB),
+            self.pixmap = self.page.fz_new_pixmap_from_page_contents(
+                    ctm=mupdf.FzMatrix(z, 0, 0, z, 0, 0),
+                    cs=mupdf.FzColorspace(mupdf.FzColorspace.Fixed_RGB),
                     alpha=0,
                     )
         except Exception as e:
-            print(f'self.page.new_pixmap_from_page_contents() failed: {e}')
+            print(f'self.page.fz_new_pixmap_from_page_contents() failed: {e}')
             return
         image = PyQt5.QtGui.QImage(
-                int(self.pixmap.pixmap_samples()),
-                self.pixmap.pixmap_width(),
-                self.pixmap.pixmap_height(),
-                self.pixmap.pixmap_stride(),
+                int(self.pixmap.fz_pixmap_samples()),
+                self.pixmap.fz_pixmap_width(),
+                self.pixmap.fz_pixmap_height(),
+                self.pixmap.fz_pixmap_stride(),
                 PyQt5.QtGui.QImage.Format_RGB888,
                 );
         qpixmap = PyQt5.QtGui.QPixmap.fromImage(image)

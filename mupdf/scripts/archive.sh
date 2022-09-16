@@ -1,65 +1,44 @@
 #!/bin/bash
 
 REV=$(git describe --tags)
-O=mupdf-$REV-source
+STEM=mupdf-$REV-source
 
-echo git archive $O.tar
-git archive --format=tar --prefix=$O/ HEAD > $O.tar
+echo git archive $STEM.tar
+git archive --format=tar --prefix=$STEM/ -o $STEM.tar HEAD
 
-git submodule | while read R P T
-do
-	M=$(basename $P)
-	echo git archive $O.$M.tar
+function make_submodule_archive {
+	# Make tarballs for submodules, stripped of unneccessary files.
+	M=$1
+	shift
+	echo git archive submodule-$M.tar
+	git archive --format=tar --remote=thirdparty/$M --prefix=$STEM/thirdparty/$M/ -o submodule-$M.tar HEAD
+	for DIR in $*
+	do
+		tar f submodule-$M.tar --wildcards --delete "*/$DIR"
+	done
+	tar Af $STEM.tar submodule-$M.tar
+	rm -f submodule-$M.tar
+}
 
-	# Remove bloat from bundled thirdparty libraries.
-	case $M in
-	harfbuzz)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/test/*' \
-			> $O.$M.tar
-		;;
-	leptonica)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/prog/*' \
-			> $O.$M.tar
-		;;
-	gumbo-parser)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/benchmarks/*' \
-			> $O.$M.tar
-		;;
-	zlib)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/contrib/*' \
-			> $O.$M.tar
-		;;
-	lcms2)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/testbed/*' --delete '*/plugins/*' \
-			> $O.$M.tar
-		;;
-	extract)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/test/*' \
-			> $O.$M.tar
-		;;
-	curl)
-		git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD \
-			| tar --wildcards --delete '*/tests/*' \
-			> $O.$M.tar
-		;;
-	*)
-	git archive --format=tar --remote=$P --prefix=$O/$P/ HEAD > $O.$M.tar
-		;;
-	esac
+# Remove test files from thirdparty source archives.
 
-	tar Af $O.tar $O.$M.tar
-	rm -f $O.$M.tar
-done
+make_submodule_archive curl		tests
+make_submodule_archive extract		test
+make_submodule_archive freeglut
+make_submodule_archive freetype		tests
+make_submodule_archive gumbo-parser	benchmarks tests
+make_submodule_archive harfbuzz		test perf
+make_submodule_archive jbig2dec
+make_submodule_archive lcms2		testbed plugins/fast_float
+make_submodule_archive leptonica	prog
+make_submodule_archive libjpeg		libjpeg/test*
+make_submodule_archive mujs
+make_submodule_archive openjpeg
+make_submodule_archive tesseract	unittest
+make_submodule_archive zlib		test contrib
 
-echo gzip $O.tar
-pigz -f -k -11 $O.tar
-echo lzip $O.tar
-plzip -9 -f -k $O.tar
-echo zstd $O.tar
-zstd -q -T0 -19 -f -k $O.tar
+echo gzip $STEM.tar
+pigz -f -k -11 $STEM.tar
+
+echo lzip $STEM.tar
+plzip -9 -f -k $STEM.tar

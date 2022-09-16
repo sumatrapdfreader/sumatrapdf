@@ -12,6 +12,10 @@ end_of_line = lf
 indent_style = space
 indent_size = 4
 
+[*.json]
+indent_style = space
+indent_size = 2
+
 [*.{c++,cc,cpp,cppm,cxx,h,h++,hh,hpp,hxx,inl,ipp,ixx,tlh,tli}]
 
 # Visual C++ Code Style settings

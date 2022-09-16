@@ -175,7 +175,7 @@ class worker_t:
         self.tbounds = None
         self.pix = None
         self.bit = None
-        self.cookie = mupdf.Cookie()
+        self.cookie = mupdf.FzCookie()
 
 class state:
 
@@ -214,7 +214,7 @@ class state:
 
     out_cs = CS_UNSET
     proof_filename = None
-    proof_cs = mupdf.Colorspace()
+    proof_cs = mupdf.FzColorspace()
     icc_filename = None
     gamma_value = 1
     invert = 0
@@ -223,7 +223,7 @@ class state:
 
     quiet = 0
     errored = 0
-    colorspace = mupdf.Colorspace()
+    colorspace = mupdf.FzColorspace()
     oi = None
     spots = SPOTS_OVERPRINT_SIM
     alpha = 0
@@ -352,66 +352,66 @@ def has_percent_d(s):
 def file_level_headers():
 
     if state.output_format in (OUT_STEXT, OUT_TRACE, OUT_XMLTEXT, OUT_BBOX):
-        state.out.write_string( "<?xml version=\"1.0\"?>\n")
+        state.out.fz_write_string( "<?xml version=\"1.0\"?>\n")
 
     if state.output_format == OUT_HTML:
-        state.out.print_stext_header_as_html()
+        state.out.fz_print_stext_header_as_html()
     if state.output_format == OUT_XHTML:
-        state.out.print_stext_header_as_xhtml()
+        state.out.fz_print_stext_header_as_xhtml()
 
     if state.output_format in (OUT_STEXT, OUT_TRACE, OUT_BBOX):
-        state.out.write_string( f'<document name="{state.filename}">\n')
+        state.out.fz_write_string( f'<document name="{state.filename}">\n')
 
     if state.output_format == OUT_PS:
-        state.out.write_ps_file_header()
+        state.out.fz_write_ps_file_header()
 
     if state.output_format == OUT_PWG:
-        state.out.write_pwg_file_header()
+        state.out.fz_write_pwg_file_header()
 
     if state.output_format == OUT_PCLM:
-        opts = mupdf.PclmOptions( 'compression=flate')
-        state.bander = mupdf.BandWriter(state.out, opts)
+        opts = mupdf.FzPclmOptions( 'compression=flate')
+        state.bander = mupdf.FzBandWriter(state.out, opts)
 
 def file_level_trailers():
     if state.output_format in (OUT_STEXT, OUT_TRACE, OUT_BBOX):
-        state.out.write_string( "</document>\n")
+        state.out.fz_write_string( "</document>\n")
 
     if state.output_format == OUT_HTML:
-        state.out.print_stext_trailer_as_html()
+        state.out.fz_print_stext_trailer_as_html()
     if state.output_format == OUT_XHTML:
-        state.out.print_stext_trailer_as_xhtml()
+        state.out.fz_print_stext_trailer_as_xhtml()
 
     if state.output_format == OUT_PS:
-        state.out.write_ps_file_trailer( state.output_pagenum)
+        state.out.fz_write_ps_file_trailer( state.output_pagenum)
 
 def drawband( page, list_, ctm, tbounds, cookie, band_start, pix):
 
     bit = None
 
     if pix.alpha():
-        pix.clear_pixmap()
+        pix.fz_clear_pixmap()
     else:
-        pix.clear_pixmap_with_value( 255)
+        pix.fz_clear_pixmap_with_value( 255)
 
-    dev = mupdf.Device( mupdf.Matrix(), pix, state.proof_cs)
+    dev = mupdf.FzDevice( mupdf.FzMatrix(), pix, state.proof_cs)
     if state.lowmemory:
         dev.enable_device_hints( mupdf.FZ_NO_CACHE)
     if state.alphabits_graphics == 0:
         dev.enable_device_hints( mupdf.FZ_DONT_INTERPOLATE_IMAGES)
     if list_:
-        list_.run_display_list( dev, ctm, tbounds, cookie)
+        list_.fz_run_display_list( dev, ctm, tbounds, cookie)
     else:
-        page.run_page( dev, ctm, cookie)
-    dev.close_device()
+        page.fz_run_page( dev, ctm, cookie)
+    dev.fz_close_device()
     dev = None  # lgtm [py/unused-local-variable]
 
     if state.invert:
-        pix.invert_pixmap()
+        pix.fz_invert_pixmap()
     if state.gamma_value != 1:
-        pix.gamma_pixmap( state.gamma_value)
+        pix.fz_gamma_pixmap( state.gamma_value)
 
     if ((state.output_format == OUT_PCL or state.output_format == OUT_PWG) and state.out_cs == CS_MONO) or (state.output_format == OUT_PBM) or (state.output_format == OUT_PKM):
-        bit = mupdf.Bitmap( pix, mupdf.Halftone(), band_start)
+        bit = mupdf.FzBitmap( pix, mupdf.FzHalftone(), band_start)
     return bit
 
 
@@ -425,47 +425,47 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         file_level_headers()
 
     if list_:
-        mediabox = mupdf.Rect( list_)
+        mediabox = mupdf.FzRect( list_)
     else:
-        mediabox = page.bound_page()
+        mediabox = page.fz_bound_page()
 
     if state.output_format == OUT_TRACE:
-        state.out.write_string( "<page mediabox=\"%g %g %g %g\">\n" % (
+        state.out.fz_write_string( "<page mediabox=\"%g %g %g %g\">\n" % (
                 mediabox.x0, mediabox.y0, mediabox.x1, mediabox.y1))
-        dev = mupdf.Device( state.out)
+        dev = mupdf.FzDevice( state.out)
         if state.lowmemory:
-            dev.enable_device_hints( mupdf.FZ_NO_CACHE)
+            dev.fz_enable_device_hints( mupdf.FZ_NO_CACHE)
         if list_:
-            list_.run_display_list( dev, mupdf.Matrix(), mupdf.Rect(mupdf.fz_infinite_rect), cookie)
+            list_.fz_run_display_list( dev, mupdf.FzMatrix(), mupdf.FzRect(mupdf.fz_infinite_rect), cookie)
         else:
-            page.run_page( dev, fz_identity, cookie)
-        state.out.write_string( "</page>\n")
-        dev.close_device()
+            page.fz_run_page( dev, fz_identity, cookie)
+        state.out.fz_write_string( "</page>\n")
+        dev.fz_close_device()
         dev = None  # lgtm [py/unused-local-variable]
 
     elif state.output_format == OUT_XMLTEXT:
-        state.out.write_string( "<page mediabox=\"%g %g %g %g\">\n" % (
+        state.out.fz_write_string( "<page mediabox=\"%g %g %g %g\">\n" % (
                 mediabox.x0, mediabox.y0, mediabox.x1, mediabox.y1))
-        dev = mupdf.Device.new_raw_device( state.out)
+        dev = mupdf.FzDevice.fz_new_raw_device( state.out)
         if list_:
-            list_.run_display_list( dev, mupdf.Matrix(), mupdf.Rect(mupdf.fz_infinite_rect), cookie)
+            list_.fz_run_display_list( dev, mupdf.FzMatrix(), mupdf.FzRect(mupdf.fz_infinite_rect), cookie)
         else:
-            page.run_page( dev, fz_identity, cookie)
-        state.out.write_string( "</page>\n")
-        dev.close_device()
+            page.fz_run_page( dev, fz_identity, cookie)
+        state.out.fz_write_string( "</page>\n")
+        dev.fz_close_device()
         dev = None  # lgtm [py/unused-local-variable]
 
     elif state.output_format == OUT_BBOX:
-        bbox = mupdf.Rect( mupdf.Rect.Fixed_EMPTY)
-        dev = mupdf.Device( bbox)
+        bbox = mupdf.FzRect( mupdf.FzRect.Fixed_EMPTY)
+        dev = mupdf.FzDevice( bbox)
         if state.lowmemory:
-            dev.enable_device_hints( mupdf.FZ_NO_CACHE)
+            dev.fz_enable_device_hints( mupdf.FZ_NO_CACHE)
         if list_:
-            list_.run_display_list( dev, fz_identity, mupdf.Rect(mupdf.fz_infinite_rect), cookie)
+            list_.fz_run_display_list( dev, fz_identity, mupdf.FzRect(mupdf.fz_infinite_rect), cookie)
         else:
-            page.run_page( dev, fz_identity, cookie)
-        dev.close_device()
-        state.out.write_string( "<page bbox=\"%s %s %s %s\" mediabox=\"%s %s %s %s\" />\n",
+            page.fz_run_page( dev, fz_identity, cookie)
+        dev.fz_close_device()
+        state.out.fz_write_string( "<page bbox=\"%s %s %s %s\" mediabox=\"%s %s %s %s\" />\n",
                 bbox.x0,
                 bbox.y0,
                 bbox.x1,
@@ -478,57 +478,57 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
 
     elif state.output_format in (OUT_TEXT, OUT_HTML, OUT_XHTML, OUT_STEXT):
         zoom = state.resolution / 72
-        ctm = mupdf.Matrix(mupdf.pre_scale(mupdf.rotate(state.rotation), zoom, zoom))
+        ctm = mupdf.FzMatrix(mupdf.fz_pre_scale(mupdf.fz_rotate(state.rotation), zoom, zoom))
 
-        stext_options = mupdf.StextOptions()
+        stext_options = mupdf.FzStextOptions()
 
         stext_options.flags = mupdf.FZ_STEXT_PRESERVE_IMAGES if (state.output_format == OUT_HTML or state.output_format == OUT_XHTML) else 0
-        text = mupdf.StextPage( mediabox)
-        dev = mupdf.Device( text, stext_options)
+        text = mupdf.FzStextPage( mediabox)
+        dev = mupdf.FzDevice( text, stext_options)
         if state.lowmemory:
             fz_enable_device_hints( dev, FZ_NO_CACHE)
         if list_:
-            list_.run_display_list( dev, ctm, mupdf.Rect(mupdf.fz_infinite_rect), cookie)
+            list_.fz_run_display_list( dev, ctm, mupdf.FzRect(mupdf.fz_infinite_rect), cookie)
         else:
-            page.run_page( dev, ctm, cookie)
-        dev.close_device()
+            page.fz_run_page( dev, ctm, cookie)
+        dev.fz_close_device()
         dev = None  # lgtm [py/unused-local-variable]
         if state.output_format == OUT_STEXT:
-            state.out.print_stext_page_as_xml( text, pagenum)
+            state.out.fz_print_stext_page_as_xml( text, pagenum)
         elif state.output_format == OUT_HTML:
-            state.out.print_stext_page_as_html( text, pagenum)
+            state.out.fz_print_stext_page_as_html( text, pagenum)
         elif state.output_format == OUT_XHTML:
-            state.out.print_stext_page_as_xhtml( text, pagenum)
+            state.out.fz_print_stext_page_as_xhtml( text, pagenum)
         elif state.output_format == OUT_TEXT:
-            state.out.print_stext_page_as_text( text)
-            state.out.write_string( "\f\n")
+            state.out.fz_print_stext_page_as_text( text)
+            state.out.fz_write_string( "\f\n")
 
     elif state.output_format == OUT_SVG:
         zoom = state.resolution / 72
-        ctm = mupdf.Matrix(zoom, zoom)
-        ctm.pre_rotate( state.rotation)
-        tbounds = mupdf.Rect(mediabox, ctm)
+        ctm = mupdf.FzMatrix(zoom, zoom)
+        ctm.fz_pre_rotate( state.rotation)
+        tbounds = mupdf.FzRect(mediabox, ctm)
 
         if not state.output or state.output == "-":
-            state.out = mupdf.Output( mupdf.Output.Fixed_STDOUT)
+            state.out = mupdf.FzOutput( mupdf.FzOutput.Fixed_STDOUT)
         else:
-            buf = mupdf.format_output_path( state.output, pagenum)
-            state.out = mupdf.Output( buf, 0)
+            buf = mupdf.fz_format_output_path( state.output, pagenum)
+            state.out = mupdf.FzOutput( buf, 0)
 
-        dev = mupdf.Device( state.out, tbounds.x1-tbounds.x0, tbounds.y1-tbounds.y0, mupdf.FZ_SVG_TEXT_AS_PATH, 1)
+        dev = mupdf.FzDevice( state.out, tbounds.x1-tbounds.x0, tbounds.y1-tbounds.y0, mupdf.FZ_SVG_TEXT_AS_PATH, 1)
         if state.lowmemory:
-            dev.enable_device_hints( dev, mupdf.FZ_NO_CACHE)
+            dev.fz_enable_device_hints( dev, mupdf.FZ_NO_CACHE)
         if list_:
-            list_.run_display_list( dev, ctm, tbounds, cookie)
+            list_.fz_run_display_list( dev, ctm, tbounds, cookie)
         else:
-            page.run_page( dev, ctm, cookie)
-        dev.close_device()
-        state.out.close_output()
+            page.fz_run_page( dev, ctm, cookie)
+        dev.fz_close_device()
+        state.out.fz_close_output()
     else:
         zoom = state.resolution / 72
-        ctm = mupdf.Matrix( mupdf.pre_scale( mupdf.rotate(state.rotation), zoom, zoom))
-        tbounds = mupdf.Rect(mediabox, ctm)
-        ibounds = tbounds.round_rect()
+        ctm = mupdf.fz_pre_scale( mupdf.fz_rotate(state.rotation), zoom, zoom)
+        tbounds = mupdf.FzRect(mediabox, ctm)
+        ibounds = tbounds.fz_round_rect()
 
         # Make local copies of our width/height
         w = state.width
@@ -564,11 +564,11 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
                     scalex = scaley
                 else:
                     scaley = scalex
-            scale_mat = mupdf.Matrix.scale(scalex, scaley)
-            ctm = mupdf.Matrix( mupdf.concat(ctm.internal(), scale_mat.internal()))
-            tbounds = mupdf.Rect( mediabox, ctm)
-        ibounds = tbounds.round_rect()
-        tbounds = ibounds.rect_from_irect()
+            scale_mat = mupdf.fz_scale(scalex, scaley)
+            ctm = mupdf.fz_concat(ctm, scale_mat)
+            tbounds = mupdf.FzRect( mediabox, ctm)
+        ibounds = tbounds.fz_round_rect()
+        tbounds = ibounds.fz_rect_from_irect()
 
         band_ibounds = ibounds
         bands = 1
@@ -590,45 +590,45 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
                 state.workers[band].band = band
                 state.workers[band].ctm = ctm
                 state.workers[band].tbounds = tbounds
-                state.workers[band].cookie = mupdf.Cookie()
+                state.workers[band].cookie = mupdf.FzCookie()
                 state.workers[band].list = list_
-                state.workers[band].pix = mupdf.Pixmap( state.colorspace, band_ibounds, seps, state.alpha)
-                state.workers[band].pix.set_pixmap_resolution( state.resolution, state.resolution)
+                state.workers[band].pix = mupdf.FzPixmap( state.colorspace, band_ibounds, seps, state.alpha)
+                state.workers[band].pix.fz_set_pixmap_resolution( state.resolution, state.resolution)
                 ctm.f -= drawheight
             pix = state.workers[0].pix
         else:
-            pix = mupdf.Pixmap( state.colorspace, band_ibounds, seps, state.alpha)
-            pix.set_pixmap_resolution( int(state.resolution), int(state.resolution))
+            pix = mupdf.FzPixmap( state.colorspace, band_ibounds, seps, state.alpha)
+            pix.fz_set_pixmap_resolution( int(state.resolution), int(state.resolution))
 
         # Output any page level headers (for banded formats)
         if state.output:
             state.bander = None
             if state.output_format == OUT_PGM or state.output_format == OUT_PPM or state.output_format == OUT_PNM:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PNM)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PNM)
             elif state.output_format == OUT_PAM:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PAM)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PAM)
             elif state.output_format == OUT_PNG:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PNG)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PNG)
             elif state.output_format == OUT_PBM:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PBM)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PBM)
             elif state.output_format == OUT_PKM:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PKM)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PKM)
             elif state.output_format == OUT_PS:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PS)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PS)
             elif state.output_format == OUT_PSD:
-                state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.PSD)
+                state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.PSD)
             elif state.output_format == OUT_PWG:
                 if state.out_cs == CS_MONO:
-                    state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.MONO, mupdf.PwgOptions())
+                    state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.MONO, mupdf.FzPwgOptions())
                 else:
-                    state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.COLOR, mupdf.PwgOptions())
+                    state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.COLOR, mupdf.FzPwgOptions())
             elif state.output_format == OUT_PCL:
                 if state.out_cs == CS_MONO:
-                    state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.MONO, mupdf.PclOptions())
+                    state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.MONO, mupdf.FzPclOptions())
                 else:
-                    state.bander = mupdf.BandWriter( state.out, mupdf.BandWriter.COLOR, mupdf.PclOptions())
+                    state.bander = mupdf.FzBandWriter( state.out, mupdf.FzBandWriter.COLOR, mupdf.FzPclOptions())
             if state.bander:
-                state.bander.write_header( pix.w(), totalheight, pix.n(), pix.alpha(), pix.xres(), pix.yres(), state.output_pagenum, pix.colorspace(), pix.seps())
+                state.bander.fz_write_header( pix.w(), totalheight, pix.n(), pix.alpha(), pix.xres(), pix.yres(), state.output_pagenum, pix.colorspace(), pix.seps())
                 state.output_pagenum += 1
 
         for band in range( bands):
@@ -637,7 +637,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
                 pix = w.pix
                 bit = w.bit
                 w.bit = None
-                cookie.increment_errors(w.cookie.errors())
+                cookie.fz_increment_errors(w.cookie.errors())
 
             else:
                 bit = drawband( page, list_, ctm, tbounds, cookie, band * state.band_height, pix)
@@ -645,9 +645,9 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
             if state.output:
                 if state.bander:
                     if bit:
-                        state.bander.write_band( bit.stride(), drawheight, bit.samples())
+                        state.bander.fz_write_band( bit.stride(), drawheight, bit.samples())
                     else:
-                        state.bander.write_band( pix.stride(), drawheight, pix.samples())
+                        state.bander.fz_write_band( pix.stride(), drawheight, pix.samples())
                 bit = None
 
             if state.num_workers > 0 and band + state.num_workers < bands:
@@ -655,12 +655,12 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
                 w.band = band + state.num_workers
                 w.ctm = ctm
                 w.tbounds = tbounds
-                w.cookie = mupdf.Cookie()
+                w.cookie = mupdf.FzCookie()
             ctm.f -= drawheight
 
         # FIXME
         if state.showmd5:
-            digest = pix.md5_pixmap()
+            digest = pix.fz_md5_pixmap()
             sys.stderr.write( ' ')
             for i in range(16):
                 sys.stderr.write( '%02x', digest[i])
@@ -705,12 +705,14 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         sys.stderr.write( "\n")
 
     if state.lowmemory:
-        mupdf.empty_store()
+        mupdf.fz_empty_store()
 
     if state.showmemory:
-        mupdf.dump_glyph_cache_stats(mupdf.stderr_())
+        # Use low-level fn because mupdf.fz_stderr() returns fz_output*, not
+        # FzOutput.
+        mupdf.ll_fz_dump_glyph_cache_stats(mupdf.ll_fz_stderr())
 
-    mupdf.flush_warnings()
+    mupdf.fz_flush_warnings()
 
     if cookie.errors():
         state.errored = 1
@@ -726,42 +728,42 @@ def bgprint_flush():
 
 def drawpage( doc, pagenum):
     list_ = None
-    cookie = mupdf.Cookie()
+    cookie = mupdf.FzCookie()
     seps = None
     features = ""
 
     start = gettime() if state.showtime else 0
 
-    page = mupdf.Page( doc, pagenum - 1)
+    page = mupdf.FzPage( doc, pagenum - 1)
 
     if state.spots != SPOTS_NONE:
-        seps = page.page_separations()
+        seps = page.fz_page_separations()
         if seps.m_internal:
-            n = seps.count_separations()
+            n = seps.fz_count_separations()
             if state.spots == SPOTS_FULL:
                 for i in range(n):
-                    seps.set_separation_behavior( i, mupdf.FZ_SEPARATION_SPOT)
+                    seps.fz_set_separation_behavior( i, mupdf.FZ_SEPARATION_SPOT)
             else:
                 for i in range(n):
-                    seps.set_separation_behavior( i, mupdf.FZ_SEPARATION_COMPOSITE)
-        elif page.page_uses_overprint():
+                    seps.fz_set_separation_behavior( i, mupdf.FZ_SEPARATION_COMPOSITE)
+        elif page.fz_page_uses_overprint():
             # This page uses overprint, so we need an empty
             # sep object to force the overprint simulation on.
-            seps = mupdf.Separations(0)
-        elif state.oi and state.oi.m_internal and state.oi.colorspace_n() != state.colorspace.colorspace_n():
+            seps = mupdf.FzSeparations(0)
+        elif state.oi and state.oi.m_internal and state.oi.fz_colorspace_n() != state.colorspace.fz_colorspace_n():
             # We have an output intent, and it's incompatible
             # with the colorspace our device needs. Force the
             # overprint simulation on, because this ensures that
             # we 'simulate' the output intent too. */
-            seps = mupdf.Separations(0)
+            seps = mupdf.FzSeparations(0)
 
     if state.uselist:
-        list_ = mupdf.DisplayList( page.bound_page())
-        dev = mupdf.Device( list_)
+        list_ = mupdf.FzDisplayList( page.fz_bound_page())
+        dev = mupdf.FzDevice( list_)
         if state.lowmemory:
-            dev.enable_device_hints( FZ_NO_CACHE)
-        page.run_page( dev, mupdf.Matrix(), cookie)
-        dev.close_device()
+            dev.fz_enable_device_hints( FZ_NO_CACHE)
+        page.fz_run_page( dev, mupdf.FzMatrix(), cookie)
+        dev.fz_close_device()
 
         if bgprint.active and state.showtime:
             end = gettime()
@@ -772,23 +774,23 @@ def drawpage( doc, pagenum):
         # mupdf.Device() constructor that wraps fz_new_test_device(), so we use
         # the underlying mupdf function() instead.
         #
-        dev, iscolor = mupdf.new_test_device( 0.02, 0, None)
-        dev = mupdf.Device( dev)
+        dev, iscolor = mupdf.ll_fz_new_test_device( 0.02, 0, None)
+        dev = mupdf.FzDevice( dev)
         if state.lowmemory:
-            dev.enable_device_hints( mupdf.FZ_NO_CACHE)
+            dev.fz_enable_device_hints( mupdf.FZ_NO_CACHE)
         if list_:
-            list_.run_display_list( dev, mupdf.Matrix(mupdf.fz_identity), mupdf.Rect(mupdf.fz_infinite_rect), mupdf.Cookie())
+            list_.fz_run_display_list( dev, mupdf.FzMatrix(mupdf.fz_identity), mupdf.FzRect(mupdf.fz_infinite_rect), mupdf.FzCookie())
         else:
-            page.run_page( dev, fz_identity, cookie)
-        dev.close_device()
+            page.fz_run_page( dev, fz_identity, cookie)
+        dev.fz_close_device()
         features = " color" if iscolor else " grayscale"
 
     if state.output_file_per_page:
         bgprint_flush()
         if state.out:
-            state.out.close_output()
-        text_buffer = mupdf.format_output_path( state.output, pagenum)
-        state.out = mupdf.Output( text_buffer, 0)
+            state.out.fz_close_output()
+        text_buffer = mupdf.fz_format_output_path( state.output, pagenum)
+        state.out = mupdf.FzOutput( text_buffer, 0)
 
     if bgprint.active:
         bgprint_flush()
@@ -819,10 +821,10 @@ def drawpage( doc, pagenum):
 
 
 def drawrange( doc, range_):
-    pagecount = doc.count_pages()
+    pagecount = doc.fz_count_pages()
 
     while 1:
-        range_, spage, epage = mupdf.parse_page_range( range_, pagecount)
+        range_, spage, epage = mupdf.fz_parse_page_range( range_, pagecount)
         if range_ is None:
             break
         if spage < epage:
@@ -884,10 +886,10 @@ def get_accelerator_filename( filename):
     return convert_to_accel_path( absname)
 
 def save_accelerator(doc, filename):
-    if not doc.document_supports_accelerator():
+    if not doc.fz_document_supports_accelerator():
         return
     absname = get_accelerator_filename( filename)
-    doc.save_accelerator( absname)
+    doc.fz_save_accelerator( absname)
 
 
 def draw( argv):
@@ -967,22 +969,22 @@ def draw( argv):
             sys.exit(1)
 
     if state.proof_filename:
-        proof_buffer = mupdf.Buffer( state.proof_filename)
-        state.proof_cs = mupdf.Colorspace( FZ_COLORSPACE_NONE, 0, None, proof_buffer)
+        proof_buffer = mupdf.FzBuffer( state.proof_filename)
+        state.proof_cs = mupdf.FzColorspace( FZ_COLORSPACE_NONE, 0, None, proof_buffer)
 
-    mupdf.set_text_aa_level( state.alphabits_text)
-    mupdf.set_graphics_aa_level( state.alphabits_graphics)
-    mupdf.set_graphics_min_line_width( state.min_line_width)
+    mupdf.fz_set_text_aa_level( state.alphabits_text)
+    mupdf.fz_set_graphics_aa_level( state.alphabits_graphics)
+    mupdf.fz_set_graphics_min_line_width( state.min_line_width)
     if state.no_icc:
-        mupdf.disable_icc()
+        mupdf.fz_disable_icc()
     else:
-        mupdf.enable_icc()
+        mupdf.fz_enable_icc()
 
     if state.layout_css:
-        buf = mupdf.Buffer( state.layout_css)
-        mupdf.set_user_css( buf.string_from_buffer())
+        buf = mupdf.FzBuffer( state.layout_css)
+        mupdf.fz_set_user_css( buf.string_from_buffer())
 
-    mupdf.set_use_document_css( state.layout_use_doc_css)
+    mupdf.fz_set_use_document_css( state.layout_use_doc_css)
 
     # Determine output type
     if state.band_height < 0:
@@ -1039,17 +1041,17 @@ def draw( argv):
 
     state.alpha = 1
     if state.out_cs in ( CS_MONO, CS_GRAY, CS_GRAY_ALPHA):
-        state.colorspace = mupdf.Colorspace( mupdf.Colorspace.Fixed_GRAY)
+        state.colorspace = mupdf.FzColorspace( mupdf.FzColorspace.Fixed_GRAY)
         state.alpha = (state.out_cs == CS_GRAY_ALPHA)
     elif state.out_cs in ( CS_RGB, CS_RGB_ALPHA):
-        state.colorspace = mupdf.Colorspace( mupdf.Colorspace.Fixed_RGB)
+        state.colorspace = mupdf.FzColorspace( mupdf.FzColorspace.Fixed_RGB)
         state.alpha = (state.out_cs == CS_RGB_ALPHA)
     elif state.out_cs in ( CS_CMYK, CS_CMYK_ALPHA):
-        state.colorspace = mupdf.Colorspace( mupdf.Colorspace.Fixed_CMYK)
+        state.colorspace = mupdf.FzColorspace( mupdf.FzColorspace.Fixed_CMYK)
         state.alpha = (state.out_cs == CS_CMYK_ALPHA)
     elif state.out_cs == CS_ICC:
         try:
-            icc_buffer = mupdf.Buffer( state.icc_filename)
+            icc_buffer = mupdf.FzBuffer( state.icc_filename)
             state.colorspace = Colorspace( mupdf.FZ_COLORSPACE_NONE, 0, None, icc_buffer)
         except Exception as e:
             sys.stderr.write( 'Invalid ICC destination color space\n')
@@ -1063,7 +1065,7 @@ def draw( argv):
         sys.exit(1)
 
     if state.out_cs != CS_ICC:
-        state.colorspace = mupdf.Colorspace( state.colorspace)
+        state.colorspace = mupdf.FzColorspace( state.colorspace)
     else:
         # Check to make sure this icc profile is ok with the output format */
         okay = 0
@@ -1072,13 +1074,13 @@ def draw( argv):
                 for j in range( len(format_cs_table[i].permitted_cs)):
                     x = format_cs_table[i].permitted_cs[j]
                     if x in ( CS_MONO, CS_GRAY, CS_GRAY_ALPHA):
-                        if state.colorspace.colorspace_is_gray():
+                        if state.colorspace.fz_colorspace_is_gray():
                             okay = 1
                         elif x in ( CS_RGB, CS_RGB_ALPHA):
-                            if state.colorspace.colorspace_is_rgb():
+                            if state.colorspace.fz_colorspace_is_rgb():
                                 okay = 1
                         elif x in ( CS_CMYK, CS_CMYK_ALPHA):
-                            if state.colorspace.colorspace_is_cmyk():
+                            if state.colorspace.fz_colorspace_is_cmyk():
                                 okay = 1
 
         if not okay:
@@ -1092,14 +1094,14 @@ def draw( argv):
         if has_percent_d(state.output):
             state.output_file_per_page = 1
         else:
-            state.out = mupdf.Output(state.output, 0)
+            state.out = mupdf.FzOutput(state.output, 0)
     else:
         state.quiet = 1 # automatically be quiet if printing to stdout
         if 0:   # lgtm [py/unreachable-statement]
             # Windows specific code to make stdout binary.
             if state.output_format not in( OUT_TEXT, OUT_STEXT, OUT_HTML, OUT_XHTML, OUT_TRACE, OUT_XMLTEXT):
                 setmode(fileno(stdout), O_BINARY)
-        state.out = mupdf.Output( mupdf.Output.Fixed_STDOUT)
+        state.out = mupdf.FzOutput( mupdf.Output.Fixed_STDOUT)
 
     state.filename = argv[0]
     if not state.output_file_per_page:
@@ -1167,27 +1169,27 @@ def draw( argv):
                 # it up to SWIG.
                 #
                 if accel:
-                    doc = mupdf.Document(state.filename, accel)
+                    doc = mupdf.FzDocument(state.filename, accel)
                 else:
-                    doc = mupdf.Document(state.filename)
+                    doc = mupdf.FzDocument(state.filename)
 
-                if doc.needs_password():
-                    if not doc.authenticate_password( password):
+                if doc.fz_needs_password():
+                    if not doc.fz_authenticate_password( password):
                         raise Exception( f'cannot authenticate password: {state.filename}')
 
                 # Once document is open check for output intent colorspace
-                state.oi = doc.document_output_intent()
+                state.oi = doc.fz_document_output_intent()
                 if state.oi.m_internal:
                     # See if we had explicitly set a profile to render
                     if state.out_cs != CS_ICC:
                         # In this case, we want to render to the output intent
                         # color space if the number of channels is the same
-                        if state.oi.colorspace_n() == state.colorspace.colorspace_n():
+                        if state.oi.fz_colorspace_n() == state.colorspace.fz_colorspace_n():
                             state.colorspace = state.oi
 
                 layouttime = time.time()
-                doc.layout_document( state.layout_w, state.layout_h, state.layout_em)
-                doc.count_pages()
+                doc.fz_layout_document( state.layout_w, state.layout_h, state.layout_em)
+                doc.fz_count_pages()
                 layouttime = time.time() - layouttime
 
                 timing.layout += layouttime
@@ -1201,9 +1203,9 @@ def draw( argv):
                 if state.layer_config:
                     apply_layer_config( doc, state.layer_config)
 
-                if fz_optind == len(argv) or not mupdf.is_page_range( argv[fz_optind]):
+                if fz_optind == len(argv) or not mupdf.fz_is_page_range( argv[fz_optind]):
                     drawrange( doc, "1-N")
-                if fz_optind < len( argv) and mupdf.is_page_range( argv[fz_optind]):
+                if fz_optind < len( argv) and mupdf.fz_is_page_range( argv[fz_optind]):
                     drawrange( doc, argv[fz_optind])
                     fz_optind += 1
 
@@ -1230,7 +1232,7 @@ def draw( argv):
         file_level_trailers()
 
     if state.out:
-        state.out.close_output()
+        state.out.fz_close_output()
     state.out = None
 
     if state.showtime and timing.count > 0:

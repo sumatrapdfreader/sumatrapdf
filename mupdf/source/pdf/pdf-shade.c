@@ -273,7 +273,7 @@ pdf_load_type4_shade(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_ob
 	if (funcs > 0)
 		pdf_sample_shade_function(ctx, shade, funcs, func, shade->u.m.c0[0], shade->u.m.c1[0]);
 
-	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict));
+	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict), 0);
 }
 
 static void
@@ -284,7 +284,7 @@ pdf_load_type5_shade(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_ob
 	if (funcs > 0)
 		pdf_sample_shade_function(ctx, shade, funcs, func, shade->u.m.c0[0], shade->u.m.c1[0]);
 
-	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict));
+	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict), 0);
 }
 
 /* Type 6 & 7 -- Patch mesh shadings */
@@ -297,7 +297,7 @@ pdf_load_type6_shade(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_ob
 	if (funcs > 0)
 		pdf_sample_shade_function(ctx, shade, funcs, func, shade->u.m.c0[0], shade->u.m.c1[0]);
 
-	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict));
+	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict), 0);
 }
 
 static void
@@ -308,7 +308,7 @@ pdf_load_type7_shade(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_ob
 	if (funcs > 0)
 		pdf_sample_shade_function(ctx, shade, funcs, func, shade->u.m.c0[0], shade->u.m.c1[0]);
 
-	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict));
+	shade->buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict), 0);
 }
 
 /* Load all of the shading dictionary parameters, then switch on the shading type. */

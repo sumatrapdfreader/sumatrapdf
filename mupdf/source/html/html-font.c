@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -101,22 +101,15 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 			}
 		}
 	}
-    /* SumatraPDF: return if perfect match, then try to load exact, if not available, return the best match */
-	if (best_score == 7)
+
+	// We found a perfect match!
+	if (best_font && best_score == 1 + 2 + 4)
 		return best_font;
 
-	fz_font* font = fz_load_system_font(ctx, family, is_bold, is_italic, 0);
-	if (font) {
-		fz_font_flags_t *flags = fz_font_flags(font);
-		if (is_bold && !flags->is_bold)
-			flags->fake_bold = 1;
-		if (is_italic && !flags->is_italic)
-			flags->fake_italic = 1;
-		fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<builtin>", font);
-		fz_drop_font(ctx, font);
-		return font;
-	}
+	// Try to load a perfect match.
 	data = fz_lookup_builtin_font(ctx, family, is_bold, is_italic, &size);
+	if (!data)
+		data = fz_lookup_builtin_font(ctx, family, 0, 0, &size);
 	if (data)
 	{
 		fz_font *font = fz_new_font_from_memory(ctx, NULL, data, size, 0, 0);
@@ -130,12 +123,13 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 		return font;
 	}
 
-	if (!strcmp(family, "monospace") || !strcmp(family, "sans-serif") || !strcmp(family, "serif"))
-		return fz_load_html_default_font(ctx, set, family, is_bold, is_italic);
-
-	/* SumatraPDF */
+	// Use the imperfect match from before.
 	if (best_font)
 		return best_font;
+
+	// Handle the "default" font aliases.
+	if (!strcmp(family, "monospace") || !strcmp(family, "sans-serif") || !strcmp(family, "serif"))
+		return fz_load_html_default_font(ctx, set, family, is_bold, is_italic);
 
 	return NULL;
 }

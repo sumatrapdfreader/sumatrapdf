@@ -1,0 +1,137 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mupdf AnnotationList author author() should return a string 1`] = `"Jeff Moran, Acrobat QE "`;
+
+exports[`mupdf AnnotationList border() should return a number 1`] = `0`;
+
+exports[`mupdf AnnotationList bound() should return a Rect 1`] = `
+Rect {
+  "x0": 239.1909942626953,
+  "x1": 435.1390075683594,
+  "y0": 86.48699951171875,
+  "y1": 140.5419921875,
+}
+`;
+
+exports[`mupdf AnnotationList dates creationDate() should return a string 1`] = `1969-12-31T23:59:59.000Z`;
+
+exports[`mupdf AnnotationList dates modificationDate() should return a string 1`] = `2000-05-19T19:23:36.000Z`;
+
+exports[`mupdf AnnotationList getTransform() should return a Matrix 1`] = `
+Matrix {
+  "a": -4.5622702060654774e-8,
+  "b": -0,
+  "c": -0,
+  "d": -1.2585658737407357e-8,
+  "e": 337.16497802734375,
+  "f": 678.4854736328125,
+}
+`;
+
+exports[`mupdf AnnotationList opacity() should return a number 1`] = `1`;
+
+exports[`mupdf AnnotationList popup() should return a Rect 1`] = `
+Rect {
+  "x0": 2147483520,
+  "x1": -2147483648,
+  "y0": 2147484416,
+  "y1": -2147482752,
+}
+`;
+
+exports[`mupdf AnnotationList rect() should return a Rect 1`] = `
+Rect {
+  "x0": 239.1909942626953,
+  "x1": 435.1390075683594,
+  "y0": 86.48699951171875,
+  "y1": 140.5419921875,
+}
+`;
+
+exports[`mupdf Link rect() should return Link hitbox 1`] = `
+Rect {
+  "x0": 47.297698974609375,
+  "x1": 214.86700439453125,
+  "y0": 77.02801513671875,
+  "y1": 100.0009765625,
+}
+`;
+
+exports[`mupdf Page search() should return list of hitboxes of search results 1`] = `
+Array [
+  Rect {
+    "x0": 144.376220703125,
+    "x1": 154.38421630859375,
+    "y0": 711.4500122070312,
+    "y1": 736.1820068359375,
+  },
+  Rect {
+    "x0": 274.7394714355469,
+    "x1": 284.7474670410156,
+    "y0": 711.4500122070312,
+    "y1": 736.1820068359375,
+  },
+  Rect {
+    "x0": 440.0064697265625,
+    "x1": 456.00848388671875,
+    "y0": 711.4500122070312,
+    "y1": 736.1820068359375,
+  },
+]
+`;
+
+exports[`mupdf Page toSTextPage() should return a valid STextPage 1`] = `
+Object {
+  "blocks": Array [
+    Object {
+      "bbox": Object {
+        "h": 24,
+        "w": 500,
+        "x": 54,
+        "y": 711,
+      },
+      "lines": Array [
+        Object {
+          "bbox": Object {
+            "h": 24,
+            "w": 239,
+            "x": 54,
+            "y": 711,
+          },
+          "font": Object {
+            "family": "sans-serif",
+            "name": "Present",
+            "size": 18,
+            "style": "normal",
+            "weight": "normal",
+          },
+          "text": "Test file created by Jeff Moran",
+          "wmode": 0,
+          "x": 54,
+          "y": 730,
+        },
+        Object {
+          "bbox": Object {
+            "h": 24,
+            "w": 114,
+            "x": 440,
+            "y": 711,
+          },
+          "font": Object {
+            "family": "sans-serif",
+            "name": "Present",
+            "size": 18,
+            "style": "normal",
+            "weight": "normal",
+          },
+          "text": "April 27, 2000",
+          "wmode": 0,
+          "x": 440,
+          "y": 730,
+        },
+      ],
+      "type": "text",
+    },
+  ],
+}
+`;

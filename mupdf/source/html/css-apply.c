@@ -700,7 +700,6 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 	fz_strlcat(path, "/", sizeof path);
 	fz_strlcat(path, src, sizeof path);
 	fz_urldecode(path);
-	fz_cleanname(path);
 
 	for (custom = set->custom; custom; custom = custom->next)
 		if (!strcmp(custom->src, path) && !strcmp(custom->family, family) &&

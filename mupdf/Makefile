@@ -513,15 +513,27 @@ c++-clean:
 python: python-$(build)
 
 python-release: c++-release
-	./scripts/mupdfwrap.py -d build/shared-release -b 023
+	./scripts/mupdfwrap.py -d build/shared-release -b 23
 
 python-debug: c++-debug
-	./scripts/mupdfwrap.py -d build/shared-debug -b 023
+	./scripts/mupdfwrap.py -d build/shared-debug -b 23
 
 python-clean:
 	rm -rf platform/python
+
+csharp: csharp-$(build)
+
+csharp-release: c++-release
+	./scripts/mupdfwrap.py -d build/shared-release -b --csharp 23
+
+csharp-debug: c++-debug
+	./scripts/mupdfwrap.py -d build/shared-debug -b --csharp 23
+
+csharp-clean:
+	rm -rf platform/csharp
 
 .PHONY: all clean nuke install third libs apps generate tags wasm
 .PHONY: shared shared-debug shared-clean
 .PHONY: c++ c++-release c++-debug c++-clean
 .PHONY: python python-debug python-clean
+.PHONY: csharp csharp-debug csharp-clean

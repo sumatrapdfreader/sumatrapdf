@@ -387,6 +387,9 @@ struct fz_story_s
 
 	/* Rectangle layout count. */
 	int rect_count;
+
+	/* Archive from which to load any resources. */
+	fz_archive *zip;
 };
 
 struct fz_html_box_s
@@ -427,9 +430,9 @@ struct fz_html_box_s
 
 		/* Only BOX_{BLOCK,TABLE,TABLE_ROW,TABLE_CELL} use the following */
 		struct {
+			float margin[4]; // TODO: is margin needed post layout?
+			float border[4];
 	float padding[4];
-	float margin[4];
-	float border[4];
 		} block;
 	} u;
 };

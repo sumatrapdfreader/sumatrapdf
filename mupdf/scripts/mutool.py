@@ -69,7 +69,7 @@ def clean_usage():
 def clean(argv):
     outfile = 'out.pdf'
     password = ''
-    opts = mupdf.pdf_write_options()
+    opts = mupdf.PdfWriteOptions()
     print( 'opts.do_garbage=%s' % opts.do_garbage)
     opts.do_garbage += 1
     print( 'opts.do_garbage=%s' % opts.do_garbage)
@@ -109,10 +109,14 @@ def clean(argv):
         outfile = argv.pop(0)
 
     try:
-        mupdf.ppdf_clean_file(infile, outfile, password, opts, argv)
+        mupdf.pdf_clean_file(infile, outfile, password, opts, argv)
     except Exception as e:
-        print( f'mupdf.ppdf_clean_file() failed: {e}')
+        print( f'mupdf.pdf_clean_file() failed: {e}')
         errors += 1
+        if 0:
+            # Enable for debugging.
+            import traceback
+            traceback.print_exc()
     print( f'errors={errors}')
     return errors != 0;
 
@@ -167,17 +171,17 @@ def convert_usage():
 
 
 def convert_runpage( doc, number, out):
-    page = mupdf.Page( doc, number - 1)
-    mediabox = page.bound_page()
-    dev = out.begin_page(mediabox)
-    page.run_page( dev, mupdf.Matrix(mupdf.fz_identity), mupdf.Cookie())
-    out.end_page()
+    page = mupdf.FzPage( doc, number - 1)
+    mediabox = page.fz_bound_page()
+    dev = out.fz_begin_page(mediabox)
+    page.fz_run_page( dev, mupdf.FzMatrix(mupdf.fz_identity), mupdf.FzCookie())
+    out.fz_end_page()
 
 def convert_runrange( doc, count, range_, out):
     start = None
     end = None
     while 1:
-        range_, start, end = mupdf.parse_page_range( range_, count)
+        range_, start, end = mupdf.fz_parse_page_range( range_, count)
         if range_ is None:
             break
         step = +1 if end > start else -1
@@ -217,38 +221,38 @@ def convert( argv):
     if not argv or (not format_ and not output):
         convert_usage()
 
-    mupdf.set_aa_level( alphabits)
+    mupdf.fz_set_aa_level( alphabits)
     if layout_css:
-        buf = mupdf.Buffer( layout_css)
-        mupdf.set_user_css( buf.string_from_buffer())
+        buf = mupdf.FzBuffer( layout_css)
+        mupdf.fz_set_user_css( buf.string_from_buffer())
 
-    mupdf.set_use_document_css(layout_use_doc_css)
+    mupdf.fz_set_use_document_css(layout_use_doc_css)
 
     if format_:
-        out = mupdf.DocumentWriter( output, format_, options)
+        out = mupdf.FzDocumentWriter( output, format_, options)
     else:
-        out = mupdf.DocumentWriter( output, options, mupdf.DocumentWriter.OutputType_PDF)
+        out = mupdf.FzDocumentWriter( output, options, mupdf.FzDocumentWriter.OutputType_PDF)
 
     i = 0
     while 1:
         if i >= len( argv):
             break
         arg = argv[i]
-        doc = mupdf.Document( arg)
-        if doc.needs_password():
-            if not doc.authenticate_password( password):
+        doc = mupdf.FzDocument( arg)
+        if doc.fz_needs_password():
+            if not doc.fz_authenticate_password( password):
                 raise Exception( f'cannot authenticate password: {arg}')
-        doc.layout_document( layout_w, layout_h, layout_em)
-        count = doc.count_pages()
+        doc.fz_layout_document( layout_w, layout_h, layout_em)
+        count = doc.fz_count_pages()
 
         range_ = '1-N'
-        if i + 1 < len(argv) and mupdf.is_page_range(ctx, argv[i+1]):
+        if i + 1 < len(argv) and mupdf.fz_is_page_range(ctx, argv[i+1]):
             i += 1
             range_ = argv[i]
         convert_runrange( doc, count, range_, out)
         i += 1
 
-    out.close_document_writer()
+    out.fz_close_document_writer()
 
 
 
@@ -273,24 +277,24 @@ def trace_usage():
     sys.exit( 1)
 
 def trace_runpage( use_display_list, doc, number):
-    page = mupdf.Page( doc, number-1)
-    mediabox = page.bound_page()
+    page = mupdf.FzPage( doc, number-1)
+    mediabox = page.fz_bound_page()
     print( f'<page number="{number}" mediabox="{mediabox.x0} {mediabox.y0} {mediabox.x1} {mediabox.y1}">')
-    output = mupdf.Output( mupdf.Output.Fixed_STDOUT)
-    dev = mupdf.Device( output)
+    output = mupdf.FzOutput( mupdf.FzOutput.Fixed_STDOUT)
+    dev = mupdf.FzDevice( output)
     if use_display_list:
-        list_ = mupdf.DisplayList( page)
-        list_.run_display_list( dev, mupdf.Matrix(mupdf.fz_identity), mupdf.Rect(mupdf.fz_infinite_rect), mupdf.Cookie())
+        list_ = mupdf.FzDisplayList( page)
+        list_.fz_run_display_list( dev, mupdf.FzMatrix(mupdf.fz_identity), mupdf.FzRect(mupdf.fz_infinite_rect), mupdf.FzCookie())
     else:
-        page.run_page( dev, mupdf.Matrix(mupdf.fz_identity), mupdf.Cookie())
-    output.close_output()
+        page.fz_run_page( dev, mupdf.FzMatrix(mupdf.fz_identity), mupdf.FzCookie())
+    output.fz_close_output()
     print( '</page>')
 
 def trace_runrange( use_display_list, doc, count, range_):
     start = None
     end = None
     while 1:
-        range_, start, end = mupdf.parse_page_range( range_, count)
+        range_, start, end = mupdf.fz_parse_page_range( range_, count)
         print(f'range_={range_!r} start={start} end={end}')
         if range_ is None:
             break
@@ -338,20 +342,20 @@ def trace( argv):
         trace_usage()
 
     if layout_css:
-        buffer_ = mupdf.Buffer( layout_css)
-        mupdf.mupdf_set_user_css( buffer_.string_from_buffer())
+        buffer_ = mupdf.FzBuffer( layout_css)
+        mupdf.fz_set_user_css( buffer_.string_from_buffer())
 
-    mupdf.set_use_document_css( layout_use_doc_css)
+    mupdf.fz_set_use_document_css( layout_use_doc_css)
 
     for argv_i in range( argv_i, len( argv)):
         arg = argv[ argv_i]
-        doc = mupdf.Document( arg)
-        if doc.needs_password():
-            doc.authenticate_password( password)
-        doc.layout_document( layout_w, layout_h, layout_em)
+        doc = mupdf.FzDocument( arg)
+        if doc.fz_needs_password():
+            doc.fz_authenticate_password( password)
+        doc.fz_layout_document( layout_w, layout_h, layout_em)
         print( f'<document filename="{arg}">')
-        count = doc.count_pages()
-        if argv_i + 1 < len( argv) and mupdf.is_page_range( argv[ argv_i+1]):
+        count = doc.fz_count_pages()
+        if argv_i + 1 < len( argv) and mupdf.fz_is_page_range( argv[ argv_i+1]):
             argv_i += 1
             trace_runrange( use_display_list, doc, count, argv[ argv_i])
         else:

@@ -1331,7 +1331,6 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, 
 		fz_strlcat(path, "/", sizeof path);
 		fz_strlcat(path, href_att, sizeof path);
 		fz_urldecode(path);
-		fz_cleanname(path);
 
 		fz_try(ctx)
 		{

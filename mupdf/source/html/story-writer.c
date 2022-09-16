@@ -194,7 +194,8 @@ void fz_write_stabilized_story(
 		fz_write_story_rectfn rectfn,
 		void *rectfn_ref,
 		fz_write_story_pagefn pagefn,
-		void *pagefn_ref
+		void *pagefn_ref,
+		fz_archive *zip
 		)
 {
 	fz_write_story_positions positions = {0};
@@ -238,7 +239,7 @@ void fz_write_stabilized_story(
 			/* Create story from new content. */
 			fz_drop_story(ctx, story);
 			story = NULL;
-			story = fz_new_story(ctx, content, user_css, em);
+			story = fz_new_story(ctx, content, user_css, em, zip);
 
 			/* Layout the story, gathering toc information as we go. */
 			positions_clear(ctx, &positions);

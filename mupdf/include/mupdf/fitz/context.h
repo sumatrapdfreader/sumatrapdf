@@ -52,7 +52,6 @@ typedef struct
 	Exception macro definitions. Just treat these as a black box -
 	pay no attention to the man behind the curtain.
 */
-
 #define fz_var(var) fz_var_imp((void *)&(var))
 #define fz_try(ctx) if (!fz_setjmp(*fz_push_try(ctx))) if (fz_do_try(ctx)) do
 #define fz_always(ctx) while (0); if (fz_do_always(ctx)) do
@@ -804,5 +803,25 @@ fz_drop_imp16(fz_context *ctx, void *p, int16_t *refs)
 	}
 	return 0;
 }
+
+
+#if WASM_SKIP_TRY_CATCH
+
+/**
+	Exception macro definitions for WASM_SKIP_TRY_CATCH. In this mode, we
+	throw JS exceptions directly, and we skip fz_catch and fz_always.
+	Useful for producing cleaner stack traces when debugging.
+	Should *never* be used in production.
+*/
+#undef fz_var
+#define fz_var(var) (void)(var)
+#undef fz_try
+#define fz_try(ctx) do
+#undef fz_always
+#define fz_always(ctx) while (0); if (0) do
+#undef fz_catch
+#define fz_catch(ctx) while (0); if (0)
+
+#endif
 
 #endif

@@ -175,4 +175,40 @@ public class RectI
 		if (r.y1 > y1)
 			y1 = r.y1;
 	}
+
+	public void inset(int dx, int dy) {
+		if (!this.isValid() || this.isInfinite() || this.isEmpty())
+			return;
+		x0 += dx;
+		y0 += dy;
+		x1 -= dx;
+		y1 -= dy;
+	}
+
+	public void inset(int left, int top, int right, int bottom) {
+		if (!this.isValid() || this.isInfinite() || this.isEmpty())
+			return;
+		x0 += left;
+		y0 += top;
+		x1 -= right;
+		y1 -= bottom;
+	}
+
+	public void offset(int dx, int dy) {
+		if (!this.isValid() || this.isInfinite() || this.isEmpty())
+			return;
+		x0 += dx;
+		y0 += dy;
+		x1 += dx;
+		y1 += dy;
+	}
+
+	public void offsetTo(int left, int top) {
+		if (!this.isValid() || this.isInfinite() || this.isEmpty())
+			return;
+		x1 += left - x0;
+		y1 += top - y0;
+		x0 = left;
+		y0 = top;
+	}
 }

@@ -1,0 +1,12 @@
+# Sample pdfs for testing mupdf-wasm
+samples/
+pdfref13.pdf
+
+# Compilation artifacts
+build/
+mupdf-wasm.js
+mupdf-wasm.worker.js
+mupdf-wasm.wasm
+
+# Node JS dependencies
+node_modules/

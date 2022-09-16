@@ -472,7 +472,7 @@ def is_pointer_to( type_, destination, verbose=False):
             jlib.log('{type_.kind=}')
         if type_.kind == clang.cindex.TypeKind.POINTER:
             pointee = type_.get_pointee().get_canonical()
-            d = cpp.declaration_text( pointee, '')
+            d = cpp.declaration_text( pointee, '', top_level='')
             d = util.clip( d, 'const ')
             d = util.clip( d, 'struct ')
             if verbose:
@@ -682,7 +682,14 @@ def find_struct( tu, structname, require_definition=True):
 
     Returns cursor for definition or None.
     '''
-    structname = util.clip( structname, 'struct ')   # Remove any 'struct ' prefix.
+    verbose = state.state_.show_details( structname)
+    if 'fz_document_handler' in structname:
+        jlib.log( '{=structname verbose}')
+    if verbose:
+        jlib.log( '{=structname}')
+    structname = util.clip( structname, ('const ', 'struct '))   # Remove any 'struct ' prefix.
+    if verbose:
+        jlib.log( '{=structname}')
     global find_struct_cache
     if find_struct_cache is None:
         find_struct_cache = dict()
@@ -693,8 +700,12 @@ def find_struct( tu, structname, require_definition=True):
             elif cursor.is_definition() and not already.is_definition():
                 find_struct_cache[ cursor.spelling] = cursor
     ret = find_struct_cache.get( structname)
+    if verbose:
+        jlib.log( '{=ret}')
     if not ret:
         return
+    if verbose:
+        jlib.log( '{=require_definition ret.is_definition()}')
     if require_definition and not ret.is_definition():
         return
     return ret

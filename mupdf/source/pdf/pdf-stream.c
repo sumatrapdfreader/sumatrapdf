@@ -586,7 +586,7 @@ can_reuse_buffer(fz_context *ctx, pdf_xref_entry *entry, fz_compression_params *
 }
 
 static fz_buffer *
-pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compression_params *params, int *truncated)
+pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compression_params *params, int *truncated, size_t worst_case)
 {
 	fz_stream *stm = NULL;
 	pdf_obj *dict, *obj;
@@ -627,10 +627,7 @@ pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compressio
 
 	fz_try(ctx)
 	{
-		if (truncated)
-			buf = fz_read_best(ctx, stm, len, truncated);
-		else
-			buf = fz_read_all(ctx, stm, len);
+		buf = fz_read_best(ctx, stm, len, truncated, worst_case);
 	}
 	fz_always(ctx)
 	{
@@ -647,17 +644,17 @@ pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compressio
 fz_buffer *
 pdf_load_stream_number(fz_context *ctx, pdf_document *doc, int num)
 {
-	return pdf_load_image_stream(ctx, doc, num, NULL, NULL);
+	return pdf_load_image_stream(ctx, doc, num, NULL, NULL, 0);
 }
 
 fz_compressed_buffer *
-pdf_load_compressed_stream(fz_context *ctx, pdf_document *doc, int num)
+pdf_load_compressed_stream(fz_context *ctx, pdf_document *doc, int num, size_t worst_case)
 {
 	fz_compressed_buffer *bc = fz_malloc_struct(ctx, fz_compressed_buffer);
 
 	fz_try(ctx)
 	{
-		bc->buffer = pdf_load_image_stream(ctx, doc, num, &bc->params, NULL);
+		bc->buffer = pdf_load_image_stream(ctx, doc, num, &bc->params, NULL, worst_case);
 	}
 	fz_catch(ctx)
 	{

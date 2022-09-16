@@ -28,6 +28,7 @@
 #include "mupdf/fitz/buffer.h"
 #include "mupdf/fitz/device.h"
 #include "mupdf/fitz/xml.h"
+#include "mupdf/fitz/archive.h"
 
 /*
 	This header file provides an API for laying out and placing styled
@@ -55,8 +56,11 @@ typedef struct fz_story_s fz_story;
 
 	Passing a NULL buffer will be treated as an empty document.
 	Passing a NULL user_css will be treated as an empty CSS string.
+	A non-NULL archive will allow images etc to be loaded. The
+	story keeps its own reference, so the caller can drop its
+	reference after this call.
 */
-fz_story *fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em);
+fz_story *fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em, fz_archive *archive);
 
 /*
 	Retrieve the warnings given from parsing this story.

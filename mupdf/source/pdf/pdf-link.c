@@ -564,8 +564,8 @@ fz_link *pdf_new_link(fz_context *ctx, pdf_page *page, fz_rect rect, const char 
 {
 	pdf_link *link = fz_new_derived_link(ctx, pdf_link, rect, uri);
 	link->super.drop = (fz_link_drop_link_fn*) pdf_drop_link_imp;
-	link->super.set_rect = pdf_set_link_rect;
-	link->super.set_uri = pdf_set_link_uri;
+	link->super.set_rect_fn = pdf_set_link_rect;
+	link->super.set_uri_fn = pdf_set_link_uri;
 	link->page = page; /* only borrowed, as the page owns the link */
 	link->obj = pdf_keep_obj(ctx, obj);
 	return &link->super;

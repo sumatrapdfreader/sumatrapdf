@@ -1917,6 +1917,9 @@ int
 fz_encode_character_with_fallback(fz_context *ctx, fz_font *user_font, int unicode, int script, int language, fz_font **out_font)
 {
 	fz_font *font;
+	int is_serif = user_font->flags.is_serif;
+	int is_italic = user_font->flags.is_italic | user_font->flags.fake_italic;
+	int is_bold = user_font->flags.is_bold | user_font->flags.fake_bold;
 	int gid;
 
 	gid = fz_encode_character(ctx, user_font, unicode);
@@ -1936,7 +1939,7 @@ fz_encode_character_with_fallback(fz_context *ctx, fz_font *user_font, int unico
 			script = UCDN_SCRIPT_HAN;
 	}
 
-	font = fz_load_fallback_font(ctx, script, language, user_font->flags.is_serif, user_font->flags.is_bold, user_font->flags.is_italic);
+	font = fz_load_fallback_font(ctx, script, language, is_serif, is_bold, is_italic);
 	if (font)
 	{
 		gid = fz_encode_character(ctx, font, unicode);
@@ -1947,28 +1950,28 @@ fz_encode_character_with_fallback(fz_context *ctx, fz_font *user_font, int unico
 #ifndef TOFU_CJK_LANG
 	if (script == UCDN_SCRIPT_HAN)
 	{
-		font = fz_load_fallback_font(ctx, script, FZ_LANG_zh_Hant, user_font->flags.is_serif, user_font->flags.is_bold, user_font->flags.is_italic);
+		font = fz_load_fallback_font(ctx, script, FZ_LANG_zh_Hant, is_serif, is_bold, is_italic);
 		if (font)
 		{
 			gid = fz_encode_character(ctx, font, unicode);
 			if (gid > 0)
 				return *out_font = font, gid;
 		}
-		font = fz_load_fallback_font(ctx, script, FZ_LANG_ja, user_font->flags.is_serif, user_font->flags.is_bold, user_font->flags.is_italic);
+		font = fz_load_fallback_font(ctx, script, FZ_LANG_ja, is_serif, is_bold, is_italic);
 		if (font)
 		{
 			gid = fz_encode_character(ctx, font, unicode);
 			if (gid > 0)
 				return *out_font = font, gid;
 		}
-		font = fz_load_fallback_font(ctx, script, FZ_LANG_ko, user_font->flags.is_serif, user_font->flags.is_bold, user_font->flags.is_italic);
+		font = fz_load_fallback_font(ctx, script, FZ_LANG_ko, is_serif, is_bold, is_italic);
 		if (font)
 		{
 			gid = fz_encode_character(ctx, font, unicode);
 			if (gid > 0)
 				return *out_font = font, gid;
 		}
-		font = fz_load_fallback_font(ctx, script, FZ_LANG_zh_Hans, user_font->flags.is_serif, user_font->flags.is_bold, user_font->flags.is_italic);
+		font = fz_load_fallback_font(ctx, script, FZ_LANG_zh_Hans, is_serif, is_bold, is_italic);
 		if (font)
 		{
 			gid = fz_encode_character(ctx, font, unicode);

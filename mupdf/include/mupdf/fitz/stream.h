@@ -297,9 +297,12 @@ fz_stream *fz_new_stream(fz_context *ctx, void *state, fz_stream_next_fn *next, 
 
 	truncated: Flag to store success/failure indication in.
 
+	worst_case: 0 for unknown, otherwise an upper bound for the
+	size of the stream.
+
 	Returns a buffer created from reading from the stream.
 */
-fz_buffer *fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated);
+fz_buffer *fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated, size_t worst_case);
 
 /**
 	Read a line from stream into the buffer until either a

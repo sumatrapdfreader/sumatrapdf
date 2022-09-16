@@ -10,6 +10,7 @@ import textwrap
 import jlib
 
 from . import cpp
+from . import rename
 from . import state
 from . import util
 
@@ -87,6 +88,8 @@ def build_swig(
             #include "mupdf/functions.h"
             #include "mupdf/classes.h"
             #include "mupdf/classes2.h"
+            #include "mupdf/internal.h"
+            #include "mupdf/exceptions.h"
             '''
     if language == 'csharp':
         common += textwrap.dedent(f'''
@@ -104,17 +107,17 @@ def build_swig(
         common += textwrap.dedent(f'''
                 /* Support for extracting buffer data into a Python bytes. If
                 <clear> is true we clear and trim the buffer. */
-                PyObject* buffer_to_bytes(fz_buffer* buffer, int clear)
+                PyObject* python_buffer_to_bytes(fz_buffer* buffer, int clear)
                 {{
                     unsigned char* c = NULL;
                     /* We mimic the affects of fz_buffer_extract(), which leaves
                     the buffer with zero capacity. */
-                    size_t len = mupdf::buffer_storage(buffer, &c);
+                    size_t len = {rename.namespace_ll_fn('fz_buffer_storage')}(buffer, &c);
                     PyObject* ret = PyBytes_FromStringAndSize((const char*) c, (Py_ssize_t) len);
                     if (clear)
                     {{
-                        mupdf::clear_buffer(buffer);
-                        mupdf::trim_buffer(buffer);
+                        {rename.namespace_ll_fn('fz_clear_buffer')}(buffer);
+                        {rename.namespace_ll_fn('fz_trim_buffer')}(buffer);
                     }}
                     return ret;
                 }}
@@ -149,7 +152,7 @@ def build_swig(
                 For example to create a MuPDF fz_buffer* from a copy of a
                 Python bytes instance:
                     bs = b'qwerty'
-                    buffer_ = mupdf.new_buffer_from_copied_data(mupdf.python_bytes_data(bs), len(bs))
+                    buffer_ = mupdf.fz_new_buffer_from_copied_data(mupdf.python_bytes_data(bs), len(bs))
                 */
                 const unsigned char* python_bytes_data(const unsigned char* PYTHON_BYTES_DATA, size_t PYTHON_BYTES_SIZE)
                 {{
@@ -157,49 +160,51 @@ def build_swig(
                 }}
 
                 /* Casts an integer to a pdf_obj*. Used to convert SWIG's int
-                values for PDF_ENUM_NAME_* into PdfObj's. */
+                values for PDF_ENUM_NAME_* into {rename.class_('pdf_obj')}'s. */
                 pdf_obj* obj_enum_to_obj(int n)
                 {{
                     return (pdf_obj*) (intptr_t) n;
                 }}
 
-                /* SWIG-friendly alternative to ppdf_set_annot_color(). */
-                void ppdf_set_annot_color2(pdf_annot *annot, int n, float color0, float color1, float color2, float color3)
+                /* SWIG-friendly alternative to {rename.ll_fn('pdf_set_annot_color')}(). */
+                void {rename.ll_fn('pdf_set_annot_color2')}(pdf_annot *annot, int n, float color0, float color1, float color2, float color3)
                 {{
                     float color[] = {{ color0, color1, color2, color3 }};
-                    return mupdf::ppdf_set_annot_color(annot, n, color);
+                    return {rename.namespace_ll_fn('pdf_set_annot_color')}(annot, n, color);
                 }}
 
 
-                /* SWIG-friendly alternative to ppdf_set_annot_interior_color(). */
-                void ppdf_set_annot_interior_color2(pdf_annot *annot, int n, float color0, float color1, float color2, float color3)
+                /* SWIG-friendly alternative to {rename.ll_fn('pdf_set_annot_interior_color')}(). */
+                void {rename.ll_fn('pdf_set_annot_interior_color2')}(pdf_annot *annot, int n, float color0, float color1, float color2, float color3)
                 {{
                     float color[] = {{ color0, color1, color2, color3 }};
-                    return mupdf::ppdf_set_annot_interior_color(annot, n, color);
+                    return {rename.namespace_ll_fn('pdf_set_annot_interior_color')}(annot, n, color);
                 }}
 
-                /* SWIG-friendly alternative to mfz_fill_text(). */
-                void mfz_fill_text2(
-                        mupdf::Device& dev,
-                        const mupdf::Text& text,
-                        mupdf::Matrix& ctm,
-                        const mupdf::Colorspace& colorspace,
+                /* Fixme: change this to override low-level wrapper function
+                with rename.ll_fn() and patch up callers. */
+                /* SWIG-friendly alternative to {rename.fn('fz_fill_text')}(). */
+                void {rename.fn('fz_fill_text2')}(
+                        {rename.namespace_class('fz_device')}& dev,
+                        const {rename.namespace_class('fz_text')}& text,
+                        {rename.namespace_class('fz_matrix')}& ctm,
+                        const {rename.namespace_class('fz_colorspace')}& colorspace,
                         float color0,
                         float color1,
                         float color2,
                         float color3,
                         float alpha,
-                        mupdf::ColorParams& color_params
+                        {rename.namespace_class('fz_color_params')}& color_params
                         )
                 {{
                     float color[] = {{color0, color1, color2, color3}};
-                    return mfz_fill_text(dev, text, ctm, colorspace, color, alpha, color_params);
+                    return {rename.namespace_fn('fz_fill_text')}(dev, text, ctm, colorspace, color, alpha, color_params);
                 }}
 
-                std::vector<unsigned char> mfz_memrnd2(int length)
+                std::vector<unsigned char> {rename.fn('fz_memrnd2')}(int length)
                 {{
                     std::vector<unsigned char>  ret(length);
-                    mupdf::mfz_memrnd(&ret[0], length);
+                    {rename.namespace_fn('fz_memrnd')}(&ret[0], length);
                     return ret;
                 }}
 
@@ -207,7 +212,7 @@ def build_swig(
                 /* mupdfpy optimisation for copying pixmap. Copies first <n>
                 bytes of each pixel from <src> to <pm>. <pm> and <src> should
                 have same .w and .h */
-                void mupdfpy_pixmap_copy( fz_pixmap* pm, const fz_pixmap* src, int n)
+                void {rename.fn('mupdfpy_pixmap_copy')}( fz_pixmap* pm, const fz_pixmap* src, int n)
                 {{
                     assert( pm->w == src->w);
                     assert( pm->h == src->h);
@@ -243,39 +248,35 @@ def build_swig(
 
     common += textwrap.dedent(f'''
             /* SWIG-friendly alternative to fz_runetochar(). */
-            std::vector<unsigned char> runetochar2(int rune)
+            std::vector<unsigned char> {rename.fn('fz_runetochar2')}(int rune)
             {{
                 std::vector<unsigned char>  buffer(10);
-                int n = mupdf::runetochar((char*) &buffer[0], rune);
+                int n = {rename.namespace_ll_fn('fz_runetochar')}((char*) &buffer[0], rune);
                 assert(n < sizeof(buffer));
                 buffer.resize(n);
                 return buffer;
             }}
 
             /* SWIG-friendly alternatives to fz_make_bookmark() and
-            fz_lookup_bookmark(), using long long instead of fz_bookmark
+            {rename.fn('fz_lookup_bookmark')}(), using long long instead of fz_bookmark
             because SWIG appears to treat fz_bookmark as an int despite it
             being a typedef for intptr_t, so ends up slicing. */
-            long long unsigned make_bookmark2(fz_document* doc, fz_location loc)
+            long long unsigned {rename.ll_fn('fz_make_bookmark2')}(fz_document* doc, fz_location loc)
             {{
-                fz_bookmark bm = mupdf::make_bookmark(doc, loc);
+                fz_bookmark bm = {rename.namespace_ll_fn('fz_make_bookmark')}(doc, loc);
                 return (long long unsigned) bm;
             }}
-            long long unsigned mfz_make_bookmark2(fz_document* doc, fz_location loc)
+
+            fz_location {rename.ll_fn('fz_lookup_bookmark2')}(fz_document *doc, long long unsigned mark)
             {{
-                return make_bookmark2(doc, loc);
+                return {rename.namespace_ll_fn('fz_lookup_bookmark')}(doc, (fz_bookmark) mark);
+            }}
+            {rename.namespace_class('fz_location')} {rename.fn('fz_lookup_bookmark2')}( {rename.namespace_class('fz_document')} doc, long long unsigned mark)
+            {{
+                return {rename.namespace_class('fz_location')}( {rename.ll_fn('fz_lookup_bookmark2')}(doc.m_internal, mark));
             }}
 
-            fz_location lookup_bookmark2(fz_document *doc, long long unsigned mark)
-            {{
-                return mupdf::lookup_bookmark(doc, (fz_bookmark) mark);
-            }}
-            fz_location mfz_lookup_bookmark2(fz_document *doc, long long unsigned mark)
-            {{
-                return lookup_bookmark2(doc, mark);
-            }}
-
-            struct convert_color2_v
+            struct {rename.fn('fz_convert_color2_v')}
             {{
                 float v0;
                 float v1;
@@ -283,17 +284,38 @@ def build_swig(
                 float v3;
             }};
 
-            /* SWIG-friendly alternative for fz_convert_color(). */
-            void convert_color2(
+            /* SWIG-friendly alternative for
+            {rename.ll_fn('fz_convert_color')}(), taking `float* sv`. */
+            void {rename.ll_fn('fz_convert_color2')}(
                     fz_colorspace *ss,
-                    float *sv,
+                    float* sv,
                     fz_colorspace *ds,
-                    convert_color2_v* dv,
+                    {rename.fn('fz_convert_color2_v')}* dv,
                     fz_colorspace *is,
                     fz_color_params params
                     )
             {{
-                mupdf::convert_color(ss, sv, ds, &dv->v0, is, params);
+                //float sv[] = {{ sv0, sv1, sv2, sv3}};
+                {rename.namespace_ll_fn('fz_convert_color')}(ss, sv, ds, &dv->v0, is, params);
+            }}
+
+            /* SWIG-friendly alternative for
+            {rename.ll_fn('fz_convert_color')}(), taking four explicit `float`
+            values for `sv`. */
+            void {rename.ll_fn('fz_convert_color2')}(
+                    fz_colorspace *ss,
+                    float sv0,
+                    float sv1,
+                    float sv2,
+                    float sv3,
+                    fz_colorspace *ds,
+                    {rename.fn('fz_convert_color2_v')}* dv,
+                    fz_colorspace *is,
+                    fz_color_params params
+                    )
+            {{
+                float sv[] = {{ sv0, sv1, sv2, sv3}};
+                {rename.namespace_ll_fn('fz_convert_color')}(ss, sv, ds, &dv->v0, is, params);
             }}
 
             /* SWIG-friendly support for fz_set_warning_callback() and
@@ -304,7 +326,7 @@ def build_swig(
                 SetWarningCallback( void* user=NULL)
                 {{
                     this->user = user;
-                    mupdf::set_warning_callback( s_print, this);
+                    {rename.namespace_ll_fn('fz_set_warning_callback')}( s_print, this);
                 }}
                 virtual void print( const char* message)
                 {{
@@ -322,7 +344,7 @@ def build_swig(
                 SetErrorCallback( void* user=NULL)
                 {{
                     this->user = user;
-                    mupdf::set_error_callback( s_print, this);
+                    {rename.namespace_ll_fn('fz_set_error_callback')}( s_print, this);
                 }}
                 virtual void print( const char* message)
                 {{
@@ -334,6 +356,22 @@ def build_swig(
                 }}
                 void* user;
             }};
+
+            /* Helper for calling a fz_document_open_fn() fnptr. */
+            fz_document *{rename.ll_fn('fz_document_open_fn_call')}(fz_document_open_fn fn, const char *filename)
+            {{
+                fz_context* ctx = mupdf::internal_context_get();
+                fz_document* ret;
+                fz_try(ctx)
+                {{
+                    ret = fn( ctx, filename);
+                }}
+                fz_catch(ctx)
+                {{
+                    mupdf::internal_throw_exception( ctx);
+                }}
+                return ret;
+            }}
 
             void Pixmap_set_alpha_helper(
                 int balen,
@@ -389,35 +427,35 @@ def build_swig(
             }}
 
             void page_merge_helper(
-                    mupdf::PdfObj& old_annots,
-                    mupdf::PdfGraftMap& graft_map,
-                    mupdf::PdfDocument& doc_des,
-                    mupdf::PdfObj& new_annots,
+                    {rename.namespace_class('pdf_obj')}& old_annots,
+                    {rename.namespace_class('pdf_graft_map')}& graft_map,
+                    {rename.namespace_class('pdf_document')}& doc_des,
+                    {rename.namespace_class('pdf_obj')}& new_annots,
                     int n
                     )
             {{
                 for ( int i=0; i<n; ++i)
                 {{
-                    mupdf::PdfObj o = mupdf::mpdf_array_get( old_annots, i);
-                    if (mupdf::mpdf_dict_gets( o, "IRT").m_internal)
+                    {rename.namespace_class('pdf_obj')} o = {rename.namespace_fn('pdf_array_get')}( old_annots, i);
+                    if ({rename.namespace_fn('pdf_dict_gets')}( o, "IRT").m_internal)
                         continue;
-                    mupdf::PdfObj subtype = mupdf::mpdf_dict_get( o, PDF_NAME(Subtype));
-                    if ( mupdf::mpdf_name_eq( subtype, PDF_NAME(Link)))
+                    {rename.namespace_class('pdf_obj')} subtype = {rename.namespace_fn('pdf_dict_get')}( o, PDF_NAME(Subtype));
+                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME(Link)))
                         continue;
-                    if ( mupdf::mpdf_name_eq( subtype, PDF_NAME(Popup)))
+                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME(Popup)))
                         continue;
-                    if ( mupdf::mpdf_name_eq( subtype, PDF_NAME(Widget)))
+                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME(Widget)))
                     {{
                         /* fixme: C++ API doesn't yet wrap fz_warn() - it
                         excludes all variadic fns. */
-                        //mupdf::mfz_warn( "skipping widget annotation");
+                        //mupdf::fz_warn( "skipping widget annotation");
                         continue;
                     }}
-                    mupdf::mpdf_dict_del( o, PDF_NAME(Popup));
-                    mupdf::mpdf_dict_del( o, PDF_NAME(P));
-                    mupdf::PdfObj copy_o = mupdf::mpdf_graft_mapped_object( graft_map, o);
-                    mupdf::PdfObj annot = mupdf::mpdf_new_indirect( doc_des, mupdf::mpdf_to_num( copy_o), 0);
-                    mupdf::mpdf_array_push( new_annots, annot);
+                    {rename.namespace_fn('pdf_dict_del')}( o, PDF_NAME(Popup));
+                    {rename.namespace_fn('pdf_dict_del')}( o, PDF_NAME(P));
+                    {rename.namespace_class('pdf_obj')} copy_o = {rename.namespace_fn('pdf_graft_mapped_object')}( graft_map, o);
+                    {rename.namespace_class('pdf_obj')} annot = {rename.namespace_fn('pdf_new_indirect')}( doc_des, {rename.namespace_fn('pdf_to_num')}( copy_o), 0);
+                    {rename.namespace_fn('pdf_array_push')}( new_annots, annot);
                 }}
             }}
             ''')
@@ -448,15 +486,23 @@ def build_swig(
                   }
                 }
                 ''')
+
+    # Ignore all C MuPDF functions; SWIG will still look at the C++ API in
+    # namespace mudf.
     for fnname in generated.c_functions:
         if fnname in ('pdf_annot_type', 'pdf_widget_type'):
             # These are also enums which we don't want to ignore. SWIGing the
             # functions is hopefully harmless.
             pass
-        elif 0 and fnname == 'pdf_string_from_annot_type':  # causes duplicate symbol with classes2.cpp and python.
-            pass
         else:
-            text += f'%ignore {fnname};\n'
+            text += f'%ignore ::{fnname};\n'
+
+    # Attempt to move C structs out of the way to allow wrapper classes to have
+    # the same name as the struct they wrap. Unfortunately this causes a small
+    # number of obscure errors from SWIG.
+    if 0:
+        for name in generated.c_structs:
+            text += f'%rename(lll_{name}) ::{name};\n'
 
     for i in (
             'fz_append_vprintf',
@@ -476,27 +522,27 @@ def build_swig(
 
             %ignore fz_open_file_w;
 
-            %ignore {util.rename.function('fz_append_vprintf')};
-            %ignore {util.rename.function('fz_error_stack_slot_s')};
-            %ignore {util.rename.function('fz_format_string')};
-            %ignore {util.rename.function('fz_vsnprintf')};
-            %ignore {util.rename.function('fz_vthrow')};
-            %ignore {util.rename.function('fz_vwarn')};
-            %ignore {util.rename.function('fz_write_vprintf')};
-            %ignore {util.rename.function('fz_vsnprintf')};
-            %ignore {util.rename.function('fz_vthrow')};
-            %ignore {util.rename.function('fz_vwarn')};
-            %ignore {util.rename.function('fz_append_vprintf')};
-            %ignore {util.rename.function('fz_write_vprintf')};
-            %ignore {util.rename.function('fz_format_string')};
-            %ignore {util.rename.function('fz_open_file_w')};
+            %ignore {rename.ll_fn('fz_append_vprintf')};
+            %ignore {rename.ll_fn('fz_error_stack_slot_s')};
+            %ignore {rename.ll_fn('fz_format_string')};
+            %ignore {rename.ll_fn('fz_vsnprintf')};
+            %ignore {rename.ll_fn('fz_vthrow')};
+            %ignore {rename.ll_fn('fz_vwarn')};
+            %ignore {rename.ll_fn('fz_write_vprintf')};
+            %ignore {rename.ll_fn('fz_vsnprintf')};
+            %ignore {rename.ll_fn('fz_vthrow')};
+            %ignore {rename.ll_fn('fz_vwarn')};
+            %ignore {rename.ll_fn('fz_append_vprintf')};
+            %ignore {rename.ll_fn('fz_write_vprintf')};
+            %ignore {rename.ll_fn('fz_format_string')};
+            %ignore {rename.ll_fn('fz_open_file_w')};
 
             // SWIG can't handle this because it uses a valist.
-            %ignore {util.rename.function('Memento_vasprintf')};
+            %ignore {rename.ll_fn('Memento_vasprintf')};
 
             // asprintf() isn't available on windows, so exclude Memento_asprintf because
             // it is #define-d to asprintf.
-            %ignore {util.rename.function('Memento_asprintf')};
+            %ignore {rename.ll_fn('Memento_asprintf')};
 
             // Might prefer to #include mupdf/exceptions.h and make the
             // %exception block below handle all the different exception types,
@@ -532,7 +578,7 @@ def build_swig(
                 %template(vectoruc) vector<unsigned char>;
                 %template(vectori) vector<int>;
                 %template(vectors) vector<std::string>;
-                %template(vectorq) vector<mupdf::{util.rename.class_("fz_quad")}>;
+                %template(vectorq) vector<{rename.namespace_class("fz_quad")}>;
             }};
 
             // Make sure that operator++() gets converted to __next__().
@@ -582,9 +628,6 @@ def build_swig(
             // Ensure SWIG handles OUTPUT params.
             //
             %include "cpointer.i"
-
-            // Don't wrap raw fz_*() functions.
-            %rename("$ignore", regexmatch$name="^fz_", %$isfunction, %$not %$ismember) "";
             ''')
 
     if swig_major < 4:
@@ -620,35 +663,37 @@ def build_swig(
 
                 %pythoncode %{{
 
-                def Document_lookup_metadata(self, key):
+                def fz_lookup_metadata_extra(self, key):
                     """
-                    Python implementation override of Document.lookup_metadata().
+                    Python implementation override of {rename.class_('fz_document')}.lookup_metadata().
 
                     Returns string or None if not found.
                     """
                     e = new_pint()
-                    ret = lookup_metadata(self.m_internal, key, e)
+                    ret = {rename.ll_fn('fz_lookup_metadata')}(self.m_internal, key, e)
                     e = pint_value(e)
                     if e < 0:
                         return None
                     return ret
 
-                Document.lookup_metadata = Document_lookup_metadata
+                {rename.class_('fz_document')}.{rename.method('fz_document', 'fz_lookup_metadata')} = fz_lookup_metadata_extra
+                {rename.fn('fz_lookup_metadata')} = fz_lookup_metadata_extra
 
-                def PdfDocument_lookup_metadata(self, key):
+                def pdf_lookup_metadata_extra(self, key):
                     """
-                    Python implementation override of PdfDocument.lookup_metadata().
+                    Python implementation override of {rename.class_('pdf_document')}.{rename.method('pdf_document', 'pdf_lookup_metadata')}().
 
                     Returns string or None if not found.
                     """
                     e = new_pint()
-                    ret = ppdf_lookup_metadata(self.m_internal, key, e)
+                    ret = {rename.ll_fn('pdf_lookup_metadata')}(self.m_internal, key, e)
                     e = pint_value(e)
                     if e < 0:
                         return None
                     return ret
 
-                PdfDocument.lookup_metadata = PdfDocument_lookup_metadata
+                {rename.class_('pdf_document')}.{rename.method('pdf_document', 'pdf_lookup_metadata')} = pdf_lookup_metadata_extra
+                {rename.fn('pdf_lookup_metadata')} = pdf_lookup_metadata_extra
                 ''')
 
     if language == 'python':
@@ -658,17 +703,17 @@ def build_swig(
         # tuples.
         #
         text += generated.swig_python
-        text += textwrap.dedent('''
+        text += textwrap.dedent(f'''
                 import re
 
-                # Wrap parse_page_range() to fix SWIG bug where a NULL return
+                # Wrap fz_parse_page_range() to fix SWIG bug where a NULL return
                 # value seems to mess up the returned list - we end up with ret
                 # containing two elements rather than three, e.g. [0, 2]. This
                 # occurs with SWIG-3.0; maybe fixed in SWIG-4?
                 #
-                w_parse_page_range = parse_page_range
-                def parse_page_range(s, n):
-                    ret = w_parse_page_range(s, n)
+                w_fz_parse_page_range = {rename.ll_fn('fz_parse_page_range')}
+                def {rename.fn('fz_parse_page_range')}(s, n):
+                    ret = w_fz_parse_page_range(s, n)
                     if len(ret) == 2:
                         return None, 0, 0
                     else:
@@ -677,7 +722,7 @@ def build_swig(
                 # Provide native python implementation of format_output_path() (->
                 # fz_format_output_path).
                 #
-                def format_output_path( format, page):
+                def {rename.fn('fz_format_output_path')}( format, page):
                     m = re.search( '(%[0-9]*d)', format)
                     if m:
                         ret = format[ :m.start(1)] + str(page) + format[ m.end(1):]
@@ -719,7 +764,7 @@ def build_swig(
                         return self.__next__()
 
                 # The auto-generated Python class method
-                # Buffer.buffer_extract() returns (size, data).
+                # {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_extract')}() returns (size, data).
                 #
                 # But these raw values aren't particularly useful to
                 # Python code so we change the method to return a Python
@@ -729,35 +774,36 @@ def build_swig(
                 # The raw values for a buffer are available via
                 # fz_buffer_storage().
 
-                def Buffer_buffer_extract(self):
+                def {rename.class_('fz_buffer')}_fz_buffer_extract(self):
                     """
                     Returns buffer data as a Python bytes instance, leaving the
                     buffer empty.
                     """
-                    assert isinstance( self, Buffer)
-                    return buffer_to_bytes(self.m_internal, clear=1)
-                Buffer.buffer_extract = Buffer_buffer_extract
-                mfz_buffer_extract      = Buffer_buffer_extract
+                    assert isinstance( self, {rename.class_('fz_buffer')})
+                    return python_buffer_to_bytes(self.m_internal, clear=1)
+                {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_extract')} = {rename.class_('fz_buffer')}_fz_buffer_extract
+                {rename.fn('fz_buffer_extract')} = {rename.class_('fz_buffer')}_fz_buffer_extract
 
-                def Buffer_buffer_extract_copy( self):
+                def {rename.class_('fz_buffer')}_fz_buffer_extract_copy( self):
                     """
                     Returns buffer data as a Python bytes instance, leaving the
                     buffer unchanged.
                     """
-                    assert isinstance( self, Buffer)
-                    return buffer_to_bytes(self.m_internal, clear=0)
-                Buffer.buffer_extract_copy  = Buffer_buffer_extract_copy
-                mfz_buffer_extract_copy     = Buffer_buffer_extract_copy
+                    assert isinstance( self, {rename.class_('fz_buffer')})
+                    return python_buffer_to_bytes(self.m_internal, clear=0)
+                {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_extract_copy')}  = {rename.class_('fz_buffer')}_fz_buffer_extract_copy
+                {rename.fn('fz_buffer_extract_copy')} = {rename.class_('fz_buffer')}_fz_buffer_extract_copy
 
-                # Overwrite Buffer.new_buffer_from_copied_data() to take Python Bytes instance.
+                # Overwrite wrappers for fz_new_buffer_from_copied_data() to
+                # take Python `bytes` instance.
                 #
-                def Buffer_new_buffer_from_copied_data(bytes_):
-                    buffer_ = new_buffer_from_copied_data(python_bytes_data(bytes_), len(bytes_))
-                    return Buffer(buffer_)
-                Buffer.new_buffer_from_copied_data = Buffer_new_buffer_from_copied_data
+                def {rename.fn('fz_new_buffer_from_copied_data')}(bytes_):
+                    buffer_ = {rename.ll_fn('fz_new_buffer_from_copied_data')}(python_bytes_data(bytes_), len(bytes_))
+                    return {rename.class_('fz_buffer')}(buffer_)
+                {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_new_buffer_from_copied_data')} = {rename.fn('fz_new_buffer_from_copied_data')}
 
 
-                def mpdf_dict_getl(obj, *tail):
+                def {rename.fn('pdf_dict_getl')}(obj, *tail):
                     """
                     Python implementation of pdf_dict_getl(fz_context *ctx,
                     pdf_obj *obj, ...), because SWIG doesn't handle variadic
@@ -766,102 +812,126 @@ def build_swig(
                     for key in tail:
                         if not obj.m_internal:
                             break
-                        obj = obj.dict_get(key)
-                    assert isinstance(obj, PdfObj)
+                        obj = obj.pdf_dict_get(key)
+                    assert isinstance(obj, {rename.class_('pdf_obj')})
                     return obj
-                PdfObj.dict_getl = mpdf_dict_getl
+                {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_dict_getl')} = {rename.fn('pdf_dict_getl')}
 
-                def mpdf_dict_putl(obj, val, *tail):
+                def {rename.fn('pdf_dict_putl')}(obj, val, *tail):
                     """
                     Python implementation of pdf_dict_putl(fz_context *ctx,
                     pdf_obj *obj, pdf_obj *val, ...) because SWIG doesn't
                     handle variadic args.
                     """
-                    if obj.is_indirect():
-                        obj = obj.resolve_indirect_chain()
-                    if not obj.is_dict():
-                        raise Exception(f'not a dict: {obj}')
+                    if obj.{rename.method('pdf_obj', 'pdf_is_indirect')}():
+                        obj = obj.{rename.method('pdf_obj', 'pdf_resolve_indirect_chain')}()
+                    if not obj.{rename.method('pdf_obj', 'pdf_is_dict')}():
+                        raise Exception(f'not a dict: {{obj}}')
                     if not tail:
                         return
-                    doc = obj.get_bound_document()
+                    doc = obj.{rename.method('pdf_obj', 'pdf_get_bound_document')}()
                     for key in tail[:-1]:
-                        next_obj = obj.dict_get(key)
+                        next_obj = obj.{rename.method('pdf_obj', 'pdf_dict_get')}(key)
                         if not next_obj.m_internal:
                             # We have to create entries
-                            next_obj = doc.new_dict(1)
-                            obj.dict_put(key, next_obj)
+                            next_obj = doc.{rename.method('pdf_obj', 'pdf_new_dict')}(1)
+                            obj.{rename.method('pdf_obj', 'pdf_dict_put')}(key, next_obj)
                         obj = next_obj
                     key = tail[-1]
-                    obj.dict_put(key, val)
-                PdfObj.dict_putl = mpdf_dict_putl
+                    obj.{rename.method('pdf_obj', 'pdf_dict_put')}(key, val)
+                {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_dict_putl')} = {rename.fn('pdf_dict_putl')}
 
-                def mpdf_dict_putl_drop(obj, *tail):
-                    raise Exception('mupdf.PdfObj.dict_putl_drop() is unsupported and unnecessary in Python because reference counting is automatic. Instead use mupdf.PdfObj.dict_putl()')
-                PdfObj.dict_putl_drop = mpdf_dict_putl_drop
+                def {rename.fn('pdf_dict_putl_drop')}(obj, *tail):
+                    raise Exception('mupdf.{rename.fn('pdf_dict_putl_drop')}() is unsupported and unnecessary in Python because reference counting is automatic. Instead use mupdf.{rename.fn('pdf_dict_putl')}().')
+                {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_dict_putl_drop')} = {rename.fn('pdf_dict_putl_drop')}
 
-                def ppdf_set_annot_color(annot, color):
+                def {rename.ll_fn('pdf_set_annot_color')}(annot, color):
                     """
                     Python implementation of pdf_set_annot_color() using
-                    ppdf_set_annot_color2().
+                    {rename.ll_fn('pdf_set_annot_interior_color2')}().
                     """
                     if isinstance(color, float):
-                        ppdf_set_annot_color2(annot, 1, color, 0, 0, 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 1, color, 0, 0, 0)
                     elif len(color) == 1:
-                        ppdf_set_annot_color2(annot, 1, color[0], 0, 0, 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 1, color[0], 0, 0, 0)
                     elif len(color) == 2:
-                        ppdf_set_annot_color2(annot, 2, color[0], color[1], 0, 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 2, color[0], color[1], 0, 0)
                     elif len(color) == 3:
-                        ppdf_set_annot_color2(annot, 3, color[0], color[1], color[2], 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 3, color[0], color[1], color[2], 0)
                     elif len(color) == 4:
-                        ppdf_set_annot_color2(annot, 4, color[0], color[1], color[2], color[3])
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 4, color[0], color[1], color[2], color[3])
                     else:
-                        raise Exception( f'Unexpected color should be float or list of 1-4 floats: {color}')
+                        raise Exception( f'Unexpected color should be float or list of 1-4 floats: {{color}}')
 
-                # Override PdfAnnot.set_annot_color() to use the above.
-                def mpdf_set_annot_color(self, color):
-                    return ppdf_set_annot_color(self.m_internal, color)
-                PdfAnnot.set_annot_color = mpdf_set_annot_color
+                # Override {rename.fn('pdf_set_annot_color')}()s to use the above.
+                def {rename.fn('pdf_set_annot_color')}(self, color):
+                    return {rename.ll_fn('pdf_set_annot_color')}(self.m_internal, color)
+                {rename.class_('pdf_annot')}.{rename.method('pdf_annot', 'pdf_set_annot_color')} = {rename.fn('pdf_set_annot_color')}
 
-                def ppdf_set_annot_interior_color(annot, color):
+                def {rename.ll_fn('pdf_set_annot_interior_color')}(annot, color):
                     """
                     Python version of pdf_set_annot_color() using
-                    ppdf_set_annot_color2().
+                    pdf_set_annot_color2().
                     """
                     if isinstance(color, float):
-                        ppdf_set_annot_interior_color2(annot, 1, color, 0, 0, 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 1, color, 0, 0, 0)
                     elif len(color) == 1:
-                        ppdf_set_annot_interior_color2(annot, 1, color[0], 0, 0, 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 1, color[0], 0, 0, 0)
                     elif len(color) == 2:
-                        ppdf_set_annot_interior_color2(annot, 2, color[0], color[1], 0, 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 2, color[0], color[1], 0, 0)
                     elif len(color) == 3:
-                        ppdf_set_annot_interior_color2(annot, 3, color[0], color[1], color[2], 0)
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 3, color[0], color[1], color[2], 0)
                     elif len(color) == 4:
-                        ppdf_set_annot_interior_color2(annot, 4, color[0], color[1], color[2], color[3])
+                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 4, color[0], color[1], color[2], color[3])
                     else:
-                        raise Exception( f'Unexpected color should be float or list of 1-4 floats: {color}')
+                        raise Exception( f'Unexpected color should be float or list of 1-4 floats: {{color}}')
 
-                # Override PdfAnnot.set_interiorannot_color() to use the above.
-                def mpdf_set_annot_interior_color(self, color):
-                    return ppdf_set_annot_interior_color(self.m_internal, color)
-                PdfAnnot.set_annot_interior_color = mpdf_set_annot_interior_color
+                # Override {rename.fn('pdf_set_annot_interior_color')}() to use
+                # the above.
+                def {rename.fn('pdf_set_annot_interior_color')}(self, color):
+                    return {rename.ll_fn('pdf_set_annot_interior_color')}(self.m_internal, color)
+                {rename.class_('pdf_annot')}.{rename.method('pdf_annot', 'pdf_set_annot_interior_color')} = {rename.fn('pdf_set_annot_interior_color')}
 
-                # Override mfz_fill_text() to handle color as a Python tuple/list.
-                def mfz_fill_text(dev, text, ctm, colorspace, color, alpha, color_params):
+                # Override {rename.fn('fz_fill_text')}() to handle color as a Python tuple/list.
+                def {rename.fn('fz_fill_text')}(dev, text, ctm, colorspace, color, alpha, color_params):
                     """
-                    Python version of mfz_fill_text() using mfz_fill_text2().
+                    Python version of {rename.fn('fz_fill_text')}() using {rename.fn('fz_fill_text2')}().
                     """
                     color = tuple(color) + (0,) * (4-len(color))
-                    assert len(color) == 4, f'color not len 4: len={len(color)}: {color}'
-                    return mfz_fill_text2(dev, text, ctm, colorspace, *color, alpha, color_params)
+                    assert len(color) == 4, f'color not len 4: len={{len(color)}}: {{color}}'
+                    return {rename.fn('fz_fill_text2')}(dev, text, ctm, colorspace, *color, alpha, color_params)
 
-                Device.fill_text = mfz_fill_text
+                {rename.class_('fz_device')}.{rename.method('fz_device', 'fz_fill_text')} = {rename.fn('fz_fill_text')}
 
                 # Override mupdf_convert_color() to return (rgb0, rgb1, rgb2, rgb3).
-                def convert_color( ss, sv, ds, is_, params):
-                    # Note that <sv> should be a SWIG representation of a float*.
-                    dv = convert_color2_v()
-                    convert_color2( ss, sv, ds, dv, is_, params)
+                def {rename.ll_fn('fz_convert_color')}( ss, sv, ds, is_, params):
+                    """
+                    Python version of {rename.ll_fn('fz_convert_color')}.
+
+                    `sv` should be a float or list of 1-4 floats or a SWIG
+                    representation of a float*.
+
+                    Returns (dv0, dv1, dv2, dv3).
+                    """
+                    dv = {rename.fn('fz_convert_color')}2_v()
+                    if isinstance( sv, float):
+                       {rename.ll_fn('fz_convert_color2')}( ss, sv, 0.0, 0.0, 0.0, ds, dv, is_, params)
+                    elif isinstance( sv, (tuple, list)):
+                        sv2 = tuple(sv) + (0,) * (4-len(sv))
+                        {rename.ll_fn('fz_convert_color2')}( ss, *sv2, ds, dv, is_, params)
+                    else:
+                        # Assume `sv` is SWIG representation of a `float*`.
+                        {rename.ll_fn('fz_convert_color2')}( ss, sv, ds, dv, is_, params)
                     return dv.v0, dv.v1, dv.v2, dv.v3
+
+                def {rename.fn('fz_convert_color')}( ss, sv, ds, is_, params):
+                    """
+                    Python version of {rename.fn('fz_convert_color')}.
+                    `sv` should be a float or list of 1-4 floats.
+                    Returns (dv0, dv1, dv2, dv3).
+                    """
+                    return {rename.ll_fn('fz_convert_color')}( ss.m_internal, sv, ds.m_internal, is_.m_internal, params.internal())
+                {rename.class_('fz_colorspace')}.{rename.method('fz_colorspace', 'fz_convert_color')} = {rename.fn('fz_convert_color')}
 
                 # Override set_warning_callback() and set_error_callback() to
                 # use Python classes derived from our SWIG Director classes
@@ -886,30 +956,30 @@ def build_swig(
                     global set_error_callback_s
                     set_error_callback_s = Callback()
 
-                set_warning_callback = set_warning_callback2
-                set_error_callback = set_error_callback2
+                {rename.fn('fz_set_warning_callback')} = set_warning_callback2
+                {rename.fn('fz_set_error_callback')} = set_error_callback2
 
                 # Direct access to fz_pixmap samples.
-                def mfz_pixmap_samples2( pixmap):
-                    assert isinstance( pixmap, Pixmap)
+                def {rename.fn('fz_pixmap_samples')}2( pixmap):
+                    assert isinstance( pixmap, {rename.class_('fz_pixmap')})
                     ret = python_memoryview_from_memory(
-                            mfz_pixmap_samples( pixmap),
-                            mfz_pixmap_stride( pixmap) * mfz_pixmap_height( pixmap),
+                            {rename.fn('fz_pixmap_samples')}( pixmap),
+                            {rename.fn('fz_pixmap_stride')}( pixmap) * {rename.fn('fz_pixmap_height')}( pixmap),
                             1, # writable
                             )
                     return ret
-                Pixmap.pixmap_samples2 = mfz_pixmap_samples2
+                {rename.class_('fz_pixmap')}.{rename.method('fz_pixmap', 'pixmap_samples')}2 = {rename.fn('fz_pixmap_samples')}2
 
                 # Avoid potential unsafe use of variadic args by forcing a
                 # single arg and escaping all '%' characters. (Passing ('%s',
                 # text) does not work - results in "(null)" being output.)
                 #
-                mfz_warn_original = mfz_warn
-                def mfz_warn( text):
+                {rename.ll_fn('fz_warn')}_original = {rename.ll_fn('fz_warn')}
+                def {rename.ll_fn('fz_warn')}( text):
                     assert isinstance( text, str)
                     text = text.replace( '%', '%%')
-                    return mfz_warn_original( text)
-                warn = mfz_warn
+                    return {rename.ll_fn('fz_warn')}_original( text)
+                #warn = mfz_warn
                 ''')
 
         # Add __iter__() methods for all classes with begin() and end() methods.
@@ -935,7 +1005,7 @@ def build_swig(
         # E.g. this allows Python code to print a mupdf.Rect instance.
         #
         for struct_name in generated.to_string_structnames:
-            text += f'{util.rename.class_(struct_name)}.__str__ = lambda self: self.to_string()\n'
+            text += f'{rename.class_(struct_name)}.__str__ = lambda self: self.to_string()\n'
 
         text += '%}\n'
 
@@ -1022,6 +1092,14 @@ def build_swig(
     disable_swig_warnings = map( str, disable_swig_warnings)
     disable_swig_warnings = '-w' + ','.join( disable_swig_warnings)
 
+    # Preserve any existing file `swig_cpp`, so that we can restore the
+    # mtime if SWIG produces an unchanged file. This then avoids unnecessary
+    # recompilation.
+    swig_cpp_old = None
+    if os.path.exists( swig_cpp):
+        swig_cpp_old = f'{swig_cpp}-old'
+        jlib.copy( swig_cpp, swig_cpp_old)
+
     if language == 'python':
         # Need -D_WIN32 on Windows because as of 2022-03-17, C++ code for
         # SWIG Directors support doesn't work on Windows so is inside #ifndef
@@ -1032,27 +1110,27 @@ def build_swig(
         def make_command( module, cpp, swig_i):
             cpp = os.path.relpath( cpp)
             swig_i = os.path.relpath( swig_i)
-        command = (
-                textwrap.dedent(
-                f'''
-                "{swig_command}"
-                    {"-D_WIN32" if state_.windows else ""}
-                    -Wall
-                    -c++
-                    {"-doxygen" if swig_major >= 4 else ""}
-                    -python
-                    {disable_swig_warnings}
+            command = (
+                    textwrap.dedent(
+                    f'''
+                    "{swig_command}"
+                        {"-D_WIN32" if state_.windows else ""}
+                        -Wall
+                        -c++
+                        {"-doxygen" if swig_major >= 4 else ""}
+                        -python
+                        {disable_swig_warnings}
                         -module {module}
-                    -outdir {os.path.relpath(build_dirs.dir_so)}
+                        -outdir {os.path.relpath(build_dirs.dir_so)}
                         -o {cpp}
-                    -includeall
-                    -I{os.path.relpath(build_dirs.dir_mupdf)}/platform/python/include
-                    -I{os.path.relpath(include1)}
-                    -I{os.path.relpath(include2)}
-                    -ignoremissing
+                        -includeall
+                        -I{os.path.relpath(build_dirs.dir_mupdf)}/platform/python/include
+                        -I{os.path.relpath(include1)}
+                        -I{os.path.relpath(include2)}
+                        -ignoremissing
                         {swig_i}
-                ''').strip().replace( '\n', "" if state_.windows else "\\\n")
-                )
+                    ''').strip().replace( '\n', "" if state_.windows else "\\\n")
+                    )
             return command
 
         def modify_py( rebuilt, swig_py, do_enums):
@@ -1101,14 +1179,14 @@ def build_swig(
                     swig_py_content = prefix + swig_py_content + postfix
 
             if do_enums:
-            # Change all our PDF_ENUM_NAME_* enums so that they are actually
-            # PdfObj instances so that they can be used like any other PdfObj.
-            #
-            jlib.log('{len(generated.c_enums)=}')
-            for enum_type, enum_names in generated.c_enums.items():
-                for enum_name in enum_names:
-                    if enum_name.startswith( 'PDF_ENUM_NAME_'):
-                        swig_py_content += f'{enum_name} = PdfObj( obj_enum_to_obj( {enum_name}))\n'
+                # Change all our PDF_ENUM_NAME_* enums so that they are actually
+                # PdfObj instances so that they can be used like any other PdfObj.
+                #
+                jlib.log('{len(generated.c_enums)=}')
+                for enum_type, enum_names in generated.c_enums.items():
+                    for enum_name in enum_names:
+                        if enum_name.startswith( 'PDF_ENUM_NAME_'):
+                            swig_py_content += f'{enum_name} = {rename.class_("pdf_obj")}( obj_enum_to_obj( {enum_name}))\n'
 
             with open( swig_py_tmp, 'w') as f:
                 f.write( swig_py_content)
@@ -1203,12 +1281,24 @@ def build_swig(
         jlib.log('{len(generated.swig_csharp)=}')
         assert len(generated.swig_csharp)
         cs2 += generated.swig_csharp
+        jlib.log( 'Updating cs2 => {build_dirs.dir_so}/mupdf.cs')
         jlib.update_file(cs2, f'{build_dirs.dir_so}/mupdf.cs')
         #jlib.copy(f'{outdir}/mupdf.cs', f'{build_dirs.dir_so}/mupdf.cs')
         jlib.log('{rebuilt=}')
 
     else:
         assert 0
+
+    if swig_cpp_old:
+        with open( swig_cpp_old) as f:
+            swig_cpp_contents_old = f.read()
+        with open(swig_cpp) as f:
+            swig_cpp_contents_new = f.read()
+        if swig_cpp_contents_new == swig_cpp_contents_old:
+            # File <swig_cpp> unchanged, so restore the mtime to avoid
+            # unnecessary recompilation.
+            jlib.log( 'File contents unchanged, copying {swig_cpp_old=} => {swig_cpp=}')
+            jlib.rename( swig_cpp_old, swig_cpp)
 
 
 def test_swig():

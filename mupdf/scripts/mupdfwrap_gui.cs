@@ -4,7 +4,7 @@
 public class MuPDFGui : System.Windows.Forms.Form
 {
     // We use static pixmap to ensure it isn't garbage-collected.
-    mupdf.Pixmap pixmap;
+    mupdf.FzPixmap pixmap;
 
     private System.Windows.Forms.MainMenu menu;
     private System.Windows.Forms.MenuItem menu_item_file;
@@ -15,8 +15,8 @@ public class MuPDFGui : System.Windows.Forms.Form
     private double  zoom = 0;
     private int     page_number = 0;
 
-    mupdf.Document                  document;
-    mupdf.Page                      page;
+    mupdf.FzDocument                document;
+    mupdf.FzPage                    page;
     System.Drawing.Bitmap           bitmap;
     System.Windows.Forms.PictureBox picture_box;
 
@@ -67,7 +67,7 @@ public class MuPDFGui : System.Windows.Forms.Form
     {
         try
         {
-            this.document = new mupdf.Document(path);
+            this.document = new mupdf.FzDocument(path);
         }
         catch (System.Exception e)
         {
@@ -80,14 +80,14 @@ public class MuPDFGui : System.Windows.Forms.Form
     public void show_html(System.Object sender, System.EventArgs e)
     {
         System.Console.WriteLine("ShowHtml() called");
-        var buffer = this.page.new_buffer_from_page_with_format(
+        var buffer = this.page.fz_new_buffer_from_page_with_format(
                 "docx",
                 "html",
-                new mupdf.Matrix(1, 0, 0, 1, 0, 0),
-                new mupdf.Cookie()
+                new mupdf.FzMatrix(1, 0, 0, 1, 0, 0),
+                new mupdf.FzCookie()
                 );
         System.Console.WriteLine("buffer=" + buffer);
-        var html_bytes = buffer.buffer_extract();
+        var html_bytes = buffer.fz_buffer_extract();
         var html_string = System.Text.Encoding.UTF8.GetString(html_bytes, 0, html_bytes.Length);
         var web_browser = new System.Windows.Forms.WebBrowser();
         web_browser.DocumentText = html_string;
@@ -106,19 +106,19 @@ public class MuPDFGui : System.Windows.Forms.Form
     //
     public void goto_page(int page_number, double zoom)
     {
-        if (page_number < 0 || page_number >= document.count_pages())
+        if (page_number < 0 || page_number >= document.fz_count_pages())
         {
             return;
         }
 
         this.zoom = zoom;
         this.page_number = page_number;
-        this.page = document.load_page(page_number);
+        this.page = document.fz_load_page(page_number);
 
         var z = System.Math.Pow(2, this.zoom / this.zoom_multiple);
 
         /* For now we always use 'fit width' view semantics. */
-        var page_rect = this.page.bound_page();
+        var page_rect = this.page.fz_bound_page();
         var vscroll_width = System.Windows.Forms.SystemInformation.VerticalScrollBarWidth;
         z *= (this.ClientSize.Width - vscroll_width) / (page_rect.x1 - page_rect.x0);
 
@@ -134,9 +134,9 @@ public class MuPDFGui : System.Windows.Forms.Form
             var stopwatch = new System.Diagnostics.Stopwatch();
             stopwatch.Reset();
             stopwatch.Start();
-            this.pixmap = this.page.new_pixmap_from_page_contents(
-                    new mupdf.Matrix((float) z, 0, 0, (float) z, 0, 0),
-                    new mupdf.Colorspace(mupdf.Colorspace.Fixed.Fixed_RGB),
+            this.pixmap = this.page.fz_new_pixmap_from_page_contents(
+                    new mupdf.FzMatrix((float) z, 0, 0, (float) z, 0, 0),
+                    new mupdf.FzColorspace(mupdf.FzColorspace.Fixed.Fixed_RGB),
                     1 /*alpha*/
                     );
             stopwatch.Stop();
@@ -145,11 +145,11 @@ public class MuPDFGui : System.Windows.Forms.Form
             stopwatch.Reset();
             stopwatch.Start();
             this.bitmap = new System.Drawing.Bitmap(
-                    this.pixmap.pixmap_width(),
-                    this.pixmap.pixmap_height(),
-                    this.pixmap.pixmap_stride(),
+                    this.pixmap.fz_pixmap_width(),
+                    this.pixmap.fz_pixmap_height(),
+                    this.pixmap.fz_pixmap_stride(),
                     System.Drawing.Imaging.PixelFormat.Format32bppRgb,
-                    (System.IntPtr) this.pixmap.pixmap_samples_int()
+                    (System.IntPtr) this.pixmap.fz_pixmap_samples_int()
                     );
             stopwatch.Stop();
             var t_bitmap = stopwatch.Elapsed;
@@ -175,19 +175,19 @@ public class MuPDFGui : System.Windows.Forms.Form
             Unlike above, it seems that we need to use MuPDF Fixed_RGB with
             alpha=0, and C#'s Format32bppRgb. Other combinations give a
             blank display (possibly with alpha=0 for each pixel). */
-            this.pixmap = this.page.new_pixmap_from_page_contents(
-                    new mupdf.Matrix((float) z, 0, 0, (float) z, 0, 0),
-                    new mupdf.Colorspace(mupdf.Colorspace.Fixed.Fixed_RGB),
+            this.pixmap = this.page.fz_new_pixmap_from_page_contents(
+                    new mupdf.FzMatrix((float) z, 0, 0, (float) z, 0, 0),
+                    new mupdf.FzColorspace(mupdf.FzColorspace.Fixed.Fixed_RGB),
                     0 /*alpha*/
                     );
 
             this.bitmap = new System.Drawing.Bitmap(
-                    this.pixmap.pixmap_width(),
-                    this.pixmap.pixmap_height(),
+                    this.pixmap.fz_pixmap_width(),
+                    this.pixmap.fz_pixmap_height(),
                     System.Drawing.Imaging.PixelFormat.Format32bppRgb
                     );
-            long samples = pixmap.pixmap_samples_int();
-            int stride = pixmap.pixmap_stride();
+            long samples = pixmap.fz_pixmap_samples_int();
+            int stride = pixmap.fz_pixmap_stride();
             for (int x=0; x<bitmap.Width; x+=1)
             {
                 for (int y=0; y<bitmap.Height; y+=1)
@@ -239,17 +239,17 @@ public class MuPDFGui : System.Windows.Forms.Form
     }
 
     // Throws exception if pixmap and bitmap differ.
-    void check(mupdf.Pixmap pixmap, System.Drawing.Bitmap bitmap, int pixmap_bytes_per_pixel)
+    void check(mupdf.FzPixmap pixmap, System.Drawing.Bitmap bitmap, int pixmap_bytes_per_pixel)
     {
-        long samples = pixmap.pixmap_samples_int();
-        if (pixmap.pixmap_width() != bitmap.Width || pixmap.pixmap_height() != bitmap.Height)
+        long samples = pixmap.fz_pixmap_samples_int();
+        if (pixmap.fz_pixmap_width() != bitmap.Width || pixmap.fz_pixmap_height() != bitmap.Height)
         {
             throw new System.Exception("Inconsistent sizes:"
-                    + " pixmap=(" + pixmap.pixmap_width() + " " + pixmap.pixmap_height()
+                    + " pixmap=(" + pixmap.fz_pixmap_width() + " " + pixmap.fz_pixmap_height()
                     + " bitmap=(" + bitmap.Width + " " + bitmap.Height
                     );
         }
-        int stride = pixmap.pixmap_stride();
+        int stride = pixmap.fz_pixmap_stride();
         for (int x=0; x<bitmap.Width; x+=1)
         {
             for (int y=0; y<bitmap.Height; y+=1)

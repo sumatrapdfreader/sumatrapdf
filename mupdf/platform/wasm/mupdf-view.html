@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MuPDF / WebAssembly</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<link rel="shortcut icon" href="mupdf-icon.png">
+<style>
+
+:root {
+	--menubar-height: 22pt;
+	--sidebar-width: 250px;
+}
+
+html, body { margin: 0; padding: 0; }
+
+html { background-color: gray; }
+
+input, button {
+	display: block;
+	border:none;
+	background-image:none;
+	background-color:transparent;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+}
+
+input, button {
+	font-size: 16px;
+	line-height: 20px;
+	height: 30px;
+	margin: 0 4px;
+}
+input {
+	background-color: white;
+	padding: 0px 5px;
+	border: 1px solid black;
+}
+button {
+	font-family: monospace;
+	background-color: gainsboro;
+	border: 2px outset white;
+	outline: 1px solid black;
+	padding: 1px 10px 1px 10px;
+}
+button:disabled {
+	color: gray;
+	border: 2px solid gainsboro;
+	outline: 1px solid gray;
+}
+button:enabled:active:hover {
+	border: 2px inset white;
+	padding: 2px 9px 0px 11px;
+}
+
+/* MENUS */
+
+#grid-menubar { font-family: "Segoe UI", "Arial", "sans-serif"; }
+
+#grid-menubar {
+	position: fixed;
+	z-index: 3;
+	top: 0;
+	left: 0;
+	font-size: 12pt;
+	line-height: 1;
+	height: var(--menubar-height);
+	width: 100%;
+	background-color: lightsteelblue;
+	user-select: none;
+	box-shadow: 0px 4px 8px 0px rgba(0,0,0,0.1);
+}
+
+.menu { float: left; }
+
+.menu-button { padding: 5pt 10pt; }
+
+.menu-popup {
+	display: none;
+	position: absolute;
+	background-color: white;
+	min-width: 20ex;
+	white-space: nowrap;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	z-index: 3;
+}
+
+.menu-popup hr { margin: 0; border-bottom: 0; border-top: 1px solid gray; }
+.menu-popup div { padding: 5pt 10pt; }
+.menu-popup div:hover { background-color: steelblue; color: white; }
+
+.menu:hover .menu-popup { display: block; }
+.menu:hover .menu-button { background-color: steelblue; color: white; }
+
+/* SIDEBAR */
+
+#grid-sidebar { font-family: "Times New Roman", "serif"; }
+
+#grid-sidebar {
+	display: none;
+	position: fixed;
+	z-index: 1;
+	top: var(--menubar-height);
+	left: 0;
+	width: var(--sidebar-width);
+	height: calc(100% - var(--menubar-height));
+	background-color: white;
+	overflow: auto;
+}
+
+#outline { margin:0; padding:1ex; padding-left:2ex; list-style-type: none; font-size: 10pt; }
+#outline ul { margin:0; padding:0; padding-left:3ex; list-style-type: none; }
+#outline a { text-decoration:none; color: black; }
+#outline a:hover { text-decoration:underline; }
+
+/* DIALOGS */
+
+div.dialog {
+	position:fixed;
+	top:22pt;
+	left:0;
+	right:0;
+	margin-left: auto;
+	width:max-content;
+	background-color:silver;
+	padding: 15px 12px;
+	z-index:2;
+	box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.2);
+}
+
+div.flex {
+	display: flex;
+	align-items: center;
+}
+
+#searchStatus {
+	padding-top: 1ex;
+}
+
+/* PAGES */
+
+#grid-pages { padding-top: var(--menubar-height); }
+#grid-pages.sidebarVisible { padding-left: var(--sidebar-width); }
+#grid-pages.sidebarHidden { padding-left: 0; }
+
+#pages { margin: 0 auto; }
+
+a.anchor {
+	display:block;
+	position:relative;
+	top:-22pt;
+	visibility:hidden;
+}
+
+div.page {
+	position:relative;
+	background-color:white;
+	margin:16px auto;
+	box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.2);
+}
+
+div.page img {
+	position:absolute;
+	user-select:none;
+}
+
+div.links { position:absolute; }
+div.links a { position:absolute; }
+div.links a:hover { outline: 1px dotted blue; }
+
+div.text { position:absolute; }
+div.text span {
+	position:absolute;
+	white-space:pre;
+	line-height:1;
+	color:transparent;
+}
+
+div.searchHitList { position:absolute; }
+div.searchHit { position:absolute; pointer-events:none; outline: 1px solid hotpink; background-color: lightpink; mix-blend-mode: multiply; }
+
+div.error {
+	padding: 1em;
+	color: hotpink;
+	font-size: 20pt;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="grid-menubar">
+	<div class="menu">
+		<div class="menu-button">File</div>
+		<div class="menu-popup">
+			<div onclick="document.getElementById('open-file-input').click()">Open File...</div>
+		</div>
+	</div>
+	<div class="menu">
+		<div class="menu-button">Edit</div>
+		<div class="menu-popup">
+			<div onclick="showSearch()">Search...</div>
+		</div>
+	</div>
+	<div class="menu" id="tools-menu">
+		<div class="menu-button">Tools</div>
+		<div class="menu-popup">
+			<div onclick="setTool('CreateText')">Create Text</div>
+			<div onclick="setTool('CreateFreeText')">Create FreeText</div>
+			<div onclick="setTool('CreateLine')">Create Line</div>
+			<div onclick="setTool('CreateSquare')">Create Square</div>
+			<div onclick="setTool('CreateCircle')">Create Circle</div>
+			<div onclick="setTool('CreatePolygon')">Create Polygon</div>
+			<div onclick="setTool('CreatePolyLine')">Create PolyLine</div>
+			<div onclick="setTool('CreateStamp')">Create Stamp</div>
+			<div onclick="setTool('CreateCaret')">Create Caret</div>
+			<div onclick="setTool('CreateFileAttachment')">Create FileAttachment</div>
+			<div onclick="setTool('CreateSound')">Create Sound</div>
+		</div>
+	</div>
+	<div class="menu">
+		<div class="menu-button">View</div>
+		<div class="menu-popup">
+			<div onclick="toggleFullscreen()">Fullscreen</div>
+			<div onclick="toggleOutline()">Outline</div>
+			<hr>
+			<div onclick="setZoom(50)">50%</div>
+			<div onclick="setZoom(75)">75% (72 dpi)</div>
+			<div onclick="setZoom(100)">100% (96 dpi)</div>
+			<div onclick="setZoom(125)">125%</div>
+			<div onclick="setZoom(150)">150%</div>
+			<div onclick="setZoom(200)">200%</div>
+		</div>
+	</div>
+</div>
+
+<div id="grid-sidebar"><ul id="outline"></ul></div>
+
+<div id="grid-pages" class="sidebarHidden">
+	<div id="pages">
+		<center style="color:silver;padding-top:3em;">
+		<h1>Loading WASM, please wait...</h1>
+		</center>
+	</div>
+</div>
+
+<div id="searchDialog" class="dialog" style="display:none">
+<div class="flex">
+<input id="searchText" type="search" size="40" oninput="updateSearch()" onkeydown="searchBoxKey(event)" placeholder="Search...">
+<button onclick="runSearch(-1)">&lt;</button>
+<button onclick="runSearch(1)">&gt;</button>
+<button onclick="hideSearch()">X</button>
+<div id="searchStatus">-</div>
+</div>
+</div>
+
+<input type="file" id="open-file-input" style="display:none"
+	accept=".pdf,.xps,application/pdf"
+	onchange="openFile(event.target.files[0])">
+
+</body>
+
+<script src="mupdf-view.js"></script>
+<script>
+"use strict";
+
+let editorMode;
+
+mupdfView.ready.then(function () {
+	emptyNode(document.getElementById("pages"));
+	let params = new URLSearchParams(window.location.search);
+	if (params.has("file"))
+		openURL(params.get("file"), params.get("progressive") | 0, params.get("prefetch") | 0);
+
+	editorMode = params.get("editor") | 0;
+
+	if (!editorMode) {
+		// FIXME - This is a very quick-and-dirty way to parameterize a menu
+		document.getElementById("tools-menu").remove();
+	}
+});
+
+let documentOpen = false;
+let pageCount;
+let currentPage = 0;
+let dirty = [];
+let isPressed = [];
+let pageDIV = [];
+let pageHIT = [];
+let zoom = 100;
+let dpi = 96;
+
+let searchNeedle = null;
+let searchDirty = [];
+
+function toggleFullscreen() {
+	if (document.fullscreen)
+		document.exitFullscreen();
+	else
+		document.documentElement.requestFullscreen();
+}
+
+function showOutline() {
+	document.getElementById("grid-sidebar").style.display = "block";
+	document.getElementById("grid-pages").classList.replace("sidebarHidden", "sidebarVisible");
+}
+
+function hideOutline() {
+	document.getElementById("grid-sidebar").style.display = "none";
+	document.getElementById("grid-pages").classList.replace("sidebarVisible", "sidebarHidden");
+}
+
+function toggleOutline() {
+	let node = document.getElementById("grid-sidebar");
+	if (node.style.display === "none" || node.style.display === "")
+		showOutline();
+	else
+		hideOutline();
+}
+
+function clearSearch() {
+	for (let i = 0; i < pageCount; ++i) {
+		if (pageHIT[i])
+			emptyNode(pageHIT[i]);
+		searchDirty[i] = false;
+	}
+}
+
+function updateSearch() {
+	let searchStatus = document.getElementById("searchStatus");
+	searchStatus.textContent = "";
+	let newNeedle = document.getElementById("searchText").value;
+	if (searchNeedle !== newNeedle) {
+		searchNeedle = newNeedle;
+		clearSearch();
+		if (searchNeedle && searchNeedle.length > 0)
+			for (let i = 1; i <= pageCount; ++i)
+				searchDirty[i] = true;
+		if (searchNeedle && searchNeedle.length > 0)
+			updateView();
+	}
+}
+
+function showSearch() {
+	let node = document.getElementById("searchDialog");
+	if (node.style.display != "block") {
+		node.style.display = "block";
+		updateSearch();
+	}
+	document.getElementById("searchText").focus();
+	document.getElementById("searchText").select();
+}
+
+function hideSearch() {
+	let node = document.getElementById("searchDialog");
+	node.style.display = "none";
+	searchNeedle = null;
+	clearSearch();
+}
+
+async function runSearchBG(page, dir) {
+	let searchStatus = document.getElementById("searchStatus");
+	if (searchNeedle && searchNeedle.length > 0) {
+		page = page + dir;
+		if (page < 1 || page > pageCount) {
+			console.log("No more search hits.");
+			searchStatus.textContent = "No more search hits.";
+		} else {
+			console.log("Searching page", page);
+			searchStatus.textContent = "Searching page " + page + ".";
+
+			const hits = await mupdfView.search(page, dpi, searchNeedle)
+			if (hits.length > 0) {
+				pageDIV[page].scrollIntoView();
+			} else {
+				await runSearchBG(page, dir);
+			}
+		}
+	} else {
+		searchStatus.textContent = "";
+	}
+}
+
+function searchBoxKey(event) {
+	if (event.key != "Enter")
+		return;
+	runSearch(event.shiftKey ? -1 : 1);
+}
+function runSearch(direction) {
+	updateSearch();
+	runSearchBG(currentPage, direction)
+		.catch(error => logError("pageLinks", error));
+}
+
+async function pageSearch(pageNumber) {
+	console.log("SEARCH", pageNumber, JSON.stringify(searchNeedle));
+	searchDirty[pageNumber] = false;
+
+	let hits = await mupdfView.search(pageNumber, dpi, searchNeedle);
+	emptyNode(pageHIT[pageNumber]);
+	for (let bbox of hits) {
+		let div = document.createElement("div");
+		div.classList.add("searchHit");
+		div.style.left = bbox.x + 'px';
+		div.style.top = bbox.y + 'px';
+		div.style.width = bbox.w + 'px';
+		div.style.height = bbox.h + 'px';
+		pageHIT[pageNumber].appendChild(div);
+	}
+}
+
+function setTool(toolName) {
+	mupdfView.setEditionTool(toolName);
+}
+
+function isVisible(element, slop) {
+	let rect = element.getBoundingClientRect();
+	if (rect.top >= -slop && rect.bottom <= window.innerHeight + slop)
+		return true;
+	if (rect.top < window.innerHeight + slop && rect.bottom >= -slop)
+		return true;
+	return false;
+}
+
+function emptyNode(node) {
+	while (node.firstChild)
+		node.removeChild(node.firstChild);
+}
+
+function logError(where, error) {
+	console.error(`mupdf.${where}: ${error.message}:\n${error.stack}`);
+}
+
+function showDocumentError(where, error) {
+	logError(where, error);
+	let div = document.createElement("div");
+	div.classList.add("error");
+	div.textContent = error.name + ": " + error.message;
+	emptyNode(document.getElementById("pages"));
+	document.getElementById("pages").appendChild(div);
+}
+
+function showPageError(where, page, error) {
+	logError(where, error);
+	let div = document.createElement("div");
+	div.classList.add("error");
+	div.textContent = error.name + ": " + error.message;
+	emptyNode(page);
+	page.appendChild(div);
+}
+
+async function openFile(file) {
+	if (file instanceof File) {
+		freeDocument();
+		try {
+			// TODO - have a more elegant way to invalidate previous renders
+			await mupdfView.resetPageCache();
+			await mupdfView.openDocumentFromBuffer(await file.arrayBuffer(), file.name);
+			documentOpen = true;
+			initDocument(file.name);
+		} catch (error) {
+			showDocumentError("openFile", error);
+		}
+	}
+}
+
+async function openURL(url, progressive, prefetch) {
+	freeDocument();
+	try {
+		let headResponse = await fetch(url, { method: "HEAD" });
+		if (!headResponse.ok)
+			throw new Error("Could not fetch document.");
+		let acceptRanges = headResponse.headers.get("Accept-Ranges");
+		let contentLength = headResponse.headers.get("Content-Length");
+		let contentType = headResponse.headers.get("Content-Type");
+		console.log("HEAD", url);
+		console.log("Content-Length", contentLength);
+		console.log("Content-Type", contentType);
+
+		if (acceptRanges === 'bytes' && progressive) {
+			console.log("USING HTTP RANGE REQUESTS");
+			await mupdfView.openDocumentFromUrl(url, contentLength, progressive, prefetch, contentType || url);
+			documentOpen = true;
+		} else {
+			let bodyResponse = await fetch(url);
+			if (!bodyResponse.ok)
+				throw new Error("Could not fetch document.");
+			let buffer = await bodyResponse.arrayBuffer();
+			await mupdfView.openDocumentFromBuffer(buffer, contentType || url);
+			documentOpen = true;
+		}
+
+		initDocument(url);
+	} catch (error) {
+		showDocumentError("openURL", error);
+	}
+}
+
+function freeDocument() {
+	if (documentOpen) {
+		documentOpen = false;
+		mupdfView.freeDocument();
+		pageCount = 0;
+		pageDIV = [];
+		dirty = [];
+		searchDirty = [];
+	}
+	emptyNode(document.getElementById("pages"));
+	emptyNode(document.getElementById("outline"));
+}
+
+async function initDocument(url) {
+	console.log("INIT DOCUMENT", url);
+
+	pageCount = await mupdfView.countPages();
+	let title = await mupdfView.documentTitle();
+
+	console.log("mupdf: Loaded", JSON.stringify(url), "with", pageCount, "pages.");
+
+	if (title)
+		document.title = title;
+	else
+		document.title = url;
+
+	// Use second page as default page size (the cover page is often differently sized)
+	let defaultW = await mupdfView.getPageWidth(pageCount > 1 ? 2 : 1, dpi);
+	let defaultH = await mupdfView.getPageHeight(pageCount > 1 ? 2 : 1, dpi);
+
+	let pagesDiv = document.getElementById("pages");
+	pagesDiv.scrollTo(0, 0);
+	for (let i = 1; i <= pageCount; ++i) {
+		let a = document.createElement("a");
+		a.classList.add("anchor");
+		a.id = "page" + i;
+		pagesDiv.appendChild(a);
+
+		let div = pageDIV[i] = document.createElement("div");
+		div.classList.add("page");
+		div.style.width = defaultW + 'px';
+		div.style.height = defaultH + 'px';
+		pagesDiv.appendChild(div);
+
+		dirty[i] = true;
+	}
+
+	let outline = await mupdfView.documentOutline();
+	if (outline) {
+		let outlineNode = document.getElementById("outline");
+		buildOutline(outlineNode, outline);
+		showOutline();
+	} else {
+		hideOutline();
+	}
+
+	updateView();
+}
+
+function buildOutline(listNode, outline) {
+	for (let item of outline) {
+		let itemNode = document.createElement("li");
+		let aNode = document.createElement("a");
+		// TODO - document the "+ 1" better
+		aNode.href = `#page${item.page + 1}`;
+		aNode.textContent = item.title;
+		itemNode.appendChild(aNode);
+		listNode.appendChild(itemNode);
+		if (item.down) {
+			itemNode = document.createElement("ul");
+			buildOutline(itemNode, item.down);
+			listNode.appendChild(itemNode);
+		}
+	}
+}
+
+let zoomLevels = [ 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200 ];
+
+function zoomIn() {
+	let curr = zoomLevels.indexOf(zoom);
+	let next = zoomLevels[curr + 1];
+	if (next)
+		setZoom(next);
+}
+
+function zoomOut() {
+	let curr = zoomLevels.indexOf(zoom);
+	let next = zoomLevels[curr - 1];
+	if (next)
+		setZoom(next);
+}
+
+async function setZoom(newZoom) {
+	if (zoom === newZoom)
+		return;
+	zoom = newZoom;
+	dpi = (zoom * 96 / 100) | 0;
+	let defaultW = await mupdfView.getPageWidth(pageCount > 1 ? 2 : 1, dpi);
+	let defaultH = await mupdfView.getPageHeight(pageCount > 1 ? 2 : 1, dpi);
+	let current = 0;
+	for (let i = 1; i <= pageCount; ++i) {
+		if (isVisible(pageDIV[i], -100)) {
+			current = i;
+			break;
+		}
+	}
+	for (let i = 1; i <= pageCount; ++i) {
+		dirty[i] = true;
+		searchDirty[i] = true;
+		pageDIV[i].style.width = defaultW + 'px';
+		pageDIV[i].style.height = defaultH + 'px';
+		emptyNode(pageDIV[i]);
+		pageHIT[i] = null;
+	}
+	if (current)
+		pageDIV[current].scrollIntoView();
+	updateView();
+}
+
+async function deleteItem() {
+	// TODO - find more elegant way to get dirty page
+	let dirtyPageNumber = await mupdfView.deleteItem();
+	dirty[dirtyPageNumber] = true;
+	updateView();
+}
+
+const pageImgs = {};
+const pageDivs = {};
+const jobCookies = {};
+async function updateView() {
+	let i, n = dirty.length;
+	let current = 0;
+	for (i = 1; i <= n; ++i) {
+		if (!current && isVisible(pageDIV[i], -100))
+			current = i;
+
+		if (dirty[i] && isVisible(pageDIV[i], 1000)) {
+			console.log("mupdf: drawing page", i, "@" + devicePixelRatio + "x");
+			let pageNumber = i;
+			dirty[pageNumber] = false;
+			let div = pageDIV[pageNumber];
+
+			let img = new Image();
+			img.draggable = false;
+			// user-select:none disables image.draggable, and we want
+			// to keep pointer-events for the link image-map
+			img.ondragstart = function () { return false; };
+			img.onload = function () {
+				URL.revokeObjectURL(this.src);
+				div.style.width = (this.width / devicePixelRatio) + 'px';
+				div.style.height = (this.height / devicePixelRatio) + 'px';
+				img.style.width = div.style.width;
+				img.style.height = div.style.height;
+			};
+
+			if (editorMode) {
+				img.onmousedown = (event) => mouseDown(pageNumber, img, event);
+				img.onmousemove = (event) => mouseMove(pageNumber, img, event);
+				img.onmouseup = (event) => mouseUp(pageNumber, img, event);
+			}
+
+			let txt = document.createElement("div");
+			txt.classList.add("text");
+			div.getElementsByClassName("text")[0]?.remove();
+			div.appendChild(txt);
+
+			let map = document.createElement("div");
+			map.classList.add("links");
+			div.getElementsByClassName("links")[0]?.remove();
+			div.appendChild(map);
+
+			let hit = pageHIT[i] = document.createElement("div");
+			hit.classList.add("searchHitList");
+			div.getElementsByClassName("searchHitList")[0]?.remove();
+			div.appendChild(hit);
+
+			pageImgs[pageNumber] = img;
+			pageDivs[pageNumber] = div;
+
+			mupdfView.drawPageAsPNG(pageNumber, dpi * devicePixelRatio)
+				.then(cookiePointer => jobCookies[pageNumber] = cookiePointer)
+				.catch(error => showPageError("drawPageAsPNG", div, error));
+
+			mupdfView.getPageLinks(pageNumber, dpi * devicePixelRatio)
+				.then(links => {
+					for (let link of links) {
+						let a = document.createElement("a");
+						a.href = link.href;
+						a.style.left = link.x + 'px';
+						a.style.top = link.y + 'px';
+						a.style.width = link.w + 'px';
+						a.style.height = link.h + 'px';
+						map.appendChild(a);
+					}
+				})
+				.catch(error => {
+					logError("pageLinks", error);
+				});
+
+			mupdfView.getPageText(pageNumber, dpi * devicePixelRatio)
+				.then(jsonData => {
+					console.log("PAGE TEXT:", jsonData);
+					let nodes = [];
+					let pdf_w = [];
+					let html_w = [];
+					let text_len = [];
+					for (let block of jsonData.blocks) {
+						if (block.type === 'text') {
+							for (let line of block.lines) {
+								let text = document.createElement("span");
+								text.style.left = line.bbox.x + 'px';
+								text.style.top = (line.y - line.font.size * 0.8) + 'px';
+								text.style.height = line.bbox.h + 'px';
+								text.style.fontSize = line.font.size + 'px';
+								text.style.fontFamily = line.font.family;
+								text.style.fontWeight = line.font.weight;
+								text.style.fontStyle = line.font.style;
+								text.textContent = line.text;
+								txt.appendChild(text);
+								nodes.push(text);
+								pdf_w.push(line.bbox.w);
+								text_len.push(line.text.length-1);
+							}
+						}
+					}
+					for (let i = 0; i < nodes.length; ++i)
+						if (text_len[i] > 0)
+							html_w[i] = nodes[i].clientWidth;
+					for (let i = 0; i < nodes.length; ++i)
+						if (text_len[i] > 0)
+							nodes[i].style.letterSpacing = ((pdf_w[i] - html_w[i]) / text_len[i]) + 'px';
+				})
+				.catch(error => {
+					logError("getPageText", error);
+				});
+		}
+
+		if (searchNeedle && searchNeedle.length > 0) {
+			if (searchDirty[i] && isVisible(pageDIV[i], 0)) {
+				pageSearch(i)
+					.catch(error => logError("pageSearch", error));
+			}
+		}
+	}
+	if (current)
+		currentPage = current;
+}
+
+mupdfView.onRender = function (pageNumber, pngData, cookiePointer) {
+	if (pngData == null) {
+		// render was aborted
+		return;
+	}
+
+	const img = pageImgs[pageNumber];
+	const div = pageDivs[pageNumber];
+	img.src = URL.createObjectURL(new Blob([pngData], {type:"image/png"}))
+	div.getElementsByTagName("img")[0]?.remove();
+	div.insertBefore(img, div.firstChild);
+
+	// TODO - delete on error too
+	delete jobCookies[pageNumber];
+	mupdfView.deleteCookie(cookiePointer);
+}
+
+function cancelRender(pageNumber) {
+	if (jobCookies[pageNumber] == null) {
+		return;
+	}
+	const int32pointer = jobCookies[pageNumber] >> 2;
+	const wasmMemoryView32 = new Int32Array(mupdfView.wasmMemory);
+	wasmMemoryView32[int32pointer] = 1;
+}
+
+// TODO - fix dirty/update code
+async function mouseDown(pageNumber, img, event) {
+	let x = event.clientX - img.getBoundingClientRect().left - img.clientLeft + img.scrollLeft;
+	let y = event.clientY - img.getBoundingClientRect().top - img.clientTop + img.scrollTop;
+	let changed = await mupdfView.mouseDownOnPage(pageNumber, dpi * devicePixelRatio, x, y);
+	isPressed[pageNumber] = true;
+	if (changed) {
+		dirty[pageNumber] = true;
+		setTimeout(() => updateView(), 0);
+	}
+};
+
+async function mouseMove(pageNumber, img, event) {
+	let x = event.clientX - img.getBoundingClientRect().left - img.clientLeft + img.scrollLeft;
+	let y = event.clientY - img.getBoundingClientRect().top - img.clientTop + img.scrollTop;
+	let changed;
+	// TODO - handle multiple buttons
+	// see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+	if (isPressed[pageNumber]) {
+		if (event.buttons == 0) {
+			// In case we missed an onmouseup event outside of the frame
+			isPressed[pageNumber] = false;
+			changed = await mupdfView.mouseUpOnPage(pageNumber, dpi * devicePixelRatio, x, y);
+		}
+		else {
+			changed = await mupdfView.mouseDragOnPage(pageNumber, dpi * devicePixelRatio, x, y);
+		}
+	}
+	else {
+		changed = await mupdfView.mouseMoveOnPage(pageNumber, dpi * devicePixelRatio, x, y);
+	}
+	if (changed) {
+		dirty[pageNumber] = true;
+		setTimeout(() => updateView(), 0);
+	}
+};
+
+async function mouseUp(pageNumber, img, event) {
+	let x = event.clientX - img.getBoundingClientRect().left - img.clientLeft + img.scrollLeft;
+	let y = event.clientY - img.getBoundingClientRect().top - img.clientTop + img.scrollTop;
+	isPressed[pageNumber] = false;
+	let changed = await mupdfView.mouseUpOnPage(pageNumber, dpi * devicePixelRatio, x, y);
+	if (changed) {
+		dirty[pageNumber] = true;
+		setTimeout(() => updateView(), 0);
+	}
+};
+
+
+/* Wait 50ms until scrolling has stopped before sending off page draw requests */
+let scrollTimer = null;
+document.addEventListener("scroll", function (event) {
+	if (scrollTimer !== null)
+		clearTimeout(scrollTimer);
+	scrollTimer = setTimeout(function () {
+		scrollTimer = null;
+		updateView();
+	}, 50);
+})
+
+let zoomTimer = null;
+window.addEventListener("wheel", function (event) {
+	if (event.ctrlKey || event.metaKey) {
+		event.preventDefault();
+		if (zoomTimer)
+			return;
+		zoomTimer = setTimeout(function () { zoomTimer = null; }, 250);
+		if (event.deltaY < 0)
+			zoomIn();
+		else if (event.deltaY > 0)
+			zoomOut();
+	}
+}, {passive: false});
+
+window.addEventListener("keydown", function (event) {
+	if (editorMode) {
+		if (event.key == "Backspace" || event.key == "Delete") {
+			deleteItem();
+		}
+	}
+
+	if (event.ctrlKey || event.metaKey) {
+		switch (event.keyCode) {
+		// '=' / '+' on various keyboards
+		case 61:
+		case 107:
+		case 187:
+		case 171:
+			zoomIn();
+			event.preventDefault();
+			break;
+		// '-'
+		case 173:
+		case 109:
+		case 189:
+			zoomOut();
+			event.preventDefault();
+			break;
+		// '0'
+		case 48:
+		case 96:
+			setZoom(100);
+			break;
+		case 70: // 'F':
+			event.preventDefault();
+			showSearch();
+			break;
+		case 71: // 'G':
+			event.preventDefault();
+			showSearch();
+			runSearch(event.shiftKey ? -1 : 1);
+			break;
+		}
+	}
+});
+
+</script>
+</html>

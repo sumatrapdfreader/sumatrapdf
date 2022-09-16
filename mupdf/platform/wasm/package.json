@@ -1,0 +1,23 @@
+{
+  "name": "muwasm",
+  "version": "0.1.0",
+  "description": "JS port of mupdf",
+  "main": "lib/mupdf.js",
+  "repository": "http://git.ghostscript.com/?p=mupdf.git",
+  "author": "Artifex Software, Inc.",
+  "license": "AGPL",
+  "engines": {
+    "node": ">=18.4.0"
+  },
+  "scripts": {
+    "server": "node test-server.js",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "chai": "^4.3.6",
+    "eslint": "^8.16.0",
+    "express": "^4.18.1",
+    "jest": "^28.1.1"
+  }
+}

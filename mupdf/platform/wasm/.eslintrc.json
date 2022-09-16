@@ -1,0 +1,35 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es2021": true,
+        "node": true,
+        "worker": true,
+        "jest": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "rules": {
+        "indent": [
+            "warn",
+            "tab"
+        ],
+        "quotes": [
+            "warn",
+            "double"
+        ],
+        "semi": [
+          "warn",
+          "always"
+        ],
+        "no-extra-semi": "warn",
+        "no-mixed-spaces-and-tabs": "warn",
+        "no-unused-vars": [
+            "warn",
+            { "argsIgnorePattern": "^_" }
+        ]
+    },
+    "ignorePatterns": ["mupdf-wasm.js", "mupdf-wasm.worker.js"]
+}

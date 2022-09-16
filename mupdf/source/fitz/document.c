@@ -790,18 +790,18 @@ void fz_set_link_rect(fz_context *ctx, fz_link *link, fz_rect rect)
 {
 	if (link == NULL)
 		return;
-	if (link->set_rect == NULL)
+	if (link->set_rect_fn == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "This format of document does not support updating link bounds");
-	link->set_rect(ctx, link, rect);
+	link->set_rect_fn(ctx, link, rect);
 }
 
 void fz_set_link_uri(fz_context *ctx, fz_link *link, const char *uri)
 {
 	if (link == NULL)
 		return;
-	if (link->set_uri == NULL)
+	if (link->set_uri_fn == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "This format of document does not support updating link uri");
-	link->set_uri(ctx, link, uri);
+	link->set_uri_fn(ctx, link, uri);
 }
 
 void *

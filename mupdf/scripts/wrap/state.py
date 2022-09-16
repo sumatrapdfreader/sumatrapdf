@@ -41,8 +41,6 @@ except Exception as e:
 
 omit_fns = [
         'fz_open_file_w',
-        'fz_set_stderr',
-        'fz_set_stdout',
         'fz_colorspace_name_process_colorants', # Not implemented in mupdf.so?
         'fz_clone_context_internal',            # Not implemented in mupdf?
         'fz_arc4_final',
@@ -53,10 +51,7 @@ omit_fns = [
         'fz_argv_from_wargv',       # Only defined on Windows. Breaks our out-param wrapper code.
         ]
 
-omit_methods = [
-        'fz_encode_character_with_fallback',    # Has 'fz_font **out_font' arg.
-        'fz_new_draw_device_with_options',      # Has 'fz_pixmap **pixmap' arg.
-        ]
+omit_methods = []
 
 class ClangInfo:
     '''
@@ -80,7 +75,8 @@ class ClangInfo:
             # We require 'pip install libclang' which avoids the need to look
             # for libclang.
             return
-        for version in 11, 10, 9, 8, 7, 6,:
+        # As of 2022-09-16, max libclang version is 14.
+        for version in range( 20, 5, -1):
             ok = self._try_init_clang( version)
             if ok:
                 break
@@ -175,6 +171,7 @@ class State:
         self.global_data = dict()
 
         self.enums = dict()
+        self.structs = dict()
 
         # Code should show extra information if state_.show_details(name)
         # returns true.
@@ -187,6 +184,7 @@ class State:
         fns = dict()
         global_data = dict()
         enums = dict()
+        structs = dict()
 
         for cursor in tu.cursor.get_children():
             if cursor.kind==clang.cindex.CursorKind.ENUM_DECL:
@@ -195,9 +193,12 @@ class State:
                 for cursor2 in cursor.get_children():
                     #jlib.log('    {cursor2.spelling=}')
                     name = cursor2.spelling
-                    #if name.startswith('PDF_ENUM_NAME_'):
                     enum_values.append(name)
                 enums[ cursor.type.get_canonical().spelling] = enum_values
+            if cursor.kind==clang.cindex.CursorKind.TYPEDEF_DECL:
+                name = cursor.spelling
+                if name.startswith( ( 'fz_', 'pdf_')):
+                    structs[ name] = cursor
             if (cursor.linkage == clang.cindex.LinkageKind.EXTERNAL
                     or cursor.is_definition()  # Picks up static inline functions.
                     ):
@@ -213,7 +214,8 @@ class State:
         self.functions_cache[ tu] = fns
         self.global_data[ tu] = global_data
         self.enums[ tu] = enums
-        jlib.log('Have populated fns and global_data. {len(enums)=}')
+        self.structs[ tu] = structs
+        jlib.log('Have populated fns and global_data. {len(enums)=} {len(self.structs)}')
 
     def find_functions_starting_with( self, tu, name_prefix, method):
         '''
