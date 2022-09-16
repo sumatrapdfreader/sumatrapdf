@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-40b2c9874138dea503ff6e42cdd26bdc36643e9c
+e80537dddb1acd46badd3a2601526601649ca315
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -61,7 +61,7 @@ sl:&O programu
 sn:&Nezve...
 sp-rs:O programu
 sq:&Për
-sr-rs:О програму
+sr-rs:&О програму
 sv:&Om
 ta:இந்நிரலைப் பற்றி (&A)
 th:&เกี่ยวกับ
@@ -80,6 +80,7 @@ co:&Dimensione attuale
 cy:&Maint Gwirioneddol
 cz:&Skutečná velikost
 de:&Tatsächliche Größe
+dk:&Faktisk størrelse
 el:Πραγματικό μέγεθος
 es:&Tamaño real
 eu:&Oraingo neurria
@@ -91,6 +92,7 @@ ja:実際のサイズ(&A)
 nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 ru:Насто&ящий размер
+sr-rs:&Стварна величина
 tl:&Totoong Sukat
 tr:&Gercek boyut
 tw:實際尺寸(&A)
@@ -152,7 +154,7 @@ sk:&Rozšírené možnosti...
 sl:N&apredne možnosti …
 sp-rs:Napredna podešavanja...
 sq:Opsionet e &avancuara...
-sr-rs:Напредне опције
+sr-rs:&Напредне опције
 sv:&Avancerade inställningar...
 ta:மேம்பட்ட விருப்பத்தேர்வுகள் (A)
 th:&การตั้งค่าขั้นสูง
@@ -219,7 +221,7 @@ sk:&Tlačiť všetky strany
 sl:&Vse izbrane strani
 sp-rs:Sve izabrane stranice
 sq:&Gjithë faqet e përzgjedhura
-sr-rs:Све изабране странице
+sr-rs:&Све изабране странице
 sv:&Alla valda sidor
 ta:அனைத்து தேர்ந்தெடுக்கப்பட்ட பக்கங்கள் (&A)
 th:&หน้าที่เลือกทั้งหมด
@@ -238,6 +240,7 @@ co:&Precedente
 cy:&Nôl
 cz:&Zpět
 de:&Vorherige Ansicht
+dk:Til&bage
 el:Πίσω
 es:&Atrás
 eu:A&tzera
@@ -249,6 +252,7 @@ ja:戻る(&B)
 nl:&Terug
 pl:&Wstecz
 ru:&Назад
+sr-rs:&Назад
 tl:&Bumalik
 tr:&Geri
 tw:上一個跳轉點(&B)
@@ -262,6 +266,7 @@ cn:书籍视图(&B)
 co:Cum’è un &libru
 cy:Golwg &Llyfr
 de:&Buchansicht
+dk:&Bogvisning
 el:Προβολή βιβλίου
 es:&Vista de libro
 eu:&Liburu ikuspegia
@@ -273,6 +278,7 @@ ja:ブック ビュー(&B)
 nl:&Boek Tonen
 pl:Widok o&dczytu
 ru:В &разворот
+sr-rs:Приказ &књиге
 tl:&View ng libro
 tr:&Kitap Görünümü
 tw:書本檢視(&B)
@@ -289,8 +295,9 @@ cn:取消
 co:&Abbandunà
 cy:&Diddymu
 de:&Abbrechen
+dk:A&nnuller
 el:&Άκυρο
-es:Cancelar
+es:&Cancelar
 et:&Loobu
 eu:E&zeztatu
 fr:Ann&uler
@@ -308,6 +315,7 @@ pl:&Anuluj
 ru:Отмена
 sk:&Zrušiť
 sl:&Prekliči
+sr-rs:&Откажи
 th:&ยกเลิก
 tl:&Kanselahin
 tr:&İptal Et
@@ -326,6 +334,7 @@ cn:&插入符
 co:&Cursore
 cy:&Caret
 de:&Cursor
+dk:&Caret
 el:Αγκύλη
 es:&Cursor
 et:&Caret
@@ -345,6 +354,7 @@ nl:&Merkteken
 pl:&Kareta
 ru:&Каретка
 sl:&Karet
+sr-rs:&Карет
 th:&ผู้ดูแล
 tl:&Kareta
 tr:&Karet
@@ -358,6 +368,7 @@ cn:关闭(&C)
 co:&Chjode
 cy:&Cau
 de:&Schließen
+dk:&Luk
 el:Κλείσιμο
 es:&Cerrar
 eu:It&xi
@@ -369,6 +380,7 @@ ja:閉じる(&C)
 nl:&Sluiten
 pl:&Zamknij
 ru:&Закрыть
+sr-rs:&Затвори
 tl:&Isara
 tr:&Kapat
 tw:關閉(&C)
@@ -384,6 +396,7 @@ cn:继续安装 32 位版本(&C)
 co:&Cuntinuà l’installazione di a versione 32-bit
 cy:&Parhau i osod y fersiwn 32-did
 de:Installation der 32-Bit-Version fortsetzen
+dk:&Fortsæt med installation af 32-bit version
 el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
 et:&Jätka 32-bitise versiooni paigaldamist
@@ -404,6 +417,7 @@ pl:&Kontynuuj instalację wersji 32-bitowej
 ru:&Продолжить установку 32-разрядной версии
 sk:&Pokračovať v inštalácii 32-bitovej verzie
 sl:&Nadaljuj z nameščanjem 32-bitne različice
+sr-rs:&Настави са инсталацијом 32-битне верзије
 th:&กำลังติดตั้งรุ่น 32-บิต ต่อไป
 tl:&Magpatuloy sa pag-install ng 32-bit na bersyon
 tr:32 bit sürümü kurmayı &sürdür
@@ -465,7 +479,7 @@ sk:&Kopírovať vybrané
 sl:Kopiraj izbor
 sp-rs:Kopiraj izabrano
 sq:&Kopjoj materialin
-sr-rs:Копирај изабрано
+sr-rs:Копирај и&забрано
 sv:&Kopiera markering
 ta:தேர்ந்தெடுத்தவற்றை நகலெடு
 th:&คัดลอกตำแหน่งที่เลือก
@@ -482,6 +496,7 @@ cn:复制到剪贴板(&C)
 co:&Cupià in u preme’papei
 cy:&Copïo i'r Clipfwrdd
 de:&In Zwischenablage kopieren
+dk:&Kopier til udklipsholder
 el:Αντιγραφή στο πρόχειρο
 es:&Copiar a portapapeles
 eu:&Kopiatu gakora
@@ -493,6 +508,7 @@ ja:クリップボードへコピー(&C)
 nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 ru:С&копировать в буфер обмена
+sr-rs:&Копирај у оставу (клипборд)
 tl:&Kopyahin sa clipboard
 tr:Panoya &kopyala
 tw:複製到剪貼簿(&C)
@@ -508,6 +524,7 @@ cn:不保存更改(&D)
 co:&Scartà i cambiamenti
 cy:&Hepgor newidiadau
 de:&Änderungen verwerfen
+dk:&Fortryd ændringer
 el:Απόρριψη
 es:&Descartar
 et:&Loobu muudatustest
@@ -526,6 +543,7 @@ nl:&Weggooien
 pl:O&drzuć zmiany
 ru:Отказат&ься от изменений
 sl:&Zavrži spremembe
+sr-rs:Одба&ци промене
 th:&ละทิ้งการเปลี่ยนแปลง
 tl:&Itapon ang mga pagbabago
 tr:&Görmezden Gel
@@ -591,7 +609,7 @@ sl:&Ne sprašuj me več
 sn:Usandivhunze futi
 sp-rs:Ne pitaj me ponovo
 sq:&Mos pyet më
-sr-rs:Не питај ме поново
+sr-rs:Не питај ме &поново
 sv:Fråga inte igen
 ta:மரு படியும் கேட்காதே
 th:&ไม่ต้องถามอีกครั้ง
@@ -656,7 +674,7 @@ sk:&Tlačiť iba párne strany
 sl:Samo &parne strani
 sp-rs:Samo lica stranica
 sq:Vetëm faqet &çift
-sr-rs:Само лица страница
+sr-rs:Само &парне странице
 sv:Endast &jämna sidor
 ta:இரட்டைபடை எண்கள்  மட்டும்
 th:& แม้แต่หน้าเท่านั้น
@@ -683,6 +701,7 @@ ja:見開き(&F)
 nl:&Gericht op
 pl:&Wiele stron
 ru:По &две страницы
+sr-rs:&Две странице
 tl:Nakaharap
 tr:Her İki Yüz
 tw:對頁模式(&F)
@@ -749,7 +768,7 @@ sl:&Datoteka
 sn:&Faira
 sp-rs:Datoteka
 sq:&Skedar
-sr-rs:Датотека
+sr-rs:&Датотека
 sv:&Arkiv
 ta:கோப்பு
 th:&ไฟล์
@@ -816,7 +835,7 @@ sk:&Vyhľadať:
 sl:&Najdi:
 sp-rs:Pojam:
 sq:&Gjej çfarë:
-sr-rs:Појам:
+sr-rs:П&ојам:
 sv:&Sök efter:
 ta:எதை தேடவும்
 th:&ค้นหาอะไร:
@@ -833,6 +852,7 @@ cn:第一页(&F)
 co:P&rima pagina
 cy:Tudalen &Gyntaf
 de:&Erste Seite
+dk:&Første side
 el:Πρώτη σελίδα
 es:&Primera página
 eu:&Lehen orrialdea
@@ -843,6 +863,7 @@ ja:最初のページ(&F)
 nl:&Eerste Pagina
 pl:&Pierwsza strona
 ru:Пер&вая страница
+sr-rs:&Прва страница
 tl:&Unang pahina
 tr:İlk sayfa
 uk:Перша сторінка
@@ -900,7 +921,7 @@ sk:&Prispôsobiť strany na tlačiteľnú plochu
 sl:Prilagodi strani na področje tiskanja
 sp-rs:Podesi stranice prema oblasti štampanja
 sq:&Përshtat faqet në hapësirën e printuar
-sr-rs:Подеси странице према области штампања
+sr-rs:&Смести странице у област штампања
 sv:&Anpassa sidor till utskrivbart område
 ta:அச்சிடும் அளவில் பக்கத்தை காட்டு
 th:&ปรับหน้ากระดาษให้พอดีกับพื้นที่ที่สามารถพิมพ์ได้
@@ -938,6 +959,7 @@ pl:&Dowolny tekst
 ru:Сво&бодный текст
 sk:&Voľný text
 sl:&Prosti tekst
+sr-rs:&Слободан текст
 th:&ข้อความอิสระ
 tr:&Özgür Metin
 tw:自由文字(&F)
@@ -1004,7 +1026,7 @@ sl:Po&jdi na
 sn:Enda ku...
 sp-rs:Idi
 sq:&Shkoj te
-sr-rs:Иди
+sr-rs:&Иди
 sv:&Gå till
 ta:அங்கு செல்
 th:&ไปที่
@@ -1072,7 +1094,7 @@ sk:&Prejsť na stranu:
 sl:Pojdi na &stran:
 sp-rs:Idi na stranicu:
 sq:&Shkoj te faqja:
-sr-rs:Иди на страницу:
+sr-rs:&Иди на страницу:
 sv:&Gå till sida:
 ta:பக்கதிர்க்கு செல்:
 th:&ไปที่หน้า:
@@ -1143,7 +1165,7 @@ sl:Po&moč
 sn:&Rubatsiro
 sp-rs:Pomoć
 sq:&Ndihmë
-sr-rs:Помоћ
+sr-rs:Помо&ћ
 sv:&Hjälp
 ta:உதவி
 th:&ช่วยเหลือ
@@ -1169,6 +1191,7 @@ ja:ハイライト(&H)
 nl:&Markeren
 pl:&Wyróżnienie
 ru:По&дсветка
+sr-rs:&Маркирај
 tr:&Vurgula
 uk:Виділити 
 vn:&Nổi Bật
@@ -1179,6 +1202,7 @@ cn:最后一页(&L)
 co:&Ultima pagina
 cy:Tudalen &Olaf
 de:&Letzte Seite
+dk:&Sidste side
 el:Τελευταία σελίδα
 es:Última página
 eu:&Azken orrialdea
@@ -1189,6 +1213,7 @@ ja:最後のページ(&L)
 nl:&Laatste Pagina
 pl:&Ostatnia strona
 ru:Последня&я страница
+sr-rs:&Задња страница
 tl:Hu&ling pahina
 tr:Son sayfa
 uk:Остання сторінка 
@@ -1247,7 +1272,7 @@ sk:&Zobrazenie:
 sl:&Povečava:
 sp-rs:Uvećanje:
 sq:&Zmadhimi:
-sr-rs:Увећање:
+sr-rs:Уве&ћање:
 sv:&Förstoring:
 ta:பெரிதாக்கம்
 th:&การขยาย:
@@ -1315,7 +1340,7 @@ sk:&Príručka
 sl:P&riročnik
 sp-rs:Uputstvo
 sq:&Manuali
-sr-rs:Упутство
+sr-rs:&Упутство
 sv:&Manual
 ta:செய்முறை ஏடு
 th:&คู่มือการใช้งาน
@@ -1379,7 +1404,7 @@ sk:&Podľa zadaných kritérií
 sl:Razlikuj &med velikimi/malimi črkami
 sp-rs:Razlikuj mala i velika slova
 sq:&Krahasoj shkronjat
-sr-rs:Разликуј мала и велика слова
+sr-rs:&Разликуј мала и велика слова
 sv:Matcha &versaler/gemener
 ta:தட்டுப் பொருத்தம்
 th:&จับคู่
@@ -1396,6 +1421,7 @@ cn:下一页(&N)
 co:Pagina &seguente
 cy:Tudalen &Nesaf
 de:&Nächste Seite
+dk:&Næste side
 el:Επόμενη σελίδα
 es:&Página siguiente
 eu:&Hurrengo orrialdea
@@ -1406,6 +1432,7 @@ ja:次のページ(&N)
 nl:&Volgende Pagina
 pl:&Następna strona
 ru:&Следующая страница
+sr-rs:&Следећа страница
 tr:Sonraki sayfa
 tw:下一頁(&N)
 uk:Наступна сторінка
@@ -1469,7 +1496,7 @@ sl:&Ne
 sn:&kwete
 sp-rs:Ne
 sq:&Jo
-sr-rs:Не
+sr-rs:&Не
 sv:&Nej
 ta:இல்லை
 th:&ไม่ใช่
@@ -1534,7 +1561,7 @@ sk:&Tlačiť iba nepárne strany
 sl:Samo &lihe strani
 sp-rs:Samo poleđine stranica
 sq:Vetëm faqet &teke
-sr-rs:Само полеђине страница
+sr-rs:Само &непарне странице
 sv:Endast &udda sidor
 ta:ஒற்றைபடை பக்கங்கள் மட்டும்
 th:&เพิ่มหน้าแตกต่างเท่านั้น
@@ -1598,7 +1625,7 @@ sk:&Otvoriť dokument
 sl:&Odpri dokument
 sp-rs:Otvori dokument
 sq:&Hap dokumentin
-sr-rs:Отвори документ
+sr-rs:&Отвори документ
 sv:&Öppna dokument
 ta:கோப்பை திற
 th:&เปิดเอกสาร
@@ -1615,6 +1642,7 @@ cn:打开(&O)...
 co:&Apre…
 cy:&Agor...
 de:&Öffnen...
+dk:Å&bn
 el:Άνοιγμα
 es:&Abrir...
 eu:&Ireki...
@@ -1625,6 +1653,7 @@ ja:開く(&O)...
 nl:&Openen
 pl:&Otwórz...
 ru:&Открыть...
+sr-rs:&Отвори...
 tr:Aç...
 tw:開啟(&O)
 uk:Відкрити
@@ -1682,7 +1711,7 @@ sk:&Možnosti
 sl:M&ožnosti
 sp-rs:Opcije
 sq:&Opsionet
-sr-rs:Опције
+sr-rs:&Опције
 sv:Alternativ
 ta:&விருப்பம்
 th:&ตัวเลือก
@@ -1745,7 +1774,7 @@ sk:&Možnosti...
 sl:&Možnosti …
 sp-rs:Opcije...
 sq:&Opsionet...
-sr-rs:Опције...
+sr-rs:&Опције...
 sv:Alternativ...
 ta:விருப்ப பேரம்
 th:&ตัวเลือก...
@@ -1812,7 +1841,7 @@ sk:&Heslo:
 sl:&Geslo:
 sp-rs:Lozinka
 sq:&Fjalëkalimi:
-sr-rs:Лозинка
+sr-rs:&Лозинка
 sv:&Lösenord:
 ta:கடவுச்சொல்
 th:&รหัสผ่าน:
@@ -1875,7 +1904,7 @@ sk:&Pripnúť dokument
 sl:&Pritrdi dokument
 sp-rs:Prikači dokument
 sq:&Fiksoj dokumentin
-sr-rs:Прикачи документ
+sr-rs:П&рикачи документ
 sv:&Fäst dokument
 ta:கோப்பை குத்திவை
 th:&เอกสาร Pin
@@ -1891,6 +1920,7 @@ cn:上一页(&P)
 co:Pagina &precedente
 cy:Tudalen &Flaenorol
 de:&Vorherige Seite
+dk:&Forrige side
 el:Προηγούμενη σελίδα
 es:&Página anterior
 eu:A&urreko orrialdea
@@ -1901,6 +1931,7 @@ ja:前のページ(&P)
 nl:&Vorige Pagina
 pl:&Poprzednia strona
 ru:Пр&едыдущая страница
+sr-rs:&Претходна страница
 tr:Önceki sayfa
 tw:上一頁(&P)
 uk:Попередня сторінка 
@@ -1960,7 +1991,7 @@ sk:&Tlač...
 sl:&Natisni …
 sp-rs:Štampaj...
 sq:&Printoj...
-sr-rs:Штампај...
+sr-rs:&Штампај...
 sv:&Skriv ut...
 ta:அச்சிடு...
 th:&พิมพ์...
@@ -2024,7 +2055,7 @@ sk:&Tlač... (odmietnutá)
 sl:&Natisni … (onemogočeno)
 sp-rs:Štampaj... (odbijeno)
 sq:&Printoj... (ndalohet)
-sr-rs:Штампај... (одбијено)
+sr-rs:&Штампај... (одбијено)
 sv:&Utskrift... (nekad)
 ta:அகசிடல்... (நிராகரிக்கப்பட்டது)
 th:&พิมพ์... (ถูกปฏิเสธ)
@@ -2087,7 +2118,7 @@ sk:&Zapamätať si heslo pre tento dokument
 sl:&Zapomni si geslo za ta dokument
 sp-rs:Zapamti lozinku za ovaj dokument
 sq:&Mbaj mend fjalëkalimin për këtë dokument
-sr-rs:Запамти лозинку за овај документ
+sr-rs:&Запамти лозинку за овај документ
 sv:&Kom ihåg lösenordet för detta dokument
 ta:கடவுச்சொல்லை நினைவில் வை
 th:&จำรหัสผ่านสำหรับเอกสารนี้
@@ -2151,7 +2182,7 @@ sk:&Zapamätať si tieto nastavenia pre každý dokument
 sl:Zapomni si te &nastavitve za vsak dokument
 sp-rs:Zapamti ova podešavanja za svaki pojedinačni dokument
 sq:&Mbaj mend parametrat për çdo dokument
-sr-rs:Запамти ова подешавања за сваки појединачни документ
+sr-rs:&Запамти ова подешавања за сваки појединачни документ
 sv:Kom ihåg dessa inställningar för &varje dokument
 ta:அமைப்புகளை ஞாபகம் கொள்
 th:&จดจำการตั้งค่าเหล่านี้สำหรับแต่ละเอกสาร
@@ -2195,6 +2226,7 @@ pl:&Usuń z historii
 ru:&Удалить из истории
 sk:&Odstrániť z histórie
 sl:Odst&rani iz zgodovine
+sr-rs:&Уклони из историје
 ta:வரலாற்றிலிருந்து நீக்கு 
 th:&ย้ายออกจากประวัติ
 tr:Geçmişten &Kaldır
@@ -2255,7 +2287,7 @@ sk:&Uložiť ako...
 sl:Shrani &kot …
 sp-rs:Sačuvaj kao...
 sq:&Ruaj si...
-sr-rs:Сачувај као...
+sr-rs:&Сачувај као...
 sv:&Spara som...
 ta:எனச் சேமி...
 th:&บันทึกเป็น...
@@ -2292,6 +2324,7 @@ pl:&Zapisz w istniejącym pliku PDF
 ru:&Сохранить в имеющийся PDF
 sk:&Uložiť do existujúceho PDF
 sl:&Shrani v obstoječo PDF datoteko
+sr-rs:&Сачувај у постојећи PDF
 th:&บันทึกไปที่ PDF ที่เปิดอยู่
 tr:Var olan PDF'ye &kaydet
 uk:Зберегти в наявному PDF-файлі
@@ -2322,6 +2355,7 @@ pl:&Szukaj za pomocą Google
 ru:&Найти в Google
 sk:&Hľadať pomocou Google
 sl:&Išči z Google
+sr-rs:&Претражи помоћу Google-а
 th:&ค้นหาด้วย Google
 tr:Google İle &Ara
 tw:使用Google搜尋(&S)
@@ -2382,7 +2416,7 @@ sk:&Nastavenia
 sl:&Nastavitve
 sp-rs:Podešavanja
 sq:&Parametrat
-sr-rs:Подешавања
+sr-rs:П&одешавања
 sv:Alternati&v
 ta:அமைப்புகள்
 th:&การตั้งค่า
@@ -2445,7 +2479,7 @@ sk:&Zmenšiť strany na tlačiteľnú plochu (ak je to potrebné)
 sl:&Skrči strani na področje tiskanja (če potrebno)
 sp-rs:Skupi stranice na oblast štampanja (ukoliko je neophodno)
 sq:&Ngjesh faqet në hapësirën e printuar (sipas nevojës)
-sr-rs:Скупи странице на област штампања (уколико је неопходно)
+sr-rs:&Скупи странице на област штампања (уколико је неопходно)
 sv:&Krymp sidor till utskrivbart område (om nödvändigt)
 ta:கோப்பை அச்சிடும் அளவிற்கு சுருக்கு (தேவைபட்டால்)
 th:&ย่อขนาดหน้ากระดาษไปยังพื้นที่ที่สามารถพิมพ์ได้ (ถ้าจำเป็น)
@@ -2461,6 +2495,7 @@ cn:单页视图(&S)
 co:&Una pagina sola
 cy:&Un Tudalen
 de:Einzel&seitenansicht
+dk:&Enkelt side
 el:Μία σελίδα 
 es:&Una sola página
 eu:&Orrialde bakarra
@@ -2471,6 +2506,7 @@ ja:単一のページ(&S)
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
 ru:По &одной странице
+sr-rs:&Једна страница
 tr:Tek sayfa
 tw:單頁模式(&S)
 uk:Одна сторінка
@@ -2502,6 +2538,7 @@ nl:&Stempel
 pl:Pie&częć
 ru:&Штамп
 sl:&Žig
+sr-rs:Пе&чат
 th:&ประทับตรา
 tr:&Damga
 tw:圖章(&S)
@@ -2534,6 +2571,7 @@ nl:&Doorhalen
 pl:&Skreślenie
 ru:Зач&ёркнутый
 sl:&Prečrtano
+sr-rs:Пре&цртано
 th:&ตีออก
 tr:&Üstünü Çiz
 uk:Викреслити
@@ -2569,6 +2607,7 @@ nl:&Tekst
 pl:&Tekst
 ru:&Текст
 sl:&Besedilo
+sr-rs:&Текст
 th:&ข้อความ
 tr:&Metin
 uk:&Текст
@@ -2621,7 +2660,7 @@ sk:&Téma
 sl:&Tema
 sp-rs:Tema
 sq:&Motivi
-sr-rs:Тема
+sr-rs:&Тема
 sv:&Tema
 ta:கருப்பொருள் (&T)
 th:&ธีม
@@ -2656,6 +2695,7 @@ pl:&Tłumacz za pomocą Google
 ru:&Перевести в Google
 sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
+sr-rs:Пре&веди помоћу Google-а
 th:&แปลด้วย Google
 tr:Google İle &Çevir
 tw:使用Google翻譯(&T)
@@ -2686,6 +2726,7 @@ lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
 ru:Под&чёркнутый
+sr-rs:Под&вуци
 th:&ขีดเส้นใต้
 tr:&Altını Çiz
 tw:底線(&U)
@@ -2744,7 +2785,7 @@ sk:Použiť originálne veľkosti strán
 sl:&Uporabi izvirno velikost strani
 sp-rs:Upotrebi originalne veličine stranica
 sq:&Përdor përmasat origjinale të fletës
-sr-rs:Употреби оригиналне величине страница
+sr-rs:&Употреби оригиналне величине страница
 sv:Använd u&rsprungliga sidstorlekar
 ta:மூல பக்க அளவுகளை உபயோகி
 th:&ใช้ขนาดหน้าดั้งเดิม
@@ -2814,7 +2855,7 @@ sl:&Pogled
 sn:&Maonero
 sp-rs:Prikaz
 sq:&Pamje
-sr-rs:Приказ
+sr-rs:&Приказ
 sv:Vi&sa
 ta:நோக்கு
 th:&มุมมอง
@@ -2940,7 +2981,7 @@ sk:&Áno
 sl:&Da
 sp-rs:Da
 sq:&Po
-sr-rs:Да
+sr-rs:&Да
 sv:&Ja
 ta:ஆம்
 th:&ใช่
@@ -3010,7 +3051,7 @@ sl:Po&večava
 sn:&Zuma
 sp-rs:Uvećanje
 sq:&Shkalla
-sr-rs:Увећање
+sr-rs:&Увећање
 sv:&Zoom
 ta:பெரிதாக்கு
 th:&ขยายเข้าออก
@@ -3236,7 +3277,7 @@ cz:Přidat oblíbenou položku
 de:Favoriten hinzufügen
 dk:Tilføj bogmærke
 el:Προσθήκη αγαπημένου
-es:Añadir un favorito
+es:Añadir favorito
 et:Lisa lemmik
 eu:Gehitu Gogokoena
 fa:افزودن به علاقه‌مندی‌ها
@@ -3276,7 +3317,7 @@ sk:Pridať obľúbenú položku
 sl:Dodaj Priljubljene
 sp-rs:Dodavanje u odabir
 sq:Shënoj te pëlqimet
-sr-rs:Додавање у одабир
+sr-rs:Додавање у фаворите
 sv:Lägg till Favorit
 ta:பிடித்தவைகனளயும் சேர்க்க
 th:เพิ่มรายการโปรด
@@ -3304,7 +3345,7 @@ cz:Přidat stránku %s k oblíbeným...
 de:Seite %s zu Favoriten hinzufügen…
 dk:Føj side %s til foretrukne
 el:Προσθήκη της σελίδας %s στα αγαπημένα
-es:Añadir la página %s a los favoritos
+es:Agregar página %s a favoritos
 et:Lisa lehekülg %s lemmikutesse
 eu:Gehitu %s Orrialdea Gogokoenetara
 fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها
@@ -3371,7 +3412,7 @@ cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
 de:Seite %s zu Favoriten mit Namen (optional) hinzufügen:
 dk:Føj side %s til foretrukne med (valgfrit) navn:
 el:Προσθήκη σελίδας %s στα αγαπημένα με (προαιρετικό) όνομα:
-es:Añadir la página %s a los favoritos con un nombre (opcional):
+es:Agregar página %s a favoritos con un nombre (opcional):
 et:Lisa lehekülg %s lemmikutesse (valikulise) nimega:
 eu:Gehitu %s Gogokoenetara (aukerazkoa) Izenarekin:
 fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها با نامی اختیاری:
@@ -3437,7 +3478,7 @@ cz:Přidat k oblíbeným
 de:Zu Favoriten hinzufügen…
 dk:Føj til foretrukne
 el:Προσθήκη στα αγαπημένα
-es:Añadir a los favoritos
+es:Añadir a favoritos
 et:Lisa lemmikutesse
 eu:Gehitu Gogokoenetara
 fa:افزودن به علاقه‌مندی‌ها
@@ -3477,7 +3518,7 @@ sk:Pridať k obľúbeným
 sl:Dodaj med priljubljene
 sp-rs:Dodaj među odabrane
 sq:Shënoj te pëlqimet
-sr-rs:Додај међу одабране
+sr-rs:Додај у фаворите
 sv:Lägg till i Favoriter
 ta:பிடித்தவையில் சேர்
 th:เพิ่มไปยังรายการโปรด
@@ -3731,6 +3772,7 @@ pl:Adnotacje
 ru:Аннотации
 sk:Anotácie
 sl:Pripombe
+sr-rs:Белешке
 th:อธิบายประกอบ
 tl:Mga anotasyon
 tr:Dipnotlar
@@ -3892,7 +3934,7 @@ cz:Přidružit k PDF souborům?
 de:Mit PDF-Dateien verknüpfen?
 dk:Tilknyt med PDF-filer?
 el:Να γίνει συσχετισμός με τα αρχεία PDF;
-es:¿Asociar con los archivos PDF?
+es:¿Asociar con archivos PDF?
 et:Seosta PDF-failidega?
 eu:Elkartu PDF agiriekin?
 fa:پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
@@ -4093,8 +4135,9 @@ co:Autore : %s
 cy:Awdur: %s
 cz:Autor: %s
 de:Autor: %s
+dk:Forfatter: %s
 el:Συγγραφέας: %s
-es:Autora: %s
+es:Autor: %s
 et:Autor: %s
 eu:Egilea: %s
 fr:Auteur : %s
@@ -4110,6 +4153,7 @@ nl:Auteur: %s
 pl:Autor: %s
 ru:Автор: %s
 sl:Avtor: %s
+sr-rs:Аутор: %s
 tl:May-akda: %s
 tr:Yazar: %s
 tw:作者: %s
@@ -4242,7 +4286,7 @@ sk:Automaticky kontrolovať &aktualizácie
 sl:&Samodejno preveri za posodobitve
 sp-rs:Automatski proveravaj dostupnost nove verzije
 sq:Verifikoj automatikisht &azhurnimet
-sr-rs:Аутоматски проверавај доступност нове верзије
+sr-rs:Аутоматски проверавај &ажурирања
 sv:Sök &automatiskt efter uppdateringar
 ta:தானாக புதுப்பித்த பதிப்பை தேடு
 th:ตรวจสอบโดยอัตโนมัติ &อัพเดท
@@ -4265,6 +4309,7 @@ co:Culore di u fondu :
 cy:Lliw Cefndir:
 cz:Barva pozadí:
 de:Hintergrundfarbe:
+dk:Baggrundsfarve
 el:Χρώμα φόντου:
 es:Color de fondo
 et:Taustavärv:
@@ -4287,6 +4332,7 @@ pl:Kolor tła:
 ru:Цвет фона:
 sk:Farba pozadia:
 sl:Barva ozadja:
+sr-rs:Позадинска боја:
 th:สีพื้นหลัง
 tl:Kulay ng background:
 tr:Arka Plan Rengi
@@ -4570,6 +4616,7 @@ co:Bordu : %d
 cy:Border: %d
 cz:Okraj: %d
 de:Umrandung: %d
+dk:Ramme: %d
 el:Περιθώριο: %d
 es:Borde: %d
 et:Ääris: %d
@@ -4587,6 +4634,7 @@ nl:Rand %d
 pl:Obramowanie: %d
 ru:Рамка: %d
 sl:Rob: %d
+sr-rs:Ивица: %d
 tl:Gilid: %d
 tr:Kenarlık: %d
 tw:邊界: %d
@@ -5015,7 +5063,7 @@ cz:Změnit jazyk... (Change Language)
 de:Sprache ändern… (Change Language)
 dk:Skift sprog (Change Language)
 el:Αλλαγή γλώσσας (Change Language)
-es:Cambiar el idioma
+es:Cambiar idioma
 et:Vali keel (Change Language)
 eu:Aldatu Hizkuntza (Change Language)
 fa:تغییر زبان (Change Language)
@@ -5086,7 +5134,7 @@ cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
 dk:Tjek efter &opdateringer
 el:Έ&λεγχος για νέα έκδοση
-es:&Buscar actualizaciones
+es:Buscar &actualizaciones
 et:Vaata, kas on &uuendusi
 eu:&Egiaztatu Eguneraketak
 fa:بررسی برای به‌روزرسانی‌ها
@@ -5126,7 +5174,7 @@ sl:&Preveri za posodobitve
 sn:&Tsvaga version idzva
 sp-rs:Proveri postojanje novije verzije
 sq:&Azhurnoj
-sr-rs:Провери постојање новије верзије
+sr-rs:Провери &ажурирања
 sv:&Sök efter ny version
 ta:புதிய பதிப்பை தேடு
 th:ตรวจสอบ &อัพเดท
@@ -5147,6 +5195,7 @@ cn:正在检查更新...
 co:Cuntrollu di e nove versioni…
 cy:Gwirio am ddiweddariad...
 de:Nach einem Update suchen...
+dk:Søger efter opdateringer
 el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
 et:Uuenduste otsimine...
@@ -5166,6 +5215,7 @@ nl:Controleer op Update...
 pl:Szukanie aktualizacji...
 ru:Проверка наличия обновления...
 sl:Preverjanje posodobitev …
+sr-rs:Провера ажурирања...
 th:ตรวจสอบการอัพเดท
 tl:Nagsusuri ng update...
 tr:Güncelleme denetleniyor...
@@ -5211,6 +5261,7 @@ pl:Okrąg
 ru:Круг
 sk:Kruh
 sl:Krog
+sr-rs:Круг
 ta:வட்டம்
 th:วงกลม
 tl:Bilog
@@ -5294,15 +5345,19 @@ cn:关闭其他标签页
 co:Chjode d’altre unghjette
 cy:Cau Tabiau Eraill
 de:Andere Tabs schließen
+dk:Luk andre tabs
 el:Κλείσιμο άλλων καρτελών
 es:Cerrar otras pestañas
 eu:Itxi beste hegatsak
 fr:Fermer les autres onglets
+hi:अन्य टैब बंद करें
 hr:Zatvori ostale kartice
 it:Chiudi altre schede
 ja:他のタブを閉じる
 nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
+ru:Закрыть другие вкладки
+sr-rs:Затвори остале картице
 tr:Diğer Sekmeleri Kapat
 tw:關閉其他分頁
 uk:Закрити інші вкладки
@@ -5313,15 +5368,19 @@ cn:关闭右侧标签页
 co:Chjode l’unghjette versu a diritta
 cy:Cau Tabiau i'r Dde
 de:Tabs rechts schließen
+dk:Luk tabs til højre
 el:Κλείσιμο καρτελών στα δεξιά
 es:Cerrar pestañas a la derecha
 eu:Itxi eskuineko hegatsak
 fr:Fermer les onglets sur la droite
+hi:दाईं ओर के टैब बंद करें
 hr:Zatvori kartice zdesna
 it:Chiudi scheda sulla destra
 ja:右側のタブを閉じる
 nl:Sluit Tabbladen Rechts
 pl:Zamknij karty po prawej stronie
+ru:Закрыть вкладки справа
+sr-rs:Затвори картице са десне стране
 tr:Sağdaki sekmeleri kapat
 uk:Закрити вкладки праворуч
 :Collapse All
@@ -5366,6 +5425,7 @@ pt:Recolher tudo
 ru:Свернуть все
 sk:Zbaliť všetko
 sl:Strni vse
+sr-rs:Скупи све
 ta:அனைத்தையும் மறை 
 th:ยุบทั้งหมด
 tl:I-collapse lahat
@@ -5410,6 +5470,7 @@ pl:Kolor:
 ru:Цвет:
 sk:Farba:
 sl:Barva:
+sr-rs:Боја:
 th:สี:
 tl:Kulay:
 tr:Renk:
@@ -5489,6 +5550,7 @@ cn:命令面板
 co:Tavuletta di cumande
 cy:Palet Gorchmynion
 de:Befehlspalette
+dk:Kommandopalette
 el:Παλέτα εντολών
 es:Paleta de comandos 
 et:Käsupalett
@@ -5501,6 +5563,7 @@ ja:コマンドパレット
 nl:Opdrachten
 pl:Paleta poleceń
 ru:Панель команд
+sr-rs:Палета команди
 tl:Command Palette
 tr:Komut paleti
 tw:指令面板
@@ -5583,6 +5646,7 @@ cn:内容：
 co:Cuntenutu :
 cy:Cynnwys:
 de:Inhalte:
+dk:Indhold:
 el:Περιεχόμενα:
 es:Contenido:
 et:Sisu:
@@ -5600,6 +5664,7 @@ nl:Inhoud
 pl:Zawartość:
 ru:Содержимое:
 sl:Vsebina:
+sr-rs:Садржај:
 tl:Nilalaman:
 tr:İçerikler:
 uk:Зміст:
@@ -5802,7 +5867,7 @@ sl:Nepretrgano dvostransko
 sn:Facing iriContinous
 sp-rs:Neprekidno, naspramno
 sq:Përbri në vazhdimësi
-sr-rs:Непрекидно, наспрамно
+sr-rs:Непрекидно, две странице
 sv:Fortlöpande uppslag
 ta:தொடர் முகப்பு
 th:เป็นหน้าต่อเนื่อง
@@ -5900,7 +5965,7 @@ cz:Kopírovat &obrázek
 de:&Bild kopieren
 dk:Kopier &billede
 el:Αντιγραφή &εικόνας
-es:Copiar la &imagen
+es:Copiar &imagen
 et:Kopeeri &pilt
 eu:Kopiatu &Irudia
 fa:رونوشت از &عکس
@@ -5939,7 +6004,7 @@ sl:Kopiraj &sliko
 sn:kopa nemufananidzo
 sp-rs:Kopiraj sliku
 sq:Kopjoj &figurën
-sr-rs:Копирај слику
+sr-rs:Копирај &слику
 sv:Kop&iera bild
 ta:நகல் & படம்
 th:คัดลอก &รูปภาพ
@@ -6004,7 +6069,7 @@ sk:Kopírovať odkaz
 sl:Kopiraj nas&lov povezave
 sp-rs:Kopiraj adresu veze
 sq:Kopjoj adresën e &lidhësit
-sr-rs:Копирај адресу везе
+sr-rs:Копирај адресу &везе
 sv:Kopiera länkadress
 ta:நகல் &இணைப்பு முகவரி
 th:คัดลอก &ที่อยู่เชื่อมโยง
@@ -6032,7 +6097,7 @@ cz:Kopírovat ko&mentář
 de:K&ommentar kopieren
 dk:Kopier ko&mmentar
 el:Αντιγραφή σ&χολίου
-es:Copiar el co&mentario
+es:Copiar co&mentario
 et:Kopeeri ko&mmentaar
 eu:Kopiatu Ira&dokizuna
 fa:رونوشت از تو&ضیح
@@ -6069,7 +6134,7 @@ sk:Kopírovať ko&mentár
 sl:Kopiraj ko&mentar
 sp-rs:Kopiraj komentar
 sq:Kopjoj ko&mentin
-sr-rs:Копирај коментар
+sr-rs:Копирај ко&ментар
 sv:Kopiera kommentar
 ta:கருத்து நகலெடுக்க
 th:คัดลอก &ความเห็น
@@ -6086,6 +6151,7 @@ cn:复制到剪贴板
 co:Cupià in u preme’papei
 cy:Copïo i'r Clipfwrdd
 de:In Zwischenablage kopieren
+dk:Kopier til udklipsholder
 el:Αντιγραφή στο πρόχειρο
 es:Copiar a portapapeles
 et:Kopeeri lõikelauale
@@ -6098,6 +6164,7 @@ ja:クリップボードへコピー
 nl:Kopieer naar klembord
 pl:Kopiuj do schowka
 ru:Скопировать в буфер обмена
+sr-rs:Копирај у оставу (клипборд)
 tl:Kopyahin sa clipboard
 tr:Panoya kopyala
 tw:複製到剪貼簿
@@ -6290,7 +6357,7 @@ sk:Získanie vlastností tlačiarne zlyhalo
 sl:Ni bilo mogoče dobiti Lastnosti tiskalnika
 sp-rs:Nije moguće prikazati osobine štampača
 sq:Nuk mund të marrë vetitë e printerit
-sr-rs:Није могуће приказати особине штампача
+sr-rs:Није могуће приказати својства штампача
 sv:Kunde inte hämta egenskaper för skrivare
 ta:அச்சுப்பொறியின் பண்புகள் பெற முடியவில்லை
 th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
@@ -6373,6 +6440,7 @@ cn:无法获取打印机名称
 co:Impussibule d’ottene u nome di a stampetta
 cy:Methwyd cael enw argraffydd
 de:Druckername konnte nicht ermittelt werden
+dk:Kunne ikke finde printer navn
 el:Δεν ήταν δυνατή η λήψη του ονόματος του εκτυπωτή 
 es:No se ha podido encontrar el nombre de la impresora
 et:Printeri nime hankimine ebaõnnestus
@@ -6389,6 +6457,7 @@ nl:Kan de naam van de printer niet vinden
 pl:Nie można uzyskać nazwy drukarki
 ru:Не удалось получить имя принтера
 sl:Ni bilo mogoče najti imena tiskalnika
+sr-rs:Није могуће добити име штампача
 th:ไม่ได้รับชื่อเครื่องพิมพ์
 tl:Hindi makuha ang pangalan ng printer
 tr:Yazıcı adı alınamadı
@@ -6754,6 +6823,7 @@ nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
 sl:Ni bilo mogoče odstraniti iskalnega filtra Sumatra
+sr-rs:Деинсталација Sumatra филтера за претрагу није успела
 th:ไม่สามารถถอนการติดตั้งตัวกรองการค้นหา Sumatra
 tl:Hindi ma-uninstall ang Sumatra search filter
 tr:Sumatra arama süzgeci kaldırılamadı
@@ -6898,8 +6968,9 @@ cn:在光标位置创建标注(&U)
 co:Scrive un’annutazione &sottu à u cursore
 cy:Creu Anodiad o &Dan y Cyrchwr
 de:Anmerkung &unter dem Cursor erstellen
+dk:Opret kommentar &under markør
 el:Δημιουργία σχολιασμού κάτω από το δρομέα
-es:Crear una anotación &bajo el cursor
+es:Crear anotación &bajo el cursor
 et:Lisa kursori &juurde märkus
 eu:Sortu oharra &kurtsorearen azpian
 fr:Créer une annotation &sous le curseur
@@ -6915,6 +6986,7 @@ nl:Maak Aantekening Onder Cursor
 pl:Utwórz adnotację &pod kursorem
 ru:Создать аннотацию &под курсором
 sl:Ustvari pripombo &pod kurzorjem
+sr-rs:Направи белешку &испод курсора
 th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
 tl:Lumikha ng anotasyon &Ilalim ng Cursor
 tr:İmlecin &Altına Dipnot Oluştur
@@ -6933,8 +7005,9 @@ cn:对所选内容创建标注
 co:Scrive un’annutazione da a selezzione
 cy:Creu Anodiad o'r Dewis
 de:Anmerkung aus Auswahl erstellen
+dk:Opret kommentar fra valgt tekst
 el:Δημιουργία σχολιασμού από επιλογή
-es:Crear una anotación con la selección
+es:Crear anotación con la selección
 et:Loo valitust märkus
 eu:Sortu oharra hautapenetik
 fr:Créer une annotation à partir de la sélection
@@ -6954,6 +7027,7 @@ nl:Aantekening maken op basis van Selectie
 pl:Utwórz adnotację z zaznaczenia
 ru:Создать аннотацию из выделения
 sl:Ustvari pripombo iz izbire
+sr-rs:Направи белешку из селекције
 th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
 tl:Lumikha ng anotasyon mula sa pinili
 tr:Seçimden Dipnot Oluştur
@@ -7167,6 +7241,7 @@ cn:自定义缩放(&Z)...
 co:&Ingrandamentu persunalizatu…
 cy:Chwyddo &Cyfaddas...
 de:Benutzerdefinierter &Zoom...
+dk:Tilpasset &Zoom
 el:Ορισμός Ζουμ
 es:Zoom &personalizado...
 eu:Norbere &Zooma...
@@ -7178,6 +7253,7 @@ ja:拡大率の指定(&Z)...
 nl:Aangepast & zoom...
 pl:&Własne powiększenie...
 ru:Свой &масштаб...
+sr-rs:Сопствено &увећање
 tl:Pasadya &Mag-zoom
 tr:Özel &yakınlaştır
 tw:自訂縮放(&Z)
@@ -7315,8 +7391,9 @@ cn:日期:
 co:Data :
 cy:Dyddiad:
 de:Datum:
+dk:Dato:
 el:Ημερομηνία:
-es:Fetcha:
+es:Fecha:
 et:Kuupäev:
 eu:Eguna:
 fr:Date :
@@ -7332,6 +7409,7 @@ nl:Datum:
 pl:Data:
 ru:Дата:
 sl:Datum:
+sr-rs:Датум:
 tl:Petsa:
 tr:Tarih:
 uk:Дата: 
@@ -7391,7 +7469,7 @@ sk:Predvolené &zobrazenie:
 sl:&Privzeta postavitev:
 sp-rs:Podrazumevani prikaz
 sq:&Faqosja standarde:
-sr-rs:Подразумевани приказ
+sr-rs:Подразумевани &приказ
 sv:Standard&utseende
 ta:கோட நிலை வடிவமைப்பு
 th:รูปแบบ &ค่าเริ่มต้น:
@@ -7456,7 +7534,7 @@ sk:Predvolená &veľkosť
 sl:Pri&vzeta povečava:
 sp-rs:Podrazumevano uvećanje
 sq:&Shkalla standarde:
-sr-rs:Подразумевано увећање
+sr-rs:Подразумевано &увећање
 sv:Standard&zoomläge
 ta:கோட நிலை உரு அளவு
 th:การขยายเข้าออก &ค่าเริ่มต้น:
@@ -7473,6 +7551,7 @@ cn:删除标注\tDel
 co:Squassà l’annutazione\tSuppr
 cy:Dileu Anodiad\tDileu
 de:Anmerkung löschen\tDel
+dk:Slet kommentar\tDel
 el:Διαγραφή σχολίου\tDel
 es:Eliminar anotación\tDel
 et:Kustuta märkus\tDel
@@ -7488,6 +7567,7 @@ nl:Verwijder Aantekening\tDel
 pl:Usuń adnotację\tDel
 ru:Удалить аннотацию\tDel
 sl:Izbriši pripombo\tDel
+sr-rs:Обриши белешку\tDel
 tl:Tanggalin ang anotasyon\tDel
 tr:Dipnotu Sil\tDel
 tw:刪除便箋\t刪除
@@ -7679,7 +7759,7 @@ sk:Vlastnosti dokumentu
 sl:Lastnosti dokumenta
 sp-rs:Osobine dokumenta
 sq:Vetitë e dokumentit
-sr-rs:Особине документа
+sr-rs:Својства документа
 sv:Dokumentegenskaper
 ta:கோப்பின் பண்புகள்
 th:คุณสมบัติเอกสาร
@@ -7700,6 +7780,7 @@ cn:不安装
 co:Ùn micca installà
 cy:Peidio â gosod
 de:Nicht installieren
+dk:Undlad at installere
 el:Μη γίνει εγκατάσταση
 es:No instalar
 et:Ära paigalda
@@ -7719,6 +7800,7 @@ nl:Niet installeren
 pl:Nie instaluj
 ru:Не устанавливать
 sl:Ne nameščati
+sr-rs:Не инсталирај
 th:ติดตั้งไม่ได้
 tl:Huwag i-install
 tr:Kurma
@@ -7736,6 +7818,7 @@ cn:下载 64 位版本
 co:Scaricà a versione 64-bit
 cy:Llwytho'r fersin 64-did i lawr
 de:64-Bit-Version herunterladen
+dk:Download 64-bit version
 el:Λήψη έκδοσης 64-bit 
 es:Descargar la versión de 64 bits
 et:Laadi alla 64-bitine versioon
@@ -7756,6 +7839,7 @@ pl:Pobierz wersję 64-bitową
 ru:Загрузить 64-разрядную версию
 sk:Stiahnuť 64-bitovú verziu
 sl:Prenesi 64-bitno različico
+sr-rs:Преузми 64-битну верзију
 th:ดาวน์โหลดรุ่น 64 บิต
 tl:I-download ang 64-bit na bersyon
 tr:64 bit sürümü indir
@@ -7770,6 +7854,7 @@ cn:退出(&X)
 co:&Esce
 cy:&Gadael
 de:&Beenden
+dk:&Afslut
 el:Έξοδος
 es:S&alir
 eu:I&rten
@@ -7781,6 +7866,7 @@ ja:終了(&X)
 nl:A&fsluiten
 pl:&Wyjście
 ru:В&ыход
+sr-rs:И&зађи
 tl:&Lumabas
 tr:Çık
 tw:離開本程式(&X)
@@ -7821,6 +7907,7 @@ nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
 ru:&Выйти из полноэкранного режима
 sl:&Izhod iz celozaslonskega načina
+sr-rs:И&зађи из целог екрана
 ta:முழுத்திரை வெளியேறு 
 th:&ออกจากโหมดเต็มหน้าจอ
 tl:&Lumabas sa fullscreen
@@ -7910,7 +7997,7 @@ cy:Golygu Anodiadau
 de:Anmerkungen bearbeiten
 dk:Rediger anmærkninger
 el:Επεξεργασία σχολίων
-es:Editar las anotaciones
+es:Editar anotaciones
 et:Muuda märkusi
 eu:Editatu oharrak
 fr:Éditer les annotations
@@ -7932,6 +8019,7 @@ nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
 sl:Uredi pripombo
+sr-rs:Уреди белешке
 th:ปรับแต่งคำอธิบายประกอบ
 tl:I-edit ang mga anotasyon
 tr:Dipnotları Düzenle
@@ -8248,6 +8336,7 @@ pl:Rozwiń wszystko
 pt:Expandir tudo
 ru:Развернуть все
 sl:Razširi vse
+sr-rs:Рашири све
 ta:அனைத்தையும் விரி 
 th:ขยายทั้งหมด
 tl:Palawakin lahat
@@ -8309,7 +8398,7 @@ sk:&Obľúbené položky
 sl:Priljubljeni
 sp-rs:Odabir
 sq:P&ëlqej
-sr-rs:Одабир
+sr-rs:&Фаворити
 sv:&Favoriter
 ta:பிடித்தவை
 th:&รายการโปรด
@@ -8326,6 +8415,7 @@ cn:下一视图(&O)
 co:&Dopu
 cy:&Ymlaen
 de:&Nächste Ansicht
+dk:&Frem
 el:Εμπρός
 es:A&delante
 eu:A&urrera
@@ -8337,6 +8427,7 @@ ja:進む(&O)
 nl:V&ooruit
 pl:&Dalej
 ru:В&перёд
+sr-rs:Н&апред
 tl:&Pasulong
 tr:İleri
 tw:下一個跳轉點(&O)
@@ -8349,6 +8440,7 @@ cn:全屏(&U)
 co:&Screnu sanu
 cy:Sgrin &Lawn
 de:&Vollbild
+dk:F&uld skærm
 el:Πλήρης οθόνη
 es:P&antalla completa
 eu:Ikusleiho-o&soa
@@ -8360,6 +8452,7 @@ ja:全画面表示(&U)
 nl:V&oledig Scherm
 pl:Pełny &ekran
 ru:Полный &экран
+sr-rs:&Цео екран
 tr:Tam ekran
 tw:全螢幕模式(&U)
 uk:Повноекранний
@@ -8383,7 +8476,7 @@ cz:Dvojstránky
 de:Doppelseite
 dk:Modstående
 el:Δύο σελίδες
-es:Caras opuestas
+es:Dos páginas
 et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
@@ -8425,7 +8518,7 @@ sl:Dvostransko
 sn:Facing
 sp-rs:Naspramno
 sq:Përbri
-sr-rs:Наспрамно
+sr-rs:Две странице
 sv:Uppslag
 ta:முகப்பு
 th:เป็นหน้า
@@ -8488,7 +8581,7 @@ sk:Vymazanie odinštalačných kľúčov v registroch bolo neúspešné
 sl:Brisanje registrskih ključev odstranjevalnega programa ni uspelo
 sp-rs:Neuspelo brisanje registri ključeva deinstalera
 sq:Problem me fshirjen e çinstaluesit nga regjistri
-sr-rs:Неуспело брисање кључева из регистри базе
+sr-rs:Неуспело брисање кључева из регистра
 sv:Misslyckades med att ta bort registernycklar
 ta:நிறுவி நீக்கியின் பதிவை அழிக்க முடியவில்லை
 th:ไม่สามารถลบรีจิสตรีคีย์ของตัวถอนการติดตั้งได้
@@ -8686,7 +8779,7 @@ sk:Zápis rozšírených informácií o prípone súboru do registrov bolo neús
 sl:Pisanje v register informacij o razširjenem podaljšku datoteke ni uspelo
 sp-rs:Neuspeli upis proširene ekstenzije fajla u registri
 sq:Problem me shkrimin në regjistër të informacionit të zgjeruar për skedarin.
-sr-rs:Неуспео упис проширене екстензије фајла у регистри базу
+sr-rs:Неуспео упис проширене информације о екстензији фајла у регистар
 sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
 th:ไม่สามารถเขียนข้อมูลส่วนขยายไฟล์เพิ่มเติมไปยังรีจิสทรี
@@ -8749,7 +8842,7 @@ sk:Uloženie informácií pre odinštalovanie do registrov bolo neúspešné
 sl:Pisanje v register informacij o odstranitvi ni uspelo
 sp-rs:Neuspeli upis instalacionih informacija u registri
 sq:Problem me shkrimin në regjistër të informacionit për çinstalimin
-sr-rs:Неуспео упис информација о деинсталацији у регистри базу
+sr-rs:Неуспео упис информација о деинсталацији у регистар
 sv:Misslyckades med att spara data för avinstallation i registret
 ta:நிறுவி நீக்கும் தகவலை பதிவில் எழுத முடியவில்லை
 th:ไม่สามารถเขียนข้อมูลการถอนการติดตั้งไปยังรีจิสทรี
@@ -8880,7 +8973,7 @@ sk:Obľúbené položky
 sl:Priljubljeni
 sp-rs:Odabir
 sq:Pëlqej
-sr-rs:Одабир
+sr-rs:Фаворити
 sv:Favoriter
 ta:பிடித்தவை
 th:รายการโปรด
@@ -9056,6 +9149,7 @@ nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
 sl:Datotečna priloga
+sr-rs:Прилог
 th:แนบไฟล์
 tl:Attachment ng file
 tr:Dosya Eki
@@ -9207,16 +9301,19 @@ cn:查找(&D)...
 co:&Circà…
 cy:&Canfod...
 de:S&uchen...
+dk:Fin&d...
 el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
 fr:R&echercher...
+hi:खोजो
 hr:&Traži...
 it:&Trova
 ja:検索(&D)...
 nl:Zoe&k
 pl:&Znajdź...
 ru:На&йти...
+sr-rs:Прона&ђи...
 tl:&Hanapin
 tr:Bul
 tw:尋找(&D)
@@ -9510,6 +9607,7 @@ cn:适合内容(&C)
 co:&Adattà à u cuntenutu
 cy:&Ffitio'r Cynnwys
 de:An &Inhalt anpassen
+dk:Tilpas &indhold
 el:Προσαρμογή περιεχομένου
 es:Ajustar al &contenido
 eu:Finkatu &edukia
@@ -9520,6 +9618,7 @@ ja:内容に合わせる(&C)
 nl:&Inhoud Aanpassen
 pl:Dopasuj do &zawartości
 ru:Вписать содер&жимое
+sr-rs:Смести &садржај
 tl:akma sa &nilalaman
 tr:Sayfa düzeyine yakınlaştır
 tw:符合內容(&C)
@@ -9532,6 +9631,7 @@ cn:适合页面(&P)
 co:&Pagina sana
 cy:Ffitio &Tudalen
 de:An &Seite anpassen
+dk:Tilpas til &Side
 el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
@@ -9542,6 +9642,7 @@ ja:ページに合わせる(&P)
 nl:&Pagina Aanpassen
 pl:Dopasuj do s&trony
 ru:Вписать &страницу
+sr-rs:Смести с&трану
 tl:Akma &Pahina
 tr:Tam Sayfayı Pencereye Sığdır
 tw:符合頁面(&P)
@@ -9554,6 +9655,7 @@ cn:适合宽度(&W)
 co:&Larghezza sana
 cy:Ffitio &Lled
 de:An Fenster&breite anpassen
+dk:Tilpas &bredde
 el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
@@ -9564,6 +9666,7 @@ ja:幅に合わせる(&W)
 nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 ru:Вписать по &ширине
+sr-rs:Смести по &ширини
 tr:Genişliğe Sığdır
 tw:符合寬度(&W)
 uk:Підігнати ширину
@@ -9622,7 +9725,7 @@ sk:Prispôsobiť obsah
 sl:Prilagodi vsebino
 sp-rs:Podesi prema sadržaju
 sq:Përshtat materialin
-sr-rs:Подеси према садржају
+sr-rs:Смести садржај
 sv:Anpassa efter innehåll
 ta:உள்ளடக்கம் பொருந்துக
 th:เต็มจอตามเนื้อหา
@@ -9692,7 +9795,7 @@ sl:Prilagodi stran
 sn:Kwanisa Peji
 sp-rs:Podesi prema stranici
 sq:Përshtat faqen
-sr-rs:Подеси према страници
+sr-rs:Смести страну
 sv:Anpassa efter helsida
 ta:பக்கம் பொருந்தவை
 th:พอดีหน้า
@@ -9762,7 +9865,7 @@ sl:Prilagodi po širini
 sn:Kwanisa hupamhu
 sp-rs:Podesi prema širini
 sq:Përshtat gjerësinë
-sr-rs:Подеси према ширини
+sr-rs:Смести по ширини
 sv:Anpassa efter bredd
 ta:அகலத்திற்கு பொருத்து
 th:พอดีความกว้าง
@@ -9825,7 +9928,7 @@ sk:Prispôsobiť šírke okna
 sl:Prilagodi po širini in prikaži strani nepretrgano
 sp-rs:Podesi prema širini i prikaži stranice bez prekida
 sq:Përshtat gjerësinë dhe tregoj faqet në vazhdimësi
-sr-rs:Подеси према ширини и прикажи странице без прекида
+sr-rs:Смести по ширини и прикажи странице без прекида
 sv:Anpassa efter bredd och visa sidor fortlöpande
 ta:அகலம் பொருத்தி பக்கங்கள் காட்டுக
 th:พอดีกับความกว้างและแสดงหน้าอย่างต่อเนื่อง
@@ -9890,7 +9993,7 @@ sk:Prispôsobiť a zobraziť celú stranu v okne
 sl:Prilagodi enostransko
 sp-rs:Podesi prema pojedinačnoj stranici
 sq:Përshtat në njëfletësh
-sr-rs:Подеси према појединачној страници
+sr-rs:Смести једну страницу
 sv:Anpassa till helsida
 ta:ஒற்றை பக்கம் பொருந்துக
 th:เต็มจอหน้าเดียว
@@ -10249,6 +10352,7 @@ ja:フォント情報を取得
 nl:Informatie over lettertypen ophalen
 pl:Uzyskaj informacje o czcionkach
 ru:Получить информацию о шрифтах
+sr-rs:Информације о фонтовима
 tl:Kumuha ng impormasyon ng mga font
 tr:Yazı tipi bilgisi
 tw:字型資訊
@@ -10379,7 +10483,7 @@ sk:Skryť &Možnosti
 sl:Skrij M&ožnosti
 sp-rs:Sakrij opcije
 sq:Fsheh &opsionet
-sr-rs:Сакриј опције
+sr-rs:Сакриј &опције
 sv:Göm Alternativ
 ta:மறை & விருப்பம்
 th:ซ่อน &ตัวเลือก
@@ -10508,7 +10612,7 @@ sk:Rada: Použite klávesu F3 pre ďalšie hľadanie
 sl:Namig: uporabite tipko F3 za ponovno iskanje
 sp-rs:Savet: Upotrebite taster F3 za nastavak pretrage
 sq:Këshillë: Përdorni tastin F3 për gjetjen e radhës
-sr-rs:Савет: Употребите тастер F3 за наставак претраге
+sr-rs:Савет: Користите тастер F3 за наставак претраге
 sv:Tips: Tryck F3 för att söka vidare
 ta:சிறுகுரிப்பு: F3 தட்டை பயன்படுத்தி மீண்டும் தேடு
 th:คำแนะนำ: ใช้ปุ่ม F3 เพื่อค้นหาอีกครั้ง
@@ -10527,6 +10631,7 @@ cn:图标:
 co:Icona :
 cy:Eicon:
 de:Icon:
+dk:Ikon:
 el:Εικονίδιο:
 es:Icono:
 et:Ikoon:
@@ -10544,6 +10649,7 @@ nl:Pictogram:
 pl:Ikona:
 ru:Значок:
 sl:Ikona:
+sr-rs:Икона:
 tl:Icon:
 tr:Simge:
 uk:Значок: 
@@ -10650,6 +10756,7 @@ pl:Obrazy
 ru:Изображения
 sk:Obrázky
 sl:Slike
+sr-rs:Слике
 ta:படங்கள் 
 th:รูปภาพ
 tl:Mga imahe
@@ -10695,6 +10802,7 @@ no:Blekk
 pl:Atrament
 ru:Чернила
 sl:Črnilo
+sr-rs:Мастило
 ta:மை 
 th:น้ำหมึก
 tl:Tinta
@@ -10822,7 +10930,7 @@ sk:Inštaluj SumatraPDF do &adresára:
 sl:Namesti SumatraPDF v mapo:
 sp-rs:Instalacija SumatraPDF u folder
 sq:Instaloj SumatraPDF në &dosje:
-sr-rs:Инсталација СуматраПДФ
+sr-rs:Инсталација СуматраПДФ у &фасциклу:
 sv:Installera SumatraPDF i katalog:
 ta:சுமத்ராPDFஐ &கோப்புறையில் நிறுவவும்:
 th:ติดตั้ง SumatraPDF ใน &โฟลเดอร์:
@@ -10842,6 +10950,7 @@ cn:安装并启动
 co:Installà è rilancià
 cy:Gosod ac ail gychwyn
 de:Installieren und neu starten
+dk:Installer og genstart
 el:Εγκατάσταση και επανεκκίνηση 
 es:Instalar y reiniciar
 et:Paigalda ja kävita uuesti
@@ -10860,6 +10969,7 @@ nl:Installeren + opnieuw starten
 pl:Zainstaluj i uruchom ponownie
 ru:Установить и перезапустить
 sl:Namesti in ponovno zaženi
+sr-rs:Инсталирај и поново покрени
 th:ติดตั้ง และ เรียกใช้งาน
 tl:I-install at muling ilunsad
 tr:Kur ve yeniden başlat
@@ -10873,6 +10983,7 @@ cn:为所有用户安装
 co:Installà per tutti l’utilizatori
 cy:Gosod ar gyfer pob defnyddiwr
 de:Für alle Benutzer installieren
+dk:Installer for alle brugere
 el:Εγκατάσταση για όλους τους χρήστες
 es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
@@ -10884,6 +10995,7 @@ ja:すべてのユーザーに対してインストール
 nl:Installeer voor alle gebruikers
 pl:Zainstaluj dla wszystkich użytkowników
 ru:Установить для всех пользователей
+sr-rs:Инсталирај за све кориснике
 tl:I-install para sa lahat ng user
 tr:Tüm kullanıcılar için kur
 tw:為所有使用者安裝
@@ -11029,6 +11141,7 @@ cn:在 64 位操作系统上安装 32 位 SumatraPDF
 co:Installazione di SumatraPDF 32-bit nant’à un sistema 64-bit
 cy:Yn gosod SumatraPDF 32-did ar OS 64-did
 de:32-Bit-Version von SumatraPDF auf einem 64-Bit-Betriebssystem installieren
+dk:Installerer 32-bit SumatraPDF på 64-bit OS
 el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστημα 64 bit 
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
@@ -11046,6 +11159,7 @@ nl:32bit SumatraPDF installeren op 64bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 ru:Установка 32-разрядной SumatraPDF в 64-разрядной ОС
 sl:Nameščanje 32-bitne različice SumatraPDF na 64-bitni OS
+sr-rs:Инсталација 32-битног SumatraPDF на 64-битном ОС-у
 th:กำลังติดตั้ง SumatraPDF รุ่น 32 บิต บนระบบปฏิบัติการ 64 บิต
 tl:Pag-install ng 32-bit SumatraPDF sa 64-bit OS
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruluyor
@@ -11064,6 +11178,7 @@ es:Color Interior
 et:Sisevärv:
 eu:Barneko margoa:
 fr:Couleur Intérieure :
+hi:आंतरिक रंग:
 hr:Unutarnja boja:
 id:Warna Interior:
 it:Colore interno:
@@ -11074,6 +11189,7 @@ nl:Interieur Kleur
 pl:Kolor wnętrza:
 ru:Внутренний цвет:
 sl:Barva notranjosti:
+sr-rs:Унутрашња боја:
 tl:Kulay ng panloob:
 tr:İç Renk:
 uk:Колір інтер'єру: 
@@ -11202,7 +11318,7 @@ sk:Povoliť, aby Windows Desktop Search &vyhľadával PDF dokumenty
 sl:Naj Windows Desktop Search išče PDF dokumente
 sp-rs:Pretraga Windows Desktop pretraga PDF dokumenta
 sq:Lejoj Windows Desktop Search të &kërkojë dokumentet PDF
-sr-rs:Претрага Windows Desktop &претрага ПДФ документа
+sr-rs:Нека Windows претрага &претражује PDF документе
 sv:Låt Windows inbyggda sökfunktion indexera PDF-dokument
 ta:விண்டோஸ் டெஸ்க்டாப் தேடல் &PDF கோப்புகளை தேடட்டும்
 th:ให้ Windows Desktop Search &ค้นหาเอกสาร PDF
@@ -11264,7 +11380,7 @@ sk:Povoliť, aby Windows zobrazoval &náhľad PDF dokumentov
 sl:Naj Windows prikazuje predogled PDF dokumentov
 sp-rs:Windows &prikaz PDF dokumenta
 sq:Lejoj Windows Desktop Search të &parashikojë dokumentet PDF
-sr-rs:Windows &приказ ПДФ документа
+sr-rs:Нека Windows приказује &прегледе ПДФ докумената
 sv:Visa förhandstitt av PDF-dokument i Windows
 ta:விண்டாஸ் PDF கோப்புகளை காண்பிக்க &முன்னோட்டம் செய்யட்டும்
 th:ให้ Windows แสดง &ตัวอย่างของเอกสาร PDF
@@ -11352,6 +11468,7 @@ eu:Lerroa
 fr:Ligne
 ga:Líne
 gl:Liña
+hi:रेखा
 hr:Linija
 hu:Vonal
 id:Garis
@@ -11367,6 +11484,7 @@ no:Linje
 pl:Linia
 ru:Линия
 sl:Črta
+sr-rs:Ред
 ta:கோடு 
 th:ไลน์
 tl:Linya
@@ -11382,11 +11500,13 @@ cn:线段终点
 co:Fine di linea :
 cy:Diwedd Llinell:
 de:Zeilenende:
+dk:Slut på linje:
 el:Τέλος γραμμής:
 es:Fin de Línea:
 et:Joone lõpp:
 eu:Lerro hasiera:
 fr:Fin de ligne :
+hi:लाइन अंत:
 hr:Kraj linije:
 id:Garis Akhir:
 it:Fine linea:
@@ -11397,6 +11517,7 @@ nl:Lijn Eind
 pl:Koniec linii:
 ru:Конец линии:
 sl:Konec črte:
+sr-rs:Крај реда
 tl:Dulo ng linya:
 tr:Satır Bitişi:
 uk:Кінець рядка: 
@@ -11409,6 +11530,7 @@ cn:线段起点
 co:Principiu di linea :
 cy:Cychwyn Llinell:
 de:Zeilenstart:
+dk:Start på linje:
 el:Έναρξη γραμμής:
 es:Inicio de Línea:
 et:Joone algus:
@@ -11424,6 +11546,7 @@ nl:Lijn Begin
 pl:Początek linii:
 ru:Начало линии:
 sl:Začetek črte:
+sr-rs:Почетак реда
 tl:Simula ng linya:
 tr:Satır Başlangıcı:
 uk:Початок рядка: 
@@ -11434,6 +11557,7 @@ cn:载入 %s ...
 co:Caricamentu di %s …
 cy:Wrthi'n llwytho %s ...
 de:Lädt %s ..,
+dk:Indlæser %s ...
 el:Φόρτωση %s...
 es:Cargando %s ...
 eu:Gertatzen %s ...
@@ -11442,6 +11566,8 @@ hr:Učitavanje %s ...
 it:Caricamento %s...
 nl:Laden %s...
 pl:Ładowanie %s ...
+ru:Загрузка %s...
+sr-rs:Учитавање %s...
 tr:Yükleniyor %s ...
 uk:Завантаження %s
 :MB
@@ -11852,6 +11978,7 @@ cn:新建窗口(&W)
 co:Nova &finestra
 cy:Ffenestr &newydd
 de:Neues &Fenster
+dk:Nyt &vindue
 el:Νέο παράθυρο
 es:Nueva &ventana
 eu:&Leiho berria
@@ -11862,6 +11989,7 @@ ja:新しいウィンドウ(&W)
 nl:Nieuw &Kader
 pl:Nowe &okno
 ru:&Новое окно
+sr-rs:Нови &прозор
 tr:Yeni pencere
 tw:新視窗(&W)
 uk:Нове вікно
@@ -11877,6 +12005,7 @@ cn:有新版本
 co:Nova versione dispunibule
 cy:Mae fersiwn newydd ar gael
 de:Neue Version verfügbar
+dk:Ny version tilgængelig
 el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
 et:Saadaval on uus versioon
@@ -11896,6 +12025,7 @@ pl:Dostępna nowa wersja
 ru:Доступна новая версия
 sk:Dostupná nová verzia
 sl:Na voljo je nova različica
+sr-rs:Нова верзија је доступна
 th:มีรุ่นใหม่พร้อมให้บริการ
 tl:Bagong bersyon na magagamit
 tr:Yeni sürüm var
@@ -12377,6 +12507,7 @@ cn:透明度:
 co:Opacità :
 cy:Anhryloywder
 de:Deckkraft:
+dk:Transparens:
 el:Διαφάνεια:
 es:Opacidad:
 et:Läbipaistvus:
@@ -12394,6 +12525,7 @@ nl:Dekking
 pl:Nieprzezroczystość:
 ru:Непрозрачность:
 sl:Motnost:
+sr-rs:Прозрачност
 tl:Kalabuan:
 tr:Opaklık:
 tw:透明度
@@ -12407,6 +12539,7 @@ cn:透明度: %d
 co:Opacità : %d
 cy:Anhryloywder: %d
 de:Deckkraft: %d
+dk:Transparens: %d
 el:Διαφάνεια: %d
 es:Opacidad: %d
 et:Läbipaistvus: %d
@@ -12423,6 +12556,7 @@ nl:Dekking: %d
 pl:Nieprzezroczystość: %d
 ru:Непрозрачность: %d
 sl:Motnost: %d
+sr-rs:Прозрачност: %d
 tl:Kalabuan: %d
 tr:Opaklık: %d
 tw:透明度: %d
@@ -12553,7 +12687,7 @@ sk:Otvoriť v programe PDF-XChange
 sl:Odpri s programom PDF-XChange
 sp-rs:Otvori u programu PDF-XChange
 sq:Hap &në PDF-XChange
-sr-rs:Отвори у програму PDF-XChange
+sr-rs:Отвори &у PDF-XChange-у
 sv:Öppna i PDF-XChange
 ta:PDF-XChange இல் திற
 th:เปิด &ใน PDF-XChange
@@ -12569,6 +12703,7 @@ cn:打开附件
 co:Apre u schedariu assuciatu
 cy:Agor Atodiad
 de:Anhang öffnen
+dk:Åbn vedhæftning
 el:Αποθήκευση συνημμένου
 es:Abrir archivo adjunto
 eu:Ireki eranskina
@@ -12578,6 +12713,8 @@ it:Apri allegato
 ja:添付を開く
 nl:Open Bijlage
 pl:Otwórz załącznik
+ru:Открыть вложение
+sr-rs:Отвори прилог
 tr:Eki aç
 uk:Відкрити вкладення
 :Open Embedded PDF
@@ -12599,6 +12736,7 @@ eu:Ireki barneko PDF
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
+hi:एंबेडेड पीडीएफ खोलें
 hr:Otvori ugrađeni PDF
 hu:Beágyazott PDF megnyitása
 id:Buka PDF yang disematkan
@@ -12613,6 +12751,7 @@ nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
 ru:Открыть встроенный PDF
 sl:Odpri vdelani PDF
+sr-rs:Отвори уграђени PDF
 th:เปิด PDF ฝังรหัส
 tl:Buksan ang naka-embed na PDF
 tr:Gömülü PDF Aç
@@ -12804,7 +12943,7 @@ sl:Odpri s programom &Adobe Reader
 sn:vhura mu&Adobe Reader
 sp-rs:Otvori u programu Adobe Reader
 sq:Hap në &Adobe Reader
-sr-rs:Отвори у програму Adobe Reader
+sr-rs:Отвори у Adobe Reader-у (&А)
 sv:Öppna i Adobe &Reader
 ta:&Adobe Reader இல் திற
 th:เปิดด้วย &Adobe Reader
@@ -12868,7 +13007,7 @@ sk:Otvoriť v programe &Foxit Reader
 sl:Odpri s programom &Foxit Reader
 sp-rs:Otvori u programu Foxit Reader
 sq:Hap në &Foxit Reader
-sr-rs:Отвори у програму Foxit Reader
+sr-rs:Отвори у Foxit Reader-у (&Ф)
 sv:Öppna i Foxit Reader
 ta:&Foxit Reader இல் திற
 th:เปิดด้วย &Foxit Reader
@@ -12932,7 +13071,7 @@ sk:Otvoriť v programe Microsoft HTML Help
 sl:Odpri s programom Microsoft HTML Help
 sp-rs:Otvori u programu Microsoft HTML Help
 sq:Hap në &Microsoft HTML Help
-sr-rs:Отвори у програму Microsoft HTML Help
+sr-rs:Отвори у Microsoft HTML Help-у (&Х)
 sv:Öppna i Microsoft HTML Help
 ta:Microsoft HTML Help இல் திற
 th:เปิดด้วย &Microsoft HTML Help
@@ -12996,7 +13135,7 @@ sk:Otvoriť v programe Microsoft XPS-Viewer
 sl:Odpri s programom Microsoft XPS-Viewer
 sp-rs:Otvori u programu Microsoft XPS-Viewer
 sq:Hap në &Microsoft XPS-Viewer
-sr-rs:Отвори у програму Microsoft XPS-Viewer
+sr-rs:Отвори у Microsoft XPS Viewer-у (&Џ)
 sv:Öppna i Microsoft XPS-Viewer
 ta:Microsoft XPS-Viewer இல் திற
 th:เปิดด้วย &Microsoft XPS-Viewer
@@ -13059,7 +13198,7 @@ sk:&Vlastnosti
 sl:Lastnosti
 sp-rs:Osobine
 sq:V&eti
-sr-rs:Особине
+sr-rs:С&војства
 sv:E&genskaper
 ta:பண்புகள்
 th:&คุณสมบัติ
@@ -13404,6 +13543,7 @@ cn:前往第 ... 页(&G)
 co:Pa&gina…
 cy:&Tudalen...
 de:&Seite...
+dk:&Side
 el:Σελίδα
 es:Pá&gina...
 eu:O&rrialdea...
@@ -13414,6 +13554,7 @@ ja:ページ(&G)...
 nl:Pa&gina
 pl:&Strona...
 ru:С&траница...
+sr-rs:&Страница...
 tr:Sayfaya...
 tw:前往頁面...(&G)
 uk:Сторінка
@@ -13969,6 +14110,7 @@ nl:Poly Regel
 pl:Polilinia
 ru:Ломаная линия
 sl:Polilinija
+sr-rs:Поли-линија
 ta:பலகோடு 
 th:โพลีไลน์
 tr:Çoklu Çizgi
@@ -14010,6 +14152,7 @@ nl:Veelhoek
 pl:Wielokąt
 ru:Многоугольник
 sl:Poligon
+sr-rs:Многоугао
 ta:பலகோணம் 
 th:รูปหลายเหลี่ยม
 tr:Çokgen
@@ -14038,6 +14181,7 @@ nl:Popup: %d O R
 pl:Wyskakujące okienko: %d 0 R
 ru:Всплывающее окно: %d 0 R
 sl:Pojavno okno: %d 0 R
+sr-rs:Обавештење: %d 0 R
 tr:Baloncuk: %d 0 R
 uk:Спливаюче вікно: %d 0 R
 vn:Hiển Thị: %d 0R
@@ -14110,6 +14254,7 @@ cn:幻灯片(&E)
 co:&Presentazione
 cy:C&yflwyniad
 de:Pr&äsentation
+dk:Pr&æsentation
 el:Παρουσίαση
 es:Pr&esentación
 eu:Aur&kezpena
@@ -14120,6 +14265,7 @@ ja:プレゼンテーション(&E)
 nl:Pr&esentatie
 pl:&Prezentacja
 ru:Презента&ция
+sr-rs:Пр&езентација
 tr:Sunum
 tw:簡報模式(&E)
 uk:Презентація
@@ -14717,6 +14863,7 @@ cn:重命名(&N)...
 co:&Rinuminà…
 cy:&Ailenwi...
 de:Umbe&nennen...
+dk:&Omdøb
 el:Μετονομασία
 es:Re&nombrar...
 eu:B&errizendatu...
@@ -14727,6 +14874,7 @@ ja:ファイル名の変更(&N)...
 nl:Her&noem
 pl:Zmień &nazwę...
 ru:Пере&именовать...
+sr-rs:Пре&именуј...
 tr:Yeniden adlandır
 tw:重新命名(&N)
 uk:Перейменувати...
@@ -14738,6 +14886,7 @@ cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 co:Rett: x=%d y=%d dx=%d dy=%d
 cy:Rect: x=%d y=%d dx=%d dy=%d
 de:Rechteck: x=%d y=%d dx=%d dy=%d
+dk:Rect: x=%d y=%d dx=%d dy=%d
 el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
 et:Ristkülik: x=%d y=%d dx=%d dy=%d
@@ -14754,6 +14903,7 @@ nl:Rect: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 ru:Прямоугольник: x=%d y=%d dx=%d dy=%d
 sl:Pravokotnik: x=%d y=%d dx=%d dy=%d
+sr-rs:Правоугаоник: x=%d y=%d dx=%d dy=%d
 tl:Rect: x=%d y=%d dx=%d dy=%d
 tr:Dikdörtgen: x=%d y=%d dx=%d dy=%d
 uk:Прямокутн.: x=%d y=%d dx=%d dy=%d
@@ -14790,6 +14940,7 @@ nl:Redigeren
 pl:Redaguj
 ru:Правка
 sl:Uredi
+sr-rs:Уреди
 ta:திருத்தஞ்செய் 
 th:แก้ไขข้อความ
 tr:Gözden Geçir
@@ -14850,7 +15001,7 @@ sk:Zapamätať si &otvorené súbory
 sl:&Zapomni si odprte datoteke
 sp-rs:Zapamti otvarane datoteke
 sq:Mbaj mend skedarët e &hapur
-sr-rs:Запамти отваране датотеке
+sr-rs:Запамти &отваране датотеке
 sv:Kom ihåg öppnade &filer
 ta:திறந்த &கோப்புகளை நினைவுகொள்
 th:จดจำ &ไฟล์ที่เปิดอยู่
@@ -15061,6 +15212,7 @@ cn:逆时针旋转(&L)
 co:Girà à &manca
 cy:Troi i'r &Chwith
 de:&Gegen UZS drehen
+dk:Rotér &Venstre
 el:Περιστροφή αριστερά
 es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
@@ -15071,6 +15223,7 @@ ja:左に回転(&L)
 nl:&Linksom Roteren
 pl:Obróć w &lewo
 ru:Повернуть в&лево
+sr-rs:Ротирај &лево
 tr:Sola döndür
 tw:逆時鐘旋轉(&L)
 uk:Повернути проти годинникової стрілки
@@ -15082,6 +15235,7 @@ cn:顺时针旋转(&R)
 co:Girà à &diritta
 cy:Troi i'r &Dde
 de:Im &UZS drehen
+dk:Rotér &Højre
 el:Περιστροφή δεξιά
 es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
@@ -15092,6 +15246,7 @@ ja:右に回転(&R)
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 ru:Повернуть в&право
+sr-rs:Ротирај &десно
 tr:Sağa döndür
 tw:順時鐘旋轉(&R)
 uk:Повернути за годинниковою стрілкою
@@ -15105,6 +15260,7 @@ cn:选择(&E)
 co:S&elezzione
 cy:&Dewis
 de:Auswahl
+dk:&Markering
 el:Επιλογή
 es:S&elección
 et:V&alik
@@ -15121,6 +15277,7 @@ nl:S&electie
 pl:Z&aznaczenie
 ru:В&ыделение
 sl:I&zbor
+sr-rs:&Избор
 th:&การเลือก
 tr:S&eçim
 tw:選取範圍(&E)
@@ -15153,6 +15310,7 @@ nl:Kr&onkelig
 pl:&Falowanie
 ru:Во&лнистый
 sl:Vi&jugasto
+sr-rs:Ви&југаво
 th:S&ยุ่งเหยิง
 tr:&Kıvrımlı
 uk:Хвилясті 
@@ -15185,6 +15343,7 @@ nl:SVG Documenten
 pl:Documenty SVG
 ru:Документы SVG
 sl:SVG dokumenti
+sr-rs:SVG документи
 th:เอกสาร SVG
 tl:SVG na mga dokumento
 tr:SVG belgeleri
@@ -15199,8 +15358,9 @@ cn:将标注保存到当前 PDF
 co:Arregistrà l’annutazioni in u PDF esistente
 cy:Cadw Anodiadau i PDF presennol
 de:Anmerkungen in bestehende PDF-Dateien speichern
+dk:Gem kommentarer til eksisterende PDF
 el:Αποθήκευση σχολίων σε υπάρχον PDF
-es:Guardar Anotaciones a PDF existente
+es:Guardar anotaciones en PDF existente
 et:Salvesta märkused olemasolevasse PDF-i
 eu:Gorde oharrak badagoen PDF-an
 fr:Sauvegarder les annotations dans le PDF existant
@@ -15214,6 +15374,7 @@ nl:Notities opslaan in bestaande PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 ru:Со&хранить аннотации в имеющемся PDF
 sl:Shrani pripombe v obstoječi PDF
+sr-rs:Сачувај белешке у постојећи PDF
 tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
 vn:Lưu Chú Thích và thoát PDF
@@ -15223,6 +15384,7 @@ cn:保存附件...
 co:Arregistrà u schedariu assuciatu…
 cy:Cadw Atodiad
 de:Anhang speichern…
+dk:Gem vedhæftning...
 el:Αποθήκευση συνημμένου...
 es:Guarda archivo adjunto...
 eu:Gorde eranskina...
@@ -15232,6 +15394,8 @@ it:Salva allegato
 ja:添付を保存
 nl:Bijlage Opslaan...
 pl:Zapisz załącznik...
+ru:Сохранить вложение...
+sr-rs:Сачувај прилог...
 tr:Eki kaydet
 uk:Зберегти вкладення...
 :Save Embedded File...
@@ -15267,6 +15431,7 @@ nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
 ru:Сохранить вложенный файл...
 sl:Shrani vdelano datoteko …
+sr-rs:Сачувај уграђену датотеку...
 th:บันทึกไฟล์ฝังรหัส... 
 tl:I-save ang naka-embed na file...
 tr:Gömülü Dosyayı Kaydet...
@@ -15279,6 +15444,7 @@ cn:保存快捷方式(&H)...
 co:Arregistrà l’&accurtatoghju…
 cy:Cadw &Llwybr Byr...
 de:Verknüpfung speichern...
+dk:Gem gen&vej
 el:Αποθήκευση συντόμευσης
 es:Guardar A&tajo...
 eu:Gorde &lastertekla...
@@ -15289,6 +15455,7 @@ ja:ショートカットを保存(&H)...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
 ru:Сохранить &ярлык...
+sr-rs:Сачувај пре&чицу...
 tr:Kısayolu kaydet
 uk:Зберегти ярлик...
 vn:Lưu Đ&ường Tắt
@@ -15303,6 +15470,7 @@ cn:是否保存标注
 co:Arregistrà l’annutazioni ?
 cy:Cadw anodiadau?
 de:Anmerkungen speichern?
+dk:Gem kommentarer?
 el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
 et:Salvestada märkused?
@@ -15320,6 +15488,7 @@ nl:Aantekeningen Opslaan?
 pl:Zapisać adnotacje?
 ru:Сохранить аннотации?
 sl:Shraniti pripombe?
+sr-rs:Сачувати белешке?
 th:บันทึกคำอธิบายประกอบหรือไม่
 tl:I-save ang mga anotasyon?
 tr:Dipnotlar kaydedilsin mi?
@@ -15336,6 +15505,7 @@ cn:另存为新的 PDF 文件
 co:Arregistrà i cambiamenti in un novu PDF
 cy:Cadw newidiadau i PDF newydd
 de:Änderungen in einer neuen PDF-Datei speichern
+dk:Gem ændringer til en ny PDF
 el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar los cambios en un nuevo PDF
 et:Salvesta muudatused uude PDF-i
@@ -15357,6 +15527,7 @@ pl:Zapisz zmiany w nowym pliku PDF
 ru:Сохранить изменения в новом PDF
 sk:Uloženie zmien do nového PDF
 sl:Shrani spremembe v novo PDF datoteko
+sr-rs:Сачувај измене у нови PDF
 th:บันทึกการเปลี่ยนแปลงเป็น PDF ใหม่
 tl:I-save ang mga pagbabago sa isang bagong PDF
 tr:Değişiklikleri yeni PDF'ye kaydet
@@ -15372,6 +15543,7 @@ cn:保存至当前 PDF 文件
 co:Arregistrà i cambiamenti in u PDF esistente
 cy:Cadw newidiadau i PDF presennol
 de:Änderungen an vorhandener PDF speichern
+dk:Gem ændringer til eksisterende PDF
 el:Αποθήκευση αλλαγών σε υπάρχον PDF
 es:Guardar los cambios en un PDF existente
 et:Salvesta muudatused olemas olevasse PDF-i
@@ -15390,6 +15562,7 @@ nl:Wijzigingen opslaan in bestaande PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 ru:Сохранить изменения в имеющемся PDF
 sl:Shrani spremembe v trenutno PDF datoteko
+sr-rs:Сачувај измене у постојећи PDF
 th:บันทึกการเปลี่ยนแปลงไปยัง PDF ที่เปิดอยู่
 tr:Değişiklikleri var olan PDF'ye kaydet
 uk:Зберегти зміни в поточний PDF
@@ -15404,6 +15577,7 @@ cn:保存至新的 PDF 文件(&N)
 co:Arregistrà in un &novu PDF
 cy:Cadw i PDF &newydd
 de:In &neue PDF speichern
+dk:Gem som &ny PDF
 el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
 et:Salvesta &uude PDF-i
@@ -15421,6 +15595,7 @@ pl:Zapisz w &nowym pliku PDF
 ru:Сохранить в &новом PDF
 sk:Uložiť do &nového PDF
 sl:Shrani v &novo PDF datoteko
+sr-rs:Сачувај у &нови PDF
 th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
 uk:Зберегти в новому PDF-файлі
@@ -15432,6 +15607,7 @@ cn:保存注释到 '%s'
 co:Annutazioni arregistrate nant’à « %s »
 cy:Cadwyd anodiadau i '%s'
 de:Gespeicherte Anmerkungen zu '%s'
+dk:Gem kommentarer til '%s'
 el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
 et:Märkused salvestatud '%s'
@@ -15448,6 +15624,7 @@ nl:Aantekeningen opgeslagen in '%s'
 pl:Zapisano adnotacje w '%s'
 ru:Аннотации сохранены в '%s'
 sl:Shrani pripombe v '%s'
+sr-rs:Белешке сачуване у "%s"
 tl:Nai-save ang mga anotasyon sa '%s'
 tr:Dipnotlar şuraya kaydedildi: '%s'
 uk:Анотації збережені до '%s'
@@ -15459,6 +15636,7 @@ cn:保存 '%s' 失败：'%s'
 co:Arregistramentu di « %s » fiascatu cù : « %s »
 cy:Methodd cadw '%s' oherwydd: '%s'
 de:Speichern von '%s' fehlgeschlagen mit: '%s'
+dk:Lagring af '%s' fejlede med: '%s'
 el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
 et:Salvestamine '%s' ebaõnnestus: '%s'
@@ -15475,6 +15653,7 @@ nl:Opslaan van '%s' mislukt met: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
 ru:Ошибка сохранения '%s' с: '%s'
 sl:Shranjevanje '%s' ni uspelo: '%s'
+sr-rs:Чување "%s" није успело због: "%s"
 tr:'%s' kaydedilmesi başarısız: '%s'
 uk:Не вдалося зберегти '%s' з допомогою: '%s'
 vn:Đang lưu '%s' lỗi với: '%s'
@@ -15505,6 +15684,7 @@ pl:Szukaj za pomocą &Bing
 ru:Н&айти в Bing
 sk:Vyhľadávanie pomocou &Bing
 sl:Išči z &Bing
+sr-rs:Претражи помоћу Bing-а (&Б)
 th:ค้นหาด้วย &​Bing
 tl:Maghanap Gamit ang &Bing
 tr:&Bing İle Ara
@@ -15538,6 +15718,7 @@ pl:Szukaj za pomocą &Google
 ru:&Найти в Google
 sk:Hľadať pomocou &Google
 sl:Išči z &Google
+sr-rs:Претражи помоћу Google-а (&Г)
 th:ค้นหาด้วย &​Google
 tr:&Google İle Ara
 tw:使用Google搜尋(&G)
@@ -15661,7 +15842,7 @@ sk:Vybrať &všetko
 sl:Izberi vse
 sp-rs:Izaberi sve
 sq:Seleksionoj të &gjithë
-sr-rs:Изабери све
+sr-rs:Изабери &све
 sv:Markera &allt
 ta:அனைத்தையும் தேர்வு செய்
 th:เลือก &ทั้งหมด
@@ -15680,6 +15861,7 @@ cn:在编辑器中选择标注
 co:Selezziunà l’annutazione in l’editore
 cy:Dewis Anodiad yn y Golygydd
 de:Anmerkung im Editor auswählen
+dk:Vælg kommentarer i Editor
 el:Επιλέξτε σχολιασμό στον επεξεργαστή 
 es:Seleccionar la anotación en el editor
 et:Vali märkus redaktoris
@@ -15697,6 +15879,7 @@ nl:Selecteer Aantekening in Bewerker
 pl:Wybierz adnotację w edytorze
 ru:Выбрать аннотацию в редакторе
 sl:Izberi pripombo v urejevalniku
+sr-rs:Одабери белешку у уређивачу
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 tl:Piliin ang Anotasyon sa Editor
 tr:Düzenleyicide Dipnot Seç
@@ -15947,7 +16130,7 @@ sk:Odoslať &e-mailom...
 sl:Pošlji po &E-pošti …
 sp-rs:Pošalji putem e-pošte...
 sq:Dërgoj me &e-mail...
-sr-rs:Пошаљи путем е-поште...
+sr-rs:Пошаљи путем &е-поште...
 sv:S&kicka som epost...
 ta:மின்னஞ்சலாக அனுப்பு...
 th:ส่งโดย &อีเมล์...
@@ -16077,7 +16260,7 @@ sk:Zobraziť &Záložky
 sl:Prikaži &zaznamke
 sp-rs:Prikaži Obeleživače
 sq:Tregoj &faqet me shenjë
-sr-rs:Прикажи обележене
+sr-rs:Прикажи обе&лежене
 sv:Visa &Bokmärken
 ta:புத்தகக்குறிகளை காட்டுக
 tr:Göster &Sık Kullanılanlar
@@ -16099,7 +16282,7 @@ cy:Dangos &Ffefrynnau
 de:&Favoriten anzeigen
 dk:Vis &foretrukne
 el:Εμφάνιση &Αγαπημένων
-es:Mostrar los &favoritos
+es:Mostrar &favoritos
 et:Näita &Lemmikuid
 eu:Erakutsi &Gogokoenak
 fr:Afficher les &favoris
@@ -16121,6 +16304,7 @@ pt:Mostrar &favoritos
 ru:Показать и&збранное
 sk:Zobraziť &obľúbené položky
 sl:Pokaži priljubljene
+sr-rs:Прикажи &фаворите
 th:แสดง &รายการโปรด
 tr:&Yer İmlerini Göster
 tw:顯示最愛(&F)
@@ -16180,7 +16364,7 @@ sk:Zobraziť &strany priebežne
 sl:&Prikaži strani nepretrgano
 sp-rs:Prikaži stranice bez prekida
 sq:Tregoj &faqet në vazhdimësi
-sr-rs:Прикажи странице без прекида
+sr-rs:Прикажи &странице без прекида
 sv:Visa sidor fortlöpande
 ta:பக்கங்களை தொடர்ச்சியாக காட்டு
 th:แสดง &หน้าอย่างต่อเนื่อง
@@ -16222,6 +16406,7 @@ nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
 ru:Показывать по&лосы прокрутки
 sl:Pokaži dr&sne trakove
+sr-rs:Прикажи &траке за померање
 ta:உருட்பட்டைகளை காண்பி 
 th:แสดงผล &​แถบเลื่อน
 tr:&Kaydırma Çubuklarını Göster
@@ -16288,7 +16473,7 @@ sl:Pokaži orodno vrstico
 sn:Ratidza Toolbar
 sp-rs:Traka sa alatkama
 sq:Tregoj &brezin e mjeteve
-sr-rs:Трака са алаткама
+sr-rs:Трака са &алаткама
 sv:Visa verktygsfält
 ta:கருவிப்பட்டை காண்பி
 th:แสดงแถบเครื่องมือ
@@ -16304,6 +16489,7 @@ cn:显示书签(&M)
 co:Affissà l’&indette
 cy:Dangos &Nodau Tudalen
 de:Lesezeichen anzeigen
+dk:Vis bog&mærker
 el:Εμφάνιση σελιδοδεικτών
 es:Mostrar favo&ritos
 eu:Erakutsi &Lastermarkak
@@ -16314,6 +16500,7 @@ ja:ブックマークを表示(&M)
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 ru:Показывать &закладки
+sr-rs:Прикажи обе&леживаче
 tr:Yer imleri
 tw:顯示書籤(&M)
 uk:Показати закладки
@@ -16336,7 +16523,7 @@ cz:Zobrazit oblíbené položky
 de:Favoriten anzeigen
 dk:Vis bogmærker
 el:Εμφάνιση αγαπημένων
-es:Mostrar los favoritos
+es:Mostrar favoritos
 et:Näita lemmikuid
 eu:Erakutsi Gogokoenak
 fa:علاقه‌مندی‌ها را نشان بده
@@ -16415,6 +16602,7 @@ nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
 ru:Показывать по&лосы прокрутки
 sl:Pokaži drsne trak&ove
+sr-rs:Прикажи траке за по&мерање
 ta:உருட்பட்டைகளை காண்பி 
 th:&แสดงแถบเลื่อน
 tr:Kaydırma Ç&ubuklarını Göster
@@ -16438,7 +16626,7 @@ cz:Zobrazit často čtené dokumenty
 de:Oft gelesene Dokumente einblenden
 dk:Vis hyppigt læste
 el:Εμφάνιση συχνά αναγνωσμένων αρχείων
-es:Mostrar lo más leído
+es:Mostrar más leídos
 et:Näita sageli loetud dokumente
 eu:Erakutsi Sarri irakurriak
 fa:نشان دادن آخرین چیزهایی که خوانده‌اید
@@ -16499,7 +16687,7 @@ cz:Zobrazit ve &složce
 de:Dokument-&Ordner öffnen
 dk:Vis i &mappe
 el:Εμφάνιση στον &φάκελο
-es:Mostrar en la &carpeta
+es:Mostrar en &carpeta
 et:Näita &kausta
 eu:Erakutsi &agiritegian
 fr:&Afficher dans le dossier
@@ -16521,6 +16709,7 @@ pt:Mostrar na &pasta
 ru:Показать в п&апке
 sk:Zobraziť v &priečinku
 sl:Pokaži v mapi
+sr-rs:Прикажи у &фасцикли
 ta:கோப்பகத்தில் காண்பி 
 th:แสดงใน &โฟลเดอร์
 tr:&Klasörde göster
@@ -16533,8 +16722,9 @@ cn:在文件夹中显示
 co:Affissà in u cartulare
 cy:Dangos mewn ffolder
 de:Im Ordner anzeigen
+dk:Vis i folder
 el:Εμφάνιση στο φάκελο 
-es:mostrar en la carpeta
+es:mostrar en carpeta
 eu:Erakutsi agiritegian
 fr:Afficher dans le dossier
 hr:Prikaži u mapi
@@ -16542,6 +16732,8 @@ it:Visualizza nella cartella
 ja:フォルダを表示
 nl:Toon in map
 pl:Pokaż w folderze
+ru:Показать в папке
+sr-rs:Прикажи у фасцикли
 tr:Klasörde göster
 tw:打開所在資料夾
 uk:Показати в папці
@@ -16599,7 +16791,7 @@ sk:Zobraziť bočný panel &záložiek, pokiaľ je dostupný
 sl:Pokaži podokno z &zaznamki, če so na voljo
 sp-rs:Prikaži bočnu traku sa obeleživačima
 sq:Tregoj &faqet me shenjë kur janë të gatshme
-sr-rs:Прикажи бочну траку са обележивачима
+sr-rs:Прикажи бочну траку са обе&леживачима
 sv:Visa sidopanel för &bokmärken när de finns
 ta:புத்தககுறி பட்டை இருந்தல் காட்டு
 th:แสดง &แถบข้างบุ๊คมาร์คเมื่อพร้อมใช้งาน
@@ -16669,7 +16861,7 @@ sl:Enostransko
 sn:Peji imwechete
 sp-rs:Pojedinačna stranica
 sq:Njëfletësh
-sr-rs:Појединачна страница
+sr-rs:Једна страница
 sv:Enkel sida
 ta:ஒற்றைப் பக்கம்
 th:หน้าเดียว
@@ -16707,6 +16899,7 @@ nl:Sla deze versie over
 pl:Pomiń tę wersję
 ru:Пропустить эту версию
 sl:Preskoči to različico
+sr-rs:Прескочи ову верзију
 th:ข้ามรุ่นนี้
 tl:Laktawan ang bersyong ito
 tr:Bu sürümü atla
@@ -16875,6 +17068,7 @@ nl:Vierkant
 pl:Kwadrat
 ru:Квадрат
 sl:Kvadrat
+sr-rs:Квадрат
 ta:நாற்கரம் 
 th:สี่เหลี่ยม
 tl:Parisukat
@@ -17585,6 +17779,7 @@ cn:文本对齐:
 co:Aliniamentu di testu :
 cy:Aliniad Testun:
 de:Textausrichtung:
+dk:Tekst justering:
 el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
 et:Teksti joondus:
@@ -17601,6 +17796,7 @@ nl:Tekst Uitlijning:
 pl:Wyrównanie tekstu:
 ru:Выравнивание текста:
 sl:Poravnava besedila:
+sr-rs:Поравнање текста:
 tr:Satır Hizası:
 uk:Вирівнювання тексту: 
 vn:Căn Chỉnh:
@@ -17613,6 +17809,7 @@ cn:文本颜色:
 co:Culore di u testu :
 cy:Lliw Testun:
 de:Textfarbe:
+dk:Tekst farve
 el:Text Color: 
 es:Color de Texto:
 et:Teksti värv
@@ -17630,6 +17827,7 @@ nl:Tekst Kleur
 pl:Kolor tekstu:
 ru:Цвет текста:
 sl:Barva besedila:
+sr-rs:Боја текста:
 tr:Metin Rengi:
 uk:Колір тексту: 
 vn:Màu Sắc:
@@ -17643,6 +17841,7 @@ cn:文本大小:
 co:Dimensione di testu :
 cy:Maint Testun:
 de:Textgröße:
+dk:Tekst størrelse:
 el:Μέγεθος κειμένου: 
 es:Tamaño de Texto
 et:Teksti suurus:
@@ -17660,6 +17859,7 @@ nl:Tekst Grootte:
 pl:Rozmiar tekstu:
 ru:Размер текста:
 sl:Velikost besedila:
+sr-rs:Величина текста:
 tr:Metin Boyutu:
 uk:Розмір тексту: 
 vn:Kích Thước:
@@ -17671,6 +17871,7 @@ cn:文本大小: %d
 co:Dimensione di testu : %d
 cy:Maint Testun: %d
 de:Textgröße: %d
+dk:Tekst størrelse: %d
 el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 et:Teksti suurus: %d
@@ -17688,6 +17889,7 @@ nl:Tekst Grootte: %d
 pl:Rozmiar tekstu: %d
 ru:Размер текста: %d
 sl:Velikost besedila: %d
+sr-rs:Величина текста: %d
 tr:Metin Boyutu: %d
 uk:Розмір тексту: %d
 vn:Kích Thước: %d
@@ -17933,7 +18135,7 @@ sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOsp
 sl:Namestitveni program je poškodovan. Prosimo, da ga ponovno prenesete.\nOpravičujemo se za nevšečnost!
 sp-rs:Instalacija je oštećena. Molimo preuzmite je ponovo. \n Žao nam je zbog neugodnosti!
 sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni për bezdinë!
-sr-rs:Инсталација је оштећена. Скинути је поново. \n Извињавамо се.
+sr-rs:Инсталација је оштећена, молимо преузмите је поново. \nИзвињавамо се на непријатностима!
 sv:Installationsprogrammet är skadat. Vänligen hämta det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 th:โปรแกรมติดตั้งเสียหาย โปรดดาวน์โหลดอีกครั้ง \n ขออภัยในความไม่สะดวก!
@@ -18101,6 +18303,7 @@ pl:Tłumacz za pomocą &DeepL
 ru:П&еревести в DeepL
 sk:Preložiť pomocou &DeepL
 sl:Prevedi z &DeepL
+sr-rs:Преведи помоћу DeepL-а (&Д)
 th:แปลด้วย &​DeepL
 tr:&DeepL İle Çevir
 tw:使用DeepL翻譯(&D)
@@ -18388,6 +18591,7 @@ nl:Niet-opgeslagen aantekening
 pl:Niezapisane adnotacje
 ru:Не сохранены аннотации
 sl:Neshranjene pripombe
+sr-rs:Несачуване белешке
 th:ไม่ได้บันทึกคำอธิบายประกอบ
 tl:Mga hindi na-save na anotasyon
 tr:Kaydedilmemiş dipnotlar
@@ -18418,6 +18622,7 @@ nl:Niet opgeslagen aantekeningen in '%s'
 pl:Niezapisane adnotacje w '%s'
 ru:В '%s' есть несохранённые аннотации
 sl:Neshranjene pripombe v '%s'
+sr-rs:Несачуване белешке у "%s"
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
 tl:Hindi na-save na mga anotasyon sa '%s'
 tr:'%s' içinde kaydedilmemiş dipnotlar
@@ -18473,7 +18678,7 @@ sk:Povoliť &záložky
 sl:Uporabljaj &zavihke
 sp-rs:Koristiti tab
 sq:Përdor &skedat
-sr-rs:Користити таб
+sr-rs:Користи &картице
 sv:Använd flikar
 ta:தாவல்களைப் பயன்படுத்துக (&T)
 th:ใช้แท็บ
@@ -18613,7 +18818,7 @@ sl:Ob&išči domačo stran
 sn:&Shanyira dande-mtande
 sp-rs:Poseti veb-sajt
 sq:SumatraPDF në &internet
-sr-rs:Посети веб-сајт
+sr-rs:Посети &веб-сајт
 sv:Besök webbplats
 ta:வலைத்தளம் செல்
 th:เยี่ยม &เว็บไชด์
@@ -18852,6 +19057,7 @@ nl:U heeft niet-opgeslagen aantekeningen
 pl:Masz niezapisane adnotacje
 ru:Аннотации не сохранены
 sl:Imaš neshranjene pripombe
+sr-rs:Имате несачуване белешке
 th:คุณไม่ได้บันทึกคำอธิบายประกอบ
 tl:Mayroon kang mga hindi na-save na anotasyon
 tr:Kaydedilmemiş dipnotlarınız var
@@ -18884,6 +19090,7 @@ nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie inst
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
 ru:Вы используете версию '%s', хотя доступна версия '%s'.\nХотите установить новую версию?
 sl:Imaš nameščeno različico '%s'; na voljo pa je različica '%s'.\nAli želiš namestiti novo različico?
+sr-rs:Користите верзију "%s", а доступна је верзија "%s".\nЖелите ли да инсталирате нову верзију?
 th:คุณมีรุ่น '%s'​ และรุ่น '%s'​ ใช่ได้ \nคุณต้องการจะติดตั้งรุ่นใหม่หรือไม่
 tl:Mayroon kang bersyon na '%s' at available ang bersyon na '%s'.\nGusto mo bang mag-install ng bagong bersyon?
 tr:'%s' sürümünüz var ve '%s' sürümü kullanılabilir.\nYeni sürümü kurmak ister misiniz?
@@ -18917,6 +19124,7 @@ nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit 
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
 ru:Вы устанавливаете 32-разрядную версию SumatraPDF в 64-разрядной ОС.\nХотите загрузить 64-разрядную версию программы?
 sl:Nameščaš 32-bitni SumatraPDF na 64-bitni OS.\nAli želiš prenesti 64-bitno različico?
+sr-rs:Инсталирате 32-битни SumatraPDF на 64-битном ОС-у.\nДа ли бисте желели да преузмете\n64-битну верзију?
 th:คุณกำลังติดตั้ง SumatraPDF รุ่น 32-บิต บนระบปฏิบัติการ 64-บิต.\nคุณต้องการดาวน์โหลดหรือไม่\nรุ่น 64-บิต
 tl:Nag-i-install ka ng 32-bit na SumatraPDF sa 64-bit na OS.\nGusto mo bang mag-download ng\n64-bit na bersyon?
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruyorsunuz.\n64 bit sürümü indirmek\nister misiniz?
