@@ -204,7 +204,7 @@ search_by_family(int *size, const char *family, int attr)
 	}
 
 	return *size = 0, NULL;
-	}
+}
 
 const unsigned char *
 fz_lookup_base14_font(fz_context *ctx, const char *name, int *size)
@@ -247,7 +247,7 @@ fz_lookup_base14_font(fz_context *ctx, const char *name, int *size)
 
 	*size = 0;
 	return NULL;
-	}
+}
 
 const unsigned char *
 fz_lookup_builtin_font(fz_context *ctx, const char *family, int is_bold, int is_italic, int *size)

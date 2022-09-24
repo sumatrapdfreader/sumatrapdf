@@ -639,22 +639,22 @@ static fz_html_box *new_box(fz_context *ctx, struct genstate *g, fz_xml *node, i
 		else
 		{
 			href = fz_xml_att(node, "href");
-	}
+		}
 		if (href)
 			box->href = fz_pool_strdup(ctx, g->pool, href);
-}
+	}
 
 	if (type == BOX_FLOW)
-{
+	{
 		box->u.flow.head = NULL;
 		box->s.build.flow_tail = &box->u.flow.head;
 	}
 
 	return box;
-	}
+}
 
 static void append_box(fz_context *ctx, fz_html_box *parent, fz_html_box *child)
-	{
+{
 	child->up = parent;
 	if (!parent->down)
 		parent->down = child;
@@ -693,7 +693,7 @@ static fz_html_box *find_table_cell_context(fz_context *ctx, fz_html_box *box)
 }
 
 static fz_html_box *find_inline_context(fz_context *ctx, struct genstate *g, fz_html_box *box)
-	{
+{
 	fz_css_style style;
 	fz_html_box *flow_box;
 
@@ -760,7 +760,7 @@ static void gen2_text(fz_context *ctx, struct genstate *g, fz_html_box *root_box
 }
 
 static fz_html_box *gen2_inline(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
-			{
+{
 	fz_html_box *this_box;
 	fz_html_box *flow_box;
 	const char *id = fz_xml_att(node, "id");
@@ -771,12 +771,12 @@ static fz_html_box *gen2_inline(fz_context *ctx, struct genstate *g, fz_html_box
 	{
 		flow_box = find_flow_encloser(ctx, this_box);
 		add_flow_anchor(ctx, g->pool, flow_box, this_box);
-			}
+	}
 	return this_box;
-		}
+}
 
 static void gen2_break(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node)
-		{
+{
 	fz_html_box *this_box;
 	fz_html_box *flow_box;
 
@@ -789,16 +789,16 @@ static void gen2_break(fz_context *ctx, struct genstate *g, fz_html_box *root_bo
 		style.font_size.unit = N_SCALE;
 		this_box = new_box(ctx, g, node, BOX_INLINE, &style);
 		append_box(ctx, find_inline_context(ctx, g, root_box), this_box);
-		}
-		else
-		{
+	}
+	else
+	{
 		this_box = root_box;
 	}
 
 	flow_box = find_flow_encloser(ctx, this_box);
 	add_flow_break(ctx, g->pool, flow_box, this_box);
-			g->at_bol = 1;
-		}
+	g->at_bol = 1;
+}
 
 static fz_html_box *gen2_block(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
 {
@@ -807,7 +807,7 @@ static fz_html_box *gen2_block(fz_context *ctx, struct genstate *g, fz_html_box 
 	this_box = new_box(ctx, g, node, BOX_BLOCK, style);
 	append_box(ctx, root_box, this_box);
 	return this_box;
-	}
+}
 
 static fz_html_box *gen2_table(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
 {
@@ -828,7 +828,7 @@ static fz_html_box *gen2_table_row(fz_context *ctx, struct genstate *g, fz_html_
 }
 
 static fz_html_box *gen2_table_cell(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
-	{
+{
 	fz_html_box *this_box;
 	root_box = find_table_cell_context(ctx, root_box);
 	this_box = new_box(ctx, g, node, BOX_TABLE_CELL, style);
@@ -837,12 +837,12 @@ static fz_html_box *gen2_table_cell(fz_context *ctx, struct genstate *g, fz_html
 }
 
 static void gen2_image_common(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_image *img, int display, fz_css_style *style)
-		{
+{
 	fz_html_box *img_block_box;
 	fz_html_box *img_inline_box;
 
 	if (display == DIS_BLOCK)
-			{
+	{
 		root_box = find_block_context(ctx, root_box);
 		img_block_box = new_box(ctx, g, node, BOX_BLOCK, style);
 		append_box(ctx, root_box, img_block_box);
@@ -851,65 +851,65 @@ static void gen2_image_common(fz_context *ctx, struct genstate *g, fz_html_box *
 		img_inline_box = new_box(ctx, g, NULL, BOX_INLINE, style);
 		append_box(ctx, root_box, img_inline_box);
 		generate_image(ctx, img_inline_box, img, g);
-				}
+	}
 
 	else if (display == DIS_INLINE)
-				{
+	{
 		root_box = find_inline_context(ctx, g, root_box);
 		img_inline_box = new_box(ctx, g, node, BOX_INLINE, style);
 		append_box(ctx, root_box, img_inline_box);
 		generate_image(ctx, img_inline_box, img, g);
-				}
-			}
+	}
+}
 
 static void gen2_image_html(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, int display, fz_css_style *style)
-			{
-				const char *src = fz_xml_att(node, "src");
-				if (src)
-				{
+{
+	const char *src = fz_xml_att(node, "src");
+	if (src)
+	{
 		fz_css_style local_style = *style;
 		fz_image *img;
-					int w, h;
-					const char *w_att = fz_xml_att(node, "width");
-					const char *h_att = fz_xml_att(node, "height");
+		int w, h;
+		const char *w_att = fz_xml_att(node, "width");
+		const char *h_att = fz_xml_att(node, "height");
 
-					if (w_att && (w = fz_atoi(w_att)) > 0)
-					{
+		if (w_att && (w = fz_atoi(w_att)) > 0)
+		{
 			local_style.width.value = w;
 			local_style.width.unit = strchr(w_att, '%') ? N_PERCENT : N_LENGTH;
-					}
-					if (h_att && (h = fz_atoi(h_att)) > 0)
-					{
+		}
+		if (h_att && (h = fz_atoi(h_att)) > 0)
+		{
 			local_style.height.value = h;
 			local_style.height.unit = strchr(h_att, '%') ? N_PERCENT : N_LENGTH;
-					}
+		}
 
 		img = load_html_image(ctx, g->zip, g->base_uri, src);
 		gen2_image_common(ctx, g, root_box, node, img, display, &local_style);
-					}
-			}
+	}
+}
 
 static void gen2_image_fb2(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, int display, fz_css_style *style)
-			{
-				const char *src = fz_xml_att(node, "l:href");
-				if (!src)
-					src = fz_xml_att(node, "xlink:href");
-				if (src && src[0] == '#')
-				{
-					fz_image *img = fz_tree_lookup(ctx, g->images, src+1);
+{
+	const char *src = fz_xml_att(node, "l:href");
+	if (!src)
+		src = fz_xml_att(node, "xlink:href");
+	if (src && src[0] == '#')
+	{
+		fz_image *img = fz_tree_lookup(ctx, g->images, src+1);
 		gen2_image_common(ctx, g, root_box, node, fz_keep_image(ctx, img), display, style);
-					}
-			}
+	}
+}
 
 static void gen2_image_svg(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, int display, fz_css_style *style)
-			{
+{
 	fz_image *img = load_svg_image(ctx, g->zip, g->base_uri, g->xml, node);
 	gen2_image_common(ctx, g, root_box, node, img, display, style);
 }
 
 static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node,
 	fz_css_match *match, int display, fz_css_style *style)
-				{
+{
 	fz_html_box *this_box;
 	const char *tag;
 	const char *lang_att;
@@ -932,9 +932,9 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 			g->markup_dir = FZ_BIDI_RTL;
 		else if (!strcmp(dir_att, "ltr"))
 			g->markup_dir = FZ_BIDI_LTR;
-					else
+		else
 			g->markup_dir = DEFAULT_DIR;
-				}
+	}
 
 	lang_att = fz_xml_att(node, "lang");
 	if (lang_att)
@@ -949,16 +949,16 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 
 	case DIS_BLOCK:
 		this_box = gen2_block(ctx, g, root_box, node, style);
-					if (g->is_fb2)
-					{
-						if (!strcmp(tag, "title") || !strcmp(tag, "subtitle"))
+		if (g->is_fb2)
+		{
+			if (!strcmp(tag, "title") || !strcmp(tag, "subtitle"))
 				this_box->heading = fz_mini(g->section_depth, 6);
-					}
-					else
-					{
-						if (tag[0]=='h' && tag[1]>='1' && tag[1]<='6' && tag[2]==0)
+		}
+		else
+		{
+			if (tag[0]=='h' && tag[1]>='1' && tag[1]<='6' && tag[2]==0)
 				this_box->heading = tag[1] - '0';
-					}
+		}
 		break;
 
 	case DIS_LIST_ITEM:
@@ -984,33 +984,33 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 	default:
 		this_box = gen2_inline(ctx, g, root_box, node, style);
 		break;
-				}
+	}
 
 	if (!strcmp(tag, "ol"))
-				{
+	{
 		int save_list_counter = g->list_counter;
 		g->list_counter = 0;
 		gen2_children(ctx, g, this_box, node, match);
 		g->list_counter = save_list_counter;
-				}
+	}
 	else if (!strcmp(tag, "section"))
-				{
+	{
 		int save_section_depth = g->section_depth;
 		g->section_depth++;
 		gen2_children(ctx, g, this_box, node, match);
 		g->section_depth = save_section_depth;
-						}
-						else
+	}
+	else
 	{
 		gen2_children(ctx, g, this_box, node, match);
-					}
+	}
 
 	g->markup_dir = save_markup_dir;
 	g->markup_lang = save_markup_lang;
-				}
+}
 
 static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *root_node, fz_css_match *root_match)
-				{
+{
 	fz_xml *node;
 	const char *tag;
 	fz_css_match match;
@@ -1018,7 +1018,7 @@ static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root
 	int display;
 
 	for (node = fz_xml_down(root_node); node; node = fz_xml_next(node))
-				{
+	{
 		tag = fz_xml_tag(node);
 		if (tag)
 		{
@@ -1028,30 +1028,30 @@ static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root
 			if (tag[0]=='b' && tag[1]=='r' && tag[2]==0)
 			{
 				gen2_break(ctx, g, root_box, node);
-				}
+			}
 			else if (tag[0]=='i' && tag[1]=='m' && tag[2]=='g' && tag[3]==0)
-				{
+			{
 				gen2_image_html(ctx, g, root_box, node, display, &style);
-				}
+			}
 			else if (g->is_fb2 && tag[0]=='i' && tag[1]=='m' && tag[2]=='a' && tag[3]=='g' && tag[4]=='e' && tag[5]==0)
-				{
+			{
 				gen2_image_fb2(ctx, g, root_box, node, display, &style);
-				}
+			}
 			else if (tag[0]=='s' && tag[1]=='v' && tag[2]=='g' && tag[3]==0)
-				{
+			{
 				gen2_image_svg(ctx, g, root_box, node, display, &style);
+			}
+			else
+			{
+				gen2_tag(ctx, g, root_box, node, &match, display, &style);
+			}
 		}
 		else
 		{
-				gen2_tag(ctx, g, root_box, node, &match, display, &style);
-			}
-				}
-				else
-				{
 			gen2_text(ctx, g, root_box, node);
-				}
-			}
 		}
+	}
+}
 
 static char *concat_text(fz_context *ctx, fz_xml *root)
 {
@@ -1792,7 +1792,7 @@ fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em, fz
 	}
 	fz_catch(ctx)
 	{
-			fz_drop_html_tree(ctx, &story->tree);
+		fz_drop_html_tree(ctx, &story->tree);
 		fz_rethrow(ctx);
 	}
 

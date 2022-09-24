@@ -291,12 +291,12 @@ struct fz_css_style_splay_s {
 
 enum
 {
-	BOX_BLOCK,	/* block-level: contains block, break, flow, and table boxes */
-	BOX_FLOW,	/* block-level: contains only inline boxes */
-	BOX_INLINE,	/* inline-level: contains only inline boxes */
-	BOX_TABLE,	/* table: contains table-row */
-	BOX_TABLE_ROW,	/* table-row: contains table-cell */
-	BOX_TABLE_CELL,	/* table-cell: contains block */
+	BOX_BLOCK,		/* block-level: contains block, break, flow, and table boxes */
+	BOX_FLOW,		/* block-level: contains only inline boxes */
+	BOX_INLINE,		/* inline-level: contains only inline boxes */
+	BOX_TABLE,		/* table: contains table-row */
+	BOX_TABLE_ROW,		/* table-row: contains table-cell */
+	BOX_TABLE_CELL,		/* table-cell: contains block */
 };
 
 typedef struct
@@ -417,8 +417,8 @@ struct fz_html_box_s
 
 		/* Only needed during layout */
 		struct {
-	float x, y, w, b; /* content */
-	float em;
+			float x, y, w, b; /* content */
+			float em;
 		} layout;
 	} s;
 
@@ -432,7 +432,7 @@ struct fz_html_box_s
 		struct {
 			float margin[4]; // TODO: is margin needed post layout?
 			float border[4];
-	float padding[4];
+			float padding[4];
 		} block;
 	} u;
 };

@@ -998,8 +998,8 @@ pdf_annot_rect(fz_context *ctx, pdf_annot *annot)
 	fz_try(ctx)
 	{
 		check_allowed_subtypes(ctx, annot, PDF_NAME(Rect), rect_subtypes);
-	pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
-	annot_rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+		pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
+		annot_rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
 	}
 	fz_always(ctx)
 		pdf_annot_pop_local_xref(ctx, annot);
@@ -1195,7 +1195,7 @@ pdf_set_annot_icon_name(fz_context *ctx, pdf_annot *annot, const char *name)
 	{
 		check_allowed_subtypes(ctx, annot, PDF_NAME(Name), icon_name_subtypes);
 		if (name)
-		pdf_dict_put_name(ctx, annot->obj, PDF_NAME(Name), name);
+			pdf_dict_put_name(ctx, annot->obj, PDF_NAME(Name), name);
 		else
 			pdf_dict_del(ctx, annot->obj, PDF_NAME(Name));
 	}

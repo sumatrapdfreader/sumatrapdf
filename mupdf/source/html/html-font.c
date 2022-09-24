@@ -58,15 +58,15 @@ fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
 
 	fz_try(ctx)
 	{
-	custom->font = fz_keep_font(ctx, font);
-	custom->src = fz_strdup(ctx, src);
-	custom->family = fz_strdup(ctx, family);
-	custom->is_bold = is_bold;
-	custom->is_italic = is_italic;
-	custom->is_small_caps = is_small_caps;
-	custom->next = set->custom;
-	set->custom = custom;
-}
+		custom->font = fz_keep_font(ctx, font);
+		custom->src = fz_strdup(ctx, src);
+		custom->family = fz_strdup(ctx, family);
+		custom->is_bold = is_bold;
+		custom->is_italic = is_italic;
+		custom->is_small_caps = is_small_caps;
+		custom->next = set->custom;
+		set->custom = custom;
+	}
 	fz_catch(ctx)
 	{
 		fz_drop_font(ctx, custom->font);

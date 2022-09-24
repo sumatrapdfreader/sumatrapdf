@@ -33,6 +33,7 @@
 /* #define DEBUG_LINEARIZATION */
 /* #define DEBUG_HEAP_SORT */
 /* #define DEBUG_WRITING */
+/* #define DEBUG_MARK_AND_SWEEP */
 
 #define SIG_EXTRAS_SIZE (1024)
 

@@ -60,7 +60,7 @@ class Package:
     def __init__(self,
             name,
             version,
-            root=None,
+            root = None,
             summary = None,
             description = None,
             classifiers = None,
@@ -589,9 +589,9 @@ class Package:
         add('Author', self.author)
         add('Author-email', self.author_email)
         if self.license:        add('License', self.license)
-        if self.url_source:  add('Home-page', f'Source, {self.url_source}')
-        if self.url_docs:    add('Home-page', f'Source, {self.url_docs}')
-        if self.url_tracker: add('Home-page', f'Source, {self.url_tracker}')
+        if self.url_source:     add('Home-page', f'Source, {self.url_source}')
+        if self.url_docs:       add('Home-page', f'Source, {self.url_docs}')
+        if self.url_tracker:    add('Home-page', f'Source, {self.url_tracker}')
         if self.url_changelog:  add('Home-page', f'Source, {self.url_changelog}')
         if self.keywords:
             add('Keywords', self.keywords)

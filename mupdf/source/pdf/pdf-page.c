@@ -1199,17 +1199,17 @@ pdf_delete_page(fz_context *ctx, pdf_document *doc, int at)
 	pdf_begin_operation(ctx, doc, "Delete page");
 	fz_try(ctx)
 	{
-	pdf_lookup_page_loc(ctx, doc, at, &parent, &i);
-	kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
-	pdf_array_delete(ctx, kids, i);
+		pdf_lookup_page_loc(ctx, doc, at, &parent, &i);
+		kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
+		pdf_array_delete(ctx, kids, i);
 
-	while (parent)
-	{
-		int count = pdf_dict_get_int(ctx, parent, PDF_NAME(Count));
-		pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count - 1);
-		parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
+		while (parent)
+		{
+			int count = pdf_dict_get_int(ctx, parent, PDF_NAME(Count));
+			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count - 1);
+			parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
+		}
 	}
-}
 	fz_always(ctx)
 		pdf_end_operation(ctx, doc);
 	fz_catch(ctx)
@@ -1292,41 +1292,41 @@ pdf_insert_page(fz_context *ctx, pdf_document *doc, int at, pdf_obj *page_ref)
 
 	fz_try(ctx)
 	{
-	if (count == 0)
-	{
-		pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
-		parent = pdf_dict_get(ctx, root, PDF_NAME(Pages));
-		if (!parent)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page tree");
-		kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
-		if (!kids)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "malformed page tree");
-		pdf_array_insert(ctx, kids, page_ref, 0);
-	}
-	else if (at == count)
-	{
-		/* append after last page */
-		pdf_lookup_page_loc(ctx, doc, count - 1, &parent, &i);
-		kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
-		pdf_array_insert(ctx, kids, page_ref, i + 1);
-	}
-	else
-	{
-		/* insert before found page */
-		pdf_lookup_page_loc(ctx, doc, at, &parent, &i);
-		kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
-		pdf_array_insert(ctx, kids, page_ref, i);
-	}
+		if (count == 0)
+		{
+			pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+			parent = pdf_dict_get(ctx, root, PDF_NAME(Pages));
+			if (!parent)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page tree");
+			kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
+			if (!kids)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "malformed page tree");
+			pdf_array_insert(ctx, kids, page_ref, 0);
+		}
+		else if (at == count)
+		{
+			/* append after last page */
+			pdf_lookup_page_loc(ctx, doc, count - 1, &parent, &i);
+			kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
+			pdf_array_insert(ctx, kids, page_ref, i + 1);
+		}
+		else
+		{
+			/* insert before found page */
+			pdf_lookup_page_loc(ctx, doc, at, &parent, &i);
+			kids = pdf_dict_get(ctx, parent, PDF_NAME(Kids));
+			pdf_array_insert(ctx, kids, page_ref, i);
+		}
 
-	pdf_dict_put(ctx, page_ref, PDF_NAME(Parent), parent);
+		pdf_dict_put(ctx, page_ref, PDF_NAME(Parent), parent);
 
-	/* Adjust page counts */
-	while (parent)
-	{
-		count = pdf_dict_get_int(ctx, parent, PDF_NAME(Count));
-		pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count + 1);
-		parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
-	}
+		/* Adjust page counts */
+		while (parent)
+		{
+			count = pdf_dict_get_int(ctx, parent, PDF_NAME(Count));
+			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count + 1);
+			parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
+		}
 	}
 	fz_always(ctx)
 		pdf_end_operation(ctx, doc);

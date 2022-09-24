@@ -171,11 +171,11 @@ def venv_run(
         py = 'py' if windows() else sys.executable
 
     def make_command( commands):
-    if windows():
+        if windows():
             command = '&&'.join( commands)
             if platform.system().startswith('CYGWIN'):
                 command = f'cmd.exe /c {shlex.quote(command)}'
-    else:
+        else:
             command = ' && '.join( commands)
         return command
 
@@ -188,7 +188,7 @@ def venv_run(
         pre.append( f'{venv}\\Scripts\\activate.bat')
     else:
         pre.append( f'. {venv}/bin/activate')
-        post = [f'deactivate']
+    post = [f'deactivate']
 
     if clean or venv not in venv_installed:
         if clean:
@@ -1187,7 +1187,7 @@ def main():
             else:
                 # Do builds ourselves.
                 abis2 = abis
-            if windows():
+                if windows():
                     if not abis2:
                         abis2 = ['x32-38', 'x32-39', 'x64-38', 'x64-39']
                     wheels = make_windows(sdist, abis2, outdir)
@@ -1195,15 +1195,15 @@ def main():
                     if not abis2:
                         abis2 = ['37', '38', '39']
                     wheels = make_linux(
-                        sdist,
+                            sdist,
                             abis2,
-                        outdir,
-                        test_direct_install = False,
-                        install_docker = manylinux_install_docker,
-                        docker_image = manylinux_docker_image,
-                        pull_docker_image = manylinux_pull_docker_image,
-                        container_name = manylinux_container_name,
-                        )
+                            outdir,
+                            test_direct_install = False,
+                            install_docker = manylinux_install_docker,
+                            docker_image = manylinux_docker_image,
+                            pull_docker_image = manylinux_pull_docker_image,
+                            container_name = manylinux_container_name,
+                            )
                 else:
                     wheels = make_unix_native( sdist, outdir)
 

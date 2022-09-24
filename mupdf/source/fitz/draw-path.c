@@ -793,7 +793,7 @@ fz_stroke_flush(fz_context *ctx, sctx *s, fz_linecap start_cap, fz_linecap end_c
 	{
 		if (s->cap == FZ_LINECAP_ROUND)
 		{
-		fz_add_line_dot(ctx, s, s->beg[0].x, s->beg[0].y);
+			fz_add_line_dot(ctx, s, s->beg[0].x, s->beg[0].y);
 		}
 		else
 		{

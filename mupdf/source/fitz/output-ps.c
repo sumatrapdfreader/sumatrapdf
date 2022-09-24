@@ -282,7 +282,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 
 		err = deflate(&writer->stream, (finalband && remain == writer->stream.avail_in) ? Z_FINISH : Z_NO_FLUSH);
 		if (err != Z_OK && err != Z_STREAM_END)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
 
 		/* We are guaranteed that writer->stream.next_in will have been updated for the
 		 * data that has been eaten. */
@@ -293,7 +293,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 		/* We are guaranteed that writer->stream.next_out will have been updated for the
 		 * data that has been written. */
 		if (writer->stream.next_out != writer->output)
-	fz_write_data(ctx, out, writer->output, writer->output_size - writer->stream.avail_out);
+			fz_write_data(ctx, out, writer->output, writer->output_size - writer->stream.avail_out);
 
 		/* Zlib only guarantees to have finished when we have no more data to feed in, and
 		 * the last call to deflate did not return with avail_out == 0. (i.e. no more is

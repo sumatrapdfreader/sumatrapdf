@@ -178,11 +178,11 @@ fz_drop_archive(fz_context *ctx, fz_archive *arch)
 {
 	if (fz_drop_imp(ctx, arch, &arch->refs))
 	{
-	if (arch->drop_archive)
-		arch->drop_archive(ctx, arch);
-	fz_drop_stream(ctx, arch->file);
-	fz_free(ctx, arch);
-}
+		if (arch->drop_archive)
+			arch->drop_archive(ctx, arch);
+		fz_drop_stream(ctx, arch->file);
+		fz_free(ctx, arch);
+	}
 }
 
 /* In-memory archive using a fz_tree holding fz_buffers */

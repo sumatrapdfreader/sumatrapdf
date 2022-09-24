@@ -465,7 +465,7 @@ restart:
 		if (css_lex_accept(buf, '-'))
 		{
 			if (css_lex_accept(buf, '>'))
-			goto restart; /* ignore CDC */
+				goto restart; /* ignore CDC */
 		}
 		if (isnmstart(buf->c))
 		{

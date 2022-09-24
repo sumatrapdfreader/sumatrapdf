@@ -291,7 +291,7 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
 		*p = 0;
 
 		l = 0;
-		r = sizeof(svg_predefined_colors) / sizeof(svg_predefined_colors[0]);
+		r = nelem(svg_predefined_colors) - 1;
 
 		while (l <= r)
 		{

@@ -1068,18 +1068,18 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, flo
 		/* We're not skipping, so add in the spacings to the top edge of our box. */
 		box->s.layout.y = advance_for_spacing(ctx, ld, box->s.layout.y, margin[T] + border[T] + padding[T], &eop);
 	}
-		if (eop)
+	if (eop)
+	{
+		box->s.layout.b = box->s.layout.y;
+		if (restart && restart->end == NULL)
 		{
-			box->s.layout.b = box->s.layout.y;
-			if (restart && restart->end == NULL)
-			{
-				if (restart->potential)
-					restart->end = restart->potential;
-				else
-					restart->end = box;
+			if (restart->potential)
+				restart->end = restart->potential;
+			else
+				restart->end = box;
 			return;
-			}
 		}
+	}
 
 	/* Start with our content being zero height. */
 	box->s.layout.b = box->s.layout.y;
@@ -1108,7 +1108,7 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, flo
 				layout_block(ctx, ld, child, box->s.layout.x, &box->s.layout.b, box->s.layout.w);
 			}
 			else
-				{
+			{
 				layout_table(ctx, ld, child, box);
 				/*
 				box->s.layout.b = child->s.layout.b
@@ -1116,7 +1116,7 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, flo
 					+ child->u.block.border[B]
 					+ child->u.block.margin[B];
 				 */
-				}
+			}
 
 			/* Unless we're still skipping, the base of our box must now be at least as
 			 * far down as the child, plus the childs spacing. */
@@ -1126,7 +1126,7 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, flo
 					child->s.layout.b,
 					child->u.block.padding[B] + child->u.block.border[B] + child->u.block.margin[B],
 					&eop);
-		}
+			}
 		}
 
 		else if (child->type == BOX_FLOW)
@@ -1260,13 +1260,13 @@ static void layout_collapse_margin_with_children(fz_context *ctx, fz_html_box *h
 	if (is_layout_box(here))
 	{
 		if (first && is_layout_box(first))
-	{
+		{
 			if (first->u.block.border[T] == 0 && first->u.block.padding[T] == 0)
 			{
 				float m = fz_max(first->u.block.margin[T], here->u.block.margin[T]);
 				here->u.block.margin[T] = m;
 				first->u.block.margin[T] = 0;
-	}
+			}
 		}
 
 		if (last && is_layout_box(last))
@@ -1291,11 +1291,11 @@ static void layout_collapse_margin_with_siblings(fz_context *ctx, fz_html_box *h
 			layout_collapse_margin_with_siblings(ctx, here->down);
 
 		if (is_layout_box(here) && next && is_layout_box(next))
-	{
+		{
 			float m = fz_max(here->u.block.margin[B], next->u.block.margin[T]);
 			here->u.block.margin[B] = m;
 			next->u.block.margin[T] = 0;
-	}
+		}
 
 		here = next;
 	}
@@ -1313,10 +1313,10 @@ static void layout_collapse_margin_with_self(fz_context *ctx, fz_html_box *here)
 			float m = fz_max(here->u.block.margin[T], here->u.block.margin[B]);
 			here->u.block.margin[T] = 0;
 			here->u.block.margin[B] = m;
-	}
+		}
 
 		here = here->next;
-}
+	}
 }
 
 static void layout_collapse_margins(fz_context *ctx, fz_html_box *box, fz_html_box *top)
@@ -1372,19 +1372,19 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 		box->s.layout.b = start_y;
 
 		switch (box->type)
-			{
-			case BOX_BLOCK:
+		{
+		case BOX_BLOCK:
 			layout_block(ctx, &ld, box->down, box->s.layout.x, &box->s.layout.b, box->s.layout.w);
-				break;
-			case BOX_FLOW:
-				layout_flow(ctx, &ld, box->down, box);
-				break;
+			break;
+		case BOX_FLOW:
+			layout_flow(ctx, &ld, box->down, box);
+			break;
 		default:
 			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid box context!");
-			}
-
-			box->s.layout.b = box->down->s.layout.b;
 		}
+
+		box->s.layout.b = box->down->s.layout.b;
+	}
 	fz_always(ctx)
 	{
 		if (unlocked)
@@ -1902,18 +1902,18 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
 		 * we might find the end-of-skip point inside this box. If there is no content
 		 * then the box height will be 0, so nothing will be drawn. */
 		if (y1 > y0)
-		draw_rect(ctx, dev, ctm, page_top, box->style->background_color, x0, y0, x1, y1);
+			draw_rect(ctx, dev, ctm, page_top, box->style->background_color, x0, y0, x1, y1);
 
 		if (!skipping)
 		{
-		/* Draw a selection of borders. */
-		/* If we are restarting, don't do the bottom one yet. */
-		suppress = restart ? (1<<B) : 0;
-		do_borders(ctx, dev, ctm, page_top, box, suppress);
+			/* Draw a selection of borders. */
+			/* If we are restarting, don't do the bottom one yet. */
+			suppress = restart ? (1<<B) : 0;
+			do_borders(ctx, dev, ctm, page_top, box, suppress);
 
-		if (box->list_item)
-			draw_list_mark(ctx, box, page_top, page_bot, dev, ctm, box->list_item);
-	}
+			if (box->list_item)
+				draw_list_mark(ctx, box, page_top, page_bot, dev, ctm, box->list_item);
+		}
 	}
 
 	for (child = box->down; child; child = child->next)
@@ -2017,25 +2017,25 @@ void fz_draw_story(fz_context *ctx, fz_story *story, fz_device *dev, fz_matrix c
 
 	if (dev)
 	{
-	clip = fz_new_path(ctx);
-	fz_try(ctx)
-	{
-	fz_moveto(ctx, clip, bbox.x0, bbox.y0);
-	fz_lineto(ctx, clip, bbox.x1, bbox.y0);
-	fz_lineto(ctx, clip, bbox.x1, bbox.y1);
-	fz_lineto(ctx, clip, bbox.x0, bbox.y1);
-	fz_closepath(ctx, clip);
-	fz_clip_path(ctx, dev, clip, 0, ctm, bbox);
-	}
-	fz_always(ctx)
-		fz_drop_path(ctx, clip);
-	fz_catch(ctx)
-		fz_rethrow(ctx);
+		clip = fz_new_path(ctx);
+		fz_try(ctx)
+		{
+			fz_moveto(ctx, clip, bbox.x0, bbox.y0);
+			fz_lineto(ctx, clip, bbox.x1, bbox.y0);
+			fz_lineto(ctx, clip, bbox.x1, bbox.y1);
+			fz_lineto(ctx, clip, bbox.x0, bbox.y1);
+			fz_closepath(ctx, clip);
+			fz_clip_path(ctx, dev, clip, 0, ctm, bbox);
+		}
+		fz_always(ctx)
+			fz_drop_path(ctx, clip);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
 	}
 
 	story->restart_place = story->restart_draw;
 	if (dev)
-	fz_draw_restarted_html(ctx, dev, ctm, story->tree.root->down, 0, page_bot+page_top, &story->restart_place);
+		fz_draw_restarted_html(ctx, dev, ctm, story->tree.root->down, 0, page_bot+page_top, &story->restart_place);
 	story->restart_place.start = story->restart_draw.end;
 	story->restart_place.start_flow = story->restart_draw.end_flow;
 	story->restart_place.end = NULL;
@@ -2046,7 +2046,7 @@ void fz_draw_story(fz_context *ctx, fz_story *story, fz_device *dev, fz_matrix c
 		story->complete = 1;
 
 	if (dev)
-	fz_pop_clip(ctx, dev);
+		fz_pop_clip(ctx, dev);
 }
 
 void fz_reset_story(fz_context *ctx, fz_story *story)

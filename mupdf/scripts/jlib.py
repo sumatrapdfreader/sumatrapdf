@@ -816,10 +816,10 @@ def exception_info(
 
             >>> def c():
             ...     raise Exception( 'c() failed')
-        >>> def b():
-        ...     try:
-        ...         c()
-        ...     except Exception as e:
+            >>> def b():
+            ...     try:
+            ...         c()
+            ...     except Exception as e:
             ...         exception_info( e, file=sys.stdout, _filelinefn=0)
             >>> def a():
             ...     b()
@@ -840,11 +840,11 @@ def exception_info(
             ...     raise Exception( 'e(): deliberate error')
             >>> def d():
             ...     e()
-        >>> def c():
-        ...     try:
-        ...         d()
-        ...     except Exception as e:
-        ...         raise Exception( 'c: d() failed') from e
+            >>> def c():
+            ...     try:
+            ...         d()
+            ...     except Exception as e:
+            ...         raise Exception( 'c: d() failed') from e
             >>> def b():
             ...     try:
             ...         c()
@@ -856,44 +856,44 @@ def exception_info(
             With chain=True (the default), we output low-level exceptions
             first, matching the behaviour of traceback.* functions:
 
-        >>> g_chain = True
-        >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
-        Traceback (most recent call last):
-            c(): d()
-            d(): e()
-            e(): raise Exception('e(): deliberate error')
-        Exception: e(): deliberate error
-        <BLANKLINE>
-        The above exception was the direct cause of the following exception:
-        Traceback (most recent call last):
-            ...
-            <module>(): a() # doctest: +REPORT_UDIFF +ELLIPSIS
-            a(): b()
-            b(): exception_info( file=sys.stdout, chain=g_chain, _filelinefn=0)
-            ^except raise:
-            b(): c()
-            c(): raise Exception( 'c: d() failed') from e
-        Exception: c: d() failed
+                >>> g_chain = True
+                >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
+                Traceback (most recent call last):
+                    c(): d()
+                    d(): e()
+                    e(): raise Exception( 'e(): deliberate error')
+                Exception: e(): deliberate error
+                <BLANKLINE>
+                The above exception was the direct cause of the following exception:
+                Traceback (most recent call last):
+                    ...
+                    <module>(): a() # doctest: +REPORT_UDIFF +ELLIPSIS
+                    a(): b()
+                    b(): exception_info( file=sys.stdout, chain=g_chain, _filelinefn=0)
+                    ^except raise:
+                    b(): c()
+                    c(): raise Exception( 'c: d() failed') from e
+                Exception: c: d() failed
 
-        With chain='because', we output high-level exceptions first:
-        >>> g_chain = 'because'
-        >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
-        Traceback (most recent call last):
-            ...
-            <module>(): a() # doctest: +REPORT_UDIFF +ELLIPSIS
-            a(): b()
-            b(): exception_info( file=sys.stdout, chain=g_chain, _filelinefn=0)
-            ^except raise:
-            b(): c()
-            c(): raise Exception( 'c: d() failed') from e
-        Exception: c: d() failed
-        <BLANKLINE>
-        Because:
-        Traceback (most recent call last):
-            c(): d()
-            d(): e()
-            e(): raise Exception('e(): deliberate error')
-        Exception: e(): deliberate error
+            With chain='because', we output high-level exceptions first:
+                >>> g_chain = 'because'
+                >>> a() # doctest: +REPORT_UDIFF +ELLIPSIS
+                Traceback (most recent call last):
+                    ...
+                    <module>(): a() # doctest: +REPORT_UDIFF +ELLIPSIS
+                    a(): b()
+                    b(): exception_info( file=sys.stdout, chain=g_chain, _filelinefn=0)
+                    ^except raise:
+                    b(): c()
+                    c(): raise Exception( 'c: d() failed') from e
+                Exception: c: d() failed
+                <BLANKLINE>
+                Because:
+                Traceback (most recent call last):
+                    c(): d()
+                    d(): e()
+                    e(): raise Exception( 'e(): deliberate error')
+                Exception: e(): deliberate error
 
         Show current backtrace by passing exception_or_traceback=None:
             >>> def c():
