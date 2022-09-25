@@ -1560,7 +1560,11 @@ void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
 
 // this assumes we only have at most one tool per this tooltip
 int Tooltip::SetSingle(const char* s, const Rect& rc, bool multiline) {
-    WCHAR* ws = ToWstrTemp(s);
+    if (str::Len(s) > 256) {
+        // pathological cases make for tooltips that take too long to display
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/2814
+        s = str::JoinTemp(str::DupTemp(s, 256), "...");
+    }
     int n = Count();
     // if want to use more tooltips, use Add() and Update()
     ReportIf(n > 1);

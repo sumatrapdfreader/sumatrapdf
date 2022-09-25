@@ -2413,6 +2413,9 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
     for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
         auto tp = pdf_annot_type(ctx, annot);
         const char* contents = pdf_annot_contents(ctx, annot); // don't free
+        if (str::Len(contents) > 128) {
+            contents = str::DupTemp(contents, 128);
+        }
         bool isContentsEmpty = str::IsEmpty(contents);
         const char* label = pdf_annot_field_label(ctx, annot); // don't free
         bool isLabelEmpty = str::IsEmpty(label);
