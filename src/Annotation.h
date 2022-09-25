@@ -63,6 +63,7 @@ struct Annotation {
 };
 
 int PageNo(Annotation*);
+RectF GetBounds(Annotation*);
 RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);

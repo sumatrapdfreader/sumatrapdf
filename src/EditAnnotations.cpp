@@ -424,12 +424,13 @@ static PdfColor GetDropDownColor(const char* sv) {
 // TODO: mupdf shows it in 1.6 but not 1.7. Why?
 bool gShowRect = true;
 
+// TODO: only limit to widgets that have rect?
 static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
     if (!gShowRect) {
         return;
     }
     str::Str s;
-    RectF rect = GetRect(annot);
+    RectF rect = GetBounds(annot);
     int x = (int)rect.x;
     int y = (int)rect.y;
     int dx = (int)rect.dx;

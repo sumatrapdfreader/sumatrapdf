@@ -144,10 +144,20 @@ int PageNo(Annotation* annot) {
     return annot->pageNo;
 }
 
+RectF GetBounds(Annotation* annot) {
+    EngineMupdf* e = annot->engine;
+    ScopedCritSec cs(e->ctxAccess);
+
+    fz_rect rc = pdf_bound_annot(e->ctx, annot->pdfannot);
+    auto rect = ToRectF(rc);
+    return rect;
+}
+
 RectF GetRect(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     ScopedCritSec cs(e->ctxAccess);
 
+    // TOOD: needs try / catch
     fz_rect rc = pdf_annot_rect(e->ctx, annot->pdfannot);
     auto rect = ToRectF(rc);
     return rect;

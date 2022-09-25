@@ -2384,8 +2384,9 @@ static IPageElement* NewFzComment(const char* comment, int pageNo, RectF rect) {
     return res;
 }
 
+// TODO: must be in try/catch
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
-    fz_rect rect = pdf_annot_rect(ctx, annot);
+    fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     const char* contents = pdf_annot_contents(ctx, annot);
     const char* label = pdf_annot_field_label(ctx, annot);
@@ -2430,7 +2431,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
             int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
             pdf_get_embedded_file_params(ctx, fs, &fileParams);
             const char* attname = fileParams.filename;
-            fz_rect rect = pdf_annot_rect(ctx, annot);
+            fz_rect rect = pdf_bound_annot(ctx, annot);
             if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
                 continue;
             }
@@ -3526,7 +3527,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         enum pdf_annot_type tp = pdf_annot_type(epdf->ctx, annot);
         AnnotationType atp = AnnotationTypeFromPdfAnnot(tp);
         if (IsAllowedAnnot(atp, allowedAnnots)) {
-            fz_rect rc = pdf_annot_rect(epdf->ctx, annot);
+            fz_rect rc = pdf_bound_annot(epdf->ctx, annot);
             if (fz_is_point_inside_rect(p, rc)) {
                 matched = annot;
             }
