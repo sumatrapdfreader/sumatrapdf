@@ -332,6 +332,11 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
         }
     }
 
+    if (!HasPermission(Perm::DiskAccess)) {
+        ctx.supportsAnnots = false;
+        ctx.hasUnsavedAnnotations = false;
+    }
+
     ctx.hasToc = win->ctrl && win->ctrl->HasToc();
 
     // append paths of opened files
