@@ -21,7 +21,8 @@ struct FileHistory {
     void Append(FileState* state) const;
     void Remove(FileState* state) const;
     FileState* Get(size_t index) const;
-    FileState* Find(const char* filePath, size_t* idxOut) const;
+    FileState* FindByPath(const char* filePath) const;
+    FileState* FindByName(const char* filePath, size_t* idxOut) const;
     FileState* MarkFileLoaded(const char* filePath) const;
     bool MarkFileInexistent(const char* filePath, bool hide = false) const;
     void GetFrequencyOrder(Vec<FileState*>& list) const;

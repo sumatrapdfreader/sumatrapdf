@@ -428,8 +428,8 @@ class HwndPasswordUI : public PasswordUI {
 /* Get password for a given 'fileName', can be nullptr if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
-    FileState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
+char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
+    FileState* fileFromHistory = gFileHistory.FindByName(path, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         AutoFreeStr fingerprint = str::MemToHex(fileDigest, 16);
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
@@ -455,10 +455,10 @@ char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decry
     if (gPluginMode) {
         char* urlName = url::GetFileName(gPluginURL);
         if (urlName) {
-            fileName = urlName; // TODO: leaks
+            path = urlName; // TODO: leaks
         }
     }
-    fileName = path::GetBaseNameTemp(fileName);
+    path = path::GetBaseNameTemp(path);
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
@@ -469,7 +469,7 @@ char* HwndPasswordUI::GetPassword(const char* fileName, u8* fileDigest, u8 decry
     HwndToForeground(hwnd);
 
     bool* rememberPwd = gGlobalPrefs->rememberOpenedFiles ? saveKey : nullptr;
-    return Dialog_GetPassword(hwnd, fileName, rememberPwd);
+    return Dialog_GetPassword(hwnd, path, rememberPwd);
 }
 
 // update global windowState for next default launch when either
@@ -529,7 +529,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
     char* fp = tab->filePath;
-    FileState* fs = gFileHistory.Find(fp, nullptr);
+    FileState* fs = gFileHistory.FindByName(fp, nullptr);
     if (!fs) {
         return;
     }
@@ -745,7 +745,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     win->ctrl->CreateThumbnail(Size(kThumbnailDx, kThumbnailDy), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
-                SetThumbnail(gFileHistory.Find(filePath, nullptr), bmp);
+                SetThumbnail(gFileHistory.FindByPath(filePath), bmp);
             }
             str::Free(filePath);
         });
@@ -1064,7 +1064,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!fs && gGlobalPrefs->rememberStatePerDocument) {
         const char* fn = args->FilePath();
-        fs = gFileHistory.Find(fn, nullptr);
+        fs = gFileHistory.FindByPath(fn);
         if (fs) {
             if (fs->windowPos.IsEmpty()) {
                 fs->windowPos = gGlobalPrefs->windowPos;
@@ -1322,7 +1322,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
-        FileState* state = gFileHistory.Find(fs->filePath, nullptr);
+        FileState* state = gFileHistory.FindByPath(fs->filePath);
         if (state) {
             CreateThumbnailForFile(win, state);
         }
@@ -1333,7 +1333,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         // we don't ask again at the next refresh
         AutoFreeStr decryptionKey = tab->AsFixed()->GetEngine()->GetDecryptionKey();
         if (decryptionKey) {
-            FileState* fs2 = gFileHistory.Find(fs->filePath, nullptr);
+            FileState* fs2 = gFileHistory.FindByName(fs->filePath, nullptr);
             if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
                 free(fs2->decryptionKey);
                 fs2->decryptionKey = decryptionKey.Release();
@@ -1530,7 +1530,7 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
     if (path::IsSame(oldPath, newPath)) {
         return;
     }
-    FileState* fs = gFileHistory.Find(newPath, nullptr);
+    FileState* fs = gFileHistory.FindByPath(newPath);
     bool oldIsPinned = false;
     int oldOpenCount = 0;
     if (fs) {
@@ -1543,7 +1543,7 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
         }
         DeleteDisplayState(fs);
     }
-    fs = gFileHistory.Find(oldPath, nullptr);
+    fs = gFileHistory.FindByName(oldPath, nullptr);
     if (fs) {
         SetFileStatePath(fs, newPath);
         // merge Frequently Read data, so that a file
@@ -1588,11 +1588,14 @@ static void scheduleReloadTab(WindowTab* tab) {
     });
 }
 
+// return true if adjustd path 
 static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
-    MainWindow* win = args->win;
     const char* path = args->FilePath();
-    bool failEarly = win && !args->forceReuse && !args->engine && !DocumentPathExists(path);
-    bool fileInHistory = gFileHistory.Find(path, nullptr) != nullptr;
+    if (DocumentPathExists(path)) {
+        return false;
+    }
+    bool failEarly = args->win && !args->forceReuse && !args->engine;
+    bool fileInHistory = gFileHistory.FindByPath(path) != nullptr;
     if (!failEarly || !fileInHistory) {
         return failEarly;
     }
@@ -3252,7 +3255,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
         char* path2 = files[i];
         Kind kind = GuessFileTypeFromName(path2);
         bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
-        bool inHistory = gFileHistory.Find(path2, nullptr);
+        bool inHistory = gFileHistory.FindByPath(path2);
         if (isSupported || inHistory) {
             continue;
         }

@@ -163,7 +163,7 @@ FileState* Favorites::GetFavByFilePath(const char* filePath) {
     // file as in previous call, so use one element cache
     FileState* fs = gFileHistory.Get(idxCache);
     if (!fs || !str::Eq(fs->filePath, filePath)) {
-        fs = gFileHistory.Find(filePath, &idxCache);
+        fs = gFileHistory.FindByName(filePath, &idxCache);
     }
     return fs;
 }
@@ -510,7 +510,7 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fn->pageNo;
-    FileState* ds = gFileHistory.Find(fs->filePath, nullptr);
+    FileState* ds = gFileHistory.FindByPath(fs->filePath);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fn->pageNo;
         ds->scrollPos = PointF(-1, -1); // don't scroll the page

@@ -91,7 +91,24 @@ FileState* FileHistory::Get(size_t index) const {
     return nullptr;
 }
 
-FileState* FileHistory::Find(const char* filePath, size_t* idxOut) const {
+FileState* FileHistory::FindByPath(const char* filePath) const {
+    int idxExact = -1;
+    int n = states->isize();
+    for (int i = 0; i < n; i++) {
+        FileState* fs = states->at(i);
+        if (str::EqI(fs->filePath, filePath)) {
+            idxExact = i;
+        }
+    }
+    if (idxExact == -1) {
+        return nullptr;
+    }
+    return states->at(idxExact);
+}
+
+// returns an exact match by path or match by just file name
+// TODO: audit the uses of FindByName and maybe convert to FindByPath
+FileState* FileHistory::FindByName(const char* filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
     const char* fileName = path::GetBaseNameTemp(filePath);
@@ -122,7 +139,7 @@ FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
-    FileState* fs = Find(filePath, nullptr);
+    FileState* fs = FindByPath(filePath);
     if (!fs) {
         fs = NewDisplayState(filePath);
         fs->useDefaultState = true;
@@ -137,7 +154,7 @@ FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
 
 bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
     CrashIf(!filePath);
-    FileState* state = Find(filePath, nullptr);
+    FileState* state = FindByPath(filePath);
     if (!state) {
         return false;
     }

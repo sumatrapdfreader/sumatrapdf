@@ -1530,7 +1530,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    FileState* fs = gFileHistory.Find(filePath, nullptr);
+    FileState* fs = gFileHistory.FindByPath(filePath);
     CrashIf(!fs);
     if (!fs) {
         return;
