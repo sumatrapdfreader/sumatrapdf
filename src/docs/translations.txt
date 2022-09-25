@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e80537dddb1acd46badd3a2601526601649ca315
+adcd9bbfbcedafe2543103e1013cfe3e04e5635b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -72,6 +72,7 @@ uk:&Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size
+az:&Faktiki ölçü
 bg:&Реална големина
 br:&Tamanho real
 by:&Фактычны памер
@@ -232,6 +233,7 @@ uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
 vn:Tất cả các trang được chọn
 :&Back
+az:&Geri
 bg:&Назад
 br:&Voltar
 by:&Назад
@@ -286,6 +288,7 @@ uk:Подання книги
 vn:Đọc Sách
 :&Cancel
 am:Չեղարկել
+az:&İmtina
 bg:&Отказ
 br:&Cancelar
 by:&Адмяніць
@@ -846,6 +849,7 @@ uk:Що шукати:
 uz:&Qidirish:
 vn:Tìm (các) từ sau:
 :&First Page
+az:&Birinci səhifə
 br:&Primeira página
 by:&Першая старонка
 cn:第一页(&F)
@@ -933,6 +937,7 @@ uz:&Betlarni printerga moslash
 vn:Vừa trang in
 :&Free Text
 am:&Ազատ գրվածք
+az:&Sərbəst mətn
 br:Texto &Livre
 ca-xv:Text &lliure
 ca:Text &lliure
@@ -5186,6 +5191,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
+az:Yeniləmə yoxlanılır...
 bg:Проверявам за обновления
 br:Verificando por atualizações...
 by:Праверка абнаўлення…
@@ -6433,6 +6439,7 @@ uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
 :Couldn't get printer name
 am:Հնարավոր չեղավ ստանալ տպիչի անունը
+az:Printerin adını öyrənmək mümkün olmadı
 bg:Името на принтера не бе намерено
 br:Não foi possível ver o nome da impressora
 by: Не ўдалося атрымаць імя прынтара
@@ -7771,6 +7778,7 @@ uz:Hujjat xossalari
 vn:Thuộc tính tập tin
 :Don't install
 am:Չտեղադրել
+az:Quraşdırma
 bg:Не инсталирай
 br:Não instalar
 by:Не ўстанаўліваць
@@ -8409,6 +8417,7 @@ uk:Закладки
 uz:&Tanlanganlar
 vn:Ưa thích
 :F&orward
+az:İ&rəli
 br:A&vançar
 by:Н&аперад
 cn:下一视图(&O)
@@ -10334,6 +10343,7 @@ uk:GB
 uz:GB
 vn:GB
 :Get Fonts Info
+az:Şriftlər haqqında məlumat
 br:Informações da Fonte
 by:Атрымаць інфармацыю аб шрыфтах
 cn:显示字体信息
@@ -10977,6 +10987,7 @@ tw:安裝並重啟
 uk:Встановити та перезапустити
 vn:Cài đặt và chạy chương trình 
 :Install for all users
+az:Bütün istifadəçilər üçün quraşdır
 br:Instalar para todos os usuários
 by:Устанавіць для ўсіх карыстальнікаў
 cn:为所有用户安装
@@ -11494,6 +11505,7 @@ uk:Лінія
 vn:Dòng
 :Line End:
 am:Տողի ավարտը.
+az:Xəttin sonu
 bn:লাইন শেষ:
 br:Fim da linha:
 cn:线段终点
@@ -11524,6 +11536,7 @@ uk:Кінець рядка:
 vn:Dòng Kết Thúc:
 :Line Start:
 am:Տողի մեկնարկը.
+az:Xəttin əvvəli
 bn:লাইন শুরু:
 br:Começo da linha:
 cn:线段起点
@@ -11552,6 +11565,7 @@ tr:Satır Başlangıcı:
 uk:Початок рядка: 
 vn:Dòng Bắt Đầu:
 :Loading %s ...
+az:Yüklənir %s ...
 br:Carregando %s ...
 cn:载入 %s ...
 co:Caricamentu di %s …
@@ -11996,6 +12010,7 @@ uk:Нове вікно
 vn:Cửa sổ &mới
 :New version available
 am:Մատչելի է նոր տարբերակ
+az:Yeni versiya mövcuddur
 bg:Достъпна е нова версия
 br:Nova versão disponível
 by:Даступная новая версія
@@ -14881,6 +14896,7 @@ uk:Перейменувати...
 vn:Đổi &Tên
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
+az:Dördbucaq: x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
 cn:位置与尺寸：x=%d y=%d dx=%d dy=%d
 co:Rett: x=%d y=%d dx=%d dy=%d
@@ -15206,6 +15222,7 @@ uk:Перейменувати в
 uz:Yangi nom
 vn:Đổi tên thành
 :Rotate &Left
+az:So&la çevir
 br:Girar à &esquerda
 by:Павярнуць у&лева
 cn:逆时针旋转(&L)
@@ -15229,6 +15246,7 @@ tw:逆時鐘旋轉(&L)
 uk:Повернути проти годинникової стрілки
 vn:Quay &Trái
 :Rotate &Right
+az:S&ağa çevir
 br:Girar à &direita
 by:Павярнуць у&права
 cn:顺时针旋转(&R)
@@ -16717,6 +16735,7 @@ tw:打開所在資料夾(&F)
 uk:Показати в п&апці
 vn:Hiển thị trong &thư mục
 :Show in folder
+az:Qovluqda göstər
 br:Mostrar na pasta
 cn:在文件夹中显示
 co:Affissà in u cartulare
