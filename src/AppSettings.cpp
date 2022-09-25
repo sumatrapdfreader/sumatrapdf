@@ -343,7 +343,7 @@ bool ReloadSettings() {
 
     UpdateDocumentColors();
     UpdateFixedPageScrollbarsVisibility();
-    CreateSumatraAcceleratorTable();
+    ReCreateSumatraAcceleratorTable();
     return true;
 }
 

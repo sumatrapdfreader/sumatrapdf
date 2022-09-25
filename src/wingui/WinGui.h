@@ -704,7 +704,6 @@ struct TabInfo {
     Rect rClose;
     Size titleSize;
     Point titlePos;
-
 };
 
 struct TabsCtrl : Wnd {

@@ -471,22 +471,19 @@ static bool IsSafeAccel(const ACCEL& a) {
     return true;
 }
 
-static ACCEL* gAccels = nullptr;
-static int gAccelsCount = 0;
+ACCEL* gAccels = nullptr;
+int gAccelsCount = 0;
 
-static ACCEL* gSafeAccels = nullptr;
-static int gSafeAccelsCount = 0;
-
-static HACCEL gAccelerators = nullptr;
-static HACCEL gSafeAccelerators = nullptr;
+static HACCEL gAccelTables[3] = {
+    nullptr, // for all but edit and tree view
+    nullptr, // for edit
+    nullptr, // TODO: for tree view
+};
 
 /* returns a pointer to HACCEL so that we can update it and message loop will use
 the latest version */
-HACCEL* CreateSumatraAcceleratorTable() {
-    DestroyAcceleratorTable(gAccelerators);
-    DestroyAcceleratorTable(gSafeAccelerators);
-    free(gAccels);
-    free(gSafeAccels);
+static void CreateSumatraAcceleratorTable() {
+    CrashIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
 
     int nBuiltIn = (int)dimof(gBuiltInAccelerators);
 
@@ -497,7 +494,7 @@ HACCEL* CreateSumatraAcceleratorTable() {
 
     // build a combined accelerator table of those defined in settings file
     // and built-in shortcuts. Custom shortcuts over-ride built-in
-    int nMax = nBuiltIn + nCustomShortcuts;
+    int nMax = nBuiltIn + nCustomShortcuts + 1; // +1 for CmdToggleBookmarks
     ACCEL* accels = AllocArray<ACCEL>(nMax);
     int nAccels = 0;
     ACCEL* safeAccels = AllocArray<ACCEL>(nMax);
@@ -543,18 +540,27 @@ HACCEL* CreateSumatraAcceleratorTable() {
 
     gAccels = accels;
     gAccelsCount = nAccels;
-    gSafeAccels = safeAccels;
-    gSafeAccelsCount = nSafeAccels;
 
-    gAccelerators = CreateAcceleratorTableW(gAccels, gAccelsCount);
-    CrashIf(gAccelerators == nullptr);
-    gSafeAccelerators = CreateAcceleratorTableW(gSafeAccels, gSafeAccelsCount);
-    return &gAccelerators;
+    gAccelTables[0] = CreateAcceleratorTableW(gAccels, gAccelsCount);
+    CrashIf(gAccelTables[0] == nullptr);
+    gAccelTables[1] = CreateAcceleratorTableW(safeAccels, nSafeAccels);
+    CrashIf(gAccelTables[1] == nullptr);
+
+    free(safeAccels);
 }
 
-HACCEL* GetSafeAcceleratorTable() {
-    CrashIf(!gSafeAccelerators);
-    return &gSafeAccelerators;
+void ReCreateSumatraAcceleratorTable() {
+    DestroyAcceleratorTable(gAccelTables[0]);
+    DestroyAcceleratorTable(gAccelTables[1]);
+    free(gAccels);
+    CreateSumatraAcceleratorTable();
+}
+
+HACCEL* GetAcceleratorTables() {
+    if (gAccelTables[0] == nullptr) {
+        CreateSumatraAcceleratorTable();
+    }
+    return gAccelTables;
 }
 
 bool GetAccelByCmd(int cmdId, ACCEL& accelOut) {
