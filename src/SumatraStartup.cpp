@@ -485,10 +485,11 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
     HACCEL* accTables = GetAcceleratorTables();
 
     HACCEL accTable = accTables[0];
-    HACCEL safeAccTable = accTables[1];
+    HACCEL editAccTable = accTables[1];
+    HACCEL treeViewAccTable = accTables[2];
     if (FindPropertyWindowByHwnd(hwnd)) {
         *hwndAccel = hwnd;
-        return safeAccTable;
+        return editAccTable;
     }
 
     MainWindow* win = FindMainWindowByHwnd(hwnd);
@@ -504,10 +505,16 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
     if (n == 0) {
         return nullptr;
     }
-    if (str::Eq(clsName, WC_EDITW) || str::Eq(clsName, WC_TREEVIEWW)) {
+    if (str::EqI(clsName, WC_EDITW)) {
         *hwndAccel = win->hwndFrame;
-        return safeAccTable;
+        return editAccTable;
     }
+
+    if (str::EqI(clsName, WC_TREEVIEWW)) {
+        *hwndAccel = win->hwndFrame;
+        return treeViewAccTable;
+    }
+
     return nullptr;
 }
 
@@ -1407,6 +1414,8 @@ Exit:
     mui::Destroy();
     uitask::Destroy();
     trans::Destroy();
+
+    FreeAcceleratorTables();
 
     FileWatcherWaitForShutdown();
 

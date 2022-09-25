@@ -477,7 +477,7 @@ int gAccelsCount = 0;
 static HACCEL gAccelTables[3] = {
     nullptr, // for all but edit and tree view
     nullptr, // for edit
-    nullptr, // TODO: for tree view
+    nullptr, // for tree view
 };
 
 /* returns a pointer to HACCEL so that we can update it and message loop will use
@@ -494,11 +494,15 @@ static void CreateSumatraAcceleratorTable() {
 
     // build a combined accelerator table of those defined in settings file
     // and built-in shortcuts. Custom shortcuts over-ride built-in
-    int nMax = nBuiltIn + nCustomShortcuts + 1; // +1 for CmdToggleBookmarks
+    int nMax = nBuiltIn + nCustomShortcuts;
     ACCEL* accels = AllocArray<ACCEL>(nMax);
     int nAccels = 0;
-    ACCEL* safeAccels = AllocArray<ACCEL>(nMax);
-    int nSafeAccels = 0;
+    // perf: only 1 allocation for 2 arrays
+    ACCEL* toFreeAccels = AllocArray<ACCEL>(nMax * 2);
+    ACCEL* editAccels = toFreeAccels;
+    ACCEL* treeViewAccels = toFreeAccels + nMax;
+    int nEditAccels = 0;
+    int nTreeViewAccels = 0;
 
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
         char* cmd = shortcut->cmd;
@@ -517,7 +521,12 @@ static void CreateSumatraAcceleratorTable() {
         }
         accels[nAccels++] = accel;
         if (IsSafeAccel(accel)) {
-            safeAccels[nSafeAccels++] = accel;
+            editAccels[nEditAccels++] = accel;
+            treeViewAccels[nTreeViewAccels++] = accel;
+        }
+        if (cmdId == CmdToggleBookmarks && !IsSafeAccel(accel)) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
+            treeViewAccels[nTreeViewAccels++] = accel;
         }
     }
 
@@ -534,7 +543,8 @@ static void CreateSumatraAcceleratorTable() {
         }
         accels[nAccels++] = accel;
         if (IsSafeAccel(accel)) {
-            safeAccels[nSafeAccels++] = accel;
+            editAccels[nEditAccels++] = accel;
+            treeViewAccels[nTreeViewAccels++] = accel;
         }
     }
 
@@ -543,16 +553,27 @@ static void CreateSumatraAcceleratorTable() {
 
     gAccelTables[0] = CreateAcceleratorTableW(gAccels, gAccelsCount);
     CrashIf(gAccelTables[0] == nullptr);
-    gAccelTables[1] = CreateAcceleratorTableW(safeAccels, nSafeAccels);
+    gAccelTables[1] = CreateAcceleratorTableW(editAccels, nEditAccels);
     CrashIf(gAccelTables[1] == nullptr);
+    gAccelTables[2] = CreateAcceleratorTableW(treeViewAccels, nTreeViewAccels);
+    CrashIf(gAccelTables[2] == nullptr);
 
-    free(safeAccels);
+    free(toFreeAccels);
+}
+
+void FreeAcceleratorTables() {
+    DestroyAcceleratorTable(gAccelTables[0]);
+    DestroyAcceleratorTable(gAccelTables[1]);
+    DestroyAcceleratorTable(gAccelTables[2]);
+    gAccelTables[0] = nullptr;
+    gAccelTables[1] = nullptr;
+    gAccelTables[2] = nullptr;
+    free(gAccels);
+    gAccels = nullptr;
 }
 
 void ReCreateSumatraAcceleratorTable() {
-    DestroyAcceleratorTable(gAccelTables[0]);
-    DestroyAcceleratorTable(gAccelTables[1]);
-    free(gAccels);
+    FreeAcceleratorTables();
     CreateSumatraAcceleratorTable();
 }
 
