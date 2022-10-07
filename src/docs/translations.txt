@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-adcd9bbfbcedafe2543103e1013cfe3e04e5635b
+78818d288abf2ada025f7c249445c3433e19c149
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -93,6 +93,7 @@ ja:実際のサイズ(&A)
 nl:&Werkelijke grootte
 pl:&Rozmiar rzeczywisty
 ru:Насто&ящий размер
+sl:Dej&anska velikost
 sr-rs:&Стварна величина
 tl:&Totoong Sukat
 tr:&Gercek boyut
@@ -254,6 +255,7 @@ ja:戻る(&B)
 nl:&Terug
 pl:&Wstecz
 ru:&Назад
+sl:Nazaj
 sr-rs:&Назад
 tl:&Bumalik
 tr:&Geri
@@ -280,6 +282,7 @@ ja:ブック ビュー(&B)
 nl:&Boek Tonen
 pl:Widok o&dczytu
 ru:В &разворот
+sl:Knjižni pogled
 sr-rs:Приказ &књиге
 tl:&View ng libro
 tr:&Kitap Görünümü
@@ -383,6 +386,7 @@ ja:閉じる(&C)
 nl:&Sluiten
 pl:&Zamknij
 ru:&Закрыть
+sl:&Zapri
 sr-rs:&Затвори
 tl:&Isara
 tr:&Kapat
@@ -511,6 +515,7 @@ ja:クリップボードへコピー(&C)
 nl:&Kopieer Naar Klembord
 pl:Kopiuj do s&chowka
 ru:С&копировать в буфер обмена
+sl:&Kopiraj v odložišče
 sr-rs:&Копирај у оставу (клипборд)
 tl:&Kopyahin sa clipboard
 tr:Panoya &kopyala
@@ -704,6 +709,7 @@ ja:見開き(&F)
 nl:&Gericht op
 pl:&Wiele stron
 ru:По &две страницы
+sl:Dvostransko
 sr-rs:&Две странице
 tl:Nakaharap
 tr:Her İki Yüz
@@ -867,6 +873,7 @@ ja:最初のページ(&F)
 nl:&Eerste Pagina
 pl:&Pierwsza strona
 ru:Пер&вая страница
+sl:Prva stran
 sr-rs:&Прва страница
 tl:&Unang pahina
 tr:İlk sayfa
@@ -1196,6 +1203,7 @@ ja:ハイライト(&H)
 nl:&Markeren
 pl:&Wyróżnienie
 ru:По&дсветка
+sl:O&znači
 sr-rs:&Маркирај
 tr:&Vurgula
 uk:Виділити 
@@ -1218,6 +1226,7 @@ ja:最後のページ(&L)
 nl:&Laatste Pagina
 pl:&Ostatnia strona
 ru:Последня&я страница
+sl:Zadnja stran
 sr-rs:&Задња страница
 tl:Hu&ling pahina
 tr:Son sayfa
@@ -1437,6 +1446,7 @@ ja:次のページ(&N)
 nl:&Volgende Pagina
 pl:&Następna strona
 ru:&Следующая страница
+sl:Naslednja stran
 sr-rs:&Следећа страница
 tr:Sonraki sayfa
 tw:下一頁(&N)
@@ -1658,6 +1668,7 @@ ja:開く(&O)...
 nl:&Openen
 pl:&Otwórz...
 ru:&Открыть...
+sl:&Odpri …
 sr-rs:&Отвори...
 tr:Aç...
 tw:開啟(&O)
@@ -1936,6 +1947,7 @@ ja:前のページ(&P)
 nl:&Vorige Pagina
 pl:&Poprzednia strona
 ru:Пр&едыдущая страница
+sl:&Prejšnja stran
 sr-rs:&Претходна страница
 tr:Önceki sayfa
 tw:上一頁(&P)
@@ -2511,6 +2523,7 @@ ja:単一のページ(&S)
 nl:&Enkele Pagina
 pl:&Pojedyncza strona
 ru:По &одной странице
+sl:Eno&stransko
 sr-rs:&Једна страница
 tr:Tek sayfa
 tw:單頁模式(&S)
@@ -2731,6 +2744,7 @@ lv:&Pasvītrojums
 nl:&Onderstrepen
 pl:&Podkreślenie
 ru:Под&чёркнутый
+sl:&Podčrtano
 sr-rs:Под&вуци
 th:&ขีดเส้นใต้
 tr:&Altını Çiz
@@ -5363,6 +5377,7 @@ ja:他のタブを閉じる
 nl:Andere Tabbladen Sluiten
 pl:Zamknij inne karty
 ru:Закрыть другие вкладки
+sl:Zapri druge zavihke
 sr-rs:Затвори остале картице
 tr:Diğer Sekmeleri Kapat
 tw:關閉其他分頁
@@ -5386,6 +5401,7 @@ ja:右側のタブを閉じる
 nl:Sluit Tabbladen Rechts
 pl:Zamknij karty po prawej stronie
 ru:Закрыть вкладки справа
+sl:Zapri zavihke na desni
 sr-rs:Затвори картице са десне стране
 tr:Sağdaki sekmeleri kapat
 uk:Закрити вкладки праворуч
@@ -5569,6 +5585,7 @@ ja:コマンドパレット
 nl:Opdrachten
 pl:Paleta poleceń
 ru:Панель команд
+sl:Ukazna paleta
 sr-rs:Палета команди
 tl:Command Palette
 tr:Komut paleti
@@ -6170,6 +6187,7 @@ ja:クリップボードへコピー
 nl:Kopieer naar klembord
 pl:Kopiuj do schowka
 ru:Скопировать в буфер обмена
+sl:Kopiraj v odložišče
 sr-rs:Копирај у оставу (клипборд)
 tl:Kopyahin sa clipboard
 tr:Panoya kopyala
@@ -7260,6 +7278,7 @@ ja:拡大率の指定(&Z)...
 nl:Aangepast & zoom...
 pl:&Własne powiększenie...
 ru:Свой &масштаб...
+sl:Povečava po &meri …
 sr-rs:Сопствено &увећање
 tl:Pasadya &Mag-zoom
 tr:Özel &yakınlaştır
@@ -7874,6 +7893,7 @@ ja:終了(&X)
 nl:A&fsluiten
 pl:&Wyjście
 ru:В&ыход
+sl:I&zhod
 sr-rs:И&зађи
 tl:&Lumabas
 tr:Çık
@@ -8436,6 +8456,7 @@ ja:進む(&O)
 nl:V&ooruit
 pl:&Dalej
 ru:В&перёд
+sl:&Naprej
 sr-rs:Н&апред
 tl:&Pasulong
 tr:İleri
@@ -8461,6 +8482,7 @@ ja:全画面表示(&U)
 nl:V&oledig Scherm
 pl:Pełny &ekran
 ru:Полный &экран
+sl:Celozaslonsko
 sr-rs:&Цео екран
 tr:Tam ekran
 tw:全螢幕模式(&U)
@@ -9322,6 +9344,7 @@ ja:検索(&D)...
 nl:Zoe&k
 pl:&Znajdź...
 ru:На&йти...
+sl:Naj&di …
 sr-rs:Прона&ђи...
 tl:&Hanapin
 tr:Bul
@@ -9627,6 +9650,7 @@ ja:内容に合わせる(&C)
 nl:&Inhoud Aanpassen
 pl:Dopasuj do &zawartości
 ru:Вписать содер&жимое
+sl:Prilagodi vsebino
 sr-rs:Смести &садржај
 tl:akma sa &nilalaman
 tr:Sayfa düzeyine yakınlaştır
@@ -9651,6 +9675,7 @@ ja:ページに合わせる(&P)
 nl:&Pagina Aanpassen
 pl:Dopasuj do s&trony
 ru:Вписать &страницу
+sl:&Prilagodi stran
 sr-rs:Смести с&трану
 tl:Akma &Pahina
 tr:Tam Sayfayı Pencereye Sığdır
@@ -9675,6 +9700,7 @@ ja:幅に合わせる(&W)
 nl:&Breedte Aanpassen
 pl:Dopasuj do sz&erokości
 ru:Вписать по &ширине
+sl:P&rilagodi po širini
 sr-rs:Смести по &ширини
 tr:Genişliğe Sığdır
 tw:符合寬度(&W)
@@ -10362,6 +10388,7 @@ ja:フォント情報を取得
 nl:Informatie over lettertypen ophalen
 pl:Uzyskaj informacje o czcionkach
 ru:Получить информацию о шрифтах
+sl:Pridobi informacije o pisavah
 sr-rs:Информације о фонтовима
 tl:Kumuha ng impormasyon ng mga font
 tr:Yazı tipi bilgisi
@@ -11006,6 +11033,7 @@ ja:すべてのユーザーに対してインストール
 nl:Installeer voor alle gebruikers
 pl:Zainstaluj dla wszystkich użytkowników
 ru:Установить для всех пользователей
+sl:Namesti za vse uporabnike
 sr-rs:Инсталирај за све кориснике
 tl:I-install para sa lahat ng user
 tr:Tüm kullanıcılar için kur
@@ -11581,6 +11609,7 @@ it:Caricamento %s...
 nl:Laden %s...
 pl:Ładowanie %s ...
 ru:Загрузка %s...
+sl:Nalaganje %s …
 sr-rs:Учитавање %s...
 tr:Yükleniyor %s ...
 uk:Завантаження %s
@@ -12003,6 +12032,7 @@ ja:新しいウィンドウ(&W)
 nl:Nieuw &Kader
 pl:Nowe &okno
 ru:&Новое окно
+sl:Novo okno
 sr-rs:Нови &прозор
 tr:Yeni pencere
 tw:新視窗(&W)
@@ -12729,6 +12759,7 @@ ja:添付を開く
 nl:Open Bijlage
 pl:Otwórz załącznik
 ru:Открыть вложение
+sl:Odpri prilogo
 sr-rs:Отвори прилог
 tr:Eki aç
 uk:Відкрити вкладення
@@ -13569,6 +13600,7 @@ ja:ページ(&G)...
 nl:Pa&gina
 pl:&Strona...
 ru:С&траница...
+sl:Stran …
 sr-rs:&Страница...
 tr:Sayfaya...
 tw:前往頁面...(&G)
@@ -14280,6 +14312,7 @@ ja:プレゼンテーション(&E)
 nl:Pr&esentatie
 pl:&Prezentacja
 ru:Презента&ция
+sl:Pr&edstavitev
 sr-rs:Пр&езентација
 tr:Sunum
 tw:簡報模式(&E)
@@ -14889,6 +14922,7 @@ ja:ファイル名の変更(&N)...
 nl:Her&noem
 pl:Zmień &nazwę...
 ru:Пере&именовать...
+sl:Preime&nuj …
 sr-rs:Пре&именуј...
 tr:Yeniden adlandır
 tw:重新命名(&N)
@@ -15240,6 +15274,7 @@ ja:左に回転(&L)
 nl:&Linksom Roteren
 pl:Obróć w &lewo
 ru:Повернуть в&лево
+sl:Zasukaj v &levo
 sr-rs:Ротирај &лево
 tr:Sola döndür
 tw:逆時鐘旋轉(&L)
@@ -15264,6 +15299,7 @@ ja:右に回転(&R)
 nl:&Rechtsom Roteren
 pl:Obróć w &prawo
 ru:Повернуть в&право
+sl:Zasukaj v &desno
 sr-rs:Ротирај &десно
 tr:Sağa döndür
 tw:順時鐘旋轉(&R)
@@ -15413,6 +15449,7 @@ ja:添付を保存
 nl:Bijlage Opslaan...
 pl:Zapisz załącznik...
 ru:Сохранить вложение...
+sl:Shrani priponko …
 sr-rs:Сачувај прилог...
 tr:Eki kaydet
 uk:Зберегти вкладення...
@@ -15473,6 +15510,7 @@ ja:ショートカットを保存(&H)...
 nl:S&neltoets Opslaan
 pl:Zapisz s&krót...
 ru:Сохранить &ярлык...
+sl:S&hrani bližnjico …
 sr-rs:Сачувај пре&чицу...
 tr:Kısayolu kaydet
 uk:Зберегти ярлик...
@@ -16518,6 +16556,7 @@ ja:ブックマークを表示(&M)
 nl:Toon Blad&wijzers
 pl:Pokaż za&kładki
 ru:Показывать &закладки
+sl:Pokaži zazna&mke
 sr-rs:Прикажи обе&леживаче
 tr:Yer imleri
 tw:顯示書籤(&M)
@@ -16752,6 +16791,7 @@ ja:フォルダを表示
 nl:Toon in map
 pl:Pokaż w folderze
 ru:Показать в папке
+sl:Pokaži v mapah
 sr-rs:Прикажи у фасцикли
 tr:Klasörde göster
 tw:打開所在資料夾
