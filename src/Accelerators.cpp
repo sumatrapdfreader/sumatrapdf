@@ -495,6 +495,10 @@ static void CreateSumatraAcceleratorTable() {
     // build a combined accelerator table of those defined in settings file
     // and built-in shortcuts. Custom shortcuts over-ride built-in
     int nMax = nBuiltIn + nCustomShortcuts;
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/2981
+    // sizeof(ACCEL) is 6 so odd number will cause treeViewAccels to
+    // be mis-aligined. Rounding to 2 should be enoug, do 4 for extra safety
+    nMax = RoundUp(nMax, 4);
     ACCEL* accels = AllocArray<ACCEL>(nMax);
     int nAccels = 0;
     // perf: only 1 allocation for 2 arrays
