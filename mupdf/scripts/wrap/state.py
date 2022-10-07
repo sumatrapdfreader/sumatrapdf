@@ -63,7 +63,7 @@ class ClangInfo:
         .include_path
         .clang_version
     '''
-    def __init__( self):
+    def __init__( self, verbose):
         '''
         We look for different versions of clang until one works.
 
@@ -77,18 +77,23 @@ class ClangInfo:
             return
         # As of 2022-09-16, max libclang version is 14.
         for version in range( 20, 5, -1):
-            ok = self._try_init_clang( version)
+            ok = self._try_init_clang( version, verbose)
             if ok:
                 break
         else:
             raise Exception( 'cannot find libclang.so')
 
-    def _try_init_clang( self, version):
+    def _try_init_clang( self, version, verbose):
+        if verbose:
+            jlib.log( 'Looking for libclang.so, {version=}.')
         if state_.openbsd:
             clang_bin = glob.glob( f'/usr/local/bin/clang-{version}')
             if not clang_bin:
-                jlib.log('Cannot find {clang_bin=}', 1)
+                if verbose:
+                    jlib.log('Cannot find {clang_bin=}', 1)
                 return
+            if verbose:
+                jlib.log( '{clang_bin=}')
             clang_bin = clang_bin[0]
             self.clang_version = version
             libclang_so = glob.glob( f'/usr/local/lib/libclang.so*')
@@ -99,17 +104,27 @@ class ClangInfo:
                     out='return',
                     ).strip()
             self.include_path = os.path.join( self.resource_dir, 'include')
-            #logx('{self.libclang_so=} {self.resource_dir=} {self.include_path=}')
+            if verbose:
+                jlib.log('{self.libclang_so=} {self.resource_dir=} {self.include_path=}')
             if os.environ.get('VIRTUAL_ENV'):
                 clang.cindex.Config.set_library_file( self.libclang_so)
             return True
 
+        if verbose:
+            jlib.log( '{os.environ.get( "PATH")=}')
         for p in os.environ.get( 'PATH').split( ':'):
-            clang_bins = glob.glob( os.path.join( p, f'clang-{version}*'))
+            pp = os.path.join( p, f'clang-{version}*')
+            clang_bins = glob.glob( pp)
             if not clang_bins:
+                if verbose:
+                    jlib.log( 'No match for: {pp=}')
                 continue
+            if verbose:
+                jlib.log( '{clang_bins=}')
             clang_bins.sort()
             for clang_bin in clang_bins:
+                if verbose:
+                    jlib.log( '{clang_bin=}')
                 e, clang_search_dirs = jlib.system(
                         f'{clang_bin} -print-search-dirs',
                         #verbose=log,
@@ -117,18 +132,24 @@ class ClangInfo:
                         raise_errors=False,
                         )
                 if e:
-                    jlib.log( '[could not find {clang_bin}: {e=}]')
+                    if verbose:
+                        jlib.log( '[could not find {clang_bin}: {e=}]')
                     return
+                if verbose:
+                    jlib.log( '{clang_search_dirs=}')
                 if version == 10:
                     m = re.search( '\nlibraries: =(.+)\n', clang_search_dirs)
                     assert m
                     clang_search_dirs = m.group(1)
                 clang_search_dirs = clang_search_dirs.strip().split(':')
+                if verbose:
+                    jlib.log( '{clang_search_dirs=}')
                 for i in ['/usr/lib', '/usr/local/lib'] + clang_search_dirs:
                     for leaf in f'libclang-{version}.*so*', f'libclang.so.{version}.*':
                         p = os.path.join( i, leaf)
                         p = os.path.abspath( p)
-                        jlib.log( '{p=}')
+                        if verbose:
+                            jlib.log( '{p=}')
                         libclang_so = glob.glob( p)
                         if not libclang_so:
                             continue
@@ -144,14 +165,16 @@ class ClangInfo:
                         self.include_path = os.path.join( self.resource_dir, 'include')
                         self.clang_version = version
                         return True
+        if verbose:
+            jlib.log( 'Failed to find libclang, {version=}.')
 
 
 clang_info_cache = None
 
-def clang_info():
+def clang_info( verbose=False):
     global clang_info_cache
     if not clang_info_cache:
-        clang_info_cache = ClangInfo()
+        clang_info_cache = ClangInfo( verbose)
     return clang_info_cache
 
 class State:

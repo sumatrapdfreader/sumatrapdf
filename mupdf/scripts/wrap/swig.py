@@ -105,24 +105,24 @@ def build_swig(
 
     if language == 'python':
         common += textwrap.dedent(f'''
-                /* Support for extracting buffer data into a Python bytes. If
-                <clear> is true we clear and trim the buffer. */
+                /* Returns a Python `bytes` containging a copy of a `fz_buffer`'s
+                data. If <clear> is true we also clear and trim the buffer. */
                 PyObject* python_buffer_to_bytes(fz_buffer* buffer, int clear)
                 {{
                     unsigned char* c = NULL;
-                    /* We mimic the affects of fz_buffer_extract(), which leaves
-                    the buffer with zero capacity. */
                     size_t len = {rename.namespace_ll_fn('fz_buffer_storage')}(buffer, &c);
                     PyObject* ret = PyBytes_FromStringAndSize((const char*) c, (Py_ssize_t) len);
                     if (clear)
                     {{
+                        /* We mimic the affects of fz_buffer_extract(), which
+                        leaves the buffer with zero capacity. */
                         {rename.namespace_ll_fn('fz_clear_buffer')}(buffer);
                         {rename.namespace_ll_fn('fz_trim_buffer')}(buffer);
                     }}
                     return ret;
                 }}
 
-                /* Returns a Python memoryview for specified memory. */
+                /* Returns a Python `memoryview` for specified memory. */
                 PyObject* python_memoryview_from_memory( void* data, size_t size, int writable)
                 {{
                     return PyMemoryView_FromMemory(
@@ -130,6 +130,14 @@ def build_swig(
                             (Py_ssize_t) size,
                             writable ? PyBUF_WRITE : PyBUF_READ
                             );
+                }}
+
+                /* Returns a Python `memoryview` for a `fz_buffer`'s data. */
+                PyObject* python_buffer_to_memoryview(fz_buffer* buffer, int writable)
+                {{
+                    unsigned char* data = NULL;
+                    size_t len = {rename.namespace_ll_fn('fz_buffer_storage')}(buffer, &data);
+                    return python_memoryview_from_memory( data, len, writable);
                 }}
 
                 /* Creates Python bytes from copy of raw data. */
@@ -357,22 +365,6 @@ def build_swig(
                 void* user;
             }};
 
-            /* Helper for calling a fz_document_open_fn() fnptr. */
-            fz_document *{rename.ll_fn('fz_document_open_fn_call')}(fz_document_open_fn fn, const char *filename)
-            {{
-                fz_context* ctx = mupdf::internal_context_get();
-                fz_document* ret;
-                fz_try(ctx)
-                {{
-                    ret = fn( ctx, filename);
-                }}
-                fz_catch(ctx)
-                {{
-                    mupdf::internal_throw_exception( ctx);
-                }}
-                return ret;
-            }}
-
             void Pixmap_set_alpha_helper(
                 int balen,
                 int n,
@@ -536,6 +528,12 @@ def build_swig(
             %ignore {rename.ll_fn('fz_write_vprintf')};
             %ignore {rename.ll_fn('fz_format_string')};
             %ignore {rename.ll_fn('fz_open_file_w')};
+
+            // Ignore custom C++ variadic fns.
+            %ignore {rename.ll_fn('pdf_dict_getlv')};
+            %ignore {rename.ll_fn('pdf_dict_getl')};
+            %ignore {rename.fn('pdf_dict_getlv')};
+            %ignore {rename.fn('pdf_dict_getl')};
 
             // SWIG can't handle this because it uses a valist.
             %ignore {rename.ll_fn('Memento_vasprintf')};
@@ -794,6 +792,15 @@ def build_swig(
                 {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_extract_copy')}  = {rename.class_('fz_buffer')}_fz_buffer_extract_copy
                 {rename.fn('fz_buffer_extract_copy')} = {rename.class_('fz_buffer')}_fz_buffer_extract_copy
 
+                def fz_buffer_storage_memoryview( buffer, writable=False):
+                    """
+                    Returns a read-only or writable Python `memoryview` onto
+                    `fz_buffer` data. This relies on `buffer` existing and
+                    not changing size while the `memoryview` is used.
+                    """
+                    return python_buffer_to_memoryview( buffer, writable)
+                {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_storage_memoryview')}  = fz_buffer_storage_memoryview
+
                 # Overwrite wrappers for fz_new_buffer_from_copied_data() to
                 # take Python `bytes` instance.
                 #
@@ -961,6 +968,9 @@ def build_swig(
 
                 # Direct access to fz_pixmap samples.
                 def {rename.fn('fz_pixmap_samples')}2( pixmap):
+                    """
+                    Returns a writable Python `memoryview` for a `fz_pixmap`.
+                    """
                     assert isinstance( pixmap, {rename.class_('fz_pixmap')})
                     ret = python_memoryview_from_memory(
                             {rename.fn('fz_pixmap_samples')}( pixmap),
@@ -980,6 +990,13 @@ def build_swig(
                     text = text.replace( '%', '%%')
                     return {rename.ll_fn('fz_warn')}_original( text)
                 #warn = mfz_warn
+
+                # Force use of pdf_field_name2() instead of pdf_field_name()
+                # because the latter returns a buffer that must be freed by the
+                # caller.
+                {rename.ll_fn('pdf_field_name')} = {rename.ll_fn('pdf_field_name2')}
+                {rename.fn('pdf_field_name')} = {rename.fn('pdf_field_name2')}
+                {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_field_name')} = {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_field_name2')}
                 ''')
 
         # Add __iter__() methods for all classes with begin() and end() methods.
@@ -1077,19 +1094,24 @@ def build_swig(
     else:
         jlib.update_file( '', swig2_i)
 
-    # Try to disable some unhelpful SWIG warnings;. unfortunately this doesn't
-    # seem to have any effect.
+    # Disable some unhelpful SWIG warnings. Must not use -Wall as it overrides
+    # all warning disables.
     disable_swig_warnings = [
             201,    # Warning 201: Unable to find 'stddef.h'
             314,    # Warning 314: 'print' is a python keyword, renaming to '_print'
+            302,    # Warning 302: Identifier 'pdf_annot_type' redefined (ignored),
             312,    # Warning 312: Nested union not currently supported (ignored).
             321,    # Warning 321: 'max' conflicts with a built-in name in python
+            322,    # Warning 322: Redundant redeclaration of 'pdf_annot',
             362,    # Warning 362: operator= ignored
             451,    # Warning 451: Setting a const char * variable may leak memory.
             503,    # Warning 503: Can't wrap 'operator <<' unless renamed to a valid identifier.
             512,    # Warning 512: Overloaded method mupdf::DrawOptions::internal() const ignored, using non-const method mupdf::DrawOptions::internal() instead.
+            509,    # Warning 509: Overloaded method mupdf::FzAaContext::FzAaContext(::fz_aa_context const) effectively ignored,
+            560,    # Warning 560: Unknown Doxygen command: d.
             ]
-    disable_swig_warnings = map( str, disable_swig_warnings)
+
+    disable_swig_warnings = [ '-' + str( x) for x in disable_swig_warnings]
     disable_swig_warnings = '-w' + ','.join( disable_swig_warnings)
 
     # Preserve any existing file `swig_cpp`, so that we can restore the
@@ -1115,10 +1137,10 @@ def build_swig(
                     f'''
                     "{swig_command}"
                         {"-D_WIN32" if state_.windows else ""}
-                        -Wall
                         -c++
                         {"-doxygen" if swig_major >= 4 else ""}
                         -python
+                        -Wextra
                         {disable_swig_warnings}
                         -module {module}
                         -outdir {os.path.relpath(build_dirs.dir_so)}
@@ -1129,7 +1151,7 @@ def build_swig(
                         -I{os.path.relpath(include2)}
                         -ignoremissing
                         {swig_i}
-                    ''').strip().replace( '\n', "" if state_.windows else "\\\n")
+                    ''').strip().replace( '\n', "" if state_.windows else " \\\n")
                     )
             return command
 
@@ -1182,7 +1204,7 @@ def build_swig(
                 # Change all our PDF_ENUM_NAME_* enums so that they are actually
                 # PdfObj instances so that they can be used like any other PdfObj.
                 #
-                jlib.log('{len(generated.c_enums)=}')
+                #jlib.log('{len(generated.c_enums)=}')
                 for enum_type, enum_names in generated.c_enums.items():
                     for enum_name in enum_names:
                         if enum_name.startswith( 'PDF_ENUM_NAME_'):
@@ -1239,9 +1261,9 @@ def build_swig(
                 f'''
                 "{swig_command}"
                     {"-D_WIN32" if state_.windows else ""}
-                    -Wall
                     -c++
                     -csharp
+                    -Wextra
                     {disable_swig_warnings}
                     -module mupdf
                     -namespace mupdf

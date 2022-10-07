@@ -62,7 +62,7 @@ typedef struct fz_pixmap_image fz_pixmap_image;
 	h: If non-NULL, a pointer to an int to be updated on exit to the
 	height (in pixels) that the scaled output will cover.
 
-	Returns a non NULL pixmap pointer. May throw exceptions.
+	Returns a non NULL kept pixmap pointer. May throw exceptions.
 */
 fz_pixmap *fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subarea, fz_matrix *ctm, int *w, int *h);
 
@@ -291,6 +291,8 @@ void fz_drop_image_base(fz_context *ctx, fz_image *image);
 	subsampling that should be performed by this routine. This will
 	be updated on exit to the amount of subsampling that is still
 	required to be done.
+
+	Returns a kept reference.
 */
 fz_pixmap *fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image *image, fz_irect *subarea, int indexed, int l2factor, int *l2extra);
 

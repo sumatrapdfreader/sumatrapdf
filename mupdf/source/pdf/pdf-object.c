@@ -582,6 +582,29 @@ pdf_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b)
 			if (pdf_objcmp(ctx, DICT(a)->items[i].v, DICT(b)->items[i].v))
 				return 1;
 		}
+		/* Dicts are identical, but if they are streams, we can only be sure
+		 * they are identical if the stream contents match. We don't currently
+		 * test for identical stream contents, so if they are streams, require
+		 * a to == b for a match. */
+		{
+			/* Slightly convoluted to know if something is a stream. */
+			pdf_document *doc = DICT(a)->doc;
+			int n = pdf_obj_parent_num(ctx, a);
+			pdf_xref_entry *entry = pdf_get_xref_entry(ctx, doc, n);
+			if (entry->obj == a && pdf_obj_num_is_stream(ctx, doc, n))
+			{
+				/* It's a stream, and we know a != b from above. So mismatch. */
+				return 1;
+			}
+			n = pdf_obj_parent_num(ctx, b);
+			entry = pdf_get_xref_entry(ctx, doc, n);
+			if (entry->obj == b && pdf_obj_num_is_stream(ctx, doc, n))
+			{
+				/* It's a stream, and we know a != b from above. So mismatch. */
+				return 1;
+			}
+		}
+
 		return 0;
 	}
 	return 1;

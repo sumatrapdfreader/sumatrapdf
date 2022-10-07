@@ -561,10 +561,12 @@ classextras = ClassExtras(
                         f'''
                         : m_internal( NULL)
                         {{
+                            #ifndef NDEBUG
                             if (s_check_refs)
                             {{
                                 s_{rename.class_('fz_device')}_refs_check.add( this, __FILE__, __LINE__, __FUNCTION__);
                             }}
+                            #endif
                         }}
                         ''',
                         comment = '/* Sets m_internal = NULL. */',
@@ -590,6 +592,7 @@ classextras = ClassExtras(
                         f'/* Return {rename.class_("fz_document")} for pdfdocument.m_internal.super. */',
                         ),
                     ],
+                constructor_raw = 'default',
                 method_wrappers = [
                     'fz_load_outline',
                 ],
@@ -928,7 +931,7 @@ classextras = ClassExtras(
                     ],
                 accessors = True,
                 iterator_next = ('', ''),
-                constructor_raw = True,
+                constructor_raw = 'default',
                 copyable = True,
                 ),
 
@@ -1339,6 +1342,14 @@ classextras = ClassExtras(
 
                     ],
                 constructors_extra = [
+                    ExtraConstructor( '()',
+                        '''
+                        : x(0), y(0)
+                        {
+                        }
+                        ''',
+                        comment = '/* Default constructor sets to (0, 0). */',
+                        ),
                     ExtraConstructor( '(float x, float y)',
                         '''
                         : x(x), y(y)
@@ -1440,7 +1451,20 @@ classextras = ClassExtras(
                         ''',
                         comment = '/* Construct from fz_unit_rect, fz_empty_rect or fz_infinite_rect. */',
                         ),
-                        ],
+                    ExtraConstructor(
+                        '()',
+                        '''
+                        :
+                        x0(0),
+                        x1(0),
+                        y0(0),
+                        y1(0)
+                        {
+                        }
+                        ''',
+                        comment = '/* Default constructor initialises to (0, 0, 0, 0. */',
+                        ),
+                    ],
                 methods_extra = [
                     ExtraMethod(
                         'void',
@@ -1699,6 +1723,10 @@ classextras = ClassExtras(
                 constructor_raw = True,
                 ),
 
+        pdf_annot = ClassExtra(
+                constructor_raw = 'default',
+                ),
+
         pdf_document = ClassExtra(
                 constructor_prefixes = [
                     'pdf_open_document',
@@ -1842,8 +1870,18 @@ classextras = ClassExtras(
                             return ret;
                         }}
                         ''',
-                        comment = '/* Typesafe wrapper for looking up things such as PDF_ENUM_NAME_Annots.*/',
+                        comment = '/* Typesafe wrapper for looking up things such as PDF_ENUM_NAME_Annots. */',
                         overload=True,
+                        ),
+                    ExtraMethod(
+                        f'std::string',
+                        f'{rename.method( "pdf_obj", "pdf_field_name2")}()',
+                        f'''
+                        {{
+                            return {rename.namespace_fn('pdf_field_name2')}( *this);
+                        }}
+                        ''',
+                        comment = f'/* Alternative to `{rename.fn("pdf_field_name")}()` that returns a std::string. */',
                         ),
                     ]
                 ),
@@ -1896,10 +1934,12 @@ classextras = ClassExtras(
                         f'''
                         : m_internal( NULL)
                         {{
+                            #ifndef NDEBUG
                             if (s_check_refs)
                             {{
                                 s_{rename.class_("pdf_processor")}_refs_check.add( this, __FILE__, __LINE__, __FUNCTION__);
                             }}
+                            #endif
                         }}
                         ''',
                         comment = '/* Sets m_internal = NULL. */',

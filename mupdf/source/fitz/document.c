@@ -154,15 +154,17 @@ fz_open_accelerated_document_with_stream(fz_context *ctx, const char *magic, fz_
 {
 	const fz_document_handler *handler;
 
-	if (magic == NULL || stream == NULL)
+	if (stream == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "no document to open");
+	if (magic == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "missing file type");
 
 	handler = fz_recognize_document(ctx, magic);
 	if (!handler)
 #if FZ_ENABLE_PDF
 		handler = &pdf_document_handler;
 #else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find document handler for file type: %s", magic);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find document handler for file type: '%s'", magic);
 #endif
 	if (handler->open_accel_with_stream)
 		if (accel || handler->open_with_stream == NULL)

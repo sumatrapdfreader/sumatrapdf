@@ -900,12 +900,13 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 
 		/* The garbage collection pass when saving will remove the annot object,
 		 * removing it here may break files if multiple pages use the same annot. */
-
-		/* And free it. */
-		pdf_drop_annot(ctx, annot);
 	}
 	fz_always(ctx)
+	{
+		/* Drop the reference to annot previously held by the page list. */
+		pdf_drop_annot(ctx, annot);
 		pdf_end_operation(ctx, page->doc);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }

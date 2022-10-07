@@ -1649,8 +1649,11 @@ def update_file( text, filename, return_different=False):
 def find_in_paths( name, paths=None):
     '''
     Looks for <name> in paths and returns complete path. paths is list/tuple or
-    colon-separated string; if None we use $PATH.
+    colon-separated string; if None we use $PATH. If `name` contains `/`, we
+    return `name` itself if it is a file, regardless of $PATH.
     '''
+    if '/' in name:
+        return name if os.path.isfile( name) else None
     if paths is None:
         paths = os.environ.get( 'PATH', '')
     if isinstance( paths, str):
