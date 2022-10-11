@@ -1511,10 +1511,10 @@ int Memento_listBlocksNested(void)
 
     /* Now display with nesting */
     if (memento.verbose) {
-    for (b = memento.used.head; b; b = b->next) {
-        if ((b->flags & Memento_Flag_HasParent) == 0)
-            doNestedDisplay(b, 0);
-    }
+        for (b = memento.used.head; b; b = b->next) {
+            if ((b->flags & Memento_Flag_HasParent) == 0)
+                doNestedDisplay(b, 0);
+        }
     }
     else {
         fprintf(stderr, " [!verbose: Not showing nestings.]\n");
@@ -1684,7 +1684,7 @@ void Memento_fin(void)
 #ifdef MEMENTO_DETAILS
             fprintf(stderr, "\n");
             if (memento.verbose)
-            Memento_listBlockInfo();
+                Memento_listBlockInfo();
             else
                 fprintf(stderr, "[!verbose: Not listing details of allocated blocks.]\n");
 #endif

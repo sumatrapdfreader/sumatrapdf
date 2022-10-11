@@ -488,46 +488,46 @@ done_SC:
 		}
 		if (p->in_BT)
 		{
-		if (gstate->pending.text.char_space != gstate->sent.text.char_space)
-		{
-			if (p->chain->op_Tc)
-				p->chain->op_Tc(ctx, p->chain, gstate->pending.text.char_space);
-		}
-		if (gstate->pending.text.word_space != gstate->sent.text.word_space)
-		{
-			if (p->chain->op_Tw)
-				p->chain->op_Tw(ctx, p->chain, gstate->pending.text.word_space);
-		}
-		if (gstate->pending.text.scale != gstate->sent.text.scale)
-		{
-			/* The value of scale in the gstate is divided by 100 from what is written in the file */
-			if (p->chain->op_Tz)
-				p->chain->op_Tz(ctx, p->chain, gstate->pending.text.scale*100);
-		}
-		if (gstate->pending.text.leading != gstate->sent.text.leading)
-		{
-			if (p->chain->op_TL)
-				p->chain->op_TL(ctx, p->chain, gstate->pending.text.leading);
-		}
-		if (gstate->pending.text.font != gstate->sent.text.font ||
-			gstate->pending.text.size != gstate->sent.text.size)
-		{
-			if (p->chain->op_Tf)
-				p->chain->op_Tf(ctx, p->chain, p->font_name, gstate->pending.text.font, gstate->pending.text.size);
-		}
-		if (gstate->pending.text.render != gstate->sent.text.render)
-		{
-			if (p->chain->op_Tr)
-				p->chain->op_Tr(ctx, p->chain, gstate->pending.text.render);
-		}
-		if (gstate->pending.text.rise != gstate->sent.text.rise)
-		{
-			if (p->chain->op_Ts)
-				p->chain->op_Ts(ctx, p->chain, gstate->pending.text.rise);
-		}
-		pdf_drop_font(ctx, gstate->sent.text.font);
-		gstate->sent.text = gstate->pending.text;
-		gstate->sent.text.font = pdf_keep_font(ctx, gstate->pending.text.font);
+			if (gstate->pending.text.char_space != gstate->sent.text.char_space)
+			{
+				if (p->chain->op_Tc)
+					p->chain->op_Tc(ctx, p->chain, gstate->pending.text.char_space);
+			}
+			if (gstate->pending.text.word_space != gstate->sent.text.word_space)
+			{
+				if (p->chain->op_Tw)
+					p->chain->op_Tw(ctx, p->chain, gstate->pending.text.word_space);
+			}
+			if (gstate->pending.text.scale != gstate->sent.text.scale)
+			{
+				/* The value of scale in the gstate is divided by 100 from what is written in the file */
+				if (p->chain->op_Tz)
+					p->chain->op_Tz(ctx, p->chain, gstate->pending.text.scale*100);
+			}
+			if (gstate->pending.text.leading != gstate->sent.text.leading)
+			{
+				if (p->chain->op_TL)
+					p->chain->op_TL(ctx, p->chain, gstate->pending.text.leading);
+			}
+			if (gstate->pending.text.font != gstate->sent.text.font ||
+				gstate->pending.text.size != gstate->sent.text.size)
+			{
+				if (p->chain->op_Tf)
+					p->chain->op_Tf(ctx, p->chain, p->font_name, gstate->pending.text.font, gstate->pending.text.size);
+			}
+			if (gstate->pending.text.render != gstate->sent.text.render)
+			{
+				if (p->chain->op_Tr)
+					p->chain->op_Tr(ctx, p->chain, gstate->pending.text.render);
+			}
+			if (gstate->pending.text.rise != gstate->sent.text.rise)
+			{
+				if (p->chain->op_Ts)
+					p->chain->op_Ts(ctx, p->chain, gstate->pending.text.rise);
+			}
+			pdf_drop_font(ctx, gstate->sent.text.font);
+			gstate->sent.text = gstate->pending.text;
+			gstate->sent.text.font = pdf_keep_font(ctx, gstate->pending.text.font);
 
 			if (p->Td_pending != 0)
 			{
@@ -537,13 +537,13 @@ done_SC:
 				p->Td_pending = 0;
 			}
 			else if (p->Tm_pending != 0)
-		{
-			if (p->chain->op_Tm)
-				p->chain->op_Tm(ctx, p->chain, p->tos.tlm.a, p->tos.tlm.b, p->tos.tlm.c, p->tos.tlm.d, p->tos.tlm.e, p->tos.tlm.f);
-			p->Tm_pending = 0;
+			{
+				if (p->chain->op_Tm)
+					p->chain->op_Tm(ctx, p->chain, p->tos.tlm.a, p->tos.tlm.b, p->tos.tlm.c, p->tos.tlm.d, p->tos.tlm.e, p->tos.tlm.f);
+				p->Tm_pending = 0;
+			}
 		}
 	}
-}
 }
 
 static int
@@ -872,6 +872,7 @@ filter_show_string(fz_context *ctx, pdf_filter_processor *p, unsigned char *buf,
 	if (!fontdesc)
 		return;
 
+	p->tos.fontdesc = fontdesc;
 	i = 0;
 	while (i < len)
 	{

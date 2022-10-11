@@ -2357,8 +2357,6 @@ pdf_set_annot_ink_list(fz_context *ctx, pdf_annot *annot, int n, const int *coun
 		pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
 		inv_page_ctm = fz_invert_matrix(page_ctm);
 
-		// TODO: update Rect (in update appearance perhaps?)
-
 		ink_list = pdf_new_array(ctx, doc, n);
 		for (i = 0; i < n; ++i)
 		{

@@ -596,23 +596,25 @@ gatherpatterns(fz_context *ctx, globals *glo, int page, pdf_obj *pageref, pdf_ob
 }
 
 static void
-gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int page, pdf_obj *rsrc, int show)
+gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int page, pdf_obj *obj, int show)
 {
+	pdf_obj *rsrc;
 	pdf_obj *pageref;
 	pdf_obj *font;
 	pdf_obj *xobj;
 	pdf_obj *shade;
 	pdf_obj *pattern;
-	pdf_obj *subrsrc;
 	int i;
+
+	/* stop on cyclic resource dependencies */
+	if (pdf_mark_list_push(ctx, mark_list, obj))
+		return;
+
+	rsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
 
 	pageref = pdf_lookup_page_obj(ctx, glo->doc, page-1);
 	if (!pageref)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot retrieve info from page %d", page);
-
-	/* stop on cyclic resource dependencies */
-	if (pdf_mark_list_push(ctx, mark_list, rsrc))
-		return;
 
 	font = pdf_dict_get(ctx, rsrc, PDF_NAME(Font));
 	if (show & FONTS && font)
@@ -623,11 +625,7 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 		n = pdf_dict_len(ctx, font);
 		for (i = 0; i < n; i++)
 		{
-			pdf_obj *obj = pdf_dict_get_val(ctx, font, i);
-
-			subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
-			if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
-				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
+			gatherresourceinfo(ctx, mark_list, glo, page, pdf_dict_get_val(ctx, font, i), show);
 		}
 	}
 
@@ -646,10 +644,7 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 		n = pdf_dict_len(ctx, xobj);
 		for (i = 0; i < n; i++)
 		{
-			pdf_obj *obj = pdf_dict_get_val(ctx, xobj, i);
-			subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
-			if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
-				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
+			gatherresourceinfo(ctx, mark_list, glo, page, pdf_dict_get_val(ctx, xobj, i), show);
 		}
 	}
 
@@ -665,10 +660,7 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 		n = pdf_dict_len(ctx, pattern);
 		for (i = 0; i < n; i++)
 		{
-			pdf_obj *obj = pdf_dict_get_val(ctx, pattern, i);
-			subrsrc = pdf_dict_get(ctx, obj, PDF_NAME(Resources));
-			if (subrsrc && pdf_objcmp(ctx, rsrc, subrsrc))
-				gatherresourceinfo(ctx, mark_list, glo, page, subrsrc, show);
+			gatherresourceinfo(ctx, mark_list, glo, page, pdf_dict_get_val(ctx, pattern, i), show);
 		}
 	}
 }
@@ -678,7 +670,6 @@ gatherpageinfo(fz_context *ctx, globals *glo, int page, int show)
 {
 	pdf_mark_list mark_list;
 	pdf_obj *pageref;
-	pdf_obj *rsrc;
 
 	pageref = pdf_lookup_page_obj(ctx, glo->doc, page-1);
 
@@ -689,10 +680,7 @@ gatherpageinfo(fz_context *ctx, globals *glo, int page, int show)
 
 	pdf_mark_list_init(ctx, &mark_list);
 	fz_try(ctx)
-	{
-		rsrc = pdf_dict_get(ctx, pageref, PDF_NAME(Resources));
-		gatherresourceinfo(ctx, &mark_list, glo, page, rsrc, show);
-	}
+		gatherresourceinfo(ctx, &mark_list, glo, page, pageref, show);
 	fz_always(ctx)
 		pdf_mark_list_free(ctx, &mark_list);
 	fz_catch(ctx)

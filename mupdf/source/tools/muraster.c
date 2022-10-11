@@ -501,8 +501,6 @@ static struct {
 	char *maxfilename;
 } timing;
 
-#define stringify(A) #A
-
 static int usage(void)
 {
 	fprintf(stderr,
@@ -520,9 +518,9 @@ static int usage(void)
 		"\n"
 		"\t-R {auto,0,90,180,270}\n"
 		"\t\trotate clockwise (default: auto)\n"
-		"\t-r -{,_}\tx and y resolution in dpi (default: " stringify(X_RESOLUTION) "x" stringify(Y_RESOLUTION) ")\n"
-		"\t-w -\tprintable width (in inches) (default: " stringify(PAPER_WIDTH) ")\n"
-		"\t-h -\tprintable height (in inches) (default: " stringify(PAPER_HEIGHT) "\n"
+		"\t-r -{,_}\tx and y resolution in dpi (default: %dx%d)\n"
+		"\t-w -\tprintable width (in inches) (default: %.2f)\n"
+		"\t-h -\tprintable height (in inches) (default: %.2f)\n"
 		"\t-f\tfit file to page if too large\n"
 		"\t-B -\tminimum band height (e.g. 32)\n"
 		"\t-M -\tmax bandmemory (e.g. 655360)\n"
@@ -540,7 +538,8 @@ static int usage(void)
 		"\t-A -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-A -/-\tnumber of bits of antialiasing (0 to 8) (graphics, text)\n"
 		"\n"
-		"\tpages\tcomma separated list of page numbers and ranges\n"
+		"\tpages\tcomma separated list of page numbers and ranges\n",
+		X_RESOLUTION, Y_RESOLUTION, PAPER_WIDTH, PAPER_HEIGHT
 		);
 	return 1;
 }
@@ -1004,6 +1003,11 @@ initialise_banding(fz_context *ctx, render_details *render, int color)
 	}
 
 	w = render->ibounds.x1 - render->ibounds.x0;
+	h = render->ibounds.y1 - render->ibounds.y0;
+	if (w <= 0 || h <= 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid page dimensions");
+
+
 	min_band_mem = (size_t)bpp * w * min_band_height;
 	if (min_band_mem > 0)
 		reps = (int)(max_band_memory / min_band_mem);
@@ -1014,7 +1018,6 @@ initialise_banding(fz_context *ctx, render_details *render, int color)
 	if (render->num_workers > 0)
 	{
 		int runs, num_bands;
-		h = render->ibounds.y1 - render->ibounds.y0;
 		num_bands = (h + min_band_height - 1) / min_band_height;
 		/* num_bands = number of min_band_height bands */
 		runs = (num_bands + reps-1) / reps;
@@ -1421,6 +1424,13 @@ read_resolution(const char *arg)
 		y_resolution = fz_atoi(arg);
 	else
 		y_resolution = x_resolution;
+
+	if (x_resolution <= 0 || y_resolution <= 0)
+	{
+		fprintf(stderr, "Ignoring invalid resolution\n");
+		x_resolution =  X_RESOLUTION;
+		y_resolution =  Y_RESOLUTION;
+	}
 }
 
 static int

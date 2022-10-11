@@ -387,6 +387,8 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 static void
 pdf_process_CS(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 {
+	fz_colorspace *cs;
+
 	if (!proc->op_CS || !proc->op_cs)
 		return;
 
@@ -396,39 +398,44 @@ pdf_process_CS(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 			proc->op_CS(ctx, proc, "Pattern", NULL);
 		else
 			proc->op_cs(ctx, proc, "Pattern", NULL);
+		return;
 	}
+
+	if (!strcmp(csi->name, "DeviceGray"))
+		cs = fz_keep_colorspace(ctx, fz_device_gray(ctx));
+	else if (!strcmp(csi->name, "DeviceRGB"))
+		cs = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
+	else if (!strcmp(csi->name, "DeviceCMYK"))
+		cs = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
 	else
 	{
-		fz_colorspace *cs;
-
-		if (!strcmp(csi->name, "DeviceGray"))
-			cs = fz_keep_colorspace(ctx, fz_device_gray(ctx));
-		else if (!strcmp(csi->name, "DeviceRGB"))
-			cs = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
-		else if (!strcmp(csi->name, "DeviceCMYK"))
-			cs = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
-		else
-		{
-			pdf_obj *csres, *csobj;
-			csres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(ColorSpace));
-			csobj = pdf_dict_gets(ctx, csres, csi->name);
-			if (!csobj)
-				fz_throw(ctx, FZ_ERROR_MINOR, "cannot find ColorSpace resource '%s'", csi->name);
-			cs = pdf_load_colorspace(ctx, csobj);
-		}
-
-		fz_try(ctx)
+		pdf_obj *csres, *csobj;
+		csres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(ColorSpace));
+		csobj = pdf_dict_gets(ctx, csres, csi->name);
+		if (!csobj)
+			fz_throw(ctx, FZ_ERROR_MINOR, "cannot find ColorSpace resource '%s'", csi->name);
+		if (pdf_is_array(ctx, csobj) && pdf_array_len(ctx, csobj) == 1 && pdf_name_eq(ctx, pdf_array_get(ctx, csobj, 0), PDF_NAME(Pattern)))
 		{
 			if (stroke)
-				proc->op_CS(ctx, proc, csi->name, cs);
+				proc->op_CS(ctx, proc, "Pattern", NULL);
 			else
-				proc->op_cs(ctx, proc, csi->name, cs);
+				proc->op_cs(ctx, proc, "Pattern", NULL);
+			return;
 		}
-		fz_always(ctx)
-			fz_drop_colorspace(ctx, cs);
-		fz_catch(ctx)
-			fz_rethrow(ctx);
+		cs = pdf_load_colorspace(ctx, csobj);
 	}
+
+	fz_try(ctx)
+	{
+		if (stroke)
+			proc->op_CS(ctx, proc, csi->name, cs);
+		else
+			proc->op_cs(ctx, proc, csi->name, cs);
+	}
+	fz_always(ctx)
+		fz_drop_colorspace(ctx, cs);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void

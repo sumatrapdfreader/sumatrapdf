@@ -426,6 +426,7 @@ fz_write_printf(fz_context *ctx, fz_output *out, const char *fmt, ...)
 void
 fz_flush_output(fz_context *ctx, fz_output *out)
 {
+	fz_write_bits_sync(ctx, out);
 	if (out->wp > out->bp)
 	{
 		out->write(ctx, out->state, out->bp, out->wp - out->bp);
@@ -771,4 +772,46 @@ void fz_drop_band_writer(fz_context *ctx, fz_band_writer *writer)
 int fz_output_supports_stream(fz_context *ctx, fz_output *out)
 {
 	return out != NULL && out->as_stream != NULL;
+}
+
+void fz_write_bits(fz_context *ctx, fz_output *out, unsigned int data, int num_bits)
+{
+	while (num_bits)
+	{
+		/* How many bits will be left in the current byte after we
+		 * insert these bits? */
+		int n = 8 - num_bits - out->buffered;
+		if (n >= 0)
+		{
+			/* We can fit our data in. */
+			out->bits |= data << n;
+			out->buffered += num_bits;
+			num_bits = 0;
+		}
+		else
+		{
+			/* There are 8 - out->buffered bits left to be filled. We have
+			 * num_bits to fill it with, which is more, so we need to throw
+			 * away the bottom 'num_bits - (8 - out->buffered)' bits. That's
+			 * num_bits + out->buffered - 8 = -(8 - num_bits - out_buffered) = -n */
+			out->bits |= data >> -n;
+			data &= ~(out->bits << -n);
+			num_bits = -n;
+			out->buffered = 8;
+		}
+		if (out->buffered == 8)
+		{
+			fz_write_byte(ctx, out, out->bits);
+			out->buffered = 0;
+			out->bits = 0;
+		}
+	}
+
+}
+
+void fz_write_bits_sync(fz_context *ctx, fz_output *out)
+{
+	if (out->buffered == 0)
+		return;
+	fz_write_bits(ctx, out, 0, 8 - out->buffered);
 }
