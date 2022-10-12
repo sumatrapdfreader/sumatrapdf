@@ -382,6 +382,10 @@ struct GlobalPrefs {
     // font size for bookmarks and favorites tree views. 0 means Windows
     // default
     int treeFontSize;
+    // font weight offset for bookmarks and favorites tree views.
+    int treeFontWeightOffset;
+    // font name for bookmarks and favorites tree views.
+    char* treeFontName;
     // if true, implements smooth scrolling
     bool smoothScroll;
     // if true, we show a list of frequently read documents when no
@@ -669,6 +673,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, treeFontWeightOffset), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, treeFontName), SettingType::String, 0},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
@@ -688,12 +694,12 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 58, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), sizeof(gGlobalPrefsFields)/sizeof(FieldInfo)-1, gGlobalPrefsFields,
     "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDef"
     "aults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSessi"
     "on\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExit"
     "\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar\0ShowF"
-    "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0SmoothScroll\0ShowStartPage\0"
+    "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0TreeFontName\0SmoothScroll\0ShowStartPage\0"
     "CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0Sess"
     "ionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 

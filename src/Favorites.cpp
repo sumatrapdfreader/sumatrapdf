@@ -869,10 +869,12 @@ HFONT GetTreeFont() {
 
     int fntSize = GetSizeOfDefaultGuiFont();
     int fntSizeUser = gGlobalPrefs->treeFontSize;
+    int fntWeightOffsetUser = gGlobalPrefs->treeFontWeightOffset;
+    char* fntNameUser_utf8 = gGlobalPrefs->treeFontName;
     if (fntSizeUser > 5) {
         fntSize = fntSizeUser;
     }
-    gTreeFont = GetDefaultGuiFontOfSize(fntSize);
+    gTreeFont = GetUserGuiFont(fntSize, fntWeightOffsetUser, fntNameUser_utf8);
     CrashIf(!gTreeFont);
     return gTreeFont;
 }
