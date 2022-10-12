@@ -139,6 +139,7 @@ Rect ChildPosWithinParent(HWND);
 int GetSizeOfDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
 HFONT GetDefaultGuiFontOfSize(int size);
+HFONT GetUserGuiFont(int size, int weight_offset, char* fontname_utf8);
 
 IStream* CreateStreamFromData(const ByteSlice&);
 ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt);

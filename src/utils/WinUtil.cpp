@@ -1325,6 +1325,24 @@ HFONT GetDefaultGuiFontOfSize(int size) {
     return fnt;
 }
 
+HFONT GetUserGuiFont(int size, int weight_offset, char* fontname_utf8) {
+    NONCLIENTMETRICS ncm = {};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    ncm.lfMessageFont.lfHeight = -size;
+    if (fontname_utf8) {
+        auto fontname_length = strlen(fontname_utf8);
+        
+        auto length = MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, fontname_length, nullptr, 0);
+        
+        MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, fontname_length, ncm.lfMessageFont.lfFaceName, length);
+        ncm.lfMessageFont.lfFaceName[length] = L'\0';
+    }
+    ncm.lfMessageFont.lfWeight += weight_offset;
+    HFONT fnt = CreateFontIndirectW(&ncm.lfMessageFont);
+    return fnt;
+}
+
 // TODO: lfUnderline? lfStrikeOut?
 HFONT GetDefaultGuiFont(bool bold, bool italic) {
     HFONT* dest = &gDefaultGuiFont;
