@@ -1330,7 +1330,7 @@ HFONT GetUserGuiFont(int size, int weight_offset, char* fontname_utf8) {
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
-    if (fontname_utf8) {
+    if (fontname_utf8 && !str::EqI(fontname_utf8, "automatic")) {
         auto fontname_length = strlen(fontname_utf8);
         
         auto length = MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, fontname_length, nullptr, 0);

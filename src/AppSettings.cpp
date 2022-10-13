@@ -165,6 +165,10 @@ bool LoadSettings() {
     setMin(gprefs->treeFontSize, 0);
     setMinMax(gprefs->toolbarSize, 8, 64);
 
+    if (!gprefs->treeFontName) {
+        gprefs->treeFontName = const_cast<char*>("automatic");
+    }
+
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
     //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
