@@ -1333,9 +1333,9 @@ HFONT GetUserGuiFont(int size, int weight_offset, char* fontname_utf8) {
     if (fontname_utf8 && !str::EqI(fontname_utf8, "automatic")) {
         auto fontname_length = strlen(fontname_utf8);
         
-        auto length = MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, fontname_length, nullptr, 0);
+        auto length = MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, (int)fontname_length, nullptr, 0);
         
-        MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, fontname_length, ncm.lfMessageFont.lfFaceName, length);
+        MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, (int)fontname_length, ncm.lfMessageFont.lfFaceName, length);
         ncm.lfMessageFont.lfFaceName[length] = L'\0';
     }
     ncm.lfMessageFont.lfWeight += weight_offset;
