@@ -282,6 +282,9 @@
     <ClInclude Include="..\mupdf\source\fitz\encodings.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\font-table.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\glyph-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>

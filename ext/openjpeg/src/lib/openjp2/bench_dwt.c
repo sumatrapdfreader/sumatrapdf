@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     }
 
     if (irreversible && check) {
-        /* Due to irreversible inverse DWT not being symetric of forward */
+        /* Due to irreversible inverse DWT not being symmetric of forward */
         /* See BUG_WEIRD_TWO_INVK in dwt.c */
         printf("-I and -check aren't compatible\n");
         exit(1);

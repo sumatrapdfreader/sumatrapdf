@@ -297,6 +297,9 @@
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1.h">
       <Filter>openjpeg\src\lib\openjp2</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_ht_luts.h">
+      <Filter>openjpeg\src\lib\openjp2</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_luts.h">
       <Filter>openjpeg\src\lib\openjp2</Filter>
     </ClInclude>
@@ -885,6 +888,9 @@
       <Filter>openjpeg\src\lib\openjp2</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\function_list.c">
+      <Filter>openjpeg\src\lib\openjp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\ht_dec.c">
       <Filter>openjpeg\src\lib\openjp2</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\image.c">

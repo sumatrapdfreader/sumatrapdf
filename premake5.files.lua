@@ -360,6 +360,7 @@ function openjpeg_files()
     "dwt.c",
     "event.c",
     "function_list.c",
+    "ht_dec.c",
     "image.c",
     "invert.c",
     "j2k.c",

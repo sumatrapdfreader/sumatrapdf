@@ -518,6 +518,7 @@
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\pi.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_ht_luts.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_luts.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t2.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\tcd.h" />
@@ -727,6 +728,7 @@
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\dwt.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\event.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\function_list.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\ht_dec.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\image.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\invert.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\j2k.c" />

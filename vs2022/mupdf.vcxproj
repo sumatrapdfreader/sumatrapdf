@@ -504,6 +504,7 @@
     <ClInclude Include="..\mupdf\source\fitz\context-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\encodings.h" />
+    <ClInclude Include="..\mupdf\source\fitz\font-table.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyph-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyphbox.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h" />

@@ -19,6 +19,7 @@ set(OPENJPEG_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/dwt.h
   ${CMAKE_CURRENT_SOURCE_DIR}/event.c
   ${CMAKE_CURRENT_SOURCE_DIR}/event.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/ht_dec.c
   ${CMAKE_CURRENT_SOURCE_DIR}/image.c
   ${CMAKE_CURRENT_SOURCE_DIR}/image.h
   ${CMAKE_CURRENT_SOURCE_DIR}/invert.c
@@ -97,12 +98,14 @@ else()
     add_library(openjp2_static STATIC ${OPENJPEG_SRCS})
     set_target_properties(openjp2_static PROPERTIES OUTPUT_NAME ${OPENJPEG_LIBRARY_NAME})
     set(INSTALL_LIBS ${OPENJPEG_LIBRARY_NAME} openjp2_static)
+    target_include_directories(openjp2_static PUBLIC $<INSTALL_INTERFACE:${OPENJPEG_INSTALL_INCLUDE_DIR}>)
   else()
     add_library(${OPENJPEG_LIBRARY_NAME} ${OPENJPEG_SRCS})
     set(INSTALL_LIBS ${OPENJPEG_LIBRARY_NAME})
   endif()
 endif()
 
+target_include_directories(${OPENJPEG_LIBRARY_NAME} PUBLIC $<INSTALL_INTERFACE:${OPENJPEG_INSTALL_INCLUDE_DIR}>)
 if(UNIX)
   target_link_libraries(${OPENJPEG_LIBRARY_NAME} m)
 endif()
@@ -132,9 +135,9 @@ install(
 endif()
 
 if(BUILD_LUTS_GENERATOR)
-# internal utility to generate t1_luts.h (part of the jp2 lib)
+# internal utility to generate t1_luts.h and t1_ht_luts.h (part of the jp2 lib)
 # no need to install:
-  add_executable(t1_generate_luts t1_generate_luts.c)
+  add_executable(t1_generate_luts t1_generate_luts.c t1_ht_generate_luts.c)
   if(UNIX)
     target_link_libraries(t1_generate_luts m)
   endif()

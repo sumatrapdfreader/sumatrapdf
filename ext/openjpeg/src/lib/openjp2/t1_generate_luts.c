@@ -39,6 +39,12 @@
 
 #include "opj_includes.h"
 
+// defined elsewhere
+extern OPJ_BOOL vlc_init_tables();
+extern OPJ_BOOL vlc_tables_initialized;
+extern int vlc_tbl0[1024];
+extern int vlc_tbl1[1024];
+
 static int t1_init_ctxno_zc(OPJ_UINT32 f, OPJ_UINT32 orient)
 {
     int h, v, d, n, t, hv;
@@ -306,6 +312,12 @@ int main(int argc, char **argv)
 
     printf("static const OPJ_INT16 lut_nmsedec_ref0[1U << T1_NMSEDEC_BITS] = {\n    ");
     dump_array16(lut_nmsedec_ref0, 1U << T1_NMSEDEC_BITS);
+
+    vlc_tables_initialized = vlc_init_tables();
+    printf("static const OPJ_UINT16 vlc_tbl0[1024] = {\n    ");
+    dump_array16(vlc_tbl0, 1024);
+    printf("static const OPJ_UINT16 vlc_tbl1[1024] = {\n    ");
+    dump_array16(vlc_tbl1, 1024);
 
     return 0;
 }
