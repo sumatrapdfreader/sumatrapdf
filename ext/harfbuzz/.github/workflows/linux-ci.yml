@@ -2,29 +2,32 @@ name: linux-ci
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
+    tags: ["*.*.*"]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install dependencies
-      run: sudo apt-get install pkg-config gcc ragel gcovr gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python3 python3-setuptools ninja-build gobject-introspection libgirepository1.0-dev
-    - run: sudo pip3 install fonttools
-    - run: sudo pip3 install git+https://github.com/mesonbuild/meson
+      run: sudo apt-get update && sudo apt-get install pkg-config gcc gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python3 python3-setuptools ninja-build gobject-introspection libgirepository1.0-dev
+    - run: sudo pip3 install fonttools meson==0.56.0 gcovr==5.0
     - name: run
-      run: meson build -Db_coverage=true --auto-features=enabled -Dgraphite=enabled -Doptimization=2
+      run: meson build -Db_coverage=true --auto-features=enabled -Dgraphite=enabled -Dchafa=disabled -Dragel_subproject=true -Doptimization=2
     - name: ci
       run: meson test --print-errorlogs -Cbuild
 
     - name: generate documentations
       run: ninja -Cbuild harfbuzz-doc
     - name: deploy documentations
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      if: github.ref_type == 'tag'
       run: .ci/deploy-docs.sh
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -48,7 +51,7 @@ jobs:
     #     fail-on-alert: true
 
     - name: cov
-      run: ninja -Cbuild coverage
-    - uses: codecov/codecov-action@v1
+      run: ninja -Cbuild coverage-xml
+    - uses: codecov/codecov-action@v3
       with:
         file: build/meson-logs/coverage.xml

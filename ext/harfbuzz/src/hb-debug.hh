@@ -67,12 +67,12 @@ hb_options ()
 #endif
   /* Make a local copy, so we can access bitfield threadsafely. */
   hb_options_union_t u;
-  u.i = _hb_options.get_relaxed ();
+  u.i = _hb_options;
 
   if (unlikely (!u.i))
   {
     _hb_options_init ();
-    u.i = _hb_options.get_relaxed ();
+    u.i = _hb_options;
   }
 
   return u.opts;
@@ -457,6 +457,11 @@ struct hb_no_trace_t {
 	 "format %d", (int) format)
 #else
 #define TRACE_DISPATCH(this, format) hb_no_trace_t<typename context_t::return_t> trace
+#endif
+
+
+#ifndef HB_BUFFER_MESSAGE_MORE
+#define HB_BUFFER_MESSAGE_MORE (HB_DEBUG+1)
 #endif
 
 

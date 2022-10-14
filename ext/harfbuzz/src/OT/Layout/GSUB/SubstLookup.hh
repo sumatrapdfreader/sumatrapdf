@@ -6,11 +6,11 @@
 
 namespace OT {
 namespace Layout {
-namespace GSUB {
+namespace GSUB_impl {
 
 struct SubstLookup : Lookup
 {
-  typedef SubstLookupSubTable SubTable;
+  using SubTable = SubstLookupSubTable;
 
   bool sanitize (hb_sanitize_context_t *c) const
   { return Lookup::sanitize<SubTable> (c); }
@@ -25,7 +25,7 @@ struct SubstLookup : Lookup
   {
     unsigned int type = get_type ();
     if (unlikely (type == SubTable::Extension))
-      return reinterpret_cast<const ExtensionSubst &> (get_subtable (0)).is_reverse ();
+      return get_subtable (0).u.extension.is_reverse ();
     return lookup_type_is_reverse (type);
   }
 
@@ -73,8 +73,6 @@ struct SubstLookup : Lookup
       return hb_closure_lookups_context_t::default_return_value ();
     }
 
-    c->set_recurse_func (dispatch_closure_lookups_recurse_func);
-
     hb_closure_lookups_context_t::return_t ret = dispatch (c);
     return ret;
   }
@@ -100,12 +98,15 @@ struct SubstLookup : Lookup
       return dispatch (c);
   }
 
-  static inline bool apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index);
-
+  template<typename Glyphs, typename Substitutes,
+	   hb_requires (hb_is_sorted_source_of (Glyphs,
+						const hb_codepoint_t) &&
+			hb_is_source_of (Substitutes,
+					 const hb_codepoint_t))>
   bool serialize_single (hb_serialize_context_t *c,
                          uint32_t lookup_props,
-                         hb_sorted_array_t<const HBGlyphID16> glyphs,
-                         hb_array_t<const HBGlyphID16> substitutes)
+                         Glyphs glyphs,
+                         Substitutes substitutes)
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!Lookup::serialize (c, SubTable::Single, lookup_props, 1))) return_trace (false);
@@ -118,19 +119,16 @@ struct SubstLookup : Lookup
     return_trace (false);
   }
 
-  bool serialize_multiple (hb_serialize_context_t *c,
-                           uint32_t lookup_props,
-                           hb_sorted_array_t<const HBGlyphID16> glyphs,
-                           hb_array_t<const unsigned int> substitute_len_list,
-                           hb_array_t<const HBGlyphID16> substitute_glyphs_list)
+  template<typename Iterator,
+           hb_requires (hb_is_sorted_iterator (Iterator))>
+  bool serialize (hb_serialize_context_t *c,
+		  uint32_t lookup_props,
+		  Iterator it)
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!Lookup::serialize (c, SubTable::Multiple, lookup_props, 1))) return_trace (false);
     if (c->push<SubTable> ()->u.multiple.
-        serialize (c,
-                   glyphs,
-                   substitute_len_list,
-                   substitute_glyphs_list))
+        serialize (c, it))
     {
       c->add_link (get_subtables<SubTable> ()[0], c->pop_pack ());
       return_trace (true);
@@ -205,8 +203,6 @@ struct SubstLookup : Lookup
 
     return ret;
   }
-
-  HB_INTERNAL static hb_closure_lookups_context_t::return_t dispatch_closure_lookups_recurse_func (hb_closure_lookups_context_t *c, unsigned lookup_index);
 
   template <typename context_t, typename ...Ts>
   typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const

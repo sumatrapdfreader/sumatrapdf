@@ -1,3 +1,146 @@
+Overview of changes leading to 5.3.0
+Saturday, October 8, 2022
+"Women, Life, Freedom" #MahsaAmini
+====================================
+- Don’t add glyphs from dropped MATH or COLR tables to the subset glyphs.
+  (Khaled Hosny)
+- Map “rlig” to appropriate AAT feature selectors. (Jonathan Kew)
+- Update USE data files to latest version. (David Corbett)
+- Check “CBDT” extents first before outline tables, to help with fonts that
+  also include an empty “glyf” table. (Khaled Hosny)
+- More work towards variable font instancing in the subsetter. (Qunxin Liu)
+- Subsetter repacker improvements. (Garret Rieger)
+- New API:
++hb_ot_layout_lookup_get_optical_bound()
++hb_face_builder_sort_tables()
+
+
+Overview of changes leading to 5.2.0
+Saturday, September 17, 2022
+====================================
+- Fix regressions in hb-ft font functions for FT_Face’s with transformation
+  matrix. (Behdad Esfahbod)
+- The experimental hb-repacker API now supports splitting several GPOS subtable
+  types when needed. (Garret Rieger)
+- The HarfBuzz extensions to OpenType font format are now opt-in behind
+  build-time flags. (Behdad Esfahbod)
+- The experimental hb-subset variable fonts instantiation API can now
+  instantiate more font tables and arbitrary axis locations. (Qunxin Liu)
+- Unicode 15 support. (David Corbett)
+- Various documentation improvements. (Behdad Esfahbod, Matthias Clasen)
+- The hb-view command line tool now detects WezTerm inline images support.
+  (Wez Furlong)
+- Fix FreeType and ICU dependency lookup with meson. (Xavier Claessens)
+
+- New API:
++HB_SCRIPT_KAWI
++HB_SCRIPT_NAG_MUNDARI
+
+
+Overview of changes leading to 5.1.0
+Sunday, July 31, 2022
+====================================
+- More extensive buffer tracing messages. (Behdad Esfahbod)
+- Fix hb-ft regression in bitmap fonts rendering. (Behdad Esfahbod)
+- Support extension promotion of lookups in hb-subset-repacker. (Garret Rieger)
+- A new HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL for scripts that use elongation
+  (e.g. Arabic) to signify where it is safe to insert tatweel glyph without
+  interrupting shaping. (Behdad Esfahbod)
+- Add “--safe-to-insert-tatweel” to “hb-shape” tool. (Behdad Esfahbod)
+
+- New API
++HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL
++HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL
+
+
+Overview of changes leading to 5.0.1
+Saturday, July 23, 2022
+====================================
+- Fix version 2 “avar” table with hb-ft. (Behdad Esfahbod)
+
+
+Overview of changes leading to 5.0.0
+Saturday, July 23, 2022
+====================================
+- Support fonts with more than 65535 glyphs in “GDEF”, “GSUB”, and “GPOS”
+  tables. This is part of https://github.com/be-fonts/boring-expansion-spec to
+  extend OpenType in a backward-compatible way.
+  (Behdad Esfahbod, Garret Rieger)
+- Complete support for more than 65535 glyphs in “glyf” table that started in
+  4.0.0 release. Part of boring-expansion-spec. (Behdad Esfahbod)
+- Support version 2 of “avar” table. Part of boring-expansion-spec.
+  (Behdad Esfahbod)
+- Fix mark attachment on multiple substitutions in some cases.
+  (Behdad Esfahbod)
+- Fix application of “calt”, “rclt”, and “ccmp” features to better match
+  Uniscribe behaviour with some Arabic fonts. (Behdad Esfahbod)
+- Improvement to interaction between multiple cursive attachments.
+  (Behdad Esfahbod)
+- Improve multiple mark interactions in Hebrew. (Behdad Esfahbod)
+- Implement language-specific forms in AAT shaping. (Behdad Esfahbod)
+- Fix variation of “VORG” table. (Behdad Esfahbod)
+- Support for specific script tags to be retained in the subsetter, and add
+  “--layout-scripts” option to “hb-subset” tool. (Garret Rieger)
+- Accept space as delimiter for --features/--variations in command line tools.
+- Improve subsetting of “COLR” table. (Qunxin Liu)
+- Improved fuzzing coverage for ot-math API. (Frédéric Wang)
+- Fix “kern” table version 2 (AAT) sanitization on 32-bit systems.
+  (Behdad Esfahbod)
+- Allow negative glyph advances from “graphite2” shaper. (Stephan Bergmann)
+- Implement loading (color) bitmap fonts with hb-ft. (Behdad Esfahbod)
+- Fix regression in hb-ft when changing font size. (Behdad Esfahbod)
+- Fix build on GCC < 7. (Kleis Auke Wolthuizen)
+- Dynamically load dwrite.dll on windows if “directwrite” shaper is enabled.
+  (Luca Bacci)
+- Provide a single-file harfbuzz-subset.cc file for easier alternate building
+  of hb-subset library, similar to harfbuzz.cc. (Khaled Hosny)
+
+- New API
++HB_SUBSET_SETS_LAYOUT_SCRIPT_TAG
++hb_language_matches()
+
+
+Overview of changes leading to 4.4.1
+Wednesday, June 29, 2022
+====================================
+- Fix test failure with some compilers.
+- Fix Telugu and Kannada kerning regression.
+
+
+Overview of changes leading to 4.4.0
+Monday, June 27, 2022
+====================================
+- Caching of variable fonts shaping, in particular when using HarfBuzz’s own
+  font loading functions (ot). Bringing performance of variable shaping in par
+  with non-variable fonts shaping. (Behdad Esfahbod)
+- Caching of format 2 “Contextual Substitution” and “Chained Contexts
+  Substitution” lookups. Resulting in up to 20% speedup of lookup-heavy fonts
+  like Gulzar or Noto Nastaliq Urdu. (Behdad Esfahbod)
+- Improved ANSI output from hb-view. (Behdad Esfahbod)
+- Support for shaping legacy, pre-OpenType Windows 3.1-era, Arabic fonts that
+  relied on a fixed PUA encoding. (Khaled Hosny, Behdad Esfahbod)
+- Sinhala script is now shaped by the USE shaper instead of “indic” one.
+  (Behdad Esfahbod, David Corbett)
+- Thai shaper improvements. (David Corbett)
+- hb-ot-name API supports approximate BCP-47 language matching, for example
+  asking for “en_US” in a font that has only “en” names will return them.
+  (Behdad Esfahbod)
+- Optimized TrueType glyph shape loading. (Behdad Esfahbod)
+- Fix subsetting of HarfBuzz faces created via hb_face_create_for_tables().
+  (Garret Rieger)
+- Add 32 bit var store support to the subsetter. (Garret Rieger)
+
+- New API
++HB_BUFFER_FLAG_DEFINED
++HB_BUFFER_SERIALIZE_FLAG_DEFINED
++hb_font_changed()
++hb_font_get_serial()
++hb_ft_hb_font_changed()
++hb_set_hash()
++hb_map_copy()
++hb_map_hash()
+
+
 Overview of changes leading to 4.3.0
 Friday, May 20, 2022
 ====================================

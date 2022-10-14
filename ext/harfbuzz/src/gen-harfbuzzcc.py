@@ -9,10 +9,12 @@ if len (sys.argv) < 3:
 
 OUTPUT = sys.argv[1]
 CURRENT_SOURCE_DIR = sys.argv[2]
-sources = sys.argv[3:]
+
+# make sure input files are unique
+sources = sorted(set(sys.argv[3:]))
 
 with open (OUTPUT, "wb") as f:
-	f.write ("".join ('#include "{}"\n'.format (os.path.basename (x)) for x in sources if x.endswith (".cc")).encode ())
+	f.write ("".join ('#include "{}"\n'.format (os.path.relpath (os.path.abspath (x), CURRENT_SOURCE_DIR)) for x in sources if x.endswith (".cc")).encode ())
 
 # copy it also to the source tree, but only if it has changed
 baseline_filename = os.path.join (CURRENT_SOURCE_DIR, os.path.basename (OUTPUT))

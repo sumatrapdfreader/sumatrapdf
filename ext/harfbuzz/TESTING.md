@@ -39,17 +39,9 @@ ninja -C build
 
 ## Test with the Fuzzer
 
-```shell
-CXXFLAGS="-fsanitize=address,fuzzer-no-link" meson fuzzbuild --default-library=static -Dfuzzer_ldflags="-fsanitize=address,fuzzer" -Dexperimental_api=true
-ninja -Cfuzzbuild test/fuzzing/hb-{shape,draw,subset,set}-fuzzer
-fuzzbuild/test/fuzzing/hb-subset-fuzzer test/fuzzing/fonts
-```
+FOr fuzzing, see `test/fuzzing/README.md`.
 
 ## Profiling
 
-```
-meson build --reconfigure
-meson compile -C build
-build/perf/perf
-```
+For profiling, see `perf/README.md`.
 

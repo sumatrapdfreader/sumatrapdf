@@ -59,17 +59,15 @@ struct hb_sparseset_t
     hb_copy (o, *this);
   }
 
-  void init_shallow () { s.init (); }
   void init ()
   {
     hb_object_init (this);
-    init_shallow ();
+    s.init ();
   }
-  void fini_shallow () { s.fini (); }
   void fini ()
   {
     hb_object_fini (this);
-    fini_shallow ();
+    s.fini ();
   }
 
   explicit operator bool () const { return !is_empty (); }
@@ -166,7 +164,6 @@ struct hb_set_t : hb_sparseset_t<hb_bit_set_invertible_t>
 
   ~hb_set_t () = default;
   hb_set_t () : sparseset () {};
-  hb_set_t (std::nullptr_t) : hb_set_t () {};
   hb_set_t (const hb_set_t &o) : sparseset ((sparseset &) o) {};
   hb_set_t (hb_set_t&& o) : sparseset (std::move ((sparseset &) o)) {}
   hb_set_t& operator = (const hb_set_t&) = default;

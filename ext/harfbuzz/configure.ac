@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [4.3.0],
+        [5.3.0],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -308,7 +308,7 @@ if $have_freetype; then
 	AC_DEFINE(HAVE_FREETYPE, 1, [Have FreeType 2 library])
 	save_libs=$LIBS
 	LIBS="$LIBS $FREETYPE_LIBS"
-	AC_CHECK_FUNCS(FT_Get_Var_Blend_Coordinates FT_Set_Var_Blend_Coordinates FT_Done_MM_Var)
+	AC_CHECK_FUNCS(FT_Get_Var_Blend_Coordinates FT_Set_Var_Blend_Coordinates FT_Done_MM_Var FT_Get_Transform)
 	LIBS=$save_libs
 fi
 AM_CONDITIONAL(HAVE_FREETYPE, $have_freetype)
@@ -366,17 +366,13 @@ AC_ARG_WITH(directwrite,
 have_directwrite=false
 AC_LANG_PUSH([C++])
 if test "x$with_directwrite" = "xyes" -o "x$with_directwrite" = "xauto"; then
-	AC_CHECK_HEADERS(dwrite.h, have_directwrite=true)
+	AC_CHECK_HEADERS(dwrite_1.h, have_directwrite=true)
 fi
 AC_LANG_POP([C++])
 if test "x$with_directwrite" = "xyes" -a "x$have_directwrite" != "xtrue"; then
 	AC_MSG_ERROR([directwrite support requested but not found])
 fi
 if $have_directwrite; then
-	DIRECTWRITE_CXXFLAGS=
-	DIRECTWRITE_LIBS=
-	AC_SUBST(DIRECTWRITE_CXXFLAGS)
-	AC_SUBST(DIRECTWRITE_LIBS)
 	AC_DEFINE(HAVE_DIRECTWRITE, 1, [Have DirectWrite library])
 fi
 AM_CONDITIONAL(HAVE_DIRECTWRITE, $have_directwrite)
@@ -437,6 +433,7 @@ test/shape/data/text-rendering-tests/Makefile
 test/subset/Makefile
 test/subset/data/Makefile
 test/subset/data/repack_tests/Makefile
+test/threads/Makefile
 perf/Makefile
 docs/Makefile
 docs/version.xml

@@ -22,7 +22,7 @@
       correct amount for each successive glyph.
     </para>
     <para>
-      But, for <emphasis>complex scripts</emphasis>, any combination of
+      But, for other scripts (often unceremoniously called <emphasis>complex scripts</emphasis>), any combination of
       several shaping operations may be required, and the rules for how
       and when they are applied vary from script to script. HarfBuzz and
       other shaping engines implement these rules.
@@ -36,42 +36,35 @@
     </para>
   </section>
   
-  <section id="complex-scripts">
-    <title>Complex scripts</title>
+  <section id="script-specific-shaping">
+    <title>Script-specific shaping</title>
     <para>
-      In text-shaping terminology, scripts are generally classified as
-      either <emphasis>complex</emphasis> or <emphasis>non-complex</emphasis>.
-    </para>
-    <para>
-      Complex scripts are those for which transforming the input
-      sequence into the final layout requires some combination of
+      In many scripts, transforming the input
+      sequence into the final layout often requires some combination of
       operations&mdash;such as context-dependent substitutions,
       context-dependent mark positioning, glyph-to-glyph joining,
       glyph reordering, or glyph stacking.
     </para>
     <para>
-      In some complex scripts, the shaping rules require that a text
+      In some scripts, the shaping rules require that a text
       run be divided into syllables before the operations can be
-      applied. Other complex scripts may apply shaping operations over
+      applied. Other scripts may apply shaping operations over
       entire words or over the entire text run, with no subdivision
       required.
     </para>
     <para>
-      Non-complex scripts, by definition, do not require these
-      operations. However, correctly shaping a text run in a
-      non-complex script may still involve Unicode normalization,
+      Other scripts, do not require these
+      operations. However, correctly shaping a text run in
+      any script may still involve Unicode normalization,
       ligature substitutions, mark positioning, kerning, and applying
-      other font features. The key difference is that a text run in a
-      non-complex script can be processed sequentially and in the same
-      order as the input sequence of Unicode codepoints, without
-      requiring an analysis stage.
+      other font features.
     </para>
   </section>
   
   <section id="shaping-operations">
     <title>Shaping operations</title>
     <para>
-      Shaping a complex-script text run involves transforming the
+      Shaping a text run involves transforming the
       input sequence of Unicode codepoints with some combination of
       operations that is specified in the shaping model for the
       script.
@@ -81,7 +74,7 @@
       text run varies from script to script, as do the order that the
       operations are performed in and which codepoints are
       affected. However, the same general set of shaping operations is
-      common to all of the complex-script shaping models. 
+      common to all of the script shaping models. 
     </para>
     
     <itemizedlist>
@@ -92,7 +85,7 @@
 	  some other ("visual") position.
 	</para>
 	<para>
-	  The shaping model for a given complex script might involve
+	  The shaping model for a given script might involve
 	  more than one reordering step.
 	</para>
       </listitem>
@@ -119,7 +112,7 @@
 	  particular string pattern.
 	</para>
 	<para>
-	  The shaping model for a given complex script might involve
+	  The shaping model for a given script might involve
 	  multiple contextual-substitution operations, each applying
 	  to different target glyphs and patterns, and which are
 	  performed in separate steps.
@@ -138,7 +131,7 @@
 	  Many contextual positioning operations are used to place
 	  <emphasis>mark</emphasis> glyphs (such as diacritics, vowel
 	  signs, and tone markers) with respect to
-	  <emphasis>base</emphasis> glyphs. However, some complex
+	  <emphasis>base</emphasis> glyphs. However, some
 	  scripts may use contextual positioning operations to
 	  correctly place base glyphs as well, such as
 	  when the script uses <emphasis>stacking</emphasis> characters.
@@ -194,7 +187,7 @@
       multiple positions).
     </para>
     <para>
-      Some complex scripts require that the text run be split into
+      Some scripts require that the text run be split into
       syllables. What constitutes a valid syllable in these
       scripts is specified in regular expressions, formed from the
       Letter and Mark codepoints, that take the UISC and UIPC
@@ -235,7 +228,7 @@
       <listitem>
 	<para>
 	  The <emphasis>default</emphasis> shaping model handles all
-	  non-complex scripts, and may also be used as a fallback for
+	  scripts with no script-specific shaping model, and may also be used as a fallback for
 	  handling unrecognized scripts.
 	</para>
       </listitem>
@@ -244,7 +237,7 @@
 	<para>
 	  The <emphasis>Indic</emphasis> shaping model handles the Indic
 	  scripts Bengali, Devanagari, Gujarati, Gurmukhi, Kannada,
-	  Malayalam, Oriya, Tamil, Telugu, and Sinhala.
+	  Malayalam, Oriya, Tamil, and Telugu.
 	</para>
 	<para>
 	  The Indic shaping model was revised significantly in
@@ -310,7 +303,7 @@
       <listitem>
 	<para>
 	  The <emphasis>Universal Shaping Engine</emphasis> (USE)
-	  shaping model supports complex scripts not covered by one of
+	  shaping model supports scripts not covered by one of
 	  the above, script-specific shaping models, including
 	  Javanese, Balinese, Buginese, Batak, Chakma, Lepcha, Modi,
 	  Phags-pa, Tagalog, Siddham, Sundanese, Tai Le, Tai Tham, Tai

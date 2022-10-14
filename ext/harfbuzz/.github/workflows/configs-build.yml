@@ -1,0 +1,27 @@
+name: configs-ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: install dependencies
+      run: sudo apt-get install gcc
+    - name: HB_DISABLE_DEPRECATED
+      run: g++ -std=c++11 -c src/harfbuzz.cc -DHB_DISABLE_DEPRECATED
+    - name: HB_MINI
+      run: g++ -std=c++11 -c src/harfbuzz.cc -DHB_MINI
+    - name: HB_LEAN
+      run: g++ -std=c++11 -c src/harfbuzz.cc -DHB_LEAN
+    - name: HB_TINY
+      run: g++ -std=c++11 -c src/harfbuzz.cc -DHB_TINY

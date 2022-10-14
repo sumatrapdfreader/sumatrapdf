@@ -25,7 +25,6 @@ EXTRA_DIST = \
 	subprojects/google-benchmark.wrap \
 	subprojects/ragel.wrap \
 	subprojects/packagefiles/ragel/meson.build \
-	subprojects/ttf-parser.wrap \
 	mingw-configure.sh \
 	$(NULL)
 

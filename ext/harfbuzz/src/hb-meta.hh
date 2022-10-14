@@ -133,6 +133,18 @@ struct
 
   template <typename T> constexpr auto
   operator () (T *v) const HB_AUTO_RETURN (*v)
+
+  template <typename T> constexpr auto
+  operator () (const hb::shared_ptr<T>& v) const HB_AUTO_RETURN (*v)
+
+  template <typename T> constexpr auto
+  operator () (hb::shared_ptr<T>& v) const HB_AUTO_RETURN (*v)
+  
+  template <typename T> constexpr auto
+  operator () (const hb::unique_ptr<T>& v) const HB_AUTO_RETURN (*v)
+
+  template <typename T> constexpr auto
+  operator () (hb::unique_ptr<T>& v) const HB_AUTO_RETURN (*v)
 }
 HB_FUNCOBJ (hb_deref);
 
@@ -188,7 +200,7 @@ template <> struct hb_int_max<signed long long>		: hb_integral_constant<signed l
 template <> struct hb_int_max<unsigned long long>	: hb_integral_constant<unsigned long long,	ULLONG_MAX>	{};
 #define hb_int_max(T) hb_int_max<T>::value
 
-#if __GNUG__ && __GNUC__ < 5
+#if defined(__GNUC__) && __GNUC__ < 5 && !defined(__clang__)
 #define hb_is_trivially_copyable(T) __has_trivial_copy(T)
 #define hb_is_trivially_copy_assignable(T) __has_trivial_assign(T)
 #define hb_is_trivially_constructible(T) __has_trivial_constructor(T)

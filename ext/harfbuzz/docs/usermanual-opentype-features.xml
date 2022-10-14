@@ -65,10 +65,10 @@
     </para>
     <para>
       The algorithms
-      used for complex scripts can be quite involved; HarfBuzz tries
+      used for shaping can be quite involved; HarfBuzz tries
       to be compatible with the OpenType Layout specification
       and, wherever there is any ambiguity, HarfBuzz attempts to replicate the
-      output of Microsoft's Uniscribe engine. See the <ulink
+      output of Microsoft's Uniscribe engine, to the extent that is feasible and desirable. See the <ulink
       url="https://docs.microsoft.com/en-us/typography/script-development/standard">Microsoft
       Typography pages</ulink> for more detail.
     </para>
@@ -131,7 +131,7 @@
     </para>
     <para>
       Some OpenType features are defined for the purpose of supporting
-      complex-script shaping, and are automatically activated, but
+      script-specific shaping, and are automatically activated, but
       only when a buffer's script property is set to a script that the
       feature supports.
     </para>

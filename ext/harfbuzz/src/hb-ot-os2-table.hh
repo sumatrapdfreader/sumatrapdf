@@ -166,6 +166,47 @@ struct OS2
     }
   }
 
+  float map_wdth_to_widthclass(float width) const
+  {
+    if (width < 50) return 1.0f;
+    if (width > 200) return 9.0f;
+
+    float ratio = (width - 50) / 12.5f;
+    int a = (int) floorf (ratio);
+    int b = (int) ceilf (ratio);
+
+    /* follow this maping:
+     * https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass
+     */
+    if (b <= 6) // 50-125
+    {
+      if (a == b) return a + 1.0f;
+    }
+    else if (b == 7) // no mapping for 137.5
+    {
+      a = 6;
+      b = 8;
+    }
+    else if (b == 8)
+    {
+      if (a == b) return 8.0f; // 150
+      a = 6;
+    }
+    else
+    {
+      if (a == b && a == 12) return 9.0f; //200
+      b = 12;
+      a = 8;
+    }
+
+    float va = 50 + a * 12.5f;
+    float vb = 50 + b * 12.5f;
+
+    float ret =  a + (width - va) / (vb - va);
+    if (a <= 6) ret += 1.0f;
+    return ret;
+  }
+
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
@@ -182,6 +223,26 @@ struct OS2
     os2_prime->usLastCharIndex = max_cp;
 
     _update_unicode_ranges (c->plan->unicodes, os2_prime->ulUnicodeRange);
+
+    if (c->plan->user_axes_location->has (HB_TAG ('w','g','h','t')) &&
+        !c->plan->pinned_at_default)
+    {
+      float weight_class = c->plan->user_axes_location->get (HB_TAG ('w','g','h','t'));
+      if (!c->serializer->check_assign (os2_prime->usWeightClass,
+                                        roundf (hb_clamp (weight_class, 1.0f, 1000.0f)),
+                                        HB_SERIALIZE_ERROR_INT_OVERFLOW))
+        return_trace (false);
+    }
+
+    if (c->plan->user_axes_location->has (HB_TAG ('w','d','t','h')) &&
+        !c->plan->pinned_at_default)
+    {
+      float width = c->plan->user_axes_location->get (HB_TAG ('w','d','t','h'));
+      if (!c->serializer->check_assign (os2_prime->usWidthClass,
+                                        roundf (map_wdth_to_widthclass (width)),
+                                        HB_SERIALIZE_ERROR_INT_OVERFLOW))
+        return_trace (false);
+    }
 
     return_trace (true);
   }
@@ -224,9 +285,11 @@ struct OS2
     *max_cp = hb_min (0xFFFFu, codepoints->get_max ());
   }
 
-  /* https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681 */
+  /* https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681
+   * https://docs.microsoft.com/en-us/typography/legacy/legacy_arabic_fonts */
   enum font_page_t
   {
+    FONT_PAGE_NONE		= 0,
     FONT_PAGE_HEBREW		= 0xB100, /* Hebrew Windows 3.1 font page */
     FONT_PAGE_SIMP_ARABIC	= 0xB200, /* Simplified Arabic Windows 3.1 font page */
     FONT_PAGE_TRAD_ARABIC	= 0xB300, /* Traditional Arabic Windows 3.1 font page */

@@ -80,17 +80,17 @@ helper_cairo_create_ft_font_face (const font_options_t *font_opts)
   }
   else
   {
-#ifdef HAVE_FT_SET_VAR_BLEND_COORDINATES
+#if !defined(HB_NO_VAR) && defined(HAVE_FT_SET_VAR_BLEND_COORDINATES)
     unsigned int num_coords;
-    const int *coords = hb_font_get_var_coords_normalized (font_opts->font, &num_coords);
+    const float *coords = hb_font_get_var_coords_design (font_opts->font, &num_coords);
     if (num_coords)
     {
       FT_Fixed *ft_coords = (FT_Fixed *) calloc (num_coords, sizeof (FT_Fixed));
       if (ft_coords)
       {
 	for (unsigned int i = 0; i < num_coords; i++)
-	  ft_coords[i] = coords[i] << 2;
-	FT_Set_Var_Blend_Coordinates (ft_face, num_coords, ft_coords);
+	  ft_coords[i] = coords[i] * 65536.f;
+	FT_Set_Var_Design_Coordinates (ft_face, num_coords, ft_coords);
 	free (ft_coords);
       }
     }

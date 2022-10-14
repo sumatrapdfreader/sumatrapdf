@@ -26,6 +26,7 @@
 
 #include "hb.hh"
 #include "hb-algs.hh"
+#include "hb-set.hh"
 
 
 static char *
@@ -90,6 +91,20 @@ main (int argc, char **argv)
   x = 1;
   assert (++hb_inc (x) == 3);
   assert (x == 3);
+
+  hb_set_t set1 {1};
+  hb_set_t set2 {2};
+
+  assert (hb_hash (set1) != hb_hash (set2));
+  assert (hb_hash (set1) == hb_hash (hb_set_t {1}));
+  assert (hb_hash (set1) != hb_hash (hb_set_t {}));
+  assert (hb_hash (set1) != hb_hash (hb_set_t {2}));
+  assert (hb_hash (set2) == hb_hash (hb_set_t {2}));
+
+  /* hb_hash, unlike std::hash, dereferences pointers. */
+  assert (hb_hash (set1) == hb_hash (&set1));
+  assert (hb_hash (set1) == hb_hash (hb::shared_ptr<hb_set_t> {hb_set_reference (&set1)}));
+  assert (hb_hash (set1) == hb_hash (hb::unique_ptr<hb_set_t> {hb_set_reference (&set1)}));
 
   return 0;
 }

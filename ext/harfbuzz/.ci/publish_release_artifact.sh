@@ -19,5 +19,6 @@ fi
 ghr -replace \
 	-u $CIRCLE_PROJECT_USERNAME \
 	-r $CIRCLE_PROJECT_REPONAME \
+	--draft \
 	$CIRCLE_TAG \
 	$1

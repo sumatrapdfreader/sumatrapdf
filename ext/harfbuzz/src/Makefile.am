@@ -12,7 +12,7 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 TESTS =
 check_PROGRAMS =
 
-EXTRA_DIST += harfbuzz.cc
+EXTRA_DIST += harfbuzz.cc harfbuzz-subset.cc
 EXTRA_DIST += meson.build
 EXTRA_DIST += fix_get_types.py
 
@@ -160,6 +160,18 @@ pkginclude_HEADERS += $(HB_SUBSET_headers)
 pkgconfig_DATA += harfbuzz-subset.pc
 EXTRA_DIST += harfbuzz-subset.pc.in
 
+harfbuzz-subset.cc: Makefile.sources
+	$(AM_V_GEN) \
+	LANG=C; \
+	for f in \
+		$(HB_BASE_sources) \
+		$(HB_SUBSET_sources) \
+		; do echo '#include "'$$f'"'; done | \
+	sort -u | \
+	grep '[.]cc"' > $(srcdir)/harfbuzz-subset.cc \
+	|| ($(RM) $(srcdir)/harfbuzz-subset.cc; false)
+BUILT_SOURCES += harfbuzz-subset.cc
+
 if HAVE_ICU
 if HAVE_ICU_BUILTIN
 HBCFLAGS += $(ICU_CFLAGS)
@@ -284,6 +296,7 @@ $(srcdir)/%.hh: $(srcdir)/%.rl
 
 harfbuzz.cc: Makefile.sources
 	$(AM_V_GEN) \
+	LANG=C; \
 	for f in \
 		$(HB_BASE_sources) \
 		$(HB_GLIB_sources) \
@@ -294,6 +307,7 @@ harfbuzz.cc: Makefile.sources
 		$(HB_DIRECTWRITE_sources) \
 		$(HB_CORETEXT_sources) \
 		; do echo '#include "'$$f'"'; done | \
+	sort -u | \
 	grep '[.]cc"' > $(srcdir)/harfbuzz.cc \
 	|| ($(RM) $(srcdir)/harfbuzz.cc; false)
 BUILT_SOURCES += harfbuzz.cc
@@ -307,6 +321,7 @@ noinst_PROGRAMS = \
 	test-ot-glyphname \
 	test-gpos-size-params \
 	test-gsub-would-substitute \
+	test-use-table \
 	$(NULL)
 bin_PROGRAMS =
 
@@ -334,6 +349,10 @@ test_ot_glyphname_SOURCES = test-ot-glyphname.cc
 test_ot_glyphname_CPPFLAGS = $(HBCFLAGS)
 test_ot_glyphname_LDADD = libharfbuzz.la $(HBLIBS)
 
+test_use_table_SOURCES = test-use-table.cc
+test_use_table_CPPFLAGS = $(HBCFLAGS)
+test_use_table_LDADD = libharfbuzz.la $(HBLIBS)
+
 test_gpos_size_params_SOURCES = test-gpos-size-params.cc
 test_gpos_size_params_CPPFLAGS = $(HBCFLAGS)
 test_gpos_size_params_LDADD = libharfbuzz.la $(HBLIBS)
@@ -357,6 +376,7 @@ COMPILED_TESTS = \
 	test-unicode-ranges \
 	test-vector \
 	test-repacker \
+	test-classdef-graph \
 	$(NULL)
 COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
 COMPILED_TESTS_LDADD = libharfbuzz.la $(HBLIBS)
@@ -399,9 +419,13 @@ test_priority_queue_SOURCES = test-priority-queue.cc hb-static.cc
 test_priority_queue_CPPFLAGS = $(HBCFLAGS)
 test_priority_queue_LDADD = libharfbuzz.la $(HBLIBS)
 
-test_repacker_SOURCES = test-repacker.cc hb-static.cc
+test_repacker_SOURCES = test-repacker.cc hb-static.cc graph/gsubgpos-context.cc
 test_repacker_CPPFLAGS = $(HBCFLAGS)
 test_repacker_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
+
+test_classdef_graph_SOURCES = graph/test-classdef-graph.cc hb-static.cc graph/gsubgpos-context.cc
+test_classdef_graph_CPPFLAGS = $(HBCFLAGS)
+test_classdef_graph_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
 
 test_set_SOURCES = test-set.cc hb-static.cc
 test_set_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
@@ -437,6 +461,7 @@ endif
 
 TESTS_ENVIRONMENT = \
 	srcdir="$(srcdir)" \
+	base_srcdir="$(srcdir)" \
 	builddir="$(builddir)" \
 	MAKE="$(MAKE) $(AM_MAKEFLAGS)" \
 	HBSOURCES="$(HBSOURCES)" \
@@ -465,7 +490,7 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 INTROSPECTION_SCANNER_ENV = CC="$(CC)"
 
 HarfBuzz-0.0.gir: libharfbuzz.la libharfbuzz-gobject.la
-HarfBuzz_0_0_gir_INCLUDES = GObject-2.0
+HarfBuzz_0_0_gir_INCLUDES = GObject-2.0 freetype2-2.0
 HarfBuzz_0_0_gir_CFLAGS = \
 	$(INCLUDES) \
 	$(HBCFLAGS) \

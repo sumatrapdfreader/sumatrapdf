@@ -40,23 +40,20 @@ html_images = [
   'HarfBuzz.svg',
 ]
 
-ignore_headers = []
-if not have_gobject
-  ignore_headers += [
-    'hb-gobject.h',
-    'hb-gobject-enums.h',
-    'hb-gobject-enums-tmp.h',
-    'hb-gobject-structs.h',
-  ]
-endif
+ignore_headers = [
+  'hb-gobject.h',
+  'hb-gobject-enums.h',
+  'hb-gobject-enums-tmp.h',
+  'hb-gobject-structs.h',
+]
 
 gnome.gtkdoc('harfbuzz',
   main_sgml: 'harfbuzz-docs.xml',
-  src_dir: [join_paths(meson.current_source_dir(), '..'),
-            join_paths(meson.current_build_dir(), '..'),
+  src_dir: [meson.current_source_dir() / '..' / 'src',
+            meson.current_build_dir() / '..' / 'src',
            ],
   scan_args: ['--deprecated-guards=HB_DISABLE_DEPRECATED',
-              '--ignore-decorators=HB_EXTERN',
+              '--ignore-decorators=HB_EXTERN|HB_DEPRECATED',
              ],
   mkdb_args: ['--source-suffixes=h,cc',
               '--xml-mode',
@@ -65,5 +62,5 @@ gnome.gtkdoc('harfbuzz',
   content_files: content_files,
   html_assets: html_images,
   ignore_headers: ignore_headers,
-  dependencies: [libharfbuzz_dep, libharfbuzz_gobject_dep],
+  dependencies: [libharfbuzz_dep],
   install: true)

@@ -419,7 +419,7 @@
   <section id="reordering-in-levels-0-and-1">
     <title>Reordering in levels 0 and 1</title>
     <para>
-      Another common operation in the more complex shapers is glyph
+      Another common operation in some shapers is glyph
       reordering. In order to maintain a monotonic cluster sequence
       when glyph reordering takes place, HarfBuzz merges the clusters
       of everything in the reordering sequence.

@@ -61,7 +61,7 @@
  *
  * Tests whether a face includes a `CPAL` color-palette table.
  *
- * Return value: %true if data found, %false otherwise
+ * Return value: `true` if data found, `false` otherwise
  *
  * Since: 2.1.0
  */
@@ -192,7 +192,7 @@ hb_ot_color_palette_get_colors (hb_face_t     *face,
  *
  * Tests whether a face includes any `COLR` color layers.
  *
- * Return value: %true if data found, %false otherwise
+ * Return value: `true` if data found, `false` otherwise
  *
  * Since: 2.1.0
  */
@@ -239,7 +239,7 @@ hb_ot_color_glyph_get_layers (hb_face_t           *face,
  *
  * Tests whether a face includes any `SVG` glyph images.
  *
- * Return value: %true if data found, %false otherwise.
+ * Return value: `true` if data found, `false` otherwise.
  *
  * Since: 2.1.0
  */
@@ -279,7 +279,7 @@ hb_ot_color_glyph_reference_svg (hb_face_t *face, hb_codepoint_t glyph)
  *
  * Tests whether a face has PNG glyph images (either in `CBDT` or `sbix` tables).
  *
- * Return value: %true if data found, %false otherwise
+ * Return value: `true` if data found, `false` otherwise
  *
  * Since: 2.1.0
  */
@@ -295,8 +295,8 @@ hb_ot_color_has_png (hb_face_t *face)
  * @glyph: a glyph index
  *
  * Fetches the PNG image for a glyph. This function takes a font object, not a face object,
- * as input. To get an optimally sized PNG blob, the UPEM value must be set on the @font
- * object. If UPEM is unset, the blob returned will be the largest PNG available.
+ * as input. To get an optimally sized PNG blob, the PPEM values must be set on the @font
+ * object. If PPEM is unset, the blob returned will be the largest PNG available.
  *
  * If the glyph has no PNG image, the singleton empty blob is returned.
  *

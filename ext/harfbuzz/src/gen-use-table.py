@@ -134,6 +134,7 @@ property_names = [
 	'Number_Joiner',
 	'Number',
 	'Brahmi_Joining_Number',
+	'Symbol_Modifier',
 	'Hieroglyph',
 	'Hieroglyph_Joiner',
 	'Hieroglyph_Segment_Begin',
@@ -214,14 +215,16 @@ def is_CONS_MED(U, UISC, UDI, UGC, AJT):
 	return (UISC == Consonant_Medial and UGC != Lo or
 		UISC == Consonant_Initial_Postfixed)
 def is_CONS_MOD(U, UISC, UDI, UGC, AJT):
-	return (UISC in [Nukta, Gemination_Mark, Consonant_Killer] and
-		not is_SYM_MOD(U, UISC, UDI, UGC, AJT))
+	return UISC in [Nukta, Gemination_Mark, Consonant_Killer]
 def is_CONS_SUB(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_Subjoined and UGC != Lo
 def is_CONS_WITH_STACKER(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_With_Stacker
 def is_HALANT(U, UISC, UDI, UGC, AJT):
-	return UISC == Virama
+	return UISC == Virama and not is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UDI, UGC, AJT)
+def is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UDI, UGC, AJT):
+	# Split off of HALANT
+	return U == 0x0DCA
 def is_HALANT_NUM(U, UISC, UDI, UGC, AJT):
 	return UISC == Number_Joiner
 def is_HIEROGLYPH(U, UISC, UDI, UGC, AJT):
@@ -254,7 +257,7 @@ def is_SAKOT(U, UISC, UDI, UGC, AJT):
 	# Split off of HALANT
 	return U == 0x1A60
 def is_SYM_MOD(U, UISC, UDI, UGC, AJT):
-	return U in [0x1B6B, 0x1B6C, 0x1B6D, 0x1B6E, 0x1B6F, 0x1B70, 0x1B71, 0x1B72, 0x1B73]
+	return UISC == Symbol_Modifier
 def is_VOWEL(U, UISC, UDI, UGC, AJT):
 	return (UISC == Pure_Killer or
 		UGC != Lo and UISC in [Vowel, Vowel_Dependent])
@@ -280,6 +283,7 @@ use_mapping = {
 	'SUB':	is_CONS_SUB,
 	'CS':	is_CONS_WITH_STACKER,
 	'H':	is_HALANT,
+	'HVM':	is_HALANT_OR_VOWEL_MODIFIER,
 	'HN':	is_HALANT_NUM,
 	'IS':	is_INVISIBLE_STACKER,
 	'G':	is_HIEROGLYPH,
@@ -329,6 +333,7 @@ use_positions = {
 		'Blw': [Bottom],
 	},
 	'H': None,
+	'HVM': None,
 	'IS': None,
 	'B': None,
 	'FM': {
@@ -354,9 +359,6 @@ def map_to_use(data):
 		# TODO: These don't have UISC assigned in Unicode 13.0.0, but have UIPC
 		if 0x0F18 <= U <= 0x0F19 or 0x0F3E <= U <= 0x0F3F: UISC = Vowel_Dependent
 
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/627
-		if 0x1BF2 <= U <= 0x1BF3: UISC = Nukta; UIPC = Bottom
-
 		# TODO: U+1CED should only be allowed after some of
 		# the nasalization marks, maybe only for U+1CE9..U+1CF1.
 		if U == 0x1CED: UISC = Tone_Mark
@@ -367,23 +369,9 @@ def map_to_use(data):
 
 		# Resolve Indic_Positional_Category
 
-		# TODO: These should die, but have UIPC in Unicode 13.0.0
-		if U in [0x953, 0x954]: UIPC = Not_Applicable
-
-		# TODO: These are not in USE's override list that we have, nor are they in Unicode 13.0.0
-		if 0xA926 <= U <= 0xA92A: UIPC = Top
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/1037
 		#  and https://github.com/harfbuzz/harfbuzz/issues/1631
 		if U in [0x11302, 0x11303, 0x114C1]: UIPC = Top
-		if 0x1CF8 <= U <= 0x1CF9: UIPC = Top
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/issues/3550
-		if U == 0x10A38: UIPC = Bottom
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/982
-		# also  https://github.com/harfbuzz/harfbuzz/issues/1012
-		if 0x1112A <= U <= 0x1112B: UIPC = Top
-		if 0x11131 <= U <= 0x11132: UIPC = Top
 
 		assert (UIPC in [Not_Applicable, Visual_Order_Left] or U == 0x0F7F or
 			USE in use_positions), "%s %s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UDI, UGC, AJT)
@@ -412,12 +400,12 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
-print ("#ifndef HB_OT_SHAPE_COMPLEX_USE_TABLE_HH")
-print ("#define HB_OT_SHAPE_COMPLEX_USE_TABLE_HH")
+print ("#ifndef HB_OT_SHAPER_USE_TABLE_HH")
+print ("#define HB_OT_SHAPER_USE_TABLE_HH")
 print ()
 print ('#include "hb.hh"')
 print ()
-print ('#include "hb-ot-shape-complex-use-machine.hh"')
+print ('#include "hb-ot-shaper-use-machine.hh"')
 print ()
 
 total = 0
@@ -473,64 +461,15 @@ for k,v in sorted(use_positions.items()):
 		print ("#define %s	USE(%s)" % (tag, tag))
 print ('#pragma GCC diagnostic pop')
 print ("")
-print ("static const uint8_t use_table[] = {")
-for u in uu:
-	if u <= last:
-		continue
-	if use_data[u][0] == 'O':
-		continue
-	block = use_data[u][1]
 
-	start = u//8*8
-	end = start+1
-	while end in uu and block == use_data[end][1]:
-		end += 1
-	end = (end-1)//8*8 + 7
 
-	if start != last + 1:
-		if start - last <= 1+16*3:
-			print_block (None, last+1, start-1, use_data)
-		else:
-			if last >= 0:
-				ends.append (last + 1)
-				offset += ends[-1] - starts[-1]
-			print ()
-			print ()
-			print ("#define use_offset_0x%04xu %d" % (start, offset))
-			starts.append (start)
+import packTab
+data = {u:v[0] for u,v in use_data.items()}
+code = packTab.Code('hb_use')
+sol = packTab.pack_table(data, compression=5, default='O')
+sol.genCode(code, f'get_category')
+code.print_c(linkage='static inline')
 
-	print_block (block, start, end, use_data)
-	last = end
-ends.append (last + 1)
-offset += ends[-1] - starts[-1]
-print ()
-print ()
-occupancy = used * 100. / total
-page_bits = 12
-print ("}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy))
-print ()
-print ("static inline uint8_t")
-print ("hb_use_get_category (hb_glyph_info_t info)")
-print ("{")
-print ("  hb_codepoint_t u = info.codepoint;")
-print ("  switch (u >> %d)" % page_bits)
-print ("  {")
-pages = set([u>>page_bits for u in starts+ends])
-for p in sorted(pages):
-	print ("    case 0x%0Xu:" % p)
-	for (start,end) in zip (starts, ends):
-		if p not in [start>>page_bits, end>>page_bits]: continue
-		offset = "use_offset_0x%04xu" % start
-		print ("      if (hb_in_range<hb_codepoint_t> (u, 0x%04Xu, 0x%04Xu)) return use_table[u - 0x%04Xu + %s];" % (start, end-1, start, offset))
-	print ("      break;")
-	print ("")
-print ("    default:")
-print ("      break;")
-print ("  }")
-print ("  if (_hb_glyph_info_get_general_category (&info) == HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED)")
-print ("    return WJ;")
-print ("  return O;")
-print ("}")
 print ()
 for k in sorted(use_mapping.keys()):
 	if k in use_positions and use_positions[k]: continue
@@ -542,9 +481,5 @@ for k,v in sorted(use_positions.items()):
 		print ("#undef %s" % tag)
 print ()
 print ()
-print ("#endif /* HB_OT_SHAPE_COMPLEX_USE_TABLE_HH */")
+print ("#endif /* HB_OT_SHAPER_USE_TABLE_HH */")
 print ("/* == End of generated table == */")
-
-# Maintain at least 50% occupancy in the table */
-if occupancy < 50:
-	raise Exception ("Table too sparse, please investigate: ", occupancy)

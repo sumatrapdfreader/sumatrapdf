@@ -29,6 +29,12 @@ for reference.
      - 32bit: `../mingw-configure.sh i686`
      - 64bit: `../mingw-configure.sh x86_64`
 
+   c) Build as usual:
+     - make
+
+   d) Configure your wine to find system mingw libraries. See:
+      https://fedoraproject.org/wiki/MinGW/Configure_wine
+
 Now you can use `hb-shape` by `(cd win32build/util && wine hb-shape.exe)`
 but if you like to shape with the Microsoft Uniscribe:
 
@@ -45,3 +51,8 @@ but if you like to shape with the Microsoft Uniscribe:
 5. `WINEDLLOVERRIDES="usp10=n" wine hb-shape.exe fontname.ttf -u 0061,0062,0063 --shaper=uniscribe`
 
 (`0061,0062,0063` means `abc`, use test/shaping/hb-unicode-decode to generate ones you need)
+
+When you have built that, you can test HarfBuzz's native shaper against Uniscribe
+following these instructions:
+
+  https://github.com/harfbuzz/harfbuzz/issues/3671

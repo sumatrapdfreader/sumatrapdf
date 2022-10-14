@@ -37,7 +37,7 @@
 #include "hb-shaper-impl.hh"
 
 #include "hb-ot-shape.hh"
-#include "hb-ot-shape-complex.hh"
+#include "hb-ot-shaper.hh"
 #include "hb-ot-shape-fallback.hh"
 #include "hb-ot-shape-normalize.hh"
 
@@ -53,11 +53,11 @@ _hb_codepoint_is_regional_indicator (hb_codepoint_t u)
 
 #ifndef HB_NO_AAT_SHAPE
 static inline bool
-_hb_apply_morx (hb_face_t *face, const hb_segment_properties_t *props)
+_hb_apply_morx (hb_face_t *face, const hb_segment_properties_t &props)
 {
   /* https://github.com/harfbuzz/harfbuzz/issues/2124 */
   return hb_aat_layout_has_substitution (face) &&
-	 (HB_DIRECTION_IS_HORIZONTAL (props->direction) || !hb_ot_layout_has_substitution (face));
+	 (HB_DIRECTION_IS_HORIZONTAL (props.direction) || !hb_ot_layout_has_substitution (face));
 }
 #endif
 
@@ -77,23 +77,23 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
 			      unsigned int                    num_user_features);
 
 hb_ot_shape_planner_t::hb_ot_shape_planner_t (hb_face_t                     *face,
-					      const hb_segment_properties_t *props) :
+					      const hb_segment_properties_t &props) :
 						face (face),
-						props (*props),
+						props (props),
 						map (face, props),
 						aat_map (face, props)
 #ifndef HB_NO_AAT_SHAPE
 						, apply_morx (_hb_apply_morx (face, props))
 #endif
 {
-  shaper = hb_ot_shape_complex_categorize (this);
+  shaper = hb_ot_shaper_categorize (this);
 
   script_zero_marks = shaper->zero_width_marks != HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE;
   script_fallback_mark_positioning = shaper->fallback_position;
 
   /* https://github.com/harfbuzz/harfbuzz/issues/1528 */
-  if (apply_morx && shaper != &_hb_ot_complex_shaper_default)
-    shaper = &_hb_ot_complex_shaper_dumber;
+  if (apply_morx && shaper != &_hb_ot_shaper_default)
+    shaper = &_hb_ot_shaper_dumber;
 }
 
 void
@@ -225,7 +225,7 @@ hb_ot_shape_plan_t::init0 (hb_face_t                     *face,
 #endif
 
   hb_ot_shape_planner_t planner (face,
-				 &key->props);
+				 key->props);
 
   hb_ot_shape_collect_features (&planner,
 				key->user_features,
@@ -927,7 +927,7 @@ hb_ot_substitute_default (const hb_ot_shape_context_t *c)
 }
 
 static inline void
-hb_ot_substitute_complex (const hb_ot_shape_context_t *c)
+hb_ot_substitute_plan (const hb_ot_shape_context_t *c)
 {
   hb_buffer_t *buffer = c->buffer;
 
@@ -946,7 +946,7 @@ hb_ot_substitute_pre (const hb_ot_shape_context_t *c)
 
   _hb_buffer_allocate_gsubgpos_vars (c->buffer);
 
-  hb_ot_substitute_complex (c);
+  hb_ot_substitute_plan (c);
 
 #ifndef HB_NO_AAT_SHAPE
   if (c->plan->apply_morx && c->plan->apply_gpos)
@@ -1039,7 +1039,7 @@ hb_ot_position_default (const hb_ot_shape_context_t *c)
 }
 
 static inline void
-hb_ot_position_complex (const hb_ot_shape_context_t *c)
+hb_ot_position_plan (const hb_ot_shape_context_t *c)
 {
   unsigned int count = c->buffer->len;
   hb_glyph_info_t *info = c->buffer->info;
@@ -1124,7 +1124,7 @@ hb_ot_position (const hb_ot_shape_context_t *c)
 
   hb_ot_position_default (c);
 
-  hb_ot_position_complex (c);
+  hb_ot_position_plan (c);
 
   if (HB_DIRECTION_IS_BACKWARD (c->buffer->props.direction))
     hb_buffer_reverse (c->buffer);
@@ -1141,6 +1141,18 @@ hb_propagate_flags (hb_buffer_t *buffer)
   if (!(buffer->scratch_flags & HB_BUFFER_SCRATCH_FLAG_HAS_GLYPH_FLAGS))
     return;
 
+  /* If we are producing SAFE_TO_INSERT_TATWEEL, then do two things:
+   *
+   * - If the places that the Arabic shaper marked as SAFE_TO_INSERT_TATWEEL,
+   *   are UNSAFE_TO_BREAK, then clear the SAFE_TO_INSERT_TATWEEL,
+   * - Any place that is SAFE_TO_INSERT_TATWEEL, is also now UNSAFE_TO_BREAK.
+   *
+   * We couldn't make this interaction earlier. It has to be done here.
+   */
+  bool flip_tatweel = buffer->flags & HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL;
+
+  bool clear_concat = (buffer->flags & HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT) == 0;
+
   hb_glyph_info_t *info = buffer->info;
 
   foreach_cluster (buffer, start, end)
@@ -1148,9 +1160,20 @@ hb_propagate_flags (hb_buffer_t *buffer)
     unsigned int mask = 0;
     for (unsigned int i = start; i < end; i++)
       mask |= info[i].mask & HB_GLYPH_FLAG_DEFINED;
-    if (mask)
-      for (unsigned int i = start; i < end; i++)
-	info[i].mask |= mask;
+
+    if (flip_tatweel)
+    {
+      if (mask & HB_GLYPH_FLAG_UNSAFE_TO_BREAK)
+	mask &= ~HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL;
+      if (mask & HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL)
+	mask |= HB_GLYPH_FLAG_UNSAFE_TO_BREAK | HB_GLYPH_FLAG_UNSAFE_TO_CONCAT;
+    }
+
+    if (clear_concat)
+	mask &= ~HB_GLYPH_FLAG_UNSAFE_TO_CONCAT;
+
+    for (unsigned int i = start; i < end; i++)
+      info[i].mask = mask;
   }
 }
 
@@ -1159,8 +1182,6 @@ hb_propagate_flags (hb_buffer_t *buffer)
 static void
 hb_ot_shape_internal (hb_ot_shape_context_t *c)
 {
-  c->buffer->enter ();
-
   /* Save the original direction, we use it later. */
   c->target_direction = c->buffer->props.direction;
 

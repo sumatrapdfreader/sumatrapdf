@@ -214,6 +214,8 @@ lang_matches (const char *lang_str,
 	      const char *spec,
 	      unsigned    spec_len)
 {
+  /* Same as hb_language_matches(); duplicated. */
+
   if (likely ((unsigned) (limit - lang_str) < spec_len))
     return false;
 
@@ -263,15 +265,19 @@ hb_ot_tags_from_language (const char   *lang_str,
 			  unsigned int *count,
 			  hb_tag_t     *tags)
 {
-  const char *s;
 
+#ifndef HB_NO_LANGUAGE_LONG
   /* Check for matches of multiple subtags. */
   if (hb_ot_tags_from_complex_language (lang_str, limit, count, tags))
     return;
+#endif
 
   /* Find a language matching in the first component. */
-  s = strchr (lang_str, '-');
+#ifndef HB_NO_LANGUAGE_LONG
+  const char *s; s = strchr (lang_str, '-');
+#endif
   {
+#ifndef HB_NO_LANGUAGE_LONG
     if (s && limit - lang_str >= 6)
     {
       const char *extlang_end = strchr (s + 1, '-');
@@ -280,6 +286,7 @@ hb_ot_tags_from_language (const char   *lang_str,
 	  ISALPHA (s[1]))
 	lang_str = s + 1;
     }
+#endif
     const LangTag *ot_languages = nullptr;
     unsigned ot_languages_len = 0;
     const char *dash = strchr (lang_str, '-');
@@ -289,15 +296,17 @@ hb_ot_tags_from_language (const char   *lang_str,
       ot_languages = ot_languages2;
       ot_languages_len = ARRAY_LENGTH (ot_languages2);
     }
+#ifndef HB_NO_LANGUAGE_LONG
     else if (first_len == 3)
     {
       ot_languages = ot_languages3;
       ot_languages_len = ARRAY_LENGTH (ot_languages3);
     }
+#endif
 
     hb_tag_t lang_tag = hb_tag_from_string (lang_str, first_len);
 
-    static unsigned last_tag_idx; /* Poor man's cache. */
+    static hb_atomic_int_t last_tag_idx; /* Poor man's cache. */
     unsigned tag_idx = last_tag_idx;
 
     if (likely (tag_idx < ot_languages_len && ot_languages[tag_idx].language == lang_tag) ||
@@ -320,6 +329,7 @@ hb_ot_tags_from_language (const char   *lang_str,
     }
   }
 
+#ifndef HB_NO_LANGUAGE_LONG
   if (!s)
     s = lang_str + strlen (lang_str);
   if (s - lang_str == 3) {
@@ -328,6 +338,7 @@ hb_ot_tags_from_language (const char   *lang_str,
     *count = 1;
     return;
   }
+#endif
 
   *count = 0;
 }
@@ -472,11 +483,13 @@ hb_ot_tag_to_language (hb_tag_t tag)
   if (tag == HB_OT_TAG_DEFAULT_LANGUAGE)
     return nullptr;
 
+#ifndef HB_NO_LANGUAGE_LONG
   {
     hb_language_t disambiguated_tag = hb_ot_ambiguous_tag_to_language (tag);
     if (disambiguated_tag != HB_LANGUAGE_INVALID)
       return disambiguated_tag;
   }
+#endif
 
   char buf[4];
   for (i = 0; i < ARRAY_LENGTH (ot_languages2); i++)
@@ -485,12 +498,14 @@ hb_ot_tag_to_language (hb_tag_t tag)
       hb_tag_to_string (ot_languages2[i].language, buf);
       return hb_language_from_string (buf, 2);
     }
+#ifndef HB_NO_LANGUAGE_LONG
   for (i = 0; i < ARRAY_LENGTH (ot_languages3); i++)
     if (ot_languages3[i].tag == tag)
     {
       hb_tag_to_string (ot_languages3[i].language, buf);
       return hb_language_from_string (buf, 3);
     }
+#endif
 
   /* Return a custom language in the form of "x-hbot-AABBCCDD".
    * If it's three letters long, also guess it's ISO 639-3 and lower-case and
@@ -596,6 +611,7 @@ test_langs_sorted ()
       abort();
     }
   }
+#ifndef HB_NO_LANGUAGE_LONG
   for (unsigned int i = 1; i < ARRAY_LENGTH (ot_languages3); i++)
   {
     int c = ot_languages3[i].cmp (&ot_languages3[i - 1]);
@@ -606,6 +622,7 @@ test_langs_sorted ()
       abort();
     }
   }
+#endif
 }
 
 int

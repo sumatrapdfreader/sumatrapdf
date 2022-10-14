@@ -226,7 +226,7 @@
   </section>
   
 
-  <section>
+  <section id="what-does-harfbuzz-do">
     <title>What does HarfBuzz do?</title>
     <para>
       HarfBuzz provides text shaping through a cross-platform
@@ -237,8 +237,7 @@
       <listitem>
 	<para>
 	  Indic (covering Devanagari, Bengali, Gujarati,
-	  Gurmukhi, Kannada, Malayalam, Oriya, Tamil, Telugu, and
-	  Sinhala)
+	  Gurmukhi, Kannada, Malayalam, Oriya, Tamil, and Telugu)
 	</para>
       </listitem>
       <listitem>

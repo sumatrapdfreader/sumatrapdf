@@ -1,6 +1,6 @@
 project('harfbuzz', 'c', 'cpp',
   meson_version: '>= 0.55.0',
-  version: '4.3.0',
+  version: '5.3.0',
   default_options: [
     'cpp_rtti=false',       # Just to support msvc, we are passing -fno-exceptions also anyway
     'cpp_std=c++11',
@@ -21,7 +21,7 @@ pkgmod = import('pkgconfig')
 cpp = meson.get_compiler('cpp')
 null_dep = dependency('', required: false)
 
-if cpp.get_id() == 'msvc'
+if cpp.get_argument_syntax() == 'msvc'
   # Ignore several spurious warnings for things HarfBuzz does very commonly.
   # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
   # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
@@ -83,25 +83,39 @@ check_funcs = [
 
 m_dep = cpp.find_library('m', required: false)
 
-# https://github.com/harfbuzz/harfbuzz/pull/2498
-freetype_dep = dependency(cpp.get_argument_syntax() == 'msvc' ? 'freetype' : 'freetype2',
-                          required: get_option('freetype'),
-                          default_options: ['harfbuzz=disabled'])
+
+# Try pkgconfig name
+freetype_dep = dependency('freetype2', required: false)
+if not freetype_dep.found()
+  # Try cmake name
+  freetype_dep = dependency('freetype', required: false)
+endif
+if not freetype_dep.found()
+  # Subproject fallback, `allow_fallback: true` means the fallback will be
+  # tried even if the freetype option is set to `auto`.
+  freetype_dep = dependency('freetype2',
+                            required: get_option('freetype'),
+                            default_options: ['harfbuzz=disabled'],
+                            allow_fallback: true)
+endif
 
 glib_dep = dependency('glib-2.0', required: get_option('glib'))
 gobject_dep = dependency('gobject-2.0', required: get_option('gobject'))
 graphite2_dep = dependency('graphite2', required: get_option('graphite2'))
 graphite_dep = dependency('graphite2', required: get_option('graphite'))
 
-if cpp.get_argument_syntax() == 'msvc'
+# Try pkgconfig name
+icu_dep = dependency('icu-uc', required: false)
+if not icu_dep.found()
+  # Try cmake name
   icu_dep = dependency('ICU',
-                       required: get_option('icu'),
+                       required: false,
                        components: 'uc',
                        method: 'cmake')
-else
-  icu_dep = dependency('icu-uc',
-                       required: get_option('icu'),
-                       method: 'pkg-config')
+endif
+if not icu_dep.found()
+  # Subproject fallback if icu option is enabled
+  icu_dep = dependency('icu-uc', required: get_option('icu'))
 endif
 
 if icu_dep.found() and icu_dep.type_name() == 'pkgconfig'
@@ -118,7 +132,7 @@ if not get_option('cairo').disabled()
   cairo_ft_dep = dependency('cairo-ft', required: false)
 
   if (not cairo_dep.found() and
-      cpp.get_id() == 'msvc' and
+      cpp.get_argument_syntax() == 'msvc' and
       cpp.has_header('cairo.h'))
     cairo_dep = cpp.find_library('cairo', required: false)
     if cairo_dep.found() and cpp.has_function('cairo_ft_font_face_create_for_ft_face',
@@ -198,6 +212,7 @@ if freetype_dep.found()
     ['FT_Get_Var_Blend_Coordinates', {'deps': freetype_dep}],
     ['FT_Set_Var_Blend_Coordinates', {'deps': freetype_dep}],
     ['FT_Done_MM_Var', {'deps': freetype_dep}],
+    ['FT_Get_Transform', {'deps': freetype_dep}],
   ]
 
   if freetype_dep.type_name() == 'internal'
@@ -232,17 +247,12 @@ if host_machine.system() == 'windows' and not get_option('gdi').disabled()
 endif
 
 # DirectWrite (Windows)
-directwrite_dep = null_dep
 if host_machine.system() == 'windows' and not get_option('directwrite').disabled()
   if get_option('directwrite').enabled() and not cpp.has_header('dwrite_1.h')
     error('DirectWrite was enabled explicitly, but required header is missing.')
   endif
 
-  directwrite_dep = cpp.find_library('dwrite', required: get_option('directwrite'))
-
-  if directwrite_dep.found()
-    conf.set('HAVE_DIRECTWRITE', 1)
-  endif
+  conf.set('HAVE_DIRECTWRITE', 1)
 endif
 
 # CoreText (macOS)

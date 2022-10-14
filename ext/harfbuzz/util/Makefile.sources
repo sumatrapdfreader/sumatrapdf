@@ -28,6 +28,7 @@ HB_SHAPE_sources = \
 	shape-consumer.hh \
 	shape-format.hh \
 	shape-options.hh \
+	shape-output.hh \
 	text-options.hh \
 	$(NULL)
 

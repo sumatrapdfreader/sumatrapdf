@@ -10,8 +10,7 @@
     HarfBuzz includes several auxiliary components in addition to the
     main APIs. These include a set of command-line tools, a set of
     lower-level APIs for common data types that may be of interest to
-    client programs, and an embedded library for working with
-    Unicode Character Database (UCD) data.
+    client programs.
   </para>
   
   <section id="utilities-command-line-tools">
@@ -213,31 +212,6 @@
     <para>
       Finally, HarfBuzz also includes data type for Booleans, bit
       masks, and other simple types.
-    </para>
-  </section>
-
-  <section id="utilities-ucdn">
-    <title>UCDN</title>
-    <para>
-      HarfBuzz includes a copy of the <ulink
-      url="https://github.com/grigorig/ucdn">UCDN</ulink> (Unicode
-      Database and Normalization) library, which provides functions
-      for accessing basic Unicode character properties, performing
-      canonical composition, and performing both canonical and
-      compatibility decomposition.
-    </para>
-    <para>
-      Currently, UCDN supports direct queries for several more character
-      properties than HarfBuzz's built-in set of Unicode functions
-      does, such as the BiDirectional Class, East Asian Width, Paired
-      Bracket and Resolved Linebreak properties. If you need to access
-      more properties than HarfBuzz's internal implementation
-      provides, using the built-in UCDN functions may be a useful solution.
-    </para>
-    <para>
-      The built-in UCDN functions are compiled by default when
-      building HarfBuzz from source, but this can be disabled with a
-      compile-time switch.
     </para>
   </section>
 

@@ -260,18 +260,18 @@
       </listitem>
     </itemizedlist>
     <para>
-      You can fetch the font-functions configuration for a font object
-      by calling <function>hb_font_get_font_funcs()</function>:
+      You can create new font-functions by calling
+      <function>hb_font_funcs_create()</function>:
     </para>
     <programlisting language="C">
-      hb_font_funcs_t *ffunctions;
-      ffunctions = hb_font_get_font_funcs (font);
+      hb_font_funcs_t *ffunctions = hb_font_funcs_create ();
+      hb_font_set_funcs (font, ffunctions, font_data, destroy);
     </programlisting>
     <para>
-      The individual methods can each be replaced with their own setter
+      The individual methods can each be set with their own setter
       function, such as
-      <function>hb_font_funcs_set_nominal_glyph_func(*ffunctions,
-      func, *user_data, destroy)</function>. 
+      <function>hb_font_funcs_set_nominal_glyph_func(ffunctions,
+      func, user_data, destroy)</function>.
     </para>
     <para>
       Font-functions structures can be reused for multiple font
@@ -291,6 +291,20 @@
       programs from changing the configuration and introducing
       inconsistencies and errors downstream.
     </para>
+    <para>
+      To override only some functions while using the default implementation
+      for the others, you will need to create a sub-font. By default, the
+      sub-font uses the font functions of its parent except for the functions
+      that were explicitly set. The following code will override only the
+      <function>hb_font_get_nominal_glyph_func_t</function> for the sub-font:
+    </para>
+    <programlisting language="C">
+      hb_font_t *subfont = hb_font_create_sub_font (font)
+      hb_font_funcs_t *ffunctions = hb_font_funcs_create ();
+      hb_font_funcs_set_nominal_glyph_func (ffunctions, func, user_data, destroy);
+      hb_font_set_funcs (subfont, ffunctions, font_data, destroy);
+      hb_font_funcs_destroy (ffunctions);
+    </programlisting>
   </section>
 
   <section id="fonts-and-faces-native-opentype">

@@ -23,9 +23,8 @@
       Release notes are posted with each new release to provide an
       overview of the changes. The project <ulink url="https://github.com/harfbuzz/harfbuzz/issues">tracks bug
       reports and other issues</ulink> on GitHub. Discussion and
-      questions are welcome on the <ulink
-      url="http://freedesktop.org/mailman/listinfo/harfbuzz/">HarfBuzz
-      mailing list</ulink>.
+      questions are welcome on <ulink
+      url="https://github.com/harfbuzz/harfbuzz/discussions">GitHub</ulink> as well.
     </para>
     <para>
       The API included in the <filename
@@ -239,26 +238,6 @@
 	</varlistentry>
 	
 	<varlistentry>
-	  <term><command>-Dfontconfig=enabled</command></term>
-	  <listitem>
-	    <para>
-	      Use <ulink url="https://www.freedesktop.org/wiki/Software/fontconfig/">Fontconfig</ulink>. <emphasis>(Default = auto)</emphasis>
-	    </para>
-	    <para>
-	      This option enables or disables usage of the Fontconfig
-	      library, which provides font-matching functions and
-	      provides access to font properties. The default setting
-	      is to check for the presence of Fontconfig and, if it is
-	      found, build with Fontconfig support.
-	    </para>
-	    <para>
-	      Note: Fontconfig is used only by the HarfBuzz
-	      command-line utilities, and not by the HarfBuzz library.
-	    </para>
-	  </listitem>
-	</varlistentry>
-	
-	<varlistentry>
 	  <term><command>-Dicu=enabled</command></term>
 	  <listitem>
 	    <para>
@@ -356,7 +335,7 @@
 	  <term><command>-Ddocs=enabled</command></term>
 	  <listitem>
 	    <para>
-	      Use <ulink url="https://www.gtk.org/gtk-doc/">GTK-Doc</ulink>. <emphasis>(Default = no)</emphasis>
+	      Use <ulink url="https://github.com/GNOME/gtk-doc">GTK-Doc</ulink>. <emphasis>(Default = no)</emphasis>
 	    </para>
 	    <para>
 	      This option enables the building of the documentation.

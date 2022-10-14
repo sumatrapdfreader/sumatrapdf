@@ -100,13 +100,14 @@ This is very rarely what you need.  Make sure you understand exactly what you
 are doing.
 
 Defining `HB_NO_FALLBACK_SHAPE` however is pretty harmless.  That removes the
-(unused) "fallback" shaper.
+(unused) "fallback" shaper.  This is defined by the `HB_TINY` profile already
+(more below).
 
 
 ## Thread-safety
 
 By default HarfBuzz builds as a thread-safe library.  The exception is that
-the `HB_TINY` predefined configuring (more below) disables thread-safety.
+the `HB_TINY` predefined configuration (more below) disables thread-safety.
 
 If you do *not* need thread-safety in the library (eg. you always call into
 HarfBuzz from the same thread), you can disable thread-safety by defining
@@ -140,7 +141,7 @@ configurations from the command-line.
 However, configuration can still be overridden from a file.  To do that, add your
 override instructions (mostly `undef` instructions) to a header file and define
 the macro `HB_CONFIG_OVERRIDE_H` to the string containing to that header file's
-name.  HarfBuzz will then include that file at appropriate right place during
+name.  HarfBuzz will then include that file at the appropriate place during
 configuration.
 
 Up until HarfBuzz 3.1.2 the the configuration override header file's name was
@@ -154,4 +155,4 @@ Note that the config option `HB_NO_CFF`, which is enabled by `HB_LEAN` and
 `HB_TINY` does *not* mean that the resulting library won't work with CFF fonts.
 The library can shape valid CFF fonts just fine, with or without this option.
 This option disables (among other things) the code to calculate glyph extents
-for CFF fonts.
+for CFF fonts, which many clients might not need.

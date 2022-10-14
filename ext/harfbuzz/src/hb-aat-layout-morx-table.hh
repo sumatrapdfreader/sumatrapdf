@@ -123,7 +123,7 @@ struct RearrangementSubtable
 	bool reverse_l = 3 == (m >> 4);
 	bool reverse_r = 3 == (m & 0x0F);
 
-	if (end - start >= l + r)
+	if (end - start >= l + r && end-start <= HB_MAX_CONTEXT_LENGTH)
 	{
 	  buffer->merge_clusters (start, hb_min (buffer->idx + 1, buffer->len));
 	  buffer->merge_clusters (start, end);
@@ -980,6 +980,15 @@ struct Chain
 	  setting = HB_AAT_LAYOUT_FEATURE_SELECTOR_LOWER_CASE_SMALL_CAPS;
 	  goto retry;
 	}
+#ifndef HB_NO_AAT
+	else if (type == HB_AAT_LAYOUT_FEATURE_TYPE_LANGUAGE_TAG_TYPE && setting &&
+		 /* TODO: Rudimentary language matching. */
+		 hb_language_matches (map->face->table.ltag->get_language (setting - 1), map->props.language))
+	{
+	  flags &= feature.disableFlags;
+	  flags |= feature.enableFlags;
+	}
+#endif
       }
     }
     return flags;

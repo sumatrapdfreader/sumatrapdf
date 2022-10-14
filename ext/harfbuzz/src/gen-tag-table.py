@@ -944,6 +944,8 @@ def same_tag (bcp_47_tag, ot_tags):
 	return len (bcp_47_tag) == 3 and len (ot_tags) == 1 and bcp_47_tag == ot_tags[0].lower ()
 
 for language_len in (2, 3):
+	if language_len == 3:
+		print ('#ifndef HB_NO_LANGUAGE_LONG')
 	print ('static const LangTag ot_languages%d[] = {' % language_len)
 	for language, tags in sorted (ot.from_bcp_47.items ()):
 		if language == '' or '-' in language:
@@ -971,6 +973,8 @@ for language_len in (2, 3):
 					write ('%s%s' % (name if len (name) > len (ot_name) else ot_name, scope))
 			print (' */')
 	print ('};')
+	if language_len == 3:
+		print ('#endif')
 	print ()
 
 print ('/**')
@@ -987,7 +991,7 @@ print (' * Converts a multi-subtag BCP 47 language tag to language tags.')
 print (' *')
 print (' * Return value: Whether any language systems were retrieved.')
 print (' **/')
-print ('static bool')
+print ('static inline bool')
 print ('hb_ot_tags_from_complex_language (const char   *lang_str,')
 print ('\t\t\t\t  const char   *limit,')
 print ('\t\t\t\t  unsigned int *count /* IN/OUT */,')
@@ -1130,7 +1134,7 @@ print (' *')
 print (' * Return value: The #hb_language_t corresponding to the BCP 47 language tag,')
 print (' * or #HB_LANGUAGE_INVALID if @tag is not ambiguous.')
 print (' **/')
-print ('static hb_language_t')
+print ('static inline hb_language_t')
 print ('hb_ot_ambiguous_tag_to_language (hb_tag_t tag)')
 print ('{')
 print ('  switch (tag)')

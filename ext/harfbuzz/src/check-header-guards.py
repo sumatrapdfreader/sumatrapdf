@@ -2,19 +2,20 @@
 
 import sys, os, re
 
-os.chdir (os.getenv ('srcdir', os.path.dirname (__file__)))
+srcdir = os.getenv ('srcdir', os.path.dirname (__file__))
+base_srcdir = os.getenv ('base_srcdir', srcdir)
 
-def removeprefix(s, prefix):
-    if s.startswith(prefix):
-        return s[len(prefix):]
-    else:
-        return s[:]
+os.chdir (srcdir)
+
+def removeprefix(s):
+	abs_path = os.path.join(base_srcdir, s)
+	return os.path.relpath(abs_path, srcdir)
 
 
 HBHEADERS = [os.path.basename (x) for x in os.getenv ('HBHEADERS', '').split ()] or \
 	[x for x in os.listdir ('.') if x.startswith ('hb') and x.endswith ('.h')]
 HBSOURCES = [
-    removeprefix(x, 'src%s' % os.path.sep) for x in os.getenv ('HBSOURCES', '').split ()
+    removeprefix(x) for x in os.getenv ('HBSOURCES', '').split ()
 ] or [
     x for x in os.listdir ('.') if x.startswith ('hb') and x.endswith (('.cc', '.hh'))
 ]

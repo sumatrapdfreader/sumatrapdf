@@ -31,7 +31,6 @@
 #include "hb-set.hh"
 #include "hb-ot-layout-common.hh"
 
-
 template <typename T>
 struct array_iter_t : hb_iter_with_fallback_t<array_iter_t<T>, T&>
 {
@@ -226,7 +225,7 @@ main (int argc, char **argv)
   test_iterable<hb_sorted_array_t<const int>> ();
   test_iterable<hb_vector_t<float>> ();
   test_iterable<hb_set_t> ();
-  test_iterable<OT::Coverage> ();
+  test_iterable<OT::Array16Of<OT::HBUINT16>> ();
 
   test_iterator (hb_zip (st, v));
   test_iterator_non_default_constructable (hb_enumerate (st));

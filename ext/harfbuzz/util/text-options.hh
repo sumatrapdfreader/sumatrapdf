@@ -127,7 +127,7 @@ encode_unicodes (const char *unicodes,
 		 GString    *gs,
 		 GError    **error)
 {
-#define DELIMITERS "<+->{},;&#\\xXuUnNiI\n\t\v\f\r "
+#define DELIMITERS "<+-|>{},;&#\\xXuUnNiI\n\t\v\f\r "
 
   char *s = (char *) unicodes;
   char *p;

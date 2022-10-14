@@ -1,15 +1,1 @@
-This is HarfBuzz, a text shaping library.
-
-For bug reports, mailing list, and other information please visit:
-
-  http://harfbuzz.org/
-
-For license information, see https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
-
-For build information, see https://github.com/harfbuzz/harfbuzz/blob/main/BUILD.md
-
-For custom configurations, see https://github.com/harfbuzz/harfbuzz/blob/main/CONFIG.md
-
-For test execution, see https://github.com/harfbuzz/harfbuzz/blob/main/TESTING.md
-
-Documentation: https://harfbuzz.github.io
+README.md

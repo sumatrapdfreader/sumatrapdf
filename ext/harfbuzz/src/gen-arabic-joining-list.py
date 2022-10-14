@@ -94,13 +94,13 @@ for h in headers:
 		print (" * %s" % (l.strip ()))
 print (" */")
 print ()
-print ("#ifndef HB_OT_SHAPE_COMPLEX_ARABIC_JOINING_LIST_HH")
-print ("#define HB_OT_SHAPE_COMPLEX_ARABIC_JOINING_LIST_HH")
+print ("#ifndef HB_OT_SHAPER_ARABIC_JOINING_LIST_HH")
+print ("#define HB_OT_SHAPER_ARABIC_JOINING_LIST_HH")
 print ()
 
 print_has_arabic_joining (read (files[1]), read_joining_uu (files[0]))
 
 print ()
-print ("#endif /* HB_OT_SHAPE_COMPLEX_ARABIC_JOINING_LIST_HH */")
+print ("#endif /* HB_OT_SHAPER_ARABIC_JOINING_LIST_HH */")
 print ()
 print ("/* == End of generated function == */")

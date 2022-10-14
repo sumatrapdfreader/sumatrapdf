@@ -175,11 +175,11 @@ struct biimage_t
     for (unsigned int i = 1; i < 8; i++)
       if (freq[bg] < freq[i])
 	bg = i;
-    fg = 0;
-    for (unsigned int i = 1; i < 8; i++)
-      if (i != bg && freq[fg] < freq[i])
+    fg = 8;
+    for (unsigned int i = 0; i < 8; i++)
+      if (i != bg && (fg == 8 || freq[fg] < freq[i]))
 	fg = i;
-    if (fg == bg || freq[fg] == 0) {
+    if (freq[fg] == 0) {
       fg = bg;
       unicolor = true;
     }
@@ -196,11 +196,11 @@ struct biimage_t
     color_t bgc = color_t::from_ansi (bg);
     color_t fgc = color_t::from_ansi (fg);
     color_diff_t diff = fgc.diff (bgc);
-    int dd = diff.dot (diff);
+    double dd = sqrt (diff.dot (diff));
     for (unsigned int y = 0; y < height; y++)
       for (unsigned int x = 0; x < width; x++) {
-	int d = diff.dot (image (x, y).diff (bgc));
-	(*this)(x, y) = d < 0 ? 0 : d > dd ? 255 : lround (d * 255. / dd);
+	double d = sqrt (diff.dot (image (x, y).diff (bgc)));
+	(*this)(x, y) = d <= 0 ? 0 : d >= dd ? 255 : lround (d / dd * 255.);
       }
   }
 
@@ -356,13 +356,13 @@ block_best (const biimage_t &bi, bool *inverse)
 	case 1:  c = "▟"; inv = true;  break;
 	case 2:  c = "▙"; inv = true;  break;
 	case 4:  c = "▖"; inv = false; break;
+	case 6:  c = "▞"; inv = false; break;
+	case 7:  c = "▛"; inv = false; break;
 	case 8:  c = "▗"; inv = false; break;
 	case 9:  c = "▚"; inv = false; break;
-	case 6:  c = "▞"; inv = false; break;
-	case 7:  c = "▜"; inv = true;  break;
-	case 11: c = "▜"; inv = true;  break;
-	case 13: c = "▙"; inv = true;  break;
-	case 14: c = "▟"; inv = true;  break;
+	case 11: c = "▜"; inv = false; break;
+	case 13: c = "▙"; inv = false; break;
+	case 14: c = "▟"; inv = false; break;
       }
       if (c) {
 	score = qs;

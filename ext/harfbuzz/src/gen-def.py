@@ -19,7 +19,9 @@ symbols = sorted (re.findall (r"^hb_\w+(?= \()", "\n".join (headers_content), re
 if '--experimental-api' not in sys.argv:
 	# Move these to harfbuzz-sections.txt when got stable
 	experimental_symbols = \
-"""hb_subset_repack_or_fail""".splitlines ()
+"""hb_subset_repack_or_fail
+hb_subset_input_pin_axis_location
+hb_subset_input_pin_axis_to_default""".splitlines ()
 	symbols = [x for x in symbols if x not in experimental_symbols]
 symbols = "\n".join (symbols)
 

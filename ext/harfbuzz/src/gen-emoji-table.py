@@ -65,7 +65,7 @@ for typ, s in ranges.items():
 		for i in range(start, end + 1):
 			arr[i] = 1
 
-	sol = packTab.pack_table(arr, 0, compression=3)
+	sol = packTab.pack_table(arr, 0, compression=9)
 	code = packTab.Code('_hb_emoji')
 	sol.genCode(code, 'is_'+typ)
 	code.print_c(linkage='static inline')
@@ -91,8 +91,8 @@ with open(sys.argv[2]) as f:
             continue
         sequences.append(line)
 
-with open("../test/shaping/data/in-house/tests/emoji-clusters.tests", "w") as f:
+with open("../test/shape/data/in-house/tests/emoji-clusters.tests", "w") as f:
     for sequence in sequences:
-        f.write("../fonts/AdobeBlank2.ttf:--no-glyph-names --no-positions --font-funcs=ot")
-        f.write(":" + ",".join(sequence))
-        f.write(":[" + "|".join("1=0" for c in sequence) + "]\n")
+        f.write("../fonts/AdobeBlank2.ttf;--no-glyph-names --no-positions --font-funcs=ot")
+        f.write(";" + ",".join(sequence))
+        f.write(";[" + "|".join("1=0" for c in sequence) + "]\n")

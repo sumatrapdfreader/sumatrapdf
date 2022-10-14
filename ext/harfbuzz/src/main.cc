@@ -492,12 +492,12 @@ print_layout_info_using_private_api (hb_blob_t *blob)
 		  gdef.has_glyph_classes () ? "" : "no ");
 	printf ("    Has %smark attachment types\n",
 		  gdef.has_mark_attachment_types () ? "" : "no ");
-	printf ("    Has %sattach points\n",
-		  gdef.has_attach_points () ? "" : "no ");
+	printf ("    Has %sattach list\n",
+		  gdef.has_attach_list () ? "" : "no ");
 	printf ("    Has %slig carets\n",
 		  gdef.has_lig_carets () ? "" : "no ");
-	printf ("    Has %smark sets\n",
-		  gdef.has_mark_sets () ? "" : "no ");
+	printf ("    Has %smark glyph sets\n",
+		  gdef.has_mark_glyph_sets () ? "" : "no ");
 	break;
 	}
       }

@@ -5,7 +5,7 @@
 It creates ``_hb_preprocess_text_vowel_constraints``, which inserts dotted
 circles into sequences prohibited by the USE script development spec.
 This function should be used as the ``preprocess_text`` of an
-``hb_ot_complex_shaper_t``.
+``hb_ot_shaper_t``.
 
 usage: ./gen-vowel-constraints.py ms-use/IndicShapingInvalidCluster.txt Scripts.txt
 
@@ -166,7 +166,7 @@ print ('#include "hb.hh"')
 print ()
 print ('#ifndef HB_NO_OT_SHAPE')
 print ()
-print ('#include "hb-ot-shape-complex-vowel-constraints.hh"')
+print ('#include "hb-ot-shaper-vowel-constraints.hh"')
 print ()
 print ('static void')
 print ('_output_dotted_circle (hb_buffer_t *buffer)')
@@ -188,7 +188,7 @@ print ('_hb_preprocess_text_vowel_constraints (const hb_ot_shape_plan_t *plan HB
 print ('\t\t\t\t       hb_buffer_t              *buffer,')
 print ('\t\t\t\t       hb_font_t                *font HB_UNUSED)')
 print ('{')
-print ('#ifdef HB_NO_OT_SHAPE_COMPLEX_VOWEL_CONSTRAINTS')
+print ('#ifdef HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS')
 print ('  return;')
 print ('#endif')
 print ('  if (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE)')

@@ -44,7 +44,9 @@ struct font_options_t : face_options_t
 {
   ~font_options_t ()
   {
+#ifndef HB_NO_VAR
     free (variations);
+#endif
     g_free (font_funcs);
     hb_font_destroy (font);
   }
@@ -54,8 +56,10 @@ struct font_options_t : face_options_t
   void post_parse (GError **error);
 
   hb_bool_t sub_font = false;
+#ifndef HB_NO_VAR
   hb_variation_t *variations = nullptr;
   unsigned int num_variations = 0;
+#endif
   int x_ppem = 0;
   int y_ppem = 0;
   double ptem = 0.;
@@ -102,7 +106,9 @@ font_options_t::post_parse (GError **error)
   int scale_y = (int) scalbnf (font_size_y, subpixel_bits);
   hb_font_set_scale (font, scale_x, scale_y);
 
+#ifndef HB_NO_VAR
   hb_font_set_variations (font, variations, num_variations);
+#endif
 
   void (*set_font_funcs) (hb_font_t *) = nullptr;
   if (!font_funcs)
@@ -152,6 +158,7 @@ font_options_t::post_parse (GError **error)
 }
 
 
+#ifndef HB_NO_VAR
 static gboolean
 parse_variations (const char *name G_GNUC_UNUSED,
 		  const char *arg,
@@ -173,7 +180,7 @@ parse_variations (const char *name G_GNUC_UNUSED,
   p = s;
   do {
     font_opts->num_variations++;
-    p = strchr (p, ',');
+    p = strpbrk (p, ", ");
     if (p)
       p++;
   } while (p);
@@ -186,7 +193,7 @@ parse_variations (const char *name G_GNUC_UNUSED,
   p = s;
   font_opts->num_variations = 0;
   while (p && *p) {
-    char *end = strchr (p, ',');
+    char *end = strpbrk (p, ", ");
     if (hb_variation_from_string (p, end ? end - p : -1, &font_opts->variations[font_opts->num_variations]))
       font_opts->num_variations++;
     p = end ? end + 1 : nullptr;
@@ -194,6 +201,7 @@ parse_variations (const char *name G_GNUC_UNUSED,
 
   return true;
 }
+#endif
 
 static gboolean
 parse_font_size (const char *name G_GNUC_UNUSED,
@@ -292,6 +300,7 @@ font_options_t::add_options (option_parser_t *parser)
 		     this,
 		     false /* We add below. */);
 
+#ifndef HB_NO_VAR
   const gchar *variations_help = "Comma-separated list of font variations\n"
     "\n"
     "    Variations are set globally. The format for specifying variation settings\n"
@@ -314,6 +323,7 @@ font_options_t::add_options (option_parser_t *parser)
 		     "Variations options:",
 		     "Options for font variations used",
 		     this);
+#endif
 }
 
 #endif

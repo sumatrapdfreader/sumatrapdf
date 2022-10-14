@@ -139,6 +139,14 @@ struct hb_serialize_context_t
         objidx = o.objidx;
       }
 #endif
+
+      HB_INTERNAL static int cmp (const void* a, const void* b)
+      {
+        int cmp = ((const link_t*)a)->position - ((const link_t*)b)->position;
+        if (cmp) return cmp;
+
+        return ((const link_t*)a)->objidx - ((const link_t*)b)->objidx;
+      }
     };
 
     char *head;
@@ -315,7 +323,7 @@ struct hb_serialize_context_t
   {
     object_t *obj = current;
     if (unlikely (!obj)) return;
-    if (unlikely (in_error())) return;
+    if (unlikely (in_error() && !only_overflow ())) return;
 
     current = current->next;
     revert (obj->head, obj->tail);
@@ -695,7 +703,7 @@ struct hb_serialize_context_t
     check_assign (off, offset, HB_SERIALIZE_ERROR_OFFSET_OVERFLOW);
   }
 
-  public: /* TODO Make private. */
+  public:
   char *start, *head, *tail, *end;
   unsigned int debug_depth;
   hb_serialize_error_t errors;
@@ -719,9 +727,7 @@ struct hb_serialize_context_t
   hb_vector_t<object_t *> packed;
 
   /* Map view of packed objects. */
-  hb_hashmap_t<const object_t *, objidx_t,
-	       const object_t *, objidx_t,
-	       nullptr, 0> packed_map;
+  hb_hashmap_t<const object_t *, objidx_t> packed_map;
 };
 
 #endif /* HB_SERIALIZE_HH */

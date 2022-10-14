@@ -347,7 +347,7 @@
       <structname>hb_glyph_position_t</structname> structures. 
     </para>
     <para>
-      Your client program only needs to ensure that it coverts
+      Your client program only needs to ensure that it converts
       correctly between HarfBuzz's low-level data types (such as
       <type>hb_position_t</type>) and Windows's corresponding types
       (such as <type>GOFFSET</type> and <type>ABC</type>). Be sure you
@@ -445,7 +445,7 @@
       is slightly lower-level than Core Text, provides
       <ulink url="https://developer.apple.com/documentation/coregraphics/cgfontref"><type>CGFontRef</type></ulink>, which enables access to typeface
       properties, but does not include size information. Core Text's
-      <ulink url="https://developer.apple.com/documentation/coretext/ctfont-q6r"><type>CTFontRef</type></ulink> is analagous to a HarfBuzz font object,
+      <ulink url="https://developer.apple.com/documentation/coretext/ctfont-q6r"><type>CTFontRef</type></ulink> is analogous to a HarfBuzz font object,
       with all of the properties required to render text at a specific
       size and configuration.
       Consequently, a HarfBuzz <type>hb_font_t</type> font object can

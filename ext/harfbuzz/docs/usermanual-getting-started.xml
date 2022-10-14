@@ -6,7 +6,7 @@
 ]>
 <chapter id="getting-started">
   <title>Getting started with HarfBuzz</title>
-  <section>
+  <section id="an-overview-of-the-harfbuzz-shaping-api">
     <title>An overview of the HarfBuzz shaping API</title>
     <para>
       The core of the HarfBuzz shaping API is the function
@@ -51,7 +51,7 @@
 
     <para>
       Although the default <function>hb_shape()</function> function is
-      sufficient for most use cases, a variant is also provide that
+      sufficient for most use cases, a variant is also provided that
       lets you specify which of HarfBuzz's shapers to use on a buffer. 
     </para>
 
@@ -73,7 +73,7 @@
     </para>
   </section>
 
-  <section>
+  <section id="terminology">
     <title>Terminology</title>
     <para>
       
@@ -117,7 +117,7 @@
 	      implements separate shapers for Indic, Arabic, Thai and
 	      Lao, Khmer, Myanmar, Tibetan, Hangul, Hebrew, the
 	      Universal Shaping Engine (USE), and a default shaper for
-	      non-complex scripts. 
+	      scripts with no script-specific shaping model.
 	    </para>
 	  </listitem>
 	</varlistentry>
@@ -201,7 +201,7 @@
   </section>
 
 
-  <section>
+  <section id="a-simple-shaping-example">
     <title>A simple shaping example</title>
 
     <para>
@@ -216,6 +216,7 @@
     </orderedlist>
     <programlisting language="C">
       #include &lt;hb.h&gt;
+
       hb_buffer_t *buf;
       buf = hb_buffer_create();
       hb_buffer_add_utf8(buf, text, -1, 0, -1);
@@ -235,15 +236,14 @@
     <orderedlist numeration="arabic">
       <listitem override="3">
 	<para>
-          Create a face and a font, using FreeType for now.
+          Create a face and a font from a font file.
 	</para>
       </listitem>
     </orderedlist>
     <programlisting language="C">
-      #include &lt;hb-ft.h&gt;
-      FT_New_Face(ft_library, font_path, index, &amp;face);
-      FT_Set_Char_Size(face, 0, 1000, 0, 0);
-      hb_font_t *font = hb_ft_font_create(face);
+      hb_blob_t *blob = hb_blob_create_from_file(filename); /* or hb_blob_create_from_file_or_fail() */
+      hb_face_t *face = hb_face_create(blob, 0);
+      hb_font_t *font = hb_font_create(face);
     </programlisting>
     <orderedlist numeration="arabic">
       <listitem override="4">
@@ -263,6 +263,7 @@
       </listitem>
     </orderedlist>
     <programlisting language="C">
+      unsigned int glyph_count;
       hb_glyph_info_t *glyph_info    = hb_buffer_get_glyph_infos(buf, &amp;glyph_count);
       hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &amp;glyph_count);
     </programlisting>
@@ -274,13 +275,15 @@
       </listitem>
     </orderedlist>
     <programlisting language="C">
-      for (i = 0; i &lt; glyph_count; ++i) {
-          glyphid = glyph_info[i].codepoint;
-          x_offset = glyph_pos[i].x_offset / 64.0;
-          y_offset = glyph_pos[i].y_offset / 64.0;
-          x_advance = glyph_pos[i].x_advance / 64.0;
-          y_advance = glyph_pos[i].y_advance / 64.0;
-          draw_glyph(glyphid, cursor_x + x_offset, cursor_y + y_offset);
+      hb_position_t cursor_x = 0;
+      hb_position_t cursor_y = 0;
+      for (unsigned int i = 0; i &lt; glyph_count; i++) {
+          hb_codepoint_t glyphid  = glyph_info[i].codepoint;
+          hb_position_t x_offset  = glyph_pos[i].x_offset;
+          hb_position_t y_offset  = glyph_pos[i].y_offset;
+          hb_position_t x_advance = glyph_pos[i].x_advance;
+          hb_position_t y_advance = glyph_pos[i].y_advance;
+       /* draw_glyph(glyphid, cursor_x + x_offset, cursor_y + y_offset); */
           cursor_x += x_advance;
           cursor_y += y_advance;
       }
@@ -294,7 +297,9 @@
     </orderedlist>
     <programlisting language="C">
       hb_buffer_destroy(buf);
-      hb_font_destroy(hb_ft_font);
+      hb_font_destroy(font);
+      hb_face_destroy(face);
+      hb_blob_destroy(blob);
     </programlisting>
     
     <para>

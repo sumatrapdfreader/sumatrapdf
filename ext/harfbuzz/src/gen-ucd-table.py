@@ -83,9 +83,9 @@ for line in open(hb_common_h):
     sc_order[i] = tag
     sc_array.append(name)
 
-DEFAULT = 1
-COMPACT = 3
-SLOPPY  = 5
+DEFAULT = 3
+COMPACT = 5
+SLOPPY  = 9
 
 
 logging.info('Generating output...')
