@@ -27,10 +27,14 @@ How to prepare a new release
     make distclean; make devel CC=g++; make multi CC=g++
 
     sh autogen.sh
-    make distclean; ./configure; make
     make distclean; ./configure CC=g++; make
 
   in the cloned repository to test compilation with both gcc and g++.
+
+  Note that it is normally not necessary to test standard C
+  compilation with the `configure`, `meson`, and `cmake` build tools
+  since this is done by the CI process of 'gitlab.freetype.org' for
+  every commit.
 
 . Test C++ compilation for 'freetype-demos' too (using `git clone` as
   above).
@@ -73,13 +77,14 @@ How to prepare a new release
 
     #!/bin/sh
 
-    VERSION=2.10.4
+    VERSION=2.12.0
     SAVANNAH_USER=wl
     SOURCEFORGE_USER=wlemb
+    GPG_KEY_ID=BE6C3AAC63AD8E3F
 
     #####################################################################
 
-    GPG='/usr/bin/gpg --batch --no-tty'
+    GPG="/usr/bin/gpg --batch --no-tty --local-user $GPG_KEY_ID"
 
     version=`echo $VERSION | sed "s/\\.//g"`
 
@@ -177,11 +182,15 @@ How to prepare a new release
   'freetype-web' repository.
 
 . Announce new release on 'freetype-announce@nongnu.org' and to
-  relevant newsgroups.
+  relevant newsgroups.  The text should include
+
+  - SHA256 checksums of all files,
+  - instructions how to verify the bundles using the `.sig` file data,
+  - the PGP public key used to sign the archives.
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2003-2021 by
+Copyright (C) 2003-2022 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

@@ -1,3 +1,84 @@
+CHANGES BETWEEN 2.12.0 and 2.12.1
+
+  I. IMPORTANT BUG FIXES
+
+  - Loading CFF fonts sometimes made FreeType crash (bug introduced in
+    version 2.12.0)
+
+  - Loading  a fully  hinted  TrueType glyph  a  second time  (without
+    caching) sometimes yielded different rendering results if TrueType
+    hinting was active (bug introduced in version 2.12.0).
+
+  - The generation of the pkg-config file `freetype2.pc` was broken if
+    the build was done with cmake (bug introduced in version 2.12.0).
+
+
+  II. MISCELLANEOUS
+
+  - New option `--with-librsvg` for  the `configure` script for better
+    FreeType demo support.
+
+  - The  meson  build  no  longer enforces  both  static  and  dynamic
+    versions of the library by default.
+
+  - The internal  zlib library was  updated to version  1.2.12.  Note,
+    however, that  FreeType is *not* affected  by CVE-2018-25032 since
+    it only does decompression.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.11.1 and 2.12.0
+
+  I. IMPORTANT CHANGES
+
+  - FreeType  now   handles  OT-SVG  fonts,  to   be  controlled  with
+    `FT_CONFIG_OPTION_SVG`  configuration macro.   By default,  it can
+    only load the 'SVG ' table of an OpenType font.  However, by using
+    the `svg-hooks` property of the new 'ot-svg' module it is possible
+    to register an  external SVG rendering engine.   The FreeType demo
+    programs  have been  set  up  to use  'librsvg'  as the  rendering
+    library.
+
+    This work was Moazin Khatti's GSoC 2019 project.
+
+
+  II. MISCELLANEOUS
+
+  - The handling of fonts with an 'sbix' table has been improved.
+
+    - Corrected bitmap offsets.
+
+    - A  new tag  `FT_PARAM_TAG_IGNORE_SBIX` for  `FT_Open_Face` makes
+      FreeType ignore an 'sbix' table in a font, allowing applications
+      to access the font's outline glyphs.
+
+    - `FT_FACE_FLAG_SBIX`  and   `FT_FACE_FLAG_SBIX_OVERLAY`  together
+      with their  corresponding preprocessor macros  `FT_HAS_SBIX` and
+      `FT_HAS_SBIX_OVERLAY` enable applications to treat 'sbix' tables
+      as described in the OpenType specification.
+
+  - The internal 'zlib'  code has been updated to be  in sync with the
+    current 'zlib' version (1.2.11).
+
+  - The  previously internal  load  flag  `FT_LOAD_SBITS_ONLY` is  now
+    public.
+
+  - Some  minor improvements  of the  building systems,  in particular
+    handling of the 'zlib' library (internal vs. external).
+
+  - Support for non-desktop Universal Windows Platform.
+
+  - Various other minor bug and documentation fixes.
+
+  - The `ftdump` demo  program shows more information  for Type1 fonts
+    if option `-n` is given.
+
+  - `ftgrid` can now display embedded bitmap strikes.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.11.0 and 2.11.1
 
   I. IMPORTANT CHANGES
@@ -5449,7 +5530,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright (C) 2000-2021 by
+Copyright (C) 2000-2022 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

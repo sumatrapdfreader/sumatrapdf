@@ -2,7 +2,7 @@
 # meson_options.txt
 #
 
-# Copyright (C) 2020-2021 by
+# Copyright (C) 2020-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -46,8 +46,10 @@ option('tests',
   description: 'Enable FreeType unit and regression tests')
 
 option('zlib',
-  type: 'feature',
-  value: 'auto',
+  type: 'combo',
+  choices: [ 'auto', 'none',
+             'internal', 'external', 'system',
+             'disabled', 'enabled' ],
   description: 'Support reading gzip-compressed font files')
 
 # EOF

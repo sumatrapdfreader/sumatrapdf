@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2005-2021 by
+# Copyright (C) 2005-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -182,7 +182,7 @@ copy_submodule_files ()
   cp $DLG_SRC_DIR/* src/dlg
 }
 
-if test -d ".git"; then
+if test -e ".git"; then
   DLG_INC_DIR=subprojects/dlg/include/dlg
   DLG_SRC_DIR=subprojects/dlg/src/dlg
 
