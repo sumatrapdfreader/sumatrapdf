@@ -1371,19 +1371,8 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 		box->s.layout.y = start_y;
 		box->s.layout.b = start_y;
 
-		switch (box->type)
-		{
-		case BOX_BLOCK:
-			layout_block(ctx, &ld, box->down, box->s.layout.x, &box->s.layout.b, box->s.layout.w);
-			break;
-		case BOX_FLOW:
-			layout_flow(ctx, &ld, box->down, box);
-			break;
-		default:
-			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid box context!");
-		}
-
-		box->s.layout.b = box->down->s.layout.b;
+		assert(box->type == BOX_BLOCK);
+		layout_block(ctx, &ld, box, box->s.layout.x, &box->s.layout.b, box->s.layout.w);
 	}
 	fz_always(ctx)
 	{

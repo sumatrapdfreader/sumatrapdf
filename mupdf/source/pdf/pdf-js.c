@@ -1259,7 +1259,7 @@ void pdf_js_execute(pdf_js *js, const char *name, const char *source, char **res
 
 pdf_js_console *pdf_js_get_console(fz_context *ctx, pdf_document *doc)
 {
-	return doc->js ? doc->js->console : NULL;
+	return (doc && doc->js) ? doc->js->console : NULL;
 }
 
 void pdf_js_set_console(fz_context *ctx, pdf_document *doc, pdf_js_console *console, void *user)

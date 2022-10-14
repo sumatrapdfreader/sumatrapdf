@@ -262,6 +262,8 @@ FONT(noto,	NotoSansSymbols2_Regular_otf,	"Noto Sans Symbols2",	MUPDF_SCRIPT_SYMB
 FONT(noto,	NotoEmoji_Regular_ttf,		"Noto Emoji",		MUPDF_SCRIPT_EMOJI,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
 #endif
 
+#endif /* TOFU_NOTO */
+
 #ifndef TOFU_CJK
 #ifndef TOFU_CJK_EXT
 #ifndef TOFU_CJK_LANG
@@ -298,5 +300,3 @@ ALIAS(droid,	DroidSansFallback_ttf,		"Droid Sans Fallback",		UCDN_SCRIPT_BOPOMOF
 
 #endif
 #endif
-
-#endif /* TOFU_NOTO */

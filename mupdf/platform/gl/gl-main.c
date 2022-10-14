@@ -2176,7 +2176,7 @@ void do_console(void)
 					console->write(ctx, "\n> ");
 					console->write(ctx, console_readline.input.text);
 				}
-				pdf_js_execute(pdf->js, "console", console_readline.input.text, &result);
+				pdf_js_execute(pdf ? pdf->js : NULL, "console", console_readline.input.text, &result);
 				if (result && console && console->write)
 				{
 					console->write(ctx, "\n");

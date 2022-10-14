@@ -163,7 +163,7 @@ static font_entry inbuilt_fonts[] =
 #undef FONT_SIZE
 
 static const unsigned char *
-search_by_script_lang(int *size, int *subfont, int script, int language)
+search_by_script_lang_strict(int *size, int *subfont, int script, int language)
 {
 	/* Search in the inbuilt font table. */
 	font_entry *e;
@@ -184,6 +184,16 @@ search_by_script_lang(int *size, int *subfont, int script, int language)
 	}
 
 	return *size = 0, NULL;
+}
+
+static const unsigned char *
+search_by_script_lang(int *size, int *subfont, int script, int language)
+{
+	const unsigned char *result;
+	result = search_by_script_lang_strict(size, subfont, script, language);
+	if (!result && language != FZ_LANG_UNSET)
+		result = search_by_script_lang_strict(size, subfont, script, FZ_LANG_UNSET);
+	return result;
 }
 
 static const unsigned char *

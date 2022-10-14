@@ -10,19 +10,31 @@ WARNING_CFLAGS := -Wall -Wsign-compare
 
 # Feature configuration options
 
+build_suffix :=
+
 ifeq ($(tesseract),yes)
+  build_suffix := $(build_suffix)-tesseract
   USE_TESSERACT := yes
-  build_suffix += -tesseract
 endif
 
 ifeq ($(tofu),yes)
-  build_suffix += -tofu
+  build_suffix := $(build_suffix)-tofu
   XCFLAGS += -DTOFU
 endif
 
 ifeq ($(tofu_cjk),yes)
-  build_suffix += -tofu_cjk
+  build_suffix := $(build_suffix)-tofu_cjk
   XCFLAGS += -DTOFU_CJK
+endif
+
+ifeq ($(tofu_cjk_ext),yes)
+  build_suffix := $(build_suffix)-tofu_cjk_ext
+  XCFLAGS += -DTOFU_CJK_EXT
+endif
+
+ifeq ($(tofu_cjk_lang),yes)
+  build_suffix := $(build_suffix)-tofu_cjk_lang
+  XCFLAGS += -DTOFU_CJK_LANG
 endif
 
 # System specific features
