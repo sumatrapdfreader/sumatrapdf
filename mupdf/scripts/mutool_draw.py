@@ -1101,7 +1101,7 @@ def draw( argv):
             # Windows specific code to make stdout binary.
             if state.output_format not in( OUT_TEXT, OUT_STEXT, OUT_HTML, OUT_XHTML, OUT_TRACE, OUT_XMLTEXT):
                 setmode(fileno(stdout), O_BINARY)
-        state.out = mupdf.FzOutput( mupdf.Output.Fixed_STDOUT)
+        state.out = mupdf.FzOutput( mupdf.FzOutput.Fixed_STDOUT)
 
     state.filename = argv[0]
     if not state.output_file_per_page:

@@ -717,6 +717,9 @@ void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int 
 	if (writer == NULL || writer->band == NULL)
 		return;
 
+	if (w <= 0 || h <= 0 || n <= 0 || alpha < 0 || alpha > 1)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid bandwriter header dimensions/setup");
+
 	writer->w = w;
 	writer->h = h;
 	writer->s = fz_count_active_separations(ctx, seps);
