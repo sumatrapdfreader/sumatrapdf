@@ -85,15 +85,15 @@ static void init_keys(const char* passwd,unsigned long* pkeys,const z_crc_t* pcr
 #define RAND_HEAD_LEN  12
    /* "last resort" source for second part of crypt seed pattern */
 #  ifndef ZCR_SEED2
-#    define ZCR_SEED2 3141592654L       /* use PI as default pattern */
+#    define ZCR_SEED2 3141592654UL      /* use PI as default pattern */
 #  endif
 
 static unsigned crypthead(const char* passwd,       /* password string */
-                     unsigned char* buf,      /* where to write header */
-                     int bufSize,
-                     unsigned long* pkeys,
-                     const z_crc_t* pcrc_32_tab,
-                     unsigned long crcForCrypting)
+                          unsigned char* buf,       /* where to write header */
+                          int bufSize,
+                          unsigned long* pkeys,
+                          const z_crc_t* pcrc_32_tab,
+                          unsigned long crcForCrypting)
 {
     unsigned n;                  /* index in random header */
     int t;                       /* temporary */
