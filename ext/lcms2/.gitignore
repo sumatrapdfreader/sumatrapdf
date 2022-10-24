@@ -59,3 +59,5 @@ DerivedData
 *.tlog
 *.ipdb
 *.iobj
+*.recipe
+*.idb

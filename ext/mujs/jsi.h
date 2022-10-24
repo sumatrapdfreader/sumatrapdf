@@ -86,6 +86,9 @@ typedef struct js_StackTrace js_StackTrace;
 #ifndef JS_TRYLIMIT
 #define JS_TRYLIMIT 64		/* exception stack size */
 #endif
+#ifndef JS_ARRAYLIMIT
+#define JS_ARRAYLIMIT (1<<26)	/* limit arrays to 64M entries (1G of flat array data) */
+#endif
 #ifndef JS_GCFACTOR
 /*
  * GC will try to trigger when memory usage is this value times the minimum
@@ -240,6 +243,8 @@ struct js_State
 	js_Object *URIError_prototype;
 
 	unsigned int seed; /* Math.random seed */
+
+	char scratch[12]; /* scratch buffer for iterating over array indices */
 
 	int nextref; /* for js_ref use */
 	js_Object *R; /* registry of hidden values */

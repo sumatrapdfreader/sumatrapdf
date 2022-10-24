@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -133,9 +133,18 @@ typedef struct _FileContext {
         FILE*          Stream;                   // File stream or NULL if holded in memory
     } FILECTX;
 
-// This struct hold all information about an open IT8 handler.
+//Very simple string
 typedef struct {
 
+        struct struct_it8* it8;
+        cmsInt32Number max;
+        cmsInt32Number len;
+        char* begin;
+    } string;
+
+
+// This struct hold all information about an open IT8 handler.
+typedef struct struct_it8 {
 
         cmsUInt32Number  TablesCount;                     // How many tables in this stream
         cmsUInt32Number  nTable;                          // The actual table
@@ -153,8 +162,8 @@ typedef struct {
         cmsInt32Number     inum;              // integer value
         cmsFloat64Number   dnum;              // real value
 
-        char           id[MAXID];             // identifier
-        char           str[MAXSTR];           // string
+        string*        id;            // identifier
+        string*        str;           // string
 
         // Allowed keywords & datasets. They have visibility on whole stream
         KEYVALUE*      ValidKeywords;
@@ -237,7 +246,7 @@ static PROPERTY PredefinedProperties[] = {
 
         {"MATERIAL",         WRITE_STRINGIFY},    // Identifies the material on which the target was produced using a code
                                                   // uniquely identifying th e material. This is intend ed to be used for IT8.7
-                                                  // physical targets only (i.e . IT8.7/1 a nd IT8.7/2).
+                                                  // physical targets only (i.e . IT8.7/1 and IT8.7/2).
 
         {"INSTRUMENTATION",  WRITE_STRINGIFY},    // Used to report the specific instrumentation used (manufacturer and
                                                   // model number) to generate the data reported. This data will often
@@ -351,6 +360,65 @@ static const char* PredefinedSampleID[] = {
 
 //Forward declaration of some internal functions
 static void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size);
+
+static
+string* StringAlloc(cmsContext ContextID, cmsIT8* it8, int max)
+{
+    string* s = (string*) AllocChunk(ContextID, it8, sizeof(string));
+    if (s == NULL) return NULL;
+
+    s->it8 = it8;
+    s->max = max;
+    s->len = 0;
+    s->begin = (char*) AllocChunk(ContextID, it8, s->max);
+
+    return s;
+}
+
+static
+void StringClear(string* s)
+{
+    s->len = 0;
+}
+
+static
+void StringAppend(cmsContext ContextID, string* s, char c)
+{
+    if (s->len + 1 >= s->max)
+    {
+        char* new_ptr;
+
+        s->max *= 10;
+        new_ptr = (char*) AllocChunk(ContextID, s->it8, s->max);
+        if (new_ptr != NULL && s->begin != NULL)
+            memcpy(new_ptr, s->begin, s->len);
+
+        s->begin = new_ptr;
+    }
+
+    if (s->begin != NULL)
+    {
+        s->begin[s->len++] = c;
+        s->begin[s->len] = 0;
+    }
+}
+
+static
+char* StringPtr(string* s)
+{
+    return s->begin;
+}
+
+static
+void StringCat(cmsContext ContextID, string* s, const char* c)
+{
+    while (*c)
+    {
+        StringAppend(ContextID, s, *c);
+        c++;
+    }
+}
+
 
 // Checks whatever c is a separator
 static
@@ -677,14 +745,44 @@ cmsFloat64Number ParseFloatNumber(const char *Buffer)
 }
 
 
+// Reads a string, special case to avoid infinite resursion on .include
+static
+void InStringSymbol(cmsContext ContextID, cmsIT8* it8)
+{
+    while (isseparator(it8->ch))
+        NextCh(it8);
+
+    if (it8->ch == '\'' || it8->ch == '\"')
+    {
+        int sng;
+
+        sng = it8->ch;
+        StringClear(it8->str);
+
+        NextCh(it8);
+
+        while (it8->ch != sng) {
+
+            if (it8->ch == '\n' || it8->ch == '\r' || it8->ch == 0) break;
+            else {
+                StringAppend(ContextID, it8->str, (char)it8->ch);
+                NextCh(it8);
+            }
+        }
+
+        it8->sy = SSTRING;
+        NextCh(it8);
+    }
+    else
+        SynError(ContextID, it8, "String expected");
+
+}
+
 // Reads next symbol
 static
 void InSymbol(cmsContext ContextID, cmsIT8* it8)
 {
-    CMSREGISTER char *idptr;
-    CMSREGISTER int k;
     SYMBOL key;
-    int sng;
 
     do {
 
@@ -693,21 +791,18 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
         if (isfirstidchar(it8->ch)) {          // Identifier
 
-            k = 0;
-            idptr = it8->id;
+            StringClear(it8->id);
 
             do {
 
-                if (++k < MAXID) *idptr++ = (char) it8->ch;
+                StringAppend(ContextID, it8->id, (char) it8->ch);
 
                 NextCh(it8);
 
             } while (isidchar(it8->ch));
 
-            *idptr = '\0';
 
-
-            key = BinSrchKey(it8->id);
+            key = BinSrchKey(StringPtr(it8->id));
             if (key == SUNDEFINED) it8->sy = SIDENT;
             else it8->sy = key;
 
@@ -742,6 +837,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                             if ((cmsFloat64Number) it8->inum * 16.0 + (cmsFloat64Number) j > (cmsFloat64Number)+2147483647.0)
                             {
                                 SynError(ContextID, it8, "Invalid hexadecimal number");
+                                it8->sy = SEOF;
                                 return;
                             }
 
@@ -763,6 +859,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                             if ((cmsFloat64Number) it8->inum * 2.0 + j > (cmsFloat64Number)+2147483647.0)
                             {
                                 SynError(ContextID, it8, "Invalid binary number");
+                                it8->sy = SEOF;
                                 return;
                             }
 
@@ -803,26 +900,27 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
                 if (isidchar(it8 ->ch)) {
 
+                    char buffer[127];
+
                     if (it8 ->sy == SINUM) {
 
-                        snprintf(it8->id, 127, "%d", it8->inum);
+                        snprintf(buffer, sizeof(buffer), "%d", it8->inum);
                     }
                     else {
 
-                        snprintf(it8->id, 127, it8 ->DoubleFormatter, it8->dnum);
+                        snprintf(buffer, sizeof(buffer), it8 ->DoubleFormatter, it8->dnum);
                     }
 
-                    k = (int) strlen(it8 ->id);
-                    idptr = it8 ->id + k;
+                    StringCat(ContextID, it8->id, buffer);
+
                     do {
 
-                        if (++k < MAXID) *idptr++ = (char) it8->ch;
+                        StringAppend(ContextID, it8->id, (char) it8->ch);
 
                         NextCh(it8);
 
                     } while (isidchar(it8->ch));
 
-                    *idptr = '\0';
                     it8->sy = SIDENT;
                 }
                 return;
@@ -831,12 +929,8 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
             else
                 switch ((int) it8->ch) {
 
-        // EOF marker -- ignore it
-        case '\x1a':
-            NextCh(it8);
-            break;
-
         // Eof stream markers
+        case '\x1a':
         case 0:
         case -1:
             it8->sy = SEOF;
@@ -870,29 +964,13 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
         // String.
         case '\'':
         case '\"':
-            idptr = it8->str;
-            sng = it8->ch;
-            k = 0;
-            NextCh(it8);
-
-            while (k < (MAXSTR-1) && it8->ch != sng) {
-
-                if (it8->ch == '\n'|| it8->ch == '\r') k = MAXSTR+1;
-                else {
-                    *idptr++ = (char) it8->ch;
-                    NextCh(it8);
-                    k++;
-                }
-            }
-
-            it8->sy = SSTRING;
-            *idptr = '\0';
-            NextCh(it8);
+            InStringSymbol(ContextID, it8);
             break;
 
 
         default:
             SynError(ContextID, it8, "Unrecognized character: 0x%x", it8 ->ch);
+            it8->sy = SEOF;
             return;
             }
 
@@ -907,24 +985,33 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                 if(it8 -> IncludeSP >= (MAXINCLUDE-1)) {
 
                     SynError(ContextID, it8, "Too many recursion levels");
+                    it8->sy = SEOF;
                     return;
                 }
 
-                InSymbol(ContextID, it8);
-                if (!Check(ContextID, it8, SSTRING, "Filename expected")) return;
+                InStringSymbol(ContextID, it8);
+                if (!Check(ContextID, it8, SSTRING, "Filename expected"))
+                {
+                    it8->sy = SEOF;
+                    return;
+                }
 
                 FileNest = it8 -> FileStack[it8 -> IncludeSP + 1];
                 if(FileNest == NULL) {
 
                     FileNest = it8 ->FileStack[it8 -> IncludeSP + 1] = (FILECTX*)AllocChunk(ContextID, it8, sizeof(FILECTX));
-                    //if(FileNest == NULL)
-                    //  TODO: how to manage out-of-memory conditions?
+                    if (FileNest == NULL) {
+                        SynError(ContextID, it8, "Out of memory");
+                        it8->sy = SEOF;
+                        return;
+                    }
                 }
 
-                if (BuildAbsolutePath(it8->str,
+                if (BuildAbsolutePath(StringPtr(it8->str),
                                       it8->FileStack[it8->IncludeSP]->FileName,
                                       FileNest->FileName, cmsMAX_PATH-1) == FALSE) {
                     SynError(ContextID, it8, "File path too long");
+                    it8->sy = SEOF;
                     return;
                 }
 
@@ -932,6 +1019,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                 if (FileNest->Stream == NULL) {
 
                         SynError(ContextID, it8, "File %s not found", FileNest->FileName);
+                        it8->sy = SEOF;
                         return;
                 }
                 it8->IncludeSP++;
@@ -982,12 +1070,12 @@ cmsBool GetVal(cmsContext ContextID, cmsIT8* it8, char* Buffer, cmsUInt32Number 
     case SEOLN:   // Empty value
                   Buffer[0]=0;
                   break;
-    case SIDENT:  strncpy(Buffer, it8->id, max);
+    case SIDENT:  strncpy(Buffer, StringPtr(it8->id), max);
                   Buffer[max-1]=0;
                   break;
     case SINUM:   snprintf(Buffer, max, "%d", it8 -> inum); break;
     case SDNUM:   snprintf(Buffer, max, it8->DoubleFormatter, it8 -> dnum); break;
-    case SSTRING: strncpy(Buffer, it8->str, max);
+    case SSTRING: strncpy(Buffer, StringPtr(it8->str), max);
                   Buffer[max-1] = 0;
                   break;
 
@@ -1095,6 +1183,9 @@ void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size)
         it8 ->Allocator.Block = (cmsUInt8Number*)  AllocBigBlock(ContextID, it8, it8 ->Allocator.BlockSize);
     }
 
+    if (it8->Allocator.Block == NULL)
+        return NULL;
+
     ptr = it8 ->Allocator.Block + it8 ->Allocator.Used;
     it8 ->Allocator.Used += size;
 
@@ -1112,7 +1203,7 @@ char *AllocString(cmsContext ContextID, cmsIT8* it8, const char* str)
 
 
     ptr = (char *) AllocChunk(ContextID, it8, Size);
-    if (ptr) strncpy (ptr, str, Size-1);
+    if (ptr) memcpy(ptr, str, Size-1);
 
     return ptr;
 }
@@ -1312,6 +1403,9 @@ cmsHANDLE  CMSEXPORT cmsIT8Alloc(cmsContext ContextID)
     it8->IncludeSP   = 0;
     it8 -> lineno = 1;
 
+    it8->id = StringAlloc(ContextID, it8, MAXSTR);
+    it8->str = StringAlloc(ContextID, it8, MAXSTR);
+
     strcpy(it8->DoubleFormatter, DEFAULT_DBL_FORMAT);
     cmsIT8SetSheetType(ContextID, (cmsHANDLE) it8, "CGATS.17");
 
@@ -1433,28 +1527,45 @@ const char* CMSEXPORT cmsIT8GetPropertyMulti(cmsContext ContextID, cmsHANDLE hIT
 
 // ----------------------------------------------------------------- Datasets
 
+// A safe atoi that returns 0 when NULL input is given
+static
+cmsInt32Number satoi(const char* b)
+{
+    int n;
+
+    if (b == NULL) return 0;
+
+    n = atoi(b);
+    if (n > 0x7fffffffL) return 0x7fffffffL;
+    if (n < -0x7ffffffeL) return -0x7ffffffeL;
+
+    return (cmsInt32Number)n;
+}
+
 
 static
-void AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
+cmsBool AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
 {
     TABLE* t = GetTable(ContextID, it8);
 
-    if (t -> DataFormat) return;    // Already allocated
+    if (t -> DataFormat) return TRUE;    // Already allocated
 
-    t -> nSamples  = (int) cmsIT8GetPropertyDbl(ContextID, it8, "NUMBER_OF_FIELDS");
+    t -> nSamples  = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
 
     if (t -> nSamples <= 0) {
 
         SynError(ContextID, it8, "AllocateDataFormat: Unknown NUMBER_OF_FIELDS");
-        t -> nSamples = 10;
-        }
+        return FALSE;
+    }
 
     t -> DataFormat = (char**) AllocChunk (ContextID, it8, ((cmsUInt32Number) t->nSamples + 1) * sizeof(char *));
     if (t->DataFormat == NULL) {
 
         SynError(ContextID, it8, "AllocateDataFormat: Unable to allocate dataFormat array");
+        return FALSE;
     }
 
+    return TRUE;
 }
 
 static
@@ -1473,8 +1584,11 @@ cmsBool SetDataFormat(cmsContext ContextID, cmsIT8* it8, int n, const char *labe
 {
     TABLE* t = GetTable(ContextID, it8);
 
-    if (!t->DataFormat)
-        AllocateDataFormat(ContextID, it8);
+    if (!t->DataFormat) {
+
+        if (!AllocateDataFormat(ContextID, it8))
+            return FALSE;
+    }
 
     if (n > t -> nSamples) {
         SynError(ContextID, it8, "More than NUMBER_OF_FIELDS fields.");
@@ -1483,6 +1597,7 @@ cmsBool SetDataFormat(cmsContext ContextID, cmsIT8* it8, int n, const char *labe
 
     if (t->DataFormat) {
         t->DataFormat[n] = AllocString(ContextID, it8, label);
+        if (t->DataFormat[n] == NULL) return FALSE;
     }
 
     return TRUE;
@@ -1493,14 +1608,6 @@ cmsBool CMSEXPORT cmsIT8SetDataFormat(cmsContext ContextID, cmsHANDLE  h, int n,
 {
     cmsIT8* it8 = (cmsIT8*)h;
     return SetDataFormat(ContextID, it8, n, Sample);
-}
-
-// A safe atoi that returns 0 when NULL input is given
-static
-cmsInt32Number satoi(const char* b)
-{
-    if (b == NULL) return 0;
-    return atoi(b);
 }
 
 // Convert to binary
@@ -1523,11 +1630,11 @@ const char* satob(const char* v)
 
 
 static
-void AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
+cmsBool AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
 {
     TABLE* t = GetTable(ContextID, it8);
 
-    if (t -> Data) return;    // Already allocated
+    if (t -> Data) return TRUE;    // Already allocated
 
     t-> nSamples   = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
     t-> nPatches   = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_SETS"));
@@ -1535,6 +1642,7 @@ void AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
     if (t -> nSamples < 0 || t->nSamples > 0x7ffe || t->nPatches < 0 || t->nPatches > 0x7ffe)
     {
         SynError(ContextID, it8, "AllocateDataSet: too much data");
+        return FALSE;
     }
     else {
         // Some dumb analizers warns of possible overflow here, just take a look couple of lines above.
@@ -1542,9 +1650,11 @@ void AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
         if (t->Data == NULL) {
 
             SynError(ContextID, it8, "AllocateDataSet: Unable to allocate data array");
+            return FALSE;
         }
     }
 
+    return TRUE;
 }
 
 static
@@ -1566,8 +1676,9 @@ cmsBool SetData(cmsContext ContextID, cmsIT8* it8, int nSet, int nField, const c
 {
     TABLE* t = GetTable(ContextID, it8);
 
-    if (!t->Data)
-        AllocateDataSet(ContextID, it8);
+    if (!t->Data) {
+        if (!AllocateDataSet(ContextID, it8)) return FALSE;
+    }
 
     if (!t->Data) return FALSE;
 
@@ -1878,7 +1989,7 @@ cmsBool DataFormatSection(cmsContext ContextID, cmsIT8* it8)
                 return SynError(ContextID, it8, "Sample type expected");
             }
 
-            if (!SetDataFormat(ContextID, it8, iField, it8->id)) return FALSE;
+            if (!SetDataFormat(ContextID, it8, iField, StringPtr(it8->id))) return FALSE;
             iField++;
 
             InSymbol(ContextID, it8);
@@ -1911,8 +2022,9 @@ cmsBool DataSection (cmsContext ContextID, cmsIT8* it8)
     InSymbol(ContextID, it8);   // Eats "BEGIN_DATA"
     CheckEOLN(ContextID, it8);
 
-    if (!t->Data)
-        AllocateDataSet(ContextID, it8);
+    if (!t->Data) {
+        if (!AllocateDataSet(ContextID, it8)) return FALSE;
+    }
 
     while (it8->sy != SEND_DATA && it8->sy != SEOF)
     {
@@ -1924,11 +2036,28 @@ cmsBool DataSection (cmsContext ContextID, cmsIT8* it8)
 
         if (it8->sy != SEND_DATA && it8->sy != SEOF) {
 
+            switch (it8->sy)
+            {
+
+            // To keep very long data
+            case SIDENT:
+                if (!SetData(ContextID, it8, iSet, iField, StringPtr(it8->id)))
+                    return FALSE;
+                break;
+
+            case SSTRING:
+                if (!SetData(ContextID, it8, iSet, iField, StringPtr(it8->str)))
+                    return FALSE;
+                break;
+
+            default:
+
             if (!GetVal(ContextID, it8, Buffer, 255, "Sample data expected"))
                 return FALSE;
 
             if (!SetData(ContextID, it8, iSet, iField, Buffer))
                 return FALSE;
+            }
 
             iField++;
 
@@ -1984,7 +2113,7 @@ cmsBool HeaderSection(cmsContext ContextID, cmsIT8* it8)
 
 
         case SIDENT:
-            strncpy(VarName, it8->id, MAXID - 1);
+            strncpy(VarName, StringPtr(it8->id), MAXID - 1);
             VarName[MAXID - 1] = 0;
 
             if (!IsAvailableOnList(ContextID, it8->ValidKeywords, VarName, NULL, &Key)) {
@@ -2128,7 +2257,7 @@ cmsBool ParseIT8(cmsContext ContextID, cmsIT8* it8, cmsBool nosheet)
                                      // If a newline is found, then this is a type string
                                     if (it8 ->ch == '\n' || it8->ch == '\r') {
 
-                                         cmsIT8SetSheetType(ContextID, it8, it8 ->id);
+                                         cmsIT8SetSheetType(ContextID, it8, StringPtr(it8 ->id));
                                          InSymbol(ContextID, it8);
                                     }
                                     else
@@ -2140,7 +2269,7 @@ cmsBool ParseIT8(cmsContext ContextID, cmsIT8* it8, cmsBool nosheet)
                                 else
                                     // Validate quoted strings
                                     if (it8 ->sy == SSTRING) {
-                                        cmsIT8SetSheetType(ContextID, it8, it8 ->str);
+                                        cmsIT8SetSheetType(ContextID, it8, StringPtr(it8 ->str));
                                         InSymbol(ContextID, it8);
                                     }
                            }
@@ -2239,8 +2368,8 @@ void CookPointers(cmsContext ContextID, cmsIT8* it8)
 
         }
 
-    }
-    }
+	}
+	}
 
     it8 ->nTable = nOldTable;
 }
@@ -2443,14 +2572,17 @@ cmsUInt32Number CMSEXPORT cmsIT8EnumProperties(cmsContext ContextID, cmsHANDLE h
 
 
     Props = (char **) AllocChunk(ContextID, it8, sizeof(char *) * n);
+    if (Props != NULL) {
 
-    // Pass#2 - Fill pointers
-    n = 0;
-    for (p = t -> HeaderList;  p != NULL; p = p->Next) {
-        Props[n++] = p -> Keyword;
+	// Pass#2 - Fill pointers
+	n = 0;
+	for (p = t->HeaderList; p != NULL; p = p->Next) {
+		Props[n++] = p->Keyword;
+	}
+
     }
-
     *PropertyNames = Props;
+
     return n;
 }
 
@@ -2482,12 +2614,14 @@ cmsUInt32Number CMSEXPORT cmsIT8EnumPropertyMulti(cmsContext ContextID, cmsHANDL
 
 
     Props = (const char **) AllocChunk(ContextID, it8, sizeof(char *) * n);
+    if (Props != NULL) {
 
-    // Pass#2 - Fill pointers
-    n = 0;
-    for (tmp = p;  tmp != NULL; tmp = tmp->NextSubkey) {
-        if(tmp->Subkey != NULL)
-            Props[n++] = p ->Subkey;
+        // Pass#2 - Fill pointers
+        n = 0;
+        for (tmp = p; tmp != NULL; tmp = tmp->NextSubkey) {
+            if (tmp->Subkey != NULL)
+                Props[n++] = p->Subkey;
+        }
     }
 
     *SubpropertyNames = Props;
@@ -2663,8 +2797,12 @@ cmsBool CMSEXPORT cmsIT8SetData(cmsContext ContextID, cmsHANDLE hIT8, const char
 
     if (t-> nPatches == 0) {
 
-        AllocateDataFormat(ContextID, it8);
-        AllocateDataSet(ContextID, it8);
+        if (!AllocateDataFormat(ContextID, it8))
+            return FALSE;
+
+        if (!AllocateDataSet(ContextID, it8))
+            return FALSE;
+
         CookPointers(ContextID, it8);
     }
 

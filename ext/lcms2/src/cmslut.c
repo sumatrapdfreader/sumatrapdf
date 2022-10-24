@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -466,7 +466,7 @@ cmsUInt32Number CubeSize(const cmsUInt32Number Dims[], cmsUInt32Number b)
     for (rv = 1; b > 0; b--) {
 
         dim = Dims[b-1];
-        if (dim == 0) return 0;  // Error
+        if (dim <= 1) return 0;  // Error
 
         rv *= dim;
 

@@ -682,11 +682,13 @@ static void pstmlist(int d, js_Ast *list)
 void jsP_dumpsyntax(js_State *J, js_Ast *prog, int dominify)
 {
 	minify = dominify;
-	if (prog->type == AST_LIST)
-		pstmlist(-1, prog);
-	else {
-		pstm(0, prog);
-		nl();
+	if (prog) {
+		if (prog->type == AST_LIST)
+			pstmlist(-1, prog);
+		else {
+			pstm(0, prog);
+			nl();
+		}
 	}
 	if (minify > 1)
 		putchar('\n');
@@ -768,11 +770,13 @@ static void sblock(int d, js_Ast *list)
 void jsP_dumplist(js_State *J, js_Ast *prog)
 {
 	minify = 0;
-	if (prog->type == AST_LIST)
-		sblock(0, prog);
-	else
-		snode(0, prog);
-	nl();
+	if (prog) {
+		if (prog->type == AST_LIST)
+			sblock(0, prog);
+		else
+			snode(0, prog);
+		nl();
+	}
 }
 
 /* Compiled code */

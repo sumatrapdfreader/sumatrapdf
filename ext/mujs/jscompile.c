@@ -1366,7 +1366,7 @@ static void cfundecs(JF, js_Ast *list)
 			emitfunction(J, F, newfun(J, stm->line, stm->a, stm->b, stm->c, 0, F->strict));
 			emitline(J, F, stm);
 			emit(J, F, OP_SETLOCAL);
-			emitarg(J, F, addlocal(J, F, stm->a, 0));
+			emitarg(J, F, addlocal(J, F, stm->a, 1));
 			emit(J, F, OP_POP);
 		}
 		list = list->b;
@@ -1400,7 +1400,7 @@ static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body)
 		if (findlocal(J, F, name->string) < 0) {
 			emit(J, F, OP_CURRENT);
 			emit(J, F, OP_SETLOCAL);
-			emitarg(J, F, addlocal(J, F, name, 0));
+			emitarg(J, F, addlocal(J, F, name, 1));
 			emit(J, F, OP_POP);
 		}
 	}

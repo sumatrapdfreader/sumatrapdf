@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -382,7 +382,7 @@ cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
     Curves8Data* Data;
     cmsUInt32Number nChans;
 
-    // This is a loosy optimization! does not apply in floating-point cases
+    // This is a lossy optimization! does not apply in floating-point cases
     if (T_FLOAT(*InputFormat) || T_FLOAT(*OutputFormat)) return FALSE;
 
     // Only on 8-bit

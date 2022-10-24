@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -125,6 +125,7 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
     // Force it to be neutral, clip to max. L* of 50
     Lab.a = Lab.b = 0;
     if (Lab.L > 50) Lab.L = 50;
+    if (Lab.L < 0) Lab.L = 0;
 
     // Free the resources
     cmsDeleteTransform(ContextID, xform);
@@ -321,6 +322,7 @@ cmsFloat64Number RootOfLeastSquaresFitQuadraticCurve(cmsContext ContextID, int n
 
     if (fabs(a) < 1.0E-10) {
 
+        if (fabs(b) < 1.0E-10) return 0;
         return cmsmin(0, cmsmax(50, -c/b ));
     }
     else {
@@ -331,7 +333,11 @@ cmsFloat64Number RootOfLeastSquaresFitQuadraticCurve(cmsContext ContextID, int n
          }
          else {
 
-             double rt = (-b + sqrt(d)) / (2.0 * a);
+             double rt;
+
+             if (fabs(a) < 1.0E-10) return 0;
+
+             rt = (-b + sqrt(d)) / (2.0 * a);
 
              return cmsmax(0, cmsmin(50, rt));
          }

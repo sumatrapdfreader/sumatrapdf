@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -210,7 +210,8 @@ void FloatCLUTEval(cmsContext ContextID,
             }
 
             if (ain) {
-                *(cmsFloat32Number*)(out[TotalOut]) = *ain;
+                *(cmsFloat32Number*)(out[TotalOut]) = *(cmsFloat32Number*)ain;
+                ain += SourceIncrements[3];
                 out[TotalOut] += DestIncrements[TotalOut];
             }
         }
@@ -252,7 +253,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     if (T_BYTES(*InputFormat) != sizeof(cmsFloat32Number) ||
         T_BYTES(*OutputFormat) != sizeof(cmsFloat32Number)) return FALSE;
 
-    // Input has to be RGB, Output may be any
+    // Input has to be RGB
     if (T_COLORSPACE(*InputFormat) != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
@@ -269,8 +270,43 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     // Add the CLUT to the destination LUT
     cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_BEGIN, OptimizedCLUTmpe);
 
+    // If output is CMYK, add a conversion stage to get %
+    if (T_COLORSPACE(*OutputFormat) == PT_CMYK) {
+
+        static const cmsFloat64Number mat[] = { 100.0,   0,     0,     0,
+                                                  0,   100.0,   0,     0,
+                                                  0,     0,   100.0,   0,
+                                                  0,     0,     0,   100.0 };
+
+        cmsStage* percent = cmsStageAllocMatrix(ContextID, 4, 4, mat, NULL);
+        if (percent == NULL) goto Error;
+
+        cmsPipelineInsertStage(OriginalLut, cmsAT_END, percent);
+    }
+    else
+        // If output is Lab, add a conversion stage to get Lab values
+        if (T_COLORSPACE(*OutputFormat) == PT_Lab) {
+
+            static const cmsFloat64Number mat[] = { 100.0,   0,    0,
+                                                      0,  255.0,   0,
+                                                      0,     0,   255.0 };
+
+            static const cmsFloat64Number off[] = { 0,   -128.0,     -128.0 };
+
+            cmsStage* lab_fix = cmsStageAllocMatrix(ContextID, 3, 3, mat, off);
+            if (lab_fix == NULL) goto Error;
+
+            cmsPipelineInsertStage(OriginalLut, cmsAT_END, lab_fix);
+        }
+
+
     // Resample the LUT
     if (!cmsStageSampleCLutFloat(ContextID, OptimizedCLUTmpe, XFormSampler, (void*)OriginalLut, 0)) goto Error;
+
+    if (T_COLORSPACE(*OutputFormat) == PT_CMYK) {
+
+        cmsPipelineUnlinkStage(ContextID, OriginalLut, cmsAT_END, NULL);
+    }
 
     // Set the evaluator, copy parameters
     data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);

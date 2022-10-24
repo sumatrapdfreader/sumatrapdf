@@ -1,6 +1,12 @@
 	LCMS2MT ChangeLog:
 
 ------------------------
+2.14.art Featured release
+------------------------
+
+Merge 2.14 with 2.10.art.
+
+------------------------
 2.10.art Featured release
 ------------------------
 
@@ -27,11 +33,40 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 	Vanilla LCMS2 Changelog:
 	~~~~~~~~~~~~~~~~~~~~~~~~
 
-------------------------
-2.9 Maintenance release
-------------------------
+-----------------------
+2.14 Featured release
+-----------------------
+lcms2 now implements ICC specification 4.4
+New multi-threaded plug-in
+several fixes to keep fuzzers happy
+Remove check on DLL when CMS_NO_REGISTER_KEYWORD is used
+Added more validation against broken profiles
+Add more help to several tools
 
-No changelog provided.
+-----------------------
+2.13.1 Hot fix
+-----------------------
+Fix for pure white going gray in grayscale transforms.
+
+-----------------------
+2.13 Featured release
+-----------------------
+Added support for premultiplied alpha
+tifficc can now handle alpha channels, both unassociated and premultiplied
+Better documentation
+CGATS parser can now deal with very long strings
+Added Projects for Visual Studio 2020
+Travis CI discontinued, GitHub actions used instead
+Added a very preliminar meson build script (thanks to xclaesse)
+Added ARM64 target to visual studio 2019 (thanks to gaborkertesz-linaro)
+Added thread safe code to get time
+Added automatic linear space detection
+Added cmsGetStageContextID function
+Added cmsDetectRGBProfileGamma function
+configure now accepts --without-fastfloat to turn plugin off
+autogen.sh has now a --distclean toggle to get rid of all autotools generated files
+Checked to work on STM32 Cortex-A, Cortex-M families
+Bug & typos fixing (thanks to many reporters and contributors)
 
 -----------------------
 2.12 Maintenance release
@@ -47,7 +82,7 @@ Fix matlab MEX compilation
 plugin: cleanup and better SSE detection
 plugin: add lab to any on float
 plugin: it can now be compiled as C++
-recover PDF documentation, but try to keep it under a resonable size.
+recover PDF documentation, but try to keep it under a reasonable size.
 Prevent a rare but possible out-of-bounds read in postscript generator
 Remove unused variables
 
@@ -64,7 +99,7 @@ Fixed LUT16 write matrix on multichannel V2 profiles
 -----------------------
 Added a compilation toggle to remove "register" keyword in API.
 Previously commercial, fast_float plug-in is now released as open source under GPL3 license.
-MD5 functions are now accesible through plug-in API.
+MD5 functions are now accessible through plug-in API.
 Added support for Visual Studio 2019
 Bug fixing.
 

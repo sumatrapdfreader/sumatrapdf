@@ -56,6 +56,15 @@ void Die(const char* Reason, ...)
     exit(1);
 }
 
+static
+void* chknull(void* mem)
+{
+    if (mem == NULL)
+        Die("Memory may be corrupted");
+
+    return mem;
+}
+
 // Memory management replacement -----------------------------------------------------------------------------
 
 
@@ -115,7 +124,7 @@ void* DebugMalloc(cmsContext ContextID, cmsUInt32Number size)
     if (size > SingleHit)
         SingleHit = size;
 
-    blk = (_cmsMemoryBlock*) malloc(size + SIZE_OF_MEM_HEADER);
+    blk = (_cmsMemoryBlock*) chknull(malloc(size + SIZE_OF_MEM_HEADER));
     if (blk == NULL) return NULL;
 
     blk ->KeepSize = size;
@@ -442,7 +451,7 @@ cmsHPROFILE Create_CMYK_DeviceLink(cmsContext ctx)
 }
 
 
-// Create a fake CMYK profile, without any other requeriment that being coarse CMYK.
+// Create a fake CMYK profile, without any other requirement that being coarse CMYK.
 // DON'T USE THIS PROFILE FOR ANYTHING, IT IS USELESS BUT FOR TESTING PURPOSES.
 typedef struct {
 
@@ -1018,7 +1027,7 @@ cmsInt32Number Check1D(cmsContext ContextID, cmsInt32Number nNodesToCheck, cmsBo
     cmsInterpParams* p;
     cmsUInt16Number* Tab;
 
-    Tab = (cmsUInt16Number*) malloc(sizeof(cmsUInt16Number)* nNodesToCheck);
+    Tab = (cmsUInt16Number*) chknull(malloc(sizeof(cmsUInt16Number)* nNodesToCheck));
     if (Tab == NULL) return 0;
 
     p = _cmsComputeInterpParams(ContextID, nNodesToCheck, 1, 1, Tab, CMS_LERP_FLAGS_16BITS);
@@ -5303,7 +5312,7 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
         case 2:
             if (!cmsReadRawTag(ContextID, hProfile, (cmsTagSignature) 0x31323334, Buffer, 7)) return 0;
 
-            if (strncmp(Buffer, "data123", 7) != 0) return 0;
+            if (memcmp(Buffer, "data123", 7) != 0) return 0;
             return 1;
 
         default:
@@ -5311,6 +5320,40 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
     }
 }
 
+
+
+static
+cmsInt32Number Check_cicp(cmsInt32Number Pass, cmsHPROFILE hProfile)
+{
+    cmsVideoSignalType* v;
+    cmsVideoSignalType  s;
+
+    switch (Pass) {
+
+    case 1:
+        s.ColourPrimaries = 1;
+        s.TransferCharacteristics = 13;
+        s.MatrixCoefficients = 0;
+        s.VideoFullRangeFlag = 1;
+
+        if (!cmsWriteTag(hProfile, cmsSigcicpTag, &s)) return 0;
+        return 1;
+
+    case 2:
+        v = (cmsVideoSignalType*)cmsReadTag(hProfile, cmsSigcicpTag);
+        if (v == NULL) return 0;
+
+        if (v->ColourPrimaries != 1) return 0;
+        if (v->TransferCharacteristics != 13) return 0;
+        if (v->MatrixCoefficients != 0) return 0;
+        if (v->VideoFullRangeFlag != 1) return 0;
+        return 1;
+
+    default:
+        return 0;
+    }
+
+}
 
 // This is a very big test that checks every single tag
 static
@@ -5456,6 +5499,9 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
         SubTest("Dictionary meta tags");
         // if (!CheckDictionary16(ContextID, Pass, h)) goto Error;
         if (!CheckDictionary24(ContextID, Pass, h)) goto Error;
+
+        SubTest("cicp Video Signal Type");
+        if (!Check_cicp(Pass, h)) goto Error;
 
         if (Pass == 1) {
             cmsSaveProfileToFile(ContextID, h, "alltags.icc");
@@ -6065,8 +6111,10 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
 {
     cmsHTRANSFORM xform;
     cmsUInt16Number In[3];
+    cmsUInt16Number wLab[3];
     cmsCIELab Lab;
     cmsCIELab White = { 100, 0, 0 };
+    cmsCIELab Color = { 7.11070, -76, 26 };
     cmsHPROFILE hLab1 = cmsCreateLab4Profile(ContextID, NULL);
     cmsHPROFILE hLab2 = cmsCreateLab4Profile(ContextID, NULL);
 
@@ -6081,6 +6129,18 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
     cmsDoTransform(ContextID, xform, In, &Lab, 1);
 
     if (cmsDeltaE(ContextID, &Lab, &White) > 0.0001) return 0;
+
+
+    In[0] = 0x1234;
+    In[1] = 0x3434;
+    In[2] = 0x9A9A;
+
+    cmsDoTransform(xform, In, &Lab, 1);
+    cmsFloat2LabEncoded(wLab, &Lab);
+    if (memcmp(In, wLab, sizeof(wLab)) != 0) return 0;
+    if (cmsDeltaE(&Lab, &Color) > 0.0001) return 0;
+
+
     cmsDeleteTransform(ContextID, xform);
 
     hLab1 = cmsCreateLab2Profile(ContextID, NULL);
@@ -6088,7 +6148,6 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
 
     xform = cmsCreateTransform(ContextID, hLab1, TYPE_LabV2_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
-
 
     In[0] = 0xFF00;
     In[1] = 0x8000;
@@ -7783,7 +7842,7 @@ static
 cmsInt32Number CheckReadRAW(cmsContext ContextID)
 {
     cmsInt32Number tag_size, tag_size1;
-    char buffer[4];
+    char buffer[37009];
     cmsHPROFILE hProfile;
 
 
@@ -7792,13 +7851,13 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
 
     if (hProfile == NULL)
         return 0;
-
-    tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, buffer, 4);
     tag_size1 = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, NULL, 0);
+    tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, buffer, 37009);
+
 
     cmsCloseProfile(ContextID, hProfile);
 
-    if (tag_size != 4)
+    if (tag_size != 37009)
         return 0;
 
     if (tag_size1 != 37009)
@@ -7806,12 +7865,12 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
 
     SubTest("RAW read on in-memory created profiles");
     hProfile = cmsCreate_sRGBProfile(ContextID);
-    tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, buffer, 4);
     tag_size1 = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, NULL, 0);
+    tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, buffer, 20);
 
     cmsCloseProfile(ContextID, hProfile);
 
-    if (tag_size != 4)
+    if (tag_size != 20)
         return 0;
     if (tag_size1 != 20)
         return 0;
@@ -7843,7 +7902,7 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     rc = cmsSaveProfileToMem(ContextID, p, NULL, &clen);
     if (!rc) return 0;
 
-    data = (char*) malloc(clen);
+    data = (char*) chknull(malloc(clen));
     rc = cmsSaveProfileToMem(ContextID, p, data, &clen);
     if (!rc) return 0;
 
@@ -7862,9 +7921,9 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     //ERROR: Corrupted tag 'meta'
     //test: test.c:59: main: Assertion `dict' failed.
     dict = cmsReadTag(ContextID, p, cmsSigMetaTag);
-   if (dict == NULL) return 0;
+    if (dict == NULL) return 0;
 
-   cmsCloseProfile(ContextID, p);
+    cmsCloseProfile(ContextID, p);
     return 1;
 }
 
@@ -8133,7 +8192,7 @@ int CheckForgedMPE(cmsContext ContextID)
     }
 
     srcCS = cmsGetColorSpace(ContextID, srcProfile);
-    nSrcComponents = cmsChannelsOf(ContextID, srcCS);
+    nSrcComponents = cmsChannelsOfColorSpace(ContextID, srcCS);
 
     if (srcCS == cmsSigLabData) {
         srcFormat =
@@ -8271,7 +8330,7 @@ double distance(const cmsUInt16Number* a, const cmsUInt16Number* b)
 
 /**
 * In 2.12, a report suggest that the built-in sRGB has roundtrip errors that makes color to move
-* when rountripping again and again
+* when roundtripping again and again
 */
 static
 int Check_sRGB_Rountrips(cmsContext contextID)
@@ -8294,9 +8353,9 @@ int Check_sRGB_Rountrips(cmsContext contextID)
         for (g = 0; g <= 255; g += 16)
             for (b = 0; b <= 255; b += 16)
             {
-                seed[0] = rgb[0] = ((r << 8) | r);
-                seed[1] = rgb[1] = ((g << 8) | g);
-                seed[2] = rgb[2] = ((b << 8) | b);
+                seed[0] = rgb[0] = (cmsUInt16Number) ((r << 8) | r);
+                seed[1] = rgb[1] = (cmsUInt16Number) ((g << 8) | g);
+                seed[2] = rgb[2] = (cmsUInt16Number) ((b << 8) | b);
 
                 for (i = 0; i < 50; i++)
                 {
@@ -8367,10 +8426,32 @@ int CheckGammaSpaceDetection(cmsContext contextID)
     return 1;
 }
 
+// Per issue #308. A built-in is corrupted by using write raw tag was causing a segfault
+static
+int CheckInducedCorruption(void)
+{
+    cmsHTRANSFORM xform0;
+    char garbage[] = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b";
+    cmsHPROFILE hsrgb = cmsCreate_sRGBProfile();
+    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+
+    cmsSetLogErrorHandler(NULL);
+    cmsWriteRawTag(hsrgb, cmsSigBlueColorantTag, &garbage, sizeof(garbage));
+
+    xform0 = cmsCreateTransform(hsrgb, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+
+    if (xform0) cmsDeleteTransform(xform0);
+
+    cmsCloseProfile(hsrgb);
+    cmsCloseProfile(hLab);
+
+    ResetFatalError();
+    return 1;
+}
 
 #if 0
 
-// You need to download folowing profilies to execute this test: sRGB-elle-V4-srgbtrc.icc, sRGB-elle-V4-g10.icc
+// You need to download following profiles to execute this test: sRGB-elle-V4-srgbtrc.icc, sRGB-elle-V4-g10.icc
 // The include this line in the checks list:  Check("KInear spaces detection", CheckLinearSpacesOptimization);
 static
 void uint16toFloat(cmsUInt16Number* src, cmsFloat32Number* dst)
@@ -8430,6 +8511,31 @@ int CheckLinearSpacesOptimization(cmsContext contextID)
 #endif
 
 
+static
+int CheckIntToFloatTransform(void)
+{
+    cmsHPROFILE hAbove = Create_AboveRGB();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
+
+    cmsHTRANSFORM xform = cmsCreateTransform(hAbove, TYPE_RGB_8, hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, 0);
+
+    cmsUInt8Number rgb8[3] = { 12, 253, 21 };
+    cmsFloat64Number rgbDBL[3] = { 0 };
+
+    cmsCloseProfile(hAbove); cmsCloseProfile(hsRGB);
+
+    cmsDoTransform(xform, rgb8, rgbDBL, 1);
+
+
+    cmsDeleteTransform(xform);
+
+    if (rgbDBL[0] < 0 && rgbDBL[2] < 0) return 1;
+
+    Fail("Unbounded transforms with integer input failed");
+
+    return 0;
+}
+
 // --------------------------------------------------------------------------------------------------
 // P E R F O R M A N C E   C H E C K S
 // --------------------------------------------------------------------------------------------------
@@ -8483,7 +8589,7 @@ void SpeedTest32bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
 
-    In = (Scanline_rgba32 *) malloc(Mb);
+    In = (Scanline_rgba32 *) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r += Interval)
@@ -8534,7 +8640,7 @@ void SpeedTest16bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
 
     Mb = 256*256*256 * sizeof(Scanline_rgb16);
 
-    In = (Scanline_rgb16*) malloc(Mb);
+    In = (Scanline_rgb16*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8587,7 +8693,7 @@ void SpeedTest32bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
 
-    In = (Scanline_rgba32 *) malloc(Mb);
+    In = (Scanline_rgba32 *) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r += Interval)
@@ -8640,7 +8746,7 @@ void SpeedTest16bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     Mb = 256*256*256*sizeof(Scanline_rgba16);
 
-    In = (Scanline_rgba16*) malloc(Mb);
+    In = (Scanline_rgba16*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8693,7 +8799,7 @@ void SpeedTest8bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsP
 
     Mb = 256*256*256*sizeof(Scanline_rgb8);
 
-    In = (Scanline_rgb8*) malloc(Mb);
+    In = (Scanline_rgb8*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8744,7 +8850,7 @@ void SpeedTest8bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hl
 
     Mb = 256*256*256*sizeof(Scanline_rgba8);
 
-    In = (Scanline_rgba8*) malloc(Mb);
+    In = (Scanline_rgba8*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8800,7 +8906,7 @@ void SpeedTest32bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(cmsFloat32Number);
 
-    In = (cmsFloat32Number*) malloc(Mb);
+    In = (cmsFloat32Number*) chknull(malloc(Mb));
 
     j = 0;
     for (r = 0; r < 256; r += Interval)
@@ -8845,7 +8951,7 @@ void SpeedTest16bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
     cmsCloseProfile(ContextID, hlcmsProfileOut);
     Mb = 256*256*256 * sizeof(cmsUInt16Number);
 
-    In = (cmsUInt16Number *) malloc(Mb);
+    In = (cmsUInt16Number *) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8891,7 +8997,7 @@ void SpeedTest8bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hl
     cmsCloseProfile(ContextID, hlcmsProfileOut);
     Mb = 256*256*256;
 
-    In = (cmsUInt8Number*) malloc(Mb);
+    In = (cmsUInt8Number*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -9117,8 +9223,6 @@ void PrintSupportedIntents(void)
     printf("\n");
 }
 
-
-
 // ---------------------------------------------------------------------------------------
 
 int main(int argc, char* argv[])
@@ -9134,19 +9238,22 @@ int main(int argc, char* argv[])
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-
     // First of all, check for the right header
-   if (cmsGetEncodedCMMversion() != LCMS_VERSION) {
-          Die("Oops, you are mixing header and shared lib!\nHeader version reports to be '%d' and shared lib '%d'\n", LCMS_VERSION, cmsGetEncodedCMMversion());
-   }
+    if (cmsGetEncodedCMMversion() != LCMS_VERSION) {
+        Die("Oops, you are mixing header and shared lib!\nHeader version reports to be '%d' and shared lib '%d'\n", LCMS_VERSION, cmsGetEncodedCMMversion());
+    }
 
-    printf("LittleCMS %2.2f test bed %s %s\n\n", LCMS_VERSION / 1000.0, __DATE__, __TIME__);
+    printf("LittleCMS %2.2f test bed %s %s\n\n", cmsGetEncodedCMMversion() / 1000.0, __DATE__, __TIME__);
 
     if ((argc == 2) && strcmp(argv[1], "--exhaustive") == 0) {
 
         Exhaustive = 1;
         printf("Running exhaustive tests (will take a while...)\n\n");
     }
+    else
+        if ((argc == 3) && strcmp(argv[1], "--chdir") == 0) {
+            CHDIR(argv[2]);
+        }
 
 #ifdef LCMS_FAST_EXTENSIONS
    //printf("Installing fast 8 bit extension ...");
@@ -9358,7 +9465,7 @@ int main(int argc, char* argv[])
     Check(ctx, "Parametric curve on Rec709", CheckParametricRec709);
     Check(ctx, "Floating Point sampled curve with non-zero start", CheckFloatSamples);
     Check(ctx, "Floating Point segmented curve with short sampled segment", CheckFloatSegments);
-    Check(ctx, "Read RAW portions", CheckReadRAW);
+    Check(ctx, "Read RAW tags", CheckReadRAW);
     Check(ctx, "Check MetaTag", CheckMeta);
     Check(ctx, "Null transform on floats", CheckFloatNULLxform);
     Check(ctx, "Set free a tag", CheckRemoveTag);
@@ -9371,6 +9478,8 @@ int main(int argc, char* argv[])
     Check(ctx, "Empty MLUC", CheckEmptyMLUC);
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
+    Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
+    Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
     }
 
     if (DoPluginTests)

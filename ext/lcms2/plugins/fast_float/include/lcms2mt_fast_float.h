@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ extern "C" {
 #   endif
 #endif
 
-#define LCMS2_FAST_FLOAT_VERSION   1400
+#define LCMS2_FAST_FLOAT_VERSION   1501
 
 // Configuration toggles
 
@@ -116,7 +116,6 @@ CMSAPI void* CMSEXPORT cmsFastFloatExtensions(void);
 #define TYPE_AGRAY_8           (COLORSPACE_SH(PT_GRAY)|EXTRA_SH(1)|CHANNELS_SH(1)|DOSWAP_SH(1)|BYTES_SH(1))
 #define TYPE_AGRAY_16          (COLORSPACE_SH(PT_GRAY)|EXTRA_SH(1)|CHANNELS_SH(1)|DOSWAP_SH(1)|BYTES_SH(2))
 #define TYPE_AGRAY_FLT         (FLOAT_SH(1)|COLORSPACE_SH(PT_GRAY)|EXTRA_SH(1)|CHANNELS_SH(1)|DOSWAP_SH(1)|BYTES_SH(4))
-#define TYPE_GRAYA_FLT         (FLOAT_SH(1)|COLORSPACE_SH(PT_GRAY)|EXTRA_SH(1)|CHANNELS_SH(1)|BYTES_SH(4))
 #define TYPE_AGRAY_DBL         (FLOAT_SH(1)|COLORSPACE_SH(PT_GRAY)|EXTRA_SH(1)|CHANNELS_SH(1)|DOSWAP_SH(1)|BYTES_SH(0))
 
 #define TYPE_ACMYK_8           (COLORSPACE_SH(PT_CMYK)|EXTRA_SH(1)|CHANNELS_SH(4)|BYTES_SH(1)|SWAPFIRST_SH(1))

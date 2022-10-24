@@ -423,7 +423,9 @@ void js_newarguments(js_State *J)
 
 void js_newarray(js_State *J)
 {
-	js_pushobject(J, jsV_newobject(J, JS_CARRAY, J->Array_prototype));
+	js_Object *obj = jsV_newobject(J, JS_CARRAY, J->Array_prototype);
+	obj->u.a.simple = 1;
+	js_pushobject(J, obj);
 }
 
 void js_newboolean(js_State *J, int v)

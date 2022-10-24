@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -318,7 +318,8 @@ void LabCLUTEval(cmsContext ContextID,
 
             if (xin)
             {
-                *(cmsFloat32Number*) (out[TotalOut]) = *xin;
+                *(cmsFloat32Number*) (out[TotalOut]) = *(cmsFloat32Number*)xin;
+                xin += SourceIncrements[3];
                 out[TotalOut] += DestIncrements[TotalOut];
             }
         }

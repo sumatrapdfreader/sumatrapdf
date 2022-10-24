@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -40,6 +40,11 @@
 
 #ifdef CMS_IS_WINDOWS_
 #    include <io.h>
+#    include <direct.h>
+#    define CHDIR(a) (void)_chdir(a)
+#else
+#    include <unistd.h>
+#    define CHDIR(a) (void)chdir(a)
 #endif
 
 #define cmsmin(a, b) (((a) < (b)) ? (a) : (b))

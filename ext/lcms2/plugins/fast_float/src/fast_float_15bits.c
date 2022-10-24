@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -356,7 +356,7 @@ cmsUInt8Number* Pack15bitsPlanar(cmsContext ContextID,
 
 
 
-// Generic falltrough
+// Generic fallthrough
 static
 cmsUInt8Number* Unroll15bitsChunky(cmsContext ContextID,
                                    CMSREGISTER struct _cmstransform_struct* CMMcargo,
@@ -501,7 +501,7 @@ cmsUInt8Number*  PackNBytesSwapDither(cmsContext ContextID,
 
 // The factory for 15 bits. This function returns a pointer to specialized function
 // that would deal with the asked format. It return a pointer to NULL if the format
-// is not supported. This is tha basis of formatter plug-in for 15 bit formats.
+// is not supported. This is the basis of formatter plug-in for 15 bit formats.
 CMSCHECKPOINT cmsFormatter CMSEXPORT Formatter_15Bit_Factory(cmsContext ContextID,
                                                              cmsUInt32Number Type,
                                                              cmsFormatterDirection Dir,
@@ -552,7 +552,7 @@ CMSCHECKPOINT cmsFormatter CMSEXPORT Formatter_15Bit_Factory(cmsContext ContextI
               Result.Fmt16 = (Dir == cmsFormatterInput) ? Unroll15bitsPlanar : Pack15bitsPlanar;
               break;
 
-       // Falltrough for remaining (corner) cases
+       // Fallthrough for remaining (corner) cases
        case TYPE_GRAY_15_REV:
        case TYPE_GRAY_15_SE:
        case TYPE_GRAYA_15:

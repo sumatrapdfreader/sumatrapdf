@@ -1,6 +1,18 @@
-List of changes
+List of changes in MuPDF 1.21.0
 
 	Added MOBI input format support.
+	Added Story API for creating PDF documents from formatted text.
+	Added API to create, edit, and delete links.
+
+	Support custom images for Stamp annotations.
+	Support interior color on Polygon annotations.
+	Support line endings on PolyLine annotations.
+
+	Improved SVG output.
+
+	C++/Python/C# binding:
+		Changes to naming of wrapper functions and classes.
+		Added limited support for callbacks into Python, using SWIG Directors.
 
 List of changes in MuPDF 1.20.0
 

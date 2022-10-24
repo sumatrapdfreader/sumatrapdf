@@ -10,15 +10,20 @@ ACLOCAL_AMFLAGS = -I m4
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 
+USER_PLUGINS = 
 if COND_FASTFLOAT
-    USER_PLUGINS = plugins
+    USER_PLUGINS += plugins/fast_float
+endif
+
+if COND_THREADED
+    USER_PLUGINS += plugins/threaded
 endif
 
 # Directories containing Makefiles to 'make'
 SUBDIRS = src include utils/tificc utils/transicc utils/linkicc utils/jpgicc utils/psicc testbed $(USER_PLUGINS)
 
 # Additional files to distribute
-EXTRA_DIST = AUTHORS COPYING ChangeLog doc Projects include bin Lib INSTALL README.1ST autogen.sh lcms2.pc.in plugins
+EXTRA_DIST = AUTHORS COPYING ChangeLog doc Projects include bin Lib INSTALL README.1ST autogen.sh lcms2.pc.in plugins 
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = lcms2mt.pc

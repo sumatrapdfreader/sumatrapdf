@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -25,9 +25,9 @@
 #include "lcms2mt_fast_float.h"
 #include <stdint.h>
 
-#define REQUIRED_LCMS_VERSION (2120-2000)
+#define REQUIRED_LCMS_VERSION (2140-2000)
 
-// Unused parameter warning supression
+// Unused parameter warning suppression
 #define UNUSED_PARAMETER(x) ((void)x)
 
 // For testbed

@@ -22,6 +22,7 @@
 
 #include "mupdf/fitz.h"
 
+#include <assert.h>
 #include <string.h>
 #include <limits.h>
 
@@ -272,6 +273,7 @@ pdfocr_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 
 	if (sh == 0)
 		sh = h;
+	assert(sh != 0 && "pdfocr_write_header() should not be given zero height input.");
 	strips = (h + sh-1)/sh;
 
 	if (a != 0)

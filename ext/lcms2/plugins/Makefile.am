@@ -1,1 +1,1 @@
-SUBDIRS = fast_float
+SUBDIRS = fast_float threaded

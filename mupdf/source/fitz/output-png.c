@@ -260,24 +260,13 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		/* Unpremultiply data */
 		for (y = 0; y < band_height; y++)
 		{
-			int prev[FZ_MAX_COLORS];
-			*dp++ = 1; /* sub prediction filter */
+			*dp++ = 0; /* none prediction filter */
 			for (x = 0; x < w; x++)
 			{
 				int a = sp[n-1];
 				int inva = a ? 256*255/a : 0;
-				int p;
 				for (k = 0; k < n-1; k++)
-				{
-					int v = (sp[k] * inva + 128)>>8;
-					p = x ? prev[k] : 0;
-					prev[k] = v;
-					v -= p;
-					dp[k] = v;
-				}
-				p = x ? prev[k] : 0;
-				prev[k] = a;
-				a -= p;
+					dp[k] = (sp[k] * inva + 128)>>8;
 				dp[k] = a;
 				sp += n;
 				dp += n;
@@ -289,16 +278,11 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 	{
 		for (y = 0; y < band_height; y++)
 		{
-			*dp++ = 1; /* sub prediction filter */
+			*dp++ = 0; /* none prediction filter */
 			for (x = 0; x < w; x++)
 			{
 				for (k = 0; k < n; k++)
-				{
-					if (x == 0)
 						dp[k] = sp[k];
-					else
-						dp[k] = sp[k] - sp[k-n];
-				}
 				sp += n;
 				dp += n;
 			}

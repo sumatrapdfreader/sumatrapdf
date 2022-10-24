@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -263,8 +263,8 @@ static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
 
         if (nalpha)
         {
-            ain = (const cmsUInt8Number*)Input + SourceStartingOrder[1];
-            aout = (cmsUInt8Number*)Output + DestStartingOrder[1];
+            ain = (const cmsUInt8Number*)Input + SourceStartingOrder[1] + strideIn;
+            aout = (cmsUInt8Number*)Output + DestStartingOrder[1] + strideOut;
         }
 
         for (ii = 0; ii < PixelsPerLine; ii++) {
@@ -328,8 +328,8 @@ static void FastFloatGrayIdentity(cmsContext ContextID,
 
         if (nalpha)
         {
-            ain = (const cmsUInt8Number*)Input + SourceStartingOrder[1];
-            aout = (cmsUInt8Number*)Output + DestStartingOrder[1];
+            ain = (const cmsUInt8Number*)Input + SourceStartingOrder[1] + strideIn;
+            aout = (cmsUInt8Number*)Output + DestStartingOrder[1] + strideOut;
         }
 
 
@@ -393,7 +393,7 @@ cmsBool KCurveIsLinear(CurvesFloatData* data)
 }
 
 
-// Create linearization tables with a reasonable number of entries. Precission is about 32 bits.
+// Create linearization tables with a reasonable number of entries. Precision is about 32 bits.
 static
 CurvesFloatData* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,  cmsPipeline* Src)
 {

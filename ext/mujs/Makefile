@@ -12,7 +12,7 @@ libdir ?= $(prefix)/lib
 ifeq "$(wildcard .git)" ".git"
   VERSION := $(shell git describe --tags --always)
 else
-  VERSION := $(shell basename $$PWD | sed -e s,^mujs-,,)
+  VERSION := $(patsubst mujs-%,%,$(notdir $(CURDIR)))
 endif
 
 ifeq ($(shell uname),Darwin)
@@ -75,31 +75,34 @@ one.c: $(SRCS)
 jsdump.c: astnames.h opnames.h
 
 $(OUT)/%.o: %.c $(HDRS)
-	@ mkdir -p $(dir $@)
+	@ mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 $(OUT)/libmujs.o: one.c $(HDRS)
-	@ mkdir -p $(dir $@)
+	@ mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 $(OUT)/libmujs.a: $(OUT)/libmujs.o
-	@ mkdir -p $(dir $@)
+	@ mkdir -p $(@D)
 	$(AR) cr $@ $^
 
 $(OUT)/libmujs.$(SO_EXT): one.c $(HDRS)
-	@ mkdir -p $(dir $@)
+	@ mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -shared $(LDFLAGS) -o $@ $< -lm
 
-$(OUT)/mujs: $(OUT)/libmujs.o $(OUT)/main.o
-	@ mkdir -p $(dir $@)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LIBREADLINE) -lm
+libmujs ?= libmujs.a
 
-$(OUT)/mujs-pp: $(OUT)/libmujs.o $(OUT)/pp.o
-	@ mkdir -p $(dir $@)
-	$(CC) $(LDFLAGS) -o $@ $^ -lm
+$(OUT)/mujs: $(OUT)/main.o $(OUT)/$(libmujs)
+	@ mkdir -p $(@D)
+	$(CC) $(LDFLAGS) -o $@ $< -L$(OUT) -l:$(libmujs) $(LIBREADLINE) -lm
+
+$(OUT)/mujs-pp: $(OUT)/pp.o $(OUT)/$(libmujs)
+	@ mkdir -p $(@D)
+	$(CC) $(LDFLAGS) -o $@ $< -L$(OUT) -l:$(libmujs) -lm
 
 .PHONY: $(OUT)/mujs.pc
 $(OUT)/mujs.pc:
+	@ mkdir -p $(dir $@)
 	@ echo Creating $@
 	@ echo > $@ Name: mujs
 	@ echo >> $@ Description: MuJS embeddable Javascript interpreter

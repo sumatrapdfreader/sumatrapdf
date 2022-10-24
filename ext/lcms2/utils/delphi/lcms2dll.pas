@@ -25,7 +25,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.13
+// Version 2.13 - unmantained
 //
 
 UNIT lcms2dll;
@@ -45,7 +45,7 @@ INTERFACE
 
  CONST
 
-  LCMS2_SO = {$IFDEF DARWIN} 'liblcms2.2.dylib'; {$ELSE} 'lcms2.dll'; {$ENDIF}
+  LCMS2_SO = {$IFDEF DARWIN} 'liblcms2.13.dylib'; {$ELSE} 'lcms2.dll'; {$ENDIF}
 
  TYPE
 
@@ -1449,7 +1449,7 @@ cmsFLAGS_SOFTPROOFING             = $4000;    // Do softproofing
 cmsFLAGS_BLACKPOINTCOMPENSATION   = $2000;
 cmsFLAGS_NOWHITEONWHITEFIXUP      = $0004;    // Don't fix scum dot
 cmsFLAGS_HIGHRESPRECALC           = $0400;    // Use more memory to give better accuracy
-cmsFLAGS_LOWRESPRECALC            = $0800;    // Use less memory to minimize resouces
+cmsFLAGS_LOWRESPRECALC            = $0800;    // Use less memory to minimize resources
 
 // For devicelink creation
 cmsFLAGS_8BITS_DEVICELINK         = $0008;   // Create 8 bits devicelinks

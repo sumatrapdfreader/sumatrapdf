@@ -385,9 +385,8 @@ Changelog
 [Note that this is only for changes to the generation of the C++/Python/C#
 APIs; changes to the main MuPDF API are not detailed here.]
 
-* **Latest**:
+* **2022-10-21**:
 
-  * Optional use of single `fz_context*` for all threads.
   * Document that global instances of wrapper classes are not supported.
   * Python: provide class-aware out-param wrappers.
   * Generate `operator==` and `operator!=` for POD structs and wrapper classes.

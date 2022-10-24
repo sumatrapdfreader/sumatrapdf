@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -53,7 +53,7 @@ void Help(void)
     fprintf(stderr, "-b - Black point compensation (CRD only)\n");
     fprintf(stderr, "-u - Do NOT generate resource name on CRD\n");
     fprintf(stderr, "-c<0,1,2> - Precision (0=LowRes, 1=Normal (default), 2=Hi-res) (CRD only)\n");
-    fprintf(stderr, "-n<gridpoints> - Alternate way to set precission, number of CLUT points (CRD only)\n");
+    fprintf(stderr, "-n<gridpoints> - Alternate way to set precision, number of CLUT points (CRD only)\n");
 
     fprintf(stderr, "\n");
     fprintf(stderr, "If no output file is specified, output goes to stdout.\n\n");
@@ -213,8 +213,8 @@ int main(int argc, char *argv[])
 	int nargs;
     cmsContext ContextID = NULL;
 
-    fprintf(stderr, "Little CMS ICC PostScript generator - v2.1 [LittleCMS %2.2f]\n", LCMS_VERSION / 1000.0);
-    fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
+    fprintf(stderr, "Little CMS ICC PostScript generator - v2.1 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2022 Marti Maria Saguer. See COPYING file for details.\n");
     fflush(stderr);
 
 	// Initialize

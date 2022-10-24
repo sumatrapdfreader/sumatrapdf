@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -251,6 +251,7 @@ void PerformanceEval8(cmsContext ContextID,
 
                      if (ain) {
                          *out[TotalOut] = *ain;
+                         ain += SourceIncrements[3];
                          out[TotalOut] += DestIncrements[TotalOut];
                      }
 
@@ -352,7 +353,7 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     // For empty transforms, do nothing
     if (*Lut == NULL) return FALSE;
 
-    // This is a loosy optimization! does not apply in floating-point cases
+    // This is a lossy optimization! does not apply in floating-point cases
     if (T_FLOAT(*InputFormat) || T_FLOAT(*OutputFormat)) return FALSE;
 
     // Only on 8-bit
@@ -360,6 +361,10 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
 
     // Only on RGB
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
+
+    // This optimization only works on RGB8->RGB8 or RGB8->CMYK8
+    if (T_COLORSPACE(*OutputFormat) != PT_RGB &&
+        T_COLORSPACE(*OutputFormat) != PT_CMYK) return FALSE;
 
     OriginalLut = *Lut;
 

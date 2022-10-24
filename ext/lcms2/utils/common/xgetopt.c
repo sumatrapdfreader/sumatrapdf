@@ -2,7 +2,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -27,15 +27,15 @@
 //    xgetopt.c  -- loosely based on System V getopt()
 //
 //    option ::= SW [optLetter]* [argLetter space* argument]
-//   
+//
 
 #include <string.h>
 #include <stdio.h>
 
-int     xoptind = 1;   
-char   *xoptarg;       
+int     xoptind = 1;
+char   *xoptarg;
 
-static  char   *nextArg = NULL;    
+static  char   *nextArg = NULL;
 
 #define SW '-'
 

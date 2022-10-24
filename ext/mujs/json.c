@@ -15,6 +15,16 @@ int js_isstringobject(js_State *J, int idx)
 	return js_isobject(J, idx) && js_toobject(J, idx)->type == JS_CSTRING;
 }
 
+int js_isbooleanobject(js_State *J, int idx)
+{
+	return js_isobject(J, idx) && js_toobject(J, idx)->type == JS_CBOOLEAN;
+}
+
+int js_isdateobject(js_State *J, int idx)
+{
+	return js_isobject(J, idx) && js_toobject(J, idx)->type == JS_CDATE;
+}
+
 static void jsonnext(js_State *J)
 {
 	J->lookahead = jsY_lexjson(J);

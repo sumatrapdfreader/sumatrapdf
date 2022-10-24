@@ -5,6 +5,8 @@
 
 #include "utf.h"
 
+#include <assert.h>
+
 static void jsR_run(js_State *J, js_Function *F);
 
 /* Push values on stack */
@@ -517,6 +519,28 @@ static void js_pushrune(js_State *J, Rune rune)
 	}
 }
 
+void jsR_unflattenarray(js_State *J, js_Object *obj) {
+	if (obj->type == JS_CARRAY && obj->u.a.simple) {
+		js_Property *ref;
+		int i;
+		char name[32];
+		if (js_try(J)) {
+			obj->properties = NULL;
+			js_throw(J);
+		}
+		for (i = 0; i < obj->u.a.length; ++i) {
+			js_itoa(name, i);
+			ref = jsV_setproperty(J, obj, name);
+			ref->value = obj->u.a.array[i];
+		}
+		js_free(J, obj->u.a.array);
+		obj->u.a.simple = 0;
+		obj->u.a.capacity = 0;
+		obj->u.a.array = NULL;
+		js_endtry(J);
+	}
+}
+
 static int jsR_hasproperty(js_State *J, js_Object *obj, const char *name)
 {
 	js_Property *ref;
@@ -526,6 +550,14 @@ static int jsR_hasproperty(js_State *J, js_Object *obj, const char *name)
 		if (!strcmp(name, "length")) {
 			js_pushnumber(J, obj->u.a.length);
 			return 1;
+		}
+		if (obj->u.a.simple) {
+			if (js_isarrayindex(J, name, &k)) {
+				if (k >= 0 && k < obj->u.a.length) {
+					js_pushvalue(J, obj->u.a.array[k]);
+					return 1;
+				}
+			}
 		}
 	}
 
@@ -591,6 +623,45 @@ static void jsR_getproperty(js_State *J, js_Object *obj, const char *name)
 		js_pushundefined(J);
 }
 
+static int jsR_hasindex(js_State *J, js_Object *obj, int k)
+{
+	char buf[32];
+	if (obj->type == JS_CARRAY && obj->u.a.simple && k >= 0 && k < obj->u.a.length) {
+		js_pushvalue(J, obj->u.a.array[k]);
+		return 1;
+	}
+	return jsR_hasproperty(J, obj, js_itoa(buf, k));
+}
+
+static void jsR_getindex(js_State *J, js_Object *obj, int k)
+{
+	if (!jsR_hasindex(J, obj, k))
+		js_pushundefined(J);
+}
+
+static void jsR_setarrayindex(js_State *J, js_Object *obj, int k, js_Value *value)
+{
+	int newlen = k + 1;
+	assert(obj->u.a.simple);
+	assert(k >= 0);
+	if (newlen > JS_ARRAYLIMIT)
+		js_rangeerror(J, "array too large");
+	if (newlen > obj->u.a.length) {
+		assert(newlen == obj->u.a.length + 1);
+		if (newlen > obj->u.a.capacity) {
+			int newcap = obj->u.a.capacity;
+			if (newcap == 0)
+				newcap = 8;
+			while (newcap < newlen)
+				newcap <<= 1;
+			obj->u.a.array = js_realloc(J, obj->u.a.array, newcap * sizeof(js_Value));
+			obj->u.a.capacity = newcap;
+		}
+		obj->u.a.length = newlen;
+	}
+	obj->u.a.array[k] = *value;
+}
+
 static void jsR_setproperty(js_State *J, js_Object *obj, const char *name, int transient)
 {
 	js_Value *value = stackidx(J, -1);
@@ -604,12 +675,30 @@ static void jsR_setproperty(js_State *J, js_Object *obj, const char *name, int t
 			int newlen = jsV_numbertointeger(rawlen);
 			if (newlen != rawlen || newlen < 0)
 				js_rangeerror(J, "invalid array length");
+			if (newlen > JS_ARRAYLIMIT)
+				js_rangeerror(J, "array too large");
+			if (obj->u.a.simple) {
+				if (newlen <= obj->u.a.length) {
+					obj->u.a.length = newlen;
+					return;
+				}
+				jsR_unflattenarray(J, obj);
+			}
 			jsV_resizearray(J, obj, newlen);
 			return;
 		}
-		if (js_isarrayindex(J, name, &k))
-			if (k >= obj->u.a.length)
+
+		if (js_isarrayindex(J, name, &k)) {
+			if (obj->u.a.simple) {
+				if (k >= 0 && k <= obj->u.a.length) {
+					jsR_setarrayindex(J, obj, k, value);
+					return;
+				}
+				jsR_unflattenarray(J, obj);
+			}
+			if (k + 1 > obj->u.a.length)
 				obj->u.a.length = k + 1;
+		}
 	}
 
 	else if (obj->type == JS_CSTRING) {
@@ -679,6 +768,16 @@ readonly:
 		js_typeerror(J, "'%s' is read-only", name);
 }
 
+static void jsR_setindex(js_State *J, js_Object *obj, int k, int transient)
+{
+	char buf[32];
+	if (obj->type == JS_CARRAY && obj->u.a.simple && k >= 0 && k <= obj->u.a.length) {
+		jsR_setarrayindex(J, obj, k, stackidx(J, -1));
+	} else {
+		jsR_setproperty(J, obj, js_itoa(buf, k), transient);
+	}
+}
+
 static void jsR_defproperty(js_State *J, js_Object *obj, const char *name,
 	int atts, js_Value *value, js_Object *getter, js_Object *setter,
 	int throw)
@@ -689,6 +788,8 @@ static void jsR_defproperty(js_State *J, js_Object *obj, const char *name,
 	if (obj->type == JS_CARRAY) {
 		if (!strcmp(name, "length"))
 			goto readonly;
+		if (obj->u.a.simple)
+			jsR_unflattenarray(J, obj);
 	}
 
 	else if (obj->type == JS_CSTRING) {
@@ -750,6 +851,8 @@ static int jsR_delproperty(js_State *J, js_Object *obj, const char *name)
 	if (obj->type == JS_CARRAY) {
 		if (!strcmp(name, "length"))
 			goto dontconf;
+		if (obj->u.a.simple)
+			jsR_unflattenarray(J, obj);
 	}
 
 	else if (obj->type == JS_CSTRING) {
@@ -887,6 +990,28 @@ void js_defaccessor(js_State *J, int idx, const char *name, int atts)
 int js_hasproperty(js_State *J, int idx, const char *name)
 {
 	return jsR_hasproperty(J, js_toobject(J, idx), name);
+}
+
+void js_getindex(js_State *J, int idx, int i)
+{
+	jsR_getindex(J, js_toobject(J, idx), i);
+}
+
+int js_hasindex(js_State *J, int idx, int i)
+{
+	return jsR_hasindex(J, js_toobject(J, idx), i);
+}
+
+void js_setindex(js_State *J, int idx, int i)
+{
+	jsR_setindex(J, js_toobject(J, idx), i, !js_isobject(J, idx));
+	js_pop(J, 1);
+}
+
+void js_delindex(js_State *J, int idx, int i)
+{
+	char buf[32];
+	js_delproperty(J, idx, js_itoa(buf, i));
 }
 
 /* Iterator */
@@ -1360,6 +1485,16 @@ void js_trap(js_State *J, int pc)
 	js_stacktrace(J);
 }
 
+static int jsR_isindex(js_State *J, int idx, int *k)
+{
+	js_Value *v = stackidx(J, idx);
+	if (v->type == JS_TNUMBER) {
+		*k = v->u.number;
+		return *k == v->u.number && *k >= 0;
+	}
+	return 0;
+}
+
 static void jsR_run(js_State *J, js_Function *F)
 {
 	js_Function **FT = F->funtab;
@@ -1532,9 +1667,14 @@ static void jsR_run(js_State *J, js_Function *F)
 			break;
 
 		case OP_GETPROP:
-			str = js_tostring(J, -1);
-			obj = js_toobject(J, -2);
-			jsR_getproperty(J, obj, str);
+			if (jsR_isindex(J, -1, &ix)) {
+				obj = js_toobject(J, -2);
+				jsR_getindex(J, obj, ix);
+			} else {
+				str = js_tostring(J, -1);
+				obj = js_toobject(J, -2);
+				jsR_getproperty(J, obj, str);
+			}
 			js_rot3pop2(J);
 			break;
 
@@ -1546,10 +1686,16 @@ static void jsR_run(js_State *J, js_Function *F)
 			break;
 
 		case OP_SETPROP:
-			str = js_tostring(J, -2);
-			obj = js_toobject(J, -3);
-			transient = !js_isobject(J, -3);
-			jsR_setproperty(J, obj, str, transient);
+			if (jsR_isindex(J, -2, &ix)) {
+				obj = js_toobject(J, -3);
+				transient = !js_isobject(J, -3);
+				jsR_setindex(J, obj, ix, transient);
+			} else {
+				str = js_tostring(J, -2);
+				obj = js_toobject(J, -3);
+				transient = !js_isobject(J, -3);
+				jsR_setproperty(J, obj, str, transient);
+			}
 			js_rot3pop2(J);
 			break;
 

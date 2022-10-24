@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -876,7 +876,7 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
 
     ptr = (cmsUInt32Number*) cmsReadTag(cpy2, h, SigInt);
     if (ptr == NULL) {
-        Fail("Read tag/conext switching failed (2)");
+        Fail("Read tag/context switching failed (2)");
         return 0;
     }
 
@@ -959,7 +959,6 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
     cmsContext cpy = NULL;
     cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
-    cmsUInt32Number myTag = 1234;
     cmsUInt32Number rc = 0;
     char* data = NULL;
     cmsUInt32Number clen = 0;
@@ -1057,7 +1056,7 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
 
     pipe = (cmsPipeline*) cmsReadTag(cpy2, h, cmsSigDToB3Tag);
     if (pipe == NULL) {
-        Fail("Read tag/conext switching failed (2)");
+        Fail("Read tag/context switching failed (2)");
         return 0;
     }
 

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -70,7 +70,7 @@ static struct my_error_mgr {
 } ErrorHandler;
 
 
-cmsUInt16Number Alarm[4] = {128,128,128,0};
+cmsUInt16Number Alarm[cmsMAXCHANNELS] = {128,128,128,0};
 
 
 static
@@ -408,7 +408,7 @@ uint32_t read32(uint8_t* arr, size_t pos, int swapBytes, size_t max)
             return (arr[pos] << 24) | (arr[pos + 1] << 16) | (arr[pos + 2] << 8) | arr[pos + 3];
         }
 
-        return arr[pos] | (arr[pos + 1] << 8) | (arr[pos + 2] << 16) | (arr[pos + 3] << 24); 
+        return arr[pos] | (arr[pos + 1] << 8) | (arr[pos + 2] << 16) | (arr[pos + 3] << 24);
     }
 }
 
@@ -464,7 +464,7 @@ cmsBool HandleEXIF(struct jpeg_decompress_struct* cinfo)
     uint32_t i, numEntries;
     double XRes = -1, YRes = -1;
     int Unit = 2; // Inches
-    
+
 
     for (ptr = cinfo ->marker_list; ptr; ptr = ptr ->next) {
 
@@ -1253,8 +1253,8 @@ int main(int argc, char* argv[])
 {
     cmsContext ContextID = cmsCreateContext(NULL, NULL);
 
-    fprintf(stderr, "Little CMS ICC profile applier for JPEG - v3.3 [LittleCMS %2.2f]\n\n", LCMS_VERSION / 1000.0);
-    fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
+    fprintf(stderr, "Little CMS ICC profile applier for JPEG - v3.4 [LittleCMS %2.2f]\n\n", cmsGetEncodedCMMversion() / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2022 Marti Maria Saguer. See COPYING file for details.\n");
     fflush(stderr);
 
     InitUtils(ContextID, "jpgicc");

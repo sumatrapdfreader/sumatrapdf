@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -258,7 +258,7 @@ Error:
 
 
 
-// Read the DToAX tag, adjusting the encoding of Lab or XYZ if neded
+// Read the DToAX tag, adjusting the encoding of Lab or XYZ if needed
 static
 cmsPipeline* _cmsReadFloatInputTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature tagFloat)
 {
@@ -319,7 +319,7 @@ cmsPipeline* CMSEXPORT _cmsReadInputLUT(cmsContext ContextID, cmsHPROFILE hProfi
 
         Lut = cmsPipelineAlloc(ContextID, 0, 0);
         if (Lut == NULL) {
-            cmsFreeNamedColorList(ContextID, nc);
+            //cmsFreeNamedColorList(ContextID, nc);
             return NULL;
         }
 
@@ -531,7 +531,7 @@ void ChangeInterpolationToTrilinear(cmsContext ContextID, cmsPipeline* Lut)
 }
 
 
-// Read the DToAX tag, adjusting the encoding of Lab or XYZ if neded
+// Read the DToAX tag, adjusting the encoding of Lab or XYZ if needed
 static
 cmsPipeline* _cmsReadFloatOutputTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature tagFloat)
 {
@@ -653,7 +653,7 @@ Error:
 
 // ---------------------------------------------------------------------------------------------------------------
 
-// Read the AToD0 tag, adjusting the encoding of Lab or XYZ if neded
+// Read the AToD0 tag, adjusting the encoding of Lab or XYZ if needed
 static
 cmsPipeline* _cmsReadFloatDevicelinkTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature tagFloat)
 {
@@ -729,7 +729,7 @@ cmsPipeline* CMSEXPORT _cmsReadDevicelinkLUT(cmsContext ContextID, cmsHPROFILE h
         return Lut;
     Error:
         cmsPipelineFree(ContextID, Lut);
-        cmsFreeNamedColorList(ContextID, nc);
+        //cmsFreeNamedColorList(ContextID, nc);
         return NULL;
     }
 

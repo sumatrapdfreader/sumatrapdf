@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -399,7 +399,7 @@ cmsNAMEDCOLORLIST* ComponentNames(cmsContext ContextID, cmsColorSpaceSignature s
 
         SetRange(1, IsInput);
 
-        n = cmsChannelsOf(ContextID, space);
+        n = cmsChannelsOfColorSpace(ContextID, space);
 
         for (i=0; i < n; i++) {
 
@@ -665,7 +665,7 @@ void PrintFloatResults(cmsContext ContextID, cmsFloat64Number Value[])
     char ChannelName[cmsMAX_PATH];
     cmsFloat64Number v;
 
-    n = cmsChannelsOf(ContextID, OutputColorSpace);
+    n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
     for (i=0; i < n; i++) {
 
         if (OutputColorant != NULL) {
@@ -745,7 +745,7 @@ void TakeFloatValues(cmsContext ContextID, cmsFloat64Number Float[])
         return;
     }
 
-    n = cmsChannelsOf(ContextID, InputColorSpace);
+    n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
     for (i=0; i < n; i++) {
 
         if (InputColorant) {
@@ -794,7 +794,7 @@ void PrintEncodedResults(cmsContext ContextID, cmsUInt16Number Encoded[])
     char ChannelName[cmsMAX_PATH];
     cmsUInt32Number v;
 
-    n = cmsChannelsOf(ContextID, OutputColorSpace);
+    n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
     for (i=0; i < n; i++) {
 
         if (OutputColorant != NULL) {
@@ -960,7 +960,7 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
         {
             cmsUInt32Number i, n;
 
-            n = cmsChannelsOf(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
@@ -976,7 +976,7 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
         {
             cmsUInt32Number i, n;
 
-            n = cmsChannelsOf(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
@@ -1067,9 +1067,9 @@ void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
     case cmsSig15colorData:
         {
 
-            cmsUInt32Number i, n;
+            cmsInt32Number i, n;
 
-            n = cmsChannelsOf(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
@@ -1084,9 +1084,9 @@ void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
     default:
         {
 
-            cmsUInt32Number i, n;
+            cmsInt32Number i, n;
 
-            n = cmsChannelsOf(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
@@ -1187,7 +1187,7 @@ void SetOutputDataFormat(cmsContext ContextID)
             int i, n;
             char Buffer[255];
 
-            n = cmsChannelsOf(ContextID, OutputColorSpace);
+            n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
             cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", n+1);
             cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
 
@@ -1203,7 +1203,7 @@ void SetOutputDataFormat(cmsContext ContextID)
         int i, n;
         char Buffer[255];
 
-        n = cmsChannelsOf(ContextID, OutputColorSpace);
+        n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
         cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", n+1);
         cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
 
@@ -1254,8 +1254,8 @@ int main(int argc, char *argv[])
 
     int nPatch = 0;
 
-    fprintf(stderr, "LittleCMS ColorSpace conversion calculator - 5.0 [LittleCMS %2.2f]\n", LCMS_VERSION / 1000.0);
-    fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
+    fprintf(stderr, "LittleCMS ColorSpace conversion calculator - 5.1 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2022 Marti Maria Saguer. See COPYING file for details.\n");
     fflush(stderr);
 
     InitUtils(ContextID, "transicc");

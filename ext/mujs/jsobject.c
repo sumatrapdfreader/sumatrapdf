@@ -62,7 +62,24 @@ static void Op_hasOwnProperty(js_State *J)
 {
 	js_Object *self = js_toobject(J, 0);
 	const char *name = js_tostring(J, 1);
-	js_Property *ref = jsV_getownproperty(J, self, name);
+	js_Property *ref;
+	int k;
+
+	if (self->type == JS_CSTRING) {
+		if (js_isarrayindex(J, name, &k) && k >= 0 && k < self->u.s.length) {
+			js_pushboolean(J, 1);
+			return;
+		}
+	}
+
+	if (self->type == JS_CARRAY && self->u.a.simple) {
+		if (js_isarrayindex(J, name, &k) && k >= 0 && k < self->u.a.length) {
+			js_pushboolean(J, 1);
+			return;
+		}
+	}
+
+	ref = jsV_getownproperty(J, self, name);
 	js_pushboolean(J, ref != NULL);
 }
 
@@ -110,9 +127,10 @@ static void O_getOwnPropertyDescriptor(js_State *J)
 		js_typeerror(J, "not an object");
 	obj = js_toobject(J, 1);
 	ref = jsV_getproperty(J, obj, js_tostring(J, 2));
-	if (!ref)
+	if (!ref) {
+		// TODO: builtin properties (string and array index and length, regexp flags, etc)
 		js_pushundefined(J);
-	else {
+	} else {
 		js_newobject(J);
 		if (!ref->getter && !ref->setter) {
 			js_pushvalue(J, ref->value);
@@ -152,6 +170,7 @@ static int O_getOwnPropertyNames_walk(js_State *J, js_Property *ref, int i)
 static void O_getOwnPropertyNames(js_State *J)
 {
 	js_Object *obj;
+	char name[32];
 	int k;
 	int i;
 
@@ -169,13 +188,21 @@ static void O_getOwnPropertyNames(js_State *J)
 	if (obj->type == JS_CARRAY) {
 		js_pushliteral(J, "length");
 		js_setindex(J, -2, i++);
+		if (obj->u.a.simple) {
+			for (k = 0; k < obj->u.a.length; ++k) {
+				js_itoa(name, k);
+				js_pushstring(J, name);
+				js_setindex(J, -2, i++);
+			}
+		}
 	}
 
 	if (obj->type == JS_CSTRING) {
 		js_pushliteral(J, "length");
 		js_setindex(J, -2, i++);
 		for (k = 0; k < obj->u.s.length; ++k) {
-			js_pushnumber(J, k);
+			js_itoa(name, k);
+			js_pushstring(J, name);
 			js_setindex(J, -2, i++);
 		}
 	}
@@ -359,9 +386,12 @@ static void O_keys(js_State *J)
 
 static void O_preventExtensions(js_State *J)
 {
+	js_Object *obj;
 	if (!js_isobject(J, 1))
 		js_typeerror(J, "not an object");
-	js_toobject(J, 1)->extensible = 0;
+	obj = js_toobject(J, 1);
+	jsR_unflattenarray(J, obj);
+	obj->extensible = 0;
 	js_copy(J, 1);
 }
 
@@ -389,6 +419,7 @@ static void O_seal(js_State *J)
 		js_typeerror(J, "not an object");
 
 	obj = js_toobject(J, 1);
+	jsR_unflattenarray(J, obj);
 	obj->extensible = 0;
 
 	if (obj->properties->level)
@@ -446,6 +477,7 @@ static void O_freeze(js_State *J)
 		js_typeerror(J, "not an object");
 
 	obj = js_toobject(J, 1);
+	jsR_unflattenarray(J, obj);
 	obj->extensible = 0;
 
 	if (obj->properties->level)

@@ -424,7 +424,10 @@ fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int it
 		fz_try(ctx)
 			font = ctx->font->load_font(ctx, name, bold, italic, needs_exact_metrics);
 		fz_catch(ctx)
+		{
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			font = NULL;
+	}
 	}
 
 	return font;
@@ -439,7 +442,10 @@ fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ros, int
 		fz_try(ctx)
 			font = ctx->font->load_cjk_font(ctx, name, ros, serif);
 		fz_catch(ctx)
+		{
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			font = NULL;
+	}
 	}
 
 	return font;
@@ -454,7 +460,10 @@ fz_font *fz_load_system_fallback_font(fz_context *ctx, int script, int language,
 		fz_try(ctx)
 			font = ctx->font->load_fallback_font(ctx, script, language, serif, bold, italic);
 		fz_catch(ctx)
+		{
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			font = NULL;
+		}
 	}
 
 	return font;

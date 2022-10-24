@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2020 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -112,7 +112,7 @@ cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.3);
+    cmsSetProfileVersion(ContextID, hICC, 4.4);
 
     cmsSetDeviceClass(ContextID, hICC,      cmsSigDisplayClass);
     cmsSetColorSpace(ContextID, hICC,       cmsSigRgbData);
@@ -226,7 +226,7 @@ cmsHPROFILE CMSEXPORT cmsCreateGrayProfile(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.3);
+    cmsSetProfileVersion(ContextID, hICC, 4.4);
 
     cmsSetDeviceClass(ContextID, hICC,      cmsSigDisplayClass);
     cmsSetColorSpace(ContextID, hICC,       cmsSigGrayData);
@@ -277,13 +277,13 @@ cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLink(cmsContext ContextID,
 {
     cmsHPROFILE hICC;
     cmsPipeline* Pipeline;
-    cmsUInt32Number nChannels;
+    cmsInt32Number nChannels;
 
     hICC = cmsCreateProfilePlaceholder(ContextID);
     if (!hICC)
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.3);
+    cmsSetProfileVersion(ContextID, hICC, 4.4);
 
     cmsSetDeviceClass(ContextID, hICC,      cmsSigLinkClass);
     cmsSetColorSpace(ContextID, hICC,       ColorSpace);
@@ -292,7 +292,7 @@ cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLink(cmsContext ContextID,
     cmsSetHeaderRenderingIntent(ContextID, hICC,  INTENT_PERCEPTUAL);
 
     // Set up channels
-    nChannels = cmsChannelsOf(ContextID, ColorSpace);
+    nChannels = cmsChannelsOfColorSpace(ContextID, ColorSpace);
 
     // Creates a Pipeline with prelinearization step only
     Pipeline = cmsPipelineAlloc(ContextID, nChannels, nChannels);
@@ -349,7 +349,7 @@ int InkLimitingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number I
 
     InkLimit = (InkLimit * 655.35);
 
-    SumCMY   = In[0]  + In[1] + In[2];
+    SumCMY   = (cmsFloat64Number) In[0]  + In[1] + In[2];
     SumCMYK  = SumCMY + In[3];
 
     if (SumCMYK > InkLimit) {
@@ -378,7 +378,7 @@ cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
     cmsHPROFILE hICC;
     cmsPipeline* LUT;
     cmsStage* CLUT;
-    cmsUInt32Number nChannels;
+    cmsInt32Number nChannels;
 
     if (ColorSpace != cmsSigCmykData) {
         cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "InkLimiting: Only CMYK currently supported");
@@ -397,7 +397,7 @@ cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.3);
+    cmsSetProfileVersion(ContextID, hICC, 4.4);
 
     cmsSetDeviceClass(ContextID, hICC,      cmsSigLinkClass);
     cmsSetColorSpace(ContextID, hICC,       ColorSpace);
@@ -497,7 +497,7 @@ cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY
     hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 4.3);
+    cmsSetProfileVersion(ContextID, hProfile, 4.4);
 
     cmsSetDeviceClass(ContextID, hProfile, cmsSigAbstractClass);
     cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
@@ -538,7 +538,7 @@ cmsHPROFILE CMSEXPORT cmsCreateXYZProfile(cmsContext ContextID)
     hProfile = cmsCreateRGBProfile(ContextID, cmsD50_xyY(ContextID), NULL, NULL);
     if (hProfile == NULL) return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 4.3);
+    cmsSetProfileVersion(ContextID, hProfile, 4.4);
 
     cmsSetDeviceClass(ContextID, hProfile, cmsSigAbstractClass);
     cmsSetColorSpace(ContextID, hProfile,  cmsSigXYZData);
@@ -784,7 +784,7 @@ cmsHPROFILE CMSEXPORT cmsCreateNULLProfile(cmsContext ContextID)
     if (!hProfile)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 4.3);
+    cmsSetProfileVersion(ContextID, hProfile, 4.4);
 
     if (!SetTextTags(ContextID, hProfile, L"NULL profile built-in")) goto Error;
 
@@ -924,7 +924,7 @@ cmsHPROFILE CreateNamedColorDevicelink(cmsContext ContextID, cmsHTRANSFORM xform
     OutputFormat = FLOAT_SH(0) |
                    COLORSPACE_SH(_cmsLCMScolorSpace(ContextID, v ->core->ExitColorSpace)) |
                    BYTES_SH(2) |
-                   CHANNELS_SH(cmsChannelsOf(ContextID, v ->core->ExitColorSpace));
+                   CHANNELS_SH(cmsChannelsOfColorSpace(ContextID, v ->core->ExitColorSpace));
     FromInput = _cmsGetFormatter(ContextID, InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
     ToOutput  = _cmsGetFormatter(ContextID, OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
 
@@ -1025,8 +1025,9 @@ const cmsAllowedLUT* FindCombination(cmsContext ContextID, const cmsPipeline* Lu
 cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFORM hTransform, cmsFloat64Number Version, cmsUInt32Number dwFlags)
 {
     cmsHPROFILE hProfile = NULL;
-    cmsUInt32Number FrmIn, FrmOut, ChansIn, ChansOut;
-    int ColorSpaceBitsIn, ColorSpaceBitsOut;
+	cmsUInt32Number FrmIn, FrmOut;
+	cmsInt32Number ChansIn, ChansOut;
+	int ColorSpaceBitsIn, ColorSpaceBitsOut;
     _cmsTRANSFORM* xform = (_cmsTRANSFORM*) hTransform;
     cmsPipeline* LUT = NULL;
     cmsStage* mpe;
@@ -1076,8 +1077,8 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
 
     // Optimize the LUT and precalculate a devicelink
 
-    ChansIn  = cmsChannelsOf(ContextID, xform ->core->EntryColorSpace);
-    ChansOut = cmsChannelsOf(ContextID, xform ->core->ExitColorSpace);
+    ChansIn  = cmsChannelsOfColorSpace(ContextID, xform -> core->EntryColorSpace);
+    ChansOut = cmsChannelsOfColorSpace(ContextID, xform -> core->ExitColorSpace);
 
     ColorSpaceBitsIn  = _cmsLCMScolorSpace(ContextID, xform ->core->EntryColorSpace);
     ColorSpaceBitsOut = _cmsLCMScolorSpace(ContextID, xform ->core->ExitColorSpace);

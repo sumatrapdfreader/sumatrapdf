@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -302,9 +302,11 @@ void FloatCMYKCLUTEval(cmsContext ContextID,
                 out[OutChan] += DestIncrements[OutChan];
             }
 
-            if (ain)
-                *out[TotalOut] = *ain;
-
+            if (ain) {
+                *(cmsFloat32Number*)(out[TotalOut]) = *(cmsFloat32Number*)ain;
+                ain += SourceIncrements[4];
+                out[TotalOut] += DestIncrements[TotalOut];
+            }
         }
 
         strideIn += Stride->BytesPerLineIn;
@@ -337,7 +339,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     // For empty transforms, do nothing
     if (*Lut == NULL) return FALSE;
 
-    // This is a loosy optimization! does not apply in floating-point cases
+    // This is a lossy optimization! does not apply in floating-point cases
     if (!T_FLOAT(*InputFormat) || !T_FLOAT(*OutputFormat)) return FALSE;
 
     // Only on 8-bit

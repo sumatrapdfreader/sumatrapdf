@@ -230,6 +230,10 @@ static const char *stacktrace_js =
 	"};\n"
 ;
 
+static const char *console_js =
+	"var console = { log: print, debug: print, warn: print, error: print };"
+;
+
 static int eval_print(js_State *J, const char *source)
 {
 	if (js_ploadstring(J, "[stdin]", source)) {
@@ -307,6 +311,10 @@ main(int argc, char **argv)
 	}
 
 	J = js_newstate(NULL, NULL, strict ? JS_STRICT : 0);
+	if (!J) {
+		fprintf(stderr, "Could not initialize MuJS.\n");
+		exit(1);
+	}
 
 	js_newcfunction(J, jsB_gc, "gc", 0);
 	js_setglobal(J, "gc");
@@ -337,6 +345,7 @@ main(int argc, char **argv)
 
 	js_dostring(J, require_js);
 	js_dostring(J, stacktrace_js);
+	js_dostring(J, console_js);
 
 	if (xoptind == argc) {
 		interactive = 1;

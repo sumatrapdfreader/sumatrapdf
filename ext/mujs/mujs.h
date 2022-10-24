@@ -8,8 +8,8 @@ extern "C" {
 #endif
 
 #define JS_VERSION_MAJOR 1
-#define JS_VERSION_MINOR 2
-#define JS_VERSION_PATCH 0
+#define JS_VERSION_MINOR 3
+#define JS_VERSION_PATCH 1
 
 #define JS_VERSION (JS_VERSION_MAJOR * 10000 + JS_VERSION_MINOR * 100 + JS_VERSION_PATCH)
 #define JS_CHECKVERSION(x,y,z) (JS_VERSION >= ((x) * 10000 + (y) * 100 + (z)))
@@ -198,6 +198,8 @@ int js_isuserdata(js_State *J, int idx, const char *tag);
 int js_iserror(js_State *J, int idx);
 int js_isnumberobject(js_State *J, int idx);
 int js_isstringobject(js_State *J, int idx);
+int js_isbooleanobject(js_State *J, int idx);
+int js_isdateobject(js_State *J, int idx);
 
 int js_toboolean(js_State *J, int idx);
 double js_tonumber(js_State *J, int idx);

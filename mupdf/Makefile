@@ -169,32 +169,47 @@ PKCS7_SRC += source/helpers/pkcs7/pkcs7-openssl.c
 PKCS7_OBJ := $(PKCS7_SRC:%.c=$(OUT)/%.o)
 
 # --- Generated embedded font files ---
-# Note: The if-else chains here must match the equivalent tests in noto.c
 
 HEXDUMP_SH := scripts/hexdump.sh
 
 FONT_BIN := $(sort $(wildcard resources/fonts/urw/*.cff))
-
-ifeq ($(filter -DTOFU_CJK,$(XCFLAGS)),)
-  ifeq ($(filter -DTOFU_CJK_EXT,$(XCFLAGS)),)
-    ifeq ($(filter -DTOFU_CJK_LANG,$(XCFLAGS)),)
 FONT_BIN += $(sort $(wildcard resources/fonts/han/*.ttc))
-    else
-      FONT_BIN += $(sort $(wildcard resources/fonts/droid/DroidSansFallbackFull.ttf))
-    endif
-  else
-    FONT_BIN += $(sort $(wildcard resources/fonts/droid/DroidSansFallback.ttf))
-  endif
-endif
-
-ifeq ($(filter -DTOFU,$(XCFLAGS)),)
-  ifeq ($(filter -DTOFU_NOTO,$(XCFLAGS)),)
+FONT_BIN += $(sort $(wildcard resources/fonts/droid/DroidSansFallbackFull.ttf))
+FONT_BIN += $(sort $(wildcard resources/fonts/droid/DroidSansFallback.ttf))
 FONT_BIN += $(sort $(wildcard resources/fonts/noto/*.otf))
 FONT_BIN += $(sort $(wildcard resources/fonts/noto/*.ttf))
-  endif
-  ifeq ($(filter -DTOFU_SIL,$(XCFLAGS)),)
 FONT_BIN += $(sort $(wildcard resources/fonts/sil/*.cff))
-  endif
+
+# Note: The tests here must match the equivalent tests in noto.c
+
+ifneq ($(filter -DTOFU_CJK,$(XCFLAGS)),)
+  FONT_BIN := $(filter-out resources/fonts/han/%.ttc, $(FONT_BIN))
+  FONT_BIN := $(filter-out resources/fonts/droid/DroidSansFallbackFull.ttf, $(FONT_BIN))
+  FONT_BIN := $(filter-out resources/fonts/droid/DroidSansFallback.ttf, $(FONT_BIN))
+endif
+
+ifneq ($(filter -DTOFU_CJK_EXT,$(XCFLAGS)),)
+  FONT_BIN := $(filter-out resources/fonts/han/%.ttc, $(FONT_BIN))
+  FONT_BIN := $(filter-out resources/fonts/droid/DroidSansFallbackFull.ttf, $(FONT_BIN))
+endif
+
+ifneq ($(filter -DTOFU_CJK_LANG,$(XCFLAGS)),)
+  FONT_BIN := $(filter-out resources/fonts/han/%.ttc, $(FONT_BIN))
+endif
+
+ifneq ($(filter -DTOFU,$(XCFLAGS)),)
+  FONT_BIN := $(filter-out resources/fonts/noto/%.otf,$(FONT_BIN))
+  FONT_BIN := $(filter-out resources/fonts/noto/%.ttf,$(FONT_BIN))
+  FONT_BIN := $(filter-out resources/fonts/sil/%.cff,$(FONT_BIN))
+endif
+
+ifneq ($(filter -DTOFU_NOTO,$(XCFLAGS)),)
+  FONT_BIN := $(filter-out resources/fonts/noto/%.otf,$(FONT_BIN))
+  FONT_BIN := $(filter-out resources/fonts/noto/%.ttf,$(FONT_BIN))
+endif
+
+ifneq ($(filter -DTOFU_SIL,$(XCFLAGS)),)
+  FONT_BIN := $(filter-out resources/fonts/sil/%.cff,$(FONT_BIN))
 endif
 
 FONT_GEN := $(FONT_BIN:%=generated/%.c)
