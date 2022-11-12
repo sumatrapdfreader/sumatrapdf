@@ -702,7 +702,7 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
-    dx = boxWidth;
+    dx = boxWidth - DpiScale(hwndFrame, 4); // 4 pixels padding on the right side of the text box
     dy = iconDy;
     exStyle = 0;
     HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
