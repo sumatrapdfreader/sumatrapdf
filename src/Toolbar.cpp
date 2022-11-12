@@ -507,19 +507,18 @@ static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
     int findBoxDx = DpiScale(win->hwndFrame, 160);
     HMODULE hmod = GetModuleHandleW(nullptr);
     HWND p = win->hwndToolbar;
-    DWORD style = WS_VISIBLE | WS_CHILD;
-    DWORD exStyle = WS_EX_STATICEDGE;
+    DWORD style = WS_VISIBLE | WS_CHILD | WS_BORDER;
+    DWORD exStyle = 0;
     int dy = iconDy + 2;
     // Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
     HWND findBg =
         CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
 
-    int dx = findBoxDx - 2 * GetSystemMetrics(SM_CXEDGE);
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
     // dy = iconDy + DpiScale(win->hwndFrame, 2);
     dy = iconDy;
     exStyle = 0;
-    HWND find = CreateWindowExW(exStyle, WC_EDIT, L"", style, 0, 1, dx, dy, p, (HMENU) nullptr, hmod, nullptr);
+    HWND find = CreateWindowExW(exStyle, WC_EDIT, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
 
     style = WS_VISIBLE | WS_CHILD;
     HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, p, (HMENU) nullptr, hmod, nullptr);
@@ -696,14 +695,14 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     auto h = GetModuleHandle(nullptr);
     int dx = boxWidth;
     int dy = iconDy + 2;
-    DWORD exStyle = WS_EX_STATICEDGE;
+    DWORD exStyle = 0;
     HWND pageBg =
-        CreateWindowExW(exStyle, WC_STATICW, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
+        CreateWindowExW(exStyle, WC_STATICW, L"", style | WS_BORDER, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
     HWND label = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
     HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
-    dx = boxWidth - 2 * GetSystemMetrics(SM_CXEDGE);
+    dx = boxWidth;
     dy = iconDy;
     exStyle = 0;
     HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
