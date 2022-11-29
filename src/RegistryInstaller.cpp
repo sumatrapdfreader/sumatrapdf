@@ -165,12 +165,13 @@ bool RegisterForOpenWith(HKEY hkey) {
         // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
         // ",${n}" => n is 0-based index of the icon
         // ",-${n}" => n is icon with resource id
-        char* iconPath = str::JoinTemp(exePath, "");
+        char* iconPath;
         if (str::Eq(ext, ".epub")) {
-            iconPath = str::JoinTemp(exePath, ",-3");
-        }
-        if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
-            iconPath = str::JoinTemp(exePath, ",-4");
+            iconPath = str::JoinTemp("\"", exePath, "\",2");
+        } else if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
+            iconPath = str::JoinTemp("\"", exePath, "\",3");
+        } else {
+            iconPath = str::JoinTemp("\"", exePath, "\",1");
         }
 
         key = str::JoinTemp(progIDKey, "\\Application");
