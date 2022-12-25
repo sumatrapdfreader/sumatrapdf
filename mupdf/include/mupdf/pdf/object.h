@@ -80,8 +80,18 @@ int pdf_is_indirect(fz_context *ctx, pdf_obj *obj);
 */
 int pdf_obj_num_is_stream(fz_context *ctx, pdf_document *doc, int num);
 int pdf_is_stream(fz_context *ctx, pdf_obj *obj);
+
+/* Compare 2 objects. Returns 0 on match, non-zero on mismatch.
+ * Streams always mismatch.
+ */
 int pdf_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b);
 int pdf_objcmp_resolve(fz_context *ctx, pdf_obj *a, pdf_obj *b);
+
+/* Compare 2 objects. Returns 0 on match, non-zero on mismatch.
+ * Stream contents are explicitly checked.
+ */
+int pdf_objcmp_deep(fz_context *ctx, pdf_obj *a, pdf_obj *b);
+
 int pdf_name_eq(fz_context *ctx, pdf_obj *a, pdf_obj *b);
 
 int pdf_obj_marked(fz_context *ctx, pdf_obj *obj);

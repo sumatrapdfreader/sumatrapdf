@@ -1,25 +1,3 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
-//
-// This file is part of MuPDF.
-//
-// MuPDF is free software: you can redistribute it and/or modify it under the
-// terms of the GNU Affero General Public License as published by the Free
-// Software Foundation, either version 3 of the License, or (at your option)
-// any later version.
-//
-// MuPDF is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
-// details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with MuPDF. If not, see <https://www.gnu.org/licenses/agpl-3.0.en.html>
-//
-// Alternative licensing terms are available from the licensor.
-// For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
-
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf source/html/css-properties.gperf  */
 /* Computed positions: -k'1-2,$' */
@@ -54,7 +32,7 @@
 #line 1 "source/html/css-properties.gperf"
 struct css_property_info { const char *name; int key; };
 
-#define TOTAL_KEYWORDS 62
+#define TOTAL_KEYWORDS 63
 #define MIN_WORD_LENGTH 3
 #define MAX_WORD_LENGTH 19
 #define MIN_HASH_VALUE 11
@@ -171,13 +149,13 @@ static struct css_property_info css_property_list[] =
     {""},
 #line 30 "source/html/css-properties.gperf"
     {"color",PRO_COLOR},
-#line 62 "source/html/css-properties.gperf"
+#line 63 "source/html/css-properties.gperf"
     {"text-indent",PRO_TEXT_INDENT},
 #line 58 "source/html/css-properties.gperf"
     {"page-break-before",PRO_PAGE_BREAK_BEFORE},
-#line 69 "source/html/css-properties.gperf"
+#line 70 "source/html/css-properties.gperf"
     {"word-spacing",PRO_WORD_SPACING},
-#line 63 "source/html/css-properties.gperf"
+#line 64 "source/html/css-properties.gperf"
     {"text-transform",PRO_TEXT_TRANSFORM},
 #line 49 "source/html/css-properties.gperf"
     {"margin-top",PRO_MARGIN_TOP},
@@ -216,7 +194,9 @@ static struct css_property_info css_property_list[] =
     {"font-weight",PRO_FONT_WEIGHT},
 #line 36 "source/html/css-properties.gperf"
     {"font-variant",PRO_FONT_VARIANT},
-    {""}, {""},
+    {""},
+#line 62 "source/html/css-properties.gperf"
+    {"text-decoration",PRO_TEXT_DECORATION},
 #line 47 "source/html/css-properties.gperf"
     {"margin-left",PRO_MARGIN_LEFT},
 #line 48 "source/html/css-properties.gperf"
@@ -228,27 +208,27 @@ static struct css_property_info css_property_list[] =
     {"height",PRO_HEIGHT},
 #line 33 "source/html/css-properties.gperf"
     {"font-family",PRO_FONT_FAMILY},
-#line 67 "source/html/css-properties.gperf"
+#line 68 "source/html/css-properties.gperf"
     {"widows",PRO_WIDOWS},
 #line 32 "source/html/css-properties.gperf"
     {"display",PRO_DISPLAY},
     {""},
-#line 66 "source/html/css-properties.gperf"
+#line 67 "source/html/css-properties.gperf"
     {"white-space",PRO_WHITE_SPACE},
     {""}, {""}, {""}, {""},
 #line 45 "source/html/css-properties.gperf"
     {"margin",PRO_MARGIN},
-#line 68 "source/html/css-properties.gperf"
+#line 69 "source/html/css-properties.gperf"
     {"width",PRO_WIDTH},
 #line 60 "source/html/css-properties.gperf"
     {"src",PRO_SRC},
     {""}, {""},
 #line 31 "source/html/css-properties.gperf"
     {"direction",PRO_DIRECTION},
-#line 65 "source/html/css-properties.gperf"
+#line 66 "source/html/css-properties.gperf"
     {"visibility",PRO_VISIBILITY},
     {""},
-#line 64 "source/html/css-properties.gperf"
+#line 65 "source/html/css-properties.gperf"
     {"vertical-align",PRO_VERTICAL_ALIGN}
   };
 

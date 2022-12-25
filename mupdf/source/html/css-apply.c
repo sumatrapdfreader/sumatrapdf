@@ -782,7 +782,11 @@ is_inheritable_property(int name)
 		name == PRO_VISIBILITY ||
 		name == PRO_WHITE_SPACE ||
 		name == PRO_WIDOWS ||
-		name == PRO_WORD_SPACING;
+		name == PRO_WORD_SPACING ||
+		// Strictly speaking, text-decoration is not an inherited property,
+		// but since when drawing an underlined element, all children are also underlined,
+		// we may as well make it inherited.
+		name == PRO_TEXT_DECORATION;
 }
 
 static fz_css_value *
@@ -1199,6 +1203,18 @@ white_space_from_property(fz_css_match *match)
 }
 
 static int
+text_decoration_from_property(fz_css_match *match)
+{
+	fz_css_value *value = value_from_property(match, PRO_TEXT_DECORATION);
+	if (value)
+	{
+		if (!strcmp(value->data, "underline")) return TD_UNDERLINE;
+		if (!strcmp(value->data, "line-through")) return TD_LINE_THROUGH;
+	}
+	return TD_NONE;
+}
+
+static int
 visibility_from_property(fz_css_match *match)
 {
 	fz_css_value *value = value_from_property(match, PRO_VISIBILITY);
@@ -1253,6 +1269,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 
 	style->visibility = visibility_from_property(match);
 	style->white_space = white_space_from_property(match);
+	style->text_decoration = text_decoration_from_property(match);
 	style->page_break_before = page_break_from_property(match, PRO_PAGE_BREAK_BEFORE);
 	style->page_break_after = page_break_from_property(match, PRO_PAGE_BREAK_AFTER);
 

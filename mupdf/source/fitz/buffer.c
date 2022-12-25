@@ -98,6 +98,11 @@ fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_
 	return b;
 }
 
+fz_buffer *fz_clone_buffer(fz_context *ctx, fz_buffer *buf)
+{
+	return fz_new_buffer_from_copied_data(ctx, buf ? buf->data : NULL, buf ? buf->len : 0);
+}
+
 static inline int iswhite(int a)
 {
 	switch (a) {

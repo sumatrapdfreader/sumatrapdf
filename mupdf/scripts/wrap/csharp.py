@@ -235,7 +235,7 @@ def make_outparam_helper_csharp(
             extras = parse.get_fz_extras( tu, arg.alt.type.spelling)
             assert extras.pod != 'none' \
                     'Cannot pass wrapper for {type_.spelling} as arg because pod is "none" so we cannot recover struct.'
-            write('.internal_()' if extras.pod else '.m_internal')
+            write('.internal_()' if extras.pod == 'inline' else '.m_internal')
         sep = ', '
     write(f'{sep}outparams);\n')
 

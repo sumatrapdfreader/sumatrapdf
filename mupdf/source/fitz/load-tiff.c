@@ -1152,6 +1152,9 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "bits per sample illegal %d", tiff->bitspersample);
 	if (tiff->samplesperpixel == 0 || tiff->samplesperpixel >= FZ_MAX_COLORS)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "components per pixel out of range");
+	/* Bug 706071: Check for overflow in the stride calculation separately. */
+	if (tiff->imagewidth > (UINT_MAX - 7) / tiff->samplesperpixel / tiff->bitspersample)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
 	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2) / (tiff->bitspersample / 8 + 1))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
 

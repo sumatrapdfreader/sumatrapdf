@@ -105,6 +105,12 @@ fz_buffer *fz_new_buffer_from_shared_data(fz_context *ctx, const unsigned char *
 fz_buffer *fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_t size);
 
 /**
+	Make a new buffer, containing a copy of the data used in
+	the original.
+*/
+fz_buffer *fz_clone_buffer(fz_context *ctx, fz_buffer *buf);
+
+/**
 	Create a new buffer with data decoded from a base64 input string.
 */
 fz_buffer *fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size);

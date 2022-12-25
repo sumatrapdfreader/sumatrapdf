@@ -31,9 +31,11 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 	pdf_processor *proc = NULL;
 	fz_default_colorspaces *default_cs = NULL;
 	int flags;
+	int resources_pushed = 0;
 
 	fz_var(proc);
 	fz_var(default_cs);
+	fz_var(resources_pushed);
 
 	if (cookie && page->super.incomplete)
 		cookie->incomplete = 1;
@@ -76,11 +78,15 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 		ctm = fz_concat(page_ctm, ctm);
 
 		proc = pdf_new_run_processor(ctx, dev, ctm, usage, NULL, default_cs, cookie);
+		pdf_processor_push_resources(ctx, proc, pdf_page_resources(ctx, annot->page));
+		resources_pushed = 1;
 		pdf_process_annot(ctx, proc, annot, cookie);
 		pdf_close_processor(ctx, proc);
 	}
 	fz_always(ctx)
 	{
+		if (resources_pushed)
+			pdf_processor_pop_resources(ctx, proc);
 		pdf_drop_processor(ctx, proc);
 		fz_drop_default_colorspaces(ctx, default_cs);
 		pdf_annot_pop_local_xref(ctx, annot);
@@ -151,7 +157,7 @@ pdf_run_page_contents_with_usage_imp(fz_context *ctx, pdf_document *doc, pdf_pag
 		}
 
 		proc = pdf_new_run_processor(ctx, dev, ctm, usage, NULL, default_cs, cookie);
-		pdf_process_contents(ctx, proc, doc, resources, contents, cookie);
+		pdf_process_contents(ctx, proc, doc, resources, contents, cookie, NULL);
 		pdf_close_processor(ctx, proc);
 
 		if (page->transparency)

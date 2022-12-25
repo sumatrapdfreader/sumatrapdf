@@ -143,6 +143,9 @@ typedef struct
 	/* The id for this element. */
 	const char *id;
 
+	/* The href for this element. */
+	const char *href;
+
 	/* The rectangle for this element. */
 	fz_rect rect;
 

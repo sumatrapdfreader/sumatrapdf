@@ -58,20 +58,18 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
     if verbose:
         jlib.log( '{array_n=}')
     if array_n >= 0 or type_.kind == state.clang.cindex.TypeKind.INCOMPLETEARRAY:
-        # Not sure this is correct.
         if verbose: jlib.log( '{array_n=}')
+        if array_n < 0:
+            array_n = ''
         text = declaration_text(
                 type_.get_array_element_type(),
-                name,
+                f'{name}[{array_n}]',
                 nest+1,
                 name_is_simple,
                 verbose=verbose,
                 expand_typedef=expand_typedef,
                 top_level=top_level,
                 )
-        if array_n < 0:
-            array_n = ''
-        text += f'[{array_n}]'
         return text
 
     pointee = type_.get_pointee()
@@ -263,10 +261,19 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
     #
     use_fz_try = True
 
-    for arg in parse.get_args( tu, cursor, include_fz_context=True):
-        if parse.is_pointer_to( arg.cursor.type, 'fz_context'):
-            uses_fz_context = True
-            break
+    if cursor.mangled_name in (
+            'pdf_specifics',
+            ):
+        # This fn takes a fz_context* but never throws, so we can omit
+        # `fz_try()...fz_catch()`, which might give a small performance
+        # improvement.
+        use_fz_try = False
+        uses_fz_context = True
+    else:
+        for arg in parse.get_args( tu, cursor, include_fz_context=True):
+            if parse.is_pointer_to( arg.cursor.type, 'fz_context'):
+                uses_fz_context = True
+                break
     if uses_fz_context:
         icg = rename.internal( 'context_get')
         te = rename.internal( 'throw_exception')
@@ -910,22 +917,36 @@ def make_internal_functions( namespace, out_h, out_cpp):
 
             struct {rename.internal("state")}
             {{
+                /* Constructor. */
                 {rename.internal("state")}()
                 {{
                     m_locks.user = this;
                     m_locks.lock = lock;
                     m_locks.unlock = unlock;
-                    m_ctx = fz_new_context(NULL /*alloc*/, &m_locks, FZ_STORE_DEFAULT);
+                    m_ctx = nullptr;
+                    bool multithreaded = true;
+                    const char* s = getenv( "MUPDF_mt_ctx");
+                    if ( s && !strcmp( s, "0")) multithreaded = false;
+                    reinit( multithreaded);
+                }}
+
+                void reinit( bool multithreaded)
+                {{
+                    fz_drop_context( m_ctx);
+                    m_multithreaded = multithreaded;
+                    m_ctx = fz_new_context(NULL /*alloc*/, (multithreaded) ? &m_locks : nullptr, FZ_STORE_DEFAULT);
                     fz_register_document_handlers(m_ctx);
                 }}
                 static void lock(void *user, int lock)
                 {{
                     {rename.internal("state")}*    self = ({rename.internal("state")}*) user;
+                    assert( self->m_multithreaded);
                     self->m_mutexes[lock].lock();
                 }}
                 static void unlock(void *user, int lock)
                 {{
                     {rename.internal("state")}*    self = ({rename.internal("state")}*) user;
+                    assert( self->m_multithreaded);
                     self->m_mutexes[lock].unlock();
                 }}
                 ~{rename.internal("state")}()
@@ -933,6 +954,7 @@ def make_internal_functions( namespace, out_h, out_cpp):
                     fz_drop_context(m_ctx);
                 }}
 
+                bool                m_multithreaded;
                 fz_context*         m_ctx;
                 std::mutex          m_mutex;    /* Serialise access to m_ctx. fixme: not actually necessary. */
 
@@ -952,7 +974,9 @@ def make_internal_functions( namespace, out_h, out_cpp):
                 {{}}
                 fz_context* get_context()
                 {{
-                    /* This assert checks that we are not being called after
+                    assert( s_state.m_multithreaded);
+
+                    /* The following code checks that we are not being called after
                     we have been destructed. This can happen if global mupdf
                     wrapper class instances are defined - thread-local objects
                     are destructed /before/ globals. */
@@ -987,6 +1011,7 @@ def make_internal_functions( namespace, out_h, out_cpp):
                 {{
                     if (m_ctx)
                     {{
+                        assert( s_state.m_multithreaded);
                         fz_drop_context( m_ctx);
                     }}
 
@@ -1008,56 +1033,25 @@ def make_internal_functions( namespace, out_h, out_cpp):
 
             static thread_local {rename.internal("thread_state")}  s_thread_state;
 
-            static ::fz_context* s_mt_ctx_init()
+            fz_context* {rename.internal("context_get")}()
             {{
-                const char* s = getenv( "MUPDF_mt_ctx");
-                if (s)
+                if (s_state.m_multithreaded)
                 {{
-                    if (!strcmp( s, "0"))
-                    {{
-                        //std::cerr << __FILE__ << ":" << __LINE__ << ": MUPDF_mt_ctx='" << s << "': using single fz_context for all threads.\\n";
-                        return s_state.m_ctx;
-                    }}
-                    else if (!strcmp( s, "1"))
-                    {{
-                        //std::cerr << __FILE__ << ":" << __LINE__ << ": MUPDF_mt_ctx='" << s << "': using per-thread fz_context's.\\n";
-                        return nullptr;
-                    }}
-                    else
-                    {{
-                        std::cerr << __FILE__ << ":" << __LINE__ << ": MUPDF_mt_ctx='" << s << "': unexpected, must be '0' or '1'.\\n";
-                        assert(0);
-                        throw std::runtime_error("Unexpected value for $MUPDF_mt_ctx");
-                    }}
+                    return s_thread_state.get_context();
                 }}
                 else
                 {{
-                    return nullptr;
-                }}
-            }}
-
-            /* If non-null, this is the single global fz_context* to use for all threads. */
-            static ::fz_context* s_mt_ctx = s_mt_ctx_init();
-
-            int mt_ctx( int v)
-            {{
-                bool ret = (s_mt_ctx) ? 0 : 1;
-                if (v != -1) s_mt_ctx = (v) ? nullptr : s_state.m_ctx;
-                return ret;
-            }}
-
-            fz_context* {rename.internal("context_get")}()
-            {{
-                if (s_mt_ctx)
-                {{
                     /* This gives a small improvement in performance for
                     single-threaded use, e.g. from 552.4s to 548.1s. */
-                    return s_mt_ctx;
+                    return s_state.m_ctx;
                 }}
-                return s_thread_state.get_context();
             }}
 
-
+            void reinit_singlethreaded()
+            {{
+                std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): Reinitialising as single-threaded.\\n";
+                s_state.reinit( false /*multithreaded*/);
+            }}
             ''')
     out_cpp.write( cpp_text)
 
@@ -2043,7 +2037,7 @@ def function_wrapper_class_aware_body(
     out_cpp.write( f'    {refcheck_if}\n')
     out_cpp.write( f'    if (s_trace) {{\n')
     out_cpp.write( f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "():"\n')
-    out_cpp.write( f'                << "calling mupdf::{rename.ll_fn(fnname)}()\\n";\n')
+    out_cpp.write( f'                << " calling mupdf::{rename.ll_fn(fnname)}()\\n";\n')
     out_cpp.write( f'    }}\n')
     out_cpp.write( f'    #endif\n')
 
@@ -2804,7 +2798,10 @@ def class_accessors(
     '''
     if not extras.pod:
         jlib.logx( 'creating accessor for non-pod class {classname=} wrapping {struct_name}')
+
+    n = 0
     for cursor in struct_cursor.type.get_canonical().get_fields():
+        n += 1
         #jlib.log( 'accessors: {cursor.spelling=} {cursor.type.spelling=}')
 
         # We set this to fz_keep_<type>() function to call, if we return a
@@ -2898,7 +2895,7 @@ def class_accessors(
             out_cpp.write( f'    return m_internal->{cursor.spelling};\n')
         out_cpp.write( '}\n')
         out_cpp.write( '\n')
-
+    assert n, f'No fields found for {struct_cursor.spelling}.'
 
 
 
@@ -3196,13 +3193,12 @@ def class_wrapper_virtual_fnptrs(
         return
 
     generated.virtual_fnptrs.append( f'{classname}2')
-    if len(extras.virtual_fnptrs) == 2:
-        self_, alloc = extras.virtual_fnptrs
-        free = None
-    elif len(extras.virtual_fnptrs) == 3:
-        self_, alloc, free = extras.virtual_fnptrs
-    else:
-        assert 0, 'virtual_fnptrs should be length 2 or 3.'
+
+    self_ = extras.virtual_fnptrs.pop( 'self_')
+    self_n = extras.virtual_fnptrs.pop( 'self_n', 1)
+    alloc = extras.virtual_fnptrs.pop( 'alloc')
+    free = extras.virtual_fnptrs.pop( 'free', None)
+    assert not extras.virtual_fnptrs, f'Unused items in virtual_fnptrs: {extras.virtual_fnptrs}'
 
     # Class definition beginning.
     #
@@ -3313,7 +3309,8 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(')')
         out_cpp.write('\n')
         out_cpp.write('{\n')
-        out_cpp.write(f'    {classname}2* self = {self_("arg_1")};\n')
+        self_expression = self_( f'arg_{self_n}')
+        out_cpp.write(f'    {classname}2* self = {self_expression};\n')
         out_cpp.write(f'    {refcheck_if}\n')
         out_cpp.write(f'    if (s_trace_director)\n')
         out_cpp.write( '    {\n')
@@ -3325,9 +3322,10 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(f'        return self->{cursor.spelling}(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
-            if i == 1:
-                # First two args are (fz_context, {structname}*). Ignore the
-                # second. We pass the fz_context to the virtual fn.
+            if i == self_n:
+                # This is the void* from which we found `self` so ignore
+                # here. Note that we still pass the fz_context to the virtual
+                # fn.
                 continue
             name = f'arg_{i}'
             out_cpp.write( f'{sep}{name}')
@@ -3379,8 +3377,7 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(f'FZ_FUNCTION {_make_top_level(fnptr_type.get_result().spelling)} {classname}2::{cursor.spelling}(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
-            if i == 1:
-                # Ignore arg args - (fz_context, {structname}*).
+            if i == self_n:
                 continue
             name = f'arg_{i}'
             write(f'{sep}')
@@ -4505,6 +4502,7 @@ def cpp_source(
     for classname, struct_cursor, struct_name in classes_:
         #log( 'creating wrapper {classname} for {cursor.spelling}')
         extras = classes.classextras.get( tu, struct_name)
+        assert extras, f'struct_name={struct_name}'
         if extras.pod:
             struct_to_string_fns(
                     tu,
@@ -4537,22 +4535,13 @@ def cpp_source(
             generated.to_string_structnames.append( struct_name)
 
     out_hs.functions.write( textwrap.dedent( '''
-            /** Sets whether C++ bindings support per-thread fz_context's.
-            v:
-                -1
-                    Do not change current setting.
-                0
-                    Use a single fz_context. Unsafe in multi-threaded
-                    programmes; may give a small performance improvement in
-                    single-threaded programmes.
-                1
-                    Use per-thread fz_context's.
+            /** Reinitializes the MuPDF context for single-threaded use, which
+            is slightly faster when calling code is single threaded.
 
-            The default is 1, or value of environmental variable MUPDF_mt_ctx if set.
-
-            Returns the previous setting (0 or 1).
+            This should be called before any other use of MuPDF.
             */
-            int mt_ctx( int v);
+            void reinit_singlethreaded();
+
             '''))
 
     # Write close of namespace.

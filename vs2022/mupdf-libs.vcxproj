@@ -551,6 +551,7 @@
     <ClCompile Include="..\ext\freetype\src\base\ftbbox.c" />
     <ClCompile Include="..\ext\freetype\src\base\ftbitmap.c" />
     <ClCompile Include="..\ext\freetype\src\base\ftdebug.c" />
+    <ClCompile Include="..\ext\freetype\src\base\ftfstype.c" />
     <ClCompile Include="..\ext\freetype\src\base\ftgasp.c" />
     <ClCompile Include="..\ext\freetype\src\base\ftglyph.c" />
     <ClCompile Include="..\ext\freetype\src\base\ftinit.c" />

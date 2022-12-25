@@ -31,13 +31,17 @@
 #define DEF_HEIGHT 792
 #define DEF_FONTSIZE 12
 
-#define MAX_USE_DEPTH 100
+struct svg_use_cycle {
+	fz_xml *node;
+	struct svg_use_cycle *up;
+};
 
 typedef struct svg_state
 {
+	struct svg_use_cycle *cycle;
+
 	fz_matrix transform;
 	fz_stroke_state stroke;
-	int use_depth;
 
 	float viewport_w, viewport_h;
 	float viewbox_w, viewbox_h, viewbox_size;
@@ -1223,6 +1227,7 @@ svg_run_use_symbol(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *u
 static void
 svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *inherit_state)
 {
+	struct svg_use_cycle local_cycle, *cycle;
 	svg_state local_state = *inherit_state;
 
 	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
@@ -1232,11 +1237,18 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 	float x = 0;
 	float y = 0;
 
-	if (++local_state.use_depth > MAX_USE_DEPTH)
+	for (cycle = local_state.cycle; cycle; cycle = cycle->up)
 	{
-		fz_warn(ctx, "svg: too much recursion");
+		if (cycle->node == root)
+		{
+			fz_warn(ctx, "svg: recursive <use> references");
 		return;
 	}
+	}
+
+	local_cycle.node = root;
+	local_cycle.up = local_state.cycle;
+	local_state.cycle = &local_cycle;
 
 	svg_parse_common(ctx, doc, root, &local_state);
 	if (x_att) x = svg_parse_length(x_att, local_state.viewbox_w, local_state.fontsize);
@@ -1623,7 +1635,7 @@ svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *de
 	/* Initial graphics state */
 	state.transform = ctm;
 	state.stroke = fz_default_stroke_state;
-	state.use_depth = 0;
+	state.cycle = NULL;
 
 	state.viewport_w = DEF_WIDTH;
 	state.viewport_h = DEF_HEIGHT;

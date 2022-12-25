@@ -392,6 +392,9 @@
     <ClCompile Include="..\ext\freetype\src\base\ftdebug.c">
       <Filter>freetype\src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\freetype\src\base\ftfstype.c">
+      <Filter>freetype\src\base</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\freetype\src\base\ftgasp.c">
       <Filter>freetype\src\base</Filter>
     </ClCompile>

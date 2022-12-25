@@ -326,6 +326,8 @@ will keep all the graphics required in memory, so will increase the amount of me
 <dd>Create an empty display list. The mediabox rect has the bounds of the page in points.
 <dt>DisplayList#run(device, transform)
 <dd>Play back the recorded device calls onto the device.
+<dt>DisplayList#bound()
+<dd>Returns a rectangle containing the dimensions of the display list contents.
 <dt>DisplayList#toPixmap(transform, colorspace, alpha)
 <dd>Render display list to a pixmap. If alpha is true, it will render to a transparent background, otherwise white.
 <dt>DisplayList#toStructuredText(options)
@@ -774,16 +776,64 @@ and style ("serif" or "sans-serif").
 </dl>
 
 <h3>
-PDF Annotations (WORK IN PROGRESS!)
+PDF Annotations
 </h3>
 
+<p>
+PDFAnnotations belong to a specific PDFPage and may be created/changed/removed.
+Because annotation appearances may change (for several reasons) it is possible
+to scan through the annotations on a page and query them whether a re-render is
+necessary. Finally redaction annotations can be applied to a PDFPage, destructively
+removing content from the page.
+
 <dl>
+<dt>PDFPage#getAnnotations()
+<dd>Return array of all annotations on the page.
 <dt>PDFPage#createAnnotation(type)
 <dd>Create a new blank annotation of a given type.
-The type must be one of the annotation subtypes listed in the PDF reference.
+The type must be one of the annotation subtypes: "Text", "Link", "FreeText",
+"Line", "Square", "Circle", "Polygon", "PolyLine", "Highlight", "Underline",
+"Squiggly", "StrikeOut", "Redact", "Stamp", "Caret", "Ink", "Popup",
+"FileAttachment", "Sound", "Movie", "RichMedia", "Widget", "Screen",
+"PrinterMark", "TrapNet", "Watermark", "3D" or "Projection".
 <dt>PDFPage#deleteAnnotation(annot)
 <dd>Delete the annotation from the page.
+<dt>PDFPage#update()
+<dd>Loop through all annotations of the page and update them. Returns true if
+re-rendering is needed because at least one annotation was changed (due to
+either events or javascript actions or annotation editing).
+<dt>PDFPage#applyRedactions(blackboxes, imagemethod)
+<dd>Apply redaction annotations to the page. Should black boxes be drawn at each redaction or not? Should affected images be ignored, entirely redacted or should just the covered part of the image be redacted?
 </dl>
+
+<p>
+These are general methods to interact with annotations:
+
+<dl>
+<dt>PDFAnnotation#bound()
+<dd>Returns a rectangle containing the location and dimension of the annotation.
+<dt>PDFAnnotation#run(device, transform)
+<dd>Calls the device functions to draw the annotation
+<dt>PDFAnnotation#toPixmap(transform, colorspace, alpha)
+<dd>Render the annotation into a Pixmap, using the transform and colorspace.
+<dt>PDFAnnotation#toDisplayList()
+<dd>Record the contents of the annotation into a DisplayList.
+<dt>PDFAnnotation#getObject()
+<dd>Get the underlying PDF object for an annotation.
+<dt>PDFAnnotation#process(processor)
+<dd>Run through the annotation appearance stream and call methods on the supplied PDF processor.
+<dt>PDFAnnotation#setAppearance(appearance, state, transform, displaylist)
+<dt>PDFAnnotation#setAppearance(appearance, state, transform, bbox, resources, contents)
+<dd>Set the annotation appearance stream for the given appearance ("N", "R" or "D") and state (may be e.g. "On", "Off").
+The desired appearance is given as a transform along with either a display list or a bounding box, a PDF dictionary of resources and a content stream.
+<dt>PDFAnnotation#update()
+<dd>Update the appearance stream to account for changes in the annotation.
+<dt>PDFAnnotation#getHot(), #setHot(hot)
+<dd>Get/set the annotation as being hot, i.e. that the pointer is hovering over the annotation.
+</dl>
+
+<p>
+These properties are available for all annotation types.
 
 <dl>
 <dt>PDFAnnotation#getType()
@@ -791,13 +841,125 @@ The type must be one of the annotation subtypes listed in the PDF reference.
 <dt>PDFAnnotation#getFlags(), #setFlags(flags)
 <dd>Get/set the annotation flags.
 <dt>PDFAnnotation#getContents(), #setContents(text)
-<dt>PDFAnnotation#getRect(), #setRect(rect)
+<dd>Get/set the annotation contents.
 <dt>PDFAnnotation#getBorder(), #setBorder(width)
+<dd>Get/set the annotation border line width in points. Use PDFAnnotation#setBorderWidth() to avoid removing the border effect.
 <dt>PDFAnnotation#getColor(), #setColor(color)
-<dt>PDFAnnotation#getQuadPoints(), #setQuadPoints(quadPoints)
-<dt>PDFAnnotation#getInkList(), #setInkList(inkList)
-<dt>PDFAnnotation#update()
-<dd>Update the appearance stream to account for changes in the annotation.
+<dd>Get/set the annotation color, represented as an array of up to 4 component values.
+<dt>PDFAnnotation#getOpacity(), #setOpacity(opacity)
+<dd>Get/set the annotation opacity.
+<dt>PDFAnnotation#getCreationDate(), #setCreationDate(milliseconds)
+<dd>Get the annotation creation date as a Date object. Set it to the number of milliseconds since the epoch.
+<dt>PDFAnnotation#getModificationDate(), #setModificationDate(milliseconds)
+<dd>Get the annotation modification date as a Date object. Set it to the number of milliseconds since the epoch.
+<dt>PDFAnnotation#getQuadding(), #setQuadding(value)
+<dd>Get/set the annotation quadding (justification), 0 for left-justified, 1 for centered, 2 for right-justified.
+<dt>PDFAnnotation#getLanguage(), #setLanguage(language)
+<dd>Get/Set the annotation language (or get inherit the document language).
+</dl>
+
+<p>
+These properties are only present for some annotation types, so support for them must be checked before use.
+
+<dl>
+<dt>PDFAnnotation#getRect(), #setRect(rect)
+<dd>Get/set the annotation bounding box.
+<dt>PDFAnnotation#getDefaultAppearance(), #setDefaultAppearance(font, size, color)
+<dd>Get/Set the default text appearance used for free text annotations.
+<dt>PDFAnnotation#hasInteriorColor(), #getInteriorColor(), #setInteriorColor(color)
+<dd>Check for support/get/set the annotation interior color, represented as an array of up to 4 component values.
+<dt>PDFAnnotation#hasAuthor(), #getAuthor(), #setAuthor(author)
+<dd>Check for support/get/set the annotation author.
+<dt>PDFAnnotation#hasLineEndingStyles(), #getLineEndingStyles(), #setLineEndingStyles(start, end)
+<dd>Check for support/get/set the annotation line ending styles, either of "None", "Square", "Circle", "Diamond", "OpenArrow", "ClosedArrow", "Butt", "ROpenArrow", "RClosedArrow" or "Slash".
+<dt>PDFAnnotation#hasIcon(), #getIcon(), #setIcon(iconname)
+<dd>Check for support/get/set annotation icon. Standard icons names for:
+<dl>
+<dt>File attachment annotations:
+<dd>"Graph", "PaperClip", "PushPin" and "Tag".
+<dt>Sound annotations:
+<dd>"Mic" and "Speaker".
+<dt>Stamp annotations:
+<dd>"Approved", "AsIs", "Confidential", "Departmental", "Draft", "Experimental", "Expired", "Final", "ForComment", "ForPublicRelease", "NotApproved", "NorForPublicRelease", "Sold" and "TopSecret".
+<dt>Text annotations:
+<dd>"Comment", "Help", "Insert", "Key", "NewParagraph", "Note" and "Paragraph".
+</dl>
+<dt>PDFAnnotation#hasLine(), #getLine(), #setLine(endpoints)
+<dd>Check for support/get/set line end points, represented by an array of to points, each represented as an [x, y] array.
+<dt>PDFAnnotation#hasOpen(), #isOpen(), #setIsOpen(state)
+<dd>Check for support/get/set annotation open state, represented as a boolean.
+<dt>PDFAnnotation#hasFilespec(), #getFilespec(), #setFilespec(filespecpdfobject)
+<dd>Check for support/get/set annotation file specification, represented by a PDF object.
+</dl>
+
+<p>
+The border drawn around some annotation can be controlled by:
+
+<dl>
+<dt>PDFAnnotation#hasBorder(), #getBorderStyle(), #setBorderStyle(style)
+<dd>Check for support/get/set the annotation border style, either of "Solid" or "Dashed".
+<dt>PDFAnnotation#getBorderWidth(), #setBorderWidth(width)
+<dd>Get/set the border width in points. Retain any existing border effects.
+<dt>PDFAnnotation#getBorderDashCount()
+<dd>Returns the number of items in the border dash pattern.
+<dt>PDFAnnotation#getBorderDashItem(i)
+<dd>Returns the length of dash pattern item i.
+<dt>PDFAnnotation#setBorderDashPattern(dashpattern)
+<dd>Set the annotation border dash pattern to the given array of dash item lengths.
+<dt>PDFAnnotation#clearBorderDash()
+<dd>Clear the entire border dash pattern for an annotation.
+<dt>PDFAnnotation#addBorderDashItem(length)
+<dd>Append an item (of the given length) to the end of the border dash pattern.
+</dl>
+
+<p>
+Annotations that have a border effect allows the effect to be controlled by:
+
+<dl>
+<dt>PDFAnnotation#hasBorderEffect(), #getBorderEffect(), #setBorderEffect(effect)
+<dd>Check for support/get/set the annotation border effect, either of "None" or "Cloudy".
+<dt>PDFAnnotation#getBorderEffectIntensity(), #setBorderEffectIntensity(intensity)
+<dd>Get/set the annotation border effect intensity. Recommended values are between 0 and 2 inclusive.
+</dl>
+
+<p>
+Ink annotations consist of a number of strokes, each consisting of a sequence of vertices between which a smooth line will be drawn. These can be controlled by:
+
+<dl>
+<dt>PDFAnnotation#hasInkList(), #getInkList(), #setInkList(inkList)
+<dd>Check for support/get/set the annotation ink list, represented as an array of strokes, each an array of points each an array of its X/Y coordinates.
+<dt>PDFAnnotation#clearInkList()
+<dd>Clear the list of ink strokes for the annotation.
+<dt>PDFAnnotation#addInkList(stroke)
+<dd>To the list of strokes, append a stroke, represented as an array of vertices each an array of its X/Y coordinates.
+<dt>PDFAnnotation#addInkListStroke()
+<dd>Add a new empty stroke to the ink annotation.
+<dt>PDFAnnotation#addInkListStrokeVertex(vertex)
+<dd>Append a vertex to end of the last stroke in the ink annotation. The vertex is an array of its X/Y coordinates.
+</dl>
+
+<p>
+Text markup and redaction annotations consist of a set of quadadrilaterals controlled by:
+
+<dl>
+<dt>PDFAnnotation#hasQuadPoints(), #getQuadPoints(), #setQuadPoints(quadPoints)
+<dd>Check for support/get/set the annotation quadpoints, describing the areas affected by text markup annotations and link annotations.
+<dt>PDFAnnotation#clearQuadPoints()
+<dd>Clear the list of quad points for the annotation.
+<dt>PDFAnnotation#addQuadPoint(quadpoint)
+<dd>Append a single quad point as an array of 8 elements, where each pair are the X/Y coordinates of a corner of the quad.
+</dl>
+
+<p>
+Polygon and polyline annotations consist of a sequence of vertices with a straight line between them. Those can be controlled by:
+
+<dl>
+<dt>PDFAnnotation#hasVertices(), #getVertices(), #setVertices(vertices)
+<dd>Check for support/get/set the annotation vertices, represented as an array of vertices each an array of its X/Y coordinates.
+<dt>PDFAnnotation#clearVertices()
+<dd>Clear the list of vertices for the annotation.
+<dt>PDFAnnotation#addVertex(vertex)
+<dd>Append a single vertex as an array of its X/Y coordinates.
 </dl>
 
 <h2>

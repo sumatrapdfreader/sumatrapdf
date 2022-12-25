@@ -7,6 +7,8 @@ build/
 mupdf-wasm.js
 mupdf-wasm.worker.js
 mupdf-wasm.wasm
+mupdf-wasm-singlethread.js
+mupdf-wasm-singlethread.wasm
 
 # Node JS dependencies
 node_modules/

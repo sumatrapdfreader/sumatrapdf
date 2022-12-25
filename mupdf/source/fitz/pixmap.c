@@ -947,21 +947,8 @@ fz_invert_pixmap_luminance(fz_context *ctx, fz_pixmap *pix)
 void
 fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
-	unsigned char *s = pix->samples;
-	int k, x, y;
-	int n1 = pix->n - pix->alpha;
-	int n = pix->n;
-
-	for (y = 0; y < pix->h; y++)
-	{
-		for (x = 0; x < pix->w; x++)
-		{
-			for (k = 0; k < n1; k++)
-				s[k] = 255 - s[k];
-			s += n;
-		}
-		s += pix->stride - pix->w * n;
-	}
+	fz_irect rect = { pix->x, pix->y, pix->x + pix->w, pix->y + pix->h };
+	fz_invert_pixmap_rect(ctx, pix, rect);
 }
 
 void
@@ -987,25 +974,149 @@ fz_invert_pixmap_alpha(fz_context *ctx, fz_pixmap *pix)
 	}
 }
 
-void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *image, fz_irect rect)
+void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 {
-	unsigned char *p;
-	int x, y, n;
+	int x0 = fz_clampi(rect.x0 - pix->x, 0, pix->w);
+	int x1 = fz_clampi(rect.x1 - pix->x, 0, pix->w);
+	int y0 = fz_clampi(rect.y0 - pix->y, 0, pix->h);
+	int y1 = fz_clampi(rect.y1 - pix->y, 0, pix->h);
 
-	int x0 = fz_clampi(rect.x0 - image->x, 0, image->w);
-	int x1 = fz_clampi(rect.x1 - image->x, 0, image->w);
-	int y0 = fz_clampi(rect.y0 - image->y, 0, image->h);
-	int y1 = fz_clampi(rect.y1 - image->y, 0, image->h);
+	int k, x, y;
+	int n = pix->n;
+	int s = pix->s;
+	int cmyk = (pix->colorspace && pix->colorspace->type == FZ_COLORSPACE_CMYK);
 
+	if (cmyk)
+	{
+		/* For cmyk, we're storing: (a.c, a.m, a.y, a.k, a)
+		 * So, a.r = a - a.c - a.k
+		 *     a.g = a - a.m - a.k
+		 *     a.b = a - a.y - a.k
+		 * Invert that:
+		 *     a.R = a.c + a.k
+		 *     a.G = a.m + a.k
+		 *     a.B = a.y + a.k
+		 * Convert that back to cmy
+		 *     a.C = a - a.c - a.k;
+		 *     a.M = a - a.m - a.k;
+		 *     a.Y = a - a.y - a.k;
+		 * Extract K:
+		 *     a.K' = min(a.C, a.M, a.Y)
+		 *          = a - a.k - max(a.c, a.m, a.y)
+		 *     a.C' = a.C - a.K' = a - a.c - a.k - (a - a.k - max(a.c, a.m, a.y)) = max(a.c, a.m, a.y) - a.c
+		 *     a.M' = a.M - a.K' = a - a.m - a.k - (a - a.k - max(a.c, a.m, a.y)) = max(a.c, a.m, a.y) - a.m
+		 *     a.Y' = a.Y - a.K' = a - a.y - a.k - (a - a.k - max(a.c, a.m, a.y)) = max(a.c, a.m, a.y) - a.y
+		 * */
+		if (pix->alpha)
+		{
+			int n1 = pix->n - pix->alpha - s;
+			for (y = y0; y < y1; y++)
+			{
+				unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
+				for (x = x0; x < x1; x++)
+				{
+					int ac = d[0];
+					int am = d[1];
+					int ay = d[2];
+					int ak = d[3];
+					int a = d[n1];
+					int mx = fz_maxi(fz_maxi(ac, am), ay);
+					d[0] = mx-ac;
+					d[1] = mx-am;
+					d[2] = mx-ay;
+					ak = a - ak - mx;
+					if (ak < 0)
+						ak = 0;
+					d[3] = ak;
+					d += n;
+				}
+			}
+		}
+		else
+		{
+			for (y = y0; y < y1; y++)
+			{
+				unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
+				for (x = x0; x < x1; x++)
+				{
+					int c = d[0];
+					int m = d[1];
+					int y = d[2];
+					int k = d[3];
+					int mx = fz_maxi(fz_maxi(c, m), y);
+					d[0] = mx-c;
+					d[1] = mx-m;
+					d[2] = mx-y;
+					k = 255 - k - mx;
+					if (k < 0)
+						k = 0;
+					d[3] = k;
+					d += n;
+				}
+			}
+		}
+	}
+	else if (pix->alpha)
+	{
+		int n1 = pix->n - pix->alpha - s;
+		for (y = y0; y < y1; y++)
+		{
+			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
+			for (x = x0; x < x1; x++)
+			{
+				int a = d[n1];
+				for (k = 0; k < n1; k++)
+					d[k] = a - d[k];
+				d += n;
+			}
+		}
+	}
+	else if (s)
+	{
+		int n1 = pix->n - s;
 	for (y = y0; y < y1; y++)
 	{
-		p = image->samples + ((y * (size_t)image->stride) + (x0 * (size_t)image->n));
+			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
 		for (x = x0; x < x1; x++)
 		{
-			for (n = image->n; n > 1; n--, p++)
-				*p = 255 - *p;
-			p++;
+				for (k = 0; k < n1; k++)
+					d[k] = 255 - d[k];
+				d += n;
 		}
+		}
+	}
+	else
+	{
+		for (y = y0; y < y1; y++)
+		{
+			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
+			for (x = x0; x < x1; x++)
+			{
+				for (k = 0; k < n; k++)
+					d[k] = 255 - d[k];
+				d += n;
+			}
+		}
+	}
+}
+
+void
+fz_invert_pixmap_raw(fz_context *ctx, fz_pixmap *pix)
+{
+	unsigned char *s = pix->samples;
+	int k, x, y;
+	int n1 = pix->n - pix->alpha;
+	int n = pix->n;
+
+	for (y = 0; y < pix->h; y++)
+	{
+		for (x = 0; x < pix->w; x++)
+		{
+			for (k = 0; k < n1; k++)
+				s[k] = 255 - s[k];
+			s += n;
+		}
+		s += pix->stride - pix->w * n;
 	}
 }
 

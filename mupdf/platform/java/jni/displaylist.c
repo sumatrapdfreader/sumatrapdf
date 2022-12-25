@@ -159,3 +159,20 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 
 	return to_SearchHits_safe(ctx, env, marks, hits, n);
 }
+
+JNIEXPORT jobject JNICALL
+FUN(DisplayList_getBounds)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_display_list *list = from_DisplayList(env, self);
+	fz_rect bounds;
+
+	if (!ctx || !list) return NULL;
+
+	fz_try(ctx)
+		bounds = fz_bound_display_list(ctx, list);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Rect(ctx, env, bounds);
+}

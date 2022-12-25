@@ -203,7 +203,8 @@ class ClassExtra:
 
         pod:
             If 'inline', there is no m_internal; instead, each member of the
-            underlying class is placed in the wrapper class.
+            underlying class is placed in the wrapper class and special method
+            `internal()` returns a fake pointer to underlying class.
 
             If 'none', there is no m_internal member at all. Typically
             <extra_cpp> could be used to add in custom members.
@@ -212,13 +213,20 @@ class ClassExtra:
             the underlying class instead of a pointer to it.
 
         virtual_fnptrs:
-            If true, should be (self, alloc) or (self, alloc, free):
+            If true, should be a dict with these keys:
 
-                self:
+                self_:
                     A callable taking single arg that is the name of a pointer
                     to an instance of the MuPDF struct; should return C++ code
                     that converts the specified name into a pointer to the
                     corresponding virtual_fnptrs wrapper class.
+                self_n:
+                    Index of arg that is the void* that should be passed to
+                    `virtual_fnptrs['self_']` to recover the virtual_fnptrs
+                    wrapper class.  Note that we assume/require that all
+                    virtual fns have the same `self_n`. If not specified,
+                    default is 1 (we generally expect args to be (fz_context*
+                    ctx, void*, ...).
                 alloc:
                     Code for embedding in the virtual_fnptrs wrapper class's
                     constructor that creates a new instances of the MuPDF
@@ -272,7 +280,7 @@ class ClassExtra:
         assert_list_of( self.constructors_extra, ExtraConstructor)
 
         if virtual_fnptrs:
-            assert isinstance(virtual_fnptrs, tuple) and len(virtual_fnptrs) in ( 2, 3), f'virtual_fnptrs={virtual_fnptrs!r}'
+            assert isinstance(virtual_fnptrs, dict), f'virtual_fnptrs={virtual_fnptrs!r}'
 
     def __str__( self):
         ret = ''
@@ -545,13 +553,14 @@ classextras = ClassExtras(
                 ),
 
         fz_device = ClassExtra(
-                virtual_fnptrs = (
-                    lambda name: f'(*({rename.class_("fz_device")}2**) ({name} + 1))',
-                    f'm_internal = {rename.ll_fn("fz_new_device_of_size")}('
-                            + f'sizeof(*m_internal)'
-                            + f' + sizeof({rename.class_("fz_device")}2*));\n'
-                        + f'*(({rename.class_("fz_device")}2**) (m_internal + 1)) = this;\n'
-                        ,
+                virtual_fnptrs = dict(
+                    self_ = lambda name: f'(*({rename.class_("fz_device")}2**) ({name} + 1))',
+                    alloc = textwrap.dedent( f'''
+                        m_internal = {rename.ll_fn("fz_new_device_of_size")}(
+                                sizeof(*m_internal) + sizeof({rename.class_("fz_device")}2*)
+                                );
+                        *(({rename.class_("fz_device")}2**) (m_internal + 1)) = this;
+                        '''),
                     ),
                 constructor_raw = True,
                 method_wrappers_static = [
@@ -1098,9 +1107,9 @@ classextras = ClassExtras(
                 ),
 
         fz_output = ClassExtra(
-                virtual_fnptrs = (
-                    lambda name: f'({rename.class_("fz_output")}2*) {name}',
-                    f'm_internal = {rename.ll_fn("fz_new_output")}(0 /*bufsize*/, this /*state*/, nullptr /*write*/, nullptr /*close*/, nullptr /*drop*/);\n',
+                virtual_fnptrs = dict(
+                    self_ = lambda name: f'({rename.class_("fz_output")}2*) {name}',
+                    alloc = f'm_internal = {rename.ll_fn("fz_new_output")}(0 /*bufsize*/, this /*state*/, nullptr /*write*/, nullptr /*close*/, nullptr /*drop*/);\n',
                     ),
                 constructor_raw = 'default',
                 constructor_excludes = [
@@ -1214,14 +1223,16 @@ classextras = ClassExtras(
 
         fz_path_walker = ClassExtra(
                 constructor_raw = 'default',
-                virtual_fnptrs = (
-                    lambda name: f'*({rename.class_("fz_path_walker")}2**) ((fz_path_walker*) {name} + 1)',
-                    textwrap.dedent(
-                        f'''
-                        m_internal = (::fz_path_walker*) {rename.ll_fn("fz_calloc")}(1, sizeof(*m_internal) + sizeof({rename.class_("fz_path_walker")}2*));
+                virtual_fnptrs = dict(
+                    self_ = lambda name: f'*({rename.class_("fz_path_walker")}2**) ((fz_path_walker*) {name} + 1)',
+                    alloc = textwrap.dedent( f'''
+                        m_internal = (::fz_path_walker*) {rename.ll_fn("fz_calloc")}(
+                                1, sizeof(*m_internal)
+                                + sizeof({rename.class_("fz_path_walker")}2*)
+                                );
                         *({rename.class_("fz_path_walker")}2**) (m_internal + 1) = this;
                         '''),
-                    f'{rename.ll_fn("fz_free")}(m_internal);\n',
+                    free = f'{rename.ll_fn("fz_free")}(m_internal);\n',
                     ),
                 ),
 
@@ -1699,6 +1710,47 @@ classextras = ClassExtras(
 
         fz_text_span = ClassExtra(
                 copyable=False,
+                methods_extra = [
+                    # We provide class-aware accessors where possible. (Some
+                    # types' wrapper classes are not copyable so we can't do
+                    # this for all data).
+                    ExtraMethod(
+                        f'{rename.class_("fz_font")}',
+                        f'font()',
+                        f'''
+                        {{
+                            return {rename.class_("fz_font")}( ll_fz_keep_font( m_internal->font));
+                        }}
+                        ''',
+                        f'/* Gives class-aware access to m_internal->font. */',
+                        ),
+                    ExtraMethod(
+                        f'{rename.class_("fz_matrix")}',
+                        f'trm()',
+                        f'''
+                        {{
+                            return {rename.class_("fz_matrix")}( m_internal->trm);
+                        }}
+                        ''',
+                        f'/* Gives class-aware access to m_internal->trm. */',
+                        ),
+                    ExtraMethod(
+                        f'fz_text_item&',
+                        f'items( int i)',
+                        f'''
+                        {{
+                            assert( i < m_internal->len);
+                            return m_internal->items[i];
+                        }}
+                        ''',
+                        '''
+                        /* Gives access to m_internal->items[i].
+                        Returned reference is only valid as long as `this`.
+                        Provided mainly for use by SWIG bindings.
+                        */
+                        ''',
+                        ),
+                    ],
                 ),
 
         fz_stream = ClassExtra(
@@ -1768,32 +1820,70 @@ classextras = ClassExtras(
                     ],
                 ),
 
-        pdf_filter_options = ClassExtra(
+        pdf_filter_factory = ClassExtra(
                 pod = 'inline',
-                # We don't need to allocate extra space, and because we are a
-                # POD class, we can simply let our default constructor run.
-                #
-                virtual_fnptrs = (
-                        lambda name: f'({rename.class_("pdf_filter_options")}2*) {name}',
-                        f'this->opaque = this;\n'
-                        ),
+                virtual_fnptrs = dict(
+                    self_ = lambda name: f'({rename.class_("pdf_filter_factory")}2*) {name}',
+                    self_n = 6,
+                    alloc = f'this->options = this;\n',
+                    ),
                 constructors_extra = [
                     ExtraConstructor( '()',
                         f'''
                         {{
-                            this->image_filter = nullptr;
-                            this->text_filter = nullptr;
-                            this->after_text_object = nullptr;
-                            this->end_page = nullptr;
-                            this->recurse = 0;
-                            this->instance_forms = 0;
-                            this->sanitize = 0;
-                            this->ascii = 0;
+                            this->filter = nullptr;
+                            this->options = nullptr;
                         }}
                         ''',
                         comment = '/* Default constructor initialises all fields to null/zero. */',
                     )
                     ],
+                ),
+
+        pdf_filter_options = ClassExtra(
+                pod = 'inline',
+                # We don't need to allocate extra space, and because we are a
+                # POD class, we can simply let our default constructor run.
+                #
+                virtual_fnptrs = dict(
+                        self_ = lambda name: f'({rename.class_("pdf_filter_options")}2*) {name}',
+                        self_n = 2,
+                        alloc = f'this->end_page_opaque = this;\n',
+                        ),
+                constructors_extra = [
+                    ExtraConstructor( '()',
+                        f'''
+                        {{
+                            this->recurse = 0;
+                            this->instance_forms = 0;
+                            this->ascii = 0;
+                            this->end_page_opaque = nullptr;
+                            this->end_page = nullptr;
+                            pdf_filter_factory eof = {{ nullptr, nullptr}};
+                            m_filters.push_back( eof);
+                        }}
+                        ''',
+                        comment = '/* Default constructor initialises all fields to null/zero. */',
+                    )
+                    ],
+                methods_extra = [
+                    ExtraMethod(
+                            'void',
+                            f'add_factory( const pdf_filter_factory& factory)',
+                            textwrap.dedent( f'''
+                                {{
+                                    this->m_filters.back() = factory;
+                                    pdf_filter_factory eof = {{ nullptr, nullptr}};
+                                    this->m_filters.push_back( eof);
+                                    this->filters = &this->m_filters[0];
+                                }}
+                                '''),
+                            comment = f'/* Appends `factory` to internal vector and updates this->filters. */',
+                            ),
+                    ],
+                class_bottom = textwrap.dedent( f'''
+                    std::vector< pdf_filter_factory> m_filters;
+                    '''),
                 ),
 
         pdf_lexbuf = ClassExtra(
@@ -1923,11 +2013,15 @@ classextras = ClassExtras(
                 ),
 
         pdf_processor = ClassExtra(
-                virtual_fnptrs = (
-                    lambda name: f'(*({rename.class_("pdf_processor")}2**) ({name} + 1))',
-                    f'm_internal = (::pdf_processor*) {rename.ll_fn("pdf_new_processor")}(sizeof(*m_internal) + sizeof({rename.class_("pdf_processor")}2*));\n'
-                        + f'*(({rename.class_("pdf_processor")}2**) (m_internal + 1)) = this;\n'
-                        ,
+                virtual_fnptrs = dict(
+                    self_ = lambda name: f'(*({rename.class_("pdf_processor")}2**) ({name} + 1))',
+                    alloc = textwrap.dedent( f'''
+                        m_internal = (::pdf_processor*) {rename.ll_fn("pdf_new_processor")}(
+                                sizeof(*m_internal)
+                                + sizeof({rename.class_("pdf_processor")}2*)
+                                );
+                        *(({rename.class_("pdf_processor")}2**) (m_internal + 1)) = this;
+                        '''),
                     ),
                 constructors_extra = [
                     ExtraConstructor( '()',
@@ -1959,6 +2053,29 @@ classextras = ClassExtras(
                         ''',
                         comment = '/* Default constructor initialises .black_boxes=0 and .image_method=0. */',
                         ),
+                    ],
+                ),
+
+        pdf_sanitize_filter_options = ClassExtra(
+                pod = 'inline',
+                # We don't need to allocate extra space, and because we are a
+                # POD class, we can simply let our default constructor run.
+                #
+                virtual_fnptrs = dict(
+                        self_ = lambda name: f'({rename.class_("pdf_sanitize_filter_options")}2*) {name}',
+                        alloc = f'this->opaque = this;\n',
+                        ),
+                constructors_extra = [
+                    ExtraConstructor( '()',
+                        f'''
+                        {{
+                            this->image_filter = nullptr;
+                            this->text_filter = nullptr;
+                            this->after_text_object = nullptr;
+                        }}
+                        ''',
+                        comment = '/* */',
+                    )
                     ],
                 ),
 

@@ -99,10 +99,10 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image depth is zero (or less)");
 	if (bpc > 16)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image depth is too large: %d", bpc);
-	if (w > (1 << 16))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image is too wide");
-	if (h > (1 << 16))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image is too high");
+	if (SIZE_MAX / w < (size_t)(bpc+7)/8)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image is too large");
+	if (SIZE_MAX / h < w * (size_t)((bpc+7)/8))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image is too large");
 
 	fz_var(mask);
 	fz_var(image);
@@ -130,6 +130,9 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 		{
 			n = 1;
 		}
+
+		if (SIZE_MAX / n < h * ((size_t)w) * ((bpc+7)/8))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "image is too large");
 
 		obj = pdf_dict_geta(ctx, dict, PDF_NAME(Decode), PDF_NAME(D));
 		if (obj)
@@ -193,6 +196,8 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 			/* Just load the compressed image data now and we can decode it on demand. */
 			size_t worst_case = w * (size_t)h;
 			worst_case = (worst_case * bpc + 7) >> 3;
+			if (colorspace)
+				worst_case *= colorspace->n;
 			buffer = pdf_load_compressed_stream(ctx, doc, pdf_to_num(ctx, dict), worst_case);
 			image = fz_new_image_from_compressed_buffer(ctx, w, h, bpc, colorspace, 96, 96, interpolate, imagemask, decode, use_colorkey ? colorkey : NULL, buffer, mask);
 			image->invert_cmyk_jpeg = 0;

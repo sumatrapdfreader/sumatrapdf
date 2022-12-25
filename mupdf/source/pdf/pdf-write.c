@@ -717,72 +717,23 @@ static void removeduplicateobjs(fz_context *ctx, pdf_document *doc, pdf_write_st
 		for (other = 1; other < num; other++)
 		{
 			pdf_obj *a, *b;
-			int newnum, streama = 0, streamb = 0, differ = 0;
+			int newnum;
 
 			if (num == other || num >= opts->list_len || !opts->use_list[num] || !opts->use_list[other])
 				continue;
 
 			/* TODO: resolve indirect references to see if we can omit them */
 
-			/*
-			 * Comparing stream objects data contents would take too long.
-			 *
-			 * pdf_obj_num_is_stream calls pdf_cache_object and ensures
-			 * that the xref table has the objects loaded.
-			 */
-			fz_try(ctx)
-			{
-				streama = pdf_obj_num_is_stream(ctx, doc, num);
-				streamb = pdf_obj_num_is_stream(ctx, doc, other);
-				differ = streama || streamb;
-				if (streama && streamb && opts->do_garbage >= 4)
-					differ = 0;
-			}
-			fz_catch(ctx)
-			{
-				/* Assume different */
-				differ = 1;
-			}
-			if (differ)
-				continue;
-
 			a = pdf_get_xref_entry_no_null(ctx, doc, num)->obj;
 			b = pdf_get_xref_entry_no_null(ctx, doc, other)->obj;
-
-			if (pdf_objcmp(ctx, a, b))
-				continue;
-
-			if (streama && streamb)
+			if (opts->do_garbage >= 4)
 			{
-				/* Check to see if streams match too. */
-				fz_buffer *sa = NULL;
-				fz_buffer *sb = NULL;
-
-				fz_var(sa);
-				fz_var(sb);
-
-				differ = 1;
-				fz_try(ctx)
-				{
-					unsigned char *dataa, *datab;
-					size_t lena, lenb;
-					sa = pdf_load_raw_stream_number(ctx, doc, num);
-					sb = pdf_load_raw_stream_number(ctx, doc, other);
-					lena = fz_buffer_storage(ctx, sa, &dataa);
-					lenb = fz_buffer_storage(ctx, sb, &datab);
-					if (lena == lenb && memcmp(dataa, datab, lena) == 0)
-						differ = 0;
+				if (pdf_objcmp_deep(ctx, a, b))
+				continue;
 				}
-				fz_always(ctx)
+			else
 				{
-					fz_drop_buffer(ctx, sa);
-					fz_drop_buffer(ctx, sb);
-				}
-				fz_catch(ctx)
-				{
-					fz_rethrow(ctx);
-				}
-				if (differ)
+				if (pdf_objcmp(ctx, a, b))
 					continue;
 			}
 
@@ -2246,7 +2197,14 @@ static void writexref(fz_context *ctx, pdf_document *doc, pdf_write_state *opts,
 				pdf_dict_put(ctx, trailer, PDF_NAME(ID), obj);
 
 			if (opts->crypt_obj)
-				pdf_dict_put(ctx, trailer, PDF_NAME(Encrypt), opts->crypt_obj);
+			{
+				pdf_obj *encrypt;
+				if (pdf_is_indirect(ctx, opts->crypt_obj))
+					encrypt = pdf_new_indirect(ctx, doc, opts->crypt_object_number, 0);
+				else
+					encrypt = opts->crypt_obj;
+				pdf_dict_put(ctx, trailer, PDF_NAME(Encrypt), encrypt);
+			}
 
 			if (opts->metadata)
 				pdf_dict_putp(ctx, trailer, "Root/Metadata", opts->metadata);
@@ -3024,11 +2982,15 @@ static void clean_content_streams(fz_context *ctx, pdf_document *doc, int saniti
 	int n = pdf_count_pages(ctx, doc);
 	int i;
 
-	pdf_filter_options filter;
-	memset(&filter, 0, sizeof filter);
-	filter.recurse = 1;
-	filter.sanitize = sanitize;
-	filter.ascii = ascii;
+	pdf_filter_options options = { 0 };
+	pdf_sanitize_filter_options sopts = { 0 };
+	pdf_filter_factory list[2] = { 0 };
+
+	options.recurse = 1;
+	options.ascii = ascii;
+	options.filters = sanitize ? list : NULL;
+	list[0].filter = pdf_new_sanitize_filter;
+	list[0].options = &sopts;
 
 	for (i = 0; i < n; i++)
 	{
@@ -3037,10 +2999,10 @@ static void clean_content_streams(fz_context *ctx, pdf_document *doc, int saniti
 
 		fz_try(ctx)
 		{
-			pdf_filter_page_contents(ctx, doc, page, &filter);
+			pdf_filter_page_contents(ctx, doc, page, &options);
 			for (annot = pdf_first_annot(ctx, page); annot != NULL; annot = pdf_next_annot(ctx, annot))
 			{
-				pdf_filter_annot_contents(ctx, doc, annot, &filter);
+				pdf_filter_annot_contents(ctx, doc, annot, &options);
 			}
 		}
 		fz_always(ctx)

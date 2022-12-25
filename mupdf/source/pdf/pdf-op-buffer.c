@@ -23,12 +23,21 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
+typedef struct resources_stack
+{
+	struct resources_stack *next;
+	pdf_obj *res;
+} resources_stack;
+
 typedef struct
 {
 	pdf_processor super;
 	fz_output *out;
 	int ahxencode;
 	int extgstate;
+	pdf_obj *res;
+	pdf_obj *last_res;
+	resources_stack *rstack;
 } pdf_output_processor;
 
 /* general graphics state */
@@ -732,7 +741,7 @@ pdf_out_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_imag
 }
 
 static void
-pdf_out_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_obj *xobj, pdf_obj *page_resources)
+pdf_out_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_obj *xobj)
 {
 	fz_output *out = ((pdf_output_processor*)proc)->out;
 	fz_write_printf(ctx, out, "%n Do\n", name);
@@ -807,17 +816,45 @@ pdf_close_output_processor(fz_context *ctx, pdf_processor *proc)
 static void
 pdf_drop_output_processor(fz_context *ctx, pdf_processor *proc)
 {
-	fz_output *out = ((pdf_output_processor*)proc)->out;
-	fz_drop_output(ctx, out);
+	pdf_output_processor *p = (pdf_output_processor *)proc;
+
+	fz_drop_output(ctx, p->out);
+}
+
+static void
+pdf_out_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
+{
+	pdf_output_processor *p = (pdf_output_processor *)proc;
+	resources_stack *stk = fz_malloc_struct(ctx, resources_stack);
+
+	stk->next = p->rstack;
+	p->rstack = stk;
+	stk->res = pdf_keep_obj(ctx, res);
+}
+
+static pdf_obj *
+pdf_out_pop_resources(fz_context *ctx, pdf_processor *proc)
+{
+	pdf_output_processor *p = (pdf_output_processor *)proc;
+	resources_stack *stk = p->rstack;
+	pdf_obj *res = stk->res;
+
+	p->rstack = stk->next;
+	fz_free(ctx, stk);
+
+	return res;
 }
 
 pdf_processor *
 pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode)
 {
 	pdf_output_processor *proc = pdf_new_processor(ctx, sizeof *proc);
-	{
+
 		proc->super.close_processor = pdf_close_output_processor;
 		proc->super.drop_processor = pdf_drop_output_processor;
+
+	proc->super.push_resources = pdf_out_push_resources;
+	proc->super.pop_resources = pdf_out_pop_resources;
 
 		/* general graphics state */
 		proc->super.op_w = pdf_out_w;
@@ -934,7 +971,6 @@ pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode)
 		proc->super.op_gs_op = NULL;
 		proc->super.op_gs_OPM = NULL;
 		proc->super.op_gs_UseBlackPtComp = NULL;
-	}
 
 	proc->out = out;
 	proc->ahxencode = ahxencode;

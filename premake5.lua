@@ -617,7 +617,7 @@ workspace "SumatraPDF"
     defines { "TOFU_NOTO", "TOFU_CJK_LANG" }
 
     disablewarnings {
-      "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4245", "4267",
+      "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4210", "4245", "4267",
       "4295", "4305", "4389", "4456", "4457", "4703", "4706"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h

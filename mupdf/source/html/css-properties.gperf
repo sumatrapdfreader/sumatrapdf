@@ -59,6 +59,7 @@ page-break-before,PRO_PAGE_BREAK_BEFORE
 quotes,PRO_QUOTES
 src,PRO_SRC
 text-align,PRO_TEXT_ALIGN
+text-decoration,PRO_TEXT_DECORATION
 text-indent,PRO_TEXT_INDENT
 text-transform,PRO_TEXT_TRANSFORM
 vertical-align,PRO_VERTICAL_ALIGN

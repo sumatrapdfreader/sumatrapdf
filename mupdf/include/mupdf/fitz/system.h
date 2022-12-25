@@ -409,6 +409,10 @@ static inline float my_sinf(float x)
 	x -= xn;
 	xn *= x2 / 72.0f;
 	x += xn;
+	if (x > 1)
+		x = 1;
+	else if (x < -1)
+		x = -1;
 	return x;
 }
 

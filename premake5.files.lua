@@ -557,6 +557,7 @@ function freetype_files()
     "ftbbox.c",
     "ftbitmap.c",
     "ftdebug.c",
+    "ftfstype.c",
     "ftgasp.c",
     "ftglyph.c",
     "ftinit.c",

@@ -109,6 +109,8 @@ fz_new_font(fz_context *ctx, const char *name, int use_glyph_bbox, int glyph_cou
 	font->flags.fake_bold = 0;
 	font->flags.fake_italic = 0;
 	font->flags.has_opentype = 0;
+	font->flags.embed = 0;
+	font->flags.never_embed = 0;
 
 	font->t3matrix = fz_identity;
 	font->t3resources = NULL;
@@ -131,6 +133,8 @@ fz_new_font(fz_context *ctx, const char *name, int use_glyph_bbox, int glyph_cou
 
 	font->width_count = 0;
 	font->width_table = NULL;
+
+	font->subfont = 0;
 
 	return font;
 }
@@ -427,7 +431,7 @@ fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int it
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			font = NULL;
-	}
+		}
 	}
 
 	return font;
@@ -445,7 +449,7 @@ fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ros, int
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			font = NULL;
-	}
+		}
 	}
 
 	return font;
@@ -512,7 +516,11 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
 		{
 			data = fz_lookup_noto_font(ctx, script, language, &size, &subfont);
 			if (data)
+			{
 				*fontp = fz_new_font_from_memory(ctx, NULL, data, size, subfont, 0);
+				/* Noto fonts can be embedded. */
+				fz_set_font_embedding(ctx, *fontp, 1);
+			}
 		}
 	}
 
@@ -677,6 +685,7 @@ fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, in
 	fz_font *font;
 	int fterr;
 	FT_ULong tag, size, i, n;
+	FT_UShort flags;
 	char namebuf[sizeof(font->name)];
 
 	fz_keep_freetype(ctx);
@@ -733,16 +742,33 @@ fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, in
 		(float) face->bbox.xMax / face->units_per_EM,
 		(float) face->bbox.yMax / face->units_per_EM);
 
+	font->subfont = index;
+
 	font->flags.is_mono = !!(face->face_flags & FT_FACE_FLAG_FIXED_WIDTH);
 	font->flags.is_serif = 1;
 	font->flags.is_bold = !!(face->style_flags & FT_STYLE_FLAG_BOLD);
 	font->flags.is_italic = !!(face->style_flags & FT_STYLE_FLAG_ITALIC);
+	font->flags.embed = 1;
+	font->flags.never_embed = 0;
 
 	if (FT_IS_SFNT(face))
 	{
 		os2 = FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
 		if (os2)
 			font->flags.is_serif = !(os2->sFamilyClass & 2048); /* Class 8 is sans-serif */
+
+		flags = FT_Get_FSType_Flags(face);
+		if (flags & (FT_FSTYPE_RESTRICTED_LICENSE_EMBEDDING |
+			FT_FSTYPE_PREVIEW_AND_PRINT_EMBEDDING |
+			FT_FSTYPE_NO_SUBSETTING |
+			FT_FSTYPE_BITMAP_EMBEDDING_ONLY))
+		{
+			/* Possibly at some point in the future we may wish to be less blunt
+			 * in our handling of these flags. Any restriction will currently be
+			 * treated as 'never_embed' for now. */
+			font->flags.never_embed = 1;
+			font->flags.embed = 0;
+		}
 
 		FT_Sfnt_Table_Info(face, 0, NULL, &n);
 		for (i = 0; i < n; ++i)
@@ -800,6 +826,16 @@ fz_new_font_from_file(fz_context *ctx, const char *name, const char *path, int i
 	return font;
 }
 
+void fz_set_font_embedding(fz_context *ctx, fz_font *font, int embed)
+{
+	if (!font)
+		return;
+	if (font->flags.never_embed)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Embedding not permitted/possible");
+
+	font->flags.embed = !!embed;
+}
+
 static int
 find_base14_index(const char *name)
 {
@@ -835,6 +871,10 @@ fz_new_base14_font(fz_context *ctx, const char *name)
 		{
 			ctx->font->base14[x] = fz_new_font_from_memory(ctx, name, data, size, 0, 1);
 			ctx->font->base14[x]->flags.is_serif = (name[0] == 'T'); /* Times-Roman */
+			/* Ideally we should not embed base14 fonts by default, but we have to
+			 * allow it for now until we have written code in pdf-device to output
+			 * base14s in a 'special' manner. */
+			fz_set_font_embedding(ctx, ctx->font->base14[x], 1);
 			return fz_keep_font(ctx, ctx->font->base14[x]);
 		}
 	}
@@ -856,6 +896,7 @@ fz_new_cjk_font(fz_context *ctx, int ordering)
 			font = fz_new_font_from_memory(ctx, NULL, data, size, index, 0);
 		else
 			font = fz_load_system_cjk_font(ctx, "SourceHanSerif", ordering, 1);
+		/* FIXME: Currently the builtin one at least will be set to embed. Is that right? */
 		if (font)
 		{
 			font->flags.cjk = 1;
@@ -872,10 +913,16 @@ fz_new_builtin_font(fz_context *ctx, const char *name, int is_bold, int is_itali
 {
 	const unsigned char *data;
 	int size;
+	fz_font *font;
 	data = fz_lookup_builtin_font(ctx, name, is_bold, is_italic, &size);
 	if (!data)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin font with name '%s'", name);
-	return fz_new_font_from_memory(ctx, NULL, data, size, 0, 0);
+	font = fz_new_font_from_memory(ctx, NULL, data, size, 0, 0);
+
+	/* Don't embed builtin fonts. */
+	fz_set_font_embedding(ctx, font, 0);
+
+	return font;
 }
 
 static fz_matrix *
@@ -1220,7 +1267,7 @@ get_gid_bbox(fz_context *ctx, fz_font *font, int gid)
 	if (font->bbox_table[gid>>8] == NULL) {
 		font->bbox_table[gid>>8] = Memento_label(fz_malloc_array(ctx, 256, fz_rect), "bbox_table");
 		for (i = 0; i < 256; i++) {
-			font->bbox_table[gid>>8][i] = fz_infinite_rect;
+			font->bbox_table[gid>>8][i] = fz_empty_rect;
 		}
 	}
 
@@ -2102,4 +2149,145 @@ void fz_font_digest(fz_context *ctx, fz_font *font, unsigned char digest[16])
 		font->has_digest = 1;
 	}
 	memcpy(digest, font->digest, 16);
+}
+
+#define CHR(a,b,c,d) ((a<<24) | (b<<16) | (c<<8) | d)
+
+typedef struct
+{
+	uint32_t offset;
+	uint32_t length;
+} ttc_block_details_t;
+
+/* The operation of the following is largely based on the operation of
+ * https://github.com/fontist/extract_ttc/blob/main/ext/stripttc/stripttc.c
+ * released under a BSD 3-clause license.
+ */
+fz_buffer *
+fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font)
+{
+	fz_stream *stream;
+	uint32_t tmp;
+	int i, count;
+	fz_buffer *buf = NULL;
+	fz_output *out = NULL;
+	ttc_block_details_t *bd = NULL;
+	uint32_t start_pos;
+	uint32_t csumpos = 0;
+
+	if (!font || !font->buffer)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Not a ttc");
+
+	stream = fz_open_buffer(ctx, font->buffer);
+
+	fz_var(buf);
+	fz_var(out);
+	fz_var(bd);
+
+	fz_try(ctx)
+	{
+		/* Signature */
+		if (fz_read_uint32(ctx, stream) != CHR('t','t','c','f'))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Not a ttc");
+
+		/* Version */
+		tmp = fz_read_uint32(ctx, stream);
+		if (tmp != 0x10000 && tmp != 0x20000)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported TTC version");
+
+		/* How many subfonts are there? */
+		tmp = fz_read_uint32(ctx, stream);
+		if ((uint32_t)font->subfont >= tmp || font->subfont < 0)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad subfont in TTC");
+
+		/* Read through the index table until we get the one for our subfont. */
+		for (i = 0; i <= font->subfont; i++)
+			tmp = fz_read_uint32(ctx, stream);
+
+		fz_seek(ctx, stream, tmp, SEEK_SET);
+		buf = fz_new_buffer(ctx, 1);
+		out = fz_new_output_with_buffer(ctx, buf);
+
+		fz_write_uint32_be(ctx, out, fz_read_uint32(ctx, stream)); /* sfnt version */
+		fz_write_uint16_be(ctx, out, count = fz_read_uint16(ctx, stream)); /* table count */
+		fz_write_uint16_be(ctx, out, fz_read_uint16(ctx, stream)); /* bsearch header */
+		fz_write_uint16_be(ctx, out, fz_read_uint16(ctx, stream));
+		fz_write_uint16_be(ctx, out, fz_read_uint16(ctx, stream));
+
+		/* We are currently here... */
+		start_pos = 4+2+2+2+2;
+		/* And after we've written the header, we will be here. */
+		start_pos += count*4*4;
+		bd = fz_malloc_array(ctx, count, ttc_block_details_t);
+		for (i = 0; i < count; i++)
+		{
+			uint32_t tag;
+
+			fz_write_uint32_be(ctx, out, tag = fz_read_uint32(ctx, stream));
+			fz_write_uint32_be(ctx, out, fz_read_uint32(ctx, stream)); /* checksum */
+			bd[i].offset = fz_read_uint32(ctx, stream);
+			fz_write_uint32_be(ctx, out, start_pos);
+			if (tag == CHR('h','e','a','d'))
+				csumpos = start_pos + 8;
+			fz_write_uint32_be(ctx, out, bd[i].length = fz_read_uint32(ctx, stream));
+			start_pos += (bd[i].length + 3) & ~3;
+		}
+
+		for (i = 0; i < count; i++)
+		{
+			uint32_t j;
+
+			fz_seek(ctx, stream, bd[i].offset, SEEK_SET);
+			for (j = 0; j < bd[i].length; j++)
+				fz_write_byte(ctx, out, fz_read_byte(ctx, stream));
+			if (bd[i].length & 1)
+			{
+				fz_write_byte(ctx, out, 0);
+				bd[i].length++;
+			}
+			if (bd[i].length & 2)
+				fz_write_uint16_be(ctx, out, 0);
+		}
+
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, bd);
+		fz_drop_output(ctx, out);
+		fz_drop_stream(ctx, stream);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
+	}
+
+	/* Now fixup the checksum */
+	if (csumpos)
+	{
+		unsigned char *data;
+		uint32_t sum = 0;
+		uint32_t j;
+		size_t len = fz_buffer_storage(ctx, buf, &data);
+
+		/* First off, blat the old checksum */
+		memset(data+csumpos, 0, 4);
+
+		/* Calculate the new sum. */
+		for (j = 0; j < len; j += 4)
+		{
+			uint32_t v = (data[j]<<24) | (data[j+1]<<16) | (data[j+2]<<8) | (data[j+3]);
+			sum += v;
+		}
+		sum = 0xb1b0afba-sum;
+
+		/* Insert it. */
+		data[csumpos] = sum>>24;
+		data[csumpos+1] = sum>>16;
+		data[csumpos+2] = sum>>8;
+		data[csumpos+3] = sum;
+	}
+
+	return buf;
 }

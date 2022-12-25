@@ -177,15 +177,16 @@ Environmental variables
 
 * **MUPDF_mt_ctx**
 
-  Controls auto-generated internal `fz_context*`.
+  Controls support for multithreading on startup.
 
-  * Unset or "1": each thread has its own `fz_context*`.
+  * If set with value "0", a single `fz_context*` is used for all threads; this
+    might give a small performance increase in single-threaded programmes, but
+    will be unsafe in multi-threaded programmes.
 
-  * "0": a single `fz_context*` is used for all threads; this might give
-    a small performance increase in single-threaded programmes, but will be
-    unsafe in multi-threaded programmes.
+  * Otherwise each thread has its own `fz_context*`.
 
-  * Other values are unrecognised and will stop execution.
+  One can instead call ``mupdf::reinit_singlethreaded()`` on startup to force
+  single-threaded mode. This should be done before any other use of MuPDF.
 
 Debug builds only
 ^^^^^^^^^^^^^^^^^

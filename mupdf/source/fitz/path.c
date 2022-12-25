@@ -130,12 +130,25 @@ fz_path *
 fz_keep_path(fz_context *ctx, const fz_path *pathc)
 {
 	fz_path *path = (fz_path *)pathc; /* Explicit cast away of const */
+	int trimmable = 0;
 
 	if (path == NULL)
 		return NULL;
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	/* Technically, we should only access ->refs with the lock held,
+	 * so do that here. We can't actually do the trimming here, because
+	 * to do so would do memory accesses with the ALLOC lock held. */
 	if (path->refs == 1 && path->packed == FZ_PATH_UNPACKED)
+		trimmable = 1;
+	fz_keep_imp8_locked(ctx, path, &path->refs);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+
+	/* This is thread safe, because we know that the only person
+	 * holding a reference to this thread is us. */
+	if (trimmable)
 		fz_trim_path(ctx, path);
-	return fz_keep_imp8(ctx, path, &path->refs);
+
+	return path;
 }
 
 void

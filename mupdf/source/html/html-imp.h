@@ -168,6 +168,7 @@ enum
 	PRO_QUOTES,
 	PRO_SRC,
 	PRO_TEXT_ALIGN,
+	PRO_TEXT_DECORATION,
 	PRO_TEXT_INDENT,
 	PRO_TEXT_TRANSFORM,
 	PRO_VERTICAL_ALIGN,
@@ -208,6 +209,7 @@ enum { VA_BASELINE, VA_SUB, VA_SUPER, VA_TOP, VA_BOTTOM, VA_TEXT_TOP, VA_TEXT_BO
 enum { BS_NONE, BS_SOLID };
 enum { V_VISIBLE, V_HIDDEN, V_COLLAPSE };
 enum { PB_AUTO, PB_ALWAYS, PB_AVOID, PB_LEFT, PB_RIGHT };
+enum { TD_NONE, TD_UNDERLINE, TD_LINE_THROUGH };
 
 enum {
 	WS_COLLAPSE = 1,
@@ -270,10 +272,11 @@ struct fz_css_style_s
 	unsigned int border_style_2 : 1;
 	unsigned int border_style_3 : 1;
 	unsigned int small_caps : 1;
+	unsigned int text_decoration: 2;
 	unsigned int overflow_wrap : 1;
 	/* Ensure the extra bits in the bitfield are copied
 	 * on structure copies. */
-	unsigned int blank : 5;
+	unsigned int blank : 3;
 	fz_css_number line_height;
 	fz_css_number leading;
 	fz_css_color background_color;

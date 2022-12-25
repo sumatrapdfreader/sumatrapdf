@@ -319,6 +319,21 @@ fz_link *pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const ch
 */
 void pdf_delete_link(fz_context *ctx, pdf_page *page, fz_link *link);
 
+enum pdf_border_style
+{
+	PDF_BORDER_STYLE_SOLID = 0,
+	PDF_BORDER_STYLE_DASHED,
+	PDF_BORDER_STYLE_BEVELED,
+	PDF_BORDER_STYLE_INSET,
+	PDF_BORDER_STYLE_UNDERLINE,
+};
+
+enum pdf_border_effect
+{
+	PDF_BORDER_EFFECT_NONE = 0,
+	PDF_BORDER_EFFECT_CLOUDY,
+};
+
 /*
 	create a new annotation of the specified type on the
 	specified page. Populate it with sensible defaults per the type.
@@ -348,6 +363,11 @@ void pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot);
 */
 void pdf_set_annot_popup(fz_context *ctx, pdf_annot *annot, fz_rect rect);
 fz_rect pdf_annot_popup(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Check to see if an annotation has a rect.
+*/
+int pdf_annot_has_rect(fz_context *ctx, pdf_annot *annot);
 
 /*
 	Check to see if an annotation has an ink list.
@@ -380,6 +400,16 @@ int pdf_annot_has_interior_color(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_has_line_ending_styles(fz_context *ctx, pdf_annot *annot);
 
 /*
+	Check to see if an annotation has a border.
+*/
+int pdf_annot_has_border(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Check to see if an annotation has a border effect.
+*/
+int pdf_annot_has_border_effect(fz_context *ctx, pdf_annot *annot);
+
+/*
 	Check to see if an annotation has an icon name.
 */
 int pdf_annot_has_icon_name(fz_context *ctx, pdf_annot *annot);
@@ -408,6 +438,36 @@ fz_rect pdf_annot_rect(fz_context *ctx, pdf_annot *annot);
 	Retrieve the annotation border line width in points.
 */
 float pdf_annot_border(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Retrieve the annotation border style.
+ */
+enum pdf_border_style pdf_annot_border_style(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Retrieve the annotation border width in points.
+ */
+float pdf_annot_border_width(fz_context *ctx, pdf_annot *annot);
+
+/*
+	How many items does the annotation border dash pattern have?
+ */
+int pdf_annot_border_dash_count(fz_context *ctx, pdf_annot *annot);
+
+/*
+	How long is dash item i in the annotation border dash pattern?
+ */
+float pdf_annot_border_dash_item(fz_context *ctx, pdf_annot *annot, int i);
+
+/*
+	Retrieve the annotation border effect.
+ */
+enum pdf_border_effect pdf_annot_border_effect(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Retrieve the annotation border effect intensity.
+ */
+float pdf_annot_border_effect_intensity(fz_context *ctx, pdf_annot *annot);
 
 /*
 	Retrieve the annotation opacity. (0 transparent, 1 solid).
@@ -488,9 +548,39 @@ void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *imag
 void pdf_set_annot_rect(fz_context *ctx, pdf_annot *annot, fz_rect rect);
 
 /*
-	Set the border width for an annotation, in points.
+	Set the border width for an annotation, in points and remove any border effect.
 */
 void pdf_set_annot_border(fz_context *ctx, pdf_annot *annot, float width);
+
+/*
+	Set the border style for an annotation.
+*/
+void pdf_set_annot_border_style(fz_context *ctx, pdf_annot *annot, enum pdf_border_style style);
+
+/*
+	Set the border width for an annotation in points;
+*/
+void pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width);
+
+/*
+	Clear the entire border dash pattern for an annotation.
+*/
+void pdf_clear_annot_border_dash(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Add an item to the end of the border dash pattern for an annotation.
+*/
+void pdf_add_annot_border_dash_item(fz_context *ctx, pdf_annot *annot, float length);
+
+/*
+	Set the border effect for an annotation.
+*/
+void pdf_set_annot_border_effect(fz_context *ctx, pdf_annot *annot, enum pdf_border_effect effect);
+
+/*
+	Set the border effect intensity for an annotation.
+*/
+void pdf_set_annot_border_effect_intensity(fz_context *ctx, pdf_annot *annot, float intensity);
 
 /*
 	Set the opacity for an annotation, between 0 (transparent) and 1

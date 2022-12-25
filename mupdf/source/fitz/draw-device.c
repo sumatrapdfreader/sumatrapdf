@@ -1089,6 +1089,7 @@ fz_draw_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, const
 	fz_draw_device *dev = (fz_draw_device*)devp;
 	fz_matrix ctm = fz_concat(in_ctm, dev->transform);
 	fz_draw_state *state = &dev->stack[dev->top];
+	fz_colorspace *model = state->dest->colorspace;
 	unsigned char colorbv[FZ_MAX_COLORS + 1];
 	unsigned char solid = 255;
 	unsigned char alpha_byte = alpha * 255;
@@ -1128,7 +1129,7 @@ fz_draw_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, const
 			tm.f = span->items[i].y;
 			trm = fz_concat(tm, ctm);
 
-			glyph = fz_render_stroked_glyph(ctx, span->font, gid, &trm, ctm, stroke, &state->scissor, aa);
+			glyph = fz_render_stroked_glyph(ctx, span->font, gid, &trm, ctm, model, stroke, &state->scissor, aa);
 			if (glyph)
 			{
 				fz_pixmap *pixmap = glyph->pixmap;
@@ -1375,7 +1376,7 @@ fz_draw_clip_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, 
 				tm.f = span->items[i].y;
 				trm = fz_concat(tm, ctm);
 
-				glyph = fz_render_stroked_glyph(ctx, span->font, gid, &trm, ctm, stroke, &state->scissor, aa);
+				glyph = fz_render_stroked_glyph(ctx, span->font, gid, &trm, ctm, model, stroke, &state->scissor, aa);
 				if (glyph)
 				{
 					int x = (int)trm.e;

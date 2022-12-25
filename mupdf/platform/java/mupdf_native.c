@@ -409,6 +409,15 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LINE_ENDING_R_CLOSED_ARROW == PDF_ANNOT_LE_R_CLOSED_ARROW;
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_LINE_ENDING_SLASH == PDF_ANNOT_LE_SLASH;
 
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_SOLID == PDF_BORDER_STYLE_SOLID;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_DASHED == PDF_BORDER_STYLE_DASHED;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_BEVELED == PDF_BORDER_STYLE_BEVELED;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_INSET == PDF_BORDER_STYLE_INSET;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_UNDERLINE == PDF_BORDER_STYLE_UNDERLINE;
+
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_EFFECT_NONE == PDF_BORDER_EFFECT_NONE;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_BORDER_EFFECT_CLOUDY == PDF_BORDER_EFFECT_CLOUDY;
+
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_TYPE_TEXT == PDF_ANNOT_TEXT;
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_TYPE_LINK == PDF_ANNOT_LINK;
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_TYPE_FREE_TEXT == PDF_ANNOT_FREE_TEXT;

@@ -30,12 +30,19 @@ let lastPromiseId = 0;
 
 mupdfView.ready = new Promise((resolve, reject) => {
 	worker.onmessage = function (event) {
-		if (event.data[0] !== "READY") {
-			reject(new Error(`Unexpected first message: ${event.data}`));
-		} else {
+		let type = event.data[0];
+		if (type === "READY") {
 			mupdfView.wasmMemory = event.data[1];
+			let methodNames = event.data[2];
+			for (let method of methodNames)
+				mupdfView[method] = wrap(method);
 			worker.onmessage = onWorkerMessage;
 			resolve();
+		} else if (type === "ERROR") {
+			let error = event.data[1];
+			reject(new Error(error));
+		} else {
+			reject(new Error(`Unexpected first message: ${event.data}`));
 		}
 	};
 });
@@ -44,8 +51,6 @@ function onWorkerMessage(event) {
 	let [ type, id, result ] = event.data;
 	if (type === "RESULT")
 		messagePromises.get(id).resolve(result);
-	else if (type === "RENDER")
-		mupdfView.onRender(result.pageNumber, result.png, result.cookiePointer);
 	else if (type === "READY")
 		messagePromises.get(id).reject(new Error("Unexpected READY message"));
 	else if (type === "ERROR") {
@@ -57,11 +62,10 @@ function onWorkerMessage(event) {
 	else
 		messagePromises.get(id).reject(new Error(`Unexpected result type '${type}'`));
 
-	if (type !== "RENDER")
-		messagePromises.delete(id);
+	messagePromises.delete(id);
 }
 
-
+// TODO - Add cancelation for trylater queues
 function wrap(func) {
 	return function(...args) {
 		return new Promise(function (resolve, reject) {
@@ -75,6 +79,8 @@ function wrap(func) {
 	};
 }
 
+mupdfView.setLogFilters = wrap("setLogFilters");
+
 const wrap_openStreamFromUrl = wrap("openStreamFromUrl");
 const wrap_openDocumentFromStream = wrap("openDocumentFromStream");
 
@@ -82,30 +88,5 @@ mupdfView.openDocumentFromUrl = async function (url, contentLength, progressive,
 	await wrap_openStreamFromUrl(url, contentLength, progressive, prefetch);
 	return await wrap_openDocumentFromStream(magic);
 };
-
-mupdfView.openDocumentFromBuffer = wrap("openDocumentFromBuffer");
-mupdfView.freeDocument = wrap("freeDocument");
-
-mupdfView.documentTitle = wrap("documentTitle");
-mupdfView.documentOutline = wrap("documentOutline");
-mupdfView.countPages = wrap("countPages");
-mupdfView.getPageSizes = wrap("getPageSizes");
-mupdfView.getPageWidth = wrap("getPageWidth");
-mupdfView.getPageHeight = wrap("getPageHeight");
-mupdfView.getPageLinks = wrap("getPageLinks");
-mupdfView.getPageText = wrap("getPageText");
-mupdfView.search = wrap("search");
-mupdfView.drawPageAsPNG = wrap("drawPageAsPNG");
-mupdfView.deleteCookie = wrap("deleteCookie");
-mupdfView.resetPageCache = wrap("resetPageCache");
-
-mupdfView.mouseDownOnPage = wrap("mouseDownOnPage");
-mupdfView.mouseDragOnPage = wrap("mouseDragOnPage");
-mupdfView.mouseMoveOnPage = wrap("mouseMoveOnPage");
-mupdfView.mouseUpOnPage = wrap("mouseUpOnPage");
-mupdfView.setEditionTool = wrap("setEditionTool");
-mupdfView.deleteItem = wrap("deleteItem");
-
-mupdfView.onRender = () => {};
 
 mupdfView.terminate = function () { worker.terminate(); };

@@ -387,4 +387,24 @@ void fz_lock_debug_unlock(fz_context *ctx, int lock)
 #endif
 }
 
+#else
+
+void
+(fz_assert_lock_held)(fz_context *ctx, int lock)
+{
+}
+
+void
+(fz_assert_lock_not_held)(fz_context *ctx, int lock)
+{
+}
+
+void (fz_lock_debug_lock)(fz_context *ctx, int lock)
+{
+}
+
+void (fz_lock_debug_unlock)(fz_context *ctx, int lock)
+{
+}
+
 #endif

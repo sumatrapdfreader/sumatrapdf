@@ -52,6 +52,8 @@ static int ft_font_file_kind(FT_Face face)
 
 static int is_ttc(fz_font *font)
 {
+	if (!font || !font->buffer || font->buffer->len < 4)
+		return 0;
 	return !memcmp(font->buffer->data, "ttcf", 4);
 }
 
@@ -82,6 +84,7 @@ pdf_add_font_file(fz_context *ctx, pdf_document *doc, fz_font *font)
 	fz_buffer *buf = font->buffer;
 	pdf_obj *obj = NULL;
 	pdf_obj *ref = NULL;
+	int drop_buf = 0;
 
 	fz_var(obj);
 	fz_var(ref);
@@ -89,6 +92,13 @@ pdf_add_font_file(fz_context *ctx, pdf_document *doc, fz_font *font)
 	/* Check for substitute fonts */
 	if (font->flags.ft_substitute)
 		return NULL;
+
+	if (is_ttc(font))
+	{
+		buf = NULL;
+		drop_buf = 1;
+		buf = fz_extract_ttf_from_ttc(ctx, font);
+	}
 
 	fz_try(ctx)
 	{
@@ -117,6 +127,8 @@ pdf_add_font_file(fz_context *ctx, pdf_document *doc, fz_font *font)
 	fz_always(ctx)
 	{
 		pdf_drop_obj(ctx, obj);
+		if (drop_buf)
+			fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
@@ -692,10 +704,10 @@ pdf_add_simple_font(fz_context *ctx, pdf_document *doc, fz_font *font, int encod
 int
 pdf_font_writing_supported(fz_font *font)
 {
-	if (font->ft_face == NULL || font->buffer == NULL || font->buffer->len < 4)
+	if (font->ft_face == NULL || font->buffer == NULL || font->buffer->len < 4 || !font->flags.embed || font->flags.never_embed)
 		return 0;
 	if (is_ttc(font))
-		return 0;
+		return 1;
 	if (is_truetype(font->ft_face))
 		return 1;
 	if (is_postscript(font->ft_face))

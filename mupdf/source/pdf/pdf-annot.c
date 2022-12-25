@@ -1397,6 +1397,7 @@ pdf_annot_border(fz_context *ctx, pdf_annot *annot)
 	fz_try(ctx)
 	{
 		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
 		bs_w = pdf_dict_get(ctx, bs, PDF_NAME(W));
 		if (pdf_is_number(ctx, bs_w))
 		{
@@ -1426,10 +1427,355 @@ pdf_set_annot_border(fz_context *ctx, pdf_annot *annot, float w)
 		pdf_obj *bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
 		if (!pdf_is_dict(ctx, bs))
 			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
+		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
 		pdf_dict_put_real(ctx, bs, PDF_NAME(W), w);
 
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(Border)); /* deprecated */
-		pdf_dict_del(ctx, annot->obj, PDF_NAME(BE)); /* not supported */
+		pdf_dict_del(ctx, annot->obj, PDF_NAME(BE)); /* no effect */
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+static pdf_obj *border_style_subtypes[] = {
+	PDF_NAME(Circle),
+	PDF_NAME(FreeText),
+	PDF_NAME(Ink),
+	PDF_NAME(Line),
+	PDF_NAME(Polygon),
+	PDF_NAME(PolyLine),
+	PDF_NAME(Square),
+	NULL,
+};
+
+static pdf_obj *border_effect_subtypes[] = {
+	PDF_NAME(Circle),
+	PDF_NAME(FreeText),
+	PDF_NAME(Polygon),
+	PDF_NAME(Square),
+	NULL,
+};
+
+int
+pdf_annot_has_border(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+}
+
+int
+pdf_annot_has_border_effect(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(BE), border_effect_subtypes);
+}
+
+enum pdf_border_style
+pdf_annot_border_style(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *bs, *s;
+	enum pdf_border_style style;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		s = pdf_dict_get(ctx, bs, PDF_NAME(S));
+
+		if (s == PDF_NAME(D))
+			style = PDF_BORDER_STYLE_DASHED;
+		else if (s == PDF_NAME(B))
+			style = PDF_BORDER_STYLE_BEVELED;
+		else if (s == PDF_NAME(I))
+			style = PDF_BORDER_STYLE_INSET;
+		else if (s == PDF_NAME(U))
+			style = PDF_BORDER_STYLE_UNDERLINE;
+		else
+			style = PDF_BORDER_STYLE_SOLID;
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return style;
+}
+
+float
+pdf_annot_border_width(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *border, *bs, *w;
+	float width;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+
+		/* if values missing, fall back to deprecated /Border array */
+		border = pdf_dict_get(ctx, annot->obj, PDF_NAME(Border));
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		w = pdf_dict_get(ctx, bs, PDF_NAME(W));
+		if (!pdf_is_number(ctx, w) && pdf_is_dict(ctx, border))
+			w = pdf_array_get(ctx, border, 2);
+		width = pdf_to_real(ctx, w);
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return width;
+}
+
+int
+pdf_annot_border_dash_count(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *bs, *d;
+	int count;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		d = pdf_dict_get(ctx, bs, PDF_NAME(D));
+		count = pdf_array_len(ctx, d);
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return count;
+}
+
+float
+pdf_annot_border_dash_item(fz_context *ctx, pdf_annot *annot, int i)
+{
+	pdf_obj *bs, *d;
+	float length;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		d = pdf_dict_get(ctx, bs, PDF_NAME(D));
+		length = pdf_array_get_real(ctx, d, i);
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return length;
+}
+
+enum pdf_border_effect
+pdf_annot_border_effect(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *be;
+	enum pdf_border_effect effect;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BE), border_effect_subtypes);
+		be = pdf_dict_get(ctx, annot->obj, PDF_NAME(BE));
+		if (pdf_dict_get(ctx, be, PDF_NAME(S)) == PDF_NAME(C))
+			effect = PDF_BORDER_EFFECT_CLOUDY;
+		else
+			effect = PDF_BORDER_EFFECT_NONE;
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return effect;
+}
+
+float
+pdf_annot_border_effect_intensity(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *be;
+	float intensity;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BE), border_effect_subtypes);
+		be = pdf_dict_get(ctx, annot->obj, PDF_NAME(BE));
+		intensity = pdf_dict_get_real(ctx, be, PDF_NAME(I));
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return intensity;
+}
+
+void
+pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width)
+{
+	pdf_obj *bs;
+
+	begin_annot_op(ctx, annot, "Set border width");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		if (!pdf_is_dict(ctx, bs))
+			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
+		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
+		pdf_dict_put_real(ctx, bs, PDF_NAME(W), width);
+		pdf_dict_del(ctx, annot->obj, PDF_NAME(Border)); /* deprecated */
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+void
+pdf_set_annot_border_style(fz_context *ctx, pdf_annot *annot, enum pdf_border_style style)
+{
+	pdf_obj *bs, *s;
+
+	begin_annot_op(ctx, annot, "Set border style");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		if (!pdf_is_dict(ctx, bs))
+			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
+		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
+		switch (style)
+		{
+		default:
+		case PDF_BORDER_STYLE_SOLID: s = PDF_NAME(S); break;
+		case PDF_BORDER_STYLE_DASHED: s = PDF_NAME(D); break;
+		case PDF_BORDER_STYLE_BEVELED: s = PDF_NAME(B); break;
+		case PDF_BORDER_STYLE_INSET: s = PDF_NAME(I); break;
+		case PDF_BORDER_STYLE_UNDERLINE: s = PDF_NAME(U); break;
+		}
+		pdf_dict_put(ctx, bs, PDF_NAME(S), s);
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+void
+pdf_clear_annot_border_dash(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *bs;
+
+	begin_annot_op(ctx, annot, "Clear border dash pattern");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		if (!pdf_is_dict(ctx, bs))
+			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
+		pdf_dict_del(ctx, bs, PDF_NAME(D));
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+void
+pdf_add_annot_border_dash_item(fz_context *ctx, pdf_annot *annot, float length)
+{
+	pdf_obj *bs, *d;
+
+	begin_annot_op(ctx, annot, "Add border dash pattern item");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
+		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
+		if (!pdf_is_dict(ctx, bs))
+			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
+		d = pdf_dict_get(ctx, bs, PDF_NAME(D));
+		if (!pdf_is_array(ctx, d))
+			d = pdf_dict_put_array(ctx, bs, PDF_NAME(D), 1);
+		pdf_array_push_real(ctx, d, length);
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+void
+pdf_set_annot_border_effect(fz_context *ctx, pdf_annot *annot, enum pdf_border_effect effect)
+{
+	pdf_obj *be, *s;
+
+	begin_annot_op(ctx, annot, "Set border effect");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BE), border_effect_subtypes);
+		be = pdf_dict_get(ctx, annot->obj, PDF_NAME(BE));
+		if (!pdf_is_dict(ctx, be))
+			be = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BE), 1);
+		switch (effect)
+		{
+		default:
+		case PDF_BORDER_EFFECT_NONE: s = PDF_NAME(S); break;
+		case PDF_BORDER_EFFECT_CLOUDY: s = PDF_NAME(C); break;
+		}
+		pdf_dict_put(ctx, be, PDF_NAME(S), s);
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+void
+pdf_set_annot_border_effect_intensity(fz_context *ctx, pdf_annot *annot, float intensity)
+{
+	pdf_obj *be;
+
+	begin_annot_op(ctx, annot, "Set border effect intensity");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(BE), border_effect_subtypes);
+		be = pdf_dict_get(ctx, annot->obj, PDF_NAME(BE));
+		if (!pdf_is_dict(ctx, be))
+			be = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BE), 1);
+		pdf_dict_put_real(ctx, be, PDF_NAME(I), intensity);
 	}
 	fz_always(ctx)
 		end_annot_op(ctx, annot);

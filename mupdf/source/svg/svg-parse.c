@@ -52,7 +52,7 @@ const char *
 svg_lex_number(float *fp, const char *ss)
 {
 	const char *s = ss;
-	if (*s == '-')
+	if (*s == '+' || *s == '-')
 		++s;
 	while (*s >= '0' && *s <= '9')
 		++s;

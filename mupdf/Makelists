@@ -13,6 +13,7 @@ FREETYPE_SRC += thirdparty/freetype/src/base/ftbase.c
 FREETYPE_SRC += thirdparty/freetype/src/base/ftbbox.c
 FREETYPE_SRC += thirdparty/freetype/src/base/ftbitmap.c
 FREETYPE_SRC += thirdparty/freetype/src/base/ftdebug.c
+FREETYPE_SRC += thirdparty/freetype/src/base/ftfstype.c
 FREETYPE_SRC += thirdparty/freetype/src/base/ftgasp.c
 FREETYPE_SRC += thirdparty/freetype/src/base/ftglyph.c
 FREETYPE_SRC += thirdparty/freetype/src/base/ftinit.c

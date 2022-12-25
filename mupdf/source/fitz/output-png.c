@@ -236,6 +236,12 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		if (usize > SIZE_MAX / band_height)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
 		usize *= band_height;
+		writer->stream.opaque = ctx;
+		writer->stream.zalloc = fz_zlib_alloc;
+		writer->stream.zfree = fz_zlib_free;
+		err = deflateInit(&writer->stream, Z_DEFAULT_COMPRESSION);
+		if (err != Z_OK)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
 		writer->usize = usize;
 		/* Now figure out how large a buffer we need to compress into.
 		 * deflateBound always expands a bit, and it's limited by being
@@ -245,12 +251,6 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 			writer->csize = UINT32_MAX;
 		writer->udata = Memento_label(fz_malloc(ctx, writer->usize), "png_write_udata");
 		writer->cdata = Memento_label(fz_malloc(ctx, writer->csize), "png_write_cdata");
-		writer->stream.opaque = ctx;
-		writer->stream.zalloc = fz_zlib_alloc;
-		writer->stream.zfree = fz_zlib_free;
-		err = deflateInit(&writer->stream, Z_DEFAULT_COMPRESSION);
-		if (err != Z_OK)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
 	}
 
 	dp = writer->udata;

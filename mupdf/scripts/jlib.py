@@ -59,7 +59,7 @@ def expand_nv( text, caller=1):
     >>> x = 45
     >>> y = 'hello'
     >>> expand_nv( 'foo {x} {y=}')
-    'foo 45 y=hello'
+    "foo 45 y='hello'"
 
     <expression> can also use ':' and '!' to control formatting, like
     str.format().
@@ -76,7 +76,7 @@ def expand_nv( text, caller=1):
     >>> foo = 45
     >>> y = 'hello'
     >>> expand_nv('{=foo y}')
-    'foo=45 y=hello'
+    "foo=45 y='hello'"
     '''
     if isinstance( caller, int):
         frame_record = inspect.stack()[ caller]
@@ -127,6 +127,13 @@ def expand_nv( text, caller=1):
                     nv = True
                     item = item[:-1]
                 expression, tail = split_first_of( item, '!:')
+                if expression.endswith('='):
+                    # Basic PEP 501 support.
+                    nv = True
+                    expression = expression[:-1]
+                if not tail:
+                    # Default to !r as in PEP 501.
+                    tail = '!r'
                 try:
                     value = eval( expression, frame.f_globals, frame.f_locals)
                     value_text = ('{0%s}' % tail).format( value)
@@ -1990,36 +1997,40 @@ def link_l_flags( sos, ld_origin=None):
     We return -L flags for each unique parent directory and -l flags for each
     leafname.
 
-    In addition on Linux we append " -Wl,-rpath='$ORIGIN'" so that libraries
-    will be searched for next to each other. This can be disabled by setting
-    ld_origin to false.
+    In addition on Linux and OpenBSD we append " -Wl,-rpath='$ORIGIN,-z,origin"
+    so that libraries will be searched for next to each other. This can be
+    disabled by setting ld_origin to false.
     '''
     dirs = set()
     names = []
     if isinstance( sos, str):
         sos = [sos]
+    ret = ''
     for so in sos:
         if not so:
             continue
         dir_ = os.path.dirname( so)
         name = os.path.basename( so)
         assert name.startswith( 'lib'), f'name={name}'
-        assert name.endswith ( '.so'), f'name={name}'
-        name = name[3:-3]
-        dirs.add( dir_)
-        names.append( name)
+        if name.endswith( '.so'):
+            dirs.add( dir_)
+            names.append( f'-l {name[3:-3]}')
+        elif name.endswith( '.a'):
+            names.append( so)
+        else:
+            assert 0, f'leaf does not end in .so or .a: {so}'
     ret = ''
     # Important to use sorted() here, otherwise ordering from set() is
     # arbitrary causing occasional spurious rebuilds.
     for dir_ in sorted(dirs):
         ret += f' -L {dir_}'
     for name in names:
-        ret += f' -l {name}'
+        ret += f' {name}'
     if ld_origin is None:
-        if os.uname()[0] == 'Linux':
+        if os.uname()[0] in ( 'Linux', 'OpenBSD'):
             ld_origin = True
     if ld_origin:
-        ret += " -Wl,-rpath='$ORIGIN'"
+        ret += " -Wl,-rpath='$ORIGIN',-z,origin"
     #log('{sos=} {ld_origin=} {ret=}')
     return ret
 

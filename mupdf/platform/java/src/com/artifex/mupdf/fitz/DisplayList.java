@@ -46,6 +46,8 @@ public class DisplayList
 		pointer = p;
 	}
 
+	public native Rect getBounds();
+
 	public native Pixmap toPixmap(Matrix ctm, ColorSpace colorspace, boolean alpha);
 	public native StructuredText toStructuredText(String options);
 

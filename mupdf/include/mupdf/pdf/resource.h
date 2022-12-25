@@ -74,6 +74,25 @@ fz_colorspace *pdf_load_colorspace(fz_context *ctx, pdf_obj *obj);
 int pdf_is_tint_colorspace(fz_context *ctx, fz_colorspace *cs);
 
 fz_shade *pdf_load_shading(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
+void pdf_sample_shade_function(fz_context *ctx, float shade[256][FZ_MAX_COLORS+1], int n, int funcs, pdf_function **func, float t0, float t1);
+
+/**
+	Function to recolor a single color from a shade.
+*/
+typedef void (pdf_recolor_vertex)(fz_context *ctx, void *opaque, fz_colorspace *dst_cs, float *d, fz_colorspace *src_cs, const float *src);
+
+/**
+	Function to handle recoloring a shade.
+
+	Called with src_cs from the shade. If no recoloring is required, return NULL. Otherwise
+	fill in *dst_cs, and return a vertex recolorer.
+*/
+typedef pdf_recolor_vertex *(pdf_shade_recolorer)(fz_context *ctx, void *opaque, fz_colorspace *src_cs, fz_colorspace **dst_cs);
+
+/**
+	Recolor a shade.
+*/
+pdf_obj *pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade, void *opaque);
 
 fz_image *pdf_load_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *file);
 int pdf_is_jpx_image(fz_context *ctx, pdf_obj *dict);

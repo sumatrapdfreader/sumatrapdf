@@ -559,6 +559,14 @@ JNIEXPORT jlong JNICALL Java_com_artifex_mupdf_fitz_DisplayList_newNative
 
 /*
  * Class:     com_artifex_mupdf_fitz_DisplayList
+ * Method:    getBounds
+ * Signature: ()Lcom/artifex/mupdf/fitz/Rect;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_DisplayList_getBounds
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_DisplayList
  * Method:    toPixmap
  * Signature: (Lcom/artifex/mupdf/fitz/Matrix;Lcom/artifex/mupdf/fitz/ColorSpace;Z)Lcom/artifex/mupdf/fitz/Pixmap;
  */
@@ -1787,6 +1795,20 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFAnnotation_LINE_ENDING_R_CLOSED_ARROW 8L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_LINE_ENDING_SLASH
 #define com_artifex_mupdf_fitz_PDFAnnotation_LINE_ENDING_SLASH 9L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_SOLID
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_SOLID 0L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_DASHED
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_DASHED 1L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_BEVELED
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_BEVELED 2L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_INSET
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_INSET 3L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_UNDERLINE
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_STYLE_UNDERLINE 4L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_EFFECT_NONE
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_EFFECT_NONE 0L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_BORDER_EFFECT_CLOUDY
+#define com_artifex_mupdf_fitz_PDFAnnotation_BORDER_EFFECT_CLOUDY 1L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_IS_INVISIBLE
 #define com_artifex_mupdf_fitz_PDFAnnotation_IS_INVISIBLE 1L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_IS_HIDDEN
@@ -2054,6 +2076,118 @@ JNIEXPORT jintArray JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getLineEnd
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setLineEndingStyles
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasBorder
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasBorder
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getBorderStyle
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorderStyle
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setBorderStyle
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setBorderStyle
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getBorderWidth
+ * Signature: ()F
+ */
+JNIEXPORT jfloat JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorderWidth
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setBorderWidth
+ * Signature: (F)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setBorderWidth
+  (JNIEnv *, jobject, jfloat);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getBorderDashCount
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorderDashCount
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getBorderDashItem
+ * Signature: (I)F
+ */
+JNIEXPORT jfloat JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorderDashItem
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    clearBorderDash
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_clearBorderDash
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    addBorderDashItem
+ * Signature: (F)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_addBorderDashItem
+  (JNIEnv *, jobject, jfloat);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasBorderEffect
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasBorderEffect
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getBorderEffect
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorderEffect
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setBorderEffect
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setBorderEffect
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getBorderEffectIntensity
+ * Signature: ()F
+ */
+JNIEXPORT jfloat JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorderEffectIntensity
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setBorderEffectIntensity
+ * Signature: (F)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setBorderEffectIntensity
+  (JNIEnv *, jobject, jfloat);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
@@ -3676,6 +3810,20 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFWidget_LINE_ENDING_R_CLOSED_ARROW 8L
 #undef com_artifex_mupdf_fitz_PDFWidget_LINE_ENDING_SLASH
 #define com_artifex_mupdf_fitz_PDFWidget_LINE_ENDING_SLASH 9L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_SOLID
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_SOLID 0L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_DASHED
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_DASHED 1L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_BEVELED
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_BEVELED 2L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_INSET
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_INSET 3L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_UNDERLINE
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_STYLE_UNDERLINE 4L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_EFFECT_NONE
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_EFFECT_NONE 0L
+#undef com_artifex_mupdf_fitz_PDFWidget_BORDER_EFFECT_CLOUDY
+#define com_artifex_mupdf_fitz_PDFWidget_BORDER_EFFECT_CLOUDY 1L
 #undef com_artifex_mupdf_fitz_PDFWidget_IS_INVISIBLE
 #define com_artifex_mupdf_fitz_PDFWidget_IS_INVISIBLE 1L
 #undef com_artifex_mupdf_fitz_PDFWidget_IS_HIDDEN

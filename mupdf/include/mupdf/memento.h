@@ -1,4 +1,4 @@
-/* Copyright (C) 2009-2018 Artifex Software, Inc.
+/* Copyright (C) 2009-2022 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -176,7 +176,10 @@
  *    relying on the library user to provide them.
  *
  *    For convenience the lines to implement such veneers can be found
- *    further down this file between:
+ *    at the end of memento.c between:
+ *        // C++ Operator Veneers - START
+ *    and
+ *        // C++ Operator Veneers - END
  *
  *    Memento's interception of new/delete can be disabled at runtime
  *    by using Memento_setIgnoreNewDelete(1). Alternatively the
@@ -197,7 +200,7 @@
  *    it's really easy:
  *       git clone git://github.com/ianlancetaylor/libbacktrace
  *       cd libbacktrace
- *       ./configure
+ *       ./configure --enable-shared
  *       make
  *
  *    This leaves the build .so as .libs/libbacktrace.so
@@ -212,11 +215,6 @@
  *       sudo cp .libs/libbacktrace.so /opt/lib/
  */
 
-#ifndef MEMENTO_H
-
-#include <stdlib.h>
-#include <stdarg.h>
-
 #ifdef __cplusplus
 
 // Avoids problems with strdup()'s throw() attribute on Linux.
@@ -224,6 +222,14 @@
 
 extern "C" {
 #endif
+
+#ifndef MEMENTO_H
+
+/* Include all these first, so our definitions below do
+ * not conflict with them. */
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 
 #define MEMENTO_H
 
@@ -249,8 +255,6 @@ extern "C" {
 #define MEMENTO_ALLOCFILL 0xa8
 #define MEMENTO_FREEFILL  0xa9
 
-#define MEMENTO_FREELIST_MAX 0x2000000
-
 int Memento_checkBlock(void *);
 int Memento_checkAllMemory(void);
 int Memento_check(void);
@@ -267,11 +271,12 @@ int Memento_failAt(int);
 int Memento_failThisEvent(void);
 void Memento_listBlocks(void);
 void Memento_listNewBlocks(void);
+void Memento_listPhasedBlocks(void);
 size_t Memento_setMax(size_t);
 void Memento_stats(void);
 void *Memento_label(void *, const char *);
 void Memento_tick(void);
-int Memento_setVerbose(int verbose);
+int Memento_setVerbose(int);
 int Memento_setIgnoreNewDelete(int ignore);
 
 void *Memento_malloc(size_t s);
@@ -279,8 +284,10 @@ void *Memento_realloc(void *, size_t s);
 void  Memento_free(void *);
 void *Memento_calloc(size_t, size_t);
 char *Memento_strdup(const char*);
+#if !defined(MEMENTO_GS_HACKS) && !defined(MEMENTO_MUPDF_HACKS)
 int Memento_asprintf(char **ret, const char *format, ...);
 int Memento_vasprintf(char **ret, const char *format, va_list ap);
+#endif
 
 void Memento_info(void *addr);
 void Memento_listBlockInfo(void);
@@ -319,6 +326,7 @@ void Memento_cpp_delete(void *pointer);
 void *Memento_cpp_new_array(size_t size);
 void Memento_cpp_delete_array(void *pointer);
 
+void Memento_showHash(unsigned int hash);
 
 #ifdef MEMENTO
 
@@ -328,8 +336,10 @@ void Memento_cpp_delete_array(void *pointer);
 #define realloc   Memento_realloc
 #define calloc    Memento_calloc
 #define strdup    Memento_strdup
+#if !defined(MEMENTO_GS_HACKS) && !defined(MEMENTO_MUPDF_HACKS)
 #define asprintf  Memento_asprintf
 #define vasprintf Memento_vasprintf
+#endif
 #endif
 
 #else
@@ -339,8 +349,10 @@ void Memento_cpp_delete_array(void *pointer);
 #define Memento_realloc   MEMENTO_UNDERLYING_REALLOC
 #define Memento_calloc    MEMENTO_UNDERLYING_CALLOC
 #define Memento_strdup    strdup
+#if !defined(MEMENTO_GS_HACKS) && !defined(MEMENTO_MUPDF_HACKS)
 #define Memento_asprintf  asprintf
 #define Memento_vasprintf vasprintf
+#endif
 
 #define Memento_checkBlock(A)              0
 #define Memento_checkAllMemory()           0
@@ -357,6 +369,7 @@ void Memento_cpp_delete_array(void *pointer);
 #define Memento_failThisEvent()            0
 #define Memento_listBlocks()               do {} while (0)
 #define Memento_listNewBlocks()            do {} while (0)
+#define Memento_listPhasedBlocks()         do {} while (0)
 #define Memento_setMax(A)                  0
 #define Memento_stats()                    do {} while (0)
 #define Memento_label(A,B)                 (A)
@@ -377,7 +390,6 @@ void Memento_cpp_delete_array(void *pointer);
 #define Memento_checkBytePointerOrNull(A)  0
 #define Memento_checkShortPointerOrNull(A) 0
 #define Memento_checkIntPointerOrNull(A)   0
-#define Memento_setVerbose(v)              0
 #define Memento_setIgnoreNewDelete(v)      0
 
 #define Memento_tick()                     do {} while (0)
@@ -387,6 +399,7 @@ void Memento_cpp_delete_array(void *pointer);
 #define Memento_bt()                       do {} while (0)
 #define Memento_sequence()                 (0)
 #define Memento_squeezing()                (0)
+#define Memento_setVerbose(A)              (A)
 
 #endif /* MEMENTO */
 

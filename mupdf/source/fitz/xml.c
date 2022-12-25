@@ -116,6 +116,9 @@ void fz_debug_xml(fz_xml *item, int level)
 {
 	char *s;
 
+	if (item == NULL)
+		return;
+
 	/* Skip over the DOC object at the top. */
 	if (item->up == NULL)
 	{

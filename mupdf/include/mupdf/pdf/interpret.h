@@ -38,8 +38,22 @@ void pdf_drop_processor(fz_context *ctx, pdf_processor *proc);
 struct pdf_processor
 {
 	int refs;
+
+	/* close the processor. Also closes any chained processors. */
 	void (*close_processor)(fz_context *ctx, pdf_processor *proc);
 	void (*drop_processor)(fz_context *ctx, pdf_processor *proc);
+
+	/* At any stage, we can have one set of resources in place.
+	 * This function gives us a set of resources to use. We remember
+	 * any previous set on a stack, so we can pop back to it later.
+	 * Our responsibility (as well as remembering it for our own use)
+	 * is to pass either it, or a filtered version of it onto any
+	 * chained processor. */
+	void (*push_resources)(fz_context *ctx, pdf_processor *proc, pdf_obj *res);
+	/* Pop the resources stack. This must be passed on to any chained
+	 * processors. This returns a pointer to the resource dict just
+	 * popped by the deepest filter. The caller inherits this reference. */
+	pdf_obj *(*pop_resources)(fz_context *ctx, pdf_processor *proc);
 
 	/* general graphics state */
 	void (*op_w)(fz_context *ctx, pdf_processor *proc, float linewidth);
@@ -54,7 +68,7 @@ struct pdf_processor
 	void (*op_gs_BM)(fz_context *ctx, pdf_processor *proc, const char *blendmode);
 	void (*op_gs_ca)(fz_context *ctx, pdf_processor *proc, float alpha);
 	void (*op_gs_CA)(fz_context *ctx, pdf_processor *proc, float alpha);
-	void (*op_gs_SMask)(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, pdf_obj *page_resources, float *bc, int luminosity);
+	void (*op_gs_SMask)(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, float *bc, int luminosity);
 	void (*op_gs_end)(fz_context *ctx, pdf_processor *proc);
 
 	/* special graphics state */
@@ -137,7 +151,7 @@ struct pdf_processor
 	void (*op_BI)(fz_context *ctx, pdf_processor *proc, fz_image *image, const char *colorspace_name);
 	void (*op_sh)(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *shade);
 	void (*op_Do_image)(fz_context *ctx, pdf_processor *proc, const char *name, fz_image *image);
-	void (*op_Do_form)(fz_context *ctx, pdf_processor *proc, const char *name, pdf_obj *form, pdf_obj *page_resources);
+	void (*op_Do_form)(fz_context *ctx, pdf_processor *proc, const char *name, pdf_obj *form);
 
 	/* marked content */
 	void (*op_MP)(fz_context *ctx, pdf_processor *proc, const char *tag);
@@ -215,9 +229,68 @@ pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int 
 */
 pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode);
 
-/*
-	opaque: Opaque value that is passed to all the filter functions.
+typedef struct pdf_filter_options pdf_filter_options;
 
+/*
+	Create a filter processor. This filters the PDF operators
+	it is fed, and passes them down (with some changes) to the
+	child filter.
+
+	chain: The child processor to which the filtered operators
+	will be fed.
+
+	The options field contains a pointer to a structure with
+	filter specific options in.
+*/
+typedef pdf_processor *(pdf_filter_factory_fn)(fz_context *ctx, pdf_document *doc, pdf_processor *chain, int struct_parents, fz_matrix transform, pdf_filter_options *options, void *factory_options);
+
+/*
+	A pdf_filter_factory is a pdf_filter_factory_fn, plus the options
+	needed to instantiate it.
+*/
+typedef struct
+{
+	pdf_filter_factory_fn *filter;
+	void *options;
+} pdf_filter_factory;
+
+/*
+	recurse: Filter resources recursively.
+
+	instance_forms: Always recurse on XObject Form resources, but will
+	create a new instance of each XObject Form that is used, filtered
+	individually.
+
+	ascii: If true, escape all binary data in the output.
+
+	no_update: If true, do not update the document at the end.
+
+	end_page_opaque: Opaque value that is passed to all the filter functions.
+
+	end_page: A function called at the end of a page.
+	This allows the caller to insert some extra content after
+	all other content.
+
+	filters: Pointer to an array of filter factory/options.
+	The array is terminated by an entry with a NULL factory pointer.
+	Operators will be fed into the filter generated from the first
+	factory function in the list, and from there go to the filter
+	generated from the second factory in the list etc.
+*/
+struct pdf_filter_options
+{
+	int recurse;
+	int instance_forms;
+	int ascii;
+	int no_update;
+
+	void *end_page_opaque;
+	void (*end_page)(fz_context *ctx, fz_buffer *buffer, void *arg);
+
+	pdf_filter_factory *filters;
+};
+
+/*
 	image_filter: A function called to assess whether a given
 	image should be removed or not.
 
@@ -227,20 +300,6 @@ pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahx
 	after_text_object: A function called after each text object.
 	This allows the caller to insert some extra content if
 	desired.
-
-	end_page: A function called at the end of a page.
-	This allows the caller to insert some extra content after
-	all other content.
-
-	sanitize: If false, will only clean the syntax. This disables all filtering!
-
-	recurse: Clean/sanitize/filter resources recursively.
-
-	instance_forms: Always recurse on XObject Form resources, but will
-	create a new instance of each XObject Form that is used, filtered
-	individually.
-
-	ascii: If true, escape all binary data in the output.
 */
 typedef struct
 {
@@ -248,20 +307,15 @@ typedef struct
 	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
 	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
 	void (*after_text_object)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
-	void (*end_page)(fz_context *ctx, fz_buffer *buffer, void *arg);
-
-	int recurse;
-	int instance_forms;
-	int sanitize;
-	int ascii;
-} pdf_filter_options;
+}
+pdf_sanitize_filter_options;
 
 /*
-	Create a filter processor. This filters the PDF operators
-	it is fed, and passes them down (with some changes) to the
-	child filter.
+	A sanitize filter factory.
 
-	The changes made by the filter are:
+	sopts = pointer to pdf_sanitize_filter_options.
+
+	The changes made by a filter generated from this are:
 
 	* No operations are allowed to change the top level gstate.
 	Additional q/Q operators are inserted to prevent this.
@@ -279,28 +333,69 @@ typedef struct
 
 	The net graphical effect of the filtered operator stream
 	should be identical to the incoming operator stream.
-
-	chain: The child processor to which the filtered operators
-	will be fed.
-
-	old_res: The incoming resource dictionary.
-
-	new_res: An (initially empty) resource dictionary that will
-	be populated by copying entries from the old dictionary to
-	the new one as they are used. At the end therefore, this
-	contains exactly those resource objects actually required.
-
-	The filter options struct allows you to filter objects using callbacks.
 */
-pdf_processor *pdf_new_filter_processor(fz_context *ctx, pdf_document *doc, pdf_processor *chain, pdf_obj *old_res, pdf_obj *new_res, int struct_parents, fz_matrix transform, pdf_filter_options *filter);
-pdf_obj *pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_res, fz_matrix ctm, pdf_filter_options *filter, pdf_cycle_list *cycle_up);
+pdf_processor *pdf_new_sanitize_filter(fz_context *ctx, pdf_document *doc, pdf_processor *chain, int struct_parents, fz_matrix transform, pdf_filter_options *options, void *sopts);
+
+pdf_obj *pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_res, fz_matrix ctm, pdf_filter_options *options, pdf_cycle_list *cycle_up);
+
+void pdf_processor_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res);
+
+pdf_obj *pdf_processor_pop_resources(fz_context *ctx, pdf_processor *proc);
+
+/*
+	opaque: Opaque value that is passed to all the filter functions.
+
+	cs_rewrite: function pointer called to rewrite a colorspace.
+
+	color_rewrite: function pointer called to rewrite a color
+		On entry:
+			*cs = reference to a pdf object representing the colorspace.
+
+			*n = number of color components
+
+			color = *n color values.
+
+		On exit:
+			*cs either the same (for no change in colorspace) or
+			updated to be a new one. Reference must be dropped, and
+			a new kept reference returned!
+
+			*n = number of color components (maybe updated)
+
+			color = *n color values (maybe updated)
+
+	image_rewrite: function pointer called to rewrite an image
+		On entry:
+			*image = reference to an fz_image.
+
+		On exit:
+			*image either the same (for no change) or updated
+			to be a new one. Reference must be dropped, and a
+			new kept reference returned.
+*/
+typedef struct
+{
+	void *opaque;
+	void (*color_rewrite)(fz_context *ctx, void *opaque, pdf_obj **cs, int *n, float color[FZ_MAX_COLORS]);
+	void (*image_rewrite)(fz_context *ctx, void *opaque, fz_image **image);
+	pdf_shade_recolorer *shade_rewrite;
+} pdf_color_filter_options;
+
+pdf_processor *
+pdf_new_color_filter(fz_context *ctx, pdf_document *doc, pdf_processor *chain, int struct_parents, fz_matrix transform, pdf_filter_options *options, void *copts);
 
 /*
 	Functions to actually process annotations, glyphs and general stream objects.
 */
-void pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *obj, pdf_obj *res, fz_cookie *cookie);
+void pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *obj, pdf_obj *res, fz_cookie *cookie, pdf_obj **out_res);
 void pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_annot *annot, fz_cookie *cookie);
 void pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *resources, fz_buffer *contents);
+
+/*
+	Function to process a contents stream without handling the resources.
+	The caller is responsible for pushing/popping the resources.
+*/
+void pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie);
 
 /* Text handling helper functions */
 typedef struct

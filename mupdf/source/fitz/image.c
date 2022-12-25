@@ -798,7 +798,7 @@ compressed_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subarea
 			fz_colorspace_is_cmyk(ctx, image->super.colorspace) &&
 			image->buffer->params.u.jpeg.color_transform)
 		{
-			fz_invert_pixmap(ctx, tile);
+			fz_invert_pixmap_raw(ctx, tile);
 		}
 
 		break;

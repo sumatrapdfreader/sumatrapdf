@@ -423,6 +423,9 @@ pdf_xobject_uses_blending(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_
 		return 0;
 	if (pdf_name_eq(ctx, pdf_dict_getp(ctx, dict, "Group/S"), PDF_NAME(Transparency)))
 		return 1;
+	if (pdf_name_eq(ctx, pdf_dict_get(ctx, dict, PDF_NAME(Subtype)), PDF_NAME(Image)) &&
+		pdf_dict_get(ctx, dict, PDF_NAME(SMask)) != NULL)
+		return 1;
 	return pdf_resources_use_blending(ctx, obj, &cycle);
 }
 
@@ -1077,6 +1080,12 @@ pdf_page *
 pdf_load_page(fz_context *ctx, pdf_document *doc, int number)
 {
 	return (pdf_page*)fz_load_page(ctx, (fz_document*)doc, number);
+}
+
+int
+pdf_page_has_transparency(fz_context *ctx, pdf_page *page)
+{
+	return page->transparency;
 }
 
 fz_page *

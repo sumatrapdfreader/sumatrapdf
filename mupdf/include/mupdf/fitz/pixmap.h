@@ -319,11 +319,17 @@ void fz_invert_pixmap_luminance(fz_context *ctx, fz_pixmap *pix);
 void fz_tint_pixmap(fz_context *ctx, fz_pixmap *pix, int black, int white);
 
 /**
-	Invert all the pixels in a given rectangle of a
+	Invert all the pixels in a given rectangle of a (premultiplied)
 	pixmap. All components of all pixels in the rectangle are
 	inverted (except alpha, which is unchanged).
 */
 void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *image, fz_irect rect);
+
+/**
+	Invert all the pixels in a non-premultiplied pixmap in a
+	very naive manner.
+*/
+void fz_invert_pixmap_raw(fz_context *ctx, fz_pixmap *pix);
 
 /**
 	Apply gamma correction to a pixmap. All components

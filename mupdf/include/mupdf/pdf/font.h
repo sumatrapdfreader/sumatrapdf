@@ -154,4 +154,6 @@ pdf_obj *pdf_add_substitute_font(fz_context *ctx, pdf_document *doc, fz_font *fo
 
 int pdf_font_writing_supported(fz_font *font);
 
+fz_buffer *fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font);
+
 #endif

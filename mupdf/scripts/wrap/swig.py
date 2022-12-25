@@ -327,7 +327,8 @@ def build_swig(
             }}
 
             /* SWIG-friendly support for fz_set_warning_callback() and
-            fz_set_error_callback(). */
+            fz_set_error_callback(). Note that we rename print() to _print() to
+            match what SWIG does. */
 
             struct SetWarningCallback
             {{
@@ -336,13 +337,13 @@ def build_swig(
                     this->user = user;
                     {rename.namespace_ll_fn('fz_set_warning_callback')}( s_print, this);
                 }}
-                virtual void print( const char* message)
+                virtual void _print( const char* message)
                 {{
                 }}
                 static void s_print( void* self0, const char* message)
                 {{
                     SetWarningCallback* self = (SetWarningCallback*) self0;
-                    return self->print( message);
+                    return self->_print( message);
                 }}
                 void* user;
             }};
@@ -354,13 +355,13 @@ def build_swig(
                     this->user = user;
                     {rename.namespace_ll_fn('fz_set_error_callback')}( s_print, this);
                 }}
-                virtual void print( const char* message)
+                virtual void _print( const char* message)
                 {{
                 }}
                 static void s_print( void* self0, const char* message)
                 {{
                     SetErrorCallback* self = (SetErrorCallback*) self0;
-                    return self->print( message);
+                    return self->_print( message);
                 }}
                 void* user;
             }};
@@ -798,7 +799,7 @@ def build_swig(
                     `fz_buffer` data. This relies on `buffer` existing and
                     not changing size while the `memoryview` is used.
                     """
-                    return python_buffer_to_memoryview( buffer, writable)
+                    return python_buffer_to_memoryview( buffer.m_internal, writable)
                 {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_storage_memoryview')}  = fz_buffer_storage_memoryview
 
                 # Overwrite wrappers for fz_new_buffer_from_copied_data() to
@@ -855,22 +856,22 @@ def build_swig(
                 def {rename.ll_fn('pdf_set_annot_color')}(annot, color):
                     """
                     Python implementation of pdf_set_annot_color() using
-                    {rename.ll_fn('pdf_set_annot_interior_color2')}().
+                    {rename.ll_fn('pdf_set_annot_color2')}().
                     """
                     if isinstance(color, float):
-                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 1, color, 0, 0, 0)
+                        {rename.ll_fn('pdf_set_annot_color2')}(annot, 1, color, 0, 0, 0)
                     elif len(color) == 1:
-                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 1, color[0], 0, 0, 0)
+                        {rename.ll_fn('pdf_set_annot_color2')}(annot, 1, color[0], 0, 0, 0)
                     elif len(color) == 2:
-                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 2, color[0], color[1], 0, 0)
+                        {rename.ll_fn('pdf_set_annot_color2')}(annot, 2, color[0], color[1], 0, 0)
                     elif len(color) == 3:
-                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 3, color[0], color[1], color[2], 0)
+                        {rename.ll_fn('pdf_set_annot_color2')}(annot, 3, color[0], color[1], color[2], 0)
                     elif len(color) == 4:
-                        {rename.ll_fn('pdf_set_annot_interior_color2')}(annot, 4, color[0], color[1], color[2], color[3])
+                        {rename.ll_fn('pdf_set_annot_color2')}(annot, 4, color[0], color[1], color[2], color[3])
                     else:
                         raise Exception( f'Unexpected color should be float or list of 1-4 floats: {{color}}')
 
-                # Override {rename.fn('pdf_set_annot_color')}()s to use the above.
+                # Override {rename.fn('pdf_set_annot_color')}() to use the above.
                 def {rename.fn('pdf_set_annot_color')}(self, color):
                     return {rename.ll_fn('pdf_set_annot_color')}(self.m_internal, color)
                 {rename.class_('pdf_annot')}.{rename.method('pdf_annot', 'pdf_set_annot_color')} = {rename.fn('pdf_set_annot_color')}
@@ -920,7 +921,7 @@ def build_swig(
 
                     Returns (dv0, dv1, dv2, dv3).
                     """
-                    dv = {rename.fn('fz_convert_color')}2_v()
+                    dv = {rename.fn('fz_convert_color2_v')}()
                     if isinstance( sv, float):
                        {rename.ll_fn('fz_convert_color2')}( ss, sv, 0.0, 0.0, 0.0, ds, dv, is_, params)
                     elif isinstance( sv, (tuple, list)):
@@ -950,7 +951,8 @@ def build_swig(
 
                 def set_warning_callback2( printfn):
                     class Callback( SetWarningCallback):
-                        def print( self, message):
+                        # SWIG renames print() to _print().
+                        def _print( self, message):
                             printfn( message)
                     global set_warning_callback_s
                     set_warning_callback_s = Callback()
@@ -958,7 +960,8 @@ def build_swig(
                 # Override set_error_callback().
                 def set_error_callback2( printfn):
                     class Callback( SetErrorCallback):
-                        def print( self, message):
+                        # SWIG renames print() to _print().
+                        def _print( self, message):
                             printfn( message)
                     global set_error_callback_s
                     set_error_callback_s = Callback()
@@ -967,7 +970,7 @@ def build_swig(
                 {rename.fn('fz_set_error_callback')} = set_error_callback2
 
                 # Direct access to fz_pixmap samples.
-                def {rename.fn('fz_pixmap_samples')}2( pixmap):
+                def {rename.fn('fz_pixmap_samples2')}( pixmap):
                     """
                     Returns a writable Python `memoryview` for a `fz_pixmap`.
                     """
@@ -978,7 +981,7 @@ def build_swig(
                             1, # writable
                             )
                     return ret
-                {rename.class_('fz_pixmap')}.{rename.method('fz_pixmap', 'pixmap_samples')}2 = {rename.fn('fz_pixmap_samples')}2
+                {rename.class_('fz_pixmap')}.{rename.method('fz_pixmap', 'fz_pixmap_samples2')} = {rename.fn('fz_pixmap_samples2')}
 
                 # Avoid potential unsafe use of variadic args by forcing a
                 # single arg and escaping all '%' characters. (Passing ('%s',
@@ -1117,8 +1120,12 @@ def build_swig(
     # Preserve any existing file `swig_cpp`, so that we can restore the
     # mtime if SWIG produces an unchanged file. This then avoids unnecessary
     # recompilation.
+    #
+    # 2022-11-16: Disabled this, because it can result in continuous
+    # unnecessary rebuilds, e.g. if .cpp is older than a mupdf header.
+    #
     swig_cpp_old = None
-    if os.path.exists( swig_cpp):
+    if 0 and os.path.exists( swig_cpp):
         swig_cpp_old = f'{swig_cpp}-old'
         jlib.copy( swig_cpp, swig_cpp_old)
 
@@ -1167,33 +1174,7 @@ def build_swig(
             with open( swig_py_tmp) as f:
                 swig_py_content = f.read()
 
-            if state_.openbsd:
-                # Write Python code that will automatically load the required
-                # .so's when mupdf.py is imported. Unfortunately this doesn't
-                # work on Linux.
-                prefix = textwrap.dedent(
-                        f'''
-                        import ctypes
-                        import os
-                        import importlib
-
-                        # The required .so's are in the same directory as this
-                        # Python file. On OpenBSD we can explicitly load these
-                        # .so's here using ctypes.cdll.LoadLibrary(), which
-                        # avoids the need for LD_LIBRARY_PATH to be defined.
-                        #
-                        # Unfortunately this doesn't work on Linux.
-                        #
-                        for leaf in ('libmupdf.so', 'libmupdfcpp.so', '{so}'):
-                            path = os.path.abspath(f'{{__file__}}/../{{leaf}}')
-                            #print(f'path={{path}}')
-                            #print(f'exists={{os.path.exists(path)}}')
-                            ctypes.cdll.LoadLibrary( path)
-                            #print(f'have loaded {{path}}')
-                        ''')
-                swig_py_content = prefix + swig_py_content
-
-            elif state_.windows:
+            if state_.windows:
                 jlib.log('Adding prefix to {swig_cpp=}')
                 prefix = ''
                 postfix = ''

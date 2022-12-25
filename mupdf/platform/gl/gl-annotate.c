@@ -789,23 +789,8 @@ static const char *quadding_names[] = { "Left", "Center", "Right" };
 static const char *font_names[] = { "Cour", "Helv", "TiRo" };
 static const char *lang_names[] = { "", "ja", "ko", "zh-Hans", "zh-Hant" };
 static const char *im_redact_names[] = { "Keep images", "Remove images", "Erase pixels" };
-
-static int should_edit_border(enum pdf_annot_type subtype)
-{
-	switch (subtype) {
-	default:
-		return 0;
-	case PDF_ANNOT_FREE_TEXT:
-		return 1;
-	case PDF_ANNOT_INK:
-	case PDF_ANNOT_LINE:
-	case PDF_ANNOT_SQUARE:
-	case PDF_ANNOT_CIRCLE:
-	case PDF_ANNOT_POLYGON:
-	case PDF_ANNOT_POLY_LINE:
-		return 1;
-	}
-}
+static const char *border_styles[] = { "Solid", "Dashed", "Dotted" };
+static const char *border_intensities[] = { "None", "Small clouds", "Large clouds", "Enormous clouds" };
 
 static int should_edit_color(enum pdf_annot_type subtype)
 {
@@ -941,6 +926,86 @@ document_has_redactions(void)
 		fz_drop_page(ctx, (fz_page *)page);
 	}
 	return has_redact;
+}
+
+static int detect_border_style(enum pdf_border_style style, float width)
+{
+	if (style == PDF_BORDER_STYLE_DASHED)
+	{
+		int count = pdf_annot_border_dash_count(ctx, ui.selected_annot);
+		float dashlen = pdf_annot_border_dash_item(ctx, ui.selected_annot, 0);
+		if ((count == 1 || count == 2) && dashlen < 2 * width)
+			return 2;
+		return 1;
+	}
+	return 0;
+}
+
+static void do_border(void)
+{
+	static int width;
+	static int choice;
+	enum pdf_border_style style;
+
+	width = pdf_annot_border_width(ctx, ui.selected_annot);
+	style = pdf_annot_border_style(ctx, ui.selected_annot);
+
+	width = fz_clampi(width, 0, 12);
+	ui_label("Border: %d", width);
+	if (ui_slider(&width, 0, 12, 100))
+	{
+		pdf_set_annot_border_width(ctx, ui.selected_annot, width);
+		trace_action("annot.setBorderWidth(%d);\n", width);
+	}
+
+	width = fz_max(width, 1);
+
+	choice = detect_border_style(style, width);
+	ui_label("Border style:");
+	choice = ui_select("BorderStyle", border_styles[choice], border_styles, nelem(border_styles));
+	if (choice != -1)
+	{
+		pdf_clear_annot_border_dash(ctx, ui.selected_annot);
+		trace_action("annot.clearBorderDash();\n");
+		if (choice == 0)
+		{
+			pdf_set_annot_border_style(ctx, ui.selected_annot, PDF_BORDER_STYLE_SOLID);
+			trace_action("annot.setBorderType('Solid');\n");
+		}
+		else if (choice == 1)
+		{
+			pdf_set_annot_border_style(ctx, ui.selected_annot, PDF_BORDER_STYLE_DASHED);
+			pdf_add_annot_border_dash_item(ctx, ui.selected_annot, 3.0f * width);
+			trace_action("annot.setBorderType('Dashed');\n");
+			trace_action("annot.addBorderDashItem(%g);\n", 3.0f * width);
+		}
+		else if (choice == 2)
+		{
+			pdf_set_annot_border_style(ctx, ui.selected_annot, PDF_BORDER_STYLE_DASHED);
+			pdf_add_annot_border_dash_item(ctx, ui.selected_annot, 1.0f * width);
+			trace_action("annot.setBorderType('Dashed');\n");
+			trace_action("annot.addBorderDashItem(%g);\n", 1.0f * width);
+		}
+	}
+
+	if (pdf_annot_has_border_effect(ctx, ui.selected_annot))
+	{
+		static int intensity;
+		intensity = fz_clampi(pdf_annot_border_effect_intensity(ctx, ui.selected_annot), 0, 3);
+		if (pdf_annot_border_effect(ctx, ui.selected_annot) == PDF_BORDER_EFFECT_NONE)
+			intensity = 0;
+
+		ui_label("Border effect:");
+		intensity = ui_select("BorderEffect", border_intensities[intensity], border_intensities, nelem(border_intensities));
+		if (intensity != -1)
+		{
+			enum pdf_border_effect effect = intensity ? PDF_BORDER_EFFECT_CLOUDY : PDF_BORDER_EFFECT_NONE;
+			pdf_set_annot_border_effect(ctx, ui.selected_annot, effect);
+			pdf_set_annot_border_effect_intensity(ctx, ui.selected_annot, intensity);
+			trace_action("annot.setBorderEffect('%s');\n", effect ? "Cloudy" : "None");
+			trace_action("annot.setBorderEffectIntensity(%d);\n", intensity);
+		}
+	}
 }
 
 void do_annotate_panel(void)
@@ -1146,17 +1211,8 @@ void do_annotate_panel(void)
 			}
 		}
 
-		if (should_edit_border(subtype))
-		{
-			static int border;
-			border = pdf_annot_border(ctx, ui.selected_annot);
-			ui_label("Border: %d", border);
-			if (ui_slider(&border, 0, 12, 100))
-			{
-				trace_action("annot.setBorder(%d);\n", border);
-				pdf_set_annot_border(ctx, ui.selected_annot, border);
-			}
-		}
+		if (pdf_annot_has_border(ctx, ui.selected_annot))
+			do_border();
 
 		if (should_edit_color(subtype))
 			do_annotate_color("Color", pdf_annot_color, pdf_set_annot_color);

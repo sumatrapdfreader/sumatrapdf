@@ -36,30 +36,6 @@ static int is_internal_uri(const char *uri)
 	return 1;
 }
 
-static const char *box_href(fz_html_box *box)
-{
-	while (box)
-	{
-		const char *href = box->href;
-		if (href)
-			return href;
-		box = box->up;
-	}
-	return NULL;
-}
-
-static int has_same_href(fz_html_box *box, const char *old_href)
-{
-	while (box)
-	{
-		const char *href = box->href;
-		if (href)
-			return !strcmp(old_href, href);
-		box = box->up;
-	}
-	return 0;
-}
-
 static fz_link *load_link_flow(fz_context *ctx, fz_html_flow *flow, fz_link *head, int page, float page_h, const char *dir, const char *file)
 {
 	fz_link *link;
@@ -78,7 +54,7 @@ static fz_link *load_link_flow(fz_context *ctx, fz_html_flow *flow, fz_link *hea
 		next = flow->next;
 		if (flow->y >= page_y0 && flow->y <= page_y1)
 		{
-			href = box_href(flow->box);
+			href = flow->box->href;
 			if (href)
 			{
 				/* Coalesce contiguous flow boxes into one link node */
@@ -86,7 +62,7 @@ static fz_link *load_link_flow(fz_context *ctx, fz_html_flow *flow, fz_link *hea
 				while (next &&
 					next->y == flow->y &&
 					next->h == flow->h &&
-					has_same_href(next->box, href))
+					next->box->href == href)
 				{
 					end = next->x + next->w;
 					next = next->next;

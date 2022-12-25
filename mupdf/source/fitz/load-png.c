@@ -33,7 +33,7 @@ struct info
 	unsigned int width, height, depth, n;
 	enum fz_colorspace_type type;
 	int interlace, indexed;
-	unsigned int size;
+	size_t size;
 	unsigned char *samples;
 	unsigned char palette[256*4];
 	int transparency;
@@ -465,7 +465,7 @@ png_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 	{
 		if (!info->interlace)
 		{
-			info->size = info->height * (1 + (info->width * info->n * info->depth + 7) / 8);
+			info->size = info->height * (1 + ((size_t) info->width * info->n * info->depth + 7) / 8);
 		}
 		else
 		{
@@ -636,7 +636,7 @@ fz_load_png(fz_context *ctx, const unsigned char *p, size_t total)
 {
 	fz_pixmap *image = NULL;
 	struct info png;
-	int stride;
+	size_t stride;
 	int alpha;
 
 	fz_var(image);
@@ -645,7 +645,7 @@ fz_load_png(fz_context *ctx, const unsigned char *p, size_t total)
 	{
 		png_read_image(ctx, &png, p, total, 0);
 
-		stride = (png.width * png.n * png.depth + 7) / 8;
+		stride = ((size_t) png.width * png.n * png.depth + 7) / 8;
 		alpha = (png.n == 2 || png.n == 4 || png.transparency);
 
 		if (png.indexed)

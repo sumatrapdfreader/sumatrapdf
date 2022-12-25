@@ -1,8 +1,8 @@
 /*
 Multi-threaded rendering of all pages in a document to PNG images.
 
-First look at doc/example.c and make sure you understand it.
-Then read the multi-threading section in doc/overview.txt,
+First look at docs/example.c and make sure you understand it.
+Then read the multi-threading section in docs/coding-overview.html.
 before coming back here to see an example of multi-threading.
 
 This example will create one main thread for reading pages from the

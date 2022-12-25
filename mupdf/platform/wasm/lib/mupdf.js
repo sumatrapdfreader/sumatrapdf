@@ -24,7 +24,12 @@
 
 // If running in Node.js environment
 if (typeof require === "function") {
-	var libmupdf = require("../mupdf-wasm.js");
+	var libmupdf;
+	if (globalThis.SharedArrayBuffer != null) {
+		libmupdf = require("../mupdf-wasm.js");
+	} else {
+		libmupdf = require("../mupdf-wasm-singlethread.js");
+	}
 }
 
 function assert(pred, message) {
@@ -57,6 +62,8 @@ class MupdfTryLaterError extends MupdfError {
 	}
 }
 
+// TODO - Port fitz geometry methods
+// See platform/java/src/com/artifex/mupdf/fitz/Point.java
 class Point {
 	constructor(x, y) {
 		assert(typeof x === "number" && !Number.isNaN(x), "invalid x argument");
@@ -64,6 +71,9 @@ class Point {
 		this.x = x;
 		this.y = y;
 	}
+
+	// TODO - See 'Matrix.from' below
+	// static from(value)
 
 	static fromPtr(ptr) {
 		ptr = ptr >> 2;
@@ -74,6 +84,8 @@ class Point {
 	}
 }
 
+// TODO - Port fitz geometry methods
+// See platform/java/src/com/artifex/mupdf/fitz/Rect.java
 class Rect {
 	constructor(x0, y0, x1, y1) {
 		assert(typeof x0 === "number" && !Number.isNaN(x0), "invalid x0 argument");
@@ -85,6 +97,9 @@ class Rect {
 		this.x1 = x1;
 		this.y1 = y1;
 	}
+
+	// TODO - See 'Matrix.from' below
+	// static from(value)
 
 	static fromFloatRectPtr(ptr) {
 		ptr = ptr >> 2;
@@ -123,6 +138,8 @@ class Rect {
 	}
 }
 
+// TODO - Port fitz geometry methods
+// See platform/java/src/com/artifex/mupdf/fitz/Matrix.java
 class Matrix {
 	constructor(a, b, c, d, e, f) {
 		this.a = a;
@@ -192,16 +209,12 @@ class Wrapper {
 		this.dropFunction(this.pointer);
 		this.pointer = 0;
 	}
-	valueOf() {
-		return this.pointer;
-	}
 	toString() {
 		return `[${this.constructor.name} ${this.pointer}]`;
 	}
 }
 
-// TODO - Add PdfDocument class
-
+// platform/java/src/com/artifex/mupdf/fitz/Document.java
 class Document extends Wrapper {
 	constructor(pointer, buffer = null) {
 		super(pointer, libmupdf._wasm_drop_document);
@@ -213,7 +226,22 @@ class Document extends Wrapper {
 	free() {
 		super.free();
 		this.buffer?.free();
+		//this.stream?.free();
 	}
+
+	// recognize
+	// needsPassword
+	// authenticatePassword
+
+	// resolveLink
+
+	// getMetaData(String key);
+	// setMetaData(String key, String value);
+
+	// isReflowable
+	// layout
+
+	// isPDF
 
 	static openFromJsBuffer(buffer, magic) {
 		let fzBuffer = Buffer.fromJsBuffer(buffer);
@@ -241,6 +269,7 @@ class Document extends Wrapper {
 			["number", "string"],
 			[stream.pointer, magic]
 		);
+		// TODO - Add reference to stream.
 		return new Document(pointer);
 	}
 
@@ -267,6 +296,35 @@ class Document extends Wrapper {
 	loadOutline() {
 		return new_outline(libmupdf._wasm_load_outline(this.pointer));
 	}
+}
+
+// platform/java/src/com/artifex/mupdf/fitz/PdfDocument.java
+class PdfDocument extends Document {
+	// isPDF !
+
+	// hasUnsavedChanges
+	// canBeSavedIncrementally
+
+	// save !
+
+	// JS Form Support
+	// Undo history
+
+	// canUndo
+	// canRedo
+	// undo
+	// redo
+
+	// beginOperation
+	// endOperation
+
+	// getLanguage !
+	// setLanguage
+
+	// addEmbeddedFile
+	// getEmbeddedFileParams
+	// loadEmbeddedFileContents
+	// verifyEmbeddedFileChecksum
 }
 
 class Page extends Wrapper {
@@ -297,7 +355,7 @@ class Page extends Wrapper {
 		);
 	}
 
-	runContents(device, transformMatrix = Matrix.identity, cookie = null) {
+	runPageContents(device, transformMatrix = Matrix.identity, cookie = null) {
 		assert(device instanceof Device, "invalid device argument");
 		let m = Matrix.from(transformMatrix);
 		libmupdf._wasm_run_page_contents(
@@ -308,7 +366,7 @@ class Page extends Wrapper {
 		);
 	}
 
-	runAnnots(device, transformMatrix = Matrix.identity, cookie = null) {
+	runPageAnnots(device, transformMatrix = Matrix.identity, cookie = null) {
 		assert(device instanceof Device, "invalid device argument");
 		let m = Matrix.from(transformMatrix);
 		libmupdf._wasm_run_page_annots(
@@ -319,7 +377,7 @@ class Page extends Wrapper {
 		);
 	}
 
-	runWidgets(device, transformMatrix = Matrix.identity, cookie = null) {
+	runPageWidgets(device, transformMatrix = Matrix.identity, cookie = null) {
 		assert(device instanceof Device, "invalid device argument");
 		let m = Matrix.from(transformMatrix);
 		libmupdf._wasm_run_page_widgets(
@@ -330,6 +388,7 @@ class Page extends Wrapper {
 		);
 	}
 
+	// showExtras?
 	toPixmap(transformMatrix, colorspace, alpha = false, cookie = null) {
 		assert(colorspace instanceof ColorSpace, "invalid colorspace argument");
 
@@ -348,19 +407,23 @@ class Page extends Wrapper {
 		return pixmap;
 	}
 
+	// toDisplayList(showExtras?)
+
+	// options
 	toSTextPage() {
 		return new STextPage(
 			libmupdf._wasm_new_stext_page_from_page(this.pointer)
 		);
 	}
 
-	loadLinks() {
+	getLinks() {
 		let links = [];
 
 		for (let link = libmupdf._wasm_load_links(this.pointer); link !== 0; link = libmupdf._wasm_next_link(link)) {
 			links.push(new Link(link));
 		}
 
+		// TODO - return plain array
 		return new Links(links);
 	}
 
@@ -404,7 +467,7 @@ class PdfPage extends Page {
 		libmupdf._wasm_pdf_update_page(this.pdfPagePointer);
 	}
 
-	annotations() {
+	getAnnotations() {
 		let annotations = [];
 
 		for (let annot = libmupdf._wasm_pdf_first_annot(this.pdfPagePointer); annot !== 0; annot = libmupdf._wasm_pdf_next_annot(annot)) {
@@ -416,7 +479,8 @@ class PdfPage extends Page {
 		return this.annotationList;
 	}
 
-	createAnnot(annotType) {
+	createAnnotation(annotType) {
+		// TODO - Validate annot type in separate function
 		assert(typeof annotType === "number" && !Number.isNaN(annotType), "invalid annotType argument");
 
 		// TODO - Update annotation list?
@@ -427,13 +491,17 @@ class PdfPage extends Page {
 		return annot;
 	}
 
-	removeAnnot(removedAnnotation) {
+	deleteAnnotation(removedAnnotation) {
 		assert(removedAnnotation instanceof Annotation, "invalid annotation argument");
 		libmupdf._wasm_pdf_delete_annot(this.pointer, removedAnnotation.pointer);
 		if (this.annotationList) {
 			this.annotationList.annotations = this.annotationList.annotations.filter(annot => annot.pointer === removedAnnotation.pointer);
 		}
 	}
+
+	// applyRedactions
+
+	// getWidgetsAt
 
 	createLink(bbox, uri) {
 		assert(bbox instanceof Rect, "invalid bbox argument");
@@ -450,7 +518,7 @@ class PdfPage extends Page {
 	}
 }
 
-// TODO destructor
+// TODO remove class
 class Links {
 	constructor(links) {
 		this.links = links;
@@ -467,18 +535,22 @@ class Link extends Wrapper {
 		super(pointer, () => {});
 	}
 
-	rect() {
+	getBounds() {
 		return Rect.fromFloatRectPtr(libmupdf._wasm_link_rect(this.pointer));
 	}
 
-	isExternalLink() {
+	// setBounds
+
+	isExternal() {
 		return libmupdf._wasm_is_external_link(this.pointer) !== 0;
 	}
 
-	uri() {
+	getURI() {
 		// the string returned by this function is borrowed and doesn't need to be freed
 		return libmupdf.UTF8ToString(libmupdf._wasm_link_uri(this.pointer));
 	}
+
+	// setURI
 
 	resolve(doc) {
 		assert(doc instanceof Document, "invalid doc argument");
@@ -487,10 +559,6 @@ class Link extends Wrapper {
 			libmupdf._wasm_resolve_link_chapter(doc.pointer, uri_string_ptr),
 			libmupdf._wasm_resolve_link_page(doc.pointer, uri_string_ptr),
 		);
-	}
-
-	delete() {
-		// TODO
 	}
 }
 
@@ -513,7 +581,16 @@ function new_outline(pointer) {
 		return new Outline(pointer);
 }
 
-// FIXME - This is pretty non-idiomatic
+// TODO - implement class Outline as follows:
+/*
+public class Outline
+{
+	public String title;
+	public String uri;
+	public Outline[] down; // children
+}
+*/
+
 class Outline extends Wrapper {
 	constructor(pointer) {
 		// TODO
@@ -539,8 +616,7 @@ class Outline extends Wrapper {
 	}
 }
 
-// TODO - remove this class and have annotations() return an Array directly
-// TODO destructor
+// TODO - remove this class and have getAnnotations() return an Array directly
 class AnnotationList {
 	constructor(annotations) {
 		this.annotations = annotations;
@@ -553,7 +629,6 @@ class AnnotationList {
 
 // TODO extends PdfObj
 class Annotation extends Wrapper {
-	// TODO - the lifetime handling of this is actually complicated
 	constructor(pointer) {
 		super(pointer, () => {});
 	}
@@ -621,6 +696,10 @@ class Annotation extends Wrapper {
 
 	setFlags(flags) {
 		return libmupdf._wasm_pdf_set_annot_flags(this.pointer, flags);
+	}
+
+	hasRect() {
+		return libmupdf._wasm_pdf_annot_has_rect(this.pointer) !== 0;
 	}
 
 	rect() {
@@ -900,6 +979,8 @@ class Pixmap extends Wrapper {
 	}
 
 	static withBbox(colorspace, bbox, alpha) {
+		// Note that the wasm function expects integers, but we pass JS `Number`
+		// values. Floating-point numbers are truncated to integers automatically.
 		return new Pixmap(libmupdf._wasm_new_pixmap_with_bbox(
 			colorspace.pointer,
 			bbox.x0, bbox.y0, bbox.x1, bbox.y1,
@@ -916,13 +997,25 @@ class Pixmap extends Wrapper {
 		libmupdf._wasm_clear_pixmap_with_value(this.pointer, 0xff);
 	}
 
+	// getWidth
 	width() {
 		return this.bbox.width();
 	}
 
+	// getHeight
 	height() {
 		return this.bbox.height();
 	}
+
+	// getStride
+	// getAlpha
+	// getColorSpace
+	// getSamples
+
+	// invert
+	// invertLuminance
+	// gamma
+	// tint
 
 	// TODO
 	drawGrabHandle(x, y) {
@@ -948,6 +1041,12 @@ class Pixmap extends Wrapper {
 			libmupdf._wasm_drop_buffer(buf);
 		}
 	}
+
+	toUint8ClampedArray() {
+		let n = libmupdf._wasm_pixmap_samples_size(this.pointer);
+		let p = libmupdf._wasm_pixmap_samples(this.pointer);
+		return new Uint8ClampedArray(libmupdf.HEAPU8.buffer, p, n).slice();
+	}
 }
 
 class Device extends Wrapper {
@@ -964,10 +1063,14 @@ class Device extends Wrapper {
 		));
 	}
 
+	// displayListDevice
+
 	close() {
 		libmupdf._wasm_close_device(this.pointer);
 	}
 }
+
+// class DisplayList
 
 class JobCookie extends Wrapper {
 	constructor(pointer) {
@@ -981,6 +1084,18 @@ class JobCookie extends Wrapper {
 	aborted() {
 		return libmupdf._wasm_cookie_aborted(this.pointer);
 	}
+}
+
+function createCookie() {
+	return libmupdf._wasm_new_cookie();
+}
+
+function cookieAborted(cookiePointer) {
+	return libmupdf._wasm_cookie_aborted(cookiePointer);
+}
+
+function deleteCookie(cookiePointer) {
+	libmupdf._wasm_free_cookie(cookiePointer);
 }
 
 class Buffer extends Wrapper {
@@ -1011,7 +1126,7 @@ class Buffer extends Wrapper {
 		return new Buffer(libmupdf._wasm_new_buffer_from_data(string_ptr, string_size));
 	}
 
-	size() {
+	getLength() {
 		return libmupdf._wasm_buffer_size(this.pointer);
 	}
 
@@ -1223,6 +1338,7 @@ const mupdf = {
 	Rect,
 	Matrix,
 	Document,
+	PdfDocument,
 	Page,
 	Links,
 	Link,
@@ -1235,6 +1351,9 @@ const mupdf = {
 	Pixmap,
 	Device,
 	JobCookie,
+	createCookie,
+	cookieAborted,
+	deleteCookie,
 	Buffer,
 	Stream,
 	Output,
@@ -1286,9 +1405,6 @@ const libmupdf_injections = {
 
 mupdf.ready = libmupdf(libmupdf_injections).then(m => {
 	libmupdf = m;
-
-	console.log("WASM MODULE READY");
-
 	libmupdf._wasm_init_context();
 
 	mupdf.DeviceGray = new ColorSpace(libmupdf._wasm_device_gray());
@@ -1296,14 +1412,25 @@ mupdf.ready = libmupdf(libmupdf_injections).then(m => {
 	mupdf.DeviceBGR = new ColorSpace(libmupdf._wasm_device_bgr());
 	mupdf.DeviceCMYK = new ColorSpace(libmupdf._wasm_device_cmyk());
 
-	let buffer = libmupdf.wasmMemory.buffer;
-	if (globalThis.SharedArrayBuffer != null && buffer instanceof globalThis.SharedArrayBuffer) {
-		return { sharedBuffer: buffer };
+	if (!globalThis.crossOriginIsolated) {
+		console.warn("MuPDF: The current page is running in a non-isolated context. This means SharedArrayBuffer is not available. See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer for details.");
+		return { sharedBuffer: null };
 	}
-	else {
+	if (globalThis.SharedArrayBuffer == null) {
+		console.warn("MuPDF: You browser does not implement SharedArrayBuffer.");
+		return { sharedBuffer: null };
+	}
+	if (libmupdf.wasmMemory == null) {
+		console.error("MuPDF internal error: emscripten does not export wasmMemory");
+		return { sharedBuffer: null };
+	}
+	if (!(libmupdf.wasmMemory instanceof WebAssembly.Memory) || !(libmupdf.wasmMemory.buffer instanceof SharedArrayBuffer)) {
+		console.error("MuPDF internal error: wasmMemory exported by emscripten is not a valid instance of WebAssembly.Memory");
 		return { sharedBuffer: null };
 	}
 
+	console.log("MuPDF: WASM module running in cross-origin isolated context")
+	return { sharedBuffer: libmupdf.wasmMemory.buffer }
 });
 
 // If running in Node.js environment

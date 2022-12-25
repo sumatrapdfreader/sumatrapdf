@@ -66,6 +66,77 @@ static fz_matrix center_rect_within_rect(const fz_rect tofit, const fz_rect with
 }
 
 static void
+draw_circle(fz_context *ctx, fz_buffer *buf, float rx, float ry, float cx, float cy)
+{
+	float mx = rx * CIRCLE_MAGIC;
+	float my = ry * CIRCLE_MAGIC;
+	fz_append_printf(ctx, buf, "%g %g m\n", cx, cy+ry);
+	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx+mx, cy+ry, cx+rx, cy+my, cx+rx, cy);
+	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx+rx, cy-my, cx+mx, cy-ry, cx, cy-ry);
+	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx-mx, cy-ry, cx-rx, cy-my, cx-rx, cy);
+	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx-rx, cy+my, cx-mx, cy+ry, cx, cy+ry);
+}
+
+static void
+draw_circle_in_box(fz_context *ctx, fz_buffer *buf, float lw, float x0, float y0, float x1, float y1)
+{
+	float rx = (x1 - x0) / 2 - lw/2;
+	float ry = (y1 - y0) / 2 - lw/2;
+	float cx = x0 + lw/2 + rx;
+	float cy = y0 + lw/2 + ry;
+	draw_circle(ctx, buf, rx, ry, cx, cy);
+}
+
+static void
+draw_arc_seg(fz_context *ctx, fz_buffer *buf, float r, float xc, float yc, float th0, float th1, int move)
+{
+	float x1 = xc + r * cosf(th0);
+	float y1 = yc + r * sinf(th0);
+	float x4 = xc + r * cosf(th1);
+	float y4 = yc + r * sinf(th1);
+
+	float ax = x1 - xc;
+	float ay = y1 - yc;
+	float bx = x4 - xc;
+	float by = y4 - yc;
+	float q1 = ax * ax + ay * ay;
+	float q2 = q1 + ax * bx + ay * by;
+	float k2 = (4.0f/3.0f) * (sqrtf(2 * q1 * q2) - q2) / (ax * by - ay * bx);
+
+	float x2 = xc + ax - k2 * ay;
+	float y2 = yc + ay + k2 * ax;
+	float x3 = xc + bx + k2 * by;
+	float y3 = yc + by - k2 * bx;
+
+	if (move)
+		fz_append_printf(ctx, buf, "%g %g m\n", x1, y1);
+	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", x2, y2, x3, y3, x4, y4);
+}
+
+static void
+draw_arc(fz_context *ctx, fz_buffer *buf, float r, float xc, float yc, float th0, float th1, int move)
+{
+	float d = th0 - th1;
+	if (d > FZ_PI / 4)
+	{
+		draw_arc(ctx, buf, r, xc, yc, th0, th0 - d / 2, move);
+		draw_arc(ctx, buf, r, xc, yc, th0 - d / 2, th1, 0);
+	}
+	else
+	{
+		draw_arc_seg(ctx, buf, r, xc, yc, th0, th1, move);
+	}
+}
+
+static void
+draw_arc_tail(fz_context *ctx, fz_buffer *buf, float r, float xc, float yc, float th0, float th1, int fill)
+{
+	draw_arc_seg(ctx, buf, r, xc, yc, th0, th1, 0);
+	if (fill)
+		draw_arc_seg(ctx, buf, r, xc, yc, th1, th0, 0);
+}
+
+static void
 pdf_write_opacity_blend_mode(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res, int bm)
 {
 	pdf_obj *res_egs, *res_egs_h;
@@ -101,6 +172,27 @@ static void
 pdf_write_opacity(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res)
 {
 	pdf_write_opacity_blend_mode(ctx, annot, buf, res, FZ_BLEND_NORMAL);
+}
+
+static void
+pdf_write_dash_pattern(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res)
+{
+	int count = pdf_annot_border_dash_count(ctx, annot);
+	int i;
+
+	if (count == 0)
+		return;
+
+	fz_append_printf(ctx, buf, "[");
+	for (i = 0; i < count; ++i)
+	{
+		float length = pdf_annot_border_dash_item(ctx, annot, i);
+		if (i == 0)
+			fz_append_printf(ctx, buf, "%g", length);
+		else
+			fz_append_printf(ctx, buf, " %g", length);
+	}
+	fz_append_printf(ctx, buf, "]0 d\n");
 }
 
 static float pdf_write_border_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf)
@@ -212,7 +304,7 @@ static int pdf_write_MK_BC_appearance(fz_context *ctx, pdf_annot *annot, fz_buff
 static void maybe_stroke_and_fill(fz_context *ctx, fz_buffer *buf, int sc, int ic)
 {
 	if (sc)
-		fz_append_string(ctx, buf, ic ? "b\n" : "s\n");
+		fz_append_string(ctx, buf, ic ? "b\n" : "S\n");
 	else
 		fz_append_string(ctx, buf, ic ? "f\n" : "n\n");
 }
@@ -353,6 +445,7 @@ pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_
 	int ic;
 
 	pdf_write_opacity(ctx, annot, buf, res);
+	pdf_write_dash_pattern(ctx, annot, buf, res);
 	w = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
@@ -383,109 +476,416 @@ pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_
 	*rect = fz_expand_rect(*rect, fz_max(1, w));
 }
 
+static fz_rect
+pdf_annot_rect_diff(fz_context *ctx, pdf_annot *annot)
+{
+	fz_rect rd = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(RD));
+	if (!fz_is_valid_rect(rd))
+		return fz_make_rect(0,0,0,0);
+	return rd;
+}
+
+static float
+cloud_intensity(fz_context *ctx, pdf_annot *annot)
+{
+	if (pdf_annot_border_effect(ctx, annot) == PDF_BORDER_EFFECT_CLOUDY)
+		return pdf_annot_border_effect_intensity(ctx, annot);
+	return 0;
+}
+
+struct cloud_list {
+	// store first 2 and latest 3 points
+	fz_point data[5];
+	int len;
+	int first;
+	int fill;
+	float spacing, radius, phase;
+};
+
+static float intersect_cloud(fz_point p0, fz_point p1, float r, int sel)
+{
+	float dx = p1.x - p0.x;
+	float dy = p1.y - p0.y;
+	float d = sqrtf(dx * dx + dy * dy);
+	float x2, y2, x3, y3;
+	float a, h;
+
+	if (d >= r + r) return 0;
+	if (d <= 0) return 0;
+
+	a = d / 2;
+	h = sqrtf(r * r - a * a);
+
+	x2 = (p0.x + p1.x) / 2;
+	y2 = (p0.y + p1.y) / 2;
+
+	x3 = x2 - h * (p1.y - p0.y) / d;
+	y3 = y2 + h * (p1.x - p0.x) / d;
+
+	if (sel == 0)
+		return atan2(y3 - p1.y, x3 - p1.x);
+	else
+		return atan2(y3 - p0.y, x3 - p0.x);
+}
+
+static void start_cloud(fz_context *ctx, struct cloud_list *list, fz_buffer *buf, float border, float intensity, int fill)
+{
+	// Constants measured from Acrobat Reader
+	list->spacing = intensity * 6.666667f + border * 0.8333333f;
+	list->radius = intensity * 4.0f + border * 0.5f;
+	list->phase = 0;
+	list->len = 0;
+	list->first = 1;
+	list->fill = fill;
+	fz_append_string(ctx, buf, "2 j\n"); // bevel join
+}
+
+static void emit_cloud(fz_context *ctx, struct cloud_list *list, fz_buffer *buf, fz_point a, fz_point b, fz_point c)
+{
+	float th0 = intersect_cloud(a, b, list->radius, 0);
+	float th1 = intersect_cloud(b, c, list->radius, 1);
+	while (th1 > th0)
+		th1 -= FZ_PI * 2;
+	draw_arc(ctx, buf, list->radius, b.x, b.y, th0, th1, list->first || !list->fill);
+	draw_arc_tail(ctx, buf, list->radius, b.x, b.y, th1, th1 - FZ_PI / 8, list->fill);
+	list->first = 0;
+}
+
+static void add_cloud(fz_context *ctx, struct cloud_list *list, fz_buffer *buf, float x, float y)
+{
+	if (list->len < 5)
+	{
+		list->data[list->len].x = x;
+		list->data[list->len].y = y;
+		list->len++;
+	}
+	else
+	{
+		list->data[2] = list->data[3];
+		list->data[3] = list->data[4];
+		list->data[4].x = x;
+		list->data[4].y = y;
+	}
+	if (list->len >= 3)
+	{
+		emit_cloud(ctx, list, buf, list->data[list->len-3], list->data[list->len-2], list->data[list->len-1]);
+	}
+}
+
+static void add_cloud_line(fz_context *ctx, struct cloud_list *list, fz_buffer *buf, float x0, float y0, float x1, float y1)
+{
+	float dx = x1 - x0;
+	float dy = y1 - y0;
+	float total = hypotf(dx, dy);
+	float used = 0;
+	float t;
+
+	if (list->phase == 0)
+		add_cloud(ctx, list, buf, x0, y0);
+
+	while (total - used > list->spacing - list->phase)
+	{
+		used += list->spacing - list->phase;
+		t = used / total;
+		add_cloud(ctx, list, buf, x0 + dx * t, y0 + dy * t);
+		list->phase = 0;
+	}
+
+	list->phase += total - used;
+}
+
+static void add_cloud_circle(fz_context *ctx, struct cloud_list *list, fz_buffer *buf, float x0, float y0, float x1, float y1)
+{
+	float cx = (x0 + x1) / 2;
+	float cy = (y0 + y1) / 2;
+	float rx = (x1 - x0) / 2;
+	float ry = (y1 - y0) / 2;
+	float da = -FZ_PI * 2 / 32;
+	int i;
+	for (i = 1; i <= 32; ++i) {
+		float ax = cx + cosf((i-1) * da) * rx;
+		float ay = cy + sinf((i-1) * da) * ry;
+		float bx = cx + cosf(i * da) * rx;
+		float by = cy + sinf(i * da) * ry;
+		add_cloud_line(ctx, list, buf, ax, ay, bx, by);
+	}
+}
+
+static void end_cloud(fz_context *ctx, struct cloud_list *list, fz_buffer *buf)
+{
+	// Join up with last and first circles.
+	switch (list->len)
+	{
+	case 0:
+		break;
+	case 1:
+		draw_circle(ctx, buf, list->radius, list->radius, list->data[0].x, list->data[0].y);
+		break;
+	case 2:
+		emit_cloud(ctx, list, buf, list->data[0], list->data[1], list->data[0]);
+		emit_cloud(ctx, list, buf, list->data[1], list->data[0], list->data[1]);
+		break;
+	case 3:
+		emit_cloud(ctx, list, buf, list->data[1], list->data[2], list->data[0]);
+		emit_cloud(ctx, list, buf, list->data[2], list->data[0], list->data[1]);
+		break;
+	case 4:
+		emit_cloud(ctx, list, buf, list->data[2], list->data[3], list->data[0]);
+		emit_cloud(ctx, list, buf, list->data[3], list->data[0], list->data[1]);
+		break;
+	case 5:
+		emit_cloud(ctx, list, buf, list->data[3], list->data[4], list->data[0]);
+		emit_cloud(ctx, list, buf, list->data[4], list->data[0], list->data[1]);
+		break;
+	}
+}
+
 static void
 pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
+	struct cloud_list cloud_list;
+	fz_rect rd;
 	float x, y, w, h;
 	float lw;
 	int sc;
 	int ic;
+	float cloud;
+	float exp;
 
 	pdf_write_opacity(ctx, annot, buf, res);
+	pdf_write_dash_pattern(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
 
-	x = rect->x0 + lw/2;
-	y = rect->y0 + lw/2;
-	w = rect->x1 - rect->x0 - lw;
-	h = rect->y1 - rect->y0 - lw;
+	rd = pdf_annot_rect_diff(ctx, annot);
 
-	fz_append_printf(ctx, buf, "%g %g %g %g re\n", x, y, w, h);
+	x = rect->x0 + lw/2 + rd.x0;
+	y = rect->y0 + lw/2 + rd.y0;
+	w = rect->x1 - rect->x0 - lw - (rd.x0 + rd.x1);
+	h = rect->y1 - rect->y0 - lw - (rd.y0 + rd.y1);
+
+	exp = lw/2;
+
+	if (w < 1) w = 1;
+	if (h < 1) h = 1;
+
+	cloud = cloud_intensity(ctx, annot);
+	if (cloud > 0)
+	{
+		start_cloud(ctx, &cloud_list, buf, lw, cloud, ic);
+
+		add_cloud_line(ctx, &cloud_list, buf, x, y, x, y+h);
+		cloud_list.phase = 0;
+		add_cloud_line(ctx, &cloud_list, buf, x, y+h, x+w, y+h);
+		cloud_list.phase = 0;
+		add_cloud_line(ctx, &cloud_list, buf, x+w, y+h, x+w, y);
+		cloud_list.phase = 0;
+		add_cloud_line(ctx, &cloud_list, buf, x+w, y, x, y);
+
+		end_cloud(ctx, &cloud_list, buf);
+		exp += cloud_list.radius;
+}
+	else
+{
+		fz_append_printf(ctx, buf, "%g %g %g %g re\n", x, y, w, h);
+}
 	maybe_stroke_and_fill(ctx, buf, sc, ic);
-}
 
-static void
-draw_circle(fz_context *ctx, fz_buffer *buf, float rx, float ry, float cx, float cy)
-{
-	float mx = rx * CIRCLE_MAGIC;
-	float my = ry * CIRCLE_MAGIC;
-	fz_append_printf(ctx, buf, "%g %g m\n", cx, cy+ry);
-	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx+mx, cy+ry, cx+rx, cy+my, cx+rx, cy);
-	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx+rx, cy-my, cx+mx, cy-ry, cx, cy-ry);
-	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx-mx, cy-ry, cx-rx, cy-my, cx-rx, cy);
-	fz_append_printf(ctx, buf, "%g %g %g %g %g %g c\n", cx-rx, cy+my, cx-mx, cy+ry, cx, cy+ry);
-}
-
-static void
-draw_circle_in_box(fz_context *ctx, fz_buffer *buf, float lw, float x0, float y0, float x1, float y1)
-{
-	float rx = (x1 - x0) / 2 - lw/2;
-	float ry = (y1 - y0) / 2 - lw/2;
-	float cx = x0 + lw/2 + rx;
-	float cy = y0 + lw/2 + ry;
-	draw_circle(ctx, buf, rx, ry, cx, cy);
+	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(exp, exp, exp, exp));
+	rect->x0 = x - exp - lw/2;
+	rect->y0 = y - exp - lw/2;
+	rect->x1 = x + w + exp + lw/2;
+	rect->y1 = y + h + exp + lw/2;
 }
 
 static void
 pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
+	struct cloud_list cloud_list;
+	fz_rect rd;
+	float x, y, w, h;
 	float lw;
 	int sc;
 	int ic;
+	float cloud;
+	float exp;
 
 	pdf_write_opacity(ctx, annot, buf, res);
+	pdf_write_dash_pattern(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
 
-	draw_circle_in_box(ctx, buf, lw, rect->x0, rect->y0, rect->x1, rect->y1);
+	rd = pdf_annot_rect_diff(ctx, annot);
+
+	x = rect->x0 + lw/2 + rd.x0;
+	y = rect->y0 + lw/2 + rd.y0;
+	w = rect->x1 - rect->x0 - lw - (rd.x0 + rd.x1);
+	h = rect->y1 - rect->y0 - lw - (rd.y0 + rd.y1);
+
+	exp = lw/2;
+
+	if (w < 1) w = 1;
+	if (h < 1) h = 1;
+
+	cloud = cloud_intensity(ctx, annot);
+	if (cloud > 0)
+	{
+		start_cloud(ctx, &cloud_list, buf, lw, cloud, ic);
+		add_cloud_circle(ctx, &cloud_list, buf, x, y, x+w, y+h);
+		end_cloud(ctx, &cloud_list, buf);
+		exp += cloud_list.radius;
+	}
+	else
+	{
+		draw_circle(ctx, buf, w / 2, h / 2, x + w / 2, y + h / 2);
+	}
 	maybe_stroke_and_fill(ctx, buf, sc, ic);
+
+	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(exp, exp, exp, exp));
+	rect->x0 = x - exp - lw/2;
+	rect->y0 = y - exp - lw/2;
+	rect->x1 = x + w + exp + lw/2;
+	rect->y1 = y + h + exp + lw/2;
+}
+
+/*
+ * This doesn't quite match Acrobat, but I haven't really got a clue
+ * what magic algorithm Acrobat is using. It'll match for all 'simple'
+ * polygons, and makes a reasonable stab for complex ones.
+ *
+ * Find the y position of the centre of the polygon. Sum the
+ * area * winding_number across that line. (Effectively an integration?)
+ * Then pick cw or ccw according to what will be leave the largest
+ * area correct.
+ */
+static int
+polygon_winding(fz_context *ctx, pdf_obj *v, int n)
+{
+	int i;
+	float mid_y = 0;
+	float min_x = 0;
+	fz_point q, r;
+	float area = 0;
+
+	/* Find the centre for y, and min x. */
+	for (i = 0; i < n; i++)
+	{
+		float x = pdf_array_get_real(ctx, v, 2*i);
+		if (x < min_x || i == 0)
+			min_x = x;
+		mid_y += pdf_array_get_real(ctx, v, 2*i+1);
+	}
+	mid_y /= n;
+
+	/* Now run through finding the weighted area across that middle line. */
+	q.x = pdf_array_get_real(ctx, v, 0);
+	q.y = pdf_array_get_real(ctx, v, 1);
+	for (i = 1; i < n; i++)
+	{
+		r.x = pdf_array_get_real(ctx, v, 2*i);
+		r.y = pdf_array_get_real(ctx, v, 2*i+1);
+		if ((r.y > mid_y && mid_y > q.y) || (r.y < mid_y && mid_y < q.y))
+		{
+			int w = (r.y > mid_y) ? 1 : -1;
+			float x = r.x + (q.x - r.x) * (r.y - mid_y) / (r.y - q.y);
+
+			area += (x - min_x) * w;
+		}
+		q = r;
+	}
+
+	return area < 0;
 }
 
 static void
 pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res, int close)
 {
+	struct cloud_list cloud_list;
+	float cloud = 0;
 	pdf_obj *verts, *le;
-	fz_point p;
+	fz_point p, first, last;
 	int i, n;
 	float lw;
 	int sc, ic;
+	int i0, i1, is;
 
 	pdf_write_opacity(ctx, annot, buf, res);
+	pdf_write_dash_pattern(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
 
 	*rect = fz_empty_rect;
 
+	if (close)
+		cloud = cloud_intensity(ctx, annot);
+
 	verts = pdf_dict_get(ctx, annot->obj, PDF_NAME(Vertices));
 	n = pdf_array_len(ctx, verts) / 2;
 	if (n > 0)
 	{
-		for (i = 0; i < n; ++i)
+		if (polygon_winding(ctx, verts, n))
+			i0 = 0, i1 = n, is = 1;
+		else
+			i0 = n-1, i1 = -1, is = -1;
+
+		if (cloud > 0)
+		{
+			start_cloud(ctx, &cloud_list, buf, lw, cloud, ic);
+		}
+
+		for (i = i0; i != i1; i += is)
 		{
 			p.x = pdf_array_get_real(ctx, verts, i*2+0);
 			p.y = pdf_array_get_real(ctx, verts, i*2+1);
-			if (i == 0)
+			if (i == i0)
 			{
 				rect->x0 = rect->x1 = p.x;
 				rect->y0 = rect->y1 = p.y;
 			}
 			else
+			{
 				*rect = fz_include_point_in_rect(*rect, p);
-			if (i == 0)
+			}
+			if (cloud > 0)
+			{
+				if (i == i0)
+					first = p;
+				else
+					add_cloud_line(ctx, &cloud_list, buf, last.x, last.y, p.x, p.y);
+				last = p;
+			}
+			else
+			{
+				if (i == i0)
 				fz_append_printf(ctx, buf, "%g %g m\n", p.x, p.y);
 			else
 				fz_append_printf(ctx, buf, "%g %g l\n", p.x, p.y);
 		}
+		}
+
+		if (cloud > 0)
+		{
+			add_cloud_line(ctx, &cloud_list, buf, last.x, last.y, first.x, first.y);
+			end_cloud(ctx, &cloud_list, buf);
+		}
+		else
+		{
 		if (close)
 			fz_append_string(ctx, buf, "h\n");
+		}
+
 		if (close)
 			maybe_stroke_and_fill(ctx, buf, sc, ic);
 		else
 			maybe_stroke(ctx, buf, sc);
+
 		*rect = fz_expand_rect(*rect, lw);
+
+		if (cloud > 0)
+			*rect = fz_expand_rect(*rect, cloud_list.radius);
 	}
 
 	le = pdf_dict_get(ctx, annot->obj, PDF_NAME(LE));
@@ -528,12 +928,13 @@ pdf_write_ink_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_r
 	int sc;
 
 	pdf_write_opacity(ctx, annot, buf, res);
+	pdf_write_dash_pattern(ctx, annot, buf, res);
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 
 	*rect = fz_empty_rect;
 
-	fz_append_printf(ctx, buf, "1 J\n1 j\n");
+	fz_append_printf(ctx, buf, "1 j\n");
 
 	ink_list = pdf_dict_get(ctx, annot->obj, PDF_NAME(InkList));
 	n = pdf_array_len(ctx, ink_list);
@@ -1719,6 +2120,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	*bbox = fz_make_rect(0, 0, w, h);
 
 	pdf_write_opacity(ctx, annot, buf, res);
+	pdf_write_dash_pattern(ctx, annot, buf, res);
 
 	if (pdf_write_fill_color_appearance(ctx, annot, buf))
 		fz_append_printf(ctx, buf, "0 0 %g %g re\nf\n", w, h);

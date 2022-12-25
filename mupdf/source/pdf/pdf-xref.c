@@ -1276,6 +1276,9 @@ pdf_read_new_xref(fz_context *ctx, pdf_document *doc)
 		if (pdf_is_indirect(ctx, pdf_array_get(ctx, obj, 2)))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "xref stream object field 3 width an indirect object");
 
+		if (doc->file_reading_linearly && pdf_dict_get(ctx, trailer, PDF_NAME(Encrypt)))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot read linearly with encryption");
+
 		w0 = pdf_array_get_int(ctx, obj, 0);
 		w1 = pdf_array_get_int(ctx, obj, 1);
 		w2 = pdf_array_get_int(ctx, obj, 2);
@@ -1404,10 +1407,13 @@ pdf_read_xref_sections(fz_context *ctx, pdf_document *doc, int64_t ofs, int read
 {
 	int i, len, cap;
 	int64_t *offsets;
+	int populated = 0;
 
 	len = 0;
 	cap = 10;
 	offsets = fz_malloc_array(ctx, cap, int64_t);
+
+	fz_var(populated);
 
 	fz_try(ctx)
 	{
@@ -1431,6 +1437,7 @@ pdf_read_xref_sections(fz_context *ctx, pdf_document *doc, int64_t ofs, int read
 			offsets[len++] = ofs;
 
 			pdf_populate_next_xref_level(ctx, doc);
+			populated = 1;
 			ofs = read_xref_section(ctx, doc, ofs);
 			if (!read_previous)
 				break;
@@ -1442,6 +1449,9 @@ pdf_read_xref_sections(fz_context *ctx, pdf_document *doc, int64_t ofs, int read
 	}
 	fz_catch(ctx)
 	{
+		/* Undo pdf_populate_next_xref_level if we've done that already. */
+		if (populated)
+			doc->num_xref_sections--;
 		fz_rethrow(ctx);
 	}
 }
@@ -1664,6 +1674,7 @@ pdf_init_document(fz_context *ctx, pdf_document *doc)
 	{
 		pdf_drop_xref_sections(ctx, doc);
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+		doc->file_reading_linearly = 0;
 		fz_warn(ctx, "trying to repair broken xref");
 		repaired = 1;
 	}
@@ -2843,6 +2854,13 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 {
 	pdf_document *doc = fz_new_derived_document(ctx, pdf_document);
 
+#ifndef NDEBUG
+	{
+		void pdf_verify_name_table_sanity(void);
+		pdf_verify_name_table_sanity();
+	}
+#endif
+
 	doc->super.drop_document = (fz_document_drop_fn*)pdf_drop_document_imp;
 	doc->super.get_output_intent = (fz_document_output_intent_fn*)pdf_document_output_intent;
 	doc->super.needs_password = (fz_document_needs_password_fn*)pdf_needs_password;
@@ -2885,6 +2903,9 @@ pdf_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	return doc;
 }
 
+/* Uncomment the following to test progressive loading. */
+/* #define TEST_PROGRESSIVE_HACK */
+
 pdf_document *
 pdf_open_document(fz_context *ctx, const char *filename)
 {
@@ -2897,6 +2918,9 @@ pdf_open_document(fz_context *ctx, const char *filename)
 	fz_try(ctx)
 	{
 		file = fz_open_file(ctx, filename);
+#ifdef TEST_PROGRESSIVE_HACK
+		file->progressive = 1;
+#endif
 		doc = pdf_new_document(ctx, file);
 		pdf_init_document(ctx, doc);
 	}
@@ -2909,6 +2933,20 @@ pdf_open_document(fz_context *ctx, const char *filename)
 		fz_drop_document(ctx, &doc->super);
 		fz_rethrow(ctx);
 	}
+
+#ifdef TEST_PROGRESSIVE_HACK
+	if (doc->file_reading_linearly)
+	{
+		fz_try(ctx)
+			pdf_progressive_advance(ctx, doc, doc->linear_page_count-1);
+		fz_catch(ctx)
+		{
+			doc->file_reading_linearly = 0;
+			/* swallow the error */
+		}
+	}
+#endif
+
 	return doc;
 }
 
@@ -3104,10 +3142,12 @@ pdf_load_hints(fz_context *ctx, pdf_document *doc, int objnum)
 		/* Now, actually use the data we have gathered. */
 		for (i = 0 /*shared_obj_count_page1*/; i < shared_obj_count_total; i++)
 		{
+			if (doc->hint_shared[i].number >= 0 && doc->hint_shared[i].number < max_object_num)
 			doc->hint_obj_offsets[doc->hint_shared[i].number] = doc->hint_shared[i].offset;
 		}
 		for (i = 0; i < doc->linear_page_count; i++)
 		{
+			if (doc->hint_page[i].number >= 0 && doc->hint_page[i].number < max_object_num)
 			doc->hint_obj_offsets[doc->hint_page[i].number] = doc->hint_page[i].offset;
 		}
 	}
@@ -3141,7 +3181,6 @@ pdf_load_hint_object(fz_context *ctx, pdf_document *doc)
 		while (1)
 		{
 			pdf_obj *page = NULL;
-			int64_t tmpofs;
 			int num, tok;
 
 			tok = pdf_lex(ctx, doc->file, buf);
@@ -3155,7 +3194,7 @@ pdf_load_hint_object(fz_context *ctx, pdf_document *doc)
 			tok = pdf_lex(ctx, doc->file, buf);
 			if (tok != PDF_TOK_OBJ)
 				break;
-			(void)pdf_repair_obj(ctx, doc, buf, &tmpofs, NULL, NULL, NULL, &page, &tmpofs, NULL);
+			(void)pdf_repair_obj(ctx, doc, buf, NULL, NULL, NULL, NULL, &page, NULL, NULL);
 			pdf_load_hints(ctx, doc, num);
 		}
 	}

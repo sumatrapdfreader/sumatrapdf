@@ -46,11 +46,17 @@ pdf_keep_processor(fz_context *ctx, pdf_processor *proc)
 void
 pdf_close_processor(fz_context *ctx, pdf_processor *proc)
 {
-	if (proc && proc->close_processor)
-	{
-		proc->close_processor(ctx, proc);
-		proc->close_processor = NULL;
-	}
+	void (*close_processor)(fz_context *ctx, pdf_processor *proc);
+
+	if (!proc)
+		return;
+
+	close_processor = proc->close_processor;
+	if (!close_processor)
+		return;
+
+	proc->close_processor = NULL;
+	close_processor(ctx, proc); /* Tail recursion */
 }
 
 void
@@ -327,11 +333,11 @@ pdf_process_extgstate(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, pdf_ob
 			if (tr && !pdf_name_eq(ctx, tr, PDF_NAME(Identity)))
 				fz_warn(ctx, "ignoring transfer function");
 
-			proc->op_gs_SMask(ctx, proc, xobj, csi->rdb, softmask_bc, luminosity);
+			proc->op_gs_SMask(ctx, proc, xobj, softmask_bc, luminosity);
 		}
 		else if (pdf_is_name(ctx, obj) && pdf_name_eq(ctx, obj, PDF_NAME(None)))
 		{
-			proc->op_gs_SMask(ctx, proc, NULL, NULL, NULL, 0);
+			proc->op_gs_SMask(ctx, proc, NULL, NULL, 0);
 		}
 	}
 }
@@ -361,7 +367,7 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	if (pdf_name_eq(ctx, subtype, PDF_NAME(Form)))
 	{
 		if (proc->op_Do_form)
-			proc->op_Do_form(ctx, proc, csi->name, xobj, csi->rdb);
+			proc->op_Do_form(ctx, proc, csi->name, xobj);
 	}
 
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(Image)))
@@ -1057,8 +1063,18 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 	while (tok != PDF_TOK_EOF);
 }
 
+void pdf_processor_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
+{
+	proc->push_resources(ctx, proc, res);
+}
+
+pdf_obj *pdf_processor_pop_resources(fz_context *ctx, pdf_processor *proc)
+{
+	return proc->pop_resources(ctx, proc);
+}
+
 void
-pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie)
+pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie)
 {
 	pdf_csi csi;
 	pdf_lexbuf buf;
@@ -1091,6 +1107,24 @@ pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pd
 		proc->close_processor = NULL; /* aborted run, don't warn about unclosed processor */
 		fz_rethrow(ctx);
 	}
+}
+
+void
+pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie, pdf_obj **out_res)
+{
+	pdf_processor_push_resources(ctx, proc, rdb);
+	fz_try(ctx)
+		pdf_process_raw_contents(ctx, proc, doc, rdb, stmobj, cookie);
+	fz_always(ctx)
+	{
+		pdf_obj *res = pdf_processor_pop_resources(ctx, proc);
+		if (out_res)
+			*out_res = res;
+		else
+			pdf_drop_obj(ctx, res);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 /* Bug 702543: It looks like certain types of annotation are never
@@ -1152,7 +1186,7 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_annot *annot, fz_coo
 			matrix.a, matrix.b,
 			matrix.c, matrix.d,
 			matrix.e, matrix.f);
-		proc->op_Do_form(ctx, proc, NULL, ap, pdf_page_resources(ctx, annot->page));
+		proc->op_Do_form(ctx, proc, NULL, ap);
 		proc->op_Q(ctx, proc);
 	}
 }
@@ -1174,12 +1208,14 @@ pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_o
 
 	fz_try(ctx)
 	{
+		pdf_processor_push_resources(ctx, proc, rdb);
 		stm = fz_open_buffer(ctx, contents);
 		pdf_process_stream(ctx, proc, &csi, stm);
 		pdf_process_end(ctx, proc, &csi);
 	}
 	fz_always(ctx)
 	{
+		pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
 		fz_drop_stream(ctx, stm);
 		pdf_clear_stack(ctx, &csi);
 		pdf_lexbuf_fin(ctx, &buf);

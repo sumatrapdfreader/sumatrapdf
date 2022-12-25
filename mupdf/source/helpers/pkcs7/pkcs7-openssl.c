@@ -119,7 +119,7 @@ static const char AdobeCA_p7c[] = {
 #warning detect version of openssl at compile time
 #endif
 
-#ifdef LIBRESSL_VERSION_NUMBER
+#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3060000fL
 
 static inline const STACK_OF(PKCS12_SAFEBAG) *
 PKCS12_SAFEBAG_get0_safes(const PKCS12_SAFEBAG *bag)
