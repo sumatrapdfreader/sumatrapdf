@@ -4675,7 +4675,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         ReportIf(!selectedSH);
         WCHAR* url = ToWstrTemp(selectedSH->url);
         // try to auto-fix url
-        bool isValidURL = str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://");
+        bool isValidURL = str::Find(url, L"://") != nullptr;
         if (!isValidURL) {
             url = str::JoinTemp(L"https://", url);
         }
