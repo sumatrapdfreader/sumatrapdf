@@ -470,8 +470,8 @@ static bool PrintToDevice(const PrintData& pd) {
 
             SizeF pSize = engine.PageMediabox(pageNo).Size();
             int rotation = 0;
-            // Turn the document by 90 deg if it isn't in portrait mode
-            if (pSize.dx > pSize.dy) {
+            // Turn the document by 90 deg if it isn't in portrait mode & if autoRotation is not disabled
+            if (pd.advData.autoRotate && pSize.dx > pSize.dy) {
                 rotation += 90;
                 std::swap(pSize.dx, pSize.dy);
             }
@@ -1120,6 +1120,8 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             advanced.rotation = PrintRotationAdv::Portrait;
         } else if (str::EqI(s, "landscape")) {
             advanced.rotation = PrintRotationAdv::Landscape;
+        } else if (str::EqI(s, "disable-auto-rotation")) {
+            advanced.autoRotate = false;
         } else if (str::Parse(s, "%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
             devMode->dmFields |= DM_COPIES;
