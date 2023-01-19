@@ -20,10 +20,11 @@ struct Print_Advanced_Data {
     PrintRangeAdv range;
     PrintScaleAdv scale;
     PrintRotationAdv rotation;
+    bool autoRotate;
 
     explicit Print_Advanced_Data(PrintRangeAdv range = PrintRangeAdv::All, PrintScaleAdv scale = PrintScaleAdv::Shrink,
-                                 PrintRotationAdv rotation = PrintRotationAdv::Auto)
-        : range(range), scale(scale), rotation(rotation) {
+                                 PrintRotationAdv rotation = PrintRotationAdv::Auto, bool autoRotate = true)
+        : range(range), scale(scale), rotation(rotation), autoRotate(autoRotate) {
     }
 };
 
