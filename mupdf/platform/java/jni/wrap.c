@@ -621,6 +621,20 @@ static inline jobject to_PDFWidget_safe(fz_context *ctx, JNIEnv *env, pdf_annot 
 
 /* Conversion functions: C to Java. Take ownership of fitz object. None of these throw fitz exceptions. */
 
+static inline jobject to_Buffer_safe_own(fz_context *ctx, JNIEnv *env, fz_buffer *buf)
+{
+	jobject jobj;
+
+	if (!ctx || !buf) return NULL;
+
+	jobj = (*env)->NewObject(env, cls_Buffer, mid_Buffer_init, jlong_cast(buf));
+	if (!jobj)
+		fz_drop_buffer(ctx, buf);
+
+	return jobj;
+}
+
+
 static inline jobject to_Document_safe_own(fz_context *ctx, JNIEnv *env, fz_document *doc)
 {
 	jobject obj;
@@ -775,6 +789,15 @@ static inline jobject to_StructuredText_safe_own(fz_context *ctx, JNIEnv *env, f
 }
 
 /* Conversion functions: Java to C. These all throw java exceptions. */
+
+static inline fz_archive *from_Archive(JNIEnv *env, jobject jobj)
+{
+	fz_archive *arch;
+	if (!jobj) return NULL;
+	arch = CAST(fz_archive *, (*env)->GetLongField(env, jobj, fid_Archive_pointer));
+	if (!arch) jni_throw_null(env, "cannot use already destroyed Archive");
+	return arch;
+}
 
 static inline fz_buffer *from_Buffer(JNIEnv *env, jobject jobj)
 {
@@ -1090,6 +1113,12 @@ static fz_link_dest from_LinkDestination(JNIEnv *env, jobject jdest)
 }
 
 /* Conversion functions: Java to C. None of these throw java exceptions. */
+
+static inline fz_archive *from_Archive_safe(JNIEnv *env, jobject jobj)
+{
+	if (!jobj) return NULL;
+	return CAST(fz_archive *, (*env)->GetLongField(env, jobj, fid_Archive_pointer));
+}
 
 static inline fz_buffer *from_Buffer_safe(JNIEnv *env, jobject jobj)
 {

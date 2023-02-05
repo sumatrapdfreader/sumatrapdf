@@ -43,12 +43,23 @@ omit_fns = [
         'fz_open_file_w',
         'fz_colorspace_name_process_colorants', # Not implemented in mupdf.so?
         'fz_clone_context_internal',            # Not implemented in mupdf?
-        'fz_arc4_final',
         'fz_assert_lock_held',      # Is a macro if NDEBUG defined.
         'fz_assert_lock_not_held',  # Is a macro if NDEBUG defined.
         'fz_lock_debug_lock',       # Is a macro if NDEBUG defined.
         'fz_lock_debug_unlock',     # Is a macro if NDEBUG defined.
         'fz_argv_from_wargv',       # Only defined on Windows. Breaks our out-param wrapper code.
+
+        # Only defined on Windows, so breaks building Windows wheels from
+        # sdist, because the C++ source in sdist (usually generated on Unix)
+        # does not contain these functions, but SWIG-generated code will try to
+        # call them.
+        'fz_utf8_from_wchar',
+        'fz_wchar_from_utf8',
+        'fz_fopen_utf8',
+        'fz_remove_utf8',
+        'fz_argv_from_wargv',
+        'fz_free_argv',
+        'fz_stdods',
         ]
 
 omit_methods = []
@@ -304,7 +315,9 @@ class Cpu:
         .windows_suffix
             '64' or '', e.g. mupdfcpp64.dll
     '''
-    def __init__(self, name):
+    def __init__(self, name=None):
+        if name is None:
+            name = cpu_name()
         self.name = name
         if name == 'x32':
             self.bits = 32
@@ -323,6 +336,8 @@ class Cpu:
 
     def __str__(self):
         return self.name
+    def __repr__(self):
+        return f'Cpu:{self.name}'
 
 def python_version():
     '''

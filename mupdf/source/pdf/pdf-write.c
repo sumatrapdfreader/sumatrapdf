@@ -2225,7 +2225,7 @@ static void writexref(fz_context *ctx, pdf_document *doc, pdf_write_state *opts,
 
 	fz_write_printf(ctx, opts->out, "startxref\n%lu\n%%%%EOF\n", startxref);
 
-	doc->has_xref_streams = 0;
+	doc->last_xref_was_old_style = 1;
 }
 
 static void writexrefstreamsubsect(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *index, fz_buffer *fzbuf, int from, int to)
@@ -2366,7 +2366,7 @@ static void writexrefstream(fz_context *ctx, pdf_document *doc, pdf_write_state 
 		fz_rethrow(ctx);
 	}
 
-	doc->has_old_style_xrefs = 0;
+	doc->last_xref_was_old_style = 0;
 }
 
 static void
@@ -3222,8 +3222,6 @@ int pdf_can_be_saved_incrementally(fz_context *ctx, pdf_document *doc)
 		return 0;
 	if (doc->redacted)
 		return 0;
-	if (doc->has_xref_streams && doc->has_old_style_xrefs)
-		return 0;
 	return 1;
 }
 
@@ -3564,7 +3562,7 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 				}
 
 				opts->first_xref_offset = fz_tell_output(ctx, opts->out);
-				if (doc->has_xref_streams)
+				if (!doc->last_xref_was_old_style)
 					writexrefstream(ctx, doc, opts, 0, xref_len, 1, 0, opts->first_xref_offset);
 				else
 					writexref(ctx, doc, opts, 0, xref_len, 1, 0, opts->first_xref_offset);

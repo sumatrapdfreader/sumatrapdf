@@ -31,7 +31,7 @@ public class PDFPage extends Page
 	private PDFPage(long p) { super(p); }
 
 	public native PDFAnnotation[] getAnnotations();
-	public native PDFAnnotation createAnnotation(int subtype);
+	public native PDFAnnotation createAnnotation(int type);
 	public native void deleteAnnotation(PDFAnnotation annot);
 
 	public static final int REDACT_IMAGE_NONE = 0;

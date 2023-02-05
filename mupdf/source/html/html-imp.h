@@ -63,9 +63,11 @@ struct fz_html_font_set_s
 	fz_html_font_face *custom;
 };
 
+#define UCS_MAX 0x10ffff
+
 enum
 {
-	CSS_KEYWORD = 256,
+	CSS_KEYWORD = UCS_MAX+1,
 	CSS_HASH,
 	CSS_STRING,
 	CSS_NUMBER,
@@ -351,7 +353,7 @@ typedef struct {
 	fz_html_box *potential;
 } fz_html_restarter;
 
-struct fz_story_s
+struct fz_story
 {
 	/* fz_story is derived from fz_html_tree, so must start with */
 	/* that. Argubly 'tree' should be called 'super'. */
@@ -395,13 +397,39 @@ struct fz_story_s
 	fz_archive *zip;
 };
 
+enum
+{
+	FZ_HTML_STRUCT_UNKNOWN = 0,
+	FZ_HTML_STRUCT_BODY,
+	FZ_HTML_STRUCT_DIV,
+	FZ_HTML_STRUCT_SPAN,
+	FZ_HTML_STRUCT_BLOCKQUOTE,
+	FZ_HTML_STRUCT_P,
+	FZ_HTML_STRUCT_H1,
+	FZ_HTML_STRUCT_H2,
+	FZ_HTML_STRUCT_H3,
+	FZ_HTML_STRUCT_H4,
+	FZ_HTML_STRUCT_H5,
+	FZ_HTML_STRUCT_H6,
+	FZ_HTML_STRUCT_L,
+	FZ_HTML_STRUCT_LI,
+	FZ_HTML_STRUCT_TABLE,
+	FZ_HTML_STRUCT_TR,
+	FZ_HTML_STRUCT_TH,
+	FZ_HTML_STRUCT_TD,
+	FZ_HTML_STRUCT_THEAD,
+	FZ_HTML_STRUCT_TBODY,
+	FZ_HTML_STRUCT_TFOOT
+};
+
+
 struct fz_html_box_s
 {
 	unsigned int type : 3;
 	unsigned int is_first_flow : 1; /* for text-indent */
 	unsigned int markup_dir : 2;
-	unsigned int heading : 3; /* h1..h6 */
-	unsigned int list_item : 23;
+	unsigned int structure : 5;
+	unsigned int list_item : 21;
 
 	fz_html_box *up, *down, *next;
 
@@ -546,5 +574,9 @@ void fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start
 fz_html_flow *fz_html_split_flow(fz_context *ctx, fz_pool *pool, fz_html_flow *flow, size_t offset);
 
 fz_archive *fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi);
+
+int fz_html_heading_from_struct(int structure);
+const char *fz_html_structure_to_string(int structure);
+fz_structure fz_html_structure_to_structure(int s);
 
 #endif

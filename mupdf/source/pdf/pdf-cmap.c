@@ -718,20 +718,33 @@ pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsign
 void
 pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *values, size_t len)
 {
+	/* Decode unicode surrogate pairs. */
+	/* Only the *-UCS2 CMaps use one-to-many mappings, so assuming unicode should be safe. */
+	if (len >= 2)
+	{
+		size_t i, j;
+		/* Look for mranges with either multiple surrogate pairs in, or surrogate pairs
+		 * with other chars. See bug 706131. */
+		for (i = 0, j = 0; i < len; i++, j++)
+		{
+			int hi = values[i];
+			if (hi >= 0xd800 && hi < 0xdc00 && i < len-1)
+	{
+				int lo = values[i+1];
+				if (lo >= 0xdc00 && lo < 0xe000)
+				{
+					hi = ((hi - 0xD800) << 10) + (lo - 0xDC00) + 0x10000;
+					i++;
+				}
+			}
+			values[j] = hi;
+		}
+		len = j;
+	}
+
 	if (len == 1)
 	{
 		add_range(ctx, cmap, low, low, values[0], 1, 0);
-		return;
-	}
-
-	/* Decode unicode surrogate pairs. */
-	/* Only the *-UCS2 CMaps use one-to-many mappings, so assuming unicode should be safe. */
-	if (len == 2 &&
-		values[0] >= 0xD800 && values[0] <= 0xDBFF &&
-		values[1] >= 0xDC00 && values[1] <= 0xDFFF)
-	{
-		int rune = ((values[0] - 0xD800) << 10) + (values[1] - 0xDC00) + 0x10000;
-		add_range(ctx, cmap, low, low, rune, 1, 0);
 		return;
 	}
 

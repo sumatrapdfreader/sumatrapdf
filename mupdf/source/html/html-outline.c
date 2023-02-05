@@ -355,6 +355,7 @@ add_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 {
 	fz_outline *node;
 	char buf[100];
+	int heading;
 
 	node = fz_new_outline(ctx);
 	fz_try(ctx)
@@ -374,19 +375,20 @@ add_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 		fz_rethrow(ctx);
 	}
 
-	if (x->level[x->current] < (int)box->heading && x->current < 5)
+	heading = fz_html_heading_from_struct(box->structure);
+	if (x->level[x->current] < heading && x->current < 5)
 	{
 		x->tail[x->current+1] = x->down[x->current];
 		x->current += 1;
 	}
 	else
 	{
-		while (x->current > 0 && x->level[x->current] > (int)box->heading)
+		while (x->current > 0 && x->level[x->current] > heading)
 		{
 			x->current -= 1;
 		}
 	}
-	x->level[x->current] = box->heading;
+	x->level[x->current] = heading;
 
 	*(x->tail[x->current]) = node;
 	x->tail[x->current] = &node->next;
@@ -398,7 +400,8 @@ load_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 {
 	while (box)
 	{
-		if (box->heading)
+		int heading = fz_html_heading_from_struct(box->structure);
+		if (heading)
 			add_html_outline(ctx, x, box);
 		if (box->down)
 			load_html_outline(ctx, x, box->down);

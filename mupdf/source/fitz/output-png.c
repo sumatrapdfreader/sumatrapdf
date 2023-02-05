@@ -246,7 +246,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		/* Now figure out how large a buffer we need to compress into.
 		 * deflateBound always expands a bit, and it's limited by being
 		 * a uLong rather than a size_t. */
-		writer->csize = writer->usize >= UINT32_MAX ? UINT32_MAX : deflateBound(&writer->stream, writer->usize);
+		writer->csize = writer->usize >= UINT32_MAX ? UINT32_MAX : deflateBound(&writer->stream, (uLong)writer->usize);
 		if (writer->csize < writer->usize || writer->csize > UINT32_MAX) /* Check for overflow */
 			writer->csize = UINT32_MAX;
 		writer->udata = Memento_label(fz_malloc(ctx, writer->usize), "png_write_udata");
@@ -298,7 +298,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		size_t eaten;
 
 		writer->stream.next_in = dp;
-		writer->stream.avail_in = remain <= UINT32_MAX ? remain : UINT32_MAX;
+		writer->stream.avail_in = (uInt)(remain <= UINT32_MAX ? remain : UINT32_MAX);
 		writer->stream.next_out = writer->cdata;
 		writer->stream.avail_out = writer->csize <= UINT32_MAX ? (uInt)writer->csize : UINT32_MAX;
 

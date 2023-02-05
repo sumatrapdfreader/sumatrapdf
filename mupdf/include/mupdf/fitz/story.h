@@ -49,7 +49,7 @@
 */
 
 
-typedef struct fz_story_s fz_story;
+typedef struct fz_story fz_story;
 
 /*
 	Create a text story using styled html.

@@ -115,16 +115,16 @@ FUN(PDFAnnotation_getType)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
-	jint subtype = 0;
+	jint type = 0;
 
 	if (!ctx || !annot) return 0;
 
 	fz_try(ctx)
-		subtype = pdf_annot_type(ctx, annot);
+		type = pdf_annot_type(ctx, annot);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return subtype;
+	return type;
 }
 
 JNIEXPORT jint JNICALL

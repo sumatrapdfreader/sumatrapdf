@@ -784,7 +784,7 @@ static int fast_strncasecmp(const char *a, const char *b, size_t n)
 static char *fast_strcasestr(char *h, char *n)
 {
 	int n0 = fast_tolower(*n++);
-	int nn = strlen(n);
+	size_t nn = strlen(n);
 	while (*h != 0)
 	{
 		if (fast_tolower(*h) == n0 && fast_strncasecmp(h+1, n, nn) == 0)

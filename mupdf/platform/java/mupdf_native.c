@@ -88,6 +88,7 @@ static JavaVM *jvm = NULL;
 /* All the cached classes/mids/fids we need. */
 
 static jclass cls_AlertResult;
+static jclass cls_Archive;
 static jclass cls_ArrayOfQuad;
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
@@ -116,6 +117,7 @@ static jclass cls_Link;
 static jclass cls_LinkDestination;
 static jclass cls_Location;
 static jclass cls_Matrix;
+static jclass cls_MultiArchive;
 static jclass cls_NativeDevice;
 static jclass cls_NullPointerException;
 static jclass cls_Object;
@@ -158,11 +160,13 @@ static jclass cls_TextWalker;
 static jclass cls_TextWidgetCharLayout;
 static jclass cls_TextWidgetLayout;
 static jclass cls_TextWidgetLineLayout;
+static jclass cls_TreeArchive;
 static jclass cls_TryLaterException;
 static jclass cls_UnsupportedOperationException;
 
 static jfieldID fid_AlertResult_buttonPressed;
 static jfieldID fid_AlertResult_checkboxChecked;
+static jfieldID fid_Archive_pointer;
 static jfieldID fid_Buffer_pointer;
 static jfieldID fid_ColorSpace_pointer;
 static jfieldID fid_Context_Version_major;
@@ -204,6 +208,7 @@ static jfieldID fid_Matrix_c;
 static jfieldID fid_Matrix_d;
 static jfieldID fid_Matrix_e;
 static jfieldID fid_Matrix_f;
+static jfieldID fid_MultiArchive_pointer;
 static jfieldID fid_NativeDevice_nativeInfo;
 static jfieldID fid_NativeDevice_nativeResource;
 static jfieldID fid_OutlineIterator_pointer;
@@ -266,7 +271,9 @@ static jfieldID fid_TextWidgetLineLayout_rect;
 static jfieldID fid_TextWidgetLineLayout_x;
 static jfieldID fid_TextWidgetLineLayout_y;
 static jfieldID fid_Text_pointer;
+static jfieldID fid_TreeArchive_pointer;
 
+static jmethodID mid_Archive_init;
 static jmethodID mid_Buffer_init;
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
@@ -308,6 +315,7 @@ static jmethodID mid_Image_init;
 static jmethodID mid_Link_init;
 static jmethodID mid_Location_init;
 static jmethodID mid_Matrix_init;
+static jmethodID mid_MultiArchive_init;
 static jmethodID mid_NativeDevice_init;
 static jmethodID mid_Object_toString;
 static jmethodID mid_Outline_init;
@@ -360,6 +368,7 @@ static jmethodID mid_TextWidgetCharLayout_init;
 static jmethodID mid_TextWidgetLayout_init;
 static jmethodID mid_TextWidgetLineLayout_init;
 static jmethodID mid_Text_init;
+static jmethodID mid_TreeArchive_init;
 
 #ifdef _WIN32
 static DWORD context_key;
@@ -802,6 +811,10 @@ static int find_fids(JNIEnv *env)
 
 	/* MuPDF classes */
 
+	cls_Archive = get_class(&err, env, PKG"Archive");
+	mid_Archive_init = get_method(&err, env, "<init>", "(J)V");
+	fid_Archive_pointer = get_field(&err, env, "pointer", "J");
+
 	cls_Buffer = get_class(&err, env, PKG"Buffer");
 	mid_Buffer_init = get_method(&err, env, "<init>", "(J)V");
 	fid_Buffer_pointer = get_field(&err, env, "pointer", "J");
@@ -902,6 +915,10 @@ static int find_fids(JNIEnv *env)
 	fid_Matrix_e = get_field(&err, env, "e", "F");
 	fid_Matrix_f = get_field(&err, env, "f", "F");
 	mid_Matrix_init = get_method(&err, env, "<init>", "(FFFFFF)V");
+
+	cls_MultiArchive = get_class(&err, env, PKG"MultiArchive");
+	mid_MultiArchive_init = get_method(&err, env, "<init>", "(J)V");
+	fid_MultiArchive_pointer = get_field(&err, env, "pointer", "J");
 
 	cls_NativeDevice = get_class(&err, env, PKG"NativeDevice");
 	fid_NativeDevice_nativeResource = get_field(&err, env, "nativeResource", "Ljava/lang/Object;");
@@ -1108,6 +1125,10 @@ static int find_fids(JNIEnv *env)
 	fid_TextWidgetCharLayout_rect = get_field(&err, env, "rect", "L"PKG"Rect;");
 	mid_TextWidgetCharLayout_init = get_method(&err, env, "<init>", "()V");
 
+	cls_TreeArchive = get_class(&err, env, PKG"TreeArchive");
+	mid_TreeArchive_init = get_method(&err, env, "<init>", "(J)V");
+	fid_TreeArchive_pointer = get_field(&err, env, "pointer", "J");
+
 	cls_TryLaterException = get_class(&err, env, PKG"TryLaterException");
 
 	/* Standard Java classes */
@@ -1166,6 +1187,7 @@ static void jni_detach_thread(jboolean detach)
 static void lose_fids(JNIEnv *env)
 {
 	(*env)->DeleteGlobalRef(env, cls_AlertResult);
+	(*env)->DeleteGlobalRef(env, cls_Archive);
 	(*env)->DeleteGlobalRef(env, cls_ArrayOfQuad);
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
@@ -1193,6 +1215,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_LinkDestination);
 	(*env)->DeleteGlobalRef(env, cls_Location);
 	(*env)->DeleteGlobalRef(env, cls_Matrix);
+	(*env)->DeleteGlobalRef(env, cls_MultiArchive);
 	(*env)->DeleteGlobalRef(env, cls_NativeDevice);
 	(*env)->DeleteGlobalRef(env, cls_NullPointerException);
 	(*env)->DeleteGlobalRef(env, cls_Object);
@@ -1235,10 +1258,10 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_TextWidgetCharLayout);
 	(*env)->DeleteGlobalRef(env, cls_TextWidgetLayout);
 	(*env)->DeleteGlobalRef(env, cls_TextWidgetLineLayout);
+	(*env)->DeleteGlobalRef(env, cls_TreeArchive);
 	(*env)->DeleteGlobalRef(env, cls_TryLaterException);
 	(*env)->DeleteGlobalRef(env, cls_UnsupportedOperationException);
 }
-
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
@@ -1284,6 +1307,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/device.c"
 #include "jni/nativedevice.c"
 
+#include "jni/archive.c"
 #include "jni/buffer.c"
 #include "jni/colorspace.c"
 #include "jni/cookie.c"
@@ -1291,11 +1315,13 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/displaylistdevice.c"
 #include "jni/document.c"
 #include "jni/documentwriter.c"
+#include "jni/dom.c"
 #include "jni/drawdevice.c"
 #include "jni/fitzinputstream.c"
 #include "jni/font.c"
 #include "jni/image.c"
 #include "jni/link.c"
+#include "jni/multiarchive.c"
 #include "jni/outlineiterator.c"
 #include "jni/page.c"
 #include "jni/path.c"
@@ -1310,11 +1336,11 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/pkcs7verifier.c"
 #include "jni/rect.c"
 #include "jni/shade.c"
+#include "jni/story.c"
 #include "jni/strokestate.c"
 #include "jni/structuredtext.c"
 #include "jni/text.c"
-#include "jni/story.c"
-#include "jni/dom.c"
+#include "jni/treearchive.c"
 
 #ifdef HAVE_ANDROID
 #include "jni/android/androiddrawdevice.c"

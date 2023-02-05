@@ -50,7 +50,7 @@ static void
 mobi_read_text_palmdoc(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t size)
 {
 	// https://wiki.mobileread.com/wiki/PalmDOC
-	uint32_t end = out->len + size;
+	size_t end = out->len + size;
 	while (out->len < end)
 	{
 		int c = fz_read_byte(ctx, stm);
@@ -71,10 +71,10 @@ mobi_read_text_palmdoc(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t
 			int x = (c << 8) | fz_read_byte(ctx, stm);
 			int distance = (x >> 3) & 0x7ff;
 			int length = (x & 7) + 3;
-			int p = out->len - distance;
-			if (p >= 0 && p < (int)out->len)
+			if (distance > 0 && (size_t)distance <= out->len)
 			{
 				int i;
+				int p = (int)(out->len - distance);
 				for (i = 0; i < length; ++i)
 					fz_append_byte(ctx, out, out->data[p + i]);
 			}
@@ -127,7 +127,7 @@ mobi_read_data(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t *offset
 
 	for (i = 1; i <= record_count && i < total_count; ++i)
 	{
-		uint32_t remain = text_length - out->len;
+		uint32_t remain = text_length - (uint32_t)out->len;
 		uint32_t size = remain < 4096 ? remain : 4096;
 		fz_seek(ctx, stm, offset[i], 0);
 		if (compression == COMPRESSION_NONE)
@@ -145,7 +145,7 @@ mobi_read_data(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t *offset
 	if (text_encoding != TEXT_ENCODING_UTF8 || format == FORMAT_TEXT)
 	{
 		unsigned char *p;
-		int i, n = fz_buffer_extract(ctx, out, &p);
+		size_t i, n = fz_buffer_extract(ctx, out, &p);
 		fz_resize_buffer(ctx, out, 0);
 		if (format == FORMAT_TEXT)
 			fz_append_string(ctx, out, "<html><head><style>body{white-space:pre-wrap}</style></head><body>");
@@ -236,7 +236,7 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)
 			offset[i] = fz_read_uint32(ctx, stm);
 			fz_skip(ctx, stm, 4);
 		}
-		offset[n] = mobi->len;
+		offset[n] = (uint32_t)mobi->len;
 
 		// decompress text data
 		buffer = fz_new_buffer(ctx, 128 << 10);

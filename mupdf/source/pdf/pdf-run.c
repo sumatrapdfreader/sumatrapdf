@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -32,6 +32,8 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 	fz_default_colorspaces *default_cs = NULL;
 	int flags;
 	int resources_pushed = 0;
+	int struct_parent_num = -1;
+	pdf_obj *struct_parent;
 
 	fz_var(proc);
 	fz_var(default_cs);
@@ -77,7 +79,11 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 
 		ctm = fz_concat(page_ctm, ctm);
 
-		proc = pdf_new_run_processor(ctx, dev, ctm, usage, NULL, default_cs, cookie);
+		struct_parent = pdf_dict_getl(ctx, page->obj, PDF_NAME(StructParent));
+		if (pdf_is_number(ctx, struct_parent))
+			struct_parent_num = pdf_to_int(ctx, struct_parent);
+
+		proc = pdf_new_run_processor(ctx, page->doc, dev, ctm, struct_parent_num, usage, NULL, default_cs, cookie);
 		pdf_processor_push_resources(ctx, proc, pdf_page_resources(ctx, annot->page));
 		resources_pushed = 1;
 		pdf_process_annot(ctx, proc, annot, cookie);
@@ -105,6 +111,8 @@ pdf_run_page_contents_with_usage_imp(fz_context *ctx, pdf_document *doc, pdf_pag
 	pdf_processor *proc = NULL;
 	fz_default_colorspaces *default_cs = NULL;
 	fz_colorspace *colorspace = NULL;
+	int struct_parent_num = -1;
+	pdf_obj *struct_parent;
 
 	fz_var(proc);
 	fz_var(colorspace);
@@ -156,7 +164,11 @@ pdf_run_page_contents_with_usage_imp(fz_context *ctx, pdf_document *doc, pdf_pag
 			fz_begin_group(ctx, dev, mediabox, colorspace, 1, 0, 0, 1);
 		}
 
-		proc = pdf_new_run_processor(ctx, dev, ctm, usage, NULL, default_cs, cookie);
+		struct_parent = pdf_dict_get(ctx, page->obj, PDF_NAME(StructParents));
+		if (pdf_is_number(ctx, struct_parent))
+			struct_parent_num = pdf_to_int(ctx, struct_parent);
+
+		proc = pdf_new_run_processor(ctx, page->doc, dev, ctm, struct_parent_num, usage, NULL, default_cs, cookie);
 		pdf_process_contents(ctx, proc, doc, resources, contents, cookie, NULL);
 		pdf_close_processor(ctx, proc);
 
@@ -378,7 +390,7 @@ pdf_run_glyph(fz_context *ctx, pdf_document *doc, pdf_obj *resources, fz_buffer 
 {
 	pdf_processor *proc;
 
-	proc = pdf_new_run_processor(ctx, dev, ctm, "View", gstate, default_cs, NULL);
+	proc = pdf_new_run_processor(ctx, doc, dev, ctm, -1, "View", gstate, default_cs, NULL);
 	fz_try(ctx)
 	{
 		pdf_process_glyph(ctx, proc, doc, resources, contents);

@@ -23,7 +23,7 @@
 /* PDFPage interface */
 
 JNIEXPORT jobject JNICALL
-FUN(PDFPage_createAnnotation)(JNIEnv *env, jobject self, jint subtype)
+FUN(PDFPage_createAnnotation)(JNIEnv *env, jobject self, jint type)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);
@@ -32,7 +32,7 @@ FUN(PDFPage_createAnnotation)(JNIEnv *env, jobject self, jint subtype)
 	if (!ctx || !page) return NULL;
 
 	fz_try(ctx)
-		annot = pdf_create_annot(ctx, page, subtype);
+		annot = pdf_create_annot(ctx, page, type);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

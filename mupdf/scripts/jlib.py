@@ -245,7 +245,7 @@ g_log_prefixes = [
 
 _log_text_line_start = True
 
-def log_text( text=None, caller=1, nv=True, raw=False):
+def log_text( text=None, caller=1, nv=True, raw=False, nl=True):
     '''
     Returns log text, prepending all lines with text from g_log_prefixes.
 
@@ -258,6 +258,9 @@ def log_text( text=None, caller=1, nv=True, raw=False):
         Otherwise should be a frame record as returned by inspect.stack()[].
     nv:
         If true, we expand {...} in <text> using expand_nv().
+    nl:
+        If true (the default) we terminate text with a newline if not already
+        present. Ignored if `raw` is true.
     '''
     if isinstance( caller, int):
         caller += 1
@@ -293,7 +296,7 @@ def log_text( text=None, caller=1, nv=True, raw=False):
         nl = text.find('\n', pos)
         if nl == -1:
             text2 += text[pos:]
-            if not raw:
+            if not raw and nl:
                 text2 += '\n'
             pos = len(text)
         else:
@@ -1669,6 +1672,25 @@ def find_in_paths( name, paths=None):
         p = f'{path}/{name}'
         if os.path.isfile( p):
             return p
+
+
+def fs_find_in_paths( name, paths=None, verbose=False):
+    '''
+    Looks for `name` in paths and returns complete path. `paths` is list/tuple
+    or colon-separated string; if `None` we use `$PATH`.
+    '''
+    if paths is None:
+        paths = os.environ.get( 'PATH', '')
+    if isinstance( paths, str):
+        paths = paths.split( os.pathsep)
+    for path in paths:
+        p = os.path.join( path, name)
+        if os.path.isfile( p):
+            if verbose:
+                log( 'Returning: {p}')
+            return p
+        if verbose:
+            log( 'Does not exist or is not file: {p}')
 
 
 def mtime( filename, default=0):

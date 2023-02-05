@@ -2133,6 +2133,12 @@ static void console_init(void)
 	fz_set_error_callback(ctx, console_err, NULL);
 }
 
+static void console_fin(void)
+{
+	fz_drop_buffer(ctx, console_buffer);
+	console_buffer = NULL;
+}
+
 static pdf_js_console gl_js_console = {
 	NULL,
 	gl_js_console_show,
@@ -2939,6 +2945,8 @@ static void cleanup(void)
 #endif
 
 	trace_action("quit(0);\n");
+
+	console_fin();
 
 	fz_drop_output(ctx, trace_file);
 	fz_drop_stext_page(ctx, page_text);

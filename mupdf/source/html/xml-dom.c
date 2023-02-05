@@ -415,7 +415,7 @@ fz_xml *fz_dom_first_child(fz_context *ctx, fz_xml *elt)
 {
 	elt = skip_doc_pointer(elt);
 
-	if (elt == NULL)
+	if (elt == NULL || FZ_TEXT_ITEM(elt))
 		return NULL;
 
 	return elt->down;

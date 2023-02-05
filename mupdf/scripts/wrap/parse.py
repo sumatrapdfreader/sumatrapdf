@@ -441,6 +441,20 @@ def get_first_arg( tu, cursor):
     return ret, n
 
 
+is_cache = dict()
+
+def is_( type_, type2):
+    key = type_.spelling, type2
+    ret = is_cache.get( key)
+    if ret is None:
+        d = cpp.declaration_text( type_, '', top_level='')
+        d = util.clip( d, 'const ')
+        d = util.clip( d, 'struct ')
+        d = d.strip()
+        ret = (d == type2)
+        is_cache[ key] = ret
+    return ret
+
 is_pointer_to_cache = dict()
 
 def is_pointer_to( type_, destination, verbose=False):

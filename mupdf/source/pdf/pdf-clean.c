@@ -411,8 +411,8 @@ void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page
 
 	fz_try(ctx)
 	{
-		if (options->end_page)
-			options->end_page(ctx, buffer, options->end_page_opaque);
+		if (options->complete)
+			options->complete(ctx, buffer, options->opaque);
 		if (!options->no_update)
 		{
 			/* If contents is not a stream it's an array of streams or missing. */
@@ -896,14 +896,15 @@ pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_o
 	options.recurse = 0; /* don't redact patterns, softmasks, and type3 fonts */
 	options.instance_forms = 1; /* redact xobjects with instancing */
 	options.ascii = 1;
-	options.end_page_opaque = page;
+	options.opaque = page;
 	options.filters = list;
 	if (black_boxes)
-		options.end_page = pdf_redact_end_page;
+		options.complete = pdf_redact_end_page;
 
 	list[0].filter = pdf_new_sanitize_filter;
 	list[0].options = &sopts;
 
+	sopts.opaque = page;
 	sopts.text_filter = pdf_redact_text_filter;
 	if (image_method == PDF_REDACT_IMAGE_PIXELS)
 		sopts.image_filter = pdf_redact_image_filter_pixels;

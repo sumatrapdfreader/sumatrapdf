@@ -174,6 +174,11 @@ class Package:
                 f' metadata_directory={metadata_directory}'
                 )
 
+        _log('build_wheel(): os.environ is:')
+        for n in sorted( os.environ.keys()):
+            v = os.environ[ n]
+            _log( f'    {n}: {v!r}')
+
         # Find platform tag used in wheel filename, as described in
         # PEP-0425. E.g. 'openbsd_6_8_amd64', 'win_amd64' or 'win32'.
         #

@@ -480,7 +480,7 @@ png_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		stm.opaque = ctx;
 
 		stm.next_out = info->samples;
-		stm.avail_out = info->size;
+		stm.avail_out = (uInt)info->size;
 
 		code = inflateInit(&stm);
 		if (code != Z_OK)

@@ -330,6 +330,27 @@ static const char *get_node_text(fz_context *ctx, fz_html_flow *node)
 		return "";
 }
 
+int fz_html_heading_from_struct(int structure)
+{
+	switch (structure)
+	{
+	case FZ_HTML_STRUCT_H1:
+		return 1;
+	case FZ_HTML_STRUCT_H2:
+		return 2;
+	case FZ_HTML_STRUCT_H3:
+		return 3;
+	case FZ_HTML_STRUCT_H4:
+		return 4;
+	case FZ_HTML_STRUCT_H5:
+		return 5;
+	case FZ_HTML_STRUCT_H6:
+		return 6;
+	default:
+		return 0;
+	}
+}
+
 static void measure_string(fz_context *ctx, fz_html_flow *node, hb_buffer_t *hb_buf)
 {
 	string_walker walker;
@@ -1852,6 +1873,10 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
 
 static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
 {
+	int ret = 0;
+
+	if (box->structure != FZ_HTML_STRUCT_UNKNOWN)
+		fz_begin_structure(ctx, dev, fz_html_structure_to_structure(box->structure), fz_html_structure_to_string(box->structure), 0);
 	switch (box->type)
 	{
 	case BOX_TABLE:
@@ -1859,15 +1884,17 @@ static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float pag
 	case BOX_TABLE_CELL:
 	case BOX_BLOCK:
 		if (restart && restart->end == box)
-			return 1;
-		if (draw_block_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
-			return 1;
+			ret = 1;
+		else if (draw_block_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
+			ret = 1;
 		break;
 	case BOX_FLOW:
 		if (draw_flow_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
-			return 1;
+			ret = 1;
 		break;
 	}
+	if (box->structure != FZ_HTML_STRUCT_UNKNOWN)
+		fz_end_structure(ctx, dev);
 
 	return 0;
 }
@@ -2161,6 +2188,7 @@ static int enumerate_block_box(fz_context *ctx, fz_html_box *box, float page_top
 	int stopped = 0;
 	int skipping;
 	fz_story_element_position pos;
+	int heading;
 
 	assert(fz_html_box_has_boxes(box));
 	y0 = box->s.layout.y - padding[T];
@@ -2186,15 +2214,16 @@ static int enumerate_block_box(fz_context *ctx, fz_html_box *box, float page_top
 
 	if (box->style->visibility == V_VISIBLE && !skipping)
 	{
-		if (box->heading || box->id != NULL || box->href)
+		heading = fz_html_heading_from_struct(box->structure);
+		if (heading || box->id != NULL || box->href)
 		{
 			/* We have a box worthy of a callback. */
 			char *text = NULL;
 			pos.text = NULL;
-			if (box->heading)
+			if (heading)
 				pos.text = text = gather_text(ctx, box->down);
 			pos.depth = depth;
-			pos.heading = box->heading;
+			pos.heading = heading;
 			pos.open_close = 1;
 			pos.id = box->id;
 			pos.href = box->href;
@@ -2224,7 +2253,7 @@ static int enumerate_block_box(fz_context *ctx, fz_html_box *box, float page_top
 
 	if (box->style->visibility == V_VISIBLE && !skipping)
 	{
-		if (box->heading || box->id != NULL || box->href)
+		if (heading || box->id != NULL || box->href)
 		{
 			/* We have a box worthy of a callback that needs closing. */
 			pos.open_close = 2;

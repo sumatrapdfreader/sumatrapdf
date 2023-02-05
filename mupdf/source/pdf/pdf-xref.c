@@ -311,7 +311,8 @@ pdf_xref_entry *pdf_get_populating_xref_entry(fz_context *ctx, pdf_document *doc
 	return &sub->table[num-sub->start];
 }
 
-pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
+static
+pdf_xref_entry *pdf_get_xref_entry_aux(fz_context *ctx, pdf_document *doc, int i, int solidify_if_needed)
 {
 	pdf_xref *xref = NULL;
 	pdf_xref_subsec *sub;
@@ -429,6 +430,9 @@ pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
 		return NULL;
 	}
 
+	if (!solidify_if_needed)
+		return NULL;
+
 	/* At this point, we solidify the xref. This ensures that we
 	 * can return a pointer. This is the only case where this function
 	 * might throw an exception, and it will never happen when we are
@@ -437,6 +441,16 @@ pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
 	xref = &doc->xref_sections[0];
 	sub = xref->subsec;
 	return &sub->table[i - sub->start];
+}
+
+pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
+{
+	return pdf_get_xref_entry_aux(ctx, doc, i, 1);
+}
+
+pdf_xref_entry *pdf_get_xref_entry_no_change(fz_context *ctx, pdf_document *doc, int i)
+{
+	return pdf_get_xref_entry_aux(ctx, doc, i, 0);
 }
 
 pdf_xref_entry *pdf_get_xref_entry_no_null(fz_context *ctx, pdf_document *doc, int i)
@@ -1182,7 +1196,7 @@ pdf_read_old_xref(fz_context *ctx, pdf_document *doc)
 	if (tok != PDF_TOK_OPEN_DICT)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "expected trailer dictionary");
 
-	doc->has_old_style_xrefs = 1;
+	doc->last_xref_was_old_style = 1;
 
 	return pdf_parse_dict(ctx, doc, file, buf);
 }
@@ -1223,7 +1237,7 @@ pdf_read_new_xref_section(fz_context *ctx, pdf_document *doc, fz_stream *stm, in
 		}
 	}
 
-	doc->has_xref_streams = 1;
+	doc->last_xref_was_old_style = 0;
 }
 
 /* Entered with file locked, remains locked throughout. */

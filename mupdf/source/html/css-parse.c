@@ -218,7 +218,7 @@ static fz_css_value *fz_new_css_value(fz_context *ctx, fz_pool *pool, int type, 
 
 static void css_lex_next(struct lexbuf *buf)
 {
-	buf->c = *(buf->s++);
+	buf->s += fz_chartorune(&buf->c, buf->s);
 	if (buf->c == '\n')
 		++buf->line;
 	buf->lookahead = EOF;
@@ -247,20 +247,23 @@ static inline int iswhite(int c)
 static int isnmstart(int c)
 {
 	return c == '\\' || c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-		(c >= 128 && c <= 255);
+		(c >= 128 && c <= UCS_MAX);
 }
 
 static int isnmchar(int c)
 {
 	return c == '\\' || c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-		(c >= '0' && c <= '9') || c == '-' || (c >= 128 && c <= 255);
+		(c >= '0' && c <= '9') || c == '-' || (c >= 128 && c <= UCS_MAX);
 }
 
 static void css_push_char(struct lexbuf *buf, int c)
 {
-	if (buf->string_len + 1 >= (int)nelem(buf->string))
+	char out[4];
+	int n = fz_runetochar(out, c);
+	if (buf->string_len + n >= (int)nelem(buf->string))
 		fz_css_error(buf, "token too long");
-	buf->string[buf->string_len++] = c;
+	memcpy(buf->string + buf->string_len, out, n);
+	buf->string_len += n;
 }
 
 static int css_lex_accept(struct lexbuf *buf, int t)
@@ -649,8 +652,11 @@ static fz_css_value *parse_expr(struct lexbuf *buf)
 		if (accept(buf, ','))
 		{
 			white(buf);
+			if (buf->lookahead != ';')
+			{
 			tail = tail->next = fz_new_css_value(buf->ctx, buf->pool, ',', ",");
 			tail = tail->next = parse_term(buf);
+			}
 		}
 		else if (accept(buf, '/'))
 		{

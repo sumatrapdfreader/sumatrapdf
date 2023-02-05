@@ -366,6 +366,35 @@ def build_swig(
                 void* user;
             }};
 
+            struct StoryPositionsCallback
+            {{
+                StoryPositionsCallback()
+                {{
+                    //printf( "StoryPositionsCallback() constructor\\n");
+                }}
+
+                virtual void call( const fz_story_element_position* position) = 0;
+
+                static void s_call( fz_context* ctx, void* self0, const fz_story_element_position* position)
+                {{
+                    //printf( "StoryPositionsCallback::s_call()\\n");
+                    (void) ctx;
+                    StoryPositionsCallback* self = (StoryPositionsCallback*) self0;
+                    self->call( position);
+                }}
+
+            }};
+
+            void ll_fz_story_positions_director( fz_story *story, StoryPositionsCallback* cb)
+            {{
+                //printf( "ll_fz_story_positions_director()\\n");
+                {rename.namespace_ll_fn('fz_story_positions')}(
+                        story,
+                        StoryPositionsCallback::s_call,
+                        cb
+                        );
+            }}
+
             void Pixmap_set_alpha_helper(
                 int balen,
                 int n,
@@ -458,27 +487,24 @@ def build_swig(
 
     text = ''
 
-    if state_.windows:
-        # 2022-02-24: Director classes break Windows builds at the moment.
-        pass
-    else:
-        text += '%module(directors="1") mupdf\n'
-        for i in generated.virtual_fnptrs:
-            text += f'%feature("director") {i};\n'
+    text += '%module(directors="1") mupdf\n'
+    for i in generated.virtual_fnptrs:
+        text += f'%feature("director") {i};\n'
 
-        text += f'%feature("director") SetWarningCallback;\n'
-        text += f'%feature("director") SetErrorCallback;\n'
+    text += f'%feature("director") SetWarningCallback;\n'
+    text += f'%feature("director") SetErrorCallback;\n'
+    text += f'%feature("director") StoryPositionsCallback;\n'
 
-        text += textwrap.dedent(
-                '''
-                %feature("director:except")
-                {
-                  if ($error != NULL)
-                  {
-                    throw Swig::DirectorMethodException();
-                  }
-                }
-                ''')
+    text += textwrap.dedent(
+            '''
+            %feature("director:except")
+            {
+              if ($error != NULL)
+              {
+                throw Swig::DirectorMethodException();
+              }
+            }
+            ''')
 
     # Ignore all C MuPDF functions; SWIG will still look at the C++ API in
     # namespace mudf.
@@ -505,6 +531,14 @@ def build_swig(
             'fz_vthrow',
             'fz_vwarn',
             'fz_write_vprintf',
+
+            'fz_utf8_from_wchar',
+            'fz_wchar_from_utf8',
+            'fz_fopen_utf8',
+            'fz_remove_utf8',
+            'fz_argv_from_wargv',
+            'fz_free_argv',
+            'fz_stdods',
             ):
         text += f'%ignore {i};\n'
         text += f'%ignore m{i};\n'
@@ -512,6 +546,7 @@ def build_swig(
     text += textwrap.dedent(f'''
             // Not implemented in mupdf.so: fz_colorspace_name_process_colorants
             %ignore fz_colorspace_name_process_colorants;
+            %ignore fz_argv_from_wargv;
 
             %ignore fz_open_file_w;
 
@@ -1000,6 +1035,65 @@ def build_swig(
                 {rename.ll_fn('pdf_field_name')} = {rename.ll_fn('pdf_field_name2')}
                 {rename.fn('pdf_field_name')} = {rename.fn('pdf_field_name2')}
                 {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_field_name')} = {rename.class_('pdf_obj')}.{rename.method('pdf_obj', 'pdf_field_name2')}
+
+                # It's important that when we create class derived
+                # from StoryPositionsCallback, we ensure that
+                # StoryPositionsCallback's constructor is called. Otherwise
+                # the new instance doesn't seem to be an instance of
+                # StoryPositionsCallback.
+                #
+                class StoryPositionsCallback_python( StoryPositionsCallback):
+                    def __init__( self, python_callback):
+                        super().__init__()
+                        self.python_callback = python_callback
+                    def call( self, position):
+                        self.python_callback( position)
+
+                ll_fz_story_positions_orig = {rename.ll_fn('fz_story_positions')}
+                def ll_fz_story_positions( story, python_callback):
+                    """
+                    Custom replacement for `ll_fz_story_positions()` that takes
+                    a Python callable `python_callback`.
+                    """
+                    #print( f'll_fz_story_positions() {{type(story)=}} {{type(python_callback)=}}')
+                    python_callback_instance = StoryPositionsCallback_python( python_callback)
+                    #python_callback_instance = StoryPositionsCallback_python()
+                    #python_callback_instance.python_callback = python_callback
+                    ll_fz_story_positions_director( story, python_callback_instance)
+
+                def fz_story_positions( story, python_callback):
+                    #print( f'fz_story_positions() {{type(story)=}} {{type(python_callback)=}}')
+                    assert isinstance( story, {rename.class_('fz_story')})
+                    assert callable( python_callback)
+                    def python_callback2( position):
+                        position2 = FzStoryElementPosition( position)
+                        python_callback( position2)
+                    ll_fz_story_positions( story.m_internal, python_callback2)
+
+                {rename.class_('fz_story')}.{rename.method('fz_story', 'fz_story_positions')} = fz_story_positions
+
+                # Monkey-patch `FzDocumentWriter.__init__()` to set `self._out`
+                # to any `FzOutput2` arg. This ensures that the Python part of
+                # the derived `FzOutput2` instance is kept alive for use by the
+                # `FzDocumentWriter`, otherwise Python can delete it, then get
+                # a SEGV if C++ tries to call the derived Python methods.
+                #
+                # [We don't patch equivalent class-aware functions such
+                # as `fz_new_pdf_writer_with_output()` because they are
+                # not available to C++/Python, because FzDocumentWriter is
+                # non-copyable.]
+                #
+                FzDocumentWriter__init__0 = FzDocumentWriter.__init__
+                def FzDocumentWriter__init__1(self, *args):
+                    out = None
+                    for arg in args:
+                        if isinstance( arg, FzOutput2):
+                            assert not out, "More than one FzOutput2 passed to FzDocumentWriter.__init__()"
+                            out = arg
+                    if out:
+                        self._out = out
+                    return FzDocumentWriter__init__0(self, *args)
+                FzDocumentWriter.__init__ = FzDocumentWriter__init__1
                 ''')
 
         # Add __iter__() methods for all classes with begin() and end() methods.

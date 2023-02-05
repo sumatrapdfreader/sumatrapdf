@@ -1491,6 +1491,11 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 
 	if ((fontdesc = pdf_find_item(ctx, pdf_drop_font_imp, dict)) != NULL)
 	{
+		if (fontdesc->t3loading)
+		{
+			pdf_drop_font(ctx, fontdesc);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "recursive type3 font");
+		}
 		return fontdesc;
 	}
 
@@ -1533,21 +1538,22 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 		/* Create glyph width table for stretching substitute fonts and text extraction. */
 		pdf_make_width_table(ctx, fontdesc);
 
+		pdf_store_item(ctx, dict, fontdesc, fontdesc->size);
+
 		/* Load CharProcs */
 		if (type3)
 		{
-			if (doc->type3_lock)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "recursive type3 font");
-			doc->type3_lock = 1;
+			fontdesc->t3loading = 1;
 			fz_try(ctx)
 				pdf_load_type3_glyphs(ctx, doc, fontdesc);
 			fz_always(ctx)
-				doc->type3_lock = 0;
+				fontdesc->t3loading = 0;
 			fz_catch(ctx)
+			{
+				pdf_remove_item(ctx, fontdesc->storable.drop, dict);
 				fz_rethrow(ctx);
 		}
-
-		pdf_store_item(ctx, dict, fontdesc, fontdesc->size);
+		}
 	}
 	fz_catch(ctx)
 	{

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -203,7 +203,7 @@ typedef struct
 
 /* Functions to set up pdf_process structures */
 
-pdf_processor *pdf_new_run_processor(fz_context *ctx, fz_device *dev, fz_matrix ctm, const char *usage, pdf_gstate *gstate, fz_default_colorspaces *default_cs, fz_cookie *cookie);
+pdf_processor *pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_matrix ctm, int struct_parent, const char *usage, pdf_gstate *gstate, fz_default_colorspaces *default_cs, fz_cookie *cookie);
 
 /*
 	Create a buffer processor.
@@ -265,9 +265,9 @@ typedef struct
 
 	no_update: If true, do not update the document at the end.
 
-	end_page_opaque: Opaque value that is passed to all the filter functions.
+	opaque: Opaque value that is passed to the complete function.
 
-	end_page: A function called at the end of a page.
+	complete: A function called at the end of processing.
 	This allows the caller to insert some extra content after
 	all other content.
 
@@ -284,11 +284,22 @@ struct pdf_filter_options
 	int ascii;
 	int no_update;
 
-	void *end_page_opaque;
-	void (*end_page)(fz_context *ctx, fz_buffer *buffer, void *arg);
+	void *opaque;
+	void (*complete)(fz_context *ctx, fz_buffer *buffer, void *arg);
 
 	pdf_filter_factory *filters;
 };
+
+typedef enum
+{
+	FZ_CULL_PATH_FILL,
+	FZ_CULL_PATH_STROKE,
+	FZ_CULL_PATH_FILL_STROKE,
+	FZ_CULL_CLIP_PATH,
+	FZ_CULL_GLYPH,
+	FZ_CULL_IMAGE,
+	FZ_CULL_SHADING
+} fz_cull_type;
 
 /*
 	image_filter: A function called to assess whether a given
@@ -300,6 +311,9 @@ struct pdf_filter_options
 	after_text_object: A function called after each text object.
 	This allows the caller to insert some extra content if
 	desired.
+
+	culler: A function called to see whether each object should
+	be culled or not.
 */
 typedef struct
 {
@@ -307,6 +321,7 @@ typedef struct
 	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
 	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
 	void (*after_text_object)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
+	int (*culler)(fz_context *ctx, void *opaque, fz_rect bbox, fz_cull_type type);
 }
 pdf_sanitize_filter_options;
 
@@ -344,8 +359,6 @@ pdf_obj *pdf_processor_pop_resources(fz_context *ctx, pdf_processor *proc);
 
 /*
 	opaque: Opaque value that is passed to all the filter functions.
-
-	cs_rewrite: function pointer called to rewrite a colorspace.
 
 	color_rewrite: function pointer called to rewrite a color
 		On entry:

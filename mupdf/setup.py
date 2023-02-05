@@ -207,6 +207,23 @@ def sdist():
 
     paths = pipcl.git_items( root_dir(), submodules=True)
 
+    # Strip out some large test directories.
+    i = 0
+    while i < len( paths):
+        path = paths[i]
+        remove = False
+        if (0
+                or path.startswith( 'thirdparty/harfbuzz/test/')
+                or path.startswith( 'thirdparty/tesseract/test/')
+                or path.startswith( 'thirdparty/extract/test/')
+                ):
+            remove = True
+        if remove:
+            #log( f'Excluding: {path}')
+            del paths[i]
+        else:
+            i += 1
+
     # Build C++ files and SWIG C code for inclusion in sdist, so that it can be
     # used on systems without clang-python or SWIG.
     #

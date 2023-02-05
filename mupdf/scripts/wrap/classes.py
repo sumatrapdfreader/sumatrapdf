@@ -371,6 +371,8 @@ classextras = ClassExtras(
 
         fz_band_writer = ClassExtra(
                 class_top = '''
+                    /* We use these enums to support construction via all the relevent MuPDF functions. */
+
                     enum Cm
                     {
                         MONO,
@@ -400,7 +402,7 @@ classextras = ClassExtras(
                             else throw std::runtime_error( "Unrecognised fz_band_writer_s Cm type");
                         }}
                         ''',
-                        comment = f'/* Calls fz_new_mono_pcl_band_writer() or fz_new_color_pcl_band_writer(). */',
+                        comment = f'/* Constructor using fz_new_mono_pcl_band_writer() or fz_new_color_pcl_band_writer(). */',
                         ),
                     ExtraConstructor(
                         f'({rename.class_("fz_output")}& out, P p)',
@@ -418,7 +420,7 @@ classextras = ClassExtras(
                             else throw std::runtime_error( "Unrecognised fz_band_writer_s P type");
                         }}
                         ''',
-                        comment = f'/* Calls fz_new_p*_band_writer(). */',
+                        comment = f'/* Constructor using fz_new_p*_band_writer(). */',
                         ),
                     ExtraConstructor(
                         f'({rename.class_("fz_output")}& out, Cm cm, const {rename.class_("fz_pwg_options")}& options)',
@@ -432,7 +434,7 @@ classextras = ClassExtras(
                             else throw std::runtime_error( "Unrecognised fz_band_writer_s Cm type");
                         }}
                         ''',
-                        comment = f'/* Calls fz_new_mono_pwg_band_writer() or fz_new_pwg_band_writer(). */',
+                        comment = f'/* Constructor using fz_new_mono_pwg_band_writer() or fz_new_pwg_band_writer(). */',
                         ),
                     ],
                 copyable = False,
@@ -499,6 +501,7 @@ classextras = ClassExtras(
                     ],
                 constructor_raw=1,
                 class_top = '''
+                        /* We use this enums to support construction via all the relevent MuPDF functions. */
                         enum Fixed
                         {
                             Fixed_GRAY,
@@ -526,7 +529,7 @@ classextras = ClassExtras(
                         this->m_internal.incomplete = 0;
                     }
                     ''',
-                    comment = '/* Sets all fields to default values. */',
+                    comment = '/* Default constructor sets all fields to default values. */',
                     ),
                     ],
                 constructor_raw = False,
@@ -578,7 +581,7 @@ classextras = ClassExtras(
                             #endif
                         }}
                         ''',
-                        comment = '/* Sets m_internal = NULL. */',
+                        comment = '/* Default constructor sets m_internal to null. */',
                         ),
                     ],
                 ),
@@ -598,7 +601,7 @@ classextras = ClassExtras(
                             m_internal = {rename.ll_fn('fz_keep_document')}(&pdfdocument.m_internal->super);
                         }}
                         ''',
-                        f'/* Return {rename.class_("fz_document")} for pdfdocument.m_internal.super. */',
+                        f'/* Returns a {rename.class_("fz_document")} for pdfdocument.m_internal.super. */',
                         ),
                     ],
                 constructor_raw = 'default',
@@ -1674,7 +1677,7 @@ classextras = ClassExtras(
                             return ret;
                         }}
                         ''',
-                        comment = f'/* Wrapper for fz_copy_selection(). */',
+                        comment = f'/* Wrapper for fz_copy_selection() that returns std::string. */',
                         ),
                     ExtraMethod(
                         'std::string',
@@ -1687,7 +1690,7 @@ classextras = ClassExtras(
                             return ret;
                         }}
                         ''',
-                        comment = f'/* Wrapper for fz_copy_rectangle(). */',
+                        comment = f'/* Wrapper for fz_copy_rectangle() that returns a std::string. */',
                         ),
                     ExtraMethod(
                         f'std::vector<{rename.class_("fz_quad")}>',
@@ -1700,7 +1703,7 @@ classextras = ClassExtras(
                             return ret;
                         }}
                         ''',
-                        '/* Wrapper for fz_search_stext_page() that returns vector of Quads. */',
+                        '/* Wrapper for fz_search_stext_page() that returns std::vector of Quads. */',
                         )
                     ],
                 iterator_next = ('first_block', 'last_block'),
@@ -1768,6 +1771,10 @@ classextras = ClassExtras(
                     comment = '/* Construct using fz_open_file(). */',
                     )
                     ],
+                ),
+
+        fz_story_element_position = ClassExtra(
+                pod='inline',
                 ),
 
         fz_transition = ClassExtra(
@@ -1848,7 +1855,7 @@ classextras = ClassExtras(
                 virtual_fnptrs = dict(
                         self_ = lambda name: f'({rename.class_("pdf_filter_options")}2*) {name}',
                         self_n = 2,
-                        alloc = f'this->end_page_opaque = this;\n',
+                        alloc = f'this->opaque = this;\n',
                         ),
                 constructors_extra = [
                     ExtraConstructor( '()',
@@ -1857,8 +1864,9 @@ classextras = ClassExtras(
                             this->recurse = 0;
                             this->instance_forms = 0;
                             this->ascii = 0;
-                            this->end_page_opaque = nullptr;
-                            this->end_page = nullptr;
+                            this->opaque = nullptr;
+                            this->complete = nullptr;
+                            this->filters = nullptr;
                             pdf_filter_factory eof = {{ nullptr, nullptr}};
                             m_filters.push_back( eof);
                         }}
@@ -1895,7 +1903,7 @@ classextras = ClassExtras(
                             {rename.ll_fn('pdf_lexbuf_init')}(m_internal, size);
                         }}
                         ''',
-                        comment = '/* Constructor that calls pdf_lexbuf_init(size) */',
+                        comment = '/* Constructor that calls pdf_lexbuf_init(size). */',
                         ),
                     ],
                 methods_extra = [
@@ -1941,7 +1949,7 @@ classextras = ClassExtras(
                             this->locked = 0;
                         }}
                         ''',
-                        comment = '/* Default constructor sets all .text to null and other fields to zero. */',
+                        comment = '/* Default constructor sets .text to null, .type to PDF_LAYER_UI_LABEL, and other fields to zero. */',
                         ),
                     ],
                 ),
@@ -2069,12 +2077,14 @@ classextras = ClassExtras(
                     ExtraConstructor( '()',
                         f'''
                         {{
+                            this->opaque = nullptr;
                             this->image_filter = nullptr;
                             this->text_filter = nullptr;
                             this->after_text_object = nullptr;
+                            this->culler = nullptr;
                         }}
                         ''',
-                        comment = '/* */',
+                        comment = '/* Default constructor initialises all members to null. */',
                     )
                     ],
                 ),
@@ -2094,11 +2104,10 @@ classextras = ClassExtras(
                         f'(const {rename.class_("pdf_write_options")}& rhs)',
                         f'''
                         {{
-                            /* Use memcpy() otherwise we get 'invalid array assignment' errors. */
                             *this = rhs;
                         }}
                         ''',
-                        comment = '/* Copy constructor using plain memcpy(). */'
+                        comment = '/* Copy constructor using raw memcopy(). */'
                         ),
                     ],
                     methods_extra = [

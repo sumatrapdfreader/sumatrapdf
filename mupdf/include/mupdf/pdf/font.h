@@ -97,6 +97,7 @@ typedef struct
 	pdf_vmtx *vmtx;
 
 	int is_embedded;
+	int t3loading;
 } pdf_font_desc;
 
 void pdf_set_font_wmode(fz_context *ctx, pdf_font_desc *font, int wmode);

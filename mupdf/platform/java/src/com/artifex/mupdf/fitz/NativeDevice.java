@@ -57,7 +57,6 @@ public class NativeDevice extends Device
 	public native final void fillShade(Shade shd, Matrix ctm, float alpha, int cp);
 	public native final void fillImage(Image img, Matrix ctm, float alpha, int cp);
 	public native final void fillImageMask(Image img, Matrix ctm, ColorSpace cs, float[] color, float alpha, int cp);
-	/* FIXME: Why no scissor? */
 	public native final void clipImageMask(Image img, Matrix ctm);
 
 	public native final void popClip();

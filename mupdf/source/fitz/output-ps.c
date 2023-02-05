@@ -237,7 +237,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 	if (required_input > SIZE_MAX / band_height)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
 	required_input *= band_height;
-	required_output = required_input >= UINT_MAX ? UINT_MAX : deflateBound(&writer->stream, required_input);
+	required_output = required_input >= UINT_MAX ? UINT_MAX : deflateBound(&writer->stream, (uLong)required_input);
 	if (required_output < required_input || required_output > UINT_MAX)
 		required_output = UINT_MAX;
 
@@ -276,7 +276,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 		size_t eaten;
 
 		writer->stream.next_in = o;
-		writer->stream.avail_in = remain <= UINT_MAX ? remain : UINT_MAX;
+		writer->stream.avail_in = (uInt)(remain <= UINT_MAX ? remain : UINT_MAX);
 		writer->stream.next_out = writer->output;
 		writer->stream.avail_out = writer->output_size <= UINT_MAX ? (uInt)writer->output_size : UINT_MAX;
 

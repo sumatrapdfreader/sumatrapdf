@@ -243,7 +243,7 @@ pdf_parse_bf_range_array(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_l
 			for (i = 0; i < len; i++)
 				dst[i] = pdf_code_from_string(&buf->scratch[i * 2], 2);
 
-			pdf_map_one_to_many(ctx, cmap, lo, dst, buf->len / 2);
+			pdf_map_one_to_many(ctx, cmap, lo, dst, i);
 		}
 
 		lo ++;

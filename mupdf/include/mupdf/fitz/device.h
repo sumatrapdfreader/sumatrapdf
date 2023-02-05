@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -134,6 +134,87 @@ enum
 	fz_device_container_stack_is_tile,
 };
 
+/* Structure types */
+typedef enum
+{
+	FZ_STRUCTURE_INVALID = -1,
+
+	/* Grouping elements (PDF 1.7 - Table 10.20) */
+	FZ_STRUCTURE_DOCUMENT,
+	FZ_STRUCTURE_PART,
+	FZ_STRUCTURE_ART,
+	FZ_STRUCTURE_SECT,
+	FZ_STRUCTURE_DIV,
+	FZ_STRUCTURE_BLOCKQUOTE,
+	FZ_STRUCTURE_CAPTION,
+	FZ_STRUCTURE_TOC,
+	FZ_STRUCTURE_TOCI,
+	FZ_STRUCTURE_INDEX,
+	FZ_STRUCTURE_NONSTRUCT,
+	FZ_STRUCTURE_PRIVATE,
+
+	/* Paragraphlike elements (PDF 1.7 - Table 10.21) */
+	FZ_STRUCTURE_P,
+	FZ_STRUCTURE_H,
+	FZ_STRUCTURE_H1,
+	FZ_STRUCTURE_H2,
+	FZ_STRUCTURE_H3,
+	FZ_STRUCTURE_H4,
+	FZ_STRUCTURE_H5,
+	FZ_STRUCTURE_H6,
+
+	/* List elements (PDF 1.7 - Table 10.23) */
+	FZ_STRUCTURE_LIST,
+	FZ_STRUCTURE_LISTITEM,
+	FZ_STRUCTURE_LABEL,
+	FZ_STRUCTURE_LISTBODY,
+
+	/* Table elements (PDF 1.7 - Table 10.24) */
+	FZ_STRUCTURE_TABLE,
+	FZ_STRUCTURE_TR,
+	FZ_STRUCTURE_TH,
+	FZ_STRUCTURE_TD,
+	FZ_STRUCTURE_THEAD,
+	FZ_STRUCTURE_TBODY,
+	FZ_STRUCTURE_TFOOT,
+
+	/* Inline elements (PDF 1.7 - Table 10.25) */
+	FZ_STRUCTURE_SPAN,
+	FZ_STRUCTURE_QUOTE,
+	FZ_STRUCTURE_NOTE,
+	FZ_STRUCTURE_REFERENCE,
+	FZ_STRUCTURE_BIBENTRY,
+	FZ_STRUCTURE_CODE,
+	FZ_STRUCTURE_LINK,
+	FZ_STRUCTURE_ANNOT,
+
+	/* Ruby inline element (PDF 1.7 - Table 10.26) */
+	FZ_STRUCTURE_RUBY,
+	FZ_STRUCTURE_RB,
+	FZ_STRUCTURE_RT,
+	FZ_STRUCTURE_RP,
+
+	/* Warichu inline element (PDF 1.7 - Table 10.26) */
+	FZ_STRUCTURE_WARICHU,
+	FZ_STRUCTURE_WT,
+	FZ_STRUCTURE_WP,
+
+	/* Illustration elements (PDF 1.7 - Table 10.27) */
+	FZ_STRUCTURE_FIGURE,
+	FZ_STRUCTURE_FORMULA,
+	FZ_STRUCTURE_FORM
+} fz_structure;
+
+const char *fz_structure_to_string(fz_structure type);
+
+typedef enum
+{
+	FZ_METATEXT_ACTUALTEXT,
+	FZ_METATEXT_ALT,
+	FZ_METATEXT_ABBREVIATION,
+	FZ_METATEXT_TITLE
+} fz_metatext;
+
 struct fz_device
 {
 	int refs;
@@ -175,6 +256,12 @@ struct fz_device
 	void (*begin_layer)(fz_context *, fz_device *, const char *layer_name);
 	void (*end_layer)(fz_context *, fz_device *);
 
+	void (*begin_structure)(fz_context *, fz_device *, fz_structure standard, const char *raw, int uid);
+	void (*end_structure)(fz_context *, fz_device *);
+
+	void (*begin_metatext)(fz_context *, fz_device *, fz_metatext meta, const char *text);
+	void (*end_metatext)(fz_context *, fz_device *);
+
 	fz_rect d1_rect;
 
 	int container_len;
@@ -210,6 +297,10 @@ void fz_render_flags(fz_context *ctx, fz_device *dev, int set, int clear);
 void fz_set_default_colorspaces(fz_context *ctx, fz_device *dev, fz_default_colorspaces *default_cs);
 void fz_begin_layer(fz_context *ctx, fz_device *dev, const char *layer_name);
 void fz_end_layer(fz_context *ctx, fz_device *dev);
+void fz_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int uid);
+void fz_end_structure(fz_context *ctx, fz_device *dev);
+void fz_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const char *text);
+void fz_end_metatext(fz_context *ctx, fz_device *dev);
 
 /**
 	Devices are created by calls to device implementations, for

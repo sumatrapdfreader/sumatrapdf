@@ -614,9 +614,9 @@ do_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b, int check_streams)
 			int ap = pdf_obj_parent_num(ctx, a);
 			int bp;
 			int a_is_stream = 0;
-			pdf_xref_entry *entrya = pdf_get_xref_entry(ctx, doc, ap);
+			pdf_xref_entry *entrya = pdf_get_xref_entry_no_change(ctx, doc, ap);
 			pdf_xref_entry *entryb;
-			if (entrya->obj == a && pdf_obj_num_is_stream(ctx, doc, ap))
+			if (entrya != NULL && entrya->obj == a && pdf_obj_num_is_stream(ctx, doc, ap))
 			{
 				/* It's a stream, and we know a != b from above. */
 				if (!check_streams)
@@ -624,8 +624,8 @@ do_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b, int check_streams)
 				a_is_stream = 1;
 			}
 			bp = pdf_obj_parent_num(ctx, b);
-			entryb = pdf_get_xref_entry(ctx, doc, bp);
-			if (entryb->obj == b && pdf_obj_num_is_stream(ctx, doc, bp))
+			entryb = pdf_get_xref_entry_no_change(ctx, doc, bp);
+			if (entryb != NULL && entryb->obj == b && pdf_obj_num_is_stream(ctx, doc, bp))
 			{
 				/* It's a stream, and we know a != b from above. So mismatch. */
 				if (!check_streams || !a_is_stream)

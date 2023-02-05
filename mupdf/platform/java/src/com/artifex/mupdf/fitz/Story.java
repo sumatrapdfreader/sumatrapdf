@@ -36,26 +36,42 @@ public class Story
 		finalize();
 	}
 
-	private static native long newStory(byte[] content, byte[] user_css, float em);
+	private static native long newStory(byte[] content, byte[] user_css, float em, Archive arch);
 
+	public Story(String content, String user_css, float em, Archive arch)
+	{
+		pointer = newStory(content.getBytes(), user_css.getBytes(), em, arch);
+	}
 	public Story(String content, String user_css, float em)
 	{
-		pointer = newStory(content.getBytes(), user_css.getBytes(), em);
+		this(content, user_css, em, null);
 	}
 
+	public Story(byte[] content, String user_css, float em, Archive arch)
+	{
+		pointer = newStory(content, user_css.getBytes(), em, arch);
+	}
 	public Story(byte[] content, String user_css, float em)
 	{
-		pointer = newStory(content, user_css.getBytes(), em);
+		this(content, user_css, em, null);
 	}
 
+	public Story(String content, byte[] user_css, float em, Archive arch)
+	{
+		pointer = newStory(content.getBytes(), user_css, em, arch);
+	}
 	public Story(String content, byte[] user_css, float em)
 	{
-		pointer = newStory(content.getBytes(), user_css, em);
+		this(content, user_css, em, null);
 	}
 
+	public Story(byte[] content, byte[] user_css, float em, Archive arch)
+	{
+		pointer = newStory(content, user_css, em, arch);
+	}
 	public Story(byte[] content, byte[] user_css, float em)
 	{
-		pointer = newStory(content, user_css, em);
+		this(content, user_css, em, null);
 	}
 
 	public native boolean place(Rect rect, Rect filled);

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -505,7 +505,7 @@ static int usage(void)
 {
 	fprintf(stderr,
 		"muraster version " FZ_VERSION "\n"
-		"Usage: muraster [options] file [pages]\n"
+		"usage: muraster [options] file [pages]\n"
 		"\t-p -\tpassword\n"
 		"\n"
 		"\t-o -\toutput file name\n"
