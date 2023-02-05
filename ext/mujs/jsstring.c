@@ -1,6 +1,4 @@
 #include "jsi.h"
-#include "jsvalue.h"
-#include "jsbuiltin.h"
 #include "utf.h"
 #include "regexp.h"
 
@@ -77,14 +75,14 @@ static void Sp_toString(js_State *J)
 {
 	js_Object *self = js_toobject(J, 0);
 	if (self->type != JS_CSTRING) js_typeerror(J, "not a string");
-	js_pushliteral(J, self->u.s.string);
+	js_pushstring(J, self->u.s.string);
 }
 
 static void Sp_valueOf(js_State *J)
 {
 	js_Object *self = js_toobject(J, 0);
 	if (self->type != JS_CSTRING) js_typeerror(J, "not a string");
-	js_pushliteral(J, self->u.s.string);
+	js_pushstring(J, self->u.s.string);
 }
 
 static void Sp_charAt(js_State *J)
@@ -688,7 +686,8 @@ static void Sp_split(js_State *J)
 
 void jsB_initstring(js_State *J)
 {
-	J->String_prototype->u.s.string = "";
+	J->String_prototype->u.s.shrstr[0] = 0;
+	J->String_prototype->u.s.string = J->String_prototype->u.s.shrstr;
 	J->String_prototype->u.s.length = 0;
 
 	js_pushobject(J, J->String_prototype);

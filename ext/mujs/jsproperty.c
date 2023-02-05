@@ -1,5 +1,4 @@
 #include "jsi.h"
-#include "jsvalue.h"
 
 #include <assert.h>
 
@@ -21,24 +20,24 @@
 */
 
 static js_Property sentinel = {
-	"",
 	&sentinel, &sentinel,
 	0, 0,
-	{ {0}, {0}, JS_TUNDEFINED },
-	NULL, NULL
+	{ { {0}, JS_TUNDEFINED } },
+	NULL, NULL, ""
 };
 
 static js_Property *newproperty(js_State *J, js_Object *obj, const char *name)
 {
-	js_Property *node = js_malloc(J, sizeof *node);
-	node->name = js_intern(J, name);
+	int n = strlen(name) + 1;
+	js_Property *node = js_malloc(J, offsetof(js_Property, name) + n);
 	node->left = node->right = &sentinel;
 	node->level = 1;
 	node->atts = 0;
-	node->value.type = JS_TUNDEFINED;
+	node->value.t.type = JS_TUNDEFINED;
 	node->value.u.number = 0;
 	node->getter = NULL;
 	node->setter = NULL;
+	memcpy(node->name, name, n);
 	++obj->count;
 	++J->gccounter;
 	return node;
@@ -104,38 +103,43 @@ static void freeproperty(js_State *J, js_Object *obj, js_Property *node)
 	--obj->count;
 }
 
-static js_Property *delete(js_State *J, js_Object *obj, js_Property *node, const char *name)
+static js_Property *unlinkproperty(js_Property *node, const char *name, js_Property **garbage)
 {
-	js_Property *temp, *succ;
-
+	js_Property *temp, *a, *b;
 	if (node != &sentinel) {
 		int c = strcmp(name, node->name);
 		if (c < 0) {
-			node->left = delete(J, obj, node->left, name);
+			node->left = unlinkproperty(node->left, name, garbage);
 		} else if (c > 0) {
-			node->right = delete(J, obj, node->right, name);
+			node->right = unlinkproperty(node->right, name, garbage);
 		} else {
-			if (node->left == &sentinel) {
-				temp = node;
-				node = node->right;
-				freeproperty(J, obj, temp);
-			} else if (node->right == &sentinel) {
-				temp = node;
-				node = node->left;
-				freeproperty(J, obj, temp);
-			} else {
-				succ = node->right;
-				while (succ->left != &sentinel)
-					succ = succ->left;
-				node->name = succ->name;
-				node->atts = succ->atts;
-				node->value = succ->value;
-				node->right = delete(J, obj, node->right, succ->name);
+			*garbage = node;
+			if (node->left == &sentinel && node->right == &sentinel) {
+				return &sentinel;
+			}
+			else if (node->left == &sentinel) {
+				a = node->right;
+				while (a->left != &sentinel)
+					a = a->left;
+				b = unlinkproperty(node->right, a->name, &temp);
+				temp->level = node->level;
+				temp->left = node->left;
+				temp->right = b;
+				node = temp;
+			}
+			else {
+				a = node->left;
+				while (a->right != &sentinel)
+					a = a->right;
+				b = unlinkproperty(node->left, a->name, &temp);
+				temp->level = node->level;
+				temp->left = b;
+				temp->right = node->right;
+				node = temp;
 			}
 		}
 
-		if (node->left->level < node->level - 1 ||
-			node->right->level < node->level - 1)
+		if (node->left->level < node->level - 1 || node->right->level < node->level - 1)
 		{
 			if (node->right->level > --node->level)
 				node->right->level = node->level;
@@ -147,6 +151,15 @@ static js_Property *delete(js_State *J, js_Object *obj, js_Property *node, const
 		}
 	}
 	return node;
+}
+
+static js_Property *deleteproperty(js_State *J, js_Object *obj, js_Property *tree, const char *name)
+{
+	js_Property *garbage = &sentinel;
+	tree = unlinkproperty(tree, name, &garbage);
+	if (garbage != &sentinel)
+		freeproperty(J, obj, garbage);
+	return tree;
 }
 
 js_Object *jsV_newobject(js_State *J, enum js_Class type, js_Object *prototype)
@@ -223,15 +236,16 @@ js_Property *jsV_setproperty(js_State *J, js_Object *obj, const char *name)
 
 void jsV_delproperty(js_State *J, js_Object *obj, const char *name)
 {
-	obj->properties = delete(J, obj, obj->properties, name);
+	obj->properties = deleteproperty(J, obj, obj->properties, name);
 }
 
 /* Flatten hierarchy of enumerable properties into an iterator object */
 
 static js_Iterator *itnewnode(js_State *J, const char *name, js_Iterator *next) {
-	js_Iterator *node = js_malloc(J, sizeof(js_Iterator));
-	node->name = name;
+	int n = strlen(name) + 1;
+	js_Iterator *node = js_malloc(J, offsetof(js_Iterator, name) + n);
 	node->next = next;
+	memcpy(node->name, name, n);
 	return node;
 }
 
@@ -272,19 +286,19 @@ js_Object *jsV_newiterator(js_State *J, js_Object *obj, int own)
 	} else {
 		io->u.iter.head = itflatten(J, obj);
 	}
+	io->u.iter.current = io->u.iter.head;
 
 	if (obj->type == JS_CSTRING)
 		io->u.iter.n = obj->u.s.length;
 
 	if (obj->type == JS_CARRAY && obj->u.a.simple)
-		io->u.iter.n = obj->u.a.length;
+		io->u.iter.n = obj->u.a.flat_length;
 
 	return io;
 }
 
 const char *jsV_nextiterator(js_State *J, js_Object *io)
 {
-	int k;
 	if (io->type != JS_CITERATOR)
 		js_typeerror(J, "not an iterator");
 	if (io->u.iter.i < io->u.iter.n) {
@@ -292,19 +306,11 @@ const char *jsV_nextiterator(js_State *J, js_Object *io)
 		io->u.iter.i++;
 		return J->scratch;
 	}
-	while (io->u.iter.head) {
-		js_Iterator *next = io->u.iter.head->next;
-		const char *name = io->u.iter.head->name;
-		js_free(J, io->u.iter.head);
-		io->u.iter.head = next;
+	while (io->u.iter.current) {
+		const char *name = io->u.iter.current->name;
+		io->u.iter.current = io->u.iter.current->next;
 		if (jsV_getproperty(J, io->u.iter.target, name))
 			return name;
-		if (io->u.iter.target->type == JS_CSTRING)
-			if (js_isarrayindex(J, name, &k) && k < io->u.iter.target->u.s.length)
-				return name;
-		if (io->u.iter.target->type == JS_CARRAY && io->u.iter.target->u.a.simple)
-			if (js_isarrayindex(J, name, &k) && k < io->u.iter.target->u.a.length)
-				return name;
 	}
 	return NULL;
 }

@@ -1,11 +1,8 @@
 #include "jsi.h"
-#include "jslex.h"
-#include "jscompile.h"
-#include "jsvalue.h"
 #include "utf.h"
 
-#define JSV_ISSTRING(v) (v->type==JS_TSHRSTR || v->type==JS_TMEMSTR || v->type==JS_TLITSTR)
-#define JSV_TOSTRING(v) (v->type==JS_TSHRSTR ? v->u.shrstr : v->type==JS_TLITSTR ? v->u.litstr : v->type==JS_TMEMSTR ? v->u.memstr->p : "")
+#define JSV_ISSTRING(v) (v->t.type==JS_TSHRSTR || v->t.type==JS_TMEMSTR || v->t.type==JS_TLITSTR)
+#define JSV_TOSTRING(v) (v->t.type==JS_TSHRSTR ? v->u.shrstr : v->t.type==JS_TLITSTR ? v->u.litstr : v->t.type==JS_TMEMSTR ? v->u.memstr->p : "")
 
 double js_strtol(const char *s, char **p, int base)
 {
@@ -121,7 +118,7 @@ void jsV_toprimitive(js_State *J, js_Value *v, int preferred)
 {
 	js_Object *obj;
 
-	if (v->type != JS_TOBJECT)
+	if (v->t.type != JS_TOBJECT)
 		return;
 
 	obj = v->u.object;
@@ -146,7 +143,7 @@ void jsV_toprimitive(js_State *J, js_Value *v, int preferred)
 	if (J->strict)
 		js_typeerror(J, "cannot convert object to primitive");
 
-	v->type = JS_TLITSTR;
+	v->t.type = JS_TLITSTR;
 	v->u.litstr = "[object]";
 	return;
 }
@@ -154,7 +151,7 @@ void jsV_toprimitive(js_State *J, js_Value *v, int preferred)
 /* ToBoolean() on a value */
 int jsV_toboolean(js_State *J, js_Value *v)
 {
-	switch (v->type) {
+	switch (v->t.type) {
 	default:
 	case JS_TSHRSTR: return v->u.shrstr[0] != 0;
 	case JS_TUNDEFINED: return 0;
@@ -242,7 +239,7 @@ double jsV_stringtonumber(js_State *J, const char *s)
 /* ToNumber() on a value */
 double jsV_tonumber(js_State *J, js_Value *v)
 {
-	switch (v->type) {
+	switch (v->t.type) {
 	default:
 	case JS_TSHRSTR: return jsV_stringtonumber(J, v->u.shrstr);
 	case JS_TUNDEFINED: return NAN;
@@ -327,7 +324,7 @@ const char *jsV_tostring(js_State *J, js_Value *v)
 {
 	char buf[32];
 	const char *p;
-	switch (v->type) {
+	switch (v->t.type) {
 	default:
 	case JS_TSHRSTR: return v->u.shrstr;
 	case JS_TUNDEFINED: return "undefined";
@@ -339,15 +336,15 @@ const char *jsV_tostring(js_State *J, js_Value *v)
 		p = jsV_numbertostring(J, buf, v->u.number);
 		if (p == buf) {
 			int n = strlen(p);
-			if (n <= soffsetof(js_Value, type)) {
+			if (n <= soffsetof(js_Value, t.type)) {
 				char *s = v->u.shrstr;
 				while (n--) *s++ = *p++;
 				*s = 0;
-				v->type = JS_TSHRSTR;
+				v->t.type = JS_TSHRSTR;
 				return v->u.shrstr;
 			} else {
 				v->u.memstr = jsV_newmemstring(J, p, n);
-				v->type = JS_TMEMSTR;
+				v->t.type = JS_TMEMSTR;
 				return v->u.memstr->p;
 			}
 		}
@@ -377,7 +374,13 @@ static js_Object *jsV_newnumber(js_State *J, double v)
 static js_Object *jsV_newstring(js_State *J, const char *v)
 {
 	js_Object *obj = jsV_newobject(J, JS_CSTRING, J->String_prototype);
-	obj->u.s.string = js_intern(J, v); /* TODO: js_String */
+	size_t n = strlen(v);
+	if (n < sizeof(obj->u.s.shrstr)) {
+		obj->u.s.string = obj->u.s.shrstr;
+		memcpy(obj->u.s.shrstr, v, n + 1);
+	} else {
+		obj->u.s.string = js_strdup(J, v);
+	}
 	obj->u.s.length = utflen(v);
 	return obj;
 }
@@ -386,7 +389,7 @@ static js_Object *jsV_newstring(js_State *J, const char *v)
 js_Object *jsV_toobject(js_State *J, js_Value *v)
 {
 	js_Object *o;
-	switch (v->type) {
+	switch (v->t.type) {
 	default:
 	case JS_TUNDEFINED: js_typeerror(J, "cannot convert undefined to object");
 	case JS_TNULL: js_typeerror(J, "cannot convert null to object");
@@ -397,7 +400,7 @@ js_Object *jsV_toobject(js_State *J, js_Value *v)
 	case JS_TBOOLEAN: o = jsV_newboolean(J, v->u.boolean); break;
 	case JS_TNUMBER: o = jsV_newnumber(J, v->u.number); break;
 	}
-	v->type = JS_TOBJECT;
+	v->t.type = JS_TOBJECT;
 	v->u.object = o;
 	return o;
 }
@@ -621,38 +624,38 @@ int js_equal(js_State *J)
 retry:
 	if (JSV_ISSTRING(x) && JSV_ISSTRING(y))
 		return !strcmp(JSV_TOSTRING(x), JSV_TOSTRING(y));
-	if (x->type == y->type) {
-		if (x->type == JS_TUNDEFINED) return 1;
-		if (x->type == JS_TNULL) return 1;
-		if (x->type == JS_TNUMBER) return x->u.number == y->u.number;
-		if (x->type == JS_TBOOLEAN) return x->u.boolean == y->u.boolean;
-		if (x->type == JS_TOBJECT) return x->u.object == y->u.object;
+	if (x->t.type == y->t.type) {
+		if (x->t.type == JS_TUNDEFINED) return 1;
+		if (x->t.type == JS_TNULL) return 1;
+		if (x->t.type == JS_TNUMBER) return x->u.number == y->u.number;
+		if (x->t.type == JS_TBOOLEAN) return x->u.boolean == y->u.boolean;
+		if (x->t.type == JS_TOBJECT) return x->u.object == y->u.object;
 		return 0;
 	}
 
-	if (x->type == JS_TNULL && y->type == JS_TUNDEFINED) return 1;
-	if (x->type == JS_TUNDEFINED && y->type == JS_TNULL) return 1;
+	if (x->t.type == JS_TNULL && y->t.type == JS_TUNDEFINED) return 1;
+	if (x->t.type == JS_TUNDEFINED && y->t.type == JS_TNULL) return 1;
 
-	if (x->type == JS_TNUMBER && JSV_ISSTRING(y))
+	if (x->t.type == JS_TNUMBER && JSV_ISSTRING(y))
 		return x->u.number == jsV_tonumber(J, y);
-	if (JSV_ISSTRING(x) && y->type == JS_TNUMBER)
+	if (JSV_ISSTRING(x) && y->t.type == JS_TNUMBER)
 		return jsV_tonumber(J, x) == y->u.number;
 
-	if (x->type == JS_TBOOLEAN) {
-		x->type = JS_TNUMBER;
+	if (x->t.type == JS_TBOOLEAN) {
+		x->t.type = JS_TNUMBER;
 		x->u.number = x->u.boolean ? 1 : 0;
 		goto retry;
 	}
-	if (y->type == JS_TBOOLEAN) {
-		y->type = JS_TNUMBER;
+	if (y->t.type == JS_TBOOLEAN) {
+		y->t.type = JS_TNUMBER;
 		y->u.number = y->u.boolean ? 1 : 0;
 		goto retry;
 	}
-	if ((JSV_ISSTRING(x) || x->type == JS_TNUMBER) && y->type == JS_TOBJECT) {
+	if ((JSV_ISSTRING(x) || x->t.type == JS_TNUMBER) && y->t.type == JS_TOBJECT) {
 		jsV_toprimitive(J, y, JS_HNONE);
 		goto retry;
 	}
-	if (x->type == JS_TOBJECT && (JSV_ISSTRING(y) || y->type == JS_TNUMBER)) {
+	if (x->t.type == JS_TOBJECT && (JSV_ISSTRING(y) || y->t.type == JS_TNUMBER)) {
 		jsV_toprimitive(J, x, JS_HNONE);
 		goto retry;
 	}
@@ -668,11 +671,11 @@ int js_strictequal(js_State *J)
 	if (JSV_ISSTRING(x) && JSV_ISSTRING(y))
 		return !strcmp(JSV_TOSTRING(x), JSV_TOSTRING(y));
 
-	if (x->type != y->type) return 0;
-	if (x->type == JS_TUNDEFINED) return 1;
-	if (x->type == JS_TNULL) return 1;
-	if (x->type == JS_TNUMBER) return x->u.number == y->u.number;
-	if (x->type == JS_TBOOLEAN) return x->u.boolean == y->u.boolean;
-	if (x->type == JS_TOBJECT) return x->u.object == y->u.object;
+	if (x->t.type != y->t.type) return 0;
+	if (x->t.type == JS_TUNDEFINED) return 1;
+	if (x->t.type == JS_TNULL) return 1;
+	if (x->t.type == JS_TNUMBER) return x->u.number == y->u.number;
+	if (x->t.type == JS_TBOOLEAN) return x->u.boolean == y->u.boolean;
+	if (x->t.type == JS_TOBJECT) return x->u.object == y->u.object;
 	return 0;
 }

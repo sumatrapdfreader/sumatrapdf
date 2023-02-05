@@ -1,8 +1,4 @@
 #include "jsi.h"
-#include "jscompile.h"
-#include "jsvalue.h"
-#include "jsrun.h"
-
 #include "utf.h"
 
 #include <assert.h>
@@ -17,7 +13,7 @@ static void jsR_run(js_State *J, js_Function *F);
 
 static void js_trystackoverflow(js_State *J)
 {
-	STACK[TOP].type = JS_TLITSTR;
+	STACK[TOP].t.type = JS_TLITSTR;
 	STACK[TOP].u.litstr = "exception stack overflow";
 	++TOP;
 	js_throw(J);
@@ -25,7 +21,7 @@ static void js_trystackoverflow(js_State *J)
 
 static void js_stackoverflow(js_State *J)
 {
-	STACK[TOP].type = JS_TLITSTR;
+	STACK[TOP].t.type = JS_TLITSTR;
 	STACK[TOP].u.litstr = "stack overflow";
 	++TOP;
 	js_throw(J);
@@ -33,7 +29,7 @@ static void js_stackoverflow(js_State *J)
 
 static void js_outofmemory(js_State *J)
 {
-	STACK[TOP].type = JS_TLITSTR;
+	STACK[TOP].t.type = JS_TLITSTR;
 	STACK[TOP].u.litstr = "out of memory";
 	++TOP;
 	js_throw(J);
@@ -92,21 +88,21 @@ void js_pushvalue(js_State *J, js_Value v)
 void js_pushundefined(js_State *J)
 {
 	CHECKSTACK(1);
-	STACK[TOP].type = JS_TUNDEFINED;
+	STACK[TOP].t.type = JS_TUNDEFINED;
 	++TOP;
 }
 
 void js_pushnull(js_State *J)
 {
 	CHECKSTACK(1);
-	STACK[TOP].type = JS_TNULL;
+	STACK[TOP].t.type = JS_TNULL;
 	++TOP;
 }
 
 void js_pushboolean(js_State *J, int v)
 {
 	CHECKSTACK(1);
-	STACK[TOP].type = JS_TBOOLEAN;
+	STACK[TOP].t.type = JS_TBOOLEAN;
 	STACK[TOP].u.boolean = !!v;
 	++TOP;
 }
@@ -114,7 +110,7 @@ void js_pushboolean(js_State *J, int v)
 void js_pushnumber(js_State *J, double v)
 {
 	CHECKSTACK(1);
-	STACK[TOP].type = JS_TNUMBER;
+	STACK[TOP].t.type = JS_TNUMBER;
 	STACK[TOP].u.number = v;
 	++TOP;
 }
@@ -125,13 +121,13 @@ void js_pushstring(js_State *J, const char *v)
 	if (n > JS_STRLIMIT)
 		js_rangeerror(J, "invalid string length");
 	CHECKSTACK(1);
-	if (n <= soffsetof(js_Value, type)) {
+	if (n <= soffsetof(js_Value, t.type)) {
 		char *s = STACK[TOP].u.shrstr;
 		while (n--) *s++ = *v++;
 		*s = 0;
-		STACK[TOP].type = JS_TSHRSTR;
+		STACK[TOP].t.type = JS_TSHRSTR;
 	} else {
-		STACK[TOP].type = JS_TMEMSTR;
+		STACK[TOP].t.type = JS_TMEMSTR;
 		STACK[TOP].u.memstr = jsV_newmemstring(J, v, n);
 	}
 	++TOP;
@@ -142,13 +138,13 @@ void js_pushlstring(js_State *J, const char *v, int n)
 	if (n > JS_STRLIMIT)
 		js_rangeerror(J, "invalid string length");
 	CHECKSTACK(1);
-	if (n <= soffsetof(js_Value, type)) {
+	if (n <= soffsetof(js_Value, t.type)) {
 		char *s = STACK[TOP].u.shrstr;
 		while (n--) *s++ = *v++;
 		*s = 0;
-		STACK[TOP].type = JS_TSHRSTR;
+		STACK[TOP].t.type = JS_TSHRSTR;
 	} else {
-		STACK[TOP].type = JS_TMEMSTR;
+		STACK[TOP].t.type = JS_TMEMSTR;
 		STACK[TOP].u.memstr = jsV_newmemstring(J, v, n);
 	}
 	++TOP;
@@ -157,7 +153,7 @@ void js_pushlstring(js_State *J, const char *v, int n)
 void js_pushliteral(js_State *J, const char *v)
 {
 	CHECKSTACK(1);
-	STACK[TOP].type = JS_TLITSTR;
+	STACK[TOP].t.type = JS_TLITSTR;
 	STACK[TOP].u.litstr = v;
 	++TOP;
 }
@@ -165,7 +161,7 @@ void js_pushliteral(js_State *J, const char *v)
 void js_pushobject(js_State *J, js_Object *v)
 {
 	CHECKSTACK(1);
-	STACK[TOP].type = JS_TOBJECT;
+	STACK[TOP].t.type = JS_TOBJECT;
 	STACK[TOP].u.object = v;
 	++TOP;
 }
@@ -181,7 +177,7 @@ void js_currentfunction(js_State *J)
 	if (BOT > 0)
 		STACK[TOP] = STACK[BOT-1];
 	else
-		STACK[TOP].type = JS_TUNDEFINED;
+		STACK[TOP].t.type = JS_TUNDEFINED;
 	++TOP;
 }
 
@@ -196,7 +192,7 @@ void *js_currentfunctiondata(js_State *J)
 
 static js_Value *stackidx(js_State *J, int idx)
 {
-	static js_Value undefined = { {0}, {0}, JS_TUNDEFINED };
+	static js_Value undefined = { { {0}, JS_TUNDEFINED } };
 	idx = idx < 0 ? TOP + idx : BOT + idx;
 	if (idx < 0 || idx >= TOP)
 		return &undefined;
@@ -208,20 +204,20 @@ js_Value *js_tovalue(js_State *J, int idx)
 	return stackidx(J, idx);
 }
 
-int js_isdefined(js_State *J, int idx) { return stackidx(J, idx)->type != JS_TUNDEFINED; }
-int js_isundefined(js_State *J, int idx) { return stackidx(J, idx)->type == JS_TUNDEFINED; }
-int js_isnull(js_State *J, int idx) { return stackidx(J, idx)->type == JS_TNULL; }
-int js_isboolean(js_State *J, int idx) { return stackidx(J, idx)->type == JS_TBOOLEAN; }
-int js_isnumber(js_State *J, int idx) { return stackidx(J, idx)->type == JS_TNUMBER; }
-int js_isstring(js_State *J, int idx) { enum js_Type t = stackidx(J, idx)->type; return t == JS_TSHRSTR || t == JS_TLITSTR || t == JS_TMEMSTR; }
-int js_isprimitive(js_State *J, int idx) { return stackidx(J, idx)->type != JS_TOBJECT; }
-int js_isobject(js_State *J, int idx) { return stackidx(J, idx)->type == JS_TOBJECT; }
-int js_iscoercible(js_State *J, int idx) { js_Value *v = stackidx(J, idx); return v->type != JS_TUNDEFINED && v->type != JS_TNULL; }
+int js_isdefined(js_State *J, int idx) { return stackidx(J, idx)->t.type != JS_TUNDEFINED; }
+int js_isundefined(js_State *J, int idx) { return stackidx(J, idx)->t.type == JS_TUNDEFINED; }
+int js_isnull(js_State *J, int idx) { return stackidx(J, idx)->t.type == JS_TNULL; }
+int js_isboolean(js_State *J, int idx) { return stackidx(J, idx)->t.type == JS_TBOOLEAN; }
+int js_isnumber(js_State *J, int idx) { return stackidx(J, idx)->t.type == JS_TNUMBER; }
+int js_isstring(js_State *J, int idx) { enum js_Type t = stackidx(J, idx)->t.type; return t == JS_TSHRSTR || t == JS_TLITSTR || t == JS_TMEMSTR; }
+int js_isprimitive(js_State *J, int idx) { return stackidx(J, idx)->t.type != JS_TOBJECT; }
+int js_isobject(js_State *J, int idx) { return stackidx(J, idx)->t.type == JS_TOBJECT; }
+int js_iscoercible(js_State *J, int idx) { js_Value *v = stackidx(J, idx); return v->t.type != JS_TUNDEFINED && v->t.type != JS_TNULL; }
 
 int js_iscallable(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	if (v->type == JS_TOBJECT)
+	if (v->t.type == JS_TOBJECT)
 		return v->u.object->type == JS_CFUNCTION ||
 			v->u.object->type == JS_CSCRIPT ||
 			v->u.object->type == JS_CCFUNCTION;
@@ -231,19 +227,19 @@ int js_iscallable(js_State *J, int idx)
 int js_isarray(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	return v->type == JS_TOBJECT && v->u.object->type == JS_CARRAY;
+	return v->t.type == JS_TOBJECT && v->u.object->type == JS_CARRAY;
 }
 
 int js_isregexp(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	return v->type == JS_TOBJECT && v->u.object->type == JS_CREGEXP;
+	return v->t.type == JS_TOBJECT && v->u.object->type == JS_CREGEXP;
 }
 
 int js_isuserdata(js_State *J, int idx, const char *tag)
 {
 	js_Value *v = stackidx(J, idx);
-	if (v->type == JS_TOBJECT && v->u.object->type == JS_CUSERDATA)
+	if (v->t.type == JS_TOBJECT && v->u.object->type == JS_CUSERDATA)
 		return !strcmp(tag, v->u.object->u.user.tag);
 	return 0;
 }
@@ -251,13 +247,13 @@ int js_isuserdata(js_State *J, int idx, const char *tag)
 int js_iserror(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	return v->type == JS_TOBJECT && v->u.object->type == JS_CERROR;
+	return v->t.type == JS_TOBJECT && v->u.object->type == JS_CERROR;
 }
 
 const char *js_typeof(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	switch (v->type) {
+	switch (v->t.type) {
 	default:
 	case JS_TSHRSTR: return "string";
 	case JS_TUNDEFINED: return "undefined";
@@ -276,7 +272,7 @@ const char *js_typeof(js_State *J, int idx)
 int js_type(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	switch (v->type) {
+	switch (v->t.type) {
 	default:
 	case JS_TSHRSTR: return JS_ISSTRING;
 	case JS_TUNDEFINED: return JS_ISUNDEFINED;
@@ -345,7 +341,7 @@ void js_toprimitive(js_State *J, int idx, int hint)
 js_Regexp *js_toregexp(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	if (v->type == JS_TOBJECT && v->u.object->type == JS_CREGEXP)
+	if (v->t.type == JS_TOBJECT && v->u.object->type == JS_CREGEXP)
 		return &v->u.object->u.r;
 	js_typeerror(J, "not a regexp");
 }
@@ -353,7 +349,7 @@ js_Regexp *js_toregexp(js_State *J, int idx)
 void *js_touserdata(js_State *J, int idx, const char *tag)
 {
 	js_Value *v = stackidx(J, idx);
-	if (v->type == JS_TOBJECT && v->u.object->type == JS_CUSERDATA)
+	if (v->t.type == JS_TOBJECT && v->u.object->type == JS_CUSERDATA)
 		if (!strcmp(tag, v->u.object->u.user.tag))
 			return v->u.object->u.user.data;
 	js_typeerror(J, "not a %s", tag);
@@ -362,9 +358,9 @@ void *js_touserdata(js_State *J, int idx, const char *tag)
 static js_Object *jsR_tofunction(js_State *J, int idx)
 {
 	js_Value *v = stackidx(J, idx);
-	if (v->type == JS_TUNDEFINED || v->type == JS_TNULL)
+	if (v->t.type == JS_TUNDEFINED || v->t.type == JS_TNULL)
 		return NULL;
-	if (v->type == JS_TOBJECT)
+	if (v->t.type == JS_TOBJECT)
 		if (v->u.object->type == JS_CFUNCTION || v->u.object->type == JS_CCFUNCTION)
 			return v->u.object;
 	js_typeerror(J, "not a function");
@@ -528,14 +524,15 @@ void jsR_unflattenarray(js_State *J, js_Object *obj) {
 			obj->properties = NULL;
 			js_throw(J);
 		}
-		for (i = 0; i < obj->u.a.length; ++i) {
+		for (i = 0; i < obj->u.a.flat_length; ++i) {
 			js_itoa(name, i);
 			ref = jsV_setproperty(J, obj, name);
 			ref->value = obj->u.a.array[i];
 		}
 		js_free(J, obj->u.a.array);
 		obj->u.a.simple = 0;
-		obj->u.a.capacity = 0;
+		obj->u.a.flat_length = 0;
+		obj->u.a.flat_capacity = 0;
 		obj->u.a.array = NULL;
 		js_endtry(J);
 	}
@@ -553,10 +550,11 @@ static int jsR_hasproperty(js_State *J, js_Object *obj, const char *name)
 		}
 		if (obj->u.a.simple) {
 			if (js_isarrayindex(J, name, &k)) {
-				if (k >= 0 && k < obj->u.a.length) {
+				if (k >= 0 && k < obj->u.a.flat_length) {
 					js_pushvalue(J, obj->u.a.array[k]);
 					return 1;
 				}
+				return 0;
 			}
 		}
 	}
@@ -626,9 +624,12 @@ static void jsR_getproperty(js_State *J, js_Object *obj, const char *name)
 static int jsR_hasindex(js_State *J, js_Object *obj, int k)
 {
 	char buf[32];
-	if (obj->type == JS_CARRAY && obj->u.a.simple && k >= 0 && k < obj->u.a.length) {
-		js_pushvalue(J, obj->u.a.array[k]);
-		return 1;
+	if (obj->type == JS_CARRAY && obj->u.a.simple) {
+		if (k >= 0 && k < obj->u.a.flat_length) {
+			js_pushvalue(J, obj->u.a.array[k]);
+			return 1;
+		}
+		return 0;
 	}
 	return jsR_hasproperty(J, obj, js_itoa(buf, k));
 }
@@ -646,19 +647,21 @@ static void jsR_setarrayindex(js_State *J, js_Object *obj, int k, js_Value *valu
 	assert(k >= 0);
 	if (newlen > JS_ARRAYLIMIT)
 		js_rangeerror(J, "array too large");
-	if (newlen > obj->u.a.length) {
-		assert(newlen == obj->u.a.length + 1);
-		if (newlen > obj->u.a.capacity) {
-			int newcap = obj->u.a.capacity;
+	if (newlen > obj->u.a.flat_length) {
+		assert(newlen == obj->u.a.flat_length + 1);
+		if (newlen > obj->u.a.flat_capacity) {
+			int newcap = obj->u.a.flat_capacity;
 			if (newcap == 0)
 				newcap = 8;
 			while (newcap < newlen)
 				newcap <<= 1;
 			obj->u.a.array = js_realloc(J, obj->u.a.array, newcap * sizeof(js_Value));
-			obj->u.a.capacity = newcap;
+			obj->u.a.flat_capacity = newcap;
 		}
-		obj->u.a.length = newlen;
+		obj->u.a.flat_length = newlen;
 	}
+	if (newlen > obj->u.a.length)
+		obj->u.a.length = newlen;
 	obj->u.a.array[k] = *value;
 }
 
@@ -678,26 +681,28 @@ static void jsR_setproperty(js_State *J, js_Object *obj, const char *name, int t
 			if (newlen > JS_ARRAYLIMIT)
 				js_rangeerror(J, "array too large");
 			if (obj->u.a.simple) {
-				if (newlen <= obj->u.a.length) {
-					obj->u.a.length = newlen;
-					return;
-				}
-				jsR_unflattenarray(J, obj);
+				obj->u.a.length = newlen;
+				if (newlen <= obj->u.a.flat_length)
+					obj->u.a.flat_length = newlen;
+			} else  {
+				jsV_resizearray(J, obj, newlen);
 			}
-			jsV_resizearray(J, obj, newlen);
 			return;
 		}
 
 		if (js_isarrayindex(J, name, &k)) {
 			if (obj->u.a.simple) {
-				if (k >= 0 && k <= obj->u.a.length) {
+				if (k >= 0 && k <= obj->u.a.flat_length) {
 					jsR_setarrayindex(J, obj, k, value);
-					return;
+				} else {
+					jsR_unflattenarray(J, obj);
+					if (obj->u.a.length < k + 1)
+						obj->u.a.length = k + 1;
 				}
-				jsR_unflattenarray(J, obj);
+			} else {
+				if (obj->u.a.length < k + 1)
+					obj->u.a.length = k + 1;
 			}
-			if (k + 1 > obj->u.a.length)
-				obj->u.a.length = k + 1;
 		}
 	}
 
@@ -771,7 +776,7 @@ readonly:
 static void jsR_setindex(js_State *J, js_Object *obj, int k, int transient)
 {
 	char buf[32];
-	if (obj->type == JS_CARRAY && obj->u.a.simple && k >= 0 && k <= obj->u.a.length) {
+	if (obj->type == JS_CARRAY && obj->u.a.simple && k >= 0 && k <= obj->u.a.flat_length) {
 		jsR_setarrayindex(J, obj, k, stackidx(J, -1));
 	} else {
 		jsR_setproperty(J, obj, js_itoa(buf, k), transient);
@@ -890,6 +895,16 @@ dontconf:
 	return 0;
 }
 
+static void jsR_delindex(js_State *J, js_Object *obj, int k)
+{
+	char buf[32];
+	/* Allow deleting last element of a simple array without unflattening */
+	if (obj->type == JS_CARRAY && obj->u.a.simple && k == obj->u.a.flat_length - 1)
+		obj->u.a.flat_length = k;
+	else
+		jsR_delproperty(J, obj, js_itoa(buf, k));
+}
+
 /* Registry, global and object property accessors */
 
 const char *js_ref(js_State *J)
@@ -897,7 +912,7 @@ const char *js_ref(js_State *J)
 	js_Value *v = stackidx(J, -1);
 	const char *s;
 	char buf[32];
-	switch (v->type) {
+	switch (v->t.type) {
 	case JS_TUNDEFINED: s = "_Undefined"; break;
 	case JS_TNULL: s = "_Null"; break;
 	case JS_TBOOLEAN:
@@ -1010,8 +1025,7 @@ void js_setindex(js_State *J, int idx, int i)
 
 void js_delindex(js_State *J, int idx, int i)
 {
-	char buf[32];
-	js_delproperty(J, idx, js_itoa(buf, i));
+	jsR_delindex(J, js_toobject(J, idx), i);
 }
 
 /* Iterator */
@@ -1224,16 +1238,23 @@ static void jsR_callscript(js_State *J, int n, js_Function *F, js_Environment *s
 
 static void jsR_callcfunction(js_State *J, int n, int min, js_CFunction F)
 {
+	int save_top;
 	int i;
 	js_Value v;
 
 	for (i = n; i < min; ++i)
 		js_pushundefined(J);
 
+	save_top = TOP;
 	F(J);
-	v = *stackidx(J, -1);
-	TOP = --BOT; /* clear stack */
-	js_pushvalue(J, v);
+	if (TOP > save_top) {
+		v = *stackidx(J, -1);
+		TOP = --BOT; /* clear stack */
+		js_pushvalue(J, v);
+	} else {
+		TOP = --BOT; /* clear stack */
+		js_pushundefined(J);
+	}
 }
 
 static void jsR_pushtrace(js_State *J, const char *name, const char *file, int line)
@@ -1434,28 +1455,49 @@ void js_throw(js_State *J)
 
 /* Main interpreter loop */
 
-static void jsR_dumpstack(js_State *J)
+static void js_dumpvalue(js_State *J, js_Value v)
 {
-	int i;
-	printf("stack {\n");
-	for (i = 0; i < TOP; ++i) {
-		putchar(i == BOT ? '>' : ' ');
-		printf("%4d: ", i);
-		js_dumpvalue(J, STACK[i]);
-		putchar('\n');
+	switch (v.t.type) {
+	case JS_TUNDEFINED: printf("undefined"); break;
+	case JS_TNULL: printf("null"); break;
+	case JS_TBOOLEAN: printf(v.u.boolean ? "true" : "false"); break;
+	case JS_TNUMBER: printf("%.9g", v.u.number); break;
+	case JS_TSHRSTR: printf("'%s'", v.u.shrstr); break;
+	case JS_TLITSTR: printf("'%s'", v.u.litstr); break;
+	case JS_TMEMSTR: printf("'%s'", v.u.memstr->p); break;
+	case JS_TOBJECT:
+		if (v.u.object == J->G) {
+			printf("[Global]");
+			break;
+		}
+		switch (v.u.object->type) {
+		case JS_COBJECT: printf("[Object %p]", (void*)v.u.object); break;
+		case JS_CARRAY: printf("[Array %p]", (void*)v.u.object); break;
+		case JS_CFUNCTION:
+			printf("[Function %p, %s, %s:%d]",
+				(void*)v.u.object,
+				v.u.object->u.f.function->name,
+				v.u.object->u.f.function->filename,
+				v.u.object->u.f.function->line);
+			break;
+		case JS_CSCRIPT: printf("[Script %s]", v.u.object->u.f.function->filename); break;
+		case JS_CCFUNCTION: printf("[CFunction %s]", v.u.object->u.c.name); break;
+		case JS_CBOOLEAN: printf("[Boolean %d]", v.u.object->u.boolean); break;
+		case JS_CNUMBER: printf("[Number %g]", v.u.object->u.number); break;
+		case JS_CSTRING: printf("[String'%s']", v.u.object->u.s.string); break;
+		case JS_CERROR: printf("[Error]"); break;
+		case JS_CARGUMENTS: printf("[Arguments %p]", (void*)v.u.object); break;
+		case JS_CITERATOR: printf("[Iterator %p]", (void*)v.u.object); break;
+		case JS_CUSERDATA:
+			printf("[Userdata %s %p]", v.u.object->u.user.tag, v.u.object->u.user.data);
+			break;
+		default: printf("[Object %p]", (void*)v.u.object); break;
+		}
+		break;
 	}
-	printf("}\n");
 }
 
-static void jsR_dumpenvironment(js_State *J, js_Environment *E, int d)
-{
-	printf("scope %d ", d);
-	js_dumpobject(J, E->variables);
-	if (E->outer)
-		jsR_dumpenvironment(J, E->outer, d+1);
-}
-
-void js_stacktrace(js_State *J)
+static void js_stacktrace(js_State *J)
 {
 	int n;
 	printf("stack trace:\n");
@@ -1473,22 +1515,29 @@ void js_stacktrace(js_State *J)
 	}
 }
 
+static void js_dumpstack(js_State *J)
+{
+	int i;
+	printf("stack {\n");
+	for (i = 0; i < TOP; ++i) {
+		putchar(i == BOT ? '>' : ' ');
+		printf("%4d: ", i);
+		js_dumpvalue(J, STACK[i]);
+		putchar('\n');
+	}
+	printf("}\n");
+}
+
 void js_trap(js_State *J, int pc)
 {
-	if (pc > 0) {
-		js_Function *F = STACK[BOT-1].u.object->u.f.function;
-		printf("trap at %d in function ", pc);
-		jsC_dumpfunction(J, F);
-	}
-	jsR_dumpstack(J);
-	jsR_dumpenvironment(J, J->E, 0);
+	js_dumpstack(J);
 	js_stacktrace(J);
 }
 
 static int jsR_isindex(js_State *J, int idx, int *k)
 {
 	js_Value *v = stackidx(J, idx);
-	if (v->type == JS_TNUMBER) {
+	if (v->t.type == JS_TNUMBER) {
 		*k = v->u.number;
 		return *k == v->u.number && *k >= 0;
 	}
@@ -1641,6 +1690,9 @@ static void jsR_run(js_State *J, js_Function *F)
 			js_pushboolean(J, b);
 			break;
 
+		case OP_SKIPARRAY:
+			js_setlength(J, -1, js_getlength(J, -1) + 1);
+			break;
 		case OP_INITARRAY:
 			js_setindex(J, -2, js_getlength(J, -2));
 			break;
@@ -1736,7 +1788,7 @@ static void jsR_run(js_State *J, js_Function *F)
 				obj = js_toobject(J, -1);
 				str = jsV_nextiterator(J, obj);
 				if (str) {
-					js_pushliteral(J, str);
+					js_pushstring(J, str);
 					js_pushboolean(J, 1);
 				} else {
 					js_pop(J, 1);

@@ -1,5 +1,4 @@
 #include "jsi.h"
-#include "jslex.h"
 #include "utf.h"
 
 JS_NORETURN static void jsY_error(js_State *J, const char *fmt, ...) JS_PRINTFLIKE(2,3);
@@ -217,7 +216,7 @@ static void textpush(js_State *J, Rune c)
 	if (c == EOF)
 		J->lexbuf.text[J->lexbuf.len++] = 0;
 	else
-	J->lexbuf.len += runetochar(J->lexbuf.text + J->lexbuf.len, &c);
+		J->lexbuf.len += runetochar(J->lexbuf.text + J->lexbuf.len, &c);
 }
 
 static char *textend(js_State *J)
