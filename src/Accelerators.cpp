@@ -420,7 +420,7 @@ void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
         return;
     }
 
-    logf("Unknown key: 0x%x, virt: 0x%x\n", virt, key);
+    logf("Unknown key: 0x%x, virt: 0x%x\n", key, virt);
     ReportIf(true);
 }
 
