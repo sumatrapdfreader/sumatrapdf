@@ -356,6 +356,8 @@ tiles of a page.
 <dd>Set X/Y resolution in dots per inch.
 <dt>Pixmap#saveAsPNG(fileName, saveAlpha)
 <dd>Save the pixmap as a PNG. Only works for Gray and RGB images.
+<dt>Pixmap#saveAsJPEG(fileName, saveAlpha, quality)
+<dd>Save the pixmap as a JPEG. Only works for Gray, RGB, and CMYK images.
 <dt>Pixmap#invert()
 <dd>Invert all pixel. All components are processed, except alpha which is unchanged.
 <dt>Pixmap#invertLuminance()
@@ -1637,7 +1639,7 @@ There are areas in MuPDF that still need bindings to access from JavaScript:
 
 <footer>
 <a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
-Copyright &copy; 2006-2018 Artifex Software Inc.
+Copyright &copy; 2006-2023 Artifex Software Inc.
 </footer>
 
 </body>

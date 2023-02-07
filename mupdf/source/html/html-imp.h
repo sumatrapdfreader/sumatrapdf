@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -140,6 +140,7 @@ enum
 	PRO_BORDER_TOP_COLOR,
 	PRO_BORDER_TOP_STYLE,
 	PRO_BORDER_TOP_WIDTH,
+	PRO_BORDER_SPACING,
 	PRO_COLOR,
 	PRO_DIRECTION,
 	PRO_DISPLAY,
@@ -261,6 +262,7 @@ struct fz_css_style_s
 	fz_css_number margin[4];
 	fz_css_number padding[4];
 	fz_css_number border_width[4];
+	fz_css_number border_spacing;
 	fz_css_number text_indent;
 	unsigned int visibility : 2;
 	unsigned int white_space : 3;

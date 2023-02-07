@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -72,7 +72,7 @@ static const char *html_default_css =
 "style{display:none}"
 "sub{font-size:0.83em;vertical-align:sub}"
 "sup{font-size:0.83em;vertical-align:super}"
-"table{display:table}"
+"table{display:table;border-spacing:2px}"
 "tbody{display:table-row-group}"
 "td{display:table-cell;padding:1px}"
 "tfoot{display:table-footer-group}"

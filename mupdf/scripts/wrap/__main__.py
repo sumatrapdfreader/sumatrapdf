@@ -1650,7 +1650,7 @@ def build( build_dirs, swig_command, args):
                         # The swig-generated .cpp file must exist at
                         # this point.
                         #
-                        cpp_path = 'platform/csharp/mupdfcpp_swig.cpp'
+                        cpp_path = f'{build_dirs.dir_mupdf}/platform/csharp/mupdfcpp_swig.cpp'
                         assert os.path.exists(cpp_path), f'SWIG-generated file does not exist: {cpp_path}'
 
                         jlib.log('Building mupdfcsharp project')
@@ -1736,7 +1736,7 @@ def build( build_dirs, swig_command, args):
                         # clang needs around 2G on OpenBSD.
                         #
                         soft, hard = resource.getrlimit( resource.RLIMIT_DATA)
-                        required = 2 * 2**30
+                        required = 3 * 2**30
                         if soft < required:
                             if hard < required:
                                 jlib.log( 'Warning: RLIMIT_DATA {hard=} is less than {required=}.')
@@ -2346,16 +2346,16 @@ def main2():
                 env_extra, command_prefix = python_settings(build_dirs)
                 script_py = os.path.relpath( f'{build_dirs.dir_mupdf}/scripts/mupdfwrap_gui.py')
                 if arg == '--test-python-gui':
-                    env_extra[ 'MUPDF_trace'] = '0'
-                    env_extra[ 'MUPDF_check_refs'] = '0'
-                    env_extra[ 'MUPDF_trace_exceptions'] = '1'
+                    #env_extra[ 'MUPDF_trace'] = '1'
+                    #env_extra[ 'MUPDF_check_refs'] = '1'
+                    #env_extra[ 'MUPDF_trace_exceptions'] = '1'
                     command = f'{command_prefix} {script_py}'
                     jlib.system( command, env_extra=env_extra, out='log', verbose=1)
 
                 else:
                     jlib.log( 'running scripts/mupdfwrap_test.py ...')
                     script_py = os.path.relpath( f'{build_dirs.dir_mupdf}/scripts/mupdfwrap_test.py')
-                    command = f'MUPDF_trace=0 MUPDF_check_refs=0 MUPDF_trace_exceptions=1 {command_prefix} {script_py}'
+                    command = f'{command_prefix} {script_py}'
                     with open( f'{build_dirs.dir_mupdf}/platform/python/mupdf_test.py.out.txt', 'w') as f:
                         jlib.system( command, env_extra=env_extra, out='log', verbose=1)
                         # Repeat with pdf_reference17.pdf if it exists.
@@ -2468,7 +2468,8 @@ def main2():
                             f'{csc} -out:{{OUT}} {{IN}}',
                             )
                     if state.state_.windows:
-                        jlib.system(f'cd {build_dirs.dir_so} && {mono} ../../{out}', verbose=1)
+                        out_rel = os.path.relpath( out, build_dirs.dir_so)
+                        jlib.system(f'cd {build_dirs.dir_so} && {mono} {out_rel}', verbose=1)
                     else:
                         command = f'LD_LIBRARY_PATH={build_dirs.dir_so} {mono} ./{out}'
                         if state.state_.openbsd:

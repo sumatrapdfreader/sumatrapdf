@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -168,6 +168,7 @@ fz_document_writer *fz_new_pdfocr_writer(fz_context *ctx, const char *path, cons
 fz_document_writer *fz_new_pdfocr_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
 void fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, fz_pdfocr_progress_fn *progress, void *);
 
+fz_document_writer *fz_new_jpeg_pixmap_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_png_pixmap_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pam_pixmap_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pnm_pixmap_writer(fz_context *ctx, const char *path, const char *options);

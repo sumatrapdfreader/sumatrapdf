@@ -1860,6 +1860,54 @@ def class_find_destructor_fns( tu, struct_name, base_name):
     return destructor_fns
 
 
+def class_constructor_default(
+        tu,
+        struct_cursor,
+        classname,
+        extras,
+        out_h,
+        out_cpp,
+        refcheck_if,
+        ):
+    '''
+    Generates constructor that sets each member to default value.
+    '''
+    if extras.pod:
+        comment = f'Default constructor, sets each member to default value.'
+    else:
+        comment = f'Default constructor, sets `m_internal` to null.'
+    out_h.write( '\n')
+    out_h.write( f'    /** {comment} */\n')
+    out_h.write( f'    FZ_FUNCTION {classname}();\n')
+
+    out_cpp.write( f'/** {comment} */\n')
+    out_cpp.write( f'FZ_FUNCTION {classname}::{classname}()\n')
+    if not extras.pod:
+        out_cpp.write( f': m_internal(nullptr)\n')
+    out_cpp.write( f'{{\n')
+    if extras.pod == 'none':
+        pass
+    elif extras.pod:
+        for c in struct_cursor.type.get_canonical().get_fields():
+            if extras.pod == 'inline':
+                c_name = f'this->{c.spelling}'
+            else:
+                c_name = f'this->m_internal.{c.spelling}'
+            if c.type.kind == state.clang.cindex.TypeKind.CONSTANTARRAY:
+                out_cpp.write( f'    memset(&{c_name}, 0, sizeof({c_name}));\n')
+            else:
+                out_cpp.write( f'    {c_name} = {{}};\n')
+    else:
+        if parse.has_refs( tu, struct_cursor.type):
+            out_cpp.write(f'    {refcheck_if}\n')
+            out_cpp.write( '    if (s_check_refs)\n')
+            out_cpp.write( '    {\n')
+            out_cpp.write(f'        s_{classname}_refs_check.add( this, __FILE__, __LINE__, __FUNCTION__);\n')
+            out_cpp.write( '    }\n')
+            out_cpp.write( '    #endif\n')
+    out_cpp.write( f'}};\n')
+
+
 def class_copy_constructor(
         tu,
         functions,
@@ -3360,7 +3408,7 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(f'    {refcheck_if}\n')
         out_cpp.write(f'    if (s_trace_director)\n')
         out_cpp.write( '    {\n')
-        out_cpp.write(f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): arg_1=" << arg_1 << " self=" << self << "\\n";\n')
+        out_cpp.write(f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): arg_0=" << arg_0 << " arg_1=" << arg_1 << " self=" << self << "\\n";\n')
         out_cpp.write( '    }\n')
         out_cpp.write( '    #endif\n')
         out_cpp.write( '    try\n')
@@ -3385,7 +3433,7 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(f'        {refcheck_if}\n')
         out_cpp.write( '        if (s_trace_director)\n')
         out_cpp.write( '        {\n')
-        out_cpp.write(f'            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): exception: " << e.what() << "\\n";\n')
+        out_cpp.write(f'            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): converting std::exception to fz_throw(): " << e.what() << "\\n";\n')
         out_cpp.write( '        }\n')
         out_cpp.write( '        #endif\n')
         out_cpp.write( '        fz_throw(arg_0, FZ_ERROR_GENERIC, "%s", e.what());\n')
@@ -3544,10 +3592,13 @@ def class_wrapper(
 
     # Constructors
     #
+    num_constructors = 0
+    have_created_default_constructor = False
+
     if constructor_fns:
         out_h.write( '\n')
         out_h.write( '    /** == Constructors. */\n')
-    num_constructors = len(constructor_fns)
+    num_constructors += len(constructor_fns)
     for fnname, cursor, duplicate_type in constructor_fns:
         # clang-6 appears not to be able to handle fn args that are themselves
         # function pointers, so for now we allow function_wrapper() to fail,
@@ -3558,6 +3609,8 @@ def class_wrapper(
         temp_out_cpp = io.StringIO()
         if state.state_.show_details(fnname):
             jlib.log('Creating constructor for {=classname fnname}')
+        if parse.get_first_arg( tu, cursor) == (None, 0):
+            have_created_default_constructor = True
         try:
             function_wrapper_class_aware(
                     tu,
@@ -3584,6 +3637,8 @@ def class_wrapper(
     # Custom constructors.
     #
     for extra_constructor in extras.constructors_extra:
+        if extra_constructor.name_args == '()':
+            have_created_default_constructor = True
         class_custom_method(
                 tu,
                 register_fn_use,
@@ -3614,6 +3669,25 @@ def class_wrapper(
     elif extras.copyable:
         out_h.write( '\n')
         out_h.write( '    /** We use default copy constructor and operator=. */\n')
+
+    if extras.constructor_default:
+        if have_created_default_constructor:
+            if 0:
+                jlib.log( 'Not creating default constructor because default custom constructor. {struct_name=}')
+        elif extras.constructor_raw == 'default':
+            if 0:
+                jlib.log( 'Not creating default constructor because default raw constructor. {struct_name=}')
+        else:
+            class_constructor_default(
+                    tu,
+                    struct_cursor,
+                    classname,
+                    extras,
+                    out_h,
+                    out_cpp,
+                    refcheck_if,
+                    )
+            num_constructors += 1
 
     # Auto-add all methods that take <struct_name> as first param, but
     # skip methods that are already wrapped in extras.method_wrappers or

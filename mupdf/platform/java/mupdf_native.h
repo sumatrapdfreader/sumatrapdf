@@ -2625,6 +2625,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setNativeAppear
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setNativeAppearanceImage
+ * Signature: (Lcom/artifex/mupdf/fitz/Image;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setNativeAppearanceImage
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    hasFileSpecification
  * Signature: ()Z
  */
@@ -4552,6 +4560,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_clearWithValue
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_saveAsPNG
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Pixmap
+ * Method:    saveAsJPEG
+ * Signature: (Ljava/lang/String;I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_saveAsJPEG
+  (JNIEnv *, jobject, jstring, jint);
 
 /*
  * Class:     com_artifex_mupdf_fitz_Pixmap

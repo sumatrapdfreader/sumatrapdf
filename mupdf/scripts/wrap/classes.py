@@ -73,9 +73,10 @@ class ClassExtra:
             class_post='',
             class_pre='',
             class_top='',
+            constructor_default=True,
+            constructor_excludes=None,
             constructor_prefixes=None,
             constructor_raw=True,
-            constructor_excludes=None,
             constructors_extra=None,
             constructors_wrappers=None,
             copyable=True,
@@ -108,6 +109,12 @@ class ClassExtra:
 
         class_top:
             Extra text at start of class definition, e.g. for enums.
+
+        constructor_default:
+            If None we set to true if `pod` is true, otherwise false. If
+            true, we create a default constructor. If `pod` is true this
+            constructor will default-initialise each member, otherwise it will
+            set `m_internal` to null.
 
         constructor_excludes:
             Lists of constructor functions to ignore.
@@ -246,11 +253,14 @@ class ClassExtra:
         '''
         if accessors is None and pod is True:
             accessors = True
+        if constructor_default is None:
+            constructor_default = pod
         self.accessors = accessors
         self.class_bottom = class_bottom
         self.class_post = class_post
         self.class_pre = class_pre
         self.class_top = class_top
+        self.constructor_default = constructor_default
         self.constructor_excludes = constructor_excludes or []
         self.constructor_prefixes = constructor_prefixes or []
         self.constructor_raw = constructor_raw
@@ -289,6 +299,7 @@ class ClassExtra:
         ret += f' class_post={self.class_post}'
         ret += f' class_pre={self.class_pre}'
         ret += f' class_top={self.class_top}'
+        ret += f' constructor_default={self.constructor_default}'
         ret += f' constructor_excludes={self.constructor_excludes}'
         ret += f' constructor_prefixes={self.constructor_prefixes}'
         ret += f' constructor_raw={self.constructor_raw}'
@@ -489,15 +500,6 @@ classextras = ClassExtras(
                         ''',
                         comment = '/* Construct using one of: fz_device_gray(), fz_device_rgb(), fz_device_bgr(), fz_device_cmyk(), fz_device_lab(). */',
                         ),
-                        ExtraConstructor(
-                        '()',
-                        '''
-                        : m_internal( NULL)
-                        {
-                        }
-                        ''',
-                        comment = '/* Sets m_internal = NULL. */',
-                        ),
                     ],
                 constructor_raw=1,
                 class_top = '''
@@ -566,24 +568,6 @@ classextras = ClassExtras(
                         '''),
                     ),
                 constructor_raw = True,
-                method_wrappers_static = [
-                    ],
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        : m_internal( NULL)
-                        {{
-                            #ifndef NDEBUG
-                            if (s_check_refs)
-                            {{
-                                s_{rename.class_('fz_device')}_refs_check.add( this, __FILE__, __LINE__, __FUNCTION__);
-                            }}
-                            #endif
-                        }}
-                        ''',
-                        comment = '/* Default constructor sets m_internal to null. */',
-                        ),
-                    ],
                 ),
 
         fz_document = ClassExtra(
@@ -909,16 +893,6 @@ classextras = ClassExtras(
 
         fz_image = ClassExtra(
                 accessors=True,
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        {{
-                            m_internal = nullptr;
-                        }}
-                        ''',
-                        '/* Construct with m_internal set to null. */',
-                        )
-                    ],
                 ),
 
         fz_irect = ClassExtra(
@@ -1265,19 +1239,6 @@ classextras = ClassExtras(
 
         fz_pdfocr_options = ClassExtra(
                 pod = 'inline',
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        {{
-                            this->compress = 0;
-                            this->strip_height = 0;
-                            this->language[0] = 0;
-                            this->datadir[0] = 0;
-                        }}
-                        ''',
-                        '/* Default constructor; sets all fields to zero or empty string. */',
-                        ),
-                    ],
                 methods_extra = [
                     ExtraMethod(
                         'void',
@@ -1356,14 +1317,6 @@ classextras = ClassExtras(
 
                     ],
                 constructors_extra = [
-                    ExtraConstructor( '()',
-                        '''
-                        : x(0), y(0)
-                        {
-                        }
-                        ''',
-                        comment = '/* Default constructor sets to (0, 0). */',
-                        ),
                     ExtraConstructor( '(float x, float y)',
                         '''
                         : x(x), y(y)
@@ -1401,16 +1354,6 @@ classextras = ClassExtras(
                     'fz_transform_quad',
                     'fz_quad_from_rect'
                     ],
-                constructors_extra = [
-                    ExtraConstructor(
-                        '()',
-                        '''
-                        : ul{0,0}, ur{0,0}, ll{0,0}, lr{0,0}
-                        {
-                        }''',
-                        comment = '/* Default constructor. */',
-                        ),
-                ],
                 pod='inline',
                 constructor_raw = True,
                 ),
@@ -1464,19 +1407,6 @@ classextras = ClassExtras(
                         }}
                         ''',
                         comment = '/* Construct from fz_unit_rect, fz_empty_rect or fz_infinite_rect. */',
-                        ),
-                    ExtraConstructor(
-                        '()',
-                        '''
-                        :
-                        x0(0),
-                        x1(0),
-                        y0(0),
-                        y1(0)
-                        {
-                        }
-                        ''',
-                        comment = '/* Default constructor initialises to (0, 0, 0, 0. */',
                         ),
                     ],
                 methods_extra = [
@@ -1581,16 +1511,6 @@ classextras = ClassExtras(
                 ),
 
         fz_shade_color_cache = ClassExtra(
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        '''
-                        : m_internal( NULL)
-                        {
-                        }
-                        ''',
-                        comment = f'/* Constructor that sets m_internal to NULL; can then be passed to {rename.class_("fz_shade")}::{rename.method("fz_shade_color_cache", "fz_paint_shade")}(). */',
-                        ),
-                    ],
                 ),
 
         # Our wrappers of the fz_stext_* structs all have a default copy
@@ -1640,14 +1560,6 @@ classextras = ClassExtras(
 
         fz_stext_options = ClassExtra(
                 constructors_extra = [
-                    ExtraConstructor( '()',
-                        '''
-                        : flags( 0)
-                        {
-                        }
-                        ''',
-                        comment = '/* Construct with .flags set to 0. */',
-                        ),
                     ExtraConstructor( '(int flags)',
                         '''
                         : flags( flags)
@@ -1834,17 +1746,6 @@ classextras = ClassExtras(
                     self_n = 6,
                     alloc = f'this->options = this;\n',
                     ),
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        {{
-                            this->filter = nullptr;
-                            this->options = nullptr;
-                        }}
-                        ''',
-                        comment = '/* Default constructor initialises all fields to null/zero. */',
-                    )
-                    ],
                 ),
 
         pdf_filter_options = ClassExtra(
@@ -1923,17 +1824,6 @@ classextras = ClassExtras(
 
         pdf_layer_config = ClassExtra(
                 pod = 'inline',
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        {{
-                            this->name = nullptr;
-                            this->creator = nullptr;
-                        }}
-                        ''',
-                        comment = '/* Default constructor sets .name and .creator to null. */',
-                        ),
-                    ],
                 ),
 
         pdf_layer_config_ui = ClassExtra(
@@ -2031,37 +1921,10 @@ classextras = ClassExtras(
                         *(({rename.class_("pdf_processor")}2**) (m_internal + 1)) = this;
                         '''),
                     ),
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        : m_internal( NULL)
-                        {{
-                            #ifndef NDEBUG
-                            if (s_check_refs)
-                            {{
-                                s_{rename.class_("pdf_processor")}_refs_check.add( this, __FILE__, __LINE__, __FUNCTION__);
-                            }}
-                            #endif
-                        }}
-                        ''',
-                        comment = '/* Sets m_internal = NULL. */',
-                        ),
-                    ],
                 ),
 
         pdf_redact_options = ClassExtra(
                 pod = 'inline',
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        {{
-                            this->black_boxes = 0;
-                            this->image_method = 0;
-                        }}
-                        ''',
-                        comment = '/* Default constructor initialises .black_boxes=0 and .image_method=0. */',
-                        ),
-                    ],
                 ),
 
         pdf_sanitize_filter_options = ClassExtra(
@@ -2073,20 +1936,6 @@ classextras = ClassExtras(
                         self_ = lambda name: f'({rename.class_("pdf_sanitize_filter_options")}2*) {name}',
                         alloc = f'this->opaque = this;\n',
                         ),
-                constructors_extra = [
-                    ExtraConstructor( '()',
-                        f'''
-                        {{
-                            this->opaque = nullptr;
-                            this->image_filter = nullptr;
-                            this->text_filter = nullptr;
-                            this->after_text_object = nullptr;
-                            this->culler = nullptr;
-                        }}
-                        ''',
-                        comment = '/* Default constructor initialises all members to null. */',
-                    )
-                    ],
                 ),
 
         pdf_write_options = ClassExtra(

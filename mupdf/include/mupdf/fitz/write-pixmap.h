@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -224,6 +224,11 @@ void fz_save_pixmap_as_pdfocr(fz_context *ctx, fz_pixmap *pixmap, char *filename
 	Save a (Greyscale or RGB) pixmap as a png.
 */
 void fz_save_pixmap_as_png(fz_context *ctx, fz_pixmap *pixmap, const char *filename);
+
+/**
+	Save a pixmap as a JPEG.
+*/
+void fz_save_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pixmap, const char *filename, int quality);
 
 /**
 	Write a (Greyscale or RGB) pixmap as a png.

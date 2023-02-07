@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -73,6 +73,7 @@ public class Pixmap
 	}
 
 	public native void saveAsPNG(String filename);
+	public native void saveAsJPEG(String filename, int quality);
 
 	public native int getX();
 	public native int getY();

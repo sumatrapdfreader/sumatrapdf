@@ -21,6 +21,7 @@ border-right,PRO_BORDER_RIGHT
 border-right-color,PRO_BORDER_RIGHT_COLOR
 border-right-style,PRO_BORDER_RIGHT_STYLE
 border-right-width,PRO_BORDER_RIGHT_WIDTH
+border-spacing,PRO_BORDER_SPACING
 border-style,PRO_BORDER_STYLE
 border-top,PRO_BORDER_TOP
 border-top-color,PRO_BORDER_TOP_COLOR

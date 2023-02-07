@@ -604,6 +604,7 @@
     <ClCompile Include="..\mupdf\source\fitz\outline.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-cbz.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-docx.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-jpeg.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-pcl.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-pclm.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-pdfocr.c" />

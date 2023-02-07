@@ -337,7 +337,7 @@ fz_colorspace *proof_cs = NULL;
 static const char *icc_filename = NULL;
 static float gamma_value = 1;
 static int invert = 0;
-static int kill_text = 0;
+static int kill = 0;
 static int band_height = 0;
 static int lowmemory = 0;
 
@@ -453,6 +453,7 @@ static int usage(void)
 		"\t-A -/-\tnumber of bits of antialiasing (0 to 8) (graphics, text)\n"
 		"\t-l -\tminimum stroked line width (in pixels)\n"
 		"\t-K\tdo not draw text\n"
+		"\t-KK\tonly draw text\n"
 		"\t-D\tdisable use of display list\n"
 		"\t-i\tignore errors\n"
 		"\t-L\tlow memory mode (avoid caching, clear objects after each page)\n"
@@ -592,6 +593,26 @@ file_level_trailers(fz_context *ctx)
 	}
 }
 
+static void apply_kill_switch(fz_device *dev)
+{
+	if (kill == 1)
+	{
+		/* kill all non-clipping text operators */
+		dev->fill_text = NULL;
+		dev->stroke_text = NULL;
+		dev->ignore_text = NULL;
+	}
+	else if (kill == 2)
+	{
+		/* kill all non-clipping path, image, and shading operators */
+		dev->fill_path = NULL;
+		dev->stroke_path = NULL;
+		dev->fill_shade = NULL;
+		dev->fill_image = NULL;
+		dev->fill_image_mask = NULL;
+	}
+}
+
 static void drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_matrix ctm, fz_rect tbounds, fz_cookie *cookie, int band_start, fz_pixmap *pix, fz_bitmap **bit)
 {
 	fz_device *dev = NULL;
@@ -608,11 +629,7 @@ static void drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_m
 			fz_clear_pixmap_with_value(ctx, pix, 255);
 
 		dev = fz_new_draw_device_with_proof(ctx, fz_identity, pix, proof_cs);
-		if (kill_text)
-		{
-			dev->fill_text = NULL;
-			dev->stroke_text = NULL;
-		}
+		apply_kill_switch(dev);
 		if (lowmemory)
 			fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 		if (alphabits_graphics == 0)
@@ -673,6 +690,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			fz_write_printf(ctx, out, "<page mediabox=\"%g %g %g %g\">\n",
 					tmediabox.x0, tmediabox.y0, tmediabox.x1, tmediabox.y1);
 			dev = fz_new_trace_device(ctx, out);
+			apply_kill_switch(dev);
 			if (output_format == OUT_OCR_TRACE)
 			{
 				pre_ocr_dev = dev;
@@ -719,6 +737,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			fz_write_printf(ctx, out, "<page mediabox=\"%g %g %g %g\">\n",
 					tmediabox.x0, tmediabox.y0, tmediabox.x1, tmediabox.y1);
 			dev = fz_new_xmltext_device(ctx, out);
+			apply_kill_switch(dev);
 			if (list)
 				fz_run_display_list(ctx, list, dev, ctm, fz_infinite_rect, cookie);
 			else
@@ -750,6 +769,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			tmediabox = fz_transform_rect(mediabox, ctm);
 
 			dev = fz_new_bbox_device(ctx, &bbox);
+			apply_kill_switch(dev);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 			if (list)
@@ -799,6 +819,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			tmediabox = fz_transform_rect(mediabox, ctm);
 			text = fz_new_stext_page(ctx, tmediabox);
 			dev = fz_new_stext_device(ctx, text, &stext_options);
+			apply_kill_switch(dev);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 			if (output_format == OUT_OCR_TEXT ||
@@ -876,6 +897,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			pdf_obj *page_obj;
 
 			dev = pdf_page_write(ctx, pdfout, mediabox, &resources, &contents);
+			apply_kill_switch(dev);
 			if (list)
 				fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, cookie);
 			else
@@ -926,6 +948,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			}
 
 			dev = fz_new_svg_device(ctx, outs, tbounds.x1-tbounds.x0, tbounds.y1-tbounds.y0, FZ_SVG_TEXT_AS_PATH, 1);
+			apply_kill_switch(dev);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 			if (list)
@@ -1378,6 +1401,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 	{
 		int iscolor;
 		dev = fz_new_test_device(ctx, &iscolor, 0.02f, 0, NULL);
+		apply_kill_switch(dev);
 		if (lowmemory)
 			fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 		fz_try(ctx)
@@ -1961,7 +1985,7 @@ int mudraw_main(int argc, char **argv)
 		case 'U': layout_css = fz_optarg; break;
 		case 'X': layout_use_doc_css = 0; break;
 
-		case 'K': kill_text = 1; break;
+		case 'K': ++kill; break;
 
 		case 'O': spots = fz_atof(fz_optarg);
 #ifndef FZ_ENABLE_SPOT_RENDERING

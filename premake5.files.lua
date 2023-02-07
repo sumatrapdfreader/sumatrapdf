@@ -901,6 +901,7 @@ function mupdf_files()
     "output.c",
     "output-cbz.c",
     "output-docx.c",
+    "output-jpeg.c",
     "output-pcl.c",
     "output-pclm.c",
     "output-pdfocr.c",

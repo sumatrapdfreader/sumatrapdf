@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -3753,6 +3753,19 @@ static void ffi_Pixmap_saveAsPNG(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_Pixmap_saveAsJPEG(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
+	const char *filename = js_tostring(J, 1);
+	int quality = js_isdefined(J, 2) ? js_tointeger(J, 2) : 90;
+
+	fz_try(ctx)
+		fz_save_pixmap_as_jpeg(ctx, pixmap, filename, quality);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_Pixmap_bound(js_State *J)
 {
 	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
@@ -4735,7 +4748,7 @@ static void ffi_new_Story(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	const char *user_css = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
-	double em = js_tonumber(J, 3);
+	double em = js_isdefined(J, 3) ? js_tonumber(J, 3) : 12;
 	fz_archive *arch = js_isdefined(J, 4) ? ffi_toarchive(J, 4) : NULL;
 	fz_buffer *contents = ffi_tobuffer(J, 1);
 	fz_story *story = NULL;
@@ -8976,6 +8989,7 @@ int murun_main(int argc, char **argv)
 		// Pixmap.scale()
 
 		jsB_propfun(J, "Pixmap.saveAsPNG", ffi_Pixmap_saveAsPNG, 1);
+		jsB_propfun(J, "Pixmap.saveAsJPEG", ffi_Pixmap_saveAsJPEG, 2);
 		// Pixmap.saveAsPNM, PAM, PWG, PCL
 
 		// Pixmap.halftone() -> Bitmap

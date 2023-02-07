@@ -270,7 +270,7 @@ The Python and C# MuPDF APIs
 * A C# namespace called ``mupdf``.
 
   * C# bindings are experimental as of 2021-10-14.
-* Generated from the C++ MuPDF API's header files, so inherits the abstractions of the C++ API:
+* Auto-generated from the C++ MuPDF API using SWIG, so inherits the abstractions of the C++ API:
 
   * No ``fz_context*`` arguments.
   * Automatic reference counting, so no need to call ``fz_keep_*()`` or ``fz_drop_*()``, and we have value-semantics for class instances.
@@ -290,7 +290,7 @@ The Python and C# MuPDF APIs
 
   * This works for classes where the C++ API defines a ``to_string()`` method as described above.
 
-    * Python classes will have a ``__str__()`` method.
+    * Python classes will have a ``__str__()`` method, and an identical ``__repr__()`` method.
     * C# classes will have a ``ToString()`` method.
 
 * Uses SWIG Director classes to allow C function pointers in MuPDF structs to call Python code.
@@ -406,6 +406,13 @@ Changelog
 [Note that this is only for changes to the generation of the C++/Python/C#
 APIs; changes to the main MuPDF API are not detailed here.]
 
+* **2023-02-03**:
+
+  * Provide a default constructor for all wrapper classes.
+  * Added Python ``__repr__()`` methods for POD classes, identical to the
+    existing ``__str__()`` methods.
+  * Fixed handling of exceptions in Python SWIG Director callbacks.
+
 * **2023-01-20**:
 
   * Don't disable SWIG Directors on Windows.
@@ -477,7 +484,7 @@ APIs; changes to the main MuPDF API are not detailed here.]
   **mupdf-1.19.0** git 58e2b82bf7d1e7), with pre-built Wheels for Windows and
   Linux. See: https://pypi.org/project/mupdf
 
-  Details
+  **Details**
   |expand_begin|
 
   * Use SWIG Director classes to support MuPDF structs that contain fn
@@ -580,7 +587,7 @@ APIs; changes to the main MuPDF API are not detailed here.]
 * **2021-05-21**: First release of Python package, **mupdf-1.18.0.20210521.1738**,
   on pypi.org with pre-built Wheels for Windows and Linux.
 
-  Details
+  **Details**
   |expand_begin|
   * Changes that apply to both C++ and Python bindings:
 
@@ -954,9 +961,9 @@ In generated C++ code:
 When building ``mupdfcpp.dll`` on Windows we link with the auto-generated
 ``platform/c++/windows_mupdf.def`` file; this lists all C public global data.
 
-For reasons that are not fully understood, we don't seem to need to tag C
-functions with `FZ_FUNCTION`, but this is required for C++ functions otherwise
-we get unresolved symbols when building MuPDF client code.
+For reasons that are not fully understood, we don't seem to need to tag
+C functions with ``FZ_FUNCTION``, but this is required for C++ functions
+otherwise we get unresolved symbols when building MuPDF client code.
 
 Building the DLLs
 -----------------
@@ -1024,31 +1031,8 @@ Wrappers for a MuPDF function ``fz_foo()`` are available in multiple forms:
     instead of pointers to MuPDF structs.
 
 
-POD Wrapper classes
--------------------
-
-Class wrappers for MuPDF structs default to having a ``m_internal`` member which
-points to an instance of the wrapped struct. This works well for MuPDF structs
-which support reference counting, because we can automatically create copy
-constructors, ``operator=`` functions and destructors that call the associated
-``fz_keep_*()`` and ``fz_drop_*()`` functions.
-
-However where a MuPDF struct does not support reference counting and contains
-simple data, it is not safe to copy a pointer to the struct, so the class
-wrapper will be a POD class. This is done in one of two ways:
-
-* ``m_internal`` is an instance of the MuPDF struct, not a pointer.
-
-  * Sometimes we provide members that give direct access to fields in
-    ``m_internal``.
-
-* An 'inline' POD - there is no ``m_internal`` member; instead the wrapper class
-  contains the same members as the MuPDF struct. This can be a little more
-  convenient to use.
-
-
-Wrapper class constructors
---------------------------
+Constructors using MuPDF functions
+----------------------------------
 
 Wrapper class constructors are created for each MuPDF function that returns an
 instance of a MuPDF struct.
@@ -1070,22 +1054,55 @@ We cope with this in two ways:
 
 
 Default constructors
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
-Some POD classes have a default constructor that sets the various fields to
-default values.
+All wrapper classes have a default constructor.
 
-Where it is useful, non-POD wrapper classes can have a default constructor that
-sets ``m_internal`` to null.
+* For POD classes each member is set to a default value with ``this->foo =
+  {};``. Arrays are initialised by setting all bytes to zero using
+  ``memset()``.
+* For non-POD classes, class member ``m_internal`` is set to ``nullptr``.
+* Some classes' default constructors are customized, for example:
+
+  * The default constructor for ``fz_color_params`` wrapper
+    ``mupdf::FzColorParams`` sets state to a copy of
+    ``fz_default_color_params``.
+  * The default constructor for ``fz_md5`` wrapper ``mupdf::FzMd5`` sets
+    state using ``fz_md5_init()``.
+  * These are described in class definition comments in
+    ``platform/c++/include/mupdf/classes.h``.
 
 
 Raw constructors
-^^^^^^^^^^^^^^^^
+----------------
 
 Many wrapper classes have constructors that take a pointer to the underlying
 MuPDF C struct. These are usually for internal use only. They do not call
 ``fz_keep_*()`` - it is expected that any supplied MuPDF struct is already
 owned.
+
+
+POD wrapper classes
+-------------------
+
+Class wrappers for MuPDF structs default to having a ``m_internal`` member which
+points to an instance of the wrapped struct. This works well for MuPDF structs
+which support reference counting, because we can automatically create copy
+constructors, ``operator=`` functions and destructors that call the associated
+``fz_keep_*()`` and ``fz_drop_*()`` functions.
+
+However where a MuPDF struct does not support reference counting and contains
+simple data, it is not safe to copy a pointer to the struct, so the class
+wrapper will be a POD class. This is done in one of two ways:
+
+* ``m_internal`` is an instance of the MuPDF struct, not a pointer.
+
+  * Sometimes we provide members that give direct access to fields in
+    ``m_internal``.
+
+* An 'inline' POD - there is no ``m_internal`` member; instead the wrapper class
+  contains the same members as the MuPDF struct. This can be a little more
+  convenient to use.
 
 
 Extra static methods
@@ -1113,8 +1130,15 @@ can work.
 Python/C# bindings details
 ==========================
 
-Custom methods for use by Python/C# bindings
---------------------------------------------
+
+Python differences from C API
+-----------------------------
+
+[The functions described below are also available as class methods.]
+
+
+Custom methods
+^^^^^^^^^^^^^^
 
 Python and C# code does not easily handle functions that return raw data, for example
 as an ``unsigned char*`` that is not a zero-terminated string. Sometimes we provide a
@@ -1124,17 +1148,49 @@ wrap it in a systematic way.
 For example ``Md5::fz_md5_final2()``.
 
 
+New functions
+^^^^^^^^^^^^^
+
+* ``fz_buffer_extract_copy()``: Returns copy of buffer data as a Python ``bytes``.
+* ``fz_buffer_storage_memoryview()``: Returns Python ``memoryview`` onto buffer data. Relies on buffer contents not changing.
+* ``fz_pixmap_samples2()``: Returns Python ``memoryview`` onto ``fz_pixmap`` data.
+
+
+Implemented in Python
+^^^^^^^^^^^^^^^^^^^^^
+
+* ``fz_format_output_path()``
+* ``pdf_dict_getl()``
+* ``pdf_dict_putl()``
+
+
+Non-standard API or implementation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``fz_buffer_extract()``: Returns a *copy* of the original buffer data as a Python ``bytes``. Still clears the buffer.
+* ``fz_convert_color()``: No ``float* fv`` param, instead returns ``(rgb0, rgb1, rgb2, rgb3)``.
+* ``fz_fill_text()``: ``color`` arg is tuple/list of 1-4 floats.
+* ``fz_new_buffer_from_copied_data()``: Takes Python ``bytes`` instance.
+* ``fz_set_error_callback()``: Takes a Python callable; no ``void* user`` arg.
+* ``fz_set_warning_callback()``: Takes a Python callable; no ``void* user`` arg.
+* ``fz_warn()``: Takes single Python ``str`` arg.
+* ``ll_fz_convert_color()``: No ``float* fv`` param, instead returns ``(rgb0, rgb1, rgb2, rgb3)``.
+* ``ll_pdf_set_annot_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
+* ``ll_pdf_set_annot_interior_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
+* ``pdf_dict_putl_drop()``: Always raises exception because not useful with automatic ref-counts.
+* ``pdf_field_name()``: Uses extra C++ function ``pdf_field_name2()`` which returns ``std::string`` by value.
+* ``pdf_set_annot_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
+* ``pdf_set_annot_interior_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
+
+
 Making MuPDF function pointers call Python code
 -----------------------------------------------
 
+Overview
+^^^^^^^^
+
 For MuPDF structs with function pointers, we provide a second C++ wrapper
 class for use by the Python bindings.
-
-Limitations:
-
-* Problems have been seen on Windows when using these callbacks.
-
-Description:
 
 * The second wrapper class has a ``2`` suffix, for example ``PdfFilterOptions2``.
 
@@ -1149,20 +1205,17 @@ Description:
   to remove the need to do this.]
 
 * It may be possible to use similar techniques in C# but this has not been
-  tested.
+  tried.
 
-These Python callbacks have args that are more low-level than in the rest of
-the Python API:
+
+Callback args
+^^^^^^^^^^^^^
+
+Python callbacks have args that are more low-level than in the rest of the
+Python API:
 
 * Callbacks generally have a first arg that is a SWIG representation of a MuPDF
   ``fz_context*``.
-
-  * This is provided so that callbacks are able to call MuPDF C function
-    pointers (which generally take a ``fz_context *ctx`` arg).
-
-  * However as of 2022-06-03 if the C function throws a MuPDF exception, it
-    will not be translated into a C++/Python exception, and so will probably
-    crash the process.
 
 * Where the underlying MuPDF function pointer has an arg that is a pointer to
   an MuPDF struct, unlike elsewhere in the MuPDF bindings we do not translate
@@ -1176,11 +1229,20 @@ the Python API:
     destructor will call ``fz_drop_*()``.
 
   * It might be safe to create an wrapper class instance using an explicit call
-    to ``mupdf.fz_keep_*()``, but this has not been tested.
+    to ``mupdf.fz_keep_*()``, but this has not been tried.
+
+* As of 2023-02-03, exceptions from Python callbacks are propagated back
+  through the Python, C++, C, C++ and Python layers. The resulting Python
+  exception will have the original exception text, but the original Python
+  backtrace is lost.
+
+
+Example
+^^^^^^^
 
 Here is an example PDF filter written in Python that removes alternating items:
 
-Details
+**Details**
 
 |expand_begin|
 
@@ -1216,46 +1278,6 @@ Details
         document.pdf_save_document('foo.pdf', mupdf.PdfWriteOptions())
 
 |expand_end|
-
-
-Python differences from C API
------------------------------
-
-[The functions listed below are also available as class methods.]
-
-New functions
-^^^^^^^^^^^^^
-
-* ``fz_buffer_extract_copy()``: Returns copy of buffer data as a Python ``bytes``.
-* ``fz_buffer_storage_memoryview()``: Returns Python ``memoryview`` onto buffer data. Relies on buffer contents not changing.
-* ``fz_pixmap_samples2()``: Returns Python ``memoryview`` onto ``fz_pixmap`` data.
-
-
-Implemented in Python
-^^^^^^^^^^^^^^^^^^^^^
-
-* ``fz_format_output_path()``
-* ``pdf_dict_getl()``
-* ``pdf_dict_putl()``
-
-
-Non-standard API or implementation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* ``fz_buffer_extract()``: Returns a *copy* of the original buffer data as a Python ``bytes``. Still clears the buffer.
-* ``fz_convert_color()``: No ``float *fv`` param, instead returns ``(rgb0, rgb1, rgb2, rgb3)``.
-* ``fz_fill_text()``: ``color`` arg is tuple/list of 1-4 floats.
-* ``fz_new_buffer_from_copied_data()``: Takes Python ``bytes`` instance.
-* ``fz_set_error_callback()``: Takes a Python callable; no ``void* user`` arg.
-* ``fz_set_warning_callback()``: Takes a Python callable; no ``void* user`` arg.
-* ``fz_warn()``: Takes single Python ``str`` arg.
-* ``ll_fz_convert_color()``: No ``float *fv`` param, instead returns ``(rgb0, rgb1, rgb2, rgb3)``.
-* ``ll_pdf_set_annot_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
-* ``ll_pdf_set_annot_interior_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
-* ``pdf_dict_putl_drop()``: Always raises exception because not useful with automatic ref-counts.
-* ``pdf_field_name()``: Uses extra C++ function ``pdf_field_name2()`` which returns ``std::string`` by value.
-* ``pdf_set_annot_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
-* ``pdf_set_annot_interior_color()``: Takes single ``color`` arg which must be float or tuple of 1-4 floats.
 
 
 Artifex Licensing

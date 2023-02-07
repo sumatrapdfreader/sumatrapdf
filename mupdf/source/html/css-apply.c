@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1361,6 +1361,8 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 
 	style->color = color_from_property(match, PRO_COLOR, black);
 	style->background_color = color_from_property(match, PRO_BACKGROUND_COLOR, transparent);
+
+	style->border_spacing = number_from_property(match, PRO_BORDER_SPACING, 0, N_LENGTH);
 
 	style->border_style_0 = border_style_from_property(match, PRO_BORDER_TOP_STYLE);
 	style->border_style_1 = border_style_from_property(match, PRO_BORDER_RIGHT_STYLE);

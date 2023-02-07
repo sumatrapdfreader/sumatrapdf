@@ -218,7 +218,7 @@ static fz_css_value *fz_new_css_value(fz_context *ctx, fz_pool *pool, int type, 
 
 static void css_lex_next(struct lexbuf *buf)
 {
-	buf->s += fz_chartorune(&buf->c, buf->s);
+	buf->s += fz_chartorune(&buf->c, (const char *)buf->s);
 	if (buf->c == '\n')
 		++buf->line;
 	buf->lookahead = EOF;
@@ -654,8 +654,8 @@ static fz_css_value *parse_expr(struct lexbuf *buf)
 			white(buf);
 			if (buf->lookahead != ';')
 			{
-			tail = tail->next = fz_new_css_value(buf->ctx, buf->pool, ',', ",");
-			tail = tail->next = parse_term(buf);
+				tail = tail->next = fz_new_css_value(buf->ctx, buf->pool, ',', ",");
+				tail = tail->next = parse_term(buf);
 			}
 		}
 		else if (accept(buf, '/'))
