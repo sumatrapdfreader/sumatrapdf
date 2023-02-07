@@ -31,7 +31,9 @@
     V(VK_UP, "Up")                  \
     V(VK_DOWN, "Down")              \
     V(VK_NEXT, "PageDown")          \
+    V(VK_NEXT, "PgDown")            \
     V(VK_PRIOR, "PageUp")           \
+    V(VK_PRIOR, "PgUp")             \
     V(VK_BACK, "Back")              \
     V(VK_BACK, "Backspace")         \
     V(VK_DELETE, "Del")             \
