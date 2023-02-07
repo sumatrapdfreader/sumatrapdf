@@ -1325,20 +1325,18 @@ HFONT GetDefaultGuiFontOfSize(int size) {
     return fnt;
 }
 
-HFONT GetUserGuiFont(int size, int weight_offset, char* fontname_utf8) {
+HFONT GetUserGuiFont(int size, int weightOffset, char* fontName) {
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
-    if (fontname_utf8 && !str::EqI(fontname_utf8, "automatic")) {
-        auto fontname_length = strlen(fontname_utf8);
-        
-        auto length = MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, (int)fontname_length, nullptr, 0);
-        
-        MultiByteToWideChar(CP_UTF8, 0, fontname_utf8, (int)fontname_length, ncm.lfMessageFont.lfFaceName, length);
-        ncm.lfMessageFont.lfFaceName[length] = L'\0';
+    if (fontName && !str::EqI(fontName, "automatic")) {
+        TempWstr fontNameW = ToWstrTemp(fontName);
+        WCHAR* dest = ncm.lfMessageFont.lfFaceName;
+        int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
+        StrCatBuffW(dest, fontNameW, cchDestBufSize);
     }
-    ncm.lfMessageFont.lfWeight += weight_offset;
+    ncm.lfMessageFont.lfWeight += weightOffset;
     HFONT fnt = CreateFontIndirectW(&ncm.lfMessageFont);
     return fnt;
 }

@@ -696,8 +696,8 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     int dx = boxWidth;
     int dy = iconDy + 2;
     DWORD exStyle = 0;
-    HWND pageBg =
-        CreateWindowExW(exStyle, WC_STATICW, L"", style | WS_BORDER, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    HWND pageBg = CreateWindowExW(exStyle, WC_STATICW, L"", style | WS_BORDER, 0, 1, dx, dy, hwndToolbar,
+                                  (HMENU) nullptr, h, nullptr);
     HWND label = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
     HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
 

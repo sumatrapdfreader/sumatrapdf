@@ -1588,7 +1588,7 @@ static void scheduleReloadTab(WindowTab* tab) {
     });
 }
 
-// return true if adjustd path 
+// return true if adjustd path
 static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     const char* path = args->FilePath();
     if (DocumentPathExists(path)) {

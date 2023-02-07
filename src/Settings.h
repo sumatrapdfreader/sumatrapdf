@@ -694,12 +694,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), sizeof(gGlobalPrefsFields)/sizeof(FieldInfo)-1, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), sizeof(gGlobalPrefsFields) / sizeof(FieldInfo) - 1, gGlobalPrefsFields,
     "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDef"
     "aults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSessi"
     "on\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExit"
     "\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar\0ShowF"
-    "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0TreeFontName\0SmoothScroll\0ShowStartPage\0"
+    "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0TreeFon"
+    "tName\0SmoothScroll\0ShowStartPage\0"
     "CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0Sess"
     "ionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 

@@ -1,9 +1,9 @@
 #include "utils/BaseUtil.h"
 
 /* Enable C preprocessor wrappers for COM methods in <objidl.h> */
-//#ifndef COBJMACROS
-//#define COBJMACROS
-//#endif
+// #ifndef COBJMACROS
+// #define COBJMACROS
+// #endif
 #include <dcommon.h>
 #include <d2dbasetypes.h>
 #include <d2derr.h>
