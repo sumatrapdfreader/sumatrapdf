@@ -2384,7 +2384,7 @@ static IPageElement* NewFzComment(const char* comment, int pageNo, RectF rect) {
     return res;
 }
 
-// TODO: must be in try/catch
+// must be called inside fz_try
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
@@ -2399,6 +2399,70 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     return NewFzComment(s, pageNo, rd);
 }
 
+// must be called inside fz_try
+static void MakePageElementCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* annot, int pageNo,
+                                                        Vec<IPageElement*>& comments) {
+    auto tp = pdf_annot_type(ctx, annot);
+    const char* contents = pdf_annot_contents(ctx, annot); // don't free
+    if (str::Len(contents) > 128) {
+        contents = str::DupTemp(contents, 128);
+    }
+    bool isContentsEmpty = str::IsEmpty(contents);
+    const char* label = pdf_annot_field_label(ctx, annot); // don't free
+    bool isLabelEmpty = str::IsEmpty(label);
+    int flags = pdf_annot_field_flags(ctx, annot);
+    bool isEmpty = isContentsEmpty && isLabelEmpty;
+
+    const char* tpStr = pdf_string_from_annot_type(ctx, tp);
+    logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr, contents,
+         label);
+
+    if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
+        logf("found file attachment annotation\n");
+
+        pdf_embedded_file_params fileParams = {};
+        pdf_obj* fs = pdf_annot_filespec(ctx, annot);
+        int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
+        pdf_get_embedded_file_params(ctx, fs, &fileParams);
+        const char* attname = fileParams.filename;
+        fz_rect rect = pdf_bound_annot(ctx, annot);
+        if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
+            return;
+        }
+
+        logf("attachment: %s, num: %d\n", attname, num);
+
+        auto dest = new PageDestination();
+        // TODO: kindDestinationAttachment ?
+        dest->kind = kindDestinationLaunchEmbedded;
+        dest->value = str::Dup(attname);
+
+        auto el = new PageElementDestination(dest);
+        el->pageNo = pageNo;
+        el->rect = ToRectF(rect);
+
+        comments.Append(el);
+        // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+        // for saving the attachment to a file
+        // TODO: expose /Contents in addition to the file path
+        return;
+    }
+
+    if (!isEmpty && tp != PDF_ANNOT_FREE_TEXT) {
+        auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+        comments.Append(comment);
+        return;
+    }
+
+    if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
+        bool isReadOnly = flags & PDF_FIELD_IS_READ_ONLY;
+        if (!isReadOnly) {
+            auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+            comments.Append(comment);
+        }
+    }
+}
+
 static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
     Vec<IPageElement*>& comments = pageInfo->comments;
 
@@ -2411,64 +2475,10 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
 
     pdf_annot* annot;
     for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
-        auto tp = pdf_annot_type(ctx, annot);
-        const char* contents = pdf_annot_contents(ctx, annot); // don't free
-        if (str::Len(contents) > 128) {
-            contents = str::DupTemp(contents, 128);
+        fz_try(ctx) {
+            MakePageElementCommentsFromAnnotationsInner(ctx, annot, pageNo, comments);
         }
-        bool isContentsEmpty = str::IsEmpty(contents);
-        const char* label = pdf_annot_field_label(ctx, annot); // don't free
-        bool isLabelEmpty = str::IsEmpty(label);
-        int flags = pdf_annot_field_flags(ctx, annot);
-        bool isEmpty = isContentsEmpty && isLabelEmpty;
-
-        const char* tpStr = pdf_string_from_annot_type(ctx, tp);
-        logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr,
-             contents, label);
-
-        if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
-            logf("found file attachment annotation\n");
-
-            pdf_embedded_file_params fileParams = {};
-            pdf_obj* fs = pdf_annot_filespec(ctx, annot);
-            int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
-            pdf_get_embedded_file_params(ctx, fs, &fileParams);
-            const char* attname = fileParams.filename;
-            fz_rect rect = pdf_bound_annot(ctx, annot);
-            if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
-                continue;
-            }
-
-            logf("attachment: %s, num: %d\n", attname, num);
-
-            auto dest = new PageDestination();
-            // TODO: kindDestinationAttachment ?
-            dest->kind = kindDestinationLaunchEmbedded;
-            dest->value = str::Dup(attname);
-
-            auto el = new PageElementDestination(dest);
-            el->pageNo = pageNo;
-            el->rect = ToRectF(rect);
-
-            comments.Append(el);
-            // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-            // for saving the attachment to a file
-            // TODO: expose /Contents in addition to the file path
-            continue;
-        }
-
-        if (!isEmpty && tp != PDF_ANNOT_FREE_TEXT) {
-            auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-            comments.Append(comment);
-            continue;
-        }
-
-        if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
-            bool isReadOnly = flags & PDF_FIELD_IS_READ_ONLY;
-            if (!isReadOnly) {
-                auto comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-                comments.Append(comment);
-            }
+        fz_catch(ctx) {
         }
     }
 
