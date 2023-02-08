@@ -453,6 +453,9 @@ function libjpeg_turbo_files()
     "jerror.c", "jfdctflt.c", "jfdctint.c", "jidctflt.c", "jidctfst.c",
     "jidctint.c", "jquant1.c", "jquant2.c", "jutils.c", "jmemmgr.c", "jmemnobs.c",
     "jaricom.c", "jdarith.c", "jfdctfst.c", "jdphuff.c", "jidctred.c",
+    "jcapimin.c", "jcapistd.c", "jcarith.c", "jccoefct.c", "jccolor.c",
+    "jcdctmgr.c", "jchuff.c", "jcinit.c", "jcmainct.c", "jcmarker.c",
+    "jcmaster.c", "jcparam.c", "jcprepct.c", "jcsample.c", "jcphuff.c"
   })
 
   --to build non-assembly version, use this:

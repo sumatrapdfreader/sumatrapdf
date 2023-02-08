@@ -770,7 +770,52 @@
     <ClCompile Include="..\ext\libjpeg-turbo\jaricom.c">
       <Filter>libjpeg-turbo</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcapimin.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcapistd.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcarith.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jccoefct.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jccolor.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcdctmgr.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jchuff.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcinit.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcmainct.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcmarker.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcmaster.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libjpeg-turbo\jcomapi.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcparam.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcphuff.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcprepct.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jcsample.c">
       <Filter>libjpeg-turbo</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libjpeg-turbo\jdapimin.c">
