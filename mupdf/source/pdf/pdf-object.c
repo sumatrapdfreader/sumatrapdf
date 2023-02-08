@@ -3256,7 +3256,8 @@ pdf_dict_get_inheritable_imp(fz_context *ctx, pdf_obj *node, pdf_obj *key, int d
 		return val;
 	if (pdf_cycle(ctx, &cycle, cycle_up, node))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in tree (parents)");
-	if (depth > 100)
+	/* SumatraPDF */
+	if (depth > 600)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "too much recursion in tree (parents)");
 	node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
 	if (node)
@@ -3279,7 +3280,8 @@ pdf_dict_getp_inheritable_imp(fz_context *ctx, pdf_obj *node, const char *path, 
 		return val;
 	if (pdf_cycle(ctx, &cycle, cycle_up, node))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in tree (parents)");
-	if (depth > 100)
+	/* SumatraPDF */
+	if (depth > 600)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "too much recursion in tree (parents)");
 	node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
 	if (node)
