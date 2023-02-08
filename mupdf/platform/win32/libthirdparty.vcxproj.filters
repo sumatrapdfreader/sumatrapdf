@@ -231,6 +231,9 @@
     <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\function_list.c">
       <Filter>libopenjpeg</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\ht_dec.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\image.c">
       <Filter>libopenjpeg</Filter>
     </ClCompile>
@@ -429,6 +432,9 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer-verify.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer-serialize.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
@@ -483,40 +489,40 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-name.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-arabic.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-arabic.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-default.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-default.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-hangul.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-hangul.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-hebrew.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-hebrew.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-indic.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-indic.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-khmer.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-khmer.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-myanmar.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-myanmar.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-thai.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-syllabic.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-use.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-thai.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-use-table.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-use.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-vowel-constraints.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-vowel-constraints.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-fallback.cc">
@@ -573,7 +579,7 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-plan.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-indic-table.cc">
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shaper-indic-table.cc">
       <Filter>harfbuzz</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\gumbo-parser\src\attribute.c">
@@ -695,6 +701,54 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\mujs\utftype.c">
       <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\ht_dec.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftfstype.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcapimin.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcapistd.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcarith.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jccoefct.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jccolor.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcdctmgr.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jchuff.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcinit.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcmainct.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcmarker.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcmaster.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcparam.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcprepct.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcsample.c">
+      <Filter>libjpeg</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

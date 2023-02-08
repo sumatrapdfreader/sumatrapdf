@@ -55,6 +55,7 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\astring.c">
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\boxer.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\buffer.c">
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\document.c">
@@ -79,6 +80,7 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\outf.c">
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\rect.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\sys.c">
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\text.c">
@@ -91,11 +93,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\thirdparty\extract\include\extract.h">
     </ClInclude>
+    <ClInclude Include="..\..\thirdparty\extract\include\extract_alloc.h" />
     <ClInclude Include="..\..\thirdparty\extract\include\extract_buffer.h">
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\include\extract_buffer_impl.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\alloc.h">
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\src\astring.h">
     </ClInclude>

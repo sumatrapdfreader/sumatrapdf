@@ -75,11 +75,14 @@
     <ClCompile Include="..\..\thirdparty\extract\src\text.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\rect.c">
+      <Filter>Source Files\extract</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\boxer.c">
+      <Filter>Source Files\extract</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\thirdparty\extract\src\alloc.h">
-      <Filter>Source Files\extract</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\src\astring.h">
       <Filter>Source Files\extract</Filter>
     </ClInclude>
@@ -90,9 +93,6 @@
       <Filter>Source Files\extract</Filter>
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\src\docx_template.h">
-      <Filter>Source Files\extract</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\html.h">
       <Filter>Source Files\extract</Filter>
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\src\outf.h">
@@ -111,6 +111,9 @@
       <Filter>Header Files\extract</Filter>
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\extract\include\extract_buffer_impl.h">
+      <Filter>Header Files\extract</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\extract\include\extract_alloc.h">
       <Filter>Header Files\extract</Filter>
     </ClInclude>
   </ItemGroup>

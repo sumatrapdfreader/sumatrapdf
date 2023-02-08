@@ -128,7 +128,7 @@ resize_xref_sub(fz_context *ctx, pdf_xref *xref, int base, int newlen)
 	assert(newlen+base > xref->num_objects);
 
 	sub->table = fz_realloc_array(ctx, sub->table, newlen, pdf_xref_entry);
-	for (i = xref->num_objects-base; i < newlen; i++)
+	for (i = sub->len; i < newlen; i++)
 	{
 		sub->table[i].type = 0;
 		sub->table[i].ofs = 0;
@@ -139,6 +139,7 @@ resize_xref_sub(fz_context *ctx, pdf_xref *xref, int base, int newlen)
 		sub->table[i].obj = NULL;
 	}
 	sub->len = newlen;
+	if (newlen+base > xref->num_objects)
 	xref->num_objects = newlen+base;
 }
 
@@ -1026,32 +1027,85 @@ static pdf_xref_entry *
 pdf_xref_find_subsection(fz_context *ctx, pdf_document *doc, int start, int len)
 {
 	pdf_xref *xref = &doc->xref_sections[doc->num_xref_sections-1];
-	pdf_xref_subsec *sub;
+	pdf_xref_subsec *sub, *extend = NULL;
 	int num_objects;
+	int solidify = 0;
 
-	/* Different cases here. Case 1) We might be asking for a
-	 * subsection (or a subset of a subsection) that we already
-	 * have - Just return it. Case 2) We might be asking for a
-	 * completely new subsection - Create it and return it.
-	 * Case 3) We might have an overlapping one - Create a 'solid'
-	 * subsection and return that. */
+	if (len == 0)
+		return NULL;
+
+	/* Different cases here.
+	 * Case 1) We might be asking for a subsection (or a subset of a
+	 *         subsection) that we already have - Just return it.
+	 * Case 2) We might be asking for a subsection that overlaps (or
+	 *         extends) a subsection we already have - extend the existing one.
+	 * Case 3) We might be asking for a subsection that overlaps multiple
+	 *         existing subsections - solidify the whole set.
+	 * Case 4) We might be asking for a completely new subsection - just
+	 *         allocate it.
+	 */
 
 	/* Sanity check */
 	for (sub = xref->subsec; sub != NULL; sub = sub->next)
 	{
-		if (start >= sub->start && start + len <= sub->start + sub->len)
-			return &sub->table[start-sub->start]; /* Case 1 */
-		if (start + len > sub->start && start <= sub->start + sub->len)
-			break; /* Case 3 */
+		if (start >= sub->start && start <= sub->start + sub->len)
+		{
+			/* 'start' is in (or immediately after) 'sub' */
+			if (start + len <= sub->start + sub->len)
+			{
+				/* And so is start+len-1 - just return this! Case 1. */
+				return &sub->table[start-sub->start];
+			}
+			/* So we overlap with sub. */
+			if (extend == NULL)
+			{
+				/* Maybe we can extend sub? */
+				extend = sub;
+			}
+			else
+			{
+				/* OK, so we've already found an overlapping one. We'll need to solidify. Case 3. */
+				solidify = 1;
+				break;
+			}
+		}
+		else if (start + len > sub->start && start + len < sub->start + sub->len)
+		{
+			/* The end of the start+len range is in 'sub'. */
+			/* For now, we won't support extending sub backwards. Just take this as
+			 * needing to solidify. Case 3. */
+			solidify = 1;
+			break;
+		}
 	}
 
 	num_objects = xref->num_objects;
 	if (num_objects < start + len)
 		num_objects = start + len;
 
-	if (sub == NULL)
+	if (solidify)
 	{
-		/* Case 2 */
+		/* Case 3: Solidify the xref */
+		ensure_solid_xref(ctx, doc, num_objects, doc->num_xref_sections-1);
+		xref = &doc->xref_sections[doc->num_xref_sections-1];
+		sub = xref->subsec;
+	}
+	else if (extend)
+	{
+		/* Case 2: Extend the subsection */
+		int newlen = start + len - extend->start;
+		sub = extend;
+		sub->table = fz_realloc_array(ctx, sub->table, newlen, pdf_xref_entry);
+		memset(&sub->table[start - sub->start], 0, sizeof(pdf_xref_entry) * (newlen - sub->len));
+		sub->len = newlen;
+		if (xref->num_objects < sub->start + sub->len)
+			xref->num_objects = sub->start + sub->len;
+		if (doc->max_xref_len < sub->start + sub->len)
+			extend_xref_index(ctx, doc, sub->start + sub->len);
+	}
+	else
+	{
+		/* Case 4 */
 		sub = fz_malloc_struct(ctx, pdf_xref_subsec);
 		fz_try(ctx)
 		{
@@ -1066,16 +1120,10 @@ pdf_xref_find_subsection(fz_context *ctx, pdf_document *doc, int start, int len)
 			fz_free(ctx, sub);
 			fz_rethrow(ctx);
 		}
+		if (xref->num_objects < num_objects)
 		xref->num_objects = num_objects;
 		if (doc->max_xref_len < num_objects)
 			extend_xref_index(ctx, doc, num_objects);
-	}
-	else
-	{
-		/* Case 3 */
-		ensure_solid_xref(ctx, doc, num_objects, doc->num_xref_sections-1);
-		xref = &doc->xref_sections[doc->num_xref_sections-1];
-		sub = xref->subsec;
 	}
 	return &sub->table[start-sub->start];
 }

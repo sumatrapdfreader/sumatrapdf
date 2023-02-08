@@ -28,6 +28,13 @@
 
 #define JZ_CTX_FROM_CINFO(c) (fz_context *)((c)->client_data)
 
+static void fz_jpg_mem_init(j_common_ptr cinfo, fz_context *ctx)
+{
+	cinfo->client_data = ctx;
+}
+
+#define fz_jpg_mem_term(cinfo)
+
 #else /* SHARE_JPEG */
 
 typedef void * backing_store_ptr;
@@ -127,14 +134,6 @@ static void term_destination(j_compress_ptr cinfo)
 	fz_write_data(ctx, out, dest->buffer, datacount);
 }
 
-/* SumatraPDF */
-static void fz_jpg_mem_init(j_common_ptr cinfo, fz_context *ctx)
-{
-cinfo->client_data = ctx;
-}
-
-#define fz_jpg_mem_term(cinfo)
-
 void
 fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int quality)
 {
@@ -189,6 +188,11 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 		jpeg_set_defaults(&cinfo);
 		jpeg_set_quality(&cinfo, quality, FALSE);
 		jpeg_simple_progression(&cinfo); /* progressive JPEGs are smaller */
+
+		cinfo.density_unit = 1; /* dots/inch */
+		cinfo.X_density = pix->xres;
+		cinfo.Y_density = pix->yres;
+
 		jpeg_start_compress(&cinfo, TRUE);
 
 		if (fz_colorspace_is_subtractive(ctx, pix->colorspace))

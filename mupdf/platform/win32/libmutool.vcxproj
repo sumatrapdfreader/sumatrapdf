@@ -642,8 +642,10 @@
     <ClCompile Include="..\..\source\tools\pdfmerge.c" />
     <ClCompile Include="..\..\source\tools\pdfpages.c" />
     <ClCompile Include="..\..\source\tools\pdfposter.c" />
+    <ClCompile Include="..\..\source\tools\pdfrecolor.c" />
     <ClCompile Include="..\..\source\tools\pdfshow.c" />
     <ClCompile Include="..\..\source\tools\pdfsign.c" />
+    <ClCompile Include="..\..\source\tools\pdftrim.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libmupdf.vcxproj">

@@ -588,6 +588,9 @@
     <ClCompile Include="..\..\source\html\html-parse.c">
       <Filter>html</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\html\story-writer.c">
+      <Filter>html</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\source\fitz\encode-fax.c">
       <Filter>fitz</Filter>
     </ClCompile>
@@ -603,6 +606,9 @@
     <ClCompile Include="..\..\source\fitz\output-docx.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\output-jpeg.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\source\pdf\pdf-layout.c">
       <Filter>pdf</Filter>
     </ClCompile>
@@ -614,6 +620,15 @@
     </ClCompile>
     <ClCompile Include="..\..\source\html\xml-dom.c">
       <Filter>html</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\html\mobi.c">
+      <Filter>html</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-op-color.c">
+      <Filter>pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-shade-recolor.c">
+      <Filter>pdf</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -863,7 +878,16 @@
     <ClInclude Include="..\..\include\mupdf\fitz\story.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\story-writer.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\source\fitz\xml-imp.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\html\html-imp.h">
+      <Filter>html</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\font-table.h">
       <Filter>fitz</Filter>
     </ClInclude>
   </ItemGroup>
