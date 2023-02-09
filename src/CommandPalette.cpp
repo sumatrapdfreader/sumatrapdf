@@ -186,6 +186,10 @@ CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
     delete annotationUnderCursor;
 }
 
+/* TODO:
+    CmdCloseOtherTabs
+    CmdCloseTabsToTheRight
+*/
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsCmdInList(gBlacklistCommandsFromPalette)) {
         return false;

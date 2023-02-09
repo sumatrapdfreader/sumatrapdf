@@ -117,7 +117,7 @@ void CreateMovePatternLazy(MainWindow* win) {
 MainWindow::~MainWindow() {
     FinishStressTest(this);
 
-    CrashIf(TabsCount() > 0);
+    CrashIf(TabCount() > 0);
     // CrashIf(ctrl); // TODO: seen in crash report
     CrashIf(linkOnLastButtonDown);
     CrashIf(annotationOnLastButtonDown);
@@ -196,7 +196,7 @@ WindowTab* MainWindow::CurrentTab() const {
         return curr;
     }
 #if 0
-    int nTabs = TabsCount();
+    int nTabs = TabCount();
     CrashIf(nTabs > 0);
     if (nTabs > 0) {
         curr = GetTab(0);
@@ -206,8 +206,8 @@ WindowTab* MainWindow::CurrentTab() const {
     return nullptr;
 }
 
-int MainWindow::TabsCount() const {
-    return tabsCtrl->GetTabCount();
+int MainWindow::TabCount() const {
+    return tabsCtrl->TabCount();
 }
 
 WindowTab* MainWindow::GetTab(int idx) const {
@@ -216,7 +216,7 @@ WindowTab* MainWindow::GetTab(int idx) const {
 }
 
 int MainWindow::GetTabIdx(WindowTab* tab) const {
-    int nTabs = tabsCtrl->GetTabCount();
+    int nTabs = tabsCtrl->TabCount();
     for (int i = 0; i < nTabs; i++) {
         WindowTab* t = GetTabsUserData<WindowTab*>(tabsCtrl, i);
         if (t == tab) {
@@ -228,7 +228,7 @@ int MainWindow::GetTabIdx(WindowTab* tab) const {
 
 Vec<WindowTab*> MainWindow::Tabs() const {
     Vec<WindowTab*> res;
-    int nTabs = tabsCtrl->GetTabCount();
+    int nTabs = tabsCtrl->TabCount();
     for (int i = 0; i < nTabs; i++) {
         WindowTab* tab = GetTabsUserData<WindowTab*>(tabsCtrl, i);
         res.Append(tab);

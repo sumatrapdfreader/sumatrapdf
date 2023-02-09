@@ -232,5 +232,5 @@ global _binary_NotoSerif_Regular_otf_size
 _binary_NotoSerif_Regular_otf:
     incbin "resources/fonts/noto/NotoSans-Regular.otf"
 
-_binary_NotoSerif_Regular_otf_size
+_binary_NotoSerif_Regular_otf_size:
     dq $ - _binary_NotoSerif_Regular_otf

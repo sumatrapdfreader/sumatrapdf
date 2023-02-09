@@ -18,3 +18,5 @@ void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void UpdateTabsColors(TabsCtrl*);
 void RemoveAndDeleteTab(WindowTab*);
+void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
+                        Vec<WindowTab*>& toCloseRight);

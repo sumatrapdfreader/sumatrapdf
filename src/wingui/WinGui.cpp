@@ -3287,7 +3287,7 @@ void TooltipRemoveAll(HWND hwnd) {
 void TabsCtrl::Layout() {
     Rect rect = ClientRect(hwnd);
     int dy = rect.dy;
-    int nTabs = GetTabCount();
+    int nTabs = TabCount();
     if (nTabs == 0) {
         // logfa("TabsCtrl::Layout size: (%d, %d), no tabs\n", rect.dx, rect.dy);
         HwndScheduleRepaint(hwnd);
@@ -3343,7 +3343,7 @@ TabMouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     if (p.x < 0 || p.y < 0) {
         return res;
     }
-    int nTabs = GetTabCount();
+    int nTabs = TabCount();
     for (int i = 0; i < nTabs; i++) {
         TabInfo* ti = tabs[i];
         if (!ti->r.Contains(p)) {
@@ -3407,7 +3407,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
     TabInfo* ti;
-    int n = GetTabCount();
+    int n = TabCount();
     Rect r;
     Gdiplus::RectF rTxt;
 
@@ -3523,7 +3523,7 @@ static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
 }
 
 static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
-    int nTabs = tabsCtrl->GetTabCount();
+    int nTabs = tabsCtrl->TabCount();
     bool badState = (tab1 == tab2) || (tab1 < 0) || (tab2 < 0) || (tab1 >= nTabs) || (tab2 >= nTabs);
     if (badState) {
         logfa("tab1: %d, tab2: %d, nTabs: %d\n", tab1, tab2, nTabs);
@@ -3775,7 +3775,7 @@ Size TabsCtrl::GetIdealSize() {
     return sz;
 }
 
-int TabsCtrl::GetTabCount() {
+int TabsCtrl::TabCount() {
     int n = TabCtrl_GetItemCount(hwnd);
     return n;
 }
@@ -3812,7 +3812,7 @@ void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip)
 // returns userData because it's not owned by TabsCtrl
 UINT_PTR TabsCtrl::RemoveTab(int idx) {
     CrashIf(idx < 0);
-    CrashIf(idx >= GetTabCount());
+    CrashIf(idx >= TabCount());
     BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
     CrashIf(!ok);
     TabInfo* tab = tabs[idx];
@@ -3851,7 +3851,7 @@ int TabsCtrl::GetSelected() {
 }
 
 int TabsCtrl::SetSelected(int idx) {
-    CrashIf(idx < 0 || idx >= GetTabCount());
+    CrashIf(idx < 0 || idx >= TabCount());
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     return prevSelectedIdx;
 }

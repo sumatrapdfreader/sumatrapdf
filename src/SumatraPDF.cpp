@@ -400,7 +400,7 @@ MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
-        if (focusTab && win->TabsCount() > 1) {
+        if (focusTab && win->TabCount() > 1) {
             // bring a background tab to the foreground
             for (WindowTab* tab : win->Tabs()) {
                 if (tab != win->CurrentTab() && tab->AsFixed() && tab->AsFixed()->pdfSync &&
@@ -2184,7 +2184,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
         HwndSetText(win->hwndFrame, kSumatraWindowTitle);
-        CrashIf(win->TabsCount() != 0 || win->CurrentTab());
+        CrashIf(win->TabCount() != 0 || win->CurrentTab());
     }
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
@@ -2408,7 +2408,7 @@ void TabsOnCloseDoc(WindowTab* tab) {
 
     RemoveAndDeleteTab(tab);
     MainWindow* win = tab->win;
-    if (win->TabsCount() < 1) {
+    if (win->TabCount() < 1) {
         return;
     }
 
@@ -2449,7 +2449,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     }
 
     bool didSavePrefs = false;
-    size_t tabCount = win->TabsCount();
+    size_t tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (CanCloseWindow(win)) {
             CloseWindow(win, quitIfLast, false);
@@ -4207,7 +4207,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
 static bool FrameOnSysChar(MainWindow* win, WPARAM key) {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
     if (win->tabsVisible && ('1' <= key && key <= '9')) {
-        TabsSelect(win, key < '9' ? (int)(key - '1') : (int)win->TabsCount() - 1);
+        TabsSelect(win, key < '9' ? (int)(key - '1') : (int)win->TabCount() - 1);
         return true;
     }
     // Alt + Space opens a sys menu
@@ -4781,6 +4781,21 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdPrevTab:
             TabsOnCtrlTab(win, true);
             break;
+
+        case CmdCloseOtherTabs:
+        case CmdCloseTabsToTheRight: {
+            Vec<WindowTab*> toCloseOther;
+            Vec<WindowTab*> toCloseRight;
+            CollectTabsToClose(win, tab, toCloseOther, toCloseRight);
+            Vec<WindowTab*>& toClose = toCloseOther;
+            if (wmId == CmdCloseTabsToTheRight) {
+                toClose = toCloseRight;
+            }
+            for (WindowTab* t : toClose) {
+                CloseTab(t, false);
+            }
+            break;
+        }
 
         case CmdExit:
             OnMenuExit();

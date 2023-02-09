@@ -67,7 +67,7 @@ static void ShowTabBar(MainWindow* win, bool show) {
 }
 
 void UpdateTabWidth(MainWindow* win) {
-    int nTabs = (int)win->TabsCount();
+    int nTabs = (int)win->TabCount();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
     if (!showTabs) {
@@ -172,6 +172,26 @@ static void ShowFileInFolder(WindowTab* tab) {
     CreateProcessHelper(process, args);
 }
 
+void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
+                        Vec<WindowTab*>& toCloseRight) {
+    int nTabs = win->TabCount();
+    bool seenCurrent = false;
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* tab = win->Tabs()[i];
+        if (tab->IsAboutTab()) {
+            continue;
+        }
+        if (currTab == tab) {
+            seenCurrent = true;
+            continue;
+        }
+        toCloseOther.Append(tab);
+        if (seenCurrent) {
+            toCloseRight.Append(tab);
+        }
+    }
+}
+
 // TODO: add "Move to another window" sub-menu
 static void TabsContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
@@ -181,29 +201,18 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     if (tabIdx < 0) {
         return;
     }
-    int nTabs = tabsCtrl->GetTabCount();
+
+    int nTabs = tabsCtrl->TabCount();
     WindowTab* selectedTab = win->Tabs()[tabIdx];
     if (selectedTab->IsAboutTab()) {
         return;
     }
     POINT pt = ToPOINT(ev->mouseScreen);
     HMENU popup = BuildMenuFromMenuDef(menuDefContextTab, CreatePopupMenu(), nullptr);
+
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
-
-    for (int i = 0; i < nTabs; i++) {
-        if (i == tabIdx) {
-            continue;
-        }
-        WindowTab* tab = win->Tabs()[i];
-        if (tab->IsAboutTab()) {
-            continue;
-        }
-        toCloseOther.Append(tab);
-        if (i > tabIdx) {
-            toCloseRight.Append(tab);
-        }
-    }
+    CollectTabsToClose(win, selectedTab, toCloseOther, toCloseRight);
 
     if (toCloseOther.IsEmpty()) {
         MenuSetEnabled(popup, CmdCloseOtherTabs, false);
@@ -358,7 +367,7 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     }
 
     auto tabs = win->tabsCtrl;
-    int idx = win->TabsCount();
+    int idx = win->TabCount();
     bool useTabs = gGlobalPrefs->useTabs;
     bool noHomeTab = gGlobalPrefs->noHomeTab;
     bool createHomeTab = useTabs && !noHomeTab && (idx == 0);
@@ -394,7 +403,7 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
 // Refresh the tab's title
 void TabsOnChangedDoc(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-    CrashIf(!tab != !win->TabsCount());
+    CrashIf(!tab != !win->TabCount());
     if (!tab) {
         return;
     }
@@ -443,7 +452,7 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     if (!win) {
         return;
     }
-    int count = (int)win->TabsCount();
+    int count = (int)win->TabCount();
     if (count < 2) {
         return;
     }

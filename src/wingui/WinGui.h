@@ -762,7 +762,7 @@ struct TabsCtrl : Wnd {
 
     void SetTextAndTooltip(int idx, const char* text, const char* tooltip);
 
-    int GetTabCount();
+    int TabCount();
 
     UINT_PTR RemoveTab(int idx);
 
