@@ -226,11 +226,11 @@ __binary_CharisSIL_BoldItalic_cff_size:
 
 ; ----------
 
-global _binary_NotoSerif_Regular_otf
-global _binary_NotoSerif_Regular_otf_size
+global __binary_NotoSerif_Regular_otf
+global __binary_NotoSerif_Regular_otf_size
 
-_binary_NotoSerif_Regular_otf:
+__binary_NotoSerif_Regular_otf:
     incbin "resources/fonts/noto/NotoSans-Regular.otf"
 
-_binary_NotoSerif_Regular_otf_size
-    dq $ - _binary_NotoSerif_Regular_otf
+__binary_NotoSerif_Regular_otf_size
+    dq $ - __binary_NotoSerif_Regular_otf
