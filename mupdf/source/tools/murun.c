@@ -2786,7 +2786,7 @@ static void ffi_setUserCSS(js_State *J)
 static void ffi_new_Archive(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	const char *path = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *path = js_tostring(J, 1);
 	fz_archive *arch = NULL;
 	fz_try(ctx)
 		if (fz_is_directory(ctx, path))
@@ -2839,7 +2839,7 @@ static void ffi_Archive_hasEntry(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	fz_archive *arch = ffi_toarchive(J, 0);
-	const char *name = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *name = js_tostring(J, 1);
 	int has = 0;
 	fz_try(ctx)
 		has = fz_has_archive_entry(ctx, arch, name);
@@ -2852,7 +2852,7 @@ static void ffi_Archive_readEntry(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	fz_archive *arch = ffi_toarchive(J, 0);
-	const char *name = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *name = js_tostring(J, 1);
 	fz_buffer *buf = NULL;
 	fz_try(ctx)
 		buf = fz_read_archive_entry(ctx, arch, name);
@@ -2899,7 +2899,7 @@ static void ffi_TreeArchive_add(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	fz_archive *arch = js_touserdata(J, 0, "fz_tree_archive");
-	const char *name = js_iscoercible(J, 1) ? js_tostring(J, 1) : NULL;
+	const char *name = js_tostring(J, 1);
 	fz_buffer *buf = ffi_tobuffer(J, 2);
 	fz_try(ctx)
 		fz_tree_archive_add_buffer(ctx, arch, name, buf);

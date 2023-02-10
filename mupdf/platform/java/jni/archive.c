@@ -56,7 +56,7 @@ FUN(Archive_newNativeArchive)(JNIEnv *env, jobject self, jstring jpath)
 	const char *path = NULL;
 
 	if (!ctx) return 0;
-	if (jpath)
+	if (!jpath) jni_throw_arg(env, "path must not be null");
 		path = (*env)->GetStringUTFChars(env, jpath, NULL);
 
 	fz_try(ctx)
@@ -67,7 +67,6 @@ FUN(Archive_newNativeArchive)(JNIEnv *env, jobject self, jstring jpath)
 			arch = fz_open_archive(ctx, path);
 	}
 	fz_always(ctx)
-		if (jpath)
 			(*env)->ReleaseStringUTFChars(env, jpath, path);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
@@ -135,13 +134,12 @@ FUN(Archive_hasEntry)(JNIEnv *env, jobject self, jstring jname)
 	int has = 0;
 
 	if (!ctx || !arch) return JNI_FALSE;
-	if (jname)
+	if (!jname) jni_throw_arg(env, "name must not be null");
 		name = (*env)->GetStringUTFChars(env, jname, NULL);
 
 	fz_try(ctx)
 		has = fz_has_archive_entry(ctx, arch, name);
 	fz_always(ctx)
-		if (jname)
 			(*env)->ReleaseStringUTFChars(env, jname, name);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
@@ -158,13 +156,12 @@ FUN(Archive_readEntry)(JNIEnv *env, jobject self, jstring jname)
 	fz_buffer *buffer = NULL;
 
 	if (!ctx || !arch) return NULL;
-	if (jname)
+	if (!jname) jni_throw_arg(env, "name must not be null");
 		name = (*env)->GetStringUTFChars(env, jname, NULL);
 
 	fz_try(ctx)
 		buffer = fz_read_archive_entry(ctx, arch, name);
 	fz_always(ctx)
-		if (jname)
 			(*env)->ReleaseStringUTFChars(env, jname, name);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);

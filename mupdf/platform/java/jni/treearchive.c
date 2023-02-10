@@ -47,13 +47,12 @@ FUN(TreeArchive_add)(JNIEnv *env, jobject self, jstring jname, jobject jbuf)
 	const char *name = NULL;
 
 	if (!ctx || !arch) return;
-	if (jname)
+	if (!jname) jni_throw_arg_void(env, "name must not be null");
 		name = (*env)->GetStringUTFChars(env, jname, NULL);
 
 	fz_try(ctx)
 		fz_tree_archive_add_buffer(ctx, arch, name, buf);
 	fz_always(ctx)
-		if (jname)
 			(*env)->ReleaseStringUTFChars(env, jname, name);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
