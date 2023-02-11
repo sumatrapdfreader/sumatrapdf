@@ -17,6 +17,10 @@ TempWstr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3 = nullptr);
 TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3 = nullptr);
+
+TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith);
+
+TempStr FormatTemp(const char* fmt, ...);
 } // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);

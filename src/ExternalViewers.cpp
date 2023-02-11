@@ -321,39 +321,37 @@ bool CouldBePDFDoc(WindowTab* tab) {
     return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
-static char* FormatParams(const char* cmdLine, WindowTab* tab) {
-    // substitutions in cmdLine:
-    //  %1 : file path (else the file path is appended)
-    //  %d : directory in which file is
-    //  %p : current page number
-    AutoFreeStr params;
+// substitutions in cmdLine:
+//  %1 : file path (else the file path is appended)
+//  %d : directory in which file is
+//  %p : current page number
+static TempStr FormatParamsTemp(const char* cmdLine, WindowTab* tab) {
     if (cmdLine == nullptr) {
         cmdLine = R"("%1")";
     }
     if (str::Find(cmdLine, "%p")) {
-        AutoFreeStr pageNoStr = str::Format("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0);
-        params.Set(str::Replace(cmdLine, "%p", pageNoStr));
-        cmdLine = params;
+        int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
+        TempStr pageNoStr = str::FormatTemp("%d", pageNo);
+        cmdLine = str::ReplaceTemp(cmdLine, "%p", pageNoStr);
     }
     bool appendPath = true;
     char* path = tab->filePath;
     if (str::Find(cmdLine, "%d")) {
         TempStr dir = path::GetDirTemp(path);
-        params.Set(str::Replace(cmdLine, "%d", dir));
-        cmdLine = params;
+        cmdLine = str::ReplaceTemp(cmdLine, "%d", dir);
         appendPath = false;
     }
     if (str::Find(cmdLine, R"("%1")")) {
         // "%1", is alrady quoted so no need to add quotes
-        params.Set(str::Replace(cmdLine, "%1", path));
+        cmdLine = str::ReplaceTemp(cmdLine, "%1", path);
     } else if (str::Find(cmdLine, R"(%1)")) {
         // %1, not quoted, need to add
         char* s = str::JoinTemp("\"", path, "\"");
-        params.Set(str::Replace(cmdLine, "%1", s));
+        cmdLine = str::ReplaceTemp(cmdLine, "%1", s);
     } else if (appendPath) {
-        params.Set(str::Format(R"(%s "%s")", cmdLine, path));
+        cmdLine = str::FormatTemp(R"(%s "%s")", cmdLine, path);
     }
-    return params.StealData();
+    return (char*)cmdLine;
 }
 
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
@@ -366,7 +364,7 @@ bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     if (ev->exeFullPath == nullptr) {
         return false;
     }
-    AutoFreeStr params = FormatParams(ev->launchArgs, tab);
+    TempStr params = FormatParamsTemp(ev->launchArgs, tab);
     return LaunchFile(ev->exeFullPath, params);
 }
 
@@ -411,7 +409,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         return false;
     }
     char* cmdLine = args.ParamsTemp();
-    AutoFreeStr params = FormatParams(cmdLine, tab);
+    TempStr params = FormatParamsTemp(cmdLine, tab);
     return LaunchFile(exePath, params);
 }
 

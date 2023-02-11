@@ -684,7 +684,7 @@ size_t TrimWSInPlace(char* s, TrimOpt opt) {
     return trimmed;
 }
 
-// the result needs to be free()d
+// caller needs to str::Free() the result
 char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith) {
         return nullptr;

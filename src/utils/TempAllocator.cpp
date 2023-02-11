@@ -57,6 +57,23 @@ TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
     return Join(GetTempAllocator(), s1, s2, s3);
 }
 
+TempStr FormatTemp(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char* res = FmtV(fmt, args);
+    va_end(args);
+    TempStr tmp = DupTemp(res);
+    str::Free(res);
+    return tmp;
+}
+
+TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith) {
+    char* res = str::Replace(s, toReplace, replaceWith);
+    TempStr tmp = str::DupTemp(res);
+    str::Free(res);
+    return tmp;
+}
+
 } // namespace str
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
