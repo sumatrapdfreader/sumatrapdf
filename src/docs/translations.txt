@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e5ee3969ea708e29cecdd663bdbaf7ab2b67cf2d
+a13410f7d07d46500ad77c84e9ff4b6559ca7eae
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -90,6 +90,7 @@ fr:&Taille réelle
 hi:वास्तविक आकार
 hr:Stv&arna veličina
 hu:&Aktuális méret
+id:Ukuran Asli
 it:Dimensione &attuale
 ja:実際のサイズ(&A)
 kr:실제 크기(&A)
@@ -260,6 +261,7 @@ fr:R&evenir
 hi:&पीछे
 hr:&Natrag
 hu:&Vissza
+id:Kembali
 it:&Indietro
 ja:戻る(&B)
 kr:뒤로(&B)
@@ -294,6 +296,7 @@ fr:&Comme un livre
 hi:&बुक व्यू
 hr:&Knjiški pregled
 hu:&Könyvnézet
+id:Tampilan Buku
 it:&Libro
 ja:ブック ビュー(&B)
 kr:책처럼 보기(&B)
@@ -761,6 +764,7 @@ eu:A&urrean
 fr:&Deux pages
 hr:&Dvije stranice
 hu:Oldal&pár
+id:Menghadap
 it:Pagine a&ffiancate
 ja:見開き(&F)
 kr:두 페이지(&F)
@@ -1274,6 +1278,7 @@ eu:&Nabarmendu
 fr:&Surligner
 hr:&Istakni
 hu:&Kiemelés
+id:Menyorot
 it:Eviden&zia
 ja:ハイライト(&H)
 kr:강조(&H)
@@ -1303,6 +1308,7 @@ eu:&Azken orrialdea
 fr:&Dernière page
 hr:&Zadnja stranica
 hu:&Utolsó oldal
+id:Halaman Terakhir
 it:&Ultima pagina
 ja:最後のページ(&L)
 kr:마지막 페이지(&L)
@@ -2637,6 +2643,7 @@ eu:&Orrialde bakarra
 fr:&Une page
 hr:Jedna &stranica
 hu:&Egyetlen oldal
+id:Halaman Tunggal
 it:Pagina &singola
 ja:単一のページ(&S)
 kr:단일 페이지(&S)
@@ -5552,6 +5559,7 @@ fr:Fermer les autres onglets
 hi:अन्य टैब बंद करें
 hr:Zatvori ostale kartice
 hu:Más lapok bezárása
+id:Tutup Tab Lain
 it:Chiudi altre schede
 ja:他のタブを閉じる
 kr:다른 탭 닫기
@@ -5583,6 +5591,7 @@ fr:Fermer les onglets sur la droite
 hi:दाईं ओर के टैब बंद करें
 hr:Zatvori kartice zdesna
 hu:Jobbra lévő lapok bezárása
+id:Tutup Tab Ke Kanan
 it:Chiudi scheda sulla destra
 ja:右側のタブを閉じる
 kr:오른쪽 탭 닫기
@@ -8174,6 +8183,7 @@ fr:&Quitter
 hi:निकास
 hr:I&zlaz
 hu:&Kilépés
+id:Keluar
 it:&Esci
 ja:終了(&X)
 kr:나가기(&X)
@@ -9649,6 +9659,7 @@ fr:R&echercher...
 hi:खोजो
 hr:&Traži...
 hu:&Keresés…
+id:Pencarian
 it:&Trova
 ja:検索(&D)...
 kr:찾기(&D)...
@@ -9961,6 +9972,7 @@ eu:Finkatu &edukia
 fr:Ajuster au &contenu
 hr:Prilagodi &sadržaju
 hu:&Tartalomhoz illesztés
+id:Muat Sesuai Isi
 it:Adatta al &contenuto
 ja:内容に合わせる(&C)
 kr:내용에 맞춤(&C)
@@ -9992,6 +10004,7 @@ eu:Finkatu &orrialdea
 fr:&Page entière
 hr:&Prilagodi stranici
 hu:&Oldalhoz illesztés
+id:Muat Sesuai Halaman
 it:Adatta alla &pagina
 ja:ページに合わせる(&P)
 kr:페이지에 맞춤(&P)
@@ -10023,6 +10036,7 @@ eu:Finkatu &zabalera
 fr:Pleine &largeur
 hr: Nam&jesti po širini
 hu:&Szélességhez illesztés
+id:Muat Sesuai Lebar Halaman
 it:Adatta a &larghezza
 ja:幅に合わせる(&W)
 kr:너비에 맞춤(&W)
@@ -10717,6 +10731,7 @@ fr:Infos sur les polices
 hi:फ़ॉन्ट जानकारी प्राप्त करें
 hr:Informacije o fontovima
 hu:Betűkészlet információk lekérése
+id:Dapatkan Info Font
 it:Ottieni informazioni sui font
 ja:フォント情報を取得
 kr:글꼴 정보 확인
@@ -11989,6 +12004,7 @@ eu:Gertatzen %s ...
 fr:Chargement de %s ...
 hr:Učitavanje %s ...
 hu:Betöltés %s …
+id:Memuat %s
 it:Caricamento %s...
 kr:%s 불러오는 중 ...
 nl:Laden %s...
@@ -12418,6 +12434,7 @@ eu:&Leiho berria
 fr:Nouvelle &fenêtre
 hr:Novi p&rozor
 hu:Új &ablak
+id:Halaman Baru
 it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 kr:새 창(&W)
@@ -13181,6 +13198,10 @@ sr-rs:Отвори прилог
 ta:இணைப்பைத் திறந்திடுக
 tr:Eki aç
 uk:Відкрити вкладення
+:Open Directory in &Double Commander
+:Open Directory in &Explorer
+:Open Directory in &Total Commander
+:Open Directory in Direcotry &Opus
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -13485,70 +13506,6 @@ tw:開啟於 Foxit Reader(&F)
 uk:Відкрити у Foxit Reader
 uz:&Foxit Readerda ochish
 vn:Mở bằng Foxit Reader
-:Open in &Microsoft HTML Help
-am:Բացել Microsoft HTML Help-ում
-ar:فتح في Microsoft HTML Help
-az:Microsoft &HTML Help-də aç
-bg:Отваряне с Microsoft HTML Help
-br:Abrir no Microsoft HTML Help
-bs:Otvori u Microsoft HTML Help
-by:Адкрыць у Microsoft HTML Help
-ca-xv:Obre amb el Microsoft HTML Help
-ca:Obre amb l'Ajuda HTML de &Microsoft
-cn:在 Microsoft HTML Help 中打开(&M)
-co:Apre cù Microsoft &HTML Help
-cy:Agor yn Microsoft HTML Help
-cz:Otevřít v programu Microsoft HTML Help
-de:Mit &Microsoft HTML-Hilfe öffnen
-dk:Åbn med Microsoft HTML Help
-el:Άνοιγμα με Microsoft HTML Help
-es:Abrir con Ayuda HTML de &Microsoft
-et:Ava Microsoft HTML Helpga
-eu:Ireki Microsoft HTML Laguntzan
-fa:باز کردن در &Microsoft HTML Help
-fi:Avaa Microsoft HTML Help
-fr:Ouvrir dans Microsoft HTML Help
-fy-nl:Iepenje mei Microsoft HTML Help
-ga:Oscail i &Microsoft HTML Help
-gl:Abrir no Microsoft HTML Help
-he:פתח ב- Microsoft HTML Help
-hi:Microsoft HTML मदद में खोलें
-hr:Otvori u programu Microsoft HTML Help
-hu:Megnyitás Microsoft HTML Helpben
-id:Buka dengan Microsoft HTML Help
-it:Apri con Microsoft HTML Help
-ja:Microsoft HTML ヘルプで開く(&M)
-ka:გახსნა Microsoft HTML Help-ში
-kr:Microsoft HTML Help로 열기(&M)
-ku:Microsoft HTML کردنەوە  بەهۆی &یارمەتی
-kw:Ygeri yn Microsoft HTML Help
-lt:Atverti su &Microsoft HTML Help
-lv:Atvērt &Microsoft HTML palīdzības vadīklā
-mk:Отвори со Microsoft HTML Help
-my:Buka menggunakan &Microsoft HTML Help
-ne:Microsoft HTML Help मा &खोल्नुहोस्
-nl:Openen met Microsoft HTML Help
-nn:Opne i &Microsoft HTML-hjelp
-no:Åpne i &Microsoft HTML Help
-pl:Otwórz w &Microsoft HTML Help
-pt:Abrir no &Microsoft HTML Help
-ro:Deschide în Microsoft HTML Help
-ru:Открыть в Microsoft HTML Help
-si:Microsoft HTML Help කියවනය මගින් විවෘතකරන්න
-sk:Otvoriť v programe Microsoft HTML Help
-sl:Odpri s programom Microsoft HTML Help
-sp-rs:Otvori u programu Microsoft HTML Help
-sq:Hap në &Microsoft HTML Help
-sr-rs:Отвори у Microsoft HTML Help-у (&Х)
-sv:Öppna i Microsoft HTML Help
-ta:Microsoft HTML Help இல் திற
-th:เปิดด้วย &Microsoft HTML Help
-tl:Buksan sa Microsoft HTML Help
-tr:Microsoft HTML Help ile aç
-tw:開啟於 Microsoft HTML Help(&M)
-uk:Відкрити у Microsoft HTML Help
-uz:Microsoft HTML Helpda ochish
-vn:Mở bằng Microsoft HTML Help
 :Open in &Microsoft XPS-Viewer
 am:Բացել Microsoft XPS-Viewer-ում
 ar:فتح في Microsoft XPS-Viewer
@@ -13613,6 +13570,7 @@ tw:開啟於 Microsoft XPS-Viewer(&W)
 uk:Відкрити у Microsoft XPS-Viewer
 uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
 :P&roperties
 am:Հ&ատկություններ
 ar:الخصائص
@@ -14020,6 +13978,7 @@ eu:O&rrialdea...
 fr:Pa&ge...
 hr:St&ranica...
 hu:&Oldal…
+id:Halaman
 it:Pa&gina...
 ja:ページ(&G)...
 kr:페이지(&G)...
@@ -14748,6 +14707,7 @@ eu:Aur&kezpena
 fr:Prés&entation
 hr:Pr&ezentacija
 hu:&Bemutató
+id:Presentasi
 it:Presentazione
 ja:プレゼンテーション(&E)
 kr:프레젠테이션(&E)
@@ -15365,6 +15325,7 @@ eu:B&errizendatu...
 fr:Re&nommer...
 hr:Preime&nuj
 hu:&Átnevezés…
+id:Rubah Nama
 it:Ri&nomina...
 ja:ファイル名の変更(&N)...
 kr:이름 바꾸기(&N)...
@@ -15732,6 +15693,7 @@ eu:Itzulikatu e&zkerrera
 fr:Rotation vers la &gauche
 hr:Rotiraj &lijevo
 hu:Forgatás &balra
+id:Putar Ke Kiri
 it:Ruota a &sinistra
 ja:左に回転(&L)
 kr:왼쪽으로 돌리기(&L)
@@ -15763,6 +15725,7 @@ eu:Itzulikatu e&skuinera
 fr:Rotation vers la d&roite
 hr:&Rotiraj desno
 hu:Forgatás &jobbra
+id:Putar Ke Kanan
 it:Ruota a &destra
 ja:右に回転(&R)
 kr:오른쪽으로 돌리기(&R)
@@ -16008,6 +15971,7 @@ eu:Gorde &lastertekla...
 fr:Enregistrer le raccourci (&h)
 hr:Spre&mi prečac...
 hu:&Prancsikon mentése…
+id:Simpan
 it:Sal&va scorciatoia...
 ja:ショートカットを保存(&H)...
 kr:바로가기 저장(&H)...
@@ -17104,6 +17068,7 @@ eu:Erakutsi &Lastermarkak
 fr:&Afficher les signets
 hr:Prikaži fa&vorite
 hu:Könyv&jelzők megjelenítése
+id:Perlihatkan Penanda
 it:Visualizza &Preferiti
 ja:ブックマークを表示(&M)
 kr:북마크 보이기(&M)
@@ -17348,6 +17313,7 @@ eu:Erakutsi agiritegian
 fr:Afficher dans le dossier
 hr:Prikaži u mapi
 hu:Megjelenítés a mappában
+id:Perlihatkan Di Folder
 it:Visualizza nella cartella
 ja:フォルダを表示
 kr:탐색기에서 폴더 열기
