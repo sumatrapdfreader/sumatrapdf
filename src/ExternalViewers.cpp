@@ -34,6 +34,7 @@ struct ExternalViewerInfo {
 
 static int gExternalViewersCount = 0;
 
+//
 // clang-format off
 static ExternalViewerInfo gExternalViewers[] = {
     {
@@ -41,6 +42,24 @@ static ExternalViewerInfo gExternalViewers[] = {
         CmdOpenWithExplorer,
         "*",
         "explorer.exe",
+        R"("%d")",
+        nullptr,
+        nullptr,
+    },
+    {
+        "Directory Opus",
+        CmdOpenWithDirectoryOpus,
+        "*",
+        R"(GPSoftware\Directory Opus\dopus.exe)",
+        R"("%d")",
+        nullptr,
+        nullptr,
+    },
+    {
+        "Total Commander",
+        CmdOpenWithTotalCommander,
+        "*",
+        R"(totalcmd\TOTALCMD64.EXE)",
         R"("%d")",
         nullptr,
         nullptr,

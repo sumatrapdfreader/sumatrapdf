@@ -146,6 +146,14 @@ static MenuDef menuDefFile[] = {
         CmdOpenWithExplorer,
     },
     {
+        _TRN("Open Directory in Direcotry &Opus"),
+        CmdOpenWithDirectoryOpus,
+    },
+    {
+        _TRN("Open Directory in &Total Commander"),
+        CmdOpenWithTotalCommander,
+    },
+    {
         _TRN("Open in &Adobe Reader"),
         CmdOpenWithAcrobat,
     },
@@ -164,7 +172,7 @@ static MenuDef menuDefFile[] = {
     },
     //| ACCESSKEY_ALTERNATIVE
     {
-        _TRN("Open in &Microsoft HTML Help"),
+        _TRN("Open in Microsoft &HTML Help"),
         CmdOpenWithHtmlHelp,
     },
     //] ACCESSKEY_ALTERNATIVE
@@ -801,10 +809,6 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdSelectAll,
     CmdProperties,
     CmdTogglePresentationMode,
-    CmdOpenWithExplorer,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
     CmdRenameFile,
     CmdShowInFolder,
     // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
@@ -906,12 +910,6 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdSaveAs,
     CmdSaveAnnotations,
     CmdRenameFile,
-    CmdOpenWithExplorer,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithPdfXchange,
-    CmdOpenWithXpsViewer,
-    CmdOpenWithHtmlHelp,
     CmdSendByEmail, // ???
     CmdContributeTranslation, // ???
     CmdAdvancedOptions,
@@ -1242,6 +1240,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
         if (!HasPermission(Perm::DiskAccess)) {
             removeMenu |= cmdIdInList(removeIfNoDiskAccessPerm);
+            if (cmdId >= CmdOpenWithFirst && cmdId <= CmdOpenWithLast) {
+                removeMenu = true;
+            }
         }
         if (!HasPermission(Perm::CopySelection)) {
             removeMenu |= cmdIdInList(removeIfNoCopyPerms);
@@ -1466,6 +1467,9 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
     bool hasDocument = tab && tab->IsDocLoaded();
+    for (UINT_PTR id = CmdOpenWithFirst; id < CmdOpenWithLast; id++) {
+        MenuSetEnabled(win->menu, id, hasDocument);
+    }
     for (int id : disableIfNoDocument) {
         MenuSetEnabled(win->menu, id, hasDocument);
     }
