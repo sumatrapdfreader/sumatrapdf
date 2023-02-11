@@ -65,6 +65,15 @@ static ExternalViewerInfo gExternalViewers[] = {
         nullptr,
     },
     {
+        "Double Commander",
+        CmdOpenWithDoubleCommander,
+        "*",
+        R"(Double Commander\doublecmd.exe)",
+        R"("%d")",
+        nullptr,
+        nullptr,
+    },
+    {
         "Acrobat Reader",
         CmdOpenWithAcrobat,
         ".pdf",

@@ -154,6 +154,10 @@ static MenuDef menuDefFile[] = {
         CmdOpenWithTotalCommander,
     },
     {
+        _TRN("Open Directory in &Double Commander"),
+        CmdOpenWithDoubleCommander,
+    },
+    {
         _TRN("Open in &Adobe Reader"),
         CmdOpenWithAcrobat,
     },
