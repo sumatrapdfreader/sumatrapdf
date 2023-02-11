@@ -142,6 +142,10 @@ static MenuDef menuDefFile[] = {
     },
     //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
     {
+        _TRN("Open Directory in &Explorer"),
+        CmdOpenWithExplorer,
+    },
+    {
         _TRN("Open in &Adobe Reader"),
         CmdOpenWithAcrobat,
     },
@@ -797,6 +801,7 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdSelectAll,
     CmdProperties,
     CmdTogglePresentationMode,
+    CmdOpenWithExplorer,
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
     CmdOpenWithPdfXchange,
@@ -813,7 +818,7 @@ static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
     CmdOpenWithPdfXchange,
-    CmdShowInFolder,
+    CmdShowInFolder, // TODO: why?
 };
 
 UINT_PTR disableIfNoSelection[] = {
@@ -901,6 +906,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdSaveAs,
     CmdSaveAnnotations,
     CmdRenameFile,
+    CmdOpenWithExplorer,
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
     CmdOpenWithPdfXchange,

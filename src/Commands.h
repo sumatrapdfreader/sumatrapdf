@@ -98,6 +98,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
     V(CmdContributeTranslation, "Contribute Translation")                 \
     V(CmdOpenWithFirst, "don't use")                                      \
+    V(CmdOpenWithExplorer, "Open Directory In Explorer")                  \
     V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \
     V(CmdOpenWithFoxIt, "Open With FoxIt")                                \
     V(CmdOpenWithFoxItPhantom, "Open With FoxIt Phantom")                 \
