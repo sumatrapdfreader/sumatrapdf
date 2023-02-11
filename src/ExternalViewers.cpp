@@ -69,7 +69,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         CmdOpenWithDoubleCommander,
         "*",
         R"(Double Commander\doublecmd.exe)",
-        R"("%d")",
+        R"(--client "%d")",
         nullptr,
         nullptr,
     },
