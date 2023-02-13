@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a13410f7d07d46500ad77c84e9ff4b6559ca7eae
+2e9742053d0bfd7d1d17185b19ce322a7b0801f5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13199,9 +13199,21 @@ ta:இணைப்பைத் திறந்திடுக
 tr:Eki aç
 uk:Відкрити вкладення
 :Open Directory in &Double Commander
+cy:Agor Cyfeiriadur yn &Double Commander
+nl:Open Map in &Double Commander
+pl:Otwórz katalog w &Double Commanderze
 :Open Directory in &Explorer
+cy:Agor Cyfeiriadur yn &Chwilotwr
+nl:Open Map in &Verkenner
+pl:Otwórz katalog w &Eksploratorze
 :Open Directory in &Total Commander
+cy:Agor Cyfeiriadur yn &Total Commander
+nl:Open Map in &TotalCommander
+pl:Otwórz katalog w &Total Commanderze
 :Open Directory in Direcotry &Opus
+cy:Agor Cyfeiriadur yn Directory &Opus
+nl:Open Map in Direcotry &Opus
+pl:Otwórz katalog w Directory &Opus
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -13571,6 +13583,9 @@ uk:Відкрити у Microsoft XPS-Viewer
 uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
+cy:Agor yn Microsoft &HTML Help
+nl:Open in Microsoft &HTML Help
+pl:Otwórz w Microsoft &HTML Help
 :P&roperties
 am:Հ&ատկություններ
 ar:الخصائص
