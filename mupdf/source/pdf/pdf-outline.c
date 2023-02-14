@@ -512,7 +512,8 @@ fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc
 		first = pdf_dict_get(ctx, obj, PDF_NAME(First));
 		if (first)
 		{
-			/* cache page tree for fast link destination lookups */
+			/* cache page tree for fast link destination lookups. This
+			 * will be dropped 'just in time' on writes to the doc. */
 			pdf_load_page_tree(ctx, doc);
 			fz_try(ctx)
 			{
@@ -531,7 +532,6 @@ fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc
 			{
 				if (fixed)
 					pdf_end_operation(ctx, doc);
-				pdf_drop_page_tree(ctx, doc);
 			}
 			fz_catch(ctx)
 				fz_rethrow(ctx);

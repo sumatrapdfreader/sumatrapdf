@@ -2380,11 +2380,14 @@ object_updated:
 	{
 		fz_seek(ctx, doc->file, x->ofs, SEEK_SET);
 
+		doc->caching_object = 1;
 		fz_try(ctx)
 		{
 			x->obj = pdf_parse_ind_obj(ctx, doc, doc->file,
 					&rnum, &rgen, &x->stm_ofs, &try_repair);
 		}
+		fz_always(ctx)
+			doc->caching_object = 0;
 		fz_catch(ctx)
 		{
 			if (!try_repair || fz_caught(ctx) == FZ_ERROR_TRYLATER)

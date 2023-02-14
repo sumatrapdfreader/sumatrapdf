@@ -434,6 +434,7 @@ struct pdf_document
 
 	int repair_attempted;
 	int repair_in_progress;
+	int caching_object; /* True while we are parsing an object. */
 
 	/* State indicating which file parsing method we are using */
 	int file_reading_linearly;
