@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2e9742053d0bfd7d1d17185b19ce322a7b0801f5
+1f29f67e991cd40d33eb9211005281e400f1480a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3575,7 +3575,7 @@ cn:以 (可选) 名称将第 %s 页添加到收藏夹:
 co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
 cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
 cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
-de:Seite %s zu Favoriten mit Namen (optional) hinzufügen:
+de:Seite %s zu Favoriten mit (optionalem) Namen hinzufügen:
 dk:Føj side %s til foretrukne med (valgfrit) navn:
 el:Προσθήκη σελίδας %s στα αγαπημένα με (προαιρετικό) όνομα:
 es:Agregar página %s a favoritos con un nombre (opcional):
@@ -13199,19 +13199,27 @@ ta:இணைப்பைத் திறந்திடுக
 tr:Eki aç
 uk:Відкрити вкладення
 :Open Directory in &Double Commander
+br:Abrir Pasta em &Double Commander
 cy:Agor Cyfeiriadur yn &Double Commander
+de:Verzeichnis in &Double Commander öffnen
 nl:Open Map in &Double Commander
 pl:Otwórz katalog w &Double Commanderze
 :Open Directory in &Explorer
+br:Abrir Pasta no &Explorer
 cy:Agor Cyfeiriadur yn &Chwilotwr
+de:Verzeichnis im &Explorer öffnen
 nl:Open Map in &Verkenner
 pl:Otwórz katalog w &Eksploratorze
 :Open Directory in &Total Commander
+br:Abrir Pasta em &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
+de:Verzeichnis in &Total Commander öffnen
 nl:Open Map in &TotalCommander
 pl:Otwórz katalog w &Total Commanderze
 :Open Directory in Direcotry &Opus
+br:Abrir Pasta em Directory &Opus
 cy:Agor Cyfeiriadur yn Directory &Opus
+de:Verzeichnis in Directory &Opus öffnen
 nl:Open Map in Direcotry &Opus
 pl:Otwórz katalog w Directory &Opus
 :Open Embedded PDF
@@ -13583,7 +13591,9 @@ uk:Відкрити у Microsoft XPS-Viewer
 uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
+br:Abrir em Microsoft &HTML Help
 cy:Agor yn Microsoft &HTML Help
+de:In Microsoft &HTML-Hilfe öffnen
 nl:Open in Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
 :P&roperties
