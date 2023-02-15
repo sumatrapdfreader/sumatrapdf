@@ -51,7 +51,7 @@ def get_field0( type_):
     Returns cursor for first field in <type_> or None if <type_> has no fields.
     '''
     assert isinstance( type_, clang.cindex.Type)
-    type_ = type_.get_canonical()
+    type_ = state.get_name_canonical( type_)
     for field in type_.get_fields():
         return field
 
@@ -65,7 +65,7 @@ def get_base_type( type_):
     ret = get_base_type_cache.get( key)
     if ret is None:
         while 1:
-            type_ = type_.get_canonical()
+            type_ = state.get_name_canonical( type_)
             if type_.kind != clang.cindex.TypeKind.POINTER:
                 break
             type_ = type_.get_pointee()
@@ -89,9 +89,9 @@ def is_double_pointer( type_):
     '''
     Returns true if <type_> is double pointer.
     '''
-    type_ = type_.get_canonical()
+    type_ = state.get_name_canonical( type_)
     if type_.kind == clang.cindex.TypeKind.POINTER:
-        type_ = type_.get_pointee().get_canonical()
+        type_ = state.get_name_canonical( type_.get_pointee())
         if type_.kind == clang.cindex.TypeKind.POINTER:
             return True
 
@@ -133,7 +133,7 @@ def has_refs( tu, type_):
                         #jlib.log( 'Type definition is available so we look for .refs member: {key=}')
                         for cursor in type_.get_fields():
                             name = cursor.spelling
-                            type2 = cursor.type.get_canonical()
+                            type2 = state.get_name_canonical( cursor.type)
                             #jlib.log( '{name=} {type2.spelling=}')
                             if name == 'refs' and type2.spelling == 'int':
                                 ret = 'refs', 32
@@ -250,21 +250,52 @@ def get_text( item, prefix, sep, *names):
         ret.append( f'{name}={value}')
     return prefix + sep.join( ret)
 
-class Clang6FnArgsBug( Exception):
-    def __init__( self, text):
-        Exception.__init__( self, f'clang-6 unable to walk args for fn type. {text}')
 
-def dump_ast( cursor, depth=0):
-    indent = depth*4*' '
-    for cursor2 in cursor.get_children():
-        jlib.log( indent * ' ' + '{cursor2.kind=} {cursor2.mangled_name=} {cursor2.displayname=} {cursor2.spelling=}')
-        dump_ast( cursor2, depth+1)
+def dump_ast( cursor, out=None, depth=0):
+    cleanup = lambda: None
+    if out is None:
+        out = sys.stdout
+    if isinstance(out, str):
+        out = open(out, 'w')
+        cleanup = lambda : out.close()
+    try:
+        indent = depth*4*' '
+        for cursor2 in cursor.get_children():
+            def or_none(f):
+                try:
+                    return f()
+                except Exception:
+                    return
+            result = or_none( cursor2.type.get_result)
+            type_ = cursor2.type
+            type_canonical = or_none( cursor2.type.get_canonical)
 
+            text = indent
+            text += jlib.expand_nv('{cursor2.kind=} {cursor2.displayname=} {cursor2.spelling=}')
+            if result:
+                text += jlib.expand_nv(' {result.spelling=}')
+            if type_:
+                text += jlib.expand_nv(' {type_.spelling=}')
+            if type_canonical:
+                text += jlib.expand_nv(' {type_canonical.spelling=}')
+            text += '\n'
+            if callable(out):
+                out( text)
+            else:
+                out.write(text)
 
-def show_ast( filename):
+            dump_ast( cursor2, out, depth+1)
+    finally:
+        cleanup()
+
+def show_ast( filename, includes):
+    jlib.log('Parsing {filename=}')
     index = clang.cindex.Index.create()
+    args = []
+    for include in includes:
+        args += ['-I', include]
     tu = index.parse( filename,
-            args=( '-I', clang_info().include_path),
+            args = args,
             )
     dump_ast( tu.cursor)
 
@@ -389,7 +420,7 @@ def get_args( tu, cursor, include_fz_context=False, skip_first_alt=False, verbos
                 pointee = arg_cursor.type.get_pointee()
                 if verbose:
                     jlib.log( 'clang.cindex.TypeKind.POINTER')
-                if pointee.get_canonical().kind == clang.cindex.TypeKind.FUNCTIONPROTO:
+                if state.get_name_canonical( pointee).kind == clang.cindex.TypeKind.FUNCTIONPROTO:
                     # Don't mark function-pointer args as out-params.
                     if verbose:
                         jlib.log( 'clang.cindex.TypeKind.FUNCTIONPROTO')
@@ -478,28 +509,31 @@ def is_pointer_to( type_, destination, verbose=False):
     #
     key = type_.spelling, destination
     ret = is_pointer_to_cache.get( key)
-    if ret is None:
+    if verbose or ret is None:
         assert isinstance( type_, clang.cindex.Type)
+        if verbose: jlib.log( '{type_.spelling=}')
         ret = None
         destination = util.clip( destination, 'struct ')
-        if verbose:
-            jlib.log('{type_.kind=}')
         if type_.kind == clang.cindex.TypeKind.POINTER:
-            pointee = type_.get_pointee().get_canonical()
-            d = cpp.declaration_text( pointee, '', top_level='')
+            pointee = type_.get_pointee()
+            if verbose: jlib.log('{pointee.spelling=}')
+            d = cpp.declaration_text( pointee, '', top_level='', verbose=verbose)
             d = util.clip( d, 'const ')
             d = util.clip( d, 'struct ')
             if verbose:
-                jlib.log( '{destination!r=} {d!r=}')
-            ret = d == f'{destination} ' or d == f'const {destination} '
+                jlib.log( '{destination=} {type_.get_pointee().kind=} {type_.get_pointee().spelling=} {state.get_name_canonical( type_.get_pointee()).spelling=}')
+            ret = d.strip() == destination or d.strip() == f'const {destination}'
         is_pointer_to_cache[ key] = ret
 
     return ret
 
-def is_pointer_to_pointer_to( type_, destination):
+def is_pointer_to_pointer_to( type_, destination, verbose=False):
+    if verbose:
+        jlib.log( '{type_.spelling=}')
     if type_.kind != clang.cindex.TypeKind.POINTER:
         return False
-    return is_pointer_to( type_.get_pointee().get_canonical(), destination)
+    pointee = type_.get_pointee()
+    return is_pointer_to( pointee, destination, verbose=verbose)
 
 
 class MethodExcludeReason_VARIADIC:
@@ -567,9 +601,9 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
 
         # Look at resulttype.
         #
-        result_type = cursor.type.get_result().get_canonical()
+        result_type = state.get_name_canonical( cursor.type.get_result())
         if result_type.kind == clang.cindex.TypeKind.POINTER:
-            result_type = result_type.get_pointee().get_canonical()
+            result_type = state.get_name_canonical( result_type.get_pointee())
         result_type = util.clip( result_type.spelling, 'struct ')
         if result_type.startswith( ('fz_', 'pdf_')):
             result_type_extras = get_fz_extras( tu, result_type)
@@ -601,7 +635,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
 
             base_typename = get_base_typename( arg.cursor.type)
             if not arg.alt and base_typename.startswith( ('fz_', 'pdf_')):
-                if arg.cursor.type.get_canonical().kind == clang.cindex.TypeKind.ENUM:
+                if state.get_name_canonical( arg.cursor.type).kind == clang.cindex.TypeKind.ENUM:
                     # We don't (yet) wrap fz_* enums, but for now at least we
                     # still wrap functions that take fz_* enum parameters -
                     # callers will have to use the fz_* type.
@@ -609,12 +643,12 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
                     # For example this is required by mutool_draw.py because
                     # mudraw.c calls fz_set_separation_behavior().
                     #
-                    jlib.logx( 'not excluding {fnname=} with enum fz_ param : {arg.cursor.spelling=} {arg.cursor.type.kind} {arg.cursor.type.get_canonical().kind=}')
+                    jlib.logx( 'not excluding {fnname=} with enum fz_ param : {arg.cursor.spelling=} {arg.cursor.type.kind} {state.get_name_canonical( arg.cursor.type).kind=}')
                 else:
                     exclude_reasons.append(
                             (
                             MethodExcludeReason_NO_WRAPPER_CLASS,
-                            f'no wrapper class for arg i={i}: {arg.cursor.type.get_canonical().spelling} {arg.cursor.type.get_canonical().kind}',
+                            f'no wrapper class for arg i={i}: {state.get_name_canonical( arg.cursor.type).spelling} {state.get_name_canonical( arg.cursor.type).kind}',
                             ))
             if i == 0:
                 if arg.alt:
@@ -637,7 +671,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
         else:
             if i > 0:
                 # <fnname> is ok to wrap.
-                arg0 = arg0_cursor.type.get_canonical().spelling
+                arg0 = state.get_name_canonical( arg0_cursor.type).spelling
                 arg0 = util.clip( arg0, 'struct ')
 
                 #jlib.log( '=== Adding to {arg0=}: {fnname=}. {len(fnname_to_method_structname)=}')
@@ -686,6 +720,9 @@ def find_class_for_wrappable_function( fn_name):
 def find_struct( tu, structname, require_definition=True):
     '''
     Finds definition of struct.
+
+    fixme: actually finds definition of anything, doesn't have to be a struct.
+
     Args:
         tu:
             Translation unit.
@@ -754,7 +791,7 @@ def find_name( cursor, name, nest=0):
         ret = find_name( c, tail, nest+2)
         return ret
 
-    for c in cursor.type.get_canonical().get_fields():
+    for c in state.get_name_canonical( cursor.type).get_fields():
         if c.spelling == '':
             ret = find_name( c, name, nest+1)
             if ret:

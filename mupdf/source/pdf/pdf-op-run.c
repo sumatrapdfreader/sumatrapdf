@@ -2678,6 +2678,8 @@ pdf_drop_run_processor(fz_context *ctx, pdf_processor *proc)
 	while (pr->marked_content)
 		pop_marked_content(ctx, pr, 0);
 
+	pdf_drop_obj(ctx, pr->mcid_sent);
+
 	pdf_drop_document(ctx, pr->doc);
 	pdf_drop_obj(ctx, pr->role_map);
 }

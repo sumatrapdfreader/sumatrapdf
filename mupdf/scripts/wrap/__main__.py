@@ -748,6 +748,10 @@ Usage:
             built as `.a` archives but compiled with -fPIC so that they can be
             linked into shared libraries.
 
+            If <directory> is '-' we do not set any paths when running tests
+            e.g. with --test-python. This is for testing after installing into
+            a venv.
+
             Examples:
                 -d build/shared-debug
                 -d build/shared-release [default]
@@ -839,13 +843,11 @@ Usage:
                     * Imports mupdf and checks basic functionality.
                 * Deactivates the Python environment.
 
-        --venv <venv> ...
-            Runs mupdfwrap.py in a venv containing clang installed with 'pip
-            install libclang', passing remaining args. This seems to be the
-            only way to use clang from python on Windows.
+        --venv <venv-name> ...
+            Runs mupdfwrap.py in a venv called `venv` containing libclang,
+            passing remaining args.
 
-            E.g.:
-                --venv pylocal --swig-windows-auto -b all -t
+                --venv pylocal -b all
 
         --windows-cmd ...
             Runs mupdfwrap.py via cmd.exe, passing remaining args. Useful to
@@ -953,7 +955,7 @@ def compare_fz_usage(
                 '''
                 if type_.kind == clang.cindex.TypeKind.POINTER:
                     type_ = type_.get_pointee()
-                type_ = type_.get_canonical()
+                type_ = parse.get_name_canonical( type_)
                 if type_.spelling.startswith( 'struct fz_'):
                     return True
             # Set uses_structs to true if fn returns a fz struct or any
@@ -1189,7 +1191,10 @@ def _get_m_command( build_dirs):
                 in_prefix = False
             elif flag == 'shared':
                 make_args += ' shared=yes'
-                suffix = '.so'
+                if state.state_.macos:
+                    suffix = '.dylib'
+                else:
+                    suffix = '.so'
                 build_prefix += f'{flag}-'
                 in_prefix = False
             else:
@@ -1832,6 +1837,11 @@ def build( build_dirs, swig_command, args):
 def python_settings(build_dirs, startdir=None):
     # We need to set LD_LIBRARY_PATH and PYTHONPATH so that our
     # test .py programme can load mupdf.py and _mupdf.so.
+    if build_dirs.dir_so is None:
+        # Use no extra environment and default python, e.g. in venv.
+        jlib.log('build_dirs.dir_so is None, returning empty extra environment and "python"')
+        return {}, 'python'
+
     env_extra = {}
     env_extra[ 'PYTHONPATH'] = os.path.relpath(build_dirs.dir_so, startdir)
 
@@ -2046,7 +2056,7 @@ def make_docs( build_dirs, languages_original):
 
 def main2():
 
-    # Set default build directory. Can br overridden by '-d'.
+    # Set default build directory. Can be overridden by '-d'.
     #
     build_dirs = state.BuildDirs()
 
@@ -2593,17 +2603,15 @@ def main2():
                         args_tail += ' ' + args.next()
                     except StopIteration:
                         break
-                commands = (
-                        f'"{sys.executable}" -m venv {venv}',
-                        f'{venv}\\Scripts\\activate.bat',
-                        # Upgrading pip seems to fail on some Windows systems,
-                        # even when retrying after first failure.
-                        #f'(pip install --upgrade pip || pip install --upgrade pip)',
-                        f'pip install libclang',
-                        f'python {sys.argv[0]} {args_tail}',
-                        f'deactivate',
-                        )
-                command = '&&'.join(commands)
+                command = f'"{sys.executable}" -m venv {venv}'
+                if state.state_.windows:
+                    command += f' && {venv}\\Scripts\\activate.bat'
+                else:
+                    command += f' && . {venv}/bin/activate'
+                command += f' && python -m pip install --upgrade pip'
+                command += f' && python -m pip install libclang'
+                command += f' && python {sys.argv[0]} {args_tail}'
+                command += f' && deactivate'
                 jlib.system(command, out='log', verbose=1)
 
             elif arg == '--windows-cmd':

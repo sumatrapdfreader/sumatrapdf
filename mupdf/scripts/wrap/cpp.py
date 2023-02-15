@@ -50,6 +50,8 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
     If name_is_simple is false, we surround <name> with (...) if type is a
     function.
     '''
+    # clang can give unhelpful spelling for anonymous structs.
+    assert 'struct (unnamed at ' not in type_.spelling, f'type_.spelling={type_.spelling}'
     if verbose:
         jlib.log( '{nest=} {name=} {type_.spelling=} {type_.get_declaration().get_usr()=}')
         jlib.log( '{type_.kind=} {type_.get_array_size()=}')
@@ -89,39 +91,16 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
         const = 'const ' if type_.is_const_qualified() else ''
         return f'{const}{_make_top_level(type_.get_typedef_name(), top_level)} {name}'
 
-    if type_.get_result().spelling:
+    if type_.get_result().spelling and type_.kind != state.clang.cindex.TypeKind.FUNCTIONNOPROTO:
         # <type> is a function. We call ourselves with type=type_.get_result()
         # and name=<name>(<args>).
         #
-        jlib.log1( 'function: {type_.spelling=} {type_.kind=} {type_.get_result().spelling=} {type_.get_declaration().spelling=}')
-        if 0 and verbose:
-            nc = 0
-            for nci in type_.get_declaration().get_arguments():
-                nc += 1
-            nt = 0
-            for nti in type_.argument_types():
-                nt += 1
-            if nt == nc:
-                jlib.log( '*** {nt=} == {nc=}')
-            if nt != nc:
-                jlib.log( '*** {nt=} != {nc=}')
-
         ret = ''
-        i = 0
-
-        #for arg_cursor in type_.get_declaration().get_arguments():
-        #    arg = arg_cursor
-        try:
-            args = type_.argument_types()
-        except Exception as e:
-            if 'libclang-6' in clang_info().libclang_so:
-                raise Clang6FnArgsBug( f'type_.spelling is {type_.spelling}: {e!r}')
-
-        for arg in args:
-            if i:
-                ret += ', '
-            ret += declaration_text( arg, '', nest+1, top_level=top_level)
-            i += 1
+        sep = ''
+        for arg in type_.argument_types():
+            ret += sep
+            ret += declaration_text( arg, '', nest+1, top_level=top_level, verbose=verbose)
+            sep = ', '
         if verbose: jlib.log( '{ret!r=}')
         if not name_is_simple:
             # If name isn't a simple identifier, put it inside braces, e.g.
@@ -142,6 +121,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
         return ret
 
     ret = f'{_make_top_level(type_.spelling, top_level)} {name}'
+    assert not 'struct (unnamed at ' in ret, f'Bad clang name for anonymous struct: {ret}'
     if verbose: jlib.log( 'returning {ret=}')
     return ret
 
@@ -190,11 +170,11 @@ def write_call_arg(
 
     if verbose:
         jlib.log( '{=arg.name arg.alt.spelling classname}')
-    type_ = arg.cursor.type.get_canonical()
+    type_ = state.get_name_canonical( arg.cursor.type)
     ptr = '*'
     #log( '{=arg.name arg.alt.spelling classname type_.spelling}')
     if type_.kind == state.clang.cindex.TypeKind.POINTER:
-        type_ = type_.get_pointee().get_canonical()
+        type_ = state.get_name_canonical( type_.get_pointee())
         ptr = ''
     #log( '{=arg.name arg.alt.spelling classname type_.spelling}')
     extras = parse.get_fz_extras( tu, type_.spelling)
@@ -223,10 +203,10 @@ def write_call_arg(
         out_cpp.write( f'{ptr} {name_}internal()')
     else:
         if verbose:
-            jlib.log( '{=arg arg.cursor.type.get_canonical().kind classname extras}')
-        if extras.pod and arg.cursor.type.get_canonical().kind == state.clang.cindex.TypeKind.POINTER:
+            jlib.log( '{=arg state.get_name_canonical(arg.cursor.type).kind classname extras}')
+        if extras.pod and state.get_name_canonical( arg.cursor.type).kind == state.clang.cindex.TypeKind.POINTER:
             out_cpp.write( '&')
-        elif not extras.pod and arg.cursor.type.get_canonical().kind != state.clang.cindex.TypeKind.POINTER:
+        elif not extras.pod and state.get_name_canonical( arg.cursor.type).kind != state.clang.cindex.TypeKind.POINTER:
             out_cpp.write( '*')
         elif arg.out_param:
             out_cpp.write( '&')
@@ -308,7 +288,7 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
                 out.write( f'        if ({varname_enable()}) std::cerr << " {arg.name}=" << {arg.name};\n')
             else:
                 out.write( f'        std::cerr << " &{arg.name}=" << &{arg.name};\n')
-        elif parse.is_pointer_to(arg.cursor.type, 'char') and arg.cursor.type.get_pointee().get_canonical().is_const_qualified():
+        elif parse.is_pointer_to(arg.cursor.type, 'char') and state.get_name_canonical( arg.cursor.type.get_pointee()).is_const_qualified():
             # 'const char*' is assumed to be zero-terminated string. But we
             # need to protect against trying to write nullptr because this
             # appears to kill std::cerr on Linux.
@@ -460,12 +440,12 @@ def make_outparam_helper(
             jlib.log( '{decl=}')
         assert arg.cursor.type.kind == state.clang.cindex.TypeKind.POINTER
 
-        # We use .get_canonical() here because, for example, it converts
-        # int64_t to 'long long', which seems to be handled better by swig -
-        # swig maps int64_t to mupdf.SWIGTYPE_p_int64_t which can't be treated
-        # or converted to an integer.
+        # We use state.get_name_canonical() here because, for example, it
+        # converts int64_t to 'long long', which seems to be handled better by
+        # swig - swig maps int64_t to mupdf.SWIGTYPE_p_int64_t which can't be
+        # treated or converted to an integer.
         #
-        pointee = arg.cursor.type.get_pointee().get_canonical()
+        pointee = state.get_name_canonical( arg.cursor.type.get_pointee())
         generated.swig_cpp.write(f'        {declaration_text( pointee, arg.name)};\n')
     generated.swig_cpp.write(f'    }};\n')
     generated.swig_cpp.write('\n')
@@ -1330,50 +1310,31 @@ def make_function_wrappers(
         if state.state_.show_details( fnname):
             jlib.log( 'Looking at {fnname}')
         fnname_wrapper = rename.ll_fn( fnname)
-        # clang-6 appears not to be able to handle fn args that are themselves
-        # function pointers, so for now we allow function_wrapper() to fail,
-        # so we need to use temporary buffers, otherwise out_functions_h and
-        # out_functions_cpp can get partial text written.
-        #
-        temp_out_h = io.StringIO()
-        temp_out_cpp = io.StringIO()
-        temp_out_h2 = io.StringIO()
-        temp_out_cpp2 = io.StringIO()
-        try:
-            function_wrapper(
+        function_wrapper(
+                tu,
+                cursor,
+                fnname,
+                fnname_wrapper,
+                out_functions_h,
+                out_functions_cpp,
+                generated,
+                refcheck_if,
+                )
+        if not fnname.startswith( ( 'fz_keep_', 'fz_drop_', 'pdf_keep_', 'pdf_drop_')):
+            function_wrapper_class_aware(
                     tu,
-                    cursor,
-                    fnname,
-                    fnname_wrapper,
-                    temp_out_h,
-                    temp_out_cpp,
-                    generated,
-                    refcheck_if,
+                    register_fn_use=None,
+                    struct_name=None,
+                    class_name=None,
+                    fn_cursor=cursor,
+                    refcheck_if=refcheck_if,
+                    fnname=fnname,
+                    out_h=out_functions_h2,
+                    out_cpp=out_functions_cpp2,
+                    generated=generated,
                     )
-            if not fnname.startswith( ( 'fz_keep_', 'fz_drop_', 'pdf_keep_', 'pdf_drop_')):
-                function_wrapper_class_aware(
-                        tu,
-                        register_fn_use=None,
-                        struct_name=None,
-                        class_name=None,
-                        fn_cursor=cursor,
-                        refcheck_if=refcheck_if,
-                        fnname=fnname,
-                        out_h=temp_out_h2,
-                        out_cpp=temp_out_cpp2,
-                        generated=generated,
-                        )
-        except parse.Clang6FnArgsBug as e:
-            #log( jlib.exception_info())
-            jlib.log( 'Unable to wrap function {cursor.spelling} becase: {e}')
-            continue
 
         python.cppyy_add_outparams_wrapper( tu, fnname, cursor, state.state_, generated)
-
-        out_functions_h.write( temp_out_h.getvalue())
-        out_functions_cpp.write( temp_out_cpp.getvalue())
-        out_functions_h2.write( temp_out_h2.getvalue())
-        out_functions_cpp2.write( temp_out_cpp2.getvalue())
 
         if fnname in ('fz_lookup_metadata', 'pdf_lookup_metadata'):
             # Output convenience wrapper for fz_lookup_metadata() and
@@ -1634,7 +1595,7 @@ def class_add_iterator( tu, struct_cursor, struct_name, classname, extras, refch
     if it_begin:
         c = parse.find_name( struct_cursor, it_begin)
         assert c.type.kind == state.clang.cindex.TypeKind.POINTER
-        it_internal_type = c.type.get_pointee().get_canonical().spelling
+        it_internal_type = state.get_name_canonical( c.type.get_pointee()).spelling
         it_internal_type = util.clip( it_internal_type, 'struct ')
         it_type = rename.class_( it_internal_type)
     else:
@@ -1805,7 +1766,7 @@ def class_find_constructor_fns( tu, classname, struct_name, base_name, extras):
                 jlib.logx('ignoring possible constructor because looks like copy constructor: {fnname}')
             elif fnname in extras.constructor_excludes:
                 pass
-            elif extras.pod and extras.pod != 'none' and cursor.result_type.get_canonical().spelling == f'{struct_name}':
+            elif extras.pod and extras.pod != 'none' and state.get_name_canonical( cursor.result_type).spelling == f'{struct_name}':
                 # Returns POD struct by value.
                 ok = True
             elif not extras.pod and parse.is_pointer_to( cursor.result_type, f'{struct_name}'):
@@ -1946,7 +1907,7 @@ def class_copy_constructor(
             assert ( pvoid
                     or parse.is_pointer_to( cursor.result_type, struct_name)
                     ), (
-                    f'result_type not void* or pointer to {struct_name}: {cursor.result_type.spelling}'
+                    f'Function {name}(): result_type not void* or pointer to {struct_name}: {cursor.result_type.spelling}'
                     )
         arg, n = parse.get_first_arg( tu, cursor)
         assert n == 1, f'should take exactly one arg: {cursor.spelling}()'
@@ -2518,7 +2479,7 @@ def function_wrapper_class_aware(
             jlib.log( '{fn_cursor.result_type.kind=}')
         if fn_cursor.result_type.kind == state.clang.cindex.TypeKind.POINTER:
             # Function returns a pointer.
-            t = fn_cursor.result_type.get_pointee().get_canonical()
+            t = state.get_name_canonical( fn_cursor.result_type.get_pointee())
             if verbose:
                 jlib.log( '{t.spelling=}')
             return_cursor = parse.find_struct( tu, t.spelling, require_definition=False)
@@ -2559,22 +2520,29 @@ def function_wrapper_class_aware(
             #   fz_quad_s ret = mupdf_snap_selection(...);
             #   return Quad(&ret);
             #
-            t = fn_cursor.result_type.get_canonical()
-            return_cursor = parse.find_struct( tu, t.spelling)
-            if return_cursor:
-                tt = return_cursor.type.get_canonical()
-                if tt.kind == state.clang.cindex.TypeKind.ENUM:
-                    # For now, we return this type directly with no wrapping.
-                    pass
-                else:
-                    return_extras = classes.classextras.get( tu, return_cursor.spelling)
-                    return_type = rename.class_(return_cursor.type.spelling)
-                    fn_h = f'{return_type} {decl_h}'
-                    if struct_name:
-                        fn_cpp = f'{return_type} {class_name}::{decl_cpp}'
+            t = state.get_name_canonical( fn_cursor.result_type)
+
+            # 2023-02-09: parse.find_struct() will actuall find any definition,
+            # and we now prefix Fitz headers with a typedef of size_t on Linux,
+            # so we need to avoid calling parse.find_struct() unless `t` is for
+            # a MuPDF type.
+            #
+            if t.spelling.startswith( ('fz_', 'pdf_')):
+                return_cursor = parse.find_struct( tu, t.spelling)
+                if return_cursor:
+                    tt = state.get_name_canonical( return_cursor.type)
+                    if tt.kind == state.clang.cindex.TypeKind.ENUM:
+                        # For now, we return this type directly with no wrapping.
+                        pass
                     else:
-                        fn_cpp = f'{return_type} {decl_cpp}'
-                    wrap_return = 'value'
+                        return_extras = classes.classextras.get( tu, return_cursor.spelling)
+                        return_type = rename.class_(return_cursor.type.spelling)
+                        fn_h = f'{return_type} {decl_h}'
+                        if struct_name:
+                            fn_cpp = f'{return_type} {class_name}::{decl_cpp}'
+                        else:
+                            fn_cpp = f'{return_type} {decl_cpp}'
+                        wrap_return = 'value'
 
     if return_extras:
         if not return_extras.copyable:
@@ -2894,7 +2862,11 @@ def class_accessors(
         jlib.logx( 'creating accessor for non-pod class {classname=} wrapping {struct_name}')
 
     n = 0
-    for cursor in struct_cursor.type.get_canonical().get_fields():
+
+    # We use get_declaration().get_children() instead of type.get_fields() in
+    # order to work with anonymous structs.
+    #
+    for cursor in struct_cursor.underlying_typedef_type.get_declaration().get_children():
         n += 1
         #jlib.log( 'accessors: {cursor.spelling=} {cursor.type.spelling=}')
 
@@ -2908,13 +2880,13 @@ def class_accessors(
         #
         if cursor.type.kind == state.clang.cindex.TypeKind.POINTER:
             decl = 'const ' + declaration_text( cursor.type, '%s()')
-            pointee_type = cursor.type.get_pointee().get_canonical().spelling
+            pointee_type = state.get_name_canonical( cursor.type.get_pointee()).spelling
             pointee_type = util.clip( pointee_type, 'const ')
             pointee_type = util.clip( pointee_type, 'struct ')
             #if 'fz_' in pointee_type:
             #    jlib.log( '{pointee_type=}')
             # We don't attempt to make accessors to function pointers.
-            if cursor.type.get_pointee().get_canonical().kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
+            if state.get_name_canonical( cursor.type.get_pointee()).kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
                 jlib.logx( 'ignoring {cursor.spelling=} because pointer to FUNCTIONPROTO')
                 continue
             elif pointee_type.startswith( ('fz_', 'pdf_')):
@@ -3262,7 +3234,12 @@ def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False):
                 t = t_cursor.underlying_typedef_type
             if t.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
                 if not shallow_typedef_expansion:
-                    t = t.get_canonical()
+                    tt = state.get_name_canonical( t)
+                    if not 'struct (unnamed at ' in tt.spelling:
+                        # This is clang giving an unhelpful name to an
+                        # anonymous struct.
+                        #jlib.log( 'Avoiding clang struct (unnamed at ...) anonymous struct: {tt.spelling=}')
+                        t = tt
                 yield cursor, t
 
 
@@ -3472,6 +3449,9 @@ def class_wrapper_virtual_fnptrs(
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
             if i == self_n:
+                # This is the void* from which we found `self` so ignore
+                # here. Note that we still pass the fz_context to the virtual
+                # fn.
                 continue
             name = f'arg_{i}'
             write(f'{sep}')
@@ -3546,6 +3526,7 @@ def class_wrapper(
     constructor_fns = class_find_constructor_fns( tu, classname, struct_name, base_name, extras)
     for fnname in extras.constructors_wrappers:
         cursor = state.state_.find_function( tu, fnname, method=True)
+        assert cursor, f'No cursor for constructor wrapper fnname={fnname}'
         constructor_fns.append( (fnname, cursor, None))
 
     destructor_fns = class_find_destructor_fns( tu, struct_name, base_name)
@@ -3605,6 +3586,7 @@ def class_wrapper(
         # so we need to use temporary buffers, otherwise out_functions_h and
         # out_functions_cpp can get partial text written.
         #
+        assert cursor, f'No cursor for constructor function. fnname={fnname} duplicate_type={duplicate_type}'
         temp_out_h = io.StringIO()
         temp_out_cpp = io.StringIO()
         if state.state_.show_details(fnname):
@@ -4187,10 +4169,8 @@ def cpp_source(
     assert isinstance(generated, Generated)
     assert not dir_mupdf.endswith( '/')
     assert not base.endswith( '/')
-    state.clang_info( clang_info_version)    # Ensure we have set up clang-python.
 
     index = state.clang.cindex.Index.create()
-    #log( '{dir_mupdf=} {base=}')
 
     header = f'{dir_mupdf}/include/mupdf/fitz.h'
     assert os.path.isfile( header), f'header={header}'
@@ -4203,17 +4183,32 @@ def cpp_source(
     # So instead we write some #include's to a temporary file and ask clang to
     # parse it.
     #
-    temp_h = f'_mupdfwrap_temp.h'
+    temp_h = f'_mupdfwrap_temp.c'
     try:
         with open( temp_h, 'w') as f:
-            f.write( '#include "mupdf/fitz.h"\n')
-            f.write( '#include "mupdf/pdf.h"\n')
-        args = []
-        args.append(['-I', f'{dir_mupdf}/include'])
-        if state.state_.windows:
-            args = ('-I', f'{dir_mupdf}/include')
-        else:
-            args = ('-I', f'{dir_mupdf}/include', '-I', state.clang_info().include_path)
+            if state.state_.linux:
+                jlib.log('Prefixing Fitz headers with `typedef unsigned long size_t;`'
+                        ' because size_t not available to clang on Linux.')
+                # On Linux, size_t is defined internally in gcc (e.g. not even
+                # in /usr/include/stdint.h) and so not visible to clang.
+                #
+                # If we don't define it, clang complains about C99 not
+                # supporting implicit int and appears to variously expand
+                # size_t as different function pointers, e.g. `int (int *)` and
+                # `int (*)(int *)`.
+                #
+                f.write( textwrap.dedent('''
+                    /*
+                    Workaround on Linux. size_t is defined internally in
+                    gcc (e.g. not even in /usr/include/stdint.h) and so not visible to clang.
+                    */
+                    typedef unsigned long size_t;
+                    '''))
+            f.write( textwrap.dedent('''
+                    #include "mupdf/fitz.h"
+                    #include "mupdf/pdf.h"
+                    '''))
+        args = ['-I', f'{dir_mupdf}/include']
         tu = index.parse( temp_h, args=args)
     finally:
         if os.path.isfile( temp_h):
@@ -4586,9 +4581,11 @@ def cpp_source(
             continue
         if cursor.kind != state.clang.cindex.CursorKind.TYPEDEF_DECL:
             continue;
-        type_ = cursor.underlying_typedef_type.get_canonical()
-        if type_.kind != state.clang.cindex.TypeKind.RECORD:
+        type_ = state.get_name_canonical( cursor.underlying_typedef_type)
+        if type_.kind not in (state.clang.cindex.TypeKind.RECORD, state.clang.cindex.TypeKind.ELABORATED):
             continue
+        if type_.kind == state.clang.cindex.TypeKind.ELABORATED:
+            jlib.log( 'state.clang.cindex.TypeKind.ELABORATED: {type_.spelling=}')
 
         if not cursor.is_definition():
             # Handle abstract type only if we have an ClassExtra for it.
@@ -4599,10 +4596,12 @@ def cpp_source(
             else:
                 continue
 
-        struct_name = type_.spelling
+        #struct_name = type_.spelling
+        struct_name = cursor.spelling
         struct_name = util.clip( struct_name, 'struct ')
+        if cursor.spelling != struct_name:
+            jlib.log('{type_.spelling=} {struct_name=} {cursor.spelling=}')
         classname = rename.class_( struct_name)
-        #log( 'Creating class wrapper. {classname=} {cursor.spelling=} {struct_name=}')
 
         # For some reason after updating mupdf 2020-04-13, clang-python is
         # returning two locations for struct fz_buffer_s, both STRUCT_DECL. One
@@ -4633,7 +4632,7 @@ def cpp_source(
     # Create each class.
     #
     for classname, struct_cursor, struct_name in classes_:
-        #log( 'creating wrapper {classname} for {cursor.spelling}')
+        #jlib.log( 'creating wrapper {classname} for {cursor.spelling}')
         extras = classes.classextras.get( tu, struct_name)
         assert extras, f'struct_name={struct_name}'
         if extras.pod:
@@ -4803,20 +4802,30 @@ def test():
     '''
     Place to experiment with clang-python.
     '''
-    text = textwrap.dedent('''
-            #include <stdint.h>
-            #include <stdlib.h>
-            typedef void (*fnptr_t)(int64_t a, size_t b);
-            fnptr_t fnptr;
-            struct Foo
-            {
-                void (*fnptr)(int64_t a, size_t b);
-            };
-            typedef struct Foo Foo;
+    text = ''
+    if state.state_.linux:
+        text += textwrap.dedent('''
+            /*
+            Workaround on Linux. size_t is defined internally in gcc. It isn't
+            even in stdint.h.
+            */
+            typedef unsigned long size_t;
             ''')
-    path = 'wrap-test.cpp'
+
+    text += textwrap.dedent('''
+            #include "mupdf/fitz.h"
+            #include "mupdf/pdf.h"
+            ''')
+    path = 'wrap-test.c'
     jlib.update_file( text, path)
     index = state.clang.cindex.Index.create()
-    tu = index.parse( path)
+    tu = index.parse( path, '-I /usr/include -I include'.split(' '))
+    path2 = 'wrap-test.c.c'
+    tu.save(path2)
+    jlib.log( 'Have saved to: {path2}')
+    parse.dump_ast( tu.cursor, 'ast')
+    for diagnostic in tu.diagnostics:
+        jlib.log('{diagnostic=}')
     for cursor in tu.cursor.get_children():
-        pass
+        if 'cpp_test_' in cursor.spelling:
+            parse.dump_ast(cursor, out=jlib.log)

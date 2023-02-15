@@ -136,10 +136,9 @@ def test_filter(path):
         try:
             document.pdf_filter_page_contents(page, filter_options)
         except Exception as e:
-            e_expected = "code=2: Director error: <class 'TypeError'>: filter_bad() missing 1 required positional argument: 'extra_arg'"
-            assert str(e) == e_expected, (
-                    f'Expected - actual:\n{e_expected}\n{e}'
-                    )
+            e_expected_text = "filter_bad() missing 1 required positional argument: 'extra_arg'"
+            if e_expected_text not in str(e):
+                raise Exception(f'Error does not contain expected text: {e_expected_text}') from e
         finally:
             document.pdf_end_operation()
 

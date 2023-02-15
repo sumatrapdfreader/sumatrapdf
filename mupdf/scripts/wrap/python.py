@@ -7,6 +7,7 @@ import jlib
 from . import cpp
 from . import parse
 from . import rename
+from . import state
 from . import util
 
 
@@ -76,7 +77,7 @@ def cppyy_add_outparams_wrapper(
     parse.find_wrappable_function_with_arg0_type_cache_populate( tu)
 
     def get_ctype_name( arg):
-        type_name = arg.cursor.type.get_pointee().get_canonical().spelling
+        type_name = state.get_name_canonical( arg.cursor.type.get_pointee()).spelling
         if type_name in (
                 'char',
                 'double',

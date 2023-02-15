@@ -535,10 +535,10 @@ android: generate
 c++: c++-$(build)
 
 c++-release: shared-release
-	./scripts/mupdfwrap.py -d build/shared-release -b 01
+	./scripts/mupdfwrap.py --venv pylocal -d build/shared-release -b 01
 
 c++-debug: shared-debug
-	./scripts/mupdfwrap.py -d build/shared-debug -b 01
+	./scripts/mupdfwrap.py --venv pylocal -d build/shared-debug -b 01
 
 c++-clean:
 	rm -rf platform/c++

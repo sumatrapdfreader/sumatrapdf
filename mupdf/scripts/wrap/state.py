@@ -12,32 +12,14 @@ import jlib
 
 
 try:
-    try:
-        import clang.cindex
-    except ModuleNotFoundError as e:
-
-        # On devuan, clang-python isn't on python3's path, but python2's
-        # clang-python works fine with python3, so we deviously get the path by
-        # running some python 2.
-        #
-        e, clang_path = jlib.system( 'python2 -c "import clang; print clang.__path__[0]"', out='return', raise_errors=0)
-
-        if e == 0:
-            jlib.log( 'Retrying import of clang using info from python2 {clang_path=}')
-            sys.path.append( os.path.dirname( clang_path))
-            import clang.cindex
-        else:
-            raise
-
+    import clang.cindex
 except Exception as e:
     jlib.log('Warning: failed to import clang.cindex: {e=}\n'
             f'We need Clang Python to build MuPDF python.\n'
-            f'Install with "pip install libclang" or use the --venv option, or:\n'
-            f'    OpenBSD: pkg_add py3-llvm\n'
-            f'    Linux:debian/devuan: apt install python-clang\n'
+            f'Install with `pip install libclang`, or use `--venv pylocal`, or\n'
+            f'(OpenBSD only) `pkg_add py3-llvm.`\n'
             )
     clang = None
-
 
 omit_fns = [
         'fz_open_file_w',
@@ -64,129 +46,21 @@ omit_fns = [
 
 omit_methods = []
 
-class ClangInfo:
+
+def get_name_canonical( type_):
     '''
-    Sets things up so we can import and use clang.
-
-    Members:
-        .libclang_so
-        .resource_dir
-        .include_path
-        .clang_version
+    Wrap Clang's clang.cindex.Type.get_canonical() to avoid returning anonymous
+    struct that clang spells as 'struct (unnamed at ...)'.
     '''
-    def __init__( self, verbose):
-        '''
-        We look for different versions of clang until one works.
+    if type_.spelling == 'size_t':
+        #jlib.log( 'Not canonicalising {self.spelling=}')
+        return type_
+    ret = type_.get_canonical()
+    if 'struct (unnamed at ' in ret.spelling:
+        jlib.log( 'Not canonicalising {type_.spelling=}')
+        ret = self
+    return ret
 
-        Searches for libclang.so and registers with
-        clang.cindex.Config.set_library_file(). This appears to be necessary
-        even when clang is installed as a standard package.
-        '''
-        if state_.windows:
-            # We require 'pip install libclang' which avoids the need to look
-            # for libclang.
-            return
-        # As of 2022-09-16, max libclang version is 14.
-        for version in range( 20, 5, -1):
-            ok = self._try_init_clang( version, verbose)
-            if ok:
-                break
-        else:
-            raise Exception( 'cannot find libclang.so')
-
-    def _try_init_clang( self, version, verbose):
-        if verbose:
-            jlib.log( 'Looking for libclang.so, {version=}.')
-        if state_.openbsd:
-            clang_bin = glob.glob( f'/usr/local/bin/clang-{version}')
-            if not clang_bin:
-                if verbose:
-                    jlib.log('Cannot find {clang_bin=}', 1)
-                return
-            if verbose:
-                jlib.log( '{clang_bin=}')
-            clang_bin = clang_bin[0]
-            self.clang_version = version
-            libclang_so = glob.glob( f'/usr/local/lib/libclang.so*')
-            assert len(libclang_so) == 1
-            self.libclang_so = libclang_so[0]
-            self.resource_dir = jlib.system(
-                    f'{clang_bin} -print-resource-dir',
-                    out='return',
-                    ).strip()
-            self.include_path = os.path.join( self.resource_dir, 'include')
-            if verbose:
-                jlib.log('{self.libclang_so=} {self.resource_dir=} {self.include_path=}')
-            if os.environ.get('VIRTUAL_ENV'):
-                clang.cindex.Config.set_library_file( self.libclang_so)
-            return True
-
-        if verbose:
-            jlib.log( '{os.environ.get( "PATH")=}')
-        for p in os.environ.get( 'PATH').split( ':'):
-            pp = os.path.join( p, f'clang-{version}*')
-            clang_bins = glob.glob( pp)
-            if not clang_bins:
-                if verbose:
-                    jlib.log( 'No match for: {pp=}')
-                continue
-            if verbose:
-                jlib.log( '{clang_bins=}')
-            clang_bins.sort()
-            for clang_bin in clang_bins:
-                if verbose:
-                    jlib.log( '{clang_bin=}')
-                e, clang_search_dirs = jlib.system(
-                        f'{clang_bin} -print-search-dirs',
-                        #verbose=log,
-                        out='return',
-                        raise_errors=False,
-                        )
-                if e:
-                    if verbose:
-                        jlib.log( '[could not find {clang_bin}: {e=}]')
-                    return
-                if verbose:
-                    jlib.log( '{clang_search_dirs=}')
-                if version == 10:
-                    m = re.search( '\nlibraries: =(.+)\n', clang_search_dirs)
-                    assert m
-                    clang_search_dirs = m.group(1)
-                clang_search_dirs = clang_search_dirs.strip().split(':')
-                if verbose:
-                    jlib.log( '{clang_search_dirs=}')
-                for i in ['/usr/lib', '/usr/local/lib'] + clang_search_dirs:
-                    for leaf in f'libclang-{version}.*so*', f'libclang.so.{version}.*':
-                        p = os.path.join( i, leaf)
-                        p = os.path.abspath( p)
-                        if verbose:
-                            jlib.log( '{p=}')
-                        libclang_so = glob.glob( p)
-                        if not libclang_so:
-                            continue
-
-                        # We have found libclang.so.
-                        self.libclang_so = libclang_so[0]
-                        jlib.log( 'Using {self.libclang_so=}')
-                        clang.cindex.Config.set_library_file( self.libclang_so)
-                        self.resource_dir = jlib.system(
-                                f'{clang_bin} -print-resource-dir',
-                                out='return',
-                                ).strip()
-                        self.include_path = os.path.join( self.resource_dir, 'include')
-                        self.clang_version = version
-                        return True
-        if verbose:
-            jlib.log( 'Failed to find libclang, {version=}.')
-
-
-clang_info_cache = None
-
-def clang_info( verbose=False):
-    global clang_info_cache
-    if not clang_info_cache:
-        clang_info_cache = ClangInfo( verbose)
-    return clang_info_cache
 
 class State:
     def __init__( self):
@@ -228,7 +102,7 @@ class State:
                     #jlib.log('    {cursor2.spelling=}')
                     name = cursor2.spelling
                     enum_values.append(name)
-                enums[ cursor.type.get_canonical().spelling] = enum_values
+                enums[ get_name_canonical( cursor.type).spelling] = enum_values
             if cursor.kind==clang.cindex.CursorKind.TYPEDEF_DECL:
                 name = cursor.spelling
                 if name.startswith( ( 'fz_', 'pdf_')):
@@ -279,7 +153,7 @@ class State:
         '''
         assert ' ' not in fnname, f'fnname={fnname}'
         if method and fnname in omit_methods:
-            return
+            assert 0, f'method={method} fnname={fnname} omit_methods={omit_methods}'
         self.functions_cache_populate( tu)
         return self.functions_cache[ tu].get( fnname)
 
@@ -395,8 +269,14 @@ class BuildDirs:
 
     def set_dir_so( self, dir_so):
         '''
-        Sets self.dir_so and also updates self.cpp_flags etc.
+        Sets self.dir_so and also updates self.cpp_flags etc. Special case
+        `dir_so='-'` sets to None.
         '''
+        if dir_so == '-':
+            self.dir_so = None
+            self.cpp_flags = None
+            return
+
         dir_so = abspath( dir_so)
         self.dir_so = dir_so
 

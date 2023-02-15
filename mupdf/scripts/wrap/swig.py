@@ -63,7 +63,6 @@ def build_swig(
         differs from our new content.
     '''
     assert isinstance( state_, state.State)
-    jlib.log( '{=build_dirs type(build_dirs)}')
     assert isinstance(build_dirs, state.BuildDirs), type(build_dirs)
     assert isinstance(generated, cpp.Generated), type(generated)
     assert language in ('python', 'csharp')

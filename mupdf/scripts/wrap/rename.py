@@ -18,6 +18,10 @@ def snake_to_camel( name, initial):
     >>> snake_to_camel( 'foo_bar_q__a', False)
     fooBarQ_A
     '''
+    # libclang can treat size_t oddly, which we work around when parsing MuPDF
+    # headers, so we should not be given size_t.
+    #
+    assert name != 'size_t'
     items = name.split( '_')
     ret = ''
     for i, item in enumerate( items):

@@ -1482,6 +1482,10 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 		return;
 	}
 
+	/* Drop the reverse page map on any modification to the document. */
+	if (doc && !doc->caching_object && doc->rev_page_map)
+		pdf_drop_page_tree(ctx, doc);
+
 	if (val)
 	{
 		val_doc = pdf_get_bound_document(ctx, val);
@@ -2105,7 +2109,6 @@ static void
 pdf_dict_get_put(fz_context *ctx, pdf_obj *obj, pdf_obj *key, pdf_obj *val, pdf_obj **old_val)
 {
 	int i;
-	pdf_document *doc;
 
 	if (old_val)
 		*old_val = NULL;
@@ -2118,11 +2121,6 @@ pdf_dict_get_put(fz_context *ctx, pdf_obj *obj, pdf_obj *key, pdf_obj *val, pdf_
 
 	if (DICT(obj)->len > 100 && !(obj->flags & PDF_FLAGS_SORTED))
 		pdf_sort_dict(ctx, obj);
-
-	/* Drop the reverse page map on any modification to the document. */
-	doc = DICT(obj)->doc;
-	if (doc && !doc->caching_object && doc->rev_page_map)
-		pdf_drop_page_tree(ctx, doc);
 
 	if (key < PDF_LIMIT)
 		i = pdf_dict_find(ctx, obj, key);

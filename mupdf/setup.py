@@ -67,6 +67,11 @@ def windows():
     return s == 'Windows' or s.startswith('CYGWIN')
 
 @cache
+def macos():
+    s = platform.system()
+    return s == 'Darwin'
+
+@cache
 def build_dir():
     # This is x86/x64-specific.
     #
@@ -305,6 +310,16 @@ def build():
                 f'mupdfcpp{infix}.dll', # C and C++.
                 '_mupdf.pyd',           # Python internals.
                 'mupdf.py',             # Python.
+                ]
+    elif macos():
+        jlib.log( 'Contents of {build_dir=} are:')
+        for leaf in os.listdir(build_dir):
+            jlib.log( '    {leaf}')
+        names = [
+                'libmupdf.dylib',   # C.
+                'libmupdfcpp.so',   # C++.
+                '_mupdf.so',        # Python internals.
+                'mupdf.py',         # Python.
                 ]
     else:
         names = [
