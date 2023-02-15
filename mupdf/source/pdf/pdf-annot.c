@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1397,9 +1397,6 @@ pdf_annot_border(fz_context *ctx, pdf_annot *annot)
 	fz_try(ctx)
 	{
 		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
-		/* SumatraPDF */
-		if (bs)
-			pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
 		bs_w = pdf_dict_get(ctx, bs, PDF_NAME(W));
 		if (pdf_is_number(ctx, bs_w))
 		{
@@ -3365,4 +3362,16 @@ pdf_set_annot_filespec(fz_context *ctx, pdf_annot *annot, pdf_obj *fs)
 		fz_rethrow(ctx);
 
 	pdf_dirty_annot(ctx, annot);
+}
+
+int
+pdf_annot_hidden_for_editing(fz_context *ctx, pdf_annot *annot)
+{
+	return annot->hidden_editing;
+}
+
+void
+pdf_set_annot_hidden_for_editing(fz_context *ctx, pdf_annot *annot, int hidden)
+{
+	annot->hidden_editing = hidden;
 }

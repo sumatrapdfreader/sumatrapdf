@@ -167,7 +167,20 @@ pdf_parse_date(fz_context *ctx, const char *s)
 
 	if (s[0] == 'Z')
 	{
+		if (s[1] == '0' && s[2] == '0')
+		{
+			s += 3;
+			if (s[0] == '\'' && s[1] == '0' && s[2] == '0')
+			{
+				s += 3;
+				if (s[0] == '\'')
 		s += 1;
+			}
+		}
+		else
+		{
+			s += 1;
+		}
 	}
 	else if ((s[0] == '-' || s[0] == '+') && isdigit(s[1]) && isdigit(s[2]))
 	{

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -877,5 +877,13 @@ pdf_obj *pdf_annot_filespec(fz_context *ctx, pdf_annot *annot);
 	Set the annotation file specification.
 */
 void pdf_set_annot_filespec(fz_context *ctx, pdf_annot *annot, pdf_obj *obj);
+
+/*
+	Get/set a hidden flag preventing the annotation from being
+	rendered when it is being edited. This flag is independent
+	of the hidden flag in the PDF annotation object described in the PDF specification.
+*/
+int pdf_annot_hidden_for_editing(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_hidden_for_editing(fz_context *ctx, pdf_annot *annot, int hidden);
 
 #endif

@@ -3700,8 +3700,8 @@ static void ffi_Pixmap_tint(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
-	float black = js_tonumber(J, 1);
-	float white = js_tonumber(J, 2);
+	int black = js_tointeger(J, 1);
+	int white = js_tointeger(J, 2);
 
 	fz_try(ctx)
 		fz_tint_pixmap(ctx, pixmap, black, white);
@@ -4749,7 +4749,7 @@ static void ffi_new_Story(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	const char *user_css = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
 	double em = js_isdefined(J, 3) ? js_tonumber(J, 3) : 12;
-	fz_archive *arch = js_isdefined(J, 4) ? ffi_toarchive(J, 4) : NULL;
+	fz_archive *arch = js_iscoercible(J, 4) ? ffi_toarchive(J, 4) : NULL;
 	fz_buffer *contents = ffi_tobuffer(J, 1);
 	fz_story *story = NULL;
 
@@ -8122,6 +8122,32 @@ static void ffi_PDFAnnotation_setIsOpen(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_getHiddenForEditing(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int hidden = 0;
+
+	fz_try(ctx)
+		hidden = pdf_annot_hidden_for_editing(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_pushboolean(J, hidden);
+}
+
+static void ffi_PDFAnnotation_setHiddenForEditing(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	int hidden = js_toboolean(J, 1);
+
+	fz_try(ctx)
+		pdf_set_annot_hidden_for_editing(ctx, annot, hidden);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFWidget_getFieldType(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -9189,6 +9215,9 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.setIsOpen", ffi_PDFAnnotation_setIsOpen, 1);
 
 		jsB_propfun(J, "PDFAnnotation.process", ffi_PDFAnnotation_process, 1);
+
+		jsB_propfun(J, "PDFAnnotation.getHiddenForEditing", ffi_PDFAnnotation_getHiddenForEditing, 0);
+		jsB_propfun(J, "PDFAnnotation.setHiddenForEditing", ffi_PDFAnnotation_setHiddenForEditing, 1);
 	}
 	js_dup(J);
 	js_setglobal(J, "PDFAnnotation");

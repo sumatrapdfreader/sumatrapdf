@@ -31,14 +31,13 @@ FUN(MultiArchive_mountArchive)(JNIEnv *env, jobject self, jobject jsub, jstring 
 	const char *path = NULL;
 
 	if (!ctx || !arch) return;
-	if (jpath)
-		path = (*env)->GetStringUTFChars(env, jpath, NULL);
+	if (!jpath) jni_throw_arg(env, "path must not be null");
+	path = (*env)->GetStringUTFChars(env, jpath, NULL);
 
 	fz_try(ctx)
 		fz_mount_multi_archive(ctx, arch, sub, path);
 	fz_always(ctx)
-		if (jpath)
-			(*env)->ReleaseStringUTFChars(env, jpath, path);
+		(*env)->ReleaseStringUTFChars(env, jpath, path);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }

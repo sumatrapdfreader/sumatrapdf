@@ -2135,6 +2135,8 @@ static void console_init(void)
 
 static void console_fin(void)
 {
+	fz_set_warning_callback(ctx, warning_callback, warning_user);
+	fz_set_error_callback(ctx, error_callback, error_user);
 	fz_drop_buffer(ctx, console_buffer);
 	console_buffer = NULL;
 }
@@ -2945,6 +2947,8 @@ static void cleanup(void)
 #endif
 
 	trace_action("quit(0);\n");
+
+	fz_flush_warnings(ctx);
 
 	console_fin();
 

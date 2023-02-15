@@ -187,11 +187,18 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 
 		jpeg_set_defaults(&cinfo);
 		jpeg_set_quality(&cinfo, quality, FALSE);
-		jpeg_simple_progression(&cinfo); /* progressive JPEGs are smaller */
 
+		/* Write image resolution */
 		cinfo.density_unit = 1; /* dots/inch */
 		cinfo.X_density = pix->xres;
 		cinfo.Y_density = pix->yres;
+
+		/* Disable chroma subsampling */
+		cinfo.comp_info[0].h_samp_factor = 1;
+		cinfo.comp_info[0].v_samp_factor = 1;
+
+		/* Progressive JPEGs are smaller */
+		jpeg_simple_progression(&cinfo);
 
 		jpeg_start_compress(&cinfo, TRUE);
 

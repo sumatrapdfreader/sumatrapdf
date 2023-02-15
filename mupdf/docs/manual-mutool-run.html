@@ -354,9 +354,9 @@ tiles of a page.
 <dd>Get the value of component k at position x, y (relative to the image origin: 0, 0 is the top left pixel).
 <dt>Pixmap#setResolution(xRes, yRes)
 <dd>Set X/Y resolution in dots per inch.
-<dt>Pixmap#saveAsPNG(fileName, saveAlpha)
+<dt>Pixmap#saveAsPNG(fileName)
 <dd>Save the pixmap as a PNG. Only works for Gray and RGB images.
-<dt>Pixmap#saveAsJPEG(fileName, saveAlpha, quality)
+<dt>Pixmap#saveAsJPEG(fileName, quality)
 <dd>Save the pixmap as a JPEG. Only works for Gray, RGB, and CMYK images.
 <dt>Pixmap#invert()
 <dd>Invert all pixel. All components are processed, except alpha which is unchanged.
@@ -1269,6 +1269,8 @@ The desired appearance is given as a transform along with either a display list 
 <dd>Update the appearance stream to account for changes in the annotation.
 <dt>PDFAnnotation#getHot(), #setHot(hot)
 <dd>Get/set the annotation as being hot, i.e. that the pointer is hovering over the annotation.
+<dt>PDFAnnotation#getHiddenForEditing(), #setHiddenForEditing(hidden)
+<dd>Get/set a special annotation hidden flag for editing. This flag prevents the annotation from being rendered.
 </dl>
 
 <p>
