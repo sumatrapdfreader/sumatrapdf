@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1f29f67e991cd40d33eb9211005281e400f1480a
+c3a86c50855847410857c44f8ac60f62a1861d30
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13202,24 +13202,28 @@ uk:Відкрити вкладення
 br:Abrir Pasta em &Double Commander
 cy:Agor Cyfeiriadur yn &Double Commander
 de:Verzeichnis in &Double Commander öffnen
+it:Apri cartella in &Double Commander
 nl:Open Map in &Double Commander
 pl:Otwórz katalog w &Double Commanderze
 :Open Directory in &Explorer
 br:Abrir Pasta no &Explorer
 cy:Agor Cyfeiriadur yn &Chwilotwr
 de:Verzeichnis im &Explorer öffnen
+it:Apri cartella in &Explorer
 nl:Open Map in &Verkenner
 pl:Otwórz katalog w &Eksploratorze
 :Open Directory in &Total Commander
 br:Abrir Pasta em &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
 de:Verzeichnis in &Total Commander öffnen
+it:Apri cartella in &Total Commander
 nl:Open Map in &TotalCommander
 pl:Otwórz katalog w &Total Commanderze
 :Open Directory in Direcotry &Opus
 br:Abrir Pasta em Directory &Opus
 cy:Agor Cyfeiriadur yn Directory &Opus
 de:Verzeichnis in Directory &Opus öffnen
+it:Apri cartella in Directory &Opus
 nl:Open Map in Direcotry &Opus
 pl:Otwórz katalog w Directory &Opus
 :Open Embedded PDF
@@ -13594,6 +13598,7 @@ vn:Mở bằng Microsoft XPS-Viewer
 br:Abrir em Microsoft &HTML Help
 cy:Agor yn Microsoft &HTML Help
 de:In Microsoft &HTML-Hilfe öffnen
+it:Apri in Microsoft &HTML Help
 nl:Open in Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
 :P&roperties
