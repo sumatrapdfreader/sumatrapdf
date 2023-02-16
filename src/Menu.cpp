@@ -146,7 +146,7 @@ static MenuDef menuDefFile[] = {
         CmdOpenWithExplorer,
     },
     {
-        _TRN("Open Directory in Direcotry &Opus"),
+        _TRN("Open Directory in Directory &Opus"),
         CmdOpenWithDirectoryOpus,
     },
     {
