@@ -13224,7 +13224,7 @@ br:Abrir Pasta em Directory &Opus
 cy:Agor Cyfeiriadur yn Directory &Opus
 de:Verzeichnis in Directory &Opus öffnen
 it:Apri cartella in Directory &Opus
-nl:Open Map in Direcotry &Opus
+nl:Open Map in Directory &Opus
 pl:Otwórz katalog w Directory &Opus
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
