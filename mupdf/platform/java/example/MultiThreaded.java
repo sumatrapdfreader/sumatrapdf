@@ -86,8 +86,8 @@ class MultiThreaded
 		Document doc;
 		try {
 			doc = Document.openDocument(filename);
-		} catch (RuntimeException e) {
-			System.err.println("Error opening document: " + e);
+		} catch (RuntimeException ex) {
+			System.err.println("cannot open document: " + ex.getMessage());
 			return;
 		}
 
@@ -95,82 +95,101 @@ class MultiThreaded
 		int pageCount;
 		try {
 			pageCount = doc.countPages();
-		} catch (RuntimeException e) {
-			System.err.println("Error counting number of pages: " + e);
+		} catch (RuntimeException ex) {
+			System.err.println("cannot count document pages: " + ex.getMessage());
 			return;
 		}
 
-		/* Create one thread and output pixmap per page. */
+		/* Create a thread, an output pixmap and an exception placeholder per page. */
 		final Thread[] threads = new Thread[pageCount];
 		final Pixmap[] pixmaps = new Pixmap[pageCount];
+		final Exception[] exceptions = new Exception[pageCount];
 
 		for (int i = 0; i < pageCount; ++i)
 		{
 			final int pageNumber = i;
+			try {
+				/* Load page and convert it to a display list on
+				 * the main thread. Note that this cannot be done
+				 * in worker threads since doc should only be used
+				 * by the main thread.
+				 */
+				Page page = doc.loadPage(pageNumber);
 
-			/* Load page and convert it to a display list on
-			 * the main thread. Note that this cannot be done
-			 * in worker threads since doc should only be used
-			 * by the main thread.
-			 */
-			Page page = doc.loadPage(i);
+				/* Determine the bounding box for the page */
+				final Rect bounds = page.getBounds();
 
-			/* Determine the bounding box for the page */
-			final Rect bounds = page.getBounds();
+				/* Convert the page into a display list. The display
+				 * list can be used by any other thread as it is not
+				 * bound to doc.
+				 */
+				final DisplayList displayList = page.toDisplayList();
 
-			/* Convert the page into a display list. The display
-			 * list can be used by any other thread as it is not
-			 * bound to doc.
-			 */
-			final DisplayList displayList = page.toDisplayList();
+				/* Pass display list, page size and destination pixmap to each
+				 * thread for rendering. Also pass page number for debug printing.
+				 * Everything inside run() takes place in each worker thread.
+				 */
+				threads[pageNumber] = new Thread() {
+					public void run() {
+						try {
+							System.out.println(pageNumber + ": creating pixmap");
 
-			/* Pass display list, page size and destination pixmap to each
-			 * thread for rendering. Also pass page number for debug printing.
-			 * Everything inside run() takes place in each worker thread.
-			 */
-			threads[pageNumber] = new Thread() {
-				public void run() {
-					System.err.println("thread at page " + pageNumber + " loading!");
+							/* Create a white destination pixmap with correct dimensions. */
+							pixmaps[pageNumber] = new Pixmap(ColorSpace.DeviceRGB, bounds);
+							pixmaps[pageNumber].clear(0xff);
 
-					/* Create a white destination pixmap with correct dimensions. */
-					pixmaps[pageNumber] = new Pixmap(ColorSpace.DeviceRGB, bounds);
-					pixmaps[pageNumber].clear(0xff);
+							System.out.println(pageNumber + ": rendering display list to pixmap");
 
-					System.err.println("thread at page " + pageNumber + " rendering!");
+							/* Run the display list through a DrawDevice which
+							 * will render the requested area of the page to the
+							 * given pixmap.
+							 */
+							DrawDevice dev = new DrawDevice(pixmaps[pageNumber]);
+							displayList.run(dev, Matrix.Identity(), bounds, null);
+							dev.close();
 
-					/* Run the display list through a DrawDevice which
-					 * will render the requested area of the page to the
-					 * given pixmap.
-					 */
-					DrawDevice dev = new DrawDevice(pixmaps[pageNumber]);
-					displayList.run(dev, Matrix.Identity(), bounds, null);
-					dev.close();
+						} catch (RuntimeException ex) {
+							pixmaps[pageNumber] = null;
+							exceptions[pageNumber] = ex;
+						}
+					}
+				};
 
-					System.err.println("thread at page " + pageNumber + " done!");
-				}
-			};
+				threads[pageNumber].start();
 
-			threads[pageNumber].start();
+			} catch (RuntimeException ex) {
+				System.err.println(pageNumber + ": cannot load page, skipping render: " + ex.getMessage());
+				exceptions[pageNumber] = ex;
+			}
 		}
 
 		/* Wait for threads to finish in reverse order. */
-		System.err.println("joining " + pageCount + " threads");
-		for (int i = pageCount - 1; i >= 0; --i)
+		System.out.println("joining " + pageCount + " threads");
+		for (int i = 0; i < pageCount; ++i)
 		{
+			if (threads[i] == null) {
+				System.err.println(i + ": skipping save, page loading failed: " + exceptions[i].toString());
+				continue;
+			}
+
 			try {
 				threads[i].join();
-			} catch (InterruptedException e) {
-				System.out.println(e);
-				return;
+			} catch (InterruptedException ex) {
+				System.err.println(i + ": interrupted while waiting for rendering result, skipping all remaining pages: " + ex.getMessage());
+				break;
+			}
+
+			if (pixmaps[i] == null) {
+				System.err.println(i + ": skipping save, page rendering failed: " + exceptions[i].toString());
+				continue;
 			}
 
 			/* Save destination pixmap from each thread to a PNG. */
-			String output = String.format("out-%04d.png", i);
-			System.err.println("Saving " + output + "...");
-			pixmaps[i].saveAsPNG(output);
+			String pngfilename = String.format("out-%04d.png", i);
+			System.out.println(i + ": saving rendered pixmap as " + pngfilename);
+			pixmaps[i].saveAsPNG(pngfilename);
 		}
 
-		System.err.println("finally!");
-		return;
+		System.out.println("finally!");
 	}
 }

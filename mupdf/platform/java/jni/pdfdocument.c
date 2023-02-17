@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -74,9 +74,9 @@ static void event_cb(fz_context *ctx, pdf_document *pdf, pdf_doc_event *event, v
 				fz_throw_java_and_detach_thread(ctx, env, detach);
 
 			if (alert->has_check_box) {
-			jcheckboxmsg = (*env)->NewStringUTF(env, alert->check_box_message);
-			if (!jcheckboxmsg || (*env)->ExceptionCheck(env))
-				fz_throw_java_and_detach_thread(ctx, env, detach);
+				jcheckboxmsg = (*env)->NewStringUTF(env, alert->check_box_message);
+				if (!jcheckboxmsg || (*env)->ExceptionCheck(env))
+					fz_throw_java_and_detach_thread(ctx, env, detach);
 			}
 
 			jalertresult = (*env)->CallObjectMethod(env, jlistener, mid_PDFDocument_JsEventListener_onAlert, jpdf, jtitle, jmessage, alert->icon_type, alert->button_group_type, alert->has_check_box, jcheckboxmsg, alert->initially_checked);
@@ -1570,4 +1570,43 @@ FUN(PDFDocument_verifyEmbeddedFileChecksum)(JNIEnv *env, jobject self, jobject j
 		jni_rethrow(env, ctx);
 
 	return valid ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_setPageLabels)(JNIEnv *env, jobject self, jint index, jint style, jstring jprefix, jint start)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	const char *prefix = NULL;
+
+	if (jprefix)
+	{
+		prefix = (*env)->GetStringUTFChars(env, jprefix, NULL);
+		if (!prefix) return;
+	}
+
+	fz_try(ctx)
+	{
+		pdf_set_page_labels(ctx, pdf, index, style, prefix, start);
+	}
+	fz_always(ctx)
+	{
+		if (jprefix)
+			(*env)->ReleaseStringUTFChars(env, jprefix, prefix);
+	}
+	fz_catch(ctx)
+	{
+		jni_rethrow_void(env, ctx);
+	}
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_deletePageLabels)(JNIEnv *env, jobject self, jint index)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	fz_try(ctx)
+		pdf_delete_page_labels(ctx, pdf, index);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
+static void pdf_adjust_page_labels(fz_context *ctx, pdf_document *doc, int index, int adjust);
 
 int
 pdf_count_pages(fz_context *ctx, pdf_document *doc)
@@ -1218,6 +1220,9 @@ pdf_delete_page(fz_context *ctx, pdf_document *doc, int at)
 			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count - 1);
 			parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
 		}
+
+		/* Adjust page labels */
+		pdf_adjust_page_labels(ctx, doc, at, -1);
 	}
 	fz_always(ctx)
 		pdf_end_operation(ctx, doc);
@@ -1336,9 +1341,380 @@ pdf_insert_page(fz_context *ctx, pdf_document *doc, int at, pdf_obj *page_ref)
 			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count + 1);
 			parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
 		}
+
+		/* Adjust page labels */
+		pdf_adjust_page_labels(ctx, doc, at, 1);
 	}
 	fz_always(ctx)
 		pdf_end_operation(ctx, doc);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+}
+
+/*
+ * Page Labels
+ */
+
+struct page_label_range {
+	int offset;
+	pdf_obj *label;
+	int nums_ix;
+	pdf_obj *nums;
+};
+
+static void
+pdf_lookup_page_label_imp(fz_context *ctx, pdf_obj *node, int index, struct page_label_range *range)
+{
+	pdf_obj *kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
+	pdf_obj *nums = pdf_dict_get(ctx, node, PDF_NAME(Nums));
+	int i;
+
+	if (pdf_is_array(ctx, kids))
+	{
+		for (i = 0; i < pdf_array_len(ctx, kids); ++i)
+		{
+			pdf_obj *kid = pdf_array_get(ctx, kids, i);
+			pdf_lookup_page_label_imp(ctx, kid, index, range);
+		}
+	}
+
+	if (pdf_is_array(ctx, nums))
+	{
+		for (i = 0; i < pdf_array_len(ctx, nums); i += 2)
+		{
+			int k = pdf_array_get_int(ctx, nums, i);
+			if (k <= index)
+			{
+				range->offset = k;
+				range->label = pdf_array_get(ctx, nums, i + 1);
+				range->nums_ix = i;
+				range->nums = nums;
+			}
+			else
+			{
+				/* stop looking if we've already passed the index */
+				return;
+			}
+		}
+	}
+}
+
+static struct page_label_range
+pdf_lookup_page_label(fz_context *ctx, pdf_document *doc, int index)
+{
+	struct page_label_range range = { 0, NULL };
+	pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+	pdf_obj *labels = pdf_dict_get(ctx, root, PDF_NAME(PageLabels));
+	pdf_lookup_page_label_imp(ctx, labels, index, &range);
+	return range;
+}
+
+static void
+pdf_flatten_page_label_tree_imp(fz_context *ctx, pdf_obj *node, pdf_obj *new_nums)
+{
+	pdf_obj *kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
+	pdf_obj *nums = pdf_dict_get(ctx, node, PDF_NAME(Nums));
+	int i;
+
+	if (pdf_is_array(ctx, kids))
+	{
+		for (i = 0; i < pdf_array_len(ctx, kids); ++i)
+		{
+			pdf_obj *kid = pdf_array_get(ctx, kids, i);
+			pdf_flatten_page_label_tree_imp(ctx, kid, new_nums);
+		}
+	}
+
+	if (pdf_is_array(ctx, nums))
+	{
+		for (i = 0; i < pdf_array_len(ctx, nums); i += 2)
+		{
+			pdf_array_push(ctx, new_nums, pdf_array_get(ctx, nums, i));
+			pdf_array_push(ctx, new_nums, pdf_array_get(ctx, nums, i + 1));
+		}
+	}
+}
+
+static void
+pdf_flatten_page_label_tree(fz_context *ctx, pdf_document *doc)
+{
+	pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+	pdf_obj *labels = pdf_dict_get(ctx, root, PDF_NAME(PageLabels));
+	pdf_obj *nums = pdf_dict_get(ctx, labels, PDF_NAME(Nums));
+
+	// Already flat...
+	if (pdf_is_array(ctx, nums) && pdf_array_len(ctx, nums) >= 2)
+		return;
+
+	nums = pdf_new_array(ctx, doc, 8);
+	fz_try(ctx)
+	{
+		if (!labels)
+			labels = pdf_dict_put_dict(ctx, root, PDF_NAME(PageLabels), 1);
+
+		pdf_flatten_page_label_tree_imp(ctx, labels, nums);
+
+		pdf_dict_del(ctx, labels, PDF_NAME(Kids));
+		pdf_dict_del(ctx, labels, PDF_NAME(Limits));
+		pdf_dict_put(ctx, labels, PDF_NAME(Nums), nums);
+
+		/* No Page Label tree found - insert one with default values */
+		if (pdf_array_len(ctx, nums) == 0)
+		{
+			pdf_obj *obj;
+			pdf_array_push_int(ctx, nums, 0);
+			obj = pdf_array_push_dict(ctx, nums, 1);
+			pdf_dict_put(ctx, obj, PDF_NAME(S), PDF_NAME(D));
+		}
+	}
+	fz_always(ctx)
+		pdf_drop_obj(ctx, nums);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+static pdf_obj *
+pdf_create_page_label(fz_context *ctx, pdf_document *doc, pdf_page_label_style style, const char *prefix, int start)
+{
+	pdf_obj *obj = pdf_new_dict(ctx, doc, 3);
+	fz_try(ctx)
+	{
+		switch (style)
+		{
+		default:
+		case PDF_PAGE_LABEL_NONE:
+			break;
+		case PDF_PAGE_LABEL_DECIMAL:
+			pdf_dict_put(ctx, obj, PDF_NAME(S), PDF_NAME(D));
+			break;
+		case PDF_PAGE_LABEL_ROMAN_UC:
+			pdf_dict_put(ctx, obj, PDF_NAME(S), PDF_NAME(R));
+			break;
+		case PDF_PAGE_LABEL_ROMAN_LC:
+			pdf_dict_put(ctx, obj, PDF_NAME(S), PDF_NAME(r));
+			break;
+		case PDF_PAGE_LABEL_ALPHA_UC:
+			pdf_dict_put(ctx, obj, PDF_NAME(S), PDF_NAME(A));
+			break;
+		case PDF_PAGE_LABEL_ALPHA_LC:
+			pdf_dict_put(ctx, obj, PDF_NAME(S), PDF_NAME(a));
+			break;
+		}
+		if (prefix && strlen(prefix) > 0)
+			pdf_dict_put_text_string(ctx, obj, PDF_NAME(P), prefix);
+		if (start > 1)
+			pdf_dict_put_int(ctx, obj, PDF_NAME(St), start);
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, obj);
+		fz_rethrow(ctx);
+	}
+	return obj;
+}
+
+static void
+pdf_adjust_page_labels(fz_context *ctx, pdf_document *doc, int index, int adjust)
+{
+	pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+	pdf_obj *labels = pdf_dict_get(ctx, root, PDF_NAME(PageLabels));
+
+	// Skip the adjustment step if there are no page labels.
+	// Exception: If we would adjust the label for page 0, we must create one!
+	// Exception: If the document only has one page!
+	if (labels || (adjust > 0 && index == 0 && pdf_count_pages(ctx, doc) > 1))
+	{
+		struct page_label_range range;
+		int i;
+
+		// Ensure we have a flat page label tree with at least one entry.
+		pdf_flatten_page_label_tree(ctx, doc);
+
+		// Find page label affecting the page that triggered adjustment
+		range = pdf_lookup_page_label(ctx, doc, index);
+
+		// Shift all page labels on and after the inserted index
+		if (adjust > 0)
+		{
+			if (range.offset == index)
+				i = range.nums_ix;
+			else
+				i = range.nums_ix + 2;
+		}
+
+		// Shift all page labels after the removed index
+		else
+		{
+			i = range.nums_ix + 2;
+		}
+
+
+		// Increase/decrease the indices in the name tree
+		for (; i < pdf_array_len(ctx, range.nums); i += 2)
+			pdf_array_put_drop(ctx, range.nums, i,
+				pdf_new_int(ctx, pdf_array_get_int(ctx, range.nums, i) + adjust));
+
+		// TODO: delete page labels that have no effect (zero range)
+
+		// Make sure the number tree always has an entry for page 0
+		if (adjust > 0 && index == 0)
+		{
+			pdf_array_insert_drop(ctx, range.nums, pdf_new_int(ctx, index), 0);
+			pdf_array_insert_drop(ctx, range.nums, pdf_create_page_label(ctx, doc, PDF_PAGE_LABEL_DECIMAL, NULL, 1), 1);
+		}
+	}
+}
+
+void
+pdf_set_page_labels(fz_context *ctx, pdf_document *doc,
+	int index,
+	pdf_page_label_style style, const char *prefix, int start)
+{
+	struct page_label_range range;
+
+	pdf_begin_operation(ctx, doc, "Set page label");
+	fz_try(ctx)
+	{
+		// Ensure we have a flat page label tree with at least one entry.
+		pdf_flatten_page_label_tree(ctx, doc);
+
+		range = pdf_lookup_page_label(ctx, doc, index);
+
+		if (range.offset == index)
+		{
+			// Replace label
+			pdf_array_put_drop(ctx, range.nums,
+				range.nums_ix + 1,
+				pdf_create_page_label(ctx, doc, style, prefix, start));
+		}
+		else
+		{
+			// Insert new label
+			pdf_array_insert_drop(ctx, range.nums,
+				pdf_new_int(ctx, index),
+				range.nums_ix + 2);
+			pdf_array_insert_drop(ctx, range.nums,
+				pdf_create_page_label(ctx, doc, style, prefix, start),
+				range.nums_ix + 3);
+		}
+	}
+	fz_always(ctx)
+		pdf_end_operation(ctx, doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void
+pdf_delete_page_labels(fz_context *ctx, pdf_document *doc, int index)
+{
+	struct page_label_range range;
+
+	if (index == 0)
+	{
+		pdf_set_page_labels(ctx, doc, 0, PDF_PAGE_LABEL_DECIMAL, NULL, 1);
+		return;
+	}
+
+	pdf_begin_operation(ctx, doc, "Delete page label");
+	fz_try(ctx)
+	{
+		// Ensure we have a flat page label tree with at least one entry.
+		pdf_flatten_page_label_tree(ctx, doc);
+
+		range = pdf_lookup_page_label(ctx, doc, index);
+
+		if (range.offset == index)
+		{
+			// Delete label
+			pdf_array_delete(ctx, range.nums, range.nums_ix);
+			pdf_array_delete(ctx, range.nums, range.nums_ix);
+		}
+	}
+	fz_always(ctx)
+		pdf_end_operation(ctx, doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+static const char *roman_uc[3][10] = {
+	{ "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX" },
+	{ "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC" },
+	{ "", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM" },
+};
+
+static const char *roman_lc[3][10] = {
+	{ "", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix" },
+	{ "", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc" },
+	{ "", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm" },
+};
+
+static void pdf_format_roman_page_label(char *buf, int size, int n, const char *sym[3][10], const char *sym_m)
+{
+	int I = n % 10;
+	int X = (n / 10) % 10;
+	int C = (n / 100) % 10;
+	int M = (n / 1000);
+
+	fz_strlcpy(buf, "", size);
+	while (M--)
+		fz_strlcat(buf, sym_m, size);
+	fz_strlcat(buf, sym[2][C], size);
+	fz_strlcat(buf, sym[1][X], size);
+	fz_strlcat(buf, sym[0][I], size);
+}
+
+static void pdf_format_alpha_page_label(char *buf, int size, int n, int alpha)
+{
+	int reps = (n - 1) / 26 + 1;
+	if (reps > size - 1)
+		reps = size - 1;
+	memset(buf, (n - 1) % 26 + alpha, reps);
+	buf[reps] = '\0';
+}
+
+static void
+pdf_format_page_label(fz_context *ctx, int index, pdf_obj *dict, char *buf, int size)
+{
+	pdf_obj *style = pdf_dict_get(ctx, dict, PDF_NAME(S));
+	const char *prefix = pdf_dict_get_text_string(ctx, dict, PDF_NAME(P));
+	int start = pdf_dict_get_int(ctx, dict, PDF_NAME(St));
+	int n;
+
+	// St must be >= 1; default is 1.
+	if (start < 1)
+		start = 1;
+
+	// Add prefix (optional; may be empty)
+	fz_strlcpy(buf, prefix, size);
+	n = strlen(buf);
+	buf += n;
+	size -= n;
+
+	// Append number using style (optional)
+	if (style == PDF_NAME(D))
+		fz_snprintf(buf, size, "%d", index + start);
+	else if (style == PDF_NAME(R))
+		pdf_format_roman_page_label(buf, size, index + start, roman_uc, "M");
+	else if (style == PDF_NAME(r))
+		pdf_format_roman_page_label(buf, size, index + start, roman_lc, "m");
+	else if (style == PDF_NAME(A))
+		pdf_format_alpha_page_label(buf, size, index + start, 'A');
+	else if (style == PDF_NAME(a))
+		pdf_format_alpha_page_label(buf, size, index + start, 'a');
+}
+
+void
+pdf_page_label(fz_context *ctx, pdf_document *doc, int index, char *buf, int size)
+{
+	struct page_label_range range = pdf_lookup_page_label(ctx, doc, index);
+	if (range.label)
+		pdf_format_page_label(ctx, index - range.offset, range.label, buf, size);
+	else
+		fz_snprintf(buf, size, "%d", index + 1);
+}
+
+void
+pdf_page_label_imp(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, int size)
+{
+	pdf_page_label(ctx, pdf_document_from_fz_document(ctx, doc), page, buf, size);
 }

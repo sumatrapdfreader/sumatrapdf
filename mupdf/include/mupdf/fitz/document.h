@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -180,6 +180,12 @@ typedef int (fz_document_count_pages_fn)(fz_context *ctx, fz_document *doc, int 
 	page from a document. See fz_load_page for more information.
 */
 typedef fz_page *(fz_document_load_page_fn)(fz_context *ctx, fz_document *doc, int chapter, int page);
+
+/**
+	Type for a function to get the page label of a page in the document.
+	See fz_page_label for more information.
+*/
+typedef void (fz_document_page_label_fn)(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, int size);
 
 /**
 	Type for a function to query
@@ -750,6 +756,11 @@ void fz_drop_page(fz_context *ctx, fz_page *page);
 fz_transition *fz_page_presentation(fz_context *ctx, fz_page *page, fz_transition *transition, float *duration);
 
 /**
+	Get page label for a given page.
+*/
+const char *fz_page_label(fz_context *ctx, fz_page *page, char *buf, int size);
+
+/**
 	Check permission flags on document.
 */
 int fz_has_permission(fz_context *ctx, fz_document *doc, fz_permission p);
@@ -901,6 +912,7 @@ struct fz_document
 	fz_document_count_chapters_fn *count_chapters;
 	fz_document_count_pages_fn *count_pages;
 	fz_document_load_page_fn *load_page;
+	fz_document_page_label_fn *page_label;
 	fz_document_lookup_metadata_fn *lookup_metadata;
 	fz_document_set_metadata_fn *set_metadata;
 	fz_document_output_intent_fn *get_output_intent;

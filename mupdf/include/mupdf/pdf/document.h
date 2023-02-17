@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -667,6 +667,24 @@ void pdf_delete_page(fz_context *ctx, pdf_document *doc, int number);
 	will be taken to be the end of the document.
 */
 void pdf_delete_page_range(fz_context *ctx, pdf_document *doc, int start, int end);
+
+/*
+	Get page label (string) from a page number (index).
+*/
+void pdf_page_label(fz_context *ctx, pdf_document *doc, int page, char *buf, int size);
+void pdf_page_label_imp(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, int size);
+
+typedef enum {
+	PDF_PAGE_LABEL_NONE = 0,
+	PDF_PAGE_LABEL_DECIMAL = 'D',
+	PDF_PAGE_LABEL_ROMAN_UC = 'R',
+	PDF_PAGE_LABEL_ROMAN_LC = 'r',
+	PDF_PAGE_LABEL_ALPHA_UC = 'A',
+	PDF_PAGE_LABEL_ALPHA_LC = 'a',
+} pdf_page_label_style;
+
+void pdf_set_page_labels(fz_context *ctx, pdf_document *doc, int index, pdf_page_label_style style, const char *prefix, int start);
+void pdf_delete_page_labels(fz_context *ctx, pdf_document *doc, int index);
 
 fz_text_language pdf_document_language(fz_context *ctx, pdf_document *doc);
 void pdf_set_document_language(fz_context *ctx, pdf_document *doc, fz_text_language lang);

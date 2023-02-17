@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -532,6 +532,12 @@ epub_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 }
 
 static void
+epub_page_label(fz_context *ctx, fz_document *doc_, int chapter, int number, char *buf, int size)
+{
+	fz_snprintf(buf, size, "ch. %d, p. %d", chapter+1, number+1);
+}
+
+static void
 epub_drop_accelerator(fz_context *ctx, epub_accelerator *acc)
 {
 	if (acc == NULL)
@@ -853,6 +859,7 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 		doc->super.count_chapters = epub_count_chapters;
 		doc->super.count_pages = epub_count_pages;
 		doc->super.load_page = epub_load_page;
+		doc->super.page_label = epub_page_label;
 		doc->super.lookup_metadata = epub_lookup_metadata;
 		doc->super.output_accelerator = epub_output_accelerator;
 		doc->super.is_reflowable = 1;

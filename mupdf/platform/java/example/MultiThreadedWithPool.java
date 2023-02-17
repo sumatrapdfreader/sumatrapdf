@@ -63,23 +63,30 @@ class MultiThreadedWithPool
 		/* Open the document and count its pages on the main thread. */
 		String filename = args[0];
 		Document doc;
-		int pages;
+		int pageCount;
 		try {
 			doc = Document.openDocument(filename);
-			pages = doc.countPages();
 		} catch (RuntimeException ex) {
-			System.err.println("Could not open input file: " + ex.getMessage());
+			System.err.println("cannot open document: " + ex.getMessage());
+			return;
+		}
+
+		try {
+			pageCount = doc.countPages();
+		} catch (RuntimeException ex) {
+			System.err.println("cannot count document pages: " + ex.getMessage());
 			return;
 		}
 
 		/* Create an ExecutorService with a thread pool of 4 threads. */
 		ExecutorService executor = Executors.newFixedThreadPool(4);
-		try {
-			/* A list holding futures for the rendered images from each page. */
-			List<Future<Pixmap>> renderingFutures = new LinkedList();
 
-			for (int i = 0; i < pages; ++i) {
-				final int pageNumber = i;
+		/* A list holding futures for the rendered images from each page. */
+		List renderingFutures = new LinkedList();
+
+		for (int i = 0; i < pageCount; ++i) {
+			final int pageNumber = i;
+			try {
 				Page page =  doc.loadPage(pageNumber);
 				final Rect bounds = page.getBounds();
 				final DisplayList displayList = page.toDisplayList();
@@ -90,11 +97,13 @@ class MultiThreadedWithPool
 				 */
 				renderingFutures.add(executor.submit(new Callable<Pixmap>() {
 					public Pixmap call() {
-						System.out.println(pageNumber + ": rendering display list to pixmap");
+						System.out.println(pageNumber + ": creating pixmap");
 
 						/* Create a white destination pixmap with correct dimensions. */
 						Pixmap pixmap = new Pixmap(ColorSpace.DeviceRGB, bounds);
 						pixmap.clear(0xff);
+
+						System.out.println(pageNumber + ": rendering display list to pixmap");
 
 						/* Run the display list through a DrawDevice which
 						 * will render the requested area of the page to the
@@ -108,22 +117,47 @@ class MultiThreadedWithPool
 						return pixmap;
 					}
 				}));
+			} catch (RuntimeException ex) {
+				System.err.println(pageNumber + ": cannot load page, skipping render: " + ex.getMessage());
+				renderingFutures.add(ex);
 			}
-
-			/* Get the resulting pixmap from each page rendering future. */
-			for (int i = pages - 1; i >= 0; --i) {
-				Pixmap pixmap = renderingFutures.get(i).get();
-				/* Save destination pixmap to a PNG. */
-				pixmap.saveAsPNG(String.format("out-%04d.png", i));
-				System.out.println(i + ": pixmap saved to PNG");
-			}
-
-			System.out.println("Rendered all pages to PNG files!");
-		} catch (Exception ex) {
-			System.err.println("Could not render all pages: " + ex.getMessage());
-		} finally {
-			/* Stop all thread pool threads. */
-			executor.shutdown();
 		}
+
+		/* Get the resulting pixmap from each page rendering future. */
+		System.out.println("awaiting " + pageCount + " futures");
+		for (int i = 0; i < pageCount; ++i) {
+			if (renderingFutures.get(i) instanceof Exception) {
+				Exception ex  = (Exception) renderingFutures.get(i);
+				System.err.println(i + ": skipping save, page loading failed: " + ex.toString());
+				continue;
+			}
+
+			Future<Pixmap> future = (Future<Pixmap>) renderingFutures.get(i);
+			if (future == null) {
+				System.err.println(i + ": skipping save, page loading failed");
+				continue;
+			}
+
+			Pixmap pixmap;
+			try {
+				pixmap = future.get();
+			} catch (InterruptedException ex) {
+				System.err.println(i + ": interrupted while waiting for rendering result, skipping all remaining pages: " + ex.getMessage());
+				break;
+			} catch (ExecutionException ex) {
+				System.err.println(i + ": skipping save, page rendering failed: " + ex.getMessage());
+				continue;
+			}
+
+			/* Save destination pixmap to a PNG. */
+			String pngfilename = String.format("out-%04d.png", i);
+			System.out.println(i + ": saving rendered pixmap as " + pngfilename);
+			pixmap.saveAsPNG(pngfilename);
+		}
+
+		/* Stop all thread pool threads. */
+		executor.shutdown();
+
+		System.out.println("finally!");
 	}
 }

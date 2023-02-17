@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -2939,6 +2939,7 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.format_link_uri = pdf_format_link_uri_imp;
 	doc->super.count_pages = pdf_count_pages_imp;
 	doc->super.load_page = pdf_load_page_imp;
+	doc->super.page_label = pdf_page_label_imp;
 	doc->super.lookup_metadata = (fz_document_lookup_metadata_fn*)pdf_lookup_metadata;
 	doc->super.set_metadata = (fz_document_set_metadata_fn*)pdf_set_metadata;
 

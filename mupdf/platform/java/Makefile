@@ -125,6 +125,9 @@ run-example: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 run-multithreaded: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.MultiThreaded $$MUPDF_ARGS
 
+run-multithreadedwithpool: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
+	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.MultiThreadedWithPool $$MUPDF_ARGS
+
 gdb: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	gdb --args $(JAVA) -classpath ../../$(OUT) -Djava.library.path="../../$(OUT)" example.Viewer $$MUPDF_ARGS
 

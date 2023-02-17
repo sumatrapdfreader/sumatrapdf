@@ -31,7 +31,7 @@ FUN(MultiArchive_mountArchive)(JNIEnv *env, jobject self, jobject jsub, jstring 
 	const char *path = NULL;
 
 	if (!ctx || !arch) return;
-	if (!jpath) jni_throw_arg(env, "path must not be null");
+	if (!jpath) jni_throw_arg_void(env, "path must not be null");
 	path = (*env)->GetStringUTFChars(env, jpath, NULL);
 
 	fz_try(ctx)

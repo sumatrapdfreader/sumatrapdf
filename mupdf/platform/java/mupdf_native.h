@@ -2708,6 +2708,18 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hans 14093L
 #undef com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hant
 #define com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hant 14822L
+#undef com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_NONE
+#define com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_NONE 0L
+#undef com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_DECIMAL
+#define com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_DECIMAL 68L
+#undef com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ROMAN_UC
+#define com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ROMAN_UC 82L
+#undef com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ROMAN_LC
+#define com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ROMAN_LC 114L
+#undef com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ALPHA_UC
+#define com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ALPHA_UC 65L
+#undef com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ALPHA_LC
+#define com_artifex_mupdf_fitz_PDFDocument_PAGE_LABEL_ALPHA_LC 97L
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    newNative
@@ -3218,6 +3230,22 @@ JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_getLanguage
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_setLanguage
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    setPageLabels
+ * Signature: (IILjava/lang/String;I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_setPageLabels
+  (JNIEnv *, jobject, jint, jint, jstring, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    deletePageLabels
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_deletePageLabels
   (JNIEnv *, jobject, jint);
 
 /*
@@ -4398,6 +4426,14 @@ JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_Page_createLink
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Page_deleteLink
   (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Page
+ * Method:    getLabel
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_Page_getLabel
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

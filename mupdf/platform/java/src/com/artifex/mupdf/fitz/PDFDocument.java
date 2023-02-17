@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -36,6 +36,14 @@ public class PDFDocument extends Document
 	public static final int LANGUAGE_zh = 242;
 	public static final int LANGUAGE_zh_Hans = 14093;
 	public static final int LANGUAGE_zh_Hant = 14822;
+
+	/* Page Label styles */
+	public static final int PAGE_LABEL_NONE = 0;
+	public static final int PAGE_LABEL_DECIMAL = 'D';
+	public static final int PAGE_LABEL_ROMAN_UC = 'R';
+	public static final int PAGE_LABEL_ROMAN_LC = 'r';
+	public static final int PAGE_LABEL_ALPHA_UC = 'A';
+	public static final int PAGE_LABEL_ALPHA_LC = 'a';
 
 	static {
 		Context.init();
@@ -208,6 +216,9 @@ public class PDFDocument extends Document
 
 	public native int getLanguage();
 	public native void setLanguage(int lang);
+
+	public native void setPageLabels(int index, int style, String prefix, int start);
+	public native void deletePageLabels(int index);
 
 	public native int countSignatures();
 

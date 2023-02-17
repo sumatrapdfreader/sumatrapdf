@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -445,4 +445,22 @@ FUN(Page_getDocument)(JNIEnv *env, jobject self)
 	if (!ctx || !page || !doc) return NULL;
 
 	return to_Document_safe_own(ctx, env, fz_keep_document(ctx, doc));
+}
+
+JNIEXPORT jstring JNICALL
+FUN(Page_getLabel)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_page *page = from_Page(env, self);
+	char buf[100];
+
+	if (!ctx || !page)
+		return NULL;
+
+	fz_try(ctx)
+		fz_page_label(ctx, page, buf, sizeof buf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return (*env)->NewStringUTF(env, buf);
 }
