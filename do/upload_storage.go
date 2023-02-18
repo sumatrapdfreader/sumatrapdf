@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kjk/minio"
+	"github.com/kjk/minioutil"
 )
 
 // we delete old daily and pre-release builds. This defines how many most recent
@@ -158,14 +158,14 @@ func getDownloadUrlsViaWebsite(buildType string, ver string) *DownloadUrls {
 	return getDownloadUrlsForPrefix(prefix, buildType, ver)
 }
 
-func getDownloadUrlsDirectS3(mc *minio.Client, buildType string, ver string) *DownloadUrls {
+func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType string, ver string) *DownloadUrls {
 	prefix := mc.URLBase()
 	prefix += getRemoteDir(buildType)
 	return getDownloadUrlsForPrefix(prefix, buildType, ver)
 }
 
 // sumatrapdf/sumatralatest.js
-func createSumatraLatestJs(mc *minio.Client, buildType string) string {
+func createSumatraLatestJs(mc *minioutil.Client, buildType string) string {
 	var appName string
 	switch buildType {
 	case buildTypePreRel:
@@ -223,7 +223,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	return execTextTemplate(tmplText, d)
 }
 
-func getVersionFilesForLatestInfo(mc *minio.Client, buildType string) [][]string {
+func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType string) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
@@ -255,7 +255,7 @@ func getVersionFilesForLatestInfo(mc *minio.Client, buildType string) [][]string
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func verifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
+func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType string) {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
 	fname := "SumatraPDF-prerel-manifest.txt"
@@ -267,7 +267,7 @@ func verifyBuildNotInStorageMust(mc *minio.Client, buildType string) {
 	panicIf(exists, "build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
 }
 
-func UploadDir(c *minio.Client, dirRemote string, dirLocal string, public bool) error {
+func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bool) error {
 	files, err := ioutil.ReadDir(dirLocal)
 	if err != nil {
 		return err
@@ -288,7 +288,7 @@ func UploadDir(c *minio.Client, dirRemote string, dirLocal string, public bool) 
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
-func minioUploadBuildMust(mc *minio.Client, buildType string) {
+func minioUploadBuildMust(mc *minioutil.Client, buildType string) {
 	timeStart := time.Now()
 	defer func() {
 		logf(ctx(), "Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
@@ -371,7 +371,7 @@ func groupFilesByVersion(files []string) []*filesByVer {
 	return res
 }
 
-func minioDeleteOldBuildsPrefix(mc *minio.Client, buildType string) {
+func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType string) {
 	panicIf(buildType == buildTypeRel, "can't delete release builds")
 
 	nBuildsToRetain := nBuildsToRetainPreRel
@@ -403,38 +403,38 @@ func minioDeleteOldBuildsPrefix(mc *minio.Client, buildType string) {
 	}
 }
 
-func newMinioSpacesClient() *minio.Client {
-	config := &minio.Config{
+func newMinioSpacesClient() *minioutil.Client {
+	config := &minioutil.Config{
 		Bucket:   "kjkpubsf",
 		Endpoint: "sfo2.digitaloceanspaces.com",
 		Access:   os.Getenv("SPACES_KEY"),
 		Secret:   os.Getenv("SPACES_SECRET"),
 	}
-	mc, err := minio.New(config)
+	mc, err := minioutil.New(config)
 	must(err)
 	return mc
 }
 
-func newMinioS3Client() *minio.Client {
-	config := &minio.Config{
+func newMinioS3Client() *minioutil.Client {
+	config := &minioutil.Config{
 		Bucket:   "kjkpub",
 		Endpoint: "s3.amazonaws.com",
 		Access:   os.Getenv("AWS_ACCESS"),
 		Secret:   os.Getenv("AWS_SECRET"),
 	}
-	mc, err := minio.New(config)
+	mc, err := minioutil.New(config)
 	must(err)
 	return mc
 }
 
-func newMinioBackblazeClient() *minio.Client {
-	config := &minio.Config{
+func newMinioBackblazeClient() *minioutil.Client {
+	config := &minioutil.Config{
 		Bucket:   "kjk-files",
 		Endpoint: "s3.us-west-001.backblazeb2.com",
 		Access:   os.Getenv("BB_ACCESS"),
 		Secret:   os.Getenv("BB_SECRET"),
 	}
-	mc, err := minio.New(config)
+	mc, err := minioutil.New(config)
 	must(err)
 	return mc
 }

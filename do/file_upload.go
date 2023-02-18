@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kjk/minio"
+	"github.com/kjk/minioutil"
 )
 
 const filesRemoteDir = "sumatraTestFiles/"
@@ -23,7 +23,7 @@ func fileUpload(fpath string) {
 
 	timeStart := time.Now()
 
-	upload := func(mc *minio.Client) {
+	upload := func(mc *minioutil.Client) {
 		uri := mc.URLForPath(remotePath)
 		if mc.Exists(remotePath) {
 			logf(ctx(), "Skipping upload, '%s' already exists\n", uri)
@@ -56,7 +56,7 @@ func fileUpload(fpath string) {
 	wg.Wait()
 }
 
-func minioFilesList(mc *minio.Client) {
+func minioFilesList(mc *minioutil.Client) {
 	uri := mc.URLForPath("")
 	logf(ctx(), "filesList in '%s'\n", uri)
 
@@ -76,7 +76,7 @@ func deleteFilesOneOff() {
 	doDelete := false
 	prefix := "vack/"
 
-	var mc *minio.Client
+	var mc *minioutil.Client
 	//mc = newMinioSpacesClient()
 	//mc = newMinioS3Client()
 	//mc = newMinioBackblazeClient()

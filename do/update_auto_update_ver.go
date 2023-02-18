@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kjk/minio"
+	"github.com/kjk/minioutil"
 )
 
 // Format of auto-update file:
@@ -52,7 +52,7 @@ Latest %s
 	fmt.Printf("Content of update file:\n%s\n\n", s)
 	d := []byte(s)
 
-	uploadInfo := func(mc *minio.Client) {
+	uploadInfo := func(mc *minioutil.Client) {
 		{
 			remotePath := "sumatrapdf/sumpdf-update.txt"
 			_, err := mc.UploadData(remotePath, d, true)
