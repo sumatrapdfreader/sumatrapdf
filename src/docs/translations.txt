@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-93088d313177faace291c3f3df697b1216c05c4d
+ef4d0be26333b1d2dd4f4469b3e46bafebe7081c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13220,6 +13220,9 @@ it:Apri cartella in &Total Commander
 nl:Open Map in &TotalCommander
 pl:Otwórz katalog w &Total Commanderze
 :Open Directory in Directory &Opus
+br:Abrir Pasta em Directory &Opus 
+de:Verzeichnis in Directory &Opus öffnen
+nl:Open Map in Directory &Opus
 pl:Otwórz katalog w Directory &Opus
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
