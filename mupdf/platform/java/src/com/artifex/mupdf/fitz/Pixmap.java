@@ -37,6 +37,7 @@ public class Pixmap
 	}
 
 	private native long newNative(ColorSpace cs, int x, int y, int w, int h, boolean alpha);
+	private native long newNativeFromColorAndMask(Pixmap color, Pixmap mask);
 
 	private Pixmap(long p) {
 		pointer = p;
@@ -66,6 +67,10 @@ public class Pixmap
 		this(cs, rect, false);
 	}
 
+	public Pixmap(Pixmap color, Pixmap mask) {
+		pointer = newNativeFromColorAndMask(color, mask);
+	}
+
 	public native void clear();
 	private native void clearWithValue(int value);
 	public void clear(int value) {
@@ -74,6 +79,10 @@ public class Pixmap
 
 	public native void saveAsPNG(String filename);
 	public native void saveAsJPEG(String filename, int quality);
+	public native void saveAsPAM(String filename);
+	public native void saveAsPNM(String filename);
+	public native void saveAsPBM(String filename);
+	public native void saveAsPKM(String filename);
 
 	public native int getX();
 	public native int getY();
@@ -95,6 +104,7 @@ public class Pixmap
 	public native void invertLuminance();
 	public native void gamma(float gamma);
 	public native void tint(int black, int white);
+	public native Pixmap convertToColorSpace(ColorSpace cs, ColorSpace proof, DefaultColorSpaces defaultCs, int colorParams, boolean keepAlpha);
 
 	public Rect getBounds() {
 		int x = getX();

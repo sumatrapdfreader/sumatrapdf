@@ -755,3 +755,58 @@ fz_structure_to_string(fz_structure type)
 
 	return NULL;
 }
+
+fz_structure
+fz_structure_from_string(const char *str)
+{
+	if (!strcmp(str, "Document")) return FZ_STRUCTURE_DOCUMENT;
+	if (!strcmp(str, "Part")) return FZ_STRUCTURE_PART;
+	if (!strcmp(str, "Art")) return FZ_STRUCTURE_ART;
+	if (!strcmp(str, "Sect")) return FZ_STRUCTURE_SECT;
+	if (!strcmp(str, "Div")) return FZ_STRUCTURE_DIV;
+	if (!strcmp(str, "BlockQuote")) return FZ_STRUCTURE_BLOCKQUOTE;
+	if (!strcmp(str, "Caption")) return FZ_STRUCTURE_CAPTION;
+	if (!strcmp(str, "TOC")) return FZ_STRUCTURE_TOC;
+	if (!strcmp(str, "TOCI")) return FZ_STRUCTURE_TOCI;
+	if (!strcmp(str, "Index")) return FZ_STRUCTURE_INDEX;
+	if (!strcmp(str, "NonStruct")) return FZ_STRUCTURE_NONSTRUCT;
+	if (!strcmp(str, "Private")) return FZ_STRUCTURE_PRIVATE;
+	if (!strcmp(str, "P")) return FZ_STRUCTURE_P;
+	if (!strcmp(str, "H")) return FZ_STRUCTURE_H;
+	if (!strcmp(str, "H1")) return FZ_STRUCTURE_H1;
+	if (!strcmp(str, "H2")) return FZ_STRUCTURE_H2;
+	if (!strcmp(str, "H3")) return FZ_STRUCTURE_H3;
+	if (!strcmp(str, "H4")) return FZ_STRUCTURE_H4;
+	if (!strcmp(str, "H5")) return FZ_STRUCTURE_H5;
+	if (!strcmp(str, "H6")) return FZ_STRUCTURE_H6;
+	if (!strcmp(str, "L")) return FZ_STRUCTURE_LIST;
+	if (!strcmp(str, "LI")) return FZ_STRUCTURE_LISTITEM;
+	if (!strcmp(str, "Lbl")) return FZ_STRUCTURE_LABEL;
+	if (!strcmp(str, "LBody")) return FZ_STRUCTURE_LISTBODY;
+	if (!strcmp(str, "Table")) return FZ_STRUCTURE_TABLE;
+	if (!strcmp(str, "TR")) return FZ_STRUCTURE_TR;
+	if (!strcmp(str, "TH")) return FZ_STRUCTURE_TH;
+	if (!strcmp(str, "TD")) return FZ_STRUCTURE_TD;
+	if (!strcmp(str, "THead")) return FZ_STRUCTURE_THEAD;
+	if (!strcmp(str, "TBody")) return FZ_STRUCTURE_TBODY;
+	if (!strcmp(str, "TFoot")) return FZ_STRUCTURE_TFOOT;
+	if (!strcmp(str, "Span")) return FZ_STRUCTURE_SPAN;
+	if (!strcmp(str, "Quote")) return FZ_STRUCTURE_QUOTE;
+	if (!strcmp(str, "Note")) return FZ_STRUCTURE_NOTE;
+	if (!strcmp(str, "Reference")) return FZ_STRUCTURE_REFERENCE;
+	if (!strcmp(str, "BibEntry")) return FZ_STRUCTURE_BIBENTRY;
+	if (!strcmp(str, "Code")) return FZ_STRUCTURE_CODE;
+	if (!strcmp(str, "Link")) return FZ_STRUCTURE_LINK;
+	if (!strcmp(str, "Annot")) return FZ_STRUCTURE_ANNOT;
+	if (!strcmp(str, "Ruby")) return FZ_STRUCTURE_RUBY;
+	if (!strcmp(str, "RB")) return FZ_STRUCTURE_RB;
+	if (!strcmp(str, "RT")) return FZ_STRUCTURE_RT;
+	if (!strcmp(str, "RP")) return FZ_STRUCTURE_RP;
+	if (!strcmp(str, "Warichu")) return FZ_STRUCTURE_WARICHU;
+	if (!strcmp(str, "WT")) return FZ_STRUCTURE_WT;
+	if (!strcmp(str, "WP")) return FZ_STRUCTURE_WP;
+	if (!strcmp(str, "Figure")) return FZ_STRUCTURE_FIGURE;
+	if (!strcmp(str, "Formula")) return FZ_STRUCTURE_FORMULA;
+	if (!strcmp(str, "Form")) return FZ_STRUCTURE_FORM;
+	return FZ_STRUCTURE_INVALID;
+}

@@ -180,6 +180,7 @@ public class PDFDocument extends Document
 	public native boolean isJsSupported();
 	public native void setJsEventListener(JsEventListener listener);
 	public native void calculate(); /* Recalculate form fields. Not needed if using page.update(). */
+	public native int getVersion();
 
 	public boolean hasAcroForm() {
 		return this.getTrailer().get("Root").get("AcroForm").get("Fields").size() > 0;

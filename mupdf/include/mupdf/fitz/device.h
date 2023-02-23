@@ -206,6 +206,7 @@ typedef enum
 } fz_structure;
 
 const char *fz_structure_to_string(fz_structure type);
+fz_structure fz_structure_from_string(const char *str);
 
 typedef enum
 {

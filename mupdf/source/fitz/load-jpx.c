@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -561,7 +561,7 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 	}
 
 #if FZ_ENABLE_ICC
-	if (!state->cs && jpx->icc_profile_buf)
+	if (!state->cs && jpx->icc_profile_buf && jpx->icc_profile_len > 0)
 	{
 		fz_buffer *cbuf = NULL;
 		fz_var(cbuf);

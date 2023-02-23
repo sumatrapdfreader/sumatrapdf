@@ -2479,6 +2479,17 @@ int mudraw_main(int argc, char **argv)
 							fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", filename);
 					}
 
+#ifdef CLUSTER
+					/* Load and then drop the outline if we're running under the cluster.
+					 * This allows our outline handling to be tested automatically. */
+					fz_try(ctx)
+						fz_drop_outline(ctx, fz_load_outline(ctx, doc));
+					fz_catch(ctx)
+					{
+						/* Drop any error */
+					}
+#endif
+
 					/* Once document is open check for output intent colorspace */
 					oi = fz_document_output_intent(ctx, doc);
 					if (oi)

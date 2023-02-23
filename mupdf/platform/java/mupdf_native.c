@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -97,6 +97,7 @@ static jclass cls_Context_Log;
 static jclass cls_Context_Version;
 static jclass cls_Cookie;
 static jclass cls_DefaultAppearance;
+static jclass cls_DefaultColorSpaces;
 static jclass cls_Device;
 static jclass cls_DisplayList;
 static jclass cls_Document;
@@ -179,6 +180,7 @@ static jfieldID fid_Cookie_pointer;
 static jfieldID fid_DefaultAppearance_color;
 static jfieldID fid_DefaultAppearance_font;
 static jfieldID fid_DefaultAppearance_size;
+static jfieldID fid_DefaultColorSpaces_pointer;
 static jfieldID fid_Device_pointer;
 static jfieldID fid_DisplayList_pointer;
 static jfieldID fid_DocumentWriter_ocrlistener;
@@ -281,9 +283,20 @@ static jmethodID mid_Context_Version_init;
 static jmethodID mid_Context_Log_error;
 static jmethodID mid_Context_Log_warning;
 static jmethodID mid_DefaultAppearance_init;
+static jmethodID mid_DefaultColorSpaces_init;
+static jmethodID mid_DefaultColorSpaces_getDefaultGray;
+static jmethodID mid_DefaultColorSpaces_getDefaultRGB;
+static jmethodID mid_DefaultColorSpaces_getDefaultCMYK;
+static jmethodID mid_DefaultColorSpaces_getOutputIntent;
+static jmethodID mid_DefaultColorSpaces_setDefaultGray;
+static jmethodID mid_DefaultColorSpaces_setDefaultRGB;
+static jmethodID mid_DefaultColorSpaces_setDefaultCMYK;
+static jmethodID mid_DefaultColorSpaces_setOutputIntent;
 static jmethodID mid_Device_beginGroup;
 static jmethodID mid_Device_beginLayer;
 static jmethodID mid_Device_beginMask;
+static jmethodID mid_Device_beginMetatext;
+static jmethodID mid_Device_beginStructure;
 static jmethodID mid_Device_beginTile;
 static jmethodID mid_Device_clipImageMask;
 static jmethodID mid_Device_clipPath;
@@ -293,6 +306,8 @@ static jmethodID mid_Device_clipText;
 static jmethodID mid_Device_endGroup;
 static jmethodID mid_Device_endLayer;
 static jmethodID mid_Device_endMask;
+static jmethodID mid_Device_endMetatext;
+static jmethodID mid_Device_endStructure;
 static jmethodID mid_Device_endTile;
 static jmethodID mid_Device_fillImage;
 static jmethodID mid_Device_fillImageMask;
@@ -302,6 +317,8 @@ static jmethodID mid_Device_fillText;
 static jmethodID mid_Device_ignoreText;
 static jmethodID mid_Device_init;
 static jmethodID mid_Device_popClip;
+static jmethodID mid_Device_renderFlags;
+static jmethodID mid_Device_setDefaultColorSpaces;
 static jmethodID mid_Device_strokePath;
 static jmethodID mid_Device_strokeText;
 static jmethodID mid_DisplayList_init;
@@ -397,6 +414,76 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_Device_BLEND_SATURATION == FZ_BLEND_SATURATION;
 	valid &= com_artifex_mupdf_fitz_Device_BLEND_COLOR == FZ_BLEND_COLOR;
 	valid &= com_artifex_mupdf_fitz_Device_BLEND_LUMINOSITY == FZ_BLEND_LUMINOSITY;
+
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_MASK == FZ_DEVFLAG_MASK;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_COLOR == FZ_DEVFLAG_COLOR;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_UNCACHEABLE == FZ_DEVFLAG_UNCACHEABLE;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_FILLCOLOR_UNDEFINED == FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_STROKECOLOR_UNDEFINED == FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_STARTCAP_UNDEFINED == FZ_DEVFLAG_STARTCAP_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_DASHCAP_UNDEFINED == FZ_DEVFLAG_DASHCAP_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_ENDCAP_UNDEFINED == FZ_DEVFLAG_ENDCAP_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_LINEJOIN_UNDEFINED == FZ_DEVFLAG_LINEJOIN_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_MITERLIMIT_UNDEFINED == FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_LINEWIDTH_UNDEFINED == FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_BBOX_DEFINED == FZ_DEVFLAG_BBOX_DEFINED;
+	valid &= com_artifex_mupdf_fitz_Device_DEVICE_FLAG_GRIDFIT_AS_TILED == FZ_DEVFLAG_GRIDFIT_AS_TILED;
+
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_INVALID == FZ_STRUCTURE_INVALID;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_DOCUMENT == FZ_STRUCTURE_DOCUMENT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_PART == FZ_STRUCTURE_PART;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_ART == FZ_STRUCTURE_ART;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_SECT == FZ_STRUCTURE_SECT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_DIV == FZ_STRUCTURE_DIV;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_BLOCKQUOTE == FZ_STRUCTURE_BLOCKQUOTE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_CAPTION == FZ_STRUCTURE_CAPTION;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TOC == FZ_STRUCTURE_TOC;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TOCI == FZ_STRUCTURE_TOCI;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_INDEX == FZ_STRUCTURE_INDEX;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_NONSTRUCT == FZ_STRUCTURE_NONSTRUCT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_PRIVATE == FZ_STRUCTURE_PRIVATE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_P == FZ_STRUCTURE_P;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H == FZ_STRUCTURE_H;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H1 == FZ_STRUCTURE_H1;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H2 == FZ_STRUCTURE_H2;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H3 == FZ_STRUCTURE_H3;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H4 == FZ_STRUCTURE_H4;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H5 == FZ_STRUCTURE_H5;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H6 == FZ_STRUCTURE_H6;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_LIST == FZ_STRUCTURE_LIST;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_LISTITEM == FZ_STRUCTURE_LISTITEM;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_LABEL == FZ_STRUCTURE_LABEL;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_LISTBODY == FZ_STRUCTURE_LISTBODY;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TABLE == FZ_STRUCTURE_TABLE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TR == FZ_STRUCTURE_TR;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TH == FZ_STRUCTURE_TH;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TD == FZ_STRUCTURE_TD;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_THEAD == FZ_STRUCTURE_THEAD;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TBODY == FZ_STRUCTURE_TBODY;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TFOOT == FZ_STRUCTURE_TFOOT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_SPAN == FZ_STRUCTURE_SPAN;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_QUOTE == FZ_STRUCTURE_QUOTE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_NOTE == FZ_STRUCTURE_NOTE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_REFERENCE == FZ_STRUCTURE_REFERENCE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_BIBENTRY == FZ_STRUCTURE_BIBENTRY;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_CODE == FZ_STRUCTURE_CODE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_LINK == FZ_STRUCTURE_LINK;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_ANNOT == FZ_STRUCTURE_ANNOT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RUBY == FZ_STRUCTURE_RUBY;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RB == FZ_STRUCTURE_RB;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RT == FZ_STRUCTURE_RT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RP == FZ_STRUCTURE_RP;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_WARICHU == FZ_STRUCTURE_WARICHU;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_WT == FZ_STRUCTURE_WT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_WP == FZ_STRUCTURE_WP;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FIGURE == FZ_STRUCTURE_FIGURE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FORMULA == FZ_STRUCTURE_FORMULA;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FORM == FZ_STRUCTURE_FORM;
+
+	valid &= com_artifex_mupdf_fitz_Device_METATEXT_ACTUALTEXT == FZ_METATEXT_ACTUALTEXT;
+	valid &= com_artifex_mupdf_fitz_Device_METATEXT_ALT == FZ_METATEXT_ALT;
+	valid &= com_artifex_mupdf_fitz_Device_METATEXT_ABBREVIATION == FZ_METATEXT_ABBREVIATION;
+	valid &= com_artifex_mupdf_fitz_Device_METATEXT_TITLE == FZ_METATEXT_TITLE;
 
 	valid &= com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_LATIN == PDF_SIMPLE_ENCODING_LATIN;
 	valid &= com_artifex_mupdf_fitz_Font_SIMPLE_ENCODING_GREEK == PDF_SIMPLE_ENCODING_GREEK;
@@ -833,6 +920,18 @@ static int find_fids(JNIEnv *env)
 	fid_DefaultAppearance_size = get_field(&err, env, "size", "F");
 	mid_DefaultAppearance_init = get_method(&err, env, "<init>", "()V");
 
+	cls_DefaultColorSpaces = get_class(&err, env, PKG"DefaultColorSpaces");
+	fid_DefaultColorSpaces_pointer = get_field(&err, env, "pointer", "J");
+	mid_DefaultColorSpaces_init = get_method(&err, env, "<init>", "(J)V");
+	mid_DefaultColorSpaces_setDefaultGray = get_method(&err, env, "setDefaultGray", "(L"PKG"ColorSpace;)V");
+	mid_DefaultColorSpaces_setDefaultRGB = get_method(&err, env, "setDefaultRGB", "(L"PKG"ColorSpace;)V");
+	mid_DefaultColorSpaces_setDefaultCMYK = get_method(&err, env, "setDefaultCMYK", "(L"PKG"ColorSpace;)V");
+	mid_DefaultColorSpaces_setOutputIntent = get_method(&err, env, "setOutputIntent", "(L"PKG"ColorSpace;)V");
+	mid_DefaultColorSpaces_getDefaultGray = get_method(&err, env, "getDefaultGray", "()L"PKG"ColorSpace;");
+	mid_DefaultColorSpaces_getDefaultRGB = get_method(&err, env, "getDefaultRGB", "()L"PKG"ColorSpace;");
+	mid_DefaultColorSpaces_getDefaultCMYK = get_method(&err, env, "getDefaultCMYK", "()L"PKG"ColorSpace;");
+	mid_DefaultColorSpaces_getOutputIntent = get_method(&err, env, "getOutputIntent", "()L"PKG"ColorSpace;");
+
 	cls_Device = get_class(&err, env, PKG"Device");
 	fid_Device_pointer = get_field(&err, env, "pointer", "J");
 	mid_Device_init = get_method(&err, env, "<init>", "(J)V");
@@ -858,6 +957,12 @@ static int find_fids(JNIEnv *env)
 	mid_Device_endGroup = get_method(&err, env, "endGroup", "()V");
 	mid_Device_beginTile = get_method(&err, env, "beginTile", "(L"PKG"Rect;L"PKG"Rect;FFL"PKG"Matrix;I)I");
 	mid_Device_endTile = get_method(&err, env, "endTile", "()V");
+	mid_Device_renderFlags = get_method(&err, env, "renderFlags", "(II)V");
+	mid_Device_setDefaultColorSpaces = get_method(&err, env, "setDefaultColorSpaces", "(L"PKG"DefaultColorSpaces;)V");
+	mid_Device_beginStructure = get_method(&err, env, "beginStructure", "(ILjava/lang/String;I)V");
+	mid_Device_endStructure = get_method(&err, env, "endStructure", "()V");
+	mid_Device_beginMetatext = get_method(&err, env, "beginMetatext", "(ILjava/lang/String;)V");
+	mid_Device_endMetatext = get_method(&err, env, "endMetatext", "()V");
 
 	cls_DisplayList = get_class(&err, env, PKG"DisplayList");
 	fid_DisplayList_pointer = get_field(&err, env, "pointer", "J");
@@ -1196,6 +1301,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_Context_Version);
 	(*env)->DeleteGlobalRef(env, cls_Cookie);
 	(*env)->DeleteGlobalRef(env, cls_DefaultAppearance);
+	(*env)->DeleteGlobalRef(env, cls_DefaultColorSpaces);
 	(*env)->DeleteGlobalRef(env, cls_Device);
 	(*env)->DeleteGlobalRef(env, cls_DisplayList);
 	(*env)->DeleteGlobalRef(env, cls_Document);
@@ -1311,6 +1417,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/buffer.c"
 #include "jni/colorspace.c"
 #include "jni/cookie.c"
+#include "jni/defaultcolorspaces.c"
 #include "jni/displaylist.c"
 #include "jni/displaylistdevice.c"
 #include "jni/document.c"

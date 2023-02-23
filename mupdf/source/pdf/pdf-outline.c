@@ -71,7 +71,9 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 			if (*fixed == 0)
 				pdf_begin_operation(ctx, doc, "Repair outline nodes");
 			*fixed = 1;
-		}
+			doc->non_structural_change = 1;
+			fz_try(ctx)
+			{
 		if (parent_diff)
 		{
 			fz_warn(ctx, "Bad or missing parent pointer in outline tree, repairing");
@@ -89,6 +91,12 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 		{
 			fz_warn(ctx, "Bad or missing last pointer in outline tree, repairing");
 			pdf_dict_put(ctx, expected_parent, PDF_NAME(Last), dict);
+				}
+			}
+			fz_always(ctx)
+				doc->non_structural_change = 0;
+			fz_catch(ctx)
+				fz_rethrow(ctx);
 		}
 
 		first = pdf_dict_get(ctx, dict, PDF_NAME(First));

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -22,8 +22,31 @@
 
 package com.artifex.mupdf.fitz;
 
-public class DefaultAppearance {
-	public String font;
-	public float size;
-	public float[] color;
+public class DefaultColorSpaces
+{
+	static {
+		Context.init();
+	}
+
+	private long pointer;
+
+	protected native void finalize();
+
+	public void destroy() {
+		finalize();
+	}
+
+	private DefaultColorSpaces(long p) {
+		pointer = p;
+	}
+
+	public native void setDefaultGray(ColorSpace cs);
+	public native void setDefaultRGB(ColorSpace cs);
+	public native void setDefaultCMYK(ColorSpace cs);
+	public native void setOutputIntent(ColorSpace cs);
+
+	public native ColorSpace getDefaultGray();
+	public native ColorSpace getDefaultRGB();
+	public native ColorSpace getDefaultCMYK();
+	public native ColorSpace getOutputIntent();
 }

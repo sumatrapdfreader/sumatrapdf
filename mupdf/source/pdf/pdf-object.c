@@ -1482,9 +1482,26 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 		return;
 	}
 
-	/* Drop the reverse page map on any modification to the document. */
-	if (doc && !doc->caching_object && doc->rev_page_map)
+	/* Do we need to drop the reverse page map? */
+	if (doc && doc->rev_page_map)
+	{
+		if (doc->non_structural_change)
+		{
+			/* No need to drop the reverse page map on a non-structural change. */
+		}
+		else if (parent == 0)
+		{
+			/* This object isn't linked into the document - can't change the
+			 * pagemap. */
+		}
+		else if (doc->local_xref && doc->local_xref_nesting > 0)
+		{
+			/* We have a local_xref and it's in force. By convention, we
+			 * never do structural changes in local_xrefs. */
+		}
+		else
 		pdf_drop_page_tree(ctx, doc);
+	}
 
 	if (val)
 	{

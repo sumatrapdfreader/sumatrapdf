@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -69,6 +69,15 @@ public class NativeDevice extends Device
 	public native final int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id);
 	public native final void endTile();
 
+	public native final void renderFlags(int set, int clear);
+	public native final void setDefaultColorSpaces(DefaultColorSpaces dcs);
+
 	public native final void beginLayer(String name);
 	public native final void endLayer();
+
+	public native final void beginStructure(int standard, String raw, int uid);
+	public native final void endStructure();
+
+	public native final void beginMetatext(int meta, String text);
+	public native final void endMetatext();
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -671,6 +671,153 @@ FUN(NativeDevice_endTile)(JNIEnv *env, jobject self)
 		return;
 	fz_try(ctx)
 		fz_end_tile(ctx, dev);
+	fz_always(ctx)
+		unlockNativeDevice(env, info);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(NativeDevice_beginStructure)(JNIEnv *env, jobject self, jint standard, jstring jraw, jint uid)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	NativeDeviceInfo *info;
+	const char *raw;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	if (jraw)
+	{
+		raw = (*env)->GetStringUTFChars(env, jraw, NULL);
+		if (!raw) return;
+	}
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+	fz_try(ctx)
+		fz_begin_structure(ctx, dev, standard, raw, uid);
+	fz_always(ctx)
+	{
+		(*env)->ReleaseStringUTFChars(env, jraw, raw);
+		unlockNativeDevice(env, info);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(NativeDevice_endStructure)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	NativeDeviceInfo *info;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+	fz_try(ctx)
+		fz_end_structure(ctx, dev);
+	fz_always(ctx)
+		unlockNativeDevice(env, info);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(NativeDevice_beginMetadata)(JNIEnv *env, jobject self, jint meta, jstring jtext)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	NativeDeviceInfo *info;
+	const char *text;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	if (jtext)
+	{
+		text = (*env)->GetStringUTFChars(env, jtext, NULL);
+		if (!text) return;
+	}
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+	fz_try(ctx)
+		fz_begin_metatext(ctx, dev, meta, text);
+	fz_always(ctx)
+	{
+		(*env)->ReleaseStringUTFChars(env, jtext, text);
+		unlockNativeDevice(env, info);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(NativeDevice_endMetadata)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	NativeDeviceInfo *info;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+	fz_try(ctx)
+		fz_end_metatext(ctx, dev);
+	fz_always(ctx)
+		unlockNativeDevice(env, info);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(NativeDevice_renderFlags)(JNIEnv *env, jobject self, jint set, jint clear)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	NativeDeviceInfo *info;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+	fz_try(ctx)
+		fz_render_flags(ctx, dev, set, clear);
+	fz_always(ctx)
+		unlockNativeDevice(env, info);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(NativeDevice_setDefaultColorSpaces)(JNIEnv *env, jobject self, jobject jdcs)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	fz_default_colorspaces *dcs = from_DefaultColorSpaces(env, jdcs);
+	NativeDeviceInfo *info;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+	fz_try(ctx)
+		fz_set_default_colorspaces(ctx, dev, dcs);
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)

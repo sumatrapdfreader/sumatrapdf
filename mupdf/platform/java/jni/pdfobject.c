@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1229,4 +1229,29 @@ FUN(PDFObject_toString)(JNIEnv *env, jobject self, jboolean tight, jboolean asci
 		jni_rethrow(env, ctx);
 
 	return string;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFObject_equals)(JNIEnv *env, jobject self, jobject jother)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *obj = from_PDFObject_safe(env, self);
+	pdf_obj *other = NULL;
+	int result = 0;
+
+	if (!ctx || !obj) return JNI_FALSE;
+
+	if (jother == NULL)
+		return JNI_FALSE;
+	if (!(*env)->IsInstanceOf(env, jother, cls_PDFObject))
+		return JNI_FALSE;
+
+	other = from_PDFObject_safe(env, jother);
+
+	fz_try(ctx)
+		result = pdf_objcmp(ctx, obj, other);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return result == 0 ? JNI_TRUE : JNI_FALSE;
 }

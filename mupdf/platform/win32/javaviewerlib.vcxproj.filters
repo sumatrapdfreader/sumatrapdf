@@ -36,6 +36,9 @@
     <None Include="..\java\src\com\artifex\mupdf\fitz\Cookie.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DefaultColorSpaces.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
     <None Include="..\java\src\com\artifex\mupdf\fitz\Device.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>
@@ -196,6 +199,9 @@
       <Filter>jni</Filter>
     </ClCompile>
     <ClCompile Include="..\java\jni\cookie.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\defaultcolorspaces.c">
       <Filter>jni</Filter>
     </ClCompile>
     <ClCompile Include="..\java\jni\device.c">

@@ -434,7 +434,7 @@ struct pdf_document
 
 	int repair_attempted;
 	int repair_in_progress;
-	int caching_object; /* True while we are parsing an object. */
+	int non_structural_change; /* True if we are modifying the document in a way that does not change the (page) structure */
 
 	/* State indicating which file parsing method we are using */
 	int file_reading_linearly;

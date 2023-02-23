@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -169,12 +169,43 @@ public class TraceDevice extends Device implements PathWalker, TextWalker
 		System.out.println("endTile");
 	}
 
+	public void renderFlags(int set, int clear) {
+		System.out.println("renderFlags set=" + set + " clear=" + clear);
+	}
+
+	public void setDefaultColorSpaces(DefaultColorSpaces dcs) {
+		System.out.println("setDefaultColorSpaces" +
+			" gray=" + dcs.getDefaultGray() +
+			" rgb=" + dcs.getDefaultRGB() +
+			" cmyk=" + dcs.getDefaultCMYK() +
+			" outputIntent=" + dcs.getOutputIntent());
+	}
+
 	public void beginLayer(String name) {
 		System.out.println("beginLayer");
 	}
 
 	public void endLayer() {
 		System.out.println("endLayer");
+	}
+
+	public void beginStructure(int standard, String raw, int uid) {
+		System.out.println("beginStructure standard=" + standard +
+			" raw=" + raw +
+			" uid=" + uid);
+	}
+
+	public void endStructure() {
+		System.out.println("endStructure");
+	}
+
+	public void beginMetatext(int meta, String text) {
+		System.out.println("beginMetatext type=" + meta +
+			" text=" + text);
+	}
+
+	public void endMetatext() {
+		System.out.println("endMetatext");
 	}
 
 	public static void main(String[] args) {

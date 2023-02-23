@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -106,6 +106,24 @@ FUN(Image_newNativeFromBytes)(JNIEnv *env, jobject self, jbyteArray jByteArray)
 	return jlong_cast(image);
 }
 
+JNIEXPORT jlong JNICALL
+FUN(Image_newNativeFromBuffer)(JNIEnv *env, jobject self, jobject jbuffer)
+{
+	fz_context *ctx = get_context(env);
+	fz_image *image = NULL;
+	fz_buffer *buffer = from_Buffer_safe(env, jbuffer);
+
+	if (!ctx) return 0;
+	if (!jbuffer) jni_throw_arg(env, "buffer must not be null");
+
+	fz_try(ctx)
+		image = fz_new_image_from_buffer(ctx, buffer);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return jlong_cast(image);
+}
+
 JNIEXPORT jint JNICALL
 FUN(Image_getWidth)(JNIEnv *env, jobject self)
 {
@@ -147,14 +165,18 @@ JNIEXPORT jint JNICALL
 FUN(Image_getXResolution)(JNIEnv *env, jobject self)
 {
 	fz_image *image = from_Image(env, self);
-	return image ? image->xres : 0;
+	int xres = 0;
+	fz_image_resolution(image, &xres, NULL);
+	return xres;
 }
 
 JNIEXPORT jint JNICALL
 FUN(Image_getYResolution)(JNIEnv *env, jobject self)
 {
 	fz_image *image = from_Image(env, self);
-	return image ? image->yres : 0;
+	int yres = 0;
+	fz_image_resolution(image, NULL, &yres);
+	return yres;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -169,6 +191,14 @@ FUN(Image_getInterpolate)(JNIEnv *env, jobject self)
 {
 	fz_image *image = from_Image(env, self);
 	return image && image->interpolate ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL
+FUN(Image_getOrientation)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_image *image = from_Image(env, self);
+	return fz_image_orientation(ctx, image);
 }
 
 JNIEXPORT jobject JNICALL
@@ -197,4 +227,36 @@ FUN(Image_toPixmap)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return to_Pixmap_safe_own(ctx, env, pixmap);
+}
+
+JNIEXPORT jintArray JNICALL
+FUN(Image_getColorKey)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_image *img = from_Image(env, self);
+	int colorkey[FZ_MAX_COLORS * 2];
+
+	if (!ctx || !img) return NULL;
+
+	if (!img->use_colorkey)
+		return NULL;
+
+	memcpy(colorkey, img->colorkey, 2 * img->n * sizeof(int));
+	return to_intArray(ctx, env, colorkey, 2 * img->n);
+}
+
+JNIEXPORT jfloatArray JNICALL
+FUN(Image_getDecode)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_image *img = from_Image(env, self);
+	float decode[FZ_MAX_COLORS * 2];
+
+	if (!ctx || !img) return NULL;
+
+	if (!img->use_decode)
+		return NULL;
+
+	memcpy(decode, img->decode, 2 * img->n * sizeof(float));
+	return to_floatArray(ctx, env, decode, 2 * img->n);
 }

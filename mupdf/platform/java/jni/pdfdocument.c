@@ -1610,3 +1610,20 @@ FUN(PDFDocument_deletePageLabels)(JNIEnv *env, jobject self, jint index)
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_getVersion)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	int version = 0;
+
+	if (!ctx || !pdf) return 0;
+
+	fz_try(ctx)
+		version = pdf_version(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return version;
+}

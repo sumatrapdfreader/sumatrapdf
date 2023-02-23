@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -67,4 +67,16 @@ public class ColorSpace
 		if (this == DeviceCMYK) return "DeviceCMYK";
 		return "ColorSpace(" + getNumberOfComponents() + ")";
 	}
+
+	public native boolean isGray();
+	public native boolean isRGB();
+	public native boolean isCMYK();
+	public native boolean isIndexed();
+	public native boolean isLab();
+	public native boolean isDeviceN();
+	public native boolean isLabICC();
+	public native boolean isSubtractive();
+	public native boolean isDevice();
+	public native boolean isDeviceGray();
+	public native boolean isDeviceCMYK();
 }
