@@ -22,6 +22,8 @@
 
 #include "mupdf/fitz.h"
 
+#include "pixmap-imp.h"
+
 #ifdef HAVE_JPEGXR
 
 #include <math.h>
@@ -304,7 +306,8 @@ jxr_read_image(fz_context *ctx, const unsigned char *data, int size, struct info
 	jxr_container_t container;
 	jxr_image_t image = NULL;
 	jxr_image_t alpha = NULL;
-	int rc, i;
+	size_t i;
+	int rc;
 
 	fz_var(image);
 	fz_var(alpha);
@@ -322,10 +325,10 @@ jxr_read_image(fz_context *ctx, const unsigned char *data, int size, struct info
 		info->width = jxrc_image_width(container, 0);
 		info->height = jxrc_image_height(container, 0);
 
-		info->format = jxrc_image_pixelformat(container, 0);
+		info->format = (int) jxrc_image_pixelformat(container, 0);
 
 		for (i = 0; i < nelem(pixelformats); i++)
-			if (pixelformats[i].format == info->format)
+			if ((int) pixelformats[i].format == info->format)
 			{
 				info->comps = pixelformats[i].comps;
 				break;

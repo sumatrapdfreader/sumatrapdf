@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -173,12 +173,15 @@ png_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "PNGs cannot contain spot colors");
 	if (fz_colorspace_type(ctx, cs) == FZ_COLORSPACE_BGR)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap can not be bgr");
+	if (cs && !fz_colorspace_is_gray(ctx, cs) && !fz_colorspace_is_rgb(ctx, cs))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as png");
 
 	/* Treat alpha only as greyscale */
 	if (n == 1 && alpha)
 		alpha = 0;
+	n -= alpha;
 
-	switch (n - alpha)
+	switch (n)
 	{
 	case 1: color = (alpha ? 4 : 0); break; /* 0 = Greyscale, 4 = Greyscale + Alpha */
 	case 3: color = (alpha ? 6 : 2); break; /* 2 = RGB, 6 = RGBA */

@@ -764,7 +764,7 @@ TESSERACT_BUILD_CFLAGS += $(TESSERACT_DEFINES)
 
 # --- EXTRACT ---
 
-EXTRACT_CFLAGS += -Ithirdparty/extract/include
+EXTRACT_CFLAGS += -Ithirdparty/extract/include -Ithirdparty/extract/src
 
 EXTRACT_SRC += thirdparty/extract/src/alloc.c
 EXTRACT_SRC += thirdparty/extract/src/astring.c
@@ -775,6 +775,7 @@ EXTRACT_SRC += thirdparty/extract/src/docx.c
 EXTRACT_SRC += thirdparty/extract/src/docx_template.c
 EXTRACT_SRC += thirdparty/extract/src/extract.c
 EXTRACT_SRC += thirdparty/extract/src/join.c
+EXTRACT_SRC += thirdparty/extract/src/json.c
 EXTRACT_SRC += thirdparty/extract/src/mem.c
 EXTRACT_SRC += thirdparty/extract/src/html.c
 EXTRACT_SRC += thirdparty/extract/src/odt.c

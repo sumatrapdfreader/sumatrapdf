@@ -47,7 +47,7 @@
 build = debug
 
 flags_link      = -W -Wall -lm
-flags_compile   = -W -Wall -Wextra -Wpointer-sign -Wmissing-declarations -Wmissing-prototypes -Wdeclaration-after-statement -Wpointer-arith -Wconversion -Wno-sign-conversion -Werror -MMD -MP
+flags_compile   = -W -Wall -Wextra -Wpointer-sign -Wmissing-declarations -Wmissing-prototypes -Wdeclaration-after-statement -Wpointer-arith -Wconversion -Wno-sign-conversion -Werror -MMD -MP -Iinclude
 
 uname = $(shell uname)
 
@@ -176,7 +176,7 @@ ifneq ($(gs),)
     tests_gs := \
             $(patsubst %, %.gs.docx.dir.diff, $(pdfs_generated)) \
             test_gs_fpp
-    
+
     # We don't yet do clipping with gs so exclude Python2clipped.pdf.*:
     tests_gs := $(filter-out test/generated/Python2clipped.pdf.%, $(tests_gs))
 
@@ -488,7 +488,7 @@ test/generated/%.pdf.gs.docx: test/%.pdf $(gs)
 	@echo == Converting .pdf directly to .docx using gs.
 	@mkdir -p test/generated
 	$(gs) -sDEVICE=docxwrite -o $@ $<
-	
+
 # Converts .pdf directly to .odt using mutool.
 test/generated/%.pdf.mutool.odt: test/%.pdf $(mutool)
 	@echo
@@ -496,14 +496,14 @@ test/generated/%.pdf.mutool.odt: test/%.pdf $(mutool)
 	@mkdir -p test/generated
 	$(mutool_run) convert -O mediabox-clip=no -o $@ $<
 
-# Converts .pdf directly to .html using mutool 
+# Converts .pdf directly to .html using mutool
 test/generated/%.pdf.mutool.html: test/%.pdf $(mutool)
 	@echo
 	@echo == Converting .pdf directly to .html using mutool.
 	@mkdir -p test/generated
 	$(mutool_run) convert -F docx -O html -o $@ $<
 
-# Converts .pdf directly to .text using mutool 
+# Converts .pdf directly to .text using mutool
 test/generated/%.pdf.mutool.text: test/%.pdf $(mutool)
 	@echo
 	@echo == Converting .pdf directly to .text using mutool.
@@ -634,7 +634,7 @@ test-obj:
 # code #includes docx_template.h. We use -std=gnu90 to catch 'ISO C90 forbids
 # mixing declarations and code' errors while still supporting 'inline'.
 #
-src/build/%.c-$(build).o: src/%.c src/docx_template.c src/odt_template.c 
+src/build/%.c-$(build).o: src/%.c src/docx_template.c src/odt_template.c
 	@mkdir -p src/build
 	$(CC) -std=gnu90 -c $(flags_compile) -o $@ $<
 

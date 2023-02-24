@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -36,13 +36,16 @@ pnm_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 
 	if (writer->s != 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "PNM writer cannot cope with spot colors");
+	if (cs && !fz_colorspace_is_gray(ctx, cs) && !fz_colorspace_is_rgb(ctx, cs))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as pnm");
+
+	/* Treat alpha only as greyscale */
+	if (n == 1 && alpha)
+		alpha = 0;
+	n -= alpha;
 
 	if (alpha)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "PNM writer cannot cope with alpha");
-
-	n -= alpha;
-	if (n != 1 && n != 3)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as pnm");
 
 	if (n == 1)
 		fz_write_printf(ctx, out, "P5\n");
@@ -177,12 +180,14 @@ pam_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	n -= alpha;
 
 	if (n == 0 && alpha) fz_write_printf(ctx, out, "TUPLTYPE GRAYSCALE\n");
-	else if (n == 1 && !alpha) fz_write_printf(ctx, out, "TUPLTYPE GRAYSCALE\n");
-	else if (n == 1 && alpha) fz_write_printf(ctx, out, "TUPLTYPE GRAYSCALE_ALPHA\n");
-	else if (n == 3 && !alpha) fz_write_printf(ctx, out, "TUPLTYPE RGB\n");
-	else if (n == 3 && alpha) fz_write_printf(ctx, out, "TUPLTYPE RGB_ALPHA\n");
-	else if (n == 4 && !alpha) fz_write_printf(ctx, out, "TUPLTYPE CMYK\n");
-	else if (n == 4 && alpha) fz_write_printf(ctx, out, "TUPLTYPE CMYK_ALPHA\n");
+	else if (n == 1 && !alpha && fz_colorspace_is_gray(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE GRAYSCALE\n");
+	else if (n == 1 && alpha && fz_colorspace_is_gray(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE GRAYSCALE_ALPHA\n");
+	else if (n == 3 && !alpha && fz_colorspace_is_rgb(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE RGB\n");
+	else if (n == 3 && alpha && fz_colorspace_is_rgb(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE RGB_ALPHA\n");
+	else if (n == 4 && !alpha && fz_colorspace_is_cmyk(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE CMYK\n");
+	else if (n == 4 && alpha && fz_colorspace_is_cmyk(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE CMYK_ALPHA\n");
+	else
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be alpha only, gray, rgb, or cmyk");
 	fz_write_printf(ctx, out, "ENDHDR\n");
 }
 

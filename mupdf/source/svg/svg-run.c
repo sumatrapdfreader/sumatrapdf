@@ -1319,7 +1319,10 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, 
 		buf = fz_new_buffer_from_base64(ctx, data, 0);
 		fz_try(ctx)
 		{
+			fz_matrix orient;
 			img = fz_new_image_from_buffer(ctx, buf);
+			orient = fz_image_orientation_matrix(ctx, img);
+			local_state.transform = fz_concat(orient, local_state.transform);
 			fz_fill_image(ctx, dev, img, local_state.transform, 1, fz_default_color_params);
 		}
 		fz_always(ctx)
@@ -1346,8 +1349,11 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, 
 
 		fz_try(ctx)
 		{
+			fz_matrix orient;
 			buf = fz_read_archive_entry(ctx, doc->zip, path);
 			img = fz_new_image_from_buffer(ctx, buf);
+			orient = fz_image_orientation_matrix(ctx, img);
+			local_state.transform = fz_concat(orient, local_state.transform);
 			fz_fill_image(ctx, dev, img, local_state.transform, 1, fz_default_color_params);
 		}
 		fz_always(ctx)

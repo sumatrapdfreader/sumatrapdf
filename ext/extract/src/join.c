@@ -1,5 +1,5 @@
-#include "../include/extract.h"
-#include "../include/extract_alloc.h"
+#include "extract/extract.h"
+#include "extract/alloc.h"
 
 #include "astring.h"
 #include "document.h"
@@ -191,7 +191,7 @@ On exit:
 */
 static int
 make_lines(extract_alloc_t *alloc,
-           content_t       *lines)
+           content_root_t  *lines)
 {
     int                    ret = -1;
     int                    a;
@@ -445,7 +445,7 @@ On exit:
 */
 static int
 make_paragraphs(extract_alloc_t *alloc,
-                content_t       *content)
+                content_root_t  *content)
 {
     int                         ret = -1;
     int                         a;
@@ -658,7 +658,7 @@ On exit:
   <content> is a list of paragraphs, with information about alignment etc.
 */
 static int
-analyse_paragraphs(content_t       *content)
+analyse_paragraphs(content_root_t *content)
 {
     content_paragraph_iterator  pit;
     paragraph_t                *paragraph;
@@ -835,7 +835,7 @@ analyse_paragraphs(content_t       *content)
 
 static int
 spot_rotated_blocks(extract_alloc_t *alloc,
-                    content_t       *lines)
+                    content_root_t  *lines)
 {
     /* On entry, we have that the content in lines has been
     sorted so that paragraphs with the same rotation are together,
@@ -937,9 +937,9 @@ end:
  * it to subset. */
 static int
 spans_within_rect(extract_alloc_t *alloc,
-                  content_t       *content,
+                  content_root_t  *content,
                   rect_t          *rect,
-                  content_t       *subset)
+                  content_root_t  *subset)
 {
     content_span_iterator  it;
     span_t                *candidate;
@@ -953,7 +953,7 @@ spans_within_rect(extract_alloc_t *alloc,
             continue; /* In case used for table, */
 
         /* Create a new span. */
-        if (content_new_span(alloc, &span))
+        if (content_new_span(alloc, &span, candidate->structure))
             return -1;
         /* Extract any chars from candidate that fall inside rect, inserting
          * those chars into subset. */
@@ -985,7 +985,7 @@ spans_within_rect(extract_alloc_t *alloc,
 
 static int
 join_content(extract_alloc_t *alloc,
-             content_t       *lines)
+             content_root_t  *lines)
 {
     if (make_lines(alloc, lines))
         return -1;
@@ -1089,7 +1089,7 @@ void extract_cell_init(cell_t *cell)
     cell->left = 0;
     cell->extend_right = 0;
     cell->extend_down = 0;
-    content_init(&cell->content, content_root);
+    content_init_root(&cell->content, NULL);
 }
 
 
@@ -1338,7 +1338,7 @@ table_find(extract_alloc_t *alloc, subpage_t *subpage, double y_min, double y_ma
             cell->left = (j==0);
             cell->extend_right = 1;
             cell->extend_down = 1;
-            content_init(&cell->content, content_root);
+            content_init_root(&cell->content, NULL);
 
             /* Set cell->above if there is a horizontal line above the cell. */
             outf("Looking to set above for i=%i j=%i rect=%s", i, j, extract_rect_string(&cell->rect));
@@ -1553,7 +1553,7 @@ static int extract_subpage_tables_find_lines(extract_alloc_t *alloc,
 
 
 /* For debugging only. */
-static void show_tables(content_t *tables)
+static void show_tables(content_root_t *tables)
 {
     content_table_iterator  tit;
     table_t                *table;
@@ -1629,6 +1629,8 @@ int extract_document_join(extract_alloc_t *alloc, document_t *document, int layo
         extract_page_t* page = document->pages[p];
         int c;
 
+        /* If we have layout analysis enabled, then we do our 'boxer' analysis to
+         * try to spot subdivisions and subpages. */
         if (layout_analysis && extract_page_analyse(alloc, page)) return -1;
 
         for (c=0; c<page->subpages_num; ++c) {

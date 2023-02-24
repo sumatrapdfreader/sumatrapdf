@@ -1,4 +1,4 @@
-#include "../include/extract.h"
+#include "extract/extract.h"
 #include "document.h"
 
 static inline double

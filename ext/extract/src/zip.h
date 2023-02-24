@@ -3,7 +3,7 @@
 
 /* Only for internal use by extract code.  */
 
-#include "../include/extract_buffer.h"
+#include "extract/buffer.h"
 
 #include <stddef.h>
 

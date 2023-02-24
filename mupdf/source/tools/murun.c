@@ -613,7 +613,9 @@ static void ffi_pusharray(js_State *J, const float *v, int n)
 static void ffi_pushcolorspace(js_State *J, fz_colorspace *colorspace)
 {
 	fz_context *ctx = js_getcontext(J);
-	if (colorspace == fz_device_rgb(ctx))
+	if (colorspace == NULL)
+		js_pushnull(J);
+	else if (colorspace == fz_device_rgb(ctx))
 		js_getregistry(J, "DeviceRGB");
 	else if (colorspace == fz_device_bgr(ctx))
 		js_getregistry(J, "DeviceBGR");
@@ -3290,6 +3292,23 @@ static void ffi_Buffer_save(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_Buffer_slice(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_buffer *buf = js_touserdata(J, 0, "fz_buffer");
+	size_t size = fz_buffer_storage(ctx, buf, NULL);
+	int64_t start = js_tointeger(J, 1);
+	int64_t end = js_iscoercible(J, 2) ? js_tointeger(J, 2) : (int64_t) size;
+	fz_buffer *copy = NULL;
+
+	fz_try(ctx)
+		copy = fz_slice_buffer(ctx, buf, start, end);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushbuffer(J, copy);
+}
+
 static void ffi_new_Document(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -4576,6 +4595,15 @@ static void ffi_Image_getDecode(js_State *J)
 	}
 	else
 		js_pushnull(J);
+}
+
+static void ffi_Image_setOrientation(js_State *J)
+{
+	fz_image *image = js_touserdata(J, 0, "fz_image");
+	int orientation = js_tointeger(J, 1);
+	if (orientation < 0 || orientation > 8)
+		js_rangeerror(J, "orientation out of range");
+	image->orientation = js_tointeger(J, 1);
 }
 
 static void ffi_Shade_bound(js_State *J)
@@ -9399,6 +9427,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Buffer.writeBuffer", ffi_Buffer_writeBuffer, 1);
 		jsB_propfun(J, "Buffer.write", ffi_Buffer_write, 1);
 		jsB_propfun(J, "Buffer.save", ffi_Buffer_save, 1);
+		jsB_propfun(J, "Buffer.slice", ffi_Buffer_slice, 2);
 	}
 	js_setregistry(J, "fz_buffer");
 
@@ -9620,6 +9649,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Image.getOrientation", ffi_Image_getOrientation, 0);
 		jsB_propfun(J, "Image.getMask", ffi_Image_getMask, 0);
 		jsB_propfun(J, "Image.toPixmap", ffi_Image_toPixmap, 2);
+		jsB_propfun(J, "Image.setOrientation", ffi_Image_setOrientation, 1);
 	}
 	js_setregistry(J, "fz_image");
 

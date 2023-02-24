@@ -141,16 +141,24 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 	struct jpeg_error_mgr err;
 	my_destination_mgr dest;
 	JSAMPROW row_pointer[1];
-
 	unsigned char *outbuffer = NULL;
 	size_t outsize = 0;
+	fz_colorspace *cs = pix->colorspace;
+	int n = pix->n;
+	int alpha = pix->alpha;
 
-	if (pix->n != 1 && pix->n != 3 && pix->n != 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be Grayscale, RGB, or CMYK to save as JPEG");
-	if (pix->alpha > 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have alpha to save as JPEG");
 	if (pix->s > 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have separations to save as JPEG");
+	if (cs && !fz_colorspace_is_gray(ctx, cs) && !fz_colorspace_is_rgb(ctx, cs) && !fz_colorspace_is_cmyk(ctx, cs))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be Grayscale, RGB, or CMYK to save as JPEG");
+
+	/* Treat alpha only as greyscale */
+	if (n == 1 && alpha)
+		alpha = 0;
+	n -= alpha;
+
+	if (alpha > 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have alpha to save as JPEG");
 
 	cinfo.mem = NULL;
 	cinfo.global_state = 0;
@@ -172,8 +180,8 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 
 		cinfo.image_width = pix->w;
 		cinfo.image_height = pix->h;
-		cinfo.input_components = pix->n;
-		switch (pix->n) {
+		cinfo.input_components = n;
+		switch (n) {
 		case 1:
 			cinfo.in_color_space = JCS_GRAYSCALE;
 			break;

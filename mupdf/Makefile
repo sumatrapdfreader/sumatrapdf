@@ -482,9 +482,6 @@ java:
 java-clean:
 	$(MAKE) -C platform/java build=$(build) clean
 
-wasm:
-	$(MAKE) -C platform/wasm
-
 extract-test:
 	$(MAKE) debug
 	$(MAKE) -C thirdparty/extract mutool=../../build/debug/mutool test-mutool
@@ -565,7 +562,7 @@ csharp-debug: c++-debug
 csharp-clean:
 	rm -rf platform/csharp
 
-.PHONY: all clean nuke install third libs apps generate tags wasm
+.PHONY: all clean nuke install third libs apps generate tags
 .PHONY: shared shared-debug shared-clean
 .PHONY: c++ c++-release c++-debug c++-clean
 .PHONY: python python-debug python-clean

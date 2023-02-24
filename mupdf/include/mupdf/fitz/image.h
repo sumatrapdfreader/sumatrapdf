@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -329,7 +329,6 @@ struct fz_image
 	unsigned int interpolate:1;
 	unsigned int use_colorkey:1;
 	unsigned int use_decode:1;
-	unsigned int invert_cmyk_jpeg:1;
 	unsigned int decoded:1;
 	unsigned int scalable:1;
 	uint8_t orientation;

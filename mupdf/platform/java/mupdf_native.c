@@ -442,6 +442,11 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_INDEX == FZ_STRUCTURE_INDEX;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_NONSTRUCT == FZ_STRUCTURE_NONSTRUCT;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_PRIVATE == FZ_STRUCTURE_PRIVATE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_DOCUMENTFRAGMENT == FZ_STRUCTURE_DOCUMENTFRAGMENT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_ASIDE == FZ_STRUCTURE_ASIDE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_TITLE == FZ_STRUCTURE_TITLE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FENOTE == FZ_STRUCTURE_FENOTE;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_SUB == FZ_STRUCTURE_SUB;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_P == FZ_STRUCTURE_P;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H == FZ_STRUCTURE_H;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_H1 == FZ_STRUCTURE_H1;
@@ -469,6 +474,8 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_CODE == FZ_STRUCTURE_CODE;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_LINK == FZ_STRUCTURE_LINK;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_ANNOT == FZ_STRUCTURE_ANNOT;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_EM == FZ_STRUCTURE_EM;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_STRONG == FZ_STRUCTURE_STRONG;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RUBY == FZ_STRUCTURE_RUBY;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RB == FZ_STRUCTURE_RB;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_RT == FZ_STRUCTURE_RT;
@@ -479,6 +486,7 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FIGURE == FZ_STRUCTURE_FIGURE;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FORMULA == FZ_STRUCTURE_FORMULA;
 	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_FORM == FZ_STRUCTURE_FORM;
+	valid &= com_artifex_mupdf_fitz_Device_STRUCTURE_ARTIFACT == FZ_STRUCTURE_ARTIFACT;
 
 	valid &= com_artifex_mupdf_fitz_Device_METATEXT_ACTUALTEXT == FZ_METATEXT_ACTUALTEXT;
 	valid &= com_artifex_mupdf_fitz_Device_METATEXT_ALT == FZ_METATEXT_ALT;

@@ -663,6 +663,20 @@ fz_structure_to_string(fz_structure type)
 		return "NonDtruct";
 	case FZ_STRUCTURE_PRIVATE:
 		return "Private";
+	/* Grouping elements (PDF 2.0 - Table 364) */
+	case FZ_STRUCTURE_DOCUMENTFRAGMENT:
+		return "DocumentFragment";
+	/* Grouping elements (PDF 2.0 - Table 365) */
+	case FZ_STRUCTURE_ASIDE:
+		return "Aside";
+	/* Grouping elements (PDF 2.0 - Table 366) */
+	case FZ_STRUCTURE_TITLE:
+		return "Title";
+	case FZ_STRUCTURE_FENOTE:
+		return "FENote";
+	/* Grouping elements (PDF 2.0 - Table 367) */
+	case FZ_STRUCTURE_SUB:
+		return "Sub";
 
 	/* Paragraphlike elements (PDF 1.7 - Table 10.21) */
 	case FZ_STRUCTURE_P:
@@ -725,6 +739,11 @@ fz_structure_to_string(fz_structure type)
 		return "Link";
 	case FZ_STRUCTURE_ANNOT:
 		return "Annot";
+	/* Inline elements (PDF 2.0 - Table 368) */
+	case FZ_STRUCTURE_EM:
+		return "Em";
+	case FZ_STRUCTURE_STRONG:
+		return "Strong";
 
 	/* Ruby inline element (PDF 1.7 - Table 10.26) */
 	case FZ_STRUCTURE_RUBY:
@@ -751,6 +770,10 @@ fz_structure_to_string(fz_structure type)
 		return "Formula";
 	case FZ_STRUCTURE_FORM:
 		return "Form";
+
+	/* Artifact structure type (PDF 2.0 - Table 375) */
+	case FZ_STRUCTURE_ARTIFACT:
+		return "Artifact";
 	}
 
 	return NULL;

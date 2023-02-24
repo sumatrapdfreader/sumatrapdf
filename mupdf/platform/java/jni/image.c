@@ -245,6 +245,15 @@ FUN(Image_getColorKey)(JNIEnv *env, jobject self)
 	return to_intArray(ctx, env, colorkey, 2 * img->n);
 }
 
+JNIEXPORT void JNICALL
+FUN(Image_setOrientation)(JNIEnv *env, jobject self, jint orientation)
+{
+	fz_image *img = from_Image(env, self);
+	if (!img) return;
+	if (orientation < 0 || orientation > 8) jni_throw_oob_void(env, "orientation out of range");
+	img->orientation = orientation;
+}
+
 JNIEXPORT jfloatArray JNICALL
 FUN(Image_getDecode)(JNIEnv *env, jobject self)
 {

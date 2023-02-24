@@ -152,6 +152,15 @@ typedef enum
 	FZ_STRUCTURE_INDEX,
 	FZ_STRUCTURE_NONSTRUCT,
 	FZ_STRUCTURE_PRIVATE,
+	/* Grouping elements (PDF 2.0 - Table 364) */
+	FZ_STRUCTURE_DOCUMENTFRAGMENT,
+	/* Grouping elements (PDF 2.0 - Table 365) */
+	FZ_STRUCTURE_ASIDE,
+	/* Grouping elements (PDF 2.0 - Table 366) */
+	FZ_STRUCTURE_TITLE,
+	FZ_STRUCTURE_FENOTE,
+	/* Grouping elements (PDF 2.0 - Table 367) */
+	FZ_STRUCTURE_SUB,
 
 	/* Paragraphlike elements (PDF 1.7 - Table 10.21) */
 	FZ_STRUCTURE_P,
@@ -187,6 +196,9 @@ typedef enum
 	FZ_STRUCTURE_CODE,
 	FZ_STRUCTURE_LINK,
 	FZ_STRUCTURE_ANNOT,
+	/* Inline elements (PDF 2.0 - Table 368) */
+	FZ_STRUCTURE_EM,
+	FZ_STRUCTURE_STRONG,
 
 	/* Ruby inline element (PDF 1.7 - Table 10.26) */
 	FZ_STRUCTURE_RUBY,
@@ -202,7 +214,10 @@ typedef enum
 	/* Illustration elements (PDF 1.7 - Table 10.27) */
 	FZ_STRUCTURE_FIGURE,
 	FZ_STRUCTURE_FORMULA,
-	FZ_STRUCTURE_FORM
+	FZ_STRUCTURE_FORM,
+
+	/* Artifact structure type (PDF 2.0 - Table 375) */
+	FZ_STRUCTURE_ARTIFACT
 } fz_structure;
 
 const char *fz_structure_to_string(fz_structure type);

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -345,6 +345,13 @@ static int extract_app13_resolution(jpeg_saved_marker_ptr marker, int *xres, int
 	return 0;
 }
 
+static void invert_cmyk(unsigned char *p, int n)
+{
+	int i;
+	for (i = 0; i < n; ++i)
+		p[i] = 255 - p[i];
+}
+
 fz_pixmap *
 fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 {
@@ -430,6 +437,11 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 		while (cinfo.output_scanline < cinfo.output_height)
 		{
 			jpeg_read_scanlines(&cinfo, row, 1);
+
+			// Invert CMYK polarity for some CMYK images (see comment in filter-dct for details).
+			if (cinfo.out_color_space == JCS_CMYK && cinfo.Adobe_transform == 2)
+				invert_cmyk(row[0], image->stride);
+
 			sp = row[0];
 			for (x = 0; x < cinfo.output_width; x++)
 			{

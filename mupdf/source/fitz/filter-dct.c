@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -37,6 +37,7 @@ typedef struct
 	fz_stream *curr_stm;
 	fz_context *ctx;
 	int color_transform;
+	int invert_cmyk; /* has inverted CMYK polarity */
 	int init;
 	int stride;
 	int l2factor;
@@ -171,6 +172,13 @@ static void skip_input_data_dct(j_decompress_ptr cinfo, long num_bytes)
 	}
 }
 
+static void invert_cmyk(unsigned char *p, int n)
+{
+	int i;
+	for (i = 0; i < n; ++i)
+		p[i] = 255 - p[i];
+}
+
 static int
 next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 {
@@ -219,33 +227,32 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 
 			jpeg_read_header(cinfo, 1);
 
-			/* default value if ColorTransform is not set */
-			if (state->color_transform == -1)
-			{
-				if (state->cinfo.num_components == 3)
-					state->color_transform = 1;
-				else
-					state->color_transform = 0;
-			}
+			/* Invert CMYK polarity if:
+			 *    It is a standalone JPEG file (i.e. not embedded in PDF; color_transform is set to -1).
+			 *       In PDF, the polarity inversion is usually done with the image Decode array if necessary.
+			 *       We set color_transform to -2 or a positive value in this cases.
+			 *    It has an Adobe marker setting the color transform to YCCK to CMYK.
+			 *       Experimentation has shown that if the color transform is set to 0 the polarity is
+			 *       usually not inverted.
+			 */
+			if (cinfo->out_color_space == JCS_CMYK && cinfo->Adobe_transform == 2 && state->color_transform == -1)
+				state->invert_cmyk = 1;
 
+			/* Adobe APP marker overrides ColorTransform from PDF */
 			if (cinfo->saw_Adobe_marker)
 				state->color_transform = cinfo->Adobe_transform;
 
-			/* Guess the input colorspace, and set output colorspace accordingly */
-			switch (cinfo->num_components)
+			/* Disable JPEG color transformations if ColorTransform is 0.
+			 * This is usually handled by libjpeg, but since PDF can override
+			 * the default behavior if the Adobe APP marker is missing
+			 * we must do it here as well.
+			 */
+			if (state->color_transform == 0)
 			{
-			case 3:
-				if (state->color_transform)
-					cinfo->jpeg_color_space = JCS_YCbCr;
-				else
+				if (cinfo->num_components == 3)
 					cinfo->jpeg_color_space = JCS_RGB;
-				break;
-			case 4:
-				if (state->color_transform)
-					cinfo->jpeg_color_space = JCS_YCCK;
-				else
+				if (cinfo->num_components == 4)
 					cinfo->jpeg_color_space = JCS_CMYK;
-				break;
 			}
 
 			cinfo->scale_num = 8/(1<<state->l2factor);
@@ -270,11 +277,15 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 			if (p + state->stride <= ep)
 			{
 				jpeg_read_scanlines(cinfo, &p, 1);
+				if (state->invert_cmyk)
+					invert_cmyk(p, state->stride);
 				p += state->stride;
 			}
 			else
 			{
 				jpeg_read_scanlines(cinfo, &state->scanline, 1);
+				if (state->invert_cmyk)
+					invert_cmyk(state->scanline, state->stride);
 				state->rp = state->scanline;
 				state->wp = state->scanline + state->stride;
 			}

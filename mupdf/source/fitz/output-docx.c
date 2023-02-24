@@ -21,7 +21,8 @@
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
 #include "glyphbox.h"
-#include "extract.h"
+#include "extract/extract.h"
+#include "extract/buffer.h"
 
 #include "mupdf/fitz.h"
 
@@ -377,6 +378,191 @@ dev_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path,
 	}
 }
 
+static extract_struct_t
+fz_struct_to_extract(fz_structure type)
+{
+	switch (type)
+	{
+	default:
+		return extract_struct_INVALID;
+
+	case FZ_STRUCTURE_DOCUMENT:
+		return extract_struct_DOCUMENT;
+	case FZ_STRUCTURE_PART:
+		return extract_struct_PART;
+	case FZ_STRUCTURE_ART:
+		return extract_struct_ART;
+	case FZ_STRUCTURE_SECT:
+		return extract_struct_SECT;
+	case FZ_STRUCTURE_DIV:
+		return extract_struct_DIV;
+	case FZ_STRUCTURE_BLOCKQUOTE:
+		return extract_struct_BLOCKQUOTE;
+	case FZ_STRUCTURE_CAPTION:
+		return extract_struct_CAPTION;
+	case FZ_STRUCTURE_TOC:
+		return extract_struct_TOC;
+	case FZ_STRUCTURE_TOCI:
+		return extract_struct_TOCI;
+	case FZ_STRUCTURE_INDEX:
+		return extract_struct_INDEX;
+	case FZ_STRUCTURE_NONSTRUCT:
+		return extract_struct_NONSTRUCT;
+	case FZ_STRUCTURE_PRIVATE:
+		return extract_struct_PRIVATE;
+	/* Grouping elements (PDF 2.0 - Table 364) */
+	case FZ_STRUCTURE_DOCUMENTFRAGMENT:
+		return extract_struct_DOCUMENTFRAGMENT;
+	/* Grouping elements (PDF 2.0 - Table 365) */
+	case FZ_STRUCTURE_ASIDE:
+		return extract_struct_ASIDE;
+	/* Grouping elements (PDF 2.0 - Table 366) */
+	case FZ_STRUCTURE_TITLE:
+		return extract_struct_TITLE;
+	case FZ_STRUCTURE_FENOTE:
+		return extract_struct_FENOTE;
+	/* Grouping elements (PDF 2.0 - Table 367) */
+	case FZ_STRUCTURE_SUB:
+		return extract_struct_SUB;
+
+	/* Paragraphlike elements (PDF 1.7 - Table 10.21) */
+	case FZ_STRUCTURE_P:
+		return extract_struct_P;
+	case FZ_STRUCTURE_H:
+		return extract_struct_H;
+	case FZ_STRUCTURE_H1:
+		return extract_struct_H1;
+	case FZ_STRUCTURE_H2:
+		return extract_struct_H2;
+	case FZ_STRUCTURE_H3:
+		return extract_struct_H3;
+	case FZ_STRUCTURE_H4:
+		return extract_struct_H4;
+	case FZ_STRUCTURE_H5:
+		return extract_struct_H5;
+	case FZ_STRUCTURE_H6:
+		return extract_struct_H6;
+
+	/* List elements (PDF 1.7 - Table 10.23) */
+	case FZ_STRUCTURE_LIST:
+		return extract_struct_LIST;
+	case FZ_STRUCTURE_LISTITEM:
+		return extract_struct_LISTITEM;
+	case FZ_STRUCTURE_LABEL:
+		return extract_struct_LABEL;
+	case FZ_STRUCTURE_LISTBODY:
+		return extract_struct_LISTBODY;
+
+	/* Table elements (PDF 1.7 - Table 10.24) */
+	case FZ_STRUCTURE_TABLE:
+		return extract_struct_TABLE;
+	case FZ_STRUCTURE_TR:
+		return extract_struct_TR;
+	case FZ_STRUCTURE_TH:
+		return extract_struct_TH;
+	case FZ_STRUCTURE_TD:
+		return extract_struct_TD;
+	case FZ_STRUCTURE_THEAD:
+		return extract_struct_THEAD;
+	case FZ_STRUCTURE_TBODY:
+		return extract_struct_TBODY;
+	case FZ_STRUCTURE_TFOOT:
+		return extract_struct_TFOOT;
+
+	/* Inline elements (PDF 1.7 - Table 10.25) */
+	case FZ_STRUCTURE_SPAN:
+		return extract_struct_SPAN;
+	case FZ_STRUCTURE_QUOTE:
+		return extract_struct_QUOTE;
+	case FZ_STRUCTURE_NOTE:
+		return extract_struct_NOTE;
+	case FZ_STRUCTURE_REFERENCE:
+		return extract_struct_REFERENCE;
+	case FZ_STRUCTURE_BIBENTRY:
+		return extract_struct_BIBENTRY;
+	case FZ_STRUCTURE_CODE:
+		return extract_struct_CODE;
+	case FZ_STRUCTURE_LINK:
+		return extract_struct_LINK;
+	case FZ_STRUCTURE_ANNOT:
+		return extract_struct_ANNOT;
+	/* Inline elements (PDF 2.0 - Table 368) */
+	case FZ_STRUCTURE_EM:
+		return extract_struct_EM;
+	case FZ_STRUCTURE_STRONG:
+		return extract_struct_STRONG;
+
+	/* Ruby inline element (PDF 1.7 - Table 10.26) */
+	case FZ_STRUCTURE_RUBY:
+		return extract_struct_RUBY;
+	case FZ_STRUCTURE_RB:
+		return extract_struct_RB;
+	case FZ_STRUCTURE_RT:
+		return extract_struct_RT;
+	case FZ_STRUCTURE_RP:
+		return extract_struct_RP;
+
+	/* Warichu inline element (PDF 1.7 - Table 10.26) */
+	case FZ_STRUCTURE_WARICHU:
+		return extract_struct_WARICHU;
+	case FZ_STRUCTURE_WT:
+		return extract_struct_WT;
+	case FZ_STRUCTURE_WP:
+		return extract_struct_WP;
+
+	/* Illustration elements (PDF 1.7 - Table 10.27) */
+	case FZ_STRUCTURE_FIGURE:
+		return extract_struct_FIGURE;
+	case FZ_STRUCTURE_FORMULA:
+		return extract_struct_FORMULA;
+	case FZ_STRUCTURE_FORM:
+		return extract_struct_FORM;
+
+	/* Artifact structure type (PDF 2.0 - Table 375) */
+	case FZ_STRUCTURE_ARTIFACT:
+		return extract_struct_ARTIFACT;
+	}
+}
+
+static void
+dev_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, const char *raw, int uid)
+{
+	fz_docx_device *dev = (fz_docx_device *)dev_;
+	extract_t *extract = dev->writer->extract;
+
+	assert(!dev->writer->ctx);
+	dev->writer->ctx = ctx;
+	fz_try(ctx)
+	{
+		if (extract_begin_struct(extract, fz_struct_to_extract(standard), uid, -1))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin struct");
+	}
+	fz_always(ctx)
+		dev->writer->ctx = NULL;
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+static void
+dev_end_structure(fz_context *ctx, fz_device *dev_)
+{
+	fz_docx_device *dev = (fz_docx_device *)dev_;
+	extract_t *extract = dev->writer->extract;
+
+	assert(!dev->writer->ctx);
+	dev->writer->ctx = ctx;
+	fz_try(ctx)
+	{
+		if (extract_end_struct(extract))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to end struct");
+	}
+	fz_always(ctx)
+		dev->writer->ctx = NULL;
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+
 static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_, fz_rect mediabox)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
@@ -398,6 +584,8 @@ static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_
 		dev->super.fill_image = dev_fill_image;
 		dev->super.fill_path = dev_fill_path;
 		dev->super.stroke_path = dev_stroke_path;
+		dev->super.begin_structure = dev_begin_structure;
+		dev->super.end_structure = dev_end_structure;
 		dev->writer = writer;
 	}
 	fz_always(ctx)
@@ -576,6 +764,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->output = out;
 		if (get_bool_option(ctx, options, "html", 0)) format = extract_format_HTML;
 		if (get_bool_option(ctx, options, "text", 0)) format = extract_format_TEXT;
+		if (get_bool_option(ctx, options, "json", 0)) format = extract_format_JSON;
 		if (extract_alloc_create(s_realloc_fn, writer, &writer->alloc))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
 		if (extract_begin(writer->alloc, format, &writer->extract))

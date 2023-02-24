@@ -75,6 +75,7 @@ public class Image
 	public native float[] getDecode();
 	public native int getOrientation();
 	public native Image getMask();
+	public native void setOrientation(int orientation);
 
 	public native Pixmap toPixmap();
 }

@@ -1,5 +1,4 @@
-#include "../include/extract_alloc.h"
-#include "memento.h"
+#include "extract/alloc.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -9,10 +8,10 @@
 
 struct extract_alloc_t
 {
-    extract_realloc_fn_t  *realloc_fn;
-    void                  *realloc_state;
-    size_t                 exp_min_alloc_size;
-    extract_alloc_stats_t  stats;
+    extract_realloc_fn_t     *realloc_fn;
+    extract_caller_context_t *realloc_state;
+    size_t                    exp_min_alloc_size;
+    extract_alloc_stats_t     stats;
 };
 
 int
@@ -118,4 +117,16 @@ void (extract_free)(extract_alloc_t *alloc, void **pptr)
 void extract_alloc_exp_min(extract_alloc_t *alloc, size_t size)
 {
     alloc->exp_min_alloc_size = size;
+}
+
+void extract_alloc_set_ctx(extract_alloc_t *alloc, extract_caller_context_t *ctx)
+{
+    assert(alloc->realloc_state == NULL);
+    alloc->realloc_state = ctx;
+}
+
+void extract_alloc_clear_ctx(extract_alloc_t *alloc)
+{
+    assert(alloc->realloc_state);
+    alloc->realloc_state = NULL;
 }

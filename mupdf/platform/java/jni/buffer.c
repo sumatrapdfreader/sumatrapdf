@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -328,4 +328,26 @@ FUN(Buffer_save)(JNIEnv *env, jobject self, jstring jfilename)
 			(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Buffer_slice)(JNIEnv *env, jobject self, jint start, jint end)
+{
+	fz_context *ctx = get_context(env);
+	fz_buffer *buf = from_Buffer(env, self);
+	fz_buffer *copy = NULL;
+	jobject jcopy = NULL;
+
+	if (!ctx || !buf) return NULL;
+
+	fz_try(ctx)
+		copy = fz_slice_buffer(ctx, buf, start, end);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jcopy = (*env)->NewObject(env, cls_Buffer, mid_Buffer_init, copy);
+	if (!jcopy || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	return jcopy;
 }

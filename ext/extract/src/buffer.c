@@ -1,7 +1,6 @@
-#include "../include/extract_buffer.h"
-#include "../include/extract_alloc.h"
+#include "extract/buffer.h"
+#include "extract/alloc.h"
 
-#include "memento.h"
 #include "outf.h"
 
 #include <assert.h>

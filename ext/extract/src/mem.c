@@ -1,4 +1,4 @@
-#include "../include/extract_alloc.h"
+#include "extract/alloc.h"
 
 #include "mem.h"
 
@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _MSC_VER
-    #include "compat_va_copy.h"
-#endif
+#include "compat_va_copy.h"
 
 
 void extract_bzero(void *b, size_t len)

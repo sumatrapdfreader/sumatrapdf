@@ -2473,6 +2473,17 @@ int mudraw_main(int argc, char **argv)
 
 					doc = fz_open_accelerated_document(ctx, filename, accel);
 
+#ifdef CLUSTER
+					/* Load and then drop the outline if we're running under the cluster.
+					 * This allows our outline handling to be tested automatically. */
+					fz_try(ctx)
+						fz_drop_outline(ctx, fz_load_outline(ctx, doc));
+					fz_catch(ctx)
+					{
+						/* Drop any error */
+					}
+#endif
+
 					if (fz_needs_password(ctx, doc))
 					{
 						if (!fz_authenticate_password(ctx, doc, password))

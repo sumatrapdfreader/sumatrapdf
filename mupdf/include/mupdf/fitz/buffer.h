@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -143,6 +143,16 @@ void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
 	Never throws exceptions.
 */
 void fz_clear_buffer(fz_context *ctx, fz_buffer *buf);
+
+/**
+	Create a new buffer with a (subset of) the data from the buffer.
+
+	start: if >= 0, offset from start of buffer, if < 0 offset from end of buffer.
+
+	end: if >= 0, offset from start of buffer, if < 0 offset from end of buffer.
+
+*/
+fz_buffer *fz_slice_buffer(fz_context *ctx, fz_buffer *buf, int64_t start, int64_t end);
 
 /**
 	Append the contents of the source buffer onto the end of the

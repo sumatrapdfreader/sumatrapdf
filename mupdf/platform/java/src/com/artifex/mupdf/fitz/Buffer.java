@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -66,6 +66,18 @@ public class Buffer
 	public native void writeRune(int rune);
 	public native void writeLine(String line);
 	public native void writeLines(String... lines);
+
+	public native Buffer slice(int start, int end);
+
+	public Buffer slice(int start)
+	{
+		return slice(start, getLength());
+	}
+
+	public Buffer slice()
+	{
+		return slice(0, getLength());
+	}
 
 	public native void save(String filename);
 

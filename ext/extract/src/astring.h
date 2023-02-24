@@ -1,6 +1,8 @@
 #ifndef ARTIFEX_EXTRACT_AUTOSTRING_XML
 #define ARTIFEX_EXTRACT_AUTOSTRING_XML
 
+#include "extract/alloc.h"
+
 /* Only for internal use by extract code.  */
 
 /* A simple string struct that reallocs as required. */

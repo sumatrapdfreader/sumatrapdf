@@ -397,6 +397,7 @@ function extract_files()
     "extract.*",
     "html.*",
     "join.*",
+    "json.*",
     "mem.*",
     "memento.*",
     "odt_template.*",

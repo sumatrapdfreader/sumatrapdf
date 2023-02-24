@@ -51,67 +51,43 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\thirdparty\extract\src\alloc.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\astring.c">
-    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\alloc.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\astring.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\boxer.c" />
-    <ClCompile Include="..\..\thirdparty\extract\src\buffer.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\document.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\docx.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c ">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\extract.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\html.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\join.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\mem.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\misc-test.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\odt.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\odt_template.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\outf.c">
-    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\buffer.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\document.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\docx.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\docx_template.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\extract.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\html.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\join.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\json.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\mem.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\misc-test.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\odt.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\odt_template.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\outf.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\rect.c" />
-    <ClCompile Include="..\..\thirdparty\extract\src\sys.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\text.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\xml.c">
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\zip.c">
-    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\extract\src\sys.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\text.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\xml.c" />
+    <ClCompile Include="..\..\thirdparty\extract\src\zip.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\thirdparty\extract\include\extract.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\include\extract_alloc.h" />
-    <ClInclude Include="..\..\thirdparty\extract\include\extract_buffer.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\include\extract_buffer_impl.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\astring.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\document.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\docx.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\docx_template.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\outf.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\xml.h">
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\extract\src\zip.h">
-    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\extract\include\extract\extract.h" />
+    <ClInclude Include="..\..\thirdparty\extract\include\extract\alloc.h" />
+    <ClInclude Include="..\..\thirdparty\extract\include\extract\buffer.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\astring.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\compat_stdint.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\compat_va_copy.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\document.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\docx.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\docx_template.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\html.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\json.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\outf.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\xml.h" />
+    <ClInclude Include="..\..\thirdparty\extract\src\zip.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -291,6 +291,27 @@ fz_buffer_extract(fz_context *ctx, fz_buffer *buf, unsigned char **datap)
 		buf->len = 0;
 	}
 	return len;
+}
+
+fz_buffer *
+fz_slice_buffer(fz_context *ctx, fz_buffer *buf, int64_t start, int64_t end)
+{
+	unsigned char *src = NULL;
+	size_t size = fz_buffer_storage(ctx, buf, &src);
+	size_t s, e;
+
+	if (start < 0)
+		start += size;
+	if (end < 0)
+		end += size;
+
+	s = fz_clampi(start, 0, size);
+	e = fz_clampi(end, 0, size);
+
+	if (s == size || e <= s)
+		return fz_new_buffer(ctx, 0);
+
+	return fz_new_buffer_from_copied_data(ctx, &src[s], e - s);
 }
 
 void

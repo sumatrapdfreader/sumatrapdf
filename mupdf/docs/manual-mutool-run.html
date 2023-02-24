@@ -113,6 +113,8 @@ only store bytes.
 <dd>Append arguments to the end of the buffer, separated by spaces.
 <dt>Buffer#writeBuffer(data)
 <dd>Append the contents of the 'data' buffer to the end of the buffer.
+<dt>Buffer#slice(start, end)
+<dd>Create a new Buffer containing a (subset of) the data in this buffer. Start and end are offsets from the beginning of this buffer, and if negative from the end of this buffer.
 <dt>Buffer#save(fileName)
 <dd>Write the contents of the buffer to a file.
 </dl>
@@ -746,6 +748,8 @@ Image objects are similar to Pixmaps, but can contain compressed data.
 <dt>8
 <dd>flip on X, then rotate counter clockwise by 270 degrees
 </dl>
+<dt>Image#setOrientation(orientation)
+<dd>Set the image orientation to the given orientation.
 <dt>Image#getImageMask()
 <dd>Returns true if this image is an image mask.
 <dt>Image#getMask()

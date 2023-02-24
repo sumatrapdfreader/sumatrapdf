@@ -1,7 +1,7 @@
 #ifndef EXTRACT_SYS_H
 #define EXTRACT_SYS_H
 
-#include "../include/extract_alloc.h"
+#include "extract/alloc.h"
 
 #include <stdio.h>
 

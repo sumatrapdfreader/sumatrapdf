@@ -1,5 +1,3 @@
-#include "../include/extract_alloc.h"
-
 #include "astring.h"
 #include "mem.h"
 #include "memento.h"

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -634,7 +634,7 @@ pdf_out_BI(fz_context *ctx, pdf_processor *proc, fz_image *img, const char *colo
 
 	case FZ_IMAGE_JPEG:
 		fz_write_string(ctx, out, ahx ? "/F[/AHx/DCT]\n" : "/F/DCT\n");
-		if (cbuf->params.u.jpeg.color_transform != -1)
+		if (cbuf->params.u.jpeg.color_transform >= 0)
 			fz_write_printf(ctx, out, "/DP<</ColorTransform %d>>\n",
 				cbuf->params.u.jpeg.color_transform);
 		break;

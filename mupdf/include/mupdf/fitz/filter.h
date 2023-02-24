@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -102,7 +102,10 @@ fz_stream *fz_open_rld(fz_context *ctx, fz_stream *chain);
 	from the chained filter.
 
 	color_transform implements the PDF color_transform option;
-	use -1 (unset) as a default.
+		use 0 to disable YUV-RGB / YCCK-CMYK transforms
+		use >0 to enable YUV-RGB / YCCK-CMYK transforms
+		use -1 (default) if not embedded in PDF
+		use -2 (default) if embedded in PDF
 
 	For subsampling on decode, set l2factor to the log2 of the
 	reduction required (therefore 0 = full size decode).

@@ -1,7 +1,6 @@
-#include "../include/extract_alloc.h"
+#include "extract/alloc.h"
 
 #include "mem.h"
-#include "memento.h"
 #include "outf.h"
 #include "zip.h"
 
@@ -12,11 +11,7 @@
 #include <limits.h>
 #include <time.h>
 
-#ifdef _MSC_VER
-    #include "compat_stdint.h"
-#else
-    #include <stdint.h>
-#endif
+#include "compat_stdint.h"
 
 
 typedef struct

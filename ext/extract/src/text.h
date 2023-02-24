@@ -1,7 +1,7 @@
 #ifndef EXTRACT_TEXT_H
 #define EXTRACT_TEXT_H
 
-#include "../include/extract_alloc.h"
+#include "extract/alloc.h"
 
 #include "astring.h"
 

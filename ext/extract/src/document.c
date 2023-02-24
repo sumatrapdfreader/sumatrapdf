@@ -2,12 +2,21 @@
 #include "outf.h"
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 void
 content_init(content_t *content, content_type_t type)
 {
     content->type = type;
     content->next = content->prev = (type == content_root) ? content : NULL;
+}
+
+void
+content_init_root(content_root_t *content, content_t *parent)
+{
+    content->base.type = content_root;
+    content->base.next = content->base.prev = &content->base;
+    content->parent = parent;
 }
 
 void
@@ -32,11 +41,12 @@ void content_unlink_span(span_t *span)
     content_unlink(&span->base);
 }
 
-void extract_span_init(span_t *span)
+void extract_span_init(span_t *span, structure_t *structure)
 {
     static const span_t blank = { 0 };
     *span = blank;
     content_init(&span->base, content_span);
+    span->structure = structure;
 }
 
 void extract_span_free(extract_alloc_t *alloc, span_t **pspan)
@@ -53,7 +63,7 @@ void extract_line_init(line_t *line)
     static const line_t blank = { 0 };
     *line = blank;
     content_init(&line->base, content_line);
-    content_init(&line->content, content_root);
+    content_init_root(&line->content, &line->base);
 }
 
 void extract_paragraph_init(paragraph_t *paragraph)
@@ -61,7 +71,7 @@ void extract_paragraph_init(paragraph_t *paragraph)
     static const paragraph_t blank = { 0 };
     *paragraph = blank;
     content_init(&paragraph->base, content_paragraph);
-    content_init(&paragraph->content, content_root);
+    content_init_root(&paragraph->content, &paragraph->base);
 }
 
 void extract_block_init(block_t *block)
@@ -69,7 +79,7 @@ void extract_block_init(block_t *block)
     static const block_t blank = { 0 };
     *block = blank;
     content_init(&block->base, content_block);
-    content_init(&block->content, content_root);
+    content_init_root(&block->content, &block->base);
 }
 
 void extract_table_init(table_t *table)
@@ -87,12 +97,12 @@ void extract_image_init(image_t *image)
 }
 
 void
-content_clear(extract_alloc_t *alloc, content_t *proot)
+content_clear(extract_alloc_t *alloc, content_root_t *proot)
 {
     content_t *content, *next;
 
-    assert(proot->type == content_root && proot->next != NULL && proot->prev != NULL);
-    for (content = proot->next; content != proot; content = next)
+    assert(proot->base.type == content_root && proot->base.next != NULL && proot->base.prev != NULL);
+    for (content = proot->base.next; content != &proot->base; content = next)
     {
         assert(content->type != content_root);
         next = content->next;
@@ -125,61 +135,61 @@ content_clear(extract_alloc_t *alloc, content_t *proot)
 }
 
 int
-content_count(content_t *root)
+content_count(content_root_t *root)
 {
     int n = 0;
     content_t *s;
 
-    for (s = root->next; s != root; s = s->next)
+    for (s = root->base.next; s != &root->base; s = s->next)
         n++;
 
     return n;
 }
 
 static int
-content_count_type(content_t *root, content_type_t type)
+content_count_type(content_root_t *root, content_type_t type)
 {
     int n = 0;
     content_t *s;
 
-    for (s = root->next; s != root; s = s->next)
+    for (s = root->base.next; s != &root->base; s = s->next)
         if (s->type == type) n++;
 
     return n;
 }
 
-int content_count_spans(content_t *root)
+int content_count_spans(content_root_t *root)
 {
     return content_count_type(root, content_span);
 }
 
-int content_count_images(content_t *root)
+int content_count_images(content_root_t *root)
 {
     return content_count_type(root, content_image);
 }
 
-int content_count_lines(content_t *root)
+int content_count_lines(content_root_t *root)
 {
     return content_count_type(root, content_line);
 }
 
-int content_count_paragraphs(content_t *root)
+int content_count_paragraphs(content_root_t *root)
 {
     return content_count_type(root, content_paragraph);
 }
 
-int content_count_tables(content_t *root)
+int content_count_tables(content_root_t *root)
 {
     return content_count_type(root, content_table);
 }
 
 static content_t *
-content_first_of_type(const content_t *root, content_type_t type)
+content_first_of_type(const content_root_t *root, content_type_t type)
 {
     content_t *content;
-    assert(root && root->type == content_root);
+    assert(root && root->base.type == content_root);
 
-    for (content = root->next; content != root; content = content->next)
+    for (content = root->base.next; content != &root->base; content = content->next)
     {
         if (content->type == type)
             return content;
@@ -188,12 +198,12 @@ content_first_of_type(const content_t *root, content_type_t type)
 }
 
 static content_t *
-content_last_of_type(const content_t *root, content_type_t type)
+content_last_of_type(const content_root_t *root, content_type_t type)
 {
     content_t *content;
-    assert(root && root->type == content_root);
+    assert(root && root->base.type == content_root);
 
-    for (content = root->prev; content != root; content = content->prev)
+    for (content = root->base.prev; content != &root->base; content = content->prev)
     {
         if (content->type == type)
             return content;
@@ -201,32 +211,32 @@ content_last_of_type(const content_t *root, content_type_t type)
     return NULL;
 }
 
-span_t *content_first_span(const content_t *root)
+span_t *content_first_span(const content_root_t *root)
 {
     return (span_t *)content_first_of_type(root, content_span);
 }
 
-span_t *content_last_span(const content_t *root)
+span_t *content_last_span(const content_root_t *root)
 {
     return (span_t *)content_last_of_type(root, content_span);
 }
 
-line_t *content_first_line(const content_t *root)
+line_t *content_first_line(const content_root_t *root)
 {
     return (line_t *)content_first_of_type(root, content_line);
 }
 
-line_t *content_last_line(const content_t *root)
+line_t *content_last_line(const content_root_t *root)
 {
     return (line_t *)content_last_of_type(root, content_line);
 }
 
-paragraph_t *content_first_paragraph(const content_t *root)
+paragraph_t *content_first_paragraph(const content_root_t *root)
 {
     return (paragraph_t *)content_first_of_type(root, content_paragraph);
 }
 
-paragraph_t *content_last_paragraph(const content_t *root)
+paragraph_t *content_last_paragraph(const content_root_t *root)
 {
     return (paragraph_t *)content_last_of_type(root, content_paragraph);
 }
@@ -290,15 +300,13 @@ paragraph_t *content_prev_paragraph(const content_t *root)
 }
 
 void
-content_concat(content_t *dst, content_t *src)
+content_concat(content_root_t *dst, content_root_t *src)
 {
     content_t *walk, *walk_next;
-    assert(dst->type == content_root);
     if (src == NULL)
         return;
-    assert(src->type == content_root);
 
-    for (walk = src->next; walk != src; walk = walk_next)
+    for (walk = src->base.next; walk != &src->base; walk = walk_next)
     {
         walk_next = walk->next;
         content_append(dst, walk);
@@ -308,7 +316,7 @@ content_concat(content_t *dst, content_t *src)
 void extract_line_free(extract_alloc_t* alloc, line_t **pline)
 {
     line_t *line = *pline;
-    content_unlink(&(*pline)->base);
+    content_unlink(&line->base);
     content_clear(alloc, &line->content);
     extract_free(alloc, pline);
 }
@@ -383,7 +391,7 @@ static void space_prefix(int depth)
 }
 
 static void
-content_dump_aux(const content_t *content, int depth);
+content_dump_aux(const content_root_t *content, int depth);
 
 static void dump_span(const span_t *span, int depth)
 {
@@ -406,11 +414,29 @@ static void dump_span(const span_t *span, int depth)
 }
 
 static void
+dump_structure_path(structure_t *structure)
+{
+    if (structure->parent)
+    {
+        dump_structure_path(structure->parent);
+        printf("/");
+    }
+    printf("%s(%d)", extract_struct_string(structure->type), structure->uid);
+}
+
+static void
 content_dump_span_aux(const span_t *span, int depth)
 {
     space_prefix(depth);
     printf("<span ctm=[%f %f %f %f]\n",
            span->ctm.a, span->ctm.b, span->ctm.c, span->ctm.d);
+    if (span->structure)
+    {
+        space_prefix(depth);
+        printf("      structure=\"");
+        dump_structure_path(span->structure);
+        printf("\"\n");
+    }
     space_prefix(depth);
     printf("      font-name=\"%s\" font_bbox=[%f %f %f %f]>\n",
            span->font_name,
@@ -452,12 +478,12 @@ content_dump_line(const line_t *line)
 }
 
 static void
-content_dump_aux(const content_t *content, int depth)
+content_dump_aux(const content_root_t *content, int depth)
 {
     const content_t *walk;
 
-    assert(content->type == content_root);
-    for (walk = content->next; walk != content; walk = walk->next)
+    assert(content->base.type == content_root);
+    for (walk = content->base.next; walk != &content->base; walk = walk->next)
     {
         assert(walk->next->prev == walk && walk->prev->next == walk);
         switch (walk->type)
@@ -516,13 +542,13 @@ content_dump_aux(const content_t *content, int depth)
     }
 }
 
-void content_dump(const content_t *content)
+void content_dump(const content_root_t *content)
 {
     content_dump_aux(content, 0);
 }
 
 static void
-content_dump_brief_aux(const content_t *content, int depth);
+content_dump_brief_aux(const content_root_t *content, int depth);
 
 static void
 content_dump_brief_span_aux(const span_t *span)
@@ -554,12 +580,12 @@ content_dump_brief_line_aux(const line_t *line, int depth)
 }
 
 static void
-content_dump_brief_aux(const content_t *content, int depth)
+content_dump_brief_aux(const content_root_t *content, int depth)
 {
     const content_t *walk;
 
-    assert(content->type == content_root);
-    for (walk = content->next; walk != content; walk = walk->next)
+    assert(content->base.type == content_root);
+    for (walk = content->base.next; walk != &content->base; walk = walk->next)
     {
         assert(walk->next->prev == walk && walk->prev->next == walk);
         switch (walk->type)
@@ -600,7 +626,7 @@ content_dump_brief_aux(const content_t *content, int depth)
     }
 }
 
-void content_dump_brief(const content_t *content)
+void content_dump_brief(const content_root_t *content)
 {
     content_dump_brief_aux(content, 0);
 }
@@ -671,7 +697,7 @@ cmp_and_merge(content_t *q1, int q1pos, int len1, int n, content_cmp_fn *cmp)
 }
 
 /* Spiffy in-place merge sort. */
-void content_sort(content_t *content, content_cmp_fn *cmp)
+void content_sort(content_root_t *content, content_cmp_fn *cmp)
 {
     int n = content_count(content);
     int size;
@@ -679,8 +705,7 @@ void content_sort(content_t *content, content_cmp_fn *cmp)
     for (size = 1; size < n; size <<= 1)
     {
         int q1_idx = 0;
-        content_t *q1 = content->next;
-        assert(content->type == content_root);
+        content_t *q1 = content->base.next;
         for (q1_idx = 0; q1_idx < n; q1_idx += size*2)
             q1 = cmp_and_merge(q1, q1_idx, size, n, cmp);
         assert(q1->type == content_root);

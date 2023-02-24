@@ -532,6 +532,214 @@ fz_write_image_as_data_uri(fz_context *ctx, fz_output *out, fz_image *image)
 		fz_rethrow(ctx);
 }
 
+static uint32_t read16(const uint8_t *d, size_t *pos, size_t len, int order)
+{
+	size_t p = *pos;
+	uint32_t v;
+
+	if (p+1 >= len)
+	{
+		*pos = len;
+		return 0;
+	}
+
+	if (order)
+	{
+		v = d[p++]<<8; /* BE */
+		v |= d[p++];
+	}
+	else
+	{
+		v = d[p++]; /* LE */
+		v |= d[p++]<<8;
+	}
+
+	*pos = p;
+
+	return v;
+}
+
+static uint32_t read32(const uint8_t *d, size_t *pos, size_t len, int order)
+{
+	size_t p = *pos;
+	uint32_t v;
+
+	if (p+3 >= len)
+	{
+		*pos = len;
+		return 0;
+	}
+
+	if (order)
+	{
+		v = d[p++]<<24; /* BE */
+		v |= d[p++]<<16;
+		v |= d[p++]<<8;
+		v |= d[p++];
+	}
+	else
+	{
+		v = d[p++];
+		v |= d[p++]<<8; /* LE */
+		v |= d[p++]<<16;
+		v |= d[p++]<<24;
+	}
+
+	*pos = p;
+
+	return v;
+}
+
+static void write16(uint8_t *d, size_t *pos, size_t len, int order, uint32_t v)
+{
+	size_t p = *pos;
+
+	if (p+1 >= len)
+	{
+		*pos = len;
+		return;
+	}
+
+	if (order)
+	{
+		d[p++] = (v>>8);
+		d[p++] = v;
+	}
+	else
+	{
+		d[p++] = v;
+		d[p++] = (v>>8);
+	}
+
+	*pos = p;
+}
+
+static void write32( uint8_t *d, size_t *pos, size_t len, int order, uint32_t v)
+{
+	size_t p = *pos;
+
+	if (p+3 >= len)
+	{
+		*pos = len;
+		return;
+	}
+
+	if (order)
+	{
+		d[p++] = (v>>24);
+		d[p++] = (v>>16);
+		d[p++] = (v>>8);
+		d[p++] = v;
+	}
+	else
+	{
+		d[p++] = v;
+		d[p++] = (v>>8);
+		d[p++] = (v>>16);
+		d[p++] = (v>>24);
+	}
+
+	*pos = p;
+}
+
+fz_buffer *
+fz_sanitize_jpeg_buffer(fz_context *ctx, fz_buffer *in)
+{
+	fz_buffer *out = fz_clone_buffer(ctx, in);
+	size_t len = out->len;
+	size_t pos = 0;
+	uint8_t *d = out->data;
+
+	/* We need at least 4 data bytes. */
+	while (pos+4 < len)
+	{
+		uint8_t m;
+		/* We should be on a marker. If not, inch forwards until we are. */
+		if (d[pos++] != 0xff)
+			continue;
+		m = d[pos++];
+		if (m == 0xDA)
+			break; /* Start Of Scan. All our rewriting happens before this. */
+		if (m == 0xE1)
+		{
+			uint8_t order;
+			uint32_t tmp;
+			size_t body_start;
+			/* APP1 tag. This is where the EXIF data lives. */
+			/* Read and discard the marker length. We're not continuing after this anyway. */
+			(void)read16(d, &pos, len, 0);
+			tmp = read32(d, &pos, len, 0);
+			if (tmp != 0x66697845) /* Exif */
+				break; /* Not exif - nothing to rewrite. */
+			tmp = read16(d, &pos, len, 0);
+			if (tmp != 0) /* Terminator + Pad */
+				break; /* Not exif - nothing to rewrite. */
+			/* Now we're at the APP1 Body. */
+			body_start = pos;
+			tmp = read16(d, &pos, len, 0);
+			if (tmp == 0x4949)
+				order = 0; /* LE */
+			else if (tmp == 0x4d4d)
+				order = 1; /* BE */
+			else
+				break; /* Bad TIFF type. Bale. */
+			tmp = read16(d, &pos, len, order);
+			if (tmp != 0x002a) /* 42 */
+				break; /* Bad version field.  Bale. */
+			do
+			{
+				uint32_t i, n;
+				tmp = read32(d, &pos, len, order);
+				pos = body_start + tmp;
+				if (tmp == 0 || pos >= len)
+					break;
+				n = read16(d, &pos, len, order);
+				for (i = 0; i < n; i++)
+				{
+					if (read16(d, &pos, len, order) == 0x112)
+					{
+						/* Orientation tag! */
+						write16(d, &pos, len, order, 3); /* 3 = short */
+						write32(d, &pos, len, order, 1); /* Count = 1 */
+						write16(d, &pos, len, order, 1); /* Value = 1 */
+						write16(d, &pos, len, order, 0); /* padding */
+						i = n;
+						pos = len; /* Done! */
+					}
+					else
+						pos += 10;
+				}
+			}
+			while (pos+4 < len);
+			break;
+		}
+		else if (m >= 0xD0 && m <= 0xD7)
+		{
+			/* RSTm - no length code. But we shouldn't hit this! */
+		}
+		else if (m == 0x01)
+		{
+			/* TEM - temporary private use in arithmetic coding - shouldn't hit this either. */
+		}
+		else if (m == 0xD8)
+		{
+			/* SOI - start of image. */
+		}
+		else if (m == 0x01)
+		{
+			/* EOI - end of image. */
+		}
+		else
+		{
+			/* All other markers have a length. */
+			size_t marker_len = d[pos]*256 + d[pos+1];
+			pos += marker_len; /* The 2 length bytes are included in the marker_len */
+		}
+	}
+
+	return out;
+}
+
 void
 fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image)
 {
@@ -545,8 +753,14 @@ fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image)
 		int type = fz_colorspace_type(ctx, image->colorspace);
 		if (type == FZ_COLORSPACE_GRAY || type == FZ_COLORSPACE_RGB)
 		{
+			fz_buffer *new_buf = fz_sanitize_jpeg_buffer(ctx, cbuf->buffer);
 			fz_append_string(ctx, out, "data:image/jpeg;base64,");
-			fz_append_base64_buffer(ctx, out, cbuf->buffer, 1);
+			fz_try(ctx)
+				fz_append_base64_buffer(ctx, out, new_buf, 1);
+			fz_always(ctx)
+				fz_drop_buffer(ctx, new_buf);
+			fz_catch(ctx)
+				fz_rethrow(ctx);
 			return;
 		}
 	}

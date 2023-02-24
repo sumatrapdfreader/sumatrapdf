@@ -1,7 +1,6 @@
-#include "../include/extract_alloc.h"
+#include "extract/alloc.h"
 
 #include "mem.h"
-#include "memento.h"
 #include "outf.h"
 #include "xml.h"
 
@@ -10,12 +9,7 @@
 #include <float.h>
 #include <limits.h>
 
-#ifdef _MSC_VER
-    #include "compat_stdint.h"
-    #include "compat_strtoll.h"
-#else
-    #include <stdint.h>
-#endif
+#include "compat_stdint.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -431,7 +425,6 @@ int extract_xml_pparse_next(extract_buffer_t *buffer, extract_xml_tag_t *out)
     char            *attribute_name = NULL;
     char            *attribute_value = NULL;
     char             c;
-    int              i;
     extract_alloc_t *alloc = extract_buffer_alloc(buffer);
 
     if (0) outf("out is: %s", extract_xml_tag_string(extract_buffer_alloc(buffer), out));
@@ -441,7 +434,7 @@ int extract_xml_pparse_next(extract_buffer_t *buffer, extract_xml_tag_t *out)
     /* Read tag name. Initialise it to empty string so we never return
     out->name==null on success. */
     if (str_catl( alloc, &out->name, NULL, 0)) goto end;
-    for( i=0;; ++i) {
+    for(;;) {
         int e = extract_buffer_read(buffer, &c, 1, NULL);
         if (e) {
             if (e == +1) ret = 1;   /* EOF is not an error here. */
