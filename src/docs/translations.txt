@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2ac6227748727f6ec47af60dc42e37e732928823
+854b59444c54c8b36dd9db49c7ad68b44d27e714
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -773,7 +773,7 @@ pl:&Wiele stron
 pt:Lado a &lado 
 ru:По &две страницы
 sl:Dvostransko
-sr-rs:&Две странице
+sr-rs:Д&ве странице
 ta:&எதிரெதிராக
 tl:Nakaharap
 tr:Her İki Yüz
@@ -944,7 +944,7 @@ pl:&Pierwsza strona
 pt:&Primeira página
 ru:Пер&вая страница
 sl:Prva stran
-sr-rs:&Прва страница
+sr-rs:П&рва страница
 ta:&முதல் பக்கம்
 tl:&Unang pahina
 tr:İlk sayfa
@@ -3550,7 +3550,7 @@ sk:Pridať stranu %s k obľúbeným
 sl:Dodaj stran %s med priljubljene
 sp-rs:Dodaj stranicu %s među odabrane
 sq:Shënoj faqen %s te pëlqimet
-sr-rs:Додај страницу %s међу одабране
+sr-rs:&Додај страницу %s међу одабране
 sv:Lägg till sida %s i Favoriter
 ta:பிடித்தவற்றில் பக்கம் %s-ஐ சேர்த்திடுக
 th:เพิ่มหน้า %s ไปยังรายการโปรด
@@ -5302,7 +5302,7 @@ sl:Spremeni jezik (Change Language)
 sn:Chinja mutauro (Change Language)
 sp-rs:Promeni jezik (Change Language)
 sq:Ndryshoj gjuhën (Change Language)
-sr-rs:Промени језик (Change Language)
+sr-rs:Промени &језик (Change Language)
 sv:Byt språk (Change Language)
 ta:மொழியை மாற்று (Change Language)
 th:เปลี่ยนภาษา
@@ -5799,7 +5799,7 @@ pl:Paleta poleceń
 pt:Paleta de comandos
 ru:Панель команд
 sl:Ukazna paleta
-sr-rs:Палета команди
+sr-rs:&Палета команди
 ta:கட்டளைப் பந்தி
 tl:Command Palette
 tr:Komut paleti
@@ -13206,6 +13206,8 @@ fr:Ouvrir dans &Double Commander
 it:Apri cartella in &Double Commander
 nl:Open Map in &Double Commander
 pl:Otwórz katalog w &Double Commanderze
+ru:Открыть папку в &Double Commander
+sr-rs:Отвори фасциклу у Double Commander-у (&К)
 :Open Directory in &Explorer
 br:Abrir Pasta no &Explorer
 cy:Agor Cyfeiriadur yn &Chwilotwr
@@ -13214,6 +13216,8 @@ fr:Ouvrir dans &Explorer
 it:Apri cartella in &Explorer
 nl:Open Map in &Verkenner
 pl:Otwórz katalog w &Eksploratorze
+ru:Открыть папку в &Проводнике
+sr-rs:Отвори фасциклу у Истра&живачу
 :Open Directory in &Total Commander
 br:Abrir Pasta em &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
@@ -13222,13 +13226,18 @@ fr:Ouvrir dans &Total Commander
 it:Apri cartella in &Total Commander
 nl:Open Map in &TotalCommander
 pl:Otwórz katalog w &Total Commanderze
+ru:Открыть папку в &Total Commander
+sr-rs:Отвори фасциклу у Total Commander-у (&Т)
 :Open Directory in Directory &Opus
 br:Abrir Pasta em Directory &Opus 
 cy:Agor Cyfarwyddiadur yng Nghyfarwyddiadur &Opus
 de:Verzeichnis in Directory &Opus öffnen
 fr:Ouvrir dans Directory &Opus
+it:Apri cartella in Directory &Opus
 nl:Open Map in Directory &Opus
 pl:Otwórz katalog w Directory &Opus
+ru:Открыть папку в &Directory Opus
+sr-rs:Отвори фасциклу у Directory Opus-у (&Д)
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -13605,6 +13614,8 @@ fr:Ouvrir dans &HTML Help
 it:Apri in Microsoft &HTML Help
 nl:Open in Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
+ru:Открыть в Microsoft &HTML Help
+sr-rs:Отвори у Microsoft HTML Help-у (&Х)
 :P&roperties
 am:Հ&ատկություններ
 ar:الخصائص
@@ -14021,7 +14032,7 @@ pl:&Strona...
 pt:Pá&gina...
 ru:С&траница...
 sl:Stran …
-sr-rs:&Страница...
+sr-rs:С&траница...
 ta:பக்கம்
 tr:Sayfaya...
 tw:前往頁面...(&G)
@@ -15571,7 +15582,7 @@ sk:Odobrať z obľúbených položiek
 sl:Odstrani iz priljubljenih
 sp-rs:Ukloni iz odabranih
 sq:Heq nga pëlqimet
-sr-rs:Уклони из одабраних
+sr-rs:&Уклони из одабраних
 sv:Ta bort från favoriter
 ta:பிடித்தவற்றில் இருந்து நீக்குக
 th:ลบออกจากรายการโปรด
@@ -15802,7 +15813,7 @@ pl:Z&aznaczenie
 pt:S&eleção
 ru:В&ыделение
 sl:I&zbor
-sr-rs:&Избор
+sr-rs:И&збор
 ta:தேர்வு
 th:&การเลือก
 tr:S&eçim
@@ -17171,7 +17182,7 @@ sk:Zobraziť obľúbené položky
 sl:Prikaži Priljubljene
 sp-rs:Prikaži odabrane stranice
 sq:Tregoj pëlqimet
-sr-rs:Прикажи одабране странице
+sr-rs:&Прикажи одабране странице
 sv:Visa favoriter
 ta:பிடித்தவைகளை காட்டுக
 th:แสดงรายการโปรด
