@@ -1,0 +1,150 @@
+/* icon sizing in the left menu */
+.icon-home {
+    width: 100px;
+    height: auto;
+}
+
+/* main document page: ensures pages fit to the available width and height */
+.wy-nav-content {
+    min-width: 100%;
+    min-height: 100vh;
+}
+
+/* Accessibility: Artifex color for main document links */
+.wy-nav-content a {
+    color: #007aff;
+}
+
+/* Artifex blue color for background elements */
+.wy-side-nav-search, .wy-nav-top {
+    background-color: #007aff;
+}
+
+/* Accessibility: ensures that the version number is readable against the background color */
+.wy-side-nav-search>div.version {
+    color:hsla(0,0%,100%,1);
+}
+
+
+/* adds scrollbar to sidenav */
+.wy-side-scroll {
+    width: auto;
+    overflow-y: scroll;
+}
+
+.wy-side-scroll ::-webkit-scrollbar {
+    width: 0.5em;
+}
+
+.wy-side-scroll ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.wy-side-scroll::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+}
+
+/* visible scroll bars on tables with scrollable content */
+.wy-table-responsive::-webkit-scrollbar {
+    background-color: #dddddd;
+    width: 1em;
+}
+
+.wy-menu-vertical::-webkit-scrollbar-track, .wy-table-responsive::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.wy-menu-vertical::-webkit-scrollbar-thumb, .wy-table-responsive::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    outline: 1px solid slategrey;
+}
+
+.htmltag {
+    padding: 2px 5px;
+    background-color: #fbff68;
+    border-radius: 4px;
+    border: 1px solid #222;
+}
+
+
+
+.discordLink {
+    display:flex;
+    justify-content:flex-end;
+    margin:0 0 10px;
+    padding:0;
+    font-size: 13px;
+}
+
+.discordLink a {
+    color: #000;
+}
+
+.discordLink img {
+    width: 30px;
+    height: 30px;
+    margin-left: 8px;
+}
+
+.feedbackLink {
+    display:flex;
+    justify-content:flex-end;
+    margin:0 0 10px;
+    padding:0;
+    font-size: 13px;
+}
+
+
+h1 {
+    padding: 10px;
+    background-color: #007aff;
+    color: #fff;
+    border-radius: 5px;
+    margin-left: -10px;
+}
+
+
+cite {
+    font-weight: bold;
+    font-style: normal;
+}
+
+
+/* Dark mode colors */
+@media (prefers-color-scheme: dark) {
+
+    /* main document page */
+    .wy-nav-content {
+        background-color: #000;
+        color: #fff;
+    }
+
+    .htmltag {
+        color: #000;
+    }
+
+    th {
+        color: #fff;
+    }
+
+    td {
+        background-color: #000 !important;
+    }
+
+    tr:nth-child(2n-1) td{
+        background-color: #333 !important;
+    }
+
+    pre {
+        color: #000;
+    }
+
+    .admonition {
+        color: #000;
+    }
+
+    .discordLink a {
+        color: #fff;
+    }
+
+}
