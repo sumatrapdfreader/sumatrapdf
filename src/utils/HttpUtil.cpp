@@ -25,7 +25,7 @@ bool HttpGet(const char* urlA, HttpRsp* rspOut) {
     DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
     WCHAR* url = ToWstrTemp(urlA);
-    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
+    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_IGNORE_CERT_CN_INVALID;
 
     if (str::StartsWithI(urlA, "https")) {
         flags |= INTERNET_FLAG_SECURE;
