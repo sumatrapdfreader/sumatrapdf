@@ -27,6 +27,10 @@ bool HttpGet(const char* urlA, HttpRsp* rspOut) {
     WCHAR* url = ToWstrTemp(urlA);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
+    if (str::StartsWithI(urlA, "https")) {
+        flags |= INTERNET_FLAG_SECURE;
+    }
+
     rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
