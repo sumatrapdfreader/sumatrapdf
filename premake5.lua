@@ -701,6 +701,7 @@ workspace "SumatraPDF"
     includedirs { "src", "ext/lzma/C" }
     includedirs { "ext/libheif", "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
     utils_files()
+    links {"wininet"}
 
   ---- executables
   --[[
@@ -788,7 +789,7 @@ workspace "SumatraPDF"
     disablewarnings { "4838" }
     includedirs { "src" }
     test_util_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version" }
+    links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet" }
 
   project "logview"
     kind "ConsoleApp"
@@ -812,7 +813,7 @@ workspace "SumatraPDF"
     includedirs { "src", "src/wingui", "mupdf/include" }
     search_filter_files()
     links { "utils", "unrar", "libmupdf" }
-    links { "comctl32", "gdiplus", "shlwapi", "version"  }
+    links { "comctl32", "gdiplus", "shlwapi", "version" }
 
   project "PdfPreview"
     kind "SharedLib"
