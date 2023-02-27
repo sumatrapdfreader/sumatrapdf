@@ -251,6 +251,17 @@ void LogLastError(DWORD err) {
     if (0 == err) {
         err = GetLastError();
     }
+
+    if (err == ERROR_INTERNET_EXTENDED_ERROR) {
+        char buf[4096] = { 0 };
+        DWORD bufSize = dimof(buf);
+        // TODO: ignoring a case where buffer is too small. 4 kB should be enough for everybody
+        InternetGetLastResponseInfoA(&err, buf, &bufSize);
+        buf[4095] = 0;
+        logf("InternetGetLastResponseInfoA: %s\n", buf);
+        return;
+    }
+
     char* msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
