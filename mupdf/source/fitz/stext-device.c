@@ -320,6 +320,59 @@ vec_dot(const fz_point *a, const fz_point *b)
 }
 
 static void
+prepend_line_if_possible(fz_context *ctx, fz_stext_block *cur_block, fz_point q)
+{
+	fz_stext_line *cur_line;
+	fz_stext_line *line;
+	fz_point ndir;
+	float size;
+	fz_point p;
+	fz_point delta;
+	float spacing;
+
+	if (cur_block == NULL || cur_block->type != FZ_STEXT_BLOCK_TEXT)
+		return;
+
+	cur_line = cur_block->u.t.last_line;
+	if (cur_line == NULL)
+		return;
+
+	line = cur_line->prev;
+	if (line == NULL)
+		return;
+
+	if (line->wmode != cur_line->wmode)
+		return;
+
+	ndir = cur_line->dir;
+	size = cur_line->last_char->size;
+	p = line->first_char->origin;
+	delta.x = p.x - q.x;
+	delta.y = p.y - q.y;
+
+	spacing = ndir.x * delta.x + ndir.y * delta.y;
+
+	if (fabsf(spacing) >= size * SPACE_MAX_DIST)
+		return;
+
+	/* cur_line plausibly finishes at the start of line. */
+	/* Move all the chars from cur_line onto the start of line */
+	cur_line->last_char->next = line->first_char;
+	line->first_char = cur_line->first_char;
+	cur_line->first_char = NULL;
+	cur_line->last_char = NULL;
+
+	/* Merge the bboxes */
+	line->bbox = fz_union_rect(line->bbox, cur_line->bbox);
+
+	/* Unlink cur_line from the block. */
+	cur_block->u.t.last_line = cur_block->u.t.last_line->prev;
+	cur_block->u.t.last_line->next = NULL;
+
+	/* Can't bin the line storage as it's from a pool. */
+}
+
+static void
 fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, int glyph, fz_matrix trm, float adv, int wmode, int force_new_line)
 {
 	fz_stext_page *page = dev->page;
@@ -497,6 +550,14 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 		new_line = 0;
 	}
 
+	if (new_line)
+	{
+		/* We are about to start a new line. This means we've finished with this
+		 * one. Can this be prepended to a previous line in this block? */
+		/* dev->pen records the previous stopping point - so where cur_line ends. */
+		prepend_line_if_possible(ctx, cur_block, dev->pen);
+	}
+
 	/* Start a new line */
 	if (new_line || !cur_line || force_new_line)
 	{
@@ -514,6 +575,15 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 
 	dev->new_obj = 0;
 	dev->trm = trm;
+}
+
+static void
+flush_text(fz_context *ctx, fz_stext_device *dev)
+{
+	fz_stext_page *page = dev->page;
+
+	/* Find current position to enter new text. */
+	prepend_line_if_possible(ctx, page->last_block, dev->pen);
 }
 
 static void
@@ -793,6 +863,8 @@ fz_stext_close_device(fz_context *ctx, fz_device *dev)
 	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
+
+	flush_text(ctx, tdev);
 
 	for (block = page->first_block; block; block = block->next)
 	{

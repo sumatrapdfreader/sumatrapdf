@@ -33,22 +33,21 @@ pdf_obj *pdf_lookup_page_obj(fz_context *ctx, pdf_document *doc, int needle);
 /*
 	Cache the page tree for fast forward/reverse page lookups.
 
-	It is the caller's responsibility to ensure that nothing alters
-	the page tree between this call and the matching pdf_drop_page_tree
-	or undefined behaviour may occur.
-
-	Any successful call to pdf_load_page_tree MUST be matched with
-	a call to pdf_drop_page_tree.
+	No longer required. This is a No Op, now as page tree
+	maps are loaded automatically 'just in time'.
 */
 void pdf_load_page_tree(fz_context *ctx, pdf_document *doc);
 
 /*
 	Discard the page tree maps.
 
-	Calls to this should exactly match successful calls to
-	pdf_load_page_tree.
+	No longer required. This is a No Op, now as page tree
+	maps are discarded automatically 'just in time'.
 */
 void pdf_drop_page_tree(fz_context *ctx, pdf_document *doc);
+
+void pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc);
+
 
 /*
 	Find the page number of a named destination.

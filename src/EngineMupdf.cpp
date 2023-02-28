@@ -2033,97 +2033,31 @@ bool EngineMupdf::FinishLoading() {
 
     ScopedCritSec scope(ctxAccess);
 
-    bool loadPageTreeFailed = false;
-
-    fz_try(ctx) {
-        pdf_load_page_tree(ctx, pdfdoc);
-    }
-    fz_catch(ctx) {
-        fz_warn(ctx, "pdf_load_page_tree() failed");
-        loadPageTreeFailed = true;
-    }
-
-    int nPages = pdfdoc->map_page_count;
-    if (loadPageTreeFailed) {
-        nPages = pageCount;
-    } else {
-        if (nPages != pageCount) {
-            logfa("pdfdoc->map_page_count: %d, pageCount: %d\n", pdfdoc->map_page_count, pageCount);
-            ReportIf(nPages != pageCount);
-            fz_warn(ctx, "mismatch between fz_count_pages() and doc->rev_page_count");
-            return false;
+    for (int pageNo = 0; pageNo < pageCount; pageNo++) {
+        pdf_obj* pageref = nullptr;
+        fz_rect mbox{};
+        fz_matrix page_ctm{};
+        fz_var(pageref);
+        fz_var(mbox);
+        fz_try(ctx) {
+            // note: don't pdf_drop_obj() this
+            pageref = pdf_lookup_page_obj(ctx, pdfdoc, pageNo);
+            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+            mbox = fz_transform_rect(mbox, page_ctm);
         }
-    }
-
-    if (!loadPageTreeFailed) {
-        // this does the job of pdf_bound_page but without doing pdf_load_page()
-        pdf_rev_page_map* map = pdfdoc->rev_page_map;
-        for (int i = 0; i < nPages && !loadPageTreeFailed; i++) {
-            int pageNo = map[i].page;
-            if (pageNo >= nPages) {
-                // corrupted file
-                loadPageTreeFailed = true;
-                continue;
-            }
-            int objNo = map[i].object;
-            fz_rect mbox{};
-            fz_matrix page_ctm{};
-            pdf_obj* pageref = nullptr;
-            fz_var(pageref);
-            fz_var(mbox);
-            fz_try(ctx) {
-                pageref = pdf_load_object(ctx, pdfdoc, objNo);
-                pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-                mbox = fz_transform_rect(mbox, page_ctm);
-                pdf_drop_obj(ctx, pageref);
-            }
-            fz_catch(ctx) {
-                loadPageTreeFailed = true;
-                mbox = {};
-            }
-            if (fz_is_empty_rect(mbox)) {
-                logfa("cannot find page size for page %d", i);
-                mbox.x0 = 0;
-                mbox.y0 = 0;
-                mbox.x1 = 612;
-                mbox.y1 = 792;
-                loadPageTreeFailed = true;
-            }
-            FzPageInfo* pageInfo = pages[pageNo];
-            pageInfo->mediabox = ToRectF(mbox);
-            pageInfo->pageNo = pageNo + 1;
+        fz_catch(ctx) {
+            mbox = {};
         }
-    }
-
-    if (loadPageTreeFailed) {
-        for (int pageNo = 0; pageNo < nPages; pageNo++) {
-            FzPageInfo* pageInfo = pages[pageNo];
-            pageInfo->pageNo = pageNo + 1;
-            fz_rect mbox{};
-            pdf_page* page = nullptr;
-            fz_var(page);
-            fz_var(mbox);
-            fz_try(ctx) {
-                page = pdf_load_page(ctx, pdfdoc, pageNo);
-                pageInfo->page = (fz_page*)page;
-                mbox = pdf_bound_page(ctx, page);
-            }
-            fz_catch(ctx) {
-                mbox = {};
-            }
-
-            if (fz_is_empty_rect(mbox)) {
-                logfa("cannot find page size (2) for page %d", pageNo);
-                mbox.x0 = 0;
-                mbox.y0 = 0;
-                mbox.x1 = 612;
-                mbox.y1 = 792;
-            }
-            pageInfo->mediabox = ToRectF(mbox);
+        if (fz_is_empty_rect(mbox)) {
+            logfa("cannot find page size for page %d", pageNo);
+            mbox.x0 = 0;
+            mbox.y0 = 0;
+            mbox.x1 = 612;
+            mbox.y1 = 792;
         }
-    }
-    if (loadPageTreeFailed) {
-        logfa("Failed to load page tree for '%s'\n", FilePath());
+        FzPageInfo* pageInfo = pages[pageNo];
+        pageInfo->mediabox = ToRectF(mbox);
+        pageInfo->pageNo = pageNo + 1;
     }
 
     fz_try(ctx) {

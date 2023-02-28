@@ -118,6 +118,11 @@ static void error_exit_dct(j_common_ptr cinfo)
 	fz_throw(ctx, FZ_ERROR_GENERIC, "jpeg error: %s", msg);
 }
 
+static void output_message_dct(j_common_ptr cinfo)
+{
+	/* swallow message */
+}
+
 static void init_source_dct(j_decompress_ptr cinfo)
 {
 	/* nothing to do */
@@ -369,6 +374,7 @@ fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int l2facto
 	cinfo->src = NULL;
 	cinfo->err = &state->errmgr;
 	jpeg_std_error(cinfo->err);
+	cinfo->err->output_message = output_message_dct;
 	cinfo->err->error_exit = error_exit_dct;
 
 	return fz_new_stream(ctx, state, next_dctd, close_dctd);

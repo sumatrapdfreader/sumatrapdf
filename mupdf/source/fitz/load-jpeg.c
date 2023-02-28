@@ -89,6 +89,11 @@ fz_jpg_mem_term(j_common_ptr cinfo)
 
 #endif /* SHARE_JPEG */
 
+static void output_message(j_common_ptr cinfo)
+{
+	/* swallow message */
+}
+
 static void error_exit(j_common_ptr cinfo)
 {
 	char msg[JMSG_LENGTH_MAX];
@@ -374,6 +379,7 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 	cinfo.mem = NULL;
 	cinfo.global_state = 0;
 	cinfo.err = jpeg_std_error(&err);
+	err.output_message = output_message;
 	err.error_exit = error_exit;
 
 	cinfo.client_data = NULL;

@@ -264,6 +264,18 @@ ifeq "$(OS)" "wasm"
   HAVE_LIBCRYPTO=no
 endif
 
+ifeq "$(OS)" "wasm-mt"
+  build_prefix += wasm-mt/
+  CC = emcc
+  CXX = em++
+  AR = emar
+  HAVE_GLUT=no
+  HAVE_X11=no
+  HAVE_OBJCOPY=no
+  HAVE_LIBCRYPTO=no
+  CFLAGS += -pthread
+endif
+
 ifeq "$(OS)" "mingw32-cross"
   build_prefix += $(OS)/
   SO := dll

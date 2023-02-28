@@ -21,6 +21,7 @@
 // CA 94945, U.S.A., +1(415)492-9861, for further information.
 
 #include "mupdf/fitz.h"
+#include "mupdf/ucdn.h"
 
 #include <string.h>
 #include <limits.h>
@@ -56,11 +57,45 @@ static int line_length(fz_stext_line *line)
 	return n;
 }
 
+static int
+direction_from_bidi_class(int bidiclass, int curdir)
+{
+	switch (bidiclass)
+	{
+	/* strong */
+	case UCDN_BIDI_CLASS_L: return 1;
+	case UCDN_BIDI_CLASS_R: return -1;
+	case UCDN_BIDI_CLASS_AL: return -1;
+
+	/* weak */
+	case UCDN_BIDI_CLASS_EN:
+	case UCDN_BIDI_CLASS_ES:
+	case UCDN_BIDI_CLASS_ET:
+	case UCDN_BIDI_CLASS_AN:
+	case UCDN_BIDI_CLASS_CS:
+	case UCDN_BIDI_CLASS_NSM:
+	case UCDN_BIDI_CLASS_BN:
+		return curdir;
+
+	/* neutral */
+	case UCDN_BIDI_CLASS_B:
+	case UCDN_BIDI_CLASS_S:
+	case UCDN_BIDI_CLASS_WS:
+	case UCDN_BIDI_CLASS_ON:
+		return curdir;
+
+	/* embedding, override, pop ... we don't support them */
+	default:
+		return 0;
+	}
+}
+
 static int find_closest_in_line(fz_stext_line *line, int idx, fz_point p)
 {
 	fz_stext_char *ch;
 	float closest_dist = 1e30f;
 	int closest_idx = idx;
+	int dirn = 0;
 
 	if (line->dir.x > line->dir.y)
 	{
@@ -82,13 +117,28 @@ static int find_closest_in_line(fz_stext_line *line, int idx, fz_point p)
 		float mid_x = (ch->quad.ul.x + ch->quad.ur.x + ch->quad.ll.x + ch->quad.lr.x) / 4;
 		float mid_y = (ch->quad.ul.y + ch->quad.ur.y + ch->quad.ll.y + ch->quad.lr.y) / 4;
 		float this_dist = dist2(p.x - mid_x, p.y - mid_y);
+
+		dirn = direction_from_bidi_class(ucdn_get_bidi_class(ch->c), dirn);
+
 		if (this_dist < closest_dist)
 		{
 			closest_dist = this_dist;
+			if (dirn == -1)
+			{
+				/* R2L */
+				if (line->dir.x > line->dir.y)
+					closest_idx = (p.x < mid_x) ? idx+1 : idx;
+				else
+					closest_idx = (p.y < mid_y) ? idx+1 : idx;
+			}
+			else
+			{
+				/* Neutral or L2R */
 			if (line->dir.x > line->dir.y)
 				closest_idx = (p.x < mid_x) ? idx : idx+1;
 			else
 				closest_idx = (p.y < mid_y) ? idx : idx+1;
+		}
 		}
 		++idx;
 	}
@@ -287,14 +337,40 @@ static void on_highlight_char(fz_context *ctx, void *arg, fz_stext_line *line, f
 	if (hits->len > 0)
 	{
 		fz_quad *end = &hits->box[hits->len-1];
-		if (hdist(&line->dir, &end->lr, &ch->quad.ll) < hfuzz
-			&& vdist(&line->dir, &end->lr, &ch->quad.ll) < vfuzz
-			&& hdist(&line->dir, &end->ur, &ch->quad.ul) < hfuzz
-			&& vdist(&line->dir, &end->ur, &ch->quad.ul) < vfuzz)
+		float llh = hdist(&line->dir, &end->lr, &ch->quad.ll);
+		float llv = vdist(&line->dir, &end->lr, &ch->quad.ll);
+		float ulh = hdist(&line->dir, &end->ur, &ch->quad.ul);
+		float ulv = vdist(&line->dir, &end->ur, &ch->quad.ul);
+		float lrh = hdist(&line->dir, &end->ll, &ch->quad.lr);
+		float lrv = vdist(&line->dir, &end->ll, &ch->quad.lr);
+		float urh = hdist(&line->dir, &end->ul, &ch->quad.ur);
+		float urv = vdist(&line->dir, &end->ul, &ch->quad.ur);
+
+		if (lrh + lrv + urh + urv < llh + llv + ulh + ulv)
+		{
+			/* Merge to the right, if at all. */
+			if (lrh < hfuzz
+				&& lrv < vfuzz
+				&& urh < hfuzz
+				&& urv < vfuzz)
+			{
+				end->ul = ch->quad.ul;
+				end->ll = ch->quad.ll;
+				return;
+			}
+		}
+		else
+		{
+			/* Merge to the left, if at all */
+			if (llh < hfuzz
+				&& llv < vfuzz
+				&& ulh < hfuzz
+				&& ulv < vfuzz)
 		{
 			end->ur = ch->quad.ur;
 			end->lr = ch->quad.lr;
 			return;
+			}
 		}
 	}
 

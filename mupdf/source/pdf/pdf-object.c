@@ -1482,8 +1482,8 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 		return;
 	}
 
-	/* Do we need to drop the reverse page map? */
-	if (doc && doc->rev_page_map)
+	/* Do we need to drop the page maps? */
+	if (doc && (doc->rev_page_map || doc->fwd_page_map))
 	{
 		if (doc->non_structural_change)
 		{
@@ -1500,7 +1500,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			 * never do structural changes in local_xrefs. */
 		}
 		else
-		pdf_drop_page_tree(ctx, doc);
+			pdf_drop_page_tree_internal(ctx, doc);
 	}
 
 	if (val)

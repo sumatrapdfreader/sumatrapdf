@@ -85,15 +85,14 @@ cmp_rev_page_map(const void *va, const void *vb)
 void
 pdf_load_page_tree(fz_context *ctx, pdf_document *doc)
 {
-	int refs;
+	/* Noop now. */
+}
 
-	/* Atomically increment the number of times we've been told to load. */
-	fz_lock(ctx, FZ_LOCK_ALLOC);
-	refs = doc->page_map_nesting++;
-	fz_unlock(ctx, FZ_LOCK_ALLOC);
-
-	/* If we were already non-zero, then we're already loaded. */
-	if (refs != 0)
+static void
+pdf_load_page_tree_internal(fz_context *ctx, pdf_document *doc)
+{
+	/* Check we're not already loaded. */
+	if (doc->fwd_page_map != NULL)
 		return;
 
 	/* At this point we're trusting that only 1 thread should be doing
@@ -112,9 +111,6 @@ pdf_load_page_tree(fz_context *ctx, pdf_document *doc)
 		doc->rev_page_map = NULL;
 		fz_free(ctx, doc->fwd_page_map);
 		doc->fwd_page_map = NULL;
-		fz_lock(ctx, FZ_LOCK_ALLOC);
-		doc->page_map_nesting--;
-		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		fz_rethrow(ctx);
 	}
 }
@@ -122,14 +118,12 @@ pdf_load_page_tree(fz_context *ctx, pdf_document *doc)
 void
 pdf_drop_page_tree(fz_context *ctx, pdf_document *doc)
 {
-	int refs;
+	/* Historical entry point. Now does nothing. We drop 'just in time'. */
+}
 
-	fz_lock(ctx, FZ_LOCK_ALLOC);
-	refs = --doc->page_map_nesting;
-	fz_unlock(ctx, FZ_LOCK_ALLOC);
-	if (refs != 0)
-		return;
-
+void
+pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc)
+{
 	/* At this point we're trusting that only 1 thread should be doing
 	 * stuff that hits the document at a time. */
 	fz_free(ctx, doc->rev_page_map);
@@ -237,11 +231,29 @@ pdf_lookup_page_loc(fz_context *ctx, pdf_document *doc, int needle, pdf_obj **pa
 pdf_obj *
 pdf_lookup_page_obj(fz_context *ctx, pdf_document *doc, int needle)
 {
-	if (doc->fwd_page_map)
+	if (doc->fwd_page_map == NULL && !doc->page_tree_broken)
 	{
+		fz_try(ctx)
+			pdf_load_page_tree_internal(ctx, doc);
+		fz_catch(ctx)
+		{
+			doc->page_tree_broken = 1;
+			fz_warn(ctx, "Page tree load failed. Falling back to slow lookup");
+		}
+	}
+
+	/* If we have a fwd_page_map then look it up. If the index in that map is 0 then
+	 * maybe it was direct page object rather than a reference. This is illegal, but
+	 * we've seen it in tests_private/pdf/sumatra/page_no_indirect_reference.pdf so
+	 * we might as well cope. */
+	if (doc->fwd_page_map && doc->fwd_page_map[needle] != 0)
+	{
+		pdf_obj *pageobj;
 		if (needle < 0 || needle >= doc->map_page_count)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page %d in page tree", needle+1);
-		return pdf_load_object(ctx, doc, doc->fwd_page_map[needle]);
+		pageobj = pdf_load_object(ctx, doc, doc->fwd_page_map[needle]);
+		pdf_drop_obj(ctx, pageobj);
+		return pageobj;
 	} else
 		return pdf_lookup_page_loc(ctx, doc, needle, NULL, NULL);
 }
@@ -327,6 +339,17 @@ pdf_lookup_page_number_fast(fz_context *ctx, pdf_document *doc, int needle)
 int
 pdf_lookup_page_number(fz_context *ctx, pdf_document *doc, pdf_obj *page)
 {
+	if (doc->rev_page_map == NULL && !doc->page_tree_broken)
+	{
+		fz_try(ctx)
+			pdf_load_page_tree_internal(ctx, doc);
+		fz_catch(ctx)
+		{
+			doc->page_tree_broken = 1;
+			fz_warn(ctx, "Page tree load failed. Falling back to slow lookup.");
+		}
+	}
+
 	if (doc->rev_page_map)
 		return pdf_lookup_page_number_fast(ctx, doc, pdf_to_num(ctx, page));
 	else

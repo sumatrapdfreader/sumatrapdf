@@ -3546,8 +3546,14 @@ static void ffi_Document_loadOutline(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 
+	if (js_try(J)) {
+		fz_drop_outline(ctx, outline);
+		js_throw(J);
+	}
+
 	to_outline(J, outline);
 
+	js_endtry(J);
 	fz_drop_outline(ctx, outline);
 }
 

@@ -1932,7 +1932,7 @@ pdf_drop_document_imp(fz_context *ctx, pdf_document *doc)
 
 	fz_free(ctx, doc->orphans);
 
-	fz_free(ctx, doc->rev_page_map);
+	pdf_drop_page_tree_internal(ctx, doc);
 
 	fz_defer_reap_end(ctx);
 

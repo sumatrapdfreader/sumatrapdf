@@ -1239,10 +1239,8 @@ FUN(PDFObject_equals)(JNIEnv *env, jobject self, jobject jother)
 	pdf_obj *other = NULL;
 	int result = 0;
 
-	if (!ctx || !obj) return JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 
-	if (jother == NULL)
-		return JNI_FALSE;
 	if (!(*env)->IsInstanceOf(env, jother, cls_PDFObject))
 		return JNI_FALSE;
 
