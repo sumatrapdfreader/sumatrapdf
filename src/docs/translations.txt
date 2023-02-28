@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-854b59444c54c8b36dd9db49c7ad68b44d27e714
+f32ada4ed2d23c5d6dadc7f2ea043ad21638995f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -531,7 +531,7 @@ sk:&Kopírovať vybrané
 sl:&Kopiraj izbor
 sp-rs:Kopiraj izabrano
 sq:&Kopjoj materialin
-sr-rs:Копирај и&забрано
+sr-rs:&Копирај изабрано
 sv:&Kopiera markering
 ta:&தேர்ந்தெடுத்ததைப் படியெடுத்திடுக
 th:&คัดลอกตำแหน่งที่เลือก
@@ -7876,7 +7876,7 @@ pl:Usuń adnotację\tDel
 pt:Remover anotação\Del
 ru:Удалить аннотацию\tDel
 sl:Izbriši pripombo\tDel
-sr-rs:Обриши белешку\tDel
+sr-rs:Обриши беле&шку\tDel
 ta:குறிப்புரையை நீக்கிடுக\tDel
 tl:Tanggalin ang anotasyon\tDel
 tr:Dipnotu Sil\tDel
@@ -8192,7 +8192,7 @@ pl:&Wyjście
 pt:&Sair
 ru:В&ыход
 sl:I&zhod
-sr-rs:И&зађи
+sr-rs:Иза&ђи
 ta:வெளியேறுக
 tl:&Lumabas
 tr:Çık
@@ -8236,7 +8236,7 @@ pl:W&yjdź z trybu pełnoekranowego
 pt:Sair de &ecrã completo
 ru:&Выйти из полноэкранного режима
 sl:&Izhod iz celozaslonskega načina
-sr-rs:И&зађи из целог екрана
+sr-rs:Иза&ђи из целог екрана
 ta:முழுத்திரை வெளியேறு 
 th:&ออกจากโหมดเต็มหน้าจอ
 tl:&Lumabas sa fullscreen
@@ -8349,7 +8349,7 @@ pl:Edytuj adnotacje
 pt:Editar anotações 
 ru:Изменить аннотации
 sl:Uredi pripombo
-sr-rs:Уреди белешке
+sr-rs:&Уреди белешке
 ta:குறிப்புரைகளைத் திருத்துக
 th:ปรับแต่งคำอธิบายประกอบ
 tl:I-edit ang mga anotasyon
@@ -15922,7 +15922,7 @@ pl:Zapisz adnotacje do istniejącego pliku PDF
 pt:Guardar anotações para PDF existente
 ru:Со&хранить аннотации в имеющемся PDF
 sl:Shrani pripombe v obstoječi PDF
-sr-rs:Сачувај белешке у постојећи PDF
+sr-rs:&Сачувај белешке у постојећи PDF
 ta:குறிப்புரைகளை நடப்பிலுள்ள PDFஇல் சேமித்திடுக
 tr:Dipnotları geçerli PDF'ye kaydet
 uk:Збереження приміток до наявного PDF-файлу
@@ -16487,7 +16487,7 @@ pl:Wybierz adnotację w edytorze
 pt:Selecionar anotação no editor
 ru:Выбрать аннотацию в редакторе
 sl:Izberi pripombo v urejevalniku
-sr-rs:Одабери белешку у уређивачу
+sr-rs:Одабери &белешку у уређивачу
 ta:தொகுப்பானில் குறிப்புரையைத் தேர்வு செய்க
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 tl:Piliin ang Anotasyon sa Editor
@@ -17122,7 +17122,7 @@ pl:Pokaż za&kładki
 pt:&Mostrar marcadores
 ru:Показывать &закладки
 sl:Pokaži zazna&mke
-sr-rs:Прикажи обе&леживаче
+sr-rs:Прикажи обеле&живаче
 ta:புத்தகக்குறிகளைக் காட்டுக
 tr:Yer imleri
 tw:顯示書籤(&M)
