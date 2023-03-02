@@ -631,7 +631,7 @@ const char* DefaultAppearanceTextFont(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->ctx;
     ScopedCritSec cs(e->ctxAccess);
-    const char* fontName;
+    const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
