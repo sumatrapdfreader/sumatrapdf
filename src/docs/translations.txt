@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f32ada4ed2d23c5d6dadc7f2ea043ad21638995f
+3e1d47c24040b26d6181f51ef19e0e6114e39174
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -399,6 +399,7 @@ tr:&Karet
 uk:&Каретка
 vn:&Bổ Sung
 :&Close
+ar:إ&غلاق
 bg:&Затвори
 br:&Fechar
 by:&Закрыць
@@ -435,6 +436,7 @@ uk:Закрити
 vn:&Đóng
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
+ar:ا&ستمر في تثبيت نسخة 32 بت
 bg:Продължи с инсталация на  &32 битова версия
 br:&Continue instalando a versão 32-bits
 by:П&рацягнуць устаноўку 32-бітнай версіі
@@ -542,6 +544,7 @@ uk:Скопіювати вибране
 uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy To Clipboard
+ar:&نسخ إلى الحافظة
 bg:&Копирай в клипборда
 br:&Copiar para área de transferência
 by:С&капіраваць у буфер абмену
@@ -750,6 +753,7 @@ uk:Тільки парні сторінки
 uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
 :&Facing
+ar:&متقابلة
 bg:Из&глед с лице
 br:&Página dupla
 by:&Экспазіцыя
@@ -919,6 +923,7 @@ uk:Що шукати:
 uz:&Qidirish:
 vn:Tìm (các) từ sau:
 :&First Page
+ar:أ&ول صفحة
 az:&Birinci səhifə
 bg:&Първа страница
 br:&Primeira página
@@ -1264,6 +1269,7 @@ uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
 :&Highlight
+ar:ت&ظليل
 bg:Ак&центирано
 br:&Destacar
 by:&Выдзяліць
@@ -1293,6 +1299,7 @@ tr:&Vurgula
 uk:Виділити 
 vn:&Nổi Bật
 :&Last Page
+ar:آ&خر صفحة
 bg:По&следна страница
 br:&Última página
 by:&Апошняя старонка
@@ -1520,6 +1527,7 @@ uk:Враховувати регістр
 uz:&Registrni hisobga olish
 vn:Phân biệt &HOA-thường
 :&Next Page
+ar:الصفحة ال&تالية
 bg:С&ледваща страница
 br:&Próxima página
 by:&Наступная старонка
@@ -1748,6 +1756,7 @@ uk:Відкрити документ
 uz:&Hujjatni ochish
 vn:Mở tập tin
 :&Open...
+ar:&فتح...
 bg:&Отвори...
 br:&Abrir
 by:&Адкрыць…
@@ -2034,6 +2043,7 @@ uk:Документ pin
 uz:&Hujjatni eslab qolish
 vn:Ghim tập tin
 :&Previous Page
+ar:الصفحة ال&سابقة
 bg:Пре&дишна страница
 br:&Página anterior
 by:&Папярэдняя старонка
@@ -2258,7 +2268,7 @@ uz:&Ushbu hujjatning maxfiy so'zini eslab qolish
 vn:Nhớ mật khẩu cho tập tin này
 :&Remember these settings for each document
 am:Հիշել այս կարգավորումները &բոլոր ֆայլերի համար
-ar:&تذكر هذه الإعدادات لكل وثيقة
+ar:&تذكر هذه الإعدادات لكل مستند
 az:Bu &parametrləri bütün sənədlər üçün yadda saxla
 bg:Запази &настройките за всеки документ
 br:Lembrar estas preferências para cada documento
@@ -2430,6 +2440,7 @@ uz:&Quyidagicha saqlash...
 vn:Lưu thành...
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
+ar:&حفظ إلى ملف PDF موجود
 bg:Запи&ши в съществуващ PDF
 br:&Salvar em um PDF existente
 by:&Захаваць у існуючы PDF
@@ -2466,6 +2477,7 @@ uk:Зберегти в наявному PDF-файлі
 vn:&Lưu và thoát PDF
 :&Search With Google
 am:&Որոնել Google-ով
+ar:&بحث في Google
 bg:По&търси с Google
 br:&Buscar com Google
 ca-xv:&Cerca amb el Google
@@ -2629,6 +2641,7 @@ uk:Урізати сторінки до зони друку (при необхі
 uz:&Betlarni printerga moslab kichraytirish (zarur bo'lganda)
 vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page
+ar:صفحة م&فردة
 bg:&Една страница
 br:&Página única
 ca:Una &sola pàgina 
@@ -2827,6 +2840,7 @@ uk:&Тема
 vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
+ar:&ترجمة في Google
 bg:&Превод с Google
 br:&Traduzir com Google
 ca-xv:Tradueix amb el &Google
@@ -3159,7 +3173,7 @@ vn:Đồng ý
 :&Zoom
 af:&Zoem
 am:&Դիտափոխել
-ar: تكبير/تصغير&
+ar:تكبير/تصغير&
 az:&Miqyas
 bg:&Увеличение
 bn:&বিবর্ধন
@@ -3494,7 +3508,7 @@ uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa Thích
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
-ar:الى المفضلة %s اضافة صفحة
+ar:إضافة الصفحة %s إلى المفضلة
 az:%s. səhifəni seçilmişlərə əlavə et
 bg:Добавяне на страница %s към любимите
 bn:এই পাতাটিকে %s প্রিয়তে যোগ করুন
@@ -3953,7 +3967,7 @@ vn:Ghi chú
 :Application:
 af:Applikasie
 am:Ծրագիր՝
-ar:التطبيق
+ar:التطبيق:
 az:Proqram:
 bg:Приложение:
 bn:অ্যাপ্লিকেশানঃ
@@ -4022,7 +4036,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
-ar:؟  SumatraPDF هل انت متاكد تريد مسح 
+ar:هل أنت متأكد من رغبتك في إلغاء تثبيت SumatraPDF؟
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
 bg:Наистина ли искате да деинсталирате SumatraPDF ?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
@@ -4230,7 +4244,7 @@ vn:Đính kèm: %s
 :Author:
 af:Outeur
 am:Հեղինակ՝
-ar:المؤلف
+ar:المؤلف:
 az:Müəllif:
 bg:Автор:
 bn:লেখকঃ
@@ -4299,6 +4313,7 @@ uz:Muallif:
 vn:Tác Giả
 :Author: %s
 am:Հեղինակ՝ %s
+ar:المؤلف: %s
 az:Müəllif: %s
 bg:Автор: %s
 bn:গ্রন্থকার: %s
@@ -4905,7 +4920,7 @@ vn:Bytes
 :CHM documents
 af:CHM dokumente
 am:CHM փաստաթղթեր
-ar:CHM ملفات 
+ar:مستندات CHM
 az:CHM sənədləri
 bg:CHM документи
 bn:সিএইচএম নথি
@@ -5659,6 +5674,7 @@ uk:Згорнути всі
 vn:Thu gọn tất cả
 :Color:
 am:Գույն.
+ar:اللون:
 az:Rəng:
 bg:Цвят
 bn:রং:
@@ -5874,6 +5890,7 @@ uz:Mosligi
 vn:Tính tương thích
 :Contents:
 am:Բովանդակություններ.
+ar:المحتويات:
 az:Məzmun:
 bg:Съдържание:
 bn:বিষয়:
@@ -6393,6 +6410,7 @@ uk:Копіювати коментар
 uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy To Clipboard
+ar:نسخ إلى الحافظة
 bg:Копирай в клипборда
 br:Copiar para área de transferência
 by:Скапіраваць у буфер абмену
@@ -7106,7 +7124,7 @@ uk:Не вдалось видалити фільтр пошуку Sumatra
 vn:Không thể gỡ cài đặt bộ lọc tìm kiếm Sumatra
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
-ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساعد
+ar:لا يمكن إلغاء تثبيت ملحق المتصفح
 az:Brauzer plaginini silmək mümkün olmadı
 bg:Не може да деинсталирате плъгина за браузъра
 bn:ব্রাউজার প্লাগ-ইন সরানো যায় নি
@@ -7320,7 +7338,7 @@ vn:Thêm Chú Thích Từ Phần Được Chọn
 :Created:
 af:Geskep
 am:Ստեղծված`
-ar:منشاء
+ar:أُنشئ:
 az:Hazırlanma tarixi:
 bg:Създаден:
 bn:নির্মিতঃ
@@ -7676,6 +7694,7 @@ uk:Темніша
 vn:Tối hơn
 :Date:
 am:Ամսաթիվ.
+ar:التاريخ:
 az:Tarix:
 bg:Дата:
 bn:তারিখ:
@@ -7848,6 +7867,7 @@ uk:Масштаб за замовчуванням:
 uz:Andoza &miqyos
 vn:Kích thước mặc định
 :Delete Annotation\tDel
+ar:حذف التوضيح\tDel
 bg:Изтрий анотация\tDel
 br:Apagar Anotação\tDel
 by:Выдаліць анатацыю\tDel
@@ -7951,7 +7971,7 @@ vn:Các quyền bị từ chối
 :DjVu documents
 af:DjVu dokumente
 am:DjVu ֆայլեր
-ar:DjVu  وثائق
+ar:مستندات DjVu
 az:DjVu sənədləri
 bg:DjVu документи
 bn:DjVu নথিসমূহ
@@ -8126,6 +8146,7 @@ uk:Не встановлювати
 vn:Không cài đặt
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
+ar:تنزيل نسخة 64 بت
 bg:Свали 64-битова версия
 br:Baixar versão 64-bits
 by:Спампаваць 64-бітную версію
@@ -8167,6 +8188,7 @@ tw:下載64位元版本
 uk:Завантажити 64-bit версію
 vn:Tải phiên bản 64-bit
 :E&xit
+ar:إ&نهاء
 bg:&Изход
 br:S&air
 by:В&ыйсці
@@ -8246,7 +8268,7 @@ uk:&Вийти з повноекранного режиму
 vn:Thoát khỏi chế độ Toàn màn hình
 :EPUB ebooks
 am:EPUB ebooks
-ar:EPUB كتب الكترونية
+ar:كتب الكترونية EPUB
 az:EPUB e-kitabları
 bg:EPUB документи
 bn:EPUB ইবুকগুলো
@@ -8773,6 +8795,7 @@ tw:下一個跳轉點(&O)
 uk:Вперед
 vn:Tiếp
 :F&ullscreen
+ar:&كامل الشاشة
 bg:&Цял екран
 br:T&ela cheia
 by:П&оўнаэкранны рэжым
@@ -9332,7 +9355,7 @@ uz:Tanlanganlar
 vn:Ưa thích
 :FictionBook documents
 am:FictionBook փաստաթղթեր
-ar:وثائق كتاب الخيال
+ar:مستندات FictionBook
 az:FictionBook sənədləri
 bg:Документи FictionBook
 br:Documentos FictionBook
@@ -9507,7 +9530,7 @@ uk:Вкладений файл
 vn:Tệp đính kèm
 :File Size:
 am:Ֆայլի չափը՝
-ar:حجم الملف
+ar:حجم الملف:
 az:Faylın həcmi:
 bg:Големина на файла:
 bn:ফাইলের আকার:
@@ -9575,7 +9598,7 @@ uz:Fayl hajmi:
 vn:Kích thước:
 :File:
 am:Ֆայլ՝
-ar:ملف
+ar:الملف:
 az:Fayl:
 bg:Файл:
 bn:ফাইল:
@@ -9643,6 +9666,7 @@ uk:Файл:
 uz:Fayl:
 vn:Tập tin:
 :Fin&d...
+ar:ال&بحث...
 bg:&Търси
 br:Locali&zar
 by:&Знайсці…
@@ -10714,6 +10738,7 @@ uk:GB
 uz:GB
 vn:GB
 :Get Fonts Info
+ar:عرض معلومات الخطوط
 az:Şriftlər haqqında məlumat
 bg:Информация за шрифта
 br:Informações da Fonte
@@ -11013,6 +11038,7 @@ uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Icon:
 am:Պատկերակ.
+ar:الأيقونة:
 bg:Иконка:
 bn:আইকন
 br:Ícone
@@ -11211,7 +11237,7 @@ vn:Mực
 :Install SumatraPDF
 af:Installeer SumatraPDF
 am:Տեղադրել SumatraPDF-ը
-ar:المحمولة Sumatra تثبيت مستندات
+ar:تثبيت SumatraPDF
 az:SumatraPDF-i quraşdır
 bg:Инсталиране на SumatraPDF
 bn:সুমাত্রা পিডিএফ স্থাপন করুন
@@ -11276,7 +11302,7 @@ uz:SumatraPDF o'rnatish
 vn:Cài đặt SumatraPDF
 :Install SumatraPDF in &folder:
 am:Տեղադրել SumatraPDF-ը &հետևյալ պանակում՝
-ar:المحمولة في المجلد Sumatra تثبيت مستندات :
+ar:تثبيت SumatraPDF في الم&جلد:
 az:SumatraPDF-i bu &qovluqda quraşdır:
 bg:Инсталираи SumatraPDF във &папка
 br:Instalar SumatraPDF na &pasta:
@@ -11377,6 +11403,7 @@ tw:安裝並重啟
 uk:Встановити та перезапустити
 vn:Cài đặt và chạy chương trình 
 :Install for all users
+ar:تثبيت لكل المستخدمين
 az:Bütün istifadəçilər üçün quraşdır
 bg:Инсталиране за всички потребители
 br:Instalar para todos os usuários
@@ -11686,7 +11713,7 @@ uz:KB
 vn:KB
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &PDF ֆայլերի որոնումը
-ar:دع البحث في سطح مكتب الوندوز &البحث في وثائق المستندات المحمولة
+ar:دع &بحث Windows يبحث في مستندات PDF
 az:PDF sənədlərini Windows Desktop Search vasitəsilə a&xtar
 bg:Нека Windows Desktop Search &търси PDF документи
 br:Permitir que o Windows faça a bu&sca em documentos PDF
@@ -11748,7 +11775,7 @@ uz:Windows Desktop Search yordamida PDF hujjatlarini &qidirish
 vn:Cho phép Windows &tìm kiếm các tài liệu PDF
 :Let Windows show &previews of PDF documents
 am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
-ar:دع الوندوز باظهار &معاينات الوثائق من المستندات المحمولة
+ar:دع Windows يظهر &معاينات لملفات PDF
 az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
 bg:Нека Windows показва &преглед на PDF документи
 br:Permitir que o Windows &pré-visualize documentos PDF
@@ -12287,7 +12314,7 @@ uz:Registrni hisobga olish
 vn:Phân biệt HOA-thường
 :Mobi documents
 am:XPS ֆայլեր
-ar:وثائق Mobi
+ar:مستندات Mobi
 az:Mobi sənədləri
 bg:Mobi документи
 bn:মোবি ফাইল
@@ -12353,7 +12380,7 @@ vn:Tập tin Mobi
 :Modified:
 af:Aangepas:
 am:Փոփոխված՝
-ar:التعديل
+ar:عُدل:
 az:Dəyişiklik tarixi:
 bg:Променен:
 bn:পরিবর্তিত
@@ -12419,6 +12446,7 @@ uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window
+ar:&نافذة جديدة
 bg:Нов &прозорец
 br:Nova &janela
 by:Новае &акно
@@ -12451,6 +12479,7 @@ uk:Нове вікно
 vn:Cửa sổ &mới
 :New version available
 am:Մատչելի է նոր տարբերակ
+ar:توجد نسخة جديدة
 az:Yeni versiya mövcuddur
 bg:Достъпна е нова версия
 br:Nova versão disponível
@@ -12821,7 +12850,7 @@ uz:Bu joyda sinxronlanish ma'lumoti yo'q
 vn:Không có thông tin đồng bộ ở chỗ này
 :Number of Pages:
 am:Էջերի քանակը.
-ar:عدد الصفحات
+ar:عدد الصفحات:
 az:Səhifə sayı:
 bg:Брой страници:
 bn:পৃষ্ঠা সংখ্যা
@@ -12959,6 +12988,7 @@ uz:OK
 vn:Đồng ý
 :Opacity:
 am:Մգություն.
+ar:الإعتام:
 bg:Прозрачност:
 bn:অস্বচ্ছতা:
 br:Opacidade:
@@ -13682,7 +13712,7 @@ vn:Thuộc tính
 :PDF Document
 af:PDF Dokument
 am:PDF ֆայլ
-ar:وثيقة المستندات المحمولة
+ar:مستند PDF
 az:PDF sənədi
 bg:PDF документ
 bn:PDF ডকুমেন্ট
@@ -13749,7 +13779,7 @@ uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
 am:PDF-ի լավարկում՝
-ar:تحسينات المستندات المحمولة
+ar:تحسينات ملف PDF:
 az:PDF optimallaşdırması:
 bg:PDF оптимизации:
 br:Otimizações PDF:
@@ -13812,7 +13842,7 @@ uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
 :PDF Producer:
 am:PDF-ի արտադրող՝
-ar:منتج المستندات المحمولة:
+ar:منتج ملف PDF:
 az:PDF kompilyatoru:
 bg:PDF създател:
 br:Produtor do PDF:
@@ -13876,7 +13906,7 @@ uz:PDF yaratuvchisi:
 vn:Phần mềm tạo PDF:
 :PDF Version:
 am:PDF-ի տարբերակ՝
-ar:اصدارالمستندات المحمولة
+ar:إصدار PDF:
 az:PDF versiyası:
 bg:PDF версия:
 bn:PDF সংস্করণ
@@ -13942,7 +13972,7 @@ uz:PDF versiyasi:
 vn:Phiên bản PDF:
 :PDF documents
 am:PDF ֆայլեր
-ar:وثائق المستندات المحمولة
+ar:مستندات PDF
 az:PDF sənədləri
 bg:PDF документи
 bn:PDF দলিল
@@ -14105,7 +14135,7 @@ uz:Bet %s
 vn:Trang %s
 :Page Size:
 am:Էջի չափը.
-ar:حجم الصفحة
+ar:حجم الصفحة:
 az:Səhifə ölçüsü:
 bg:Размери на страницата:
 bn:পৃষ্ঠার আকার
@@ -14369,7 +14399,7 @@ uz:Bet:
 vn:Trang:
 :PalmDoc documents
 am:PalmDoc փաստաթղթեր
-ar:وثائق PalmDoc 
+ar:مستندات PalmDoc 
 az:PalmDoc sənədləri
 bg:PalmDoc документи
 br:Documentos PalmDoc
@@ -14738,6 +14768,7 @@ uk:Документи postscript
 uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation
+ar:عرض &تقديمي
 bg:Режим п&резентация
 br:A&presentação
 ca:Pr&esentació
@@ -15355,6 +15386,7 @@ uk:Помилка друкування.
 uz:Chop etish muammosi.
 vn:Lỗi in.
 :Re&name...
+ar:إعادة ت&سمية...
 bg:Пре&именуване...
 br:Re&nomear...
 by:Пе&райменаваць...
@@ -15387,6 +15419,7 @@ uk:Перейменувати...
 vn:Đổi &Tên
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղ. x=%d y=%d dx=%d dy=%d
+ar:المربع: x=%d y=%d dx=%d dy=%d
 az:Dördbucaq: x=%d y=%d dx=%d dy=%d
 bg:Правоъгълник: x=%d y=%d dx=%d dy=%d
 br:Retângulo: x=%d y=%d dx=%d dy=%d
@@ -15822,6 +15855,7 @@ uk:Виділення
 vn:Chọn
 :S&quiggly
 am:Ա&լիքավոր
+ar:خط مت&عرج
 az:&Dalğa
 bg:&Криволичещо
 br:Sublinhar &ondulado
@@ -15858,6 +15892,7 @@ uk:Хвилясті
 vn:Lệch
 :SVG documents
 am:SVG փաստաթղթեր
+ar:مستندات SVG
 bg:SVG документи
 br:Documentos SVG
 by:Дакументы SVG
@@ -15896,6 +15931,7 @@ uk:SVG документи
 vn:Các Tài Liệu SVG
 :Save Annotations to existing PDF
 am:Պահել ծանոթագրությունը առկա PDF-ում
+ar:حفظ التوضيحات في ملف PDF الحالي
 bg:Запази Обясненията в съществуващ PDF
 br:Salvar anotações neste PDF
 by:Захаваць анатацыі ў існуючы PDF
@@ -16069,6 +16105,7 @@ uk:Зберегти анотації?
 vn:Lưu chú thích?
 :Save changes to a new PDF
 am:Պահել փոփոխությունները նոր PDF-ում
+ar:حفظ التغييرات إلى ملف PDF جديد
 az:Dəyişiklikləri yeni PDF-ə yaz
 bg:Запази промените в нов PDF
 br:Salvar alterações em um novo PDF
@@ -16111,6 +16148,7 @@ uk:Зберегти зміни у новий PDF
 vn:Lưu thay đổi tới một PDF mới 
 :Save changes to existing PDF
 am:Պահել փոփոխությունները առկա PDF-ում
+ar:حفظ التغييرات إلى ملف PDF الحالي
 az:Dəyişiklikləri mövcud PDF-ə yaz
 bg:Запази промените в съществуващ PDF файл
 br:Salvar alterações no PDF existente
@@ -16149,6 +16187,7 @@ uk:Зберегти зміни в поточний PDF
 vn:Lưu thay đổi và thoát PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
+ar:حفظ إلى ملف PDF &جديد
 bg:Запази в &нов PDF
 br:Salvar em um &novo PDF
 by:Захаваць &новы PDF
@@ -16255,6 +16294,7 @@ uk:Не вдалося зберегти '%s' з допомогою: '%s'
 vn:Đang lưu '%s' lỗi với: '%s'
 :Search With &Bing
 am:Որոնել &Bing-ով
+ar:بحث في &Bing
 bg:Потърси с &Bing
 br:Buscar com &Bing
 by:Шукаць у &Bing
@@ -16293,6 +16333,7 @@ uk:Пошук за допомогою &Bing
 vn:Tìm Kiếm Với &Bing
 :Search With &Google
 am:Որոնել &Google-ով
+ar:بحث في &Google
 bg:Потърси с &Google
 br:Buscar com &Google
 by:Шукаць у &Google
@@ -16560,7 +16601,7 @@ uz:Ctrl va sichqonchaning chap tugmasini bosib tarkibini tanlang
 vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 :Select the folder where SumatraPDF should be installed:
 am:Ընտրեք պանակ, որտեղ պետք է տեղադրվի SumatraPDF-ը՝
-ar:المحمولة Sumatra حدد المجلد حيث يجب أن يكون مثبت مستندات :
+ar:حدد المجلد الذي يجب أن يثبت فيه SumatraPDF:
 az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
 bg:Изберете папката, в която да се инсталира SumatraPDF:
 br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
@@ -17099,6 +17140,7 @@ uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks
+ar:إظهار ال&علامات
 bg:Покажи от&метки
 br:Mostrar favo&ritos
 ca:Mostra els &marcadors
@@ -17299,7 +17341,7 @@ uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show in &folder
 am:Ցուցադրել &պանակում
-ar:إظهار في &المجلد
+ar:إظهار في ال&مجلد
 az:Qovlu&qda göstər
 bg:Покажи в &папка
 br:Mostrar na &pasta
@@ -17716,7 +17758,7 @@ uk:Квадрат
 vn:Vuông
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
-ar:بدء تشغيل مستندات Sumatra  المحمولة
+ar:بدء SumatraPDF
 az:SumatraPDF-i işə sal
 bg:Стартираи SumatraPDF
 br:Iniciar SumatraPDF
@@ -17846,7 +17888,7 @@ vn:Chủ đề:
 :SumatraPDF %s Installer
 af:SumatraPDF %s Installeerder
 am:SumatraPDF %s-ը տեղակայելու ծրագիր
-ar:المثبت%s المحمولة Sumatra مستندات
+ar:مثبت SumatraPDF %s
 az:SumatraPDF quraşdırıcısı %s
 bg:SumatraPDF %s инсталатор
 br:SumatraPDF %s instalador
@@ -17908,7 +17950,7 @@ uz:SumatraPDF %s o'rnatuvchisi
 vn:Bộ cài đặt %s SumatraPDF
 :SumatraPDF %s Uninstaller
 am:SumatraPDF %s-ը հեռացնելու ծրագիր
-ar:إلغاء  تثبيت %s المحمولة Sumatra مستندات
+ar:إلغاء تثبيت SumatraPDF %s
 az:SumatraPDF deinstalyatoru %s
 bg:SumatraPDF %s деинсталатор
 br:SumatraPDF %s desinstalador
@@ -17969,7 +18011,7 @@ uz:SumatraPDF %s o'chirish dasturi
 vn:Bộ gỡ cài đặt %s SumatraPDF
 :SumatraPDF Options
 am:Ընտրանքներ
-ar:خيارات مستندات Sumatra المحمولة
+ar:خيارات SumatraPDF
 az:SumatraPDF seçimləri
 bg:Настройки на SumatraPDF
 br:Opções do SumatraPDF
@@ -18161,7 +18203,7 @@ uz:SumatraPDFda nosozlik ro'y berdi
 vn:SumatraPDF đã ngưng hoạt đọng
 :SumatraPDF has been uninstalled.
 am:SumatraPDF-ը հեռացվել է:
-ar: مستندات Sumatra المحمولة إلغاء تثبيت
+ar:لقد ألغي تثبيت SumatraPDF.
 az:SumatraPDF silindi.
 bg:SumatraPDF е премахнат.
 br:SumatraPDF foi desinstalado.
@@ -18624,7 +18666,7 @@ uz:Matn hujjatlari
 vn:Tập tin văn bản
 :Thank you for choosing SumatraPDF!
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
-ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
+ar:نشكركم لاختياركم SumatraPDF
 az:SumatraPDF-i seçdiyiniz üçün təşəkkür edirik!
 bg:Благодаря че избрахте SumatraPDF!
 bn:SumatraPDF কে বেছে নেয়ার জন্য ধন্যবাদ।
@@ -18872,7 +18914,7 @@ vn:Tài liệu này có vài tính năng không được hỗ trợ (%s) và kh�
 :Title:
 af:Titel:
 am:Անունը.
-ar:العنوان
+ar:العنوان:
 az:Başlıq:
 bg:Заглавие:
 bn:শিরোনাম:
@@ -18941,6 +18983,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
+ar:ترجمة في &DeepL
 bg:Превод с &DeepL
 br:Traduzir com &DeepL
 by:Перакласці ў &DeepL
@@ -18978,7 +19021,7 @@ uk:Перекласти за допомогою &DeepL
 vn:Dịch với &DeepL
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
-ar:المحمولة Sumatra  الغاء تثبيت مستندات
+ar:إزالة SumatraPDF
 az:SumatraPDF-i sil
 bg:Деинсталиране на SumatraPDF
 br:Desinstalar SumatraPDF
@@ -19303,7 +19346,7 @@ uk:Незбережені анотації в '%s'
 vn:Lưu chú không được lưu trong '%s'
 :Use &tabs
 am:Ավելացնել &ներդիրներ
-ar:الإستعمال & التبويبات
+ar:استعمال ال&تبويبات
 az:&Tab-vərəqlərdən istifadə et
 bg:&Използвай табулатор
 br:Usar &abas
@@ -19703,6 +19746,7 @@ uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 am:Դուք ունեք չպահված մեկնաբանություններ
+ar:لديك توضيحات غير محفوظة
 bg:Имате незаписан анотации
 br:Você possui anotações não salvas
 ca-xv:Teniu anotacions sense desar
