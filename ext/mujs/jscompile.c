@@ -1,4 +1,8 @@
 #include "jsi.h"
+#include "jslex.h"
+#include "jsparse.h"
+#include "jscompile.h"
+#include "jsvalue.h" /* for jsV_numbertostring */
 
 #define cexp jsC_cexp /* collision with math.h */
 
@@ -284,12 +288,8 @@ static void carray(JF, js_Ast *list)
 {
 	while (list) {
 		emitline(J, F, list->a);
-		if (list->a->type == EXP_ELISION) {
-			emit(J, F, OP_SKIPARRAY);
-		} else {
-			cexp(J, F, list->a);
-			emit(J, F, OP_INITARRAY);
-		}
+		cexp(J, F, list->a);
+		emit(J, F, OP_INITARRAY);
 		list = list->b;
 	}
 }
@@ -584,7 +584,9 @@ static void cexp(JF, js_Ast *exp)
 		emitline(J, F, exp);
 		emitnumber(J, F, exp->number);
 		break;
-	case EXP_ELISION:
+	case EXP_UNDEF:
+		emitline(J, F, exp);
+		emit(J, F, OP_UNDEF);
 		break;
 	case EXP_NULL:
 		emitline(J, F, exp);
@@ -777,7 +779,7 @@ static void cexp(JF, js_Ast *exp)
 		break;
 
 	default:
-		jsC_error(J, exp, "unknown expression type");
+		jsC_error(J, exp, "unknown expression: (%s)", jsP_aststring(exp->type));
 	}
 }
 

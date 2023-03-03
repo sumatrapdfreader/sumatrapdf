@@ -1,4 +1,5 @@
 #include "jsi.h"
+#include "jslex.h"
 #include "utf.h"
 
 JS_NORETURN static void jsY_error(js_State *J, const char *fmt, ...) JS_PRINTFLIKE(2,3);

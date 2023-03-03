@@ -1,4 +1,6 @@
 #include "jsi.h"
+#include "jsvalue.h"
+#include "jsbuiltin.h"
 
 #if defined(_MSC_VER) && (_MSC_VER < 1700) /* VS2012 has stdint.h */
 typedef unsigned __int64 uint64_t;

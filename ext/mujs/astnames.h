@@ -5,7 +5,7 @@
 "exp_number",
 "exp_string",
 "exp_regexp",
-"exp_elision",
+"exp_undef",
 "exp_null",
 "exp_true",
 "exp_false",

@@ -1,4 +1,6 @@
 #include "jsi.h"
+#include "jslex.h"
+#include "jsparse.h"
 
 #define LIST(h)			jsP_newnode(J, AST_LIST, 0, h, 0, 0, 0)
 
@@ -187,7 +189,7 @@ static js_Ast *arrayelement(js_State *J)
 {
 	int line = J->lexline;
 	if (J->lookahead == ',')
-		return EXP0(ELISION);
+		return EXP0(UNDEF);
 	return assignment(J, 0);
 }
 

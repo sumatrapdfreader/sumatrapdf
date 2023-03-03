@@ -63,17 +63,16 @@ shell: $(OUT)/mujs $(OUT)/mujs-pp
 static: $(OUT)/libmujs.a
 shared: $(OUT)/libmujs.$(SO_EXT)
 
-astnames.h: jsi.h
-	grep -E '\<(AST|EXP|STM)_' jsi.h | sed 's/^[^A-Z]*\(AST_\)*/"/;s/,.*/",/' | tr A-Z a-z > $@
+astnames.h: jsparse.h
+	grep -E '(AST|EXP|STM)_' jsparse.h | sed 's/^[^A-Z]*\(AST_\)*/"/;s/,.*/",/' | tr A-Z a-z > $@
 
-opnames.h: jsi.h
-	grep -E '\<OP_' jsi.h | sed 's/^[^A-Z]*OP_/"/;s/,.*/",/' | tr A-Z a-z > $@
-
+opnames.h: jscompile.h
+	grep -E 'OP_' jscompile.h | sed 's/^[^A-Z]*OP_/"/;s/,.*/",/' | tr A-Z a-z > $@
 
 one.c: $(SRCS)
 	ls $(SRCS) | awk '{print "#include \""$$1"\""}' > $@
 
-pp.c: astnames.h opnames.h
+jsdump.c: astnames.h opnames.h
 
 $(OUT)/%.o: %.c $(HDRS)
 	@ mkdir -p $(@D)

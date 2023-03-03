@@ -1,4 +1,6 @@
 #include "jsi.h"
+#include "jsvalue.h"
+#include "jsbuiltin.h"
 
 static void jsB_new_Object(js_State *J)
 {
@@ -71,7 +73,7 @@ static void Op_hasOwnProperty(js_State *J)
 	}
 
 	if (self->type == JS_CARRAY && self->u.a.simple) {
-		if (js_isarrayindex(J, name, &k) && k >= 0 && k < self->u.a.flat_length) {
+		if (js_isarrayindex(J, name, &k) && k >= 0 && k < self->u.a.length) {
 			js_pushboolean(J, 1);
 			return;
 		}
@@ -132,25 +134,25 @@ static void O_getOwnPropertyDescriptor(js_State *J)
 		js_newobject(J);
 		if (!ref->getter && !ref->setter) {
 			js_pushvalue(J, ref->value);
-			js_defproperty(J, -2, "value", 0);
+			js_setproperty(J, -2, "value");
 			js_pushboolean(J, !(ref->atts & JS_READONLY));
-			js_defproperty(J, -2, "writable", 0);
+			js_setproperty(J, -2, "writable");
 		} else {
 			if (ref->getter)
 				js_pushobject(J, ref->getter);
 			else
 				js_pushundefined(J);
-			js_defproperty(J, -2, "get", 0);
+			js_setproperty(J, -2, "get");
 			if (ref->setter)
 				js_pushobject(J, ref->setter);
 			else
 				js_pushundefined(J);
-			js_defproperty(J, -2, "set", 0);
+			js_setproperty(J, -2, "set");
 		}
 		js_pushboolean(J, !(ref->atts & JS_DONTENUM));
-		js_defproperty(J, -2, "enumerable", 0);
+		js_setproperty(J, -2, "enumerable");
 		js_pushboolean(J, !(ref->atts & JS_DONTCONF));
-		js_defproperty(J, -2, "configurable", 0);
+		js_setproperty(J, -2, "configurable");
 	}
 }
 
@@ -158,7 +160,7 @@ static int O_getOwnPropertyNames_walk(js_State *J, js_Property *ref, int i)
 {
 	if (ref->left->level)
 		i = O_getOwnPropertyNames_walk(J, ref->left, i);
-	js_pushstring(J, ref->name);
+	js_pushliteral(J, ref->name);
 	js_setindex(J, -2, i++);
 	if (ref->right->level)
 		i = O_getOwnPropertyNames_walk(J, ref->right, i);
@@ -187,7 +189,7 @@ static void O_getOwnPropertyNames(js_State *J)
 		js_pushliteral(J, "length");
 		js_setindex(J, -2, i++);
 		if (obj->u.a.simple) {
-			for (k = 0; k < obj->u.a.flat_length; ++k) {
+			for (k = 0; k < obj->u.a.length; ++k) {
 				js_itoa(name, k);
 				js_pushstring(J, name);
 				js_setindex(J, -2, i++);
@@ -246,7 +248,7 @@ static void ToPropertyDescriptor(js_State *J, js_Object *obj, const char *name, 
 	}
 	if (js_hasproperty(J, -1, "value")) {
 		hasvalue = 1;
-		js_defproperty(J, -3, name, 0);
+		js_setproperty(J, -3, name);
 	}
 
 	if (!writable) atts |= JS_READONLY;
@@ -312,7 +314,7 @@ static void O_create_walk(js_State *J, js_Object *obj, js_Property *ref)
 	if (ref->left->level)
 		O_create_walk(J, obj, ref->left);
 	if (!(ref->atts & JS_DONTENUM)) {
-		if (ref->value.t.type != JS_TOBJECT)
+		if (ref->value.type != JS_TOBJECT)
 			js_typeerror(J, "not an object");
 		ToPropertyDescriptor(J, obj, ref->name, ref->value.u.object);
 	}
@@ -350,7 +352,7 @@ static int O_keys_walk(js_State *J, js_Property *ref, int i)
 	if (ref->left->level)
 		i = O_keys_walk(J, ref->left, i);
 	if (!(ref->atts & JS_DONTENUM)) {
-		js_pushstring(J, ref->name);
+		js_pushliteral(J, ref->name);
 		js_setindex(J, -2, i++);
 	}
 	if (ref->right->level)
@@ -361,7 +363,6 @@ static int O_keys_walk(js_State *J, js_Property *ref, int i)
 static void O_keys(js_State *J)
 {
 	js_Object *obj;
-	char name[32];
 	int i, k;
 
 	if (!js_isobject(J, 1))
@@ -377,16 +378,7 @@ static void O_keys(js_State *J)
 
 	if (obj->type == JS_CSTRING) {
 		for (k = 0; k < obj->u.s.length; ++k) {
-			js_itoa(name, k);
-			js_pushstring(J, name);
-			js_setindex(J, -2, i++);
-		}
-	}
-
-	if (obj->type == JS_CARRAY && obj->u.a.simple) {
-		for (k = 0; k < obj->u.a.flat_length; ++k) {
-			js_itoa(name, k);
-			js_pushstring(J, name);
+			js_pushnumber(J, k);
 			js_setindex(J, -2, i++);
 		}
 	}

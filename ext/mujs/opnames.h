@@ -25,7 +25,6 @@
 "setvar",
 "delvar",
 "in",
-"skiparray",
 "initarray",
 "initprop",
 "initgetter",
