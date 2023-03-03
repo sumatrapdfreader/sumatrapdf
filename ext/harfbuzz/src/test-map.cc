@@ -179,20 +179,43 @@ main (int argc, char **argv)
 
     hb_hashmap_t<vector_t, vector_t> m1;
 
-    m1.set (vector_t (), vector_t ());
     m1.set (vector_t (), vector_t {1});
     m1.set (vector_t {1}, vector_t {2});
+
+    m1 << hb_pair_t<vector_t, vector_t> {vector_t {2}, vector_t ()};
 
     assert (m1.get (vector_t ()) == vector_t {1});
     assert (m1.get (vector_t {1}) == vector_t {2});
   }
 
+  /* Test moving values */
+  {
+    using vector_t = hb_vector_t<unsigned>;
+
+    hb_hashmap_t<vector_t, vector_t> m1;
+    vector_t v {3};
+    assert (v.length == 1);
+    m1 << hb_pair_t<vector_t, vector_t> {vector_t {3}, v};
+    assert (v.length == 1);
+    m1 << hb_pair_t<vector_t, vector_t&&> {vector_t {4}, std::move (v)};
+    assert (v.length == 0);
+    m1 << hb_pair_t<vector_t&&, vector_t> {vector_t {4}, vector_t {5}};
+    m1 << hb_pair_t<vector_t&&, vector_t&&> {vector_t {4}, vector_t {5}};
+
+    hb_hashmap_t<vector_t, vector_t> m2;
+    vector_t v2 {3};
+    m2.set (vector_t {4}, v2);
+    assert (v2.length == 1);
+    m2.set (vector_t {5}, std::move (v2));
+    assert (v2.length == 0);
+  }
+
   /* Test hb::shared_ptr. */
-  hb_hash (hb::shared_ptr<hb_set_t> ());
   {
     hb_hashmap_t<hb::shared_ptr<hb_set_t>, hb::shared_ptr<hb_set_t>> m;
 
-    m.get (hb::shared_ptr<hb_set_t> ());
+    m.set (hb::shared_ptr<hb_set_t> (hb_set_get_empty ()),
+	   hb::shared_ptr<hb_set_t> (hb_set_get_empty ()));
     m.get (hb::shared_ptr<hb_set_t> (hb_set_get_empty ()));
     m.iter ();
     m.keys ();
@@ -202,12 +225,14 @@ main (int argc, char **argv)
     m.values_ref ();
   }
   /* Test hb::unique_ptr. */
-  hb_hash (hb::unique_ptr<hb_set_t> ());
   {
     hb_hashmap_t<hb::unique_ptr<hb_set_t>, hb::unique_ptr<hb_set_t>> m;
 
-    m.get (hb::unique_ptr<hb_set_t> ());
+    m.set (hb::unique_ptr<hb_set_t> (hb_set_get_empty ()),
+           hb::unique_ptr<hb_set_t> (hb_set_get_empty ()));
     m.get (hb::unique_ptr<hb_set_t> (hb_set_get_empty ()));
+    hb::unique_ptr<hb_set_t> *v;
+    m.has (hb::unique_ptr<hb_set_t> (hb_set_get_empty ()), &v);
     m.iter_ref ();
     m.keys_ref ();
     m.values_ref ();
@@ -234,11 +259,48 @@ main (int argc, char **argv)
     hb::shared_ptr<hb_map_t> p1 {m1};
     hb::shared_ptr<hb_map_t> p2 {m2};
     m.set (p1,1);
-    
+
     assert (m.has (p2));
 
     m1->set (2,4);
     assert (!m.has (p2));
   }
+  /* Test value type with hb_bytes_t. */
+  {
+    hb_hashmap_t<int, hb_bytes_t> m;
+    char c_str[] = "Test";
+    hb_bytes_t bytes (c_str);
+
+    m.set (1, bytes);
+    assert (m.has (1));
+  }
+  /* Test operators. */
+  {
+    hb_map_t m1, m2, m3;
+    m1.set (1, 2);
+    m1.set (2, 4);
+    m2.set (1, 2);
+    m2.set (2, 4);
+    m3.set (1, 3);
+    m3.set (3, 5);
+
+    assert (m1 == m2);
+    assert (m1 != m3);
+    assert (!(m2 == m3));
+
+    m2 = m3;
+    assert (m2.has (1));
+    assert (!m2.has (2));
+    assert (m2.has (3));
+
+    assert (m3.has (3));
+  }
+  /* Test reset. */
+  {
+    hb_hashmap_t<int, hb_set_t> m;
+    m.set (1, hb_set_t {1, 2, 3});
+    m.reset ();
+  }
+
   return 0;
 }

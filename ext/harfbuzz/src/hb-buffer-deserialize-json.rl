@@ -36,8 +36,8 @@ alphtype unsigned char;
 write data;
 
 action clear_item {
-	memset (&info, 0, sizeof (info));
-	memset (&pos , 0, sizeof (pos ));
+	hb_memset (&info, 0, sizeof (info));
+	hb_memset (&pos , 0, sizeof (pos ));
 }
 
 action add_item {

@@ -29,7 +29,9 @@
 
 #include "view-options.hh"
 #include "output-options.hh"
-#include "helper-cairo-ft.hh"
+#ifdef HAVE_CAIRO_FT
+#  include "helper-cairo-ft.hh"
+#endif
 #include "helper-cairo-user.hh"
 
 #include <cairo.h>
@@ -71,21 +73,35 @@ helper_cairo_use_hb_draw (const font_options_t *font_opts)
 {
   const char *env = getenv ("HB_DRAW");
   if (!env)
+#if 1
+    /* Following branch disabled because we prefer our
+     * OpenType extensions working, ie going through hb-draw,
+     * over avoiding the obscure cairo bug. */
+    return true;
+#else
+    /* Older cairo had a bug in rendering COLRv0 fonts in
+     * right-to-left direction. */
     return cairo_version () >= CAIRO_VERSION_ENCODE (1, 17, 5);
+#endif
+
   return atoi (env);
 }
 
 static inline cairo_scaled_font_t *
 helper_cairo_create_scaled_font (const font_options_t *font_opts)
 {
-  bool use_hb_draw = helper_cairo_use_hb_draw (font_opts);
   hb_font_t *font = hb_font_reference (font_opts->font);
 
+#ifdef HAVE_CAIRO_FT
+  bool use_hb_draw = helper_cairo_use_hb_draw (font_opts);
   cairo_font_face_t *cairo_face;
   if (use_hb_draw)
     cairo_face = helper_cairo_create_user_font_face (font_opts);
   else
     cairo_face = helper_cairo_create_ft_font_face (font_opts);
+#else
+  cairo_font_face_t *cairo_face = helper_cairo_create_user_font_face (font_opts);
+#endif
 
   cairo_matrix_t ctm, font_matrix;
   cairo_font_options_t *font_options;
@@ -94,8 +110,10 @@ helper_cairo_create_scaled_font (const font_options_t *font_opts)
   cairo_matrix_init_scale (&font_matrix,
 			   font_opts->font_size_x,
 			   font_opts->font_size_y);
-  if (use_hb_draw)
+#ifdef HAVE_CAIRO_FT
+  if (!use_hb_draw)
     font_matrix.xy = -font_opts->slant * font_opts->font_size_x;
+#endif
 
   font_options = cairo_font_options_create ();
   cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
@@ -122,10 +140,14 @@ helper_cairo_create_scaled_font (const font_options_t *font_opts)
 static inline bool
 helper_cairo_scaled_font_has_color (cairo_scaled_font_t *scaled_font)
 {
+#ifdef HAVE_CAIRO_FT
   if (helper_cairo_user_font_face_has_data (cairo_scaled_font_get_font_face (scaled_font)))
     return helper_cairo_user_scaled_font_has_color (scaled_font);
   else
     return helper_cairo_ft_scaled_font_has_color (scaled_font);
+#else
+  return helper_cairo_user_scaled_font_has_color (scaled_font);
+#endif
 }
 
 

@@ -56,6 +56,7 @@
 #include "hb-ot-math-table.hh"
 #include "hb-ot-stat-table.hh"
 #include "hb-repacker.hh"
+#include "hb-subset-accelerator.hh"
 
 using OT::Layout::GSUB;
 using OT::Layout::GPOS;
@@ -80,6 +81,10 @@ using OT::Layout::GPOS;
  * Fonts with graphite or AAT tables may still be subsetted but will likely need to use the
  * retain glyph ids option and configure the subset to pass through the layout tables untouched.
  */
+
+
+hb_user_data_key_t _hb_subset_accelerator_user_data_key = {};
+
 
 /*
  * The list of tables in the open type spec. Used to check for tables that may need handling
@@ -408,20 +413,14 @@ _passthrough (hb_subset_plan_t *plan, hb_tag_t tag)
 
 static bool
 _dependencies_satisfied (hb_subset_plan_t *plan, hb_tag_t tag,
-                         hb_set_t &visited_set, hb_set_t &revisit_set)
+                         const hb_set_t &subsetted_tags,
+                         const hb_set_t &pending_subset_tags)
 {
   switch (tag)
   {
   case HB_OT_TAG_hmtx:
   case HB_OT_TAG_vmtx:
-    if (!plan->pinned_at_default &&
-        !visited_set.has (HB_OT_TAG_glyf))
-    {
-      revisit_set.add (tag);
-      return false;
-    }
-    return true;
-
+    return plan->pinned_at_default || !pending_subset_tags.has (HB_OT_TAG_glyf);
   default:
     return true;
   }
@@ -494,6 +493,34 @@ _subset_table (hb_subset_plan_t *plan,
   }
 }
 
+static void _attach_accelerator_data (hb_subset_plan_t* plan,
+                                      hb_face_t* face /* IN/OUT */)
+{
+  if (!plan->inprogress_accelerator) return;
+
+  // Transfer the accelerator from the plan to us.
+  hb_subset_accelerator_t* accel = plan->inprogress_accelerator;
+  plan->inprogress_accelerator = nullptr;
+
+  if (accel->in_error ())
+  {
+    hb_subset_accelerator_t::destroy (accel);
+    return;
+  }
+
+  // Populate caches that need access to the final tables.
+  hb_blob_ptr_t<OT::cmap> cmap_ptr (hb_sanitize_context_t ().reference_table<OT::cmap> (face));
+  accel->cmap_cache = OT::cmap::create_filled_cache (cmap_ptr);
+  accel->destroy_cmap_cache = OT::SubtableUnicodesCache::destroy;
+
+  if (!hb_face_set_user_data(face,
+                             hb_subset_accelerator_t::user_data_key(),
+                             accel,
+                             hb_subset_accelerator_t::destroy,
+                             true))
+    hb_subset_accelerator_t::destroy (accel);
+}
+
 /**
  * hb_subset_or_fail:
  * @source: font face data to be subset.
@@ -539,41 +566,67 @@ hb_subset_plan_execute_or_fail (hb_subset_plan_t *plan)
     return nullptr;
   }
 
-  hb_set_t tags_set, revisit_set;
-  bool success = true;
   hb_tag_t table_tags[32];
   unsigned offset = 0, num_tables = ARRAY_LENGTH (table_tags);
-  hb_vector_t<char> buf;
-  buf.alloc (4096 - 16);
 
+  hb_set_t subsetted_tags, pending_subset_tags;
   while (((void) _get_table_tags (plan, offset, &num_tables, table_tags), num_tables))
   {
     for (unsigned i = 0; i < num_tables; ++i)
     {
       hb_tag_t tag = table_tags[i];
-      if (_should_drop_table (plan, tag) && !tags_set.has (tag)) continue;
-      if (!_dependencies_satisfied (plan, tag, tags_set, revisit_set)) continue;
-      tags_set.add (tag);
+      if (_should_drop_table (plan, tag)) continue;
+      pending_subset_tags.add (tag);
+    }
+
+    offset += num_tables;
+  }
+
+  hb_vector_t<char> buf;
+  buf.alloc (4096 - 16);
+
+
+  bool success = true;
+
+  while (!pending_subset_tags.is_empty ())
+  {
+    if (subsetted_tags.in_error ()
+        || pending_subset_tags.in_error ()) {
+      success = false;
+      goto end;
+    }
+
+    bool made_changes = false;
+    for (hb_tag_t tag : pending_subset_tags)
+    {
+      if (!_dependencies_satisfied (plan, tag,
+                                    subsetted_tags,
+                                    pending_subset_tags))
+      {
+        // delayed subsetting for some tables since they might have dependency on other tables
+        // in some cases: e.g: during instantiating glyf tables, hmetrics/vmetrics are updated
+        // and saved in subset plan, hmtx/vmtx subsetting need to use these updated metrics values
+        continue;
+      }
+
+      pending_subset_tags.del (tag);
+      subsetted_tags.add (tag);
+      made_changes = true;
+
       success = _subset_table (plan, buf, tag);
       if (unlikely (!success)) goto end;
     }
 
-    /*delayed subsetting for some tables since they might have dependency on other tables in some cases:
-    e.g: during instantiating glyf tables, hmetrics/vmetrics are updated and saved in subset plan,
-    hmtx/vmtx subsetting need to use these updated metrics values*/
-    while (!revisit_set.is_empty ())
+    if (!made_changes)
     {
-      hb_set_t revisit_temp;
-      for (hb_tag_t tag : revisit_set)
-      {
-        if (!_dependencies_satisfied (plan, tag, tags_set, revisit_temp)) continue;
-        tags_set.add (tag);
-        success = _subset_table (plan, buf, tag);
-        if (unlikely (!success)) goto end;
-      }
-      revisit_set = revisit_temp;
+      DEBUG_MSG (SUBSET, nullptr, "Table dependencies unable to be satisfied. Subset failed.");
+      success = false;
+      goto end;
     }
-    offset += num_tables;
+  }
+
+  if (success && plan->attach_accelerator_data) {
+    _attach_accelerator_data (plan, plan->dest);
   }
 
 end:

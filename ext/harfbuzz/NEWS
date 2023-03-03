@@ -1,3 +1,73 @@
+Overview of changes leading to 6.0.0
+Friday, December 16, 2022
+====================================
+- A new API have been added to pre-process the face and speed up future
+  subsetting operations on that face. Provides up to a 95% reduction in
+  subsetting times when the same face is subset more than once.
+
+  For more details and benchmarks, see:
+  https://github.com/harfbuzz/harfbuzz/blob/main/docs/subset-preprocessing.md
+
+  (Garret Rieger, Behdad Esfahbod)
+
+- Shaping have been speedup by skipping entire lookups when the buffer contents
+  don't intersect with the lookup. Shows up to a 10% speedup in shaping some
+  fonts. (Behdad Esfahbod)
+
+- A new experimental feature, “Variable Composites” (enabled by passing
+  -Dexperimental_api=true to meson), is also featured in this release.
+  This technology enables drastic compression of fonts in the Chinese,
+  Japanese, Korean, and other writing systems, by reusing the OpenType Font
+  Variations technology for encoding “smart components” into the font.
+
+  The specification for these  extensions to the font format can be found in:
+  https://github.com/harfbuzz/boring-expansion-spec/blob/glyf1/glyf1.md
+
+  A test variable-font with ~7160 Hangul syllables derived from the
+  NotoSerifKR-VF font has been built, with existing OpenType technology, as
+  well as with the new Variable Composites (VarComposites) technology. The
+  VarComposites font is over 90% smaller than the OpenType version of the font!
+  Both fonts can be obtained from the “smarties” repository:
+  https://github.com/behdad/smarties/tree/3.0/fonts/hangul/serif
+
+  When building HarfBuzz with experimental features enabled, you can test
+  the “smarties” font with a sample character like this:
+
+  $ hb-view butchered-hangul-serif-smarties-variable.ttf -u AE01 --variations=wght=700
+
+  (Behdad Esfahbod)
+
+- The HarfBuzz subsetter can now drop axes by pinning them to specific values
+  (also referred to as instancing). There are a couple of restrictions
+  currently:
+
+  - Only works with TrueType (“glyf”) based fonts. “CFF2” fonts are not yet
+    supported.
+  - Only supports the case where all axes in a font are pinned.
+
+  (Garret Rieger, Qunxin Liu)
+
+- Miscellaneous fixes and improvements.
+
+  (Behdad Esfahbod, Christoph Reiter, David Corbett, Eli Schwartz, Garret
+   Rieger, Joel Auterson, Jordan Petridis, Khaled Hosny, Lorenz Wildberg,
+   Marco Rebhan, Martin Storsjö, Matthias Clasen, Qunxin Liu, Satadru Pramanik)
+
+
+- New API
++hb_subset_input_pin_axis_location()
++hb_subset_input_pin_axis_to_default()
++hb_subset_preprocess()
+
+
+Overview of changes leading to 5.3.1
+Wednesday, October 19, 2022
+====================================
+- Subsetter repacker fixes. (Garret Rieger)
+- Adjust Grapheme clusters for Katakana voiced sound marks. (Behdad Esfahbod)
+- New “hb-subset” option “--preprocess-face”. (Garret Rieger)
+
+
 Overview of changes leading to 5.3.0
 Saturday, October 8, 2022
 "Women, Life, Freedom" #MahsaAmini

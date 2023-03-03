@@ -14,6 +14,7 @@ jobs:
     runs-on: windows-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - MSYSTEM: MINGW32
@@ -21,6 +22,11 @@ jobs:
           - MSYSTEM: MINGW64
             MSYS2_ARCH: x86_64
     name: ${{ matrix.MSYSTEM }}
+
+    env:
+      # XXX: For some reason enabling jit debugging "fixes" random python crashes
+      # see https://github.com/msys2/MINGW-packages/issues/11864
+      MSYS: "winjitdebug"
 
     defaults:
       run:

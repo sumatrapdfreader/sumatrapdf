@@ -434,7 +434,7 @@ struct PairPosFormat2 : public OT::Layout::GPOS_impl::PairPosFormat2_4<SmallType
 
     char* start_addr = ((char*)&values[0]) + start * split_context.class1_record_size;
     unsigned num_records = end - start;
-    memcpy (&pair_pos_prime->values[0],
+    hb_memcpy (&pair_pos_prime->values[0],
             start_addr,
             num_records * split_context.class1_record_size);
 
@@ -526,10 +526,13 @@ struct PairPosFormat2 : public OT::Layout::GPOS_impl::PairPosFormat2_4<SmallType
     }, hb_second)
     ;
 
+    auto new_coverage = + klass_map | hb_map_retains_sorting (hb_first);
     if (!Coverage::make_coverage (split_context.c,
-                                  + klass_map | hb_map_retains_sorting (hb_first),
+                                  + new_coverage,
                                   coverage.index,
-                                  coverage.vertex->table_size ()))
+                                  // existing ranges my not be kept, worst case size is a format 1
+                                  // coverage table.
+                                  4 + new_coverage.len() * 2))
       return false;
 
     return ClassDef::make_class_def (split_context.c,
@@ -608,7 +611,7 @@ struct PairPos : public OT::Layout::GPOS_impl::PairPos
       return ((PairPosFormat1*)(&u.format1))->split_subtables (c, parent_index, this_index);
     case 2:
       return ((PairPosFormat2*)(&u.format2))->split_subtables (c, parent_index, this_index);
-#ifndef HB_NO_BORING_EXPANSION
+#ifndef HB_NO_BEYOND_64K
     case 3: HB_FALLTHROUGH;
     case 4: HB_FALLTHROUGH;
       // Don't split 24bit PairPos's.
@@ -628,7 +631,7 @@ struct PairPos : public OT::Layout::GPOS_impl::PairPos
       return ((PairPosFormat1*)(&u.format1))->sanitize (vertex);
     case 2:
       return ((PairPosFormat2*)(&u.format2))->sanitize (vertex);
-#ifndef HB_NO_BORING_EXPANSION
+#ifndef HB_NO_BEYOND_64K
     case 3: HB_FALLTHROUGH;
     case 4: HB_FALLTHROUGH;
 #endif

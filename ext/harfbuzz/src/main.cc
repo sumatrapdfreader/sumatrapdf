@@ -58,7 +58,8 @@ svg_dump (hb_face_t *face, unsigned face_index)
     const char *data = hb_blob_get_data (blob, &length);
 
     char output_path[255];
-    sprintf (output_path, "out/svg-%u-%u.svg%s",
+    snprintf (output_path, sizeof output_path,
+	     "out/svg-%u-%u.svg%s",
 	     glyph_id,
 	     face_index,
 	     // append "z" if the content is gzipped, https://stackoverflow.com/a/6059405
@@ -112,7 +113,7 @@ png_dump (hb_face_t *face, unsigned face_index)
 	const char *data = hb_blob_get_data (blob, &length);
 
 	char output_path[255];
-	sprintf (output_path, "out/png-%u-%u-%u.png", glyph_id, strike, face_index);
+	snprintf (output_path, sizeof output_path, "out/png-%u-%u-%u.png", glyph_id, strike, face_index);
 
 	FILE *f = fopen (output_path, "wb");
 	fwrite (data, 1, length, f);
@@ -224,7 +225,7 @@ layered_glyph_dump (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index
 	}
 
 	char output_path[255];
-	sprintf (output_path, "out/colr-%u-%u-%u.svg", gid, palette, face_index);
+	snprintf (output_path, sizeof output_path, "out/colr-%u-%u-%u.svg", gid, palette, face_index);
 	FILE *f = fopen (output_path, "wb");
 	fprintf (f, "<svg xmlns=\"http://www.w3.org/2000/svg\""
 		    " viewBox=\"%d %d %d %d\">\n",
@@ -274,7 +275,7 @@ dump_glyphs (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index)
     }
 
     char output_path[255];
-    sprintf (output_path, "out/%u-%u.svg", face_index, gid);
+    snprintf (output_path, sizeof output_path, "out/%u-%u.svg", face_index, gid);
     FILE *f = fopen (output_path, "wb");
     fprintf (f, "<svg xmlns=\"http://www.w3.org/2000/svg\""
 		" viewBox=\"%d %d %d %d\"><path d=\"",

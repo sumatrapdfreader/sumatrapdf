@@ -136,7 +136,7 @@ jobs:
     steps:
       - checkout
       - run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y ninja-build gtk-doc-tools python3 python3-pip git g++-mingw-w64-i686 zip
-      - run: pip3 install meson==0.56.0 --upgrade
+      - run: pip3 install meson==0.60.0
       - run: .ci/build-win32.sh
       - store_artifacts:
           path: harfbuzz-win32.zip
@@ -159,7 +159,7 @@ jobs:
     steps:
       - checkout
       - run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y ninja-build gtk-doc-tools python3 python3-pip git g++-mingw-w64-x86-64 zip
-      - run: pip3 install meson==0.56.0 --upgrade
+      - run: pip3 install meson==0.60.0
       - run: bash .ci/build-win64.sh
       - store_artifacts:
           path: harfbuzz-win64.zip

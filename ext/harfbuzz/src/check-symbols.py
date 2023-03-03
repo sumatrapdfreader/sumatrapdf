@@ -31,7 +31,7 @@ for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject'
 		symprefix = '_' if suffix == 'dylib' else ''
 
 		EXPORTED_SYMBOLS = [s.split ()[2]
-				    for s in re.findall (r'^.+ [BCDGIRST] .+$', subprocess.check_output (nm.split() + [so]).decode ('utf-8'), re.MULTILINE)
+				    for s in re.findall (r'^.+ [BCDGIRSTu] .+$', subprocess.check_output (nm.split() + [so]).decode ('utf-8'), re.MULTILINE)
 				    if not re.match (r'.* %s(%s)\b' % (symprefix, IGNORED_SYMBOLS), s)]
 
 		# run again c++filt also if is available

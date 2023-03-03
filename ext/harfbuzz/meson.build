@@ -1,6 +1,6 @@
 project('harfbuzz', 'c', 'cpp',
   meson_version: '>= 0.55.0',
-  version: '5.3.0',
+  version: '6.0.0',
   default_options: [
     'cpp_rtti=false',       # Just to support msvc, we are passing -fno-exceptions also anyway
     'cpp_std=c++11',
@@ -83,20 +83,35 @@ check_funcs = [
 
 m_dep = cpp.find_library('m', required: false)
 
-
-# Try pkgconfig name
-freetype_dep = dependency('freetype2', required: false)
-if not freetype_dep.found()
-  # Try cmake name
-  freetype_dep = dependency('freetype', required: false)
-endif
-if not freetype_dep.found()
-  # Subproject fallback, `allow_fallback: true` means the fallback will be
-  # tried even if the freetype option is set to `auto`.
-  freetype_dep = dependency('freetype2',
+if meson.version().version_compare('>=0.60.0')
+  # pkg-config: freetype2, cmake: Freetype
+  freetype_dep = dependency('freetype2', 'Freetype',
                             required: get_option('freetype'),
                             default_options: ['harfbuzz=disabled'],
                             allow_fallback: true)
+else
+  # painful hack to handle multiple dependencies but also respect options
+  freetype_opt = get_option('freetype')
+  # we want to handle enabled manually after fallbacks, but also handle disabled normally
+  if freetype_opt.enabled()
+    freetype_opt = false
+  endif
+  # try pkg-config name
+  freetype_dep = dependency('freetype2', method: 'pkg-config', required: freetype_opt)
+  # when disabled, leave it not-found
+  if not freetype_dep.found() and not get_option('freetype').disabled()
+    # Try cmake name
+    freetype_dep = dependency('Freetype', method: 'cmake', required: false)
+    # Subproject fallback, `allow_fallback: true` means the fallback will be
+    # tried even if the freetype option is set to `auto`.
+    if not freetype_dep.found()
+      freetype_dep = dependency('freetype2',
+                                method: 'pkg-config',
+                                required: get_option('freetype'),
+                                default_options: ['harfbuzz=disabled'],
+                                allow_fallback: true)
+    endif
+  endif
 endif
 
 glib_dep = dependency('glib-2.0', required: get_option('glib'))
@@ -104,18 +119,36 @@ gobject_dep = dependency('gobject-2.0', required: get_option('gobject'))
 graphite2_dep = dependency('graphite2', required: get_option('graphite2'))
 graphite_dep = dependency('graphite2', required: get_option('graphite'))
 
-# Try pkgconfig name
-icu_dep = dependency('icu-uc', required: false)
-if not icu_dep.found()
-  # Try cmake name
-  icu_dep = dependency('ICU',
-                       required: false,
-                       components: 'uc',
-                       method: 'cmake')
-endif
-if not icu_dep.found()
-  # Subproject fallback if icu option is enabled
-  icu_dep = dependency('icu-uc', required: get_option('icu'))
+if meson.version().version_compare('>=0.60.0')
+  # pkg-config: icu-uc, cmake: ICU but with components
+  icu_dep = dependency('icu-uc', 'ICU',
+                            components: 'uc',
+                            required: get_option('icu'),
+                            default_options: ['harfbuzz=disabled'],
+                            allow_fallback: true)
+else
+  # painful hack to handle multiple dependencies but also respect options
+  icu_opt = get_option('icu')
+  # we want to handle enabled manually after fallbacks, but also handle disabled normally
+  if icu_opt.enabled()
+    icu_opt = false
+  endif
+  # try pkg-config name
+  icu_dep = dependency('icu-uc', method: 'pkg-config', required: icu_opt)
+  # when disabled, leave it not-found
+  if not icu_dep.found() and not get_option('icu').disabled()
+    # Try cmake name
+    icu_dep = dependency('ICU', method: 'cmake', components: 'uc', required: false)
+    # Try again with subproject fallback. `allow_fallback: true` means the
+    # fallback will be tried even if the icu option is set to `auto`, but
+    # we cannot pass this option until Meson 0.59.0, because no wrap file
+    # is checked into git.
+    if not icu_dep.found()
+      icu_dep = dependency('icu-uc',
+                           method: 'pkg-config',
+                           required: get_option('icu'))
+    endif
+  endif
 endif
 
 if icu_dep.found() and icu_dep.type_name() == 'pkgconfig'
@@ -148,7 +181,8 @@ if not get_option('cairo').disabled()
     # harfbuzz support disabled, so when cairo will lookup freetype2 dependency
     # it will be forced to use that one.
     cairo_dep = dependency('cairo', required: get_option('cairo'))
-    cairo_ft_dep = dependency('cairo-ft', required: get_option('cairo'))
+    cairo_ft_required = get_option('cairo').enabled() and get_option('freetype').enabled()
+    cairo_ft_dep = dependency('cairo-ft', required: cairo_ft_required)
   endif
 endif
 

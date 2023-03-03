@@ -74,6 +74,7 @@ export VD   = 9;
 export PLACEHOLDER = 10;
 export DOTTEDCIRCLE = 11;
 export RS    = 12;
+export MPst  = 13;
 export Repha = 14;
 export Ra    = 15;
 export CM    = 16;
@@ -88,7 +89,7 @@ reph = (Ra H | Repha);		# possible reph
 
 cn = c.ZWJ?.n?;
 symbol = Symbol.N?;
-matra_group = z*.M.N?.H?;
+matra_group = z*.(M | SM? MPst).N?.H?;
 syllable_tail = (z?.SM.SM?.ZWNJ?)? (A | VD)*;
 halant_group = (z?.H.(ZWJ.N?)?);
 final_halant_group = halant_group | H.ZWNJ;
@@ -122,7 +123,7 @@ main := |*
     for (unsigned int i = ts; i < te; i++) \
       info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
-    if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
+    if (syllable_serial == 16) syllable_serial = 1; \
   } HB_STMT_END
 
 inline void

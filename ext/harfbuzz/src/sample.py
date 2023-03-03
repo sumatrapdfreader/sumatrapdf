@@ -2,6 +2,8 @@
 
 import sys
 import array
+import gi
+gi.require_version('HarfBuzz', '0.0')
 from gi.repository import HarfBuzz as hb
 from gi.repository import GLib
 

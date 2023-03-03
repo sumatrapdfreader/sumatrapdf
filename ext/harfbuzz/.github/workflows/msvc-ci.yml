@@ -14,6 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-2019, windows-latest]
         include:
@@ -45,7 +46,7 @@ jobs:
           $env:path = ($env:path.Split(';') | Where-Object { $_ -ne 'C:\Strawberry\perl\bin' }) -join ';'
 
           meson setup build `
-            --wrap-mode=default `
+            --wrap-mode=forcefallback `
             --buildtype=release `
             -Dglib=enabled `
             -Dfreetype=enabled `

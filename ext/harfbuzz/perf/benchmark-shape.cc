@@ -27,8 +27,16 @@ struct test_input_t
    "perf/texts/fa-thelittleprince.txt",
    false},
 
+  {"perf/fonts/NotoNastaliqUrdu-Regular.ttf",
+   "perf/texts/fa-words.txt",
+   false},
+
   {"perf/fonts/Amiri-Regular.ttf",
    "perf/texts/fa-thelittleprince.txt",
+   false},
+
+  {SUBSET_FONT_BASE_PATH "NotoSansDevanagari-Regular.ttf",
+   "perf/texts/hi-words.txt",
    false},
 
   {"perf/fonts/Roboto-Regular.ttf",
