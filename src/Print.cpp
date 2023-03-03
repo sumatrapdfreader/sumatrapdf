@@ -1122,7 +1122,7 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             advanced.rotation = PrintRotationAdv::Landscape;
         } else if (str::EqI(s, "disable-auto-rotation")) {
             advanced.autoRotate = false;
-        } else if (str::Parse(s, "%dx%$", &val) && 0 < val && val < 1000) {
+        } else if (str::Parse(s, "%dx%$", &val) && 0 < val && val < 10000) {
             devMode->dmCopies = (short)val;
             devMode->dmFields |= DM_COPIES;
         } else if (str::EqI(s, "simplex")) {
