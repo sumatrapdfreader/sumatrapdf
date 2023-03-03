@@ -685,11 +685,11 @@ pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 
 		end_cloud(ctx, &cloud_list, buf);
 		exp += cloud_list.radius;
-}
+	}
 	else
-{
+	{
 		fz_append_printf(ctx, buf, "%g %g %g %g re\n", x, y, w, h);
-}
+	}
 	maybe_stroke_and_fill(ctx, buf, sc, ic);
 
 	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(exp, exp, exp, exp));
@@ -860,10 +860,10 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 			else
 			{
 				if (i == i0)
-				fz_append_printf(ctx, buf, "%g %g m\n", p.x, p.y);
-			else
-				fz_append_printf(ctx, buf, "%g %g l\n", p.x, p.y);
-		}
+					fz_append_printf(ctx, buf, "%g %g m\n", p.x, p.y);
+				else
+					fz_append_printf(ctx, buf, "%g %g l\n", p.x, p.y);
+			}
 		}
 
 		if (cloud > 0)
@@ -873,8 +873,8 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 		}
 		else
 		{
-		if (close)
-			fz_append_string(ctx, buf, "h\n");
+			if (close)
+				fz_append_string(ctx, buf, "h\n");
 		}
 
 		if (close)

@@ -2726,9 +2726,9 @@ pdf_run_pop_resources(fz_context *ctx, pdf_processor *proc)
 
 	if (stk)
 	{
-	pr->rstack = stk->next;
-	pdf_drop_obj(ctx, stk->resources);
-	fz_free(ctx, stk);
+		pr->rstack = stk->next;
+		pdf_drop_obj(ctx, stk->resources);
+		fz_free(ctx, stk);
 	}
 
 	return NULL;

@@ -174,7 +174,7 @@ pdf_parse_date(fz_context *ctx, const char *s)
 			{
 				s += 3;
 				if (s[0] == '\'')
-		s += 1;
+					s += 1;
 			}
 		}
 		else

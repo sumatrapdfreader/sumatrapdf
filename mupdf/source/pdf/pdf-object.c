@@ -578,13 +578,13 @@ do_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b, int check_streams)
 		if ((a->flags & b->flags) & PDF_FLAGS_SORTED)
 		{
 			/* Both a and b are sorted. Easy. */
-		for (i = 0; i < DICT(a)->len; i++)
-		{
-			if (pdf_objcmp(ctx, DICT(a)->items[i].k, DICT(b)->items[i].k))
-				return 1;
-			if (pdf_objcmp(ctx, DICT(a)->items[i].v, DICT(b)->items[i].v))
-				return 1;
-		}
+			for (i = 0; i < DICT(a)->len; i++)
+			{
+				if (pdf_objcmp(ctx, DICT(a)->items[i].k, DICT(b)->items[i].k))
+					return 1;
+				if (pdf_objcmp(ctx, DICT(a)->items[i].v, DICT(b)->items[i].v))
+					return 1;
+			}
 		}
 		else
 		{

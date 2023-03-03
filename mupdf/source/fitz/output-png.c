@@ -285,7 +285,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 			for (x = 0; x < w; x++)
 			{
 				for (k = 0; k < n; k++)
-						dp[k] = sp[k];
+					dp[k] = sp[k];
 				sp += n;
 				dp += n;
 			}

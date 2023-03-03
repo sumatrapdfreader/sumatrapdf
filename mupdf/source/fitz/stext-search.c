@@ -134,11 +134,11 @@ static int find_closest_in_line(fz_stext_line *line, int idx, fz_point p)
 			else
 			{
 				/* Neutral or L2R */
-			if (line->dir.x > line->dir.y)
-				closest_idx = (p.x < mid_x) ? idx : idx+1;
-			else
-				closest_idx = (p.y < mid_y) ? idx : idx+1;
-		}
+				if (line->dir.x > line->dir.y)
+					closest_idx = (p.x < mid_x) ? idx : idx+1;
+				else
+					closest_idx = (p.y < mid_y) ? idx : idx+1;
+			}
 		}
 		++idx;
 	}
@@ -366,10 +366,10 @@ static void on_highlight_char(fz_context *ctx, void *arg, fz_stext_line *line, f
 				&& llv < vfuzz
 				&& ulh < hfuzz
 				&& ulv < vfuzz)
-		{
-			end->ur = ch->quad.ur;
-			end->lr = ch->quad.lr;
-			return;
+			{
+				end->ur = ch->quad.ur;
+				end->lr = ch->quad.lr;
+				return;
 			}
 		}
 	}

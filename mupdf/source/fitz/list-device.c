@@ -707,7 +707,7 @@ fz_append_display_node(
 	{
 		out_private = (unsigned char *)(void *)(&node_ptr[private_off]);
 		if (private_data)
-		memcpy(out_private, private_data, private_data_len);
+			memcpy(out_private, private_data, private_data_len);
 	}
 	list->len += size;
 

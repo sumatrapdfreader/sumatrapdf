@@ -850,127 +850,127 @@ pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode)
 {
 	pdf_output_processor *proc = pdf_new_processor(ctx, sizeof *proc);
 
-		proc->super.close_processor = pdf_close_output_processor;
-		proc->super.drop_processor = pdf_drop_output_processor;
+	proc->super.close_processor = pdf_close_output_processor;
+	proc->super.drop_processor = pdf_drop_output_processor;
 
 	proc->super.push_resources = pdf_out_push_resources;
 	proc->super.pop_resources = pdf_out_pop_resources;
 
-		/* general graphics state */
-		proc->super.op_w = pdf_out_w;
-		proc->super.op_j = pdf_out_j;
-		proc->super.op_J = pdf_out_J;
-		proc->super.op_M = pdf_out_M;
-		proc->super.op_d = pdf_out_d;
-		proc->super.op_ri = pdf_out_ri;
-		proc->super.op_i = pdf_out_i;
-		proc->super.op_gs_begin = pdf_out_gs_begin;
-		proc->super.op_gs_end = pdf_out_gs_end;
+	/* general graphics state */
+	proc->super.op_w = pdf_out_w;
+	proc->super.op_j = pdf_out_j;
+	proc->super.op_J = pdf_out_J;
+	proc->super.op_M = pdf_out_M;
+	proc->super.op_d = pdf_out_d;
+	proc->super.op_ri = pdf_out_ri;
+	proc->super.op_i = pdf_out_i;
+	proc->super.op_gs_begin = pdf_out_gs_begin;
+	proc->super.op_gs_end = pdf_out_gs_end;
 
-		/* transparency graphics state */
-		proc->super.op_gs_BM = NULL;
-		proc->super.op_gs_CA = NULL;
-		proc->super.op_gs_ca = NULL;
-		proc->super.op_gs_SMask = NULL;
+	/* transparency graphics state */
+	proc->super.op_gs_BM = NULL;
+	proc->super.op_gs_CA = NULL;
+	proc->super.op_gs_ca = NULL;
+	proc->super.op_gs_SMask = NULL;
 
-		/* special graphics state */
-		proc->super.op_q = pdf_out_q;
-		proc->super.op_Q = pdf_out_Q;
-		proc->super.op_cm = pdf_out_cm;
+	/* special graphics state */
+	proc->super.op_q = pdf_out_q;
+	proc->super.op_Q = pdf_out_Q;
+	proc->super.op_cm = pdf_out_cm;
 
-		/* path construction */
-		proc->super.op_m = pdf_out_m;
-		proc->super.op_l = pdf_out_l;
-		proc->super.op_c = pdf_out_c;
-		proc->super.op_v = pdf_out_v;
-		proc->super.op_y = pdf_out_y;
-		proc->super.op_h = pdf_out_h;
-		proc->super.op_re = pdf_out_re;
+	/* path construction */
+	proc->super.op_m = pdf_out_m;
+	proc->super.op_l = pdf_out_l;
+	proc->super.op_c = pdf_out_c;
+	proc->super.op_v = pdf_out_v;
+	proc->super.op_y = pdf_out_y;
+	proc->super.op_h = pdf_out_h;
+	proc->super.op_re = pdf_out_re;
 
-		/* path painting */
-		proc->super.op_S = pdf_out_S;
-		proc->super.op_s = pdf_out_s;
-		proc->super.op_F = pdf_out_F;
-		proc->super.op_f = pdf_out_f;
-		proc->super.op_fstar = pdf_out_fstar;
-		proc->super.op_B = pdf_out_B;
-		proc->super.op_Bstar = pdf_out_Bstar;
-		proc->super.op_b = pdf_out_b;
-		proc->super.op_bstar = pdf_out_bstar;
-		proc->super.op_n = pdf_out_n;
+	/* path painting */
+	proc->super.op_S = pdf_out_S;
+	proc->super.op_s = pdf_out_s;
+	proc->super.op_F = pdf_out_F;
+	proc->super.op_f = pdf_out_f;
+	proc->super.op_fstar = pdf_out_fstar;
+	proc->super.op_B = pdf_out_B;
+	proc->super.op_Bstar = pdf_out_Bstar;
+	proc->super.op_b = pdf_out_b;
+	proc->super.op_bstar = pdf_out_bstar;
+	proc->super.op_n = pdf_out_n;
 
-		/* clipping paths */
-		proc->super.op_W = pdf_out_W;
-		proc->super.op_Wstar = pdf_out_Wstar;
+	/* clipping paths */
+	proc->super.op_W = pdf_out_W;
+	proc->super.op_Wstar = pdf_out_Wstar;
 
-		/* text objects */
-		proc->super.op_BT = pdf_out_BT;
-		proc->super.op_ET = pdf_out_ET;
+	/* text objects */
+	proc->super.op_BT = pdf_out_BT;
+	proc->super.op_ET = pdf_out_ET;
 
-		/* text state */
-		proc->super.op_Tc = pdf_out_Tc;
-		proc->super.op_Tw = pdf_out_Tw;
-		proc->super.op_Tz = pdf_out_Tz;
-		proc->super.op_TL = pdf_out_TL;
-		proc->super.op_Tf = pdf_out_Tf;
-		proc->super.op_Tr = pdf_out_Tr;
-		proc->super.op_Ts = pdf_out_Ts;
+	/* text state */
+	proc->super.op_Tc = pdf_out_Tc;
+	proc->super.op_Tw = pdf_out_Tw;
+	proc->super.op_Tz = pdf_out_Tz;
+	proc->super.op_TL = pdf_out_TL;
+	proc->super.op_Tf = pdf_out_Tf;
+	proc->super.op_Tr = pdf_out_Tr;
+	proc->super.op_Ts = pdf_out_Ts;
 
-		/* text positioning */
-		proc->super.op_Td = pdf_out_Td;
-		proc->super.op_TD = pdf_out_TD;
-		proc->super.op_Tm = pdf_out_Tm;
-		proc->super.op_Tstar = pdf_out_Tstar;
+	/* text positioning */
+	proc->super.op_Td = pdf_out_Td;
+	proc->super.op_TD = pdf_out_TD;
+	proc->super.op_Tm = pdf_out_Tm;
+	proc->super.op_Tstar = pdf_out_Tstar;
 
-		/* text showing */
-		proc->super.op_TJ = pdf_out_TJ;
-		proc->super.op_Tj = pdf_out_Tj;
-		proc->super.op_squote = pdf_out_squote;
-		proc->super.op_dquote = pdf_out_dquote;
+	/* text showing */
+	proc->super.op_TJ = pdf_out_TJ;
+	proc->super.op_Tj = pdf_out_Tj;
+	proc->super.op_squote = pdf_out_squote;
+	proc->super.op_dquote = pdf_out_dquote;
 
-		/* type 3 fonts */
-		proc->super.op_d0 = pdf_out_d0;
-		proc->super.op_d1 = pdf_out_d1;
+	/* type 3 fonts */
+	proc->super.op_d0 = pdf_out_d0;
+	proc->super.op_d1 = pdf_out_d1;
 
-		/* color */
-		proc->super.op_CS = pdf_out_CS;
-		proc->super.op_cs = pdf_out_cs;
-		proc->super.op_SC_color = pdf_out_SC_color;
-		proc->super.op_sc_color = pdf_out_sc_color;
-		proc->super.op_SC_pattern = pdf_out_SC_pattern;
-		proc->super.op_sc_pattern = pdf_out_sc_pattern;
-		proc->super.op_SC_shade = pdf_out_SC_shade;
-		proc->super.op_sc_shade = pdf_out_sc_shade;
+	/* color */
+	proc->super.op_CS = pdf_out_CS;
+	proc->super.op_cs = pdf_out_cs;
+	proc->super.op_SC_color = pdf_out_SC_color;
+	proc->super.op_sc_color = pdf_out_sc_color;
+	proc->super.op_SC_pattern = pdf_out_SC_pattern;
+	proc->super.op_sc_pattern = pdf_out_sc_pattern;
+	proc->super.op_SC_shade = pdf_out_SC_shade;
+	proc->super.op_sc_shade = pdf_out_sc_shade;
 
-		proc->super.op_G = pdf_out_G;
-		proc->super.op_g = pdf_out_g;
-		proc->super.op_RG = pdf_out_RG;
-		proc->super.op_rg = pdf_out_rg;
-		proc->super.op_K = pdf_out_K;
-		proc->super.op_k = pdf_out_k;
+	proc->super.op_G = pdf_out_G;
+	proc->super.op_g = pdf_out_g;
+	proc->super.op_RG = pdf_out_RG;
+	proc->super.op_rg = pdf_out_rg;
+	proc->super.op_K = pdf_out_K;
+	proc->super.op_k = pdf_out_k;
 
-		/* shadings, images, xobjects */
-		proc->super.op_BI = pdf_out_BI;
-		proc->super.op_sh = pdf_out_sh;
-		proc->super.op_Do_image = pdf_out_Do_image;
-		proc->super.op_Do_form = pdf_out_Do_form;
+	/* shadings, images, xobjects */
+	proc->super.op_BI = pdf_out_BI;
+	proc->super.op_sh = pdf_out_sh;
+	proc->super.op_Do_image = pdf_out_Do_image;
+	proc->super.op_Do_form = pdf_out_Do_form;
 
-		/* marked content */
-		proc->super.op_MP = pdf_out_MP;
-		proc->super.op_DP = pdf_out_DP;
-		proc->super.op_BMC = pdf_out_BMC;
-		proc->super.op_BDC = pdf_out_BDC;
-		proc->super.op_EMC = pdf_out_EMC;
+	/* marked content */
+	proc->super.op_MP = pdf_out_MP;
+	proc->super.op_DP = pdf_out_DP;
+	proc->super.op_BMC = pdf_out_BMC;
+	proc->super.op_BDC = pdf_out_BDC;
+	proc->super.op_EMC = pdf_out_EMC;
 
-		/* compatibility */
-		proc->super.op_BX = pdf_out_BX;
-		proc->super.op_EX = pdf_out_EX;
+	/* compatibility */
+	proc->super.op_BX = pdf_out_BX;
+	proc->super.op_EX = pdf_out_EX;
 
-		/* extgstate */
-		proc->super.op_gs_OP = NULL;
-		proc->super.op_gs_op = NULL;
-		proc->super.op_gs_OPM = NULL;
-		proc->super.op_gs_UseBlackPtComp = NULL;
+	/* extgstate */
+	proc->super.op_gs_OP = NULL;
+	proc->super.op_gs_op = NULL;
+	proc->super.op_gs_OPM = NULL;
+	proc->super.op_gs_UseBlackPtComp = NULL;
 
 	proc->out = out;
 	proc->ahxencode = ahxencode;

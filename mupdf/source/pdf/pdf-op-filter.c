@@ -608,7 +608,7 @@ filter_show_char(fz_context *ctx, pdf_sanitize_processor *p, int cid, int *unico
 		}
 
 		if (p->options->text_filter)
-		remove = p->options->text_filter(ctx, p->options->opaque, ucsbuf, ucslen, trm, ctm, bbox);
+			remove = p->options->text_filter(ctx, p->options->opaque, ucsbuf, ucslen, trm, ctm, bbox);
 		if (p->options->culler && !remove)
 		{
 			ctm = fz_concat(trm, ctm);

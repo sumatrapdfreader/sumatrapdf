@@ -729,10 +729,10 @@ static void removeduplicateobjs(fz_context *ctx, pdf_document *doc, pdf_write_st
 			if (opts->do_garbage >= 4)
 			{
 				if (pdf_objcmp_deep(ctx, a, b))
-				continue;
-				}
+					continue;
+			}
 			else
-				{
+			{
 				if (pdf_objcmp(ctx, a, b))
 					continue;
 			}

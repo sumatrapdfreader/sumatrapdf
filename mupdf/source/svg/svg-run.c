@@ -1242,8 +1242,8 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 		if (cycle->node == root)
 		{
 			fz_warn(ctx, "svg: recursive <use> references");
-		return;
-	}
+			return;
+		}
 	}
 
 	local_cycle.node = root;

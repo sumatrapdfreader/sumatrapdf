@@ -238,7 +238,7 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 }
 
 void
-    fz_save_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pixmap, const char *filename, int quality)
+fz_save_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pixmap, const char *filename, int quality)
 {
 	fz_output *out = fz_new_output_with_path(ctx, filename, 0);
 	fz_try(ctx)

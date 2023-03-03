@@ -4131,14 +4131,14 @@ static void ffi_new_Pixmap(js_State *J)
 		fz_catch(ctx)
 			rethrow(J);
 	} else {
-	fz_colorspace *colorspace = js_touserdata(J, 1, "fz_colorspace");
-	fz_irect bounds = ffi_toirect(J, 2);
-	int alpha = js_toboolean(J, 3);
+		fz_colorspace *colorspace = js_touserdata(J, 1, "fz_colorspace");
+		fz_irect bounds = ffi_toirect(J, 2);
+		int alpha = js_toboolean(J, 3);
 
-	fz_try(ctx)
-		pixmap = fz_new_pixmap_with_bbox(ctx, colorspace, bounds, 0, alpha);
-	fz_catch(ctx)
-		rethrow(J);
+		fz_try(ctx)
+			pixmap = fz_new_pixmap_with_bbox(ctx, colorspace, bounds, 0, alpha);
+		fz_catch(ctx)
+			rethrow(J);
 	}
 
 	ffi_pushpixmap(J, pixmap);

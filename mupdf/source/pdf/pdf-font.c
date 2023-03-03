@@ -1552,7 +1552,7 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 			{
 				pdf_remove_item(ctx, fontdesc->storable.drop, dict);
 				fz_rethrow(ctx);
-		}
+			}
 		}
 	}
 	fz_catch(ctx)

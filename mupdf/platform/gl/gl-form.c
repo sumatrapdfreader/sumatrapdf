@@ -563,9 +563,9 @@ static void tx_dialog(void)
 			{
 				if (pdf_set_text_field_value(ctx, tx_widget, tx_input.text))
 				{
-				trace_action("widget.setTextValue(%q);\n", tx_input.text);
-				trace_field_value(tx_widget, tx_input.text);
-				ui.dialog = NULL;
+					trace_action("widget.setTextValue(%q);\n", tx_input.text);
+					trace_field_value(tx_widget, tx_input.text);
+					ui.dialog = NULL;
 				}
 			}
 		}

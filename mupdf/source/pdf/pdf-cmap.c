@@ -729,7 +729,7 @@ pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *valu
 		{
 			int hi = values[i];
 			if (hi >= 0xd800 && hi < 0xdc00 && i < len-1)
-	{
+			{
 				int lo = values[i+1];
 				if (lo >= 0xdc00 && lo < 0xe000)
 				{

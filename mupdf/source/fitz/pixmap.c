@@ -1074,15 +1074,15 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 	else if (s)
 	{
 		int n1 = pix->n - s;
-	for (y = y0; y < y1; y++)
-	{
-			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
-		for (x = x0; x < x1; x++)
+		for (y = y0; y < y1; y++)
 		{
+			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
+			for (x = x0; x < x1; x++)
+			{
 				for (k = 0; k < n1; k++)
 					d[k] = 255 - d[k];
 				d += n;
-		}
+			}
 		}
 	}
 	else

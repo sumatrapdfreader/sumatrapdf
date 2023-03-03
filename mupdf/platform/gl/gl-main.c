@@ -2937,7 +2937,7 @@ static void cleanup(void)
 {
 	save_history();
 	fz_try(ctx)
-	save_accelerator();
+		save_accelerator();
 	fz_catch(ctx)
 		fz_warn(ctx, "cannot save accelerator file");
 
