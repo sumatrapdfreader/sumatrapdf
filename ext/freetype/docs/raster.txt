@@ -63,7 +63,7 @@ II. Rendering Technology
     `26.6' means  that 26 bits  are used for  the integer part  of a
     value   and  6   bits  are   used  for   the   fractional  part.
     Consequently, the `distance'  between two neighbouring pixels is
-    64 `units' (1 unit = 1/64th of a pixel).
+    64 `units' (1 unit = 1/64 of a pixel).
 
     Note  that, for  the rasterizer,  pixel centers  are  located at
     integer   coordinates.   The   TrueType   bytecode  interpreter,
@@ -618,7 +618,7 @@ II. Rendering Technology
 
 ------------------------------------------------------------------------
 
-Copyright (C) 2003-2022 by
+Copyright (C) 2003-2023 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

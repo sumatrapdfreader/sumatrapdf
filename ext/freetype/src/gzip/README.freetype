@@ -18,5 +18,6 @@ The files in this directory have been prepared as follows.
 
  - Take the unmodified source code files from the zlib distribution that are
    included by `ftgzip.c`.
+ - Copy `zconf.h` to `ftzconf.h` (which stays unmodified otherwise).
  - Run zlib's `zlib2ansi` script on all `.c` files.
  - Apply the diff file(s) in the `patches` folder.

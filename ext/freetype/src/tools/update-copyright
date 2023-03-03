@@ -4,10 +4,10 @@
 # taking care of exceptions stored in file `no-copyright'.
 
 topdir=`git rev-parse --show-toplevel`
-toolsdir=$topdir/src/tools
+toolsdir=`dirname $0`
 
 git ls-files --full-name $topdir        \
-| sed 's|^|../../|'                     \
+| sed "s|^|$topdir/|"                   \
 | grep -vFf $toolsdir/no-copyright      \
 | xargs $toolsdir/update-copyright-year
 

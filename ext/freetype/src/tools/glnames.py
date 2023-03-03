@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-#
+#!/usr/bin/env python3
 
 #
 # FreeType 2 glyph name builder
 #
-
-
-# Copyright (C) 1996-2022 by
+# Copyright (C) 1996-2023 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -16,8 +13,7 @@
 # fully.
 
 
-"""\
-
+"""
 usage: %s <output-file>
 
   This python script generates the glyph names tables defined in the
@@ -26,9 +22,9 @@ usage: %s <output-file>
   Its single argument is the name of the header file to be created.
 """
 
-
-import sys, string, struct, re, os.path
-
+import os.path
+import struct
+import sys
 
 # This table lists the glyphs according to the Macintosh specification.
 # It is used by the TrueType Postscript names table.
@@ -39,378 +35,370 @@ import sys, string, struct, re, os.path
 #
 # for the official list.
 #
-mac_standard_names = \
-[
-  # 0
-  ".notdef", ".null", "nonmarkingreturn", "space", "exclam",
-  "quotedbl", "numbersign", "dollar", "percent", "ampersand",
+mac_standard_names = [
+    # 0
+    ".notdef", ".null", "nonmarkingreturn", "space", "exclam",
+    "quotedbl", "numbersign", "dollar", "percent", "ampersand",
 
-  # 10
-  "quotesingle", "parenleft", "parenright", "asterisk", "plus",
-  "comma", "hyphen", "period", "slash", "zero",
+    # 10
+    "quotesingle", "parenleft", "parenright", "asterisk", "plus",
+    "comma", "hyphen", "period", "slash", "zero",
 
-  # 20
-  "one", "two", "three", "four", "five",
-  "six", "seven", "eight", "nine", "colon",
+    # 20
+    "one", "two", "three", "four", "five",
+    "six", "seven", "eight", "nine", "colon",
 
-  # 30
-  "semicolon", "less", "equal", "greater", "question",
-  "at", "A", "B", "C", "D",
+    # 30
+    "semicolon", "less", "equal", "greater", "question",
+    "at", "A", "B", "C", "D",
 
-  # 40
-  "E", "F", "G", "H", "I",
-  "J", "K", "L", "M", "N",
+    # 40
+    "E", "F", "G", "H", "I",
+    "J", "K", "L", "M", "N",
 
-  # 50
-  "O", "P", "Q", "R", "S",
-  "T", "U", "V", "W", "X",
+    # 50
+    "O", "P", "Q", "R", "S",
+    "T", "U", "V", "W", "X",
 
-  # 60
-  "Y", "Z", "bracketleft", "backslash", "bracketright",
-  "asciicircum", "underscore", "grave", "a", "b",
+    # 60
+    "Y", "Z", "bracketleft", "backslash", "bracketright",
+    "asciicircum", "underscore", "grave", "a", "b",
 
-  # 70
-  "c", "d", "e", "f", "g",
-  "h", "i", "j", "k", "l",
+    # 70
+    "c", "d", "e", "f", "g",
+    "h", "i", "j", "k", "l",
 
-  # 80
-  "m", "n", "o", "p", "q",
-  "r", "s", "t", "u", "v",
+    # 80
+    "m", "n", "o", "p", "q",
+    "r", "s", "t", "u", "v",
 
-  # 90
-  "w", "x", "y", "z", "braceleft",
-  "bar", "braceright", "asciitilde", "Adieresis", "Aring",
+    # 90
+    "w", "x", "y", "z", "braceleft",
+    "bar", "braceright", "asciitilde", "Adieresis", "Aring",
 
-  # 100
-  "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis",
-  "aacute", "agrave", "acircumflex", "adieresis", "atilde",
+    # 100
+    "Ccedilla", "Eacute", "Ntilde", "Odieresis", "Udieresis",
+    "aacute", "agrave", "acircumflex", "adieresis", "atilde",
 
-  # 110
-  "aring", "ccedilla", "eacute", "egrave", "ecircumflex",
-  "edieresis", "iacute", "igrave", "icircumflex", "idieresis",
+    # 110
+    "aring", "ccedilla", "eacute", "egrave", "ecircumflex",
+    "edieresis", "iacute", "igrave", "icircumflex", "idieresis",
 
-  # 120
-  "ntilde", "oacute", "ograve", "ocircumflex", "odieresis",
-  "otilde", "uacute", "ugrave", "ucircumflex", "udieresis",
+    # 120
+    "ntilde", "oacute", "ograve", "ocircumflex", "odieresis",
+    "otilde", "uacute", "ugrave", "ucircumflex", "udieresis",
 
-  # 130
-  "dagger", "degree", "cent", "sterling", "section",
-  "bullet", "paragraph", "germandbls", "registered", "copyright",
+    # 130
+    "dagger", "degree", "cent", "sterling", "section",
+    "bullet", "paragraph", "germandbls", "registered", "copyright",
 
-  # 140
-  "trademark", "acute", "dieresis", "notequal", "AE",
-  "Oslash", "infinity", "plusminus", "lessequal", "greaterequal",
+    # 140
+    "trademark", "acute", "dieresis", "notequal", "AE",
+    "Oslash", "infinity", "plusminus", "lessequal", "greaterequal",
 
-  # 150
-  "yen", "mu", "partialdiff", "summation", "product",
-  "pi", "integral", "ordfeminine", "ordmasculine", "Omega",
+    # 150
+    "yen", "mu", "partialdiff", "summation", "product",
+    "pi", "integral", "ordfeminine", "ordmasculine", "Omega",
 
-  # 160
-  "ae", "oslash", "questiondown", "exclamdown", "logicalnot",
-  "radical", "florin", "approxequal", "Delta", "guillemotleft",
+    # 160
+    "ae", "oslash", "questiondown", "exclamdown", "logicalnot",
+    "radical", "florin", "approxequal", "Delta", "guillemotleft",
 
-  # 170
-  "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde",
-  "Otilde", "OE", "oe", "endash", "emdash",
+    # 170
+    "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde",
+    "Otilde", "OE", "oe", "endash", "emdash",
 
-  # 180
-  "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide",
-  "lozenge", "ydieresis", "Ydieresis", "fraction", "currency",
+    # 180
+    "quotedblleft", "quotedblright", "quoteleft", "quoteright", "divide",
+    "lozenge", "ydieresis", "Ydieresis", "fraction", "currency",
 
-  # 190
-  "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl",
-  "periodcentered", "quotesinglbase", "quotedblbase", "perthousand",
+    # 190
+    "guilsinglleft", "guilsinglright", "fi", "fl", "daggerdbl",
+    "periodcentered", "quotesinglbase", "quotedblbase", "perthousand",
     "Acircumflex",
 
-  # 200
-  "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute",
-  "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex",
+    # 200
+    "Ecircumflex", "Aacute", "Edieresis", "Egrave", "Iacute",
+    "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex",
 
-  # 210
-  "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave",
-  "dotlessi", "circumflex", "tilde", "macron", "breve",
+    # 210
+    "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave",
+    "dotlessi", "circumflex", "tilde", "macron", "breve",
 
-  # 220
-  "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek",
-  "caron", "Lslash", "lslash", "Scaron", "scaron",
+    # 220
+    "dotaccent", "ring", "cedilla", "hungarumlaut", "ogonek",
+    "caron", "Lslash", "lslash", "Scaron", "scaron",
 
-  # 230
-  "Zcaron", "zcaron", "brokenbar", "Eth", "eth",
-  "Yacute", "yacute", "Thorn", "thorn", "minus",
+    # 230
+    "Zcaron", "zcaron", "brokenbar", "Eth", "eth",
+    "Yacute", "yacute", "Thorn", "thorn", "minus",
 
-  # 240
-  "multiply", "onesuperior", "twosuperior", "threesuperior", "onehalf",
-  "onequarter", "threequarters", "franc", "Gbreve", "gbreve",
+    # 240
+    "multiply", "onesuperior", "twosuperior", "threesuperior", "onehalf",
+    "onequarter", "threequarters", "franc", "Gbreve", "gbreve",
 
-  # 250
-  "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute",
-  "Ccaron", "ccaron", "dcroat"
+    # 250
+    "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute",
+    "Ccaron", "ccaron", "dcroat"
 ]
-
 
 # The list of standard `SID' glyph names.  For the official list,
 # see Annex A of document at
 #
-#   https://www.adobe.com/content/dam/acom/en/devnet/font/pdfs/5176.CFF.pdf  .
+#   https://www.adobe.com/content/dam/acom/en/devnet/font/pdfs/5176.CFF.pdf
 #
-sid_standard_names = \
-[
-  # 0
-  ".notdef", "space", "exclam", "quotedbl", "numbersign",
-  "dollar", "percent", "ampersand", "quoteright", "parenleft",
+sid_standard_names = [
+    # 0
+    ".notdef", "space", "exclam", "quotedbl", "numbersign",
+    "dollar", "percent", "ampersand", "quoteright", "parenleft",
 
-  # 10
-  "parenright", "asterisk", "plus", "comma", "hyphen",
-  "period", "slash", "zero", "one", "two",
+    # 10
+    "parenright", "asterisk", "plus", "comma", "hyphen",
+    "period", "slash", "zero", "one", "two",
 
-  # 20
-  "three", "four", "five", "six", "seven",
-  "eight", "nine", "colon", "semicolon", "less",
+    # 20
+    "three", "four", "five", "six", "seven",
+    "eight", "nine", "colon", "semicolon", "less",
 
-  # 30
-  "equal", "greater", "question", "at", "A",
-  "B", "C", "D", "E", "F",
+    # 30
+    "equal", "greater", "question", "at", "A",
+    "B", "C", "D", "E", "F",
 
-  # 40
-  "G", "H", "I", "J", "K",
-  "L", "M", "N", "O", "P",
+    # 40
+    "G", "H", "I", "J", "K",
+    "L", "M", "N", "O", "P",
 
-  # 50
-  "Q", "R", "S", "T", "U",
-  "V", "W", "X", "Y", "Z",
+    # 50
+    "Q", "R", "S", "T", "U",
+    "V", "W", "X", "Y", "Z",
 
-  # 60
-  "bracketleft", "backslash", "bracketright", "asciicircum", "underscore",
-  "quoteleft", "a", "b", "c", "d",
+    # 60
+    "bracketleft", "backslash", "bracketright", "asciicircum", "underscore",
+    "quoteleft", "a", "b", "c", "d",
 
-  # 70
-  "e", "f", "g", "h", "i",
-  "j", "k", "l", "m", "n",
+    # 70
+    "e", "f", "g", "h", "i",
+    "j", "k", "l", "m", "n",
 
-  # 80
-  "o", "p", "q", "r", "s",
-  "t", "u", "v", "w", "x",
+    # 80
+    "o", "p", "q", "r", "s",
+    "t", "u", "v", "w", "x",
 
-  # 90
-  "y", "z", "braceleft", "bar", "braceright",
-  "asciitilde", "exclamdown", "cent", "sterling", "fraction",
+    # 90
+    "y", "z", "braceleft", "bar", "braceright",
+    "asciitilde", "exclamdown", "cent", "sterling", "fraction",
 
-  # 100
-  "yen", "florin", "section", "currency", "quotesingle",
-  "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi",
+    # 100
+    "yen", "florin", "section", "currency", "quotesingle",
+    "quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi",
 
-  # 110
-  "fl", "endash", "dagger", "daggerdbl", "periodcentered",
-  "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright",
+    # 110
+    "fl", "endash", "dagger", "daggerdbl", "periodcentered",
+    "paragraph", "bullet", "quotesinglbase", "quotedblbase", "quotedblright",
 
-  # 120
-  "guillemotright", "ellipsis", "perthousand", "questiondown", "grave",
-  "acute", "circumflex", "tilde", "macron", "breve",
+    # 120
+    "guillemotright", "ellipsis", "perthousand", "questiondown", "grave",
+    "acute", "circumflex", "tilde", "macron", "breve",
 
-  # 130
-  "dotaccent", "dieresis", "ring", "cedilla", "hungarumlaut",
-  "ogonek", "caron", "emdash", "AE", "ordfeminine",
+    # 130
+    "dotaccent", "dieresis", "ring", "cedilla", "hungarumlaut",
+    "ogonek", "caron", "emdash", "AE", "ordfeminine",
 
-  # 140
-  "Lslash", "Oslash", "OE", "ordmasculine", "ae",
-  "dotlessi", "lslash", "oslash", "oe", "germandbls",
+    # 140
+    "Lslash", "Oslash", "OE", "ordmasculine", "ae",
+    "dotlessi", "lslash", "oslash", "oe", "germandbls",
 
-  # 150
-  "onesuperior", "logicalnot", "mu", "trademark", "Eth",
-  "onehalf", "plusminus", "Thorn", "onequarter", "divide",
+    # 150
+    "onesuperior", "logicalnot", "mu", "trademark", "Eth",
+    "onehalf", "plusminus", "Thorn", "onequarter", "divide",
 
-  # 160
-  "brokenbar", "degree", "thorn", "threequarters", "twosuperior",
-  "registered", "minus", "eth", "multiply", "threesuperior",
+    # 160
+    "brokenbar", "degree", "thorn", "threequarters", "twosuperior",
+    "registered", "minus", "eth", "multiply", "threesuperior",
 
-  # 170
-  "copyright", "Aacute", "Acircumflex", "Adieresis", "Agrave",
-  "Aring", "Atilde", "Ccedilla", "Eacute", "Ecircumflex",
+    # 170
+    "copyright", "Aacute", "Acircumflex", "Adieresis", "Agrave",
+    "Aring", "Atilde", "Ccedilla", "Eacute", "Ecircumflex",
 
-  # 180
-  "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis",
-  "Igrave", "Ntilde", "Oacute", "Ocircumflex", "Odieresis",
+    # 180
+    "Edieresis", "Egrave", "Iacute", "Icircumflex", "Idieresis",
+    "Igrave", "Ntilde", "Oacute", "Ocircumflex", "Odieresis",
 
-  # 190
-  "Ograve", "Otilde", "Scaron", "Uacute", "Ucircumflex",
-  "Udieresis", "Ugrave", "Yacute", "Ydieresis", "Zcaron",
+    # 190
+    "Ograve", "Otilde", "Scaron", "Uacute", "Ucircumflex",
+    "Udieresis", "Ugrave", "Yacute", "Ydieresis", "Zcaron",
 
-  # 200
-  "aacute", "acircumflex", "adieresis", "agrave", "aring",
-  "atilde", "ccedilla", "eacute", "ecircumflex", "edieresis",
+    # 200
+    "aacute", "acircumflex", "adieresis", "agrave", "aring",
+    "atilde", "ccedilla", "eacute", "ecircumflex", "edieresis",
 
-  # 210
-  "egrave", "iacute", "icircumflex", "idieresis", "igrave",
-  "ntilde", "oacute", "ocircumflex", "odieresis", "ograve",
+    # 210
+    "egrave", "iacute", "icircumflex", "idieresis", "igrave",
+    "ntilde", "oacute", "ocircumflex", "odieresis", "ograve",
 
-  # 220
-  "otilde", "scaron", "uacute", "ucircumflex", "udieresis",
-  "ugrave", "yacute", "ydieresis", "zcaron", "exclamsmall",
+    # 220
+    "otilde", "scaron", "uacute", "ucircumflex", "udieresis",
+    "ugrave", "yacute", "ydieresis", "zcaron", "exclamsmall",
 
-  # 230
-  "Hungarumlautsmall", "dollaroldstyle", "dollarsuperior", "ampersandsmall",
+    # 230
+    "Hungarumlautsmall", "dollaroldstyle", "dollarsuperior", "ampersandsmall",
     "Acutesmall",
-  "parenleftsuperior", "parenrightsuperior", "twodotenleader",
+    "parenleftsuperior", "parenrightsuperior", "twodotenleader",
     "onedotenleader", "zerooldstyle",
 
-  # 240
-  "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle",
+    # 240
+    "oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle",
     "fiveoldstyle",
-  "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle",
+    "sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle",
     "commasuperior",
 
-  # 250
-  "threequartersemdash", "periodsuperior", "questionsmall", "asuperior",
+    # 250
+    "threequartersemdash", "periodsuperior", "questionsmall", "asuperior",
     "bsuperior",
-  "centsuperior", "dsuperior", "esuperior", "isuperior", "lsuperior",
+    "centsuperior", "dsuperior", "esuperior", "isuperior", "lsuperior",
 
-  # 260
-  "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior",
-  "tsuperior", "ff", "ffi", "ffl", "parenleftinferior",
+    # 260
+    "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior",
+    "tsuperior", "ff", "ffi", "ffl", "parenleftinferior",
 
-  # 270
-  "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall",
+    # 270
+    "parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall",
     "Asmall",
-  "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall",
+    "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall",
 
-  # 280
-  "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall",
-  "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall",
+    # 280
+    "Gsmall", "Hsmall", "Ismall", "Jsmall", "Ksmall",
+    "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall",
 
-  # 290
-  "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall",
-  "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall",
+    # 290
+    "Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall",
+    "Vsmall", "Wsmall", "Xsmall", "Ysmall", "Zsmall",
 
-  # 300
-  "colonmonetary", "onefitted", "rupiah", "Tildesmall", "exclamdownsmall",
-  "centoldstyle", "Lslashsmall", "Scaronsmall", "Zcaronsmall",
+    # 300
+    "colonmonetary", "onefitted", "rupiah", "Tildesmall", "exclamdownsmall",
+    "centoldstyle", "Lslashsmall", "Scaronsmall", "Zcaronsmall",
     "Dieresissmall",
 
-  # 310
-  "Brevesmall", "Caronsmall", "Dotaccentsmall", "Macronsmall", "figuredash",
-  "hypheninferior", "Ogoneksmall", "Ringsmall", "Cedillasmall",
+    # 310
+    "Brevesmall", "Caronsmall", "Dotaccentsmall", "Macronsmall", "figuredash",
+    "hypheninferior", "Ogoneksmall", "Ringsmall", "Cedillasmall",
     "questiondownsmall",
 
-  # 320
-  "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird",
-  "twothirds", "zerosuperior", "foursuperior", "fivesuperior",
+    # 320
+    "oneeighth", "threeeighths", "fiveeighths", "seveneighths", "onethird",
+    "twothirds", "zerosuperior", "foursuperior", "fivesuperior",
     "sixsuperior",
 
-  # 330
-  "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior",
+    # 330
+    "sevensuperior", "eightsuperior", "ninesuperior", "zeroinferior",
     "oneinferior",
-  "twoinferior", "threeinferior", "fourinferior", "fiveinferior",
+    "twoinferior", "threeinferior", "fourinferior", "fiveinferior",
     "sixinferior",
 
-  # 340
-  "seveninferior", "eightinferior", "nineinferior", "centinferior",
+    # 340
+    "seveninferior", "eightinferior", "nineinferior", "centinferior",
     "dollarinferior",
-  "periodinferior", "commainferior", "Agravesmall", "Aacutesmall",
+    "periodinferior", "commainferior", "Agravesmall", "Aacutesmall",
     "Acircumflexsmall",
 
-  # 350
-  "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall",
-  "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall",
+    # 350
+    "Atildesmall", "Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall",
+    "Egravesmall", "Eacutesmall", "Ecircumflexsmall", "Edieresissmall",
     "Igravesmall",
 
-  # 360
-  "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall",
+    # 360
+    "Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall",
     "Ntildesmall",
-  "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall",
+    "Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall",
     "Odieresissmall",
 
-  # 370
-  "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall",
+    # 370
+    "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall",
     "Ucircumflexsmall",
-  "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall",
+    "Udieresissmall", "Yacutesmall", "Thornsmall", "Ydieresissmall",
     "001.000",
 
-  # 380
-  "001.001", "001.002", "001.003", "Black", "Bold",
-  "Book", "Light", "Medium", "Regular", "Roman",
+    # 380
+    "001.001", "001.002", "001.003", "Black", "Bold",
+    "Book", "Light", "Medium", "Regular", "Roman",
 
-  # 390
-  "Semibold"
+    # 390
+    "Semibold"
 ]
-
 
 # This table maps character codes of the Adobe Standard Type 1
 # encoding to glyph indices in the sid_standard_names table.
 #
-t1_standard_encoding = \
-[
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   1,   2,   3,   4,   5,   6,   7,   8,
-    9,  10,  11,  12,  13,  14,  15,  16,  17,  18,
+t1_standard_encoding = [
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   1,   2,   3,   4,   5,   6,   7,   8,
+      9,  10,  11,  12,  13,  14,  15,  16,  17,  18,
 
-   19,  20,  21,  22,  23,  24,  25,  26,  27,  28,
-   29,  30,  31,  32,  33,  34,  35,  36,  37,  38,
-   39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
-   49,  50,  51,  52,  53,  54,  55,  56,  57,  58,
-   59,  60,  61,  62,  63,  64,  65,  66,  67,  68,
+     19,  20,  21,  22,  23,  24,  25,  26,  27,  28,
+     29,  30,  31,  32,  33,  34,  35,  36,  37,  38,
+     39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
+     49,  50,  51,  52,  53,  54,  55,  56,  57,  58,
+     59,  60,  61,  62,  63,  64,  65,  66,  67,  68,
 
-   69,  70,  71,  72,  73,  74,  75,  76,  77,  78,
-   79,  80,  81,  82,  83,  84,  85,  86,  87,  88,
-   89,  90,  91,  92,  93,  94,  95,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+     69,  70,  71,  72,  73,  74,  75,  76,  77,  78,
+     79,  80,  81,  82,  83,  84,  85,  86,  87,  88,
+     89,  90,  91,  92,  93,  94,  95,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,  96,  97,  98,  99, 100, 101, 102, 103, 104,
-  105, 106, 107, 108, 109, 110,   0, 111, 112, 113,
-  114,   0, 115, 116, 117, 118, 119, 120, 121, 122,
-    0, 123,   0, 124, 125, 126, 127, 128, 129, 130,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,  96,  97,  98,  99, 100, 101, 102, 103, 104,
+    105, 106, 107, 108, 109, 110,   0, 111, 112, 113,
+    114,   0, 115, 116, 117, 118, 119, 120, 121, 122,
+      0, 123,   0, 124, 125, 126, 127, 128, 129, 130,
 
-  131,   0, 132, 133,   0, 134, 135, 136, 137,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0, 138,   0, 139,   0,   0,
-    0,   0, 140, 141, 142, 143,   0,   0,   0,   0,
-    0, 144,   0,   0,   0, 145,   0,   0, 146, 147,
+    131,   0, 132, 133,   0, 134, 135, 136, 137,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0, 138,   0, 139,   0,   0,
+      0,   0, 140, 141, 142, 143,   0,   0,   0,   0,
+      0, 144,   0,   0,   0, 145,   0,   0, 146, 147,
 
-  148, 149,   0,   0,   0,   0
+    148, 149,   0,   0,   0, 0
 ]
-
 
 # This table maps character codes of the Adobe Expert Type 1
 # encoding to glyph indices in the sid_standard_names table.
 #
-t1_expert_encoding = \
-[
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   1, 229, 230,   0, 231, 232, 233, 234,
-  235, 236, 237, 238,  13,  14,  15,  99, 239, 240,
+t1_expert_encoding = [
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   1, 229, 230,   0, 231, 232, 233, 234,
+    235, 236, 237, 238,  13,  14,  15,  99, 239, 240,
 
-  241, 242, 243, 244, 245, 246, 247, 248,  27,  28,
-  249, 250, 251, 252,   0, 253, 254, 255, 256, 257,
-    0,   0,   0, 258,   0,   0, 259, 260, 261, 262,
-    0,   0, 263, 264, 265,   0, 266, 109, 110, 267,
-  268, 269,   0, 270, 271, 272, 273, 274, 275, 276,
+    241, 242, 243, 244, 245, 246, 247, 248,  27,  28,
+    249, 250, 251, 252,   0, 253, 254, 255, 256, 257,
+      0,   0,   0, 258,   0,   0, 259, 260, 261, 262,
+      0,   0, 263, 264, 265,   0, 266, 109, 110, 267,
+    268, 269,   0, 270, 271, 272, 273, 274, 275, 276,
 
-  277, 278, 279, 280, 281, 282, 283, 284, 285, 286,
-  287, 288, 289, 290, 291, 292, 293, 294, 295, 296,
-  297, 298, 299, 300, 301, 302, 303,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    277, 278, 279, 280, 281, 282, 283, 284, 285, 286,
+    287, 288, 289, 290, 291, 292, 293, 294, 295, 296,
+    297, 298, 299, 300, 301, 302, 303,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0, 304, 305, 306,   0,   0, 307, 308, 309, 310,
-  311,   0, 312,   0,   0, 313,   0,   0, 314, 315,
-    0,   0, 316, 317, 318,   0,   0,   0, 158, 155,
-  163, 319, 320, 321, 322, 323, 324, 325,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0, 304, 305, 306,   0,   0, 307, 308, 309, 310,
+    311,   0, 312,   0,   0, 313,   0,   0, 314, 315,
+      0,   0, 316, 317, 318,   0,   0,   0, 158, 155,
+    163, 319, 320, 321, 322, 323, 324, 325,   0,   0,
 
-  326, 150, 164, 169, 327, 328, 329, 330, 331, 332,
-  333, 334, 335, 336, 337, 338, 339, 340, 341, 342,
-  343, 344, 345, 346, 347, 348, 349, 350, 351, 352,
-  353, 354, 355, 356, 357, 358, 359, 360, 361, 362,
-  363, 364, 365, 366, 367, 368, 369, 370, 371, 372,
+    326, 150, 164, 169, 327, 328, 329, 330, 331, 332,
+    333, 334, 335, 336, 337, 338, 339, 340, 341, 342,
+    343, 344, 345, 346, 347, 348, 349, 350, 351, 352,
+    353, 354, 355, 356, 357, 358, 359, 360, 361, 362,
+    363, 364, 365, 366, 367, 368, 369, 370, 371, 372,
 
-  373, 374, 375, 376, 377, 378
+    373, 374, 375, 376, 377, 378
 ]
-
 
 # This data has been taken literally from the files `glyphlist.txt'
 # and `zapfdingbats.txt' version 2.0, Sept 2002.  It is available from
@@ -4906,81 +4894,81 @@ a9;2720
 # string table management
 #
 class StringTable:
-  def __init__( self, name_list, master_table_name ):
-    self.names        = name_list
-    self.master_table = master_table_name
-    self.indices      = {}
-    index             = 0
+    def __init__(self, name_list, master_table_name):
+        self.names = name_list
+        self.master_table = master_table_name
+        self.indices = {}
+        index = 0
 
-    for name in name_list:
-      self.indices[name] = index
-      index += len( name ) + 1
+        for name in name_list:
+            self.indices[name] = index
+            index += len(name) + 1
 
-    self.total = index
+        self.total = index
 
-  def dump( self, file ):
-    write = file.write
-    write( "#ifndef  DEFINE_PS_TABLES_DATA\n" )
-    write( "#ifdef  __cplusplus\n" )
-    write( '  extern "C"\n' )
-    write( "#else\n" )
-    write( "  extern\n" )
-    write( "#endif\n" )
-    write( "#endif\n" )
-    write( "  const char  " + self.master_table +
-           "[" + repr( self.total ) + "]\n" )
-    write( "#ifdef  DEFINE_PS_TABLES_DATA\n" )
-    write( "  =\n" )
-    write( "  {\n" )
+    def dump(self, file):
+        write = file.write
+        write("#ifndef  DEFINE_PS_TABLES_DATA\n")
+        write("#ifdef  __cplusplus\n")
+        write('  extern "C"\n')
+        write("#else\n")
+        write("  extern\n")
+        write("#endif\n")
+        write("#endif\n")
+        write("  const char  " + self.master_table +
+              "[" + repr(self.total) + "]\n")
+        write("#ifdef  DEFINE_PS_TABLES_DATA\n")
+        write("  =\n")
+        write("  {\n")
 
-    line = ""
-    for name in self.names:
-      line += "    '"
-      line += string.join( ( re.findall( ".", name ) ), "','" )
-      line += "', 0,\n"
+        line = ""
+        for name in self.names:
+            line += "    '"
+            line += "','".join(list(name))
+            line += "', 0,\n"
 
-    write( line )
-    write( "  }\n" )
-    write( "#endif /* DEFINE_PS_TABLES_DATA */\n" )
-    write( "  ;\n\n\n" )
+        write(line)
+        write("  }\n")
+        write("#endif /* DEFINE_PS_TABLES_DATA */\n")
+        write("  ;\n\n\n")
 
-  def dump_sublist( self, file, table_name, macro_name, sublist ):
-    write = file.write
-    write( "#define " + macro_name + "  " + repr( len( sublist ) ) + "\n\n" )
+    def dump_sublist(self, file, table_name, macro_name, sublist):
+        write = file.write
+        write("#define " + macro_name + "  " + repr(len(sublist)) + "\n\n")
 
-    write( "  /* Values are offsets into the `" +
-           self.master_table + "' table */\n\n" )
-    write( "#ifndef  DEFINE_PS_TABLES_DATA\n" )
-    write( "#ifdef  __cplusplus\n" )
-    write( '  extern "C"\n' )
-    write( "#else\n" )
-    write( "  extern\n" )
-    write( "#endif\n" )
-    write( "#endif\n" )
-    write( "  const short  " + table_name +
-           "[" + macro_name + "]\n" )
-    write( "#ifdef  DEFINE_PS_TABLES_DATA\n" )
-    write( "  =\n" )
-    write( "  {\n" )
+        write("  /* Values are offsets into the `" +
+              self.master_table + "' table */\n\n")
+        write("#ifndef  DEFINE_PS_TABLES_DATA\n")
+        write("#ifdef  __cplusplus\n")
+        write('  extern "C"\n')
+        write("#else\n")
+        write("  extern\n")
+        write("#endif\n")
+        write("#endif\n")
+        write("  const short  " + table_name +
+              "[" + macro_name + "]\n")
+        write("#ifdef  DEFINE_PS_TABLES_DATA\n")
+        write("  =\n")
+        write("  {\n")
 
-    line  = "    "
-    comma = ""
-    col   = 0
+        line = "    "
+        comma = ""
+        col = 0
 
-    for name in sublist:
-      line += comma
-      line += "%4d" % self.indices[name]
-      col  += 1
-      comma = ","
-      if col == 14:
-        col   = 0
-        comma = ",\n    "
+        for name in sublist:
+            line += comma
+            line += "%4d" % self.indices[name]
+            col += 1
+            comma = ","
+            if col == 14:
+                col = 0
+                comma = ",\n    "
 
-    write( line )
-    write( "\n" )
-    write( "  }\n" )
-    write( "#endif /* DEFINE_PS_TABLES_DATA */\n" )
-    write( "  ;\n\n\n" )
+        write(line)
+        write("\n")
+        write("  }\n")
+        write("#endif /* DEFINE_PS_TABLES_DATA */\n")
+        write("  ;\n\n\n")
 
 
 # We now store the Adobe Glyph List in compressed form.  The list is put
@@ -5059,307 +5047,312 @@ class StringTable:
 # The root node has first letter = 0, and no value.
 #
 class StringNode:
-  def __init__( self, letter, value ):
-    self.letter   = letter
-    self.value    = value
-    self.children = {}
+    def __init__(self, letter, value):
+        self.letter = letter
+        self.value = value
+        self.children = {}
 
-  def __cmp__( self, other ):
-    return ord( self.letter[0] ) - ord( other.letter[0] )
+    def __cmp__(self, other):
+        return ord(self.letter[0]) - ord(other.letter[0])
 
-  def add( self, word, value ):
-    if len( word ) == 0:
-      self.value = value
-      return
+    def __lt__(self, other):
+        return self.letter[0] < other.letter[0]
 
-    letter = word[0]
-    word   = word[1:]
+    def add(self, word, value):
+        if len(word) == 0:
+            self.value = value
+            return
 
-    if self.children.has_key( letter ):
-      child = self.children[letter]
-    else:
-      child = StringNode( letter, 0 )
-      self.children[letter] = child
+        letter = word[0]
+        word = word[1:]
 
-    child.add( word, value )
+        if letter in self.children:
+            child = self.children[letter]
+        else:
+            child = StringNode(letter, 0)
+            self.children[letter] = child
 
-  def optimize( self ):
-    # optimize all children first
-    children      = self.children.values()
-    self.children = {}
+        child.add(word, value)
 
-    for child in children:
-      self.children[child.letter[0]] = child.optimize()
+    def optimize(self):
+        # optimize all children first
+        children = list(self.children.values())
+        self.children = {}
 
-    # don't optimize if there's a value,
-    # if we don't have any child or if we
-    # have more than one child
-    if ( self.value != 0 ) or ( not children ) or len( children ) > 1:
-      return self
+        for child in children:
+            self.children[child.letter[0]] = child.optimize()
 
-    child = children[0]
+        # don't optimize if there's a value,
+        # if we don't have any child or if we
+        # have more than one child
+        if (self.value != 0) or (not children) or len(children) > 1:
+            return self
 
-    self.letter  += child.letter
-    self.value    = child.value
-    self.children = child.children
+        child = children[0]
 
-    return self
+        self.letter += child.letter
+        self.value = child.value
+        self.children = child.children
 
-  def dump_debug( self, write, margin ):
-    # this is used during debugging
-    line = margin + "+-"
-    if len( self.letter ) == 0:
-      line += "<NOLETTER>"
-    else:
-      line += self.letter
+        return self
 
-    if self.value:
-      line += " => " + repr( self.value )
+    def dump_debug(self, write, margin):
+        # this is used during debugging
+        line = margin + "+-"
+        if len(self.letter) == 0:
+            line += "<NOLETTER>"
+        else:
+            line += self.letter
 
-    write( line + "\n" )
+        if self.value:
+            line += " => " + repr(self.value)
 
-    if self.children:
-      margin += "| "
-      for child in self.children.values():
-        child.dump_debug( write, margin )
+        write(line + "\n")
 
-  def locate( self, index ):
-    self.index = index
-    if len( self.letter ) > 0:
-      index += len( self.letter ) + 1
-    else:
-      index += 2
+        if self.children:
+            margin += "| "
+            for child in self.children.values():
+                child.dump_debug(write, margin)
 
-    if self.value != 0:
-      index += 2
+    def locate(self, index):
+        self.index = index
+        if len(self.letter) > 0:
+            index += len(self.letter) + 1
+        else:
+            index += 2
 
-    children = self.children.values()
-    children.sort()
+        if self.value != 0:
+            index += 2
 
-    index += 2 * len( children )
-    for child in children:
-      index = child.locate( index )
+        children = list(self.children.values())
+        children.sort()
 
-    return index
+        index += 2 * len(children)
+        for child in children:
+            index = child.locate(index)
 
-  def store( self, storage ):
-    # write the letters
-    l = len( self.letter )
-    if l == 0:
-      storage += struct.pack( "B", 0 )
-    else:
-      for n in range( l ):
-        val = ord( self.letter[n] )
-        if n < l - 1:
-          val += 128
-        storage += struct.pack( "B", val )
+        return index
 
-    # write the count
-    children = self.children.values()
-    children.sort()
+    def store(self, storage):
+        # write the letters
+        length = len(self.letter)
+        if length == 0:
+            storage += struct.pack("B", 0)
+        else:
+            for n in range(length):
+                val = ord(self.letter[n])
+                if n < length - 1:
+                    val += 128
+                storage += struct.pack("B", val)
 
-    count = len( children )
+        # write the count
+        children = list(self.children.values())
+        children.sort()
 
-    if self.value != 0:
-      storage += struct.pack( "!BH", count + 128, self.value )
-    else:
-      storage += struct.pack( "B", count )
+        count = len(children)
 
-    for child in children:
-      storage += struct.pack( "!H", child.index )
+        if self.value != 0:
+            storage += struct.pack("!BH", count + 128, self.value)
+        else:
+            storage += struct.pack("B", count)
 
-    for child in children:
-      storage = child.store( storage )
+        for child in children:
+            storage += struct.pack("!H", child.index)
 
-    return storage
+        for child in children:
+            storage = child.store(storage)
+
+        return storage
 
 
 def adobe_glyph_values():
-  """return the list of glyph names and their unicode values"""
+    """return the list of glyph names and their unicode values"""
 
-  lines  = string.split( adobe_glyph_list, '\n' )
-  glyphs = []
-  values = []
+    lines = adobe_glyph_list.split("\n")
+    glyphs = []
+    values = []
 
-  for line in lines:
-    if line:
-      fields = string.split( line, ';' )
-#     print fields[1] + ' - ' + fields[0]
-      subfields = string.split( fields[1], ' ' )
-      if len( subfields ) == 1:
-        glyphs.append( fields[0] )
-        values.append( fields[1] )
+    for line in lines:
+        if line:
+            fields = line.split(';')
+            #     print fields[1] + ' - ' + fields[0]
+            subfields = fields[1].split(' ')
+            if len(subfields) == 1:
+                glyphs.append(fields[0])
+                values.append(fields[1])
 
-  return glyphs, values
-
-
-def filter_glyph_names( alist, filter ):
-  """filter `alist' by taking _out_ all glyph names that are in `filter'"""
-
-  count  = 0
-  extras = []
-
-  for name in alist:
-    try:
-      filtered_index = filter.index( name )
-    except:
-      extras.append( name )
-
-  return extras
+    return glyphs, values
 
 
-def dump_encoding( file, encoding_name, encoding_list ):
-  """dump a given encoding"""
+def filter_glyph_names(alist, filter):
+    """filter `alist' by taking _out_ all glyph names that are in `filter'"""
 
-  write = file.write
-  write( "  /* the following are indices into the SID name table */\n" )
-  write( "#ifndef  DEFINE_PS_TABLES_DATA\n" )
-  write( "#ifdef  __cplusplus\n" )
-  write( '  extern "C"\n' )
-  write( "#else\n" )
-  write( "  extern\n" )
-  write( "#endif\n" )
-  write( "#endif\n" )
-  write( "  const unsigned short  " + encoding_name +
-         "[" + repr( len( encoding_list ) ) + "]\n" )
-  write( "#ifdef  DEFINE_PS_TABLES_DATA\n" )
-  write( "  =\n" )
-  write( "  {\n" )
+    count = 0
+    extras = []
 
-  line  = "    "
-  comma = ""
-  col   = 0
-  for value in encoding_list:
-    line += comma
-    line += "%3d" % value
-    comma = ","
-    col  += 1
-    if col == 16:
-      col = 0
-      comma = ",\n    "
+    for name in alist:
+        try:
+            filtered_index = filter.index(name)
+        except:
+            extras.append(name)
 
-  write( line )
-  write( "\n" )
-  write( "  }\n" )
-  write( "#endif /* DEFINE_PS_TABLES_DATA */\n" )
-  write( "  ;\n\n\n" )
+    return extras
 
 
-def dump_array( the_array, write, array_name ):
-  """dumps a given encoding"""
+def dump_encoding(file, encoding_name, encoding_list):
+    """dump a given encoding"""
 
-  write( "#ifndef  DEFINE_PS_TABLES_DATA\n" )
-  write( "#ifdef  __cplusplus\n" )
-  write( '  extern "C"\n' )
-  write( "#else\n" )
-  write( "  extern\n" )
-  write( "#endif\n" )
-  write( "#endif\n" )
-  write( "  const unsigned char  " + array_name +
-         "[" + repr( len( the_array ) ) + "L]\n" )
-  write( "#ifdef  DEFINE_PS_TABLES_DATA\n" )
-  write( "  =\n" )
-  write( "  {\n" )
+    write = file.write
+    write("  /* the following are indices into the SID name table */\n")
+    write("#ifndef  DEFINE_PS_TABLES_DATA\n")
+    write("#ifdef  __cplusplus\n")
+    write('  extern "C"\n')
+    write("#else\n")
+    write("  extern\n")
+    write("#endif\n")
+    write("#endif\n")
+    write("  const unsigned short  " + encoding_name +
+          "[" + repr(len(encoding_list)) + "]\n")
+    write("#ifdef  DEFINE_PS_TABLES_DATA\n")
+    write("  =\n")
+    write("  {\n")
 
-  line  = ""
-  comma = "    "
-  col   = 0
+    line = "    "
+    comma = ""
+    col = 0
+    for value in encoding_list:
+        line += comma
+        line += "%3d" % value
+        comma = ","
+        col += 1
+        if col == 16:
+            col = 0
+            comma = ",\n    "
 
-  for value in the_array:
-    line += comma
-    line += "%3d" % ord( value )
-    comma = ","
-    col  += 1
+    write(line)
+    write("\n")
+    write("  }\n")
+    write("#endif /* DEFINE_PS_TABLES_DATA */\n")
+    write("  ;\n\n\n")
 
-    if col == 16:
-      col   = 0
-      comma = ",\n    "
 
-    if len( line ) > 1024:
-      write( line )
-      line = ""
+def dump_array(the_array, write, array_name):
+    """dumps a given encoding"""
 
-  write( line )
-  write( "\n" )
-  write( "  }\n" )
-  write( "#endif /* DEFINE_PS_TABLES_DATA */\n" )
-  write( "  ;\n\n\n" )
+    write("#ifndef  DEFINE_PS_TABLES_DATA\n")
+    write("#ifdef  __cplusplus\n")
+    write('  extern "C"\n')
+    write("#else\n")
+    write("  extern\n")
+    write("#endif\n")
+    write("#endif\n")
+    write("  const unsigned char  " + array_name +
+          "[" + repr(len(the_array)) + "L]\n")
+    write("#ifdef  DEFINE_PS_TABLES_DATA\n")
+    write("  =\n")
+    write("  {\n")
+
+    line = ""
+    comma = "    "
+    col = 0
+
+    for value in the_array:
+        line += comma
+        line += "%3d" % value
+        comma = ","
+        col += 1
+
+        if col == 16:
+            col = 0
+            comma = ",\n    "
+
+        if len(line) > 1024:
+            write(line)
+            line = ""
+
+    write(line)
+    write("\n")
+    write("  }\n")
+    write("#endif /* DEFINE_PS_TABLES_DATA */\n")
+    write("  ;\n\n\n")
 
 
 def main():
-  """main program body"""
+    """main program body"""
 
-  if len( sys.argv ) != 2:
-    print __doc__ % sys.argv[0]
-    sys.exit( 1 )
+    if len(sys.argv) != 2:
+        print(__doc__ % sys.argv[0])
+        sys.exit(1)
 
-  file  = open( sys.argv[1], "wb" )
-  write = file.write
+    file = open(sys.argv[1], "w")
+    write = file.write
 
-  count_sid = len( sid_standard_names )
+    count_sid = len(sid_standard_names)
 
-  # `mac_extras' contains the list of glyph names in the Macintosh standard
-  # encoding which are not in the SID Standard Names.
-  #
-  mac_extras = filter_glyph_names( mac_standard_names, sid_standard_names )
+    # `mac_extras' contains the list of glyph names in the Macintosh standard
+    # encoding which are not in the SID Standard Names.
+    #
+    mac_extras = filter_glyph_names(mac_standard_names, sid_standard_names)
 
-  # `base_list' contains the names of our final glyph names table.
-  # It consists of the `mac_extras' glyph names, followed by the SID
-  # standard names.
-  #
-  mac_extras_count = len( mac_extras )
-  base_list        = mac_extras + sid_standard_names
+    # `base_list' contains the names of our final glyph names table.
+    # It consists of the `mac_extras' glyph names, followed by the SID
+    # standard names.
+    #
+    mac_extras_count = len(mac_extras)
+    base_list = mac_extras + sid_standard_names
 
-  write( "/****************************************************************************\n" )
-  write( " *\n" )
+    write("/*\n")
+    write(" *\n")
+    write(" * %-71s\n" % os.path.basename(sys.argv[1]))
+    write(" *\n")
+    write(" *   PostScript glyph names.\n")
+    write(" *\n")
+    write(" * Copyright 2005-2022 by\n")
+    write(" * David Turner, Robert Wilhelm, and Werner Lemberg.\n")
+    write(" *\n")
+    write(" * This file is part of the FreeType project, and may only be "
+          "used,\n")
+    write(" * modified, and distributed under the terms of the FreeType "
+          "project\n")
+    write(" * license, LICENSE.TXT.  By continuing to use, modify, or "
+          "distribute\n")
+    write(" * this file you indicate that you have read the license and\n")
+    write(" * understand and accept it fully.\n")
+    write(" *\n")
+    write(" */\n")
+    write("\n")
+    write("\n")
+    write("  /* This file has been generated automatically -- do not edit! */"
+          "\n")
+    write("\n")
+    write("\n")
 
-  write( " * %-71s\n" % os.path.basename( sys.argv[1] ) )
+    # dump final glyph list (mac extras + sid standard names)
+    #
+    st = StringTable(base_list, "ft_standard_glyph_names")
 
-  write( " *\n" )
-  write( " *   PostScript glyph names.\n" )
-  write( " *\n" )
-  write( " * Copyright 2005-2019 by\n" )
-  write( " * David Turner, Robert Wilhelm, and Werner Lemberg.\n" )
-  write( " *\n" )
-  write( " * This file is part of the FreeType project, and may only be used,\n" )
-  write( " * modified, and distributed under the terms of the FreeType project\n" )
-  write( " * license, LICENSE.TXT.  By continuing to use, modify, or distribute\n" )
-  write( " * this file you indicate that you have read the license and\n" )
-  write( " * understand and accept it fully.\n" )
-  write( " *\n" )
-  write( " */\n" )
-  write( "\n" )
-  write( "\n" )
-  write( "  /* This file has been generated automatically -- do not edit! */\n" )
-  write( "\n" )
-  write( "\n" )
+    st.dump(file)
+    st.dump_sublist(file, "ft_mac_names",
+                    "FT_NUM_MAC_NAMES", mac_standard_names)
+    st.dump_sublist(file, "ft_sid_names",
+                    "FT_NUM_SID_NAMES", sid_standard_names)
 
-  # dump final glyph list (mac extras + sid standard names)
-  #
-  st = StringTable( base_list, "ft_standard_glyph_names" )
+    dump_encoding(file, "t1_standard_encoding", t1_standard_encoding)
+    dump_encoding(file, "t1_expert_encoding", t1_expert_encoding)
 
-  st.dump( file )
-  st.dump_sublist( file, "ft_mac_names",
-                   "FT_NUM_MAC_NAMES", mac_standard_names )
-  st.dump_sublist( file, "ft_sid_names",
-                   "FT_NUM_SID_NAMES", sid_standard_names )
+    # dump the AGL in its compressed form
+    #
+    agl_glyphs, agl_values = adobe_glyph_values()
+    dictionary = StringNode("", 0)
 
-  dump_encoding( file, "t1_standard_encoding", t1_standard_encoding )
-  dump_encoding( file, "t1_expert_encoding", t1_expert_encoding )
+    for g in range(len(agl_glyphs)):
+        dictionary.add(agl_glyphs[g], eval("0x" + agl_values[g]))
 
-  # dump the AGL in its compressed form
-  #
-  agl_glyphs, agl_values = adobe_glyph_values()
-  dict = StringNode( "", 0 )
+    dictionary = dictionary.optimize()
+    dict_len = dictionary.locate(0)
+    dict_array = dictionary.store(b"")
 
-  for g in range( len( agl_glyphs ) ):
-    dict.add( agl_glyphs[g], eval( "0x" + agl_values[g] ) )
-
-  dict       = dict.optimize()
-  dict_len   = dict.locate( 0 )
-  dict_array = dict.store( "" )
-
-  write( """\
+    write("""\
   /*
    * This table is a compressed version of the Adobe Glyph List (AGL),
    * optimized for efficient searching.  It has been generated by the
@@ -5371,13 +5364,13 @@ def main():
 
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
 
-""" )
+""")
 
-  dump_array( dict_array, write, "ft_adobe_glyph_list" )
+    dump_array(dict_array, write, "ft_adobe_glyph_list")
 
-  # write the lookup routine now
-  #
-  write( """\
+    # write the lookup routine now
+    #
+    write("""\
 #ifdef  DEFINE_PS_TABLES
   /*
    * This function searches the compressed table efficiently.
@@ -5477,64 +5470,64 @@ def main():
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
-""" )
+""")
 
-  if 0:  # generate unit test, or don't
-    #
-    # now write the unit test to check that everything works OK
-    #
-    write( "#ifdef TEST\n\n" )
+    if 0:  # generate unit test, or don't
+        #
+        # now write the unit test to check that everything works OK
+        #
+        write("#ifdef TEST\n\n")
 
-    write( "static const char* const  the_names[] = {\n" )
-    for name in agl_glyphs:
-      write( '  "' + name + '",\n' )
-    write( "  0\n};\n" )
+        write("static const char* const  the_names[] = {\n")
+        for name in agl_glyphs:
+            write('  "' + name + '",\n')
+        write("  0\n};\n")
 
-    write( "static const unsigned long  the_values[] = {\n" )
-    for val in agl_values:
-      write( '  0x' + val + ',\n' )
-    write( "  0\n};\n" )
+        write("static const unsigned long  the_values[] = {\n")
+        for val in agl_values:
+            write('  0x' + val + ',\n')
+        write("  0\n};\n")
 
-    write( """
+        write("""
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-  int
-  main( void )
+int
+main( void )
+{
+int                   result = 0;
+const char* const*    names  = the_names;
+const unsigned long*  values = the_values;
+
+
+for ( ; *names; names++, values++ )
+{
+  const char*    name      = *names;
+  unsigned long  reference = *values;
+  unsigned long  value;
+
+
+  value = ft_get_adobe_glyph_index( name, name + strlen( name ) );
+  if ( value != reference )
   {
-    int                   result = 0;
-    const char* const*    names  = the_names;
-    const unsigned long*  values = the_values;
-
-
-    for ( ; *names; names++, values++ )
-    {
-      const char*    name      = *names;
-      unsigned long  reference = *values;
-      unsigned long  value;
-
-
-      value = ft_get_adobe_glyph_index( name, name + strlen( name ) );
-      if ( value != reference )
-      {
-        result = 1;
-        fprintf( stderr, "name '%s' => %04x instead of %04x\\n",
-                         name, value, reference );
-      }
-    }
-
-    return result;
+    result = 1;
+    fprintf( stderr, "name '%s' => %04x instead of %04x\\n",
+                     name, value, reference );
   }
-""" )
+}
 
-    write( "#endif /* TEST */\n" )
+return result;
+}
+""")
 
-  write("\n/* END */\n")
+        write("#endif /* TEST */\n")
+
+    write("\n/* END */\n")
 
 
 # Now run the main routine
 #
 main()
-
 
 # END

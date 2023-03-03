@@ -1,9 +1,9 @@
 # Files that don't get a copyright, or which are taken from elsewhere.
 #
-# All lines in this file are patterns, including the comment lines; this
-# means that e.g. `FTL.TXT' matches all files that have this string in
-# the file name (including the path relative to the current directory,
-# always starting with `./').
+# All lines in this file are patterns (relative to the top-level directory),
+# including the comment lines; this means that e.g. `FTL.TXT' matches all
+# files that have this string in the file name (including the path relative
+# to the current directory, always starting with `./').
 #
 # Don't put empty lines into this file!
 #
@@ -42,6 +42,7 @@ src/pcf/README
 src/pcf/rules.mk
 #
 src/gzip/adler32.c
+src/gzip/ftzconf.c
 src/gzip/infblock.c
 src/gzip/infblock.h
 src/gzip/infcodes.c

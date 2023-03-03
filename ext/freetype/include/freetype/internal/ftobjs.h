@@ -4,7 +4,7 @@
  *
  *   The FreeType private base classes (specification).
  *
- * Copyright (C) 1996-2022 by
+ * Copyright (C) 1996-2023 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -418,7 +418,7 @@ FT_BEGIN_HEADER
    *     initializing the glyph slot.
    */
 
-#define FT_GLYPH_OWN_BITMAP  0x1U
+#define FT_GLYPH_OWN_BITMAP    0x1U
 #define FT_GLYPH_OWN_GZIP_SVG  0x2U
 
   typedef struct  FT_Slot_InternalRec_

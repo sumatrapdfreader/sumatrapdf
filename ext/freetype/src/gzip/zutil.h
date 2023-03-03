@@ -53,8 +53,10 @@ typedef unsigned long  ulg;
 #  endif
 #endif
 
+#ifndef Z_FREETYPE
 extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
+#endif  /* !Z_FREETYPE */
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
 
@@ -195,6 +197,7 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
     (!defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0)
     ZEXTERN uLong ZEXPORT adler32_combine64 OF((uLong, uLong, z_off_t));
     ZEXTERN uLong ZEXPORT crc32_combine64 OF((uLong, uLong, z_off_t));
+    ZEXTERN uLong ZEXPORT crc32_combine_gen64 OF((z_off_t));
 #endif
 
 #endif  /* !Z_FREETYPE */

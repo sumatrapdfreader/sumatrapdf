@@ -2,7 +2,7 @@
 # Meson project file for FreeType 2
 #
 
-# Copyright (C) 2020-2022 by
+# Copyright (C) 2020-2023 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -52,6 +52,8 @@ ft2_includes = include_directories('include')
 
 freetype_includedir = join_paths(get_option('includedir'), 'freetype2')
 
+ft2_defines = []
+
 # Generate a custom `ftmodule.h` version based on the content of
 # `modules.cfg`.
 
@@ -64,6 +66,7 @@ ftmodule_h = custom_target('ftmodule.h',
   install_dir: join_paths(freetype_includedir, 'freetype/config'),
 )
 ft2_sources = [ftmodule_h]
+ft2_defines += ['-DFT_CONFIG_MODULES_H=<ftmodule.h>']
 
 
 # FreeType 2 modules.
@@ -187,7 +190,7 @@ ft2_config_headers = files([
   'include/freetype/config/public-macros.h',
 ])
 
-ft2_defines = ['-DFT2_BUILD_LIBRARY=1']
+ft2_defines += ['-DFT2_BUILD_LIBRARY=1']
 
 
 # System support file.
@@ -335,7 +338,8 @@ endif
 # Harfbuzz support
 harfbuzz_dep = dependency('harfbuzz',
   version: '>= 2.0.0',
-  required: get_option('harfbuzz'))
+  required: get_option('harfbuzz'),
+  default_options: ['freetype=disabled'])
 
 if harfbuzz_dep.found()
   ftoption_command += ['--enable=FT_CONFIG_OPTION_USE_HARFBUZZ']

@@ -1,6 +1,6 @@
 # CMakeLists.txt
 #
-# Copyright (C) 2013-2022 by
+# Copyright (C) 2013-2023 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # Written originally by John Cary <cary@txcorp.com>
@@ -60,6 +60,8 @@
 # to modify compilation and linking parameters.
 #
 # Some notes.
+#
+# - Say `cmake -LAH` to see all configuration options.
 #
 # - `cmake' creates configuration files in
 #
@@ -121,7 +123,6 @@ endif ()
 
 include(CheckIncludeFile)
 include(CMakeDependentOption)
-include(FindPkgConfig)
 
 # CMAKE_TOOLCHAIN_FILE must be set before `project' is called, which
 # configures the base build environment and references the toolchain file
@@ -162,8 +163,8 @@ endif ()
 project(freetype C)
 
 set(VERSION_MAJOR "2")
-set(VERSION_MINOR "12")
-set(VERSION_PATCH "1")
+set(VERSION_MINOR "13")
+set(VERSION_PATCH "0")
 
 # Generate LIBRARY_VERSION and LIBRARY_SOVERSION.
 set(LIBTOOL_REGEX "version_info='([0-9]+):([0-9]+):([0-9]+)'")
@@ -216,6 +217,8 @@ cmake_dependent_option(FT_REQUIRE_BROTLI
   "Require support of compressed WOFF2 fonts." OFF
   "NOT FT_DISABLE_BROTLI" OFF)
 
+option(FT_ENABLE_ERROR_STRINGS
+  "Enable support for meaningful error descriptions." OFF)
 
 # Disallow in-source builds
 if ("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
@@ -245,6 +248,8 @@ endif ()
 
 
 # Find dependencies
+include(FindPkgConfig)
+
 if (NOT FT_DISABLE_HARFBUZZ)
   set(HARFBUZZ_MIN_VERSION "2.0.0")
   if (FT_REQUIRE_HARFBUZZ)
@@ -350,6 +355,12 @@ endif ()
 if (BROTLIDEC_FOUND)
   string(REGEX REPLACE
     "/\\* +(#define +FT_CONFIG_OPTION_USE_BROTLI) +\\*/" "\\1"
+    FTOPTION_H "${FTOPTION_H}")
+endif ()
+
+if (FT_ENABLE_ERROR_STRINGS)
+  string(REGEX REPLACE
+    "/\\* +(#define +FT_CONFIG_OPTION_ERROR_STRINGS) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
 endif ()
 
@@ -497,6 +508,13 @@ if (BUILD_FRAMEWORK)
   )
 endif ()
 
+# 'freetype-interface' is an interface library, to be accessed with
+# `EXPORT_NAME Freetype::Freetype`.  This is the target name provided by
+# CMake's `FindFreetype.cmake`, so we provide it for compatibility.
+add_library(freetype-interface INTERFACE)
+set_target_properties(freetype-interface PROPERTIES
+  EXPORT_NAME Freetype::Freetype
+  INTERFACE_LINK_LIBRARIES freetype)
 
 set(PKGCONFIG_REQUIRES "")
 set(PKGCONFIG_REQUIRES_PRIVATE "")
@@ -614,7 +632,7 @@ if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
     COMPATIBILITY SameMajorVersion)
 
   install(
-    TARGETS freetype
+    TARGETS freetype freetype-interface
       EXPORT freetype-targets
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
