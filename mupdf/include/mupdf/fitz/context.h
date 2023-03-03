@@ -60,6 +60,7 @@ typedef struct
 FZ_NORETURN void fz_vthrow(fz_context *ctx, int errcode, const char *, va_list ap);
 FZ_NORETURN void fz_throw(fz_context *ctx, int errcode, const char *, ...) FZ_PRINTFLIKE(3,4);
 FZ_NORETURN void fz_rethrow(fz_context *ctx);
+void fz_morph_error(fz_context *ctx, int fromcode, int tocode);
 void fz_vwarn(fz_context *ctx, const char *fmt, va_list ap);
 void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
 const char *fz_caught_message(fz_context *ctx);

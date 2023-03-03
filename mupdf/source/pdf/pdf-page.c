@@ -64,7 +64,7 @@ pdf_load_page_tree_imp(fz_context *ctx, pdf_document *doc, pdf_obj *node, int id
 			fz_throw(ctx, FZ_ERROR_GENERIC, "too many kids in page tree");
 		doc->rev_page_map[idx].page = idx;
 		doc->rev_page_map[idx].object = pdf_to_num(ctx, node);
-		doc->fwd_page_map[idx] = doc->rev_page_map[idx].object;
+		doc->fwd_page_map[idx] = pdf_keep_obj(ctx, node);
 		++idx;
 	}
 	else
@@ -88,6 +88,20 @@ pdf_load_page_tree(fz_context *ctx, pdf_document *doc)
 	/* Noop now. */
 }
 
+void
+pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc)
+{
+	int i;
+	fz_free(ctx, doc->rev_page_map);
+	doc->rev_page_map = NULL;
+	if (doc->fwd_page_map)
+		for (i = 0; i < doc->map_page_count; i++)
+			pdf_drop_obj(ctx, doc->fwd_page_map[i]);
+	fz_free(ctx, doc->fwd_page_map);
+	doc->fwd_page_map = NULL;
+	doc->map_page_count = 0;
+}
+
 static void
 pdf_load_page_tree_internal(fz_context *ctx, pdf_document *doc)
 {
@@ -100,17 +114,14 @@ pdf_load_page_tree_internal(fz_context *ctx, pdf_document *doc)
 	fz_try(ctx)
 	{
 		doc->map_page_count = pdf_count_pages(ctx, doc);
-		doc->rev_page_map = Memento_label(fz_malloc_array(ctx, doc->map_page_count, pdf_rev_page_map), "pdf_rev_page_map");
-		doc->fwd_page_map = Memento_label(fz_malloc_array(ctx, doc->map_page_count, int), "pdf_fwd_page_map");
+		doc->rev_page_map = Memento_label(fz_calloc(ctx, doc->map_page_count, sizeof(pdf_rev_page_map)), "pdf_rev_page_map");
+		doc->fwd_page_map = Memento_label(fz_calloc(ctx, doc->map_page_count, sizeof(pdf_obj *)), "pdf_fwd_page_map");
 		pdf_load_page_tree_imp(ctx, doc, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/Pages"), 0, NULL);
 		qsort(doc->rev_page_map, doc->map_page_count, sizeof *doc->rev_page_map, cmp_rev_page_map);
 	}
 	fz_catch(ctx)
 	{
-		fz_free(ctx, doc->rev_page_map);
-		doc->rev_page_map = NULL;
-		fz_free(ctx, doc->fwd_page_map);
-		doc->fwd_page_map = NULL;
+		pdf_drop_page_tree_internal(ctx, doc);
 		fz_rethrow(ctx);
 	}
 }
@@ -119,18 +130,6 @@ void
 pdf_drop_page_tree(fz_context *ctx, pdf_document *doc)
 {
 	/* Historical entry point. Now does nothing. We drop 'just in time'. */
-}
-
-void
-pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc)
-{
-	/* At this point we're trusting that only 1 thread should be doing
-	 * stuff that hits the document at a time. */
-	fz_free(ctx, doc->rev_page_map);
-	doc->rev_page_map = NULL;
-	fz_free(ctx, doc->fwd_page_map);
-	doc->fwd_page_map = NULL;
-	doc->map_page_count = 0;
 }
 
 static pdf_obj *
@@ -242,20 +241,15 @@ pdf_lookup_page_obj(fz_context *ctx, pdf_document *doc, int needle)
 		}
 	}
 
-	/* If we have a fwd_page_map then look it up. If the index in that map is 0 then
-	 * maybe it was direct page object rather than a reference. This is illegal, but
-	 * we've seen it in tests_private/pdf/sumatra/page_no_indirect_reference.pdf so
-	 * we might as well cope. */
-	if (doc->fwd_page_map && doc->fwd_page_map[needle] != 0)
+	if (doc->fwd_page_map)
 	{
-		pdf_obj *pageobj;
 		if (needle < 0 || needle >= doc->map_page_count)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page %d in page tree", needle+1);
-		pageobj = pdf_load_object(ctx, doc, doc->fwd_page_map[needle]);
-		pdf_drop_obj(ctx, pageobj);
-		return pageobj;
-	} else
-		return pdf_lookup_page_loc(ctx, doc, needle, NULL, NULL);
+		if (doc->fwd_page_map[needle] != NULL)
+			return doc->fwd_page_map[needle];
+	}
+
+	return pdf_lookup_page_loc(ctx, doc, needle, NULL, NULL);
 }
 
 static int

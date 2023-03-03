@@ -2936,7 +2936,10 @@ static void do_open_document_dialog(void)
 static void cleanup(void)
 {
 	save_history();
+	fz_try(ctx)
 	save_accelerator();
+	fz_catch(ctx)
+		fz_warn(ctx, "cannot save accelerator file");
 
 	ui_finish();
 

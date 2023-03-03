@@ -331,7 +331,6 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 	unsigned short encode_gamma;
 	int last_tag;
 	icS15Fixed16Number temp_XYZ[3];
-	int tag_location;
 	icTagSignature TRC_Tags[3] = { icSigRedTRCTag, icSigGreenTRCTag, icSigBlueTRCTag };
 	int trc_tag_size;
 	float cat02[9];
@@ -401,7 +400,6 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 
 	/* Common tags */
 	add_common_tag_data(ctx, profile, tag_list, desc_name);
-	tag_location = ICC_NUMBER_COMMON_TAGS;
 
 	/* Get the cat02 matrix */
 	gsicc_create_compute_cam(ctx, wp, cat02);
@@ -417,27 +415,23 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 			apply_adaption(ctx, cat02, &(matrix[k * 3]), &(primary[0]));
 			get_XYZ_doubletr(ctx, temp_XYZ, &(primary[0]));
 			add_xyzdata(ctx, profile, temp_XYZ);
-			tag_location++;
 		}
 	}
 
 	/* White and black points. WP is D50 */
 	get_D50(ctx, temp_XYZ);
 	add_xyzdata(ctx, profile, temp_XYZ);
-	tag_location++;
 
 	/* Black point. Apply cat02*/
 	apply_adaption(ctx, cat02, bp, &(black_adapt[0]));
 	get_XYZ_doubletr(ctx, temp_XYZ, &(black_adapt[0]));
 	add_xyzdata(ctx, profile, temp_XYZ);
-	tag_location++;
 
 	/* Gamma */
 	for (k = 0; k < n; k++)
 	{
 		encode_gamma = float2u8Fixed8(ctx, gamma[k]);
 		add_gammadata(ctx, profile, encode_gamma, icSigCurveType);
-		tag_location++;
 	}
 
 	fz_free(ctx, tag_list);

@@ -301,6 +301,13 @@ FZ_NORETURN void fz_rethrow(fz_context *ctx)
 	throw(ctx, ctx->error.errcode);
 }
 
+void fz_morph_error(fz_context *ctx, int fromerr, int toerr)
+{
+	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
+	if (ctx->error.errcode == fromerr)
+		ctx->error.errcode = toerr;
+}
+
 void fz_rethrow_if(fz_context *ctx, int err)
 {
 	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);

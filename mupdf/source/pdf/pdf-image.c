@@ -306,6 +306,7 @@ pdf_load_jpx(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int forcemask)
 	}
 	fz_catch(ctx)
 	{
+		fz_morph_error(ctx, FZ_ERROR_GENERIC, FZ_ERROR_MINOR);
 		fz_rethrow(ctx);
 	}
 

@@ -174,7 +174,7 @@ public class Rect
 
 	public boolean isValid()
 	{
-		return (x0 <= x1 || y0 <= y1);
+		return (x0 <= x1 && y0 <= y1);
 	}
 
 	public void union(Rect r)

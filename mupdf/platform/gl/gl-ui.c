@@ -895,7 +895,7 @@ int ui_slider(int *value, int min, int max, int width)
 
 void ui_splitter(int *start, int *v, int min, int max, enum side side)
 {
-	fz_irect area;
+	fz_irect area = { 0 };
 
 	if (side == L || side == R)
 		area = ui_pack(4, 0);
