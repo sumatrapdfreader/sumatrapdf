@@ -158,12 +158,7 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 }
 
 func main() {
-	if dirExists("/opt/buildhome/repo") {
-		// on Cloudflare pages build machine
-		os.Chdir("/opt/buildhome/repo")
-	} else {
-		cdUpDir("sumatrapdf")
-	}
+	cdUpDir("sumatrapdf")
 	logf(ctx(), "Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
@@ -205,6 +200,7 @@ func main() {
 		flgSmoke           bool
 		flgFileUpload      string
 		flgFilesList       bool
+		flgExtractUtils    bool
 	)
 
 	{
@@ -237,6 +233,7 @@ func main() {
 		flag.BoolVar(&flgDrMem, "drmem", false, "run drmemory of rel 64")
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
+		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
 		flag.Parse()
 	}
 
@@ -254,6 +251,11 @@ func main() {
 
 	if false {
 		deleteFilesOneOff()
+		return
+	}
+
+	if flgExtractUtils {
+		extractUtils(flgCIBuild)
 		return
 	}
 

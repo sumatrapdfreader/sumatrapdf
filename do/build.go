@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -228,7 +227,7 @@ func setBuildConfigPreRelease() {
 
 func setBuildConfigRelease() {
 	s := getBuildConfigCommon()
-	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 0644)
+	err := os.WriteFile(buildConfigPath(), []byte(s), 0644)
 	must(err)
 }
 
@@ -243,7 +242,7 @@ func addZipFileWithNameMust(w *zip.Writer, path, nameInZip string) {
 	must(err)
 	fih.Name = nameInZip
 	fih.Method = zip.Deflate
-	d, err := ioutil.ReadFile(path)
+	d, err := os.ReadFile(path)
 	must(err)
 	fw, err := w.CreateHeader(fih)
 	must(err)

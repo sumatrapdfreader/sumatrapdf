@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -42,6 +44,44 @@ func logf(ctx context.Context, s string, arg ...interface{}) {
 		s = fmt.Sprintf(s, arg...)
 	}
 	fmt.Print(s)
+}
+
+func getCallstackFrames(skip int) []string {
+	var callers [32]uintptr
+	n := runtime.Callers(skip+1, callers[:])
+	frames := runtime.CallersFrames(callers[:n])
+	var cs []string
+	for {
+		frame, more := frames.Next()
+		if !more {
+			break
+		}
+		s := frame.File + ":" + strconv.Itoa(frame.Line)
+		cs = append(cs, s)
+	}
+	return cs
+}
+
+func getCallstack(skip int) string {
+	frames := getCallstackFrames(skip + 1)
+	return strings.Join(frames, "\n")
+}
+
+func logErrorf(ctx context.Context, s string, args ...interface{}) {
+	if len(args) > 0 {
+		s = fmt.Sprintf(s, args...)
+	}
+	cs := getCallstack(1)
+	fmt.Printf("%s\n%s\n", s, cs)
+}
+
+// return true if there was an error
+func logIfError(ctx context.Context, err error) bool {
+	if err == nil {
+		return false
+	}
+	logErrorf(ctx, "err.Error(): %s", err.Error())
+	return true
 }
 
 func absPathMust(path string) string {
