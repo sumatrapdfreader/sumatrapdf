@@ -57,7 +57,7 @@ def main():
         stdin = child.stdout
     else:
         stdin = sys.stdin
-    
+
     openbsd = os.uname()[0] == 'OpenBSD'
     n = None
     segv = 0
@@ -70,14 +70,14 @@ def main():
         if m:
             if not m.group(2):
                 # Start of squeeze.
-                
+
                 if 0 and not openbsd:
                     # Looks like memento's forked processes might terminate
                     # before they get to output the 'Memory squeezing @ <N>
                     # complete' line.
                     #
                     assert n is None, f'n={n} line={line!r}'
-                
+
                 n = int(m.group(1))
                 if n >= quiet_next:
                     sys.stdout.write(f'quiet_next={quiet_next!r} n={n!r}: {line}')

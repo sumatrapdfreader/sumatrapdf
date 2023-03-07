@@ -747,7 +747,6 @@ def build_swig(
             %array_class(unsigned char, uchar_array);
 
             %include <cstring.i>
-            %cstring_output_allocate(char **OUTPUT, free($1));
 
             namespace std
             {{

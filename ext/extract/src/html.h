@@ -8,12 +8,12 @@
 /* Things for creating docx files. */
 
 int extract_document_to_html_content(
-        extract_alloc_t    *alloc,
-        document_t        *document,
-        int                rotation,
-        int                images,
-        extract_astring_t *content
-        );
+		extract_alloc_t    *alloc,
+		document_t        *document,
+		int                rotation,
+		int                images,
+		extract_astring_t *content
+		);
 /* Makes *o_content point to a string containing all paragraphs in *document in
 docx XML format.
 

@@ -42,11 +42,11 @@ typedef struct extract_buffer_t extract_buffer_t;
 */
 typedef enum
 {
-    extract_format_ODT,
-    extract_format_DOCX,
-    extract_format_HTML,
-    extract_format_TEXT,
-    extract_format_JSON
+	extract_format_ODT,
+	extract_format_DOCX,
+	extract_format_HTML,
+	extract_format_TEXT,
+	extract_format_JSON
 } extract_format_t;
 
 
@@ -80,18 +80,18 @@ int extract_page_begin(extract_t *extract, double minx, double miny, double maxx
 		font bounding box (unscaled)
 */
 int extract_span_begin(extract_t  *extract,
-                       const char *font_name,
-                       int         font_bold,
-                       int         font_italic,
-                       int         wmode,
-                       double      ctm_a,
-                       double      ctm_b,
-                       double      ctm_c,
-                       double      ctm_d,
-                       double      bbox_x0,
-                       double      bbox_y0,
-                       double      bbox_x1,
-                       double      bbox_y1);
+		       const char *font_name,
+		       int	   font_bold,
+		       int	   font_italic,
+		       int	   wmode,
+		       double	   ctm_a,
+		       double	   ctm_b,
+		       double	   ctm_c,
+		       double	   ctm_d,
+		       double	   bbox_x0,
+		       double	   bbox_y0,
+		       double	   bbox_x1,
+		       double	   bbox_y1);
 
 
 /*
@@ -111,14 +111,14 @@ int extract_span_begin(extract_t  *extract,
 		Glyph bbox
 */
 int extract_add_char(extract_t *extract,
-                     double     x,
-                     double     y,
-                     unsigned   ucs,
-                     double     adv,
-                     double     minx,
-                     double     miny,
-                     double     maxx,
-                     double     maxy);
+		     double	x,
+		     double	y,
+		     unsigned	ucs,
+		     double	adv,
+		     double	minx,
+		     double	miny,
+		     double	maxx,
+		     double	maxy);
 
 
 /* Must be called before starting a new span or ending current page. */
@@ -143,80 +143,85 @@ typedef void (extract_image_data_free)(void *handle, void *image_data);
 		with <data>. Otherwise the lifetime of <data> is the responsibility of the
 		caller and it must persist for at least the lifetime of <extract>.
 */
-int extract_add_image(extract_t               *extract,
-                      const char              *type,
-                      double                   x,
-                      double                   y,
-                      double                   w,
-                      double                   h,
-                      void                    *data,
-                      size_t                   data_size,
-                      extract_image_data_free *data_free,
-                      void                    *data_free_handle);
+int extract_add_image(
+		extract_t               *extract,
+		const char              *type,
+		double                   x,
+		double                   y,
+		double                   w,
+		double                   h,
+		void                    *data,
+		size_t                   data_size,
+		extract_image_data_free *data_free,
+		void                    *data_free_handle);
 
 
 /* Adds a four-element path. Paths that define thin vertical/horizontal
 rectangles are used to find tables. */
-int extract_add_path4(extract_t *extract,
-                      double     ctm_a,
-                      double     ctm_b,
-                      double     ctm_c,
-                      double     ctm_d,
-                      double     ctm_e,
-                      double     ctm_f,
-                      double     x0,
-                      double     y0,
-                      double     x1,
-                      double     y1,
-                      double     x2,
-                      double     y2,
-                      double     x3,
-                      double     y3,
-                      double     color);
+int extract_add_path4(
+		extract_t *extract,
+		double     ctm_a,
+		double     ctm_b,
+		double     ctm_c,
+		double     ctm_d,
+		double     ctm_e,
+		double     ctm_f,
+		double     x0,
+		double     y0,
+		double     x1,
+		double     y1,
+		double     x2,
+		double     y2,
+		double     x3,
+		double     y3,
+		double     color);
 
 
 /* Adds a stroked line. Vertical/horizontal lines are used to find tables. */
-int extract_add_line(extract_t *extract,
-                     double     ctm_a,
-                     double     ctm_b,
-                     double     ctm_c,
-                     double     ctm_d,
-                     double     ctm_e,
-                     double     ctm_f,
-                     double     width,
-                     double     x0,
-                     double     y0,
-                     double     x1,
-                     double     y1,
-                     double     color);
+int extract_add_line(
+		extract_t *extract,
+		double     ctm_a,
+		double     ctm_b,
+		double     ctm_c,
+		double     ctm_d,
+		double     ctm_e,
+		double     ctm_f,
+		double     width,
+		double     x0,
+		double     y0,
+		double     x1,
+		double     y1,
+		double     color);
 
 
 /* Alternative to extract_add_path4(). Should be followed by calls to
 extract_moveto(), extract_lineto() and extract_closepath(), which are used
 to find lines that may define tables. extract_fill_end() should be called
 afterwards. */
-int extract_fill_begin(extract_t *extract,
-                       double     ctm_a,
-                       double     ctm_b,
-                       double     ctm_c,
-                       double     ctm_d,
-                       double     ctm_e,
-                       double     ctm_f,
-                       double     color);
+int extract_fill_begin(
+		extract_t *extract,
+		double     ctm_a,
+		double     ctm_b,
+		double     ctm_c,
+		double     ctm_d,
+		double     ctm_e,
+		double     ctm_f,
+		double     color);
 
 /* Alternative to extract_add_line(). Should be followed by calls to
 extract_moveto(), extract_lineto() and extract_closepath(), which are used
 to find lines that may define tables. extract_fill_end() should be called
 afterwards. */
-int extract_stroke_begin(extract_t *extract,
-                         double     ctm_a,
-                         double     ctm_b,
-                         double     ctm_c,
-                         double     ctm_d,
-                         double     ctm_e,
-                         double     ctm_f,
-                         double     line_width,
-                         double     color);
+int extract_stroke_begin(
+		extract_t *extract,
+		double     ctm_a,
+		double     ctm_b,
+		double     ctm_c,
+		double     ctm_d,
+		double     ctm_e,
+		double     ctm_f,
+		double     line_width,
+		double     color);
 
 int extract_moveto(extract_t *extract, double x, double y);
 
@@ -339,10 +344,11 @@ const char *extract_struct_string(extract_struct_t type);
 	page data (individual spans, lines, paragraphs etc). E.g. call this after
 	extract_page_end() to reduce internal data use.
 */
-int extract_process(extract_t *extract,
-                    int        spacing,
-                    int        rotation,
-                    int        images);
+int extract_process(
+		extract_t *extract,
+		int        spacing,
+		int        rotation,
+		int        images);
 
 
 /*
@@ -381,10 +387,11 @@ int extract_write_content(extract_t *extract, extract_buffer_t *buffer);
 		If true, we don't delete the temporary directory <path_out>.dir containing
 		the output document contents prior to zipping.
 */
-int extract_write_template(extract_t  *extract,
-                           const char *path_template,
-                           const char *path_out,
-                           int         preserve_dir);
+int extract_write_template(
+		extract_t  *extract,
+		const char *path_template,
+		const char *path_out,
+		int         preserve_dir);
 
 
 /* Frees all data associated with *pextract and sets *pextract to NULL. */
@@ -408,8 +415,9 @@ int extract_tables_csv_format(extract_t *extract, const char *path_format);
 
 	(Makes internal calls to extract_span_begin(), extract_add_image() etc.)
 */
-int extract_read_intermediate(extract_t        *extract,
-                              extract_buffer_t *buffer);
+int extract_read_intermediate(
+		extract_t        *extract,
+		extract_buffer_t *buffer);
 
 
 /*

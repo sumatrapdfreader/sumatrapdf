@@ -39,7 +39,7 @@ static int s_show(const char* filename)
     datasize = n;
     outf("datasize=%zi", datasize);
     fclose(f);
-    
+
     /* look for End of central directory (EOCD) record. */
     uint32_t magic = 0x06054b50;
     char* pos = data + datasize - 22;
@@ -70,7 +70,7 @@ static int s_show(const char* filename)
     outf("        offset_cd=%i", offset_cd);
     outf("        comment_length=%i", comment_length);
     outf("        comment=%s", comment);
-    
+
     if (pos != data + datasize - 22 - comment_length) {
         outf("file does not end with EOCD. datasize=%zi pos-data=%li datasize-22-comment_length=%zi",
                 datasize,
@@ -83,7 +83,7 @@ static int s_show(const char* filename)
         the file. */
         assert(0);
     }
-    
+
     pos = data + offset_cd;
     int i;
     for (i=0; i<num_records_on_disk; ++i) {
@@ -110,7 +110,7 @@ static int s_show(const char* filename)
         assert(filename);
         memcpy(filename, pos+46, filename_length);
         filename[filename_length] = 0;
-        
+
         char* comment = extract_malloc(filecomment_length + 1);
         assert(comment);
         memcpy(comment, pos+46+filename_length+extrafield_length, filecomment_length);
@@ -133,7 +133,7 @@ static int s_show(const char* filename)
         outf("        external_attributes=0x%x", external_attributes);
         outf("        offset=%i", offset);
         outf("        filename=%s", filename);
-        
+
         if (extrafield_length) {
             outf( "        extra:");
             fprintf(stderr, "            ");
@@ -146,14 +146,14 @@ static int s_show(const char* filename)
             }
             fputc('\n', stderr);
         }
-        
+
         /* show local file header. */
         {
             char* local_pos = data + offset;
             outf("    local header offset=%i", i, local_pos - data);
             magic = 0x04034b50;
             assert(!memcmp(local_pos, &magic, sizeof(magic)));
-            
+
             uint16_t version_needed = *(uint16_t*)(local_pos+4);
             uint16_t general_bit_flag = *(uint16_t*)(local_pos+6);
             uint16_t compression_method = *(uint16_t*)(local_pos+8);
@@ -164,7 +164,7 @@ static int s_show(const char* filename)
             uint32_t size_uncompressed = *(uint32_t*)(local_pos+22);
             uint16_t filename_length = *(uint16_t*)(local_pos+26);
             uint16_t extrafield_length = *(uint16_t*)(local_pos+28);
-            
+
             char* filename = extract_malloc(filename_length + 1);
             assert(filename);
             memcpy(filename, local_pos+30, filename_length);
@@ -201,15 +201,15 @@ static int s_show(const char* filename)
             }
 
         }
-        
+
         outf("        comment=%s", comment);
-        
+
         pos += 46 + filename_length + extrafield_length + filecomment_length;
     }
-    
+
     outf("finished");
     extract_free(&data);
-    
+
     return 0;
 }
 

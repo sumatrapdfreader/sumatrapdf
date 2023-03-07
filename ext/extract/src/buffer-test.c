@@ -1,5 +1,5 @@
-#include "../include/extract_buffer.h"
-#include "../include/extract_alloc.h"
+#include "extract/buffer.h"
+#include "extract/alloc.h"
 
 #include "mem.h"
 #include "memento.h"
@@ -104,7 +104,7 @@ static void test_read(void)
     int e;
     extract_buffer_t* buffer;
     s_create_read_buffer(NULL /*alloc*/, len, &r, &buffer);
-        
+
     /* Repeatedly read from read-buffer until we get EOF, and check we read the
     original content. */
     if (extract_malloc(r.alloc, &out_buffer, len)) abort();
@@ -127,7 +127,7 @@ static void test_read(void)
     out_buffer = NULL;
     e = extract_buffer_close(&buffer);
     assert(!e);
-    
+
     outf("Read test passed.\n");
 }
 
@@ -202,9 +202,9 @@ static void test_write(void)
     size_t out_pos = 0;
     int its;
     int e;
-    
+
     s_create_write_buffer(NULL /*alloc*/, len, &r, &buffer);
-    
+
     /* Write to read-buffer, and check it contains the original content. */
     if (extract_malloc(r.alloc, &out_buffer, len)) abort();
     for (i=0; i<len; ++i) {
@@ -234,7 +234,7 @@ static void test_file(void)
     /* Check we can write 3 bytes to file. */
     extract_buffer_t* file_buffer;
     if (extract_buffer_open_file(NULL /*alloc*/, "test/generated/buffer-file", 1 /*writable*/, &file_buffer)) abort();
-    
+
     {
         size_t  n;
         int e;
@@ -247,11 +247,11 @@ static void test_file(void)
         }
     }
     if (extract_buffer_close(&file_buffer)) abort();
-    
+
     /* Check we get back expected short reads and EOF when reading from 3-byte
     file created above. */
     if (extract_buffer_open_file(NULL /*alloc*/, "test/generated/buffer-file", 0 /*writable*/, &file_buffer)) abort();
-    
+
     {
         size_t  n;
         char    buffer[10];
@@ -277,7 +277,7 @@ static void test_file(void)
         }
     }
     if (extract_buffer_close(&file_buffer)) abort();
-    
+
     /* Check writing to read-only file buffer fails. */
     {
         int e;
@@ -286,13 +286,13 @@ static void test_file(void)
         if (extract_buffer_open_file(NULL /*alloc*/, "test/generated/buffer-file", 0 /*writable*/, &file_buffer)) {
             abort();
         }
-        
+
         e = extract_buffer_write(file_buffer, text, sizeof(text)-1, &actual);
         outf("extract_buffer_write() on read buffer returned e=%i actual=%zi", e, actual);
         if (e != -1 || errno != EINVAL) abort();
         if (extract_buffer_close(&file_buffer)) abort();
     }
-    
+
     outf("file buffer tests passed.\n");
 }
 

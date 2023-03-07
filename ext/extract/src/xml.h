@@ -11,16 +11,16 @@
 /* Things for representing XML. */
 
 typedef struct {
-    char *name;
-    char *value;
+	char *name;
+	char *value;
 } extract_xml_attribute_t;
 
 /* Represents a single <...> XML tag plus trailing text. */
 typedef struct {
-    char                    *name;
-    extract_xml_attribute_t *attributes;
-    int                      attributes_num;
-    extract_astring_t        text;
+	char                    *name;
+	extract_xml_attribute_t *attributes;
+	int                      attributes_num;
+	extract_astring_t        text;
 } extract_xml_tag_t;
 
 
@@ -69,15 +69,17 @@ char *extract_xml_tag_attributes_find(extract_xml_tag_t *tag, const char *name);
 
 /* Finds float value of specified attribute, returning error if not found or
 there is trailing text. */
-int extract_xml_tag_attributes_find_float(extract_xml_tag_t *tag,
-                                          const char        *name,
-                                          float             *o_out);
+int extract_xml_tag_attributes_find_float(
+		extract_xml_tag_t *tag,
+		const char        *name,
+		float             *o_out);
 
 /* Finds double value of specified attribute, returning error if not found or there is
 trailing text. */
-int extract_xml_tag_attributes_find_double(extract_xml_tag_t *tag,
-                                           const char        *name,
-                                           double            *o_out);
+int extract_xml_tag_attributes_find_double(
+		extract_xml_tag_t *tag,
+		const char        *name,
+		double            *o_out);
 
 
 /* Next few functions write to out-param and return zero on success, else
@@ -101,20 +103,23 @@ int extract_xml_str_to_float(const char *text, float *o_out);
 
 
 /* Finds int value of specified attribute, returning error if not found. */
-int extract_xml_tag_attributes_find_int(extract_xml_tag_t *tag,
-                                        const char        *name,
-                                        int               *o_out);
+int extract_xml_tag_attributes_find_int(
+		extract_xml_tag_t *tag,
+		const char        *name,
+		int               *o_out);
 
 /* Finds unsigned int value of specified attribute, returning error if not
 found. */
-int extract_xml_tag_attributes_find_uint(extract_xml_tag_t *tag,
-                                         const char        *name,
-                                         unsigned          *o_out);
+int extract_xml_tag_attributes_find_uint(
+		extract_xml_tag_t *tag,
+		const char        *name,
+		unsigned          *o_out);
 
 /* Finds unsigned int value of specified attribute, returning error if not
 found. */
-int extract_xml_tag_attributes_find_size(extract_xml_tag_t *tag,
-                                         const char        *name,
-                                         size_t            *o_out);
+int extract_xml_tag_attributes_find_size(
+		extract_xml_tag_t *tag,
+		const char        *name,
+		size_t            *o_out);
 
 #endif

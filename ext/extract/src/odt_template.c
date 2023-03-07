@@ -26,7 +26,7 @@ const odt_template_item_t odt_template_items[] =
                 "<text:sequence-decl text:display-outline-level=\"0\" text:name=\"Figure\"/></text:sequence-decls>"
                 "<text:p text:style-name=\"Standard\"/></office:text></office:body></office:document-content>"
     },
-    
+
     {
         "manifest.rdf",
         "\x3c\x3f\x78\x6d\x6c\x20\x76\x65\x72\x73\x69\x6f\x6e\x3d\x22"
@@ -87,7 +87,7 @@ const odt_template_item_t odt_template_items[] =
         "\x72\x69\x70\x74\x69\x6f\x6e\x3e\x0a\x3c\x2f\x72\x64\x66\x3a\x52"
         "\x44\x46\x3e\x0a"
     },
-    
+
     {
         "meta.xml",
         ""
@@ -102,14 +102,14 @@ const odt_template_item_t odt_template_items[] =
                 "<meta:editing-cycles>1</meta:editing-cycles>"
                 "<meta:document-statistic meta:table-count=\"0\" meta:image-count=\"0\" meta:object-count=\"0\" meta:page-count=\"1\" meta:paragraph-count=\"0\" meta:word-count=\"0\" meta:character-count=\"0\" meta:non-whitespace-character-count=\"0\"/></office:meta></office:document-meta>"
     },
-    
+
     {
         "mimetype",
         "\x61\x70\x70\x6c\x69\x63\x61\x74\x69\x6f\x6e\x2f\x76\x6e\x64"
         "\x2e\x6f\x61\x73\x69\x73\x2e\x6f\x70\x65\x6e\x64\x6f\x63\x75\x6d"
         "\x65\x6e\x74\x2e\x74\x65\x78\x74"
     },
-    
+
     {
         "settings.xml",
         ""
@@ -238,7 +238,7 @@ const odt_template_item_t odt_template_items[] =
                 "<config:config-item config:name=\"ChartAutoUpdate\" config:type=\"boolean\">true</config:config-item>"
                 "<config:config-item config:name=\"AddParaTableSpacing\" config:type=\"boolean\">true</config:config-item></config:config-item-set></office:settings></office:document-settings>"
     },
-    
+
     {
         "styles.xml",
         ""
@@ -320,7 +320,7 @@ const odt_template_item_t odt_template_items[] =
                 "<office:master-styles>"
                 "<style:master-page style:name=\"Standard\" style:page-layout-name=\"Mpm1\"/></office:master-styles></office:document-styles>"
     },
-    
+
     {
         "META-INF/manifest.xml",
         ""
@@ -345,7 +345,7 @@ const odt_template_item_t odt_template_items[] =
                 "<manifest:file-entry manifest:full-path=\"Thumbnails/thumbnail.png\" manifest:media-type=\"image/png\"/>\n"
                 "</manifest:manifest>"
     },
-    
+
     {
         "Thumbnails/thumbnail.png",
         "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44"
@@ -359,7 +359,7 @@ const odt_template_item_t odt_template_items[] =
         "\x00\x78\x18\xc7\x00\x00\x01\xf9\xd2\xb5\x9a\x00\x00\x00\x00\x49"
         "\x45\x4e\x44\xae\x42\x60\x82"
     },
-    
+
 };
 
 int odt_template_items_num = 8;

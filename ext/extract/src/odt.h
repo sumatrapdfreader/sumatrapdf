@@ -34,7 +34,7 @@ extract_odt_write_template() to be inserted into an odt archive. */
 
 
 int extract_odt_write_template(
-        extract_alloc_t*    alloc, 
+        extract_alloc_t*    alloc,
         extract_astring_t*  contentss,
         int                 contentss_num,
         extract_odt_styles_t* styles,

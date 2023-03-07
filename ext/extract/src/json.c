@@ -61,6 +61,8 @@ static int output_structure_path(extract_alloc_t *alloc, extract_astring_t *cont
 
 static int flush(extract_alloc_t *alloc, extract_astring_t *content, span_t *span, structure_t *structure, extract_astring_t *text, rect_t *bbox)
 {
+	if (span == NULL)
+		return 0;
 	if (content->chars_num)
 		if (extract_astring_cat(alloc, content, ",\n"))
 			return -1;
