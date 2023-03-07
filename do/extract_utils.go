@@ -16,8 +16,10 @@ var runLogged2 = func(cmd *exec.Cmd, panicOnErr bool) string {
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
 	logf(ctx(), "Output:\n%s\n", string(out))
-	logIfError(ctx(), err)
-	panicIf(panicOnErr && err != nil)
+	if panicOnErr {
+		logIfError(ctx(), err)
+		panicIf(panicOnErr && err != nil)
+	}
 	return string(out)
 }
 
