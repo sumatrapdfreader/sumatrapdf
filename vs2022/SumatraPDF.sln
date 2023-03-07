@@ -45,6 +45,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin-test", "plugin-test.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "signfile", "signfile.vcxproj", "{16722C28-023F-8733-2B58-75DB1784BCC1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sizer", "sizer.vcxproj", "{52AA5B10-BEBE-83C1-8740-2721F31380F2}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_util", "test_util.vcxproj", "{22AB719A-8E15-2611-D753-D7B643FD0366}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unarrlib", "unarrlib.vcxproj", "{C45AE373-B027-3E7F-D940-2C27C56C730D}"
@@ -394,6 +396,24 @@ Global
 		{16722C28-023F-8733-2B58-75DB1784BCC1}.Release|x64.Build.0 = Release|x64
 		{16722C28-023F-8733-2B58-75DB1784BCC1}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
 		{16722C28-023F-8733-2B58-75DB1784BCC1}.Release|x64_asan.Build.0 = Release x64_asan|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Debug|Win32.Build.0 = Debug|Win32
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Debug|x64.ActiveCfg = Debug|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Debug|x64.Build.0 = Debug|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Debug|x64_asan.ActiveCfg = Debug x64_asan|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Debug|x64_asan.Build.0 = Debug x64_asan|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.ReleaseAnalyze|Win32.ActiveCfg = ReleaseAnalyze|Win32
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.ReleaseAnalyze|Win32.Build.0 = ReleaseAnalyze|Win32
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.ReleaseAnalyze|x64.ActiveCfg = ReleaseAnalyze|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.ReleaseAnalyze|x64.Build.0 = ReleaseAnalyze|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.ReleaseAnalyze|x64_asan.ActiveCfg = ReleaseAnalyze x64_asan|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.ReleaseAnalyze|x64_asan.Build.0 = ReleaseAnalyze x64_asan|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Release|Win32.ActiveCfg = Release|Win32
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Release|Win32.Build.0 = Release|Win32
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Release|x64.ActiveCfg = Release|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Release|x64.Build.0 = Release|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Release|x64_asan.ActiveCfg = Release x64_asan|x64
+		{52AA5B10-BEBE-83C1-8740-2721F31380F2}.Release|x64_asan.Build.0 = Release x64_asan|x64
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|Win32.ActiveCfg = Debug|Win32
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|Win32.Build.0 = Debug|Win32
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|x64.ActiveCfg = Debug|x64

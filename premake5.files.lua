@@ -1109,6 +1109,12 @@ function efi_files()
   }
 end
 
+function sizer_files()
+  files {
+    "tools/sizer/*",
+  }
+end
+
 function test_util_files()
   files_in_dir( "src/utils", {
     "BaseUtil.*",

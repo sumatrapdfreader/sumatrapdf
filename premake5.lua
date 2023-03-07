@@ -791,6 +791,16 @@ workspace "SumatraPDF"
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet" }
 
+  project "sizer"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+    disablewarnings { "4996", "4706", "4100", "4505" }
+    includedirs { "tools/sizer" }
+    sizer_files()
+    links { "ole32.lib", "oleaut32.lib" }
+
   project "logview"
     kind "ConsoleApp"
     language "C++"
@@ -899,7 +909,6 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     -- dependson { "PdfFilter", "PdfPreview", "test_util" }
-
 
   -- a dll version where most functionality is in libmupdf.dll
   project "SumatraPDF-dll"
