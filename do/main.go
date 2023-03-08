@@ -237,6 +237,11 @@ func main() {
 		flag.Parse()
 	}
 
+	if flgExtractUtils {
+		extractUtils(flgCIBuild)
+		return
+	}
+
 	detectVersions()
 
 	if false {
@@ -251,11 +256,6 @@ func main() {
 
 	if false {
 		deleteFilesOneOff()
-		return
-	}
-
-	if flgExtractUtils {
-		extractUtils(flgCIBuild)
 		return
 	}
 

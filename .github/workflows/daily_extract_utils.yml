@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: update notepad2web
+      - name: update pdfprint
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: cd src && .\doit.bat -extract-utils -ci
