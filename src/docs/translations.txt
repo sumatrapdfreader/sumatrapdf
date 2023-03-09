@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5afea94da7e99158297dc6bf3e7709d97e4a8b5c
+e455e445f090d94670267f7bdbf974c9ac4587e5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13230,6 +13230,7 @@ tr:Eki aç
 uk:Відкрити вкладення
 :Open Directory in &Double Commander
 br:Abrir Pasta em &Double Commander
+co:Apre u cartulare cù &Double Commander
 cy:Agor Cyfeiriadur yn &Double Commander
 de:Verzeichnis in &Double Commander öffnen
 el:Άνοιγμα καταλόγου στο &Double Commander
@@ -13241,6 +13242,7 @@ ru:Открыть папку в &Double Commander
 sr-rs:Отвори фасциклу у Double Commander-у (&К)
 :Open Directory in &Explorer
 br:Abrir Pasta no &Explorer
+co:Apre u cartulare cù l’&espluratore
 cy:Agor Cyfeiriadur yn &Chwilotwr
 de:Verzeichnis im &Explorer öffnen
 el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείων
@@ -13252,6 +13254,7 @@ ru:Открыть папку в &Проводнике
 sr-rs:Отвори фасциклу у Истра&живачу
 :Open Directory in &Total Commander
 br:Abrir Pasta em &Total Commander
+co:Apre u cartulare cù &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
 de:Verzeichnis in &Total Commander öffnen
 el:Άνοιγμα κατακόγου στον &Total Commander
@@ -13263,6 +13266,7 @@ ru:Открыть папку в &Total Commander
 sr-rs:Отвори фасциклу у Total Commander-у (&Т)
 :Open Directory in Directory &Opus
 br:Abrir Pasta em Directory &Opus 
+co:Apre u cartulare cù Directory &Opus
 cy:Agor Cyfarwyddiadur yng Nghyfarwyddiadur &Opus
 de:Verzeichnis in Directory &Opus öffnen
 el:Άνοιγμα καταλόγου στο Directory &Opus
@@ -13642,6 +13646,7 @@ uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
 br:Abrir em Microsoft &HTML Help
+co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft &HTML Help
 de:In Microsoft &HTML-Hilfe öffnen
 el:Άνοιγμα στη βοήθεια Microsoft &HTML
