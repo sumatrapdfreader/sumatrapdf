@@ -27,10 +27,23 @@ var runLogged = func(cmd *exec.Cmd) string {
 	return runLogged2(cmd, true)
 }
 
+func printCurrDir() {
+	dir, err := filepath.Abs(".")
+	must(err)
+	logf(ctx(), "dir: %s\n", dir)
+	files, err := os.ReadDir(dir)
+	must(err)
+	for _, de := range files {
+		logf(ctx(), "  %s dir: %v\n", de.Name(), de.IsDir())
+	}
+}
+
 // action code based on https://www.youtube.com/watch?v=dcSy8uCxOfk
 func extractUtils(inAction bool) {
-	commitMsg := os.Getenv("COMMIT_MSG")
-	logf(ctx(), "updateNotepad2: inAction=%v, COMMIT_MSG: %s\n", inAction, commitMsg)
+	printCurrDir()
+
+	commitMsg := "update from sumatrapdf"
+	logf(ctx(), "updateNotepad2: inAction=%v\n", inAction)
 	parentDir, err := filepath.Abs("..")
 	must(err)
 	logf(ctx(), "parentDir: %s\n", parentDir)

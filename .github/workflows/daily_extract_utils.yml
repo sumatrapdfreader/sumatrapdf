@@ -15,7 +15,7 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v3
         with:
-          path: 'src'
+          path: 'sumatrapdf'
           ref: 'master'
           persist-credentials: false
 
