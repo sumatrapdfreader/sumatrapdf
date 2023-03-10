@@ -32,4 +32,4 @@ jobs:
       - name: update pdfprint
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
-        run: cd src && .\doit.bat -extract-utils -ci
+        run: dir && cd sumatrapdf && .\doit.bat -extract-utils -ci
