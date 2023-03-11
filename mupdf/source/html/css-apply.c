@@ -990,7 +990,8 @@ fz_from_css_number(fz_css_number number, float em, float percent_value, float au
 	case N_NUMBER: return number.value;
 	case N_LENGTH: return number.value;
 	case N_SCALE: return number.value * em;
-	case N_PERCENT: return number.value * 0.01f * percent_value;
+	/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/3260 */
+	case N_PERCENT: return percent_value >= 0 ? number.value * 0.01f * percent_value : number.value;
 	case N_AUTO: return auto_value;
 	}
 }
