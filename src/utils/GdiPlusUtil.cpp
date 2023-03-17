@@ -567,8 +567,8 @@ static bool Jp2SizeFromData(ByteReader r, Size& result) {
             bool isIhdr = boxType2 == JP2_IHDR;
             idx += 8;
             if (isIhdr && boxLen2 <= (boxLen - 8)) {
-                result.dx = r.DWordBE(idx);
-                result.dy = r.DWordBE(idx + 4);
+                result.dy = r.DWordBE(idx);
+                result.dx = r.DWordBE(idx + 4);
                 if (result.dx > 64 * 1024 || result.dy > 64 * 1024) {
                     // sanity check, assuming that images that big can't
                     // possibly be valid
