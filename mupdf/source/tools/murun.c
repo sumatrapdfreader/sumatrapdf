@@ -6840,36 +6840,24 @@ static void ffi_PDFDocument_setPageLabels(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
 	int index = js_tointeger(J, 1);
-	const char *s = "", *p = NULL;
-	int st = 1;
+	const char *s = js_tostring(J, 2);
+	const char *p = js_tostring(J, 3);
+	int st = js_iscoercible(J, 4) ? js_tonumber(J, 4) : 1;
+	fz_try(ctx)
+		pdf_set_page_labels(ctx, pdf, index, s[0], p, st);
+	fz_catch(ctx)
+		rethrow(J);
+}
 
-	// Argument 2 is either
-	// an object { style: "D", prefix: "Prefix-", start: 1 }
-	// an array [ "D", "Prefix-", 1 ]
-	// or null
-
-	if (js_isobject(J, 2))
-	{
-		if (js_hasproperty(J, 2, "style") || js_hasindex(J, 2, 0))
-			s = js_tostring(J, -1);
-		if (js_hasproperty(J, 2, "prefix") || js_hasindex(J, 2, 1))
-			p = js_tostring(J, -1);
-		if (js_hasproperty(J, 2, "start") || js_hasindex(J, 2, 2))
-			st = js_tointeger(J, -1);
-		fz_try(ctx)
-			pdf_set_page_labels(ctx, pdf, index, s[0], p, st);
-		fz_catch(ctx)
-			rethrow(J);
-	}
-	else
-	{
-		fz_try(ctx)
-			pdf_delete_page_labels(ctx, pdf, index);
-		fz_catch(ctx)
-			rethrow(J);
-	}
-
-	js_pushundefined(J);
+static void ffi_PDFDocument_deletePageLabels(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	int index = js_tointeger(J, 1);
+	fz_try(ctx)
+		pdf_delete_page_labels(ctx, pdf, index);
+	fz_catch(ctx)
+		rethrow(J);
 }
 
 static void ffi_PDFGraftMap_graftObject(js_State *J)
@@ -9838,7 +9826,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFDocument.undo", ffi_PDFDocument_undo, 0);
 		jsB_propfun(J, "PDFDocument.redo", ffi_PDFDocument_redo, 0);
 
-		jsB_propfun(J, "PDFDocument.setPageLabels", ffi_PDFDocument_setPageLabels, 2);
+		jsB_propfun(J, "PDFDocument.setPageLabels", ffi_PDFDocument_setPageLabels, 4);
+		jsB_propfun(J, "PDFDocument.deletePageLabels", ffi_PDFDocument_deletePageLabels, 1);
 	}
 	js_setregistry(J, "pdf_document");
 

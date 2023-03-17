@@ -592,28 +592,36 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 		}
 	}
 
-	n = pixmap->n - pixmap->alpha;
-	bpp = pixmap->n;
-	if (fz_colorspace_is_subtractive(ctx, pixmap->colorspace))
-		white = 0;
-	else
-		white = 255;
-
-	inv_ctm = fz_post_scale(fz_invert_matrix(ctm), pixmap->w, pixmap->h);
-	r = fz_round_rect(fz_transform_rect(fz_rect_from_quad(q), inv_ctm));
-	r.x0 = fz_clampi(r.x0, 0, pixmap->w);
-	r.x1 = fz_clampi(r.x1, 0, pixmap->w);
-	r.y1 = fz_clampi(pixmap->h - r.y1, 0, pixmap->h);
-	r.y0 = fz_clampi(pixmap->h - r.y0, 0, pixmap->h);
-	for (y = r.y1; y < r.y0; ++y)
+	/* If we have a 1x1 image, to which a mask is being applied
+	 * then it's the mask we really want to change, not the
+	 * image. We might have just a small section of the image
+	 * being covered, and setting the whole thing to white
+	 * will blank stuff outside the desired area. */
+	if (mask && (pixmap->w > 1 || pixmap->h > 1))
 	{
-		for (x = r.x0; x < r.x1; ++x)
+		n = pixmap->n - pixmap->alpha;
+		bpp = pixmap->n;
+		if (fz_colorspace_is_subtractive(ctx, pixmap->colorspace))
+			white = 0;
+		else
+			white = 255;
+
+		inv_ctm = fz_post_scale(fz_invert_matrix(ctm), pixmap->w, pixmap->h);
+		r = fz_round_rect(fz_transform_rect(fz_rect_from_quad(q), inv_ctm));
+		r.x0 = fz_clampi(r.x0, 0, pixmap->w);
+		r.x1 = fz_clampi(r.x1, 0, pixmap->w);
+		r.y1 = fz_clampi(pixmap->h - r.y1, 0, pixmap->h);
+		r.y0 = fz_clampi(pixmap->h - r.y0, 0, pixmap->h);
+		for (y = r.y1; y < r.y0; ++y)
 		{
-			unsigned char *s = &pixmap->samples[(size_t)y * pixmap->stride + (size_t)x * bpp];
-			for (k = 0; k < n; ++k)
-				s[k] = white;
-			if (pixmap->alpha)
-				s[k] = 255;
+			for (x = r.x0; x < r.x1; ++x)
+			{
+				unsigned char *s = &pixmap->samples[(size_t)y * pixmap->stride + (size_t)x * bpp];
+				for (k = 0; k < n; ++k)
+					s[k] = white;
+				if (pixmap->alpha)
+					s[k] = 255;
+			}
 		}
 	}
 

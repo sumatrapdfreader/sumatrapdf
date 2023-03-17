@@ -186,6 +186,20 @@ fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stre
 }
 
 fz_document *
+fz_open_document_with_buffer(fz_context *ctx, const char *magic, fz_buffer *buffer)
+{
+	fz_document *doc;
+	fz_stream *stream = fz_open_buffer(ctx, buffer);
+	fz_try(ctx)
+		doc = fz_open_document_with_stream(ctx, magic, stream);
+	fz_always(ctx)
+		fz_drop_stream(ctx, stream);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return doc;
+}
+
+fz_document *
 fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *accel)
 {
 	const fz_document_handler *handler;

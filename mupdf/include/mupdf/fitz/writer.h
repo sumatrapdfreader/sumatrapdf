@@ -118,6 +118,9 @@ fz_document_writer *fz_new_document_writer(fz_context *ctx, const char *path, co
 fz_document_writer *
 fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *format, const char *options);
 
+fz_document_writer *
+fz_new_document_writer_with_buffer(fz_context *ctx, fz_buffer *buf, const char *format, const char *options);
+
 /**
 	Document writers for various possible output formats.
 

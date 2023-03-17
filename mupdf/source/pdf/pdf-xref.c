@@ -2812,11 +2812,23 @@ pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *b
 	if (!strcmp(key, FZ_META_ENCRYPTION))
 	{
 		if (doc->crypt)
-			return 1 + (int)fz_snprintf(buf, size, "Standard V%d R%d %d-bit %s",
-					pdf_crypt_version(ctx, doc->crypt),
-					pdf_crypt_revision(ctx, doc->crypt),
-					pdf_crypt_length(ctx, doc->crypt),
-					pdf_crypt_method(ctx, doc->crypt));
+		{
+			const char *stream_method = pdf_crypt_stream_method(ctx, doc->crypt);
+			const char *string_method = pdf_crypt_string_method(ctx, doc->crypt);
+			if (stream_method == string_method)
+				return 1 + (int)fz_snprintf(buf, size, "Standard V%d R%d %d-bit %s",
+						pdf_crypt_version(ctx, doc->crypt),
+						pdf_crypt_revision(ctx, doc->crypt),
+						pdf_crypt_length(ctx, doc->crypt),
+						pdf_crypt_string_method(ctx, doc->crypt));
+			else
+				return 1 + (int)fz_snprintf(buf, size, "Standard V%d R%d %d-bit streams: %s strings: %s",
+						pdf_crypt_version(ctx, doc->crypt),
+						pdf_crypt_revision(ctx, doc->crypt),
+						pdf_crypt_length(ctx, doc->crypt),
+						pdf_crypt_stream_method(ctx, doc->crypt),
+						pdf_crypt_string_method(ctx, doc->crypt));
+		}
 		else
 			return 1 + (int)fz_strlcpy(buf, "None", size);
 	}

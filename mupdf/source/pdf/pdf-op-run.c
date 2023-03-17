@@ -1491,13 +1491,19 @@ end_metatext(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val, pdf_obj *mc
 }
 
 static void
-begin_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
+begin_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val, pdf_cycle_list *cycle_up)
 {
 	/* val has been resolved to a dict for us by the originally specified name
 	 * having been looked up in Properties already for us. Either there will
 	 * be a Name entry, or there will be an OCGs and it'll be a group one. */
+	pdf_cycle_list cycle;
+	pdf_obj *obj;
 	int i, n;
-	pdf_obj *obj = pdf_dict_get(ctx, val, PDF_NAME(Name));
+
+	if (pdf_cycle(ctx, &cycle, cycle_up, val))
+		return;
+
+	obj = pdf_dict_get(ctx, val, PDF_NAME(Name));
 	if (obj)
 	{
 		pdf_flush_text(ctx, proc);
@@ -1509,18 +1515,24 @@ begin_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
 	n = pdf_array_len(ctx, obj);
 	for (i = 0; i < n; i++)
 	{
-		begin_oc(ctx, proc, pdf_array_get(ctx, obj, i));
+		begin_oc(ctx, proc, pdf_array_get(ctx, obj, i), &cycle);
 	}
 }
 
 static void
-end_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
+end_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val, pdf_cycle_list *cycle_up)
 {
 	/* val has been resolved to a dict for us by the originally specified name
 	 * having been looked up in Properties already for us. Either there will
 	 * be a Name entry, or there will be an OCGs and it'll be a group one. */
+	pdf_cycle_list cycle;
+	pdf_obj *obj;
 	int i, n;
-	pdf_obj *obj = pdf_dict_get(ctx, val, PDF_NAME(Name));
+
+	if (pdf_cycle(ctx, &cycle, cycle_up, val))
+		return;
+
+	obj = pdf_dict_get(ctx, val, PDF_NAME(Name));
 	if (obj)
 	{
 		flush_begin_layer(ctx, proc);
@@ -1532,7 +1544,7 @@ end_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
 	n = pdf_array_len(ctx, obj);
 	for (i = n-1; i >= 0; i--)
 	{
-		end_oc(ctx, proc, pdf_array_get(ctx, obj, i));
+		end_oc(ctx, proc, pdf_array_get(ctx, obj, i), &cycle);
 	}
 }
 
@@ -1664,7 +1676,7 @@ push_marked_content(fz_context *ctx, pdf_run_processor *proc, const char *tagstr
 
 		/* Start any optional content layers. */
 		if (pdf_name_eq(ctx, tag, PDF_NAME(OC)))
-			begin_oc(ctx, proc, val);
+			begin_oc(ctx, proc, val, NULL);
 
 		/* Special handling for common non-spec extension. */
 		if (pdf_name_eq(ctx, tag, PDF_NAME(Layer)))
@@ -1769,7 +1781,7 @@ pop_marked_content(fz_context *ctx, pdf_run_processor *proc, int neat)
 			end_layer(ctx, proc, val);
 
 		if (pdf_name_eq(ctx, tag, PDF_NAME(OC)))
-			end_oc(ctx, proc, val);
+			end_oc(ctx, proc, val, NULL);
 	}
 	fz_always(ctx)
 	{

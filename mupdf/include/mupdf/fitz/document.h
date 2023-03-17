@@ -418,6 +418,11 @@ fz_document *fz_open_accelerated_document(fz_context *ctx, const char *filename,
 fz_document *fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream);
 
 /**
+	Open a document using a buffer rather than opening a file on disk.
+*/
+fz_document *fz_open_document_with_buffer(fz_context *ctx, const char *magic, fz_buffer *buffer);
+
+/**
 	Open a document using the specified stream object rather than
 	opening a file on disk.
 

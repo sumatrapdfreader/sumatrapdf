@@ -816,12 +816,12 @@ The write options are a string of comma separated options (see the document writ
 <dd>Returns true if the document was an XFA form without AcroForm fields.
 <dt>PDFDocument#wasRepaired()
 <dd>Returns true if the document was repaired when opened.
-<dt>PDFDocument#setPageLabels(index, label)
+<dt>PDFDocument#setPageLabels(index, style, prefix, start)
 <dd>Sets the page label numbering for the page and all pages following it, until the next page with an attached label.
-The label must be an array or object with three values: style, prefix, and start.
 Style can be one of the following strings: "", "D", "R", "r", "A", or "a".
 Start is the ordinal with which to start numbering.
-If the label is null, any attached label is removed instead.
+<dt>PDFDocument#deletePageLabels(index)
+<dd>Removes any associated page label from the page.
 <dt>PDFDocument#getVersion()
 <dd>Returns the PDF document version as an intenger multiplied by 10, so e.g. a PDF-1.4 document would return 14.
 </dl>

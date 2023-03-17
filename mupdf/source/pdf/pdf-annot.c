@@ -3354,7 +3354,7 @@ pdf_set_annot_filespec(fz_context *ctx, pdf_annot *annot, pdf_obj *fs)
 	fz_try(ctx)
 	{
 		check_allowed_subtypes(ctx, annot, PDF_NAME(M), filespec_subtypes);
-		pdf_dict_put_drop(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(FS), fs);
+		pdf_dict_put(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(FS), fs);
 	}
 	fz_always(ctx)
 		end_annot_op(ctx, annot);

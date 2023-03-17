@@ -335,6 +335,17 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, 
 	else if (!is_identity)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse crypt filter (%d 0 R)", pdf_to_num(ctx, crypt->cf));
 
+	if (cf->method != PDF_CRYPT_NONE)
+	{
+		if (crypt->r == 4 && cf->method != PDF_CRYPT_RC4 && cf->method != PDF_CRYPT_AESV2)
+			fz_warn(ctx, "unexpected encryption method for revision 4 crypto: %s", pdf_crypt_method(ctx, crypt));
+		else if (crypt->r >= 5 && cf->method != PDF_CRYPT_AESV3)
+		{
+			fz_warn(ctx, "illegal encryption method for revision 5/6, assuming AESV3");
+			cf->method = PDF_CRYPT_AESV3;
+		}
+	}
+
 	/* the length for crypt filters is supposed to be in bytes not bits */
 	if (cf->length < 40)
 		cf->length = cf->length * 8;
@@ -346,7 +357,10 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, 
 		(cf->length < 40 || cf->length > 128))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid key length: %d", cf->length);
 	if ((crypt->r == 5 || crypt->r == 6) && cf->length != 256)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid key length: %d", cf->length);
+	{
+		fz_warn(ctx, "illegal key length for revision 5/6, assuming 256 bits");
+		cf->length = 256;
+	}
 }
 
 /*
@@ -941,21 +955,40 @@ int pdf_crypt_revision(fz_context *ctx, pdf_crypt *crypt)
 	return 0;
 }
 
-char *
-pdf_crypt_method(fz_context *ctx, pdf_crypt *crypt)
+static char *
+crypt_method(fz_context *ctx, int method)
+{
+	switch (method)
+	{
+	default:
+	case PDF_CRYPT_UNKNOWN: return "Unknown";
+	case PDF_CRYPT_NONE: return "None";
+	case PDF_CRYPT_RC4: return "RC4";
+	case PDF_CRYPT_AESV2: return "AES";
+	case PDF_CRYPT_AESV3: return "AES";
+	}
+}
+
+const char *
+pdf_crypt_string_method(fz_context *ctx, pdf_crypt *crypt)
 {
 	if (crypt)
-	{
-		switch (crypt->strf.method)
-		{
-		case PDF_CRYPT_NONE: return "None";
-		case PDF_CRYPT_RC4: return "RC4";
-		case PDF_CRYPT_AESV2: return "AES";
-		case PDF_CRYPT_AESV3: return "AES";
-		case PDF_CRYPT_UNKNOWN: return "Unknown";
-		}
-	}
+		return crypt_method(ctx, crypt->strf.method);
 	return "None";
+}
+
+const char *
+pdf_crypt_stream_method(fz_context *ctx, pdf_crypt *crypt)
+{
+	if (crypt)
+		return crypt_method(ctx, crypt->stmf.method);
+	return "None";
+}
+
+const char *
+pdf_crypt_method(fz_context *ctx, pdf_crypt *crypt)
+{
+	return pdf_crypt_string_method(ctx, crypt);
 }
 
 int

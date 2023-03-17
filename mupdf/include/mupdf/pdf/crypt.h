@@ -51,7 +51,9 @@ fz_stream *pdf_open_crypt_with_filter(fz_context *ctx, fz_stream *chain, pdf_cry
 
 int pdf_crypt_version(fz_context *ctx, pdf_crypt *crypt);
 int pdf_crypt_revision(fz_context *ctx, pdf_crypt *crypt);
-char *pdf_crypt_method(fz_context *ctx, pdf_crypt *crypt);
+const char *pdf_crypt_method(fz_context *ctx, pdf_crypt *crypt);
+const char *pdf_crypt_string_method(fz_context *ctx, pdf_crypt *crypt);
+const char *pdf_crypt_stream_method(fz_context *ctx, pdf_crypt *crypt);
 int pdf_crypt_length(fz_context *ctx, pdf_crypt *crypt);
 int pdf_crypt_permissions(fz_context *ctx, pdf_crypt *crypt);
 int pdf_crypt_encrypt_metadata(fz_context *ctx, pdf_crypt *crypt);

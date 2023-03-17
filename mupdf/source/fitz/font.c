@@ -759,13 +759,8 @@ fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, in
 
 		flags = FT_Get_FSType_Flags(face);
 		if (flags & (FT_FSTYPE_RESTRICTED_LICENSE_EMBEDDING |
-			FT_FSTYPE_PREVIEW_AND_PRINT_EMBEDDING |
-			FT_FSTYPE_NO_SUBSETTING |
-			FT_FSTYPE_BITMAP_EMBEDDING_ONLY))
+				FT_FSTYPE_BITMAP_EMBEDDING_ONLY))
 		{
-			/* Possibly at some point in the future we may wish to be less blunt
-			 * in our handling of these flags. Any restriction will currently be
-			 * treated as 'never_embed' for now. */
 			font->flags.never_embed = 1;
 			font->flags.embed = 0;
 		}
