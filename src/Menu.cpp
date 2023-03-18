@@ -917,6 +917,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdSendByEmail, // ???
     CmdContributeTranslation, // ???
     CmdAdvancedOptions,
+    CmdAdvancedSettings,
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,

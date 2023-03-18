@@ -73,6 +73,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdContributeTranslation,
     CmdOptions,
     CmdAdvancedOptions,
+    CmdAdvancedSettings,
     CmdChangeLanguage,
     CmdCheckUpdate,
     CmdHelpOpenManualInBrowser,

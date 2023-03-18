@@ -121,6 +121,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenAttachment, "Open Attachment")                               \
     V(CmdOptions, "Options...")                                           \
     V(CmdAdvancedOptions, "Advanced Options...")                          \
+    V(CmdAdvancedSettings, "Advanced Settings...")                        \
     V(CmdChangeLanguage, "Change Language...")                            \
     V(CmdCheckUpdate, "Check For Updates")                                \
     V(CmdHelpOpenManualInBrowser, "Help: Manual")                         \
