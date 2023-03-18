@@ -3541,6 +3541,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
         newSelected = tab2;
     }
     tabsCtrl->SetSelected(newSelected);
+    tabsCtrl->Layout();
 }
 
 LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
@@ -3661,7 +3662,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     }
                     SetSelected(tabUnderMouse);
                     TriggerSelectionChanged(this);
-                    return 0;
                 }
                 SetCapture(hwnd);
             }
