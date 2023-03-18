@@ -1421,6 +1421,18 @@ void StartEditAnnotations(WindowTab* tab, Vec<Annotation*>& annots) {
     DeleteVecMembers(annots);
 }
 
+static PdfColor GetAnnotationSquigglyColor() {
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
+    return parsedCol->pdfCol;
+}
+
+static PdfColor GetAnnotationStrikeOutColor() {
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
+    return parsedCol->pdfCol;
+}
+
 static PdfColor GetAnnotationHighlightColor() {
     auto& a = gGlobalPrefs->annotations;
     ParsedColor* parsedCol = GetParsedColor(a.highlightColor, a.highlightColorParsed);
@@ -1533,6 +1545,12 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
         SetColor(res, col);
     } else if (typ == AnnotationType::Highlight) {
         auto col = GetAnnotationHighlightColor();
+        SetColor(res, col);
+    } else if (typ == AnnotationType::Squiggly) {
+        auto col = GetAnnotationSquigglyColor();
+        SetColor(res, col);
+    } else if (typ == AnnotationType::StrikeOut) {
+        auto col = GetAnnotationStrikeOutColor();
         SetColor(res, col);
     }
     pdf_drop_annot(ctx, annot);

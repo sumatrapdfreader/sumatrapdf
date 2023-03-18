@@ -253,7 +253,7 @@ void LogLastError(DWORD err) {
     }
 
     if (err == ERROR_INTERNET_EXTENDED_ERROR) {
-        char buf[4096] = { 0 };
+        char buf[4096] = {0};
         DWORD bufSize = dimof(buf);
         // TODO: ignoring a case where buffer is too small. 4 kB should be enough for everybody
         InternetGetLastResponseInfoA(&err, buf, &bufSize);

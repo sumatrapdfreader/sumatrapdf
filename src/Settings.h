@@ -146,13 +146,19 @@ struct ForwardSearch {
 
 // default values for annotations in PDF documents
 struct Annotations {
-    // color used for highlight annotations
+    // highlight annotation color
     char* highlightColor;
     ParsedColor highlightColorParsed;
-    // color used for underline annotations
+    // underline annotation color
     char* underlineColor;
     ParsedColor underlineColorParsed;
-    // color used for text icon annotation
+    // squiggly annotation color
+    char* squigglyColor;
+    ParsedColor squigglyColorParsed;
+    // strike out annotation color
+    char* strikeOutColor;
+    ParsedColor strikeOutColorParsed;
+    // text icon annotation color
     char* textIconColor;
     ParsedColor textIconColorParsed;
     // type of text annotation icon: comment, help, insert, key, new
@@ -384,7 +390,8 @@ struct GlobalPrefs {
     int treeFontSize;
     // font weight offset for bookmarks and favorites tree views.
     int treeFontWeightOffset;
-    // font name for bookmarks and favorites tree views.
+    // font name for bookmarks and favorites tree views. automatic means
+    // Windows default
     char* treeFontName;
     // if true, implements smooth scrolling
     bool smoothScroll;
@@ -516,13 +523,15 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t) "#00ff00"},
+    {offsetof(Annotations, squigglyColor), SettingType::Color, (intptr_t) "#ff00ff"},
+    {offsetof(Annotations, strikeOutColor), SettingType::Color, (intptr_t) "#ff0000"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t) ""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t) ""},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 5, gAnnotationsFields,
-    "HighlightColor\0UnderlineColor\0TextIconColor\0TextIconType\0DefaultAuthor"};
+    sizeof(Annotations), 7, gAnnotationsFields,
+    "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0TextIconColor\0TextIconType\0DefaultAuthor"};
 
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
@@ -674,7 +683,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, treeFontWeightOffset), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, treeFontName), SettingType::String, 0},
+    {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t) "automatic"},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
@@ -694,14 +703,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), sizeof(gGlobalPrefsFields) / sizeof(FieldInfo) - 1, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 60, gGlobalPrefsFields,
     "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDef"
     "aults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSessi"
     "on\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExit"
     "\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar\0ShowF"
     "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0TreeFon"
-    "tName\0SmoothScroll\0ShowStartPage\0"
-    "CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0Sess"
-    "ionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "tName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors"
+    "\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
