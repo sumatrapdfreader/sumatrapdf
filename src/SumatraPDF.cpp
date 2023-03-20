@@ -1682,7 +1682,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
     }
     if (!args->forceReuse) {
         // insert a new tab for the loaded document
-        win->currentTabTemp = CreateNewTab(win, fullPath);
+        WindowTab* tab = new WindowTab(win);
+        tab->SetFilePath(fullPath);
+        win->currentTabTemp = AddTabToWindow(win, tab);
+                
         // logf("LoadDocument: !forceReuse, created win->CurrentTab() at 0x%p\n", win->CurrentTab());
     } else {
         win->CurrentTab()->filePath.SetCopy(fullPath);
@@ -2406,27 +2409,8 @@ void TabsOnCloseDoc(WindowTab* tab) {
     }
     */
 
-    RemoveAndDeleteTab(tab);
-    MainWindow* win = tab->win;
-    if (win->TabCount() < 1) {
-        return;
-    }
-
-    WindowTab* curr = win->CurrentTab();
-    WindowTab* newCurrent = curr;
-    if (!curr || newCurrent == tab) {
-        // a current tab was closed so need to find new current tab
-        // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
-        if (win->tabSelectionHistory->Size() > 0) {
-            newCurrent = win->tabSelectionHistory->Pop();
-        } else {
-            newCurrent = win->GetTab(0);
-        }
-    }
-    int idx = win->GetTabIdx(newCurrent);
-    win->tabsCtrl->SetSelected(idx);
-    tab = win->CurrentTab();
-    LoadModelIntoTab(tab);
+    RemoveTab(tab);
+    delete tab;
 }
 
 // TODO: better name

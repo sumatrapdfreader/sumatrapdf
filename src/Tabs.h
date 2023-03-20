@@ -7,7 +7,7 @@ void SaveCurrentWindowTab(MainWindow*);
 void LoadModelIntoTab(WindowTab*);
 
 void CreateTabbar(MainWindow*);
-WindowTab* CreateNewTab(MainWindow* win, const char* filePath);
+WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab);
 void TabsOnCloseDoc(WindowTab*);
 void TabsOnCloseWindow(MainWindow*);
 void TabsOnChangedDoc(MainWindow*);
@@ -17,6 +17,8 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse);
 void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void UpdateTabsColors(TabsCtrl*);
-void RemoveAndDeleteTab(WindowTab*);
+void RemoveTab(WindowTab*);
+// create a new window if win==nullptr
+void MigrateTab(WindowTab* tab, MainWindow* win);
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight);

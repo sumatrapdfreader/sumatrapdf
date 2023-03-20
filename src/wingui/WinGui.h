@@ -674,6 +674,14 @@ struct TabsSelectionChangedEvent {
 
 using TabsSelectionChangedHandler = std::function<void(TabsSelectionChangedEvent*)>;
 
+struct TabMigrationEvent {
+    TabsCtrl* tabs = nullptr;
+    int tabIdx;
+    Point releasePoint;
+};
+
+using TabMigrationHandler = std::function<void(TabMigrationEvent*)>;
+
 struct TabDraggedEvent {
     TabsCtrl* tabs = nullptr;
     int tab1 = -1;
@@ -727,6 +735,7 @@ struct TabsCtrl : Wnd {
     TabClosedHandler onTabClosed = nullptr;
     TabsSelectionChangingHandler onSelectionChanging = nullptr;
     TabsSelectionChangedHandler onSelectionChanged = nullptr;
+    TabMigrationHandler onTabMigration = nullptr;
     TabDraggedHandler onTabDragged = nullptr;
 
     // TODO: set those to reasonable defaults
