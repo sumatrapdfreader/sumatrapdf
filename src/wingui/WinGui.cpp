@@ -3250,6 +3250,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
 Kind kindTabs = "tabs";
 
+using Gdiplus::Bitmap;
 using Gdiplus::Color;
 using Gdiplus::CompositingQualityHighQuality;
 using Gdiplus::Font;
@@ -3473,6 +3474,46 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     }
 }
 
+HBITMAP TabsCtrl::RenderForDragging(int idx) {
+    TabInfo* ti = GetTab(idx);
+    Bitmap bitmap(ti->r.dx, ti->r.dy);
+    Graphics* gfx = Graphics::FromImage(&bitmap);
+    // DrawString() on a bitmap does not work with CompositingModeSourceCopy - obscure bug.
+    gfx->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+    gfx->SetCompositingQuality(CompositingQualityHighQuality);
+    gfx->SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+    gfx->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    gfx->SetPageUnit(UnitPixel);
+
+    StringFormat sf(StringFormat::GenericDefault());
+    sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+    sf.SetLineAlignment(StringAlignmentCenter);
+    sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+
+    COLORREF bgCol = tabSelectedBg;
+    COLORREF textCol = tabSelectedText;
+
+    SolidBrush br(GdipCol(bgCol));
+    Gdiplus::Rect gr(0, 0, ti->r.dx, ti->r.dy);
+    gfx->FillRectangle(&br, gr);
+
+    HDC hdc = GetDC(hwnd);
+    Font f(hdc, GetDefaultGuiFont());
+    ReleaseDC(hwnd, hdc);
+
+    Gdiplus::RectF rTxt(0, 0, ti->r.dx, ti->r.dy);
+    rTxt.X += 8;
+    rTxt.Width -= (8 + 8);
+    br.SetColor(GdipCol(textCol));
+    WCHAR* ws = ToWstrTemp(ti->text);
+    gfx->DrawString(ws, -1, &f, rTxt, &sf, &br);
+
+    HBITMAP ret;
+    bitmap.GetHBITMAP(Color(255, 255, 255), &ret);
+    delete gfx;
+    return ret;
+}
+
 TabsCtrl::TabsCtrl() {
     kind = kindTabs;
 }
@@ -3586,6 +3627,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         // logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
     }
 
+    if (draggingTab && msg == WM_MOUSEMOVE) {
+        POINT p;
+        p.x = mousePos.x;
+        p.y = mousePos.y;
+        MapWindowPoints(hwnd, NULL, &p, 1);
+        //logfa("%s moving to: %d %d\n", WinMsgName(msg), p.x, p.y);
+        ImageList_DragMove(p.x, p.y);
+        return 0;
+    }
+
     switch (msg) {
         case WM_NCHITTEST: {
             if (false) {
@@ -3618,9 +3669,19 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int hl = tabUnderMouse;
             bool didChangeTabs = false;
             if (isDragging && hl == -1) {
-                // preserve the highlighted tab if it's dragged outside the tabs' area
                 hl = tabHighlighted;
-                didChangeTabs = true;
+                // move the tab out: draw it as a image and drag around the screen
+                draggingTab = true;
+                TabInfo* ti = GetTab(tabHighlighted);
+                HBITMAP hbmp = RenderForDragging(tabHighlighted);
+                HIMAGELIST himl = ImageList_Create(ti->r.dx, ti->r.dy, 0, 1, 0);
+                ImageList_Add(himl, hbmp, NULL);
+                ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
+                DeleteObject(hbmp);
+                DeleteObject(himl);
+                POINT p(mousePos.x, mousePos.y);
+                MapWindowPoints(hwnd, NULL, &p, 1);
+                ImageList_DragEnter(NULL, p.x, p.y);                
             }
             if (tabHighlighted != hl) {
                 if (isDragging) {
@@ -3663,6 +3724,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     SetSelected(tabUnderMouse);
                     TriggerSelectionChanged(this);
                 }
+                TabInfo* ti = GetTab(GetSelected());
+                grabLocation.x = mousePos.x - ti->r.x;
+                grabLocation.y = mousePos.y - ti->r.y;
                 SetCapture(hwnd);
             }
             return 0;
@@ -3677,8 +3741,17 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             bool isDragging = (GetCapture() == hwnd);
             if (isDragging) {
-                isDragging = false;
                 ReleaseCapture();
+            }
+            if (draggingTab) {
+                draggingTab = false;
+                ImageList_EndDrag();
+                int selectedTab = GetSelected();
+                logfa("selected: %d underMouse: %d\n", selectedTab, tabUnderMouse);
+                if (tabUnderMouse != -1 && tabUnderMouse != selectedTab) {
+                    TriggerTabDragged(this, selectedTab, tabUnderMouse);
+                    UpdateAfterDrag(this, selectedTab, tabUnderMouse);
+                }
             }
             return 0;
         }

@@ -710,6 +710,7 @@ struct TabsCtrl : Wnd {
     int ctrlID = 0;
     bool withToolTips = false;
     bool inTitleBar = false;
+    bool draggingTab = false;
     // dx of tab if there's more space available
     int tabDefaultDx = 300;
 
@@ -720,6 +721,8 @@ struct TabsCtrl : Wnd {
     int tabHighlightedClose = -1;
     int tabBeingClosed = -1;
     Point lastMousePos;
+    // where we grabbed the tab with a leftclick, in tab coordinates
+    Point grabLocation;
 
     TabClosedHandler onTabClosed = nullptr;
     TabsSelectionChangingHandler onSelectionChanging = nullptr;
@@ -781,6 +784,7 @@ struct TabsCtrl : Wnd {
     void Layout();
     TabMouseState TabStateFromMousePosition(const Point& p);
     void Paint(HDC hdc, RECT& rc);
+    HBITMAP RenderForDragging(int idx);
 };
 
 template <typename T>
