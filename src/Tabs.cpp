@@ -77,7 +77,7 @@ void UpdateTabWidth(MainWindow* win) {
     ShowTabBar(win, true);
 }
 
-void RemoveAndDeleteTab(WindowTab* tab) {
+void RemoveTab(WindowTab* tab) {
     UpdateTabFileDisplayStateForTab(tab);
     MainWindow* win = tab->win;
     win->tabSelectionHistory->Remove(tab);
@@ -88,8 +88,56 @@ void RemoveAndDeleteTab(WindowTab* tab) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
     }
-    delete tab;
     UpdateTabWidth(win);
+
+    // if the removed tab was the current one, select another
+    if (win->TabCount() < 1) {
+        return;
+    }
+    WindowTab* curr = win->CurrentTab();
+    WindowTab* newCurrent = curr;
+    if (!curr || newCurrent == tab) {
+        // TODO(tabs): why do I need win->tabSelectionHistory.Size() > 0
+        if (win->tabSelectionHistory->Size() > 0) {
+            newCurrent = win->tabSelectionHistory->Pop();
+        } else {
+            newCurrent = win->GetTab(0);
+        }
+    }
+    int newIdx = win->GetTabIdx(newCurrent);
+    win->tabsCtrl->SetSelected(newIdx);
+    tab = win->CurrentTab();
+    LoadModelIntoTab(tab);
+}
+
+void MigrateTab(WindowTab* tab, MainWindow* newWin) {
+    MainWindow* oldWin = tab->win;
+    RemoveTab(tab);
+
+    // TODO: migrate to existing window
+    CrashIf(newWin);
+    newWin = CreateAndShowMainWindow(nullptr);
+    if (!newWin) {
+        return;
+    }
+
+    // TODO: we should be able to just slide the existing tab
+    // into the new window, preserving its controller and
+    // the entire state, but this crashes/renders badly etc.
+    // More work needed. The code that should work but doesn't:
+    // tab->win = newWin;
+    // newWin->currentTabTemp = AddTabToWindow(newWin, tab);
+    // newWin->ctrl = tab->ctrl;
+    // UpdateUiForCurrentTab(newWin);
+    // newWin->showSelection = tab->selectionOnPage != nullptr;
+    // SetFocus(newWin->hwndFrame);
+    // newWin->RedrawAll(true);
+    // TabsOnChangedDoc(newWin);
+    WindowTab* newTab = new WindowTab(newWin);
+    newTab->SetFilePath(tab->filePath);
+    newWin->currentTabTemp = AddTabToWindow(newWin, newTab);
+    ReloadDocument(newWin, false);
+    delete tab;
 }
 
 // Selects the given tab (0-based index)
@@ -280,6 +328,11 @@ void CreateTabbar(MainWindow* win) {
     };
     tabsCtrl->onContextMenu = TabsContextMenu;
 
+    tabsCtrl->onTabMigration = [win](TabMigrationEvent* ev) {
+        WindowTab* tab = win->GetTab(ev->tabIdx);
+        MigrateTab(tab, nullptr);
+    };
+
     TabsCreateArgs args;
     args.parent = win->hwndFrame;
     args.withToolTips = true;
@@ -359,8 +412,7 @@ void UpdateTabsColors(TabsCtrl* tab) {
     tab->tabClickedCloseCircle = GetAppColor(AppColor::TabClickedCloseCircle);
 }
 
-// On load of a new document we insert a new tab item in the tab bar.
-WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
+WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
     CrashIf(!win);
     if (!win) {
         return nullptr;
@@ -372,21 +424,19 @@ WindowTab* CreateNewTab(MainWindow* win, const char* filePath) {
     bool noHomeTab = gGlobalPrefs->noHomeTab;
     bool createHomeTab = useTabs && !noHomeTab && (idx == 0);
     if (createHomeTab) {
-        WindowTab* tab = new WindowTab(win);
-        tab->type = WindowTab::Type::About;
-        tab->canvasRc = win->canvasRc;
+        WindowTab* homeTab = new WindowTab(win);
+        homeTab->type = WindowTab::Type::About;
+        homeTab->canvasRc = win->canvasRc;
         TabInfo* newTab = new TabInfo();
         newTab->text = str::Dup("Home");
         newTab->tooltip = nullptr;
         newTab->isPinned = true;
-        newTab->userData = (UINT_PTR)tab;
+        newTab->userData = (UINT_PTR)homeTab;
         int insertedIdx = tabs->InsertTab(idx, newTab);
         CrashIf(insertedIdx != 0);
         idx++;
     }
 
-    WindowTab* tab = new WindowTab(win);
-    tab->SetFilePath(filePath);
     tab->canvasRc = win->canvasRc;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());

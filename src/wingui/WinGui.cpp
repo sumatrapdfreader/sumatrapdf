@@ -3542,6 +3542,17 @@ static bool TriggerSelectionChanging(TabsCtrl* tabs) {
     return (LRESULT)res;
 }
 
+static void TriggerTabMigration(TabsCtrl* tabs, int tabIdx, Point p) {
+    if (!tabs->onTabMigration) {
+        return;
+    }
+    TabMigrationEvent ev;
+    ev.tabs = tabs;
+    ev.tabIdx = tabIdx;
+    ev.releasePoint = p;
+    tabs->onTabMigration(&ev);
+}
+
 static void TriggerTabClosed(TabsCtrl* tabs, int tabIdx) {
     if ((tabIdx < 0) || !tabs->onTabClosed) {
         return;
@@ -3666,32 +3677,34 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             bool isDragging = (GetCapture() == hwnd);
             // logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, isDragging: %d\n", tabUnderMouse,
             // (int)isDragging);
-            int hl = tabUnderMouse;
-            bool didChangeTabs = false;
-            if (isDragging && hl == -1) {
-                hl = tabHighlighted;
+            int hl = tabHighlighted;
+            if (isDragging && tabUnderMouse == -1) {
                 // move the tab out: draw it as a image and drag around the screen
                 draggingTab = true;
-                TabInfo* ti = GetTab(tabHighlighted);
-                HBITMAP hbmp = RenderForDragging(tabHighlighted);
-                HIMAGELIST himl = ImageList_Create(ti->r.dx, ti->r.dy, 0, 1, 0);
+                TabInfo* thl = GetTab(hl);
+                HBITMAP hbmp = RenderForDragging(hl);
+                HIMAGELIST himl = ImageList_Create(thl->r.dx, thl->r.dy, 0, 1, 0);
                 ImageList_Add(himl, hbmp, NULL);
                 ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
                 DeleteObject(hbmp);
                 DeleteObject(himl);
                 POINT p(mousePos.x, mousePos.y);
                 MapWindowPoints(hwnd, NULL, &p, 1);
-                ImageList_DragEnter(NULL, p.x, p.y);                
+                ImageList_DragEnter(NULL, p.x, p.y);
+                return 0;
             }
-            if (tabHighlighted != hl) {
+            if (hl != tabUnderMouse) {
+                tabHighlighted = tabUnderMouse;
                 if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
-                    TriggerTabDragged(this, tabHighlighted, hl);
-                    UpdateAfterDrag(this, tabHighlighted, hl);
+                    if (!GetTab(tabUnderMouse)->isPinned) {
+                        TriggerTabDragged(this, hl, tabUnderMouse);
+                        UpdateAfterDrag(this, hl, tabUnderMouse);
+                    }   
+                } else {
+                    // highlight a different tab
+                    HwndScheduleRepaint(hwnd);
                 }
-                HwndScheduleRepaint(hwnd);
-                tabHighlighted = hl;
-                didChangeTabs = true;
                 return 0;
             }
             int xHl = -1;
@@ -3725,9 +3738,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     TriggerSelectionChanged(this);
                 }
                 TabInfo* ti = GetTab(GetSelected());
-                grabLocation.x = mousePos.x - ti->r.x;
-                grabLocation.y = mousePos.y - ti->r.y;
-                SetCapture(hwnd);
+                if (!ti->isPinned) {
+                    grabLocation.x = mousePos.x - ti->r.x;
+                    grabLocation.y = mousePos.y - ti->r.y;
+                    SetCapture(hwnd);
+                }
             }
             return 0;
         }
@@ -3748,9 +3763,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ImageList_EndDrag();
                 int selectedTab = GetSelected();
                 logfa("selected: %d underMouse: %d\n", selectedTab, tabUnderMouse);
-                if (tabUnderMouse != -1 && tabUnderMouse != selectedTab) {
+                if (tabUnderMouse != -1 && tabUnderMouse != selectedTab
+                    && !GetTab(tabUnderMouse)->isPinned) {
                     TriggerTabDragged(this, selectedTab, tabUnderMouse);
                     UpdateAfterDrag(this, selectedTab, tabUnderMouse);
+                } else if (tabUnderMouse == -1) {
+                    // migrate to new/different window
+                    TriggerTabMigration(this, selectedTab, mousePos);
                 }
             }
             return 0;
