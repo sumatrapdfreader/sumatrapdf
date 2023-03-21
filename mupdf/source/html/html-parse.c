@@ -615,7 +615,10 @@ static fz_html_box *new_box(fz_context *ctx, struct genstate *g, fz_xml *node, i
 		box = fz_pool_alloc(ctx, g->pool, offsetof(fz_html_box, u) + sizeof(box->u.block));
 
 	box->type = type;
+	box->is_first_flow = 0;
 	box->markup_dir = g->markup_dir;
+	box->structure = 0;
+	box->list_item = 0;
 
 	box->style = fz_css_enlist(ctx, style, &g->styles, g->pool);
 
@@ -1469,20 +1472,25 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 	char *title;
 
 	fz_css_match match;
-	struct genstate g;
+	struct genstate g = {0};
 
 	g.pool = NULL;
 	g.set = set;
 	g.zip = zip;
 	g.images = NULL;
+	g.xml = xml;
+	g.is_fb2 = 0;
 	g.base_uri = base_uri;
 	g.css = NULL;
 	g.at_bol = 0;
 	g.emit_white = 0;
 	g.last_brk_cls = UCDN_LINEBREAK_CLASS_OP;
-	g.styles = NULL;
-	g.xml = xml;
+	g.list_counter = 0;
+	g.section_depth = 0;
+	g.markup_dir = FZ_BIDI_LTR;
+	g.markup_lang = FZ_LANG_UNSET;
 	g.href = NULL;
+	g.styles = NULL;
 
 	if (rtitle)
 		*rtitle = NULL;

@@ -993,7 +993,12 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 		 * type3 glyphs that seem to inherit current graphics
 		 * attributes, or type 3 glyphs within type3 glyphs). */
 		fz_matrix composed = fz_concat(trm, gstate->ctm);
+		pdf_gsave(ctx, pr);
+		gstate = pr->gstate + pr->gtop;
+		pdf_drop_font(ctx, gstate->text.font);
+		gstate->text.font = NULL; /* don't inherit the current font... */
 		fz_render_t3_glyph_direct(ctx, pr->dev, fontdesc->font, gid, composed, gstate, pr->default_cs);
+		pdf_grestore(ctx, pr);
 		/* Render text invisibly so that it can still be extracted. */
 		pr->tos.text_mode = 3;
 	}
