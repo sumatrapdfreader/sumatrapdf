@@ -2423,6 +2423,21 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         RemoveTab(tab);
         delete tab;
     }
+
+    tabCount = win->TabCount();
+    if (tabCount == 1) {
+        // showing only home page tab so remove it
+        // if there are other windows, close this one
+        if (gWindows.size() > 1) {
+            CloseWindow(win, false, false);
+        } else {
+            tab = win->GetTab(0);
+            // re-use quitIfLast logic
+            CloseTab(tab, quitIfLast);
+            return;
+        }
+    }
+
     if (!didSavePrefs) {
         SaveSettings();
     }
