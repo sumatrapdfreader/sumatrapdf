@@ -2392,27 +2392,6 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     return true;
 }
 
-// Called when we're closing a document
-void TabsOnCloseDoc(WindowTab* tab) {
-    if (!tab) {
-        return;
-    }
-
-    /*
-    DisplayModel* dm = win->AsFixed();
-    if (dm) {
-        EngineBase* engine = dm->GetEngine();
-        if (EngineHasUnsavedAnnotations(engine)) {
-            // TODO: warn about unsaved annotations
-            logf("File has unsaved annotations\n");
-        }
-    }
-    */
-
-    RemoveTab(tab);
-    delete tab;
-}
-
 // TODO: better name
 void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (!tab) {
@@ -2441,7 +2420,8 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         }
     } else {
         CrashIf(gPluginMode && !gWindows.Contains(win));
-        TabsOnCloseDoc(tab);
+        RemoveTab(tab);
+        delete tab;
     }
     if (!didSavePrefs) {
         SaveSettings();
