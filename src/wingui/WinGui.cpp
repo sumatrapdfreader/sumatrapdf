@@ -3768,7 +3768,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     UpdateAfterDrag(this, selectedTab, tabUnderMouse);
                 } else if (tabUnderMouse == -1) {
                     // migrate to new/different window
-                    TriggerTabMigration(this, selectedTab, mousePos);
+                    POINT p(mousePos.x, mousePos.y);
+                    ClientToScreen(hwnd, &p);
+                    Point scPoint(p.x, p.y);
+                    TriggerTabMigration(this, selectedTab, scPoint);
                 }
             }
             return 0;
