@@ -114,11 +114,11 @@ void MigrateTab(WindowTab* tab, MainWindow* newWin) {
     MainWindow* oldWin = tab->win;
     RemoveTab(tab);
 
-    // TODO: migrate to existing window
-    CrashIf(newWin);
-    newWin = CreateAndShowMainWindow(nullptr);
     if (!newWin) {
-        return;
+        newWin = CreateAndShowMainWindow(nullptr);
+        if (!newWin) {
+            return;
+        }
     }
 
     // TODO: we should be able to just slide the existing tab
@@ -136,7 +136,10 @@ void MigrateTab(WindowTab* tab, MainWindow* newWin) {
     WindowTab* newTab = new WindowTab(newWin);
     newTab->SetFilePath(tab->filePath);
     newWin->currentTabTemp = AddTabToWindow(newWin, newTab);
-    ReloadDocument(newWin, false);
+    LoadArgs args(tab->filePath, newWin);
+    args.forceReuse = true;
+    args.noSavePrefs = true;
+    LoadDocument(&args, false, false);
     delete tab;
 }
 
@@ -330,7 +333,19 @@ void CreateTabbar(MainWindow* win) {
 
     tabsCtrl->onTabMigration = [win](TabMigrationEvent* ev) {
         WindowTab* tab = win->GetTab(ev->tabIdx);
-        MigrateTab(tab, nullptr);
+        MainWindow* releaseWnd = nullptr;
+        POINT p;
+        p.x = ev->releasePoint.x;
+        p.y = ev->releasePoint.y;
+        HWND hwnd = WindowFromPoint(p);
+        if (hwnd != nullptr) {
+            releaseWnd = FindMainWindowByHwnd(hwnd);
+        }
+        if (releaseWnd == win) {
+            // don't re-add to the same window
+            releaseWnd = nullptr;
+        }
+        MigrateTab(tab, releaseWnd);
     };
 
     TabsCreateArgs args;
