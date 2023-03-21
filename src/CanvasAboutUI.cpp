@@ -87,8 +87,17 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         SumatraLaunchBrowser(url);
     } else {
         // assume it's a thumbnail of a document
-        CrashIf(!url);
-        LoadArgs args(url, win);
+        auto path = url;
+        CrashIf(!path);
+        // ctrl forces always opening. Without ctrl switch to tab if already opened
+        if (!IsCtrlPressed()) {
+            MainWindow* existing = FindMainWindowByFile(path, true);
+            if (existing) {
+                existing->Focus();
+                return;
+            }
+        }
+        LoadArgs args(path, win);
         LoadDocument(&args);
     }
     // SetFocus(win->hwndFrame);

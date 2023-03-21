@@ -1842,6 +1842,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
 // open a file doesn't block next/prev file in
 static StrVec gFilesFailedToOpen;
 
+// TODO: maybe move the logic that activates tab if file is already opened here
 MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
     CrashAlwaysIf(gCrashOnOpen);
 
