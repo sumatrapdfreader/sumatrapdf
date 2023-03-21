@@ -1272,7 +1272,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
             args.noSavePrefs = true;
-            LoadDocument(&args);
+            LoadDocument(&args, false, false);
         }
         return;
     }
@@ -1685,7 +1685,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
         WindowTab* tab = new WindowTab(win);
         tab->SetFilePath(fullPath);
         win->currentTabTemp = AddTabToWindow(win, tab);
-                
+
         // logf("LoadDocument: !forceReuse, created win->CurrentTab() at 0x%p\n", win->CurrentTab());
     } else {
         win->CurrentTab()->filePath.SetCopy(fullPath);
@@ -1842,13 +1842,20 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
 // open a file doesn't block next/prev file in
 static StrVec gFilesFailedToOpen;
 
-// TODO: maybe move the logic that activates tab if file is already opened here
-MainWindow* LoadDocument(LoadArgs* args, bool lazyload) {
+MainWindow* LoadDocument(LoadArgs* args, bool lazyload, bool activateExisting) {
     CrashAlwaysIf(gCrashOnOpen);
+
+    const char* path = args->FilePath();
+    if (activateExisting) {
+        MainWindow* existing = FindMainWindowByFile(path, true);
+        if (existing) {
+            existing->Focus();
+            return existing;
+        }
+    }
 
     MainWindow* win = args->win;
     bool failEarly = AdjustPathForMaybeMovedFile(args);
-    const char* path = args->FilePath();
 
     // fail fast if the file doesn't exist and there is a window the user
     // has just been interacting with
@@ -2252,7 +2259,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
-    LoadDocument(&args);
+    LoadDocument(&args, false, false);
 
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
@@ -2888,7 +2895,7 @@ static void RenameCurrentFile(MainWindow* win) {
         LogLastError();
         LoadArgs args(srcPath, win);
         args.forceReuse = true;
-        LoadDocument(&args);
+        LoadDocument(&args, false, false);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.msg = _TRA("Failed to rename the file!");
@@ -2903,7 +2910,7 @@ static void RenameCurrentFile(MainWindow* win) {
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
-    LoadDocument(&args);
+    LoadDocument(&args, false, false);
 }
 
 static void CreateLnkShortcut(MainWindow* win) {
@@ -3023,7 +3030,7 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     LoadArgs args(path, newWin);
     args.showWin = true;
     args.noPlaceWindow = true;
-    LoadDocument(&args);
+    LoadDocument(&args, false, false);
 }
 
 // create a new window and load currently shown document into it
@@ -3083,7 +3090,7 @@ static void OpenFolder(MainWindow* win) {
     }
     LoadArgs args(dir, win);
     args.engine = engine;
-    LoadDocument(&args);
+    LoadDocument(&args, false, false);
 }
 
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
@@ -3194,7 +3201,7 @@ static void OpenFile(MainWindow* win) {
     GetFilesFromGetOpenFileName(&ofn, files);
     for (char* path : files) {
         LoadArgs args(path, win);
-        LoadDocument(&args);
+        LoadDocument(&args, false, false);
     }
 }
 
@@ -3277,7 +3284,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     // we could automatically go to next file
     LoadArgs args(path, win);
     args.forceReuse = true;
-    LoadDocument(&args);
+    LoadDocument(&args, false, false);
 }
 
 constexpr int kSplitterDx = 5;
@@ -4515,7 +4522,7 @@ void ReopenLastClosedFile(MainWindow* win) {
         return;
     }
     LoadArgs args(path, win);
-    LoadDocument(&args);
+    LoadDocument(&args, false, false);
 }
 
 void ClearHistory(MainWindow* win) {
@@ -4601,7 +4608,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         FileState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm::DiskAccess)) {
             LoadArgs args(state->filePath, win);
-            LoadDocument(&args);
+            LoadDocument(&args, false, false);
         }
         return 0;
     }

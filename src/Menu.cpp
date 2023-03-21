@@ -1562,7 +1562,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
 
     if (CmdOpenSelectedDocument == cmd) {
         LoadArgs args(filePath, win);
-        LoadDocument(&args);
+        LoadDocument(&args, false, !IsCtrlPressed());
         return;
     }
 

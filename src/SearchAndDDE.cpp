@@ -658,7 +658,7 @@ static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
         // if not then open it
         if (newWindow || !win) {
             LoadArgs args(pdfFile, !newWindow ? win : nullptr);
-            win = LoadDocument(&args);
+            win = LoadDocument(&args, false, false);
         } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
@@ -667,7 +667,7 @@ static const char* HandleSyncCmd(const char* cmd, DDEACK& ack) {
         win = FindMainWindowBySyncFile(srcFile, true);
         if (win && newWindow) {
             LoadArgs args(win->CurrentTab()->filePath, nullptr);
-            win = LoadDocument(&args);
+            win = LoadDocument(&args, false, false);
         }
     }
 
@@ -772,7 +772,7 @@ static const char* HandleOpenCmd(const char* cmd, DDEACK& ack) {
             win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
         }
         LoadArgs args(pdfFile, win);
-        win = LoadDocument(&args);
+        win = LoadDocument(&args, false, false);
     } else if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
         forceRefresh = 0;

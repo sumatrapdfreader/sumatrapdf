@@ -457,14 +457,8 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     if (!str::StartsWith(path, tabPath)) {
         return;
     }
-    MainWindow* newWin = FindMainWindowByFile(path, true);
-    if (!newWin) {
-        LoadArgs args(path, win);
-        newWin = LoadDocument(&args);
-    }
-    if (newWin) {
-        newWin->Focus();
-    }
+    LoadArgs args(path, win);
+    LoadDocument(&args, false, true);
 }
 
 static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fileName) {

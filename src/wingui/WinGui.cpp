@@ -3643,7 +3643,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         p.x = mousePos.x;
         p.y = mousePos.y;
         MapWindowPoints(hwnd, NULL, &p, 1);
-        //logfa("%s moving to: %d %d\n", WinMsgName(msg), p.x, p.y);
+        // logfa("%s moving to: %d %d\n", WinMsgName(msg), p.x, p.y);
         ImageList_DragMove(p.x, p.y);
         return 0;
     }
@@ -3700,7 +3700,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     if (!GetTab(tabUnderMouse)->isPinned) {
                         TriggerTabDragged(this, hl, tabUnderMouse);
                         UpdateAfterDrag(this, hl, tabUnderMouse);
-                    }   
+                    }
                 } else {
                     // highlight a different tab
                     HwndScheduleRepaint(hwnd);
@@ -3763,8 +3763,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ImageList_EndDrag();
                 int selectedTab = GetSelected();
                 logfa("selected: %d underMouse: %d\n", selectedTab, tabUnderMouse);
-                if (tabUnderMouse != -1 && tabUnderMouse != selectedTab
-                    && !GetTab(tabUnderMouse)->isPinned) {
+                if (tabUnderMouse != -1 && tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
                     TriggerTabDragged(this, selectedTab, tabUnderMouse);
                     UpdateAfterDrag(this, selectedTab, tabUnderMouse);
                 } else if (tabUnderMouse == -1) {

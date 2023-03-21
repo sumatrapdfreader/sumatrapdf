@@ -89,16 +89,11 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         // assume it's a thumbnail of a document
         auto path = url;
         CrashIf(!path);
-        // ctrl forces always opening. Without ctrl switch to tab if already opened
-        if (!IsCtrlPressed()) {
-            MainWindow* existing = FindMainWindowByFile(path, true);
-            if (existing) {
-                existing->Focus();
-                return;
-            }
-        }
+        bool lazyLoad = false;
+        // ctrl forces always opening
+        bool activateExisting = !IsCtrlPressed();
         LoadArgs args(path, win);
-        LoadDocument(&args);
+        LoadDocument(&args, lazyLoad, activateExisting);
     }
     // SetFocus(win->hwndFrame);
 }
