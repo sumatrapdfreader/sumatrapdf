@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e455e445f090d94670267f7bdbf974c9ac4587e5
+93beb39c20db30bed28b03e0321285a29bf214fd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -97,6 +97,7 @@ kr:실제 크기(&A)
 ml:യഥാർത്ഥ സൈസ്
 ne:वास्तविक आकार
 nl:&Werkelijke grootte
+no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
 pt:Tam&anho real
 ru:Насто&ящий размер
@@ -268,6 +269,7 @@ kr:뒤로(&B)
 ml:&തിരികെ
 ne:पछाडी
 nl:&Terug
+no:&Tilbake
 pl:&Wstecz
 pt:&Recuar 
 ru:&Назад
@@ -303,6 +305,7 @@ kr:책처럼 보기(&B)
 ml:&പുസ്തക കാഴ്ച
 ne:&पुस्तकको रुपमा हेर्नुहोस 
 nl:&Boek Tonen
+no:&Bokvisning
 pl:Widok o&dczytu
 pt:&Como livro 
 ru:В &разворот
@@ -344,6 +347,7 @@ mk:Откажи
 ml:&ക്യാൻസൽ ചെയ്യുക
 ne:&रद्द गर्नुहोस्
 nl:&Annuleren
+no:&Avbryt
 pl:&Anuluj
 pt:&Cancelar
 ru:Отмена
@@ -387,6 +391,7 @@ lt:&Intarpas
 lv:&Norāde
 ml:&കാരറ്റ് അടയാളം
 nl:&Merkteken
+no:&Innsettingspunkt
 pl:&Kareta
 pt:&Caret
 ru:&Каретка
@@ -423,6 +428,7 @@ kr:닫기(&C)
 ml:&അടയ്ക്കുക
 ne:बन्द गर्नुहोस्
 nl:&Sluiten
+no:&Lukk
 pl:&Zamknij
 pt:Fe&char
 ru:&Закрыть
@@ -464,6 +470,7 @@ kw:&Pesya lea gwersyon 32-byt
 mk:Продолжете со инсталирање на 32-битна верзија
 ml:&32-ബിറ്റ് പതിപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുന്നത് തുടരുക
 nl:&Doorgaan met installeren van 32bit versie
+no:&Fortsett installasjon av 32-biters versjon
 pl:&Kontynuuj instalację wersji 32-bitowej
 pt:&Continuar com a instalação 32-bit
 ru:&Продолжить установку 32-разрядной версии
@@ -566,6 +573,7 @@ ja:クリップボードへコピー(&C)
 kr:클립보드에 복사(&C)
 ml:ക്ലിപ്പ്ബോർഡിലേയ്ക്ക് &പകർത്തുക
 nl:&Kopieer Naar Klembord
+no:&Kopier til utklippstavle
 pl:Kopiuj do s&chowka
 pt:&Copiar para a área de transferência 
 ru:С&копировать в буфер обмена
@@ -605,6 +613,7 @@ kw:&Tewlel chanjyow
 mk:Откажи ги измените
 ml:മാറ്റങ്ങൾ &ഉപേക്ഷിക്കുക
 nl:&Weggooien
+no:&Avvis endringer
 pl:O&drzuć zmiany
 pt:&Descartar alterações
 ru:Отказат&ься от изменений
@@ -773,6 +782,7 @@ it:Pagine a&ffiancate
 ja:見開き(&F)
 kr:두 페이지(&F)
 nl:&Gericht op
+no:&Side om side
 pl:&Wiele stron
 pt:Lado a &lado 
 ru:По &две страницы
@@ -945,6 +955,7 @@ it:&Prima pagina
 ja:最初のページ(&F)
 kr:첫 번째 페이지(&F)
 nl:&Eerste Pagina
+no:&Første side
 pl:&Pierwsza strona
 pt:&Primeira página
 ru:Пер&вая страница
@@ -1046,6 +1057,7 @@ lt:&Laisvas tekstas
 lv:&Brīvs teksts
 my:&Teks Bebas
 nl:&Vrije Tekst
+no:&Frigjør tekst
 pl:&Dowolny tekst
 pt:Te&xto livre
 ru:Сво&бодный текст
@@ -1289,6 +1301,7 @@ it:Eviden&zia
 ja:ハイライト(&H)
 kr:강조(&H)
 nl:&Markeren
+no:&Merk
 pl:&Wyróżnienie
 pt:&Destacar
 ru:По&дсветка
@@ -1320,6 +1333,7 @@ it:&Ultima pagina
 ja:最後のページ(&L)
 kr:마지막 페이지(&L)
 nl:&Laatste Pagina
+no:&Siste side
 pl:&Ostatnia strona
 pt:Última págin&a
 ru:Последня&я страница
@@ -1548,6 +1562,7 @@ it:Pagina &successiva
 ja:次のページ(&N)
 kr:다음 페이지(&N)
 nl:&Volgende Pagina
+no:&Neste side
 pl:&Następna strona
 pt:Página segui&nte 
 ru:&Следующая страница
@@ -1777,6 +1792,7 @@ it:&Apri
 ja:開く(&O)...
 kr:열기(&O)...
 nl:&Openen
+no:&Åpne...
 pl:&Otwórz...
 pt:&Abrir
 ru:&Открыть...
@@ -2064,6 +2080,7 @@ it:Pagina &precedente
 ja:前のページ(&P)
 kr:이전 페이지(&P)
 nl:&Vorige Pagina
+no:&Forrige side
 pl:&Poprzednia strona
 pt:&Página anterior
 ru:Пр&едыдущая страница
@@ -2362,6 +2379,7 @@ kw:&Removya A Istori
 lt:&Pašalinti iš istorijos
 lv:&Izņemt no vēstures
 nl:V&erwijder uit Geschiedenis
+no:&Fjern fra historikk
 pl:&Usuń z historii
 pt:&Remover do histórico
 ru:&Удалить из истории
@@ -2464,6 +2482,7 @@ ja:上書き保存(&S)
 kr:기존 PDF에 저장(&S)
 kw:&Gwitha dhe PDF seulabrys
 nl:&Opslaan in bestaande PDF
+no:&Lagre til eksisterende PDF
 pl:&Zapisz w istniejącym pliku PDF
 pt:Guardar para PDF exi&stente
 ru:&Сохранить в имеющийся PDF
@@ -2500,6 +2519,7 @@ ja:Google で検索(&S)
 kr:Google로 검색(&S)
 kw:&Hwilas Gans Google
 nl:&Zoeken Met Google
+no:&Søk med Google
 pl:&Szukaj za pomocą Google
 pt:Pe&squisar com Google
 ru:&Найти в Google
@@ -2661,6 +2681,7 @@ it:Pagina &singola
 ja:単一のページ(&S)
 kr:단일 페이지(&S)
 nl:&Enkele Pagina
+no:&Enkeltside
 pl:&Pojedyncza strona
 pt:&Uma página
 ru:По &одной странице
@@ -2697,6 +2718,7 @@ kw:&Stampa
 lt:&Antspaudas
 lv:&Zīmogs
 nl:&Stempel
+no:&Stemple
 pl:Pie&częć
 pt:Carimbo&s
 ru:&Штамп
@@ -2734,6 +2756,7 @@ kw:&Treuslinya
 lt:&Išbraukti
 lv:&Izsvītrot
 nl:&Doorhalen
+no:&Stryk over
 pl:&Skreślenie
 pt:Ra&surado
 ru:Зач&ёркнутый
@@ -2772,6 +2795,7 @@ lt:&Tekstas
 lv:&Teksts
 my:&Teks
 nl:&Tekst
+no:&Tekst
 pl:&Tekst
 pt:&Texto 
 ru:&Текст
@@ -2863,6 +2887,7 @@ ja:Google を使って翻訳(&T)
 kr:Google로 번역(&T)
 kw:&Treylya Gans Google
 nl:&Vertalen Met Google
+no:&Oversett med Google
 pl:&Tłumacz za pomocą Google
 pt:&Traduzir com Google
 ru:&Перевести в Google
@@ -2900,6 +2925,7 @@ kw:&Islinya
 lt:Pa&braukti
 lv:&Pasvītrojums
 nl:&Onderstrepen
+no:&Understrek
 pl:&Podkreślenie
 pt:S&ublinhado
 ru:Под&чёркнутый
@@ -3825,7 +3851,7 @@ my:Semua fail
 ne:सबै फाइलहरु
 nl:Alle bestanden
 nn:Alle filar
-no:Alle filer (*.*)
+no:Alle filer
 pa:ਸਾਰੀਆਂ ਫ਼ਾਇਲਾਂ
 pl:Wszystkie pliki
 pt:Todos os ficheiros
@@ -3951,6 +3977,7 @@ lv:Anotācijas
 mk:Прибелешки
 ml:വ്യാഖ്യാനങ്ങൾ
 nl:Aantekeningen
+no:Merknader
 pl:Adnotacje
 pt:Anotações 
 ru:Аннотации
@@ -4344,6 +4371,7 @@ lv:Autors: %s
 ml:രചയിതാവ്: %s
 ne:लेखक: %s
 nl:Auteur: %s
+no:Forfatter: %s
 pl:Autor: %s
 pt:Autor: %s
 ru:Автор: %s
@@ -4526,6 +4554,7 @@ mk:Боја на позадина
 ml:പശ്ചാത്തല നിറം:
 ne:पृष्ठभूमिको रंग:
 nl:Achtergrond Kleur
+no:Bakgrunnsfarge:
 pl:Kolor tła:
 pt:Cor de fundo:
 ru:Цвет фона:
@@ -4838,6 +4867,7 @@ lt:Kraštas: %d
 lv:Apmale: %d
 ml:ബോർഡർ: %d 
 nl:Rand %d
+no:Ramme: %d
 pl:Obramowanie: %d
 pt:Contorno: %d
 ru:Рамка: %d
@@ -5427,6 +5457,7 @@ kw:Ow checkya rag nowedhans
 mk:Провери за надградба
 ml:അപ്‌ഡേറ്റിനായി പരിശോധിക്കുന്നു...
 nl:Controleer op Update...
+no:Ser etter oppdatering...
 pl:Szukanie aktualizacji...
 pt:A procurar atualização...
 ru:Проверка наличия обновления...
@@ -5580,6 +5611,7 @@ ja:他のタブを閉じる
 kr:다른 탭 닫기
 ml:മറ്റ് ടാബുകൾ അടയ്ക്കുക
 nl:Andere Tabbladen Sluiten
+no:Lukk andre faner
 pl:Zamknij inne karty
 pt:Fechar outros separadores 
 ru:Закрыть другие вкладки
@@ -5612,6 +5644,7 @@ ja:右側のタブを閉じる
 kr:오른쪽 탭 닫기
 ml:വലതുവശത്തുള്ള ടാബുകൾ അടയ്ക്കുക
 nl:Sluit Tabbladen Rechts
+no:Lukk faner til høyre
 pl:Zamknij karty po prawej stronie
 pt:Fechar separadores à direita
 ru:Закрыть вкладки справа
@@ -5659,6 +5692,7 @@ mk:Затвори се
 ml:എല്ലാം സങ്കോചിപ്പിക്കുക
 ne:सबै बन्द गर्नुहोस
 nl:Alle Samenvouwen
+no:Fold sammen alle
 pl:Zwiń wszystko
 pt:Recolher tudo
 ru:Свернуть все
@@ -5708,6 +5742,7 @@ ml:നിറം:
 my:Warna:
 ne:रंग:
 nl:Kleur
+no:Farge:
 pl:Kolor:
 pt:Cor:
 ru:Цвет:
@@ -5811,6 +5846,7 @@ ja:コマンドパレット
 kr:명령 팔레트
 ml:കമാൻഡ് പാലറ്റ്
 nl:Opdrachten
+no:Kommandopalett
 pl:Paleta poleceń
 pt:Paleta de comandos
 ru:Панель команд
@@ -5920,6 +5956,7 @@ lv:Saturs:
 ml:ഉള്ളടക്കം:
 ne:विषय सूची
 nl:Inhoud
+no:Innhold:
 pl:Zawartość:
 pt:Conteúdo:
 ru:Содержимое:
@@ -6433,6 +6470,7 @@ ja:クリップボードへコピー
 kr:클립보드에 복사
 ml:ക്ലിപ്പ്ബോർഡിലേയ്ക്ക് പകർത്തുക
 nl:Kopieer naar klembord
+no:Kopier til utklippstavle
 pl:Kopiuj do schowka
 pt:Copiar para a área de transferência 
 ru:Скопировать в буфер обмена
@@ -6735,6 +6773,7 @@ kr:프린터 이름을 확인할 수 없음
 kw:Ny yllir kavos hanow pryntyer
 ml:പ്രിന്ററിന്റെ പേര് കണ്ടെത്താനായില്ല
 nl:Kan de naam van de printer niet vinden
+no:Kunne ikke hente skrivernavn
 pl:Nie można uzyskać nazwy drukarki
 pt:Não foi possível obter o nome da impressora 
 ru:Не удалось получить имя принтера
@@ -7110,6 +7149,7 @@ lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
 ml:സുമാത്ര തിരയൽ ഫിൽട്ടർ അൺഇൻസ്റ്റാൾ ചെയ്യാനായില്ല
 my:Tidak dapat membuang penapis carian Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
+no:Kunne ikke avinstallere Sumatra-søkefilter
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 pt: Não foi possível desinstalar o filtro de pesquisa
 ru:Не удалось удалить фильтр поиска Sumatra
@@ -7279,6 +7319,7 @@ kr:커서 아래 주석 생성(&U)
 kw:Gwruthyl Notenyans &Yn-Dann Resor
 ml:&കഴ്സറിന് കീഴിൽ വ്യാഖ്യാനം സൃഷ്ടിക്കുക
 nl:Maak Aantekening Onder Cursor
+no:Lag merknad &under peker
 pl:Utwórz adnotację &pod kursorem
 pt:Criar anotação no local do c&ursor
 ru:Создать аннотацию &под курсором
@@ -7323,6 +7364,7 @@ lv:Veidot anotāciju no atlases
 mk:Креирајте прибелешка од изборот
 ml:തിരഞ്ഞെടുക്കലിൽ നിന്ന് വ്യാഖ്യാനം സൃഷ്ടിക്കുക
 nl:Aantekening maken op basis van Selectie
+no:Lag merknad på merket område
 pl:Utwórz adnotację z zaznaczenia
 pt:Criar anotação na seleção
 ru:Создать аннотацию из выделения
@@ -7558,6 +7600,7 @@ ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
 ml:ഇഷ്‌ടാനുസൃത &സൂം...
 nl:Aangepast & zoom...
+no:Tilpasset &zoom...
 pl:&Własne powiększenie...
 pt:Tamanho personali&zado...
 ru:Свой &масштаб...
@@ -7724,6 +7767,7 @@ lv:Datums:
 ml:തീയ്യതി:
 ne:मिति:
 nl:Datum:
+no:Dato:
 pl:Data:
 pt:Data:
 ru:Дата:
@@ -7892,6 +7936,7 @@ ja:注釈を削除\tDel
 kr:주석 삭제\tDel
 ml:വ്യാഖ്യാനം ഇല്ലാതാക്കുക\tDel
 nl:Verwijder Aantekening\tDel
+no:Slett merknad\tDel
 pl:Usuń adnotację\tDel
 pt:Remover anotação\Del
 ru:Удалить аннотацию\tDel
@@ -8132,6 +8177,7 @@ kw:Ny wra lea
 mk:Не инсталирај
 ml:ഇൻസ്റ്റാൾ ചെയ്യരുത്
 nl:Niet installeren
+no:Ikke installer
 pl:Nie instaluj
 pt:Não instalar
 ru:Не устанавливать
@@ -8174,6 +8220,7 @@ kw:Iskarga gwersyon 64-byt
 mk:Преземете 64-битна верзија
 ml:64-ബിറ്റ് പതിപ്പ് ഡൗൺലോഡ് ചെയ്യുക
 nl:Download 64bit versie
+no:Last ned 64-biters versjon
 pl:Pobierz wersję 64-bitową
 pt:Descarregar versão 64-bit
 ru:Загрузить 64-разрядную версию
@@ -8210,6 +8257,7 @@ it:&Esci
 ja:終了(&X)
 kr:나가기(&X)
 nl:A&fsluiten
+no:A&vslutt
 pl:&Wyjście
 pt:&Sair
 ru:В&ыход
@@ -8254,6 +8302,7 @@ kw:Kwytya Skrin-leun
 lt:&Išeiti iš pilno ekrano režimo
 lv:&Iziet no pilnekrāna
 nl:Volledig scherm uit
+no:A&vslutt fullskjerm
 pl:W&yjdź z trybu pełnoekranowego
 pt:Sair de &ecrã completo
 ru:&Выйти из полноэкранного режима
@@ -8367,6 +8416,7 @@ lt:Redaguoti anotacijas
 lv:Rediģēt anotācijas
 mk:Измени прибелешка
 nl:Bewerk Aantekeningen
+no:Rediger merknader
 pl:Edytuj adnotacje
 pt:Editar anotações 
 ru:Изменить аннотации
@@ -8685,6 +8735,7 @@ lt:Išplėsti viską
 lv:Izvērst visu
 mk:Прошириги сите
 nl:Alle Uitvouwen
+no:Utvid alle
 pl:Rozwiń wszystko
 pt:Expandir tudo
 ru:Развернуть все
@@ -8783,6 +8834,7 @@ it:&Avanti
 ja:進む(&O)
 kr:앞으로(&O)
 nl:V&ooruit
+no:F&ramover
 pl:&Dalej
 pt:A&vançar
 ru:В&перёд
@@ -8817,6 +8869,7 @@ it:Sc&hermo pieno
 ja:全画面表示(&U)
 kr:전체화면(&U)
 nl:V&oledig Scherm
+no:F&ullskjerm
 pl:Pełny &ekran
 pt:E&crã completo
 ru:Полный &экран
@@ -9516,6 +9569,7 @@ lt:Failo priedas
 lv:Faila pielikums
 mk:Прикачи документ
 nl:Bestands Bijlage
+no:Filvedlegg
 pl:Załącznik
 pt:Anexo
 ru:Вложенный файл
@@ -9688,6 +9742,7 @@ it:&Trova
 ja:検索(&D)...
 kr:찾기(&D)...
 nl:Zoe&k
+no:Fin&n...
 pl:&Znajdź...
 pt:Locali&zar...
 ru:На&йти...
@@ -10001,6 +10056,7 @@ it:Adatta al &contenuto
 ja:内容に合わせる(&C)
 kr:내용에 맞춤(&C)
 nl:&Inhoud Aanpassen
+no:Tilpass til &innhold
 pl:Dopasuj do &zawartości
 pt:Ajustar ao &conteúdo 
 ru:Вписать содер&жимое
@@ -10033,6 +10089,7 @@ it:Adatta alla &pagina
 ja:ページに合わせる(&P)
 kr:페이지에 맞춤(&P)
 nl:&Pagina Aanpassen
+no:Tilpass til &side
 pl:Dopasuj do s&trony
 pt:Ajustar à &página 
 ru:Вписать &страницу
@@ -10065,6 +10122,7 @@ it:Adatta a &larghezza
 ja:幅に合わせる(&W)
 kr:너비에 맞춤(&W)
 nl:&Breedte Aanpassen
+no:Tilpass til &bredde
 pl:Dopasuj do sz&erokości
 pt:Ajustar à l&argura
 ru:Вписать по &ширине
@@ -10761,6 +10819,7 @@ it:Ottieni informazioni sui font
 ja:フォント情報を取得
 kr:글꼴 정보 확인
 nl:Informatie over lettertypen ophalen
+no:Hent skrifttypeinformasjon
 pl:Uzyskaj informacje o czcionkach
 pt:Obter info acerca dos tipos de letra
 ru:Получить информацию о шрифтах
@@ -11065,6 +11124,7 @@ kw:Ikon:
 lt:Ikona:
 lv:Ikona:
 nl:Pictogram:
+no:Ikon:
 pl:Ikona:
 pt:Ícone 
 ru:Значок:
@@ -11173,6 +11233,7 @@ lt:Vaizdai
 lv:Attēli
 mk:Слики
 nl:Afbeeldingen
+no:Bilder
 pl:Obrazy
 pt:Imagens 
 ru:Изображения
@@ -11390,6 +11451,7 @@ kr:설치 후 재실행
 kw:Lea ha daslonchya
 mk:Инсталирајте и повторно стартувајте
 nl:Installeren + opnieuw starten
+no:Installer og kjør på nytt
 pl:Zainstaluj i uruchom ponownie
 pt:Instalar e reiniciar 
 ru:Установить и перезапустить
@@ -11426,6 +11488,7 @@ it:Installa per tutti gli utenti
 ja:すべてのユーザーに対してインストール
 kr:모든 사용자용 설치
 nl:Installeer voor alle gebruikers
+no:Installer for alle brukere
 pl:Zainstaluj dla wszystkich użytkowników
 pt:Instalar para todos 
 ru:Установить для всех пользователей
@@ -11482,7 +11545,7 @@ my:Pemasangan gagal!
 ne:स्थापना असफल भयो !
 nl:Installatie mislukt!
 nn:Installering mislykkast!
-no:Feil ved installering!
+no:Installasjon mislyktes!
 pl:Błąd instalacji!
 pt:A instalação falhou!
 ro:Instalare esuata!
@@ -11593,6 +11656,7 @@ ja:64-bit 版の OS に 32-bit 版の SumatraPDF をインストール中
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
 kw:Ow lea Sumatra PDF 32-byt war SO 64-byt
 nl:32bit SumatraPDF installeren op 64bit OS
+no:Installerer 32-bit SumatraPDF på 64-bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 pt:A instalar versão 32-bit num sistema 64-bits
 ru:Установка 32-разрядной SumatraPDF в 64-разрядной ОС
@@ -11630,6 +11694,7 @@ kw:Liw A-Bervedh:
 lt:Vidaus spalva:
 lv:Iekšējā krāsa:
 nl:Interieur Kleur
+no:Innvendig farge:
 pl:Kolor wnętrza:
 pt:Cor interior:
 ru:Внутренний цвет:
@@ -11967,6 +12032,7 @@ kr:선 끝:
 kw:Diwedh Linen:
 lt:Linijos pabaiga:
 nl:Lijn Eind
+no:Linjeslutt:
 pl:Koniec linii:
 pt:Fim de linha:
 ru:Конец линии:
@@ -12004,6 +12070,7 @@ kr:선 시작:
 kw:Dalleth Linen:
 lt:Linijos pradžia:
 nl:Lijn Begin
+no:Linjestart:
 pl:Początek linii:
 pt:Início de linha:
 ru:Начало линии:
@@ -12035,6 +12102,7 @@ id:Memuat %s
 it:Caricamento %s...
 kr:%s 불러오는 중 ...
 nl:Laden %s...
+no:Laster %s ...
 pl:Ładowanie %s ...
 pt:A carregar %s...
 ru:Загрузка %s...
@@ -12467,6 +12535,7 @@ it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 kr:새 창(&W)
 nl:Nieuw &Kader
+no:Nytt &vindu
 pl:Nowe &okno
 pt:Nova &janela
 ru:&Новое окно
@@ -12506,6 +12575,7 @@ kr:새 버전이 있습니다
 kw:Gwersyon nowydh kavadow
 mk:Достапна е нова верзија
 nl:Nieuwe versie beschikbaar
+no:Ny versjon tilgjengelig
 pl:Dostępna nowa wersja
 pt:Nova versão disponível
 ru:Доступна новая версия
@@ -13015,6 +13085,7 @@ kw:Disklerder:
 lt:Nepermatomumas:
 lv:Necaurspīdīgums:
 nl:Dekking
+no:Ugjennomsiktighet:
 pl:Nieprzezroczystość:
 pt:Opacidade 
 ru:Непрозрачность:
@@ -13053,6 +13124,7 @@ kw:Disklerder: %d
 lt:Nepermatomumas: %d
 lv:Necaurspīdīgums: %d
 nl:Dekking: %d
+no:Ugjennomsiktighet: %d
 pl:Nieprzezroczystość: %d
 pt:Opacidade: %d
 ru:Непрозрачность: %d
@@ -13220,6 +13292,7 @@ it:Apri allegato
 ja:添付を開く
 kr:첨부 파일 열기
 nl:Open Bijlage
+no:Åpne vedlegg
 pl:Otwórz załącznik
 pt:Abrir anexo
 ru:Открыть вложение
@@ -13237,6 +13310,7 @@ el:Άνοιγμα καταλόγου στο &Double Commander
 fr:Ouvrir dans &Double Commander
 it:Apri cartella in &Double Commander
 nl:Open Map in &Double Commander
+no:Åpne mappe i &Double Commander
 pl:Otwórz katalog w &Double Commanderze
 ru:Открыть папку в &Double Commander
 sr-rs:Отвори фасциклу у Double Commander-у (&К)
@@ -13249,6 +13323,7 @@ el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείω
 fr:Ouvrir dans &Explorer
 it:Apri cartella in &Explorer
 nl:Open Map in &Verkenner
+no:Åpne mappe i &filutforsker
 pl:Otwórz katalog w &Eksploratorze
 ru:Открыть папку в &Проводнике
 sr-rs:Отвори фасциклу у Истра&живачу
@@ -13261,6 +13336,7 @@ el:Άνοιγμα κατακόγου στον &Total Commander
 fr:Ouvrir dans &Total Commander
 it:Apri cartella in &Total Commander
 nl:Open Map in &TotalCommander
+no:Åpne mappe i &Total Commander
 pl:Otwórz katalog w &Total Commanderze
 ru:Открыть папку в &Total Commander
 sr-rs:Отвори фасциклу у Total Commander-у (&Т)
@@ -13273,6 +13349,7 @@ el:Άνοιγμα καταλόγου στο Directory &Opus
 fr:Ouvrir dans Directory &Opus
 it:Apri cartella in Directory &Opus
 nl:Open Map in Directory &Opus
+no:Åpne mappe i Directory &Opus
 pl:Otwórz katalog w Directory &Opus
 ru:Открыть папку в &Directory Opus
 sr-rs:Отвори фасциклу у Directory Opus-у (&Д)
@@ -13309,6 +13386,7 @@ kw:Ygeri PDF Neythys
 lt:Atidaryti įdėtą PDF
 lv:Atvērt iegultu PDF
 nl:Open Ingesloten Pdf
+no:Åpne innebygd PDF
 pl:Otwórz osadzony PDF
 pt:Abrir PDF incorporado
 ru:Открыть встроенный PDF
@@ -13653,6 +13731,7 @@ el:Άνοιγμα στη βοήθεια Microsoft &HTML
 fr:Ouvrir dans &HTML Help
 it:Apri in Microsoft &HTML Help
 nl:Open in Microsoft &HTML Help
+no:Åpne i Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
 ru:Открыть в Microsoft &HTML Help
 sr-rs:Отвори у Microsoft HTML Help-у (&Х)
@@ -14068,6 +14147,7 @@ it:Pa&gina...
 ja:ページ(&G)...
 kr:페이지(&G)...
 nl:Pa&gina
+no:Si&de...
 pl:&Strona...
 pt:Pá&gina...
 ru:С&траница...
@@ -14627,6 +14707,7 @@ kw:Lieslinen
 lt:Laužtė
 lv:Lauzta līnija
 nl:Poly Regel
+no:Polylinje
 pl:Polilinia
 pt:Poli-linha 
 ru:Ломаная линия
@@ -14671,6 +14752,7 @@ kw:Liestuek
 lt:Daugiakampis
 lv:Daudzstūris
 nl:Veelhoek
+no:Polygon
 pl:Wielokąt
 pt:Polígono
 ru:Многоугольник
@@ -14705,6 +14787,7 @@ kw:Tardhans: %d 0 R
 lt:Pranešimas: %d 0 R
 lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
+no:Sprettopp: %d 0 R
 pl:Wyskakujące okienko: %d 0 R
 pt:Popup: %d 0 R
 ru:Всплывающее окно: %d 0 R
@@ -14798,6 +14881,7 @@ it:Presentazione
 ja:プレゼンテーション(&E)
 kr:프레젠테이션(&E)
 nl:Pr&esentatie
+no:Pr&esentasjon
 pl:&Prezentacja
 pt:Apr&esentação
 ru:Презента&ция
@@ -15417,6 +15501,7 @@ it:Ri&nomina...
 ja:ファイル名の変更(&N)...
 kr:이름 바꾸기(&N)...
 nl:Her&noem
+no:Gi nytt &navn...
 pl:Zmień &nazwę...
 pt:Mudar &nome...
 ru:Пере&именовать...
@@ -15455,6 +15540,7 @@ kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lt:Stačiakampis: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
+no:Rekt: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 pt:Retângulo: x=%d y=%d dx=%d dy=%d
 ru:Прямоугольник: x=%d y=%d dx=%d dy=%d
@@ -15495,6 +15581,7 @@ kw:Redaktya
 lt:Redaguoti
 lv:Rediģēt
 nl:Redigeren
+no:Endre
 pl:Redaguj
 pt:Censurar
 ru:Правка
@@ -15786,6 +15873,7 @@ it:Ruota a &sinistra
 ja:左に回転(&L)
 kr:왼쪽으로 돌리기(&L)
 nl:&Linksom Roteren
+no:Roter til &venstre
 pl:Obróć w &lewo
 pt:Rodar à &esquerda
 ru:Повернуть в&лево
@@ -15818,6 +15906,7 @@ it:Ruota a &destra
 ja:右に回転(&R)
 kr:오른쪽으로 돌리기(&R)
 nl:&Rechtsom Roteren
+no:Roter til &høyre
 pl:Obróć w &prawo
 pt:Rodar à di&reita
 ru:Повернуть в&право
@@ -15852,6 +15941,7 @@ ja:選択範囲(&E)
 kr:선택(&E)
 kw:D&ewisans
 nl:S&electie
+no:U&tvalg
 pl:Z&aznaczenie
 pt:S&eleção
 ru:В&ыделение
@@ -15890,6 +15980,7 @@ kw:I&gam-ogam
 lt:Pabraukti &vingiuota linija
 lv:&Viļņaina
 nl:Kr&onkelig
+no:S&nirklet understreking
 pl:&Falowanie
 pt:&Curva irregular
 ru:Во&лнистый
@@ -15927,6 +16018,7 @@ ja:SVG ドキュメント
 kr:SVG 문서
 kw:Dogvennow SVG
 nl:SVG Documenten
+no:SVG-dokumenter
 pl:Documenty SVG
 pt:Documentos SVG
 ru:Документы SVG
@@ -15964,6 +16056,7 @@ it:Salva annotazioni in questo PDF
 ja:注釈を上書き保存
 kr:주석을 현재 PDF에 저장하기
 nl:Notities opslaan in bestaande PDF
+no:Lagre merknader til eksisterende PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 pt:Guardar anotações para PDF existente
 ru:Со&хранить аннотации в имеющемся PDF
@@ -15994,6 +16087,7 @@ it:Salva allegato
 ja:添付を保存
 kr:첨부파일 저장...
 nl:Bijlage Opslaan...
+no:Lagre vedlegg...
 pl:Zapisz załącznik...
 pt:Guardar anexo...
 ru:Сохранить вложение...
@@ -16034,6 +16128,7 @@ kw:Gwitha Restren Neythys...
 lt:Išsaugoti įdėtą failą...
 lv:Saglabāt iegultu failu
 nl:Ingesloten Bestand Opslaan...
+no:Lagre innebygd fil...
 pl:Zapisz osadzony plik...
 pt:Guardar ficheiro incorporado...
 ru:Сохранить вложенный файл...
@@ -16067,6 +16162,7 @@ it:Sal&va scorciatoia...
 ja:ショートカットを保存(&H)...
 kr:바로가기 저장(&H)...
 nl:S&neltoets Opslaan
+no:Lagre s&narvei...
 pl:Zapisz s&krót...
 pt:Guardar atal&ho...
 ru:Сохранить &ярлык...
@@ -16102,6 +16198,7 @@ ja:注釈を保存しますか？
 kr:주석을 저장할까요?
 kw:Gwitha notenyansow?
 nl:Aantekeningen Opslaan?
+no:Lagre merknader?
 pl:Zapisać adnotacje?
 pt:Guardar anotações?
 ru:Сохранить аннотации?
@@ -16144,6 +16241,7 @@ lt:Išsaugoti pakeitimus į naują PDF failą
 lv:Saglabāt izmaiņas jaunā PDF failā
 mk:Зачувај ги измените во нов ПДФ
 nl:Wijzigingen opslaan in een nieuwe PDF
+no:Lagre endringer til en ny PDF
 pl:Zapisz zmiany w nowym pliku PDF
 pt:Guardar alterações para ficheiro PDF distinto
 ru:Сохранить изменения в новом PDF
@@ -16185,6 +16283,7 @@ kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lt:Išsaugoti pakeitimus į esamą PDF failą
 lv:Saglabāt izmaiņas esošajā PDF failā
 nl:Wijzigingen opslaan in bestaande PDF
+no:Lagre endringer til eksisterende PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 pt:Guardar anotações para PDF existente
 ru:Сохранить изменения в имеющемся PDF
@@ -16221,6 +16320,7 @@ ja:新しい PDF に保存(&N)
 kr:새 PDF로 저장(&N)
 kw:Gwitha dhe PDF &nowydh
 nl:Opslaan in &nieuwe PDF
+no:Lagre til &ny PDF
 pl:Zapisz w &nowym pliku PDF
 pt:Guardar para PDF disti&nto
 ru:Сохранить в &новом PDF
@@ -16258,6 +16358,7 @@ kw:Notenyansow gwithys dhe '%s'
 lt:Anotacijos išsaugotos į '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
 nl:Aantekeningen opgeslagen in '%s'
+no:Lagret merknader i '%s'
 pl:Zapisano adnotacje w '%s'
 pt:Guardar anotações para '%s'
 ru:Аннотации сохранены в '%s'
@@ -16293,6 +16394,7 @@ kw:Gwitha '%s' re fyllis gans: '%s'
 lt:%s išsaugojimas nepavyko: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
+no:Lagring av '%s' mislyktes med: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
 pt:Não foi possível guardar '%s': '%s'
 ru:Ошибка сохранения '%s' с: '%s'
@@ -16328,6 +16430,7 @@ ja:Bing で検索(&B)
 kr:Bing으로 검색(&B)
 kw:Hwilas Gans &Bing
 nl:Zoeken Met &Bing
+no:Søk med &Bing
 pl:Szukaj za pomocą &Bing
 pt:Pesquisar com &Bing
 ru:Н&айти в Bing
@@ -16367,6 +16470,7 @@ ja:Google で検索(&G)
 kr:Google로 검색(&G)
 kw:Hwilas Gans &Google
 nl:Zoeken Met &Google
+no:Søk med &Google
 pl:Szukaj za pomocą &Google
 pt:Pesquisar com &Google
 ru:&Найти в Google
@@ -16534,6 +16638,7 @@ kw:Dewis Notenyans y'n Wolegell
 lt:Pasirinkti anotaciją redaktoriuje
 lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
+no:Velg merknad i merknadvindu
 pl:Wybierz adnotację w edytorze
 pt:Selecionar anotação no editor
 ru:Выбрать аннотацию в редакторе
@@ -16961,6 +17066,7 @@ kw:Diskwedhes &Taklow Drudh
 lt:Rodyti &mėgstamus
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
+no:Vis &favoritter
 pl:Pokaż &ulubione
 pt:Mostrar &favoritos
 ru:Показать и&збранное
@@ -17068,6 +17174,7 @@ kw:Diskwedhes &Skrolvarrys
 lt:Rodyti &slinkties juostas
 lv:Rādīt &ritjoslas
 nl:Toon S&chuifbalken
+no:Vis &rullefelt
 pl:Pokaż &paski przewijania
 pt:Mo&strar barra de deslocação
 ru:Показывать по&лосы прокрутки
@@ -17170,6 +17277,7 @@ it:Visualizza &Preferiti
 ja:ブックマークを表示(&M)
 kr:북마크 보이기(&M)
 nl:Toon Blad&wijzers
+no:Vis bok&merker
 pl:Pokaż za&kładki
 pt:&Mostrar marcadores
 ru:Показывать &закладки
@@ -17275,6 +17383,7 @@ kw:Diskwedhes Skr&olvarrys
 lt:Rodyti &slinkties juostas
 lv:Rādīt rit&joslas
 nl:Toon Sch&uifbalken
+no:Vis rul&lefelt
 pl:Pokaż p&aski przewijania
 pt:M&ostrar barra de deslocação
 ru:Показывать по&лосы прокрутки
@@ -17382,6 +17491,7 @@ kw:Diskwedhes yn &restren
 lt:Rodyti ap&lankale
 lv:Rādīt &mapē
 nl:Toon in &map
+no:Vis i &mappe
 pl:Pokaż w &folderze
 pt:Mostrar na &pasta
 ru:Показать в п&апке
@@ -17415,6 +17525,7 @@ it:Visualizza nella cartella
 ja:フォルダを表示
 kr:탐색기에서 폴더 열기
 nl:Toon in map
+no:Vis i mappe
 pl:Pokaż w folderze
 pt:Mostrar na pasta
 ru:Показать в папке
@@ -17583,6 +17694,7 @@ ja:このバージョンをスキップ
 kr:이 버전 건너뛰기
 kw:Skyppya an gwersyon ma
 nl:Sla deze versie over
+no:Hopp over denne versjonen
 pl:Pomiń tę wersję
 pt:Ignorar esta versão
 ru:Пропустить эту версию
@@ -17754,6 +17866,7 @@ kw:Pedrek
 lt:Kvadratas
 lv:Kvadrāts
 nl:Vierkant
+no:Firkant
 pl:Kwadrat
 pt:Quadrado 
 ru:Квадрат
@@ -18063,7 +18176,7 @@ my:Tetapan-tetapan SumatraPDF
 ne:SumatraPDF विकल्पहरु
 nl:SumatraPDF Opties
 nn:SumatraPDF-innstillingar
-no:Innstillinger
+no:SumatraPDF-innstillinger
 pl:Opcje SumatraPDF
 pt:Opções do SumatraPDF
 ro:Opțiuni SumatraPDF
@@ -18487,6 +18600,7 @@ kw:Alinyans Tekst:
 lt:Teksto lygiavimas:
 lv:Teksta līdzinājums:
 nl:Tekst Uitlijning:
+no:Tekstjustering:
 pl:Wyrównanie tekstu:
 pt:Alinhamento do texto:
 ru:Выравнивание текста:
@@ -18526,6 +18640,7 @@ lv:Teksta krāsa:
 my:Warna Teks:
 ne:अक्षरको रङ:
 nl:Tekst Kleur
+no:Tekstfarge:
 pl:Kolor tekstu:
 pt:Cor do texto:
 ru:Цвет текста:
@@ -18564,6 +18679,7 @@ lt:Teksto dydis:
 lv:Teksta lielums:
 my:Saiz Teks:
 nl:Tekst Grootte:
+no:Tekststørrelse:
 pl:Rozmiar tekstu:
 pt:Tamanho do texto:
 ru:Размер текста:
@@ -18601,6 +18717,7 @@ lt:Teksto dydis: %d
 lv:Teksta lielums: %d
 my:Saiz Teks: %d
 nl:Tekst Grootte: %d
+no:Tekststørrelse: %d
 pl:Rozmiar tekstu: %d
 pt:Tamanho do texto: %d
 ru:Размер текста: %d
@@ -19017,6 +19134,7 @@ ja:DeepL を使って翻訳(&D)
 kr:DeepL로 번역(&D)
 kw:Treylya gans &DeepL
 nl:Vertalen Met &Deepl
+no:Oversett med &DeepL
 pl:Tłumacz za pomocą &DeepL
 pt:Traduzir com &DeepL
 ru:П&еревести в DeepL
@@ -19308,6 +19426,7 @@ kw:Notenyansow anwithys
 lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
 nl:Niet-opgeslagen aantekening
+no:Merknader som ikke er lagret
 pl:Niezapisane adnotacje
 pt:Anotações não guardadas
 ru:Не сохранены аннотации
@@ -19343,6 +19462,7 @@ ja:'%s' に未保存の注釈があります
 kr:'%s'에 저장되지 않은 주석
 kw:Notenyansow anwithys yn '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
+no:Merknader som ikke er lagret i '%s'
 pl:Niezapisane adnotacje w '%s'
 pt:Anotações não guardadas em '%s'
 ru:В '%s' есть несохранённые аннотации
@@ -19782,6 +19902,7 @@ kw:Yma notenyansow anwithys dhis
 lt:Turite neišsaugotų anotacijų
 lv:Jums ir nesaglabātas anotācijas
 nl:U heeft niet-opgeslagen aantekeningen
+no:Du har merknader som ikke er lagret
 pl:Masz niezapisane adnotacje
 pt:Existem anotações não guardadas
 ru:Аннотации не сохранены
@@ -19818,6 +19939,7 @@ ja:使用中のバージョン '%s' よりも新しいバージョン '%s' が�
 kr:현재 버전은 '%s' 이고 '%s' 버전을 사용할 수 있습니다.\n새 버전을 설치하시겠습니까?
 kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon nowydh?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
+no:Du har versjon '%s' og versjon '%s' er tilgjengelig.\nVil du installere ny versjon?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
 pt:Você tem a versão '%s' mas a versão '%s' já está disponível.\nDeseja instalar a nova versão?
 ru:Вы используете версию '%s', хотя доступна версия '%s'.\nХотите установить новую версию?
@@ -19855,6 +19977,7 @@ ja:現在 32 ビット版の SumatraPDF を 64 ビット版の OS で使用し�
 kr:64비트 OS에 32비트 SumatraPDF를 설치하고 있습니다.\n64비트 버전을\n다운로드 하시겠습니까?
 kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwersyon 64-byt?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
+no:Du installerer 32-bit SumatraPDF på 64-bit OS.\nVil du laste ned\n64-biters versjonen?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
 pt:Está a instalar a versão 32-bit num sistema 64-bit.\nGostaria de descarregar e instalar\na versão 64-bit?
 ru:Вы устанавливаете 32-разрядную версию SumatraPDF в 64-разрядной ОС.\nХотите загрузить 64-разрядную версию программы?
