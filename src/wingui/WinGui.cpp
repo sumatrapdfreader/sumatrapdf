@@ -3443,25 +3443,29 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         gr = ToGdipRect(ti->r);
         gfx.FillRectangle(&br, gr);
 
-        r = ti->rClose;
-        if (i == tabUnderMouse && overClose) {
-            // draw bacground of X
-            Rect cr = r;
-            cr.Inflate(3, 3);
-            gr = ToGdipRect(cr);
-            br.SetColor(GdipCol(circleColor));
-            gfx.FillRectangle(&br, gr);
-        }
+        // first tab is always Home tab and cannot be closed
+        // TODO: this should be an attribute on the tab, not tied to SumatraPDF
+        if (i > 0) {
+            r = ti->rClose;
+            if (i == tabUnderMouse && overClose) {
+                // draw bacground of X
+                Rect cr = r;
+                cr.Inflate(3, 3);
+                gr = ToGdipRect(cr);
+                br.SetColor(GdipCol(circleColor));
+                gfx.FillRectangle(&br, gr);
+            }
 
-        // draw X
-        br.SetColor(GdipCol(xColor));
-        Pen penX(&br, 1.f);
-        Gdiplus::Point p1(r.x, r.y);
-        Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);
-        gfx.DrawLine(&penX, p1, p2);
-        p1 = {r.x + r.dx, r.y};
-        p2 = {r.x, r.y + r.dy};
-        gfx.DrawLine(&penX, p1, p2);
+            // draw X
+            br.SetColor(GdipCol(xColor));
+            Pen penX(&br, 1.f);
+            Gdiplus::Point p1(r.x, r.y);
+            Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);
+            gfx.DrawLine(&penX, p1, p2);
+            p1 = {r.x + r.dx, r.y};
+            p2 = {r.x, r.y + r.dy};
+            gfx.DrawLine(&penX, p1, p2);
+        }
 
         // draw text
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
