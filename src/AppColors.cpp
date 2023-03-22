@@ -180,6 +180,14 @@ COLORREF GetAppColor(AppColor col) {
         return COL_WHITE;
     }
 
+    if (col == AppColor::TabBackgroundBg) {
+        return COL_LIGHT_GRAY;
+    }
+
+    if (col == AppColor::TabHighlightedBg) {
+        return COL_LIGHTER_GRAY;
+    }
+
     if (col == AppColor::TabSelectedText) {
         return COL_DARK_GRAY;
     }
@@ -193,12 +201,12 @@ COLORREF GetAppColor(AppColor col) {
         return RgbToCOLORREF(0xC13535);
     }
 
-    if (col == AppColor::TabBackgroundBg) {
-        return COL_LIGHTER_GRAY;
-    }
-
     if (col == AppColor::TabBackgroundText) {
         return COL_DARK_GRAY;
+    }
+
+    if (col == AppColor::TabHighlightedText) {
+        return COL_BLACK;
     }
 
     if (col == AppColor::TabBackgroundCloseX) {
@@ -207,14 +215,6 @@ COLORREF GetAppColor(AppColor col) {
 
     if (col == AppColor::TabBackgroundCloseCircle) {
         return GetAppColor(AppColor::TabSelectedCloseCircle);
-    }
-
-    if (col == AppColor::TabHighlightedBg) {
-        return COL_LIGHT_GRAY;
-    }
-
-    if (col == AppColor::TabHighlightedText) {
-        return COL_BLACK;
     }
 
     if (col == AppColor::TabHighlightedCloseX) {
