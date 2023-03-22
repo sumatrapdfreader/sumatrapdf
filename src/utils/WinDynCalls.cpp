@@ -186,6 +186,19 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWOR
     }
     return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
+
+HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {
+    if (!DynDwmSetWindowAttribute) {
+        return E_NOTIMPL;
+    }
+    return DynDwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+}
+
+// https://stackoverflow.com/questions/39261826/change-the-color-of-the-title-bar-caption-of-a-win32-application
+HRESULT SetCaptionColor(HWND hwnd, COLORREF col) {
+    return SetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE::DWMWA_CAPTION_COLOR, &col, sizeof(col));
+}
+
 }; // namespace dwm
 
 static const char* dllsToPreload =
