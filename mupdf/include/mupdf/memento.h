@@ -277,6 +277,15 @@ void Memento_stats(void);
 void *Memento_label(void *, const char *);
 void Memento_tick(void);
 int Memento_setVerbose(int);
+
+/* Terminate backtraces if we see specified function name. E.g.
+'cfunction_call' will exclude Python interpreter functions when Python calls C
+code. Returns 0 on success, -1 on failure (out of memory). */
+int Memento_addBacktraceLimitFnname(const char *fnname);
+
+/* If <atexitfin> is 0, we do not call Memento_fin() in an atexit() handler. */
+int Memento_setAtexitFin(int atexitfin);
+
 int Memento_setIgnoreNewDelete(int ignore);
 
 void *Memento_malloc(size_t s);
@@ -400,6 +409,8 @@ void Memento_showHash(unsigned int hash);
 #define Memento_sequence()                 (0)
 #define Memento_squeezing()                (0)
 #define Memento_setVerbose(A)              (A)
+#define Memento_addBacktraceLimitFnname(A) (0)
+#define Memento_setAtexitFin(atexitfin)    (0)
 
 #endif /* MEMENTO */
 

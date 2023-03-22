@@ -295,7 +295,7 @@ pnm_read_tupletype(fz_context *ctx, const unsigned char *p, const unsigned char 
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse tuple type in pnm image");
 
 	s = p;
-	while (!iswhiteeol(*p))
+	while (p < e && !iswhiteeol(*p))
 		p++;
 	len = p - s;
 
@@ -328,7 +328,7 @@ pnm_read_token(fz_context *ctx, const unsigned char *p, const unsigned char *e, 
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse header token in pnm image");
 
 	s = p;
-	while (!iswhiteeol(*p))
+	while (p < e && !iswhiteeol(*p))
 		p++;
 	len = p - s;
 

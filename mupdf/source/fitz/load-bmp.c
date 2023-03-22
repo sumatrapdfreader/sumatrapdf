@@ -599,6 +599,17 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 	width = info->width;
 	height = info->height;
 
+	sstride = ((width * bitcount + 31) / 32) * 4;
+	if (ssp + sstride * height > end)
+	{
+		int32_t h = (end - ssp) / sstride;
+		if (h == 0 || h > SHRT_MAX)
+		{
+			fz_free(ctx, decompressed);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions out of range in bmp image");
+		}
+	}
+
 	fz_try(ctx)
 	{
 		pix = fz_new_pixmap(ctx, info->cs, width, height, NULL, 1);
@@ -619,18 +630,10 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 		dstride = -dstride;
 	}
 
-	sstride = ((width * bitcount + 31) / 32) * 4;
 	if (ssp + sstride * height > end)
 	{
 		fz_warn(ctx, "premature end in bitmap data in bmp image");
-
 		height = (end - ssp) / sstride;
-		if (height == 0 || height > SHRT_MAX)
-		{
-			fz_drop_pixmap(ctx, pix);
-			fz_free(ctx, decompressed);
-			fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions out of range in bmp image");
-		}
 	}
 
 	/* These are only used for 16- and 32-bit components

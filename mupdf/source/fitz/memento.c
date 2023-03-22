@@ -505,6 +505,7 @@ static struct {
     int            leaking;
     int            showDetailedBlocks;
     int            hideMultipleReallocs;
+    int            hideRefChangeBacktraces;
     int            abortOnLeak;
     int            abortOnCorruption;
     size_t         maxMemory;
@@ -519,10 +520,13 @@ static struct {
     int            squeezes_num;
     int            squeezes_pos;
     int            ignoreNewDelete;
+    int            atexitFin;
     int            phasing;
     int            verbose;
     int            verboseNewlineSuppressed;
     void          *lastVerbosePtr;
+    char         **backtraceLimitFnnames;
+    int            backtraceLimitFnnamesNum;
 #ifdef MEMENTO_DETAILS
     Memento_hashedST *stacktraces[256];
     int            hashCollisions;
@@ -552,7 +556,7 @@ extern void backtrace_symbols_fd(void **, size_t, int);
 extern char **backtrace_symbols(void **, size_t);
 
 #define MEMENTO_BACKTRACE_MAX 256
-static void (*print_stack_value)(void *address);
+static int (*print_stack_value)(void *address);
 
 /* Libbacktrace gubbins - relies on us having libdl to load the .so */
 #ifdef HAVE_LIBDL
@@ -625,25 +629,34 @@ static void error_cb(void *data, const char *msg, int errnum)
 
 static int full_cb(void *data, uintptr_t pc, const char *fname, int line, const char *fn)
 {
-    (void)data;
     if (sizeof(void *) == 4)
         fprintf(stderr, "    0x%08lx %s(%s:%d)\n", pc, fn?fn:"?", fname?fname:"?", line);
     else
         fprintf(stderr, "    0x%016lx %s(%s:%d)\n", pc, fn?fn:"?", fname?fname:"?", line);
+    if (fn) {
+        int i;
+        for (i=0; i<memento.backtraceLimitFnnamesNum; ++i) {
+            if (!strcmp(fn, memento.backtraceLimitFnnames[i])) {
+                *(int*) data = 1;
+            }
+        }
+    }
     return 0;
 }
 
-static void print_stack_libbt(void *addr)
+static int print_stack_libbt(void *addr)
 {
+    int end = 0;
     current_addr = addr;
     backtrace_pcinfo(my_backtrace_state,
                      (uintptr_t)addr,
                      full_cb,
                      error_cb,
-                     NULL);
+                     &end);
+    return end;
 }
 
-static void print_stack_libbt_failed(void *addr)
+static int print_stack_libbt_failed(void *addr)
 {
     char **strings;
 #if 0
@@ -682,6 +695,7 @@ static void print_stack_libbt_failed(void *addr)
         fprintf(stderr, "    %s\n", strings[0]);
     }
     (free)(strings);
+    return 0;
 }
 
 static int init_libbt(void)
@@ -738,7 +752,7 @@ static int init_libbt(void)
 }
 #endif
 
-static void print_stack_default(void *addr)
+static int print_stack_default(void *addr)
 {
     char **strings = backtrace_symbols(&addr, 1);
 
@@ -766,6 +780,7 @@ static void print_stack_default(void *addr)
         fprintf(stderr, "    %s\n", strings[0]);
     }
     free(strings);
+    return 0;
 }
 
 static void Memento_initStacktracer(void)
@@ -791,7 +806,8 @@ static void Memento_showStacktrace(void **stack, int numberOfFrames)
 
     for (i = 0; i < numberOfFrames; i++)
     {
-        print_stack_value(stack[i]);
+        if (print_stack_value(stack[i]))
+            break;
     }
 }
 #elif defined(MEMENTO_STACKTRACE_METHOD) && MEMENTO_STACKTRACE_METHOD == 2
@@ -1837,12 +1853,17 @@ static int Memento_listBlock(Memento_BlkHeader *b,
 }
 
 static void doNestedDisplay(Memento_BlkHeader *b,
-                            int depth)
+                            int depth,
+                            int include_known_leaks
+                            )
 {
     /* Try and avoid recursion if we can help it */
     do {
         Memento_BlkHeader *c = NULL;
-        blockDisplay(b, depth);
+        if (!include_known_leaks && (b->flags & Memento_Flag_KnownLeak))
+            ;
+        else
+            blockDisplay(b, depth);
         VALGRIND_MAKE_MEM_DEFINED(b, sizeof(Memento_BlkHeader));
         if (b->sibling) {
             c = b->child;
@@ -1853,7 +1874,7 @@ static void doNestedDisplay(Memento_BlkHeader *b,
         }
         VALGRIND_MAKE_MEM_NOACCESS(b, sizeof(Memento_BlkHeader));
         if (c)
-            doNestedDisplay(c, depth+1);
+            doNestedDisplay(c, depth+1, include_known_leaks);
     } while (b);
 }
 
@@ -1865,10 +1886,11 @@ static int ptrcmp(const void *a_, const void *b_)
 }
 
 static
-int Memento_listBlocksNested(void)
+int Memento_listBlocksNested(int include_known_leaks)
 {
-    int count, i;
+    int count, i, count_excluding_known_leaks, count_known_leaks;
     size_t size;
+    size_t size_excluding_known_leaks, size_known_leaks;
     Memento_BlkHeader *b, *prev;
     void **blocks, *minptr, *maxptr;
     intptr_t mask;
@@ -1876,10 +1898,22 @@ int Memento_listBlocksNested(void)
     /* Count the blocks */
     count = 0;
     size = 0;
+    count_excluding_known_leaks = 0;
+    size_excluding_known_leaks = 0;
+    count_known_leaks = 0;
+    size_known_leaks = 0;
     for (b = memento.used.head; b; b = b->next) {
         VALGRIND_MAKE_MEM_DEFINED(b, sizeof(*b));
-        size += b->rawsize;
         count++;
+        size += b->rawsize;
+        if (b->flags & Memento_Flag_KnownLeak) {
+            count_known_leaks += 1;
+            size_known_leaks += b->rawsize;
+        }
+        else {
+            count_excluding_known_leaks += 1;
+            size_excluding_known_leaks += b->rawsize;
+        }
     }
 
     if (memento.showDetailedBlocks)
@@ -1963,7 +1997,7 @@ int Memento_listBlocksNested(void)
         /* Now display with nesting */
         for (b = memento.used.head; b; b = b->next) {
             if ((b->flags & Memento_Flag_HasParent) == 0)
-            doNestedDisplay(b, 0);
+                doNestedDisplay(b, 0, include_known_leaks);
         }
 
         MEMENTO_UNDERLYING_FREE(blocks);
@@ -1984,15 +2018,26 @@ int Memento_listBlocksNested(void)
 
     fprintf(stderr, " Total number of blocks = %d\n", count);
     fprintf(stderr, " Total size of blocks = "FMTZ"\n", (FMTZ_CAST)size);
+    if (!include_known_leaks) {
+        fprintf(stderr, " Excluding known leaks:\n");
+        fprintf(stderr, "   Number of blocks = %d\n", count_excluding_known_leaks);
+        fprintf(stderr, "   Size of blocks = "FMTZ"\n", (FMTZ_CAST) size_excluding_known_leaks);
+        fprintf(stderr, " Known leaks:\n");
+        fprintf(stderr, "   Number of blocks = %d\n", count_known_leaks);
+        fprintf(stderr, "   Size of blocks = "FMTZ"\n", (FMTZ_CAST) size_known_leaks);
+    }
 
     return 0;
 }
 
-void Memento_listBlocks(void)
+static void Memento_listBlocksInternal(int include_known_leaks)
 {
     MEMENTO_LOCK();
-    fprintf(stderr, "Allocated blocks:\n");
-    if (Memento_listBlocksNested())
+    if (include_known_leaks)
+        fprintf(stderr, "Allocated blocks:\n");
+    else
+        fprintf(stderr, "Allocated blocks (excluding known leaks):\n");
+    if (Memento_listBlocksNested(include_known_leaks))
     {
         size_t counts[2];
         counts[0] = 0;
@@ -2002,6 +2047,11 @@ void Memento_listBlocks(void)
         fprintf(stderr, " Total size of blocks = "FMTZ"\n", (FMTZ_CAST)counts[1]);
     }
     MEMENTO_UNLOCK();
+}
+
+void Memento_listBlocks()
+{
+    Memento_listBlocksInternal(1 /*include_known_leaks*/);
 }
 
 static int Memento_listNewBlock(Memento_BlkHeader *b,
@@ -2103,7 +2153,7 @@ void Memento_listPhasedBlocks(void)
         while (phase.phase != 0);
         phase.counts[0] = 0;
         phase.counts[1] = 0;
-        fprintf(stderr, "Blocks allocated and still extant: In phase 0:\n", num, phase.phase);
+        fprintf(stderr, "Blocks allocated and still extant: In phase 0:\n");
         Memento_appBlocks(&memento.used, Memento_listNewPhasedBlock, &phase);
         fprintf(stderr, "  Total number of blocks = "FMTZ"\n", (FMTZ_CAST)phase.counts[0]);
         fprintf(stderr, "  Total size of blocks = "FMTZ"\n", (FMTZ_CAST)phase.counts[1]);
@@ -2138,7 +2188,7 @@ static int showInfo(Memento_BlkHeader *b, void *arg)
 {
     Memento_BlkDetails *details;
 
-    (void)arg;
+    int include_known_leaks = (arg) ? *(int*) arg : 1;
 
     fprintf(stderr, FMTP":(size="FMTZ",num=%d)",
             MEMBLK_TOBLK(b), (FMTZ_CAST)b->rawsize, b->sequence);
@@ -2157,6 +2207,12 @@ static int showInfo(Memento_BlkHeader *b, void *arg)
             continue;
         }
         fprintf(stderr, "  Event %d (%s)\n", details->sequence, eventType[(int)details->type]);
+        if (memento.hideRefChangeBacktraces && (
+                details->type == Memento_EventType_takeRef
+                || details->type == Memento_EventType_dropRef))
+            continue;
+        if (!include_known_leaks && (b->flags & Memento_Flag_KnownLeak))
+            continue;
         Memento_showHashedStacktrace(details->trace);
         if (memento.showDetailedBlocks > 0) {
             memento.showDetailedBlocks -= 1;
@@ -2170,14 +2226,19 @@ static int showInfo(Memento_BlkHeader *b, void *arg)
 }
 #endif
 
-void Memento_listBlockInfo(void)
+static void Memento_listBlockInfoInternal(int include_known_leaks)
 {
 #ifdef MEMENTO_DETAILS
     MEMENTO_LOCK();
     fprintf(stderr, "Details of allocated blocks:\n");
-    Memento_appBlocks(&memento.used, showInfo, NULL);
+    Memento_appBlocks(&memento.used, showInfo, &include_known_leaks);
     MEMENTO_UNLOCK();
 #endif
+}
+
+void Memento_listBlockInfo(void)
+{
+    Memento_listBlockInfoInternal(1 /*include_known_leaks*/);
 }
 
 void Memento_blockInfo(void *p)
@@ -2220,11 +2281,11 @@ void Memento_fin(void)
     {
         Memento_endStats();
         if (Memento_nonLeakBlocksLeaked()) {
-            Memento_listBlocks();
+            Memento_listBlocksInternal(0 /*include_known_leaks*/);
 #ifdef MEMENTO_DETAILS
             fprintf(stderr, "\n");
             if (memento.showDetailedBlocks)
-                Memento_listBlockInfo();
+                Memento_listBlockInfoInternal(0 /*include_known_leaks*/);
 #endif
             Memento_breakpoint();
             leaked = 1;
@@ -2429,8 +2490,15 @@ static int Memento_add_squeezes(const char *text)
 #if defined(_WIN32) || defined(_WIN64)
 static int Memento_fin_win(void)
 {
-    Memento_fin();
+    if (memento.atexitFin)
+        Memento_fin();
     return 0;
+}
+#else
+static void Memento_fin_unix(void)
+{
+    if (memento.atexitFin)
+        Memento_fin();
 }
 #endif
 
@@ -2448,6 +2516,8 @@ static void Memento_init(void)
     memento.squeezes  = NULL;
     memento.squeezes_num = 0;
     memento.squeezes_pos = 0;
+    memento.backtraceLimitFnnames = NULL;
+    memento.backtraceLimitFnnamesNum = 0;
 
     env = getenv("MEMENTO_FAILAT");
     memento.failAt = (env ? atoi(env) : 0);
@@ -2475,6 +2545,9 @@ static void Memento_init(void)
     env = getenv("MEMENTO_HIDE_MULTIPLE_REALLOCS");
     memento.hideMultipleReallocs = (env ? atoi(env) : 0);
 
+    env = getenv("MEMENTO_HIDE_REF_CHANGE_BACKTRACES");
+    memento.hideRefChangeBacktraces = (env ? atoi(env) : 0);
+
     env = getenv("MEMENTO_ABORT_ON_LEAK");
     memento.abortOnLeak = (env ? atoi(env) : 0);
 
@@ -2501,16 +2574,21 @@ static void Memento_init(void)
     env = getenv("MEMENTO_IGNORENEWDELETE");
     memento.ignoreNewDelete = (env ? atoi(env) : 0);
 
-    /* For Windows, we can _onexit rather than atexit. This is because
-     * _onexit registered handlers are called when the DLL that they are
-     * in is freed, rather than on complete closedown. This gives us a
-     * higher chance of seeing Memento_fin called in a state when the
-     * stack backtracing mechanism can still work. */
+    env = getenv("MEMENTO_ATEXIT_FIN");
+    memento.atexitFin = (env ? atoi(env) : 1);
+
+    if (memento.atexitFin) {
+        /* For Windows, we can _onexit rather than atexit. This is because
+         * _onexit registered handlers are called when the DLL that they are
+         * in is freed, rather than on complete closedown. This gives us a
+         * higher chance of seeing Memento_fin called in a state when the
+         * stack backtracing mechanism can still work. */
 #if defined(_WIN32) || defined(_WIN64)
-    _onexit(Memento_fin_win);
+        _onexit(Memento_fin_win);
 #else
-    atexit(Memento_fin);
+        atexit(Memento_fin_unix);
 #endif
+    }
 
     Memento_initMutex(&memento.mutex);
 
@@ -4248,6 +4326,8 @@ size_t Memento_setMax(size_t max)
 
 void Memento_startLeaking(void)
 {
+    if (!memento.inited)
+        Memento_init();
     memento.leaking++;
 }
 
@@ -4265,6 +4345,41 @@ int Memento_setVerbose(int x)
 {
     memento.verbose = x;
     return x;
+}
+
+int Memento_addBacktraceLimitFnname(const char *fnname)
+{
+    char **ss;
+    char *s;
+    if (!memento.inited)
+        Memento_init();
+    ss = MEMENTO_UNDERLYING_REALLOC(
+            memento.backtraceLimitFnnames,
+            sizeof(*memento.backtraceLimitFnnames) * (memento.backtraceLimitFnnamesNum + 1)
+            );
+    if (!ss) {
+        fprintf(stderr, "Memento_addBacktraceLimitFnname(): out of memory\n");
+        return -1;
+    }
+    memento.backtraceLimitFnnames = ss;
+    s = MEMENTO_UNDERLYING_MALLOC(strlen(fnname) + 1);
+    if (!s) {
+        fprintf(stderr, "Memento_addBacktraceLimitFnname(): out of memory\n");
+        return -1;
+    }
+    memento.backtraceLimitFnnames[memento.backtraceLimitFnnamesNum] = s;
+    strcpy(s, fnname);
+    memento.backtraceLimitFnnamesNum += 1;
+    return 0;
+}
+
+int Memento_setAtexitFin(int atexitfin)
+{
+    if (!memento.inited) {
+        Memento_init();
+    }
+    memento.atexitFin = atexitfin;
+    return 0;
 }
 
 void *Memento_cpp_new(size_t size)
