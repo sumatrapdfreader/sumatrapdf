@@ -45,7 +45,7 @@ constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/updatec
 constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/updatecheck-pre-release.txt";
 #else
 constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-check-rel.txt";
-constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/update-check-rel.txt2";
+constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/update-check-rel.txt";
 #endif
 
 #ifndef WEBSITE_DOWNLOAD_PAGE_URL
