@@ -250,32 +250,3 @@ Exit:
     }
     return ok;
 }
-
-// callback function f is responsible for deleting HttpRsp
-void HttpGetAsync(const char* url, const std::function<void(HttpRsp*)>& f) {
-    // rsp is owned and deleted by f callback
-    HttpRsp* rsp = new HttpRsp;
-    rsp->url.SetCopy(url);
-    RunAsync([rsp, f] { // NOLINT
-        HttpGet(rsp->url, rsp);
-        f(rsp);
-    });
-}
-
-#if 0
-// returns false if failed to download or status code is not 200
-// for other scenarios, check HttpRsp
-static bool  HttpGet(const char *url, HttpRsp *rspOut) {
-    AutoFreeWstr urlW(strconv::FromUtf8(url));
-    return HttpGet(urlW, rspOut);
-}
-
-void HttpGetAsync(const char *url, const std::function<void(HttpRsp *)> &f) {
-    std::thread t([=] {
-        auto rsp = new HttpRsp;
-        HttpGet(url, rsp.Get());
-        f(rsp.Get());
-    });
-    t.detach();
-}
-#endif

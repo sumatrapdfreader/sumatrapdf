@@ -16,5 +16,3 @@ bool HttpRspOk(const HttpRsp*);
 bool HttpPost(const char* server, int port, const char* url, str::Str* headers, str::Str* data);
 bool HttpGet(const char* url, HttpRsp* rspOut);
 bool HttpGetToFile(const char* url, const char* destFilePath);
-// void  HttpGetAsync(const char *url, const std::function<void(HttpRsp *)> &);
-void HttpGetAsync(const char* url, const std::function<void(HttpRsp*)>&);
