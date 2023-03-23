@@ -1307,7 +1307,39 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
     }
 }
 
-StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
+// TODO: maybe remove the code completely
+// bugs: 3225 and 353
+// not sure if we should do it, it's unexpected behavior
+static bool gEnsureUniqueLabels = false;
+
+static void EnsureLabelsUnique(StrVec* labels) {
+    if (!gEnsureUniqueLabels) {
+        return;
+    }
+    // ensure that all page labels are unique (by appending a number to duplicates)
+    StrVec dups(*labels);
+    dups.Sort();
+    int nDups = dups.Size();
+    for (int i = 1; i < nDups; i++) {
+        if (!str::Eq(dups.at(i), dups.at(i - 1))) {
+            continue;
+        }
+        int idx = labels->Find(dups.at(i)), counter = 0;
+        while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
+            AutoFreeStr unique;
+            do {
+                unique.Set(str::Format("%s.%d", dups.at(i), ++counter));
+            } while (labels->Contains(unique));
+            labels->SetAt(idx, unique.Get());
+        }
+        nDups = dups.Size();
+        for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
+            // no-op
+        }
+    }
+}
+
+static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
@@ -1350,28 +1382,7 @@ StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         labels->SetAt(idx, "");
     }
 
-    // ensure that all page labels are unique (by appending a number to duplicates)
-    StrVec dups(*labels);
-    dups.Sort();
-    int nDups = dups.Size();
-    for (int i = 1; i < nDups; i++) {
-        if (!str::Eq(dups.at(i), dups.at(i - 1))) {
-            continue;
-        }
-        int idx = labels->Find(dups.at(i)), counter = 0;
-        while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
-            AutoFreeStr unique;
-            do {
-                unique.Set(str::Format("%s.%d", dups.at(i), ++counter));
-            } while (labels->Contains(unique));
-            labels->SetAt(idx, unique.Get());
-        }
-        nDups = dups.Size();
-        for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
-            // no-op
-        }
-    }
-
+    EnsureLabelsUnique(labels);
     return labels;
 }
 struct PageTreeStackItem {
