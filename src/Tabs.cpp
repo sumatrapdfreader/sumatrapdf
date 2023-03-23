@@ -110,7 +110,17 @@ void RemoveTab(WindowTab* tab) {
     LoadModelIntoTab(tab);
 }
 
-void MigrateTab(WindowTab* tab, MainWindow* newWin) {
+static void CloseWindowIfNoDocuments(MainWindow* win) {
+    for (auto& tab : win->Tabs()) {
+        if (!tab->IsAboutTab()) {
+            return;
+        }
+    }
+    // no tabs or only about tab
+    CloseWindow(win, true, true);
+}
+
+static void MigrateTab(WindowTab* tab, MainWindow* newWin) {
     MainWindow* oldWin = tab->win;
     RemoveTab(tab);
 
@@ -141,6 +151,8 @@ void MigrateTab(WindowTab* tab, MainWindow* newWin) {
     args.noSavePrefs = true;
     LoadDocument(&args, false, false);
     delete tab;
+
+    CloseWindowIfNoDocuments(oldWin);
 }
 
 // Selects the given tab (0-based index)
