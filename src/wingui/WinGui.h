@@ -739,7 +739,7 @@ struct TabsCtrl : Wnd {
     TabDraggedHandler onTabDragged = nullptr;
 
     // TODO: set those to reasonable defaults
-    COLORREF currBgCol = kTabDefaultBgCol;
+    COLORREF currBgCol = 0;
     COLORREF tabBackgroundBg = 0;
     COLORREF tabBackgroundText = 0;
     COLORREF tabBackgroundCloseX = 0;

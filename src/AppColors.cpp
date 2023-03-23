@@ -176,16 +176,20 @@ COLORREF GetAppColor(AppColor col) {
         return GetAppColor(AppColor::MainWindowLink);
     }
 
+    if (col == AppColor::CaptionBg) {
+        return RGB(0xee, 0xee, 0xee);
+    }
+
     if (col == AppColor::TabSelectedBg) {
         return COL_WHITE;
     }
 
     if (col == AppColor::TabBackgroundBg) {
-        return COL_LIGHT_GRAY;
+        return RGB(0xce, 0xce, 0xce);
     }
 
     if (col == AppColor::TabHighlightedBg) {
-        return COL_LIGHTER_GRAY;
+        return RGB(0xbb, 0xbb, 0xbb);
     }
 
     if (col == AppColor::TabSelectedText) {

@@ -28,6 +28,8 @@ enum class AppColor {
 
     NotifcationsProgress,
 
+    CaptionBg,
+
     TabSelectedBg,
     TabSelectedText,
     TabSelectedCloseX,

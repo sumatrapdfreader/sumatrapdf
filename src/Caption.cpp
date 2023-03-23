@@ -162,9 +162,7 @@ void CaptionInfo::UpdateColors(bool activeWindow) {
         textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
                                                                   : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
-    // TODO: make it light gray e.g. 0xeeeeee but also needs to
-    // update background of TabsCtrl
-    COLORREF col = RGB(0xff, 0xff, 0xff);
+    COLORREF col = GetAppColor(AppColor::CaptionBg);
     dwm::SetCaptionColor(::GetParent(hwnd), col);
 }
 
