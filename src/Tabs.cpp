@@ -311,6 +311,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
 
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
+    UpdateTabsColors(tabsCtrl);
 
     tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) {
         int closedTabIdx = ev->tabIdx;

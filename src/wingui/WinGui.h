@@ -741,7 +741,6 @@ struct TabsCtrl : Wnd {
     TabMigrationHandler onTabMigration = nullptr;
     TabDraggedHandler onTabDragged = nullptr;
 
-    // TODO: set those to reasonable defaults
     COLORREF currBgCol = 0;
     COLORREF tabBackgroundBg = 0;
     COLORREF tabBackgroundText = 0;
