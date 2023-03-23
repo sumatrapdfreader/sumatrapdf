@@ -644,12 +644,14 @@ using Gdiplus::PathData;
 #define kTabMinDx 100
 
 struct TabsCtrl;
+struct TabInfo;
 
 #define kTabDefaultBgCol (COLORREF) - 1
 
 struct TabMouseState {
     int tabIdx = -1;
     bool overClose = false;
+    TabInfo* tabInfo = nullptr;
 };
 
 struct TabClosedEvent {
@@ -702,6 +704,7 @@ struct TabInfo {
     char* text = nullptr;
     char* tooltip = nullptr;
     bool isPinned = false;
+    bool canClose = true; // TODO: same as !isPinned?
     UINT_PTR userData = 0;
 
     TabInfo() = default;

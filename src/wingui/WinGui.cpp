@@ -3352,6 +3352,7 @@ TabMouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
         }
         res.tabIdx = i;
         res.overClose = ti->rClose.Contains(p);
+        res.tabInfo = ti;
         return res;
     }
 
@@ -3378,7 +3379,7 @@ Gdiplus::Color GdipCol(COLORREF c) {
 void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
-    bool overClose = tabState.overClose;
+    bool overClose = tabState.overClose && tabState.tabInfo->canClose;
     int tabSelected = GetSelected();
     // logfa("TabsCtrl::Paint, underMouse: %d, overClose: %d, selected: %d, rc: pos: (%d, %d), size: (%d, %d)\n",
     // tabUnderMouse, (int)overClose, tabSelected, rc.left, rc.top, RectDx(rc), RectDy(rc));
@@ -3443,9 +3444,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         gr = ToGdipRect(ti->r);
         gfx.FillRectangle(&br, gr);
 
-        // first tab is always Home tab and cannot be closed
-        // TODO: this should be an attribute on the tab, not tied to SumatraPDF
-        if (i > 0) {
+        if (ti->canClose) {
             r = ti->rClose;
             if (i == tabUnderMouse && overClose) {
                 // draw bacground of X
@@ -3625,6 +3624,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TabMouseState tabState;
 
     bool overClose = false;
+    bool canClose = true;
     int tabUnderMouse = -1;
 
     if (WM_MOUSELEAVE == msg) {
@@ -3636,7 +3636,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if ((msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || (msg == WM_MOUSELEAVE)) {
         tabState = TabStateFromMousePosition(mousePos);
         tabUnderMouse = tabState.tabIdx;
-        overClose = tabState.overClose;
+        canClose = tabState.tabInfo && tabState.tabInfo->canClose;
+        overClose = tabState.overClose && canClose;
         lastMousePos = mousePos;
         const char* msgName = WinMsgName(msg);
         // logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
@@ -3789,7 +3790,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONUP: {
-            if (tabBeingClosed < 0) {
+            if (tabBeingClosed < 0 || !canClose) {
                 return 0;
             }
             TriggerTabClosed(this, tabBeingClosed);

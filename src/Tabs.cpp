@@ -446,6 +446,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
         newTab->text = str::Dup("Home");
         newTab->tooltip = nullptr;
         newTab->isPinned = true;
+        newTab->canClose = false;
         newTab->userData = (UINT_PTR)homeTab;
         int insertedIdx = tabs->InsertTab(idx, newTab);
         CrashIf(insertedIdx != 0);
