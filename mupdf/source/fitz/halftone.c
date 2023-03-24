@@ -597,7 +597,7 @@ fz_bitmap *fz_new_bitmap_from_pixmap_band(fz_context *ctx, fz_pixmap *pix, fz_ha
 
 	fz_try(ctx)
 	{
-		ht_line = fz_malloc(ctx, lcm * n);
+		ht_line = fz_malloc(ctx, lcm * (size_t)n);
 		out = fz_new_bitmap(ctx, pix->w, pix->h, n, pix->xres, pix->yres);
 		o = out->samples;
 		p = pix->samples;

@@ -26,7 +26,7 @@
 #include "mupdf/fitz/store.h"
 #include "mupdf/pdf/document.h"
 
-#define PDF_MRANGE_CAP 8
+#define PDF_MRANGE_CAP 32
 
 typedef struct
 {

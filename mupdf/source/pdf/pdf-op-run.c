@@ -970,7 +970,7 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 	pdf_font_desc *fontdesc = gstate->text.font;
 	fz_matrix trm;
 	int gid;
-	int ucsbuf[8];
+	int ucsbuf[PDF_MRANGE_CAP];
 	int ucslen;
 	int i;
 	int render_direct;

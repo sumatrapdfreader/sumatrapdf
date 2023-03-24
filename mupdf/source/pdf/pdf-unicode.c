@@ -32,7 +32,7 @@ pdf_remap_cmap_range(fz_context *ctx, pdf_cmap *ucs_from_gid,
 	unsigned int cpt, unsigned int gid, unsigned int n, pdf_cmap *ucs_from_cpt)
 {
 	unsigned int k;
-	int ucsbuf[8];
+	int ucsbuf[PDF_MRANGE_CAP];
 	int ucslen;
 
 	for (k = 0; k <= n; ++k)

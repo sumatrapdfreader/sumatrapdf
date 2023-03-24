@@ -156,7 +156,9 @@ clean_path(char *name)
 		}
 	}
 
-	if (q == start) /* empty string is really "." */
+	/* Protect against 'blah:' input, where start = q = the terminator.
+	 * We must not overrun it. */
+	if (q == start && *q != 0) /* empty string is really "." */
 		*q++ = '.';
 	*q = '\0';
 

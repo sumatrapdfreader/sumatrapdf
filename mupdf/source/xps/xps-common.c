@@ -270,7 +270,8 @@ xps_parse_color(fz_context *ctx, xps_document *doc, char *base_uri, char *string
 
 	if (string[0] == '#')
 	{
-		if (strlen(string) == 9)
+		size_t z = strlen(string);
+		if (z == 9)
 		{
 			samples[0] = unhex(string[1]) * 16 + unhex(string[2]);
 			samples[1] = unhex(string[3]) * 16 + unhex(string[4]);
@@ -280,9 +281,12 @@ xps_parse_color(fz_context *ctx, xps_document *doc, char *base_uri, char *string
 		else
 		{
 			samples[0] = 255;
-			samples[1] = unhex(string[1]) * 16 + unhex(string[2]);
-			samples[2] = unhex(string[3]) * 16 + unhex(string[4]);
-			samples[3] = unhex(string[5]) * 16 + unhex(string[6]);
+/* Use a macro to protect against overrunning the string. */
+#define UNHEX(idx) (idx < z ? unhex(string[idx]) : 0)
+			samples[1] = UNHEX(1) * 16 + UNHEX(2);
+			samples[2] = UNHEX(3) * 16 + UNHEX(4);
+			samples[3] = UNHEX(5) * 16 + UNHEX(6);
+#undef UNHEX
 		}
 
 		samples[0] /= 255;
