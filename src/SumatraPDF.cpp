@@ -2456,7 +2456,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
 // are other windows, else the Frequently Read page is displayed
 void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     WindowTab* tab = win->CurrentTab();
-    if (!tab || tab->IsAboutTab()) {
+    if (!tab) {
         return;
     }
     CloseTab(tab, quitIfLast);
