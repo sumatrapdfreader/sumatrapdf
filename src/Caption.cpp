@@ -11,6 +11,7 @@
 
 #include "Settings.h"
 #include "AppColors.h"
+#include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
@@ -162,8 +163,10 @@ void CaptionInfo::UpdateColors(bool activeWindow) {
         textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
                                                                   : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
-    COLORREF col = GetAppColor(AppColor::CaptionBg);
-    dwm::SetCaptionColor(::GetParent(hwnd), col);
+    if (gGlobalPrefs->useTabs) {
+        COLORREF col = GetAppColor(AppColor::CaptionBg);
+        dwm::SetCaptionColor(::GetParent(hwnd), col);
+    }
 }
 
 // TODO: not sure if needed, those are bitmaps
