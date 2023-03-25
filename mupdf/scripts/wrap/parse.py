@@ -734,6 +734,7 @@ def find_struct( tu, structname, require_definition=True):
     Returns cursor for definition or None.
     '''
     verbose = state.state_.show_details( structname)
+    verbose = False
     if verbose:
         jlib.log( '{=structname}')
     structname = util.clip( structname, ('const ', 'struct '))   # Remove any 'struct ' prefix.

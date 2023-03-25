@@ -341,10 +341,10 @@ class ClassExtras:
         We return None if <name> is a known enum.
         '''
         verbose = state.state_.show_details( name)
-        if verbose:
+        if 0 and verbose:
             jlib.log( 'ClassExtras.get(): {=name}')
         name = util.clip( name, ('const ', 'struct '))
-        if verbose:
+        if 0 and verbose:
             jlib.log( 'ClassExtras.get(): {=name}')
         if not name.startswith( ('fz_', 'pdf_')):
             return

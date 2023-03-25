@@ -136,10 +136,17 @@ class State:
         self.functions_cache_populate( tu)
         fn_to_cursor = self.functions_cache[ tu]
         for fnname, cursor in fn_to_cursor.items():
+            verbose = state_.show_details( fnname)
             if method and fnname in omit_methods:
+                if verbose:
+                    jlib.log('{fnname=} is in {omit_methods=}')
                 continue
             if not fnname.startswith( name_prefix):
+                if 0 and verbose:
+                    jlib.log('{fnname=} does not start with {name_prefix=}')
                 continue
+            if verbose:
+                jlib.log('{name_prefix=} yielding {fnname=}')
             yield fnname, cursor
 
     def find_global_data_starting_with( self, tu, prefix):

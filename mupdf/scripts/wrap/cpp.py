@@ -790,17 +790,7 @@ def function_wrapper(
             jlib.log( '{arg.cursor=} {arg.name=} {arg.separator=} {arg.alt=} {arg.out_param=}')
         if parse.is_pointer_to(arg.cursor.type, 'fz_context'):
             continue
-        if arg.out_param:
-            decl = ''
-            decl += '\n'
-            decl += '        #ifdef SWIG\n'
-            decl += '            ' + declaration_text( arg.cursor.type, 'OUTPUT') + '\n'
-            decl += '        #else\n'
-            decl += '            ' + declaration_text( arg.cursor.type, arg.name) + '\n'
-            decl += '        #endif\n'
-            decl += '        '
-        else:
-            decl = declaration_text( arg.cursor.type, arg.name, verbose=verbose)
+        decl = declaration_text( arg.cursor.type, arg.name, verbose=verbose)
         if verbose:
             jlib.log( '{decl=}')
         name_args_h += f'{comma}{decl}'
@@ -1731,26 +1721,36 @@ def class_find_constructor_fns( tu, classname, struct_name, base_name, extras):
         .
     '''
     assert struct_name == f'fz_{base_name}' or struct_name == f'pdf_{base_name}'
+    verbose = state.state_.show_details( struct_name)
     constructor_fns = []
     if '-' not in extras.constructor_prefixes:
         # Add default constructor fn prefix.
         if struct_name.startswith( 'fz_'):
             extras.constructor_prefixes.insert( 0, f'fz_new_')
+            extras.constructor_prefixes.insert( 0, f'pdf_new_')
         elif struct_name.startswith( 'pdf_'):
             extras.constructor_prefixes.insert( 0, f'pdf_new_')
     for fnprefix in extras.constructor_prefixes:
+        if verbose:
+            jlib.log('{struct_name=} {fnprefix=}')
         for fnname, cursor in state.state_.find_functions_starting_with( tu, fnprefix, method=True):
             # Check whether this has identical signature to any fn we've
             # already found.
+            if verbose:
+                jlib.log( '{struct_name=} {fnname=}')
             duplicate_type = None
             duplicate_name = False
             for f, c, is_duplicate in constructor_fns:
-                #jlib.log( '{cursor.type=} {c.type=}')
+                if verbose:
+                    jlib.log( '{struct_name=} {cursor.spelling=} {c.type.spelling=}')
                 if f == fnname:
+                    if verbose:
+                        jlib.log('setting duplicate_name to true')
                     duplicate_name = True
                     break
                 if c.type == cursor.type:
-                    #jlib.log( '{struct_name} wrapper: ignoring candidate constructor {fnname}() because prototype is indistinguishable from {f=}()')
+                    if verbose:
+                        jlib.log( '{struct_name} wrapper: ignoring candidate constructor {fnname}() because prototype is indistinguishable from {f=}()')
                     duplicate_type = f
                     break
             if duplicate_name:
@@ -1763,9 +1763,11 @@ def class_find_constructor_fns( tu, classname, struct_name, base_name, extras):
                 # function fz_new_pixmap_from_alpha_channel() introduced
                 # 2021-05-07.
                 #
-                jlib.logx('ignoring possible constructor because looks like copy constructor: {fnname}')
+                if verbose:
+                    jlib.log('ignoring possible constructor because looks like copy constructor: {fnname}')
             elif fnname in extras.constructor_excludes:
-                pass
+                if verbose:
+                    jlib.log('{fnname=} is in {extras.constructor_excludes=}')
             elif extras.pod and extras.pod != 'none' and state.get_name_canonical( cursor.result_type).spelling == f'{struct_name}':
                 # Returns POD struct by value.
                 ok = True
@@ -1775,15 +1777,19 @@ def class_find_constructor_fns( tu, classname, struct_name, base_name, extras):
 
             if ok:
                 if duplicate_type and extras.copyable:
-                    jlib.log1( 'adding static method wrapper for {fnname}')
+                    if verbose:
+                        jlib.log1( 'adding static method wrapper for {fnname}')
                     extras.method_wrappers_static.append( fnname)
                 else:
                     if duplicate_type:
-                        jlib.logx( 'not able to provide static factory fn {struct_name}::{fnname} because wrapper class is not copyable.')
-                    jlib.log1( 'adding constructor wrapper for {fnname}')
+                        if verbose:
+                            jlib.log( 'not able to provide static factory fn {struct_name}::{fnname} because wrapper class is not copyable.')
+                    if verbose:
+                        jlib.log( 'adding constructor wrapper for {fnname}')
                     constructor_fns.append( (fnname, cursor, duplicate_type))
             else:
-                jlib.log3( 'ignoring possible constructor for {classname=} because does not return required type: {fnname=} -> {cursor.result_type.spelling=}')
+                if verbose:
+                    jlib.log( 'ignoring possible constructor for {classname=} because does not return required type: {fnname=} -> {cursor.result_type.spelling=}')
 
     constructor_fns.sort()
     return constructor_fns
@@ -2063,6 +2069,7 @@ def function_wrapper_class_aware_body(
 
         Otherwise we don't wrap the returned value.
     '''
+    verbose = state.state_.show_details( fnname)
     out_cpp.write( f'{{\n')
     return_void = (fn_cursor.result_type.spelling == 'void')
 
@@ -2129,6 +2136,8 @@ def function_wrapper_class_aware_body(
             out_cpp.write( f'    {_make_top_level(return_cursor.spelling)} temp = mupdf::{rename.ll_fn(fnname)}(')
         elif wrap_return == 'pointer':
             out_cpp.write( f'    {_make_top_level(return_cursor.spelling)}* temp = mupdf::{rename.ll_fn(fnname)}(')
+        elif wrap_return == 'const pointer':
+            out_cpp.write( f'    const {_make_top_level(return_cursor.spelling)}* temp = mupdf::{rename.ll_fn(fnname)}(')
         elif return_void:
             out_cpp.write( f'    mupdf::{rename.ll_fn(fnname)}(')
         else:
@@ -2155,7 +2164,7 @@ def function_wrapper_class_aware_body(
         if state.state_.show_details(fnname):
             jlib.log('{=wrap_return}')
         refcounted_return = False
-        if wrap_return == 'pointer' and parse.has_refs( tu, return_cursor.type):
+        if wrap_return in ('pointer', 'const pointer') and parse.has_refs( tu, return_cursor.type):
             refcounted_return = True
             refcounted_return_struct_cursor = return_cursor
         elif class_constructor and parse.has_refs( tu, struct_cursor.type):
@@ -2197,7 +2206,7 @@ def function_wrapper_class_aware_body(
 
         if wrap_return == 'value':
             out_cpp.write( f'    auto ret = {rename.class_(return_cursor.spelling)}(&temp);\n')
-        elif wrap_return == 'pointer':
+        elif wrap_return in ('pointer', 'const pointer'):
             out_cpp.write( f'    auto ret = {rename.class_(return_cursor.spelling)}(temp);\n')
 
         # Handle wrapper-class out-params - need to keep arg.m_internal and set to
@@ -2400,16 +2409,7 @@ def function_wrapper_class_aware(
         else:
             jlib.logx( '{arg.spelling=}')
             decl_text = declaration_text( arg.cursor.type, arg.name)
-            if arg.out_param:
-                decl_h += '\n'
-                decl_h += '            #ifdef SWIG\n'
-                decl_h += '                ' + declaration_text( arg.cursor.type, 'OUTPUT') + '\n'
-                decl_h += '            #else\n'
-                decl_h += '                ' + decl_text + '\n'
-                decl_h += '            #endif\n'
-                decl_h += '            '
-            else:
-                decl_h += decl_text
+            decl_h += decl_text
             decl_cpp += decl_text
         comma = ', '
 
@@ -2495,7 +2495,7 @@ def function_wrapper_class_aware(
                     return_type = rename.class_(return_cursor.spelling)
                     if verbose:
                         jlib.log( '{=return_type}')
-                    if state.state_.show_details(return_cursor.type.spelling) or state.state_.show_details(struct_name):
+                    if 0 and (state.state_.show_details(return_cursor.type.spelling) or state.state_.show_details(struct_name)):
                         jlib.log('{return_cursor.type.spelling=}'
                                 ' {return_cursor.spelling=}'
                                 ' {struct_name=} {return_extras.copyable=}'
@@ -2506,7 +2506,10 @@ def function_wrapper_class_aware(
                         fn_cpp = f'{return_type} {class_name}::{decl_cpp}'
                     else:
                         fn_cpp = f'{return_type} {decl_cpp}'
-                    wrap_return = 'pointer'
+                    if t.is_const_qualified():
+                        wrap_return = 'const pointer'
+                    else:
+                        wrap_return = 'pointer'
             if verbose:
                 jlib.log( '{=warning_not_copyable warning_no_raw_constructor}')
         else:
@@ -3210,7 +3213,7 @@ def pod_class_fns(
     out_cpp.write( f'}}\n')
 
 
-def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False):
+def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False, verbose=False):
     '''
     Yields (cursor, fnptr_type) for function-pointer members of struct defined
     at cusor, where <cursor> is the cursor of the member and <fntr_type> is the
@@ -3225,21 +3228,33 @@ def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False):
         be useful when generating code that will be compiled on different
         platforms with differing definitions of size_t.
     '''
+    if verbose:
+        jlib.log('Looking for fnptrs in {cursor_struct.spelling=}')
     for cursor in cursor_struct.type.get_canonical().get_fields():
         t = cursor.type
+        if verbose:
+            jlib.log('{t.kind=} {cursor.spelling=}')
         if t.kind == state.clang.cindex.TypeKind.POINTER:
             t = cursor.type.get_pointee()
-            if t.kind == state.clang.cindex.TypeKind.TYPEDEF:
+            if t.kind in (state.clang.cindex.TypeKind.TYPEDEF, state.clang.cindex.TypeKind.ELABORATED):
                 t_cursor = t.get_declaration()
                 t = t_cursor.underlying_typedef_type
             if t.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
-                if not shallow_typedef_expansion:
+                if shallow_typedef_expansion:
+                    if verbose:
+                        jlib.log('Not calling state.get_name_canonical() for {t.spelling=}. {cursor.spelling=}.')
+                else:
                     tt = state.get_name_canonical( t)
+                    if verbose:
+                        jlib.log('{tt.spelling=}')
                     if not 'struct (unnamed at ' in tt.spelling:
                         # This is clang giving an unhelpful name to an
                         # anonymous struct.
-                        #jlib.log( 'Avoiding clang struct (unnamed at ...) anonymous struct: {tt.spelling=}')
+                        if verbose:
+                            jlib.log( 'Avoiding clang struct (unnamed at ...) anonymous struct: {tt.spelling=}')
                         t = tt
+                if verbose:
+                    jlib.log('Yielding: {cursor.spelling=} {t.spelling=}')
                 yield cursor, t
 
 
@@ -3262,7 +3277,7 @@ def class_wrapper_virtual_fnptrs(
     '''
     if not extras.virtual_fnptrs:
         return
-
+    verbose = state.state_.show_details( struct_name)
     generated.virtual_fnptrs.append( f'{classname}2')
 
     self_ = extras.virtual_fnptrs.pop( 'self_')
@@ -3282,7 +3297,7 @@ def class_wrapper_virtual_fnptrs(
     out_cpp.write( '\n')
 
     def get_fnptrs( shallow_typedef_expansion=False):
-        for i in get_struct_fnptrs( struct_cursor, shallow_typedef_expansion):
+        for i in get_struct_fnptrs( struct_cursor, shallow_typedef_expansion, verbose=verbose):
             yield i
 
     # Constructor
@@ -3420,6 +3435,9 @@ def class_wrapper_virtual_fnptrs(
     # Define use_virtual_<name>( bool use) method for each fnptr.
     #
     out_h.write(f'\n')
+    # Using a Doxygen-style `/**` comment prefix here can break swig with
+    # `Error: Syntax error in input(3).` if there are no following method
+    # declarations.
     out_h.write(f'    /** These methods set the function pointers in *m_internal\n')
     out_h.write(f'    to point to internal callbacks that call our virtual methods. */\n')
     for cursor, fnptr_type in get_fnptrs():
@@ -3440,6 +3458,10 @@ def class_wrapper_virtual_fnptrs(
     # Write virtual fn default implementations.
     #
     out_h.write(f'\n')
+
+    # Using a Doxygen-style `/**` comment prefix here can break swig with
+    # `Error: Syntax error in input(3).` if there are no following method
+    # declarations.
     out_h.write(f'    /** Default virtual method implementations; these all throw an exception. */\n')
     for cursor, fnptr_type in get_fnptrs():
 
