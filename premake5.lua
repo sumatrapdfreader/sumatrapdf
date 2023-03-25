@@ -133,7 +133,7 @@ end
 
 function zlib_defines()
   includedirs {
-    "ext/zlib-ng",
+    "ext/zlib",
   }
 end
 
