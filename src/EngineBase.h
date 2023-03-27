@@ -128,16 +128,12 @@ struct PageDestinationFile : IPageDestination {
         CrashIf(!u);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
-        if (frag) {
-            name = str::Dup(frag);
-        }
+        name = str::Dup(frag);
     }
 
     ~PageDestinationFile() override {
         str::Free(path);
-        if (name) {
-            str::Free(name);
-        }
+        str::Free(name);
     }
 
     char* GetValue() override {
