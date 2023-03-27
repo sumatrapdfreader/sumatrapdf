@@ -3722,9 +3722,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HwndScheduleRepaint(hwnd);
                 tabHighlightedClose = xHl;
             }
-            if (!overClose) {
-                tabBeingClosed = -1;
-            }
             return 0;
         }
 
@@ -3753,7 +3750,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONUP: {
-            if (tabBeingClosed != -1) {
+            if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed
+                && overClose) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
                 HwndScheduleRepaint(hwnd);
