@@ -3676,7 +3676,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_MOUSELEAVE:
             // logfa("TabsCtrl::WndProc: WM_MOUSELEAVE\n");
-            [[fallthrough]];
+            break;
 
         case WM_MOUSEMOVE: {
             bool isDragging = (GetCapture() == hwnd);
