@@ -1793,13 +1793,21 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
     return win;
 }
 
-void LoadDocumentAsync(LoadArgs* argsIn) {
+void LoadDocumentAsync(LoadArgs* argsIn, bool activateExisting) {
     MainWindow* win = argsIn->win;
     bool failEarly = AdjustPathForMaybeMovedFile(argsIn);
     const char* path = argsIn->FilePath();
     if (failEarly) {
         ShowFileNotFound(win, path, argsIn->noSavePrefs);
         return;
+    }
+
+    if (activateExisting) {
+        MainWindow* existing = FindMainWindowByFile(path, true);
+        if (existing) {
+            existing->Focus();
+            return;
+        }
     }
 
     win = MaybeCreateWindowForFileLoad(argsIn);

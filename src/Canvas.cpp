@@ -1647,7 +1647,7 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
             win = CreateAndShowMainWindow(nullptr);
             args.win = win;
         }
-        LoadDocumentAsync(&args);
+        LoadDocumentAsync(&args, false);
     }
 }
 

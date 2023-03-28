@@ -89,11 +89,10 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         // assume it's a thumbnail of a document
         auto path = url;
         CrashIf(!path);
-        bool lazyLoad = false;
         // ctrl forces always opening
         bool activateExisting = !IsCtrlPressed();
         LoadArgs args(path, win);
-        LoadDocument(&args, lazyLoad, activateExisting);
+        LoadDocumentAsync(&args, activateExisting);
     }
     // SetFocus(win->hwndFrame);
 }
