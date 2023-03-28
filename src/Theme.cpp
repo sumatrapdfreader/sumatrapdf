@@ -17,9 +17,6 @@ makes themes easier to modify and update.
 Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 */
 
-// temporarily (?) disabled
-#if defined(ENABLE_THEME)
-
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "Settings.h"
@@ -32,6 +29,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #define COL_BLACK 0x000000
 #define COL_WHITE 0xFFFFFF
 #define COL_WHITEISH 0xEBEBF9
+#define COL_DARK_GRAY 0x424242
 
 // Theme definition helper functions
 static COLORREF RgbToCOLORREF(COLORREF rgb) {
@@ -65,16 +63,16 @@ Theme g_themeLight = {
     {
         // Height
         24,
-        // Current style
+        // Selected style
         {
             // Background color
-            RgbToCOLORREF(0xFfFfFf),
+            COL_WHITE,
             // Text color
-            COL_BLACK,
+            COL_DARK_GRAY,
             // Default close style
             {
                 // X color
-                AdjustLightness2(g_themeLight.tab.current.backgroundColor, -60),
+                AdjustLightness2(g_themeLight.tab.selected.backgroundColor, -60),
                 // Circle color
                 RgbToCOLORREF(0xC13535)
             }
@@ -82,38 +80,40 @@ Theme g_themeLight = {
         // Background style
         {
             // Background color
-            AdjustLightness2(g_themeLight.tab.current.backgroundColor, -25),
+            //AdjustLightness2(g_themeLight.tab.selected.backgroundColor, -25),
+            RgbToCOLORREF(0xCECECE),
             // Text color
-            COL_BLACK,
+            COL_DARK_GRAY,
             // Default close style
-            g_themeLight.tab.current.close
+            g_themeLight.tab.selected.close
         },
         // Highlighted style
         {
             // Background color
-            AdjustLightness2(g_themeLight.tab.current.backgroundColor, 15),
+            // AdjustLightness2(g_themeLight.tab.selected.backgroundColor, 15),
+            RgbToCOLORREF(0xBBBBBB),
             // Text color
             COL_BLACK,
             // Default close style
-            g_themeLight.tab.current.close
+            g_themeLight.tab.selected.close
         },
         // Tab Close Circle Enabled
         true,
         // Tab Close Pen Width
-        2.0f,
+        1.0f,
         // Hovered close style
         {
             // X color
             COL_WHITEISH,
             // Circle color
-            g_themeLight.tab.current.close.circleColor
+            g_themeLight.tab.selected.close.circleColor
         },
         // Clicked close style
         {
             // X color
             g_themeLight.tab.hoveredClose.xColor,
             // Circle color
-            AdjustLightness2(g_themeLight.tab.current.close.circleColor, -10)
+            AdjustLightness2(g_themeLight.tab.selected.close.circleColor, -10)
         }
     },
     // Notifications
@@ -156,7 +156,7 @@ Theme g_themeDark = {
     {
         // Height
         24,
-        // Current style
+        // Selected style
         {
             // Background color
             RgbToCOLORREF(0x009688),
@@ -171,20 +171,20 @@ Theme g_themeDark = {
         // Background style
         {
             // Background color
-            AdjustLightness2(g_themeDark.tab.current.backgroundColor, -10),
+            AdjustLightness2(g_themeDark.tab.selected.backgroundColor, -10),
             // Text color
             COL_WHITE,
             // Default close style
-            g_themeDark.tab.current.close
+            g_themeDark.tab.selected.close
         },
         // Highlighted style
         {
             // Background color
-            AdjustLightness2(g_themeDark.tab.current.backgroundColor, 10),
+            AdjustLightness2(g_themeDark.tab.selected.backgroundColor, 10),
             // Text color
             COL_WHITE,
             // Default close style
-            g_themeDark.tab.current.close
+            g_themeDark.tab.selected.close
         },
         // Tab Close Circle Enabled
         false,
@@ -238,7 +238,7 @@ Theme g_themeDarker = {
     {
         // Height
         24,
-        // Current style
+        // Selected style
         {
             // Background color
             RgbToCOLORREF(0x007ACC),
@@ -273,7 +273,7 @@ Theme g_themeDarker = {
             // Text color
             COL_WHITE,
             // Default close style
-            g_themeDarker.tab.current.close
+            g_themeDarker.tab.selected.close
         },
         // Tab Close Circle Enabled
         false,
@@ -313,8 +313,23 @@ Theme* g_themes[THEME_COUNT] = {
 };
 
 // Current theme caching
-Theme* currentTheme = NULL;
-int currentThemeIndex;
+Theme* currentTheme = &g_themeLight;
+int currentThemeIndex = 0;
+
+void SwitchTheme(int index) {
+    CrashIf(index < 0 || index >= THEME_COUNT);
+    currentThemeIndex = index;
+    currentTheme = g_themes[index];
+}
+
+void CycleNextTheme() {
+    ++currentThemeIndex;
+    if (currentThemeIndex >= THEME_COUNT) {
+        currentThemeIndex = 0;
+    }
+    SwitchTheme(currentThemeIndex);
+}
+
 
 Theme* GetThemeByName(char* name) {
     for (int i = 0; i < THEME_COUNT; i++) {
@@ -329,6 +344,8 @@ Theme* GetThemeByIndex(int index) {
     CrashIf(index < 0 || index >= THEME_COUNT);
     return g_themes[index];
 }
+
+#if 0
 
 Theme* GetCurrentTheme() {
     if (currentTheme == NULL || !str::Eq(currentTheme->name, gGlobalPrefs->themeName)) {

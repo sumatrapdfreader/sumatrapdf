@@ -82,6 +82,7 @@
 #include "SumatraConfig.h"
 #include "EditAnnotations.h"
 #include "CommandPalette.h"
+#include "Theme.h"
 
 #include "utils/Log.h"
 
@@ -5322,6 +5323,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 createdAnnots.Append(annot);
             }
         } break;
+
+        case CmdCycleTheme:
+            CycleNextTheme();
+            for (auto mainWin : gWindows) {
+                // TODO: this only rerenders canvas, not frame, even with
+                // includingNonClientArea == true.
+                // MainWindowRerender(mainWin, true);
+                RedrawWindow(win->hwndFrame, nullptr, nullptr,
+                             RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+            }
+            break;
 
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
