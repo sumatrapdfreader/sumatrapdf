@@ -3349,6 +3349,7 @@ TabMouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     int nTabs = TabCount();
     for (int i = 0; i < nTabs; i++) {
         TabInfo* ti = tabs[i];
+        // logfa("testing i=%d rect: %d %d %d %d pt: %d %d\n", i, ti->r.x, ti->r.y, ti->r.dx, ti->r.dy, p.x, p.y);
         if (!ti->r.Contains(p)) {
             continue;
         }
@@ -3622,7 +3623,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int tabUnderMouse = -1;
 
     if (WM_MOUSELEAVE == msg) {
-        mousePos = {-1, -1};
+        POINT p;
+        GetCursorPos(&p);
+        ScreenToClient(hwnd, &p);
+        mousePos.x = p.x;
+        mousePos.y = p.y;
     }
     if (WM_MOUSEMOVE == msg) {
         TrackMouseLeave(hwnd);
@@ -3669,9 +3674,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSELEAVE:
-            tabUnderMouse = -1;
-            tabHighlighted = -1;
-            HwndScheduleRepaint(hwnd);
+            if (tabHighlighted != tabUnderMouse) {
+                tabHighlighted = tabUnderMouse;
+                HwndScheduleRepaint(hwnd);
+            }
             break;
 
         case WM_MOUSEMOVE: {
