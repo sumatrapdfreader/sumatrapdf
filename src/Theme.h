@@ -1,11 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
 License: GPLv3 */
 
-#ifndef SUMATRA_THEME
-#define SUMATRA_THEME
-
-#if defined(ENABLE_THEME)
-
 #include "utils/BaseUtil.h"
 
 // The number of themes
@@ -61,8 +56,8 @@ struct TabStyle {
 struct TabTheme {
     // Height of the tab bar
     int height;
-    // Style of the current file tab
-    TabStyle current;
+    // Style of the selected tab
+    TabStyle selected;
     // Style of background tabs
     TabStyle background;
     // Style of the highlighted tab (hovered over)
@@ -79,7 +74,7 @@ struct TabTheme {
 
 struct Theme {
     // Name of the theme
-    char* name;
+    const char* name;
     // Style of the main window
     MainWindowStyle mainWindow;
     // Style of documents
@@ -90,7 +85,10 @@ struct Theme {
     NotificationStyle notifications;
 };
 
-// Function definitions
+extern Theme* currentTheme;
+void CycleNextTheme();
+
+    // Function definitions
 Theme* GetThemeByName(char* name);
 Theme* GetThemeByIndex(int index);
 Theme* GetCurrentTheme();
@@ -98,6 +96,3 @@ Theme* GetCurrentTheme();
 int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
 
-#endif
-
-#endif // !THEME

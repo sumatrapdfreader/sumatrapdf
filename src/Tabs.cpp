@@ -422,22 +422,6 @@ void SaveCurrentWindowTab(MainWindow* win) {
 // TODO: most CloseX colors are not used
 void UpdateTabsColors(TabsCtrl* tab) {
     tab->currBgCol = GetAppColor(AppColor::CaptionBg);
-    tab->tabBackgroundBg = GetAppColor(AppColor::TabBackgroundBg);
-    tab->tabBackgroundText = GetAppColor(AppColor::TabBackgroundText);
-    tab->tabBackgroundCloseX = GetAppColor(AppColor::TabBackgroundCloseX);
-    tab->tabBackgroundCloseCircle = GetAppColor(AppColor::TabBackgroundCloseCircle);
-    tab->tabSelectedBg = GetAppColor(AppColor::TabSelectedBg);
-    tab->tabSelectedText = GetAppColor(AppColor::TabSelectedText);
-    tab->tabSelectedCloseX = GetAppColor(AppColor::TabSelectedCloseX);
-    tab->tabSelectedCloseCircle = GetAppColor(AppColor::TabSelectedCloseCircle);
-    tab->tabHighlightedBg = GetAppColor(AppColor::TabHighlightedBg);
-    tab->tabHighlightedText = GetAppColor(AppColor::TabHighlightedText);
-    tab->tabHighlightedCloseX = GetAppColor(AppColor::TabHighlightedCloseX);
-    tab->tabHighlightedCloseCircle = GetAppColor(AppColor::TabHighlightedCloseCircle);
-    tab->tabHoveredCloseX = GetAppColor(AppColor::TabHoveredCloseX);
-    tab->tabHoveredCloseCircle = GetAppColor(AppColor::TabHoveredCloseCircle);
-    tab->tabClickedCloseX = GetAppColor(AppColor::TabClickedCloseX);
-    tab->tabClickedCloseCircle = GetAppColor(AppColor::TabClickedCloseCircle);
 }
 
 WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {

@@ -30,27 +30,6 @@ enum class AppColor {
 
     CaptionBg,
 
-    TabSelectedBg,
-    TabSelectedText,
-    TabSelectedCloseX,
-    TabSelectedCloseCircle,
-
-    TabBackgroundBg,
-    TabBackgroundText,
-    TabBackgroundCloseX,
-    TabBackgroundCloseCircle,
-
-    TabHighlightedBg,
-    TabHighlightedText,
-    TabHighlightedCloseX,
-    TabHighlightedCloseCircle,
-
-    TabHoveredCloseX,
-    TabHoveredCloseCircle,
-
-    TabClickedCloseX,
-    TabClickedCloseCircle,
-
 };
 
 COLORREF GetAppColor(AppColor);

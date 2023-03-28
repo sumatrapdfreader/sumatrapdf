@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"
+#include "Theme.h"
 
 // For reference of what used to be:
 // https://github.com/sumatrapdfreader/sumatrapdf/commit/74aca9e1b78f833b0886db5b050c96045c0071a0
@@ -178,73 +179,6 @@ COLORREF GetAppColor(AppColor col) {
 
     if (col == AppColor::CaptionBg) {
         return RGB(0xee, 0xee, 0xee);
-    }
-
-    if (col == AppColor::TabSelectedBg) {
-        return COL_WHITE;
-    }
-
-    if (col == AppColor::TabBackgroundBg) {
-        return RGB(0xce, 0xce, 0xce);
-    }
-
-    if (col == AppColor::TabHighlightedBg) {
-        return RGB(0xbb, 0xbb, 0xbb);
-    }
-
-    if (col == AppColor::TabSelectedText) {
-        return COL_DARK_GRAY;
-    }
-
-    if (col == AppColor::TabSelectedCloseX) {
-        c = GetAppColor(AppColor::TabBackgroundBg);
-        return AdjustLightness2(c, -60);
-    }
-
-    if (col == AppColor::TabSelectedCloseCircle) {
-        return RgbToCOLORREF(0xC13535);
-    }
-
-    if (col == AppColor::TabBackgroundText) {
-        return COL_DARK_GRAY;
-    }
-
-    if (col == AppColor::TabHighlightedText) {
-        return COL_BLACK;
-    }
-
-    if (col == AppColor::TabBackgroundCloseX) {
-        return GetAppColor(AppColor::TabSelectedCloseX);
-    }
-
-    if (col == AppColor::TabBackgroundCloseCircle) {
-        return GetAppColor(AppColor::TabSelectedCloseCircle);
-    }
-
-    if (col == AppColor::TabHighlightedCloseX) {
-        return GetAppColor(AppColor::TabSelectedCloseX);
-    }
-
-    if (col == AppColor::TabHighlightedCloseCircle) {
-        return GetAppColor(AppColor::TabSelectedCloseCircle);
-    }
-
-    if (col == AppColor::TabHoveredCloseX) {
-        return COL_WHITEISH;
-    }
-
-    if (col == AppColor::TabHoveredCloseCircle) {
-        return GetAppColor(AppColor::TabSelectedCloseCircle);
-    }
-
-    if (col == AppColor::TabClickedCloseX) {
-        return GetAppColor(AppColor::TabHoveredCloseX);
-    }
-
-    if (col == AppColor::TabClickedCloseCircle) {
-        c = GetAppColor(AppColor::TabSelectedCloseCircle);
-        AdjustLightness2(c, -10);
-        return c;
     }
 
     CrashIf(true);

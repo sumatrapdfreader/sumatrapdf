@@ -13,6 +13,8 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
+#include "Theme.h"
+
 #include "webview2.h"
 
 #include "utils/Log.h"
@@ -3415,23 +3417,15 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
 
     for (int i = 0; i < n; i++) {
         // Get the correct colors based on the state and the current theme
-        COLORREF bgCol = tabBackgroundBg;
-        COLORREF textCol = tabBackgroundText;
-        COLORREF circleColor = tabBackgroundCloseCircle;
-        COLORREF xColor = RGB(0, 0, 0);
-
+        TabStyle tabStyle = currentTheme->tab.background;
         if (tabSelected == i) {
-            bgCol = tabSelectedBg;
-            textCol = tabSelectedText;
-            circleColor = tabSelectedCloseCircle;
+            tabStyle = currentTheme->tab.selected;
         } else if (tabUnderMouse == i) {
-            bgCol = tabHighlightedBg;
-            textCol = tabHighlightedText;
-            circleColor = tabHighlightedCloseCircle;
+            tabStyle = currentTheme->tab.highlighted;
         }
+        TabCloseStyle tabCloseStyle = tabStyle.close;
         if ((tabUnderMouse == i) && overClose) {
-            xColor = tabHoveredCloseX;
-            circleColor = tabHoveredCloseCircle;
+            tabCloseStyle = currentTheme->tab.hoveredClose;
         }
 
         ti = GetTab(i);
@@ -3440,24 +3434,24 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
 
         // draw background
-        br.SetColor(GdipCol(bgCol));
+        br.SetColor(GdipCol(tabStyle.backgroundColor));
         gr = ToGdipRect(ti->r);
         gfx.FillRectangle(&br, gr);
 
         if (ti->canClose) {
             r = ti->rClose;
-            if (i == tabUnderMouse && overClose) {
+            if (i == tabUnderMouse && overClose && currentTheme->tab.closeCircleEnabled) {
                 // draw bacground of X
                 Rect cr = r;
                 cr.Inflate(3, 3);
                 gr = ToGdipRect(cr);
-                br.SetColor(GdipCol(circleColor));
+                br.SetColor(GdipCol(tabCloseStyle.circleColor));
                 gfx.FillRectangle(&br, gr);
             }
 
             // draw X
-            br.SetColor(GdipCol(xColor));
-            Pen penX(&br, 1.f);
+            br.SetColor(GdipCol(tabCloseStyle.xColor));
+            Pen penX(&br, currentTheme->tab.closePenWidth);
             Gdiplus::Point p1(r.x, r.y);
             Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);
             gfx.DrawLine(&penX, p1, p2);
@@ -3471,7 +3465,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         rTxt = ToGdipRectF(ti->r);
         rTxt.X += 8;
         rTxt.Width -= (8 + r.dx + 8);
-        br.SetColor(GdipCol(textCol));
+        br.SetColor(GdipCol(tabStyle.textColor));
         WCHAR* ws = ToWstrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
     }
