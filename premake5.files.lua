@@ -633,6 +633,7 @@ function sumatrapdf_files()
     "SaveAsPdf.*",
     "SearchAndDDE.*",
     "Selection.*",
+    "Settings.h",
     "SettingsStructs.*",
     "SumatraPDF.cpp",
     "SumatraPDF.h",

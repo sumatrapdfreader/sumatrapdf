@@ -598,6 +598,7 @@
     <ClInclude Include="..\src\Scratch.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
+    <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\StressTesting.h" />
     <ClInclude Include="..\src\SumatraAbout.h" />
     <ClInclude Include="..\src\SumatraDialogs.h" />
