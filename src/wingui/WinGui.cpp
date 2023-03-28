@@ -3669,13 +3669,14 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSELEAVE:
-            // logfa("TabsCtrl::WndProc: WM_MOUSELEAVE\n");
+            tabUnderMouse = -1;
+            tabHighlighted = -1;
+            HwndScheduleRepaint(hwnd);
             break;
 
         case WM_MOUSEMOVE: {
             bool isDragging = (GetCapture() == hwnd);
-            // logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, isDragging: %d\n", tabUnderMouse,
-            // (int)isDragging);
+            // logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n", tabUnderMouse, tabHighlighted, (int)isDragging);
             int hl = tabHighlighted;
             if (isDragging && tabUnderMouse == -1) {
                 // move the tab out: draw it as a image and drag around the screen
