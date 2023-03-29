@@ -378,58 +378,6 @@ static void measure_string_h(fz_context *ctx, fz_html_flow *node)
 		node->h = fz_from_css_number_scale(node->box->style->line_height, em);
 }
 
-static unsigned int measure_string_to_fit(fz_context *ctx, const char *s, fz_html_flow *node, hb_buffer_t *hb_buf, float max_w)
-{
-	string_walker walker;
-	unsigned int i;
-	float em;
-	float line_w;
-	uint32_t min;
-	int fragment_offset;
-	float node_w;
-
-	node_w = 0;
-	em = node->box->s.layout.em;
-
-	line_w = 0;
-	fragment_offset = 0;
-	init_string_walker(ctx, &walker, hb_buf, node->bidi_level & 1, node->box->style->font, node->script, node->markup_lang, node->box->style->small_caps, s);
-	while (walk_string(&walker))
-	{
-		for (i = 0; i < walker.glyph_count; i++)
-		{
-			line_w += walker.glyph_pos[i].x_advance * em / walker.scale;
-			if (line_w > max_w)
-				goto split;
-			node_w = line_w;
-		}
-		fragment_offset = walker.end - s;
-	}
-
-	/* This indicates that the whole string fitted. That should never be possible
-	 * as we'd never have called this function in that case! */
-	assert("Spanish Inquisition!" == NULL);
-
-	return 0;
-
-split:
-	/* Nothing fitted. Exit here. Don't update the node width. */
-	if (i == 0)
-		return 0;
-
-	/* Find min, the byte offset of the smallest cluster seen after
-	 * where we need to split the string to fit. That's the split point. */
-	min = walker.glyph_info[i].cluster;
-	for (i++; i < walker.glyph_count; i++)
-		if (walker.glyph_info[i].cluster < min)
-			min = walker.glyph_info[i].cluster;
-
-	/* Update the width of the node for when we split it.*/
-	node->w = node_w;
-
-	/* So return the offset in bytes at which to split. */
-	return min + fragment_offset;
-}
 
 static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline, float *vert_adv)
 {
@@ -658,36 +606,55 @@ static int flush_line(fz_context *ctx, fz_html_box *box, layout_data *ld, float 
 	return 0;
 }
 
-static fz_html_flow *
-break_node(fz_context *ctx, fz_html_flow *node, layout_data *ld, float w)
+static void break_word_for_overflow_wrap(fz_context *ctx, fz_html_flow *node, layout_data *ld)
 {
-	const char *s = get_node_text(ctx, node);
-	unsigned int split_pos;
-	fz_html_flow *new_node;
+	hb_buffer_t *hb_buf = ld->hb_buf;
+	const char *text = node->content.text;
+	string_walker walker;
 
-	/* Only break nodes if overflow_wrap is set to break-word. */
-	if (node->box->style->overflow_wrap != OVERFLOW_WRAP_BREAK_WORD)
-		return NULL;
+	assert(node->type == FLOW_WORD);
+	assert(node->atomic == 0);
 
-	split_pos = measure_string_to_fit(ctx, s, node, ld->hb_buf, w);
-	if (split_pos == 0)
+	/* Split a word node after the first cluster (usually a character), and
+	 * flag the second half as a valid node to break before if in desperate
+	 * need. This may break earlier than necessary, but in that case we'll
+	 * break the second half again when we come to it, until we find a
+	 * suitable breaking point.
+	 *
+	 * We split after each clusters here so we can flag each fragment as
+	 * "atomic" so we don't try breaking it again, and also to flag the
+	 * following word fragment as a possible break point. Breaking at the
+	 * exact desired point would make this more complicated than necessary.
+	 *
+	 * Desperately breaking in the middle of a word like this should should
+	 * rarely (if ever) come up.
+	 *
+	 * TODO: Split at all the clusters in the word at once.
+	 */
+
+	/* Walk string and split at the first cluster. */
+	init_string_walker(ctx, &walker, hb_buf, node->bidi_level & 1, node->box->style->font, node->script, node->markup_lang, node->box->style->small_caps, text);
+	while (walk_string(&walker))
 	{
-		/* No sensible chunk fitted - we can't split, but this should
-		 * be a candidate for breaking. */
-		return node;
+		unsigned int i, a, b;
+		a = walker.glyph_info[0].cluster;
+		for (i = 0; i < walker.glyph_count; ++i)
+		{
+			b = walker.glyph_info[i].cluster;
+			if (b != a)
+			{
+				fz_html_split_flow(ctx, ld->pool, node, fz_runeidx(text, text + b));
+				node->atomic = 1;
+				node->next->overflow_wrap = 1;
+				measure_string_w(ctx, node, ld->hb_buf);
+				measure_string_w(ctx, node->next, ld->hb_buf);
+				return;
+			}
+		}
 	}
 
-	new_node = fz_html_split_flow(ctx, ld->pool, node, split_pos);
-	new_node->type = FLOW_WORD;
-	new_node->h = node->h;
-	new_node->expand = node->expand;
-	new_node->script = node->script;
-	new_node->markup_lang = node->markup_lang;
-	new_node->bidi_level = node->bidi_level;
-	new_node->breaks_line = node->breaks_line;
-	measure_string_w(ctx, new_node, ld->hb_buf);
-
-	return new_node;
+	/* Word is already only one cluster. Don't try breaking here again! */
+	node->atomic = 1;
 }
 
 /*
@@ -700,10 +667,10 @@ break_node(fz_context *ctx, fz_html_flow *node, layout_data *ld, float w)
 */
 static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_html_box *top)
 {
-	fz_html_flow *node, *line, *candidate;
+	fz_html_flow *node, *line, *candidate, *desperate;
 	fz_html_flow *start_flow = NULL;
-	float line_w, candidate_w, indent, break_w, nonbreak_w;
-	int line_align, align;
+	float line_w, candidate_w, desperate_w, indent;
+	int align;
 	fz_html_restarter *restart = ld->restart;
 
 	float em = box->s.layout.em = fz_from_css_number(box->style->font_size, top->s.layout.em, top->s.layout.em, top->s.layout.em);
@@ -738,6 +705,7 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 	if (!box->u.flow.head)
 		return;
 
+	/* Measure the size of all the words and images in the flow. */
 	for (node = box->u.flow.head; node; node = node->next)
 	{
 		if (restart && restart->start_flow)
@@ -793,9 +761,6 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 	}
 
 	node = box->u.flow.head;
-
-	candidate = NULL;
-	candidate_w = 0;
 	if (start_flow)
 	{
 		line = start_flow;
@@ -807,8 +772,14 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 		line_w = indent;
 	}
 
+	candidate = NULL;
+	candidate_w = 0;
+	desperate = NULL;
+	desperate_w = 0;
+
 	while (node)
 	{
+		/* Fast-forward to the restart point. */
 		if (start_flow)
 		{
 			if (start_flow != node)
@@ -818,66 +789,84 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			}
 			start_flow = NULL;
 		}
+
 		switch (node->type)
 		{
 		default:
+			// always same width
+			line_w += node->w;
+			break;
+
 		case FLOW_WORD:
-			if (node->w > box->s.layout.w - line_w && !candidate)
+			/* Allow desperate breaking in middle of word if overflow-wrap: break-word. */
+			if (line_w + node->w > box->s.layout.w && !candidate)
 			{
-				candidate = break_node(ctx, node, ld, box->s.layout.w - line_w);
+				if (!node->atomic && node->box->style->overflow_wrap == OVERFLOW_WRAP_BREAK_WORD)
+				{
+					break_word_for_overflow_wrap(ctx, node, ld);
+				}
 			}
-			nonbreak_w = break_w = node->w;
-			break;
-		case FLOW_IMAGE:
-			nonbreak_w = break_w = node->w;
-			break;
-
-		case FLOW_SHYPHEN:
-		case FLOW_SBREAK:
-		case FLOW_SPACE:
-			nonbreak_w = break_w = 0;
-
-			/* Determine broken and unbroken widths of this node. */
-			if (node->type == FLOW_SPACE)
-				nonbreak_w = node->w;
-			else if (node->type == FLOW_SHYPHEN)
-				break_w = node->w;
-
-			/* If the broken node fits, remember it. */
-			/* Also remember it if we have no other candidate and need to break in desperation. */
-			if (line_w + break_w <= box->s.layout.w || !candidate)
+			/* Remember overflow-wrap word fragments, unless at the beginning of a line. */
+			if (node->overflow_wrap && node != line)
 			{
-				candidate = node;
-				candidate_w = line_w + break_w;
+				desperate = node;
+				desperate_w = line_w;
 			}
+			line_w += node->w;
 			break;
 
 		case FLOW_BREAK:
-			nonbreak_w = break_w = 0;
+		case FLOW_SBREAK:
+			// always zero width
 			candidate = node;
 			candidate_w = line_w;
+			break;
+
+		case FLOW_SPACE:
+			// zero width if broken, default width if unbroken
+			candidate = node;
+			candidate_w = line_w;
+			line_w += node->w;
+			break;
+
+		case FLOW_SHYPHEN:
+			// default width if broken, zero width if unbroken
+			candidate = node;
+			candidate_w = line_w + node->w;
 			break;
 		}
 
 		/* The current node either does not fit or we saw a hard break. */
 		/* Break the line if we have a candidate break point. */
-		line_w += nonbreak_w;
-		if (node->type == FLOW_BREAK || (line_w > box->s.layout.w && candidate))
+		if (node->type == FLOW_BREAK || (line_w > box->s.layout.w && (candidate || desperate)))
 		{
-			fz_html_flow *break_at = (candidate->type == FLOW_WORD ? candidate : candidate->next);
+			int line_align = align;
+			fz_html_flow *break_at;
+			float break_w;
 
-			candidate->breaks_line = 1;
-			if (candidate->type == FLOW_BREAK)
-				line_align = (align == TA_JUSTIFY) ? TA_LEFT : align;
+			if (candidate)
+			{
+				if (candidate->type == FLOW_BREAK)
+					line_align = (align == TA_JUSTIFY) ? TA_LEFT : align;
+				candidate->breaks_line = 1;
+				break_at = candidate->next;
+				break_w = candidate_w;
+			}
 			else
-				line_align = align;
-			if (flush_line(ctx, box, ld, box->s.layout.w, candidate_w, line_align, indent, line, break_at, restart))
+			{
+				break_at = desperate;
+				break_w = desperate_w;
+			}
+
+			if (flush_line(ctx, box, ld, box->s.layout.w, break_w, line_align, indent, line, break_at, restart))
 				return;
 
 			line = break_at;
 			node = break_at;
 			candidate = NULL;
 			candidate_w = 0;
+			desperate = NULL;
+			desperate_w = 0;
 			indent = 0;
 			line_w = 0;
 		}
@@ -889,7 +878,7 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 
 	if (line)
 	{
-		line_align = (align == TA_JUSTIFY) ? TA_LEFT : align;
+		int line_align = (align == TA_JUSTIFY) ? TA_LEFT : align;
 		flush_line(ctx, box, ld, box->s.layout.w, line_w, line_align, indent, line, NULL, restart);
 	}
 }
@@ -1512,7 +1501,7 @@ static void layout_update_widths(fz_context *ctx, fz_html_box *box, fz_html_box 
 				if (node->type == FLOW_IMAGE)
 					/* start with "native" size (only used for table width calculations) */
 					node->w = node->content.image->w * 72.0f / 96.0f;
-				else
+				else if (node->type == FLOW_WORD || node->type == FLOW_SPACE || node->type == FLOW_SHYPHEN)
 					measure_string_w(ctx, node, hb_buf);
 			}
 		}

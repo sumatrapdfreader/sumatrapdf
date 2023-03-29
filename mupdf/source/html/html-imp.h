@@ -498,6 +498,12 @@ struct fz_html_flow_s
 	/* Whether this node is currently taken as a line break */
 	unsigned int breaks_line : 1;
 
+	/* Whether this word node can be split or consists of a single glyph cluster */
+	unsigned int atomic : 1;
+
+	/* Whether lines may be broken before this word for overflow-wrap: word-break */
+	unsigned int overflow_wrap : 1;
+
 	/* Direction setting for text - UAX#9 says 125 is the max */
 	unsigned int bidi_level : 7;
 
@@ -505,7 +511,7 @@ struct fz_html_flow_s
 	unsigned int script : 8;
 
 	/* Whether the markup specifies a given language. */
-	unsigned int markup_lang : 15;
+	unsigned short markup_lang;
 
 	float x, y, w, h;
 	fz_html_box *box; /* for style and em */

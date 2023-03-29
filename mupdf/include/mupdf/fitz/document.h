@@ -874,7 +874,7 @@ void *fz_process_opened_pages(fz_context *ctx, fz_document *doc, fz_process_open
 struct fz_page
 {
 	int refs;
-	fz_document *doc; /* reference to parent document */
+	fz_document *doc; /* kept reference to parent document. Guaranteed non-NULL. */
 	int chapter; /* chapter number */
 	int number; /* page number in chapter */
 	int incomplete; /* incomplete from progressive loading; don't cache! */
@@ -891,7 +891,13 @@ struct fz_page
 	fz_page_uses_overprint_fn *overprint;
 	fz_page_create_link_fn *create_link;
 	fz_page_delete_link_fn *delete_link;
-	fz_page **prev, *next; /* linked list of currently open pages */
+
+	/* linked list of currently open pages. This list is maintained
+	 * by fz_load_chapter_page and fz_drop_page. All pages hold a
+	 * kept reference to the document, so the document cannot disappear
+	 * while pages exist. 'Incomplete' pages are NOT kept in this
+	 * list. */
+	fz_page **prev, *next;
 };
 
 /**
@@ -924,7 +930,15 @@ struct fz_document
 	fz_document_output_accelerator_fn *output_accelerator;
 	int did_layout;
 	int is_reflowable;
-	fz_page *open; /* linked list of currently open pages */
+
+	/* Linked list of currently open pages. These are not
+	 * references, but just a linked list of open pages,
+	 * maintained by fz_load_chapter_page, and fz_drop_page.
+	 * Every page holds a kept reference to the document, so
+	 * the document cannot be destroyed while a page exists.
+	 * Incomplete pages are NOT inserted into this list, but
+	 * do still hold a real document reference. */
+	fz_page *open;
 };
 
 struct fz_document_handler
