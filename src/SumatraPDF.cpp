@@ -401,14 +401,16 @@ MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
-        if (focusTab && win->TabCount() > 1) {
-            // bring a background tab to the foreground
-            for (WindowTab* tab : win->Tabs()) {
-                if (tab != win->CurrentTab() && tab->AsFixed() && tab->AsFixed()->pdfSync &&
-                    tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-                    TabsSelect(win, win->GetTabIdx(tab));
-                    return win;
-                }
+        bool bringFore = focusTab && win->TabCount() > 1;
+        if (!bringFore) {
+            continue;
+        }
+        // bring a background tab to the foreground
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab != win->CurrentTab() && tab->AsFixed() && tab->AsFixed()->pdfSync &&
+                tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
+                TabsSelect(win, win->GetTabIdx(tab));
+                return win;
             }
         }
     }
