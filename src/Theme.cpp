@@ -330,7 +330,6 @@ void CycleNextTheme() {
     SwitchTheme(currentThemeIndex);
 }
 
-
 Theme* GetThemeByName(char* name) {
     for (int i = 0; i < THEME_COUNT; i++) {
         if (str::Eq(g_themes[i]->name, name)) {

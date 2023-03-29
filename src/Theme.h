@@ -88,11 +88,10 @@ struct Theme {
 extern Theme* currentTheme;
 void CycleNextTheme();
 
-    // Function definitions
+// Function definitions
 Theme* GetThemeByName(char* name);
 Theme* GetThemeByIndex(int index);
 Theme* GetCurrentTheme();
 
 int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
-

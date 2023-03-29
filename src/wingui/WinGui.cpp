@@ -3682,7 +3682,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_MOUSEMOVE: {
             bool isDragging = (GetCapture() == hwnd);
-            // logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n", tabUnderMouse, tabHighlighted, (int)isDragging);
+            // logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
+            // tabUnderMouse, tabHighlighted, (int)isDragging);
             int hl = tabHighlighted;
             if (isDragging && tabUnderMouse == -1) {
                 // move the tab out: draw it as a image and drag around the screen
@@ -3751,8 +3752,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONUP: {
-            if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed
-                && overClose) {
+            if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed && overClose) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
                 HwndScheduleRepaint(hwnd);
