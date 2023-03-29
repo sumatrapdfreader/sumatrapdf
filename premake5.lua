@@ -701,7 +701,6 @@ workspace "SumatraPDF"
     includedirs { "src", "ext/lzma/C" }
     includedirs { "ext/libheif", "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
     utils_files()
-    links {"wininet"}
 
   ---- executables
   --[[
@@ -749,10 +748,11 @@ workspace "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     includedirs { "src", "mupdf/include"}
     files { "src/tools/signfile.cpp" }
     links { "utils", "mupdf" }
-    links { "crypt32", "shlwapi" }
+    links { "crypt32", "shlwapi", "version", "Comctl32", "wininet" }
 
 
   project "plugin-test"
@@ -764,7 +764,7 @@ workspace "SumatraPDF"
     includedirs { "src" }
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
-    links { "shlwapi", "version", "comctl32" }
+    links { "shlwapi", "version", "comctl32", "wininet" }
 
   project "enginedump"
     kind "ConsoleApp"
@@ -778,7 +778,7 @@ workspace "SumatraPDF"
     links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
-      "version", "windowscodecs"
+      "version", "windowscodecs", "wininet"
     }
 
   project "test_util"
@@ -823,7 +823,7 @@ workspace "SumatraPDF"
     includedirs { "src", "src/wingui", "mupdf/include" }
     search_filter_files()
     links { "utils", "unrar", "libmupdf" }
-    links { "comctl32", "gdiplus", "shlwapi", "version" }
+    links { "comctl32", "gdiplus", "shlwapi", "version", "wininet" }
 
   project "PdfPreview"
     kind "SharedLib"
@@ -847,7 +847,7 @@ workspace "SumatraPDF"
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
     links { "utils", "unrar", "libmupdf", "chm" }
-    links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
+    links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet" }
 
     project "PdfPreviewTest"
       kind "ConsoleApp"

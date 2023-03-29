@@ -21,6 +21,8 @@
 #define ErrOut(msg, ...) fprintf(stderr, msg "\n", __VA_ARGS__)
 #define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
+void _uploadDebugReportIfFunc(bool, char const*){};
+
 void ShowUsage(const char* exeName) {
     ErrOut("Syntax: %s", path::GetBaseNameTemp(exeName));
     ErrOut1("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
@@ -95,7 +97,7 @@ int main() {
     const char* sig = nullptr;
 
 #define is_arg(name, var) (str::EqI(args[i], name) && i + 1 < args.size() && !var)
-    for (size_t i = 1; i < args.size(); i++) {
+    for (int i = 1; i < args.size(); i++) {
         if (is_arg("-cert", certName))
             certName = args.at(++i);
         else if (is_arg("-out", signFilePath))
@@ -189,7 +191,7 @@ int main() {
             str::StartsWith(lastLine + str::Len(inFileCommentSyntax), " Signature sha1:")) {
             strcpy_s(lastLine, 3, lf);
         } else {
-            data.Set(str::Format("%s%s", data, lf));
+            data.Set(str::Format("%s%s", data.Get(), lf));
         }
         dataLen = str::Len(data);
     }
@@ -220,7 +222,8 @@ int main() {
     hexSignature.Set(str::MemToHex((const u8*)signature.Get(), sigLen));
     if (inFileCommentSyntax) {
         const char* lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
-        data.Set(str::Format("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax, hexSignature, lf));
+        data.Set(
+            str::Format("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax.Get(), hexSignature.Get(), lf));
         dataLen = str::Len(data);
         hexSignature.SetCopy(data);
     } else {
