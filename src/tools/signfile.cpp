@@ -96,8 +96,8 @@ int main() {
     BOOL ok;
     const char* sig = nullptr;
 
-#define is_arg(name, var) (str::EqI(args[i], name) && i + 1 < args.size() && !var)
-    for (int i = 1; i < args.size(); i++) {
+#define is_arg(name, var) (str::EqI(args[i], name) && i + 1 < args.Size() && !var)
+    for (int i = 1; i < args.Size(); i++) {
         if (is_arg("-cert", certName))
             certName = args.at(++i);
         else if (is_arg("-out", signFilePath))
