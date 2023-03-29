@@ -26,13 +26,14 @@ func hasCertPwd() bool {
 // signtool sign /n "subject name" /t http://timestamp.comodoca.com/authenticode myInstaller.exe
 // signtool sign /n "subject name" /fd sha256 /tr http://timestamp.comodoca.com/rfc3161 /td sha256 /as myInstaller.exe
 // signtool args (https://msdn.microsoft.com/en-us/library/windows/desktop/aa387764(v=vs.85).aspx):
-//   /as          : append signature
-//   /fd ${alg}   : specify digest algo, default is sha1
-//   /t ${url}    : timestamp server
-//   /tr ${url}   : timestamp rfc 3161 server
-//   /td ${alg}   : for /tr, must be after /tr
-//   /du ${url}   : URL for expanded description of the signed content.
-//   /debug       : show debugging info
+//
+//	/as          : append signature
+//	/fd ${alg}   : specify digest algo, default is sha1, SHA256 is recommended
+//	/t ${url}    : timestamp server
+//	/tr ${url}   : timestamp rfc 3161 server
+//	/td ${alg}   : for /tr, must be after /tr
+//	/du ${url}   : URL for expanded description of the signed content.
+//	/debug       : show debugging info
 func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
@@ -60,8 +61,9 @@ func signMust(path string) {
 		desc := "https://www.sumatrapdfreader.org"
 		{
 			// sign with sha1 for pre-win-7
+			// TODO: remove it? We no longer support pre-win7
 			cmd := exec.Command(signtoolPath, "sign", "/t", signServer,
-				"/du", desc, "/f", "cert.pfx",
+				"/du", desc, "/f", "cert.pfx", "/fd", "sha1",
 				"/p", certPwd, fileName)
 			cmd.Dir = fileDir
 			err = runCmdLoggedRedacted(cmd, certPwd)
