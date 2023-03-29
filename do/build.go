@@ -96,6 +96,23 @@ func build(dir, config, platform string, sign bool) {
 	createPdbLzsaMust(dir)
 }
 
+// builds more targets, even those not used, to prevent code rot
+func buildAll(dir, config, platform string, sign bool) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
+	runTestUtilMust(dir)
+
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild;signfile:Rebuild;logview:Rebuild;PdfPreviewTest:Rebuild;plugin-test:Rebuild;sizer:Rebuild`, p, `/m`)
+	if sign {
+		signFilesMust(dir)
+	}
+	createPdbZipMust(dir)
+	createPdbLzsaMust(dir)
+}
+
 func extractSumatraVersionMust() string {
 	path := filepath.Join("src", "Version.h")
 	lines, err := readLinesFromFile(path)
@@ -398,8 +415,8 @@ func buildDaily() {
 	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
-	build(rel32Dir, "Release", "Win32", false)
-	build(rel64Dir, "Release", "x64", false)
+	buildAll(rel32Dir, "Release", "Win32", false)
+	buildAll(rel64Dir, "Release", "x64", false)
 }
 
 func buildPreRelease() {

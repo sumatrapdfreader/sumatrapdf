@@ -7,14 +7,14 @@ import (
 
 var (
 	// from ls "c:\Program Files (x86)\Windows Kits\10\bin"
+	// TODO: those get constantly updated, need to scan the dir
+	// and pick the latest
 	sdkVersions = []string{
+		"10.0.22621.0",
+		"10.0.22000.0",
+		"10.0.20348.0",
 		"10.0.19041.0",
 		"10.0.18362.0",
-		"10.0.17763.0",
-		"10.0.17134.0",
-		"10.0.16299.0",
-		"10.0.15063.0",
-		"10.0.14393.0",
 	}
 
 	msBuildName = `MSBuild\Current\Bin\MSBuild.exe`
