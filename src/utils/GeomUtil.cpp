@@ -131,17 +131,18 @@ bool Rect::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
+// endpoint-exclusive, like RECT: https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 bool Rect::Contains(int x, int y) const {
     if (x < this->x) {
         return false;
     }
-    if (x > this->x + this->dx) {
+    if (x >= this->x + this->dx) {
         return false;
     }
     if (y < this->y) {
         return false;
     }
-    if (y > this->y + this->dy) {
+    if (y >= this->y + this->dy) {
         return false;
     }
     return true;
@@ -151,6 +152,7 @@ bool Rect::Contains(Point pt) const {
     return Contains(pt.x, pt.y);
 }
 
+// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
 Rect Rect::Intersect(Rect other) const {
     /* The intersection starts with the larger of the start coordinates
@@ -167,6 +169,7 @@ Rect Rect::Intersect(Rect other) const {
     return {_x, _y, _dx, _dy};
 }
 
+// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 Rect Rect::Union(Rect other) const {
     if (this->dx <= 0 && this->dy <= 0) {
         return other;
@@ -286,22 +289,24 @@ bool RectF::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
+// endpoint-exclusive, like RECT: https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 bool RectF::Contains(PointF pt) const {
     if (pt.x < this->x) {
         return false;
     }
-    if (pt.x > this->x + this->dx) {
+    if (pt.x >= this->x + this->dx) {
         return false;
     }
     if (pt.y < this->y) {
         return false;
     }
-    if (pt.y > this->y + this->dy) {
+    if (pt.y >= this->y + this->dy) {
         return false;
     }
     return true;
 }
 
+// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
 RectF RectF::Intersect(RectF other) const {
     /* The intersection starts with the larger of the start coordinates
@@ -318,6 +323,7 @@ RectF RectF::Intersect(RectF other) const {
     return {_x, _y, _dx, _dy};
 }
 
+// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 RectF RectF::Union(RectF other) {
     if (this->dx <= 0 && this->dy <= 0) {
         return other;
