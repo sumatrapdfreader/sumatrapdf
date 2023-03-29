@@ -632,29 +632,30 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
     }
     ReportIf(!scanner);
 
-    AutoFreeStr srcfilepath;
+    TempStr srcfilepath = (TempStr)srcfilename;
     // convert the source file to an absolute path
     if (!path::IsAbsolute(srcfilename)) {
-        srcfilepath.Set(PrependDir(srcfilename));
-    } else {
-        srcfilepath.SetCopy(srcfilename);
+        char* tmp = PrependDir(srcfilename);
+        srcfilepath = str::DupTemp(tmp);
+        str::Free(tmp);
     }
     if (!srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
     bool isUtf8 = true;
-    char* mb_srcfilepath = srcfilepath;
+    TempStr mb_srcfilepath = srcfilepath;
 TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
     int ret = synctex_display_query(this->scanner, mb_srcfilepath, line, col);
-    str::Free(mb_srcfilepath);
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        mb_srcfilepath = strconv::Utf8ToAnsi(srcfilepath);
+        char* tmp = strconv::Utf8ToAnsi(srcfilepath);
+        mb_srcfilepath = str::DupTemp(tmp);
+        str::Free(tmp);
         goto TryAgainAnsi;
     }
 
