@@ -105,7 +105,7 @@ func buildAll(dir, config, platform string, sign bool) {
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 	runTestUtilMust(dir)
 
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild;signfile:Rebuild;logview:Rebuild;PdfPreviewTest:Rebuild;plugin-test:Rebuild;sizer:Rebuild`, p, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;logview:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 	if sign {
 		signFilesMust(dir)
 	}
