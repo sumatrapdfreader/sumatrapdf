@@ -38,5 +38,6 @@
     <ClCompile Include="..\src\utils\TempAllocator.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\StrFormat.cpp" />
   </ItemGroup>
 </Project>
