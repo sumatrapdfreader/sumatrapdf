@@ -3901,6 +3901,7 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
         }
     }
     tabBeingClosed = -1;
+    Layout();
     return insertedIdx;
 }
 

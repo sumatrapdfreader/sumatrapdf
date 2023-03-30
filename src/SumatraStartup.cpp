@@ -1280,9 +1280,6 @@ ContinueOpenWindow:
             TabsSelect(win, data->tabIndex - 1);
             if (gEnableLazyLoad) {
                 ReloadDocument(win, false);
-                // TODO: too brute force? Needed to refresh tabs when restoring
-                // state with gEnableLazyLoad = true
-                win->tabsCtrl->Layout();
             }
         }
     }
