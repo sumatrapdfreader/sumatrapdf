@@ -1794,7 +1794,8 @@ fz_draw_fill_image(fz_context *ctx, fz_device *devp, fz_image *image, fz_matrix 
 	if (color_params.op == 0)
 		eop = NULL;
 
-	local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
+	if (!(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3))
+		local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
 
 	src_area = find_src_area_required(local_ctm, image, clip);
 	if (fz_is_empty_irect(src_area))
@@ -1911,7 +1912,8 @@ fz_draw_fill_image_mask(fz_context *ctx, fz_device *devp, fz_image *image, fz_ma
 	if (image->w == 0 || image->h == 0)
 		return;
 
-	local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
+	if (!(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3))
+		local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
 
 	src_area = find_src_area_required(local_ctm, image, clip);
 	if (fz_is_empty_irect(src_area))
@@ -1990,7 +1992,8 @@ fz_draw_clip_image_mask(fz_context *ctx, fz_device *devp, fz_image *image, fz_ma
 		return;
 	}
 
-	local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
+	if (!(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3))
+		local_ctm = fz_gridfit_matrix(devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, local_ctm);
 
 	src_area = find_src_area_required(local_ctm, image, clip);
 	if (fz_is_empty_irect(src_area))

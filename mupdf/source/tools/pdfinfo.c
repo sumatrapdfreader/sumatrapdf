@@ -617,7 +617,7 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot retrieve info from page %d", page);
 
 	font = pdf_dict_get(ctx, rsrc, PDF_NAME(Font));
-	if (show & FONTS && font)
+	if (show & FONTS && font && !pdf_mark_list_push(ctx, mark_list, font))
 	{
 		int n;
 
@@ -630,7 +630,7 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 	}
 
 	xobj = pdf_dict_get(ctx, rsrc, PDF_NAME(XObject));
-	if (show & (IMAGES|XOBJS) && xobj)
+	if (show & (IMAGES|XOBJS) && xobj && !pdf_mark_list_push(ctx, mark_list, xobj))
 	{
 		int n;
 
@@ -649,11 +649,11 @@ gatherresourceinfo(fz_context *ctx, pdf_mark_list *mark_list, globals *glo, int 
 	}
 
 	shade = pdf_dict_get(ctx, rsrc, PDF_NAME(Shading));
-	if (show & SHADINGS && shade)
+	if (show & SHADINGS && shade && !pdf_mark_list_push(ctx, mark_list, shade))
 		gathershadings(ctx, glo, page, pageref, shade);
 
 	pattern = pdf_dict_get(ctx, rsrc, PDF_NAME(Pattern));
-	if (show & PATTERNS && pattern)
+	if (show & PATTERNS && pattern && !pdf_mark_list_push(ctx, mark_list, pattern))
 	{
 		int n;
 		gatherpatterns(ctx, glo, page, pageref, pattern);
