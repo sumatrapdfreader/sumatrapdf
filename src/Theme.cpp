@@ -48,7 +48,9 @@ Theme g_themeLight = {
         // Main Text Color
         COL_BLACK,
         // Main Link Color
-        RgbToCOLORREF(0x0020A0)
+        RgbToCOLORREF(0x0020A0),
+        // Caption background Color
+        RgbToCOLORREF(0xEEEEEE)
     },
     // Document style
     {
@@ -119,13 +121,13 @@ Theme g_themeLight = {
     // Notifications
     {
         // Background color
-        g_themeLight.mainWindow.backgroundColor,
+        COL_WHITE,
         // Text color
         g_themeLight.mainWindow.textColor,
         // Highlight color
-        RgbToCOLORREF(0x3399FF),
+        RgbToCOLORREF(0xFFEE70),
         // Highlight text color
-        COL_WHITE,
+        RgbToCOLORREF(0x8d0801),
         // Progress bar color
         g_themeLight.mainWindow.linkColor
     }
@@ -141,7 +143,9 @@ Theme g_themeDark = {
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        RgbToCOLORREF(0x80CBAD)
+        RgbToCOLORREF(0x80CBAD),
+        // Caption background Color
+        RgbToCOLORREF(0x263238)
     },
     // Document style
     {
@@ -223,7 +227,9 @@ Theme g_themeDarker = {
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        RgbToCOLORREF(0x3081D4)
+        RgbToCOLORREF(0x3081D4),
+        // Caption background Color
+        RgbToCOLORREF(0x2D2D30)
     },
     // Document style
     {

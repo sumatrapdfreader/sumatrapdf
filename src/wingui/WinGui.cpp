@@ -3403,7 +3403,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     gfx.SetPageUnit(UnitPixel);
 
-    SolidBrush br(GdipCol(currBgCol));
+    SolidBrush br(GdipCol(currentTheme->mainWindow.captionBackgroundColor));
 
     Font f(hdc, GetDefaultGuiFont());
 

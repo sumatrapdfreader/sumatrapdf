@@ -21,6 +21,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "Menu.h"
+#include "Theme.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Brush;
@@ -164,7 +165,7 @@ void CaptionInfo::UpdateColors(bool activeWindow) {
                                                                   : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
     if (gGlobalPrefs->useTabs) {
-        COLORREF col = GetAppColor(AppColor::CaptionBg);
+        COLORREF col = currentTheme->mainWindow.captionBackgroundColor;
         dwm::SetCaptionColor(::GetParent(hwnd), col);
     }
 }

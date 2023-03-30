@@ -15,7 +15,6 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse);
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
-void UpdateTabsColors(TabsCtrl*);
 void RemoveTab(WindowTab*);
 // create a new window if win==nullptr
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,

@@ -49,10 +49,6 @@
 #define COL_WINDOW_BG RGB(0x99, 0x99, 0x99)
 #endif
 
-static COLORREF RgbToCOLORREF(COLORREF rgb) {
-    return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
-}
-
 // returns the background color for start page, About window and Properties dialog
 static COLORREF GetAboutBgColor() {
     COLORREF bgColor = ABOUT_BG_GRAY_COLOR;
@@ -151,34 +147,6 @@ COLORREF GetAppColor(AppColor col) {
             parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
         }
         return parsedCol->col;
-    }
-
-    if (col == AppColor::NotificationsBg) {
-        return MkGray(0xff);
-        // return GetAppColor(AppColor::MainWindowBg);
-    }
-
-    if (col == AppColor::NotificationsText) {
-        return GetAppColor(AppColor::MainWindowText);
-    }
-
-    if (col == AppColor::NotificationsHighlightBg) {
-        // yellow-ish background
-        // return MkRgb(0xff, 0xee, 0x70);
-        return RgbToCOLORREF(0xFFEE70);
-    }
-
-    if (col == AppColor::NotificationsHighlightText) {
-        // dark red
-        return RgbToCOLORREF(0x8d0801);
-    }
-
-    if (col == AppColor::NotifcationsProgress) {
-        return GetAppColor(AppColor::MainWindowLink);
-    }
-
-    if (col == AppColor::CaptionBg) {
-        return RGB(0xee, 0xee, 0xee);
     }
 
     CrashIf(true);
