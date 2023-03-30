@@ -793,6 +793,7 @@ struct TabsCtrl : Wnd {
     HWND GetToolTipsHwnd();
 
     void Layout();
+    void ScheduleRepaint();
     TabMouseState TabStateFromMousePosition(const Point& p);
     void Paint(HDC hdc, RECT& rc);
     HBITMAP RenderForDragging(int idx);

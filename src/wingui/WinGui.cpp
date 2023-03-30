@@ -3285,6 +3285,10 @@ void TooltipRemoveAll(HWND hwnd) {
     }
 }
 
+void TabsCtrl::ScheduleRepaint() {
+    HwndScheduleRepaint(hwnd);
+}
+
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
 void TabsCtrl::Layout() {

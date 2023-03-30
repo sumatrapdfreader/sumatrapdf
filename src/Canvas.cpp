@@ -1546,7 +1546,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case REPAINT_TIMER_ID:
             win->delayedRepaintTimer = 0;
             KillTimer(hwnd, REPAINT_TIMER_ID);
-            win->RedrawAllIncludingNonClient(true);
+            win->RedrawAllIncludingNonClient();
             break;
 
         case SMOOTHSCROLL_TIMER_ID:

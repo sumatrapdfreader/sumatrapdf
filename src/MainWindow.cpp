@@ -291,11 +291,9 @@ void MainWindow::RedrawAll(bool update) const {
     }
 }
 
-void MainWindow::RedrawAllIncludingNonClient(bool update) const {
+void MainWindow::RedrawAllIncludingNonClient() const {
     InvalidateRect(this->hwndCanvas, nullptr, false);
-    if (update) {
-        RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
-    }
+    RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
 }
 
 void MainWindow::ChangePresentationMode(PresentationMode mode) {

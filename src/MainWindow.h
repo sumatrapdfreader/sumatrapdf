@@ -232,7 +232,7 @@ struct MainWindow {
     void UpdateCanvasSize();
     Size GetViewPortSize() const;
     void RedrawAll(bool update = false) const;
-    void RedrawAllIncludingNonClient(bool update = false) const;
+    void RedrawAllIncludingNonClient() const;
 
     void ChangePresentationMode(PresentationMode mode);
 

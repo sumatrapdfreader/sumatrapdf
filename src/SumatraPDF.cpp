@@ -1270,6 +1270,12 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     if (!tab || tab->editAnnotsWindow) {
         return;
     }
+    // TODO: maybe should ensure it never is called for IsAboutTab() ?
+    // This only happens if gEnableLazyLoad is true
+    if (tab->IsAboutTab()) {
+        return;
+    }
+
     if (!win->IsDocLoaded()) {
         if (!autoRefresh) {
             LoadArgs args(tab->filePath, win);
@@ -1912,8 +1918,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     MainWindow* win = tab->win;
-    if (gEnableLazyLoad && win->ctrl && !tab->ctrl) {
-        char* msg = str::Format(_TRA("Please wait - rendering..."));
+    if (gEnableLazyLoad && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
+        char* msg = str::Format(_TRA("Please wait - loading..."));
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.msg = msg;
@@ -2073,7 +2079,7 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     gRenderCache.CancelRendering(dm);
     gRenderCache.KeepForDisplayModel(dm, dm);
     if (includeNonClientArea) {
-        win->RedrawAllIncludingNonClient(true);
+        win->RedrawAllIncludingNonClient();
     } else {
         win->RedrawAll(true);
     }
