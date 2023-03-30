@@ -18,18 +18,6 @@ enum class AppColor {
     DocumentBg,
     DocumentText,
 
-    // text color of regular notification
-    NotificationsBg,
-    NotificationsText,
-
-    // text/background color of highlighted notfications
-    NotificationsHighlightBg,
-    NotificationsHighlightText,
-
-    NotifcationsProgress,
-
-    CaptionBg,
-
 };
 
 COLORREF GetAppColor(AppColor);

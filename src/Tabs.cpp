@@ -319,7 +319,6 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
 
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
-    UpdateTabsColors(tabsCtrl);
 
     tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) {
         int closedTabIdx = ev->tabIdx;
@@ -413,11 +412,6 @@ void SaveCurrentWindowTab(MainWindow* win) {
     // update the selection history
     win->tabSelectionHistory->Remove(tab);
     win->tabSelectionHistory->Append(tab);
-}
-
-// TODO: most CloseX colors are not used
-void UpdateTabsColors(TabsCtrl* tab) {
-    tab->currBgCol = GetAppColor(AppColor::CaptionBg);
 }
 
 WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {

@@ -11,13 +11,13 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "AppColors.h"
 #include "Settings.h"
 #include "SumatraPdf.h"
 #include "AppTools.h"
 
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
+#include "Theme.h"
 
 #include "utils/Log.h"
 
@@ -327,13 +327,13 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 
     ScopedSelectObject fontPrev(hdc, font);
 
-    COLORREF colBg = GetAppColor(AppColor::NotificationsBg);
+    COLORREF colBg = currentTheme->notifications.backgroundColor;
     COLORREF colBorder = MkGray(0xdd);
-    COLORREF colTxt = GetAppColor(AppColor::NotificationsText);
+    COLORREF colTxt = currentTheme->notifications.textColor;
     if (highlight) {
-        colBg = GetAppColor(AppColor::NotificationsHighlightBg);
+        colBg = currentTheme->notifications.highlightColor;
         colBorder = colBg;
-        colTxt = GetAppColor(AppColor::NotificationsHighlightText);
+        colTxt = currentTheme->notifications.highlightTextColor;
     }
     // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
     // COLORREF colBg = MkGray(0xff);
@@ -375,7 +375,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         rc = rProgress;
         int progressWidth = rc.dx;
 
-        COLORREF col = GetAppColor(AppColor::NotifcationsProgress);
+        COLORREF col = currentTheme->notifications.progressColor;
         Pen pen(GdiRgbFromCOLORREF(col));
         grc = {rc.x, rc.y, rc.dx, rc.dy};
         graphics.DrawRectangle(&pen, grc);

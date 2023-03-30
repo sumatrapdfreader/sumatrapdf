@@ -1029,7 +1029,6 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
 
     // TODO: match either the toolbar (if shown) or background
-    UpdateTabsColors(win->tabsCtrl);
     HwndScheduleRepaint(win->tabsCtrl->hwnd); // TODO: was RepaintNow() ?
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();

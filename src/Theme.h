@@ -13,6 +13,8 @@ struct MainWindowStyle {
     COLORREF textColor;
     // Link color on recently added, about, and properties menus
     COLORREF linkColor;
+    // Background color of the caption area when we use it for tabs
+    COLORREF captionBackgroundColor;
 };
 
 struct DocumentStyle {
