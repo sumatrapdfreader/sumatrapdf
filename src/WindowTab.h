@@ -60,6 +60,7 @@ struct WindowTab {
     ChmModel* AsChm() const;
 
     const char* GetTabTitle() const;
+    const char* GetPath() const;
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
     void ToggleZoom() const;

@@ -774,6 +774,10 @@ static MenuDef menuDefContextStart[] = {
         CmdOpenSelectedDocument,
     },
     {
+        _TRN("Show in folder"),
+        CmdShowInFolder,
+    },
+    {
         _TRN("&Pin Document"),
         CmdPinSelectedDocument,
     },
@@ -1533,19 +1537,28 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
 }
 
+// TODO: not the best file for this
+void ShowFileInFolder(const char* path) {
+    if (!HasPermission(Perm::DiskAccess)) {
+        return;
+    }
+    const char* process = "explorer.exe";
+    TempStr args = str::FormatTemp("/select,\"%s\"", path);
+    CreateProcessHelper(process, args);
+}
+
 void OnAboutContextMenu(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !gGlobalPrefs->rememberOpenedFiles ||
         !gGlobalPrefs->showStartPage) {
         return;
     }
 
-    char* filePath = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
-    if (!filePath || *filePath == '<' || str::StartsWith(filePath, "http://") ||
-        str::StartsWith(filePath, "https://")) {
+    char* path = GetStaticLinkTemp(win->staticLinks, x, y, nullptr);
+    if (!path || *path == '<' || str::StartsWith(path, "http://") || str::StartsWith(path, "https://")) {
         return;
     }
 
-    FileState* fs = gFileHistory.FindByPath(filePath);
+    FileState* fs = gFileHistory.FindByPath(path);
     CrashIf(!fs);
     if (!fs) {
         return;
@@ -1561,8 +1574,13 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     DestroyMenu(popup);
 
     if (CmdOpenSelectedDocument == cmd) {
-        LoadArgs args(filePath, win);
+        LoadArgs args(path, win);
         LoadDocument(&args, false, !IsCtrlPressed());
+        return;
+    }
+
+    if (CmdShowInFolder == cmd) {
+        ShowFileInFolder(path);
         return;
     }
 

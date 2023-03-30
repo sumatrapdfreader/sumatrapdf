@@ -2841,14 +2841,11 @@ static void ShowCurrentFileInFolder(MainWindow* win) {
         return;
     }
     auto* ctrl = win->ctrl;
-    auto srcFileName = ctrl->GetFilePath();
-    if (!srcFileName) {
+    auto path = ctrl->GetFilePath();
+    if (!path) {
         return;
     }
-
-    const char* process = "explorer.exe";
-    AutoFreeStr args = str::Format("/select,\"%s\"", srcFileName);
-    CreateProcessHelper(process, args);
+    ShowFileInFolder(path);
 }
 
 static void RenameCurrentFile(MainWindow* win) {
@@ -2998,8 +2995,8 @@ static void CreateLnkShortcut(MainWindow* win) {
     AutoFreeStr args = str::Format("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(), ss.page,
                                    viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeStr label = ctrl->GetPageLabel(ss.page);
-    const char* srcFileName = path::GetBaseNameTemp(ctrl->GetFilePath());
-    AutoFreeStr desc = str::Format(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
+    const char* path = path::GetBaseNameTemp(ctrl->GetFilePath());
+    AutoFreeStr desc = str::Format(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), path);
     auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -3038,8 +3035,8 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     if (!tab || tab->IsAboutTab()) {
         return;
     }
-    char* path = tab->filePath;
-    CrashIf(!path);
+    const char* path = tab->GetPath();
+    ReportIf(!path);
     if (!path) {
         return;
     }

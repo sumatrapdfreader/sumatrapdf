@@ -221,11 +221,7 @@ static void ShowFileInFolder(WindowTab* tab) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
     }
-    DocController* ctrl = tab->ctrl;
-    if (!ctrl) {
-        return;
-    }
-    const char* path = ctrl->GetFilePath();
+    const char* path = tab->GetPath();
     if (!path) {
         return;
     }
@@ -266,8 +262,8 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     }
 
     int nTabs = tabsCtrl->TabCount();
-    WindowTab* selectedTab = win->Tabs()[tabIdx];
-    if (selectedTab->IsAboutTab()) {
+    WindowTab* tabUnderMouse = win->Tabs()[tabIdx];
+    if (tabUnderMouse->IsAboutTab()) {
         return;
     }
     POINT pt = ToPOINT(ev->mouseScreen);
@@ -275,7 +271,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
 
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
-    CollectTabsToClose(win, selectedTab, toCloseOther, toCloseRight);
+    CollectTabsToClose(win, tabUnderMouse, toCloseOther, toCloseRight);
 
     if (toCloseOther.IsEmpty()) {
         MenuSetEnabled(popup, CmdCloseOtherTabs, false);
@@ -290,7 +286,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     DestroyMenu(popup);
     switch (cmd) {
         case CmdClose:
-            CloseTab(selectedTab, false);
+            CloseTab(tabUnderMouse, false);
             break;
 
         case CmdCloseOtherTabs: {
@@ -306,16 +302,16 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             break;
         }
         case CmdShowInFolder: {
-            ShowFileInFolder(selectedTab);
+            ShowFileInFolder(tabUnderMouse);
             break;
         }
         case CmdDuplicateInNewWindow: {
-            DuplicateTabInNewWindow(selectedTab);
+            DuplicateTabInNewWindow(tabUnderMouse);
             break;
         }
         case CmdProperties: {
             bool extended = false;
-            ShowProperties(win->hwndFrame, selectedTab->ctrl, extended);
+            ShowProperties(win->hwndFrame, tabUnderMouse->ctrl, extended);
             break;
         }
     }
