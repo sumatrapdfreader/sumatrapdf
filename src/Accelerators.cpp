@@ -313,6 +313,35 @@ static const char* getVirt(BYTE key, bool isEng) {
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     // Note: might need to add if we add more shortcuts
     switch (key) {
+        case VK_BACK:
+            return "Backspace";
+        case VK_TAB:
+            return "Tab";
+        case VK_CLEAR:
+            // TODO: ???
+            return "Clear";
+        case VK_RETURN:
+            return "Return";
+        case VK_ESCAPE:
+            return "Esc";
+        case VK_CONVERT:
+            // TODO: ???
+            return "Convert";
+        case VK_NONCONVERT:
+            // TODO: ???
+            return "NoConvert";
+        case VK_ACCEPT:
+            // TODO: ???
+            return "Accept";
+        case VK_MODECHANGE:
+            // TODO: ???
+            return "ModeChange";
+        case VK_SPACE:
+            return "Space";
+        case VK_PRIOR:
+            return "PageUp";
+        case VK_NEXT:
+            return "PageDown";
         case VK_END:
             return "End";
         case VK_HOME:
@@ -322,46 +351,111 @@ static const char* getVirt(BYTE key, bool isEng) {
                 return "<-";
             }
             return "Left";
+        case VK_UP:
+            return "Up";
         case VK_RIGHT:
             if (!isEng) {
                 return "->";
             }
             return "Right";
-        case VK_UP:
-            return "Up";
         case VK_DOWN:
             return "Down";
-        case VK_NEXT:
-            return "PageDown";
-        case VK_PRIOR:
-            return "PageUp";
-        case VK_BACK:
-            return "Backspace";
-        case VK_DELETE:
-            return "Del";
+        case VK_SELECT:
+            return "Select";
+        case VK_PRINT:
+            return "Print";
+        case VK_EXECUTE:
+            return "Execute";
+        case VK_SNAPSHOT:
+            return "PrtSc";
         case VK_INSERT:
             return "Insert";
-        case VK_ESCAPE:
-            return "Esc";
-        case VK_RETURN:
-            return "Return";
-        case VK_SPACE:
-            return "Space";
+        case VK_DELETE:
+            return "Del";
+        case VK_HELP:
+            return "Help";
+        case VK_SLEEP:
+            // TODO: ???
+            return "Sleep";
         case VK_MULTIPLY:
             return "*";
         case VK_ADD:
         case VK_OEM_PLUS:
             return "+";
+        case VK_SEPARATOR:
+            // TODO: ???
+            return "Separator";
         case VK_SUBTRACT:
         case VK_OEM_MINUS:
             return "-";
+        case VK_DECIMAL:
+            // TODO: ???
+            return "Decimal";
         case VK_DIVIDE:
             return "/";
-        case VK_HELP:
-            return "Help";
-        case VK_SELECT:
-            return "Select";
+        case VK_SCROLL:
+            // TODO: ???
+            return "Scroll";
     }
+    /*
+    TOOD: add those as well?
+        #define VK_BROWSER_BACK        0xA6
+        #define VK_BROWSER_FORWARD     0xA7
+        #define VK_BROWSER_REFRESH     0xA8
+        #define VK_BROWSER_STOP        0xA9
+        #define VK_BROWSER_SEARCH      0xAA
+        #define VK_BROWSER_FAVORITES   0xAB
+        #define VK_BROWSER_HOME        0xAC
+
+        #define VK_VOLUME_MUTE         0xAD
+        #define VK_VOLUME_DOWN         0xAE
+        #define VK_VOLUME_UP           0xAF
+        #define VK_MEDIA_NEXT_TRACK    0xB0
+        #define VK_MEDIA_PREV_TRACK    0xB1
+        #define VK_MEDIA_STOP          0xB2
+        #define VK_MEDIA_PLAY_PAUSE    0xB3
+        #define VK_LAUNCH_MAIL         0xB4
+        #define VK_LAUNCH_MEDIA_SELECT 0xB5
+        #define VK_LAUNCH_APP1         0xB6
+        #define VK_LAUNCH_APP2         0xB7
+
+        #define VK_OEM_4          0xDB  //  '[{' for US
+        #define VK_OEM_5          0xDC  //  '\|' for US
+        #define VK_OEM_6          0xDD  //  ']}' for US
+        #define VK_OEM_7          0xDE  //  ''"' for US
+        #define VK_OEM_8          0xDF
+
+        #define VK_OEM_AX         0xE1  //  'AX' key on Japanese AX kbd
+        #define VK_OEM_102        0xE2  //  "<>" or "\|" on RT 102-key kbd.
+        #define VK_ICO_HELP       0xE3  //  Help key on ICO
+        #define VK_ICO_00         0xE4  //  00 key on ICO
+
+        #define VK_PROCESSKEY     0xE5
+
+        #define VK_OEM_RESET      0xE9
+        #define VK_OEM_JUMP       0xEA
+        #define VK_OEM_PA1        0xEB
+        #define VK_OEM_PA2        0xEC
+        #define VK_OEM_PA3        0xED
+        #define VK_OEM_WSCTRL     0xEE
+        #define VK_OEM_CUSEL      0xEF
+        #define VK_OEM_ATTN       0xF0
+        #define VK_OEM_FINISH     0xF1
+        #define VK_OEM_COPY       0xF2
+        #define VK_OEM_AUTO       0xF3
+        #define VK_OEM_ENLW       0xF4
+        #define VK_OEM_BACKTAB    0xF5
+
+        #define VK_ATTN           0xF6
+        #define VK_CRSEL          0xF7
+        #define VK_EXSEL          0xF8
+        #define VK_EREOF          0xF9
+        #define VK_PLAY           0xFA
+        #define VK_ZOOM           0xFB
+        #define VK_NONAME         0xFC
+        #define VK_PA1            0xFD
+        #define VK_OEM_CLEAR      0xFE
+    */
     return nullptr;
 }
 
@@ -396,18 +490,17 @@ void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
     bool isVirt = virt & FVIRTKEY;
     BYTE key = a.key;
 
-    if (isVirt && key >= VK_F1 && key <= VK_F24) {
-        int n = key - VK_F1 + 1;
-        str.AppendFmt("F%d", n);
-        return;
-    }
-    if (isVirt && key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
-        WCHAR c = (WCHAR)key - VK_NUMPAD0 + '0';
-        str.AppendChar(c);
-        return;
-    }
-
     if (isVirt) {
+        if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
+            WCHAR c = (WCHAR)key - VK_NUMPAD0 + '0';
+            str.AppendChar(c);
+            return;
+        }
+        if (key >= VK_F1 && key <= VK_F24) {
+            int n = key - VK_F1 + 1;
+            str.AppendFmt("F%d", n);
+            return;
+        }
         const char* s = getVirt(key, isEng);
         if (s) {
             str.Append(s);
