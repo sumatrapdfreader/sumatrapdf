@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-93beb39c20db30bed28b03e0321285a29bf214fd
+21c181b68e50ad6bb3232598c477e809baaca613
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -14610,6 +14610,7 @@ tw:請關閉 %s 以繼續。
 uk:Будь ласка закрийте %s, щоб продовжити!
 uz:Davom etish uchun %s yoping!
 vn:Hãy đóng %s lại để tiến hành!
+:Please wait - loading...
 :Please wait - rendering...
 am:Խնդրում ենք սպասել...
 ar:الرجاء الإنتظار - اعادة...
