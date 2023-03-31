@@ -3291,49 +3291,60 @@ int pdf_obj_refs(fz_context *ctx, pdf_obj *obj)
 static pdf_obj *
 pdf_dict_get_inheritable_imp(fz_context *ctx, pdf_obj *node, pdf_obj *key, int depth, pdf_cycle_list *cycle_up)
 {
-	pdf_cycle_list cycle;
-	pdf_obj *val = pdf_dict_get(ctx, node, key);
-	if (val)
-		return val;
-	if (pdf_cycle(ctx, &cycle, cycle_up, node))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in tree (parents)");
-	/* SumatraPDF */
-	if (depth > 600)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too much recursion in tree (parents)");
-	node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
-	if (node)
-		return pdf_dict_get_inheritable_imp(ctx, node, key, depth + 1, &cycle);
-	return NULL;
 }
 
+/*
+	Uses Floyd's cycle finding algorithm, modified to avoid starting
+	the 'slow' pointer for a while.
+
+	https://www.geeksforgeeks.org/floyds-cycle-finding-algorithm/
+*/
 pdf_obj *
 pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *node, pdf_obj *key)
 {
-	return pdf_dict_get_inheritable_imp(ctx, node, key, 0, NULL);
-}
+	pdf_obj *slow = node;
+	int halfbeat = 11; /* Don't start moving slow pointer for a while. */
 
-static pdf_obj *
-pdf_dict_getp_inheritable_imp(fz_context *ctx, pdf_obj *node, const char *path, int depth, pdf_cycle_list *cycle_up)
-{
-	pdf_cycle_list cycle;
-	pdf_obj *val = pdf_dict_getp(ctx, node, path);
-	if (val)
-		return val;
-	if (pdf_cycle(ctx, &cycle, cycle_up, node))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in tree (parents)");
-	/* SumatraPDF */
-	if (depth > 600)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too much recursion in tree (parents)");
-	node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
-	if (node)
-		return pdf_dict_getp_inheritable_imp(ctx, node, path, depth + 1, &cycle);
+	while (node)
+	{
+		pdf_obj *val = pdf_dict_get(ctx, node, key);
+		if (val)
+			return val;
+		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
+		if (node == slow)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in resources");
+		if (--halfbeat == 0)
+		{
+			slow = pdf_dict_get(ctx, slow, PDF_NAME(Parent));
+			halfbeat = 2;
+		}
+	}
+
 	return NULL;
 }
 
 pdf_obj *
 pdf_dict_getp_inheritable(fz_context *ctx, pdf_obj *node, const char *path)
 {
-	return pdf_dict_getp_inheritable_imp(ctx, node, path, 0, NULL);
+	pdf_obj *slow = node;
+	int halfbeat = 11; /* Don't start moving slow pointer for a while. */
+
+	while (node)
+	{
+		pdf_obj *val = pdf_dict_getp(ctx, node, path);
+		if (val)
+			return val;
+		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
+		if (node == slow)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in resources");
+		if (--halfbeat == 0)
+		{
+			slow = pdf_dict_get(ctx, slow, PDF_NAME(Parent));
+			halfbeat = 2;
+		}
+	}
+
+	return NULL;
 }
 
 void pdf_dict_put_bool(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int x)

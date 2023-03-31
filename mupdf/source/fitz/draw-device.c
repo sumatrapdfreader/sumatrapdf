@@ -61,6 +61,7 @@ typedef struct {
 	fz_matrix ctm;
 	float xstep, ystep;
 	fz_irect area;
+	int flags;
 } fz_draw_state;
 
 typedef struct fz_draw_device
@@ -2627,6 +2628,8 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 		fz_knockout_begin(ctx, dev);
 
 	state = push_stack(ctx, dev, "tile");
+	state[1].flags = dev->flags;
+	dev->flags &= ~FZ_DRAWDEV_FLAGS_TYPE3;
 
 	local_view = fz_transform_rect(view, ctm);
 	bbox = fz_irect_from_rect(local_view);
@@ -2726,6 +2729,7 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected end tile");
 
 	state = pop_stack(ctx, dev, "tile");
+	dev->flags = state[1].flags;
 
 	xstep = state[1].xstep;
 	ystep = state[1].ystep;
@@ -3040,6 +3044,7 @@ new_draw_device(fz_context *ctx, fz_matrix transform, fz_pixmap *dest, const fz_
 	dev->stack[0].scissor.y0 = dest->y;
 	dev->stack[0].scissor.x1 = dest->x + dest->w;
 	dev->stack[0].scissor.y1 = dest->y + dest->h;
+	dev->stack[0].flags = dev->flags;
 
 	if (clip)
 	{

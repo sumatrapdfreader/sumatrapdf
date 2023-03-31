@@ -24,18 +24,72 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
-static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname, size_t len)
+static int
+fz_mkdir(char *path)
+{
+#ifdef _WIN32
+	int ret;
+	wchar_t *wpath = fz_wchar_from_utf8(path);
+
+	if (wpath == NULL)
+		return -1;
+
+	ret = _wmkdir(wpath);
+
+	free(wpath);
+
+	return ret;
+#else
+	return mkdir(path);
+#endif
+}
+
+static int create_accel_path(fz_context *ctx, char outname[], size_t len, int create, const char *absname, ...)
+{
+	va_list args;
+	char *s = outname;
+	size_t z, remain = len;
+	char *arg;
+
+	va_start(args, absname);
+
+	while ((arg = va_arg(args, char *)) != NULL)
+	{
+		z = fz_snprintf(s, remain, "%s", arg);
+		if (z+1 > remain)
+			goto fail; /* won't fit */
+
+		if (create)
+			fz_mkdir(outname);
+		if (!fz_is_directory(ctx, outname))
+			goto fail; /* directory creation failed, or that dir doesn't exist! */
+#ifdef _WIN32
+		s[z] = '\\';
+#else
+		s[z] = '/';
+#endif
+		s[z+1] = 0;
+		s += z+1;
+		remain -= z+1;
+	}
+
+	if (fz_snprintf(s, remain, "%s.accel", absname) >= remain)
+		goto fail; /* won't fit */
+
+	va_end(args);
+
+	return 1;
+
+fail:
+	va_end(args);
+
+	return 0;
+}
+
+static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname, size_t len, int create)
 {
 	char *tmpdir;
 	char *s;
-
-	tmpdir = getenv("TEMP");
-	if (!tmpdir)
-		tmpdir = getenv("TMP");
-	if (!tmpdir)
-		tmpdir = "/var/tmp";
-	if (!fz_is_directory(ctx, tmpdir))
-		tmpdir = "/tmp";
 
 	if (absname[0] == '/' || absname[0] == '\\')
 		++absname;
@@ -47,17 +101,34 @@ static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname,
 		++s;
 	}
 
-	if (fz_snprintf(outname, len, "%s/%s.accel", tmpdir, absname) >= len)
-		return 0;
-	return 1;
+#ifdef _WIN32
+	tmpdir = getenv("USERPROFILE");
+	if (tmpdir && create_accel_path(ctx, outname, len, create, absname, tmpdir, ".config", "mupdf", NULL))
+		return 1; /* OK! */
+	/* TEMP and TMP are user-specific on modern windows. */
+	tmpdir = getenv("TEMP");
+	if (tmpdir && create_accel_path(ctx, outname, len, create, absname, tmpdir, "mupdf", NULL))
+		return 1; /* OK! */
+	tmpdir = getenv("TMP");
+	if (tmpdir && create_accel_path(ctx, outname, len, create, absname, tmpdir, "mupdf", NULL))
+		return 1; /* OK! */
+#else
+	tmpdir = getenv("XDG_CACHE_HOME");
+	if (tmpdir && create_accel_path(ctx, outname, len, create, absname, tmpdir, "mupdf", NULL))
+		return 1; /* OK! */
+	tmpdir = getenv("HOME");
+	if (tmpdir && create_accel_path(ctx, outname, len, create, absname, tmpdir, ".cache", "mupdf", NULL))
+		return 1; /* OK! */
+#endif
+	return 0; /* Fail */
 }
 
-static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *filename)
+static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *filename, int create)
 {
 	char absname[PATH_MAX];
 	if (!fz_realpath(filename, absname))
 		return 0;
-	if (!convert_to_accel_path(ctx, outname, absname, len))
+	if (!convert_to_accel_path(ctx, outname, absname, len, create))
 		return 0;
 	return 1;
 }
@@ -70,7 +141,7 @@ static void save_accelerator(fz_context *ctx, fz_document *doc, const char *file
 		return;
 	if (!fz_document_supports_accelerator(ctx, doc))
 		return;
-	if (!get_accelerator_filename(ctx, absname, sizeof(absname), filename))
+	if (!get_accelerator_filename(ctx, absname, sizeof(absname), filename, 1))
 		return;
 
 	fz_save_accelerator(ctx, doc, absname);
@@ -425,7 +496,7 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 			time_t dtime;
 
 			/* If there was an accelerator to load, what would it be called? */
-			if (get_accelerator_filename(ctx, accelpath, sizeof(accelpath), filename))
+			if (get_accelerator_filename(ctx, accelpath, sizeof(accelpath), filename, 0))
 			{
 				/* Check whether that file exists, and isn't older than
 				 * the document. */
