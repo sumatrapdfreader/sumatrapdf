@@ -41,6 +41,7 @@
 #include "StressTesting.h"
 #include "Translations.h"
 #include "uia/Provider.h"
+#include "Theme.h"
 
 #include "utils/Log.h"
 
@@ -618,8 +619,10 @@ void LinkHandler::GotoNamedDest(const char* name) {
 void UpdateTreeCtrlColors(MainWindow* win) {
     COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
-    COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
-    COLORREF treeTxtCol = GetAppColor(AppColor::DocumentText);
+    COLORREF treeBgCol, treeTxtCol;
+    GetDocumentColors(treeTxtCol, treeBgCol);
+    logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
+
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
     bool flatTreeWnd = false;
 

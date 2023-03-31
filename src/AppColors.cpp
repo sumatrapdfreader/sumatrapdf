@@ -84,9 +84,6 @@ static COLORREF GetNoDocBgColor() {
 }
 
 COLORREF GetAppColor(AppColor col) {
-    COLORREF c;
-    ParsedColor* parsedCol;
-
     if (col == AppColor::NoDocBg) {
         // GetCurrentTheme()->document.canvasColor
         return GetNoDocBgColor();
@@ -113,51 +110,6 @@ COLORREF GetAppColor(AppColor col) {
         return COL_BLUE_LINK;
     }
 
-    if (col == AppColor::DocumentBg) {
-        if (gGlobalPrefs->useSysColors) {
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                c = GetSysColor(COLOR_WINDOWTEXT);
-            } else {
-                c = GetSysColor(COLOR_WINDOW);
-            }
-            return c;
-        }
-        // ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
-        if (gGlobalPrefs->fixedPageUI.invertColors) {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-        } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-        }
-        return parsedCol->col;
-    }
-
-    if (col == AppColor::DocumentText) {
-        if (gGlobalPrefs->useSysColors) {
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                c = GetSysColor(COLOR_WINDOW);
-            } else {
-                c = GetSysColor(COLOR_WINDOWTEXT);
-            }
-            return c;
-        }
-
-        if (gGlobalPrefs->fixedPageUI.invertColors) {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-        } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-        }
-        return parsedCol->col;
-    }
-
     CrashIf(true);
     return COL_WINDOW_BG;
-}
-
-void GetFixedPageUiColors(COLORREF& text, COLORREF& bg) {
-#if 0
-    text = GetCurrentTheme()->document.textColor;
-    bg = GetCurrentTheme()->document.backgroundColor;
-#endif
-    text = GetAppColor(AppColor::DocumentText);
-    bg = GetAppColor(AppColor::DocumentBg);
 }

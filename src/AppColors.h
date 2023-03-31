@@ -15,10 +15,7 @@ enum class AppColor {
     MainWindowText,
     MainWindowLink,
 
-    DocumentBg,
-    DocumentText,
-
 };
 
 COLORREF GetAppColor(AppColor);
-void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
+

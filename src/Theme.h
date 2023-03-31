@@ -97,3 +97,5 @@ Theme* GetCurrentTheme();
 
 int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
+
+void GetDocumentColors(COLORREF& text, COLORREF& bg);

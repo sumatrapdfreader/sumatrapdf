@@ -2100,7 +2100,9 @@ static void RerenderFixedPage() {
 
 void UpdateDocumentColors() {
     COLORREF text, bg;
-    GetFixedPageUiColors(text, bg);
+    GetDocumentColors(text, bg);
+    logfa("retrieved doc colors in UpdateDocumentColors: 0x%x 0x%x\n", text, bg);
+
 
     if ((text == gRenderCache.textColor) && (bg == gRenderCache.backgroundColor)) {
         return; // colors didn't change
@@ -5344,9 +5346,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // TODO: this only rerenders canvas, not frame, even with
                 // includingNonClientArea == true.
                 // MainWindowRerender(mainWin, true);
-                RedrawWindow(win->hwndFrame, nullptr, nullptr,
+                RedrawWindow(mainWin->hwndFrame, nullptr, nullptr,
                              RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                UpdateTreeCtrlColors(mainWin);
             }
+            UpdateDocumentColors();
             break;
 
         default:

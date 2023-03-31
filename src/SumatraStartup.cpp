@@ -67,6 +67,7 @@
 #include "Installer.h"
 #include "ExternalViewers.h"
 #include "AppColors.h"
+#include "Theme.h"
 
 #include "utils/Log.h"
 
@@ -1167,7 +1168,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __un
 
     gCrashOnOpen = flags.crashOnOpen;
 
-    GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
+    GetDocumentColors(gRenderCache.textColor, gRenderCache.backgroundColor);
+    logfa("retrieved doc colors in WinMain: 0x%x 0x%x\n", gRenderCache.textColor, gRenderCache.backgroundColor);
 
     gIsStartup = true;
     if (!RegisterWinClass()) {
