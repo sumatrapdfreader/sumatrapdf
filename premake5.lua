@@ -349,7 +349,7 @@ workspace "SumatraPDF"
     filter {'platforms:x64 or x64_asan'}
       defines { "ARCH_X86_32=0", "ARCH_X86_64=1" }
     filter{}
-    disablewarnings { "4057", "4090", "4100", "4152", "4201", "4244", "4245", "4456", "4457", "4701", "4703", "4706", "4996" }
+    disablewarnings { "4057", "4090", "4100", "4152", "4201", "4244", "4245", "4456", "4457", "4701", "4703", "4706", "4819", "4996" }
     includedirs { "ext/dav1d/include/compat/msvc", "ext/dav1d", "ext/dav1d/include" }
      -- nasm.exe -I .\ext\libjpeg-turbo\simd\
     -- -I .\ext\libjpeg-turbo\win\ -f win32
@@ -401,7 +401,7 @@ workspace "SumatraPDF"
 
     -- libjpeg-turbo
     defines { "_CRT_SECURE_NO_WARNINGS" }
-    disablewarnings { "4018", "4100", "4244", "4245" }
+    disablewarnings { "4018", "4100", "4244", "4245", "4819" }
     includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
     -- -I .\ext\libjpeg-turbo\win\ -f win32
@@ -618,7 +618,7 @@ workspace "SumatraPDF"
 
     disablewarnings {
       "4005", "4018", "4057", "4100", "4115", "4130", "4204", "4206", "4210", "4245", "4267",
-      "4295", "4305", "4389", "4456", "4457", "4703", "4706"
+      "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
@@ -889,7 +889,7 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    disablewarnings { "4100", "4244", "4267", "4702", "4706", "4819" }
     uses_zlib()
     includedirs { "ext/synctex" }
 
