@@ -3709,7 +3709,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
                     if (!GetTab(tabUnderMouse)->isPinned) {
+                        logfa("WM_MOUSEMOVE: before TriggerTabDragged: hl=%d, tabUnderMouse=%d\n", hl, tabUnderMouse);
                         TriggerTabDragged(this, hl, tabUnderMouse);
+                        logfa("WM_MOUSEMOVE: before UpdateAfterDrag: hl=%d, tabUnderMouse=%d\n", hl, tabUnderMouse);
                         UpdateAfterDrag(this, hl, tabUnderMouse);
                     }
                 } else {
@@ -3885,7 +3887,7 @@ int TabsCtrl::TabCount() {
 // takes ownership of tab
 int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     CrashIf(idx < 0);
-
+    logfa("TabCtrl::InsertTab(): idx=%d\n", idx);
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
     item.pszText = ToWstrTemp(tab->text);
@@ -3950,11 +3952,17 @@ TabInfo* TabsCtrl::GetTab(int idx) {
 
 int TabsCtrl::GetSelected() {
     int idx = TabCtrl_GetCurSel(hwnd);
+    if (idx < 0) {
+        logfa("TabCtrl::GetSelected() returning -1\n");
+    }
     return idx;
 }
 
 int TabsCtrl::SetSelected(int idx) {
     CrashIf(idx < 0 || idx >= TabCount());
+    if (idx < 0) {
+        logfa("TabCtrl::SetSelected() idx=%d\n", idx);
+    }
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     return prevSelectedIdx;
 }
