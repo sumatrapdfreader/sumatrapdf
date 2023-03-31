@@ -1036,6 +1036,10 @@ static void AppendRecentFilesToMenu(HMENU m) {
             break;
         }
         const char* fp = fs->filePath;
+        if (!fp) {
+            // comes from settings file so can be missing due to user modifications
+            continue;
+        }
         AddFileMenuItem(m, fp, i);
     }
 
