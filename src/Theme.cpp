@@ -350,6 +350,30 @@ Theme* GetThemeByIndex(int index) {
     return g_themes[index];
 }
 
+
+void GetDocumentColors(COLORREF& text, COLORREF& bg) {
+    // Special behavior for light theme.
+    // TODO: migrate from prefs to theme.
+    if (currentThemeIndex == 0) {
+        ParsedColor* parsedCol;
+        if (gGlobalPrefs->fixedPageUI.invertColors) {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+        } else {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+        }
+        bg = parsedCol->col;
+        if (gGlobalPrefs->fixedPageUI.invertColors) {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+        } else {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+        }
+        text = parsedCol->col;
+    } else {
+        bg = currentTheme->document.backgroundColor;
+        text = currentTheme->document.textColor;
+    }
+}
+
 #if 0
 
 Theme* GetCurrentTheme() {
