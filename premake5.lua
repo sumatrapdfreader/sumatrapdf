@@ -946,6 +946,8 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
+    disablewarnings { "4819" }
+
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
 
     files { "src/MuPDF_Exports.cpp" }
