@@ -18,4 +18,3 @@ enum class AppColor {
 };
 
 COLORREF GetAppColor(AppColor);
-

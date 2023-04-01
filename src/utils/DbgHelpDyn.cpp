@@ -24,7 +24,7 @@
 
 namespace dbghelp {
 
-static const char* ExceptionNameFromCode(DWORD excCode) {
+const char* ExceptionNameFromCode(DWORD excCode) {
 #define EXC(x)          \
     case EXCEPTION_##x: \
         return #x;
@@ -98,6 +98,9 @@ static bool SetupSymbolPath()
 static BOOL gSymInitializeOk = FALSE;
 
 static bool CanStackWalk() {
+#if IS_ARM_64 == 1
+    return false;
+#endif
     bool ok = DynSymCleanup && DynSymGetOptions && DynSymSetOptions && DynStackWalk64 && DynSymFunctionTableAccess64 &&
               DynSymGetModuleBase64 && DynSymFromAddr;
     // if (!ok)
@@ -343,7 +346,9 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
-#ifdef _WIN64
+#if IS_ARM_64 == 1
+    // shouldn't happen as CanStalkWalk() should return false
+#elif defined(_WIN64)
     stackFrame.AddrPC.Offset = ctx.Rip;
     stackFrame.AddrFrame.Offset = ctx.Rbp;
     stackFrame.AddrStack.Offset = ctx.Rsp;
@@ -483,6 +488,11 @@ void GetAllThreadsCallstacks(str::Str& s) {
 }
 #pragma warning(pop)
 
+#if IS_ARM_64 == 1
+void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
+    // TODO: do something for arm64 ??
+}
+#else
 void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     if (!excPointers) {
         return;
@@ -514,7 +524,6 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
 
     PCONTEXT ctx = excPointers->ContextRecord;
     s.AppendFmt("\r\nRegisters:\r\n");
-
 #ifdef _WIN64
     s.AppendFmt(
         "RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\r\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\r\n"
@@ -539,5 +548,6 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     // it's not really for current thread, but it seems to work
     GetCallstack(s, *ctx, GetCurrentThread());
 }
+#endif
 
 } // namespace dbghelp

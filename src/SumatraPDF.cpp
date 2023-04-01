@@ -2103,7 +2103,6 @@ void UpdateDocumentColors() {
     GetDocumentColors(text, bg);
     logfa("retrieved doc colors in UpdateDocumentColors: 0x%x 0x%x\n", text, bg);
 
-
     if ((text == gRenderCache.textColor) && (bg == gRenderCache.backgroundColor)) {
         return; // colors didn't change
     }

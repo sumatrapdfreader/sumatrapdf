@@ -350,7 +350,6 @@ Theme* GetThemeByIndex(int index) {
     return g_themes[index];
 }
 
-
 void GetDocumentColors(COLORREF& text, COLORREF& bg) {
     // Special behavior for light theme.
     // TODO: migrate from prefs to theme.
