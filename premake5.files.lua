@@ -1309,3 +1309,9 @@ function gumbo_files()
     "*.h",
   })
 end
+
+function bin2coff_files()
+  files_in_dir("tools", {
+    "bin2coff.c"
+  })
+end

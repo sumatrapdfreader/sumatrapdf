@@ -828,6 +828,16 @@ workspace "SumatraPDF"
     logview_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
+  project "bin2coff"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    regconf()
+    disablewarnings { "4200", "4838" }
+    includedirs { "src" }
+    bin2coff_files()
+    links { "gdiplus", "comctl32", "shlwapi", "Version" }
+
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
