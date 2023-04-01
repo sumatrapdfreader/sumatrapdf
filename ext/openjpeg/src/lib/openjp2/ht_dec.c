@@ -69,7 +69,8 @@ static OPJ_BOOL only_cleanup_pass_is_decoded = OPJ_FALSE;
 static INLINE
 OPJ_UINT32 population_count(OPJ_UINT32 val)
 {
-#ifdef OPJ_COMPILER_MSVC
+    // SumatraPDF
+#if defined(OPJ_COMPILER_MSVC) && !defined(_M_ARM64)
     return (OPJ_UINT32)__popcnt(val);
 #elif (defined OPJ_COMPILER_GNUC)
     return (OPJ_UINT32)__builtin_popcount(val);
