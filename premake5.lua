@@ -615,11 +615,97 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
 --]]
+
+  function fonts_old()
+    --[[ files {
+      "mupdf/font_base14.asm",
+    }
+    --]]
+    filter {"platforms:x64 or x64_asan"}
+      files {
+        "mupdf/fonts_64.asm",
+      }
+    filter {}
+
+    filter {"platforms:x32"}
+      files {
+        "mupdf/fonts_32.asm",
+      }
+    filter {}
+
+    -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
+    -- .\mupdf\font_base14.asm
+    filter {'files:**.asm', 'platforms:x32'}
+       buildmessage 'Compiling %{file.relpath}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+       buildcommands {
+          '..\\bin\\nasm.exe -f win32 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+       }
+    filter {}
+
+    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
+      buildmessage 'Compiling %{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+      buildcommands {
+        '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+      }
+    filter {}
+  end
+
+  function fonts_new()
+    files {
+      "mupdf/resources/fonts/urw/Dingbats.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff",
+      "mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-Regular.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-Italic.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-Bold.cff",
+      "mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-Regular.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-Italic.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-Bold.cff",
+      "mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff",
+      "mupdf/resources/fonts/urw/StandardSymbolsPS.cff",
+      "mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf",
+      "mupdf/resources/fonts/sil/CharisSIL.cff",
+      "mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
+      "mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
+      "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
+      "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
+    }
+
+    filter {'files:**.cff'}
+       buildmessage  '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff %{cfg.architecture}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+       buildcommands {
+          '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff %{cfg.architecture}'
+       }
+    filter {}
+
+    filter {'files:**.ttf'}
+       buildmessage '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf %{cfg.architecture}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+       buildcommands {
+          '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf %{cfg.architecture}'
+       }
+    filter {}
+
+    filter {'files:**.otf'}
+       buildmessage '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf %{cfg.architecture}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+       buildcommands {
+          '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf %{cfg.architecture}'
+       }
+    filter {}
+  end
 
   project "mupdf"
     kind "StaticLib"
@@ -654,24 +740,9 @@ workspace "SumatraPDF"
       "ext/lcms2/include",
       "ext/gumbo-parser/src",
       "ext/extract/include",
-  }
-    -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
-    -- .\mupdf\font_base14.asm
-    filter {'files:**.asm', 'platforms:x32'}
-       buildmessage 'Compiling %{file.relpath}'
-       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-       buildcommands {
-          '..\\bin\\nasm.exe -f win32 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
-       }
-    filter {}
-
-    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
-      buildmessage 'Compiling %{file.relpath}'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
-      }
-    filter {}
+    }
+    -- fonts_old()
+    fonts_new()
 
     mupdf_files()
     links { "mupdf-libs" }

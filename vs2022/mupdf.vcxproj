@@ -867,38 +867,824 @@
     <ClCompile Include="..\mupdf\source\xps\xps-zip.c" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\mupdf\fonts_32.asm">
+    <CustomBuild Include="..\mupdf\resources\fonts\droid\DroidSansFallbackFull.ttf">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/fonts_32.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/fonts_32.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/fonts_32.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/DroidSansFallbackFull.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
     </CustomBuild>
-    <CustomBuild Include="..\mupdf\fonts_64.asm">
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSans-Regular.otf">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/fonts_64.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/fonts_64.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/fonts_64.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/fonts_64.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/fonts_64.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/fonts_64.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSerif-Regular.otf">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSerif-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-Bold.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL-Bold.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-BoldItalic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL-BoldItalic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-Italic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL-Italic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/CharisSIL.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\Dingbats.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/Dingbats.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-Bold.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-Bold.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-BoldItalic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-BoldItalic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-Italic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-Italic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-Regular.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusMonoPS-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-Bold.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-Bold.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-BoldItalic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-BoldItalic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-Italic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-Italic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-Regular.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusRoman-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-Bold.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-Bold.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-BoldItalic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-BoldItalic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-Italic.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-Italic.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-Regular.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NimbusSans-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\StandardSymbolsPS.cff">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/StandardSymbolsPS.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_cff ARM64</Message>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

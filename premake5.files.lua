@@ -808,24 +808,7 @@ function chm_files()
 end
 
 function mupdf_files()
-  --[[ files {
-    "mupdf/font_base14.asm",
-  }
-  --]]
-
   files { "ext/mupdf_load_system_font.c" }
-
-  filter {"platforms:x64 or x64_asan"}
-    files {
-      "mupdf/fonts_64.asm",
-    }
-  filter {}
-
-  filter {"platforms:x32"}
-    files {
-      "mupdf/fonts_32.asm",
-    }
-  filter {}
 
   files_in_dir("mupdf/source/cbz", {
     "mucbz.c",

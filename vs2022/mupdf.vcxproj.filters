@@ -22,6 +22,24 @@
     <Filter Include="mupdf\include\mupdf\pdf">
       <UniqueIdentifier>{283605CB-946D-4D62-9D77-B185092E745B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mupdf\resources">
+      <UniqueIdentifier>{EB63ADA1-57EF-1A66-6000-9E5ACC0A7766}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\resources\fonts">
+      <UniqueIdentifier>{8462B853-F0CE-734E-B9C2-0BAC25EE95B6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\resources\fonts\droid">
+      <UniqueIdentifier>{C5A6F52E-31B4-2315-BA9A-1F0026A7EFCB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\resources\fonts\noto">
+      <UniqueIdentifier>{F34DBF37-DF5D-6B08-4817-D02634465AA1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\resources\fonts\sil">
+      <UniqueIdentifier>{7BC18966-E783-BDF0-3034-4C7D9C3596CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\resources\fonts\urw">
+      <UniqueIdentifier>{31CB8966-9D8D-BDF0-E63D-4C7D523F96CE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mupdf\source">
       <UniqueIdentifier>{21F463C1-0D57-F365-B6DC-2B1CA21EBFE8}</UniqueIdentifier>
     </Filter>
@@ -925,11 +943,68 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\mupdf\fonts_32.asm">
-      <Filter>mupdf</Filter>
+    <CustomBuild Include="..\mupdf\resources\fonts\droid\DroidSansFallbackFull.ttf">
+      <Filter>mupdf\resources\fonts\droid</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\mupdf\fonts_64.asm">
-      <Filter>mupdf</Filter>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSans-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSerif-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-Bold.cff">
+      <Filter>mupdf\resources\fonts\sil</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-BoldItalic.cff">
+      <Filter>mupdf\resources\fonts\sil</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-Italic.cff">
+      <Filter>mupdf\resources\fonts\sil</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL.cff">
+      <Filter>mupdf\resources\fonts\sil</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\Dingbats.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-Bold.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-BoldItalic.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-Italic.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusMonoPS-Regular.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-Bold.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-BoldItalic.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-Italic.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusRoman-Regular.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-Bold.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-BoldItalic.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-Italic.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\NimbusSans-Regular.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\urw\StandardSymbolsPS.cff">
+      <Filter>mupdf\resources\fonts\urw</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

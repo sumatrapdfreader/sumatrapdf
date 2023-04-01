@@ -240,16 +240,19 @@ static int streq(const char* s1, const char* s2) {
 }
 
 static int check_arch(const char* arg, uint16_t* machine) {
-    if (streq(arg, "64bit") || streq(arg, "x64")) {
-        *machine = IMAGE_FILE_MACHINE_AMD64;
-        return 1;
-    }
-    if (streq(arg, "32bit") || streq(arg, "Win32")) {
+    if (streq(arg, "32bit") || streq(arg, "Win32") || streq(arg, "x86")) {
         *machine = IMAGE_FILE_MACHINE_I386;
+        printf("check_arch: i386\n");
         return 1;
     }
-    if (streq(arg, "arm64")) {
+    if (streq(arg, "64bit") || streq(arg, "x64") || streq(arg, "x86_64")) {
+        *machine = IMAGE_FILE_MACHINE_AMD64;
+        printf("check_arch: amd64\n");
+        return 1;
+    }
+    if (streq(arg, "arm64") || streq(arg, "ARM64")) {
         *machine = IMAGE_FILE_MACHINE_ARM64;
+        printf("check_arch: arm64\n");
         return 1;
     }
     return 0;
@@ -310,6 +313,8 @@ int
         last_arg = 4;
     else if (argc >= 5 && check_arch(argv[4], &machine))
         last_arg = 5;
+
+    printf("bin2coff: machine: 0x%x\n", (int)machine);
 
     /* Label setup */
     if (argc < last_arg) {
