@@ -385,6 +385,9 @@ workspace "SumatraPDF"
     filter {}
 
     dav1d_files()
+    filter {'platforms:x32 or x64 or x64_asan'}
+    dav1d_x68_files()
+    filter {}
 
   project "zlib"
     kind "StaticLib"

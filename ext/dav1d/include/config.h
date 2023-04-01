@@ -27,7 +27,12 @@
 
 #define HAVE_ALIGNED_MALLOC 1
 
+/* SumatraPDF */
+#if defined(_M_ARM64)
+#define HAVE_ASM 0
+#else
 #define HAVE_ASM 1
+#endif
 
 #define HAVE_IO_H 1
 
@@ -39,11 +44,10 @@
 
 #define _UNICODE 1
 
-//#define _WIN32_WINNT 0x0601
+// #define _WIN32_WINNT 0x0601
 
 #define __USE_MINGW_ANSI_STDIO 1
 
 #define fseeko _fseeki64
 
 #define ftello _ftelli64
-

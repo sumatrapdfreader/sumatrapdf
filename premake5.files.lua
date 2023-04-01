@@ -266,38 +266,7 @@ function libheif_files()
 
 end
 
-function dav1d_files()
-  files_in_dir("ext/dav1d/src", {
-    "lib.c",
-    "thread_task.c",
-    "cdf.c",
-    "cpu.c",
-    "data.c",
-    "decode.c",
-    "dequant_tables.c",
-    "getbits.c",
-    "intra_edge.c",
-    "itx_1d.c",
-    "lf_mask.c",
-    "log.c",
-    "mem.c",
-    "msac.c",
-    "obu.c",
-    "picture.c",
-    "qm.c",
-    "ref.c",
-    "refmvs.c",
-    "scan.c",
-    "tables.c",
-    "warpmv.c",
-    "wedge.c",
-    "win32/thread.c",
-
-    "sumatra_bitdepth_8.c",
-    "sumatra_bitdepth_8_2.c",
-    "sumatra_bitdepth_16.c",
-    "sumatra_bitdepth_16_2.c",
-  })
+function dav1d_x68_files()
   files_in_dir("ext/dav1d/src/x86", {
     "cpu.c",
     "msac_init.c",
@@ -349,6 +318,43 @@ function dav1d_files()
     "looprestoration16_sse.asm",
     "mc16_sse.asm",
   })
+end
+
+function dav1d_files()
+  files_in_dir("ext/dav1d/src", {
+    "lib.c",
+    "thread_task.c",
+    "cdf.c",
+    "cpu.c",
+    "data.c",
+    "decode.c",
+    "dequant_tables.c",
+    "getbits.c",
+    "intra_edge.c",
+    "itx_1d.c",
+    "lf_mask.c",
+    "log.c",
+    "mem.c",
+    "msac.c",
+    "obu.c",
+    "picture.c",
+    "qm.c",
+    "ref.c",
+    "refmvs.c",
+    "scan.c",
+    "tables.c",
+    "warpmv.c",
+    "wedge.c",
+    "win32/thread.c",
+  })
+
+  files_in_dir("ext/dav1d/src", {
+    "sumatra_bitdepth_8.c",
+    "sumatra_bitdepth_8_2.c",
+    "sumatra_bitdepth_16.c",
+    "sumatra_bitdepth_16_2.c",
+  })
+
   files("ext/dav1d/include/common/*.h")
   files("ext/dav1d/include/dav1d/*.h")
 end
