@@ -1251,7 +1251,9 @@ ByteSlice EngineCbx::GetImageData(int pageNo) {
         return images[pageNo - 1];
     // decompress image data
     size_t fileId = files[pageNo - 1]->fileId;
-    return images[pageNo - 1] = cbxFile->GetFileDataById(fileId);
+    ByteSlice d = cbxFile->GetFileDataById(fileId);
+    images[pageNo - 1] = d;
+    return d;
 }
 
 static char* GetTextContent(HtmlPullParser& parser) {
