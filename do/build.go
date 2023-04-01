@@ -415,12 +415,14 @@ func buildDaily() {
 	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
-	buildAll(rel32Dir, "Release", "Win32", false)
-	buildAll(rel64Dir, "Release", "x64", false)
+	buildAll(rel32Dir, "Release", "Win32", true)
+	buildAll(rel64Dir, "Release", "x64", true)
+	buildAll(relArm64Dir, "Release", "ARM64", true)
 }
 
-func buildPreRelease() {
-	detectSigntoolPath() // early exit if missing
+func buildPreRelease(outDir string, platform string, suffix string) {
+	// make sure we can sign the executables, early exit if missing
+	detectSigntoolPath()
 
 	ver := getVerForBuildType(buildTypePreRel)
 	s := fmt.Sprintf("buidling pre-release version %s", ver)
@@ -430,20 +432,21 @@ func buildPreRelease() {
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
-	build(rel64Dir, "Release", "x64", true)
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-64.exe", ver)
-	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
+	build(outDir, "Release", platform, true)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
+	createExeZipWithGoWithNameMust(outDir, nameInZip)
 
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-prerel")
 	prefix := "SumatraPDF-prerel"
-	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
+	copyBuiltFiles(dstDir, outDir, prefix+"-"+suffix)
 	copyBuiltManifest(dstDir, prefix)
 }
 
 func buildRelease() {
-	detectSigntoolPath() // early exit if missing
+	// make sure we can sign the executables, early exit if missing
+	detectSigntoolPath()
 
 	ver := getVerForBuildType(buildTypeRel)
 	s := fmt.Sprintf("buidling release version %s", ver)
@@ -465,12 +468,17 @@ func buildRelease() {
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
+	build(relArm64Dir, "Release", "ARM64", true)
+	nameInZip = fmt.Sprintf("SumatraPDF-%s-arm64.exe", ver)
+	createExeZipWithGoWithNameMust(relArm64Dir, nameInZip)
+
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-rel")
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
 	copyBuiltFiles(dstDir, rel32Dir, prefix)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
+	copyBuiltFiles(dstDir, relArm64Dir, prefix+"-arm64")
 	copyBuiltManifest(dstDir, prefix)
 }
 

@@ -388,7 +388,7 @@ func main() {
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
-			buildPreRelease()
+			buildPreRelease(rel64Dir, "x64", "64")
 		case githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
 			// by their tooling
@@ -421,8 +421,7 @@ func main() {
 	}
 
 	if flgBuildPreRelease {
-		// make sure we can sign the executables
-		buildPreRelease()
+		buildPreRelease(rel64Dir, "x64", "64")
 		uploadToStorage(opts, buildTypePreRel)
 		return
 	}
