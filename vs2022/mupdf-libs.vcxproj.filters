@@ -896,6 +896,9 @@
     <ClCompile Include="..\ext\libjpeg-turbo\jquant2.c">
       <Filter>libjpeg-turbo</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libjpeg-turbo\jsimd_none.c">
+      <Filter>libjpeg-turbo</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libjpeg-turbo\jutils.c">
       <Filter>libjpeg-turbo</Filter>
     </ClCompile>
