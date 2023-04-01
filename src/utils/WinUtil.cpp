@@ -36,8 +36,12 @@ RenderedBitmap* RenderedBitmap::Clone() const {
     return new RenderedBitmap(hbmp2, size);
 }
 
+bool RenderedBitmap::IsValid() {
+    return hbmp != nullptr;
+}
+
 // render the bitmap into the target rectangle (streching and skewing as requird)
-bool RenderedBitmap::StretchDIBits(HDC hdc, Rect target) const {
+bool RenderedBitmap::Blit(HDC hdc, Rect target) {
     return BlitHBITMAP(hbmp, hdc, target);
 }
 

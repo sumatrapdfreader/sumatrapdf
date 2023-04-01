@@ -422,9 +422,9 @@ static bool PrintToDevice(const PrintData& pd) {
                     if (abortCookie) {
                         abortCookie->Clear();
                     }
-                    if (bmp && bmp->GetBitmap()) {
+                    if (bmp && bmp->IsValid()) {
                         Rect rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
-                        ok = bmp->StretchDIBits(hdc, rc);
+                        ok = bmp->Blit(hdc, rc);
                     }
                     delete bmp;
                     shrink *= 2;
@@ -536,10 +536,10 @@ static bool PrintToDevice(const PrintData& pd) {
                 if (abortCookie) {
                     abortCookie->Clear();
                 }
-                if (bmp && bmp->GetBitmap()) {
+                if (bmp && bmp->IsValid()) {
                     auto size = bmp->Size();
                     Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
-                    ok = bmp->StretchDIBits(hdc, rc);
+                    ok = bmp->Blit(hdc, rc);
                 }
                 delete bmp;
                 shrink *= 2;

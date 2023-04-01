@@ -226,10 +226,15 @@ struct BitmapPixels {
     HDC hdc;
 };
 
-struct RenderedBitmap {
+struct BlittableBitmap {
+    virtual bool Blit(HDC hdc, Rect target) = 0;
+    virtual bool IsValid() = 0;
+};
+
+struct RenderedBitmap : BlittableBitmap {
     HBITMAP hbmp = nullptr;
     Size size{};
-    HANDLE hMap{};
+    HANDLE hMap = nullptr;
 
     RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }
@@ -237,7 +242,8 @@ struct RenderedBitmap {
     RenderedBitmap* Clone() const;
     HBITMAP GetBitmap() const;
     Size Size() const;
-    bool StretchDIBits(HDC hdc, Rect target) const;
+    bool IsValid() override;
+    bool Blit(HDC hdc, Rect target) override;
 };
 
 void InitAllCommonControls();

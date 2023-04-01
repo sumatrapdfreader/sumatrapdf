@@ -813,7 +813,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
         RenderedBitmap* bmp = dm->GetEngine()->RenderPage(args);
-        bool success = bmp && bmp->GetBitmap() && bmp->StretchDIBits(hdc, bounds);
+        bool success = bmp && bmp->IsValid() && bmp->Blit(hdc, bounds);
         delete bmp;
 
         return success ? 0 : RENDER_DELAY_FAILED;

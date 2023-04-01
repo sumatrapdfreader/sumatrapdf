@@ -727,10 +727,10 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 RenderedBitmap* clone = state->thumbnail->Clone();
                 if (clone) {
                     UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
-                    clone->StretchDIBits(hdc, page);
+                    clone->Blit(hdc, page);
                     delete clone;
                 } else {
-                    state->thumbnail->StretchDIBits(hdc, page);
+                    state->thumbnail->Blit(hdc, page);
                 }
                 SelectClipRgn(hdc, nullptr);
                 DeleteObject(clip);
