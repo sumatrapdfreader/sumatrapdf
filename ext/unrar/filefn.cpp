@@ -38,7 +38,7 @@ MKDIR_CODE MakeDir(const wchar *Name,bool SetAttr,uint Attr)
 }
 
 
-bool CreatePath(const wchar *Path,bool SkipLastName)
+bool CreatePath(const wchar *Path,bool SkipLastName,bool Silent)
 {
   if (Path==NULL || *Path==0)
     return false;
@@ -73,7 +73,7 @@ bool CreatePath(const wchar *Path,bool SkipLastName)
       DirName[s-Path]=0;
 
       Success=MakeDir(DirName,true,DirAttr)==MKDIR_SUCCESS;
-      if (Success)
+      if (Success && !Silent)
       {
         mprintf(St(MCreatDir),DirName);
         mprintf(L" %s",St(MOk));
@@ -320,7 +320,6 @@ bool SetFileAttr(const wchar *Name,uint Attr)
 }
 
 
-#if 0
 wchar *MkTemp(wchar *Name,size_t MaxSize)
 {
   size_t Length=wcslen(Name);
@@ -354,7 +353,6 @@ wchar *MkTemp(wchar *Name,size_t MaxSize)
   }
   return Name;
 }
-#endif
 
 
 #if !defined(SFX_MODULE)
@@ -397,7 +395,11 @@ void CalcFileSum(File *SrcFile,uint *CRC32,byte *Blake2,uint Threads,int64 Size,
     {
 #ifndef SILENT
       if ((Flags & CALCFSUM_SHOWPROGRESS)!=0)
-        uiExtractProgress(TotalRead,FileLength,TotalRead,FileLength);
+      {
+        // Update only the current file progress in WinRAR, set the total to 0
+        // to keep it as is. It looks better for WinRAR.
+        uiExtractProgress(TotalRead,FileLength,0,0);
+      }
       else
       {
         if ((Flags & CALCFSUM_SHOWPERCENT)!=0)
@@ -474,6 +476,24 @@ bool DelFile(const wchar *Name)
 }
 
 
+bool DelDir(const wchar *Name)
+{
+#ifdef _WIN_ALL
+  bool Success=RemoveDirectory(Name)!=0;
+  if (!Success)
+  {
+    wchar LongName[NM];
+    if (GetWinLongPath(Name,LongName,ASIZE(LongName)))
+      Success=RemoveDirectory(LongName)!=0;
+  }
+  return Success;
+#else
+  char NameA[NM];
+  WideToChar(Name,NameA,ASIZE(NameA));
+  bool Success=rmdir(NameA)==0;
+  return Success;
+#endif
+}
 
 
 #if defined(_WIN_ALL) && !defined(SFX_MODULE)
@@ -498,6 +518,18 @@ bool SetFileCompression(const wchar *Name,bool State)
                               sizeof(NewState),NULL,0,&Result,NULL);
   CloseHandle(hFile);
   return RetCode!=0;
+}
+
+
+void ResetFileCache(const wchar *Name)
+{
+  // To reset file cache in Windows it is enough to open it with
+  // FILE_FLAG_NO_BUFFERING and then close it.
+  HANDLE hSrc=CreateFile(Name,GENERIC_READ,
+                         FILE_SHARE_READ|FILE_SHARE_WRITE,
+                         NULL,OPEN_EXISTING,FILE_FLAG_NO_BUFFERING,NULL);
+  if (hSrc!=INVALID_HANDLE_VALUE)
+    CloseHandle(hSrc);
 }
 #endif
 

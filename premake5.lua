@@ -258,6 +258,8 @@ workspace "SumatraPDF"
     language "C++"
     optconf()
     defines { "UNRAR", "RARDLL", "SILENT" }
+    -- os.hpp redefines WINVER, is there a better way?
+    disablewarnings { "4005" }
     disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4731", "4996" }
     -- unrar uses exception handling in savepos.hpp but I don't want to enable it
     -- as it seems to infect the Sumatra binary as well (i.e. I see bad alloc exception

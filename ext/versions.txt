@@ -52,7 +52,7 @@ openjpeg        2.3.1      2020-02-07
 synctex         1.16       2011-06-14
   https://itexmac.sourceforge.net/SyncTeX.html
 
-UnRAR           5.9.3
+UnRAR           6.21.0     2023-02-16
   https://www.rarlab.com/rar_add.htm
 
 unarr           trunk

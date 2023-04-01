@@ -38,7 +38,8 @@ enum UIMESSAGE_CODE {
   UIERROR_PATHTOOLONG, UIERROR_DIRSCAN, UIERROR_UOWNERGET,
   UIERROR_UOWNERBROKEN, UIERROR_UOWNERGETOWNERID, UIERROR_UOWNERGETGROUPID,
   UIERROR_UOWNERSET, UIERROR_ULINKREAD, UIERROR_ULINKEXIST,
-  UIERROR_OPENPRESERVEATIME,
+  UIERROR_OPENPRESERVEATIME, UIERROR_READERRTRUNCATED, UIERROR_READERRCOUNT,
+  UIERROR_DIRNAMEEXISTS,UIERROR_TRUNCPSW,UIERROR_ADJUSTVALUE,
 
   UIMSG_FIRST,
   UIMSG_STRING, UIMSG_BUILD, UIMSG_RRSEARCH, UIMSG_ANALYZEFILEDATA,
@@ -48,6 +49,7 @@ enum UIMESSAGE_CODE {
   UIMSG_CORRECTINGNAME, UIMSG_BADARCHIVE, UIMSG_CREATING, UIMSG_RENAMING,
   UIMSG_RECVOLCALCCHECKSUM, UIMSG_RECVOLFOUND, UIMSG_RECVOLMISSING,
   UIMSG_MISSINGVOL, UIMSG_RECONSTRUCTING, UIMSG_CHECKSUM, UIMSG_FAT32SIZE,
+  UIMSG_SKIPENCARC, UIMSG_FILERENAME,
 
   UIWAIT_FIRST,
   UIWAIT_DISKFULLNEXT, UIWAIT_FCREATEERROR, UIWAIT_BADPSW,
@@ -75,7 +77,7 @@ enum UIASKREP_RESULT {
 };
 
 UIASKREP_RESULT uiAskReplace(wchar *Name,size_t MaxNameSize,int64 FileSize,RarTime *FileTime,uint Flags);
-UIASKREP_RESULT uiAskReplaceEx(RAROptions *Cmd,wchar *Name,size_t MaxNameSize,int64 FileSize,RarTime *FileTime,uint Flags);
+UIASKREP_RESULT uiAskReplaceEx(CommandData *Cmd,wchar *Name,size_t MaxNameSize,int64 FileSize,RarTime *FileTime,uint Flags);
 
 void uiInit(SOUND_NOTIFY_MODE Sound);
 
@@ -86,21 +88,23 @@ void uiExtractProgress(int64 CurFileSize,int64 TotalFileSize,int64 CurSize,int64
 void uiProcessProgress(const char *Command,int64 CurSize,int64 TotalSize);
 
 enum UIPASSWORD_TYPE {UIPASSWORD_GLOBAL,UIPASSWORD_FILE,UIPASSWORD_ARCHIVE};
-bool uiGetPassword(UIPASSWORD_TYPE Type,const wchar *FileName,SecPassword *Password);
+bool uiGetPassword(UIPASSWORD_TYPE Type,const wchar *FileName,SecPassword *Password,CheckPassword *CheckPwd);
 bool uiIsGlobalPasswordSet();
 
 enum UIALARM_TYPE {UIALARM_ERROR, UIALARM_INFO, UIALARM_QUESTION};
 void uiAlarm(UIALARM_TYPE Type);
 
+void uiEolAfterMsg();
 
 bool uiAskNextVolume(wchar *VolName,size_t MaxSize);
-bool uiAskRepeatRead(const wchar *FileName);
+#if !defined(SILENT) && !defined(SFX_MODULE)
+void uiAskRepeatRead(const wchar *FileName,bool &Ignore,bool &All,bool &Retry,bool &Quit);
+#endif
 bool uiAskRepeatWrite(const wchar *FileName,bool DiskFull);
 
 #ifndef SFX_MODULE
 const wchar *uiGetMonthName(int Month);
 #endif
-
 
 class uiMsgStore
 {
@@ -141,30 +145,31 @@ class uiMsgStore
 // Templates recognize usual NULL as integer, not wchar*.
 #define UINULL ((wchar *)NULL)
 
-inline void uiMsg(UIMESSAGE_CODE Code)
+inline void uiMsgBase(uiMsgStore &Store)
 {
-  uiMsgStore Store(Code);
-  Store.Msg();
+  // Called last, when no parameters are left.
 }
 
-template<class T1> void uiMsg(UIMESSAGE_CODE Code,T1 a1)
+template<class T1,class... TN> void uiMsgBase(uiMsgStore &Store,T1&& a1,TN&&... aN)
 {
-  uiMsgStore Store(Code);
+  // Process first parameter and pass the rest to same uiMsgBase.
   Store<<a1;
-  Store.Msg();
+  uiMsgBase(Store,aN...);
 }
 
-template<class T1,class T2> void uiMsg(UIMESSAGE_CODE Code,T1 a1,T2 a2)
+
+// Use variadic templates.
+//
+// We must pass variable parameters by reference, so no temporary copies are
+// created for custom string objects like CStringBase in 7-Zip decompression
+// code. Such temporary copies would be destroyed inside of recursive
+// uiMsgBase calls, leaving us with Str[] items pointing at released memory.
+// Since we pass integer values as well, we can't use & references
+// and must resort to && rvalue references.
+template<class... TN> void uiMsg(UIMESSAGE_CODE Code,TN&&... aN)
 {
   uiMsgStore Store(Code);
-  Store<<a1<<a2;
-  Store.Msg();
-}
-
-template<class T1,class T2,class T3> void uiMsg(UIMESSAGE_CODE code,T1 a1,T2 a2,T3 a3)
-{
-  uiMsgStore Store(code);
-  Store<<a1<<a2<<a3;
+  uiMsgBase(Store,aN...);
   Store.Msg();
 }
 

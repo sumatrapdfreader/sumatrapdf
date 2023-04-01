@@ -45,6 +45,12 @@ enum OVERWRITE_MODE
   OVERWRITE_FORCE_ASK
 };
 
+enum ARC_METADATA
+{
+  ARCMETA_NONE=0,
+  ARCMETA_SAVE,    // -ams
+  ARCMETA_RESTORE  // -amr
+};
 
 enum QOPEN_MODE { QOPEN_NONE, QOPEN_AUTO, QOPEN_ALWAYS };
 
@@ -61,7 +67,8 @@ enum SAVECOPY_MODE {
 
 enum APPENDARCNAME_MODE
 {
-  APPENDARCNAME_NONE=0,APPENDARCNAME_DESTPATH,APPENDARCNAME_OWNDIR
+  APPENDARCNAME_NONE=0,APPENDARCNAME_DESTPATH,APPENDARCNAME_OWNSUBDIR,
+  APPENDARCNAME_OWNDIR
 };
 
 enum POWER_MODE {
@@ -83,11 +90,12 @@ struct FilterMode
 #define MAX_GENERATE_MASK  128
 
 
+// Here we store simple data types, which we can clear and move all together
+// quickly. Rest of data types goes to CommandData.
 class RAROptions
 {
   public:
     RAROptions();
-    ~RAROptions();
     void Init();
 
     uint ExclFileAttr;
@@ -115,9 +123,10 @@ class RAROptions
     RAR_CHARSET ErrlogCharset;
     RAR_CHARSET RedirectCharset;
 
-    wchar ArcPath[NM];
-    SecPassword Password;
+    wchar ArcPath[NM]; // For -ap<path>.
+    wchar ExclArcPath[NM]; // For -ep4<path> switch.
     bool EncryptHeaders;
+    bool SkipEncrypted;
     
     bool ManualPassword; // Password entered manually during operation, might need to clean for next archive.
 
@@ -129,9 +138,11 @@ class RAROptions
     HASH_TYPE HashType;
     int Recovery;
     int RecVolNumber;
+    ARC_METADATA ArcMetadata;
     bool DisablePercentage;
     bool DisableCopyright;
     bool DisableDone;
+    bool DisableNames;
     bool PrintVersion;
     int Solid;
     int SolidCount;
@@ -143,10 +154,9 @@ class RAROptions
     PATH_EXCL_MODE ExclPath;
     RECURSE_MODE Recurse;
     int64 VolSize;
-    Array<int64> NextVolSizes;
     uint CurVolNum;
     bool AllYes;
-    bool MoreInfo; // -im, show more information, used only in "WinRAR t" now.
+    bool VerboseOutput; // -iv, display verbose output, used only in "WinRAR t" now.
     bool DisableSortSolid;
     int ArcTime;
     int ConvertNames;
@@ -193,7 +203,11 @@ class RAROptions
     EXTTIME_MODE xctime;
     EXTTIME_MODE xatime;
     bool PreserveAtime;
-    wchar CompressStdin[NM];
+
+    // Read data from stdin and store in archive under a name specified here
+    // when archiving. Read an archive from stdin if any non-empty string
+    // is specified here when extracting.
+    wchar UseStdin[NM];
 
     uint Threads; // We use it to init hash even if RAR_SMP is not defined.
 

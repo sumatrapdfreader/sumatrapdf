@@ -97,7 +97,7 @@ void QuickOpen::Load(uint64 BlockPos)
 
   if (Arc->SubHead.Encrypted)
   {
-    RAROptions *Cmd=Arc->GetRAROptions();
+    CommandData *Cmd=Arc->GetCommandData();
 #ifndef RAR_NOCRYPT
     if (Cmd->Password.IsSet())
       Crypt.SetCryptKeys(false,CRYPT_RAR50,&Cmd->Password,Arc->SubHead.Salt,
@@ -214,16 +214,16 @@ uint QuickOpen::ReadBuffer()
   if (SizeToRead!=0)
   {
     ReadSize=Arc->File::Read(Buf+ReadBufSize,SizeToRead);
-  if (ReadSize<=0)
+    if (ReadSize<=0)
       ReadSize=0;
     else
     {
 #ifndef RAR_NOCRYPT
-  if (Arc->SubHead.Encrypted)
-    Crypt.DecryptBlock(Buf+ReadBufSize,ReadSize & ~CRYPT_BLOCK_MASK);
+      if (Arc->SubHead.Encrypted)
+        Crypt.DecryptBlock(Buf+ReadBufSize,ReadSize & ~CRYPT_BLOCK_MASK);
 #endif
-  RawDataPos+=ReadSize;
-  ReadBufSize+=ReadSize;
+      RawDataPos+=ReadSize;
+      ReadBufSize+=ReadSize;
     }
   }
   Arc->Seek(SavePos,SEEK_SET);
