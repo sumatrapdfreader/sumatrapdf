@@ -24,21 +24,22 @@
 #define OS_WIN 0
 #endif
 
+// https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #if defined(_M_IX86) || defined(__i386__)
-#define IS_32BIT 1
 #define IS_INTEL_32 1
-#define IS_64BIT 0
 #define IS_INTEL_64 0
-#endif
-
-#if defined(_M_X64) || defined(__x86_64__)
-#define IS_64BIT 1
+#define IS_ARM_64 0
+#elif defined(_M_X64) || defined(__x86_64__)
 #define IS_INTEL_64 1
-#define IS_32BIT 0
 #define IS_INTEL_32 0
+#define IS_ARM_64 0
+#elif defined(_M_ARM64)
+#define IS_INTEL_64 0
+#define IS_INTEL_32 0
+#define IS_ARM_64 1
+#else
+#error "unsupported arch"
 #endif
-
-// TODO: ARM 64bit
 
 /* OS_UNIX - Any Unix-like system */
 #if OS_DARWIN || OS_LINUX || defined(unix) || defined(__unix) || defined(__unix__)

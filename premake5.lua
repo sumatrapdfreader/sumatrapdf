@@ -66,6 +66,7 @@ function regconf()
     optimize "Size"
 
   -- no ltcg in asan builds
+  -- TODO: or arm64 ?
   filter { "configurations:Release*", "platforms:x32 or x64" }
     flags {
       "LinkTimeOptimization",
@@ -82,6 +83,8 @@ function webviewconf()
     libdirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/x86" }
   filter "platforms:x64 or x64_asan"
     libdirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/x64" }
+  filter "platforms:arm64"
+    libdirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/arm64" }
   filter {}
   links { "WebView2LoaderStatic.lib"}
 end
@@ -101,6 +104,7 @@ function optconf()
   runtime "Release"
 
   -- no ltcg in asan builds
+  -- TODO: or arm64 ?
   filter { "configurations:Release*", "platforms:x32 or x64" }
     flags {
       "LinkTimeOptimization",
@@ -153,7 +157,7 @@ end
 
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
-  platforms { "x32", "x64", "x64_asan" }
+  platforms { "x32", "x64", "arm64", "x64_asan" }
   startproject "SumatraPDF"
 
   filter "platforms:x32"
@@ -172,14 +176,14 @@ workspace "SumatraPDF"
      resdefines { "_WIN64" }
   filter {}
 
+  filter "platforms:arm64"
+     architecture "arm64"
+  filter {}
+
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
   warnings "Extra"
 
   location "this_is_invalid_location"
-
-  filter "action:vs2019"
-    location "vs2019"
-  filter {}
 
   filter "action:vs2022"
     location "vs2022"
@@ -207,6 +211,14 @@ workspace "SumatraPDF"
     targetdir "out/rel64_prefast_asan"
   filter {"platforms:x64_asan", "configurations:Debug"}
     targetdir "out/dbg64_asan"
+  filter {}
+
+  filter {"platforms:arm64", "configurations:Release"}
+    targetdir "out/arm64"
+  filter {"platforms:arm64", "configurations:ReleaseAnalyze"}
+    targetdir "out/arm64_prefast"
+  filter {"platforms:arm64", "configurations:Debug"}
+    targetdir "out/dbgarm64"
   filter {}
 
   objdir "%{cfg.targetdir}/obj"
