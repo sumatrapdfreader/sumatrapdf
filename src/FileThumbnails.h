@@ -7,7 +7,7 @@ constexpr int kThumbnailDy = 150;
 
 bool LoadThumbnail(FileState* ds);
 bool HasThumbnail(FileState* ds);
-void SetThumbnail(FileState* ds, RenderedBitmap* bmp);
+void SetThumbnail(FileState* ds, BlittableBitmap* bmp);
 void SaveThumbnail(FileState* ds);
 void RemoveThumbnail(FileState* ds);
 

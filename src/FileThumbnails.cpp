@@ -122,7 +122,7 @@ bool HasThumbnail(FileState* ds) {
 }
 
 // takes ownership of bmp
-void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
+void SetThumbnail(FileState* ds, BlittableBitmap* bmp) {
     CrashIf(bmp && bmp->GetSize().IsEmpty());
     if (!ds || !bmp || bmp->GetSize().IsEmpty()) {
         delete bmp;

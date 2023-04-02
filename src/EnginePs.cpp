@@ -277,7 +277,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
-    RenderedBitmap* RenderPage(RenderPageArgs& args) override {
+    BlittableBitmap* RenderPage(RenderPageArgs& args) override {
         return pdfEngine->RenderPage(args);
     }
 

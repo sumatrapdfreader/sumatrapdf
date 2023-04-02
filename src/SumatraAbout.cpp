@@ -724,7 +724,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 }
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
-                RenderedBitmap* clone = state->thumbnail->Clone();
+                BlittableBitmap* clone = state->thumbnail->Clone();
                 if (clone) {
                     UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
                     clone->Blit(hdc, page);

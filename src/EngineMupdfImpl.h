@@ -48,7 +48,7 @@ class EngineMupdf : public EngineBase {
     RectF PageMediabox(int pageNo) override;
     RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
+    BlittableBitmap* RenderPage(RenderPageArgs& args) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 

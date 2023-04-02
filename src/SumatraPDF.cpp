@@ -662,15 +662,15 @@ static bool ShouldSaveThumbnail(FileState* ds) {
 
 // TODO: replace with std::function
 class ThumbnailRenderingTask : public RenderingCallback {
-    std::function<void(RenderedBitmap*)> saveThumbnail;
+    std::function<void(BlittableBitmap*)> saveThumbnail;
 
   public:
-    explicit ThumbnailRenderingTask(const std::function<void(RenderedBitmap*)>& saveThumbnail)
+    explicit ThumbnailRenderingTask(const std::function<void(BlittableBitmap*)>& saveThumbnail)
         : saveThumbnail(saveThumbnail) {
     }
     ~ThumbnailRenderingTask() override = default;
 
-    void Callback(RenderedBitmap* bmp) override {
+    void Callback(BlittableBitmap* bmp) override {
         saveThumbnail(bmp);
         delete this;
     }
@@ -745,7 +745,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     }
 
     char* filePath = str::Dup(win->ctrl->GetFilePath());
-    win->ctrl->CreateThumbnail(Size(kThumbnailDx, kThumbnailDy), [=](RenderedBitmap* bmp) {
+    win->ctrl->CreateThumbnail(Size(kThumbnailDx, kThumbnailDy), [=](BlittableBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
                 SetThumbnail(gFileHistory.FindByPath(filePath), bmp);

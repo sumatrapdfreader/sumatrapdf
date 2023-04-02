@@ -55,11 +55,11 @@ Kind kindEngineComicBooks = "engineComicBooks";
 
 struct ImagePage {
     int pageNo = 0;
-    Bitmap* bmp = nullptr;
+    BlittableBitmap* bmp = nullptr;
     bool ownBmp = true;
     int refs = 1;
 
-    ImagePage(int pageNo, Bitmap* bmp) {
+    ImagePage(int pageNo, BlittableBitmap* bmp) {
         this->pageNo = pageNo;
         this->bmp = bmp;
     }
@@ -77,7 +77,7 @@ class EngineImages : public EngineBase {
 
     RectF PageMediabox(int pageNo) override;
 
-    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
+    BlittableBitmap* RenderPage(RenderPageArgs& args) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
@@ -153,7 +153,8 @@ RectF EngineImages::PageMediabox(int pageNo) {
     return mbox;
 }
 
-RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
+#if 0
+BlittableBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
@@ -213,6 +214,16 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     }
 
     return new RenderedBitmap(hbmp, screen.Size(), hMap);
+}
+#endif
+
+BlittableBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
+    auto pageNo = args.pageNo;
+    ImagePage* page = GetPage(pageNo);
+    if (!page) {
+        return nullptr;
+    }
+    return page->bmp;
 }
 
 void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation) {
@@ -283,14 +294,13 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
         return nullptr;
     }
 
-    HBITMAP hbmp;
     auto bmp = page->bmp;
     int dx = bmp->GetWidth();
     int dy = bmp->GetHeight();
     Size s{dx, dy};
-    auto status = bmp->GetHBITMAP((ARGB)Color::White, &hbmp);
+    HBITMAP hbmp = bmp->GetBitmap();
     DropPage(page, false);
-    if (status != Ok) {
+    if (hbmp == nullptr) {
         return nullptr;
     }
     return new RenderedBitmap(hbmp, s);
@@ -337,7 +347,8 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             DropPage(pageCache.Last(), true);
         }
         result = new ImagePage(pageNo, nullptr);
-        result->bmp = LoadBitmapForPage(pageNo, result->ownBmp);
+        auto bmp = LoadBitmapForPage(pageNo, result->ownBmp);
+        result->bmp = new BlittableGdiplusBitmap(bmp);
         pageCache.InsertAt(0, result);
     } else if (result != pageCache.at(0)) {
         // keep the list Most Recently Used first
@@ -383,9 +394,12 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
         DropPage(page, false);
     };
 
-    auto bmp = page->bmp;
-    if (!bmp)
+    // TODO: do something better?
+    auto bbmp = (BlittableGdiplusBitmap*)page->bmp;
+    if (!bbmp) {
         return RectF{};
+    }
+    auto bmp = bbmp->bmp;
 
     const int w = bmp->GetWidth(), h = bmp->GetHeight();
     // don't need pixel-perfect margin, so scan 200 points at most
@@ -749,7 +763,12 @@ bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
-        ok = page && c->AddPageFromGdiplusBitmap(page->bmp, dpi);
+        auto bbmp = page->bmp;
+        if (!bbmp) {
+            continue;
+        }
+        auto bmp = (BlittableGdiplusBitmap*)bbmp;
+        ok = page && c->AddPageFromGdiplusBitmap(bmp->bmp, dpi);
         DropPage(page, false);
     }
     if (ok) {
@@ -885,7 +904,8 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     // TODO: better handle the case where images have different resolutions
     ImagePage* page = e->GetPage(1);
     if (page) {
-        e->fileDPI = page->bmp->GetHorizontalResolution();
+        auto bmp = (BlittableGdiplusBitmap*)page->bmp;
+        e->fileDPI = bmp->bmp->GetHorizontalResolution();
         e->DropPage(page, false);
     }
     return true;

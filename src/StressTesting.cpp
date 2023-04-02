@@ -74,7 +74,7 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
 
     t = TimeGet();
     RenderPageArgs args(pagenum, 1.0, 0);
-    RenderedBitmap* rendered = engine->RenderPage(args);
+    BlittableBitmap* rendered = engine->RenderPage(args);
 
     if (!rendered) {
         logf("Error: failed to render page %d\n", pagenum);

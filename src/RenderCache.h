@@ -17,7 +17,7 @@ struct PageInfo;
 
 class RenderingCallback {
   public:
-    virtual void Callback(RenderedBitmap* bmp = nullptr) = 0;
+    virtual void Callback(BlittableBitmap* bmp = nullptr) = 0;
     virtual ~RenderingCallback() = default;
 };
 
@@ -51,12 +51,12 @@ struct BitmapCacheEntry {
     int cacheIdx = -1; // index within RenderCache.cache
 
     // owned by the BitmapCacheEntry
-    RenderedBitmap* bitmap = nullptr;
+    BlittableBitmap* bitmap = nullptr;
     bool outOfDate = false;
     int refs = 1;
 
     BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile,
-                     RenderedBitmap* bitmap) {
+                     BlittableBitmap* bitmap) {
         this->dm = dm;
         this->pageNo = pageNo;
         this->rotation = rotation;
@@ -84,7 +84,7 @@ struct PageRenderRequest {
     AbortCookie* abortCookie = nullptr;
     DWORD timestamp = 0;
     // owned by the PageRenderRequest (use it before reusing the request)
-    // on rendering success, the callback gets handed the RenderedBitmap
+    // on rendering success, the callback gets handed the BlittableBitmap
     RenderingCallback* renderCb = nullptr;
 };
 
@@ -129,7 +129,7 @@ struct RenderCache {
 
     bool ClearCurrentRequest();
     bool GetNextRequest(PageRenderRequest* req);
-    void Add(PageRenderRequest& req, RenderedBitmap* bmp);
+    void Add(PageRenderRequest& req, BlittableBitmap* bmp);
 
     USHORT GetTileRes(DisplayModel* dm, int pageNo) const;
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);

@@ -2592,7 +2592,7 @@ RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rota
     return ToRectF(rect2);
 }
 
-RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
+BlittableBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);

@@ -10,9 +10,10 @@ struct TocTree;
 struct TocItem;
 struct MainWindow;
 struct FileState;
+struct BlittableBitmap;
 enum class DisplayMode;
 
-using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
+using onBitmapRenderedCb = std::function<void(BlittableBitmap*)>;
 
 // TODO: "format", "encryption", "info::Keywords" as in fz_lookup_metadata
 enum class DocumentProperty {
@@ -106,7 +107,7 @@ struct DocController {
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(FileState* ds) = 0;
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(Size size, const std::function<void(RenderedBitmap*)>& saveThumbnail) = 0;
+    virtual void CreateThumbnail(Size size, const std::function<void(BlittableBitmap*)>& saveThumbnail) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const {

@@ -4,6 +4,8 @@
 struct fz_outline;
 struct fz_link;
 
+struct BlittableBitmap;
+
 extern Kind kindEngineMupdf;
 extern Kind kindEngineMulti;
 extern Kind kindEngineDjVu;
@@ -416,7 +418,7 @@ class EngineBase {
 
     // renders a page into a cacheable RenderedBitmap
     // (*cookie_out must be deleted after the call returns)
-    virtual RenderedBitmap* RenderPage(RenderPageArgs& args) = 0;
+    virtual BlittableBitmap* RenderPage(RenderPageArgs& args) = 0;
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction

@@ -418,7 +418,7 @@ static bool PrintToDevice(const PrintData& pd) {
                     if (abortCookie) {
                         args.cookie_out = &abortCookie->cookie;
                     }
-                    RenderedBitmap* bmp = engine.RenderPage(args);
+                    BlittableBitmap* bmp = engine.RenderPage(args);
                     if (abortCookie) {
                         abortCookie->Clear();
                     }
@@ -533,7 +533,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 if (abortCookie) {
                     args.cookie_out = &abortCookie->cookie;
                 }
-                RenderedBitmap* bmp = engine.RenderPage(args);
+                BlittableBitmap* bmp = engine.RenderPage(args);
                 if (abortCookie) {
                     abortCookie->Clear();
                 }

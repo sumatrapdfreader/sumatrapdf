@@ -41,7 +41,7 @@ RenderedBitmap::~RenderedBitmap() {
     }
 }
 
-RenderedBitmap* RenderedBitmap::Clone() const {
+BlittableBitmap* RenderedBitmap::Clone() {
     HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
     return new RenderedBitmap(hbmp2, size);
 }
@@ -56,7 +56,46 @@ bool RenderedBitmap::Blit(HDC hdc, Rect target) {
 }
 
 // callers must not delete this (use Clone if you have to modify it)
-HBITMAP RenderedBitmap::GetBitmap() const {
+HBITMAP RenderedBitmap::GetBitmap() {
+    return hbmp;
+}
+
+BlittableGdiplusBitmap::~BlittableGdiplusBitmap() {
+    delete bmp;
+}
+
+BlittableBitmap* BlittableGdiplusBitmap::Clone() {
+    // TODO: write me
+    CrashIf(true);
+    return nullptr;
+}
+
+bool BlittableGdiplusBitmap::IsValid() {
+    return bmp != nullptr;
+}
+
+bool BlittableGdiplusBitmap::Blit(HDC hdc, Rect target) {
+    // TODO: write me
+    CrashIf(true);
+    if (!bmp) {
+        return false;
+    }
+
+    return false;
+}
+
+HBITMAP BlittableGdiplusBitmap::GetBitmap() {
+    if (hbmp) {
+        return hbmp;
+    }
+    if (!bmp) {
+        return nullptr;
+    }
+    auto bgCol = Gdiplus::Color(0xff, 0xff, 0xff);
+    auto status = bmp->GetHBITMAP(bgCol, &hbmp);
+    if (status != Gdiplus::Status::Ok) {
+        return nullptr;
+    }
     return hbmp;
 }
 

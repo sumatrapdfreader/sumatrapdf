@@ -390,7 +390,7 @@ bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int d
     float zoom = dpi / engine->GetFileDPI();
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
         RenderPageArgs args(i, zoom, 0, nullptr, RenderTarget::Export);
-        RenderedBitmap* bmp = engine->RenderPage(args);
+        BlittableBitmap* bmp = engine->RenderPage(args);
         ok = false;
         if (bmp) {
             ok = AddPageFromHBITMAP(c, bmp->GetBitmap(), bmp->GetSize(), dpi);

@@ -163,7 +163,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     return false;
 }
 
-void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
+void RenderCache::Add(PageRenderRequest& req, BlittableBitmap* bmp) {
     ScopedCritSec scope(&cacheAccess);
     CrashIf(!req.dm);
 
@@ -636,7 +636,7 @@ void RenderCache::AbortCurrentRequest() {
 DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
     RenderCache* cache = (RenderCache*)data;
     PageRenderRequest req;
-    RenderedBitmap* bmp;
+    BlittableBitmap* bmp;
 
     for (;;) {
         if (cache->ClearCurrentRequest()) {
@@ -724,7 +724,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
             RequestRendering(dm, pageNo, tile);
         }
     }
-    RenderedBitmap* renderedBmp = entry ? entry->bitmap : nullptr;
+    BlittableBitmap* renderedBmp = entry ? entry->bitmap : nullptr;
     HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : nullptr;
 
     if (!hbmp) {
@@ -812,7 +812,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
-        RenderedBitmap* bmp = dm->GetEngine()->RenderPage(args);
+        BlittableBitmap* bmp = dm->GetEngine()->RenderPage(args);
         bool success = bmp && bmp->IsValid() && bmp->Blit(hdc, bounds);
         delete bmp;
 

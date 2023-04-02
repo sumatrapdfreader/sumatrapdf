@@ -232,11 +232,16 @@ struct BlittableBitmap {
     BlittableBitmap(){};
 
     Size GetSize();
+    int GetWidth() { return size.dx; }
+    int GetHeight() { return size.dy; }
 
     virtual bool Blit(HDC hdc, Rect target) = 0;
     virtual bool IsValid() = 0;
 
     virtual ~BlittableBitmap(){};
+
+    virtual HBITMAP GetBitmap() = 0;
+    virtual BlittableBitmap* Clone() = 0;
 };
 
 struct RenderedBitmap : BlittableBitmap {
@@ -246,10 +251,26 @@ struct RenderedBitmap : BlittableBitmap {
     RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
     ~RenderedBitmap() override;
 
-    RenderedBitmap* Clone() const;
-    HBITMAP GetBitmap() const;
+    BlittableBitmap* Clone() override;
+
     bool IsValid() override;
     bool Blit(HDC hdc, Rect target) override;
+    HBITMAP GetBitmap() override;
+};
+
+struct BlittableGdiplusBitmap : BlittableBitmap {
+    Gdiplus::Bitmap* bmp = nullptr;
+    HBITMAP hbmp = nullptr;
+
+    BlittableGdiplusBitmap(Gdiplus::Bitmap* bmp) : bmp(bmp) {}
+
+    ~BlittableGdiplusBitmap() override;
+
+    BlittableBitmap* Clone() override;
+
+    bool IsValid() override;
+    bool Blit(HDC hdc, Rect target) override;
+    HBITMAP GetBitmap() override;
 };
 
 void InitAllCommonControls();
