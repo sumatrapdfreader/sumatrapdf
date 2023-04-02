@@ -59,10 +59,10 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 
     page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &page);
-    RenderedBitmap* bmp = engine->RenderPage(args);
+    BlittableBitmap* bmp = engine->RenderPage(args);
 
     HDC hdc = GetDC(nullptr);
-    if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+    if (bmp && bmp->IsValid() && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
         for (int i = 0; i < thumb.dx * thumb.dy; i++) {
             bmpData[4 * i + 3] = 0xFF;
@@ -90,7 +90,7 @@ class PageRenderer {
     HWND hwnd = nullptr;
 
     int currPage = 0;
-    RenderedBitmap* currBmp = nullptr;
+    BlittableBitmap* currBmp = nullptr;
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     Size currSize;
     int reqPage = 0;
@@ -163,8 +163,8 @@ class PageRenderer {
 
         PageRenderer* pr = (PageRenderer*)data;
         RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
-        RenderedBitmap* bmp = pr->engine->RenderPage(args);
-        if (!bmp) {
+        BlittableBitmap* bmp = pr->engine->RenderPage(args);
+        if (!bmp || !bmp->IsValid()) {
             return 0;
         }
 
