@@ -3678,6 +3678,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSELEAVE:
+            logfa("TabsCtrl::WndProc: WM_MOUSELEAVE, tabUnderMouse: %d, tabHighlited: %d\n", tabUnderMouse,
+                  tabHighlighted);
             if (tabHighlighted != tabUnderMouse) {
                 tabHighlighted = tabUnderMouse;
                 HwndScheduleRepaint(hwnd);
@@ -3754,10 +3756,18 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     SetCapture(hwnd);
                 }
             }
+            logfa(
+                "TabsCtrl::WndProc: WM_LBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                "overClose: %d\n",
+                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
             return 0;
         }
 
         case WM_LBUTTONUP: {
+            logfa(
+                "TabsCtrl::WndProc: WM_LBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                "overClose: %d\n",
+                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
             if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed && overClose) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
@@ -3772,7 +3782,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 draggingTab = false;
                 ImageList_EndDrag();
                 int selectedTab = GetSelected();
-                logfa("selected: %d underMouse: %d\n", selectedTab, tabUnderMouse);
+                logfa("TabsCtrl::WndProc: selectedTab: %d tabUnderMouse: %d\n", selectedTab, tabUnderMouse);
                 if (tabUnderMouse != -1 && tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
                     TriggerTabDragged(this, selectedTab, tabUnderMouse);
                     UpdateAfterDrag(this, selectedTab, tabUnderMouse);
