@@ -388,7 +388,7 @@ func main() {
 		gev := getGitHubEventType()
 		switch gev {
 		case githubEventPush:
-			buildPreRelease(rel64Dir, "x64", "64")
+			buildPreRelease(rel64Dir, kPlatformIntel64, "64")
 		case githubEventTypeCodeQL:
 			// code ql is just a regular build, I assume intercepted by
 			// by their tooling
@@ -421,7 +421,7 @@ func main() {
 	}
 
 	if flgBuildPreRelease {
-		buildPreRelease(rel64Dir, "x64", "64")
+		buildPreRelease(rel64Dir, kPlatformIntel64, "64")
 		uploadToStorage(opts, buildTypePreRel)
 		return
 	}
@@ -433,7 +433,7 @@ func main() {
 	}
 
 	if flgDrMem {
-		buildJustPortableExe(rel64Dir, "Release", "x64")
+		buildJustPortableExe(rel64Dir, "Release", kPlatformIntel64)
 		//cmd := exec.Command("drmemory.exe", "-light", "-check_leaks", "-possible_leaks", "-count_leaks", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
 		cmd := exec.Command("drmemory.exe", "-leaks_only", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
 		runCmdLoggedMust(cmd)

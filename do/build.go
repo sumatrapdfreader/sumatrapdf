@@ -103,7 +103,10 @@ func buildAll(dir, config, platform string, sign bool) {
 
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
-	runTestUtilMust(dir)
+	// can't run arm binaries in x86 CI
+	if platform != kPlatformArm64 {
+		runTestUtilMust(dir)
+	}
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;logview:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 	if sign {
@@ -405,6 +408,12 @@ func signFilesOptional(dir string) {
 	signFilesMust(dir)
 }
 
+const (
+	kPlatformIntel32 = "Win32"
+	kPlatformIntel64 = "x64"
+	kPlatformArm64   = "ARM64"
+)
+
 func buildDaily() {
 	detectSigntoolPath() // early exit if missing
 
@@ -415,9 +424,9 @@ func buildDaily() {
 	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
-	buildAll(rel32Dir, "Release", "Win32", true)
-	buildAll(rel64Dir, "Release", "x64", true)
-	buildAll(relArm64Dir, "Release", "ARM64", true)
+	buildAll(rel32Dir, "Release", kPlatformIntel32, true)
+	buildAll(rel64Dir, "Release", kPlatformIntel64, true)
+	buildAll(relArm64Dir, "Release", kPlatformArm64, true)
 }
 
 func buildPreRelease(outDir string, platform string, suffix string) {
@@ -460,15 +469,15 @@ func buildRelease() {
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
-	build(rel32Dir, "Release", "Win32", true)
+	build(rel32Dir, "Release", kPlatformIntel32, true)
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-32.exe", ver)
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 
-	build(rel64Dir, "Release", "x64", true)
+	build(rel64Dir, "Release", kPlatformIntel64, true)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
-	build(relArm64Dir, "Release", "ARM64", true)
+	build(relArm64Dir, "Release", kPlatformArm64, true)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-arm64.exe", ver)
 	createExeZipWithGoWithNameMust(relArm64Dir, nameInZip)
 
@@ -496,8 +505,7 @@ func buildLogview() {
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	config := "Release"
-	platform := "x64"
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, kPlatformIntel64)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:logview:Rebuild`, p, `/m`)
 }
 
@@ -506,7 +514,6 @@ func buildTestUtil() {
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	config := "Release"
-	platform := "x64"
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, kPlatformIntel64)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 }
