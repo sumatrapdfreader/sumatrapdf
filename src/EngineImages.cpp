@@ -1041,9 +1041,6 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     static EngineBase* CreateFromFile(const char* path);
     static EngineBase* CreateFromStream(IStream* stream);
 
-    // an image for each page
-    Vec<ByteSlice> images;
-
   protected:
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
@@ -1079,13 +1076,7 @@ EngineCbx::EngineCbx(MultiFormatArchive* arch) {
 
 EngineCbx::~EngineCbx() {
     delete tocTree;
-
     delete cbxFile;
-
-    for (auto&& img : images) {
-        if (!img.empty())
-            str::Free(img);
-    }
 }
 
 EngineBase* EngineCbx::Clone() {
@@ -1233,11 +1224,6 @@ bool EngineCbx::FinishLoading() {
         tocTree = new TocTree(realRoot);
     }
 
-    for (int i = 0; i < pageCount; i++) {
-        // actual image load will be performed in EngineCbx::GetImageData
-        images.Append({});
-    }
-
     return true;
 }
 
@@ -1247,12 +1233,8 @@ TocTree* EngineCbx::GetToc() {
 
 ByteSlice EngineCbx::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
-    if (!images[pageNo - 1].empty())
-        return images[pageNo - 1];
-    // decompress image data
     size_t fileId = files[pageNo - 1]->fileId;
     ByteSlice d = cbxFile->GetFileDataById(fileId);
-    images[pageNo - 1] = d;
     return d;
 }
 
@@ -1349,6 +1331,7 @@ bool EngineCbx::SaveFileAsPDF(const char* pdfFileName) {
     for (int i = 1; i <= PageCount() && ok; i++) {
         ByteSlice img = GetImageData(i);
         ok = c->AddPageFromImageData(img, GetFileDPI());
+        img.Free();
     }
     if (ok) {
         c->CopyProperties(this);
@@ -1385,19 +1368,24 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
         logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     };
     ByteSlice img = GetImageData(pageNo);
-    if (!img.empty()) {
-        deleteAfterUse = true;
-        return BitmapFromData(img);
+    if (img.empty()) {
+        img.Free();
+        return nullptr;
     }
-    return nullptr;
+    deleteAfterUse = true;
+    auto res = BitmapFromData(img);
+    img.Free();
+    return res;
 }
 
 RectF EngineCbx::LoadMediabox(int pageNo) {
     ByteSlice img = GetImageData(pageNo);
     if (!img.empty()) {
         Size size = BitmapSizeFromData(img);
+        img.Free();
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
+    img.Free();
 
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
