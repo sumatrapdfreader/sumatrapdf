@@ -494,7 +494,7 @@ workspace "SumatraPDF"
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
     -- gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
@@ -874,7 +874,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
-    disablewarnings { "4838" }
+    disablewarnings { "4100", "4838" }
     includedirs { "src" }
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet" }

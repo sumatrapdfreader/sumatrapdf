@@ -74,7 +74,7 @@ bool BlittableGdiplusBitmap::IsValid() {
     return bmp != nullptr;
 }
 
-bool BlittableGdiplusBitmap::Blit(HDC hdc, Rect target) {
+bool BlittableGdiplusBitmap::Blit(HDC, Rect) {
     // TODO: write me
     CrashIf(true);
     if (!bmp) {
