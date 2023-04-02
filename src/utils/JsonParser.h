@@ -16,8 +16,7 @@ enum class Type { String, Number, Bool, Null };
 // 1. "/key[0]", "false", Type::Bool
 // 2. "/key[1]/name", "value", Type::String
 
-class ValueVisitor {
-  public:
+struct ValueVisitor {
     // return false to stop parsing
     virtual bool Visit(const char* path, const char* value, Type type) = 0;
     virtual ~ValueVisitor() = default;
