@@ -393,7 +393,7 @@ bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int d
         RenderedBitmap* bmp = engine->RenderPage(args);
         ok = false;
         if (bmp) {
-            ok = AddPageFromHBITMAP(c, bmp->GetBitmap(), bmp->Size(), dpi);
+            ok = AddPageFromHBITMAP(c, bmp->GetBitmap(), bmp->GetSize(), dpi);
         }
         delete bmp;
     }

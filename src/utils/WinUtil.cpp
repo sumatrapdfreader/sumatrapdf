@@ -22,6 +22,16 @@ bool ToBool(BOOL b) {
     return b ? true : false;
 }
 
+Size BlittableBitmap::GetSize() {
+    return size;
+}
+
+RenderedBitmap::RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap) {
+    this->hbmp = hbmp;
+    this->hMap = hMap;
+    this->size = size;
+}
+
 RenderedBitmap::~RenderedBitmap() {
     if (IsValidHandle(hbmp)) {
         DeleteObject(hbmp);
@@ -48,10 +58,6 @@ bool RenderedBitmap::Blit(HDC hdc, Rect target) {
 // callers must not delete this (use Clone if you have to modify it)
 HBITMAP RenderedBitmap::GetBitmap() const {
     return hbmp;
-}
-
-Size RenderedBitmap::Size() const {
-    return size;
 }
 
 void EditSelectAll(HWND hwnd) {

@@ -227,21 +227,27 @@ struct BitmapPixels {
 };
 
 struct BlittableBitmap {
+    Size size = {};
+
+    BlittableBitmap(){};
+
+    Size GetSize();
+
     virtual bool Blit(HDC hdc, Rect target) = 0;
     virtual bool IsValid() = 0;
+
+    virtual ~BlittableBitmap(){};
 };
 
 struct RenderedBitmap : BlittableBitmap {
     HBITMAP hbmp = nullptr;
-    Size size{};
     HANDLE hMap = nullptr;
 
-    RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
-    }
-    ~RenderedBitmap();
+    RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
+    ~RenderedBitmap() override;
+
     RenderedBitmap* Clone() const;
     HBITMAP GetBitmap() const;
-    Size Size() const;
     bool IsValid() override;
     bool Blit(HDC hdc, Rect target) override;
 };

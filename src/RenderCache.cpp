@@ -742,7 +742,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
 
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {
-        Size bmpSize = renderedBmp->Size();
+        Size bmpSize = renderedBmp->GetSize();
         int xSrc = -std::min(tileOnScreen.x, 0);
         int ySrc = -std::min(tileOnScreen.y, 0);
         float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);

@@ -423,7 +423,8 @@ static bool PrintToDevice(const PrintData& pd) {
                         abortCookie->Clear();
                     }
                     if (bmp && bmp->IsValid()) {
-                        Rect rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                        Size size = bmp->GetSize();
+                        Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
                         ok = bmp->Blit(hdc, rc);
                     }
                     delete bmp;
@@ -537,7 +538,7 @@ static bool PrintToDevice(const PrintData& pd) {
                     abortCookie->Clear();
                 }
                 if (bmp && bmp->IsValid()) {
-                    auto size = bmp->Size();
+                    auto size = bmp->GetSize();
                     Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
                     ok = bmp->Blit(hdc, rc);
                 }

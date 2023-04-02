@@ -92,7 +92,7 @@ bool LoadThumbnail(FileState* ds) {
     }
 
     RenderedBitmap* bmp = LoadRenderedBitmap(bmpPath);
-    if (!bmp || bmp->Size().IsEmpty()) {
+    if (!bmp || bmp->GetSize().IsEmpty()) {
         delete bmp;
         return false;
     }
@@ -123,8 +123,8 @@ bool HasThumbnail(FileState* ds) {
 
 // takes ownership of bmp
 void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
-    CrashIf(bmp && bmp->Size().IsEmpty());
-    if (!ds || !bmp || bmp->Size().IsEmpty()) {
+    CrashIf(bmp && bmp->GetSize().IsEmpty());
+    if (!ds || !bmp || bmp->GetSize().IsEmpty()) {
         delete bmp;
         return;
     }
