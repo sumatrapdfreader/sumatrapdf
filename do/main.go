@@ -381,11 +381,21 @@ func main() {
 
 	if flgCIDailyBuild {
 		buildCiDaily()
+		if opts.upload {
+			uploadToStorage(buildTypeDaily)
+		} else {
+			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+		}
 		return
 	}
 
 	if flgCIBuild {
 		buildCi()
+		if opts.upload {
+			uploadToStorage(buildTypePreRel)
+		} else {
+			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+		}
 		return
 	}
 
@@ -410,7 +420,7 @@ func main() {
 	}
 
 	if flgBuildPreRelease {
-		buildPreRelease(kPlatformIntel64, "64")
+		buildPreRelease(kPlatformIntel64)
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {

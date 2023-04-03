@@ -19,7 +19,6 @@ var (
 	preReleaseVerCached string
 	gitSha1Cached       string
 	sumatraVersion      string
-	versionCheckVer     string
 )
 
 func getGitSha1() string {
@@ -231,36 +230,36 @@ func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 	must(err)
 }
 
-func createExeZipWithPigz(dir string) {
-	srcFile := "SumatraPDF.exe"
-	srcPath := filepath.Join(dir, srcFile)
-	panicIf(!fileExists(srcPath), "file '%s' doesn't exist\n", srcPath)
+// func createExeZipWithPigz(dir string) {
+// 	srcFile := "SumatraPDF.exe"
+// 	srcPath := filepath.Join(dir, srcFile)
+// 	panicIf(!fileExists(srcPath), "file '%s' doesn't exist\n", srcPath)
 
-	// this is the file that pigz.exe will create
-	dstFileTmp := "SumatraPDF.exe.zip"
-	dstPathTmp := filepath.Join(dir, dstFileTmp)
-	removeFileMust(dstPathTmp)
+// 	// this is the file that pigz.exe will create
+// 	dstFileTmp := "SumatraPDF.exe.zip"
+// 	dstPathTmp := filepath.Join(dir, dstFileTmp)
+// 	removeFileMust(dstPathTmp)
 
-	// this is the file we want at the end
-	dstFile := "SumatraPDF.zip"
-	dstPath := filepath.Join(dir, dstFile)
-	removeFileMust(dstPath)
+// 	// this is the file we want at the end
+// 	dstFile := "SumatraPDF.zip"
+// 	dstPath := filepath.Join(dir, dstFile)
+// 	removeFileMust(dstPath)
 
-	wd, err := os.Getwd()
-	must(err)
-	pigzExePath := filepath.Join(wd, "bin", "pigz.exe")
-	panicIf(!fileExists(pigzExePath), "file '%s' doesn't exist\n", pigzExePath)
-	cmd := exec.Command(pigzExePath, "-11", "--keep", "--zip", srcFile)
-	// in pigz we don't control the name of the file created inside so
-	// so when we run pigz the current directory is the same as
-	// the directory with the file we're compressing
-	cmd.Dir = dir
-	runCmdMust(cmd)
+// 	wd, err := os.Getwd()
+// 	must(err)
+// 	pigzExePath := filepath.Join(wd, "bin", "pigz.exe")
+// 	panicIf(!fileExists(pigzExePath), "file '%s' doesn't exist\n", pigzExePath)
+// 	cmd := exec.Command(pigzExePath, "-11", "--keep", "--zip", srcFile)
+// 	// in pigz we don't control the name of the file created inside so
+// 	// so when we run pigz the current directory is the same as
+// 	// the directory with the file we're compressing
+// 	cmd.Dir = dir
+// 	runCmdMust(cmd)
 
-	panicIf(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
-	err = os.Rename(dstPathTmp, dstPath)
-	must(err)
-}
+// 	panicIf(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
+// 	err = os.Rename(dstPathTmp, dstPath)
+// 	must(err)
+// }
 
 func createPdbZipMust(dir string) {
 	path := filepath.Join(dir, "SumatraPDF.pdb.zip")
@@ -421,16 +420,30 @@ func buildAll(config, platform string, sign bool) {
 	createPdbLzsaMust(dir)
 }
 
+func getSuffixForPlatform(platform string) string {
+	switch platform {
+	case kPlatformArm64:
+		return "arm64"
+	case kPlatformIntel32:
+		return "32"
+	case kPlatformIntel64:
+		return "64"
+	}
+	panicIf(true, "unrecognized platform '%s'", platform)
+	return ""
+}
+
 func buildCiDaily() {
-	buildAll("Release", kPlatformIntel32, true)
-	buildAll("Release", kPlatformIntel64, true)
+	buildDaily(kPlatformArm64)
+	//buildDaily(kPlatformIntel32)
+	//buildDaily(kPlatformIntel64)
 }
 
 func buildCi() {
 	gev := getGitHubEventType()
 	switch gev {
 	case githubEventPush:
-		buildPreRelease(kPlatformIntel64, "64")
+		buildPreRelease(kPlatformIntel64)
 	case githubEventTypeCodeQL:
 		// code ql is just a regular build, I assume intercepted by
 		// by their tooling
@@ -440,11 +453,11 @@ func buildCi() {
 	}
 }
 
-func buildDaily(platform string, suffix string) {
+func buildDaily(platform string) {
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
 
-	ver := getVerForBuildType(buildTypePreRel)
+	ver := getVerForBuildType(buildTypeDaily)
 	s := fmt.Sprintf("buidling daily pre-release version %s", ver)
 	defer makePrintDuration(s)()
 
@@ -454,19 +467,20 @@ func buildDaily(platform string, suffix string) {
 
 	buildAll("Release", platform, true)
 
+	suffix := getSuffixForPlatform(platform)
 	outDir := getOutDirForPlatform(platform)
 	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
 	createExeZipWithGoWithNameMust(outDir, nameInZip)
 
 	createManifestMust()
 
-	dstDir := filepath.Join("out", "final-prerel")
+	dstDir := getFinalDirForBuildType(buildTypeDaily)
 	prefix := "SumatraPDF-prerel"
 	copyBuiltFiles(dstDir, outDir, prefix+"-"+suffix)
 	copyBuiltManifest(dstDir, prefix)
 }
 
-func buildPreRelease(platform string, suffix string) {
+func buildPreRelease(platform string) {
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
 
@@ -480,13 +494,14 @@ func buildPreRelease(platform string, suffix string) {
 
 	build("Release", platform, true)
 
+	suffix := getSuffixForPlatform(platform)
 	outDir := getOutDirForPlatform(platform)
 	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
 	createExeZipWithGoWithNameMust(outDir, nameInZip)
 
 	createManifestMust()
 
-	dstDir := filepath.Join("out", "final-prerel")
+	dstDir := getFinalDirForBuildType(buildTypePreRel)
 	prefix := "SumatraPDF-prerel"
 	copyBuiltFiles(dstDir, outDir, prefix+"-"+suffix)
 	copyBuiltManifest(dstDir, prefix)
@@ -522,7 +537,7 @@ func buildRelease() {
 
 	createManifestMust()
 
-	dstDir := filepath.Join("out", "final-rel")
+	dstDir := getFinalDirForBuildType(buildTypeRel)
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
 	copyBuiltFiles(dstDir, rel32Dir, prefix)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")

@@ -24,6 +24,7 @@ type BuildType string
 const (
 	buildTypePreRel BuildType = "prerel"
 	buildTypeRel    BuildType = "rel"
+	buildTypeDaily  BuildType = "daily"
 )
 
 func getRemotePaths(buildType BuildType) []string {
@@ -32,6 +33,14 @@ func getRemotePaths(buildType BuildType) []string {
 			"software/sumatrapdf/sumatralatest.js",
 			"software/sumatrapdf/sumpdf-prerelease-latest.txt",
 			"software/sumatrapdf/sumpdf-prerelease-update.txt",
+		}
+	}
+
+	if buildType == buildTypeDaily {
+		return []string{
+			"software/sumatrapdf/sumatralatest-daily.js",
+			"software/sumatrapdf/sumpdf-daily-latest.txt",
+			"software/sumatrapdf/sumpdf-daily-update.txt",
 		}
 	}
 
@@ -47,18 +56,10 @@ func getRemotePaths(buildType BuildType) []string {
 	return nil
 }
 
-func isValidBuildType(buildType BuildType) bool {
-	switch buildType {
-	case buildTypePreRel, buildTypeRel:
-		return true
-	}
-	return false
-}
-
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType BuildType) string {
 	switch buildType {
-	case buildTypePreRel:
+	case buildTypePreRel, buildTypeDaily:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:
@@ -70,7 +71,6 @@ func getVerForBuildType(buildType BuildType) string {
 }
 
 func getRemoteDir(buildType BuildType) string {
-	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
 	ver := getVerForBuildType(buildType)
 	return "software/sumatrapdf/" + string(buildType) + "/" + ver + "/"
 }
@@ -80,6 +80,10 @@ type DownloadUrls struct {
 	portableExe64 string
 	portableZip64 string
 
+	installerArm64   string
+	portableExeArm64 string
+	portableZipArm64 string
+
 	installer32   string
 	portableExe32 string
 	portableZip32 string
@@ -88,22 +92,28 @@ type DownloadUrls struct {
 func getDownloadUrlsForPrefix(prefix string, buildType BuildType, ver string) *DownloadUrls {
 	// zip is like .exe but can be half the size due to compression
 	res := &DownloadUrls{
-		installer64:   prefix + "SumatraPDF-${ver}-64-install.exe",
-		portableExe64: prefix + "SumatraPDF-${ver}-64.exe",
-		portableZip64: prefix + "SumatraPDF-${ver}-64.zip",
-		installer32:   prefix + "SumatraPDF-${ver}-install.exe",
-		portableExe32: prefix + "SumatraPDF-${ver}.exe",
-		portableZip32: prefix + "SumatraPDF-${ver}.zip",
+		installer64:      prefix + "SumatraPDF-${ver}-64-install.exe",
+		portableExe64:    prefix + "SumatraPDF-${ver}-64.exe",
+		portableZip64:    prefix + "SumatraPDF-${ver}-64.zip",
+		installerArm64:   prefix + "SumatraPDF-${ver}-arm64-install.exe",
+		portableExeArm64: prefix + "SumatraPDF-${ver}-arm64.exe",
+		portableZipArm64: prefix + "SumatraPDF-${ver}-arm64.zip",
+		installer32:      prefix + "SumatraPDF-${ver}-install.exe",
+		portableExe32:    prefix + "SumatraPDF-${ver}.exe",
+		portableZip32:    prefix + "SumatraPDF-${ver}.zip",
 	}
-	if buildType == buildTypePreRel {
-		// for pre-release, ${ver} is encoded prefix
+	if buildType != buildTypeRel {
+		// for pre-release and daily, ${ver} is encoded prefix
 		res = &DownloadUrls{
-			installer64:   prefix + "SumatraPDF-prerel-64-install.exe",
-			portableExe64: prefix + "SumatraPDF-prerel-64.exe",
-			portableZip64: prefix + "SumatraPDF-prerel-64.zip",
-			installer32:   prefix + "SumatraPDF-prerel-install.exe",
-			portableExe32: prefix + "SumatraPDF-prerel.exe",
-			portableZip32: prefix + "SumatraPDF-prerel.zip",
+			installer64:      prefix + "SumatraPDF-prerel-64-install.exe",
+			portableExe64:    prefix + "SumatraPDF-prerel-64.exe",
+			portableZip64:    prefix + "SumatraPDF-prerel-64.zip",
+			installerArm64:   prefix + "SumatraPDF-prerel-arm64-install.exe",
+			portableExeArm64: prefix + "SumatraPDF-prerel-arm64.exe",
+			portableZipArm64: prefix + "SumatraPDF-prerel-arm64.zip",
+			installer32:      prefix + "SumatraPDF-prerel-install.exe",
+			portableExe32:    prefix + "SumatraPDF-prerel.exe",
+			portableZip32:    prefix + "SumatraPDF-prerel.zip",
 		}
 	}
 	rplc := func(s *string) {
@@ -113,6 +123,9 @@ func getDownloadUrlsForPrefix(prefix string, buildType BuildType, ver string) *D
 	rplc(&res.installer64)
 	rplc(&res.portableExe64)
 	rplc(&res.portableZip64)
+	rplc(&res.installerArm64)
+	rplc(&res.portableExeArm64)
+	rplc(&res.portableZipArm64)
 	rplc(&res.installer32)
 	rplc(&res.portableExe32)
 	rplc(&res.portableZip32)
@@ -123,10 +136,13 @@ func genUpdateTxt(urls *DownloadUrls, ver string) string {
 	s := `[SumatraPDF]
 Latest: ${ver}
 Installer64: ${inst64}
+InstallerArm64: ${instArm64}
 Installer32: ${inst32}
 PortableExe64: ${exe64}
+PortableExeArm64: ${exeArm64}
 PortableExe32: ${exe32}
 PortableZip64: ${zip64}
+PortableZipArm64: ${zipArm64}
 PortableZip32: ${zip32}
 `
 	rplc := func(old, new string) {
@@ -134,10 +150,13 @@ PortableZip32: ${zip32}
 	}
 	rplc("${ver}", ver)
 	rplc("${inst64}", urls.installer64)
+	rplc("${instArm64}", urls.installerArm64)
 	rplc("${inst32}", urls.installer32)
 	rplc("${exe64}", urls.portableExe64)
+	rplc("${exeArm64}", urls.portableExeArm64)
 	rplc("${exe32}", urls.portableExe32)
 	rplc("${zip64}", urls.portableZip64)
+	rplc("${zipArm64}", urls.portableZipArm64)
 	rplc("${zip32}", urls.portableZip32)
 	return s
 }
@@ -165,7 +184,7 @@ func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType BuildType, ver stri
 func createSumatraLatestJs(mc *minioutil.Client, buildType BuildType) string {
 	var appName string
 	switch buildType {
-	case buildTypePreRel:
+	case buildTypePreRel, buildTypeDaily:
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
@@ -181,9 +200,16 @@ func createSumatraLatestJs(mc *minioutil.Client, buildType BuildType) string {
 	//host + "software/sumatrapdf/" + buildType
 
 	// new version that redirects via www.sumatrapdfreader.org/dl/
-	host := "https://www.sumatrapdfreader.org/dl/prerel/" + ver
-	if buildType == buildTypeRel {
+	var host string
+	switch buildType {
+	case buildTypeRel:
 		host = "https://www.sumatrapdfreader.org/dl/rel/" + ver
+	case buildTypePreRel:
+		host = "https://www.sumatrapdfreader.org/dl/prerel/" + ver
+	case buildTypeDaily:
+		host = "https://www.sumatrapdfreader.org/dl/daily/" + ver
+	default:
+		panicIf(true, "unsupported buildType: '%s'", buildType)
 	}
 
 	// TODO: use
@@ -204,6 +230,12 @@ var sumLatestExe64       = "{{.Host}}/{{.Prefix}}-64.exe";
 var sumLatestExeZip64    = "{{.Host}}/{{.Prefix}}-64.zip";
 var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
 var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
+
+var sumLatestExeArm64       = "{{.Host}}/{{.Prefix}}-arm64.exe";
+var sumLatestExeZipArm64    = "{{.Host}}/{{.Prefix}}-arm64.zip";
+var sumLatestPdbArm64       = "{{.Host}}/{{.Prefix}}-arm64.pdb.zip";
+var sumLatestInstallerArm64 = "{{.Host}}/{{.Prefix}}-arm64-install.exe";
+
 `
 	sha1 := getGitSha1()
 	d := map[string]interface{}{
@@ -213,8 +245,8 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 		"CurrDate": currDate,
 		"Prefix":   appName + "-" + ver,
 	}
-	// for prerel, version is in path, not in name
-	if buildType == buildTypePreRel {
+	// for prerel / daily, version is in path, not in name
+	if buildType == buildTypePreRel || buildType == buildTypeDaily {
 		d["Prefix"] = appName
 	}
 	return execTextTemplate(tmplText, d)
@@ -284,6 +316,21 @@ func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bo
 	return nil
 }
 
+func getFinalDirForBuildType(buildType BuildType) string {
+	var dir string
+	switch buildType {
+	case buildTypeRel:
+		dir = "final-rel"
+	case buildTypePreRel:
+		dir = "final-prerel"
+	case buildTypeDaily:
+		dir = "final-daily"
+	default:
+		panicIf(true, "invalid buildType '%s'", buildType)
+	}
+	return filepath.Join("out", dir)
+}
+
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
 func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 	timeStart := time.Now()
@@ -292,20 +339,7 @@ func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 	}()
 
 	dirRemote := getRemoteDir(buildType)
-	getFinalDirForBuildType := func() string {
-		var dir string
-		switch buildType {
-		case buildTypeRel:
-			dir = "final-rel"
-		case buildTypePreRel:
-			dir = "final-prerel"
-		default:
-			panicIf(true, "invalid buildType '%s'", buildType)
-		}
-		return filepath.Join("out", dir)
-	}
-
-	dirLocal := getFinalDirForBuildType()
+	dirLocal := getFinalDirForBuildType(buildType)
 
 	err := UploadDir(mc, dirRemote, dirLocal, true)
 	must(err)
@@ -447,8 +481,8 @@ func uploadToStorage(buildType BuildType) {
 	go func() {
 		mc := newMinioBackblazeClient()
 		minioUploadBuildMust(mc, buildType)
-		if buildType == buildTypePreRel {
-			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType != buildTypeRel {
+			minioDeleteOldBuildsPrefix(mc, buildType)
 		}
 		wg.Done()
 	}()
@@ -457,8 +491,8 @@ func uploadToStorage(buildType BuildType) {
 	go func() {
 		mc := newMinioS3Client()
 		minioUploadBuildMust(mc, buildType)
-		if buildType == buildTypePreRel {
-			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType != buildTypeRel {
+			minioDeleteOldBuildsPrefix(mc, buildType)
 		}
 		wg.Done()
 	}()
@@ -472,7 +506,7 @@ func uploadToStorage(buildType BuildType) {
 	// world (including cloudflare)
 	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
 	// no guarantees the files will be visible from other networks
-	if buildType == buildTypePreRel {
+	if buildType != buildTypeRel {
 		logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
 		time.Sleep(time.Minute * 5)
 	}
@@ -481,8 +515,8 @@ func uploadToStorage(buildType BuildType) {
 	go func() {
 		mc := newMinioSpacesClient()
 		minioUploadBuildMust(mc, buildType)
-		if buildType == buildTypePreRel {
-			minioDeleteOldBuildsPrefix(mc, buildTypePreRel)
+		if buildType != buildTypeRel {
+			minioDeleteOldBuildsPrefix(mc, buildType)
 		}
 		wg.Done()
 	}()
@@ -500,5 +534,4 @@ func uploadCi() {
 	default:
 		panic("unkown value from getGitHubEventType()")
 	}
-
 }
