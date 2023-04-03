@@ -326,7 +326,7 @@ func main() {
 	}
 
 	if flgClean {
-		clean()
+		cleanPreserveSettings()
 		return
 	}
 
@@ -420,6 +420,7 @@ func main() {
 	}
 
 	if flgBuildPreRelease {
+		cleanReleaseBuilds()
 		buildPreRelease(kPlatformIntel64)
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)

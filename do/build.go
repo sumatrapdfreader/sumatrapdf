@@ -105,7 +105,7 @@ func detectVersions() {
 }
 
 // remove all files and directories under out/ except settings files
-func clean() {
+func cleanPreserveSettings() {
 	entries, err := os.ReadDir("out")
 	if err != nil {
 		// assuming 'out' doesn't exist, which is fine
@@ -143,6 +143,12 @@ func clean() {
 	logf(ctx(), "clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
 }
 
+func cleanReleaseBuilds() {
+	os.RemoveAll(rel32Dir)
+	os.RemoveAll(rel64Dir)
+	os.RemoveAll(relArm64Dir)
+}
+
 func runTestUtilMust(dir string) {
 	cmd := exec.Command(`.\test_util.exe`)
 	cmd.Dir = dir
@@ -154,7 +160,7 @@ func buildLzsa() {
 	detectSigntoolPath()
 
 	defer makePrintDuration("buildLzsa")()
-	clean()
+	cleanPreserveSettings()
 
 	msbuildPath := detectMsbuildPath()
 	runExeLoggedMust(msbuildPath, `vs2022\MakeLZSA.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
@@ -437,6 +443,7 @@ func getSuffixForPlatform(platform string) string {
 }
 
 func buildCiDaily() {
+	cleanReleaseBuilds()
 	buildDaily(kPlatformArm64)
 	//buildDaily(kPlatformIntel32)
 	//buildDaily(kPlatformIntel64)
@@ -446,6 +453,7 @@ func buildCi() {
 	gev := getGitHubEventType()
 	switch gev {
 	case githubEventPush:
+		cleanReleaseBuilds()
 		buildPreRelease(kPlatformIntel64)
 	case githubEventTypeCodeQL:
 		// code ql is just a regular build, I assume intercepted by
@@ -464,7 +472,6 @@ func buildDaily(platform string) {
 	s := fmt.Sprintf("buidling daily pre-release version %s", ver)
 	defer makePrintDuration(s)()
 
-	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
@@ -491,7 +498,6 @@ func buildPreRelease(platform string) {
 	s := fmt.Sprintf("buidling pre-release version %s", ver)
 	defer makePrintDuration(s)()
 
-	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
@@ -522,7 +528,7 @@ func buildRelease() {
 	verifyBuildNotInStorageMust(newMinioBackblazeClient(), buildTypeRel)
 	verifyBuildNotInStorageMust(newMinioSpacesClient(), buildTypeRel)
 
-	clean()
+	cleanReleaseBuilds()
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
@@ -554,7 +560,7 @@ func buildRelease() {
 func buildSmoke() {
 	detectSigntoolPath()
 	defer makePrintDuration("smoke build")()
-	clean()
+	cleanReleaseBuilds()
 
 	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
 	panicIf(!fileExists(lzsa), "file '%s' doesn't exist", lzsa)
