@@ -380,49 +380,42 @@ func main() {
 	}
 
 	if flgCIDailyBuild {
-		buildDaily()
+		buildCiDaily()
 		return
 	}
 
 	if flgCIBuild {
-		gev := getGitHubEventType()
-		switch gev {
-		case githubEventPush:
-			buildPreRelease(rel64Dir, kPlatformIntel64, "64")
-		case githubEventTypeCodeQL:
-			// code ql is just a regular build, I assume intercepted by
-			// by their tooling
-			buildSmoke()
-		default:
-			panic("unkown value from getGitHubEventType()")
-		}
+		buildCi()
 		return
 	}
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
-		gev := getGitHubEventType()
-		switch gev {
-		case githubEventPush:
-			// pre-release build on push
-			uploadToStorage(opts, buildTypePreRel)
-		case githubEventTypeCodeQL:
-			// do nothing
-		default:
-			panic("unkown value from getGitHubEventType()")
+		if opts.upload {
+			uploadCi()
+		} else {
+			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
 		}
 		return
 	}
 
 	if flgBuildRelease {
 		buildRelease()
-		uploadToStorage(opts, buildTypeRel)
+		if opts.upload {
+			uploadToStorage(buildTypeRel)
+		} else {
+			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+		}
 		return
 	}
 
 	if flgBuildPreRelease {
-		buildPreRelease(rel64Dir, kPlatformIntel64, "64")
-		uploadToStorage(opts, buildTypePreRel)
+		buildPreRelease(kPlatformIntel64, "64")
+		if opts.upload {
+			uploadToStorage(buildTypePreRel)
+		} else {
+			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+		}
 		return
 	}
 

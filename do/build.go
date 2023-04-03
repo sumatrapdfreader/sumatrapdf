@@ -80,42 +80,6 @@ func copyBuiltManifest(dstDir string, prefix string) {
 	must(copyFile(dstPath, srcPath))
 }
 
-func build(dir, config, platform string, sign bool) {
-	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
-
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
-	runTestUtilMust(dir)
-
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
-	if sign {
-		signFilesMust(dir)
-	}
-	createPdbZipMust(dir)
-	createPdbLzsaMust(dir)
-}
-
-// builds more targets, even those not used, to prevent code rot
-func buildAll(dir, config, platform string, sign bool) {
-	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
-
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
-	// can't run arm binaries in x86 CI
-	if platform != kPlatformArm64 {
-		runTestUtilMust(dir)
-	}
-
-	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;logview:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
-	if sign {
-		signFilesMust(dir)
-	}
-	createPdbZipMust(dir)
-	createPdbLzsaMust(dir)
-}
-
 func extractSumatraVersionMust() string {
 	path := filepath.Join("src", "Version.h")
 	lines, err := readLinesFromFile(path)
@@ -199,30 +163,6 @@ func buildLzsa() {
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
 	logf(ctx(), "build and signed '%s'\n", path)
-}
-
-// smoke build is meant to be run locally to check that we can build everything
-// it does full installer build of 64-bit release build
-// We don't build other variants for speed. It takes about 5 mins locally
-func buildSmoke() {
-	detectSigntoolPath()
-	defer makePrintDuration("smoke build")()
-	clean()
-
-	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
-	panicIf(!fileExists(lzsa), "file '%s' doesn't exist", lzsa)
-
-	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
-	outDir := filepath.Join("out", "rel64")
-	runTestUtilMust(outDir)
-
-	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb")
-		cmd.Dir = outDir
-		runCmdLoggedMust(cmd)
-	}
-	signFilesMust(outDir)
 }
 
 func buildConfigPath() string {
@@ -418,23 +358,115 @@ const (
 	kPlatformArm64   = "ARM64"
 )
 
-func buildDaily() {
-	detectSigntoolPath() // early exit if missing
+var (
+	rel32Dir    = filepath.Join("out", "rel32")
+	rel64Dir    = filepath.Join("out", "rel64")
+	relArm64Dir = filepath.Join("out", "arm64")
+)
+
+func getOutDirForPlatform(platform string) string {
+	if platform == kPlatformIntel32 {
+		return rel32Dir
+	}
+	if platform == kPlatformIntel64 {
+		return rel64Dir
+	}
+	if platform == kPlatformArm64 {
+		return relArm64Dir
+	}
+	panicIf(true, "unsupported platform '%s'", platform)
+	return ""
+}
+
+func build(config, platform string, sign bool) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
+
+	dir := getOutDirForPlatform(platform)
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
+	// can't run arm binaries in x86 CI
+	if platform != kPlatformArm64 {
+		runTestUtilMust(dir)
+	}
+
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
+	if sign {
+		signFilesMust(dir)
+	}
+	createPdbZipMust(dir)
+	createPdbLzsaMust(dir)
+}
+
+// builds more targets, even those not used, to prevent code rot
+func buildAll(config, platform string, sign bool) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
+
+	dir := getOutDirForPlatform(platform)
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
+	// can't run arm binaries in x86 CI
+	if platform != kPlatformArm64 {
+		runTestUtilMust(dir)
+	}
+
+	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;logview:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
+	if sign {
+		signFilesMust(dir)
+	}
+	createPdbZipMust(dir)
+	createPdbLzsaMust(dir)
+}
+
+func buildCiDaily() {
+	buildAll("Release", kPlatformIntel32, true)
+	buildAll("Release", kPlatformIntel64, true)
+}
+
+func buildCi() {
+	gev := getGitHubEventType()
+	switch gev {
+	case githubEventPush:
+		buildPreRelease(kPlatformIntel64, "64")
+	case githubEventTypeCodeQL:
+		// code ql is just a regular build, I assume intercepted by
+		// by their tooling
+		buildSmoke()
+	default:
+		panic("unkown value from getGitHubEventType()")
+	}
+}
+
+func buildDaily(platform string, suffix string) {
+	// make sure we can sign the executables, early exit if missing
+	detectSigntoolPath()
 
 	ver := getVerForBuildType(buildTypePreRel)
-	s := fmt.Sprintf("buidling pre-release version %s", ver)
+	s := fmt.Sprintf("buidling daily pre-release version %s", ver)
 	defer makePrintDuration(s)()
 
 	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
-	buildAll(relArm64Dir, "Release", kPlatformArm64, true)
-	buildAll(rel32Dir, "Release", kPlatformIntel32, true)
-	buildAll(rel64Dir, "Release", kPlatformIntel64, true)
+	buildAll("Release", platform, true)
+
+	outDir := getOutDirForPlatform(platform)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
+	createExeZipWithGoWithNameMust(outDir, nameInZip)
+
+	createManifestMust()
+
+	dstDir := filepath.Join("out", "final-prerel")
+	prefix := "SumatraPDF-prerel"
+	copyBuiltFiles(dstDir, outDir, prefix+"-"+suffix)
+	copyBuiltManifest(dstDir, prefix)
 }
 
-func buildPreRelease(outDir string, platform string, suffix string) {
+func buildPreRelease(platform string, suffix string) {
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
 
@@ -446,7 +478,9 @@ func buildPreRelease(outDir string, platform string, suffix string) {
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
-	build(outDir, "Release", platform, true)
+	build("Release", platform, true)
+
+	outDir := getOutDirForPlatform(platform)
 	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
 	createExeZipWithGoWithNameMust(outDir, nameInZip)
 
@@ -474,15 +508,15 @@ func buildRelease() {
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
-	build(rel32Dir, "Release", kPlatformIntel32, true)
+	build("Release", kPlatformIntel32, true)
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-32.exe", ver)
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 
-	build(rel64Dir, "Release", kPlatformIntel64, true)
+	build("Release", kPlatformIntel64, true)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
-	build(relArm64Dir, "Release", kPlatformArm64, true)
+	build("Release", kPlatformArm64, true)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-arm64.exe", ver)
 	createExeZipWithGoWithNameMust(relArm64Dir, nameInZip)
 
@@ -494,6 +528,30 @@ func buildRelease() {
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 	copyBuiltFiles(dstDir, relArm64Dir, prefix+"-arm64")
 	copyBuiltManifest(dstDir, prefix)
+}
+
+// smoke build is meant to be run locally to check that we can build everything
+// it does full installer build of 64-bit release build
+// We don't build other variants for speed. It takes about 5 mins locally
+func buildSmoke() {
+	detectSigntoolPath()
+	defer makePrintDuration("smoke build")()
+	clean()
+
+	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
+	panicIf(!fileExists(lzsa), "file '%s' doesn't exist", lzsa)
+
+	msbuildPath := detectMsbuildPath()
+	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	outDir := filepath.Join("out", "rel64")
+	runTestUtilMust(outDir)
+
+	{
+		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb")
+		cmd.Dir = outDir
+		runCmdLoggedMust(cmd)
+	}
+	signFilesMust(outDir)
 }
 
 func buildJustPortableExe(dir, config, platform string) {

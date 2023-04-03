@@ -19,18 +19,14 @@ import (
 // builds to retain
 const nBuildsToRetainPreRel = 5
 
+type BuildType string
+
 const (
-	buildTypePreRel = "prerel"
-	buildTypeRel    = "rel"
+	buildTypePreRel BuildType = "prerel"
+	buildTypeRel    BuildType = "rel"
 )
 
-var (
-	rel32Dir    = filepath.Join("out", "rel32")
-	rel64Dir    = filepath.Join("out", "rel64")
-	relArm64Dir = filepath.Join("out", "arm64")
-)
-
-func getRemotePaths(buildType string) []string {
+func getRemotePaths(buildType BuildType) []string {
 	if buildType == buildTypePreRel {
 		return []string{
 			"software/sumatrapdf/sumatralatest.js",
@@ -51,7 +47,7 @@ func getRemotePaths(buildType string) []string {
 	return nil
 }
 
-func isValidBuildType(buildType string) bool {
+func isValidBuildType(buildType BuildType) bool {
 	switch buildType {
 	case buildTypePreRel, buildTypeRel:
 		return true
@@ -60,7 +56,7 @@ func isValidBuildType(buildType string) bool {
 }
 
 // this returns version to be used in uploaded file names
-func getVerForBuildType(buildType string) string {
+func getVerForBuildType(buildType BuildType) string {
 	switch buildType {
 	case buildTypePreRel:
 		// this is linear build number like "12223"
@@ -73,10 +69,10 @@ func getVerForBuildType(buildType string) string {
 	return ""
 }
 
-func getRemoteDir(buildType string) string {
+func getRemoteDir(buildType BuildType) string {
 	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
 	ver := getVerForBuildType(buildType)
-	return "software/sumatrapdf/" + buildType + "/" + ver + "/"
+	return "software/sumatrapdf/" + string(buildType) + "/" + ver + "/"
 }
 
 type DownloadUrls struct {
@@ -89,7 +85,7 @@ type DownloadUrls struct {
 	portableZip32 string
 }
 
-func getDownloadUrlsForPrefix(prefix string, buildType string, ver string) *DownloadUrls {
+func getDownloadUrlsForPrefix(prefix string, buildType BuildType, ver string) *DownloadUrls {
 	// zip is like .exe but can be half the size due to compression
 	res := &DownloadUrls{
 		installer64:   prefix + "SumatraPDF-${ver}-64-install.exe",
@@ -154,19 +150,19 @@ func testGenUpdateTxt() {
 	os.Exit(0)
 }
 
-func getDownloadUrlsViaWebsite(buildType string, ver string) *DownloadUrls {
-	prefix := "https://www.sumatrapdfreader.org/dl/" + buildType + "/" + ver + "/"
+func getDownloadUrlsViaWebsite(buildType BuildType, ver string) *DownloadUrls {
+	prefix := "https://www.sumatrapdfreader.org/dl/" + string(buildType) + "/" + ver + "/"
 	return getDownloadUrlsForPrefix(prefix, buildType, ver)
 }
 
-func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType string, ver string) *DownloadUrls {
+func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType BuildType, ver string) *DownloadUrls {
 	prefix := mc.URLBase()
 	prefix += getRemoteDir(buildType)
 	return getDownloadUrlsForPrefix(prefix, buildType, ver)
 }
 
 // sumatrapdf/sumatralatest.js
-func createSumatraLatestJs(mc *minioutil.Client, buildType string) string {
+func createSumatraLatestJs(mc *minioutil.Client, buildType BuildType) string {
 	var appName string
 	switch buildType {
 	case buildTypePreRel:
@@ -224,7 +220,7 @@ var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 	return execTextTemplate(tmplText, d)
 }
 
-func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType string) [][]string {
+func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
@@ -256,7 +252,7 @@ func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType string) [][]st
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType string) {
+func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType) {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
 	fname := "SumatraPDF-prerel-manifest.txt"
@@ -289,7 +285,7 @@ func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bo
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
-func minioUploadBuildMust(mc *minioutil.Client, buildType string) {
+func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 	timeStart := time.Now()
 	defer func() {
 		logf(ctx(), "Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
@@ -320,7 +316,7 @@ func minioUploadBuildMust(mc *minioutil.Client, buildType string) {
 		return
 	}
 
-	uploadBuildUpdateInfoMust := func(buildType string) {
+	uploadBuildUpdateInfoMust := func(buildType BuildType) {
 		files := getVersionFilesForLatestInfo(mc, buildType)
 		for _, f := range files {
 			remotePath := f[0]
@@ -372,7 +368,7 @@ func groupFilesByVersion(files []string) []*filesByVer {
 	return res
 }
 
-func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType string) {
+func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType BuildType) {
 	panicIf(buildType == buildTypeRel, "can't delete release builds")
 
 	nBuildsToRetain := nBuildsToRetainPreRel
@@ -440,12 +436,7 @@ func newMinioBackblazeClient() *minioutil.Client {
 	return mc
 }
 
-func uploadToStorage(opts *BuildOptions, buildType string) {
-	if !opts.upload {
-		logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
-		return
-	}
-
+func uploadToStorage(buildType BuildType) {
 	timeStart := time.Now()
 	defer func() {
 		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
@@ -496,4 +487,18 @@ func uploadToStorage(opts *BuildOptions, buildType string) {
 		wg.Done()
 	}()
 	wg.Wait()
+}
+
+func uploadCi() {
+	gev := getGitHubEventType()
+	switch gev {
+	case githubEventPush:
+		// pre-release build on push
+		uploadToStorage(buildTypePreRel)
+	case githubEventTypeCodeQL:
+		// do nothing
+	default:
+		panic("unkown value from getGitHubEventType()")
+	}
+
 }
