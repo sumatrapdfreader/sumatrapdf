@@ -487,7 +487,7 @@ func newMinioBackblazeClient() *minioutil.Client {
 }
 
 func uploadToStorage(buildType BuildType) {
-	isUploaded := isBuildAlreadyUploaded(newMinioS3Client(), buildType)
+	isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildType)
 	if isUploaded {
 		logf(ctx(), "uploadToStorage: skipping upload because already uploaded")
 		return

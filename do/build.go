@@ -445,6 +445,12 @@ func getSuffixForPlatform(platform string) string {
 }
 
 func buildCiDaily() {
+	isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildTypePreRel)
+	if isUploaded {
+		logf(ctx(), "buildCiDaily: skipping build because already built and uploaded")
+		return
+	}
+
 	cleanReleaseBuilds()
 	buildPreRelease(kPlatformArm64, false)
 	buildPreRelease(kPlatformIntel32, false)
