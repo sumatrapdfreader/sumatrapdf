@@ -27,7 +27,7 @@ const (
 var (
 	rel32Dir    = filepath.Join("out", "rel32")
 	rel64Dir    = filepath.Join("out", "rel64")
-	relArm64Dir = filepath.Join("out", "relArm64")
+	relArm64Dir = filepath.Join("out", "arm64")
 )
 
 func getRemotePaths(buildType string) []string {
