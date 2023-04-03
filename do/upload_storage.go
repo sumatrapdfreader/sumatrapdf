@@ -283,7 +283,7 @@ func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType) [][
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType) {
+func isBuildAlreadyUploaded(mc *minioutil.Client, buildType BuildType) bool {
 	dirRemote := getRemoteDir(buildType)
 	ver := getVerForBuildType(buildType)
 	fname := "SumatraPDF-prerel-manifest.txt"
@@ -292,7 +292,16 @@ func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType) {
 	}
 	remotePath := path.Join(dirRemote, fname)
 	exists := mc.Exists(remotePath)
-	panicIf(exists, "build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
+	if exists {
+		logf(ctx(), "build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
+
+	}
+	return exists
+}
+
+func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType) {
+	exists := isBuildAlreadyUploaded(mc, buildType)
+	panicIf(exists, "build already exists")
 }
 
 func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bool) error {
@@ -478,6 +487,12 @@ func newMinioBackblazeClient() *minioutil.Client {
 }
 
 func uploadToStorage(buildType BuildType) {
+	isUploaded := isBuildAlreadyUploaded(newMinioS3Client(), buildType)
+	if isUploaded {
+		logf(ctx(), "uploadToStorage: skipping upload because already uploaded")
+		return
+	}
+
 	timeStart := time.Now()
 	defer func() {
 		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))

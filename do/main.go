@@ -416,9 +416,10 @@ func main() {
 		return
 	}
 
+	// this one is typically for me to build locally, so build all projects
 	if flgBuildPreRelease {
 		cleanReleaseBuilds()
-		buildPreRelease(kPlatformIntel64, false)
+		buildPreRelease(kPlatformIntel64, true)
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {

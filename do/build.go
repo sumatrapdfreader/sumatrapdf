@@ -446,9 +446,9 @@ func getSuffixForPlatform(platform string) string {
 
 func buildCiDaily() {
 	cleanReleaseBuilds()
-	buildPreReleaseDaily(kPlatformArm64)
-	buildPreReleaseDaily(kPlatformIntel32)
-	buildPreReleaseDaily(kPlatformIntel64)
+	buildPreRelease(kPlatformArm64, false)
+	buildPreRelease(kPlatformIntel32, false)
+	buildPreRelease(kPlatformIntel64, false)
 }
 
 func buildCi() {
@@ -456,7 +456,10 @@ func buildCi() {
 	switch gev {
 	case githubEventPush:
 		cleanReleaseBuilds()
-		buildPreRelease(kPlatformIntel64, false)
+		// I'm typically building 64-bit so in ci build 32-bit
+		// and build all projects, to find regressions in code
+		// I'm not regularly building while developing
+		buildPreRelease(kPlatformIntel32, true)
 	case githubEventTypeCodeQL:
 		// code ql is just a regular build, I assume intercepted by
 		// by their tooling
@@ -464,10 +467,6 @@ func buildCi() {
 	default:
 		panic("unkown value from getGitHubEventType()")
 	}
-}
-
-func buildPreReleaseDaily(platform string) {
-	buildPreRelease(platform, true)
 }
 
 func buildPreRelease(platform string, all bool) {
