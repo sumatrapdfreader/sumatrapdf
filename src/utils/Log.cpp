@@ -63,7 +63,7 @@ static void logToPipe(const char* s, size_t n = 0) {
     if (!gLogToPipe) {
         return;
     }
-    if (!s || n == 0) {
+    if (!s || (*s == 0)) {
         return;
     }
     if (n == 0) {

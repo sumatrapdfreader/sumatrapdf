@@ -408,17 +408,18 @@ static DWORD WINAPI CrashDumpThread(LPVOID) {
     return 0;
 }
 
-static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+    log("CrashDumpExceptionHandler\n");
     if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
+        log("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode\n");
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
     gReducedLogging = true;
 
-    log("DumpExceptionHandler\n");
     static bool wasHere = false;
     if (wasHere) {
-        log("DumpExceptionHandler: wasHere set\n");
+        log("CrashDumpExceptionHandler: wasHere set\n");
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
@@ -722,7 +723,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
         log("InstallCrashHandler: skipping because !gDumpThread\n");
         return;
     }
-    gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
+    gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);
 
     signal(SIGABRT, onSignalAbort);
 #if COMPILER_MSVC

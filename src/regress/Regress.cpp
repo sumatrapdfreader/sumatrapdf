@@ -114,7 +114,7 @@ static DWORD WINAPI CrashDumpThread(__unused LPVOID data) {
     return 0;
 }
 
-static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode))
         return EXCEPTION_CONTINUE_SEARCH;
 
@@ -147,7 +147,7 @@ static void InstallCrashHandler() {
         printflush("InstallCrashHandler(): CreateThread() failed\n");
         return;
     }
-    gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
+    gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);
 }
 
 static void UninstallCrashHandler() {
