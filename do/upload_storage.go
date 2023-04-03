@@ -403,10 +403,18 @@ func groupFilesByVersion(files []string) []*filesByVer {
 }
 
 func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType BuildType) {
-	panicIf(buildType == buildTypeRel, "can't delete release builds")
-
 	nBuildsToRetain := nBuildsToRetainPreRel
-	remoteDir := "software/sumatrapdf/prerel/"
+	var remoteDir string
+	switch buildType {
+	case buildTypeRel:
+		panicIf(true, "can't delete release builds")
+	case buildTypePreRel:
+		remoteDir = "software/sumatrapdf/prerel/"
+	case buildTypeDaily:
+		remoteDir = "software/sumatrapdf/daily/"
+	default:
+		panicIf(true, "unsupported buildType: '%s'", buildType)
+	}
 	objectsCh := mc.ListObjects(remoteDir)
 	var keys []string
 	for f := range objectsCh {

@@ -445,8 +445,8 @@ func getSuffixForPlatform(platform string) string {
 func buildCiDaily() {
 	cleanReleaseBuilds()
 	buildDaily(kPlatformArm64)
-	//buildDaily(kPlatformIntel32)
-	//buildDaily(kPlatformIntel64)
+	buildDaily(kPlatformIntel32)
+	buildDaily(kPlatformIntel64)
 }
 
 func buildCi() {

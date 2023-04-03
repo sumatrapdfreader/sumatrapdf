@@ -21,4 +21,4 @@ jobs:
       - name: Build
         env:
           CERT_PWD: ${{ secrets.CERT_PWD }}
-        run: .\doit.bat -ci-daily
+        run: .\doit.bat -ci-daily -upload
