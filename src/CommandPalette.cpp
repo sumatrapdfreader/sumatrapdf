@@ -90,6 +90,10 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdShowLog,
     CmdClearHistory,
     CmdReopenLastClosedFile,
+#if defined(DEBUG)
+    CmdDebugCrashMe,
+    CmdDebugCorruptMemory,
+#endif
 };
 
 // for those commands do not activate main window
@@ -290,6 +294,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         case CmdDebugTestApp:
         case CmdDebugShowNotif:
         case CmdDebugStartStressTest:
+        case CmdDebugCorruptMemory:
         case CmdDebugCrashMe: {
             return gIsDebugBuild;
         }

@@ -4613,6 +4613,20 @@ void ClearHistory(MainWindow* win) {
     */
 }
 
+// try to trigger a crash due to corrupting allocator
+// this is a different kind of a crash than just referencing invalid memory
+// as corrupted memory migh prevent crash handler from working
+// this can be used to test that crash handler still works
+// TODO: maybe corrupt some more
+void DebugCorruptMemory() {
+    char* s = (char*)malloc(23);
+    char* d = (char*)malloc(34);
+    free(s);
+    free(d);
+    // this triggers ntdll.dll!RtlReportCriticalFailure()
+    free(s);
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
@@ -5241,6 +5255,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDebugCrashMe:
             CrashMe();
+            break;
+
+        case CmdDebugCorruptMemory:
+            DebugCorruptMemory();
             break;
 #endif
 
