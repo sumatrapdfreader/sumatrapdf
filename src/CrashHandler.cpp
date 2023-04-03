@@ -56,9 +56,11 @@ static char* BuildSymbolsUrl() {
         urlBase = "https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" QM(CURR_VERSION);
     }
     const char* suff = ".pdb.lzsa";
-    if (IsProcess64()) {
-        suff = "-64.pdb.lzsa";
-    }
+#if IS_ARM_64 == 1
+    suff = "-arm64.pdb.lzsa";
+#elif IS_INTEL_64 == 1
+    suff = "-64.pdb.lzsa";
+#endif
     return str::Join(urlBase, suff);
 }
 
