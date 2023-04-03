@@ -382,16 +382,6 @@ func main() {
 	if flgCIDailyBuild {
 		buildCiDaily()
 		if opts.upload {
-			uploadToStorage(buildTypeDaily)
-		} else {
-			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
-		}
-		return
-	}
-
-	if flgCIBuild {
-		buildCi()
-		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {
 			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
@@ -401,8 +391,15 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
+		// pre-release build on push
+		uploadToStorage(buildTypePreRel)
+		return
+	}
+
+	if flgCIBuild {
+		buildCi()
 		if opts.upload {
-			uploadCi()
+			uploadToStorage(buildTypePreRel)
 		} else {
 			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
 		}
@@ -421,7 +418,7 @@ func main() {
 
 	if flgBuildPreRelease {
 		cleanReleaseBuilds()
-		buildPreRelease(kPlatformIntel64)
+		buildPreRelease(kPlatformIntel64, false)
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {

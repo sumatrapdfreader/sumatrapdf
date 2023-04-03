@@ -24,7 +24,6 @@ type BuildType string
 const (
 	buildTypePreRel BuildType = "prerel"
 	buildTypeRel    BuildType = "rel"
-	buildTypeDaily  BuildType = "daily"
 )
 
 func getRemotePaths(buildType BuildType) []string {
@@ -36,13 +35,13 @@ func getRemotePaths(buildType BuildType) []string {
 		}
 	}
 
-	if buildType == buildTypeDaily {
-		return []string{
-			"software/sumatrapdf/sumatralatest-daily.js",
-			"software/sumatrapdf/sumpdf-daily-latest.txt",
-			"software/sumatrapdf/sumpdf-daily-update.txt",
-		}
-	}
+	// if buildType == buildTypeDaily {
+	// 	return []string{
+	// 		"software/sumatrapdf/sumatralatest-daily.js",
+	// 		"software/sumatrapdf/sumpdf-daily-latest.txt",
+	// 		"software/sumatrapdf/sumpdf-daily-update.txt",
+	// 	}
+	// }
 
 	if buildType == buildTypeRel {
 		return []string{
@@ -59,7 +58,7 @@ func getRemotePaths(buildType BuildType) []string {
 // this returns version to be used in uploaded file names
 func getVerForBuildType(buildType BuildType) string {
 	switch buildType {
-	case buildTypePreRel, buildTypeDaily:
+	case buildTypePreRel:
 		// this is linear build number like "12223"
 		return getPreReleaseVer()
 	case buildTypeRel:
@@ -184,7 +183,7 @@ func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType BuildType, ver stri
 func createSumatraLatestJs(mc *minioutil.Client, buildType BuildType) string {
 	var appName string
 	switch buildType {
-	case buildTypePreRel, buildTypeDaily:
+	case buildTypePreRel:
 		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
@@ -206,8 +205,8 @@ func createSumatraLatestJs(mc *minioutil.Client, buildType BuildType) string {
 		host = "https://www.sumatrapdfreader.org/dl/rel/" + ver
 	case buildTypePreRel:
 		host = "https://www.sumatrapdfreader.org/dl/prerel/" + ver
-	case buildTypeDaily:
-		host = "https://www.sumatrapdfreader.org/dl/daily/" + ver
+	// case buildTypeDaily:
+	// 	host = "https://www.sumatrapdfreader.org/dl/daily/" + ver
 	default:
 		panicIf(true, "unsupported buildType: '%s'", buildType)
 	}
@@ -246,7 +245,7 @@ var sumLatestInstallerArm64 = "{{.Host}}/{{.Prefix}}-arm64-install.exe";
 		"Prefix":   appName + "-" + ver,
 	}
 	// for prerel / daily, version is in path, not in name
-	if buildType == buildTypePreRel || buildType == buildTypeDaily {
+	if buildType == buildTypePreRel {
 		d["Prefix"] = appName
 	}
 	return execTextTemplate(tmplText, d)
@@ -323,8 +322,8 @@ func getFinalDirForBuildType(buildType BuildType) string {
 		dir = "final-rel"
 	case buildTypePreRel:
 		dir = "final-prerel"
-	case buildTypeDaily:
-		dir = "final-daily"
+	// case buildTypeDaily:
+	// 	dir = "final-daily"
 	default:
 		panicIf(true, "invalid buildType '%s'", buildType)
 	}
@@ -410,8 +409,8 @@ func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType BuildType) {
 		panicIf(true, "can't delete release builds")
 	case buildTypePreRel:
 		remoteDir = "software/sumatrapdf/prerel/"
-	case buildTypeDaily:
-		remoteDir = "software/sumatrapdf/daily/"
+	// case buildTypeDaily:
+	// 	remoteDir = "software/sumatrapdf/daily/"
 	default:
 		panicIf(true, "unsupported buildType: '%s'", buildType)
 	}
@@ -529,17 +528,4 @@ func uploadToStorage(buildType BuildType) {
 		wg.Done()
 	}()
 	wg.Wait()
-}
-
-func uploadCi() {
-	gev := getGitHubEventType()
-	switch gev {
-	case githubEventPush:
-		// pre-release build on push
-		uploadToStorage(buildTypePreRel)
-	case githubEventTypeCodeQL:
-		// do nothing
-	default:
-		panic("unkown value from getGitHubEventType()")
-	}
 }

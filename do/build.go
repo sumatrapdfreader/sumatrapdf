@@ -147,6 +147,7 @@ func cleanReleaseBuilds() {
 	os.RemoveAll(rel32Dir)
 	os.RemoveAll(rel64Dir)
 	os.RemoveAll(relArm64Dir)
+	os.RemoveAll(finalPreRelDir)
 }
 
 func runTestUtilMust(dir string) {
@@ -367,9 +368,10 @@ const (
 )
 
 var (
-	rel32Dir    = filepath.Join("out", "rel32")
-	rel64Dir    = filepath.Join("out", "rel64")
-	relArm64Dir = filepath.Join("out", "arm64")
+	rel32Dir       = filepath.Join("out", "rel32")
+	rel64Dir       = filepath.Join("out", "rel64")
+	relArm64Dir    = filepath.Join("out", "arm64")
+	finalPreRelDir = filepath.Join("out", "final-prerel")
 )
 
 func getOutDirForPlatform(platform string) string {
@@ -444,9 +446,9 @@ func getSuffixForPlatform(platform string) string {
 
 func buildCiDaily() {
 	cleanReleaseBuilds()
-	buildDaily(kPlatformArm64)
-	buildDaily(kPlatformIntel32)
-	buildDaily(kPlatformIntel64)
+	buildPreReleaseDaily(kPlatformArm64)
+	buildPreReleaseDaily(kPlatformIntel32)
+	buildPreReleaseDaily(kPlatformIntel64)
 }
 
 func buildCi() {
@@ -454,7 +456,7 @@ func buildCi() {
 	switch gev {
 	case githubEventPush:
 		cleanReleaseBuilds()
-		buildPreRelease(kPlatformIntel64)
+		buildPreRelease(kPlatformIntel64, false)
 	case githubEventTypeCodeQL:
 		// code ql is just a regular build, I assume intercepted by
 		// by their tooling
@@ -464,33 +466,11 @@ func buildCi() {
 	}
 }
 
-func buildDaily(platform string) {
-	// make sure we can sign the executables, early exit if missing
-	detectSigntoolPath()
-
-	ver := getVerForBuildType(buildTypeDaily)
-	s := fmt.Sprintf("buidling daily pre-release version %s", ver)
-	defer makePrintDuration(s)()
-
-	setBuildConfigPreRelease()
-	defer revertBuildConfig()
-
-	buildAll("Release", platform, true)
-
-	suffix := getSuffixForPlatform(platform)
-	outDir := getOutDirForPlatform(platform)
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
-	createExeZipWithGoWithNameMust(outDir, nameInZip)
-
-	createManifestMust()
-
-	dstDir := getFinalDirForBuildType(buildTypeDaily)
-	prefix := "SumatraPDF-prerel"
-	copyBuiltFiles(dstDir, outDir, prefix+"-"+suffix)
-	copyBuiltManifest(dstDir, prefix)
+func buildPreReleaseDaily(platform string) {
+	buildPreRelease(platform, true)
 }
 
-func buildPreRelease(platform string) {
+func buildPreRelease(platform string, all bool) {
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
 
@@ -501,7 +481,11 @@ func buildPreRelease(platform string) {
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
-	build("Release", platform, true)
+	if all {
+		buildAll("Release", platform, true)
+	} else {
+		build("Release", platform, true)
+	}
 
 	suffix := getSuffixForPlatform(platform)
 	outDir := getOutDirForPlatform(platform)
