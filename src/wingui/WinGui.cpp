@@ -3778,6 +3778,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (isDragging) {
                 ReleaseCapture();
             }
+            // we don't always get WM_MOUSEMOVE before WM_LBUTTONUP so
+            // update tabHighlighted
+            tabHighlighted = tabUnderMouse;
             if (draggingTab) {
                 draggingTab = false;
                 ImageList_EndDrag();
