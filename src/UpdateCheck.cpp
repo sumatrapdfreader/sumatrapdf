@@ -65,8 +65,10 @@ struct UpdateInfo {
     HWND hwndParent = nullptr;
     const char* latestVer = nullptr;
     const char* installer64 = nullptr;
+    const char* installerArm64 = nullptr;
     const char* installer32 = nullptr;
     const char* portable64 = nullptr;
+    const char* portableArm64 = nullptr;
     const char* portable32 = nullptr;
 
     const char* dlURL = nullptr;
@@ -76,8 +78,10 @@ struct UpdateInfo {
     ~UpdateInfo() {
         str::Free(latestVer);
         str::Free(installer64);
+        str::Free(installerArm64);
         str::Free(installer32);
         str::Free(portable64);
+        str::Free(portableArm64);
         str::Free(portable32);
         str::Free(dlURL);
         str::Free(installerPath);
@@ -123,25 +127,21 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
 
     // those are optional. if missing, we'll just tell the user to go to website to download
     res->installer64 = str::Dup(node->GetValue("Installer64"));
+    res->installerArm64 = str::Dup(node->GetValue("InstallerArm64"));
     res->installer32 = str::Dup(node->GetValue("Installer32"));
     res->portable64 = str::Dup(node->GetValue("PortableExe64"));
+    res->portableArm64 = str::Dup(node->GetValue("PortableExeArm64"));
     res->portable32 = str::Dup(node->GetValue("PortableExe32"));
 
     // figure out which executable to download
     const char* dlURL = nullptr;
     bool isDll = IsDllBuild();
-    if (IsProcess64()) {
-        if (isDll) {
-            dlURL = res->installer64;
-        } else {
-            dlURL = res->portable64;
-        }
+    if (IsArmBuild()) {
+        dlURL = isDll ? res->installerArm64 : res->portableArm64;
+    } else if (IsProcess64()) {
+        dlURL = isDll ? res->installer64 : res->portable64;
     } else {
-        if (isDll) {
-            dlURL = res->installer32;
-        } else {
-            dlURL = res->portable32;
-        }
+        dlURL = isDll ? res->installer32 : res->portable32;
     }
     res->dlURL = str::Dup(dlURL);
     return res;

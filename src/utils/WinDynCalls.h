@@ -64,6 +64,7 @@ NORMALIZ_API_LIST(API_DECLARATION)
 #define KERNEL32_API_LIST(V)    \
     V(SetProcessDEPPolicy)      \
     V(IsWow64Process)           \
+    V(GetProcessInformation)    \
     V(SetDllDirectoryW)         \
     V(SetDefaultDllDirectories) \
     V(RtlCaptureContext)        \

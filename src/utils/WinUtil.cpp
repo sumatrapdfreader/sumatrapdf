@@ -250,6 +250,10 @@ bool IsOs64() {
     return IsProcess64() || IsRunningInWow64();
 }
 
+bool IsArmBuild() {
+    return IS_ARM_64 == 1;
+}
+
 // return true if OS and our process have the same arch (i.e. both are 32bit
 // or both are 64bit)
 bool IsProcessAndOsArchSame() {

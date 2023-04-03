@@ -28,6 +28,7 @@ void MoveWindow(HWND hwnd, RECT* r);
 
 bool IsOs64();
 bool IsProcess64();
+bool IsArmBuild();
 bool IsRunningInWow64();
 bool IsProcessAndOsArchSame();
 
