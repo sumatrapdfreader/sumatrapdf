@@ -3288,11 +3288,6 @@ int pdf_obj_refs(fz_context *ctx, pdf_obj *obj)
 
 /* Convenience functions */
 
-static pdf_obj *
-pdf_dict_get_inheritable_imp(fz_context *ctx, pdf_obj *node, pdf_obj *key, int depth, pdf_cycle_list *cycle_up)
-{
-}
-
 /*
 	Uses Floyd's cycle finding algorithm, modified to avoid starting
 	the 'slow' pointer for a while.

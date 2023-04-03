@@ -1549,13 +1549,31 @@ static void preloadobjstms(fz_context *ctx, pdf_document *doc)
 	pdf_obj *obj;
 	int num;
 
+	/* If we have attempted a repair, then everything will have been
+	 * loaded already. */
+	if (doc->repair_attempted)
+		return;
+
+	fz_var(num);
+
 	/* xref_len may change due to repair, so check it every iteration */
 	for (num = 0; num < pdf_xref_len(ctx, doc); num++)
 	{
-		if (pdf_get_xref_entry_no_null(ctx, doc, num)->type == 'o')
+		fz_try(ctx)
 		{
-			obj = pdf_load_object(ctx, doc, num);
-			pdf_drop_obj(ctx, obj);
+			for (; num < pdf_xref_len(ctx, doc); num++)
+			{
+				if (pdf_get_xref_entry_no_null(ctx, doc, num)->type == 'o')
+				{
+					obj = pdf_load_object(ctx, doc, num);
+					pdf_drop_obj(ctx, obj);
+				}
+			}
+		}
+		fz_catch(ctx)
+		{
+			/* Ignore the error, so we can carry on trying to load. */
+			fz_warn(ctx, "%s", fz_caught_message(ctx));
 		}
 	}
 }

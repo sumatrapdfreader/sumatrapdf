@@ -12,6 +12,7 @@
 #include <direct.h> /* for getcwd */
 #else
 #include <unistd.h> /* for getcwd */
+#include <sys/stat.h> /* for mkdir */
 #endif
 
 #define BEYOND_THRESHHOLD 40
@@ -40,7 +41,7 @@ fz_mkdir(char *path)
 
 	return ret;
 #else
-	return mkdir(path);
+	return mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO);
 #endif
 }
 

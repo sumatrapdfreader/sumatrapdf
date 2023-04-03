@@ -2405,6 +2405,7 @@ object_updated:
 
 		if (try_repair)
 		{
+perform_repair:
 			fz_try(ctx)
 			{
 				pdf_repair_xref(ctx, doc);
@@ -2442,7 +2443,13 @@ object_updated:
 			if (x == NULL)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot load object stream containing object (%d 0 R)", num);
 			if (!x->obj)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "object (%d 0 R) was not found in its object stream", num);
+			{
+				x->type = 'f';
+				orig_x->type = 'f';
+				if (doc->repair_attempted)
+					fz_throw(ctx, FZ_ERROR_GENERIC, "object (%d 0 R) was not found in its object stream", num);
+				goto perform_repair;
+			}
 		}
 	}
 	else if (doc->hint_obj_offsets && read_hinted_object(ctx, doc, num))
