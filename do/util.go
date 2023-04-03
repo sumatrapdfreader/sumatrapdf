@@ -124,7 +124,7 @@ func makePrintDuration(name string) func() {
 
 func fileSizeMust(path string) int64 {
 	size := getFileSize(path)
-	panicIf(size == -1)
+	panicIf(size == -1, "getFileSize() for '%s' failed", path)
 	return size
 }
 

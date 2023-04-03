@@ -300,11 +300,14 @@ func createManifestMust() {
 		"SumatraPDF.pdb.zip",
 		"SumatraPDF.pdb.lzsa",
 	}
-	dirs := []string{rel32Dir, rel64Dir}
-	// in daily build, there's no 32bit build
-	if !pathExists(rel32Dir) {
-		dirs = []string{rel64Dir}
+	var dirs []string
+	// in daily build, there's no 32bit / arm64 build
+	for _, dir := range []string{rel32Dir, rel64Dir, relArm64Dir} {
+		if pathExists(dir) {
+			dirs = append(dirs, dir)
+		}
 	}
+	panicIf(len(dirs) == 0, "didn't find any dirs for the manifest")
 	for _, dir := range dirs {
 		for _, file := range files {
 			path := filepath.Join(dir, file)
