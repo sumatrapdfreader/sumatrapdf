@@ -382,16 +382,20 @@ func createManifestMust() {
 	writeFileMust(path, []byte(s))
 }
 
-// https://lucasg.github.io/2018/01/15/Creating-an-appx-package/
-// https://docs.microsoft.com/en-us/windows/win32/appxpkg/make-appx-package--makeappx-exe-#to-create-a-package-using-a-mapping-file
-// https://github.com/lucasg/Dependencies/tree/master/DependenciesAppx
-// https://docs.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-packaging-dot-net
-func makeAppx() {
-	appExePath := detectMakeAppxPath()
-	logf(ctx(), "makeAppx: '%s'\n", appExePath)
+func listFilesInDir(dir string) {
+	files, err := os.ReadDir(dir)
+	panicIfErr(err)
+	for _, de := range files {
+		i, err := de.Info()
+		panicIfErr(err)
+		logf(ctx(), "%s: %d\n", de.Name(), i.Size())
+	}
 }
 
 func signFilesMust(dir string) {
+	logf(ctx(), "signFileMust: '%s'\n", dir)
+	listFilesInDir(dir)
+
 	if fileExists(filepath.Join(dir, "SumatraPDF.exe")) {
 		signMust(filepath.Join(dir, "SumatraPDF.exe"))
 	}
@@ -424,9 +428,10 @@ func buildDaily() {
 	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
-	buildAll(rel32Dir, "Release", kPlatformIntel32, true)
-	buildAll(rel64Dir, "Release", kPlatformIntel64, true)
 	buildAll(relArm64Dir, "Release", kPlatformArm64, true)
+
+	//buildAll(rel32Dir, "Release", kPlatformIntel32, true)
+	//buildAll(rel64Dir, "Release", kPlatformIntel64, true)
 }
 
 func buildPreRelease(outDir string, platform string, suffix string) {
