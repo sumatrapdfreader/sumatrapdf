@@ -408,14 +408,49 @@ static DWORD WINAPI CrashDumpThread(LPVOID) {
     return 0;
 }
 
-static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
-    log("CrashDumpExceptionHandler\n");
-    if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
-        log("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode\n");
+// This is needed to intercept memory corruption reports from windows heap manager
+// https://peteronprogramming.wordpress.com/2017/07/30/crashes-you-cant-handle-easily-3-status_heap_corruption-on-windows/
+// https://phabricator.services.mozilla.com/D83753
+static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+    if (exceptionInfo->ExceptionRecord->ExceptionCode != STATUS_HEAP_CORRUPTION) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
     gReducedLogging = true;
+    log("CrashDumpVectoredExceptionHandler\n");
+
+    static bool wasHere = false;
+    if (wasHere) {
+        log("CrashDumpVectoredExceptionHandler: wasHere set\n");
+        return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
+    }
+
+    wasHere = true;
+    gCrashed = true;
+
+    gMei.ThreadId = GetCurrentThreadId();
+    gMei.ExceptionPointers = exceptionInfo;
+    // per msdn (which is backed by my experience), MiniDumpWriteDump() doesn't
+    // write callstack for the calling thread correctly. We use msdn-recommended
+    // work-around of spinning a thread to do the writing
+    SetEvent(gDumpEvent);
+    WaitForSingleObject(gDumpThread, INFINITE);
+
+    ShowCrashHandlerMessage();
+    TerminateProcess(GetCurrentProcess(), 1);
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+    if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
+        log("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == "
+            "exceptionInfo->ExceptionRecord->ExceptionCode\n");
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    gReducedLogging = true;
+    log("CrashDumpExceptionHandler\n");
 
     static bool wasHere = false;
     if (wasHere) {
@@ -724,6 +759,8 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
         return;
     }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);
+    // 1 means that our handler will be called first, 0 would be: last
+    AddVectoredExceptionHandler(1, CrashDumpVectoredExceptionHandler);
 
     signal(SIGABRT, onSignalAbort);
 #if COMPILER_MSVC
