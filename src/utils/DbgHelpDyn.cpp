@@ -98,9 +98,6 @@ static bool SetupSymbolPath()
 static BOOL gSymInitializeOk = FALSE;
 
 static bool CanStackWalk() {
-#if IS_ARM_64 == 1
-    return false;
-#endif
     bool ok = DynSymCleanup && DynSymGetOptions && DynSymSetOptions && DynStackWalk64 && DynSymFunctionTableAccess64 &&
               DynSymGetModuleBase64 && DynSymFromAddr;
     // if (!ok)
@@ -346,16 +343,20 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
-#if IS_ARM_64 == 1
-    // shouldn't happen as CanStalkWalk() should return false
-#elif defined(_WIN64)
+#if IS_INTEL_64 == 1
     stackFrame.AddrPC.Offset = ctx.Rip;
     stackFrame.AddrFrame.Offset = ctx.Rbp;
     stackFrame.AddrStack.Offset = ctx.Rsp;
-#else
+#elif IS_INTEL_32 == 1
     stackFrame.AddrPC.Offset = ctx.Eip;
     stackFrame.AddrFrame.Offset = ctx.Ebp;
     stackFrame.AddrStack.Offset = ctx.Esp;
+#elif IS_ARM_64 == 1
+    stackFrame.AddrPC.Offset = ctx.Pc;
+    stackFrame.AddrFrame.Offset = ctx.Fp;
+    stackFrame.AddrStack.Offset = ctx.Sp;
+#else
+#error "Unsupported CPU architecture"
 #endif
     stackFrame.AddrPC.Mode = AddrModeFlat;
     stackFrame.AddrFrame.Mode = AddrModeFlat;
@@ -488,11 +489,6 @@ void GetAllThreadsCallstacks(str::Str& s) {
 }
 #pragma warning(pop)
 
-#if IS_ARM_64 == 1
-void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
-    // TODO: do something for arm64 ??
-}
-#else
 void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     if (!excPointers) {
         return;
@@ -524,7 +520,7 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
 
     PCONTEXT ctx = excPointers->ContextRecord;
     s.AppendFmt("\r\nRegisters:\r\n");
-#ifdef _WIN64
+#if IS_INTEL_64 == 1
     s.AppendFmt(
         "RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\r\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\r\n"
         "R8: %016I64X\r\nR9: "
@@ -535,19 +531,22 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\r\n", ctx->SegSs, (unsigned int)ctx->Rsp, (unsigned int)ctx->Rbp);
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
-#else
+#elif IS_INTEL_32 == 1
     s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\r\nEDX:%08X  ESI:%08X  EDI:%08X\r\n", ctx->Eax, ctx->Ebx, ctx->Ecx,
                 ctx->Edx, ctx->Esi, ctx->Edi);
     s.AppendFmt("CS:EIP:%04X:%08X\r\n", ctx->SegCs, ctx->Eip);
     s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\r\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
+#elif IS_ARM_64 == 1
+    s.AppendFmt("Fp:%016I64X\r\nLr:%016I64X\r\nSp:%016I64X\r\nPc:%016I64X\r\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc);
+#else
+#error "Unsupported CPU architecture"
 #endif
 
     s.Append("\r\nCrashed thread:\r\n");
     // it's not really for current thread, but it seems to work
     GetCallstack(s, *ctx, GetCurrentThread());
 }
-#endif
 
 } // namespace dbghelp
