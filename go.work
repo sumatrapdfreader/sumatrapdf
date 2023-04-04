@@ -2,5 +2,6 @@ go 1.18
 
 use (
 	./tools/logview
+	./tools/logview-win
 	.\do\
 )
