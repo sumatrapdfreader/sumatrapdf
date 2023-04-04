@@ -1,5 +1,6 @@
 <script>
-  import { afterUpdate } from "svelte";
+  import { afterUpdate, onMount } from "svelte";
+  import { version } from "./version";
 
   let idx = 2;
   /** @type {[string, number][]} */
@@ -71,6 +72,8 @@
     scrollToBottom(element);
   });
 
+  let windowTitle = "Logview " + version;
+
   function pauseClicked() {
     autoScrollPaused = !autoScrollPaused;
     if (autoScrollPaused) {
@@ -91,6 +94,7 @@
   window.runtime.EventsOn("plog", plog);
 </script>
 
+<svelte:window title={windowTitle} />
 <main>
   <div class="top">
     <input type="text" placeholder="search term..." bind:value={searchTerm} />

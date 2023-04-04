@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kjk/common/u"
@@ -201,6 +203,7 @@ func main() {
 		flgFileUpload      string
 		flgFilesList       bool
 		flgExtractUtils    bool
+		flgBuildLogview    bool
 	)
 
 	{
@@ -234,6 +237,7 @@ func main() {
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
 		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
+		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win")
 		flag.Parse()
 	}
 
@@ -266,6 +270,14 @@ func main() {
 
 	if flgFileUpload != "" {
 		fileUpload(flgFileUpload)
+		return
+	}
+
+	if flgBuildLogview {
+		buildLogView()
+		if flgUpload {
+			uploadLogView()
+		}
 		return
 	}
 
@@ -475,4 +487,62 @@ func logview1() {
 func logView2() {
 	cmd := exec.Command("go", "run", `.\tools\logview\`)
 	runCmdLoggedMust(cmd)
+}
+
+func cmdRunLoggedInDir(dir string, args ...string) {
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Dir = dir
+	cmdRunLoggedMust(cmd)
+}
+
+var logViewWinDir = filepath.Join("tools", "logview-win")
+
+func buildLogView() {
+	ver := extractLogViewVersion()
+	logf(ctx(), "biuldLogView: ver: %s\n", ver)
+	os.RemoveAll(filepath.Join(logViewWinDir, "build", "bin"))
+	//cmdRunLoggedInDir(".", "wails", "build", "-clean", "-f", "-upx")
+	cmdRunLoggedInDir(logViewWinDir, "wails", "build", "-clean", "-f", "-upx", "-o", "logview.exe")
+
+	path := filepath.Join(logViewWinDir, "build", "bin", "logview.exe")
+	panicIf(!u.FileExists(path))
+	signMust(path)
+	logf(ctx(), "\n")
+	printFileSize(path)
+}
+
+func uploadLogView() {
+	// TODO: implement me
+	logf(ctx(), "uploadLogView\n")
+}
+
+func extractLogViewVersion() string {
+	path := filepath.Join(logViewWinDir, "frontend", "src", "version.js")
+	d, err := os.ReadFile(path)
+	must(err)
+	d = u.NormalizeNewlinesInPlace(d)
+	s := string(d)
+	// s looks like:
+	// export const version = "0.1.2";
+	parts := strings.Split(s, "\n")
+	s = parts[0]
+	parts = strings.Split(s, " ")
+	panicIf(len(parts) != 5)
+	ver := parts[4] // "0.1.2";
+	ver = strings.ReplaceAll(ver, `"`, "")
+	ver = strings.ReplaceAll(ver, `;`, "")
+	parts = strings.Split(ver, ".")
+	panicIf(len(parts) < 2) // must be at least 1.0
+	// verify all elements are numbers
+	for _, part := range parts {
+		n, err := strconv.ParseInt(part, 10, 32)
+		panicIf(err != nil)
+		panicIf(n > 100)
+	}
+	return ver
+}
+
+func printFileSize(path string) {
+	size := u.FileSize(path)
+	logf(ctx(), "%s: %s\n", path, u.FormatSize(size))
 }
