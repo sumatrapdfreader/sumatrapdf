@@ -10,6 +10,7 @@ body {
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   font-size: 9pt;
+  overscroll-behavior-y: none;
 }
 
 #app {
