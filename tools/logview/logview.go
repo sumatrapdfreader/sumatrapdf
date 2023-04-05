@@ -9,7 +9,7 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
-const kPipeName = "\\\\.\\pipe\\SumatraPDFLogger"
+const kPipeName = "\\\\.\\pipe\\LOCAL\\ArsLexis-Logger"
 const kBufSize = 1024 * 16
 const PIPE_UNLIMITED_INSTANCES = 255
 const INVALID_HANDLE_VALUE = -1

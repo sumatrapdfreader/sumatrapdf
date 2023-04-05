@@ -10,7 +10,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-const kPipeName = "\\\\.\\pipe\\SumatraPDFLogger"
+const kPipeName = "\\\\.\\pipe\\LOCAL\\ArsLexis-Logger"
 const kBufSize = 1024 * 16
 const PIPE_UNLIMITED_INSTANCES = 255
 const INVALID_HANDLE_VALUE = -1

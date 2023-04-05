@@ -7,7 +7,7 @@
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
 
-constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";
+constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
 
 const char* gLogAppName = "SumatraPDF";
 

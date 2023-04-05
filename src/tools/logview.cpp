@@ -1,6 +1,6 @@
 #include "utils/BaseUtil.h"
 
-constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\SumatraPDFLogger";
+constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
 constexpr DWORD kBufSize = 1024 * 16;
 
 void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
