@@ -1236,10 +1236,10 @@ tiff_read_ifd(fz_context *ctx, struct tiff *tiff)
 		offset += 12;
 	}
 
-	if (tiff->bitspersample > 32)
+	if (tiff->bitspersample > 16)
 	{
-		fz_warn(ctx, "limiting bits per component to 32 in TIFF image");
-		tiff->bitspersample = 32;
+		fz_warn(ctx, "limiting bits per component to 16 in TIFF image");
+		tiff->bitspersample = 16;
 	}
 
 	tiff->maxcolors = tiff->colormaplen;

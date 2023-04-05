@@ -347,6 +347,8 @@ fz_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix ctm, f
 void
 fz_fill_image(fz_context *ctx, fz_device *dev, fz_image *image, fz_matrix ctm, float alpha, fz_color_params color_params)
 {
+	if (image->colorspace == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "argument to fill image must be a color image");
 	if (dev->fill_image)
 	{
 		fz_try(ctx)
