@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-851cb119d5c3786a6699b0c04d118256b15256c7
+8cd33a8212841cefa90a47f01ad3d378e97d9d9a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13303,6 +13303,7 @@ tr:Eki aç
 uk:Відкрити вкладення
 :Open Directory in &Double Commander
 br:Abrir Pasta em &Double Commander
+cn:在 Double Commander 中打开目录(&D)
 co:Apre u cartulare cù &Double Commander
 cy:Agor Cyfeiriadur yn &Double Commander
 de:Verzeichnis in &Double Commander öffnen
@@ -13316,6 +13317,7 @@ ru:Открыть папку в &Double Commander
 sr-rs:Отвори фасциклу у Double Commander-у (&К)
 :Open Directory in &Explorer
 br:Abrir Pasta no &Explorer
+cn:在文件资源管理器中打开目录(&E)
 co:Apre u cartulare cù l’&espluratore
 cy:Agor Cyfeiriadur yn &Chwilotwr
 de:Verzeichnis im &Explorer öffnen
@@ -13329,6 +13331,7 @@ ru:Открыть папку в &Проводнике
 sr-rs:Отвори фасциклу у Истра&живачу
 :Open Directory in &Total Commander
 br:Abrir Pasta em &Total Commander
+cn:在 Total Commander 中打开目录(&T)
 co:Apre u cartulare cù &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
 de:Verzeichnis in &Total Commander öffnen
@@ -13342,6 +13345,7 @@ ru:Открыть папку в &Total Commander
 sr-rs:Отвори фасциклу у Total Commander-у (&Т)
 :Open Directory in Directory &Opus
 br:Abrir Pasta em Directory &Opus 
+cn:在 Directory Opus 中打开目录(&O)
 co:Apre u cartulare cù Directory &Opus
 cy:Agor Cyfarwyddiadur yng Nghyfarwyddiadur &Opus
 de:Verzeichnis in Directory &Opus öffnen
@@ -13724,6 +13728,7 @@ uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
 br:Abrir em Microsoft &HTML Help
+cn:在 Microsoft HTML 帮助中打开(&H)
 co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft &HTML Help
 de:In Microsoft &HTML-Hilfe öffnen
@@ -14612,9 +14617,11 @@ uz:Davom etish uchun %s yoping!
 vn:Hãy đóng %s lại để tiến hành!
 :Please wait - loading...
 br:Por favor, aguarde - carregando...
+cn:请稍等，正在加载...
 cy:Arhoswch - wrthi'n llwytho...
 de:Bitte auf das Laden warten...
 el:Παρακαλώ περιμένετε - φόρτωση...
+it:Caricamento...
 nl:Even wachten - Laden
 pl:Proszę czekać - ładowanie...
 :Please wait - rendering...
