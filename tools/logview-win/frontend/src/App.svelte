@@ -62,7 +62,8 @@
    * @param {HTMLElement} node
    */
   function scrollToBottom(node) {
-    node.scroll({ top: node.scrollHeight, behavior: "smooth" });
+    // node.scroll({ top: node.scrollHeight, behavior: "smooth" });
+    node.scroll({ top: node.scrollHeight });
   }
 
   afterUpdate(() => {
@@ -100,6 +101,7 @@
     <input type="text" placeholder="search term..." bind:value={searchTerm} />
     <button class="btn-pause" on:click={pauseClicked}>{btnText}</button>
     <button on:click={clearLogs}>clear</button>
+    <div>{len(logs)} line, {len(filterLogs)} shown</div>
   </div>
   <div bind:this={element} class="log">
     {#if len(filteredLogs) == 0}
@@ -129,11 +131,14 @@
   .btn-pause {
     min-width: 8rem;
   }
+
   .top {
     display: flex;
     justify-content: center;
+    align-items: baseline;
     column-gap: 0.5rem;
   }
+
   .log {
     overflow: auto;
     margin-top: 0.5rem;
