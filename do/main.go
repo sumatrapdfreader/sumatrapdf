@@ -455,7 +455,7 @@ func main() {
 	}
 
 	if flgLogView {
-		logView2()
+		logView()
 		return
 	}
 
@@ -471,20 +471,7 @@ func main() {
 	flag.Usage()
 }
 
-func logview1() {
-	pathSrc := filepath.Join("src", "tools", "logview.cpp")
-	dir := filepath.Join("out", "rel64")
-	path := filepath.Join(dir, "logview.exe")
-	needsRebuild := fileNewerThan(pathSrc, path)
-	if needsRebuild {
-		buildLogview()
-	}
-	cmd := exec.Command(".\\logview.exe")
-	cmd.Dir = dir
-	runCmdLoggedMust(cmd)
-}
-
-func logView2() {
+func logView() {
 	cmd := exec.Command("go", "run", `.\tools\logview\`)
 	runCmdLoggedMust(cmd)
 }

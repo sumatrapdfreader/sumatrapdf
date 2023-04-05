@@ -423,7 +423,7 @@ func buildAll(config, platform string, sign bool) {
 		runTestUtilMust(dir)
 	}
 
-	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;logview:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 	if sign {
 		signFilesMust(dir)
 	}
@@ -574,15 +574,6 @@ func buildJustPortableExe(dir, config, platform string) {
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
 	signFilesOptional(dir)
-}
-
-func buildLogview() {
-	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
-
-	config := "Release"
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, kPlatformIntel64)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:logview:Rebuild`, p, `/m`)
 }
 
 func buildTestUtil() {

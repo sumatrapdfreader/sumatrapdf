@@ -8,19 +8,6 @@ function files_in_dir(dir, files_in_dir)
   files(paths)
 end
 
-function logview_files()
-  files_in_dir("src/utils", {
-    "BaseUtil.*",
-    "TempAllocator.*",
-    "StrFormat.*",
-    "StrUtil.*",
-    "StrconvUtil.*",
-  })
-  files {
-    "src/tools/logview.cpp",
-  }
-end
-
 function preview_test_files()
   files_in_dir("src/utils", {
     "BaseUtil.*",

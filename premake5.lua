@@ -889,16 +889,6 @@ workspace "SumatraPDF"
     sizer_files()
     links { "ole32.lib", "oleaut32.lib" }
 
-  project "logview"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    regconf()
-    disablewarnings { "4838" }
-    includedirs { "src" }
-    logview_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version" }
-
   project "bin2coff"
     kind "ConsoleApp"
     language "C++"
