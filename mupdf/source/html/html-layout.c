@@ -541,25 +541,6 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 	fz_free(ctx, reorder);
 }
 
-static void find_accumulated_margins(fz_context *ctx, fz_html_box *box, float *w, float *h)
-{
-	while (box)
-	{
-		if (fz_html_box_has_boxes(box))
-		{
-			float *margin = box->u.block.margin;
-			float *padding = box->u.block.padding;
-			float *border = box->u.block.border;
-			/* TODO: take into account collapsed margins */
-			*h += margin[T] + padding[T] + border[T];
-			*h += margin[B] + padding[B] + border[B];
-			*w += margin[L] + padding[L] + border[L];
-			*w += margin[R] + padding[R] + border[R];
-		}
-		box = box->up;
-	}
-}
-
 typedef struct
 {
 	fz_pool *pool;
@@ -718,16 +699,15 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			restart->start_flow = NULL;
 		}
 		node->breaks_line = 0; /* reset line breaks from previous layout */
+
 		if (node->type == FLOW_IMAGE)
 		{
-			float margin_w = 0, margin_h = 0;
 			float max_w, max_h;
 			float xs = 1, ys = 1, s;
 			float aspect = 1;
 
-			find_accumulated_margins(ctx, box, &margin_w, &margin_h);
-			max_w = top->s.layout.w - margin_w;
-			max_h = ld->page_h - margin_h;
+			max_w = top->s.layout.w;
+			max_h = ld->page_h;
 
 			/* NOTE: We ignore the image DPI here, since most images in EPUB files have bogus values. */
 			node->w = node->content.image->w * 72.0f / 96.0f;
@@ -735,9 +715,9 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			aspect = node->h ? node->w / node->h : 0;
 
 			if (node->box->style->width.unit != N_AUTO)
-				node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, top->s.layout.w - margin_w, node->w);
+				node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, top->s.layout.w, node->w);
 			if (node->box->style->height.unit != N_AUTO)
-				node->h = fz_from_css_number(node->box->style->height, top->s.layout.em, ld->page_h - margin_h, node->h);
+				node->h = fz_from_css_number(node->box->style->height, top->s.layout.em, ld->page_h, node->h);
 			if (node->box->style->width.unit == N_AUTO && node->box->style->height.unit != N_AUTO)
 				node->w = node->h * aspect;
 			if (node->box->style->width.unit != N_AUTO && node->box->style->height.unit == N_AUTO)

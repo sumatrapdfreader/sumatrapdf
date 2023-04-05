@@ -1,3 +1,36 @@
+List of changes in MuPDF 1.22.0
+
+	New command line "mutool recolor" to change colorspace of PDF files.
+	New command line "mutool trim" to remove content outside mediabox.
+	New flag to "mutool draw": -KK to remove all non-textual content.
+
+	Support PDF page labels.
+
+	Layout HTML tables with variable column widths.
+
+	Added JPEG output format. JPEG should be used with care due to its
+	lossy nature (if in doubt, use PDF instead).
+
+	Added PDF filter factories.
+	Added PDF color filter.
+	Added "culler" to sanitize filter.
+	Added flags to control embedding fonts in output.
+	New device methods for structured tags.
+	Increased maximum allowed image size.
+	Add magic flag to temporarily hide annotations when editing them.
+
+	Support RD in Square and Circle annotations.
+	Support dashed borders in annotations.
+	Support cloudy borders in annotations.
+	Improved layers in PDF files.
+	Fix performance issue with large PDF files and outlines.
+
+	Updated multi-threading examples.
+
+	Moved WASM project into separate repository.
+
+	Added Java and "mutool run" bindings for many more functions.
+
 List of changes in MuPDF 1.21.0
 
 	Added MOBI input format support.
