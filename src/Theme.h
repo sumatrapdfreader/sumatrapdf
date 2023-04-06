@@ -85,6 +85,8 @@ struct Theme {
     TabTheme tab;
     // Style of notifications
     NotificationStyle notifications;
+    // Whether or not we colorize standard Windows controls and window areas
+    bool colorizeControls;
 };
 
 extern Theme* currentTheme;

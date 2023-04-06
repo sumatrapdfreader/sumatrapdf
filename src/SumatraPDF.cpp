@@ -5370,6 +5370,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 RedrawWindow(mainWin->hwndFrame, nullptr, nullptr,
                              RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
                 UpdateTreeCtrlColors(mainWin);
+                RebuildMenuBarForWindow(mainWin);
             }
             UpdateDocumentColors();
             break;
@@ -5446,14 +5447,14 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return FrameOnCommand(win, hwnd, msg, wp, lp);
 
         case WM_MEASUREITEM:
-            if (gOwnerDrawMenu) {
+            if (currentTheme->colorizeControls) {
                 MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;
 
         case WM_DRAWITEM:
-            if (gOwnerDrawMenu) {
+            if (currentTheme->colorizeControls) {
                 MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
                 return TRUE;
             }

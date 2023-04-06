@@ -141,7 +141,9 @@ Theme g_themeLight = {
         RgbToCOLORREF(0x8d0801),
         // Progress bar color
         g_themeLight.mainWindow.linkColor
-    }
+    },
+    // Colorize standard controls
+    false
 };
 
 Theme g_themeDark = {
@@ -225,7 +227,9 @@ Theme g_themeDark = {
         g_themeDark.mainWindow.textColor,
         // Progress bar color
         g_themeDark.mainWindow.linkColor
-    }
+    },
+    // Colorize standard controls
+    true
 };
 
 Theme g_themeDarker = {
@@ -318,7 +322,9 @@ Theme g_themeDarker = {
         g_themeDarker.mainWindow.textColor,
         // Progress bar color
         g_themeDarker.mainWindow.linkColor
-    }
+    },
+    // Colorize standard controls
+    true
 };
 // clang-format on
 
