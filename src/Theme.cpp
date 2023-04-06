@@ -31,6 +31,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #define COL_WHITEISH 0xEBEBF9
 #define COL_DARK_GRAY 0x424242
 
+
 // Theme definition helper functions
 static COLORREF RgbToCOLORREF(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
@@ -44,6 +45,17 @@ Theme g_themeLight = {
     // Main window theme
     {
         // Main Background Color
+        // Background color comparison:
+        // Adobe Reader X   0x565656 without any frame border
+        // Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
+        // PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
+        // Google Chrome    0xCCCCCC with a symmetric gradient shadow
+        // Evince           0xD7D1CB with a pronounced frame shadow
+        // SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
+
+        // it's very light gray but not white so that there's contrast between
+        // background and thumbnail, which often have white background because
+        // most PDFs have white background.
         RgbToCOLORREF(0xF2F2F2),
         // Main Text Color
         COL_BLACK,
@@ -371,6 +383,23 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
         bg = currentTheme->document.backgroundColor;
         text = currentTheme->document.textColor;
     }
+}
+
+COLORREF GetMainWindowBackgroundColor() {
+    COLORREF bgColor = currentTheme->mainWindow.backgroundColor;
+    // Special behavior for light theme.
+    // TODO: migrate from prefs to theme.
+    if (currentThemeIndex == 0) {
+
+// for backward compatibility use a value that older versions will render as yellow
+#define MAIN_WINDOW_BG_COLOR_DEFAULT (RGB(0xff, 0xf2, 0) - 0x80000000)
+
+        ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
+        if (MAIN_WINDOW_BG_COLOR_DEFAULT != bgParsed->col) {
+            bgColor = bgParsed->col;
+        }
+    }
+    return bgColor;
 }
 
 #if 0

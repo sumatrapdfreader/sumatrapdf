@@ -98,4 +98,8 @@ Theme* GetCurrentTheme();
 int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
 
+// These functions take into account both gPrefs and the theme.
+// Access to these colors must go through them until everything is
+// configured through themes.
 void GetDocumentColors(COLORREF& text, COLORREF& bg);
+COLORREF GetMainWindowBackgroundColor();
