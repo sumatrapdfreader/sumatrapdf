@@ -1899,7 +1899,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     };
 }
 void MarkMenuOwnerDraw(HMENU hmenu) {
-    if (!gOwnerDrawMenu) {
+    if (!currentTheme->colorizeControls) {
         return;
     }
     WCHAR buf[1024];

@@ -46,13 +46,6 @@ const char* gitCommidId = QM(GIT_COMMIT_ID);
 const char* gitCommidId = nullptr;
 #endif
 
-// experimental, unfinished theme support for menus by making them owner-drawn
-#if defined(EXP_MENU_OWNER_DRAW)
-bool gOwnerDrawMenu = true;
-#else
-bool gOwnerDrawMenu = false;
-#endif
-
 #ifdef DISABLE_DOCUMENT_RESTRICTIONS
 bool gDisableDocumentRestrictions = true;
 #else
