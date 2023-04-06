@@ -1275,8 +1275,12 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
-    if (!win->IsDocLoaded()) {
+    if (!tab->IsDocLoaded()) {
         if (!autoRefresh) {
+            // TODO: seen a crash
+            if (str::IsEmpty(tab->filePath)) {
+                logf("tab->filePath is empty\n");
+            }
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
             args.noSavePrefs = true;
