@@ -37,19 +37,13 @@ func fileUpload(fpath string) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		upload(newMinioS3Client())
+		upload(newMinioR2Client())
 		wg.Done()
 	}()
 
 	wg.Add(1)
 	go func() {
 		upload(newMinioBackblazeClient())
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		upload(newMinioSpacesClient())
 		wg.Done()
 	}()
 
@@ -77,8 +71,7 @@ func deleteFilesOneOff() {
 	prefix := "vack/"
 
 	var mc *minioutil.Client
-	//mc = newMinioSpacesClient()
-	//mc = newMinioS3Client()
+	//mc = newMinioR2Client()
 	//mc = newMinioBackblazeClient()
 	uri := mc.URLForPath("")
 	logf(ctx(), "deleteFiles in '%s'\n", uri)

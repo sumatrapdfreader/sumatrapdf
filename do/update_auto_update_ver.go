@@ -65,9 +65,11 @@ Latest %s
 		}
 	}
 
-	uploadInfo(newMinioS3Client())
+	// TODO: anyone using those for update info?
+	//uploadInfo(newMinioSpacesClient())
+	//uploadInfo(newMinioS3Client())
 	uploadInfo(newMinioBackblazeClient())
-	uploadInfo(newMinioSpacesClient())
+	uploadInfo(newMinioR2Client())
 
 	path := filepath.Join("website", "update-check-rel.txt")
 	writeFileMust(path, []byte(s))
