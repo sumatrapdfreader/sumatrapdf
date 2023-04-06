@@ -306,6 +306,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
 }
 
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
+    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
     if (!LoadDocument(&args, lazyload, false)) {
@@ -1269,7 +1270,8 @@ ContinueOpenWindow:
         for (SessionData* data : *gGlobalPrefs->sessionData) {
             win = CreateAndShowMainWindow(data);
             for (TabState* state : *data->tabStates) {
-                if (!state->filePath) {
+                if (str::IsEmpty(state->filePath)) {
+                    logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }
                 // TODO: if SaveSettings() is called, it deletes gGlobalPrefs->sessionData

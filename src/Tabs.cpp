@@ -156,11 +156,18 @@ static void MigrateTab(WindowTab* tab, MainWindow* newWin) {
 }
 
 // Selects the given tab (0-based index)
+// tabIndex can come from settings file so must be sanitized
 void TabsSelect(MainWindow* win, int tabIndex) {
     auto tabs = win->Tabs();
-    int count = tabs.Size();
-    if (count < 2 || tabIndex < 0 || tabIndex >= count) {
+    int nTabs = tabs.Size();
+    logf("TabsSelect: tabIndex: %d, nTabs: %d\n", tabIndex, nTabs);
+    if (nTabs == 0) {
+        logf("TabsSelect: skipping because nTabs = %d\n", nTabs);
         return;
+    }
+    if (tabIndex < 0 || tabIndex >= nTabs) {
+        tabIndex = 0;
+        logf("TabsSelect: fixing tabIndex to 0\n");
     }
     TabsCtrl* tabsCtrl = win->tabsCtrl;
     int currIdx = tabsCtrl->GetSelected();

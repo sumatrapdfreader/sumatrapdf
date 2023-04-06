@@ -29,7 +29,9 @@ bool gReducedLogging = false;
 // try to log. when true, this stops logging
 bool gStopLogging = false;
 
-bool gSkipDuplicateLines = true;
+// if true, doesn't log if the same text has already been logged
+// reduces logging but also can be confusing i.e. log lines are not showing up
+bool gSkipDuplicateLines = false;
 
 bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;

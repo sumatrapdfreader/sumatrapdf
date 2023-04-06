@@ -3921,7 +3921,6 @@ int TabsCtrl::TabCount() {
 // takes ownership of tab
 int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     CrashIf(idx < 0);
-    logfa("TabCtrl::InsertTab(): idx=%d\n", idx);
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
     item.pszText = ToWstrTemp(tab->text);
@@ -3986,17 +3985,11 @@ TabInfo* TabsCtrl::GetTab(int idx) {
 
 int TabsCtrl::GetSelected() {
     int idx = TabCtrl_GetCurSel(hwnd);
-    if ((idx < 0) && (TabCount() > 0)) {
-        logfa("TabCtrl::GetSelected() returning -1\n");
-    }
     return idx;
 }
 
 int TabsCtrl::SetSelected(int idx) {
     CrashIf(idx < 0 || idx >= TabCount());
-    if (idx < 0) {
-        logfa("TabCtrl::SetSelected() idx=%d\n", idx);
-    }
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     return prevSelectedIdx;
 }
