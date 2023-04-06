@@ -3623,12 +3623,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TCITEMW* tcs = nullptr;
 
     Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-    TabMouseState tabState;
-
-    bool overClose = false;
-    bool canClose = true;
-    int tabUnderMouse = -1;
-
     if (WM_MOUSELEAVE == msg) {
         POINT p;
         GetCursorPos(&p);
@@ -3636,9 +3630,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         mousePos.x = p.x;
         mousePos.y = p.y;
     }
-    if (WM_MOUSEMOVE == msg) {
-        TrackMouseLeave(hwnd);
-    }
+
+    TabMouseState tabState;
+
+    bool overClose = false;
+    bool canClose = true;
+    int tabUnderMouse = -1;
+
     if ((msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || (msg == WM_MOUSELEAVE)) {
         tabState = TabStateFromMousePosition(mousePos);
         tabUnderMouse = tabState.tabIdx;
@@ -3691,8 +3689,9 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSEMOVE: {
+            TrackMouseLeave(hwnd);
             bool isDragging = (GetCapture() == hwnd);
-            if (nWmMouseMoveCount == 0) {
+            if (nWmMouseMoveCount == 0 || isDragging) {
                 logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
                       tabUnderMouse, tabHighlighted, (int)isDragging);
             }
@@ -3718,9 +3717,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
                     if (!GetTab(tabUnderMouse)->isPinned) {
-                        logfa("WM_MOUSEMOVE: before TriggerTabDragged: hl=%d, tabUnderMouse=%d\n", hl, tabUnderMouse);
+                        logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: before TriggerTabDragged: hl=%d, tabUnderMouse=%d\n",
+                              hl, tabUnderMouse);
                         TriggerTabDragged(this, hl, tabUnderMouse);
-                        logfa("WM_MOUSEMOVE: before UpdateAfterDrag: hl=%d, tabUnderMouse=%d\n", hl, tabUnderMouse);
+                        logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: before UpdateAfterDrag: hl=%d, tabUnderMouse=%d\n", hl,
+                              tabUnderMouse);
                         UpdateAfterDrag(this, hl, tabUnderMouse);
                     }
                 } else {
@@ -3794,7 +3795,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 draggingTab = false;
                 ImageList_EndDrag();
                 int selectedTab = GetSelected();
-                logfa("TabsCtrl::WndProc: selectedTab: %d tabUnderMouse: %d\n", selectedTab, tabUnderMouse);
+                logfa("TabsCtrl::WndProc: WM_LBUTTONUP, selectedTab: %d tabUnderMouse: %d\n", selectedTab,
+                      tabUnderMouse);
                 if (tabUnderMouse != -1 && tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
                     TriggerTabDragged(this, selectedTab, tabUnderMouse);
                     UpdateAfterDrag(this, selectedTab, tabUnderMouse);
