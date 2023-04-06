@@ -118,15 +118,9 @@ type BuildOptions struct {
 	releaseBuild              bool
 }
 
-func ensureSpacesCreds() {
-	panicIf(os.Getenv("SPACES_KEY") == "", "Not uploading to do spaces because SPACES_KEY env variable not set\n")
-	panicIf(os.Getenv("SPACES_SECRET") == "", "Not uploading to do spaces because SPACES_SECRET env variable not set\n")
-}
-
 func ensureAllUploadCreds() {
-	ensureSpacesCreds()
-	panicIf(os.Getenv("AWS_ACCESS") == "", "Not uploading to s3 because AWS_ACCESS env variable not set\n")
-	panicIf(os.Getenv("AWS_SECRET") == "", "Not uploading to s3 because AWS_SECRET env variable not set\n")
+	panicIf(os.Getenv("R2_ACCESS") == "", "Not uploading to s3 because R2_ACCESS env variable not set\n")
+	panicIf(os.Getenv("R2_SECRET") == "", "Not uploading to s3 because R2_SECRET env variable not set\n")
 	panicIf(os.Getenv("BB_ACCESS") == "", "Not uploading to backblaze because BB_ACCESS env variable not set\n")
 	panicIf(os.Getenv("BB_SECRET") == "", "Not uploading to backblaze because BB_SECRET env variable not set\n")
 }

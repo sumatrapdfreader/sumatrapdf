@@ -451,36 +451,24 @@ func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType BuildType) {
 	}
 }
 
-func newMinioSpacesClient() *minioutil.Client {
-	config := &minioutil.Config{
-		Bucket:   "kjkpubsf",
-		Endpoint: "sfo2.digitaloceanspaces.com",
-		Access:   os.Getenv("SPACES_KEY"),
-		Secret:   os.Getenv("SPACES_SECRET"),
-	}
-	mc, err := minioutil.New(config)
-	must(err)
-	return mc
-}
-
-func newMinioS3Client() *minioutil.Client {
-	config := &minioutil.Config{
-		Bucket:   "kjkpub",
-		Endpoint: "s3.amazonaws.com",
-		Access:   os.Getenv("AWS_ACCESS"),
-		Secret:   os.Getenv("AWS_SECRET"),
-	}
-	mc, err := minioutil.New(config)
-	must(err)
-	return mc
-}
-
 func newMinioBackblazeClient() *minioutil.Client {
 	config := &minioutil.Config{
 		Bucket:   "kjk-files",
 		Endpoint: "s3.us-west-001.backblazeb2.com",
 		Access:   os.Getenv("BB_ACCESS"),
 		Secret:   os.Getenv("BB_SECRET"),
+	}
+	mc, err := minioutil.New(config)
+	must(err)
+	return mc
+}
+
+func newMinioR2Client() *minioutil.Client {
+	config := &minioutil.Config{
+		Bucket:   "files",
+		Endpoint: "71694ef61795ecbe1bc331d217dbd7a7.r2.cloudflarestorage.com",
+		Access:   os.Getenv("R2_ACCESS"),
+		Secret:   os.Getenv("R2_SECRET"),
 	}
 	mc, err := minioutil.New(config)
 	must(err)
@@ -502,24 +490,13 @@ func uploadToStorage(buildType BuildType) {
 
 	wg.Add(1)
 	go func() {
-		mc := newMinioBackblazeClient()
+		mc := newMinioR2Client()
 		minioUploadBuildMust(mc, buildType)
 		if buildType != buildTypeRel {
 			minioDeleteOldBuildsPrefix(mc, buildType)
 		}
 		wg.Done()
 	}()
-
-	wg.Add(1)
-	go func() {
-		mc := newMinioS3Client()
-		minioUploadBuildMust(mc, buildType)
-		if buildType != buildTypeRel {
-			minioDeleteOldBuildsPrefix(mc, buildType)
-		}
-		wg.Done()
-	}()
-	wg.Wait()
 
 	// downloads of pre-release 64-bit installer often fail
 	// I suspect cloudflare backblaze proxy is caching 404 responses and 64-bit are hit
@@ -536,13 +513,14 @@ func uploadToStorage(buildType BuildType) {
 
 	wg.Add(1)
 	go func() {
-		mc := newMinioSpacesClient()
+		mc := newMinioBackblazeClient()
 		minioUploadBuildMust(mc, buildType)
 		if buildType != buildTypeRel {
 			minioDeleteOldBuildsPrefix(mc, buildType)
 		}
 		wg.Done()
 	}()
+
 	wg.Wait()
 }
 
