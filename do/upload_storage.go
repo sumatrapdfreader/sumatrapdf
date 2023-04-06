@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/kjk/minioutil"
+	"github.com/kjk/u"
 )
 
 // we delete old daily and pre-release builds. This defines how many most recent
@@ -543,4 +544,20 @@ func uploadToStorage(buildType BuildType) {
 		wg.Done()
 	}()
 	wg.Wait()
+}
+
+func uploadLogView() {
+	logf(ctx(), "uploadLogView\n")
+	ver := extractLogViewVersion()
+	path := filepath.Join("tools", "logview-win", "build", "bin", "logview.exe")
+	panicIf(!fileExists(path), "file '%s' doesn't exist", path)
+	remotePath := "software/logview/rel/" + fmt.Sprintf("logview-%s.exe", ver)
+	mc := newMinioBackblazeClient()
+	if mc.Exists(remotePath) {
+		logf(ctx(), "%s (%s) already uploaded\n", remotePath, mc.URLForPath(remotePath))
+		return
+	}
+	mc.UploadFile(remotePath, path, true)
+	sizeStr := u.FmtSizeHuman(getFileSize(path))
+	logf(ctx(), "Uploaded %s of size %s as %s\n", path, sizeStr, mc.URLForPath(remotePath))
 }

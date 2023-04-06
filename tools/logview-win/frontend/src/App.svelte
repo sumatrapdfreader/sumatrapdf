@@ -74,6 +74,8 @@
   });
 
   let windowTitle = "Logview " + version;
+  // @ts-ignore
+  window.runtime.WindowSetTitle(windowTitle);
 
   function pauseClicked() {
     autoScrollPaused = !autoScrollPaused;
@@ -91,6 +93,11 @@
     logs = [["Logview SumatraPDF", 1]];
     filteredLogs = logs;
   }
+  function aboutClicked() {
+    let uri = "https://www.sumatrapdfreader.org/docs/Logview";
+    // @ts-ignore
+    window.runtime.BrowserOpenURL(uri);
+  }
   // @ts-ignore
   window.runtime.EventsOn("plog", plog);
 </script>
@@ -98,10 +105,13 @@
 <svelte:window title={windowTitle} />
 <main>
   <div class="top">
+    <div style="flex-grow: 1" />
     <input type="text" placeholder="search term..." bind:value={searchTerm} />
     <button class="btn-pause" on:click={pauseClicked}>{btnText}</button>
     <button on:click={clearLogs}>clear</button>
     <div>{len(logs)} line, {len(filterLogs)} shown</div>
+    <div style="flex-grow: 1" />
+    <a on:click|preventDefault={aboutClicked} href="#">about</a>
   </div>
   <div bind:this={element} class="log">
     {#if len(filteredLogs) == 0}

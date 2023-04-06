@@ -237,7 +237,7 @@ func main() {
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
 		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
-		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win")
+		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win. Use -upload to also upload it to backblaze")
 		flag.Parse()
 	}
 
@@ -489,18 +489,13 @@ func buildLogView() {
 	logf(ctx(), "biuldLogView: ver: %s\n", ver)
 	os.RemoveAll(filepath.Join(logViewWinDir, "build", "bin"))
 	//cmdRunLoggedInDir(".", "wails", "build", "-clean", "-f", "-upx")
-	cmdRunLoggedInDir(logViewWinDir, "wails", "build", "-clean", "-f", "-upx", "-o", "logview.exe")
+	cmdRunLoggedInDir(logViewWinDir, "wails", "build", "-clean", "-f", "-upx")
 
 	path := filepath.Join(logViewWinDir, "build", "bin", "logview.exe")
 	panicIf(!u.FileExists(path))
 	signMust(path)
 	logf(ctx(), "\n")
 	printFileSize(path)
-}
-
-func uploadLogView() {
-	// TODO: implement me
-	logf(ctx(), "uploadLogView\n")
 }
 
 func extractLogViewVersion() string {
