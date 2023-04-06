@@ -25,9 +25,7 @@
 // "SumatraPDF yellow" similar to the one use for icon and installer
 #define ABOUT_BG_LOGO_COLOR RGB(0xFF, 0xF2, 0x00)
 
-
 #define ABOUT_BG_GRAY_COLOR RGB(0xF2, 0xF2, 0xF2)
-
 
 COLORREF GetAppColor(AppColor col) {
     CrashIf(true);

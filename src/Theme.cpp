@@ -31,7 +31,6 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #define COL_WHITEISH 0xEBEBF9
 #define COL_DARK_GRAY 0x424242
 
-
 // Theme definition helper functions
 static COLORREF RgbToCOLORREF(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
@@ -390,7 +389,6 @@ COLORREF GetMainWindowBackgroundColor() {
     // Special behavior for light theme.
     // TODO: migrate from prefs to theme.
     if (currentThemeIndex == 0) {
-
 // for backward compatibility use a value that older versions will render as yellow
 #define MAIN_WINDOW_BG_COLOR_DEFAULT (RGB(0xff, 0xf2, 0) - 0x80000000)
 
