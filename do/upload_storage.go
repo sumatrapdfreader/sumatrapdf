@@ -506,10 +506,10 @@ func uploadToStorage(buildType BuildType) {
 	// world (including cloudflare)
 	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
 	// no guarantees the files will be visible from other networks
-	if buildType != buildTypeRel {
-		logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
-		time.Sleep(time.Minute * 5)
-	}
+	// if buildType != buildTypeRel {
+	// 	logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
+	// 	time.Sleep(time.Minute * 5)
+	// }
 
 	wg.Add(1)
 	go func() {
