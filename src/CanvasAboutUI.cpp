@@ -24,14 +24,15 @@
 #include "Menu.h"
 #include "SumatraAbout.h"
 #include "Translations.h"
+#include "Theme.h"
 
 static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    auto txtCol = GetAppColor(AppColor::MainWindowText);
-    auto bgCol = GetAppColor(AppColor::MainWindowBg);
+    auto txtCol = currentTheme->mainWindow.textColor;
+    auto bgCol = GetMainWindowBackgroundColor();
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
         gGlobalPrefs->showStartPage) {
         DrawStartPage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);

@@ -27,6 +27,7 @@
 #include "Translations.h"
 #include "SumatraConfig.h"
 #include "Print.h"
+#include "Theme.h"
 
 void ShowProperties(HWND parent, DocController* ctrl, bool extended);
 
@@ -600,11 +601,11 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
     Rect rcClient = ClientRect(hwnd);
     RECT rTmp = ToRECT(rcClient);
-    auto col = GetAppColor(AppColor::MainWindowBg);
+    auto col = GetMainWindowBackgroundColor();
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
 
-    col = GetAppColor(AppColor::MainWindowText);
+    col = currentTheme->mainWindow.textColor;
     SetTextColor(hdc, col);
 
     /* render text on the left*/

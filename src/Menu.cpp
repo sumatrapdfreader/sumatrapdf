@@ -2024,8 +2024,8 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
     HFONT font = GetMenuFont();
     auto prevFont = SelectObject(hdc, font);
 
-    COLORREF bgCol = GetAppColor(AppColor::MainWindowBg);
-    COLORREF txtCol = GetAppColor(AppColor::MainWindowText);
+    COLORREF bgCol = GetMainWindowBackgroundColor();
+    COLORREF txtCol = currentTheme->mainWindow.textColor;
 
     bool isSelected = bit::IsMaskSet(dis->itemState, (uint)ODS_SELECTED);
     if (isSelected) {
