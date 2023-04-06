@@ -3616,6 +3616,9 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     return 0;
 }
 
+// used to do less logging of WM_MOUSEMOVE
+static int nWmMouseMoveCount = 0;
+
 LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TCITEMW* tcs = nullptr;
 
@@ -3684,12 +3687,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 tabHighlighted = tabUnderMouse;
                 HwndScheduleRepaint(hwnd);
             }
+            nWmMouseMoveCount = 0;
             break;
 
         case WM_MOUSEMOVE: {
             bool isDragging = (GetCapture() == hwnd);
-            logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
-                  tabUnderMouse, tabHighlighted, (int)isDragging);
+            if (nWmMouseMoveCount == 0) {
+                logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
+                      tabUnderMouse, tabHighlighted, (int)isDragging);
+            }
+            nWmMouseMoveCount++;
             int hl = tabHighlighted;
             if (isDragging && tabUnderMouse == -1) {
                 // move the tab out: draw it as a image and drag around the screen
@@ -3736,6 +3743,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONDOWN: {
+            nWmMouseMoveCount = 0;
             if (overClose) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = tabUnderMouse;
@@ -3764,6 +3772,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONUP: {
+            nWmMouseMoveCount = 0;
             logfa(
                 "TabsCtrl::WndProc: WM_LBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
                 "overClose: %d\n",
@@ -3801,6 +3810,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONDOWN: {
+            logfa(
+                "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                "overClose: %d\n",
+                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            nWmMouseMoveCount = 0;
             // middle-clicking unconditionally closes the tab
             tabBeingClosed = tabUnderMouse;
             HwndScheduleRepaint(hwnd);
@@ -3808,6 +3822,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONUP: {
+            logfa(
+                "TabsCtrl::WndProc: WM_MBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                "overClose: %d\n",
+                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            nWmMouseMoveCount = 0;
             if (tabBeingClosed < 0 || !canClose) {
                 return 0;
             }
