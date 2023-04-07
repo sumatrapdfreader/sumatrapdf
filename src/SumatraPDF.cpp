@@ -4696,7 +4696,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 break;
             }
         }
-        ReportIf(!selectedSH);
+        if (!selectedSH || str::IsEmpty(selectedSH->url)) {
+            logf("FrameOnCommand: missing selectedSH for wmId %d\n", wmId);
+            return 0;
+        }
         WCHAR* url = ToWstrTemp(selectedSH->url);
         // try to auto-fix url
         bool isValidURL = str::Find(url, L"://") != nullptr;
