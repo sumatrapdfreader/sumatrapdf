@@ -127,6 +127,7 @@ MainWindow::~MainWindow() {
 
     DeleteObject(brMovePattern);
     DeleteObject(bmpMovePattern);
+    DeleteObject(brControlBgColor);
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere

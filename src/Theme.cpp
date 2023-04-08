@@ -56,12 +56,12 @@ Theme g_themeLight = {
         // background and thumbnail, which often have white background because
         // most PDFs have white background.
         RgbToCOLORREF(0xF2F2F2),
+        // Control background Color
+        COL_WHITE,
         // Main Text Color
         COL_BLACK,
         // Main Link Color
-        RgbToCOLORREF(0x0020A0),
-        // Caption background Color
-        RgbToCOLORREF(0xEEEEEE)
+        RgbToCOLORREF(0x0020A0)
     },
     // Document style
     {
@@ -153,12 +153,13 @@ Theme g_themeDark = {
     {
         // Main Background Color
         RgbToCOLORREF(0x263238),
+         // Control background Color
+        RgbToCOLORREF(0x263238),
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        RgbToCOLORREF(0x80CBAD),
-        // Caption background Color
-        RgbToCOLORREF(0x263238)
+        RgbToCOLORREF(0x80CBAD)
+       
     },
     // Document style
     {
@@ -239,12 +240,12 @@ Theme g_themeDarker = {
     {
         // Main Background Color
         RgbToCOLORREF(0x2D2D30),
+         // Control background Color
+        RgbToCOLORREF(0x2D2D30),
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        RgbToCOLORREF(0x3081D4),
-        // Caption background Color
-        RgbToCOLORREF(0x2D2D30)
+        RgbToCOLORREF(0x3081D4)
     },
     // Document style
     {

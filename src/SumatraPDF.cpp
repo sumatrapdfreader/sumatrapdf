@@ -1452,6 +1452,7 @@ static MainWindow* CreateMainWindow() {
     if (!win->isMenuHidden) {
         SetMenu(win->hwndFrame, win->menu);
     }
+    win->brControlBgColor = CreateSolidBrush(currentTheme->mainWindow.controlBackgroundColor);
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -1536,6 +1537,15 @@ void DeleteMainWindow(MainWindow* win) {
     }
 
     delete win;
+}
+
+static void UpdateThemeForWindow(MainWindow* win) {
+    DeleteObject(win->brControlBgColor);
+    win->brControlBgColor = CreateSolidBrush(currentTheme->mainWindow.controlBackgroundColor);
+
+    UpdateTreeCtrlColors(win);
+    RebuildMenuBarForWindow(win);
+    RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 }
 
 static void RenameFileInHistory(const char* oldPath, const char* newPath) {
@@ -5370,10 +5380,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // TODO: this only rerenders canvas, not frame, even with
                 // includingNonClientArea == true.
                 // MainWindowRerender(mainWin, true);
-                RedrawWindow(mainWin->hwndFrame, nullptr, nullptr,
-                             RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
-                UpdateTreeCtrlColors(mainWin);
-                RebuildMenuBarForWindow(mainWin);
+                UpdateThemeForWindow(mainWin);
+                
             }
             UpdateDocumentColors();
             break;

@@ -165,7 +165,7 @@ void CaptionInfo::UpdateColors(bool activeWindow) {
                                                                   : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
     if (gGlobalPrefs->useTabs) {
-        COLORREF col = currentTheme->mainWindow.captionBackgroundColor;
+        COLORREF col = currentTheme->mainWindow.controlBackgroundColor;
         dwm::SetCaptionColor(::GetParent(hwnd), col);
     }
 }
