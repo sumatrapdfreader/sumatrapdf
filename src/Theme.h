@@ -9,12 +9,12 @@ License: GPLv3 */
 struct MainWindowStyle {
     // Background color of recently added, about, and properties menus
     COLORREF backgroundColor;
+    // Background color of controls, menus, non-client areas, etc.
+    COLORREF controlBackgroundColor;
     // Text color of recently added, about, and properties menus
     COLORREF textColor;
     // Link color on recently added, about, and properties menus
     COLORREF linkColor;
-    // Background color of the caption area when we use it for tabs
-    COLORREF captionBackgroundColor;
 };
 
 struct DocumentStyle {

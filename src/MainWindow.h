@@ -204,6 +204,7 @@ struct MainWindow {
     Point annotationBeingMovedOffset;
     HBITMAP bmpMovePattern = nullptr;
     HBRUSH brMovePattern = nullptr;
+    HBRUSH brControlBgColor = nullptr;
 
     DocControllerCallback* cbHandler = nullptr;
 
