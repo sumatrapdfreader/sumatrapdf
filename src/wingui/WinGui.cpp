@@ -3692,7 +3692,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             TrackMouseLeave(hwnd);
             bool isDragging = (GetCapture() == hwnd);
             if (nWmMouseMoveCount == 0 || isDragging) {
-                logfa("TabsCtrl::WndProc: WM_MOUSEMOVE, tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
+                logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
                       tabUnderMouse, tabHighlighted, (int)isDragging);
             }
             nWmMouseMoveCount++;
@@ -3745,6 +3745,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_LBUTTONDOWN: {
             nWmMouseMoveCount = 0;
+            tabHighlighted = tabUnderMouse;
             if (overClose) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = tabUnderMouse;
