@@ -312,21 +312,6 @@ LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 static WNDPROC DefWndProcToolbar = nullptr;
 static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    /*
-    if (WM_CTLCOLORSTATIC == msg || WM_CTLCOLOREDIT == msg) {
-        return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
-        HWND hStatic = (HWND)lp;
-        HDC hdc = (HDC)wp;
-        MainWindow* win = FindMainWindowByHwnd(hStatic);
-        if (!win) {
-            return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
-        }
-        logfa("CTRLCOLORSTATIC in toolbar for: 0x%x\n", hStatic);
-        SetTextColor(hdc, RGB(0xef, 0xef, 0xef));
-        SetBkColor(hdc, RGB(0, 0, 0));
-        return (LRESULT)GetStockObject(BLACK_BRUSH);
-    }
-    */
     if (WM_CTLCOLORSTATIC == msg || WM_CTLCOLOREDIT == msg) {
         HWND hStatic = (HWND)lp;
         HDC hdc = (HDC)wp;
@@ -342,14 +327,14 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             return (LRESULT)br;
         }
         if ((win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed()) {
-            // Set color used in "Page:" and "Find:" labels 
+            // Set color used in "Page:" and "Find:" labels
             auto col = RGB(0x00, 0x00, 0x00);
             SetTextColor(hdc, currentTheme->mainWindow.textColor);
             SetBkMode(hdc, TRANSPARENT);
             return (LRESULT)win->brControlBgColor;
         }
     }
-    
+
     if (WM_COMMAND == msg) {
         HWND hEdit = (HWND)lp;
         MainWindow* win = FindMainWindowByHwnd(hEdit);
@@ -543,7 +528,7 @@ static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
     // Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
     HWND findBg =
         CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
-    
+
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
     // dy = iconDy + DpiScale(win->hwndFrame, 2);
     dy = iconDy;
@@ -841,7 +826,7 @@ void CreateToolbar(MainWindow* win) {
     RECT rc;
     LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
     if (!res) {
-        rc.left = rc.right = rc.top = rc.bottom = 0;   
+        rc.left = rc.right = rc.top = rc.bottom = 0;
     }
 
     ShowWindow(hwndToolbar, SW_SHOW);

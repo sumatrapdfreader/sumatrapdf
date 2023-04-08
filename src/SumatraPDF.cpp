@@ -5381,7 +5381,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // includingNonClientArea == true.
                 // MainWindowRerender(mainWin, true);
                 UpdateThemeForWindow(mainWin);
-                
             }
             UpdateDocumentColors();
             break;
