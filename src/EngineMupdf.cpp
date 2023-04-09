@@ -3433,9 +3433,11 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
         return false;
     }
     // pdf_has_unsaved_changes() also returns true if the file was auto-repaired
-    // at loading time, which is not something we want
-    // int res = pdf_has_unsaved_changes(epdf->ctx, epdf->pdfdoc);
-    // return res != 0;
+    // at loading time, which is not something we want, so only rely on it
+    // when we know it wasn't repaired.
+    if (!pdf_was_repaired(epdf->ctx, epdf->pdfdoc)) {
+        return pdf_has_unsaved_changes(epdf->ctx, epdf->pdfdoc);
+    }   
     return epdf->modifiedAnnotations;
 }
 
