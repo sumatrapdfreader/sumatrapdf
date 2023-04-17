@@ -107,6 +107,7 @@ Rect GetVirtualScreenRect();
 void DrawRect(HDC, Rect);
 void DrawLine(HDC, Rect);
 void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
+void DrawCenteredText(HDC hdc, Rect r, const char* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 Size TextSizeInHwnd(HWND, const char*, HFONT = nullptr);

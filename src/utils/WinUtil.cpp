@@ -2740,6 +2740,11 @@ void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
     DrawTextW(hdc, txt, -1, &tmpRect, format);
 }
 
+void DrawCenteredText(HDC hdc, const Rect r, const char* txt, bool isRTL) {
+    TempWstr ws = ToWstrTemp(txt);
+    DrawCenteredText(hdc, r, ws, isRTL);
+}
+
 void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
     Rect rc = ToRect(r);
     DrawCenteredText(hdc, rc, txt, isRTL);

@@ -3437,7 +3437,7 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     // when we know it wasn't repaired.
     if (!pdf_was_repaired(epdf->ctx, epdf->pdfdoc)) {
         return pdf_has_unsaved_changes(epdf->ctx, epdf->pdfdoc);
-    }   
+    }
     return epdf->modifiedAnnotations;
 }
 
