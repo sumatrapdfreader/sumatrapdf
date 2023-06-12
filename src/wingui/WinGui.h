@@ -731,7 +731,7 @@ struct TabsCtrl : Wnd {
     int tabHighlighted = -1;
     int tabHighlightedClose = -1;
     int tabBeingClosed = -1;
-    Point lastMousePos;
+    Point lastMousePos{-1,-1};
     // where we grabbed the tab with a leftclick, in tab coordinates
     Point grabLocation;
 
