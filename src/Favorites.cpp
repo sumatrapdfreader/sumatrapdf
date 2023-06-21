@@ -808,7 +808,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     HMENU popup = BuildMenuFromMenuDef(menuDefContextFav, CreatePopupMenu(), nullptr);
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
-    int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
+    int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
