@@ -4755,6 +4755,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OpenFile(win);
             break;
 
+        case CmdDarkMode:
+            gRenderCache.textColor = ((0xffffff & 0x0000FF) << 16) | (0xffffff & 0x00FF00) | ((0xffffff & 0xFF0000) >> 16);
+            gRenderCache.backgroundColor = ((0x000000 & 0x0000FF) << 16) | (0x000000 & 0x00FF00) | ((0x000000 & 0xFF0000) >> 16);
+            RerenderEverything();
+            break;
+
         case CmdOpenFolder:
             OpenFolder(win);
             break;

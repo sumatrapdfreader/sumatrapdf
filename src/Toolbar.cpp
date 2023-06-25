@@ -82,6 +82,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
     {TbIcon::MatchCase, CmdFindMatch, _TRN("Match Case")},
     {TbIcon::None, CmdInfoText, nullptr}, // info text
+    {TbIcon::DarkMode,CmdDarkMode,_TRN("dark mode")},
 };
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
@@ -143,6 +144,9 @@ static bool IsToolbarButtonEnabled(MainWindow* win, int buttonNo) {
         case CmdPrint:
             isAllowed = HasPermission(Perm::PrinterAccess);
             break;
+        case CmdDarkMode:
+            printf("dark mode activated\n");
+        break;
     }
     if (!isAllowed) {
         return false;

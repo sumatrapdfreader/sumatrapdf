@@ -21,4 +21,5 @@ enum class TbIcon {
     Save,
     RotateLeft,
     RotateRight,
+    DarkMode
 };
