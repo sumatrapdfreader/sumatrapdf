@@ -353,6 +353,14 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
     UpdateToolbarState(win);
 }
 
+void ReversePageOrder(MainWindow* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    win->ctrl->ReversePageOrder();
+    UpdateToolbarState(win);
+}
+
 WindowTab* FindTabByFile(const char* file) {
     char* normFile = path::NormalizeTemp(file);
 
@@ -3579,6 +3587,13 @@ static void ToggleContinuousView(MainWindow* win) {
     SwitchToDisplayMode(win, newMode);
 }
 
+static void ToggleReverseView(MainWindow* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    ReversePageOrder(win);
+}
+
 static void ToggleMangaMode(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
@@ -4906,8 +4921,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SwitchToDisplayMode(win, DisplayMode::BookView, true);
             break;
 
-        case CmdToggleContinuousView:
+        case CmdToggleContinuousViewVertically:
             ToggleContinuousView(win);
+            break;
+
+        case CmdToggleContinuousViewHorizontally:
+            break;
+
+        case CmdToggleReversePages:
+            ToggleReverseView(win);
             break;
 
         case CmdToggleMangaMode:

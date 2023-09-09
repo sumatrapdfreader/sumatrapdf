@@ -31,6 +31,8 @@ struct ChmModel : DocController {
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
+    void ReversePageOrder() override;
+    bool IsReversed() override;
 
     // table of contents
     TocTree* GetToc() override;
@@ -80,6 +82,7 @@ struct ChmModel : DocController {
     HtmlWindow* htmlWindow = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     float initZoom = kInvalidZoom;
+    bool reverse = false;
 
     Vec<ChmCacheEntry*> urlDataCache;
     // use a pool allocator for strings that aren't freed until this ChmModel

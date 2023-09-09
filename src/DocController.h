@@ -92,6 +92,8 @@ struct DocController {
     virtual float GetZoomVirtual(bool absolute = false) const = 0;
     virtual float GetNextZoomStep(float towards) const = 0;
     virtual void SetViewPortSize(Size size) = 0;
+    virtual void ReversePageOrder() = 0;
+    virtual bool IsReversed() = 0;
 
     // table of contents
     bool HasToc() {

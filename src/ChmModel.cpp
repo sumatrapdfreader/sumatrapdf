@@ -269,6 +269,15 @@ void ChmModel::SetViewPortSize(Size) {
     // no-op
 }
 
+void ChmModel::ReversePageOrder() {
+    // no-op
+}
+
+bool ChmModel::IsReversed() {
+    // no-op
+    return false;
+}
+
 ChmModel* ChmModel::AsChm() {
     return this;
 }

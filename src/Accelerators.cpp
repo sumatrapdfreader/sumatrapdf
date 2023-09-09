@@ -213,7 +213,7 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'w', CmdPresentationWhiteBackground},
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
-    {0, 'c', CmdToggleContinuousView},
+    {0, 'c', CmdToggleContinuousViewVertically},
 };
 
 static void SkipWS(const char*& s) {

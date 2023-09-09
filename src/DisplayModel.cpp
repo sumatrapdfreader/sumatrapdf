@@ -684,7 +684,12 @@ RestartLayout:
     int columnMaxWidth[2] = {0, 0};
     int pageInARow = 0;
     int rowMaxPageDy = 0;
-    for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+    for (int pageInd = 1; pageInd <= PageCount(); ++pageInd) {
+        int pageNo = pageInd;
+        if (reverse) {
+            pageNo = PageCount() - pageNo + 1;
+        }
+
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
             CrashIf(0.0 != pageInfo->visibleRatio);
@@ -785,10 +790,18 @@ RestartLayout:
     CrashIf(offX < 0);
     pageInARow = 0;
     int pageOffX = offX + windowMargin.left;
-    for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+    for (int pageInd = 1; pageInd <= PageCount(); ++pageInd) {
+        int pageNo = pageInd;
+        if (reverse) {
+            pageNo = PageCount() - pageNo + 1;
+        }
+
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
             CrashIf(0.0 != pageInfo->visibleRatio);
+            if (reverse) {
+                pageNo = PageCount() - pageNo + 1;
+            }
             continue;
         }
         // leave first spot empty in cover page mode
@@ -863,8 +876,10 @@ void DisplayModel::ChangeStartPage(int newStartPage) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (IsContinuous(GetDisplayMode())) {
             pageInfo->shown = true;
-        } else if (pageNo >= newStartPage && pageNo < newStartPage + columns) {
+        } else if (!reverse && pageNo >= newStartPage && pageNo < newStartPage + columns) {
             // lf("DisplayModel::changeStartPage() set page %d as shown", pageNo);
+            pageInfo->shown = true;
+        } else if (reverse && pageNo <= newStartPage && pageNo > newStartPage - columns) {
             pageInfo->shown = true;
         } else {
             pageInfo->shown = false;
@@ -1314,6 +1329,16 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
     GoToPage(currPageNo, 0);
 }
 
+void DisplayModel::ReversePageOrder() {
+    reverse = !reverse;
+    Relayout(zoomVirtual, rotation);
+    GoToPage(CurrentPageNo(), 0);
+}
+
+bool DisplayModel::IsReversed() {
+    return reverse;
+}
+
 void DisplayModel::SetPresentationMode(bool enable) {
     presentationMode = enable;
     if (enable) {
@@ -1357,6 +1382,9 @@ bool DisplayModel::GoToNextPage() {
         return true;
     }
     int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, IsBookView(GetDisplayMode()));
+    if (!IsContinuous(GetDisplayMode()) && reverse) {
+        firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, IsBookView(GetDisplayMode()));
+    }
     if (firstPageInNewRow > PageCount()) {
         /* we're on a last row or after it, can't go any further */
         return false;
@@ -1384,8 +1412,15 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
         return true;
     }
     int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, IsBookView(GetDisplayMode()));
-    if (firstPageInNewRow < 1 || 1 == currPageNo) {
+    if (!IsContinuous(GetDisplayMode()) && reverse) {
+        firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, IsBookView(GetDisplayMode()));
+    }
+    if (!reverse && (firstPageInNewRow < 1 || 1 == currPageNo)) {
         /* we're on a first page, can't go back */
+        return false;
+    }
+
+    if (reverse && (firstPageInNewRow > PageCount() || PageCount() == currPageNo)) {
         return false;
     }
 

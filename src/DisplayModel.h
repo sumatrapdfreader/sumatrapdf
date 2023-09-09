@@ -84,13 +84,15 @@ struct DisplayModel : DocController {
     void Navigate(int dir) override;
 
     // view settings
-    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
+    void ReversePageOrder();
     DisplayMode GetDisplayMode() const override;
     void SetPresentationMode(bool enable) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
+    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
+    bool IsReversed() override;
 
     // table of contents
     TocTree* GetToc() override;
@@ -260,4 +262,7 @@ struct DisplayModel : DocController {
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool dontRenderFlag = false;
+
+    /* reverse page order */
+    bool reverse = false;
 };
