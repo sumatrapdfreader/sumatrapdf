@@ -661,6 +661,11 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         return;
     }
 
+    if (displayMode == DisplayMode::ContinuousHorizontally) {
+        RelayoutHorizontally(newZoomVirtual, newRotation);
+        return;
+    }
+
     rotation = NormalizeRotation(newRotation);
 
     bool needHScroll = false;
@@ -685,10 +690,7 @@ RestartLayout:
     int pageInARow = 0;
     int rowMaxPageDy = 0;
     for (int pageInd = 1; pageInd <= PageCount(); ++pageInd) {
-        int pageNo = pageInd;
-        if (reverse) {
-            pageNo = PageCount() - pageNo + 1;
-        }
+        int pageNo = reverse ? PageCount() - pageInd + 1 : pageInd;
 
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
@@ -791,17 +793,11 @@ RestartLayout:
     pageInARow = 0;
     int pageOffX = offX + windowMargin.left;
     for (int pageInd = 1; pageInd <= PageCount(); ++pageInd) {
-        int pageNo = pageInd;
-        if (reverse) {
-            pageNo = PageCount() - pageNo + 1;
-        }
+        int pageNo = reverse ? PageCount() - pageInd + 1 : pageInd;
 
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
             CrashIf(0.0 != pageInfo->visibleRatio);
-            if (reverse) {
-                pageNo = PageCount() - pageNo + 1;
-            }
             continue;
         }
         // leave first spot empty in cover page mode
@@ -857,6 +853,130 @@ RestartLayout:
                 continue;
             }
             pageInfo->pos.y += offY;
+        }
+    }
+
+    canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
+}
+
+void DisplayModel::RelayoutHorizontally(float newZoomVirtual, int newRotation) {
+    rotation = NormalizeRotation(newRotation);
+
+    bool needHScroll = false;
+    bool needVScroll = false;
+    viewPort = Rect(viewPort.TL(), totalViewPortSize);
+
+RestartLayoutHorizontally:
+    int currPosX = windowMargin.left;
+    float currZoomReal = zoomReal;
+    CalcZoomReal(newZoomVirtual);
+
+
+    int newViewPortOffsetY = 0;
+    if (0 != currZoomReal && kInvalidZoom != currZoomReal) {
+        newViewPortOffsetY = (int)(viewPort.y * zoomReal / currZoomReal);
+    }
+    viewPort.y = newViewPortOffsetY;
+    // calculate the position of each page on the canvas, given current zoom, rotation.
+    int maxPageDy = 0;
+    for (int pageInd = 1; pageInd <= PageCount(); ++pageInd) {
+        int pageNo = reverse ? PageCount() - pageInd + 1 : pageInd;
+        PageInfo* pageInfo = GetPageInfo(pageNo);
+        if (!pageInfo->shown) {
+            CrashIf(0.0 != pageInfo->visibleRatio);
+            continue;
+        }
+        SizeF pageSize = PageSizeAfterRotation(pageNo);
+        Rect pos;
+        float zoom = GetZoomReal(pageNo);
+        pos.dx = (int)(pageSize.dx * zoom + 0.499);
+        pos.dy = (int)(pageSize.dy * zoom + 0.499);
+
+        pos.x = currPosX;
+
+        // restart the layout if we detect we need to show scrollbars, skip if
+        //   scrollbars are being hidden or if `needVScroll` has already been
+        //   set to true (i.e., the block has been processed)
+        if ((!gGlobalPrefs->fixedPageUI.hideScrollbars) && (!needHScroll) && viewPort.dx < currPosX + pos.dx) {
+            needHScroll = true;
+            viewPort.dy -= GetSystemMetrics(SM_CXHSCROLL);
+            goto RestartLayoutHorizontally;
+        }
+
+        maxPageDy = std::max(maxPageDy, pos.dy);
+
+        // restart the layout if we detect we need to show scrollbars, skip if
+        //   scrollbars are being hidden or if `needHScroll` has already been
+        //   set to true (i.e., the block has been processed)
+        if ((!gGlobalPrefs->fixedPageUI.hideScrollbars) && (!needVScroll) &&
+                viewPort.dy < windowMargin.top + pos.dy + windowMargin.bottom) {
+            needVScroll = true;
+            viewPort.dx -= GetSystemMetrics(SM_CYVSCROLL);
+            goto RestartLayoutHorizontally;
+        }
+
+        pageInfo->pos = pos;
+        currPosX += pos.dx + pageSpacing.dx;
+    }
+
+    // restart the layout if we detect we need to show scrollbars
+    // (there are some edge cases we can't catch in the above loop)
+    const int canvasDx = currPosX + windowMargin.right - pageSpacing.dx;
+    if ((!gGlobalPrefs->fixedPageUI.hideScrollbars) && (!needHScroll) && viewPort.dx < canvasDx) {
+        needHScroll = true;
+        viewPort.dy -= GetSystemMetrics(SM_CXHSCROLL);
+        goto RestartLayoutHorizontally;
+    }
+
+    // restart the layout if we detect we need to show scrollbars
+    // (there are some edge cases we can't catch in the above loop)
+    int canvasDy = windowMargin.top + maxPageDy + windowMargin.bottom;
+    if ((!gGlobalPrefs->fixedPageUI.hideScrollbars) && (!needVScroll) && viewPort.dy < canvasDy) {
+        needVScroll = true;
+        viewPort.dx -= GetSystemMetrics(SM_CYVSCROLL);
+        goto RestartLayoutHorizontally;
+    }
+
+    /* since pages can be smaller than the drawing area, center them in y axis */
+    int offY = 0;
+    if (canvasDy < viewPort.dy) {
+        viewPort.y = 0;
+        offY = (viewPort.dy - canvasDy) / 2;
+        canvasDy = viewPort.dy;
+    }
+
+    CrashIf(offY < 0);
+    int pageOffY = offY + windowMargin.top;
+    for (int pageInd = 1; pageInd <= PageCount(); ++pageInd) {
+        int pageNo = reverse ? PageCount() - pageInd + 1 : pageInd;
+
+        PageInfo* pageInfo = GetPageInfo(pageNo);
+        if (!pageInfo->shown) {
+            CrashIf(0.0 != pageInfo->visibleRatio);
+            continue;
+        }
+
+        pageInfo->pos.y = pageOffY + (maxPageDy - pageInfo->pos.dy) / 2;
+        pageOffY = offY + windowMargin.top;
+    }
+
+    /* if after resizing we would have blank space on the right due to y offset
+       being too much, make y offset smaller so that there's no blank space */
+    if (viewPort.dy - (canvasDy - newViewPortOffsetY) > 0) {
+        viewPort.y = canvasDy - viewPort.dy;
+    }
+
+    /* if a page is smaller than drawing area in x axis, x-center the page */
+    if (canvasDx < viewPort.dx) {
+        int offX = windowMargin.left + (viewPort.dx - canvasDx) / 2;
+        CrashIf(offX < 0.0);
+        for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+            PageInfo* pageInfo = GetPageInfo(pageNo);
+            if (!pageInfo->shown) {
+                CrashIf(0.0 != pageInfo->visibleRatio);
+                continue;
+            }
+            pageInfo->pos.x += offX;
         }
     }
 

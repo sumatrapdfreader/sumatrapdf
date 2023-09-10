@@ -11,17 +11,27 @@
 #include "utils/Log.h"
 
 bool IsSingle(DisplayMode mode) {
-    return DisplayMode::SinglePage == mode || DisplayMode::ContinuousVertically == mode;
+    return DisplayMode::SinglePage == mode || DisplayMode::ContinuousVertically == mode ||
+           DisplayMode::ContinuousHorizontally == mode;
 }
 
 bool IsContinuous(DisplayMode mode) {
     switch (mode) {
         case DisplayMode::ContinuousVertically:
+        case DisplayMode::ContinuousHorizontally:
         case DisplayMode::ContinuousFacing:
         case DisplayMode::ContinuousBookView:
             return true;
     }
     return false;
+}
+
+bool IsContinuousVertically(DisplayMode mode) {
+    return IsContinuous(mode) && !IsContinuousHorizontally(mode);
+}
+
+bool IsContinuousHorizontally(DisplayMode mode) {
+    return mode == DisplayMode::ContinuousHorizontally;
 }
 
 bool IsFacing(DisplayMode mode) {

@@ -1478,7 +1478,8 @@ void MenuUpdateDisplayMode(MainWindow* win) {
     }
 
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
-    MenuSetChecked(win->menu, CmdToggleContinuousViewVertically, IsContinuous(displayMode));
+    MenuSetChecked(win->menu, CmdToggleContinuousViewVertically, IsContinuousVertically(displayMode));
+    MenuSetChecked(win->menu, CmdToggleContinuousViewHorizontally, IsContinuousHorizontally(displayMode));
     MenuSetChecked(win->menu, CmdToggleReversePages, win->ctrl->IsReversed());
 
     if (win->CurrentTab() && win->CurrentTab()->GetEngineType() == kindEngineComicBooks) {

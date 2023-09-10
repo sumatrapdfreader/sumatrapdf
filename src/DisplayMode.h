@@ -3,6 +3,8 @@
 
 bool IsSingle(DisplayMode mode);
 bool IsContinuous(DisplayMode mode);
+bool IsContinuousVertically(DisplayMode mode);
+bool IsContinuousHorizontally(DisplayMode mode);
 bool IsFacing(DisplayMode mode);
 bool IsBookView(DisplayMode mode);
 bool IsValidZoom(float zoomLevel);
