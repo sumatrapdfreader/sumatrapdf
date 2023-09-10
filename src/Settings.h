@@ -12,7 +12,7 @@ enum class DisplayMode {
     SinglePage,
     Facing,
     BookView,
-    Continuous,
+    ContinuousVertically,
     ContinuousFacing,
     ContinuousBookView,
 };

@@ -389,7 +389,7 @@ static bool SetupPluginMode(Flags& i) {
         // if the user hasn't changed the default display mode,
         // display documents as single page/continuous/fit width
         // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
-        gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::Continuous;
+        gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::ContinuousVertically;
         gGlobalPrefs->defaultZoomFloat = kZoomFitWidth;
     }
     // use fixed page UI for all document types (so that the context menu always

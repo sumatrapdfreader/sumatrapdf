@@ -495,7 +495,7 @@ void UpdateToolbarState(MainWindow* win) {
     WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, CmdZoomFitWidthAndContinuous, 0);
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
-    if (dm == DisplayMode::Continuous && zoomVirtual == kZoomFitWidth) {
+    if (dm == DisplayMode::ContinuousVertically && zoomVirtual == kZoomFitWidth) {
         state |= TBSTATE_CHECKED;
     } else {
         state &= ~TBSTATE_CHECKED;
