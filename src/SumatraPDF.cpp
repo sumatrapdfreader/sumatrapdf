@@ -3573,7 +3573,8 @@ static void ToggleContinuousViewVertically(MainWindow* win) {
     switch (newMode) {
         case DisplayMode::SinglePage:
         case DisplayMode::ContinuousVertically:
-            newMode = IsContinuous(newMode) ? DisplayMode::SinglePage : DisplayMode::ContinuousVertically;
+        case DisplayMode::ContinuousHorizontally:
+            newMode = IsContinuousVertically(newMode) ? DisplayMode::SinglePage : DisplayMode::ContinuousVertically;
             break;
         case DisplayMode::Facing:
         case DisplayMode::ContinuousFacing:
