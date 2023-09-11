@@ -55,6 +55,8 @@
     V(VK_SELECT, "Select")          \
     V(VK_VOLUME_DOWN, "VolumeDown") \
     V(VK_VOLUME_UP, "VolumeUp")     \
+    V(VK_XBUTTON1, "XButton1")      \
+    V(VK_XBUTTON2, "XButton2")      \
     V(VK_F1, "F1")                  \
     V(VK_F2, "F2")                  \
     V(VK_F3, "F3")                  \
@@ -313,6 +315,10 @@ static const char* getVirt(BYTE key, bool isEng) {
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     // Note: might need to add if we add more shortcuts
     switch (key) {
+        case VK_XBUTTON1:
+            return "XButton1";
+        case VK_XBUTTON2:
+            return "XButton2";
         case VK_BACK:
             return "Backspace";
         case VK_TAB:
