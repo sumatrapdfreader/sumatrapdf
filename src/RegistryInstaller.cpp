@@ -85,8 +85,9 @@ bool WriteUninstallerRegistryInfo(HKEY hkey) {
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoRepair", 1);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "Publisher", kPublisherStr);
     // command line for uninstaller
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, "UninstallString", uninstallCmdLine);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, "QuietUninstallString", uninstallCmdLine + " -silent");
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "UninstallString", uninstallCmdLine.Get());
+    TempStr uninstallCmdLineSilent = str::JoinTemp(uninstallCmdLine.Get(), " -silent");
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "QuietUninstallString", uninstallCmdLineSilent);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLInfoAbout", "https://www.sumatrapdfreader.org/");
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLUpdateInfo",
                             "https://www.sumatrapdfreader.org/docs/Version-history.html");
