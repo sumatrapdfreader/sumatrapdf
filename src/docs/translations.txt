@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d2171b85261bbf2c6bb7a321a41fca41cb7c316e
+608ebc3039db395ff05d3d5d950afdd65a233c58
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2910,7 +2910,7 @@ nl:&Tekst
 no:&Tekst
 pl:&Tekst
 pt:&Texto 
-ro:&Text\n
+ro:&Text
 ru:&Текст
 sl:&Besedilo
 sr-rs:&Текст
@@ -12900,7 +12900,7 @@ nl:Nieuwe versie beschikbaar
 no:Ny versjon tilgjengelig
 pl:Dostępna nowa wersja
 pt:Nova versão disponível
-ro:Versiune nouă disponibilă\n
+ro:Versiune nouă disponibilă
 ru:Доступна новая версия
 sk:Dostupná nová verzia
 sl:Na voljo je nova različica
@@ -13414,7 +13414,7 @@ nl:Dekking
 no:Ugjennomsiktighet:
 pl:Nieprzezroczystość:
 pt:Opacidade 
-ro:Opacitate:\n
+ro:Opacitate:
 ru:Непрозрачность:
 sl:Motnost:
 sr-rs:Прозрачност
