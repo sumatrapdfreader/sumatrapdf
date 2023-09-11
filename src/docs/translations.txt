@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8cd33a8212841cefa90a47f01ad3d378e97d9d9a
+d2171b85261bbf2c6bb7a321a41fca41cb7c316e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -16,7 +16,7 @@ cn:关于(&A)...
 co:&Apprupositu
 cy:&Ynghylch
 cz:&O programu
-de:Über &SumatraPDF
+de:&Über
 dk:&Om
 el:&Σχετικά
 es:&Acerca de
@@ -28,7 +28,7 @@ fr:&À propos
 fy-nl:&Oer
 ga:Maidir le
 gl:&Acerca de
-he:אודות...
+he:אודות
 hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
@@ -86,7 +86,10 @@ dk:&Faktisk størrelse
 el:Πραγματικό μέγεθος
 es:&Tamaño real
 eu:&Oraingo neurria
+fi:&Todellinen koko
 fr:&Taille réelle
+gl:T&amaño actual
+he:גודל אמיתי
 hi:वास्तविक आकार
 hr:Stv&arna veličina
 hu:&Aktuális méret
@@ -94,19 +97,21 @@ id:Ukuran Asli
 it:Dimensione &attuale
 ja:実際のサイズ(&A)
 kr:실제 크기(&A)
+ku:&Mezinahiya rastîn
 ml:യഥാർത്ഥ സൈസ്
 ne:वास्तविक आकार
 nl:&Werkelijke grootte
 no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
 pt:Tam&anho real
+ro:&Mărimea actuală
 ru:Насто&ящий размер
 sl:Dej&anska velikost
 sr-rs:&Стварна величина
 ta:&உண்மையான அளவு
 tl:&Totoong Sukat
 tr:&Gercek boyut
-tw:實際尺寸(&A)
+tw:實際大小(&A)
 uk:Фактичний розмір
 vn:Kích Thước Thực
 :&Advanced Options...
@@ -225,8 +230,8 @@ nn:&Alle valde sider
 no:&Alle valgte sider
 pa:&ਸਾਰੇ ਚੁਣੇ ਹੋਏ ਪੰਨੇ
 pl:&Zaznaczone strony
-pt:Tod&as as páginas selecionadas
-ro:Toate paginile selectate
+pt:Tod&as as páginas seleccionadas
+ro:&Toate paginile selectate
 ru:&Все выбранные страницы
 si:&සියලු තේරූ පිටු
 sk:&Tlačiť všetky strany
@@ -258,7 +263,10 @@ dk:Til&bage
 el:Πίσω
 es:&Atrás
 eu:A&tzera
+fi:&Takaisin
 fr:R&evenir
+gl:&Volver
+he:חזור
 hi:&पीछे
 hr:&Natrag
 hu:&Vissza
@@ -272,6 +280,7 @@ nl:&Terug
 no:&Tilbake
 pl:&Wstecz
 pt:&Recuar 
+ro:&Înapoi
 ru:&Назад
 sl:Nazaj
 sr-rs:&Назад
@@ -282,6 +291,7 @@ tw:上一個跳轉點(&B)
 uk:Назад
 vn:Quay Lại
 :&Book View
+az:&Kitab görüntüsü
 bg:&Като Книга
 br:&Ver como livro
 by:У выглядзе &кнігі
@@ -294,7 +304,10 @@ dk:&Bogvisning
 el:Προβολή βιβλίου
 es:&Vista de libro
 eu:&Liburu ikuspegia
+fi:&Kirja näkymä
 fr:&Comme un livre
+gl:Vista de li&bro
+he:תצוגת ספר
 hi:&बुक व्यू
 hr:&Knjiški pregled
 hu:&Könyvnézet
@@ -308,6 +321,7 @@ nl:&Boek Tonen
 no:&Bokvisning
 pl:Widok o&dczytu
 pt:&Como livro 
+ro:&Vizualizare în format carte
 ru:В &разворот
 sl:Knjižni pogled
 sr-rs:Приказ &књиге
@@ -334,7 +348,10 @@ el:&Άκυρο
 es:&Cancelar
 et:&Loobu
 eu:E&zeztatu
+fi:&Peruuta
 fr:Ann&uler
+gl:&Cancelar
+he:ביטול
 hi:&रद्द करें
 hr:&Odustani
 hu:&Mégse
@@ -350,6 +367,7 @@ nl:&Annuleren
 no:&Avbryt
 pl:&Anuluj
 pt:&Cancelar
+ro:&Anulare
 ru:Отмена
 sk:&Zrušiť
 sl:&Prekliči
@@ -378,7 +396,10 @@ el:Αγκύλη
 es:&Cursor
 et:&Caret
 eu:&Txertaketa seinua
+fi:&Caret
 fr:&Curseur
+gl:&Circunflexo
+he:קרט
 hi:&कैरेट
 hr:&Znak za umetanje
 hu:Kurzor
@@ -393,7 +414,8 @@ ml:&കാരറ്റ് അടയാളം
 nl:&Merkteken
 no:&Innsettingspunkt
 pl:&Kareta
-pt:&Caret
+pt:&Cursor
+ro:&Semn de omisiune
 ru:&Каретка
 sl:&Karet
 sr-rs:&Карет
@@ -401,10 +423,12 @@ ta:&இடையெச்சக்குறி
 th:&ผู้ดูแล
 tl:&Kareta
 tr:&Karet
+tw:插入符號(&C)
 uk:&Каретка
 vn:&Bổ Sung
 :&Close
 ar:إ&غلاق
+az:&Bağla
 bg:&Затвори
 br:&Fechar
 by:&Закрыць
@@ -417,7 +441,10 @@ dk:&Luk
 el:Κλείσιμο
 es:&Cerrar
 eu:It&xi
+fi:&Sulje
 fr:&Fermer
+gl:Pe&char
+he:סגור
 hi:&बंद करे
 hr:&Zatvori
 hu:&Bezárás
@@ -431,6 +458,7 @@ nl:&Sluiten
 no:&Lukk
 pl:&Zamknij
 pt:Fe&char
+ro:&Închide
 ru:&Закрыть
 sl:&Zapri
 sr-rs:&Затвори
@@ -457,8 +485,10 @@ el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
 et:&Jätka 32-bitise versiooni paigaldamist
 eu:&Jarraitu 32-biteko bertsioa ezartzen
+fi:&Jatka 32-bittisen version asentamista
 fr:Continuer l'installation de la version 32-bits
 gl:Continuar instalando a versión de 32 bits
+he:המשך בהתקנת גרסת 32 סיביות
 hi:32-बिट संस्करण को स्थापित करना जारी रखें
 hr:&Nastavi instalirati 32-bit verziju 
 hu:Folytatás a 32-bites verzió telepítésével
@@ -473,6 +503,7 @@ nl:&Doorgaan met installeren van 32bit versie
 no:&Fortsett installasjon av 32-biters versjon
 pl:&Kontynuuj instalację wersji 32-bitowej
 pt:&Continuar com a instalação 32-bit
+ro:&Continuă cu instalare versiune 32 de biți
 ru:&Продолжить установку 32-разрядной версии
 sk:&Pokračovať v inštalácii 32-bitovej verzie
 sl:&Nadaljuj z nameščanjem 32-bitne različice
@@ -532,7 +563,7 @@ nn:&Kopier utval
 no:&Kopier valgt område
 pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ
 pl:Kopiuj &zaznaczenie
-pt:&Copiar seleção
+pt:&Copiar selecção
 ro:&Copiază selecția
 ru:С&копировать выделенное
 si:ලකුනුකල ‌කොටස ‌කොපිකරන්න
@@ -564,10 +595,14 @@ dk:&Kopier til udklipsholder
 el:Αντιγραφή στο πρόχειρο
 es:&Copiar a portapapeles
 eu:&Kopiatu gakora
+fi:&Kopioi leikepöydälle
 fr:&Copier dans le presse-papiers
+gl:&Copiar ao portapapeis
+he:העתק ללוח
 hi:क्लिपबोर्ड पर कॉपी करें
 hr:Kopiraj u &međuspremnik
 hu:&Másolás vágólapra
+id:&Salin ke Papan Klip
 it:&Copia negli Appunti
 ja:クリップボードへコピー(&C)
 kr:클립보드에 복사(&C)
@@ -576,6 +611,7 @@ nl:&Kopieer Naar Klembord
 no:&Kopier til utklippstavle
 pl:Kopiuj do s&chowka
 pt:&Copiar para a área de transferência 
+ro:&Copiază pe Clipboard
 ru:С&копировать в буфер обмена
 sl:&Kopiraj v odložišče
 sr-rs:&Копирај у оставу (клипборд)
@@ -601,7 +637,10 @@ el:Απόρριψη
 es:&Descartar
 et:&Loobu muudatustest
 eu:&Baztertu aldaketak
+fi:&Hylkää muutokset
 fr:&Abandonner les modifications
+gl:&Descartar cambios
+he:בטל שינויים
 hi:परिवर्तनों को निरस्त करें
 hr:&Odbaci promjene
 hu:Változtatások elvetése
@@ -616,6 +655,7 @@ nl:&Weggooien
 no:&Avvis endringer
 pl:O&drzuć zmiany
 pt:&Descartar alterações
+ro:&Renunțați la modificări
 ru:Отказат&ься от изменений
 sl:&Zavrni spremembe
 sr-rs:Одба&ци промене
@@ -623,6 +663,7 @@ ta:&மாற்றங்களைக் கழித்திடுக
 th:&ละทิ้งการเปลี่ยนแปลง
 tl:&Itapon ang mga pagbabago
 tr:&Görmezden Gel
+tw:放棄變更(&D)
 uk:&Скасувати зміни
 vn:&Không Lưu thay đổi
 :&Don't ask me again
@@ -678,7 +719,7 @@ no:&Ikke spør meg igjen
 pa:ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
 pl:&Nie pytaj więcej
 pt:&Não perguntar novamente
-ro:Nu mă întreba din nou
+ro:&Nu mă întreba din nou
 ru:&Больше не спрашивать
 si:යළි විමසන්න &එපා
 sk:&Nepýtať sa znova
@@ -692,7 +733,7 @@ ta:மறுபடியும் கேட்காதே
 th:&ไม่ต้องถามอีกครั้ง
 tl:Huwag na akong tanunging muli
 tr:Yeniden &sorma
-tw:不要再問我(&D)
+tw:不要再詢問我(&D)
 uk:Не питати знову
 uz:&Boshqa so'ralmasin
 vn:Không hỏi lại
@@ -744,7 +785,7 @@ nn:&Kun partalssider
 no:Bare &partallssider
 pl:Strony &parzyste
 pt:Apenas páginas par&es
-ro:Doar paginile pare
+ro:&Doar paginile pare
 ru:Только ч&ётные страницы
 si:&ඉරට්ටෙ පිටු පමණි
 sk:&Tlačiť iba párne strany
@@ -774,7 +815,10 @@ de:&Doppelseite
 el:Προσανατολισμός
 es:&Caras opuestas
 eu:A&urrean
+fi:&Kohtaaminen
 fr:&Deux pages
+gl:Páxina &dobre
+he:מוּל
 hr:&Dvije stranice
 hu:Oldal&pár
 id:Menghadap
@@ -785,13 +829,14 @@ nl:&Gericht op
 no:&Side om side
 pl:&Wiele stron
 pt:Lado a &lado 
+ro:&Două pagini
 ru:По &две страницы
 sl:Dvostransko
 sr-rs:Д&ве странице
 ta:&எதிரெதிராக
 tl:Nakaharap
 tr:Her İki Yüz
-tw:對頁模式(&F)
+tw:雙頁檢視(&F)
 uk:По дві сторінки
 vn:&Trang kép
 :&File
@@ -915,7 +960,7 @@ nn:&Finn hvilke:
 no:&Søk etter:
 pl:&Szukaj:
 pt:&Localizar:
-ro:Caută text:
+ro:&Caută text:
 ru:На&йти:
 si:&සොයන්නෙ කුමක්ද:
 sk:&Vyhľadať:
@@ -947,7 +992,10 @@ dk:&Første side
 el:Πρώτη σελίδα
 es:&Primera página
 eu:&Lehen orrialdea
+fi:&Ensimmäinen sivu
 fr:P&remière page
+gl:&Primeira páxina
+he:עמוד ראשון
 hr:&Prva stranica
 hu:&Első oldal
 id:&Halaman Pertama
@@ -958,12 +1006,14 @@ nl:&Eerste Pagina
 no:&Første side
 pl:&Pierwsza strona
 pt:&Primeira página
+ro:&Prima pagină
 ru:Пер&вая страница
 sl:Prva stran
 sr-rs:П&рва страница
 ta:&முதல் பக்கம்
 tl:&Unang pahina
 tr:İlk sayfa
+tw:第一頁(&F)
 uk:Перша сторінка
 vn:&Trang Đầu
 :&Fit pages to printable area
@@ -1012,7 +1062,7 @@ nn:&Tilpass sider til utskrivbart område
 no:&Tilpass sider til utskriftsområde
 pl:Dopasuj strony do rozmiaru &wydruku
 pt:A&justar páginas à área de impressão
-ro:Potrivire pagini cu aria de imprimare
+ro:&Potrivire pagini cu aria de imprimare
 ru:Подо&гнать страницы под область печати
 si:මෘද්‍රණ කලාපය සදහා සුදුසු ලෙස පිටු &සකසන්න
 sk:&Prispôsobiť strany na tlačiteľnú plochu
@@ -1045,7 +1095,10 @@ el:Ελεύθερο κείμενο
 es:&Texto libre
 et:&Vaba tekst
 eu:&Idazki askea
+fi:&Vapaa teksti
 fr:&Texte libre
+gl:Texto &libre
+he:טקסט חופשי
 hr:&Slobodni tekst
 hu:Szabad szöveg
 id:Teks Bebas
@@ -1060,6 +1113,7 @@ nl:&Vrije Tekst
 no:&Frigjør tekst
 pl:&Dowolny tekst
 pt:Te&xto livre
+ro:&Text liber
 ru:Сво&бодный текст
 sk:&Voľný text
 sl:&Prosti tekst
@@ -1192,7 +1246,7 @@ no:&Gå til side:
 pa:&ਇਸ ਪੰਨੇ 'ਤੇ ਜਾਓ:
 pl:Idź &do strony:
 pt:Ir pa&ra a página:
-ro:Salt la pagina:
+ro:&Salt la pagina:
 ru:Перейти &к странице
 si:පිටුවට &යන්න:
 sk:&Prejsť na stranu:
@@ -1276,7 +1330,7 @@ ta:உதவி
 th:&ช่วยเหลือ
 tl:Tulong
 tr:&Yardım
-tw:求助(&H)
+tw:說明(&H)
 uk:&Допомога
 uz:&Yordam
 vn:Trợ &giúp
@@ -1293,7 +1347,10 @@ de:Text &hervorheben
 el:Επισήμανση
 es:&Destacar
 eu:&Nabarmendu
+fi:&Kohokohta
 fr:&Surligner
+gl:&Resaltado
+he:בולט
 hr:&Istakni
 hu:&Kiemelés
 id:Menyorot
@@ -1304,15 +1361,18 @@ nl:&Markeren
 no:&Merk
 pl:&Wyróżnienie
 pt:&Destacar
+ro:&Evidențiere
 ru:По&дсветка
 sl:O&znači
 sr-rs:&Маркирај
 ta:&சிறப்பாக்க நிறமிடு
 tr:&Vurgula
+tw:螢光標示(&H)
 uk:Виділити 
 vn:&Nổi Bật
 :&Last Page
 ar:آ&خر صفحة
+az:&Sonuncu səhifə
 bg:По&следна страница
 br:&Última página
 by:&Апошняя старонка
@@ -1325,7 +1385,10 @@ dk:&Sidste side
 el:Τελευταία σελίδα
 es:Última página
 eu:&Azken orrialdea
+fi:&Viimeinen sivu
 fr:&Dernière page
+gl:Ú&ltima páxina
+he:עמוד אחרון
 hr:&Zadnja stranica
 hu:&Utolsó oldal
 id:Halaman Terakhir
@@ -1336,12 +1399,14 @@ nl:&Laatste Pagina
 no:&Siste side
 pl:&Ostatnia strona
 pt:Última págin&a
+ro:&Ultima pagină
 ru:Последня&я страница
 sl:Zadnja stran
 sr-rs:&Задња страница
 ta:&கடைசி பக்கம்
 tl:Hu&ling pahina
 tr:Son sayfa
+tw:最後一頁(&L)
 uk:Остання сторінка 
 vn:&Trang Cuối
 :&Magnification:
@@ -1391,7 +1456,7 @@ nn:&Forstørring:
 no:&Forstørrelse:
 pl:&Powiększenie:
 pt:A&mpliação:
-ro:Factor mărire:
+ro:&Factor mărire:
 ru:Мас&штабирование:
 si:&විශාලනය:
 sk:&Zobrazenie:
@@ -1459,7 +1524,7 @@ no:&Bruksanvisning
 pa:ਮਦੱਦ ਕਤਾਬ(&M)
 pl:Instrukcja o&bsługi
 pt:&Manual
-ro:Manual
+ro:&Manual
 ru:&Руководство пользователя
 si:&අත්පොත (M)
 sk:&Príručka
@@ -1523,7 +1588,7 @@ nn:&Skil mellom store/små bokstaver
 no:&Skill mellom store og små bokstaver
 pl:&Uwzględnij wielkość liter
 pt:Sensível a &maiúsculas
-ro:Potrivire literele mari și mici
+ro:&Potrivire literele mari și mici
 ru:&Учитывать регистр
 si:&උදාහරණය ගැළපීම
 sk:&Podľa zadaných kritérií
@@ -1554,7 +1619,10 @@ dk:&Næste side
 el:Επόμενη σελίδα
 es:&Página siguiente
 eu:&Hurrengo orrialdea
+fi:&Seuraava sivu
 fr:Page &suivante
+gl:Segui&nte páxina
+he:העמוד הבא
 hr:Sljedeća stra&nica
 hu:&Következő oldal
 id:Halaman selanjutnya
@@ -1565,6 +1633,7 @@ nl:&Volgende Pagina
 no:&Neste side
 pl:&Następna strona
 pt:Página segui&nte 
+ro:&Pagina următoare
 ru:&Следующая страница
 sl:Naslednja stran
 sr-rs:&Следећа страница
@@ -1690,7 +1759,7 @@ nn:&Kun oddetalssider
 no:Bare &oddetallssider
 pl:Strony &nieparzyste
 pt:Apenas páginas í&mpares
-ro:Doar paginile impare
+ro:&Doar paginile impare
 ru:Только нечётн&ые страницы
 si:&ඔත්තෙ පිටු පමණි
 sk:&Tlačiť iba nepárne strany
@@ -1772,6 +1841,7 @@ uz:&Hujjatni ochish
 vn:Mở tập tin
 :&Open...
 ar:&فتح...
+az:&Aç...
 bg:&Отвори...
 br:&Abrir
 by:&Адкрыць…
@@ -1784,7 +1854,10 @@ dk:Å&bn
 el:Άνοιγμα
 es:&Abrir...
 eu:&Ireki...
+fi:&Avaa...
 fr:&Ouvrir...
+gl:&Abrir...
+he:פתח...
 hr:&Otvori...
 hu:&Megnyitás…
 id:&Buka...
@@ -1795,12 +1868,13 @@ nl:&Openen
 no:&Åpne...
 pl:&Otwórz...
 pt:&Abrir
+ro:&Deschide...
 ru:&Открыть...
 sl:&Odpri …
 sr-rs:&Отвори...
 ta:திற...
 tr:Aç...
-tw:開啟(&O)
+tw:開啟(&O)...
 uk:Відкрити
 vn:&Mở...
 :&Options
@@ -1849,7 +1923,7 @@ nn:&Innstillingar
 no:&Tillegg
 pl:&Opcje
 pt:&Opções
-ro:&Optiuni
+ro:&Opţiuni
 ru:&Параметры
 si:&විකල්ප
 sk:&Možnosti
@@ -1979,7 +2053,7 @@ no:&Passord:
 pa:&ਪਾਸਵਰਡ
 pl:&Hasło:
 pt:&Palavra-passe:
-ro:&Parola:
+ro:&Parolă:
 ru:&Пароль:
 si:&රහස්පද:
 sk:&Heslo:
@@ -2060,6 +2134,7 @@ uz:&Hujjatni eslab qolish
 vn:Ghim tập tin
 :&Previous Page
 ar:الصفحة ال&سابقة
+az:Ə&vvəlki səhifə
 bg:Пре&дишна страница
 br:&Página anterior
 by:&Папярэдняя старонка
@@ -2072,7 +2147,10 @@ dk:&Forrige side
 el:Προηγούμενη σελίδα
 es:&Página anterior
 eu:A&urreko orrialdea
+fi:&Edellinen sivu
 fr:Page &précédente
+gl:&Páxina anterior
+he:עמוד קודם
 hr:&Prethodna stranica
 hu:&Előző oldal
 id:Halaman Sebelumnya
@@ -2083,6 +2161,7 @@ nl:&Vorige Pagina
 no:&Forrige side
 pl:&Poprzednia strona
 pt:&Página anterior
+ro:&Pagina anterioară
 ru:Пр&едыдущая страница
 sl:&Prejšnja stran
 sr-rs:&Претходна страница
@@ -2365,9 +2444,11 @@ el:Κατάργηση από το ιστορικό
 es:&Eliminar del historial
 et:&Eemalda Ajaloost
 eu:&Kendu historiatik
+fi:&Poista historiasta
 fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
+he:מחק מההסטוריה
 hr:&Ukloni iz povijesti
 hu:&Eltávolítás a listából
 id:&Hapus dari Riwayat
@@ -2382,6 +2463,7 @@ nl:V&erwijder uit Geschiedenis
 no:&Fjern fra historikk
 pl:&Usuń z historii
 pt:&Remover do histórico
+ro:&Șterge din istoric 
 ru:&Удалить из истории
 sk:&Odstrániť z histórie
 sl:Odst&rani iz zgodovine
@@ -2389,7 +2471,7 @@ sr-rs:&Уклони из историје
 ta:வரலாற்றிலிருந்து நீக்கு 
 th:&ย้ายออกจากประวัติ
 tr:Geçmişten &Kaldır
-tw:從歷史紀錄刪除(&R)
+tw:從歷史記錄中移除(&R)
 uk:&Видалити з історії
 vn:&Xoá Khỏi Lịch Sử
 :&Save As...
@@ -2452,7 +2534,7 @@ ta:எனச் சேமி...
 th:&บันทึกเป็น...
 tl:I-&save bilang...
 tr:&Farklı Kaydet...
-tw:另存為(&S)...
+tw:另存新檔(&S)...
 uk:Зберегти як...
 uz:&Quyidagicha saqlash...
 vn:Lưu thành...
@@ -2473,7 +2555,10 @@ el:Αποθήκευση σε υπάρχον PDF
 es:&Guardar en un PDF existente
 et:&Salvesta olemas olevasse PDF-i
 eu:Gorde &badagoen PDF batean
+fi:&Tallenna nykyiseen PDF-tiedostoon
 fr:&Sauvegarder dans le PDF existant
+gl:Gardar a PDF exi&stente
+he:קיים PDF שמירה במסמך
 hr:&Spremi u postojeći PDF
 hu:Meglévő PDF-be mentés
 id:&Simpan ke PDF yang sudah ada
@@ -2485,6 +2570,7 @@ nl:&Opslaan in bestaande PDF
 no:&Lagre til eksisterende PDF
 pl:&Zapisz w istniejącym pliku PDF
 pt:Guardar para PDF exi&stente
+ro:&Salvează în PDF existent
 ru:&Сохранить в имеющийся PDF
 sk:&Uložiť do existujúceho PDF
 sl:&Shrani v obstoječo PDF datoteko
@@ -2492,6 +2578,7 @@ sr-rs:&Сачувај у постојећи PDF
 ta:&நடப்பிலுள்ள PDFஇல் சேமித்திடுக
 th:&บันทึกไปที่ PDF ที่เปิดอยู่
 tr:Var olan PDF'ye &kaydet
+tw:儲存到現有的 PDF 檔(&S)
 uk:Зберегти в наявному PDF-файлі
 vn:&Lưu và thoát PDF
 :&Search With Google
@@ -2499,6 +2586,7 @@ am:&Որոնել Google-ով
 ar:&بحث في Google
 bg:По&търси с Google
 br:&Buscar com Google
+by:&Шукаць праз Google
 ca-xv:&Cerca amb el Google
 ca:&Cerca amb el Google
 cn:使用谷歌搜索(&S)
@@ -2510,7 +2598,10 @@ el:Αναζήτηση με Google
 es:&Buscar con Google
 et:Otsi Google-iga
 eu:Bilatu G&oogle-rekin
+fi:&Haku Googlen avulla
 fr:&Rechercher avec Google
+gl:Bu&scar con Google
+he:Google חפש באמצעות
 hr:Pretraži &sa Google-om
 hu:Keresés Google-el
 id:&Cari dengan Google
@@ -2522,6 +2613,7 @@ nl:&Zoeken Met Google
 no:&Søk med Google
 pl:&Szukaj za pomocą Google
 pt:Pe&squisar com Google
+ro:&Caută cu Google
 ru:&Найти в Google
 sk:&Hľadať pomocou Google
 sl:&Išči z Google
@@ -2529,7 +2621,7 @@ sr-rs:&Претражи помоћу Google-а
 ta:&Google உடன் தேடுக
 th:&ค้นหาด้วย Google
 tr:Google İle &Ara
-tw:使用Google搜尋(&S)
+tw:使用 Google 搜尋(&S)
 uk:Пошук за допомогою Google
 vn:&Tìm Kiếm Với Google
 :&Settings
@@ -2664,6 +2756,7 @@ vn:Nén vừa trang in (nếu cần thiết)
 ar:صفحة م&فردة
 bg:&Една страница
 br:&Página única
+by:&Адна старонка
 ca:Una &sola pàgina 
 cn:单页视图(&S)
 co:&Una pagina sola
@@ -2673,7 +2766,10 @@ dk:&Enkelt side
 el:Μία σελίδα 
 es:&Una sola página
 eu:&Orrialde bakarra
+fi:&Yksi sivu
 fr:&Une page
+gl:Páxina &única
+he:עמוד בודד
 hr:Jedna &stranica
 hu:&Egyetlen oldal
 id:Halaman Tunggal
@@ -2684,18 +2780,20 @@ nl:&Enkele Pagina
 no:&Enkeltside
 pl:&Pojedyncza strona
 pt:&Uma página
+ro:&O singură pagină
 ru:По &одной странице
 sl:Eno&stransko
 sr-rs:&Једна страница
 ta:&ஒற்றைப் பக்கம்
 tr:Tek sayfa
-tw:單頁模式(&S)
+tw:單頁檢視(&S)
 uk:Одна сторінка
 vn:&Trang Đơn
 :&Stamp
 am:&Կնիք
 bg:&Подпечатване
 br:&Carimbo
+by:&Штамп
 ca-xv:&Segell
 ca:&Segell
 cn:&图章
@@ -2707,7 +2805,10 @@ el:Σφραγίδα
 es:&Estampa
 et:&Tempel
 eu:&Zigilua
+fi:&Leima
 fr:&Tampon
+gl:&Selo
+he:חותמת
 hr:&Pečat
 hu:Bélyeg
 id:&Stempel
@@ -2721,19 +2822,21 @@ nl:&Stempel
 no:&Stemple
 pl:Pie&częć
 pt:Carimbo&s
+ro:&Ștampilă
 ru:&Штамп
 sl:&Žig
 sr-rs:Пе&чат
 ta:&பொறிப்பு
 th:&ประทับตรา
 tr:&Damga
-tw:圖章(&S)
+tw:印章(&S)
 uk:Штамп
 vn:&Tem
 :&Strike Out
 am:&Ջնջած
 bg:Зач&еркнато
 br:Ri&scar
+by:&Закрэслены
 ca-xv:&Ratlla
 ca:&Ratlla
 cn:&删除线
@@ -2745,7 +2848,10 @@ el:Εξάλειψη
 es:&Tachar
 et:&Tõmba maha
 eu:&Marratua
+fi:&Yliviivaa
 fr:&Rayer
+gl:Ri&scado
+he:קו חוצה
 hr:Za&crtati
 hu:Kihúzás
 id:Coret
@@ -2759,12 +2865,14 @@ nl:&Doorhalen
 no:&Stryk over
 pl:&Skreślenie
 pt:Ra&surado
+ro:&Tăiat
 ru:Зач&ёркнутый
 sl:&Prečrtano
 sr-rs:Пре&цртано
 ta:&அடித்தவாறு
 th:&ตีออก
 tr:&Üstünü Çiz
+tw:刪除線(&S)
 uk:Викреслити
 vn:&Làm Văng Ra
 :&Text
@@ -2772,6 +2880,7 @@ am:&Գրվածք
 az:Mə&tn
 bg:&Текст
 br:&Texto
+by:&Тэкст
 ca-xv:&Text
 ca:&Text
 cn:&文本
@@ -2783,7 +2892,10 @@ el:Κείμενο
 es:&Texto
 et:&Tekst
 eu:I&dazkia
+fi:&Teksti
 fr:&Texte
+gl:&Texto
+he:טקסט
 hr:&Tekst
 hu:Szöveg
 id:&Teks
@@ -2798,12 +2910,14 @@ nl:&Tekst
 no:&Tekst
 pl:&Tekst
 pt:&Texto 
+ro:&Text\n
 ru:&Текст
 sl:&Besedilo
 sr-rs:&Текст
 ta:&உரை
 th:&ข้อความ
 tr:&Metin
+tw:文字(&T)
 uk:&Текст
 vn:&Chữ
 :&Theme
@@ -2827,6 +2941,7 @@ es:&Tema
 et:&Kujundus
 eu:&Azalgaia
 fa:&قالب
+fi:&Teema
 fr:Thème
 ga:&Téama
 gl:&Tema
@@ -2848,6 +2963,7 @@ no:&Tema
 pa:&ਥੀਮ
 pl:&Motyw
 pt:&Tema
+ro:&Temă
 ru:&Тема
 si:&තේමා
 sk:&Téma
@@ -2865,8 +2981,10 @@ vn:&Chủ đề
 :&Translate With Google
 am:&Թարգմանել Google-ով
 ar:&ترجمة في Google
+az:&Google ilə tərcümə et
 bg:&Превод с Google
 br:&Traduzir com Google
+by:&Перакласці з дапамогай Google
 ca-xv:Tradueix amb el &Google
 ca:Tradueix amb el &Google
 cn:使用谷歌翻译(&T)
@@ -2878,7 +2996,10 @@ el:Μετάφραση με Google
 es:&Traducir con Google
 et:&Tõlgi Google-iga
 eu:Itzuli &Google-rekin
+fi:&Käännä Googlen avulla
 fr:&Traduire avec Google
+gl:&Traducido con Google
+he:google תרגם באמצעות
 hr:&Prevedi sa Google-om
 hu:Fordítsd le a Google-el
 id:&Terjemahkan dengan Google
@@ -2890,6 +3011,7 @@ nl:&Vertalen Met Google
 no:&Oversett med Google
 pl:&Tłumacz za pomocą Google
 pt:&Traduzir com Google
+ro:T&raduce cu Google
 ru:&Перевести в Google
 sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
@@ -2897,13 +3019,14 @@ sr-rs:Пре&веди помоћу Google-а
 ta:&கூகுளுடன் மொழிபெயர்த்திடுக
 th:&แปลด้วย Google
 tr:Google İle &Çevir
-tw:使用Google翻譯(&T)
+tw:使用 Google 翻譯(&T)
 uk:Перекласти за допомогою Google
 vn:&Dịch Với Google
 :&Underline
 am:&Ընդգծված
 bg:&Подчертавка
 br:S&ublinhar
+by:&Падкрэслены
 ca-xv:&Subratlla
 ca:&Subratlla
 cn:&下划线
@@ -2914,7 +3037,10 @@ dk:&Understreg
 el:Υπογράμμιση
 es:&Subrayar
 eu:A&zpimarra
+fi:&Korosta
 fr:So&uligner
+gl:S&ubliñado
+he:הדגש
 hr:Podv&ući
 hu:Alá&húzás
 id:Garis bawah
@@ -2928,6 +3054,7 @@ nl:&Onderstrepen
 no:&Understrek
 pl:&Podkreślenie
 pt:S&ublinhado
+ro:&Subliniază
 ru:Под&чёркнутый
 sl:&Podčrtano
 sr-rs:Под&вуци
@@ -3114,6 +3241,7 @@ nn:&Vindu
 no:&Vindu
 pl:&Okno
 pt:&Janela
+ro:&Fereastră
 ru:&Окно
 si:&කවුළුව
 sk:&Okno
@@ -3248,7 +3376,7 @@ no:&Zoom
 pa:ਵੱਡਾ ਕਰੋ(&Z)
 pl:Po&większenie
 pt:&Ampliação
-ro:&Mărime
+ro:&Mărire
 ru:Мас&штаб
 si:&විශාලනය (Z)
 sk:&Zväčšenie
@@ -3421,7 +3549,7 @@ fr:À propos de SumatraPDF
 fy-nl:Oer SumatraPDF
 ga:Maidir le SumatraPDF
 gl:Acerca do SumatraPDF
-he:אודות SumatraPDF
+he:SumatraPDF אודות
 hi:Sumatra PDF के बारे में
 hr:O SumatriPDF
 hu:A SumatraPDF névjegye
@@ -3445,7 +3573,7 @@ nn:Om SumatraPDF
 no:Om SumatraPDF
 pa:SumatraPDF ਬਾਰੇ
 pl:O programie SumatraPDF
-pt:Acerca de SumatraPDF
+pt:Acerca do SumatraPDF
 ro:Despre SumatraPDF
 ru:О программе SumatraPDF
 si:SumatraPDF පිළිබඳව
@@ -3528,7 +3656,7 @@ ta:பிடித்ததைச் சேர்த்திடுக
 th:เพิ่มรายการโปรด
 tl:I-Add sa favorite
 tr:Sık Kullanılanlara Ekle
-tw:加到最愛
+tw:加到我的最愛
 uk:Додати закладку
 uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa Thích
@@ -3558,7 +3686,7 @@ fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s leis na ceanáin
 gl:Engadir a páxina %s aos favoritos
-he:הוסף את עמוד מס' %s למועדפים...
+he:...למועדפים %s 'הוסף את עמוד מס
 hi:पृष्ठ %s को पसंदीदा सूचि में जोड़े
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
@@ -3596,7 +3724,7 @@ ta:பிடித்தவற்றில் பக்கம் %s-ஐ சே�
 th:เพิ่มหน้า %s ไปยังรายการโปรด
 tl:Magdagdag ng pahina %s sa mga paborito
 tr:%s. sayfayı sık kullanılanlara ekle
-tw:將第 %s 頁加到最愛
+tw:將第 %s 頁加到我的最愛
 uk:Додати %s сторінку до закладок
 uz:%s betni Tanlanganlarga qo'shish
 vn:Thêm trang %s vào Ưa thích
@@ -3626,7 +3754,7 @@ fi:Lisää sivu %s suosikkeihin (valinnaisella) nimellä:
 fr:Ajouter la page %s aux favoris avec un nom (optionnel) :
 ga:Cuir leathanach a %s le na ceanáin le ainm (roghnach):
 gl:Engadir páxina %s aos favoritos  cun nome (opcional):
-he:הוסף את עמוד מס' %s למועדפים בשם:
+he::למועדפים בשם %s 'הוסף את עמוד מס
 hi:पृष्ठ %s को पसंदीदा सूचि में नाम (वैकल्पिक) के साथ: जोड़ें:
 hr:Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
 hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (nem kötelező):
@@ -3663,7 +3791,7 @@ ta:பிடித்தவையில்  பக்கம் %s-ஐ (விர
 th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อมชื่อ (สามารถเลือกได้) :
 tl:Magdagdag ng pahina %s sa mga paborito na may (opsyonal) na pangalan:
 tr:%s. sayfayı şu (isteğe bağlı) adla sık kullanılanlara ekle:
-tw:以 (可有可無) 名稱將第 %s 頁加到最愛:
+tw:將第 %s 頁加到我的最愛，並(選擇性的)提供名稱:
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
 uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
@@ -3731,7 +3859,7 @@ ta:பிடித்தவையில் சேர்
 th:เพิ่มไปยังรายการโปรด
 tl:Idagdag sa mga paborito
 tr:Sık kullanılanlara ekle
-tw:加到最愛
+tw:加到我的最愛
 uk:Додати до закладок
 uz:Tanlanganlarga qo'shish
 vn:Thêm vào Ưa thích
@@ -3960,9 +4088,11 @@ el:Σχόλια
 es:Anotaciones
 et:Märkused
 eu:Oharrak
+fi:Huomautukset
 fr:Annotations
 ga:Nótaí mínithe
 gl:Anotacións
+he:הערות
 hi:एनोटेशन
 hr:Bilješke
 hu:Megjegyzések
@@ -3980,6 +4110,7 @@ nl:Aantekeningen
 no:Merknader
 pl:Adnotacje
 pt:Anotações 
+ro:Adnotări
 ru:Аннотации
 sk:Anotácie
 sl:Pripombe
@@ -3988,7 +4119,7 @@ ta:குறிப்புரைகள்
 th:อธิบายประกอบ
 tl:Mga anotasyon
 tr:Dipnotlar
-tw:評注
+tw:註解
 uk:Анотації
 vn:Ghi chú
 :Application:
@@ -4019,7 +4150,7 @@ fr:Application :
 fy-nl:Applikaasje:
 ga:Feidhmchlár:
 gl:Aplicación:
-he:יישום:
+he::יישום
 hi:आवेदन:
 hr:Aplikacija:
 hu:Alkalmazás:
@@ -4110,8 +4241,8 @@ nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
 pa:ਕੀ ਤੁਸੀਂ SumatraPDF ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
-pt:Tem a certeza de que deseja desinstalar SumatraPDF?
-ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
+pt:Tem a certeza de que deseja desinstalar o SumatraPDF?
+ro:Sunteţi sigur că doriţi să dezinstalaţi Sumatra PDF?
 ru:Вы действительно хотите удалить SumatraPDF?
 si:ඔබට SumatraPDF අස්ථාපනය කිරීමට අවශ්‍ය බවට විශ්වාසද?
 sk:Naozaj chcete odinštalovat SumatraPDF?
@@ -4125,7 +4256,7 @@ ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
 th:คุณแน่ใจหรือไม่ว่าต้องการถอนการติดตั้ง SumatraPDF?
 tl:Sigurado ka bang gusto mong i-uninstall ang SumatraPDF?
 tr:SumatraPDF'yi kaldırmak istediğinize emin misiniz?
-tw:確定要卸除 SumatraPDF 嗎？
+tw:您確定要解除安裝 SumatraPDF 嗎？
 uk:Ви впевнені, що хочете видалити SumatraPDF?
 uz:SumatraPDF'ni o'chirishga ishonchingiz komilmi?
 vn:Bạn có chắc muốn gỡ bỏ SumatraPDF không?
@@ -4357,7 +4488,10 @@ el:Συγγραφέας: %s
 es:Autor: %s
 et:Autor: %s
 eu:Egilea: %s
+fi:Tekijä: %s
 fr:Auteur : %s
+gl:Autor: %s
+he:מחבר: %s
 hi:लेखक: %s
 hr:Autor: %s
 hu:Szerző: %s
@@ -4365,6 +4499,7 @@ id:Penulis: %s
 it:Autore: %s
 ja:作者: %s
 kr:작성자: %s
+ku:Nivîskar: %s
 kw:Skrifer: %s
 lt:Autorius: %s
 lv:Autors: %s
@@ -4374,6 +4509,7 @@ nl:Auteur: %s
 no:Forfatter: %s
 pl:Autor: %s
 pt:Autor: %s
+ro:Autor: %s
 ru:Автор: %s
 sl:Avtor: %s
 sr-rs:Аутор: %s
@@ -4502,8 +4638,8 @@ nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
 pa:ਆਪਣੇ-ਆਪ &ਅਪਡੇਟਾਂ ਦੀ ਜਾਂਚ ਕਰੋ
 pl:&Szukaj aktualizacji automatycznie
-pt:Proc&urar atualizações automaticamente
-ro:Urmărește automat versiuni noi
+pt:Proc&urar actualizações automaticamente
+ro:Urmărește automat &versiuni noi
 ru:&Автоматически проверять обновления
 si:යාවත්කාලකිරීම් ස්වයක්‍රීයව සොයන්න
 sk:Automaticky kontrolovať &aktualizácie
@@ -4522,6 +4658,7 @@ uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Background Color:
 am:Խորքի գույնը.
+az:Fon rəngi
 bg:Цвят на фона
 bn:পটভূমির রং:
 br:Cor de fundo
@@ -4538,8 +4675,10 @@ el:Χρώμα φόντου:
 es:Color de fondo
 et:Taustavärv:
 eu:Barrenaren margoa:
+fi:Taustan väri:
 fr:Couleur d'arrière-plan :
 gl:Cor de fondo
+he:צבע רקע:
 hi:बैकग्राउंड कलर:
 hr:Boja pozadine:
 hu:Háttérszín:
@@ -4547,6 +4686,7 @@ id:Warna Latar:
 it:Colore sfondo:
 ja:背景色:
 kr:배경색
+ku:Rengê Rûerdê:
 kw:Liw Kilva:
 lt:Fono spalva:
 lv:Fona krāsa:
@@ -4557,6 +4697,7 @@ nl:Achtergrond Kleur
 no:Bakgrunnsfarge:
 pl:Kolor tła:
 pt:Cor de fundo:
+ro:Culoare fundal:
 ru:Цвет фона:
 sk:Farba pozadia:
 sl:Barva ozadja:
@@ -4839,6 +4980,7 @@ uz:Xatcho'plar
 vn:Chỉ dấu sách
 :Border: %d
 am:Եզրագիծ. %d
+az:Kənar: %d
 bg:Окантовка: %d
 bn:সীমানা: %d
 br:Borda: %d
@@ -4854,7 +4996,10 @@ el:Περιθώριο: %d
 es:Borde: %d
 et:Ääris: %d
 eu:Ertza: %d
+fi:Raja: %d
 fr:Bordure : %d
+gl:Bordo: %d
+he:%d :גבול
 hi:बॉर्डर: %d
 hr:Rub: %d
 hu:Keret: %d
@@ -4870,6 +5015,7 @@ nl:Rand %d
 no:Ramme: %d
 pl:Obramowanie: %d
 pt:Contorno: %d
+ro:Graniță: %d
 ru:Рамка: %d
 sl:Rob: %d
 sr-rs:Ивица: %d
@@ -5282,7 +5428,7 @@ ta:தலைகீழ் தேடல் கட்டளையைத் தெ�
 th:ไม่สามารถค้นหาคำสั่งที่ตรงกันข้าม โปรดตรวจสอบแถวคำสั่งในการตั้งค่า
 tl:Hindi ma-execute ang command para sa inverse search. Pakitingnan ang command line sa settings.
 tr:Evrik arama komutu başlatılamadı. Ayarlarda, komut satırını gözden geçirin.
-tw:無法進行逆向搜尋。請檢查設定的指令列。
+tw:無法進行反向搜尋。請檢查設定的命令列。
 uk:Неможливо запустити команду зворотнього пошуку. Перевірте налашутвання командного рядка.
 uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
@@ -5408,8 +5554,8 @@ nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
 pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
 pl:Szukaj &aktualizacji
-pt:Procurar at&ualizações
-ro:Verifică apariția unei versiuni noi
+pt:Procurar act&ualizações
+ro:Verifică apariția unei &versiuni noi
 ru:Проверить наличие новой &версии
 si:&යාවත්කාලීනකිරීම් සදහා සොයන්න
 sk:&Skontrolovať novú verziu
@@ -5444,8 +5590,10 @@ el:Έλεγχος για ενημέρωση...
 es:Buscando actualizaciones...
 et:Uuenduste otsimine...
 eu:Eguneraketak egiaztatzen...
+fi:Tarkistetaan päivitys...
 fr:Vérification des mises à jour...
 gl:Comprobar actualizacións
+he:...מחפש עדכון
 hi:अपडेट की जांच की जा रही है...
 hr:Provjera dostupnosti ažuriranja...
 hu:Frissítés keresése...
@@ -5459,7 +5607,8 @@ ml:അപ്‌ഡേറ്റിനായി പരിശോധിക്കു�
 nl:Controleer op Update...
 no:Ser etter oppdatering...
 pl:Szukanie aktualizacji...
-pt:A procurar atualização...
+pt:A procurar actualização...
+ro:Căutare actualizare...
 ru:Проверка наличия обновления...
 sl:Preverjanje posodobitev …
 sr-rs:Провера ажурирања...
@@ -5489,9 +5638,11 @@ el:Κύκλος
 es:Círculo
 et:Ring
 eu:Zirkulua
+fi:Ympyrä
 fr:Cercle
 ga:Ciorcal
 gl:Círculo
+he:עיגול
 hi:सर्कल
 hr:Krug
 hu:Kör
@@ -5509,6 +5660,7 @@ nl:Cirkel
 no:Sirkel
 pl:Okrąg
 pt:Círculo 
+ro:Ciclu
 ru:Круг
 sk:Kruh
 sl:Krog
@@ -5570,7 +5722,7 @@ no:Lukk
 pa:ਬੰਦ ਕਰੋ
 pl:Zamknij
 pt:Fechar
-ro:Inchidere
+ro:Inchide
 ru:Закрыть
 si:වහන්න
 sk:Zatvoriť
@@ -5601,7 +5753,10 @@ dk:Luk andre tabs
 el:Κλείσιμο άλλων καρτελών
 es:Cerrar otras pestañas
 eu:Itxi beste hegatsak
+fi:Sulje muut välilehdet
 fr:Fermer les autres onglets
+gl:Pechar outras lapelas
+he:סגור כרטיסיות אחרות
 hi:अन्य टैब बंद करें
 hr:Zatvori ostale kartice
 hu:Más lapok bezárása
@@ -5614,6 +5769,7 @@ nl:Andere Tabbladen Sluiten
 no:Lukk andre faner
 pl:Zamknij inne karty
 pt:Fechar outros separadores 
+ro:Închide alte file
 ru:Закрыть другие вкладки
 sl:Zapri druge zavihke
 sr-rs:Затвори остале картице
@@ -5634,7 +5790,10 @@ dk:Luk tabs til højre
 el:Κλείσιμο καρτελών στα δεξιά
 es:Cerrar pestañas a la derecha
 eu:Itxi eskuineko hegatsak
+fi:Sulje välilehdet oikealle
 fr:Fermer les onglets sur la droite
+gl:Pechar lapelas á dereita
+he:סגור כרטיסיות מימין
 hi:दाईं ओर के टैब बंद करें
 hr:Zatvori kartice zdesna
 hu:Jobbra lévő lapok bezárása
@@ -5647,11 +5806,13 @@ nl:Sluit Tabbladen Rechts
 no:Lukk faner til høyre
 pl:Zamknij karty po prawej stronie
 pt:Fechar separadores à direita
+ro:Închide filele la dreapta
 ru:Закрыть вкладки справа
 sl:Zapri zavihke na desni
 sr-rs:Затвори картице са десне стране
 ta:வலதுபுறம் உள்ள கீற்றுகளை மூடிடுக
 tr:Sağdaki sekmeleri kapat
+tw:關閉右側分頁
 uk:Закрити вкладки праворуч
 :Collapse All
 am:Կոծկել բոլորը
@@ -5673,6 +5834,7 @@ el:Σύμπτυξη όλων
 es:Contraer todo
 et:Sulge kõik
 eu:Bildu guztiak
+fi:Pienennä kaikki
 fr:Tout réduire
 ga:Laghdaigh Gach
 gl:Contraer todo
@@ -5695,6 +5857,7 @@ nl:Alle Samenvouwen
 no:Fold sammen alle
 pl:Zwiń wszystko
 pt:Recolher tudo
+ro:Restrânge toate
 ru:Свернуть все
 sk:Zbaliť všetko
 sl:Strni vse
@@ -5725,8 +5888,10 @@ el:Χρώμα:
 es:Color:
 et:Värv:
 eu:Margoa:
+fi:Väri:
 fr:Couleur :
 gl:cor
+he::צבע
 hi:रंग:
 hr:Boja:
 hu:Szín:
@@ -5734,6 +5899,7 @@ id:Warna:
 it:Colore:
 ja:色:
 kr:색상
+ku:Reng
 kw:Liw:
 lt:Spalva:
 lv:Krāsa:
@@ -5745,6 +5911,7 @@ nl:Kleur
 no:Farge:
 pl:Kolor:
 pt:Cor:
+ro:Culoare
 ru:Цвет:
 sk:Farba:
 sl:Barva:
@@ -5837,10 +6004,14 @@ el:Παλέτα εντολών
 es:Paleta de comandos 
 et:Käsupalett
 eu:Agindu paleta
+fi:Komentopolku
 fr:Palette de commande
+gl:Paleta de comando
+he:לוח פקודות
 hi:कमांड पैलेट
 hr:Paleta naredbi
 hu:Parancs paletta
+id:Palet Perintah
 it:Elenco comandi
 ja:コマンドパレット
 kr:명령 팔레트
@@ -5849,13 +6020,14 @@ nl:Opdrachten
 no:Kommandopalett
 pl:Paleta poleceń
 pt:Paleta de comandos
+ro:Paleta de comenzi
 ru:Панель команд
 sl:Ukazna paleta
 sr-rs:&Палета команди
 ta:கட்டளைப் பந்தி
 tl:Command Palette
 tr:Komut paleti
-tw:指令面板
+tw:命令面板
 uk:Палітра команд
 vn:Lệnh
 :Compatibility
@@ -5942,7 +6114,10 @@ el:Περιεχόμενα:
 es:Contenido:
 et:Sisu:
 eu:Edukiak:
+fi:Sisältö:
 fr:Contenu :
+gl:Contidos:
+he::תוכן
 hi:विषयवस्तु:
 hr:Sadržaj:
 hu:Tartalom:
@@ -5959,12 +6134,14 @@ nl:Inhoud
 no:Innhold:
 pl:Zawartość:
 pt:Conteúdo:
+ro:Сonţinut:
 ru:Содержимое:
 sl:Vsebina:
 sr-rs:Садржај:
 ta:உள்ளடக்கங்கள்:
 tl:Nilalaman:
 tr:İçerikler:
+tw:內容:
 uk:Зміст:
 vn:Nội Dung:
 :Continuous
@@ -6172,7 +6349,7 @@ ta:தொடர்ந்து எதிரெதிராக
 th:เป็นหน้าต่อเนื่อง
 tl:Tuloy-tuloy na Magkaharap
 tr:Sürekli Her İki Yüz
-tw:連續對頁模式
+tw:雙頁捲動模式
 uk:Дві протяжні сторінки
 uz:Uzluksiz ikkita betdan
 vn:Trang kép liên tiếp
@@ -6461,10 +6638,14 @@ el:Αντιγραφή στο πρόχειρο
 es:Copiar a portapapeles
 et:Kopeeri lõikelauale
 eu:Kopiatu gakora
+fi:Kopioi leikepöydälle
 fr:Copier dans le presse-papiers
+gl:Copiar ao portapapeis
+he:העתק ללוח
 hi:क्लिपबोर्ड पर कॉपी करें
 hr:Kopiraj u međuspremnik
 hu:Másolás vágólapra
+id:Salin ke Papan Klip
 it:Copia negli Appunti
 ja:クリップボードへコピー
 kr:클립보드에 복사
@@ -6473,6 +6654,7 @@ nl:Kopieer naar klembord
 no:Kopier til utklippstavle
 pl:Kopiuj do schowka
 pt:Copiar para a área de transferência 
+ro:Copiază pe Clipboard
 ru:Скопировать в буфер обмена
 sl:Kopiraj v odložišče
 sr-rs:Копирај у оставу (клипборд)
@@ -6677,7 +6859,7 @@ ta:அச்சுப்பொறியின் பண்புகள் ப
 th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
 tl:Hindi makuha ang Printer properties
 tr:Yazıcı özellikleri alınamadı
-tw:無法取得印表機特性
+tw:無法取得印表機內容
 uk:Неможливо отримати налаштування принтера
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
@@ -6762,7 +6944,10 @@ el:Δεν ήταν δυνατή η λήψη του ονόματος του εκ�
 es:No se ha podido encontrar el nombre de la impresora
 et:Printeri nime hankimine ebaõnnestus
 eu:Ezinezkoa irarkailuaren izena lortzea
+fi:Tulostimen nimeä ei saatu selville
 fr:Impossible d'obtenir le nom de l'imprimante
+gl:Non se puido obter nome da impresora
+he:לא היתה אפשרות לקבל את שם המדפסת
 hi:प्रिंटर नाम नहीं मिला
 hr:Nemoguće dobiti naziv printera
 hu:Nem sikerült lekérni a nyomtató nevét
@@ -6776,6 +6961,7 @@ nl:Kan de naam van de printer niet vinden
 no:Kunne ikke hente skrivernavn
 pl:Nie można uzyskać nazwy drukarki
 pt:Não foi possível obter o nome da impressora 
+ro:Nu s-a putut obține numele imprimantei
 ru:Не удалось получить имя принтера
 sl:Ni bilo mogoče najti imena tiskalnika
 sr-rs:Није могуће добити име штампача
@@ -6813,7 +6999,7 @@ fr:Impossible d'initialiser l'imprimante
 fy-nl:Kin de printer net inisjalisearje
 ga:Níorbh fhéidir an clóire a thúsú
 gl:Non se puido inicializar a impresora
-he:אתחול המדפסת נכשל.
+he:.אתחול המדפסת נכשל
 hi:प्रिंटर प्रारंभ नहीं हो पा रहा
 hr:Ne mogu inicijalizirati pisač
 hu:A nyomtató inicializálása nem sikerült
@@ -6899,7 +7085,7 @@ nl:Kan PDF-previewer niet installeren
 nn:Kunne ikkje installere PDF-forhandsvisar
 no:Kunne ikke installere PDF forhåndsvisning
 pl:Nie można zainstalować podglądu PDF
-pt:Não foi possível instalar o pré-visualizador de PDF
+pt:Não foi possível instalar a antevisão de PDF
 ro:Nu s-a putut instala previzualizatorul PDF
 ru:Не удалось установить просмотрщик PDF
 si:PDF පෙරදක්වනය ස්ථාපනය කිරීමට අසමත්විය
@@ -6965,7 +7151,7 @@ nn:Kunne ikkje installere PDF-søkjefilter
 no:Kunne ikke installere PDF søkefilter
 pl:Nie można zainstalować filtru przeszukiwania PDF
 pt:Não foi possível instalar o filtro de pesquisa PDF
-ro:Nu s-a putut instala filtrul de cautare PDF
+ro:Nu s-a putut instala filtrul de căutare PDF
 ru:Не удалось установить фильтр поиска PDF
 si:PDF ‌ප‌ෙ‌රහන ස්ථාපනය කිරීමට න‌ොහැකිවිය
 sk:Nie je možné nainštalovať PDF vyhľadávací filter
@@ -6978,7 +7164,7 @@ ta:PDF தேடலை நிறுவ இயலவில்லை
 th:ไม่สามารถติดตั้งตัวกรองค้นหา PDF
 tl:Hindi ma-install ang PDF search filter
 tr:PDF arama süzgeci kurulamadı
-tw:無法安裝 PDF 搜索過濾器
+tw:無法安裝 PDF 搜尋篩選器
 uk:Не вдалося встановити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'rnatib bo'lmadi
 vn:Không thể cài đặt bộ lọc tìm kiếm PDF
@@ -7109,7 +7295,7 @@ ta:PDF முன்னோட்டத்தை நீக்க முடிய�
 th:ไม่สามารถถอนการติดตั้งโปรแกรมดูตัวอย่าง PDF
 tl:Hindi ma-uninstall ang PDF previewer
 tr:PDF ön izleyicisi kaldırılamadı
-tw:無法卸除 PDF 預覽器
+tw:無法移除 PDF 預覽器
 uk:Не вдалося видалити програму попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
@@ -7132,9 +7318,11 @@ el:Δεν ήταν δυνατή η κατάργηση της εγκατάστα�
 es:No se pudo desinstalar el filtro de búsqueda de Sumatra.
 et:Sumatra otsingufiltri kustutamine ebaõnnestus
 eu:Ezin da Sumatraren bilaketa iragazkia kendu 
+fi:Ei voinut poistaa Sumatran hakusuodatinta
 fr:Impossible de désinstaller le filtre de recherche de Sumatra
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
 gl:Non se pode desinstalar o filtro de busca do Sumatra
+he:Sumatra  לא ניתן היה להסיר את מסנן החיפוש של
 hi:सुमात्रा खोज फ़िल्टर को अनइंस्टॉल नहीं किया जा सका
 hr:Nije moguće deinstalirati Sumatra filtar za pretraživanje
 hu:Nem tudtam eltávolítani a Sumatra keresőszűrőt
@@ -7152,6 +7340,7 @@ nl:Kan Sumatra zoekfilter niet verwijderen
 no:Kunne ikke avinstallere Sumatra-søkefilter
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 pt: Não foi possível desinstalar o filtro de pesquisa
+ro:Nu s-a putut dezinstala filtrul de căutare Sumatra
 ru:Не удалось удалить фильтр поиска Sumatra
 sl:Ni bilo mogoče odstraniti iskalnega filtra Sumatra
 sr-rs:Деинсталација Sumatra филтера за претрагу није успела
@@ -7159,7 +7348,7 @@ ta:சுமத்ரா தேடல் வடிப்பான் நிற�
 th:ไม่สามารถถอนการติดตั้งตัวกรองการค้นหา Sumatra
 tl:Hindi ma-uninstall ang Sumatra search filter
 tr:Sumatra arama süzgeci kaldırılamadı
-tw:無法卸除 Sumatra 搜索過濾器
+tw:無法移除 Sumatra 搜尋篩選器
 uk:Не вдалось видалити фільтр пошуку Sumatra
 vn:Không thể gỡ cài đặt bộ lọc tìm kiếm Sumatra
 :Couldn't uninstall browser plugin
@@ -7188,7 +7377,7 @@ fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 ga:Níorbh fhéidir an breiseán don líonléitheoir a dhíshuiteáil
 gl:Non se puido desinstalar o engadido do navegador
-he:הסרת התוסף לדפדפן נכשלה.
+he:.הסרת התוסף לדפדפן נכשלה
 hi:ब्राउज़र प्लगइन स्थापित नहीं किया जा सका 
 hr:Nemoguće deinstalirati dodatak za internet preglednik
 hu:Böngésző beépülő eltávolítása sikertelen
@@ -7209,7 +7398,7 @@ nl:Kan browserplugin niet verwijderen
 nn:Kunne ikkje avinstallere nettlesartillegget
 no:Kunne ikke avinstallere nettlesertillegget
 pl:Nie można usunąć wtyczki do przeglądarek
-pt:Não foi possível desinstalar o plugin do navegador
+pt:Não foi possível desinstalar a extensão do navegador
 ro:Nu s-a putut dezinstala plugin-ul de browser
 ru:Не удалось удалить плагин браузера
 si:Browser plugin ඉවත්කිරීමට අසමත්විය
@@ -7223,7 +7412,7 @@ ta:உலாவி உள்இடுக்கைளை நீக்க மு�
 th:ไม่สามารถถอนปลั๊กอินบราวเซอร์
 tl:Hindi ma-uninstall ang browser plugin
 tr:Tarayıcı eklentisi kaldırılamadı
-tw:無法卸除瀏覽器附加元件
+tw:無法移除瀏覽器附加元件
 uk:Не вдалося видалити розширення для браузера
 uz:Brauzer plaginini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt Plugin trình duyệt
@@ -7253,7 +7442,7 @@ fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
 ga:Níorbh fhéidir %s a scríobh chuig an diosca
 gl:Non se puido escribir %s no disco
-he:כתיבת %s לדיסק נכשלה.
+he:.לדיסק נכשלה %s כתיבת
 hi:%s को डिस्क पर नहीं लिखा जा सका 
 hr:Nemoguće zapisati %s na disk
 hu:%s lemezre írása sikertelen
@@ -7308,7 +7497,10 @@ el:Δημιουργία σχολιασμού κάτω από το δρομέα
 es:Crear anotación &bajo el cursor
 et:Lisa kursori &juurde märkus
 eu:Sortu oharra &kurtsorearen azpian
+fi:Luo huomautus ja kohdistin
 fr:Créer une annotation &sous le curseur
+gl:Crear anotación baixo o p&unteiro
+he:צור הערה תחת סמן העכבר
 hi:एनोटेशन और कर्सर के तहत बनाएं
 hr:Napravi bilješku &ispod kursora
 hu:Új megjegyzés &Kurzor alatt
@@ -7322,6 +7514,7 @@ nl:Maak Aantekening Onder Cursor
 no:Lag merknad &under peker
 pl:Utwórz adnotację &pod kursorem
 pt:Criar anotação no local do c&ursor
+ro:Creează adnotare &sub cursor
 ru:Создать аннотацию &под курсором
 sl:Ustvari pripombo &pod kurzorjem
 sr-rs:Направи белешку &испод курсора
@@ -7329,7 +7522,7 @@ ta:&நிலைகாட்டியின் அடியில் குற�
 th:สร้างคำอธิบายประกอบ &​ใต้ตัวชี้ตำแหน่ง
 tl:Lumikha ng anotasyon &Ilalim ng Cursor
 tr:İmlecin &Altına Dipnot Oluştur
-tw:在游標下建立便箋(&U)
+tw:在游標下建立註解(&U)
 uk:Створити анотацію &Під курсором
 vn:Thêm Chú Thích &Gạch Chân
 :Create Annotation From Selection
@@ -7349,8 +7542,10 @@ el:Δημιουργία σχολιασμού από επιλογή
 es:Crear anotación con la selección
 et:Loo valitust märkus
 eu:Sortu oharra hautapenetik
+fi:Luo huomautus valinnasta
 fr:Créer une annotation à partir de la sélection
 gl:Crear anotacion a partir da selección
+he:צור הערה מן הבחירה
 hi:चयन से एनोटेशन बनाएं
 hr:Napravite bilješku iz odabira
 hu:Megjegyzés készítése a kiválasztásból
@@ -7366,7 +7561,8 @@ ml:തിരഞ്ഞെടുക്കലിൽ നിന്ന് വ്യാ
 nl:Aantekening maken op basis van Selectie
 no:Lag merknad på merket område
 pl:Utwórz adnotację z zaznaczenia
-pt:Criar anotação na seleção
+pt:Criar anotação na selecção
+ro:Creează adnotare din selecție
 ru:Создать аннотацию из выделения
 sl:Ustvari pripombo iz izbire
 sr-rs:Направи белешку из селекције
@@ -7374,7 +7570,7 @@ ta:தேர்வு செய்ததிலிருந்து குறி
 th:สร้างคำอธิบายประกอบจากส่วนที่เลือก
 tl:Lumikha ng anotasyon mula sa pinili
 tr:Seçimden Dipnot Oluştur
-tw:從選取文字建立便箋
+tw:從選取文字建立註解
 uk:Створити анотацію з виділеного
 vn:Thêm Chú Thích Từ Phần Được Chọn
 :Created:
@@ -7442,7 +7638,7 @@ ta:உருவாக்கப்பட்டது
 th:สร้างแล้ว
 tl:Ginawa noong:
 tr:Oluşturma:
-tw:檔案建立日期:
+tw:建立日期:
 uk:Створено:
 uz:Yaratilgan:
 vn:Ngày tạo:
@@ -7495,7 +7691,7 @@ nn:Nåverande fil
 no:Gjeldende fil
 pa:ਮੌਜੂਦਾ ਫ਼ਾਇਲ
 pl:Bieżący plik
-pt:Ficheiro atual
+pt:Ficheiro actual
 ro:Fișier curent
 ru:Текущий файл
 si:‌මෙම ‌ගොනුව
@@ -7509,7 +7705,7 @@ ta:நடப்பு கோப்பு
 th:ไฟล์ปัจจุบัน
 tl:Kasalukuyang file
 tr:Geçerli dosya
-tw:當前檔案
+tw:目前檔案
 uk:Поточний файл
 uz:Joriy fayl
 vn:Tập tin hiện hành
@@ -7561,7 +7757,7 @@ nn:Markørposisjon:
 no:Skrivemerkeposisjon:
 pl:Pozycja kursora:
 pt:Posição do cursor:
-ro:Pozitia Cursorului
+ro:Poziţia Cursorului
 ru:Позиция курсора:
 si:Cursor පිහිටුම
 sk:Pozícia kurzora:
@@ -7591,10 +7787,14 @@ dk:Tilpasset &Zoom
 el:Ορισμός Ζουμ
 es:Zoom &personalizado...
 eu:Norbere &Zooma...
+fi:Mukautettu ja zoomaus...
 fr:&Zoom personnalisé...
+gl:Aumento personali&zado...
+he:זום מותאם אישית...
 hi:कस्टम &ज़ूम करें...
 hr:Prilagođeno &uvećanje...
 hu:Egyéni &nagyítás…
+id:Kustomisasi & Perbesar... 
 it:&Zoom personalizzato
 ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
@@ -7603,13 +7803,14 @@ nl:Aangepast & zoom...
 no:Tilpasset &zoom...
 pl:&Własne powiększenie...
 pt:Tamanho personali&zado...
+ro:Mă&rire setată de utilizator
 ru:Свой &масштаб...
 sl:Povečava po &meri …
 sr-rs:Сопствено &увећање
 ta:&வழமைக் காணுருவளவு
 tl:Pasadya &Mag-zoom
 tr:Özel &yakınlaştır
-tw:自訂縮放(&Z)
+tw:自訂縮放(&Z)...
 uk:Нетиповий масштаб...
 vn:Thiết Lập &Phóng...
 :Dark
@@ -7634,6 +7835,7 @@ es:Oscuro
 et:Tume
 eu:Iluna
 fa:تیره
+fi:Tumma
 fr:Sombre
 ga:dorcha
 gl:Escuro
@@ -7647,6 +7849,7 @@ ja:濃色
 jv:Peteng
 ka:მუქი
 kr:어두운
+ku:Tarî
 kw:Tewl
 lt:Tamsi
 lv:Tumšs
@@ -7695,6 +7898,7 @@ es:Más oscuro
 et:Tumedam
 eu:Ilunagoa
 fa:تیره‌تر
+fi:Tummempi
 fr:Plus sombre
 ga:nios dorcha
 gl:Máis escuro
@@ -7708,6 +7912,7 @@ ja:黒
 jv:Luwih Peteng
 ka:მეტად მუქი
 kr:더 어두운
+ku:Tarîtir
 kw:Tewlla
 lt:Tamsesnė
 lv:Tumšāks
@@ -7753,7 +7958,10 @@ el:Ημερομηνία:
 es:Fecha:
 et:Kuupäev:
 eu:Eguna:
+fi:Päivämäärä:
 fr:Date :
+gl:Data:
+he::תאריך
 hi:तारीख:
 hr:Datum:
 hu:Dátum
@@ -7770,12 +7978,14 @@ nl:Datum:
 no:Dato:
 pl:Data:
 pt:Data:
+ro:Dată:
 ru:Дата:
 sl:Datum:
 sr-rs:Датум:
 ta:நாள்:
 tl:Petsa:
 tr:Tarih:
+tw:日期:
 uk:Дата: 
 vn:Ngày:
 :Default &Layout:
@@ -7827,7 +8037,7 @@ nn:Standard &oppsett:
 no:Standard sideoppsett:
 pl:&Układ domyślny:
 pt:&Exibição padrão:
-ro:Design implicit:
+ro:&Aspect implicit:
 ru:&Компоновка по умолчанию
 si:පෙරනිමි දැක්ම:
 sk:Predvolené &zobrazenie:
@@ -7840,7 +8050,7 @@ ta:கோட நிலை வடிவமைப்பு
 th:รูปแบบ &ค่าเริ่มต้น:
 tl:Default na Ayos:
 tr:Öntanımlı &Düzen:
-tw:預設布局(&L):
+tw:預設配置(&L):
 uk:Розташування за замовчуванням:
 uz:Andoza &joylashish
 vn:Khung nhìn mặc định
@@ -7893,7 +8103,7 @@ nn:Standard &zooming:
 no:Standard&zoom:
 pl:Domyślne &powiększenie:
 pt:&Ampliação padrão:
-ro:Factor de mărire implicit:
+ro:Factor de &mărire implicit:
 ru:Масшта&б по умолчанию
 si:පෙරනිමි සෙවුම:
 sk:Predvolená &veľkosť
@@ -7925,8 +8135,10 @@ el:Διαγραφή σχολίου\tDel
 es:Eliminar anotación\tDel
 et:Kustuta märkus\tDel
 eu:Ezabatu oharra\tDel
+fi:Poista huomautus\tDel
 fr:Supprimer l'annotation\tDel
 gl:Borrar anotación
+he:מחק הערה\tDel
 hi:व्याख्या हटाएं\tDel
 hr:Obriši bilješku\tDel
 hu:Megjegyzés törlése\tDel
@@ -7939,13 +8151,14 @@ nl:Verwijder Aantekening\tDel
 no:Slett merknad\tDel
 pl:Usuń adnotację\tDel
 pt:Remover anotação\Del
+ro: Șterge adnotarea\tDel
 ru:Удалить аннотацию\tDel
 sl:Izbriši pripombo\tDel
 sr-rs:Обриши беле&шку\tDel
 ta:குறிப்புரையை நீக்கிடுக\tDel
 tl:Tanggalin ang anotasyon\tDel
 tr:Dipnotu Sil\tDel
-tw:刪除便箋\t刪除
+tw:刪除註解\tDel
 uk:Видалити анотацію\tDel
 vn:Xoá Chú Thích \tDel
 :Denied Permissions:
@@ -8143,7 +8356,7 @@ ta:ஆவணப் பண்புகள்
 th:คุณสมบัติเอกสาร
 tl:Mga katangian ng dokumento
 tr:Belge Özellikleri
-tw:文件特性
+tw:文件內容
 uk:Властивості документа
 uz:Hujjat xossalari
 vn:Thuộc tính tập tin
@@ -8164,8 +8377,10 @@ el:Μη γίνει εγκατάσταση
 es:No instalar
 et:Ära paigalda
 eu:Ez ezarri
+fi:Älä asenna
 fr:Ne pas installer
 gl:Non instalar
+he:אל תתקין
 hi:इंस्टॉल न करें
 hr:Nemoj instalirati
 hu:Ne telepítsd
@@ -8180,6 +8395,7 @@ nl:Niet installeren
 no:Ikke installer
 pl:Nie instaluj
 pt:Não instalar
+ro:Nu instala
 ru:Не устанавливать
 sl:Ne nameščaj
 sr-rs:Не инсталирај
@@ -8193,6 +8409,7 @@ vn:Không cài đặt
 :Download 64-bit version
 am:Ներբեռնել 64 բիթային տարբերակը
 ar:تنزيل نسخة 64 بت
+az:64-bitlik versiyanı endir
 bg:Свали 64-битова версия
 br:Baixar versão 64-bits
 by:Спампаваць 64-бітную версію
@@ -8207,8 +8424,10 @@ el:Λήψη έκδοσης 64-bit
 es:Descargar la versión de 64 bits
 et:Laadi alla 64-bitine versioon
 eu:Jeitsi 64-biteko bertsioa
+fi:Lataa 64-bittinen versio
 fr:Télécharger la version 64-bits
 gl:Baixar versión de 64 bits
+he:הורד גירסת 64 סיביות
 hi:64-बिट वर्जन डाउनलोड करें
 hr:Preuzmite 64-bitnu verziju
 hu:64-bites verzió letöltése
@@ -8222,7 +8441,8 @@ ml:64-ബിറ്റ് പതിപ്പ് ഡൗൺലോഡ് ചെയ�
 nl:Download 64bit versie
 no:Last ned 64-biters versjon
 pl:Pobierz wersję 64-bitową
-pt:Descarregar versão 64-bit
+pt:Transferir versão 64-bit
+ro:Descarcă versiunea 64 de biți
 ru:Загрузить 64-разрядную версию
 sk:Stiahnuť 64-bitovú verziu
 sl:Prenesi 64-bitno različico
@@ -8248,7 +8468,10 @@ dk:&Afslut
 el:Έξοδος
 es:S&alir
 eu:I&rten
+fi:P&oistu
 fr:&Quitter
+gl:Sa&ír
+he:יציאה
 hi:निकास
 hr:I&zlaz
 hu:&Kilépés
@@ -8260,13 +8483,14 @@ nl:A&fsluiten
 no:A&vslutt
 pl:&Wyjście
 pt:&Sair
+ro:&Ieșire
 ru:В&ыход
 sl:I&zhod
 sr-rs:Иза&ђи
 ta:வெளியேறுக
 tl:&Lumabas
 tr:Çık
-tw:離開本程式(&X)
+tw:結束(&X)
 uk:Вийти 
 vn:T&hoát
 :E&xit Fullscreen
@@ -8287,9 +8511,11 @@ el:Έξοδος από την πλήρη οθόνη
 es:&Salir de la pantalla completa
 et:V&älju Täisekraanilt
 eu:Irten ikusleiho-o&sotik
+fi:P&oistu Koko näyttö
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
 gl:Sa&ír da pantalla completa
+he:יציאה ממסך מלא
 hi:पूर्ण स्क्रीन से बाहर निकलें
 hr:I&zlaz iz cijelog ekrana
 hu:Kilépés a teljes képernyőből
@@ -8304,7 +8530,8 @@ lv:&Iziet no pilnekrāna
 nl:Volledig scherm uit
 no:A&vslutt fullskjerm
 pl:W&yjdź z trybu pełnoekranowego
-pt:Sair de &ecrã completo
+pt:Sair do &ecrã completo
+ro:&Ieșire mod pe tot ecranul.
 ru:&Выйти из полноэкранного режима
 sl:&Izhod iz celozaslonskega načina
 sr-rs:Иза&ђи из целог екрана
@@ -8342,7 +8569,7 @@ fr:Fichiers EPUB
 fy-nl:EPUB-bestannen
 ga:Cáipéisí EPUB
 gl:Documentos EPUB
-he:קובצי EPUB
+he:EPUB קבצי
 hi:EPUB ई - किताबें
 hr:EPUB dokumenti
 hu:EPUB fájlok
@@ -8400,9 +8627,11 @@ el:Επεξεργασία σχολίων
 es:Editar anotaciones
 et:Muuda märkusi
 eu:Editatu oharrak
+fi:Muokkaa huomautuksia
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
+he:ערוך הערות
 hi:टिप्पणियां संपादित करें
 hr:Uredi bilješke
 hu:Megjegyzések szerkesztése
@@ -8419,6 +8648,7 @@ nl:Bewerk Aantekeningen
 no:Rediger merknader
 pl:Edytuj adnotacje
 pt:Editar anotações 
+ro:Modifică adnotări
 ru:Изменить аннотации
 sl:Uredi pripombo
 sr-rs:&Уреди белешке
@@ -8426,7 +8656,7 @@ ta:குறிப்புரைகளைத் திருத்துக
 th:ปรับแต่งคำอธิบายประกอบ
 tl:I-edit ang mga anotasyon
 tr:Dipnotları Düzenle
-tw:編輯評注
+tw:編輯註解
 uk:Змінити анотації
 vn:Chỉnh Sửa Chú Thích
 :Enter password
@@ -8496,7 +8726,7 @@ ta:கடவுச்சொல்லை வழங்கு
 th:ป้อนรหัสผ่าน
 tl:Ipasok ang password
 tr:Parola gir
-tw:鍵入密碼
+tw:輸入密碼
 uk:Введіть пароль
 uz:Maxfiy so'zni kiriting
 vn:Nhập mật khẩu
@@ -8565,7 +8795,7 @@ ta:%s  க்கான கடவுச்சொல்லை வழங்கு
 th:ป้อนรหัสผ่านสำหรับ %s
 tl:Ipasok ang password ng %s
 tr:%s için parola gir
-tw:鍵入 %s 的密碼
+tw:輸入 %s 的密碼
 uk:Введіть пароль для %s
 uz:%s uchun maxfiy so'zni kiriting
 vn:Nhập mật khẩu cho %s
@@ -8616,7 +8846,7 @@ nn:Gå inn i kommandolinja for å hentast, når du dobbeltklikkar på PDF-dokume
 no:Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
 pl:Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
 pt:Indique a linha de comandos a invocar ao clicar duas vezes no documento PDF:
-ro:Introduceți comanda invocată la dublu click pe documentul PDF:
+ro:Introduceți linia de comandă, chemată prin dublu clic pe documentul PDF
 ru:Введите командную строку, вызываемую при двойном щелчке на файле PDF:
 si:PDF ගොනුව මත double-click කළ විට සිදුවන ක්‍රියාව සදහා විධාන පෙළට අවතීර්ණවන්න:
 sk:Dvojité kliknutie na PDF dokument vykoná zadaný príkazový riadok:
@@ -8629,7 +8859,7 @@ ta:நீங்கள் PDF ஆவணத்தின் மீது இரட�
 th:ป้อนบรรทัดคำสั่งเพื่อเรียกใช้เมื่อคุณดับเบิลคลิกที่เอกสาร PDF:
 tl:Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
 tr:PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
-tw:請輸入滑鼠按兩下 PDF 文件時，應執行的指令(&E):
+tw:請輸入滑鼠按兩下 PDF 文件時，應執行的命令(&E):
 uk:Введіть командну стрічку, що викликається при подвійному клацані на PDF-документі:
 uz:PDF-hujjatni ikki marta bosganda ishga tushadigan buyruq satrini kiriting:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
@@ -8718,6 +8948,7 @@ el:Ανάπτυξη όλων
 es:Expandir todo
 et:Ava kõik
 eu:Hedatu guztiak
+fi:Laajenna kaikki
 fr:Tout développer
 ga:Leathnaigh Gach
 gl:Expandir todo
@@ -8738,6 +8969,7 @@ nl:Alle Uitvouwen
 no:Utvid alle
 pl:Rozwiń wszystko
 pt:Expandir tudo
+ro:Extinde toate
 ru:Развернуть все
 sl:Razširi vse
 sr-rs:Рашири све
@@ -8808,7 +9040,7 @@ ta:பிடித்தவை
 th:&รายการโปรด
 tl:&Mga paborito
 tr:S&ık Kullanılanlar
-tw:最愛(&A)
+tw:我的最愛(&A)
 uk:Закладки
 uz:&Tanlanganlar
 vn:Ưa thích
@@ -8826,10 +9058,14 @@ dk:&Frem
 el:Εμπρός
 es:A&delante
 eu:A&urrera
+fi:E&teenpäin
 fr:&Avancer
+gl:A&vanzar
+he:קדימה
 hi:आगे
 hr:Na&prijed
 hu:&Előre
+id:L&anjut
 it:&Avanti
 ja:進む(&O)
 kr:앞으로(&O)
@@ -8837,6 +9073,7 @@ nl:V&ooruit
 no:F&ramover
 pl:&Dalej
 pt:A&vançar
+ro:Î&nainte
 ru:В&перёд
 sl:&Naprej
 sr-rs:Н&апред
@@ -8860,7 +9097,10 @@ dk:F&uld skærm
 el:Πλήρης οθόνη
 es:P&antalla completa
 eu:Ikusleiho-o&soa
+fi:K&oko näyttö
 fr:P&lein écran
+gl:P&antalla completa
+he:מסך מלא
 hi:पूर्ण स्क्रीन
 hr:P&uni zaslon
 hu:&Teljes képernyő
@@ -8872,6 +9112,7 @@ nl:V&oledig Scherm
 no:F&ullskjerm
 pl:Pełny &ekran
 pt:E&crã completo
+ro:P&e tot ecranul
 ru:Полный &экран
 sl:Celozaslonsko
 sr-rs:&Цео екран
@@ -8947,7 +9188,7 @@ ta:எதிரெதிராக
 th:เป็นหน้า
 tl:Magkaharap
 tr:Her İki Yüz
-tw:對頁模式
+tw:雙頁檢視
 uk:Дві сторінки
 uz:Ikkita betdan
 vn:Trang kép
@@ -8997,7 +9238,7 @@ nn:Mislykkast i å slette avinstalleringsregisternøklane
 no:Kan ikke slette avinstalleringsnøkler i Registeret
 pl:Nie można usunąć kluczy deinstalatora z rejestru
 pt:Falha ao remover as chaves de registo
-ro:Eroare la stergerea inregistrarilor de dezinstalare din registri
+ro:Eroare la ștergerea înregistrărilor de dezinstalare din registru
 ru:Ошибка удаления из реестра ключей деинсталлятора
 si:ඉවත්කරනයේ registry keys මකා දැමීමට අසමත්විය
 sk:Vymazanie odinštalačných kľúčov v registroch bolo neúspešné
@@ -9010,7 +9251,7 @@ ta:நிறுவி நீக்கியின் பதிவை அழி�
 th:ไม่สามารถลบรีจิสตรีคีย์ของตัวถอนการติดตั้งได้
 tl:Nabigong tanggalin ang mga registry key ng uninstaller
 tr:Kaldırıcı kayıt defteri anahtarları silinemedi
-tw:刪除解除安裝器註冊項失敗。
+tw:無法刪除解除安裝程式的登錄機碼。
 uk:Не вдалося видалити інформацію деінсталятора з реєстру
 uz:O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi
 vn:Không thể xóa các khóa Registry của bộ gỡ cài đặt
@@ -9040,7 +9281,7 @@ fi:Tiedoston uudelleennimeäminen epäonnistui!
 fr:Impossible de renommer le fichier !
 ga:Theip ar athainmniú an chomhaid!
 gl:Fallouse ao renomear o ficheiro
-he:פעולת שינוי שם הקובץ נכשלה.
+he:.פעולת שינוי שם הקובץ נכשלה
 hi:फ़ाइल का नाम बदलने मे असफ़ल​ !
 hr:Neuspjeh u preimenovanju datoteke!
 hu:A fájl átnevezése sikertelen
@@ -9062,7 +9303,7 @@ nn:Klarte ikkje å omdøpe fila!
 no:Kunne ikke endre navn på filen!
 pl:Błąd zmiany nazwy pliku!
 pt:Falha ao mudar o nome do ficheiro!
-ro:Eroare la redenumirea fisierului!
+ro:Eroare la redenumirea fișierului!
 ru:Ошибка переименования файла!
 si:ගොනුව නැවත නම් කිරීමට නොහැකිවිය!
 sk:Premenovanie súboru bolo neúspešné!
@@ -9075,7 +9316,7 @@ ta:கோப்புக்கு மறுபெயரிட முடிய
 th:ไม่สามารถเปลี่ยนชื่อไฟล์ได้!
 tl:Nabigong palitan ang pangalan ng file!
 tr:Dosya yeniden adlandırılamadı!
-tw:重新命名該檔案失敗!
+tw:無法重新命名該檔案!
 uk:Не вдалося перейменувати файл!
 uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi!
 vn:Không thể đổi tên tập tin!
@@ -9195,7 +9436,7 @@ nn:Mislykkast i å skrive den utvida filutvidingsinformasjonen til registeret
 no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
 pl:Nie można wprowadzić poszerzonych informacji o rozszerzeniu pliku do rejestru
 pt:Falha ao escrever as informações do tipo de ficheiro no registo
-ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
+ro:Eroare la scrierea informaţiei extinse despre extensia fișierului în registru
 ru:Не удалось записать в реестр дополнительную информацию о расширении файла
 si:විස්තෘත ගොනු දිගු තෝරතුරු registry වල ලිවීමට අසමත්විය
 sk:Zápis rozšírených informácií o prípone súboru do registrov bolo neúspešné
@@ -9208,7 +9449,7 @@ ta:பதிவு செய்ய விரிவாக்கப்பட்ட
 th:ไม่สามารถเขียนข้อมูลส่วนขยายไฟล์เพิ่มเติมไปยังรีจิสทรี
 tl:Nabigong isulat ang impormasyon ng extended file extension sa registry
 tr:Kayıt defterine genişletimiş dosya uzantısı yazma başarısız oldu
-tw:寫入延遲檔案副檔名資訊到註冊項失敗。
+tw:無法將延伸的檔案副檔名資訊寫入註冊表。
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
 uz:Fayl turi haqida kengaytirilgan ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
 vn:Không thể ghi thông tin về phần mở rộng của tập tin vào khóa Registry
@@ -9258,7 +9499,7 @@ nn:Mislykkast i å skrive avinstalleringsinformasjonen til registeret
 no:Kan ikke lagre avinstalleringsinformasjon i Registeret
 pl:Nie można zapisać informacji o usunięciu programu do rejestru
 pt:Falha ao escrever as informações de desinstalação no registo
-ro:Eroare la scrierea informatiilor de dezinstalare in registri
+ro:Eroare la scrierea informaţiilor de dezinstalare în registru
 ru:Не удалось записать в реестр информацию для удаления
 si:ඉවත්කිරීමේ තොරතුරු registryයට ලිවීමට අසමත්විය
 sk:Uloženie informácií pre odinštalovanie do registrov bolo neúspešné
@@ -9271,7 +9512,7 @@ ta:நிறுவி நீக்கும் தகவலை பதிவி�
 th:ไม่สามารถเขียนข้อมูลการถอนการติดตั้งไปยังรีจิสทรี
 tl:Nabigong isulat ang impormasyon ng uninstallation sa registry
 tr:Kayıt defterine kaldırma bilgisi yazma işi başarısız oldu
-tw:寫入解除安裝資訊到註冊項目失敗。
+tw:無法將解除安裝資訊寫入註冊表。
 uk:Не вдалося записати інформацію для видалення у реєстр
 uz:Dasturni o'chirish ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
 vn:Không thể ghi thông tin về việc gỡ cài đặt vào khóa Registry
@@ -9402,7 +9643,7 @@ ta:பிடித்தவை
 th:รายการโปรด
 tl:Mga paborito
 tr:Sık Kullanılanlar
-tw:最愛
+tw:我的最愛
 uk:Закладки
 uz:Tanlanganlar
 vn:Ưa thích
@@ -9452,7 +9693,7 @@ nn:FictionBook-dokumentar
 no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
 pt:Livros de ficção
-ro:Documente SF (Carti de fictiune)
+ro:Documente SF (Cărţi de ficţiune)
 ru:Документы FictionBook
 si:ප්‍රබන්ධ පොත් ලේඛන
 sk:FictionBook dokumenty
@@ -9517,7 +9758,7 @@ nn:Filen %s blei ikkje funnet
 no:Filen %s finnes ikke
 pl:Nie znaleziono pliku %s
 pt:Ficheiro %s não encontrado
-ro:Fisierul %s nu a fost gasit
+ro:Fișierul %s nu a fost găsit
 ru:Файл %s не найден
 si:ගොනුව %s සොයාගැනීමට නොහැකිවිය 
 sk:Súbor %s nenájdený
@@ -9553,9 +9794,11 @@ el:Συνημμένο αρχείο
 es:Archivo adjunto
 et:Lisatud fail
 eu:Agiri eranspena
+fi:Liitetiedosto
 fr:Pièce jointe
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
+he:קובץ מצורף
 hi:फ़ाइल अटैचमेंट
 hr:Prilog
 hu:Fájl melléklet
@@ -9572,6 +9815,7 @@ nl:Bestands Bijlage
 no:Filvedlegg
 pl:Załącznik
 pt:Anexo
+ro:Fișier atașat
 ru:Вложенный файл
 sl:Datotečna priloga
 sr-rs:Прилог
@@ -9721,6 +9965,7 @@ uz:Fayl:
 vn:Tập tin:
 :Fin&d...
 ar:ال&بحث...
+az:A&xtar...
 bg:&Търси
 br:Locali&zar
 by:&Знайсці…
@@ -9733,7 +9978,10 @@ dk:Fin&d...
 el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
+fi:Löyd&ä
 fr:R&echercher...
+gl:Atopa&r...
+he:חפש...
 hi:खोजो
 hr:&Traži...
 hu:&Keresés…
@@ -9745,13 +9993,14 @@ nl:Zoe&k
 no:Fin&n...
 pl:&Znajdź...
 pt:Locali&zar...
+ro:C&aută...
 ru:На&йти...
 sl:Naj&di …
 sr-rs:Прона&ђи...
 ta:தேடுக
 tl:&Hanapin
 tr:Bul
-tw:尋找(&D)
+tw:尋找(&D)...
 uk:Знайти ...
 vn:Tìm
 :Find
@@ -9889,7 +10138,7 @@ ta:அடுத்ததை தேடு
 th:ค้นหาต่อไป
 tl:Hanapin ang Susunod
 tr:Sonrakini Bul
-tw:向下尋找
+tw:尋找下一個
 uk:Знайти наступне
 uz:Keyingisini qidirish
 vn:Tìm xuống
@@ -9960,7 +10209,7 @@ ta:முந்தையதை தேடு
 th:ค้นหาก่อนหน้า
 tl:Hanapin ang Nauna
 tr:Öncekini Bul
-tw:向上尋找
+tw:尋找上一個
 uk:Знайти попереднє
 uz:Oldingisini qidirish
 vn:Tìm lên
@@ -10031,7 +10280,7 @@ ta:தேடு:
 th:ค้นหา:
 tl:Hanapin:
 tr:Bul:
-tw:尋找(&F):
+tw:尋找:
 uk:Знайти:
 uz:Qidirish:
 vn:Tìm kiếm:
@@ -10048,7 +10297,10 @@ dk:Tilpas &indhold
 el:Προσαρμογή περιεχομένου
 es:Ajustar al &contenido
 eu:Finkatu &edukia
+fi:Sovita &Sisältö
 fr:Ajuster au &contenu
+gl:Axustar &contido
+he:התאמה לתוכן
 hr:Prilagodi &sadržaju
 hu:&Tartalomhoz illesztés
 id:Muat Sesuai Isi
@@ -10059,6 +10311,7 @@ nl:&Inhoud Aanpassen
 no:Tilpass til &innhold
 pl:Dopasuj do &zawartości
 pt:Ajustar ao &conteúdo 
+ro:Cuprinde &conținutul
 ru:Вписать содер&жимое
 sl:Prilagodi vsebino
 sr-rs:Смести &садржај
@@ -10081,7 +10334,10 @@ dk:Tilpas til &Side
 el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
+fi:Sovita &Sivu
 fr:&Page entière
+gl:Axustar &páxina
+he:התאמה לעמוד
 hr:&Prilagodi stranici
 hu:&Oldalhoz illesztés
 id:Muat Sesuai Halaman
@@ -10092,6 +10348,7 @@ nl:&Pagina Aanpassen
 no:Tilpass til &side
 pl:Dopasuj do s&trony
 pt:Ajustar à &página 
+ro:Cuprinde &Pagină
 ru:Вписать &страницу
 sl:&Prilagodi stran
 sr-rs:Смести с&трану
@@ -10114,7 +10371,10 @@ dk:Tilpas &bredde
 el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
+fi:Sovita &Leveys
 fr:Pleine &largeur
+gl:Axustar &largura
+he:התאם לרוחב
 hr: Nam&jesti po širini
 hu:&Szélességhez illesztés
 id:Muat Sesuai Lebar Halaman
@@ -10125,6 +10385,7 @@ nl:&Breedte Aanpassen
 no:Tilpass til &bredde
 pl:Dopasuj do sz&erokości
 pt:Ajustar à l&argura
+ro:Cuprinde &lățime
 ru:Вписать по &ширине
 sl:P&rilagodi po širini
 sr-rs:Смести по &ширини
@@ -10810,7 +11071,10 @@ el:Πληροφορίες γραμματοσειρών
 es:Información sobre las fuentes
 et:Hangi fondi infot
 eu:Lortu hizkien argibideak
+fi:Hanki fonttien tiedot
 fr:Infos sur les polices
+gl:Obter información do tipo de letra
+he:קבל מידע על גופנים
 hi:फ़ॉन्ट जानकारी प्राप्त करें
 hr:Informacije o fontovima
 hu:Betűkészlet információk lekérése
@@ -10821,7 +11085,8 @@ kr:글꼴 정보 확인
 nl:Informatie over lettertypen ophalen
 no:Hent skrifttypeinformasjon
 pl:Uzyskaj informacje o czcionkach
-pt:Obter info acerca dos tipos de letra
+pt:Informação da letra
+ro:Primeşte informații despre fonturi
 ru:Получить информацию о шрифтах
 sl:Pridobi informacije o pisavah
 sr-rs:Информације о фонтовима
@@ -10949,7 +11214,7 @@ nn:Skjul &innstillingar
 no:Skjule &Tillegg
 pl:Ukryj &opcje
 pt:&Ocultar opções
-ro:Ascundere &Optiuni
+ro:Ascundere &Opţiuni
 ru:Скрыть параметры
 si:&විකල්ප සගවන්න
 sk:Skryť &Možnosti
@@ -11112,7 +11377,10 @@ el:Εικονίδιο:
 es:Icono:
 et:Ikoon:
 eu:Ikurra:
+fi:Kuvake:
 fr:Icône :
+gl:Icona
+he::סמל
 hi:आइकॉन
 hr:Ikona:
 hu:Ikon:
@@ -11127,12 +11395,14 @@ nl:Pictogram:
 no:Ikon:
 pl:Ikona:
 pt:Ícone 
+ro:Pictogramă:
 ru:Значок:
 sl:Ikona:
 sr-rs:Икона:
 ta:படக்குறி:
 tl:Icon:
 tr:Simge:
+tw:圖示:
 uk:Значок: 
 vn:Biểu Tượng:
 :Image files (*.%s)
@@ -11217,9 +11487,11 @@ el:Εικόνες
 es:Imágenes
 et:Pildid
 eu:Irudiak
+fi:Kuvat
 fr:Images
 ga:Íomhánna
 gl:Imaxes
+he:תמונות
 hi:इमेजिस
 hr:Slike
 hu:Képek
@@ -11236,6 +11508,7 @@ nl:Afbeeldingen
 no:Bilder
 pl:Obrazy
 pt:Imagens 
+ro:Imagini
 ru:Изображения
 sk:Obrázky
 sl:Slike
@@ -11266,9 +11539,11 @@ el:Μελάνι
 es:Tinta
 et:Tint
 eu:Tinta
+fi:Muste
 fr:Encre
 ga:Dúch
 gl:Trazo
+he:דיו
 hi:स्याही
 hr:Tinta
 hu:Tinta
@@ -11285,6 +11560,7 @@ nl:Snelkoppeling
 no:Blekk
 pl:Atrament
 pt:Tinta 
+ro:Cerneală
 ru:Чернила
 sl:Črnilo
 sr-rs:Мастило
@@ -11408,7 +11684,7 @@ nn:Installer SumatraPDF i mappa:
 no:Installere SumatraPDF i &mappe:
 pl:Zainstaluj SumatraPDF w &folderze:
 pt:Instalar SumatraPD&F na pasta:
-ro:Instalare SumatraPDF in &folderul:
+ro:Instalare SumatraPDF în &folderul:
 ru:Установить SumatraPDF в &папку:
 si:ෆෝල්ඩරයේ SumatraPDF ස්ථාපනය කරන්න
 sk:Inštaluj SumatraPDF do &adresára:
@@ -11426,6 +11702,7 @@ uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 am:Տեղադրել և վեաթողարկել
+az:Quraşdır və təkrar aç
 bg:Инсталирай и рестартирай програмата
 br:Instalar e reiniciar
 by:Устанавіць і перазапусціць
@@ -11440,7 +11717,10 @@ el:Εγκατάσταση και επανεκκίνηση
 es:Instalar y reiniciar
 et:Paigalda ja kävita uuesti
 eu:Ezarri eta berrabiarazi
+fi:Asenna ja käynnistä uudelleen
 fr:Installer et redémarrer
+gl:Instalar e volver iniciar
+he:התקן והפעל מחדש
 hi:इंस्टाल और रीलॉन्च
 hr:Instaliraj i ponovno pokreni
 hu:Telepítés és újraindítás
@@ -11454,6 +11734,7 @@ nl:Installeren + opnieuw starten
 no:Installer og kjør på nytt
 pl:Zainstaluj i uruchom ponownie
 pt:Instalar e reiniciar 
+ro:Instalați și relansați
 ru:Установить и перезапустить
 sl:Namesti in ponovno zaženi
 sr-rs:Инсталирај и поново покрени
@@ -11479,7 +11760,10 @@ dk:Installer for alle brugere
 el:Εγκατάσταση για όλους τους χρήστες
 es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
+fi:Asenna kaikille käyttäjille
 fr:Installer pour tous les utilisateurs
+gl:Instalar para todos os usuarios
+he:התקן לכל המשתמשים
 hi:सभी उपयोगकर्ताओं के लिए इंस्टॉल करें
 hr:Instaliraj za sve korisnike
 hu:Telepítés minden felhasználó számára
@@ -11491,6 +11775,7 @@ nl:Installeer voor alle gebruikers
 no:Installer for alle brukere
 pl:Zainstaluj dla wszystkich użytkowników
 pt:Instalar para todos 
+ro:Instalare pentru toți utilizatorii
 ru:Установить для всех пользователей
 sl:Namesti za vse uporabnike
 sr-rs:Инсталирај за све кориснике
@@ -11548,7 +11833,7 @@ nn:Installering mislykkast!
 no:Installasjon mislyktes!
 pl:Błąd instalacji!
 pt:A instalação falhou!
-ro:Instalare esuata!
+ro:Instalare eșuată!
 ru:Ошибка установки!
 si:ස්ථාපනය කිරීමට අසමත් විය
 sk:Inštalácia sa nepodarila!
@@ -11613,7 +11898,7 @@ nn:Installering under arbeid...
 no:Installasjon pågår...
 pl:Trwa instalacja...
 pt:A instalar...
-ro:Se instaleaza...
+ro:Se instalează...
 ru:Установка...
 si:ස්ථාපනය කරමින් පවතී...
 sk:Prebieha inštalácia...
@@ -11646,7 +11931,10 @@ el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστ
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
 eu:32-biteko Sumatra ezartzen 64-biteko SE-n
+fi:32-bittisen SumatraPDF:n asentaminen 64-bittiseen käyttöjärjestelmään
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits
+gl:Instalando o SumatraPDF de 32-bit en sistema de 64-bit
+he:התקנת SumatraPDF של 32 סיביות במערכת הפעלה של 64 סיביות
 hi:64-बिट ओएस पर 32-बिट सुमात्रापीडीएफ स्थापित करना।
 hr:Instaliranje 32-bitne SumatraPDF na 64-bit OS
 hu:32-bites SumatraPDF telepítése 64-bites operációs rendszerre
@@ -11659,6 +11947,7 @@ nl:32bit SumatraPDF installeren op 64bit OS
 no:Installerer 32-bit SumatraPDF på 64-bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
 pt:A instalar versão 32-bit num sistema 64-bits
+ro:Instalare SumatraPDF 32 de biți  în Sistem de Operare 64 de biți
 ru:Установка 32-разрядной SumatraPDF в 64-разрядной ОС
 sl:Nameščanje 32-bitne različice SumatraPDF na 64-bitni OS
 sr-rs:Инсталација 32-битног SumatraPDF на 64-битном ОС-у
@@ -11683,7 +11972,10 @@ el:Εσωτερικό Χρώμα:
 es:Color Interior
 et:Sisevärv:
 eu:Barneko margoa:
+fi:Sisätilojen väri:
 fr:Couleur Intérieure :
+gl:Cor interior:
+he::צבע פנים
 hi:आंतरिक रंग:
 hr:Unutarnja boja:
 hu:Belső szín:
@@ -11697,12 +11989,14 @@ nl:Interieur Kleur
 no:Innvendig farge:
 pl:Kolor wnętrza:
 pt:Cor interior:
+ro:Culoare interioară:
 ru:Внутренний цвет:
 sl:Barva notranjosti:
 sr-rs:Унутрашња боја:
 ta:உட்புற நிறம்:
 tl:Kulay ng panloob:
 tr:İç Renk:
+tw:內部顏色:
 uk:Колір інтер'єру: 
 vn:Màu Bên Trong:
 :KB
@@ -11822,7 +12116,7 @@ nn:Let Windows Skrivebordssøk &søkje gjennom PDF-dokumentar
 no:La Windows søkemotor &søke PDF dokumenter
 pl:Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwać pliki PDF
 pt:Permitir que a pe&squisa Windows pesquise documentos PDF
-ro:Permite Windows Desktop &Search sa caute in documente PDF
+ro:Permite Windows Desktop &Search să caute în documente PDF
 ru:&Поиск файлов PDF с помощью Windows Desktop Search
 si:Windows Desktop Searchට PDF ලේඛන සොයන්න ඉඩදෙන්න
 sk:Povoliť, aby Windows Desktop Search &vyhľadával PDF dokumenty
@@ -11884,7 +12178,7 @@ nn:Let Windows vise &forhandsvisingar av PDF-dokumentar
 no:La Windows vise &forhåndsvisning av PDF-dokumenter
 pl:Windows ma pokazywać &podgląd plików PDF
 pt:&Permitir que o Windows mostre uma antevisão dos PDF
-ro:Permite Windows-ului sa arate &previzualizari ale documentelor PDF
+ro:Permite Windows-ului să arate &previzualizari ale documentelor PDF
 ru:&Просмотр PDF средствами Windows
 si:Windowsට PDF ලේඛනවල &පෙරදසුන් පෙන්වන්න දෙන්න
 sk:Povoliť, aby Windows zobrazoval &náhľad PDF dokumentov
@@ -11921,6 +12215,7 @@ es:Claro
 et:Hele
 eu:Argia
 fa:روشن
+fi:Vaalea
 fr:Clair
 ga:éadroime
 gl:Claro
@@ -11942,6 +12237,7 @@ nn:Lyst
 no:Lyst
 pl:Jasny
 pt:Claro
+ro:Luminoasă
 ru:Светлая
 si:ආලෝකමත්
 sk:Svetlý
@@ -11976,9 +12272,11 @@ el:Γραμμή
 es:Línea
 et:Joon
 eu:Lerroa
+fi:Rivi
 fr:Ligne
 ga:Líne
 gl:Liña
+he:קו
 hi:रेखा
 hr:Linija
 hu:Vonal
@@ -11994,6 +12292,7 @@ nl:Regel
 no:Linje
 pl:Linia
 pt:Linha 
+ro:Linie
 ru:Линия
 sl:Črta
 sr-rs:Ред
@@ -12021,7 +12320,10 @@ el:Τέλος γραμμής:
 es:Fin de Línea:
 et:Joone lõpp:
 eu:Lerro hasiera:
+fi:Rivin loppu:
 fr:Fin de ligne :
+gl:Liña final:
+he::סוף שורה
 hi:लाइन अंत:
 hr:Kraj linije:
 hu:Vonalvég:
@@ -12035,12 +12337,14 @@ nl:Lijn Eind
 no:Linjeslutt:
 pl:Koniec linii:
 pt:Fim de linha:
+ro:Sfârșit de linie:
 ru:Конец линии:
 sl:Konec črte:
 sr-rs:Крај реда
 ta:வரி முடிவு:
 tl:Dulo ng linya:
 tr:Satır Bitişi:
+tw:行尾:
 uk:Кінець рядка: 
 vn:Dòng Kết Thúc:
 :Line Start:
@@ -12060,7 +12364,10 @@ el:Έναρξη γραμμής:
 es:Inicio de Línea:
 et:Joone algus:
 eu:Lerro hasiera:
+fi:Rivin alku:
 fr:Début de ligne :
+gl:Liña inicial:
+he::תחילת שורה
 hr:Početak linije:
 hu:Vonalkezdet:
 id:Garis Awal:
@@ -12073,12 +12380,14 @@ nl:Lijn Begin
 no:Linjestart:
 pl:Początek linii:
 pt:Início de linha:
+ro:Început de linie:
 ru:Начало линии:
 sl:Začetek črte:
 sr-rs:Почетак реда
 ta:வரித் தொடக்கம்:
 tl:Simula ng linya:
 tr:Satır Başlangıcı:
+tw:行首:
 uk:Початок рядка: 
 vn:Dòng Bắt Đầu:
 :Loading %s ...
@@ -12095,21 +12404,27 @@ dk:Indlæser %s ...
 el:Φόρτωση %s...
 es:Cargando %s ...
 eu:Gertatzen %s ...
+fi:Ladataan %s ...
 fr:Chargement de %s ...
+gl:Cargando %s ...
+he:טוען %s ...
 hr:Učitavanje %s ...
 hu:Betöltés %s …
 id:Memuat %s
 it:Caricamento %s...
+ja:%s を読込中…
 kr:%s 불러오는 중 ...
 nl:Laden %s...
 no:Laster %s ...
 pl:Ładowanie %s ...
 pt:A carregar %s...
+ro:Încărcare %s ...
 ru:Загрузка %s...
 sl:Nalaganje %s …
 sr-rs:Учитавање %s...
 ta:%s ஏற்றப்படுகிறது ...
 tr:Yükleniyor %s ...
+tw:正在載入 %s ...
 uk:Завантаження %s
 :MB
 af:MB
@@ -12509,12 +12824,13 @@ ta:மாற்றப்பட்டது:
 th:ได้ปรับแต่งแล้ว:
 tl:Nabago noong:
 tr:Değiştirilme:
-tw:檔案更新日期:
+tw:修改日期:
 uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window
 ar:&نافذة جديدة
+az:Yeni &pəncərə
 bg:Нов &прозорец
 br:Nova &janela
 by:Новае &акно
@@ -12527,7 +12843,10 @@ dk:Nyt &vindue
 el:Νέο παράθυρο
 es:Nueva &ventana
 eu:&Leiho berria
+fi:Uusi &ikkuna
 fr:Nouvelle &fenêtre
+gl:Nova &xanela
+he:חלון חדש
 hr:Novi p&rozor
 hu:Új &ablak
 id:Halaman Baru
@@ -12538,6 +12857,7 @@ nl:Nieuw &Kader
 no:Nytt &vindu
 pl:Nowe &okno
 pt:Nova &janela
+ro:&Fereastră nouă
 ru:&Новое окно
 sl:Novo okno
 sr-rs:Нови &прозор
@@ -12564,8 +12884,10 @@ el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
 et:Saadaval on uus versioon
 eu:Bertsio berria eskuragarri
+fi:Uusi versio saatavilla
 fr:Nouvelle version disponible
 gl:Nova versión dispoñible
+he:גרסה חדשה זמינה
 hr:Dostupna nova verzija
 hu:Új verzió elérhető
 id:Versi baru tersedia
@@ -12578,6 +12900,7 @@ nl:Nieuwe versie beschikbaar
 no:Ny versjon tilgjengelig
 pl:Dostępna nowa wersja
 pt:Nova versão disponível
+ro:Versiune nouă disponibilă\n
 ru:Доступна новая версия
 sk:Dostupná nová verzia
 sl:Na voljo je nova različica
@@ -13073,7 +13396,10 @@ el:Διαφάνεια:
 es:Opacidad:
 et:Läbipaistvus:
 eu:Iragazkaiztasuna:
+fi:Läpinäkyvyys:
 fr:Opacité :
+gl:Opacidade:
+he::אטימות
 hi:अपारदर्शिता:
 hr:Neprozirnost:
 hu:Átlátszatlanság:
@@ -13088,6 +13414,7 @@ nl:Dekking
 no:Ugjennomsiktighet:
 pl:Nieprzezroczystość:
 pt:Opacidade 
+ro:Opacitate:\n
 ru:Непрозрачность:
 sl:Motnost:
 sr-rs:Прозрачност
@@ -13113,7 +13440,10 @@ el:Διαφάνεια: %d
 es:Opacidad: %d
 et:Läbipaistvus: %d
 eu:Iragazkaiztasuna: %d
+fi:Läåinäkyvyys: %d
 fr:Opacité : %d
+gl:Opacidade: %d
+he:%d :אטימות
 hr:Neprozirnost: %d
 hu:Átlátszatlanság: %d
 id:Kegelapan: %d
@@ -13127,6 +13457,7 @@ nl:Dekking: %d
 no:Ugjennomsiktighet: %d
 pl:Nieprzezroczystość: %d
 pt:Opacidade: %d
+ro:Opacitate: %d
 ru:Непрозрачность: %d
 sl:Motnost: %d
 sr-rs:Прозрачност: %d
@@ -13254,7 +13585,7 @@ nn:Opne &i PDF-XChange
 no:Åpne i PDF-XChange
 pl:Otwórz &w PDF-XChange
 pt:Abrir no PDF-&XChange
-ro:Deschide în PDF-XChange
+ro:Deschide &în PDF-XChange
 ru:Открыть в PDF-XChange
 si:PDF-XChange කියවනය මගින් විවෘතකරන්න
 sk:Otvoriť v programe PDF-XChange
@@ -13272,6 +13603,7 @@ uk:Відкрити у PDF-XChange
 uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
 :Open Attachment
+az:Qoşmanı aç
 bg:Отваряне на прикачения файл
 br:Abrir Anexo
 by:Адкрыць далучэнне
@@ -13284,7 +13616,10 @@ dk:Åbn vedhæftning
 el:Αποθήκευση συνημμένου
 es:Abrir archivo adjunto
 eu:Ireki eranskina
+fi:Avaa liite
 fr:Ouvrir la pièce jointe
+gl:Abrir anexo
+he:פתח את הקובץ המצורף
 hr:Otvori prilog
 hu:Melléklet megnyitása
 id:Buka Lampiran
@@ -13295,68 +13630,122 @@ nl:Open Bijlage
 no:Åpne vedlegg
 pl:Otwórz załącznik
 pt:Abrir anexo
+ro:Deschide ataşament
 ru:Открыть вложение
 sl:Odpri prilogo
 sr-rs:Отвори прилог
 ta:இணைப்பைத் திறந்திடுக
 tr:Eki aç
+tw:開啟附件
 uk:Відкрити вкладення
 :Open Directory in &Double Commander
+az:Qovluğu &Double Commander-də aç
 br:Abrir Pasta em &Double Commander
+by:Адкрыць каталог у &Double Commander
+ca:Obre el directori amb &Double Commander
 cn:在 Double Commander 中打开目录(&D)
 co:Apre u cartulare cù &Double Commander
 cy:Agor Cyfeiriadur yn &Double Commander
 de:Verzeichnis in &Double Commander öffnen
 el:Άνοιγμα καταλόγου στο &Double Commander
+es:Abrir directorio en &Double Commander
+fi:Avaa hakemisto &Double Commanderissa
 fr:Ouvrir dans &Double Commander
+gl:Abrir directorio no &Double Commander
+he:Double Commander -פתח מדריך ב
+id:Buka Direktori di &Double Commander
 it:Apri cartella in &Double Commander
 nl:Open Map in &Double Commander
 no:Åpne mappe i &Double Commander
 pl:Otwórz katalog w &Double Commanderze
+pt:Abrir pasta no &Double Commander
+ro:Deschide folder în &Double Commander
 ru:Открыть папку в &Double Commander
 sr-rs:Отвори фасциклу у Double Commander-у (&К)
+tr:Dizini &Double Commander ile aç
+tw:在 Double Commander 中開啟資料夾(&D)
+uk:Відкрити папку в &Double Commander
 :Open Directory in &Explorer
+az:Qovluğu &Explorer-də aç
 br:Abrir Pasta no &Explorer
+by:Адкрыць каталог у &Правадніку
+ca:Obre el directori amb l'&Explorador
 cn:在文件资源管理器中打开目录(&E)
 co:Apre u cartulare cù l’&espluratore
 cy:Agor Cyfeiriadur yn &Chwilotwr
 de:Verzeichnis im &Explorer öffnen
 el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείων
+es:Abrir directorio en &Explorador de Archivos
+fi:Avaa hakemisto &Explorerissa
 fr:Ouvrir dans &Explorer
+gl:Abrir directorio no &explorador
+he:פתח מדריך בסייר הקבצים
+id:Buka Direktori di &Explorer
 it:Apri cartella in &Explorer
 nl:Open Map in &Verkenner
 no:Åpne mappe i &filutforsker
 pl:Otwórz katalog w &Eksploratorze
+pt:Abrir pasta no &Explorador
+ro:Deschide folder în &exploratorul de fișiere în Windows
 ru:Открыть папку в &Проводнике
 sr-rs:Отвори фасциклу у Истра&живачу
+tr:Dizini &Explorer ile aç
+tw:在檔案總管中開啟資料夾(&E)
+uk:Відкрити папку в &Провіднику
 :Open Directory in &Total Commander
+az:Qovluğu &Total Commander-də aç
 br:Abrir Pasta em &Total Commander
+by:Адкрыць каталог у &Total Commander
+ca:Obre el directori amb &Total Commander
 cn:在 Total Commander 中打开目录(&T)
 co:Apre u cartulare cù &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
 de:Verzeichnis in &Total Commander öffnen
 el:Άνοιγμα κατακόγου στον &Total Commander
+es:Abrir directorio en &Total Commander
+fi:Avaa hakemisto &Total Commanderissa
 fr:Ouvrir dans &Total Commander
+gl:Abrir directorio no &Total Commander
+he:Total Commander -פתח מדריך ב
+id:Buka Direktori di &Total Commander
 it:Apri cartella in &Total Commander
 nl:Open Map in &TotalCommander
 no:Åpne mappe i &Total Commander
 pl:Otwórz katalog w &Total Commanderze
+pt:Abrir pasta no &Total Commander
+ro:Deschide folder în &Total Commander
 ru:Открыть папку в &Total Commander
 sr-rs:Отвори фасциклу у Total Commander-у (&Т)
+tr:Dizini &Total Commander ile aç
+tw:在 Total Commander 中開啟資料夾(&T)
+uk:Відкрити папку в &Total Commander
 :Open Directory in Directory &Opus
+az:Qovluğu Directory &Opus-da aç
 br:Abrir Pasta em Directory &Opus 
+by:Адкрыць каталог у Directory &Opus
+ca:Obre el directori amb el Directory &Opus
 cn:在 Directory Opus 中打开目录(&O)
 co:Apre u cartulare cù Directory &Opus
 cy:Agor Cyfarwyddiadur yng Nghyfarwyddiadur &Opus
 de:Verzeichnis in Directory &Opus öffnen
 el:Άνοιγμα καταλόγου στο Directory &Opus
+es:Abrir directorio en Directory &Opus
+fi:Avaa hakemisto osoitteessa Directory &Opus
 fr:Ouvrir dans Directory &Opus
+gl:Abrir directorio no Directory &Opus
+he:פתח מדריך בספריה Opus
+id:Buka Direktori di Directory &Opus
 it:Apri cartella in Directory &Opus
 nl:Open Map in Directory &Opus
 no:Åpne mappe i Directory &Opus
 pl:Otwórz katalog w Directory &Opus
+pt:Abrir pasta no Directory Opus
+ro:Deschide folder în Directory &Opus
 ru:Открыть папку в &Directory Opus
 sr-rs:Отвори фасциклу у Directory Opus-у (&Д)
+tr:Dizini Directory &Opus ile aç
+tw:在 Directory Opus 中開啟資料夾(&O)
+uk:Відкрити папку в &Opus
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 ar:فتح بي.دي.أف مدمج 
@@ -13375,9 +13764,11 @@ el:Άνοιγμα ενσωματωμένου PDF
 es:Abrir un PDF incrustado
 et:Ava põimitud PDF
 eu:Ireki barneko PDF
+fi:Avaa upotettu PDF-tiedosto
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
+he:מוטבע PDF פתח מסמך 
 hi:एंबेडेड पीडीएफ खोलें
 hr:Otvori ugrađeni PDF
 hu:Beágyazott PDF megnyitása
@@ -13393,6 +13784,7 @@ nl:Open Ingesloten Pdf
 no:Åpne innebygd PDF
 pl:Otwórz osadzony PDF
 pt:Abrir PDF incorporado
+ro:Deschide PDF încorporat
 ru:Открыть встроенный PDF
 sl:Odpri vdelani PDF
 sr-rs:Отвори уграђени PDF
@@ -13515,7 +13907,7 @@ nn:Opne i %s
 no:Åpne i %s
 pl:Otwórz w %s
 pt:Abrir em %s
-ro:deschide în %s
+ro:Deschide în %s
 ru:Открыть в %s
 si:%s තුල විවෘත කරන්න
 sk:Otvoriť v %s
@@ -13709,7 +14101,7 @@ nn:Opne i &Microsoft XPS-visar
 no:Åpne i &Microsoft XPS-visning
 pl:Otwórz w &Microsoft XPS-Viewer
 pt:Abrir no &Microsoft XPS-Viewer
-ro:Deschide în Microsoft XPS-Viewer
+ro:Deschide în &Microsoft XPS-Viewer
 ru:Открыть в Microsoft XPS-Viewer
 si:Microsoft XPS-Viewer කියවනය මගින් විවෘතකරන්න
 sk:Otvoriť v programe Microsoft XPS-Viewer
@@ -13728,18 +14120,29 @@ uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
 br:Abrir em Microsoft &HTML Help
+by:Адкрыць у Microsoft &HTML Help
+ca:Obre a l'ajuda amb Microsoft &HTML
 cn:在 Microsoft HTML 帮助中打开(&H)
 co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft &HTML Help
 de:In Microsoft &HTML-Hilfe öffnen
 el:Άνοιγμα στη βοήθεια Microsoft &HTML
+es:Abrir en Microsoft HTML Help
+fi:Avaa Microsoft &HTML Help -ohjelmassa
 fr:Ouvrir dans &HTML Help
+gl:Abrir na axuda Microsoft &HTML
+he:פתח בעזרה של Microsoft HTML
+id:Buka di Microsoft &HTML Bantuan
 it:Apri in Microsoft &HTML Help
 nl:Open in Microsoft &HTML Help
 no:Åpne i Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
+pt:Abrir no Microsoft &HTML Help
+ro:Deschide în Microsoft &HTML Help
 ru:Открыть в Microsoft &HTML Help
 sr-rs:Отвори у Microsoft HTML Help-у (&Х)
+tr:Dizini Microsoft &HTML ile aç
+tw:在 Microsoft HTML 說明中開啟(&H)
 :P&roperties
 am:Հ&ատկություններ
 ar:الخصائص
@@ -13799,7 +14202,7 @@ ta:பண்புகள்
 th:&คุณสมบัติ
 tl:Mga katangian
 tr:Ö&zellikler
-tw:特性(&R)...
+tw:內容(&R)...
 uk:Властивості
 uz:&Xossalari
 vn:Thuộc tính
@@ -13916,8 +14319,8 @@ nl:PDF Optimalisaties
 nn:PDF-optimaliseringer:
 no:PDF Optimalisering:
 pl:Optymalizacja PDF:
-pt:Otimizações PDF:
-ro:Optimizari PDF:
+pt:Optimizações PDF:
+ro:Optimizări PDF:
 ru:Оптимизация PDF:
 si:PDF ප්‍රශස්තකරණය කිරීම්
 sk:PDF Optimalizácia:
@@ -14132,6 +14535,7 @@ uk:Документи PDF
 uz:PDF hujjatlari
 vn:Tập tin PDF
 :Pa&ge...
+az:Sə&hifə
 bg:Ст&раница...
 br:Pá&gina
 by:С&таронка…
@@ -14144,23 +14548,28 @@ dk:&Side
 el:Σελίδα
 es:Pá&gina...
 eu:O&rrialdea...
+fi:Si&vu...
 fr:Pa&ge...
+gl:Pá&xina...
+he:...עמוד
 hr:St&ranica...
 hu:&Oldal…
 id:Halaman
 it:Pa&gina...
 ja:ページ(&G)...
 kr:페이지(&G)...
+ku:Rû&pel
 nl:Pa&gina
 no:Si&de...
 pl:&Strona...
 pt:Pá&gina...
+ro:Pa&gina
 ru:С&траница...
 sl:Stran …
 sr-rs:С&траница...
 ta:பக்கம்
 tr:Sayfaya...
-tw:前往頁面...(&G)
+tw:前往頁面(&G)...
 uk:Сторінка
 vn:Trang...
 :Page %s
@@ -14536,6 +14945,7 @@ nn:PalmDoc-dokumentar
 no:PalmDoc dokumenter
 pl:Dokumenty PalmDoc
 pt:Documentos PalmDoc
+ro:Documente PalmDoc 
 ru:Документы PalmDoc
 si:PalmDoc ලේඛන
 sk:PalmDoc dokumenty
@@ -14598,7 +15008,7 @@ nn:Vennlig lukk %s for å fortsetje!
 no:Vennligst lukk %s for å fortsette!
 pl:Zamknij  %s, aby kontynuować!
 pt:Para continuar, feche o %s!
-ro:Rugam inchideti %s pentru a putea continua!
+ro:Rugăm închideţi %s pentru a putea continua!
 ru:Для продолжения закройте %s!
 si:ඉදිරියට යෑම සදහා කරුණාකර %s වසන්න!
 sk:Prosím zatvorte %s pre pokračovanie!
@@ -14616,14 +15026,33 @@ uk:Будь ласка закрийте %s, щоб продовжити!
 uz:Davom etish uchun %s yoping!
 vn:Hãy đóng %s lại để tiến hành!
 :Please wait - loading...
+az:Lütfən gözləyin - yüklənir...
 br:Por favor, aguarde - carregando...
+by:Пачакайце – загружаецца…
+ca:Espereu - s'està carregant...
 cn:请稍等，正在加载...
+co:Aspittate a fine di u caricamentu…
 cy:Arhoswch - wrthi'n llwytho...
 de:Bitte auf das Laden warten...
 el:Παρακαλώ περιμένετε - φόρτωση...
+es:Por favor, espere - cargando...
+fi:Odota - latautuu...
+fr:Chargement, veuillez patienter...
+gl:Prégase agardar, cargando...
+he:...אנא המתן - טוען
+id:Mohon tunggu - sedang memuat...
 it:Caricamento...
+ja:読込中…
 nl:Even wachten - Laden
+no:Lastar, vent venligst...
 pl:Proszę czekać - ładowanie...
+pt:Por favor, aguarde - a carregar...
+ro:Vă rugăm așteptați - încărcare...
+ru:Подождите, идет загрузка..
+sr-rs:Молимо сачекајте – учитавање…
+tr:Yükleniyor lütfen bekleyin...
+tw:請稍候 - 載入中...
+uk:Будь ласка, зачекайте - завантаження...
 :Please wait - rendering...
 am:Խնդրում ենք սպասել...
 ar:الرجاء الإنتظار - اعادة...
@@ -14685,7 +15114,7 @@ ta:தயவுசெய்து காத்திருக்கவும் 
 th:กรุณารอ - กำลังประมวลผล ... ...
 tl:Maghintay - pinapakita...
 tr:Bekleyiniz - oluşturuluyor...
-tw:請稍等，正在渲染...
+tw:請稍候，正在渲染...
 uk:Зачекайте - генерується...
 uz:Kutib turing - render qilinmoqda...
 vn:Xin chờ đợi, đang hiện...
@@ -14707,9 +15136,11 @@ el:Πολυγραμμή
 es:Polilínea
 et:Murdjoon
 eu:Poli lerroa
+fi:Poly Line
 fr:Ligne polygonale
 ga:Líne iolrach
 gl:Liña polivinílica
+he:קו פולי
 hr:Poli-linija
 hu:Vonallánc
 id:Garis Poli
@@ -14724,6 +15155,7 @@ nl:Poly Regel
 no:Polylinje
 pl:Polilinia
 pt:Poli-linha 
+ro:Polilinie
 ru:Ломаная линия
 sl:Polilinija
 sr-rs:Поли-линија
@@ -14752,9 +15184,11 @@ el:Πολύγωνο
 es:Polígono
 et:Hulknurk
 eu:Poligonoa
+fi:Polygon
 fr:Polygone
 ga:Polagán
 gl:Polígono
+he:מצולע
 hr:Poligon
 hu:Sokszög
 id:Poligon
@@ -14769,6 +15203,7 @@ nl:Veelhoek
 no:Polygon
 pl:Wielokąt
 pt:Polígono
+ro:Polygon(grafică pe computer)
 ru:Многоугольник
 sl:Poligon
 sr-rs:Многоугао
@@ -14782,6 +15217,7 @@ vn:Đa Hình
 am:Ելնող. %d 0 R
 bg:Изскачащ прозорец:  %d 0 R
 br:Aparecer: %d 0 R
+by:Усплывальнае акно: %d 0 R
 ca:Emergent: %d 0 R
 cn:弹出：%d 0 R
 co:Finestrinu : %d 0 R
@@ -14791,7 +15227,10 @@ el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
 et:Hüpikaken: %d 0 R
 eu:Ohar-leihoa: %d 0 R
+fi:Ponnahdusikkuna: %d 0 R
 fr:Popup: %d 0 R
+gl:Aparecer: %d 0 R
+he:Popup: %d 0 R
 hr:Skočna obavijest: %d 0 R
 hu:Felugró: %d 0 R
 id:Munculkan: %d 0 R
@@ -14803,12 +15242,14 @@ lv:Uznirstošs: %d 0 R
 nl:Popup: %d O R
 no:Sprettopp: %d 0 R
 pl:Wyskakujące okienko: %d 0 R
-pt:Popup: %d 0 R
+pt:Balão: %d 0 R
+ro:Fereastră pop-up: %d 0 R
 ru:Всплывающее окно: %d 0 R
 sl:Pojavno okno: %d 0 R
 sr-rs:Обавештење: %d 0 R
 ta:துள்ளம்: %d 0 R
 tr:Baloncuk: %d 0 R
+tw:彈出視窗: %d 0 R
 uk:Спливаюче вікно: %d 0 R
 vn:Hiển Thị: %d 0R
 :Postscript documents
@@ -14876,8 +15317,10 @@ uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation
 ar:عرض &تقديمي
+az:Tə&qdimat
 bg:Режим п&резентация
 br:A&presentação
+by:Пр&эзентацыя
 ca:Pr&esentació
 cn:幻灯片(&E)
 co:&Presentazione
@@ -14887,7 +15330,10 @@ dk:Pr&æsentation
 el:Παρουσίαση
 es:Pr&esentación
 eu:Aur&kezpena
+fi:Es&ittely
 fr:Prés&entation
+gl:Pr&esentación
+he:הצגה
 hr:Pr&ezentacija
 hu:&Bemutató
 id:Presentasi
@@ -14898,6 +15344,7 @@ nl:Pr&esentatie
 no:Pr&esentasjon
 pl:&Prezentacja
 pt:Apr&esentação
+ro:Pr&ezentare
 ru:Презента&ция
 sl:Pr&edstavitev
 sr-rs:Пр&езентација
@@ -15218,7 +15665,7 @@ nn:Utskriving under arbeid.
 no:Utskrift pågår.
 pl:Trwa drukowanie.
 pt:Impressão em curso
-ro:Tiparire in curs.
+ro:Tipărire în curs.
 ru:Идёт печать.
 si:මුද්රණය කරමින් පවතී 
 sk:Prebieha tlač...
@@ -15260,7 +15707,7 @@ fi:Tulostaminen on edelleen käynnissä. Keskeytä ja lopeta?
 fr:Impression toujours en cours. Annuler et quitter ?
 ga:Tá clóbhuladh fós ar siúl. Tobscoir agus dún?
 gl:Aínda se está imprimindo. Abortar e saír?
-he:תהליך ההדפסה עדיין לא הסתיים. לבטל ולצאת?
+he:?תהליך ההדפסה עדיין לא הסתיים. לבטל ולצאת
 hi:छपाई अभी भी प्रगति पर है | रद्द किजिये और दें छोड़ दें ?
 hr:Ispis u tijeku. Prekinite i izađite?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
@@ -15281,7 +15728,7 @@ nn:Utskrivinga pågår framleis. Vil du stoppe og avslutte?
 no:Skriver ut fortsatt. Avbryte?
 pl:Nadal trwa drukowanie. Przerwać i wyjść?
 pt:A impressão está em curso. Cancelar e sair?
-ro:In prezent se tipareste ceva. Anulati si renuntati?
+ro:În prezent se tipărește ceva. Anulaţi si renuntaţi?
 ru:Печать ещё не завершена. Отменить и выйти?
 si:මුද්‍රණය කිරීම තවමත් සිදුවේ. එය නවත්වා ඉවත්වන්නද?
 sk:Prebieha tlač. Prerušiť a ukončiť tlač?
@@ -15495,6 +15942,7 @@ uz:Chop etish muammosi.
 vn:Lỗi in.
 :Re&name...
 ar:إعادة ت&سمية...
+az:Adını &dəyişdir...
 bg:Пре&именуване...
 br:Re&nomear...
 by:Пе&райменаваць...
@@ -15507,7 +15955,10 @@ dk:&Omdøb
 el:Μετονομασία
 es:Re&nombrar...
 eu:B&errizendatu...
+fi:Uu&delleennimeä
 fr:Re&nommer...
+gl:Cambiar &nome...
+he:שנה שם...
 hr:Preime&nuj
 hu:&Átnevezés…
 id:Rubah Nama
@@ -15517,13 +15968,14 @@ kr:이름 바꾸기(&N)...
 nl:Her&noem
 no:Gi nytt &navn...
 pl:Zmień &nazwę...
-pt:Mudar &nome...
+pt:Re&nomear...
+ro:Re&denumește...
 ru:Пере&именовать...
 sl:Preime&nuj …
 sr-rs:Пре&именуј...
 ta:பெயர்மாற்றுக
 tr:Yeniden adlandır
-tw:重新命名(&N)
+tw:重新命名(&N)...
 uk:Перейменувати...
 vn:Đổi &Tên
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -15543,7 +15995,10 @@ el:Τετρ: x=%d y=%d dx=%dy=%d
 es:Rectangulo: x=%d y=%d dx=%d dy=%d
 et:Ristkülik: x=%d y=%d dx=%d dy=%d
 eu:Zuzen: x=%d y=%d dx=%d dy=%d
+fi:Suorakulmainen: x=%d y=%d dx=%d dy=%d
 fr:Rect : x=%d y=%d dx=%d dy=%d
+gl:Rectángulo: x=%d y=%d dx=%d dy=%d
+he:Rect: x=%d y=%d dx=%d dy=%d
 hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
 hu:Téglalap: x=%d y=%d dx=%d dy=%d
 id:Persegi: x=%d y=%d dx=%d dy=%d
@@ -15556,13 +16011,15 @@ lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 no:Rekt: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
-pt:Retângulo: x=%d y=%d dx=%d dy=%d
+pt:Rectângulo: x=%d y=%d dx=%d dy=%d
+ro:Dreptunghi: x=%d y=%d dx=%d dy=%d
 ru:Прямоугольник: x=%d y=%d dx=%d dy=%d
 sl:Pravokotnik: x=%d y=%d dx=%d dy=%d
 sr-rs:Правоугаоник: x=%d y=%d dx=%d dy=%d
 ta:செவ்வகம்:x=%d y=%d dx=%d dy=%d
 tl:Rect: x=%d y=%d dx=%d dy=%d
 tr:Dikdörtgen: x=%d y=%d dx=%d dy=%d
+tw:矩形: x=%d y=%d dx=%d dy=%d
 uk:Прямокутн.: x=%d y=%d dx=%d dy=%d
 vn:Khung: x=%d y=%d dx=%d dy=%d
 :Redact
@@ -15571,6 +16028,7 @@ ar:تنقيح
 az:Düzəliş et
 bg:Редактирай
 br:Redigir
+by:Рэдагаваць
 ca-xv:Redacta
 ca:Redacta
 cn:编辑
@@ -15582,9 +16040,11 @@ el:Σύνταξη
 es:Redactar
 et:Redaktsioon
 eu:Idatzi
+fi:Muokkaa
 fr:Rédiger
 ga:Folaigh
 gl:Redactar
+he:ערוך
 hr:Urediti
 hu:Megrövidít
 id:Menyunting
@@ -15598,6 +16058,7 @@ nl:Redigeren
 no:Endre
 pl:Redaguj
 pt:Censurar
+ro:Redactare
 ru:Правка
 sl:Uredi
 sr-rs:Уреди
@@ -15654,7 +16115,7 @@ nn:Husk &opna filar
 no:Husk &åpnede filer
 pl:Pamiętaj &otwierane pliki
 pt:Memorizar ficheiros abert&os
-ro:Ține minte fișierele deschise
+ro:Ține minte &fișierele deschise
 ru:Запоминать &открытые файлы
 si:&විවෘතකළ ගොනු මතකතබාගන්න
 sk:Zapamätať si &otvorené súbory
@@ -15732,7 +16193,7 @@ ta:பிடித்தவற்றில் இருந்து நீக்
 th:ลบออกจากรายการโปรด
 tl:Alisin mula sa mga paborito
 tr:Sık kullanılanlardan kaldır
-tw:自最愛移除
+tw:從我的最愛移除
 uk:Видалити із закладок
 uz:Tanlanganlardan o'chirish
 vn:Xóa khỏi Ưa thích
@@ -15794,7 +16255,7 @@ sv:Ta bort sida %s från favoriter
 ta:%s பக்கத்தைப் பிடித்தவற்றில் இருந்து நீக்குக
 th:ลบหน้า %s ออกจากรายการโปรด
 tr:%s sayfasını sık kullanılanlardan kaldır
-tw:從最愛移除第 %s 頁
+tw:從我的最愛移除第 %s 頁
 uk:Видалити %s сторінку із закладок
 uz:%s betni tanlanganlardan o'chirish
 vn:Xoá trang %s khỏi Ưa thích
@@ -15846,7 +16307,7 @@ nl:Naam wijzigen in
 nn:Gjev nytt namn
 no:Endre Navn Til
 pl:Zmień nazwę na
-pt:Mudar nome para
+pt:Renomear para
 ro:Redenumește la
 ru:Переименовать в
 si:බවට නැවත නම් කරන්න
@@ -15879,7 +16340,10 @@ dk:Rotér &Venstre
 el:Περιστροφή αριστερά
 es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
+fi:Kierrä &Vasemmalle
 fr:Rotation vers la &gauche
+gl:Rotar &esquerda
+he:סובב שמאלה
 hr:Rotiraj &lijevo
 hu:Forgatás &balra
 id:Putar Ke Kiri
@@ -15890,6 +16354,7 @@ nl:&Linksom Roteren
 no:Roter til &venstre
 pl:Obróć w &lewo
 pt:Rodar à &esquerda
+ro:Rotește spre &stânga
 ru:Повернуть в&лево
 sl:Zasukaj v &levo
 sr-rs:Ротирај &лево
@@ -15912,7 +16377,10 @@ dk:Rotér &Højre
 el:Περιστροφή δεξιά
 es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
+fi:Kierrä &oikealle
 fr:Rotation vers la d&roite
+gl:Rotar de&reita
+he:סובב ימינה
 hr:&Rotiraj desno
 hu:Forgatás &jobbra
 id:Putar Ke Kanan
@@ -15923,6 +16391,7 @@ nl:&Rechtsom Roteren
 no:Roter til &høyre
 pl:Obróć w &prawo
 pt:Rodar à di&reita
+ro:Rotește spre &dreapta
 ru:Повернуть в&право
 sl:Zasukaj v &desno
 sr-rs:Ротирај &десно
@@ -15935,6 +16404,7 @@ vn:Quay &Phải
 am:Ը&նտրում
 bg:Се&лекция
 br:S&eleção
+by:В&ыбар
 ca-xv:S&elecció
 ca:S&elecció
 cn:选择(&E)
@@ -15946,7 +16416,10 @@ el:Επιλογή
 es:S&elección
 et:V&alik
 eu:&Hautapena
+fi:V&alinta
 fr:&Sélection
+gl:S&elección
+he:בחירה
 hr:O&dabir
 hu:K&iválasztás
 id:Pilihan
@@ -15957,7 +16430,8 @@ kw:D&ewisans
 nl:S&electie
 no:U&tvalg
 pl:Z&aznaczenie
-pt:S&eleção
+pt:S&elecção
+ro:S&electare
 ru:В&ыделение
 sl:I&zbor
 sr-rs:И&збор
@@ -15973,6 +16447,7 @@ ar:خط مت&عرج
 az:&Dalğa
 bg:&Криволичещо
 br:Sublinhar &ondulado
+by:&Хвалісты
 ca-xv:&Ondulat
 ca:&Ondulat
 cn:波浪线(&Q)
@@ -15983,7 +16458,10 @@ el:Στριφογυριστό
 es:&Ondulado
 et:&Kritseldus
 eu:U&hindua
+fi:K&iemurteleva
 fr:&Ondulé
+gl:O&ndulado
+he:גלי ומתפתל
 hr:&Vrckava crta
 hu:Hullámos
 id:Lekukan
@@ -15997,12 +16475,14 @@ nl:Kr&onkelig
 no:S&nirklet understreking
 pl:&Falowanie
 pt:&Curva irregular
+ro:O&ndulat
 ru:Во&лнистый
 sl:Vi&jugasto
 sr-rs:Ви&југаво
 ta:&நெளிவாக
 th:S&ยุ่งเหยิง
 tr:&Kıvrımlı
+tw:波浪線(&Q)
 uk:Хвилясті 
 vn:Lệch
 :SVG documents
@@ -16022,8 +16502,10 @@ el:Έγγραφα SVG
 es:Documentos SVG
 et:SVG dokumendid
 eu:SVG agiriak
+fi:SVG asiakirjat
 fr:Documents SVG
 gl:documentos SVG
+he:SVG מסמכי
 hr:SVG dokumenti
 hu:SVG dokumentumok
 id:Dokumen SVG
@@ -16035,6 +16517,7 @@ nl:SVG Documenten
 no:SVG-dokumenter
 pl:Documenty SVG
 pt:Documentos SVG
+ro:Documente SVG 
 ru:Документы SVG
 sl:SVG dokumenti
 sr-rs:SVG документи
@@ -16061,8 +16544,10 @@ el:Αποθήκευση σχολίων σε υπάρχον PDF
 es:Guardar anotaciones en PDF existente
 et:Salvesta märkused olemasolevasse PDF-i
 eu:Gorde oharrak badagoen PDF-an
+fi:Tallenna merkinnät nykyiseen PDF-tiedostoon
 fr:Sauvegarder les annotations dans le PDF existant
 gl:Gardar anotacións ó PDF existente
+he:שמירת הערות במסמך PDF קיים
 hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
 id:Simpan catatan ke PDF terkini
@@ -16073,14 +16558,17 @@ nl:Notities opslaan in bestaande PDF
 no:Lagre merknader til eksisterende PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 pt:Guardar anotações para PDF existente
+ro:Salvează adnotări în PDF existent
 ru:Со&хранить аннотации в имеющемся PDF
 sl:Shrani pripombe v obstoječi PDF
 sr-rs:&Сачувај белешке у постојећи PDF
 ta:குறிப்புரைகளை நடப்பிலுள்ள PDFஇல் சேமித்திடுக
 tr:Dipnotları geçerli PDF'ye kaydet
+tw:儲存註解到現有的 PDF
 uk:Збереження приміток до наявного PDF-файлу
 vn:Lưu Chú Thích và thoát PDF
 :Save Attachment...
+az:Qoşmanı yadda saxla...
 bg:Запис на прикачения файл...
 br:Salvar Anexo...
 by:Захаваць далучэнне…
@@ -16093,7 +16581,10 @@ dk:Gem vedhæftning...
 el:Αποθήκευση συνημμένου...
 es:Guarda archivo adjunto...
 eu:Gorde eranskina...
+fi:Tallenna liite...
 fr:Enregistrer la pièce jointe...
+gl:Gardar anexo...
+he:...שמור קובץ מצורף
 hr:Spremi prilog...
 hu:Melléklet mentése…
 id:Simpan Lampiran...
@@ -16104,11 +16595,13 @@ nl:Bijlage Opslaan...
 no:Lagre vedlegg...
 pl:Zapisz załącznik...
 pt:Guardar anexo...
+ro:Salvează ataşamentul...
 ru:Сохранить вложение...
 sl:Shrani priponko …
 sr-rs:Сачувај прилог...
 ta:இணைப்பைச் சேமித்திடுக...
 tr:Eki kaydet
+tw:儲存附件...
 uk:Зберегти вкладення...
 :Save Embedded File...
 am:Պահել ներկառուցված ֆայլը...
@@ -16128,9 +16621,11 @@ el:Αποθήκευση ενσωματωμένου αρχείου...
 es:Guardar el archivo incrustado...
 et:Salvesta põimitud fail...
 eu:Gorde barneko agiria...
+fi:Tallenna upotettu tiedosto...
 fr:Enregistrer le fichier incorporé...
 ga:Taisc comhad leabaithe...
 gl:Gardar ficheiro inserido...
+he:...שמור קובץ מוטבע
 hr:Spremi ugrađenu datoteku...
 hu:Beágyazott fájl mentése...
 id:Simpan File Tersemat
@@ -16145,6 +16640,7 @@ nl:Ingesloten Bestand Opslaan...
 no:Lagre innebygd fil...
 pl:Zapisz osadzony plik...
 pt:Guardar ficheiro incorporado...
+ro:Salvează fișierul încorporat...
 ru:Сохранить вложенный файл...
 sl:Shrani vdelano datoteko …
 sr-rs:Сачувај уграђену датотеку...
@@ -16168,7 +16664,10 @@ dk:Gem gen&vej
 el:Αποθήκευση συντόμευσης
 es:Guardar A&tajo...
 eu:Gorde &lastertekla...
+fi:Tallenna P&ikakuvake...
 fr:Enregistrer le raccourci (&h)
+gl:Gardar ata&llo...
+he:...שמור קיצור דרך
 hr:Spre&mi prečac...
 hu:&Prancsikon mentése…
 id:Simpan
@@ -16179,11 +16678,13 @@ nl:S&neltoets Opslaan
 no:Lagre s&narvei...
 pl:Zapisz s&krót...
 pt:Guardar atal&ho...
+ro:Salvează s&curtătură...
 ru:Сохранить &ярлык...
 sl:S&hrani bližnjico …
 sr-rs:Сачувај пре&чицу...
 ta:&குறுக்குவழியைச் சேமித்திடுக...
 tr:Kısayolu kaydet
+tw:儲存捷徑(&H)... 
 uk:Зберегти ярлик...
 vn:Lưu Đ&ường Tắt
 :Save annotations?
@@ -16202,8 +16703,10 @@ el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
 et:Salvestada märkused?
 eu:Gorde oharrak?
+fi:Tallenna huomautukset?
 fr:Sauvegarder les annotations ?
 gl:Gardar anotacións?
+he:?לשמור הערות
 hr:Spremi bilješke?
 hu:Megjegyzések mentése?
 id:Simpan catatan?
@@ -16215,6 +16718,7 @@ nl:Aantekeningen Opslaan?
 no:Lagre merknader?
 pl:Zapisać adnotacje?
 pt:Guardar anotações?
+ro:Salvați adnotările?
 ru:Сохранить аннотации?
 sl:Shraniti pripombe?
 sr-rs:Сачувати белешке?
@@ -16222,6 +16726,7 @@ ta:குறிப்புரைகளை சேமித்திடவா?
 th:บันทึกคำอธิบายประกอบหรือไม่
 tl:I-save ang mga anotasyon?
 tr:Dipnotlar kaydedilsin mi?
+tw:是否要儲存註解?
 uk:Зберегти анотації?
 vn:Lưu chú thích?
 :Save changes to a new PDF
@@ -16242,8 +16747,10 @@ el:Αποθήκευση αλλαγών σε νέο PDF
 es:Guardar los cambios en un nuevo PDF
 et:Salvesta muudatused uude PDF-i
 eu:Gorde aldaketak PDF berri batean
+fi:Tallenna muutokset uuteen PDF-tiedostoon
 fr:Enregistrer les modifications dans un nouveau PDF
 gl:Gardar anotacións a un novo PDF
+he:חדש PDF שמור שינויים בקובץ
 hr:Spremi promjene u novi PDF
 hu:Változtatások elmentése egy új PDF-be
 id:Simpan perubahan ke PDF baru
@@ -16258,6 +16765,7 @@ nl:Wijzigingen opslaan in een nieuwe PDF
 no:Lagre endringer til en ny PDF
 pl:Zapisz zmiany w nowym pliku PDF
 pt:Guardar alterações para ficheiro PDF distinto
+ro:Salvează modificările într-un PDF nou
 ru:Сохранить изменения в новом PDF
 sk:Uloženie zmien do nového PDF
 sl:Shrani spremembe v novo PDF datoteko
@@ -16266,6 +16774,7 @@ ta:மாற்றங்களை ஒரு புதிய PDFஆகச் ச�
 th:บันทึกการเปลี่ยนแปลงเป็น PDF ใหม่
 tl:I-save ang mga pagbabago sa isang bagong PDF
 tr:Değişiklikleri yeni PDF'ye kaydet
+tw:儲存變更到新的 PDF 檔
 uk:Зберегти зміни у новий PDF
 vn:Lưu thay đổi tới một PDF mới 
 :Save changes to existing PDF
@@ -16286,7 +16795,10 @@ el:Αποθήκευση αλλαγών σε υπάρχον PDF
 es:Guardar los cambios en un PDF existente
 et:Salvesta muudatused olemas olevasse PDF-i
 eu:Gorde aldaketak badagoen PDF batean
+fi:Tallenna muutokset nykyiseen PDF-tiedostoon
 fr:Enregistrer les modifications dans le PDF existant
+gl:Gardar cambios nun PDF existente
+he:קיים PDF שמור שינויים במסמך
 hr:Spremi promjene u postojeći PDF
 hu:Változtatások mentése a meglévő PDF-be
 id:Simpan perubahan ke PDF terkini
@@ -16300,12 +16812,14 @@ nl:Wijzigingen opslaan in bestaande PDF
 no:Lagre endringer til eksisterende PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
 pt:Guardar anotações para PDF existente
+ro:Salvează modificările la PDF existent
 ru:Сохранить изменения в имеющемся PDF
 sl:Shrani spremembe v trenutno PDF datoteko
 sr-rs:Сачувај измене у постојећи PDF
 ta:மாற்றங்களை நடப்பிலுள்ள PDFஇல் சேமித்திடுக
 th:บันทึกการเปลี่ยนแปลงไปยัง PDF ที่เปิดอยู่
 tr:Değişiklikleri var olan PDF'ye kaydet
+tw:儲存變更到現有的 PDF 檔
 uk:Зберегти зміни в поточний PDF
 vn:Lưu thay đổi và thoát PDF
 :Save to &new PDF
@@ -16325,7 +16839,10 @@ el:Αποθήκευση σε νέο PDF
 es:Guardar en un PDF &nuevo
 et:Salvesta &uude PDF-i
 eu:Gorde &PDF berrian
+fi:Tallenna &uusi PDF-tiedosto
 fr:Sauvegarder dans un &nouveau PDF
+gl:Gardar en PDF &novo
+he:חדש PDF שמירה במסמך
 hr:Spremi u &novi PDF
 hu:Mentés új PDF-be
 id:Simpan ke PDF &baru
@@ -16337,6 +16854,7 @@ nl:Opslaan in &nieuwe PDF
 no:Lagre til &ny PDF
 pl:Zapisz w &nowym pliku PDF
 pt:Guardar para PDF disti&nto
+ro:Salvează într-un PDF &nou
 ru:Сохранить в &новом PDF
 sk:Uložiť do &nového PDF
 sl:Shrani v &novo PDF datoteko
@@ -16344,6 +16862,7 @@ sr-rs:Сачувај у &нови PDF
 ta:&புதிய PDFஆகச் சேமித்திடுக
 th:บันทึกไปที่ &​PDF ใหม่
 tr:&Yeni PDF'ye kaydet
+tw:儲存到新的 PDF 檔(&N)
 uk:Зберегти в новому PDF-файлі
 vn:Lưu &PDF mới
 :Saved annotations to '%s'
@@ -16361,7 +16880,10 @@ el: Αποθηκεύτηκαν σχόλια στο '%s'
 es:Anotaciones guardadas en '%s'
 et:Märkused salvestatud '%s'
 eu:Oharrak gordeta hemen: '%s'
+fi:Tallennetut huomautukset kohtaan '%s'.
 fr:Annotation enregistrée vers '%s'
+gl:Gardáronse as anotacións a '%s'
+he:'%s' -הערות שנשמרו ב
 hr:Bilješke spremljene u '%s'
 hu:Mentett megjegyzések ehhez: „%s”
 id:Catatan tersimpan di: %s'
@@ -16375,18 +16897,21 @@ nl:Aantekeningen opgeslagen in '%s'
 no:Lagret merknader i '%s'
 pl:Zapisano adnotacje w '%s'
 pt:Guardar anotações para '%s'
+ro:Adnotări salvate în '%s'
 ru:Аннотации сохранены в '%s'
 sl:Shrani pripombe v '%s'
 sr-rs:Белешке сачуване у "%s"
 ta:குறிப்புரைகள் '%s'இல் சேமிக்கப்பட்டுள்ளன
 tl:Nai-save ang mga anotasyon sa '%s'
 tr:Dipnotlar şuraya kaydedildi: '%s'
+tw:儲存註解至 '%s'
 uk:Анотації збережені до '%s'
 vn:Đã lưu chú thích tới '%s'
 :Saving of '%s' failed with: '%s'
 am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
 bg:Записът на '%s' бе неуспешен с: '%s'
 br:Salvamento de '%s' falhou com: '%s'
+by:Захаванне '%s' не выканана: '%s'
 ca:No s'ha pogut desar '%s': '%s'
 cn:保存 '%s' 失败：'%s'
 co:Arregistramentu di « %s » fiascatu cù : « %s »
@@ -16397,7 +16922,10 @@ el:Η αποθήκευση του '%s' απέτυχε με: '%s'
 es:El proceso de guardado de '%s' fallo por: '%s'
 et:Salvestamine '%s' ebaõnnestus: '%s'
 eu:'%s'-ren gordetzeak huts egin du: '%s'
+fi:'%s':n tallentaminen epäonnistui: '%s'
 fr:L'enregistrement de '%s' a échoué avec : '%s'
+gl:O gardado de '%s' fallou con: '%s'
+he:'%s' :נכשל עם '%s' :שמירה של
 hr:Spremanje '%s' neuspjelo sa: '%s'
 hu:A(z) „%s” mentése sikertelen volt: „%s”
 id:Penyimpanan %s' gagal dengan: %s'
@@ -16411,16 +16939,19 @@ nl:Opslaan van '%s' mislukt met: '%s'
 no:Lagring av '%s' mislyktes med: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
 pt:Não foi possível guardar '%s': '%s'
+ro:Salvarea a '%s' a eșuat cu: '%s'
 ru:Ошибка сохранения '%s' с: '%s'
 sl:Shranjevanje '%s' ni uspelo: '%s'
 sr-rs:Чување "%s" није успело због: "%s"
 ta:'%s': உடன் '%s'ஐச் சேமிப்பது தோல்வியுற்றது
 tr:'%s' kaydedilmesi başarısız: '%s'
+tw:儲存 '%s' 失敗，因為: '%s'
 uk:Не вдалося зберегти '%s' з допомогою: '%s'
 vn:Đang lưu '%s' lỗi với: '%s'
 :Search With &Bing
 am:Որոնել &Bing-ով
 ar:بحث في &Bing
+az:&Bing-də axtar
 bg:Потърси с &Bing
 br:Buscar com &Bing
 by:Шукаць у &Bing
@@ -16435,7 +16966,10 @@ el:Αναζήτηση με Bing
 es:Buscar con &Bing
 et:Otsi &Bingiga
 eu:Bilatu &Bing-rekin
+fi:Haku &Bingin avulla
 fr:Rechercher avec &Bing
+gl:Buscar con &Bing
+he:Bing חפש באמצעות
 hr:Pretraži sa &Bing-om
 hu:Keresés &Bing-el
 id:Cari menggunakan &Bing
@@ -16447,6 +16981,7 @@ nl:Zoeken Met &Bing
 no:Søk med &Bing
 pl:Szukaj za pomocą &Bing
 pt:Pesquisar com &Bing
+ro:Caută cu &Bing
 ru:Н&айти в Bing
 sk:Vyhľadávanie pomocou &Bing
 sl:Išči z &Bing
@@ -16455,12 +16990,13 @@ ta:&Bing உடன் தேடுக
 th:ค้นหาด้วย &​Bing
 tl:Maghanap Gamit ang &Bing
 tr:&Bing İle Ara
-tw:使用Bing搜尋(&B)
+tw:使用 Bing 搜尋(&B)
 uk:Пошук за допомогою &Bing
 vn:Tìm Kiếm Với &Bing
 :Search With &Google
 am:Որոնել &Google-ով
 ar:بحث في &Google
+az:&Google-da axtar
 bg:Потърси с &Google
 br:Buscar com &Google
 by:Шукаць у &Google
@@ -16475,7 +17011,10 @@ el:Αναζήτηση με Google
 es:Buscar con &Google
 et:Otsi &Google-iga
 eu:Bilatu &Google-ekin
+fi:Haku &Googlen avulla
 fr:Rechercher avec &Google
+gl:Buscar con &Google
+he:Google חפש באמצעות
 hr:Pretraži sa &Google-om
 hu:Keresés &Google-el
 id:Cari menggunakan &Google
@@ -16487,6 +17026,7 @@ nl:Zoeken Met &Google
 no:Søk med &Google
 pl:Szukaj za pomocą &Google
 pt:Pesquisar com &Google
+ro:Caută cu &Google
 ru:&Найти в Google
 sk:Hľadať pomocou &Google
 sl:Išči z &Google
@@ -16494,7 +17034,7 @@ sr-rs:Претражи помоћу Google-а (&Г)
 ta:&Google உடன் தேடுக
 th:ค้นหาด้วย &​Google
 tr:&Google İle Ara
-tw:使用Google搜尋(&G)
+tw:使用 Google 搜尋(&G)
 uk:Пошук за допомогою &Google
 vn:Tìm Kiếm Với &Google
 :Searching %d of %d...
@@ -16607,7 +17147,7 @@ nl:&Alles selecteren
 nn:Vel &alle
 no:Merk &alt
 pl:Zaznacz &wszystko
-pt:Selecion&ar tudo
+pt:Seleccion&ar tudo
 ro:Selecte&ază Tot
 ru:В&ыделить все
 si:සියල්ල &තෝරන්න
@@ -16641,7 +17181,10 @@ el:Επιλέξτε σχολιασμό στον επεξεργαστή
 es:Seleccionar la anotación en el editor
 et:Vali märkus redaktoris
 eu:Hautatu oharra editatzailean
+fi:Valitse huomautus editorissa
 fr:Sélectionner l'annotation dans l'éditeur
+gl:Seleccionar anotación no editor
+he:בחר הערה בעורך
 hr:Odaberite bilješku u uređivaču
 hu:Megjegyzés kiválasztása a szerkesztőben
 id:Pilih Catatan di Penyunting
@@ -16654,7 +17197,8 @@ lv:Atlasīt anotāciju redaktorā
 nl:Selecteer Aantekening in Bewerker
 no:Velg merknad i merknadvindu
 pl:Wybierz adnotację w edytorze
-pt:Selecionar anotação no editor
+pt:Seleccionar anotação no editor
+ro:Selectare adnotare în editor
 ru:Выбрать аннотацию в редакторе
 sl:Izberi pripombo v urejevalniku
 sr-rs:Одабери &белешку у уређивачу
@@ -16662,6 +17206,7 @@ ta:தொகுப்பானில் குறிப்புரையைத�
 th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 tl:Piliin ang Anotasyon sa Editor
 tr:Düzenleyicide Dipnot Seç
+tw:在編輯器中選取註解
 uk:Вибір приміток у редакторі
 vn:Chọn Chú Thích trong Chỉnh Sửa
 :Select content with Ctrl+left mouse button
@@ -16690,7 +17235,7 @@ fr:Sélectionner avec Ctrl+bouton gauche de la souris
 fy-nl:Selektearje ynhâld mei Ctrl+linker mûsknop
 ga:Roghnaigh inneachar le Ctrl+an cnaipe luchóige ar chlé
 gl:Seleccionar contido con Ctrl+botón esquerdo do rato
-he:בחר תוכן באמצעות Ctrl + לחצן עכבר שמאלי
+he:לחצן עכבר שמאלי + Ctrl בחר תוכן באמצעות
 hi:सामग्री का चयन करने के लिये  Ctrl +  माउस का बायाँ बटन दबाएँ
 hr:Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
 hu:Jelölje ki a másolandó részt Ctrl+Bal egérgombbal
@@ -16710,7 +17255,7 @@ nl:Selecteer inhoud met Ctrl+linker muisknop
 nn:Vel innhald med Ctrl + venstre museknapp
 no:Velg innhold med Ctrl+Venstre museknapp
 pl:Zaznacz zawartość, wciskając Ctrl i lewy przycisk myszy
-pt:Selecione o conteúdo com Ctrl+botão esquerdo do rato
+pt:Seleccione o conteúdo com Ctrl+botão esquerdo do rato
 ro:Selectați conținut cu Ctrl+buton stânga maus
 ru:Выделите содержимое левой кнопкой мыши, удерживая Ctrl 
 si:Ctrl+left mouse button සමග අන්තර්ගතය තෝරන්න
@@ -16774,7 +17319,7 @@ nn:Vel mappa der SumatraPDF skal bli installert:
 no:Velg mappe der SumatraPDF skal installeres:
 pl:Wybierz folder, w którym należy zainstalować program SumatraPDF:
 pt:Escolha a pasta de instalação do SumatraPDF:
-ro:Alegeti folderul in care sa se instaleze SumatraPDF:
+ro:Alegeţi folderul in care să se instaleze SumatraPDF:
 ru:Укажите папку установки SumatraPDF:
 si:SumatraPDF ස්ථාපනය විය යුතු ෆෝල්ඩරය තෝරන්න:
 sk:Vyberte adresár, kde sa má SumatraPDF nainštalovať:
@@ -16838,6 +17383,7 @@ nn:Utval:
 no:Valg:
 pl:Zaznaczenie:
 pt:Selecção:
+ro:Selectare:
 ru:Выделение:
 si:තෝරාගැනීම
 sk:Výber:
@@ -16901,8 +17447,8 @@ nl:Verzend per &E-Mail...
 nn:Send med &E-post...
 no:Send med E-post...
 pl:Dołącz do wiadomości &e-mail...
-pt:&Enviar por e-mail...
-ro:Trimite pe &E-mail...
+pt:&Enviar por correio electrónico...
+ro:Trimite prin &E-mail...
 ru:Отправить по &электронной почте...
 si:&E-mail... මගින් යවන්න
 sk:Odoslať &e-mailom...
@@ -16915,7 +17461,7 @@ ta:மின்னஞ்சலாக அனுப்பு...
 th:ส่งโดย &อีเมล์...
 tl:Ipadala sa &email...
 tr:&E-postayla Gönder...
-tw:發送電郵(&E)...
+tw:透過電子郵件傳送(&E)...
 uk:Надіслати через E-mail...
 uz:&Elektron pochta orqali yuborish...
 vn:Gửi qua &email...
@@ -16970,7 +17516,7 @@ no:Velg invertert kommandolinje for søk
 pa:ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
 pl:Ustaw wiersz poleceń do odwrotnego wyszukiwania
 pt:Definir linha de comandos para procura inversa
-ro:Setați comandă pentru căutare inversă
+ro:Setați linia de comandă pentru căutare inversă
 ru:Задать команду обратного поиска
 si:Command-line ප්‍රතිලෝම සෙවුම සකසන්න
 sk:Nastaviť inverzné vyhľadávanie
@@ -16983,7 +17529,7 @@ ta:தலைகீழ் தேடல் கட்டளை வரி அமை�
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 tl:Itakda ang inverse search command-line
 tr:Evrik arama komut satırı belirle
-tw:設定反向搜尋指令列
+tw:設定反向搜尋命令列
 uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
@@ -17032,7 +17578,7 @@ nn:Vis &bokmerkar
 no:Vis &bokmerker
 pl:Pokaż &zakładki
 pt:&Mostrar marcadores
-ro:Arata Se&bnele de Carte
+ro:Arată &marcaje
 ru:Показать &закладки
 si:පි&ටුසලකුණු පෙන්වන්න
 sk:Zobraziť &Záložky
@@ -17065,6 +17611,7 @@ el:Εμφάνιση &Αγαπημένων
 es:Mostrar &favoritos
 et:Näita &Lemmikuid
 eu:Erakutsi &Gogokoenak
+fi:Näytä &Suosikit
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
 gl:Amosar &favoritos
@@ -17083,6 +17630,7 @@ nl:Toon &Favorieten
 no:Vis &favoritter
 pl:Pokaż &ulubione
 pt:Mostrar &favoritos
+ro:Arată &favorite
 ru:Показать и&збранное
 sk:Zobraziť &obľúbené položky
 sl:Pokaži priljubljene
@@ -17090,7 +17638,7 @@ sr-rs:Прикажи &фаворите
 ta:&பிடித்தவையைக் காட்டுக
 th:แสดง &รายการโปรด
 tr:&Yer İmlerini Göster
-tw:顯示最愛(&F)
+tw:顯示我的最愛(&F)
 uk:Показати О&бране
 vn:Hiện mục Ưa thích
 :Show &Pages Continuously
@@ -17163,6 +17711,7 @@ ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
 bg:Покажи &лентите за превъртане (Scrollbars)
 br:Mostrar barras de &rolagem
+by:Паказваць &палоскі пракруткі
 ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&S)
@@ -17174,9 +17723,11 @@ el:Εμφάνιση μπαρών κύλισης
 es:Mostrar las &barras de desplazamiento
 et:Näita kerimi&sribasid
 eu:Erakutsi &Irristabarrak
+fi:Näytä &Vierityspalkit
 fr:Afficher les &barres de défilement
 ga:Taispeáin na barraí &scrollála
 gl:Amosr barra&s de desprazamento
+he:הצג פסי גלילה
 hr:Prikaži &klizače
 hu:Görgetősávok mutatása
 id:Tampilkan &Scrollbars
@@ -17191,6 +17742,7 @@ nl:Toon S&chuifbalken
 no:Vis &rullefelt
 pl:Pokaż &paski przewijania
 pt:Mo&strar barra de deslocação
+ro:Arată bare de &derulare
 ru:Показывать по&лосы прокрутки
 sl:Pokaži dr&sne trakove
 sr-rs:Прикажи &траке за померање
@@ -17252,7 +17804,7 @@ no:Vis verktøylinje
 pa:ਸੰਦ ਵਾਲੀ ਫੱਟੀ ਵਖਾਓ
 pl:Pokaż pasek &narzędzi
 pt:Mostrar &barra de ferramentas
-ro:Arată bara de instrumente
+ro:Arată bara de &instrumente
 ru:Показывать панель &инструментов
 si:&මෙවලම්පුවරුව පෙන්වන්න
 sk:Zobraziť &panel nástrojov
@@ -17274,6 +17826,7 @@ vn:Hiện thanh công cụ
 ar:إظهار ال&علامات
 bg:Покажи от&метки
 br:Mostrar favo&ritos
+by:Паказваць &Закладкі
 ca:Mostra els &marcadors
 cn:显示书签(&M)
 co:Affissà l’&indette
@@ -17283,7 +17836,10 @@ dk:Vis bog&mærker
 el:Εμφάνιση σελιδοδεικτών
 es:Mostrar favo&ritos
 eu:Erakutsi &Lastermarkak
+fi:Näytä kirja&merkit
 fr:&Afficher les signets
+gl:Amosar &marcadores
+he:הצג סימניות
 hr:Prikaži fa&vorite
 hu:Könyv&jelzők megjelenítése
 id:Perlihatkan Penanda
@@ -17294,6 +17850,7 @@ nl:Toon Blad&wijzers
 no:Vis bok&merker
 pl:Pokaż za&kładki
 pt:&Mostrar marcadores
+ro:Arată marc&aje
 ru:Показывать &закладки
 sl:Pokaži zazna&mke
 sr-rs:Прикажи обеле&живаче
@@ -17349,7 +17906,7 @@ nn:Vis favorittar
 no:Vis favoritter
 pl:Pokaż ulubione
 pt:Mostrar favoritos
-ro:Arată favoritele
+ro:Arată favorite
 ru:Показывать панель &избранного
 si: ප්‍රියතමයන් පෙන්වන්න
 sk:Zobraziť obľúbené položky
@@ -17362,7 +17919,7 @@ ta:பிடித்தவைகளை காட்டுக
 th:แสดงรายการโปรด
 tl:Ipakita ang mga paborito
 tr:Sık Kullanılanları Göster
-tw:顯示最愛
+tw:顯示我的最愛
 uk:Перелік закладок
 uz:Tanlanganlarni ko'rsatish
 vn:Hiện Ưa thích
@@ -17372,6 +17929,7 @@ ar:إظهار أشرطة التمرير
 az:Sürüşdürmə &zolaqlarını göstər
 bg:Пока&жи лентите за превъртане
 br:Mostrar Barras de R&olagem
+by:Паказваць п&алоскі пракруткі
 ca-xv:Mostra les barres de &desplaçament
 ca:Mostra les barres de &desplaçament
 cn:显示滚动条(&O)
@@ -17383,9 +17941,11 @@ el:Εμφάνιση μπαρών κύλισης
 es:Mostrar las barras de &desplazamiento
 et:Näita &kerimisribasid
 eu:Erakutsi Irristaba&rrak
+fi:Näytä vie&rityspalkit
 fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o
+he:הצג פסי גלילה
 hr:Prikaži &klizače
 hu:Gör&getősávok megjelenítése
 id:Tampilkan Scr&ollbars
@@ -17400,6 +17960,7 @@ nl:Toon Sch&uifbalken
 no:Vis rul&lefelt
 pl:Pokaż p&aski przewijania
 pt:M&ostrar barra de deslocação
+ro:Arată bare de de&rulare
 ru:Показывать по&лосы прокрутки
 sl:Pokaži drsne trak&ove
 sr-rs:Прикажи траке за по&мерање
@@ -17478,6 +18039,7 @@ ar:إظهار في ال&مجلد
 az:Qovlu&qda göstər
 bg:Покажи в &папка
 br:Mostrar na &pasta
+by:Паказаць у &каталогу
 ca-xv:Mostra-ho en la &carpeta
 ca:Mostra-ho a la &carpeta
 cn:打开所在文件夹(&F)
@@ -17490,6 +18052,7 @@ el:Εμφάνιση στον &φάκελο
 es:Mostrar en &carpeta
 et:Näita &kausta
 eu:Erakutsi &agiritegian
+fi:Näytä &kansiossa
 fr:&Afficher dans le dossier
 ga:Taispeáin san &fillteán
 gl:Amosar no carta&fol
@@ -17508,6 +18071,7 @@ nl:Toon in &map
 no:Vis i &mappe
 pl:Pokaż w &folderze
 pt:Mostrar na &pasta
+ro:Arată în &folder
 ru:Показать в п&апке
 sk:Zobraziť v &priečinku
 sl:Pokaži v &mapi
@@ -17515,13 +18079,14 @@ sr-rs:Прикажи у &фасцикли
 ta:கோப்பகத்தில் காண்பி 
 th:แสดงใน &โฟลเดอร์
 tr:&Klasörde göster
-tw:打開所在資料夾(&F)
+tw:在資料夾中顯示(&F)
 uk:Показати в п&апці
 vn:Hiển thị trong &thư mục
 :Show in folder
 az:Qovluqda göstər
 bg:Покажи в папката
 br:Mostrar na pasta
+by:Паказаць у каталогу
 ca:Mostra-ho a la carpeta
 cn:在文件夹中显示
 co:Affissà in u cartulare
@@ -17531,7 +18096,10 @@ dk:Vis i folder
 el:Εμφάνιση στο φάκελο 
 es:mostrar en carpeta
 eu:Erakutsi agiritegian
+fi:Näytä kansiossa
 fr:Afficher dans le dossier
+gl:Amosar no cartafol
+he:הצג בתיקייה
 hr:Prikaži u mapi
 hu:Megjelenítés a mappában
 id:Perlihatkan Di Folder
@@ -17542,12 +18110,13 @@ nl:Toon in map
 no:Vis i mappe
 pl:Pokaż w folderze
 pt:Mostrar na pasta
+ro:Arată în folder
 ru:Показать в папке
 sl:Pokaži v mapi
 sr-rs:Прикажи у фасцикли
 ta:கோப்புறையில் காட்டுக
 tr:Klasörde göster
-tw:打開所在資料夾
+tw:在資料夾中顯示
 uk:Показати в папці
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
@@ -17679,7 +18248,7 @@ ta:ஒற்றைப் பக்கம்
 th:หน้าเดียว
 tl:Iisang Pahina
 tr:Tek Sayfa
-tw:單頁模式
+tw:單頁檢視
 uk:Одна сторінка
 uz:Bitta bet
 vn:Trang đơn
@@ -17699,7 +18268,10 @@ el:Παράλειψη αυτής της έκδοσης
 es:Omitir esta versión
 et:Jäta see versioon vahele
 eu:Jauzi bertsio hau
+fi:Ohita tämä versio
 fr:Ignorer cette version
+gl:Omitir esta versión
+he:דלג על גרסה זו
 hr:Preskoči ovu verziju
 hu:Ezen verzió kihagyása
 id:Lewatkan versi ini
@@ -17711,6 +18283,7 @@ nl:Sla deze versie over
 no:Hopp over denne versjonen
 pl:Pomiń tę wersję
 pt:Ignorar esta versão
+ro:Omite această versiune
 ru:Пропустить эту версию
 sl:Preskoči to različico
 sr-rs:Прескочи ову верзију
@@ -17781,7 +18354,7 @@ ta:மன்னிக்கவும், இது நடந்திருக�
 th:ขออภัยนั่นไม่น่าจะเกิดขึ้น! \n\n กรุณากด 'ยกเลิก' หากคุณต้องการช่วยเราแก้ไขสาเหตุของความผิดพลาดนี้
 tl:Paumanhin, hindi dapat nangyari iyon!\n\nPakipindot ang 'Kanselahin', kung gusto mong tulungan kaming ayusin ang sanhi ng pag-crash na ito.
 tr:Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak istiyorsanız lütfen 'İptal'e basın.
-tw:抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請按下 [取消] 。
+tw:抱歉，這不應該發生的！\n\n如果您想要協助我們修正這個錯誤，請按下 [取消] 。
 uk:Вибачте, але це не мало статись!\n\nНатисніть "Скасувати", якщо ви бажаєте допомогти нам виправити причину збою.
 uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yordam bermoqchi bo'lsaniz 'Bekor qilish' tugmasini bosing.
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
@@ -17855,6 +18428,7 @@ ar:مربع
 az:Kvadrat
 bg:Квадрат
 br:Quadrado
+by:Квадрат
 ca-xv:Quadrat
 ca:Quadrat
 cn:矩形
@@ -17866,9 +18440,11 @@ el:Τετράγωνο
 es:Cuadrado
 et:Ruut
 eu:Laukia
+fi:Neliö
 fr:Carré
 ga:Cearnóg
 gl:Cadrado
+he:ריבוע
 hr:Kvadrat
 hu:Négyzet
 id:Persegi
@@ -17883,6 +18459,7 @@ nl:Vierkant
 no:Firkant
 pl:Kwadrat
 pt:Quadrado 
+ro:Pătrat
 ru:Квадрат
 sl:Kvadrat
 sr-rs:Квадрат
@@ -18081,7 +18658,7 @@ sv:Installationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவி
 th:ตัวติดตั้ง %s SumatraPDF
 tr:SumatraPDF %s Kurucu
-tw:SumatraPDF %s 安裝器
+tw:SumatraPDF %s 安裝程式
 uk:Інсталятор SumatraPDF %s
 uz:SumatraPDF %s o'rnatuvchisi
 vn:Bộ cài đặt %s SumatraPDF
@@ -18142,7 +18719,7 @@ sv:Avinstallationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவல்நீக்கி
 th:ถอนการติดตั้ง SumatraPDF %s
 tr:SumatraPDF %s Kaldırıcı
-tw:SumatraPDF %s 解除安裝器
+tw:SumatraPDF %s 解除安裝程式
 uk:Деінсталятор SumatraPDF %s
 uz:SumatraPDF %s o'chirish dasturi
 vn:Bộ gỡ cài đặt %s SumatraPDF
@@ -18236,7 +18813,7 @@ fi:SumatraPDF:n päivitys
 fr:Mise à jour de SumatraPDF
 ga:Nuashonrú do ShumatraPDF
 gl:Actualización de SumatraPDF
-he:עדכון SumatraPDF
+he:SumatraPDF עדכון
 hi:Sumatra पीडीएफ अपडेट
 hr:SumatraPDF ažuriranje
 hu:SumatraPDF frissítés
@@ -18256,7 +18833,7 @@ nl:SumatraPDF Update
 nn:SumatraPDF Oppdatering
 no:SumatraPDF-oppdatering
 pl:Aktualizacja SumatraPDF
-pt:Atualização do SumatraPDF
+pt:Actualização do SumatraPDF
 ro:Versiune nouă SumatraPDF
 ru:Обновление SumatraPDF
 si:SumatraPDF යාවත්කාලීන කිරීම
@@ -18445,7 +19022,7 @@ nn:SumatraPDF-installeringa blei ikkje funnet.
 no:SumatraPDF installering ikke funnet.
 pl:Program SumatraPDF nie został znaleziony.
 pt:O SumatraPDF não foi encontrado.
-ro:Nu s-a gasit instalarea SumatraPDF.
+ro:Nu s-a găsit instalarea SumatraPDF.
 ru:Установка SumatraPDF не найдена.
 si:SumatraPDF ස්ථාපනය සොයාගත නොහැකිවිය.
 sk:Inštalácia programu SumatraPDF nebola nájdená.
@@ -18593,6 +19170,7 @@ vn:PDF được gắn thẻ
 am:Գրվածքի հավասարեցում
 bg:Подравняване на текста
 br:Alinhamento de Texto:
+by:Выраўнаванне тэксту
 ca:Alineació del text:
 cn:文本对齐:
 co:Aliniamentu di testu :
@@ -18603,7 +19181,10 @@ el:Ευθυγράμμιση κειμένου:
 es:Alineación de Texto:
 et:Teksti joondus:
 eu:Idazki lerrokapena:
+fi:Tekstin kohdistaminen:
 fr:Alignement du texte :
+gl:Aliñación do texto:
+he::יישור טקסט
 hr:Poravnavanje teksta:
 hu:Szövegigazítás:
 id:Rata Teks:
@@ -18617,11 +19198,13 @@ nl:Tekst Uitlijning:
 no:Tekstjustering:
 pl:Wyrównanie tekstu:
 pt:Alinhamento do texto:
+ro:Aliniere text
 ru:Выравнивание текста:
 sl:Poravnava besedila:
 sr-rs:Поравнање текста:
 ta:உரைச் சீரமைவு
 tr:Satır Hizası:
+tw:文字對齊方式:
 uk:Вирівнювання тексту: 
 vn:Căn Chỉnh:
 :Text Color:
@@ -18641,7 +19224,10 @@ el:Text Color:
 es:Color de Texto:
 et:Teksti värv
 eu:Idazki margoa:
+fi:Tekstin väri:
 fr:Couleur du texte :
+gl:Cor do texto:
+he::צבע טקסט
 hr:Boja teksta:
 hu:Szöveg színe:
 id:Warna Teks:
@@ -18657,11 +19243,13 @@ nl:Tekst Kleur
 no:Tekstfarge:
 pl:Kolor tekstu:
 pt:Cor do texto:
+ro:Culoare text:
 ru:Цвет текста:
 sl:Barva besedila:
 sr-rs:Боја текста:
 ta:உரை நிறம்:
 tr:Metin Rengi:
+tw:文字顏色:
 uk:Колір тексту: 
 vn:Màu Sắc:
 :Text Size:
@@ -18681,7 +19269,10 @@ el:Μέγεθος κειμένου:
 es:Tamaño de Texto
 et:Teksti suurus:
 eu:Idazki neurria:
+fi:Tekstin koko:
 fr:Taille du texte :
+gl:Tamaño do texto:
+he::גודל טקסט
 hr:Veličina teksta:
 hu:Szövegméret:
 id:Ukuran Teks:
@@ -18696,11 +19287,13 @@ nl:Tekst Grootte:
 no:Tekststørrelse:
 pl:Rozmiar tekstu:
 pt:Tamanho do texto:
+ro:Mărime text:
 ru:Размер текста:
 sl:Velikost besedila:
 sr-rs:Величина текста:
 ta:உரை அளவு:
 tr:Metin Boyutu:
+tw:文字大小:
 uk:Розмір тексту: 
 vn:Kích Thước:
 :Text Size: %d
@@ -18719,7 +19312,10 @@ el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 et:Teksti suurus: %d
 eu:Idazki neurria: %d
+fi:Tekstin koko: %d
 fr:Taille du texte : %d
+gl:Tamaño do texto: %d
+he:%d :גודל טקסט
 hr:Veličina teksta: %d
 hu:Szövegméret: %d
 id:Ukuran Teks: %d
@@ -18734,11 +19330,13 @@ nl:Tekst Grootte: %d
 no:Tekststørrelse: %d
 pl:Rozmiar tekstu: %d
 pt:Tamanho do texto: %d
+ro:Mărime text: %d
 ru:Размер текста: %d
 sl:Velikost besedila: %d
 sr-rs:Величина текста: %d
 ta:உரை அளவு: %d
 tr:Metin Boyutu: %d
+tw:文字大小: %d
 uk:Розмір тексту: %d
 vn:Kích Thước: %d
 :Text documents
@@ -18788,7 +19386,7 @@ nn:Tekstdokumentar
 no:Tekstdokumenter
 pl:Pliki tekstowe
 pt:Documentos de texto
-ro:Fișiere text
+ro:Documente Text
 ru:Текстовые документы
 si:පෙළ ගොනුව
 sk:Textové dokumenty
@@ -18851,8 +19449,8 @@ nl:Dank u om voor SumatraPDF te kiezen!
 nn:Takk for at du valde SumatraPDF!
 no:Takk for at du valgte SumatraPDF!
 pl:Dziękujemy za wybór SumatraPDF!
-pt:Obrigado por escolher SumatraPDF!
-ro:Va multumim pentru ca ati ales SumatraPDF!
+pt:Obrigado por escolher o SumatraPDF!
+ro:Vă mulţumim pentru că aţi ales SumatraPDF!
 ru:Благодарим за выбор SumatraPDF!
 si:SumatraPDF තෝරගැනීම පිලිබදව ස්තූතියි!
 sk:Dakujeme, že ste sa rozhodli pre SumatraPDF!
@@ -18914,7 +19512,7 @@ nn:Tusen takk! SumatraPDF har blitt installert.
 no:Takk! SumatraPDF har blitt installert.
 pl:Program SumatraPDF został zainstalowany.
 pt:O SumatraPDF foi instalado.
-ro:Multumim! SumatraPDF a fost dezinstalat.
+ro:Mulţumim! SumatraPDF a fost instalat.
 ru:Спасибо! Программа SumatraPDF установлена.
 si:ස්තූතියි! Sumatra PDF ස්ථාපනය කර ඇත
 sk:Ďakujeme! SumatraPDF bol nainštalovaný.
@@ -18975,8 +19573,8 @@ nl:Het installatieprogramma is beschadigd. Gelieve het opnieuw te downloaden.\nO
 nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
-pt:O instalador está danificado.\nDescarregue novamente o ficheiro de instalação.\nDesculpe.
-ro:Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!
+pt:O instalador está danificado.\nTransfira novamente o ficheiro de instalação.\nDesculpe.
+ro:Programul de instalare este deteriorat. Rugăm descărcaţi-l din nou. \n Scuze pentru deranj!
 ru:Программа установки повреждена. Скачайте её повторно.\nИзвините за неудобства!
 si:ස්ථාපනය කරනය අකර්මන්‍යයි. කරුණාකර නැවත බාගත කරන්න. \nඇතිවූ අපහසුතාවයට සමාවන්න!
 sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOspravedlňujeme sa za ťažkosti!
@@ -19035,7 +19633,8 @@ nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogel
 nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
 no:Dette dokumentet bruker ustøttede funksjoner (%s) og kan muligens ikke bli vist riktig.
 pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
-pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
+pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado correctamente
+ro:Acest document folosește caracteristici neacceptate (%s) și este posibil să nu fie redat corect
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 si:මෙම ලේඛනයේ සහය නොදක්වන විශේෂාංග භාවිත වේ (%s) නිසි අයුරින් පිරිනැමීමට නොහැකිවේවි
 sk:Tento dokument používa nepodporované funkcie (%s) a týmto sa nemusí vykresliť správne
@@ -19125,6 +19724,7 @@ vn:Tựa đề
 :Translate with &DeepL
 am:Թարգմանել &DeepL-ով
 ar:ترجمة في &DeepL
+az:&DeepL ilə tərcümə et
 bg:Превод с &DeepL
 br:Traduzir com &DeepL
 by:Перакласці ў &DeepL
@@ -19139,7 +19739,10 @@ el:Μετάφραση με DeepL
 es:Traducir con &DeepL
 et:Tõlgi &DeepL-iga
 eu:Itzuli &DeepL-rekin
+fi:Käännä &DeepL avulla
 fr:Traduire avec &DeepL
+gl:Traducido con &DeepL
+he:DeepL תרגם באמצעות
 hr:Prevedi sa &DeepL
 hu:Fordítsd le a DeepL-el
 id:Terjemahkan dengan &DeepL
@@ -19151,6 +19754,7 @@ nl:Vertalen Met &Deepl
 no:Oversett med &DeepL
 pl:Tłumacz za pomocą &DeepL
 pt:Traduzir com &DeepL
+ro:Traduce cu &DeepL
 ru:П&еревести в DeepL
 sk:Preložiť pomocou &DeepL
 sl:Prevedi z &DeepL
@@ -19158,7 +19762,7 @@ sr-rs:Преведи помоћу DeepL-а (&Д)
 ta:&DeepL உடன் மொழிபெயர்த்திடுக
 th:แปลด้วย &​DeepL
 tr:&DeepL İle Çevir
-tw:使用DeepL翻譯(&D)
+tw:使用 DeepL 翻譯(&D)
 uk:Перекласти за допомогою &DeepL
 vn:Dịch với &DeepL
 :Uninstall SumatraPDF
@@ -19206,7 +19810,7 @@ nl:Verwijder SumatraPDF
 nn:Avinstaller SumatraPDF
 no:Avinstaller SumatraPDF
 pl:Usuń SumatraPDF
-pt:Desinstalar SumatraPDF
+pt:Desinstalar o SumatraPDF
 ro:Dezinstalare SumatraPDF
 ru:Удалить SumatraPDF
 si:SumatraPDF ඉවත්කරන්න
@@ -19249,7 +19853,7 @@ fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
 ga:Theip air díshuiteáil
 gl:Fallou a desinstalación
-he:הסרת SumatraPDF נכשלה.
+he:.נכשלה SumatraPDF הסרת
 hr:Deinstalacija nije uspjela
 hu:Eltávolítás sikertelen
 id:Proses uninstall gagal.
@@ -19269,7 +19873,7 @@ nn:Avinstallering mislykkast
 no:Feil ved avinstallering
 pl:Usunięcie programu nie powiodło się
 pt:Falha ao desinstalar!
-ro:Dezinstalarea a esuat
+ro:Dezinstalarea a eșuat
 ru:Ошибка удаления
 si:ඉවත්කිරීම අසාර්ථක විය
 sk:Odinštalovanie sa nepodarilo
@@ -19396,7 +20000,7 @@ nn:Ukjend kildefil (%s)
 no:Ukjent kildefil (%s)
 pl:Nieznany plik źródłowy (%s)
 pt:O ficheiro (%s) é desconhecido
-ro:Fișier sursă necunoscut (%s)
+ro:Fișier sursă necunoscută (%s)
 ru:Неизвестный исходный файл (%s)
 si:නොදත් මූලාශ්‍ර ගොනුව (%s)
 sk:Neznámy zdrojový súbor (%s)
@@ -19417,6 +20021,7 @@ vn:Không rõ tập tin nguồn (%s)
 am:Չպահված մեկնաբանություններ
 bg:Незапазени обяснения
 br:Anotações não salvas
+by:Незахаваныя заўвагі
 ca-xv:Anotacions sense desar
 ca:Anotacions sense desar
 cn:未保存的标注
@@ -19428,8 +20033,10 @@ el:Μη αποθηκευμένα σχόλια
 es:Anotaciones sin guardar
 et:Salvestamata märkused
 eu:Gorde gabeko oharrak
+fi:Tallentamattomat huomautukset
 fr:Annotations non sauvegardées
 gl:Anotacións sen gardar
+he:הערות שלא נשמרו
 hr:Nespremljene bilješke
 hu:Mentetlen megjegyzések
 id:Catatan tidak tersimpan
@@ -19443,6 +20050,7 @@ nl:Niet-opgeslagen aantekening
 no:Merknader som ikke er lagret
 pl:Niezapisane adnotacje
 pt:Anotações não guardadas
+ro:Adnotări nesalvate
 ru:Не сохранены аннотации
 sl:Neshranjene pripombe
 sr-rs:Несачуване белешке
@@ -19450,12 +20058,14 @@ ta:சேமிக்கப்படாத குறிப்புரைகள�
 th:ไม่ได้บันทึกคำอธิบายประกอบ
 tl:Mga hindi na-save na anotasyon
 tr:Kaydedilmemiş dipnotlar
+tw:未儲存的註解
 uk:Незбережені анотації
 vn:Ghi chú không được lưu
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
 bg:Незаписани анотации в '%s'
 br:Anotações não salvas em '%s'
+by:Незахаваныя заўвагі ў '%s'
 ca-xv:Anotacions sense desar a «%s».
 ca:Anotacions sense desar a «%s».
 cn:'%s' 中有未保存的标注
@@ -19467,7 +20077,10 @@ el:Μη αποθηκευμένα σχόλια στο '%s'
 es:Anotaciones sin guardar en «%s»
 et:Salvestamata märkused dokumendis '%s'
 eu:Gorde gabeko oharrak -> '%s'
+fi:Tallentamattomia huomautuksia kohdassa '%s'.
 fr:Annotations non sauvegardées dans « %s »
+gl:Anotacións sen gardar en '%s'
+he:'%s' -הערות שלא נשמרו ב
 hr:Nespremljene bilješke u '%s'
 hu:Mentetlen megjegyzések itt: '%s'
 id:Catatan tidak tersimpan di '%s'
@@ -19479,6 +20092,7 @@ nl:Niet opgeslagen aantekeningen in '%s'
 no:Merknader som ikke er lagret i '%s'
 pl:Niezapisane adnotacje w '%s'
 pt:Anotações não guardadas em '%s'
+ro:Adnotări nesalvate în '%s'
 ru:В '%s' есть несохранённые аннотации
 sl:Neshranjene pripombe v '%s'
 sr-rs:Несачуване белешке у "%s"
@@ -19486,6 +20100,7 @@ ta:'%s'இல் சேமிக்கப்படாத குறிப்ப�
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
 tl:Hindi na-save na mga anotasyon sa '%s'
 tr:'%s' içinde kaydedilmemiş dipnotlar
+tw: '%s' 尚未儲存註解
 uk:Незбережені анотації в '%s'
 vn:Lưu chú không được lưu trong '%s'
 :Use &tabs
@@ -19532,6 +20147,7 @@ nn:Bruk &faner
 no:Bruk &faner
 pl:Włącz wyświetlanie &kart
 pt:&Utilizar separadores
+ro:Utilizare & file
 ru:Использовать &вкладки
 si:ටැබ &භාවිතය
 sk:Povoliť &záložky
@@ -19847,7 +20463,7 @@ fr:Vous avez la dernière version.
 fy-nl:Jo brûke de meast resinte ferzje.
 ga:Tá an leagan is úire agat.
 gl:Tes a última versión
-he:ברשותך הגרסה האחרונה.
+he:.ברשותך הגרסה האחרונה
 hi:आपके पास पहले से ही नवीनतम संसकरण है
 hr:Imate najnoviju inačicu.
 hu:Önnél a legfrissebb verzió van telepítve.
@@ -19884,7 +20500,7 @@ ta:உங்களிடம் புதிய பதிப்பு உள்�
 th:โปรแกรมของคุณเป็นรุ่นล่าสุดอยู่แล้ว
 tl:Mayroon kang pinakabagong bersyon.
 tr:Güncel sürümü kullanıyorsunuz.
-tw:你的版本已是最新版。
+tw:您已擁有最新版本。
 uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
@@ -19893,6 +20509,7 @@ am:Դուք ունեք չպահված մեկնաբանություններ
 ar:لديك توضيحات غير محفوظة
 bg:Имате незаписан анотации
 br:Você possui anotações não salvas
+by:У вас ёсць незахаваныя заўвагі
 ca-xv:Teniu anotacions sense desar
 ca:Teniu anotacions sense desar
 cn:存在未保存的标注
@@ -19904,8 +20521,10 @@ el:Έχετε μη αποθηκευμένα σχόλια
 es:Hay anotaciones sin guardar
 et:Sul on salvestamata märkuseid
 eu:Gorde gabeko oharrak dituzu
+fi:Sinulla on tallentamattomia huomautuksia
 fr:Vous avez des annotations non sauvegardées
 gl:Tes anotacións sen gardar
+he:יש לך הערות שלא נשמרו
 hr:Imate nespremljene bilješke
 hu:Mentetlen megjegyzéseid vannak
 id:Kamu memiliki catatan yang belum tersimpan
@@ -19919,6 +20538,7 @@ nl:U heeft niet-opgeslagen aantekeningen
 no:Du har merknader som ikke er lagret
 pl:Masz niezapisane adnotacje
 pt:Existem anotações não guardadas
+ro:Aveți adnotări nesalvate
 ru:Аннотации не сохранены
 sl:Imate neshranjene pripombe
 sr-rs:Имате несачуване белешке
@@ -19926,10 +20546,12 @@ ta:உங்களிடம் சேமிக்கப்படாத குற
 th:คุณไม่ได้บันทึกคำอธิบายประกอบ
 tl:Mayroon kang mga hindi na-save na anotasyon
 tr:Kaydedilmemiş dipnotlarınız var
+tw:您有未儲存的註解
 uk:Анотації не збережено
 vn:Bạn có lưu chú chưa lưu
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 am:Ձեր տարբերակն է՝ '%s', իսկ մատչելի է '%s' տարբերակը:\nՑանկանո՞ւմ եք տեղադրել նոր տարբերակը:
+az:Sizin versiya: '%s'. Mövcud versiya: '%s'.\nYeni versiyanı quraşdırmaq istəyirsinizmi?
 bg:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nИмате версия '%s' а версия '%s' е достъпна.\nИскате ли да инсталирате новата версия?
 br:Você possui a versão '%s' sendo que a '%s' está disponível.\nDeseja instalar a nova versão?
 by:У вас устаноўлена версія '%s'. Даступна версія '%s'.\nХочаце ўстанавіць новую версію?
@@ -19944,7 +20566,10 @@ el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η �
 es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quiere instalar la versión nueva?
 et:Sul on versioon '%s' ja saadaval on versioon '%s'.\nKas soovid paigaldada uue versiooni?
 eu:'%s' bertsioa duzu eta '%s' bertsioa eskuragarri dago.\nNahi duzu bertsio berria ezartzea?
+fi:Sinulla on versio '%s' ja versio '%s' on saatavilla.\nTahdotko asentaa uuden version?
 fr:Vous avez la version ‘%s’ et la version ‘%s’ est disponible. \nVoulez-vous installer la nouvelle version ?
+gl:Tes a versión '%s' e está dispoñíbel a versión '%s'.\nQueres instalar a nova versión?
+he:.זמינה '%s' וגרסה '%s' יש לך גרסה\n?האם ברצונך להתקין גרסה חדשה
 hr:Imate verziju '%s' a verzija '%s' je dostupna.\nŽelite li instalirati novu verziju?
 hu:A jelenlegi verziód '%s' és már a '%s' verzió is elérhető.\nSzeretnéd feltelepíteni az új verziót?
 id:Anda memiliki versi '%s' dan versi '%s' telah tersedia.\nApakah anda ingin memasang versi terbaru?
@@ -19955,7 +20580,8 @@ kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon n
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
 no:Du har versjon '%s' og versjon '%s' er tilgjengelig.\nVil du installere ny versjon?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
-pt:Você tem a versão '%s' mas a versão '%s' já está disponível.\nDeseja instalar a nova versão?
+pt:Tem a versão "%s" mas está disponível a versão "%s".\nDeseja instalar a nova versão?
+ro:Versiunea instalată este '%s' și versiunea '%s' este disponibilă.\nDoriți să instalați o nouă versiune?
 ru:Вы используете версию '%s', хотя доступна версия '%s'.\nХотите установить новую версию?
 sl:Nameščeno je različica '%s'. Na voljo je novejša različica '%s'.\n Ali jo želite namestiti?
 sr-rs:Користите верзију "%s", а доступна је верзија "%s".\nЖелите ли да инсталирате нову верзију?
@@ -19968,6 +20594,7 @@ uk:У вас є версія '%s'.Версія '%s' доступна.\nВи хо
 vn:Bạn có phiên bản '%s' và phiên bản '%s' sẵn sàng. \nBạn muốn cài đặt phiên bản mới?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
+az:Siz 32-bitlik SumatraPDF proqramını 64-bitlik əməliyyat sistemində quraşdırırsınız.\nProqramın\n64-bitlik versiyasını endirmək istəyərdinizmi?
 bg:Вие инсталирате 32-битова версия на SumatraPDF на 64-битова ОС.\nИскате ли да свалите\n64-битовата версия?
 br:Você está instalando o SumatraPDF 32-bits em um SO 64-bits.\nDeseja baixar a versão 64-bits?
 by:Вы ўстанаўліваеце 32-бітную версію\nSumatraPDF на 64-бітную АС.\nСпампаваць64-бітную версію?
@@ -19982,7 +20609,10 @@ el:Εγκαθιστάτε το SumatraPDF 32-bit σε λειτουργικό σ�
 es:Está instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits.\n¿Quiere descargar la versión de 64 bits?
 et:Paigaldad 64-bitisele operatsioonisüsteemile 32-bitist SumatraPDF-i versiooni.\nKas soovid alla laadida\nhoopis 64-bitise versiooni?
 eu:32-biteko SumatraPDF ezartzen ari zra 64-biteko SE-n.\nNahi duzu jeistea\n64-biteko bertsioa?
+fi:Asennat 32-bittisen SumatraPDF:n 64-bittiseen käyttöjärjestelmään.\nTahdotko ladata\n64-bittisen version?
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits.\nVoulez-vous télécharger la version 64-bits ?
+gl:Estas a instalar o SumatraPDF de 32-bit nun sistema de 64-bit.\nQueres descargar a versión\nde 64-bit?
+he:.בגרסת 32 סיביות, במערכת ההפעלה של 64 סיביות SumatraPDF אתה מתקין\nהאם ברצונך להוריד\n?גרסת 64 סיביות
 hr:Instalirate 32-bitnu SumatraPDF on 64-bitni OS.\nŽelite li preuzeti 64-bit verziju?
 hu:A SumatraPDF 32-bites verzióját telepíted éppen egy 64-bites operációs rendszerre.\nSzeretnéd inkább letölteni a\n64-bites verziót?
 id:Anda memasang SumatraPDF versi 32-bit pada OS 64-bit.\nApakah Anda ingin mengunduh versi 64-bit?
@@ -19993,7 +20623,8 @@ kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwer
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 no:Du installerer 32-bit SumatraPDF på 64-bit OS.\nVil du laste ned\n64-biters versjonen?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
-pt:Está a instalar a versão 32-bit num sistema 64-bit.\nGostaria de descarregar e instalar\na versão 64-bit?
+pt:Está a instalar a versão 32-bit num sistema 64-bit.\nGostaria de transferir e instalar\na versão 64-bit?
+ro:Se instalează SumatraPDF 32 de biți în Sistem de Operare 64 de biți.\nDoriți să descărcați\nversiunea 64 de biți?
 ru:Вы устанавливаете 32-разрядную версию SumatraPDF в 64-разрядной ОС.\nХотите загрузить 64-разрядную версию программы?
 sl:32-bitni SumatraPDF bo nameščen v 64-bitni operacijski sistem.\nAli bi raje prenesli in namestili 64-bitno različico?
 sr-rs:Инсталирате 32-битни SumatraPDF на 64-битном ОС-у.\nДа ли бисте желели да преузмете\n64-битну верзију?
@@ -20258,7 +20889,7 @@ nl:Zoomniveau
 nn:Zoomfaktor
 no:Zoom til
 pl:Współczynnik powiększenia
-pt:Ampliação
+pt:Factor de ampliação
 ro:Factor de mărire
 ru:Масштаб
 si:විශාලන කළමනාකරණය
@@ -20325,7 +20956,7 @@ nn:[Endringar oppdaga; lastar inn på nytt] %s
 no:[Endringer oppdaget; oppdaterer] %s
 pa:[ਤਬਦੀਲੀਆਂ ਦਾ ਪਤਾ ਚੱਲਿਆ; ਤਾਜ਼ਾ ਕੀਤਾ ਜਾ ਰਿਹੈ] %s
 pl:[wykryto zmiany; odświeżanie] %s
-pt:[Alterações detetadas; a recarregar] %s
+pt:[Alterações detectadas; a recarregar] %s
 ro:[Schimbări detectate; actualizare] %s
 ru:[Обнаружены изменения; обновление...] %s
 si:[වෙනස්කම් හදුනාගෙන; ප්‍රතිපූරණය වෙමින්] %s
@@ -20339,7 +20970,7 @@ ta:[மாற்றங்கள் கண்டுபிடிக்க பட�
 th:[พบการเปลี่ยนแปลง; กำลังเรียกใหม่] %s
 tl:[May napansing mga pagbabago; nagre-refresh] %s
 tr:[Değişiklik saptandı; tazeleniyor] %s
-tw:[已偵測變更，正在更新] %s
+tw:[偵測到變更，正在更新] %s
 uk:[Знайдено зміни; оновлення] %s
 uz:[O'zgarishlar aniqlangan; yangilanmoqda] %s
 vn:[Phát hiện thay đổi; đang cập nhật] %s
@@ -20404,7 +21035,7 @@ sv:kopierar text
 ta:உரை படியெடுக்கப்படுகிறது
 th:การคัดลอกข้อความ
 tl:kinokopya ang mensahe
-tr:metin kopyalanıyor
+tr:Metin kopyalamak
 tw:正在複製文字
 uk:копіювання тексту
 uz:matnni nusxa olish
