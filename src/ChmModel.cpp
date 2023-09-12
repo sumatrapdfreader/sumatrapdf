@@ -218,7 +218,7 @@ void ChmModel::ScrollTo(int, RectF, float) {
     CrashIf(true);
 }
 
-bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* linkHandler) {
+bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
     CrashIf(link->GetKind() != kindDestinationScrollTo);
     char* url = link->GetName();
     if (url) {

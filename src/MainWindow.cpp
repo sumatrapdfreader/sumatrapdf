@@ -433,6 +433,12 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     if (!dest || !win || !win->ctrl || !win->IsDocLoaded()) {
         return;
     }
+    // TODO: this seems like a hack, there should be a better way
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/3499
+    ChmModel* chm = win->ctrl->AsChm();
+    if (chm) {
+        chm->HandleLink(dest, nullptr);
+    }
     int pageNo = dest->GetPageNo();
     if (!win->ctrl->ValidPageNo(pageNo)) {
         return;
