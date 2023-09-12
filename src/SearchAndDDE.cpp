@@ -80,7 +80,10 @@ void FindFirst(MainWindow* win) {
 
     // copy any selected text to the find bar, if it's still empty
     DisplayModel* dm = win->AsFixed();
-    if (dm->textSelection->result.len > 0 && Edit_GetTextLength(win->hwndFindEdit) == 0) {
+    // note: used to only copy selection to search edit ctrl
+    // if search edit was empty
+    //auto isEditEmpty = Edit_GetTextLength(win->hwndFindEdit) == 0
+    if (dm->textSelection->result.len > 0) {
         AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
