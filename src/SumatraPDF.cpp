@@ -4558,6 +4558,15 @@ void ReopenLastClosedFile(MainWindow* win) {
     LoadDocument(&args, false, false);
 }
 
+void CopyFilePath(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    const char* path = tab->GetPath();
+    CopyTextToClipboard(path);
+    // TODO: implement me
+}
+
 void ClearHistory(MainWindow* win) {
     if (!win) {
         // TODO: find current active MainWindow ?
@@ -4783,6 +4792,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdPrint:
             PrintCurrentFile(win);
+            break;
+
+        case CmdCopyFilePath:
+            CopyFilePath(tab);
             break;
 
         case CmdCommandPalette:

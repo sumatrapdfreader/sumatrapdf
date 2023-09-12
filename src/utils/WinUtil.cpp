@@ -1192,7 +1192,7 @@ char* GetDefaultPrinterNameTemp() {
     return nullptr;
 }
 
-bool CopyTextToClipboard(const WCHAR* text, bool appendOnly) {
+static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
     CrashIf(!text);
     if (!text) {
         return false;
@@ -1224,37 +1224,17 @@ bool CopyTextToClipboard(const WCHAR* text, bool appendOnly) {
     return handle != nullptr;
 }
 
-bool CopyTextToClipboard(const char* textA, bool appendOnly) {
-    CrashIf(!textA);
-    if (!textA) {
-        return false;
-    }
+static bool CopyOrAppendTextToClipboard(const char* s, bool appendOnly) {
+    WCHAR* ws = ToWstrTemp(s);
+    return CopyOrAppendTextToClipboard(ws, appendOnly);
+}
 
-    WCHAR* text = ToWstrTemp(textA);
-    if (!appendOnly) {
-        if (!OpenClipboard(nullptr)) {
-            return false;
-        }
-        EmptyClipboard();
-    }
+bool CopyTextToClipboard(const char* s) {
+    return CopyOrAppendTextToClipboard(s, false);
+}
 
-    size_t n = str::Len(text) + 1;
-    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
-    if (handle) {
-        WCHAR* globalText = (WCHAR*)GlobalLock(handle);
-        if (globalText) {
-            str::BufSet(globalText, n, text);
-        }
-        GlobalUnlock(handle);
-
-        SetClipboardData(CF_UNICODETEXT, handle);
-    }
-
-    if (!appendOnly) {
-        CloseClipboard();
-    }
-
-    return handle != nullptr;
+bool AppendTextToClipboard(const char* s) {
+    return CopyOrAppendTextToClipboard(s, true);
 }
 
 static bool SetClipboardImage(HBITMAP hbmp) {

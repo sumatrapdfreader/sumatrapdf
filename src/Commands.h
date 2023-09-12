@@ -49,6 +49,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCopyImage, "Copy Image")                                         \
     V(CmdCopyLinkTarget, "Copy Link Target")                              \
     V(CmdCopyComment, "Copy Comment")                                     \
+    V(CmdCopyFilePath, "Copy File Path")                                  \
     V(CmdScrollUp, "Scroll Up")                                           \
     V(CmdScrollDown, "Scroll Down")                                       \
     V(CmdScrollLeft, "Scroll Left")                                       \

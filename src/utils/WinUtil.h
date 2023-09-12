@@ -123,8 +123,8 @@ bool IsMouseOverRect(HWND hwnd, const Rect& r);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 char* GetDefaultPrinterNameTemp();
 
-bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);
-bool CopyTextToClipboard(const char* textA, bool appendOnly = false);
+bool CopyTextToClipboard(const char*);
+bool AppendTextToClipboard(const char*);
 
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 
