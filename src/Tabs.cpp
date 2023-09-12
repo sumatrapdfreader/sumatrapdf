@@ -197,6 +197,10 @@ static MenuDef menuDefContextTab[] = {
         CmdShowInFolder,
     },
     {
+        _TRN("Copy File Path"),
+        CmdCopyFilePath,
+    },
+    {
         // TODO: translate
         "Open In New Window",
         CmdDuplicateInNewWindow,
@@ -310,6 +314,10 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         }
         case CmdShowInFolder: {
             ShowFileInFolder(tabUnderMouse);
+            break;
+        }
+        case CmdCopyFilePath: {
+            CopyFilePath(tabUnderMouse);
             break;
         }
         case CmdDuplicateInNewWindow: {
