@@ -1733,6 +1733,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             // handle in FrameOnCommand() in SumatraPDF.cpp
             HwndSendCommand(win->hwndFrame, cmd);
             break;
+
+        // note: those are duplicated in SumatraPDF.cpp to enable keyboard shortcuts for them
         case CmdSelectAnnotation:
             CrashIf(!buildCtx.annotationUnderCursor);
 
@@ -1744,6 +1746,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdDeleteAnnotation:
             DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
             break;
+
         case CmdCopyLinkTarget: {
             char* tmp = CleanupURLForClipbardCopy(value);
             CopyTextToClipboard(tmp);

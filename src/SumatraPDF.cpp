@@ -3881,21 +3881,21 @@ static bool ChmForwardKey(WPARAM key) {
     return false;
 }
 
-static void DeleteAnnotationUnderCursor(MainWindow* win) {
-    Point pt = HwndGetCursorPos(win->hwndCanvas);
-    DisplayModel* dm = win->AsFixed();
-    Annotation* annot = nullptr;
-    if (!pt.IsEmpty() && dm) {
-        int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-        if (pageNoUnderCursor > 0) {
-            annot = dm->GetAnnotationAtPos(pt, nullptr);
-        }
+static Annotation* GetAnnotionUnderCursor(WindowTab* tab) {
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return nullptr;
     }
-    if (annot) {
-        auto tab = win->CurrentTab();
-        DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
-        delete annot;
+    Point pt = HwndGetCursorPos(tab->win->hwndCanvas);
+    if (pt.IsEmpty()) {
+        return nullptr;
     }
+    int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+    if (pageNoUnderCursor <= 0) {
+        return nullptr;
+    }
+    Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
+    return annot;
 }
 
 static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
@@ -4750,6 +4750,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
     }
 
+    Annotation* annotationUnderCursor = nullptr;
+
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
         case CmdNewWindow:
@@ -4937,10 +4939,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSaveAnnotations:
             SaveAnnotationsAndCloseEditAnnowtationsWindow(tab);
-            break;
-
-        case CmdEditAnnotations:
-            StartEditAnnotations(tab, nullptr);
             break;
 
         case CmdToggleMenuBar:
@@ -5227,8 +5225,24 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdSelectAnnotation:
+            annotationUnderCursor = GetAnnotionUnderCursor(tab);
+            [[fallthrough]];
+
+        case CmdEditAnnotations:
+            StartEditAnnotations(tab, nullptr);
+            if (annotationUnderCursor) {
+                SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotationUnderCursor);
+                delete annotationUnderCursor;
+            }
+            break;
+
         case CmdDeleteAnnotation: {
-            DeleteAnnotationUnderCursor(win);
+            Annotation* annot = GetAnnotionUnderCursor(tab);
+            if (annot) {
+                DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
+                delete annot;
+            }
         } break;
 
         case CmdDebugDownloadSymbols:

@@ -82,7 +82,7 @@ void FindFirst(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     // note: used to only copy selection to search edit ctrl
     // if search edit was empty
-    //auto isEditEmpty = Edit_GetTextLength(win->hwndFindEdit) == 0
+    // auto isEditEmpty = Edit_GetTextLength(win->hwndFindEdit) == 0
     if (dm->textSelection->result.len > 0) {
         AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
@@ -951,7 +951,9 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, DDEACK& ack) {
 
 static void HandleDdeCmds(HWND hwnd, const char* cmd, DDEACK& ack) {
     while (!str::IsEmpty(cmd)) {
-        { logf("HandleDdeCmds: '%s'\n", cmd); }
+        {
+            logf("HandleDdeCmds: '%s'\n", cmd);
+        }
 
         const char* nextCmd = HandleSyncCmd(cmd, ack);
         if (!nextCmd) {
