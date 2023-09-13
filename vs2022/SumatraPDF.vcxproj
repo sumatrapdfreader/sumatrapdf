@@ -1104,6 +1104,10 @@
     <ClCompile Include="..\src\wingui\WinGui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\docs\releasenotes.txt" />
+    <None Include="..\src\docs\todo.txt" />
+    <None Include="..\src\docs\translations.txt" />
+    <None Include="..\src\docs\wishlist.txt" />
     <None Include="..\src\ext\versions.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -653,11 +653,12 @@ function sumatrapdf_files()
     "WindowTab.*",
 
     "ext/versions.txt",
+    "docs/*.txt",
   })
   filter {"configurations:Debug"}
     files_in_dir("src", {
       "Tests.cpp",
-      "regress/Regress.*",  
+      "regress/Regress.*",
       "Scratch.*",
     })
     files_in_dir("src/testcode", {

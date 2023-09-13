@@ -2,29 +2,73 @@
 the release notes, as we make them, to make the release process easier.
 
 Next version:
-3.4 (???)
-* command palette (with 'Ctrl + K')
-* configurable keyboard shortcuts
-* better support for epub files using mupdf's epub engine
-* added ability to search / translate selected text with web services
-  we have few built-in and you can add your own via
-  https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers
-* installer now has -all-users option for system-wide installation
+
+3.5 (???)
+* exit fullscreen / presentation modes via double click with left mouse button
+* ability to drag out a tab to open it in new window
+* support opening .avif images (including inside .cbz/,cbr files)
+* respect image orientation exif metadata in .jpeg and .png images
+* support Adobe Reader syntax for opening files /A "page=<pageno>#nameddest=<dest>search=<string>
+* add Next Tab / Prev Tab commands and bind them to Ctrl + PageUp / Ctrl + PageDown
+* keep Home tab open; add NoHomeTab advanced option to disable that
+* add context menu to tabs
+* bugfix: handle files we can't open in next file in folder / prev file in folder commands
+* command palette: when search starts with >, only show commands, not files (like in Visual Studio Code)
+* add reopen last closed command (Ctrl + Shift + T, like in web browsers)
+* add clear history command
+* can send commands via DDE
+* added CmdOpenWithExplorer, CmdOpenWithDirectoryOpus, CmdOpenWithTotalCommander, CmdOpenWithDoubleCommander commands
+* enable CmdCloseOtherTabs, CmdCloseTabsToTheRight commands from command palette
+* recognize PgUp / PgDown in keyboard shortcuts
+add -disable-auto-rotation cmd-line print option
+* Arm 64 builds
+
+3.4.6 (2022-06-08)
+* fix crashes
+* fix hang in Fit Content mode and Bookmark links
+
+3.4.5 (2022-06-05)
+* fix crashes
+
+3.4.4 (2022-06-02)
+* restore HOME and END in find edit field
+* fix crashes
+
+3.4.3 (2022-05-29)
+* re-enable Backspace in edit field
+* fix installation for all users when using custom installation directory
+* re-enable Copy Image context menu for comic book files
+* fix display of some PDF images
+* fix slow loading of some ePub files
+
+3.4.2 (2022-05-27)
+* make keyboard accelerators work when tree view has focus
+* fix -set-color-range and -bg-color replacing MainWindowBackground
+* fix crash with incorrectly defined selection handlers
+
+3.4.1 (2022-05-25)
+* fix downloading of symbols for better crash reports
+
+3.4 (2022-05-24)
+* Command Palette
+* customizable keyboard shortcuts
+* better support for epub files using mupdf’s epub engine. Adds text selection and search in ebook files. Better rendering fidelity. On the downside, might be slower.
+* search / translate selected text with web services
+* we have few built-in and you can add your own
+* installer: -all-users cmd-line arg for system-wide install
 * added Annotations.TextIconColor and TextIconType advanced settings
 * added Annotations.UnderlineColor advanced setting
 * added Annotations.DefaultAuthor advanced setting
-  https://github.com/sumatrapdfreader/sumatrapdf/issues/2025
-* 'Shift + i' keyboard shortcuts inverts document colors
-* 'u' and 'Shift + u' keyboard shortucts adds underline annotation for currently selected text
-  https://github.com/sumatrapdfreader/sumatrapdf/issues/2157
-* 'Delete' / 'Backspace' keyboard shortucts delete an annotation under mouse cursor
-* respect zoom level in PDF destination links
-  https://github.com/sumatrapdfreader/sumatrapdf/commit/3aa18aaf89caef7dd28529682d9344ef89422100
-* support .svg files
+* i keyboard shortcuts inverts document colors Shift + i does what i used to do i.e. show page number
+* u and Shift + u keyboard shortcuts adds underline annotation for currently selected text
+* Delete / Backspace keyboard shortcuts delete an annotation under mouse cursor
+support .svg files
 * faster scrolling with mouse wheel when cursor over scrollbar
 * add -search cmd-line option and [Search("<file>", "<search-term>")] DDE command
-* when showing document properties press ctrl-d will show font information for PDF files
-* support opening .heic image files (if Windows has heic codec installed)
+* a way to get list of used fonts in properties window
+* support opening .heic image files (if Windows heic codec is installed)
+* add experimental smooth scrolling (enabled with SmoothScroll advanc
+
 
 3.3.3 (2021-07-20)
 * fix a crash in PdfFilter.dll
