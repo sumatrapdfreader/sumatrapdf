@@ -195,7 +195,6 @@ void TrimWsEnd(char* s, char*& e);
 size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
 size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 
-char* Replace(const char* s, const char* toReplace, const char* replaceWith);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 size_t NormalizeWSInPlace(char* str);

@@ -684,24 +684,6 @@ size_t TrimWSInPlace(char* s, TrimOpt opt) {
     return trimmed;
 }
 
-// caller needs to str::Free() the result
-char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
-    if (!s || str::IsEmpty(toReplace) || !replaceWith) {
-        return nullptr;
-    }
-
-    str::Str result(str::Len(s));
-    size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
-    const char *start = s, *end;
-    while ((end = str::Find(start, toReplace)) != nullptr) {
-        result.Append(start, end - start);
-        result.Append(replaceWith, replLen);
-        start = end + findLen;
-    }
-    result.Append(start);
-    return result.StealData();
-}
-
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
@@ -1556,9 +1538,9 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
     if (!str::Find(s.els, toReplace)) {
         return false;
     }
-    char* newStr = str::Replace(s.els, toReplace, replaceWith);
+    char* newStr = str::ReplaceTemp(s.els, toReplace, replaceWith);
     s.Reset();
-    s.AppendAndFree(newStr);
+    s.Append(newStr);
     return true;
 }
 

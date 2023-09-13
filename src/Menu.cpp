@@ -1015,7 +1015,7 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
         str::Free(newStr);
     }
 
-    char* fileName = MenuToSafeStringTemp(menuString);
+    TempStr fileName = MenuToSafeStringTemp(menuString);
     int menuIdx = (int)((index + 1) % 10);
     menuString = str::Format("&%d) %s", menuIdx, fileName);
     uint menuId = CmdFileHistoryFirst + index;

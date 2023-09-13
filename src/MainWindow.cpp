@@ -400,9 +400,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         TempStr tmpPath = CleanupFileURLTemp(pdf->path);
         // heuristic: replace %20 with ' '
         if (!file::Exists(tmpPath) && (str::Find(tmpPath, "%20") != nullptr)) {
-            char* tmp = str::Replace(tmpPath, "%20", " ");
-            tmpPath = str::DupTemp(tmp);
-            str::Free(tmp);
+            tmpPath = str::ReplaceTemp(tmpPath, "%20", " ");
         }
         LaunchFile(tmpPath, dest);
         return;
@@ -483,9 +481,9 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     }
 
     // TODO: make it a function
-    AutoFreeStr path = str::Replace(pathOrig, "/", "\\");
+    TempStr path = str::ReplaceTemp(pathOrig, "/", "\\");
     if (str::StartsWith(path, ".\\")) {
-        path.SetCopy(path + 2);
+        path = path + 2;
     }
 
     char drive;

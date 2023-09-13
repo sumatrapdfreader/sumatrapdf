@@ -1508,13 +1508,13 @@ void MenuSetText(HMENU m, int id, const char* s) {
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-char* MenuToSafeStringTemp(const char* s) {
+TempStr MenuToSafeStringTemp(const char* s) {
     auto str = str::DupTemp(s);
     if (!str::FindChar(str, '&')) {
         return str;
     }
-    AutoFreeStr safe = str::Replace(str, "&", "&&");
-    return str::DupTemp(safe.Get());
+    TempStr safe = str::ReplaceTemp(str, "&", "&&");
+    return safe;
 }
 
 HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {

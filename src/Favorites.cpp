@@ -418,7 +418,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
             if (f == currFileFav) {
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                char* fileName = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
+                TempStr fileName = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWstrTemp(fileName));
             }
         }

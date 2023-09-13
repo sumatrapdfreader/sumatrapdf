@@ -130,7 +130,7 @@ static char* Escape(const char* str) {
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
     Out1("\t<Properties\n");
-    AutoFreeStr str = Escape(engine->FileName());
+    AutoFreeStr str = Escape(engine->FilePath());
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str = Escape(engine->GetProperty(DocumentProperty::Title));
     if (str.Get()) {
@@ -480,7 +480,7 @@ static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoo
         RenderedBitmap* bmp = engine->RenderPage(args);
         success &= bmp != nullptr;
         if (!bmp && !silent) {
-            ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FileName());
+            ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FilePath());
         }
         if (!bmp || silent) {
             delete bmp;

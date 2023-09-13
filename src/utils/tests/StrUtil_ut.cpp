@@ -7,9 +7,8 @@
 #include "utils/UtAssert.h"
 
 static void StrReplaceTestOne(const char* s, const char* toReplace, const char* replaceWith, const char* expected) {
-    char* res = str::Replace(s, toReplace, replaceWith);
+    TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     utassert(str::Eq(res, expected));
-    free(res);
 }
 
 static void StrReplaceTest() {
@@ -39,9 +38,8 @@ static void StrReplaceTest() {
         {"a", "b", nullptr, nullptr},
     };
     for (size_t i = 0; i < dimof(data); i++) {
-        char* result = str::Replace(data[i].string, data[i].find, data[i].replace);
+        TempStr result = str::ReplaceTemp(data[i].string, data[i].find, data[i].replace);
         utassert(str::Eq(result, data[i].result));
-        str::Free(result);
     }
 }
 

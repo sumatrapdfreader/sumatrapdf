@@ -185,7 +185,7 @@ void MenuRemove(HMENU m, int id);
 void MenuEmpty(HMENU m);
 void MenuSetText(HMENU m, int id, const WCHAR* s);
 void MenuSetText(HMENU m, int id, const char* s);
-char* MenuToSafeStringTemp(const char* s);
+TempStr MenuToSafeStringTemp(const char* s);
 
 struct DoubleBuffer {
     HWND hTarget = nullptr;

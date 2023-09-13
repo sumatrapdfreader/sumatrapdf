@@ -68,10 +68,21 @@ TempStr FormatTemp(const char* fmt, ...) {
 }
 
 TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith) {
-    char* res = str::Replace(s, toReplace, replaceWith);
-    TempStr tmp = str::DupTemp(res);
-    str::Free(res);
-    return tmp;
+    if (!s || str::IsEmpty(toReplace) || !replaceWith) {
+        return nullptr;
+    }
+
+    str::Str result(str::Len(s));
+    size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
+    const char *start = s, *end;
+    while ((end = str::Find(start, toReplace)) != nullptr) {
+        result.Append(start, end - start);
+        result.Append(replaceWith, replLen);
+        start = end + findLen;
+    }
+    result.Append(start);
+    char* res = DupTemp(result.Get());
+    return res;
 }
 
 } // namespace str
