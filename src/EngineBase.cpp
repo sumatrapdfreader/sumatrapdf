@@ -445,9 +445,8 @@ TempStr CleanupFileURLTemp(const char* s) {
 
 // s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
 // We only want the "path.pdf" / "foo@bar.com"
-// caller must free
-char* CleanupURLForClipbardCopy(const char* s) {
-    char* s2 = CleanupFileURLTemp(s);
-    char* s3 = str::Dup(SkipMailProtocolTemp(s));
-    return s3;
+TempStr CleanupURLForClipbardCopyTemp(const char* s) {
+    TempStr s2 = CleanupFileURLTemp(s);
+    s2 = (char*)SkipMailProtocolTemp(s2);
+    return s2;
 }

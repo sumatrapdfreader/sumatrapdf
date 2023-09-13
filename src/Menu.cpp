@@ -1748,9 +1748,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             break;
 
         case CmdCopyLinkTarget: {
-            char* tmp = CleanupURLForClipbardCopy(value);
+            TempStr tmp = CleanupURLForClipbardCopyTemp(value);
             CopyTextToClipboard(tmp);
-            str::Free(tmp);
         } break;
         case CmdCopyComment:
             CopyTextToClipboard(value);
