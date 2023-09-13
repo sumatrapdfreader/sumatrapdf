@@ -397,15 +397,14 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         PageDestinationFile* pdf = (PageDestinationFile*)dest;
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        char* tmpPath = CleanupFileURL(pdf->path);
+        TempStr tmpPath = CleanupFileURLTemp(pdf->path);
         // heuristic: replace %20 with ' '
         if (!file::Exists(tmpPath) && (str::Find(tmpPath, "%20") != nullptr)) {
             char* tmp = str::Replace(tmpPath, "%20", " ");
-            str::Free(tmpPath);
-            tmpPath = tmp;
+            tmpPath = str::DupTemp(tmp);
+            str::Free(tmp);
         }
         LaunchFile(tmpPath, dest);
-        str::Free(tmpPath);
         return;
     }
     if (kindDestinationLaunchEmbedded == kind) {
@@ -438,6 +437,7 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     ChmModel* chm = win->ctrl->AsChm();
     if (chm) {
         chm->HandleLink(dest, nullptr);
+        return;
     }
     int pageNo = dest->GetPageNo();
     if (!win->ctrl->ValidPageNo(pageNo)) {

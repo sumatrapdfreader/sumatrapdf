@@ -518,8 +518,7 @@ struct PasswordUI {
     virtual ~PasswordUI() = default;
 };
 
-// WCHAR* CleanupFileURL(const WCHAR*);
-char* CleanupFileURL(const char* s);
+TempStr CleanupFileURLTemp(const char* s);
 
 // WCHAR* CleanupURLForClipbardCopy(const WCHAR*);
 char* CleanupURLForClipbardCopy(const char* s);
