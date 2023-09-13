@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/BitManip.h"
 #include "utils/WinDynCalls.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
@@ -580,10 +581,11 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
 
 static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
-    if (win->presentation && !(key & ~MK_LBUTTON)) {
-        // in presentation mode, left clicks turn the page,
-        // make two quick left clicks (AKA one double-click) turn two pages
-        OnMouseLeftButtonDown(win, x, y, key);
+    auto isLeft = bit::IsMaskSet(key, (WPARAM)MK_LBUTTON);
+    if (isLeft && (win->presentation || win->isFullScreen)) {
+        // note: before 3.5 used to turn 2 pages
+        // OnMouseLeftButtonDown(win, x, y, key);
+        ExitFullScreen(win);
         return;
     }
 
