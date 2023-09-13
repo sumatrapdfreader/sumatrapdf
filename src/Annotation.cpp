@@ -308,7 +308,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
 }
 */
 
-const char* Contents(Annotation* annot) {
+TempStr Contents(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->ctx;
     ScopedCritSec cs(e->ctxAccess);
@@ -320,7 +320,7 @@ const char* Contents(Annotation* annot) {
         s = nullptr;
         logf("Contents(): pdf_annot_contents()\n");
     }
-    return s;
+    return (TempStr)s;
 }
 
 bool SetContents(Annotation* annot, const char* sv) {

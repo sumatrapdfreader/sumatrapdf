@@ -485,10 +485,10 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
-    str::Str s = Contents(annot);
+    TempStr s = Contents(annot);
     // TODO: don't replace if already is "\r\n"
-    Replace(s, "\n", "\r\n");
-    ew->editContents->SetText(s.Get());
+    s = str::ReplaceTemp(s, "\n", "\r\n");
+    ew->editContents->SetText(s);
     ew->staticContents->SetIsVisible(true);
     ew->editContents->SetIsVisible(true);
 }

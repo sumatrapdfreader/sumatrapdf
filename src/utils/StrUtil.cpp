@@ -1532,6 +1532,7 @@ bool Str::AppendAndFree(const char* s) {
     return ok;
 }
 
+#if 0
 // returns true if was replaced
 bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
     // fast path: nothing to replace
@@ -1543,6 +1544,7 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
     s.Append(newStr);
     return true;
 }
+#endif
 
 void Str::Set(const char* s) {
     Reset();

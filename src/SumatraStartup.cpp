@@ -775,13 +775,12 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    str::Str msg{kInstallerHelpTmpl};
-    str::Replace(msg, "${appName}", kAppName);
+    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl, "${appName}", kAppName);
 
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
         // if we're launched from console, print help to consle window
-        printf("%s\n%s\n", msg.Get(), "See more at https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments");
+        printf("%s\n%s\n", msg, "See more at https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments");
         return;
     }
 
@@ -795,7 +794,7 @@ static void ShowInstallerHelp() {
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = title;
-    dialogConfig.pszMainInstruction = ToWstrTemp(msg.Get());
+    dialogConfig.pszMainInstruction = ToWstrTemp(msg);
     dialogConfig.pszContent =
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
     dialogConfig.nDefaultButton = IDOK;

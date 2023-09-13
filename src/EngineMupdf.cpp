@@ -1605,17 +1605,15 @@ ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
 }
 
 static ByteSlice TxtFileToHTML(const char* path) {
-    ByteSlice fd = file::ReadFile(path);
+    ByteSlice fd = file::ReadFileWithAllocator(path, GetTempAllocator());
     if (fd.empty()) {
         return {};
     }
-    str::Str fc;
-    char* data = (char*)fd.data();
-    fc.Append(data, fd.size());
-    str::Free(data);
-    Replace(fc, "&", "&amp;");
-    Replace(fc, ">", "&gt;");
-    Replace(fc, "<", "&lt;");
+
+    TempStr data = (TempStr)fd.data();
+    data = str::ReplaceTemp(data, "&", "&amp;");
+    data = str::ReplaceTemp(data, ">", "&gt;");
+    data = str::ReplaceTemp(data, "<", "&lt;");
 
     str::Str d;
     d.Append(R"(<html>
@@ -1631,7 +1629,7 @@ static ByteSlice TxtFileToHTML(const char* path) {
     </head>
 <body>
     <pre>)");
-    d.Append(fc.Get());
+    d.Append(data);
     d.Append(R"(</pre>
 </body>
 </html>)");

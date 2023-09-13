@@ -81,7 +81,7 @@ int DefaultAppearanceTextSize(Annotation*);
 void SetDefaultAppearanceTextFont(Annotation*, const char*);
 void SetDefaultAppearanceTextSize(Annotation*, int);
 void SetDefaultAppearanceTextColor(Annotation*, PdfColor);
-const char* Contents(Annotation*);
+TempStr Contents(Annotation*);
 int Quadding(Annotation*);
 bool SetQuadding(Annotation*, int);
 int BorderWidth(Annotation*);
