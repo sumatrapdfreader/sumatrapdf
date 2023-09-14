@@ -1344,6 +1344,7 @@ void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->annotations->Append(annot);
     RebuildAnnotations(ew);
     SelectAnnotationInListBox(ew, annot);
+    ew->editContents->SetFocus();
 }
 
 void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
