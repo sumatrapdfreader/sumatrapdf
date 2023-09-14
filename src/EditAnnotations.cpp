@@ -844,6 +844,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Anno
     DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
+        ew->skipGoToPage = true;
         RebuildAnnotations(ew);
         UpdateUIForSelectedAnnotation(ew, 0);
         ew->listBox->SetCurrentSelection(0);
