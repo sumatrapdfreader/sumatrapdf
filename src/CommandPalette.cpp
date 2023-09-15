@@ -164,7 +164,7 @@ struct CommandPaletteWnd : Wnd {
     void CollectStrings(MainWindow*);
     void FilterStringsForQuery(const char*, StrVec&);
 
-    bool Create(MainWindow* win, bool);
+    bool Create(MainWindow* win, const char* prefix);
     void QueryChanged();
     void ListDoubleClick();
 
@@ -624,7 +624,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
+bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -701,9 +701,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
-    if (noFiles) {
+    if (prefix) {
         // this will trigger filtering
-        editQuery->SetText(">");
+        editQuery->SetText(prefix);
         editQuery->SetSelection(1, 1);
     }
 
@@ -712,7 +712,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
     return true;
 }
 
-void RunCommandPallette(MainWindow* win, bool noFiles) {
+void RunCommandPallette(MainWindow* win, const char* prefix) {
     CrashIf(gCommandPaletteWnd);
 
     if (!gCommandPaletteFont) {
@@ -729,7 +729,7 @@ void RunCommandPallette(MainWindow* win, bool noFiles) {
 
     auto wnd = new CommandPaletteWnd();
     wnd->win = win;
-    bool ok = wnd->Create(win, noFiles);
+    bool ok = wnd->Create(win, prefix);
     CrashIf(!ok);
     gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;

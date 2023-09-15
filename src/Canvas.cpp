@@ -602,7 +602,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
     // ctrl + double click over annotation: start editing the annotation
-    // check before IsOverText() 
+    // check before IsOverText()
     if (pageEl && IsCtrlPressed() && pageEl->Is(kindPageElementComment)) {
         Annotation* annot = dm->GetAnnotationAtPos(mousePos, nullptr);
         if (annot) {
