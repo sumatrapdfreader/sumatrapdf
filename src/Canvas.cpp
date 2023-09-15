@@ -589,19 +589,32 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    bool dontSelect = false;
-    if (gGlobalPrefs->enableTeXEnhancements && !(key & ~MK_LBUTTON)) {
-        dontSelect = OnInverseSearch(win, x, y);
-    }
-    if (dontSelect) {
-        return;
+    if (gGlobalPrefs->enableTeXEnhancements && isLeft) {
+        bool dontSelect = OnInverseSearch(win, x, y);
+        if (dontSelect) {
+            return;
+        }
     }
 
+    Point mousePos = Point(x, y);
     DisplayModel* dm = win->AsFixed();
-    if (dm->IsOverText(Point(x, y))) {
-        int pageNo = dm->GetPageNoByPoint(Point(x, y));
+    int elementPageNo = -1;
+    IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
+
+    // ctrl + double click over annotation: start editing the annotation
+    // check before IsOverText() 
+    if (pageEl && IsCtrlPressed() && pageEl->Is(kindPageElementComment)) {
+        Annotation* annot = dm->GetAnnotationAtPos(mousePos, nullptr);
+        if (annot) {
+            StartEditAnnotations(win->CurrentTab(), annot);
+            return;
+        }
+    }
+
+    if (dm->IsOverText(mousePos)) {
+        int pageNo = dm->GetPageNoByPoint(mousePos);
         if (win->ctrl->ValidPageNo(pageNo)) {
-            PointF pt = dm->CvtFromScreen(Point(x, y), pageNo);
+            PointF pt = dm->CvtFromScreen(mousePos, pageNo);
             dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(win, false);
             RepaintAsync(win, 0);
@@ -609,14 +622,15 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    int pageNo = -1;
-    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y), &pageNo);
-    if (pageEl && pageEl->Is(kindPageElementDest)) {
+    if (!pageEl) {
+        return;
+    }
+    if (pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
-    } else if (pageEl && pageEl->Is(kindPageElementImage)) {
+    } else if (pageEl->Is(kindPageElementImage)) {
         // select an image that could be copied to the clipboard
-        Rect rc = dm->CvtToScreen(pageNo, pageEl->GetRect());
+        Rect rc = dm->CvtToScreen(elementPageNo, pageEl->GetRect());
 
         DeleteOldSelectionInfo(win, true);
         win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
