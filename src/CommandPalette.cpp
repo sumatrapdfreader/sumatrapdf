@@ -353,7 +353,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
     // append paths of opened files
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab2 : win->Tabs()) {
-            if (!tab2->IsDocLoaded()) {
+            if (tab2->IsAboutTab()) {
                 continue;
             }
             const char* name = tab2->filePath.Get();
@@ -492,12 +492,17 @@ const char* SkipWS(const char* s) {
 void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVec& strings) {
     filter = SkipWS(filter);
     bool skipFiles = (filter[0] == '>');
-    if (skipFiles) {
+    bool onlyTabs = (filter[0] == '@');
+    if (skipFiles || onlyTabs) {
         ++filter;
         filter = SkipWS(filter);
     }
     // for efficiency, reusing existing model
     strings.Reset();
+    if (onlyTabs) {
+        FilterStrings(filesInTabs, filter, strings);
+        return;
+    }
     if (!skipFiles) {
         FilterStrings(filesInTabs, filter, strings);
         FilterStrings(filesInHistory, filter, strings);
@@ -539,7 +544,7 @@ void CommandPaletteWnd::ScheduleDelete() {
 static WindowTab* FindOpenedFile(const char* s) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            if (!tab->IsDocLoaded()) {
+            if (tab->IsAboutTab()) {
                 continue;
             }
             const char* name = tab->filePath.Get();
@@ -615,7 +620,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
     r = {x, y, r.dx, r.dy};
     Rect r2 = ShiftRectToWorkArea(r, hwndRelative, true);
-    r2.y = rRelative.y + 32;
+    r2.y = rRelative.y + 42;
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
