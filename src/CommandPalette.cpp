@@ -416,7 +416,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         } else if (msg.wParam == VK_DOWN) {
             dir = 1;
         }
-        if (!dir) {
+        if (dir == 0) {
             return false;
         }
         int n = listBox->GetCount();
@@ -432,6 +432,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
             sel = 0;
         }
         listBox->SetCurrentSelection(sel);
+        return true;
     }
     return false;
 }
