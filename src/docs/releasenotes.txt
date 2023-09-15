@@ -4,6 +4,7 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 
 3.5 (???)
+* add CmdCommandPaletteOnlyTabs and bind it to Alt + K
 * exit fullscreen / presentation modes via double click with left mouse button
 * ability to drag out a tab to open it in new window
 * support opening .avif images (including inside .cbz/,cbr files)
