@@ -156,6 +156,8 @@ struct CommandPaletteWnd : Wnd {
     ListBox* listBox = nullptr;
     Static* staticHelp = nullptr;
 
+    int currTabPos = 0;
+
     void OnDestroy() override;
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
@@ -351,6 +353,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
     ctx.hasToc = win->ctrl && win->ctrl->HasToc();
 
     // append paths of opened files
+    int tabPos = 0;
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab2 : win->Tabs()) {
             if (tab2->IsAboutTab()) {
@@ -359,6 +362,10 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
             const char* name = tab2->filePath.Get();
             name = path::GetBaseNameTemp(name);
             filesInTabs.AppendIfNotExists(name);
+            if (w == win && tab2 == win->CurrentTab()) {
+                currTabPos = tabPos;
+            }
+            tabPos++;
         }
     }
 
@@ -516,7 +523,11 @@ void CommandPaletteWnd::QueryChanged() {
     FilterStringsForQuery(filter, m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
-        listBox->SetCurrentSelection(0);
+        if (str::Eq(filter, "@")) {
+            listBox->SetCurrentSelection(currTabPos);
+        } else {
+            listBox->SetCurrentSelection(0);
+        }
     }
 }
 
@@ -701,7 +712,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
-    if (prefix) {
+    if (!str::IsEmpty(prefix)) {
         // this will trigger filtering
         editQuery->SetText(prefix);
         editQuery->SetSelection(1, 1);
