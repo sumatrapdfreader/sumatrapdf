@@ -445,7 +445,7 @@ static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
         }
     }
 }
-
+// For selection/dragging
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
@@ -596,15 +596,26 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     if (dontSelect) {
         return;
     }
-
+    Point pt{x, y};
     DisplayModel* dm = win->AsFixed();
-    if (dm->IsOverText(Point(x, y))) {
-        int pageNo = dm->GetPageNoByPoint(Point(x, y));
+    if (dm->IsOverText(pt)) {
+        int pageNo = dm->GetPageNoByPoint(pt);
         if (win->ctrl->ValidPageNo(pageNo)) {
-            PointF pt = dm->CvtFromScreen(Point(x, y), pageNo);
-            dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
+            PointF ptf = dm->CvtFromScreen(pt, pageNo);
+            dm->textSelection->SelectWordAt(pageNo, ptf.x, ptf.y);
             UpdateTextSelection(win, false);
             RepaintAsync(win, 0);
+
+            if (IsCtrlPressed()) {
+                IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
+                if (pageEl && pageEl->Is(kindPageElementComment)) {
+                    Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
+                    if (annot) {
+                        StartEditAnnotations(win->CurrentTab(), annot);
+                    }
+                }
+            }
+
         }
         return;
     }
