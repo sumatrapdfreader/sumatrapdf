@@ -853,7 +853,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
 
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Annotation* annot) {
     annot = FindMatchingAnnotation(ew, annot);
-    int prevLocation = ew->listBox->GetCurrentSelection();
+    int prevLocation = ew ? ew->listBox->GetCurrentSelection() : 0;
     DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
