@@ -591,7 +591,24 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
 
     bool isFromTab = filesInTabs.Contains(s);
     if (isFromTab) {
-        WindowTab* tab = FindOpenedFile(s);
+        WindowTab* tab = nullptr;
+        // First find opened file in current window
+        for (WindowTab* winTab : win->Tabs()) {
+            if (winTab->IsAboutTab()) {
+                continue;
+            }
+            const char* name = winTab->filePath.Get();
+            name = path::GetBaseNameTemp(name);
+            if (str::Eq(name, s)) {
+                tab = winTab;
+            }
+        }
+
+        // If not found, find it in other windows
+        if (tab == nullptr) {
+            tab = FindOpenedFile(s);
+        }
+
         if (tab) {
             if (tab->win->CurrentTab() != tab) {
                 SelectTabInWindow(tab);
