@@ -11,6 +11,24 @@
 
 #include "./image_dec.h"
 
+const char* WebPGetEnabledInputFileFormats(void) {
+  return "WebP"
+#ifdef WEBP_HAVE_JPEG
+         ", JPEG"
+#endif
+#ifdef WEBP_HAVE_PNG
+         ", PNG"
+#endif
+         ", PNM (PGM, PPM, PAM)"
+#ifdef WEBP_HAVE_TIFF
+         ", TIFF"
+#endif
+#ifdef HAVE_WINCODEC_H
+         ", Windows Imaging Component (WIC)"
+#endif
+         "";
+}
+
 static WEBP_INLINE uint32_t GetBE32(const uint8_t buf[]) {
   return ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }

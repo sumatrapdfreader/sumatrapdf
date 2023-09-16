@@ -16,11 +16,15 @@
 #ifndef WEBP_EXAMPLES_UNICODE_H_
 #define WEBP_EXAMPLES_UNICODE_H_
 
+#include <stdio.h>
+
 #if defined(_WIN32) && defined(_UNICODE)
 
 // wchar_t is used instead of TCHAR because we only perform additional work when
 // Unicode is enabled and because the output of CommandLineToArgvW() is wchar_t.
 
+#include <fcntl.h>
+#include <io.h>
 #include <wchar.h>
 #include <windows.h>
 #include <shellapi.h>
@@ -55,8 +59,16 @@
 
 #define WFOPEN(ARG, OPT) _wfopen((const W_CHAR*)ARG, TO_W_CHAR(OPT))
 
-#define WPRINTF(STR, ...) wprintf(TO_W_CHAR(STR), __VA_ARGS__)
-#define WFPRINTF(STDERR, STR, ...) fwprintf(STDERR, TO_W_CHAR(STR), __VA_ARGS__)
+#define WFPRINTF(STREAM, STR, ...)                    \
+  do {                                                \
+    int prev_mode;                                    \
+    fflush(STREAM);                                   \
+    prev_mode = _setmode(_fileno(STREAM), _O_U8TEXT); \
+    fwprintf(STREAM, TO_W_CHAR(STR), __VA_ARGS__);    \
+    fflush(STREAM);                                   \
+    (void)_setmode(_fileno(STREAM), prev_mode);       \
+  } while (0)
+#define WPRINTF(STR, ...) WFPRINTF(stdout, STR, __VA_ARGS__)
 
 #define WSTRLEN(FILENAME) wcslen((const W_CHAR*)FILENAME)
 #define WSTRCMP(FILENAME, STR) wcscmp((const W_CHAR*)FILENAME, TO_W_CHAR(STR))
@@ -64,6 +76,8 @@
 #define WSNPRINTF(A, B, STR, ...) _snwprintf(A, B, TO_W_CHAR(STR), __VA_ARGS__)
 
 #else
+
+#include <string.h>
 
 // Unicode file paths work as is on Unix platforms, and no extra work is done on
 // Windows either if Unicode is disabled.
@@ -83,7 +97,7 @@
 #define WFOPEN(ARG, OPT) fopen(ARG, OPT)
 
 #define WPRINTF(STR, ...) printf(STR, __VA_ARGS__)
-#define WFPRINTF(STDERR, STR, ...) fprintf(STDERR, STR, __VA_ARGS__)
+#define WFPRINTF(STREAM, STR, ...) fprintf(STREAM, STR, __VA_ARGS__)
 
 #define WSTRLEN(FILENAME) strlen(FILENAME)
 #define WSTRCMP(FILENAME, STR) strcmp(FILENAME, STR)

@@ -9,6 +9,7 @@ common_HEADERS = ../webp/types.h
 commondir = $(includedir)/webp
 
 noinst_HEADERS =
+noinst_HEADERS += ../dsp/cpu.h
 noinst_HEADERS += ../dsp/dsp.h
 noinst_HEADERS += ../webp/decode.h
 noinst_HEADERS += ../webp/encode.h

@@ -105,6 +105,14 @@ model {
       sources {
         c {
           source {
+            srcDir "sharpyuv"
+            include "sharpyuv.c"
+            include "sharpyuv_cpu.c"
+            include "sharpyuv_csp.c"
+            include "sharpyuv_dsp.c"
+            include "sharpyuv_gamma.c"
+            include "sharpyuv_neon.c"
+            include "sharpyuv_sse2.c"
             srcDir "src/dec"
             include "alpha_dec.c"
             include "buffer_dec.c"
@@ -141,6 +149,7 @@ model {
             include "lossless_msa.c"
             include "lossless_neon.$NEON"
             include "lossless_sse2.c"
+            include "lossless_sse41.c"
             include "rescaler.c"
             include "rescaler_mips32.c"
             include "rescaler_mips_dsp_r2.c"

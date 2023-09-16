@@ -45,18 +45,19 @@ static GifFileType* DGifOpenFileUnicode(const W_CHAR* file_name, int* error) {
   }
 
 #if defined(_WIN32) && defined(_UNICODE)
-
-  int file_handle = _wopen(file_name, _O_RDONLY | _O_BINARY);
-  if (file_handle == -1) {
-    if (error != NULL) *error = D_GIF_ERR_OPEN_FAILED;
-    return NULL;
-  }
+  {
+    int file_handle = _wopen(file_name, _O_RDONLY | _O_BINARY);
+    if (file_handle == -1) {
+      if (error != NULL) *error = D_GIF_ERR_OPEN_FAILED;
+      return NULL;
+    }
 
 #if LOCAL_GIF_PREREQ(5, 0)
-  return DGifOpenFileHandle(file_handle, error);
+    return DGifOpenFileHandle(file_handle, error);
 #else
-  return DGifOpenFileHandle(file_handle);
+    return DGifOpenFileHandle(file_handle);
 #endif
+  }
 
 #else
 

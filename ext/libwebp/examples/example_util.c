@@ -103,7 +103,10 @@ int ExUtilInitCommandLineArguments(int argc, const char* argv[],
     }
     args->own_argv_ = 1;
     args->argv_ = (const char**)WebPMalloc(MAX_ARGC * sizeof(*args->argv_));
-    if (args->argv_ == NULL) return 0;
+    if (args->argv_ == NULL) {
+      ExUtilDeleteCommandLineArguments(args);
+      return 0;
+    }
 
     argc = 0;
     for (cur = strtok((char*)args->argv_data_.bytes, sep);
@@ -111,6 +114,7 @@ int ExUtilInitCommandLineArguments(int argc, const char* argv[],
          cur = strtok(NULL, sep)) {
       if (argc == MAX_ARGC) {
         fprintf(stderr, "ERROR: Arguments limit %d reached\n", MAX_ARGC);
+        ExUtilDeleteCommandLineArguments(args);
         return 0;
       }
       assert(strlen(cur) != 0);

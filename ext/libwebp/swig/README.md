@@ -1,15 +1,20 @@
-Building:
-=========
+# SWIG bindings
 
-JNI SWIG bindings:
-------------------
+## Building
+
+### JNI SWIG bindings
+
+```shell
  $ gcc -shared -fPIC -fno-strict-aliasing -O2 \
        -I/path/to/your/jdk/includes \
        libwebp_java_wrap.c \
        -lwebp \
        -o libwebp_jni.so
+```
 
--------------------------------------- BEGIN PSEUDO EXAMPLE
+Example usage:
+
+```java
 import com.google.webp.libwebp;
 
 import java.lang.reflect.Method;
@@ -33,17 +38,23 @@ public class libwebp_jni_example {
     }
   }
 }
--------------------------------------- END PSEUDO EXAMPLE
+```
 
+```shell
  $ javac -cp libwebp.jar libwebp_jni_example.java
  $ java -Djava.library.path=. -cp libwebp.jar:. libwebp_jni_example
+```
 
-Python SWIG bindings:
----------------------
+### Python SWIG bindings:
+
+```shell
  $ python setup.py build_ext
  $ python setup.py install --prefix=pylocal
+```
 
--------------------------------------- BEGIN PSEUDO EXAMPLE
+Example usage:
+
+```python
 import glob
 import sys
 sys.path.append(glob.glob('pylocal/lib/python*/site-packages')[0])
@@ -53,4 +64,4 @@ print "libwebp decoder version: %x" % libwebp.WebPGetDecoderVersion()
 
 print "libwebp attributes:"
 for attr in dir(libwebp): print attr
--------------------------------------- END PSEUDO EXAMPLE
+```

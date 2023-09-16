@@ -96,7 +96,7 @@ static void Help(void) {
          "  -alpha_dither  use alpha-plane dithering if needed\n"
          "  -mt .......... use multi-threading\n"
          "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
-         "  -resize <w> <h> ......... scale the output (*after* any cropping)\n"
+         "  -resize <w> <h> ......... resize output (*after* any cropping)\n"
          "  -flip ........ flip the output vertically\n"
          "  -alpha ....... only save the alpha plane\n"
          "  -incremental . use incremental decoding (useful for tests)\n"

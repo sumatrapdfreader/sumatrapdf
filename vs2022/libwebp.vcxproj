@@ -627,6 +627,7 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\filters_sse2.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless_sse41.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\rescaler.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\rescaler_sse2.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\ssim.c" />

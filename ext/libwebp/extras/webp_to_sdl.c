@@ -29,7 +29,7 @@
 #endif
 
 static int init_ok = 0;
-int WebpToSDL(const char* data, unsigned int data_size) {
+int WebPToSDL(const char* data, unsigned int data_size) {
   int ok = 0;
   VP8StatusCode status;
   WebPDecoderConfig config;

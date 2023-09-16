@@ -17,6 +17,6 @@ noinst_HEADERS =
 noinst_HEADERS += ../webp/format_constants.h
 
 libwebpmux_la_LIBADD = ../libwebp.la
-libwebpmux_la_LDFLAGS = -no-undefined -version-info 3:6:0 -lm
+libwebpmux_la_LDFLAGS = -no-undefined -version-info 3:13:0 -lm
 libwebpmuxincludedir = $(includedir)/webp
 pkgconfig_DATA = libwebpmux.pc
