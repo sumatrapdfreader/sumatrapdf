@@ -810,7 +810,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
         DoSaveEmbed(ew, ew->annot);
 
         DoCurrentEditAnnotation(ew, ew->annot, annotPageNo);
-
+        ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
     }
 
@@ -853,13 +853,14 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
 
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Annotation* annot) {
     annot = FindMatchingAnnotation(ew, annot);
+    int prevLocation = ew->listBox->GetCurrentSelection();
     DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         ew->skipGoToPage = true;
         RebuildAnnotations(ew);
-        UpdateUIForSelectedAnnotation(ew, 0);
-        ew->listBox->SetCurrentSelection(0);
+        UpdateUIForSelectedAnnotation(ew, prevLocation);
+        ew->tab->currentEditAnnotationMark.show = false;
     }
     MainWindowRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);
@@ -1426,7 +1427,7 @@ void StartEditAnnotations(WindowTab* tab, Vec<Annotation*>& annots) {
     HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     ew->skipGoToPage = !annots.empty();
     if (!annots.empty()) {
-        SelectAnnotationInListBox(ew, annots[0]);
+        SelectAnnotationInListBox(ew, annots[0]); // why
     }
 
     // important to call this after hooking up onSize to ensure
