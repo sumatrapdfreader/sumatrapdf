@@ -289,7 +289,7 @@ void CancelDrag(MainWindow* win) {
     SetCursorCached(IDC_ARROW);
 }
 
-bool IsDrag(int x1, int x2, int y1, int y2) {
+bool IsDragDistance(int x1, int x2, int y1, int y2) {
     int dx = abs(x1 - x2);
     int dragDx = GetSystemMetrics(SM_CXDRAG);
     if (dx > dragDx) {
@@ -337,7 +337,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
 
     if (win->dragStartPending) {
-        if (!IsDrag(x, win->dragStart.x, y, win->dragStart.y)) {
+        if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
         }
         win->dragStartPending = false;
@@ -503,7 +503,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
 
     // TODO: should IsDrag() ever be true here? We should get mouse move first
-    bool didDragMouse = !win->dragStartPending || IsDrag(x, win->dragStart.x, y, win->dragStart.y);
+    bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         StopMouseDrag(win, x, y, !didDragMouse);
     } else {
@@ -681,7 +681,7 @@ static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    int isDragXOrY = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
+    int isDragXOrY = IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     bool didDragMouse = !win->dragStartPending || isDragXOrY;
     StopMouseDrag(win, x, y, !didDragMouse);
 

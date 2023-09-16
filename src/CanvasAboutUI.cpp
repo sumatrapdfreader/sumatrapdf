@@ -105,7 +105,7 @@ static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
 }
 
 static void OnMouseRightButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
-    int isDrag = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
+    int isDrag = IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (isDrag) {
         return;
     }
