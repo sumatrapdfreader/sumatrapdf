@@ -1,3 +1,5 @@
+# Ignore this file during non-NDK builds.
+ifdef NDK_ROOT
 LOCAL_PATH := $(call my-dir)
 
 ################################################################################
@@ -52,3 +54,4 @@ LOCAL_STATIC_LIBRARIES := imageio_util
 LOCAL_MODULE := imageenc
 
 include $(BUILD_STATIC_LIBRARY)
+endif  # NDK_ROOT

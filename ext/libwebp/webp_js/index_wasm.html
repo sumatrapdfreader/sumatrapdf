@@ -34,7 +34,7 @@ function decode(webp_data, canvas_id) {
   var result;
   if (Module["asm"] != undefined) {
     // wrapper for the function decoding a WebP into a canvas object
-    WebpToCanvas = Module.cwrap('WebpToSDL', 'number', ['array', 'number']);
+    WebpToCanvas = Module.cwrap('WebPToSDL', 'number', ['array', 'number']);
     // get the canvas to decode into
     var canvas = document.getElementById(canvas_id);
     if (canvas == null) return;

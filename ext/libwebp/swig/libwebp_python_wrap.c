@@ -2764,7 +2764,7 @@ SWIG_Python_DestroyModule(void *vptr)
 SWIGRUNTIME void
 SWIG_Python_SetModule(swig_module_info *swig_module) {
 #if PY_VERSION_HEX >= 0x03000000
- /* Add a dummy module object into sys.modules */
+ /* Add a placeholder module object into sys.modules */
   PyObject *module = PyImport_AddModule((char*)"swig_runtime_data" SWIG_RUNTIME_VERSION);
 #else
   static PyMethodDef swig_empty_runtime_method_table[] = { {NULL, NULL, 0, NULL} }; /* Sentinel */

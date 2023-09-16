@@ -3,7 +3,9 @@
 *.pc
 .DS_Store
 .deps
+.idea
 .libs
+.vscode
 /aclocal.m4
 /ar-lib
 /autom4te.cache

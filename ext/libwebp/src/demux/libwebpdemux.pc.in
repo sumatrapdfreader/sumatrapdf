@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: libwebpdemux
 Description: Library for parsing the WebP graphics format container
 Version: @PACKAGE_VERSION@
-Requires: libwebp >= 0.2.0
+Requires.private: libwebp >= 0.2.0
 Cflags: -I${includedir}
-Libs: -L${libdir} -lwebpdemux
+Libs: -L${libdir} -l@webp_libname_prefix@webpdemux

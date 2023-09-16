@@ -1692,6 +1692,24 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
     return hwnd;
 }
 
+LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+        case WM_KEYDOWN: {
+            if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed()) {
+                return false;
+            }
+            PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+            return true;
+        }
+
+        case UWM_DELAYED_CTRL_BACK: {
+            EditImplementCtrlBack(hwnd);
+            return true;
+        }
+    }
+    return WndProcDefault(hwnd, msg, wp, lp);
+}
+
 bool Edit::HasBorder() {
     DWORD exStyle = GetWindowExStyle(hwnd);
     bool res = bit::IsMaskSet<DWORD>(exStyle, WS_EX_CLIENTEDGE);

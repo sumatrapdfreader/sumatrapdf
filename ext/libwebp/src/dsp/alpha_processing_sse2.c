@@ -18,16 +18,16 @@
 
 //------------------------------------------------------------------------------
 
-static int DispatchAlpha_SSE2(const uint8_t* alpha, int alpha_stride,
-                              int width, int height,
-                              uint8_t* dst, int dst_stride) {
+static int DispatchAlpha_SSE2(const uint8_t* WEBP_RESTRICT alpha,
+                              int alpha_stride, int width, int height,
+                              uint8_t* WEBP_RESTRICT dst, int dst_stride) {
   // alpha_and stores an 'and' operation of all the alpha[] values. The final
   // value is not 0xff if any of the alpha[] is not equal to 0xff.
   uint32_t alpha_and = 0xff;
   int i, j;
   const __m128i zero = _mm_setzero_si128();
-  const __m128i rgb_mask = _mm_set1_epi32(0xffffff00u);  // to preserve RGB
-  const __m128i all_0xff = _mm_set_epi32(0, 0, ~0u, ~0u);
+  const __m128i rgb_mask = _mm_set1_epi32((int)0xffffff00);  // to preserve RGB
+  const __m128i all_0xff = _mm_set_epi32(0, 0, ~0, ~0);
   __m128i all_alphas = all_0xff;
 
   // We must be able to access 3 extra bytes after the last written byte
@@ -72,9 +72,10 @@ static int DispatchAlpha_SSE2(const uint8_t* alpha, int alpha_stride,
   return (alpha_and != 0xff);
 }
 
-static void DispatchAlphaToGreen_SSE2(const uint8_t* alpha, int alpha_stride,
-                                      int width, int height,
-                                      uint32_t* dst, int dst_stride) {
+static void DispatchAlphaToGreen_SSE2(const uint8_t* WEBP_RESTRICT alpha,
+                                      int alpha_stride, int width, int height,
+                                      uint32_t* WEBP_RESTRICT dst,
+                                      int dst_stride) {
   int i, j;
   const __m128i zero = _mm_setzero_si128();
   const int limit = width & ~15;
@@ -98,15 +99,15 @@ static void DispatchAlphaToGreen_SSE2(const uint8_t* alpha, int alpha_stride,
   }
 }
 
-static int ExtractAlpha_SSE2(const uint8_t* argb, int argb_stride,
+static int ExtractAlpha_SSE2(const uint8_t* WEBP_RESTRICT argb, int argb_stride,
                              int width, int height,
-                             uint8_t* alpha, int alpha_stride) {
+                             uint8_t* WEBP_RESTRICT alpha, int alpha_stride) {
   // alpha_and stores an 'and' operation of all the alpha[] values. The final
   // value is not 0xff if any of the alpha[] is not equal to 0xff.
   uint32_t alpha_and = 0xff;
   int i, j;
-  const __m128i a_mask = _mm_set1_epi32(0xffu);  // to preserve alpha
-  const __m128i all_0xff = _mm_set_epi32(0, 0, ~0u, ~0u);
+  const __m128i a_mask = _mm_set1_epi32(0xff);  // to preserve alpha
+  const __m128i all_0xff = _mm_set_epi32(0, 0, ~0, ~0);
   __m128i all_alphas = all_0xff;
 
   // We must be able to access 3 extra bytes after the last written byte
@@ -177,7 +178,7 @@ static int ExtractAlpha_SSE2(const uint8_t* argb, int argb_stride,
 static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first,
                                     int w, int h, int stride) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i kMult = _mm_set1_epi16(0x8081u);
+  const __m128i kMult = _mm_set1_epi16((short)0x8081);
   const __m128i kMask = _mm_set_epi16(0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0);
   const int kSpan = 4;
   while (h-- > 0) {
@@ -266,7 +267,7 @@ static int HasAlpha32b_SSE2(const uint8_t* src, int length) {
 }
 
 static void AlphaReplace_SSE2(uint32_t* src, int length, uint32_t color) {
-  const __m128i m_color = _mm_set1_epi32(color);
+  const __m128i m_color = _mm_set1_epi32((int)color);
   const __m128i zero = _mm_setzero_si128();
   int i = 0;
   for (; i + 8 <= length; i += 8) {
@@ -317,7 +318,8 @@ static void MultARGBRow_SSE2(uint32_t* const ptr, int width, int inverse) {
   if (width > 0) WebPMultARGBRow_C(ptr + x, width, inverse);
 }
 
-static void MultRow_SSE2(uint8_t* const ptr, const uint8_t* const alpha,
+static void MultRow_SSE2(uint8_t* WEBP_RESTRICT const ptr,
+                         const uint8_t* WEBP_RESTRICT const alpha,
                          int width, int inverse) {
   int x = 0;
   if (!inverse) {

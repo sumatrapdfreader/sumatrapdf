@@ -680,6 +680,7 @@ workspace "SumatraPDF"
       "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
       "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSerifDevanagari-Regular.otf",
     }
 
     filter {'files:**.cff'}

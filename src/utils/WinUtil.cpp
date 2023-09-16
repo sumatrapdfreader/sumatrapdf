@@ -85,6 +85,29 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
     return dy;
 }
 
+// HWND should be Edit control
+// Should be called after user types Ctrl + Backspace to
+// delete word backwards from current cursor position
+void EditImplementCtrlBack(HWND hwnd) {
+    WCHAR* text = HwndGetTextWTemp(hwnd);
+    int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
+    // remove the rectangle produced by Ctrl+Backspace
+    if (selStart > 0 && text[selStart - 1] == '\x7F') {
+        memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
+        HwndSetText(hwnd, text);
+        selStart = selEnd = selStart - 1;
+    }
+    // remove the previous word (and any spacing after it)
+    for (; selStart > 0 && str::IsWs(text[selStart - 1]); selStart--) {
+        ;
+    }
+    for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--) {
+        ;
+    }
+    Edit_SetSel(hwnd, selStart, selEnd);
+    SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
+}
+
 void ListBox_AppendString_NoSort(HWND hwnd, const WCHAR* txt) {
     ListBox_InsertString(hwnd, -1, txt);
 }

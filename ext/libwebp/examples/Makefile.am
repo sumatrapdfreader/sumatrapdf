@@ -47,7 +47,7 @@ anim_dump_LDADD += ../imageio/libimageenc.la
 anim_dump_LDADD += $(PNG_LIBS) $(GIF_LIBS) $(TIFF_LIBS) -lm
 
 cwebp_SOURCES  = cwebp.c stopwatch.h
-cwebp_CPPFLAGS  = $(AM_CPPFLAGS)
+cwebp_CPPFLAGS  = $(AM_CPPFLAGS) -I$(top_srcdir)
 cwebp_LDADD  =
 cwebp_LDADD += libexample_util.la
 cwebp_LDADD += ../imageio/libimageio_util.la
@@ -92,7 +92,7 @@ webpmux_LDADD += ../src/mux/libwebpmux.la
 webpmux_LDADD += ../src/libwebp.la
 
 img2webp_SOURCES = img2webp.c
-img2webp_CPPFLAGS = $(AM_CPPFLAGS)
+img2webp_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)
 img2webp_LDADD  =
 img2webp_LDADD += libexample_util.la
 img2webp_LDADD += ../imageio/libimageio_util.la

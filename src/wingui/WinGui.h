@@ -3,6 +3,10 @@
 
 //--- Wnd
 
+// global messages for wingui start at WM_APP + 0x300 to not
+// collide with values defined for the app
+const DWORD UWM_DELAYED_CTRL_BACK = WM_APP + 0x300 + 1;
+
 UINT_PTR NextSubclassId();
 
 const char* WinMsgName(UINT);
@@ -258,6 +262,7 @@ struct Edit : Wnd {
     ~Edit() override;
 
     HWND Create(const EditCreateArgs&);
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 

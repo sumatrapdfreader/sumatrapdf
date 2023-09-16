@@ -241,7 +241,7 @@ static int ReadAnimatedWebP(const char filename[],
   image->bgcolor = anim_info.bgcolor;
 
   // Allocate frames.
-  if (!AllocateFrames(image, anim_info.frame_count)) return 0;
+  if (!AllocateFrames(image, anim_info.frame_count)) goto End;
 
   // Decode frames.
   while (WebPAnimDecoderHasMoreFrames(dec)) {
@@ -558,7 +558,10 @@ static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
     }
   }
   // Allocate frames.
-  AllocateFrames(image, frame_count);
+  if (!AllocateFrames(image, frame_count)) {
+    DGifCloseFile(gif, NULL);
+    return 0;
+  }
 
   canvas_width = image->canvas_width;
   canvas_height = image->canvas_height;

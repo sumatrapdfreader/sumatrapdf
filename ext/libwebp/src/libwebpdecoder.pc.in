@@ -7,5 +7,5 @@ Name: libwebpdecoder
 Description: Library for the WebP graphics format (decode only)
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lwebpdecoder
+Libs: -L${libdir} -l@webp_libname_prefix@webpdecoder
 Libs.private: -lm @PTHREAD_CFLAGS@ @PTHREAD_LIBS@

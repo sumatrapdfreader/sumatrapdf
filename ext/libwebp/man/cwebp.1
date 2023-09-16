@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "November 19, 2020"
+.TH CWEBP 1 "March 17, 2022"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -90,15 +90,17 @@ additional encoding possibilities and decide on the quality gain.
 Lower value can result in faster processing time at the expense of
 larger file size and lower compression quality.
 .TP
-.BI \-resize " width height
-Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
-If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
-the value will be calculated preserving the aspect\-ratio.
-.TP
 .BI \-crop " x_position y_position width height
 Crop the source to a rectangle with top\-left corner at coordinates
 (\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.
 This cropping area must be fully contained within the source rectangle.
+Note: the cropping is applied \fIbefore\fP any scaling.
+.TP
+.BI \-resize " width height
+Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
+If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
+the value will be calculated preserving the aspect\-ratio. Note: scaling
+is applied \fIafter\fP cropping.
 .TP
 .B \-mt
 Use multi\-threading for encoding, if possible.
@@ -222,7 +224,7 @@ Compute and report average PSNR (Peak\-Signal\-To\-Noise ratio).
 .TP
 .B \-print_ssim
 Compute and report average SSIM (structural similarity
-metric, see http://en.wikipedia.org/wiki/SSIM for additional details).
+metric, see https://en.wikipedia.org/wiki/SSIM for additional details).
 .TP
 .B \-print_lsim
 Compute and report local similarity metric (sum of lowest error amongst the
@@ -298,7 +300,7 @@ Please report all bugs to the issue tracker:
 https://bugs.chromium.org/p/webp
 .br
 Patches welcome! See this page to get started:
-http://www.webmproject.org/code/contribute/submitting\-patches/
+https://www.webmproject.org/code/contribute/submitting\-patches/
 
 .SH EXAMPLES
 cwebp \-q 50 -lossless picture.png \-o picture_lossless.webp
@@ -322,5 +324,5 @@ for the Debian project (and may be used by others).
 .BR dwebp (1),
 .BR gif2webp (1)
 .br
-Please refer to http://developers.google.com/speed/webp/ for additional
+Please refer to https://developers.google.com/speed/webp/ for additional
 information.
