@@ -2365,8 +2365,7 @@ static void MakePageElementCommentsFromAnnotationsInner(fz_context* ctx, pdf_ann
     bool isEmpty = isContentsEmpty && isLabelEmpty;
 
     const char* tpStr = pdf_string_from_annot_type(ctx, tp);
-    logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr, contents,
-         label);
+    //logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr, contents, abel);
 
     if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
         logf("found file attachment annotation\n");

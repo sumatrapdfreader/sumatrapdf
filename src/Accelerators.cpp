@@ -518,7 +518,7 @@ void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
     // virtual codes overlap with some ascii chars like '-' is VK_INSERT
     // so for non-virtual assume it's a single char
     bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
-    static const char* otherAscii = "[]'`~@#$%^&*(){}\\|?<>!,.+-=_;:\"";
+    static const char* otherAscii = "[]'`~@#$%^&*(){}/\\|?<>!,.+-=_;:\"";
     if (str::FindChar(otherAscii, key)) {
         isAscii = true;
     }
