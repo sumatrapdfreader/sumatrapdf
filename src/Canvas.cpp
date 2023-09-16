@@ -607,6 +607,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         Annotation* annot = dm->GetAnnotationAtPos(mousePos, nullptr);
         if (annot) {
             StartEditAnnotations(win->CurrentTab(), annot);
+            RepaintAsync(win, 0);
             return;
         }
     }
