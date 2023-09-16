@@ -1839,6 +1839,31 @@ void LoadDocumentAsync(LoadArgs* argsIn, bool activateExisting) {
     auto wndNotif = ShowLoadingNotif(win, path);
     LoadArgs* args = argsIn->Clone();
 
+    // when using mshtml to display CHM files, we can't load in a thread
+    // TODO: that's because we create web control on a thread which
+    // violates threading rules and that happens as part of CreateControllerForEngineOrFile()
+    // we could probably delay creating web control but that's more complicated
+    if (!gGlobalPrefs->chmUI.useFixedPageUI) {
+        Kind kind = GuessFileTypeFromName(path);
+        bool isChm = ChmModel::IsSupportedFileType(kind);
+        if (isChm) {
+            // TODO: repeating the code below
+            DocController* ctrl = nullptr;
+            HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
+            EngineBase* engine = args->engine;
+            args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
+            RemoveNotification(wndNotif);
+            if (!args->ctrl) {
+                ShowErrorLoading(win, path, args->noSavePrefs);
+                delete args;
+                return;
+            }
+            LoadDocumentFinish(args, false);
+            delete args;
+            return;
+        }
+    }
+
     RunAsync([args, wndNotif] {
         IncDangerousThreadCount();
         SetThreadName("LoadDocument");
