@@ -64,6 +64,13 @@ struct WindowTab {
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
     void ToggleZoom() const;
+
+    struct {
+        bool show = false;
+        RectF rect;
+        int page = 0;
+        bool scrolled = false; // only automatically scroll once
+    } currentEditAnnotationMark;
 };
 
 bool SaveDataToFile(HWND hwndParent, char* fileName, ByteSlice data);

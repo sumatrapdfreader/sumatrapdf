@@ -1712,13 +1712,16 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
         Rect rc = CvtToScreen(res->pages[i], ToRectF(res->rects[i]));
         extremes = extremes.Union(rc);
     }
+    return ScrollScreenToRect(res->pages[0], extremes);
+}
 
+bool DisplayModel::ScrollScreenToRect(int pageNo, Rect extremes) {
     // don't scroll if the whole result is already visible
     if (Rect(Point(), viewPort.Size()).Intersect(extremes) == extremes) {
         return false;
     }
 
-    PageInfo* pageInfo = GetPageInfo(res->pages[0]);
+    PageInfo* pageInfo = GetPageInfo(pageNo);
     int sx = 0, sy = 0;
 
     // vertically, we try to position the search result between 40%
