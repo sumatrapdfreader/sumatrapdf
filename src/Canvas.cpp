@@ -426,6 +426,10 @@ static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, moveableAnnotations);
     if (annot) {
+        if (!IsShiftPressed()) {
+            delete annot;
+            return;
+        }
         win->annotationOnLastButtonDown = annot;
         CreateMovePatternLazy(win);
         RectF r = GetRect(annot);
@@ -436,6 +440,7 @@ static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
         int offsetY = rScreen.y - pt.y;
         win->annotationBeingMovedOffset = Point{offsetX, offsetY};
         DrawMovePattern(win, pt, win->annotationBeingMovedSize);
+        return;
     }
 
     IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
