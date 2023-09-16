@@ -37,6 +37,7 @@ libwebpencodeinclude_HEADERS += ../webp/types.h
 noinst_HEADERS =
 noinst_HEADERS += ../webp/format_constants.h
 
+libwebpencode_la_LIBADD = ../../sharpyuv/libsharpyuv.la
 libwebpencode_la_LDFLAGS = -lm
 libwebpencode_la_CPPFLAGS = $(AM_CPPFLAGS)
 libwebpencodeincludedir = $(includedir)/webp

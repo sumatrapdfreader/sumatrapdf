@@ -6,6 +6,7 @@ includedir=@includedir@
 Name: libwebp
 Description: Library for the WebP graphics format
 Version: @PACKAGE_VERSION@
+Requires.private: libsharpyuv
 Cflags: -I${includedir}
-Libs: -L${libdir} -lwebp
+Libs: -L${libdir} -l@webp_libname_prefix@webp
 Libs.private: -lm @PTHREAD_CFLAGS@ @PTHREAD_LIBS@

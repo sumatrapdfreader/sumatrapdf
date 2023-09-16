@@ -5,6 +5,7 @@ LIBWEBPDECODER_BASENAME = libwebpdecoder
 LIBWEBP_BASENAME = libwebp
 LIBWEBPMUX_BASENAME = libwebpmux
 LIBWEBPDEMUX_BASENAME = libwebpdemux
+LIBSHARPYUV_BASENAME = libsharpyuv
 
 !IFNDEF ARCH
 !IF ! [ cl 2>&1 | find "x86" > NUL ]
@@ -31,12 +32,11 @@ CCNODBG    = cl.exe $(NOLOGO) /O2 /DNDEBUG
 CCDEBUG    = cl.exe $(NOLOGO) /Od /Zi /D_DEBUG /RTC1
 CFLAGS     = /I. /Isrc $(NOLOGO) /W3 /EHsc /c
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
-LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
+LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST:EMBED /NXCOMPAT /DYNAMICBASE
 LDFLAGS    = $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LNKDLL     = link.exe /DLL $(NOLOGO)
 LNKEXE     = link.exe $(NOLOGO)
 LNKLIB     = lib.exe $(NOLOGO)
-MT         = mt.exe $(NOLOGO)
 RCNODBG    = rc.exe $(NOLOGO) /l"0x0409"  # 0x409 = U.S. English
 RCDEBUG    = $(RCNODBG) /D_DEBUG
 
@@ -82,6 +82,7 @@ OUTPUT_DIRS = $(DIRBIN) $(DIRINC) $(DIRLIB) \
               $(DIROBJ)\extras \
               $(DIROBJ)\imageio \
               $(DIROBJ)\mux \
+              $(DIROBJ)\sharpyuv \
               $(DIROBJ)\utils \
 
 # Target configuration
@@ -96,6 +97,7 @@ LIBWEBPDECODER_BASENAME = $(LIBWEBPDECODER_BASENAME)_debug
 LIBWEBP_BASENAME = $(LIBWEBP_BASENAME)_debug
 LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
 LIBWEBPDEMUX_BASENAME = $(LIBWEBPDEMUX_BASENAME)_debug
+LIBSHARPYUV_BASENAME = $(LIBSHARPYUV_BASENAME)_debug
 !ELSE IF "$(CFG)" == "release-dynamic"
 CC        = $(CCNODBG)
 RC        = $(RCNODBG)
@@ -109,6 +111,7 @@ LIBWEBPDECODER_BASENAME = $(LIBWEBPDECODER_BASENAME)_debug
 LIBWEBP_BASENAME = $(LIBWEBP_BASENAME)_debug
 LIBWEBPMUX_BASENAME = $(LIBWEBPMUX_BASENAME)_debug
 LIBWEBPDEMUX_BASENAME = $(LIBWEBPDEMUX_BASENAME)_debug
+LIBSHARPYUV_BASENAME = $(LIBSHARPYUV_BASENAME)_debug
 !ENDIF
 
 !IF "$(STATICLIBBUILD)" == "TRUE"
@@ -118,13 +121,14 @@ LIBWEBPDECODER = $(DIRLIB)\$(LIBWEBPDECODER_BASENAME).lib
 LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME).lib
 LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME).lib
 LIBWEBPDEMUX = $(DIRLIB)\$(LIBWEBPDEMUX_BASENAME).lib
+LIBSHARPYUV = $(DIRLIB)\$(LIBSHARPYUV_BASENAME).lib
 !ELSE IF "$(DLLBUILD)" == "TRUE"
-DLLINC = webp_dll.h
-CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
+CC     = $(CC) /I$(DIROBJ) $(RTLIB) /DWEBP_DLL
 LIBWEBPDECODER = $(DIRLIB)\$(LIBWEBPDECODER_BASENAME)_dll.lib
 LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME)_dll.lib
 LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME)_dll.lib
 LIBWEBPDEMUX = $(DIRLIB)\$(LIBWEBPDEMUX_BASENAME)_dll.lib
+LIBSHARPYUV = $(DIRLIB)\$(LIBSHARPYUV_BASENAME)_dll.lib
 LIBWEBP_PDBNAME = $(DIROBJ)\$(LIBWEBP_BASENAME)_dll.pdb
 CFGSET = TRUE
 !ENDIF
@@ -174,6 +178,15 @@ CFLAGS = $(CFLAGS) /D_UNICODE /DUNICODE
 # A config was provided, so the library can be built.
 #
 
+SHARPYUV_OBJS = \
+    $(DIROBJ)\sharpyuv\sharpyuv.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_cpu.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_csp.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_dsp.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_gamma.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_neon.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_sse2.obj \
+
 DEC_OBJS = \
     $(DIROBJ)\dec\alpha_dec.obj \
     $(DIROBJ)\dec\buffer_dec.obj \
@@ -215,6 +228,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\lossless_msa.obj \
     $(DIROBJ)\dsp\lossless_neon.obj \
     $(DIROBJ)\dsp\lossless_sse2.obj \
+    $(DIROBJ)\dsp\lossless_sse41.obj \
     $(DIROBJ)\dsp\rescaler.obj \
     $(DIROBJ)\dsp\rescaler_mips32.obj \
     $(DIROBJ)\dsp\rescaler_mips_dsp_r2.obj \
@@ -334,12 +348,13 @@ UTILS_ENC_OBJS = \
     $(DIROBJ)\utils\quant_levels_utils.obj \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
-LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
-               $(UTILS_ENC_OBJS) $(DLL_OBJS)
+LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) \
+               $(DSP_ENC_OBJS) $(UTILS_ENC_OBJS) $(DLL_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS) $(LIBWEBPMUX_OBJS)
 LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS) $(LIBWEBPDEMUX_OBJS)
+LIBSHARPYUV_OBJS = $(SHARPYUV_OBJS)
 
-OUT_LIBS = $(LIBWEBPDECODER) $(LIBWEBP)
+OUT_LIBS = $(LIBWEBPDECODER) $(LIBWEBP) $(LIBSHARPYUV)
 !IF "$(ARCH)" == "ARM"
 ex: $(OUT_LIBS)
 all: ex
@@ -367,7 +382,7 @@ $(DIRBIN)\anim_dump.exe: $(EX_GIF_DEC_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
 $(DIRBIN)\anim_dump.exe: $(IMAGEIO_ENC_OBJS)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\cwebp.exe: $(IMAGEIO_UTIL_OBJS)
-$(DIRBIN)\cwebp.exe: $(LIBWEBPDEMUX)
+$(DIRBIN)\cwebp.exe: $(LIBWEBPDEMUX) $(LIBSHARPYUV)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\dwebp.exe: $(IMAGEIO_ENC_OBJS)
 $(DIRBIN)\dwebp.exe: $(IMAGEIO_UTIL_OBJS)
@@ -385,7 +400,7 @@ $(DIRBIN)\webpmux.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS) $(LIBWEBP)
 $(DIRBIN)\img2webp.exe: $(DIROBJ)\examples\img2webp.obj $(LIBWEBPMUX)
 $(DIRBIN)\img2webp.exe: $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\img2webp.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS)
-$(DIRBIN)\img2webp.exe: $(LIBWEBPDEMUX) $(LIBWEBP)
+$(DIRBIN)\img2webp.exe: $(LIBWEBPDEMUX) $(LIBWEBP) $(LIBSHARPYUV)
 $(DIRBIN)\get_disto.exe: $(DIROBJ)\extras\get_disto.obj
 $(DIRBIN)\get_disto.exe: $(IMAGEIO_DEC_OBJS) $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\get_disto.exe: $(LIBWEBPDEMUX) $(LIBWEBP)
@@ -408,17 +423,16 @@ $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS): $(OUTPUT_DIRS)
 $(IMAGEIO_DEC_OBJS) $(IMAGEIO_ENC_OBJS) $(EXTRAS_OBJS): $(OUTPUT_DIRS)
 !ENDIF  # ARCH == ARM
 
+$(LIBSHARPYUV): $(LIBSHARPYUV_OBJS)
 $(LIBWEBPDECODER): $(LIBWEBPDECODER_OBJS)
-$(LIBWEBP): $(LIBWEBP_OBJS)
+$(LIBWEBP): $(LIBWEBP_OBJS) $(LIBSHARPYUV)
 $(LIBWEBPMUX): $(LIBWEBPMUX_OBJS)
 $(LIBWEBPDEMUX): $(LIBWEBPDEMUX_OBJS)
 
-$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): $(OUTPUT_DIRS)
+$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS) $(LIBSHARPYUV_OBJS): \
+    $(OUTPUT_DIRS)
 
 !IF "$(DLLBUILD)" == "TRUE"
-$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): \
-    $(DIROBJ)\$(DLLINC)
-
 {$(DIROBJ)}.c{$(DIROBJ)}.obj:
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$@  $<
 
@@ -428,33 +442,26 @@ $(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): \
 	$(RC) /fo$@ $<
 {src\mux}.rc{$(DIROBJ)\mux}.res:
 	$(RC) /fo$@ $<
+{sharpyuv}.rc{$(DIROBJ)\sharpyuv}.res:
+	$(RC) /fo$@ $<
 
-$(LIBWEBP): $(DIROBJ)\$(LIBWEBP_BASENAME:_debug=).res
+$(LIBSHARPYUV): $(DIROBJ)\sharpyuv\$(LIBSHARPYUV_BASENAME:_debug=).res
+$(LIBWEBP): $(LIBSHARPYUV) $(DIROBJ)\$(LIBWEBP_BASENAME:_debug=).res
 $(LIBWEBPDECODER): $(DIROBJ)\$(LIBWEBPDECODER_BASENAME:_debug=).res
 $(LIBWEBPMUX): $(LIBWEBP) $(DIROBJ)\mux\$(LIBWEBPMUX_BASENAME:_debug=).res
 $(LIBWEBPDEMUX): $(LIBWEBP) $(DIROBJ)\demux\$(LIBWEBPDEMUX_BASENAME:_debug=).res
 
-$(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
+$(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX) $(LIBSHARPYUV):
 	$(LNKDLL) /out:$(DIRBIN)\$(@B:_dll=.dll) /implib:$@ $(LFLAGS) $**
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
-
-clean::
-	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
 !ELSE
-$(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
+$(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX) $(LIBSHARPYUV):
 	$(LNKLIB) /out:$@ $**
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
 !ENDIF
 
 $(OUTPUT_DIRS):
 	@if not exist "$(@)" mkdir "$(@)"
-
-# generate a helper include to define WEBP_EXTERN suitable for the DLL build
-$(DIROBJ)\$(DLLINC):
-	@echo #ifndef WEBP_DLL_H_ > $@
-	@echo #define WEBP_DLL_H_ >> $@
-	@echo #define WEBP_EXTERN __declspec(dllexport) >> $@
-	@echo #endif  /* WEBP_DLL_H_ */ >> $@
 
 .SUFFIXES: .c .obj .res .exe
 # File-specific flag builds. Note batch rules take precedence over wildcards,
@@ -481,6 +488,8 @@ $(DIROBJ)\examples\gifdec.obj: examples\gifdec.c
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\extras\ /Fo$(DIROBJ)\extras\ $<
 {imageio}.c{$(DIROBJ)\imageio}.obj::
 	$(CC) $(CFLAGS) /Fd$(DIROBJ)\imageio\ /Fo$(DIROBJ)\imageio\ $<
+{sharpyuv}.c{$(DIROBJ)\sharpyuv}.obj::
+	$(CC) $(CFLAGS) /Fd$(DIROBJ)\sharpyuv\ /Fo$(DIROBJ)\sharpyuv\ $<
 {src\dec}.c{$(DIROBJ)\dec}.obj::
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dec\ $<
 {src\demux}.c{$(DIROBJ)\demux}.obj::
@@ -501,13 +510,9 @@ LNKLIBS     = $(LNKLIBS) Shell32.lib
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** $(LNKLIBS)
-	$(MT) -manifest $@.manifest -outputresource:$@;1
-	del $@.manifest
 
 {$(DIROBJ)\extras}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** $(LNKLIBS)
-	$(MT) -manifest $@.manifest -outputresource:$@;1
-	del $@.manifest
 
 clean::
 	@-erase /s $(DIROBJ)\*.dll 2> NUL

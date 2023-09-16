@@ -415,7 +415,6 @@ void OpenFileWithTextEditor(const char* path) {
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
-#define UWM_DELAYED_CTRL_BACK (WM_APP + 2)
 
 // selects all text in an edit box if it's selected either
 // through a keyboard shortcut or a non-selecting mouse click
@@ -428,7 +427,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             delayFocus = !IsFocused(hwnd);
             return true;
 
-        case WM_LBUTTONUP:
+        case WM_LBUTTONUP: {
             if (delayFocus) {
                 DWORD sel = Edit_GetSel(hwnd);
                 if (LOWORD(sel) == HIWORD(sel)) {
@@ -437,47 +436,35 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
                 delayFocus = false;
             }
             return true;
+        }
 
         case WM_KILLFOCUS:
             return false; // for easier debugging (make setting a breakpoint possible)
 
-        case WM_SETFOCUS:
+        case WM_SETFOCUS: {
             if (!delayFocus) {
                 PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
             }
             return true;
+        }
 
-        case UWM_DELAYED_SET_FOCUS:
+        case UWM_DELAYED_SET_FOCUS: {
             EditSelectAll(hwnd);
             return true;
+        }
 
-        case WM_KEYDOWN:
+        case WM_KEYDOWN: {
             if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed()) {
                 return false;
             }
             PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
             return true;
+        }
 
         case UWM_DELAYED_CTRL_BACK: {
-            WCHAR* text = HwndGetTextWTemp(hwnd);
-            int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
-            // remove the rectangle produced by Ctrl+Backspace
-            if (selStart > 0 && text[selStart - 1] == '\x7F') {
-                memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
-                HwndSetText(hwnd, text);
-                selStart = selEnd = selStart - 1;
-            }
-            // remove the previous word (and any spacing after it)
-            for (; selStart > 0 && str::IsWs(text[selStart - 1]); selStart--) {
-                ;
-            }
-            for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--) {
-                ;
-            }
-            Edit_SetSel(hwnd, selStart, selEnd);
-            SendMessageW(hwnd, WM_CLEAR, 0, 0);
-        }
+            EditImplementCtrlBack(hwnd);
             return true;
+        }
 
         default:
             return false;

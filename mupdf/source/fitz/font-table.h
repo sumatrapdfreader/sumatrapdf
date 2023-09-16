@@ -87,6 +87,10 @@ ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_CYRILLIC,	FZ_LANG_U
 ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_COMMON,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
 ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_INHERITED,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
 ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_UNKNOWN,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+
+#define DEFNOTO(symbol, name, script) FONT(noto, symbol, name, script, FZ_LANG_UNSET, NO_SUBFONT, REGULAR)
+DEFNOTO(NotoSerifDevanagari_Regular_otf, "Noto Serif Devanagari", UCDN_SCRIPT_DEVANAGARI)
+
 #endif
 
 #ifndef TOFU_NOTO

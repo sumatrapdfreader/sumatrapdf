@@ -1,3 +1,64 @@
+- 9/13/2023: version 1.3.2
+  This is a binary compatible release.
+  * security fix for lossless decoder (chromium: #1479274, CVE-2023-4863)
+
+- 6/23/2023: version 1.3.1
+  This is a binary compatible release.
+  * security fixes for lossless encoder (#603, chromium: #1420107, #1455619,
+    CVE-2023-1999)
+  * improve error reporting through WebPPicture error codes
+  * fix upsampling for RGB565 and RGBA4444 in NEON builds
+  * img2webp: add -sharp_yuv & -near_lossless
+  * Windows builds:
+    - fix compatibility with clang-cl (#607)
+    - improve Arm64 performance with cl.exe
+    - add Arm64EC support
+  * fix webp_js with emcc >= 3.1.27 (stack size change, #614)
+  * CMake fixes (#592, #610, #612)
+  * further updates to the container and lossless bitstream docs (#581, #611)
+
+- 12/16/2022: version 1.3.0
+  This is a binary compatible release.
+  * add libsharpyuv, which exposes -sharp_yuv/config.use_sharp_yuv
+    functionality to other libraries; libwebp now depends on this library
+  * major updates to the container and lossless bitstream docs (#448, #546,
+    #551)
+  * miscellaneous warning, bug & build fixes (#576, #583, #584)
+
+- 8/4/2022: version 1.2.4
+  This is a binary compatible release.
+  * restore CMake libwebpmux target name for compatibility with 1.2.2 (#575)
+  * fix lossless crunch mode encoding with WEBP_REDUCE_SIZE
+    (chromium: #1345547, #1345595, #1345772, #1345804)
+
+- 6/30/2022: version 1.2.3
+  This is a binary compatible release.
+  * security fix for lossless encoder (#565, chromium:1313709)
+  * improved progress granularity in WebPReportProgress() when using lossless
+  * improved precision in Sharp YUV (-sharp_yuv) conversion
+  * many corrections to webp-lossless-bitstream-spec.txt (#551)
+  * crash/leak fixes on error/OOM and other bug fixes (#558, #563, #569, #573)
+
+- 1/11/2022: version 1.2.2
+  This is a binary compatible release.
+  * webpmux: add "-set bgcolor A,R,G,B"
+  * add ARM64 NEON support for MSVC builds (#539)
+  * fix duplicate include error in Xcode when using multiple XCFrameworks in a
+    project (#542)
+  * doc updates and bug fixes (#538, #544, #548, #550)
+
+- 7/20/2021: version 1.2.1
+  This is a binary compatible release.
+  * minor lossless encoder improvements and x86 color conversion speed up
+  * add ARM64 simulator support to xcframeworkbuild.sh (#510)
+  * further security related hardening in libwebp & examples
+    (issues: #497, #508, #518)
+    (chromium: #1196480, #1196773, #1196775, #1196777, #1196778, #1196850)
+    (oss-fuzz: #28658, #28978)
+  * toolchain updates and bug fixes (#498, #501, #502, #504, #505, #506, #509,
+                                     #533)
+  * use more inclusive language within the source (#507)
+
 - 12/23/2020: version 1.2.0
   * API changes:
     - libwebp:

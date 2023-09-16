@@ -234,3 +234,15 @@ __binary_NotoSerif_Regular_otf:
 
 __binary_NotoSerif_Regular_otf_size
     dq $ - __binary_NotoSerif_Regular_otf
+
+; ----------
+
+global __NotoSerifDevanagari_Regular_otf
+global __NotoSerifDevanagari_Regular_otf_size
+
+__NotoSerifDevanagari_Regular_otf:
+    incbin "resources/fonts/noto/NotoSerifDevanagari-Regular.otf"
+
+__NotoSerifDevanagari_Regular_otf_size
+    dq $ - __NotoSerifDevanagari_Regular_otf
+

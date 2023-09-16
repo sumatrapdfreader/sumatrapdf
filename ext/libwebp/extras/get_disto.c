@@ -223,7 +223,8 @@ static void Help(void) {
           "  -o <file> . save the diff map as a WebP lossless file\n"
           "  -scale .... scale the difference map to fit [0..255] range\n"
           "  -gray ..... use grayscale for difference map (-scale)\n"
-          " Also handles PNG, JPG and TIFF files, in addition to WebP.\n");
+          "\nSupported input formats:\n  %s\n",
+          WebPGetEnabledInputFileFormats());
 }
 
 int main(int argc, const char* argv[]) {

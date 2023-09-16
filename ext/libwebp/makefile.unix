@@ -3,7 +3,8 @@
 # It will not install the libraries system-wide, but just create the 'cwebp'
 # and 'dwebp' tools in the examples/ directory, along with the static
 # libraries 'src/libwebp.a', 'src/libwebpdecoder.a', 'src/mux/libwebpmux.a',
-# 'src/demux/libwebpdemux.a' and 'extras/libwebpextras.a'.
+# 'src/demux/libwebpdemux.a', 'extras/libwebpextras.a' and
+# 'sharpyuv/libsharpyuv.a'.
 #
 # To build the library and examples, use:
 #    make -f makefile.unix
@@ -47,7 +48,7 @@ else
 endif
 
 # To install libraries on Mac OS X:
-# 1. Install MacPorts (http://www.macports.org/install.php)
+# 1. Install MacPorts (https://www.macports.org/install.php)
 # 2. Run "sudo port install jpeg"
 # 3. Run "sudo port install libpng"
 # 4. Run "sudo port install tiff"
@@ -125,6 +126,15 @@ endif
 ANIM_UTIL_OBJS = \
     examples/anim_util.o \
 
+SHARPYUV_OBJS = \
+    sharpyuv/sharpyuv.o \
+    sharpyuv/sharpyuv_cpu.o \
+    sharpyuv/sharpyuv_csp.o \
+    sharpyuv/sharpyuv_dsp.o \
+    sharpyuv/sharpyuv_gamma.o \
+    sharpyuv/sharpyuv_neon.o \
+    sharpyuv/sharpyuv_sse2.o \
+
 DEC_OBJS = \
     src/dec/alpha_dec.o \
     src/dec/buffer_dec.o \
@@ -166,6 +176,7 @@ DSP_DEC_OBJS = \
     src/dsp/lossless_msa.o \
     src/dsp/lossless_neon.o \
     src/dsp/lossless_sse2.o \
+    src/dsp/lossless_sse41.o \
     src/dsp/rescaler.o \
     src/dsp/rescaler_mips32.o \
     src/dsp/rescaler_mips_dsp_r2.o \
@@ -281,11 +292,12 @@ EXTRA_OBJS = \
     extras/quality_estimate.o \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
-LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
-               $(UTILS_ENC_OBJS)
+LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) \
+               $(DSP_ENC_OBJS) $(UTILS_ENC_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)
 LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS)
 LIBWEBPEXTRA_OBJS = $(EXTRA_OBJS)
+LIBSHARPYUV_OBJS = $(SHARPYUV_OBJS)
 
 HDRS_INSTALLED = \
     src/webp/decode.h \
@@ -295,6 +307,11 @@ HDRS_INSTALLED = \
     src/webp/mux_types.h \
     src/webp/types.h \
 
+SHARPYUV_HDRS_INSTALLED = \
+    sharpyuv/sharpyuv.h \
+    sharpyuv/sharpyuv_cpu.h \
+    sharpyuv/sharpyuv_csp.h \
+
 HDRS = \
     src/dec/alphai_dec.h \
     src/dec/common_dec.h \
@@ -303,6 +320,7 @@ HDRS = \
     src/dec/vp8li_dec.h \
     src/dec/webpi_dec.h \
     src/dsp/common_sse2.h \
+    src/dsp/cpu.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
     src/dsp/lossless_common.h \
@@ -333,6 +351,7 @@ HDRS = \
     src/utils/utils.h \
     src/webp/format_constants.h \
     $(HDRS_INSTALLED) \
+    $(SHARPYUV_HDRS_INSTALLED) \
 
 OUT_LIBS = examples/libexample_util.a
 OUT_LIBS += imageio/libimageio_util.a
@@ -340,6 +359,7 @@ OUT_LIBS += imageio/libimagedec.a
 OUT_LIBS += imageio/libimageenc.a
 OUT_LIBS += src/libwebpdecoder.a
 OUT_LIBS += src/libwebp.a
+OUT_LIBS += sharpyuv/libsharpyuv.a
 EXTRA_LIB = extras/libwebpextras.a
 OUT_EXAMPLES = examples/cwebp examples/dwebp
 EXTRA_EXAMPLES = examples/gif2webp examples/vwebp examples/webpmux \
@@ -385,6 +405,7 @@ src/libwebpdecoder.a: $(LIBWEBPDECODER_OBJS)
 src/libwebp.a: $(LIBWEBP_OBJS)
 src/mux/libwebpmux.a: $(LIBWEBPMUX_OBJS)
 src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
+sharpyuv/libsharpyuv.a: $(LIBSHARPYUV_OBJS)
 
 %.a:
 	$(AR) $(ARFLAGS) $@ $^
@@ -402,6 +423,7 @@ examples/webpinfo: examples/webpinfo.o
 examples/anim_diff: examples/libanim_util.a examples/libgifdec.a
 examples/anim_diff: src/demux/libwebpdemux.a examples/libexample_util.a
 examples/anim_diff: imageio/libimageio_util.a src/libwebp.a
+examples/anim_diff: sharpyuv/libsharpyuv.a
 examples/anim_diff: override EXTRA_LIBS += $(GIF_LIBS)
 examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
 examples/anim_dump: examples/libanim_util.a examples/libgifdec.a
@@ -410,12 +432,14 @@ examples/anim_dump: examples/libexample_util.a
 examples/anim_dump: imageio/libimageio_util.a
 examples/anim_dump: imageio/libimageenc.a
 examples/anim_dump: src/libwebp.a
+examples/anim_dump: sharpyuv/libsharpyuv.a
 examples/anim_dump: override EXTRA_LIBS += $(GIF_LIBS) $(DWEBP_LIBS)
 examples/cwebp: examples/libexample_util.a
 examples/cwebp: imageio/libimagedec.a
 examples/cwebp: src/demux/libwebpdemux.a
 examples/cwebp: imageio/libimageio_util.a
 examples/cwebp: src/libwebp.a
+examples/cwebp: sharpyuv/libsharpyuv.a
 examples/cwebp: override EXTRA_LIBS += $(CWEBP_LIBS)
 examples/dwebp: examples/libexample_util.a
 examples/dwebp: imageio/libimagedec.a
@@ -423,13 +447,16 @@ examples/dwebp: src/demux/libwebpdemux.a
 examples/dwebp: imageio/libimageenc.a
 examples/dwebp: imageio/libimageio_util.a
 examples/dwebp: src/libwebp.a
+examples/dwebp: sharpyuv/libsharpyuv.a
 examples/dwebp: override EXTRA_LIBS += $(DWEBP_LIBS)
 examples/gif2webp: examples/libexample_util.a imageio/libimageio_util.a
 examples/gif2webp: examples/libgifdec.a src/mux/libwebpmux.a src/libwebp.a
+examples/gif2webp: sharpyuv/libsharpyuv.a
 examples/gif2webp: override EXTRA_LIBS += $(GIF_LIBS)
 examples/gif2webp: EXTRA_FLAGS += -DWEBP_HAVE_GIF
 examples/vwebp: examples/libexample_util.a src/demux/libwebpdemux.a
 examples/vwebp: imageio/libimageio_util.a src/libwebp.a
+examples/vwebp: sharpyuv/libsharpyuv.a
 examples/vwebp: override EXTRA_LIBS += $(GL_LIBS)
 examples/vwebp: EXTRA_FLAGS += -DWEBP_HAVE_GL
 examples/webpmux: examples/libexample_util.a imageio/libimageio_util.a
@@ -437,7 +464,9 @@ examples/webpmux: src/mux/libwebpmux.a src/libwebpdecoder.a
 examples/img2webp: examples/libexample_util.a imageio/libimageio_util.a
 examples/img2webp: imageio/libimagedec.a
 examples/img2webp: src/demux/libwebpdemux.a
-examples/img2webp: src/mux/libwebpmux.a src/libwebp.a
+examples/img2webp: src/mux/libwebpmux.a
+examples/img2webp: src/libwebp.a
+examples/img2webp: sharpyuv/libsharpyuv.a
 examples/img2webp: override EXTRA_LIBS += $(CWEBP_LIBS)
 examples/webpinfo: examples/libexample_util.a imageio/libimageio_util.a
 examples/webpinfo: src/libwebpdecoder.a
@@ -447,16 +476,19 @@ extras/get_disto: imageio/libimagedec.a
 extras/get_disto: src/demux/libwebpdemux.a
 extras/get_disto: imageio/libimageio_util.a
 extras/get_disto: src/libwebp.a
+extras/get_disto: sharpyuv/libsharpyuv.a
 extras/get_disto: override EXTRA_LIBS += $(CWEBP_LIBS)
 
 extras/webp_quality: extras/webp_quality.o
 extras/webp_quality: imageio/libimageio_util.a
 extras/webp_quality: $(EXTRA_LIB) src/libwebp.a
+extras/webp_quality: sharpyuv/libsharpyuv.a
 
 extras/vwebp_sdl: extras/vwebp_sdl.o
 extras/vwebp_sdl: extras/webp_to_sdl.o
 extras/vwebp_sdl: imageio/libimageio_util.a
 extras/vwebp_sdl: src/libwebp.a
+extras/vwebp_sdl: sharpyuv/libsharpyuv.a
 extras/vwebp_sdl: EXTRA_FLAGS += -DWEBP_HAVE_SDL $(SDL_FLAGS)
 extras/vwebp_sdl: override EXTRA_LIBS += $(SDL_LIBS)
 
@@ -467,12 +499,15 @@ dist: DESTDIR := dist
 dist: OUT_EXAMPLES += $(EXTRA_EXAMPLES)
 dist: all
 	$(INSTALL) -m755 -d $(DESTDIR)/include/webp \
-	           $(DESTDIR)/bin $(DESTDIR)/doc $(DESTDIR)/lib
+	            $(DESTDIR)/include/webp/sharpyuv \
+	            $(DESTDIR)/bin $(DESTDIR)/doc $(DESTDIR)/lib
 	$(INSTALL) -m755 -s $(OUT_EXAMPLES) $(DESTDIR)/bin
 	$(INSTALL) -m644 $(HDRS_INSTALLED) $(DESTDIR)/include/webp
+	$(INSTALL) -m644 $(SHARPYUV_HDRS_INSTALLED) $(DESTDIR)/include/webp/sharpyuv
 	$(INSTALL) -m644 src/libwebp.a $(DESTDIR)/lib
 	$(INSTALL) -m644 src/demux/libwebpdemux.a $(DESTDIR)/lib
 	$(INSTALL) -m644 src/mux/libwebpmux.a $(DESTDIR)/lib
+	$(INSTALL) -m644 sharpyuv/libsharpyuv.a $(DESTDIR)/lib
 	umask 022; \
 	for m in man/[cdv]webp.1 man/gif2webp.1 man/webpmux.1 \
                  man/img2webp.1 man/webpinfo.1; do \
@@ -488,6 +523,7 @@ clean:
               examples/*.o examples/*~ \
               extras/*.o extras/*~ \
               imageio/*.o imageio/*~ \
+              sharpyuv/*.o sharpyuv/*~ \
               src/dec/*.o src/dec/*~ \
               src/demux/*.o src/demux/*~ \
               src/dsp/*.o src/dsp/*~ \

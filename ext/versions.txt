@@ -27,8 +27,8 @@ libdjvu         master     2020-12-06
   https://djvu.sourceforge.net/
   https://github.com/barak/djvulibre
 
-libwebp         1.2.0   2021-01-29
-  https://github.com/webmproject/libwebp/commit/78881b769c55ae8edb945338a26cd4bf50b5ab8b
+libwebp         1.3.2   2023-08-13
+  https://github.com/webmproject/libwebp/releases/tag/v1.3.2
 
 lzma            9.22b      2011-04-19
   https://www.7-zip.org/sdk.html

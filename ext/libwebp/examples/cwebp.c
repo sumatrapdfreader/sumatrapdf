@@ -27,6 +27,7 @@
 #include "../imageio/webpdec.h"
 #include "./stopwatch.h"
 #include "./unicode.h"
+#include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
 
 #ifndef WEBP_DLL
@@ -571,7 +572,7 @@ static void HelpLong(void) {
   printf("  -qrange <min> <max> .... specifies the permissible quality range\n"
          "                           (default: 0 100)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
-  printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
+  printf("  -resize <w> <h> ........ resize picture (*after* any cropping)\n");
   printf("  -mt .................... use multi-threading if available\n");
   printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
   printf("  -map <int> ............. print map of extra info\n");
@@ -591,9 +592,8 @@ static void HelpLong(void) {
          "                           green=0xe0 and blue=0xd0\n");
   printf("  -noalpha ............... discard any transparency information\n");
   printf("  -lossless .............. encode image losslessly, default=off\n");
-  printf("  -near_lossless <int> ... use near-lossless image\n"
-         "                           preprocessing (0..100=off), "
-         "default=100\n");
+  printf("  -near_lossless <int> ... use near-lossless image preprocessing\n"
+         "                           (0..100=off), default=100\n");
   printf("  -hint <string> ......... specify image characteristics hint,\n");
   printf("                           one of: photo, picture or graph\n");
 
@@ -620,6 +620,7 @@ static void HelpLong(void) {
   printf("  -af .................... auto-adjust filter strength\n");
   printf("  -pre <int> ............. pre-processing filter\n");
   printf("\n");
+  printf("Supported input formats:\n  %s\n", WebPGetEnabledInputFileFormats());
 }
 
 //------------------------------------------------------------------------------
@@ -831,8 +832,12 @@ int main(int argc, const char* argv[]) {
 #endif
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
+      const int sharpyuv_version = SharpYuvGetVersion();
       printf("%d.%d.%d\n",
              (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      printf("libsharpyuv: %d.%d.%d\n",
+             (sharpyuv_version >> 24) & 0xff, (sharpyuv_version >> 16) & 0xffff,
+             sharpyuv_version & 0xff);
       FREE_WARGV_AND_RETURN(0);
     } else if (!strcmp(argv[c], "-progress")) {
       show_progress = 1;
@@ -1139,9 +1144,10 @@ int main(int argc, const char* argv[]) {
       }
 
       picture.use_argb = 1;
-      if (!ReadWebP(memory_writer.mem, memory_writer.size, &picture,
-                    /*keep_alpha=*/WebPPictureHasTransparency(&picture),
-                    /*metadata=*/NULL)) {
+      if (!ReadWebP(
+              memory_writer.mem, memory_writer.size, &picture,
+              /*keep_alpha=*/WebPPictureHasTransparency(&original_picture),
+              /*metadata=*/NULL)) {
         fprintf(stderr, "Error! Cannot decode encoded WebP bitstream\n");
         fprintf(stderr, "Error code: %d (%s)\n", picture.error_code,
                 kErrorMessages[picture.error_code]);

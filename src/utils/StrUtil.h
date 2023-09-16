@@ -318,7 +318,7 @@ struct Str {
     }
 };
 
-//bool Replace(Str& s, const char* toReplace, const char* replaceWith);
+// bool Replace(Str& s, const char* toReplace, const char* replaceWith);
 
 struct WStr {
     // allocator is not owned by Vec and must outlive it

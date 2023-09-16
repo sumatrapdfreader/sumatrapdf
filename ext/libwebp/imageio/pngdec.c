@@ -133,7 +133,7 @@ static const struct {
                  MetadataPayload* const payload);
   size_t storage_offset;
 } kPNGMetadataMap[] = {
-  // http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/PNG.html#TextualData
+  // https://exiftool.org/TagNames/PNG.html#TextualData
   // See also: ExifTool on CPAN.
   { "Raw profile type exif", ProcessRawProfile, METADATA_OFFSET(exif) },
   { "Raw profile type xmp",  ProcessRawProfile, METADATA_OFFSET(xmp) },
@@ -235,7 +235,7 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   volatile png_infop end_info = NULL;
   PNGReadContext context = { NULL, 0, 0 };
   int color_type, bit_depth, interlaced;
-  int has_alpha;
+  int num_channels;
   int num_passes;
   int p;
   volatile int ok = 0;
@@ -259,11 +259,14 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
     goto End;
   }
 
+#if LOCAL_PNG_PREREQ(1,5) || \
+    (LOCAL_PNG_PREREQ(1,4) && PNG_LIBPNG_VER_RELEASE >= 1)
   // If it looks like the bitstream is going to need more memory than libpng's
   // internal limit (default: 8M), try to (reasonably) raise it.
   if (data_size > png_get_chunk_malloc_max(png) && data_size < (1u << 24)) {
     png_set_chunk_malloc_max(png, data_size);
   }
+#endif
 
   info = png_create_info_struct(png);
   if (info == NULL) goto Error;
@@ -290,9 +293,6 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   }
   if (png_get_valid(png, info, PNG_INFO_tRNS)) {
     png_set_tRNS_to_alpha(png);
-    has_alpha = 1;
-  } else {
-    has_alpha = !!(color_type & PNG_COLOR_MASK_ALPHA);
   }
 
   // Apply gamma correction if needed.
@@ -307,13 +307,16 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
 
   if (!keep_alpha) {
     png_set_strip_alpha(png);
-    has_alpha = 0;
   }
 
   num_passes = png_set_interlace_handling(png);
   png_read_update_info(png, info);
 
-  stride = (int64_t)(has_alpha ? 4 : 3) * width * sizeof(*rgb);
+  num_channels = png_get_channels(png, info);
+  if (num_channels != 3 && num_channels != 4) {
+    goto Error;
+  }
+  stride = (int64_t)num_channels * width * sizeof(*rgb);
   if (stride != (int)stride ||
       !ImgIoUtilCheckSizeArgumentsOverflow(stride, height)) {
     goto Error;
@@ -338,8 +341,8 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
 
   pic->width = (int)width;
   pic->height = (int)height;
-  ok = has_alpha ? WebPPictureImportRGBA(pic, rgb, (int)stride)
-                 : WebPPictureImportRGB(pic, rgb, (int)stride);
+  ok = (num_channels == 4) ? WebPPictureImportRGBA(pic, rgb, (int)stride)
+                           : WebPPictureImportRGB(pic, rgb, (int)stride);
 
   if (!ok) {
     goto Error;

@@ -2,10 +2,10 @@
 
 Although you may be viewing an alternate representation, this document
 is sourced in Markdown, a light-duty markup scheme, and is optimized for
-the [kramdown](http://kramdown.rubyforge.org/) transformer.
+the [kramdown](https://kramdown.gettalong.org/) transformer.
 
-See the accompanying README. External link targets are referenced at the
-end of this file.
+See the accompanying specs_generation.md. External link targets are referenced
+at the end of this file.
 
 -->
 
@@ -20,25 +20,25 @@ WebP Container Specification
 Introduction
 ------------
 
-WebP is an image format that uses either (i) the VP8 key frame encoding
-to compress image data in a lossy way, or (ii) the WebP lossless encoding
-(and possibly other encodings in the future). These encoding schemes should
-make it more efficient than currently used formats. It is optimized for fast
-image transfer over the network (e.g., for websites). The WebP format has
-feature parity (color profile, metadata, animation etc) with other formats as
-well. This document describes the structure of a WebP file.
+WebP is an image format that uses either (i) the VP8 key frame encoding to
+compress image data in a lossy way, or (ii) the WebP lossless encoding. These
+encoding schemes should make it more efficient than older formats such as JPEG,
+GIF and PNG. It is optimized for fast image transfer over the network (for
+example, for websites). The WebP format has feature parity (color profile,
+metadata, animation, etc.) with other formats as well. This document describes
+the structure of a WebP file.
 
-The WebP container (i.e., RIFF container for WebP) allows feature support over
-and above the basic use case of WebP (i.e., a file containing a single image
-encoded as a VP8 key frame). The WebP container provides additional support
-for:
+The WebP container (that is, the RIFF container for WebP) allows feature support
+over and above the basic use case of WebP (that is, a file containing a single
+image encoded as a VP8 key frame). The WebP container provides additional
+support for:
 
   * **Lossless compression.** An image can be losslessly compressed, using the
     WebP Lossless Format.
 
-  * **Metadata.** An image may have metadata stored in EXIF or XMP formats.
+  * **Metadata.** An image may have metadata stored in Exif or XMP formats.
 
-  * **Transparency.** An image may have transparency, i.e., an alpha channel.
+  * **Transparency.** An image may have transparency, that is, an alpha channel.
 
   * **Color Profile.** An image may have an embedded ICC profile as described
     by the [International Color Consortium][iccspec].
@@ -46,24 +46,21 @@ for:
   * **Animation.** An image may have multiple frames with pauses between them,
     making it an animation.
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in [RFC 2119][].
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in BCP 14 [RFC 2119][] [RFC 8174][]
+when, and only when, they appear in all capitals, as shown here.
 
 Bit numbering in chunk diagrams starts at `0` for the most significant bit
 ('MSB 0') as described in [RFC 1166][].
 
-**Note:** Out of the features mentioned above, lossy compression, lossless
-compression, transparency, metadata, color profile and animation are finalized
-and are to be considered stable.
+Terminology & Basics
+--------------------
 
-Terminology &amp; Basics
-------------------------
-
-A WebP file contains either a still image (i.e., an encoded matrix of pixels)
+A WebP file contains either a still image (that is, an encoded matrix of pixels)
 or an [animation](#animation). Optionally, it can also contain transparency
-information, color profile and metadata. In case we need to refer only to the
-matrix of pixels, we will call it the _canvas_ of the image.
+information, color profile and metadata. We refer to the matrix of pixels as the
+_canvas_ of the image.
 
 Below are additional terms used throughout this document:
 
@@ -87,18 +84,25 @@ _uint32_
 _FourCC_
 
 : A _FourCC_ (four-character code) is a _uint32_ created by concatenating four
-  ASCII characters in little-endian order.
+  ASCII characters in little-endian order. This means 'aaaa' (0x61616161) and
+ 'AAAA' (0x41414141) are treated as different _FourCCs_.
 
 _1-based_
 
-: An unsigned integer field storing values offset by `-1`. e.g., Such a field
-  would store value _25_ as _24_.
+: An unsigned integer field storing values offset by `-1`, for example, such a
+  field would store value _25_ as _24_.
+
+_ChunkHeader('ABCD')_
+
+: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
+  chunks, where 'ABCD' is the FourCC for the chunk. This element's size is 8
+  bytes.
 
 
 RIFF File Format
 ----------------
 
-The WebP file format is based on the RIFF (resource interchange file format)
+The WebP file format is based on the RIFF (Resource Interchange File Format)
 document format.
 
 The basic element of a RIFF file is a _chunk_. It consists of:
@@ -110,7 +114,7 @@ The basic element of a RIFF file is a _chunk_. It consists of:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                          Chunk Size                           |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                         Chunk Payload                         |
+    :                         Chunk Payload                         :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Chunk FourCC: 32 bits
@@ -119,19 +123,13 @@ Chunk FourCC: 32 bits
 
 Chunk Size: 32 bits (_uint32_)
 
-: The size of the chunk not including this field, the chunk identifier or
-  padding.
+: The size of the chunk in bytes, not including this field, the chunk
+  identifier or padding.
 
 Chunk Payload: _Chunk Size_ bytes
 
-: The data payload. If _Chunk Size_ is odd, a single padding byte -- that
-  SHOULD be `0` -- is added.
-
-_ChunkHeader('ABCD')_
-
-: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
-  chunks, where 'ABCD' is the FourCC for the chunk. This element's
-  size is 8 bytes.
+: The data payload. If _Chunk Size_ is odd, a single padding byte -- that MUST
+  be `0` to conform with RIFF -- is added.
 
 **Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
 chunks that apply to any RIFF file format, while FourCCs specific to a file
@@ -167,9 +165,11 @@ File Size: 32 bits (_uint32_)
 
 A WebP file MUST begin with a RIFF header with the FourCC 'WEBP'. The file size
 in the header is the total size of the chunks that follow plus `4` bytes for
-the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. As the size
-of any chunk is even, the size given by the RIFF header is also even. The
-contents of individual chunks will be described in the following sections.
+the 'WEBP' FourCC. The file SHOULD NOT contain any data after the data
+specified by _File Size_. Readers MAY parse such files, ignoring the trailing
+data. As the size of any chunk is even, the size given by the RIFF header is
+also even. The contents of individual chunks are described in the following
+sections.
 
 
 Simple File Format (Lossy)
@@ -184,9 +184,11 @@ Simple WebP (lossy) file format:
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
     |                    WebP file header (12 bytes)                |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                          VP8 chunk                            |
+    :                          VP8 chunk                            :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8 chunk:
@@ -195,20 +197,24 @@ VP8 chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8 ')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           VP8 data                            |
+    :                           VP8 data                            :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8 data: _Chunk Size_ bytes
 
 : VP8 bitstream data.
 
+Note the fourth character in the 'VP8 ' FourCC is an ASCII space (0x20).
+
 The VP8 bitstream format specification can be found at [VP8 Data Format and
 Decoding Guide][vp8spec]. Note that the VP8 frame header contains the VP8 frame
 width and height. That is assumed to be the width and height of the canvas.
 
-The VP8 specification describes how to decode the image into Y'CbCr
-format. To convert to RGB, Rec. 601 SHOULD be used.
+The VP8 specification describes how to decode the image into Y'CbCr format. To
+convert to RGB, Rec. 601 SHOULD be used. Applications MAY use another
+conversion method, but visual results may differ among decoders.
 
 
 Simple File Format (Lossless)
@@ -225,9 +231,11 @@ Simple WebP (lossless) file format:
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
     |                    WebP file header (12 bytes)                |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                          VP8L chunk                           |
+    :                          VP8L chunk                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8L chunk:
@@ -236,8 +244,9 @@ VP8L chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8L')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           VP8L data                           |
+    :                           VP8L data                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8L data: _Chunk Size_ bytes
@@ -265,11 +274,11 @@ An extended format file consists of:
 
   * Image data.
 
-  * An optional 'EXIF' chunk with EXIF metadata.
+  * An optional 'EXIF' chunk with Exif metadata.
 
   * An optional 'XMP ' chunk with XMP metadata.
 
-  * An optional list of [unknown chunks](#unknown-chunks). _\[status: experimental\]_
+  * An optional list of [unknown chunks](#unknown-chunks).
 
 For a _still image_, the _image data_ consists of a single frame, which is made
 up of:
@@ -283,7 +292,7 @@ details about frames can be found in the [Animation](#animation) section.
 
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
-file, ignoring the chunks that come too late.
+file, ignoring the chunks that are out of order.
 
 **Rationale:** Setting the order of chunks should allow quicker file
 parsing. For example, if an 'ALPH' chunk does not appear in its required
@@ -297,9 +306,12 @@ Extended WebP file header:
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
     |                   WebP file header (12 bytes)                 |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |Rsv|I|L|E|X|A|R|                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -310,7 +322,7 @@ Extended WebP file header:
 
 Reserved (Rsv): 2 bits
 
-: SHOULD be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 ICC profile (I): 1 bit
 
@@ -321,9 +333,9 @@ Alpha (L): 1 bit
 : Set if any of the frames of the image contain transparency information
   ("alpha").
 
-EXIF metadata (E): 1 bit
+Exif metadata (E): 1 bit
 
-: Set if the file contains EXIF metadata.
+: Set if the file contains Exif metadata.
 
 XMP metadata (X): 1 bit
 
@@ -336,25 +348,25 @@ Animation (A): 1 bit
 
 Reserved (R): 1 bit
 
-: SHOULD be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 Reserved: 24 bits
 
-: SHOULD be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 Canvas Width Minus One: 24 bits
 
 : _1-based_ width of the canvas in pixels.
-  The actual canvas width is '1 + Canvas Width Minus One'
+  The actual canvas width is `1 + Canvas Width Minus One`.
 
 Canvas Height Minus One: 24 bits
 
 : _1-based_ height of the canvas in pixels.
-  The actual canvas height is '1 + Canvas Height Minus One'
+  The actual canvas height is `1 + Canvas Height Minus One`.
 
 The product of _Canvas Width_ and _Canvas Height_ MUST be at most `2^32 - 1`.
 
-Future specifications MAY add more fields.
+Future specifications may add more fields. Unknown fields MUST be ignored.
 
 ### Chunks
 
@@ -372,6 +384,7 @@ animation.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ANIM')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                       Background Color                        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -387,8 +400,8 @@ Background Color: 32 bits (_uint32_)
 
 **Note**:
 
-  * Background color MAY contain a transparency value (alpha), even if the
-    _Alpha_ flag in [VP8X chunk](#extended_header) is unset.
+  * Background color MAY contain a non-opaque alpha value, even if the _Alpha_
+    flag in [VP8X chunk](#extended_header) is unset.
 
   * Viewer applications SHOULD treat the background color value as a hint, and
     are not required to use it.
@@ -401,8 +414,8 @@ Loop Count: 16 bits (_uint16_)
 : The number of times to loop the animation. `0` means infinitely.
 
 This chunk MUST appear if the _Animation_ flag in the VP8X chunk is set.
-If the _Animation_ flag is not set and this chunk is present, it
-SHOULD be ignored.
+If the _Animation_ flag is not set and this chunk is present, it MUST be
+ignored.
 
 ANMF chunk:
 
@@ -413,6 +426,7 @@ If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ANMF')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                        Frame X                |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -422,26 +436,26 @@ If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                 Frame Duration                |  Reserved |B|D|
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                         Frame Data                            |
+    :                         Frame Data                            :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Frame X: 24 bits (_uint24_)
 
-: The X coordinate of the upper left corner of the frame is `Frame X * 2`
+: The X coordinate of the upper left corner of the frame is `Frame X * 2`.
 
 Frame Y: 24 bits (_uint24_)
 
-: The Y coordinate of the upper left corner of the frame is `Frame Y * 2`
+: The Y coordinate of the upper left corner of the frame is `Frame Y * 2`.
 
 Frame Width Minus One: 24 bits (_uint24_)
 
 : The _1-based_ width of the frame.
-  The frame width is `1 + Frame Width Minus One`
+  The frame width is `1 + Frame Width Minus One`.
 
 Frame Height Minus One: 24 bits (_uint24_)
 
 : The _1-based_ height of the frame.
-  The frame height is `1 + Frame Height Minus One`
+  The frame height is `1 + Frame Height Minus One`.
 
 Frame Duration: 24 bits (_uint24_)
 
@@ -452,7 +466,7 @@ Frame Duration: 24 bits (_uint24_)
 
 Reserved: 6 bits
 
-: SHOULD be 0.
+: MUST be `0`. Readers MUST ignore this field.
 
 Blending method (B): 1 bit
 
@@ -497,8 +511,9 @@ Disposal method (D): 1 bit
     if blend.A = 0 then
       blend.RGB = 0
     else
-      blend.RGB = (src.RGB * src.A +
-                   dst.RGB * dst.A * (1 - src.A / 255)) / blend.A
+      blend.RGB =
+          (src.RGB * src.A +
+           dst.RGB * dst.A * (1 - src.A / 255)) / blend.A
 ~~~~~
 
   * Alpha-blending SHOULD be done in linear color space, by taking into account
@@ -525,22 +540,23 @@ _padded_ chunks as described by the [RIFF file format](#riff-file-format).
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ALPH')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |Rsv| P | F | C |     Alpha Bitstream...                        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Reserved (Rsv): 2 bits
 
-: SHOULD be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 Pre-processing (P): 2 bits
 
-: These INFORMATIVE bits are used to signal the pre-processing that has
+: These _informative_ bits are used to signal the pre-processing that has
   been performed during compression. The decoder can use this information to
-  e.g. dither the values or smooth the gradients prior to display.
+  for example, dither the values or smooth the gradients prior to display.
 
-    * `0`: no pre-processing
-    * `1`: level reduction
+    * `0`: No pre-processing.
+    * `1`: Level reduction.
 
 Filtering method (F): 2 bits
 
@@ -573,14 +589,14 @@ where `clip(v)` is equal to:
   * v    otherwise
 
 The final value is derived by adding the decompressed value `X` to the
-predictor and using modulo-256 arithmetic to wrap the \[256-511\] range
-into the \[0-255\] one:
+predictor and using modulo-256 arithmetic to wrap the \[256..511\] range
+into the \[0..255\] one:
 
 `alpha = (predictor + X) % 256`
 
-There are special cases for left-most and top-most pixel positions:
+There are special cases for the left-most and top-most pixel positions:
 
-  * Top-left value at location (0,0) uses 0 as predictor value. Otherwise,
+  * The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
   * For horizontal or gradient filtering methods, the left-most pixels at
     location (0, y) are predicted using the location (0, y-1) just above.
   * For vertical or gradient filtering methods, the top-most pixels at
@@ -642,14 +658,15 @@ The formats of VP8 and VP8L chunks are as described in sections
 [Simple File Format (Lossy)](#simple-file-format-lossy)
 and [Simple File Format (Lossless)](#simple-file-format-lossless) respectively.
 
-#### Color profile
+#### Color Profile
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ICCP')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                       Color Profile                           |
+    :                       Color Profile                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Color Profile: _Chunk Size_ bytes
@@ -669,8 +686,7 @@ If this chunk is not present, sRGB SHOULD be assumed.
 Metadata can be stored in 'EXIF' or 'XMP ' chunks.
 
 There SHOULD be at most one chunk of each type ('EXIF' and 'XMP '). If there
-are more such chunks, readers MAY ignore all except the first one. Also, a file
-may possibly contain both 'EXIF' and 'XMP ' chunks.
+are more such chunks, readers MAY ignore all except the first one.
 
 The chunks are defined as follows:
 
@@ -680,13 +696,14 @@ EXIF chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('EXIF')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                        EXIF Metadata                          |
+    :                        Exif Metadata                          :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-EXIF Metadata: _Chunk Size_ bytes
+Exif Metadata: _Chunk Size_ bytes
 
-: image metadata in EXIF format.
+: Image metadata in Exif format.
 
 XMP chunk:
 
@@ -694,18 +711,21 @@ XMP chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('XMP ')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                        XMP Metadata                           |
+    :                        XMP Metadata                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 XMP Metadata: _Chunk Size_ bytes
 
-: image metadata in XMP format.
+: Image metadata in XMP format.
+
+Note the fourth character in the 'XMP ' FourCC is an ASCII space (0x20).
 
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
 
-#### Unknown Chunks _\[status: experimental\]_
+#### Unknown Chunks
 
 A RIFF chunk (described in [this](#terminology-amp-basics) section) whose _chunk
 tag_ is different from any of the chunks described in this document, is
@@ -724,49 +744,73 @@ A file MAY contain unknown chunks:
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
 original order (unless they specifically intend to modify these chunks).
 
-### Assembling the Canvas from frames
+### Assembling the Canvas From Frames
 
-Here we provide an overview of how a reader should assemble a canvas in the
-case of an animated image. The notation _VP8X.field_ means the field in the
-'VP8X' chunk with the same description.
+Here we provide an overview of how a reader MUST assemble a canvas in the case
+of an animated image.
 
-Displaying an _animated image_ canvas MUST be equivalent to the following
-pseudocode:
+The process begins with creating a canvas using the dimensions given in the
+'VP8X' chunk, `Canvas Width Minus One + 1` pixels wide by `Canvas Height Minus
+One + 1` pixels high. The `Loop Count` field from the 'ANIM' chunk controls how
+many times the animation process is repeated. This is `Loop Count - 1` for
+non-zero `Loop Count` values or infinitely if `Loop Count` is zero.
+
+At the beginning of each loop iteration the canvas is filled using the
+background color from the 'ANIM' chunk or an application defined color.
+
+'ANMF' chunks contain individual frames given in display order. Before rendering
+each frame, the previous frame's `Disposal method` is applied.
+
+The rendering of the decoded frame begins at the Cartesian coordinates (`2 *
+Frame X`, `2 * Frame Y`) using the top-left corner of the canvas as the origin.
+`Frame Width Minus One + 1` pixels wide by `Frame Height Minus One + 1` pixels
+high are rendered onto the canvas using the `Blending method`.
+
+The canvas is displayed for `Frame Duration` milliseconds. This continues until
+all frames given by 'ANMF' chunks have been displayed. A new loop iteration is
+then begun or the canvas is left in its final state if all iterations have been
+completed.
+
+The following pseudocode illustrates the rendering process. The notation
+_VP8X.field_ means the field in the 'VP8X' chunk with the same description.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 assert VP8X.flags.hasAnimation
 canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
          background color ANIM.background_color.
 loop_count ← ANIM.loopCount
-dispose_method ← ANIM.disposeMethod
+dispose_method ← Dispose to background color
 if loop_count == 0:
-    loop_count = ∞
+  loop_count = ∞
 frame_params ← nil
 assert next chunk in image_data is ANMF
 for loop = 0..loop_count - 1
-    clear canvas to ANIM.background_color or application defined color
-    until eof or non-ANMF chunk
-        frame_params.frameX = Frame X
-        frame_params.frameY = Frame Y
-        frame_params.frameWidth = Frame Width Minus One + 1
-        frame_params.frameHeight = Frame Height Minus One + 1
-        frame_params.frameDuration = Frame Duration
-        frame_right = frame_params.frameX + frame_params.frameWidth
-        frame_bottom = frame_params.frameY + frame_params.frameHeight
-        assert VP8X.canvasWidth >= frame_right
-        assert VP8X.canvasHeight >= frame_bottom
-        for subchunk in 'Frame Data':
-            if subchunk.tag == "ALPH":
-                assert alpha subchunks not found in 'Frame Data' earlier
-                frame_params.alpha = alpha_data
-            else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
-                assert bitstream subchunks not found in 'Frame Data' earlier
-                frame_params.bitstream = bitstream_data
-        render frame with frame_params.alpha and frame_params.bitstream on
-            canvas with top-left corner at (frame_params.frameX,
-            frame_params.frameY), using dispose method dispose_method.
-        canvas contains the decoded image.
-        Show the contents of the canvas for frame_params.frameDuration * 1ms.
+  clear canvas to ANIM.background_color or application defined color
+  until eof or non-ANMF chunk
+    frame_params.frameX = Frame X
+    frame_params.frameY = Frame Y
+    frame_params.frameWidth = Frame Width Minus One + 1
+    frame_params.frameHeight = Frame Height Minus One + 1
+    frame_params.frameDuration = Frame Duration
+    frame_right = frame_params.frameX + frame_params.frameWidth
+    frame_bottom = frame_params.frameY + frame_params.frameHeight
+    assert VP8X.canvasWidth >= frame_right
+    assert VP8X.canvasHeight >= frame_bottom
+    for subchunk in 'Frame Data':
+      if subchunk.tag == "ALPH":
+        assert alpha subchunks not found in 'Frame Data' earlier
+        frame_params.alpha = alpha_data
+      else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
+        assert bitstream subchunks not found in 'Frame Data' earlier
+        frame_params.bitstream = bitstream_data
+    render frame with frame_params.alpha and frame_params.bitstream
+      on canvas with top-left corner at (frame_params.frameX,
+      frame_params.frameY), using blending method
+      frame_params.blendingMethod.
+    canvas contains the decoded image.
+    Show the contents of the canvas for
+    frame_params.frameDuration * 1ms.
+    dispose_method = frame_params.disposeMethod
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -802,7 +846,7 @@ RIFF/WEBP
 +- XMP  (metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An animated image with EXIF metadata may look as follows:
+An animated image with Exif metadata may look as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
@@ -815,9 +859,10 @@ RIFF/WEBP
 +- EXIF (metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[vp8spec]:  http://tools.ietf.org/html/rfc6386
-[webpllspec]: https://chromium.googlesource.com/webm/libwebp/+/master/doc/webp-lossless-bitstream-spec.txt
-[iccspec]: http://www.color.org/icc_specs2.xalter
-[metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
-[rfc 1166]: http://tools.ietf.org/html/rfc1166
-[rfc 2119]: http://tools.ietf.org/html/rfc2119
+[vp8spec]:  https://datatracker.ietf.org/doc/html/rfc6386
+[webpllspec]: https://chromium.googlesource.com/webm/libwebp/+/HEAD/doc/webp-lossless-bitstream-spec.txt
+[iccspec]: https://www.color.org/icc_specs2.xalter
+[metadata]: https://web.archive.org/web/20180919181934/http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
+[rfc 1166]: https://datatracker.ietf.org/doc/html/rfc1166
+[rfc 2119]: https://datatracker.ietf.org/doc/html/rfc2119
+[rfc 8174]: https://datatracker.ietf.org/doc/html/rfc8174

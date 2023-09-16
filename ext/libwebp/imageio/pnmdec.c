@@ -20,6 +20,10 @@
 #include "webp/encode.h"
 #include "./imageio_util.h"
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
+
 typedef enum {
   WIDTH_FLAG      = 1 << 0,
   HEIGHT_FLAG     = 1 << 1,
@@ -111,8 +115,9 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
       break;
     } else {
       static const char kEllipsis[] = " ...";
+      const size_t kLen = strlen(kEllipsis) + 1;  // +1 = trailing \0
       int i;
-      if (out_size > 20) sprintf(out + 20 - strlen(kEllipsis), kEllipsis);
+      if (out_size > 20) snprintf(out + 20 - kLen, kLen, kEllipsis);
       for (i = 0; i < (int)strlen(out); ++i) {
         // isprint() might trigger a "char-subscripts" warning if given a char.
         if (!isprint((int)out[i])) out[i] = ' ';

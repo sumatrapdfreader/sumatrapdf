@@ -41,6 +41,9 @@ typedef enum {
   WEBP_UNSUPPORTED_FORMAT
 } WebPInputFileFormat;
 
+// Returns a comma separated list of enabled input formats.
+const char* WebPGetEnabledInputFileFormats(void);
+
 // Try to infer the image format. 'data_size' should be larger than 12.
 // Returns WEBP_UNSUPPORTED_FORMAT if format can't be guess safely.
 WebPInputFileFormat WebPGuessImageType(const uint8_t* const data,

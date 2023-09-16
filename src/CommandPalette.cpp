@@ -156,6 +156,8 @@ struct CommandPaletteWnd : Wnd {
     ListBox* listBox = nullptr;
     Static* staticHelp = nullptr;
 
+    int currTabPos = 0;
+
     void OnDestroy() override;
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
@@ -164,7 +166,7 @@ struct CommandPaletteWnd : Wnd {
     void CollectStrings(MainWindow*);
     void FilterStringsForQuery(const char*, StrVec&);
 
-    bool Create(MainWindow* win, bool);
+    bool Create(MainWindow* win, const char* prefix);
     void QueryChanged();
     void ListDoubleClick();
 
@@ -351,14 +353,19 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
     ctx.hasToc = win->ctrl && win->ctrl->HasToc();
 
     // append paths of opened files
+    int tabPos = 0;
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab2 : win->Tabs()) {
-            if (!tab2->IsDocLoaded()) {
+            if (tab2->IsAboutTab()) {
                 continue;
             }
             const char* name = tab2->filePath.Get();
             name = path::GetBaseNameTemp(name);
             filesInTabs.AppendIfNotExists(name);
+            if (w == win && tab2 == win->CurrentTab()) {
+                currTabPos = tabPos;
+            }
+            tabPos++;
         }
     }
 
@@ -416,7 +423,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         } else if (msg.wParam == VK_DOWN) {
             dir = 1;
         }
-        if (!dir) {
+        if (dir == 0) {
             return false;
         }
         int n = listBox->GetCount();
@@ -432,6 +439,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
             sel = 0;
         }
         listBox->SetCurrentSelection(sel);
+        return true;
     }
     return false;
 }
@@ -491,12 +499,17 @@ const char* SkipWS(const char* s) {
 void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVec& strings) {
     filter = SkipWS(filter);
     bool skipFiles = (filter[0] == '>');
-    if (skipFiles) {
+    bool onlyTabs = (filter[0] == '@');
+    if (skipFiles || onlyTabs) {
         ++filter;
         filter = SkipWS(filter);
     }
     // for efficiency, reusing existing model
     strings.Reset();
+    if (onlyTabs) {
+        FilterStrings(filesInTabs, filter, strings);
+        return;
+    }
     if (!skipFiles) {
         FilterStrings(filesInTabs, filter, strings);
         FilterStrings(filesInHistory, filter, strings);
@@ -510,7 +523,11 @@ void CommandPaletteWnd::QueryChanged() {
     FilterStringsForQuery(filter, m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
-        listBox->SetCurrentSelection(0);
+        if (str::Eq(filter, "@")) {
+            listBox->SetCurrentSelection(currTabPos);
+        } else {
+            listBox->SetCurrentSelection(0);
+        }
     }
 }
 
@@ -538,7 +555,7 @@ void CommandPaletteWnd::ScheduleDelete() {
 static WindowTab* FindOpenedFile(const char* s) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            if (!tab->IsDocLoaded()) {
+            if (tab->IsAboutTab()) {
                 continue;
             }
             const char* name = tab->filePath.Get();
@@ -614,11 +631,11 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
     r = {x, y, r.dx, r.dy};
     Rect r2 = ShiftRectToWorkArea(r, hwndRelative, true);
-    r2.y = rRelative.y + 32;
+    r2.y = rRelative.y + 42;
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
+bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -695,9 +712,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
-    if (noFiles) {
+    if (!str::IsEmpty(prefix)) {
         // this will trigger filtering
-        editQuery->SetText(">");
+        editQuery->SetText(prefix);
         editQuery->SetSelection(1, 1);
     }
 
@@ -706,7 +723,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, bool noFiles) {
     return true;
 }
 
-void RunCommandPallette(MainWindow* win, bool noFiles) {
+void RunCommandPallette(MainWindow* win, const char* prefix) {
     CrashIf(gCommandPaletteWnd);
 
     if (!gCommandPaletteFont) {
@@ -723,7 +740,7 @@ void RunCommandPallette(MainWindow* win, bool noFiles) {
 
     auto wnd = new CommandPaletteWnd();
     wnd->win = win;
-    bool ok = wnd->Create(win, noFiles);
+    bool ok = wnd->Create(win, prefix);
     CrashIf(!ok);
     gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;

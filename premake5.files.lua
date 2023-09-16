@@ -425,6 +425,7 @@ function libwebp_files()
     "filters_sse2.c",
     "lossless.c",
     "lossless_sse2.c",
+    "lossless_sse41.c",
     "rescaler.c",
     "rescaler_sse2.c",
     "ssim.c",
@@ -436,6 +437,8 @@ function libwebp_files()
     "yuv_sse2.c",
     "yuv_sse41.c",
   })
+
+  files("ext/libwebp/src/sharpyuv/*.c")
 
   files("ext/libwebp/src/utils/*.c")
 end

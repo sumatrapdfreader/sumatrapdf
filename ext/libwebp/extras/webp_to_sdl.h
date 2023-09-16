@@ -14,9 +14,9 @@
 #ifndef WEBP_EXTRAS_WEBP_TO_SDL_H_
 #define WEBP_EXTRAS_WEBP_TO_SDL_H_
 
-// Exports the method WebpToSDL(const char* data, int data_size) which decodes
+// Exports the method WebPToSDL(const char* data, int data_size) which decodes
 // a WebP bitstream into an RGBA SDL surface.
 // Return false on failure.
-extern int WebpToSDL(const char* data, unsigned int data_size);
+extern int WebPToSDL(const char* data, unsigned int data_size);
 
 #endif  // WEBP_EXTRAS_WEBP_TO_SDL_H_
