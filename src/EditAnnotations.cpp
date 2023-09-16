@@ -225,6 +225,9 @@ static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
     ew->buttonEmbedAttachment->SetIsVisible(false);
 
     ew->buttonDelete->SetIsVisible(false);
+    if (ew->tab) {
+        ew->tab->currentEditAnnotationMark.show = false;
+    }
 }
 
 static int FindStringInArray(const char* items, const char* toFind, int valIfNotFound = -1) {
@@ -745,6 +748,13 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->buttonEmbedAttachment->SetIsVisible(true);
 }
 
+static void DoCurrentEditAnnotation(EditAnnotationsWindow* ew, Annotation* annot, int annotPageNo) {
+    ew->tab->currentEditAnnotationMark.show = true;
+    ew->tab->currentEditAnnotationMark.page = annotPageNo;
+    ew->tab->currentEditAnnotationMark.scrolled = false;
+    ew->tab->currentEditAnnotationMark.rect = GetBounds(ew->annot);
+}
+
 static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
     int opacity = ev->pos;
     SetOpacity(ew->annot, opacity);
@@ -798,6 +808,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
 
         DoOpacity(ew, ew->annot);
         DoSaveEmbed(ew, ew->annot);
+
+        DoCurrentEditAnnotation(ew, ew->annot, annotPageNo);
 
         ew->buttonDelete->SetIsVisible(true);
     }
@@ -1355,6 +1367,7 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
     HWND hwnd = ew->hwnd;
     BringWindowToTop(hwnd);
     SelectAnnotationInListBox(ew, annot);
+    RepaintAsync(ew->tab->win, 0); // Paints the initial "currentEditAnnotationMark"
 }
 
 void StartEditAnnotations(WindowTab* tab, Annotation* annot) {
@@ -1533,26 +1546,40 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
 
     pdf_update_annot(ctx, annot);
     auto res = MakeAnnotationPdf(epdf, annot, pageNo);
+
+    std::optional <PdfColor> col;
+
     if (typ == AnnotationType::Text) {
         AutoFreeStr iconName = GetAnnotationTextIcon();
         if (!str::EqI(iconName, "Note")) {
             SetIconName(res, iconName.Get());
         }
-        auto col = GetAnnotationTextIconColor();
-        SetColor(res, col);
+        col = GetAnnotationTextIconColor();
     } else if (typ == AnnotationType::Underline) {
-        auto col = GetAnnotationUnderlineColor();
-        SetColor(res, col);
+        col = GetAnnotationUnderlineColor();
     } else if (typ == AnnotationType::Highlight) {
-        auto col = GetAnnotationHighlightColor();
-        SetColor(res, col);
+        col = GetAnnotationHighlightColor();
     } else if (typ == AnnotationType::Squiggly) {
-        auto col = GetAnnotationSquigglyColor();
-        SetColor(res, col);
+        col = GetAnnotationSquigglyColor();
     } else if (typ == AnnotationType::StrikeOut) {
-        auto col = GetAnnotationStrikeOutColor();
-        SetColor(res, col);
+        col = GetAnnotationStrikeOutColor();
     }
+    if (col.has_value()) {
+        SetColor(res, col.value());
+    }
+
     pdf_drop_annot(ctx, annot);
     return res;
+}
+
+void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
+    // Highlight Currently Editing Annotation
+    Gdiplus::Pen blackPen(Gdiplus::Color(255, 0, 0, 0), 5);
+    Rect rect = dm->CvtToScreen(tab->currentEditAnnotationMark.page, tab->currentEditAnnotationMark.rect);
+    if (!tab->currentEditAnnotationMark.scrolled) {
+        dm->ScrollScreenToRect(tab->currentEditAnnotationMark.page, rect);
+        tab->currentEditAnnotationMark.scrolled = true;
+    }
+    Gdiplus::Graphics gs(hdc);
+    Gdiplus::Status stat = gs.DrawRectangle(&blackPen, rect.x, rect.y, rect.dx, rect.dy);
 }

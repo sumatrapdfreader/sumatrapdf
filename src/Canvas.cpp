@@ -956,6 +956,11 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         DeleteDC(bmpDC);
     }
 
+    WindowTab* tab = win->CurrentTab();
+    if (tab && tab->currentEditAnnotationMark.show) {
+        PaintCurrentEditAnnotationMark(tab, hdc, dm);
+    }
+
     if (win->showSelection) {
         PaintSelection(win, hdc);
     }
@@ -968,6 +973,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         DebugShowLinks(dm, hdc);
     }
 }
+
 
 static void OnPaintDocument(MainWindow* win) {
     auto t = TimeGet();
