@@ -427,7 +427,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
             delayFocus = !IsFocused(hwnd);
             return true;
 
-        case WM_LBUTTONUP:
+        case WM_LBUTTONUP: {
             if (delayFocus) {
                 DWORD sel = Edit_GetSel(hwnd);
                 if (LOWORD(sel) == HIWORD(sel)) {
@@ -436,31 +436,35 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
                 delayFocus = false;
             }
             return true;
+        }
 
         case WM_KILLFOCUS:
             return false; // for easier debugging (make setting a breakpoint possible)
 
-        case WM_SETFOCUS:
+        case WM_SETFOCUS: {
             if (!delayFocus) {
                 PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
             }
             return true;
+        }
 
-        case UWM_DELAYED_SET_FOCUS:
+        case UWM_DELAYED_SET_FOCUS: {
             EditSelectAll(hwnd);
             return true;
+        }
 
-        case WM_KEYDOWN:
+        case WM_KEYDOWN: {
             if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed()) {
                 return false;
             }
             PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
             return true;
+        }
 
         case UWM_DELAYED_CTRL_BACK: {
             EditImplementCtrlBack(hwnd);
-        }
             return true;
+        }
 
         default:
             return false;
