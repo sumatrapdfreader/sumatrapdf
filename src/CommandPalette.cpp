@@ -313,17 +313,17 @@ static char* ConvertPathForDisplayTemp(const char* s) {
     return res;
 }
 
-void CommandPaletteWnd::CollectStrings(MainWindow* win) {
+void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
-    ctx.isDocLoaded = win->IsDocLoaded();
-    WindowTab* tab = win->CurrentTab();
-    ctx.hasSelection = ctx.isDocLoaded && tab && win->showSelection && tab->selectionOnPage;
+    ctx.isDocLoaded = mainWin->IsDocLoaded();
+    WindowTab* tab = mainWin->CurrentTab();
+    ctx.hasSelection = ctx.isDocLoaded && tab && mainWin->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
-    ctx.allowToggleMenuBar = !win->tabsInTitlebar;
+    ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;
 
-    Point cursorPos = HwndGetCursorPos(win->hwndCanvas);
+    Point cursorPos = HwndGetCursorPos(mainWin->hwndCanvas);
 
-    DisplayModel* dm = win->AsFixed();
+    DisplayModel* dm = mainWin->AsFixed();
     if (dm) {
         auto engine = dm->GetEngine();
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
@@ -350,22 +350,25 @@ void CommandPaletteWnd::CollectStrings(MainWindow* win) {
         ctx.hasUnsavedAnnotations = false;
     }
 
-    ctx.hasToc = win->ctrl && win->ctrl->HasToc();
+    ctx.hasToc = mainWin->ctrl && mainWin->ctrl->HasToc();
 
     // append paths of opened files
     int tabPos = 0;
-    for (MainWindow* w : gWindows) {
-        for (WindowTab* tab2 : win->Tabs()) {
-            if (tab2->IsAboutTab()) {
-                continue;
+    for (MainWindow* win : gWindows) {
+        if (win == mainWin) {
+            for (WindowTab* tab2 : mainWin->Tabs()) {
+                if (tab2->IsAboutTab()) {
+                    continue;
+                }
+                const char* name = tab2->filePath.Get();
+                name = path::GetBaseNameTemp(name);
+                filesInTabs.AppendIfNotExists(name);
+                // find current tab index
+                if (tab2 == mainWin->CurrentTab()) {
+                    currTabPos = tabPos;
+                }
+                tabPos++;
             }
-            const char* name = tab2->filePath.Get();
-            name = path::GetBaseNameTemp(name);
-            filesInTabs.AppendIfNotExists(name);
-            if (w == win && tab2 == win->CurrentTab()) {
-                currTabPos = tabPos;
-            }
-            tabPos++;
         }
     }
 
