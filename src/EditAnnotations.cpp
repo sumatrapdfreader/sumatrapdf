@@ -1550,7 +1550,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     pdf_update_annot(ctx, annot);
     auto res = MakeAnnotationPdf(epdf, annot, pageNo);
 
-    std::optional <PdfColor> col;
+    PdfColor col = ColorUnset;
 
     if (typ == AnnotationType::Text) {
         AutoFreeStr iconName = GetAnnotationTextIcon();
@@ -1567,8 +1567,8 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     } else if (typ == AnnotationType::StrikeOut) {
         col = GetAnnotationStrikeOutColor();
     }
-    if (col.has_value()) {
-        SetColor(res, col.value());
+    if (col != ColorUnset) {
+        SetColor(res, col);
     }
 
     pdf_drop_annot(ctx, annot);
