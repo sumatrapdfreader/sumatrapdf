@@ -143,7 +143,9 @@ void FileExistenceChecker::Run() {
     });
 }
 
-static void MakePluginWindow(MainWindow* win, HWND hwndParent) {
+static NO_INLINE void MakePluginWindow(MainWindow* win, HWND hwndParent) {
+    logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%x (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
+          (int)IsWindow(hwndParent), gPluginURL ? gPluginURL : "<nulL>");
     CrashIf(!IsWindow(hwndParent));
     CrashIf(!gPluginMode);
 
