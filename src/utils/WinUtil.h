@@ -17,6 +17,7 @@ Rect MapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
 
 void EditSelectAll(HWND);
 int EditIdealDy(HWND, bool hasBorder, int lines = 1);
+void EditImplementCtrlBack(HWND hwnd);
 
 void ListBox_AppendString_NoSort(HWND, const WCHAR*);
 

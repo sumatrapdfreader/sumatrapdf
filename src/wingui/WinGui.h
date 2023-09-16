@@ -3,6 +3,10 @@
 
 //--- Wnd
 
+// global messages for wingui start at WM_APP + 0x300 to not
+// collide with values defined for the app
+const DWORD UWM_DELAYED_CTRL_BACK = WM_APP + 0x300 + 1;
+
 UINT_PTR NextSubclassId();
 
 const char* WinMsgName(UINT);
