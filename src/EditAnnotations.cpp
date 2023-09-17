@@ -1376,7 +1376,9 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
 
 void StartEditAnnotations(WindowTab* tab, Annotation* annot) {
     Vec<Annotation*> annots;
-    annots.Append(annot);
+    if (annot) {
+        annots.Append(annot); 
+    }
     StartEditAnnotations(tab, annots);
 }
 
