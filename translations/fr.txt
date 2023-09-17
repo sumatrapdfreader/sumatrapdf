@@ -1,0 +1,731 @@
+:Copy File Path
+:&About
+&À propos
+:&Actual Size
+&Taille réelle
+:&Advanced Options...
+Options &avancées…
+:&All selected pages
+Toutes les p&ages sélectionnées
+:&Back
+R&evenir
+:&Book View
+&Comme un livre
+:&Cancel
+Ann&uler
+:&Caret
+&Curseur
+:&Close
+&Fermer
+:&Continue installing 32-bit version
+Continuer l'installation de la version 32-bits
+:&Copy Selection
+&Copier la sélection
+:&Copy To Clipboard
+&Copier dans le presse-papiers
+:&Discard changes
+&Abandonner les modifications
+:&Don't ask me again
+&Ne plus me demander
+:&Even pages only
+Seulement les pages &paires
+:&Facing
+&Deux pages
+:&File
+&Fichier
+:&Find what:
+&Rechercher quoi :
+:&First Page
+P&remière page
+:&Fit pages to printable area
+&Ajuster les pages à la zone d'impression
+:&Free Text
+&Texte libre
+:&Go To
+A&ller…
+:&Go to page:
+&Aller à la page :
+:&Help
+Ai&de
+:&Highlight
+&Surligner
+:&Last Page
+&Dernière page
+:&Magnification:
+&Grossissement :
+:&Manual
+&Manuel
+:&Match case
+&Respecter la casse
+:&Next Page
+Page &suivante
+:&No
+&Non
+:&Odd pages only
+Seulement les pages &impaires
+:&Open Document
+&Ouvrir le document
+:&Open...
+&Ouvrir...
+:&Options
+&Options
+:&Options...
+&Options...
+:&Password:
+&Mot de passe :
+:&Pin Document
+&Épingler le document
+:&Previous Page
+Page &précédente
+:&Print...
+Im&primer...
+:&Print... (denied)
+&Imprimer... (refusé)
+:&Remember the password for this document
+&Mémoriser le mot de passe pour ce document
+:&Remember these settings for each document
+&Mémoriser ces paramètres pour chaque document
+:&Remove From History
+Supprimer de l'historique
+:&Save As...
+&Enregistrer sous...
+:&Save to existing PDF
+&Sauvegarder dans le PDF existant
+:&Search With Google
+&Rechercher avec Google
+:&Settings
+&Préférences
+:&Shrink pages to printable area (if necessary)
+&Réduire les pages à la zone d'impression (si nécessaire)
+:&Single Page
+&Une page
+:&Stamp
+&Tampon
+:&Strike Out
+&Rayer
+:&Text
+&Texte
+:&Theme
+Thème
+:&Translate With Google
+&Traduire avec Google
+:&Underline
+So&uligner
+:&Use original page sizes
+&Utiliser les dimensions d'origine
+:&View
+&Affichage
+:&Window
+F&enêtre
+:&Yes
+&Oui
+:&Zoom
+&Zoom
+:(of %d)
+(de %d)
+:(page %s)
+(page %s)
+:About SumatraPDF
+À propos de SumatraPDF
+:Add Favorite
+Ajouter aux favoris
+:Add page %s to favorites
+Ajouter la page %s aux favoris
+:Add page %s to favorites with (optional) name:
+Ajouter la page %s aux favoris avec un nom (optionnel) :
+:Add to favorites
+Ajouter aux favoris
+:Advanced
+Avancé
+:All files
+Tous les fichiers
+:All supported documents
+Tous les documents pris en charge
+:Annotations
+Annotations
+:Application:
+Application :
+:Are you sure you want to uninstall SumatraPDF?
+Êtes-vous certain de vouloir désinstaller SumatraPDF ?
+:Associate with PDF files?
+Associer aux fichiers PDF ?
+:Attachment: %s
+Fichier joint : %s
+:Author:
+Auteur :
+:Author: %s
+Auteur : %s
+:Automatic
+Automatique
+:Automatically check for &updates
+Vérifier a&utomatiquement les mises à jour
+:Background Color:
+Couleur d'arrière-plan :
+:Book View
+Comme un livre
+:Bookmark Shortcuts
+Raccourcis des signets
+:Bookmark shortcut to page %s of %s
+Raccourci du signet de la page %s de %s
+:Bookmarks
+Signets
+:Border: %d
+Bordure : %d
+:Bytes
+Octets
+:CHM documents
+Fichiers d'aide CHM
+:Can't connect to the Internet (error %#x).
+Impossible de se connecter à Internet (erreur %#x)
+:Cancel
+Annuler
+:Cannot print this file
+Impossible d'imprimer ce fichier
+:Cannot start inverse search command. Please check the command line in the settings.
+Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
+:Change Language
+Changer la langue
+:Check for &Updates
+&Vérifier les mises à jour
+:Checking for update...
+Vérification des mises à jour...
+:Circle
+Cercle
+:Close
+Fermer
+:Close Other Tabs
+Fermer les autres onglets
+:Close Tabs To The Right
+Fermer les onglets sur la droite
+:Collapse All
+Tout réduire
+:Color:
+Couleur :
+:Comic books
+Bandes dessinées
+:Command Palette
+Palette de commande
+:Compatibility
+Compatibilité
+:Contents:
+Contenu :
+:Continuous
+Vue continue
+:Continuous Book View
+Vue continue, comme un livre
+:Continuous Facing
+Vue continue, deux pages
+:Contribute Translation
+Contribuer à la traduction
+:Copy &Image
+Copier l'&image
+:Copy &Link Address
+Copier l'adresse du &lien
+:Copy Co&mment
+Copier le co&mmentaire
+:Copy To Clipboard
+Copier dans le presse-papiers
+:Copying text was denied (copying as image only)
+La copie de texte est refusée (seule une capture d’écran est faite)
+:Copyright:
+Copyright :
+:Could not obtain Printer properties
+Impossible d'obtenir les propriétés de l'imprimante
+:Couldn't create the installation directory
+Impossible de créer le répertoire d'installation
+:Couldn't get printer name
+Impossible d'obtenir le nom de l'imprimante
+:Couldn't initialize printer
+Impossible d'initialiser l'imprimante
+:Couldn't install PDF previewer
+Impossible d'installer l'aperçu PDF
+:Couldn't install PDF search filter
+Impossible d'installer le filtre de recherche PDF
+:Couldn't render the page
+Impossible de générer la page
+:Couldn't uninstall PDF previewer
+Impossible de désinstaller l'aperçu PDF
+:Couldn't uninstall Sumatra search filter
+Impossible de désinstaller le filtre de recherche de Sumatra
+:Couldn't uninstall browser plugin
+Impossible de désinstalle le plug-in du navigateur
+:Couldn't write %s to disk
+Impossible d'écrire %s sur le disque
+:Create Annotation &Under Cursor
+Créer une annotation &sous le curseur
+:Create Annotation From Selection
+Créer une annotation à partir de la sélection
+:Created:
+Créé le :
+:Current file
+Fichier actuel
+:Cursor position:
+Position du curseur :
+:Custom &Zoom...
+&Zoom personnalisé...
+:Dark
+Sombre
+:Darker
+Plus sombre
+:Date:
+Date :
+:Default &Layout:
+Mise en &page par défaut :
+:Default &Zoom:
+&Zoom par défaut :
+:Delete Annotation\tDel
+Supprimer l'annotation\tDel
+:Denied Permissions:
+Interdictions :
+:DjVu documents
+Documents DjVu
+:Document Properties
+Propriétés du document
+:Don't install
+Ne pas installer
+:Download 64-bit version
+Télécharger la version 64-bits
+:E&xit
+&Quitter
+:E&xit Fullscreen
+&Quitter le mode plein écran
+:EPUB ebooks
+Fichiers EPUB
+:Edit Annotations
+Éditer les annotations
+:Enter password
+Entrer le mot de passe
+:Enter password for %s
+Entrer le mot de passe pour %s
+:Enter the command-line to invoke when you double-click on the PDF document:
+Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF :
+:Error loading %s
+Erreur de chargement de %s
+:Expand All
+Tout développer
+:F&avorites
+Fa&voris
+:F&orward
+&Avancer
+:F&ullscreen
+P&lein écran
+:Facing
+Deux pages
+:Failed to delete uninstaller registry keys
+La suppression des clés de la base de registre du désinstalleur a échoué
+:Failed to rename the file!
+Impossible de renommer le fichier !
+:Failed to save a file
+Échec à l'enregistrement du fichier
+:Failed to write the extended file extension information to the registry
+L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
+:Failed to write the uninstallation information to the registry
+L'écriture des informations de désinstallation dans la base de registre a échoué
+:Fast Web View
+Affichage Web rapide
+:Favorites
+Favoris
+:FictionBook documents
+Documents FictionBook
+:File %s not found
+Fichier %s non trouvé
+:File Attachment
+Pièce jointe
+:File Size:
+Taille du fichier :
+:File:
+Fichier :
+:Fin&d...
+R&echercher...
+:Find
+Rechercher
+:Find Next
+Occurrence suivante
+:Find Previous
+Occurrence précédente
+:Find:
+Rechercher :
+:Fit &Content
+Ajuster au &contenu
+:Fit &Page
+&Page entière
+:Fit &Width
+Pleine &largeur
+:Fit Content
+Ajuster au contenu
+:Fit Page
+Page entière
+:Fit Width
+Pleine largeur
+:Fit Width and Show Pages Continuously
+Pleine largeur, vue continue
+:Fit a Single Page
+Page unique
+:Fonts:
+Polices :
+:Found text at page %s
+Texte trouvé à la page %s
+:Found text at page %s (again)
+Texte trouvé page %s (suivant)
+:Frequently Read
+Documents lus fréquemment
+:GB
+Go
+:Get Fonts Info
+Infos sur les polices
+:Go to page
+Aller à la page
+:Hide &Options
+Masquer les &options
+:Hide frequently read
+Masquer les documents lus fréquemment
+:Hint: Use the F3 key for finding again
+Remarque : utilisez la touche F3 pour trouver de nouveau
+:Icon:
+Icône :
+:Image files (*.%s)
+Fichiers-images (*.%s)
+:Images
+Images
+:Ink
+Encre
+:Install SumatraPDF
+Installer SumatraPDF
+:Install SumatraPDF in &folder:
+Installer SumatraPDF dans le répertoire :
+:Install and relaunch
+Installer et redémarrer
+:Install for all users
+Installer pour tous les utilisateurs
+:Installation failed!
+Échec de l'installation !
+:Installation in progress...
+Installation en cours…
+:Installing 32-bit SumatraPDF on 64-bit OS
+Installation de SumatraPDF 32-bits sur un système 64-bits
+:Interior Color:
+Couleur Intérieure :
+:KB
+Ko
+:Let Windows Desktop Search &search PDF documents
+Permettre à Windows Desktop Search la recherche de documents PDF
+:Let Windows show &previews of PDF documents
+Permettre à Windows de montrer des a&perçus des documents PDF
+:Light
+Clair
+:Line
+Ligne
+:Line End:
+Fin de ligne :
+:Line Start:
+Début de ligne :
+:Loading %s ...
+Chargement de %s ...
+:MB
+Mo
+:Make SumatraPDF default application for PDF files?
+Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
+:Man&ga Mode
+Mode man&ga
+:Match Case
+Respecter la casse
+:Mobi documents
+Fichiers Mobi
+:Modified:
+Modifié le :
+:New &window
+Nouvelle &fenêtre
+:New version available
+Nouvelle version disponible
+:Next Page
+Page suivante
+:No matches were found
+Aucun résultat n'a été trouvé
+:No result found around line %u in file %s
+Aucun résultat trouvé autour de la ligne %u dans le fichier %s
+:No synchronization file found
+Aucun fichier de synchronisation trouvé
+:No synchronization info at this position
+Aucune information de synchronisation à cette position
+:Number of Pages:
+Nombre de pages :
+:OK
+OK
+:Opacity:
+Opacité :
+:Opacity: %d
+Opacité : %d
+:Open
+Ouvrir
+:Open &in PDF-XChange
+Ouvrir dans PDF-XChange
+:Open Attachment
+Ouvrir la pièce jointe
+:Open Directory in &Double Commander
+Ouvrir dans &Double Commander
+:Open Directory in &Explorer
+Ouvrir dans &Explorer
+:Open Directory in &Total Commander
+Ouvrir dans &Total Commander
+:Open Directory in Directory &Opus
+Ouvrir dans Directory &Opus
+:Open Embedded PDF
+Ouvrir le PDF intégré
+:Open a document...
+Ouvrir un document...
+:Open in %s
+Ouvrir dans %s
+:Open in &Adobe Reader
+Ouvrir dans &Adobe Reader
+:Open in &Foxit Reader
+Ouvrir dans Fo&xit Reader
+:Open in &Microsoft XPS-Viewer
+Ouvrir dans Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
+Ouvrir dans &HTML Help
+:P&roperties
+P&ropriétés
+:PDF Document
+Document PDF
+:PDF Optimizations:
+Optimisations PDF :
+:PDF Producer:
+PDF produit par :
+:PDF Version:
+Version du PDF :
+:PDF documents
+Documents PDF
+:Pa&ge...
+Pa&ge...
+:Page %s
+Page %s
+:Page Size:
+Dimensions de la page :
+:Page number %u inexistant
+La page %u n'existe pas
+:Page scaling
+Mise à l'échelle
+:Page:
+Page :
+:PalmDoc documents
+Fichiers PalmDoc
+:Please close %s to proceed!
+Fermez %s pour continuer, s.v.p. !
+:Please wait - loading...
+Chargement, veuillez patienter...
+:Please wait - rendering...
+Patientez s'il vous plaît (génération...)
+:Poly Line
+Ligne polygonale
+:Polygon
+Polygone
+:Popup: %d 0 R
+Popup: %d 0 R
+:Postscript documents
+Documents Postscript
+:Pr&esentation
+Prés&entation
+:Previous Page
+Page précédente
+:Print
+Imprimer
+:Print range
+Plage d'impression
+:Printer with given name doesn't exist
+Il n'y a pas d'imprimante de ce nom
+:Printing in progress.
+Impression en cours
+:Printing is still in progress. Abort and quit?
+Impression toujours en cours. Annuler et quitter ?
+:Printing is still in progress. Abort and start over?
+Impression toujours en cours. Annuler et recommencer ?
+:Printing page %d of %d...
+Impression de la page %d sur %d...
+:Printing problem.
+Problème d'impression.
+:Re&name...
+Re&nommer...
+:Rect: x=%d y=%d dx=%d dy=%d
+Rect : x=%d y=%d dx=%d dy=%d
+:Redact
+Rédiger
+:Remember &opened files
+Mémoriser les fichiers &ouverts
+:Remove from favorites
+Enlever des favoris
+:Remove page %s from favorites
+Enlever page %s des favoris
+:Rename To
+Renommer
+:Rotate &Left
+Rotation vers la &gauche
+:Rotate &Right
+Rotation vers la d&roite
+:S&election
+&Sélection
+:S&quiggly
+&Ondulé
+:SVG documents
+Documents SVG
+:Save Annotations to existing PDF
+Sauvegarder les annotations dans le PDF existant
+:Save Attachment...
+Enregistrer la pièce jointe...
+:Save Embedded File...
+Enregistrer le fichier incorporé...
+:Save S&hortcut...
+Enregistrer le raccourci (&h)
+:Save annotations?
+Sauvegarder les annotations ?
+:Save changes to a new PDF
+Enregistrer les modifications dans un nouveau PDF
+:Save changes to existing PDF
+Enregistrer les modifications dans le PDF existant
+:Save to &new PDF
+Sauvegarder dans un &nouveau PDF
+:Saved annotations to '%s'
+Annotation enregistrée vers '%s'
+:Saving of '%s' failed with: '%s'
+L'enregistrement de '%s' a échoué avec : '%s'
+:Search With &Bing
+Rechercher avec &Bing
+:Search With &Google
+Rechercher avec &Google
+:Searching %d of %d...
+Recherche de %d à %d...
+:Select &All
+&Tout sélectionner
+:Select Annotation in Editor
+Sélectionner l'annotation dans l'éditeur
+:Select content with Ctrl+left mouse button
+Sélectionner avec Ctrl+bouton gauche de la souris
+:Select the folder where SumatraPDF should be installed:
+Sélectionner le répertoire d'installation de SumatraPDF :
+:Selection:
+Sélection :
+:Send by &E-mail...
+Envoyer par &courriel...
+:Set inverse search command-line
+Configurer la recherche inverse
+:Show &Bookmarks
+&Afficher les signets
+:Show &Favorites
+Afficher les &favoris
+:Show &Pages Continuously
+&Vue continue
+:Show &Scrollbars
+Afficher les &barres de défilement
+:Show &Toolbar
+Afficher la &barre d'outils
+:Show Book&marks
+&Afficher les signets
+:Show Favorites
+Afficher les favoris
+:Show Scr&ollbars
+Afficher les barres de &défilement
+:Show frequently read
+Montrer les documents lus fréquemment
+:Show in &folder
+&Afficher dans le dossier
+:Show in folder
+Afficher dans le dossier
+:Show the &bookmarks sidebar when available
+&Afficher la barre latérale des signets lorsqu'elle est disponible
+:Single Page
+Une page
+:Skip this version
+Ignorer cette version
+:Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Désolé, cela n'aurait pas dû se produire !\n\n Cliquez sur "Annuler" si vous voulez nous aider à remédier à ce crash
+:Source file %s has no synchronization point
+Le fichier source %s n'a pas de point de synchronisation
+:Square
+Carré
+:Start SumatraPDF
+Lancer SumatraPDF
+:Subject:
+Objet :
+:SumatraPDF %s Installer
+Installeur de SumatraPDF %s
+:SumatraPDF %s Uninstaller
+Désinstalleur de SumatraPDF %s
+:SumatraPDF Options
+Options SumatraPDF
+:SumatraPDF Update
+Mise à jour de SumatraPDF
+:SumatraPDF crashed
+SumatraPDF a planté
+:SumatraPDF has been uninstalled.
+SumatraPDF a été désinstallé.
+:SumatraPDF installation not found.
+Installation de SumatraPDF non trouvée
+:Synchronization file cannot be opened
+Le fichier de synchronisation ne peut pas être ouvert
+:Tagged PDF
+PDF balisé
+:Text Alignment:
+Alignement du texte :
+:Text Color:
+Couleur du texte :
+:Text Size:
+Taille du texte :
+:Text Size: %d
+Taille du texte : %d
+:Text documents
+Documents texte
+:Thank you for choosing SumatraPDF!
+Merci d'avoir choisi SumatraPDF !
+:Thank you! SumatraPDF has been installed.
+Merci ! SumatraPDF a été installé.
+:The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
+L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
+:This document uses unsupported features (%s) and might not render properly
+Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
+:Title:
+Titre :
+:Translate with &DeepL
+Traduire avec &DeepL
+:Uninstall SumatraPDF
+Désinstaller SumatraPDF
+:Uninstallation failed
+Échec de la désinstallation
+:Uninstallation in progress...
+Désinstallation en cours…
+:Unknown source file (%s)
+Fichier source inconnue (%s)
+:Unsaved annotations
+Annotations non sauvegardées
+:Unsaved annotations in '%s'
+Annotations non sauvegardées dans « %s »
+:Use &tabs
+Utiliser les ongle&ts
+:View
+Affichage
+:Visit &Website
+Visiter le site &web
+:Warning
+Avertissement
+:XPS documents
+Documents XPS
+:You have the latest version.
+Vous avez la dernière version.
+:You have unsaved annotations
+Vous avez des annotations non sauvegardées
+:You have version '%s' and version '%s' is available.\nDo you want to install new version?
+Vous avez la version ‘%s’ et la version ‘%s’ est disponible. \nVoulez-vous installer la nouvelle version ?
+:You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
+Installation de SumatraPDF 32-bits sur un système 64-bits.\nVoulez-vous télécharger la version 64-bits ?
+:Zoom
+Zoom
+:Zoom In
+Zoom avant
+:Zoom Out
+Zoom arrière
+:Zoom factor
+Facteur de zoom
+:[Changes detected; refreshing] %s
+[Modifications détectées ; actualisation] %s
+:copying text
+copie du texte
+:printing document
+impression du document

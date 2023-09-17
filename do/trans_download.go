@@ -75,16 +75,94 @@ func downloadTranslationsMust() []byte {
 	return d
 }
 
+/*
+The file looks like:
+
+AppTranslator: SumatraPDF
+608ebc3039db395ff05d3d5d950afdd65a233c58
+:&About
+af:&Omtrent
+am:&Ծրագրի մասին
+*/
+func splitIntoPerLangFiles(d []byte) {
+	a := strings.Split(string(d), "\n")
+	a = a[2:]
+	perLang := make(map[string]map[string]string)
+	allStrings := []string{}
+	currString := "" // string we're currently processing
+
+	addLangTrans := func(lang, trans string) {
+		m := perLang[lang]
+		if m == nil {
+			m = make(map[string]string)
+			perLang[lang] = m
+		}
+		m[currString] = trans
+	}
+
+	// build perLang maps
+	for _, s := range a {
+		if len(s) == 0 {
+			// can happen at the end of the file
+			continue
+		}
+		if strings.HasPrefix(s, ":") {
+			currString = s[1:]
+			allStrings = append(allStrings, currString)
+			continue
+		}
+		parts := strings.SplitN(s, ":", 2)
+		lang := parts[0]
+		panicIf(len(lang) > 5)
+		panicIf(len(parts) == 1, "parts: '%s'\n", parts)
+		trans := parts[1]
+		addLangTrans(lang, trans)
+	}
+
+	for lang, m := range perLang {
+		a := []string{}
+		sort.Slice(allStrings, func(i, j int) bool {
+			s1 := allStrings[i]
+			s2 := allStrings[j]
+			s1IsTranslated := m[s1] != ""
+			s2IsTranslated := m[s2] != ""
+			if !s1IsTranslated && s2IsTranslated {
+				return true
+			}
+			if s1IsTranslated && !s2IsTranslated {
+				return false
+			}
+			return s1 < s2
+		})
+		for _, s := range allStrings {
+			a = append(a, ":"+s)
+			trans := m[s]
+			panicIf(strings.Contains(trans, "\n"))
+			if len(trans) == 0 {
+				continue
+			}
+			a = append(a, trans)
+		}
+		// TODO: sort so that untranslated strings are at start
+		s := strings.Join(a, "\n")
+		path := filepath.Join("translations", lang+".txt")
+		writeFileMust(path, []byte(s))
+		logf(ctx(), "Wrote: '%s'\n", path)
+	}
+}
+
 func downloadTranslations() bool {
 	d := downloadTranslationsMust()
 
 	curr := readFileMust(translationsTxtPath)
 	if bytes.Equal(d, curr) {
 		fmt.Printf("Translations didn't change\n")
-		return false
+		//TODO: for now to force splitting into per-lang files
+		// return false
 	}
 
 	writeFileMust(translationsTxtPath, d)
+	splitIntoPerLangFiles(d)
 	fmt.Printf("Wrote response of size %d to %s\n", len(d), translationsTxtPath)
 	printSusTranslations(d)
 	return false

@@ -941,8 +941,7 @@ static void ForceStartupLeaks() {
     }
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR cmdLine,
-                     __unused int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
     MainWindow* win = nullptr;

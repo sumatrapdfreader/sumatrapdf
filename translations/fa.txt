@@ -1,0 +1,604 @@
+:&Actual Size
+:&Back
+:&Book View
+:&Cancel
+:&Caret
+:&Close
+:&Continue installing 32-bit version
+:&Copy To Clipboard
+:&Discard changes
+:&Facing
+:&First Page
+:&Free Text
+:&Highlight
+:&Last Page
+:&Next Page
+:&Open...
+:&Previous Page
+:&Remove From History
+:&Save to existing PDF
+:&Search With Google
+:&Single Page
+:&Stamp
+:&Strike Out
+:&Text
+:&Translate With Google
+:&Underline
+:Annotations
+:Author: %s
+:Background Color:
+:Border: %d
+:Checking for update...
+:Circle
+:Close Other Tabs
+:Close Tabs To The Right
+:Collapse All
+:Color:
+:Command Palette
+:Contents:
+:Copy File Path
+:Copy To Clipboard
+:Couldn't get printer name
+:Couldn't uninstall Sumatra search filter
+:Create Annotation &Under Cursor
+:Create Annotation From Selection
+:Custom &Zoom...
+:Date:
+:Delete Annotation\tDel
+:Don't install
+:Download 64-bit version
+:E&xit
+:E&xit Fullscreen
+:Edit Annotations
+:Expand All
+:F&orward
+:F&ullscreen
+:File Attachment
+:Fin&d...
+:Fit &Content
+:Fit &Page
+:Fit &Width
+:Get Fonts Info
+:Icon:
+:Images
+:Ink
+:Install and relaunch
+:Install for all users
+:Installing 32-bit SumatraPDF on 64-bit OS
+:Interior Color:
+:Line
+:Line End:
+:Line Start:
+:Loading %s ...
+:New &window
+:New version available
+:Opacity:
+:Opacity: %d
+:Open Attachment
+:Open Directory in &Double Commander
+:Open Directory in &Explorer
+:Open Directory in &Total Commander
+:Open Directory in Directory &Opus
+:Open Embedded PDF
+:Open in Microsoft &HTML Help
+:Pa&ge...
+:Please wait - loading...
+:Poly Line
+:Polygon
+:Popup: %d 0 R
+:Pr&esentation
+:Re&name...
+:Rect: x=%d y=%d dx=%d dy=%d
+:Redact
+:Rotate &Left
+:Rotate &Right
+:S&election
+:S&quiggly
+:SVG documents
+:Save Annotations to existing PDF
+:Save Attachment...
+:Save Embedded File...
+:Save S&hortcut...
+:Save annotations?
+:Save changes to a new PDF
+:Save changes to existing PDF
+:Save to &new PDF
+:Saved annotations to '%s'
+:Saving of '%s' failed with: '%s'
+:Search With &Bing
+:Search With &Google
+:Select Annotation in Editor
+:Show &Favorites
+:Show &Scrollbars
+:Show Book&marks
+:Show Scr&ollbars
+:Show in &folder
+:Show in folder
+:Skip this version
+:Square
+:Text Alignment:
+:Text Color:
+:Text Size:
+:Text Size: %d
+:Translate with &DeepL
+:Unsaved annotations
+:Unsaved annotations in '%s'
+:You have unsaved annotations
+:You have version '%s' and version '%s' is available.\nDo you want to install new version?
+:You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
+:&About
+&درباره
+:&Advanced Options...
+تنظیمات پیشرفته
+:&All selected pages
+&همه‌ی صفحات انتخاب ‌شده
+:&Copy Selection
+&رونوشت از قسمت انتخاب شده
+:&Don't ask me again
+&دوباره از من نپرس
+:&Even pages only
+فقط صفحات &زوج
+:&File
+&پرونده
+:&Find what:
+&جستجو برای:
+:&Fit pages to printable area
+اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &درست کن
+:&Go To
+&برو به
+:&Go to page:
+&برو به صفحه‌ی:
+:&Help
+&راهنما
+:&Magnification:
+&درشت نمایی
+:&Manual
+&کتابچه‌ی راهنمای آنلاین
+:&Match case
+دقیقا &مثل عبارت وارد شده
+:&No
+&خیر
+:&Odd pages only
+فقط صفحات &فرد
+:&Open Document
+باز کردن سند
+:&Options
+&گزینه‌ها
+:&Options...
+&تنظیمات ...
+:&Password:
+&کلمه‌ی عبور
+:&Pin Document
+&سنجاق کردن سند
+:&Print...
+&چاپ...
+:&Print... (denied)
+&چاپ... (ممنوع شده)
+:&Remember the password for this document
+رمز عبور این سند را به &خاطر داشته باش
+:&Remember these settings for each document
+این تنظیمات را برای همه‌ی اسناد به &خاطر بسپار
+:&Save As...
+&ذخیره کردن با نام...
+:&Settings
+&تنظیمات
+:&Shrink pages to printable area (if necessary)
+صفحات را متناسب با ناحیه‌ی قابل چاپ روی کاغذ &جمع و جور کن (اگر لازم است)
+:&Theme
+&قالب
+:&Use original page sizes
+اندازه‌ی &واقعی صفحات را به کار بگیر
+:&View
+&نمایش
+:&Window
+&پنجره
+:&Yes
+&بلی
+:&Zoom
+&بزرگنمایی
+:(of %d)
+(از %d)
+:(page %s)
+(صفحه‌ی %s)
+:About SumatraPDF
+درباره‌ی برنامه‌ی SumatraPDF
+:Add Favorite
+افزودن به علاقه‌مندی‌ها
+:Add page %s to favorites
+افزودن صفحه‌ی %s به علاقه‌مندی‌ها
+:Add page %s to favorites with (optional) name:
+افزودن صفحه‌ی %s به علاقه‌مندی‌ها با نامی اختیاری:
+:Add to favorites
+افزودن به علاقه‌مندی‌ها
+:Advanced
+امکانات پیشرفته
+:All files
+تمام پرونده‌ها
+:All supported documents
+همه‌ی اسناد پشتیبانی شده
+:Application:
+:نرم‌افزار
+:Are you sure you want to uninstall SumatraPDF?
+آیا برای پاک کردن برنامه‌ی سوماترا پی‌دی‌اف مطمئن هستید؟
+:Associate with PDF files?
+پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
+:Attachment: %s
+پیوست: %s
+:Author:
+مؤلف:
+:Automatic
+خودکار
+:Automatically check for &updates
+بررسی خودکار برای به‌روزرسانی‌ها
+:Book View
+کتابی
+:Bookmark Shortcuts
+میانبرهای نشانک
+:Bookmark shortcut to page %s of %s
+میانبر به نشانک صفحه‌ی %s از %s
+:Bookmarks
+نشانک‌ها
+:Bytes
+بایت
+:CHM documents
+CHM اسناد
+:Can't connect to the Internet (error %#x).
+نمی‌توان به اینترنت وصل شد (خطای %#x)
+:Cancel
+لغو
+:Cannot print this file
+نمی‌توان این پرونده را چاپ کرد
+:Cannot start inverse search command. Please check the command line in the settings.
+جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات خط فرمان را بازبینی کنید.
+:Change Language
+تغییر زبان (Change Language)
+:Check for &Updates
+بررسی برای به‌روزرسانی‌ها
+:Close
+بستن
+:Comic books
+کتاب‌های فُکاهی
+:Compatibility
+سازگاری
+:Continuous
+پیوسته
+:Continuous Book View
+کتابی پیوسته
+:Continuous Facing
+دو صفحه‌ای پیوسته
+:Contribute Translation
+در ترجمه‌ی این برنامه کمک کنید
+:Copy &Image
+رونوشت از &عکس
+:Copy &Link Address
+رونوشت از نشانی &پیوند
+:Copy Co&mment
+رونوشت از تو&ضیح
+:Copying text was denied (copying as image only)
+رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
+:Copyright:
+حقّ نشر
+:Could not obtain Printer properties
+نمی‌توان خصوصیات چاپگر را به دست آورد
+:Couldn't create the installation directory
+نمی‌توان پوشه‌ی نصب را ایجاد کرد
+:Couldn't initialize printer
+متأسفانه چاپگر منتخب در دسترس نیست
+:Couldn't install PDF previewer
+نمی‌توان پیش‌نمایشگر PDF را نصب کرد.
+:Couldn't install PDF search filter
+نمی‌توان فیلتر جستجوی PDF را نصب کرد.
+:Couldn't render the page
+متأسفانه صفحه قابل نمایش نیست
+:Couldn't uninstall PDF previewer
+نمی‌توان پیش‌نمایشگر PDF را پاک کرد
+:Couldn't uninstall browser plugin
+نمی‌توان افزونه‌ی مرورگر را پاک کرد
+:Couldn't write %s to disk
+نمی‌توان %s را روی دیسک نوشت
+:Created:
+زمان ایجاد:
+:Current file
+همین پرونده
+:Cursor position:
+موقعیت مکان‌نما
+:Dark
+تیره
+:Darker
+تیره‌تر
+:Default &Layout:
+&صفحه‌بندی پیش‌فرض:
+:Default &Zoom:
+&بزرگنمایی پیش‌فرض:
+:Denied Permissions:
+دسترسی‌های ممنوع:
+:DjVu documents
+DjVu اسناد
+:Document Properties
+مشخصات سند
+:EPUB ebooks
+EPUB اسناد
+:Enter password
+کلمه‌ی عبور را وارد کنید
+:Enter password for %s
+کلمه‌ی عبور را برای %s وارد کنید
+:Enter the command-line to invoke when you double-click on the PDF document:
+خط دستور را برای فراخوانی هنگام دوبار کلیک روی سند PDF وارد کنید:
+:Error loading %s
+خطا هنگام بارگذاری %s
+:F&avorites
+&علاقه‌مندی‌ها
+:Facing
+نمایش دوصفحه‌ای
+:Failed to delete uninstaller registry keys
+کلیدهای رجیستری برنامه‌ی حذف پاک نشد
+:Failed to rename the file!
+تغییر نام پرونده ناموفق بود!
+:Failed to save a file
+ذخیره کردن پرونده با شکست مواجه شد
+:Failed to write the extended file extension information to the registry
+ثبت اطلاعات ارسال شده با پسوند طولانی ناموفق
+:Failed to write the uninstallation information to the registry
+ثبت اطلاعات فرآیند حذف در رجیستری ناموفق بود
+:Fast Web View
+نمایش بی‌درنگ
+:Favorites
+علاقه‌مندی‌ها
+:FictionBook documents
+اسناد FictionBook
+:File %s not found
+پرونده %s پیدا نشد
+:File Size:
+حجم پرونده:
+:File:
+پرونده:
+:Find
+جستجو
+:Find Next
+مورد بعدی را پیدا کن
+:Find Previous
+مورد قبلی را پیدا کن
+:Find:
+جستجو:
+:Fit Content
+متناسب کردن با محتویات
+:Fit Page
+به بزرگی پنجره
+:Fit Width
+به بزرگی پهنای پنجره
+:Fit Width and Show Pages Continuously
+صفحات را به بزرگی پهنای پنجره و به صورت پیوسته نمایش بده
+:Fit a Single Page
+متناسب کردن یک صفحه
+:Fonts:
+قلم‌ها:
+:Found text at page %s
+متن در صفحه‌ی ‌%s پیدا شد
+:Found text at page %s (again)
+متن در صفحه‌ی ‌%s پیدا شد (دوباره)
+:Frequently Read
+آخرین چیزهایی که خوانده‌اید
+:GB
+گیگابایت
+:Go to page
+برو به صفحه‌ی
+:Hide &Options
+مخفی کردن &گزینه‌ها
+:Hide frequently read
+پنهان کردن آخرین چیزهایی که خوانده‌اید
+:Hint: Use the F3 key for finding again
+نکته: برای جستجوی مجدد از کلید F3 استفاده کنید
+:Image files (*.%s)
+پرونده‌های تصویری (*.%s)
+:Install SumatraPDF
+نصب کردن SumatraPDF
+:Install SumatraPDF in &folder:
+SumatraPDF را در این &پوشه نصب کن:
+:Installation failed!
+ایراد در نصب
+:Installation in progress...
+در حال نصب...
+:KB
+کیلوبایت
+:Let Windows Desktop Search &search PDF documents
+جستجوگر ویندوز امکان &جستجو در اسناد PDF را داشته باشد
+:Let Windows show &previews of PDF documents
+ویندوز امکان پیش‌نمایش اسناد PDF را داشته باشد
+:Light
+روشن
+:MB
+مگابایت
+:Make SumatraPDF default application for PDF files?
+پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
+:Man&ga Mode
+حالت مانگا
+:Match Case
+دقیقا مثل عبارت وارد شده
+:Mobi documents
+Mobi اسناد
+:Modified:
+اصلاح شده:
+:Next Page
+صفحه‌ی بعدی
+:No matches were found
+موردی یافت نشد
+:No result found around line %u in file %s
+هیچ نتیجه‌ای در خط %u در پرونده‌ی %s یافت نشد
+:No synchronization file found
+پرونده همگام‌سازی موجود نیست
+:No synchronization info at this position
+هیچ اطلاعاتی در این محل همگام نشد
+:Number of Pages:
+تعداد صفحات:
+:OK
+تأیید
+:Open
+باز کردن
+:Open &in PDF-XChange
+باز کردن در PDF-&XChange
+:Open a document...
+باز کردن یک سند...
+:Open in %s
+باز کردن در %s
+:Open in &Adobe Reader
+باز کردن در &Adobe Reader
+:Open in &Foxit Reader
+باز کردن در &Foxit Reader
+:Open in &Microsoft XPS-Viewer
+باز کردن در Microsoft X&PS-Viewer
+:P&roperties
+م&شخصات
+:PDF Document
+PDF سند
+:PDF Optimizations:
+PDF بهینه‌سازی
+:PDF Producer:
+برنامه‌ی ساخت PDF:
+:PDF Version:
+نسخه‌ی PDF:
+:PDF documents
+PDF اسناد
+:Page %s
+صفحه‌ی %s
+:Page Size:
+ابعاد صفحه:
+:Page number %u inexistant
+صفحه‌ی %u موجود نیست
+:Page scaling
+مقیاس‌گذاری صفحه
+:Page:
+صفحه:
+:PalmDoc documents
+PalmDoc اسناد
+:Please close %s to proceed!
+پیش از ادامه لطفا %s را ببندید!
+:Please wait - rendering...
+لطفاً صبر کنید...
+:Postscript documents
+Postscript اسناد
+:Previous Page
+صفحه‌ی قبلی
+:Print
+چاپ
+:Print range
+محدوده‌ی چاپ
+:Printer with given name doesn't exist
+چاپگری با نام داده شده وجود ندارد
+:Printing in progress.
+فرآیند چاپ در جریان است.
+:Printing is still in progress. Abort and quit?
+فرآیند چاپ هنوز در جریان است. انصراف و خروج؟
+:Printing is still in progress. Abort and start over?
+فرآیند چاپ هنوز در جریان است. انصراف و شروع مجدد؟
+:Printing page %d of %d...
+در حال چاپ کردن صفحه‌ی %d از %d...
+:Printing problem.
+مشکل در چاپ.
+:Remember &opened files
+پرونده‌های &باز را به خاطر بسپار
+:Remove from favorites
+حذف از علاقه‌مندی‌ها
+:Remove page %s from favorites
+حذف صفحه‌ی %s از علاقه‌مندی‌ها
+:Rename To
+تغییر نام به
+:Searching %d of %d...
+در حال جستجوی %d از %d...
+:Select &All
+انتخاب &همه
+:Select content with Ctrl+left mouse button
+انتخاب محتوا با نگه داشتن کلید Ctrl و کلید سمت چپ موشی
+:Select the folder where SumatraPDF should be installed:
+پوشه‌ای را برای نصب Sumatra PDF انتخاب کنید:
+:Selection:
+انتخاب
+:Send by &E-mail...
+ارسال با پست ا&لکترونیکی...
+:Set inverse search command-line
+تنظیم خط فرمان جستجوی وارونه
+:Show &Bookmarks
+ن&شانک‌ها را نشان بده
+:Show &Pages Continuously
+به صورت &پیوسته
+:Show &Toolbar
+نمایش نوار &ابزار
+:Show Favorites
+علاقه‌مندی‌ها را نشان بده
+:Show frequently read
+نشان دادن آخرین چیزهایی که خوانده‌اید
+:Show the &bookmarks sidebar when available
+نوار ن&شانک‌ها را در صورت وجود نشان بده
+:Single Page
+تک صفحه‌ای
+:Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+متأسفیم، نباید اینطوری می‌شد!\n\n لطفاً اگر مایلید تا این مشکل را برطرف کنیم، کلید لغو را بزنید.
+:Source file %s has no synchronization point
+پرونده‌ی %s نقاط همگام‌سازی ندارد
+:Start SumatraPDF
+اجرای Sumatra PDF
+:Subject:
+موضوع:
+:SumatraPDF %s Installer
+نصب کننده SumatraPDF %s
+:SumatraPDF %s Uninstaller
+حذف کننده SumatraPDF %s
+:SumatraPDF Options
+ گزینه‌های SumatraPDF
+:SumatraPDF Update
+به‌روز رسانی SumatraPDF
+:SumatraPDF crashed
+SumatraPDF از کار افتاد
+:SumatraPDF has been uninstalled.
+SumatraPDF پاک شد.
+:SumatraPDF installation not found.
+نصب شده‌ی SumatraPDF پیدا نشد.
+:Synchronization file cannot be opened
+پرونده‌ی همگام‌سازی باز نمی‌شود
+:Tagged PDF
+PDF برچسب‌گذاری شده
+:Text documents
+سند متنی
+:Thank you for choosing SumatraPDF!
+به خاطر انتخاب SumatraPDF از شما متشکریم!
+:Thank you! SumatraPDF has been installed.
+با تشکر! SumatraPDF نصب شد.
+:The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
+برنامه نصب خراب شده است. لطفا دوباره دانلود کنید.\nبا عرض پوزش به خاطر اشکال به وجود آمده..
+:This document uses unsupported features (%s) and might not render properly
+این سند حاوی ویژگی‌هایی است که توسط این برنامه پشتیبانی نمی‌شود (%s) و ممکن است به درستی نمایش داده نشود
+:Title:
+عنوان:
+:Uninstall SumatraPDF
+پاک کردن SumatraPDF
+:Uninstallation failed
+پاک کردن برنامه ناموفق بود
+:Uninstallation in progress...
+فرآیند حذف برنامه در جریان است...
+:Unknown source file (%s)
+پرونده‌ی منبع ناشناخته (%s)
+:Use &tabs
+استفاده از &سربرگ
+:View
+نمایش
+:Visit &Website
+بازدید از &وب‌سایت
+:Warning
+هشدار
+:XPS documents
+XPS اسناد
+:You have the latest version.
+نسخه‌ی شما جدیدترین نسخه است.
+:Zoom
+بزرگنمایی
+:Zoom In
+بزرگ‌نمایی
+:Zoom Out
+کوچک‌نمایی
+:Zoom factor
+ضریب بزرگنمایی
+:[Changes detected; refreshing] %s
+%s [تغییرات شناسایی شد؛ تازه‌سازی]
+:copying text
+در حال رونوشت متن
+:printing document
+در حال چاپ سند
