@@ -58,10 +58,6 @@ struct TabTheme {
     TabStyle background;
     // Style of the highlighted tab (hovered over)
     TabStyle highlighted;
-    // Style of the close (X button) when the mouse hovers over it
-    TabCloseStyle hoveredClose;
-    // Style of the close (X button) when the mouse is clicked down over it
-    TabCloseStyle clickedClose;
 };
 
 struct Theme {

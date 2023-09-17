@@ -93,16 +93,6 @@ Theme g_themeLight = {
             // Text color
             COL_BLACK,
         },
-        // Hovered close style
-        {
-            // X color
-            COL_WHITEISH,
-        },
-        // Clicked close style
-        {
-            // X color
-            g_themeLight.tab.hoveredClose.xColor,
-        }
     },
     // Notifications
     {
@@ -168,13 +158,6 @@ Theme g_themeDark = {
             // Text color
             COL_WHITE,
         },
-        // Hovered close style
-        {
-            // X color
-            COL_WHITEISH
-        },
-        // Clicked close style
-        g_themeDark.tab.hoveredClose
     },
     // Notifications
     {
@@ -239,13 +222,6 @@ Theme g_themeDarker = {
             // Text color
             COL_WHITE,
         },
-        // Hovered close style
-        {
-            // X color
-            COL_WHITE,
-        },
-        // Clicked close style
-        g_themeDarker.tab.hoveredClose
     },
     // Notifications
     {
