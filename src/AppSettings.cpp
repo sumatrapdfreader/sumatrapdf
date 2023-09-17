@@ -31,6 +31,7 @@
 #include "Toolbar.h"
 #include "Translations.h"
 #include "Accelerators.h"
+#include "Theme.h"
 
 #include "utils/Log.h"
 
@@ -174,6 +175,7 @@ bool LoadSettings() {
     //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
+    SetCurrentThemeFromSettings();
     if (!file::Exists(settingsPath)) {
         SaveSettings();
     }

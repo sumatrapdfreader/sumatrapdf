@@ -90,7 +90,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdShowLog,
     CmdClearHistory,
     CmdReopenLastClosedFile,
-    CmdCycleTheme,
+    CmdSelectNextTheme,
 #if defined(DEBUG)
     CmdDebugCrashMe,
     CmdDebugCorruptMemory,

@@ -191,7 +191,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},
     {FCONTROL | FVIRTKEY, VK_NEXT, CmdNextTab},
     {FCONTROL | FVIRTKEY, VK_PRIOR, CmdPrevTab},
-    {FCONTROL | FSHIFT | FVIRTKEY, 'D', CmdCycleTheme},
+    //{FCONTROL | FSHIFT | FVIRTKEY, 'D', CmdSelectNextTheme},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)

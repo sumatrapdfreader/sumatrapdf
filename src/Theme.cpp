@@ -2,8 +2,8 @@
 License: GPLv3 */
 
 /* Adding themes instructions:
-Add one to THEME_COUNT (Theme.h)
-If THEME_COUNT > 20, you will have to update IDM_CHANGE_THEME_LAST (resource.h)
+Add one to kThemeCount (Theme.h)
+If kThemeCount > 20, you will have to update IDM_CHANGE_THEME_LAST (resource.h)
 Copy one of the theme declarations below
 Rename it to whatever and change all of the properties as desired
 Add a pointer to your new struct to the g_themes array below
@@ -330,7 +330,7 @@ Theme g_themeDarker = {
 // clang-format on
 
 // Master themes list
-Theme* g_themes[THEME_COUNT] = {
+Theme* g_themes[kThemeCount] = {
     &g_themeLight,
     &g_themeDark,
     &g_themeDarker,
@@ -340,32 +340,47 @@ Theme* g_themes[THEME_COUNT] = {
 Theme* currentTheme = &g_themeLight;
 int currentThemeIndex = 0;
 
-void SwitchTheme(int index) {
-    CrashIf(index < 0 || index >= THEME_COUNT);
-    currentThemeIndex = index;
-    currentTheme = g_themes[index];
+int GetCurrentThemeIndex() {
+    return currentThemeIndex;
 }
 
-void CycleNextTheme() {
-    ++currentThemeIndex;
-    if (currentThemeIndex >= THEME_COUNT) {
-        currentThemeIndex = 0;
-    }
-    SwitchTheme(currentThemeIndex);
+void SetThemeByIndex(int themeIdx) {
+    CrashIf((themeIdx < 0) || (themeIdx >= kThemeCount));
+    currentThemeIndex = themeIdx;
+    currentTheme = g_themes[currentThemeIndex];
+    str::ReplaceWithCopy(&gGlobalPrefs->theme, currentTheme->name);
+};
+
+void SelectNextTheme() {
+    int newIdx = (currentThemeIndex + 1) % kThemeCount;
+    SetThemeByIndex(newIdx);
 }
 
-Theme* GetThemeByName(char* name) {
-    for (int i = 0; i < THEME_COUNT; i++) {
-        if (str::Eq(g_themes[i]->name, name)) {
+// not case sensitive
+static Theme* GetThemeByName(const char* name, int& idx) {
+    for (int i = 0; i < kThemeCount; i++) {
+        if (str::EqI(g_themes[i]->name, name)) {
+            idx = i;
             return g_themes[i];
         }
     }
-    return NULL;
+    return nullptr;
 }
 
-Theme* GetThemeByIndex(int index) {
-    CrashIf(index < 0 || index >= THEME_COUNT);
-    return g_themes[index];
+// call after loading settings
+void SetCurrentThemeFromSettings() {
+    const char* name = gGlobalPrefs->theme;
+    if (str::IsEmpty(name)) {
+        return;
+    }
+    int idx = 0;
+    auto theme = GetThemeByName(name, idx);
+    if (!theme) {
+        // invalid name, reset to light theme
+        str::ReplaceWithCopy(&gGlobalPrefs->theme, g_themeLight.name);
+        return;
+    }
+    SetThemeByIndex(idx);
 }
 
 void GetDocumentColors(COLORREF& text, COLORREF& bg) {
@@ -406,35 +421,3 @@ COLORREF GetMainWindowBackgroundColor() {
     }
     return bgColor;
 }
-
-#if 0
-
-Theme* GetCurrentTheme() {
-    if (currentTheme == NULL || !str::Eq(currentTheme->name, gGlobalPrefs->themeName)) {
-        currentTheme = GetThemeByName(gGlobalPrefs->themeName);
-        if (currentTheme == NULL) {
-            str::ReplaceWithCopy(&gGlobalPrefs->themeName, g_themeLight.name);
-            currentTheme = &g_themeLight;
-        }
-        currentThemeIndex = GetThemeIndex(currentTheme);
-    }
-    return currentTheme;
-}
-
-int GetThemeIndex(Theme* theme) {
-    for (int i = 0; i < THEME_COUNT; i++) {
-        if (g_themes[i] == theme) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int GetCurrentThemeIndex() {
-    if (currentTheme == NULL || !str::Eq(currentTheme->name, gGlobalPrefs->themeName)) {
-        GetCurrentTheme();
-    }
-    return currentThemeIndex;
-}
-
-#endif

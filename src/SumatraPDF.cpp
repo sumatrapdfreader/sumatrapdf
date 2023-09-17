@@ -1552,6 +1552,16 @@ static void UpdateThemeForWindow(MainWindow* win) {
     RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 }
 
+static void UpdateAfterThemeChange() {
+    for (auto mainWin : gWindows) {
+        // TODO: this only rerenders canvas, not frame, even with
+        // includingNonClientArea == true.
+        // MainWindowRerender(mainWin, true);
+        UpdateThemeForWindow(mainWin);
+    }
+    UpdateDocumentColors();
+}
+
 static void RenameFileInHistory(const char* oldPath, const char* newPath) {
     if (path::IsSame(oldPath, newPath)) {
         return;
@@ -4704,22 +4714,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     static_assert(CmdFavoriteLast - CmdFavoriteFirst == 256, "wrong number of favorite menu ids");
     if ((wmId >= CmdFavoriteFirst) && (wmId <= CmdFavoriteLast)) {
         GoToFavoriteByMenuId(win, wmId);
+        return 0;
     }
-
-#if defined(ENABLE_THEME)
-    // check if the menuId belongs to a theme
-    if ((wmId >= IDM_CHANGE_THEME_FIRST) && (wmId <= IDM_CHANGE_THEME_LAST)) {
-        auto newThemeName = GetThemeByIndex(wmId - IDM_CHANGE_THEME_FIRST)->name;
-        str::ReplaceWithCopy(&gGlobalPrefs->themeName, newThemeName);
-        RelayoutWindow(win);    // fix tabbar height
-        UpdateDocumentColors(); // update document colors
-        RedrawWindow(win->hwndFrame, nullptr, nullptr,
-                     RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN); // paint new theme
-        UpdateDocumentColors();        // doing this a second time ensures the frequently read documents are updated
-        UpdateAppMenu(win, (HMENU)wp); // update the radio buttons
-        SaveSettings();                // save new preferences
-    }
-#endif
 
     if (!win) {
         return DefWindowProc(hwnd, msg, wp, lp);
@@ -4736,6 +4732,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ViewWithKnownExternalViewer(tab, wmId);
             return 0;
         }
+    }
+
+    if ((wmId >= CmdThemeFirst) && (wmId <= CmdThemeLast)) {
+        int themeIdx = (wmId - CmdThemeFirst);
+        SetThemeByIndex(themeIdx);
+        UpdateAfterThemeChange();
+        return 0;
     }
 
     if (CmdSelectionHandlerFirst <= wmId && wmId < CmdSelectionHandlerLast) {
@@ -5436,15 +5439,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
         } break;
 
-        case CmdCycleTheme:
-            CycleNextTheme();
-            for (auto mainWin : gWindows) {
-                // TODO: this only rerenders canvas, not frame, even with
-                // includingNonClientArea == true.
-                // MainWindowRerender(mainWin, true);
-                UpdateThemeForWindow(mainWin);
-            }
-            UpdateDocumentColors();
+        case CmdSelectNextTheme:
+            SelectNextTheme();
+            UpdateAfterThemeChange();
             break;
 
         default:

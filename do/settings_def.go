@@ -248,8 +248,7 @@ var (
 
 	globalPrefs = []*Field{
 		mkComment(""),
-		//MkField("ThemeName", String, "light", "the name of the theme to use"),
-
+		mkField("Theme", String, "", "the name of the theme to use").setDoc("Valid themes: light, dark, darker").setVersion("3.5"),
 		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
 		mkStruct("ComicBookUI", comicBookUI,

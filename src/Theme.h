@@ -4,7 +4,7 @@ License: GPLv3 */
 #include "utils/BaseUtil.h"
 
 // The number of themes
-#define THEME_COUNT 3
+constexpr const int kThemeCount = 3;
 
 struct MainWindowStyle {
     // Background color of recently added, about, and properties menus
@@ -90,14 +90,11 @@ struct Theme {
 };
 
 extern Theme* currentTheme;
-void CycleNextTheme();
+void SelectNextTheme();
+void SetThemeByIndex(int);
 
-// Function definitions
-Theme* GetThemeByName(char* name);
-Theme* GetThemeByIndex(int index);
-Theme* GetCurrentTheme();
+void SetCurrentThemeFromSettings();
 
-int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
 
 // These functions take into account both gPrefs and the theme.

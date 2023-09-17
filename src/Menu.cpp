@@ -416,6 +416,28 @@ static MenuDef menuDefZoom[] = {
 };
 //] ACCESSKEY_GROUP Zoom Menu
 
+// TODO: build this dynamically
+//[ ACCESSKEY_GROUP Themes Menu
+MenuDef menuDefThemes[] = {
+    {
+        _TRN("Light"),
+        CmdThemeFirst,
+    },
+    {
+        _TRN("Dark"),
+        CmdThemeFirst+1,
+    },
+    {
+        _TRN("Darker"),
+        CmdThemeFirst+2,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Favorites Menu
+
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
     {
@@ -433,6 +455,10 @@ static MenuDef menuDefSettings[] = {
     {
         _TRN("&Advanced Options..."),
         CmdAdvancedOptions,
+    },
+    {
+        _TRN("&Theme"),
+        (UINT_PTR)menuDefThemes,
     },
     {
         nullptr,
@@ -1533,10 +1559,8 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
         MenuSetEnabled(win->menu, CmdRenameFile, false);
     }
 
-#if defined(ENABLE_THEME)
-    CheckMenuRadioItem(win->menu, IDM_CHANGE_THEME_FIRST, IDM_CHANGE_THEME_LAST,
-                       IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
-#endif
+    int themeCmdId = CmdThemeFirst + GetCurrentThemeIndex();
+    CheckMenuRadioItem(win->menu, CmdThemeFirst, CmdThemeLast, themeCmdId, MF_BYCOMMAND);
 
     MenuSetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
 }
@@ -2097,18 +2121,6 @@ HMENU BuildMenu(MainWindow* win) {
     FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
 
     HMENU mainMenu = BuildMenuFromMenuDef(menuDefMenubar, CreateMenu(), &buildCtx);
-
-#if defined(ENABLE_THEME) && 0
-    // Build the themes sub-menu of the settings menu
-    MenuDef menuDefTheme[THEME_COUNT + 1];
-    static_assert(IDM_CHANGE_THEME_LAST - IDM_CHANGE_THEME_FIRST + 1 >= THEME_COUNT,
-                  "Too many themes. Either remove some or update IDM_CHANGE_THEME_LAST");
-    for (int i = 0; i < THEME_COUNT; i++) {
-        menuDefTheme[i] = {GetThemeByIndex(i)->name, IDM_CHANGE_THEME_FIRST + i, 0};
-    }
-    HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, CreateMenu(), filter);
-    AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
-#endif
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;

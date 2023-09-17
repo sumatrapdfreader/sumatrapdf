@@ -173,7 +173,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdReopenLastClosedFile, "Reopen Last Closed")                      \
     V(CmdNextTab, "Next Tab")                                             \
     V(CmdPrevTab, "Previous Tab")                                         \
-    V(CmdCycleTheme, "Switch to next theme")                              \
+    V(CmdSelectNextTheme, "Select next theme")                            \
     V(CmdNone, "Do nothing")
 
 // order of CreateAnnot* must be the same as enum AnnotationType

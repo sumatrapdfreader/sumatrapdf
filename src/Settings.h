@@ -303,6 +303,8 @@ struct SessionData {
 // Most values on this structure can be updated through the UI and are
 // persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {
+    // the name of the theme to use
+    char* theme;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
     // customization options for Comic Book and images UI
@@ -651,6 +653,7 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
      (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-5.html"},
+    {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t) ""},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
@@ -714,13 +717,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 60, gGlobalPrefsFields,
-    "\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0PrinterDef"
-    "aults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSessi"
-    "on\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0EscToExit"
-    "\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar\0ShowF"
-    "avorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0TreeFon"
-    "tName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSysColors"
-    "\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    sizeof(GlobalPrefs), 61, gGlobalPrefsFields,
+    "\0Theme\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0Pri"
+    "nterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0Resto"
+    "reSession\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0Es"
+    "cToExit\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar"
+    "\0ShowFavorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0"
+    "TreeFontName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSys"
+    "Colors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
