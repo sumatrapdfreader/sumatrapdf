@@ -418,6 +418,26 @@ static AnnotationType moveableAnnotations[] = {
 };
 // clang-format on
 
+static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
+    // to drag annotations with mouse need to press Ctrl
+    if (!IsCtrlPressed()) {
+        delete annot;
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    win->annotationOnLastButtonDown = annot;
+    CreateMovePatternLazy(win);
+    RectF r = GetRect(annot);
+    int pageNo = dm->GetPageNoByPoint(pt);
+    Rect rScreen = dm->CvtToScreen(pageNo, r);
+    win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};
+    int offsetX = rScreen.x - pt.x;
+    int offsetY = rScreen.y - pt.y;
+    win->annotationBeingMovedOffset = Point{offsetX, offsetY};
+    DrawMovePattern(win, pt, win->annotationBeingMovedSize);
+    return;
+}
+
 static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
     CrashIf(win->linkOnLastButtonDown);
     CrashIf(win->annotationOnLastButtonDown);
@@ -426,21 +446,7 @@ static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, moveableAnnotations);
     if (annot) {
-        if (!IsShiftPressed()) {
-            delete annot;
-            return;
-        }
-        win->annotationOnLastButtonDown = annot;
-        CreateMovePatternLazy(win);
-        RectF r = GetRect(annot);
-        int pageNo = dm->GetPageNoByPoint(pt);
-        Rect rScreen = dm->CvtToScreen(pageNo, r);
-        win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};
-        int offsetX = rScreen.x - pt.x;
-        int offsetY = rScreen.y - pt.y;
-        win->annotationBeingMovedOffset = Point{offsetX, offsetY};
-        DrawMovePattern(win, pt, win->annotationBeingMovedSize);
-        return;
+        StartAnnotationDrag(win, annot, pt);
     }
 
     IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
