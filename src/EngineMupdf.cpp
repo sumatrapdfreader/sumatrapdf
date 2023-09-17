@@ -3250,6 +3250,12 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
             showErrorFunc(mupdfErr);
         }
     }
+
+    // TOOD: what if not ok?
+    // note: this might not be necessary because we reload the file
+    if (ok) {
+        epdf->modifiedAnnotations = false;
+    }
     return ok;
 }
 
@@ -3428,12 +3434,19 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     if (!epdf->pdfdoc) {
         return false;
     }
+#if 0
+    // TODO: this fails in https://github.com/sumatrapdfreader/sumatrapdf/issues/3448
+    // because pdf_has_unsaved_changes() returns true even though pdf_was_repaired()
+    // returns false (even though the doc was modified in pdf_test_outline() becasue
+    // "Bad or missing last pointer in outline tree, repairing"
+
     // pdf_has_unsaved_changes() also returns true if the file was auto-repaired
     // at loading time, which is not something we want, so only rely on it
     // when we know it wasn't repaired.
     if (!pdf_was_repaired(epdf->ctx, epdf->pdfdoc)) {
         return pdf_has_unsaved_changes(epdf->ctx, epdf->pdfdoc);
     }
+#endif
     return epdf->modifiedAnnotations;
 }
 
