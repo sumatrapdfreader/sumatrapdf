@@ -56,8 +56,6 @@ struct TabStyle {
 };
 
 struct TabTheme {
-    // Height of the tab bar
-    int height;
     // Style of the selected tab
     TabStyle selected;
     // Style of background tabs

@@ -74,8 +74,6 @@ Theme g_themeLight = {
     },
     // Tabs
     {
-        // Height
-        24,
         // Selected style
         {
             // Background color
@@ -172,8 +170,6 @@ Theme g_themeDark = {
     },
     // Tabs
     {
-        // Height
-        24,
         // Selected style
         {
             // Background color
@@ -258,8 +254,6 @@ Theme g_themeDarker = {
     },
     // Tabs
     {
-        // Height
-        24,
         // Selected style
         {
             // Background color
