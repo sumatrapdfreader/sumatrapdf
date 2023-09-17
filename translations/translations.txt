@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-92f59afc325a18807e2d44771ed06c09b036a381
+b283600f264e32659161432642a3f3ba5db164da
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6624,6 +6624,7 @@ uk:Копіювати коментар
 uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy File Path
+pl:Kopiuj ścieżkę pliku
 :Copy To Clipboard
 ar:نسخ إلى الحافظة
 bg:Копирай в клипборда

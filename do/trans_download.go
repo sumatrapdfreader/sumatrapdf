@@ -162,8 +162,22 @@ func downloadTranslations() bool {
 	}
 
 	writeFileMust(translationsTxtPath, d)
+	// TODO: save ~400k in uncompressed binary by
+	// saving as gzipped and embedding that in the exe
+	//u.WriteFileGzipped(translationsTxtPath+".gz", d)
 	splitIntoPerLangFiles(d)
 	fmt.Printf("Wrote response of size %d to %s\n", len(d), translationsTxtPath)
 	printSusTranslations(d)
 	return false
 }
+
+// TODO:
+// - generate translations/status.md file that shows how many
+//   strings untranslated per language and links to their files
+// - do this when updating from soource:
+//	 - read current per-lang translations
+//   - extract strings from source
+//   - remove no longer needed
+//   - add new ones
+//   - re-save per-lang files
+//   - save no longer needeed in obsolete.txt

@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 &O programie SumatraPDF
 :&Actual Size
@@ -223,6 +222,8 @@ Kopiuj o&braz
 Kopiuj adres z &odnośnika
 :Copy Co&mment
 Kopiuj ko&mentarz
+:Copy File Path
+Kopiuj ścieżkę pliku
 :Copy To Clipboard
 Kopiuj do schowka
 :Copying text was denied (copying as image only)
