@@ -372,6 +372,7 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
     NotificationCreateArgs args;
     args.hwndParent = tab->win->hwndCanvas;
+    args.timeoutMs = 5000;
     args.msg = msg.Get();
     ShowNotification(args);
 
@@ -1473,73 +1474,85 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
 
     ScopedCritSec cs(epdf->ctxAccess);
+    pdf_annot* annot = nullptr;
 
-    auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
-    enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
+    fz_try(ctx) {
+        auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
+        enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
 
-    auto annot = pdf_create_annot(ctx, page, atyp);
+        annot = pdf_create_annot(ctx, page, atyp);
 
-    pdf_set_annot_modification_date(ctx, annot, time(nullptr));
-    if (pdf_annot_has_author(ctx, annot)) {
-        char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
-        // if "(none)" we don't set it
-        if (!str::Eq(defAuthor, "(none)")) {
-            const char* author = getuser();
-            if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
-                author = defAuthor;
+        pdf_set_annot_modification_date(ctx, annot, time(nullptr));
+        if (pdf_annot_has_author(ctx, annot)) {
+            char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
+            // if "(none)" we don't set it
+            if (!str::Eq(defAuthor, "(none)")) {
+                const char* author = getuser();
+                if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
+                    author = defAuthor;
+                }
+                pdf_set_annot_author(ctx, annot, author);
             }
-            pdf_set_annot_author(ctx, annot, author);
+        }
+
+        switch (typ) {
+            case AnnotationType::Text:
+            case AnnotationType::FreeText:
+            case AnnotationType::Stamp:
+            case AnnotationType::Caret:
+            case AnnotationType::Square:
+            case AnnotationType::Circle: {
+                fz_rect trect = pdf_annot_rect(ctx, annot);
+                float dx = trect.x1 - trect.x0;
+                trect.x0 = pos.x;
+                trect.x1 = trect.x0 + dx;
+                float dy = trect.y1 - trect.y0;
+                trect.y0 = pos.y;
+                trect.y1 = trect.y0 + dy;
+                pdf_set_annot_rect(ctx, annot, trect);
+            } break;
+            case AnnotationType::Line: {
+                fz_point a{pos.x, pos.y};
+                fz_point b{pos.x + 100, pos.y + 50};
+                pdf_set_annot_line(ctx, annot, a, b);
+            } break;
+        }
+        if (typ == AnnotationType::FreeText) {
+            auto& a = gGlobalPrefs->annotations;
+            int borderWidth = a.freeTextBorderWidth;
+            if (borderWidth < 0) {
+                borderWidth = 1; // default
+            }
+            pdf_set_annot_border(ctx, annot, (float)borderWidth);
+            pdf_set_annot_contents(ctx, annot, "This is a text...");
+            int fontSize = a.freeTextSize;
+            if (fontSize <= 0) {
+                fontSize = 12;
+            }
+            int nCol = 3;
+            const float* col = black;
+            float textColor[3]{};
+
+            auto parsedCol = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
+            if (parsedCol && parsedCol->parsedOk) {
+                PdfColorToFloat(parsedCol->pdfCol, textColor);
+                col = textColor;
+            }
+
+            pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, col);
+        }
+
+        pdf_update_annot(ctx, annot);
+    }
+    fz_catch(ctx) {
+        if (annot) {
+            pdf_drop_annot(ctx, annot);
         }
     }
-
-    switch (typ) {
-        case AnnotationType::Text:
-        case AnnotationType::FreeText:
-        case AnnotationType::Stamp:
-        case AnnotationType::Caret:
-        case AnnotationType::Square:
-        case AnnotationType::Circle: {
-            fz_rect trect = pdf_annot_rect(ctx, annot);
-            float dx = trect.x1 - trect.x0;
-            trect.x0 = pos.x;
-            trect.x1 = trect.x0 + dx;
-            float dy = trect.y1 - trect.y0;
-            trect.y0 = pos.y;
-            trect.y1 = trect.y0 + dy;
-            pdf_set_annot_rect(ctx, annot, trect);
-        } break;
-        case AnnotationType::Line: {
-            fz_point a{pos.x, pos.y};
-            fz_point b{pos.x + 100, pos.y + 50};
-            pdf_set_annot_line(ctx, annot, a, b);
-        } break;
-    }
-    if (typ == AnnotationType::FreeText) {
-        auto& a = gGlobalPrefs->annotations;
-        int borderWidth = a.freeTextBorderWidth;
-        if (borderWidth < 0) {
-            borderWidth = 1; // default
-        }
-        pdf_set_annot_border(ctx, annot, (float)borderWidth);
-        pdf_set_annot_contents(ctx, annot, "This is a text...");
-        int fontSize = a.freeTextSize;
-        if (fontSize <= 0) {
-            fontSize = 12;
-        }
-        int nCol = 3;
-        const float* col = black;
-        float textColor[3]{};
-
-        auto parsedCol = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
-        if (parsedCol && parsedCol->parsedOk) {
-            PdfColorToFloat(parsedCol->pdfCol, textColor);
-            col = textColor;
-        }
-
-        pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, col);
+    if (!annot) {
+        return nullptr;
     }
 
-    pdf_update_annot(ctx, annot);
     auto res = MakeAnnotationPdf(epdf, annot, pageNo);
 
     auto& a = gGlobalPrefs->annotations;

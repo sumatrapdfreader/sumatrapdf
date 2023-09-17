@@ -2323,6 +2323,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
+    nargs.timeoutMs = 5000;
     nargs.msg = msg.Get();
     ShowNotification(nargs);
     return true;
@@ -4433,10 +4434,11 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     }
     str::Str msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
-    NotificationCreateArgs args;
-    args.hwndParent = tab->win->hwndCanvas;
-    args.msg = msg.Get();
-    ShowNotification(args);
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = tab->win->hwndCanvas;
+    nargs.msg = msg.Get();
+    nargs.timeoutMs = 5000;
+    ShowNotification(nargs);
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
