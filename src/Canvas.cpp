@@ -993,7 +993,6 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     }
 }
 
-
 static void OnPaintDocument(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;

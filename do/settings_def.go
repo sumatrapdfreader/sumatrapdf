@@ -130,7 +130,10 @@ var (
 		mkField("StrikeOutColor", Color, mkRGB(0xff, 0x00, 0x00),
 			"strike out annotation color").setVersion("3.5"),
 		// yellow
-		mkField("TextIconColor", Color, mkRGB(0xFF, 0xFF, 0x0), "text icon annotation color"),
+		mkField("FreeTextColor", Color, "", "color of free text annotation").setVersion("3.5"),
+		mkField("FreeTextSize", Int, 12, "size of free text annotation").setVersion("3.5"),
+		mkField("FreeTextBorderWidth", Int, 1, "width of free text annotation border").setVersion("3.5"),
+		mkField("TextIconColor", Color, "", "text icon annotation color"),
 		mkField("TextIconType", String, "", "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note."),
 		mkField("DefaultAuthor", String, "", "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name").setVersion("3.4"),
 	}

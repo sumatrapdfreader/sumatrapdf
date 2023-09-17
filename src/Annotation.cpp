@@ -444,7 +444,7 @@ void SetIconName(Annotation* annot, const char* iconName) {
     annot->isChanged = true;
 }
 
-static void PdfColorToFloat(PdfColor c, float rgb[3]) {
+void PdfColorToFloat(PdfColor c, float rgb[3]) {
     u8 r, g, b, a;
     UnpackPdfColor(c, r, g, b, a);
     rgb[0] = (float)r / 255.0f;
@@ -721,11 +721,11 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
-    float textColor[4]{};
+    float textColor[3]{};
     fz_try(ctx) {
         pdf_annot_default_appearance(ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
         PdfColorToFloat(col, textColor);
-        pdf_set_annot_default_appearance(ctx, annot->pdfannot, fontName, sizeF, n, textColor);
+        pdf_set_annot_default_appearance(ctx, annot->pdfannot, fontName, sizeF, 3, textColor);
         pdf_update_annot(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {

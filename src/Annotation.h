@@ -62,6 +62,8 @@ struct Annotation {
     ~Annotation() = default;
 };
 
+void PdfColorToFloat(PdfColor c, float rgb[3]);
+
 int PageNo(Annotation*);
 RectF GetBounds(Annotation*);
 RectF GetRect(Annotation*);

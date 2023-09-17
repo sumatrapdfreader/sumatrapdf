@@ -158,6 +158,13 @@ struct Annotations {
     // strike out annotation color
     char* strikeOutColor;
     ParsedColor strikeOutColorParsed;
+    // color of free text annotation
+    char* freeTextColor;
+    ParsedColor freeTextColorParsed;
+    // size of free text annotation
+    int freeTextSize;
+    // width of free text annotation border
+    int freeTextBorderWidth;
     // text icon annotation color
     char* textIconColor;
     ParsedColor textIconColorParsed;
@@ -525,13 +532,17 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t) "#00ff00"},
     {offsetof(Annotations, squigglyColor), SettingType::Color, (intptr_t) "#ff00ff"},
     {offsetof(Annotations, strikeOutColor), SettingType::Color, (intptr_t) "#ff0000"},
-    {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) "#ffff00"},
+    {offsetof(Annotations, freeTextColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Annotations, freeTextSize), SettingType::Int, 12},
+    {offsetof(Annotations, freeTextBorderWidth), SettingType::Int, 1},
+    {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) ""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t) ""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t) ""},
 };
 static const StructInfo gAnnotationsInfo = {
-    sizeof(Annotations), 7, gAnnotationsFields,
-    "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0TextIconColor\0TextIconType\0DefaultAuthor"};
+    sizeof(Annotations), 10, gAnnotationsFields,
+    "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextSize\0FreeTextBorderWidth\0T"
+    "extIconColor\0TextIconType\0DefaultAuthor"};
 
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
