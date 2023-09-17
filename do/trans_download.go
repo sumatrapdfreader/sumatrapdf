@@ -14,7 +14,7 @@ import (
 
 var (
 	apptranslatoServer  = "https://www.apptranslator.org"
-	translationsTxtPath = filepath.Join("src", "docs", "translations.txt")
+	translationsTxtPath = filepath.Join("translations", "translations.txt")
 )
 
 func getTransSecret() string {
