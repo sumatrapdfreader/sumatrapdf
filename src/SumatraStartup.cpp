@@ -307,18 +307,12 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     return win;
 }
 
-static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
-    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
-    LoadArgs args(state->filePath, win);
-    args.noSavePrefs = true;
-    if (!LoadDocument(&args, lazyload, false)) {
-        return;
-    }
-    WindowTab* tab = win->CurrentTab();
+static void SetTabState(WindowTab* tab, TabState* state) {
     if (!tab || !tab->ctrl) {
         return;
     }
 
+    auto win = tab->win;
     DocController* ctrl = tab->ctrl;
     DisplayModel* dm = tab->AsFixed();
 
@@ -359,6 +353,19 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload 
             ctrl->SetZoomVirtual(zoom, nullptr);
         }
     }
+}
+
+// TODO: when files are lazy loaded, they do not restore TabState. Need to remember
+// it in LoadArgs and call SetTabState() if present after loading
+static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
+    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
+    LoadArgs args(state->filePath, win);
+    args.noSavePrefs = true;
+    if (!LoadDocument(&args, lazyload, false)) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    SetTabState(tab, state);
 }
 
 static bool SetupPluginMode(Flags& i) {
