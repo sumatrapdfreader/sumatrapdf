@@ -963,16 +963,20 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
     if (!engine) {
         engine = CreateEngineFromFile(path, pwdUI, chmInFixedUI);
     }
-    if (engine) {
-        int nPages = engine ? engine->PageCount() : 0;
-        logf("CreateControllerForEngine: '%s', %d pages\n", path, nPages);
-        DocController* ctrl = new DisplayModel(engine, win->cbHandler);
-        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
-        VerifyController(ctrl, path);
-        return ctrl;
+    if (!engine) {
+        // as a last resort, try to open as chm file
+        return CreateControllerForChm(path, pwdUI, win);
     }
-    // logf("CreateControllerForFile: '%s', %d pages\n", path, ctrl->PageCount());
-    return CreateControllerForChm(path, pwdUI, win);
+    int nPages = engine ? engine->PageCount() : 0;
+    logf("CreateControllerForEngineOrFile: '%s', %d pages\n", path, nPages);
+    if (nPages == 0) {
+        delete engine;
+        return nullptr;
+    }
+    DocController* ctrl = new DisplayModel(engine, win->cbHandler);
+    CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+    VerifyController(ctrl, path);
+    return ctrl;
 }
 
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {

@@ -538,13 +538,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\docs\notes.txt">
+      <Filter>src\docs</Filter>
+    </None>
     <None Include="..\src\docs\releasenotes.txt">
-      <Filter>src\docs</Filter>
-    </None>
-    <None Include="..\src\docs\todo.txt">
-      <Filter>src\docs</Filter>
-    </None>
-    <None Include="..\src\docs\translations.txt">
       <Filter>src\docs</Filter>
     </None>
     <None Include="..\src\docs\wishlist.txt">
