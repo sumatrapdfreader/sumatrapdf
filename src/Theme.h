@@ -49,8 +49,6 @@ struct TabStyle {
     COLORREF backgroundColor;
     // Text color of the tab
     COLORREF textColor;
-    // Style of the close (X button) by default
-    TabCloseStyle close;
 };
 
 struct TabTheme {

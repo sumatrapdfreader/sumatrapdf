@@ -3451,10 +3451,8 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         } else if (tabUnderMouse == i) {
             tabStyle = currentTheme->tab.highlighted;
         }
-        TabCloseStyle tabCloseStyle = tabStyle.close;
-        if ((tabUnderMouse == i) && overClose) {
-            tabCloseStyle = currentTheme->tab.hoveredClose;
-        }
+        // COLORREF xColor = currentTheme->mainWindow.textColor;
+        COLORREF xColor = tabStyle.textColor;
 
         ti = GetTab(i);
         // logfa("rClose: pos: (%d, %d) size: (%d, %d)\n", r.x, r.y, r.dx, r.dy);
@@ -3478,7 +3476,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
             }
 
             // draw X
-            br.SetColor(GdipCol(tabCloseStyle.xColor));
+            br.SetColor(GdipCol(xColor));
             Pen penX(&br, closePenWidth);
             Gdiplus::Point p1(r.x, r.y);
             Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);

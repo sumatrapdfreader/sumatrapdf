@@ -76,11 +76,6 @@ Theme g_themeLight = {
             // Text color
             COL_DARK_GRAY,
             // Default close style
-            {
-                // X color
-                AdjustLightness2(g_themeLight.tab.selected.backgroundColor, -60),
-
-            }
         },
         // Background style
         {
@@ -89,8 +84,6 @@ Theme g_themeLight = {
             RgbToCOLORREF(0xCECECE),
             // Text color
             COL_DARK_GRAY,
-            // Default close style
-            g_themeLight.tab.selected.close
         },
         // Highlighted style
         {
@@ -99,8 +92,6 @@ Theme g_themeLight = {
             RgbToCOLORREF(0xBBBBBB),
             // Text color
             COL_BLACK,
-            // Default close style
-            g_themeLight.tab.selected.close
         },
         // Hovered close style
         {
@@ -162,11 +153,6 @@ Theme g_themeDark = {
             RgbToCOLORREF(0x009688),
             // Text color
             COL_WHITE,
-            // Default close style
-            {
-                // X color
-                RgbToCOLORREF(0x99D5CF)
-            }
         },
         // Background style
         {
@@ -174,8 +160,6 @@ Theme g_themeDark = {
             AdjustLightness2(g_themeDark.tab.selected.backgroundColor, -10),
             // Text color
             COL_WHITE,
-            // Default close style
-            g_themeDark.tab.selected.close
         },
         // Highlighted style
         {
@@ -183,8 +167,6 @@ Theme g_themeDark = {
             AdjustLightness2(g_themeDark.tab.selected.backgroundColor, 10),
             // Text color
             COL_WHITE,
-            // Default close style
-            g_themeDark.tab.selected.close
         },
         // Hovered close style
         {
@@ -242,11 +224,6 @@ Theme g_themeDarker = {
             RgbToCOLORREF(0x007ACC),
             // Text color
             COL_WHITE,
-            // Default close style
-            {
-                // X color
-                RgbToCOLORREF(0xD0E6F5),
-            }
         },
         // Background style
         {
@@ -254,11 +231,6 @@ Theme g_themeDarker = {
             RgbToCOLORREF(0xEAEAEA),
             // Text color
             COL_BLACK,
-            // Default close style
-            {
-                // X color
-                COL_BLACK,
-            }
         },
         // Highlighted style
         {
@@ -266,8 +238,6 @@ Theme g_themeDarker = {
             RgbToCOLORREF(0x1C97EA),
             // Text color
             COL_WHITE,
-            // Default close style
-            g_themeDarker.tab.selected.close
         },
         // Hovered close style
         {
