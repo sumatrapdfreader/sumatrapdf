@@ -331,7 +331,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4204", "4244", "4057", "4245", "4310" }
+    disablewarnings { "4204", "4244", "4057", "4245", "4310", "4701" }
     includedirs { "ext/libwebp" }
     libwebp_files()
 

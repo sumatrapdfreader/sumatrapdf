@@ -45,6 +45,9 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_neon.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
@@ -63,6 +66,9 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\dec_clip_tables.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_neon.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
@@ -72,10 +78,16 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\filters.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\filters_neon.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\filters_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless_neon.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless_sse2.c">
@@ -85,6 +97,9 @@
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\rescaler.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\rescaler_neon.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\rescaler_sse2.c">
@@ -99,6 +114,9 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\upsampling.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_neon.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
@@ -106,6 +124,9 @@
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\yuv.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv_neon.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse2.c">
