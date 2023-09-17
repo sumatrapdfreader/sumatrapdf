@@ -626,7 +626,7 @@ void UpdateTreeCtrlColors(MainWindow* win) {
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
     COLORREF treeBgCol, treeTxtCol;
     GetDocumentColors(treeTxtCol, treeBgCol);
-    logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
+    // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
     bool flatTreeWnd = false;

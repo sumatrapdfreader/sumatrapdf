@@ -21,6 +21,8 @@
 
 Kind kindWnd = "wnd";
 
+constexpr bool gLogTabs = false;
+
 static LONG gSubclassId = 0;
 
 UINT_PTR NextSubclassId() {
@@ -3196,7 +3198,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
-        log("tv: TVN_SELCHANGED\n");
+        // log("tv: TVN_SELCHANGED\n");
         if (!onTreeSelectionChanged) {
             return 0;
         }
@@ -3217,7 +3219,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
-        log("tv: NM_CLICK\n");
+        // log("tv: NM_CLICK\n");
         if (!onTreeClick) {
             return 0;
         }
@@ -3631,7 +3633,9 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
         case TTN_GETDISPINFOA:
         case TTN_GETDISPINFOW:
-            // logfa("TabsCtrl::OnNotifyReflect: TTN_GETDISPINFO\n");
+            if (gLogTabs) {
+                logfa("TabsCtrl::OnNotifyReflect: TTN_GETDISPINFO\n");
+            }
             break;
     }
     return 0;
@@ -3700,8 +3704,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_MOUSELEAVE:
-            logfa("TabsCtrl::WndProc: WM_MOUSELEAVE, tabUnderMouse: %d, tabHighlited: %d\n", tabUnderMouse,
-                  tabHighlighted);
+            if (gLogTabs) {
+                logfa("TabsCtrl::WndProc: WM_MOUSELEAVE, tabUnderMouse: %d, tabHighlited: %d\n", tabUnderMouse,
+                      tabHighlighted);
+            }
             if (tabHighlighted != tabUnderMouse) {
                 tabHighlighted = tabUnderMouse;
                 HwndScheduleRepaint(hwnd);
@@ -3713,8 +3719,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             TrackMouseLeave(hwnd);
             bool isDragging = (GetCapture() == hwnd);
             if (nWmMouseMoveCount == 0 || isDragging) {
-                logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
-                      tabUnderMouse, tabHighlighted, (int)isDragging);
+                if (gLogTabs) {
+                    logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: tabUnderMouse: %d, tabHighlited: %d, isDragging: %d\n",
+                          tabUnderMouse, tabHighlighted, (int)isDragging);
+                }
             }
             nWmMouseMoveCount++;
             int hl = tabHighlighted;
@@ -3738,11 +3746,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (isDragging) {
                     // send notification if the highlighted tab is dragged over another
                     if (!GetTab(tabUnderMouse)->isPinned) {
-                        logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: before TriggerTabDragged: hl=%d, tabUnderMouse=%d\n",
-                              hl, tabUnderMouse);
+                        if (gLogTabs) {
+                            logfa(
+                                "TabsCtrl::WndProc: WM_MOUSEMOVE: before TriggerTabDragged: hl=%d, tabUnderMouse=%d\n",
+                                hl, tabUnderMouse);
+                        }
                         TriggerTabDragged(this, hl, tabUnderMouse);
-                        logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: before UpdateAfterDrag: hl=%d, tabUnderMouse=%d\n", hl,
-                              tabUnderMouse);
+                        if (gLogTabs) {
+                            logfa("TabsCtrl::WndProc: WM_MOUSEMOVE: before UpdateAfterDrag: hl=%d, tabUnderMouse=%d\n",
+                                  hl, tabUnderMouse);
+                        }
                         UpdateAfterDrag(this, hl, tabUnderMouse);
                     }
                 } else {
@@ -3787,19 +3800,23 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     SetCapture(hwnd);
                 }
             }
-            logfa(
-                "TabsCtrl::WndProc: WM_LBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                "overClose: %d\n",
-                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            if (gLogTabs) {
+                logfa(
+                    "TabsCtrl::WndProc: WM_LBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                    "overClose: %d\n",
+                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            }
             return 0;
         }
 
         case WM_LBUTTONUP: {
             nWmMouseMoveCount = 0;
-            logfa(
-                "TabsCtrl::WndProc: WM_LBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                "overClose: %d\n",
-                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            if (gLogTabs) {
+                logfa(
+                    "TabsCtrl::WndProc: WM_LBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                    "overClose: %d\n",
+                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            }
             if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed && overClose) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
@@ -3817,8 +3834,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 draggingTab = false;
                 ImageList_EndDrag();
                 int selectedTab = GetSelected();
-                logfa("TabsCtrl::WndProc: WM_LBUTTONUP, selectedTab: %d tabUnderMouse: %d\n", selectedTab,
-                      tabUnderMouse);
+                if (gLogTabs) {
+                    logfa("TabsCtrl::WndProc: WM_LBUTTONUP, selectedTab: %d tabUnderMouse: %d\n", selectedTab,
+                          tabUnderMouse);
+                }
                 if (tabUnderMouse != -1 && tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
                     TriggerTabDragged(this, selectedTab, tabUnderMouse);
                     UpdateAfterDrag(this, selectedTab, tabUnderMouse);
@@ -3834,10 +3853,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONDOWN: {
-            logfa(
-                "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                "overClose: %d\n",
-                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            if (gLogTabs) {
+                logfa(
+                    "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                    "overClose: %d\n",
+                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            }
             nWmMouseMoveCount = 0;
             // middle-clicking unconditionally closes the tab
             tabBeingClosed = tabUnderMouse;
@@ -3846,10 +3867,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONUP: {
-            logfa(
-                "TabsCtrl::WndProc: WM_MBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                "overClose: %d\n",
-                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            if (gLogTabs) {
+                logfa(
+                    "TabsCtrl::WndProc: WM_MBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                    "overClose: %d\n",
+                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            }
             nWmMouseMoveCount = 0;
             if (tabBeingClosed < 0 || !canClose) {
                 return 0;
