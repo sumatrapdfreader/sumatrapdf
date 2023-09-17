@@ -44,6 +44,8 @@ struct WindowTab {
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
 
+    TabState* tabState = nullptr; // when lazy loading
+
     WindowTab(MainWindow* win);
     ~WindowTab();
 

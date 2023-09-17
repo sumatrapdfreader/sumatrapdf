@@ -179,6 +179,7 @@ void LoadArgs::SetFilePath(const char* path) {
 
 LoadArgs* LoadArgs::Clone() {
     LoadArgs* res = new LoadArgs(fileName, win);
+    res->tabState = this->tabState;
     return res;
 }
 
@@ -1288,6 +1289,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
             args.noSavePrefs = true;
+            args.tabState = tab->tabState;
             LoadDocument(&args, false, false);
         }
         return;
@@ -1688,7 +1690,9 @@ static void ShowErrorLoading(MainWindow* win, const char* path, bool noSavePrefs
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
 
-MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
+extern void SetTabState(WindowTab* tab, TabState* state);
+
+MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyLoad) {
     MainWindow* win = args->win;
     const char* fullPath = args->FilePath();
 
@@ -1733,7 +1737,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
 
     // TODO: stop remembering/restoring window positions when using tabs?
     args->placeWindow = !gGlobalPrefs->useTabs;
-    if (!lazyload) {
+    if (!lazyLoad) {
         ReplaceDocumentInCurrentTab(args, args->ctrl, nullptr);
     }
 
@@ -1745,15 +1749,22 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
 
     auto currTab = win->CurrentTab();
     const char* path = currTab->filePath;
+#if 0
     int nPages = 0;
     if (currTab->ctrl) {
         nPages = currTab->ctrl->PageCount();
     }
-#if 0
     logf("LoadDocument: after ReplaceDocumentInCurrentTab win->CurrentTab() is 0x%p, path: '%s', %d pages\n", currTab,
          path.Get(), nPages);
 #endif
-
+    // when lazy loading: first time remember tab state, second time is
+    // real loading so restore tab state
+    if (!currTab->ctrl && !currTab->tabState) {
+        currTab->tabState = args->tabState;
+    } else if (currTab->tabState) {
+        SetTabState(currTab, currTab->tabState);
+        currTab->tabState;
+    }
     // TODO: figure why we hit this.
     // happens when opening 3 files via "Open With"
     // the first file is loaded via cmd-line arg, the rest
@@ -1767,7 +1778,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload) {
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, path));
         FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
-        if (!lazyload && gGlobalPrefs->showStartPage) {
+        if (!lazyLoad && gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, ds);
         }
         // TODO: this seems to save the state of file that we just opened
@@ -1911,7 +1922,7 @@ void LoadDocumentAsync(LoadArgs* argsIn, bool activateExisting) {
 // open a file doesn't block next/prev file in
 static StrVec gFilesFailedToOpen;
 
-MainWindow* LoadDocument(LoadArgs* args, bool lazyload, bool activateExisting) {
+MainWindow* LoadDocument(LoadArgs* args, bool lazyLoad, bool activateExisting) {
     CrashAlwaysIf(gCrashOnOpen);
 
     const char* path = args->FilePath();
@@ -1941,7 +1952,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload, bool activateExisting) {
     auto timeStart = TimeGet();
     HwndPasswordUI pwdUI(win->hwndFrame);
     DocController* ctrl = nullptr;
-    if (!lazyload) {
+    if (!lazyLoad) {
         ctrl = CreateControllerForEngineOrFile(args->engine, path, &pwdUI, win);
         {
             auto durMs = TimeSinceInMs(timeStart);
@@ -1960,7 +1971,7 @@ MainWindow* LoadDocument(LoadArgs* args, bool lazyload, bool activateExisting) {
         }
     }
     args->ctrl = ctrl;
-    return LoadDocumentFinish(args, lazyload);
+    return LoadDocumentFinish(args, lazyLoad);
 }
 
 // Loads document data into the MainWindow.

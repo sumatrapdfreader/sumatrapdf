@@ -307,7 +307,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     return win;
 }
 
-static void SetTabState(WindowTab* tab, TabState* state) {
+void SetTabState(WindowTab* tab, TabState* state) {
     if (!tab || !tab->ctrl) {
         return;
     }
@@ -357,15 +357,20 @@ static void SetTabState(WindowTab* tab, TabState* state) {
 
 // TODO: when files are lazy loaded, they do not restore TabState. Need to remember
 // it in LoadArgs and call SetTabState() if present after loading
-static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyload = true) {
+static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad = true) {
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
-    if (!LoadDocument(&args, lazyload, false)) {
+    if (lazyLoad) {
+        args.tabState = state;
+    }
+    if (!LoadDocument(&args, lazyLoad, false)) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    SetTabState(tab, state);
+    if (!lazyLoad) {
+        SetTabState(tab, state);
+    }
 }
 
 static bool SetupPluginMode(Flags& i) {
@@ -951,6 +956,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     HWND existingHwnd = nullptr;
     WindowTab* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
+    Vec<SessionData*>* sessionData = nullptr;
 
     CrashIf(hInstance != GetInstance());
 
@@ -1258,7 +1264,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     }
 
 ContinueOpenWindow:
-    if (gGlobalPrefs->sessionData->size() > 0 && !gPluginURL) {
+    // keep this data alive until the end of program and ensure it's not
+    // over-written by re-loading settings file while we're using it
+    // and also to keep TabState forever for lazy loading of tabs
+    sessionData = gGlobalPrefs->sessionData;
+    gGlobalPrefs->sessionData = new Vec<SessionData*>();
+    if (sessionData->size() > 0 && !gPluginURL) {
         restoreSession = gGlobalPrefs->restoreSession;
     }
 
@@ -1274,18 +1285,13 @@ ContinueOpenWindow:
     }
 
     if (restoreSession) {
-        for (SessionData* data : *gGlobalPrefs->sessionData) {
+        for (SessionData* data : *sessionData) {
             win = CreateAndShowMainWindow(data);
             for (TabState* state : *data->tabStates) {
                 if (str::IsEmpty(state->filePath)) {
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }
-                // TODO: if SaveSettings() is called, it deletes gGlobalPrefs->sessionData
-                // we're currently iterating (happened e.g. if the file is deleted)
-                // the current fix is to not call SaveSettings() below but maybe there's a better way
-                // maybe make a copy of TabState so that it isn't invalidated
-                // https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
                 RestoreTabOnStartup(win, state, gEnableLazyLoad);
             }
             TabsSelect(win, data->tabIndex - 1);
@@ -1294,7 +1300,6 @@ ContinueOpenWindow:
             }
         }
     }
-    ResetSessionState(gGlobalPrefs->sessionData);
 
     for (const char* path : flags.fileNames) {
         if (restoreSession) {
@@ -1402,6 +1407,10 @@ Exit:
     }
     str::Free(logFilePath);
 
+    if (sessionData) {
+        DeleteVecMembers(*sessionData);
+        delete sessionData;
+    }
     FreeExternalViewers();
     while (gWindows.size() > 0) {
         DeleteMainWindow(gWindows.at(0));

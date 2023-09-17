@@ -164,6 +164,8 @@ struct LoadArgs {
 
     FileArgs* fileArgs = nullptr;
 
+    TabState* tabState = nullptr;
+
   private:
     AutoFreeStr fileName;
 };
