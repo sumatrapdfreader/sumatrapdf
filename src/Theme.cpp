@@ -31,11 +31,6 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #define COL_WHITEISH 0xEBEBF9
 #define COL_DARK_GRAY 0x424242
 
-// Theme definition helper functions
-static COLORREF RgbToCOLORREF(COLORREF rgb) {
-    return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
-}
-
 // clang-format off
 // Themes
 Theme g_themeLight = {
@@ -84,8 +79,7 @@ Theme g_themeLight = {
             {
                 // X color
                 AdjustLightness2(g_themeLight.tab.selected.backgroundColor, -60),
-                // Circle color
-                RgbToCOLORREF(0xC13535)
+
             }
         },
         // Background style
@@ -108,23 +102,15 @@ Theme g_themeLight = {
             // Default close style
             g_themeLight.tab.selected.close
         },
-        // Tab Close Circle Enabled
-        true,
-        // Tab Close Pen Width
-        1.0f,
         // Hovered close style
         {
             // X color
             COL_WHITEISH,
-            // Circle color
-            g_themeLight.tab.selected.close.circleColor
         },
         // Clicked close style
         {
             // X color
             g_themeLight.tab.hoveredClose.xColor,
-            // Circle color
-            AdjustLightness2(g_themeLight.tab.selected.close.circleColor, -10)
         }
     },
     // Notifications
@@ -200,10 +186,6 @@ Theme g_themeDark = {
             // Default close style
             g_themeDark.tab.selected.close
         },
-        // Tab Close Circle Enabled
-        false,
-        // Tab Close Pen Width
-        1.0f,
         // Hovered close style
         {
             // X color
@@ -264,8 +246,6 @@ Theme g_themeDarker = {
             {
                 // X color
                 RgbToCOLORREF(0xD0E6F5),
-                // Circle color
-                COL_BLACK
             }
         },
         // Background style
@@ -278,8 +258,6 @@ Theme g_themeDarker = {
             {
                 // X color
                 COL_BLACK,
-                // Circle color
-                COL_BLACK
             }
         },
         // Highlighted style
@@ -291,16 +269,10 @@ Theme g_themeDarker = {
             // Default close style
             g_themeDarker.tab.selected.close
         },
-        // Tab Close Circle Enabled
-        false,
-        // Tab Close Pen Width
-        2.0f,
         // Hovered close style
         {
             // X color
             COL_WHITE,
-            // Circle color
-            COL_BLACK
         },
         // Clicked close style
         g_themeDarker.tab.hoveredClose

@@ -42,8 +42,6 @@ struct NotificationStyle {
 struct TabCloseStyle {
     // Color of the X button
     COLORREF xColor;
-    // Color of the circle surrounding the X button
-    COLORREF circleColor;
 };
 
 struct TabStyle {
@@ -62,10 +60,6 @@ struct TabTheme {
     TabStyle background;
     // Style of the highlighted tab (hovered over)
     TabStyle highlighted;
-    // Whether or not the circle around the tab X is displayed on hover
-    bool closeCircleEnabled;
-    // The width of the pen drawing the tab X
-    float closePenWidth;
     // Style of the close (X button) when the mouse hovers over it
     TabCloseStyle hoveredClose;
     // Style of the close (X button) when the mouse is clicked down over it
@@ -100,3 +94,7 @@ int GetCurrentThemeIndex();
 // configured through themes.
 void GetDocumentColors(COLORREF& text, COLORREF& bg);
 COLORREF GetMainWindowBackgroundColor();
+
+constexpr COLORREF RgbToCOLORREF(COLORREF rgb) {
+    return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
+}

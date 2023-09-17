@@ -3401,6 +3401,11 @@ Gdiplus::Color GdipCol(COLORREF c) {
     return GdiRgbFromCOLORREF(c);
 }
 
+// if true, on hover we paint the background of tab close (X) button
+constexpr bool closeCircleEnabled = true;
+constexpr float closePenWidth = 1.0f;
+constexpr COLORREF circleColor = RgbToCOLORREF(0xC13535);
+
 void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
@@ -3463,18 +3468,18 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
 
         if (ti->canClose) {
             r = ti->rClose;
-            if (i == tabUnderMouse && overClose && currentTheme->tab.closeCircleEnabled) {
+            if (i == tabUnderMouse && overClose && closeCircleEnabled) {
                 // draw bacground of X
                 Rect cr = r;
                 cr.Inflate(3, 3);
                 gr = ToGdipRect(cr);
-                br.SetColor(GdipCol(tabCloseStyle.circleColor));
+                br.SetColor(GdipCol(circleColor));
                 gfx.FillRectangle(&br, gr);
             }
 
             // draw X
             br.SetColor(GdipCol(tabCloseStyle.xColor));
-            Pen penX(&br, currentTheme->tab.closePenWidth);
+            Pen penX(&br, closePenWidth);
             Gdiplus::Point p1(r.x, r.y);
             Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);
             gfx.DrawLine(&penX, p1, p2);
