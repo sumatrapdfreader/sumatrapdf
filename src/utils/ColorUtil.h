@@ -38,6 +38,7 @@ void SerializePdfColor(PdfColor c, str::Str& out);
 COLORREF AdjustLightness(COLORREF c, float factor);
 COLORREF AdjustLightness2(COLORREF c, float units);
 float GetLightness(COLORREF c);
+bool IsLightColor(COLORREF c);
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
 Gdiplus::Color Unblend(COLORREF c, u8 alpha);

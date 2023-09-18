@@ -198,12 +198,22 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
     return AdjustLightness(c, 1.0f + units / lightness);
 }
 
-// cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
+// http://en.wikipedia.org/wiki/HSV_color_space#Lightness
 float GetLightness(COLORREF c) {
-    u8 R, G, B;
-    UnpackColor(c, R, G, B);
-    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
-    return (M + m) / 2.0f;
+    u8 r, g, b;
+    UnpackColor(c, r, g, b);
+    u8 m1 = std::max(std::max(r, g), b);
+    u8 m2 = std::min(std::min(r, g), b);
+    return (float)(m1 + m2) / 2.0f;
+}
+
+// return true for light color, false for dark
+// https://stackoverflow.com/questions/52879235/determine-color-lightness-via-rgb
+bool IsLightColor(COLORREF c) {
+    u8 r, g, b;
+    UnpackColor(c, r, g, b);
+    float y = 0.2126f * float(r) + 0.7152f * float(g) + 0.0722f * float(b);
+    return y > 0.5;
 }
 
 u8 GetRed(COLORREF rgb) {
