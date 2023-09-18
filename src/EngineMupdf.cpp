@@ -936,6 +936,52 @@ static TocItem* NewTocItemWithDestination(TocItem* parent, char* title, IPageDes
     return res;
 }
 
+static bool FullyContains(RectF r1, RectF r2) {
+    return r1.Contains(r2.TL()) && r1.Contains(r2.BR());
+}
+
+// if an elements fully obscures another, remove it from the list
+static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
+    int n = els.Size();
+    CrashIf(n < 2);
+    for (int i = 0; i < n; i++) {
+        RectF r1 = els[i]->GetRect();
+        for (int j = 0; j < n; j++) {
+            if (j == i) {
+                continue; // skip checking against self
+            }
+            auto r2 = els[j]->GetRect();
+            if (FullyContains(r1, r2)) {
+                // logfa("el %d fully obscures %d\n", i, j);
+                els.RemoveAtFast(i);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// if we have multiple elements at the same position, pick the one
+// that is fully obscured by all other elements
+// if not fully obscured, return the first one
+static IPageElement* PickBestElement(Vec<IPageElement*>& els) {
+    if (els.Size() == 0) {
+        return nullptr;
+    }
+
+Encore:
+    int n = els.Size();
+    if (n == 1) {
+        return els[0];
+    }
+    bool didRemove = RemoveHeWhoFullyContains(els);
+    if (didRemove) {
+        CrashIf(els.Size() != n - 1);
+        goto Encore;
+    }
+    return els[0];
+}
+
 // don't delete the result
 NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     if (!pageInfo) {
@@ -970,9 +1016,6 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
         }
         imageIdx++;
     }
-    if (res.IsEmpty()) {
-        return nullptr;
-    }
 
     if (false) {
         int i = 0;
@@ -982,8 +1025,7 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
             i++;
         }
     }
-
-    return res[0];
+    return PickBestElement(res);
 }
 
 static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
