@@ -1305,7 +1305,9 @@ bool EngineCbx::FinishLoading() {
         if (root == nullptr) {
             root = ti;
         } else {
-            curr->next = ti;
+            if (curr) { // just to silence cppcheck
+                curr->next = ti;
+            }
         }
         curr = ti;
     }
