@@ -474,6 +474,7 @@ EXPORTS
 	fz_xml_find
 	fz_xml_find_next
 	fz_xml_find_down
+	fz_contains_rect
 
 ; MuPDF exports
 
