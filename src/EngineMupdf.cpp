@@ -973,6 +973,16 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
     if (res.IsEmpty()) {
         return nullptr;
     }
+
+    if (false) {
+        int i = 0;
+        for (auto&& el : res) {
+            Rect r = el->GetRect().Round();
+            logfa("el %d: pos: %d-%d, size: %d-%d, kind: %s\n", (int)i, r.x, r.y, r.dx, r.dy, el->GetKind());
+            i++;
+        }
+    }
+
     return res[0];
 }
 
@@ -2498,9 +2508,6 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         link = link->next;
     }
 
-    if (pdfdoc) {
-        MakePageElementCommentsFromAnnotations(ctx, pageInfo);
-    }
     if (!stext) {
         return pageInfo;
     }
