@@ -1297,7 +1297,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
     HwndPasswordUI pwdUI(win->hwndFrame);
     char* path = tab->filePath;
-    logfa("ReloadDocument: %s\n", path);
+    logfa("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
@@ -4448,7 +4448,8 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
-    tab->editAnnotsWindow = nullptr;
+    tab->editAnnotsWindow = nullptr; // must happen before ReloadDocument()
+    ReloadDocument(tab->win, false);
 }
 
 #if 0
