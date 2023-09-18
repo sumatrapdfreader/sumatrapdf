@@ -70,11 +70,6 @@ Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
     return Gdiplus::Color(c);
 }
 
-// TODO: replace usage with GdiRgbFromCOLORREF
-Gdiplus::Color FromColor(COLORREF c) {
-    return Gdiplus::Color(c);
-}
-
 char* SerializeColor(COLORREF c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);

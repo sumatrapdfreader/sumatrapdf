@@ -1569,15 +1569,3 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     pdf_drop_annot(ctx, annot);
     return res;
 }
-
-void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
-    // Highlight Currently Editing Annotation
-    Gdiplus::Pen blackPen(Gdiplus::Color(255, 0, 0, 0), 5);
-    Rect rect = dm->CvtToScreen(tab->currentEditAnnotationMark.page, tab->currentEditAnnotationMark.rect);
-    if (!tab->currentEditAnnotationMark.scrolled) {
-        dm->ScrollScreenToRect(tab->currentEditAnnotationMark.page, rect);
-        tab->currentEditAnnotationMark.scrolled = true;
-    }
-    Gdiplus::Graphics gs(hdc);
-    Gdiplus::Status stat = gs.DrawRectangle(&blackPen, rect.x, rect.y, rect.dx, rect.dy);
-}

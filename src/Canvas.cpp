@@ -828,6 +828,22 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     tv->Blue = (COLOR16)((ab + perc * (bb - ab)) * 256);
 }
 
+// Draw a border around selected annotation
+NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
+    Rect rect = dm->CvtToScreen(tab->currentEditAnnotationMark.page, tab->currentEditAnnotationMark.rect);
+    if (!tab->currentEditAnnotationMark.scrolled) {
+        dm->ScrollScreenToRect(tab->currentEditAnnotationMark.page, rect);
+        tab->currentEditAnnotationMark.scrolled = true;
+    }
+
+    Gdiplus::Color col = GdiRgbFromCOLORREF(currentTheme->document.textColor);
+    Gdiplus::Pen pen(col, 5);
+    Gdiplus::Graphics gs(hdc);
+    // TODO: maybe make the rectangle a bit bigger and draw line
+    // using a pattern
+    Gdiplus::Status stat = gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
+}
+
 static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) {

@@ -41,7 +41,6 @@ float GetLightness(COLORREF c);
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
 Gdiplus::Color Unblend(COLORREF c, u8 alpha);
-Gdiplus::Color FromColor(COLORREF c);
 Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
 

@@ -9,4 +9,3 @@ void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow*);
 void AddAnnotationToEditWindow(EditAnnotationsWindow*, Annotation*);
 void SelectAnnotationInEditWindow(EditAnnotationsWindow*, Annotation*);
 void DeleteAnnotationAndUpdateUI(WindowTab*, EditAnnotationsWindow*, Annotation*);
-void PaintCurrentEditAnnotationMark(WindowTab*, HDC, DisplayModel*);
