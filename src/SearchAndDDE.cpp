@@ -619,6 +619,24 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
+static MainWindow* ensurePDFOpen(const char* pdfFile) {
+    // check if the PDF is already opened
+    // TODO: prioritize window with HWND so that if we have the same file
+    // opened in multiple tabs / windows, we operate on the one that got the message
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    if (!win) {
+        return nullptr;
+    }
+    if (!win->IsDocLoaded()) {
+        ReloadDocument(win, false);
+        if (!win->IsDocLoaded()) {
+            return nullptr;
+        }
+    }
+    return win;
+}
+
+
 // DDE commands
 
 /*
@@ -711,18 +729,9 @@ static const char* HandleSearchCmd(const char* cmd, DDEACK& ack) {
     if (str::IsEmpty(term.Get())) {
         return next;
     }
-    // check if the PDF is already opened
-    // TODO: prioritize window with HWND so that if we have the same file
-    // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
-    if (!win) {
+    MainWindow* win = ensurePDFOpen(pdfFile);
+    if (win == nullptr) {
         return next;
-    }
-    if (!win->IsDocLoaded()) {
-        ReloadDocument(win, false);
-        if (!win->IsDocLoaded()) {
-            return next;
-        }
     }
     ack.fAck = 1;
     bool wasModified = true;
@@ -814,15 +823,9 @@ static const char* HandleGotoCmd(const char* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
-    if (!win) {
+    MainWindow* win = ensurePDFOpen(pdfFile);
+    if (win == nullptr) {
         return next;
-    }
-    if (!win->IsDocLoaded()) {
-        ReloadDocument(win, false);
-        if (!win->IsDocLoaded()) {
-            return next;
-        }
     }
 
     win->linkHandler->GotoNamedDest(destName);
@@ -846,18 +849,9 @@ static const char* HandlePageCmd(__unused HWND hwnd, const char* cmd, DDEACK& ac
         return nullptr;
     }
 
-    // check if the PDF is already opened
-    // TODO: prioritize window with HWND so that if we have the same file
-    // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
-    if (!win) {
+    MainWindow* win = ensurePDFOpen(pdfFile);
+    if (win == nullptr) {
         return next;
-    }
-    if (!win->IsDocLoaded()) {
-        ReloadDocument(win, false);
-        if (!win->IsDocLoaded()) {
-            return next;
-        }
     }
 
     if (!win->ctrl->ValidPageNo(page)) {
@@ -892,15 +886,9 @@ static const char* HandleSetViewCmd(const char* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
-    if (!win) {
+    MainWindow* win = ensurePDFOpen(pdfFile);
+    if (win == nullptr) {
         return next;
-    }
-    if (!win->IsDocLoaded()) {
-        ReloadDocument(win, false);
-        if (!win->IsDocLoaded()) {
-            return next;
-        }
     }
 
     DisplayMode mode = DisplayModeFromString(viewMode, DisplayMode::Automatic);
