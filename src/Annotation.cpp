@@ -704,7 +704,7 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
-    float textColor[4];
+    float textColor[4]{};
     fz_try(ctx) {
         pdf_annot_default_appearance(ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     }
@@ -721,7 +721,7 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
-    float textColor[3]{};
+    float textColor[4]{}; // must be at least 4
     fz_try(ctx) {
         pdf_annot_default_appearance(ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
         PdfColorToFloat(col, textColor);

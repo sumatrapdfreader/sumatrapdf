@@ -3228,6 +3228,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
     pdf_write_options save_opts{};
     save_opts = pdf_default_write_options2;
     save_opts.do_incremental = pdf_can_be_saved_incrementally(ctx, epdf->pdfdoc);
+    save_opts.do_incremental = false;
     save_opts.do_compress = 1;
     save_opts.do_compress_images = 1;
     save_opts.do_compress_fonts = 1;
