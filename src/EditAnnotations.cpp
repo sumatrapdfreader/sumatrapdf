@@ -368,13 +368,7 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     if (!ok) {
         return;
     }
-    str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
-    NotificationCreateArgs args;
-    args.hwndParent = tab->win->hwndCanvas;
-    args.timeoutMs = 5000;
-    args.msg = msg.Get();
-    ShowNotification(args);
+    ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
 
     // TODO: hacky: set tab->editAnnotsWindow to nullptr to
     // disable a check in ReloadDocuments. Could pass additional argument

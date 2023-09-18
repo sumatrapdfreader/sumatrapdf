@@ -1264,6 +1264,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 }
 
 void ReloadDocument(MainWindow* win, bool autoRefresh) {
+
     // TODO: must disable reload for EngineMulti representing a directory
     WindowTab* tab = win->CurrentTab();
 
@@ -1295,6 +1296,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
+    logfa("ReloadDocument: %s\n", tab->filePath);
     HwndPasswordUI pwdUI(win->hwndFrame);
     char* path = tab->filePath;
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
@@ -2286,6 +2288,16 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // SetFocus(win->hwndFrame);
 }
 
+void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path) {
+    str::Str msg;
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = hwndParent;
+    nargs.timeoutMs = 5000;
+    nargs.msg = msg.Get();
+    ShowNotification(nargs);
+}
+
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
@@ -2344,13 +2356,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     args.forceReuse = true;
     LoadDocument(&args, false, false);
 
-    str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
-    NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
-    nargs.timeoutMs = 5000;
-    nargs.msg = msg.Get();
-    ShowNotification(nargs);
+    ShowSavedAnnotationsNotification(win->hwndCanvas, newPath);
     return true;
 }
 
@@ -4457,13 +4463,7 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     if (!ok) {
         return;
     }
-    str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
-    NotificationCreateArgs nargs;
-    nargs.hwndParent = tab->win->hwndCanvas;
-    nargs.msg = msg.Get();
-    nargs.timeoutMs = 5000;
-    ShowNotification(nargs);
+    ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
