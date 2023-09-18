@@ -968,9 +968,10 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
         // as a last resort, try to open as chm file
         return CreateControllerForChm(path, pwdUI, win);
     }
-    int nPages = engine ? engine->PageCount() : 0;
+    int nPages = engine ? engine->pageCount : 0;
     logf("CreateControllerForEngineOrFile: '%s', %d pages\n", path, nPages);
-    if (nPages == 0) {
+    if (nPages <= 0) {
+        // seen nPages < 0 in a crash in epub file
         delete engine;
         return nullptr;
     }
