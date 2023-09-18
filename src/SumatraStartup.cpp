@@ -1239,6 +1239,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         // TODO: should exit?
     }
 
+    if (flags.hwndPluginParent) {
+        // check early to avoid a crash in MakePluginWindow()
+        if (!IsWindow(flags.hwndPluginParent)) {
+            MessageBoxA(nullptr, "-plugin argument is not a valid window", "Error", MB_OK | MB_ICONERROR);
+            goto Exit;
+        }
+    }
+
     if (existingHwnd) {
         size_t nFiles = flags.fileNames.size();
         // we allow -new-window on its own if no files given
