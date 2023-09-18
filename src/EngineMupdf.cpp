@@ -3521,16 +3521,26 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     return nullptr;
 }
 
-void EngineMupdf::InvalideAnnotationsForPage(int pageNo) {
-    if (!pdfdoc) {
+static void InvalideAnnotationsForPage(EngineMupdf* e, int pageNo) {
+    if (!e->pdfdoc) {
         return;
     }
-    ScopedCritSec scope(&pagesAccess);
-    CrashIf(pageNo < 1 || pageNo > pageCount);
+    ScopedCritSec scope(&e->pagesAccess);
+    CrashIf(pageNo < 1 || pageNo > e->pageCount);
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = pages[pageIdx];
+    FzPageInfo* pageInfo = e->pages[pageIdx];
     if (pageInfo) {
         pageInfo->commentsNeedRebuilding = true;
+    }
+}
+
+// in a function so that we can set a breakpoint or add logging
+// to easily trace all places that modify annotations
+NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot) {
+    e->modifiedAnnotations = true;
+    if (annot) {
+        annot->isChanged = true;
+        InvalideAnnotationsForPage(e, annot->pageNo);
     }
 }
 
@@ -3544,8 +3554,6 @@ Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo)
         // unsupported type
         return nullptr;
     }
-
-    engine->modifiedAnnotations = true;
 
     CrashIf(pageNo < 1);
     Annotation* res = new Annotation();

@@ -56,7 +56,7 @@ struct Annotation {
     bool isDeleted = false;
 
     EngineMupdf* engine = nullptr;
-    pdf_annot* pdfannot = nullptr;
+    pdf_annot* pdfannot = nullptr; // not owned
 
     Annotation() = default;
     ~Annotation() = default;
@@ -104,3 +104,4 @@ void DeleteAnnotation(Annotation*);
 
 // EngineMupdf.cpp
 Annotation* MakeAnnotationPdf(EngineMupdf*, pdf_annot*, int pageNo);
+void MarkAsModifiedAnnotations(EngineMupdf*, Annotation*);

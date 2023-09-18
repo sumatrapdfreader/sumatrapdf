@@ -1542,6 +1542,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     }
 
     auto res = MakeAnnotationPdf(epdf, annot, pageNo);
+    MarkAsModifiedAnnotations(epdf, res);
 
     auto& a = gGlobalPrefs->annotations;
     ParsedColor* parsedCol = nullptr;

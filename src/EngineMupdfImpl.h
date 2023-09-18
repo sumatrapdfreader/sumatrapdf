@@ -117,7 +117,6 @@ class EngineMupdf : public EngineBase {
     char* ExtractFontList();
 
     ByteSlice LoadStreamFromPDFFile(const char* filePath);
-    void InvalideAnnotationsForPage(int pageNo);
 };
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine);
