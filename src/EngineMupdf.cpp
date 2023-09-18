@@ -3534,6 +3534,27 @@ ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
     return res;
 }
 
+// if an elements fully obscures another, remove it from the list
+static bool RemoveHeWhoFullyContains(fz_context* ctx, Vec<pdf_annot*>& els) {
+    int n = els.Size();
+    CrashIf(n < 2);
+    for (int i = 0; i < n; i++) {
+        fz_rect r1 = pdf_bound_annot(ctx, els[i]);
+        for (int j = 0; j < n; j++) {
+            if (j == i) {
+                continue; // skip checking against self
+            }
+            fz_rect r2 = pdf_bound_annot(ctx, els[j]);
+            if (fz_contains_rect(r1, r2)) {
+                // logfa("el %d fully obscures %d\n", i, j);
+                els.RemoveAtFast(i);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // caller must delete
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
@@ -3554,22 +3575,35 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     // find last annotation that contains this point
     // they are drawn in order so later annotations
     // are drawn on top of earlier
-    pdf_annot* matched = nullptr;
+    Vec<pdf_annot*> els;
     while (annot) {
         enum pdf_annot_type tp = pdf_annot_type(epdf->ctx, annot);
         AnnotationType atp = AnnotationTypeFromPdfAnnot(tp);
         if (IsAllowedAnnot(atp, allowedAnnots)) {
             fz_rect rc = pdf_bound_annot(epdf->ctx, annot);
             if (fz_is_point_inside_rect(p, rc)) {
-                matched = annot;
+                els.Append(annot);
             }
         }
         annot = pdf_next_annot(epdf->ctx, annot);
     }
-    if (matched) {
-        return MakeAnnotationPdf(epdf, matched, pageNo);
+    if (els.Size() == 0) {
+        return nullptr;
     }
-    return nullptr;
+    // pick the best
+Encore:
+    int n = els.Size();
+    if (n == 1) {
+        auto res = MakeAnnotationPdf(epdf, els[0], pageNo);
+        return res;
+    }
+    bool didRemove = RemoveHeWhoFullyContains(epdf->ctx, els);
+    if (didRemove) {
+        CrashIf(els.Size() != n - 1);
+        goto Encore;
+    }
+    auto res = MakeAnnotationPdf(epdf, els[0], pageNo);
+    return res;
 }
 
 static void InvalideAnnotationsForPage(EngineMupdf* e, int pageNo) {
