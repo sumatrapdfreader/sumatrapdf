@@ -2474,6 +2474,7 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
             break;
         case SaveChoice::SaveExisting: {
             SaveDocument(tab, {}, false);
+            ReloadDocument(tab->win, false);
         } break;
         case SaveChoice::Cancel:
             tab->askedToSaveAnnotations = false;
@@ -4445,7 +4446,7 @@ static void SaveAnnotationsAndCloseEditAnnotationsWindow(WindowTab* tab) {
     if (!SaveDocument(tab, {}, true)) {
         return;
     }
-
+    ReloadDocument(tab->win, false);
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
 }
