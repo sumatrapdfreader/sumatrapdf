@@ -196,3 +196,4 @@ void ShutdownCleanup();
 bool DocIsSupportedFileType(Kind);
 char* GetLogFilePath();
 void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path);
+void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, const char* mupdfErr);

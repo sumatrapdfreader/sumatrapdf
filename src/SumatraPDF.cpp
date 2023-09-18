@@ -1264,7 +1264,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 }
 
 void ReloadDocument(MainWindow* win, bool autoRefresh) {
-
     // TODO: must disable reload for EngineMulti representing a directory
     WindowTab* tab = win->CurrentTab();
 
@@ -1296,9 +1295,9 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
-    logfa("ReloadDocument: %s\n", tab->filePath);
     HwndPasswordUI pwdUI(win->hwndFrame);
     char* path = tab->filePath;
+    logfa("ReloadDocument: %s\n", path);
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
@@ -2298,6 +2297,12 @@ void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path) {
     ShowNotification(nargs);
 }
 
+void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, const char* mupdfErr) {
+    str::Str msg;
+    msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
+    ShowWarningNotification(hwndParent, msg.Get(), 0);
+}
+
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
@@ -2330,14 +2335,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     }
     char* dstFilePath = ToUtf8Temp(dstFileName);
     ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](const char* mupdfErr) {
-        str::Str msg;
-        // TODO: duplicated string
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath, mupdfErr);
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.warning = true;
-        args.timeoutMs = 0;
-        args.msg = msg.Get();
+        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, dstFilePath, mupdfErr);
     });
     if (!ok) {
         return false;
@@ -2470,15 +2468,7 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
         case SaveChoice::SaveExisting: {
             // const char* path = engine->FileName();
             bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-                str::Str msg;
-                // TODO: duplicated message
-                msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-                NotificationCreateArgs args;
-                args.hwndParent = tab->win->hwndCanvas;
-                args.msg = msg.Get();
-                args.warning = true;
-                args.timeoutMs = 0;
-                ShowNotification(args);
+                ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
             });
         } break;
         case SaveChoice::Cancel:
@@ -4450,15 +4440,7 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     const char* path = engine->FilePath();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-        str::Str msg;
-        // TODO: duplicated message
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = msg.Get();
-        args.warning = true;
-        args.timeoutMs = 0;
-        ShowNotification(args);
+        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
     });
     if (!ok) {
         return;

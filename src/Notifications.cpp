@@ -511,6 +511,18 @@ NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeo
     return ShowNotification(args);
 }
 
+NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs) {
+    if (timeoutMs < 0) {
+        timeoutMs = kNotifDefaultTimeOut;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = hwndParent;
+    args.msg = msg;
+    args.warning = true;
+    args.timeoutMs = timeoutMs;
+    return ShowNotification(args);
+}
+
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutMs, bool highlight) {
     wnd->UpdateMessage(msg, timeoutMs, highlight);
 }

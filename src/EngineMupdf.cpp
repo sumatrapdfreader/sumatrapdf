@@ -3227,6 +3227,8 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
 
     pdf_write_options save_opts{};
     save_opts = pdf_default_write_options2;
+    // TODO: if saving to a new file, don't do incremental and linearlize?
+    // save_opts.do_linear = 1;
     save_opts.do_incremental = pdf_can_be_saved_incrementally(ctx, epdf->pdfdoc);
     save_opts.do_compress = 1;
     save_opts.do_compress_images = 1;
@@ -3252,7 +3254,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
     }
 
     // TOOD: what if not ok?
-    // note: this might not be necessary because we reload the file
+    // note: this should be short-lived as we should re-load the file
     if (ok) {
         epdf->modifiedAnnotations = false;
     }

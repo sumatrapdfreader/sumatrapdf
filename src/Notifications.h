@@ -24,10 +24,12 @@ struct NotificationCreateArgs {
 
 NotificationWnd* ShowNotification(NotificationCreateArgs& args);
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
-NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
 void RemoveNotification(NotificationWnd*);
 void RemoveNotificationsForGroup(HWND hwnd, Kind);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, int, int);
 bool NotificationExists(NotificationWnd*);
 void RelayoutNotifications(HWND hwnd);
+
+NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
+NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs);

@@ -355,15 +355,7 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     EngineMupdf* engine = GetEngineMupdf(ew);
     const char* path = engine->FilePath();
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-        str::Str msg;
-        // TODO: duplicated message
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = msg.Get();
-        args.warning = true;
-        args.timeoutMs = 0;
-        ShowNotification(args);
+        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
     });
     if (!ok) {
         return;
