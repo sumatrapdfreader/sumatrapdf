@@ -1304,11 +1304,10 @@ bool EngineCbx::FinishLoading() {
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;
-            curr = ti;
         } else {
             curr->next = ti;
-            curr = ti;
         }
+        curr = ti;
     }
     if (root) {
         auto realRoot = new TocItem();
