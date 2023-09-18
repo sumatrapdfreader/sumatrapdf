@@ -3039,9 +3039,11 @@ void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
     int n = tm->ChildCount(item);
     TreeItem tmp[256];
     TreeItem* a = &tmp[0];
+    void* toFree = nullptr;
     if (n > dimof(tmp)) {
         size_t nBytes = (size_t)n * sizeof(TreeItem);
-        a = (TreeItem*)malloc(nBytes);
+        toFree = malloc(nBytes);
+        a = (TreeItem*)toFree;
     }
     // ChildAt() is optimized for sequential access and we need to
     // insert backwards, so gather the items in v first
@@ -3061,9 +3063,7 @@ void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
         }
     }
 
-    if (a != &tmp[0]) {
-        free(a);
-    }
+    free(toFree);
 }
 
 static void PopulateTree(TreeView* treeView, TreeModel* tm) {
