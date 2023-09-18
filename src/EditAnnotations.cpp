@@ -34,6 +34,7 @@ extern "C" {
 #include "WindowTab.h"
 #include "EditAnnotations.h"
 #include "SumatraPDF.h"
+#include "Canvas.h"
 
 #include "utils/Log.h"
 
@@ -226,7 +227,7 @@ static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
 
     ew->buttonDelete->SetIsVisible(false);
     if (ew->tab) {
-        ew->tab->currentEditAnnotationMark.show = false;
+        ew->tab->selectedAnnotation.show = false;
     }
 }
 
@@ -735,13 +736,6 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->buttonEmbedAttachment->SetIsVisible(true);
 }
 
-static void DoCurrentEditAnnotation(EditAnnotationsWindow* ew, Annotation* annot, int annotPageNo) {
-    ew->tab->currentEditAnnotationMark.show = true;
-    ew->tab->currentEditAnnotationMark.page = annotPageNo;
-    ew->tab->currentEditAnnotationMark.scrolled = false;
-    ew->tab->currentEditAnnotationMark.rect = GetBounds(ew->annot);
-}
-
 static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
     int opacity = ev->pos;
     SetOpacity(ew->annot, opacity);
@@ -796,7 +790,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
         DoOpacity(ew, ew->annot);
         DoSaveEmbed(ew, ew->annot);
 
-        DoCurrentEditAnnotation(ew, ew->annot, annotPageNo);
+        SelectAnnotation(ew->tab, ew->annot, annotPageNo);
         ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
     }
@@ -847,7 +841,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Anno
         ew->skipGoToPage = true;
         RebuildAnnotations(ew);
         UpdateUIForSelectedAnnotation(ew, prevLocation);
-        ew->tab->currentEditAnnotationMark.show = false;
+        ew->tab->selectedAnnotation.show = false;
     }
     MainWindowRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);

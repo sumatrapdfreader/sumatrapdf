@@ -72,7 +72,8 @@ struct WindowTab {
         RectF rect;
         int page = 0;
         bool scrolled = false; // only automatically scroll once
-    } currentEditAnnotationMark;
+        Annotation* annot;     // owned, must delete when done with it
+    } selectedAnnotation;
 };
 
 bool SaveDataToFile(HWND hwndParent, char* fileName, ByteSlice data);
