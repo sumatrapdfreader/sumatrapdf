@@ -118,6 +118,7 @@ void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
+bool SaveDocument(WindowTab* tab, const char* path, const bool successNotification);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 void RelayoutWindow(MainWindow* win);

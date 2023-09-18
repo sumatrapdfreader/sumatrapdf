@@ -1262,6 +1262,43 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
 }
 
+bool SaveDocument(WindowTab* tab, const char* path, const bool successNotification) {
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+
+    if (str::IsEmpty(path)) {
+        path = engine->FilePath();
+    }
+
+    bool ok = EngineMupdfSaveUpdated(engine, path, [&tab, &path](const char* mupdfErr) {
+        str::Str msg;
+        // TODO: duplicated message
+        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = msg.Get();
+        args.warning = true;
+        args.timeoutMs = 0;
+        ShowNotification(args);
+    });
+
+    if (!ok) {
+        return false;
+    }
+
+    if (successNotification) {
+        str::Str msg;
+        msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = tab->win->hwndCanvas;
+        nargs.msg = msg.Get();
+        nargs.timeoutMs = 5000;
+        ShowNotification(nargs);
+    }
+    return true;
+}
+
+
+
 void ReloadDocument(MainWindow* win, bool autoRefresh) {
     // TODO: must disable reload for EngineMulti representing a directory
     WindowTab* tab = win->CurrentTab();
@@ -2306,16 +2343,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return false;
     }
     char* dstFilePath = ToUtf8Temp(dstFileName);
-    ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](const char* mupdfErr) {
-        str::Str msg;
-        // TODO: duplicated string
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), dstFilePath, mupdfErr);
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.warning = true;
-        args.timeoutMs = 0;
-        args.msg = msg.Get();
-    });
+
+    ok = SaveDocument(tab, dstFilePath, true);
     if (!ok) {
         return false;
     }
@@ -2333,13 +2362,6 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     args.forceReuse = true;
     LoadDocument(&args, false, false);
 
-    str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), newPath);
-    NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
-    nargs.timeoutMs = 5000;
-    nargs.msg = msg.Get();
-    ShowNotification(nargs);
     return true;
 }
 
@@ -2451,18 +2473,7 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
             SaveAnnotationsToMaybeNewPdfFile(tab);
             break;
         case SaveChoice::SaveExisting: {
-            // const char* path = engine->FileName();
-            bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-                str::Str msg;
-                // TODO: duplicated message
-                msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-                NotificationCreateArgs args;
-                args.hwndParent = tab->win->hwndCanvas;
-                args.msg = msg.Get();
-                args.warning = true;
-                args.timeoutMs = 0;
-                ShowNotification(args);
-            });
+            SaveDocument(tab, {}, false);
         } break;
         case SaveChoice::Cancel:
             tab->askedToSaveAnnotations = false;
@@ -4426,33 +4437,14 @@ static int TestBigNew()
 }
 #endif
 
-static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
+static void SaveAnnotationsAndCloseEditAnnotationsWindow(WindowTab* tab) {
     if (!tab) {
         return;
     }
-    EngineBase* engine = tab->AsFixed()->GetEngine();
-    const char* path = engine->FilePath();
-    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-        str::Str msg;
-        // TODO: duplicated message
-        msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = msg.Get();
-        args.warning = true;
-        args.timeoutMs = 0;
-        ShowNotification(args);
-    });
-    if (!ok) {
+
+    if (!SaveDocument(tab, {}, true)) {
         return;
     }
-    str::Str msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
-    NotificationCreateArgs nargs;
-    nargs.hwndParent = tab->win->hwndCanvas;
-    nargs.msg = msg.Get();
-    nargs.timeoutMs = 5000;
-    ShowNotification(nargs);
 
     CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
     tab->editAnnotsWindow = nullptr;
@@ -4976,7 +4968,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSaveAnnotations:
-            SaveAnnotationsAndCloseEditAnnowtationsWindow(tab);
+            SaveAnnotationsAndCloseEditAnnotationsWindow(tab);
             break;
 
         case CmdToggleMenuBar:
