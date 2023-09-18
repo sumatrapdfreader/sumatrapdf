@@ -977,11 +977,12 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
 }
 
 static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
-    if (!pageInfo || pageInfo->gotAllElements) {
+    if (!pageInfo || !pageInfo->elementsNeedRebuilding) {
         return;
     }
-    pageInfo->gotAllElements = true;
+    pageInfo->elementsNeedRebuilding = false;
     auto& els = pageInfo->allElements;
+    els.Reset();
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
@@ -2463,10 +2464,11 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         return nullptr;
     }
 
-    if (pdfdoc && pageInfo->commentsNeedRebuilding) {
+    if (pdfdoc && pageInfo->annotationsNeedRebuilding) {
         DeleteVecMembers(pageInfo->comments);
         MakePageElementCommentsFromAnnotations(ctx, pageInfo);
-        pageInfo->commentsNeedRebuilding = false;
+        pageInfo->annotationsNeedRebuilding = false;
+        pageInfo->elementsNeedRebuilding = true;
     }
 
     if (loadQuick || pageInfo->fullyLoaded) {
@@ -3530,7 +3532,7 @@ static void InvalideAnnotationsForPage(EngineMupdf* e, int pageNo) {
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = e->pages[pageIdx];
     if (pageInfo) {
-        pageInfo->commentsNeedRebuilding = true;
+        pageInfo->annotationsNeedRebuilding = true;
     }
 }
 

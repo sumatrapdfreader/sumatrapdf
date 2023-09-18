@@ -27,7 +27,7 @@ struct FzPageInfo {
     Vec<IPageElement*> comments;
 
     Vec<IPageElement*> allElements;
-    bool gotAllElements = false;
+    bool elementsNeedRebuilding = true;
 
     RectF mediabox{};
     Vec<FitzPageImageInfo*> images;
@@ -36,7 +36,7 @@ struct FzPageInfo {
     // if true, loaded expensive info (extracted text etc.)
     bool fullyLoaded = false;
 
-    bool commentsNeedRebuilding = true;
+    bool annotationsNeedRebuilding = true;
 };
 
 class EngineMupdf : public EngineBase {
