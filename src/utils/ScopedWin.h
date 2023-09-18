@@ -137,15 +137,14 @@ class ScopedComQIPtr {
     }
 };
 
-class AutoDeleteDC {
+struct AutoDeleteDC {
     HDC hdc = nullptr;
 
-  public:
+    explicit AutoDeleteDC(HDC hdc) {
+        this->hdc = hdc;
+    }
     AutoDeleteDC() = default;
 
-    AutoDeleteDC(HDC hdcIn) {
-        hdc = hdcIn;
-    }
     ~AutoDeleteDC() {
         DeleteDC(hdc);
     }
@@ -216,11 +215,10 @@ class ScopedSelectFont {
     }
 };
 
-class ScopedSelectPen {
+struct ScopedSelectPen {
     HDC hdc = nullptr;
     HPEN prevPen = nullptr;
 
-  public:
     explicit ScopedSelectPen(HDC hdc, HPEN pen) {
         prevPen = (HPEN)SelectObject(hdc, pen);
     }

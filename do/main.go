@@ -100,6 +100,11 @@ func runCppCheck(all bool) {
 		// I often use global variables set at compile time to
 		// control paths to take
 		args = append(args, "--suppress=knownConditionTrueFalse")
+		args = append(args, "--suppress=constParameterPointer")
+		args = append(args, "--suppress=constVariablePointer")
+		args = append(args, "--suppress=constVariableReference")
+		args = append(args, "--suppress=constParameterReference")
+		args = append(args, "--suppress=useInitializationList")
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cppcheckExe := detectCppcheckExe()
