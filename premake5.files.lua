@@ -663,7 +663,7 @@ function sumatrapdf_files()
     "WindowTab.*",
 
     "ext/versions.txt",
-    "docs/*.txt",
+    "../docs/*.txt",
   })
   filter {"configurations:Debug"}
     files_in_dir("src", {

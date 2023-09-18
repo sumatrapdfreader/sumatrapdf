@@ -168,7 +168,7 @@ func main() {
 		flgCppCheckAll            = false
 		flgClangTidy              = false
 		flgClangTidyFix           = false
-		flgBuildNo                = false
+		flgPrintBuildNo           = false
 		flgBuildLzsa              = false
 		flgFindLargestFilesByExt  = false
 	)
@@ -198,6 +198,7 @@ func main() {
 		flgFilesList       bool
 		flgExtractUtils    bool
 		flgBuildLogview    bool
+		flgBuildNo         int
 	)
 
 	{
@@ -218,7 +219,7 @@ func main() {
 		//flag.BoolVar(&flgGenTranslationsInfoCpp, "trans-gen-info", false, "generate src/TranslationLangs.cpp")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build (remove out/ files except for settings)")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
-		//flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
+		//flag.BoolVar(&flgPrintBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
@@ -232,6 +233,7 @@ func main() {
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
 		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
 		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win. Use -upload to also upload it to backblaze")
+		flag.IntVar(&flgBuildNo, "build-no-info", 0, "print build number info for given build number")
 		flag.Parse()
 	}
 
@@ -254,6 +256,11 @@ func main() {
 
 	if false {
 		deleteFilesOneOff()
+		return
+	}
+
+	if flgBuildNo > 0 {
+		printBuildNoInfo(flgBuildNo)
 		return
 	}
 
@@ -381,7 +388,7 @@ func main() {
 		return
 	}
 
-	if flgBuildNo {
+	if flgPrintBuildNo {
 		return
 	}
 
@@ -521,4 +528,14 @@ func extractLogViewVersion() string {
 func printFileSize(path string) {
 	size := u.FileSize(path)
 	logf(ctx(), "%s: %s\n", path, u.FormatSize(size))
+}
+
+func printBuildNoInfo(buildNo int) {
+	out := runExeMust("git", "log", "--oneline")
+	lines := toTrimmedLines(out)
+	// we add 1000 to create a version that is larger than the svn version
+	// from the time we used svn
+	n := len(lines) - (buildNo - 1000)
+	s := lines[n]
+	logf(ctx(), "%d: %s\n", buildNo, s)
 }
