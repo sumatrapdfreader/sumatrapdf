@@ -114,6 +114,7 @@ const char* GetKnownColorName(PdfColor c) {
 struct EditAnnotationsWindow : Wnd {
     void OnSize(UINT msg, UINT type, SIZE size) override;
     void OnClose() override;
+    void OnFocus() override;
 
     WindowTab* tab = nullptr;
     LayoutBase* mainLayout = nullptr;
@@ -337,6 +338,10 @@ static void RebuildAnnotations(EditAnnotationsWindow* ew) {
 void EditAnnotationsWindow::OnClose() {
     tab->editAnnotsWindow = nullptr;
     delete this; // sketchy
+}
+
+void EditAnnotationsWindow::OnFocus() {
+    SelectTabInWindow(tab);
 }
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab);
