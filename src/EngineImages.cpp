@@ -1011,7 +1011,7 @@ EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
     return engine;
 }
 
-bool IsEngineImageDirSupportedFile(const char* fileName, __unused bool sniff) {
+bool IsEngineImageDirSupportedFile(const char* fileName, bool) {
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }

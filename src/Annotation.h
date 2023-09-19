@@ -37,6 +37,12 @@ enum class AnnotationType {
     Unknown = -1
 };
 
+enum class AnnotationChange {
+    Add,
+    Remove,
+    Modify,
+};
+
 class EngineMupdf;
 extern "C" struct pdf_annot;
 
@@ -52,10 +58,6 @@ struct Annotation {
 
     // in page coordinates
     RectF bounds = {};
-    // either new annotation or has been modified
-    bool isChanged = false;
-    // deleted are not shown but can be undeleted
-    bool isDeleted = false;
 
     EngineMupdf* engine = nullptr;
     pdf_annot* pdfannot = nullptr; // not owned
@@ -89,8 +91,8 @@ bool SetQuadding(Annotation*, int);
 int BorderWidth(Annotation*);
 void SetBorderWidth(Annotation*, int);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
-const char* IconName(Annotation*); // empty() if no icon
-PdfColor GetColor(Annotation*); // ColorUnset if no color
+const char* IconName(Annotation*);   // empty() if no icon
+PdfColor GetColor(Annotation*);      // ColorUnset if no color
 PdfColor InteriorColor(Annotation*); // ColorUnset if no color
 bool SetInteriorColor(Annotation*, PdfColor);
 int Opacity(Annotation*);

@@ -333,17 +333,23 @@ void DeleteAnnotation(Annotation* annot) {
     }
     EngineMupdf* e = annot->engine;
     auto ctx = e->ctx;
-    CrashIf(annot->isDeleted);
-    ScopedCritSec cs(e->ctxAccess);
-    pdf_page* page = nullptr;
-    fz_try(ctx) {
-        page = pdf_annot_page(ctx, annot->pdfannot);
-        pdf_delete_annot(ctx, page, annot->pdfannot);
+    {
+        ScopedCritSec cs(e->ctxAccess);
+        bool failed = false;
+        pdf_page* page = nullptr;
+        fz_try(ctx) {
+            page = pdf_annot_page(ctx, annot->pdfannot);
+            pdf_delete_annot(ctx, page, annot->pdfannot);
+        }
+        fz_catch(ctx) {
+            failed = true;
+        }
+        if (failed) {
+            logf("failed to delete annotation on page %d\n", annot->pageNo);
+            return;
+        }
     }
-    fz_catch(ctx) {
-    }
-    annot->isDeleted = true;
-    MarkAsModifiedAnnotations(e, annot);
+    MarkAsModifiedAnnotations(e, annot, AnnotationChange::Remove);
 }
 
 // -1 if not exist
@@ -952,8 +958,8 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
         return nullptr;
     }
 
-    auto res = MakeAnnotationPdf(epdf, annot, pageNo);
-    MarkAsModifiedAnnotations(epdf, res);
+    auto res = MakeAnnotationFrom_pdf_annot(epdf, annot, pageNo);
+    MarkAsModifiedAnnotations(epdf, res, AnnotationChange::Add);
 
     auto& a = gGlobalPrefs->annotations;
     ParsedColor* parsedCol = nullptr;
