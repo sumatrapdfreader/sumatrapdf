@@ -2239,7 +2239,6 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     AbortFinding(win, true);
 
     win->linkOnLastButtonDown = nullptr;
-    delete win->annotationOnLastButtonDown;
     win->annotationOnLastButtonDown = nullptr;
 
     win->fwdSearchMark.show = false;
@@ -4122,20 +4121,21 @@ static void AddUniquePageNo(Vec<int>& v, int pageNo) {
     v.Append(pageNo);
 }
 
-Vec<Annotation*> MakeAnnotationFromSelection(WindowTab* tab, AnnotationType annotType) {
+// create one or more annotations from current selection
+// returns last created annotations
+Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotType) {
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
-    Vec<Annotation*> annots;
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        return annots;
+        return nullptr;
     }
     auto engine = dm->GetEngine();
     bool supportsAnnots = EngineSupportsAnnotations(engine);
     MainWindow* win = tab->win;
     bool ok = supportsAnnots && win->showSelection && tab->selectionOnPage;
     if (!ok) {
-        return annots;
+        return nullptr;
     }
 
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
@@ -4148,9 +4148,11 @@ Vec<Annotation*> MakeAnnotationFromSelection(WindowTab* tab, AnnotationType anno
         AddUniquePageNo(pageNos, pageNo);
     }
     if (pageNos.empty()) {
-        return annots;
+        return 0;
     }
 
+    int nCreated = 0;
+    Annotation* annot = nullptr;
     for (auto pageNo : pageNos) {
         Vec<RectF> rects;
         for (auto& sel : *s) {
@@ -4159,9 +4161,11 @@ Vec<Annotation*> MakeAnnotationFromSelection(WindowTab* tab, AnnotationType anno
             }
             rects.Append(sel.rect);
         }
-        Annotation* annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
+        annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
         SetQuadPointsAsRect(annot, rects);
-        annots.Append(annot);
+    }
+    if (!annot) {
+        return nullptr;
     }
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
@@ -4169,7 +4173,7 @@ Vec<Annotation*> MakeAnnotationFromSelection(WindowTab* tab, AnnotationType anno
     DeleteOldSelectionInfo(win, true);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
-    return annots;
+    return annot;
 }
 
 static void ShowCursorPositionInDoc(MainWindow* win) {
@@ -4183,25 +4187,6 @@ static void ShowCursorPositionInDoc(MainWindow* win) {
         UpdateCursorPositionHelper(win, pt, nullptr);
     }
 }
-
-static void openAnnotsInEditWindow(MainWindow* win, Vec<Annotation*>& annots, bool isShift) {
-    if (annots.empty()) {
-        return;
-    }
-    MainWindowRerender(win);
-    if (isShift) {
-        StartEditAnnotations(win->CurrentTab(), annots);
-        return;
-    }
-    auto w = win->CurrentTab()->editAnnotsWindow;
-    if (w) {
-        for (auto annot : annots) {
-            AddAnnotationToEditWindow(w, annot);
-        }
-    } else {
-        DeleteVecMembers(annots);
-    }
-};
 
 static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -4759,7 +4744,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
 
-    Vec<Annotation*> createdAnnots;
+    Annotation* lastCreatedAnnot = nullptr;
 
     AnnotationType annotType = (AnnotationType)(wmId - CmdCreateAnnotText);
     switch (wmId) {
@@ -4776,8 +4761,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             annotType = AnnotationType::Underline;
             break;
     }
-
-    Annotation* annotationUnderCursor = nullptr;
 
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
@@ -5246,33 +5229,40 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         // TODO: make it closer to handling in OnWindowContextMenu()
         case CmdCreateAnnotHighlight:
+            [[fallthrough]];
         case CmdCreateAnnotSquiggly:
+            [[fallthrough]];
         case CmdCreateAnnotStrikeOut:
+            [[fallthrough]];
         case CmdCreateAnnotUnderline:
             if (win && tab) {
-                auto annots = MakeAnnotationFromSelection(tab, annotType);
+                auto annot = MakeAnnotationsFromSelection(tab, annotType);
                 bool isShift = IsShiftPressed();
-                openAnnotsInEditWindow(win, annots, isShift);
+                if (annot) {
+                    MainWindowRerender(win);
+                    if (isShift) {
+                        StartEditAnnotation(tab, nullptr);
+                    }
+                }
             }
             break;
 
         case CmdSelectAnnotation:
             [[fallthrough]];
 
-        case CmdEditAnnotations:
-            annotationUnderCursor = GetAnnotionUnderCursor(tab);
-            StartEditAnnotations(tab, nullptr);
-            if (annotationUnderCursor) {
-                SelectAnnotationInEditWindow(tab->editAnnotsWindow, annotationUnderCursor);
-                delete annotationUnderCursor;
+        case CmdEditAnnotations: {
+            Annotation* annot = GetAnnotionUnderCursor(tab);
+            StartEditAnnotation(tab, nullptr);
+            if (annot) {
+                SelectAnnotationInEditWindow(tab->editAnnotsWindow, annot);
             }
             break;
+        }
 
         case CmdDeleteAnnotation: {
             Annotation* annot = GetAnnotionUnderCursor(tab);
             if (annot) {
                 DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
-                delete annot;
             }
         } break;
 
@@ -5428,7 +5418,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (annot) {
                 MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
-                createdAnnots.Append(annot);
+                lastCreatedAnnot = annot;
             }
         } break;
 
@@ -5440,8 +5430,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
     }
-    if (!createdAnnots.empty()) {
-        StartEditAnnotations(tab, createdAnnots);
+    if (lastCreatedAnnot) {
+        StartEditAnnotation(tab, lastCreatedAnnot);
     }
     return 0;
 }

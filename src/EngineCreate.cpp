@@ -170,7 +170,7 @@ bool EngineSupportsAnnotations(EngineBase* engine) {
     return EngineMupdfSupportsAnnotations(engine);
 }
 
-bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
+bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
     if (!IsEngineMupdf(engine)) {
         return false;
     }
@@ -185,7 +185,6 @@ bool EngineHasUnsavedAnnotations(EngineBase* engine) {
     return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
-// caller must delete
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     if (!IsEngineMupdf(engine)) {
         return nullptr;

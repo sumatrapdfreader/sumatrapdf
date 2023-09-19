@@ -30,6 +30,9 @@ extern "C" {
 #include "EngineAll.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
+#include "SumatraConfig.h"
+#include "Settings.h"
+#include "GlobalPrefs.h"
 
 #include "utils/Log.h"
 
@@ -936,7 +939,8 @@ static TocItem* NewTocItemWithDestination(TocItem* parent, char* title, IPageDes
     return res;
 }
 
-static bool FullyContains(RectF r1, RectF r2) {
+// TODO: could be optimized
+static bool RectFullyContains(RectF r1, RectF r2) {
     return r1.Contains(r2.TL()) && r1.Contains(r2.BR());
 }
 
@@ -951,7 +955,7 @@ static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
                 continue; // skip checking against self
             }
             auto r2 = els[j]->GetRect();
-            if (FullyContains(r1, r2)) {
+            if (RectFullyContains(r1, r2)) {
                 // logfa("el %d fully obscures %d\n", i, j);
                 els.RemoveAtFast(i);
                 return true;
@@ -2468,6 +2472,7 @@ static void MakePageElementCommentsFromAnnotationsInner(fz_context* ctx, pdf_ann
 }
 
 static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
+    // TODO: can use pageInof->annotations
     Vec<IPageElement*>& comments = pageInfo->comments;
 
     auto page = pageInfo->page;
@@ -2517,6 +2522,8 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     if (pdfdoc && pageInfo->annotationsNeedRebuilding) {
+        RebuildAnnotsForPage(pageInfo);
+
         DeleteVecMembers(pageInfo->comments);
         MakePageElementCommentsFromAnnotations(ctx, pageInfo);
         pageInfo->annotationsNeedRebuilding = false;
@@ -3359,25 +3366,22 @@ int EngineMupdf::GetPageByLabel(const char* label) const {
     return pageNo;
 }
 
-int EngineMupdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
+// it's fast because we only collect pointers
+void EngineMupdf::GetAnnotations(Vec<Annotation*>& annotsOut) {
+    annotsOut.Clear();
     if (!pdfdoc) {
-        return 0;
+        return;
     }
-    int nAnnots = 0;
     for (int i = 1; i <= pageCount; i++) {
-        auto pi = GetFzPageInfo(i, true);
-        pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
-        pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
-        while (annot) {
-            Annotation* a = MakeAnnotationPdf(this, annot, i);
-            if (a) {
-                annotsOut->Append(a);
-                nAnnots++;
-            }
-            annot = pdf_next_annot(ctx, annot);
+        const auto& pi = GetFzPageInfo(i, true);
+        // TODO: could Append() in bulk
+        for (auto& a : pi->annotations) {
+            annotsOut.Append(a);
         }
     }
-    return nAnnots;
+    for (int i = 1; i <= pageCount; i++) {
+        auto pi = GetFzPageInfo(i, true);
+    }
 }
 
 bool IsEngineMupdfSupportedFileType(Kind kind) {
@@ -3477,9 +3481,9 @@ EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHin
     return engine;
 }
 
-int EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
+void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    return epdf->GetAnnotations(annotsOut);
+    epdf->GetAnnotations(annotsOut);
 }
 
 bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
@@ -3535,17 +3539,17 @@ ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
 }
 
 // if an elements fully obscures another, remove it from the list
-static bool RemoveHeWhoFullyContains(fz_context* ctx, Vec<pdf_annot*>& els) {
+static bool RemoveHeWhoFullyContains(Vec<Annotation*>& els) {
     int n = els.Size();
     CrashIf(n < 2);
     for (int i = 0; i < n; i++) {
-        fz_rect r1 = pdf_bound_annot(ctx, els[i]);
+        RectF r1 = els[i]->bounds;
         for (int j = 0; j < n; j++) {
             if (j == i) {
                 continue; // skip checking against self
             }
-            fz_rect r2 = pdf_bound_annot(ctx, els[j]);
-            if (fz_contains_rect(r1, r2)) {
+            RectF r2 = els[j]->bounds;
+            if (RectFullyContains(r1, r2)) {
                 // logfa("el %d fully obscures %d\n", i, j);
                 els.RemoveAtFast(i);
                 return true;
@@ -3555,7 +3559,6 @@ static bool RemoveHeWhoFullyContains(fz_context* ctx, Vec<pdf_annot*>& els) {
     return false;
 }
 
-// caller must delete
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
@@ -3567,25 +3570,17 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     }
 
     ScopedCritSec cs(epdf->ctxAccess);
-
-    pdf_page* pdfpage = pdf_page_from_fz_page(epdf->ctx, pi->page);
-    pdf_annot* annot = pdf_first_annot(epdf->ctx, pdfpage);
-    fz_point p{pos.x, pos.y};
-
-    // find last annotation that contains this point
-    // they are drawn in order so later annotations
-    // are drawn on top of earlier
-    Vec<pdf_annot*> els;
-    while (annot) {
-        enum pdf_annot_type tp = pdf_annot_type(epdf->ctx, annot);
-        AnnotationType atp = AnnotationTypeFromPdfAnnot(tp);
-        if (IsAllowedAnnot(atp, allowedAnnots)) {
-            fz_rect rc = pdf_bound_annot(epdf->ctx, annot);
-            if (fz_is_point_inside_rect(p, rc)) {
-                els.Append(annot);
-            }
+    Vec<Annotation*> els;
+    for (auto& annot : pi->annotations) {
+        auto& atp = annot->type;
+        RectF bounds = annot->bounds;
+        if (!IsAllowedAnnot(atp, allowedAnnots)) {
+            continue;
         }
-        annot = pdf_next_annot(epdf->ctx, annot);
+        if (!bounds.Contains(pos)) {
+            continue;
+        }
+        els.Append(annot);
     }
     if (els.Size() == 0) {
         return nullptr;
@@ -3594,57 +3589,220 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
 Encore:
     int n = els.Size();
     if (n == 1) {
-        auto res = MakeAnnotationPdf(epdf, els[0], pageNo);
-        return res;
+        return els[0];
     }
-    bool didRemove = RemoveHeWhoFullyContains(epdf->ctx, els);
+    bool didRemove = RemoveHeWhoFullyContains(els);
     if (didRemove) {
         CrashIf(els.Size() != n - 1);
         goto Encore;
     }
-    auto res = MakeAnnotationPdf(epdf, els[0], pageNo);
-    return res;
-}
-
-static void InvalideAnnotationsForPage(EngineMupdf* e, int pageNo) {
-    if (!e->pdfdoc) {
-        return;
-    }
-    ScopedCritSec scope(&e->pagesAccess);
-    CrashIf(pageNo < 1 || pageNo > e->pageCount);
-    int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = e->pages[pageIdx];
-    if (pageInfo) {
-        pageInfo->annotationsNeedRebuilding = true;
-    }
+    return els[0];
 }
 
 // in a function so that we can set a breakpoint or add logging
 // to easily trace all places that modify annotations
 NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot) {
     e->modifiedAnnotations = true;
-    if (annot) {
-        annot->isChanged = true;
-        InvalideAnnotationsForPage(e, annot->pageNo);
+    annot->isChanged = true;
+    if (!e->pdfdoc) {
+        return;
+    }
+    int pageNo = annot->pageNo;
+    CrashIf(pageNo < 1 || pageNo > e->pageCount);
+    int pageIdx = pageNo - 1;
+
+    ScopedCritSec scope(&e->pagesAccess);
+    FzPageInfo* pageInfo = e->pages[pageIdx];
+    if (pageInfo) {
+        pageInfo->annotationsNeedRebuilding = true;
     }
 }
 
-Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
+static Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
+    CrashIf(pageNo < 1);
     CrashIf(!engine->pdfdoc);
     ScopedCritSec cs(engine->ctxAccess);
 
-    auto tp = pdf_annot_type(engine->ctx, annot);
-    AnnotationType typ = AnnotationTypeFromPdfAnnot(tp);
+    AnnotationType typ = AnnotationType::Unknown;
+    fz_rect bounds;
+
+    fz_context* ctx = engine->ctx;
+    fz_try(ctx) {
+        auto tp = pdf_annot_type(ctx, annot);
+        bounds = pdf_bound_annot(ctx, annot);
+        typ = AnnotationTypeFromPdfAnnot(tp);
+    }
+    fz_catch(ctx) {
+        // do nothing
+    }
+
     if (typ == AnnotationType::Unknown) {
-        // unsupported type
+        // unsupported type or exception in fz_try
         return nullptr;
     }
 
-    CrashIf(pageNo < 1);
     Annotation* res = new Annotation();
     res->engine = engine;
     res->pageNo = pageNo;
     res->pdfannot = annot;
+    res->bounds = ToRectF(bounds);
     res->type = typ;
+    return res;
+}
+
+void EngineMupdf::RebuildAnnotsForPage(FzPageInfo* pi) {
+    DeleteVecMembers(pi->annotations);
+    // TODO: fz_try / fz_catch
+    int pageNo = pi->pageNo;
+    pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
+    pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
+    while (annot) {
+        Annotation* a = MakeAnnotationPdf(this, annot, pageNo);
+        if (a) {
+            pi->annotations.Append(a);
+        }
+        annot = pdf_next_annot(ctx, annot);
+    }
+}
+
+static const char* getuser(void) {
+    const char* u;
+    u = getenv("USER");
+    if (!u) {
+        u = getenv("USERNAME");
+    }
+    if (!u) {
+        u = "user";
+    }
+    return u;
+}
+
+static TempStr GetAnnotationTextIconTemp() {
+    char* s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
+    // this way user can use "new paragraph" and we'll match "NewParagraph"
+    str::RemoveCharsInPlace(s, " ");
+    int idx = seqstrings::StrToIdxIS(gAnnotationTextIcons, s);
+    if (idx < 0) {
+        return (char*)"Note";
+    }
+    char* real = (char*)seqstrings::IdxToStr(gAnnotationTextIcons, idx);
+    return real;
+}
+
+Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
+    static const float black[3] = {0, 0, 0};
+
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    fz_context* ctx = epdf->ctx;
+
+    auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
+
+    ScopedCritSec cs(epdf->ctxAccess);
+    pdf_annot* annot = nullptr;
+
+    fz_try(ctx) {
+        auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
+        enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
+
+        annot = pdf_create_annot(ctx, page, atyp);
+
+        pdf_set_annot_modification_date(ctx, annot, time(nullptr));
+        if (pdf_annot_has_author(ctx, annot)) {
+            char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
+            // if "(none)" we don't set it
+            if (!str::Eq(defAuthor, "(none)")) {
+                const char* author = getuser();
+                if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
+                    author = defAuthor;
+                }
+                pdf_set_annot_author(ctx, annot, author);
+            }
+        }
+
+        switch (typ) {
+            case AnnotationType::Text:
+            case AnnotationType::FreeText:
+            case AnnotationType::Stamp:
+            case AnnotationType::Caret:
+            case AnnotationType::Square:
+            case AnnotationType::Circle: {
+                fz_rect trect = pdf_annot_rect(ctx, annot);
+                float dx = trect.x1 - trect.x0;
+                trect.x0 = pos.x;
+                trect.x1 = trect.x0 + dx;
+                float dy = trect.y1 - trect.y0;
+                trect.y0 = pos.y;
+                trect.y1 = trect.y0 + dy;
+                pdf_set_annot_rect(ctx, annot, trect);
+            } break;
+            case AnnotationType::Line: {
+                fz_point a{pos.x, pos.y};
+                fz_point b{pos.x + 100, pos.y + 50};
+                pdf_set_annot_line(ctx, annot, a, b);
+            } break;
+        }
+        if (typ == AnnotationType::FreeText) {
+            auto& a = gGlobalPrefs->annotations;
+            int borderWidth = a.freeTextBorderWidth;
+            if (borderWidth < 0) {
+                borderWidth = 1; // default
+            }
+            pdf_set_annot_border(ctx, annot, (float)borderWidth);
+            pdf_set_annot_contents(ctx, annot, "This is a text...");
+            int fontSize = a.freeTextSize;
+            if (fontSize <= 0) {
+                fontSize = 12;
+            }
+            int nCol = 3;
+            const float* col = black;
+            float textColor[3]{};
+
+            auto parsedCol = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
+            if (parsedCol && parsedCol->parsedOk) {
+                PdfColorToFloat(parsedCol->pdfCol, textColor);
+                col = textColor;
+            }
+
+            pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, col);
+        }
+
+        pdf_update_annot(ctx, annot);
+    }
+    fz_catch(ctx) {
+        if (annot) {
+            pdf_drop_annot(ctx, annot);
+        }
+    }
+    if (!annot) {
+        return nullptr;
+    }
+
+    auto res = MakeAnnotationPdf(epdf, annot, pageNo);
+    MarkAsModifiedAnnotations(epdf, res);
+
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = nullptr;
+
+    if (typ == AnnotationType::Text) {
+        TempStr iconName = GetAnnotationTextIconTemp();
+        if (!str::EqI(iconName, "Note")) {
+            SetIconName(res, iconName);
+        }
+        parsedCol = GetParsedColor(a.textIconColor, a.textIconColorParsed);
+    } else if (typ == AnnotationType::Underline) {
+        parsedCol = GetParsedColor(a.underlineColor, a.underlineColorParsed);
+    } else if (typ == AnnotationType::Highlight) {
+        parsedCol = GetParsedColor(a.highlightColor, a.highlightColorParsed);
+    } else if (typ == AnnotationType::Squiggly) {
+        parsedCol = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
+    } else if (typ == AnnotationType::StrikeOut) {
+        parsedCol = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
+    } else if (typ == AnnotationType::FreeText) {
+    }
+    if (parsedCol && parsedCol->parsedOk) {
+        SetColor(res, parsedCol->pdfCol);
+    }
+
+    pdf_drop_annot(ctx, annot);
     return res;
 }

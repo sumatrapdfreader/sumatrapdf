@@ -95,12 +95,20 @@ class Vec {
     }
 
   public:
+    // resets to initial state, freeing memory
     void Reset() {
         FreeEls();
         len = 0;
         cap = dimof(buf) - kPadding;
         els = buf;
         memset(buf, 0, sizeof(buf));
+    }
+
+    // use to empty but don't free els
+    // for efficient reuse
+    void Clear() {
+        len = 0;
+        memset(els, 0, cap * kElSize);
     }
 
     bool SetSize(size_t newSize) {
@@ -389,5 +397,5 @@ inline void DeleteVecMembers(Vec<T>& v) {
     for (T& el : v) {
         delete el;
     }
-    v.Reset();
+    v.Clear();
 }

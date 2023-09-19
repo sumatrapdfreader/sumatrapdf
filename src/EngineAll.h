@@ -55,7 +55,7 @@ EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHin
 ByteSlice LoadEmbeddedPDFFile(const char* path);
 const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut);
 Annotation* EngineMupdfCreateAnnotation(EngineBase*, AnnotationType type, int pageNo, PointF pos);
-int EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>*);
+void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc);
@@ -75,6 +75,6 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks);
 EngineBase* CreateEngineFromFile(const char* filePath, PasswordUI* pwdUI, bool enableChmEngine);
 
 bool EngineSupportsAnnotations(EngineBase*);
-bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>*);
+bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineHasUnsavedAnnotations(EngineBase*);
 Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, AnnotationType* allowedAnnots);

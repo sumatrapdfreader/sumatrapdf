@@ -21,6 +21,7 @@ struct FzPageInfo {
     // have to keep them alive because they are reverenced in links
     fz_link* retainedLinks = nullptr;
 
+    Vec<Annotation*> annotations;
     // auto-detected links
     Vec<IPageElement*> autoLinks;
     // comments are made out of annotations
@@ -40,6 +41,8 @@ struct FzPageInfo {
 };
 
 class EngineMupdf : public EngineBase {
+    void RebuildAnnotsForPage(FzPageInfo* pi);
+
   public:
     EngineMupdf();
     ~EngineMupdf() override;
@@ -74,7 +77,7 @@ class EngineMupdf : public EngineBase {
     char* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
-    int GetAnnotations(Vec<Annotation*>* annotsOut);
+    void GetAnnotations(Vec<Annotation*>& annotsOut);
 
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
@@ -124,3 +127,4 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine);
 fz_rect ToFzRect(RectF rect);
 RectF ToRectF(fz_rect rect);
 RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);
+void MarkAsModifiedAnnotations(EngineMupdf*, Annotation*);

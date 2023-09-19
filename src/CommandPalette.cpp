@@ -191,7 +191,6 @@ struct CommandPaletteBuildCtx {
     ~CommandPaletteBuildCtx();
 };
 CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
-    delete annotationUnderCursor;
 }
 
 /* TODO:

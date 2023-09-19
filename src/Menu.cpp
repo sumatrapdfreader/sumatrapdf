@@ -45,7 +45,7 @@
 #include "utils/Log.h"
 
 // SumatraPDF.cpp
-extern Vec<Annotation*> MakeAnnotationFromSelection(WindowTab* tab, AnnotationType annotType);
+extern Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotType);
 
 struct BuildMenuCtx {
     WindowTab* tab = nullptr;
@@ -60,7 +60,6 @@ struct BuildMenuCtx {
 };
 
 BuildMenuCtx::~BuildMenuCtx() {
-    delete annotationUnderCursor;
 }
 
 // value associated with menu item for owner-drawn purposes
@@ -1735,7 +1734,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     AnnotationType annotType = (AnnotationType)(cmd - CmdCreateAnnotText);
-    Vec<Annotation*> createdAnnots;
+    Annotation* annot = nullptr;
     switch (cmd) {
         case CmdCopySelection:
         case CmdTranslateSelectionWithGoogle:
@@ -1764,7 +1763,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
             [[fallthrough]];
         case CmdEditAnnotations:
-            StartEditAnnotations(tab, nullptr);
+            StartEditAnnotation(tab, nullptr);
             SelectAnnotationInEditWindow(tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
             break;
         case CmdDeleteAnnotation:
@@ -1799,33 +1798,32 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
-            auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
             if (annot) {
                 MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
-                createdAnnots.Append(annot);
             }
         } break;
         case CmdCreateAnnotHighlight:
-            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::Highlight);
+            annot = MakeAnnotationsFromSelection(tab, AnnotationType::Highlight);
             break;
         case CmdCreateAnnotSquiggly:
-            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::Squiggly);
+            annot = MakeAnnotationsFromSelection(tab, AnnotationType::Squiggly);
             break;
         case CmdCreateAnnotStrikeOut:
-            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::StrikeOut);
+            annot = MakeAnnotationsFromSelection(tab, AnnotationType::StrikeOut);
             break;
         case CmdCreateAnnotUnderline:
-            createdAnnots = MakeAnnotationFromSelection(tab, AnnotationType::Underline);
+            annot = MakeAnnotationsFromSelection(tab, AnnotationType::Underline);
             break;
         case CmdCreateAnnotInk:
         case CmdCreateAnnotPolyLine:
             // TODO: implement me
             break;
     }
-    if (!createdAnnots.empty()) {
-        // TODO: leaking createdAnnots?
-        StartEditAnnotations(tab, createdAnnots);
+    if (annot) {
+        // TODO: pass created annotation to select it
+        StartEditAnnotation(tab, annot);
     }
     // TODO: should delete it?
     // delete buildCtx.annotationUnderCursor;

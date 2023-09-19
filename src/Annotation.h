@@ -50,6 +50,8 @@ struct Annotation {
     AnnotationType type{AnnotationType::Unknown};
     int pageNo = -1;
 
+    // in page coordinates
+    RectF bounds = {};
     // either new annotation or has been modified
     bool isChanged = false;
     // deleted are not shown but can be undeleted
@@ -75,7 +77,7 @@ void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 const char* Author(Annotation*);
 time_t ModificationDate(Annotation*);
 int PopupId(Annotation*); // -1 if not exist
-const char* AnnotationReadableName(AnnotationType);
+TempStr AnnotationReadableNameTemp(AnnotationType tp);
 AnnotationType Type(Annotation*);
 const char* DefaultAppearanceTextFont(Annotation*);
 PdfColor DefaultAppearanceTextColor(Annotation*);
@@ -101,7 +103,3 @@ bool SetContents(Annotation*, const char*);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
 void DeleteAnnotation(Annotation*);
-
-// EngineMupdf.cpp
-Annotation* MakeAnnotationPdf(EngineMupdf*, pdf_annot*, int pageNo);
-void MarkAsModifiedAnnotations(EngineMupdf*, Annotation*);
