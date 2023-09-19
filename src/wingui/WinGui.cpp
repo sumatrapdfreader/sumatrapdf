@@ -387,6 +387,9 @@ int Wnd::OnCreate(CREATESTRUCT*) {
 void Wnd::OnDestroy() {
 }
 
+void Wnd::OnFocus() {
+}
+
 // Called when the background of the window's client area needs to be erased.
 // Override this function in your derived class to perform drawing tasks.
 // Return Value: Return FALSE to also permit default erasure of the background
@@ -743,6 +746,10 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             break; // Note: Some controls require default processing.
         }
 
+        case WM_SETFOCUS: {
+            OnFocus();
+            break;
+        }
         case WM_NOTIFY: {
             // Do notification reflection if message came from a child window.
             // Restricting OnNotifyReflect to child windows avoids double handling.
