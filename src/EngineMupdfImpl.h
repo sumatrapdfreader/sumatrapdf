@@ -128,3 +128,4 @@ fz_rect ToFzRect(RectF rect);
 RectF ToRectF(fz_rect rect);
 RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);
 void MarkAsModifiedAnnotations(EngineMupdf*, Annotation*);
+Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo);

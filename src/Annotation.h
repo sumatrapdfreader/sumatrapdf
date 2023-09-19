@@ -64,8 +64,6 @@ struct Annotation {
     ~Annotation() = default;
 };
 
-void PdfColorToFloat(PdfColor c, float rgb[3]);
-
 int PageNo(Annotation*);
 RectF GetBounds(Annotation*);
 RectF GetRect(Annotation*);
@@ -92,14 +90,14 @@ int BorderWidth(Annotation*);
 void SetBorderWidth(Annotation*, int);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
 const char* IconName(Annotation*); // empty() if no icon
-void SetIconName(Annotation*, const char*);
 PdfColor GetColor(Annotation*); // ColorUnset if no color
-bool SetColor(Annotation*, PdfColor);
 PdfColor InteriorColor(Annotation*); // ColorUnset if no color
 bool SetInteriorColor(Annotation*, PdfColor);
 int Opacity(Annotation*);
 void SetOpacity(Annotation*, int);
 bool SetContents(Annotation*, const char*);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
-
+void PdfColorToFloat(PdfColor c, float rgb[3]);
+void SetIconName(Annotation*, const char*);
+bool SetColor(Annotation*, PdfColor);
 void DeleteAnnotation(Annotation*);
