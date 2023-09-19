@@ -1631,12 +1631,18 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             }
             break;
 
-        case AUTO_RELOAD_TIMER_ID:
+        case AUTO_RELOAD_TIMER_ID: {
             KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-            if (win->CurrentTab() && win->CurrentTab()->reloadOnFocus) {
-                ReloadDocument(win, true);
+            auto tab = win->CurrentTab();
+            if (tab && tab->reloadOnFocus) {
+                if (tab->ignoreNextAutoReload) {
+                    tab->ignoreNextAutoReload = false;
+                } else {
+                    ReloadDocument(win, true);
+                }
             }
             break;
+        }
 
         case MW_SMOOTHSCROLL_TIMER_ID:
             DisplayModel* dm = win->AsFixed();

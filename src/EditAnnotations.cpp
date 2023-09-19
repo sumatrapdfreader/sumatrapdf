@@ -328,10 +328,12 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     WindowTab* tab = ew->tab;
     EngineMupdf* engine = GetEngineMupdf(ew);
     const char* path = engine->FilePath();
+    tab->ignoreNextAutoReload = true;
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
         ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
     });
     if (!ok) {
+        tab->ignoreNextAutoReload = false;
         return;
     }
     ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);

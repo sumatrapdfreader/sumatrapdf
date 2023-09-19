@@ -4421,10 +4421,12 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     }
     EngineBase* engine = tab->AsFixed()->GetEngine();
     const char* path = engine->FilePath();
+    tab->ignoreNextAutoReload = true;
     bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
         ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
     });
     if (!ok) {
+        tab->ignoreNextAutoReload = false;
         return;
     }
     ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
