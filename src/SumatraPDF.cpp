@@ -2481,7 +2481,6 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     return true;
 }
 
-// TODO: better name
 void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (!tab) {
         return;
@@ -2500,12 +2499,11 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         return;
     }
 
-    bool didSavePrefs = false;
     size_t tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (CanCloseWindow(win)) {
             CloseWindow(win, quitIfLast, false);
-            didSavePrefs = true; // in CloseWindow()
+            return;
         }
     } else {
         CrashIf(gPluginMode && !gWindows.Contains(win));
@@ -2527,9 +2525,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         }
     }
 
-    if (!didSavePrefs) {
-        SaveSettings();
-    }
+    SaveSettings();
 }
 
 // closes the current tab, selecting the next one
