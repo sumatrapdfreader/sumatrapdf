@@ -1384,10 +1384,7 @@ void StartEditAnnotations(WindowTab* tab, Vec<Annotation*>& annots) {
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
     args.bgColor = MkGray(0xee);
-
-    std::string result = _TRA("Annotations") + std::string(": ") +
-                         tab->GetTabTitle();
-    args.title = result.c_str();
+    args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
  
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
