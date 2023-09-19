@@ -161,7 +161,7 @@ struct EditAnnotationsWindow : Wnd {
     Button* buttonSaveToCurrentFile = nullptr;
     Button* buttonSaveToNewFile = nullptr;
 
-    Vec<Annotation*>* annotations = nullptr;
+    Vec<Annotation*> annotations;
     // currently selected annotation
     Annotation* annot = nullptr;
 
@@ -253,17 +253,7 @@ void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow* ew) {
     delete ew;
 }
 
-static void DeleteAnnotations(EditAnnotationsWindow* ew) {
-    if (ew->annotations) {
-        DeleteVecMembers(*ew->annotations);
-        delete ew->annotations;
-    }
-    ew->annotations = nullptr;
-    ew->annot = nullptr;
-}
-
 EditAnnotationsWindow::~EditAnnotationsWindow() {
-    DeleteAnnotations(this);
     delete mainLayout;
 }
 
@@ -282,10 +272,8 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
     ew->buttonSaveToNewFile->SetIsEnabled(didChange);
 }
 
-static void RemoveDeletedAnnotations(Vec<Annotation*>* v) {
-    if (!v) {
-        return;
-    }
+static void RemoveDeletedAnnotations(Vec<Annotation*>& v) {
+#if 0
 again:
     auto n = v->isize();
     for (int i = 0; i < n; i++) {
@@ -296,14 +284,15 @@ again:
             goto again;
         }
     }
+#endif
 }
 
 // Annotation* is a temporary wrapper. Find matching in list of annotations
 static Annotation* FindMatchingAnnotation(EditAnnotationsWindow* ew, Annotation* annot) {
-    if (!ew || !ew->annotations) {
-        return annot;
+    if (!ew || ew->annotations.IsEmpty()) {
+        return nullptr;
     }
-    for (auto a : *ew->annotations) {
+    for (auto a : ew->annotations) {
         if (IsAnnotationEq(a, annot)) {
             return a;
         }
@@ -311,21 +300,19 @@ static Annotation* FindMatchingAnnotation(EditAnnotationsWindow* ew, Annotation*
     return nullptr;
 }
 
-static void RebuildAnnotations(EditAnnotationsWindow* ew) {
+static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     RemoveDeletedAnnotations(ew->annotations);
     auto model = new ListBoxModelStrings();
     int n = 0;
-    if (ew->annotations) {
-        n = ew->annotations->isize();
-    }
+    n = ew->annotations.isize();
 
     str::Str s;
     for (int i = 0; i < n; i++) {
-        auto annot = ew->annotations->at(i);
+        auto annot = ew->annotations.at(i);
         CrashIf(annot->isDeleted);
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
-        const char* name = AnnotationReadableName(annot->type);
+        TempStr name = AnnotationReadableNameTemp(annot->type);
         s.Append(name);
         model->strings.Append(s.Get());
     }
@@ -370,7 +357,7 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     ReloadDocument(tab->win, false);
     tab->editAnnotsWindow = tmpWin;
 
-    DeleteAnnotations(ew);
+    ew->annot = nullptr;
     GetAnnotationsFromEngine(ew, tab);
     UpdateUIForSelectedAnnotation(ew, -1);
 }
@@ -751,9 +738,9 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
 
     // get annotation at index itemNo, skipping deleted annotations
     int idx = 0;
-    int nAnnots = ew->annotations->isize();
+    int nAnnots = ew->annotations.isize();
     for (int i = 0; itemNo >= 0 && i < nAnnots; i++) {
-        auto annot = ew->annotations->at(i);
+        auto annot = ew->annotations.at(i);
         if (annot->isDeleted) {
             continue;
         }
@@ -839,7 +826,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Anno
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         ew->skipGoToPage = true;
-        RebuildAnnotations(ew);
+        RebuildAnnotationsListBox(ew);
         UpdateUIForSelectedAnnotation(ew, prevLocation);
         ew->tab->selectedAnnotation.show = false;
     }
@@ -1297,14 +1284,12 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 }
 
 static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, WindowTab* tab) {
-    Vec<Annotation*>* annots = new Vec<Annotation*>();
     EngineMupdf* engine = GetEngineMupdf(ew);
-    EngineGetAnnotations(engine, annots);
+    EngineGetAnnotations(engine, ew->annotations);
 
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
-    ew->annotations = annots;
-    RebuildAnnotations(ew);
+    RebuildAnnotationsListBox(ew);
 }
 
 static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -1312,9 +1297,9 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* ann
         ew->listBox->SetCurrentSelection(-1);
         return false;
     }
-    int n = ew->annotations->isize();
+    int n = ew->annotations.isize();
     for (int i = 0; i < n; i++) {
-        Annotation* a = ew->annotations->at(i);
+        Annotation* a = ew->annotations.at(i);
         if (IsAnnotationEq(a, annot)) {
             ew->listBox->SetCurrentSelection(i);
             UpdateUIForSelectedAnnotation(ew, i);
@@ -1324,6 +1309,7 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* ann
     return false;
 }
 
+#if 0
 void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
     HWND hwnd = ew->hwnd;
     BringWindowToTop(hwnd);
@@ -1336,11 +1322,12 @@ void AddAnnotationToEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
         delete annot;
         return;
     }
-    ew->annotations->Append(annot);
-    RebuildAnnotations(ew);
+    ew->annotations.Append(annot);
+    RebuildAnnotationsListBox(ew);
     SelectAnnotationInListBox(ew, annot);
     ew->editContents->SetFocus();
 }
+#endif
 
 void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) {
     CrashIf(!ew);
@@ -1354,22 +1341,11 @@ void SelectAnnotationInEditWindow(EditAnnotationsWindow* ew, Annotation* annot) 
     RepaintAsync(ew->tab->win, 0); // Paints the initial "currentEditAnnotationMark"
 }
 
-void StartEditAnnotations(WindowTab* tab, Annotation* annot) {
-    Vec<Annotation*> annots;
-    if (annot) {
-        annots.Append(annot);
-    }
-    StartEditAnnotations(tab, annots);
-}
-
-// takes ownership of annots
-void StartEditAnnotations(WindowTab* tab, Vec<Annotation*>& annots) {
+void StartEditAnnotation(WindowTab* tab, Annotation* annot) {
     CrashIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {
-        for (auto annot : annots) {
-            AddAnnotationToEditWindow(ew, annot);
-        }
+        SelectAnnotationInEditWindow(ew, annot);
         return;
     }
     ew = new EditAnnotationsWindow();
@@ -1408,159 +1384,12 @@ void StartEditAnnotations(WindowTab* tab, Vec<Annotation*>& annots) {
     }
     LayoutAndSizeToContent(ew->mainLayout, 520, minDy, ew->hwnd);
     HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
-    ew->skipGoToPage = !annots.empty();
-    if (!annots.empty()) {
-        SelectAnnotationInListBox(ew, annots[0]); // why
+    ew->skipGoToPage = (annot != nullptr);
+    if (annot) {
+        SelectAnnotationInListBox(ew, annot); // why
     }
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);
-
-    DeleteVecMembers(annots);
-}
-
-// caller needs to free()
-static char* GetAnnotationTextIcon() {
-    char* s = str::Dup(gGlobalPrefs->annotations.textIconType);
-    // this way user can use "new paragraph" and we'll match "NewParagraph"
-    str::RemoveCharsInPlace(s, " ");
-    int idx = seqstrings::StrToIdxIS(gAnnotationTextIcons, s);
-    if (idx < 0) {
-        str::ReplaceWithCopy(&s, "Note");
-    } else {
-        const char* real = seqstrings::IdxToStr(gAnnotationTextIcons, idx);
-        str::ReplaceWithCopy(&s, real);
-    }
-    return s;
-}
-
-static const char* getuser(void) {
-    const char* u;
-    u = getenv("USER");
-    if (!u) {
-        u = getenv("USERNAME");
-    }
-    if (!u) {
-        u = "user";
-    }
-    return u;
-}
-
-Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
-    static const float black[3] = {0, 0, 0};
-
-    EngineMupdf* epdf = AsEngineMupdf(engine);
-    fz_context* ctx = epdf->ctx;
-
-    auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
-
-    ScopedCritSec cs(epdf->ctxAccess);
-    pdf_annot* annot = nullptr;
-
-    fz_try(ctx) {
-        auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
-        enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
-
-        annot = pdf_create_annot(ctx, page, atyp);
-
-        pdf_set_annot_modification_date(ctx, annot, time(nullptr));
-        if (pdf_annot_has_author(ctx, annot)) {
-            char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
-            // if "(none)" we don't set it
-            if (!str::Eq(defAuthor, "(none)")) {
-                const char* author = getuser();
-                if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
-                    author = defAuthor;
-                }
-                pdf_set_annot_author(ctx, annot, author);
-            }
-        }
-
-        switch (typ) {
-            case AnnotationType::Text:
-            case AnnotationType::FreeText:
-            case AnnotationType::Stamp:
-            case AnnotationType::Caret:
-            case AnnotationType::Square:
-            case AnnotationType::Circle: {
-                fz_rect trect = pdf_annot_rect(ctx, annot);
-                float dx = trect.x1 - trect.x0;
-                trect.x0 = pos.x;
-                trect.x1 = trect.x0 + dx;
-                float dy = trect.y1 - trect.y0;
-                trect.y0 = pos.y;
-                trect.y1 = trect.y0 + dy;
-                pdf_set_annot_rect(ctx, annot, trect);
-            } break;
-            case AnnotationType::Line: {
-                fz_point a{pos.x, pos.y};
-                fz_point b{pos.x + 100, pos.y + 50};
-                pdf_set_annot_line(ctx, annot, a, b);
-            } break;
-        }
-        if (typ == AnnotationType::FreeText) {
-            auto& a = gGlobalPrefs->annotations;
-            int borderWidth = a.freeTextBorderWidth;
-            if (borderWidth < 0) {
-                borderWidth = 1; // default
-            }
-            pdf_set_annot_border(ctx, annot, (float)borderWidth);
-            pdf_set_annot_contents(ctx, annot, "This is a text...");
-            int fontSize = a.freeTextSize;
-            if (fontSize <= 0) {
-                fontSize = 12;
-            }
-            int nCol = 3;
-            const float* col = black;
-            float textColor[3]{};
-
-            auto parsedCol = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
-            if (parsedCol && parsedCol->parsedOk) {
-                PdfColorToFloat(parsedCol->pdfCol, textColor);
-                col = textColor;
-            }
-
-            pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, col);
-        }
-
-        pdf_update_annot(ctx, annot);
-    }
-    fz_catch(ctx) {
-        if (annot) {
-            pdf_drop_annot(ctx, annot);
-        }
-    }
-    if (!annot) {
-        return nullptr;
-    }
-
-    auto res = MakeAnnotationPdf(epdf, annot, pageNo);
-    MarkAsModifiedAnnotations(epdf, res);
-
-    auto& a = gGlobalPrefs->annotations;
-    ParsedColor* parsedCol = nullptr;
-
-    if (typ == AnnotationType::Text) {
-        AutoFreeStr iconName = GetAnnotationTextIcon();
-        if (!str::EqI(iconName, "Note")) {
-            SetIconName(res, iconName.Get());
-        }
-        parsedCol = GetParsedColor(a.textIconColor, a.textIconColorParsed);
-    } else if (typ == AnnotationType::Underline) {
-        parsedCol = GetParsedColor(a.underlineColor, a.underlineColorParsed);
-    } else if (typ == AnnotationType::Highlight) {
-        parsedCol = GetParsedColor(a.highlightColor, a.highlightColorParsed);
-    } else if (typ == AnnotationType::Squiggly) {
-        parsedCol = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
-    } else if (typ == AnnotationType::StrikeOut) {
-        parsedCol = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
-    } else if (typ == AnnotationType::FreeText) {
-    }
-    if (parsedCol && parsedCol->parsedOk) {
-        SetColor(res, parsedCol->pdfCol);
-    }
-
-    pdf_drop_annot(ctx, annot);
-    return res;
 }

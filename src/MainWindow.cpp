@@ -166,7 +166,6 @@ MainWindow::~MainWindow() {
 
 void ClearMouseState(MainWindow* win) {
     win->linkOnLastButtonDown = nullptr;
-    delete win->annotationOnLastButtonDown;
     win->annotationOnLastButtonDown = nullptr;
 }
 

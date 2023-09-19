@@ -228,7 +228,6 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
     }
     DrawMovePattern(win, win->dragPrevPos, win->annotationBeingMovedSize);
     if (aborted) {
-        delete annot;
         win->annotationOnLastButtonDown = nullptr;
         return true;
     }
@@ -250,9 +249,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         SetRect(annot, r);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
-        StartEditAnnotations(win->CurrentTab(), annot);
-    } else {
-        delete annot;
+        StartEditAnnotation(win->CurrentTab(), annot);
     }
     win->annotationOnLastButtonDown = nullptr;
     return true;

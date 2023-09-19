@@ -119,14 +119,14 @@ const char* AnnotationName(AnnotationType tp) {
 }
 */
 
-const char* AnnotationReadableName(AnnotationType tp) {
+TempStr AnnotationReadableNameTemp(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
-        return "Unknown";
+        return (char*)"Unknown";
     }
-    const char* s = seqstrings::IdxToStr(gAnnotReadableNames, n);
+    char* s = (char*)seqstrings::IdxToStr(gAnnotReadableNames, n);
     CrashIf(!s);
-    return {s};
+    return s;
 }
 
 bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
@@ -163,19 +163,7 @@ RectF GetBounds(Annotation* annot) {
 }
 
 RectF GetRect(Annotation* annot) {
-    EngineMupdf* e = annot->engine;
-    auto ctx = e->ctx;
-    ScopedCritSec cs(e->ctxAccess);
-    fz_rect rc = {};
-
-    fz_try(ctx) {
-        rc = pdf_annot_rect(ctx, annot->pdfannot);
-    }
-    fz_catch(ctx) {
-        logf("GetRect(): pdf_annot_rect()\n");
-    }
-    auto rect = ToRectF(rc);
-    return rect;
+    return annot->bounds;
 }
 
 void SetRect(Annotation* annot, RectF r) {
@@ -191,6 +179,7 @@ void SetRect(Annotation* annot, RectF r) {
     fz_catch(ctx) {
         logf("SetRect(): pdf_set_annot_rect() or pdf_update_annot() failed\n");
     }
+    annot->bounds = r;
     MarkAsModifiedAnnotations(e, annot);
 }
 
