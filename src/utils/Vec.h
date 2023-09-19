@@ -238,6 +238,12 @@ class Vec {
         return true;
     }
 
+    bool Append(const Vec& other) {
+        size_t n = other.size();
+        const T* data = other.LendData();
+        return this->Append(data, n);
+    }
+
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(size_t count) {
         return MakeSpaceAt(len, count);

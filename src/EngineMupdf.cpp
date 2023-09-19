@@ -1032,7 +1032,7 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
     return PickBestElement(res);
 }
 
-static void BuildGetElementsInfo(FzPageInfo* pageInfo) {
+static void BuildElementsInfo(FzPageInfo* pageInfo) {
     if (!pageInfo || !pageInfo->elementsNeedRebuilding) {
         return;
     }
@@ -1513,6 +1513,7 @@ EngineMupdf::~EngineMupdf() {
         DeleteVecMembers(pi->autoLinks);
         DeleteVecMembers(pi->comments);
         DeleteVecMembers(pi->images);
+        DeleteVecMembers(pi->annotations);
         if (pi->retainedLinks) {
             fz_drop_link(ctx, pi->retainedLinks);
         }
@@ -2408,8 +2409,8 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
 }
 
 // must be called inside fz_try
-static void MakePageElementCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* annot, int pageNo,
-                                                        Vec<IPageElement*>& comments) {
+static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* annot, int pageNo,
+                                                Vec<IPageElement*>& comments) {
     auto tp = pdf_annot_type(ctx, annot);
     const char* contents = pdf_annot_contents(ctx, annot); // don't free
     if (str::Len(contents) > 128) {
@@ -2471,7 +2472,9 @@ static void MakePageElementCommentsFromAnnotationsInner(fz_context* ctx, pdf_ann
     }
 }
 
-static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
+static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
+    DeleteVecMembers(pageInfo->comments);
+
     // TODO: can use pageInof->annotations
     Vec<IPageElement*>& comments = pageInfo->comments;
 
@@ -2485,7 +2488,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
     pdf_annot* annot;
     for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
         fz_try(ctx) {
-            MakePageElementCommentsFromAnnotationsInner(ctx, annot, pageNo, comments);
+            RebuildCommentsFromAnnotationsInner(ctx, annot, pageNo, comments);
         }
         fz_catch(ctx) {
         }
@@ -2521,12 +2524,22 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         return nullptr;
     }
 
-    if (pdfdoc && pageInfo->annotationsNeedRebuilding) {
-        RebuildAnnotsForPage(pageInfo);
-
-        DeleteVecMembers(pageInfo->comments);
-        MakePageElementCommentsFromAnnotations(ctx, pageInfo);
-        pageInfo->annotationsNeedRebuilding = false;
+    // build annotations info on first access
+    if (pdfdoc) {
+        fz_try(ctx) {
+            pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
+            pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
+            while (annot) {
+                Annotation* a = MakeAnnotationFrom_pdf_annot(this, annot, pageNo);
+                if (a) {
+                    pageInfo->annotations.Append(a);
+                }
+                annot = pdf_next_annot(ctx, annot);
+            }
+        }
+        fz_catch(ctx) {
+        }
+        RebuildCommentsFromAnnotations(ctx, pageInfo);
         pageInfo->elementsNeedRebuilding = true;
     }
 
@@ -2758,7 +2771,7 @@ Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
         return Vec<IPageElement*>();
     }
 
-    BuildGetElementsInfo(pageInfo);
+    BuildElementsInfo(pageInfo);
     return pageInfo->allElements;
 }
 
@@ -3366,24 +3379,6 @@ int EngineMupdf::GetPageByLabel(const char* label) const {
     return pageNo;
 }
 
-// it's fast because we only collect pointers
-void EngineMupdf::GetAnnotations(Vec<Annotation*>& annotsOut) {
-    annotsOut.Clear();
-    if (!pdfdoc) {
-        return;
-    }
-    for (int i = 1; i <= pageCount; i++) {
-        const auto& pi = GetFzPageInfo(i, true);
-        // TODO: could Append() in bulk
-        for (auto& a : pi->annotations) {
-            annotsOut.Append(a);
-        }
-    }
-    for (int i = 1; i <= pageCount; i++) {
-        auto pi = GetFzPageInfo(i, true);
-    }
-}
-
 bool IsEngineMupdfSupportedFileType(Kind kind) {
     if (kind == kindFilePDF) {
         return true;
@@ -3481,9 +3476,19 @@ EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHin
     return engine;
 }
 
+// it's fast because we only collect pointers from FzPageInfo
 void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
-    EngineMupdf* epdf = AsEngineMupdf(engine);
-    epdf->GetAnnotations(annotsOut);
+    annotsOut.Clear();
+
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e->pdfdoc) {
+        return;
+    }
+    ScopedCritSec scope(&e->pagesAccess);
+    for (int i = 1; i <= e->pageCount; i++) {
+        const auto& pi = e->GetFzPageInfo(i, true);
+        annotsOut.Append(pi->annotations);
+    }
 }
 
 bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
@@ -3599,11 +3604,23 @@ Encore:
     return els[0];
 }
 
+// Note: this code is compiled in release mode even if debug build so
+// DEBUG is not defined so we can't do #if defined(DEBUG) here
+// so we use this runtime boolean instead
+static bool gSkipAnnotatoinValidation = true;
+
+// check that pageInfo->annotations has the same info as in mupdf
+NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* e, FzPageInfo* pageInfo) {
+    if (gSkipAnnotatoinValidation) {
+        return;
+    }
+    // TODO: write me
+}
+
 // in a function so that we can set a breakpoint or add logging
 // to easily trace all places that modify annotations
-NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot) {
+NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot, AnnotationChange change) {
     e->modifiedAnnotations = true;
-    annot->isChanged = true;
     if (!e->pdfdoc) {
         return;
     }
@@ -3611,14 +3628,39 @@ NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot) {
     CrashIf(pageNo < 1 || pageNo > e->pageCount);
     int pageIdx = pageNo - 1;
 
+    // EngineMupdf is the ultimate source of truth for Annotation* list
+    // all other places only get references to Annotation* created
+    // inside EngineMupdf.
+    // It would be easier to re-create Annotation* list after each change
+    // to annotations inside mupdf but we don't want loose the identity
+    // so on add /remove we update the list manually
+    // on change we assume Annotation* lives inside EngineMupdf
     ScopedCritSec scope(&e->pagesAccess);
     FzPageInfo* pageInfo = e->pages[pageIdx];
-    if (pageInfo) {
-        pageInfo->annotationsNeedRebuilding = true;
+    pageInfo->elementsNeedRebuilding = true;
+    if (change == AnnotationChange::Remove) {
+        int sizeBefore = pageInfo->annotations.isize();
+        int removedPos = pageInfo->annotations.Remove(annot);
+        CrashIf(removedPos < 0); // must exist
+        int sizeNow = pageInfo->annotations.isize();
+        CrashIf(sizeBefore != sizeNow + 1);
+        ValidateAnnotationsInSync(e, pageInfo);
+        return;
+    }
+
+    if (change == AnnotationChange::Add) {
+        int sizeBefore = pageInfo->annotations.isize();
+        int pos = pageInfo->annotations.Find(annot);
+        CrashIf(pos >= 0); // shouldn't exist
+        pageInfo->annotations.Append(annot);
+        int sizeNow = pageInfo->annotations.isize();
+        CrashIf(sizeBefore != sizeNow - 1);
+        ValidateAnnotationsInSync(e, pageInfo);
+        return;
     }
 }
 
-Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
+Annotation* MakeAnnotationFrom_pdf_annot(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
     CrashIf(pageNo < 1);
     CrashIf(!engine->pdfdoc);
     ScopedCritSec cs(engine->ctxAccess);
@@ -3649,19 +3691,3 @@ Annotation* MakeAnnotationPdf(EngineMupdf* engine, pdf_annot* annot, int pageNo)
     res->type = typ;
     return res;
 }
-
-void EngineMupdf::RebuildAnnotsForPage(FzPageInfo* pi) {
-    DeleteVecMembers(pi->annotations);
-    // TODO: fz_try / fz_catch
-    int pageNo = pi->pageNo;
-    pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
-    pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
-    while (annot) {
-        Annotation* a = MakeAnnotationPdf(this, annot, pageNo);
-        if (a) {
-            pi->annotations.Append(a);
-        }
-        annot = pdf_next_annot(ctx, annot);
-    }
-}
-

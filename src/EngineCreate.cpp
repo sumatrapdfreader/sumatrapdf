@@ -76,7 +76,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const char* path, PasswordUI* 
         return engine;
     }
     if (kind == kindDirectory) {
-        // TODO: in 3.1.2 we open folder of images (IsEngineImageDirSupportedFile)
+        // TODO: in 3.1.2 we open folder of images (IsEngineImageDirSupportedFile())
         // To avoid changing behavior, we open pdfs only in ramicro build
         // this should be controlled via cmd-line flag e.g. -folder-open-pdf
         // Then we could have more options, like -folder-open-images (default)

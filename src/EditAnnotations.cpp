@@ -176,15 +176,19 @@ struct EditAnnotationsWindow : Wnd {
     void ListBoxSelectionChanged();
 };
 
-static EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
+static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
+#if 0
     // TODO: shouldn't happen but seen in crash report
     if (!ew || !ew->tab) {
         return nullptr;
     }
+#endif
     DisplayModel* dm = ew->tab->AsFixed();
+#if 0
     if (!dm) {
         return nullptr;
     }
+#endif
     return AsEngineMupdf(dm->GetEngine());
 }
 
@@ -272,21 +276,6 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
     ew->buttonSaveToNewFile->SetIsEnabled(didChange);
 }
 
-static void RemoveDeletedAnnotations(Vec<Annotation*>& v) {
-#if 0
-again:
-    auto n = v->isize();
-    for (int i = 0; i < n; i++) {
-        auto a = v->at(i);
-        if (a->isDeleted) {
-            v->RemoveAt((size_t)i, 1);
-            delete a;
-            goto again;
-        }
-    }
-#endif
-}
-
 // Annotation* is a temporary wrapper. Find matching in list of annotations
 static Annotation* FindMatchingAnnotation(EditAnnotationsWindow* ew, Annotation* annot) {
     if (!ew || ew->annotations.IsEmpty()) {
@@ -301,7 +290,6 @@ static Annotation* FindMatchingAnnotation(EditAnnotationsWindow* ew, Annotation*
 }
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
-    RemoveDeletedAnnotations(ew->annotations);
     auto model = new ListBoxModelStrings();
     int n = 0;
     n = ew->annotations.isize();
@@ -309,7 +297,6 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     str::Str s;
     for (int i = 0; i < n; i++) {
         auto annot = ew->annotations.at(i);
-        CrashIf(annot->isDeleted);
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
         TempStr name = AnnotationReadableNameTemp(annot->type);
@@ -327,7 +314,6 @@ void EditAnnotationsWindow::OnClose() {
 }
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab);
-static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, WindowTab* tab);
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo);
 
 static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
@@ -358,7 +344,8 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     tab->editAnnotsWindow = tmpWin;
 
     ew->annot = nullptr;
-    GetAnnotationsFromEngine(ew, tab);
+    EngineGetAnnotations(engine, ew->annotations);
+    RebuildAnnotationsListBox(ew);
     UpdateUIForSelectedAnnotation(ew, -1);
 }
 
@@ -741,9 +728,6 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo)
     int nAnnots = ew->annotations.isize();
     for (int i = 0; itemNo >= 0 && i < nAnnots; i++) {
         auto annot = ew->annotations.at(i);
-        if (annot->isDeleted) {
-            continue;
-        }
         if (idx < itemNo) {
             ++idx;
             continue;
@@ -826,8 +810,11 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, EditAnnotationsWindow* ew, Anno
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         ew->skipGoToPage = true;
+        auto engine = GetEngineMupdf(ew);
+        EngineMupdfGetAnnotations(engine, ew->annotations);
         RebuildAnnotationsListBox(ew);
         UpdateUIForSelectedAnnotation(ew, prevLocation);
+        ew->tab->selectedAnnotation.annot = nullptr;
         ew->tab->selectedAnnotation.show = false;
     }
     MainWindowRerender(tab->win);
@@ -1283,15 +1270,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HidePerAnnotControls(ew);
 }
 
-static void GetAnnotationsFromEngine(EditAnnotationsWindow* ew, WindowTab* tab) {
-    EngineMupdf* engine = GetEngineMupdf(ew);
-    EngineGetAnnotations(engine, ew->annotations);
-
-    ew->tab = tab;
-    tab->editAnnotsWindow = ew;
-    RebuildAnnotationsListBox(ew);
-}
-
 static bool SelectAnnotationInListBox(EditAnnotationsWindow* ew, Annotation* annot) {
     if (!annot) {
         ew->listBox->SetCurrentSelection(-1);
@@ -1367,7 +1345,8 @@ void StartEditAnnotation(WindowTab* tab, Annotation* annot) {
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
 
-    GetAnnotationsFromEngine(ew, tab);
+    EngineMupdf* engine = GetEngineMupdf(ew);
+    EngineGetAnnotations(engine, ew->annotations);
 
     // size our editor window to be the same height as main window
     int minDy = 720;
@@ -1382,6 +1361,8 @@ void StartEditAnnotation(WindowTab* tab, Annotation* annot) {
             ew->listBox->idealSizeLines = 14;
         }
     }
+    RebuildAnnotationsListBox(ew);
+
     LayoutAndSizeToContent(ew->mainLayout, 520, minDy, ew->hwnd);
     HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     ew->skipGoToPage = (annot != nullptr);
