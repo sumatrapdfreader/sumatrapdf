@@ -256,11 +256,14 @@ int GetCurrentThemeIndex() {
     return currentThemeIndex;
 }
 
+extern void UpdateAfterThemeChange();
+
 void SetThemeByIndex(int themeIdx) {
     CrashIf((themeIdx < 0) || (themeIdx >= kThemeCount));
     currentThemeIndex = themeIdx;
     currentTheme = g_themes[currentThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, currentTheme->name);
+    UpdateAfterThemeChange();
 };
 
 void SelectNextTheme() {
@@ -282,9 +285,6 @@ static Theme* GetThemeByName(const char* name, int& idx) {
 // call after loading settings
 void SetCurrentThemeFromSettings() {
     const char* name = gGlobalPrefs->theme;
-    if (str::IsEmpty(name)) {
-        return;
-    }
     int idx = 0;
     auto theme = GetThemeByName(name, idx);
     if (!theme) {

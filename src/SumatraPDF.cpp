@@ -83,6 +83,7 @@
 #include "EditAnnotations.h"
 #include "CommandPalette.h"
 #include "Theme.h"
+#include "Caption.h"
 
 #include "utils/Log.h"
 
@@ -1553,10 +1554,13 @@ static void UpdateThemeForWindow(MainWindow* win) {
 
     UpdateTreeCtrlColors(win);
     RebuildMenuBarForWindow(win);
-    RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+    CaptionUpdateUI(win, win->caption);
+    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
+    RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
+    RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
 }
 
-static void UpdateAfterThemeChange() {
+void UpdateAfterThemeChange() {
     for (auto mainWin : gWindows) {
         // TODO: this only rerenders canvas, not frame, even with
         // includingNonClientArea == true.
@@ -4717,7 +4721,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if ((wmId >= CmdThemeFirst) && (wmId <= CmdThemeLast)) {
         int themeIdx = (wmId - CmdThemeFirst);
         SetThemeByIndex(themeIdx);
-        UpdateAfterThemeChange();
         return 0;
     }
 
@@ -5430,7 +5433,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSelectNextTheme:
             SelectNextTheme();
-            UpdateAfterThemeChange();
             break;
 
         default:
