@@ -293,13 +293,13 @@ void UpdateFindbox(MainWindow* win) {
 
 LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
                                 DWORD_PTR dwRefData) {
-    if (WM_ERASEBKGND == uMsg && currentTheme->colorizeControls) {
+    if (WM_ERASEBKGND == uMsg && gCurrentTheme->colorizeControls) {
         HDC hdc = (HDC)wParam;
         RECT rect;
         GetClientRect(hWnd, &rect);
-        SetTextColor(hdc, currentTheme->mainWindow.textColor);
-        SetBkColor(hdc, currentTheme->mainWindow.controlBackgroundColor);
-        auto bg = CreateSolidBrush(currentTheme->mainWindow.controlBackgroundColor);
+        SetTextColor(hdc, gCurrentTheme->mainWindow.textColor);
+        SetBkColor(hdc, gCurrentTheme->mainWindow.controlBackgroundColor);
+        auto bg = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
         FillRect(hdc, &rect, bg);
         DeleteObject(bg);
         return 1;
@@ -329,7 +329,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         if ((win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed()) {
             // Set color used in "Page:" and "Find:" labels
             auto col = RGB(0x00, 0x00, 0x00);
-            SetTextColor(hdc, currentTheme->mainWindow.textColor);
+            SetTextColor(hdc, gCurrentTheme->mainWindow.textColor);
             SetBkMode(hdc, TRANSPARENT);
             return (LRESULT)win->brControlBgColor;
         }

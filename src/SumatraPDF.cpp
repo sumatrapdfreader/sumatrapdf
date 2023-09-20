@@ -1461,7 +1461,7 @@ static MainWindow* CreateMainWindow() {
     if (!win->isMenuHidden) {
         SetMenu(win->hwndFrame, win->menu);
     }
-    win->brControlBgColor = CreateSolidBrush(currentTheme->mainWindow.controlBackgroundColor);
+    win->brControlBgColor = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -1550,7 +1550,7 @@ void DeleteMainWindow(MainWindow* win) {
 
 static void UpdateThemeForWindow(MainWindow* win) {
     DeleteObject(win->brControlBgColor);
-    win->brControlBgColor = CreateSolidBrush(currentTheme->mainWindow.controlBackgroundColor);
+    win->brControlBgColor = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
 
     UpdateTreeCtrlColors(win);
     RebuildMenuBarForWindow(win);
@@ -5505,14 +5505,14 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return FrameOnCommand(win, hwnd, msg, wp, lp);
 
         case WM_MEASUREITEM:
-            if (currentTheme->colorizeControls) {
+            if (gCurrentTheme->colorizeControls) {
                 MenuCustomDrawMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;
 
         case WM_DRAWITEM:
-            if (currentTheme->colorizeControls) {
+            if (gCurrentTheme->colorizeControls) {
                 MenuCustomDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
                 return TRUE;
             }

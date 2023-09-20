@@ -3438,7 +3438,8 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     gfx.SetPageUnit(UnitPixel);
 
-    SolidBrush br(GdipCol(currentTheme->mainWindow.controlBackgroundColor));
+    Theme* theme = gCurrentTheme;
+    SolidBrush br(GdipCol(theme->mainWindow.controlBackgroundColor));
 
     Font f(hdc, GetDefaultGuiFont());
 
@@ -3455,7 +3456,6 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     Rect r;
     Gdiplus::RectF rTxt;
 
-    Theme* theme = currentTheme;
     COLORREF textColor = theme->mainWindow.textColor;
     COLORREF tabBgSelected = theme->mainWindow.controlBackgroundColor;
     COLORREF tabBgHighlight;

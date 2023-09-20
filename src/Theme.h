@@ -52,7 +52,7 @@ struct Theme {
     bool colorizeControls;
 };
 
-extern Theme* currentTheme;
+extern Theme* gCurrentTheme;
 void SelectNextTheme();
 void SetThemeByIndex(int);
 

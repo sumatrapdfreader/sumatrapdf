@@ -605,7 +605,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
 
-    col = currentTheme->mainWindow.textColor;
+    col = gCurrentTheme->mainWindow.textColor;
     SetTextColor(hdc, col);
 
     /* render text on the left*/

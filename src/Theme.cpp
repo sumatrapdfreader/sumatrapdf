@@ -31,8 +31,7 @@ constexpr COLORREF kColWhite = 0xFFFFFF;
 // #define kColDarkGray 0x424242
 
 // clang-format off
-// Themes
-Theme g_themeLight = {
+static Theme gThemeLight = {
     // Theme Name
     _TRN("Light"),
     // Main window theme
@@ -71,19 +70,19 @@ Theme g_themeLight = {
         // Background color
         kColWhite,
         // Text color
-        g_themeLight.mainWindow.textColor,
+        gThemeLight.mainWindow.textColor,
         // Highlight color
         RgbToCOLORREF(0xFFEE70),
         // Highlight text color
         RgbToCOLORREF(0x8d0801),
         // Progress bar color
-        g_themeLight.mainWindow.linkColor
+        gThemeLight.mainWindow.linkColor
     },
     // Colorize standard controls
     false
 };
 
-Theme g_themeDark = {
+static Theme gThemeDark = {
     // Theme Name
     _TRN("Dark"),
     // Main window theme
@@ -103,28 +102,28 @@ Theme g_themeDark = {
         // Canvas Color
         RgbToCOLORREF(0x1E272C),
         // Background Color
-        g_themeDark.mainWindow.backgroundColor,
+        gThemeDark.mainWindow.backgroundColor,
         // Text color
-        g_themeDark.mainWindow.textColor
+        gThemeDark.mainWindow.textColor
     },
     // Notifications
     {
         // Background color
-        AdjustLightness2(g_themeDark.mainWindow.backgroundColor, 10),
+        AdjustLightness2(gThemeDark.mainWindow.backgroundColor, 10),
         // Text color
-        g_themeDark.mainWindow.textColor,
+        gThemeDark.mainWindow.textColor,
         // Highlight color
         AdjustLightness2(RgbToCOLORREF(0x33434B), 10),
         // Highlight text color
-        g_themeDark.mainWindow.textColor,
+        gThemeDark.mainWindow.textColor,
         // Progress bar color
-        g_themeDark.mainWindow.linkColor
+        gThemeDark.mainWindow.linkColor
     },
     // Colorize standard controls
     true
 };
 
-Theme g_themeDarker = {
+static Theme gThemeDarker = {
     // Theme Name
     _TRN("Darker"),
     // Main window theme
@@ -143,38 +142,36 @@ Theme g_themeDarker = {
         // Canvas Color
         RgbToCOLORREF(0x1E1E1E),
         // Background Color
-        g_themeDarker.mainWindow.backgroundColor,
+        gThemeDarker.mainWindow.backgroundColor,
         // Text color
-        g_themeDarker.mainWindow.textColor
+        gThemeDarker.mainWindow.textColor
     },
     // Notifications
     {
         // Background color
-        AdjustLightness2(g_themeDarker.mainWindow.backgroundColor, 10),
+        AdjustLightness2(gThemeDarker.mainWindow.backgroundColor, 10),
         // Text color
-        g_themeDarker.mainWindow.textColor,
+        gThemeDarker.mainWindow.textColor,
         // Highlight color
         AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
         // Highlight text color
-        g_themeDarker.mainWindow.textColor,
+        gThemeDarker.mainWindow.textColor,
         // Progress bar color
-        g_themeDarker.mainWindow.linkColor
+        gThemeDarker.mainWindow.linkColor
     },
     // Colorize standard controls
     true
 };
 // clang-format on
 
-// Master themes list
-Theme* g_themes[kThemeCount] = {
-    &g_themeLight,
-    &g_themeDark,
-    &g_themeDarker,
+static Theme* gThemes[kThemeCount] = {
+    &gThemeLight,
+    &gThemeDark,
+    &gThemeDarker,
 };
 
-// Current theme caching
-Theme* currentTheme = &g_themeLight;
-int currentThemeIndex = 0;
+Theme* gCurrentTheme = &gThemeLight;
+static int currentThemeIndex = 0;
 
 int GetCurrentThemeIndex() {
     return currentThemeIndex;
@@ -185,8 +182,8 @@ extern void UpdateAfterThemeChange();
 void SetThemeByIndex(int themeIdx) {
     CrashIf((themeIdx < 0) || (themeIdx >= kThemeCount));
     currentThemeIndex = themeIdx;
-    currentTheme = g_themes[currentThemeIndex];
-    str::ReplaceWithCopy(&gGlobalPrefs->theme, currentTheme->name);
+    gCurrentTheme = gThemes[currentThemeIndex];
+    str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     UpdateAfterThemeChange();
 };
 
@@ -198,9 +195,9 @@ void SelectNextTheme() {
 // not case sensitive
 static Theme* GetThemeByName(const char* name, int& idx) {
     for (int i = 0; i < kThemeCount; i++) {
-        if (str::EqI(g_themes[i]->name, name)) {
+        if (str::EqI(gThemes[i]->name, name)) {
             idx = i;
-            return g_themes[i];
+            return gThemes[i];
         }
     }
     return nullptr;
@@ -213,7 +210,7 @@ void SetCurrentThemeFromSettings() {
     auto theme = GetThemeByName(name, idx);
     if (!theme) {
         // invalid name, reset to light theme
-        str::ReplaceWithCopy(&gGlobalPrefs->theme, g_themeLight.name);
+        str::ReplaceWithCopy(&gGlobalPrefs->theme, gThemeLight.name);
         return;
     }
     SetThemeByIndex(idx);
@@ -237,13 +234,13 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
         }
         text = parsedCol->col;
     } else {
-        bg = currentTheme->document.backgroundColor;
-        text = currentTheme->document.textColor;
+        bg = gCurrentTheme->document.backgroundColor;
+        text = gCurrentTheme->document.textColor;
     }
 }
 
 COLORREF GetMainWindowBackgroundColor() {
-    COLORREF bgColor = currentTheme->mainWindow.backgroundColor;
+    COLORREF bgColor = gCurrentTheme->mainWindow.backgroundColor;
     // Special behavior for light theme.
     // TODO: migrate from prefs to theme.
     if (currentThemeIndex == 0) {

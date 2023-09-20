@@ -846,7 +846,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         tab->didScrollToSelectedAnnotation = true;
     }
 
-    Gdiplus::Color col = GdiRgbFromCOLORREF(currentTheme->document.textColor);
+    Gdiplus::Color col = GdiRgbFromCOLORREF(gCurrentTheme->document.textColor);
     Gdiplus::Pen pen(col, 5);
     Gdiplus::Graphics gs(hdc);
     // TODO: maybe make the rectangle a bit bigger and draw line
@@ -961,7 +961,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (renderDelay != 0) {
             AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            auto col = currentTheme->mainWindow.textColor;
+            auto col = gCurrentTheme->mainWindow.textColor;
             SetTextColor(hdc, col);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
