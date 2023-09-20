@@ -454,11 +454,12 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
         }
 
         case WM_KEYDOWN: {
-            if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed()) {
-                return false;
+            bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed();
+            if (isCtrlBack) {
+                PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+                return true;
             }
-            PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
-            return true;
+            return false;
         }
 
         case UWM_DELAYED_CTRL_BACK: {

@@ -573,6 +573,15 @@ static bool IsSafeAccel(const ACCEL& a) {
         return false;
     }
 
+    // whitelist Alt + Left, Alt + Right to enable document
+    // navigation when focus is in edit or tree control
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/3688#issuecomment-1728271753
+    if (a.fVirt == (FVIRTKEY | FALT)) {
+        if ((k == VK_LEFT) || (k == VK_RIGHT)) {
+            return true;
+        }
+    }
+
     for (WORD notSafe : gNotSafeKeys) {
         if (notSafe == k) {
             return false;
