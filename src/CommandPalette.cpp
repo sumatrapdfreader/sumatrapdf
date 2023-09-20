@@ -261,7 +261,6 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return false;
     }
 
-
     bool remove = false;
     if (!HasPermission(Perm::InternetAccess)) {
         remove |= IsCmdInMenuList(cmdId, removeIfNoInternetPerms);

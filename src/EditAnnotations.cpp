@@ -1285,6 +1285,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
         // TODO: do I need this?
         EngineMupdf* engine = GetEngineMupdf(ew);
         EngineGetAnnotations(engine, ew->annotations);
+        RebuildAnnotationsListBox(ew);
         // TODO: bring to front?
         return;
     }

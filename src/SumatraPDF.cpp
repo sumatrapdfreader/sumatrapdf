@@ -5257,8 +5257,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdEditAnnotations: {
             Annotation* annot = GetAnnotionUnderCursor(tab);
+            ShowEditAnnotationsWindow(tab);
             if (annot) {
-                ShowEditAnnotationsWindow(tab);
                 SetSelectedAnnotation(tab, annot);
             }
             break;
@@ -5401,13 +5401,25 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
+            [[fallthrough]];
         case CmdCreateAnnotFreeText:
+            [[fallthrough]];
         case CmdCreateAnnotStamp:
+            [[fallthrough]];
         case CmdCreateAnnotCaret:
+            [[fallthrough]];
         case CmdCreateAnnotSquare:
+            [[fallthrough]];
         case CmdCreateAnnotLine:
+            [[fallthrough]];
         case CmdCreateAnnotCircle: {
-            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+            if (!dm) {
+                return 0;
+            }
+            EngineBase* engine = dm->GetEngine();
+            if (!engine) {
+                return 0;
+            }
             bool handle = !win->isFullScreen && EngineSupportsAnnotations(engine);
             if (!handle) {
                 return 0;
@@ -5419,12 +5431,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
-            auto annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
-            if (annot) {
-                MainWindowRerender(win);
-                ToolbarUpdateStateForWindow(win, true);
-                lastCreatedAnnot = annot;
-            }
+            lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
         } break;
 
         case CmdSelectNextTheme:
@@ -5437,7 +5444,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (lastCreatedAnnot) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, lastCreatedAnnot);
-        //        StartEditAnnotation(tab, lastCreatedAnnot);
+        MainWindowRerender(win);
+        ToolbarUpdateStateForWindow(win, true);
     }
     return 0;
 }
