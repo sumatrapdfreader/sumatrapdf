@@ -1667,10 +1667,24 @@ static ByteSlice TxtFileToHTML(const char* path) {
         return {};
     }
 
+    InterlockedIncrement(&gAllowAllocFailure);
+    defer {
+        InterlockedDecrement(&gAllowAllocFailure);
+    };
+
     TempStr data = (TempStr)fd.data();
     data = str::ReplaceTemp(data, "&", "&amp;");
+    if (!data) {
+        return {};
+    }
     data = str::ReplaceTemp(data, ">", "&gt;");
+    if (!data) {
+        return {};
+    }
     data = str::ReplaceTemp(data, "<", "&lt;");
+    if (!data) {
+        return {};
+    }
 
     str::Str d;
     d.Append(R"(<html>
@@ -1686,10 +1700,6 @@ static ByteSlice TxtFileToHTML(const char* path) {
     </head>
 <body>
     <pre>)");
-    InterlockedIncrement(&gAllowAllocFailure);
-    defer {
-        InterlockedDecrement(&gAllowAllocFailure);
-    };
     bool ok = d.Append(data);
     if (!ok) {
         return {};

@@ -72,15 +72,25 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
         return nullptr;
     }
 
+    bool ok;
     str::Str result(str::Len(s));
     size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
     const char *start = s, *end;
     while ((end = str::Find(start, toReplace)) != nullptr) {
-        result.Append(start, end - start);
-        result.Append(replaceWith, replLen);
+        ok = result.Append(start, end - start);
+        if (!ok) {
+            return nullptr;
+        }
+        ok = result.Append(replaceWith, replLen);
+        if (!ok) {
+            return nullptr;
+        }
         start = end + findLen;
     }
-    result.Append(start);
+    ok = result.Append(start);
+    if (!ok) {
+        return nullptr;
+    }
     char* res = DupTemp(result.Get());
     return res;
 }
