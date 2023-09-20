@@ -221,7 +221,7 @@ void Favorites::AddOrReplace(const char* filePath, int pageNo, const char* name,
 
     Favorite* fn = FindByPage(fav, pageNo, pageLabel);
     if (fn) {
-        str::ReplacePtr(&fn->name, name);
+        str::ReplaceWithCopy(&fn->name, name);
         CrashIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
     } else {
         fn = NewFavorite(pageNo, name, pageLabel);
