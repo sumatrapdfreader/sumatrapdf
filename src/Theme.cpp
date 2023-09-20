@@ -25,11 +25,10 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #include "GlobalPrefs.h"
 #include "Translations.h"
 
-// Color definitions
-#define COL_BLACK 0x000000
-#define COL_WHITE 0xFFFFFF
-#define COL_WHITEISH 0xEBEBF9
-#define COL_DARK_GRAY 0x424242
+constexpr COLORREF kColBlack = 0x000000;
+constexpr COLORREF kColWhite = 0xFFFFFF;
+// #define kColWhiteish 0xEBEBF9
+// #define kColDarkGray 0x424242
 
 // clang-format off
 // Themes
@@ -52,9 +51,9 @@ Theme g_themeLight = {
         // most PDFs have white background.
         RgbToCOLORREF(0xF2F2F2),
         // Control background Color
-        COL_WHITE,
+        kColWhite,
         // Main Text Color
-        COL_BLACK,
+        kColBlack,
         // Main Link Color
         RgbToCOLORREF(0x0020A0)
     },
@@ -63,14 +62,14 @@ Theme g_themeLight = {
         // Canvas Color
         RgbToCOLORREF(0x999999),
         // Background Color
-        COL_WHITE,
+        kColWhite,
         // Text color
-        COL_BLACK
+        kColBlack
     },
     // Notifications
     {
         // Background color
-        COL_WHITE,
+        kColWhite,
         // Text color
         g_themeLight.mainWindow.textColor,
         // Highlight color
@@ -94,7 +93,7 @@ Theme g_themeDark = {
          // Control background Color
         RgbToCOLORREF(0x263238),
         // Main Text Color
-        COL_WHITE,
+        kColWhite,
         // Main Link Color
         RgbToCOLORREF(0x80CBAD)
        
@@ -135,7 +134,7 @@ Theme g_themeDarker = {
          // Control background Color
         RgbToCOLORREF(0x2D2D30),
         // Main Text Color
-        COL_WHITE,
+        kColWhite,
         // Main Link Color
         RgbToCOLORREF(0x3081D4)
     },
