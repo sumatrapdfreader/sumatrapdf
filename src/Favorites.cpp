@@ -926,5 +926,5 @@ void CreateFavorites(MainWindow* win) {
     }
     SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
 
-    UpdateTreeCtrlColors(win);
+    UpdateControlsColors(win);
 }

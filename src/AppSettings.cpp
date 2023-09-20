@@ -335,7 +335,7 @@ bool ReloadSettings() {
             ShowOrHideToolbar(win);
         }
         UpdateFavoritesTree(win);
-        UpdateTreeCtrlColors(win);
+        UpdateControlsColors(win);
     }
 
     UpdateDocumentColors();

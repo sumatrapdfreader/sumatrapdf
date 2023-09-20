@@ -5,7 +5,6 @@ void CreateToc(MainWindow*);
 void ClearTocBox(MainWindow*);
 void ToggleTocBox(MainWindow*);
 void LoadTocTree(MainWindow*);
-void UpdateTreeCtrlColors(MainWindow*);
 void UpdateTocSelection(MainWindow*, int currPageNo);
 void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
 void UnsubclassToc(MainWindow*);

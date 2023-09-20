@@ -1552,7 +1552,7 @@ static void UpdateThemeForWindow(MainWindow* win) {
     DeleteObject(win->brControlBgColor);
     win->brControlBgColor = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
 
-    UpdateTreeCtrlColors(win);
+    UpdateControlsColors(win);
     RebuildMenuBarForWindow(win);
     CaptionUpdateUI(win, win->caption);
     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
@@ -5358,7 +5358,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdInvertColors:
             gGlobalPrefs->fixedPageUI.invertColors ^= true;
             UpdateDocumentColors();
-            UpdateTreeCtrlColors(win);
+            UpdateControlsColors(win);
             // UpdateUiForCurrentTab(win);
             break;
 

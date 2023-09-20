@@ -248,7 +248,7 @@ struct MainWindow {
     bool CreateUIAProvider();
 };
 
-void UpdateTreeCtrlColors(MainWindow*);
+void UpdateControlsColors(MainWindow*);
 void RepaintAsync(MainWindow*, int delay);
 void ClearFindBox(MainWindow*);
 void CreateMovePatternLazy(MainWindow*);

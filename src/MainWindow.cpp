@@ -620,9 +620,11 @@ void LinkHandler::GotoNamedDest(const char* name) {
     }
 }
 
-void UpdateTreeCtrlColors(MainWindow* win) {
-    COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
-    COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
+void UpdateControlsColors(MainWindow* win) {
+    Theme* theme = gCurrentTheme;
+    COLORREF labelBgCol = theme->mainWindow.controlBackgroundColor;
+    COLORREF labelTxtCol = theme->mainWindow.textColor;
+
     COLORREF treeBgCol, treeTxtCol;
     GetDocumentColors(treeTxtCol, treeBgCol);
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
@@ -657,7 +659,6 @@ void UpdateTreeCtrlColors(MainWindow* win) {
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
         SetWindowPos(favTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
     }
-
     // TODO: more work needed to to ensure consistent look of the ebook window:
     // - tab bar should match the colort
     // - change the tree item text color
