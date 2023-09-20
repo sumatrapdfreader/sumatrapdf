@@ -1564,7 +1564,7 @@ void UpdateAfterThemeChange() {
     for (auto mainWin : gWindows) {
         // TODO: this only rerenders canvas, not frame, even with
         // includingNonClientArea == true.
-        // MainWindowRerender(mainWin, true);
+        MainWindowRerender(mainWin, true);
         UpdateThemeForWindow(mainWin);
     }
     UpdateDocumentColors();
