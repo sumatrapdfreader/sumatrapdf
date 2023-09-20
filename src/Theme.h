@@ -39,11 +39,6 @@ struct NotificationStyle {
     COLORREF progressColor;
 };
 
-struct TabCloseStyle {
-    // Color of the X button
-    COLORREF xColor;
-};
-
 struct TabStyle {
     // Background color of the tab
     COLORREF backgroundColor;
