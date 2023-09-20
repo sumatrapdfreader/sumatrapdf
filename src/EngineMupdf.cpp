@@ -1513,7 +1513,6 @@ EngineMupdf::~EngineMupdf() {
         DeleteVecMembers(pi->autoLinks);
         DeleteVecMembers(pi->comments);
         DeleteVecMembers(pi->images);
-        DeleteVecMembers(pi->annotations);
         if (pi->retainedLinks) {
             fz_drop_link(ctx, pi->retainedLinks);
         }
@@ -2525,7 +2524,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     }
 
     // build annotations info on first access
-    if (pdfdoc) {
+    if (pdfdoc && pageInfo->annotations.isize() == 0) {
         fz_try(ctx) {
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
             pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
@@ -2540,7 +2539,6 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         fz_catch(ctx) {
         }
         RebuildCommentsFromAnnotations(ctx, pageInfo);
-        pageInfo->elementsNeedRebuilding = true;
     }
 
     if (loadQuick || pageInfo->fullyLoaded) {
@@ -2765,6 +2763,8 @@ IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
     return FzGetElementAtPos(pageInfo, pt);
 }
 
+// TOOD: optimize by returning reference or pointer so that
+// we don't have to re-create the Vec every time
 Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
     auto pageInfo = GetFzPageInfoFast(pageNo);
     if (!pageInfo) {
@@ -3637,7 +3637,7 @@ NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot, Anno
     // on change we assume Annotation* lives inside EngineMupdf
     ScopedCritSec scope(&e->pagesAccess);
     FzPageInfo* pageInfo = e->pages[pageIdx];
-    pageInfo->elementsNeedRebuilding = true;
+
     if (change == AnnotationChange::Remove) {
         int sizeBefore = pageInfo->annotations.isize();
         int removedPos = pageInfo->annotations.Remove(annot);
@@ -3645,10 +3645,7 @@ NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot, Anno
         int sizeNow = pageInfo->annotations.isize();
         CrashIf(sizeBefore != sizeNow + 1);
         ValidateAnnotationsInSync(e, pageInfo);
-        return;
-    }
-
-    if (change == AnnotationChange::Add) {
+    } else if (change == AnnotationChange::Add) {
         int sizeBefore = pageInfo->annotations.isize();
         int pos = pageInfo->annotations.Find(annot);
         CrashIf(pos >= 0); // shouldn't exist
@@ -3656,8 +3653,12 @@ NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot, Anno
         int sizeNow = pageInfo->annotations.isize();
         CrashIf(sizeBefore != sizeNow - 1);
         ValidateAnnotationsInSync(e, pageInfo);
-        return;
+    } else {
+        CrashIf(change != AnnotationChange::Modify);
     }
+    RebuildCommentsFromAnnotations(e->ctx, pageInfo);
+    // TODO: just do it inside RebuildCommentsFromAnnotations()
+    pageInfo->elementsNeedRebuilding = true;
 }
 
 Annotation* MakeAnnotationFrom_pdf_annot(EngineMupdf* engine, pdf_annot* annot, int pageNo) {

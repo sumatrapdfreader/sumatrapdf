@@ -119,6 +119,13 @@ const char* AnnotationName(AnnotationType tp) {
 }
 */
 
+static bool gDebugAnnotDestructor = false;
+Annotation::~Annotation() {
+    if (gDebugAnnotDestructor) {
+        logf("deleting an annotation\n");
+    }
+}
+
 TempStr AnnotationReadableNameTemp(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
@@ -158,8 +165,8 @@ RectF GetBounds(Annotation* annot) {
     fz_catch(ctx) {
         logf("GetBounds(): pdf_bound_annot() failed\n");
     }
-    auto rect = ToRectF(rc);
-    return rect;
+    annot->bounds = ToRectF(rc);
+    return annot->bounds;
 }
 
 RectF GetRect(Annotation* annot) {

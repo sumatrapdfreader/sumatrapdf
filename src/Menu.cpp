@@ -1763,11 +1763,11 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
             [[fallthrough]];
         case CmdEditAnnotations:
-            StartEditAnnotation(tab, nullptr);
-            SelectAnnotationInEditWindow(tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
+            ShowEditAnnotationsWindow(tab);
+            SetSelectedAnnotation(tab, buildCtx.annotationUnderCursor);
             break;
         case CmdDeleteAnnotation:
-            DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, buildCtx.annotationUnderCursor);
+            DeleteAnnotationAndUpdateUI(tab, buildCtx.annotationUnderCursor);
             break;
 
         case CmdCopyLinkTarget: {
@@ -1799,10 +1799,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
             annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+// TODO: remove
+#if 0
             if (annot) {
                 MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
             }
+#endif
         } break;
         case CmdCreateAnnotHighlight:
             annot = MakeAnnotationsFromSelection(tab, AnnotationType::Highlight);
@@ -1822,8 +1825,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             break;
     }
     if (annot) {
-        // TODO: pass created annotation to select it
-        StartEditAnnotation(tab, annot);
+        ShowEditAnnotationsWindow(tab);
+        SetSelectedAnnotation(tab, annot);
     }
     // TODO: should delete it?
     // delete buildCtx.annotationUnderCursor;

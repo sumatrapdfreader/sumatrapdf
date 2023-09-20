@@ -46,14 +46,10 @@ struct WindowTab {
 
     TabState* tabState = nullptr; // when lazy loading
 
-    struct {
-        bool show = false;
-        RectF rect;
-        int page = 0;
-        bool scrolled = false; // only automatically scroll once
-        Annotation* annot;     // owned, must delete when done with it
-    } selectedAnnotation;
+    Annotation* selectedAnnotation = nullptr;
+    bool didScrollToSelectedAnnotation = false; // only automatically scroll once
 
+    // TODO: arguably a hack
     bool ignoreNextAutoReload = false;
 
     WindowTab(MainWindow* win);

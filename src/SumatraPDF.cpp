@@ -5241,10 +5241,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 auto annot = MakeAnnotationsFromSelection(tab, annotType);
                 bool isShift = IsShiftPressed();
                 if (annot) {
-                    MainWindowRerender(win);
+//                    MainWindowRerender(win);
                     if (isShift) {
-                        StartEditAnnotation(tab, nullptr);
+                        ShowEditAnnotationsWindow(tab);
+//                        StartEditAnnotation(tab, annot);
+                    } else {
+//                        SelectAnnotationInEditWindow(tab->editAnnotsWindow, annot);
                     }
+                    SetSelectedAnnotation(tab, annot);
                 }
             }
             break;
@@ -5254,9 +5258,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdEditAnnotations: {
             Annotation* annot = GetAnnotionUnderCursor(tab);
-            StartEditAnnotation(tab, nullptr);
             if (annot) {
-                SelectAnnotationInEditWindow(tab->editAnnotsWindow, annot);
+                ShowEditAnnotationsWindow(tab);
+                SetSelectedAnnotation(tab, annot);
             }
             break;
         }
@@ -5264,7 +5268,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDeleteAnnotation: {
             Annotation* annot = GetAnnotionUnderCursor(tab);
             if (annot) {
-                DeleteAnnotationAndUpdateUI(tab, tab->editAnnotsWindow, annot);
+                DeleteAnnotationAndUpdateUI(tab, annot);
             }
         } break;
 
@@ -5433,7 +5437,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             return DefWindowProc(hwnd, msg, wp, lp);
     }
     if (lastCreatedAnnot) {
-        StartEditAnnotation(tab, lastCreatedAnnot);
+        ShowEditAnnotationsWindow(tab);
+        SetSelectedAnnotation(tab, lastCreatedAnnot);
+//        StartEditAnnotation(tab, lastCreatedAnnot);
     }
     return 0;
 }
