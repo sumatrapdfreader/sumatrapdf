@@ -67,6 +67,7 @@ bool NeedsFindUI(MainWindow* win) {
     }
     return true;
 }
+int initialPage = 0;
 
 void FindFirst(MainWindow* win) {
     if (win->AsChm()) {
@@ -321,6 +322,13 @@ static void FindEndTask(MainWindow* win, FindThreadData* ftd, TextSel* textSel, 
     delete ftd;
 }
 
+void ReturnToInitialFindPage(MainWindow* win) {
+    if (initialPage) {
+        DisplayModel* dm = win->AsFixed();
+        dm->GoToPage(initialPage, false);
+    }
+}
+
 static DWORD WINAPI FindThread(LPVOID data) {
     FindThreadData* ftd = (FindThreadData*)data;
     CrashIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
@@ -381,6 +389,15 @@ void AbortFinding(MainWindow* win, bool hideMessage) {
 void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress) {
     AbortFinding(win, false);
+
+    static char prevSearchText[256] = "";
+    if (str::IsEmpty(prevSearchText) || !str::StartsWith(text, prevSearchText)) {
+        DisplayModel* dm = win->AsFixed();
+        initialPage = dm->CurrentPageNo();
+    }
+
+    strncpy(prevSearchText, text, 256);
+
     if (str::IsEmpty(text)) {
         return;
     }

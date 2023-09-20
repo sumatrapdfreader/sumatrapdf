@@ -26,6 +26,7 @@ void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearchDirection direction);
 void AbortFinding(MainWindow* win, bool hideMessage);
+void ReturnToInitialFindPage(MainWindow* win);
 void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showProgress);
 void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress);
