@@ -191,6 +191,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},
     {FCONTROL | FVIRTKEY, VK_NEXT, CmdNextTab},
     {FCONTROL | FVIRTKEY, VK_PRIOR, CmdPrevTab},
+    {FCONTROL | FVIRTKEY, 'E', CmdEditAnnotations},
     //{FCONTROL | FSHIFT | FVIRTKEY, 'D', CmdSelectNextTheme},
 
     // need 2 entries for 'a' and 'Shift + a'
@@ -201,8 +202,6 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'u', CmdCreateAnnotUnderline},
     {0, 'U', CmdCreateAnnotUnderline},
 
-    {0, 'e', CmdEditAnnotations},
-    {0, 'E', CmdEditAnnotations},
 
     {0, 'i', CmdInvertColors},
     {0, 'I', CmdTogglePageInfo},
