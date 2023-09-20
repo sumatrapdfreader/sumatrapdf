@@ -249,7 +249,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         SetRect(annot, r);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
-        StartEditAnnotation(win->CurrentTab(), annot);
+        //ShowEditAnnotationsWindow(win->CurrentTab(), annot);
     }
     win->annotationOnLastButtonDown = nullptr;
     return true;
@@ -418,7 +418,6 @@ static AnnotationType moveableAnnotations[] = {
 static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     // to drag annotations with mouse need to press Ctrl
     if (!IsCtrlPressed()) {
-        delete annot;
         return;
     }
     DisplayModel* dm = win->AsFixed();
@@ -825,20 +824,20 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     tv->Blue = (COLOR16)((ab + perc * (bb - ab)) * 256);
 }
 
-void SelectAnnotation(WindowTab* tab, Annotation* annot, int annotPageNo) {
-    tab->selectedAnnotation.annot = annot;
-    tab->selectedAnnotation.show = true;
-    tab->selectedAnnotation.page = annotPageNo;
-    tab->selectedAnnotation.scrolled = false;
-    tab->selectedAnnotation.rect = GetBounds(annot);
-}
-
 // Draw a border around selected annotation
 NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
-    Rect rect = dm->CvtToScreen(tab->selectedAnnotation.page, tab->selectedAnnotation.rect);
-    if (!tab->selectedAnnotation.scrolled) {
-        dm->ScrollScreenToRect(tab->selectedAnnotation.page, rect);
-        tab->selectedAnnotation.scrolled = true;
+    if (!tab) {
+        return;
+    }
+    Annotation* annot = tab->selectedAnnotation;
+    if (!annot) {
+        return;
+    }
+
+    Rect rect = dm->CvtToScreen(annot->pageNo, GetRect(annot));
+    if (!tab->didScrollToSelectedAnnotation) {
+        dm->ScrollScreenToRect(annot->pageNo, rect);
+        tab->didScrollToSelectedAnnotation = true;
     }
 
     Gdiplus::Color col = GdiRgbFromCOLORREF(currentTheme->document.textColor);
@@ -993,9 +992,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     }
 
     WindowTab* tab = win->CurrentTab();
-    if (tab && tab->selectedAnnotation.show) {
-        PaintCurrentEditAnnotationMark(tab, hdc, dm);
-    }
+    PaintCurrentEditAnnotationMark(tab, hdc, dm);
 
     if (win->showSelection) {
         PaintSelection(win, hdc);

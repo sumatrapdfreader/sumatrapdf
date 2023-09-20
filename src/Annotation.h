@@ -63,7 +63,7 @@ struct Annotation {
     pdf_annot* pdfannot = nullptr; // not owned
 
     Annotation() = default;
-    ~Annotation() = default;
+    ~Annotation();
 };
 
 int PageNo(Annotation*);

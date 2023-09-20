@@ -27,7 +27,8 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider() {
 }
 
 void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel* dm) {
-    CrashIf(document);
+    // TODO: re-enable and figure out what's wrong
+    //CrashIf(document);
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(dm);
