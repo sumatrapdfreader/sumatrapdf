@@ -162,7 +162,7 @@ struct EditAnnotationsWindow : Wnd {
     Button* buttonSaveToCurrentFile = nullptr;
     Button* buttonSaveToNewFile = nullptr;
 
-    // those are 
+    // those are
     Vec<Annotation*> annotations;
 
     bool skipGoToPage = false;

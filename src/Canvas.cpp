@@ -249,7 +249,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         SetRect(annot, r);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
-        //ShowEditAnnotationsWindow(win->CurrentTab(), annot);
+        // ShowEditAnnotationsWindow(win->CurrentTab(), annot);
     }
     win->annotationOnLastButtonDown = nullptr;
     return true;

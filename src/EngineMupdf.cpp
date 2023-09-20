@@ -1686,7 +1686,14 @@ static ByteSlice TxtFileToHTML(const char* path) {
     </head>
 <body>
     <pre>)");
-    d.Append(data);
+    InterlockedIncrement(&gAllowAllocFailure);
+    defer {
+        InterlockedDecrement(&gAllowAllocFailure);
+    };
+    bool ok = d.Append(data);
+    if (!ok) {
+        return {};
+    }
     d.Append(R"(</pre>
 </body>
 </html>)");

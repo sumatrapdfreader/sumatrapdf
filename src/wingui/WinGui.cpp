@@ -1719,7 +1719,7 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
     return WndProcDefault(hwnd, msg, wp, lp);
-    //return FinalWindowProc(msg, wp, lp);
+    // return FinalWindowProc(msg, wp, lp);
 }
 
 bool Edit::HasBorder() {

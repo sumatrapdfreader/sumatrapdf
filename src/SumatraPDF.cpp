@@ -5241,12 +5241,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 auto annot = MakeAnnotationsFromSelection(tab, annotType);
                 bool isShift = IsShiftPressed();
                 if (annot) {
-//                    MainWindowRerender(win);
+                    //                    MainWindowRerender(win);
                     if (isShift) {
                         ShowEditAnnotationsWindow(tab);
-//                        StartEditAnnotation(tab, annot);
+                        //                        StartEditAnnotation(tab, annot);
                     } else {
-//                        SelectAnnotationInEditWindow(tab->editAnnotsWindow, annot);
+                        //                        SelectAnnotationInEditWindow(tab->editAnnotsWindow, annot);
                     }
                     SetSelectedAnnotation(tab, annot);
                 }
@@ -5439,7 +5439,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (lastCreatedAnnot) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, lastCreatedAnnot);
-//        StartEditAnnotation(tab, lastCreatedAnnot);
+        //        StartEditAnnotation(tab, lastCreatedAnnot);
     }
     return 0;
 }
