@@ -47,8 +47,6 @@ struct TabStyle {
 };
 
 struct TabTheme {
-    // Style of the selected tab
-    TabStyle selected;
     // Style of background tabs
     TabStyle background;
     // Style of the highlighted tab (hovered over)

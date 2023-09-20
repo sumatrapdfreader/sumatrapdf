@@ -3459,7 +3459,8 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         // Get the correct colors based on the state and the current theme
         TabStyle tabStyle = currentTheme->tab.background;
         if (tabSelected == i) {
-            tabStyle = currentTheme->tab.selected;
+            tabStyle.backgroundColor = currentTheme->mainWindow.controlBackgroundColor;
+            tabStyle.textColor = currentTheme->mainWindow.textColor;
         } else if (tabUnderMouse == i) {
             tabStyle = currentTheme->tab.highlighted;
         }

@@ -69,14 +69,6 @@ Theme g_themeLight = {
     },
     // Tabs
     {
-        // Selected style
-        {
-            // Background color
-            COL_WHITE,
-            // Text color
-            COL_DARK_GRAY,
-            // Default close style
-        },
         // Background style
         {
             // Background color
@@ -137,24 +129,17 @@ Theme g_themeDark = {
     },
     // Tabs
     {
-        // Selected style
-        {
-            // Background color
-            RgbToCOLORREF(0x009688),
-            // Text color
-            COL_WHITE,
-        },
         // Background style
         {
             // Background color
-            AdjustLightness2(g_themeDark.tab.selected.backgroundColor, -10),
+            AdjustLightness2(g_themeDark.mainWindow.backgroundColor, -10),
             // Text color
             COL_WHITE,
         },
         // Highlighted style
         {
             // Background color
-            AdjustLightness2(g_themeDark.tab.selected.backgroundColor, 10),
+            AdjustLightness2(g_themeDark.mainWindow.backgroundColor, 10),
             // Text color
             COL_WHITE,
         },
@@ -201,13 +186,6 @@ Theme g_themeDarker = {
     },
     // Tabs
     {
-        // Selected style
-        {
-            // Background color
-            RgbToCOLORREF(0x007ACC),
-            // Text color
-            COL_WHITE,
-        },
         // Background style
         {
             // Background color
