@@ -146,7 +146,7 @@ static StrVec gAllowedFileTypes;
 // if this flag is set, CloseWindow will not save prefs before closing the window.
 static bool gDontSavePrefs = false;
 
-static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled = false, bool deleteModel = false);
+static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
 static void OnSidebarSplitterMove(SplitterMoveEvent*);
 static void OnFavSplitterMove(SplitterMoveEvent*);
 static void DownloadDebugSymbols();
@@ -2000,7 +2000,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         // display the notification ASAP
         win->RedrawAll(true);
     }
-    CloseDocumentInCurrentTab(win, true);
+    CloseDocumentInCurrentTab(win, true, false);
 
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
@@ -2635,7 +2635,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         DeleteMainWindow(win);
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        CloseDocumentInCurrentTab(win);
+        CloseDocumentInCurrentTab(win, false, false);
         SetFocus(win->hwndFrame);
         CrashIf(!gWindows.Contains(win));
     } else {
