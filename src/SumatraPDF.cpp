@@ -1147,6 +1147,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             }
             // tell UI Automation about content change
             if (win->uiaProvider) {
+                win->uiaProvider->OnDocumentUnload();
                 win->uiaProvider->OnDocumentLoad(dm);
             }
         } else if (win->AsChm()) {
