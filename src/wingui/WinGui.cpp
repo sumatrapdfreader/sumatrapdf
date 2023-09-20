@@ -346,6 +346,9 @@ LRESULT Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 void Wnd::OnAttach() {
 }
 
+void Wnd::OnFocus() {
+}
+
 // Override this to handle WM_COMMAND messages
 bool Wnd::OnCommand(WPARAM wparam, LPARAM lparam) {
     //  UINT id = LOWORD(wparam);
@@ -434,7 +437,7 @@ LRESULT Wnd::OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam) {
     return -1;
 }
 
-void Wnd::OnMove(LPPOINTS pts) {
+void Wnd::OnMove(POINTS*) {
 }
 
 // Processes notification (WM_NOTIFY) messages from a child window.
@@ -741,6 +744,11 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_DESTROY: {
             OnDestroy();
             break; // Note: Some controls require default processing.
+        }
+
+        case WM_SETFOCUS: {
+            OnFocus();
+            break;
         }
 
         case WM_NOTIFY: {

@@ -94,6 +94,7 @@ struct Wnd : public ILayout {
     virtual LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
 
     virtual void OnAttach();
+    virtual void OnFocus();
     virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
     virtual void OnClose();
     virtual int OnCreate(CREATESTRUCT*);

@@ -114,6 +114,7 @@ const char* GetKnownColorName(PdfColor c) {
 struct EditAnnotationsWindow : Wnd {
     void OnSize(UINT msg, UINT type, SIZE size) override;
     void OnClose() override;
+    void OnFocus() override;
 
     WindowTab* tab = nullptr;
     LayoutBase* mainLayout = nullptr;
@@ -294,6 +295,10 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
 void EditAnnotationsWindow::OnClose() {
     tab->editAnnotsWindow = nullptr;
     delete this; // sketchy
+}
+
+void EditAnnotationsWindow::OnFocus() {
+    SelectTabInWindow(tab);
 }
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
@@ -1290,7 +1295,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
     args.bgColor = MkGray(0xee);
-    args.title = _TRA("Annotations");
+    args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
     args.visible = false;
 
     // PositionCloseTo(w, args->hwndRelatedTo);
