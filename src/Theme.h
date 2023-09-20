@@ -42,8 +42,6 @@ struct NotificationStyle {
 struct TabStyle {
     // Background color of the tab
     COLORREF backgroundColor;
-    // Text color of the tab
-    COLORREF textColor;
 };
 
 struct TabTheme {

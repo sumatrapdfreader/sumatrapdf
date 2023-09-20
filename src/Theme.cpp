@@ -74,16 +74,12 @@ Theme g_themeLight = {
             // Background color
             //AdjustLightness2(g_themeLight.tab.selected.backgroundColor, -25),
             RgbToCOLORREF(0xCECECE),
-            // Text color
-            COL_DARK_GRAY,
         },
         // Highlighted style
         {
             // Background color
             // AdjustLightness2(g_themeLight.tab.selected.backgroundColor, 15),
             RgbToCOLORREF(0xBBBBBB),
-            // Text color
-            COL_BLACK,
         },
     },
     // Notifications
@@ -133,15 +129,11 @@ Theme g_themeDark = {
         {
             // Background color
             AdjustLightness2(g_themeDark.mainWindow.backgroundColor, -10),
-            // Text color
-            COL_WHITE,
         },
         // Highlighted style
         {
             // Background color
             AdjustLightness2(g_themeDark.mainWindow.backgroundColor, 10),
-            // Text color
-            COL_WHITE,
         },
     },
     // Notifications
@@ -190,15 +182,11 @@ Theme g_themeDarker = {
         {
             // Background color
             RgbToCOLORREF(0xEAEAEA),
-            // Text color
-            COL_BLACK,
         },
         // Highlighted style
         {
             // Background color
             RgbToCOLORREF(0x1C97EA),
-            // Text color
-            COL_WHITE,
         },
     },
     // Notifications

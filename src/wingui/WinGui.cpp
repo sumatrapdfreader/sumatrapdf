@@ -3455,17 +3455,16 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     Rect r;
     Gdiplus::RectF rTxt;
 
+    COLORREF textColor = currentTheme->mainWindow.textColor;
+    COLORREF xColor = textColor;
     for (int i = 0; i < n; i++) {
         // Get the correct colors based on the state and the current theme
         TabStyle tabStyle = currentTheme->tab.background;
         if (tabSelected == i) {
             tabStyle.backgroundColor = currentTheme->mainWindow.controlBackgroundColor;
-            tabStyle.textColor = currentTheme->mainWindow.textColor;
         } else if (tabUnderMouse == i) {
             tabStyle = currentTheme->tab.highlighted;
         }
-        // COLORREF xColor = currentTheme->mainWindow.textColor;
-        COLORREF xColor = tabStyle.textColor;
 
         ti = GetTab(i);
         // logfa("rClose: pos: (%d, %d) size: (%d, %d)\n", r.x, r.y, r.dx, r.dy);
@@ -3504,7 +3503,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         rTxt = ToGdipRectF(ti->r);
         rTxt.X += 8;
         rTxt.Width -= (8 + r.dx + 8);
-        br.SetColor(GdipCol(tabStyle.textColor));
+        br.SetColor(GdipCol(textColor));
         WCHAR* ws = ToWstrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
     }
