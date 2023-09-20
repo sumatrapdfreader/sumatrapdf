@@ -261,6 +261,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return false;
     }
 
+
     bool remove = false;
     if (!HasPermission(Perm::InternetAccess)) {
         remove |= IsCmdInMenuList(cmdId, removeIfNoInternetPerms);
@@ -293,8 +294,8 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (!ctx.cursorOnImage && (cmdId == CmdCopyImage)) {
         return false;
     }
-    if (!ctx.hasToc && (cmdId == CmdToggleBookmarks) || (cmdId == CmdToggleTableOfContents)) {
-        return false;
+    if ((cmdId == CmdToggleBookmarks) || (cmdId == CmdToggleTableOfContents)) {
+        return ctx.hasToc;
     }
     if ((cmdId == CmdToggleScrollbars) && !gGlobalPrefs->fixedPageUI.hideScrollbars) {
         return false;
