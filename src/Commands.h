@@ -199,7 +199,7 @@ enum {
 
     COMMANDS(DEF_CMD)
 
-        CmdLastCommand,
+    CmdLastCommand,
 
     /* range for "external viewers" setting */
     CmdOpenWithExternalFirst,

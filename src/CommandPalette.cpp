@@ -39,6 +39,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithLast,
     CmdCommandPalette,
     CmdCommandPaletteNoFiles,
+    CmdCommandPaletteOnlyTabs,
 
     // managing frequently list in home tab
     CmdOpenSelectedDocument,
@@ -61,6 +62,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenAttachment,
 
     CmdCreateShortcutToFile, // not sure I want this at all
+
 };
 
 // most commands are not valid when document is not opened
@@ -193,6 +195,11 @@ struct CommandPaletteBuildCtx {
 CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
 }
 
+static bool IsOpenExternalViewerCommand(i32 cmdId) {
+    return ((cmdId >= CmdOpenWithExternalFirst) && (cmdId <= CmdOpenWithExternalLast)) ||
+           ((cmdId >= CmdOpenWithFirst) && (cmdId <= CmdOpenWithLast));
+}
+
 /* TODO:
     CmdCloseOtherTabs
     CmdCloseTabsToTheRight
@@ -210,6 +217,11 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         if (!IsCmdInList(gDocumentNotOpenWhitelist)) {
             return false;
         }
+        if (IsOpenExternalViewerCommand(cmdId)) {
+            return false;
+        }
+    } else {
+        return HasExternalViewerForCmd(cmdId);
     }
 
     if (cmdId == CmdToggleMenuBar) {

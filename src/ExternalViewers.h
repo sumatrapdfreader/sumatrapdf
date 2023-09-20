@@ -1,6 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+bool HasExternalViewerForCmd(int cmd);
 bool ViewWithExternalViewer(WindowTab* tab, size_t idx);
 
 void DetectExternalViewers();

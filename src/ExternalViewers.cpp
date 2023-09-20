@@ -160,8 +160,15 @@ static ExternalViewerInfo* FindExternalViewerInfoByCmd(int cmd) {
             return info;
         }
     }
-    CrashMe();
     return nullptr;
+}
+
+bool HasExternalViewerForCmd(int cmd) {
+    auto* v= FindExternalViewerInfoByCmd(cmd);
+    if (v == nullptr) {
+        return false;
+    }
+    return v->exeFullPath != nullptr;
 }
 
 static bool CanViewExternally(WindowTab* tab) {
