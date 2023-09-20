@@ -46,6 +46,12 @@ struct WindowTab {
 
     TabState* tabState = nullptr; // when lazy loading
 
+    Annotation* selectedAnnotation = nullptr;
+    bool didScrollToSelectedAnnotation = false; // only automatically scroll once
+
+    // TODO: arguably a hack
+    bool ignoreNextAutoReload = false;
+
     WindowTab(MainWindow* win);
     ~WindowTab();
 
@@ -66,14 +72,6 @@ struct WindowTab {
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
     void ToggleZoom() const;
-
-    struct {
-        bool show = false;
-        RectF rect;
-        int page = 0;
-        bool scrolled = false; // only automatically scroll once
-        Annotation* annot;     // owned, must delete when done with it
-    } selectedAnnotation;
 };
 
 bool SaveDataToFile(HWND hwndParent, char* fileName, ByteSlice data);

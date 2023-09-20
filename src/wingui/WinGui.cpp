@@ -1704,11 +1704,12 @@ HWND Edit::Create(const EditCreateArgs& editArgs) {
 LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_KEYDOWN: {
-            if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed()) {
-                return false;
+            bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed();
+            if (isCtrlBack) {
+                PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+                return true;
             }
-            PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
-            return true;
+            break;
         }
 
         case UWM_DELAYED_CTRL_BACK: {
@@ -1717,6 +1718,7 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
     return WndProcDefault(hwnd, msg, wp, lp);
+    //return FinalWindowProc(msg, wp, lp);
 }
 
 bool Edit::HasBorder() {

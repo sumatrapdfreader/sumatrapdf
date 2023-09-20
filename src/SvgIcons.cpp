@@ -8,13 +8,6 @@ extern "C" {
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
-
-#include "wingui/UIModels.h"
-
-#include "DocController.h"
-#include "EngineBase.h"
-#include "EngineMupdfImpl.h"
 
 // https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
 static const char* gIconFileOpen =

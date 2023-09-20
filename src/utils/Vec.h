@@ -95,12 +95,20 @@ class Vec {
     }
 
   public:
+    // resets to initial state, freeing memory
     void Reset() {
         FreeEls();
         len = 0;
         cap = dimof(buf) - kPadding;
         els = buf;
         memset(buf, 0, sizeof(buf));
+    }
+
+    // use to empty but don't free els
+    // for efficient reuse
+    void Clear() {
+        len = 0;
+        memset(els, 0, cap * kElSize);
     }
 
     bool SetSize(size_t newSize) {
@@ -228,6 +236,12 @@ class Vec {
         }
         memcpy(dst, src, count * kElSize);
         return true;
+    }
+
+    bool Append(const Vec& other) {
+        size_t n = other.size();
+        const T* data = other.LendData();
+        return this->Append(data, n);
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
@@ -389,5 +403,5 @@ inline void DeleteVecMembers(Vec<T>& v) {
     for (T& el : v) {
         delete el;
     }
-    v.Reset();
+    v.Clear();
 }

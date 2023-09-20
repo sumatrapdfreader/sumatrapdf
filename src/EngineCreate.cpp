@@ -76,7 +76,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const char* path, PasswordUI* 
         return engine;
     }
     if (kind == kindDirectory) {
-        // TODO: in 3.1.2 we open folder of images (IsEngineImageDirSupportedFile)
+        // TODO: in 3.1.2 we open folder of images (IsEngineImageDirSupportedFile())
         // To avoid changing behavior, we open pdfs only in ramicro build
         // this should be controlled via cmd-line flag e.g. -folder-open-pdf
         // Then we could have more options, like -folder-open-images (default)
@@ -170,7 +170,7 @@ bool EngineSupportsAnnotations(EngineBase* engine) {
     return EngineMupdfSupportsAnnotations(engine);
 }
 
-bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
+bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
     if (!IsEngineMupdf(engine)) {
         return false;
     }
@@ -185,7 +185,6 @@ bool EngineHasUnsavedAnnotations(EngineBase* engine) {
     return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
-// caller must delete
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     if (!IsEngineMupdf(engine)) {
         return nullptr;

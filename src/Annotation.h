@@ -37,6 +37,12 @@ enum class AnnotationType {
     Unknown = -1
 };
 
+enum class AnnotationChange {
+    Add,
+    Remove,
+    Modify,
+};
+
 class EngineMupdf;
 extern "C" struct pdf_annot;
 
@@ -50,19 +56,15 @@ struct Annotation {
     AnnotationType type{AnnotationType::Unknown};
     int pageNo = -1;
 
-    // either new annotation or has been modified
-    bool isChanged = false;
-    // deleted are not shown but can be undeleted
-    bool isDeleted = false;
+    // in page coordinates
+    RectF bounds = {};
 
     EngineMupdf* engine = nullptr;
     pdf_annot* pdfannot = nullptr; // not owned
 
     Annotation() = default;
-    ~Annotation() = default;
+    ~Annotation();
 };
-
-void PdfColorToFloat(PdfColor c, float rgb[3]);
 
 int PageNo(Annotation*);
 RectF GetBounds(Annotation*);
@@ -75,7 +77,7 @@ void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 const char* Author(Annotation*);
 time_t ModificationDate(Annotation*);
 int PopupId(Annotation*); // -1 if not exist
-const char* AnnotationReadableName(AnnotationType);
+TempStr AnnotationReadableNameTemp(AnnotationType tp);
 AnnotationType Type(Annotation*);
 const char* DefaultAppearanceTextFont(Annotation*);
 PdfColor DefaultAppearanceTextColor(Annotation*);
@@ -89,19 +91,15 @@ bool SetQuadding(Annotation*, int);
 int BorderWidth(Annotation*);
 void SetBorderWidth(Annotation*, int);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
-const char* IconName(Annotation*); // empty() if no icon
-void SetIconName(Annotation*, const char*);
-PdfColor GetColor(Annotation*); // ColorUnset if no color
-bool SetColor(Annotation*, PdfColor);
+const char* IconName(Annotation*);   // empty() if no icon
+PdfColor GetColor(Annotation*);      // ColorUnset if no color
 PdfColor InteriorColor(Annotation*); // ColorUnset if no color
 bool SetInteriorColor(Annotation*, PdfColor);
 int Opacity(Annotation*);
 void SetOpacity(Annotation*, int);
 bool SetContents(Annotation*, const char*);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
-
+void PdfColorToFloat(PdfColor c, float rgb[3]);
+void SetIconName(Annotation*, const char*);
+bool SetColor(Annotation*, PdfColor);
 void DeleteAnnotation(Annotation*);
-
-// EngineMupdf.cpp
-Annotation* MakeAnnotationPdf(EngineMupdf*, pdf_annot*, int pageNo);
-void MarkAsModifiedAnnotations(EngineMupdf*, Annotation*);

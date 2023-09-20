@@ -228,7 +228,6 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
     }
     DrawMovePattern(win, win->dragPrevPos, win->annotationBeingMovedSize);
     if (aborted) {
-        delete annot;
         win->annotationOnLastButtonDown = nullptr;
         return true;
     }
@@ -250,9 +249,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         SetRect(annot, r);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
-        StartEditAnnotations(win->CurrentTab(), annot);
-    } else {
-        delete annot;
+        //ShowEditAnnotationsWindow(win->CurrentTab(), annot);
     }
     win->annotationOnLastButtonDown = nullptr;
     return true;
@@ -421,7 +418,6 @@ static AnnotationType moveableAnnotations[] = {
 static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     // to drag annotations with mouse need to press Ctrl
     if (!IsCtrlPressed()) {
-        delete annot;
         return;
     }
     DisplayModel* dm = win->AsFixed();
@@ -828,20 +824,20 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     tv->Blue = (COLOR16)((ab + perc * (bb - ab)) * 256);
 }
 
-void SelectAnnotation(WindowTab* tab, Annotation* annot, int annotPageNo) {
-    tab->selectedAnnotation.annot = annot;
-    tab->selectedAnnotation.show = true;
-    tab->selectedAnnotation.page = annotPageNo;
-    tab->selectedAnnotation.scrolled = false;
-    tab->selectedAnnotation.rect = GetBounds(annot);
-}
-
 // Draw a border around selected annotation
 NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
-    Rect rect = dm->CvtToScreen(tab->selectedAnnotation.page, tab->selectedAnnotation.rect);
-    if (!tab->selectedAnnotation.scrolled) {
-        dm->ScrollScreenToRect(tab->selectedAnnotation.page, rect);
-        tab->selectedAnnotation.scrolled = true;
+    if (!tab) {
+        return;
+    }
+    Annotation* annot = tab->selectedAnnotation;
+    if (!annot) {
+        return;
+    }
+
+    Rect rect = dm->CvtToScreen(annot->pageNo, GetRect(annot));
+    if (!tab->didScrollToSelectedAnnotation) {
+        dm->ScrollScreenToRect(annot->pageNo, rect);
+        tab->didScrollToSelectedAnnotation = true;
     }
 
     Gdiplus::Color col = GdiRgbFromCOLORREF(currentTheme->document.textColor);
@@ -996,9 +992,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     }
 
     WindowTab* tab = win->CurrentTab();
-    if (tab && tab->selectedAnnotation.show) {
-        PaintCurrentEditAnnotationMark(tab, hdc, dm);
-    }
+    PaintCurrentEditAnnotationMark(tab, hdc, dm);
 
     if (win->showSelection) {
         PaintSelection(win, hdc);
@@ -1634,12 +1628,18 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             }
             break;
 
-        case AUTO_RELOAD_TIMER_ID:
+        case AUTO_RELOAD_TIMER_ID: {
             KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-            if (win->CurrentTab() && win->CurrentTab()->reloadOnFocus) {
-                ReloadDocument(win, true);
+            auto tab = win->CurrentTab();
+            if (tab && tab->reloadOnFocus) {
+                if (tab->ignoreNextAutoReload) {
+                    tab->ignoreNextAutoReload = false;
+                } else {
+                    ReloadDocument(win, true);
+                }
             }
             break;
+        }
 
         case MW_SMOOTHSCROLL_TIMER_ID:
             DisplayModel* dm = win->AsFixed();

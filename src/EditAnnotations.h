@@ -3,9 +3,7 @@
 
 struct EditAnnotationsWindow;
 
-void StartEditAnnotations(WindowTab*, Annotation*);
-void StartEditAnnotations(WindowTab*, Vec<Annotation*>&);
+void ShowEditAnnotationsWindow(WindowTab*);
 void CloseAndDeleteEditAnnotationsWindow(EditAnnotationsWindow*);
-void AddAnnotationToEditWindow(EditAnnotationsWindow*, Annotation*);
-void SelectAnnotationInEditWindow(EditAnnotationsWindow*, Annotation*);
-void DeleteAnnotationAndUpdateUI(WindowTab*, EditAnnotationsWindow*, Annotation*);
+void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
+void SetSelectedAnnotation(WindowTab* tab, Annotation* annot);

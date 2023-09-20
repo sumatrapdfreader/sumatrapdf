@@ -119,14 +119,21 @@ const char* AnnotationName(AnnotationType tp) {
 }
 */
 
-const char* AnnotationReadableName(AnnotationType tp) {
+static bool gDebugAnnotDestructor = false;
+Annotation::~Annotation() {
+    if (gDebugAnnotDestructor) {
+        logf("deleting an annotation\n");
+    }
+}
+
+TempStr AnnotationReadableNameTemp(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
-        return "Unknown";
+        return (char*)"Unknown";
     }
-    const char* s = seqstrings::IdxToStr(gAnnotReadableNames, n);
+    char* s = (char*)seqstrings::IdxToStr(gAnnotReadableNames, n);
     CrashIf(!s);
-    return {s};
+    return s;
 }
 
 bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
@@ -158,24 +165,12 @@ RectF GetBounds(Annotation* annot) {
     fz_catch(ctx) {
         logf("GetBounds(): pdf_bound_annot() failed\n");
     }
-    auto rect = ToRectF(rc);
-    return rect;
+    annot->bounds = ToRectF(rc);
+    return annot->bounds;
 }
 
 RectF GetRect(Annotation* annot) {
-    EngineMupdf* e = annot->engine;
-    auto ctx = e->ctx;
-    ScopedCritSec cs(e->ctxAccess);
-    fz_rect rc = {};
-
-    fz_try(ctx) {
-        rc = pdf_annot_rect(ctx, annot->pdfannot);
-    }
-    fz_catch(ctx) {
-        logf("GetRect(): pdf_annot_rect()\n");
-    }
-    auto rect = ToRectF(rc);
-    return rect;
+    return annot->bounds;
 }
 
 void SetRect(Annotation* annot, RectF r) {
@@ -191,6 +186,7 @@ void SetRect(Annotation* annot, RectF r) {
     fz_catch(ctx) {
         logf("SetRect(): pdf_set_annot_rect() or pdf_update_annot() failed\n");
     }
+    annot->bounds = r;
     MarkAsModifiedAnnotations(e, annot);
 }
 
@@ -344,17 +340,23 @@ void DeleteAnnotation(Annotation* annot) {
     }
     EngineMupdf* e = annot->engine;
     auto ctx = e->ctx;
-    CrashIf(annot->isDeleted);
-    ScopedCritSec cs(e->ctxAccess);
-    pdf_page* page = nullptr;
-    fz_try(ctx) {
-        page = pdf_annot_page(ctx, annot->pdfannot);
-        pdf_delete_annot(ctx, page, annot->pdfannot);
+    {
+        ScopedCritSec cs(e->ctxAccess);
+        bool failed = false;
+        pdf_page* page = nullptr;
+        fz_try(ctx) {
+            page = pdf_annot_page(ctx, annot->pdfannot);
+            pdf_delete_annot(ctx, page, annot->pdfannot);
+        }
+        fz_catch(ctx) {
+            failed = true;
+        }
+        if (failed) {
+            logf("failed to delete annotation on page %d\n", annot->pageNo);
+            return;
+        }
     }
-    fz_catch(ctx) {
-    }
-    annot->isDeleted = true;
-    MarkAsModifiedAnnotations(e, annot);
+    MarkAsModifiedAnnotations(e, annot, AnnotationChange::Remove);
 }
 
 // -1 if not exist
@@ -850,3 +852,145 @@ Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) 
     return result;
 }
 #endif
+
+static const char* getuser(void) {
+    const char* u;
+    u = getenv("USER");
+    if (!u) {
+        u = getenv("USERNAME");
+    }
+    if (!u) {
+        u = "user";
+    }
+    return u;
+}
+
+static TempStr GetAnnotationTextIconTemp() {
+    char* s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
+    // this way user can use "new paragraph" and we'll match "NewParagraph"
+    str::RemoveCharsInPlace(s, " ");
+    int idx = seqstrings::StrToIdxIS(gAnnotationTextIcons, s);
+    if (idx < 0) {
+        return (char*)"Note";
+    }
+    char* real = (char*)seqstrings::IdxToStr(gAnnotationTextIcons, idx);
+    return real;
+}
+
+Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
+    static const float black[3] = {0, 0, 0};
+
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    fz_context* ctx = epdf->ctx;
+
+    auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
+
+    ScopedCritSec cs(epdf->ctxAccess);
+    pdf_annot* annot = nullptr;
+
+    fz_try(ctx) {
+        auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
+        enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
+
+        annot = pdf_create_annot(ctx, page, atyp);
+
+        pdf_set_annot_modification_date(ctx, annot, time(nullptr));
+        if (pdf_annot_has_author(ctx, annot)) {
+            char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
+            // if "(none)" we don't set it
+            if (!str::Eq(defAuthor, "(none)")) {
+                const char* author = getuser();
+                if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
+                    author = defAuthor;
+                }
+                pdf_set_annot_author(ctx, annot, author);
+            }
+        }
+
+        switch (typ) {
+            case AnnotationType::Text:
+            case AnnotationType::FreeText:
+            case AnnotationType::Stamp:
+            case AnnotationType::Caret:
+            case AnnotationType::Square:
+            case AnnotationType::Circle: {
+                fz_rect trect = pdf_annot_rect(ctx, annot);
+                float dx = trect.x1 - trect.x0;
+                trect.x0 = pos.x;
+                trect.x1 = trect.x0 + dx;
+                float dy = trect.y1 - trect.y0;
+                trect.y0 = pos.y;
+                trect.y1 = trect.y0 + dy;
+                pdf_set_annot_rect(ctx, annot, trect);
+            } break;
+            case AnnotationType::Line: {
+                fz_point a{pos.x, pos.y};
+                fz_point b{pos.x + 100, pos.y + 50};
+                pdf_set_annot_line(ctx, annot, a, b);
+            } break;
+        }
+        if (typ == AnnotationType::FreeText) {
+            auto& a = gGlobalPrefs->annotations;
+            int borderWidth = a.freeTextBorderWidth;
+            if (borderWidth < 0) {
+                borderWidth = 1; // default
+            }
+            pdf_set_annot_border(ctx, annot, (float)borderWidth);
+            pdf_set_annot_contents(ctx, annot, "This is a text...");
+            int fontSize = a.freeTextSize;
+            if (fontSize <= 0) {
+                fontSize = 12;
+            }
+            int nCol = 3;
+            const float* col = black;
+            float textColor[3]{};
+
+            auto parsedCol = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
+            if (parsedCol && parsedCol->parsedOk) {
+                PdfColorToFloat(parsedCol->pdfCol, textColor);
+                col = textColor;
+            }
+
+            pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, col);
+        }
+
+        pdf_update_annot(ctx, annot);
+    }
+    fz_catch(ctx) {
+        if (annot) {
+            pdf_drop_annot(ctx, annot);
+        }
+    }
+    if (!annot) {
+        return nullptr;
+    }
+
+    auto res = MakeAnnotationFrom_pdf_annot(epdf, annot, pageNo);
+    MarkAsModifiedAnnotations(epdf, res, AnnotationChange::Add);
+
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* parsedCol = nullptr;
+
+    if (typ == AnnotationType::Text) {
+        TempStr iconName = GetAnnotationTextIconTemp();
+        if (!str::EqI(iconName, "Note")) {
+            SetIconName(res, iconName);
+        }
+        parsedCol = GetParsedColor(a.textIconColor, a.textIconColorParsed);
+    } else if (typ == AnnotationType::Underline) {
+        parsedCol = GetParsedColor(a.underlineColor, a.underlineColorParsed);
+    } else if (typ == AnnotationType::Highlight) {
+        parsedCol = GetParsedColor(a.highlightColor, a.highlightColorParsed);
+    } else if (typ == AnnotationType::Squiggly) {
+        parsedCol = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
+    } else if (typ == AnnotationType::StrikeOut) {
+        parsedCol = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
+    } else if (typ == AnnotationType::FreeText) {
+    }
+    if (parsedCol && parsedCol->parsedOk) {
+        SetColor(res, parsedCol->pdfCol);
+    }
+
+    pdf_drop_annot(ctx, annot);
+    return res;
+}

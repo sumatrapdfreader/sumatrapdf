@@ -1055,7 +1055,6 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt, int* pageNoOut) {
     return engine->GetElementAtPos(pageNo, pos);
 }
 
-// caller must delete
 Annotation* DisplayModel::GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots) {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {
