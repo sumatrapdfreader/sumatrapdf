@@ -213,7 +213,7 @@ bool IsLightColor(COLORREF c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     float y = 0.2126f * float(r) + 0.7152f * float(g) + 0.0722f * float(b);
-    return y > 0.5;
+    return y > 127.5f; // mid 256
 }
 
 u8 GetRed(COLORREF rgb) {

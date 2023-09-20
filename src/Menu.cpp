@@ -1799,7 +1799,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle:
             annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
-        break;
+            break;
         case CmdCreateAnnotHighlight:
             annot = MakeAnnotationsFromSelection(tab, AnnotationType::Highlight);
             break;

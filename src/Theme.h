@@ -39,18 +39,6 @@ struct NotificationStyle {
     COLORREF progressColor;
 };
 
-struct TabStyle {
-    // Background color of the tab
-    COLORREF backgroundColor;
-};
-
-struct TabTheme {
-    // Style of background tabs
-    TabStyle background;
-    // Style of the highlighted tab (hovered over)
-    TabStyle highlighted;
-};
-
 struct Theme {
     // Name of the theme
     const char* name;
@@ -58,8 +46,6 @@ struct Theme {
     MainWindowStyle mainWindow;
     // Style of documents
     DocumentStyle document;
-    // Style of tabs
-    TabTheme tab;
     // Style of notifications
     NotificationStyle notifications;
     // Whether or not we colorize standard Windows controls and window areas

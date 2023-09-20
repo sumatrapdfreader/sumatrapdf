@@ -3455,15 +3455,27 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     Rect r;
     Gdiplus::RectF rTxt;
 
-    COLORREF textColor = currentTheme->mainWindow.textColor;
-    COLORREF xColor = textColor;
+    Theme* theme = currentTheme;
+    COLORREF textColor = theme->mainWindow.textColor;
+    COLORREF tabBgSelected = theme->mainWindow.controlBackgroundColor;
+    COLORREF tabBgHighlight;
+    COLORREF tabBgBackground;
+    if (IsLightColor(tabBgSelected)) {
+        tabBgBackground = AdjustLightness2(tabBgSelected, -15);
+        tabBgHighlight = AdjustLightness2(tabBgSelected, -25);
+    } else {
+        tabBgBackground = AdjustLightness2(tabBgSelected, 15);
+        tabBgHighlight = AdjustLightness2(tabBgSelected, 25);
+    }
+
+    COLORREF tabBgCol;
     for (int i = 0; i < n; i++) {
         // Get the correct colors based on the state and the current theme
-        TabStyle tabStyle = currentTheme->tab.background;
+        tabBgCol = tabBgBackground;
         if (tabSelected == i) {
-            tabStyle.backgroundColor = currentTheme->mainWindow.controlBackgroundColor;
+            tabBgCol = tabBgSelected;
         } else if (tabUnderMouse == i) {
-            tabStyle = currentTheme->tab.highlighted;
+            tabBgCol = tabBgHighlight;
         }
 
         ti = GetTab(i);
@@ -3472,7 +3484,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
 
         // draw background
-        br.SetColor(GdipCol(tabStyle.backgroundColor));
+        br.SetColor(GdipCol(tabBgCol));
         gr = ToGdipRect(ti->r);
         gfx.FillRectangle(&br, gr);
 
@@ -3488,7 +3500,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
             }
 
             // draw X
-            br.SetColor(GdipCol(xColor));
+            br.SetColor(GdipCol(textColor));
             Pen penX(&br, closePenWidth);
             Gdiplus::Point p1(r.x, r.y);
             Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);

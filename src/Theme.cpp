@@ -67,21 +67,6 @@ Theme g_themeLight = {
         // Text color
         COL_BLACK
     },
-    // Tabs
-    {
-        // Background style
-        {
-            // Background color
-            //AdjustLightness2(g_themeLight.tab.selected.backgroundColor, -25),
-            RgbToCOLORREF(0xCECECE),
-        },
-        // Highlighted style
-        {
-            // Background color
-            // AdjustLightness2(g_themeLight.tab.selected.backgroundColor, 15),
-            RgbToCOLORREF(0xBBBBBB),
-        },
-    },
     // Notifications
     {
         // Background color
@@ -123,19 +108,6 @@ Theme g_themeDark = {
         // Text color
         g_themeDark.mainWindow.textColor
     },
-    // Tabs
-    {
-        // Background style
-        {
-            // Background color
-            AdjustLightness2(g_themeDark.mainWindow.backgroundColor, -10),
-        },
-        // Highlighted style
-        {
-            // Background color
-            AdjustLightness2(g_themeDark.mainWindow.backgroundColor, 10),
-        },
-    },
     // Notifications
     {
         // Background color
@@ -175,19 +147,6 @@ Theme g_themeDarker = {
         g_themeDarker.mainWindow.backgroundColor,
         // Text color
         g_themeDarker.mainWindow.textColor
-    },
-    // Tabs
-    {
-        // Background style
-        {
-            // Background color
-            RgbToCOLORREF(0xEAEAEA),
-        },
-        // Highlighted style
-        {
-            // Background color
-            RgbToCOLORREF(0x1C97EA),
-        },
     },
     // Notifications
     {
