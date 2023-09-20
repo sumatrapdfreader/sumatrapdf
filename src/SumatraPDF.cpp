@@ -2267,7 +2267,17 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     win->mouseAction = MouseAction::Idle;
 
     DeletePropertiesWindow(win->hwndFrame);
-    DeleteOldSelectionInfo(win, true);
+
+    {
+        // on 3.4.6 we would call DeleteOldSelectionInfo()
+        // but it wouldn't delete tab->selectionOnPage because
+        // win->currentTab was null. In 3.5 we changed
+        // to win->GetCurrentTab() which always returns something
+        // other calls to DeleteOldSelectionInfo() might
+        // incorrectly clear tab->selectionOnPage
+        win->showSelection = false;
+        win->selectionMeasure = SizeF();
+    }
 
     if (!keepUIEnabled) {
         SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);

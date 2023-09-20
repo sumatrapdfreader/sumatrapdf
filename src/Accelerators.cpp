@@ -202,7 +202,6 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'u', CmdCreateAnnotUnderline},
     {0, 'U', CmdCreateAnnotUnderline},
 
-
     {0, 'i', CmdInvertColors},
     {0, 'I', CmdTogglePageInfo},
 
