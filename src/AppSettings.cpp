@@ -95,15 +95,6 @@ bool LoadSettings() {
         gGlobalPrefs = NewGlobalPrefs(prefsData);
         CrashAlwaysIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
-
-        // in pre-release builds between 3.1.10079 and 3.1.10377,
-        // RestoreSession was a string with the additional option "auto"
-        // TODO: remove this after 3.2 has been released
-#if defined(DEBUG) || defined(PRE_RELEASE_VER)
-        if (!gprefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto")) {
-            gprefs->restoreSession = true;
-        }
-#endif
         prefsData.Free();
     }
 

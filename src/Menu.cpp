@@ -1797,16 +1797,9 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotCaret:
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
-        case CmdCreateAnnotCircle: {
+        case CmdCreateAnnotCircle:
             annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
-// TODO: remove
-#if 0
-            if (annot) {
-                MainWindowRerender(win);
-                ToolbarUpdateStateForWindow(win, true);
-            }
-#endif
-        } break;
+        break;
         case CmdCreateAnnotHighlight:
             annot = MakeAnnotationsFromSelection(tab, AnnotationType::Highlight);
             break;

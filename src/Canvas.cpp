@@ -833,10 +833,16 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     if (!annot) {
         return;
     }
+    int pageNo = annot->pageNo;
+    if (!dm->PageVisible(pageNo)) {
+        // CvtToScreen() might not work if page is not visible because
+        // it might not have zoom etc. calculated yet
+        return;
+    }
 
-    Rect rect = dm->CvtToScreen(annot->pageNo, GetRect(annot));
+    Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
     if (!tab->didScrollToSelectedAnnotation) {
-        dm->ScrollScreenToRect(annot->pageNo, rect);
+        dm->ScrollScreenToRect(pageNo, rect);
         tab->didScrollToSelectedAnnotation = true;
     }
 

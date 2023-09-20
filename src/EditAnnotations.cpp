@@ -802,13 +802,13 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     }
     tab->selectedAnnotation = annot;
     tab->didScrollToSelectedAnnotation = false;
+    auto ew = tab->editAnnotsWindow;
+    // go to page with a given annotations before triggering repaint
+    if (ew) {
+        UpdateUIForSelectedAnnotation(ew, annot);
+    }
     MainWindowRerender(tab->win);
     ToolbarUpdateStateForWindow(tab->win, false);
-    auto ew = tab->editAnnotsWindow;
-    if (!ew) {
-        return;
-    }
-    UpdateUIForSelectedAnnotation(ew, annot);
 }
 
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
