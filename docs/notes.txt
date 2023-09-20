@@ -10,3 +10,10 @@ CssParser.cpp, HtmlFormatter.cpp, EngineEbook.cpp
 Fix cppcheck issues.
 Notably, registry deletion is wrong.
 
+-------------------
+
+MenuOwnerDrawInfo.text should be char*
+
+-------------------
+
+

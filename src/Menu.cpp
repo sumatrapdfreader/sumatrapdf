@@ -1965,7 +1965,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
 constexpr int kMenuPaddingY = 2;
 constexpr int kMenuPaddingX = 2;
 
-void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
+void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {
         return;
     }
@@ -2002,7 +2002,7 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
 }
 
 // https://gist.github.com/kjk/1df108aa126b7d8e298a5092550a53b7
-void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
+void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     if (ODT_MENU != dis->CtlType) {
         return;
     }
@@ -2023,8 +2023,6 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
     // ??
     // bool isMenuBreak = bit::IsMaskSet(modi->fType, (uint)MFT_MENUBREAK);
 
-    // bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
-
     bool isSeparator = bit::IsMaskSet(modi->fType, (uint)MFT_SEPARATOR);
 
     // default should be drawn in bold
@@ -2038,7 +2036,10 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
 
     // checked/unchecked state for check and radio menus?
     // uses hbmpChecked, otherwise use hbmpUnchecked ?
-    // bool isChecked = bit::IsMaskSet(modi->fState, (uint)MFS_CHECKED);
+    bool isChecked = bit::IsMaskSet(modi->fState, (uint)MFS_CHECKED);
+
+    // if isChecked, show as radio button (i.e. circle)
+    bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
     auto hdc = dis->hDC;
     HFONT font = GetMenuFont();
@@ -2054,19 +2055,35 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
     }
 
     RECT rc = dis->rcItem;
+    int rcDy = RectDy(rc);
 
     int padY = DpiScale(hwnd, kMenuPaddingY);
     int padX = DpiScale(hwnd, kMenuPaddingX);
     int dxCheckMark = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
 
-    auto hbr = CreateSolidBrush(bgCol);
-    FillRect(hdc, &rc, hbr);
-    DeleteObject(hbr);
+    // TODO: improve how we paint the menu:
+    // - paint checkmark if this is checkbox menu
+    // - position text the right way (not just DT_CENTER)
+    //   taking into account LTR mode
+    // - paint shortcut (part after \t if exists) separately
+    // - paint disabled state better
+    // - paint icons for system menus
+    SetTextColor(hdc, txtCol);
+    SetBkColor(hdc, bgCol);
+
+    auto brBg = CreateSolidBrush(bgCol);
+    FillRect(hdc, &rc, brBg);
+    auto brTxt = CreateSolidBrush(txtCol);
+
+    defer {
+        DeleteObject(brBg);
+        DeleteObject(brTxt);
+    };
 
     if (isSeparator) {
         CrashIf(modi->text);
         int sx = rc.left + dxCheckMark;
-        int y = rc.top + (RectDy(rc) / 2);
+        int y = rc.top + (rcDy / 2);
         int ex = rc.right - padX;
         auto pen = CreatePen(PS_SOLID, 1, txtCol);
         auto prevPen = SelectObject(hdc, pen);
@@ -2085,16 +2102,6 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
     MenuText mt;
     ParseMenuText((WCHAR*)modi->text, mt);
 
-    // TODO: improve how we paint the menu:
-    // - paint checkmark if this is checkbox menu
-    // - position text the right way (not just DT_CENTER)
-    //   taking into account LTR mode
-    // - paint shortcut (part after \t if exists) separately
-    // - paint disabled state better
-    // - paint icons for system menus
-    SetTextColor(hdc, txtCol);
-    SetBkColor(hdc, bgCol);
-
     // DrawTextEx handles & => underscore drawing
     rc.top += padY;
     rc.left += dxCheckMark;
@@ -2106,6 +2113,22 @@ void MenuOwnerDrawnDrawItem(__unused HWND hwnd, DRAWITEMSTRUCT* dis) {
         DrawTextExW(hdc, mt.shortcutText, mt.shortcutTextLen, &rc, DT_RIGHT, nullptr);
     }
     SelectObject(hdc, prevFont);
+
+    constexpr int kRadioCircleDx = 6;
+    if (isChecked) {
+        if (isRadioCheck || true) {
+            int dx = DpiScale(hwnd, kRadioCircleDx);
+            rc = dis->rcItem;
+            rc.left = rc.left + (dxCheckMark / 2) - (dx / 2);
+            rc.right = rc.left + dx;
+            rc.top = rc.top + (rcDy / 2) - (dx / 2);
+            rc.bottom = rc.top + dx;
+            ScopedSelectObject restoreBrush(hdc, brTxt);
+            Ellipse(hdc, rc.left, rc.top, rc.right, rc.bottom);
+            return;
+        }
+        // TODO: !isRadioCheck
+    }
 }
 
 HMENU BuildMenu(MainWindow* win) {

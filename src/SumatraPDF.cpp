@@ -5506,14 +5506,14 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_MEASUREITEM:
             if (currentTheme->colorizeControls) {
-                MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
+                MenuCustomDrawMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;
 
         case WM_DRAWITEM:
             if (currentTheme->colorizeControls) {
-                MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
+                MenuCustomDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;

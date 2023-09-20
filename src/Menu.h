@@ -18,8 +18,8 @@ void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);
 void MarkMenuOwnerDraw(HMENU);
 void FreeMenuOwnerDrawInfoData(HMENU);
-void MenuOwnerDrawnMesureItem(HWND, MEASUREITEMSTRUCT*);
-void MenuOwnerDrawnDrawItem(HWND, DRAWITEMSTRUCT*);
+void MenuCustomDrawMesureItem(HWND, MEASUREITEMSTRUCT*);
+void MenuCustomDrawItem(HWND, DRAWITEMSTRUCT*);
 HFONT GetMenuFont();
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
