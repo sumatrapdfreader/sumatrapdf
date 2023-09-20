@@ -164,7 +164,7 @@ static ExternalViewerInfo* FindExternalViewerInfoByCmd(int cmd) {
 }
 
 bool HasExternalViewerForCmd(int cmd) {
-    auto* v= FindExternalViewerInfoByCmd(cmd);
+    auto* v = FindExternalViewerInfoByCmd(cmd);
     if (v == nullptr) {
         return false;
     }

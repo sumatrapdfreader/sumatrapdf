@@ -213,15 +213,13 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return RecentlyCloseDocumentsCount() > 0;
     }
 
+    if (IsOpenExternalViewerCommand(cmdId)) {
+        return HasExternalViewerForCmd(cmdId);
+    }
     if (!ctx.isDocLoaded) {
         if (!IsCmdInList(gDocumentNotOpenWhitelist)) {
             return false;
         }
-        if (IsOpenExternalViewerCommand(cmdId)) {
-            return false;
-        }
-    } else {
-        return HasExternalViewerForCmd(cmdId);
     }
 
     if (cmdId == CmdToggleMenuBar) {
