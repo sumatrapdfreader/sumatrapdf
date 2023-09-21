@@ -1376,12 +1376,11 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
 
     LayoutAndSizeToContent(ew->mainLayout, 520, minDy, ew->hwnd);
     HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
-#if 0
+    Annotation* annot = ew->tab->selectedAnnotation;
     ew->skipGoToPage = (annot != nullptr);
     if (annot) {
-        SelectAnnotationInListBox(ew, annot); // why
+        UpdateUIForSelectedAnnotation(ew, annot);
     }
-#endif
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);
