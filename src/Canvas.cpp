@@ -372,7 +372,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.hwndParent = win->hwndCanvas;
                         args.groupId = kindNotifAnnotation;
                         args.font = GetDefaultGuiFont();
-                        args.timeoutMs = 2000;
+                        args.timeoutMs = 1500;
                         // TODO: translate
                         // TODO: 'e' and 'Ctrl + e' could be re-defined
                         args.msg = str::FormatTemp("%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
@@ -419,7 +419,6 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
     win->dragPrevPos = pos;
 
-    // TODO: why need cursorPosNotif here?
     if (cursorPosNotif && (MouseAction::Selecting == win->mouseAction)) {
         win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
     }
@@ -499,8 +498,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
-    Annotation* annot = win->annotationUnderCursor;
-    if (annot || !canCopy || (isShift || !isOverText) && !isCtrl) {
+    if (!canCopy || (isShift || !isOverText) && !isCtrl) {
         StartMouseDrag(win, x, y);
     } else {
         OnSelectionStart(win, x, y, key);
