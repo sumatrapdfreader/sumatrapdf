@@ -53,7 +53,7 @@ extern const char* gAnnotationTextIcons;
 // inlude mupdf to include Annotation
 struct Annotation {
     // common to both smx and pdf
-    AnnotationType type{AnnotationType::Unknown};
+    AnnotationType type = AnnotationType::Unknown;
     int pageNo = -1;
 
     // in page coordinates

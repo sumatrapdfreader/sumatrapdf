@@ -298,8 +298,12 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
     return dy > dragDy;
 }
 
+const Kind kindNotifAnnotation = "notifAnnotation";
+static bool gShowAnnotationNotification = true;
+
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
-    CrashIf(!win->AsFixed());
+    DisplayModel* dm = win->AsFixed();
+    CrashIf(!dm);
 
     if (win->InPresentation()) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -349,10 +353,37 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
     Point prevPos = win->dragPrevPos;
     switch (win->mouseAction) {
-        case MouseAction::None:
+        case MouseAction::None: {
+            Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
+            Annotation* prev = win->annotationUnderCursor;
+            if (annot != prev) {
+                TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr)"none";
+                TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
+                logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
+                if (gShowAnnotationNotification) {
+                    if (annot) {
+                        auto r = annot->bounds;
+                        logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
+                        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);
+                        NotificationCreateArgs args;
+                        args.hwndParent = win->hwndCanvas;
+                        args.groupId = kindNotifAnnotation;
+                        args.font = GetDefaultGuiFont();
+                        args.timeoutMs = 2500;
+                        args.msg = str::FormatTemp(
+                            "%s Annotation. Ctrl + click to select. Ctrl + double click to start edit", name);
+                        ShowNotification(args);
+                    } else {
+                        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);
+                    }
+                }
+            }
+            win->annotationUnderCursor = annot;
             break;
+        }
 
         case MouseAction::Scrolling: {
+            win->annotationUnderCursor = nullptr;
             win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             break;
@@ -363,6 +394,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             }
             [[fallthrough]];
         case MouseAction::Selecting: {
+            win->annotationUnderCursor = nullptr;
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
             OnSelectionEdgeAutoscroll(win, x, y);
@@ -385,7 +417,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
     // TODO: why need cursorPosNotif here?
     if (cursorPosNotif && (MouseAction::Selecting == win->mouseAction)) {
-        win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
+        win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
     }
 }
 
@@ -442,7 +474,6 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
 
 static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
     CrashIf(win->linkOnLastButtonDown);
-    CrashIf(win->annotationUnderCursor);
     DisplayModel* dm = win->AsFixed();
     Point pt{x, y};
 
