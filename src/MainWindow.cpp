@@ -121,7 +121,6 @@ MainWindow::~MainWindow() {
     CrashIf(TabCount() > 0);
     // CrashIf(ctrl); // TODO: seen in crash report
     CrashIf(linkOnLastButtonDown);
-    CrashIf(annotationUnderCursor);
 
     UnsubclassToc(this);
 

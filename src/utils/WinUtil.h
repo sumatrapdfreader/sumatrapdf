@@ -120,8 +120,11 @@ bool IsCursorOverWindow(HWND);
 Point HwndGetCursorPos(HWND hwnd);
 int MapWindowPoints(HWND, HWND, Point*, int);
 void HwndScreenToClient(HWND, Point&);
+void HwndMakeVisible(HWND);
+
 bool IsMouseOverRect(HWND hwnd, const Rect& r);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
+
 char* GetDefaultPrinterNameTemp();
 
 bool CopyTextToClipboard(const char*);

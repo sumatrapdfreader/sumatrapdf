@@ -175,6 +175,12 @@ void HwndScreenToClient(HWND hwnd, Point& p) {
     p.y = pt.y;
 }
 
+// move window to top of Z order (i.e. make it visible to the user)
+// but without activation (i.e. capturing focus)
+void HwndMakeVisible(HWND hwnd) {
+    SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+}
+
 void MoveWindow(HWND hwnd, Rect rect) {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }

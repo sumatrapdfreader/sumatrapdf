@@ -1288,6 +1288,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     CrashIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {
+        HwndMakeVisible(ew->hwnd);
         return;
     }
     ew = new EditAnnotationsWindow();
