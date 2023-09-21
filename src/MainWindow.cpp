@@ -305,6 +305,10 @@ void MainWindow::ChangePresentationMode(PresentationMode mode) {
     RedrawAll();
 }
 
+bool MainWindow::InPresentation() const {
+    return presentation != PM_DISABLED;
+}
+
 static HWND FindModalOwnedBy(HWND hwndParent) {
     HWND hwnd = nullptr;
     while (true) {

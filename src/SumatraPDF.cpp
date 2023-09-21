@@ -1262,7 +1262,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         EnterFullScreen(win);
     }
     if (!args->isNewWindow && win->presentation && win->ctrl) {
-        win->ctrl->SetPresentationMode(true);
+        win->ctrl->SetInPresentation(true);
     }
 }
 
@@ -2014,7 +2014,7 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     UpdateUiForCurrentTab(win);
 
-    if (win->presentation != PM_DISABLED) {
+    if (win->InPresentation()) {
         SetSidebarVisibility(win, tab->showTocPresentation, gGlobalPrefs->showFavorites);
     } else {
         SetSidebarVisibility(win, tab->showToc, gGlobalPrefs->showFavorites);
@@ -2026,8 +2026,8 @@ void LoadModelIntoTab(WindowTab* tab) {
         }
         DisplayModel* dm = win->AsFixed();
         dm->SetScrollState(dm->GetScrollState());
-        if (dm->GetPresentationMode() != (win->presentation != PM_DISABLED)) {
-            dm->SetPresentationMode(!dm->GetPresentationMode());
+        if (dm->InPresentation() != win->InPresentation()) {
+            dm->SetInPresentation(win->InPresentation());
         }
     } else if (win->AsChm()) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
@@ -3759,7 +3759,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     SetWindowPos(win->hwndFrame, nullptr, rect.x, rect.y, rect.dx, rect.dy, flags);
 
     if (presentation) {
-        win->ctrl->SetPresentationMode(true);
+        win->ctrl->SetInPresentation(true);
     }
 
     // Make sure that no toolbar/sidebar keeps the focus
@@ -3777,7 +3777,7 @@ void ExitFullScreen(MainWindow* win) {
     if (wasPresentation) {
         win->presentation = PM_DISABLED;
         if (win->IsDocLoaded()) {
-            win->ctrl->SetPresentationMode(false);
+            win->ctrl->SetInPresentation(false);
         }
         // re-enable the auto-hidden cursor
         KillTimer(win->hwndCanvas, kHideCursorTimerID);

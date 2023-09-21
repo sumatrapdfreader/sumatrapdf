@@ -301,7 +301,7 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     CrashIf(!win->AsFixed());
 
-    if (win->presentation != PM_DISABLED) {
+    if (win->InPresentation()) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
             // logf("OnMouseMove: hiding cursor because black screen or white screen\n");
             SetCursor((HCURSOR) nullptr);
@@ -310,7 +310,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
         bool showingCursor = (GetCursor() != nullptr);
         bool sameAsLastPos = win->dragPrevPos.Eq(x, y);
-        // logf("OnMouseMove(): win->presentation != PM_DISABLED (%d, %d) showingCursor: %d, same as last pos: %d\n", x,
+        // logf("OnMouseMove(): win->InPresentation() (%d, %d) showingCursor: %d, same as last pos: %d\n", x,
         // y,
         //     (int)showingCursor, (int)sameAsLastPos);
         if (!sameAsLastPos) {
@@ -1618,7 +1618,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kHideCursorTimerID:
             // logf("got kHideCursorTimerID\n");
             KillTimer(hwnd, kHideCursorTimerID);
-            if (win->presentation != PM_DISABLED) {
+            if (win->InPresentation()) {
                 // logf("hiding cursor because win->presentations\n");
                 SetCursor((HCURSOR) nullptr);
             }

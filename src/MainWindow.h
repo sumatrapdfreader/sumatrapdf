@@ -178,7 +178,7 @@ struct MainWindow {
     Vec<StaticLinkInfo*> staticLinks;
 
     bool isFullScreen = false;
-    PresentationMode presentation{PM_DISABLED};
+    PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;
 
     long nonFullScreenWindowStyle = 0;
@@ -236,6 +236,7 @@ struct MainWindow {
     void RedrawAllIncludingNonClient() const;
 
     void ChangePresentationMode(PresentationMode mode);
+    bool InPresentation() const;
 
     void Focus() const;
 

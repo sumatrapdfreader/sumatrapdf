@@ -86,7 +86,7 @@ struct DisplayModel : DocController {
     // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override;
-    void SetPresentationMode(bool enable) override;
+    void SetInPresentation(bool enable) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
@@ -196,7 +196,7 @@ struct DisplayModel : DocController {
     // called when we decide that the display needs to be redrawn
     void RepaintDisplay();
 
-    bool GetPresentationMode() const;
+    bool InPresentation() const;
 
     void BuildPagesInfo();
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
@@ -257,7 +257,7 @@ struct DisplayModel : DocController {
     bool displayR2L = false;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
-    bool presentationMode = false;
+    bool inPresentation = false;
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool dontRenderFlag = false;

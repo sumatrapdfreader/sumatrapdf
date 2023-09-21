@@ -211,8 +211,8 @@ void DisplayModel::RepaintDisplay() {
     cb->Repaint();
 }
 
-bool DisplayModel::GetPresentationMode() const {
-    return presentationMode;
+bool DisplayModel::InPresentation() const {
+    return inPresentation;
 }
 
 void DisplayModel::GetDisplayState(FileState* fs) {
@@ -221,13 +221,13 @@ void DisplayModel::GetDisplayState(FileState* fs) {
 
     fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(presentationMode ? presDisplayMode : GetDisplayMode()));
-    ZoomToString(&fs->zoom, presentationMode ? presZoomVirtual : zoomVirtual, fs);
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(inPresentation ? presDisplayMode : GetDisplayMode()));
+    ZoomToString(&fs->zoom, inPresentation ? presZoomVirtual : zoomVirtual, fs);
 
     ScrollState ss = GetScrollState();
     fs->pageNo = ss.page;
     fs->scrollPos = PointF();
-    if (!presentationMode) {
+    if (!inPresentation) {
         fs->scrollPos = PointF((float)ss.x, (float)ss.y);
     }
     fs->rotation = rotation;
@@ -1313,33 +1313,33 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
     GoToPage(currPageNo, 0);
 }
 
-void DisplayModel::SetPresentationMode(bool enable) {
-    presentationMode = enable;
-    if (enable) {
+void DisplayModel::SetInPresentation(bool inPres) {
+    inPresentation = inPres;
+    if (inPresentation) {
         presDisplayMode = displayMode;
         presZoomVirtual = zoomVirtual;
         // disable the window margin during presentations
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
         SetDisplayMode(DisplayMode::SinglePage);
         SetZoomVirtual(kZoomFitPage, nullptr);
-    } else {
-        if (engine && engine->IsImageCollection()) {
-            windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
-        } else {
-            windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
-        }
-#ifdef DRAW_PAGE_SHADOWS
-        windowMargin.top += 3;
-        windowMargin.bottom += 5;
-        windowMargin.right += 3;
-        windowMargin.left += 1;
-#endif
-        SetDisplayMode(presDisplayMode);
-        if (!IsValidZoom(presZoomVirtual)) {
-            presZoomVirtual = zoomVirtual;
-        }
-        SetZoomVirtual(presZoomVirtual, nullptr);
+        return;
     }
+    if (engine && engine->IsImageCollection()) {
+        windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
+    } else {
+        windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
+    }
+#ifdef DRAW_PAGE_SHADOWS
+    windowMargin.top += 3;
+    windowMargin.bottom += 5;
+    windowMargin.right += 3;
+    windowMargin.left += 1;
+#endif
+    SetDisplayMode(presDisplayMode);
+    if (!IsValidZoom(presZoomVirtual)) {
+        presZoomVirtual = zoomVirtual;
+    }
+    SetZoomVirtual(presZoomVirtual, nullptr);
 }
 
 /* In continuous mode just scrolls to the next page. In single page mode

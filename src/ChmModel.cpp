@@ -261,7 +261,7 @@ DisplayMode ChmModel::GetDisplayMode() const {
     return DisplayMode::SinglePage;
 }
 
-void ChmModel::SetPresentationMode(bool) {
+void ChmModel::SetInPresentation(bool) {
     // no-op
 }
 

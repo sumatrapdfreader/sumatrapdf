@@ -26,7 +26,7 @@ struct ChmModel : DocController {
     // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override;
-    void SetPresentationMode(bool enable) override;
+    void SetInPresentation(bool) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
