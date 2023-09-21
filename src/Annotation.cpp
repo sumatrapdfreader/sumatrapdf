@@ -885,6 +885,57 @@ static TempStr GetAnnotationTextIconTemp() {
     return real;
 }
 
+// clang-format off
+static AnnotationType moveableAnnotations[] = {
+    AnnotationType::Text,
+    AnnotationType::Link,
+    AnnotationType::FreeText,
+    AnnotationType::Line,
+    AnnotationType::Square,
+    AnnotationType::Circle,
+    AnnotationType::Polygon,
+    AnnotationType::PolyLine,
+    //AnnotationType::Highlight,
+    //AnnotationType::Underline,
+    //AnnotationType::Squiggly,
+    //AnnotationType::StrikeOut,
+    //AnnotationType::Redact,
+    AnnotationType::Stamp,
+    AnnotationType::Caret,
+    AnnotationType::Ink,
+    AnnotationType::Popup,
+    AnnotationType::FileAttachment,
+    AnnotationType::Sound,
+    AnnotationType::Movie,
+    //AnnotationType::Widget, // TODO: maybe moveble?
+    AnnotationType::Screen,
+    AnnotationType::PrinterMark,
+    AnnotationType::TrapNet,
+    AnnotationType::Watermark,
+    AnnotationType::ThreeD,
+    AnnotationType::Unknown,// sentinel value
+};
+// clang-format on
+
+static bool IsAnnotationInList(AnnotationType tp, AnnotationType* allowed) {
+    if (!allowed) {
+        return true;
+    }
+    int i = 0;
+    while (allowed[i] != AnnotationType::Unknown) {
+        AnnotationType tp2 = allowed[i];
+        if (tp2 == tp) {
+            return true;
+        }
+        ++i;
+    }
+    return false;
+}
+
+bool IsMoveableAnnotation(AnnotationType tp) {
+    return IsAnnotationInList(tp, moveableAnnotations);
+}
+
 Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
     static const float black[3] = {0, 0, 0};
 

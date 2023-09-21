@@ -1055,7 +1055,7 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt, int* pageNoOut) {
     return engine->GetElementAtPos(pageNo, pos);
 }
 
-Annotation* DisplayModel::GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots) {
+Annotation* DisplayModel::GetAnnotationAtPos(Point pt) {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {
         return nullptr;
@@ -1066,7 +1066,7 @@ Annotation* DisplayModel::GetAnnotationAtPos(Point pt, AnnotationType* allowedAn
     }
 
     PointF pos = CvtFromScreen(pt, pageNo);
-    return EngineGetAnnotationAtPos(engine, pageNo, pos, allowedAnnots);
+    return EngineGetAnnotationAtPos(engine, pageNo, pos);
 }
 
 // note: returns false for pages that haven't been rendered yet

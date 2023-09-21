@@ -222,13 +222,14 @@ static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
 
 // return true if this was annotation dragging
 static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) {
-    Annotation* annot = win->annotationUnderCursor;
+    Annotation* annot = win->annotationBeingDragged;
     if (!annot) {
         return false;
     }
     DrawMovePattern(win, win->dragPrevPos, win->annotationBeingMovedSize);
+
+    win->annotationBeingDragged = nullptr;
     if (aborted) {
-        win->annotationUnderCursor = nullptr;
         return true;
     }
 
@@ -251,7 +252,8 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         ToolbarUpdateStateForWindow(win, true);
         // ShowEditAnnotationsWindow(win->CurrentTab(), annot);
     }
-    win->annotationUnderCursor = nullptr;
+    // win->annotationUnderCursor = dm->GetAnnotationAtPos(pt);
+    // SetCursorForAnnotation(win->annotationUnderCursor, annotSelected);
     return true;
 }
 
@@ -283,6 +285,7 @@ void CancelDrag(MainWindow* win) {
     StopMouseDrag(win, x, y, true);
     win->mouseAction = MouseAction::None;
     win->linkOnLastButtonDown = nullptr;
+    win->annotationBeingDragged = nullptr;
     SetCursorCached(IDC_ARROW);
 }
 
@@ -354,22 +357,22 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     Point prevPos = win->dragPrevPos;
     switch (win->mouseAction) {
         case MouseAction::None: {
-            Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
+            Annotation* annot = dm->GetAnnotationAtPos(pos);
             Annotation* prev = win->annotationUnderCursor;
             if (annot != prev) {
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                 TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
-                logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
+                // logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
                 if (gShowAnnotationNotification) {
                     if (annot) {
-                        auto r = annot->bounds;
-                        logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
+                        // auto r = annot->bounds;
+                        // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
                         RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);
                         NotificationCreateArgs args;
                         args.hwndParent = win->hwndCanvas;
                         args.groupId = kindNotifAnnotation;
                         args.font = GetDefaultGuiFont();
-                        args.timeoutMs = 2500;
+                        args.timeoutMs = 2000;
                         // TODO: translate
                         // TODO: 'e' and 'Ctrl + e' could be re-defined
                         args.msg = str::FormatTemp("%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
@@ -403,7 +406,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             break;
         }
         case MouseAction::Dragging: {
-            Annotation* annot = win->annotationUnderCursor;
+            Annotation* annot = win->annotationBeingDragged;
             if (annot) {
                 Size size = win->annotationBeingMovedSize;
                 DrawMovePattern(win, prevPos, size);
@@ -422,45 +425,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
 }
 
-// clang-format off
-static AnnotationType moveableAnnotations[] = {
-    AnnotationType::Text,
-    AnnotationType::Link,
-    AnnotationType::FreeText,
-    AnnotationType::Line,
-    AnnotationType::Square,
-    AnnotationType::Circle,
-    AnnotationType::Polygon,
-    AnnotationType::PolyLine,
-    //AnnotationType::Highlight,
-    //AnnotationType::Underline,
-    //AnnotationType::Squiggly,
-    //AnnotationType::StrikeOut,
-    //AnnotationType::Redact,
-    AnnotationType::Stamp,
-    AnnotationType::Caret,
-    AnnotationType::Ink,
-    AnnotationType::Popup,
-    AnnotationType::FileAttachment,
-    AnnotationType::Sound,
-    AnnotationType::Movie,
-    //AnnotationType::Widget, // TODO: maybe moveble?
-    AnnotationType::Screen,
-    AnnotationType::PrinterMark,
-    AnnotationType::TrapNet,
-    AnnotationType::Watermark,
-    AnnotationType::ThreeD,
-    AnnotationType::Unknown,
-};
-// clang-format on
-
 static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
-    // to drag annotations with mouse need to press Ctrl
-    if (!IsCtrlPressed()) {
-        return;
-    }
+    win->annotationBeingDragged = annot;
     DisplayModel* dm = win->AsFixed();
-    win->annotationUnderCursor = annot;
     CreateMovePatternLazy(win);
     RectF r = GetRect(annot);
     int pageNo = dm->GetPageNoByPoint(pt);
@@ -478,9 +445,11 @@ static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     Point pt{x, y};
 
-    Annotation* annot = dm->GetAnnotationAtPos(pt, moveableAnnotations);
-    if (annot) {
+    WindowTab* tab = win->CurrentTab();
+    Annotation* annot = dm->GetAnnotationAtPos(pt);
+    if (annot && (annot == tab->selectedAnnotation) && IsMoveableAnnotation(annot->type)) {
         StartAnnotationDrag(win, annot, pt);
+        return;
     }
 
     IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
@@ -1083,7 +1052,7 @@ static void SetTextOrArrorCursor(DisplayModel* dm, Point pt) {
 }
 
 // TODO: this gets called way too often
-static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
+static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     DisplayModel* dm = win->AsFixed();
     Point pt = HwndGetCursorPos(hwnd);
     if (!dm || !GetCursor() || pt.IsEmpty()) {
@@ -1092,6 +1061,12 @@ static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
     }
     if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
         SetCursorCached(IDC_CROSS);
+        return TRUE;
+    }
+
+    Annotation* annot = dm->GetAnnotationAtPos(pt);
+    if (annot && (annot == win->CurrentTab()->selectedAnnotation) && IsMoveableAnnotation(annot->type)) {
+        SetCursorCached(IDC_HAND);
         return TRUE;
     }
 
@@ -1142,7 +1117,7 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
         case MouseAction::Selecting:
             break;
         case MouseAction::None:
-            return OnSetCursorMouseIdle(win, hwnd);
+            return OnSetCursorMouseNone(win, hwnd);
     }
     return win->presentation ? TRUE : FALSE;
 }

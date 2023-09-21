@@ -161,6 +161,12 @@ struct MainWindow {
     /* when dragging, mouse x/y position when dragging was started */
     Point dragStart;
 
+    Size annotationBeingMovedSize;
+    Point annotationBeingMovedOffset;
+    HBITMAP bmpMovePattern = nullptr;
+    HBRUSH brMovePattern = nullptr;
+    Annotation* annotationBeingDragged = nullptr;
+
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
        of the mouse from the point where the user middle clicked. */
@@ -200,10 +206,6 @@ struct MainWindow {
     IPageElement* linkOnLastButtonDown = nullptr;
     AutoFreeStr urlOnLastButtonDown;
     Annotation* annotationUnderCursor = nullptr;
-    Size annotationBeingMovedSize;
-    Point annotationBeingMovedOffset;
-    HBITMAP bmpMovePattern = nullptr;
-    HBRUSH brMovePattern = nullptr;
     HBRUSH brControlBgColor = nullptr;
 
     DocControllerCallback* cbHandler = nullptr;

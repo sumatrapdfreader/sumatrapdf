@@ -103,3 +103,4 @@ void PdfColorToFloat(PdfColor c, float rgb[3]);
 void SetIconName(Annotation*, const char*);
 bool SetColor(Annotation*, PdfColor);
 void DeleteAnnotation(Annotation*);
+bool IsMoveableAnnotation(AnnotationType);

@@ -3925,7 +3925,7 @@ static Annotation* GetAnnotionUnderCursor(WindowTab* tab) {
     if (pageNoUnderCursor <= 0) {
         return nullptr;
     }
-    Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
+    Annotation* annot = dm->GetAnnotationAtPos(pt);
     return annot;
 }
 
@@ -5239,53 +5239,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnSelectAll(win);
             break;
 
-        // TODO: make it closer to handling in OnWindowContextMenu()
-        case CmdCreateAnnotHighlight:
-            [[fallthrough]];
-        case CmdCreateAnnotSquiggly:
-            [[fallthrough]];
-        case CmdCreateAnnotStrikeOut:
-            [[fallthrough]];
-        case CmdCreateAnnotUnderline:
-            if (win && tab) {
-                auto annot = MakeAnnotationsFromSelection(tab, annotType);
-                bool isShift = IsShiftPressed();
-                if (annot) {
-                    if (isShift) {
-                        ShowEditAnnotationsWindow(tab);
-                    }
-                    SetSelectedAnnotation(tab, annot);
-                }
-            }
-            break;
-
-        case CmdSelectAnnotation: {
-            if (tab) {
-                Annotation* annot = GetAnnotionUnderCursor(tab);
-                if (annot) {
-                    SetSelectedAnnotation(tab, annot);
-                }
-            }
-            break;
-        }
-
-        case CmdEditAnnotations: {
-            if (tab) {
-                Annotation* annot = GetAnnotionUnderCursor(tab);
-                ShowEditAnnotationsWindow(tab);
-                if (annot) {
-                    SetSelectedAnnotation(tab, annot);
-                }
-            }
-            break;
-        }
-
-        case CmdDeleteAnnotation: {
-            if (tab && tab->selectedAnnotation) {
-                DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
-            }
-        } break;
-
         case CmdDebugDownloadSymbols:
             DownloadDebugSymbols();
             break;
@@ -5414,7 +5367,54 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        // Note: duplicated in OnWindowContextMenu because slightly different handling
+        case CmdSelectAnnotation: {
+            if (tab) {
+                Annotation* annot = GetAnnotionUnderCursor(tab);
+                if (annot) {
+                    SetSelectedAnnotation(tab, annot);
+                }
+            }
+            break;
+        }
+
+        case CmdEditAnnotations: {
+            if (tab) {
+                Annotation* annot = GetAnnotionUnderCursor(tab);
+                ShowEditAnnotationsWindow(tab);
+                if (annot) {
+                    SetSelectedAnnotation(tab, annot);
+                }
+            }
+            break;
+        }
+
+        case CmdDeleteAnnotation: {
+            if (tab && tab->selectedAnnotation) {
+                DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
+            }
+        } break;
+
+        // TODO: make it closer to handling in OnWindowContextMenu()
+        case CmdCreateAnnotHighlight:
+            [[fallthrough]];
+        case CmdCreateAnnotSquiggly:
+            [[fallthrough]];
+        case CmdCreateAnnotStrikeOut:
+            [[fallthrough]];
+        case CmdCreateAnnotUnderline:
+            if (win && tab) {
+                auto annot = MakeAnnotationsFromSelection(tab, annotType);
+                bool isShift = IsShiftPressed();
+                if (annot) {
+                    if (isShift) {
+                        ShowEditAnnotationsWindow(tab);
+                    }
+                    SetSelectedAnnotation(tab, annot);
+                }
+            }
+            break;
+
+            // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
             [[fallthrough]];
         case CmdCreateAnnotFreeText:

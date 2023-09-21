@@ -3534,21 +3534,6 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
     return (epdf->pdfdoc != nullptr);
 }
 
-static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
-    if (!allowed) {
-        return true;
-    }
-    int i = 0;
-    while (allowed[i] != AnnotationType::Unknown) {
-        AnnotationType tp2 = allowed[i];
-        if (tp2 == tp) {
-            return true;
-        }
-        ++i;
-    }
-    return false;
-}
-
 // caller must free
 ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
@@ -3581,7 +3566,7 @@ static bool RemoveHeWhoFullyContains(Vec<Annotation*>& els) {
     return false;
 }
 
-Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
+Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return nullptr;
@@ -3596,9 +3581,6 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     for (auto& annot : pi->annotations) {
         auto& atp = annot->type;
         RectF bounds = annot->bounds;
-        if (!IsAllowedAnnot(atp, allowedAnnots)) {
-            continue;
-        }
         if (!bounds.Contains(pos)) {
             continue;
         }
