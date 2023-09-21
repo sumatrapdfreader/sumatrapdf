@@ -17,7 +17,7 @@ extern "C" {
 #include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"
-#include "EngineMupdfImpl.h"
+#include "EngineMupdf.h"
 #include "PdfCreator.h"
 
 #include "utils/Log.h"

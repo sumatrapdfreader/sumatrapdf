@@ -26,7 +26,7 @@ extern "C" {
 #include "Annotation.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineMupdfImpl.h"
+#include "EngineMupdf.h"
 #include "EngineAll.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

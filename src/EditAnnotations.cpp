@@ -22,7 +22,7 @@ extern "C" {
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "EngineMupdfImpl.h"
+#include "EngineMupdf.h"
 #include "Translations.h"
 #include "SumatraConfig.h"
 #include "GlobalPrefs.h"

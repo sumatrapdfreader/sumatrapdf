@@ -14,7 +14,7 @@
     <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\EngineMupdfImpl.h" />
+    <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />

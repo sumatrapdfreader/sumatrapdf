@@ -19,7 +19,7 @@ extern "C" {
 #include "Flags.h"
 #include "EngineBase.h"
 #include "Annotation.h"
-#include "EngineMupdfImpl.h"
+#include "EngineMupdf.h"
 #include "EngineAll.h"
 
 #include "utils/Log.h"

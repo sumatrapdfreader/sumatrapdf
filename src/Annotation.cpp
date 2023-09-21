@@ -16,7 +16,7 @@ extern "C" {
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineMupdfImpl.h"
+#include "EngineMupdf.h"
 #include "GlobalPrefs.h"
 
 #include "utils/Log.h"
