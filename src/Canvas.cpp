@@ -342,9 +342,6 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
     Point pos{x, y};
     NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
-    if (cursorPosNotif) {
-        UpdateCursorPositionHelper(win, pos, cursorPosNotif);
-    }
 
     if (win->dragStartPending) {
         if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
@@ -401,6 +398,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             win->annotationUnderCursor = nullptr;
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
+            win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
             OnSelectionEdgeAutoscroll(win, x, y);
             RepaintAsync(win, 0);
             break;
@@ -419,8 +417,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
     win->dragPrevPos = pos;
 
-    if (cursorPosNotif && (MouseAction::Selecting == win->mouseAction)) {
-        win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
+    if (cursorPosNotif) {
+        UpdateCursorPositionHelper(win, pos, cursorPosNotif);
     }
 }
 
