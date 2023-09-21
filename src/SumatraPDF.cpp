@@ -2094,50 +2094,23 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
     return fmt::FormatTemp("%s x %s %s", xPos, yPos, unitName);
 }
 
+static auto cursorPosUnit = MeasurementUnit::pt;
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd) {
-    static auto unit = MeasurementUnit::pt;
-    // toggle measurement unit by repeatedly invoking the helper
-    if (!wnd && GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
-        switch (unit) {
-            case MeasurementUnit::pt:
-                unit = MeasurementUnit::mm;
-                break;
-            case MeasurementUnit::mm:
-                unit = MeasurementUnit::in;
-                break;
-            case MeasurementUnit::in:
-                unit = MeasurementUnit::pt;
-                break;
-            default:
-                CrashAlwaysIf(true);
-        }
-        wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
-    }
-
     CrashIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
     PointF pt = win->AsFixed()->CvtFromScreen(pos);
-    char* posStr = FormatCursorPositionTemp(engine, pt, unit);
+    char* posStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
     char* selStr = nullptr;
     if (!win->selectionMeasure.IsEmpty()) {
         pt = PointF(win->selectionMeasure.dx, win->selectionMeasure.dy);
-        selStr = FormatCursorPositionTemp(engine, pt, unit);
+        selStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
     }
 
     char* posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:"), posStr);
     if (selStr) {
         posInfo = fmt::FormatTemp("%s - %s %s", posInfo, _TRA("Selection:"), selStr);
     }
-    if (!wnd) {
-        NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
-        args.msg = posInfo;
-        args.groupId = kNotifGroupCursorPos;
-        args.timeoutMs = 0;
-        ShowNotification(args);
-    } else {
-        NotificationUpdateMessage(wnd, posInfo);
-    }
+    NotificationUpdateMessage(wnd, posInfo);
 }
 
 // re-render the document currently displayed in this window
@@ -2244,7 +2217,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     AbortFinding(win, true);
 
     win->linkOnLastButtonDown = nullptr;
-    win->annotationOnLastButtonDown = nullptr;
+    win->annotationUnderCursor = nullptr;
 
     win->fwdSearchMark.show = false;
     if (win->uiaProvider) {
@@ -4192,16 +4165,38 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotTyp
     return annot;
 }
 
-static void ShowCursorPositionInDoc(MainWindow* win) {
+static void ToggleCursorPositionInDoc(MainWindow* win) {
     // "cursor position" tip: make figuring out the current
     // cursor position in cm/in/pt possible (for exact layouting)
     if (!win->AsFixed()) {
         return;
     }
-    Point pt = HwndGetCursorPos(win->hwndCanvas);
-    if (!pt.IsEmpty()) {
-        UpdateCursorPositionHelper(win, pt, nullptr);
+    auto notif = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    if (!notif) {
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.groupId = kNotifGroupCursorPos;
+        args.timeoutMs = 0;
+        notif = ShowNotification(args);
+        cursorPosUnit = MeasurementUnit::pt;
+    } else {
+        switch (cursorPosUnit) {
+            case MeasurementUnit::pt:
+                cursorPosUnit = MeasurementUnit::mm;
+                break;
+            case MeasurementUnit::mm:
+                cursorPosUnit = MeasurementUnit::in;
+                break;
+            case MeasurementUnit::in:
+                cursorPosUnit = MeasurementUnit::pt;
+                RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+                return;
+            default:
+                CrashAlwaysIf(true);
+        }
     }
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    UpdateCursorPositionHelper(win, pt, notif);
 }
 
 static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
@@ -5390,8 +5385,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             win->ToggleZoom();
             break;
 
-        case CmdShowCursorPosition:
-            ShowCursorPositionInDoc(win);
+        case CmdToggleCursorPosition:
+            ToggleCursorPositionInDoc(win);
             break;
 
         case CmdPresentationBlackBackground:

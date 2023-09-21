@@ -199,7 +199,7 @@ struct MainWindow {
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
     AutoFreeStr urlOnLastButtonDown;
-    Annotation* annotationOnLastButtonDown = nullptr;
+    Annotation* annotationUnderCursor = nullptr;
     Size annotationBeingMovedSize;
     Point annotationBeingMovedOffset;
     HBITMAP bmpMovePattern = nullptr;

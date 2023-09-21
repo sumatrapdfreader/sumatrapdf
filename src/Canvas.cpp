@@ -222,13 +222,13 @@ static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
 
 // return true if this was annotation dragging
 static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) {
-    Annotation* annot = win->annotationOnLastButtonDown;
+    Annotation* annot = win->annotationUnderCursor;
     if (!annot) {
         return false;
     }
     DrawMovePattern(win, win->dragPrevPos, win->annotationBeingMovedSize);
     if (aborted) {
-        win->annotationOnLastButtonDown = nullptr;
+        win->annotationUnderCursor = nullptr;
         return true;
     }
 
@@ -251,7 +251,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         ToolbarUpdateStateForWindow(win, true);
         // ShowEditAnnotationsWindow(win->CurrentTab(), annot);
     }
-    win->annotationOnLastButtonDown = nullptr;
+    win->annotationUnderCursor = nullptr;
     return true;
 }
 
@@ -333,6 +333,12 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
         }
     }
 
+    Point pos{x, y};
+    NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    if (cursorPosNotif) {
+        UpdateCursorPositionHelper(win, pos, cursorPosNotif);
+    }
+
     if (win->dragStartPending) {
         if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
@@ -342,25 +348,26 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
 
     Point prevPos = win->dragPrevPos;
-    Point pos{x, y};
-    Annotation* annot = win->annotationOnLastButtonDown;
     switch (win->mouseAction) {
-        case MouseAction::Scrolling:
+        case MouseAction::Scrolling: {
             win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             break;
+        }
         case MouseAction::SelectingText:
             if (GetCursor()) {
                 SetCursorCached(IDC_IBEAM);
             }
             [[fallthrough]];
-        case MouseAction::Selecting:
+        case MouseAction::Selecting: {
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
             OnSelectionEdgeAutoscroll(win, x, y);
             RepaintAsync(win, 0);
             break;
-        case MouseAction::Dragging:
+        }
+        case MouseAction::Dragging: {
+            Annotation* annot = win->annotationUnderCursor;
             if (annot) {
                 Size size = win->annotationBeingMovedSize;
                 DrawMovePattern(win, prevPos, size);
@@ -369,18 +376,14 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 win->MoveDocBy(win->dragPrevPos.x - x, win->dragPrevPos.y - y);
             }
             break;
+        }
     }
     win->dragPrevPos = pos;
 
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
-    if (!wnd) {
-        return;
-    }
-
-    if (MouseAction::Selecting == win->mouseAction) {
+    // TODO: why need cursorPosNotif here?
+    if (cursorPosNotif && (MouseAction::Selecting == win->mouseAction)) {
         win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
     }
-    UpdateCursorPositionHelper(win, pos, wnd);
 }
 
 // clang-format off
@@ -421,7 +424,7 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
-    win->annotationOnLastButtonDown = annot;
+    win->annotationUnderCursor = annot;
     CreateMovePatternLazy(win);
     RectF r = GetRect(annot);
     int pageNo = dm->GetPageNoByPoint(pt);
@@ -436,7 +439,7 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
 
 static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
     CrashIf(win->linkOnLastButtonDown);
-    CrashIf(win->annotationOnLastButtonDown);
+    CrashIf(win->annotationUnderCursor);
     DisplayModel* dm = win->AsFixed();
     Point pt{x, y};
 
@@ -492,7 +495,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
-    Annotation* annot = win->annotationOnLastButtonDown;
+    Annotation* annot = win->annotationUnderCursor;
     if (annot || !canCopy || (isShift || !isOverText) && !isCtrl) {
         StartMouseDrag(win, x, y);
     } else {

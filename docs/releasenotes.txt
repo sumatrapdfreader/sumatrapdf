@@ -4,6 +4,7 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 
 3.5 (???)
+* rename CmdShowCursorPosition => CmdToggleCursorPosition
 * add Annotations [ FreeTextColor, FreeTextSize, FreeTextBorderWidth ] settings
 * change: to move annotations, must press Ctrl
 * add CmdCommandPaletteOnlyTabs and bind it to Alt + K

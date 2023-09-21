@@ -183,7 +183,6 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     TextOutUtf8(hdc, pt.x, pt.y, ver, (int)str::Len(ver));
     txt = VERSION_SUB_TXT;
     TextOutUtf8(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
-
 }
 
 // draw on the bottom right

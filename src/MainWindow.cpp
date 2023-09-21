@@ -121,7 +121,7 @@ MainWindow::~MainWindow() {
     CrashIf(TabCount() > 0);
     // CrashIf(ctrl); // TODO: seen in crash report
     CrashIf(linkOnLastButtonDown);
-    CrashIf(annotationOnLastButtonDown);
+    CrashIf(annotationUnderCursor);
 
     UnsubclassToc(this);
 
@@ -166,7 +166,7 @@ MainWindow::~MainWindow() {
 
 void ClearMouseState(MainWindow* win) {
     win->linkOnLastButtonDown = nullptr;
-    win->annotationOnLastButtonDown = nullptr;
+    win->annotationUnderCursor = nullptr;
 }
 
 bool MainWindow::IsAboutWindow() const {

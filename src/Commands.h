@@ -162,7 +162,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdToggleZoom, "Toggle Zoom")                                       \
     V(CmdNavigateBack, "Navigate Back")                                   \
     V(CmdNavigateForward, "Navigate Forward")                             \
-    V(CmdShowCursorPosition, "Show Cursor Position")                      \
+    V(CmdToggleCursorPosition, "Toggle Cursor Position")                  \
     V(CmdOpenNextFileInFolder, "Open Next File In Folder")                \
     V(CmdOpenPrevFileInFolder, "Open Previous File In Folder")            \
     V(CmdCommandPalette, "Command Palette")                               \
