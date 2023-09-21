@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 &À propos
 :&Actual Size
@@ -196,7 +195,7 @@ Fermer
 :Close Other Tabs
 Fermer les autres onglets
 :Close Tabs To The Right
-Fermer les onglets sur la droite
+Fermer les onglets à droite
 :Collapse All
 Tout réduire
 :Color:
@@ -223,6 +222,8 @@ Copier l'&image
 Copier l'adresse du &lien
 :Copy Co&mment
 Copier le co&mmentaire
+:Copy File Path
+Copier le chemin
 :Copy To Clipboard
 Copier dans le presse-papiers
 :Copying text was denied (copying as image only)
@@ -626,9 +627,9 @@ Afficher les barres de &défilement
 :Show frequently read
 Montrer les documents lus fréquemment
 :Show in &folder
-&Afficher dans le dossier
+Ouvrir le &dossier
 :Show in folder
-Afficher dans le dossier
+Ouvrir le dossier
 :Show the &bookmarks sidebar when available
 &Afficher la barre latérale des signets lorsqu'elle est disponible
 :Single Page

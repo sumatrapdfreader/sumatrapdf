@@ -121,5 +121,5 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine);
 fz_rect ToFzRect(RectF rect);
 RectF ToRectF(fz_rect rect);
 RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);
-void MarkAsModifiedAnnotations(EngineMupdf*, Annotation*, AnnotationChange = AnnotationChange::Modify);
+void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange = AnnotationChange::Modify);
 Annotation* MakeAnnotationFrom_pdf_annot(EngineMupdf* engine, pdf_annot* annot, int pageNo);

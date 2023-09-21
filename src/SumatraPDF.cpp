@@ -5259,10 +5259,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdSelectAnnotation:
-            [[fallthrough]];
+        case CmdSelectAnnotation: {
+            // TODO: use win->annotationUnderCursor?
+            Annotation* annot = GetAnnotionUnderCursor(tab);
+            if (annot) {
+                SetSelectedAnnotation(tab, annot);
+            }
+            break;
+        }
 
         case CmdEditAnnotations: {
+            // TODO: use win->annotationUnderCursor?
             Annotation* annot = GetAnnotionUnderCursor(tab);
             ShowEditAnnotationsWindow(tab);
             if (annot) {

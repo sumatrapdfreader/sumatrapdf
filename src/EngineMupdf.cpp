@@ -3636,7 +3636,7 @@ NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* e, FzPageInfo* pageInfo) {
 
 // in a function so that we can set a breakpoint or add logging
 // to easily trace all places that modify annotations
-NO_INLINE void MarkAsModifiedAnnotations(EngineMupdf* e, Annotation* annot, AnnotationChange change) {
+NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, AnnotationChange change) {
     e->modifiedAnnotations = true;
     if (!e->pdfdoc) {
         return;

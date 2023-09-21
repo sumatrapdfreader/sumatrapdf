@@ -796,7 +796,15 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
 }
 
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
+    // when we delete an annotation we automatically pick one to
+    // set as selected and it might end up as currently selected
+    // we still want to redraw to not show deleted annotation
+    // but not do the rest of the logic as it triggers infinite loop
+    // TODO: maybe if we already have selected annotation, do not auto-pick
+    MainWindow* win = tab->win;
     if (annot == tab->selectedAnnotation) {
+        MainWindowRerender(win);
+        ToolbarUpdateStateForWindow(win, false);
         return;
     }
     tab->selectedAnnotation = annot;
@@ -806,8 +814,8 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     if (ew) {
         UpdateUIForSelectedAnnotation(ew, annot);
     }
-    MainWindowRerender(tab->win);
-    ToolbarUpdateStateForWindow(tab->win, false);
+    MainWindowRerender(win);
+    ToolbarUpdateStateForWindow(win, false);
 }
 
 void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
@@ -821,17 +829,27 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
 
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
-    int prevLocation = ew ? ew->listBox->GetCurrentSelection() : 0;
+    Annotation* selectNext = nullptr;
+    if (annot != tab->selectedAnnotation) {
+        // preserve current selection if we're not deleting it
+        selectNext = tab->selectedAnnotation;
+    } else {
+        tab->selectedAnnotation = nullptr;
+    }
+
     DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         ew->skipGoToPage = true;
+        int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
         UpdateAnnotationsList(ew);
-        annot = PickNewSelectedAnnotation(ew, prevLocation);
-        SetSelectedAnnotation(tab, annot);
-    } else {
-        SetSelectedAnnotation(tab, nullptr); // de-select
+        if ((selectNext == nullptr) && (currSelIdx >= 0)) {
+            // if we're deleting currently selected, pick
+            // next to select
+            annot = PickNewSelectedAnnotation(ew, currSelIdx);
+        }
     }
+    SetSelectedAnnotation(tab, selectNext);
 }
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {

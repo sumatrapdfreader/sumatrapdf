@@ -73,7 +73,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFindMatch, "Find: Match Case")                                   \
     V(CmdSaveAnnotations, "Save Annotations to existing PDF")             \
     V(CmdEditAnnotations, "Edit Annotations")                             \
-    V(CmdSelectAnnotation, "Select Annotation in Editor")                 \
+    V(CmdSelectAnnotation, "Select Annotation")                 \
     V(CmdDeleteAnnotation, "Delete Annotation")                           \
     V(CmdZoomFitPage, "Zoom: Fit Page")                                   \
     V(CmdZoomActualSize, "Zoom: Actual Size")                             \

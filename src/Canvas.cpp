@@ -370,8 +370,10 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.groupId = kindNotifAnnotation;
                         args.font = GetDefaultGuiFont();
                         args.timeoutMs = 2500;
+                        // TODO: translate
+                        // TODO: 'e' and 'Ctrl + e' could be re-defined
                         args.msg = str::FormatTemp(
-                            "%s Annotation. Ctrl + click to select. Ctrl + double click to start edit", name);
+                            "%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
                         ShowNotification(args);
                     } else {
                         RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);

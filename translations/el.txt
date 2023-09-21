@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 &Σχετικά
 :&Actual Size
@@ -223,6 +222,8 @@ Bytes
 Αντιγραφή &διεύθυνσης
 :Copy Co&mment
 Αντιγραφή σ&χολίου
+:Copy File Path
+Αντιγραφή Τοποθεσίας Αρχείου
 :Copy To Clipboard
 Αντιγραφή στο πρόχειρο
 :Copying text was denied (copying as image only)

@@ -188,8 +188,7 @@ void TabsSelect(MainWindow* win, int tabIndex) {
 // clang-format off
 static MenuDef menuDefContextTab[] = {
     {
-        // TODO: translate
-        "Properties...",
+        _TRN("Properties..."),
         CmdProperties,
     },
     {
@@ -201,8 +200,7 @@ static MenuDef menuDefContextTab[] = {
         CmdCopyFilePath,
     },
     {
-        // TODO: translate
-        "Open In New Window",
+        _TRN("Open In New Window"),
         CmdDuplicateInNewWindow,
     },
     {

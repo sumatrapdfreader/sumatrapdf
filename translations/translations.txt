@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7c20d7cf3a6921a16994ce50fccae4d2d42e4b75
+1518fac4f844ea973446522f9b023ba3cda40642
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5791,7 +5791,7 @@ el:Κλείσιμο καρτελών στα δεξιά
 es:Cerrar pestañas a la derecha
 eu:Itxi eskuineko hegatsak
 fi:Sulje välilehdet oikealle
-fr:Fermer les onglets sur la droite
+fr:Fermer les onglets à droite
 gl:Pechar lapelas á dereita
 he:סגור כרטיסיות מימין
 hi:दाईं ओर के टैब बंद करें
@@ -6627,6 +6627,8 @@ vn:Chép chú thích
 br:Copiar Caminho do Arquivo
 cn:复制文件路径
 de:Dateipfad kopieren
+el:Αντιγραφή Τοποθεσίας Αρχείου
+fr:Copier le chemin
 nl:Kopieer Bestand Pad
 pl:Kopiuj ścieżkę pliku
 tw:複製檔案路徑
@@ -18060,7 +18062,7 @@ es:Mostrar en &carpeta
 et:Näita &kausta
 eu:Erakutsi &agiritegian
 fi:Näytä &kansiossa
-fr:&Afficher dans le dossier
+fr:Ouvrir le &dossier
 ga:Taispeáin san &fillteán
 gl:Amosar no carta&fol
 he:פתח תיקייה מכילה...
@@ -18104,7 +18106,7 @@ el:Εμφάνιση στο φάκελο
 es:mostrar en carpeta
 eu:Erakutsi agiritegian
 fi:Näytä kansiossa
-fr:Afficher dans le dossier
+fr:Ouvrir le dossier
 gl:Amosar no cartafol
 he:הצג בתיקייה
 hr:Prikaži u mapi
