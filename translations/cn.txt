@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 关于(&A)...
 :&Actual Size
@@ -223,6 +222,8 @@ CHM 文档
 复制链接地址(&L)
 :Copy Co&mment
 复制注释(&M)
+:Copy File Path
+复制文件路径
 :Copy To Clipboard
 复制到剪贴板
 :Copying text was denied (copying as image only)

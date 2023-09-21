@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 &Over...
 :&Actual Size
@@ -223,6 +222,8 @@ Afbeelding kopiëren
 &Verwijzing kopiëren
 :Copy Co&mment
 Notitie kopiëren
+:Copy File Path
+Kopieer Bestand Pad
 :Copy To Clipboard
 Kopieer naar klembord
 :Copying text was denied (copying as image only)

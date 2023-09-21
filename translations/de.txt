@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 &Über
 :&Actual Size
@@ -223,6 +222,8 @@ Fortlaufende Doppelseiten
 &Linkadresse kopieren
 :Copy Co&mment
 K&ommentar kopieren
+:Copy File Path
+Dateipfad kopieren
 :Copy To Clipboard
 In Zwischenablage kopieren
 :Copying text was denied (copying as image only)

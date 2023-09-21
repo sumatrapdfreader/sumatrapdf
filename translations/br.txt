@@ -1,4 +1,3 @@
-:Copy File Path
 :&About
 Sobre
 :&Actual Size
@@ -223,6 +222,8 @@ Copiar &imagem
 Copiar ata&lho
 :Copy Co&mment
 Copiar co&mentário
+:Copy File Path
+Copiar Caminho do Arquivo
 :Copy To Clipboard
 Copiar para área de transferência
 :Copying text was denied (copying as image only)
