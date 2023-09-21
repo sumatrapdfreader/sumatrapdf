@@ -1,12 +1,4 @@
-:Copy File Path
-:Open Directory in &Double Commander
-:Open Directory in &Explorer
-:Open Directory in &Total Commander
-:Open Directory in Directory &Opus
-:Open In New Window
 :Open in Microsoft &HTML Help
-:Please wait - loading...
-:Properties...
 :&About
 정보(&A)
 :&Actual Size
@@ -231,6 +223,8 @@ CHM 문서
 링크 주소 복사(&L)
 :Copy Co&mment
 주석(설명) 복사(&M)
+:Copy File Path
+파일 경로 복사
 :Copy To Clipboard
 클립보드에 복사
 :Copying text was denied (copying as image only)
@@ -469,8 +463,18 @@ Mobi 문서
 PDF-XChange로 열기(&I)
 :Open Attachment
 첨부 파일 열기
+:Open Directory in &Double Commander
+더블 커멘더에서 디렉토리 열기
+:Open Directory in &Explorer
+탐색기에서 디렉토리 열기
+:Open Directory in &Total Commander
+토탈 커멘더에서 디렉토리 열기
+:Open Directory in Directory &Opus
+오푸스에서 디렉토리 열기
 :Open Embedded PDF
 임베딩된 PDF 열기
+:Open In New Window
+새 창에서 열기
 :Open a document...
 문서 열기...
 :Open in %s
@@ -509,6 +513,8 @@ PDF 문서
 PalmDoc 문서
 :Please close %s to proceed!
 진행하려면, %s (을)를 닫으세요!
+:Please wait - loading...
+잠시 기다려 주세요. 로드 중입니다...
 :Please wait - rendering...
 렌더링 중입니다, 기다리세요...
 :Poly Line
@@ -539,6 +545,8 @@ Postscript 문서
 %d / %d 페이지 인쇄하는 중...
 :Printing problem.
 인쇄하는 중에 문제가 발생했습니다.
+:Properties...
+속성들...
 :Re&name...
 이름 바꾸기(&N)...
 :Rect: x=%d y=%d dx=%d dy=%d

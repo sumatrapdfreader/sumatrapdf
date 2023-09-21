@@ -1,6 +1,3 @@
-:Copy File Path
-:Open In New Window
-:Properties...
 :&About
 &Om
 :&Actual Size
@@ -225,6 +222,8 @@ Kopier &Bilde
 Kopier &lenkeadresse
 :Copy Co&mment
 Kopier ko&mmentar
+:Copy File Path
+Kopier filbane
 :Copy To Clipboard
 Kopier til utklippstavle
 :Copying text was denied (copying as image only)
@@ -473,6 +472,8 @@ Ugjennomsiktighet: %d
 Åpne mappe i Directory &Opus
 :Open Embedded PDF
 Åpne innebygd PDF
+:Open In New Window
+Åpne i nytt vindu
 :Open a document...
 Åpne et dokument...
 :Open in %s
@@ -545,6 +546,8 @@ Utskriften pågår fortsatt. Avbryte og starte på nytt?
 Skriver ut side %d av %d...
 :Printing problem.
 Problem med utskrift.
+:Properties...
+Egenskaper...
 :Re&name...
 Gi nytt &navn...
 :Rect: x=%d y=%d dx=%d dy=%d

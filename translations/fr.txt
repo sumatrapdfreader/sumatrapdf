@@ -1,5 +1,3 @@
-:Open In New Window
-:Properties...
 :&About
 &À propos
 :&Actual Size
@@ -197,7 +195,7 @@ Fermer
 :Close Other Tabs
 Fermer les autres onglets
 :Close Tabs To The Right
-Fermer les onglets à droite
+Fermer les onglets sur la droite
 :Collapse All
 Tout réduire
 :Color:
@@ -474,6 +472,8 @@ Ouvrir dans &Total Commander
 Ouvrir dans Directory &Opus
 :Open Embedded PDF
 Ouvrir le PDF intégré
+:Open In New Window
+Ouvrir dans une nouvelle fenêtre
 :Open a document...
 Ouvrir un document...
 :Open in %s
@@ -517,7 +517,7 @@ Fermez %s pour continuer, s.v.p. !
 :Please wait - loading...
 Chargement, veuillez patienter...
 :Please wait - rendering...
-Patientez s'il vous plaît (génération...)
+Patientez s'il vous plaît, génération…
 :Poly Line
 Ligne polygonale
 :Polygon
@@ -546,6 +546,8 @@ Impression toujours en cours. Annuler et recommencer ?
 Impression de la page %d sur %d...
 :Printing problem.
 Problème d'impression.
+:Properties...
+Propriétés…
 :Re&name...
 Re&nommer...
 :Rect: x=%d y=%d dx=%d dy=%d

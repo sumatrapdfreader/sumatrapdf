@@ -1,4 +1,3 @@
-:&Actual Size
 :&Advanced Options...
 :&All selected pages
 :&Back
@@ -51,9 +50,6 @@
 :&Window
 :(of %d)
 :(page %s)
-:Add Favorite
-:Add page %s to favorites
-:Add page %s to favorites with (optional) name:
 :Add to favorites
 :All files
 :All supported documents
@@ -302,6 +298,8 @@
 :printing document
 :&About
 &Omtrent
+:&Actual Size
+&Werklike Grootte
 :&Don't ask me again
 Moet My Nie Weer Vra Nie
 :&File
@@ -322,10 +320,16 @@ Handleiding
 &Zoem
 :About SumatraPDF
 Omtrent SumatraPDF
+:Add Favorite
+Maak Gunstelling
+:Add page %s to favorites
+Maak bladsy %s 'n gunstelling
+:Add page %s to favorites with (optional) name:
+Maak bladsy %s 'n gunstelling met (optioneel) 'n naam
 :Advanced
 Gevorderde
 :Application:
-Applikasie
+Toepassing:
 :Are you sure you want to uninstall SumatraPDF?
 Is jy seker jy wil SumatraPDF oninstalleer?
 :Associate with PDF files?

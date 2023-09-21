@@ -1,6 +1,3 @@
-:Copy File Path
-:Open In New Window
-:Properties...
 :&About
 Info progr&amma
 :&Actual Size
@@ -225,6 +222,8 @@ Copia &immagine
 Copia indirizzo co&llegamento
 :Copy Co&mment
 Copia co&mmento
+:Copy File Path
+Copia percorso file
 :Copy To Clipboard
 Copia negli Appunti
 :Copying text was denied (copying as image only)
@@ -473,6 +472,8 @@ Apri cartella in &Total Commander
 Apri cartella in Directory &Opus
 :Open Embedded PDF
 Apri PDF incorporato:
+:Open In New Window
+Apri in una nuova finestra
 :Open a document...
 Apri documento...
 :Open in %s
@@ -545,6 +546,8 @@ La stampa è ancora in corso.\nVuoi interrompere e ricominciare?
 Stampa pagina %d di %d...
 :Printing problem.
 Problemi di stampa.
+:Properties...
+Proprietà
 :Re&name...
 Ri&nomina...
 :Rect: x=%d y=%d dx=%d dy=%d

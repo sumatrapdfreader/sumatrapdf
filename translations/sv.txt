@@ -1,19 +1,12 @@
-:&Actual Size
 :&Back
 :&Book View
-:&Cancel
 :&Caret
-:&Close
 :&Continue installing 32-bit version
 :&Copy To Clipboard
 :&Discard changes
 :&Facing
-:&First Page
 :&Free Text
-:&Highlight
 :&Last Page
-:&Next Page
-:&Open...
 :&Previous Page
 :&Remove From History
 :&Save to existing PDF
@@ -22,57 +15,32 @@
 :&Stamp
 :&Strike Out
 :&Text
-:&Translate With Google
 :&Underline
 :Annotations
 :Author: %s
-:Background Color:
 :Border: %d
-:Checking for update...
-:Circle
-:Close Other Tabs
 :Close Tabs To The Right
 :Collapse All
-:Color:
 :Command Palette
-:Contents:
-:Copy File Path
 :Copy To Clipboard
-:Couldn't get printer name
 :Couldn't uninstall Sumatra search filter
 :Create Annotation &Under Cursor
 :Create Annotation From Selection
 :Custom &Zoom...
-:Date:
 :Delete Annotation\tDel
-:Don't install
-:Download 64-bit version
-:E&xit
 :E&xit Fullscreen
 :Edit Annotations
-:Expand All
 :F&orward
 :F&ullscreen
 :File Attachment
-:Fin&d...
-:Fit &Content
-:Fit &Page
-:Fit &Width
 :Get Fonts Info
-:Icon:
-:Images
 :Ink
-:Install and relaunch
-:Install for all users
 :Installing 32-bit SumatraPDF on 64-bit OS
 :Interior Color:
 :Line
 :Line End:
 :Line Start:
 :Loading %s ...
-:New &window
-:New version available
-:Opacity:
 :Opacity: %d
 :Open Attachment
 :Open Directory in &Double Commander
@@ -85,15 +53,12 @@
 :Pa&ge...
 :Please wait - loading...
 :Poly Line
-:Polygon
 :Popup: %d 0 R
 :Pr&esentation
 :Properties...
 :Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 :Redact
-:Rotate &Left
-:Rotate &Right
 :S&election
 :S&quiggly
 :SVG documents
@@ -122,7 +87,6 @@
 :Text Color:
 :Text Size:
 :Text Size: %d
-:Translate with &DeepL
 :Unsaved annotations
 :Unsaved annotations in '%s'
 :You have unsaved annotations
@@ -130,10 +94,16 @@
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 :&About
 &Om
+:&Actual Size
+&Faktisk storlek
 :&Advanced Options...
 &Avancerade inställningar...
 :&All selected pages
 &Alla valda sidor
+:&Cancel
+&Avbryt
+:&Close
+&Stäng
 :&Copy Selection
 &Kopiera markering
 :&Don't ask me again
@@ -144,6 +114,8 @@ Endast &jämna sidor
 &Arkiv
 :&Find what:
 &Sök efter:
+:&First Page
+Anpassa till sida
 :&Fit pages to printable area
 &Anpassa sidor till utskrivbart område
 :&Go To
@@ -152,18 +124,24 @@ Endast &jämna sidor
 &Gå till sida:
 :&Help
 &Hjälp
+:&Highlight
+&Markera
 :&Magnification:
 &Förstoring:
 :&Manual
 &Manual
 :&Match case
 Matcha &versaler/gemener
+:&Next Page
+&Nästa sida
 :&No
 &Nej
 :&Odd pages only
 Endast &udda sidor
 :&Open Document
 &Öppna dokument
+:&Open...
+&Öppna
 :&Options
 Alternativ
 :&Options...
@@ -188,6 +166,8 @@ Alternati&v
 &Krymp sidor till utskrivbart område (om nödvändigt)
 :&Theme
 &Tema
+:&Translate With Google
+Översätt med Google
 :&Use original page sizes
 Använd u&rsprungliga sidstorlekar
 :&View
@@ -232,6 +212,8 @@ Författare:
 Automatiskt
 :Automatically check for &updates
 Sök &automatiskt efter uppdateringar
+:Background Color:
+Bakgrundsfärg:
 :Book View
 Bokvy
 :Bookmark Shortcuts
@@ -256,12 +238,22 @@ Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 Byt språk (Change Language)
 :Check for &Updates
 &Sök efter ny version
+:Checking for update...
+Söker efter uppdatering...
+:Circle
+Cirkel
 :Close
 Stäng
+:Close Other Tabs
+Stäng andra flikar
+:Color:
+Färg:
 :Comic books
 Serier
 :Compatibility
 Kompatibilitet
+:Contents:
+Innehåll:
 :Continuous
 Fortlöpande
 :Continuous Book View
@@ -276,6 +268,8 @@ Kop&iera bild
 Kopiera länkadress
 :Copy Co&mment
 Kopiera kommentar
+:Copy File Path
+Kopiera sökväg
 :Copying text was denied (copying as image only)
 Textkopiering tilläts ej (kopierar som bild)
 :Copyright:
@@ -284,6 +278,8 @@ Upphovsrätt:
 Kunde inte hämta egenskaper för skrivare
 :Couldn't create the installation directory
 Kunde inte skapa installationsmappen
+:Couldn't get printer name
+Kunde inte att hämta skrivarens namn
 :Couldn't initialize printer
 Kunde ej använda skrivare
 :Couldn't install PDF previewer
@@ -308,6 +304,8 @@ Muspekarens position:
 Mörk
 :Darker
 Mörkare
+:Date:
+Datum
 :Default &Layout:
 Standard&utseende
 :Default &Zoom:
@@ -318,6 +316,12 @@ Nekade tillstånd:
 DjVu-dokument
 :Document Properties
 Dokumentegenskaper
+:Don't install
+Installera inte
+:Download 64-bit version
+Ladda ner 64-bitars version
+:E&xit
+Avsluta
 :EPUB ebooks
 EPUB-dokument
 :Enter password
@@ -328,6 +332,8 @@ Ange lösenord för %s
 Ange kommandorad som körs när du dubbelklickar på PDF-dokumentet:
 :Error loading %s
 Fel vid öppning av %s
+:Expand All
+Expandera alla
 :F&avorites
 &Favoriter
 :Facing
@@ -354,6 +360,8 @@ Fil %s hittades inte
 Filstorlek:
 :File:
 Fil:
+:Fin&d...
+Sök
 :Find
 Sök
 :Find Next
@@ -362,6 +370,12 @@ Sök nästa
 Sök föregående
 :Find:
 Sök:
+:Fit &Content
+Anpassa till &innehåll
+:Fit &Page
+Anpassa till &sida
+:Fit &Width
+Anpassa till bredd
 :Fit Content
 Anpassa efter innehåll
 :Fit Page
@@ -390,12 +404,20 @@ Göm Alternativ
 Dölj mest lästa
 :Hint: Use the F3 key for finding again
 Tips: Tryck F3 för att söka vidare
+:Icon:
+Ikon:
 :Image files (*.%s)
 Bildfiler (*.%s)
+:Images
+Bilder
 :Install SumatraPDF
 Installera SumatraPDF
 :Install SumatraPDF in &folder:
 Installera SumatraPDF i katalog:
+:Install and relaunch
+Installera och starta om
+:Install for all users
+Installera för alla användare
 :Installation failed!
 Installationen misslyckades!
 :Installation in progress...
@@ -420,6 +442,10 @@ Matcha versaler/gemener
 Mobi-dokument
 :Modified:
 Ändrad:
+:New &window
+Nytt fönster
+:New version available
+Ny version tillgänglig
 :Next Page
 Nästa sida
 :No matches were found
@@ -434,6 +460,8 @@ Synkroniseringsinformation saknas här
 Antal sidor:
 :OK
 OK
+:Opacity:
+Opacitet:
 :Open
 Öppna
 :Open &in PDF-XChange
@@ -476,6 +504,8 @@ PalmDoc-dokument
 Vänligen stäng %s innan du fortsätter!
 :Please wait - rendering...
 Ett ögonblick - förbereder...
+:Polygon
+Polygon
 :Postscript documents
 Postscript-dokument
 :Previous Page
@@ -504,6 +534,10 @@ Ta bort från favoriter
 Ta bort sida %s från favoriter
 :Rename To
 Döp om till
+:Rotate &Left
+Rotera åt &vänster
+:Rotate &Right
+Rotera åt &höger
 :Searching %d of %d...
 Söker %d av %d...
 :Select &All
@@ -570,6 +604,8 @@ Installationsprogrammet är skadat. Vänligen hämta det igen.\nVi ber om ursäk
 Detta dokument använder funktioner som inte stöds (%s) och kan inte återges korrekt
 :Title:
 Titel:
+:Translate with &DeepL
+Översätt med &Deepl
 :Uninstall SumatraPDF
 Avinstallera SumatraPDF
 :Uninstallation failed

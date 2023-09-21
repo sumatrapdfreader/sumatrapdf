@@ -1,9 +1,6 @@
 :&Actual Size
-:&Back
 :&Book View
-:&Cancel
 :&Caret
-:&Close
 :&Continue installing 32-bit version
 :&Copy To Clipboard
 :&Discard changes
@@ -13,7 +10,6 @@
 :&Highlight
 :&Last Page
 :&Next Page
-:&Open...
 :&Previous Page
 :&Remove From History
 :&Save to existing PDF
@@ -23,105 +19,59 @@
 :&Strike Out
 :&Text
 :&Translate With Google
-:&Underline
 :Annotations
-:Author: %s
-:Background Color:
 :Border: %d
-:Checking for update...
-:Circle
 :Close Other Tabs
 :Close Tabs To The Right
 :Collapse All
-:Color:
 :Command Palette
-:Contents:
-:Copy File Path
 :Copy To Clipboard
 :Couldn't get printer name
 :Couldn't uninstall Sumatra search filter
 :Create Annotation &Under Cursor
 :Create Annotation From Selection
 :Custom &Zoom...
-:Date:
 :Delete Annotation\tDel
-:Don't install
-:Download 64-bit version
-:E&xit
-:E&xit Fullscreen
 :Edit Annotations
 :Expand All
 :F&orward
-:F&ullscreen
-:File Attachment
 :Fin&d...
 :Fit &Content
 :Fit &Page
 :Fit &Width
 :Get Fonts Info
-:Icon:
-:Images
-:Ink
 :Install and relaunch
-:Install for all users
 :Installing 32-bit SumatraPDF on 64-bit OS
 :Interior Color:
-:Line
-:Line End:
-:Line Start:
-:Loading %s ...
-:New &window
-:New version available
 :Opacity:
 :Opacity: %d
-:Open Attachment
 :Open Directory in &Double Commander
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
 :Open Embedded PDF
-:Open In New Window
 :Open in Microsoft &HTML Help
-:Pa&ge...
-:Please wait - loading...
 :Poly Line
-:Polygon
 :Popup: %d 0 R
 :Pr&esentation
-:Properties...
 :Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 :Redact
-:Rotate &Left
-:Rotate &Right
 :S&election
 :S&quiggly
-:SVG documents
 :Save Annotations to existing PDF
-:Save Attachment...
 :Save Embedded File...
 :Save S&hortcut...
 :Save annotations?
-:Save changes to a new PDF
-:Save changes to existing PDF
 :Save to &new PDF
 :Saved annotations to '%s'
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
 :Select Annotation in Editor
-:Show &Favorites
 :Show &Scrollbars
 :Show Book&marks
 :Show Scr&ollbars
-:Show in &folder
-:Show in folder
-:Skip this version
-:Square
-:Text Alignment:
-:Text Color:
-:Text Size:
-:Text Size: %d
 :Translate with &DeepL
 :Unsaved annotations
 :Unsaved annotations in '%s'
@@ -134,6 +84,12 @@
 &Avanserte innstillingar
 :&All selected pages
 &Alle valde sider
+:&Back
+&Tilbake
+:&Cancel
+&Avbryt
+:&Close
+&Lukk
 :&Copy Selection
 &Kopier utval
 :&Don't ask me again
@@ -164,6 +120,8 @@ Ikkje spør meg igjen
 &Kun oddetalssider
 :&Open Document
 &Opne dokument
+:&Open...
+&Opne...
 :&Options
 &Innstillingar
 :&Options...
@@ -188,12 +146,14 @@ Ikkje spør meg igjen
 &Krymp sider til utskrivbart område (hvis nødvendig)
 :&Theme
 &Tema
+:&Underline
+&Understreking
 :&Use original page sizes
 &Bruk opprinnelige sidestorleikar
 :&View
 &Vis
 :&Window
-&Vindu
+&Vindauge
 :&Yes
 &Ja
 :&Zoom
@@ -228,10 +188,14 @@ Tilknytte PDF-filer?
 Vedlegg: %s
 :Author:
 Skapar:
+:Author: %s
+Skapar: %s
 :Automatic
 Automatisk
 :Automatically check for &updates
 Søk automatisk etter &oppdateringar
+:Background Color:
+Bakgrunnsfarge:
 :Book View
 Bokvising
 :Bookmark Shortcuts
@@ -256,12 +220,20 @@ Kan ikkje starte invertert søkjekommando. Venligst sjekk kommandolinja i innsti
 Byt språk (Change Language)
 :Check for &Updates
 &Sjå etter ny versjon
+:Checking for update...
+Ser etter oppdatering...
+:Circle
+Sirkel
 :Close
 Lukk
+:Color:
+Farge:
 :Comic books
 Teikneseriebøkjer
 :Compatibility
 Kompatibilitet
+:Contents:
+Innhald:
 :Continuous
 Kontinuerleg
 :Continuous Book View
@@ -276,6 +248,8 @@ Kopier &bilete
 Kopier &lenkeadresse
 :Copy Co&mment
 Kopier ko&mmentar
+:Copy File Path
+Kopier Filbane
 :Copying text was denied (copying as image only)
 Kopiering av tekst blei nektast (Kopierer kun som bilete)
 :Copyright:
@@ -308,6 +282,8 @@ Markørposisjon:
 Mørkt
 :Darker
 Mørkare
+:Date:
+Dato:
 :Default &Layout:
 Standard &oppsett:
 :Default &Zoom:
@@ -318,6 +294,14 @@ Permisjonar som blei nekta:
 DjVu-dokumentar
 :Document Properties
 Dokumentegenskaper
+:Don't install
+Ikkje installer
+:Download 64-bit version
+Last ned 64-bit versjon
+:E&xit
+A&vslutt
+:E&xit Fullscreen
+A&vslutt Fullskjerm
 :EPUB ebooks
 EPUB digitale bøkjer
 :Enter password
@@ -330,6 +314,8 @@ Gå inn i kommandolinja for å hentast, når du dobbeltklikkar på PDF-dokumente
 Feil ved innlasting av %s
 :F&avorites
 F&avorittar
+:F&ullscreen
+F&ullskjerm
 :Facing
 Fleire sider
 :Failed to delete uninstaller registry keys
@@ -350,6 +336,8 @@ Favorittar
 FictionBook-dokumentar
 :File %s not found
 Filen %s blei ikkje funnet
+:File Attachment
+Filvedlegg:
 :File Size:
 Filstørrelse:
 :File:
@@ -390,12 +378,20 @@ Skjul &innstillingar
 Skjul ofte lesne
 :Hint: Use the F3 key for finding again
 Tips: Bruk F3-knappen for å finne igjen
+:Icon:
+Ikon:
 :Image files (*.%s)
 Biletfilar (*.%s)
+:Images
+Bilete
+:Ink
+Blekk
 :Install SumatraPDF
 Installer SumatraPDF
 :Install SumatraPDF in &folder:
 Installer SumatraPDF i mappa:
+:Install for all users
+Installer for alle brukarar
 :Installation failed!
 Installering mislykkast!
 :Installation in progress...
@@ -408,6 +404,14 @@ Let Windows Skrivebordssøk &søkje gjennom PDF-dokumentar
 Let Windows vise &forhandsvisingar av PDF-dokumentar
 :Light
 Lyst
+:Line
+Linje
+:Line End:
+Linje Slutt:
+:Line Start:
+Linje Start:
+:Loading %s ...
+Laster %s ...
 :MB
 MB
 :Make SumatraPDF default application for PDF files?
@@ -420,6 +424,10 @@ Skil mellom store/små bokstavar
 Mobi-dokumentar
 :Modified:
 Endrast:
+:New &window
+Nytt &vindauge
+:New version available
+Ny versjon tilgjengeleg
 :Next Page
 Neste side
 :No matches were found
@@ -438,6 +446,10 @@ OK
 Opne
 :Open &in PDF-XChange
 Opne &i PDF-XChange
+:Open Attachment
+Opne Vedlegg
+:Open In New Window
+Opne i nytt vindauge
 :Open a document...
 Opne eit dokument
 :Open in %s
@@ -460,6 +472,8 @@ PDF-lagar:
 PDF-versjon:
 :PDF documents
 PDF-dokumentar
+:Pa&ge...
+Si&de...
 :Page %s
 Side %s
 :Page Size:
@@ -474,8 +488,12 @@ Side:
 PalmDoc-dokumentar
 :Please close %s to proceed!
 Vennlig lukk %s for å fortsetje!
+:Please wait - loading...
+Ver vennleg og vent - lastar...
 :Please wait - rendering...
 Venligst vent - Visar...
+:Polygon
+Polygon
 :Postscript documents
 Etterskriv dokumentar
 :Previous Page
@@ -496,6 +514,8 @@ Utskrivinga pågår framleis. Vil du stoppe og starte på nytt?
 Skriver ut side %d av %d...
 :Printing problem.
 Skrivarfeil
+:Properties...
+Eigenskapar...
 :Remember &opened files
 Husk &opna filar
 :Remove from favorites
@@ -504,6 +524,18 @@ Fjern frå favorittar
 Fjern side %s frå favorittene
 :Rename To
 Gjev nytt namn
+:Rotate &Left
+Roter &Venstre
+:Rotate &Right
+Roter &Høgre
+:SVG documents
+SVG-dokument
+:Save Attachment...
+Lagre vedlegg...
+:Save changes to a new PDF
+Lagre endringar til ny PDF
+:Save changes to existing PDF
+Lagre endringar til eksisterande PDF
 :Searching %d of %d...
 Søkjer gjennom %d av %d...
 :Select &All
@@ -520,6 +552,8 @@ Send med &E-post...
 Velg motsatt søk-kommandolinje
 :Show &Bookmarks
 Vis &bokmerkar
+:Show &Favorites
+Vis &Favorittar
 :Show &Pages Continuously
 Vis &sider kontinuerleg
 :Show &Toolbar
@@ -528,14 +562,22 @@ Vis verktylinje
 Vis favorittar
 :Show frequently read
 Vis ofte lesne
+:Show in &folder
+Vis i &mappe
+:Show in folder
+Vis i mappe
 :Show the &bookmarks sidebar when available
 Vis &bokmerkesidelinja hvis den er tilgjengeleg
 :Single Page
 Enkel side
+:Skip this version
+Hopp over denne versjonen
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Beklager, dét skulle ikkje ha skjedd!\n\nVenligst trykk 'Lukk' hvis du vil hjelpe oss å fikse orsaka til dette krasjet.
 :Source file %s has no synchronization point
 Kildefila %s har ikkje nokre synkroniseringspunkt
+:Square
+Firkant
 :Start SumatraPDF
 Start SumatraPDF
 :Subject:
@@ -558,6 +600,14 @@ SumatraPDF-installeringa blei ikkje funnet.
 Synkroniseringsfila kan ikkje opnes
 :Tagged PDF
 Merka PDF
+:Text Alignment:
+Tekstjustering:
+:Text Color:
+Tekstfarge:
+:Text Size:
+Tekststorleik:
+:Text Size: %d
+Tekststorleik: %d
 :Text documents
 Tekstdokumentar
 :Thank you for choosing SumatraPDF!
