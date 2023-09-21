@@ -25,10 +25,10 @@ struct WindowTab;
 struct Annotation;
 struct ILinkHandler;
 
-/* Describes actions which can be performed by mouse */
+// Current action being performed with a mouse
 // clang-format off
 enum class MouseAction {
-    Idle = 0,
+    None = 0,
     Dragging,
     Selecting,
     Scrolling,
@@ -150,7 +150,7 @@ struct MainWindow {
 
     DoubleBuffer* buffer = nullptr;
 
-    MouseAction mouseAction = MouseAction::Idle;
+    MouseAction mouseAction = MouseAction::None;
     bool dragRightClick = false; // if true, drag was initiated with right mouse click
     bool dragStartPending = false;
 

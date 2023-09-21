@@ -281,7 +281,7 @@ void CancelDrag(MainWindow* win) {
     auto pt = win->dragPrevPos;
     auto [x, y] = pt;
     StopMouseDrag(win, x, y, true);
-    win->mouseAction = MouseAction::Idle;
+    win->mouseAction = MouseAction::None;
     win->linkOnLastButtonDown = nullptr;
     SetCursorCached(IDC_ARROW);
 }
@@ -317,7 +317,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             // shortly display the cursor if the mouse has moved and the cursor is hidden
             if (!showingCursor) {
                 // logf("OnMouseMove: temporary showing cursor\n");
-                if (win->mouseAction == MouseAction::Idle) {
+                if (win->mouseAction == MouseAction::None) {
                     SetCursorCached(IDC_ARROW);
                 } else {
                     SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
@@ -349,6 +349,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
     Point prevPos = win->dragPrevPos;
     switch (win->mouseAction) {
+        case MouseAction::None:
+            break;
+
         case MouseAction::Scrolling: {
             win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
@@ -463,16 +466,16 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::Idle;
+        win->mouseAction = MouseAction::None;
         return;
     }
 
-    if (win->mouseAction != MouseAction::Idle) {
+    if (win->mouseAction != MouseAction::None) {
         // this can be MouseAction::SelectingText (4)
         // can't reproduce it so far
         logf("OnMouseLeftButtonDown: win->mouseAction=%d\n", (int)win->mouseAction);
         // ReportIf(win->mouseAction != MouseAction::Idle);
-        win->mouseAction = MouseAction::Idle;
+        win->mouseAction = MouseAction::None;
         return;
     }
     ReportIf(!win->AsFixed());
@@ -507,7 +510,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
     auto ma = win->mouseAction;
-    if (MouseAction::Idle == ma || IsRightDragging(win)) {
+    if (MouseAction::None == ma || IsRightDragging(win)) {
         return;
     }
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
@@ -523,7 +526,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         }
     }
 
-    win->mouseAction = MouseAction::Idle;
+    win->mouseAction = MouseAction::None;
 
     Point pt(x, y);
     int pageNo = dm->GetPageNoByPoint(pt);
@@ -643,7 +646,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
     // Handle message by recording placement then moving document as mouse moves.
 
     switch (win->mouseAction) {
-        case MouseAction::Idle:
+        case MouseAction::None:
             win->mouseAction = MouseAction::Scrolling;
 
             // record current mouse position, the farther the mouse is moved
@@ -653,7 +656,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
             break;
 
         case MouseAction::Scrolling:
-            win->mouseAction = MouseAction::Idle;
+            win->mouseAction = MouseAction::None;
             break;
     }
 }
@@ -661,8 +664,8 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
 static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
     // lf("Right button clicked on %d %d", x, y);
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::Idle;
-    } else if (win->mouseAction != MouseAction::Idle) {
+        win->mouseAction = MouseAction::None;
+    } else if (win->mouseAction != MouseAction::None) {
         return;
     }
     CrashIf(!win->AsFixed());
@@ -685,7 +688,7 @@ static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     bool didDragMouse = !win->dragStartPending || isDragXOrY;
     StopMouseDrag(win, x, y, !didDragMouse);
 
-    win->mouseAction = MouseAction::Idle;
+    win->mouseAction = MouseAction::None;
 
     if (didDragMouse) {
         /* pass */;
@@ -1090,7 +1093,7 @@ static LRESULT OnSetCursorMouseIdle(MainWindow* win, HWND hwnd) {
 
 static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     CrashIf(win->hwndCanvas != hwnd);
-    if (win->mouseAction != MouseAction::Idle) {
+    if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();
     }
 
@@ -1106,7 +1109,7 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
             return TRUE;
         case MouseAction::Selecting:
             break;
-        case MouseAction::Idle:
+        case MouseAction::None:
             return OnSetCursorMouseIdle(win, hwnd);
     }
     return win->presentation ? TRUE : FALSE;

@@ -2237,7 +2237,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
-    win->mouseAction = MouseAction::Idle;
+    win->mouseAction = MouseAction::None;
 
     DeletePropertiesWindow(win->hwndFrame);
 
