@@ -1,4 +1,6 @@
 :Copy File Path
+:Open In New Window
+:Properties...
 :&About
 &Apprupositu
 :&Actual Size

@@ -37,10 +37,12 @@
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
+:Open In New Window
 :Open in Microsoft &HTML Help
 :Pa&ge...
 :Please wait - loading...
 :Popup: %d 0 R
+:Properties...
 :Rotate &Left
 :Rotate &Right
 :S&election

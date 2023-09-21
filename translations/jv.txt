@@ -151,6 +151,7 @@
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
 :Open Embedded PDF
+:Open In New Window
 :Open a document...
 :Open in &Foxit Reader
 :Open in &Microsoft XPS-Viewer
@@ -178,6 +179,7 @@
 :Printing is still in progress. Abort and start over?
 :Printing page %d of %d...
 :Printing problem.
+:Properties...
 :Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 :Redact

@@ -34,6 +34,7 @@
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
+:Open In New Window
 :Open in %s
 :Open in Microsoft &HTML Help
 :Pa&ge...
@@ -43,6 +44,7 @@
 :Polygon
 :Popup: %d 0 R
 :Pr&esentation
+:Properties...
 :Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 :Redact

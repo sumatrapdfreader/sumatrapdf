@@ -1,3 +1,5 @@
+:Open In New Window
+:Properties...
 :&About
 關於(&A)
 :&Actual Size

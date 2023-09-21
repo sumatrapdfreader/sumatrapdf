@@ -73,6 +73,7 @@
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
 :Open Embedded PDF
+:Open In New Window
 :Open in Microsoft &HTML Help
 :Pa&ge...
 :Please wait - loading...
@@ -80,6 +81,7 @@
 :Polygon
 :Popup: %d 0 R
 :Pr&esentation
+:Properties...
 :Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 :Redact

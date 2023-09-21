@@ -1,3 +1,5 @@
+:Open In New Window
+:Properties...
 :&About
 &Σχετικά
 :&Actual Size

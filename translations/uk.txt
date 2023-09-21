@@ -1,5 +1,7 @@
 :Copy File Path
+:Open In New Window
 :Open in Microsoft &HTML Help
+:Properties...
 :&About
 &Про програму...
 :&Actual Size

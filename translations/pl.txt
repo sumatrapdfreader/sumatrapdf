@@ -1,3 +1,5 @@
+:Open In New Window
+:Properties...
 :&About
 &O programie SumatraPDF
 :&Actual Size

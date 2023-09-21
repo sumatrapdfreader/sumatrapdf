@@ -30,8 +30,10 @@
 :Interior Color:
 :Opacity:
 :Opacity: %d
+:Open In New Window
 :Open in Microsoft &HTML Help
 :Popup: %d 0 R
+:Properties...
 :S&election
 :SVG documents
 :Save Annotations to existing PDF
