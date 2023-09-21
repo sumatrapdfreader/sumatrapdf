@@ -293,8 +293,10 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
 }
 
 void EditAnnotationsWindow::OnClose() {
+    HWND toActivate = tab->win->hwndFrame;
     tab->editAnnotsWindow = nullptr;
     delete this; // sketchy
+    SetActiveWindow(toActivate);
 }
 
 void EditAnnotationsWindow::OnFocus() {
