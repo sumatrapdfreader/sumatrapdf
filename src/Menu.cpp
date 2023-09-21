@@ -1821,9 +1821,6 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, annot);
     }
-    // TODO: should delete it?
-    // delete buildCtx.annotationUnderCursor;
-
     /*
         { _TR("Line"), CmdCreateAnnotLine, },
         { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, },

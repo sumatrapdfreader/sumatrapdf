@@ -166,7 +166,6 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
     AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize));
-    HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
 
     SetBkMode(hdc, TRANSPARENT);
 
@@ -176,8 +175,8 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
 
-    SetTextColor(hdc, WIN_COL_BLACK);
-    SelectObject(hdc, fontVersionTxt);
+    SetTextColor(hdc, gCurrentTheme->mainWindow.textColor);
+    ScopedSelectFont restoreFont(hdc, fontVersionTxt);
     Point pt(mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding), mainRect.y);
 
     char* ver = GetAppVersionTemp();
@@ -185,7 +184,6 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     txt = VERSION_SUB_TXT;
     TextOutUtf8(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
 
-    SelectObject(hdc, oldFont);
 }
 
 // draw on the bottom right
@@ -725,7 +723,9 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 }
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
-                RenderedBitmap* clone = state->thumbnail->Clone();
+                // note: we used to invert bitmaps in dark theme but that doesn't
+                // make sense for thumbnails
+                RenderedBitmap* clone = nullptr; // state->thumbnail->Clone();
                 if (clone) {
                     UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
                     clone->Blit(hdc, page);
