@@ -4150,10 +4150,12 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotTyp
             rects.Append(sel.rect);
         }
         annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
+        if (!annot) {
+            // TODO: leaking if created annots before
+            return nullptr;
+        }
         SetQuadPointsAsRect(annot, rects);
-    }
-    if (!annot) {
-        return nullptr;
+        annot->bounds = GetBounds(annot);
     }
     UpdateAnnotationsList(tab->editAnnotsWindow);
 
