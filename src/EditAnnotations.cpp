@@ -334,10 +334,7 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     ReloadDocument(tab->win, false);
     tab->editAnnotsWindow = tmpWin;
 
-    EngineMupdf* newEngine = GetEngineMupdf(ew);
-    CrashIf(engine == newEngine);
-    EngineGetAnnotations(newEngine, ew->annotations);
-    RebuildAnnotationsListBox(ew);
+    UpdateAnnotationsList(ew);
     SetSelectedAnnotation(tab, nullptr);
 }
 
@@ -813,6 +810,15 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     ToolbarUpdateStateForWindow(tab->win, false);
 }
 
+void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
+    if (!ew) {
+        return;
+    }
+    auto engine = GetEngineMupdf(ew);
+    EngineMupdfGetAnnotations(engine, ew->annotations);
+    RebuildAnnotationsListBox(ew);
+}
+
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     int prevLocation = ew ? ew->listBox->GetCurrentSelection() : 0;
@@ -820,9 +826,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
         ew->skipGoToPage = true;
-        auto engine = GetEngineMupdf(ew);
-        EngineMupdfGetAnnotations(engine, ew->annotations);
-        RebuildAnnotationsListBox(ew);
+        UpdateAnnotationsList(ew);
         annot = PickNewSelectedAnnotation(ew, prevLocation);
         SetSelectedAnnotation(tab, annot);
     } else {
@@ -1284,11 +1288,6 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     CrashIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {
-        // TODO: do I need this?
-        EngineMupdf* engine = GetEngineMupdf(ew);
-        EngineGetAnnotations(engine, ew->annotations);
-        RebuildAnnotationsListBox(ew);
-        // TODO: bring to front?
         return;
     }
     ew = new EditAnnotationsWindow();
@@ -1311,8 +1310,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
 
-    EngineMupdf* engine = GetEngineMupdf(ew);
-    EngineGetAnnotations(engine, ew->annotations);
+    UpdateAnnotationsList(ew);
 
     // size our editor window to be the same height as main window
     int minDy = 720;
@@ -1327,7 +1325,6 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
             ew->listBox->idealSizeLines = 14;
         }
     }
-    RebuildAnnotationsListBox(ew);
 
     LayoutAndSizeToContent(ew->mainLayout, 520, minDy, ew->hwnd);
     HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);

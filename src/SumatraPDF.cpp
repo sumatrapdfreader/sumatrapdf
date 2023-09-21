@@ -4182,6 +4182,7 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotTyp
     if (!annot) {
         return nullptr;
     }
+    UpdateAnnotationsList(tab->editAnnotsWindow);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     CopySelectionToClipboard(win);
@@ -5453,10 +5454,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             return DefWindowProc(hwnd, msg, wp, lp);
     }
     if (lastCreatedAnnot) {
+        UpdateAnnotationsList(tab->editAnnotsWindow);
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, lastCreatedAnnot);
-        MainWindowRerender(win);
-        ToolbarUpdateStateForWindow(win, true);
     }
     return 0;
 }
