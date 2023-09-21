@@ -357,7 +357,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
             if (annot != prev) {
-                TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr)"none";
+                TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                 TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
                 if (gShowAnnotationNotification) {
@@ -372,8 +372,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.timeoutMs = 2500;
                         // TODO: translate
                         // TODO: 'e' and 'Ctrl + e' could be re-defined
-                        args.msg = str::FormatTemp(
-                            "%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
+                        args.msg = str::FormatTemp("%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
                         ShowNotification(args);
                     } else {
                         RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);

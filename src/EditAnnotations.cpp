@@ -112,10 +112,6 @@ const char* GetKnownColorName(PdfColor c) {
 }
 
 struct EditAnnotationsWindow : Wnd {
-    void OnSize(UINT msg, UINT type, SIZE size) override;
-    void OnClose() override;
-    void OnFocus() override;
-
     WindowTab* tab = nullptr;
     LayoutBase* mainLayout = nullptr;
 
@@ -171,10 +167,53 @@ struct EditAnnotationsWindow : Wnd {
     str::Str currCustomColor;
     str::Str currCustomInteriorColor;
 
-    ~EditAnnotationsWindow();
+    void OnSize(UINT msg, UINT type, SIZE size) override;
+    void OnClose() override;
+    void OnFocus() override;
+    bool PreTranslateMessage(MSG&) override;
 
+    void DeleteSelectedAnnotation();
     void ListBoxSelectionChanged();
+
+    ~EditAnnotationsWindow();
 };
+
+bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
+    if (msg.message == WM_KEYDOWN) {
+        if (msg.wParam == VK_DELETE) {
+            DeleteSelectedAnnotation();
+            return true;
+        }
+    }
+    return false;
+}
+
+static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
+    int nAnnots = ew->annotations.isize();
+    if (nAnnots == 0) {
+        return nullptr;
+    }
+    if (prevIdx >= nAnnots) {
+        prevIdx = nAnnots - 1;
+    }
+    return ew->annotations.at(prevIdx);
+}
+
+void EditAnnotationsWindow::DeleteSelectedAnnotation() {
+    int idx = listBox->GetCurrentSelection();
+    if (idx < 0) {
+        CrashIf(tab->selectedAnnotation != nullptr);
+        return;
+    }
+    Annotation* annot = annotations.at(idx);
+    CrashIf(tab->selectedAnnotation != annot);
+    DeleteAnnotationAndUpdateUI(tab, annot);
+    annot = PickNewSelectedAnnotation(this, idx);
+    skipGoToPage = false;
+    if (annot) {
+        SetSelectedAnnotation(tab, annot);
+    }
+}
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
 #if 0
@@ -708,17 +747,6 @@ static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent*
     MainWindowRerender(ew->tab->win);
 }
 
-static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int itemNo) {
-    int nAnnots = ew->annotations.isize();
-    if (nAnnots == 0) {
-        return nullptr;
-    }
-    if (itemNo >= nAnnots) {
-        itemNo = nAnnots - 1;
-    }
-    return ew->annotations.at(itemNo);
-}
-
 // TODO: maybe use ew->tab->selectedAnnotation instead of annot
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation* annot) {
     HidePerAnnotControls(ew);
@@ -813,6 +841,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     // go to page with a given annotations before triggering repaint
     if (ew) {
         UpdateUIForSelectedAnnotation(ew, annot);
+        HwndMakeVisible(ew->hwnd);
     }
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, false);
