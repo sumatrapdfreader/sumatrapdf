@@ -189,6 +189,8 @@ struct CommandPaletteBuildCtx {
     bool cursorOnImage = false;
     bool hasToc = false;
     bool allowToggleMenuBar = false;
+    bool canCloseOtherTabs = false;
+    bool canCloseTabsToRight = true;
 
     ~CommandPaletteBuildCtx();
 };
@@ -200,13 +202,16 @@ static bool IsOpenExternalViewerCommand(i32 cmdId) {
            ((cmdId >= CmdOpenWithFirst) && (cmdId <= CmdOpenWithLast));
 }
 
-/* TODO:
-    CmdCloseOtherTabs
-    CmdCloseTabsToTheRight
-*/
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsCmdInList(gBlacklistCommandsFromPalette)) {
         return false;
+    }
+
+    if (CmdCloseOtherTabs == cmdId) {
+        return ctx.canCloseOtherTabs;
+    }
+    if (CmdCloseTabsToTheRight == cmdId) {
+        return ctx.canCloseTabsToRight;
     }
 
     if (CmdReopenLastClosedFile == cmdId) {
@@ -216,6 +221,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsOpenExternalViewerCommand(cmdId)) {
         return HasExternalViewerForCmd(cmdId);
     }
+
     if (!ctx.isDocLoaded) {
         if (!IsCmdInList(gDocumentNotOpenWhitelist)) {
             return false;
@@ -329,6 +335,20 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     ctx.hasSelection = ctx.isDocLoaded && tab && mainWin->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;
+
+    int nTabs = mainWin->TabCount();
+    int currTabIdx = mainWin->GetTabIdx(tab);
+    ctx.canCloseTabsToRight = currTabIdx < (nTabs - 1);
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* t = mainWin->GetTab(i);
+        if (t->IsAboutTab()) {
+            continue;
+        }
+        if (t == tab) {
+            continue;
+        }
+        ctx.canCloseOtherTabs = true;
+    }
 
     Point cursorPos = HwndGetCursorPos(mainWin->hwndCanvas);
 
