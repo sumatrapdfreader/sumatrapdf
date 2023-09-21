@@ -3913,6 +3913,9 @@ static bool ChmForwardKey(WPARAM key) {
 }
 
 static Annotation* GetAnnotionUnderCursor(WindowTab* tab) {
+    if (!tab) {
+        return nullptr;
+    }
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return nullptr;
