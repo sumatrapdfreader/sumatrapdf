@@ -3913,9 +3913,6 @@ static bool ChmForwardKey(WPARAM key) {
 }
 
 static Annotation* GetAnnotionUnderCursor(WindowTab* tab) {
-    if (!tab) {
-        return nullptr;
-    }
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return nullptr;
@@ -5263,28 +5260,29 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSelectAnnotation: {
-            // TODO: use win->annotationUnderCursor?
-            Annotation* annot = GetAnnotionUnderCursor(tab);
-            if (annot) {
-                SetSelectedAnnotation(tab, annot);
+            if (tab) {
+                Annotation* annot = GetAnnotionUnderCursor(tab);
+                if (annot) {
+                    SetSelectedAnnotation(tab, annot);
+                }
             }
             break;
         }
 
         case CmdEditAnnotations: {
-            // TODO: use win->annotationUnderCursor?
-            Annotation* annot = GetAnnotionUnderCursor(tab);
-            ShowEditAnnotationsWindow(tab);
-            if (annot) {
-                SetSelectedAnnotation(tab, annot);
+            if (tab) {
+                Annotation* annot = GetAnnotionUnderCursor(tab);
+                ShowEditAnnotationsWindow(tab);
+                if (annot) {
+                    SetSelectedAnnotation(tab, annot);
+                }
             }
             break;
         }
 
         case CmdDeleteAnnotation: {
-            Annotation* annot = GetAnnotionUnderCursor(tab);
-            if (annot) {
-                DeleteAnnotationAndUpdateUI(tab, annot);
+            if (tab && tab->selectedAnnotation) {
+                DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
             }
         } break;
 
