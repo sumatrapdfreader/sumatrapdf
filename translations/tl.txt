@@ -1,86 +1,7 @@
-:&Free Text
-:&Highlight
-:&Next Page
-:&Open Document
-:&Open...
-:&Options
-:&Pin Document
-:&Previous Page
-:&Remove From History
-:&Save to existing PDF
-:&Search With Google
-:&Single Page
-:&Stamp
-:&Strike Out
-:&Text
-:&Theme
-:&Translate With Google
-:&Underline
-:&Window
-:Close Other Tabs
-:Close Tabs To The Right
-:Copy File Path
-:EPUB ebooks
-:F&ullscreen
-:Fit &Width
-:Hide &Options
-:Install SumatraPDF in &folder:
-:Let Windows Desktop Search &search PDF documents
-:Let Windows show &previews of PDF documents
-:Loading %s ...
-:Man&ga Mode
-:New &window
-:Open Attachment
-:Open Directory in &Double Commander
-:Open Directory in &Explorer
-:Open Directory in &Total Commander
-:Open Directory in Directory &Opus
-:Open In New Window
-:Open in Microsoft &HTML Help
-:Pa&ge...
-:Please wait - loading...
-:Poly Line
-:Polygon
-:Popup: %d 0 R
-:Pr&esentation
-:Printing page %d of %d...
-:Properties...
-:Re&name...
-:Redact
-:Remove page %s from favorites
-:Rotate &Left
-:Rotate &Right
-:S&election
-:S&quiggly
-:Save Annotations to existing PDF
-:Save Attachment...
-:Save S&hortcut...
-:Save changes to existing PDF
-:Save to &new PDF
-:Saving of '%s' failed with: '%s'
-:Search With &Google
-:Selection:
-:Show &Bookmarks
-:Show &Favorites
-:Show &Scrollbars
-:Show Book&marks
-:Show Scr&ollbars
-:Show in &folder
-:Show in folder
-:Start SumatraPDF
-:SumatraPDF %s Installer
-:SumatraPDF %s Uninstaller
-:SumatraPDF installation not found.
-:Text Alignment:
-:Text Color:
-:Text Size:
-:Text Size: %d
-:Translate with &DeepL
-:Use &tabs
 :&About
 &Tungkol sa
 :&Actual Size
-&Totoong Sukat
+&Actual na Sukat
 :&Advanced Options...
 &Advanced na mga pagpipilian...
 :&All selected pages
@@ -117,12 +38,16 @@ Hanapin ang:
 &Unang pahina
 :&Fit pages to printable area
 Pagkasyahin ang mga pahina sa printable na area
+:&Free Text
+&Free Text
 :&Go To
 Pumun&ta Sa...
 :&Go to page:
 Pumunta sa pahina:
 :&Help
 Tulong
+:&Highlight
+I-&Highlight
 :&Last Page
 Hu&ling pahina
 :&Magnification:
@@ -131,14 +56,26 @@ Hu&ling pahina
 Gabay
 :&Match case
 &Itugma ang laki ng mga letra
+:&Next Page
+&Next na pahina
 :&No
 Hindi
 :&Odd pages only
-Mga odd na pahina lamang
+Mga &Odd na pahina lamang
+:&Open Document
+I-&Open ang Document
+:&Open...
+I-&Open...
+:&Options
+Mga &Options
 :&Options...
 Mga Pagpipilian
 :&Password:
 &Password:
+:&Pin Document
+I-&Pin ang Document
+:&Previous Page
+&Previous na pahina
 :&Print...
 I-&print
 :&Print... (denied)
@@ -147,16 +84,38 @@ I-&print
 Tandaan ang password para sa dokumentong ito
 :&Remember these settings for each document
 Tandaan ang settings ng bawat dokumento
+:&Remove From History
+I-&Remove sa History
 :&Save As...
 I-&save bilang...
+:&Save to existing PDF
+I-&Save sa existing PDF
+:&Search With Google
+I-&Search gamit ang Google
 :&Settings
 Mga Setting
 :&Shrink pages to printable area (if necessary)
 Paliitin ang pahina sa printable na area (kung kinakailangan)
+:&Single Page
+&Single na pahina
+:&Stamp
+&Stamp
+:&Strike Out
+&Strike Out
+:&Text
+&Text
+:&Theme
+&Tema
+:&Translate With Google
+I-&Translate gamit ang Google
+:&Underline
+&Underline
 :&Use original page sizes
 Gamitin ang orihinal na laki ng mga pahina
 :&View
 Tignan
+:&Window
+&Window
 :&Yes
 &Oo
 :&Zoom
@@ -168,7 +127,7 @@ Mag-&Zoom
 :About SumatraPDF
 Tungkol sa SumatraPDF
 :Add Favorite
-I-Add sa favorite
+Idagdag sa Favorite
 :Add page %s to favorites
 Magdagdag ng pahina %s sa mga paborito
 :Add page %s to favorites with (optional) name:
@@ -233,6 +192,10 @@ Nagsusuri ng update...
 Bilog
 :Close
 Isara
+:Close Other Tabs
+I-Close ang ibang Tabs
+:Close Tabs To The Right
+I-Close ang Tabs sa kanan
 :Collapse All
 I-collapse lahat
 :Color:
@@ -259,6 +222,8 @@ Kopyahin ang &Larawan
 Kopyahin nag address ng &link
 :Copy Co&mment
 Kopyahin ang komento
+:Copy File Path
+Kopyahin ang File Path
 :Copy To Clipboard
 Kopyahin sa clipboard
 :Copying text was denied (copying as image only)
@@ -325,6 +290,8 @@ I-download ang 64-bit na bersyon
 &Lumabas
 :E&xit Fullscreen
 &Lumabas sa fullscreen
+:EPUB ebooks
+EPUB ebooks
 :Edit Annotations
 I-edit ang mga anotasyon
 :Enter password
@@ -341,6 +308,8 @@ Palawakin lahat
 &Mga paborito
 :F&orward
 &Pasulong
+:F&ullscreen
+I-F&ullscreen
 :Facing
 Magkaharap
 :Failed to delete uninstaller registry keys
@@ -381,6 +350,8 @@ Hanapin:
 akma sa &nilalaman
 :Fit &Page
 Akma &Pahina
+:Fit &Width
+I-Fit sa &Width
 :Fit Content
 Pagkasyahin ang laman
 :Fit Page
@@ -405,6 +376,8 @@ GB
 Kumuha ng impormasyon ng mga font
 :Go to page
 Pumunta sa Pahina
+:Hide &Options
+Itago ang &Options
 :Hide frequently read
 Itago ang madalas basahin
 :Hint: Use the F3 key for finding again
@@ -419,6 +392,8 @@ Mga imahe
 Tinta
 :Install SumatraPDF
 I-install ang SumatraPDF
+:Install SumatraPDF in &folder:
+I-install ang SumatraPDF sa &folder:
 :Install and relaunch
 I-install at muling ilunsad
 :Install for all users
@@ -433,6 +408,10 @@ Pag-install ng 32-bit SumatraPDF sa 64-bit OS
 Kulay ng panloob:
 :KB
 KB
+:Let Windows Desktop Search &search PDF documents
+Hayaan ang Windows Desktop Search na i-&search ang mga PDF documents
+:Let Windows show &previews of PDF documents
+Hayaan ang Windows na ipakita ang &previews ng mga PDF documents
 :Light
 Liwanag
 :Line
@@ -441,16 +420,22 @@ Linya
 Dulo ng linya:
 :Line Start:
 Simula ng linya:
+:Loading %s ...
+Naglo-loading %s ...
 :MB
 MB
 :Make SumatraPDF default application for PDF files?
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
+:Man&ga Mode
+Man&ga Mode
 :Match Case
 Ipantay ang Laki ng Titik
 :Mobi documents
 Mga dokumento ng mobi
 :Modified:
 Nabago noong:
+:New &window
+Bagong &window
 :New version available
 Bagong bersyon na magagamit
 :Next Page
@@ -475,8 +460,20 @@ Kalabuan: %d
 Buksan
 :Open &in PDF-XChange
 Buksan sa PDF-XChange
+:Open Attachment
+Buksan ang Attachment
+:Open Directory in &Double Commander
+Buksan ang Directory sa &Double Commander
+:Open Directory in &Explorer
+Buksan ang Directory sa &Explorer
+:Open Directory in &Total Commander
+Buksan ang Directory sa &Total Commander
+:Open Directory in Directory &Opus
+Buksan ang Directory sa Directory &Opus
 :Open Embedded PDF
 Buksan ang naka-embed na PDF
+:Open In New Window
+Buksan sa bagong Window
 :Open a document...
 magbukas ng dokumento...
 :Open in %s
@@ -487,6 +484,8 @@ Buksan sa Adobe Reader
 Buksan sa Foxit Reader
 :Open in &Microsoft XPS-Viewer
 Buksan sa Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
+Buksan sa Microsoft &HTML Help
 :P&roperties
 Mga katangian
 :PDF Document
@@ -499,6 +498,8 @@ Gumawa ng PDF:
 Bersyon ng PDF:
 :PDF documents
 Mga PDF na dokumento
+:Pa&ge...
+Pa&ge...
 :Page %s
 Pahina %s
 :Page Size:
@@ -513,10 +514,20 @@ Pahina:
 Mga dokumento ng PalmDoc
 :Please close %s to proceed!
 mangyaring isara ang %s upang magpatuloy!
+:Please wait - loading...
+Mangyaring maghintay - naglo-loading...
 :Please wait - rendering...
 Maghintay - pinapakita...
+:Poly Line
+Poly Line
+:Polygon
+Polygon
+:Popup: %d 0 R
+Popup: %d 0 R
 :Postscript documents
 Mga dokumento ng Postscript
+:Pr&esentation
+Pr&esentasyon
 :Previous Page
 Naunang Pahina
 :Print
@@ -531,28 +542,60 @@ kasalukuyang napi-print
 Kasalukuyang isinasagawa ang pagpi-print. Itigil at huminto?
 :Printing is still in progress. Abort and start over?
 Kasalukuyang isinasagawa ang pagpi-print. itigil at magsimulang muli?
+:Printing page %d of %d...
+Nagpi-print na pahina %d ng %d...
 :Printing problem.
 May Problema sa Pagpi-print.
+:Properties...
+Properties...
+:Re&name...
+I-Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 Rect: x=%d y=%d dx=%d dy=%d
+:Redact
+I-Redact
 :Remember &opened files
 Alalahanin ang mga binuksang files
 :Remove from favorites
 Alisin mula sa mga paborito
+:Remove page %s from favorites
+I-Remove ang pahina %s sa favorites
 :Rename To
 Palitan ang pangalan sa
+:Rotate &Left
+Paikutin sa &Left
+:Rotate &Right
+Paikutin sa &Right
+:S&election
+S&election
+:S&quiggly
+S&quiggly
 :SVG documents
 SVG na mga dokumento
+:Save Annotations to existing PDF
+I-Save ang Annotations sa existing PDF
+:Save Attachment...
+I-Save ang Attachment...
 :Save Embedded File...
 I-save ang naka-embed na file...
+:Save S&hortcut...
+I-Save ang S&hortcu...
 :Save annotations?
 I-save ang mga anotasyon?
 :Save changes to a new PDF
 I-save ang mga pagbabago sa isang bagong PDF
+:Save changes to existing PDF
+I-Save ang mga pagbabago sa exising PDF
+:Save to &new PDF
+I-Save sa &new PDF
 :Saved annotations to '%s'
 Nai-save ang mga anotasyon sa '%s'
+:Saving of '%s' failed with: '%s'
+Saving ng '%s' ay pumalya: '%s'
 :Search With &Bing
 Maghanap Gamit ang &Bing
+:Search With &Google
+Hanaping gamit ang &Google
 :Searching %d of %d...
 Hinahanap ang %d ng %d...
 :Select &All
@@ -563,18 +606,34 @@ Piliin ang Anotasyon sa Editor
 Mamili ng content gamit ang Ctrl+left mouse button
 :Select the folder where SumatraPDF should be installed:
 Piliin ang folder kung saan dapat i-install ang SumatraPDF:
+:Selection:
+Pagpipilian:
 :Send by &E-mail...
 Ipadala sa &email...
 :Set inverse search command-line
 Itakda ang inverse search command-line
+:Show &Bookmarks
+Ipakita ang &Bookmarks
+:Show &Favorites
+Ipakita ang &Favorites
 :Show &Pages Continuously
 Ipakita nang tuloy-tuloy ang mga &pahina
+:Show &Scrollbars
+Ipakita ang &Scrollbars
 :Show &Toolbar
 Ipakita ang toolbar
+:Show Book&marks
+Ipakita ang Book&marks
 :Show Favorites
 Ipakita ang mga paborito
+:Show Scr&ollbars
+Ipakita ang Scr&ollbars
 :Show frequently read
 Ipakita ang madalas basahin
+:Show in &folder
+Ipakita sa &folder
+:Show in folder
+Ipakita sa folder
 :Show the &bookmarks sidebar when available
 Ipakita ang &bookmarks sidebar kung naangkop
 :Single Page
@@ -587,8 +646,14 @@ Paumanhin, hindi dapat nangyari iyon!\n\nPakipindot ang 'Kanselahin', kung gusto
 Walang synchronization point ang source file na %s
 :Square
 Parisukat
+:Start SumatraPDF
+Simulan ang SumatraPDF
 :Subject:
 Paksa:
+:SumatraPDF %s Installer
+Installer ng SumatraPDF %s
+:SumatraPDF %s Uninstaller
+Uninstaller ng SumatraPDF %s
 :SumatraPDF Options
 Mga Opsyon para sa SumatraPDF
 :SumatraPDF Update
@@ -597,10 +662,20 @@ Update sa SumatraPDF
 Nag-crash ang SumatraPDF
 :SumatraPDF has been uninstalled.
 Ang SumatraPDF ay na-uninstall.
+:SumatraPDF installation not found.
+Hindi natagpuan ang installation ng SumatraPDF.
 :Synchronization file cannot be opened
 Hindi mabuksan ang synchronization file
 :Tagged PDF
 Naka-tag na PDF
+:Text Alignment:
+Alignment ng Text:
+:Text Color:
+Kulay ng Text:
+:Text Size:
+Laki ng Text:
+:Text Size: %d
+Laki ng Text: %d
 :Text documents
 Mga tekstong dokumento
 :Thank you for choosing SumatraPDF!
@@ -613,6 +688,8 @@ Nasira ang installer. Paki-download muli.\nPaumanhin sa abala!
 Gumagamit ang dokumentong ito ng mga hindi sinusuportahang feature (%s) at maaaring hindi mai-render nang maayos
 :Title:
 Pamagat:
+:Translate with &DeepL
+I-Translate gamit ang &DeepL
 :Uninstall SumatraPDF
 I-uninstall ang SumatraPDF
 :Uninstallation failed
@@ -625,6 +702,8 @@ Hindi alam na source file (%s)
 Mga hindi na-save na anotasyon
 :Unsaved annotations in '%s'
 Hindi na-save na mga anotasyon sa '%s'
+:Use &tabs
+Gamitin ang &tabs
 :View
 Tignan
 :Visit &Website

@@ -1,12 +1,3 @@
-:Copy File Path
-:Open Directory in &Double Commander
-:Open Directory in &Explorer
-:Open Directory in &Total Commander
-:Open Directory in Directory &Opus
-:Open In New Window
-:Open in Microsoft &HTML Help
-:Please wait - loading...
-:Properties...
 :&About
 Név&jegy
 :&Actual Size
@@ -231,6 +222,8 @@ Folyamatos oldalpár
 &Hivatkozás címének másolása
 :Copy Co&mment
 Me&gjegyzés másolása
+:Copy File Path
+Útvonal másolása
 :Copy To Clipboard
 Másolás vágólapra
 :Copying text was denied (copying as image only)
@@ -469,8 +462,18 @@ Megny&itás
 Megnyitás PDF-XChange-ben
 :Open Attachment
 Melléklet megnyitása
+:Open Directory in &Double Commander
+Mappa megnyitása Double Commander-ben
+:Open Directory in &Explorer
+Tároló mappa megnyitása
+:Open Directory in &Total Commander
+Mappa megnyitása Total Commander-ben
+:Open Directory in Directory &Opus
+Mappa megnyitása Opus-ban
 :Open Embedded PDF
 Beágyazott PDF megnyitása
+:Open In New Window
+Megnyitás új ablakban
 :Open a document...
 Fájl megnyitása...
 :Open in %s
@@ -481,6 +484,8 @@ Megnyitás &Adobe Acrobat-ban
 Megnyitás &Foxit Readerben
 :Open in &Microsoft XPS-Viewer
 Megnyitás Microsoft XPS-Viewerben
+:Open in Microsoft &HTML Help
+Microsoft Súgó megnyitása
 :P&roperties
 &Tulajdonságok
 :PDF Document
@@ -509,6 +514,8 @@ Oldal:
 PalmDoc dokumentumok
 :Please close %s to proceed!
 A(z) %s bezárása szükséges a folytatáshoz!
+:Please wait - loading...
+Kérem várjon...
 :Please wait - rendering...
 Feldolgozás, kérem várjon
 :Poly Line
@@ -539,6 +546,8 @@ A nyomtatás még folyamatban van. Megszakítás és újrakezdés?
 %d. oldal nyomtatása a(z) %d-ből...
 :Printing problem.
 Nyomtatási probléma.
+:Properties...
+Tulajdonságok
 :Re&name...
 &Átnevezés…
 :Rect: x=%d y=%d dx=%d dy=%d

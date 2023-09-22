@@ -1,6 +1,3 @@
-:Copy File Path
-:Open In New Window
-:Properties...
 :&About
 &Acerca de
 :&Actual Size
@@ -225,6 +222,8 @@ Copiar &imagen
 Copiar la dirección del en&lace
 :Copy Co&mment
 Copiar co&mentario
+:Copy File Path
+Copiar dirección del archivo
 :Copy To Clipboard
 Copiar a portapapeles
 :Copying text was denied (copying as image only)
@@ -473,6 +472,8 @@ Abrir directorio en &Total Commander
 Abrir directorio en Directory &Opus
 :Open Embedded PDF
 Abrir un PDF incrustado
+:Open In New Window
+Abrir en nueva ventana
 :Open a document...
 Abrir un documento...
 :Open in %s
@@ -545,6 +546,8 @@ Aún se está imprimiendo. ¿Cancelar y empezar desde cero?
 Imprimiendo la página %d de %d...
 :Printing problem.
 Problema de impresión.
+:Properties...
+Propiedades...
 :Re&name...
 Re&nombrar...
 :Rect: x=%d y=%d dx=%d dy=%d

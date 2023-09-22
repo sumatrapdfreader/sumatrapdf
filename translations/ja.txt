@@ -4,10 +4,8 @@
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
-:Open In New Window
 :Open in Microsoft &HTML Help
 :Popup: %d 0 R
-:Properties...
 :Redact
 :&About
 バージョン情報(&A)
@@ -471,6 +469,8 @@ PDF-XChange で開く(&I)
 添付を開く
 :Open Embedded PDF
 埋め込み PDF を開く
+:Open In New Window
+新しいウィンドウで開く
 :Open a document...
 ドキュメントを開く...
 :Open in %s
@@ -539,6 +539,8 @@ PostScript ドキュメント
 %d / %d ページ目を印刷中...
 :Printing problem.
 印刷の問題です。
+:Properties...
+プロパティ
 :Re&name...
 ファイル名の変更(&N)...
 :Rect: x=%d y=%d dx=%d dy=%d

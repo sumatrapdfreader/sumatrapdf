@@ -1,18 +1,10 @@
-:&Actual Size
-:&Back
-:&Book View
-:&Cancel
 :&Caret
-:&Close
 :&Continue installing 32-bit version
 :&Copy To Clipboard
-:&Discard changes
 :&Facing
 :&First Page
 :&Free Text
-:&Highlight
 :&Last Page
-:&Next Page
 :&Open...
 :&Previous Page
 :&Remove From History
@@ -24,55 +16,33 @@
 :&Text
 :&Translate With Google
 :&Underline
-:Annotations
-:Author: %s
-:Background Color:
-:Border: %d
-:Checking for update...
-:Circle
 :Close Other Tabs
 :Close Tabs To The Right
-:Collapse All
-:Color:
 :Command Palette
-:Contents:
-:Copy File Path
-:Copy To Clipboard
 :Couldn't get printer name
 :Couldn't uninstall Sumatra search filter
 :Create Annotation &Under Cursor
 :Create Annotation From Selection
 :Custom &Zoom...
-:Date:
 :Delete Annotation\tDel
-:Don't install
-:Download 64-bit version
 :E&xit
 :E&xit Fullscreen
 :Edit Annotations
 :Expand All
 :F&orward
 :F&ullscreen
-:File Attachment
 :Fin&d...
 :Fit &Content
 :Fit &Page
 :Fit &Width
-:Get Fonts Info
-:Icon:
-:Images
-:Ink
 :Install and relaunch
 :Install for all users
 :Installing 32-bit SumatraPDF on 64-bit OS
 :Interior Color:
-:Line
 :Line End:
 :Line Start:
 :Loading %s ...
-:New &window
 :New version available
-:Opacity:
 :Opacity: %d
 :Open Attachment
 :Open Directory in &Double Commander
@@ -80,7 +50,6 @@
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
 :Open Embedded PDF
-:Open In New Window
 :Open in Microsoft &HTML Help
 :Pa&ge...
 :Please wait - loading...
@@ -88,7 +57,6 @@
 :Polygon
 :Popup: %d 0 R
 :Pr&esentation
-:Properties...
 :Re&name...
 :Rect: x=%d y=%d dx=%d dy=%d
 :Redact
@@ -98,13 +66,11 @@
 :S&quiggly
 :SVG documents
 :Save Annotations to existing PDF
-:Save Attachment...
 :Save Embedded File...
 :Save S&hortcut...
 :Save annotations?
 :Save changes to a new PDF
 :Save changes to existing PDF
-:Save to &new PDF
 :Saved annotations to '%s'
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
@@ -117,10 +83,7 @@
 :Show in &folder
 :Show in folder
 :Skip this version
-:Square
 :Text Alignment:
-:Text Color:
-:Text Size:
 :Text Size: %d
 :Translate with &DeepL
 :Unsaved annotations
@@ -130,12 +93,24 @@
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 :&About
 &درباره
+:&Actual Size
+اندازه واقعی
 :&Advanced Options...
 تنظیمات پیشرفته
 :&All selected pages
 &همه‌ی صفحات انتخاب ‌شده
+:&Back
+ برگشت
+:&Book View
+نمای کتاب
+:&Cancel
+لغو 
+:&Close
+بستن
 :&Copy Selection
 &رونوشت از قسمت انتخاب شده
+:&Discard changes
+لغو تغییرات
 :&Don't ask me again
 &دوباره از من نپرس
 :&Even pages only
@@ -152,12 +127,16 @@
 &برو به صفحه‌ی:
 :&Help
 &راهنما
+:&Highlight
+برجسته کردن
 :&Magnification:
 &درشت نمایی
 :&Manual
 &کتابچه‌ی راهنمای آنلاین
 :&Match case
 دقیقا &مثل عبارت وارد شده
+:&Next Page
+صفحه بعدی
 :&No
 &خیر
 :&Odd pages only
@@ -218,6 +197,8 @@
 تمام پرونده‌ها
 :All supported documents
 همه‌ی اسناد پشتیبانی شده
+:Annotations
+علامت گذاری ها
 :Application:
 :نرم‌افزار
 :Are you sure you want to uninstall SumatraPDF?
@@ -228,10 +209,14 @@
 پیوست: %s
 :Author:
 مؤلف:
+:Author: %s
+%s :نویسنده
 :Automatic
 خودکار
 :Automatically check for &updates
 بررسی خودکار برای به‌روزرسانی‌ها
+:Background Color:
+رنگ پس زمینه
 :Book View
 کتابی
 :Bookmark Shortcuts
@@ -240,8 +225,10 @@
 میانبر به نشانک صفحه‌ی %s از %s
 :Bookmarks
 نشانک‌ها
+:Border: %d
+%d :حاشیه
 :Bytes
-بایت
+بایت ها
 :CHM documents
 CHM اسناد
 :Can't connect to the Internet (error %#x).
@@ -256,12 +243,22 @@ CHM اسناد
 تغییر زبان (Change Language)
 :Check for &Updates
 بررسی برای به‌روزرسانی‌ها
+:Checking for update...
+چک کردن برای بروزرسانی
+:Circle
+دایره
 :Close
 بستن
+:Collapse All
+بستن همه
+:Color:
+رنگ
 :Comic books
 کتاب‌های فُکاهی
 :Compatibility
 سازگاری
+:Contents:
+محتوا
 :Continuous
 پیوسته
 :Continuous Book View
@@ -276,6 +273,10 @@ CHM اسناد
 رونوشت از نشانی &پیوند
 :Copy Co&mment
 رونوشت از تو&ضیح
+:Copy File Path
+کپی کردن مسیر فایل
+:Copy To Clipboard
+کپی در کلیپ برد
 :Copying text was denied (copying as image only)
 رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
 :Copyright:
@@ -308,6 +309,8 @@ CHM اسناد
 تیره
 :Darker
 تیره‌تر
+:Date:
+تاریخ
 :Default &Layout:
 &صفحه‌بندی پیش‌فرض:
 :Default &Zoom:
@@ -318,6 +321,10 @@ CHM اسناد
 DjVu اسناد
 :Document Properties
 مشخصات سند
+:Don't install
+نصب نشود
+:Download 64-bit version
+دانلود نسخه 64 بیتی
 :EPUB ebooks
 EPUB اسناد
 :Enter password
@@ -350,6 +357,8 @@ EPUB اسناد
 اسناد FictionBook
 :File %s not found
 پرونده %s پیدا نشد
+:File Attachment
+پیوست فابل
 :File Size:
 حجم پرونده:
 :File:
@@ -382,6 +391,8 @@ EPUB اسناد
 آخرین چیزهایی که خوانده‌اید
 :GB
 گیگابایت
+:Get Fonts Info
+دریافت اطلاعات فونت
 :Go to page
 برو به صفحه‌ی
 :Hide &Options
@@ -390,8 +401,14 @@ EPUB اسناد
 پنهان کردن آخرین چیزهایی که خوانده‌اید
 :Hint: Use the F3 key for finding again
 نکته: برای جستجوی مجدد از کلید F3 استفاده کنید
+:Icon:
+آیکون
 :Image files (*.%s)
 پرونده‌های تصویری (*.%s)
+:Images
+تصاویر
+:Ink
+جوهر
 :Install SumatraPDF
 نصب کردن SumatraPDF
 :Install SumatraPDF in &folder:
@@ -408,6 +425,8 @@ SumatraPDF را در این &پوشه نصب کن:
 ویندوز امکان پیش‌نمایش اسناد PDF را داشته باشد
 :Light
 روشن
+:Line
+خط
 :MB
 مگابایت
 :Make SumatraPDF default application for PDF files?
@@ -420,6 +439,8 @@ SumatraPDF را در این &پوشه نصب کن:
 Mobi اسناد
 :Modified:
 اصلاح شده:
+:New &window
+پنجره جدید
 :Next Page
 صفحه‌ی بعدی
 :No matches were found
@@ -434,10 +455,14 @@ Mobi اسناد
 تعداد صفحات:
 :OK
 تأیید
+:Opacity:
+وضوح
 :Open
 باز کردن
 :Open &in PDF-XChange
 باز کردن در PDF-&XChange
+:Open In New Window
+بازکردن در پنجره جدید
 :Open a document...
 باز کردن یک سند...
 :Open in %s
@@ -496,6 +521,8 @@ Postscript اسناد
 در حال چاپ کردن صفحه‌ی %d از %d...
 :Printing problem.
 مشکل در چاپ.
+:Properties...
+مشخصات
 :Remember &opened files
 پرونده‌های &باز را به خاطر بسپار
 :Remove from favorites
@@ -504,6 +531,10 @@ Postscript اسناد
 حذف صفحه‌ی %s از علاقه‌مندی‌ها
 :Rename To
 تغییر نام به
+:Save Attachment...
+...ذخیره کردن پیوست
+:Save to &new PDF
+جدید pdf ذخیره کردن در 
 :Searching %d of %d...
 در حال جستجوی %d از %d...
 :Select &All
@@ -536,6 +567,8 @@ Postscript اسناد
 متأسفیم، نباید اینطوری می‌شد!\n\n لطفاً اگر مایلید تا این مشکل را برطرف کنیم، کلید لغو را بزنید.
 :Source file %s has no synchronization point
 پرونده‌ی %s نقاط همگام‌سازی ندارد
+:Square
+مربع
 :Start SumatraPDF
 اجرای Sumatra PDF
 :Subject:
@@ -558,6 +591,10 @@ SumatraPDF پاک شد.
 پرونده‌ی همگام‌سازی باز نمی‌شود
 :Tagged PDF
 PDF برچسب‌گذاری شده
+:Text Color:
+رنگ متن
+:Text Size:
+اندازه متن
 :Text documents
 سند متنی
 :Thank you for choosing SumatraPDF!

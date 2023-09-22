@@ -1,5 +1,3 @@
-:Open In New Window
-:Properties...
 :&About
 關於(&A)
 :&Actual Size
@@ -474,6 +472,8 @@ Mobi 文件
 在 Directory Opus 中開啟資料夾(&O)
 :Open Embedded PDF
 開啟內嵌的 PDF
+:Open In New Window
+在新視窗中開啟
 :Open a document...
 開啟文件...
 :Open in %s
@@ -546,6 +546,8 @@ Postscript 文件
 正在列印第 %d 頁（共 %d 頁）
 :Printing problem.
 列印問題
+:Properties...
+內容...
 :Re&name...
 重新命名(&N)...
 :Rect: x=%d y=%d dx=%d dy=%d
