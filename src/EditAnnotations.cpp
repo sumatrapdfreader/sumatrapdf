@@ -292,14 +292,16 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, size_t arrSize, Annotat
     return false;
 }
 
-void CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
+// return true if closed the window, false if there was no window to close
+bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
     if (!tab->editAnnotsWindow) {
-        return;
+        return false;
     }
     auto ew = tab->editAnnotsWindow;
     tab->editAnnotsWindow = nullptr;
     // this will trigger closing the window
     delete ew;
+    return true;
 }
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {

@@ -4,7 +4,7 @@
 struct EditAnnotationsWindow;
 
 void ShowEditAnnotationsWindow(WindowTab*);
-void CloseAndDeleteEditAnnotationsWindow(WindowTab*);
+bool CloseAndDeleteEditAnnotationsWindow(WindowTab*);
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
 void SetSelectedAnnotation(WindowTab*, Annotation*);
 void UpdateAnnotationsList(EditAnnotationsWindow*);

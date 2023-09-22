@@ -2294,6 +2294,33 @@ void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, c
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
+static bool SaveAnnotationsToExistingFile(WindowTab* tab) {
+    if (!tab) {
+        return false;
+    }
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    const char* path = engine->FilePath();
+    tab->ignoreNextAutoReload = true;
+    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
+        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
+    });
+    if (!ok) {
+        tab->ignoreNextAutoReload = false;
+        return false;
+    }
+    ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
+
+    // have to re-open edit annotations window because the current has
+    // a reference to deleted Engine
+    bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
+    ReloadDocument(tab->win, false);
+    if (hadEditAnnotations) {
+        ShowEditAnnotationsWindow(tab);
+    }
+
+    return true;
+}
+
 // returns true if saved successully
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
@@ -2326,6 +2353,11 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return false;
     }
     char* dstFilePath = ToUtf8Temp(dstFileName);
+    bool savingToExisting = str::Eq(dstFilePath, srcFileName);
+    if (savingToExisting) {
+        return SaveAnnotationsToExistingFile(tab);
+    }
+
     ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](const char* mupdfErr) {
         ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, dstFilePath, mupdfErr);
     });
@@ -2335,14 +2367,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     // have to re-open edit annotations window because the current has
     // a reference to deleted Engine
-    bool hadEditAnnotations = tab->editAnnotsWindow != nullptr;
-    if (hadEditAnnotations) {
-        CloseAndDeleteEditAnnotationsWindow(tab);
-    }
-
-    bool savedToExisting = str::Eq(dstFilePath, srcFileName);
-    // TODO: close and re-open EditAnnotationsWindow
-    // becaues it's holding a reference to outdated engine
+    bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
 
     auto win = tab->win;
     UpdateTabFileDisplayStateForTab(tab);
@@ -2350,10 +2375,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     SetFocus(win->hwndFrame);
 
     char* newPath = path::NormalizeTemp(dstFilePath);
-    if (!savedToExisting) {
-        // TODO: this should be 'duplicate FileInHistory"
-        RenameFileInHistory(srcFileName, newPath);
-    }
+    // TODO: this should be 'duplicate FileInHistory"
+    RenameFileInHistory(srcFileName, newPath);
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
@@ -4449,26 +4472,6 @@ static int TestBigNew()
 }
 #endif
 
-static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
-    if (!tab) {
-        return;
-    }
-    EngineBase* engine = tab->AsFixed()->GetEngine();
-    const char* path = engine->FilePath();
-    tab->ignoreNextAutoReload = true;
-    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
-    });
-    if (!ok) {
-        tab->ignoreNextAutoReload = false;
-        return;
-    }
-    ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
-
-    CloseAndDeleteEditAnnotationsWindow(tab);
-    ReloadDocument(tab->win, false);
-}
-
 #if 0
 static bool NeedsURLEncoding(WCHAR c) {
     // TODO: implement me
@@ -4986,7 +4989,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSaveAnnotations:
-            SaveAnnotationsAndCloseEditAnnowtationsWindow(tab);
+            SaveAnnotationsToExistingFile(tab);
             break;
 
         case CmdSaveAnnotationsNewFile: {
