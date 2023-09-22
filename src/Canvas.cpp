@@ -367,7 +367,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.hwndParent = win->hwndCanvas;
                         args.groupId = kindNotifAnnotation;
                         args.font = GetDefaultGuiFont();
-                        args.timeoutMs = 1500;
+                        args.timeoutMs = -1;
                         // TODO: translate
                         // TODO: 'e' and 'Ctrl + e' could be re-defined
                         args.msg = str::FormatTemp("%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
