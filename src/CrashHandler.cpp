@@ -55,7 +55,7 @@ static char* BuildSymbolsUrl() {
         // assuming this is release version
         urlBase = "https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" QM(CURR_VERSION);
     }
-    const char* suff = ".pdb.lzsa";
+    const char* suff = "-32.pdb.lzsa";
 #if IS_ARM_64 == 1
     suff = "-arm64.pdb.lzsa";
 #elif IS_INTEL_64 == 1
