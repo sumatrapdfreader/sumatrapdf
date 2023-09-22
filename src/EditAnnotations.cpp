@@ -537,7 +537,10 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
     int fontSize = DefaultAppearanceTextSize(annot);
     AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
     ew->staticTextSize->SetText(s.Get());
-    SetDefaultAppearanceTextSize(ew->tab->selectedAnnotation, fontSize);
+    // TODO: DoTextSize() shouldn't modify the annotation but I'm not sure
+    // if it's not needed to be called for free text annotations
+    // at some point (i.e. when creating)
+    //SetDefaultAppearanceTextSize(ew->tab->selectedAnnotation, fontSize);
     ew->trackbarTextSize->SetValue(fontSize);
     ew->staticTextSize->SetIsVisible(true);
     ew->trackbarTextSize->SetIsVisible(true);
@@ -776,9 +779,12 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         DoOpacity(ew, annot);
         DoSaveEmbed(ew, annot);
 
+        // TODO: not sure it should be here as it might trigger recursive loop
         SetSelectedAnnotation(ew->tab, annot);
         ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
+        ew->editContents->SetFocus();
+        ew->editContents->SetCursorPositionAtEnd();
     }
 
     // TODO: get from client size

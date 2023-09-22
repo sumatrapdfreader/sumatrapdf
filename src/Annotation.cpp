@@ -766,8 +766,7 @@ void SetLineEndingStyles(Annotation* annot, int start, int end) {
         logf("SetLineEndingStyles: failure in mupdf calls\n");
     }
 
-    MarkAsModifiedAnnotations(e, annot);
-
+    MarkNotificationAsModified(e, annot);
 }
 */
 

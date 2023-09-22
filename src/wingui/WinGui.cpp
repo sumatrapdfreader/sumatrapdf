@@ -1667,6 +1667,16 @@ void Edit::SetSelection(int start, int end) {
     Edit_SetSel(hwnd, start, end);
 }
 
+void Edit::SetCursorPosition(int pos) {
+    SetSelection(pos, pos);
+}
+
+void Edit::SetCursorPositionAtEnd() {
+    WCHAR* s = HwndGetTextWTemp(hwnd);
+    int pos = str::Len(s);
+    SetCursorPosition(pos);
+}
+
 HWND Edit::Create(const EditCreateArgs& editArgs) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     CreateControlArgs args;

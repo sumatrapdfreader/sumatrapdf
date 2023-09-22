@@ -270,6 +270,8 @@ struct Edit : Wnd {
     Size GetIdealSize() override;
 
     void SetSelection(int start, int end);
+    void SetCursorPosition(int pos);
+    void SetCursorPositionAtEnd();
     bool HasBorder();
 };
 
