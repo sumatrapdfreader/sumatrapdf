@@ -2333,14 +2333,20 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return false;
     }
 
+    bool savedToExisting = str::Eq(dstFilePath, srcFileName);
+    // TODO: close and re-open EditAnnotationsWindow
+    // becaues it's holding a reference to outdated engine
+
     auto win = tab->win;
     UpdateTabFileDisplayStateForTab(tab);
     CloseDocumentInCurrentTab(win, true, true);
     SetFocus(win->hwndFrame);
 
     char* newPath = path::NormalizeTemp(dstFilePath);
-    // TODO: this should be 'duplicate FileInHistory"
-    RenameFileInHistory(srcFileName, newPath);
+    if (!savedToExisting) {
+        // TODO: this should be 'duplicate FileInHistory"
+        RenameFileInHistory(srcFileName, newPath);
+    }
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
@@ -4973,6 +4979,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdSaveAnnotations:
             SaveAnnotationsAndCloseEditAnnowtationsWindow(tab);
             break;
+
+        case CmdSaveAnnotationsNewFile: {
+            if (tab) {
+                SaveAnnotationsToMaybeNewPdfFile(tab);
+            }
+            break;
+        }
 
         case CmdToggleMenuBar:
             if (!win->tabsInTitlebar) {

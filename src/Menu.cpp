@@ -942,6 +942,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdShowInFolder,
     CmdSaveAs,
     CmdSaveAnnotations,
+    CmdSaveAnnotationsNewFile,
     CmdRenameFile,
     CmdSendByEmail, // ???
     CmdContributeTranslation, // ???
@@ -950,7 +951,6 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,
-    CmdSaveAnnotations,
     CmdSelectAnnotation,
     CmdDeleteAnnotation,
     CmdEditAnnotations,
@@ -965,6 +965,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
 
 UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
+    CmdSaveAnnotationsNewFile,
     CmdSelectAnnotation,
     CmdEditAnnotations,
     CmdDeleteAnnotation,
@@ -1751,6 +1752,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdToggleToolbar:
         case CmdToggleScrollbars:
         case CmdSaveAnnotations:
+        case CmdSaveAnnotationsNewFile:
         case CmdFavoriteAdd:
         case CmdToggleFullscreen:
             // handle in FrameOnCommand() in SumatraPDF.cpp

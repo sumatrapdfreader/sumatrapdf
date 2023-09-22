@@ -250,10 +250,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         SetRect(annot, r);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
-        // ShowEditAnnotationsWindow(win->CurrentTab(), annot);
     }
-    // win->annotationUnderCursor = dm->GetAnnotationAtPos(pt);
-    // SetCursorForAnnotation(win->annotationUnderCursor, annotSelected);
     return true;
 }
 

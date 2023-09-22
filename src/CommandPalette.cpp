@@ -259,8 +259,8 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         }
     }
 
-    if ((cmdId == CmdSaveAnnotations) && !ctx.hasUnsavedAnnotations) {
-        return false;
+    if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile)) {
+        return ctx.hasUnsavedAnnotations;
     }
 
     if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
