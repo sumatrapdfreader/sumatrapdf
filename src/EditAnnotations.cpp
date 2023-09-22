@@ -840,10 +840,17 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         CrashIf(annotPageNo > nPages);
         return;
     }
-    // TODO: should skip if annot is already visible but need
-    // DisplayModel::IsPageAreaVisible() function
-    // TODO: use GoToPage() with x/y position
-    dm->GoToPage(annotPageNo, false);
+
+    // don't switch pages if already visible. needed for cases where
+    // we show more than one page at a time and GoToPage() scrolls
+    // to top page
+    // TODO: this is not perfect. We should skipGoToPage if this
+    // is caused by creating an annotation. by definition the page
+    // was visible when user created an annotation.
+    // but that requires passing down more stuff
+    if (!dm->PageVisible(annotPageNo)) {
+        dm->GoToPage(annotPageNo, true);
+    }
 }
 
 static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
