@@ -178,16 +178,7 @@ struct EditAnnotationsWindow : Wnd {
     ~EditAnnotationsWindow();
 };
 
-bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN) {
-        if (msg.wParam == VK_DELETE) {
-            DeleteSelectedAnnotation();
-            return true;
-        }
-    }
-    return false;
-}
-
+#if 0
 static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
     int nAnnots = ew->annotations.isize();
     if (nAnnots == 0) {
@@ -198,6 +189,7 @@ static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prev
     }
     return ew->annotations.at(prevIdx);
 }
+#endif
 
 void EditAnnotationsWindow::DeleteSelectedAnnotation() {
     int idx = listBox->GetCurrentSelection();
@@ -386,6 +378,25 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
 
     UpdateAnnotationsList(ew);
     SetSelectedAnnotation(tab, nullptr);
+}
+
+
+bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
+    if (msg.message == WM_KEYDOWN) {
+        int key = (int)msg.wParam;
+        if (key == VK_DELETE) {
+            DeleteSelectedAnnotation();
+            return true;
+        }
+        if (key == 'S' && IsShiftPressed() && IsCtrlPressed()) {
+            // TODO: delay by posting a message?
+            // TODO: the keybinding could be changed so this should
+            // be more sophisticated and match the shortcut
+            ButtonSaveToCurrentPDFHandler(this);
+            return true;
+        }
+    }
+    return false;
 }
 
 static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
@@ -886,14 +897,16 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
-        ew->skipGoToPage = true;
-        int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
+        //ew->skipGoToPage = true;
+        //int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
         UpdateAnnotationsList(ew);
+#if 0
         if ((selectNext == nullptr) && (currSelIdx >= 0)) {
             // if we're deleting currently selected, pick
             // next to select
             annot = PickNewSelectedAnnotation(ew, currSelIdx);
         }
+#endif
     }
     SetSelectedAnnotation(tab, selectNext);
 }
