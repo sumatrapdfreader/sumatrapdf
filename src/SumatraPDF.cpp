@@ -1283,6 +1283,8 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
+    tab->selectedAnnotation = nullptr;
+
     if (!tab->IsDocLoaded()) {
         if (!autoRefresh) {
             // TODO: seen a crash
@@ -2225,6 +2227,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     }
     win->ctrl = nullptr;
     WindowTab* currentTab = win->CurrentTab();
+    currentTab->selectedAnnotation = nullptr;
     if (deleteModel) {
         delete currentTab->ctrl;
         currentTab->ctrl = nullptr;
