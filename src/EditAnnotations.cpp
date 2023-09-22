@@ -544,7 +544,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
     // TODO: DoTextSize() shouldn't modify the annotation but I'm not sure
     // if it's not needed to be called for free text annotations
     // at some point (i.e. when creating)
-    //SetDefaultAppearanceTextSize(ew->tab->selectedAnnotation, fontSize);
+    // SetDefaultAppearanceTextSize(ew->tab->selectedAnnotation, fontSize);
     ew->trackbarTextSize->SetValue(fontSize);
     ew->staticTextSize->SetIsVisible(true);
     ew->trackbarTextSize->SetIsVisible(true);

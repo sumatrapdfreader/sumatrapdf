@@ -2294,6 +2294,7 @@ void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, c
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
+// returns true if saved successully
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
@@ -2453,9 +2454,10 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     switch (choice) {
         case SaveChoice::Discard:
             return true;
-        case SaveChoice::SaveNew:
-            SaveAnnotationsToMaybeNewPdfFile(tab);
-            break;
+        case SaveChoice::SaveNew: {
+            bool didSave = SaveAnnotationsToMaybeNewPdfFile(tab);
+            return didSave;
+        }
         case SaveChoice::SaveExisting: {
             // const char* path = engine->FileName();
             bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
