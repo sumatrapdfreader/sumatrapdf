@@ -208,11 +208,15 @@ void EditAnnotationsWindow::DeleteSelectedAnnotation() {
     Annotation* annot = annotations.at(idx);
     CrashIf(tab->selectedAnnotation != annot);
     DeleteAnnotationAndUpdateUI(tab, annot);
+
+    // Note: auto-selecting next annotation might cause page jumping
+#if 0
     annot = PickNewSelectedAnnotation(this, idx);
     skipGoToPage = false;
     if (annot) {
         SetSelectedAnnotation(tab, annot);
     }
+#endif
 }
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
