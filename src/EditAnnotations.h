@@ -8,3 +8,4 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab*);
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
 void SetSelectedAnnotation(WindowTab*, Annotation*);
 void UpdateAnnotationsList(EditAnnotationsWindow*);
+void NotifyAnnotationsChanged(EditAnnotationsWindow*);

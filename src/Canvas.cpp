@@ -248,6 +248,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         // logf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
         // logf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
         SetRect(annot, r);
+        NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
     }

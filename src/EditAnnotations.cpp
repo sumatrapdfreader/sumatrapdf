@@ -315,6 +315,13 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
     ew->buttonSaveToNewFile->SetIsEnabled(didChange);
 }
 
+void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
+    if (!ew) {
+        return;
+    }
+    EnableSaveIfAnnotationsChanged(ew);
+}
+
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     auto model = new ListBoxModelStrings();
     int n = 0;
@@ -1415,3 +1422,4 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     // first layout is triggered
     ew->SetIsVisible(true);
 }
+

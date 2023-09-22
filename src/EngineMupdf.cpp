@@ -3656,7 +3656,6 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
         CrashIf(change != AnnotationChange::Modify);
     }
     RebuildCommentsFromAnnotations(e->ctx, pageInfo);
-    // TODO: just do it inside RebuildCommentsFromAnnotations()
     pageInfo->elementsNeedRebuilding = true;
 }
 
