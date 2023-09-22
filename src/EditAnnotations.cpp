@@ -889,7 +889,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
     CrashIf(!ew->tab->selectedAnnotation);
-    DeleteAnnotationAndUpdateUI(ew->tab, ew->tab->selectedAnnotation);
+    ew->DeleteSelectedAnnotation();
 }
 
 void EditAnnotationsWindow::ListBoxSelectionChanged() {
