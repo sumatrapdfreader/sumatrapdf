@@ -44,7 +44,7 @@ WindowTab::~WindowTab() {
     }
     delete selectionOnPage;
     delete ctrl;
-    CloseAndDeleteEditAnnotationsWindow(editAnnotsWindow);
+    CloseAndDeleteEditAnnotationsWindow(this);
 }
 
 bool WindowTab::IsDocLoaded() const {

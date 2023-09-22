@@ -2333,6 +2333,13 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return false;
     }
 
+    // have to re-open edit annotations window because the current has
+    // a reference to deleted Engine
+    bool hadEditAnnotations = tab->editAnnotsWindow != nullptr;
+    if (hadEditAnnotations) {
+        CloseAndDeleteEditAnnotationsWindow(tab);
+    }
+
     bool savedToExisting = str::Eq(dstFilePath, srcFileName);
     // TODO: close and re-open EditAnnotationsWindow
     // becaues it's holding a reference to outdated engine
@@ -2353,6 +2360,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     LoadDocument(&args, false, false);
 
     ShowSavedAnnotationsNotification(win->hwndCanvas, newPath);
+    if (hadEditAnnotations) {
+        ShowEditAnnotationsWindow(tab);
+    }
     return true;
 }
 
@@ -4455,8 +4465,7 @@ static void SaveAnnotationsAndCloseEditAnnowtationsWindow(WindowTab* tab) {
     }
     ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
 
-    CloseAndDeleteEditAnnotationsWindow(tab->editAnnotsWindow);
-    tab->editAnnotsWindow = nullptr; // must happen before ReloadDocument()
+    CloseAndDeleteEditAnnotationsWindow(tab);
     ReloadDocument(tab->win, false);
 }
 
