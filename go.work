@@ -1,7 +1,5 @@
 go 1.19
 
-toolchain go1.21.1
-
 use (
 	./tools/logview
 	./tools/logview-win
