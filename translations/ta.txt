@@ -1,3 +1,4 @@
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :&About
 இந்நிரலைப் பற்றி (&A)
 :&Actual Size

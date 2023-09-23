@@ -1,3 +1,4 @@
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :&About
 &À propos
 :&Actual Size
@@ -223,7 +224,7 @@ Copier l'adresse du &lien
 :Copy Co&mment
 Copier le co&mmentaire
 :Copy File Path
-Copier le chemin
+Copier le chemin du fichier
 :Copy To Clipboard
 Copier dans le presse-papiers
 :Copying text was denied (copying as image only)

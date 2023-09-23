@@ -1,5 +1,4 @@
-:Open In New Window
-:Properties...
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :&About
 &Σχετικά
 :&Actual Size
@@ -474,6 +473,8 @@ MB
 Άνοιγμα καταλόγου στο Directory &Opus
 :Open Embedded PDF
 Άνοιγμα ενσωματωμένου PDF 
+:Open In New Window
+Άνοιγμα Σε Νέο Παράθυρο
 :Open a document...
 Άνοιγμα εγγράφου...
 :Open in %s
@@ -546,6 +547,8 @@ MB
 Εκτύπωση σελίδας %d από %d...
 :Printing problem.
 Πρόβλημα εκτύπωσης.
+:Properties...
+Ιδιότητες...
 :Re&name...
 Μετονομασία
 :Rect: x=%d y=%d dx=%d dy=%d

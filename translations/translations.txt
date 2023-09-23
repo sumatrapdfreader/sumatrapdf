@@ -1,5 +1,6 @@
 AppTranslator: SumatraPDF
-0277bc5ebdf4bbc2ff5011a17b75dface31462d0
+43d037575aa712deeacc969610f8a98cce932bdf
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1005,6 +1006,7 @@ dk:&Første side
 el:Πρώτη σελίδα
 es:&Primera página
 eu:&Lehen orrialdea
+fa:&صفحه اول
 fi:&Ensimmäinen sivu
 fr:P&remière page
 gl:&Primeira páxina
@@ -1876,6 +1878,7 @@ dk:Å&bn
 el:Άνοιγμα
 es:&Abrir...
 eu:&Ireki...
+fa:&بازکردن
 fi:&Avaa...
 fr:&Ouvrir...
 gl:&Abrir...
@@ -5810,6 +5813,7 @@ dk:Luk andre tabs
 el:Κλείσιμο άλλων καρτελών
 es:Cerrar otras pestañas
 eu:Itxi beste hegatsak
+fa:بستن سربرگ‌های دیگر
 fi:Sulje muut välilehdet
 fr:Fermer les autres onglets
 gl:Pechar outras lapelas
@@ -5849,6 +5853,7 @@ dk:Luk tabs til højre
 el:Κλείσιμο καρτελών στα δεξιά
 es:Cerrar pestañas a la derecha
 eu:Itxi eskuineko hegatsak
+fa:بستن سربرگ‌های سمت راست
 fi:Sulje välilehdet oikealle
 fr:Fermer les onglets sur la droite
 gl:Pechar lapelas á dereita
@@ -6697,7 +6702,7 @@ de:Dateipfad kopieren
 el:Αντιγραφή Τοποθεσίας Αρχείου
 es:Copiar dirección del archivo
 fa:کپی کردن مسیر فایل
-fr:Copier le chemin
+fr:Copier le chemin du fichier
 hu:Útvonal másolása
 it:Copia percorso file
 kr:파일 경로 복사
@@ -7630,6 +7635,7 @@ el:Δημιουργία σχολιασμού από επιλογή
 es:Crear anotación con la selección
 et:Loo valitust märkus
 eu:Sortu oharra hautapenetik
+fa:از قسمت انتخاب‌شده، علامت‌گذاری ایجاد کن
 fi:Luo huomautus valinnasta
 fr:Créer une annotation à partir de la sélection
 gl:Crear anotacion a partir da selección
@@ -8728,6 +8734,7 @@ el:Επεξεργασία σχολίων
 es:Editar anotaciones
 et:Muuda märkusi
 eu:Editatu oharrak
+fa:ویرایش علامت‌گذاری‌ها
 fi:Muokkaa huomautuksia
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
@@ -9049,6 +9056,7 @@ el:Ανάπτυξη όλων
 es:Expandir todo
 et:Ava kõik
 eu:Hedatu guztiak
+fa:پهن‌کردن همه
 fi:Laajenna kaikki
 fr:Tout développer
 ga:Leathnaigh Gach
@@ -9199,6 +9207,7 @@ dk:F&uld skærm
 el:Πλήρης οθόνη
 es:P&antalla completa
 eu:Ikusleiho-o&soa
+fa:&تمام‌صفحه
 fi:K&oko näyttö
 fr:P&lein écran
 gl:P&antalla completa
@@ -10084,6 +10093,7 @@ dk:Fin&d...
 el:Εύρεση
 es:Busca&r...
 eu:&Bilatu...
+fa:&جستجو
 fi:Löyd&ä
 fr:R&echercher...
 gl:Atopa&r...
@@ -11839,6 +11849,7 @@ el:Εγκατάσταση και επανεκκίνηση
 es:Instalar y reiniciar
 et:Paigalda ja kävita uuesti
 eu:Ezarri eta berrabiarazi
+fa:نصب و راه‌اندازی مجدد
 fi:Asenna ja käynnistä uudelleen
 fr:Installer et redémarrer
 gl:Instalar e volver iniciar
@@ -11883,6 +11894,7 @@ dk:Installer for alle brugere
 el:Εγκατάσταση για όλους τους χρήστες
 es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
+fa:برای همه کاربران نصب کن
 fi:Asenna kaikille käyttäjille
 fr:Installer pour tous les utilisateurs
 gl:Instalar para todos os usuarios
@@ -12056,6 +12068,7 @@ el:Εγκατάσταση 32-bit SumatraPDF σε λειτουργικό σύστ
 es:Instalando SumatraPDF de 32 bits en un sistema operativo de 64 bits
 et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
 eu:32-biteko Sumatra ezartzen 64-biteko SE-n
+fa:در حال نصب سوماترا پی‌دی‌اف 32 بیتی روی سیستم‌عامل 64 بیتی
 fi:32-bittisen SumatraPDF:n asentaminen 64-bittiseen käyttöjärjestelmään
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits
 gl:Instalando o SumatraPDF de 32-bit en sistema de 64-bit
@@ -12449,6 +12462,7 @@ el:Τέλος γραμμής:
 es:Fin de Línea:
 et:Joone lõpp:
 eu:Lerro hasiera:
+fa:انتهای خط
 fi:Rivin loppu:
 fr:Fin de ligne :
 gl:Liña final:
@@ -12494,6 +12508,7 @@ el:Έναρξη γραμμής:
 es:Inicio de Línea:
 et:Joone algus:
 eu:Lerro hasiera:
+fa:شروع خط
 fi:Rivin alku:
 fr:Début de ligne :
 gl:Liña inicial:
@@ -12535,6 +12550,7 @@ dk:Indlæser %s ...
 el:Φόρτωση %s...
 es:Cargando %s ...
 eu:Gertatzen %s ...
+fa:در حال بارگذاری %s ...
 fi:Ladataan %s ...
 fr:Chargement de %s ...
 gl:Cargando %s ...
@@ -13022,6 +13038,7 @@ el:Νέα έκδοση διαθέσιμη
 es:Disponible una versión nueva
 et:Saadaval on uus versioon
 eu:Bertsio berria eskuragarri
+fa:نسخه جدیدی موجود است
 fi:Uusi versio saatavilla
 fr:Nouvelle version disponible
 gl:Nova versión dispoñible
@@ -13582,6 +13599,7 @@ el:Διαφάνεια: %d
 es:Opacidad: %d
 et:Läbipaistvus: %d
 eu:Iragazkaiztasuna: %d
+fa:شفافیت: %d
 fi:Läåinäkyvyys: %d
 fr:Opacité : %d
 gl:Opacidade: %d
@@ -13758,6 +13776,7 @@ dk:Åbn vedhæftning
 el:Αποθήκευση συνημμένου
 es:Abrir archivo adjunto
 eu:Ireki eranskina
+fa:باز کردن پیوست
 fi:Avaa liite
 fr:Ouvrir la pièce jointe
 gl:Abrir anexo
@@ -13924,6 +13943,7 @@ el:Άνοιγμα ενσωματωμένου PDF
 es:Abrir un PDF incrustado
 et:Ava põimitud PDF
 eu:Ireki barneko PDF
+fa:باز کردن پی‌دی‌اف جاسازی‌شده
 fi:Avaa upotettu PDF-tiedosto
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
@@ -13958,6 +13978,8 @@ vn:Mở PDF Đã Nhúng
 :Open In New Window
 br:Abrir em Nova Janela
 cn:在新窗口中打开
+de:In neuem Fenster öffnen
+el:Άνοιγμα Σε Νέο Παράθυρο
 es:Abrir en nueva ventana
 fa:بازکردن در پنجره جدید
 fr:Ouvrir dans une nouvelle fenêtre
@@ -16136,6 +16158,8 @@ vn:Lỗi in.
 :Properties...
 br:Propriedades...
 cn:属性...
+de:Eigenschaften...
+el:Ιδιότητες...
 es:Propiedades...
 fa:مشخصات
 fr:Propriétés…
@@ -16929,6 +16953,7 @@ el:Αποθήκευση σχολιασμών?
 es:¿Guardar las anotaciones?
 et:Salvestada märkused?
 eu:Gorde oharrak?
+fa:علامت‌گذاری‌ها ذخیره شوند؟
 fi:Tallenna huomautukset?
 fr:Sauvegarder les annotations ?
 gl:Gardar anotacións?
@@ -19571,6 +19596,7 @@ el:Μέγεθος κειμένου: %d
 es:Tamaño de Texto: %d
 et:Teksti suurus: %d
 eu:Idazki neurria: %d
+fa:اندازه متن: %d
 fi:Tekstin koko: %d
 fr:Taille du texte : %d
 gl:Tamaño do texto: %d
@@ -20296,6 +20322,7 @@ el:Μη αποθηκευμένα σχόλια
 es:Anotaciones sin guardar
 et:Salvestamata märkused
 eu:Gorde gabeko oharrak
+fa:علامت‌گذاری‌های ذخیره‌نشده
 fi:Tallentamattomat huomautukset
 fr:Annotations non sauvegardées
 gl:Anotacións sen gardar
@@ -20785,6 +20812,7 @@ el:Έχετε μη αποθηκευμένα σχόλια
 es:Hay anotaciones sin guardar
 et:Sul on salvestamata märkuseid
 eu:Gorde gabeko oharrak dituzu
+fa:شما علامت‌گذاری‌های ذخیره‌نشده دارید
 fi:Sinulla on tallentamattomia huomautuksia
 fr:Vous avez des annotations non sauvegardées
 gl:Tes anotacións sen gardar

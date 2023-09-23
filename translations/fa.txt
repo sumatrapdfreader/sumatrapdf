@@ -1,11 +1,10 @@
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :&Caret
 :&Continue installing 32-bit version
 :&Copy To Clipboard
 :&Facing
-:&First Page
 :&Free Text
 :&Last Page
-:&Open...
 :&Previous Page
 :&Remove From History
 :&Save to existing PDF
@@ -16,40 +15,23 @@
 :&Text
 :&Translate With Google
 :&Underline
-:Close Other Tabs
-:Close Tabs To The Right
 :Command Palette
 :Couldn't get printer name
 :Couldn't uninstall Sumatra search filter
 :Create Annotation &Under Cursor
-:Create Annotation From Selection
 :Custom &Zoom...
 :Delete Annotation\tDel
 :E&xit
 :E&xit Fullscreen
-:Edit Annotations
-:Expand All
 :F&orward
-:F&ullscreen
-:Fin&d...
 :Fit &Content
 :Fit &Page
 :Fit &Width
-:Install and relaunch
-:Install for all users
-:Installing 32-bit SumatraPDF on 64-bit OS
 :Interior Color:
-:Line End:
-:Line Start:
-:Loading %s ...
-:New version available
-:Opacity: %d
-:Open Attachment
 :Open Directory in &Double Commander
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
 :Open Directory in Directory &Opus
-:Open Embedded PDF
 :Open in Microsoft &HTML Help
 :Pa&ge...
 :Please wait - loading...
@@ -68,7 +50,6 @@
 :Save Annotations to existing PDF
 :Save Embedded File...
 :Save S&hortcut...
-:Save annotations?
 :Save changes to a new PDF
 :Save changes to existing PDF
 :Saved annotations to '%s'
@@ -84,11 +65,8 @@
 :Show in folder
 :Skip this version
 :Text Alignment:
-:Text Size: %d
 :Translate with &DeepL
-:Unsaved annotations
 :Unsaved annotations in '%s'
-:You have unsaved annotations
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
 :&About
@@ -119,6 +97,8 @@
 &پرونده
 :&Find what:
 &جستجو برای:
+:&First Page
+&صفحه اول
 :&Fit pages to printable area
 اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &درست کن
 :&Go To
@@ -143,6 +123,8 @@
 فقط صفحات &فرد
 :&Open Document
 باز کردن سند
+:&Open...
+&بازکردن
 :&Options
 &گزینه‌ها
 :&Options...
@@ -249,6 +231,10 @@ CHM اسناد
 دایره
 :Close
 بستن
+:Close Other Tabs
+بستن سربرگ‌های دیگر
+:Close Tabs To The Right
+بستن سربرگ‌های سمت راست
 :Collapse All
 بستن همه
 :Color:
@@ -299,6 +285,8 @@ CHM اسناد
 نمی‌توان افزونه‌ی مرورگر را پاک کرد
 :Couldn't write %s to disk
 نمی‌توان %s را روی دیسک نوشت
+:Create Annotation From Selection
+از قسمت انتخاب‌شده، علامت‌گذاری ایجاد کن
 :Created:
 زمان ایجاد:
 :Current file
@@ -327,6 +315,8 @@ DjVu اسناد
 دانلود نسخه 64 بیتی
 :EPUB ebooks
 EPUB اسناد
+:Edit Annotations
+ویرایش علامت‌گذاری‌ها
 :Enter password
 کلمه‌ی عبور را وارد کنید
 :Enter password for %s
@@ -335,8 +325,12 @@ EPUB اسناد
 خط دستور را برای فراخوانی هنگام دوبار کلیک روی سند PDF وارد کنید:
 :Error loading %s
 خطا هنگام بارگذاری %s
+:Expand All
+پهن‌کردن همه
 :F&avorites
 &علاقه‌مندی‌ها
+:F&ullscreen
+&تمام‌صفحه
 :Facing
 نمایش دوصفحه‌ای
 :Failed to delete uninstaller registry keys
@@ -363,6 +357,8 @@ EPUB اسناد
 حجم پرونده:
 :File:
 پرونده:
+:Fin&d...
+&جستجو
 :Find
 جستجو
 :Find Next
@@ -413,10 +409,16 @@ EPUB اسناد
 نصب کردن SumatraPDF
 :Install SumatraPDF in &folder:
 SumatraPDF را در این &پوشه نصب کن:
+:Install and relaunch
+نصب و راه‌اندازی مجدد
+:Install for all users
+برای همه کاربران نصب کن
 :Installation failed!
 ایراد در نصب
 :Installation in progress...
 در حال نصب...
+:Installing 32-bit SumatraPDF on 64-bit OS
+در حال نصب سوماترا پی‌دی‌اف 32 بیتی روی سیستم‌عامل 64 بیتی
 :KB
 کیلوبایت
 :Let Windows Desktop Search &search PDF documents
@@ -427,6 +429,12 @@ SumatraPDF را در این &پوشه نصب کن:
 روشن
 :Line
 خط
+:Line End:
+انتهای خط
+:Line Start:
+شروع خط
+:Loading %s ...
+در حال بارگذاری %s ...
 :MB
 مگابایت
 :Make SumatraPDF default application for PDF files?
@@ -441,6 +449,8 @@ Mobi اسناد
 اصلاح شده:
 :New &window
 پنجره جدید
+:New version available
+نسخه جدیدی موجود است
 :Next Page
 صفحه‌ی بعدی
 :No matches were found
@@ -457,10 +467,16 @@ Mobi اسناد
 تأیید
 :Opacity:
 وضوح
+:Opacity: %d
+شفافیت: %d
 :Open
 باز کردن
 :Open &in PDF-XChange
 باز کردن در PDF-&XChange
+:Open Attachment
+باز کردن پیوست
+:Open Embedded PDF
+باز کردن پی‌دی‌اف جاسازی‌شده
 :Open In New Window
 بازکردن در پنجره جدید
 :Open a document...
@@ -533,6 +549,8 @@ Postscript اسناد
 تغییر نام به
 :Save Attachment...
 ...ذخیره کردن پیوست
+:Save annotations?
+علامت‌گذاری‌ها ذخیره شوند؟
 :Save to &new PDF
 جدید pdf ذخیره کردن در 
 :Searching %d of %d...
@@ -595,6 +613,8 @@ PDF برچسب‌گذاری شده
 رنگ متن
 :Text Size:
 اندازه متن
+:Text Size: %d
+اندازه متن: %d
 :Text documents
 سند متنی
 :Thank you for choosing SumatraPDF!
@@ -615,6 +635,8 @@ PDF برچسب‌گذاری شده
 فرآیند حذف برنامه در جریان است...
 :Unknown source file (%s)
 پرونده‌ی منبع ناشناخته (%s)
+:Unsaved annotations
+علامت‌گذاری‌های ذخیره‌نشده
 :Use &tabs
 استفاده از &سربرگ
 :View
@@ -627,6 +649,8 @@ PDF برچسب‌گذاری شده
 XPS اسناد
 :You have the latest version.
 نسخه‌ی شما جدیدترین نسخه است.
+:You have unsaved annotations
+شما علامت‌گذاری‌های ذخیره‌نشده دارید
 :Zoom
 بزرگنمایی
 :Zoom In
