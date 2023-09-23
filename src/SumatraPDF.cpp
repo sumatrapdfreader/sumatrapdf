@@ -5426,8 +5426,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdDeleteAnnotation: {
-            if (tab && tab->selectedAnnotation) {
-                DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
+            if (tab) {
+                Annotation* annot = tab->selectedAnnotation;
+                if (!annot) {
+                    Point pt = HwndGetCursorPos(tab->win->hwndCanvas);
+                    if (!pt.IsEmpty()) {
+                        annot = dm->GetAnnotationAtPos(pt);
+                    }
+                }
+                if (annot) {
+                    DeleteAnnotationAndUpdateUI(tab, annot);
+                }
             }
         } break;
 
