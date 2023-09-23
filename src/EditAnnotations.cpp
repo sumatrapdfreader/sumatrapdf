@@ -811,8 +811,10 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         SetSelectedAnnotation(ew->tab, annot);
         ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
-        ew->editContents->SetFocus();
-        ew->editContents->SetCursorPositionAtEnd();
+        if (ew->editContents->IsVisible()) {
+            ew->editContents->SetFocus();
+            ew->editContents->SetCursorPositionAtEnd();
+        }
     }
 
     // TODO: get from client size

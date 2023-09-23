@@ -368,7 +368,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.groupId = kindNotifAnnotation;
                         args.font = GetDefaultGuiFont();
                         args.timeoutMs = -1;
-                        args.msg = str::FormatTemp(_TRN("%s annotation. Ctrl+click to select. Ctrl+dbl click to edit."), name);
+                        args.msg =
+                            str::FormatTemp(_TRN("%s annotation. Ctrl+click to select. Ctrl+dbl click to edit."), name);
                         ShowNotification(args);
                     } else {
                         RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);

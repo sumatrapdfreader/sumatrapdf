@@ -279,7 +279,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     }
     bool ok = MaybeMakePluginWindow(win, flags.hwndPluginParent);
     if (!ok) {
-        return;
+        return nullptr;
     }
     if (!win->IsDocLoaded() || !isFirstWin) {
         return win;
