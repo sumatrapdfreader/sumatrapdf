@@ -598,9 +598,9 @@ static void RandomizeLetters()
 
 #define kSumatraLettersCount (dimof(gLetters))
 
-static void SetLettersSumatraUpTo(int n) {
+static void SetLettersSumatraUpTo(size_t n) {
     const char* s = "SUMATRAPDF";
-    for (int i = 0; i < kSumatraLettersCount; i++) {
+    for (size_t i = 0; i < kSumatraLettersCount; i++) {
         char c = ' ';
         if (i < n) {
             c = s[i];
