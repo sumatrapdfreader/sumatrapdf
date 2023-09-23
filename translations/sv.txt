@@ -30,6 +30,7 @@
 :Custom &Zoom...
 :Delete Annotation\tDel
 :E&xit Fullscreen
+:Edit %s Annotation
 :Edit Annotations
 :F&orward
 :F&ullscreen
@@ -75,7 +76,6 @@
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
-:Select Annotation in Editor
 :Show &Favorites
 :Show &Scrollbars
 :Show Book&marks

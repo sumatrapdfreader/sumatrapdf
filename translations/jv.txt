@@ -90,6 +90,7 @@
 :Download 64-bit version
 :E&xit
 :E&xit Fullscreen
+:Edit %s Annotation
 :Edit Annotations
 :Enter password for %s
 :Enter the command-line to invoke when you double-click on the PDF document:
@@ -206,7 +207,6 @@
 :Search With &Google
 :Searching %d of %d...
 :Select &All
-:Select Annotation in Editor
 :Select content with Ctrl+left mouse button
 :Select the folder where SumatraPDF should be installed:
 :Selection:

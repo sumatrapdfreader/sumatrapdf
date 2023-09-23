@@ -1,6 +1,8 @@
 AppTranslator: SumatraPDF
-43d037575aa712deeacc969610f8a98cce932bdf
+88f0f3b24093515df8f1f93c6895436b0ef01b55
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
+pl:Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8715,6 +8717,7 @@ tw:EPUB 文件
 uk:Документи EPUB
 uz:EPUB kitoblari
 vn:Tập tin EPUB
+:Edit %s Annotation
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 ar:تعديل الشرح و التوضيح 
@@ -17423,50 +17426,6 @@ tw:全選(&A)
 uk:Вибрати все
 uz:&Hammasini tanlash
 vn:Chọn hết
-:Select Annotation in Editor
-am:Ընտրեք մեկնաբանությունը Խմբագրիչում
-bg:Изберете анотация в редактора
-br:Selecionar Anotação no Editor
-by:Выбраць анатацыю ў рэдактары
-ca-xv:Selecciona l'anotació a l'editor
-ca:Selecciona l'anotació a l'editor
-cn:在编辑器中选择标注
-co:Selezziunà l’annutazione in l’editore
-cy:Dewis Anodiad yn y Golygydd
-de:Anmerkung im Editor auswählen
-dk:Vælg kommentarer i Editor
-el:Επιλέξτε σχολιασμό στον επεξεργαστή 
-es:Seleccionar la anotación en el editor
-et:Vali märkus redaktoris
-eu:Hautatu oharra editatzailean
-fi:Valitse huomautus editorissa
-fr:Sélectionner l'annotation dans l'éditeur
-gl:Seleccionar anotación no editor
-he:בחר הערה בעורך
-hr:Odaberite bilješku u uređivaču
-hu:Megjegyzés kiválasztása a szerkesztőben
-id:Pilih Catatan di Penyunting
-it:Seleziona annotazione nell'editor
-ja:エディタで注釈を選択
-kr:편집기에서 주석 선택
-kw:Dewis Notenyans y'n Wolegell
-lt:Pasirinkti anotaciją redaktoriuje
-lv:Atlasīt anotāciju redaktorā
-nl:Selecteer Aantekening in Bewerker
-no:Velg merknad i merknadvindu
-pl:Wybierz adnotację w edytorze
-pt:Seleccionar anotação no editor
-ro:Selectare adnotare în editor
-ru:Выбрать аннотацию в редакторе
-sl:Izberi pripombo v urejevalniku
-sr-rs:Одабери &белешку у уређивачу
-ta:தொகுப்பானில் குறிப்புரையைத் தேர்வு செய்க
-th:เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
-tl:Piliin ang Anotasyon sa Editor
-tr:Düzenleyicide Dipnot Seç
-tw:在編輯器中選取註解
-uk:Вибір приміток у редакторі
-vn:Chọn Chú Thích trong Chỉnh Sửa
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl

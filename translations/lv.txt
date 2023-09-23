@@ -31,6 +31,7 @@
 :Don't install
 :Download 64-bit version
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -538,8 +539,6 @@ Anotācijas ir saglabātas šeit: '%s'
 %d no %d meklēšana...
 :Select &All
 Atlasīt &visu
-:Select Annotation in Editor
-Atlasīt anotāciju redaktorā
 :Select content with Ctrl+left mouse button
 Atlasīt saturu ar Ctrl+peles kreiso pogu
 :Select the folder where SumatraPDF should be installed:

@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Interior Color:
 :Open Directory in &Double Commander
 :Open Directory in &Explorer
@@ -592,8 +593,6 @@ Google で検索(&G)
 %d (%d 中) を検索しています...
 :Select &All
 すべて選択(&A)
-:Select Annotation in Editor
-エディタで注釈を選択
 :Select content with Ctrl+left mouse button
 Ctrl+左マウス ボタンで内容を選択します
 :Select the folder where SumatraPDF should be installed:

@@ -2,6 +2,7 @@
 :Close Other Tabs
 :Close Tabs To The Right
 :Copy File Path
+:Edit %s Annotation
 :Loading %s ...
 :Open Attachment
 :Open Directory in &Double Commander
@@ -588,8 +589,6 @@ Tìm Kiếm Với &Google
 Đang tìm %d trên %d
 :Select &All
 Chọn hết
-:Select Annotation in Editor
-Chọn Chú Thích trong Chỉnh Sửa
 :Select content with Ctrl+left mouse button
 Đánh dấu nội dung bằng Ctrl+phím chuột trái
 :Select the folder where SumatraPDF should be installed:

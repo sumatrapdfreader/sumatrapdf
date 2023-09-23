@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :&About
 Név&jegy
 :&Actual Size
@@ -601,8 +602,6 @@ Keresés &Google-el
 Keresés a(z) %d./%d oldalon
 :Select &All
 &Összes kijelölése
-:Select Annotation in Editor
-Megjegyzés kiválasztása a szerkesztőben
 :Select content with Ctrl+left mouse button
 Jelölje ki a másolandó részt Ctrl+Bal egérgombbal
 :Select the folder where SumatraPDF should be installed:

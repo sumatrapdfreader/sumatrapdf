@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Open Directory in &Double Commander
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
@@ -592,8 +593,6 @@ Pretraži sa &Google-om
 Pretražujem %d. stranicu (od %d)...
 :Select &All
 Obilježi &sve
-:Select Annotation in Editor
-Odaberite bilješku u uređivaču
 :Select content with Ctrl+left mouse button
 Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
 :Select the folder where SumatraPDF should be installed:

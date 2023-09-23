@@ -44,6 +44,7 @@
 :Don't install
 :Download 64-bit version
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -93,7 +94,6 @@
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
-:Select Annotation in Editor
 :Show Book&marks
 :Show in folder
 :Skip this version

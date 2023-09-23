@@ -25,6 +25,7 @@
 :Date:
 :Delete Annotation\tDel
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -544,8 +545,6 @@ Cerca amb el &Google
 S'està cercant %d de %d...
 :Select &All
 Selecciona-ho &tot
-:Select Annotation in Editor
-Selecciona l'anotació a l'editor
 :Select content with Ctrl+left mouse button
 Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
 :Select the folder where SumatraPDF should be installed:

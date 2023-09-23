@@ -20,6 +20,7 @@
 :Custom &Zoom...
 :Delete Annotation\tDel
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -556,8 +557,6 @@ Hwilas Gans &Google
 Ow hwilas %d a %d...
 :Select &All
 Dewis &Oll
-:Select Annotation in Editor
-Dewis Notenyans y'n Wolegell
 :Select content with Ctrl+left mouse button
 Dewis dalgh gans Ctrl+boton-logosen kledh
 :Select the folder where SumatraPDF should be installed:

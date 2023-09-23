@@ -20,6 +20,7 @@
 :&Underline
 :&Window
 :Copy File Path
+:Edit %s Annotation
 :Fit &Content
 :Fit &Page
 :Fit &Width
@@ -66,7 +67,6 @@
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
-:Select Annotation in Editor
 :Show &Favorites
 :Show &Scrollbars
 :Show Book&marks

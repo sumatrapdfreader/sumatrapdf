@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Open In New Window
 :Properties...
 :&About
@@ -598,8 +599,6 @@ OK
 Поиск на странице %d из %d...
 :Select &All
 В&ыделить все
-:Select Annotation in Editor
-Выбрать аннотацию в редакторе
 :Select content with Ctrl+left mouse button
 Выделите содержимое левой кнопкой мыши, удерживая Ctrl 
 :Select the folder where SumatraPDF should be installed:

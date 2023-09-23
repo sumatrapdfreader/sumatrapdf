@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :&About
 இந்நிரலைப் பற்றி (&A)
 :&Actual Size
@@ -601,8 +602,6 @@ SVG ஆவணங்கள்
 %d இல் %d தேடப்படுகிறது....
 :Select &All
 அனைத்தையும் தேர்வு செய்
-:Select Annotation in Editor
-தொகுப்பானில் குறிப்புரையைத் தேர்வு செய்க
 :Select content with Ctrl+left mouse button
 Ctrl+சுட்டியின் இடது பொத்தான் மூலம் உள்ளடகத்தைத் தேர்வு செய்க
 :Select the folder where SumatraPDF should be installed:

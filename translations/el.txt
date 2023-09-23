@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :&About
 &Σχετικά
 :&Actual Size
@@ -601,8 +602,6 @@ MB
 Αναζήτηση %d από %d...
 :Select &All
 Επιλογή ό&λων
-:Select Annotation in Editor
-Επιλέξτε σχολιασμό στον επεξεργαστή 
 :Select content with Ctrl+left mouse button
 Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 :Select the folder where SumatraPDF should be installed:

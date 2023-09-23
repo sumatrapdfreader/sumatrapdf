@@ -54,6 +54,7 @@
 :Download 64-bit version
 :E&xit
 :E&xit Fullscreen
+:Edit %s Annotation
 :F&avorites
 :F&orward
 :F&ullscreen
@@ -139,7 +140,6 @@
 :Search With &Bing
 :Search With &Google
 :Searching %d of %d...
-:Select Annotation in Editor
 :Select content with Ctrl+left mouse button
 :Select the folder where SumatraPDF should be installed:
 :Show &Bookmarks

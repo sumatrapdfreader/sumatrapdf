@@ -18,6 +18,7 @@
 :Copy File Path
 :Custom &Zoom...
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -559,8 +560,6 @@ Otsi &Google-iga
 Otsitakse %d/%d...
 :Select &All
 V&ali kõik
-:Select Annotation in Editor
-Vali märkus redaktoris
 :Select content with Ctrl+left mouse button
 Sisu valimiseks Ctrl+vasak hiirenupp
 :Select the folder where SumatraPDF should be installed:

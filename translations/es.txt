@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :&About
 &Acerca de
 :&Actual Size
@@ -601,8 +602,6 @@ Buscar con &Google
 Buscando %d de %d...
 :Select &All
 Seleccionar &todo
-:Select Annotation in Editor
-Seleccionar la anotación en el editor
 :Select content with Ctrl+left mouse button
 Seleccionar contenido con Ctrl + botón izquierdo del ratón
 :Select the folder where SumatraPDF should be installed:

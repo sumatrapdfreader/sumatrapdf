@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Open In New Window
 :Properties...
 :&About
@@ -598,8 +599,6 @@ Chwilio gyda &Google
 Yn chwilio am %d o %d...
 :Select &All
 Dewis &Popeth
-:Select Annotation in Editor
-Dewis Anodiad yn y Golygydd
 :Select content with Ctrl+left mouse button
 Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 :Select the folder where SumatraPDF should be installed:

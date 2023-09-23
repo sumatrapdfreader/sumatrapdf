@@ -24,6 +24,7 @@
 :Date:
 :Delete Annotation\tDel
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -546,8 +547,6 @@ S&ยุ่งเหยิง
 กำลังค้นหา %d จาก %d ...
 :Select &All
 เลือก &ทั้งหมด
-:Select Annotation in Editor
-เลือกคำอธิบายประกอบในเครื่องมือแก้ไข
 :Select content with Ctrl+left mouse button
 เลือกเนื้อหาด้วย Ctrl+ปุ่มซ้ายของเมาส์
 :Select the folder where SumatraPDF should be installed:

@@ -3,6 +3,7 @@
 :&Free Text
 :&Highlight
 :Copy File Path
+:Edit %s Annotation
 :Get Fonts Info
 :Interior Color:
 :Open Directory in &Double Commander
@@ -585,8 +586,6 @@ Søg med &Google
 Søger i %d af %d ...
 :Select &All
 Marker &alt
-:Select Annotation in Editor
-Vælg kommentarer i Editor
 :Select content with Ctrl+left mouse button
 Vælg indhold med Ctrl+venstre museknap
 :Select the folder where SumatraPDF should be installed:

@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :&About
 关于(&A)...
 :&Actual Size
@@ -601,8 +602,6 @@ SVG 文档
 正在搜索第 %d 页，共 %d 页
 :Select &All
 全选(&A)
-:Select Annotation in Editor
-在编辑器中选择标注
 :Select content with Ctrl+left mouse button
 按 Ctrl+鼠标左键 选定内容
 :Select the folder where SumatraPDF should be installed:

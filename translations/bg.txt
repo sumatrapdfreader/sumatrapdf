@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Open Directory in &Double Commander
 :Open Directory in &Explorer
 :Open Directory in &Total Commander
@@ -592,8 +593,6 @@ SVG документи
 Търсене в страница %d от %d...
 :Select &All
 Избери всичко
-:Select Annotation in Editor
-Изберете анотация в редактора
 :Select content with Ctrl+left mouse button
 Изберете съдържание с Ctrl и левия бутон на мишката
 :Select the folder where SumatraPDF should be installed:

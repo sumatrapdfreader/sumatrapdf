@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Open In New Window
 :Properties...
 :&About
@@ -598,8 +599,6 @@ Dipnotlar şuraya kaydedildi: '%s'
 %d / %d sayfa aranıyor...
 :Select &All
 &Tümünü Seç
-:Select Annotation in Editor
-Düzenleyicide Dipnot Seç
 :Select content with Ctrl+left mouse button
 Ctrl+sol fare düğmesiyle içerik seç
 :Select the folder where SumatraPDF should be installed:

@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :&About
 &Om
 :&Actual Size
@@ -601,8 +602,6 @@ Søk med &Google
 Søker %d av %d...
 :Select &All
 Merk &alt
-:Select Annotation in Editor
-Velg merknad i merknadvindu
 :Select content with Ctrl+left mouse button
 Velg innhold med Ctrl+Venstre museknapp
 :Select the folder where SumatraPDF should be installed:

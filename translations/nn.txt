@@ -33,6 +33,7 @@
 :Create Annotation From Selection
 :Custom &Zoom...
 :Delete Annotation\tDel
+:Edit %s Annotation
 :Edit Annotations
 :Expand All
 :F&orward
@@ -69,7 +70,6 @@
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
-:Select Annotation in Editor
 :Show &Scrollbars
 :Show Book&marks
 :Show Scr&ollbars

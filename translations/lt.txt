@@ -31,6 +31,7 @@
 :Don't install
 :Download 64-bit version
 :E&xit
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -540,8 +541,6 @@ Anotacijos išsaugotos į '%s'
 Ieškoma %d iš %d...
 :Select &All
 Pažymėti &viską
-:Select Annotation in Editor
-Pasirinkti anotaciją redaktoriuje
 :Select content with Ctrl+left mouse button
 Turinį žymėkite su Ctrl+kairiuoju pelės klavišu
 :Select the folder where SumatraPDF should be installed:

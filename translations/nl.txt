@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :Open In New Window
 :Properties...
 :&About
@@ -599,8 +600,6 @@ Zoeken Met &Google
 Zoek %d van %d...
 :Select &All
 &Alles selecteren
-:Select Annotation in Editor
-Selecteer Aantekening in Bewerker
 :Select content with Ctrl+left mouse button
 Selecteer inhoud met Ctrl+linker muisknop
 :Select the folder where SumatraPDF should be installed:

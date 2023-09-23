@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Edit %s Annotation
 :Open in Microsoft &HTML Help
 :&About
 정보(&A)
@@ -600,8 +601,6 @@ Google로 검색(&G)
 %d / %d 페이지 검색하는 중...
 :Select &All
 모두 선택(&A)
-:Select Annotation in Editor
-편집기에서 주석 선택
 :Select content with Ctrl+left mouse button
 Ctrl+마우스 왼쪽 버튼으로 내용을 선택하세요.
 :Select the folder where SumatraPDF should be installed:

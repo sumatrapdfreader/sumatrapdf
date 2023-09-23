@@ -22,6 +22,7 @@
 :Custom &Zoom...
 :Delete Annotation\tDel
 :E&xit
+:Edit %s Annotation
 :F&ullscreen
 :Fit &Content
 :Fit &Page
@@ -43,7 +44,6 @@
 :Save to &new PDF
 :Saved annotations to '%s'
 :Saving of '%s' failed with: '%s'
-:Select Annotation in Editor
 :Show Book&marks
 :Skip this version
 :Text Alignment:

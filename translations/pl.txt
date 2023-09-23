@@ -1,4 +1,6 @@
+:Edit %s Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
 :&About
 &O programie SumatraPDF
 :&Actual Size
@@ -601,8 +603,6 @@ Szukaj za pomocą &Google
 Szukanie %d z %d...
 :Select &All
 Zaznacz &wszystko
-:Select Annotation in Editor
-Wybierz adnotację w edytorze
 :Select content with Ctrl+left mouse button
 Zaznacz zawartość, wciskając Ctrl i lewy przycisk myszy
 :Select the folder where SumatraPDF should be installed:

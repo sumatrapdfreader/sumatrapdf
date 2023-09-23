@@ -38,6 +38,7 @@
 :Download 64-bit version
 :E&xit
 :E&xit Fullscreen
+:Edit %s Annotation
 :Edit Annotations
 :Expand All
 :F&orward
@@ -98,7 +99,6 @@
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
-:Select Annotation in Editor
 :Show &Favorites
 :Show &Scrollbars
 :Show Book&marks

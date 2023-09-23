@@ -40,6 +40,7 @@
 :Delete Annotation\tDel
 :E&xit
 :E&xit Fullscreen
+:Edit %s Annotation
 :F&orward
 :F&ullscreen
 :Fin&d...
@@ -92,7 +93,6 @@
 :Saving of '%s' failed with: '%s'
 :Search With &Bing
 :Search With &Google
-:Select Annotation in Editor
 :Show &Favorites
 :Show &Scrollbars
 :Show Book&marks

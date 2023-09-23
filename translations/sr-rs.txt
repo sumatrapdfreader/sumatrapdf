@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Edit %s Annotation
 :Open In New Window
 :Properties...
 :&About
@@ -598,8 +599,6 @@ SVG документи
 Претраживање %d странице од укупно %d...
 :Select &All
 Изабери &све
-:Select Annotation in Editor
-Одабери &белешку у уређивачу
 :Select content with Ctrl+left mouse button
 Изаберите садржај користећи Ctrl + лево дугме миша
 :Select the folder where SumatraPDF should be installed:

@@ -37,6 +37,7 @@
 :Don't install
 :E&xit
 :E&xit Fullscreen
+:Edit %s Annotation
 :Edit Annotations
 :Expand All
 :F&orward
@@ -91,7 +92,6 @@
 :Save changes to existing PDF
 :Saved annotations to '%s'
 :Saving of '%s' failed with: '%s'
-:Select Annotation in Editor
 :Show &Scrollbars
 :Show Book&marks
 :Show Scr&ollbars

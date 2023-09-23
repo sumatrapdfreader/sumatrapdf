@@ -97,6 +97,7 @@
 :E&xit
 :E&xit Fullscreen
 :EPUB ebooks
+:Edit %s Annotation
 :Edit Annotations
 :Enter the command-line to invoke when you double-click on the PDF document:
 :Error loading %s
@@ -224,7 +225,6 @@
 :Search With &Google
 :Searching %d of %d...
 :Select &All
-:Select Annotation in Editor
 :Select content with Ctrl+left mouse button
 :Select the folder where SumatraPDF should be installed:
 :Selection:
