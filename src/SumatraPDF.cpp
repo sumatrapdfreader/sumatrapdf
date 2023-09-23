@@ -1772,7 +1772,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyLoad) {
         currTab->tabState = args->tabState;
     } else if (currTab->tabState) {
         SetTabState(currTab, currTab->tabState);
-        currTab->tabState;
+        currTab->tabState = nullptr;
     }
     // TODO: figure why we hit this.
     // happens when opening 3 files via "Open With"
@@ -2408,7 +2408,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     constexpr int kBtnIdDiscard = 100;
     constexpr int kBtnIdSaveToExisting = 101;
     constexpr int kBtnIdSaveToNew = 102;
-    constexpr int kBtnIdCancel = 103;
+    //constexpr int kBtnIdCancel = 103;
     TASKDIALOGCONFIG dialogConfig{};
     TASKDIALOG_BUTTON buttons[4];
 

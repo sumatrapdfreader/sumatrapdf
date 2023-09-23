@@ -345,7 +345,7 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
     // and https://github.com/larryli/PhotoTime/blob/3c77913e4c5ee46ab25dcc6e74a3f4c7502dbec2/gdip.c#L111
     // is different still
     // https://github.com/larryli/PhotoTime/blob/3c77913e4c5ee46ab25dcc6e74a3f4c7502dbec2/gdip.c#L130
-    if (iRot >= 0 && iRot < dimof(rfts)) {
+    if (iRot < dimof(rfts)) {
         bmp->RotateFlip(rfts[iRot]);
     }
 }

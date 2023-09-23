@@ -146,7 +146,7 @@ void FileExistenceChecker::Run() {
 // return false if failed in a way that should abort the app
 static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     if (!hwndParent) {
-        true;
+        return true;
     }
     logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%x (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
           (int)IsWindow(hwndParent), gPluginURL ? gPluginURL : "<nulL>");

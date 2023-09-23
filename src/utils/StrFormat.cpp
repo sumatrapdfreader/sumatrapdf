@@ -239,7 +239,6 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
 
     for (int n = 0; n < nInst; n++) {
         CrashIf(n >= dimof(instructions));
-        CrashIf(n >= nInst);
 
         auto& inst = instructions[n];
         int argNo = inst.argNo;

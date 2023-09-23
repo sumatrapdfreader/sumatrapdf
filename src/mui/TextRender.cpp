@@ -274,7 +274,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb,
 #else
     uint opts = 0; // ETO_OPAQUE;
     if (isRtl) {
-        opts = opts | ETO_RTLREADING;
+        opts = ETO_RTLREADING;
     }
     ExtTextOut(memHdc, 0, 0, opts, nullptr, s, (uint)sLen, nullptr);
 #endif

@@ -1949,7 +1949,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     const int base[4] = {bt, gt, rt, 0};
     byte rb, gb, bb;
     UnpackColor(bgColor, rb, gb, bb);
-    int diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
+    int const diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
 
     DIBSECTION info{};
     int ret = GetObject(hbmp, sizeof(info), &info);
