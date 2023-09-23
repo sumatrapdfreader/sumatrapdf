@@ -383,8 +383,8 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     // append paths of opened files
     int tabPos = 0;
-    for (MainWindow* win : gWindows) {
-        if (win == mainWin) {
+    for (MainWindow* mw : gWindows) {
+        if (mw == mainWin) {
             for (WindowTab* tab2 : mainWin->Tabs()) {
                 if (tab2->IsAboutTab()) {
                     continue;

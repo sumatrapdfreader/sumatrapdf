@@ -356,9 +356,11 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
             if (annot != prev) {
+#if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                 TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
-                // logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
+                logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
+#endif
                 if (gShowAnnotationNotification) {
                     if (annot) {
                         // auto r = annot->bounds;
@@ -369,6 +371,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.groupId = kNotifGroupAnnotation;
                         args.font = GetDefaultGuiFont();
                         args.timeoutMs = -1;
+                        TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                         args.msg =
                             str::FormatTemp(_TRN("%s annotation. Ctrl+click to select. Ctrl+dbl click to edit."), name);
                         ShowNotification(args);
@@ -610,7 +613,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     int elementPageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
-    WindowTab* tab = tab = win->CurrentTab();
+    WindowTab* tab = win->CurrentTab();
     if (IsCtrlPressed() && win->annotationUnderCursor) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, win->annotationUnderCursor);
