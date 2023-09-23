@@ -189,7 +189,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
         return false;
     }
 
-    static int csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
+    static int const csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
     for (int csidl : csidls) {
         char* dir = GetSpecialFolderTemp(csidl);
         char* path = path::JoinTemp(dir, partialPath);

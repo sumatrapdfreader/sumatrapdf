@@ -596,18 +596,18 @@ static void RandomizeLetters()
 }
 #endif
 
+#define kSumatraLettersCount (dimof(gLetters))
+
 static void SetLettersSumatraUpTo(int n) {
     const char* s = "SUMATRAPDF";
-    for (int i = 0; i < dimof(gLetters); i++) {
+    for (int i = 0; i < kSumatraLettersCount; i++) {
+        char c = ' ';
         if (i < n) {
-            gLetters[i].c = s[i];
-        } else {
-            gLetters[i].c = ' ';
+            c = s[i];
         }
+        gLetters[i].c = c;
     }
 }
-
-#define kSumatraLettersCount (dimof(gLetters))
 
 static void SetLettersSumatra() {
     SetLettersSumatraUpTo(kSumatraLettersCount);

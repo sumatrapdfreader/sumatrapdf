@@ -36,7 +36,7 @@ typedef struct DialogSizerSizingItem {
     uint uSizeInfo;
 } DialogSizerSizingItem;
 
-#define DIALOG_SIZER_START(name) DialogSizerSizingItem name[] = {
+#define DIALOG_SIZER_START(name) const DialogSizerSizingItem name[] = {
 #define DIALOG_SIZER_ENTRY(controlID, flags) {controlID, flags},
 #define DIALOG_SIZER_END()     \
     { 0xFFFFFFFF, 0xFFFFFFFF } \

@@ -107,6 +107,7 @@ func runCppCheck(all bool) {
 		args = append(args, "--suppress=useInitializationList")
 		args = append(args, "--suppress=duplInheritedMember")
 		args = append(args, "--suppress=unusedStructMember")
+		args = append(args, "--suppress=CastIntegerToAddressAtReturn")
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cppcheckExe := detectCppcheckExe()
