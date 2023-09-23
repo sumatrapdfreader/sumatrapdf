@@ -325,13 +325,6 @@ TempStr Contents(Annotation* annot) {
 }
 
 bool SetContents(Annotation* annot, const char* sv) {
-    // TODO: seen in crash report
-    // edit control is shown even though it shouldn't
-    // seems to happen after saving an annotation
-    ReportIf(!annot);
-    if (!annot) {
-        return false;
-    }
     EngineMupdf* e = annot->engine;
     auto ctx = e->ctx;
     const char* currValue = Contents(annot);

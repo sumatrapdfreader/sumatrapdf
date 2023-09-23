@@ -3305,6 +3305,9 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
     if (!epdf->pdfdoc) {
         return false;
     }
+    if (!EngineMupdfHasUnsavedAnnotations(engine)) {
+        return false;
+    }
 
     auto timeStart = TimeGet();
     const char* currPath = engine->FilePath();
