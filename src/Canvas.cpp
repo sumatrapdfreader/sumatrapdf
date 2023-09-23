@@ -368,9 +368,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.groupId = kindNotifAnnotation;
                         args.font = GetDefaultGuiFont();
                         args.timeoutMs = -1;
-                        // TODO: translate
-                        // TODO: 'e' and 'Ctrl + e' could be re-defined
-                        args.msg = str::FormatTemp("%s annotation. 'e' to select. 'Ctrl + e' to start edit", name);
+                        args.msg = str::FormatTemp(_TRN("%s annotation. Ctrl+click to select. Ctrl+dbl click to edit."), name);
                         ShowNotification(args);
                     } else {
                         RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);
@@ -543,6 +541,11 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    if (IsCtrlPressed() && win->annotationUnderCursor) {
+        SetSelectedAnnotation(tab, win->annotationUnderCursor);
+        return;
+    }
+
     if (link && link->GetRect().Contains(ptPage)) {
         /* follow an active link */
         IPageDestination* dest = link->AsLink();
@@ -608,6 +611,13 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     int elementPageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
+
+    WindowTab* tab = tab = win->CurrentTab();
+    if (IsCtrlPressed() && win->annotationUnderCursor) {
+        ShowEditAnnotationsWindow(tab);
+        SetSelectedAnnotation(tab, win->annotationUnderCursor);
+        return;
+    }
 
     if (dm->IsOverText(mousePos)) {
         int pageNo = dm->GetPageNoByPoint(mousePos);

@@ -387,7 +387,6 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     SetSelectedAnnotation(tab, nullptr);
 }
 
-
 bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         int key = (int)msg.wParam;
@@ -911,8 +910,8 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     DeleteAnnotation(annot);
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
-        //ew->skipGoToPage = true;
-        //int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
+        // ew->skipGoToPage = true;
+        // int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
         UpdateAnnotationsList(ew);
 #if 0
         if ((selectNext == nullptr) && (currSelIdx >= 0)) {
@@ -1429,4 +1428,3 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     // first layout is triggered
     ew->SetIsVisible(true);
 }
-
