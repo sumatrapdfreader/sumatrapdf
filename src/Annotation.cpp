@@ -1030,7 +1030,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
         return nullptr;
     }
 
-    auto res = MakeAnnotationFrom_pdf_annot(epdf, annot, pageNo);
+    auto res = MakeAnnotationWrapper(epdf, annot, pageNo);
     MarkNotificationAsModified(epdf, res, AnnotationChange::Add);
 
     auto& a = gGlobalPrefs->annotations;
