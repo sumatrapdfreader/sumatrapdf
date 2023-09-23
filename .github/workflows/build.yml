@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: Sumatra_Builder
+    runs-on: Sumatra_Builder2
     # runs-on: windows-latest
     steps:
       - name: Set up Go
