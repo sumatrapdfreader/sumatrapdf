@@ -172,7 +172,6 @@ struct EditAnnotationsWindow : Wnd {
     void OnFocus() override;
     bool PreTranslateMessage(MSG&) override;
 
-    void DeleteSelectedAnnotation();
     void ListBoxSelectionChanged();
 
     ~EditAnnotationsWindow();
@@ -191,15 +190,40 @@ static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prev
 }
 #endif
 
-void EditAnnotationsWindow::DeleteSelectedAnnotation() {
-    int idx = listBox->GetCurrentSelection();
+void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    Annotation* selectNext = nullptr;
+    if (annot != tab->selectedAnnotation) {
+        // preserve current selection if we're not deleting it
+        selectNext = tab->selectedAnnotation;
+    }
+
+    DeleteAnnotation(annot);
+    if (ew != nullptr) {
+        // can be null if called from Menu.cpp and annotations window is not visible
+        // ew->skipGoToPage = true;
+        // int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
+        UpdateAnnotationsList(ew);
+#if 0
+        if ((selectNext == nullptr) && (currSelIdx >= 0)) {
+            // if we're deleting currently selected, pick
+            // next to select
+            annot = PickNewSelectedAnnotation(ew, currSelIdx);
+        }
+#endif
+    }
+    SetSelectedAnnotation(tab, selectNext);
+}
+
+static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
+    int idx = ew->listBox->GetCurrentSelection();
     if (idx < 0) {
-        CrashIf(tab->selectedAnnotation != nullptr);
+        CrashIf(ew->tab->selectedAnnotation != nullptr);
         return;
     }
-    Annotation* annot = annotations.at(idx);
-    CrashIf(tab->selectedAnnotation != annot);
-    DeleteAnnotationAndUpdateUI(tab, annot);
+    Annotation* annot = ew->annotations.at(idx);
+    CrashIf(ew->tab->selectedAnnotation != annot);
+    DeleteAnnotationAndUpdateUI(ew->tab, annot);
 
     // Note: auto-selecting next annotation might cause page jumping
 #if 0
@@ -391,7 +415,7 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         int key = (int)msg.wParam;
         if (key == VK_DELETE) {
-            DeleteSelectedAnnotation();
+            DeleteSelectedAnnotation(this);
             return true;
         }
         if (key == 'S' && IsShiftPressed() && IsCtrlPressed()) {
@@ -899,36 +923,9 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     RebuildAnnotationsListBox(ew);
 }
 
-void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
-    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
-    Annotation* selectNext = nullptr;
-    if (annot != tab->selectedAnnotation) {
-        // preserve current selection if we're not deleting it
-        selectNext = tab->selectedAnnotation;
-    } else {
-        tab->selectedAnnotation = nullptr;
-    }
-
-    DeleteAnnotation(annot);
-    if (ew != nullptr) {
-        // can be null if called from Menu.cpp and annotations window is not visible
-        // ew->skipGoToPage = true;
-        // int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
-        UpdateAnnotationsList(ew);
-#if 0
-        if ((selectNext == nullptr) && (currSelIdx >= 0)) {
-            // if we're deleting currently selected, pick
-            // next to select
-            annot = PickNewSelectedAnnotation(ew, currSelIdx);
-        }
-#endif
-    }
-    SetSelectedAnnotation(tab, selectNext);
-}
-
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
     CrashIf(!ew->tab->selectedAnnotation);
-    ew->DeleteSelectedAnnotation();
+    DeleteSelectedAnnotation(ew);
 }
 
 void EditAnnotationsWindow::ListBoxSelectionChanged() {

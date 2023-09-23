@@ -1768,10 +1768,10 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             ShowEditAnnotationsWindow(tab);
             SetSelectedAnnotation(tab, buildCtx.annotationUnderCursor);
             break;
-        case CmdDeleteAnnotation:
+        case CmdDeleteAnnotation: {
             DeleteAnnotationAndUpdateUI(tab, buildCtx.annotationUnderCursor);
             break;
-
+        }
         case CmdCopyLinkTarget: {
             TempStr tmp = CleanupURLForClipbardCopyTemp(value);
             CopyTextToClipboard(tmp);
@@ -1780,7 +1780,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             CopyTextToClipboard(value);
             break;
 
-        case CmdCopyImage:
+        case CmdCopyImage: {
             if (pageEl) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
@@ -1789,9 +1789,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 delete bmp;
             }
             break;
-        case CmdFavoriteDel:
+        }
+        case CmdFavoriteDel: {
             DelFavorite(filePath, pageNoUnderCursor);
             break;
+        }
+
         // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
         case CmdCreateAnnotFreeText:
