@@ -35,6 +35,7 @@ extern "C" {
 #include "EditAnnotations.h"
 #include "SumatraPDF.h"
 #include "Canvas.h"
+#include "Commands.h"
 
 #include "utils/Log.h"
 
@@ -386,29 +387,10 @@ static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
     }
 }
 
+extern bool SaveAnnotationsToExistingFile(WindowTab* tab);
+
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
-    WindowTab* tab = ew->tab;
-    EngineMupdf* engine = GetEngineMupdf(ew);
-    const char* path = engine->FilePath();
-    tab->ignoreNextAutoReload = true;
-    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
-    });
-    if (!ok) {
-        tab->ignoreNextAutoReload = false;
-        return;
-    }
-    ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
-
-    // TODO: hacky: set tab->editAnnotsWindow to nullptr to
-    // disable a check in ReloadDocuments. Could pass additional argument
-    auto tmpWin = tab->editAnnotsWindow;
-    tab->editAnnotsWindow = nullptr;
-    ReloadDocument(tab->win, false);
-    tab->editAnnotsWindow = tmpWin;
-
-    UpdateAnnotationsList(ew);
-    SetSelectedAnnotation(tab, nullptr);
+    SaveAnnotationsToExistingFile(ew->tab);
 }
 
 bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {

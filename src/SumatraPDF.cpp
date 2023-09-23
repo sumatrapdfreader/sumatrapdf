@@ -2296,7 +2296,7 @@ void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, c
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
-static bool SaveAnnotationsToExistingFile(WindowTab* tab) {
+bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     if (!tab) {
         return false;
     }
@@ -4990,9 +4990,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuViewShowHideScrollbars();
             break;
 
-        case CmdSaveAnnotations:
-            SaveAnnotationsToExistingFile(tab);
+        case CmdSaveAnnotations: {
+            if (tab) {
+                SaveAnnotationsToExistingFile(tab);
+            }
             break;
+        }
 
         case CmdSaveAnnotationsNewFile: {
             if (tab) {
