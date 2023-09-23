@@ -53,8 +53,10 @@
 
 #include "utils/Log.h"
 
+Kind kNotifGroupAnnotation = "notifAnnotation";
+
 // Timer for mouse wheel smooth scrolling
-#define MW_SMOOTHSCROLL_TIMER_ID 6
+constexpr UINT_PTR kSmoothScrollTimerID = 6;
 
 // Smooth scrolling factor. This is a value between 0 and 1.
 // Each step, we scroll the needed delta times this factor.
@@ -142,7 +144,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         if (gGlobalPrefs->smoothScroll) {
             win->scrollTargetY = si.nPos;
-            SetTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID, USER_TIMER_MINIMUM, nullptr);
+            SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
         } else {
             win->AsFixed()->ScrollYTo(si.nPos);
         }
@@ -299,7 +301,6 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
     return dy > dragDy;
 }
 
-const Kind kindNotifAnnotation = "notifAnnotation";
 static bool gShowAnnotationNotification = true;
 
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
@@ -362,19 +363,20 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     if (annot) {
                         // auto r = annot->bounds;
                         // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
-                        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);
+                        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
                         NotificationCreateArgs args;
                         args.hwndParent = win->hwndCanvas;
-                        args.groupId = kindNotifAnnotation;
+                        args.groupId = kNotifGroupAnnotation;
                         args.font = GetDefaultGuiFont();
                         args.timeoutMs = -1;
                         args.msg =
                             str::FormatTemp(_TRN("%s annotation. Ctrl+click to select. Ctrl+dbl click to edit."), name);
                         ShowNotification(args);
-                    } else {
-                        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifAnnotation);
                     }
                 }
+            }
+            if (!annot) {
+                RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
             }
             win->annotationUnderCursor = annot;
             break;
@@ -1156,7 +1158,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
         // Kill the smooth scroll timer when zooming
         // We don't want to move to the new updated y offset after zooming
-        KillTimer(win->hwndCanvas, MW_SMOOTHSCROLL_TIMER_ID);
+        KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
 
         return 0;
     }
@@ -1665,7 +1667,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
         }
 
-        case MW_SMOOTHSCROLL_TIMER_ID:
+        case kSmoothScrollTimerID:
             DisplayModel* dm = win->AsFixed();
 
             int current = dm->yOffset();
@@ -1673,7 +1675,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             int delta = target - current;
 
             if (delta == 0) {
-                KillTimer(hwnd, MW_SMOOTHSCROLL_TIMER_ID);
+                KillTimer(hwnd, kSmoothScrollTimerID);
             } else {
                 // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
 

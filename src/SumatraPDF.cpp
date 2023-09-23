@@ -89,7 +89,7 @@
 
 using std::placeholders::_1;
 
-#define kRestrictionsFileName "sumatrapdfrestrict.ini"
+constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
@@ -2285,6 +2285,7 @@ void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path) {
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
     NotificationCreateArgs nargs;
     nargs.hwndParent = hwndParent;
+    nargs.font = GetDefaultGuiFont();
     nargs.timeoutMs = 5000;
     nargs.msg = msg.Get();
     ShowNotification(nargs);
@@ -2522,6 +2523,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     AbortFinding(win, true);
     ClearFindBox(win);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
 
     RememberRecentlyClosedDocument(tab->filePath);
 

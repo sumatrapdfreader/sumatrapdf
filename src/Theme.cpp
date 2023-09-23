@@ -184,7 +184,7 @@ void SetThemeByIndex(int themeIdx) {
     currentThemeIndex = themeIdx;
     gCurrentTheme = gThemes[currentThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
-    // set invertColors after theme change
+    // for light theme set invertColors 
     // don't invert for light theme, invert for dark themes
     gGlobalPrefs->fixedPageUI.invertColors = (themeIdx == 0);
     UpdateAfterThemeChange();
