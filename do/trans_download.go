@@ -14,7 +14,8 @@ import (
 
 var (
 	apptranslatoServer  = "https://www.apptranslator.org"
-	translationsTxtPath = filepath.Join("translations", "translations.txt")
+	translationsDir     = "translations"
+	translationsTxtPath = filepath.Join(translationsDir, "translations.txt")
 )
 
 func getTransSecret() string {
@@ -119,6 +120,8 @@ func splitIntoPerLangFiles(d []byte) {
 		addLangTrans(lang, trans)
 	}
 
+	nStrings := len(allStrings)
+	langsToSkip := map[string]bool{}
 	for lang, m := range perLang {
 		a := []string{}
 		sort.Slice(allStrings, func(i, j int) bool {
@@ -145,28 +148,62 @@ func splitIntoPerLangFiles(d []byte) {
 		}
 		// TODO: sort so that untranslated strings are at start
 		s := strings.Join(a, "\n")
-		path := filepath.Join("translations", lang+".txt")
+		path := filepath.Join(translationsDir, lang+".txt")
 		writeFileMust(path, []byte(s))
-		logf(ctx(), "Wrote: '%s'\n", path)
+		nMissing := nStrings - len(m)
+		skipStr := ""
+		if nMissing > 100 {
+			skipStr = "  SKIP"
+			langsToSkip[lang] = true
+		}
+		logf(ctx(), "Wrote: '%s', missing: %d%s\n", path, nMissing, skipStr)
 	}
+
+	// write translations-good.txt with langs that don't miss too many translations
+	sort.Strings(allStrings)
+	// for backwards compat with translations.txt first 2 lines
+	// are skipped by ParseTranslationsTxt()
+	a = []string{
+		"AppTranslator: SumatraPDF",
+		"AppTranslator: SumatraPDF",
+	}
+	for _, s := range allStrings {
+		a = append(a, ":"+s)
+		for lang, m := range perLang {
+			if langsToSkip[lang] {
+				continue
+			}
+			trans := m[s]
+			panicIf(strings.Contains(trans, "\n"))
+			if len(trans) == 0 {
+				continue
+			}
+			a = append(a, lang+":"+trans)
+		}
+	}
+	s := strings.Join(a, "\n")
+	path := filepath.Join(translationsDir, "translations-good.txt")
+	writeFileMust(path, []byte(s))
+	logf(ctx(), "Wrote %s of size %d\n", path, len(s))
 }
 
 func downloadTranslations() bool {
 	d := downloadTranslationsMust()
 
-	curr := readFileMust(translationsTxtPath)
+	path := filepath.Join(translationsDir, "translations.txt")
+	curr := readFileMust(path)
 	if bytes.Equal(d, curr) {
 		fmt.Printf("Translations didn't change\n")
 		//TODO: for now to force splitting into per-lang files
 		// return false
 	}
 
-	writeFileMust(translationsTxtPath, d)
+	writeFileMust(path, d)
 	// TODO: save ~400k in uncompressed binary by
 	// saving as gzipped and embedding that in the exe
 	//u.WriteFileGzipped(translationsTxtPath+".gz", d)
 	splitIntoPerLangFiles(d)
-	fmt.Printf("Wrote response of size %d to %s\n", len(d), translationsTxtPath)
+	logf(ctx(), "Wrote %s of size %d\n", path, len(d))
 	printSusTranslations(d)
 	return false
 }

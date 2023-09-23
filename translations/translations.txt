@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-88f0f3b24093515df8f1f93c6895436b0ef01b55
+d4ba5c31ef59f030540da467149e33d531f9f701
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
 pl:Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
@@ -8718,6 +8718,7 @@ uk:Документи EPUB
 uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Edit %s Annotation
+pl:Edytuj adnotację %s
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 ar:تعديل الشرح و التوضيح 

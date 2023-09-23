@@ -67,7 +67,8 @@ END
 1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
 
-2                       RCDATA "..\\translations\\translations.txt"
+2                       RCDATA "..\\translations\\translations-good.txt"
+//2                       RCDATA "..\\translations\\translations.txt"
 
 /////////////////////////////////////////////////////////////////////////////
 

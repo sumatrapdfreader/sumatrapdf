@@ -1,4 +1,3 @@
-:Edit %s Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
 :&About
@@ -295,6 +294,8 @@ Pobierz wersję 64-bitową
 W&yjdź z trybu pełnoekranowego
 :EPUB ebooks
 Dokumenty EPUB
+:Edit %s Annotation
+Edytuj adnotację %s
 :Edit Annotations
 Edytuj adnotacje
 :Enter password
