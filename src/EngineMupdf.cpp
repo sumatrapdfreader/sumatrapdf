@@ -3569,7 +3569,7 @@ static bool RemoveHeWhoFullyContains(Vec<Annotation*>& els) {
     return false;
 }
 
-Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos) {
+Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, Annotation* preferredAnnot) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return nullptr;
@@ -3592,6 +3592,12 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     if (els.Size() == 0) {
         return nullptr;
     }
+    for (const auto& a : els) {
+        if (a == preferredAnnot) {
+            return preferredAnnot;
+        }
+    }
+
     // pick the best
 Encore:
     int n = els.Size();

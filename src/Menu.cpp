@@ -1081,7 +1081,7 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
         if (pageNoUnderCursor > 0) {
             ctx->isCursorOnPage = true;
         }
-        ctx->annotationUnderCursor = dm->GetAnnotationAtPos(pt);
+        ctx->annotationUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
     }
     ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
 }

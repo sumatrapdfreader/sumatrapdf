@@ -361,7 +361,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         if (pageNoUnderCursor > 0) {
             ctx.isCursorOnPage = true;
         }
-        ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos);
+        ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, nullptr);
 
         // PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
         //  TODO: should this be point on page?

@@ -3959,7 +3959,7 @@ static bool ChmForwardKey(WPARAM key) {
     return false;
 }
 
-static Annotation* GetAnnotionUnderCursor(WindowTab* tab) {
+static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot) {
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return nullptr;
@@ -3972,7 +3972,7 @@ static Annotation* GetAnnotionUnderCursor(WindowTab* tab) {
     if (pageNoUnderCursor <= 0) {
         return nullptr;
     }
-    Annotation* annot = dm->GetAnnotationAtPos(pt);
+    annot = dm->GetAnnotationAtPos(pt, annot);
     return annot;
 }
 
@@ -5407,7 +5407,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSelectAnnotation: {
             if (tab) {
-                Annotation* annot = GetAnnotionUnderCursor(tab);
+                Annotation* annot = GetAnnotionUnderCursor(tab, nullptr);
                 if (annot) {
                     SetSelectedAnnotation(tab, annot);
                 }
@@ -5417,7 +5417,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdEditAnnotations: {
             if (tab) {
-                Annotation* annot = GetAnnotionUnderCursor(tab);
+                Annotation* annot = GetAnnotionUnderCursor(tab, nullptr);
                 ShowEditAnnotationsWindow(tab);
                 if (annot) {
                     SetSelectedAnnotation(tab, annot);
@@ -5432,7 +5432,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 if (!annot) {
                     Point pt = HwndGetCursorPos(tab->win->hwndCanvas);
                     if (!pt.IsEmpty()) {
-                        annot = dm->GetAnnotationAtPos(pt);
+                        annot = dm->GetAnnotationAtPos(pt, nullptr);
                     }
                 }
                 if (annot) {

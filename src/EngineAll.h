@@ -59,7 +59,7 @@ void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc);
-Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos);
+Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 
 /* EnginePs.cpp */
@@ -77,4 +77,4 @@ EngineBase* CreateEngineFromFile(const char* filePath, PasswordUI* pwdUI, bool e
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineHasUnsavedAnnotations(EngineBase*);
-Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos);
+Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);

@@ -353,7 +353,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     Point prevPos = win->dragPrevPos;
     switch (win->mouseAction) {
         case MouseAction::None: {
-            Annotation* annot = dm->GetAnnotationAtPos(pos);
+            Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
             if (annot != prev) {
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
@@ -436,26 +436,6 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     return;
 }
 
-static void SetObjectUnderMouse(MainWindow* win, int x, int y) {
-    CrashIf(win->linkOnLastButtonDown);
-    DisplayModel* dm = win->AsFixed();
-    Point pt{x, y};
-
-    WindowTab* tab = win->CurrentTab();
-    Annotation* annot = dm->GetAnnotationAtPos(pt);
-    if (annot && (annot == tab->selectedAnnotation) && IsMoveableAnnotation(annot->type)) {
-        StartAnnotationDrag(win, annot, pt);
-        return;
-    }
-
-    IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
-    if (pageEl) {
-        if (pageEl->Is(kindPageElementDest)) {
-            win->linkOnLastButtonDown = pageEl;
-        }
-    }
-}
-
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
@@ -479,10 +459,25 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 
     SetFocus(win->hwndFrame);
 
-    SetObjectUnderMouse(win, x, y);
+    DisplayModel* dm = win->AsFixed();
+    Point pt{x, y};
+
+    WindowTab* tab = win->CurrentTab();
+    Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
+    bool isMoveableAnnot = annot && (annot == tab->selectedAnnotation) && IsMoveableAnnotation(annot->type);
+    if (isMoveableAnnot) {
+        StartAnnotationDrag(win, annot, pt);
+    } else {
+        CrashIf(win->linkOnLastButtonDown);
+        IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
+        if (pageEl) {
+            if (pageEl->Is(kindPageElementDest)) {
+                win->linkOnLastButtonDown = pageEl;
+            }
+        }
+    }
 
     win->dragStartPending = true;
-    Point pt{x, y};
     win->dragStart = pt;
 
     // - without modifiers, clicking on text starts a text selection
@@ -495,7 +490,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
-    if (!canCopy || (isShift || !isOverText) && !isCtrl) {
+    if (isMoveableAnnot || !canCopy || (isShift || !isOverText) && !isCtrl) {
         StartMouseDrag(win, x, y);
     } else {
         OnSelectionStart(win, x, y, key);
@@ -1071,8 +1066,9 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         return TRUE;
     }
 
-    Annotation* annot = dm->GetAnnotationAtPos(pt);
-    if (annot && (annot == win->CurrentTab()->selectedAnnotation) && IsMoveableAnnotation(annot->type)) {
+    Annotation* selected = win->CurrentTab()->selectedAnnotation;
+    Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
+    if (annot && (annot == selected) && IsMoveableAnnotation(annot->type)) {
         SetCursorCached(IDC_HAND);
         return TRUE;
     }
