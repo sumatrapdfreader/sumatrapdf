@@ -184,6 +184,9 @@ void SetThemeByIndex(int themeIdx) {
     currentThemeIndex = themeIdx;
     gCurrentTheme = gThemes[currentThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
+    // note: re-set invertColors after theme change
+    // don't invert for light theme, invert for dark themes
+    gGlobalPrefs->fixedPageUI.invertColors = (themeIdx == 0);
     UpdateAfterThemeChange();
 };
 
@@ -217,25 +220,25 @@ void SetCurrentThemeFromSettings() {
 }
 
 void GetDocumentColors(COLORREF& text, COLORREF& bg) {
-    // Special behavior for light theme.
-    // TODO: migrate from prefs to theme.
-    if (currentThemeIndex == 0) {
-        ParsedColor* parsedCol;
-        if (gGlobalPrefs->fixedPageUI.invertColors) {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-        } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-        }
-        bg = parsedCol->col;
-        if (gGlobalPrefs->fixedPageUI.invertColors) {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-        } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-        }
-        text = parsedCol->col;
+#if 0
+    ParsedColor* parsedCol;
+    if (gGlobalPrefs->fixedPageUI.invertColors) {
+        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
     } else {
-        bg = gCurrentTheme->document.backgroundColor;
-        text = gCurrentTheme->document.textColor;
+        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+    }
+    bg = parsedCol->col;
+    if (gGlobalPrefs->fixedPageUI.invertColors) {
+        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+    } else {
+        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+    }
+    text = parsedCol->col;
+#endif
+    bg = gCurrentTheme->document.backgroundColor;
+    text = gCurrentTheme->document.textColor;
+    if (gGlobalPrefs->fixedPageUI.invertColors) {
+        std::swap(bg, text);
     }
 }
 
