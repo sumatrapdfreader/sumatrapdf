@@ -1,4 +1,5 @@
 name: Build
+runs-on: Sumatra_Builder
 on:
   push:
   pull_request:
