@@ -758,14 +758,6 @@ static MenuDef menuDefContext[] = {
         kMenuSeparatorID,
     },
     {
-        _TRN("Select Annotation in Editor"),
-        CmdSelectAnnotation,
-    },
-    {
-        _TRN("Delete Annotation\tDel"),
-        CmdDeleteAnnotation,
-    },
-    {
         _TRN("Edit Annotations"),
         CmdEditAnnotations,
     },
@@ -776,6 +768,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("Create Annotation &Under Cursor"),
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    },
+    {
+        _TRN("Delete Annotation\tDel"),
+        CmdDeleteAnnotation,
     },
     {
         _TRN("Save Annotations to existing PDF"),
@@ -941,8 +937,6 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdClose, // ???
     CmdShowInFolder,
     CmdSaveAs,
-    CmdSaveAnnotations,
-    CmdSaveAnnotationsNewFile,
     CmdRenameFile,
     CmdSendByEmail, // ???
     CmdContributeTranslation, // ???
@@ -951,15 +945,9 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,
-    CmdSelectAnnotation,
-    CmdDeleteAnnotation,
-    CmdEditAnnotations,
     CmdOpenSelectedDocument,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
-
-    (UINT_PTR)menuDefCreateAnnotFromSelection,
-    (UINT_PTR)menuDefCreateAnnotUnderCursor,
     0,
 };
 
@@ -1279,6 +1267,8 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
         if (!HasPermission(Perm::DiskAccess)) {
             removeMenu |= cmdIdInList(removeIfNoDiskAccessPerm);
+            // editing annotations also requires disk access
+            removeMenu |= cmdIdInList(removeIfAnnotsNotSupported);
             if (cmdId >= CmdOpenWithFirst && cmdId <= CmdOpenWithLast) {
                 removeMenu = true;
             }
@@ -1682,6 +1672,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+
+    if (buildCtx.annotationUnderCursor) {
+        // change from generic "Edit Annotations" to more specific
+        // "Edit ${annotType} Annotation"
+        TempStr t = AnnotationReadableNameTemp(buildCtx.annotationUnderCursor->type);
+        TempStr s = str::FormatTemp(_TRN("Edit %s Annotation"), t);
+        MenuSetText(popup, CmdEditAnnotations, s);
+    }
 
     const char* filePath = win->ctrl->GetFilePath();
     bool favsSupported = HasPermission(Perm::SavePreferences) && HasPermission(Perm::DiskAccess);
