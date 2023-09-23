@@ -2546,7 +2546,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
             pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
             while (annot) {
-                Annotation* a = MakeAnnotationFrom_pdf_annot(this, annot, pageNo);
+                Annotation* a = MakeAnnotationWrapper(this, annot, pageNo);
                 if (a) {
                     pageInfo->annotations.Append(a);
                 }
@@ -3659,7 +3659,8 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     pageInfo->elementsNeedRebuilding = true;
 }
 
-Annotation* MakeAnnotationFrom_pdf_annot(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
+// creates Annotation wrapper around pdf_annot
+Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
     CrashIf(pageNo < 1);
     CrashIf(!engine->pdfdoc);
     ScopedCritSec cs(engine->ctxAccess);
