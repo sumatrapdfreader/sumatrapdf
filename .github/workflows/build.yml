@@ -1,5 +1,4 @@
 name: Build
-runs-on: Sumatra_Builder
 on:
   push:
   pull_request:
@@ -8,7 +7,8 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: windows-2022
+    runs-on: Sumatra_Builder
+    # runs-on: windows-2022
     steps:
       - name: Set up Go
         uses: actions/setup-go@v3
