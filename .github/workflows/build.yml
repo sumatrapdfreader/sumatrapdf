@@ -8,12 +8,12 @@ jobs:
   build:
     name: Build
     runs-on: Sumatra_Builder
-    # runs-on: windows-2022
+    # runs-on: windows-latest
     steps:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.20
 
       - name: Check out source code
         uses: actions/checkout@v3
