@@ -143,11 +143,21 @@ void FileExistenceChecker::Run() {
     });
 }
 
-static NO_INLINE void MakePluginWindow(MainWindow* win, HWND hwndParent) {
+// return false if failed in a way that should abort the app
+static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
+    if (!hwndParent) {
+        true;
+    }
     logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%x (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
           (int)IsWindow(hwndParent), gPluginURL ? gPluginURL : "<nulL>");
-    CrashIf(!IsWindow(hwndParent));
     CrashIf(!gPluginMode);
+
+    if (!IsWindow(hwndParent)) {
+        // we validated hwndParent for validity at startup but I'm seeing cases
+        // in crash reports were it's not valid here
+        // I assume the window went away so we just abort
+        return false;
+    }
 
     auto hwndFrame = win->hwndFrame;
     long ws = GetWindowLong(hwndFrame, GWL_STYLE);
@@ -162,6 +172,7 @@ static NO_INLINE void MakePluginWindow(MainWindow* win, HWND hwndParent) {
 
     // from here on, we depend on the plugin's host to resize us
     SetFocus(hwndFrame);
+    return true;
 }
 
 static bool RegisterWinClass() {
@@ -266,8 +277,9 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
             win->ctrl->GoToPage(flags.pageNumber, false);
         }
     }
-    if (flags.hwndPluginParent) {
-        MakePluginWindow(win, flags.hwndPluginParent);
+    bool ok = MaybeMakePluginWindow(win, flags.hwndPluginParent);
+    if (!ok) {
+        return;
     }
     if (!win->IsDocLoaded() || !isFirstWin) {
         return win;
