@@ -184,7 +184,7 @@ void SetThemeByIndex(int themeIdx) {
     currentThemeIndex = themeIdx;
     gCurrentTheme = gThemes[currentThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
-    // note: re-set invertColors after theme change
+    // set invertColors after theme change
     // don't invert for light theme, invert for dark themes
     gGlobalPrefs->fixedPageUI.invertColors = (themeIdx == 0);
     UpdateAfterThemeChange();
@@ -220,21 +220,24 @@ void SetCurrentThemeFromSettings() {
 }
 
 void GetDocumentColors(COLORREF& text, COLORREF& bg) {
-#if 0
-    ParsedColor* parsedCol;
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
-        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-    } else {
-        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+    if (currentThemeIndex == 0) {
+        // for backwards compat light theme respects the old customization colors
+        ParsedColor* parsedCol;
+        if (gGlobalPrefs->fixedPageUI.invertColors) {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+        } else {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+        }
+        bg = parsedCol->col;
+        if (gGlobalPrefs->fixedPageUI.invertColors) {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+        } else {
+            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+        }
+        text = parsedCol->col;
+        return;
     }
-    bg = parsedCol->col;
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
-        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-    } else {
-        parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-    }
-    text = parsedCol->col;
-#endif
+
     bg = gCurrentTheme->document.backgroundColor;
     text = gCurrentTheme->document.textColor;
     if (gGlobalPrefs->fixedPageUI.invertColors) {

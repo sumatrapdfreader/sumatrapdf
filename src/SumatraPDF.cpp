@@ -2521,10 +2521,9 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     MainWindow* win = tab->win;
     AbortFinding(win, true);
     ClearFindBox(win);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
 
-    if (tab) {
-        RememberRecentlyClosedDocument(tab->filePath);
-    }
+    RememberRecentlyClosedDocument(tab->filePath);
 
     // TODO: maybe should have a way to over-ride this for unconditional close?
     bool canClose = MaybeSaveAnnotations(tab);
