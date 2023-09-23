@@ -2227,7 +2227,9 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     }
     win->ctrl = nullptr;
     WindowTab* currentTab = win->CurrentTab();
-    currentTab->selectedAnnotation = nullptr;
+    if (currentTab) {
+        currentTab->selectedAnnotation = nullptr;
+    }
     if (deleteModel) {
         delete currentTab->ctrl;
         currentTab->ctrl = nullptr;
