@@ -73,9 +73,9 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 char* ResolveLnkTemp(const char* path);
 bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args = nullptr,
                     const char* description = nullptr, int iconIndex = 0);
-DWORD GetFileVersion(const char* path);
 IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
 
+HANDLE LaunchProces(const char* exe, const char* cmdLine);
 HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
 bool CreateProcessHelper(const char* exe, const char* args);
 bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);

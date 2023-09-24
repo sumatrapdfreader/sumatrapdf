@@ -84,7 +84,7 @@ void RemoveAppShortcuts();
 
 // RegistryInstaller.cpp
 
-bool WriteUninstallerRegistryInfo(HKEY hkey);
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers);
 bool WriteExtendedFileExtensionInfo(HKEY hkey);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);

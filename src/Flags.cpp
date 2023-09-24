@@ -479,7 +479,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.testBrowser = true;
             continue;
         }
-        if (arg == Arg::AllUsers || arg == Arg::AllUsers2) {
+        if ((arg == Arg::AllUsers) || (arg == Arg::AllUsers2)) {
             i.allUsers = true;
             continue;
         }
