@@ -822,22 +822,26 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
         case WM_ERASEBKGND:
             return TRUE;
 
-        case WM_PAINT:
+        case WM_PAINT: {
             OnPaintFrame(hwnd, gWnd->showOptions);
             break;
+        }
 
-        case WM_COMMAND:
+        case WM_COMMAND: {
             handled = InstallerOnWmCommand(wp);
             if (!handled) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
             break;
+        }
 
-        case WM_APP_START_INSTALLATION:
+        case WM_APP_START_INSTALLATION: {
             StartInstallation(gWnd);
+            SetForegroundWindow(hwnd);
             break;
+        }
 
-        case WM_APP_INSTALLATION_FINISHED:
+        case WM_APP_INSTALLATION_FINISHED: {
             OnInstallationFinished();
             if (gWnd->btnRunSumatra) {
                 gWnd->btnRunSumatra->SetFocus();
@@ -845,7 +849,9 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             if (gWnd->btnExit) {
                 gWnd->btnExit->SetFocus();
             }
+            SetForegroundWindow(hwnd);
             break;
+        }
 
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
@@ -1115,8 +1121,8 @@ int RunInstaller() {
             log("CreateInstallerWindow() failed\n");
             goto Exit;
         }
-        log("Before BringWindowToTop()\n");
-        BringWindowToTop(gWnd->hwnd);
+        log("Before SetForegroundWindow()\n");
+        SetForegroundWindow(gWnd->hwnd);
         log("Before RunApp()\n");
         ret = RunApp();
         logfa("RunApp() returned %d\n", ret);

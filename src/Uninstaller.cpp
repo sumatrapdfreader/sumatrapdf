@@ -230,19 +230,22 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
             OnPaintFrame(hwnd, false);
             break;
 
-        case WM_COMMAND:
+        case WM_COMMAND: {
             handled = UninstallerOnWmCommand(wp);
             if (!handled) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
             break;
+        }
 
-        case WM_APP_INSTALLATION_FINISHED:
+        case WM_APP_INSTALLATION_FINISHED: {
             OnUninstallationFinished();
             if (gButtonExit) {
                 gButtonExit->SetFocus();
             }
+            SetForegroundWindow(hwnd);
             break;
+        }
 
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
@@ -274,6 +277,7 @@ static bool InstanceInit() {
 
     CenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
+    SetForegroundWindow(gHwndFrame);
 
     return TRUE;
 }
@@ -480,8 +484,6 @@ int RunUninstaller() {
     if (!InstanceInit()) {
         goto Exit;
     }
-
-    BringWindowToTop(gHwndFrame);
     ret = RunApp();
 
     // re-register if we un-registered but uninstallation was cancelled
