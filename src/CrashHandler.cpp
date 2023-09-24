@@ -343,7 +343,7 @@ void _uploadDebugReport(const char* condStr) {
 // so only allow once submition in a given session
 static bool didSubmitDebugReport = false;
 
-void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr) {
+void _uploadDebugReportIfFunc(bool cond, const char* condStr) {
     if (!cond || didSubmitDebugReport) {
         return;
     }

@@ -18,7 +18,7 @@
 #include "EngineAll.h"
 #include "PdfCreator.h"
 
-void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+void _uploadDebugReportIfFunc(bool, const char*) {
     // no-op implementation to satisfy SubmitBugReport()
 }
 
@@ -517,13 +517,12 @@ class PasswordHolder : public PasswordUI {
   public:
     explicit PasswordHolder(const char* password) : password(password) {
     }
-    char* GetPassword(__unused const char* fileName, __unused u8* fileDigest, __unused u8 decryptionKeyOut[32],
-                      __unused bool* saveKey) override {
+    char* GetPassword(const char*, u8*, __unused u8 decryptionKeyOut[32], bool*) override {
         return str::Dup(password);
     }
 };
 
-int main(__unused int argc, __unused char** argv) {
+int main(int, char**) {
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 

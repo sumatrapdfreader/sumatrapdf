@@ -213,11 +213,11 @@ EngineEbook::~EngineEbook() {
     DeleteCriticalSection(&pagesAccess);
 }
 
-RectF EngineEbook::PageMediabox(__unused int pageNo) {
+RectF EngineEbook::PageMediabox(int) {
     return pageRect;
 }
 
-RectF EngineEbook::PageContentBox(int pageNo, __unused RenderTarget target) {
+RectF EngineEbook::PageContentBox(int pageNo, RenderTarget) {
     RectF mbox = PageMediabox(pageNo);
     mbox.Inflate(-pageBorder, -pageBorder);
     return mbox;
@@ -241,11 +241,11 @@ bool EngineEbook::SaveFileAs(const char* dstPath) {
 }
 
 // make RenderCache request larger tiles than per default
-bool EngineEbook::HasClipOptimizations(__unused int pageNo) {
+bool EngineEbook::HasClipOptimizations(int) {
     return false;
 }
 
-bool EngineEbook::BenchLoadPage(__unused int pageNo) {
+bool EngineEbook::BenchLoadPage(int) {
     return true;
 }
 
@@ -296,7 +296,7 @@ bool EngineEbook::ExtractPageAnchors() {
     return true;
 }
 
-RectF EngineEbook::Transform(const RectF& rect, __unused int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineEbook::Transform(const RectF& rect, int, float zoom, int rotation, bool inverse) {
     RectF rcF = rect; // TODO: un-needed conversion
     auto p1 = Gdiplus::PointF(rcF.x, rcF.y);
     auto p2 = Gdiplus::PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
@@ -1475,7 +1475,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         return html.StealData();
     }
 
-    void Visit(__unused const char* name, const char* url, __unused int level) override {
+    void Visit(__unused const char* name, const char* url, int) override {
         if (!url || url::IsAbsolute(url)) {
             return;
         }

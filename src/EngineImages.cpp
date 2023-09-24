@@ -83,10 +83,10 @@ class EngineImages : public EngineBase {
 
     ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
-    PageText ExtractPageText(__unused int pageNo) override {
+    PageText ExtractPageText(int) override {
         return {};
     }
-    bool HasClipOptimizations(__unused int pageNo) override {
+    bool HasClipOptimizations(int) override {
         return false;
     }
 
