@@ -2750,44 +2750,14 @@ static void SaveCurrentFileAs(MainWindow* win) {
 
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    bool canConvertToTXT =
-        engine && !engine->IsImageCollection() && win->CurrentTab()->GetEngineType() != kindEngineTxt;
-    bool canConvertToPDF = engine && win->CurrentTab()->GetEngineType() != kindEngineMupdf;
-#ifndef DEBUG
-    // not ready for document types other than PS and image collections
-    if (canConvertToPDF && win->CurrentTab()->GetEngineType() != kindEnginePostScript && !engine->IsImageCollection()) {
-        canConvertToPDF = false;
-    }
-#endif
-#ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    // Can't save a document's content as plain text if text copying isn't allowed
-    if (engine && !engine->AllowsCopyingText()) {
-        canConvertToTXT = false;
-    }
-    // don't allow converting to PDF when printing isn't allowed
-    if (engine && !engine->AllowsPrinting()) {
-        canConvertToPDF = false;
-    }
-#endif
-    CrashIf(canConvertToTXT &&
-            (!engine || engine->IsImageCollection() || kindEngineTxt == win->CurrentTab()->GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || kindEngineMupdf == win->CurrentTab()->GetEngineType()));
 
-    const WCHAR* defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
+    TempWstr defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::WStr fileFilter(256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
         fileFilter.AppendFmt(L"\1*%s\1", defExt);
-    }
-    if (canConvertToTXT) {
-        fileFilter.Append(_TR("Text documents"));
-        fileFilter.Append(L"\1*.txt\1");
-    }
-    if (canConvertToPDF) {
-        fileFilter.Append(_TR("PDF documents"));
-        fileFilter.Append(L"\1*.pdf\1");
     }
     fileFilter.Append(_TR("All files"));
     fileFilter.Append(L"\1*.*\1");
@@ -2837,49 +2807,15 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 
     char* realDstFileName = ToUtf8Temp(dstFileName);
-    bool convertToTXT = canConvertToTXT && str::EndsWithI(realDstFileName, ".txt");
-    bool convertToPDF = canConvertToPDF && str::EndsWithI(realDstFileName, ".pdf");
 
     // Make sure that the file has a valid ending
-    if (!str::EndsWithI(dstFileName, defExt) && !convertToTXT && !convertToPDF) {
-        if (canConvertToTXT && 2 == ofn.nFilterIndex) {
-            defExt = L".txt";
-            convertToTXT = true;
-        } else if (canConvertToPDF && (canConvertToTXT ? 3 : 2) == (int)ofn.nFilterIndex) {
-            defExt = L".pdf";
-            convertToPDF = true;
-        }
-        // TODO: leaks
-        realDstFileName = str::Format("%s%s", dstFileName, defExt);
+    if (!str::EndsWithI(dstFileName, defExt)) {
+        realDstFileName = str::FormatTemp("%s%s", dstFileName, defExt);
     }
 
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
-    if (convertToTXT) {
-        str::WStr text(1024);
-        for (int pageNo = 1; pageNo <= ctrl->PageCount(); pageNo++) {
-            PageText pageText = engine->ExtractPageText(pageNo);
-            if (pageText.text != nullptr) {
-                WCHAR* tmp = str::Replace(pageText.text, L"\n", L"\r\n");
-                text.AppendAndFree(tmp);
-            }
-            FreePageText(&pageText);
-        }
-
-        char* textA = ToUtf8Temp(text.LendData());
-        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textA);
-        ByteSlice data = textUTF8BOM;
-        ok = file::WriteFile(realDstFileName, data);
-    } else if (convertToPDF) {
-        // Convert the file into a PDF one
-        char* producerName = str::JoinTemp(kAppName, " ", CURR_VERSION_STRA);
-        PdfCreator::SetProducerName(producerName);
-        ok = engine->SaveFileAsPDF(realDstFileName);
-        if (!ok && gIsDebugBuild) {
-            // rendering includes all page annotations
-            ok = PdfCreator::RenderToFile(realDstFileName, engine);
-        }
-    } else if (!file::Exists(srcFileName) && engine) {
+    if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
         ok = engine->SaveFileAs(realDstFileName);
     } else if (EngineSupportsAnnotations(engine)) {
@@ -2912,14 +2848,9 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 
     auto path = win->ctrl->GetFilePath();
-    if (ok && IsUntrustedFile(path, gPluginURL) && !convertToTXT) {
+    if (ok && IsUntrustedFile(path, gPluginURL)) {
         file::SetZoneIdentifier(realDstFileName);
     }
-#if 0
-    if (realDstFileName != dstFileName) {
-        free(realDstFileName);
-    }
-#endif
 }
 
 static void ShowCurrentFileInFolder(MainWindow* win) {

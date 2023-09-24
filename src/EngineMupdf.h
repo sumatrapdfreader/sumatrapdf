@@ -53,7 +53,6 @@ class EngineMupdf : public EngineBase {
 
     ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
-    bool SaveFileAsPDF(const char* pdfFileName) override;
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;

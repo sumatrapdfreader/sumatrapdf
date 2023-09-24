@@ -298,10 +298,6 @@ class EnginePs : public EngineBase {
         return file::Copy(dstPath, srcPath, false);
     }
 
-    bool SaveFileAsPDF(const char* pdfFileName) override {
-        return pdfEngine->SaveFileAs(pdfFileName);
-    }
-
     PageText ExtractPageText(int pageNo) override {
         return pdfEngine->ExtractPageText(pageNo);
     }

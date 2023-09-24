@@ -430,8 +430,6 @@ class EngineBase {
 
     // saves a copy of the current file under a different name (overwriting an existing file)
     virtual bool SaveFileAs(const char* copyFileName) = 0;
-    // converts the current file to a PDF file and saves it (overwriting an existing file),
-    virtual bool SaveFileAsPDF(const char* pdfFileName);
 
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)

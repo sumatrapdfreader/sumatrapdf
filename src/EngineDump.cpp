@@ -463,17 +463,6 @@ static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoo
         return file::WriteFile(txtFilePath, textUTF8BOM);
     }
 
-    if (str::EndsWithI(renderPath, ".pdf")) {
-        if (silent) {
-            return false;
-        }
-        AutoFreeStr pdfFilePath(str::Format(renderPath, 0));
-        if (engine->SaveFileAsPDF(pdfFilePath)) {
-            return true;
-        }
-        return PdfCreator::RenderToFile(pdfFilePath, engine);
-    }
-
     bool success = true;
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderPageArgs args(pageNo, zoom, 0);

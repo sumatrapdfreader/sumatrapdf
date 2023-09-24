@@ -494,8 +494,6 @@ class EngineImage : public EngineImages {
 
     char* GetProperty(DocumentProperty prop) override;
 
-    bool SaveFileAsPDF(const char* pdfFileName) override;
-
     static EngineBase* CreateFromFile(const char* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
@@ -734,32 +732,6 @@ RectF EngineImage::LoadMediabox(int pageNo) {
     return mbox;
 }
 
-bool EngineImage::SaveFileAsPDF(const char* pdfFileName) {
-    bool ok = true;
-    PdfCreator* c = new PdfCreator();
-    auto dpi = GetFileDPI();
-    if (FilePath()) {
-        ByteSlice data = file::ReadFile(FilePath());
-        ok = c->AddPageFromImageData(data, dpi);
-        data.Free();
-    } else {
-        ByteSlice data = GetDataFromStream(fileStream, nullptr);
-        ok = c->AddPageFromImageData(data, dpi);
-        data.Free();
-    }
-    for (int i = 2; i <= PageCount() && ok; i++) {
-        ImagePage* page = GetPage(i);
-        ok = page && c->AddPageFromGdiplusBitmap(page->bmp, dpi);
-        DropPage(page, false);
-    }
-    if (ok) {
-        c->CopyProperties(this);
-        ok = c->SaveToFile(pdfFileName);
-    }
-    delete c;
-    return ok;
-}
-
 EngineBase* EngineImage::CreateFromFile(const char* path) {
     logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
@@ -843,8 +815,6 @@ class EngineImageDir : public EngineImages {
     int GetPageByLabel(const char* label) const override;
 
     TocTree* GetToc() override;
-
-    bool SaveFileAsPDF(const char* pdfFileName) override;
 
     static EngineBase* CreateFromFile(const char* fileName);
 
@@ -985,22 +955,6 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName) {
-    bool ok = true;
-    PdfCreator* c = new PdfCreator();
-    for (int i = 1; i <= PageCount() && ok; i++) {
-        char* path = pageFileNames.at(i - 1);
-        ByteSlice data = file::ReadFile(path);
-        ok = c->AddPageFromImageData(data, GetFileDPI());
-        str::Free(data);
-    }
-    if (ok) {
-        ok = c->SaveToFile(pdfFileName);
-    }
-    delete c;
-    return ok;
-}
-
 EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
     CrashIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
@@ -1132,8 +1086,6 @@ class EngineCbx : public EngineImages {
     ~EngineCbx() override;
 
     EngineBase* Clone() override;
-
-    bool SaveFileAsPDF(const char* pdfFileName) override;
 
     char* GetProperty(DocumentProperty prop) override;
 
@@ -1329,22 +1281,6 @@ ByteSlice EngineCbx::GetImageData(int pageNo) {
     size_t fileId = files[pageNo - 1]->fileId;
     ByteSlice d = cbxFile->GetFileDataById(fileId);
     return d;
-}
-
-bool EngineCbx::SaveFileAsPDF(const char* pdfFileName) {
-    bool ok = true;
-    PdfCreator* c = new PdfCreator();
-    for (int i = 1; i <= PageCount() && ok; i++) {
-        ByteSlice img = GetImageData(i);
-        ok = c->AddPageFromImageData(img, GetFileDPI());
-        img.Free();
-    }
-    if (ok) {
-        c->CopyProperties(this);
-        ok = c->SaveToFile(pdfFileName);
-    }
-    delete c;
-    return ok;
 }
 
 char* EngineCbx::GetProperty(DocumentProperty prop) {

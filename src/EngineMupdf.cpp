@@ -2851,10 +2851,6 @@ RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
     return GetPageImage(pageNo, r, imageID);
 }
 
-bool EngineMupdf::SaveFileAsPDF(const char* pdfFileName) {
-    return SaveFileAs(pdfFileName);
-}
-
 bool EngineMupdf::BenchLoadPage(int pageNo) {
     return GetFzPageInfo(pageNo, false) != nullptr;
 }
