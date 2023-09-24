@@ -146,7 +146,6 @@ func splitIntoPerLangFiles(d []byte) {
 			}
 			a = append(a, trans)
 		}
-		// TODO: sort so that untranslated strings are at start
 		s := strings.Join(a, "\n")
 		path := filepath.Join(translationsDir, lang+".txt")
 		writeFileMust(path, []byte(s))
@@ -167,12 +166,20 @@ func splitIntoPerLangFiles(d []byte) {
 		"AppTranslator: SumatraPDF",
 		"AppTranslator: SumatraPDF",
 	}
+	// sort languages for better diffs of translations-good.txt
+	sortedLangs := []string{}
+	for lang := range perLang {
+		if langsToSkip[lang] {
+			continue
+		}
+		sortedLangs = append(sortedLangs, lang)
+	}
+	sort.Strings(sortedLangs)
+
 	for _, s := range allStrings {
 		a = append(a, ":"+s)
-		for lang, m := range perLang {
-			if langsToSkip[lang] {
-				continue
-			}
+		for _, lang := range sortedLangs {
+			m := perLang[lang]
 			trans := m[s]
 			panicIf(strings.Contains(trans, "\n"))
 			if len(trans) == 0 {
