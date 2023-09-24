@@ -362,7 +362,12 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         model->strings.Append(s.Get());
     }
 
+    auto topIdx = ListBoxGetTopIndex(ew->listBox->hwnd);
     ew->listBox->SetModel(model);
+    topIdx = std::min(ew->listBox->GetCount() - 1, topIdx);
+    if (topIdx >= 0) {
+        ListBoxSetTopIndex(ew->listBox->hwnd, topIdx);
+    }
     EnableSaveIfAnnotationsChanged(ew);
 }
 

@@ -112,6 +112,18 @@ void ListBox_AppendString_NoSort(HWND hwnd, const WCHAR* txt) {
     ListBox_InsertString(hwnd, -1, txt);
 }
 
+// https://learn.microsoft.com/en-us/windows/win32/controls/lb-gettopindex
+int ListBoxGetTopIndex(HWND hwnd) {
+    auto res = ListBox_GetTopIndex(hwnd);
+    return res;
+}
+
+// https://learn.microsoft.com/en-us/windows/win32/controls/lb-settopindex
+bool ListBoxSetTopIndex(HWND hwnd, int idx) {
+    auto res = ListBox_SetTopIndex(hwnd, idx);
+    return res != LB_ERR;
+}
+
 void InitAllCommonControls() {
     INITCOMMONCONTROLSEX cex{};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);

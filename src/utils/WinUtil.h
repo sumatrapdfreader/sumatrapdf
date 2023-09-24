@@ -20,6 +20,8 @@ int EditIdealDy(HWND, bool hasBorder, int lines = 1);
 void EditImplementCtrlBack(HWND hwnd);
 
 void ListBox_AppendString_NoSort(HWND, const WCHAR*);
+int ListBoxGetTopIndex(HWND);
+bool ListBoxSetTopIndex(HWND, int);
 
 bool IsValidHandle(HANDLE);
 bool SafeCloseHandle(HANDLE*);
