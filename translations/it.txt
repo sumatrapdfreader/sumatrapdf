@@ -1,5 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Edit %s Annotation
+Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
 :&About
 Info progr&amma
 :&Actual Size
@@ -294,6 +294,8 @@ Download versione a 64bit
 Esci da schermo pieno
 :EPUB ebooks
 Documenti EPUB
+:Edit %s Annotation
+Modifica annotazione %s
 :Edit Annotations
 Modifica annotazioni
 :Enter password

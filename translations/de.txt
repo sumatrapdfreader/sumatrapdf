@@ -1,5 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Edit %s Annotation
+%s Anmerkung.
 :&About
 &Über
 :&Actual Size
@@ -294,6 +294,8 @@ Nicht installieren
 Vollbild verlassen
 :EPUB ebooks
 EPUB-E-Bücher
+:Edit %s Annotation
+%s Anmerkung bearbeiten
 :Edit Annotations
 Anmerkungen bearbeiten
 :Enter password
