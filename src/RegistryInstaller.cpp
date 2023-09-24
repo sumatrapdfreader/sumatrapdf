@@ -515,11 +515,11 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     char* buf = LoggedReadRegStrTemp(hkey, kRegExplorerPdfExt, "ProgId");
     if (str::Eq(buf, kAppName)) {
-        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "ProgId");
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt "ProgId", true);
     }
     buf = LoggedReadRegStrTemp(hkey, kRegExplorerPdfExt, "Application");
     if (str::EqI(buf, kExeName)) {
-        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt, "Application");
+        LoggedDeleteRegKey(hkey, kRegExplorerPdfExt "Application", true);
     }
     buf = LoggedReadRegStrTemp(hkey, kRegExplorerPdfExt "\\UserChoice", "ProgId");
     if (str::Eq(buf, kAppName)) {
