@@ -25,7 +25,7 @@ constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;
 constexpr UINT kUwmPaintAgain = (WM_USER + 101);
 
-void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr) {
+void _uploadDebugReportIfFunc(bool, const char*) {
     // no-op implementation to satisfy SubmitBugReport()
 }
 

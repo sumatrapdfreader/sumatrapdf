@@ -86,7 +86,7 @@ static void RemoveInstalledFiles() {
     logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
-static DWORD WINAPI UninstallerThread(__unused LPVOID data) {
+static DWORD WINAPI UninstallerThread(void*) {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory

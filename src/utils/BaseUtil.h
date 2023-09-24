@@ -256,7 +256,7 @@ inline void CrashIfFunc(bool cond) {
     } while (0)
 
 // must be defined in the app. can be no-op to disable this functionality
-void _uploadDebugReportIfFunc(bool cond, __unused const char* condStr);
+void _uploadDebugReportIfFunc(bool cond, const char*);
 
 #define ReportIf(cond)                         \
     do {                                       \

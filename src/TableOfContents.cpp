@@ -850,7 +850,7 @@ LRESULT TocTreeKeyDown2(TreeKeyDownEvent* ev) {
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void TocTreeMsgFilter(__unused WndEvent* ev) {
+static void TocTreeMsgFilter(WndEvent*) {
     switch (msg) {
         case WM_SIZE:
         case WM_HSCROLL:

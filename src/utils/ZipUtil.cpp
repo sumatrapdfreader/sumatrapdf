@@ -46,7 +46,7 @@ class FileWriteStream : public ISequentialStream {
         return newCount;
     }
     // ISequentialStream
-    IFACEMETHODIMP Read(__unused void* buffer, __unused ULONG size, __unused ULONG* read) {
+    IFACEMETHODIMP Read(void*, ULONG, ULONG*) {
         return E_NOTIMPL;
     }
     IFACEMETHODIMP Write(const void* data, ULONG size, ULONG* written) {

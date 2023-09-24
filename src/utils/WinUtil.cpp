@@ -1150,7 +1150,7 @@ Rect GetFullscreenRect(HWND hwnd) {
     return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
-static BOOL CALLBACK GetMonitorRectProc(__unused HMONITOR hMonitor, __unused HDC hdc, LPRECT rcMonitor, LPARAM data) {
+static BOOL CALLBACK GetMonitorRectProc(HMONITOR, HDC, LPRECT rcMonitor, LPARAM data) {
     Rect* rcAll = (Rect*)data;
     *rcAll = rcAll->Union(ToRect(*rcMonitor));
     return TRUE;
@@ -2272,9 +2272,7 @@ ByteSlice LoadDataResource(int resId) {
     return {(u8*)s, size};
 }
 
-static HDDEDATA CALLBACK DdeCallback(__unused UINT uType, __unused UINT uFmt, __unused HCONV hconv, __unused HSZ hsz1,
-                                     __unused HSZ hsz2, __unused HDDEDATA hdata, __unused ULONG_PTR dwData1,
-                                     __unused ULONG_PTR dwData2) {
+static HDDEDATA CALLBACK DdeCallback(UINT, UINT, HCONV, HSZ, HSZ, HDDEDATA, ULONG_PTR, ULONG_PTR) {
     return nullptr;
 }
 

@@ -227,7 +227,7 @@ void RemoveAppShortcuts() {
     }
 }
 
-static DWORD WINAPI InstallerThread(__unused LPVOID data) {
+static DWORD WINAPI InstallerThread(void*) {
     gWnd->failed = true;
     bool ok;
 

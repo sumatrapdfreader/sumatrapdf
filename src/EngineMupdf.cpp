@@ -316,7 +316,7 @@ struct istream_filter {
     u8 buf[4096];
 };
 
-extern "C" int next_istream(fz_context* ctx, fz_stream* stm, __unused size_t max) {
+extern "C" int next_istream(fz_context* ctx, fz_stream* stm, size_t) {
     istream_filter* state = (istream_filter*)stm->state;
     ULONG cbRead = sizeof(state->buf);
     HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);
@@ -1556,8 +1556,7 @@ class PasswordCloner : public PasswordUI {
         this->cryptKey = cryptKey;
     }
 
-    char* GetPassword(__unused const char* fileName, __unused u8* fileDigest, u8 decryptionKeyOut[32],
-                      bool* saveKey) override {
+    char* GetPassword(const char*, u8*, u8 decryptionKeyOut[32], bool* saveKey) override {
         memcpy(decryptionKeyOut, cryptKey, 32);
         *saveKey = true;
         return nullptr;

@@ -20,7 +20,7 @@ struct PluginStartData {
     const char* fileOriginUrl;
 };
 
-void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+void _uploadDebugReportIfFunc(bool, const char*) {
     // no-op implementation to satisfy SubmitBugReport()
 }
 
@@ -99,7 +99,7 @@ static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
     LocalFree(argsArr);
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR lpCmdLineA, int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     StrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
 

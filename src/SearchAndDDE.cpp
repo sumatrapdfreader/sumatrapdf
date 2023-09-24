@@ -835,7 +835,7 @@ DDE command: jump to a page in an already opened document.
 
 eg: [GoToPage("c:\file.pdf",37)]
 */
-static const char* HandlePageCmd(__unused HWND hwnd, const char* cmd, DDEACK& ack) {
+static const char* HandlePageCmd(HWND, const char* cmd, DDEACK& ack) {
     AutoFreeStr pdfFile;
     uint page = 0;
     const char* next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
@@ -1005,13 +1005,13 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, __unused LPARAM lp) {
+LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM) {
     // Respond with another WM_DDE_TERMINATE message
     PostMessageW((HWND)wp, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }
 
-LRESULT OnCopyData(__unused HWND hwnd, WPARAM wp, LPARAM lp) {
+LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
     COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
     if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wp) {
         return FALSE;

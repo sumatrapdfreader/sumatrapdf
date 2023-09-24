@@ -1475,7 +1475,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         return html.StealData();
     }
 
-    void Visit(__unused const char* name, const char* url, int) override {
+    void Visit(const char*, const char* url, int) override {
         if (!url || url::IsAbsolute(url)) {
             return;
         }

@@ -111,7 +111,7 @@ class TextRenderGdiplus : public ITextRender {
 
     void SetFont(CachedFont* font) override;
     void SetTextColor(Gdiplus::Color col) override;
-    void SetTextBgColor(__unused Gdiplus::Color col) override {
+    void SetTextBgColor(Gdiplus::Color) override {
     }
 
     float GetCurrFontLineSpacing() override;

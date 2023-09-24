@@ -312,7 +312,7 @@ static void RunManualChecks() {
     }
 }
 
-static DWORD WINAPI FileWatcherThread(__unused void* param) {
+static DWORD WINAPI FileWatcherThread(void*) {
     HANDLE handles[1];
     // must be alertable to receive ReadDirectoryChangesW() callbacks and APCs
     BOOL alertable = TRUE;
