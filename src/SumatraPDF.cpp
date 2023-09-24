@@ -1778,7 +1778,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyLoad) {
     // happens when opening 3 files via "Open With"
     // the first file is loaded via cmd-line arg, the rest
     // via DDE Open command.
-    CrashIf(currTab->watcher);
+    ReportIf(currTab->watcher);
 
     if (gGlobalPrefs->reloadModifiedDocuments) {
         currTab->watcher = FileWatcherSubscribe(path, [currTab] { scheduleReloadTab(currTab); });
@@ -2231,10 +2231,12 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         currentTab->selectedAnnotation = nullptr;
     }
     if (deleteModel) {
-        delete currentTab->ctrl;
-        currentTab->ctrl = nullptr;
-        FileWatcherUnsubscribe(win->CurrentTab()->watcher);
-        win->CurrentTab()->watcher = nullptr;
+        if (currentTab) {
+            delete currentTab->ctrl;
+            currentTab->ctrl = nullptr;
+            FileWatcherUnsubscribe(currentTab->watcher);
+            currentTab->watcher = nullptr;
+        }
     } else {
         win->currentTabTemp = nullptr;
     }
