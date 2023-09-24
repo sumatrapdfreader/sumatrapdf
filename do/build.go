@@ -308,7 +308,7 @@ func createManifestMust() {
 		"SumatraPDF.pdb.lzsa",
 	}
 	var dirs []string
-	// in daily build, there's no 32bit / arm64 build
+	// 32bit / arm64 are only in daily build
 	for _, dir := range []string{rel32Dir, rel64Dir, relArm64Dir} {
 		if pathExists(dir) {
 			dirs = append(dirs, dir)
