@@ -2750,6 +2750,10 @@ static void SaveCurrentFileAs(MainWindow* win) {
 
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (EngineHasUnsavedAnnotations(engine)) {
+        SaveAnnotationsToMaybeNewPdfFile(win->CurrentTab());
+        return;
+    }
 
     TempWstr defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
     // Prepare the file filters (use \1 instead of \0 so that the
