@@ -29,7 +29,7 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
-SelectionOnPage::SelectionOnPage(int pageNo, RectF* rect) {
+SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect) {
     this->pageNo = pageNo;
     if (rect) {
         this->rect = *rect;
