@@ -2408,7 +2408,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     constexpr int kBtnIdDiscard = 100;
     constexpr int kBtnIdSaveToExisting = 101;
     constexpr int kBtnIdSaveToNew = 102;
-    //constexpr int kBtnIdCancel = 103;
+    // constexpr int kBtnIdCancel = 103;
     TASKDIALOGCONFIG dialogConfig{};
     TASKDIALOG_BUTTON buttons[4];
 

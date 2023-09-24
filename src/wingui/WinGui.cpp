@@ -3139,7 +3139,7 @@ TreeItemState TreeView::GetItemState(TreeItem ti) {
 // sets pt to screen position (for context menu coordinates)
 TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
     TreeView* treeView = (TreeView*)args->w;
-    //TreeModel* tm = treeView->treeModel;
+    // TreeModel* tm = treeView->treeModel;
     HWND hwnd = treeView->hwnd;
 
     TreeItem ti;
@@ -3677,7 +3677,7 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 static int nWmMouseMoveCount = 0;
 
 LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    //TCITEMW* tcs = nullptr;
+    // TCITEMW* tcs = nullptr;
 
     Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
     if (WM_MOUSELEAVE == msg) {
@@ -3700,8 +3700,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         canClose = tabState.tabInfo && tabState.tabInfo->canClose;
         overClose = tabState.overClose && canClose;
         lastMousePos = mousePos;
-        //const char* msgName = WinMsgName(msg);
-        // logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
+        // const char* msgName = WinMsgName(msg);
+        //  logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
     }
 
     if (draggingTab && msg == WM_MOUSEMOVE) {
@@ -4260,7 +4260,7 @@ void DrawCloseButton(const DrawCloseButtonArgs& args) {
 }
 
 void DrawCloseButton2(const DrawCloseButtonArgs& args) {
-    //bool isHover = args.isHover;
+    // bool isHover = args.isHover;
     HDC hdc = args.hdc;
     const Rect& r = args.r;
     COLORREF lineCol = args.colX;
