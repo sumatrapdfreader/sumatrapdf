@@ -4583,8 +4583,7 @@ void ClearHistory(MainWindow* win) {
 
     SaveSettings();
 
-    // TODO: translate this message
-    const char* msg = "Clearing history...";
+    const char* msg = _TRA("Clearing history...");
     auto notifWnd = ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 
     DeleteThumbnailCacheDirectory();
@@ -4594,8 +4593,7 @@ void ClearHistory(MainWindow* win) {
     RemoveNotification(notifWnd);
     ::InvalidateRect(win->hwndCanvas, nullptr, true);
     ::UpdateWindow(win->hwndCanvas);
-    // TODO: translate this message
-    char* msg2 = str::Format("Cleared history of %d files, deleted thumbnails.", nFiles);
+    char* msg2 = str::Format(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
     str::Free(msg2);
 
@@ -4611,8 +4609,7 @@ void ClearHistory(MainWindow* win) {
             RemoveNotification(notifWnd);
             ::InvalidateRect(win->hwndCanvas, nullptr, true);
             ::UpdateWindow(win->hwndCanvas);
-            // TODO: translate this message
-            char* msg = str::Format("Cleared history of %d files, deleted thumbnails.", nFiles);
+            char* msg2 = str::Format(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
             ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
             str::Free(msg);
         });

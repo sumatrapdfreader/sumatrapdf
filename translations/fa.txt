@@ -15,6 +15,8 @@
 :&Text
 :&Translate With Google
 :&Underline
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Command Palette
 :Couldn't get printer name
 :Couldn't uninstall Sumatra search filter

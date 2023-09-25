@@ -57,6 +57,8 @@
 :Cannot start inverse search command. Please check the command line in the settings.
 :Checking for update...
 :Circle
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Other Tabs
 :Close Tabs To The Right
 :Collapse All

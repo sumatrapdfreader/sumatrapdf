@@ -38,6 +38,8 @@
 :&Yes
 :(of %d)
 :(page %s)
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Copy File Path
 :Delete Annotation
 :E&xit

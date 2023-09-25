@@ -1,3 +1,5 @@
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 %s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 

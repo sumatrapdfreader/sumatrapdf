@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a61d8046ab5a5d814283974dbb6ba53dc07a5954
+3c929c629b7d4a196a20c2cfdfb519625e998710
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
 de:%s Anmerkung.
@@ -5740,6 +5740,8 @@ tr:Çember
 tw:圓
 uk:Коло
 vn:Vòng tròn
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close
 am:Փակել
 ar:إغلاق

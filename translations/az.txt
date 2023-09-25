@@ -12,6 +12,8 @@
 :&Stamp
 :&Strike Out
 :&Underline
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Other Tabs
 :Close Tabs To The Right
 :Command Palette

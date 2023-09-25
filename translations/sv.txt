@@ -20,6 +20,8 @@
 :Annotations
 :Author: %s
 :Border: %d
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Tabs To The Right
 :Collapse All
 :Command Palette

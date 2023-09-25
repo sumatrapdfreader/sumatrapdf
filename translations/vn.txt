@@ -1,4 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Other Tabs
 :Close Tabs To The Right
 :Copy File Path

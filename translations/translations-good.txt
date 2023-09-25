@@ -4589,6 +4589,8 @@ tr:Çember
 tw:圓
 uk:Коло
 vn:Vòng tròn
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close
 am:Փակել
 ar:إغلاق

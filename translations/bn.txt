@@ -41,6 +41,8 @@
 :(of %d)
 :(page %s)
 :Checking for update...
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Other Tabs
 :Close Tabs To The Right
 :Command Palette

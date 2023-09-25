@@ -22,6 +22,8 @@
 :&Translate With Google
 :Annotations
 :Border: %d
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Other Tabs
 :Close Tabs To The Right
 :Collapse All

@@ -21,6 +21,8 @@
 :Author: %s
 :Border: %d
 :Checking for update...
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close Other Tabs
 :Close Tabs To The Right
 :Command Palette

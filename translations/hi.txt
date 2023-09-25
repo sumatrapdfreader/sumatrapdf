@@ -19,6 +19,8 @@
 :&Translate With Google
 :&Underline
 :&Window
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Copy File Path
 :Delete Annotation
 :Edit %s Annotation

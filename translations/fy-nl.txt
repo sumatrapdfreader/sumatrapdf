@@ -60,6 +60,8 @@
 :Can't connect to the Internet (error %#x).
 :Checking for update...
 :Circle
+:Cleared history of %d files, deleted thumbnails.
+:Clearing history...
 :Close
 :Close Other Tabs
 :Close Tabs To The Right
