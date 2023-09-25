@@ -40,6 +40,7 @@ struct WindowTab {
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
     TocTree* currToc = nullptr; // not owned by us
     EditAnnotationsWindow* editAnnotsWindow = nullptr;
+    Rect lastEditAnnotsWindowPos = {};
 
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;

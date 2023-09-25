@@ -44,8 +44,6 @@ using std::placeholders::_1;
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 
-static Rect gLastEditWindowPos = {};
-
 // clang-format off
 static const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
 static const char *gSoundIcons = "Speaker\0Mic\0";
@@ -324,7 +322,7 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
 }
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
-    gLastEditWindowPos = WindowRect(hwnd);
+    tab->lastEditAnnotsWindowPos = WindowRect(hwnd);
     delete mainLayout;
 }
 
@@ -1394,8 +1392,9 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
 
     UpdateAnnotationsList(ew);
 
+    Rect lastPos = tab->lastEditAnnotsWindowPos;
     // size our editor window to be the same height as main window
-    int minDy = gLastEditWindowPos.dy;
+    int minDy = lastPos.dy;
     if (minDy == 0) {
         minDy = 720;
         // TODO: this is slightly less that wanted
@@ -1412,13 +1411,13 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
         ew->listBox->idealSizeLines = 14;
     }
 
-    if (gLastEditWindowPos.IsEmpty()) {
+    if (lastPos.IsEmpty()) {
         LayoutAndSizeToContent(ew->mainLayout, 520, minDy, ew->hwnd);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     } else {
-        int dx = gLastEditWindowPos.dx;
+        int dx = lastPos.dx;
         LayoutAndSizeToContent(ew->mainLayout, dx, minDy, ew->hwnd);
-        Rect r = ShiftRectToWorkArea(gLastEditWindowPos, ew->hwnd, true);
+        Rect r = ShiftRectToWorkArea(lastPos, ew->hwnd, true);
         SetWindowPos(ew->hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
     }
     Annotation* annot = ew->tab->selectedAnnotation;
