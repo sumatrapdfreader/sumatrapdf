@@ -826,6 +826,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
             ew->editContents->SetFocus();
             ew->editContents->SetCursorPositionAtEnd();
         }
+    } else {
+        ew->listBox->SetFocus();
     }
 
     // TODO: get from client size
