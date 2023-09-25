@@ -554,14 +554,6 @@ uint MbRtlReadingMaybe() {
     return 0;
 }
 
-void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
-    uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
-    if (!title) {
-        title = _TR("Warning");
-    }
-    MessageBoxW(hwnd, msg, title, type);
-}
-
 void MessageBoxWarning(HWND hwnd, const char* msg, const char* title) {
     uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
     if (!title) {
@@ -2812,24 +2804,24 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
 
-    char* realDstFileName = ToUtf8Temp(dstFileName);
+    TempStr realDstFileName = ToUtf8Temp(dstFileName);
 
-    // Make sure that the file has a valid ending
+    // Make sure that the file has a valid extension
     if (!str::EndsWithI(dstFileName, defExt)) {
-        realDstFileName = str::FormatTemp("%s%s", dstFileName, defExt);
+        TempWstr s = str::JoinTemp(dstFileName, defExt);
+        realDstFileName = ToUtf8(dstFileName);
     }
 
-    AutoFreeWstr errorMsg;
-    // Extract all text when saving as a plain text file
+    logf("Saving '%s' to '%s'\n", srcFileName, realDstFileName);
+
+    // TODO: engine->SaveFileA() is stupid
+    // Replace with EngineGetDocumentData() and save that if not empty
+    TempStr errorMsg = nullptr;
     if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(realDstFileName);
-    } else if (EngineSupportsAnnotations(engine)) {
-        // ... as well as files containing annotations ...
+        logf("calling engine->SaveFileAs(%s)\n", realDstFileName);
         ok = engine->SaveFileAs(realDstFileName);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
-        // ... else just copy the file
-        WCHAR* msgBuf = nullptr;
         ok = file::Copy(realDstFileName, srcFileName, false);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
@@ -2838,22 +2830,20 @@ static void SaveCurrentFileAs(MainWindow* win) {
             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop)) {
                 file::SetAttributes(realDstFileName, attributes & ~attributesToDrop);
             }
-        } else if (FormatMessage(
-                       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                       nullptr, GetLastError(), 0, (LPWSTR)&msgBuf, 0, nullptr)) {
-            errorMsg = str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf);
-            LocalFree(msgBuf);
+        } else {
+            TempStr s = GetLastErrorStrTemp();
+            if (str::Len(s) > 0) {
+                errorMsg = str::FormatTemp("%s\n\n%s", _TRA("Failed to save a file"), s);
+            }
         }
     }
     if (!ok) {
-        const WCHAR* msg = _TR("Failed to save a file");
-        if (errorMsg) {
-            msg = errorMsg.Get();
-        }
+        TempStr msg = (errorMsg != nullptr) ? errorMsg : (TempStr)_TRA("Failed to save a file");
+        logf("SaveCurrentFileAs() failed with '%s'\n", msg);
         MessageBoxWarning(win->hwndFrame, msg);
     }
 
-    auto path = win->ctrl->GetFilePath();
+    auto path = ctrl->GetFilePath();
     if (ok && IsUntrustedFile(path, gPluginURL)) {
         file::SetZoneIdentifier(realDstFileName);
     }

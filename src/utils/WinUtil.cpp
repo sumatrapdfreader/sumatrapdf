@@ -301,49 +301,41 @@ bool IsProcessAndOsArchSame() {
     return IsProcess64() == IsOs64();
 }
 
-void LogLastError(DWORD err) {
-    // allow to set a breakpoint in release builds
-    if (0 == err) {
-        err = GetLastError();
+TempStr GetLastErrorStrTemp(DWORD err) {
+    err = (err == 0) ? GetLastError() : err;
+    if (err == 0) {
+        return str::DupTemp("");
     }
-
     if (err == ERROR_INTERNET_EXTENDED_ERROR) {
         char buf[4096] = {0};
         DWORD bufSize = dimof(buf);
         // TODO: ignoring a case where buffer is too small. 4 kB should be enough for everybody
         InternetGetLastResponseInfoA(&err, buf, &bufSize);
         buf[4095] = 0;
-        logf("InternetGetLastResponseInfoA: %s\n", buf);
-        return;
+        return str::DupTemp(buf);
     }
-
     char* msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
-    DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
-    if (!res || !msgBuf) {
-        return;
+    DWORD ferr = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
+    if (!ferr || !msgBuf) {
+        return str::DupTemp("");
     }
-    logf("LogLastError: %s\n", msgBuf);
+    auto res = str::DupTemp(msgBuf);
     LocalFree(msgBuf);
+    return res;
+}
+
+void LogLastError(DWORD err) {
+    TempStr msg = GetLastErrorStrTemp(err);
+    if (str::Len(msg) > 0) {
+        logf("LogLastError: %s\n", msg);
+    }
 }
 
 void DbgOutLastError(DWORD err) {
-    if (0 == err) {
-        err = GetLastError();
-    }
-    if (0 == err) {
-        return;
-    }
-    char* msgBuf = nullptr;
-    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-    DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
-    DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
-    if (!res || !msgBuf) {
-        return;
-    }
-    OutputDebugStringA(msgBuf);
-    LocalFree(msgBuf);
+    TempStr msg = GetLastErrorStrTemp(err);
+    OutputDebugStringA(msg);
 }
 
 // return true if a given registry key (path) exists

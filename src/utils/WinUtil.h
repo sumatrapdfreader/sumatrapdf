@@ -39,6 +39,7 @@ bool GetOsVersion(OSVERSIONINFOEX& ver);
 TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver);
 TempStr GetWindowsVerTemp();
 
+TempStr GetLastErrorStrTemp(DWORD err = 0);
 void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);
 

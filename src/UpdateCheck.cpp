@@ -456,8 +456,8 @@ void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
             if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
                 // notify the user about network error during a manual update check
-                AutoFreeWstr msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), err));
-                MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
+                TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x)."), err);
+                MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
             }
         });
     });

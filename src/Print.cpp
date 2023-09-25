@@ -799,7 +799,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     HRESULT res = PrintDlgEx(&pdex);
     if (res != S_OK) {
         logf("OnMenuPrint: PrintDlgEx failed\n");
-        MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+        MessageBoxWarning(win->hwndFrame, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
     }
     auto action = pdex.dwResultAction;
     if (action != PD_RESULT_PRINT) {
@@ -808,7 +808,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (!pdex.hDevNames) {
-        MessageBoxWarning(win->hwndFrame, _TR("Couldn't get printer name"), _TR("Printing problem."));
+        MessageBoxWarning(win->hwndFrame, _TRA("Couldn't get printer name"), _TRA("Printing problem."));
         goto Exit;
     }
 
@@ -825,7 +825,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (!printer) {
-        MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+        MessageBoxWarning(win->hwndFrame, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
         goto Exit;
     }
 

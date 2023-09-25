@@ -180,7 +180,6 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
                                                MainWindow* win);
 
 uint MbRtlReadingMaybe();
-void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
 void MessageBoxWarning(HWND hwnd, const char* msg, const char* title = nullptr);
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
 bool DocumentPathExists(const char* path);
