@@ -1547,7 +1547,7 @@ void MenuSetText(HMENU m, int id, const WCHAR* s) {
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
     if (!ok) {
         const char* tmp = s ? ToUtf8Temp(s) : "(null)";
-        logf("SetText(): id=%d, s='%s'\n", id, tmp);
+        logf("MenuSetText(): id=%d, s='%s'\n", id, tmp);
         LogLastError();
         ReportIf(true);
     }

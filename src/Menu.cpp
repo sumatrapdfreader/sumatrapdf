@@ -1076,7 +1076,7 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
     ctx->canSendEmail = CanSendAsEmailAttachment(tab);
 
     DisplayModel* dm = tab->AsFixed();
-    if (dm) {
+    if (dm && ctx->supportsAnnotations) {
         int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
         if (pageNoUnderCursor > 0) {
             ctx->isCursorOnPage = true;
