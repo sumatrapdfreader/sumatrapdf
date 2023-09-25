@@ -33,7 +33,7 @@ quits.
 
 // maximum number of files to remember in total
 // (to keep the settings file within reasonable bounds)
-#define FILE_HISTORY_MAX_FILES 1000
+constexpr size_t kFileHistoryMaxFiles = 1000;
 
 // sorts the most often used files first
 static int cmpOpenCount(const void* a, const void* b) {
@@ -208,8 +208,9 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
     if (alwaysUseDefaultState) {
         Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
-        if (frequencyList.size() > kFileHistoryMaxRecent) {
-            minOpenCount = frequencyList.at(kFileHistoryMaxFrequent)->openCount / 2;
+        if (frequencyList.size() > kFileHistoryMaxFrequent) {
+            auto el = frequencyList.at(kFileHistoryMaxFrequent);
+            minOpenCount = el->openCount / 2;
         }
     }
 
@@ -223,7 +224,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
             // forget about missing documents without valuable state
             states->RemoveAt(j - 1);
-        } else if (j > FILE_HISTORY_MAX_FILES) {
+        } else if (j > kFileHistoryMaxFiles) {
             // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
             states->RemoveAt(j - 1);
         } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent) {
