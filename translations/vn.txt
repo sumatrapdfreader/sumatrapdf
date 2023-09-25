@@ -2,6 +2,7 @@
 :Close Other Tabs
 :Close Tabs To The Right
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Loading %s ...
 :Open Attachment
@@ -285,8 +286,6 @@ Ngày:
 Khung nhìn mặc định
 :Default &Zoom:
 Kích thước mặc định
-:Delete Annotation\tDel
-Xoá Chú Thích \tDel
 :Denied Permissions:
 Các quyền bị từ chối
 :DjVu documents

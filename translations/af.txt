@@ -106,7 +106,7 @@
 :Date:
 :Default &Layout:
 :Default &Zoom:
-:Delete Annotation\tDel
+:Delete Annotation
 :Denied Permissions:
 :Document Properties
 :Don't install

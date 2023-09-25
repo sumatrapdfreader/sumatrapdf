@@ -20,7 +20,7 @@
 :Couldn't uninstall Sumatra search filter
 :Create Annotation &Under Cursor
 :Custom &Zoom...
-:Delete Annotation\tDel
+:Delete Annotation
 :E&xit
 :E&xit Fullscreen
 :Edit %s Annotation

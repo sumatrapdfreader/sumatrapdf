@@ -33,7 +33,7 @@
 :Create Annotation &Under Cursor
 :Create Annotation From Selection
 :Custom &Zoom...
-:Delete Annotation\tDel
+:Delete Annotation
 :Don't install
 :Download 64-bit version
 :E&xit

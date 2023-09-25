@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+:Delete Annotation
 :Edit %s Annotation
 :&About
 &À propos
@@ -276,8 +277,6 @@ Date :
 Mise en &page par défaut :
 :Default &Zoom:
 &Zoom par défaut :
-:Delete Annotation\tDel
-Supprimer l'annotation\tDel
 :Denied Permissions:
 Interdictions :
 :DjVu documents

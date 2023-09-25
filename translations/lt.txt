@@ -27,7 +27,7 @@
 :Couldn't get printer name
 :Create Annotation &Under Cursor
 :Custom &Zoom...
-:Delete Annotation\tDel
+:Delete Annotation
 :Don't install
 :Download 64-bit version
 :E&xit

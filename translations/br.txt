@@ -1,4 +1,4 @@
-:Edit %s Annotation
+:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 %s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
 :&About
@@ -277,8 +277,6 @@ Data:
 &Visualização padrão
 :Default &Zoom:
 &Zoom padrão
-:Delete Annotation\tDel
-Apagar Anotação\tDel
 :Denied Permissions:
 Permissões negadas:
 :DjVu documents
@@ -295,6 +293,8 @@ S&air
 Sair da tela &cheia
 :EPUB ebooks
 Documentos EPUB
+:Edit %s Annotation
+Editar a Anotação %s
 :Edit Annotations
 Editar Anotações
 :Enter password

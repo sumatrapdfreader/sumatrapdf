@@ -33,7 +33,7 @@
 :Create Annotation From Selection
 :Custom &Zoom...
 :Date:
-:Delete Annotation\tDel
+:Delete Annotation
 :Don't install
 :E&xit
 :E&xit Fullscreen

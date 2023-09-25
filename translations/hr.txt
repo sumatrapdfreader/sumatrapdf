@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Open Directory in &Double Commander
 :Open Directory in &Explorer
@@ -283,8 +284,6 @@ Datum:
 Pretpostavljeni &izgled:
 :Default &Zoom:
 Pretpostavljeno &uvećanje:
-:Delete Annotation\tDel
-Obriši bilješku\tDel
 :Denied Permissions:
 Dozvole ograničenja:
 :DjVu documents

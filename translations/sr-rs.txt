@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Open In New Window
 :Properties...
@@ -277,8 +278,6 @@ CHM документи
 Подразумевани &приказ
 :Default &Zoom:
 Подразумевано &увећање
-:Delete Annotation\tDel
-Обриши беле&шку\tDel
 :Denied Permissions:
 Није допуштено:
 :DjVu documents

@@ -770,7 +770,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
     },
     {
-        _TRN("Delete Annotation\tDel"),
+        _TRN("Delete Annotation"),
         CmdDeleteAnnotation,
     },
     {

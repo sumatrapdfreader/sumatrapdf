@@ -21,6 +21,7 @@
 :Create Annotation &Under Cursor
 :Create Annotation From Selection
 :Custom &Zoom...
+:Delete Annotation
 :Don't install
 :Edit %s Annotation
 :F&orward
@@ -295,8 +296,6 @@
 التخطيط الافتراضي&
 :Default &Zoom:
 التكبير الافتراضي&:
-:Delete Annotation\tDel
-حذف التوضيح\tDel
 :Denied Permissions:
 رفض الأذونات:
 :DjVu documents

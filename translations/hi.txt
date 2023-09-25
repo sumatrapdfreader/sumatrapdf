@@ -20,6 +20,7 @@
 :&Underline
 :&Window
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Fit &Content
 :Fit &Page
@@ -329,8 +330,6 @@ Close
 मूलभूत लेआउट :(&L)
 :Default &Zoom:
 डिफ़ॉल्ट पृष्ठ &आकार:
-:Delete Annotation\tDel
-व्याख्या हटाएं\tDel
 :Denied Permissions:
 अस्वीकृत अनुमतियाँ
 :DjVu documents

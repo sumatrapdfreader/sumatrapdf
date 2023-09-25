@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Open In New Window
 :Properties...
@@ -277,8 +278,6 @@ Data:
 Disposición por defecto:
 :Default &Zoom:
 &Aumento por defecto:
-:Delete Annotation\tDel
-Borrar anotación
 :Denied Permissions:
 Permisos denegados:
 :DjVu documents

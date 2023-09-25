@@ -3,6 +3,7 @@
 :&Free Text
 :&Highlight
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Get Fonts Info
 :Interior Color:
@@ -284,8 +285,6 @@ Dato:
 Standard&layout:
 :Default &Zoom:
 Standard&zoom
-:Delete Annotation\tDel
-Slet kommentar\tDel
 :Denied Permissions:
 Nægtede tilladelser:
 :DjVu documents

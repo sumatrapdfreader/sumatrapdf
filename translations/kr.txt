@@ -1,6 +1,6 @@
+:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Edit %s Annotation
-:Open in Microsoft &HTML Help
+%s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
 :&About
 정보(&A)
 :&Actual Size
@@ -134,7 +134,7 @@ SumatraPDF 정보
 :Add page %s to favorites
 %s 페이지를 즐겨찾기에 추가
 :Add page %s to favorites with (optional) name:
-(선택 사항) 이름을 사용하여 즐겨찾기에 %s 페이지 추가:
+(선택사항) 이름을 사용하여 즐겨찾기에 %s 페이지 추가:
 :Add to favorites
 즐겨찾기에 추가
 :Advanced
@@ -277,8 +277,6 @@ Sumatra 검색 필터를 제거할 수 없습니다
 기본 구성(&L):
 :Default &Zoom:
 기본 확대/축소(&Z):
-:Delete Annotation\tDel
-주석 삭제\tDel
 :Denied Permissions:
 거부된 사용 권한:
 :DjVu documents
@@ -295,6 +293,8 @@ DjVu 문서
 전체화면 종료(&X)
 :EPUB ebooks
 ePub 문서
+:Edit %s Annotation
+주석 편집 (%s)
 :Edit Annotations
 주석 편집
 :Enter password
@@ -487,6 +487,8 @@ Adobe Reader로 열기(&A)
 Foxit Reader로 열기(&F)
 :Open in &Microsoft XPS-Viewer
 Microsoft XPS-Viewer로 열기(&M)
+:Open in Microsoft &HTML Help
+Microsoft HTML 도움말로 열기(&H)
 :P&roperties
 속성(&R)
 :PDF Document
@@ -730,6 +732,6 @@ XPS 문서
 :[Changes detected; refreshing] %s
 [변경 감지됨.  새로 고치는 중...] %s
 :copying text
-텍스트 복사중
+텍스트 복사 중
 :printing document
 문서 인쇄

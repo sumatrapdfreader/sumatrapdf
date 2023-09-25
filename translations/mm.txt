@@ -119,7 +119,7 @@
 :Date:
 :Default &Layout:
 :Default &Zoom:
-:Delete Annotation\tDel
+:Delete Annotation
 :Denied Permissions:
 :DjVu documents
 :Document Properties

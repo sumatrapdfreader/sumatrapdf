@@ -17,6 +17,7 @@
 :Close Tabs To The Right
 :Copy File Path
 :Custom &Zoom...
+:Delete Annotation
 :E&xit
 :Edit %s Annotation
 :F&orward
@@ -286,8 +287,6 @@ Kuupäev:
 Vaike &küljend:
 :Default &Zoom:
 Vaike &suurendus:
-:Delete Annotation\tDel
-Kustuta märkus\tDel
 :Denied Permissions:
 Keelatud õigused:
 :DjVu documents

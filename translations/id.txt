@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Open In New Window
 :Properties...
@@ -277,8 +278,6 @@ Tanggal:
 Tata letak &Standar
 :Default &Zoom:
 Pembesaran &Standar
-:Delete Annotation\tDel
-Hapus Catatan\tDel
 :Denied Permissions:
 Izin Ditolak:
 :DjVu documents

@@ -37,7 +37,7 @@
 :Create Annotation &Under Cursor
 :Custom &Zoom...
 :Date:
-:Delete Annotation\tDel
+:Delete Annotation
 :E&xit
 :E&xit Fullscreen
 :Edit %s Annotation

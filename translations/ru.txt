@@ -1,8 +1,6 @@
+:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Copy File Path
-:Edit %s Annotation
-:Open In New Window
-:Properties...
+Аннотация %s. Ctrl+щелчок для выбора. Ctrl+двойной щелчок для изменения.
 :&About
 &О программе...
 :&Actual Size
@@ -227,6 +225,8 @@
 Скопировать адрес &ссылки
 :Copy Co&mment
 Скопировать ко&мментарий
+:Copy File Path
+Скопировать путь к файлу
 :Copy To Clipboard
 Скопировать в буфер обмена
 :Copying text was denied (copying as image only)
@@ -277,8 +277,6 @@
 &Компоновка по умолчанию
 :Default &Zoom:
 Масшта&б по умолчанию
-:Delete Annotation\tDel
-Удалить аннотацию\tDel
 :Denied Permissions:
 Запрещённые права:
 :DjVu documents
@@ -295,6 +293,8 @@
 &Выйти из полноэкранного режима
 :EPUB ebooks
 Документы ePub
+:Edit %s Annotation
+Изменить аннотацию %s
 :Edit Annotations
 Изменить аннотации
 :Enter password
@@ -475,6 +475,8 @@ OK
 Открыть папку в &Directory Opus
 :Open Embedded PDF
 Открыть встроенный PDF
+:Open In New Window
+Открыть в новом окне
 :Open a document...
 Открыть документ...
 :Open in %s
@@ -547,6 +549,8 @@ OK
 Печать страницы %d из %d...
 :Printing problem.
 Ошибка при печати.
+:Properties...
+Свойства...
 :Re&name...
 Пере&именовать...
 :Rect: x=%d y=%d dx=%d dy=%d

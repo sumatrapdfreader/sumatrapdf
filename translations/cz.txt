@@ -39,7 +39,7 @@
 :Create Annotation From Selection
 :Custom &Zoom...
 :Date:
-:Delete Annotation\tDel
+:Delete Annotation
 :Don't install
 :Download 64-bit version
 :E&xit

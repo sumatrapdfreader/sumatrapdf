@@ -1,5 +1,6 @@
+:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Edit %s Annotation
+%s σχόλιο. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
 :&About
 &Σχετικά
 :&Actual Size
@@ -276,8 +277,6 @@ Bytes
 Προκαθορισμένη &διαμόρφωση:
 :Default &Zoom:
 Προκαθορισμένο &ζουμ:
-:Delete Annotation\tDel
-Διαγραφή σχολίου\tDel
 :Denied Permissions:
 Απαγόρευση δικαιωμάτων:
 :DjVu documents
@@ -294,6 +293,8 @@ Bytes
 Έξοδος από την πλήρη οθόνη
 :EPUB ebooks
 Έγγραφα EPUB
+:Edit %s Annotation
+Επεξεργασία %s Σχολίου
 :Edit Annotations
 Επεξεργασία σχολίων
 :Enter password

@@ -1,10 +1,14 @@
 AppTranslator: SumatraPDF
-32b322ce29dd231aca1be01751073eb169b935a1
+a61d8046ab5a5d814283974dbb6ba53dc07a5954
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
 de:%s Anmerkung.
+el:%s σχόλιο. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
 it:Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
+kr:%s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
 pl:Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
+ru:Аннотация %s. Ctrl+щелчок для выбора. Ctrl+двойной щелчок для изменения.
+tw:%s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3814,7 +3818,7 @@ it:Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 ja:ページ %s に名前を付けて追加
 jv:Nambah kaca %s ning favorit nganggo jeneng (opsional):
 ka:%s გვერდის დამატება რჩეულებში (არასავალდებულო) სახელწოდებით:
-kr:(선택 사항) 이름을 사용하여 즐겨찾기에 %s 페이지 추가:
+kr:(선택사항) 이름을 사용하여 즐겨찾기에 %s 페이지 추가:
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
 kw:Keworra folen %s dhe daklow drudh gans hanow (dewisel):
 lt:Sukurti žymę į %s puslapį, suteikiant jai pavadinimą (neprivalomas):
@@ -6714,6 +6718,7 @@ nl:Kopieer Bestand Pad
 nn:Kopier Filbane
 no:Kopier filbane
 pl:Kopiuj ścieżkę pliku
+ru:Скопировать путь к файлу
 sv:Kopiera sökväg
 ta:கோப்பு பாதை நகலெடு
 tl:Kopyahin ang File Path
@@ -8221,47 +8226,7 @@ tw:預設縮放(&Z):
 uk:Масштаб за замовчуванням:
 uz:Andoza &miqyos
 vn:Kích thước mặc định
-:Delete Annotation\tDel
-ar:حذف التوضيح\tDel
-bg:Изтрий анотация\tDel
-br:Apagar Anotação\tDel
-by:Выдаліць анатацыю\tDel
-ca:Suprimeix l'anotació\tDel
-cn:删除标注\tDel
-co:Squassà l’annutazione\tSuppr
-cy:Dileu Anodiad\tDileu
-de:Anmerkung löschen\tDel
-dk:Slet kommentar\tDel
-el:Διαγραφή σχολίου\tDel
-es:Eliminar anotación\tDel
-et:Kustuta märkus\tDel
-eu:Ezabatu oharra\tDel
-fi:Poista huomautus\tDel
-fr:Supprimer l'annotation\tDel
-gl:Borrar anotación
-he:מחק הערה\tDel
-hi:व्याख्या हटाएं\tDel
-hr:Obriši bilješku\tDel
-hu:Megjegyzés törlése\tDel
-id:Hapus Catatan\tDel
-it:Elimina annotazione\tCanc
-ja:注釈を削除\tDel
-kr:주석 삭제\tDel
-ml:വ്യാഖ്യാനം ഇല്ലാതാക്കുക\tDel
-nl:Verwijder Aantekening\tDel
-no:Slett merknad\tDel
-pl:Usuń adnotację\tDel
-pt:Remover anotação\Del
-ro: Șterge adnotarea\tDel
-ru:Удалить аннотацию\tDel
-sl:Izbriši pripombo\tDel
-sr-rs:Обриши беле&шку\tDel
-ta:குறிப்புரையை நீக்கிடுக\tDel
-tl:Tanggalin ang anotasyon\tDel
-tr:Dipnotu Sil\tDel
-tw:刪除註解\tDel
-uk:Видалити анотацію\tDel
-vn:Xoá Chú Thích \tDel
+:Delete Annotation
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
 ar:رفض الأذونات:
@@ -8720,9 +8685,14 @@ uk:Документи EPUB
 uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Edit %s Annotation
+br:Editar a Anotação %s
 de:%s Anmerkung bearbeiten
+el:Επεξεργασία %s Σχολίου
 it:Modifica annotazione %s
+kr:주석 편집 (%s)
 pl:Edytuj adnotację %s
+ru:Изменить аннотацию %s
+tw:編輯 %s 註解
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 ar:تعديل الشرح و التوضيح 
@@ -13998,6 +13968,7 @@ kr:새 창에서 열기
 nn:Opne i nytt vindauge
 no:Åpne i nytt vindu
 pl:Otwórz w nowym oknie
+ru:Открыть в новом окне
 ta:புதிய சாளரத்தில் திற
 tl:Buksan sa bagong Window
 tw:在新視窗中開啟
@@ -14341,6 +14312,7 @@ he:פתח בעזרה של Microsoft HTML
 hu:Microsoft Súgó megnyitása
 id:Buka di Microsoft &HTML Bantuan
 it:Apri in Microsoft &HTML Help
+kr:Microsoft HTML 도움말로 열기(&H)
 nl:Open in Microsoft &HTML Help
 no:Åpne i Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
@@ -16178,6 +16150,7 @@ kr:속성들...
 nn:Eigenskapar...
 no:Egenskaper...
 pl:Właściwości...
+ru:Свойства...
 ta:பண்புகள்
 tl:Properties...
 tw:內容...
@@ -16308,7 +16281,7 @@ ta:மறைதிருத்தஞ்செய்க
 th:แก้ไขข้อความ
 tl:I-Redact
 tr:Gözden Geçir
-tw:编辑
+tw:編輯
 uk:Редагувати
 vn:Biên tập
 :Remember &opened files
@@ -21265,7 +21238,7 @@ it:Copia testo...
 ja:コピーするテキスト
 jv:nyalin text
 ka:ტექსტი კოპირდება
-kr:텍스트 복사중
+kr:텍스트 복사 중
 ku:لەبەرگرتنەوەی دەق
 kw:ow kopia tekst
 lt:kopijuojamas tekstas

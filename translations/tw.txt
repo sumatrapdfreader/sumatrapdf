@@ -1,5 +1,6 @@
+:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Edit %s Annotation
+%s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
 :&About
 關於(&A)
 :&Actual Size
@@ -276,8 +277,6 @@ CHM 文件
 預設配置(&L):
 :Default &Zoom:
 預設縮放(&Z):
-:Delete Annotation\tDel
-刪除註解\tDel
 :Denied Permissions:
 權限不足: 
 :DjVu documents
@@ -294,6 +293,8 @@ DjVu 文件
 結束全螢幕模式(&X)
 :EPUB ebooks
 EPUB 文件
+:Edit %s Annotation
+編輯 %s 註解
 :Edit Annotations
 編輯註解
 :Enter password
@@ -555,7 +556,7 @@ Postscript 文件
 :Rect: x=%d y=%d dx=%d dy=%d
 矩形: x=%d y=%d dx=%d dy=%d
 :Redact
-编辑
+編輯
 :Remember &opened files
 記憶最近開啟的檔案(&O)
 :Remove from favorites

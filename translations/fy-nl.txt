@@ -93,7 +93,7 @@
 :Dark
 :Darker
 :Date:
-:Delete Annotation\tDel
+:Delete Annotation
 :Denied Permissions:
 :Don't install
 :Download 64-bit version

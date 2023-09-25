@@ -1,5 +1,6 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 :Copy File Path
+:Delete Annotation
 :Edit %s Annotation
 :Open In New Window
 :Properties...
@@ -277,8 +278,6 @@ Tarih:
 Öntanımlı &Düzen:
 :Default &Zoom:
 Öntanımlı &Yakınlaştırma:
-:Delete Annotation\tDel
-Dipnotu Sil\tDel
 :Denied Permissions:
 Reddedilen İzinler:
 :DjVu documents

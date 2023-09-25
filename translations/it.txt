@@ -1,3 +1,4 @@
+:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
 :&About
@@ -276,8 +277,6 @@ Data:
 &Layout predefinito:
 :Default &Zoom:
 &Ingrandimento predefinito:
-:Delete Annotation\tDel
-Elimina annotazione\tCanc
 :Denied Permissions:
 Permessi rifiutati:
 :DjVu documents

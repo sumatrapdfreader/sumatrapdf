@@ -22,7 +22,7 @@
 :Copy To Clipboard
 :Custom &Zoom...
 :Date:
-:Delete Annotation\tDel
+:Delete Annotation
 :E&xit
 :Edit %s Annotation
 :F&orward
