@@ -203,7 +203,7 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'i', CmdInvertColors},
     {0, 'I', CmdTogglePageInfo},
 
-    {FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
+    {FCONTROL | FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
 
     {0, 'q', CmdCloseCurrentDocument},
     {0, 'r', CmdReloadDocument},
