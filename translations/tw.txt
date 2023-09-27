@@ -1,6 +1,3 @@
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 %s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
 :&About
@@ -195,6 +192,10 @@ CHM 文件
 檢查更新中...
 :Circle
 圓
+:Cleared history of %d files, deleted thumbnails.
+已清除 %d 個檔案的歷史記錄，已刪除縮圖。
+:Clearing history...
+正在清除歷史記錄...
 :Close
 關閉
 :Close Other Tabs
@@ -279,6 +280,8 @@ CHM 文件
 預設配置(&L):
 :Default &Zoom:
 預設縮放(&Z):
+:Delete Annotation
+刪除註解
 :Denied Permissions:
 權限不足: 
 :DjVu documents

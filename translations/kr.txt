@@ -1,6 +1,3 @@
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 %s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
 :&About
@@ -195,6 +192,10 @@ CHM 문서
 업데이트를 확인 중입니다...
 :Circle
 원
+:Cleared history of %d files, deleted thumbnails.
+%d개 파일 내역 초기화 및 썸네일 삭제.
+:Clearing history...
+내역 초기화...
 :Close
 닫기
 :Close Other Tabs
@@ -279,6 +280,8 @@ Sumatra 검색 필터를 제거할 수 없습니다
 기본 구성(&L):
 :Default &Zoom:
 기본 확대/축소(&Z):
+:Delete Annotation
+주석 삭제
 :Denied Permissions:
 거부된 사용 권한:
 :DjVu documents

@@ -1,10 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
-:Edit %s Annotation
-:Open In New Window
-:Properties...
+%s aantekening. Ctrl+klik om te selecteren. Ctrl+dubbelklik om te bewerken.
 :&About
 &Over...
 :&Actual Size
@@ -197,6 +192,10 @@ Controleren op &Updates
 Controleer op Update...
 :Circle
 Cirkel
+:Cleared history of %d files, deleted thumbnails.
+Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
+:Clearing history...
+Geschiedenis wissen...
 :Close
 Sluiten
 :Close Other Tabs
@@ -281,6 +280,8 @@ Datum:
 Standaardopmaak:
 :Default &Zoom:
 Standaard &zoom:
+:Delete Annotation
+Aantekening Verwijderen
 :Denied Permissions:
 Niet toegestaan:
 :DjVu documents
@@ -297,6 +298,8 @@ A&fsluiten
 Volledig scherm uit
 :EPUB ebooks
 EPUB-bestanden
+:Edit %s Annotation
+Bewerk %s Aantekening
 :Edit Annotations
 Bewerk Aantekeningen
 :Enter password
@@ -477,6 +480,8 @@ Open Map in &TotalCommander
 Open Map in Directory &Opus
 :Open Embedded PDF
 Open Ingesloten Pdf
+:Open In New Window
+Open In Nieuw Venster
 :Open a document...
 Open een document...
 :Open in %s
@@ -549,6 +554,8 @@ Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
 Pagina %d van %d afdrukken...
 :Printing problem.
 Probleem bij het afdrukken
+:Properties...
+Eigenschappen...
 :Re&name...
 Her&noem
 :Rect: x=%d y=%d dx=%d dy=%d

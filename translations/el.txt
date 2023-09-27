@@ -1,8 +1,5 @@
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-%s σχόλιο. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
+%s σχολιασμός. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
 :&About
 &Σχετικά
 :&Actual Size
@@ -146,7 +143,7 @@
 :All supported documents
 Όλα τα υποστηριζόμενα έγγραφα
 :Annotations
-Σχόλια
+Σχολιασμοί
 :Application:
 Εφαρμογή:
 :Are you sure you want to uninstall SumatraPDF?
@@ -195,6 +192,10 @@ Bytes
 Έλεγχος για ενημέρωση...
 :Circle
 Κύκλος
+:Cleared history of %d files, deleted thumbnails.
+Εκκαθάριση Ιστορικού %d αρχείων,διαγραφή μικρογραφιών.
+:Clearing history...
+Καθάρισμα Ιστορικού...
 :Close
 Κλείσιμο
 :Close Other Tabs
@@ -279,6 +280,8 @@ Bytes
 Προκαθορισμένη &διαμόρφωση:
 :Default &Zoom:
 Προκαθορισμένο &ζουμ:
+:Delete Annotation
+Διαγραφή Σχολιασμού
 :Denied Permissions:
 Απαγόρευση δικαιωμάτων:
 :DjVu documents
@@ -296,9 +299,9 @@ Bytes
 :EPUB ebooks
 Έγγραφα EPUB
 :Edit %s Annotation
-Επεξεργασία %s Σχολίου
+Επεξεργασία %s Σχολιασμού
 :Edit Annotations
-Επεξεργασία σχολίων
+Επεξεργασία Σχολιασμών
 :Enter password
 Εισάγετε κωδικό
 :Enter password for %s
@@ -578,7 +581,7 @@ MB
 :SVG documents
 Έγγραφα SVG
 :Save Annotations to existing PDF
-Αποθήκευση σχολίων σε υπάρχον PDF
+Αποθήκευση Σχολιασμών σε υπάρχον PDF
 :Save Attachment...
 Αποθήκευση συνημμένου...
 :Save Embedded File...
@@ -594,7 +597,7 @@ MB
 :Save to &new PDF
 Αποθήκευση σε νέο PDF
 :Saved annotations to '%s'
- Αποθηκεύτηκαν σχόλια στο '%s'
+ Αποθηκεύτηκαν σχολιασμοί στο '%s'
 :Saving of '%s' failed with: '%s'
 Η αποθήκευση του '%s' απέτυχε με: '%s'
 :Search With &Bing
@@ -702,9 +705,9 @@ Text Color:
 :Unknown source file (%s)
 Άγνωστο αρχείο προέλευσης (%s)
 :Unsaved annotations
-Μη αποθηκευμένα σχόλια
+Μη αποθηκευμένοι σχολιασμοί
 :Unsaved annotations in '%s'
-Μη αποθηκευμένα σχόλια στο '%s'
+Μη αποθηκευμένοι σχολιασμοί στο '%s'
 :Use &tabs
 Χρήση &καρτελών
 :View
@@ -718,7 +721,7 @@ Text Color:
 :You have the latest version.
 Έχετε την πιο πρόσφατη έκδοση.
 :You have unsaved annotations
-Έχετε μη αποθηκευμένα σχόλια
+Έχετε μη αποθηκευμένους σχολιασμούς
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε τη νέα έκδοση;
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?

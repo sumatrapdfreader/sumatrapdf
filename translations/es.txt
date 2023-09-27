@@ -1,8 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
-:Edit %s Annotation
+%s anotación. Ctrl+click para seleccionar. Ctrl+doble click para editar.
 :&About
 &Acerca de
 :&Actual Size
@@ -195,6 +192,10 @@ Buscar &actualizaciones
 Buscando actualizaciones...
 :Circle
 Círculo
+:Cleared history of %d files, deleted thumbnails.
+Eliminado historial de %d ficheros, miniaturas eliminadas.
+:Clearing history...
+Borrando historial...
 :Close
 Cerrar
 :Close Other Tabs
@@ -279,6 +280,8 @@ Fecha:
 Distribución pre&determinada:
 :Default &Zoom:
 Am&pliación predeterminada:
+:Delete Annotation
+Eliminar anotación
 :Denied Permissions:
 Permisos denegados:
 :DjVu documents
@@ -295,6 +298,8 @@ S&alir
 &Salir de la pantalla completa
 :EPUB ebooks
 Libros electrónicos EPUB
+:Edit %s Annotation
+Editar %s anotación
 :Edit Annotations
 Editar anotaciones
 :Enter password

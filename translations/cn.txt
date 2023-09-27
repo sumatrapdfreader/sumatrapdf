@@ -1,8 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
-:Edit %s Annotation
+%s标注。按 Ctrl+单击 选中标注；按 Ctrl+双击 编辑标注。
 :&About
 关于(&A)...
 :&Actual Size
@@ -195,6 +192,10 @@ CHM 文档
 正在检查更新...
 :Circle
 圆
+:Cleared history of %d files, deleted thumbnails.
+清除了共 %d 个文件的历史记录，并删除了缩略图缓存。
+:Clearing history...
+正在清除历史记录…
 :Close
 关闭
 :Close Other Tabs
@@ -279,6 +280,8 @@ CHM 文档
 默认布局(&L):
 :Default &Zoom:
 默认缩放(&Z):
+:Delete Annotation
+删除标注
 :Denied Permissions:
 权限不足:
 :DjVu documents
@@ -295,6 +298,8 @@ DjVu 文档
 退出全屏(&X)
 :EPUB ebooks
 EPUB 电子书
+:Edit %s Annotation
+编辑%s标注
 :Edit Annotations
 编辑标注
 :Enter password

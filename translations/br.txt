@@ -1,6 +1,3 @@
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 %s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
 :&About
@@ -195,6 +192,10 @@ Procurar Atualizações
 Verificando por atualizações...
 :Circle
 Círculo
+:Cleared history of %d files, deleted thumbnails.
+Excluído o histórico de %d arquivos, miniaturas apagadas.
+:Clearing history...
+Limpando o histórico...
 :Close
 Fechar
 :Close Other Tabs
@@ -279,6 +280,8 @@ Data:
 &Visualização padrão
 :Default &Zoom:
 &Zoom padrão
+:Delete Annotation
+Apagar Anotação
 :Denied Permissions:
 Permissões negadas:
 :DjVu documents

@@ -1,11 +1,15 @@
 AppTranslator: SumatraPDF
-3c929c629b7d4a196a20c2cfdfb519625e998710
+6dc6dd372ea6786e7aa98c5f7388c9854ed017a8
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
+cn:%s标注。按 Ctrl+单击 选中标注；按 Ctrl+双击 编辑标注。
 de:%s Anmerkung.
-el:%s σχόλιο. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
+el:%s σχολιασμός. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
+es:%s anotación. Ctrl+click para seleccionar. Ctrl+doble click para editar.
+fr:Annotation %s. Ctrl+clic pour sélectionner. Ctrl+dbl clic pour modifier.
 it:Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
 kr:%s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
+nl:%s aantekening. Ctrl+klik om te selecteren. Ctrl+dubbelklik om te bewerken.
 pl:Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
 ru:Аннотация %s. Ctrl+щелчок для выбора. Ctrl+двойной щелчок для изменения.
 tw:%s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
@@ -4139,7 +4143,7 @@ co:Annutazioni
 cy:Anodiadau
 de:Anmerkungen
 dk:Anmærkninger
-el:Σχόλια
+el:Σχολιασμοί
 es:Anotaciones
 et:Märkused
 eu:Oharrak
@@ -5741,7 +5745,25 @@ tw:圓
 uk:Коло
 vn:Vòng tròn
 :Cleared history of %d files, deleted thumbnails.
+br:Excluído o histórico de %d arquivos, miniaturas apagadas.
+cn:清除了共 %d 个文件的历史记录，并删除了缩略图缓存。
+el:Εκκαθάριση Ιστορικού %d αρχείων,διαγραφή μικρογραφιών.
+es:Eliminado historial de %d ficheros, miniaturas eliminadas.
+fr:Historique de %d fichiers effacé, vignettes supprimées.
+kr:%d개 파일 내역 초기화 및 썸네일 삭제.
+nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
+pl:Wyczyszczono historię %d plików, usunięto miniatury.
+tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 :Clearing history...
+br:Limpando o histórico...
+cn:正在清除历史记录…
+el:Καθάρισμα Ιστορικού...
+es:Borrando historial...
+fr:Effacement de l'historique…
+kr:내역 초기화...
+nl:Geschiedenis wissen...
+pl:Czyszczenie historii...
+tw:正在清除歷史記錄...
 :Close
 am:Փակել
 ar:إغلاق
@@ -8229,6 +8251,15 @@ uk:Масштаб за замовчуванням:
 uz:Andoza &miqyos
 vn:Kích thước mặc định
 :Delete Annotation
+br:Apagar Anotação
+cn:删除标注
+el:Διαγραφή Σχολιασμού
+es:Eliminar anotación
+fr:Supprimer l'annotation
+kr:주석 삭제
+nl:Aantekening Verwijderen
+pl:Usuń adnotację
+tw:刪除註解
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
 ar:رفض الأذونات:
@@ -8688,10 +8719,14 @@ uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Edit %s Annotation
 br:Editar a Anotação %s
+cn:编辑%s标注
 de:%s Anmerkung bearbeiten
-el:Επεξεργασία %s Σχολίου
+el:Επεξεργασία %s Σχολιασμού
+es:Editar %s anotación
+fr:Modifier l'annotation %s
 it:Modifica annotazione %s
 kr:주석 편집 (%s)
+nl:Bewerk %s Aantekening
 pl:Edytuj adnotację %s
 ru:Изменить аннотацию %s
 tw:編輯 %s 註解
@@ -8710,7 +8745,7 @@ co:&Mudificà l’annutazioni
 cy:Golygu Anodiadau
 de:Anmerkungen bearbeiten
 dk:Rediger anmærkninger
-el:Επεξεργασία σχολίων
+el:Επεξεργασία Σχολιασμών
 es:Editar anotaciones
 et:Muuda märkusi
 eu:Editatu oharrak
@@ -13967,6 +14002,7 @@ hu:Megnyitás új ablakban
 it:Apri in una nuova finestra
 ja:新しいウィンドウで開く
 kr:새 창에서 열기
+nl:Open In Nieuw Venster
 nn:Opne i nytt vindauge
 no:Åpne i nytt vindu
 pl:Otwórz w nowym oknie
@@ -16149,6 +16185,7 @@ hu:Tulajdonságok
 it:Proprietà
 ja:プロパティ
 kr:속성들...
+nl:Eigenschappen...
 nn:Eigenskapar...
 no:Egenskaper...
 pl:Właściwości...
@@ -16768,7 +16805,7 @@ co:Arregistrà l’annutazioni in u PDF esistente
 cy:Cadw Anodiadau i PDF presennol
 de:Anmerkungen in bestehende PDF-Dateien speichern
 dk:Gem kommentarer til eksisterende PDF
-el:Αποθήκευση σχολίων σε υπάρχον PDF
+el:Αποθήκευση Σχολιασμών σε υπάρχον PDF
 es:Guardar anotaciones en PDF existente
 et:Salvesta märkused olemasolevasse PDF-i
 eu:Gorde oharrak badagoen PDF-an
@@ -17115,7 +17152,7 @@ co:Annutazioni arregistrate nant’à « %s »
 cy:Cadwyd anodiadau i '%s'
 de:Gespeicherte Anmerkungen zu '%s'
 dk:Gem kommentarer til '%s'
-el: Αποθηκεύτηκαν σχόλια στο '%s'
+el: Αποθηκεύτηκαν σχολιασμοί στο '%s'
 es:Anotaciones guardadas en '%s'
 et:Märkused salvestatud '%s'
 eu:Oharrak gordeta hemen: '%s'
@@ -20257,7 +20294,7 @@ co:Annutazioni micca arregistrate
 cy:Anodiadau heb eu cadw
 de:Nicht gespeicherte Anmerkungen
 dk:Ikke-gemte annoteringer
-el:Μη αποθηκευμένα σχόλια
+el:Μη αποθηκευμένοι σχολιασμοί
 es:Anotaciones sin guardar
 et:Salvestamata märkused
 eu:Gorde gabeko oharrak
@@ -20302,7 +20339,7 @@ co:Annutazioni micca arregistrate in « %s »
 cy:Anodiadau heb eu cadw yn '%s'
 de:Nicht gespeicherte Anmerkungen in '%s'
 dk:Ikke-gemte annoteringer i '%s'
-el:Μη αποθηκευμένα σχόλια στο '%s'
+el:Μη αποθηκευμένοι σχολιασμοί στο '%s'
 es:Anotaciones sin guardar en «%s»
 et:Salvestamata märkused dokumendis '%s'
 eu:Gorde gabeko oharrak -> '%s'
@@ -20747,7 +20784,7 @@ co:Avete annutazioni micca arregistrate
 cy:Mae gennych anodiadau heb eu cadw
 de:Sie haben ungespeicherte Anmerkungen.
 dk:Du har ikke-gemte annoteringer
-el:Έχετε μη αποθηκευμένα σχόλια
+el:Έχετε μη αποθηκευμένους σχολιασμούς
 es:Hay anotaciones sin guardar
 et:Sul on salvestamata märkuseid
 eu:Gorde gabeko oharrak dituzu
