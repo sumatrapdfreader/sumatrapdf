@@ -372,8 +372,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.font = GetDefaultGuiFont();
                         args.timeoutMs = -1;
                         TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
-                        args.msg =
-                            str::FormatTemp(_TRN("%s annotation. Ctrl+click to select. Ctrl+dbl click to edit."), name);
+                        args.msg = str::FormatTemp(_TRN("%s annotation. Ctrl+click to edit."), name);
                         ShowNotification(args);
                     }
                 }
@@ -543,6 +542,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     if (IsCtrlPressed() && win->annotationUnderCursor) {
+        ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, win->annotationUnderCursor);
         return;
     }
@@ -614,12 +614,13 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
     WindowTab* tab = win->CurrentTab();
+#if 0
     if (IsCtrlPressed() && win->annotationUnderCursor) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, win->annotationUnderCursor);
         return;
     }
-
+#endif
     if (dm->IsOverText(mousePos)) {
         int pageNo = dm->GetPageNoByPoint(mousePos);
         if (win->ctrl->ValidPageNo(pageNo)) {

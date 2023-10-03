@@ -954,7 +954,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
 UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
-    CmdSelectAnnotation,
+    //CmdSelectAnnotation,
     CmdEditAnnotations,
     CmdDeleteAnnotation,
     (UINT_PTR)menuDefCreateAnnotFromSelection,
@@ -1287,7 +1287,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
 
             disableMenu |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
-            disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdSelectAnnotation));
+            // disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdSelectAnnotation));
             disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdDeleteAnnotation));
             disableMenu |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
 
@@ -1757,11 +1757,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             HwndSendCommand(win->hwndFrame, cmd);
             break;
 
-        // note: those are duplicated in SumatraPDF.cpp to enable keyboard shortcuts for them
+            // note: those are duplicated in SumatraPDF.cpp to enable keyboard shortcuts for them
+#if 0
         case CmdSelectAnnotation:
             CrashIf(!buildCtx.annotationUnderCursor);
-
             [[fallthrough]];
+#endif
+
         case CmdEditAnnotations:
             ShowEditAnnotationsWindow(tab);
             SetSelectedAnnotation(tab, buildCtx.annotationUnderCursor);

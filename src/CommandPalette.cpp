@@ -254,7 +254,8 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
 
     if (!ctx.annotationUnderCursor) {
-        if ((cmdId == CmdSelectAnnotation) || (cmdId == CmdDeleteAnnotation)) {
+        //        if ((cmdId == CmdSelectAnnotation) || (cmdId == CmdDeleteAnnotation)) {
+        if (cmdId == CmdDeleteAnnotation) {
             return false;
         }
     }

@@ -5329,6 +5329,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+#if 0
         case CmdSelectAnnotation: {
             if (tab) {
                 Annotation* annot = GetAnnotionUnderCursor(tab, nullptr);
@@ -5338,6 +5339,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
         }
+#endif
 
         case CmdEditAnnotations: {
             if (tab) {
@@ -5375,11 +5377,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotUnderline:
             if (win && tab) {
                 auto annot = MakeAnnotationsFromSelection(tab, annotType);
-                bool isShift = IsShiftPressed();
                 if (annot) {
-                    if (isShift) {
-                        ShowEditAnnotationsWindow(tab);
-                    }
+                    ShowEditAnnotationsWindow(tab);
                     SetSelectedAnnotation(tab, annot);
                 }
             }

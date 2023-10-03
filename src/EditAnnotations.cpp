@@ -323,6 +323,11 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
     tab->lastEditAnnotsWindowPos = WindowRect(hwnd);
+    if (tab->selectedAnnotation != nullptr) {
+        tab->selectedAnnotation = nullptr;
+        MainWindowRerender(tab->win);
+        ToolbarUpdateStateForWindow(tab->win, false);
+    }
     delete mainLayout;
 }
 

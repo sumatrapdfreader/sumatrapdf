@@ -73,7 +73,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFindMatch, "Find: Match Case")                                   \
     V(CmdSaveAnnotations, "Save Annotations to existing PDF")             \
     V(CmdSaveAnnotationsNewFile, "Save Annotations to a new PDF")         \
-    V(CmdSelectAnnotation, "Select Annotation")                           \
     V(CmdEditAnnotations, "Edit Annotations")                             \
     V(CmdDeleteAnnotation, "Delete Annotation")                           \
     V(CmdZoomFitPage, "Zoom: Fit Page")                                   \
@@ -176,6 +175,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdPrevTab, "Previous Tab")                                         \
     V(CmdSelectNextTheme, "Select next theme")                            \
     V(CmdNone, "Do nothing")
+
+//V(CmdSelectAnnotation, "Select Annotation")                           \
 
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*

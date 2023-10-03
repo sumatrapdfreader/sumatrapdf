@@ -4,8 +4,7 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 
 3.5 (???)
-* CmdSelectAnnotation ('e') to select annotation under cursor. Selected annotation can be moved
-* CmdEditAnnotation ('Ctrl + E') select annotation under cursor and open annotation edit window
+* CmdEditAnnotation select annotation under cursor and open annotation edit window
 * rename CmdShowCursorPosition => CmdToggleCursorPosition
 * add Annotations [ FreeTextColor, FreeTextSize, FreeTextBorderWidth ] settings
 * change: to move annotations, must press Ctrl
