@@ -1,6 +1,3 @@
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 %s Anmerkung.
 :&About
@@ -195,6 +192,10 @@ Nach &neuer Version suchen
 Nach einem Update suchen...
 :Circle
 Kreis
+:Cleared history of %d files, deleted thumbnails.
+Verlauf von %d Dateien gelöscht, Miniaturansichten gelöscht.
+:Clearing history...
+Historie löschen...
 :Close
 Schließen
 :Close Other Tabs
@@ -279,6 +280,8 @@ Datum:
 &Standardlayout:
 :Default &Zoom:
 Standard&vergrößerung:
+:Delete Annotation
+Anmerkung löschen
 :Denied Permissions:
 Einschränkungen:
 :DjVu documents

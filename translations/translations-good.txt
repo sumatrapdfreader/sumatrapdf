@@ -2,17 +2,21 @@ AppTranslator: SumatraPDF
 AppTranslator: SumatraPDF
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
+ca:Anotació %s. Ctrl+clic per seleccionar. Ctrl+doble clic per editar.
 cn:%s标注。按 Ctrl+单击 选中标注；按 Ctrl+双击 编辑标注。
+cy:%s nodiant. Ctrl+clic i ddewis. Ctrl+dbl i olygu.
 de:%s Anmerkung.
 el:%s σχολιασμός. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
 es:%s anotación. Ctrl+click para seleccionar. Ctrl+doble click para editar.
 fr:Annotation %s. Ctrl+clic pour sélectionner. Ctrl+dbl clic pour modifier.
+hu:%s megjegyzés. Ctrl+kattintás a kijelöléshez. Ctrl+dupla kattintás a szerkesztéshez.
 it:Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
 kr:%s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
 nl:%s aantekening. Ctrl+klik om te selecteren. Ctrl+dubbelklik om te bewerken.
 pl:Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
 ru:Аннотация %s. Ctrl+щелчок для выбора. Ctrl+двойной щелчок для изменения.
 tw:%s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
+vn:%s ghi chú. Ctrl + nhấp chuột để chọn. Ctrl + nhấp đôi chuột để chỉnh sửa.
 :&About
 am:&Ծրագրի մասին
 ar:حول& 
@@ -40,7 +44,7 @@ hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:Info progr&amma
+it:Informazioni sul progr&amma
 ja:バージョン情報(&A)
 kr:정보(&A)
 kw:&A-dro dhe...
@@ -131,7 +135,7 @@ hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
-it:Apri file (opzioni &avanzate)...
+it:&Opzioni avanzate...
 ja:詳細設定(&A)
 kr:고급 옵션(&A)...
 kw:Settyansow &avonsys...
@@ -804,7 +808,7 @@ et:&Otsitav:
 eu:&Bilatu hau:
 fa:&جستجو برای:
 fi:&Etsittävä:
-fr:&Rechercher quoi :
+fr:&Rechercher :
 gl:&Atopar que:
 he:חפש:
 hi:क्या ढूँढ़ें:(&F)
@@ -1755,7 +1759,7 @@ hi:दस्तावेज़ &जड़ें
 hr:&Pričvrsti dokument
 hu:Lista elejére
 id:&Pin Dokumen
-it:&Attacca il documento (Pin)
+it:&Allega il documento (Pin)
 ja:ドキュメントをピンする&(P)
 kr:문서 고정(&P)
 kw:&Pynna Skriven
@@ -3623,7 +3627,7 @@ el:Δημιουργός:
 es:Autor:
 et:Autor:
 eu:Egilea:
-fa:مؤلف:
+fa:نویسنده
 fi:Tekijä:
 fr:Auteur :
 gl:Autor:
@@ -4595,24 +4599,37 @@ uk:Коло
 vn:Vòng tròn
 :Cleared history of %d files, deleted thumbnails.
 br:Excluído o histórico de %d arquivos, miniaturas apagadas.
+ca:S'ha esborrat l'historial de %d fitxers, i s'han suprimit les miniatures.
 cn:清除了共 %d 个文件的历史记录，并删除了缩略图缓存。
+cy:Hanes wedi'i glirio o ffeiliau %d., lluniau bach wedi'u dileu
+de:Verlauf von %d Dateien gelöscht, Miniaturansichten gelöscht.
 el:Εκκαθάριση Ιστορικού %d αρχείων,διαγραφή μικρογραφιών.
 es:Eliminado historial de %d ficheros, miniaturas eliminadas.
 fr:Historique de %d fichiers effacé, vignettes supprimées.
+hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
+it:Svuotata la cronologia di %d file, anteprime eliminate
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
+vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
 br:Limpando o histórico...
+ca:S'està esborrant l'historial...
 cn:正在清除历史记录…
+cy:Yn clirio hanes...
+de:Historie löschen...
 el:Καθάρισμα Ιστορικού...
 es:Borrando historial...
+fa:پاک کردن تاریخجه
 fr:Effacement de l'historique…
+hu:Előzmények törlése...
+it:Svuotamento cronologia in corso...
 kr:내역 초기화...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
 tw:正在清除歷史記錄...
+vn:Đang dọn dẹp lịch sử...
 :Close
 am:Փակել
 ar:إغلاق
@@ -4702,6 +4719,7 @@ tl:I-Close ang ibang Tabs
 tr:Diğer Sekmeleri Kapat
 tw:關閉其他分頁
 uk:Закрити інші вкладки
+vn:Đóng các tab khác
 :Close Tabs To The Right
 bg:Затвори табовете в дясно
 br:Fechar abas à direita
@@ -5377,7 +5395,9 @@ uk:Копіювати коментар
 vn:Chép chú thích
 :Copy File Path
 br:Copiar Caminho do Arquivo
+ca:Copia el camí del fitxer
 cn:复制文件路径
+cy:Llwybr Copïo Ffeil
 de:Dateipfad kopieren
 el:Αντιγραφή Τοποθεσίας Αρχείου
 es:Copiar dirección del archivo
@@ -5563,7 +5583,7 @@ hi:प्रिंटर के गुणों प्राप्त नही�
 hr:Nemoguće pribaviti svojstva printera
 hu:A nyomtató tulajdonságai nem érhetőek el
 id:Gagal mendapatkan properti Pencetak
-it:Impossibile ottenere info proprietà stampante
+it:Impossibile ottenere proprietà stampante
 ja:プリンターのプロパティを開けませんでした
 kr:프린터 속성을 가져올 수 없습니다.
 kw:Ny yllir kavos gnasow an pryntyer
@@ -6381,7 +6401,7 @@ hi:अंधेरापन
 hr:Tamna
 hu:Sötét
 id:Gelap
-it:Scuro
+it:Tema scuro
 ja:濃色
 kr:어두운
 kw:Tewl
@@ -6431,7 +6451,7 @@ hi:अधिक कालापन
 hr:Tamnija
 hu:Sötétebb
 id:Lebih Gelap
-it:Più scuro
+it:Tema molto scuro
 ja:黒
 kr:더 어두운
 kw:Tewlla
@@ -6604,10 +6624,15 @@ uk:Масштаб за замовчуванням:
 vn:Kích thước mặc định
 :Delete Annotation
 br:Apagar Anotação
+ca:Suprimeix l'annotació
 cn:删除标注
+cy:Dileu Nodiant
+de:Anmerkung löschen
 el:Διαγραφή Σχολιασμού
 es:Eliminar anotación
 fr:Supprimer l'annotation
+hu:Megjegyzés törlése
+it:Elimina Annotazione
 kr:주석 삭제
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
@@ -6998,11 +7023,14 @@ uk:Документи EPUB
 vn:Tập tin EPUB
 :Edit %s Annotation
 br:Editar a Anotação %s
+ca:Edita l'annotació %s
 cn:编辑%s标注
+cy:Golygu Nodiant %s
 de:%s Anmerkung bearbeiten
 el:Επεξεργασία %s Σχολιασμού
 es:Editar %s anotación
 fr:Modifier l'annotation %s
+hu:%s. megjegyzés szerkesztése
 it:Modifica annotazione %s
 kr:주석 편집 (%s)
 nl:Bewerk %s Aantekening
@@ -7029,7 +7057,7 @@ et:Muuda märkusi
 eu:Editatu oharrak
 fa:ویرایش علامت‌گذاری‌ها
 fi:Muokkaa huomautuksia
-fr:Éditer les annotations
+fr:Modifier les annotations
 gl:Editar anotacións
 he:ערוך הערות
 hi:टिप्पणियां संपादित करें
@@ -8861,7 +8889,7 @@ et:Sageli loetud dokumendid
 eu:Sarri Irakurriak
 fa:آخرین چیزهایی که خوانده‌اید
 fi:Usein luetut
-fr:Documents lus fréquemment
+fr:Lu fréquemment
 gl:Lido decote
 he:נקרא תכופות
 hi:अक्सर पढ़ें जाने वाले
@@ -9102,7 +9130,7 @@ et:Peida sageli loetud dokumendid
 eu:Ezkutatu sarri irakurriak
 fa:پنهان کردن آخرین چیزهایی که خوانده‌اید
 fi:Piilota usein luetut
-fr:Masquer les documents lus fréquemment
+fr:Masquer les lectures fréquentes
 gl:Agachar o lido decote
 he:הסתר 'נקרא תכופות'
 hi:अक्सर पढ़े जाने वालों को छुपाएँ
@@ -9152,7 +9180,7 @@ et:Soovitus: Uuesti otsimiseks vajuta F3-klahvi
 eu:Oharra: Erabili F3 tekla berriro bilatzeko
 fa:نکته: برای جستجوی مجدد از کلید F3 استفاده کنید
 fi:Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
-fr:Remarque : utilisez la touche F3 pour trouver de nouveau
+fr:Remarque : touche F3 pour le résultat suivant
 gl:Usar "F3" para amosar seguinte resultado
 he:לחיפוש המופע הבא, לחץ על F3
 hi:सुझाव: फिर से खोजने के लिए F3 कुंजी का प्रयोग करें
@@ -9928,7 +9956,7 @@ he:בהירה
 hr:Svijetla
 hu:Világos
 id:Terang
-it:Leggero
+it:Tema chiaro
 ja:淡色
 kr:밝은
 kw:Golow
@@ -11137,7 +11165,7 @@ de:Verzeichnis im &Explorer öffnen
 el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείων
 es:Abrir directorio en &Explorador de Archivos
 fi:Avaa hakemisto &Explorerissa
-fr:Ouvrir dans &Explorer
+fr:Ouvrir dans l'&Explorateur
 gl:Abrir directorio no &explorador
 he:פתח מדריך בסייר הקבצים
 hu:Tároló mappa megnyitása
@@ -11268,7 +11296,9 @@ uk:Відкрити вкладений PDF
 vn:Mở PDF Đã Nhúng
 :Open In New Window
 br:Abrir em Nova Janela
+ca:Obre en una finestra nova
 cn:在新窗口中打开
+cy:Agor Mewn Ffenestr Newydd
 de:In neuem Fenster öffnen
 el:Άνοιγμα Σε Νέο Παράθυρο
 es:Abrir en nueva ventana
@@ -12264,7 +12294,7 @@ de:Bitte auf das Laden warten...
 el:Παρακαλώ περιμένετε - φόρτωση...
 es:Por favor, espere - cargando...
 fi:Odota - latautuu...
-fr:Chargement, veuillez patienter...
+fr:Veuillez patienter, chargement…
 gl:Prégase agardar, cargando...
 he:...אנא המתן - טוען
 hu:Kérem várjon...
@@ -12305,7 +12335,7 @@ et:Palun oota - toimub visualiseerimine...
 eu:Mesedez itxaron - aurkezten...
 fa:لطفاً صبر کنید...
 fi:Odota - tulkitaan...
-fr:Patientez s'il vous plaît, génération…
+fr:Veuillez patienter, génération…
 gl:Agarde por favor - compoñendo...
 he:אנא המתן – מבצע...
 hi:कृपया प्रतीक्षा करें - प्रतिपादन...
@@ -13010,7 +13040,9 @@ uk:Помилка друкування.
 vn:Lỗi in.
 :Properties...
 br:Propriedades...
+ca:Propietats...
 cn:属性...
+cy:Priodweddau...
 de:Eigenschaften...
 el:Ιδιότητες...
 es:Propiedades...
@@ -14827,7 +14859,7 @@ et:Näita sageli loetud dokumente
 eu:Erakutsi Sarri irakurriak
 fa:نشان دادن آخرین چیزهایی که خوانده‌اید
 fi:Näytä usein luetut
-fr:Montrer les documents lus fréquemment
+fr:Montrer les lectures fréquentes
 gl:Amosar lidos decote
 he:הצג 'נקרא תכופות'
 hi:अक्सर पढ़े जाने वाले दिखाएँ

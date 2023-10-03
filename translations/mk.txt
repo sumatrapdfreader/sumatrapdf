@@ -1,9 +1,4 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:&Actual Size
-:&Back
-:&Book View
 :&Caret
-:&Close
 :&Copy To Clipboard
 :&Facing
 :&First Page
@@ -23,16 +18,7 @@
 :&Theme
 :&Translate With Google
 :&Underline
-:Author: %s
-:Border: %d
-:Circle
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Close Other Tabs
-:Close Tabs To The Right
 :Command Palette
-:Contents:
-:Copy File Path
 :Copy To Clipboard
 :Couldn't get printer name
 :Couldn't uninstall Sumatra search filter
@@ -114,14 +100,24 @@
 :You have unsaved annotations
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+%s анотација. Цтрл+клик за селекција. Цтрл+двоен клик за менување.
 :&About
 &За SumatraPDF...
+:&Actual Size
+&Вистинска Големина
 :&Advanced Options...
 &Напредни oпции...
 :&All selected pages
 &Сите означени страници
+:&Back
+&Назад
+:&Book View
+&Преглед на Книга
 :&Cancel
 Откажи
+:&Close
+&Затвори
 :&Continue installing 32-bit version
 Продолжете со инсталирање на 32-битна верзија
 :&Copy Selection
@@ -220,6 +216,8 @@
 Прилог: %s
 :Author:
 Автор:
+:Author: %s
+Автор: %s
 :Automatic
 Автоматски
 :Automatically check for &updates
@@ -234,6 +232,8 @@
 Кратенки од обележувачи за страница %s од %s
 :Bookmarks
 Обележувачи
+:Border: %d
+Граница: %d
 :Bytes
 бајти
 :CHM documents
@@ -252,8 +252,18 @@ CHM-документи
 &Провери за надградби
 :Checking for update...
 Провери за надградба
+:Circle
+Круг
+:Cleared history of %d files, deleted thumbnails.
+Избришани се %d датотеки од историјата, избришани се сликите за преглед.
+:Clearing history...
+Бришење на историјата...
 :Close
 Затвори
+:Close Other Tabs
+Затвори Други Табови
+:Close Tabs To The Right
+Затвори Табови На Десно
 :Collapse All
 Затвори се
 :Color:
@@ -262,6 +272,8 @@ CHM-документи
 Стрипови
 :Compatibility
 Компатибилност
+:Contents:
+Содржини:
 :Continuous
 Непрекинат поглед
 :Continuous Book View
@@ -276,6 +288,8 @@ CHM-документи
 Копирај ја адресата на &врската
 :Copy Co&mment
 Копирај коментар
+:Copy File Path
+Копирај Патека до Датотеката
 :Copying text was denied (copying as image only)
 Копирањето на текстот беше одбиено (копирање само во вид на слика)
 :Copyright:

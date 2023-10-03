@@ -1,14 +1,11 @@
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Delete Annotation
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
 Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
 :&About
-Info progr&amma
+Informazioni sul progr&amma
 :&Actual Size
 Dimensione &attuale
 :&Advanced Options...
-Apri file (opzioni &avanzate)...
+&Opzioni avanzate...
 :&All selected pages
 &Tutte le pagine selezionate
 :&Back
@@ -78,7 +75,7 @@ S&olo pagine dispari
 :&Password:
 &Password:
 :&Pin Document
-&Attacca il documento (Pin)
+&Allega il documento (Pin)
 :&Previous Page
 Pagina &precedente
 :&Print...
@@ -195,6 +192,10 @@ Controlla &aggiornamenti programma
 Controllo aggiornamenti...
 :Circle
 Cerchio
+:Cleared history of %d files, deleted thumbnails.
+Svuotata la cronologia di %d file, anteprime eliminate
+:Clearing history...
+Svuotamento cronologia in corso...
 :Close
 Chiudi
 :Close Other Tabs
@@ -236,7 +237,7 @@ Impossibile copiare il testo (copia solo come immagine)
 :Copyright:
 Copyright:
 :Could not obtain Printer properties
-Impossibile ottenere info proprietà stampante
+Impossibile ottenere proprietà stampante
 :Couldn't create the installation directory
 Impossibile creare la cartella di installazione
 :Couldn't get printer name
@@ -270,15 +271,17 @@ Posizione cursore
 :Custom &Zoom...
 &Zoom personalizzato
 :Dark
-Scuro
+Tema scuro
 :Darker
-Più scuro
+Tema molto scuro
 :Date:
 Data:
 :Default &Layout:
 &Layout predefinito:
 :Default &Zoom:
 &Ingrandimento predefinito:
+:Delete Annotation
+Elimina Annotazione
 :Denied Permissions:
 Permessi rifiutati:
 :DjVu documents
@@ -418,7 +421,7 @@ Permetti a Windows Desktop Search di cercare i documenti PDF
 :Let Windows show &previews of PDF documents
 Permetti a Windows di visualizzare l'anteprima dei documenti PDF
 :Light
-Leggero
+Tema chiaro
 :Line
 Linea
 :Line End:

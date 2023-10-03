@@ -1,7 +1,3 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Close Other Tabs
 :Close Tabs To The Right
 :Copy File Path
 :Delete Annotation
@@ -18,6 +14,8 @@
 :Properties...
 :Save Attachment...
 :Show in folder
+:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
+%s ghi chú. Ctrl + nhấp chuột để chọn. Ctrl + nhấp đôi chuột để chỉnh sửa.
 :&About
 Giới thiệu
 :&Actual Size
@@ -210,8 +208,14 @@ Kiểm tra cập nhật
 Kiểm tra bản cập nhật mới...
 :Circle
 Vòng tròn
+:Cleared history of %d files, deleted thumbnails.
+Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
+:Clearing history...
+Đang dọn dẹp lịch sử...
 :Close
 Đóng lại
+:Close Other Tabs
+Đóng các tab khác
 :Collapse All
 Thu gọn tất cả
 :Color:

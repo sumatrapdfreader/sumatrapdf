@@ -16,7 +16,6 @@
 :&Translate With Google
 :&Underline
 :Cleared history of %d files, deleted thumbnails.
-:Clearing history...
 :Command Palette
 :Couldn't get printer name
 :Couldn't uninstall Sumatra search filter
@@ -192,7 +191,7 @@
 :Attachment: %s
 پیوست: %s
 :Author:
-مؤلف:
+نویسنده
 :Author: %s
 %s :نویسنده
 :Automatic
@@ -231,6 +230,8 @@ CHM اسناد
 چک کردن برای بروزرسانی
 :Circle
 دایره
+:Clearing history...
+پاک کردن تاریخجه
 :Close
 بستن
 :Close Other Tabs

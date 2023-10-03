@@ -1,11 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Copy File Path
-:Delete Annotation
-:Edit %s Annotation
-:Open In New Window
-:Properties...
+Anotació %s. Ctrl+clic per seleccionar. Ctrl+doble clic per editar.
 :&About
 &Quant a...
 :&Actual Size
@@ -198,6 +192,10 @@ Canvia l'idioma
 S'està comprovant si hi ha actualitzacions...
 :Circle
 Cercle
+:Cleared history of %d files, deleted thumbnails.
+S'ha esborrat l'historial de %d fitxers, i s'han suprimit les miniatures.
+:Clearing history...
+S'està esborrant l'historial...
 :Close
 Tanca
 :Close Other Tabs
@@ -230,6 +228,8 @@ Copia la &imatge
 Copia l'adreça de l'enllaç
 :Copy Co&mment
 Copia el co&mentari
+:Copy File Path
+Copia el camí del fitxer
 :Copy To Clipboard
 Copia al porta-retalls
 :Copying text was denied (copying as image only)
@@ -280,6 +280,8 @@ Data:
 &Disposició predeterminada:
 :Default &Zoom:
 &Ampliació predeterminada
+:Delete Annotation
+Suprimeix l'annotació
 :Denied Permissions:
 Permisos denegats:
 :DjVu documents
@@ -296,6 +298,8 @@ Baixa la versió de 64 bits
 Surt de &la pantalla completa
 :EPUB ebooks
 Documents EPUB
+:Edit %s Annotation
+Edita l'annotació %s
 :Edit Annotations
 Edita les anotacions
 :Enter password
@@ -476,6 +480,8 @@ Obre el directori amb &Total Commander
 Obre el directori amb el Directory &Opus
 :Open Embedded PDF
 Obre el PDF incrustat
+:Open In New Window
+Obre en una finestra nova
 :Open a document...
 Obre un document...
 :Open in %s
@@ -548,6 +554,8 @@ La impressió segueix en curs. Voleu cancel·lar-la i començar de nou?
 S'està imprimient la pàgina %d de %d...
 :Printing problem.
 S'ha produït un problema en la impressió.
+:Properties...
+Propietats...
 :Re&name...
 Ca&nvia el nom...
 :Rect: x=%d y=%d dx=%d dy=%d

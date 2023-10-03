@@ -1,11 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Copy File Path
-:Delete Annotation
-:Edit %s Annotation
-:Open In New Window
-:Properties...
+%s nodiant. Ctrl+clic i ddewis. Ctrl+dbl i olygu.
 :&About
 &Ynghylch
 :&Actual Size
@@ -198,6 +192,10 @@ Gwirio am &Ddiweddariadau
 Gwirio am ddiweddariad...
 :Circle
 Cylchu
+:Cleared history of %d files, deleted thumbnails.
+Hanes wedi'i glirio o ffeiliau %d., lluniau bach wedi'u dileu
+:Clearing history...
+Yn clirio hanes...
 :Close
 Cau
 :Close Other Tabs
@@ -230,6 +228,8 @@ Copïo &Delwedd
 Copïo &Dolen Cyfeiriad
 :Copy Co&mment
 Copïo &Sylw
+:Copy File Path
+Llwybr Copïo Ffeil
 :Copy To Clipboard
 Copïo i'r Clipfwrdd
 :Copying text was denied (copying as image only)
@@ -280,6 +280,8 @@ Dyddiad:
 &Cynllun Rhagosodedig:
 :Default &Zoom:
 C&hwyddo Rhagosodedig:
+:Delete Annotation
+Dileu Nodiant
 :Denied Permissions:
 Gwrthodwyd Caniatâd:
 :DjVu documents
@@ -296,6 +298,8 @@ Llwytho'r fersin 64-did i lawr
 Gadael Sgrin Lawn
 :EPUB ebooks
 eLyfrau EPUB
+:Edit %s Annotation
+Golygu Nodiant %s
 :Edit Annotations
 Golygu Anodiadau
 :Enter password
@@ -476,6 +480,8 @@ Agor Cyfeiriadur yn &Total Commander
 Agor Cyfarwyddiadur yng Nghyfarwyddiadur &Opus
 :Open Embedded PDF
 Agor PDF wedi'i Mewnosod
+:Open In New Window
+Agor Mewn Ffenestr Newydd
 :Open a document...
 Agor dogfen...
 :Open in %s
@@ -548,6 +554,8 @@ Dal wrthi'n argraffu. Hepgor a chychwyn eto?
 Argraffu tudalen %d o %d...
 :Printing problem.
 Anhawster argraffu
+:Properties...
+Priodweddau...
 :Re&name...
 &Ailenwi...
 :Rect: x=%d y=%d dx=%d dy=%d

@@ -35,7 +35,7 @@ Seulement les pages &paires
 :&File
 &Fichier
 :&Find what:
-&Rechercher quoi :
+&Rechercher :
 :&First Page
 P&remière page
 :&Fit pages to printable area
@@ -301,7 +301,7 @@ Fichiers EPUB
 :Edit %s Annotation
 Modifier l'annotation %s
 :Edit Annotations
-Éditer les annotations
+Modifier les annotations
 :Enter password
 Entrer le mot de passe
 :Enter password for %s
@@ -377,7 +377,7 @@ Texte trouvé à la page %s
 :Found text at page %s (again)
 Texte trouvé page %s (suivant)
 :Frequently Read
-Documents lus fréquemment
+Lu fréquemment
 :GB
 Go
 :Get Fonts Info
@@ -387,9 +387,9 @@ Aller à la page
 :Hide &Options
 Masquer les &options
 :Hide frequently read
-Masquer les documents lus fréquemment
+Masquer les lectures fréquentes
 :Hint: Use the F3 key for finding again
-Remarque : utilisez la touche F3 pour trouver de nouveau
+Remarque : touche F3 pour le résultat suivant
 :Icon:
 Icône :
 :Image files (*.%s)
@@ -473,7 +473,7 @@ Ouvrir la pièce jointe
 :Open Directory in &Double Commander
 Ouvrir dans &Double Commander
 :Open Directory in &Explorer
-Ouvrir dans &Explorer
+Ouvrir dans l'&Explorateur
 :Open Directory in &Total Commander
 Ouvrir dans &Total Commander
 :Open Directory in Directory &Opus
@@ -523,9 +523,9 @@ Fichiers PalmDoc
 :Please close %s to proceed!
 Fermez %s pour continuer, s.v.p. !
 :Please wait - loading...
-Chargement, veuillez patienter...
+Veuillez patienter, chargement…
 :Please wait - rendering...
-Patientez s'il vous plaît, génération…
+Veuillez patienter, génération…
 :Poly Line
 Ligne polygonale
 :Polygon
@@ -635,7 +635,7 @@ Afficher les favoris
 :Show Scr&ollbars
 Afficher les barres de &défilement
 :Show frequently read
-Montrer les documents lus fréquemment
+Montrer les lectures fréquentes
 :Show in &folder
 Ouvrir le &dossier
 :Show in folder
