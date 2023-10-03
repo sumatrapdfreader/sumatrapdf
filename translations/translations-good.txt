@@ -9,6 +9,7 @@ de:%s Anmerkung.
 el:%s σχολιασμός. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
 es:%s anotación. Ctrl+click para seleccionar. Ctrl+doble click para editar.
 fr:Annotation %s. Ctrl+clic pour sélectionner. Ctrl+dbl clic pour modifier.
+hr:%s bilješka. Ctrl+klik za odabir. Ctrl+dpl klik za uređivanje.
 hu:%s megjegyzés. Ctrl+kattintás a kijelöléshez. Ctrl+dupla kattintás a szerkesztéshez.
 it:Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
 kr:%s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
@@ -4606,6 +4607,7 @@ de:Verlauf von %d Dateien gelöscht, Miniaturansichten gelöscht.
 el:Εκκαθάριση Ιστορικού %d αρχείων,διαγραφή μικρογραφιών.
 es:Eliminado historial de %d ficheros, miniaturas eliminadas.
 fr:Historique de %d fichiers effacé, vignettes supprimées.
+hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
 it:Svuotata la cronologia di %d file, anteprime eliminate
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
@@ -4623,6 +4625,7 @@ el:Καθάρισμα Ιστορικού...
 es:Borrando historial...
 fa:پاک کردن تاریخجه
 fr:Effacement de l'historique…
+hr:Brisanje povijesti...
 hu:Előzmények törlése...
 it:Svuotamento cronologia in corso...
 kr:내역 초기화...
@@ -5403,6 +5406,7 @@ el:Αντιγραφή Τοποθεσίας Αρχείου
 es:Copiar dirección del archivo
 fa:کپی کردن مسیر فایل
 fr:Copier le chemin du fichier
+hr:Kopiraj putanju datoteke
 hu:Útvonal másolása
 it:Copia percorso file
 kr:파일 경로 복사
@@ -6631,6 +6635,7 @@ de:Anmerkung löschen
 el:Διαγραφή Σχολιασμού
 es:Eliminar anotación
 fr:Supprimer l'annotation
+hr:Izbriši bilješku
 hu:Megjegyzés törlése
 it:Elimina Annotazione
 kr:주석 삭제
@@ -7030,6 +7035,7 @@ de:%s Anmerkung bearbeiten
 el:Επεξεργασία %s Σχολιασμού
 es:Editar %s anotación
 fr:Modifier l'annotation %s
+hr:Uredi %s bilješku
 hu:%s. megjegyzés szerkesztése
 it:Modifica annotazione %s
 kr:주석 편집 (%s)
@@ -11137,6 +11143,7 @@ fi:Avaa hakemisto &Double Commanderissa
 fr:Ouvrir dans &Double Commander
 gl:Abrir directorio no &Double Commander
 he:Double Commander -פתח מדריך ב
+hr:Otvori direktorij u &Double Commanderu
 hu:Mappa megnyitása Double Commander-ben
 id:Buka Direktori di &Double Commander
 it:Apri cartella in &Double Commander
@@ -11168,6 +11175,7 @@ fi:Avaa hakemisto &Explorerissa
 fr:Ouvrir dans l'&Explorateur
 gl:Abrir directorio no &explorador
 he:פתח מדריך בסייר הקבצים
+hr:Otvori direktorij u &Exploreru
 hu:Tároló mappa megnyitása
 id:Buka Direktori di &Explorer
 it:Apri cartella in &Explorer
@@ -11199,6 +11207,7 @@ fi:Avaa hakemisto &Total Commanderissa
 fr:Ouvrir dans &Total Commander
 gl:Abrir directorio no &Total Commander
 he:Total Commander -פתח מדריך ב
+hr:Otvori direktorij u &Total Commanderu
 hu:Mappa megnyitása Total Commander-ben
 id:Buka Direktori di &Total Commander
 it:Apri cartella in &Total Commander
@@ -11230,6 +11239,7 @@ fi:Avaa hakemisto osoitteessa Directory &Opus
 fr:Ouvrir dans Directory &Opus
 gl:Abrir directorio no Directory &Opus
 he:פתח מדריך בספריה Opus
+hr:Otvori direktorij u Directory &Opusu
 hu:Mappa megnyitása Opus-ban
 id:Buka Direktori di Directory &Opus
 it:Apri cartella in Directory &Opus
@@ -11304,6 +11314,7 @@ el:Άνοιγμα Σε Νέο Παράθυρο
 es:Abrir en nueva ventana
 fa:بازکردن در پنجره جدید
 fr:Ouvrir dans une nouvelle fenêtre
+hr:Otvori u novom prozoru
 hu:Megnyitás új ablakban
 it:Apri in una nuova finestra
 ja:新しいウィンドウで開く
@@ -11579,6 +11590,7 @@ fi:Avaa Microsoft &HTML Help -ohjelmassa
 fr:Ouvrir dans &HTML Help
 gl:Abrir na axuda Microsoft &HTML
 he:פתח בעזרה של Microsoft HTML
+hr:Otvori u Microsoft &HTML Helpu
 hu:Microsoft Súgó megnyitása
 id:Buka di Microsoft &HTML Bantuan
 it:Apri in Microsoft &HTML Help
@@ -12297,6 +12309,7 @@ fi:Odota - latautuu...
 fr:Veuillez patienter, chargement…
 gl:Prégase agardar, cargando...
 he:...אנא המתן - טוען
+hr:Molim pričekajte - učitavanje...
 hu:Kérem várjon...
 id:Mohon tunggu - sedang memuat...
 it:Caricamento...
@@ -13048,6 +13061,7 @@ el:Ιδιότητες...
 es:Propiedades...
 fa:مشخصات
 fr:Propriétés…
+hr:Svojstva...
 hu:Tulajdonságok
 it:Proprietà
 ja:プロパティ

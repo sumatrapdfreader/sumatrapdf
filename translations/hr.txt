@@ -1,17 +1,5 @@
 :%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Copy File Path
-:Delete Annotation
-:Edit %s Annotation
-:Open Directory in &Double Commander
-:Open Directory in &Explorer
-:Open Directory in &Total Commander
-:Open Directory in Directory &Opus
-:Open In New Window
-:Open in Microsoft &HTML Help
-:Please wait - loading...
-:Properties...
+%s bilješka. Ctrl+klik za odabir. Ctrl+dpl klik za uređivanje.
 :&About
 &O programu...
 :&Actual Size
@@ -204,6 +192,10 @@ Provjeri ažuriranje
 Provjera dostupnosti ažuriranja...
 :Circle
 Krug
+:Cleared history of %d files, deleted thumbnails.
+Izbrisana povijest %d datoteka, izbrisane minijature.
+:Clearing history...
+Brisanje povijesti...
 :Close
 Zatvori
 :Close Other Tabs
@@ -236,6 +228,8 @@ Kopiraj Sl&iku
 Kopiraj adresu &linka
 :Copy Co&mment
 Kopiraj ko&mentar
+:Copy File Path
+Kopiraj putanju datoteke
 :Copy To Clipboard
 Kopiraj u međuspremnik
 :Copying text was denied (copying as image only)
@@ -286,6 +280,8 @@ Datum:
 Pretpostavljeni &izgled:
 :Default &Zoom:
 Pretpostavljeno &uvećanje:
+:Delete Annotation
+Izbriši bilješku
 :Denied Permissions:
 Dozvole ograničenja:
 :DjVu documents
@@ -302,6 +298,8 @@ I&zlaz
 I&zlaz iz cijelog ekrana
 :EPUB ebooks
 EPUB dokumenti
+:Edit %s Annotation
+Uredi %s bilješku
 :Edit Annotations
 Uredi bilješke
 :Enter password
@@ -472,8 +470,18 @@ Otvori
 Otvori u programu PDF-XChange
 :Open Attachment
 Otvori prilog
+:Open Directory in &Double Commander
+Otvori direktorij u &Double Commanderu
+:Open Directory in &Explorer
+Otvori direktorij u &Exploreru
+:Open Directory in &Total Commander
+Otvori direktorij u &Total Commanderu
+:Open Directory in Directory &Opus
+Otvori direktorij u Directory &Opusu
 :Open Embedded PDF
 Otvori ugrađeni PDF
+:Open In New Window
+Otvori u novom prozoru
 :Open a document...
 Otvori dokument...
 :Open in %s
@@ -484,6 +492,8 @@ Otvori u programu &Adobe Reader
 Otvori u programu &Foxit Reader
 :Open in &Microsoft XPS-Viewer
 Otvori u programu Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
+Otvori u Microsoft &HTML Helpu
 :P&roperties
 &Svojstva
 :PDF Document
@@ -512,6 +522,8 @@ Stranica:
 PalmDoc dokumenti
 :Please close %s to proceed!
 Molim zatvorite %s za nastavak!
+:Please wait - loading...
+Molim pričekajte - učitavanje...
 :Please wait - rendering...
 Molim pričekajte, iscrtavam...
 :Poly Line
@@ -542,6 +554,8 @@ Ispis je još u tijeku. Prekini i započni ponovno?
 Ispis stranice %d od %d...
 :Printing problem.
 Problem prilikom ispisivanja.
+:Properties...
+Svojstva...
 :Re&name...
 Preime&nuj
 :Rect: x=%d y=%d dx=%d dy=%d
