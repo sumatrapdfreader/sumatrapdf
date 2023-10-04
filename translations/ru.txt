@@ -1,8 +1,7 @@
+:%s annotation. Ctrl+click to edit.
 :Cleared history of %d files, deleted thumbnails.
 :Clearing history...
 :Delete Annotation
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-Аннотация %s. Ctrl+щелчок для выбора. Ctrl+двойной щелчок для изменения.
 :&About
 &О программе...
 :&Actual Size

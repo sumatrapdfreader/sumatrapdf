@@ -1,5 +1,4 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-%s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
+:%s annotation. Ctrl+click to edit.
 :&About
 關於(&A)
 :&Actual Size

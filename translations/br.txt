@@ -1,5 +1,4 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
+:%s annotation. Ctrl+click to edit.
 :&About
 Sobre
 :&Actual Size

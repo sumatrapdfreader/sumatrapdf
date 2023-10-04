@@ -1,5 +1,4 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
+:%s annotation. Ctrl+click to edit.
 :&About
 &O programie SumatraPDF
 :&Actual Size

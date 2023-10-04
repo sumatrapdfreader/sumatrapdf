@@ -1,5 +1,4 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-Anotació %s. Ctrl+clic per seleccionar. Ctrl+doble clic per editar.
+:%s annotation. Ctrl+click to edit.
 :&About
 &Quant a...
 :&Actual Size
@@ -281,7 +280,7 @@ Data:
 :Default &Zoom:
 &Ampliació predeterminada
 :Delete Annotation
-Suprimeix l'annotació
+Suprimeix l'anotació
 :Denied Permissions:
 Permisos denegats:
 :DjVu documents
@@ -299,7 +298,7 @@ Surt de &la pantalla completa
 :EPUB ebooks
 Documents EPUB
 :Edit %s Annotation
-Edita l'annotació %s
+Edita l'anotació %s
 :Edit Annotations
 Edita les anotacions
 :Enter password
@@ -493,7 +492,7 @@ Obre amb el &Foxit Reader
 :Open in &Microsoft XPS-Viewer
 Obre amb el Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
-Obre a l'ajuda amb Microsoft &HTML
+Obre amb l'Ajuda &HTML de Microsoft
 :P&roperties
 P&ropietats
 :PDF Document

@@ -1,24 +1,6 @@
 AppTranslator: SumatraPDF
-45ba2464e41503d1a729eb7a3230e5f4cc1d0007
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-br:%s anotação. Ctrl+clique para selecionar. Ctrl+duplo clique para editar
-ca:Anotació %s. Ctrl+clic per seleccionar. Ctrl+doble clic per editar.
-cn:%s标注。按 Ctrl+单击 选中标注；按 Ctrl+双击 编辑标注。
-cy:%s nodiant. Ctrl+clic i ddewis. Ctrl+dbl i olygu.
-de:%s Anmerkung.
-el:%s σχολιασμός. Ctrl+κλικ για να επιλέξετε.Ctrl+διπλό κλικ για να επεξεργαστείτε.
-es:%s anotación. Ctrl+click para seleccionar. Ctrl+doble click para editar.
-fr:Annotation %s. Ctrl+clic pour sélectionner. Ctrl+dbl clic pour modifier.
-hr:%s bilješka. Ctrl+klik za odabir. Ctrl+dpl klik za uređivanje.
-hu:%s megjegyzés. Ctrl+kattintás a kijelöléshez. Ctrl+dupla kattintás a szerkesztéshez.
-it:Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
-kr:%s 주석. 선택은 Ctrl+클릭, 편집은 Ctrl+더블클릭.
-mk:%s анотација. Цтрл+клик за селекција. Цтрл+двоен клик за менување.
-nl:%s aantekening. Ctrl+klik om te selecteren. Ctrl+dubbelklik om te bewerken.
-pl:Adnotacja %s. Ctrl+kliknięcie, aby zaznaczyć. Ctrl+podwójne kliknięcie, aby edytować.
-ru:Аннотация %s. Ctrl+щелчок для выбора. Ctrl+двойной щелчок для изменения.
-tw:%s 註解. 按Ctrl+滑鼠左鍵選取. 按Ctrl+滑鼠左鍵兩下進行編輯. 
-vn:%s ghi chú. Ctrl + nhấp chuột để chọn. Ctrl + nhấp đôi chuột để chỉnh sửa.
+179fcd67e7b9ab66da009a392599dd628e6a8128
+:%s annotation. Ctrl+click to edit.
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8290,7 +8272,7 @@ uz:Andoza &miqyos
 vn:Kích thước mặc định
 :Delete Annotation
 br:Apagar Anotação
-ca:Suprimeix l'annotació
+ca:Suprimeix l'anotació
 cn:删除标注
 cy:Dileu Nodiant
 de:Anmerkung löschen
@@ -8763,7 +8745,7 @@ uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Edit %s Annotation
 br:Editar a Anotação %s
-ca:Edita l'annotació %s
+ca:Edita l'anotació %s
 cn:编辑%s标注
 cy:Golygu Nodiant %s
 de:%s Anmerkung bearbeiten
@@ -14391,7 +14373,7 @@ vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
 br:Abrir em Microsoft &HTML Help
 by:Адкрыць у Microsoft &HTML Help
-ca:Obre a l'ajuda amb Microsoft &HTML
+ca:Obre amb l'Ajuda &HTML de Microsoft
 cn:在 Microsoft HTML 帮助中打开(&H)
 co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft &HTML Help

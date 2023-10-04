@@ -1,5 +1,4 @@
-:%s annotation. Ctrl+click to select. Ctrl+dbl click to edit.
-Annotazione %s - Ctrl+clic per selezionarla - Ctrl+doppio clic per modificarla
+:%s annotation. Ctrl+click to edit.
 :&About
 Informazioni sul progr&amma
 :&Actual Size
