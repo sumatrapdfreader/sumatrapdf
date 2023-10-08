@@ -1,150 +1,73 @@
 :%s annotation. Ctrl+click to edit.
-:&Actual Size
-:&Back
-:&Book View
-:&Cancel
-:&Caret
-:&Close
-:&Continue installing 32-bit version
-:&Copy To Clipboard
-:&Discard changes
-:&Facing
-:&First Page
-:&Free Text
-:&Highlight
-:&Last Page
-:&Next Page
-:&Open...
-:&Previous Page
-:&Save to existing PDF
-:&Search With Google
-:&Single Page
-:&Stamp
-:&Strike Out
-:&Text
-:&Translate With Google
-:&Underline
-:Author: %s
-:Background Color:
-:Border: %d
-:Checking for update...
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Close Other Tabs
-:Close Tabs To The Right
-:Color:
-:Command Palette
-:Contents:
-:Copy File Path
-:Copy To Clipboard
-:Couldn't get printer name
-:Create Annotation &Under Cursor
-:Create Annotation From Selection
-:Custom &Zoom...
-:Date:
-:Delete Annotation
-:Don't install
-:Download 64-bit version
-:E&xit
-:Edit %s Annotation
-:F&orward
-:F&ullscreen
-:Fin&d...
-:Fit &Content
-:Fit &Page
-:Fit &Width
-:Get Fonts Info
-:Icon:
-:Install and relaunch
-:Install for all users
-:Installing 32-bit SumatraPDF on 64-bit OS
-:Interior Color:
-:Line End:
-:Line Start:
-:Loading %s ...
-:New &window
-:New version available
-:Opacity:
-:Opacity: %d
-:Open Attachment
-:Open Directory in &Double Commander
-:Open Directory in &Explorer
-:Open Directory in &Total Commander
-:Open Directory in Directory &Opus
-:Open In New Window
-:Open in Microsoft &HTML Help
-:Pa&ge...
-:Please wait - loading...
-:Popup: %d 0 R
-:Pr&esentation
-:Properties...
-:Re&name...
-:Rect: x=%d y=%d dx=%d dy=%d
-:Rotate &Left
-:Rotate &Right
-:S&election
-:S&quiggly
-:SVG documents
-:Save Annotations to existing PDF
-:Save Attachment...
-:Save S&hortcut...
-:Save annotations?
-:Save changes to a new PDF
-:Save changes to existing PDF
-:Save to &new PDF
-:Saved annotations to '%s'
-:Saving of '%s' failed with: '%s'
-:Search With &Bing
-:Search With &Google
-:Show Book&marks
-:Show in folder
-:Skip this version
-:Text Alignment:
-:Text Color:
-:Text Size:
-:Text Size: %d
-:Translate with &DeepL
-:Unsaved annotations
-:Unsaved annotations in '%s'
-:You have unsaved annotations
-:You have version '%s' and version '%s' is available.\nDo you want to install new version?
-:You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
+%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 :&About
 Maidir le
+:&Actual Size
+&Méid iarbhír
 :&Advanced Options...
 &Ardroghanna...
 :&All selected pages
 &Gach leathanach roghnaithe
+:&Back
+&Siar
+:&Book View
+&Amharc Leabhair
+:&Cancel
+&Cealaigh
+:&Caret
+&Carait
+:&Close
+&Dún
+:&Continue installing 32-bit version
+&Lean ar aghaidh ag suiteáil an leagain 32-beart
 :&Copy Selection
 &Macasamhlaigh an Roghnúchán
+:&Copy To Clipboard
+&Cóipeáil chuig an ngearrthaisce é
+:&Discard changes
+Cuileáil na hathruithe
 :&Don't ask me again
 &Ná fiafraigh dom arís
 :&Even pages only
 &Leathanaigh cothromacha amháin
+:&Facing
+&Dhá leathanach
 :&File
 &Comhad
 :&Find what:
 &Aimsigh céard:
+:&First Page
+&An Chéad Leathanach
 :&Fit pages to printable area
 &Oiriúnaigh leathanaigh go limistéar inchlóbhuailte
+:&Free Text
+&Téacs Saor
 :&Go To
 &Téigh Chuig
 :&Go to page:
 &Téigh chuig lch:
 :&Help
 &Cabhair
+:&Highlight
+&Aibhsigh
+:&Last Page
+&An leathanach deireanach
 :&Magnification:
 For&mhéadú:
 :&Manual
 Lá&mhleabhar
 :&Match case
 &Comhoiriúnaigh an cás
+:&Next Page
+&Leathanach Ar Aghaidh
 :&No
 &Ná déan
 :&Odd pages only
 &Corr-leathanaigh amháin
 :&Open Document
 &Oscail Cáipéis
+:&Open...
+&Oscail...
 :&Options
 &Roghanna
 :&Options...
@@ -153,6 +76,8 @@ Lá&mhleabhar
 &Focal faire:
 :&Pin Document
 &Greamaigh an cháipéis le biorrán
+:&Previous Page
+&An leathanach roimhe
 :&Print...
 &Clóbhuail...
 :&Print... (denied)
@@ -165,12 +90,28 @@ Cuimhnigh ar na socruithe seo do gach cáipéis
 &Bain ón stair
 :&Save As...
 &Cuir i dtaisce mar...
+:&Save to existing PDF
+&Cuir i dtaisce i PDF atá ann
+:&Search With Google
+&Cuardaigh le Google
 :&Settings
 &Socruithe
 :&Shrink pages to printable area (if necessary)
 &Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
+:&Single Page
+&Leathanach amháin
+:&Stamp
+&Stampa
+:&Strike Out
+&Leag Amach
+:&Text
+&Téacs
 :&Theme
 &Téama
+:&Translate With Google
+&Aistrigh le Google é
+:&Underline
+&Cuir líne faoi
 :&Use original page sizes
 &Bain feidhm as méideanna bunaidh an leathanaigh
 :&View
@@ -213,10 +154,14 @@ Comhthiomsaigh le comhaid PDF?
 Ceangaltán: %s
 :Author:
 Údar:
+:Author: %s
+Údar: %s
 :Automatic
 Go huathoibríoch
 :Automatically check for &updates
 Lorg nuashonruithe go huathoibríoch
+:Background Color:
+Dath an chúlra:
 :Book View
 Leabhar-amharc
 :Bookmark Shortcuts
@@ -225,6 +170,8 @@ Déan leabharmharc d'aicearraí
 Cruthaigh aicearra chuig lch %s as %s
 :Bookmarks
 Leabharmharcanna
+:Border: %d
+Imlíne: %d
 :Bytes
 Bearta
 :CHM documents
@@ -241,16 +188,32 @@ Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne an ordaithe 
 Athraigh an Teanga (Change Language)
 :Check for &Updates
 Lorg Nuashonruithe
+:Checking for update...
+Tá nuashonrú á lorg...
 :Circle
 Ciorcal
+:Cleared history of %d files, deleted thumbnails.
+Glanadh an t-oireas de %d comhad, mionsamhlacha scriosta.
+:Clearing history...
+Tá an t-oireas á ghlanadh...
 :Close
 Dún
+:Close Other Tabs
+Dún cluaisíní eile
+:Close Tabs To The Right
+Dún cluaisíní ar dheis
 :Collapse All
 Laghdaigh Gach
+:Color:
+Dath:
 :Comic books
 Greannáin
+:Command Palette
+Pailéad na n-orduithe
 :Compatibility
 Comhoiriúnacht
+:Contents:
+Inneachar:
 :Continuous
 Amharc leanúnach
 :Continuous Book View
@@ -265,6 +228,10 @@ Macasamhlaigh an &Íomhá
 Macasamhlaigh seoladh an naisc
 :Copy Co&mment
 Macasamhlaigh an nóta tráchta
+:Copy File Path
+Cóipeáil Conair an Chomhaid
+:Copy To Clipboard
+Cóipeáil chuig an ngearrthaisce é
 :Copying text was denied (copying as image only)
 Níorbh fhéidir téacs a mhacasamhlú (tá sé á mhacasamhlú mar íomhá amháin)
 :Copyright:
@@ -273,6 +240,8 @@ Cóipcheart:
 Níorbh fhéidir airíonna an chlóire a fháil
 :Couldn't create the installation directory
 Níorbh fhéidir an chomhadlann suiteála a chruthú
+:Couldn't get printer name
+Níorbh fhéidir ainm an chlóire a fháil
 :Couldn't initialize printer
 Níorbh fhéidir an clóire a thúsú
 :Couldn't install PDF previewer
@@ -289,30 +258,48 @@ Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
 Níorbh fhéidir an breiseán don líonléitheoir a dhíshuiteáil
 :Couldn't write %s to disk
 Níorbh fhéidir %s a scríobh chuig an diosca
+:Create Annotation &Under Cursor
+Cruthaigh nóta mínithe faoin gcursóir
+:Create Annotation From Selection
+Cruthaigh nótaí mínithe ón rogha
 :Created:
 Cruthaithe:
 :Current file
 Comhad reatha
 :Cursor position:
 Suíomh an chúrsóra:
+:Custom &Zoom...
+Gluais saincheaptha...
 :Dark
 dorcha
 :Darker
 nios dorcha
+:Date:
+Dáta:
 :Default &Layout:
 &Leagan amach réamhshocraithe:
 :Default &Zoom:
 Formhéadú réamhshocraithe:
+:Delete Annotation
+Scrios an nóta mínithe
 :Denied Permissions:
 Ceadanna diúltaithe:
 :DjVu documents
 Cáipéisí DjVu
 :Document Properties
 Airíonna na cáipéise
+:Don't install
+Ná suiteáil é
+:Download 64-bit version
+Íosluchtaigh an leagan 64-beart
+:E&xit
+Scoir
 :E&xit Fullscreen
 Fág an lánscáileán
 :EPUB ebooks
 Cáipéisí EPUB
+:Edit %s Annotation
+Cuir an nóta mínithe %s in eagar
 :Edit Annotations
 Cuir nótaí mínithe in eagar
 :Enter password
@@ -327,6 +314,10 @@ Tharla botún ag luchtú %s
 Leathnaigh Gach
 :F&avorites
 Ce&anáin
+:F&orward
+Ar aghaidh
+:F&ullscreen
+Lánscáileán
 :Facing
 Dhá Leathanach
 :Failed to delete uninstaller registry keys
@@ -353,6 +344,8 @@ Ceangaltán comhaid
 Méid an chomhaid:
 :File:
 Comhad:
+:Fin&d...
+Aimsigh...
 :Find
 Aimsigh
 :Find Next
@@ -361,6 +354,12 @@ Aimsigh Ar Aghaidh
 Aimsigh Roimhe
 :Find:
 Aimsigh:
+:Fit &Content
+Oiriúnaigh an t-inneachar
+:Fit &Page
+Oiriúnaigh don leathanach é
+:Fit &Width
+Oiriúnaigh don leithead é
 :Fit Content
 Oiriúnaigh an t-inneachar
 :Fit Page
@@ -381,6 +380,8 @@ Aimsíodh téacs ag lch a %s (arís)
 Léite Go Minic
 :GB
 GB
+:Get Fonts Info
+Faigh eolas maidir le na clófhoirne
 :Go to page
 Téigh chuig lch
 :Hide &Options
@@ -389,6 +390,8 @@ Cuir na roghanna i bhfolach
 Folaigh cinn léite go minic
 :Hint: Use the F3 key for finding again
 Leid: Bain feidhm as an gcnaipe F3 chun nithe a aimsiú arís
+:Icon:
+Deilbhín:
 :Image files (*.%s)
 Comhaid íomhánna (*.%s)
 :Images
@@ -399,10 +402,18 @@ Dúch
 Suiteáil SumatraPDF
 :Install SumatraPDF in &folder:
 Suiteáil SumatraPDF sa bh&fillteán seo:
+:Install and relaunch
+Suiteáil agus atosaigh é
+:Install for all users
+Suiteáil do chách é
 :Installation failed!
 Theip ar an suiteáil!
 :Installation in progress...
 Suiteáil ar siúl...
+:Installing 32-bit SumatraPDF on 64-bit OS
+Ag suiteáil SumatraPDF 32-beart ar chóras oibriúcháin 64-beart
+:Interior Color:
+An dath inmheánach:
 :KB
 KB
 :Let Windows Desktop Search &search PDF documents
@@ -413,6 +424,12 @@ Lig do Windows réamhamhairc de cháipéisí PDF a thaispeáint
 éadroime
 :Line
 Líne
+:Line End:
+Críoch na líne:
+:Line Start:
+Tús an líne:
+:Loading %s ...
+%s á luchtú...
 :MB
 MB
 :Make SumatraPDF default application for PDF files?
@@ -425,6 +442,10 @@ Comhoiriúnaigh an cás
 Cáipéisí Mobi
 :Modified:
 Mionathraithe:
+:New &window
+Fuinneog nua
+:New version available
+Tá leagan nua ar fáil
 :Next Page
 Leathanach Ar Aghaidh
 :No matches were found
@@ -439,12 +460,28 @@ Níl faisnéis chomhaimseartha ag an suíomh seo
 Líon na leathanaigh:
 :OK
 Tá go maith
+:Opacity:
+Teimhneacht:
+:Opacity: %d
+Teimhneacht: %d
 :Open
 Oscail
 :Open &in PDF-XChange
 Oscail &i PDF-XChange
+:Open Attachment
+Oscail an ceangaltán
+:Open Directory in &Double Commander
+Oscail an chomhadlann i gceannasaí &dúbailte
+:Open Directory in &Explorer
+Oscail an Chomhadlann in &Explorer
+:Open Directory in &Total Commander
+Oscail an chomhadlann i gceannasaí iomlán
+:Open Directory in Directory &Opus
+Oscail an chomhadlann i saothar comhadlainne
 :Open Embedded PDF
 Oscail PDF leabaithe
+:Open In New Window
+Oscail i bhfuinneog nua
 :Open a document...
 Oscail cáipéis...
 :Open in %s
@@ -455,6 +492,8 @@ Oscail in &Adobe Reader
 Oscail i &Foxit Reader
 :Open in &Microsoft XPS-Viewer
 Oscail i &Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
+Oscail in Microsoft &HTML Help
 :P&roperties
 Ai&ríonna
 :PDF Document
@@ -467,6 +506,8 @@ Déantasóir PDF:
 Leagan PDF:
 :PDF documents
 Cáipéisí PDF
+:Pa&ge...
+Leathanach...
 :Page %s
 Leathanach %s
 :Page Size:
@@ -481,14 +522,20 @@ Leathanach:
 Cáipéisí PalmDoc
 :Please close %s to proceed!
 Dún %s le do thoil chun dul ar aghaidh!
+:Please wait - loading...
+Fan le do thoil - tá sé ag luchtú...
 :Please wait - rendering...
 Fan le do thoil - tá sé á chóiriú...
 :Poly Line
 Líne iolrach
 :Polygon
 Polagán
+:Popup: %d 0 R
+Mír aníos: %d 0 R
 :Postscript documents
 Cáipéisí Postscript
+:Pr&esentation
+Cur i láthair
 :Previous Page
 Leathanach Roimhe
 :Print
@@ -507,6 +554,12 @@ Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
 Ag clóbhualadh leathanach a %d as %d...
 :Printing problem.
 Fadhb chlóbhuailte.
+:Properties...
+Airíonna...
+:Re&name...
+Athai&nmnigh...
+:Rect: x=%d y=%d dx=%d dy=%d
+Ceart: x=%d y=%d dx=%d dy=%d
 :Redact
 Folaigh
 :Remember &opened files
@@ -517,8 +570,40 @@ Bain ó na ceanáin
 Bain leathanach a %s ó na ceanáin
 :Rename To
 Athainmnigh chuig
+:Rotate &Left
+Rothlaigh tuathal é
+:Rotate &Right
+Rothlaigh deiseal é
+:S&election
+Roghnú
+:S&quiggly
+Catach
+:SVG documents
+Cáipéisí SVG
+:Save Annotations to existing PDF
+Cuir na nótaí mínithe i dtaisce sa PDF atá ann
+:Save Attachment...
+Cuir an ceangaltán i dtaisce...
 :Save Embedded File...
 Taisc comhad leabaithe...
+:Save S&hortcut...
+Cuir an t-aicearra i dtaisce...
+:Save annotations?
+Cuir na nótaí mínithe i dtaisce?
+:Save changes to a new PDF
+Cuir na hathruithe i dtaisce in PDF nua
+:Save changes to existing PDF
+Cuir na hathruithe i dtaisce in PDF atá ann
+:Save to &new PDF
+Cuir i dtaisce sa PDF &nua é
+:Saved annotations to '%s'
+Cuireadh na hathruithe i dtaisce in '%s'
+:Saving of '%s' failed with: '%s'
+Níorbh fhéidir '%s' a chur i dtaisce le: '%s'
+:Search With &Bing
+Cuardaigh le &Bing
+:Search With &Google
+Cuardaigh le &Google
 :Searching %d of %d...
 Ag cuardach %d as %d...
 :Select &All
@@ -543,6 +628,8 @@ Teaspáin na leathanaigh go leanúnach
 Taispeáin na barraí &scrollála
 :Show &Toolbar
 Taispeáin an Barra Uirlisí
+:Show Book&marks
+Taispeáin na Ceanáin
 :Show Favorites
 Taispeáin Ceanáin
 :Show Scr&ollbars
@@ -551,10 +638,14 @@ Taispeáin na barraí scr&ollála
 Taispeáin cinn léite go minic
 :Show in &folder
 Taispeáin san &fillteán
+:Show in folder
+Taispeáin san fhillteán é
 :Show the &bookmarks sidebar when available
 Taispeáin taobh-bharra na gceanán nuair atá sé ar fáil
 :Single Page
 Leathanach Amháin
+:Skip this version
+Ná bac leis an leagan sin
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Faraor, níor chóir go dtarlódh sin!\n\nBrúigh 'Cealaigh' le do thoil, más mian leat cuidiú linn údar an chliste seo a dheisiú.
 :Source file %s has no synchronization point
@@ -583,6 +674,14 @@ Níor aimsíodh suiteáil SumatraPDF.
 Ní féidir an comhad comhaimseartha a oscailt
 :Tagged PDF
 PDF formáid chlibeáilte
+:Text Alignment:
+Ailíniú an téacs:
+:Text Color:
+Dath an téacs:
+:Text Size:
+Méid an téacs:
+:Text Size: %d
+Méid an téacs: %d
 :Text documents
 Cáipéisí téacs
 :Thank you for choosing SumatraPDF!
@@ -595,6 +694,8 @@ Tá an suiteálaí truaillithe. Déan é a íosluchtú arís le do thoil.\nIs do
 Baineann an cháipéis seo feidhm as gnéithe (%s) nach dtugtar tacaíocht dóibh agus b'fhéidir nach ndéanfar iad a thaispeáint i gceart
 :Title:
 Teideal:
+:Translate with &DeepL
+Aistrigh le &DeepL é
 :Uninstall SumatraPDF
 Déan SumatraPDF a dhíshuiteáil
 :Uninstallation failed
@@ -603,6 +704,10 @@ Theip air díshuiteáil
 Díshuiteáil ar siúl...
 :Unknown source file (%s)
 Comhad foinse anaithnid (%s)
+:Unsaved annotations
+Nótaí mínithe nach bhfuil curtha i dtaisce
+:Unsaved annotations in '%s'
+Tá nótaí mínithe nach bhfuil i dtaisce i '%s'
 :Use &tabs
 Bain feidhm as &cluaisíní
 :View
@@ -615,6 +720,12 @@ Rabhadh
 Cáipéisí XPS
 :You have the latest version.
 Tá an leagan is úire agat.
+:You have unsaved annotations
+Tá nótaí mínithe nach bhfuil curtha i dtaisce agat
+:You have version '%s' and version '%s' is available.\nDo you want to install new version?
+Tá leagan '%s' agat agus tá leagan '%s' ar fáil.\nAn mian leat an leagan nua a shuiteáil?
+:You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
+Tá leagan 32-beart de SumatraPDF á shuiteáil ar chóras oibriúcháin 64-beart agat.\nAr mhaith leat an leagan 64-beart a íosluchtú?
 :Zoom
 Formhéadú
 :Zoom In

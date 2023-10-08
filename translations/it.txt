@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to edit.
+Annotazione %s. Ctrl+clic per modificarla.
 :&About
 Informazioni sul progr&amma
 :&Actual Size

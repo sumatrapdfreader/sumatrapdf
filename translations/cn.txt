@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to edit.
+%s 标注
 :&About
 关于(&A)...
 :&Actual Size
@@ -8,11 +9,11 @@
 :&All selected pages
 所有已选定页面(&A)
 :&Back
-上一视图(B)
+上一视图(&B)
 :&Book View
 书籍视图(&B)
 :&Cancel
-取消
+取消(&C)
 :&Caret
 &插入符
 :&Close
@@ -100,17 +101,17 @@
 :&Single Page
 单页视图(&S)
 :&Stamp
-&图章
+图章(&S)
 :&Strike Out
-&删除线
+删除线(&S)
 :&Text
-&文本
+文本(&T)
 :&Theme
 主题(&T)
 :&Translate With Google
 使用谷歌翻译(&T)
 :&Underline
-&下划线
+下划线(&U)
 :&Use original page sizes
 使用原始页面大小(&U)
 :&View
@@ -298,7 +299,7 @@ DjVu 文档
 :EPUB ebooks
 EPUB 电子书
 :Edit %s Annotation
-编辑%s标注
+编辑 %s 标注
 :Edit Annotations
 编辑标注
 :Enter password
