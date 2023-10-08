@@ -5377,7 +5377,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotUnderline:
             if (win && tab) {
                 auto annot = MakeAnnotationsFromSelection(tab, annotType);
-                if (annot) {
+                if (annot && IsShiftPressed()) {
                     ShowEditAnnotationsWindow(tab);
                     SetSelectedAnnotation(tab, annot);
                 }
