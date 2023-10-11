@@ -3,10 +3,10 @@ module github.com/sumatrapdfreader/sumatrapdf/do
 go 1.19
 
 require (
-	github.com/kjk/common v0.0.0-20230820163345-3bc2890a0f06
+	github.com/kjk/common v0.0.0-20231002223317-7760ee96eb8e
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
 	github.com/kjk/u v0.0.0-20220410204605-ce4a95db4475
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 )
 
 require (
@@ -26,9 +26,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )

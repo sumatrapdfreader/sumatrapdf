@@ -3,5 +3,5 @@ go 1.19
 use (
 	./tools/logview
 	./tools/logview-win
-	.\do\
+	./do
 )
