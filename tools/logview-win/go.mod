@@ -2,8 +2,6 @@ module changeme
 
 go 1.21
 
-toolchain go1.21.2
-
 require (
 	github.com/kjk/u v0.0.0-20220410204605-ce4a95db4475
 	github.com/rodrigocfd/windigo v0.0.0-20230809154420-8faa606d9f5f
