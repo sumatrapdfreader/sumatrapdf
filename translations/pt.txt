@@ -1,11 +1,19 @@
 :%s annotation. Ctrl+click to edit.
+Anotação %s. Ctrl +  clique para editar.
 :Cleared history of %d files, deleted thumbnails.
+Histórico e miniaturas  de %d ficheiros removidos
 :Clearing history...
+A limpar histórico...
 :Copy File Path
+Copiar caminho do ficheiro
 :Delete Annotation
+Eliminar anotação
 :Edit %s Annotation
+Editar %s
 :Open In New Window
+Abrir em nova janela
 :Properties...
+Propriedades...
 :&About
 &Acerca
 :&Actual Size
@@ -13,7 +21,7 @@ Tam&anho real
 :&Advanced Options...
 Opções &avançadas...
 :&All selected pages
-Tod&as as páginas seleccionadas
+Tod&as as páginas selecionadas
 :&Back
 &Recuar 
 :&Book View
@@ -25,9 +33,9 @@ Tod&as as páginas seleccionadas
 :&Close
 Fe&char
 :&Continue installing 32-bit version
-&Continuar com a instalação 32-bit
+&Continuar com a instalação 32-bits
 :&Copy Selection
-&Copiar selecção
+&Copiar seleção
 :&Copy To Clipboard
 &Copiar para a área de transferência 
 :&Discard changes
@@ -103,7 +111,7 @@ Pe&squisar com Google
 :&Settings
 &Definições
 :&Shrink pages to printable area (if necessary)
-&Reduzir páginas à área de impressão (se necessário)
+Aju&star páginas à área de impressão (se necessário)
 :&Single Page
 &Uma página
 :&Stamp
@@ -133,7 +141,7 @@ S&ublinhado
 :(page %s)
 (página %s)
 :About SumatraPDF
-Acerca do SumatraPDF
+Acerca de SumatraPDF
 :Add Favorite
 Adicionar favorito
 :Add page %s to favorites
@@ -153,7 +161,7 @@ Anotações
 :Application:
 Aplicação:
 :Are you sure you want to uninstall SumatraPDF?
-Tem a certeza de que deseja desinstalar o SumatraPDF?
+Tem a certeza de que deseja desinstalar SumatraPDF?
 :Associate with PDF files?
 Associar a ficheiros PDF?
 :Attachment: %s
@@ -165,7 +173,7 @@ Autor: %s
 :Automatic
 Automático
 :Automatically check for &updates
-Proc&urar actualizações automaticamente
+Proc&urar atualizações automaticamente
 :Background Color:
 Cor de fundo:
 :Book View
@@ -189,15 +197,15 @@ Cancelar
 :Cannot print this file
 Não foi possível imprimir este ficheiro
 :Cannot start inverse search command. Please check the command line in the settings.
-Não foi possível iniciar o comando da pesquisa inversa. Verifique a linha de comandos nas definições.
+Não foi possível iniciar o comando de pesquisa inversa. Verifique a linha de comandos nas definições.
 :Change Language
 Mudar idioma (Change Language)
 :Check for &Updates
-Procurar act&ualizações
+Procurar at&ualizações
 :Checking for update...
 A procurar actualização...
 :Circle
-Círculo 
+Círculo
 :Close
 Fechar
 :Close Other Tabs
@@ -233,7 +241,7 @@ Copiar co&mentário
 :Copy To Clipboard
 Copiar para a área de transferência 
 :Copying text was denied (copying as image only)
-A cópia do texto foi recusada (copie como imagem)
+A cópia de texto foi recusada (copie como imagem)
 :Copyright:
 Direitos de autor:
 :Could not obtain Printer properties
@@ -265,7 +273,7 @@ Criar anotação na selecção
 :Created:
 Criado:
 :Current file
-Ficheiro actual
+Ficheiro atual
 :Cursor position:
 Posição do cursor:
 :Custom &Zoom...
@@ -289,11 +297,11 @@ Propriedades do documento
 :Don't install
 Não instalar
 :Download 64-bit version
-Transferir versão 64-bit
+Descarregar versão 64-bits
 :E&xit
 &Sair
 :E&xit Fullscreen
-Sair do &ecrã completo
+Sair de &ecrã completo
 :EPUB ebooks
 Documentos EPUB
 :Edit Annotations
@@ -371,13 +379,13 @@ Tipo de letra:
 :Found text at page %s
 Texto encontrado na página %s
 :Found text at page %s (again)
-Texto encontrado na página %s
+Texto encontrado na página %s (novamente)
 :Frequently Read
 Frequentes
 :GB
 GB
 :Get Fonts Info
-Informação da letra
+Obter info acerca dos tipos de letra
 :Go to page
 Ir para a página
 :Hide &Options
@@ -387,27 +395,27 @@ Ocultar frequentes
 :Hint: Use the F3 key for finding again
 Dica: utilize F3 para procurar a seguinte
 :Icon:
-Ícone 
+Ícone:
 :Image files (*.%s)
 Imagens (*.%s)
 :Images
 Imagens 
 :Ink
-Tinta 
+Tinta
 :Install SumatraPDF
 Instalar SumatraPDF
 :Install SumatraPDF in &folder:
 Instalar SumatraPD&F na pasta:
 :Install and relaunch
-Instalar e reiniciar 
+Instalar e reiniciar
 :Install for all users
-Instalar para todos 
+Instalar para todos
 :Installation failed!
 A instalação falhou!
 :Installation in progress...
 A instalar...
 :Installing 32-bit SumatraPDF on 64-bit OS
-A instalar versão 32-bit num sistema 64-bits
+A instalar versão 32-bits num sistema 64-bits
 :Interior Color:
 Cor interior:
 :KB
@@ -419,7 +427,7 @@ Permitir que a pe&squisa Windows pesquise documentos PDF
 :Light
 Claro
 :Line
-Linha 
+Linha
 :Line End:
 Fim de linha:
 :Line Start:
@@ -445,7 +453,7 @@ Nova versão disponível
 :Next Page
 Página seguinte
 :No matches were found
-Nenhuma ocorrência encontrada
+Não form encontradas ocorrências
 :No result found around line %u in file %s
 Nenhum resultado perto da linha %u no ficheiro %s
 :No synchronization file found
@@ -457,7 +465,7 @@ Número de páginas:
 :OK
 Aplicar
 :Opacity:
-Opacidade 
+Opacidade
 :Opacity: %d
 Opacidade: %d
 :Open
@@ -493,11 +501,11 @@ Abrir no Microsoft &HTML Help
 :PDF Document
 Documento PDF
 :PDF Optimizations:
-Optimizações PDF:
+Otimizações PDF:
 :PDF Producer:
 Criador do PDF:
 :PDF Version:
-Versão PDF:
+Versão do PDF:
 :PDF documents
 Documentos PDF
 :Pa&ge...
@@ -515,13 +523,13 @@ Página:
 :PalmDoc documents
 Documentos PalmDoc
 :Please close %s to proceed!
-Para continuar, feche o %s!
+Para continuar, feche %s!
 :Please wait - loading...
 Por favor, aguarde - a carregar...
 :Please wait - rendering...
 Por favor aguarde - a processar...
 :Poly Line
-Poli-linha 
+Poli-linha
 :Polygon
 Polígono
 :Popup: %d 0 R
@@ -549,9 +557,9 @@ A imprimir página %d de %d...
 :Printing problem.
 Erro de impressão
 :Re&name...
-Re&nomear...
+Mudar &nome...
 :Rect: x=%d y=%d dx=%d dy=%d
-Rectângulo: x=%d y=%d dx=%d dy=%d
+Retângulo: x=%d y=%d dx=%d dy=%d
 :Redact
 Censurar
 :Remember &opened files
@@ -561,13 +569,13 @@ Remover dos favoritos
 :Remove page %s from favorites
 Remover página %s dos favoritos
 :Rename To
-Renomear para
-:Rotate &Left
+Mudar nome para
+Rotate &Left
 Rodar à &esquerda
 :Rotate &Right
 Rodar à di&reita
 :S&election
-S&elecção
+S&eleção
 :S&quiggly
 &Curva irregular
 :SVG documents
@@ -583,11 +591,11 @@ Guardar atal&ho...
 :Save annotations?
 Guardar anotações?
 :Save changes to a new PDF
-Guardar alterações para ficheiro PDF distinto
+Guardar alterações para un novo ficheiro PDF
 :Save changes to existing PDF
 Guardar anotações para PDF existente
 :Save to &new PDF
-Guardar para PDF disti&nto
+Guardar para &novo PDF
 :Saved annotations to '%s'
 Guardar anotações para '%s'
 :Saving of '%s' failed with: '%s'
@@ -599,15 +607,15 @@ Pesquisar com &Google
 :Searching %d of %d...
 A pesquisar %d de %d...
 :Select &All
-Seleccion&ar tudo
+Selecion&ar tudo
 :Select content with Ctrl+left mouse button
-Seleccione o conteúdo com Ctrl+botão esquerdo do rato
+Selecione o conteúdo com Ctrl+botão esquerdo do rato
 :Select the folder where SumatraPDF should be installed:
 Escolha a pasta de instalação do SumatraPDF:
 :Selection:
-Selecção:
+Seleção:
 :Send by &E-mail...
-&Enviar por correio electrónico...
+&Enviar por e-mail...
 :Set inverse search command-line
 Definir linha de comandos para procura inversa
 :Show &Bookmarks
@@ -643,25 +651,25 @@ Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrig
 :Source file %s has no synchronization point
 O ficheiro %s não tem ponto de sincronização
 :Square
-Quadrado 
+Quadrado
 :Start SumatraPDF
 Iniciar SumatraPDF
 :Subject:
 Assunto:
 :SumatraPDF %s Installer
-Instalador do SumatraPDF %s
+Instalador - SumatraPDF %s
 :SumatraPDF %s Uninstaller
-Desinstalador do SumatraPDF %s
+Desinstalador - SumatraPDF %s
 :SumatraPDF Options
 Opções do SumatraPDF
 :SumatraPDF Update
-Actualização do SumatraPDF
+Atualização do SumatraPDF
 :SumatraPDF crashed
-O SumatraPDF terminou
+SumatraPDF terminou
 :SumatraPDF has been uninstalled.
-O SumatraPDF foi desinstalado.
+SumatraPDF foi desinstalado
 :SumatraPDF installation not found.
-O SumatraPDF não foi encontrado.
+SumatraPDF não foi encontrado
 :Synchronization file cannot be opened
 Não foi possível abrir o ficheiro de sincronização
 :Tagged PDF
@@ -677,21 +685,21 @@ Tamanho do texto: %d
 :Text documents
 Documentos de texto
 :Thank you for choosing SumatraPDF!
-Obrigado por escolher o SumatraPDF!
+Obrigado por escolher SumatraPDF!
 :Thank you! SumatraPDF has been installed.
-O SumatraPDF foi instalado.
+SumatraPDF foi instalado
 :The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
-O instalador está danificado.\nTransfira novamente o ficheiro de instalação.\nDesculpe.
+O instalador está danificado.\nDescarregue novamente o ficheiro de instalação.\nDesculpe.
 :This document uses unsupported features (%s) and might not render properly
-Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado correctamente
+Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 :Title:
 Título:
 :Translate with &DeepL
 Traduzir com &DeepL
 :Uninstall SumatraPDF
-Desinstalar o SumatraPDF
+Desinstalar SumatraPDF
 :Uninstallation failed
-Falha ao desinstalar!
+Falha ao desinstalar
 :Uninstallation in progress...
 A desinstalar...
 :Unknown source file (%s)
@@ -717,7 +725,7 @@ Existem anotações não guardadas
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 Tem a versão "%s" mas está disponível a versão "%s".\nDeseja instalar a nova versão?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?
-Está a instalar a versão 32-bit num sistema 64-bit.\nGostaria de transferir e instalar\na versão 64-bit?
+Está a instalar a versão 32-bits num sistema 64-bits.\nGostaria de descarregar e instalar\na versão 64-bit?
 :Zoom
 Ampliação
 :Zoom In
@@ -725,9 +733,9 @@ Ampliar
 :Zoom Out
 Reduzir
 :Zoom factor
-Factor de ampliação
+Fator de ampliação
 :[Changes detected; refreshing] %s
-[Alterações detectadas; a recarregar] %s
+[Alterações detetadas; a recarregar] %s
 :copying text
 cópia de texto
 :printing document
