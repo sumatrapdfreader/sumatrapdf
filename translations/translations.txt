@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2a80fdcc6701fce665cd51c244fceed7dfee2cec
+349319b2b68a1f284df2341a78132cb461e201a6
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 br:anotação %s.
@@ -7,11 +7,13 @@ ca:Anotació %s. Ctrl+clic per editar.
 cn:%s 标注
 de:%s-Anmerkung. Strg+Klick zum Bearbeiten.
 el:%s σχολιασμός. Ctrl+κλικ για επεξεργασία.
+es:Comentario %s.
 fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 it:Annotazione %s. Ctrl+clic per modificarla.
 nl:%s opmerking. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
+pt:Anotação %s. Ctrl + clique para editar.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About
 af:&Omtrent
@@ -603,7 +605,7 @@ nn:&Kopier utval
 no:&Kopier valgt område
 pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ
 pl:Kopiuj &zaznaczenie
-pt:&Copiar selecção
+pt:&Copiar seleção
 ro:&Copiază selecția
 ru:С&копировать выделенное
 si:ලකුනුකල ‌කොටස ‌කොපිකරන්න
@@ -3671,7 +3673,7 @@ nn:Om SumatraPDF
 no:Om SumatraPDF
 pa:SumatraPDF ਬਾਰੇ
 pl:O programie SumatraPDF
-pt:Acerca do SumatraPDF
+pt:Acerca de SumatraPDF
 ro:Despre SumatraPDF
 ru:О программе SumatraPDF
 si:SumatraPDF පිළිබඳව
@@ -4343,7 +4345,7 @@ nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
 pa:ਕੀ ਤੁਸੀਂ SumatraPDF ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
-pt:Tem a certeza de que deseja desinstalar o SumatraPDF?
+pt:Tem a certeza de que deseja desinstalar SumatraPDF?
 ro:Sunteţi sigur că doriţi să dezinstalaţi Sumatra PDF?
 ru:Вы действительно хотите удалить SumatraPDF?
 si:ඔබට SumatraPDF අස්ථාපනය කිරීමට අවශ්‍ය බවට විශ්වාසද?
@@ -4744,7 +4746,7 @@ nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
 pa:ਆਪਣੇ-ਆਪ &ਅਪਡੇਟਾਂ ਦੀ ਜਾਂਚ ਕਰੋ
 pl:&Szukaj aktualizacji automatycznie
-pt:Proc&urar actualizações automaticamente
+pt:Proc&urar atualizações automaticamente
 ro:Urmărește automat &versiuni noi
 ru:&Автоматически проверять обновления
 si:යාවත්කාලකිරීම් ස්වයක්‍රීයව සොයන්න
@@ -5667,7 +5669,7 @@ nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
 pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
 pl:Szukaj &aktualizacji
-pt:Procurar act&ualizações
+pt:Procurar at&ualizações
 ro:Verifică apariția unei &versiuni noi
 ru:Проверить наличие новой &версии
 si:&යාවත්කාලීනකිරීම් සදහා සොයන්න
@@ -5723,7 +5725,7 @@ nl:Controleer op Update...
 nn:Ser etter oppdatering...
 no:Ser etter oppdatering...
 pl:Szukanie aktualizacji...
-pt:A procurar actualização...
+pt:A procurar atualizações...
 ro:Căutare actualizare...
 ru:Проверка наличия обновления...
 sl:Preverjanje posodobitev …
@@ -5811,6 +5813,7 @@ kr:%d개 파일 내역 초기화 및 썸네일 삭제.
 mk:Избришани се %d датотеки од историјата, избришани се сликите за преглед.
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
+pt:Histórico de %d ficheiros removido e miniaturas removidas.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
@@ -5832,6 +5835,7 @@ kr:내역 초기화...
 mk:Бришење на историјата...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
+pt:A limpar histórico...
 tw:正在清除歷史記錄...
 vn:Đang dọn dẹp lịch sử...
 :Close
@@ -6830,6 +6834,7 @@ nl:Kopieer Bestand Pad
 nn:Kopier Filbane
 no:Kopier filbane
 pl:Kopiuj ścieżkę pliku
+pt:Copiar caminho do ficheiro
 ru:Скопировать путь к файлу
 sv:Kopiera sökväg
 ta:கோப்பு பாதை நகலெடு
@@ -7781,7 +7786,7 @@ ml:തിരഞ്ഞെടുക്കലിൽ നിന്ന് വ്യാ
 nl:Aantekening maken op basis van Selectie
 no:Lag merknad på merket område
 pl:Utwórz adnotację z zaznaczenia
-pt:Criar anotação na selecção
+pt:Criar anotação na seleção
 ro:Creează adnotare din selecție
 ru:Создать аннотацию из выделения
 sl:Ustvari pripombo iz izbire
@@ -7911,7 +7916,7 @@ nn:Nåverande fil
 no:Gjeldende fil
 pa:ਮੌਜੂਦਾ ਫ਼ਾਇਲ
 pl:Bieżący plik
-pt:Ficheiro actual
+pt:Ficheiro atual
 ro:Fișier curent
 ru:Текущий файл
 si:‌මෙම ‌ගොනුව
@@ -8363,6 +8368,7 @@ it:Elimina Annotazione
 kr:주석 삭제
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
+pt:Eliminar anotação
 tw:刪除註解
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
@@ -8651,7 +8657,7 @@ nl:Download 64bit versie
 nn:Last ned 64-bit versjon
 no:Last ned 64-biters versjon
 pl:Pobierz wersję 64-bitową
-pt:Transferir versão 64-bit
+pt:Descarregar versão 64-bit
 ro:Descarcă versiunea 64 de biți
 ru:Загрузить 64-разрядную версию
 sk:Stiahnuť 64-bitovú verziu
@@ -8746,7 +8752,7 @@ nl:Volledig scherm uit
 nn:A&vslutt Fullskjerm
 no:A&vslutt fullskjerm
 pl:W&yjdź z trybu pełnoekranowego
-pt:Sair do &ecrã completo
+pt:Sair de &ecrã completo
 ro:&Ieșire mod pe tot ecranul.
 ru:&Выйти из полноэкранного режима
 sl:&Izhod iz celozaslonskega načina
@@ -8842,6 +8848,7 @@ it:Modifica annotazione %s
 kr:주석 편집 (%s)
 nl:Bewerk %s Aantekening
 pl:Edytuj adnotację %s
+pt:Editar %s
 ru:Изменить аннотацию %s
 tw:編輯 %s 註解
 :Edit Annotations
@@ -11350,7 +11357,7 @@ kr:글꼴 정보 확인
 nl:Informatie over lettertypen ophalen
 no:Hent skrifttypeinformasjon
 pl:Uzyskaj informacje o czcionkach
-pt:Informação da letra
+pt:Informação do tipo de letra
 ro:Primeşte informații despre fonturi
 ru:Получить информацию о шрифтах
 sl:Pridobi informacije o pisavah
@@ -12232,7 +12239,7 @@ kw:Ow lea Sumatra PDF 32-byt war SO 64-byt
 nl:32bit SumatraPDF installeren op 64bit OS
 no:Installerer 32-bit SumatraPDF på 64-bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
-pt:A instalar versão 32-bit num sistema 64-bits
+pt:A instalar versão 32-bits num sistema 64-bits
 ro:Instalare SumatraPDF 32 de biți  în Sistem de Operare 64 de biți
 ru:Установка 32-разрядной SumatraPDF в 64-разрядной ОС
 sl:Nameščanje 32-bitne različice SumatraPDF na 64-bitni OS
@@ -14168,6 +14175,7 @@ nl:Open In Nieuw Venster
 nn:Opne i nytt vindauge
 no:Åpne i nytt vindu
 pl:Otwórz w nowym oknie
+pt:Abrir em nova janela
 ru:Открыть в новом окне
 ta:புதிய சாளரத்தில் திற
 tl:Buksan sa bagong Window
@@ -14703,7 +14711,7 @@ nl:PDF Optimalisaties
 nn:PDF-optimaliseringer:
 no:PDF Optimalisering:
 pl:Optymalizacja PDF:
-pt:Optimizações PDF:
+pt:Otimizações PDF:
 ro:Optimizări PDF:
 ru:Оптимизация PDF:
 si:PDF ප්‍රශස්තකරණය කිරීම්
@@ -16367,6 +16375,7 @@ nl:Eigenschappen...
 nn:Eigenskapar...
 no:Egenskaper...
 pl:Właściwości...
+pt:Propriedades...
 ru:Свойства...
 ta:பண்புகள்
 tl:Properties...
@@ -16446,7 +16455,7 @@ lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 no:Rekt: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
-pt:Rectângulo: x=%d y=%d dx=%d dy=%d
+pt:Retângulo: x=%d y=%d dx=%d dy=%d
 ro:Dreptunghi: x=%d y=%d dx=%d dy=%d
 ru:Прямоугольник: x=%d y=%d dx=%d dy=%d
 sl:Pravokotnik: x=%d y=%d dx=%d dy=%d
@@ -16878,7 +16887,7 @@ kw:D&ewisans
 nl:S&electie
 no:U&tvalg
 pl:Z&aznaczenie
-pt:S&elecção
+pt:S&eleção
 ro:S&electare
 ru:В&ыделение
 sl:I&zbor
@@ -17626,7 +17635,7 @@ nl:&Alles selecteren
 nn:Vel &alle
 no:Merk &alt
 pl:Zaznacz &wszystko
-pt:Seleccion&ar tudo
+pt:Selecion&ar tudo
 ro:Selecte&ază Tot
 ru:В&ыделить все
 si:සියල්ල &තෝරන්න
@@ -17690,7 +17699,7 @@ nl:Selecteer inhoud met Ctrl+linker muisknop
 nn:Vel innhald med Ctrl + venstre museknapp
 no:Velg innhold med Ctrl+Venstre museknapp
 pl:Zaznacz zawartość, wciskając Ctrl i lewy przycisk myszy
-pt:Seleccione o conteúdo com Ctrl+botão esquerdo do rato
+pt:Selecione o conteúdo com Ctrl + Botão esquerdo do rato
 ro:Selectați conținut cu Ctrl+buton stânga maus
 ru:Выделите содержимое левой кнопкой мыши, удерживая Ctrl 
 si:Ctrl+left mouse button සමග අන්තර්ගතය තෝරන්න
@@ -19290,7 +19299,7 @@ nl:SumatraPDF Update
 nn:SumatraPDF Oppdatering
 no:SumatraPDF-oppdatering
 pl:Aktualizacja SumatraPDF
-pt:Actualização do SumatraPDF
+pt:Atualização do SumatraPDF
 ro:Versiune nouă SumatraPDF
 ru:Обновление SumatraPDF
 si:SumatraPDF යාවත්කාලීන කිරීම
@@ -20046,7 +20055,7 @@ nl:Het installatieprogramma is beschadigd. Gelieve het opnieuw te downloaden.\nO
 nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
-pt:O instalador está danificado.\nTransfira novamente o ficheiro de instalação.\nDesculpe.
+pt:O instalador está danificado.\nDescarregue novamente o ficheiro de instalação.\nDesculpe.
 ro:Programul de instalare este deteriorat. Rugăm descărcaţi-l din nou. \n Scuze pentru deranj!
 ru:Программа установки повреждена. Скачайте её повторно.\nИзвините за неудобства!
 si:ස්ථාපනය කරනය අකර්මන්‍යයි. කරුණාකර නැවත බාගත කරන්න. \nඇතිවූ අපහසුතාවයට සමාවන්න!
@@ -20106,7 +20115,7 @@ nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogel
 nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
 no:Dette dokumentet bruker ustøttede funksjoner (%s) og kan muligens ikke bli vist riktig.
 pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
-pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado correctamente
+pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente.
 ro:Acest document folosește caracteristici neacceptate (%s) și este posibil să nu fie redat corect
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 si:මෙම ලේඛනයේ සහය නොදක්වන විශේෂාංග භාවිත වේ (%s) නිසි අයුරින් පිරිනැමීමට නොහැකිවේවි
@@ -21107,7 +21116,7 @@ kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwer
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 no:Du installerer 32-bit SumatraPDF på 64-bit OS.\nVil du laste ned\n64-biters versjonen?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
-pt:Está a instalar a versão 32-bit num sistema 64-bit.\nGostaria de transferir e instalar\na versão 64-bit?
+pt:Está a instalar a versão 32-bit num sistema 64-bit.\nGostaria de descarregar e instalar\na versão 64-bit?
 ro:Se instalează SumatraPDF 32 de biți în Sistem de Operare 64 de biți.\nDoriți să descărcați\nversiunea 64 de biți?
 ru:Вы устанавливаете 32-разрядную версию SumatraPDF в 64-разрядной ОС.\nХотите загрузить 64-разрядную версию программы?
 sl:32-bitni SumatraPDF bo nameščen v 64-bitni operacijski sistem.\nAli bi raje prenesli in namestili 64-bitno različico?
@@ -21440,7 +21449,7 @@ nn:[Endringar oppdaga; lastar inn på nytt] %s
 no:[Endringer oppdaget; oppdaterer] %s
 pa:[ਤਬਦੀਲੀਆਂ ਦਾ ਪਤਾ ਚੱਲਿਆ; ਤਾਜ਼ਾ ਕੀਤਾ ਜਾ ਰਿਹੈ] %s
 pl:[wykryto zmiany; odświeżanie] %s
-pt:[Alterações detectadas; a recarregar] %s
+pt:[Alterações detetadas; a recarregar] %s
 ro:[Schimbări detectate; actualizare] %s
 ru:[Обнаружены изменения; обновление...] %s
 si:[වෙනස්කම් හදුනාගෙන; ප්‍රතිපූරණය වෙමින්] %s

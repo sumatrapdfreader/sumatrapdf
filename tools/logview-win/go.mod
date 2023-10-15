@@ -1,6 +1,6 @@
 module changeme
 
-go 1.21
+go 1.20
 
 require (
 	github.com/kjk/u v0.0.0-20220410204605-ce4a95db4475
