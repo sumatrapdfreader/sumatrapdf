@@ -1,58 +1,5 @@
 :%s annotation. Ctrl+click to edit.
-:&Caret
-:&Continue installing 32-bit version
-:&Copy To Clipboard
-:&Discard changes
-:&Facing
-:&Highlight
-:&Next Page
-:&Save to existing PDF
-:&Search With Google
-:&Single Page
-:&Stamp
-:&Strike Out
-:&Underline
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Close Other Tabs
-:Close Tabs To The Right
-:Command Palette
-:Copy File Path
-:Copy To Clipboard
-:Create Annotation &Under Cursor
-:Create Annotation From Selection
-:Custom &Zoom...
-:Delete Annotation
-:E&xit
-:Edit %s Annotation
-:F&ullscreen
-:Fit &Content
-:Fit &Page
-:Fit &Width
-:Icon:
-:Installing 32-bit SumatraPDF on 64-bit OS
-:Interior Color:
-:Opacity:
-:Opacity: %d
-:Open In New Window
-:Open in Microsoft &HTML Help
-:Popup: %d 0 R
-:Properties...
-:S&election
-:SVG documents
-:Save Annotations to existing PDF
-:Save S&hortcut...
-:Save annotations?
-:Save to &new PDF
-:Saved annotations to '%s'
-:Saving of '%s' failed with: '%s'
-:Show Book&marks
-:Skip this version
-:Text Alignment:
-:Text Size: %d
-:Unsaved annotations
-:Unsaved annotations in '%s'
-:You have unsaved annotations
+Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 :&About
 Proqram &haqqında
 :&Actual Size
@@ -67,14 +14,24 @@ Proqram &haqqında
 &Kitab görüntüsü
 :&Cancel
 &İmtina
+:&Caret
+&Karet
 :&Close
 &Bağla
+:&Continue installing 32-bit version
+32-bitlik versiyanın quraşdırılmasına &davam et
 :&Copy Selection
 Seçilmiş sahəni &kopyala
+:&Copy To Clipboard
+Yaddaş buferinə &kopyala
+:&Discard changes
+Dəyişiklikləri &rədd et
 :&Don't ask me again
 Bir daha &soruşma
 :&Even pages only
 Yalnız &cüt səhifələr
+:&Facing
+&Cüt səhifələr
 :&File
 &Fayl
 :&Find what:
@@ -91,6 +48,8 @@ K&eçid
 &Səhifə:
 :&Help
 &Kömək
+:&Highlight
+&Seç
 :&Last Page
 &Sonuncu səhifə
 :&Magnification:
@@ -99,6 +58,8 @@ K&eçid
 &Təlimat
 :&Match case
 Re&gistri nəzərə al
+:&Next Page
+&Növbəti səhifə
 :&No
 &Xeyr
 :&Odd pages only
@@ -129,16 +90,28 @@ Bu &parametrləri bütün sənədlər üçün yadda saxla
 Tarixçədən &sil
 :&Save As...
 &Fərqli adla yadda saxla...
+:&Save to existing PDF
+Mövcud PDF-də yadda &saxla
+:&Search With Google
+Goo&gle-da axtar
 :&Settings
 &Parametrlər
 :&Shrink pages to printable area (if necessary)
 Ehtiyac varsa, səhifələri çap sahəsinin ölçüsünə görə kiçilt
+:&Single Page
+&Tək səhifə
+:&Stamp
+Mö&hürlə
+:&Strike Out
+&Qarala
 :&Text
 Mə&tn
 :&Theme
 &Tema
 :&Translate With Google
 &Google ilə tərcümə et
+:&Underline
+&Altdan xətt
 :&Use original page sizes
 &Faktiki ölçüyə görə
 :&View
@@ -219,14 +192,24 @@ Dili dəyişdir (Change Language)
 Yeniləmə yoxlanılır...
 :Circle
 Dairə
+:Cleared history of %d files, deleted thumbnails.
+%d faylın tarixçəsi və eskizi silindi.
+:Clearing history...
+Tarixçə silinir...
 :Close
 Bağla
+:Close Other Tabs
+Digər tabları bağla
+:Close Tabs To The Right
+Sağdakı tabları bağla
 :Collapse All
 Hamısını bağla
 :Color:
 Rəng:
 :Comic books
 CBR, CBZ sənədləri
+:Command Palette
+Komandalar palitrası
 :Compatibility
 Uyğunluq
 :Contents:
@@ -245,6 +228,10 @@ Tərcüməyə kömək et
 Keçidin &ünvanını kopyala
 :Copy Co&mment
 &Şərhi kopyala
+:Copy File Path
+Faylın yolunu kopyala
+:Copy To Clipboard
+Yaddaş buferinə kopyala
 :Copying text was denied (copying as image only)
 Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
 :Copyright:
@@ -271,12 +258,18 @@ Sumatra axtarış filtrini silmək mümkün olmadı
 Brauzer plaginini silmək mümkün olmadı
 :Couldn't write %s to disk
 %s diskə yazıla bilmədi
+:Create Annotation &Under Cursor
+Kursorun &altına qeyd düş
+:Create Annotation From Selection
+Seçilmiş sahədən qeyd düzəlt
 :Created:
 Hazırlanma tarixi:
 :Current file
 Hazırkı fayl
 :Cursor position:
 Kursorun mövqeyi:
+:Custom &Zoom...
+Mi&qyas...
 :Dark
 Tünd
 :Darker
@@ -287,6 +280,8 @@ Tarix:
 Standart &düzüm:
 :Default &Zoom:
 Standart miq&yas:
+:Delete Annotation
+Qeydi sil
 :Denied Permissions:
 Qadağan olunmuş hüquqlar:
 :DjVu documents
@@ -297,10 +292,14 @@ Sənədin xüsusiyyətləri
 Quraşdırma
 :Download 64-bit version
 64-bitlik versiyanı endir
+:E&xit
+Çı&x
 :E&xit Fullscreen
 Tam ekran rejimindən çı&x
 :EPUB ebooks
 EPUB e-kitabları
+:Edit %s Annotation
+%s qeydinə düzəliş et
 :Edit Annotations
 Qeydlərə düzəliş et
 :Enter password
@@ -317,6 +316,8 @@ Hamısını aç
 &Seçilmişlər
 :F&orward
 İ&rəli
+:F&ullscreen
+&Tam ekran
 :Facing
 Cüt səhifələr
 :Failed to delete uninstaller registry keys
@@ -353,6 +354,12 @@ Sonrakını tap
 Əvvəlkini tap
 :Find:
 Axtar:
+:Fit &Content
+&Məzmuna görə sığışdır
+:Fit &Page
+&Səhifəyə sığışdır
+:Fit &Width
+&Genişliyə görə sığışdır
 :Fit Content
 Məzmuna görə sığışdır
 :Fit Page
@@ -383,6 +390,8 @@ Səhifəyə keç
 Ən çox oxunanları gizlət
 :Hint: Use the F3 key for finding again
 Məsləhət: Təkrar axtarış üçün F3 düyməsinə basın
+:Icon:
+Piktoqram:
 :Image files (*.%s)
 Şəkil faylları (*.%s)
 :Images
@@ -401,6 +410,10 @@ Bütün istifadəçilər üçün quraşdır
 Quraşdırma baş tutmadı!
 :Installation in progress...
 Quraşdırma davam edir...
+:Installing 32-bit SumatraPDF on 64-bit OS
+32-bitlik SumatraPDF 64-bitlik əməliyyat sistemində quraşdırılır
+:Interior Color:
+İç rəngi:
 :KB
 KB
 :Let Windows Desktop Search &search PDF documents
@@ -447,6 +460,10 @@ Bu mövqedə sinxronlaşdırma məlumatı yoxdur
 Səhifə sayı:
 :OK
 OK
+:Opacity:
+Tutğunluq
+:Opacity: %d
+Tutğunluq: %d
 :Open
 Aç
 :Open &in PDF-XChange
@@ -463,6 +480,8 @@ Qovluğu &Total Commander-də aç
 Qovluğu Directory &Opus-da aç
 :Open Embedded PDF
 İç PDF faylını aç
+:Open In New Window
+Yeni pəncərədə aç
 :Open a document...
 Sənədi aç...
 :Open in %s
@@ -473,6 +492,8 @@ Sənədi aç...
 &Foxit Reader-də aç
 :Open in &Microsoft XPS-Viewer
 Microsoft &XPS-Viewer-də aç
+:Open in Microsoft &HTML Help
+Microsoft &HTML Help-də aç
 :P&roperties
 &Xüsusiyyətlər
 :PDF Document
@@ -509,6 +530,8 @@ Görüntü hazırlanır, lütfən gözləyin...
 Qırıq xətt
 :Polygon
 Çoxbucaqlı
+:Popup: %d 0 R
+Sıçrayan element: %d 0 R
 :Postscript documents
 Postscript sənədləri
 :Pr&esentation
@@ -531,6 +554,8 @@ Bu adda printer mövcud deyil
 %d/%d səhifə çap olunur...
 :Printing problem.
 Çap xətası.
+:Properties...
+Xüsusiyyətlər...
 :Re&name...
 Adını &dəyişdir...
 :Rect: x=%d y=%d dx=%d dy=%d
@@ -549,16 +574,32 @@ Adını dəyişdir
 So&la çevir
 :Rotate &Right
 S&ağa çevir
+:S&election
+S&eçilmiş sahə
 :S&quiggly
 &Dalğa
+:SVG documents
+SVG sənədləri
+:Save Annotations to existing PDF
+Qeydləri mövcud PDF-də yadda saxla
 :Save Attachment...
 Qoşmanı yadda saxla...
 :Save Embedded File...
 İç faylı yadda saxla...
+:Save S&hortcut...
+&Qısayolu yadda saxla...
+:Save annotations?
+Qeydlər yadda saxlanılsın?
 :Save changes to a new PDF
 Dəyişiklikləri yeni PDF-ə yaz
 :Save changes to existing PDF
 Dəyişiklikləri mövcud PDF-ə yaz
+:Save to &new PDF
+Ye&ni PDF kimi yadda saxla
+:Saved annotations to '%s'
+Qeydləri burada yadda saxla: '%s'
+:Saving of '%s' failed with: '%s'
+'%s' yadda saxlanılarkən '%s' baş verdi
 :Search With &Bing
 &Bing-də axtar
 :Search With &Google
@@ -587,6 +628,8 @@ Səhifələri &ardıcıl göstər
 &Sürüşdürmə zolaqlarını göstər
 :Show &Toolbar
 Alətlər &panelini göstər
+:Show Book&marks
+Əl&fəcinləri göstər
 :Show Favorites
 Seçilmişləri göstər
 :Show Scr&ollbars
@@ -601,6 +644,8 @@ Qovluqda göstər
 Mümkündürsə, ə&lfəcinlər panelini göstər
 :Single Page
 Tək səhifə
+:Skip this version
+Bu versiyanı burax
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Bağışlayın, gözlənilməz xəta baş verdi!\n\nProblemin həllində bizə kömək etmək üçün "İmtina" düyməsinə basın.
 :Source file %s has no synchronization point
@@ -629,10 +674,14 @@ SumatraPDF quraşdırması tapılmadı.
 Sinxronlaşdırma faylını açmaq mümkün deyil
 :Tagged PDF
 Teqlənmiş PDF
+:Text Alignment:
+Mətn kənarlarının düzəldilməsi:
 :Text Color:
 Mətnin rəngi:
 :Text Size:
 Mətnin ölçüsü:
+:Text Size: %d
+Mətn ölçüsü: %d
 :Text documents
 Mətn sənədləri
 :Thank you for choosing SumatraPDF!
@@ -655,6 +704,10 @@ Deinstalyasiya baş tutmadı
 Deinstalyasiya davam edir...
 :Unknown source file (%s)
 Naməlum mənbə faylı (%s)
+:Unsaved annotations
+Yadda saxlanılmamış qeydlər
+:Unsaved annotations in '%s'
+Yadda saxlanılmamış qeydlər burada: '%s'
 :Use &tabs
 &Tab-vərəqlərdən istifadə et
 :View
@@ -667,6 +720,8 @@ Xəbərdarlıq
 XPS sənədləri
 :You have the latest version.
 Ən son versiyanı istifadə edirsiniz.
+:You have unsaved annotations
+Yadda saxlanılmamış qeydləriniz var
 :You have version '%s' and version '%s' is available.\nDo you want to install new version?
 Sizin versiya: '%s'. Mövcud versiya: '%s'.\nYeni versiyanı quraşdırmaq istəyirsinizmi?
 :You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?

@@ -2,6 +2,7 @@ AppTranslator: SumatraPDF
 AppTranslator: SumatraPDF
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
+az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 br:anotação %s.
 ca:Anotació %s. Ctrl+clic per editar.
 cn:%s 标注
@@ -346,6 +347,7 @@ uk:&Скасувати
 vn:&Hủy
 :&Caret
 am:&Ստեղն
+az:&Karet
 bg:&коректорски знак
 br:&Circunflexo
 by:&Карэт
@@ -438,6 +440,7 @@ vn:&Đóng
 :&Continue installing 32-bit version
 am:&Շարունակել 32 բիթային տարբերակի տեղադրումը
 ar:ا&ستمر في تثبيت نسخة 32 بت
+az:32-bitlik versiyanın quraşdırılmasına &davam et
 bg:Продължи с инсталация на  &32 битова версия
 br:&Continue instalando a versão 32-bits
 by:П&рацягнуць устаноўку 32-бітнай версіі
@@ -534,6 +537,7 @@ vn:&Chép phần đã chọn
 :&Copy To Clipboard
 am:&Պատճենել սեղմնատախտակ
 ar:&نسخ إلى الحافظة
+az:Yaddaş buferinə &kopyala
 bg:&Копирай в клипборда
 br:&Copiar para área de transferência
 by:С&капіраваць у буфер абмену
@@ -574,6 +578,7 @@ uk:Скопіювати до буфера обміну
 vn:&Lưu Sao Chép
 :&Discard changes
 am:&Մերժել
+az:Dəyişiklikləri &rədd et
 bg:От&хвърли промените
 br:&Descartar
 by:&Скасаваць змены
@@ -722,6 +727,7 @@ vn:Chỉ những trang lẻ
 :&Facing
 am:&Դիմահայաց
 ar:&متقابلة
+az:&Cüt səhifələr
 bg:Из&глед с лице
 br:&Página dupla
 by:&Экспазіцыя
@@ -1155,6 +1161,7 @@ vn:Trợ &giúp
 :&Highlight
 am:&Գունանշում
 ar:ت&ظليل
+az:&Seç
 bg:Ак&центирано
 br:&Destacar
 by:&Выдзяліць
@@ -1390,6 +1397,7 @@ vn:Phân biệt &HOA-thường
 :&Next Page
 am:&Հաջորդ էջ
 ar:الصفحة ال&تالية
+az:&Növbəti səhifə
 bg:С&ледваща страница
 br:&Próxima página
 by:&Наступная старонка
@@ -2175,6 +2183,7 @@ vn:Lưu thành...
 :&Save to existing PDF
 am:&Պահել առկա PDF-ում
 ar:&حفظ إلى ملف PDF موجود
+az:Mövcud PDF-də yadda &saxla
 bg:Запи&ши в съществуващ PDF
 br:&Salvar em um PDF existente
 by:&Захаваць у існуючы PDF
@@ -2219,6 +2228,7 @@ vn:&Lưu và thoát PDF
 :&Search With Google
 am:&Որոնել Google-ով
 ar:&بحث في Google
+az:Goo&gle-da axtar
 bg:По&търси с Google
 br:&Buscar com Google
 by:&Шукаць праз Google
@@ -2365,6 +2375,7 @@ vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page
 am:&Մեկ էջ
 ar:صفحة م&فردة
+az:&Tək səhifə
 bg:&Една страница
 br:&Página única
 by:&Адна старонка
@@ -2404,6 +2415,7 @@ uk:Одна сторінка
 vn:&Trang Đơn
 :&Stamp
 am:&Կնիք
+az:Mö&hürlə
 bg:&Подпечатване
 br:&Carimbo
 by:&Штамп
@@ -2449,6 +2461,7 @@ uk:Штамп
 vn:&Tem
 :&Strike Out
 am:&Ջնջած
+az:&Qarala
 bg:Зач&еркнато
 br:Ri&scar
 by:&Закрэслены
@@ -2636,6 +2649,7 @@ uk:Перекласти за допомогою Google
 vn:&Dịch Với Google
 :&Underline
 am:&Ընդգծված
+az:&Altdan xətt
 bg:&Подчертавка
 br:S&ublinhar
 by:&Падкрэслены
@@ -4706,6 +4720,7 @@ uk:Коло
 vn:Vòng tròn
 :Cleared history of %d files, deleted thumbnails.
 am:%d ֆայլերի մաքրված պատմություն, ջնջված մանրապատկերներ:
+az:%d faylın tarixçəsi və eskizi silindi.
 br:Excluído o histórico de %d arquivos, miniaturas apagadas.
 ca:S'ha esborrat l'historial de %d fitxers, i s'han suprimit les miniatures.
 cn:清除了共 %d 个文件的历史记录，并删除了缩略图缓存。
@@ -4718,6 +4733,7 @@ ga:Glanadh an t-oireas de %d comhad, mionsamhlacha scriosta.
 hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
 it:Svuotata la cronologia di %d file, anteprime eliminate
+ja:%d 個の履歴を削除し、サムネイルを削除しました。
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
@@ -4726,6 +4742,7 @@ tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
 am:Պատմության մաքրում...
+az:Tarixçə silinir...
 br:Limpando o histórico...
 ca:S'està esborrant l'historial...
 cn:正在清除历史记录…
@@ -4739,6 +4756,7 @@ ga:Tá an t-oireas á ghlanadh...
 hr:Brisanje povijesti...
 hu:Előzmények törlése...
 it:Svuotamento cronologia in corso...
+ja:履歴を削除中...
 kr:내역 초기화...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
@@ -4798,6 +4816,7 @@ uk:Закрити
 vn:Đóng lại
 :Close Other Tabs
 am:Փակել այլ ներդիրները
+az:Digər tabları bağla
 bg:Затвори другите отметки
 br:Fechar outras abas
 by:Закрыць іншыя ўкладкі
@@ -4840,6 +4859,7 @@ uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
+az:Sağdakı tabları bağla
 bg:Затвори табовете в дясно
 br:Fechar abas à direita
 by:Закрыць укладкі справа
@@ -5031,6 +5051,7 @@ uk:Документи CBR, CBZ (комікси)
 vn:Truyện tranh
 :Command Palette
 am:Հրամանի նախշ
+az:Komandalar palitrası
 bg:Списък с команди
 br:Paleta de comandos
 by:Набор каманд
@@ -5529,6 +5550,7 @@ uk:Копіювати коментар
 vn:Chép chú thích
 :Copy File Path
 am:Պատճենել ֆայլի ուղին
+az:Faylın yolunu kopyala
 br:Copiar Caminho do Arquivo
 ca:Copia el camí del fitxer
 cn:复制文件路径
@@ -5542,6 +5564,7 @@ ga:Cóipeáil Conair an Chomhaid
 hr:Kopiraj putanju datoteke
 hu:Útvonal másolása
 it:Copia percorso file
+ja:ファイルパスをコピー
 kr:파일 경로 복사
 nl:Kopieer Bestand Pad
 nn:Kopier Filbane
@@ -5556,6 +5579,7 @@ tw:複製檔案路徑
 :Copy To Clipboard
 am:Պատճենել սեղմնատախտակին
 ar:نسخ إلى الحافظة
+az:Yaddaş buferinə kopyala
 bg:Копирай в клипборда
 br:Copiar para área de transferência
 by:Скапіраваць у буфер абмену
@@ -6252,6 +6276,7 @@ uk:Не вдалося записати %s на диск
 vn:Không thể ghi %s vào đĩa
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
+az:Kursorun &altına qeyd düş
 bg:Създай анотация &под курсора
 br:Criar Anotação sobre o c&ursor
 by:Стварыць &анатацыю пад курсорам
@@ -6296,6 +6321,7 @@ uk:Створити анотацію &Під курсором
 vn:Thêm Chú Thích &Gạch Chân
 :Create Annotation From Selection
 am:Ստեղծել ծանոթագրություններ ընտրվածից
+az:Seçilmiş sahədən qeyd düzəlt
 bg:Създай Обяснение от избраното
 br:Criar Anotação a partir da Seleção
 by:Стварыць анатацыю з выдзялення
@@ -6496,6 +6522,7 @@ uk:Позиція вказівника:
 vn:Vị trí con trỏ:
 :Custom &Zoom...
 am:Հարմարեցված &դիտափոխում...
+az:Mi&qyas...
 bg:Увеличение по и&збор
 br:Zoom &personalizado...
 by:Карыстальніцкае &маштабаванне…
@@ -6789,6 +6816,7 @@ uk:Масштаб за замовчуванням:
 vn:Kích thước mặc định
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
+az:Qeydi sil
 br:Apagar Anotação
 ca:Suprimeix l'anotació
 cn:删除标注
@@ -6801,6 +6829,7 @@ ga:Scrios an nóta mínithe
 hr:Izbriši bilješku
 hu:Megjegyzés törlése
 it:Elimina Annotazione
+ja:注釈を削除
 kr:주석 삭제
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
@@ -7059,6 +7088,7 @@ vn:Tải phiên bản 64-bit
 :E&xit
 am:Փ&ակել
 ar:إ&نهاء
+az:Çı&x
 bg:&Изход
 br:S&air
 by:В&ыйсці
@@ -7201,6 +7231,7 @@ uk:Документи EPUB
 vn:Tập tin EPUB
 :Edit %s Annotation
 am:Խմբագրել %s մեկնաբանությունը
+az:%s qeydinə düzəliş et
 br:Editar a Anotação %s
 ca:Edita l'anotació %s
 cn:编辑 %s 标注
@@ -7617,6 +7648,7 @@ vn:Tiếp
 :F&ullscreen
 am:Լ&իաէկրան
 ar:&كامل الشاشة
+az:&Tam ekran
 bg:&Цял екран
 br:T&ela cheia
 by:П&оўнаэкранны рэжым
@@ -8569,6 +8601,7 @@ uk:Знайти:
 vn:Tìm kiếm:
 :Fit &Content
 am:Հարմարեցնել &բովանդակությունը
+az:&Məzmuna görə sığışdır
 bg:Побиране по &съдържание
 br:Ajustar ao &conteúdo
 by:Падагнаць &змесціва
@@ -8609,6 +8642,7 @@ uk:Підігнати вміст
 vn:Vừa &Nội Dung
 :Fit &Page
 am:Հարմարեցնել &էջը
+az:&Səhifəyə sığışdır
 bg:По&биране в страницата
 br:Ajustar à &página
 by:Падагнаць &старонку
@@ -8649,6 +8683,7 @@ uk:Підігнати сторінку
 vn:Vừa &Trang
 :Fit &Width
 am:Հարմարեցնել &լայնությունը
+az:&Genişliyə görə sığışdır
 bg:Поб&иране по ширина
 br:Ajustar pela &largura
 by:Дапасаваць па &шырыні
@@ -9447,6 +9482,7 @@ vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Icon:
 am:Պատկերակ.
 ar:الأيقونة:
+az:Piktoqram:
 bg:Иконка:
 br:Ícone
 by:Значок:
@@ -9942,6 +9978,7 @@ uk:Встановлення триває...
 vn:Đang cài đặt...
 :Installing 32-bit SumatraPDF on 64-bit OS
 am:Տեղադրել 32 բիթային SumatraPDF-ը 64 բիթային OS-ում
+az:32-bitlik SumatraPDF 64-bitlik əməliyyat sistemində quraşdırılır
 bg:Инсталира се 32-битова версия на SumatraPDF на 64-битова ОС
 br:Instalando SumatraPDF 32-bits em SO 64-bits
 by:Усталяванне 32-бітнай версіі SumatraPDF у 64-бітнай АС
@@ -9987,6 +10024,7 @@ uk:Встановлення 32-розрядної SumatraPDF на 64-розря�
 vn:Cài đặt SumatraPDF 32-bit trên hệ điều hành 64-bit
 :Interior Color:
 am:Ներքին գույնը.
+az:İç rəngi:
 bg:Вътрешен цвят:
 br:Cor Interior:
 by:Унутраны колер:
@@ -11169,6 +11207,7 @@ vn:Đồng ý
 :Opacity:
 am:Մգություն.
 ar:الإعتام:
+az:Tutğunluq
 bg:Прозрачност:
 br:Opacidade:
 by:Непразрыстасць:
@@ -11215,6 +11254,7 @@ uk:Непрозорість
 vn:Làm mờ:
 :Opacity: %d
 am:Մգություն. %d
+az:Tutğunluq: %d
 bg:Прозрачност: %d
 br:Opacidade: %d
 by:Непразрыстасць: %d
@@ -11587,6 +11627,7 @@ uk:Відкрити вкладений PDF
 vn:Mở PDF Đã Nhúng
 :Open In New Window
 am:Բացել նոր պատուհանում
+az:Yeni pəncərədə aç
 br:Abrir em Nova Janela
 ca:Obre en una finestra nova
 cn:在新窗口中打开
@@ -11867,6 +11908,7 @@ uk:Відкрити у Microsoft XPS-Viewer
 vn:Mở bằng Microsoft XPS-Viewer
 :Open in Microsoft &HTML Help
 am:Բացել Microsoft &HTML Օգնությունում
+az:Microsoft &HTML Help-də aç
 br:Abrir em Microsoft &HTML Help
 by:Адкрыць у Microsoft &HTML Help
 ca:Obre amb l'Ajuda &HTML de Microsoft
@@ -12785,6 +12827,7 @@ uk:Багатокутник
 vn:Đa Hình
 :Popup: %d 0 R
 am:Ելնող. %d 0 R
+az:Sıçrayan element: %d 0 R
 bg:Изскачащ прозорец:  %d 0 R
 br:Aparecer: %d 0 R
 by:Усплывальнае акно: %d 0 R
@@ -13377,6 +13420,7 @@ uk:Помилка друкування.
 vn:Lỗi in.
 :Properties...
 am:Հատկություններ...
+az:Xüsusiyyətlər...
 br:Propriedades...
 ca:Propietats...
 cn:属性...
@@ -13823,6 +13867,7 @@ uk:Повернути за годинниковою стрілкою
 vn:Quay &Phải
 :S&election
 am:Ը&նտրում
+az:S&eçilmiş sahə
 bg:Се&лекция
 br:S&eleção
 by:В&ыбар
@@ -13913,6 +13958,7 @@ vn:Lệch
 :SVG documents
 am:SVG փաստաթղթեր
 ar:مستندات SVG
+az:SVG sənədləri
 bg:SVG документи
 br:Documentos SVG
 by:Дакументы SVG
@@ -13958,6 +14004,7 @@ vn:Các Tài Liệu SVG
 :Save Annotations to existing PDF
 am:Պահել ծանոթագրությունը առկա PDF-ում
 ar:حفظ التوضيحات في ملف PDF الحالي
+az:Qeydləri mövcud PDF-də yadda saxla
 bg:Запази Обясненията в съществуващ PDF
 br:Salvar anotações neste PDF
 by:Захаваць анатацыі ў існуючы PDF
@@ -14086,6 +14133,7 @@ uk:Зберегти вкладений файл...
 vn:Lưu Tập Đã Nhúng...
 :Save S&hortcut...
 am:Պահել դ&յուրանցումը...
+az:&Qısayolu yadda saxla...
 bg:Запази &пряк път
 br:Salvar A&talho
 by:Захаваць &ярлык...
@@ -14125,6 +14173,7 @@ uk:Зберегти ярлик...
 vn:Lưu Đ&ường Tắt
 :Save annotations?
 am:Պահե՞լ մեկնաբանությունը?
+az:Qeydlər yadda saxlanılsın?
 bg:Да запазя ли обясненията?
 br:Salvar anotações?
 by:Захаваць анатацыі?
@@ -14266,6 +14315,7 @@ vn:Lưu thay đổi và thoát PDF
 :Save to &new PDF
 am:Պահել &նոր PDF-ում
 ar:حفظ إلى ملف PDF &جديد
+az:Ye&ni PDF kimi yadda saxla
 bg:Запази в &нов PDF
 br:Salvar em um &novo PDF
 by:Захаваць &новы PDF
@@ -14310,6 +14360,7 @@ uk:Зберегти в новому PDF-файлі
 vn:Lưu &PDF mới
 :Saved annotations to '%s'
 am:Պահված մեկնաբանություններ '%s'-ում
+az:Qeydləri burada yadda saxla: '%s'
 bg:Запазени анотации към '%s'
 br:Anotações salvas em '%s'
 by:Анатацыі захаваныя ў «%s»
@@ -14353,6 +14404,7 @@ uk:Анотації збережені до '%s'
 vn:Đã lưu chú thích tới '%s'
 :Saving of '%s' failed with: '%s'
 am:'%s'-ի պահումը ձախողվեց հետևյալով՝ '%s'
+az:'%s' yadda saxlanılarkən '%s' baş verdi
 bg:Записът на '%s' бе неуспешен с: '%s'
 br:Salvamento de '%s' falhou com: '%s'
 by:Захаванне '%s' не выканана: '%s'
@@ -15090,6 +15142,7 @@ vn:Hiện thanh công cụ
 :Show Book&marks
 am:Ցուցադրել էջա&նիշերը
 ar:إظهار ال&علامات
+az:Əl&fəcinləri göstər
 bg:Покажи от&метки
 br:Mostrar favo&ritos
 by:Паказваць &Закладкі
@@ -15468,6 +15521,7 @@ uk:Одна сторінка
 vn:Trang đơn
 :Skip this version
 am:Բաց թողնել այս տարբերակը
+az:Bu versiyanı burax
 bg:Пропусни тази версия
 br:Ignorar esta versão
 by:Прапусціць гэтую версію
@@ -16221,6 +16275,7 @@ uk:PDF з мітками
 vn:PDF được gắn thẻ
 :Text Alignment:
 am:Գրվածքի հավասարեցում
+az:Mətn kənarlarının düzəldilməsi:
 bg:Подравняване на текста
 br:Alinhamento de Texto:
 by:Выраўнаванне тэксту
@@ -16357,6 +16412,7 @@ uk:Розмір тексту:
 vn:Kích Thước:
 :Text Size: %d
 am:Գրվածքի չափը՝ %d
+az:Mətn ölçüsü: %d
 bg:Текст размер: %d
 br:Tamanho do Texto: %d
 by:Памер тэксту: %d
@@ -16952,6 +17008,7 @@ uk:Невідомий файл-джерело (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Unsaved annotations
 am:Չպահված մեկնաբանություններ
+az:Yadda saxlanılmamış qeydlər
 bg:Незапазени обяснения
 br:Anotações não salvas
 by:Незахаваныя заўвагі
@@ -16998,6 +17055,7 @@ uk:Незбережені анотації
 vn:Ghi chú không được lưu
 :Unsaved annotations in '%s'
 am:Չպահված մեկնաբանություններ '%s'-ում
+az:Yadda saxlanılmamış qeydlər burada: '%s'
 bg:Незаписани анотации в '%s'
 br:Anotações não salvas em '%s'
 by:Незахаваныя заўвагі ў '%s'
@@ -17347,6 +17405,7 @@ vn:Bạn đang dùng phiên bản mới nhất.
 :You have unsaved annotations
 am:Դուք ունեք չպահված մեկնաբանություններ
 ar:لديك توضيحات غير محفوظة
+az:Yadda saxlanılmamış qeydləriniz var
 bg:Имате незаписан анотации
 br:Você possui anotações não salvas
 by:У вас ёсць незахаваныя заўвагі

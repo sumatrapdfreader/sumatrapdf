@@ -1,8 +1,4 @@
 :%s annotation. Ctrl+click to edit.
-:Cleared history of %d files, deleted thumbnails.
-:Clearing history...
-:Copy File Path
-:Delete Annotation
 :Edit %s Annotation
 :Interior Color:
 :Open Directory in &Double Commander
@@ -204,6 +200,10 @@ CHM ドキュメント
 更新を確認中...
 :Circle
 丸
+:Cleared history of %d files, deleted thumbnails.
+%d 個の履歴を削除し、サムネイルを削除しました。
+:Clearing history...
+履歴を削除中...
 :Close
 閉じる
 :Close Other Tabs
@@ -236,6 +236,8 @@ CHM ドキュメント
 リンク先のアドレスをコピー(&L)
 :Copy Co&mment
 コメントをコピー(&M)
+:Copy File Path
+ファイルパスをコピー
 :Copy To Clipboard
 クリップボードへコピー
 :Copying text was denied (copying as image only)
@@ -286,6 +288,8 @@ Sumatra 検索フィルターをアンインストールできませんでした
 既定のレイアウト(&L):
 :Default &Zoom:
 既定の拡大率(&Z):
+:Delete Annotation
+注釈を削除
 :Denied Permissions:
 拒否された権限:
 :DjVu documents
