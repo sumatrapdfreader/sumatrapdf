@@ -3329,7 +3329,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
         pdf_save_document(ctx, epdf->pdfdoc, path, &save_opts);
         ok = true;
         auto dur = TimeSinceInMs(timeStart);
-        logf("Saved annotations to '%s' in  %.2f ms\n", path, dur);
+        logf("Saved annotations to '%s' in  %.2f ms, incremental: %d\n", path, dur, save_opts.do_incremental);
     }
     fz_catch(ctx) {
         const char* mupdfErr = fz_caught_message(epdf->ctx);

@@ -3471,11 +3471,11 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     COLORREF tabBgHighlight;
     COLORREF tabBgBackground;
     if (IsLightColor(tabBgSelected)) {
-        tabBgBackground = AdjustLightness2(tabBgSelected, -15);
-        tabBgHighlight = AdjustLightness2(tabBgSelected, -25);
+        tabBgBackground = AdjustLightness2(tabBgSelected, -25);
+        tabBgHighlight = AdjustLightness2(tabBgSelected, -35);
     } else {
-        tabBgBackground = AdjustLightness2(tabBgSelected, 15);
-        tabBgHighlight = AdjustLightness2(tabBgSelected, 25);
+        tabBgBackground = AdjustLightness2(tabBgSelected, 25);
+        tabBgHighlight = AdjustLightness2(tabBgSelected, 35);
     }
 
     COLORREF tabBgCol;
