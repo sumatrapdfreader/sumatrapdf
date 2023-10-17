@@ -2,6 +2,7 @@
 :&Facing
 :&Free Text
 :&Highlight
+:&Keyboard Shortcuts
 :Cleared history of %d files, deleted thumbnails.
 :Clearing history...
 :Copy File Path

@@ -19,6 +19,7 @@
 :&Free Text
 :&Go to page:
 :&Highlight
+:&Keyboard Shortcuts
 :&Last Page
 :&Magnification:
 :&Manual

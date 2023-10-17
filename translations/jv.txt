@@ -14,6 +14,7 @@
 :&Fit pages to printable area
 :&Free Text
 :&Highlight
+:&Keyboard Shortcuts
 :&Last Page
 :&Magnification:
 :&Manual

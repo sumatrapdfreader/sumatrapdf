@@ -1,3 +1,4 @@
+:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 %s 标注
 :&About

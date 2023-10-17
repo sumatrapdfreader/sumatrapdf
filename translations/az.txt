@@ -1,3 +1,4 @@
+:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 :&About

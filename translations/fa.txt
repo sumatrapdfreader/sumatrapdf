@@ -4,6 +4,7 @@
 :&Copy To Clipboard
 :&Facing
 :&Free Text
+:&Keyboard Shortcuts
 :&Last Page
 :&Previous Page
 :&Remove From History

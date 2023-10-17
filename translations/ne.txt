@@ -7,6 +7,7 @@
 :&First Page
 :&Free Text
 :&Highlight
+:&Keyboard Shortcuts
 :&Last Page
 :&Next Page
 :&Open...

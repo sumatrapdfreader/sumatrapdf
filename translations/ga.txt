@@ -1,3 +1,4 @@
+:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 %s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 :&About

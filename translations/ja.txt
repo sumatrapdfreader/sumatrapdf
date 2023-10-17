@@ -1,4 +1,5 @@
 :%s annotation. Ctrl+click to edit.
+:&Keyboard Shortcuts
 :Edit %s Annotation
 :Interior Color:
 :Open Directory in &Double Commander

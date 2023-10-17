@@ -10,6 +10,7 @@
 :&Facing
 :&First Page
 :&Highlight
+:&Keyboard Shortcuts
 :&Last Page
 :&Next Page
 :&Open...

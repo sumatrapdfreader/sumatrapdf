@@ -1,3 +1,4 @@
+:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 Annotazione %s. Ctrl+clic per modificarla.
 :&About

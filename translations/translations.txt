@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-066296dd80a4b970db91242391b70ab9a20ecdcd
+fcced7e0eed5b50c3a2c6740bfab40db665531ae
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -1436,6 +1436,7 @@ tr:&Vurgula
 tw:螢光標示(&H)
 uk:Виділити 
 vn:&Nổi Bật
+:&Keyboard Shortcuts
 :&Last Page
 am:&Վերջին էջ
 ar:آ&خر صفحة

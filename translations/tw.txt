@@ -1,3 +1,4 @@
+:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 %s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About

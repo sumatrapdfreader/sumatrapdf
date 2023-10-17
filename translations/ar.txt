@@ -6,6 +6,7 @@
 :&Caret
 :&Discard changes
 :&Free Text
+:&Keyboard Shortcuts
 :&Stamp
 :&Strike Out
 :&Text
