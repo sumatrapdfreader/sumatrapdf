@@ -5130,15 +5130,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpVisitWebsite:
-            SumatraLaunchBrowser(WEBSITE_MAIN_URL);
+            SumatraLaunchBrowser(kWebsiteURL);
             break;
 
         case CmdHelpOpenManualInBrowser:
-            SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
+            SumatraLaunchBrowser(kManualURL);
+            break;
+
+        case CmdHelpOpenKeyboardShortcutsInBrowser:
+            SumatraLaunchBrowser(kManualKeyboardShortcutsURL);
             break;
 
         case CmdContributeTranslation:
-            SumatraLaunchBrowser(WEBSITE_TRANSLATIONS_URL);
+            SumatraLaunchBrowser(kContributeTranslationsURL);
             break;
 
         case CmdHelpAbout:

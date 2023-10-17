@@ -4,9 +4,10 @@
 #define CANVAS_CLASS_NAME L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME L"SUMATRA_PDF_FRAME"
 
-#define WEBSITE_MAIN_URL "https://www.sumatrapdfreader.org/"
-#define WEBSITE_MANUAL_URL "https://www.sumatrapdfreader.org/manual"
-#define WEBSITE_TRANSLATIONS_URL "https://www.sumatrapdfreader.org/docs/Contribute-translation"
+constexpr const char* kWebsiteURL = "https://www.sumatrapdfreader.org/";
+constexpr const char* kManualURL = "https://www.sumatrapdfreader.org/manual";
+constexpr const char* kManualKeyboardShortcutsURL = "https://www.sumatrapdfreader.org/docs/Keyboard-shortcuts";
+constexpr const char* kContributeTranslationsURL = "https://www.sumatrapdfreader.org/docs/Contribute-translation";
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL "https://www.sumatrapdfreader.org/docs/Contribute-to-SumatraPDF"

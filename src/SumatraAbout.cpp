@@ -83,8 +83,8 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    {"website", "SumatraPDF website", WEBSITE_MAIN_URL},
-    {"manual", "SumatraPDF manual", WEBSITE_MANUAL_URL},
+    {"website", "SumatraPDF website", kWebsiteURL},
+    {"manual", "SumatraPDF manual", kManualURL},
     {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
     {"programming", "The Programmers", URL_AUTHORS},
     {"translations", "The Translators", URL_TRANSLATORS},

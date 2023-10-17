@@ -498,6 +498,10 @@ static MenuDef menuDefHelp[] = {
         CmdHelpOpenManualInBrowser,
     },
     {
+        _TRN("&Keyboard Shortcuts"),
+        CmdHelpOpenKeyboardShortcutsInBrowser
+    },
+    {
         _TRN("Check for &Updates"),
         CmdCheckUpdate,
     },
@@ -891,6 +895,7 @@ UINT_PTR removeIfNoInternetPerms[] = {
     CmdSearchSelectionWithBing,
     CmdHelpVisitWebsite,
     CmdHelpOpenManualInBrowser,
+    CmdHelpOpenKeyboardShortcutsInBrowser,
     CmdContributeTranslation,
     0,
 };

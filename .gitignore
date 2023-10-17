@@ -22,7 +22,7 @@ vs2022/.vs/
 .vscode/ipch/
 bin/cmapdump.exe
 drmemlogs/
-src/utils/BuildConfig.h
+# src/utils/BuildConfig.h
 build-log.txt
 analyze-output.txt
 analyze-errors.html
