@@ -252,11 +252,11 @@ COLORREF GetMainWindowBackgroundColor() {
     // Special behavior for light theme.
     // TODO: migrate from prefs to theme.
     if (currentThemeIndex == 0) {
-// for backward compatibility use a value that older versions will render as yellow
-#define MAIN_WINDOW_BG_COLOR_DEFAULT (RGB(0xff, 0xf2, 0) - 0x80000000)
+        // for backward compatibility use a value that older versions will render as yellow
+        constexpr COLORREF kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
 
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
-        if (MAIN_WINDOW_BG_COLOR_DEFAULT != bgParsed->col) {
+        if (kMainWinBgColDefault != bgParsed->col) {
             bgColor = bgParsed->col;
         }
     }
