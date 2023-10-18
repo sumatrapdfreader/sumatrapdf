@@ -38,13 +38,13 @@ bool WindowTab::IsAboutTab() const {
 }
 
 WindowTab::~WindowTab() {
+    CloseAndDeleteEditAnnotationsWindow(this);
     FileWatcherUnsubscribe(watcher);
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
     }
     delete selectionOnPage;
     delete ctrl;
-    CloseAndDeleteEditAnnotationsWindow(this);
 }
 
 bool WindowTab::IsDocLoaded() const {
