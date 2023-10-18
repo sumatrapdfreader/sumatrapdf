@@ -177,7 +177,7 @@ bool MainWindow::IsDocLoaded() const {
     bool isTabLoaded = (CurrentTab() && CurrentTab()->ctrl != nullptr);
     if (isLoaded != isTabLoaded) {
         logfa("MainWindow::IsDocLoaded(): isLoaded: %d, isTabLoaded: %d\n", (int)isLoaded, (int)isTabLoaded);
-        ReportIf(true);
+        ReportIf(!gPluginMode);
     }
     return isLoaded;
 }
