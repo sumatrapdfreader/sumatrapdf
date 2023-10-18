@@ -624,12 +624,9 @@ void LinkHandler::GotoNamedDest(const char* name) {
 }
 
 void UpdateControlsColors(MainWindow* win) {
-    Theme* theme = gCurrentTheme;
-    COLORREF labelBgCol = theme->mainWindow.controlBackgroundColor;
-    COLORREF labelTxtCol = theme->mainWindow.textColor;
+    COLORREF bgCol = gCurrentTheme->mainWindow.controlBackgroundColor;
+    COLORREF txtCol = gCurrentTheme->mainWindow.textColor;
 
-    COLORREF treeBgCol, treeTxtCol;
-    GetDocumentColors(treeTxtCol, treeBgCol);
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
@@ -637,11 +634,11 @@ void UpdateControlsColors(MainWindow* win) {
 
     {
         auto tocTreeView = win->tocTreeView;
-        tocTreeView->SetBackgroundColor(treeBgCol);
-        tocTreeView->SetTextColor(treeTxtCol);
+        tocTreeView->SetBackgroundColor(bgCol);
+        tocTreeView->SetTextColor(txtCol);
 
-        win->tocLabelWithClose->SetBgCol(labelBgCol);
-        win->tocLabelWithClose->SetTextCol(labelTxtCol);
+        win->tocLabelWithClose->SetBgCol(bgCol);
+        win->tocLabelWithClose->SetTextCol(txtCol);
         win->sidebarSplitter->SetBackgroundColor(splitterCol);
         SetWindowExStyle(tocTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
@@ -650,11 +647,11 @@ void UpdateControlsColors(MainWindow* win) {
 
     auto favTreeView = win->favTreeView;
     if (favTreeView) {
-        favTreeView->SetBackgroundColor(treeBgCol);
-        favTreeView->SetTextColor(treeTxtCol);
+        favTreeView->SetBackgroundColor(bgCol);
+        favTreeView->SetTextColor(txtCol);
 
-        win->favLabelWithClose->SetBgCol(labelBgCol);
-        win->favLabelWithClose->SetTextCol(labelTxtCol);
+        win->favLabelWithClose->SetBgCol(bgCol);
+        win->favLabelWithClose->SetTextCol(txtCol);
 
         win->favSplitter->SetBackgroundColor(splitterCol);
 
@@ -663,7 +660,6 @@ void UpdateControlsColors(MainWindow* win) {
         SetWindowPos(favTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
     }
     // TODO: more work needed to to ensure consistent look of the ebook window:
-    // - tab bar should match the colort
     // - change the tree item text color
     // - change the tree item background color when selected (for both focused and non-focused cases)
     // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
