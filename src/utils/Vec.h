@@ -197,8 +197,12 @@ class Vec {
 
     T& at(int idx) const {
         CrashIf(idx < 0);
-        CrashIf((size_t)idx >= len);
+        CrashIf(idx >= (int)len);
         return els[idx];
+    }
+
+    bool isValidIndex(int idx) const {
+        return (idx >= 0) && (idx < (int)len);
     }
 
     size_t size() const {

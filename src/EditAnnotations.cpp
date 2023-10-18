@@ -925,6 +925,12 @@ static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
 
 void EditAnnotationsWindow::ListBoxSelectionChanged() {
     int itemNo = listBox->GetCurrentSelection();
+    if (!annotations.isValidIndex(itemNo)) {
+        logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, annotations.size()=%d\n", itemNo,
+              annotations.isize());
+        ReportIf(true);
+        return;
+    }
     Annotation* annot = annotations.at(itemNo);
     SetSelectedAnnotation(tab, annot);
 }
