@@ -201,16 +201,20 @@ func downloadTranslations() bool {
 	curr := readFileMust(path)
 	if bytes.Equal(d, curr) {
 		fmt.Printf("Translations didn't change\n")
-		//TODO: for now to force splitting into per-lang files
-		// return false
+		return false
 	}
 
-	writeFileMust(path, d)
+	// disable per-lang files for now
+	if false {
+		splitIntoPerLangFiles(d)
+	}
+
 	// TODO: save ~400k in uncompressed binary by
 	// saving as gzipped and embedding that in the exe
 	//u.WriteFileGzipped(translationsTxtPath+".gz", d)
-	splitIntoPerLangFiles(d)
+	writeFileMust(path, d)
 	logf(ctx(), "Wrote %s of size %d\n", path, len(d))
+
 	printSusTranslations(d)
 	return false
 }
