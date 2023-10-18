@@ -58,8 +58,6 @@ static Theme gThemeLight = {
     },
     // Document style
     {
-        // Canvas Color
-        RgbToCOLORREF(0x999999),
         // Background Color
         kColWhite,
         // Text color
@@ -99,8 +97,6 @@ static Theme gThemeDark = {
     },
     // Document style
     {
-        // Canvas Color
-        RgbToCOLORREF(0x1E272C),
         // Background Color
         gThemeDark.mainWindow.backgroundColor,
         // Text color
@@ -139,8 +135,6 @@ static Theme gThemeDarker = {
     },
     // Document style
     {
-        // Canvas Color
-        RgbToCOLORREF(0x1E1E1E),
         // Background Color
         gThemeDarker.mainWindow.backgroundColor,
         // Text color
@@ -242,7 +236,8 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
 
     bg = gCurrentTheme->document.backgroundColor;
     text = gCurrentTheme->document.textColor;
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
+
+    if (!gGlobalPrefs->fixedPageUI.invertColors) {
         std::swap(bg, text);
     }
 }

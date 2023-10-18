@@ -18,8 +18,6 @@ struct MainWindowStyle {
 };
 
 struct DocumentStyle {
-    // Background color behind the open document
-    COLORREF canvasColor;
     // Color value with which white (background) will be substituted
     COLORREF backgroundColor;
     // Color value with which black (text) will be substituted
