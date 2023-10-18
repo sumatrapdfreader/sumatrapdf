@@ -224,6 +224,11 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
         // TODO: this probably only makes sense for dark themes
         text = gCurrentTheme->window.textColor;
         bg = gCurrentTheme->window.backgroundColor;
+        if (IsLightColor(bg)) {
+            bg = AdjustLightness2(bg, -8);
+        } else {
+            bg = AdjustLightness2(bg, 8);
+        }
     }
 }
 
