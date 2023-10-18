@@ -24,7 +24,6 @@
 #include "Theme.h"
 
 using Gdiplus::ARGB;
-using Gdiplus::Brush;
 using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Pen;
