@@ -3832,7 +3832,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     SetCapture(hwnd);
                 }
             }
-            if (gLogTabs) {
+            if (gLogTabs || (tabHighlighted == -1)) {
                 logfa(
                     "TabsCtrl::WndProc: WM_LBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
                     "overClose: %d\n",
