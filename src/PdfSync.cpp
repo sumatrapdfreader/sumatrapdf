@@ -5,6 +5,7 @@
 #include <synctex_parser.h>
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/ZipUtil.h"
 
 #include "wingui/UIModels.h"
 
@@ -492,6 +493,29 @@ int Pdfsync::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
+// returns path of ungzipped file
+TempStr ungzipToFile(char* path) {
+    // to see if we can read when gzopen in synctex_scanner_new_with_output_file cannot
+    ByteSlice compr = file::ReadFile(path);
+    if (compr.IsEmpty()) {
+        logf("ungzip: file::ReadFile() '%s' failed\n", path);
+        return nullptr;
+    }
+    logf("ungzip: file::ReadFile() did read '%s'\n", path);
+    ByteSlice uncompr = Ungzip(compr);
+    compr.Free();
+    if (uncompr.IsEmpty()) {
+        return nullptr;
+    }
+    TempStr destPath = str::JoinTemp(path, ".sum.synctex");
+    bool ok = file::WriteFile(destPath, uncompr);
+    uncompr.Free();
+    if (!ok) {
+        return nullptr;
+    }
+    return destPath;
+}
+
 // SYNCTEX synchronizer
 
 int SyncTex::RebuildIndexIfNeeded() {
@@ -501,69 +525,55 @@ int SyncTex::RebuildIndexIfNeeded() {
     }
     synctex_scanner_free(scanner);
     scanner = nullptr;
-    bool synctexExists = false;
-    char* pathNoExt = path::GetPathNoExtTemp(syncFilePath);
-    char* pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
     i64 fsize;
-    {
-        char* pathSync = str::JoinTemp(pathNoExt, ".synctex");
-        if (file::Exists(pathSync)) {
-            fsize = file::GetSize(pathSync);
-            logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSync, (int)fsize);
-            synctexExists = true;
-        }
-        if (file::Exists(pathSyncGz)) {
-            fsize = file::GetSize(pathSyncGz);
-            logf("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
-            synctexExists = true;
-
-            // to see if we can read when gzopen in synctex_scanner_new_with_output_file cannot
-            ByteSlice d = file::ReadFile(pathSyncGz);
-            if (d.empty()) {
-                logf("SyncTex::RebuildIndexIfNeeded: file::ReadFile() '%s' failed\n", pathSyncGz);
-            } else {
-                logf("SyncTex::RebuildIndexIfNeeded: file::ReadFile() did read '%s'\n", pathSyncGz);
-                d.Free();
-            }
-        }
-        if (!synctexExists) {
-            logf("SyncTex::RebuildIndexIfNeeded: files %s and %s don't exist\n", pathSync, pathSyncGz);
-        }
-    }
-
+    TempStr pathNoExt;
+    TempStr pathSyncGz;
     bool didRepeat = false;
+
+    TempStr syncPathTemp = str::DupTemp(syncFilePath.Get());
 Repeat:
-    WCHAR* ws = ToWstrTemp(syncFilePath);
+    WCHAR* ws = ToWstrTemp(syncPathTemp);
     AutoFreeStr pathAnsi = strconv::WstrToAnsi(ws);
     scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
     if (scanner) {
         logfa("synctex_scanner_new_with_output_file: ok for pathAnsi '%s'\n", pathAnsi.Get());
         goto Exit;
     }
-    if (!str::Eq(syncFilePath, pathAnsi)) {
-        logfa("synctex_scanner_new_with_output_file: retrying for syncFilePath '%s'\n", syncFilePath.Get());
-        scanner = synctex_scanner_new_with_output_file(syncFilePath, nullptr, 1);
+    if (!str::Eq(syncPathTemp, pathAnsi)) {
+        logfa("synctex_scanner_new_with_output_file: retrying for syncFilePath '%s'\n", syncPathTemp);
+        scanner = synctex_scanner_new_with_output_file(syncPathTemp, nullptr, 1);
     }
     if (scanner) {
-        logfa("synctex_scanner_new_with_output_file: ok forsyncFilePath '%s'\n", syncFilePath.Get());
+        logfa("synctex_scanner_new_with_output_file: ok forsyncFilePath '%s'\n", syncPathTemp);
         goto Exit;
     }
-    if (!synctexExists || didRepeat) {
+    if (didRepeat) {
         logfa("synctex_scanner_new_with_output_file: failed for '%s'\n", pathAnsi.Get());
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
+
     // Note: https://github.com/sumatrapdfreader/sumatrapdf/discussions/2640#discussioncomment-2861368
     // reported failure to parse a large (12 MB) .synctex.gz even though file exists
-    // theory: timing issue of us reading partially written file
-    // retry with 1 sec delay once
-    logfa("SyncTex::RebuildIndexIfNeeded: retrying with 1 sec delay\n");
-    ::Sleep(1000);
-
+    pathNoExt = path::GetPathNoExtTemp(syncFilePath);
+    pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
+    if (!file::Exists(pathSyncGz)) {
+        logfa("synctex_scanner_new_with_output_file: failed for '%s'\n", pathAnsi.Get());
+        return PDFSYNCERR_SYNCFILE_NOTFOUND;
+    }
     fsize = file::GetSize(pathSyncGz);
-    logfa("SyncTex::RebuildIndexIfNeeded: %s, size: %d\n", pathSyncGz, (int)fsize);
+    logf("SyncTex::RebuildIndexIfNeeded: trying to uncompress %s, size: %d\n", pathSyncGz, (int)fsize);
+
+    syncPathTemp = ungzipToFile(pathSyncGz);
+    if (!syncPathTemp) {
+        logfa("SyncTex::RebuildIndexIfNeeded: ungzipToFile('%s') failecd\n", pathSyncGz);
+        goto Exit;
+    }
+    fsize = file::GetSize(syncPathTemp);
+    logfa("SyncTex::RebuildIndexIfNeeded: retrying with uncompressed version '%s' of size %d\n", syncPathTemp, fsize);
 
     didRepeat = true;
     goto Repeat;
+
 Exit:
     return MarkIndexWasRebuilt();
 }

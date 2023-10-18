@@ -60,6 +60,9 @@ struct ByteSlice {
     bool empty() const {
         return !d;
     }
+    bool IsEmpty() const {
+        return !d;
+    }
     ByteSlice Clone() const {
         if (empty()) {
             return {};

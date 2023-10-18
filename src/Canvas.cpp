@@ -859,14 +859,14 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         tab->didScrollToSelectedAnnotation = true;
     }
     rect.Inflate(4, 4);
-    //Gdiplus::Color col = GdiRgbFromCOLORREF(gCurrentTheme->window.backgroundColor);
+    // Gdiplus::Color col = GdiRgbFromCOLORREF(gCurrentTheme->window.backgroundColor);
     Gdiplus::Color col = GdiRgbFromCOLORREF(0xff3333); // blue
     // TODO: maybe make the rectangle a bit bigger and draw line
     // using a pattern, using a brush pen
     Gdiplus::Color colHatch2((Gdiplus::ARGB)Gdiplus::Color::Yellow);
 
     Gdiplus::HatchBrush br(Gdiplus::HatchStyleCross, colHatch2, col);
-    //Gdiplus::Pen pen(col, 4);
+    // Gdiplus::Pen pen(col, 4);
     Gdiplus::Pen pen(&br, 4);
     Gdiplus::Graphics gs(hdc);
     Gdiplus::Status stat = gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
