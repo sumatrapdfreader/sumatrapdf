@@ -214,7 +214,13 @@ static int SortByPageNo(const void* a, const void* b) {
 void Favorites::AddOrReplace(const char* filePath, int pageNo, const char* name, const char* pageLabel) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
-        CrashIf(gGlobalPrefs->rememberOpenedFiles);
+        // we were asked to add a favorite for current file but couldn't find
+        // history for this file. should only happen if we're not remembering
+        // opened files
+        // TODO: is this invalid check because we could have opened a file,
+        // turned off the setting, turned on the setting and then
+        // tried to add the fav?
+        ReportIf(gGlobalPrefs->rememberOpenedFiles);
         fav = NewDisplayState(filePath);
         gFileHistory.Append(fav);
     }
@@ -222,7 +228,7 @@ void Favorites::AddOrReplace(const char* filePath, int pageNo, const char* name,
     Favorite* fn = FindByPage(fav, pageNo, pageLabel);
     if (fn) {
         str::ReplaceWithCopy(&fn->name, name);
-        CrashIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
+        ReportIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
     } else {
         fn = NewFavorite(pageNo, name, pageLabel);
         fav->favorites->Append(fn);

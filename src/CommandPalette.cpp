@@ -50,7 +50,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdCollapseAll, // TODO: figure proper context for it
     CmdMoveFrameFocus,
 
-    CmdFavoriteAdd,
+    //CmdFavoriteAdd,
     CmdFavoriteDel,
 
     CmdPresentationWhiteBackground,

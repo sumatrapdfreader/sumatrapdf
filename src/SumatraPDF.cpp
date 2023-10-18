@@ -96,11 +96,7 @@ constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
-#if defined(DEBUG)
-bool gDebugShowLinks = true;
-#else
 bool gDebugShowLinks = false;
-#endif
 
 // used to show it in debug, but is not very useful,
 // so always disable
