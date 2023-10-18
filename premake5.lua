@@ -1002,7 +1002,7 @@ workspace "SumatraPDF"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
-    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
+    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     filter "platforms:x64_asan"
       linkoptions { "/INFERASANLIBS" }
@@ -1061,7 +1061,7 @@ workspace "SumatraPDF"
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:libmupdf.dll" }
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
-    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
+    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     dependson { "PdfFilter", "PdfPreview", "test_util" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
