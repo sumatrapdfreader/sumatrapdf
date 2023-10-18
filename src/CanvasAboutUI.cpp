@@ -31,7 +31,7 @@ static void OnPaintAbout(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    auto txtCol = gCurrentTheme->mainWindow.textColor;
+    auto txtCol = gCurrentTheme->window.textColor;
     auto bgCol = GetMainWindowBackgroundColor();
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
         gGlobalPrefs->showStartPage) {

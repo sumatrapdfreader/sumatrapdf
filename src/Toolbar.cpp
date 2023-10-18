@@ -297,9 +297,9 @@ LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         HDC hdc = (HDC)wParam;
         RECT rect;
         GetClientRect(hWnd, &rect);
-        SetTextColor(hdc, gCurrentTheme->mainWindow.textColor);
-        SetBkColor(hdc, gCurrentTheme->mainWindow.controlBackgroundColor);
-        auto bg = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
+        SetTextColor(hdc, gCurrentTheme->window.textColor);
+        SetBkColor(hdc, gCurrentTheme->window.controlBackgroundColor);
+        auto bg = CreateSolidBrush(gCurrentTheme->window.controlBackgroundColor);
         FillRect(hdc, &rect, bg);
         DeleteObject(bg);
         return 1;
@@ -329,7 +329,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         if ((win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed()) {
             // Set color used in "Page:" and "Find:" labels
             auto col = RGB(0x00, 0x00, 0x00);
-            SetTextColor(hdc, gCurrentTheme->mainWindow.textColor);
+            SetTextColor(hdc, gCurrentTheme->window.textColor);
             SetBkMode(hdc, TRANSPARENT);
             return (LRESULT)win->brControlBgColor;
         }

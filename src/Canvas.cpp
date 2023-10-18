@@ -757,7 +757,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
 
     // Draw frame
     ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME));
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gCurrentTheme->window.backgroundColor));
     SelectObject(hdc, pe);
     SelectObject(hdc, brush);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
@@ -859,7 +859,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         tab->didScrollToSelectedAnnotation = true;
     }
 
-    Gdiplus::Color col = GdiRgbFromCOLORREF(gCurrentTheme->document.textColor);
+    Gdiplus::Color col = GdiRgbFromCOLORREF(gCurrentTheme->window.textColor);
     Gdiplus::Pen pen(col, 5);
     Gdiplus::Graphics gs(hdc);
     // TODO: maybe make the rectangle a bit bigger and draw line
@@ -974,7 +974,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (renderDelay != 0) {
             AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            auto col = gCurrentTheme->mainWindow.textColor;
+            auto col = gCurrentTheme->window.textColor;
             SetTextColor(hdc, col);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {

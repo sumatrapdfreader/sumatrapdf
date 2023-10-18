@@ -17,13 +17,6 @@ struct MainWindowStyle {
     COLORREF linkColor;
 };
 
-struct DocumentStyle {
-    // Color value with which white (background) will be substituted
-    COLORREF backgroundColor;
-    // Color value with which black (text) will be substituted
-    COLORREF textColor;
-};
-
 struct NotificationStyle {
     // Background color of the notification window
     COLORREF backgroundColor;
@@ -41,9 +34,7 @@ struct Theme {
     // Name of the theme
     const char* name;
     // Style of the main window
-    MainWindowStyle mainWindow;
-    // Style of documents
-    DocumentStyle document;
+    MainWindowStyle window;
     // Style of notifications
     NotificationStyle notifications;
     // Whether or not we colorize standard Windows controls and window areas

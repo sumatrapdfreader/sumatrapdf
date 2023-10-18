@@ -1456,7 +1456,7 @@ static MainWindow* CreateMainWindow() {
     if (!win->isMenuHidden) {
         SetMenu(win->hwndFrame, win->menu);
     }
-    win->brControlBgColor = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
+    win->brControlBgColor = CreateSolidBrush(gCurrentTheme->window.controlBackgroundColor);
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -1545,7 +1545,7 @@ void DeleteMainWindow(MainWindow* win) {
 
 static void UpdateThemeForWindow(MainWindow* win) {
     DeleteObject(win->brControlBgColor);
-    win->brControlBgColor = CreateSolidBrush(gCurrentTheme->mainWindow.controlBackgroundColor);
+    win->brControlBgColor = CreateSolidBrush(gCurrentTheme->window.controlBackgroundColor);
 
     UpdateControlsColors(win);
     RebuildMenuBarForWindow(win);

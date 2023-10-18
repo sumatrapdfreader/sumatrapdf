@@ -175,7 +175,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
 
-    SetTextColor(hdc, gCurrentTheme->mainWindow.textColor);
+    SetTextColor(hdc, gCurrentTheme->window.textColor);
     ScopedSelectFont restoreFont(hdc, fontVersionTxt);
     Point pt(mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding), mainRect.y);
 
@@ -188,7 +188,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 // draw on the bottom right
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 16));
-    auto col = gCurrentTheme->mainWindow.linkColor;
+    auto col = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
     ScopedSelectObject font(hdc, fontLeftTxt);
 
@@ -218,10 +218,10 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& staticLinks) {
-    auto col = gCurrentTheme->mainWindow.textColor;
+    auto col = gCurrentTheme->window.textColor;
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
-    col = gCurrentTheme->mainWindow.linkColor;
+    col = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
@@ -256,7 +256,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     DrawSumatraVersion(hwnd, hdc, titleRect);
 
     /* render attribution box */
-    col = gCurrentTheme->mainWindow.textColor;
+    col = gCurrentTheme->window.textColor;
     SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
 
@@ -277,9 +277,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm::DiskAccess) && el->url;
         if (hasUrl) {
-            col = gCurrentTheme->mainWindow.linkColor;
+            col = gCurrentTheme->window.linkColor;
         } else {
-            col = gCurrentTheme->mainWindow.textColor;
+            col = gCurrentTheme->window.textColor;
         }
         SetTextColor(hdc, col);
         size_t txtLen = str::Len(el->rightTxt);
@@ -617,10 +617,10 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
 void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     HWND hwnd = win->hwndFrame;
-    auto col = gCurrentTheme->mainWindow.textColor;
+    auto col = gCurrentTheme->window.textColor;
     AutoDeletePen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
-    col = gCurrentTheme->mainWindow.linkColor;
+    col = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 24));
@@ -650,7 +650,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
-    col = gCurrentTheme->mainWindow.textColor;
+    col = gCurrentTheme->window.textColor;
     SetTextColor(hdc, col);
 
     rc.y += titleBox.dy;
@@ -767,7 +767,7 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
         DOCLIST_MARGIN_TOP + height * kThumbnailDy + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
 
-    col = gCurrentTheme->mainWindow.linkColor;
+    col = gCurrentTheme->window.linkColor;
     SetTextColor(hdc, col);
     SelectObject(hdc, penLinkLine);
 

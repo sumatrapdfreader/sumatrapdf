@@ -34,7 +34,7 @@ constexpr COLORREF kColWhite = 0xFFFFFF;
 static Theme gThemeLight = {
     // Theme Name
     _TRN("Light"),
-    // Main window theme
+    // Window theme
     {
         // Main Background Color
         // Background color comparison:
@@ -56,25 +56,18 @@ static Theme gThemeLight = {
         // Main Link Color
         RgbToCOLORREF(0x0020A0)
     },
-    // Document style
-    {
-        // Background Color
-        kColWhite,
-        // Text color
-        kColBlack
-    },
     // Notifications
     {
         // Background color
         kColWhite,
         // Text color
-        gThemeLight.mainWindow.textColor,
+        gThemeLight.window.textColor,
         // Highlight color
         RgbToCOLORREF(0xFFEE70),
         // Highlight text color
         RgbToCOLORREF(0x8d0801),
         // Progress bar color
-        gThemeLight.mainWindow.linkColor
+        gThemeLight.window.linkColor
     },
     // Colorize standard controls
     false
@@ -83,37 +76,31 @@ static Theme gThemeLight = {
 static Theme gThemeDark = {
     // Theme Name
     _TRN("Dark"),
-    // Main window theme
+    // Window theme
     {
         // Main Background Color
         RgbToCOLORREF(0x263238),
          // Control background Color
         RgbToCOLORREF(0x263238),
         // Main Text Color
-        kColWhite,
+        //kColWhite,
+        AdjustLightness2(RgbToCOLORREF(0x263238), 150),
         // Main Link Color
-        RgbToCOLORREF(0x80CBAD)
-       
-    },
-    // Document style
-    {
-        // Background Color
-        gThemeDark.mainWindow.backgroundColor,
-        // Text color
-        gThemeDark.mainWindow.textColor
+        //RgbToCOLORREF(0x80CBAD)
+        AdjustLightness2(RgbToCOLORREF(0x263238), 110),
     },
     // Notifications
     {
         // Background color
-        AdjustLightness2(gThemeDark.mainWindow.backgroundColor, 10),
+        AdjustLightness2(gThemeDark.window.backgroundColor, 10),
         // Text color
-        gThemeDark.mainWindow.textColor,
+        gThemeDark.window.textColor,
         // Highlight color
-        AdjustLightness2(RgbToCOLORREF(0x33434B), 10),
+        /*AdjustLightness2*/(RgbToCOLORREF(0x33434B), 10),
         // Highlight text color
-        gThemeDark.mainWindow.textColor,
+        gThemeDark.window.textColor,
         // Progress bar color
-        gThemeDark.mainWindow.linkColor
+        gThemeDark.window.linkColor
     },
     // Colorize standard controls
     true
@@ -122,36 +109,30 @@ static Theme gThemeDark = {
 static Theme gThemeDarker = {
     // Theme Name
     _TRN("Darker"),
-    // Main window theme
+    // Window theme
     {
         // Main Background Color
         RgbToCOLORREF(0x2D2D30),
          // Control background Color
         RgbToCOLORREF(0x2D2D30),
         // Main Text Color
-        kColWhite,
+        AdjustLightness2(RgbToCOLORREF(0x2D2D30), 150),
+        //kColWhite,
         // Main Link Color
-        RgbToCOLORREF(0x3081D4)
-    },
-    // Document style
-    {
-        // Background Color
-        gThemeDarker.mainWindow.backgroundColor,
-        // Text color
-        gThemeDarker.mainWindow.textColor
+        AdjustLightness2(RgbToCOLORREF(0x2D2D30), 110),
     },
     // Notifications
     {
         // Background color
-        AdjustLightness2(gThemeDarker.mainWindow.backgroundColor, 10),
+        AdjustLightness2(gThemeDarker.window.backgroundColor, 10),
         // Text color
-        gThemeDarker.mainWindow.textColor,
+        gThemeDarker.window.textColor,
         // Highlight color
         AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
         // Highlight text color
-        gThemeDarker.mainWindow.textColor,
+        gThemeDarker.window.textColor,
         // Progress bar color
-        gThemeDarker.mainWindow.linkColor
+        gThemeDarker.window.linkColor
     },
     // Colorize standard controls
     true
@@ -216,6 +197,9 @@ void SetCurrentThemeFromSettings() {
 }
 
 void GetDocumentColors(COLORREF& text, COLORREF& bg) {
+    text = kColBlack;
+    bg = kColWhite;
+
     if (currentThemeIndex == 0) {
         // for backwards compat light theme respects the old customization colors
         ParsedColor* parsedCol;
@@ -234,16 +218,17 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
         return;
     }
 
-    bg = gCurrentTheme->document.backgroundColor;
-    text = gCurrentTheme->document.textColor;
-
-    if (!gGlobalPrefs->fixedPageUI.invertColors) {
-        std::swap(bg, text);
+    if (gGlobalPrefs->fixedPageUI.invertColors) {
+        // if we're inverting in non-default themes, the colors
+        // should match the colors of the window
+        // TODO: this probably only makes sense for dark themes
+        text = gCurrentTheme->window.textColor;
+        bg = gCurrentTheme->window.backgroundColor;
     }
 }
 
 COLORREF GetMainWindowBackgroundColor() {
-    COLORREF bgColor = gCurrentTheme->mainWindow.backgroundColor;
+    COLORREF bgColor = gCurrentTheme->window.backgroundColor;
     // Special behavior for light theme.
     // TODO: migrate from prefs to theme.
     if (currentThemeIndex == 0) {
