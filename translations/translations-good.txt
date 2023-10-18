@@ -43,7 +43,7 @@ he:אודות
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:Informazioni sul progr&amma
+it:Info progr&amma
 ja:バージョン情報(&A)
 kr:정보(&A)
 kw:&A-dro dhe...
@@ -274,7 +274,7 @@ he:תצוגת ספר
 hr:&Knjiški pregled
 hu:&Könyvnézet
 id:Tampilan Buku
-it:&Libro
+it:Vista &libro
 ja:ブック ビュー(&B)
 kr:책처럼 보기(&B)
 nl:&Boek Tonen
@@ -1180,6 +1180,11 @@ tw:螢光標示(&H)
 uk:Виділити 
 vn:&Nổi Bật
 :&Keyboard Shortcuts
+br:Atalhos do Teclado
+fr:&Raccourcis clavier
+it:&Tasti rapidi
+pl:Skróty &klawiaturowe
+tw:鍵盤快速鍵(&K)
 :&Last Page
 am:&Վերջին էջ
 ar:آ&خر صفحة
@@ -3034,7 +3039,7 @@ he:SumatraPDF אודות
 hr:O SumatriPDF
 hu:A SumatraPDF névjegye
 id:Tentang SumatraPDF
-it:Informazioni su SumatraPDF
+it:Info su SumatraPDF
 ja:SumatraPDF のバージョン情報
 kr:SumatraPDF 정보
 kw:A-dro dhe SumatraPDF
@@ -3134,7 +3139,7 @@ he:...למועדפים %s 'הוסף את עמוד מס
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
 id:Tambah halaman %s ke favorit
-it:Aggiungi pagina %s ai Preferiti
+it:Aggiungi pagina '%s' ai preferiti
 ja:ページ %s を追加
 kr:%s 페이지를 즐겨찾기에 추가
 kw:Keworra folen %s dhe daklow drudh
@@ -3234,7 +3239,7 @@ he:הוסף למועדפים
 hr:Dodaj u favorite
 hu:Hozzáadás a kedvencekhez
 id:Tambah ke favorit
-it:Aggiungi ai Preferiti
+it:Aggiungi ai preferiti
 ja:お気に入りに追加
 kr:즐겨찾기에 추가
 kw:Keworra dhe daklow drudh
@@ -6433,7 +6438,7 @@ he:זום מותאם אישית...
 hr:Prilagođeno &uvećanje...
 hu:Egyéni &nagyítás…
 id:Kustomisasi & Perbesar... 
-it:&Zoom personalizzato
+it:&Zoom personalizzato...
 ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
 nl:Aangepast & zoom...

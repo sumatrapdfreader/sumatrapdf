@@ -1,8 +1,7 @@
-:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 Annotazione %s. Ctrl+clic per modificarla.
 :&About
-Informazioni sul progr&amma
+Info progr&amma
 :&Actual Size
 Dimensione &attuale
 :&Advanced Options...
@@ -12,7 +11,7 @@ Dimensione &attuale
 :&Back
 &Indietro
 :&Book View
-&Libro
+Vista &libro
 :&Cancel
 &Annulla
 :&Caret
@@ -51,6 +50,8 @@ Testo libero
 &Guida in linea
 :&Highlight
 Eviden&zia
+:&Keyboard Shortcuts
+&Tasti rapidi
 :&Last Page
 &Ultima pagina
 :&Magnification:
@@ -128,15 +129,15 @@ Sottolineato
 :(page %s)
 (pagina %s)
 :About SumatraPDF
-Informazioni su SumatraPDF
+Info su SumatraPDF
 :Add Favorite
 Aggiungi ai Preferiti
 :Add page %s to favorites
-Aggiungi pagina %s ai Preferiti
+Aggiungi pagina '%s' ai preferiti
 :Add page %s to favorites with (optional) name:
 Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 :Add to favorites
-Aggiungi ai Preferiti
+Aggiungi ai preferiti
 :Advanced
 Avanzate
 :All files
@@ -270,7 +271,7 @@ File attuale
 :Cursor position:
 Posizione cursore
 :Custom &Zoom...
-&Zoom personalizzato
+&Zoom personalizzato...
 :Dark
 Tema scuro
 :Darker

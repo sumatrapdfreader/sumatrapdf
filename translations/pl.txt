@@ -1,4 +1,3 @@
-:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 :&About
@@ -51,6 +50,8 @@ Idź &do strony:
 &Pomoc
 :&Highlight
 &Wyróżnienie
+:&Keyboard Shortcuts
+Skróty &klawiaturowe
 :&Last Page
 &Ostatnia strona
 :&Magnification:

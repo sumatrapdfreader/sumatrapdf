@@ -1,4 +1,3 @@
-:&Keyboard Shortcuts
 :%s annotation. Ctrl+click to edit.
 Annotation %s. Ctrl+clic pour modifier.
 :&About
@@ -51,6 +50,8 @@ A&ller…
 Ai&de
 :&Highlight
 &Surligner
+:&Keyboard Shortcuts
+&Raccourcis clavier
 :&Last Page
 &Dernière page
 :&Magnification:

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fcced7e0eed5b50c3a2c6740bfab40db665531ae
+79bc16efa4d3423f883b991ead7ed7b5e5c5cb1b
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -49,7 +49,7 @@ hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:Informazioni sul progr&amma
+it:Info progr&amma
 ja:バージョン情報(&A)
 jv:&Babagan
 ka:&პროგრამის შესახებ...
@@ -342,7 +342,7 @@ hi:&बुक व्यू
 hr:&Knjiški pregled
 hu:&Könyvnézet
 id:Tampilan Buku
-it:&Libro
+it:Vista &libro
 ja:ブック ビュー(&B)
 kr:책처럼 보기(&B)
 mk:&Преглед на Книга
@@ -1437,6 +1437,11 @@ tw:螢光標示(&H)
 uk:Виділити 
 vn:&Nổi Bật
 :&Keyboard Shortcuts
+br:Atalhos do Teclado
+fr:&Raccourcis clavier
+it:&Tasti rapidi
+pl:Skróty &klawiaturowe
+tw:鍵盤快速鍵(&K)
 :&Last Page
 am:&Վերջին էջ
 ar:آ&خر صفحة
@@ -3669,7 +3674,7 @@ hi:Sumatra PDF के बारे में
 hr:O SumatriPDF
 hu:A SumatraPDF névjegye
 id:Tentang SumatraPDF
-it:Informazioni su SumatraPDF
+it:Info su SumatraPDF
 ja:SumatraPDF のバージョン情報
 jv:Babagan SumatraPDF
 ka:SumatraPDF-ის შესახებ
@@ -3808,7 +3813,7 @@ hi:पृष्ठ %s को पसंदीदा सूचि में जो
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
 id:Tambah halaman %s ke favorit
-it:Aggiungi pagina %s ai Preferiti
+it:Aggiungi pagina '%s' ai preferiti
 ja:ページ %s を追加
 jv:Nambah kaca %s ning favorit
 ka:%s გვერდის რჩეულებში დამატება
@@ -3944,7 +3949,7 @@ hi:पसंदीदा सूचि में जोड़ें
 hr:Dodaj u favorite
 hu:Hozzáadás a kedvencekhez
 id:Tambah ke favorit
-it:Aggiungi ai Preferiti
+it:Aggiungi ai preferiti
 ja:お気に入りに追加
 jv:Nambah ning favorit
 ka:რჩეულებში დამატება
@@ -8050,7 +8055,7 @@ hi:कस्टम &ज़ूम करें...
 hr:Prilagođeno &uvećanje...
 hu:Egyéni &nagyítás…
 id:Kustomisasi & Perbesar... 
-it:&Zoom personalizzato
+it:&Zoom personalizzato...
 ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
 ml:ഇഷ്‌ടാനുസൃത &സൂം...
