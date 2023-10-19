@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-79bc16efa4d3423f883b991ead7ed7b5e5c5cb1b
+30e97d6fd71649751fcbdfff5968eeb9971e7e60
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -1438,6 +1438,7 @@ uk:Виділити
 vn:&Nổi Bật
 :&Keyboard Shortcuts
 br:Atalhos do Teclado
+de:Tasten&kombinationen
 fr:&Raccourcis clavier
 it:&Tasti rapidi
 pl:Skróty &klawiaturowe
@@ -5842,6 +5843,7 @@ vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 am:Պատմության մաքրում...
 az:Tarixçə silinir...
 br:Limpando o histórico...
+by:Ачыстка гісторыі…
 ca:S'està esborrant l'historial...
 cn:正在清除历史记录…
 cy:Yn clirio hanes...
@@ -14204,6 +14206,7 @@ vn:Mở PDF Đã Nhúng
 am:Բացել նոր պատուհանում
 az:Yeni pəncərədə aç
 br:Abrir em Nova Janela
+by:Адкрыць у новым акне
 ca:Obre en una finestra nova
 cn:在新窗口中打开
 cy:Agor Mewn Ffenestr Newydd
