@@ -80,7 +80,7 @@ var (
 				"background might allow to subconsciously determine reading progress; "+
 				"suggested values: #2828aa #28aa28 #aa2828"),
 		mkField("InvertColors", Bool, false,
-			"if true, TextColor and BackgroundColor will be temporarily swapped").setInternal(),
+			"if true, TextColor and BackgroundColor of the document will be swapped"),
 		mkField("HideScrollbars", Bool, false,
 			"if true, hides the scrollbars but retains ability to scroll"),
 	}
