@@ -1861,6 +1861,7 @@ void FreeAllMenuDrawInfos() {
         // Note: could be faster
         FreeMenuOwnerDrawInfo(g_menuDrawInfos[0]);
     }
+    DeleteMenuFont();
 }
 
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
@@ -1879,6 +1880,10 @@ HFONT GetMenuFont() {
         gMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
     }
     return gMenuFont;
+}
+
+void DeleteMenuFont() {
+    DeleteFontSafe(&gMenuFont);
 }
 
 struct MenuText {
