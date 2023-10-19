@@ -338,3 +338,13 @@ void TbGetRect(HWND hwnd, int buttonId, RECT* rc);
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree);
 void AddPathToRecentDocs(const char*);
+
+int GetGdiObjectsCount();
+
+struct CheckGdiLeaks {
+    int initialCount = GetGdiObjectsCount();
+    ~CheckGdiLeaks() {
+        int currCount = GetGdiObjectsCount();
+        CrashIf(currCount > initialCount);
+    }
+};
