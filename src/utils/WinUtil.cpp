@@ -2910,3 +2910,8 @@ void AddPathToRecentDocs(const char* path) {
     WCHAR* pathW = ToWstrTemp(path);
     SHAddToRecentDocs(SHARD_PATH, pathW);
 }
+
+int GetGdiObjectsCount() {
+    DWORD n = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+    return (int)n;
+}
