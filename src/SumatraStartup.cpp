@@ -1379,7 +1379,6 @@ ContinueOpenWindow:
         RestrictPolicies(Perm::SavePreferences);
         RebuildMenuBarForWindow(win);
         StartStressTest(&flags, win);
-        fastExit = true;
     }
 
     // only hide newly missing files when showing the start page on startup
