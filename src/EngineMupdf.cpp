@@ -1505,9 +1505,6 @@ EngineMupdf::EngineMupdf() {
 EngineMupdf::~EngineMupdf() {
     EnterCriticalSection(&pagesAccess);
 
-    // TODO: remove this lock and see what happens
-    EnterCriticalSection(ctxAccess);
-
     for (FzPageInfo* pi : pages) {
         DeleteVecMembers(pi->links);
         DeleteVecMembers(pi->autoLinks);
@@ -1541,7 +1538,6 @@ EngineMupdf::~EngineMupdf() {
     DeleteVecMembers(pages);
 
     for (size_t i = 0; i < dimof(mutexes); i++) {
-        LeaveCriticalSection(&mutexes[i]);
         DeleteCriticalSection(&mutexes[i]);
     }
     LeaveCriticalSection(&pagesAccess);
