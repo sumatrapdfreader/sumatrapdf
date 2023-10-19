@@ -1861,7 +1861,6 @@ void FreeAllMenuDrawInfos() {
         // Note: could be faster
         FreeMenuOwnerDrawInfo(g_menuDrawInfos[0]);
     }
-    DeleteMenuFont();
 }
 
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
@@ -1932,7 +1931,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
             SetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
         }
         if (mii.hSubMenu != nullptr) {
-            MarkMenuOwnerDraw(mii.hSubMenu);
+            FreeMenuOwnerDrawInfoData(mii.hSubMenu);
         }
     };
 }
