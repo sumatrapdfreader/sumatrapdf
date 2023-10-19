@@ -608,7 +608,9 @@ static void UpdateGlobalPrefs(const Flags& i) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
-    gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
+    if (i.invertColors) {
+        gGlobalPrefs->fixedPageUI.invertColors = true;
+    }
 
     char* arg = nullptr;
     char* param = nullptr;

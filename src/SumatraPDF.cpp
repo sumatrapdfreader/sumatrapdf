@@ -5285,12 +5285,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdInvertColors:
+        case CmdInvertColors: {
             gGlobalPrefs->fixedPageUI.invertColors ^= true;
             UpdateDocumentColors();
             UpdateControlsColors(win);
             // UpdateUiForCurrentTab(win);
+            SaveSettings();
             break;
+        }
 
         case CmdNavigateBack:
             if (ctrl) {

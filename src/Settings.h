@@ -63,7 +63,8 @@ struct FixedPageUI {
     // subconsciously determine reading progress; suggested values: #2828aa
     // #28aa28 #aa2828
     Vec<char*>* gradientColors;
-    // if true, TextColor and BackgroundColor will be temporarily swapped
+    // if true, TextColor and BackgroundColor of the document will be
+    // swapped
     bool invertColors;
     // if true, hides the scrollbars but retains ability to scroll
     bool hideScrollbars;
@@ -467,11 +468,12 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMarginInfo},
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
+    {offsetof(FixedPageUI, invertColors), SettingType::Bool, false},
     {offsetof(FixedPageUI, hideScrollbars), SettingType::Bool, false},
 };
-static const StructInfo gFixedPageUIInfo = {
-    sizeof(FixedPageUI), 7, gFixedPageUIFields,
-    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0HideScrollbars"};
+static const StructInfo gFixedPageUIInfo = {sizeof(FixedPageUI), 8, gFixedPageUIFields,
+                                            "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0Gra"
+                                            "dientColors\0InvertColors\0HideScrollbars"};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
     {offsetof(WindowMargin, top), SettingType::Int, 0},

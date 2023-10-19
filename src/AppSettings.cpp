@@ -308,15 +308,12 @@ bool ReloadSettings() {
 
     const char* uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
-    bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
     gFileHistory.UpdateStatesSource(nullptr);
     CleanUpSettings();
 
     ok = LoadSettings();
     CrashAlwaysIf(!ok || !gGlobalPrefs);
-
-    gGlobalPrefs->fixedPageUI.invertColors = invertColors;
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
