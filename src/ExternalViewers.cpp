@@ -19,6 +19,8 @@
 #include "ExternalViewers.h"
 #include "Commands.h"
 
+#include "utils/Log.h"
+
 struct ExternalViewerInfo {
     const char* name; // shown to the user
     int cmd;
@@ -300,6 +302,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     }
     ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
     if (!ev || ev->exeFullPath == nullptr) {
+        logfa("CanViewWithKnownExternalViewer cmd: %d, !ev || ev->exeFullPath == nullptr\n", cmd);
         return false;
     }
     // must match file extension
@@ -309,6 +312,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
         char* ext = path::GetExtTemp(filePath);
         const char* pos = str::FindI(ev->exts, ext);
         if (!pos) {
+            logfa("CanViewWithKnownExternalViewer cmd: %d, !pos\n", cmd);
             return false;
         }
     }
@@ -316,6 +320,8 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     if (engineKind != nullptr) {
         if (ev->engineKind != nullptr) {
             if (ev->engineKind != engineKind) {
+                logfa("CanViewWithKnownExternalViewer cmd: %d, ev->engineKind '%s' != engineKind '%s'\n", cmd,
+                      ev->engineKind, engineKind);
                 return false;
             }
         }
@@ -363,8 +369,10 @@ static TempStr FormatParamsTemp(const char* cmdLine, WindowTab* tab) {
 
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmd);
-    ReportIf(!canView); // TODO: with command palette can send un-enforcable command
     if (!canView) {
+        // TODO: with command palette can send un-enforcable command
+        logfa("ViewWithKnownExternalViewer cmd: %d\n", cmd);
+        ReportIf(!canView);
         return false;
     }
     ExternalViewerInfo* ev = FindExternalViewerInfoByCmd(cmd);
