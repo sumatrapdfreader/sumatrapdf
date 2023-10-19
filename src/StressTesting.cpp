@@ -308,7 +308,7 @@ class TestFileProvider {
     virtual ~TestFileProvider() {
     }
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
-    virtual char* NextFile() = 0;
+    virtual TempStr NextFile() = 0;
     // start the iteration from the beginning
     virtual void Restart() = 0;
     virtual int GetFilesCount() = 0;
@@ -339,11 +339,12 @@ class FilesProvider : public TestFileProvider {
     ~FilesProvider() override {
     }
 
-    char* NextFile() override {
+    TempStr NextFile() override {
         if (provided >= files.size()) {
             return nullptr;
         }
-        return str::Dup(files.at(provided++));
+        TempStr res = files.at(provided++);
+        return res;
     }
 
     void Restart() override {
@@ -364,7 +365,7 @@ class DirFileProvider : public TestFileProvider {
   public:
     DirFileProvider(const char* path, const char* filter);
     ~DirFileProvider() override;
-    char* NextFile() override;
+    TempStr NextFile() override;
     void Restart() override;
     int GetFilesCount() override;
 };
@@ -386,13 +387,13 @@ bool DirFileProvider::OpenDir(const char* dirPath) {
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
 
-    AutoFreeStr pattern(str::Format("%s\\*", dirPath));
+    TempStr pattern = str::FormatTemp("%s\\*", dirPath);
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
 }
 
-char* DirFileProvider::NextFile() {
+TempStr DirFileProvider::NextFile() {
     if (filesToOpen.size() > 0) {
         return filesToOpen.PopAt(0);
     }
@@ -695,7 +696,7 @@ static void RandomizeViewingState(StressTest* st) {
 
 static bool GoToNextFile(StressTest* st) {
     for (;;) {
-        AutoFreeStr nextFile(st->fileProvider->NextFile());
+        TempStr nextFile = st->fileProvider->NextFile();
         if (nextFile) {
             if (!IsInRange(st->fileRanges, ++st->fileIndex)) {
                 continue;
