@@ -288,20 +288,17 @@ bool HasFavorites() {
 
 // caller has to free() the result
 static char* FavReadableName(Favorite* fn) {
-    const char* toFree = nullptr;
     const char* label = fn->pageLabel;
     if (!label) {
-        label = str::Format("%d", fn->pageNo);
-        toFree = label;
+        label = str::FormatTemp("%d", fn->pageNo);
     }
     char* res = nullptr;
     if (fn->name) {
-        AutoFreeStr pageNo(str::Format(_TRA("(page %s)"), label));
+        TempStr pageNo = str::FormatTemp(_TRA("(page %s)"), label);
         res = str::Join(fn->name, " ", pageNo);
     } else {
         res = str::Format(_TRA("Page %s"), label);
     }
-    str::Free(toFree);
     return res;
 }
 
@@ -450,7 +447,7 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
             MenuSetEnabled(menu, CmdFavoriteAdd, false);
-            AutoFreeStr s(str::Format(_TRA("Remove page %s from favorites"), label.Get()));
+            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites"), label.Get());
             MenuSetText(menu, CmdFavoriteDel, s);
         } else {
             MenuSetEnabled(menu, CmdFavoriteDel, false);
@@ -460,7 +457,7 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
             if (ok) {
                 AppendAccelKeyToMenuString(str, a);
             }
-            AutoFreeStr s(str::Format(str.Get(), label.Get()));
+            TempStr s = str::FormatTemp(str.Get(), label.Get());
             MenuSetText(menu, CmdFavoriteAdd, s);
         }
         AppendFavMenus(menu, win->ctrl->GetFilePath());
@@ -678,7 +675,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
         return;
     }
 
-    AutoFreeStr plainLabel(str::Format("%d", pageNo));
+    TempStr plainLabel = str::FormatTemp("%d", pageNo);
     bool needsLabel = !str::Eq(plainLabel, pageLabel);
 
     RememberFavTreeExpansionStateForAllWindows();

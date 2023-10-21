@@ -457,7 +457,7 @@ static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoo
         if (silent) {
             return true;
         }
-        AutoFreeStr txtFilePath(str::Format(renderPath, 0));
+        TempStr txtFilePath = str::FormatTemp(renderPath, 0);
         char* textA = ToUtf8Temp(text.Get());
         char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textA);
         return file::WriteFile(txtFilePath, textUTF8BOM);
@@ -475,7 +475,7 @@ static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoo
             delete bmp;
             continue;
         }
-        AutoFreeStr pageBmpPath(str::Format(renderPath, pageNo));
+        TempStr pageBmpPath = str::FormatTemp(renderPath, pageNo);
         if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");

@@ -115,16 +115,15 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
                 _TRA("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
-        char* filePath = path::JoinTemp(destDir, fi->name);
+        TempStr filePath = path::JoinTemp(destDir, fi->name);
 
         ByteSlice d = {uncompressed, fi->uncompressedSize};
         bool ok = file::WriteFile(filePath, d);
         free(uncompressed);
 
         if (!ok) {
-            char* msg = str::Format(_TRA("Couldn't write %s to disk"), filePath);
+            TempStr msg = str::FormatTemp(_TRA("Couldn't write %s to disk"), filePath);
             NotifyFailed(msg);
-            str::Free(msg);
             return false;
         }
         logf("  extracted '%s'\n", filePath);

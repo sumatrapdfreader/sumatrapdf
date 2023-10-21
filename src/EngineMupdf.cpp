@@ -1385,11 +1385,11 @@ static void EnsureLabelsUnique(StrVec* labels) {
         }
         int idx = labels->Find(dups.at(i)), counter = 0;
         while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
-            AutoFreeStr unique;
+            TempStr unique = nullptr;
             do {
-                unique.Set(str::Format("%s.%d", dups.at(i), ++counter));
+                unique = str::FormatTemp("%s.%d", dups.at(i), ++counter);
             } while (labels->Contains(unique));
-            labels->SetAt(idx, unique.Get());
+            labels->SetAt(idx, unique);
         }
         nDups = dups.Size();
         for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
