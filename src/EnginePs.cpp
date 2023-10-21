@@ -61,7 +61,7 @@ TryAgain64Bit:
     for (size_t ix = nVers; ix > 0; ix--) {
         for (const char* gsProd : gsProducts) {
             char* ver = versions.at(ix - 1);
-            AutoFreeStr keyName(str::Format("Software\\%s\\%s", gsProd, ver));
+            TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd, ver);
             char* GS_DLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!GS_DLL) {
                 continue;
@@ -161,7 +161,7 @@ static EngineBase* ps2pdf(const char* path) {
     // way to do it
     // https://github.com/GravityMedia/Ghostscript/issues/6
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1923
-    AutoFreeStr cmdLine = str::Format(
+    TempStr cmdLine = str::FormatTemp(
         "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
         "-f \"%s\"",
         gswin32c.Get(), tmpFile.Get(), shortPath.Get());

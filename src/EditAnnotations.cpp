@@ -580,8 +580,8 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int fontSize = DefaultAppearanceTextSize(annot);
-    AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
-    ew->staticTextSize->SetText(s.Get());
+    TempStr s = str::FormatTemp(_TRA("Text Size: %d"), fontSize);
+    ew->staticTextSize->SetText(s);
     // TODO: DoTextSize() shouldn't modify the annotation but I'm not sure
     // if it's not needed to be called for free text annotations
     // at some point (i.e. when creating)
@@ -594,8 +594,8 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
 static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
     int fontSize = ev->pos;
     SetDefaultAppearanceTextSize(ew->tab->selectedAnnotation, fontSize);
-    AutoFreeStr s = str::Format(_TRA("Text Size: %d"), fontSize);
-    ew->staticTextSize->SetText(s.Get());
+    TempStr s = str::FormatTemp(_TRA("Text Size: %d"), fontSize);
+    ew->staticTextSize->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -627,8 +627,8 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     int borderWidth = BorderWidth(annot);
     borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
-    AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
-    ew->staticBorder->SetText(s.Get());
+    TempStr s = str::FormatTemp(_TRA("Border: %d"), borderWidth);
+    ew->staticBorder->SetText(s);
     ew->trackbarBorder->SetValue(borderWidth);
     ew->staticBorder->SetIsVisible(true);
     ew->trackbarBorder->SetIsVisible(true);
@@ -637,8 +637,8 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
 static void BorderWidthChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
     int borderWidth = ev->pos;
     SetBorderWidth(ew->tab->selectedAnnotation, borderWidth);
-    AutoFreeStr s = str::Format(_TRA("Border: %d"), borderWidth);
-    ew->staticBorder->SetText(s.Get());
+    TempStr s = str::FormatTemp(_TRA("Border: %d"), borderWidth);
+    ew->staticBorder->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -771,8 +771,8 @@ static void DoOpacity(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int opacity = Opacity(ew->tab->selectedAnnotation);
-    AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
-    ew->staticOpacity->SetText(s.Get());
+    TempStr s = str::FormatTemp(_TRA("Opacity: %d"), opacity);
+    ew->staticOpacity->SetText(s);
     ew->staticOpacity->SetIsVisible(true);
     ew->trackbarOpacity->SetIsVisible(true);
     ew->trackbarOpacity->SetValue(opacity);
@@ -789,8 +789,8 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
 static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
     int opacity = ev->pos;
     SetOpacity(ew->tab->selectedAnnotation, opacity);
-    AutoFreeStr s = str::Format(_TRA("Opacity: %d"), opacity);
-    ew->staticOpacity->SetText(s.Get());
+    TempStr s = str::FormatTemp(_TRA("Opacity: %d"), opacity);
+    ew->staticOpacity->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }

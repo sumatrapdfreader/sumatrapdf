@@ -102,7 +102,7 @@ static DWORD WINAPI UninstallerThread(void*) {
 
     if (!ok) {
         log("RemoveUninstallerRegistryInfo failed\n");
-        NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
+        NotifyFailed(_TRA("Failed to delete uninstaller registry keys"));
     }
 
     // mark them as uninstalled

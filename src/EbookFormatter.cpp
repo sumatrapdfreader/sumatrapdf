@@ -289,7 +289,7 @@ void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, const char* name) {
 void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
     if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
         bool isSubtitle = Tag_Subtitle == t->tag;
-        AutoFreeStr name = str::Format("h%d", section + (isSubtitle ? 1 : 0));
+        TempStr name = str::FormatTemp("h%d", section + (isSubtitle ? 1 : 0));
         HtmlToken tok;
         tok.SetTag(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);

@@ -46,7 +46,6 @@ extern Gdiplus::Color gCol5Shadow;
 void OnPaintFrame(HWND hwnd, bool skipoMessage);
 void AnimStep();
 
-void NotifyFailed(const WCHAR* msg);
 void NotifyFailed(const char* msg);
 
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);

@@ -89,14 +89,6 @@ TempStr GetRegPathUninstTemp(const char* appName) {
     return str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
 }
 
-void NotifyFailed(const WCHAR* msg) {
-    if (!gFirstError) {
-        gFirstError = str::Dup(msg);
-    }
-    char* s = ToUtf8Temp(msg);
-    logf("NotifyFailed: %s\n", s);
-}
-
 void NotifyFailed(const char* msg) {
     if (!gFirstError) {
         gFirstError = ToWstr(msg);
@@ -246,7 +238,7 @@ void UninstallBrowserPlugin() {
         return;
     }
     log("  failed to uninstall browser plugin\n");
-    NotifyFailed(_TR("Couldn't uninstall browser plugin"));
+    NotifyFailed(_TRA("Couldn't uninstall browser plugin"));
 }
 
 constexpr const char* kSearchFilterDllName = "PdfFilter.dll";
@@ -260,7 +252,7 @@ void RegisterSearchFilter(bool allUsers) {
         return;
     }
     log("  failed to register\n");
-    NotifyFailed(_TR("Couldn't install PDF search filter"));
+    NotifyFailed(_TRA("Couldn't install PDF search filter"));
 }
 
 void UnRegisterSearchFilter() {
@@ -272,7 +264,7 @@ void UnRegisterSearchFilter() {
         return;
     }
     log("  failed to unregister\n");
-    NotifyFailed(_TR("Couldn't uninstall Sumatra search filter"));
+    NotifyFailed(_TRA("Couldn't uninstall Sumatra search filter"));
 }
 
 constexpr const char* kPreviewDllName = "PdfPreview.dll";
@@ -286,7 +278,7 @@ void RegisterPreviewer(bool allUsers) {
         return;
     }
     log("  failed to register\n");
-    NotifyFailed(_TR("Couldn't install PDF previewer"));
+    NotifyFailed(_TRA("Couldn't install PDF previewer"));
 }
 
 void UnRegisterPreviewer() {
@@ -298,7 +290,7 @@ void UnRegisterPreviewer() {
         return;
     }
     log(" failed to unregister\n");
-    NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
+    NotifyFailed(_TRA("Couldn't uninstall PDF previewer"));
 }
 
 static bool IsProcWithModule(DWORD processId, const char* modulePath) {

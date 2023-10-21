@@ -272,12 +272,12 @@ static DWORD WINAPI InstallerThread(void*) {
 
     ok = WriteUninstallerRegistryInfo(key, allUsers);
     if (!ok) {
-        NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
+        NotifyFailed(_TRA("Failed to write the uninstallation information to the registry"));
     }
 
     ok = WriteExtendedFileExtensionInfo(key);
     if (!ok) {
-        NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
+        NotifyFailed(_TRA("Failed to write the extended file extension information to the registry"));
     }
 
     ProgressStep();
@@ -981,7 +981,7 @@ bool ExtractInstallerFiles(char* dir) {
     if (!ok) {
         log("  dir::CreateAll() failed\n");
         LogLastError();
-        NotifyFailed(_TR("Couldn't create the installation directory"));
+        NotifyFailed(_TRA("Couldn't create the installation directory"));
         return false;
     }
 
