@@ -567,7 +567,7 @@ const char* Find(const char* str, const char* find) {
     return strstr(str, find);
 }
 
-// format string to a buffer profided by the caller
+// format string to a buffer provided by the caller
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
@@ -585,7 +585,7 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 }
 
 // TODO: need to finish StrFormat and use it instead.
-char* FmtV(const char* fmt, va_list args) {
+char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args) {
     char message[256]{};
     size_t bufCchSize = dimof(message);
     char* buf = message;
@@ -607,17 +607,21 @@ char* FmtV(const char* fmt, va_list args) {
         } else {
             bufCchSize += 1024;
         }
-        buf = AllocArray<char>(bufCchSize);
+        buf = (char*)Allocator::AllocZero(a, bufCchSize);
         if (!buf) {
             break;
         }
     }
 
     if (buf == message) {
-        buf = str::Dup(message);
+        buf = str::Dup(a, message);
     }
 
     return buf;
+}
+
+char* FmtV(const char* fmt, va_list args) {
+    return FmtVWithAllocator(nullptr, fmt, args);
 }
 
 // caller needs to str::Free()

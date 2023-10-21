@@ -60,11 +60,9 @@ TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
 TempStr FormatTemp(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* res = FmtV(fmt, args);
+    char* res = FmtVWithAllocator(GetTempAllocator(), fmt, args);
     va_end(args);
-    TempStr tmp = DupTemp(res);
-    str::Free(res);
-    return tmp;
+    return res;
 }
 
 TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith) {
