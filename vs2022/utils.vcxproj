@@ -616,8 +616,6 @@
     <ClInclude Include="..\src\utils\JsonParser.h" />
     <ClInclude Include="..\src\utils\Log.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
-    <ClInclude Include="..\src\utils\MinHook.h" />
-    <ClInclude Include="..\src\utils\PEB.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
     <ClInclude Include="..\src\utils\ScopedWin.h" />
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
@@ -667,7 +665,6 @@
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\Log.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
-    <ClCompile Include="..\src\utils\MinHook.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />

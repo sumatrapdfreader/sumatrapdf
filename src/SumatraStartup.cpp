@@ -934,32 +934,6 @@ static void testLogf() {
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 
-// in MemLeakDetect.cpp
-extern bool MemLeakInit();
-extern void DumpMemLeaks();
-
-bool gEnableMemLeak = false;
-
-// some libc functions internally allocate stuff that shows up
-// as leaks in MemLeakDetect even though it's probably freed at shutdown
-// call this function before MemLeakInit() so that those allocations
-// don't show up
-static void ForceStartupLeaks() {
-    time_t secs = 0;
-    struct tm tm {
-        0
-    };
-    secs = mktime(&tm);
-    gmtime_s(&tm, &secs);
-    gmtime(&secs);
-    char* path = GetExePathTemp();
-    WCHAR* pathW = ToWstrTemp(path);
-    FILE* fp = _wfopen(pathW, L"rb");
-    if (fp) {
-        fclose(fp);
-    }
-}
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -973,18 +947,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     Vec<SessionData*>* sessionData = nullptr;
 
     CrashIf(hInstance != GetInstance());
-
-    // TODO: decide if we should enable mem leak detection
-#if defined(DEBUG)
-    gEnableMemLeak = true;
-#endif
-    if (IsDebuggerPresent()) {
-        gEnableMemLeak = true;
-    }
-    gEnableMemLeak = false;
-    if (gEnableMemLeak) {
-        fastExit = false;
-    }
 
     supressThrowFromNew();
 
@@ -1001,16 +963,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     srand((unsigned int)time(nullptr));
-
-    ForceStartupLeaks();
-
-    // for testing mem leak detection
-    void* maybeLeak = nullptr;
-    if (gEnableMemLeak) {
-        MemLeakInit();
-        maybeLeak = malloc(10);
-    }
-    // maybeLeak = malloc(10);
 
     if (!gIsAsanBuild) {
         SetupCrashHandler();
@@ -1480,19 +1432,6 @@ Exit:
 
     DestroyLogging();
     DestroyTempAllocator();
-
-    if (gEnableMemLeak) {
-        // free(maybeLeak);
-        DumpMemLeaks();
-    }
-
-#if 0 // no longer seems to be needed in latest vs build, was probably early asan bug
-    if (gIsAsanBuild) {
-        // TODO: crashes in wild places without this
-        // Note: ::ExitProcess(0) also crashes
-        ::TerminateProcess(GetCurrentProcess(), 0);
-    }
-#endif
 
     return exitCode;
 }
