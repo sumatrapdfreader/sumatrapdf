@@ -75,17 +75,17 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
     //[ ACCESSKEY_GROUP Password Dialog
     if (WM_INITDIALOG == msg) {
         data = (Dialog_GetPassword_Data*)lp;
-        HwndSetText(hDlg, _TR("Enter password"));
+        HwndSetText(hDlg, _TRA("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
-        AutoFreeWstr txt(str::Format(_TR("Enter password for %s"), ToWStrTemp(data->fileName)));
-        SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
-        SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, L"");
-        SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
-        SetDlgItemText(hDlg, IDC_REMEMBER_PASSWORD, _TR("&Remember the password for this document"));
-        SetDlgItemText(hDlg, IDOK, _TR("OK"));
-        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+        TempStr txt = str::FormatTemp(_TRA("Enter password for %s"), data->fileName);
+        SetDlgItemTextW(hDlg, IDC_GET_PASSWORD_LABEL, ToWStrTemp(txt));
+        SetDlgItemTextW(hDlg, IDC_GET_PASSWORD_EDIT, L"");
+        SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Password:"));
+        SetDlgItemTextW(hDlg, IDC_REMEMBER_PASSWORD, _TR("&Remember the password for this document"));
+        SetDlgItemTextW(hDlg, IDOK, _TR("OK"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
@@ -163,10 +163,11 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
         }
         CrashIf(!data->currPageLabel);
-        WCHAR* ws = ToWStrTemp(data->currPageLabel);
+        TempWStr ws = ToWStrTemp(data->currPageLabel);
         SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_EDIT, ws);
-        AutoFreeWstr totalCount(str::Format(_TR("(of %d)"), data->pageCount));
-        SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
+        TempStr totalCount = str::FormatTemp(_TRA("(of %d)"), data->pageCount);
+        ws = ToWStrTemp(totalCount);
+        SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_LABEL_OF, ws);
 
         EditSelectAll(editPageNo);
         SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Go to page:"));
@@ -475,9 +476,8 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
     }
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
-        WCHAR* customZoom = str::Format(L"%.0f%%", currZoom);
-        SetDlgItemText(hDlg, idComboBox, customZoom);
-        free(customZoom);
+        TempStr customZoom = str::FormatTemp("%.0f%%", currZoom);
+        SetDlgItemTextW(hDlg, idComboBox, ToWStrTemp(customZoom));
     }
 }
 

@@ -281,7 +281,7 @@ bool CrashHandlerDownloadSymbols() {
         return false;
     }
 
-    WCHAR* ws = ToWStrTemp(gSymbolPath);
+    TempWStr ws = ToWStrTemp(gSymbolPath);
     if (!dbghelp::Initialize(ws, false)) {
         log("CrashHandlerDownloadSymbols: dbghelp::Initialize() failed\n");
         return false;
