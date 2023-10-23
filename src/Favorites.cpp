@@ -873,11 +873,11 @@ HFONT GetTreeFont() {
     int fntSize = GetSizeOfDefaultGuiFont();
     int fntSizeUser = gGlobalPrefs->treeFontSize;
     int fntWeightOffsetUser = gGlobalPrefs->treeFontWeightOffset;
-    char* fntNameUser_utf8 = gGlobalPrefs->treeFontName;
+    char* fntNameUser = gGlobalPrefs->treeFontName;
     if (fntSizeUser > 5) {
         fntSize = fntSizeUser;
     }
-    gTreeFont = GetUserGuiFont(fntSize, fntWeightOffsetUser, fntNameUser_utf8);
+    gTreeFont = GetUserGuiFont(fntSize, fntWeightOffsetUser, fntNameUser);
     CrashIf(!gTreeFont);
     return gTreeFont;
 }

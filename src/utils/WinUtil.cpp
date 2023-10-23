@@ -1390,10 +1390,9 @@ HFONT GetUserGuiFont(int size, int weightOffset, char* fontName) {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
     if (fontName && !str::EqI(fontName, "automatic")) {
-        TempWstr fontNameW = ToWstrTemp(fontName);
         WCHAR* dest = ncm.lfMessageFont.lfFaceName;
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
-        StrCatBuffW(dest, fontNameW, cchDestBufSize);
+        str::BufSet(dest, cchDestBufSize, fontName);
     }
     ncm.lfMessageFont.lfWeight += weightOffset;
     HFONT fnt = CreateFontIndirectW(&ncm.lfMessageFont);
@@ -2911,7 +2910,3 @@ void AddPathToRecentDocs(const char* path) {
     SHAddToRecentDocs(SHARD_PATH, pathW);
 }
 
-int GetGdiObjectsCount() {
-    DWORD n = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
-    return (int)n;
-}
