@@ -988,19 +988,18 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
         }
     }
 
+    TempStr s = nullptr;
     if (!IsUIRightToLeft()) {
-        char* s = str::Format("%s %s- %s", titlePath, docTitle, kSumatraWindowTitle);
-        tab->frameTitle.Set(s);
+        s = str::FormatTemp("%s %s- %s", titlePath, docTitle, kSumatraWindowTitle);
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        char* s = str::Format("%s %s- %s", kSumatraWindowTitle, docTitle, titlePath);
-        tab->frameTitle.Set(s);
+        s = str::FormatTemp("%s %s- %s", kSumatraWindowTitle, docTitle, titlePath);
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        char* s = str::Format(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle.Get());
-        tab->frameTitle.Set(s);
+        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle.Get());
     }
+    tab->frameTitle.SetCopy(s);
 }
 
 static void UpdateUiForCurrentTab(MainWindow* win) {

@@ -161,18 +161,15 @@ UINT gWinMessageIDs[] = {WIN_MESSAGES(MSG_ID)};
 SeqStrings gWinMessageNames = WIN_MESSAGES(MSG_NAME) "\0";
 #undef MSG_NAME
 
-const char* WinMsgName(UINT msg) {
+TempStr WinMsgNameTemp(UINT msg) {
     int n = dimof(gWinMessageIDs);
     for (int i = 0; i < n; i++) {
         UINT m = gWinMessageIDs[i];
         if (m == msg) {
-            return seqstrings::IdxToStr(gWinMessageNames, i);
+            return (TempStr)seqstrings::IdxToStr(gWinMessageNames, i);
         }
     }
-    char* s = str::Format("0x%x", (int)msg);
-    char* res = str::DupTemp(s);
-    str::Free(s);
-    return res;
+    return str::FormatTemp("0x%x", (int)msg);
 }
 
 // TODO:
@@ -3700,7 +3697,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         canClose = tabState.tabInfo && tabState.tabInfo->canClose;
         overClose = tabState.overClose && canClose;
         lastMousePos = mousePos;
-        // const char* msgName = WinMsgName(msg);
+        // TempStr msgName = WinMsgNameTemp(msg);
         //  logfa("msg; %s, tabUnderMouse: %d, overClose: %d\n", msgName, tabUnderMouse, (int)overClose);
     }
 
@@ -3709,7 +3706,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         p.x = mousePos.x;
         p.y = mousePos.y;
         MapWindowPoints(hwnd, NULL, &p, 1);
-        // logfa("%s moving to: %d %d\n", WinMsgName(msg), p.x, p.y);
+        // logfa("%s moving to: %d %d\n", WinMsgNameTemp(msg), p.x, p.y);
         ImageList_DragMove(p.x, p.y);
         return 0;
     }

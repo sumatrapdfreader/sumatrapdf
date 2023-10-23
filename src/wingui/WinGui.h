@@ -9,7 +9,7 @@ const DWORD UWM_DELAYED_CTRL_BACK = WM_APP + 0x300 + 1;
 
 UINT_PTR NextSubclassId();
 
-const char* WinMsgName(UINT);
+TempStr WinMsgNameTemp(UINT);
 
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderStatic };
