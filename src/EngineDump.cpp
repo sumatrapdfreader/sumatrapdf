@@ -309,7 +309,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
-        AutoFreeStr label = Escape(engine->GetPageLabel(pageNo));
+        AutoFreeStr label = Escape(engine->GetPageLabeTemp(pageNo));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
     Rect bbox = engine->PageMediabox(pageNo).Round();

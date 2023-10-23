@@ -136,10 +136,10 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
     // Draw the page number right-aligned (if there is one)
     MainWindow* win = FindMainWindowByHwnd(hTV);
     TocItem* tocItem = (TocItem*)item.lParam;
-    AutoFreeWstr label;
+    TempStr label = nullptr;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
-        label.Set(win->ctrl->GetPageLabel(tocItem->pageNo));
-        label.Set(str::Join(L"  ", label));
+        label = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
+        label = str::JoinTemp("  ", label);
     }
     if (label && str::EndsWith(item.pszText, label)) {
         RECT rcPageNo = rcFullWidth;
@@ -413,7 +413,7 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
         pageNo = dti->dest->GetPageNo();
     }
     char* name = dti->title;
-    AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
+    TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
 
@@ -586,14 +586,14 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     if (pageNo > 0) {
-        AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNo);
+        TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
             MenuRemove(popup, CmdFavoriteAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             const char* tr = _TRA("Remove page %s from favorites");
-            TempStr s = str::FormatTemp(tr, pageLabel.Get());
+            TempStr s = str::FormatTemp(tr, pageLabel);
             MenuSetText(popup, CmdFavoriteDel, s);
         } else {
             MenuRemove(popup, CmdFavoriteDel);
@@ -604,7 +604,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             if (ok) {
                 AppendAccelKeyToMenuString(str, a);
             }
-            TempStr s = str::FormatTemp(str.Get(), pageLabel.Get());
+            TempStr s = str::FormatTemp(str.Get(), pageLabel);
             MenuSetText(popup, CmdFavoriteAdd, s);
         }
     } else {

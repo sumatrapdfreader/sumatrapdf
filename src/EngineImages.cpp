@@ -811,7 +811,7 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    char* GetPageLabel(int pageNo) const override;
+    TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
     TocTree* GetToc() override;
@@ -861,20 +861,20 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     return true;
 }
 
-char* EngineImageDir::GetPageLabel(int pageNo) const {
+TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     if (pageNo < 1 || PageCount() < pageNo) {
-        return EngineBase::GetPageLabel(pageNo);
+        return EngineBase::GetPageLabeTemp(pageNo);
     }
 
     const char* path = pageFileNames.at(pageNo - 1);
     const char* fileName = path::GetBaseNameTemp(path);
     char* ext = path::GetExtTemp(fileName);
     if (!ext) {
-        return str::Dup(fileName);
+        return str::DupTemp(fileName);
     }
     auto pos = str::Find(fileName, ext);
     size_t n = pos - fileName;
-    return str::Dup(fileName, n);
+    return str::DupTemp(fileName, n);
 }
 
 int EngineImageDir::GetPageByLabel(const char* label) const {
@@ -903,11 +903,11 @@ TocTree* EngineImageDir::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    char* label = GetPageLabel(1);
+    TempStr label = GetPageLabeTemp(1);
     TocItem* root = newImageDirTocItem(nullptr, label, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
-        label = GetPageLabel(1);
+        label = GetPageLabeTemp(1);
         TocItem* item = newImageDirTocItem(root, label, i);
         item->id = i;
         root->AddSiblingAtEnd(item);

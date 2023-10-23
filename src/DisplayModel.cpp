@@ -128,8 +128,8 @@ bool DisplayModel::HasPageLabels() const {
     return engine->HasPageLabels();
 }
 
-char* DisplayModel::GetPageLabel(int pageNo) const {
-    return engine->GetPageLabel(pageNo);
+TempStr DisplayModel::GetPageLabeTemp(int pageNo) const {
+    return engine->GetPageLabeTemp(pageNo);
 }
 
 int DisplayModel::GetPageByLabel(const char* label) const {

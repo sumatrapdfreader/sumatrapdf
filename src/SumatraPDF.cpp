@@ -827,10 +827,11 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     if (!ctrl->ValidPageNo(pageNo)) {
         pageNo = ctrl->CurrentPageNo();
     }
-    TempStr pageInfo = str::FormatTemp("%s %d / %d", _TRA("Page:"), pageNo, ctrl->PageCount());
+    int nPages = ctrl->PageCount();
+    TempStr pageInfo = str::FormatTemp("%s %d / %d", _TRA("Page:"), pageNo, nPages);
     if (ctrl->HasPageLabels()) {
-        AutoFreeStr label = ctrl->GetPageLabel(pageNo);
-        pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, ctrl->PageCount());
+        TempStr label = ctrl->GetPageLabeTemp(pageNo);
+        pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:"), label, pageNo, nPages);
     }
     NotificationUpdateMessage(wnd, pageInfo);
 }
@@ -864,9 +865,8 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     }
 
     if (kInvalidPageNo != pageNo) {
-        char* label = win->ctrl->GetPageLabel(pageNo);
+        TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
         HwndSetText(win->hwndPageEdit, label);
-        str::Free(label);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
@@ -3007,8 +3007,8 @@ static void CreateLnkShortcut(MainWindow* win) {
 
     TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode,
                                    zoomVirtual, (int)ss.x, (int)ss.y);
-    AutoFreeStr label = ctrl->GetPageLabel(ss.page);
-    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), path);
+    TempStr label = ctrl->GetPageLabeTemp(ss.page);
+    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label, path);
     auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -3654,7 +3654,7 @@ static void OnMenuGoToPage(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeStr label = ctrl->GetPageLabel(ctrl->CurrentPageNo());
+    TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
     AutoFreeStr newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
     if (!newPageLabel) {
         return;

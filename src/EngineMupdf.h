@@ -69,7 +69,7 @@ class EngineMupdf : public EngineBase {
     IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
-    char* GetPageLabel(int pageNo) const override;
+    TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
     // make sure to never ask for pagesAccess in an ctxAccess

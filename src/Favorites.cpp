@@ -443,11 +443,11 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
         MenuSetEnabled(menu, CmdFavoriteDel, false);
         AppendFavMenus(menu, (const char*)nullptr);
     } else {
-        AutoFreeStr label(win->ctrl->GetPageLabel(win->currPageNo));
+        TempStr label = win->ctrl->GetPageLabeTemp(win->currPageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
             MenuSetEnabled(menu, CmdFavoriteAdd, false);
-            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites"), label.Get());
+            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites"), label);
             MenuSetText(menu, CmdFavoriteDel, s);
         } else {
             MenuSetEnabled(menu, CmdFavoriteDel, false);
@@ -457,7 +457,7 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
             if (ok) {
                 AppendAccelKeyToMenuString(str, a);
             }
-            TempStr s = str::FormatTemp(str.Get(), label.Get());
+            TempStr s = str::FormatTemp(str.Get(), label);
             MenuSetText(menu, CmdFavoriteAdd, s);
         }
         AppendFavMenus(menu, win->ctrl->GetFilePath());
@@ -708,8 +708,8 @@ void AddFavoriteForCurrentPage(MainWindow* win, int pageNo) {
             name = item->title;
         }
     }
-    AutoFreeStr pageLabel = ctrl->GetPageLabel(pageNo);
-    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
+    TempStr pageLabel = ctrl->GetPageLabeTemp(pageNo);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
 
 void AddFavoriteForCurrentPage(MainWindow* win) {

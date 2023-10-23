@@ -3362,13 +3362,13 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
     return true;
 }
 
-char* EngineMupdf::GetPageLabel(int pageNo) const {
+TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
     if (!pageLabels || pageNo < 1 || PageCount() < pageNo) {
-        return EngineBase::GetPageLabel(pageNo);
+        return EngineBase::GetPageLabeTemp(pageNo);
     }
 
     char* res = pageLabels->at(pageNo - 1);
-    return str::Dup(res);
+    return res;
 }
 
 int EngineMupdf::GetPageByLabel(const char* label) const {

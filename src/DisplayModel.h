@@ -104,7 +104,7 @@ struct DisplayModel : DocController {
 
     // page labels (optional)
     bool HasPageLabels() const override;
-    char* GetPageLabel(int pageNo) const override;
+    TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
     // common shortcuts

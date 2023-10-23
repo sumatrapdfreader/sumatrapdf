@@ -112,8 +112,8 @@ struct DocController {
     virtual bool HasPageLabels() const {
         return false;
     }
-    virtual char* GetPageLabel(int pageNo) const {
-        return str::Format("%d", pageNo);
+    virtual TempStr GetPageLabeTemp(int pageNo) const {
+        return str::FormatTemp("%d", pageNo);
     }
     virtual int GetPageByLabel(const char* label) const {
         return atoi(label);

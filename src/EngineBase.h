@@ -481,7 +481,7 @@ class EngineBase {
 
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual char* GetPageLabel(int pageNo) const;
+    virtual TempStr GetPageLabeTemp(int pageNo) const;
 
     // reverts GetPageLabel by returning the first page number having the given label
     virtual int GetPageByLabel(const char* label) const;

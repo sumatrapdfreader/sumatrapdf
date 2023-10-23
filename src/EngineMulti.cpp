@@ -66,7 +66,7 @@ class EngineMulti : public EngineBase {
     IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
-    char* GetPageLabel(int pageNo) const override;
+    TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
     bool LoadFromFiles(const char* dir, StrVec& files);
@@ -219,13 +219,13 @@ TocTree* EngineMulti::GetToc() {
     return tocTree;
 }
 
-char* EngineMulti::GetPageLabel(int pageNo) const {
+TempStr EngineMulti::GetPageLabeTemp(int pageNo) const {
     if (pageNo < 1 || pageNo >= pageCount) {
         return nullptr;
     }
 
     EngineBase* e = PageToEngine(pageNo);
-    return e->GetPageLabel(pageNo);
+    return e->GetPageLabeTemp(pageNo);
 }
 
 int EngineMulti::GetPageByLabel(const char* label) const {

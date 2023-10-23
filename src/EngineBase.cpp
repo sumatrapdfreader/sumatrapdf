@@ -360,8 +360,8 @@ bool EngineBase::HasPageLabels() const {
     return hasPageLabels;
 }
 
-char* EngineBase::GetPageLabel(int pageNo) const {
-    return str::Format("%d", pageNo);
+TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
+    return str::FormatTemp("%d", pageNo);
 }
 
 int EngineBase::GetPageByLabel(const char* label) const {

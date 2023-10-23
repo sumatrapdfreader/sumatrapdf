@@ -266,7 +266,7 @@ class EngineDjVu : public EngineBase {
     IPageDestination* GetNamedDest(const char* name) override;
     TocTree* GetToc() override;
 
-    char* GetPageLabel(int pageNo) const override;
+    TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
     static EngineBase* CreateFromFile(const char* path);
@@ -1174,14 +1174,14 @@ TocTree* EngineDjVu::GetToc() {
     return tocTree;
 }
 
-char* EngineDjVu::GetPageLabel(int pageNo) const {
+TempStr EngineDjVu::GetPageLabeTemp(int pageNo) const {
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
-            return str::Dup(info.title);
+            return str::DupTemp(info.title);
         }
     }
-    return EngineBase::GetPageLabel(pageNo);
+    return EngineBase::GetPageLabeTemp(pageNo);
 }
 
 int EngineDjVu::GetPageByLabel(const char* label) const {

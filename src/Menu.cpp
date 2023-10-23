@@ -1687,14 +1687,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     bool favsSupported = HasPermission(Perm::SavePreferences) && HasPermission(Perm::DiskAccess);
     if (favsSupported) {
         if (pageNoUnderCursor > 0) {
-            AutoFreeStr pageLabel = win->ctrl->GetPageLabel(pageNoUnderCursor);
+            TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
             bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNoUnderCursor);
             if (isBookmarked) {
                 MenuRemove(popup, CmdFavoriteAdd);
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
                 const char* tr = _TRA("Remove page %s from favorites");
-                TempStr s = str::FormatTemp(tr, pageLabel.Get());
+                TempStr s = str::FormatTemp(tr, pageLabel);
                 MenuSetText(popup, CmdFavoriteDel, s);
             } else {
                 MenuRemove(popup, CmdFavoriteDel);
@@ -1706,7 +1706,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 if (ok) {
                     AppendAccelKeyToMenuString(str, a);
                 }
-                TempStr s = str::FormatTemp(str.Get(), pageLabel.Get());
+                TempStr s = str::FormatTemp(str.Get(), pageLabel);
                 MenuSetText(popup, CmdFavoriteAdd, s);
             }
         } else {
