@@ -226,7 +226,7 @@ int CmpNatural(const WCHAR*, const WCHAR*);
 
 char* FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
 char* FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
-char* FormatRomanNumeral(int number);
+char* FormatRomanNumeralTemp(int number);
 
 bool EmptyOrWhiteSpaceOnly(const char* sv);
 } // namespace str

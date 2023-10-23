@@ -1311,11 +1311,11 @@ static TempStr FormatPageLabelTemp(const char* type, int pageNo, const char* pre
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
-        AutoFreeStr number(str::FormatRomanNumeral(pageNo));
+        TempStr number = str::FormatRomanNumeralTemp(pageNo);
         if (*type == 'r') {
-            str::ToLowerInPlace(number.Get());
+            str::ToLowerInPlace(number);
         }
-        return str::FormatTemp("%s%s", prefix, number.Get());
+        return str::FormatTemp("%s%s", prefix, number);
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)

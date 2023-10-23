@@ -2326,7 +2326,7 @@ char* FormatFloatWithThousandSepTemp(double number, LCID locale) {
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
-char* FormatRomanNumeral(int number) {
+char* FormatRomanNumeralTemp(int number) {
     if (number < 1) {
         return nullptr;
     }
@@ -2345,7 +2345,8 @@ char* FormatRomanNumeral(int number) {
     }
     CrashIf(len == 0);
 
-    char *roman = AllocArray<char>(len + 1), *c = roman;
+    TempStr roman = (TempStr)Allocator::AllocZero(GetTempAllocator(), len + 1);
+    TempStr c = roman;
     for (int n = number, i = 0; i < dimof(romandata); i++) {
         for (; n >= romandata[i].value; n -= romandata[i].value) {
             c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);
