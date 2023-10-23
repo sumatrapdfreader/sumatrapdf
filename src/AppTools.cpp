@@ -708,7 +708,7 @@ TempStr FormatFileSizeTemp(i64 size) {
 // as "1.29 MB (1,348,258 Bytes)"
 TempStr FormatFileSizeNoTransTemp(i64 size) {
     if (size <= 0) {
-        return str::Format("%d", (int)size);
+        return str::FormatTemp("%d", (int)size);
     }
     char* n1 = FormatSizeSuccintNoTransTemp(size);
     char* n2 = str::FormatNumWithThousandSepTemp(size);
