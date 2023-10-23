@@ -295,7 +295,7 @@ void mel_decode(dec_mel_t *melp)
   *  @param [in]  scup is the length of MEL+VLC segments
   */
 static INLINE
-void mel_init(dec_mel_t *melp, OPJ_UINT8* bbuf, int lcup, int scup)
+OPJ_BOOL mel_init(dec_mel_t *melp, OPJ_UINT8* bbuf, int lcup, int scup)
 {
     int num;
     int i;
@@ -317,7 +317,9 @@ void mel_init(dec_mel_t *melp, OPJ_UINT8* bbuf, int lcup, int scup)
         OPJ_UINT64 d;
         int d_bits;
 
-        assert(melp->unstuff == OPJ_FALSE || melp->data[0] <= 0x8F);
+        if (melp->unstuff == OPJ_TRUE && melp->data[0] > 0x8F) {
+            return OPJ_FALSE;
+        }
         d = (melp->size > 0) ? *melp->data : 0xFF; // if buffer is consumed
         // set data to 0xFF
         if (melp->size == 1) {
@@ -333,6 +335,7 @@ void mel_init(dec_mel_t *melp, OPJ_UINT8* bbuf, int lcup, int scup)
     }
     melp->tmp <<= (64 - melp->bits); //push all the way up so the first bit
     // is the MSB
+    return OPJ_TRUE;
 }
 
 //************************************************************************/
@@ -1064,7 +1067,7 @@ static OPJ_BOOL opj_t1_allocate_buffers(
         if (flagssize > t1->flagssize) {
 
             opj_aligned_free(t1->flags);
-            t1->flags = (opj_flag_t*) opj_aligned_malloc(flagssize);
+            t1->flags = (opj_flag_t*) opj_aligned_malloc(flagssize * sizeof(opj_flag_t));
             if (!t1->flags) {
                 /* FIXME event manager error callback */
                 return OPJ_FALSE;
@@ -1072,7 +1075,7 @@ static OPJ_BOOL opj_t1_allocate_buffers(
         }
         t1->flagssize = flagssize;
 
-        memset(t1->flags, 0, flagssize);
+        memset(t1->flags, 0, flagssize * sizeof(opj_flag_t));
     }
 
     t1->w = w;
@@ -1375,7 +1378,17 @@ OPJ_BOOL opj_t1_ht_decode_cblk(opj_t1_t *t1,
     }
 
     // init structures
-    mel_init(&mel, coded_data, lcup, scup);
+    if (mel_init(&mel, coded_data, lcup, scup) == OPJ_FALSE) {
+        if (p_manager_mutex) {
+            opj_mutex_lock(p_manager_mutex);
+        }
+        opj_event_msg(p_manager, EVT_ERROR, "Malformed HT codeblock. "
+                      "Incorrect MEL segment sequence.\n");
+        if (p_manager_mutex) {
+            opj_mutex_unlock(p_manager_mutex);
+        }
+        return OPJ_FALSE;
+    }
     rev_init(&vlc, coded_data, lcup, scup);
     frwd_init(&magsgn, coded_data, lcup - scup, 0xFF);
     if (num_passes > 1) { // needs to be tested
