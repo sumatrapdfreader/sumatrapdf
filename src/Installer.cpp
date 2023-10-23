@@ -783,7 +783,7 @@ static HWND CreateInstallerHwnd() {
     int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
-    TempWstr titleW = ToWstrTemp(title);
+    TempWStr titleW = ToWstrTemp(title);
     HWND hwnd = CreateWindowExW(exStyle, winCls, titleW, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     gWnd->hwnd = hwnd;
     DpiScale(hwnd, dx, dy);

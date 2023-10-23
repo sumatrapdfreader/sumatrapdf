@@ -1155,9 +1155,9 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
             }
         }
 
-        AutoFreeStr menuString = str::Format(_TRA("Open in %s"), name);
+        TempStr menuString = str::Format(_TRA("Open in %s"), name);
         uint menuId = CmdOpenWithExternalFirst + count;
-        WCHAR* ws = ToWstrTemp(menuString);
+        TempWStr ws = ToWstrTemp(menuString);
         InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, ws);
         if (!filePath) {
             MenuSetEnabled(menuFile, menuId, false);

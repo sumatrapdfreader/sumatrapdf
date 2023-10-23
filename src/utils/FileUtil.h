@@ -10,13 +10,13 @@ const char* GetBaseNameTemp(const char* path);
 TempStr GetPathNoExtTemp(const char* path);
 
 TempStr GetDirTemp(const char* path);
-TempWstr GetDirTemp(const WCHAR* path);
+TempWStr GetDirTemp(const WCHAR* path);
 
 char* Join(Allocator* allocator, const char* path, const char* fileName);
 char* Join(const char* path, const char* fileName);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
-TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
+TempWStr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 
 bool IsDirectory(const char*);
 

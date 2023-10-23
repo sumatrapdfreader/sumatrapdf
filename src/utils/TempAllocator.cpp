@@ -45,7 +45,7 @@ TempStr DupTemp(const char* s, size_t cb) {
     return str::Dup(GetTempAllocator(), s, cb);
 }
 
-TempWstr DupTemp(const WCHAR* s, size_t cch) {
+TempWStr DupTemp(const WCHAR* s, size_t cch) {
     return str::Dup(GetTempAllocator(), s, cch);
 }
 
@@ -53,7 +53,7 @@ TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
     return Join(GetTempAllocator(), s1, s2, s3);
 }
 
-TempWstr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
+TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
     return Join(GetTempAllocator(), s1, s2, s3);
 }
 
@@ -103,7 +103,7 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     return strconv::WstrToUtf8(s, cch, GetTempAllocator());
 }
 
-TempWstr ToWstrTemp(const char* s, size_t cb) {
+TempWStr ToWstrTemp(const char* s, size_t cb) {
     if (!s) {
         CrashIf((int)cb > 0);
         return nullptr;

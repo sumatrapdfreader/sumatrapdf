@@ -124,7 +124,7 @@ static const WCHAR* GetBaseNameTemp(const WCHAR* path) {
     return end;
 }
 
-TempWstr GetDirTemp(const WCHAR* path) {
+TempWStr GetDirTemp(const WCHAR* path) {
     const WCHAR* baseName = GetBaseNameTemp(path);
     if (baseName == path) {
         // relative directory
@@ -168,7 +168,7 @@ TempStr GetDirTemp(const char* path) {
     return str::DupTemp(path, baseName - path - 1);
 }
 
-TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
+TempWStr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
     // TODO: not sure if should allow null path
     if (IsSep(*fileName)) {
         fileName++;
@@ -180,7 +180,7 @@ TempWstr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileNam
             sepStr = L"\\";
         }
     }
-    TempWstr res = str::JoinTemp(path, sepStr, fileName);
+    TempWStr res = str::JoinTemp(path, sepStr, fileName);
     if (fileName2) {
         res = JoinTemp(res, fileName2);
     }

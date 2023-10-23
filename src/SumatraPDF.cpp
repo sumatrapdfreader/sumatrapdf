@@ -2745,7 +2745,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
 
-    TempWstr defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
+    TempWStr defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
@@ -2804,7 +2804,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
 
     // Make sure that the file has a valid extension
     if (!str::EndsWithI(dstFileName, defExt)) {
-        TempWstr s = str::JoinTemp(dstFileName, defExt);
+        TempWStr s = str::JoinTemp(dstFileName, defExt);
         realDstFileName = ToUtf8(dstFileName);
     }
 

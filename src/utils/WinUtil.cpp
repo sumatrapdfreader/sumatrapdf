@@ -1824,7 +1824,7 @@ size_t HwndGetTextLen(HWND hwnd) {
 }
 
 // return text of window or edit control, nullptr in case of an error
-TempWstr HwndGetTextWTemp(HWND hwnd) {
+TempWStr HwndGetTextWTemp(HWND hwnd) {
     size_t cch = HwndGetTextLen(hwnd);
     size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
     WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
@@ -2772,7 +2772,7 @@ void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
 }
 
 void DrawCenteredText(HDC hdc, const Rect r, const char* txt, bool isRTL) {
-    TempWstr ws = ToWstrTemp(txt);
+    TempWStr ws = ToWstrTemp(txt);
     DrawCenteredText(hdc, r, ws, isRTL);
 }
 
