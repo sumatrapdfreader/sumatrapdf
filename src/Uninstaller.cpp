@@ -170,7 +170,7 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
 static void CreateUninstallerWindow() {
-    AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
+    TempStr title = str::FormatTemp(_TRA("SumatraPDF %s Uninstaller"), CURR_VERSION_STRA);
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = GetInstallerWinDx();
@@ -178,7 +178,7 @@ static void CreateUninstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     auto winCls = kInstallerWindowClassName;
-    gHwndFrame = CreateWindowW(winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    gHwndFrame = CreateWindowW(winCls, ToWStrTemp(title), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 
     DpiScale(gHwndFrame, dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);
@@ -189,8 +189,8 @@ static void CreateUninstallerWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    char* caption = str::JoinTemp(kAppName, " Uninstaller Usage");
-    AutoFreeStr msg = str::Format(
+    TempStr caption = str::JoinTemp(kAppName, " Uninstaller Usage");
+    TempStr msg = str::FormatTemp(
         "uninstall.exe [/s][/d <path>]\n\
     \n\
     /s\tuninstalls %s silently (without user interaction).\n\
@@ -408,7 +408,7 @@ static void InitSelfDelete() {
         return;
     }
     logf("Created self-delete batch script '%s'\n", scriptPath);
-    AutoFreeStr cmdLine = str::Format("cmd.exe /C \"%s\"", scriptPath);
+    TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath);
     DWORD flags = CREATE_NO_WINDOW;
     LaunchProcess(cmdLine, nullptr, flags);
 }

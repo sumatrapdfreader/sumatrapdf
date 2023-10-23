@@ -77,9 +77,8 @@ static void MobiSaveImage(const char* filePathBase, size_t imgNo, ByteSlice img)
     }
     const char* ext = GfxFileExtFromData(img);
     CrashAlwaysIf(!ext);
-    char* path = str::Format("%s_img_%d%s", filePathBase, (int)imgNo, ext);
+    TempStr path = str::FormatTemp("%s_img_%d%s", filePathBase, (int)imgNo, ext);
     file::WriteFile(path, img);
-    str::Free(path);
 }
 
 static void MobiSaveImages(const char* filePathBase, MobiDoc* mb) {

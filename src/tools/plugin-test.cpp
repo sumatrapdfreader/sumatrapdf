@@ -30,9 +30,10 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     if (WM_CREATE == msg) {
         // run SumatraPDF.exe with the -plugin command line argument
         PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
-        AutoFreeStr cmdLine(str::Format("-plugin %d \"%s\"", hwnd, data->filePath));
+        auto path = data->filePath;
+        TempStr cmdLine = str::FormatTemp("-plugin %d \"%s\"", hwnd, path);
         if (data->fileOriginUrl) {
-            cmdLine.Set(str::Format("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, data->filePath));
+            cmdLine = str::FormatTemp("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, path);
         }
         ShellExecute(hwnd, L"open", ToWStrTemp(data->sumatraPath), ToWStrTemp(cmdLine), nullptr, SW_SHOW);
     } else if (WM_SIZE == msg) {

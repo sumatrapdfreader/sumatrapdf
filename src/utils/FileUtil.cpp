@@ -710,10 +710,11 @@ int GetZoneIdentifier(const char* filePath) {
 }
 
 bool SetZoneIdentifier(const char* filePath, int zoneId) {
-    char* path = str::JoinTemp(filePath, ":Zone.Identifier");
-    AutoFreeWstr id(str::Format(L"%d", zoneId));
-    WCHAR* pathW = ToWStrTemp(path);
-    return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, pathW);
+    TempStr path = str::JoinTemp(filePath, ":Zone.Identifier");
+    TempStr id = str::FormatTemp("%d", zoneId);
+    TempWStr idw = ToWStrTemp(id);
+    TempWStr pathW = ToWStrTemp(path);
+    return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", idw, pathW);
 }
 
 bool DeleteZoneIdentifier(const char* filePath) {
