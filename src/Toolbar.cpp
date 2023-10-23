@@ -628,32 +628,30 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     int currX = r.right + DpiScale(win->hwndFrame, 10);
     int currY = (r.bottom - pageWndRect.dy) / 2;
 
-    char* buf;
+    TempStr txt = nullptr;
     Size size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
-        char* tmp = HwndGetTextTemp(win->hwndPageTotal);
-        buf = str::Dup(tmp);
+        txt = HwndGetTextTemp(win->hwndPageTotal);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= DpiScale(win->hwndFrame, kTextPaddingRight);
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
     } else if (!pageCount) {
-        buf = str::Dup("");
+        txt = (TempStr) "";
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
-        buf = str::Format(" / %d", pageCount);
+        txt = str::FormatTemp(" / %d", pageCount);
     } else {
-        buf = str::Format(" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
-        AutoFreeStr buf2(str::Format(" (%d / %d)", pageCount, pageCount));
-        size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
+        txt = str::FormatTemp(" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
+        TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
+        size2 = TextSizeInHwnd(win->hwndPageTotal, txt2);
     }
 
-    HwndSetText(win->hwndPageTotal, buf);
+    HwndSetText(win->hwndPageTotal, txt);
     if (0 == size2.dx) {
-        size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
+        size2 = TextSizeInHwnd(win->hwndPageTotal, txt);
     }
     size2.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
-    str::Free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;

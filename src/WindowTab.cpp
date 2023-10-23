@@ -136,24 +136,27 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
         return false;
     }
 
-    WCHAR dstFileName[MAX_PATH] = {0};
-    if (fileNameA) {
-        str::BufSet(dstFileName, dimof(dstFileName), fileNameA);
-    }
     // CrashIf(fileName && str::FindChar(fileName, '/'));
-
-    // Prepare the file filters (use \1 instead of \0 so that the
-    // double-zero terminated string isn't cut by the string handling
-    // methods too early on)
-    AutoFreeWstr fileFilter = str::Format(L"%s\1*.*\1", _TR("All files"));
-    str::TransCharsInPlace(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwndParent;
+
+    WCHAR dstFileName[MAX_PATH] = {0};
+    if (fileNameA) {
+        str::BufSet(dstFileName, dimof(dstFileName), fileNameA);
+    }
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
+
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
+    TempStr fileFilterA = str::FormatTemp("%s\1*.*\1", _TRA("All files"));
+    TempWStr fileFilter = ToWstrTemp(fileFilterA);
+    str::TransCharsInPlace(fileFilter, L"\1", L"\0");
     ofn.lpstrFilter = fileFilter;
+
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
@@ -161,7 +164,7 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     if (!ok) {
         return false;
     }
-    char* path = ToUtf8Temp(dstFileName);
+    TempStr path = ToStrTemp(dstFileName);
     ok = file::WriteFile(path, data);
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
