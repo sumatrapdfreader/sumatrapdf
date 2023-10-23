@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "xps-imp.h"
@@ -249,7 +249,7 @@ static float sRGB_from_scRGB(float x)
 {
 	if (x < 0.0031308f)
 		return 12.92f * x;
-	return 1.055f * pow(x, 1/2.4f) - 0.055f;
+	return 1.055f * powf(x, 1/2.4f) - 0.055f;
 }
 
 void

@@ -636,6 +636,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\pdf\event.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\font.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\form.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\image-rewriter.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\interpret.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\javascript.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\name-table.h" />
@@ -657,6 +658,7 @@
     <ClInclude Include="..\mupdf\source\fitz\icc34.h" />
     <ClInclude Include="..\mupdf\source\fitz\image-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\jmemcust.h" />
+    <ClInclude Include="..\mupdf\source\fitz\leptonica-wrap.h" />
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h" />
     <ClInclude Include="..\mupdf\source\fitz\pixmap-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h" />
@@ -709,6 +711,7 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
     <ClCompile Include="..\mupdf\source\fitz\encode-basic.c" />
     <ClCompile Include="..\mupdf\source\fitz\encode-fax.c" />
+    <ClCompile Include="..\mupdf\source\fitz\encode-jpx.c" />
     <ClCompile Include="..\mupdf\source\fitz\encodings.c" />
     <ClCompile Include="..\mupdf\source\fitz\error.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />
@@ -742,6 +745,7 @@
     <ClCompile Include="..\mupdf\source\fitz\load-jxr-win.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-png.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-pnm.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-psd.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c" />
     <ClCompile Include="..\mupdf\source\fitz\log.c" />
     <ClCompile Include="..\mupdf\source\fitz\memento.c" />
@@ -818,6 +822,7 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-form.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-function.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-graft.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-image-rewriter.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-image.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-interpret.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-js.c" />

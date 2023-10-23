@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -171,13 +171,16 @@ const char *pdf_clean_font_name(const char *fontname)
 
 enum { UNKNOWN, TYPE1, TRUETYPE };
 
-static int ft_kind(FT_Face face)
+static int ft_kind(fz_context *ctx, FT_Face face)
 {
+	const char *kind;
+	fz_ft_lock(ctx);
 #ifdef FT_FONT_FORMATS_H
-	const char *kind = FT_Get_Font_Format(face);
+	kind = FT_Get_Font_Format(face);
 #else
-	const char *kind = FT_Get_X11_Font_Format(face);
+	kind = FT_Get_X11_Font_Format(face);
 #endif
+	fz_ft_unlock(ctx);
 	if (!strcmp(kind, "TrueType")) return TRUETYPE;
 	if (!strcmp(kind, "Type 1")) return TYPE1;
 	if (!strcmp(kind, "CFF")) return TYPE1;
@@ -260,7 +263,13 @@ int
 pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid)
 {
 	if (fontdesc->font->ft_face)
-		return ft_cid_to_gid(fontdesc, cid);
+	{
+		int gid;
+		fz_ft_lock(ctx);
+		gid = ft_cid_to_gid(fontdesc, cid);
+		fz_ft_unlock(ctx);
+		return gid;
+	}
 	return cid;
 }
 
@@ -593,6 +602,13 @@ pdf_drop_font(fz_context *ctx, pdf_font_desc *fontdesc)
 	fz_drop_storable(ctx, &fontdesc->storable);
 }
 
+static int
+pdf_font_is_droppable(fz_context *ctx, fz_storable *fontdesc)
+{
+	/* If we aren't holding the FT lock, then we can drop. */
+	return !fz_ft_lock_held(ctx);
+}
+
 static void
 pdf_drop_font_imp(fz_context *ctx, fz_storable *fontdesc_)
 {
@@ -615,7 +631,7 @@ pdf_new_font_desc(fz_context *ctx)
 	pdf_font_desc *fontdesc;
 
 	fontdesc = fz_malloc_struct(ctx, pdf_font_desc);
-	FZ_INIT_STORABLE(fontdesc, 1, pdf_drop_font_imp);
+	FZ_INIT_AWKWARD_STORABLE(fontdesc, 1, pdf_drop_font_imp, pdf_font_is_droppable);
 	fontdesc->size = sizeof(pdf_font_desc);
 
 	fontdesc->font = NULL;
@@ -678,7 +694,7 @@ select_type1_cmap(FT_Face face)
 }
 
 static FT_CharMap
-select_truetype_cmap(FT_Face face, int symbolic)
+select_truetype_cmap(fz_context *ctx, FT_Face face, int symbolic)
 {
 	int i;
 
@@ -690,21 +706,34 @@ select_truetype_cmap(FT_Face face, int symbolic)
 				return face->charmaps[i];
 	}
 
+	fz_ft_lock(ctx);
+
 	/* Then look for a Microsoft Unicode cmap */
 	for (i = 0; i < face->num_charmaps; i++)
 		if (face->charmaps[i]->platform_id == 3 && face->charmaps[i]->encoding_id == 1)
 			if (FT_Get_CMap_Format(face->charmaps[i]) != -1)
+			{
+				fz_ft_unlock(ctx);
 				return face->charmaps[i];
+			}
 
 	/* Finally look for an Apple MacRoman cmap */
 	for (i = 0; i < face->num_charmaps; i++)
 		if (face->charmaps[i]->platform_id == 1 && face->charmaps[i]->encoding_id == 0)
 			if (FT_Get_CMap_Format(face->charmaps[i]) != -1)
+			{
+				fz_ft_unlock(ctx);
 				return face->charmaps[i];
+			}
 
 	if (face->num_charmaps > 0)
 		if (FT_Get_CMap_Format(face->charmaps[0]) != -1)
+		{
+			fz_ft_unlock(ctx);
 			return face->charmaps[0];
+		}
+
+	fz_ft_unlock(ctx);
 	return NULL;
 }
 
@@ -760,7 +789,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 	{
 		fontdesc = pdf_new_font_desc(ctx);
 
-		basefont = pdf_to_name(ctx, pdf_dict_get(ctx, dict, PDF_NAME(BaseFont)));
+		basefont = pdf_dict_get_name(ctx, dict, PDF_NAME(BaseFont));
 
 		descriptor = pdf_dict_get(ctx, dict, PDF_NAME(FontDescriptor));
 		if (descriptor)
@@ -798,7 +827,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 		}
 
 		face = fontdesc->font->ft_face;
-		kind = ft_kind(face);
+		kind = ft_kind(ctx, face);
 
 		/* Encoding */
 
@@ -810,13 +839,15 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 		if (kind == TYPE1)
 			cmap = select_type1_cmap(face);
 		else if (kind == TRUETYPE)
-			cmap = select_truetype_cmap(face, symbolic);
+			cmap = select_truetype_cmap(ctx, face, symbolic);
 		else
 			cmap = select_unknown_cmap(face);
 
 		if (cmap)
 		{
+			fz_ft_lock(ctx);
 			fterr = FT_Set_Charmap(face, cmap);
+			fz_ft_unlock(ctx);
 			if (fterr)
 				fz_warn(ctx, "freetype could not set cmap: %s", ft_error_string(fterr));
 		}
@@ -867,12 +898,12 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 		else if (!fontdesc->is_embedded && !symbolic)
 			pdf_load_encoding(estrings, "StandardEncoding");
 
+		fz_ft_lock(ctx);
+		has_lock = 1;
+
 		/* start with the builtin encoding */
 		for (i = 0; i < 256; i++)
 			etable[i] = ft_char_index(face, i);
-
-		fz_lock(ctx, FZ_LOCK_FREETYPE);
-		has_lock = 1;
 
 		/* built-in and substitute fonts may be a different type than what the document expects */
 		subtype = pdf_dict_get(ctx, dict, PDF_NAME(Subtype));
@@ -980,7 +1011,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 					estrings[i] = (char*) fz_glyph_name_from_adobe_standard[i];
 		}
 
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
+		fz_ft_unlock(ctx);
 		has_lock = 0;
 
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
@@ -1023,8 +1054,12 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 		}
 		else
 		{
+			fz_ft_lock(ctx);
+			has_lock = 1;
 			for (i = 0; i < 256; i++)
 				pdf_add_hmtx(ctx, fontdesc, i, i, ft_width(ctx, fontdesc, i));
+			fz_ft_unlock(ctx);
+			has_lock = 0;
 		}
 
 		pdf_end_hmtx(ctx, fontdesc);
@@ -1032,7 +1067,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 	fz_catch(ctx)
 	{
 		if (has_lock)
-			fz_unlock(ctx, FZ_LOCK_FREETYPE);
+			fz_ft_unlock(ctx);
 		if (fontdesc && etable != fontdesc->cid_to_gid)
 			fz_free(ctx, etable);
 		pdf_drop_font(ctx, fontdesc);
@@ -1133,7 +1168,7 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 	{
 		/* Get font name and CID collection */
 
-		basefont = pdf_to_name(ctx, pdf_dict_get(ctx, dict, PDF_NAME(BaseFont)));
+		basefont = pdf_dict_get_name(ctx, dict, PDF_NAME(BaseFont));
 
 		{
 			pdf_obj *cidinfo;
@@ -1211,7 +1246,9 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 		/* unicode cmap to get a glyph id */
 		else if (fontdesc->font->flags.ft_substitute)
 		{
+			fz_ft_lock(ctx);
 			fterr = FT_Select_Charmap(face, ft_encoding_unicode);
+			fz_ft_unlock(ctx);
 			if (fterr)
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "no unicode cmap when emulating CID font: %s", ft_error_string(fterr));
 
@@ -1242,10 +1279,7 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 
 		/* Horizontal */
 
-		dw = 1000;
-		obj = pdf_dict_get(ctx, dict, PDF_NAME(DW));
-		if (obj)
-			dw = pdf_to_int(ctx, obj);
+		dw = pdf_dict_get_int_default(ctx, dict, PDF_NAME(DW), 1000);
 		pdf_set_default_hmtx(ctx, fontdesc, dw);
 
 		widths = pdf_dict_get(ctx, dict, PDF_NAME(W));
@@ -1424,7 +1458,7 @@ pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *font
 
 	/* Check for DynaLab fonts that must use hinting */
 	face = fontdesc->font->ft_face;
-	if (ft_kind(face) == TRUETYPE)
+	if (ft_kind(ctx, face) == TRUETYPE)
 	{
 		/* FreeType's own 'tricky' font detection needs a bit of help */
 		if (is_dynalab(fontdesc->font->name))

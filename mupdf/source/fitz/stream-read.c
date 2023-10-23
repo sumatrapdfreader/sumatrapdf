@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -228,6 +228,33 @@ fz_read_file(fz_context *ctx, const char *filename)
 	return buf;
 }
 
+fz_buffer *
+fz_try_read_file(fz_context *ctx, const char *filename)
+{
+	fz_stream *stm;
+	fz_buffer *buf = NULL;
+
+	fz_var(buf);
+
+	stm = fz_try_open_file(ctx, filename);
+	if (stm == NULL)
+		return NULL;
+	fz_try(ctx)
+	{
+		buf = fz_read_all(ctx, stm, 0);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_stream(ctx, stm);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return buf;
+}
+
 uint16_t fz_read_uint16(fz_context *ctx, fz_stream *stm)
 {
 	int a = fz_read_byte(ctx, stm);
@@ -361,4 +388,181 @@ void fz_read_string(fz_context *ctx, fz_stream *stm, char *buffer, int len)
 		len--;
 	}
 	while (c != 0);
+}
+
+int fz_read_rune(fz_context *ctx, fz_stream *in)
+{
+	int c = fz_read_byte(ctx, in);
+
+	if ((c & 0xF8) == 0xF0)
+	{
+		uint8_t d = fz_read_byte(ctx, in);
+		c = (c & 7)<<18;
+		if ((d & 0xC0) == 0x80)
+		{
+			uint8_t e = fz_read_byte(ctx, in);
+			c += (d & 0x3f)<<12;
+			if ((e & 0xC0) == 0x80)
+			{
+				uint8_t f = fz_read_byte(ctx, in);
+				c += (e & 0x3f)<<6;
+				if ((f & 0xC0) == 0x80)
+				{
+					c += f & 0x3f;
+				}
+				else
+					goto bad_byte;
+			}
+			else
+				goto bad_byte;
+		}
+		else
+			goto bad_byte;
+	}
+	else if ((c & 0xF0) == 0xE0)
+	{
+		uint8_t d = fz_read_byte(ctx, in);
+		c = (c & 15)<<12;
+		if ((d & 0xC0) == 0x80)
+		{
+			uint8_t e = fz_read_byte(ctx, in);
+			c += (d & 0x3f)<<6;
+			if ((e & 0xC0) == 0x80)
+			{
+				c += e & 0x3f;
+			}
+			else
+				goto bad_byte;
+		}
+		else
+			goto bad_byte;
+	}
+	else if ((c & 0xE0) == 0xC0)
+	{
+		uint8_t d = fz_read_byte(ctx, in);
+		c = (c & 31)<<6;
+		if ((d & 0xC0) == 0x80)
+		{
+			c += d & 0x3f;
+		}
+		else
+			fz_unread_byte(ctx, in);
+	}
+	else if ((c & 0xc0) == 0x80)
+	{
+bad_byte:
+		fz_unread_byte(ctx, in);
+		return 0xFFFD;
+	}
+
+	return c;
+
+}
+
+int fz_read_utf16_le(fz_context *ctx, fz_stream *stm)
+{
+	int c = fz_read_byte(ctx, stm);
+	int d, e;
+
+	if (c == EOF)
+		return EOF;
+
+	d = fz_read_byte(ctx, stm);
+	if (d == EOF)
+		return c; /* Might be wrong, but the best we can do. */
+
+	c |= d<<8;
+
+	/* If it's not a surrogate, we're done. */
+	if (c < 0xd800 || c >= 0xe000)
+		return c;
+
+	/* It *ought* to be a leading (high) surrogate. If it's not,
+	 * then we're in trouble. */
+	if (c >= 0xdc00)
+		return 0x10000 + c - 0xdc00; /* Imagine the high surrogate was 0. */
+
+	/* Our stream abstraction only enables us to peek 1 byte ahead, and we'd need
+	 * 2 to tell if it was a low surrogate. Just assume it is. */
+	d = fz_read_byte(ctx, stm);
+	if (d == EOF)
+	{
+		/* Failure! Imagine the trailing surrogate was 0. */
+		return 0x10000 + ((c - 0xd800)<<10);
+	}
+	e = fz_read_byte(ctx, stm);
+	if (e == EOF)
+	{
+		e = 0xDC; /* Fudge a low surrogate */
+	}
+
+	d |= e<<8;
+
+	if (d < 0xdc00 || d >= 0xe000)
+	{
+		/* Bad encoding! This is nasty, because we've eaten 2 bytes from the
+		 * stream which ideally we would not have. Serves you right for
+		 * having a broken stream. */
+		return 0x10000 + ((c - 0xd800)<<10); /* Imagine the high surrogate was 0. */
+	}
+
+	c -= 0xd800;
+	d -= 0xdc00;
+
+	return 0x10000 + (c<<10) + d;
+}
+
+int fz_read_utf16_be(fz_context *ctx, fz_stream *stm)
+{
+	int c = fz_read_byte(ctx, stm);
+	int d, e;
+
+	if (c == EOF)
+		return EOF;
+
+	d = fz_read_byte(ctx, stm);
+	if (d == EOF)
+		return c; /* Might be wrong, but the best we can do. */
+
+	c = (c<<8) | d;
+
+	/* If it's not a surrogate, we're done. */
+	if (c < 0xd800 || c >= 0xe000)
+		return c;
+
+	/* It *ought* to be a leading (high) surrogate. If it's not,
+	 * then we're in trouble. */
+	if (c >= 0xdc00)
+		return 0x10000 + c - 0xdc00; /* Imagine the high surrogate was 0. */
+
+	/* Our stream abstraction only enables us to peek 1 byte ahead, and we'd need
+	 * 2 to tell if it was a low surrogate. Just assume it is. */
+	d = fz_read_byte(ctx, stm);
+	if (d == EOF)
+	{
+		/* Failure! Imagine the trailing surrogate was 0. */
+		return 0x10000 + ((c - 0xd800)<<10);
+	}
+
+	/* The next byte ought to be the start of a trailing (low) surrogate. */
+	if (d < 0xdc || d >= 0xe0)
+	{
+		/* It wasn't. Put the byte back. */
+		fz_unread_byte(ctx, stm);
+		d = 0xdc00; /* Pretend it was a 0 surrogate. */
+	}
+	else
+	{
+		e = fz_read_byte(ctx, stm);
+		if (e == EOF)
+		{
+			e = 0;
+		}
+		d = (d<<8) | e;
+	}
+
+	c -= 0xd800;
+	d -= 0xdc00;
+
+	return 0x10000 + (c<<10) + d;
 }

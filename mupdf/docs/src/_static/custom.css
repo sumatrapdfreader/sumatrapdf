@@ -1,9 +1,3 @@
-/* icon sizing in the left menu */
-.icon-home {
-    width: 100px;
-    height: auto;
-}
-
 /* main document page: ensures pages fit to the available width and height */
 .wy-nav-content {
     min-width: 100%;
@@ -25,40 +19,6 @@
     color:hsla(0,0%,100%,1);
 }
 
-
-/* adds scrollbar to sidenav */
-.wy-side-scroll {
-    width: auto;
-    overflow-y: scroll;
-}
-
-.wy-side-scroll ::-webkit-scrollbar {
-    width: 0.5em;
-}
-
-.wy-side-scroll ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-}
-
-.wy-side-scroll::-webkit-scrollbar-thumb {
-    background-color: darkgrey;
-}
-
-/* visible scroll bars on tables with scrollable content */
-.wy-table-responsive::-webkit-scrollbar {
-    background-color: #dddddd;
-    width: 1em;
-}
-
-.wy-menu-vertical::-webkit-scrollbar-track, .wy-table-responsive::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-}
-
-.wy-menu-vertical::-webkit-scrollbar-thumb, .wy-table-responsive::-webkit-scrollbar-thumb {
-    background-color: darkgrey;
-    outline: 1px solid slategrey;
-}
-
 .htmltag {
     padding: 2px 5px;
     background-color: #fbff68;
@@ -66,18 +26,12 @@
     border: 1px solid #222;
 }
 
-
-
 .discordLink {
     display:flex;
     justify-content:flex-end;
-    margin:0 0 10px;
+    margin:0;
     padding:0;
     font-size: 13px;
-}
-
-.discordLink a {
-    color: #000;
 }
 
 .discordLink img {
@@ -94,57 +48,174 @@
     font-size: 13px;
 }
 
-
-h1 {
-    padding: 10px;
-    background-color: #007aff;
-    color: #fff;
-    border-radius: 5px;
-    margin-left: -10px;
+.intro-title {
+    font-size: 22px;
+    margin: 0 0 20px 0;
 }
 
+h1 {
+    padding: 10px !important;
+    background-color: #007aff !important;
+    color: #fff !important;
+    border-radius: 5px !important;
+    margin-top: 20px !important;
+    margin-left: -10px !important;
+}
 
 cite {
     font-weight: bold;
     font-style: normal;
 }
 
+.red-color {
+    color: #cc0000;
+}
+
+.orange-color {
+    color: #ff6600;
+}
+
+.green-color {
+    color: #00cc00;
+}
+
+button.cta {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border:0;
+    text-transform:uppercase;
+    border-radius:5px;
+    font-size:16px;
+    font-weight:500;
+    min-height:40px;
+    line-height:40px;
+    padding: 0 15px;
+    color:#fff;
+    cursor:pointer;
+}
+
+button.cta.orange {
+    width:auto;
+    background-image: linear-gradient(to right, #ea5842, #ec6343, #ed6d45, #ef7747, #f0804a) !important;
+}
+
+button.cta.orange:hover {
+    background:#ea5842 !important;
+}
+
+button.cta a {
+    color:#fff !important;
+}
+
+
+/*** Furo theme overrides ***/
+
+/* This is to do with hiding the Furo link text and the "Made with" text */
+.bottom-of-page .left-details {
+    font-size:0;
+}
+
+.bottom-of-page .left-details a {
+    display:none;
+}
+
+/* Now ensure that the other copyright text is visible here */
+.bottom-of-page .left-details > * {
+    font-size:12px;
+}
+
+.sidebar-brand-text {
+    font-size: 13px;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-logo {
+    width: 60px;
+    height: 60px;
+}
+
+.sidebar-container {
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-container .sidebar-search-container {
+    display: none;
+}
+
+.sidebar-search-container.top {
+    /*position:sticky;
+    top:10px;*/
+    border-radius: 20px;
+    border: solid #333 1px;
+    background-color: #fff;
+}
+
+.sidebar-search-container.top .sidebar-search {
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+}
+
+/* really important ! */
+.sidebar-search {
+    color: #000 !important;
+}
+
+.toc-drawer .toc-title {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+:target>h1:first-of-type, span:target~h1:first-of-type {
+    background-color: #007aff !important;
+    color: #fff !important;
+    padding-top: 40px; /* accomodates header search blocking target */
+    margin-top: -40px;
+}
+
+
+:target>h2:first-of-type, :target>h3:first-of-type,
+:target>h4:first-of-type, :target>h5:first-of-type, :target>h6:first-of-type,
+span:target~h2:first-of-type, span:target~h3:first-of-type,
+span:target~h4:first-of-type, span:target~h5:first-of-type, span:target~h6:first-of-type {
+    background-color: transparent !important;
+    padding-top: 40px; /* accomodates header search blocking target */
+    margin-top: -40px;
+    text-decoration: underline;
+}
+
+.mutool_tag, .wasm_tag, .instance_props_tag, .instance_methods_tag, .example_tag {
+    font-family: monospace;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    font-weight: 600;
+}
+
+.mutool_tag {
+    background-color: #2ab57c;
+}
+
+.wasm_tag {
+    background-color: #2c5cbd;
+}
+
+.example_tag {
+    font-size: 9px;
+    color: white;
+    background-color: #222;
+}
+
+.instance_props_tag, .instance_methods_tag {
+    color: black;
+    background-color: #a5a5b5;
+}
 
 /* Dark mode colors */
 @media (prefers-color-scheme: dark) {
 
-    /* main document page */
-    .wy-nav-content {
-        background-color: #000;
-        color: #fff;
-    }
 
-    .htmltag {
-        color: #000;
-    }
-
-    th {
-        color: #fff;
-    }
-
-    td {
-        background-color: #000 !important;
-    }
-
-    tr:nth-child(2n-1) td{
-        background-color: #333 !important;
-    }
-
-    pre {
-        color: #000;
-    }
-
-    .admonition {
-        color: #000;
-    }
-
-    .discordLink a {
-        color: #fff;
-    }
 
 }

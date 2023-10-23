@@ -46,7 +46,7 @@ def make_outparam_helper_csharp(
                 // Custom C# wrapper for fz_buffer_extract().
                 public static class mupdf_{rename.class_('fz_buffer')}_extract
                 {{
-                    public static byte[] fz_buffer_extract(this mupdf.{rename.class_('fz_buffer')} buffer)
+                    public static byte[] {rename.method('fz_buffer', 'fz_buffer_extract')}(this mupdf.{rename.class_('fz_buffer')} buffer)
                     {{
                         var outparams = new mupdf.{rename.ll_fn('fz_buffer_storage')}_outparams();
                         uint n = mupdf.mupdf.{rename.ll_fn('fz_buffer_storage')}_outparams_fn(buffer.m_internal, outparams);

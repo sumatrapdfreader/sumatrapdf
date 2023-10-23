@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -162,7 +162,7 @@ load_devicen(fz_context *ctx, pdf_obj *array, int is_devn, pdf_cycle_list *cycle
 		cs->u.separation.tint = pdf_load_function(ctx, tintobj, n, cs->u.separation.base->n);
 		if (pdf_is_array(ctx, nameobj))
 			for (i = 0; i < n; i++)
-				fz_colorspace_name_colorant(ctx, cs, i, pdf_to_name(ctx, pdf_array_get(ctx, nameobj, i)));
+				fz_colorspace_name_colorant(ctx, cs, i, pdf_array_get_name(ctx, nameobj, i));
 		else
 			fz_colorspace_name_colorant(ctx, cs, 0, pdf_to_name(ctx, nameobj));
 	}

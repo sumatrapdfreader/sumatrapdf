@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_STORE_H
 #define MUPDF_FITZ_STORE_H
@@ -60,6 +60,14 @@ typedef struct fz_storable fz_storable;
 typedef void (fz_store_drop_fn)(fz_context *, fz_storable *);
 
 /**
+	Function type for a function to check whether a storable
+	object can be dropped at the moment.
+
+	Return 0 for 'cannot be dropped', 1 otherwise.
+*/
+typedef int (fz_store_droppable_fn)(fz_context *, fz_storable *);
+
+/**
 	Any storable object should include an fz_storable structure
 	at the start (by convention at least) of their structure.
 	(Unless it starts with an fz_key_storable, see below).
@@ -67,6 +75,7 @@ typedef void (fz_store_drop_fn)(fz_context *, fz_storable *);
 struct fz_storable {
 	int refs;
 	fz_store_drop_fn *drop;
+	fz_store_droppable_fn *droppable;
 };
 
 /**
@@ -81,11 +90,16 @@ typedef struct
 } fz_key_storable;
 
 /**
-	Macro to initialise a storable object.
+	Macros to initialise a storable object.
 */
 #define FZ_INIT_STORABLE(S_,RC,DROP) \
 	do { fz_storable *S = &(S_)->storable; S->refs = (RC); \
-	S->drop = (DROP); \
+	S->drop = (DROP); S->droppable = NULL; \
+	} while (0)
+
+#define FZ_INIT_AWKWARD_STORABLE(S_,RC,DROP,DROPPABLE) \
+	do { fz_storable *S = &(S_)->storable; S->refs = (RC); \
+	S->drop = (DROP); S->droppable = (DROPPABLE); \
 	} while (0)
 
 /**

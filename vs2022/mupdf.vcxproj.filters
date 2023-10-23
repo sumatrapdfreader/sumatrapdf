@@ -258,6 +258,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\pdf\form.h">
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\image-rewriter.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\pdf\interpret.h">
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
@@ -319,6 +322,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\jmemcust.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\leptonica-wrap.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h">
@@ -473,6 +479,9 @@
     <ClCompile Include="..\mupdf\source\fitz\encode-fax.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\encode-jpx.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\encodings.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
@@ -570,6 +579,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\load-pnm.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\load-psd.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c">
@@ -798,6 +810,9 @@
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-graft.c">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-image-rewriter.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-image.c">

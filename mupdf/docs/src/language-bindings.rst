@@ -1,3 +1,6 @@
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. include:: header.rst
 
 .. meta::
@@ -211,12 +214,18 @@ environmental variables:
   If `1`, generated code checks MuPDF struct reference counts at
   runtime.
 
+* **MUPDF_check_error_stack**
+
+    If `1`, generated code outputs a diagnostic if a MuPDF function changes the
+    current `fz_context`'s error stack depth.
+
 * **MUPDF_trace**
 
-  If `1`, generated code outputs a diagnostic each time it calls a MuPDF
-  function (apart from keep/drop functions).
+  If `1` or `2`, class-aware code outputs a diagnostic each time it calls a
+  MuPDF function (apart from keep/drop functions).
 
-  If `2`, we also show arg POD and pointer values.
+  If `2`, low-level wrappers output a diagnostic each time they are
+  called. We also show arg POD and pointer values.
 
 * **MUPDF_trace_director**
 
@@ -270,6 +279,18 @@ The Python and C# MuPDF APIs
   * Automatic reference counting, so no need to call `fz_keep_*()` or `fz_drop_*()`, and we have value-semantics for class instances.
   * Native Python and C# exceptions.
 * Output parameters are returned as tuples.
+
+  For example MuPDF C function `fz_read_best()` has prototype::
+
+      fz_buffer *fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated);
+
+  The class-aware Python wrapper is:
+
+      mupdf.fz_read_best(stm, initial)
+
+  and returns `(buffer, truncated)`, where `buffer` is a SWIG proxy for a
+  `mupdf::FzBuffer` instance and `truncated` is an integer.
+
 * Allows implementation of mutool in Python - see
   `mupdf:scripts/mutool.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=mupdf:scripts/mutool.py>`_
   and
@@ -296,7 +317,7 @@ Installing the Python mupdf module using `pip`
 
 The Python `mupdf` module is available on the `Python Package Index (PyPI) website <https://pypi.org/>`_.
 
-* Install with: `pip install mupdf`
+* Install with `pip install mupdf`.
 * Pre-built Wheels (binary Python packages) are provided for Windows and Linux.
 * For more information on the latest release, see changelog below and: https://pypi.org/project/mupdf/
 
@@ -399,6 +420,72 @@ Changelog
 
 [Note that this is only for changes to the generation of the C++/Python/C#
 APIs; changes to the main MuPDF API are not detailed here.]
+
+
+* **2023-07-13**:
+
+  * Improved generation of extra/customised functions and methods.
+
+    Instead of adding custom C++/Python/C# code, we instead inject new C++
+    functions as though they were part of the MuPDF C API when parsing MuPDF C
+    headers. Thus customised functions are automatically wrapped and available
+    as low-level functions, class-aware functions and class methods.
+
+
+* **2023-05-02**:
+
+  * Improved implementation of Python-specific wrappers:
+
+    * Consistently use low-level wrappers to implement high-level wrappers.
+    * Added missing low-level wrappers.
+
+      * `ll_fz_buffer_storage_memoryview()`
+      * `ll_fz_fill_text2()`
+      * `ll_fz_pixmap_copy()`
+      * `ll_fz_parse_page_range_orig()`
+      * `ll_fz_format_output_path()`
+      * `ll_fz_buffer_extract()`
+      * `ll_fz_buffer_extract_copy()`
+      * `ll_fz_new_buffer_from_copied_data()`
+      * `ll_pdf_dict_getl()`
+      * `ll_pdf_dict_putl()`
+      * `ll_fz_fill_text()`
+      * `ll_fz_pixmap_samples_memoryview()`
+
+    * Renamed `mupdf.python_bytes_data()` to `mupdf.python_buffer_data()`
+      because it works on any instance that supports the Python Buffer
+      interface.
+    * Renamed `python_buffer_to_memoryview()` to
+      `fz_buffer_storage_memoryview()`, because it uses a MuPDF `fz_buffer`,
+      not a Python buffer.
+    * Added `ll_fz_pixmap_copy_raw()` for copying raw sample data directly into
+      a `fz_pixmap`.
+    * In wrappers for `pdf_dict_getl()` and `pdf_dict_putl()`, generate
+      diagnostics if variadic args are the wrong type.
+    * Renamed `fz_pixmap_samples2()` to `ll_fz_pixmap_samples_memoryview()`.
+    * Added `fz_warn()`, same as `ll_fz_wrap()`.
+
+  * Fixes for MacOS and improved finding of struct members.
+  * Give Python and C# access to arrays of floats; e.g. for `fz_stroke_state`'s
+    `float dash_list[32];`.
+  * Updated bindings to cope with recent rename `pdf_field_name()` =>
+    `pdf_load_field_name()`.
+  * `MUPDF_trace` also enables
+    `fz_clone_context()`/`fz_new_context()`/`fz_drop_context()` diagnostics.
+  * Disabled questionable diagnostics about memory leaks.
+  * In `fz_compressed_buffer` class wrapper, give access to
+    `m_internal->buffer`.
+  * If Python callback raises an exception, add a Python backtrace to the
+    exception text.
+  * Allow building with Visual Studio 2022 without VS-2019 v142 tools
+    installed. See new `--vs-upgrade 0|1` option.
+  * Also use pdf_new_*() as constructors of `fz_*` structs where applicable.
+    For example this adds `pdf_new_stext_page_from_annot()` as a constructor of
+    `fz_stext_page`.
+  * Use new `scripts/wrap/wdev.py` to find C# compiler `csc.exe` on Windows.
+  * Fixed handling of functions that return `const fz_foo*`.
+  * Use our own handling of out-params instead of SWIG.
+  * Fixes for use with libclang-16.0.0
 
 * **2023-02-14**:
 
@@ -671,209 +758,338 @@ Building the C++, Python and C# MuPDF APIs from source
 ---------------------------------------------------------------
 
 
-Special case for building Python bindings using pip
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Python bindings can be built from source and installed into a `venv
-<https://docs.python.org/3.8/library/venv.html>`_ on all platforms by using
-`pip`::
-
-    # Windows create+enter venv.
-    py -m venv pylocal
-    .\pylocal\Scripts\activate
-
-    # Unix create+enter venv.
-    python3 -m venv pylocal
-    . pylocal/bin/activate
-
-    # Upgrade pip then build and install into current venv.
-    python -m pip --upgrade pip
-    cd mupdf && python -m pip install .
-
-
 General requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Linux, Windows, or OpenBSD.
+* Windows, Linux, MacOS or OpenBSD.
 
-* Python development libraries.
+*
+  Build should take place inside a Python `venv
+  <https://docs.python.org/3.8/library/venv.html>`_.
 
-* Build inside a Python `venv <https://docs.python.org/3.8/library/venv.html>`_.
-
-* Python package `libclang` - a `Python interface
-  <https://libclang.readthedocs.io/en/latest/index.html>`_ onto the `libclang
+*
+  `libclang Python interface onto
+  <https://libclang.readthedocs.io/en/latest/index.html>`_ the `libclang
   C/C++ parser <https://clang.llvm.org/>`_.
 
-  * These instructions generally use Python's pip to install pypi.org's
-    `libclang <https://pypi.org/project/libclang/>`_.
+* `swig <https://swig.org/>`_, for Python and C# bindings.
 
-  * Other python/clang packages are available (for example pypi.org's
-    `clang <https://pypi.org/project/clang/>`_, or Debian's
-    `python-clang <https://packages.debian.org/search?keywords=python+clang&searchon=names&suite=stable&section=all>`_)
-    but often require explicit setting of
-    LD_LIBRARY_PATH to point to the correct libclang dynamic library.
-
-* `SWIG <https://swig.org/>`_ version 3 or 4.
-
-  * If only building the Python bindings, one can use pypi.org's `SWIG
-    <https://pypi.org/project/swig/>`_, installing with `python -m pip install
-    swig`. But for simplicity the instructions below will specify a generic
-    SWIG that will also generate C# bindings.
-
-* For C# on Unix, we also need `Mono <https://www.mono-project.com/>`_.
+*
+  `Mono <https://www.mono-project.com/>`_, for C# bindings on platforms
+  other than Windows.
 
 
-Setting up on Windows
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-Install Python:
-
-* Use the Python Windows installer from the python.org website: http://www.python.org/downloads
-
-* Don't use other installers such as the Microsoft Store Python package.
-
-  * If Microsoft Store Python is already installed, leave it in place and install
-    from python.org on top of it - uninstalling before running the python.org
-    installer has been known to cause problems.
-
-* A default installation is sufficient.
-
-* Debug binaries are required for debug builds of the MuPDF Python API.
-
-* If "Customize Installation" is chosen, make sure to include "py launcher" so
-  that the `py` command will be available.
-
-* Also see: https://docs.python.org/3/using/windows.html
-
-Create and enter a Python `venv
-<https://docs.python.org/3.8/library/venv.html>`_, upgrade to latest pip and
-install libclang::
-
-      py -m venv pylocal
-      .\pylocal\Scripts\activate
-      python -m pip install --upgrade pip
-      python -m pip install libclang
-
-Specifying `SWIG <https://swig.org/>`_:
-
-* When running `scripts/mupdfwrap.py`, specify `--swig-windows-auto`. This will
-  automatically download SWIG to the local directory (if not already present),
-  and use it directly.
-
-Specifying location of `devenv.com`:
-
-* `scripts/mupdfwrap.py` looks for `devenv.com` in some hard-coded locations,
-  which can be overriden with::
-
-      scripts/mupdfwrap.py -b --devenv <devenv.com-location> ...
-
-
-Setting up on Linux
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-Create and enter a Python `venv
-<https://docs.python.org/3.8/library/venv.html>`_, upgrade to latest pip and
-install libclang::
-
-      python3 -m venv pylocal
-      . pylocal/bin/activate
-      python -m pip install --upgrade pip
-      pip install libclang
-
-Install Python development libraries and `SWIG <https://swig.org/>`_ using the
-system package manager::
-
-    sudo apt install python3-dev swig
-
-If building the C# bindings, install `Mono <https://www.mono-project.com/>`_
-using the system package manager::
-
-    sudo apt install mono-devel
-
-
-Setting up on OpenBSD
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-Install Python (includes development libraries), `SWIG <https://swig.org/>`_
-and clang-python using the system package manager::
-
-      sudo pkg_add python py3-llvm swig
-
-If building the C# bindings, install `Mono <https://www.mono-project.com/>`_
-using the system package manager::
-
-      sudo pkg_add mono
-
-Notes:
-
-* `libclang` and `SWIG` cannot be installed with pip on OpenBSD - wheels are
-  not available and building from source fails. However unlike on other
-  platforms, the system python-clang package `py3-llvm` is already integrated
-  with the libclang shared library so it can be used directly.
-
-* The use of the system `py3-llvm` package means that it is not necessary to
-  use a Python venv on OpenBSD.
-
-
-Doing a build
+Setting up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Get the MuPDF source tree::
+Windows only
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-    git clone --recursive git://git.ghostscript.com/mupdf.git
+* Install Python.
 
-Build C++, Python and C# bindings and run tests:
+  *
+    Use the Python Windows installer from the python.org website:
+    http://www.python.org/downloads
 
-[`--swig-windows-auto` is only required on Windows; it will be ignored on other
-platforms.]
+  * Don't use other installers such as the Microsoft Store Python package.
 
-.. code-block:: shell
+    *
+      If Microsoft Store Python is already installed, leave it in place and install
+      from python.org on top of it - uninstalling before running the python.org
+      installer has been known to cause problems.
 
-    cd mupdf
-    ./scripts/mupdfwrap.py --swig-windows-auto -b all --test-python --test-python-gui
-    ./scripts/mupdfwrap.py --swig-windows-auto -b --csharp all --test-csharp --test-csharp-gui
+  * A default installation is sufficient.
 
-As above but do a debug build (this requires debug version of the Python
-interpreter, for example `python311_d.lib`):
+  * Debug binaries are required for debug builds of the MuPDF Python API.
 
-.. code-block:: shell
+  *
+    If "Customize Installation" is chosen, make sure to include "py launcher" so
+    that the `py` command will be available.
 
-    ./scripts/mupdfwrap.py --swig-windows-auto -d build/shared-debug -b all --test-python
+  * Also see: https://docs.python.org/3/using/windows.html
+
+*
+  Install Visual Studio 2019. Later versions may not work with MuPDF's
+  solution and build files.
+
+
+All platforms
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+* Get the latest version of MuPDF in git.
+
+  .. code-block:: shell
+
+      git clone --recursive git://git.ghostscript.com/mupdf.git
+
+*
+  Create and enter a `Python venv
+  <https://docs.python.org/3.8/library/venv.html>`_ and upgrade pip.
+
+  * Windows.
+
+    .. code-block:: bat
+
+        py -m venv pylocal
+        .\pylocal\Scripts\activate
+        python -m pip install --upgrade pip
+
+  * Linux, MacOS, OpenBSD
+
+    .. code-block:: shell
+
+        python3 -m venv pylocal
+        . pylocal/bin/activate
+        python -m pip install --upgrade pip
+
+
+Building and installing the Python bindings using `pip`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Windows, Linux, MacOS.
+
+  .. code-block:: shell
+
+      cd mupdf && pip install -vv .
+
+* OpenBSD.
+
+  Building using `pip` is not supported because `libclang` is not
+  available from pypi.org so pip will fail to install prerequisites from
+  `pypackage.toml`.
+
+
+Building the Python bindings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Windows, Linux, MacOS.
+
+  .. code-block:: shell
+
+      pip install libclang swig
+      cd mupdf && python scripts/mupdfwrap.py -b all
+
+* OpenBSD.
+
+  `libclang` is not available from pypi.org, but we can instead use
+  the system `py3-llvm` package.
+
+  .. code-block:: shell
+
+      sudo pkg_add py3-llvm
+      pip install swig
+      cd mupdf && python scripts/mupdfwrap.py -b all
+
+Building the C++ bindings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Windows, Linux, MacOS.
+
+  .. code-block:: shell
+
+      pip install libclang
+      cd mupdf && python scripts/mupdfwrap.py -b m01
+
+* OpenBSD.
+
+  `libclang` is not available from pypi.org, but we can instead use
+  the system `py3-llvm` package.
+
+  .. code-block:: shell
+
+      sudo pkg_add py3-llvm
+      cd mupdf && python scripts/mupdfwrap.py -b m01
+
+
+Building the C# bindings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Windows.
+
+  .. code-block:: shell
+
+      pip install libclang swig
+      cd mupdf && python scripts/mupdfwrap.py -b --csharp all
+
+* Linux.
+
+  .. code-block:: shell
+
+      sudo apt install mono-devel
+      pip install libclang swig
+      cd mupdf && python scripts/mupdfwrap.py -b --csharp all
+
+* MacOS.
+
+  Building the C# bindings on MacOS is not currently supported.
+
+* OpenBSD.
+
+  .. code-block:: shell
+
+      sudo pkg_add py3-llvm mono
+      pip install swig
+      cd mupdf && python scripts/mupdfwrap.py -b --csharp all
+
+
+Using the bindings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To use the bindings, one has to tell the OS where to find the MuPDF
+runtime files.
+
+* C++ and C# bindings:
+
+  * Windows.
+
+    .. code-block:: shell
+
+        set PATH=.../mupdf/build/shared-release-x64-py3.11;%PATH%
+
+    * Replace `x64` with `x32` if using 32-bit.
+
+    * Replace `3.11` with the appropriate python version number.
+
+
+  * Linux, OpenBSD.
+
+    .. code-block:: shell
+
+        LD_LIBRARY_PATH=.../mupdf/build/shared-release
+
+    (`LD_LIBRARY_PATH` must be an absolute path.)
+
+  * MacOS.
+
+    .. code-block:: shell
+
+        DYLD_LIBRARY_PATH=.../mupdf/build/shared-release
+
+* Python bindings:
+
+  If the bindings have been built and installed using `pip install`,
+  they will already be available within the venv.
+
+  Otherwise:
+
+  * Windows.
+
+    .. code-block:: shell
+
+        PYTHONPATH=.../mupdf/build/shared-release-x64-py3.11
+
+    * Replace `x64` with `x32` if using 32-bit.
+
+    * Replace `3.11` with the appropriate python version number.
+
+  * Linux, MacOS, OpenBSD.
+
+    .. code-block:: shell
+
+        PYTHONPATH=.../mupdf/build/shared-release
 
 
 Notes
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-C# build failure: `cstring.i not implemented for this target` and/or `Unknown
-directive '%cstring_output_allocate'`.
-
-* This is probably because SWIG is from pypi.org (e.g with `pip install swig`)
-  and does not include support for C#.
-
-* Solution: install SWIG using the system package manager (e.g. `sudo apt
-  install swig` on Linux, or use `./scripts/mupdfwrap.py --swig-windows-auto
-  ...` on Windows).
-
-More information
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-* Run `./scripts/mupdfwrap.py -h`.
-* Read the doc-string at beginning of `scripts/wrap/__main__.py+`.
-
-
-How building the APIs works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Building the MuPDF shared library
+* Running tests.
+
+  Basic tests can be run by appending args to the `scripts/mupdfwrap.py`
+  command.
+
+  This will also demonstrate how to set environment variables such as
+  `PYTHONPATH` or `LD_LIBRARY_PATH` to the MuPDF build directory.
+
+  * Python tests.
+
+    * `--test-python`
+    * `--test-python-gui`
+
+  * C# tests.
+
+    * `--test-csharp`
+    * `--test-csharp-gui`
+
+  * C++ tests.
+
+    * `--test-cpp`
+
+* Specifying the location of Visual Studio's `devenv.com` on Windows.
+
+  `scripts/mupdfwrap.py` looks for Visual Studio's `devenv.com` in
+  standard locations; this can be overridden with:
+
+  .. code-block:: shell
+
+      python scripts/mupdfwrap.py -b --devenv <devenv.com-location> ...
+
+* OpenBSD `libclang`.
+
+  *
+    `libclang` cannot be installed with pip on OpenBSD - wheels are not
+    available and building from source fails.
+
+    However unlike on other platforms, the system python-clang package
+    (`py3-llvm`) is integrated with the system's libclang and can be
+    used directly.
+
+    So the above examples use `pkg_add py3-llvm`.
+
+* Alternatives to Python package `libclang` generally do not work.
+
+  For example pypi.org's `clang <https://pypi.org/project/clang/>`_, or
+  Debian's `python-clang <https://packages.debian.org/search?keywords=python+clang&searchon=names&suite=stable&section=all>`_.
+
+  These are inconvenient to use because they require explicit setting of
+  `LD_LIBRARY_PATH` to point to the correct libclang dynamic library.
+
+* Debug builds.
+
+  One can specify a debug build using the `-d <build-directory>` arg
+  before `-b`.
+
+  .. code-block:: shell
+
+      python ./scripts/mupdfwrap.py -d build/shared-debug -b ...
+
+  *
+    Debug builds of the Python and C# bindings on Windows have not been
+    tested. There may be issues with requiring a debug version of the Python
+    interpreter, for example `python311_d.lib`.
+
+*
+  C# build failure: `cstring.i not implemented for this target` and/or
+  `Unknown directive '%cstring_output_allocate'`.
+
+  This is probably because SWIG does not include support for C#. This
+  has been seen in the past but as of 2023-07-19 pypi.org's default swig
+  seems ok.
+
+  A possible solution is to install SWIG using the system package
+  manager, for example `sudo apt install swig` on Linux, or use
+  `./scripts/mupdfwrap.py --swig-windows-auto ...` on Windows.
+
+
+* More information about running `scripts/mupdfwrap.py`.
+
+  * Run `python ./scripts/mupdfwrap.py -h`.
+  * Read the doc-string at beginning of `scripts/wrap/__main__.py+`.
+
+
+How `scripts/mupdfwrap.py` builds the APIs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Building the MuPDF C API
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-* On Unix, runs `make` on MuPDF's Makefile.
+* On Unix, runs `make` on MuPDF's `Makefile` with `shared=yes`.
+
 * On Windows, runs `devenv.com` on `.sln` and
   `.vcxproj` files within MuPDF's `platform/win32/
   <https://git.ghostscript.com/?p=mupdf.git;a=tree;f=platform/win32>`_
   directory.
 
-Generation of the C++ MuPDF API
+Generation of the MuPDF C++ API
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * Uses clang-python to parse MuPDF's C API.
@@ -893,14 +1109,15 @@ Generation of the C++ MuPDF API
 * Compile and link the generated C++ code to create shared libraries.
 
 
-Generation of the Python and C# MuPDF APIs
+Generation of the MuPDF Python and C# APIs
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * Uses SWIG to parse the previously-generated C++ headers and generate C++,
   Python and C# code.
 
-* Defines some custom-written Python and C# functions and methods, e.g. so that
-  out-params are returned as tuples.
+*
+  Defines some custom-written Python and C# functions and methods, for
+  example so that out-params are returned as tuples.
 
 * If SWIG is version 4+, C++ comments are converted into Python doc-comments.
 
@@ -914,7 +1131,7 @@ Build HTML documentation for the C, C++ and Python APIs (using Doxygen and pydoc
 
 .. code-block:: shell
 
-    ./scripts/mupdfwrap.py --doc all
+    python ./scripts/mupdfwrap.py --doc all
 
 This will generate the following tree:
 
@@ -928,14 +1145,18 @@ This will generate the following tree:
 
 All content is ultimately generated from the MuPDF C header file comments.
 
-As of 2022-2-5, it looks like `swig -doxygen` (swig-4.02) ignores single-line `/** ... */` comments, so the generated Python code (and hence also Pydoc documentation) is missing information.
+As of 2022-2-5, it looks like `swig -doxygen` (swig-4.02) ignores
+single-line `/** ... */` comments, so the generated Python code (and
+hence also Pydoc documentation) is missing information.
 
 Generated files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-File required at runtime are created in `mupdf/build/shared-<build>/`.
+All generated files are within the MuPDF checkout.
 
-Other intermediate generated files are created in `mupdf/platform/`
+* C++ headers for the MuPDF C++ API are in `platform/c++/include/`.
+
+* Files required at runtime are in `build/shared-release/`.
 
 **Details**
 |expand_begin|
@@ -945,7 +1166,8 @@ Other intermediate generated files are created in `mupdf/platform/`
     mupdf/
         build/
             shared-release/    [Unix runtime files.]
-                libmupdf.so    [MuPDF C API.]
+                libmupdf.so    [MuPDF C API, not MacOS.]
+                libmupdf.dylib [MuPDF C API, MacOS.]
                 libmupdfcpp.so [MuPDF C++ API.]
                 mupdf.py       [MuPDF Python API.]
                 _mupdf.so      [MuPDF Python API internals.]
@@ -955,8 +1177,9 @@ Other intermediate generated files are created in `mupdf/platform/`
             shared-debug/
                 [as shared-release but debug build.]
 
-            shared-release-x32-py3.8/   [Windows runtime files.]
-                mupdfcpp.dll            [MuPDF C and C++ API.]
+            shared-release-x*-py*/      [Windows runtime files.]
+                mupdfcpp.dll            [MuPDF C and C++ API, x32.]
+                mupdfcpp64.dll          [MuPDF C and C++ API, x64.]
                 mupdf.py                [MuPDF Python API.]
                 _mupdf.pyd              [MuPDF Python API internals.]
                 mupdf.cs                [MuPDF C# API.]
@@ -991,14 +1214,16 @@ Other intermediate generated files are created in `mupdf/platform/`
                 mupdfcpp_swig.cpp
                 mupdfcpp_swig.i
 
-        win32/
-            Release/    [Windows 32-bit .dll, .lib, .exp, .pdb etc.]
-            x64/
-                Release/    [Windows 64-bit .dll, .lib, .exp, .pdb etc.]
-                    mupdfcpp64.dll
-                    mupdfcpp64.lib
-                    mupdfpyswig.dll
-                    mupdfpyswig.lib
+            win32/
+                Release/    [Windows 32-bit .dll, .lib, .exp, .pdb etc.]
+                x64/
+                    Release/    [Windows 64-bit .dll, .lib, .exp, .pdb etc.]
+                        mupdfcpp64.dll  [Copied to build/shared-release*/mupdfcpp64.dll]
+                        mupdfpyswig.dll [Copied to build/shared-release*/_mupdf.pyd]
+                        mupdfcpp64.lib
+                        mupdfpyswig.lib
+
+            win32-vs-upgrade/   [used instead of win32/ if PYMUPDF_SETUP_MUPDF_VS_UPGRADE is '1'.]
 
 |expand_end|
 
@@ -1049,8 +1274,7 @@ otherwise we get unresolved symbols when building MuPDF client code.
 Building the DLLs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We build Windows binaries by running `devenv.com` directly. As of 2021-05-17
-the location of `devenv.com` is hard-coded in this Python script.
+We build Windows binaries by running `devenv.com` directly.
 
 Building `_mupdf.pyd` is tricky because it needs to be built with a
 specific `Python.h` and linked with a specific `python.lib`. This is
@@ -1208,8 +1432,102 @@ is constructed. In this particular case there is no need to hold on to a
 can work.
 
 
+Extra functions in C++, Python and C#
+---------------------------------------------------------------
+
+[These functions are available as low-level functions, class-aware
+functions and class methods.]
+
+.. code-block:: c++
+
+    /**
+    C++ alternative to `fz_lookup_metadata()` that returns a `std::string`
+    or calls `fz_throw()` if not found.
+    */
+    FZ_FUNCTION std::string fz_lookup_metadata2(fz_context* ctx, fz_document* doc, const char* key);
+
+    /**
+    C++ alternative to `pdf_lookup_metadata()` that returns a `std::string`
+    or calls `fz_throw()` if not found.
+    */
+    FZ_FUNCTION std::string pdf_lookup_metadata2(fz_context* ctx, pdf_document* doc, const char* key);
+
+    /**
+    C++ alternative to `fz_md5_pixmap()` that returns the digest by value.
+    */
+    FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context* ctx, fz_pixmap* pixmap);
+
+    /**
+    C++ alternative to fz_md5_final() that returns the digest by value.
+    */
+    FZ_FUNCTION std::vector<unsigned char> fz_md5_final2(fz_md5* md5);
+
+    /** */
+    FZ_FUNCTION long long fz_pixmap_samples_int(fz_context* ctx, fz_pixmap* pixmap);
+
+    /**
+    Provides simple (but slow) access to pixmap data from Python and C#.
+    */
+    FZ_FUNCTION int fz_samples_get(fz_pixmap* pixmap, int offset);
+
+    /**
+    Provides simple (but slow) write access to pixmap data from Python and
+    C#.
+    */
+    FZ_FUNCTION void fz_samples_set(fz_pixmap* pixmap, int offset, int value);
+
+    /**
+    C++ alternative to fz_highlight_selection() that returns quads in a
+    std::vector.
+    */
+    FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context* ctx, fz_stext_page* page, fz_point a, fz_point b, int max_quads);
+
+    struct fz_search_page2_hit
+    {{
+        fz_quad quad;
+        int mark;
+    }};
+
+    /**
+    C++ alternative to fz_search_page() that returns information in a std::vector.
+    */
+    FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document *doc, int number, const char *needle, int hit_max);
+
+
 Python/C# bindings details
 ---------------------------------------------------------------
+
+Extra Python functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Access to raw C arrays
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+The following functions can be used from Python to get access to raw data:
+
+*
+  `mupdf.bytes_getitem(array, index)`: Gives access to individual items
+  in an array of `unsigned char`'s, for example in the data returned by
+  `mupdf::FzPixmap`'s `samples()` method.
+
+*
+  `mupdf.floats_getitem(array, index)`: Gives access to individual items in an
+  array of `float`'s, for example in `fz_stroke_state`'s `float dash_list[32]`
+  array. Generated with SWIG code `carrays.i` and `array_functions(float,
+  floats);`.
+
+*
+  `mupdf.python_buffer_data(b)`: returns a SWIG wrapper for a `const unsigned
+  char*` pointing to a Python buffer instance's raw data. For example `b` can
+  be a Python `bytes` or `bytearray` instance.
+
+*
+  `mupdfpython_mutable_buffer_data(b)`: returns a SWIG wrapper for an `unsigned
+  char*` pointing to a Python buffer instance's raw data. For example `b` can
+  be a Python `bytearray` instance.
+
+[These functions are implemented internally using SWIG's `carrays.i` and
+`pybuffer.i`.
 
 
 Python differences from C API
@@ -1228,41 +1546,46 @@ wrap it in a systematic way.
 
 For example `Md5::fz_md5_final2()`.
 
+For all functions described below, there is also a `ll_*` variant that
+takes/returns raw MuPDF structs instead of wrapper classes.
+
 
 New functions
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * `fz_buffer_extract_copy()`: Returns copy of buffer data as a Python `bytes`.
-* `fz_buffer_storage_memoryview()`: Returns Python `memoryview` onto buffer data. Relies on buffer contents not changing.
-* `fz_pixmap_samples2()`: Returns Python `memoryview` onto `fz_pixmap` data.
+* `fz_buffer_storage_memoryview(buffer, writable)`: Returns a readonly/writable Python memoryview onto `buffer`.
+  Relies on `buffer` existing and not changing size while the memory view is used.
+* `fz_pixmap_samples_memoryview()`: Returns Python `memoryview` onto `fz_pixmap` data.
 
+* `fz_lookup_metadata2(fzdocument, key)`: Return key value or raise an exception if not found:
+* `pdf_lookup_metadata2(pdfdocument, key)`: Return key value or raise an exception if not found:
 
 Implemented in Python
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * `fz_format_output_path()`
+* `fz_story_positions()`
 * `pdf_dict_getl()`
 * `pdf_dict_putl()`
-
 
 Non-standard API or implementation
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * `fz_buffer_extract()`: Returns a *copy* of the original buffer data as a Python `bytes`. Still clears the buffer.
+* `fz_buffer_storage()`: Returns `(size, data)` where `data` is a low-level SWIG representation of the buffer's storage.
 * `fz_convert_color()`: No `float* fv` param, instead returns `(rgb0, rgb1, rgb2, rgb3)`.
 * `fz_fill_text()`: `color` arg is tuple/list of 1-4 floats.
-* `fz_new_buffer_from_copied_data()`: Takes Python `bytes` instance.
+* `fz_lookup_metadata(fzdocument, key)`: Return key value or None if not found:
+* `fz_new_buffer_from_copied_data()`: Takes a Python `bytes` (or other Python buffer) instance.
 * `fz_set_error_callback()`: Takes a Python callable; no `void* user` arg.
 * `fz_set_warning_callback()`: Takes a Python callable; no `void* user` arg.
 * `fz_warn()`: Takes single Python `str` arg.
-* `ll_fz_convert_color()`: No `float* fv` param, instead returns `(rgb0, rgb1, rgb2, rgb3)`.
-* `ll_pdf_set_annot_color()`: Takes single `color` arg which must be float or tuple of 1-4 floats.
-* `ll_pdf_set_annot_interior_color()`: Takes single `color` arg which must be float or tuple of 1-4 floats.
 * `pdf_dict_putl_drop()`: Always raises exception because not useful with automatic ref-counts.
-* `pdf_field_name()`: Uses extra C++ function `pdf_field_name2()` which returns `std::string` by value.
+* `pdf_load_field_name()`: Uses extra C++ function `pdf_load_field_name2()` which returns `std::string` by value.
+* `pdf_lookup_metadata(pdfdocument, key)`: Return key value or None if not found:
 * `pdf_set_annot_color()`: Takes single `color` arg which must be float or tuple of 1-4 floats.
 * `pdf_set_annot_interior_color()`: Takes single `color` arg which must be float or tuple of 1-4 floats.
-
 
 Making MuPDF function pointers call Python code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1317,6 +1640,19 @@ Python API:
   exception will have the original exception text, but the original Python
   backtrace is lost.
 
+
+Exceptions in callbacks
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Python exceptions in Director callbacks are propagated back through the
+language layers (from Python to C++ to C, then back to C++ and finally to
+Python).
+
+For convenience we add a text representation of the original Python backtrace
+to the exception text, but the C layer's fz_try/catch exception handling only
+holds 256 characters of exception text, so this backtrace information may be
+truncated by the time the exception reaches the original Python code's `except
+...` block.
 
 Example
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

@@ -417,6 +417,7 @@ LEPTONICA_SRC += thirdparty/leptonica/src/boxfunc4.c
 LEPTONICA_SRC += thirdparty/leptonica/src/boxfunc5.c
 LEPTONICA_SRC += thirdparty/leptonica/src/bytearray.c
 LEPTONICA_SRC += thirdparty/leptonica/src/ccbord.c
+LEPTONICA_SRC += thirdparty/leptonica/src/ccthin.c
 LEPTONICA_SRC += thirdparty/leptonica/src/classapp.c
 LEPTONICA_SRC += thirdparty/leptonica/src/colorcontent.c
 LEPTONICA_SRC += thirdparty/leptonica/src/coloring.c

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "svg-imp.h"
@@ -44,7 +44,7 @@ svg_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 }
 
 static fz_rect
-svg_bound_page(fz_context *ctx, fz_page *page_)
+svg_bound_page(fz_context *ctx, fz_page *page_, fz_box_type box)
 {
 	svg_page *page = (svg_page*)page_;
 	svg_document *doc = page->doc;
@@ -267,6 +267,55 @@ static const char *svg_mimetypes[] =
 	NULL
 };
 
+static int
+svg_recognize_doc_content(fz_context *ctx, fz_stream *stm)
+{
+	// A standalone SVG document is an XML document with an <svg> root element.
+	//
+	// Assume the document is ASCII or UTF-8.
+	//
+	// Parse the start of the file using a simplified XML parser, skipping
+	// processing instructions and comments, and stopping at the first
+	// element.
+	//
+	// Return failure on anything unexpected, or if the first element is not SVG.
+
+	int c;
+
+parse_text:
+	// Skip whitespace until "<"
+	c = fz_read_byte(ctx, stm);
+	while (c == ' ' || c == '\r' || c == '\n' || c == '\t')
+		c = fz_read_byte(ctx, stm);
+	if (c == '<')
+		goto parse_element;
+	return 0;
+
+parse_element:
+	// Either "<?...>" or "<!...>" or "<svg" or not an SVG document.
+	c = fz_read_byte(ctx, stm);
+	if (c == '!' || c == '?')
+		goto parse_comment;
+	if (c != 's')
+		return 0;
+	c = fz_read_byte(ctx, stm);
+	if (c != 'v')
+		return 0;
+	c = fz_read_byte(ctx, stm);
+	if (c != 'g')
+		return 0;
+	return 100;
+
+parse_comment:
+	// Skip everything after "<?" or "<!" until ">"
+	c = fz_read_byte(ctx, stm);
+	while (c != EOF && c != '>')
+		c = fz_read_byte(ctx, stm);
+	if (c == '>')
+		goto parse_text;
+	return 0;
+}
+
 fz_document_handler svg_document_handler =
 {
 	NULL,
@@ -275,5 +324,6 @@ fz_document_handler svg_document_handler =
 	svg_extensions,
 	svg_mimetypes,
 	NULL,
-	NULL
+	NULL,
+	svg_recognize_doc_content
 };

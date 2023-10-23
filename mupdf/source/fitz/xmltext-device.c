@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -277,6 +277,8 @@ static void fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *im
 				type = "jpeg";
 				s_write_attribute_string(ctx, dev->out, "type", type);
 				s_write_attribute_int(ctx, dev->out, "color_transform", compressed->params.u.jpeg.color_transform);
+				if (compressed->params.u.jpeg.invert_cmyk)
+					s_write_attribute_int(ctx, dev->out, "invert_cmyk", 1);
 			}
 			else if (compressed->params.type == FZ_IMAGE_JPX)
 			{

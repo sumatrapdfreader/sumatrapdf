@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -582,7 +582,7 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 				for (x = 0; x < w; x++)
 					for (k = 0; k < n; k++)
 					{
-						*dp++ = map_color(ctx, (p[1] << 8) | p[0], pnm->maxval, 255);
+						*dp++ = map_color(ctx, (p[0] << 8) | p[1], pnm->maxval, 255);
 						p += 2;
 					}
 		}
@@ -832,7 +832,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 					for (x = 0; x < w; x++)
 						for (k = 0; k < n; k++)
 						{
-							*dp++ = map_color(ctx, (p[1] << 8) | p[0], pnm->maxval, 255);
+							*dp++ = map_color(ctx, (p[0] << 8) | p[1], pnm->maxval, 255);
 							p += 2;
 						}
 			}
@@ -1008,6 +1008,8 @@ pnm_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, size_t
 			pix = pfm_binary_read_image(ctx, pnm, p, e, subonlymeta, 1, &p);
 		else
 			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported portable anymap signature (0x%02x, 0x%02x)", signature[0], signature[1]);
+
+		p = pnm_read_whites_and_eols(ctx, p, e, 0);
 
 		if (onlymeta)
 			pnm->subimages++;

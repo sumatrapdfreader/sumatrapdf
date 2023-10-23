@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_COLOR_H
 #define MUPDF_FITZ_COLOR_H
@@ -253,6 +253,18 @@ int fz_colorspace_is_lab_icc(fz_context *ctx, fz_colorspace *cs);
 	a blending space (i.e. only grey, rgb or cmyk).
 */
 int fz_is_valid_blend_colorspace(fz_context *ctx, fz_colorspace *cs);
+
+/**
+	Get the 'base' colorspace for a colorspace.
+
+	For indexed colorspaces, this is the colorspace the index
+	decodes into. For all other colorspaces, it is the colorspace
+	itself.
+
+	The returned colorspace is 'borrowed' (i.e. no additional
+	references are taken or dropped).
+*/
+fz_colorspace *fz_base_colorspace(fz_context *ctx, fz_colorspace *cs);
 
 /**
 	Retrieve global default colorspaces.

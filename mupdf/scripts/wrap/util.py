@@ -33,13 +33,13 @@ def clip( text, prefixes, suffixes=''):
 
 def update_file_regress( text, filename, check_regression):
     '''
-    Behaves like jlib.update_file(), but if check_regression is true and
+    Behaves like jlib.fs_update(), but if check_regression is true and
     <filename> already exists with different content from <text>, we show a
     diff and raise an exception.
     '''
-    text_old = jlib.update_file( text, filename, check_regression)
+    text_old = jlib.fs_update( text, filename, check_regression)
     if text_old:
-        jlib.log( 'jlib.update_file() => {len(text_old)=}. {filename=} {check_regression}')
+        jlib.log( 'jlib.fs_update() => {len(text_old)=}. {filename=} {check_regression}')
     if check_regression:
         if text_old is not None:
             # Existing content differs and <check_regression> is true.

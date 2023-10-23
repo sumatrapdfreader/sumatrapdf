@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -51,7 +51,7 @@ static fz_stream *open_dir_entry(fz_context *ctx, fz_archive *arch, const char *
 	fz_strlcpy(path, dir->path, sizeof path);
 	fz_strlcat(path, "/", sizeof path);
 	fz_strlcat(path, name, sizeof path);
-	return fz_open_file(ctx, path);
+	return fz_try_open_file(ctx, path);
 }
 
 static fz_buffer *read_dir_entry(fz_context *ctx, fz_archive *arch, const char *name)
@@ -61,7 +61,7 @@ static fz_buffer *read_dir_entry(fz_context *ctx, fz_archive *arch, const char *
 	fz_strlcpy(path, dir->path, sizeof path);
 	fz_strlcat(path, "/", sizeof path);
 	fz_strlcat(path, name, sizeof path);
-	return fz_read_file(ctx, path);
+	return fz_try_read_file(ctx, path);
 }
 
 static int has_dir_entry(fz_context *ctx, fz_archive *arch, const char *name)

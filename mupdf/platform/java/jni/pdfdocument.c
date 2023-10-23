@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* PDFDocument interface */
 
@@ -1418,6 +1418,20 @@ FUN(PDFDocument_endOperation)(JNIEnv *env, jobject self)
 		jni_rethrow_void(env, ctx);
 }
 
+JNIEXPORT void JNICALL
+FUN(PDFDocument_abandonOperation)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+
+	if (!ctx || !pdf) return;
+
+	fz_try(ctx)
+		pdf_abandon_operation(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
 JNIEXPORT jboolean JNICALL
 FUN(PDFDocument_isRedacted)(JNIEnv *env, jobject self)
 {
@@ -1626,4 +1640,138 @@ FUN(PDFDocument_getVersion)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return version;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_formatURIFromPathAndNamedDest)(JNIEnv *env, jclass cls, jstring jpath, jstring jname)
+{
+	fz_context *ctx = get_context(env);
+	char *uri = NULL;
+	jobject juri;
+	const char *path = NULL;
+	const char *name = NULL;
+
+	if (jpath)
+	{
+		path = (*env)->GetStringUTFChars(env, jpath, NULL);
+		if (!path) return NULL;
+	}
+	if (jname)
+	{
+		name = (*env)->GetStringUTFChars(env, jname, NULL);
+		if (!name) return NULL;
+	}
+
+	fz_try(ctx)
+		uri = pdf_new_uri_from_path_and_named_dest(ctx, path, name);
+	fz_always(ctx)
+	{
+		if (jname)
+			(*env)->ReleaseStringUTFChars(env, jname, name);
+		if (jpath)
+			(*env)->ReleaseStringUTFChars(env, jpath, path);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	juri = (*env)->NewStringUTF(env, uri);
+	fz_free(ctx, uri);
+	return juri;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_formatURIFromPathAndExplicitDest)(JNIEnv *env, jclass cls, jstring jpath, jobject jdest)
+{
+	fz_context *ctx = get_context(env);
+	fz_link_dest dest = from_LinkDestination(env, jdest);
+	char *uri = NULL;
+	jobject juri;
+	const char *path = NULL;
+
+	if (jpath)
+	{
+		path = (*env)->GetStringUTFChars(env, jpath, NULL);
+		if (!path) return NULL;
+	}
+
+	fz_try(ctx)
+		uri = pdf_new_uri_from_path_and_explicit_dest(ctx, path, dest);
+	fz_always(ctx)
+	{
+		if (jpath)
+			(*env)->ReleaseStringUTFChars(env, jpath, path);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	juri = (*env)->NewStringUTF(env, uri);
+	fz_free(ctx, uri);
+	return juri;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_appendNamedDestToURI)(JNIEnv *env, jclass cls, jstring jurl, jstring jname)
+{
+	fz_context *ctx = get_context(env);
+	char *uri = NULL;
+	jobject juri;
+	const char *url = NULL;
+	const char *name = NULL;
+
+	if (jurl)
+	{
+		url = (*env)->GetStringUTFChars(env, jurl, NULL);
+		if (!url) return NULL;
+	}
+	if (jname)
+	{
+		name = (*env)->GetStringUTFChars(env, jname, NULL);
+		if (!name) return NULL;
+	}
+
+	fz_try(ctx)
+		uri = pdf_append_named_dest_to_uri(ctx, url, name);
+	fz_always(ctx)
+	{
+		if (jname)
+			(*env)->ReleaseStringUTFChars(env, jname, name);
+		if (jurl)
+			(*env)->ReleaseStringUTFChars(env, jurl, url);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	juri = (*env)->NewStringUTF(env, uri);
+	fz_free(ctx, uri);
+	return juri;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_appendExplicitDestToURI)(JNIEnv *env, jclass cls, jstring jurl, jobject jdest)
+{
+	fz_context *ctx = get_context(env);
+	fz_link_dest dest = from_LinkDestination(env, jdest);
+	char *uri = NULL;
+	jobject juri;
+	const char *url = NULL;
+
+	if (jurl)
+	{
+		url = (*env)->GetStringUTFChars(env, jurl, NULL);
+		if (!url) return NULL;
+	}
+
+	fz_try(ctx)
+		uri = pdf_append_explicit_dest_to_uri(ctx, url, dest);
+	fz_always(ctx)
+	{
+		if (jurl)
+			(*env)->ReleaseStringUTFChars(env, jurl, url);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	juri = (*env)->NewStringUTF(env, uri);
+	fz_free(ctx, uri);
+	return juri;
 }

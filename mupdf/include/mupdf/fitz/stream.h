@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_STREAM_H
 #define MUPDF_FITZ_STREAM_H
@@ -54,6 +54,15 @@ typedef struct fz_stream fz_stream;
 	and Linux, the encoding they use is UTF-8 anyway).
 */
 fz_stream *fz_open_file(fz_context *ctx, const char *filename);
+
+/**
+	Open the named file and wrap it in a stream.
+
+	Does the same as fz_open_file, but in the event the file
+	does not open, it will return NULL rather than throw an
+	exception.
+*/
+fz_stream *fz_try_open_file(fz_context *ctx, const char *name);
 
 #ifdef _WIN32
 /**
@@ -136,6 +145,10 @@ int64_t fz_tell(fz_context *ctx, fz_stream *stm);
 	offset: The offset to seek to.
 
 	whence: From where the offset is measured (see fseek).
+	SEEK_SET - start of stream.
+	SEEK_CUR - current position.
+	SEEK_END - end of stream.
+
 */
 void fz_seek(fz_context *ctx, fz_stream *stm, int64_t offset, int whence);
 
@@ -181,6 +194,14 @@ fz_buffer *fz_read_all(fz_context *ctx, fz_stream *stm, size_t initial);
 fz_buffer *fz_read_file(fz_context *ctx, const char *filename);
 
 /**
+	Read all the contents of a file into a buffer.
+
+	Returns NULL if the file does not exist, otherwise
+	behaves exactly as fz_read_file.
+*/
+fz_buffer *fz_try_read_file(fz_context *ctx, const char *filename);
+
+/**
 	fz_read_[u]int(16|24|32|64)(_le)?
 
 	Read a 16/32/64 bit signed/unsigned integer from stream,
@@ -216,6 +237,27 @@ float fz_read_float(fz_context *ctx, fz_stream *stm);
 	string including the terminator into the buffer).
 */
 void fz_read_string(fz_context *ctx, fz_stream *stm, char *buffer, int len);
+
+/**
+	Read a utf-8 rune from a stream.
+
+	In the event of encountering badly formatted utf-8 codes
+	(such as a leading code with an unexpected number of following
+	codes) no error/exception is given, but undefined values may be
+	returned.
+*/
+int fz_read_rune(fz_context *ctx, fz_stream *in);
+
+/**
+	Read a utf-16 rune from a stream. (little endian and
+	big endian respectively).
+
+	In the event of encountering badly formatted utf-16 codes
+	(mismatched surrogates) no error/exception is given, but
+	undefined values may be returned.
+*/
+int fz_read_utf16_le(fz_context *ctx, fz_stream *stm);
+int fz_read_utf16_be(fz_context *ctx, fz_stream *stm);
 
 /**
 	A function type for use when implementing

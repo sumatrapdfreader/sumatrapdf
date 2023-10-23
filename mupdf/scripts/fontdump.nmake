@@ -12,11 +12,19 @@ generated\resources\fonts\sil:
 	mkdir generated\resources\fonts\sil
 generated\resources\fonts\urw:
 	mkdir generated\resources\fonts\urw
+
 generate: generated\resources\fonts\urw\Dingbats.cff.obj generated\resources\fonts\urw\Dingbats.cff.x64.obj
 generated\resources\fonts\urw\Dingbats.cff.obj: resources\fonts\urw\Dingbats.cff generated\resources\fonts\urw bin2coff.exe
 	bin2coff.exe resources\fonts\urw\Dingbats.cff generated\resources\fonts\urw\Dingbats.cff.obj _binary_Dingbats_cff
 generated\resources\fonts\urw\Dingbats.cff.x64.obj: resources\fonts\urw\Dingbats.cff generated\resources\fonts\urw bin2coff.exe
 	bin2coff.exe resources\fonts\urw\Dingbats.cff generated\resources\fonts\urw\Dingbats.cff.x64.obj _binary_Dingbats_cff 64bit
+
+generate: generated\resources\fonts\urw\NimbusBoxes-Regular.cff.obj generated\resources\fonts\urw\NimbusBoxes-Regular.cff.x64.obj
+generated\resources\fonts\urw\NimbusBoxes-Regular.cff.obj: resources\fonts\urw\NimbusBoxes-Regular.cff generated\resources\fonts\urw bin2coff.exe
+	bin2coff.exe resources\fonts\urw\NimbusBoxes-Regular.cff generated\resources\fonts\urw\NimbusBoxes-Regular.cff.obj _binary_NimbusBoxes_Regular_cff
+generated\resources\fonts\urw\NimbusBoxes-Regular.cff.x64.obj: resources\fonts\urw\NimbusBoxes-Regular.cff generated\resources\fonts\urw bin2coff.exe
+	bin2coff.exe resources\fonts\urw\NimbusBoxes-Regular.cff generated\resources\fonts\urw\NimbusBoxes-Regular.cff.x64.obj _binary_NimbusBoxes_Regular_cff 64bit
+
 generate: generated\resources\fonts\urw\NimbusMonoPS-Bold.cff.obj generated\resources\fonts\urw\NimbusMonoPS-Bold.cff.x64.obj
 generated\resources\fonts\urw\NimbusMonoPS-Bold.cff.obj: resources\fonts\urw\NimbusMonoPS-Bold.cff generated\resources\fonts\urw bin2coff.exe
 	bin2coff.exe resources\fonts\urw\NimbusMonoPS-Bold.cff generated\resources\fonts\urw\NimbusMonoPS-Bold.cff.obj _binary_NimbusMonoPS_Bold_cff

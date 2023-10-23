@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -832,7 +832,7 @@ scavenge(fz_context *ctx, size_t tofree)
 
 		for (item = store->tail; item; item = item->prev)
 		{
-			if (item->val->refs == 1)
+			if (item->val->refs == 1 && (item->val->droppable == NULL || item->val->droppable(ctx, item->val)))
 			{
 				/* This one is evictable */
 				suffix_size += item->size;

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * pdfextract -- the ultimate way to extract images and fonts from pdfs
@@ -277,7 +277,7 @@ int pdfextract_main(int argc, char **argv)
 {
 	char *infile;
 	char *password = "";
-	int c, o;
+	int c, o, ret = 0;
 
 	while ((c = fz_getopt(argc, argv, "p:raN")) != -1)
 	{
@@ -308,28 +308,40 @@ int pdfextract_main(int argc, char **argv)
 	else
 		fz_disable_icc(ctx);
 
-	doc = pdf_open_document(ctx, infile);
-	if (pdf_needs_password(ctx, doc))
-		if (!pdf_authenticate_password(ctx, doc, password))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
+	fz_var(doc);
 
-	if (fz_optind == argc)
+	fz_try(ctx)
 	{
-		int len = pdf_count_objects(ctx, doc);
-		for (o = 1; o < len; o++)
-			extractobject(o);
-	}
-	else
-	{
-		while (fz_optind < argc)
+		doc = pdf_open_document(ctx, infile);
+		if (pdf_needs_password(ctx, doc))
+			if (!pdf_authenticate_password(ctx, doc, password))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
+
+		if (fz_optind == argc)
 		{
-			extractobject(atoi(argv[fz_optind]));
-			fz_optind++;
+			int len = pdf_count_objects(ctx, doc);
+			for (o = 1; o < len; o++)
+				extractobject(o);
+		}
+		else
+		{
+			while (fz_optind < argc)
+			{
+				extractobject(atoi(argv[fz_optind]));
+				fz_optind++;
+			}
 		}
 	}
+	fz_always(ctx)
+		pdf_drop_document(ctx, doc);
+	fz_catch(ctx)
+	{
+		fz_log_error(ctx, fz_caught_message(ctx));
+		ret = 1;
+	}
 
-	pdf_drop_document(ctx, doc);
 	fz_flush_warnings(ctx);
 	fz_drop_context(ctx);
-	return 0;
+
+	return ret;
 }

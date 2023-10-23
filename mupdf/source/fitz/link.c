@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -67,13 +67,19 @@ fz_drop_link(fz_context *ctx, fz_link *link)
 int
 fz_is_external_link(fz_context *ctx, const char *uri)
 {
+	const char *mark;
 	/* Basically, this function returns true, if the URI starts with
 	 * a valid 'scheme' followed by ':'. */
+
+	 if (!uri)
+		 return 0;
 
 	/* All schemes must start with a letter; exit if we don't. */
 	if ((*uri < 'a' || *uri > 'z') && (*uri < 'A' || *uri > 'Z'))
 		return 0;
 	uri++;
+
+	mark = uri;
 
 	/* Subsequent characters can be letters, digits, +, -, or . */
 	while ((*uri >= 'a' && *uri <= 'z') ||
@@ -84,7 +90,7 @@ fz_is_external_link(fz_context *ctx, const char *uri)
 		(*uri == '.'))
 		++uri;
 
-	return uri[0] == ':';
+	return uri[0] == ':' && (uri - mark) > 1;
 }
 
 fz_link_dest fz_make_link_dest_none(void)

@@ -5,7 +5,7 @@ if (scriptArgs.length != 2) {
 	quit();
 }
 
-var doc = new PDFDocument(scriptArgs[0]);
+var doc = Document.openDocument(scriptArgs[0]);
 
 var font = new Font("zh-Hans");
 var song = doc.addCJKFont(font, "zh-Hans", "H", "serif");
@@ -25,7 +25,7 @@ var i, n = doc.countPages();
 for (i = 0; i < n; ++i) {
 	var fonts = doc.findPage(i).Resources.Font;
 	if (fonts) {
-		fonts.forEach(function (name, font) {
+		fonts.forEach(function (font, name) {
 			if (font.BaseFont in MAP && font.Encoding == 'WinAnsiEncoding')
 				fonts[name] = MAP[font.BaseFont];
 		});

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -952,8 +952,7 @@ load_sample_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 		}
 	}
 
-	obj = pdf_dict_get(ctx, dict, PDF_NAME(BitsPerSample));
-	func->u.sa.bps = bps = pdf_to_int(ctx, obj);
+	func->u.sa.bps = bps = pdf_dict_get_int(ctx, dict, PDF_NAME(BitsPerSample));
 
 	for (i = 0; i < func->m; i++)
 	{
@@ -1142,8 +1141,7 @@ load_exponential_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 		fz_warn(ctx, "exponential functions have at most one input");
 	func->m = 1;
 
-	obj = pdf_dict_get(ctx, dict, PDF_NAME(N));
-	func->u.e.n = pdf_to_real(ctx, obj);
+	func->u.e.n = pdf_dict_get_real(ctx, dict, PDF_NAME(N));
 
 	/* See exponential functions (PDF 1.7 section 3.9.2) */
 	if (func->u.e.n != (int) func->u.e.n)
@@ -1227,7 +1225,6 @@ load_stitching_func(fz_context *ctx, pdf_function *func, pdf_obj *dict, pdf_cycl
 	pdf_function **funcs;
 	pdf_obj *obj;
 	pdf_obj *sub;
-	pdf_obj *num;
 	int k;
 	int i;
 
@@ -1273,8 +1270,7 @@ load_stitching_func(fz_context *ctx, pdf_function *func, pdf_obj *dict, pdf_cycl
 
 		for (i = 0; i < k - 1; i++)
 		{
-			num = pdf_array_get(ctx, obj, i);
-			func->u.st.bounds[i] = pdf_to_real(ctx, num);
+			func->u.st.bounds[i] = pdf_array_get_real(ctx, obj, i);
 			if (i && func->u.st.bounds[i - 1] > func->u.st.bounds[i])
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "subfunction %d boundary out of range", i);
 		}
@@ -1438,8 +1434,7 @@ pdf_load_function_imp(fz_context *ctx, pdf_obj *dict, int in, int out, pdf_cycle
 	FZ_INIT_STORABLE(func, 1, pdf_drop_function_imp);
 	func->size = sizeof(*func);
 
-	obj = pdf_dict_get(ctx, dict, PDF_NAME(FunctionType));
-	func->type = pdf_to_int(ctx, obj);
+	func->type = pdf_dict_get_int(ctx, dict, PDF_NAME(FunctionType));
 
 	/* required for all */
 	obj = pdf_dict_get(ctx, dict, PDF_NAME(Domain));

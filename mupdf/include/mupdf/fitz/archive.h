@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_ARCHIVE_H
 #define MUPDF_FITZ_ARCHIVE_H
@@ -61,6 +61,15 @@ fz_archive *fz_open_archive(fz_context *ctx, const char *filename);
 	opening a file or directory on disk.
 */
 fz_archive *fz_open_archive_with_stream(fz_context *ctx, fz_stream *file);
+
+/**
+	Open zip or tar archive stream.
+
+	Does the same as fz_open_archive_with_stream, but will not throw
+	an error in the event of failing to recognise the format. Will
+	still throw errors in other cases though!
+*/
+fz_archive *fz_try_open_archive_with_stream(fz_context *ctx, fz_stream *file);
 
 /**
 	Open a directory as if it was an archive.
@@ -150,6 +159,14 @@ int fz_has_archive_entry(fz_context *ctx, fz_archive *arch, const char *name);
 fz_stream *fz_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name);
 
 /**
+	Opens an archive entry as a stream.
+
+	Returns NULL if a matching entry cannot be found, otherwise
+	behaves exactly as fz_open_archive_entry.
+*/
+fz_stream *fz_try_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name);
+
+/**
 	Reads all bytes in an archive entry
 	into a buffer.
 
@@ -159,6 +176,18 @@ fz_stream *fz_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *
 	Throws an exception if a matching entry cannot be found.
 */
 fz_buffer *fz_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name);
+
+/**
+	Reads all bytes in an archive entry
+	into a buffer.
+
+	name: Entry name to look for, this must be an exact match to
+	the entry name in the archive.
+
+	Returns NULL if a matching entry cannot be found. Otherwise behaves
+	the same as fz_read_archive_entry. Exceptions may be thrown.
+*/
+fz_buffer *fz_try_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name);
 
 /**
 	fz_archive: tar implementation

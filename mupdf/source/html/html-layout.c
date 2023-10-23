@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
@@ -261,7 +261,7 @@ static int walk_string(string_walker *walker)
 			hb_buffer_set_language(walker->hb_buf, hb_language_from_string(lang, (int)strlen(lang)));
 			Memento_stopLeaking(); /* HarfBuzz leaks harmlessly */
 		}
-		/* hb_buffer_set_cluster_level(hb_buf, HB_BUFFER_CLUSTER_LEVEL_CHARACTERS); */
+		hb_buffer_set_cluster_level(walker->hb_buf, HB_BUFFER_CLUSTER_LEVEL_CHARACTERS);
 
 		hb_buffer_add_utf8(walker->hb_buf, walker->start, walker->end - walker->start, 0, -1);
 
@@ -1065,6 +1065,12 @@ static void layout_table_row(fz_context *ctx, layout_data *ld, fz_html_box *row,
 		++col;
 	}
 
+	/* For each cell in the row - adjust final cell heights to fill the row */
+	for (cell = row->down; cell; cell = cell->next)
+	{
+		cell->s.layout.b = row->s.layout.b - (cell->u.block.padding[B] + cell->u.block.border[B]);
+	}
+
 	ld->restart = save_restart;
 }
 
@@ -1244,7 +1250,7 @@ static void layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 					if (restart)
 					{
 						restart->end = row;
-						return;
+						goto exit;
 					}
 					else
 					{
@@ -1256,6 +1262,7 @@ static void layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 
 			box->s.layout.b = row->s.layout.b + spacing;
 		}
+		exit:;
 	}
 	fz_always(ctx)
 		fz_free(ctx, colw);

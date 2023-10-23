@@ -69,36 +69,36 @@ def clean_usage():
 def clean(argv):
     outfile = 'out.pdf'
     password = ''
-    opts = mupdf.PdfWriteOptions()
-    print( 'opts.do_garbage=%s' % opts.do_garbage)
-    opts.do_garbage += 1
-    print( 'opts.do_garbage=%s' % opts.do_garbage)
+    opts = mupdf.PdfCleanOptions()
+    print( 'opts.do_garbage=%s' % opts.write.do_garbage)
+    opts.write.do_garbage += 1
+    print( 'opts.do_garbage=%s' % opts.write.do_garbage)
     errors = 0
     items, argv = getopt.getopt( argv, 'adfgilp:sczDAE:O:U:P:')
     for option, value in items:
          print( f'option={option} value={value}')
          if 0:   pass   # lgtm [py/unreachable-statement]
          elif option == '-p': password = value
-         elif option == '-d': opts.do_decompress += 1
-         elif option == '-z': opts.do_compress += 1
-         elif option == '-f': opts.do_compress_fonts += 1
-         elif option == '-i': opts.do_compress_images += 1
-         elif option == '-a': opts.do_ascii += 1
-         elif option == '-g': opts.do_garbage += 1
-         elif option == '-l': opts.do_linear += 1
-         elif option == '-c': opts.do_clean += 1
-         elif option == '-s': opts.do_sanitize += 1
-         elif option == '-A': opts.do_appearance += 1
-         elif option == '-D': opts.do_encrypt = PDF_ENCRYPT_NONE
-         elif option == '-E': opts.do_encrypt = encrypt_method_from_string(value)
-         elif option == '-P': opts.permissions = int(value)
-         elif option == '-O': opts.opwd_utf8 = value[:128]
-         elif option == '-U': opts.upwd_utf8 = value[:128]
+         elif option == '-d': opts.write.do_decompress += 1
+         elif option == '-z': opts.write.do_compress += 1
+         elif option == '-f': opts.write.do_compress_fonts += 1
+         elif option == '-i': opts.write.do_compress_images += 1
+         elif option == '-a': opts.write.do_ascii += 1
+         elif option == '-g': opts.write.do_garbage += 1
+         elif option == '-l': opts.write.do_linear += 1
+         elif option == '-c': opts.write.do_clean += 1
+         elif option == '-s': opts.write.do_sanitize += 1
+         elif option == '-A': opts.write.do_appearance += 1
+         elif option == '-D': opts.write.do_encrypt = PDF_ENCRYPT_NONE
+         elif option == '-E': opts.write.do_encrypt = encrypt_method_from_string(value)
+         elif option == '-P': opts.write.permissions = int(value)
+         elif option == '-O': opts.write.opwd_utf8 = value[:128]
+         elif option == '-U': opts.write.upwd_utf8 = value[:128]
          else:
             clean_usage()
 
-    if (opts.do_ascii or opts.do_decompress) and not opts.do_compress:
-        opts.do_pretty = 1
+    if (opts.write.do_ascii or opts.write.do_decompress) and not opts.write.do_compress:
+        opts.write.do_pretty = 1
 
     if not argv:
         clean_usage()

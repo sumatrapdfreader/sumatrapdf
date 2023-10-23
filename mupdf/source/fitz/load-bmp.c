@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -932,15 +932,18 @@ static const unsigned char *
 bmp_read_palette(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
 {
 	int i, expected, present, entry_size;
-	const unsigned char *bitmap;
 
 	entry_size = palette_entry_size(info);
-	bitmap = begin + info->bitmapoffset;
 
-	expected = fz_mini(info->colors, 1 << info->bitcount);
-	if (expected == 0)
-		expected = 1 << info->bitcount;
-	present = fz_mini(expected, (bitmap - p) / entry_size);
+	if (info->colors == 0)
+		expected = info->colors = 1 << info->bitcount;
+	else
+		expected = fz_mini(info->colors, 1 << info->bitcount);
+
+	if (info->bitmapoffset == 0)
+		present = fz_mini(expected, (end - p) / entry_size);
+	else
+		present = fz_mini(expected, (begin + info->bitmapoffset - p) / entry_size);
 
 	for (i = 0; i < present; i++)
 	{
@@ -1099,15 +1102,17 @@ bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, c
 
 	p = bmp_read_info_header(ctx, info, begin, end, p);
 
+	/* clamp bitmap offset to buffer size */
+	if (info->bitmapoffset < (uint32_t)(p - begin))
+		info->bitmapoffset = 0;
+	if ((uint32_t)(end - begin) < info->bitmapoffset)
+		info->bitmapoffset = end - begin;
+
 	if (has_palette(info))
 		p = bmp_read_palette(ctx, info, begin, end, p);
 
 	if (has_color_masks(info))
 		p = bmp_read_color_masks(ctx, info, begin, end, p);
-
-	/* clamp bitmap offset to buffer size */
-	if ((uint32_t)(end - begin) < info->bitmapoffset)
-		info->bitmapoffset = end - begin;
 
 	info->xres = DPM_TO_DPI(info->xres);
 	info->yres = DPM_TO_DPI(info->yres);
@@ -1257,7 +1262,15 @@ fz_load_bmp_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int 
 	{
 		p = begin + nextoffset;
 
-		if (is_bitmap_array(p))
+		if (end - p < 14)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "not enough data for bitmap array (%02x%02x) in bmp image", p[0], p[1]);
+
+		if (!is_bitmap_array(p))
+		{
+			fz_warn(ctx, "treating invalid subimage as end of file");
+			nextoffset = 0;
+		}
+		else
 		{
 			/* read16(p+0) == type */
 			/* read32(p+2) == size of this header in bytes */
@@ -1266,16 +1279,14 @@ fz_load_bmp_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int 
 			/* read16(p+12) == suitable pely dimensions */
 			p += 14;
 		}
-		else if (nextoffset > 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected bitmap array magic (%02x%02x) in bmp image", p[0], p[1]);
 
 		if (end - begin < nextoffset)
 		{
 			fz_warn(ctx, "treating invalid next subimage offset as end of file");
 			nextoffset = 0;
 		}
-
-		subimage--;
+		else
+			subimage--;
 
 	} while (subimage >= 0 && nextoffset > 0);
 
@@ -1297,14 +1308,22 @@ fz_load_bmp_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len
 {
 	const unsigned char *begin = buf;
 	const unsigned char *end = buf + len;
-	int nextoffset = 0;
+	uint32_t nextoffset = 0;
 	int count = 0;
 
 	do
 	{
 		const unsigned char *p = begin + nextoffset;
 
-		if (is_bitmap_array(p))
+		if (end - p < 14)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "not enough data for bitmap array in bmp image");
+
+		if (!is_bitmap_array(p))
+		{
+			fz_warn(ctx, "treating invalid subimage as end of file");
+			nextoffset = 0;
+		}
+		else
 		{
 			/* read16(p+0) == type */
 			/* read32(p+2) == size of this header in bytes */
@@ -1313,16 +1332,14 @@ fz_load_bmp_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len
 			/* read16(p+12) == suitable pely dimensions */
 			p += 14;
 		}
-		else if (nextoffset > 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected bitmap array magic (%02x%02x) in bmp image", p[0], p[1]);
 
 		if (end - begin < nextoffset)
 		{
 			fz_warn(ctx, "treating invalid next subimage offset as end of file");
 			nextoffset = 0;
 		}
-
-		count++;
+		else
+			count++;
 
 	} while (nextoffset > 0);
 

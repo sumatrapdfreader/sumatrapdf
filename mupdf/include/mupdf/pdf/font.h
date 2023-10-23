@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_FONT_H
 #define MUPDF_PDF_FONT_H
@@ -153,7 +153,7 @@ pdf_obj *pdf_add_cjk_font(fz_context *ctx, pdf_document *doc, fz_font *font, int
 */
 pdf_obj *pdf_add_substitute_font(fz_context *ctx, pdf_document *doc, fz_font *font);
 
-int pdf_font_writing_supported(fz_font *font);
+int pdf_font_writing_supported(fz_context *ctx, fz_font *font);
 
 fz_buffer *fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font);
 

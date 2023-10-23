@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -14,7 +14,6 @@ Third Party Libraries Used by :title:`MuPDF`
 
 These are the third party libraries used by :title:`MuPDF`.
 
-
 .. list-table::
    :header-rows: 1
 
@@ -27,11 +26,11 @@ These are the third party libraries used by :title:`MuPDF`.
      -
      -
    * - freetype_
-     - 2.12.1
+     - 2.13.0
      - Font scaling and rendering
      - BSD-style
    * - harfbuzz_
-     - 5.3.0
+     - 6.0.0
      - Text shaping
      - MIT-style
    * - libjpeg_
@@ -105,5 +104,5 @@ These are the third party libraries used by :title:`MuPDF`.
 .. _JPEG-XR reference: https://www.itu.int/rec/T-REC-T.835/
 .. _Tesseract: https://tesseract-ocr.github.io/
 .. _Leptonica: https://github.com/DanBloomberg/leptonica
-.. _jbig2dec: http://jbig2dec.com/
-.. _MuJS: http://mujs.com/
+.. _jbig2dec: https://jbig2dec.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link
+.. _MuJS: https://mujs.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link

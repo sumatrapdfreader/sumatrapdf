@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -44,6 +44,7 @@ int snprintf(char *s, size_t n, const char *fmt, ...)
 #endif
 
 static const char *fz_hex_digits = "0123456789abcdef";
+static const char *fz_hex_digits_UC = "0123456789ABCDEF";
 
 struct fmtbuf
 {
@@ -123,12 +124,19 @@ static void fmtuint32(struct fmtbuf *out, unsigned int a, int s, int z, int w, i
 {
 	char buf[40];
 	int i;
+	const char *hex_digits = fz_hex_digits;
+
+	if (base < 0)
+	{
+		base = -base;
+		hex_digits = fz_hex_digits_UC;
+	}
 
 	i = 0;
 	if (a == 0)
 		buf[i++] = '0';
 	while (a) {
-		buf[i++] = fz_hex_digits[a % base];
+		buf[i++] = hex_digits[a % base];
 		a /= base;
 	}
 	if (s) {
@@ -147,12 +155,19 @@ static void fmtuint64(struct fmtbuf *out, uint64_t a, int s, int z, int w, int b
 {
 	char buf[80];
 	int i;
+	const char *hex_digits = fz_hex_digits;
+
+	if (base < 0)
+	{
+		base = -base;
+		hex_digits = fz_hex_digits_UC;
+	}
 
 	i = 0;
 	if (a == 0)
 		buf[i++] = '0';
 	while (a) {
-		buf[i++] = fz_hex_digits[a % base];
+		buf[i++] = hex_digits[a % base];
 		a /= base;
 	}
 	if (s) {
@@ -485,6 +500,18 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				{
 					i32 = va_arg(args, int);
 					fmtuint32(&out, i32, 0, z, w, 16);
+				}
+				break;
+			case 'X':
+				if (bits == 64)
+				{
+					i64 = va_arg(args, int64_t);
+					fmtuint64(&out, i64, 0, z, w, -16);
+				}
+				else
+				{
+					i32 = va_arg(args, int);
+					fmtuint32(&out, i32, 0, z, w, -16);
 				}
 				break;
 			case 'd':

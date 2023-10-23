@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * PDF cleaning tool: general purpose pdf syntax washer.
@@ -56,13 +56,19 @@ static int usage(void)
 		"\t-a\tascii hex encode binary streams\n"
 		"\t-d\tdecompress streams\n"
 		"\t-z\tdeflate uncompressed streams\n"
+		"\t-e -\tcompression \"effort\" (0 = default, 1 = min, 100 = max)\n"
 		"\t-f\tcompress font streams\n"
 		"\t-i\tcompress image streams\n"
 		"\t-c\tclean content streams\n"
 		"\t-s\tsanitize content streams\n"
+		"\t-t\t'tighten' objects\n"
 		"\t-A\tcreate appearance streams for annotations\n"
 		"\t-AA\trecreate appearance streams for annotations\n"
 		"\t-m\tpreserve metadata\n"
+		"\t-Z\tuse objstms if possible for extra compression\n"
+		"\t--{color,gray,bitonal}-{,lossy-,lossless-}image-subsample-method -\n\t\taverage, bicubic\n"
+		"\t--{color,gray,bitonal}-{,lossy-,lossless-}image-subsample-dpi -[,-]\n\t\tDPI at which to subsample [+ target dpi]\n"
+		"\t--{color,gray,bitonal}-{,lossy-,lossless-}image-recompress-method -[:quality]\n\t\tnever, same, lossless, jpeg, j2k, fax, jbig2\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
 	return 1;
@@ -83,42 +89,155 @@ int pdfclean_main(int argc, char **argv)
 	char *outfile = "out.pdf";
 	char *password = "";
 	int c;
-	pdf_write_options opts = pdf_default_write_options;
+	int tighten = 0;
+	pdf_clean_options opts = { 0 };
 	int errors = 0;
 	fz_context *ctx;
+	const fz_getopt_long_options longopts[] =
+	{
+		{ "color-lossy-image-subsample-method=average|bicubic", &opts.image.color_lossy_image_subsample_method, (void *)1 },
+		{ "color-lossless-image-subsample-method=average|bicubic", &opts.image.color_lossless_image_subsample_method, (void *)2 },
+		{ "color-image-subsample-method=average|bicubic", &opts.image.color_lossy_image_subsample_method, (void *)3 },
+		{ "color-lossy-image-subsample-dpi:", &opts.image.color_lossy_image_subsample_threshold, (void *)4 },
+		{ "color-lossless-image-subsample-dpi:", &opts.image.color_lossless_image_subsample_threshold, (void *)5 },
+		{ "color-image-subsample-dpi:", &opts.image.color_lossless_image_subsample_threshold, (void *)6 },
+		{ "color-lossy-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.color_lossy_image_recompress_method, (void *)7 },
+		{ "color-lossless-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.color_lossless_image_recompress_method, (void *)8 },
+		{ "color-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.color_lossless_image_recompress_method, (void *)9 },
 
-	opts.dont_regenerate_id = 1;
+		{ "gray-lossy-image-subsample-method=average|bicubic", &opts.image.gray_lossy_image_subsample_method, (void *)10 },
+		{ "gray-lossless-image-subsample-method=average|bicubic", &opts.image.gray_lossless_image_subsample_method, (void *)11 },
+		{ "gray-image-subsample-method=average|bicubic", &opts.image.gray_lossy_image_subsample_method, (void *)12 },
+		{ "gray-lossy-image-subsample-dpi:", &opts.image.gray_lossy_image_subsample_threshold, (void *)13 },
+		{ "gray-lossless-image-subsample-dpi:", &opts.image.gray_lossless_image_subsample_threshold, (void *)14 },
+		{ "gray-image-subsample-dpi:", &opts.image.gray_lossless_image_subsample_threshold, (void *)15 },
+		{ "gray-lossy-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.gray_lossy_image_recompress_method, (void *)16 },
+		{ "gray-lossless-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.gray_lossless_image_recompress_method, (void *)17 },
+		{ "gray-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.gray_lossless_image_recompress_method, (void *)18 },
 
-	while ((c = fz_getopt(argc, argv, "adfgilp:sczDAE:O:U:P:m")) != -1)
+		{ "bitonal-image-subsample-method=average|bicubic", &opts.image.bitonal_image_subsample_method, (void *)19 },
+		{ "bitonal-image-subsample-dpi:", &opts.image.bitonal_image_subsample_threshold, (void *)20 },
+		{ "bitonal-image-recompress-method=never|same|lossless|jpeg:|j2k:|fax|jbig2", &opts.image.bitonal_image_recompress_method, (void *)21 },
+
+		{ NULL, NULL, NULL }
+	};
+
+
+	opts.write = pdf_default_write_options;
+	opts.write.dont_regenerate_id = 1;
+
+	while ((c = fz_getopt_long(argc, argv, "ade:fgilmp:stczDAE:O:U:P:Z", longopts)) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 
-		case 'd': opts.do_decompress += 1; break;
-		case 'z': opts.do_compress += 1; break;
-		case 'f': opts.do_compress_fonts += 1; break;
-		case 'i': opts.do_compress_images += 1; break;
-		case 'a': opts.do_ascii += 1; break;
-		case 'g': opts.do_garbage += 1; break;
-		case 'l': opts.do_linear += 1; break;
-		case 'c': opts.do_clean += 1; break;
-		case 's': opts.do_sanitize += 1; break;
-		case 'A': opts.do_appearance += 1; break;
+		case 'd': opts.write.do_decompress += 1; break;
+		case 'z': opts.write.do_compress += 1; break;
+		case 'f': opts.write.do_compress_fonts += 1; break;
+		case 'i': opts.write.do_compress_images += 1; break;
+		case 'a': opts.write.do_ascii += 1; break;
+		case 'e': opts.write.compression_effort = fz_atoi(fz_optarg); break;
+		case 'g': opts.write.do_garbage += 1; break;
+		case 'l': opts.write.do_linear += 1; break;
+		case 'c': opts.write.do_clean += 1; break;
+		case 's': opts.write.do_sanitize += 1; break;
+		case 't': tighten = 1; break;
+		case 'A': opts.write.do_appearance += 1; break;
 
-		case 'D': opts.do_encrypt = PDF_ENCRYPT_NONE; break;
-		case 'E': opts.do_encrypt = encrypt_method_from_string(fz_optarg); break;
-		case 'P': opts.permissions = fz_atoi(fz_optarg); break;
-		case 'O': fz_strlcpy(opts.opwd_utf8, fz_optarg, sizeof opts.opwd_utf8); break;
-		case 'U': fz_strlcpy(opts.upwd_utf8, fz_optarg, sizeof opts.upwd_utf8); break;
-		case 'm': opts.do_preserve_metadata = 1; break;
+		case 'D': opts.write.do_encrypt = PDF_ENCRYPT_NONE; break;
+		case 'E': opts.write.do_encrypt = encrypt_method_from_string(fz_optarg); break;
+		case 'P': opts.write.permissions = fz_atoi(fz_optarg); break;
+		case 'O': fz_strlcpy(opts.write.opwd_utf8, fz_optarg, sizeof opts.write.opwd_utf8); break;
+		case 'U': fz_strlcpy(opts.write.upwd_utf8, fz_optarg, sizeof opts.write.upwd_utf8); break;
+		case 'm': opts.write.do_preserve_metadata = 1; break;
+		case 'Z': opts.write.do_use_objstms = 1; break;
+		case 0:
+		{
+			switch((int)(intptr_t)fz_optlong->opaque)
+			{
+			default:
+			case 0:
+				assert(!"Never happens");
+				break;
 
+			case 1: /* color-lossy-image-subsample-method */
+			case 2: /* color-lossless-image-subsample-method */
+				break;
+			case 3: /* color-image-subsample-method */
+				opts.image.color_lossless_image_subsample_method = opts.image.color_lossy_image_subsample_method;
+				break;
+			case 4: /* color-lossy-image-subsample-dpi */
+				opts.image.color_lossy_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.color_lossy_image_subsample_threshold);
+				break;
+			case 5: /* color-lossless-image-subsample-dpi */
+				opts.image.color_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.color_lossless_image_subsample_threshold);
+				break;
+			case 6: /* color-image-subsample-dpi */
+				opts.image.color_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.color_lossless_image_subsample_threshold);
+				opts.image.color_lossy_image_subsample_threshold = opts.image.color_lossless_image_subsample_threshold;
+				opts.image.color_lossy_image_subsample_to = opts.image.color_lossless_image_subsample_to;
+				break;
+			case 7: /* color-lossy-image-recompress-method */
+				opts.image.color_lossless_image_recompress_quality = fz_optarg;
+				break;
+			case 8: /* color-lossless-image-recompress-method */
+				opts.image.color_lossy_image_recompress_quality = fz_optarg;
+				break;
+			case 9: /* color-image-recompress-method */
+				opts.image.color_lossless_image_recompress_quality = fz_optarg;
+				opts.image.color_lossy_image_recompress_method = opts.image.color_lossless_image_recompress_method;
+				opts.image.color_lossy_image_recompress_quality = opts.image.color_lossless_image_recompress_quality;
+				break;
+
+			case 10: /* gray-lossy-image-subsample-method */
+			case 11: /* gray-lossless-image-subsample-method */
+				break;
+			case 12: /* gray-image-subsample-method */
+				opts.image.gray_lossless_image_subsample_method = opts.image.gray_lossy_image_subsample_method;
+				break;
+			case 13: /* gray-lossy-image-subsample-dpi */
+				opts.image.gray_lossy_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossless_image_subsample_threshold);
+				break;
+			case 14: /* gray-lossless-image-subsample-dpi */
+				opts.image.gray_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossless_image_subsample_threshold);
+				break;
+			case 15: /* gray-image-subsample-dpi */
+				opts.image.gray_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossy_image_subsample_threshold);
+				opts.image.gray_lossy_image_subsample_threshold = opts.image.gray_lossless_image_subsample_threshold;
+				opts.image.gray_lossy_image_subsample_to = opts.image.gray_lossless_image_subsample_to;
+				break;
+			case 16: /* gray-lossy-image-recompress-method */
+				opts.image.gray_lossless_image_recompress_quality = fz_optarg;
+				break;
+			case 17: /* gray-lossless-image-recompress-method */
+				opts.image.gray_lossy_image_recompress_quality = fz_optarg;
+				break;
+			case 18: /* gray-image-recompress-method */
+				opts.image.gray_lossless_image_recompress_quality = fz_optarg;
+				opts.image.gray_lossy_image_recompress_method = opts.image.gray_lossless_image_recompress_method;
+				opts.image.gray_lossy_image_recompress_quality = opts.image.gray_lossless_image_recompress_quality;
+				break;
+
+			case 19: /* bitonal-image-subsample-method */
+				break;
+			case 20: /* bitonal-image-subsample-dpi */
+				opts.image.bitonal_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.bitonal_image_subsample_threshold);
+				break;
+			case 21: /* bitonal-image-recompress-method */
+				opts.image.bitonal_image_recompress_quality = fz_optarg;
+				if (fz_optarg)
+					return usage();
+				break;
+			}
+			break;
+		}
 		default: return usage();
 		}
 	}
 
-	if ((opts.do_ascii || opts.do_decompress) && !opts.do_compress)
-		opts.do_pretty = 1;
+	if ((opts.write.do_ascii || opts.write.do_decompress) && !opts.write.do_compress)
+		opts.write.do_pretty = !tighten;
 
 	if (argc - fz_optind < 1)
 		return usage();
@@ -144,6 +263,7 @@ int pdfclean_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
+		fz_log_error(ctx, fz_caught_message(ctx));
 		errors++;
 	}
 	fz_drop_context(ctx);

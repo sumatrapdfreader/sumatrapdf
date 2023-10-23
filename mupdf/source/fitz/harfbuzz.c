@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * Some additional glue functions for using Harfbuzz with
@@ -139,7 +139,7 @@ static fz_context *get_hb_context(void)
 
 void fz_hb_lock(fz_context *ctx)
 {
-	fz_lock(ctx, FZ_LOCK_FREETYPE);
+	fz_ft_lock(ctx);
 
 	set_hb_context(ctx);
 }
@@ -148,7 +148,7 @@ void fz_hb_unlock(fz_context *ctx)
 {
 	set_hb_context(NULL);
 
-	fz_unlock(ctx, FZ_LOCK_FREETYPE);
+	fz_ft_unlock(ctx);
 }
 
 void *fz_hb_malloc(size_t size)

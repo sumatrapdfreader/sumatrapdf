@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -279,6 +279,15 @@ int fz_is_valid_blend_colorspace(fz_context *ctx, fz_colorspace *cs)
 		cs->type == FZ_COLORSPACE_GRAY ||
 		cs->type == FZ_COLORSPACE_RGB ||
 		cs->type == FZ_COLORSPACE_CMYK;
+}
+
+fz_colorspace *fz_base_colorspace(fz_context *ctx, fz_colorspace *cs)
+{
+	if (cs == NULL)
+		return NULL;
+	if (cs->type == FZ_COLORSPACE_INDEXED)
+		return cs->u.indexed.base;
+	return cs;
 }
 
 fz_colorspace *
@@ -581,7 +590,8 @@ fz_clamp_color(fz_context *ctx, fz_colorspace *cs, const float *in, float *out)
 	}
 	else if (cs->type == FZ_COLORSPACE_INDEXED)
 	{
-		out[0] = fz_clamp(in[0], 0, cs->u.indexed.high) / 255.0f;
+		/* round color index to integer before rescaling to hival */
+		out[0] = fz_clamp((int)(in[0]+0.5), 0, cs->u.indexed.high) / 255.0f;
 	}
 	else
 	{
@@ -1126,40 +1136,545 @@ void fz_fin_cached_color_converter(fz_context *ctx, fz_color_converter *cc_)
 
 /* Pixmap color conversion */
 
-void
-fz_convert_slow_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params, int copy_spots)
+static inline void
+template_convert_lab(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params, int sa, int da, int spots)
 {
 	float srcv[FZ_MAX_COLORS];
 	float dstv[FZ_MAX_COLORS];
-	int srcn, dstn;
-	int k, i;
 	size_t w = src->w;
 	int h = src->h;
-	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
-	ptrdiff_t s_line_inc = src->stride - w * src->n;
-	int da = dst->alpha;
-	int sa = src->alpha;
-	int alpha = 255;
-
-	fz_colorspace *ss = src->colorspace;
-	fz_colorspace *ds = dst->colorspace;
+	fz_colorspace *src_cs = src->colorspace;
+	fz_colorspace *dst_cs = dst->colorspace;
 
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
 
+	int src_n = spots ? src->n : 3+sa;
+	int dst_c = dst->n - (spots ? dst->s : 0) - da;
+	int dst_n = dst->n;
+
+	fz_color_converter cc;
+	int alpha = 255;
+	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
+	ptrdiff_t s_line_inc = src->stride - w * src->n;
+
+	int k;
+
+	fz_find_color_converter(ctx, &cc, src_cs, dst_cs, is, params);
+	while (h--)
+	{
+		size_t ww = w;
+		while (ww--)
+		{
+			if (sa)
+			{
+				alpha = s[4];
+				srcv[0] = fz_div255(s[0], alpha) / 255.0f * 100;
+				srcv[1] = fz_div255(s[1], alpha) - 128;
+				srcv[2] = fz_div255(s[2], alpha) - 128;
+			}
+			else
+			{
+				srcv[0] = s[0] / 255.0f * 100;
+				srcv[1] = s[1] - 128;
+				srcv[2] = s[2] - 128;
+			}
+			s += src_n;
+
+			cc.convert(ctx, &cc, srcv, dstv);
+
+			if (da)
+			{
+				for (k = 0; k < dst_c; k++)
+					*d++ = fz_mul255(dstv[k] * 255, alpha);
+				/* Just fill in spots as empty */
+				if (spots)
+					for (; k < dst_n; k++)
+						*d++ = 0;
+				*d++ = alpha;
+			}
+			else
+			{
+				for (k = 0; k < dst_c; k++)
+					*d++ = dstv[k] * 255;
+				if (spots)
+					for (; k < dst_n; k++)
+						*d++ = 0;
+			}
+		}
+		d += d_line_inc;
+		s += s_line_inc;
+	}
+	fz_drop_color_converter(ctx, &cc);
+}
+
+static void convert_lab(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 0, 0, 0);
+}
+
+static void convert_lab_sa(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 1, 0, 0);
+}
+
+static void convert_lab_da(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 0, 1, 0);
+}
+
+static void convert_lab_sa_da(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 1, 1, 0);
+}
+
+static void convert_lab_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 0, 0, 1);
+}
+
+static void convert_lab_sa_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 1, 0, 1);
+}
+
+static void convert_lab_da_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 0, 1, 1);
+}
+
+static void convert_lab_sa_da_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_convert_lab(ctx, src, dst, is, params, 1, 1, 1);
+}
+
+static inline void
+template_brute_force(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params, int sa, int da, int spots)
+{
+	float srcv[FZ_MAX_COLORS];
+	float dstv[FZ_MAX_COLORS];
+	size_t w = src->w;
+	int h = src->h;
+	fz_colorspace *src_cs = src->colorspace;
+	fz_colorspace *dst_cs = dst->colorspace;
+
+	unsigned char *s = src->samples;
+	unsigned char *d = dst->samples;
+
+	int src_c = src->n - (spots ? src->s : 0) - sa;
+	int src_n = src->n;
+	int dst_c = dst->n - (spots ? dst->s : 0) - da;
+	int dst_n = dst->n;
+
+	fz_color_converter cc;
+	int alpha = 255;
+	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
+	ptrdiff_t s_line_inc = src->stride - w * src->n;
+
+	int k;
+
+	fz_find_color_converter(ctx, &cc, src_cs, dst_cs, is, params);
+	while (h--)
+	{
+		size_t ww = w;
+		while (ww--)
+		{
+			if (sa)
+			{
+				alpha = s[src_n];
+				for (k = 0; k < src_c; k++)
+					srcv[k] = fz_div255(s[k], alpha) / 255.0f;
+			}
+			else
+			{
+				for (k = 0; k < src_c; k++)
+					srcv[k] = s[k] / 255.0f;
+			}
+			s += src_n;
+
+			cc.convert(ctx, &cc, srcv, dstv);
+
+			if (da)
+			{
+				for (k = 0; k < dst_c; k++)
+					*d++ = fz_mul255(dstv[k] * 255, alpha);
+				if (spots)
+					for (; k < dst_n; k++)
+						*d++ = 0;
+				*d++ = alpha;
+			}
+			else
+			{
+				for (k = 0; k < dst_c; k++)
+					*d++ = dstv[k] * 255;
+				if (spots)
+					for (; k < dst_n; k++)
+						*d++ = 0;
+			}
+		}
+		d += d_line_inc;
+		s += s_line_inc;
+	}
+	fz_drop_color_converter(ctx, &cc);
+}
+
+static void brute_force(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 0, 0, 0);
+}
+
+static void brute_force_sa(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 1, 0, 0);
+}
+
+static void brute_force_da(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 0, 1, 0);
+}
+
+static void brute_force_sa_da(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 1, 1, 0);
+}
+
+static void brute_force_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 0, 0, 1);
+}
+
+static void brute_force_sa_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 1, 0, 1);
+}
+
+static void brute_force_da_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 0, 1, 1);
+}
+
+static void brute_force_sa_da_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	template_brute_force(ctx, src, dst, is, params, 1, 1, 1);
+}
+
+static void
+lookup_1d(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	float srcv[FZ_MAX_COLORS];
+	float dstv[FZ_MAX_COLORS];
+	size_t w = src->w;
+	int h = src->h;
+	fz_colorspace *src_cs = src->colorspace;
+	fz_colorspace *dst_cs = dst->colorspace;
+
+	unsigned char *s = src->samples;
+	unsigned char *d = dst->samples;
+
+	int sa = src->alpha;
+	int da = dst->alpha;
+	int dst_s = dst->s;
+	int dst_n = dst->n;
+	int dst_c = dst_n - dst_s - da;
+
+	fz_color_converter cc;
+	int alpha = 255;
+	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
+	ptrdiff_t s_line_inc = src->stride - w * src->n;
+
+	int i, k;
+
+	unsigned char lookup[FZ_MAX_COLORS * 256];
+
+	fz_find_color_converter(ctx, &cc, src_cs, dst_cs, is, params);
+	for (i = 0; i < 256; i++)
+	{
+		srcv[0] = i / 255.0f;
+		cc.convert(ctx, &cc, srcv, dstv);
+		for (k = 0; k < dst_c; k++)
+			lookup[i * dst_c + k] = dstv[k] * 255;
+	}
+	fz_drop_color_converter(ctx, &cc);
+
+	while (h--)
+	{
+		size_t ww = w;
+		while (ww--)
+		{
+			if (sa)
+			{
+				alpha = s[1];
+				i = fz_div255(s[0], alpha);
+				s += 2;
+			}
+			else
+			{
+				i = *s++;
+			}
+
+			if (da)
+			{
+				for (k = 0; k < dst_c; k++)
+					*d++ = fz_mul255(lookup[i * dst_c + k], alpha);
+				for (; k < dst_n; k++)
+					*d++ = 0;
+				*d++ = alpha;
+			}
+			else
+			{
+				for (k = 0; k < dst_c; k++)
+					*d++ = lookup[i * dst_c + k];
+				for (; k < dst_n; k++)
+					*d++ = 0;
+			}
+		}
+		d += d_line_inc;
+		s += s_line_inc;
+	}
+}
+
+static void
+memoize_nospots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	float srcv[FZ_MAX_COLORS];
+	float dstv[FZ_MAX_COLORS];
+	size_t w = src->w;
+	int h = src->h;
+	fz_colorspace *src_cs = src->colorspace;
+	fz_colorspace *dst_cs = dst->colorspace;
+
+	unsigned char *s = src->samples;
+	unsigned char *d = dst->samples;
+
+	int sa = src->alpha;
+	int src_s = src->s;
+	int src_n = src->n;
+	int src_c = src_n - src_s - sa;
+	int da = dst->alpha;
+	int dst_s = dst->s;
+	int dst_n = dst->n;
+	int dst_c = dst_n - dst_s - da;
+
+	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
+	ptrdiff_t s_line_inc = src->stride - w * src->n;
+
+	int k;
+
+	fz_hash_table *lookup;
+	unsigned char *color;
+	unsigned char dummy = s[0] ^ 255;
+	unsigned char *sold = &dummy;
+	unsigned char *dold;
+	fz_color_converter cc;
+	int alpha = 255;
+
+	lookup = fz_new_hash_table(ctx, 509, src_n, -1, NULL);
+	fz_find_color_converter(ctx, &cc, src_cs, dst_cs, is, params);
+
+	fz_try(ctx)
+	{
+		while (h--)
+		{
+			size_t ww = w;
+			while (ww--)
+			{
+				if (*s == *sold && memcmp(sold, s, src_n) == 0)
+				{
+					sold = s;
+					memcpy(d, dold, dst_n);
+				}
+				else
+				{
+					sold = s;
+					dold = d;
+					color = fz_hash_find(ctx, lookup, s);
+					if (color)
+					{
+						memcpy(d, color, dst_n);
+					}
+					else
+					{
+						if (sa)
+						{
+							alpha = s[src_c];
+							for (k = 0; k < src_c; k++)
+								srcv[k] = fz_div255(s[k], alpha) / 255.0f;
+						}
+						else
+						{
+							for (k = 0; k < src_c; k++)
+								srcv[k] = s[k] / 255.0f;
+						}
+
+						cc.convert(ctx, &cc, srcv, dstv);
+
+						if (da)
+						{
+							for (k = 0; k < dst_c; k++)
+								d[k] = fz_mul255(dstv[k] * 255, alpha);
+							d[k] = alpha;
+						}
+						else
+						{
+							for (k = 0; k < dst_c; k++)
+								d[k] = dstv[k] * 255;
+						}
+
+						fz_hash_insert(ctx, lookup, s, d);
+					}
+				}
+				s += src_n;
+				d += dst_n;
+			}
+			d += d_line_inc;
+			s += s_line_inc;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_color_converter(ctx, &cc);
+		fz_drop_hash_table(ctx, lookup);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+static void
+memoize_spots(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params)
+{
+	float srcv[FZ_MAX_COLORS];
+	float dstv[FZ_MAX_COLORS];
+	size_t w = src->w;
+	int h = src->h;
+	fz_colorspace *src_cs = src->colorspace;
+	fz_colorspace *dst_cs = dst->colorspace;
+
+	unsigned char *s = src->samples;
+	unsigned char *d = dst->samples;
+
+	int sa = src->alpha;
+	int src_s = src->s;
+	int src_n = src->n;
+	int src_c = src_n - src_s - sa;
+	int src_m = src_c + sa;
+	int da = dst->alpha;
+	int dst_s = dst->s;
+	int dst_n = dst->n;
+	int dst_c = dst_n - dst_s - da;
+
+	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
+	ptrdiff_t s_line_inc = src->stride - w * src->n;
+
+	int k;
+
+	fz_hash_table *lookup;
+	unsigned char *color;
+	unsigned char sold[FZ_MAX_COLORS];
+	unsigned char dold[FZ_MAX_COLORS];
+	fz_color_converter cc;
+	int alpha = 255;
+
+	sold[0] = s[0] ^ 255;
+
+	lookup = fz_new_hash_table(ctx, 509, src_m, -1, NULL);
+	fz_find_color_converter(ctx, &cc, src_cs, dst_cs, is, params);
+
+	fz_try(ctx)
+	{
+		while (h--)
+		{
+			size_t ww = w;
+			while (ww--)
+			{
+				if (*s == *sold && memcmp(sold, s, src_m) == 0)
+				{
+					memcpy(d, dold, dst_c);
+					if (dst_s)
+						memset(d + dst_c, 0, dst_s);
+					if (da)
+						d[dst_n-1] = sold[src_m];
+				}
+				else
+				{
+					memcpy(sold, s, src_m);
+					if (sa)
+						sold[src_m] = s[src_n-1];
+					color = fz_hash_find(ctx, lookup, sold);
+					if (color)
+					{
+						memcpy(d, color, dst_n);
+					}
+					else
+					{
+						if (sa)
+						{
+							alpha = s[src_c];
+							for (k = 0; k < src_c; k++)
+								srcv[k] = fz_div255(s[k], alpha) / 255.0f;
+						}
+						else
+						{
+							for (k = 0; k < src_c; k++)
+								srcv[k] = s[k] / 255.0f;
+						}
+
+						cc.convert(ctx, &cc, srcv, dstv);
+
+						if (da)
+						{
+							for (k = 0; k < dst_c; k++)
+								d[k] = fz_mul255(dstv[k] * 255, alpha);
+							if (dst_s)
+								memset(d + dst_c, 0, dst_s);
+							dold[dst_c] = d[dst_n-1] = alpha;
+						}
+						else
+						{
+							for (k = 0; k < dst_c; k++)
+								d[k] = dstv[k] * 255;
+							if (dst_s)
+								memset(d + dst_c, 0, dst_s);
+						}
+						memcpy(dold, d, dst_c);
+
+						fz_hash_insert(ctx, lookup, sold, dold);
+					}
+				}
+				s += src_n;
+				d += dst_n;
+			}
+			d += d_line_inc;
+			s += s_line_inc;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_color_converter(ctx, &cc);
+		fz_drop_hash_table(ctx, lookup);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void
+fz_convert_slow_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params, int copy_spots)
+{
+	int sa = src->alpha;
+	int src_s = src->s;
+	int src_c = src->n - src_s - sa;
+	int da = dst->alpha;
+	int dst_s = dst->s;
+	size_t w = src->w;
+	int h = src->h;
+	ptrdiff_t d_line_inc = dst->stride - w * dst->n;
+	ptrdiff_t s_line_inc = src->stride - w * src->n;
+
+	fz_colorspace *ss = src->colorspace;
+
 	if ((int)w < 0 || h < 0)
 		return;
 
-	srcn = ss->n;
-	dstn = ds->n;
-
-	/* No spot colors allowed here! */
-	assert(src->s == 0);
-	assert(dst->s == 0);
-
 	assert(src->w == dst->w && src->h == dst->h);
-	assert(src->n == srcn + sa);
-	assert(dst->n == dstn + da);
 
 	if (d_line_inc == 0 && s_line_inc == 0)
 	{
@@ -1167,227 +1682,102 @@ fz_convert_slow_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap 
 		h = 1;
 	}
 
+	if (src_s != 0 || dst_s != 0)
+	{
+		fz_warn(ctx, "Spots dropped during pixmap conversion");
+	}
+
 	/* Special case for Lab colorspace (scaling of components to float) */
 	if (ss->type == FZ_COLORSPACE_LAB)
 	{
-		fz_color_converter cc;
-
-		fz_find_color_converter(ctx, &cc, ss, ds, is, params);
-		while (h--)
+		if (src_s == 0 && dst_s == 0)
 		{
-			size_t ww = w;
-			while (ww--)
+			if (sa)
 			{
-				if (sa)
-				{
-					alpha = s[4];
-					srcv[0] = fz_div255(s[0], alpha) / 255.0f * 100;
-					srcv[1] = fz_div255(s[1], alpha) - 128;
-					srcv[2] = fz_div255(s[2], alpha) - 128;
-					s += 4;
-				}
-				else
-				{
-					srcv[0] = s[0] / 255.0f * 100;
-					srcv[1] = s[1] - 128;
-					srcv[2] = s[2] - 128;
-					s += 3;
-				}
-
-				cc.convert(ctx, &cc, srcv, dstv);
-
 				if (da)
-				{
-					for (k = 0; k < dstn; k++)
-						*d++ = fz_mul255(dstv[k] * 255, alpha);
-					*d++ = alpha;
-				}
+					convert_lab_sa_da(ctx, src, dst, is, params);
 				else
-				{
-					for (k = 0; k < dstn; k++)
-						*d++ = dstv[k] * 255;
-				}
+					convert_lab_sa(ctx, src, dst, is, params);
 			}
-			d += d_line_inc;
-			s += s_line_inc;
+			else
+			{
+				if (da)
+					convert_lab_da(ctx, src, dst, is, params);
+				else
+					convert_lab(ctx, src, dst, is, params);
+			}
 		}
-		fz_drop_color_converter(ctx, &cc);
+		else
+		{
+			if (sa)
+			{
+				if (da)
+					convert_lab_sa_da_spots(ctx, src, dst, is, params);
+				else
+					convert_lab_sa_spots(ctx, src, dst, is, params);
+			}
+			else
+			{
+				if (da)
+					convert_lab_da_spots(ctx, src, dst, is, params);
+				else
+					convert_lab_spots(ctx, src, dst, is, params);
+			}
+		}
 	}
 
 	/* Brute-force for small images */
 	else if (w*h < 256)
 	{
-		fz_color_converter cc;
-
-		fz_find_color_converter(ctx, &cc, ss, ds, is, params);
-		while (h--)
+		if (src_s == 0 && dst_s == 0)
 		{
-			size_t ww = w;
-			while (ww--)
+			if (sa)
 			{
-				if (sa)
-				{
-					alpha = s[srcn];
-					for (k = 0; k < srcn; k++)
-						srcv[k] = fz_div255(s[k], alpha) / 255.0f;
-					s += srcn + 1;
-				}
-				else
-				{
-					for (k = 0; k < srcn; k++)
-						srcv[k] = s[k] / 255.0f;
-					s += srcn;
-				}
-
-				cc.convert(ctx, &cc, srcv, dstv);
-
 				if (da)
-				{
-					for (k = 0; k < dstn; k++)
-						*d++ = fz_mul255(dstv[k] * 255, alpha);
-					*d++ = alpha;
-				}
+					brute_force_sa_da(ctx, src, dst, is, params);
 				else
-				{
-					for (k = 0; k < dstn; k++)
-						*d++ = dstv[k] * 255;
-				}
+					brute_force_sa(ctx, src, dst, is, params);
 			}
-			d += d_line_inc;
-			s += s_line_inc;
+			else
+			{
+				if (da)
+					brute_force_da(ctx, src, dst, is, params);
+				else
+					brute_force(ctx, src, dst, is, params);
+			}
 		}
-		fz_drop_color_converter(ctx, &cc);
+		else
+		{
+			if (sa)
+			{
+				if (da)
+					brute_force_sa_da_spots(ctx, src, dst, is, params);
+				else
+					brute_force_sa_spots(ctx, src, dst, is, params);
+			}
+			else
+			{
+				if (da)
+					brute_force_da_spots(ctx, src, dst, is, params);
+				else
+					brute_force_spots(ctx, src, dst, is, params);
+			}
+		}
 	}
 
 	/* 1-d lookup table for single channel colorspaces */
-	else if (srcn == 1)
+	else if (src_c == 1)
 	{
-		unsigned char lookup[FZ_MAX_COLORS * 256];
-		fz_color_converter cc;
-
-		fz_find_color_converter(ctx, &cc, ss, ds, is, params);
-		for (i = 0; i < 256; i++)
-		{
-			srcv[0] = i / 255.0f;
-			cc.convert(ctx, &cc, srcv, dstv);
-			for (k = 0; k < dstn; k++)
-				lookup[i * dstn + k] = dstv[k] * 255;
-		}
-		fz_drop_color_converter(ctx, &cc);
-
-		while (h--)
-		{
-			size_t ww = w;
-			while (ww--)
-			{
-				if (sa)
-				{
-					alpha = s[1];
-					i = fz_div255(s[0], alpha);
-					s += 2;
-				}
-				else
-				{
-					i = *s++;
-				}
-
-				if (da)
-				{
-					for (k = 0; k < dstn; k++)
-						*d++ = fz_mul255(lookup[i * dstn + k], alpha);
-					*d++ = alpha;
-				}
-				else
-				{
-					for (k = 0; k < dstn; k++)
-						*d++ = lookup[i * dstn + k];
-				}
-			}
-			d += d_line_inc;
-			s += s_line_inc;
-		}
+		lookup_1d(ctx, src, dst, is, params);
 	}
 
 	/* Memoize colors using a hash table for the general case */
 	else
 	{
-		fz_hash_table *lookup;
-		unsigned char *color;
-		unsigned char dummy = s[0] ^ 255;
-		unsigned char *sold = &dummy;
-		unsigned char *dold;
-		fz_color_converter cc;
-
-		lookup = fz_new_hash_table(ctx, 509, srcn+sa, -1, NULL);
-		fz_find_color_converter(ctx, &cc, ss, ds, is, params);
-
-		fz_try(ctx)
-		{
-			while (h--)
-			{
-				size_t ww = w;
-				while (ww--)
-				{
-					if (*s == *sold && memcmp(sold,s,srcn+sa) == 0)
-					{
-						sold = s;
-						memcpy(d, dold, dstn+da);
-					}
-					else
-					{
-						sold = s;
-						dold = d;
-						color = fz_hash_find(ctx, lookup, s);
-						if (color)
-						{
-							memcpy(d, color, dstn+da);
-						}
-						else
-						{
-							if (sa)
-							{
-								alpha = s[srcn];
-								for (k = 0; k < srcn; k++)
-									srcv[k] = fz_div255(s[k], alpha) / 255.0f;
-							}
-							else
-							{
-								for (k = 0; k < srcn; k++)
-									srcv[k] = s[k] / 255.0f;
-							}
-
-							cc.convert(ctx, &cc, srcv, dstv);
-
-							if (da)
-							{
-								for (k = 0; k < dstn; k++)
-									d[k] = fz_mul255(dstv[k] * 255, alpha);
-								d[k] = alpha;
-							}
-							else
-							{
-								for (k = 0; k < dstn; k++)
-									d[k] = dstv[k] * 255;
-							}
-
-							fz_hash_insert(ctx, lookup, s, d);
-						}
-					}
-					s += srcn + sa;
-					d += dstn + da;
-				}
-				d += d_line_inc;
-				s += s_line_inc;
-			}
-		}
-		fz_always(ctx)
-		{
-			fz_drop_color_converter(ctx, &cc);
-			fz_drop_hash_table(ctx, lookup);
-		}
-		fz_catch(ctx)
-			fz_rethrow(ctx);
-
+		if (src_s == 0 && dst_s == 0)
+			memoize_nospots(ctx, src, dst, is, params);
+		else
+			memoize_spots(ctx, src, dst, is, params);
 	}
 }
 

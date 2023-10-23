@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -220,9 +220,8 @@ putrun(fz_context *ctx, fz_buffer *out, int run, int c)
 }
 
 fz_buffer *
-fz_compress_ccitt_fax_g4(fz_context *ctx, const unsigned char *src, int columns, int rows)
+fz_compress_ccitt_fax_g4(fz_context *ctx, const unsigned char *src, int columns, int rows, ptrdiff_t stride)
 {
-	int stride = (columns + 7) >> 3;
 	fz_buffer *out = fz_new_buffer(ctx, (stride * rows) >> 3);
 	const unsigned char *ref = NULL;
 
@@ -285,9 +284,8 @@ fz_compress_ccitt_fax_g4(fz_context *ctx, const unsigned char *src, int columns,
 }
 
 fz_buffer *
-fz_compress_ccitt_fax_g3(fz_context *ctx, const unsigned char *src, int columns, int rows)
+fz_compress_ccitt_fax_g3(fz_context *ctx, const unsigned char *src, int columns, int rows, ptrdiff_t stride)
 {
-	int stride = (columns + 7) >> 3;
 	fz_buffer *out = fz_new_buffer(ctx, (stride * rows) >> 3);
 	int i;
 

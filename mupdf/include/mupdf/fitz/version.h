@@ -17,15 +17,15 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_VERSION_H
 #define MUPDF_FITZ_VERSION_H
 #ifndef FZ_VERSION
-#define FZ_VERSION "1.22.0"
+#define FZ_VERSION "1.24.0"
 #define FZ_VERSION_MAJOR 1
-#define FZ_VERSION_MINOR 22
+#define FZ_VERSION_MINOR 24
 #define FZ_VERSION_PATCH 0
 #endif
 #endif

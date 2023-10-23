@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -635,8 +635,9 @@ pdf_out_BI(fz_context *ctx, pdf_processor *proc, fz_image *img, const char *colo
 	case FZ_IMAGE_JPEG:
 		fz_write_string(ctx, out, ahx ? "/F[/AHx/DCT]\n" : "/F/DCT\n");
 		if (cbuf->params.u.jpeg.color_transform >= 0)
-			fz_write_printf(ctx, out, "/DP<</ColorTransform %d>>\n",
-				cbuf->params.u.jpeg.color_transform);
+			fz_write_printf(ctx, out, "/DP<</ColorTransform %d>>\n", cbuf->params.u.jpeg.color_transform);
+		if (cbuf->params.u.jpeg.invert_cmyk && img->n == 4)
+			fz_write_printf(ctx, out, "/D[1 0 1 0 1 0 1 0]\n");
 		break;
 
 	case FZ_IMAGE_FAX:

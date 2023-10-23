@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -36,6 +36,7 @@ typedef struct gstate_stack
 	pdf_obj *cs_stroke;
 	pdf_obj *cs_fill;
 	int unmarked;
+	fz_matrix ctm;
 } gstate_stack;
 
 typedef struct resources_stack
@@ -55,7 +56,7 @@ typedef struct
 
 typedef struct
 {
-	fz_image *before;
+	pdf_obj *im_obj;
 	fz_image *after;
 	char name[MAX_REWRITTEN_NAME];
 } rewritten_image;
@@ -98,7 +99,7 @@ typedef struct
 } pdf_color_processor;
 
 static void
-push_rewritten_image(fz_context *ctx, pdf_color_processor *p, fz_image *before, fz_image *after, char *name)
+push_rewritten_image(fz_context *ctx, pdf_color_processor *p, pdf_obj *im_obj, fz_image *after, char *name)
 {
 	rewritten_images *list = &p->images;
 
@@ -110,20 +111,20 @@ push_rewritten_image(fz_context *ctx, pdf_color_processor *p, fz_image *before, 
 		list->res = fz_realloc(ctx, list->res, sizeof(*list->res) * new_max);
 		list->max = new_max;
 	}
-	list->res[list->len].before = fz_keep_image(ctx, before);
+	list->res[list->len].im_obj = pdf_keep_obj(ctx, im_obj);
 	list->res[list->len].after = fz_keep_image(ctx, after);
 	memcpy(list->res[list->len].name, name, MAX_REWRITTEN_NAME);
 	list->len++;
 }
 
 static fz_image *
-find_rewritten_image(fz_context *ctx, pdf_color_processor *p, fz_image *before, char *name)
+find_rewritten_image(fz_context *ctx, pdf_color_processor *p, pdf_obj *im_obj, char *name)
 {
 	rewritten_images *list = &p->images;
 	int i;
 
 	for (i = 0; i < list->len; i++)
-		if (list->res[i].before == before)
+		if (list->res[i].im_obj == im_obj)
 		{
 			memcpy(name, list->res[i].name, MAX_REWRITTEN_NAME);
 			return list->res[i].after;
@@ -140,7 +141,7 @@ drop_rewritten_images(fz_context *ctx, pdf_color_processor *p)
 
 	for (i = 0; i < list->len; i++)
 	{
-		fz_drop_image(ctx, list->res[i].before);
+		pdf_drop_obj(ctx, list->res[i].im_obj);
 		fz_drop_image(ctx, list->res[i].after);
 	}
 	fz_free(ctx, list->res);
@@ -239,10 +240,10 @@ static void
 rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, float *color, int stroking)
 {
 	char new_name[MAX_REWRITTEN_NAME];
-	pdf_obj *obj;
 	fz_colorspace *cs = NULL;
 	pdf_pattern *pat = NULL;
 	fz_shade *shade = NULL;
+	int type;
 
 	if (stroking)
 		p->gstate->unmarked &= ~UNMARKED_STROKE;
@@ -290,7 +291,8 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 		}
 		/* Now, do any rewriting. This might drop the reference to cs_obj and
 		 * return with a different one. */
-		p->options->color_rewrite(ctx, p->options->opaque, &cs_obj, &n, color);
+		if (p->options->color_rewrite)
+			p->options->color_rewrite(ctx, p->options->opaque, &cs_obj, &n, color);
 
 		/* If we've rewritten it to be a simple name, great! */
 		if (pdf_name_eq(ctx, cs_obj, PDF_NAME(DeviceGray)))
@@ -373,36 +375,42 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 				p->chain->op_CS(ctx, p->chain, new_name, cs);
 			else
 				p->chain->op_cs(ctx, p->chain, new_name, cs);
+
+			if (n > 0)
+			{
+				if (stroking)
+					p->chain->op_SC_color(ctx, p->chain, n, color);
+				else
+					p->chain->op_sc_color(ctx, p->chain, n, color);
+			}
 			break;
 		}
 
 		/* Has it been rewritten to be a pattern? */
-		obj = pdf_dict_get(ctx, cs_obj, PDF_NAME(PatternType));
-		if (obj)
-		{
-			/* Make a new entry (or find an existing one), and send that. */
-			make_resource_instance(ctx, p, PDF_NAME(Pattern), "Pa", new_name, sizeof(new_name), cs_obj);
+		type = pdf_dict_get_int(ctx, cs_obj, PDF_NAME(PatternType));
+		if (type < 1 || type > 2)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad PatternType");
 
-			if (pdf_to_int(ctx, obj) == 1)
-			{
-				pat = pdf_load_pattern(ctx, p->doc, cs_obj);
-				if (stroking)
-					p->chain->op_SC_pattern(ctx, p->chain, new_name, pat, n, color);
-				else
-					p->chain->op_sc_pattern(ctx, p->chain, new_name, pat, n, color);
-				break;
-			}
-			else if (pdf_to_int(ctx, obj) == 2)
-			{
-				shade = pdf_load_shading(ctx, p->doc, cs_obj);
-				if (stroking)
-					p->chain->op_SC_shade(ctx, p->chain, new_name, shade);
-				else
-					p->chain->op_sc_shade(ctx, p->chain, new_name, shade);
-				break;
-			}
+		/* Make a new entry (or find an existing one), and send that. */
+		make_resource_instance(ctx, p, PDF_NAME(Pattern), "Pa", new_name, sizeof(new_name), cs_obj);
+
+		if (type == 1)
+		{
+			pat = pdf_load_pattern(ctx, p->doc, cs_obj);
+			if (stroking)
+				p->chain->op_SC_pattern(ctx, p->chain, new_name, pat, n, color);
 			else
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Bad PatternType");
+				p->chain->op_sc_pattern(ctx, p->chain, new_name, pat, n, color);
+			break;
+		}
+		else if (type == 2)
+		{
+			shade = pdf_load_shading(ctx, p->doc, cs_obj);
+			if (stroking)
+				p->chain->op_SC_shade(ctx, p->chain, new_name, shade);
+			else
+				p->chain->op_sc_shade(ctx, p->chain, new_name, shade);
+			break;
 		}
 
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal rewritten colorspace");
@@ -605,6 +613,7 @@ pdf_color_q(fz_context *ctx, pdf_processor *proc)
 	gs->cs_fill = pdf_keep_obj(ctx, p->gstate->cs_fill);
 	gs->cs_stroke = pdf_keep_obj(ctx, p->gstate->cs_stroke);
 	gs->unmarked = p->gstate->unmarked;
+	gs->ctm = p->gstate->ctm;
 	p->gstate = gs;
 
 	if (p->chain->op_q)
@@ -615,6 +624,16 @@ static void
 pdf_color_cm(fz_context *ctx, pdf_processor *proc, float a, float b, float c, float d, float e, float f)
 {
 	pdf_color_processor *p = (pdf_color_processor*)proc;
+	fz_matrix m;
+
+	m.a = a;
+	m.b = b;
+	m.c = c;
+	m.d = d;
+	m.e = e;
+	m.f = f;
+
+	p->gstate->ctm = fz_concat(m, p->gstate->ctm);
 
 	if (p->chain->op_cm)
 		p->chain->op_cm(ctx, p->chain, a, b, c, d, e, f);
@@ -1116,9 +1135,24 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 	pdf_obj *orig;
 	pdf_obj *dict = NULL;
+	pdf_obj *dict2 = NULL;
 	char new_name[MAX_REWRITTEN_NAME];
 	pdf_obj *rewritten;
 	fz_shade *new_shade = NULL;
+
+	if (p->options->shade_rewrite == NULL)
+	{
+		/* Must copy shading over to new resources dict. */
+		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		if (new_shading_dict == NULL)
+			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
+
+		if (p->chain->op_SC_shade)
+			p->chain->op_SC_shade(ctx, p->chain, name, shade);
+		return;
+	}
 
 	orig = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Pattern)), name);
 	orig = pdf_dict_get(ctx, orig, PDF_NAME(Shading));
@@ -1126,6 +1160,13 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 	new_shade = find_rewritten_shade(ctx, p, orig, new_name);
 	if (new_shade)
 	{
+		/* Must copy shading over to new resources dict. */
+		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		if (new_shading_dict == NULL)
+			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
+
 		if (p->chain->op_SC_shade)
 			p->chain->op_SC_shade(ctx, p->chain, new_name, new_shade);
 		return;
@@ -1135,14 +1176,15 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 
 	fz_var(new_shade);
 	fz_var(dict);
+	fz_var(dict2);
 
 	fz_try(ctx)
 	{
 		dict = pdf_new_dict(ctx, p->doc, 1);
 		pdf_dict_put_int(ctx, dict, PDF_NAME(PatternType), 2);
 		pdf_dict_put(ctx, dict, PDF_NAME(Shading), rewritten);
-		dict = pdf_add_object(ctx, p->doc, dict);
-		make_resource_instance(ctx, p, PDF_NAME(Pattern), "Pa", new_name, sizeof(new_name), dict);
+		dict2 = pdf_add_object(ctx, p->doc, dict);
+		make_resource_instance(ctx, p, PDF_NAME(Pattern), "Pa", new_name, sizeof(new_name), dict2);
 
 		new_shade = pdf_load_shading(ctx, p->doc, rewritten);
 
@@ -1157,6 +1199,7 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 		fz_drop_shade(ctx, new_shade);
 		pdf_drop_obj(ctx, rewritten);
 		pdf_drop_obj(ctx, dict);
+		pdf_drop_obj(ctx, dict2);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
@@ -1168,9 +1211,24 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 	pdf_obj *orig;
 	pdf_obj *dict = NULL;
+	pdf_obj *dict2 = NULL;
 	char new_name[MAX_REWRITTEN_NAME];
 	pdf_obj *rewritten;
 	fz_shade *new_shade = NULL;
+
+	if (p->options->shade_rewrite == NULL)
+	{
+		/* Must copy shading over to new resources dict. */
+		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		if (new_shading_dict == NULL)
+			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
+
+		if (p->chain->op_sc_shade)
+			p->chain->op_sc_shade(ctx, p->chain, name, shade);
+		return;
+	}
 
 	orig = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Pattern)), name);
 	orig = pdf_dict_get(ctx, orig, PDF_NAME(Shading));
@@ -1187,14 +1245,15 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 
 	fz_var(new_shade);
 	fz_var(dict);
+	fz_var(dict2);
 
 	fz_try(ctx)
 	{
 		dict = pdf_new_dict(ctx, p->doc, 1);
 		pdf_dict_put_int(ctx, dict, PDF_NAME(PatternType), 2);
 		pdf_dict_put(ctx, dict, PDF_NAME(Shading), rewritten);
-		dict = pdf_add_object(ctx, p->doc, dict);
-		make_resource_instance(ctx, p, PDF_NAME(Pattern), "Pa", new_name, sizeof(new_name), dict);
+		dict2 = pdf_add_object(ctx, p->doc, dict);
+		make_resource_instance(ctx, p, PDF_NAME(Pattern), "Pa", new_name, sizeof(new_name), dict2);
 
 		new_shade = pdf_load_shading(ctx, p->doc, rewritten);
 
@@ -1209,6 +1268,7 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 		fz_drop_shade(ctx, new_shade);
 		pdf_drop_obj(ctx, rewritten);
 		pdf_drop_obj(ctx, dict);
+		pdf_drop_obj(ctx, dict2);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
@@ -1306,7 +1366,8 @@ pdf_color_BI(fz_context *ctx, pdf_processor *proc, fz_image *image, const char *
 	}
 
 	fz_keep_image(ctx, image);
-	p->options->image_rewrite(ctx, p->options->opaque, &image);
+	if (p->options->image_rewrite)
+		p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, NULL);
 
 	if (p->chain->op_BI)
 		p->chain->op_BI(ctx, p->chain, image, colorspace);
@@ -1321,6 +1382,20 @@ pdf_color_sh(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *s
 	char new_name[MAX_REWRITTEN_NAME];
 	pdf_obj *rewritten;
 	fz_shade *new_shade = NULL;
+
+	if (p->options->shade_rewrite == NULL)
+	{
+		/* Must copy shading over to new resources dict. */
+		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		if (new_shading_dict == NULL)
+			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
+
+		if (p->chain->op_sh)
+			p->chain->op_sh(ctx, p->chain, name, shade);
+		return;
+	}
 
 	orig = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
 
@@ -1363,21 +1438,26 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 	fz_image *orig = image;
 	char new_name[MAX_REWRITTEN_NAME];
-	pdf_obj *im_obj;
+	pdf_obj *im_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(XObject)), name);
 
 	/* Have we done this one before? */
-	image = find_rewritten_image(ctx, p, image, new_name);
-	if (image)
+	if (!p->options->repeated_image_rewrite)
 	{
-		if (p->chain->op_Do_image)
-			p->chain->op_Do_image(ctx, p->chain, new_name, image);
-		return;
+		image = find_rewritten_image(ctx, p, im_obj, new_name);
+		if (image)
+		{
+			if (p->chain->op_Do_image)
+				p->chain->op_Do_image(ctx, p->chain, new_name, image);
+			return;
+		}
 	}
 
 	image = orig;
 	fz_keep_image(ctx, image);
+	pdf_keep_obj(ctx, im_obj);
 	fz_try(ctx)
 	{
+
 		if (image->imagemask)
 		{
 			/* Imagemasks require the color to have been set. */
@@ -1386,19 +1466,25 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 		}
 		else
 		{
-			p->options->image_rewrite(ctx, p->options->opaque, &image);
+			if (p->options->image_rewrite)
+				p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, im_obj);
 		}
 
 		/* If it's been rewritten add the new one, otherwise copy the old one across. */
 		if (image != orig)
+		{
+			pdf_drop_obj(ctx, im_obj);
+			im_obj = NULL;
 			im_obj = pdf_add_image(ctx, p->doc, image);
-		else
-			im_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(XObject)), name);
+		}
 
 		make_resource_instance(ctx, p, PDF_NAME(XObject), "Im", new_name, sizeof(new_name), im_obj);
 
-		/* Remember that we've done this one before. */
-		push_rewritten_image(ctx, p, orig, image, new_name);
+		if (!p->options->repeated_image_rewrite)
+		{
+			/* Remember that we've done this one before. */
+			push_rewritten_image(ctx, p, im_obj, image, new_name);
+		}
 
 		if (p->chain->op_Do_image)
 			p->chain->op_Do_image(ctx, p->chain, new_name, image);
@@ -1764,6 +1850,7 @@ pdf_new_color_filter(
 		fz_free(ctx, proc);
 		fz_rethrow(ctx);
 	}
+	proc->gstate->ctm = fz_identity;
 
 	proc->doc = pdf_keep_document(ctx, doc);
 	proc->chain = chain;

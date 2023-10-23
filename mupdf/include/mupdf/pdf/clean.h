@@ -17,17 +17,24 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_CLEAN_H
 #define MUPDF_PDF_CLEAN_H
 
 #include "mupdf/pdf/document.h"
+#include "mupdf/pdf/image-rewriter.h"
+
+typedef struct
+{
+	pdf_write_options write;
+	pdf_image_rewriter_options image;
+} pdf_clean_options;
 
 /*
 	Read infile, and write selected pages to outfile with the given options.
 */
-void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_write_options *opts, int retainlen, char *retainlist[]);
+void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_clean_options *opts, int retainlen, char *retainlist[]);
 
 #endif

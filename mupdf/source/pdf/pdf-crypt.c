@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -86,10 +86,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown encryption handler: '%s'", pdf_to_name(ctx, obj));
 	}
 
-	crypt->v = 0;
-	obj = pdf_dict_get(ctx, dict, PDF_NAME(V));
-	if (pdf_is_int(ctx, obj))
-		crypt->v = pdf_to_int(ctx, obj);
+	crypt->v = pdf_dict_get_int_default(ctx, dict, PDF_NAME(V), 0);
 	if (crypt->v != 0 && crypt->v != 1 && crypt->v != 2 && crypt->v != 4 && crypt->v != 5)
 	{
 		pdf_drop_crypt(ctx, crypt);
@@ -180,10 +177,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		memcpy(crypt->ue, pdf_to_str_buf(ctx, obj), 32);
 	}
 
-	crypt->encrypt_metadata = 1;
-	obj = pdf_dict_get(ctx, dict, PDF_NAME(EncryptMetadata));
-	if (pdf_is_bool(ctx, obj))
-		crypt->encrypt_metadata = pdf_to_bool(ctx, obj);
+	crypt->encrypt_metadata = pdf_dict_get_bool_default(ctx, dict, PDF_NAME(EncryptMetadata), 1);
 
 	/* Extract file identifier string */
 
@@ -201,9 +195,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	crypt->length = 40;
 	if (crypt->v == 2 || crypt->v == 4)
 	{
-		obj = pdf_dict_get(ctx, dict, PDF_NAME(Length));
-		if (pdf_is_int(ctx, obj))
-			crypt->length = pdf_to_int(ctx, obj);
+		crypt->length = pdf_dict_get_int_default(ctx, dict, PDF_NAME(Length), crypt->length);
 
 		/* work-around for pdf generators that assume length is in bytes */
 		if (crypt->length < 40)
@@ -328,9 +320,7 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, 
 				fz_warn(ctx, "unknown encryption method: %s", pdf_to_name(ctx, obj));
 		}
 
-		obj = pdf_dict_get(ctx, dict, PDF_NAME(Length));
-		if (pdf_is_int(ctx, obj))
-			cf->length = pdf_to_int(ctx, obj);
+		cf->length = pdf_dict_get_int_default(ctx, dict, PDF_NAME(Length), cf->length);
 	}
 	else if (!is_identity)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse crypt filter (%d 0 R)", pdf_to_num(ctx, crypt->cf));
@@ -845,9 +835,13 @@ pdf_has_permission(fz_context *ctx, pdf_document *doc, fz_permission p)
 	switch (p)
 	{
 	case FZ_PERMISSION_PRINT: return doc->crypt->p & PDF_PERM_PRINT;
-	case FZ_PERMISSION_COPY: return doc->crypt->p & PDF_PERM_COPY;
 	case FZ_PERMISSION_EDIT: return doc->crypt->p & PDF_PERM_MODIFY;
+	case FZ_PERMISSION_COPY: return doc->crypt->p & PDF_PERM_COPY;
 	case FZ_PERMISSION_ANNOTATE: return doc->crypt->p & PDF_PERM_ANNOTATE;
+	case FZ_PERMISSION_FORM: return doc->crypt->p & PDF_PERM_FORM;
+	case FZ_PERMISSION_ACCESSIBILITY: return doc->crypt->p & PDF_PERM_ACCESSIBILITY;
+	case FZ_PERMISSION_ASSEMBLE: return doc->crypt->p & PDF_PERM_ASSEMBLE;
+	case FZ_PERMISSION_PRINT_HQ: return doc->crypt->p & PDF_PERM_PRINT_HQ;
 	}
 	return 1;
 }

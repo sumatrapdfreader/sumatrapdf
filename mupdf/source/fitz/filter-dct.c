@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -135,6 +135,7 @@ static void term_source_dct(j_decompress_ptr cinfo)
 
 static boolean fill_input_buffer_dct(j_decompress_ptr cinfo)
 {
+	static unsigned char eoi[2] = { 0xFF, JPEG_EOI };
 	struct jpeg_source_mgr *src = cinfo->src;
 	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
 	fz_context *ctx = state->ctx;
@@ -147,13 +148,20 @@ static boolean fill_input_buffer_dct(j_decompress_ptr cinfo)
 	}
 	fz_catch(ctx)
 	{
-		return 0;
+		/* Since fz_available swallows all other errors, the only errors that can
+		 * bubble up to here are TRYLATER and exception stack overflow.
+		 * Ignore this catastrophic failure and treat it as end of file.
+		 * NOTE: We do NOT handle TRYLATER here.
+		 */
+		src->next_input_byte = eoi;
+		src->bytes_in_buffer = 2;
+		return 1;
 	}
+
 	src->next_input_byte = curr_stm->rp;
 
 	if (src->bytes_in_buffer == 0)
 	{
-		static unsigned char eoi[2] = { 0xFF, JPEG_EOI };
 		fz_warn(state->ctx, "premature end of file in jpeg");
 		src->next_input_byte = eoi;
 		src->bytes_in_buffer = 2;
@@ -177,6 +185,10 @@ static void skip_input_data_dct(j_decompress_ptr cinfo, long num_bytes)
 	}
 }
 
+/* Invert CMYK polarity if it is a standalone JPEG file.
+ * For JPEG images embedded in PDF files, the CMYK data is normal.
+ * For JPEG images created by Photoshop, the CMYK data is inverted.
+ */
 static void invert_cmyk(unsigned char *p, int n)
 {
 	int i;
@@ -232,17 +244,6 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 
 			jpeg_read_header(cinfo, 1);
 
-			/* Invert CMYK polarity if:
-			 *    It is a standalone JPEG file (i.e. not embedded in PDF; color_transform is set to -1).
-			 *       In PDF, the polarity inversion is usually done with the image Decode array if necessary.
-			 *       We set color_transform to -2 or a positive value in this cases.
-			 *    It has an Adobe marker setting the color transform to YCCK to CMYK.
-			 *       Experimentation has shown that if the color transform is set to 0 the polarity is
-			 *       usually not inverted.
-			 */
-			if (cinfo->out_color_space == JCS_CMYK && cinfo->Adobe_transform == 2 && state->color_transform == -1)
-				state->invert_cmyk = 1;
-
 			/* Adobe APP marker overrides ColorTransform from PDF */
 			if (cinfo->saw_Adobe_marker)
 				state->color_transform = cinfo->Adobe_transform;
@@ -282,14 +283,14 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 			if (p + state->stride <= ep)
 			{
 				jpeg_read_scanlines(cinfo, &p, 1);
-				if (state->invert_cmyk)
+				if (state->invert_cmyk && cinfo->num_components == 4)
 					invert_cmyk(p, state->stride);
 				p += state->stride;
 			}
 			else
 			{
 				jpeg_read_scanlines(cinfo, &state->scanline, 1);
-				if (state->invert_cmyk)
+				if (state->invert_cmyk && cinfo->num_components == 4)
 					invert_cmyk(state->scanline, state->stride);
 				state->rp = state->scanline;
 				state->wp = state->scanline + state->stride;
@@ -349,7 +350,7 @@ close_dctd(fz_context *ctx, void *state_)
 }
 
 fz_stream *
-fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int l2factor, fz_stream *jpegtables)
+fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int invert_cmyk, int l2factor, fz_stream *jpegtables)
 {
 	fz_dctd *state = fz_malloc_struct(ctx, fz_dctd);
 	j_decompress_ptr cinfo = &state->cinfo;
@@ -365,6 +366,7 @@ fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int l2facto
 	}
 
 	state->color_transform = color_transform;
+	state->invert_cmyk = invert_cmyk;
 	state->init = 0;
 	state->l2factor = l2factor;
 	state->chain = fz_keep_stream(ctx, chain);

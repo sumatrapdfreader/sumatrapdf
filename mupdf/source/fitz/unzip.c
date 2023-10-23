@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -65,6 +65,192 @@ static void drop_zip_archive(fz_context *ctx, fz_archive *arch)
 	fz_free(ctx, zip->entries);
 }
 
+static int ishex(char c)
+{
+	if (c >= '0' && c <= '9')
+		return 1;
+	if (c >= 'a' && c <= 'f')
+		return 1;
+	if (c >= 'A' && c <= 'F')
+		return 1;
+	return 0;
+}
+
+static int unhex(char c)
+{
+	if (c >= '0' && c <= '9')
+		return c-'0';
+	if (c >= 'a' && c <= 'f')
+		return c-'a'+10;
+	return c - 'A'+10;
+}
+
+/* This is to cope with the #Uffff and #Lffffff escaping scheme
+ * used by info-zip when encoding files into zipfiles on
+ * non-utf8-native platforms, like Windows. Although this isn't
+ * strictly part of the zip standard, info-zip has been doing
+ * this since 2008 at least, and it's ubiquitous. We shouldn't
+ * get '#' chars in filenames otherwise, so it's pretty safe.
+ */
+static unsigned char *unescape(fz_context *ctx, unsigned char *name)
+{
+	unsigned char *newname;
+	unsigned char *d;
+	unsigned char *s = name;
+	unsigned char c;
+	size_t z = 1;
+
+	/* Count the target length */
+	while ((c = *s++) != 0)
+	{
+		if (c == '#' && s[0] == 'U' &&
+			ishex(s[1]) && ishex(s[2]) && ishex(s[3]) && ishex(s[4]))
+		{
+			int uni = (unhex(s[1])<<12)+(unhex(s[2])<<8)+(unhex(s[3])<<4)+unhex(s[4]);
+
+			if (uni < 0x80)
+			{
+				/* Unlikely, cos why would it have been escaped? */
+				z++;
+			}
+			else if (uni < (1<<11))
+			{
+				z += 2;
+			}
+			else
+			{
+				z += 3;
+			}
+			s += 5;
+		}
+		else if (c == '#' && s[0] == 'L' &&
+			ishex(s[1]) && ishex(s[2]) && ishex(s[3]) && ishex(s[4]) && ishex(s[5]) && ishex(s[6]))
+		{
+			int uni = (unhex(s[1])<<20)+(unhex(s[2])<<16)+(unhex(s[3])<<12)+(unhex(s[4])<<8)+(unhex(s[5])<<4)+unhex(s[6]);
+
+			if (uni < 0x80)
+			{
+				/* Unlikely, cos why would it have been escaped? */
+				z++;
+			}
+			else if (uni < (1<<11))
+			{
+				/* Unlikely, cos why wouldn't it be #U? */
+				z += 2;
+			}
+			else if (uni < (1<<16))
+			{
+				/* Unlikely, cos why wouldn't it be #U? */
+				z += 3;
+			}
+			else if (uni <= 0x10FFFF)
+			{
+				z += 4;
+			}
+			else
+			{
+				/* Illegal char for utf-8 encoding. */
+				/* Leave escaped! */
+				z += 8;
+			}
+			s += 7;
+		}
+		else if (c >= 0x80)
+		{
+			/* Why wasn't this byte escaped? Encode it to utf-8, best we can do. */
+			z += 2;
+		}
+		else
+			z++;
+	}
+
+	newname = Memento_label(fz_malloc(ctx, z), "zip_name");
+
+	d = newname;
+	s = name;
+
+	/* Now rewrite the name */
+	while ((c = *s++) != 0)
+	{
+		if (c == '#' && s[0] == 'U' &&
+			ishex(s[1]) && ishex(s[2]) && ishex(s[3]) && ishex(s[4]))
+		{
+			int uni = (unhex(s[1])<<12)+(unhex(s[2])<<8)+(unhex(s[3])<<4)+unhex(s[4]);
+
+			if (uni < 0x80)
+			{
+				/* Unlikely, cos why would it have been escaped? */
+				*d++ = uni;
+			}
+			else if (uni < (1<<11))
+			{
+				*d++ = 0xC0+(uni>>6);		/* 5 bits */
+				*d++ = 0x80+(uni & 0x3f);	/* 6 bits */
+			}
+			else
+			{
+				*d++ = 0xE0+(uni>>12);		/* 4 bits */
+				*d++ = 0x80+((uni>>6) & 0x3f);	/* 6 bits */
+				*d++ = 0x80+(uni & 0x3f);	/* 6 bits */
+			}
+			s += 5;
+		}
+		else if (c == '#' && s[0] == 'L' &&
+			ishex(s[1]) && ishex(s[2]) && ishex(s[3]) && ishex(s[4]) && ishex(s[5]) && ishex(s[6]))
+		{
+			int uni = (unhex(s[1])<<20)+(unhex(s[2])<<16)+(unhex(s[3])<<12)+(unhex(s[4])<<8)+(unhex(s[5])<<4)+unhex(s[6]);
+
+			if (uni < 0x80)
+			{
+				/* Unlikely, cos why would it have been escaped? */
+				*d++ = uni;
+			}
+			else if (uni < (1<<11))
+			{
+				/* Unlikely, cos why wouldn't it be #U? */
+				*d++ = 0xC0+(uni>>6);		/* 5 bits */
+				*d++ = 0x80+(uni & 0x3f);	/* 6 bits */
+			}
+			else if (uni < (1<<16))
+			{
+				/* Unlikely, cos why wouldn't it be #U? */
+				*d++ = 0xE0+(uni>>12);		/* 4 bits */
+				*d++ = 0x80+((uni>>6) & 0x3f);	/* 6 bits */
+				*d++ = 0x80+(uni & 0x3f);	/* 6 bits */
+			}
+			else if (uni <= 0x10FFFF)
+			{
+				*d++ = 0xF0+(uni>>18);		/* 3 bits */
+				*d++ = 0x80+((uni>>12) & 0x3f);	/* 6 bits */
+				*d++ = 0x80+((uni>>6) & 0x3f);	/* 6 bits */
+				*d++ = 0x80+(uni & 0x3f);	/* 6 bits */
+			}
+			else
+			{
+				/* Illegal char for utf-8 encoding. */
+				/* Leave escaped! */
+				memcpy(d, s-1, 8);
+				d += 8;
+			}
+			s += 7;
+		}
+		else if (c >= 0x80)
+		{
+			/* Why wasn't this byte escaped? Encode it to utf-8, best we can do. */
+			*d++ = 0xC0+(c>>6);	/* 5 bits */
+			*d++ = 0x80+(c & 0x3f);	/* 6 bits */
+		}
+		else
+			*d++ = c;
+
+	}
+	*d = 0;
+
+	fz_free(ctx, name);
+
+	return newname;
+}
+
 static void read_zip_dir_imp(fz_context *ctx, fz_zip_archive *zip, int64_t start_offset)
 {
 	fz_stream *file = zip->super.file;
@@ -75,6 +261,8 @@ static void read_zip_dir_imp(fz_context *ctx, fz_zip_archive *zip, int64_t start
 	uint64_t csize, usize;
 	char *name = NULL;
 	size_t n;
+	int gp;
+	int utf8 = 0;
 
 	fz_var(name);
 
@@ -147,7 +335,8 @@ static void read_zip_dir_imp(fz_context *ctx, fz_zip_archive *zip, int64_t start
 
 			(void) fz_read_uint16_le(ctx, file); /* version made by */
 			(void) fz_read_uint16_le(ctx, file); /* version to extract */
-			(void) fz_read_uint16_le(ctx, file); /* general */
+			gp = fz_read_uint16_le(ctx, file); /* general */
+			utf8 = !!(gp & (1<<11));
 			(void) fz_read_uint16_le(ctx, file); /* method */
 			(void) fz_read_uint16_le(ctx, file); /* last mod file time */
 			(void) fz_read_uint16_le(ctx, file); /* last mod file date */
@@ -168,6 +357,9 @@ static void read_zip_dir_imp(fz_context *ctx, fz_zip_archive *zip, int64_t start
 			if (n < (size_t)namesize)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in zip entry name");
 			name[namesize] = '\0';
+
+			if (!utf8)
+				name = (char *)unescape(ctx, (unsigned char *)name);
 
 			while (metasize > 0)
 			{
@@ -302,7 +494,7 @@ static fz_stream *open_zip_entry(fz_context *ctx, fz_archive *arch, const char *
 
 	ent = lookup_zip_entry(ctx, zip, name);
 	if (!ent)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find named zip archive entry");
+		return NULL;
 
 	method = read_zip_entry_header(ctx, zip, ent);
 	if (method == 0)
@@ -328,7 +520,7 @@ static fz_buffer *read_zip_entry(fz_context *ctx, fz_archive *arch, const char *
 
 	ent = lookup_zip_entry(ctx, zip, name);
 	if (!ent)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find named zip archive entry");
+		return NULL;
 
 	method = read_zip_entry_header(ctx, zip, ent);
 	ubuf = fz_new_buffer(ctx, ent->usize + 1); /* +1 because many callers will add a terminating zero */

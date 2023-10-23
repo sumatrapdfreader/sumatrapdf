@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -255,6 +255,14 @@ static inline int tohex(int c)
 	return 0;
 }
 
+#define URIRESERVED ";/?:@&=+$,"
+#define URIALPHA "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define URIDIGIT "0123456789"
+#define URIMARK "-_.!~*'()"
+#define URIUNESCAPED URIALPHA URIDIGIT URIMARK
+#define HEX "0123456789ABCDEF"
+
+/* Same as fz_decode_uri_component but in-place */
 char *
 fz_urldecode(char *url)
 {
@@ -276,6 +284,100 @@ fz_urldecode(char *url)
 	}
 	*p = 0;
 	return url;
+}
+
+char *
+fz_decode_uri_component(fz_context *ctx, const char *s)
+{
+	char *uri = fz_malloc(ctx, strlen(s) + 1);
+	char *p = uri;
+	while (*s)
+	{
+		int c = (unsigned char) *s++;
+		if (c == '%' && ishex(s[0]) && ishex(s[1]))
+		{
+			int a = tohex(*s++);
+			int b = tohex(*s++);
+			*p++ = a << 4 | b;
+		}
+		else
+		{
+			*p++ = c;
+		}
+	}
+	*p = 0;
+	return uri;
+}
+
+char *
+fz_decode_uri(fz_context *ctx, const char *s)
+{
+	char *uri = fz_malloc(ctx, strlen(s) + 1);
+	char *p = uri;
+	while (*s)
+	{
+		int c = (unsigned char) *s++;
+		if (c == '%' && ishex(s[0]) && ishex(s[1]))
+		{
+			int a = tohex(*s++);
+			int b = tohex(*s++);
+			int c = a << 4 | b;
+			if (strchr(URIRESERVED "#", c)) {
+				*p++ = '%';
+				*p++ = HEX[a];
+				*p++ = HEX[b];
+			} else {
+				*p++ = c;
+			}
+		}
+		else
+		{
+			*p++ = c;
+		}
+	}
+	*p = 0;
+	return uri;
+}
+
+static char *
+fz_encode_uri_imp(fz_context *ctx, const char *s, const char *unescaped)
+{
+	char *uri = fz_malloc(ctx, strlen(s) * 3 + 1); /* allocate enough for worst case */
+	char *p = uri;
+	while (*s)
+	{
+		int c = (unsigned char) *s++;
+		if (strchr(unescaped, c))
+		{
+			*p++ = c;
+		}
+		else
+		{
+			*p++ = '%';
+			*p++ = HEX[(c >> 4) & 15];
+			*p++ = HEX[(c) & 15];
+		}
+	}
+	*p = 0;
+	return uri;
+}
+
+char *
+fz_encode_uri_component(fz_context *ctx, const char *s)
+{
+	return fz_encode_uri_imp(ctx, s, URIUNESCAPED);
+}
+
+char *
+fz_encode_uri_pathname(fz_context *ctx, const char *s)
+{
+	return fz_encode_uri_imp(ctx, s, URIUNESCAPED "/");
+}
+
+char *
+fz_encode_uri(fz_context *ctx, const char *s)
+{
+	return fz_encode_uri_imp(ctx, s, URIUNESCAPED URIRESERVED "#");
 }
 
 void

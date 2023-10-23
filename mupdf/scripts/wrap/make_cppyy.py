@@ -898,5 +898,5 @@ def make_cppyy(
     #
     #text += generated.cppyy_extra
 
-    jlib.ensure_parent_dir( path)
-    jlib.update_file( text, path)
+    jlib.fs_ensure_parent_dir( path)
+    jlib.fs_update( text, path)

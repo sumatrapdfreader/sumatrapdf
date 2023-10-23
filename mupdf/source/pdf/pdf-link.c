@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "pdf-annot-imp.h"
@@ -62,88 +62,63 @@ resolve_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 	return resolve_dest_rec(ctx, doc, dest, 0);
 }
 
-char *
-pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
+static void
+populate_destination(fz_context *ctx, pdf_document *doc, pdf_obj *dest, int is_remote, fz_link_dest *destination)
 {
-	pdf_obj *arg1, *arg2, *arg3, *arg4;
-	float arg1v, arg2v, arg3v, arg4v;
-	fz_link_dest destination;
-	pdf_obj *pageobj, *typeobj;
-	fz_matrix page_ctm;
-	const char *ld;
-	int pageno;
-	fz_point p;
+	pdf_obj *arg1 = pdf_array_get(ctx, dest, 2);
+	pdf_obj *arg2 = pdf_array_get(ctx, dest, 3);
+	pdf_obj *arg3 = pdf_array_get(ctx, dest, 4);
+	pdf_obj *arg4 = pdf_array_get(ctx, dest, 5);
+	float arg1v = pdf_to_real(ctx, arg1);
+	float arg2v = pdf_to_real(ctx, arg2);
+	float arg3v = pdf_to_real(ctx, arg3);
+	float arg4v = pdf_to_real(ctx, arg4);
+	pdf_obj *type, *page = NULL;
+	fz_matrix ctm = fz_identity;
 	fz_rect rect;
+	fz_point p;
+	int pageno;
 
-	dest = resolve_dest(ctx, doc, dest);
-	if (dest == NULL)
-	{
-		fz_warn(ctx, "undefined link destination");
-		return NULL;
-	}
-
-	if (pdf_is_name(ctx, dest))
-	{
-		ld = pdf_to_name(ctx, dest);
-		return fz_strdup(ctx, ld);
-	}
-	else if (pdf_is_string(ctx, dest))
-	{
-		ld = pdf_to_str_buf(ctx, dest);
-		return fz_strdup(ctx, ld);
-	}
-
-	if (pdf_array_len(ctx, dest) < 1)
-	{
-		fz_warn(ctx, "invalid link destination");
-		return NULL;
-	}
-
-	pageobj = pdf_array_get(ctx, dest, 0);
-	if (pdf_is_int(ctx, pageobj))
-	{
-		pageno = pdf_to_int(ctx, pageobj);
-		pageobj = pdf_lookup_page_obj(ctx, doc, pageno);
-	}
+	if (is_remote)
+		pageno = pdf_array_get_int(ctx, dest, 0);
 	else
-		pageno = pdf_lookup_page_number(ctx, doc, pageobj);
+	{
+		page = pdf_array_get(ctx, dest, 0);
+		if (pdf_is_int(ctx, page))
+		{
+			pageno = pdf_to_int(ctx, page);
+			page = pdf_lookup_page_obj(ctx, doc, pageno);
+		}
+		else
+			pageno = pdf_lookup_page_number(ctx, doc, page);
+		pageno = fz_clampi(pageno, 0, pdf_count_pages(ctx, doc) - 1);
+		if (pdf_is_dict(ctx, page))
+			pdf_page_obj_transform(ctx, page, NULL, &ctm);
+	}
 
-	destination.loc.chapter = 0;
-	destination.loc.page = fz_clampi(pageno, 0, pdf_count_pages(ctx, doc) - 1);
+	destination->loc.page = pageno;
 
-	typeobj = pdf_array_get(ctx, dest, 1);
-	if (typeobj == PDF_NAME(XYZ))
-		destination.type = FZ_LINK_DEST_XYZ;
-	else if (typeobj == PDF_NAME(Fit))
-		destination.type = FZ_LINK_DEST_FIT;
-	else if (typeobj == PDF_NAME(FitH))
-		destination.type = FZ_LINK_DEST_FIT_H;
-	else if (typeobj == PDF_NAME(FitV))
-		destination.type = FZ_LINK_DEST_FIT_V;
-	else if (typeobj == PDF_NAME(FitR))
-		destination.type = FZ_LINK_DEST_FIT_R;
-	else if (typeobj == PDF_NAME(FitB))
-		destination.type = FZ_LINK_DEST_FIT_B;
-	else if (typeobj == PDF_NAME(FitBH))
-		destination.type = FZ_LINK_DEST_FIT_BH;
-	else if (typeobj == PDF_NAME(FitBV))
-		destination.type = FZ_LINK_DEST_FIT_BV;
+	type = pdf_array_get(ctx, dest, 1);
+	if (type == PDF_NAME(XYZ))
+		destination->type = FZ_LINK_DEST_XYZ;
+	else if (type == PDF_NAME(Fit))
+		destination->type = FZ_LINK_DEST_FIT;
+	else if (type == PDF_NAME(FitH))
+		destination->type = FZ_LINK_DEST_FIT_H;
+	else if (type == PDF_NAME(FitV))
+		destination->type = FZ_LINK_DEST_FIT_V;
+	else if (type == PDF_NAME(FitR))
+		destination->type = FZ_LINK_DEST_FIT_R;
+	else if (type == PDF_NAME(FitB))
+		destination->type = FZ_LINK_DEST_FIT_B;
+	else if (type == PDF_NAME(FitBH))
+		destination->type = FZ_LINK_DEST_FIT_BH;
+	else if (type == PDF_NAME(FitBV))
+		destination->type = FZ_LINK_DEST_FIT_BV;
 	else
-		destination.type = FZ_LINK_DEST_XYZ;
+		destination->type = FZ_LINK_DEST_XYZ;
 
-	arg1 = pdf_array_get(ctx, dest, 2);
-	arg2 = pdf_array_get(ctx, dest, 3);
-	arg3 = pdf_array_get(ctx, dest, 4);
-	arg4 = pdf_array_get(ctx, dest, 5);
-
-	arg1v = pdf_to_real(ctx, arg1);
-	arg2v = pdf_to_real(ctx, arg2);
-	arg3v = pdf_to_real(ctx, arg3);
-	arg4v = pdf_to_real(ctx, arg4);
-
-	pdf_page_obj_transform(ctx, pageobj, NULL, &page_ctm);
-
-	switch (destination.type)
+	switch (destination->type)
 	{
 	default:
 	case FZ_LINK_DEST_FIT:
@@ -151,86 +126,125 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 		break;
 	case FZ_LINK_DEST_FIT_H:
 	case FZ_LINK_DEST_FIT_BH:
-		p = fz_transform_point_xy(0, arg1v, page_ctm);
-		destination.y = arg1 ? p.y : NAN;
+		p = fz_transform_point_xy(0, arg1v, ctm);
+		destination->y = arg1 ? p.y : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_V:
 	case FZ_LINK_DEST_FIT_BV:
-		p = fz_transform_point_xy(arg1v, 0, page_ctm);
-		destination.x = arg1 ? p.x : NAN;
+		p = fz_transform_point_xy(arg1v, 0, ctm);
+		destination->x = arg1 ? p.x : NAN;
 		break;
 	case FZ_LINK_DEST_XYZ:
-		p = fz_transform_point_xy(arg1v, arg2v, page_ctm);
-		destination.x = arg1 ? p.x : NAN;
-		destination.y = arg2 ? p.y : NAN;
-		destination.zoom = arg3 ? (arg3v > 0 ? (arg3v * 100) : 100) : NAN;
+		p = fz_transform_point_xy(arg1v, arg2v, ctm);
+		destination->x = arg1 ? p.x : NAN;
+		destination->y = arg2 ? p.y : NAN;
+		destination->zoom = arg3 ? (arg3v > 0 ? (arg3v * 100) : 100) : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_R:
 		rect.x0 = arg1v;
 		rect.y0 = arg2v;
 		rect.x1 = arg3v;
 		rect.y1 = arg4v;
-		fz_transform_rect(rect, page_ctm);
-		destination.x = rect.x0;
-		destination.y = rect.y0;
-		destination.w = rect.x1 - rect.x0;
-		destination.h = rect.y1 - rect.y0;
+		fz_transform_rect(rect, ctm);
+		destination->x = rect.x0;
+		destination->y = rect.y0;
+		destination->w = rect.x1 - rect.x0;
+		destination->h = rect.y1 - rect.y0;
 		break;
 	}
-
-	return pdf_format_link_uri(ctx, destination);
 }
 
 static char *
-pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_obj *dest)
+pdf_parse_link_dest_to_file_with_uri(fz_context *ctx, pdf_document *doc, const char *uri, pdf_obj *dest)
 {
-	pdf_obj *filename = NULL;
-	const char *path;
-	char *uri;
-	char frag[256];
+	if (pdf_is_array(ctx, dest) && pdf_array_len(ctx, dest) >= 1)
+	{
+		fz_link_dest destination = fz_make_link_dest_none();
+		populate_destination(ctx, doc, dest, 1, &destination);
+		return pdf_append_explicit_dest_to_uri(ctx, uri, destination);
+	}
+	else if (pdf_is_name(ctx, dest))
+	{
+		const char *name = pdf_to_name(ctx, dest);
+		return pdf_append_named_dest_to_uri(ctx, uri, name);
+	}
+	else if (pdf_is_string(ctx, dest))
+	{
+		const char *name = pdf_to_text_string(ctx, dest);
+		return pdf_append_named_dest_to_uri(ctx, uri, name);
+	}
+	else
+	{
+		fz_warn(ctx, "invalid link destination");
+		return NULL;
+	}
+}
+
+static char *
+pdf_parse_link_dest_to_file_with_path(fz_context *ctx, pdf_document *doc, const char *path, pdf_obj *dest, int is_remote)
+{
+	if (pdf_is_array(ctx, dest) && pdf_array_len(ctx, dest) >= 1)
+	{
+		fz_link_dest destination = fz_make_link_dest_none();
+		if (!is_remote)
+			dest = resolve_dest(ctx, doc, dest);
+		populate_destination(ctx, doc, dest, is_remote, &destination);
+		return pdf_new_uri_from_path_and_explicit_dest(ctx, path, destination);
+	}
+	else if (pdf_is_name(ctx, dest))
+	{
+		const char *name = pdf_to_name(ctx, dest);
+		return pdf_new_uri_from_path_and_named_dest(ctx, path, name);
+	}
+	else if (pdf_is_string(ctx, dest))
+	{
+		const char *name = pdf_to_text_string(ctx, dest);
+		return pdf_new_uri_from_path_and_named_dest(ctx, path, name);
+	}
+	else if (path)
+	{
+		fz_link_dest destination = fz_make_link_dest_none();
+		return pdf_new_uri_from_path_and_explicit_dest(ctx, path, destination);
+	}
+	else
+	{
+		fz_warn(ctx, "invalid link destination");
+		return NULL;
+	}
+}
+
+static char *
+pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_obj *dest, int is_remote)
+{
+	pdf_obj *str = NULL;
+	int is_url;
 
 	if (pdf_is_string(ctx, file_spec))
-		filename = file_spec;
-
-	if (pdf_is_dict(ctx, file_spec)) {
-#ifdef _WIN32
-		filename = pdf_dict_get(ctx, file_spec, PDF_NAME(DOS));
-#else
-		filename = pdf_dict_get(ctx, file_spec, PDF_NAME(Unix));
-#endif
-		if (!filename)
-			filename = pdf_dict_geta(ctx, file_spec, PDF_NAME(UF), PDF_NAME(F));
+		str = file_spec;
+	else if (pdf_is_dict(ctx, file_spec)) {
+		str = pdf_dict_get(ctx, file_spec, PDF_NAME(UF));
+		if (!str)
+			str = pdf_dict_get(ctx, file_spec, PDF_NAME(F));
+		if (!str)
+			str = pdf_dict_get(ctx, file_spec, PDF_NAME(Unix));
+		if (!str)
+			str = pdf_dict_get(ctx, file_spec, PDF_NAME(DOS));
+		if (!str)
+			str = pdf_dict_get(ctx, file_spec, PDF_NAME(Mac));
 	}
 
-	if (!pdf_is_string(ctx, filename))
+	if (!pdf_is_string(ctx, str))
 	{
 		fz_warn(ctx, "cannot parse file specification");
 		return NULL;
 	}
 
-	if (pdf_is_array(ctx, dest))
-		fz_snprintf(frag, sizeof frag, "#page=%d", pdf_array_get_int(ctx, dest, 0) + 1);
-	else if (pdf_is_name(ctx, dest))
-		fz_snprintf(frag, sizeof frag, "#%s", pdf_to_name(ctx, dest));
-	else if (pdf_is_string(ctx, dest))
-		fz_snprintf(frag, sizeof frag, "#%s", pdf_to_str_buf(ctx, dest));
+	is_url = pdf_dict_get(ctx, file_spec, PDF_NAME(FS)) == PDF_NAME(URL);
+
+	if (is_url)
+		return pdf_parse_link_dest_to_file_with_uri(ctx, doc, pdf_to_text_string(ctx, str), dest);
 	else
-		frag[0] = 0;
-
-	path = pdf_to_text_string(ctx, filename);
-	uri = NULL;
-#ifdef _WIN32
-	if (!pdf_name_eq(ctx, pdf_dict_get(ctx, file_spec, PDF_NAME(FS)), PDF_NAME(URL)))
-	{
-		/* Fix up the drive letter (change "/C/Documents/Foo" to "C:/Documents/Foo") */
-		if (path[0] == '/' && (('A' <= path[1] && path[1] <= 'Z') || ('a' <= path[1] && path[1] <= 'z')) && path[2] == '/')
-			uri = fz_asprintf(ctx, "file://%c:%s%s", path[1], path+2, frag);
-	}
-#endif
-	if (!uri)
-		uri = fz_asprintf(ctx, "file://%s%s", path, frag);
-
-	return uri;
+		return pdf_parse_link_dest_to_file_with_path(ctx, doc, pdf_to_text_string(ctx, str), dest, is_remote);
 }
 
 static pdf_obj *
@@ -384,24 +398,12 @@ pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
 	const char *filename, const char *mimetype, fz_buffer *contents,
 	int64_t created, int64_t modified, int add_checksum)
 {
-	const char *s;
-	char asciiname[1024];
 	pdf_obj *file = NULL;
 	pdf_obj *filespec = NULL;
-	pdf_obj *ef = NULL;
 	pdf_obj *params = NULL;
-	size_t i;
 
 	fz_var(file);
 	fz_var(filespec);
-
-	for (i = 0, s = filename; *s && i + 1 < sizeof asciiname; ++i)
-	{
-		int c;
-		s += fz_chartorune(&c, s);
-		asciiname[i] = (c >= 32 && c <= 126) ? c : '_';
-	}
-	asciiname[i] = 0;
 
 	if (!mimetype)
 		mimetype = pdf_guess_mime_type_from_file_name(ctx, filename);
@@ -427,21 +429,14 @@ pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
 				pdf_dict_put_string(ctx, params, PDF_NAME(CheckSum), (const char *) digest, nelem(digest));
 		}
 
-		filespec = pdf_add_new_dict(ctx, doc, 4);
-		pdf_dict_put(ctx, filespec, PDF_NAME(Type), PDF_NAME(Filespec));
-		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(F), asciiname);
-		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(UF), filename);
-		ef = pdf_dict_put_dict(ctx, filespec, PDF_NAME(EF), 1);
-		pdf_dict_put(ctx, ef, PDF_NAME(F), file);
+		filespec = pdf_add_filespec(ctx, doc, filename, file);
 	}
 	fz_always(ctx)
-	{
-		pdf_end_operation(ctx, doc);
 		pdf_drop_obj(ctx, file);
-	}
 	fz_catch(ctx)
 	{
 		pdf_drop_obj(ctx, filespec);
+		pdf_abandon_operation(ctx, doc);
 		fz_rethrow(ctx);
 	}
 
@@ -480,13 +475,13 @@ pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *action, int p
 	else if (pdf_name_eq(ctx, PDF_NAME(Launch), obj))
 	{
 		file_spec = pdf_dict_get(ctx, action, PDF_NAME(F));
-		return pdf_parse_file_spec(ctx, doc, file_spec, NULL);
+		return pdf_parse_file_spec(ctx, doc, file_spec, NULL, 0);
 	}
 	else if (pdf_name_eq(ctx, PDF_NAME(GoToR), obj))
 	{
 		dest = pdf_dict_get(ctx, action, PDF_NAME(D));
 		file_spec = pdf_dict_get(ctx, action, PDF_NAME(F));
-		return pdf_parse_file_spec(ctx, doc, file_spec, dest);
+		return pdf_parse_file_spec(ctx, doc, file_spec, dest, 1);
 	}
 	else if (pdf_name_eq(ctx, PDF_NAME(Named), obj))
 	{
@@ -532,11 +527,13 @@ static void pdf_set_link_rect(fz_context *ctx, fz_link *link_, fz_rect rect)
 	{
 		pdf_dict_put_rect(ctx, link->obj, PDF_NAME(Rect), rect);
 		link->super.rect = rect;
-	}
-	fz_always(ctx)
 		pdf_end_operation(ctx, link->page->doc);
+	}
 	fz_catch(ctx)
+	{
+		pdf_abandon_operation(ctx, link->page->doc);
 		fz_rethrow(ctx);
+	}
 }
 
 static void pdf_set_link_uri(fz_context *ctx, fz_link *link_, const char *uri)
@@ -553,11 +550,13 @@ static void pdf_set_link_uri(fz_context *ctx, fz_link *link_, const char *uri)
 				pdf_new_action_from_link(ctx, link->page->doc, uri));
 		fz_free(ctx, link->super.uri);
 		link->super.uri = fz_strdup(ctx, uri);
-	}
-	fz_always(ctx)
 		pdf_end_operation(ctx, link->page->doc);
+	}
 	fz_catch(ctx)
+	{
+		pdf_abandon_operation(ctx, link->page->doc);
 		fz_rethrow(ctx);
+	}
 }
 
 fz_link *pdf_new_link(fz_context *ctx, pdf_page *page, fz_rect rect, const char *uri, pdf_obj *obj)
@@ -656,70 +655,167 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj
 	return head;
 }
 
-/* See explanation of this format in pdf-outline.c */
-char *
-pdf_format_link_uri(fz_context *ctx, fz_link_dest dest)
+static char*
+format_explicit_dest_link_uri(fz_context *ctx, const char *schema, const char *uri, fz_link_dest dest)
 {
-	char *uri = NULL;
+	int pageno = dest.loc.page < 0 ? 1 : dest.loc.page + 1;
+	int has_frag;
+
+	if (!schema)
+		schema = "";
+	if (!uri)
+		uri = "";
+
+	has_frag = !!strchr(uri, '#');
 
 	switch (dest.type)
 	{
 	default:
+		return fz_asprintf(ctx, "%s%s%cpage=%d", schema, uri, "#&"[has_frag], pageno);
 	case FZ_LINK_DEST_FIT:
-		uri = fz_asprintf(ctx, "#page=%d&view=Fit", dest.loc.page + 1);
-		break;
+		return fz_asprintf(ctx, "%s%s%cpage=%d&view=Fit", schema, uri, "#&"[has_frag], pageno);
 	case FZ_LINK_DEST_FIT_B:
-		uri = fz_asprintf(ctx, "#page=%d&view=FitB", dest.loc.page + 1);
-		break;
+		return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitB", schema, uri, "#&"[has_frag], pageno);
 	case FZ_LINK_DEST_FIT_H:
 		if (isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&view=FitH", dest.loc.page + 1);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitH", schema, uri, "#&"[has_frag], pageno);
 		else
-			uri = fz_asprintf(ctx, "#page=%d&view=FitH,%g", dest.loc.page + 1, dest.y);
-		break;
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitH,%g", schema, uri, "#&"[has_frag], pageno, dest.y);
 	case FZ_LINK_DEST_FIT_BH:
 		if (isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&view=FitBH", dest.loc.page + 1);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitBH", schema, uri, "#&"[has_frag], pageno);
 		else
-			uri = fz_asprintf(ctx, "#page=%d&view=FitBH,%g", dest.loc.page + 1, dest.y);
-		break;
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitBH,%g", schema, uri, "#&"[has_frag], pageno, dest.y);
 	case FZ_LINK_DEST_FIT_V:
 		if (isnan(dest.x))
-			uri = fz_asprintf(ctx, "#page=%d&view=FitV", dest.loc.page + 1);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitV", schema, uri, "#&"[has_frag], pageno);
 		else
-			uri = fz_asprintf(ctx, "#page=%d&view=FitV,%g", dest.loc.page + 1, dest.x);
-		break;
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitV,%g", schema, uri, "#&"[has_frag], pageno, dest.x);
 	case FZ_LINK_DEST_FIT_BV:
 		if (isnan(dest.x))
-			uri = fz_asprintf(ctx, "#page=%d&view=FitBV", dest.loc.page + 1);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitBV", schema, uri, "#&"[has_frag], pageno);
 		else
-			uri = fz_asprintf(ctx, "#page=%d&view=FitBV,%g", dest.loc.page + 1, dest.x);
-		break;
+			return fz_asprintf(ctx, "%s%s%cpage=%d&view=FitBV,%g", schema, uri, "#&"[has_frag], pageno, dest.x);
 	case FZ_LINK_DEST_XYZ:
 		if (!isnan(dest.zoom) && !isnan(dest.x) && !isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,%g,%g", dest.loc.page + 1, dest.zoom, dest.x, dest.y);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=%g,%g,%g", schema, uri, "#&"[has_frag], pageno, dest.zoom, dest.x, dest.y);
 		else if (!isnan(dest.zoom) && !isnan(dest.x) && isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,%g,nan", dest.loc.page + 1, dest.zoom, dest.x);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=%g,%g,nan", schema, uri, "#&"[has_frag], pageno, dest.zoom, dest.x);
 		else if (!isnan(dest.zoom) && isnan(dest.x) && !isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,nan,%g", dest.loc.page + 1, dest.zoom, dest.y);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=%g,nan,%g", schema, uri, "#&"[has_frag], pageno, dest.zoom, dest.y);
 		else if (!isnan(dest.zoom) && isnan(dest.x) && isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=%g,nan,nan", dest.loc.page + 1, dest.zoom);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=%g,nan,nan", schema, uri, "#&"[has_frag], pageno, dest.zoom);
 		else if (isnan(dest.zoom) && !isnan(dest.x) && !isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,%g,%g", dest.loc.page + 1, dest.x, dest.y);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=nan,%g,%g", schema, uri, "#&"[has_frag], pageno, dest.x, dest.y);
 		else if (isnan(dest.zoom) && !isnan(dest.x) && isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,%g,nan", dest.loc.page + 1, dest.x);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=nan,%g,nan", schema, uri, "#&"[has_frag], pageno, dest.x);
 		else if (isnan(dest.zoom) && isnan(dest.x) && !isnan(dest.y))
-			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,nan,%g", dest.loc.page + 1, dest.y);
+			return fz_asprintf(ctx, "%s%s%cpage=%d&zoom=nan,nan,%g", schema, uri, "#&"[has_frag], pageno, dest.y);
 		else
-			uri = fz_asprintf(ctx, "#page=%d&zoom=nan,nan,nan", dest.loc.page + 1);
-		break;
+			return fz_asprintf(ctx, "%s%s%cpage=%d", schema, uri, "#&"[has_frag], pageno);
 	case FZ_LINK_DEST_FIT_R:
-		uri = fz_asprintf(ctx, "#page=%d&viewrect=%g,%g,%g,%g", dest.loc.page + 1,
+		return fz_asprintf(ctx, "%s%s%cpage=%d&viewrect=%g,%g,%g,%g", schema, uri, "#&"[has_frag], pageno,
 			dest.x, dest.y, dest.w, dest.h);
-		break;
 	}
+}
+
+static char*
+format_named_dest_link_uri(fz_context *ctx, const char *schema, const char *path, const char *name)
+{
+	if (!schema)
+		schema = "";
+	if (!path)
+		path = "";
+	return fz_asprintf(ctx, "%s%s#nameddest=%s", schema, path, name);
+}
+
+static char *
+pdf_format_remote_link_uri_from_name(fz_context *ctx, const char *name)
+{
+	char *encoded_name = NULL;
+	char *uri = NULL;
+
+	encoded_name = fz_encode_uri_component(ctx, name);
+	fz_try(ctx)
+		uri = format_named_dest_link_uri(ctx, NULL, NULL, encoded_name);
+	fz_always(ctx)
+		fz_free(ctx, encoded_name);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	return uri;
+}
+
+static int
+is_file_uri(fz_context *ctx, const char *uri)
+{
+	return uri && !strncmp(uri, "file:", 5);
+}
+
+static int
+has_explicit_dest(fz_context *ctx, const char *uri)
+{
+	const char *fragment;
+	if (uri == NULL || (fragment = strchr(uri, '#')) == NULL)
+		return 0;
+	return strstr(fragment, "page=") != NULL;
+}
+
+static int
+has_named_dest(fz_context *ctx, const char *uri)
+{
+	const char *fragment;
+	if (uri == NULL || (fragment = strchr(uri, '#')) == NULL)
+		return 0;
+	return (strstr(fragment, "nameddest=") || !has_explicit_dest(ctx, uri));
+}
+
+static char *
+parse_file_uri_path(fz_context *ctx, const char *uri)
+{
+	char *frag, *path, *temp;
+
+	temp = fz_strdup(ctx, uri + 5);
+	fz_try(ctx)
+	{
+		frag = strchr(temp, '#');
+		if (frag)
+			*frag = 0;
+		path = fz_decode_uri_component(ctx, temp);
+		fz_cleanname(path);
+	}
+	fz_always(ctx)
+		fz_free(ctx, temp);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return path;
+}
+
+static char *
+parse_uri_named_dest(fz_context *ctx, const char *uri)
+{
+	const char *nameddest_s = strstr(uri, "nameddest=");
+	if (nameddest_s)
+	{
+		char *temp = fz_strdup(ctx, nameddest_s + 10);
+		char *dest;
+		fz_try(ctx)
+		{
+			char *ampersand = strchr(temp, '&');
+			if (ampersand)
+				*ampersand = 0;
+			dest = fz_decode_uri_component(ctx, temp);
+		}
+		fz_always(ctx)
+			fz_free(ctx, temp);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+		return dest;
+	}
+
+	// We know there must be a # because of the check in has_named_dest
+	return fz_decode_uri_component(ctx, strchr(uri, '#') + 1);
 }
 
 static float next_float(const char *str, int eatcomma, char **end)
@@ -729,81 +825,544 @@ static float next_float(const char *str, int eatcomma, char **end)
 	return fz_strtof(str, end);
 }
 
-fz_link_dest
-pdf_parse_link_uri(fz_context *ctx, const char *uri)
+static fz_link_dest
+pdf_new_explicit_dest_from_uri(fz_context *ctx, pdf_document *doc, const char *uri)
 {
-	fz_link_dest dest = fz_make_link_dest_xyz(0, 0, NAN, NAN, NAN);
-	char *page_s, *view_s, *rect_s, *zoom_s;
+	char *page, *rect, *zoom, *view;
+	fz_link_dest val = fz_make_link_dest_none();
 
-	if (!uri || uri[0] != '#')
+	uri = uri ? strchr(uri, '#') : NULL;
+
+	page = uri ? strstr(uri, "page=") : NULL;
+	rect = uri ? strstr(uri, "viewrect=") : NULL;
+	zoom = uri ? strstr(uri, "zoom=") : NULL;
+	view = uri ? strstr(uri, "view=") : NULL;
+
+	val.loc.chapter = 0;
+
+	if (page)
 	{
-		fz_warn(ctx, "unknown link uri '%s'", uri);
-		return dest;
+		val.loc.page = fz_atoi(page+5) - 1;
+		val.loc.page = fz_maxi(val.loc.page, 0);
+	}
+	else
+		val.loc.page = 0;
+
+	if (rect)
+	{
+		rect += 9;
+		val.type = FZ_LINK_DEST_FIT_R;
+		val.x = next_float(rect, 0, &rect);
+		val.y = next_float(rect, 1, &rect);
+		val.w = next_float(rect, 1, &rect);
+		val.h = next_float(rect, 1, &rect);
+	}
+	else if (zoom)
+	{
+		zoom += 5;
+		val.type = FZ_LINK_DEST_XYZ;
+		val.zoom = next_float(zoom, 0, &zoom);
+		val.x = next_float(zoom, 1, &zoom);
+		val.y = next_float(zoom, 1, &zoom);
+		if (val.zoom <= 0 || isinf(val.zoom))
+			val.zoom = 100;
+	}
+	else if (view)
+	{
+		view += 5;
+		if (!fz_strncasecmp(view, "FitH", 4))
+		{
+			view += 4;
+			val.type = FZ_LINK_DEST_FIT_H;
+			val.y = strchr(view, ',') ? next_float(view, 1, &view) : NAN;
+		}
+		else if (!fz_strncasecmp(view, "FitBH", 5))
+		{
+			view += 5;
+			val.type = FZ_LINK_DEST_FIT_BH;
+			val.y = strchr(view, ',') ? next_float(view, 1, &view) : NAN;
+		}
+		else if (!fz_strncasecmp(view, "FitV", 4))
+		{
+			view += 4;
+			val.type = FZ_LINK_DEST_FIT_V;
+			val.x = strchr(view, ',') ? next_float(view, 1, &view) : NAN;
+		}
+		else if (!fz_strncasecmp(view, "FitBV", 5))
+		{
+			view += 5;
+			val.type = FZ_LINK_DEST_FIT_BV;
+			val.x = strchr(view, ',') ? next_float(view, 1, &view) : NAN;
+		}
+		else if (!fz_strncasecmp(view, "FitB", 4))
+		{
+			val.type = FZ_LINK_DEST_FIT_B;
+		}
+		else if (!fz_strncasecmp(view, "Fit", 3))
+		{
+			val.type = FZ_LINK_DEST_FIT;
+		}
 	}
 
-	page_s = strstr(uri, "page=");
-	if (page_s)
-		dest.loc.page = fz_atoi(page_s+5) - 1;
+	return val;
+}
 
-	rect_s = strstr(uri, "viewrect=");
-	zoom_s = strstr(uri, "zoom=");
-	view_s = strstr(uri, "view=");
+char *
+pdf_append_named_dest_to_uri(fz_context *ctx, const char *uri, const char *name)
+{
+	char *encoded_name = NULL;
+	char *new_uri = NULL;
+	int has_frag;
 
-	if (rect_s)
+	if (!uri)
+		uri = "";
+
+	has_frag = !!strchr(uri, '#');
+
+	encoded_name = fz_encode_uri_component(ctx, name);
+	fz_try(ctx)
+		new_uri = fz_asprintf(ctx, "%s%cnameddest=%s", uri, "#&"[has_frag], encoded_name);
+	fz_always(ctx)
+		fz_free(ctx, encoded_name);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return new_uri;
+}
+
+char *
+pdf_append_explicit_dest_to_uri(fz_context *ctx, const char *uri, fz_link_dest dest)
+{
+	return format_explicit_dest_link_uri(ctx, NULL, uri, dest);
+}
+
+char *
+pdf_new_uri_from_path_and_named_dest(fz_context *ctx, const char *path, const char *name)
+{
+	const char *schema = NULL;
+	char *encoded_name = NULL;
+	char *encoded_path = NULL;
+	char *uri = NULL;
+
+	fz_var(encoded_name);
+	fz_var(encoded_path);
+
+	fz_try(ctx)
 	{
-		rect_s += 9;
-		dest.type = FZ_LINK_DEST_FIT_R;
-		dest.x = next_float(rect_s, 0, &rect_s);
-		dest.y = next_float(rect_s, 1, &rect_s);
-		dest.w = next_float(rect_s, 1, &rect_s);
-		dest.h = next_float(rect_s, 1, &rect_s);
+		if (path && strlen(path) > 0)
+		{
+			if (path[0] == '/')
+				schema = "file://";
+			else
+				schema = "file:";
+			encoded_path = fz_encode_uri_pathname(ctx, path);
+			fz_cleanname(encoded_path);
+		}
+
+		encoded_name = fz_encode_uri_component(ctx, name);
+		uri = format_named_dest_link_uri(ctx, schema, encoded_path, encoded_name);
 	}
-	else if (zoom_s)
+	fz_always(ctx)
 	{
-		zoom_s += 5;
-		dest.type = FZ_LINK_DEST_XYZ;
-		dest.zoom = next_float(zoom_s, 0, &zoom_s);
-		dest.x = next_float(zoom_s, 1, &zoom_s);
-		dest.y = next_float(zoom_s, 1, &zoom_s);
-		if (dest.zoom <= 0 || isinf(dest.zoom))
-			dest.zoom = 100;
+		fz_free(ctx, encoded_name);
+		fz_free(ctx, encoded_path);
 	}
-	else if (view_s)
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return uri;
+}
+
+char *
+pdf_new_uri_from_path_and_explicit_dest(fz_context *ctx, const char *path, fz_link_dest dest)
+{
+	const char *schema = NULL;
+	char *encoded_path = NULL;
+	char *uri = NULL;
+
+	fz_var(encoded_path);
+
+	fz_try(ctx)
 	{
-		view_s += 5;
-		if (!fz_strncasecmp(view_s, "FitH", 4))
+		if (path && strlen(path) > 0)
 		{
-			view_s += 4;
-			dest.type = FZ_LINK_DEST_FIT_H;
-			dest.y = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
+			if (path[0] == '/')
+				schema = "file://";
+			else
+				schema = "file:";
+			encoded_path = fz_encode_uri_pathname(ctx, path);
+			fz_cleanname(encoded_path);
 		}
-		else if (!fz_strncasecmp(view_s, "FitBH", 5))
+
+		uri = format_explicit_dest_link_uri(ctx, schema, encoded_path, dest);
+	}
+	fz_always(ctx)
+		fz_free(ctx, encoded_path);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return uri;
+}
+
+char *
+pdf_new_uri_from_explicit_dest(fz_context *ctx, fz_link_dest dest)
+{
+	return format_explicit_dest_link_uri(ctx, NULL, NULL, dest);
+}
+
+char *
+pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
+{
+	if (pdf_is_array(ctx, dest) && pdf_array_len(ctx, dest) >= 1)
+	{
+		fz_link_dest destination = fz_make_link_dest_none();
+		populate_destination(ctx, doc, dest, 0, &destination);
+		return format_explicit_dest_link_uri(ctx, NULL, NULL, destination);
+	}
+	else if (pdf_is_name(ctx, dest))
+	{
+		const char *name = pdf_to_name(ctx, dest);
+		return pdf_format_remote_link_uri_from_name(ctx, name);
+	}
+	else if (pdf_is_string(ctx, dest))
+	{
+		const char *name = pdf_to_text_string(ctx, dest);
+		return pdf_format_remote_link_uri_from_name(ctx, name);
+	}
+	else
+	{
+		fz_warn(ctx, "invalid link destination");
+		return NULL;
+	}
+}
+
+static pdf_obj *
+pdf_add_filespec_from_link(fz_context *ctx, pdf_document *doc, const char *uri)
+{
+	char *file = NULL;
+	pdf_obj *filespec = NULL;
+	fz_try(ctx)
+	{
+		if (is_file_uri(ctx, uri))
 		{
-			view_s += 5;
-			dest.type = FZ_LINK_DEST_FIT_BH;
-			dest.y = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
+			file = parse_file_uri_path(ctx, uri);
+			filespec = pdf_add_filespec(ctx, doc, file, NULL);
 		}
-		else if (!fz_strncasecmp(view_s, "FitV", 4))
+		else if (fz_is_external_link(ctx, uri))
+			filespec = pdf_add_url_filespec(ctx, doc, uri);
+		else
+			fz_throw(ctx, FZ_ERROR_GENERIC, "can not add non-uri as file specification");
+	}
+	fz_always(ctx)
+		fz_free(ctx, file);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return filespec;
+}
+
+
+pdf_obj *
+pdf_new_action_from_link(fz_context *ctx, pdf_document *doc, const char *uri)
+{
+	pdf_obj *action = pdf_new_dict(ctx, doc, 2);
+	char *file = NULL;
+
+	fz_var(file);
+
+	if (uri == NULL)
+		return NULL;
+
+	fz_try(ctx)
+	{
+		if (uri[0] == '#')
 		{
-			view_s += 4;
-			dest.type = FZ_LINK_DEST_FIT_V;
-			dest.x = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
+			pdf_dict_put(ctx, action, PDF_NAME(S), PDF_NAME(GoTo));
+			pdf_dict_put_drop(ctx, action, PDF_NAME(D),
+				pdf_new_dest_from_link(ctx, doc, uri, 0));
 		}
-		else if (!fz_strncasecmp(view_s, "FitBV", 5))
+		else if (!strncmp(uri, "file:", 5))
 		{
-			view_s += 5;
-			dest.type = FZ_LINK_DEST_FIT_BV;
-			dest.x = strchr(view_s, ',') ? next_float(view_s, 1, &view_s) : NAN;
+			pdf_dict_put(ctx, action, PDF_NAME(S), PDF_NAME(GoToR));
+			pdf_dict_put_drop(ctx, action, PDF_NAME(D),
+				pdf_new_dest_from_link(ctx, doc, uri, 1));
+			pdf_dict_put_drop(ctx, action, PDF_NAME(F),
+				pdf_add_filespec_from_link(ctx, doc, uri));
 		}
-		else if (!fz_strncasecmp(view_s, "FitB", 4))
+		else if (fz_is_external_link(ctx, uri))
 		{
-			dest.type = FZ_LINK_DEST_FIT_B;
+			pdf_dict_put(ctx, action, PDF_NAME(S), PDF_NAME(URI));
+			pdf_dict_put_text_string(ctx, action, PDF_NAME(URI), uri);
 		}
-		else if (!fz_strncasecmp(view_s, "Fit", 3))
+		else
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported link URI type");
+	}
+	fz_always(ctx)
+		fz_free(ctx, file);
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, action);
+		fz_rethrow(ctx);
+	}
+
+	return action;
+}
+
+
+pdf_obj *pdf_add_filespec(fz_context *ctx, pdf_document *doc, const char *filename, pdf_obj *embedded_file)
+{
+	pdf_obj *filespec = NULL;
+	char *asciiname = NULL;
+	const char *s;
+	size_t len, i;
+
+	fz_var(asciiname);
+	fz_var(filespec);
+
+	fz_try(ctx)
+	{
+		len = strlen(filename) + 1;
+		asciiname = fz_malloc(ctx, len);
+
+		for (i = 0, s = filename; *s && i + 1 < len; ++i)
 		{
-			dest.type = FZ_LINK_DEST_FIT;
+			int c;
+			s += fz_chartorune(&c, s);
+			asciiname[i] = (c >= 32 && c <= 126) ? c : '_';
+		}
+		asciiname[i] = 0;
+
+		filespec = pdf_add_new_dict(ctx, doc, 4);
+		pdf_dict_put(ctx, filespec, PDF_NAME(Type), PDF_NAME(Filespec));
+		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(F), asciiname);
+		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(UF), filename);
+		if (embedded_file)
+		{
+			pdf_obj *ef = pdf_dict_put_dict(ctx, filespec, PDF_NAME(EF), 1);
+			pdf_dict_put(ctx, ef, PDF_NAME(F), embedded_file);
+		}
+	}
+	fz_always(ctx)
+		fz_free(ctx, asciiname);
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, filespec);
+		fz_rethrow(ctx);
+	}
+
+	return filespec;
+}
+
+pdf_obj *pdf_add_url_filespec(fz_context *ctx, pdf_document *doc, const char *url)
+{
+	pdf_obj *filespec = pdf_add_new_dict(ctx, doc, 3);
+	fz_try(ctx)
+	{
+		pdf_dict_put(ctx, filespec, PDF_NAME(Type), PDF_NAME(Filespec));
+		pdf_dict_put(ctx, filespec, PDF_NAME(FS), PDF_NAME(URL));
+		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(F), url);
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, filespec);
+		fz_rethrow(ctx);
+	}
+	return filespec;
+}
+
+pdf_obj *
+pdf_new_dest_from_link(fz_context *ctx, pdf_document *doc, const char *uri, int is_remote)
+{
+	pdf_obj *dest = NULL;
+
+	fz_var(dest);
+
+	if (has_named_dest(ctx, uri))
+	{
+		char *name = parse_uri_named_dest(ctx, uri);
+
+		fz_try(ctx)
+			dest = pdf_new_name(ctx, name);
+		fz_always(ctx)
+			fz_free(ctx, name);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+	}
+	else
+	{
+		fz_matrix ctm, invctm;
+		fz_link_dest val;
+		pdf_obj *pageobj;
+		fz_point p;
+		fz_rect r;
+
+		fz_try(ctx)
+		{
+			val = pdf_new_explicit_dest_from_uri(ctx, doc, uri);
+
+			dest = pdf_new_array(ctx, doc, 6);
+
+			if (is_remote)
+			{
+				pdf_array_push_int(ctx, dest, val.loc.page);
+				invctm = fz_identity;
+			}
+			else
+			{
+				pageobj = pdf_lookup_page_obj(ctx, doc, val.loc.page);
+				pdf_array_push(ctx, dest, pageobj);
+
+				pdf_page_obj_transform(ctx, pageobj, NULL, &ctm);
+				invctm = fz_invert_matrix(ctm);
+			}
+
+			switch (val.type)
+			{
+			default:
+			case FZ_LINK_DEST_FIT:
+				pdf_array_push(ctx, dest, PDF_NAME(Fit));
+				break;
+			case FZ_LINK_DEST_FIT_H:
+				p = fz_transform_point_xy(0, val.y, invctm);
+				pdf_array_push(ctx, dest, PDF_NAME(FitH));
+				if (isnan(p.y))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, p.y);
+				break;
+			case FZ_LINK_DEST_FIT_BH:
+				p = fz_transform_point_xy(0, val.y, invctm);
+				pdf_array_push(ctx, dest, PDF_NAME(FitBH));
+				if (isnan(p.y))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, p.y);
+				break;
+			case FZ_LINK_DEST_FIT_V:
+				p = fz_transform_point_xy(val.x, 0, invctm);
+				pdf_array_push(ctx, dest, PDF_NAME(FitV));
+				if (isnan(p.x))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, p.x);
+				break;
+			case FZ_LINK_DEST_FIT_BV:
+				p = fz_transform_point_xy(val.x, 0, invctm);
+				pdf_array_push(ctx, dest, PDF_NAME(FitBV));
+				if (isnan(p.x))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, p.x);
+				break;
+			case FZ_LINK_DEST_XYZ:
+				p = fz_transform_point_xy(val.x, val.y, invctm);
+				pdf_array_push(ctx, dest, PDF_NAME(XYZ));
+				if (isnan(p.x))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, p.x);
+				if (isnan(p.y))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, p.y);
+				if (isnan(val.zoom))
+					pdf_array_push(ctx, dest, PDF_NULL);
+				else
+					pdf_array_push_real(ctx, dest, val.zoom / 100);
+				break;
+			case FZ_LINK_DEST_FIT_R:
+				r.x0 = val.x;
+				r.y0 = val.y;
+				r.x1 = val.x + val.w;
+				r.y1 = val.y + val.h;
+				fz_transform_rect(r, invctm);
+				pdf_array_push(ctx, dest, PDF_NAME(FitR));
+				pdf_array_push_real(ctx, dest, r.x0);
+				pdf_array_push_real(ctx, dest, r.y0);
+				pdf_array_push_real(ctx, dest, r.x1);
+				pdf_array_push_real(ctx, dest, r.y1);
+				break;
+			}
+		}
+		fz_catch(ctx)
+		{
+			pdf_drop_obj(ctx, dest);
+			fz_rethrow(ctx);
 		}
 	}
 
 	return dest;
+}
+
+fz_link_dest
+pdf_resolve_link_dest(fz_context *ctx, pdf_document *doc, const char *uri)
+{
+	fz_link_dest dest = fz_make_link_dest_none();
+	pdf_obj *page_obj;
+	fz_matrix page_ctm;
+	fz_rect mediabox;
+	pdf_obj *needle = NULL;
+	char *name = NULL;
+	char *desturi = NULL;
+	pdf_obj *destobj = NULL;
+
+	fz_var(needle);
+	fz_var(name);
+
+	fz_try(ctx)
+	{
+		if (has_explicit_dest(ctx, uri))
+		{
+			dest = pdf_new_explicit_dest_from_uri(ctx, doc, uri);
+			if (!isnan(dest.x) || !isnan(dest.y) || !isnan(dest.w) || !isnan(dest.h))
+			{
+				page_obj = pdf_lookup_page_obj(ctx, doc, dest.loc.page);
+				pdf_page_obj_transform(ctx, page_obj, &mediabox, &page_ctm);
+				mediabox = fz_transform_rect(mediabox, page_ctm);
+
+				/* clamp coordinates to remain on page */
+				dest.x = fz_clamp(dest.x, 0, mediabox.x1 - mediabox.x0);
+				dest.y = fz_clamp(dest.y, 0, mediabox.y1 - mediabox.y0);
+				dest.w = fz_clamp(dest.w, 0, mediabox.x1 - dest.x);
+				dest.h = fz_clamp(dest.h, 0, mediabox.y1 - dest.y);
+			}
+		}
+		else if (has_named_dest(ctx, uri))
+		{
+			name = parse_uri_named_dest(ctx, uri);
+
+			needle = pdf_new_string(ctx, name, strlen(name));
+			destobj = resolve_dest(ctx, doc, needle);
+			if (destobj)
+			{
+				fz_link_dest destdest;
+				desturi = pdf_parse_link_dest(ctx, doc, destobj);
+				destdest = pdf_resolve_link_dest(ctx, doc, desturi);
+				if (dest.type == FZ_LINK_DEST_XYZ && isnan(dest.x) && isnan(dest.y) && isnan(dest.zoom))
+					dest = destdest;
+				else
+					dest.loc = destdest.loc;
+			}
+		}
+		else
+			dest.loc.page = fz_atoi(uri) - 1;
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, desturi);
+		fz_free(ctx, name);
+		pdf_drop_obj(ctx, needle);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return dest.loc.page >= 0 ? dest : fz_make_link_dest_none();
+}
+
+int
+pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float *xp, float *yp)
+{
+	fz_link_dest dest = pdf_resolve_link_dest(ctx, doc, uri);
+	if (xp) *xp = dest.x;
+	if (yp) *yp = dest.y;
+	return dest.loc.page;
 }

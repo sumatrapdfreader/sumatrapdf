@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -285,6 +285,7 @@ fz_clone_pixmap_area_with_different_seps(fz_context *ctx, fz_pixmap *src, const 
 {
 	fz_irect local_bbox;
 	fz_pixmap *dst, *pix;
+	int drop_src = 0;
 
 	if (bbox == NULL)
 	{
@@ -301,8 +302,17 @@ fz_clone_pixmap_area_with_different_seps(fz_context *ctx, fz_pixmap *src, const 
 	else
 		dst->flags &= ~FZ_PIXMAP_FLAG_INTERPOLATE;
 
+	if (fz_colorspace_is_indexed(ctx, src->colorspace))
+	{
+		src = fz_convert_indexed_pixmap_to_base(ctx, src);
+		drop_src = 1;
+	}
+
 	fz_try(ctx)
 		pix = fz_copy_pixmap_area_converting_seps(ctx, src, dst, NULL, color_params, default_cs);
+	fz_always(ctx)
+		if (drop_src)
+			fz_drop_pixmap(ctx, src);
 	fz_catch(ctx)
 	{
 		fz_drop_pixmap(ctx, dst);

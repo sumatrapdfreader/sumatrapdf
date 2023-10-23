@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_DOCUMENT_H
 #define MUPDF_FITZ_DOCUMENT_H
@@ -36,6 +36,19 @@
 typedef struct fz_document_handler fz_document_handler;
 typedef struct fz_page fz_page;
 typedef intptr_t fz_bookmark;
+
+typedef enum
+{
+	FZ_MEDIA_BOX,
+	FZ_CROP_BOX,
+	FZ_BLEED_BOX,
+	FZ_TRIM_BOX,
+	FZ_ART_BOX,
+	FZ_UNKNOWN_BOX
+} fz_box_type;
+
+fz_box_type fz_box_type_from_string(const char *name);
+const char *fz_string_from_box_type(fz_box_type box);
 
 /**
 	Simple constructor for fz_locations.
@@ -95,6 +108,10 @@ typedef enum
 	FZ_PERMISSION_COPY = 'c',
 	FZ_PERMISSION_EDIT = 'e',
 	FZ_PERMISSION_ANNOTATE = 'n',
+	FZ_PERMISSION_FORM = 'f',
+	FZ_PERMISSION_ACCESSIBILITY = 'y',
+	FZ_PERMISSION_ASSEMBLE = 'a',
+	FZ_PERMISSION_PRINT_HQ = 'h',
 }
 fz_permission;
 
@@ -185,14 +202,14 @@ typedef fz_page *(fz_document_load_page_fn)(fz_context *ctx, fz_document *doc, i
 	Type for a function to get the page label of a page in the document.
 	See fz_page_label for more information.
 */
-typedef void (fz_document_page_label_fn)(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, int size);
+typedef void (fz_document_page_label_fn)(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, size_t size);
 
 /**
 	Type for a function to query
 	a document's metadata. See fz_lookup_metadata for more
 	information.
 */
-typedef int (fz_document_lookup_metadata_fn)(fz_context *ctx, fz_document *doc, const char *key, char *buf, int size);
+typedef int (fz_document_lookup_metadata_fn)(fz_context *ctx, fz_document *doc, const char *key, char *buf, size_t size);
 
 /**
 	Type for a function to set
@@ -235,7 +252,7 @@ typedef void (fz_page_drop_page_fn)(fz_context *ctx, fz_page *page);
 	bounding box of a page. See fz_bound_page for more
 	information.
 */
-typedef fz_rect (fz_page_bound_page_fn)(fz_context *ctx, fz_page *page);
+typedef fz_rect (fz_page_bound_page_fn)(fz_context *ctx, fz_page *page, fz_box_type box);
 
 /**
 	Type for a function to run the
@@ -356,6 +373,17 @@ typedef fz_document *(fz_document_open_accel_with_stream_fn)(fz_context *ctx, fz
 typedef int (fz_document_recognize_fn)(fz_context *ctx, const char *magic);
 
 /**
+	Recognize a document type from stream contents.
+
+	stream: stream contents to recognise.
+
+	Returns a number between 0 (not recognized) and 100
+	(fully recognized) based on how certain the recognizer
+	is that this is of the required type.
+*/
+typedef int (fz_document_recognize_content_fn)(fz_context *ctx, fz_stream *stream);
+
+/**
 	Type for a function to be called when processing an already opened page.
 	See fz_process_opened_pages.
 */
@@ -383,6 +411,26 @@ void fz_register_document_handlers(fz_context *ctx);
 	a mimetype.
 */
 const fz_document_handler *fz_recognize_document(fz_context *ctx, const char *magic);
+
+/**
+	Given a filename find a document handler that can handle a
+	document of this type.
+
+	filename: The filename of the document. This will be opened and sampled
+	to check data.
+*/
+const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const char *filename);
+
+/**
+	Given a magic find a document handler that can handle a
+	document of this type.
+
+	stream: the file stream to sample.
+
+	magic: Can be a filename extension (including initial period) or
+	a mimetype.
+*/
+const fz_document_handler *fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const char *magic);
 
 /**
 	Open a document file and read its basic structure so pages and
@@ -668,6 +716,7 @@ fz_page *fz_new_page_of_size(fz_context *ctx, int size, fz_document *doc);
 	Determine the size of a page at 72 dpi.
 */
 fz_rect fz_bound_page(fz_context *ctx, fz_page *page);
+fz_rect fz_bound_page_box(fz_context *ctx, fz_page *page, fz_box_type box);
 
 /**
 	Run a page through a device.
@@ -950,6 +999,7 @@ struct fz_document_handler
 	const char **mimetypes;
 	fz_document_open_accel_fn *open_accel;
 	fz_document_open_accel_with_stream_fn *open_accel_with_stream;
+	fz_document_recognize_content_fn *recognize_content;
 };
 
 #endif

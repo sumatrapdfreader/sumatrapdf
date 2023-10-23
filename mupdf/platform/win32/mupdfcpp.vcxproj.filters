@@ -24,6 +24,9 @@
     <ClCompile Include="..\c++\implementation\classes2.cpp">
       <Filter>implementation</Filter>
     </ClCompile>
+    <ClCompile Include="..\c++\implementation\extra.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\c++\include\classes.h">

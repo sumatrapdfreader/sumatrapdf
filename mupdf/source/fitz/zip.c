@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -51,10 +51,11 @@ fz_write_zip_entry(fz_context *ctx, fz_zip_writer *zip, const char *name, fz_buf
 	sum = crc32(0, NULL, 0);
 	sum = crc32(sum, buf->data, (uInt)buf->len);
 
+	/* bit 11 of general purpose bit flag indicates UTF-8. */
 	fz_append_int32_le(ctx, zip->central, ZIP_CENTRAL_DIRECTORY_SIG);
 	fz_append_int16_le(ctx, zip->central, 0); /* version made by: MS-DOS */
 	fz_append_int16_le(ctx, zip->central, 20); /* version to extract: 2.0 */
-	fz_append_int16_le(ctx, zip->central, 0); /* general purpose bit flag */
+	fz_append_int16_le(ctx, zip->central, 1<<11); /* general purpose bit flag */
 	fz_append_int16_le(ctx, zip->central, 0); /* compression method: store */
 	fz_append_int16_le(ctx, zip->central, 0); /* TODO: last mod file time */
 	fz_append_int16_le(ctx, zip->central, 0); /* TODO: last mod file date */
@@ -72,7 +73,7 @@ fz_write_zip_entry(fz_context *ctx, fz_zip_writer *zip, const char *name, fz_buf
 
 	fz_write_int32_le(ctx, zip->output, ZIP_LOCAL_FILE_SIG);
 	fz_write_int16_le(ctx, zip->output, 20); /* version to extract: 2.0 */
-	fz_write_int16_le(ctx, zip->output, 0); /* general purpose bit flag */
+	fz_write_int16_le(ctx, zip->output, 1<<11); /* general purpose bit flag */
 	fz_write_int16_le(ctx, zip->output, 0); /* compression method: store */
 	fz_write_int16_le(ctx, zip->output, 0); /* TODO: last mod file time */
 	fz_write_int16_le(ctx, zip->output, 0); /* TODO: last mod file date */

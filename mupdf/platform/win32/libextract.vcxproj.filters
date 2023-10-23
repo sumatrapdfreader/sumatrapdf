@@ -45,9 +45,6 @@
     <ClCompile Include="..\..\thirdparty\extract\src\mem.c">
       <Filter>extract</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\extract\src\misc-test.c">
-      <Filter>extract</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\thirdparty\extract\src\odt.c">
       <Filter>extract</Filter>
     </ClCompile>

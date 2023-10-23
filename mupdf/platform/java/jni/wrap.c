@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* Conversion functions: C to Java. These all throw fitz exceptions. */
 
@@ -45,7 +45,7 @@ static inline jobject to_DefaultColorSpaces(fz_context *ctx, JNIEnv *env, fz_def
 	if (!ctx || !dcs) return NULL;
 
 	fz_keep_default_colorspaces(ctx, dcs);
-	jdcs = (*env)->CallStaticObjectMethod(env, cls_DefaultColorSpaces, mid_DefaultColorSpaces_init, jlong_cast(dcs));
+	jdcs = (*env)->NewObject(env, cls_DefaultColorSpaces, mid_DefaultColorSpaces_init, jlong_cast(dcs));
 	if (!jdcs)
 		fz_drop_default_colorspaces(ctx, dcs);
 	if ((*env)->ExceptionCheck(env))

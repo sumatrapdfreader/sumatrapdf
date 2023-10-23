@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* PDFObject interface */
 
@@ -455,7 +455,7 @@ FUN(PDFObject_getArray)(JNIEnv *env, jobject self, jint index)
 }
 
 JNIEXPORT jobject JNICALL
-FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
+FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname, jboolean inheritable)
 {
 	fz_context *ctx = get_context(env);
 	pdf_obj *dict = from_PDFObject(env, self);
@@ -471,7 +471,10 @@ FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
 	if (!name) jni_throw_run(env, "cannot get name to lookup");
 
 	fz_try(ctx)
-		val = pdf_dict_gets(ctx, dict, name);
+		if (inheritable)
+			val = pdf_dict_gets_inheritable(ctx, dict, name);
+		else
+			val = pdf_dict_gets(ctx, dict, name);
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jname, name);
 	fz_catch(ctx)
@@ -558,7 +561,7 @@ FUN(PDFObject_putArrayString)(JNIEnv *env, jobject self, jint index, jstring jst
 	fz_try(ctx)
 	{
 		if (str)
-			pdf_array_put_drop(ctx, arr, index, pdf_new_string(ctx, str, strlen(str)));
+			pdf_array_put_string(ctx, arr, index, str, strlen(str));
 		else
 			pdf_array_put(ctx, arr, index, PDF_NULL);
 	}

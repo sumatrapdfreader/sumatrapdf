@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_MATH_H
 #define MUPDF_FITZ_MATH_H
@@ -146,6 +146,11 @@ static inline float fz_clamp(float x, float min, float max)
 }
 
 static inline int fz_clampi(int x, int min, int max)
+{
+	return x < min ? min : x > max ? max : x;
+}
+
+static inline int64_t fz_clamp64(int64_t x, int64_t min, int64_t max)
 {
 	return x < min ? min : x > max ? max : x;
 }

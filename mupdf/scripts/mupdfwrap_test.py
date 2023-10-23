@@ -165,7 +165,7 @@ def test(path):
     assert getattr(mupdf.FzBuffer, 'fz_buffer_extract')
     assert getattr(mupdf.FzBuffer, 'fz_buffer_extract_copy')
 
-    # Test SWIG Directory wrapping of pdf_filter_options:
+    # Test SWIG Director wrapping of pdf_filter_options:
     #
     test_filter(path)
 
@@ -354,6 +354,12 @@ def test(path):
                 log(f'            {line_text}')
 
         device_stext.fz_close_device()
+
+    # Check fz_search_page2().
+    items = mupdf.fz_search_page2(document, 0, "compression", 20)
+    print(f'{len(items)=}')
+    for item in items:
+        print(f'    {item.mark=} {item.quad=}')
 
     # Check copy-constructor.
     log(f'Checking copy-constructor')

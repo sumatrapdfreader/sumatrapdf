@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package example;
 
@@ -157,6 +157,10 @@ public class ViewerCore {
 			boolean edit = false;
 			boolean copy = false;
 			boolean annotate = false;
+			boolean form = false;
+			boolean accessibility = false;
+			boolean assemble = false;
+			boolean printHq = false;
 			boolean isPDF = false;
 			boolean reflowable = false;
 			boolean linear = false;
@@ -171,6 +175,10 @@ public class ViewerCore {
 				copy = doc.hasPermission(Document.PERMISSION_COPY);
 				edit = doc.hasPermission(Document.PERMISSION_EDIT);
 				annotate = doc.hasPermission(Document.PERMISSION_ANNOTATE);
+				form = doc.hasPermission(Document.PERMISSION_FORM);
+				accessibility = doc.hasPermission(Document.PERMISSION_ACCESSBILITY);
+				assemble = doc.hasPermission(Document.PERMISSION_ASSEMBLE);
+				printHq = doc.hasPermission(Document.PERMISSION_PRINT_HQ);
 				reflowable = doc.isReflowable();
 				isPDF = doc.isPDF();
 				if (isPDF) {
@@ -182,7 +190,7 @@ public class ViewerCore {
 			}
 			public void run() {
 				callback.onMetadataChange(title, author, format, encryption);
-				callback.onPermissionsChange(print, copy, edit, annotate);
+				callback.onPermissionsChange(print, copy, edit, annotate, form, accessibility, assemble, printHq);
 				callback.onReflowableChange(reflowable);
 				if (isPDF) {
 					callback.onLinearizedChange(linear);
@@ -400,7 +408,7 @@ public class ViewerCore {
 		});
 	}
 
-	public void renderPage(final Matrix ctm, final Rect bbox, final boolean icc, final int antialias, final boolean invert, final boolean tint, final int tintBlack, final int tintWhite, final OnException onException) {
+	public void renderPage(final Matrix ctm, final Rect bbox, final boolean icc, final int antialias, final boolean invert, final boolean tint, final int tintBlack, final int tintWhite, final Cookie cookie, final OnException onException) {
 		worker.add(new Worker.Task() {
 			Pixmap pixmap = null;
 			Rect[] links = null;
@@ -444,7 +452,7 @@ public class ViewerCore {
 				Context.setAntiAliasLevel(antialias);
 
 				DrawDevice dev = new DrawDevice(pixmap);
-				page.run(dev, ctm, null);
+				page.run(dev, ctm, cookie);
 				dev.close();
 				dev.destroy();
 
@@ -618,7 +626,7 @@ public class ViewerCore {
 		public void onPageChange(Location page, int chapterNumber, int pageNumber, Rect bbox);
 		public void onPageContentsChange(Pixmap pixmap, Rect[] links, String[] linkURIs, Quad[][] searchHits);
 		public void onPageCountChange(int pages);
-		public void onPermissionsChange(boolean print, boolean copy, boolean edit, boolean annotate);
+		public void onPermissionsChange(boolean print, boolean copy, boolean edit, boolean annotate, boolean form, boolean accessibility, boolean assemble, boolean printHq);
 		public void onReflowableChange(boolean reflowable);
 		public void onSaveComplete();
 		public void onSearchCancelled();

@@ -33,7 +33,7 @@ function BBoxDevice(bbox) {
 		return {
 			showGlyph: function (font,trm,gid,ucs,wmode,bidi) {
 				var bbox = [ 0, -0.2, font.advanceGlyph(gid, 0), 0.8 ];
-				extendRect(Concat(trm, ctm), bbox);
+				extendRect(Matrix.concat(trm, ctm), bbox);
 			},
 		};
 	}
@@ -66,7 +66,7 @@ function BBoxDevice(bbox) {
 			text.walk(new TextBounder(ctm));
 		},
 		fillShade: function (shade, ctm, alpha) {
-			var bbox = shade.bound(ctm);
+			var bbox = shade.getBounds(ctm);
 			extend(bbox[0], bbox[1]);
 			extend(bbox[2], bbox[3]);
 		},
@@ -82,10 +82,10 @@ function BBoxDevice(bbox) {
 if (scriptArgs.length != 2)
 	print("usage: mutool run bbox-device.js document.pdf pageNumber")
 else {
-	var doc = new Document(scriptArgs[0]);
+	var doc = Document.openDocument(scriptArgs[0]);
 	var page = doc.loadPage(parseInt(scriptArgs[1])-1);
 	var bbox = [Infinity, Infinity, -Infinity, -Infinity];
-	page.run(new BBoxDevice(bbox), Identity);
-	print("original bbox:", page.bound());
+	page.run(new BBoxDevice(bbox), Matrix.identity);
+	print("original bbox:", page.getBounds());
 	print("computed bbox:", bbox.map(function (x) { return Math.round(x); }));
 }

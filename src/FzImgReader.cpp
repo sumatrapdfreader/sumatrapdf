@@ -29,7 +29,7 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
     fz_try(ctx) {
         fz_load_jpeg_info(ctx, data, len, &w, &h, &xres, &yres, &cs, &orient);
         stm = fz_open_memory(ctx, data, len);
-        stm = fz_open_dctd(ctx, stm, -1, 0, nullptr);
+        stm = fz_open_dctd(ctx, stm, -1, 1, 0, nullptr);
     }
     fz_catch(ctx) {
         fz_drop_colorspace(ctx, cs);

@@ -24,7 +24,7 @@ function pdfmerge() {
 
 	dstDoc = new PDFDocument()
 	for (i = 1; i < scriptArgs.length; ++i) {
-		srcDoc = new PDFDocument(scriptArgs[i])
+		srcDoc = Document.openDocument(scriptArgs[i])
 		copyAllPages(dstDoc, srcDoc)
 	}
 	dstDoc.save(scriptArgs[0], "compress")

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "xps-imp.h"
@@ -173,7 +173,7 @@ xps_lookup_link_target(fz_context *ctx, fz_document *doc_, const char *target_ur
 	for (target = doc->target; target; target = target->next)
 		if (!strcmp(target->name, needle))
 			return fz_make_link_dest_xyz(0, target->page, 0, 0, 0);
-	return fz_make_link_dest_none();
+	return fz_make_link_dest_xyz(0, fz_atoi(needle) - 1, 0, 0, 0);
 }
 
 static void
@@ -447,7 +447,7 @@ xps_load_fixed_page(fz_context *ctx, xps_document *doc, xps_fixpage *page)
 }
 
 static fz_rect
-xps_bound_page(fz_context *ctx, fz_page *page_)
+xps_bound_page(fz_context *ctx, fz_page *page_, fz_box_type box)
 {
 	xps_page *page = (xps_page*)page_;
 	fz_rect bounds;
@@ -527,6 +527,31 @@ static const char *xps_mimetypes[] =
 	NULL
 };
 
+static int
+xps_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+{
+	fz_archive *arch = NULL;
+	int ret = 0;
+
+	fz_var(arch);
+	fz_var(ret);
+
+	fz_try(ctx)
+	{
+		arch = fz_try_open_archive_with_stream(ctx, stream);
+
+		if (fz_has_archive_entry(ctx, arch, "/_rels/.rels") ||
+			fz_has_archive_entry(ctx, arch, "\\_rels\\.rels"))
+			ret = 100;
+	}
+	fz_always(ctx)
+		fz_drop_archive(ctx, arch);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
+}
+
 fz_document_handler xps_document_handler =
 {
 	xps_recognize,
@@ -535,5 +560,6 @@ fz_document_handler xps_document_handler =
 	xps_extensions,
 	xps_mimetypes,
 	NULL,
-	NULL
+	NULL,
+	xps_recognize_doc_content
 };

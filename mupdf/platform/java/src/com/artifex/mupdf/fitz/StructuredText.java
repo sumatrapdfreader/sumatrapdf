@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
@@ -64,6 +64,7 @@ public class StructuredText
 		ArrayList<TextLine> lines;
 		ArrayList<TextChar> chrs;
 		Rect lineBbox;
+		Point lineDir;
 		Rect blockBbox;
 
 		BlockWalker() {
@@ -85,14 +86,16 @@ public class StructuredText
 			blocks.add(block);
 		}
 
-		public void beginLine(Rect bbox, int wmode) {
+		public void beginLine(Rect bbox, int wmode, Point dir) {
 			chrs = new ArrayList<TextChar>();
 			lineBbox = bbox;
+			lineDir = dir;
 		}
 
 		public void endLine() {
 			TextLine line = new TextLine();
 			line.bbox = lineBbox;
+			line.dir = lineDir;
 			line.chars =  chrs.toArray(new TextChar[0]);
 			lines.add(line);
 		}
@@ -101,6 +104,7 @@ public class StructuredText
 			TextChar chr = new TextChar();
 			chr.c = c;
 			chr.quad = quad;
+			chr.origin = origin;
 			chrs.add(chr);
 		}
 
@@ -117,11 +121,13 @@ public class StructuredText
 	public static class TextLine {
 		public TextChar[] chars;
 		public Rect bbox;
+		public Point dir;
 	}
 
 	public static class TextChar {
 		public int c;
 		public Quad quad;
+		public Point origin;
 		public boolean isWhitespace() {
 			return Character.isWhitespace(c);
 		}

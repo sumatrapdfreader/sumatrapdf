@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_SEPARATION_H
 #define MUPDF_FITZ_SEPARATION_H
@@ -106,6 +106,14 @@ int fz_count_separations(fz_context *ctx, const fz_separations *sep);
 	Return the number of active separations.
 */
 int fz_count_active_separations(fz_context *ctx, const fz_separations *seps);
+
+/**
+	Compare 2 separations structures (or NULLs).
+
+	Return 0 if identical, non-zero if not identical.
+*/
+int fz_compare_separations(fz_context *ctx, const fz_separations *sep1, const fz_separations *sep2);
+
 
 /**
 	Return a separations object with all the spots in the input

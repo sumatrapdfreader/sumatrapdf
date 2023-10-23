@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* PDF content trimming tool. */
 
@@ -56,26 +56,8 @@ culler(fz_context *ctx, void *opaque, fz_rect r, fz_cull_type type)
 	return 0;
 }
 
-enum
-{
-	MEDIABOX,
-	BLEEDBOX,
-	CROPBOX,
-	TRIMBOX,
-	ARTBOX
-};
-
-const char *boxes[] =
-{
-	"mediabox",
-	"bleedbox",
-	"cropbox",
-	"trimbox",
-	"artbox"
-};
-
 static void
-rewrite_page_streams(fz_context *ctx, pdf_document *doc, int page_num, int box, float *margins, int exclude, int fallback)
+rewrite_page_streams(fz_context *ctx, pdf_document *doc, int page_num, fz_box_type box, float *margins, int exclude, int fallback)
 {
 	pdf_page *page = pdf_load_page(ctx, doc, page_num);
 	pdf_filter_options options = { 0 };
@@ -97,19 +79,19 @@ rewrite_page_streams(fz_context *ctx, pdf_document *doc, int page_num, int box, 
 		switch (box)
 		{
 		default:
-		case MEDIABOX:
+		case FZ_MEDIA_BOX:
 			cd.cullbox = pdf_dict_get_rect(ctx, page->obj, PDF_NAME(MediaBox));
 			break;
-		case BLEEDBOX:
+		case FZ_BLEED_BOX:
 			cd.cullbox = pdf_dict_get_rect(ctx, page->obj, PDF_NAME(BleedBox));
 			break;
-		case CROPBOX:
+		case FZ_CROP_BOX:
 			cd.cullbox = pdf_dict_get_rect(ctx, page->obj, PDF_NAME(CropBox));
 			break;
-		case TRIMBOX:
+		case FZ_TRIM_BOX:
 			cd.cullbox = pdf_dict_get_rect(ctx, page->obj, PDF_NAME(TrimBox));
 			break;
-		case ARTBOX:
+		case FZ_ART_BOX:
 			cd.cullbox = pdf_dict_get_rect(ctx, page->obj, PDF_NAME(ArtBox));
 			break;
 		}
@@ -119,7 +101,7 @@ rewrite_page_streams(fz_context *ctx, pdf_document *doc, int page_num, int box, 
 		cd.cullbox.x1 -= margins[1];
 		cd.cullbox.y1 -= margins[0];
 
-		if (fz_is_empty_rect(cd.cullbox) && fallback && box != MEDIABOX)
+		if (fz_is_empty_rect(cd.cullbox) && fallback && box != FZ_MEDIA_BOX)
 		{
 			fprintf(stderr, "Falling back to Mediabox for page %d\n", page_num);
 			cd.cullbox = pdf_dict_get_rect(ctx, page->obj, PDF_NAME(MediaBox));
@@ -183,7 +165,7 @@ static int
 usage(void)
 {
 	fprintf(stderr, "usage: mutool trim [options] <input filename>\n");
-	fprintf(stderr, "\t-b -\tWhich box to trim to (mediabox(default),cropbox,bleedbox,trimbox,artbox)\n");
+	fprintf(stderr, "\t-b -\tWhich box to trim to (MediaBox(default), CropBox, BleedBox, TrimBox, ArtBox)\n");
 	fprintf(stderr, "\t-m -\tAdd margins to box (+ve for inwards, -ve outwards).\n");
 	fprintf(stderr, "\t\t\t<All> or <V>,<H> or <T>,<R>,<B>,<L>\n");
 	fprintf(stderr, "\t-e\tExclude contents of box, rather than include them\n");
@@ -204,7 +186,7 @@ int pdftrim_main(int argc, char **argv)
 	int code = EXIT_SUCCESS;
 	int exclude = 0;
 	const char *boxname = NULL;
-	int box = MEDIABOX;
+	fz_box_type box = FZ_CROP_BOX;
 	int fallback = 0;
 	float margins[4] = { 0 };
 	int c;
@@ -230,12 +212,8 @@ int pdftrim_main(int argc, char **argv)
 
 	if (boxname)
 	{
-		for (box = 0; box < (int)nelem(boxes); box++)
-		{
-			if (!strcmp(boxes[box], boxname))
-				break;
-		}
-		if (box == (int)nelem(boxes))
+		box = fz_box_type_from_string(boxname);
+		if (box == FZ_UNKNOWN_BOX)
 		{
 			fprintf(stderr, "Unknown box %s specified!\n", boxname);
 			return 1;
@@ -290,6 +268,7 @@ int pdftrim_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
+		fz_log_error(ctx, fz_caught_message(ctx));
 		code = EXIT_FAILURE;
 	}
 	fz_drop_context(ctx);

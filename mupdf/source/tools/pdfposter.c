@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * PDF posteriser; split pages within a PDF file into smaller lumps.
@@ -33,6 +33,7 @@
 
 static int x_factor = 0;
 static int y_factor = 0;
+static int x_dir = 1;
 
 static int usage(void)
 {
@@ -40,7 +41,9 @@ static int usage(void)
 		"usage: mutool poster [options] input.pdf [output.pdf]\n"
 		"\t-p -\tpassword\n"
 		"\t-x\tx decimation factor\n"
-		"\t-y\ty decimation factor\n");
+		"\t-y\ty decimation factor\n"
+		"\t-r\tsplit right-to-left\n"
+		);
 	return 1;
 }
 
@@ -147,7 +150,9 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 
 		for (y = yf-1; y >= 0; y--)
 		{
-			for (x = 0; x < xf; x++)
+			int x0 = (x_dir > 0) ? 0 : xf-1;
+			int x1 = (x_dir > 0) ? xf : -1;
+			for (x = x0; x != x1; x += x_dir)
 			{
 				pdf_obj *newpageobj, *newpageref, *newmediabox;
 				fz_rect mb;
@@ -205,14 +210,16 @@ int pdfposter_main(int argc, char **argv)
 	pdf_write_options opts = pdf_default_write_options;
 	pdf_document *doc;
 	fz_context *ctx;
+	int ret = 0;
 
-	while ((c = fz_getopt(argc, argv, "x:y:p:")) != -1)
+	while ((c = fz_getopt(argc, argv, "x:y:p:r")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'x': x_factor = atoi(fz_optarg); break;
 		case 'y': y_factor = atoi(fz_optarg); break;
+		case 'r': x_dir = -1; break;
 		default: return usage();
 		}
 	}
@@ -235,16 +242,27 @@ int pdfposter_main(int argc, char **argv)
 		exit(1);
 	}
 
-	doc = pdf_open_document(ctx, infile);
-	if (pdf_needs_password(ctx, doc))
-		if (!pdf_authenticate_password(ctx, doc, password))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
+	fz_var(doc);
 
-	decimatepages(ctx, doc);
+	fz_try(ctx)
+	{
+		doc = pdf_open_document(ctx, infile);
+		if (pdf_needs_password(ctx, doc))
+			if (!pdf_authenticate_password(ctx, doc, password))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
 
-	pdf_save_document(ctx, doc, outfile, &opts);
+		decimatepages(ctx, doc);
 
-	pdf_drop_document(ctx, doc);
+		pdf_save_document(ctx, doc, outfile, &opts);
+	}
+	fz_always(ctx)
+		pdf_drop_document(ctx, doc);
+	fz_catch(ctx)
+	{
+		fz_log_error(ctx, fz_caught_message(ctx));
+		ret = 1;
+	}
 	fz_drop_context(ctx);
-	return 0;
+
+	return ret;
 }

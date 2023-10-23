@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -123,7 +123,7 @@ pdf_new_stext_page_from_annot(fz_context *ctx, pdf_annot *annot, const fz_stext_
 }
 
 fz_pixmap *
-pdf_new_pixmap_from_page_contents_with_separations_and_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, fz_separations *seps, int alpha, const char *usage)
+pdf_new_pixmap_from_page_contents_with_separations_and_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, fz_separations *seps, int alpha, const char *usage, fz_box_type box)
 {
 	fz_rect rect;
 	fz_irect bbox;
@@ -132,7 +132,7 @@ pdf_new_pixmap_from_page_contents_with_separations_and_usage(fz_context *ctx, pd
 
 	fz_var(dev);
 
-	rect = pdf_bound_page(ctx, page);
+	rect = pdf_bound_page(ctx, page, box);
 	rect = fz_transform_rect(rect, ctm);
 	bbox = fz_round_rect(rect);
 
@@ -171,13 +171,13 @@ pdf_new_pixmap_from_page_contents_with_separations_and_usage(fz_context *ctx, pd
 }
 
 fz_pixmap *
-pdf_new_pixmap_from_page_contents_with_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const char *usage)
+pdf_new_pixmap_from_page_contents_with_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const char *usage, fz_box_type box)
 {
-	return pdf_new_pixmap_from_page_contents_with_separations_and_usage(ctx, page, ctm, cs, NULL, alpha, usage);
+	return pdf_new_pixmap_from_page_contents_with_separations_and_usage(ctx, page, ctm, cs, NULL, alpha, usage, box);
 }
 
 fz_pixmap *
-pdf_new_pixmap_from_page_with_separations_and_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, fz_separations *seps, int alpha, const char *usage)
+pdf_new_pixmap_from_page_with_separations_and_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, fz_separations *seps, int alpha, const char *usage, fz_box_type box)
 {
 	fz_rect rect;
 	fz_irect bbox;
@@ -186,7 +186,7 @@ pdf_new_pixmap_from_page_with_separations_and_usage(fz_context *ctx, pdf_page *p
 
 	fz_var(dev);
 
-	rect = pdf_bound_page(ctx, page);
+	rect = pdf_bound_page(ctx, page, box);
 	rect = fz_transform_rect(rect, ctm);
 	bbox = fz_round_rect(rect);
 
@@ -226,7 +226,7 @@ pdf_new_pixmap_from_page_with_separations_and_usage(fz_context *ctx, pdf_page *p
 }
 
 fz_pixmap *
-pdf_new_pixmap_from_page_with_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const char *usage)
+pdf_new_pixmap_from_page_with_usage(fz_context *ctx, pdf_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const char *usage, fz_box_type box)
 {
-	return pdf_new_pixmap_from_page_with_separations_and_usage(ctx, page, ctm, cs, NULL, alpha, usage);
+	return pdf_new_pixmap_from_page_with_separations_and_usage(ctx, page, ctm, cs, NULL, alpha, usage, box);
 }

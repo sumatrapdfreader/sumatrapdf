@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 .. default-domain:: js
@@ -64,7 +64,7 @@ A page is created for each input file, with the contents of the file copied into
 
 Define an image:
 
-.. code-block:: txt
+.. code-block::
 
    %%MediaBox 0 0 500 800
    %%Rotate 90
@@ -79,7 +79,7 @@ Define an image:
 
 Font resources can be created by either giving the name of a standard :title:`PDF` font, or by giving the path to a font file. If a third argument is present and either "Greek" or "Cyrillic" the font will be encoded using ISO 8859-7 or KOI8-U, respectively:
 
-.. code-block:: txt
+.. code-block::
 
    %%Font Tm Times-Roman
    %%Font TmG Times-Roman Greek
@@ -94,7 +94,7 @@ Font resources can be created by either giving the name of a standard :title:`PD
 CJK fonts can be created by passing a language tag for one of the 4 CID orderings: zh-Hant, zh-Hans, ja, or ko (Traditional Chinese, Simplified Chinese, Japanese, Korean). The CJK font will use the UTF-16 encoding. A font file will not be embedded, so a :title:`PDF` viewer will use a substitute font:
 
 
-.. code-block:: txt
+.. code-block::
 
    %%CJKFont Batang ko
    %%CJKFont Mincho ja
@@ -108,7 +108,7 @@ CJK fonts can be created by passing a language tag for one of the 4 CID ordering
 
 An example input file, which adds an image, a triangle and some text:
 
-.. code-block:: txt
+.. code-block::
 
    %%MediaBox 0 0 595 842
    %%Font TmRm Times-Roman

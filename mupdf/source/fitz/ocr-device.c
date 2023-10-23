@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -460,11 +460,11 @@ flush_word(fz_context *ctx, fz_ocr_device *ocr)
 			trm.a = 10.0f/6 * (char_bbox.x1 - char_bbox.x0);
 			trm.b = 0;
 			trm.c = 0;
-			trm.d = (char_bbox.y1 - char_bbox.y0);
+			trm.d = 10.0f/6 * (char_bbox.y1 - char_bbox.y0);
 			trm.e = char_bbox.x0;
 			trm.f = char_bbox.y0;
 			fz_show_glyph(ctx, text, ocr->font, trm,
-				ocr->chars[i], ocr->chars[i],
+				fz_encode_character(ctx, ocr->font, ocr->chars[i]), ocr->chars[i],
 					0, 0, FZ_BIDI_LTR, 0);
 		}
 

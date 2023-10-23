@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_CONTEXT_H
 #define MUPDF_FITZ_CONTEXT_H
@@ -26,6 +26,11 @@
 #include "mupdf/fitz/version.h"
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/geometry.h"
+
+
+#ifndef FZ_VERBOSE_EXCEPTIONS
+#define FZ_VERBOSE_EXCEPTIONS 0
+#endif
 
 typedef struct fz_font_context fz_font_context;
 typedef struct fz_colorspace_context fz_colorspace_context;
@@ -57,18 +62,132 @@ typedef struct
 #define fz_always(ctx) while (0); if (fz_do_always(ctx)) do
 #define fz_catch(ctx) while (0); if (fz_do_catch(ctx))
 
+/**
+	These macros provide a simple exception handling system. Use them as
+	follows:
+
+	fz_try(ctx)
+		...
+	fz_catch(ctx)
+		...
+
+	or as:
+
+	fz_try(ctx)
+		...
+	fz_always(ctx)
+		...
+	fz_catch(ctx)
+		...
+
+	Code within the fz_try() section can then throw exceptions using fz_throw()
+	(or fz_vthrow()).
+
+	They are implemented with setjmp/longjmp, which can have unfortunate
+	consequences for 'losing' local variable values on a throw. To avoid this
+	we recommend calling 'fz_var(variable)' before the fz_try() for any
+	local variable whose value may change within the fz_try() block and whose
+	value will be required afterwards.
+
+	Do not call anything in the fz_always() section that can throw.
+
+	Any exception can be rethrown from the fz_catch() section using fz_rethrow()
+	as long as there has been no intervening use of fz_try/fz_catch.
+*/
+
+/**
+	Throw an exception.
+
+	This assumes an enclosing fz_try() block within the callstack.
+*/
 FZ_NORETURN void fz_vthrow(fz_context *ctx, int errcode, const char *, va_list ap);
 FZ_NORETURN void fz_throw(fz_context *ctx, int errcode, const char *, ...) FZ_PRINTFLIKE(3,4);
 FZ_NORETURN void fz_rethrow(fz_context *ctx);
+
+/**
+	Called within a catch block this modifies the current
+	exception's code. If it's of type 'fromcode' it is
+	modified to 'tocode'. Typically used for 'downgrading'
+	exception severity.
+*/
 void fz_morph_error(fz_context *ctx, int fromcode, int tocode);
+
+/**
+	Log a warning.
+
+	This goes to the registered warning stream (stderr by
+	default).
+*/
 void fz_vwarn(fz_context *ctx, const char *fmt, va_list ap);
 void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
+
+/**
+	Within an fz_catch() block, retrieve the formatted message
+	string for the current exception.
+
+	This assumes no intervening use of fz_try/fz_catch.
+*/
 const char *fz_caught_message(fz_context *ctx);
+
+/**
+	Within an fz_catch() block, retrieve the error code for
+	the current exception.
+
+	This assumes no intervening use of fz_try/fz_catch.
+*/
 int fz_caught(fz_context *ctx);
+
+/**
+	Within an fz_catch() block, rethrow the current exception
+	if the errcode of the current exception matches.
+
+	This assumes no intervening use of fz_try/fz_catch.
+*/
 void fz_rethrow_if(fz_context *ctx, int errcode);
+
+/**
+	Format an error message, and log it to the registered
+	error stream (stderr by default).
+*/
+void fz_log_error_printf(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
+void fz_vlog_error_printf(fz_context *ctx, const char *fmt, va_list ap);
+
+/**
+	Log a (preformatted) string to the registered
+	error stream (stderr by default).
+*/
+void fz_log_error(fz_context *ctx, const char *str);
 
 void fz_start_throw_on_repair(fz_context *ctx);
 void fz_end_throw_on_repair(fz_context *ctx);
+
+/**
+	Now, a debugging feature. If FZ_VERBOSE_EXCEPTIONS is 1 then
+	some of the above functions are replaced by versions that print
+	FILE and LINE information.
+*/
+#if FZ_VERBOSE_EXCEPTIONS
+#define fz_vthrow(CTX, ERRCODE, FMT, VA) fz_vthrowFL(CTX, __FILE__, __LINE__, ERRCODE, FMT, VA)
+#define fz_throw(CTX, ERRCODE, ...) fz_throwFL(CTX, __FILE__, __LINE__, ERRCODE, __VA_ARGS__)
+#define fz_rethrow(CTX) fz_rethrowFL(CTX, __FILE__, __LINE__)
+#define fz_morph_error(CTX, FROM, TO) fz_morph_errorFL(CTX, __FILE__, __LINE__, FROM, TO)
+#define fz_vwarn(CTX, FMT, VA) fz_vwarnFL(CTX, __FILE__, __LINE__, FMT, VA)
+#define fz_warn(CTX, ...) fz_warnFL(CTX, __FILE__, __LINE__, __VA_ARGS__)
+#define fz_rethrow_if(CTX, ERRCODE) fz_rethrow_ifFL(CTX, __FILE__, __LINE__, ERRCODE)
+#define fz_log_error_printf(CTX, ...) fz_log_error_printfFL(CTX, __FILE__, __LINE__, __VA_ARGS__)
+#define fz_vlog_error_printf(CTX, FMT, VA) fz_log_error_printfFL(CTX, __FILE__, __LINE__, FMT, VA)
+#define fz_log_error(CTX, STR) fz_log_error_printfFL(CTX, __FILE__, __LINE__, STR)
+FZ_NORETURN void fz_vthrowFL(fz_context *ctx, const char *file, int line, int errcode, const char *fmt, va_list ap);
+FZ_NORETURN void fz_throwFL(fz_context *ctx, const char *file, int line, int errcode, const char *fmt, ...) FZ_PRINTFLIKE(5,6);
+FZ_NORETURN void fz_rethrowFL(fz_context *ctx, const char *file, int line);
+void fz_morph_errorFL(fz_context *ctx, const char *file, int line, int fromcode, int tocode);
+void fz_vwarnFL(fz_context *ctx, const char *file, int line, const char *fmt, va_list ap);
+void fz_warnFL(fz_context *ctx, const char *file, int line, const char *fmt, ...) FZ_PRINTFLIKE(4,5);
+void fz_rethrow_ifFL(fz_context *ctx, const char *file, int line, int errcode);
+void fz_log_error_printfFL(fz_context *ctx, const char *file, int line, const char *fmt, ...) FZ_PRINTFLIKE(4,5);
+void fz_vlog_error_printfFL(fz_context *ctx, const char *file, int line, const char *fmt, va_list ap);
+void fz_log_errorFL(fz_context *ctx, const char *file, int line, const char *str);
+#endif
 
 enum
 {

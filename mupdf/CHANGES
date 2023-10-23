@@ -1,3 +1,37 @@
+List of changes in MuPDF 1.23.0
+
+	New features:
+		New WASM library with same API as mutool run and Java, for both browser and Node environments.
+		Support CropBox, TrimBox, BleedBox, and ArtBox in PDF tools and viewers.
+		PhotoShop PSD image support.
+		mupdf-gl: Custom ICC display profile support.
+		mutool poster: Option to split in RTL direction.
+
+	Miscellaneous improvements and notable bug fixes:
+		EPUB: Fix table cell height calculations.
+		EPUB: Inherit table cell background color from table row.
+		EPUB: Support files with partial encryption (only read unencrypted parts).
+		EPUB: Support files with incorrect directory prefixes.
+		TIFF: Stability improvements.
+		MOBI: Stability improvements.
+		PDF: Support old style border dash patterns.
+		PDF: Support GoToR links to remote PDF documents.
+		PDF: Improve link parsing and creation.
+		ZIP: Improve unicode file name handling.
+		Fall back to unhinted fonts if hints are broken.
+		Recognize document types by sniffing contents (don't need to rely on mimetype or file extension).
+
+	New APIs:
+		More PDF document permission flags.
+		Tweaked exception error logging.
+		pdf_minimize_document to squeeze amount of memory used by an open document.
+
+	Incompatible API changes:
+		pdf_field_name renamed to pdf_load_field_name.
+		mutool run -- changed many methods to match Java and new WASM library.
+
+	New and improved documentation.
+
 List of changes in MuPDF 1.22.0
 
 	New command line "mutool recolor" to change colorspace of PDF files.

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -405,4 +405,47 @@ fz_band_writer *fz_new_psd_band_writer(fz_context *ctx, fz_output *out)
 	writer->num_additive = 0;
 
 	return &writer->super;
+}
+
+static fz_buffer *
+psd_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, int drop)
+{
+	fz_buffer *buf = NULL;
+	fz_output *out = NULL;
+
+	fz_var(buf);
+	fz_var(out);
+
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 1024);
+		out = fz_new_output_with_buffer(ctx, buf);
+		fz_write_pixmap_as_psd(ctx, out, pix);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+	{
+		if (drop)
+			fz_drop_pixmap(ctx, pix);
+		fz_drop_output(ctx, out);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
+	}
+	return buf;
+}
+
+fz_buffer *
+fz_new_buffer_from_image_as_psd(fz_context *ctx, fz_image *image, fz_color_params color_params)
+{
+	fz_pixmap *pix = fz_get_pixmap_from_image(ctx, image, NULL, NULL, NULL, NULL);
+	return psd_from_pixmap(ctx, pix, color_params, 1);
+}
+
+fz_buffer *
+fz_new_buffer_from_pixmap_as_psd(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params)
+{
+	return psd_from_pixmap(ctx, pix, color_params, 0);
 }

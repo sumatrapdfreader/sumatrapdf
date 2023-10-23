@@ -59,6 +59,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\fitz\leptonica-wrap.h" />
     <ClInclude Include="..\..\source\fitz\tessocr.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\allheaders.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\alltypes.h" />
@@ -92,6 +93,7 @@
     <ClInclude Include="..\..\thirdparty\leptonica\src\watershed.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\fitz\leptonica-wrap.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\adaptmap.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
@@ -904,7 +906,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -925,7 +927,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -946,7 +948,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -967,7 +969,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -990,7 +992,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1014,7 +1016,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1038,7 +1040,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1060,7 +1062,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1079,7 +1081,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1098,7 +1100,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1117,7 +1119,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1138,7 +1140,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1160,7 +1162,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -1182,7 +1184,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

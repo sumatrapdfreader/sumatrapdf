@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * PDF merge tool: Tool for merging pdf content.
@@ -323,7 +323,8 @@ int pdfmerge_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
-		fprintf(stderr, "error: Cannot create destination document.\n");
+		fz_log_error(ctx, fz_caught_message(ctx));
+		fz_log_error(ctx, "Cannot create destination document.");
 		fz_flush_warnings(ctx);
 		fz_drop_context(ctx);
 		exit(1);
@@ -346,7 +347,10 @@ int pdfmerge_main(int argc, char **argv)
 		fz_always(ctx)
 			pdf_drop_document(ctx, doc_src);
 		fz_catch(ctx)
-			fprintf(stderr, "error: Cannot merge document '%s'.\n", input);
+		{
+			fz_log_error(ctx, fz_caught_message(ctx));
+			fz_log_error_printf(ctx, "Cannot merge document '%s'.", input);
+		}
 	}
 
 	if (fz_optind == argc)
@@ -354,7 +358,10 @@ int pdfmerge_main(int argc, char **argv)
 		fz_try(ctx)
 			pdf_save_document(ctx, doc_des, output, &opts);
 		fz_catch(ctx)
-			fprintf(stderr, "error: Cannot save output file: '%s'.\n", output);
+		{
+			fz_log_error(ctx, fz_caught_message(ctx));
+			fz_log_error_printf(ctx, "Cannot save output file: '%s'.", output);
+		}
 	}
 
 	pdf_drop_document(ctx, doc_des);

@@ -1,8 +1,12 @@
 .. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
+----
+
 .. default-domain:: js
 
+
+.. include:: html_tags.rst
 
 .. _mutool_object_display_list:
 
@@ -23,18 +27,21 @@ A display list records all the device calls for playback later. If you want to r
 
     *Constructor method*.
 
-    Create an empty display list. The mediabox rectangle has the bounds of the page in points.
+    Create an empty display list. The mediabox rectangle should be the bounds of the page.
 
     :arg mediabox: `[ulx,uly,lrx,lry]` :ref:`Rectangle<mutool_run_js_api_rectangle>`.
 
     :return: `DisplayList`.
 
-    **Example**
+    |example_tag|
 
     .. code-block:: javascript
 
-        var displayList = new DisplayList([0,0,100,100]);
+        var displayList = new mupdf.DisplayList([0,0,100,100]);
 
+
+
+|instance_methods|
 
 
 .. method:: run(device, transform)
@@ -44,12 +51,28 @@ A display list records all the device calls for playback later. If you want to r
     :arg device: `Device`.
     :arg transform: `[a,b,c,d,e,f]`. The transform :ref:`matrix<mutool_run_js_api_matrix>`.
 
+    |example_tag|
 
-.. method:: bound()
+    .. code-block:: javascript
+
+        displayList.run(device, mupdf.Matrix.identity);
+
+
+
+.. method:: getBounds()
 
     Returns a rectangle containing the dimensions of the display list contents.
 
     :return: `[ulx,uly,lrx,lry]` :ref:`Rectangle<mutool_run_js_api_rectangle>`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var bounds = displayList.getBounds();
+
+
 
 
 .. method:: toPixmap(transform, colorspace, alpha)
@@ -58,8 +81,16 @@ A display list records all the device calls for playback later. If you want to r
 
     :arg transform: `[a,b,c,d,e,f]`. The transform :ref:`matrix<mutool_run_js_api_matrix>`.
     :arg colorspace: `ColorSpace`.
-    :arg alpha: `Boolean`. If alpha is *true*, the annotation will be drawn on a transparent background, otherwise white.
+    :arg alpha: `Boolean`. If alpha is *true*, a transparent background, otherwise white.
 
+    :return: `Pixmap`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var pixmap = displayList.toPixmap(mupdf.Matrix.identity, mupdf.ColorSpace.DeviceRGB, false);
 
 
 .. method:: toStructuredText(options)
@@ -70,10 +101,27 @@ A display list records all the device calls for playback later. If you want to r
     :arg options: `String`.
     :return: `StructuredText`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var sText = displayList.toStructuredText("preserve-whitespace");
+
+
 
 .. method:: search(needle)
 
-    Search the display list text for all instances of 'needle', and return an array with :ref:`rectangles<mutool_run_js_api_rectangle>` of all matches found.
+
+    Search the display list text for all instances of the `needle` value, and return an array of search hits. Each search hit is an array of :ref:`rectangles<mutool_run_js_api_quad>` corresponding to all characters in the search hit.
 
     :arg needle: `String`.
-    :return: `[]`.
+    :return: `[ [ Quad, Quad, ... ], [ Quad, Quad, ...], ... ]`.
+
+    |mutool_tag|
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var results = displayList.search("my search phrase");

@@ -4,3 +4,4 @@ rst2pdf
 sphinx==5.3.0
 sphinx_rtd_theme==1.1.1
 readthedocs-sphinx-search==0.1.1
+furo==2023.03.27

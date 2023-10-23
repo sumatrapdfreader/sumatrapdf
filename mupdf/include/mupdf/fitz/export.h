@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_EXPORT_H
 #define MUPDF_FITZ_EXPORT_H
@@ -31,7 +31,7 @@
  * When compiling MuPDF DLL itself, FZ_DLL should be defined.
  */
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 	#if defined(FZ_DLL)
 		/* Building DLL. */
 		#define FZ_FUNCTION __declspec(dllexport)

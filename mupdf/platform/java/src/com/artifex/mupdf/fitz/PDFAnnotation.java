@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
@@ -128,20 +128,13 @@ public class PDFAnnotation
 	public native void setFlags(int flags);
 	public native String getContents();
 	public native void setContents(String contents);
-	public native Rect getRect();
-	public native void setRect(Rect rect);
 	public native float getBorder();
 	public native void setBorder(float width);
 	public native float[] getColor();
 	public native void setColor(float[] color);
-	public native boolean hasInteriorColor();
-	public native float[] getInteriorColor();
-	public native void setInteriorColor(float[] color);
 	public native float getOpacity();
 	public native void setOpacity(float opacity);
-	public native boolean hasAuthor();
-	public native String getAuthor();
-	public native void setAuthor(String author);
+
 	protected native long getCreationDateNative();
 	protected native void setCreationDate(long time);
 	protected native long getModificationDateNative();
@@ -158,6 +151,18 @@ public class PDFAnnotation
 	public void setModificationDate(Date date) {
 		setModificationDate(date.getTime());
 	}
+
+	public native boolean hasRect();
+	public native Rect getRect();
+	public native void setRect(Rect rect);
+
+	public native boolean hasInteriorColor();
+	public native float[] getInteriorColor();
+	public native void setInteriorColor(float[] color);
+
+	public native boolean hasAuthor();
+	public native String getAuthor();
+	public native void setAuthor(String author);
 
 	public native boolean hasLineEndingStyles();
 	public native int[] getLineEndingStyles();
@@ -265,9 +270,18 @@ public class PDFAnnotation
 	public native boolean hasIcon();
 	public native String getIcon();
 	public native void setIcon(String icon);
+
 	public native boolean hasOpen();
-	public native boolean isOpen();
+	public native boolean getIsOpen();
 	public native void setIsOpen(boolean open);
+
+	public native boolean hasLine();
+	public native Point[] getLine();
+	public native void setLine(Point a, Point b);
+
+	public native boolean hasFileSpecification();
+	public native void setFileSpecification(PDFObject fs);
+	public native PDFObject getFileSpecification();
 
 	public native void eventEnter();
 	public native void eventExit();
@@ -286,10 +300,6 @@ public class PDFAnnotation
 
 	public native int getQuadding();
 	public native void setQuadding(int quadding);
-
-	public native boolean hasLine();
-	public native Point[] getLine();
-	public native void setLine(Point a, Point b);
 
 	public native DefaultAppearance getDefaultAppearance();
 	public native void setDefaultAppearance(String font, float size, float[] color);
@@ -332,10 +342,8 @@ public class PDFAnnotation
 		setNativeAppearanceImage(image);
 	}
 
-	public native boolean hasFileSpecification();
-	public native void setFileSpecification(PDFObject fs);
-	public native PDFObject getFileSpecification();
-
 	public native boolean getHiddenForEditing();
 	public native void setHiddenForEditing(boolean hidden);
+
+	public native boolean applyRedaction(boolean blackBoxes, int imageMethod);
 }

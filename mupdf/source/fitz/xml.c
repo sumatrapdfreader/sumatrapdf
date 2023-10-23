@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "xml-imp.h"
 
@@ -104,15 +104,23 @@ struct parser
 #endif
 };
 
-static void xml_indent(int n)
+static void xml_indent(fz_context *ctx, fz_output *out, int n)
 {
 	while (n--) {
-		putchar(' ');
-		putchar(' ');
+		fz_write_byte(ctx, out, ' ');
+		fz_write_byte(ctx, out, ' ');
 	}
 }
 
 void fz_debug_xml(fz_xml *item, int level)
+{
+	/* This is a bit nasty as it relies on implementation
+	 * details of both fz_stdout, and fz_write_printf coping
+	 * with NULL ctx. */
+	fz_output_xml(NULL, fz_stdout(NULL), item, level);
+}
+
+void fz_output_xml(fz_context *ctx, fz_output *out, fz_xml *item, int level)
 {
 	char *s;
 
@@ -122,64 +130,63 @@ void fz_debug_xml(fz_xml *item, int level)
 	/* Skip over the DOC object at the top. */
 	if (item->up == NULL)
 	{
-		fz_debug_xml(item->down, level);
+		fz_output_xml(ctx, out, item->down, level);
 		return;
 	}
 
 	s = fz_xml_text(item);
+	xml_indent(ctx, out, level);
 	if (s)
 	{
 		int c;
-		xml_indent(level);
-		putchar('"');
+		fz_write_byte(ctx, out, '"');
 		while (*s) {
 			s += fz_chartorune(&c, s);
 			switch (c) {
 			default:
 				if (c > 0xFFFF)
-					printf("\\u{%X}", c);
+					fz_write_printf(ctx, out, "\\u{%X}", c);
 				else if (c < 32 || c > 127)
-					printf("\\u%04X", c);
+					fz_write_printf(ctx, out, "\\u%04X", c);
 				else
-					putchar(c);
+					fz_write_byte(ctx, out, c);
 				break;
-			case '\\': putchar('\\'); putchar('\\'); break;
-			case '\b': putchar('\\'); putchar('b'); break;
-			case '\f': putchar('\\'); putchar('f'); break;
-			case '\n': putchar('\\'); putchar('n'); break;
-			case '\r': putchar('\\'); putchar('r'); break;
-			case '\t': putchar('\\'); putchar('t'); break;
+			case '\\': fz_write_byte(ctx, out, '\\'); fz_write_byte(ctx, out, '\\'); break;
+			case '\b': fz_write_byte(ctx, out, '\\'); fz_write_byte(ctx, out, 'b'); break;
+			case '\f': fz_write_byte(ctx, out, '\\'); fz_write_byte(ctx, out, 'f'); break;
+			case '\n': fz_write_byte(ctx, out, '\\'); fz_write_byte(ctx, out, 'n'); break;
+			case '\r': fz_write_byte(ctx, out, '\\'); fz_write_byte(ctx, out, 'r'); break;
+			case '\t': fz_write_byte(ctx, out, '\\'); fz_write_byte(ctx, out, 't'); break;
 			}
 		}
-		putchar('"');
+		fz_write_byte(ctx, out, '"');
 #ifdef FZ_XML_SEQ
-		printf(" <%d>", item->seq);
+		fz_write_printf(ctx, out, " <%d>", item->seq);
 #endif
-		putchar('\n');
+		fz_write_byte(ctx, out, '\n');
 	}
 	else
 	{
 		fz_xml *child;
 		struct attribute *att;
 
-		xml_indent(level);
 #ifdef FZ_XML_SEQ
-		printf("(%s <%d>\n", item->u.node.u.d.name, item->u.node.seq);
+		fz_write_printf(ctx, out, "(%s <%d>\n", item->u.node.u.d.name, item->u.node.seq);
 #else
-		printf("(%s\n", item->u.node.u.d.name);
+		fz_write_printf(ctx, out, "(%s\n", item->u.node.u.d.name);
 #endif
 		for (att = item->u.node.u.d.atts; att; att = att->next)
 		{
-			xml_indent(level);
-			printf("=%s %s\n", att->name, att->value);
+			xml_indent(ctx, out, level);
+			fz_write_printf(ctx, out, "=%s %s\n", att->name, att->value);
 		}
 		for (child = fz_xml_down(item); child; child = child->u.node.next)
-			fz_debug_xml(child, level + 1);
-		xml_indent(level);
+			fz_output_xml(ctx, out, child, level + 1);
+		xml_indent(ctx, out, level);
 #ifdef FZ_XML_SEQ
-		printf(")%s <%d>\n", item->u.node.u.d.name, item->u.node.seq);
+		fz_write_printf(ctx, out, ")%s <%d>\n", item->u.node.u.d.name, item->u.node.seq);
 #else
-		printf(")%s\n", item->u.node.u.d.name);
+		fz_write_printf(ctx, out, ")%s\n", item->u.node.u.d.name);
 #endif
 	}
 }
@@ -218,7 +225,7 @@ char *fz_xml_tag(fz_xml *item)
 {
 	/* DOC items can never have MAGIC_TEXT as their down value,
 	 * so this is safe. */
-	return item && !FZ_TEXT_ITEM(item) && item->u.node.u.d.name[0] ? item->u.node.u.d.name : NULL;
+	return item && !FZ_TEXT_ITEM(item) ? item->u.node.u.d.name : NULL;
 }
 
 int fz_xml_is_tag(fz_xml *item, const char *name)
@@ -696,6 +703,8 @@ parse_closing_element:
 	while (iswhite(*p)) ++p;
 	mark = p;
 	while (isname(*p)) ++p;
+	if (!isname(*mark))
+		return "syntax error in closing element";
 	if (close_tag(ctx, parser, mark, p))
 		return "opening and closing tag mismatch";
 	while (iswhite(*p)) ++p;
@@ -766,7 +775,8 @@ parse_attribute_value:
 	return "end of data in attribute value";
 }
 
-static int fast_tolower(int c) {
+static int fast_tolower(int c)
+{
 	if ((unsigned)c - 'A' < 26)
 		return c | 32;
 	return c;
@@ -930,6 +940,60 @@ static char *convert_to_utf8(fz_context *ctx, unsigned char *s, size_t n, int *d
 		return (char*)s+3;
 
 	return (char*)s;
+}
+
+fz_xml *
+fz_parse_xml_stream(fz_context *ctx, fz_stream *stm, int preserve_white)
+{
+	fz_buffer *buf = fz_read_all(ctx, stm, 128);
+	fz_xml *xml = NULL;
+
+	fz_var(xml);
+
+	fz_try(ctx)
+		xml = fz_parse_xml(ctx, buf, preserve_white);
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return xml;
+}
+
+static fz_xml *
+parse_and_drop_buffer(fz_context *ctx, fz_buffer *buf, int preserve_white)
+{
+	fz_xml *xml = NULL;
+
+	fz_var(xml);
+
+	fz_try(ctx)
+		xml = fz_parse_xml(ctx, buf, preserve_white);
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return xml;
+}
+
+fz_xml *
+fz_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char *filename, int preserve_white)
+{
+	fz_buffer *buf = fz_read_archive_entry(ctx, arch, filename);
+
+	return parse_and_drop_buffer(ctx, buf, preserve_white);
+}
+
+fz_xml *
+fz_try_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char *filename, int preserve_white)
+{
+	fz_buffer *buf = fz_try_read_archive_entry(ctx, arch, filename);
+
+	if (buf == NULL)
+		return NULL;
+
+	return parse_and_drop_buffer(ctx, buf, preserve_white);
 }
 
 fz_xml *
@@ -1172,6 +1236,11 @@ fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf)
 
 fz_xml *fz_xml_find_dfs(fz_xml *item, const char *tag, const char *att, const char *match)
 {
+	return fz_xml_find_dfs_top(item, tag, att, match, NULL);
+}
+
+fz_xml *fz_xml_find_dfs_top(fz_xml *item, const char *tag, const char *att, const char *match, fz_xml *top)
+{
 	/* Skip over any DOC object. */
 	if (item && FZ_DOCUMENT_ITEM(item))
 		item = item->down;
@@ -1191,6 +1260,9 @@ fz_xml *fz_xml_find_dfs(fz_xml *item, const char *tag, const char *att, const ch
 		else
 			while (1) {
 				item = item->up;
+				/* Stop searching if we hit our declared 'top' item. */
+				if (item == top)
+					return NULL;
 				/* We should never reach item == NULL, but just in case. */
 				if (item == NULL)
 					return NULL;
@@ -1210,6 +1282,11 @@ fz_xml *fz_xml_find_dfs(fz_xml *item, const char *tag, const char *att, const ch
 
 fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, const char *match)
 {
+	return fz_xml_find_next_dfs_top(item, tag, att, match, NULL);
+}
+
+fz_xml *fz_xml_find_next_dfs_top(fz_xml *item, const char *tag, const char *att, const char *match, fz_xml *top)
+{
 	/* Skip over any DOC object. */
 	if (item && FZ_DOCUMENT_ITEM(item))
 		item = item->down;
@@ -1224,6 +1301,9 @@ fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, con
 	else
 		while (1) {
 			item = item->up;
+			/* Stop searching if we hit our declared 'top' item. */
+			if (item == top)
+				return NULL;
 			/* We should never reach item == NULL, but just in case. */
 			if (item == NULL)
 				return NULL;
@@ -1237,7 +1317,7 @@ fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, con
 			}
 		}
 
-	return fz_xml_find_dfs(item, tag, att, match);
+	return fz_xml_find_dfs_top(item, tag, att, match, top);
 }
 
 fz_xml *fz_keep_xml(fz_context *ctx, fz_xml *xml)

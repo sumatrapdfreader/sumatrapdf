@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -522,6 +522,20 @@ static void do_threshold_4(const unsigned char * FZ_RESTRICT ht_line, const unsi
 fz_bitmap *fz_new_bitmap_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 {
 	return fz_new_bitmap_from_pixmap_band(ctx, pix, ht, 0);
+}
+
+void fz_invert_bitmap(fz_context *ctx, fz_bitmap *bmp)
+{
+	unsigned char *s = bmp->samples;
+	int w, h, w2 = (bmp->w+7)>>3;
+
+	for (h = bmp->h; h > 0; h--)
+	{
+		unsigned char *t = s;
+		for (w = w2; w > 0; w--)
+			*t++ ^= 255;
+		s += bmp->stride;
+	}
 }
 
 /* TAOCP, vol 2, p337 */

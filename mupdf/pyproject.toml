@@ -1,5 +1,5 @@
 [build-system]
-requires = ["libclang", "swig"]
+requires = ["libclang", "swig", "setuptools"]
 
 # See pep-517.
 #

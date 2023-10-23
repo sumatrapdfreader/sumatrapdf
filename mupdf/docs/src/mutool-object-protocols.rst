@@ -1,8 +1,11 @@
 .. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
+----
 
 .. default-domain:: js
+
+.. include:: html_tags.rst
 
 .. _mutool_object_protocols:
 
@@ -12,29 +15,12 @@
 
 
 
-
 Object Protocols
 ---------------------------
 
 
 The following objects are standard :title:`JavaScript` objects with assumed properties (i.e. they follow their outlined protocol). They are used throughout the :title:`mutool API` to support object types for various methods.
 
-
-
-.. _mutool_run_js_api_links:
-
-.. _mutool_run_js_api_link_dict:
-
-Link Dictionary Object
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A link is a dictionary with keys for:
-
-`bounds`
-    A rectangle describing the link's location on the page.
-
-`uri`
-    A `uri` describing either a document internal destination or a :title:`URL` for a web page.
 
 
 .. _mutool_run_js_api_link_dest:
@@ -80,7 +66,7 @@ File Specification Object
 
 This object is used to represent a file.
 
-In order to retieve information from this object see methods described within :ref:`Embedded files in PDFs<mutool_object_pdf_document_embedded_files>`.
+In order to retrieve information from this object see methods described within :ref:`Embedded files in PDFs<mutool_object_pdf_document_embedded_files>`.
 
 
 
@@ -153,7 +139,7 @@ The stroking state is a dictionary with keys for:
         Array of on/off dash lengths.
 
 
-**Example:**
+|example_tag|
 
     `{dashes:[5,10], lineWidth:3, lineCap:'Round'}`
 
@@ -181,6 +167,8 @@ This `Object` has properties for:
 
 .. _mutool_run_js_api_pdf_widget_text_layout_object:
 
+.. note ``index`` in the parameters list here, otherwise it inserts a hyperlink to index.rst "Welcome"
+
 Text Layout Object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -198,7 +186,7 @@ A description of layouted text value from a text widget with keys:
     - `x` The X coordinate for the text line.
     - `y` The Y coordinate for the text line.
     - `fontSize` The text size used for the layouted text line.
-    - `index` The index of the beginning of the line in the text string.
+    - ``index`` The index of the beginning of the line in the text string.
     - `rect` The bounding rectangle for the text line.
     - `chars` An array of characters in the text line.
 
@@ -206,7 +194,7 @@ A description of layouted text value from a text widget with keys:
 
         - `x` The position of the character.
         - `advance` The advance of the character.
-        - `index` The index of the character in the text string.
+        - ``index`` The index of the character in the text string.
         - `rect` The bounding :ref:`Rectangle<mutool_run_js_api_rectangle>` for the character.
 
 

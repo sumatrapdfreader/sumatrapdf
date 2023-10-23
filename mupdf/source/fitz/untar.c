@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -125,16 +125,25 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 
 		if (typeflag == TYPE_LONG_NAME)
 		{
-			longname = fz_malloc(ctx, size);
-			n = fz_read(ctx, file, (unsigned char *) longname, size);
-			if (n < (size_t) size)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar long name entry name");
+			longname = fz_malloc(ctx, size + 1);
+			fz_try(ctx)
+			{
+				n = fz_read(ctx, file, (unsigned char *) longname, size);
+				if (n < (size_t) size)
+					fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar long name entry name");
+				longname[size] = '\0';
+			}
+			fz_catch(ctx)
+			{
+				fz_free(ctx, longname);
+				fz_rethrow(ctx);
+			}
 
 			fz_seek(ctx, file, 512 - (size % 512), 1);
 		}
 
 		if (typeflag != TYPE_NORMAL_OLD && typeflag != TYPE_NORMAL &&
-			typeflag != TYPE_CONTIGUOUS)
+			typeflag != TYPE_CONTIGUOUS && typeflag != TYPE_LONG_NAME)
 			continue;
 
 		blocks = (size + 511) / 512;
@@ -173,7 +182,7 @@ static fz_stream *open_tar_entry(fz_context *ctx, fz_archive *arch, const char *
 
 	ent = lookup_tar_entry(ctx, tar, name);
 	if (!ent)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find named tar archive entry");
+		return NULL;
 
 	fz_seek(ctx, file, ent->offset + 512, 0);
 	return fz_open_null_filter(ctx, file, ent->size, fz_tell(ctx, file));
@@ -188,7 +197,7 @@ static fz_buffer *read_tar_entry(fz_context *ctx, fz_archive *arch, const char *
 
 	ent = lookup_tar_entry(ctx, tar, name);
 	if (!ent)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find named tar archive entry");
+		return NULL;
 
 	ubuf = fz_new_buffer(ctx, ent->size);
 

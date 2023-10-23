@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* StructuredText interface */
 
@@ -140,6 +140,7 @@ FUN(StructuredText_walk)(JNIEnv *env, jobject self, jobject walker)
 	jobject jbbox = NULL;
 	jobject jtrm = NULL;
 	jobject jimage = NULL;
+	jobject jdir = NULL;
 	jobject jorigin = NULL;
 	jobject jfont = NULL;
 	jobject jquad = NULL;
@@ -182,9 +183,13 @@ FUN(StructuredText_walk)(JNIEnv *env, jobject self, jobject walker)
 				jbbox = to_Rect_safe(ctx, env, line->bbox);
 				if (!jbbox) return;
 
-				(*env)->CallVoidMethod(env, walker, mid_StructuredTextWalker_beginLine, jbbox, line->wmode);
+				jdir = to_Point_safe(ctx, env, line->dir);
+				if (!jdir) return;
+
+				(*env)->CallVoidMethod(env, walker, mid_StructuredTextWalker_beginLine, jbbox, line->wmode, jdir);
 				if ((*env)->ExceptionCheck(env)) return;
 
+				(*env)->DeleteLocalRef(env, jdir);
 				(*env)->DeleteLocalRef(env, jbbox);
 
 				for (ch = line->first_char; ch; ch = ch->next)

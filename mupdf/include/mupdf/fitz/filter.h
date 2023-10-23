@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_FILTER_H
 #define MUPDF_FITZ_FILTER_H
@@ -101,11 +101,14 @@ fz_stream *fz_open_rld(fz_context *ctx, fz_stream *chain);
 	dctd filter performs DCT (JPEG) decoding of data read
 	from the chained filter.
 
-	color_transform implements the PDF color_transform option;
+	color_transform implements the PDF color_transform option
+		use -1 for default behavior
 		use 0 to disable YUV-RGB / YCCK-CMYK transforms
-		use >0 to enable YUV-RGB / YCCK-CMYK transforms
-		use -1 (default) if not embedded in PDF
-		use -2 (default) if embedded in PDF
+		use 1 to enable YUV-RGB / YCCK-CMYK transforms
+
+	invert_cmyk implements the necessary inversion for Photoshop CMYK images
+		use 0 if embedded in PDF
+		use 1 if not embedded in PDF
 
 	For subsampling on decode, set l2factor to the log2 of the
 	reduction required (therefore 0 = full size decode).
@@ -113,7 +116,7 @@ fz_stream *fz_open_rld(fz_context *ctx, fz_stream *chain);
 	jpegtables is an optional stream from which the JPEG tables
 	can be read. Use NULL if not required.
 */
-fz_stream *fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int l2factor, fz_stream *jpegtables);
+fz_stream *fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int invert_cmyk, int l2factor, fz_stream *jpegtables);
 
 /**
 	faxd filter performs FAX decoding of data read from

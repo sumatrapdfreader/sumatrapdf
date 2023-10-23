@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
@@ -214,12 +214,31 @@ public class PDFDocument extends Document
 	public native void beginOperation(String operation);
 	public native void beginImplicitOperation();
 	public native void endOperation();
+	public native void abandonOperation();
 
 	public native int getLanguage();
 	public native void setLanguage(int lang);
 
 	public native void setPageLabels(int index, int style, String prefix, int start);
 	public native void deletePageLabels(int index);
+	protected static native String formatURIFromPathAndNamedDest(String path, String name);
+	protected static native String formatURIFromPathAndExplicitDest(String path, LinkDestination dest);
+	protected static native String appendNamedDestToURI(String uri, String name);
+	protected static native String appendExplicitDestToURI(String uri, LinkDestination dest);
+
+	public static String formatURIFromPathAndDest(String path, String name) {
+		return formatURIFromPathAndNamedDest(path, name);
+	}
+	public static String formatURIFromPathAndDest(String path, LinkDestination dest) {
+		return formatURIFromPathAndExplicitDest(path, dest);
+	}
+
+	public static String appendDestToURI(String uri, String name) {
+		return appendNamedDestToURI(uri, name);
+	}
+	public static String appendDestToURI(String uri, LinkDestination dest) {
+		return appendExplicitDestToURI(uri, dest);
+	}
 
 	public native int countSignatures();
 

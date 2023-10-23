@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -305,8 +305,8 @@ fz_slice_buffer(fz_context *ctx, fz_buffer *buf, int64_t start, int64_t end)
 	if (end < 0)
 		end += size;
 
-	s = fz_clampi(start, 0, size);
-	e = fz_clampi(end, 0, size);
+	s = fz_clamp64(start, 0, size);
+	e = fz_clamp64(end, 0, size);
 
 	if (s == size || e <= s)
 		return fz_new_buffer(ctx, 0);

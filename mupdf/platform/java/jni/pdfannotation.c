@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* Annotation interface */
 
@@ -783,7 +783,7 @@ FUN(PDFAnnotation_update)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFAnnotation_isOpen)(JNIEnv *env, jobject self)
+FUN(PDFAnnotation_getIsOpen)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
@@ -1596,4 +1596,37 @@ FUN(PDFAnnotation_getHiddenForEditing)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return hidden;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_applyRedaction)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation_safe(env, self);
+	pdf_redact_options opts = { blackBoxes, imageMethod };
+	jboolean redacted = JNI_FALSE;
+
+	if (!ctx || !annot) return JNI_FALSE;
+
+	fz_try(ctx)
+		redacted = pdf_apply_redaction(ctx, annot, &opts);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return redacted;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasRect)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_rect(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
 }

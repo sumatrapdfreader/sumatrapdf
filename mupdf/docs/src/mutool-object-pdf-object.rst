@@ -1,8 +1,11 @@
 .. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
+----
 
 .. default-domain:: js
+
+.. include:: html_tags.rst
 
 .. _mutool_object_pdf_object:
 
@@ -25,18 +28,16 @@ All functions that take `PDFObjects`, do automatic translation between :title:`J
 - The translation goes both ways: :title:`PDF` dictionaries and arrays can be accessed similarly to :title:`JavaScript` objects and arrays by getting and setting their properties.
 
 
-----
-
-**Instance properties**
+|instance_props|
 
 `length`
 
     Length of the array.
 
 
-----
 
-**Instance methods**
+
+|instance_methods|
 
 .. method:: get(ref)
 
@@ -44,6 +45,15 @@ All functions that take `PDFObjects`, do automatic translation between :title:`J
 
     :arg ref: Key or index.
     :return: The value for the key or index.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var dict = pdfDocument.newDictionary();
+        var value = dict.get("my_key");
+        var arr = pdfDocument.newArray();
+        var value = arr.get(1);
 
 
 .. method:: put(ref, value)
@@ -53,6 +63,15 @@ All functions that take `PDFObjects`, do automatic translation between :title:`J
     :arg ref: Key or index.
     :arg value: The value for the key or index.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var dict = pdfDocument.newDictionary();
+        dict.put("my_key", "my_value");
+        var arr = pdfDocument.newArray();
+        arr.put(0, 42);
+
 
 .. method:: delete(ref)
 
@@ -60,32 +79,92 @@ All functions that take `PDFObjects`, do automatic translation between :title:`J
 
     :arg ref: Key or index.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfObj.delete("my_key");
+        var dict = pdfDocument.newDictionary();
+        dict.put("my_key", "my_value");
+        dict.delete("my_key");
+        var arr = pdfDocument.newArray();
+        arr.put(1, 42);
+        arr.delete(1);
+
+
 .. method:: resolve()
 
     If the object is an indirect reference, return the object it points to; otherwise return the object itself.
 
     :return: Object.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var resolvedObj = pdfObj.resolve();
+
+
+.. method:: compare(other_obj)
+
+    |mutool_tag|
+
+    Compare the object to another one. Returns 0 on match, non-zero on mismatch. Streams always mismatch.
+
+    :arg other: `PDFObject`.
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var match = pdfObj.compare(other_obj);
+
+
 .. method:: isArray()
 
     :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var result = pdfObj.isArray();
 
 .. method:: isDictionary()
 
     :return: `Boolean`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var result = pdfObj.isDictionary();
+
 .. method:: forEach(fun)
 
-    Iterate over all the entries in a dictionary or array and call `fun` for each key-value pair.
+    Iterate over all the entries in a dictionary or array and call a function for each key-value pair.
 
     :arg fun: Function in the format `function(key,value){...}`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfObj.forEach(function(key,value){console.log("key="+key+",value="+value)});
 
 
 .. method:: push(item)
 
-    Append `item` to the end of the array.
+    Append `item` to the end of an array.
 
     :arg item: Item to add.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfObj.push("item");
 
 
 .. method:: toString()
@@ -94,19 +173,26 @@ All functions that take `PDFObjects`, do automatic translation between :title:`J
 
     :return: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var str = pdfObj.toString();
+
 
 .. method:: valueOf()
+
+    |mutool_tag|
 
     Convert primitive :title:`PDF` objects to a corresponding primitive `Null`, `Boolean`, `Number` or `String` :title:`JavaScript` objects. Indirect :title:`PDF` objects get converted to the string "R" while :title:`PDF` names are converted to plain strings. :title:`PDF` arrays or dictionaries are returned unchanged.
 
     :return: `Null` \| `Boolean` \| `Number` \| `String`.
 
+    |example_tag|
 
-----
+    .. code-block:: javascript
 
-**PDF streams**
-
-The only way to access a stream is via an indirect object, since all streams are numbered objects.
+        var val = pdfObj.valueOf();
 
 
 .. method:: isIndirect()
@@ -115,11 +201,34 @@ The only way to access a stream is via an indirect object, since all streams are
 
     :return: `Boolean`.
 
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isIndirect();
+
+
 .. method:: asIndirect()
 
     Return the object number the indirect reference points to.
 
-    :return: `Boolean`.
+    :return: `Integer`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.asIndirect();
+
+
+
+
+:title:`PDF` streams
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The only way to access a stream is via an indirect object, since all streams are numbered objects.
 
 
 .. method:: isStream()
@@ -128,6 +237,12 @@ The only way to access a stream is via an indirect object, since all streams are
 
     :return: `Boolean`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isStream();
+
 
 .. method:: readStream()
 
@@ -135,11 +250,23 @@ The only way to access a stream is via an indirect object, since all streams are
 
     :return: `Buffer`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var buffer = pdfObj.readStream();
+
 .. method:: readRawStream()
 
     Read the raw, uncompressed, contents of the stream object into a `Buffer`.
 
     :return: `Buffer`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var buffer = pdfObj.readRawStream();
 
 .. method:: writeObject(obj)
 
@@ -147,11 +274,23 @@ The only way to access a stream is via an indirect object, since all streams are
 
     :arg obj: Object to update.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfObj.writeObject(obj);
+
 .. method:: writeStream(buffer)
 
     Update the contents of the stream the indirect reference points to. This will update the "Length", "Filter" and "DecodeParms" automatically.
 
     :arg buffer: `Buffer`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfObj.writeStream(buffer);
 
 .. method:: writeRawStream(buffer)
 
@@ -161,7 +300,15 @@ The only way to access a stream is via an indirect object, since all streams are
     :arg buffer: `Buffer`.
 
 
-----
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfObj.writeRawStream(buffer);
+
+
+Primitive Objects
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Primitive :title:`PDF` objects such as booleans, names, and numbers can usually be treated like :title:`JavaScript` values. When that is not sufficient use these functions:
@@ -173,11 +320,23 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
 
     :return: `Boolean`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isNull();
+
 .. method:: isBoolean()
 
     Returns *true* if the object is a `Boolean` object.
 
     :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isBoolean();
 
 .. method:: asBoolean()
 
@@ -185,11 +344,23 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
 
     :return: `Boolean`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.asBoolean();
+
 .. method:: isNumber()
 
     Returns *true* if the object is a `Number` object.
 
     :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isNumber();
 
 .. method:: asNumber()
 
@@ -197,11 +368,23 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
 
     :return: `Integer`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.asNumber();
+
 .. method:: isName()
 
     Returns *true* if the object is a `Name` object.
 
     :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isName();
 
 .. method:: asName()
 
@@ -209,11 +392,23 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
 
     :return: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.asName();
+
 .. method:: isString()
 
     Returns *true* if the object is a `String` object.
 
     :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isString();
 
 .. method:: asString()
 
@@ -221,8 +416,20 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
 
     :return: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.asString();
+
 .. method:: asByteString()
 
     Convert a string to an array of byte values.
 
     :return: `[...]`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.asByteString();

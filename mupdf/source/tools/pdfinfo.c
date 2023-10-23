@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * Information tool.
@@ -229,6 +229,7 @@ gatherdimensions(fz_context *ctx, globals *glo, int page, pdf_obj *pageref)
 {
 	fz_rect bbox;
 	pdf_obj *obj;
+	float unit;
 	int j;
 
 	obj = pdf_dict_get(ctx, pageref, PDF_NAME(MediaBox));
@@ -237,15 +238,11 @@ gatherdimensions(fz_context *ctx, globals *glo, int page, pdf_obj *pageref)
 
 	bbox = pdf_to_rect(ctx, obj);
 
-	obj = pdf_dict_get(ctx, pageref, PDF_NAME(UserUnit));
-	if (pdf_is_number(ctx, obj))
-	{
-		float unit = pdf_to_real(ctx, obj);
-		bbox.x0 *= unit;
-		bbox.y0 *= unit;
-		bbox.x1 *= unit;
-		bbox.y1 *= unit;
-	}
+	unit = pdf_dict_get_real_default(ctx, pageref, PDF_NAME(UserUnit), 1);
+	bbox.x0 *= unit;
+	bbox.y0 *= unit;
+	bbox.x1 *= unit;
+	bbox.y1 *= unit;
 
 	for (j = 0; j < glo->dims; j++)
 		if (!memcmp(glo->dim[j].u.dim.bbox, &bbox, sizeof (fz_rect)))
@@ -1059,7 +1056,10 @@ int pdfinfo_main(int argc, char **argv)
 	fz_try(ctx)
 		pdfinfo_info(ctx, fz_stdout(ctx), filename, password, show, &argv[fz_optind], argc-fz_optind);
 	fz_catch(ctx)
+	{
+		fz_log_error(ctx, fz_caught_message(ctx));
 		ret = 1;
+	}
 	fz_drop_context(ctx);
 	return ret;
 }

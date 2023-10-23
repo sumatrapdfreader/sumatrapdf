@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
@@ -4023,6 +4023,8 @@ fz_paint_image_imp(fz_context *ctx,
 	/* image size overflows fixed point math */
 	if (sw >= LIMIT || sh >= LIMIT)
 	{
+		/* Note this may cause compile warning because fz_warn() is marked as
+		being like printf(), but actually it treats %ld as matching int64_t. */
 		fz_warn(ctx, "image too large for fixed point math: %ld x %ld", (int64_t)sw, (int64_t)sh);
 		return;
 	}
@@ -4039,7 +4041,7 @@ fz_paint_image_imp(fz_context *ctx,
 	}
 
 #if FZ_PLOTTERS_RGB
-	if (dn == 3 && img->n == 1 + sa && !color && !fz_overprint_required(eop))
+	if (dn == 3 && dst->s == 0 && img->n == 1 + sa && !color && !fz_overprint_required(eop))
 	{
 		if (dolerp)
 			paintfn = fz_paint_affine_g2rgb_lerp(da, sa, fa, fb, dn, alpha);

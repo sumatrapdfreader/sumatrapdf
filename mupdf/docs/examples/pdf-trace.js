@@ -37,7 +37,7 @@ var traceProcessor = {
 	op_d: function (array, phase) { print("[" + showArray(array) + "]", phase, "d"); },
 	op_gs: function (name, dict) {
 		print("/"+name, "gs");
-		dict.forEach(function(k,v) {
+		dict.forEach(function(v,k) {
 			print("%", k, v);
 		});
 	},
@@ -129,6 +129,6 @@ var traceProcessor = {
 	op_EX: function () { print("EX"); },
 };
 
-var doc = new PDFDocument(scriptArgs[0]);
+var doc = Document.openDocument(scriptArgs[0]);
 var page = doc.loadPage(scriptArgs[1]-1);
 page.process(traceProcessor);

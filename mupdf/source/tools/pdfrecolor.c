@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* PDF recoloring tool. */
 
@@ -64,7 +64,7 @@ color_rewrite(fz_context *ctx, void *opaque, pdf_obj **cs_obj, int *n, float col
 }
 
 static void
-image_rewrite(fz_context *ctx, void *opaque, fz_image **image)
+image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm, pdf_obj *im_obj)
 {
 	fz_image *orig = *image;
 	fz_pixmap *pix;
@@ -251,6 +251,7 @@ int pdfrecolor_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
+		fz_log_error(ctx, fz_caught_message(ctx));
 		code = EXIT_FAILURE;
 	}
 	fz_drop_context(ctx);

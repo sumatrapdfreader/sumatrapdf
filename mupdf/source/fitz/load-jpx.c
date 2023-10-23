@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -111,38 +111,9 @@ static fz_context *get_opj_context(void)
 	return opj_secret;
 }
 
-/*
-sumatrapdf: need to add a single, global lock
-https://github.com/sumatrapdfreader/sumatrapdf/issues/1306
-*/
-
-#if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-static int isInitialized = 0;
-static CRITICAL_SECTION opj_cs;
-
 void opj_lock(fz_context *ctx)
 {
-	/* this is racy, but should be good enough */
-	if (!isInitialized) {
-		InitializeCriticalSection(&opj_cs);
-		isInitialized = 1;
-	}
-
-	EnterCriticalSection(&opj_cs);
-	set_opj_context(ctx);
-}
-
-void opj_unlock(fz_context *ctx)
-{
-	set_opj_context(NULL);
-	LeaveCriticalSection(&opj_cs);
-}
-#else
-void opj_lock(fz_context *ctx)
-{
-	fz_lock(ctx, FZ_LOCK_FREETYPE);
+	fz_ft_lock(ctx);
 
 	set_opj_context(ctx);
 }
@@ -151,10 +122,8 @@ void opj_unlock(fz_context *ctx)
 {
 	set_opj_context(NULL);
 
-	fz_unlock(ctx, FZ_LOCK_FREETYPE);
+	fz_ft_unlock(ctx);
 }
-#endif
-
 
 void *opj_malloc(size_t size)
 {

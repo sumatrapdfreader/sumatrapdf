@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -158,7 +158,7 @@ cbz_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 }
 
 static fz_rect
-cbz_bound_page(fz_context *ctx, fz_page *page_)
+cbz_bound_page(fz_context *ctx, fz_page *page_, fz_box_type box)
 {
 	cbz_page *page = (cbz_page*)page_;
 	fz_image *image = page->image;
@@ -253,7 +253,7 @@ cbz_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 }
 
 static int
-cbz_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
+cbz_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, size_t size)
 {
 	cbz_document *doc = (cbz_document*)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
@@ -305,6 +305,50 @@ static const char *cbz_mimetypes[] =
 	NULL
 };
 
+static int
+cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+{
+	fz_archive *arch = NULL;
+	int ret = 0;
+	int i, k, count;
+
+	fz_var(arch);
+	fz_var(ret);
+
+	fz_try(ctx)
+	{
+		arch = fz_try_open_archive_with_stream(ctx, stream);
+		if (arch == NULL)
+			break;
+
+		/* If it's an archive, and we can find at least one plausible page
+		 * then we can open it as a cbz. */
+		count = fz_count_archive_entries(ctx, arch);
+		for (i = 0; i < count && ret == 0; i++)
+		{
+			const char *name = fz_list_archive_entry(ctx, arch, i);
+			const char *ext = name ? strrchr(name, '.') : NULL;
+			if (ext)
+			{
+				for (k = 0; cbz_ext_list[k]; k++)
+				{
+					if (!fz_strcasecmp(ext, cbz_ext_list[k]))
+					{
+						ret = 25;
+						break;
+					}
+				}
+			}
+		}
+	}
+	fz_always(ctx)
+		fz_drop_archive(ctx, arch);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
+}
+
 fz_document_handler cbz_document_handler =
 {
 	NULL,
@@ -313,5 +357,6 @@ fz_document_handler cbz_document_handler =
 	cbz_extensions,
 	cbz_mimetypes,
 	NULL,
-	NULL
+	NULL,
+	cbz_recognize_doc_content
 };

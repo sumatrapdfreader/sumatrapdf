@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* Cookie interface */
 
@@ -57,4 +57,48 @@ FUN(Cookie_abort)(JNIEnv *env, jobject self)
 	if (!ctx || !cookie) return;
 
 	cookie->abort = 1;
+}
+
+JNIEXPORT jint JNICALL
+FUN(Cookie_getProgress)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_cookie *cookie = from_Cookie(env, self);
+
+	if (!ctx || !cookie) return 0;
+
+	return cookie->progress;
+}
+
+JNIEXPORT jint JNICALL
+FUN(Cookie_getProgressMax)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_cookie *cookie = from_Cookie(env, self);
+
+	if (!ctx || !cookie) return 0;
+
+	return cookie->progress_max;
+}
+
+JNIEXPORT jint JNICALL
+FUN(Cookie_getErrors)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_cookie *cookie = from_Cookie(env, self);
+
+	if (!ctx || !cookie) return 0;
+
+	return cookie->errors;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(Cookie_getIncomplete)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_cookie *cookie = from_Cookie(env, self);
+
+	if (!ctx || !cookie) return JNI_FALSE;
+
+	return cookie->incomplete ? JNI_TRUE : JNI_FALSE;
 }

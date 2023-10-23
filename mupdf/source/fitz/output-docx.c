@@ -17,14 +17,16 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
+
+#include "mupdf/fitz.h"
+
+#if FZ_ENABLE_DOCX_OUTPUT
 
 #include "glyphbox.h"
 #include "extract/extract.h"
 #include "extract/buffer.h"
-
-#include "mupdf/fitz.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -810,14 +812,24 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 	return &writer->super;
 }
 
-fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
-{
-	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
-}
-
 fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
 	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
+}
+
+fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options)
+{
+	/* No need to drop <out> if fz_new_docx_writer_internal() throws, because
+	it always drops <out> if it fails. */
+	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
+}
+
+#if FZ_ENABLE_ODT_OUTPUT
+
+fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+{
+	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
 }
 
 fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
@@ -828,10 +840,46 @@ fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const c
 	return fz_new_docx_writer_internal(ctx, out, options, extract_format_ODT);
 }
 
+#else
+
+fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "ODT writer not enabled");
+	return NULL;
+}
+
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "ODT writer not enabled");
+	return NULL;
+}
+
+#endif
+
+#else
+
+fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX/ODT writer not enabled");
+	return NULL;
+}
+
+fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX/ODT writer not enabled");
+	return NULL;
+}
+
+fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX writer not enabled");
+	return NULL;
+}
+
 fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options)
 {
-	/* No need to drop <out> if fz_new_docx_writer_internal() throws, because
-	it always drops <out> if it fails. */
-	fz_output *out = fz_new_output_with_path(ctx, path, 0 /*append*/);
-	return fz_new_docx_writer_internal(ctx, out, options, extract_format_DOCX);
+	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX writer not enabled");
+	return NULL;
 }
+
+#endif

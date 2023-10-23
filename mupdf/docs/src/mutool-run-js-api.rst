@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -270,6 +270,8 @@ Alpha values are floats between `0` and `1`, whereby `0` denotes full transparen
 .. include:: mutool-object-pdf-annotation.rst
 
 .. include:: mutool-object-pdf-widget.rst
+
+.. include:: mutool-object-stroke-state.rst
 
 .. include:: mutool-object-outline-iterator.rst
 

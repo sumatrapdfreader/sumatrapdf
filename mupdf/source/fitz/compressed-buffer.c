@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -35,6 +35,12 @@ fz_drop_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf)
 		fz_drop_buffer(ctx, buf->buffer);
 		fz_free(ctx, buf);
 	}
+}
+
+fz_compressed_buffer *
+fz_new_compressed_buffer(fz_context *ctx)
+{
+	return fz_malloc_struct(ctx, fz_compressed_buffer);
 }
 
 fz_stream *
@@ -87,7 +93,7 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_stream *tail, fz_compression_par
 					our_l2factor = 3;
 				*l2factor -= our_l2factor;
 			}
-			head = fz_open_dctd(ctx, tail, params->u.jpeg.color_transform, our_l2factor, NULL);
+			head = fz_open_dctd(ctx, tail, params->u.jpeg.color_transform, params->u.jpeg.invert_cmyk, our_l2factor, NULL);
 			break;
 
 		case FZ_IMAGE_JBIG2:

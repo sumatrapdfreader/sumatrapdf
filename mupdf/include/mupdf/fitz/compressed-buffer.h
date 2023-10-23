@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_COMPRESSED_BUFFER_H
 #define MUPDF_FITZ_COMPRESSED_BUFFER_H
@@ -39,6 +39,7 @@ typedef struct
 	union {
 		struct {
 			int color_transform; /* Use -1 for unset */
+			int invert_cmyk; /* Use 1 for standalone JPEG files */
 		} jpeg;
 		struct {
 			int smask_in_data;
@@ -159,6 +160,7 @@ enum
 	FZ_IMAGE_PNG,
 	FZ_IMAGE_PNM,
 	FZ_IMAGE_TIFF,
+	FZ_IMAGE_PSD,
 };
 
 /**
@@ -168,5 +170,10 @@ enum
 	Never throws exceptions.
 */
 void fz_drop_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf);
+
+/**
+	Create a new, UNKNOWN format, compressed_buffer;
+*/
+fz_compressed_buffer *fz_new_compressed_buffer(fz_context *ctx);
 
 #endif

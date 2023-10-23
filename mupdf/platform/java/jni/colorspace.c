@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* ColorSpace interface */
 
@@ -158,20 +158,6 @@ FUN(ColorSpace_isDeviceN)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(ColorSpace_isLabICC)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
-	fz_try(ctx)
-		result = fz_colorspace_is_lab_icc(ctx, cs);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-	return result;
-}
-
-JNIEXPORT jboolean JNICALL
 FUN(ColorSpace_isSubtractive)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
@@ -180,48 +166,6 @@ FUN(ColorSpace_isSubtractive)(JNIEnv *env, jobject self)
 	if (!ctx) return 0;
 	fz_try(ctx)
 		result = fz_colorspace_is_subtractive(ctx, cs);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-	return result;
-}
-
-JNIEXPORT jboolean JNICALL
-FUN(ColorSpace_isDevice)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
-	fz_try(ctx)
-		result = fz_colorspace_is_device(ctx, cs);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-	return result;
-}
-
-JNIEXPORT jboolean JNICALL
-FUN(ColorSpace_isDeviceGray)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
-	fz_try(ctx)
-		result = fz_colorspace_is_device_gray(ctx, cs);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-	return result;
-}
-
-JNIEXPORT jboolean JNICALL
-FUN(ColorSpace_isDeviceCMYK)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
-	fz_try(ctx)
-		result = fz_colorspace_is_device_cmyk(ctx, cs);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 	return result;

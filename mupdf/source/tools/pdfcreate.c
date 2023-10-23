@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * PDF creation tool: Tool for creating pdf content.
@@ -292,7 +292,10 @@ int pdfcreate_main(int argc, char **argv)
 	fz_always(ctx)
 		pdf_drop_document(ctx, doc);
 	fz_catch(ctx)
+	{
+		fz_log_error(ctx, fz_caught_message(ctx));
 		error = 1;
+	}
 
 	fz_flush_warnings(ctx);
 	fz_drop_context(ctx);

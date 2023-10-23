@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -447,7 +447,7 @@ pdf_dev_font(fz_context *ctx, pdf_device *pdev, fz_font *font, fz_matrix trm)
 	if (fz_font_t3_procs(ctx, font))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "pdf device does not support type 3 fonts");
 
-	if (fz_font_flags(font)->ft_substitute || !pdf_font_writing_supported(font))
+	if (fz_font_flags(font)->ft_substitute || !pdf_font_writing_supported(ctx, font))
 		gs->font = pdf_dev_add_substitute_font_res(ctx, pdev, font);
 	else
 		gs->font = pdf_dev_add_embedded_font_res(ctx, pdev, font);
@@ -573,11 +573,14 @@ pdf_dev_text_span(fz_context *ctx, pdf_device *pdev, fz_text_span *span)
 		else if (enc == ENC_UNICODE)
 			fz_append_printf(ctx, gs->buf, "%04x", it->ucs);
 
-		adv = fz_advance_glyph(ctx, span->font, it->gid, span->wmode);
-		if (span->wmode == 0)
-			trm = fz_pre_translate(trm, adv, 0);
-		else
-			trm = fz_pre_translate(trm, 0, adv);
+		if (it->gid != -1)
+		{
+			adv = fz_advance_glyph(ctx, span->font, it->gid, span->wmode);
+			if (span->wmode == 0)
+				trm = fz_pre_translate(trm, adv, 0);
+			else
+				trm = fz_pre_translate(trm, 0, adv);
+		}
 	}
 
 	fz_append_string(ctx, gs->buf, ">]TJ\n");
@@ -1088,7 +1091,6 @@ static void
 pdf_dev_begin_group(fz_context *ctx, fz_device *dev, fz_rect bbox, fz_colorspace *cs, int isolated, int knockout, int blendmode, float alpha)
 {
 	pdf_device *pdev = (pdf_device*)dev;
-	pdf_document *doc = pdev->doc;
 	int num;
 	pdf_obj *form_ref;
 	gstate *gs;
@@ -1106,10 +1108,9 @@ pdf_dev_begin_group(fz_context *ctx, fz_device *dev, fz_rect bbox, fz_colorspace
 		if (obj == NULL)
 		{
 			/* No, better make one */
-			obj = pdf_new_dict(ctx, doc, 2);
+			obj = pdf_dict_puts_dict(ctx, pdev->resources, text, 2);
 			pdf_dict_put(ctx, obj, PDF_NAME(Type), PDF_NAME(ExtGState));
 			pdf_dict_put_name(ctx, obj, PDF_NAME(BM), fz_blendmode_name(blendmode));
-			pdf_dict_putp_drop(ctx, pdev->resources, text, obj);
 		}
 	}
 
@@ -1231,14 +1232,13 @@ fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topc
 
 	fz_try(ctx)
 	{
-		if (buf)
-			buf = fz_keep_buffer(ctx, buf);
-		else
-			buf = fz_new_buffer(ctx, 256);
 		dev->doc = doc;
 		dev->resources = pdf_keep_obj(ctx, resources);
 		dev->gstates = fz_malloc_struct(ctx, gstate);
-		dev->gstates[0].buf = buf;
+		if (buf)
+			dev->gstates[0].buf = fz_keep_buffer(ctx, buf);
+		else
+			dev->gstates[0].buf = fz_new_buffer(ctx, 256);
 		dev->gstates[0].ctm = fz_identity; // XXX
 		dev->gstates[0].colorspace[0] = fz_device_gray(ctx);
 		dev->gstates[0].colorspace[1] = fz_device_gray(ctx);
@@ -1251,12 +1251,11 @@ fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topc
 		dev->max_gstates = 1;
 
 		if (!fz_is_identity(topctm))
-			fz_append_printf(ctx, buf, "%M cm\n", &topctm);
+			fz_append_printf(ctx, dev->gstates[0].buf, "%M cm\n", &topctm);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_buffer(ctx, buf);
-		fz_free(ctx, dev);
+		fz_drop_device(ctx, &dev->super);
 		fz_rethrow(ctx);
 	}
 

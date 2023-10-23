@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -32,6 +32,7 @@ extern fz_document_handler html_document_handler;
 extern fz_document_handler xhtml_document_handler;
 extern fz_document_handler mobi_document_handler;
 extern fz_document_handler epub_document_handler;
+extern fz_document_handler txt_document_handler;
 
 void fz_register_document_handlers(fz_context *ctx)
 {
@@ -55,6 +56,7 @@ void fz_register_document_handlers(fz_context *ctx)
 	fz_register_document_handler(ctx, &html_document_handler);
 	fz_register_document_handler(ctx, &xhtml_document_handler);
 	fz_register_document_handler(ctx, &mobi_document_handler);
+	fz_register_document_handler(ctx, &txt_document_handler);
 #endif /* FZ_ENABLE_HTML */
 #if FZ_ENABLE_EPUB
 	fz_register_document_handler(ctx, &epub_document_handler);

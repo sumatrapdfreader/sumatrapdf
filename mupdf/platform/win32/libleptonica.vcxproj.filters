@@ -114,6 +114,9 @@
     <ClInclude Include="..\..\source\fitz\tessocr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\fitz\leptonica-wrap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\thirdparty\leptonica\src\adaptmap.c">
@@ -571,6 +574,9 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\leptonica\src\gplot.c">
       <Filter>Source Files\leptonica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\leptonica-wrap.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

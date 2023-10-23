@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -26,7 +26,7 @@
 
 enum
 {
-	FZ_DOCUMENT_HANDLER_MAX = 10
+	FZ_DOCUMENT_HANDLER_MAX = 32
 };
 
 #define DEFW (450)
@@ -88,7 +88,7 @@ void fz_register_document_handler(fz_context *ctx, const fz_document_handler *ha
 }
 
 const fz_document_handler *
-fz_recognize_document(fz_context *ctx, const char *magic)
+fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const char *magic)
 {
 	fz_document_handler_context *dc;
 	int i, best_score, best_i;
@@ -107,35 +107,57 @@ fz_recognize_document(fz_context *ctx, const char *magic)
 	best_score = 0;
 	best_i = -1;
 
-	for (i = 0; i < dc->count; i++)
+	if (stream && stream->seek != NULL)
 	{
-		int score = 0;
-		const char **entry;
-
-		if (dc->handler[i]->recognize)
-			score = dc->handler[i]->recognize(ctx, magic);
-
-		for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
-			if (!fz_strcasecmp(magic, *entry) && score < 100)
-			{
-				score = 100;
-				break;
-			}
-
-		if (ext)
+		for (i = 0; i < dc->count; i++)
 		{
-			for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
-				if (!fz_strcasecmp(ext, *entry) && score < 100)
+			int score = 0;
+
+			fz_seek(ctx, stream, 0, SEEK_SET);
+
+			if (dc->handler[i]->recognize_content)
+				score = dc->handler[i]->recognize_content(ctx, stream);
+
+			if (best_score < score)
+			{
+				best_score = score;
+				best_i = i;
+			}
+		}
+	}
+
+	if (best_score < 100)
+	{
+		for (i = 0; i < dc->count; i++)
+		{
+			int score = 0;
+			const char **entry;
+
+			if (dc->handler[i]->recognize)
+				score = dc->handler[i]->recognize(ctx, magic);
+
+			for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
+				if (!fz_strcasecmp(magic, *entry) && score < 100)
 				{
 					score = 100;
 					break;
 				}
-		}
 
-		if (best_score < score)
-		{
-			best_score = score;
-			best_i = i;
+			if (ext)
+			{
+				for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
+					if (!fz_strcasecmp(ext, *entry) && score < 100)
+					{
+						score = 100;
+						break;
+					}
+			}
+
+			if (best_score < score)
+			{
+				best_score = score;
+				best_i = i;
+			}
 		}
 	}
 
@@ -143,6 +165,27 @@ fz_recognize_document(fz_context *ctx, const char *magic)
 		return NULL;
 
 	return dc->handler[best_i];
+}
+
+const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const char *filename)
+{
+	fz_stream *stream  = fz_open_file(ctx, filename);
+	const fz_document_handler *handler = NULL;
+
+	fz_try(ctx)
+		handler = fz_recognize_document_stream_content(ctx, stream, filename);
+	fz_always(ctx)
+		fz_drop_stream(ctx, stream);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return handler;
+}
+
+const fz_document_handler *
+fz_recognize_document(fz_context *ctx, const char *magic)
+{
+	return fz_recognize_document_stream_content(ctx, NULL, magic);
 }
 
 #if FZ_ENABLE_PDF
@@ -159,7 +202,7 @@ fz_open_accelerated_document_with_stream(fz_context *ctx, const char *magic, fz_
 	if (magic == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "missing file type");
 
-	handler = fz_recognize_document(ctx, magic);
+	handler = fz_recognize_document_stream_content(ctx, stream, magic);
 	if (!handler)
 #if FZ_ENABLE_PDF
 		handler = &pdf_document_handler;
@@ -212,7 +255,7 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 	if (filename == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "no document to open");
 
-	handler = fz_recognize_document(ctx, filename);
+	handler = fz_recognize_document_content(ctx, filename);
 	if (!handler)
 #if FZ_ENABLE_PDF
 		handler = &pdf_document_handler;
@@ -599,11 +642,6 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 	/* Protect modifications to the page list to cope with
 	 * destruction of pages on other threads. */
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-	/* SumatraPDF: seen a crash */
-	if (doc == NULL) {
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			return NULL;
-	}
 	for (page = doc->open; page; page = page->next)
 		if (page->chapter == chapter && page->number == number)
 		{
@@ -647,7 +685,15 @@ fz_rect
 fz_bound_page(fz_context *ctx, fz_page *page)
 {
 	if (page && page->bound_page)
-		return page->bound_page(ctx, page);
+		return page->bound_page(ctx, page, FZ_CROP_BOX);
+	return fz_empty_rect;
+}
+
+fz_rect
+fz_bound_page_box(fz_context *ctx, fz_page *page, fz_box_type box)
+{
+	if (page && page->bound_page)
+		return page->bound_page(ctx, page, box);
 	return fz_empty_rect;
 }
 
@@ -882,4 +928,33 @@ fz_page_label(fz_context *ctx, fz_page *page, char *buf, int size)
 	else
 		fz_snprintf(buf, size, "%d", page->number + 1);
 	return buf;
+}
+
+
+fz_box_type fz_box_type_from_string(const char *name)
+{
+	if (!fz_strcasecmp(name, "MediaBox"))
+		return FZ_MEDIA_BOX;
+	if (!fz_strcasecmp(name, "CropBox"))
+		return FZ_CROP_BOX;
+	if (!fz_strcasecmp(name, "BleedBox"))
+		return FZ_BLEED_BOX;
+	if (!fz_strcasecmp(name, "TrimBox"))
+		return FZ_TRIM_BOX;
+	if (!fz_strcasecmp(name, "ArtBox"))
+		return FZ_ART_BOX;
+	return FZ_UNKNOWN_BOX;
+}
+
+const char *fz_string_from_box_type(fz_box_type box)
+{
+	switch (box)
+	{
+	case FZ_MEDIA_BOX: return "MediaBox";
+	case FZ_CROP_BOX: return "CropBox";
+	case FZ_BLEED_BOX: return "BleedBox";
+	case FZ_TRIM_BOX: return "TrimBox";
+	case FZ_ART_BOX: return "ArtBox";
+	default: return "UnknownBox";
+	}
 }

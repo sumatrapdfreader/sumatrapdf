@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_STRING_H
 #define MUPDF_FITZ_STRING_H
@@ -104,9 +104,39 @@ void fz_dirname(char *dir, const char *path, size_t dirsize);
 const char *fz_basename(const char *path);
 
 /**
-	decode url escapes.
+	Like fz_decode_uri_component but in-place.
 */
 char *fz_urldecode(char *url);
+
+/**
+ * Return a new string representing the unencoded version of the given URI.
+ * This decodes all escape sequences except those that would result in a reserved
+ * character that are part of the URI syntax (; / ? : @ & = + $ , #).
+ */
+char *fz_decode_uri(fz_context *ctx, const char *s);
+
+/**
+ * Return a new string representing the unencoded version of the given URI component.
+ * This decodes all escape sequences!
+ */
+char *fz_decode_uri_component(fz_context *ctx, const char *s);
+
+/**
+ * Return a new string representing the provided string encoded as a URI.
+ */
+char *fz_encode_uri(fz_context *ctx, const char *s);
+
+/**
+ * Return a new string representing the provided string encoded as an URI component.
+ * This also encodes the special reserved characters (; / ? : @ & = + $ , #).
+ */
+char *fz_encode_uri_component(fz_context *ctx, const char *s);
+
+/**
+ * Return a new string representing the provided string encoded as an URI path name.
+ * This also encodes the special reserved characters except /.
+ */
+char *fz_encode_uri_pathname(fz_context *ctx, const char *s);
 
 /**
 	create output file name using a template.

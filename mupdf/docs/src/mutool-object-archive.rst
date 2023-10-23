@@ -1,8 +1,11 @@
 .. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
+----
+
 .. default-domain:: js
 
+.. include:: html_tags.rst
 
 .. _mutool_object_archive:
 
@@ -15,6 +18,7 @@
 `Archive`
 ------------------------
 
+|mutool_tag|
 
 .. method:: new Archive(path)
 
@@ -26,11 +30,15 @@
 
     :return: `Archive`.
 
-    **Example**
+    |example_tag|
 
     .. code-block:: javascript
 
-        var archive = new Archive(<path>);
+        var archive = new mupdf.Archive("example1.zip");
+        var archive2 = new mupdf.Archive("example2.tar");
+
+
+|instance_methods|
 
 .. method:: getFormat()
 
@@ -38,11 +46,25 @@
 
     :return: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var archive = new mupdf.Archive("example1.zip");
+        print(archive.getFormat());
+
 .. method:: countEntries()
 
     Returns the number of entries in the archive.
 
     :return: `Integer`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var archive = new mupdf.Archive("example1.zip");
+        var numEntries = archive.countEntries();
 
 .. method:: listEntry(idx)
 
@@ -52,6 +74,14 @@
 
     :return: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var archive = new mupdf.Archive("example1.zip");
+        var entry = archive.listEntry(0);
+
+
 .. method:: hasEntry(name)
 
     Returns :title:`true` if an entry of the given name exists in the archive.
@@ -59,6 +89,14 @@
     :arg name: `String`.
 
     :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var archive = new mupdf.Archive("example1.zip");
+        var hasEntry = archive.hasEntry("file1.txt");
+
 
 .. method:: readEntry(name)
 
@@ -68,10 +106,18 @@
 
     :return: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var archive = new mupdf.Archive("example1.zip");
+        var contents = archive.readEntry("file1.txt");
+
 
 `MultiArchive`
 ------------------------
 
+|mutool_tag|
 
 .. method:: new MultiArchive()
 
@@ -81,11 +127,13 @@
 
     :return: `MultiArchive`.
 
-    **Example**
+    |example_tag|
 
     .. code-block:: javascript
 
-        var multiArchive = new MultiArchive();
+        var multiArchive = new mupdf.MultiArchive();
+
+|instance_methods|
 
 
 .. method:: mountArchive(subArchive, path)
@@ -95,10 +143,24 @@
     :arg subArchive: `Archive`.
     :arg path: `String`.
 
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var archive = new mupdf.MultiArchive();
+        archive.mountArchive(new mupdf.Archive("example1.zip"), null);
+        archive.mountArchive(new mupdf.Archive("example2.tar"), "subpath");
+        print(archive.hasEntry("file1.txt"));
+        print(archive.hasEntry("subpath/file2.txt"));
+
+    Assuming that `example1.zip` contains a `file1.txt` and `example2.tar` contains `file2.txt`, the multiarchive now allows access to "file1.txt" and "subpath/file2.txt".
+
 
 
 `TreeArchive`
 ------------------------
+
+|mutool_tag|
 
 .. method:: new TreeArchive()
 
@@ -108,11 +170,13 @@
 
     :return: `TreeArchive`.
 
-    **Example**
+    |example_tag|
 
     .. code-block:: javascript
 
-        var treeArchive = new TreeArchive();
+        var treeArchive = new mupdf.TreeArchive();
+
+|instance_methods|
 
 
 .. method:: add(name, buffer)
@@ -121,3 +185,13 @@
 
     :arg name: `String`.
     :arg buffer: `Buffer`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var buf = new mupdf.Buffer();
+        buf.writeLine("hello world!");
+        var archive = new mupdf.TreeArchive();
+        archive.add("file2.txt", buf);
+        print(archive.hasEntry("file2.txt"));

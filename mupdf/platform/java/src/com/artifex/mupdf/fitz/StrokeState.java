@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
@@ -46,7 +46,7 @@ public class StrokeState
 		finalize();
 	}
 
-	private native long newNative(int startCap, int dashCap, int endCap, int lineJoin, float lineWidth, float miterLimit,
+	private native long newNativeStrokeState(int startCap, int dashCap, int endCap, int lineJoin, float lineWidth, float miterLimit,
 			float dashPhase, float[] dash);
 
 	// Private constructor for the C to use. Any objects created by the
@@ -59,12 +59,12 @@ public class StrokeState
 	}
 
 	public StrokeState(int startCap, int endCap, int lineJoin, float lineWidth, float miterLimit) {
-		pointer = newNative(startCap, 0, endCap, lineJoin, lineWidth, miterLimit, 0, null);
+		pointer = newNativeStrokeState(startCap, 0, endCap, lineJoin, lineWidth, miterLimit, 0, null);
 	}
 
 	public StrokeState(int startCap, int dashCap, int endCap, int lineJoin, float lineWidth, float miterLimit,
 			float dashPhase, float[] dash) {
-		pointer = newNative(startCap, dashCap, endCap, lineJoin, lineWidth, miterLimit, dashPhase, dash);
+		pointer = newNativeStrokeState(startCap, dashCap, endCap, lineJoin, lineWidth, miterLimit, dashPhase, dash);
 	}
 
 	public native int getStartCap();

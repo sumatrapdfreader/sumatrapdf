@@ -17,14 +17,16 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
 #include <string.h>
 #include <math.h>
+
+#include "mupdf/ucdn.h"
 
 #define TILE
 
@@ -73,6 +75,9 @@ struct pdf_gstate
 	/* materials */
 	pdf_material stroke;
 	pdf_material fill;
+
+	/* pattern paint type 2 */
+	int ismask;
 
 	/* text state */
 	pdf_text_state text;
@@ -123,6 +128,7 @@ struct pdf_run_processor
 
 	/* text object state */
 	pdf_text_object_state tos;
+	int bidi;
 
 	/* graphics state */
 	pdf_gstate *gstate;
@@ -452,6 +458,7 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 	int x0, y0, x1, y1;
 	float fx0, fy0, fx1, fy1;
 	fz_rect local_area;
+	int oldbot;
 	int id;
 
 	pdf_gsave(ctx, pr);
@@ -463,6 +470,8 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 
 	if (pat->ismask)
 	{
+		/* Inhibit any changes to the color since we're drawing an uncolored pattern. */
+		gstate->ismask = 1;
 		pdf_unset_pattern(ctx, pr, PDF_FILL);
 		pdf_unset_pattern(ctx, pr, PDF_STROKE);
 		if (what == PDF_FILL)
@@ -534,9 +543,17 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 		if (!cached)
 		{
 			gstate->ctm = ptm;
+
+			oldbot = pr->gbot;
+			pr->gbot = pr->gtop;
+
 			pdf_gsave(ctx, pr);
 			pdf_process_contents(ctx, (pdf_processor*)pr, pat->document, pat->resources, pat->contents, NULL, NULL);
 			pdf_grestore(ctx, pr);
+
+			while (pr->gtop > pr->gbot)
+				pdf_grestore(ctx, pr);
+			pr->gbot = oldbot;
 		}
 		fz_end_tile(ctx, pr->dev);
 	}
@@ -571,9 +588,17 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 				 * it each time round the loop. */
 				gstate = pr->gstate + pr->gtop;
 				gstate->ctm = fz_pre_translate(ptm, x * pat->xstep, y * pat->ystep);
+
+				oldbot = pr->gbot;
+				pr->gbot = pr->gtop;
+
 				pdf_gsave(ctx, pr);
 				pdf_process_contents(ctx, (pdf_processor*)pr, pat->document, pat->resources, pat->contents, NULL, NULL);
 				pdf_grestore(ctx, pr);
+
+				while (pr->gtop > pr->gbot)
+					pdf_grestore(ctx, pr);
+				pr->gbot = oldbot;
 			}
 		}
 	}
@@ -809,6 +834,107 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
  * Assemble and emit text
  */
 
+static int
+guess_bidi_level(int bidiclass, int cur_bidi)
+{
+	switch (bidiclass)
+	{
+	/* strong */
+	case UCDN_BIDI_CLASS_L:
+		return 0;
+	case UCDN_BIDI_CLASS_R:
+	case UCDN_BIDI_CLASS_AL:
+		return 1;
+
+	/* weak */
+	case UCDN_BIDI_CLASS_EN:
+	case UCDN_BIDI_CLASS_ES:
+	case UCDN_BIDI_CLASS_ET:
+	case UCDN_BIDI_CLASS_AN:
+		return 0;
+
+	case UCDN_BIDI_CLASS_CS:
+	case UCDN_BIDI_CLASS_NSM:
+	case UCDN_BIDI_CLASS_BN:
+		return cur_bidi;
+
+	/* neutral */
+	case UCDN_BIDI_CLASS_B:
+	case UCDN_BIDI_CLASS_S:
+	case UCDN_BIDI_CLASS_WS:
+	case UCDN_BIDI_CLASS_ON:
+		return cur_bidi;
+
+	/* embedding, override, pop ... we don't support them */
+	default:
+		return 0;
+	}
+}
+
+static int
+guess_markup_dir(int bidiclass)
+{
+	switch (bidiclass)
+	{
+	/* strong */
+	case UCDN_BIDI_CLASS_L:
+		return FZ_BIDI_LTR;
+	case UCDN_BIDI_CLASS_R:
+	case UCDN_BIDI_CLASS_AL:
+		return FZ_BIDI_RTL;
+
+	/* weak */
+	case UCDN_BIDI_CLASS_EN:
+	case UCDN_BIDI_CLASS_ES:
+	case UCDN_BIDI_CLASS_ET:
+	case UCDN_BIDI_CLASS_AN:
+		return FZ_BIDI_LTR;
+
+	case UCDN_BIDI_CLASS_CS:
+	case UCDN_BIDI_CLASS_NSM:
+	case UCDN_BIDI_CLASS_BN:
+		return FZ_BIDI_NEUTRAL;
+
+	default:
+		return FZ_BIDI_NEUTRAL;
+	}
+}
+
+static void patch_bidi(fz_context *ctx, fz_text *text)
+{
+	fz_text_span *span;
+	int rtl = 0;
+	int ltr = 0;
+
+	/* Hacky solution that just looks for majority strong LTR or RTL
+	 * characters to determine bidi level of neutral characters. This is
+	 * primarily used for reversing visual order text into logical order in
+	 * the stext-device.
+	 */
+
+	for (span = text->head; span; span = span->next)
+	{
+		if (span->markup_dir == FZ_BIDI_LTR)
+			ltr += span->len;
+		if (span->markup_dir == FZ_BIDI_RTL)
+			rtl += span->len;
+	}
+
+	if (rtl > ltr)
+	{
+		for (span = text->head; span; span = span->next)
+			if (span->markup_dir == FZ_BIDI_NEUTRAL)
+				span->bidi_level = 1;
+	}
+	else if (ltr > rtl)
+	{
+		for (span = text->head; span; span = span->next)
+			if (span->markup_dir == FZ_BIDI_NEUTRAL)
+				span->bidi_level = 0;
+	}
+}
+
+
 static pdf_gstate *
 pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 {
@@ -824,6 +950,8 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	text = pdf_tos_get_text(ctx, &pr->tos);
 	if (!text)
 		return gstate;
+
+	patch_bidi(ctx, text);
 
 	/* If we are going to output text, we need to have flushed any begin layers first. */
 	flush_begin_layer(ctx, pr);
@@ -972,6 +1100,8 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 	int gid;
 	int ucsbuf[PDF_MRANGE_CAP];
 	int ucslen;
+	int bc;
+	int dir;
 	int i;
 	int render_direct;
 
@@ -1022,12 +1152,20 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 		ucslen = 1;
 	}
 
+	/* Guess bidi level from unicode value. Record uncertainty of guess in
+	 * markup_dir temporarily, to set bidi level of weak/neutral to
+	 * majority directionality before flushing the finished text object.
+	 */
+	bc = ucdn_get_bidi_class(ucsbuf[0]);
+	pr->bidi = guess_bidi_level(bc, pr->bidi);
+	dir = guess_markup_dir(bc);
+
 	/* add glyph to textobject */
-	fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, gid, ucsbuf[0], fontdesc->wmode, 0, FZ_BIDI_NEUTRAL, lang);
+	fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, gid, ucsbuf[0], fontdesc->wmode, pr->bidi, dir, lang);
 
 	/* add filler glyphs for one-to-many unicode mapping */
 	for (i = 1; i < ucslen; i++)
-		fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, -1, ucsbuf[i], fontdesc->wmode, 0, FZ_BIDI_NEUTRAL, lang);
+		fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, -1, ucsbuf[i], fontdesc->wmode, pr->bidi, dir, lang);
 
 	pdf_tos_move_after_char(ctx, &pr->tos);
 }
@@ -1213,6 +1351,8 @@ pdf_init_gstate(fz_context *ctx, pdf_gstate *gs, fz_matrix ctm)
 
 	gs->fill.color_params = fz_default_color_params;
 	gs->stroke.color_params = fz_default_color_params;
+
+	gs->ismask = 0;
 }
 
 static void
@@ -1235,6 +1375,10 @@ pdf_set_colorspace(fz_context *ctx, pdf_run_processor *pr, int what, fz_colorspa
 	int n = fz_colorspace_n(ctx, colorspace);
 
 	gstate = pdf_flush_text(ctx, pr);
+
+	/* Don't change color if we're drawing an uncolored pattern tile! */
+	if (gstate->ismask)
+		return;
 
 	mat = what == PDF_FILL ? &gstate->fill : &gstate->stroke;
 
@@ -1263,6 +1407,10 @@ pdf_set_color(fz_context *ctx, pdf_run_processor *pr, int what, float *v)
 	pdf_material *mat;
 
 	gstate = pdf_flush_text(ctx, pr);
+
+	/* Don't change color if we're drawing an uncolored pattern tile! */
+	if (gstate->ismask)
+		return;
 
 	mat = what == PDF_FILL ? &gstate->fill : &gstate->stroke;
 
@@ -1516,8 +1664,14 @@ begin_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val, pdf_cycle_list 
 	obj = pdf_dict_get(ctx, val, PDF_NAME(Name));
 	if (obj)
 	{
+		const char *name = "";
 		pdf_flush_text(ctx, proc);
-		push_begin_layer(ctx, proc, pdf_to_name(ctx, obj));
+		if (pdf_is_name(ctx, obj))
+			name = pdf_to_name(ctx, obj);
+		else if (pdf_is_string(ctx, obj))
+			name = pdf_to_text_string(ctx, obj);
+
+		push_begin_layer(ctx, proc, name);
 		return;
 	}
 
@@ -1606,24 +1760,67 @@ pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 	}
 }
 
+struct line
+{
+	pdf_obj *obj;
+	struct line *child;
+};
+
+static pdf_obj *
+find_most_recent_common_ancestor_imp(fz_context *ctx, pdf_obj *a, struct line *line_a, pdf_obj *b, struct line *line_b, pdf_cycle_list *cycle_up_a, pdf_cycle_list *cycle_up_b)
+{
+	struct line line;
+	pdf_obj *common = NULL;
+	pdf_cycle_list cycle;
+	pdf_obj *parent;
+
+	/* First ascend one lineage. */
+	if (pdf_is_dict(ctx, a))
+	{
+		if (pdf_cycle(ctx, &cycle, cycle_up_a, a))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in structure tree");
+		line.obj = a;
+		line.child = line_a;
+		parent = pdf_dict_get(ctx, a, PDF_NAME(P));
+		return find_most_recent_common_ancestor_imp(ctx, parent, &line, b, NULL, &cycle, NULL);
+	}
+	/* Then ascend the other lineage. */
+	else if (pdf_is_dict(ctx, b))
+	{
+		if (pdf_cycle(ctx, &cycle, cycle_up_b, b))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in structure tree");
+		line.obj = b;
+		line.child = line_b;
+		parent = pdf_dict_get(ctx, b, PDF_NAME(P));
+		return find_most_recent_common_ancestor_imp(ctx, a, line_a, parent, &line, cycle_up_a, &cycle);
+	}
+
+	/* Once both lineages are know, traverse top-down to find most recent common ancestor. */
+	while (line_a && line_b && !pdf_objcmp(ctx, line_a->obj, line_b->obj))
+	{
+		common = line_a->obj;
+		line_a = line_a->child;
+		line_b = line_b->child;
+	}
+	return common;
+}
+
+static pdf_obj *
+find_most_recent_ancestor(fz_context *ctx, pdf_obj *a, pdf_obj *b)
+{
+	if (!pdf_is_dict(ctx, a) || !pdf_is_dict(ctx, b))
+		return NULL;
+	return find_most_recent_common_ancestor_imp(ctx, a, NULL, b, NULL, NULL, NULL);
+}
+
 static void
 send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 {
-	pdf_obj *common;
-	pdf_obj *parent_tree_root = pdf_dict_getl(ctx, pdf_trailer(ctx, proc->doc), PDF_NAME(Root), PDF_NAME(StructTreeRoot), PDF_NAME(ParentTree), NULL);
+	pdf_obj *common = NULL;
 
 	/* We are currently nested in A,B,C,...E,F,mcid_sent. We want to update to
-	 * being in A,B,C,...G,H,mc_dict. So we need to find the lowest common
-	 * point. We know that the structure is a tree, so no cycles to worry about.
-	 * Live with an n^2 algorithm for now. */
-	for (common = mc_dict; common != NULL && pdf_objcmp(ctx, common, parent_tree_root); common = pdf_dict_get(ctx, common, PDF_NAME(P)))
-	{
-		pdf_obj *o;
-
-		for (o = proc->mcid_sent; o != NULL && pdf_objcmp(ctx, o, common) && pdf_objcmp(ctx, o, parent_tree_root); o = pdf_dict_get(ctx, o, PDF_NAME(P)));
-		if (!pdf_objcmp(ctx, o, common))
-			break;
-	}
+	 * being in A,B,C,...G,H,mc_dict. So we need to find the lowest common point. */
+	common = find_most_recent_ancestor(ctx, proc->mcid_sent, mc_dict);
 
 	/* So, we need to pop everything up to common (i.e. everything below common will be closed). */
 	pop_structure_to(ctx, proc, common);
@@ -1664,6 +1861,9 @@ push_marked_content(fz_context *ctx, pdf_run_processor *proc, const char *tagstr
 	int drop_tag = 1;
 	fz_structure standard;
 	pdf_obj *mc_dict = NULL;
+
+	/* Flush any pending text so it's not in the wrong layer. */
+	pdf_flush_text(ctx, proc);
 
 	if (!tagstr)
 		tagstr = "Untitled";
@@ -1755,6 +1955,9 @@ pop_marked_content(fz_context *ctx, pdf_run_processor *proc, int neat)
 	/* Close structure/layers here, in reverse order to how we opened them. */
 	fz_try(ctx)
 	{
+		/* Make sure that any pending text is written into the correct layer. */
+		pdf_flush_text(ctx, proc);
+
 		/* Check to see if val contains an MCID. */
 		mc_dict = lookup_mcid(ctx, proc, val);
 
@@ -1838,7 +2041,7 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 	fz_default_colorspaces *xobj_default_cs = NULL;
 	marked_content_stack *save_marked_content = NULL;
 	int save_struct_parent;
-	pdf_obj *struct_parent;
+	pdf_obj *oc;
 
 	/* Avoid infinite recursion */
 	pdf_cycle_list *cycle_up = pr->cycle;
@@ -1860,13 +2063,13 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 	pr->marked_content = NULL;
 	save_struct_parent = pr->struct_parent;
 
-	pr->struct_parent = -1;
-
 	fz_try(ctx)
 	{
-		struct_parent = pdf_dict_get(ctx, xobj, PDF_NAME(StructParent));
-		if (pdf_is_number(ctx, struct_parent))
-			pr->struct_parent = pdf_to_int(ctx, struct_parent);
+		pr->struct_parent = pdf_dict_get_int_default(ctx, xobj, PDF_NAME(StructParent), -1);
+
+		oc = pdf_dict_get(ctx, xobj, PDF_NAME(OC));
+		if (oc)
+			begin_oc(ctx, pr, oc, NULL);
 
 		pdf_gsave(ctx, pr);
 
@@ -1969,6 +2172,9 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 
 		while (oldtop < pr->gtop)
 			pdf_grestore(ctx, pr);
+
+		if (oc)
+			end_oc(ctx, pr, oc, NULL);
 
 		if (xobj_default_cs != save_default_cs)
 		{
@@ -2324,6 +2530,7 @@ static void pdf_run_BT(fz_context *ctx, pdf_processor *proc)
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pr->tos.tm = fz_identity;
 	pr->tos.tlm = fz_identity;
+	pr->bidi = 0;
 }
 
 static void pdf_run_ET(fz_context *ctx, pdf_processor *proc)

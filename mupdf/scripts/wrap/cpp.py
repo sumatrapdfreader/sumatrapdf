@@ -20,6 +20,10 @@ from . import util
 
 
 def _make_top_level( text, top_level='::'):
+    if text == 'string':
+        # This is a hack; for some reason we often end up with `string` when it
+        # it should be `std::string`.
+        text = 'std::string'
     initial_prefix = ['']
     def handle_prefix( text, prefix):
         if text.startswith( prefix):
@@ -34,7 +38,15 @@ def _make_top_level( text, top_level='::'):
     return text
 
 
-def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, expand_typedef=True, top_level='::'):
+def declaration_text(
+        type_,
+        name,
+        nest=0,
+        name_is_simple=True,
+        verbose=False,
+        expand_typedef=True,
+        top_level='::',
+        ):
     '''
     Returns text for C++ declaration of <type_> called <name>.
 
@@ -54,7 +66,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
     assert 'struct (unnamed at ' not in type_.spelling, f'type_.spelling={type_.spelling}'
     if verbose:
         jlib.log( '{nest=} {name=} {type_.spelling=} {type_.get_declaration().get_usr()=}')
-        jlib.log( '{type_.kind=} {type_.get_array_size()=}')
+        jlib.log( '{type_.kind=} {type_.get_array_size()=} {expand_typedef=}')
 
     array_n = type_.get_array_size()
     if verbose:
@@ -63,7 +75,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
         if verbose: jlib.log( '{array_n=}')
         if array_n < 0:
             array_n = ''
-        text = declaration_text(
+        ret = declaration_text(
                 type_.get_array_element_type(),
                 f'{name}[{array_n}]',
                 nest+1,
@@ -72,12 +84,14 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
                 expand_typedef=expand_typedef,
                 top_level=top_level,
                 )
-        return text
+        if verbose:
+            jlib.log( 'returning {ret=}')
+        return ret
 
     pointee = type_.get_pointee()
     if pointee and pointee.spelling:
         if verbose: jlib.log( '{pointee.spelling=}')
-        return declaration_text(
+        ret = declaration_text(
                 pointee, f'*{name}',
                 nest+1,
                 name_is_simple=False,
@@ -85,21 +99,45 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
                 expand_typedef=expand_typedef,
                 top_level=top_level,
                 )
+        if verbose:
+            jlib.log( 'returning {ret=}')
+        return ret
 
     if expand_typedef and type_.get_typedef_name():
         if verbose: jlib.log( '{type_.get_typedef_name()=}')
         const = 'const ' if type_.is_const_qualified() else ''
-        return f'{const}{_make_top_level(type_.get_typedef_name(), top_level)} {name}'
+        ret = f'{const}{_make_top_level(type_.get_typedef_name(), top_level)} {name}'
+        if verbose:
+            jlib.log( 'returning {ret=}')
+        return ret
 
-    if type_.get_result().spelling and type_.kind != state.clang.cindex.TypeKind.FUNCTIONNOPROTO:
+    # On MacOS type `size_t` returns true from get_result() and is
+    # state.clang.cindex.TypeKind.ELABORATED.
+    #
+    if ( type_.get_result().spelling
+            and type_.kind not in
+                (
+                    state.clang.cindex.TypeKind.FUNCTIONNOPROTO,
+                    state.clang.cindex.TypeKind.ELABORATED,
+                )
+            ):
         # <type> is a function. We call ourselves with type=type_.get_result()
         # and name=<name>(<args>).
         #
+        assert type_.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO, \
+                f'{type_.spelling=} {type_.kind=}'
         ret = ''
         sep = ''
         for arg in type_.argument_types():
             ret += sep
-            ret += declaration_text( arg, '', nest+1, top_level=top_level, verbose=verbose)
+            ret += declaration_text(
+                    arg,
+                    '',
+                    nest+1,
+                    top_level=top_level,
+                    verbose=verbose,
+                    expand_typedef=expand_typedef,
+                    )
             sep = ', '
         if verbose: jlib.log( '{ret!r=}')
         if not name_is_simple:
@@ -114,6 +152,7 @@ def declaration_text( type_, name, nest=0, name_is_simple=True, verbose=False, e
                 nest+1,
                 name_is_simple=False,
                 verbose=verbose,
+                expand_typedef=expand_typedef,
                 top_level=top_level,
                 )
         if verbose:
@@ -241,7 +280,7 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
     #
     use_fz_try = True
 
-    if cursor.mangled_name in (
+    if cursor.spelling in (
             'pdf_specifics',
             ):
         # This fn takes a fz_context* but never throws, so we can omit
@@ -257,19 +296,19 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
     if uses_fz_context:
         icg = rename.internal( 'context_get')
         te = rename.internal( 'throw_exception')
-        out.write(      f'    fz_context* auto_ctx = {icg}();\n')
+        out.write( f'    fz_context* auto_ctx = {icg}();\n')
 
     # Output code that writes diagnostics to std::cerr if $MUPDF_trace is set.
     #
     def varname_enable():
         for t in 'fz_keep_', 'fz_drop_', 'pdf_keep_', 'pdf_drop_':
-            if cursor.mangled_name.startswith( t):
+            if cursor.spelling.startswith( t):
                 return 's_trace_keepdrop'
         return 's_trace > 1'
 
     out.write( f'    {refcheck_if}\n')
     out.write( f'    if ({varname_enable()}) {{\n')
-    out.write( f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): calling {cursor.mangled_name}():";\n')
+    out.write( f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): calling {cursor.spelling}():";\n')
     for arg in parse.get_args( tu, cursor, include_fz_context=True):
         if parse.is_pointer_to( arg.cursor.type, 'fz_context'):
             out.write( f'        if ({varname_enable()}) std::cerr << " auto_ctx=" << auto_ctx;\n')
@@ -314,6 +353,15 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
     out.write( f'        std::cerr << "\\n";\n')
     out.write( f'    }}\n')
     out.write( f'    #endif\n')
+
+    if uses_fz_context:
+        out.write( f'    {refcheck_if}\n')
+        out.write( f'        long stack0;\n')
+        out.write( f'        if (s_check_error_stack)\n')
+        out.write( f'        {{\n')
+        out.write( f'            stack0 = auto_ctx->error.top - auto_ctx->error.stack_base;\n')
+        out.write( f'        }}\n')
+        out.write( f'    #endif\n')
 
     # Now output the function call.
     #
@@ -360,6 +408,17 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
         out.write(      f'        #endif\n')
         out.write(      f'        {te}(auto_ctx);\n')
         out.write(      f'    }}\n')
+
+    if uses_fz_context:
+        out.write( f'    {refcheck_if}\n')
+        out.write( f'        if (s_check_error_stack)\n')
+        out.write( f'        {{\n')
+        out.write( f'            long stack1 = auto_ctx->error.top - auto_ctx->error.stack_base;\n')
+        out.write( f'            if (stack1 != stack0)\n')
+        out.write( f'                std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): MuPDF error stack size changed by {cursor.spelling}(): " << stack0 << " -> " << stack1 << "\\n";\n')
+        out.write( f'        }}\n')
+        out.write( f'    #endif\n')
+
     if return_type != 'void':
         out.write(  f'    return ret;\n')
 
@@ -423,13 +482,13 @@ def make_outparam_helper(
     generated.swig_cpp.
     '''
     verbose = False
-    main_name = rename.ll_fn(cursor.mangled_name)
+    main_name = rename.ll_fn(cursor.spelling)
     generated.swig_cpp.write( '\n')
 
     # Write struct.
     generated.swig_cpp.write( 'namespace mupdf\n')
     generated.swig_cpp.write('{\n')
-    generated.swig_cpp.write(f'    /* Out-params helper class for {cursor.mangled_name}(). */\n')
+    generated.swig_cpp.write(f'    /* Out-params helper class for {cursor.spelling}(). */\n')
     generated.swig_cpp.write(f'    struct {main_name}_outparams\n')
     generated.swig_cpp.write(f'    {{\n')
     for arg in parse.get_args( tu, cursor):
@@ -461,7 +520,7 @@ def make_outparam_helper(
         sep = ', '
     name_args += f'{sep}{main_name}_outparams* outparams'
     name_args += ')'
-    generated.swig_cpp.write(f'    /* Out-params function for {cursor.mangled_name}(). */\n')
+    generated.swig_cpp.write(f'    /* Out-params function for {cursor.spelling}(). */\n')
     generated.swig_cpp.write(f'    {declaration_text( cursor.result_type, name_args)}\n')
     generated.swig_cpp.write( '    {\n')
     # Set all pointer fields to NULL.
@@ -481,7 +540,7 @@ def make_outparam_helper(
     generated.swig_cpp.write(f'        ')
     if not return_void:
         generated.swig_cpp.write(f'{declaration_text(cursor.result_type, "ret")} = ')
-    generated.swig_cpp.write(f'{rename.ll_fn(cursor.mangled_name)}(')
+    generated.swig_cpp.write(f'{rename.ll_fn(cursor.spelling)}(')
     sep = ''
     for arg in parse.get_args( tu, cursor):
         generated.swig_cpp.write(sep)
@@ -534,12 +593,12 @@ def make_python_class_method_outparam_override(
     classes.
     '''
     # Underlying fn.
-    main_name = rename.ll_fn(cursor.mangled_name)
+    main_name = rename.ll_fn(cursor.spelling)
 
     if structname:
-        name_new = f'{classname}_{rename.method(structname, cursor.mangled_name)}_outparams_fn'
+        name_new = f'{classname}_{rename.method(structname, cursor.spelling)}_outparams_fn'
     else:
-        name_new = f'{rename.fn(cursor.mangled_name)}_outparams_fn'
+        name_new = f'{rename.fn(cursor.spelling)}_outparams_fn'
 
     # Define an internal Python function that will become the class method.
     #
@@ -559,9 +618,9 @@ def make_python_class_method_outparam_override(
     out.write('):\n')
     out.write( '    """\n')
     if structname:
-        out.write(f'    Helper for out-params of class method {structname}::{main_name}() [{cursor.mangled_name}()].\n')
+        out.write(f'    Helper for out-params of class method {structname}::{main_name}() [{cursor.spelling}()].\n')
     else:
-        out.write(f'    Class-aware helper for out-params of {fnname}() [{cursor.mangled_name}()].\n')
+        out.write(f'    Class-aware helper for out-params of {fnname}() [{cursor.spelling}()].\n')
     out.write( '    """\n')
 
     # ret, a, b, ... = foo::bar(self.m_internal, p, q, r, ...)
@@ -616,6 +675,9 @@ def make_python_class_method_outparam_override(
                     return_extra = classes.classextras.get( tu, return_ll_type)
                     if not function_name_implies_kept_references( fnname):
                         do_keep = True
+                else:
+                    if 'char' in return_ll_type.spelling:
+                        jlib.log('### Function returns {cursor.result_type.spelling=} -> {return_ll_type.spelling=}: {fnname}. {function_name_implies_kept_references(fnname)=}')
             if do_keep:
                 keepfn = f'{prefix}keep_{return_ll_type[ len(prefix):]}'
                 keepfn = rename.ll_fn( keepfn)
@@ -649,9 +711,9 @@ def make_python_class_method_outparam_override(
 
     # foo.bar = foo_bar_outparams_fn
     if structname:
-        out.write(f'{classname}.{rename.method(structname, cursor.mangled_name)} = {name_new}\n')
+        out.write(f'{classname}.{rename.method(structname, cursor.spelling)} = {name_new}\n')
     else:
-        out.write(f'{rename.fn( cursor.mangled_name)} = {name_new}\n')
+        out.write(f'{rename.fn( cursor.spelling)} = {name_new}\n')
     out.write('\n')
     out.write('\n')
 
@@ -671,14 +733,19 @@ def make_wrapper_comment(
         ret.write( text)
 
     num_out_params = 0
-    for arg in parse.get_args( tu, cursor, include_fz_context=False, skip_first_alt=is_method):
+    for arg in parse.get_args(
+            tu,
+            cursor,
+            include_fz_context=False,
+            skip_first_alt=is_method,
+            ):
         if arg.out_param:
             num_out_params += 1
 
     if is_low_level:
-        write( f'Low-level wrapper for `{rename.c_fn(cursor.mangled_name)}()`.')
+        write( f'Low-level wrapper for `{rename.c_fn(cursor.spelling)}()`.')
     else:
-        write( f'Class-aware wrapper for `{rename.c_fn(cursor.mangled_name)}()`.')
+        write( f'Class-aware wrapper for `{rename.c_fn(cursor.spelling)}()`.')
     if num_out_params:
         tuple_size = num_out_params
         if cursor.result_type.spelling != 'void':
@@ -757,6 +824,9 @@ def function_wrapper(
         }
     '''
     assert cursor.kind == state.clang.cindex.CursorKind.FUNCTION_DECL
+    if cursor.type.is_function_variadic() and fnname != 'fz_warn':
+        jlib.log( 'Not writing low-level wrapper because variadic: {fnname=}')
+        return
 
     verbose = state.state_.show_details( fnname)
     if verbose:
@@ -804,8 +874,8 @@ def function_wrapper(
 
     name_args_h += ')'
     name_args_cpp += ')'
-    declaration_h = declaration_text( cursor.result_type, name_args_h)
-    declaration_cpp = declaration_text( cursor.result_type, name_args_cpp)
+    declaration_h = declaration_text( cursor.result_type, name_args_h, verbose=verbose)
+    declaration_cpp = declaration_text( cursor.result_type, name_args_cpp, verbose=verbose)
     out_h.write( f'FZ_FUNCTION {declaration_h};\n')
     out_h.write( '\n')
 
@@ -815,7 +885,7 @@ def function_wrapper(
     out_cpp.write( '{\n')
     return_type = cursor.result_type.spelling
     fncall = ''
-    fncall += f'{rename.c_fn(cursor.mangled_name)}('
+    fncall += f'{rename.c_fn(cursor.spelling)}('
     for arg in parse.get_args( tu, cursor, include_fz_context=True):
         if parse.is_pointer_to( arg.cursor.type, 'fz_context'):
             fncall += f'{arg.separator}auto_ctx'
@@ -849,7 +919,217 @@ def make_namespace_close( namespace, out):
         out.write( f'}} /* End of namespace {namespace}. */\n')
 
 
-def make_internal_functions( namespace, out_h, out_cpp):
+# libclang can't always find headers so we define our own `std::string`
+# and `std::vector<>` that work well enough for the generation of the
+# C++ API.
+#
+# We also define extra raw functions to aid SWIG-generated code. These
+# are implemented in C++, and should be excluded from the generated
+# windows_def file later on, otherwise we get link errors on Windows.
+#
+g_extra_declarations = textwrap.dedent(f'''
+
+        #ifdef MUPDF_WRAP_LIBCLANG
+
+            namespace std
+            {{
+                template<typename T>
+                struct vector
+                {{
+                }};
+
+                struct string
+                {{
+                }};
+            }}
+
+        #else
+
+            #include <string>
+            #include <vector>
+
+        #endif
+
+        #include "mupdf/fitz.h"
+        #include "mupdf/pdf.h"
+
+        /**
+        C++ alternative to `fz_lookup_metadata()` that returns a `std::string`
+        or calls `fz_throw()` if not found.
+        */
+        FZ_FUNCTION std::string fz_lookup_metadata2(fz_context* ctx, fz_document* doc, const char* key);
+
+        /**
+        C++ alternative to `pdf_lookup_metadata()` that returns a `std::string`
+        or calls `fz_throw()` if not found.
+        */
+        FZ_FUNCTION std::string pdf_lookup_metadata2(fz_context* ctx, pdf_document* doc, const char* key);
+
+        /**
+        C++ alternative to `fz_md5_pixmap()` that returns the digest by value.
+        */
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context* ctx, fz_pixmap* pixmap);
+
+        /**
+        C++ alternative to fz_md5_final() that returns the digest by value.
+        */
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_final2(fz_md5* md5);
+
+        /** */
+        FZ_FUNCTION long long fz_pixmap_samples_int(fz_context* ctx, fz_pixmap* pixmap);
+
+        /**
+        Provides simple (but slow) access to pixmap data from Python and C#.
+        */
+        FZ_FUNCTION int fz_samples_get(fz_pixmap* pixmap, int offset);
+
+        /**
+        Provides simple (but slow) write access to pixmap data from Python and
+        C#.
+        */
+        FZ_FUNCTION void fz_samples_set(fz_pixmap* pixmap, int offset, int value);
+
+        /**
+        C++ alternative to fz_highlight_selection() that returns quads in a
+        std::vector.
+        */
+        FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context* ctx, fz_stext_page* page, fz_point a, fz_point b, int max_quads);
+
+        struct fz_search_page2_hit
+        {{
+            fz_quad quad;
+            int mark;
+        }};
+
+        /**
+        C++ alternative to fz_search_page() that returns information in a std::vector.
+        */
+        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document *doc, int number, const char *needle, int hit_max);
+        ''')
+
+g_extra_definitions = textwrap.dedent(f'''
+        FZ_FUNCTION std::string fz_lookup_metadata2( fz_context* ctx, fz_document* doc, const char* key)
+        {{
+            /* Find length first. */
+            int e = fz_lookup_metadata(ctx, doc, key, NULL /*buf*/, 0 /*size*/);
+            if (e < 0)
+            {{
+                fz_throw(ctx, FZ_ERROR_GENERIC, "key not found: %s", key);
+            }}
+            assert(e != 0);
+            char* buf = (char*) fz_malloc(ctx, e);
+            int e2 = fz_lookup_metadata(ctx, doc, key, buf, e);
+            assert(e2 = e);
+            std::string ret = buf;
+            free(buf);
+            return ret;
+        }}
+
+        FZ_FUNCTION std::string pdf_lookup_metadata2( fz_context* ctx, pdf_document* doc, const char* key)
+        {{
+            /* Find length first. */
+            int e = pdf_lookup_metadata(ctx, doc, key, NULL /*buf*/, 0 /*size*/);
+            if (e < 0)
+            {{
+                fz_throw(ctx, FZ_ERROR_GENERIC, "key not found: %s", key);
+            }}
+            assert(e != 0);
+            char* buf = (char*) fz_malloc(ctx, e);
+            int e2 = pdf_lookup_metadata(ctx, doc, key, buf, e);
+            assert(e2 = e);
+            std::string ret = buf;
+            free(buf);
+            return ret;
+        }}
+
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context *ctx, fz_pixmap *pixmap)
+        {{
+            std::vector<unsigned char>  ret(16);
+            fz_md5_pixmap( ctx, pixmap, &ret[0]);
+            return ret;
+        }}
+
+        FZ_FUNCTION long long fz_pixmap_samples_int(fz_context *ctx, fz_pixmap *pixmap)
+        {{
+            long long ret = (intptr_t) pixmap->samples;
+            return ret;
+        }}
+
+        FZ_FUNCTION int fz_samples_get(fz_pixmap *pixmap, int offset)
+        {{
+            return pixmap->samples[offset];
+        }}
+
+        FZ_FUNCTION void fz_samples_set(fz_pixmap *pixmap, int offset, int value)
+        {{
+            pixmap->samples[offset] = value;
+        }}
+
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_final2(fz_md5* md5)
+        {{
+            std::vector<unsigned char>  ret(16);
+            fz_md5_final( md5, &ret[0]);
+            return ret;
+        }}
+
+        FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context *ctx, fz_stext_page *page, fz_point a, fz_point b, int max_quads)
+        {{
+            {{
+                std::vector<fz_quad>    ret(max_quads);
+                int n;
+                fz_try(ctx)
+                {{
+                    n = fz_highlight_selection(ctx, page, a, b, &ret[0], max_quads);
+                }}
+                fz_catch(ctx)
+                {{
+                    n = -1;
+                }}
+                if (n >= 0)
+                {{
+                    ret.resize(n);
+                    return ret;
+                }}
+            }}
+            /* We are careful to only call `fz_throw()` after `ret`'s
+            destructor has been called. */
+            fz_throw(ctx, FZ_ERROR_GENERIC, "fz_highlight_selection() failed");
+        }}
+
+        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context *ctx, fz_document *doc, int number, const char *needle, int hit_max)
+        {{
+            std::vector<fz_quad>    quads(hit_max);
+            std::vector<int>        marks(hit_max);
+            int n = fz_search_page_number(ctx, doc, number, needle, &marks[0], &quads[0], hit_max);
+            std::vector<fz_search_page2_hit>    ret(n);
+            for (int i=0; i<n; ++i)
+            {{
+                ret[i].quad = quads[i];
+                ret[i].mark = marks[i];
+            }}
+            return ret;
+        }}
+        ''')
+
+def make_extra( out_extra_h, out_extra_cpp):
+    '''
+    We write extra abstractions here.
+
+    These are written in C++ but are at the same level of abstraction as MuPDF
+    C functions, for example they take `fz_context` args. This is done so that
+    we automatically generate wrappers as class methods as well as global
+    functions.
+    '''
+    out_extra_h.write( g_extra_declarations)
+
+    out_extra_cpp.write( textwrap.dedent('''
+            #include "mupdf/extra.h"
+
+            '''))
+    out_extra_cpp.write( g_extra_definitions)
+
+
+def make_internal_functions( namespace, out_h, out_cpp, refcheck_if):
     '''
     Writes internal support functions.
 
@@ -909,6 +1189,12 @@ def make_internal_functions( namespace, out_h, out_cpp):
                 return false;
             }}
 
+            {refcheck_if}
+                static const int    s_trace = mupdf::internal_env_flag("MUPDF_trace");
+            #else
+                static const int    s_trace = mupdf::internal_env_flag_check_unset("{refcheck_if}", "MUPDF_trace");
+            #endif
+
             struct {rename.internal("state")}
             {{
                 /* Constructor. */
@@ -926,9 +1212,24 @@ def make_internal_functions( namespace, out_h, out_cpp):
 
                 void reinit( bool multithreaded)
                 {{
+                    if (s_trace)
+                    {{
+                        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                << " calling fz_drop_context()\\n";
+                    }}
                     fz_drop_context( m_ctx);
                     m_multithreaded = multithreaded;
+                    if (s_trace)
+                    {{
+                        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                << " calling fz_new_context()\\n";
+                    }}
                     m_ctx = fz_new_context(NULL /*alloc*/, (multithreaded) ? &m_locks : nullptr, FZ_STORE_DEFAULT);
+                    if (s_trace)
+                    {{
+                        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                << " calling fz_register_document_handlers()\\n";
+                    }}
                     fz_register_document_handlers(m_ctx);
                 }}
                 static void lock(void *user, int lock)
@@ -945,6 +1246,11 @@ def make_internal_functions( namespace, out_h, out_cpp):
                 }}
                 ~{rename.internal("state")}()
                 {{
+                    if (s_trace)
+                    {{
+                        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                << " calling fz_drop_context()\\n";
+                    }}
                     fz_drop_context(m_ctx);
                 }}
 
@@ -997,6 +1303,11 @@ def make_internal_functions( namespace, out_h, out_cpp):
                         context. */
                         /* fixme: we don't actually need to take a lock here. */
                         std::lock_guard<std::mutex> lock( s_state.m_mutex);
+                        if (s_trace)
+                        {{
+                            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                    << " calling fz_clone_context()\\n";
+                        }}
                         m_ctx = fz_clone_context(s_state.m_ctx);
                     }}
                     return m_ctx;
@@ -1006,6 +1317,11 @@ def make_internal_functions( namespace, out_h, out_cpp):
                     if (m_ctx)
                     {{
                         assert( s_state.m_multithreaded);
+                        if (s_trace)
+                        {{
+                            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                    << " calling fz_drop_context()\\n";
+                        }}
                         fz_drop_context( m_ctx);
                     }}
 
@@ -1043,7 +1359,10 @@ def make_internal_functions( namespace, out_h, out_cpp):
 
             FZ_FUNCTION void reinit_singlethreaded()
             {{
-                std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): Reinitialising as single-threaded.\\n";
+                if (0)
+                {{
+                    std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): Reinitialising as single-threaded.\\n";
+                }}
                 s_state.reinit( false /*multithreaded*/);
             }}
             ''')
@@ -1140,10 +1459,11 @@ def make_function_wrappers(
     error_name_prefix = 'FZ_ERROR_'
     fz_error_names = []
     fz_error_names_maxlen = 0   # Used for padding so generated code aligns.
-    for cursor in tu.cursor.get_children():
+
+    for cursor in parse.get_children(tu.cursor):
         if cursor.kind == state.clang.cindex.CursorKind.ENUM_DECL:
             #log( 'enum: {cursor.spelling=})
-            for child in cursor.get_children():
+            for child in parse.get_members( cursor):
                 #log( 'child:{ child.spelling=})
                 if child.spelling.startswith( error_name_prefix):
                     name = child.spelling[ len(error_name_prefix):]
@@ -1269,15 +1589,17 @@ def make_function_wrappers(
     out_exceptions_cpp.write( f'}}\n')
     out_exceptions_cpp.write( '\n')
 
-    make_internal_functions( namespace, out_internal_h, out_internal_cpp)
+    make_internal_functions( namespace, out_internal_h, out_internal_cpp, refcheck_if)
 
     # Generate wrappers for each function that we find.
     #
     functions = []
     for fnname, cursor in state.state_.find_functions_starting_with( tu, ('fz_', 'pdf_'), method=False):
         assert fnname not in state.omit_fns
-        #jlib.log( '{cursor.type.spelling=}')
-        if cursor.type.is_function_variadic():
+        #jlib.log( '{fnname=} {cursor.spelling=} {cursor.type.spelling=}')
+        if ( cursor.type == state.clang.cindex.TypeKind.FUNCTIONPROTO
+                and cursor.type.is_function_variadic()
+                ):
             # We don't attempt to wrap variadic functions - would need to find
             # the equivalent function that takes a va_list.
             if 0:
@@ -1326,61 +1648,22 @@ def make_function_wrappers(
 
         python.cppyy_add_outparams_wrapper( tu, fnname, cursor, state.state_, generated)
 
-        if fnname in ('fz_lookup_metadata', 'pdf_lookup_metadata'):
-            # Output convenience wrapper for fz_lookup_metadata() and
-            # pdf_lookup_metadata() that are easily SWIG-able - return a
-            # std::string by value, and uses an out-param for the integer
-            # error/length value.
-            structname = 'fz_document' if fnname == 'fz_lookup_metadata' else 'pdf_document'
-            out_functions_h.write(
-                    textwrap.dedent(
-                    f'''
-                    /** Extra low-level wrapper for `{fnname}()` that returns a std::string and sets
-                    *o_out to length of string plus one. If <key> is not found, returns empty
-                    string with *o_out=-1. <o_out> can be NULL if caller is not interested in
-                    error information. */
-                    FZ_FUNCTION std::string {rename.ll_fn(fnname)}({structname} *doc, const char *key, int* o_out=NULL);
-
-                    '''))
-            out_functions_cpp.write(
-                    textwrap.dedent(
-                    f'''
-                    FZ_FUNCTION std::string {rename.ll_fn(fnname)}({structname} *doc, const char *key, int* o_out)
-                    {{
-                        /* Find length first. */
-                        int e = {rename.ll_fn(fnname)}(doc, key, NULL /*buf*/, 0 /*size*/);
-                        if (e < 0) {{
-                            // Not found.
-                            if (o_out)  *o_out = e;
-                            return "";
-                        }}
-                        assert(e != 0);
-                        char* buf = (char*) malloc(e);
-                        assert(buf);    // mupdf::malloc() throws on error.
-                        int e2 = {rename.ll_fn(fnname)}(doc, key, buf, e);
-                        assert(e2 = e);
-                        std::string ret = buf;
-                        free(buf);
-                        if (o_out)  *o_out = e;
-                        return ret;
-                    }}
-                    '''))
-        if fnname == "pdf_field_name":  #(fz_context *ctx, pdf_obj *field);
+        if fnname == "pdf_load_field_name":  #(fz_context *ctx, pdf_obj *field);
             # Output wrapper that returns std::string instead of buffer that
             # caller needs to free.
             out_functions_h.write(
                     textwrap.dedent(
                     f'''
-                    /** Alternative to `{rename.ll_fn('pdf_field_name')}()` that returns a std::string. */
-                    FZ_FUNCTION std::string {rename.ll_fn('pdf_field_name2')}(pdf_obj* field);
+                    /** Alternative to `{rename.ll_fn('pdf_load_field_name')}()` that returns a std::string. */
+                    FZ_FUNCTION std::string {rename.ll_fn('pdf_load_field_name2')}(pdf_obj* field);
 
                     '''))
             out_functions_cpp.write(
                     textwrap.dedent(
                     f'''
-                    FZ_FUNCTION std::string {rename.ll_fn('pdf_field_name2')}(pdf_obj* field)
+                    FZ_FUNCTION std::string {rename.ll_fn('pdf_load_field_name2')}(pdf_obj* field)
                     {{
-                        char* buffer = {rename.ll_fn('pdf_field_name')}( field);
+                        char* buffer = {rename.ll_fn('pdf_load_field_name')}( field);
                         std::string ret( buffer);
                         {rename.ll_fn('fz_free')}( buffer);
                         return ret;
@@ -1390,8 +1673,8 @@ def make_function_wrappers(
                     textwrap.indent(
                         textwrap.dedent(
                         f'''
-                        /** Alternative to `{rename.fn('pdf_field_name')}()` that returns a std::string. */
-                        FZ_FUNCTION std::string {rename.fn('pdf_field_name2')}({rename.class_('pdf_obj')}& field);
+                        /** Alternative to `{rename.fn('pdf_load_field_name')}()` that returns a std::string. */
+                        FZ_FUNCTION std::string {rename.fn('pdf_load_field_name2')}({rename.class_('pdf_obj')}& field);
                         '''),
                         '    ',
                         )
@@ -1399,9 +1682,9 @@ def make_function_wrappers(
             out_functions_cpp2.write(
                     textwrap.dedent(
                     f'''
-                    FZ_FUNCTION std::string {rename.fn('pdf_field_name2')}({rename.class_('pdf_obj')}& field)
+                    FZ_FUNCTION std::string {rename.fn('pdf_load_field_name2')}({rename.class_('pdf_obj')}& field)
                     {{
-                        return {rename.ll_fn('pdf_field_name2')}( field.m_internal);
+                        return {rename.ll_fn('pdf_load_field_name2')}( field.m_internal);
                     }}
                     '''))
 
@@ -1855,7 +2138,7 @@ def class_constructor_default(
     if extras.pod == 'none':
         pass
     elif extras.pod:
-        for c in struct_cursor.type.get_canonical().get_fields():
+        for c in parse.get_members(struct_cursor):
             if extras.pod == 'inline':
                 c_name = f'this->{c.spelling}'
             else:
@@ -2082,7 +2365,7 @@ def function_wrapper_class_aware_body(
     out_cpp.write( f'    #endif\n')
 
     if fn_cursor.type.is_function_variadic():
-        assert fnname == 'fz_warn'
+        assert fnname == 'fz_warn', f'{fnname=}'
         out_cpp.write( f'    va_list ap;\n')
         out_cpp.write( f'    va_start( ap, fmt);\n')
         out_cpp.write( f'    {rename.ll_fn("fz_vwarn")}( fmt, ap);\n')
@@ -2209,8 +2492,8 @@ def function_wrapper_class_aware_body(
         elif wrap_return in ('pointer', 'const pointer'):
             out_cpp.write( f'    auto ret = {rename.class_(return_cursor.spelling)}(temp);\n')
 
-        # Handle wrapper-class out-params - need to keep arg.m_internal and set to
-        # null.
+        # Handle wrapper-class out-params - need to keep arg.m_internal if
+        # fnname implies it will be a borrowed reference.
         for arg in parse.get_args( tu, fn_cursor):
             if arg.alt and arg.out_param:
                 if parse.has_refs(tu, arg.alt.type):
@@ -2327,12 +2610,15 @@ def function_wrapper_class_aware(
             Show extra diagnostics.
     '''
     verbose = state.state_.show_details( fnname)
+    if fn_cursor and fn_cursor.type.is_function_variadic() and fnname != 'fz_warn':
+        jlib.log( 'Not writing class-aware wrapper because variadic: {fnname=}')
+        return
     if verbose:
         jlib.log( 'Writing class-aware wrapper for {fnname=}')
     if struct_name:
         assert fnname not in state.omit_methods, jlib.log_text( '{=fnname}')
     if debug:
-        jlib.log( '{classname=} {fnname=}')
+        jlib.log( '{class_name=} {fnname=}')
     assert fnname.startswith( ('fz_', 'pdf_'))
     if not fn_cursor:
         fn_cursor = state.state_.find_function( tu, fnname, method=True)
@@ -2510,6 +2796,18 @@ def function_wrapper_class_aware(
                         wrap_return = 'const pointer'
                     else:
                         wrap_return = 'pointer'
+            else:
+                return_pointee = fn_cursor.result_type.get_pointee()
+                if 'char' in return_pointee.spelling:
+                    if function_name_implies_kept_references(fnname):
+                        # For now we just output a diagnostic, but eventually
+                        # we might make C++ wrappers return a std::string here,
+                        # free()-ing the char* before returning.
+                        jlib.log( '### Function name implies kept reference and returns char*:'
+                                ' {fnname}(): {fn_cursor.result_type.spelling=}'
+                                ' -> {return_pointee.spelling=}.'
+                                )
+
             if verbose:
                 jlib.log( '{=warning_not_copyable warning_no_raw_constructor}')
         else:
@@ -2525,7 +2823,7 @@ def function_wrapper_class_aware(
             #
             t = state.get_name_canonical( fn_cursor.result_type)
 
-            # 2023-02-09: parse.find_struct() will actuall find any definition,
+            # 2023-02-09: parse.find_struct() will actually find any definition,
             # and we now prefix Fitz headers with a typedef of size_t on Linux,
             # so we need to avoid calling parse.find_struct() unless `t` is for
             # a MuPDF type.
@@ -2787,7 +3085,7 @@ def class_raw_constructor(
         if extras.pod == 'inline':
             assert struct_cursor, f'cannot form raw constructor for inline pod {classname} without cursor for underlying {struct_name}'
             out_cpp.write( f'    assert( internal);\n')
-            for c in struct_cursor.type.get_canonical().get_fields():
+            for c in parse.get_members(struct_cursor):
                 if c.type.kind == state.clang.cindex.TypeKind.CONSTANTARRAY:
                     out_cpp.write( f'    memcpy(this->{c.spelling}, internal->{c.spelling}, sizeof(this->{c.spelling}));\n')
                 else:
@@ -2814,7 +3112,7 @@ def class_raw_constructor(
         if extras.constructor_raw != 'declaration_only':
             out_cpp.write( f'FZ_FUNCTION {classname}::{constructor_decl}\n')
             out_cpp.write( '{\n')
-            for c in struct_cursor.type.get_canonical().get_fields():
+            for c in parse.get_members(struct_cursor):
                 if c.type.kind == state.clang.cindex.TypeKind.CONSTANTARRAY:
                     out_cpp.write( f'    memcpy(this->{c.spelling}, &internal.{c.spelling}, sizeof(this->{c.spelling}));\n')
                 else:
@@ -2833,7 +3131,7 @@ def class_raw_constructor(
                 out_cpp.write( f'{comment}\n')
                 out_cpp.write( f'FZ_FUNCTION {const_space}::{struct_name}* {classname}::internal(){space_const}\n')
                 out_cpp.write( '{\n')
-                field0 = parse.get_field0(struct_cursor.type).spelling
+                field0 = parse.get_field0(struct_cursor.canonical).spelling
                 out_cpp.write( f'    auto ret = ({const_space}::{struct_name}*) &this->{field0};\n')
                 if parse.has_refs( tu, struct_cursor.type):
                     out_cpp.write( f'    {refcheck_if}\n')
@@ -2866,10 +3164,7 @@ def class_accessors(
 
     n = 0
 
-    # We use get_declaration().get_children() instead of type.get_fields() in
-    # order to work with anonymous structs.
-    #
-    for cursor in struct_cursor.underlying_typedef_type.get_declaration().get_children():
+    for cursor in parse.get_members(struct_cursor):
         n += 1
         #jlib.log( 'accessors: {cursor.spelling=} {cursor.type.spelling=}')
 
@@ -3118,7 +3413,7 @@ def pod_struct_fns(
     i = 0
     out_cpp.write( f'    out\n')
     out_cpp.write( f'            << "("\n');
-    for cursor in struct_cursor.type.get_canonical().get_fields():
+    for cursor in parse.get_members(struct_cursor):
         out_cpp.write( f'            << ');
         if i:
             out_cpp.write( f'" {cursor.spelling}="')
@@ -3142,7 +3437,7 @@ def pod_struct_fns(
     out_cpp.write( f'\n')
     out_cpp.write( f'FZ_FUNCTION bool operator==( const ::{struct_name}& lhs, const ::{struct_name}& rhs)\n')
     out_cpp.write( f'{{\n')
-    for cursor in struct_cursor.type.get_canonical().get_fields():
+    for cursor in parse.get_members(struct_cursor):
         out_cpp.write( f'    if (lhs.{cursor.spelling} != rhs.{cursor.spelling}) return false;\n')
     out_cpp.write( f'    return true;\n')
     out_cpp.write( f'}}\n')
@@ -3230,7 +3525,7 @@ def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False, verbose=F
     '''
     if verbose:
         jlib.log('Looking for fnptrs in {cursor_struct.spelling=}')
-    for cursor in cursor_struct.type.get_canonical().get_fields():
+    for cursor in parse.get_members(cursor_struct):
         t = cursor.type
         if verbose:
             jlib.log('{t.kind=} {cursor.spelling=}')
@@ -3247,11 +3542,16 @@ def get_struct_fnptrs( cursor_struct, shallow_typedef_expansion=False, verbose=F
                     tt = state.get_name_canonical( t)
                     if verbose:
                         jlib.log('{tt.spelling=}')
-                    if not 'struct (unnamed at ' in tt.spelling:
+                    if (0
+                            or 'struct (unnamed at ' in tt.spelling
+                            or 'unnamed struct at ' in tt.spelling
+                            ):
+
                         # This is clang giving an unhelpful name to an
                         # anonymous struct.
                         if verbose:
-                            jlib.log( 'Avoiding clang struct (unnamed at ...) anonymous struct: {tt.spelling=}')
+                            jlib.log( 'Avoiding clang anonymous struct placeholder: {tt.spelling=}')
+                    else:
                         t = tt
                 if verbose:
                     jlib.log('Yielding: {cursor.spelling=} {t.spelling=}')
@@ -3444,6 +3744,14 @@ def class_wrapper_virtual_fnptrs(
         out_h.write(f'    FZ_FUNCTION void use_virtual_{cursor.spelling}( bool use=true);\n')
         out_cpp.write(f'FZ_FUNCTION void {classname}2::use_virtual_{cursor.spelling}( bool use)\n')
         out_cpp.write( '{\n')
+
+        out_cpp.write(f'    {refcheck_if}\n')
+        out_cpp.write(f'    if (s_trace_director)\n')
+        out_cpp.write( '    {\n')
+        out_cpp.write(f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2::use_virtual_{cursor.spelling}(): this=" << this << " use=" << use << "\\n";\n')
+        out_cpp.write( '    }\n')
+        out_cpp.write( '    #endif\n')
+
         if extras.pod == 'inline':
             # Fnptr (in {classname}2) and virtual function (in {classname})
             # have same name, so we need qualify the fnptr with {classname} to
@@ -3477,13 +3785,14 @@ def class_wrapper_virtual_fnptrs(
                 continue
             name = f'arg_{i}'
             write(f'{sep}')
-            write(declaration_text(arg_type, name))
+            decl_text = declaration_text(arg_type, name, verbose=0)
+            write(decl_text)
             sep = ', '
         out_h.write( ');\n')
         out_cpp.write( ')\n')
         out_cpp.write( '{\n')
-        out_cpp.write(f'    std::cerr << "Unexpected call of unimplemented virtual_fnptrs fn {classname}2::{cursor.spelling}().\\n";\n')
-        out_cpp.write(f'    throw std::runtime_error( "Unexpected call of unimplemented virtual_fnptrs fn {classname}2::{cursor.spelling}().");\n')
+        out_cpp.write(f'    std::cerr << "Unexpected call of unimplemented virtual_fnptrs fn {classname}2::{cursor.spelling}(): this=" << this << ".\\n";\n')
+        out_cpp.write(f'    throw std::runtime_error( "Unexpected call of unimplemented virtual_fnptrs fn {classname}2::{cursor.spelling}()");\n')
         out_cpp.write( '}\n')
 
     out_h.write(  '};\n')
@@ -3878,7 +4187,7 @@ def class_wrapper(
         pass
     elif extras.pod == 'inline':
         out_h.write( f'    /* These members are the same as the members of ::{struct_name}. */\n')
-        for c in struct_cursor.type.get_canonical().get_fields():
+        for c in parse.get_members(struct_cursor):
             out_h.write( f'    {declaration_text(c.type, c.spelling)};\n')
     elif extras.pod:
         out_h.write( f'    ::{struct_cursor.spelling}  m_internal; /** Wrapped data is held by value. */\n')
@@ -4161,6 +4470,7 @@ def cpp_source(
         check_regress,
         clang_info_version,
         refcheck_if,
+        debug,
         ):
     '''
     Generates all .h and .cpp files.
@@ -4185,6 +4495,8 @@ def cpp_source(
             `#if ... ' text for enabling reference-checking code. For example
             `#if 1` to always enable, `#ifndef NDEBUG` to only enable in debug
             builds, `#if 0` to always disable.
+        debug:
+            True if debug build.
 
     Updates <generated> and returns <tu> from clang..
     '''
@@ -4192,55 +4504,9 @@ def cpp_source(
     assert not dir_mupdf.endswith( '/')
     assert not base.endswith( '/')
 
-    index = state.clang.cindex.Index.create()
-
-    header = f'{dir_mupdf}/include/mupdf/fitz.h'
-    assert os.path.isfile( header), f'header={header}'
-
-    # Get clang to parse mupdf/fitz.h and mupdf/pdf.h.
-    #
-    # It might be possible to use index.parse()'s <unsaved_files> arg to
-    # specify these multiple files, but i couldn't get that to work.
-    #
-    # So instead we write some #include's to a temporary file and ask clang to
-    # parse it.
-    #
-    temp_h = f'_mupdfwrap_temp.c'
-    try:
-        with open( temp_h, 'w') as f:
-            if state.state_.linux:
-                jlib.log('Prefixing Fitz headers with `typedef unsigned long size_t;`'
-                        ' because size_t not available to clang on Linux.')
-                # On Linux, size_t is defined internally in gcc (e.g. not even
-                # in /usr/include/stdint.h) and so not visible to clang.
-                #
-                # If we don't define it, clang complains about C99 not
-                # supporting implicit int and appears to variously expand
-                # size_t as different function pointers, e.g. `int (int *)` and
-                # `int (*)(int *)`.
-                #
-                f.write( textwrap.dedent('''
-                    /*
-                    Workaround on Linux. size_t is defined internally in
-                    gcc (e.g. not even in /usr/include/stdint.h) and so not visible to clang.
-                    */
-                    typedef unsigned long size_t;
-                    '''))
-            f.write( textwrap.dedent('''
-                    #include "mupdf/fitz.h"
-                    #include "mupdf/pdf.h"
-                    '''))
-        args = ['-I', f'{dir_mupdf}/include']
-        tu = index.parse( temp_h, args=args)
-    finally:
-        if os.path.isfile( temp_h):
-            os.remove( temp_h)
-
-    os.makedirs( f'{base}/include/mupdf', exist_ok=True)
-    os.makedirs( f'{base}/implementation', exist_ok=True)
+    # Do initial setting up of generated files before parse, because we include extra.h in our parse input.
 
     doit = True
-    num_regressions = 0
     if doit:
         class File:
             def __init__( self, filename, tabify=True):
@@ -4249,7 +4515,10 @@ def cpp_source(
                 self.file = io.StringIO()
                 self.line_begin = True
                 self.regressions = True
+                self.closed = False
             def write( self, text, fileline=False):
+                # Do not allow writes after .close().
+                assert not self.closed, f'File.write() called after .close(). {self.filename=}'
                 if fileline:
                     # Generate #line <line> "<filename>" for our caller's
                     # location. This makes any compiler warnings refer to thei
@@ -4261,18 +4530,16 @@ def cpp_source(
                 self.file.write( text)
                 self.line_begin = text.endswith( '\n')
             def close( self):
+                if self.closed:
+                    # Allow multiple calls to .close().
+                    return
+                self.closed = True
                 if self.filename:
                     # Overwrite if contents differ.
                     text = self.get()
                     if self.tabify:
                         text = tabify( self.filename, text)
                     cr = check_regress
-                    if self.filename in (
-                            os.path.abspath( 'platform/c++/include/mupdf/classes2.h'),
-                            os.path.abspath( 'platform/c++/implementation/classes2.cpp'),
-                            ):
-                        if 0:
-                            cr = False
                     jlib.log('calling util.update_file_regress() check_regress={cr}: {self.filename=}', 1)
                     e = util.update_file_regress( text, self.filename, check_regression=cr)
                     jlib.log('util.update_file_regress() returned => {e}', 1)
@@ -4326,14 +4593,10 @@ def cpp_source(
             'exceptions',
             'functions',
             'internal',
+            'extra',
             ):
         out_hs.add( name, f'{base}/include/mupdf/{name}.h')
         out_cpps.add( name, f'{base}/implementation/{name}.cpp')
-
-    # Create extra File that writes to internal buffer rather than an actual
-    # file, which we will append to out_h.
-    #
-    out_h_classes_end = File( None)
 
     # Make text of header comment for all generated file.
     #
@@ -4359,6 +4622,15 @@ def cpp_source(
     for _, _, file in out_cpps.get() + out_hs.get():
         file.write( header_text)
 
+    os.makedirs( f'{base}/include/mupdf', exist_ok=True)
+    os.makedirs( f'{base}/implementation', exist_ok=True)
+
+    num_regressions = 0
+    # Create extra File that writes to internal buffer rather than an actual
+    # file, which we will append to out_h.
+    #
+    out_h_classes_end = File( None)
+
     # Write multiple-inclusion guards into headers:
     #
     for name, filename, file in out_hs.get():
@@ -4366,6 +4638,115 @@ def cpp_source(
         assert filename.startswith( prefix)
         name = filename[ len(prefix):]
         header_guard( name, file)
+
+    # We need to write to out_hs.extra here before we do the parse
+    # because out_hs.extra will be part of the input text passed to the
+    # clang parser.
+    #
+    make_extra(out_hs.extra, out_cpps.extra)
+    out_hs.extra.write( textwrap.dedent('''
+            #endif
+            '''))
+    out_hs.extra.close()
+    out_cpps.extra.close()
+
+    # Now parse.
+    #
+    try:
+        index = state.clang.cindex.Index.create()
+    except Exception as e:
+        raise Exception(f'libclang does not appear to be installed') from e
+
+    header = f'{dir_mupdf}/include/mupdf/fitz.h'
+    assert os.path.isfile( header), f'header={header}'
+
+    # Get clang to parse mupdf/fitz.h and mupdf/pdf.h and mupdf/extra.h.
+    #
+    # It might be possible to use index.parse()'s <unsaved_files> arg to
+    # specify these multiple files, but i couldn't get that to work.
+    #
+    # So instead we write some #include's to a temporary file and ask clang to
+    # parse it.
+    #
+    temp_h = f'_mupdfwrap_temp.cpp'
+    try:
+        with open( temp_h, 'w') as f:
+            if state.state_.linux or state.state_.macos:
+                jlib.log('Prefixing Fitz headers with `typedef unsigned long size_t;`'
+                        ' because size_t not available to clang on Linux/MacOS.')
+                # On Linux, size_t is defined internally in gcc (e.g. not even
+                # in /usr/include/stdint.h) and so not visible to clang.
+                #
+                # If we don't define it, clang complains about C99 not
+                # supporting implicit int and appears to variously expand
+                # size_t as different function pointers, e.g. `int (int *)` and
+                # `int (*)(int *)`.
+                #
+                f.write( textwrap.dedent('''
+                    /*
+                    Workaround on Linux/MacOS. size_t is defined internally in
+                    gcc (e.g. not even in /usr/include/stdint.h) and so not visible to clang.
+                    */
+                    typedef unsigned long size_t;
+                    '''))
+            if state.state_.macos:
+                f.write( textwrap.dedent('''
+                    /*
+                    Workaround on MacOS: we need to define fixed-size int types
+                    and FILE and va_list, similarly as with size_t above.
+                    */
+                    typedef signed char         int8_t;
+                    typedef short               int16_t;
+                    typedef int                 int32_t;
+                    typedef long long           int64_t;
+                    typedef unsigned char       uint8_t;
+                    typedef unsigned short      uint16_t;
+                    typedef unsigned int        uint32_t;
+                    typedef unsigned long long  uint64_t;
+                    typedef struct FILE FILE;
+                    typedef struct va_list va_list;
+                    '''))
+            f.write( textwrap.dedent('''
+                    #include "mupdf/extra.h"
+
+                    #include "mupdf/fitz.h"
+                    #include "mupdf/pdf.h"
+                    '''))
+
+        # libclang often doesn't have access to system headers so we define
+        # MUPDF_WRAP_LIBCLANG so that extra.h can use dummy definition of
+        # std::vector.
+        #
+        args = [
+                '-I', f'{dir_mupdf}/include',
+                '-I', f'{dir_mupdf}/platform/c++/include',
+                '-D', 'MUPDF_WRAP_LIBCLANG',
+                '-D', 'FZ_FUNCTION=',
+                ]
+        tu = index.parse(
+                temp_h,
+                args = args,
+                options = 0
+                        | state.clang.cindex.TranslationUnit.PARSE_INCOMPLETE
+                        | state.clang.cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES
+                        ,
+                )
+
+        # Show warnings/errors from the parse. Failure to include stddef.h
+        # appears to be harmless on Linux, but other failures seem to cause
+        # more problems.
+        #
+        def show_clang_diagnostic( diagnostic, depth=0):
+            for diagnostic2 in diagnostic.children:
+                show_clang_diagnostic( diagnostic2, depth + 1)
+            jlib.log( '{" "*4*depth}{diagnostic}')
+        jlib.log( 'tu.diagnostics():')
+        for diagnostic in tu.diagnostics:
+            show_clang_diagnostic(diagnostic, 1)
+
+    finally:
+        if os.path.isfile( temp_h):
+            os.remove( temp_h)
 
     # Write required #includes into .h files:
     #
@@ -4386,6 +4767,8 @@ def cpp_source(
 
     out_hs.functions.write( textwrap.dedent(
             '''
+            #include "mupdf/extra.h"
+
             #include "mupdf/fitz.h"
             #include "mupdf/pdf.h"
 
@@ -4436,6 +4819,7 @@ def cpp_source(
             #include "mupdf/exceptions.h"
             #include "mupdf/functions.h"
             #include "mupdf/internal.h"
+            #include "mupdf/extra.h"
 
             #include <assert.h>
             #include <sstream>
@@ -4499,7 +4883,7 @@ def cpp_source(
 
     namespace = 'mupdf'
     for _, _, file in out_cpps.get() + out_hs.get():
-        if file == out_cpps.internal:
+        if file in (out_cpps.internal, out_cpps.extra, out_hs.extra):
             continue
         make_namespace_open( namespace, file)
 
@@ -4537,10 +4921,12 @@ def cpp_source(
                 static const int    s_trace = internal_env_flag("MUPDF_trace");
                 static const bool   s_trace_keepdrop = internal_env_flag("MUPDF_trace_keepdrop");
                 static const bool   s_trace_exceptions = internal_env_flag("MUPDF_trace_exceptions");
+                static const bool   s_check_error_stack = internal_env_flag("MUPDF_check_error_stack");
             #else
                 static const int    s_trace = internal_env_flag_check_unset("{refcheck_if}", "MUPDF_trace");
                 static const bool   s_trace_keepdrop = internal_env_flag_check_unset("{refcheck_if}", "MUPDF_trace_keepdrop");
                 static const bool   s_trace_exceptions = internal_env_flag_check_unset("{refcheck_if}", "MUPDF_trace_exceptions");
+                static const bool   s_check_error_stack = internal_env_flag_check_unset("{refcheck_if}", "MUPDF_check_error_stack");
             #endif
 
             '''))
@@ -4576,13 +4962,57 @@ def cpp_source(
     windows_def = ''
     #windows_def += 'LIBRARY mupdfcpp\n'    # This breaks things.
     windows_def += 'EXPORTS\n'
+
     for name, cursor in state.state_.find_global_data_starting_with( tu, ('fz_', 'pdf_')):
         if state.state_.show_details(name):
             jlib.log('global: {name=}')
         generated.c_globals.append(name)
         windows_def += f'    {name} DATA\n'
+    for fnname, cursor in state.state_.find_functions_starting_with( tu, ('fz_', 'pdf_', 'FT_'), method=False):
+        if fnname == 'fz_is_infinite_irect':
+            jlib.log( '{fnname=} {cursor.storage_class=}')
+        if cursor.storage_class == state.clang.cindex.StorageClass.STATIC:
+            # These fns do not work in windows.def, probably because they are
+            # usually inline?
+            #
+            jlib.log('Not adding to windows_def because static: {fnname}()')
+        elif fnname in (
+                'fz_lookup_metadata2',
+                'fz_md5_pixmap2',
+                'fz_pixmap_samples_int',
+                'fz_samples_get',
+                'fz_samples_set',
+                'pdf_lookup_metadata2',
+                'fz_md5_final2',
+                'fz_highlight_selection2',
+                'fz_search_page2',
+                ):
+            # These are excluded from windows_def because are C++ so
+            # we'd need to use the mangled name in. Instead we mark them
+            # with FZ_FUNCTION.
+            pass
+        else:
+            windows_def += f'    {fnname}\n'
+    # Add some internal fns that PyMuPDF requires.
+    for fnname in (
+            'FT_Get_First_Char',
+            'FT_Get_Next_Char',
+            'pdf_lookup_page_loc',
+            'fz_scale_pixmap',
+            'fz_pixmap_size',
+            'fz_subsample_pixmap',
+            'fz_copy_pixmap_rect',
+            'fz_write_pixmap_as_jpeg',
+            ):
+        windows_def += f'    {fnname}\n'
 
-    jlib.update_file( windows_def, f'{base}/windows_mupdf.def')
+    if debug:
+        # In debug builds these are real fns, not macros, and we need to
+        # make them exported.
+        windows_def += f'    fz_lock_debug_lock\n'
+        windows_def += f'    fz_lock_debug_unlock\n'
+
+    jlib.fs_update( windows_def, f'{base}/windows_mupdf.def')
 
     def register_fn_use( name):
         assert name.startswith( ('fz_', 'pdf_'))
@@ -4598,7 +5028,7 @@ def cpp_source(
     # Find all classes that we can create.
     #
     classes_ = []
-    for cursor in tu.cursor.get_children():
+    for cursor in parse.get_children(tu.cursor):
         if not cursor.spelling.startswith( ('fz_', 'pdf_')):
             continue
         if cursor.kind != state.clang.cindex.CursorKind.TYPEDEF_DECL:
@@ -4701,7 +5131,7 @@ def cpp_source(
     # Write close of namespace.
     out_hs.classes.write( out_h_classes_end.get())
     for _, _, file in out_cpps.get() + out_hs.get():
-        if file == out_cpps.internal:
+        if file in (out_cpps.internal, out_cpps.extra, out_hs.extra):
             continue
         make_namespace_close( namespace, file)
 
@@ -4739,8 +5169,9 @@ def cpp_source(
 
     # Terminate multiple-inclusion guards in headers:
     #
-    for _, _, file in out_hs.get():
-        file.write( '\n#endif\n')
+    for name, _, file in out_hs.get():
+        if name != 'extra':
+            file.write( '\n#endif\n')
 
     out_hs.close()
     out_cpps.close()
@@ -4839,7 +5270,7 @@ def test():
             #include "mupdf/pdf.h"
             ''')
     path = 'wrap-test.c'
-    jlib.update_file( text, path)
+    jlib.fs_update( text, path)
     index = state.clang.cindex.Index.create()
     tu = index.parse( path, '-I /usr/include -I include'.split(' '))
     path2 = 'wrap-test.c.c'
@@ -4848,6 +5279,6 @@ def test():
     parse.dump_ast( tu.cursor, 'ast')
     for diagnostic in tu.diagnostics:
         jlib.log('{diagnostic=}')
-    for cursor in tu.cursor.get_children():
+    for cursor in parse.get_members( tu.cursor):
         if 'cpp_test_' in cursor.spelling:
             parse.dump_ast(cursor, out=jlib.log)

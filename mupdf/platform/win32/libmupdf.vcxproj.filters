@@ -630,6 +630,15 @@
     <ClCompile Include="..\..\source\pdf\pdf-shade-recolor.c">
       <Filter>pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\load-psd.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-image-rewriter.c">
+      <Filter>pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\encode-jpx.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -889,6 +898,9 @@
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\font-table.h">
       <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\pdf\image-rewriter.h">
+      <Filter>!include\pdf</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,0 +1,24 @@
+{
+  "name": "mupdf",
+  "version": "0.1.1",
+  "description": "MuPDF WASM Library",
+  "exports": "./lib/mupdf.js",
+  "files": [
+    "lib/mupdf.js",
+    "lib/mupdf-wasm.js",
+    "lib/mupdf-wasm.wasm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://git.ghostscript.com/mupdf.git"
+  },
+  "keywords": [
+    "mupdf",
+    "pdf",
+    "wasm",
+    "webassembly",
+    "artifex"
+  ],
+  "author": "Artifex Software, Inc.",
+  "license": "AGPL-3.0-or-later"
+}

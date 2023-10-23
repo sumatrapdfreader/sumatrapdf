@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_PATH_H
 #define MUPDF_FITZ_PATH_H
@@ -152,28 +152,20 @@ int fz_packed_path_size(const fz_path *path);
 	be aligned by the caller to the same alignment as required for
 	a fz_path pointer.
 
-	max: The number of bytes available in the block.
-	If max < sizeof(fz_path) then an exception will
-	be thrown. If max >= the value returned by
-	fz_packed_path_size, then this call will never
-	fail, except in low memory situations with large
-	paths.
-
 	path: The path to pack.
 
 	Returns the number of bytes within the block used. Callers can
 	access the packed path data by casting the value of pack on
 	entry to be a fz_path *.
 
-	Throws exceptions on failure to allocate, or if
-	max < sizeof(fz_path).
+	Throws exceptions on failure to allocate.
 
 	Implementation details: Paths can be 'unpacked', 'flat', or
-	'open'. Standard paths, as created are 'unpacked'. Paths that
-	will pack into less than max bytes will be packed as 'flat',
-	unless they are too large (where large indicates that they
-	exceed some private implementation defined limits, currently
-	including having more than 256 coordinates or commands).
+	'open'. Standard paths, as created are 'unpacked'. Paths
+	will be packed as 'flat', unless they are too large
+	(where large indicates that they exceed some private
+	implementation defined limits, currently including having
+	more than 256 coordinates or commands).
 
 	Large paths are 'open' packed as a header into the given block,
 	plus pointers to other data blocks.
@@ -182,7 +174,7 @@ int fz_packed_path_size(const fz_path *path);
 	or 'flat' packed. Simply pack a path (if required), and then
 	forget about the details.
 */
-size_t fz_pack_path(fz_context *ctx, uint8_t *pack, size_t max, const fz_path *path);
+size_t fz_pack_path(fz_context *ctx, uint8_t *pack, const fz_path *path);
 
 /**
 	Clone the data for a path.

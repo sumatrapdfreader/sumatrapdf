@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -1130,7 +1130,7 @@ fz_gamma_pixmap(fz_context *ctx, fz_pixmap *pix, float gamma)
 	int k, x, y;
 
 	for (k = 0; k < 256; k++)
-		gamma_map[k] = pow(k / 255.0f, gamma) * 255;
+		gamma_map[k] = powf(k / 255.0f, gamma) * 255;
 
 	for (y = 0; y < pix->h; y++)
 	{

@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -306,13 +306,13 @@ Reference counting
 
 Reference counting uses special words in functions to make it easy to remember and follow the rules.
 
-Words that take ownership: `new`, `find`, `load`, `open`, `keep`.
+Words that take ownership: ``new``, ``find``, ``load``, ``open``, ``keep``.
 
-Words that release ownership: `drop`.
+Words that release ownership: ``drop``.
 
-If an object is returned by a function with one of the special words that take ownership, you are responsible for freeing it by calling `drop` or `free`, or `close` before you return. You may pass ownership of an owned object by return it only if you name the function using one of the special words.
+If an object is returned by a function with one of the special words that take ownership, you are responsible for freeing it by calling ``drop`` or ``free``, or ``close`` before you return. You may pass ownership of an owned object by return it only if you name the function using one of the special words.
 
-Any objects returned by functions that do not have any of these special words, are borrowed and have a limited life time. Do not hold on to them past the duration of the current function, or stow them away inside structs. If you need to keep the object for longer than that, you have to either `keep` it or make your own copy.
+Any objects returned by functions that do not have any of these special words, are borrowed and have a limited life time. Do not hold on to them past the duration of the current function, or stow them away inside structs. If you need to keep the object for longer than that, you have to either ``keep`` it or make your own copy.
 
 
 

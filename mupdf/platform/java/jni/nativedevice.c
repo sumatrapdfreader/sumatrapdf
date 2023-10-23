@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* Device interface */
 
@@ -591,7 +591,7 @@ FUN(NativeDevice_beginGroup)(JNIEnv *env, jobject self, jobject jrect, jobject j
 	fz_context *ctx = get_context(env);
 	fz_device *dev = from_Device(env, self);
 	fz_rect rect = from_Rect(env, jrect);
-	fz_colorspace *cs = from_ColorSpace(env, self);
+	fz_colorspace *cs = from_ColorSpace(env, jcs);
 	NativeDeviceInfo *info;
 	int err;
 
@@ -730,7 +730,7 @@ FUN(NativeDevice_endStructure)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-FUN(NativeDevice_beginMetadata)(JNIEnv *env, jobject self, jint meta, jstring jtext)
+FUN(NativeDevice_beginMetatext)(JNIEnv *env, jobject self, jint meta, jstring jtext)
 {
 	fz_context *ctx = get_context(env);
 	fz_device *dev = from_Device(env, self);
@@ -761,7 +761,7 @@ FUN(NativeDevice_beginMetadata)(JNIEnv *env, jobject self, jint meta, jstring jt
 }
 
 JNIEXPORT void JNICALL
-FUN(NativeDevice_endMetadata)(JNIEnv *env, jobject self)
+FUN(NativeDevice_endMetatext)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_device *dev = from_Device(env, self);

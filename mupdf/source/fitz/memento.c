@@ -4,11 +4,13 @@
    This software is provided AS-IS with no warranty, either express or
    implied.
 
-   This software is distributed under license and may not be copied, modified
-   or distributed except as expressly authorized under the terms of that
-   license. Refer to licensing information at http://www.artifex.com
-   or contact Artifex Software, Inc.,  1305 Grant Avenue - Suite 200,
-   Novato, CA 94945, U.S.A., +1(415)492-9861, for further information.
+   This software is distributed under license and may not be copied,
+   modified or distributed except as expressly authorized under the terms
+   of the license contained in the file COPYING in this distribution.
+
+   Refer to licensing information at http://www.artifex.com or contact
+   Artifex Software, Inc.,  39 Mesa Street, Suite 108A, San Francisco,
+   CA 94129, USA, for further information.
 */
 
 #ifndef MEMENTO_CPP_EXTRAS_ONLY
@@ -1410,7 +1412,7 @@ static void Memento_removeBlockSplay(Memento_Blocks    *blks,
             b->parent->left = replacement;
         else
             b->parent->right = replacement;
-            VALGRIND_MAKE_MEM_NOACCESS(b->parent, sizeof(*b->parent));
+        VALGRIND_MAKE_MEM_NOACCESS(b->parent, sizeof(*b->parent));
     } else {
         VALGRIND_MAKE_MEM_DEFINED(&blks->top, sizeof(blks->top));
         blks->top = replacement;

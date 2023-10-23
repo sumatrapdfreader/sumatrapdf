@@ -27,6 +27,17 @@ endif
 
 # Use of Tesseract is optional:
 ifeq ($(USE_TESSERACT),yes)
+  USE_LEPTONICA := yes
+  ifeq ($(USE_SYSTEM_TESSERACT),yes)
+    HAVE_TESSERACT := $(HAVE_SYS_TESSERACT)
+  else
+    ifneq ($(wildcard thirdparty/tesseract/src/*),)
+      HAVE_TESSERACT := yes
+    endif
+  endif
+endif
+
+ifeq ($(USE_LEPTONICA),yes)
   ifeq ($(USE_SYSTEM_LEPTONICA),yes)
     HAVE_LEPTONICA := $(HAVE_SYS_LEPTONICA)
   else
@@ -34,12 +45,11 @@ ifeq ($(USE_TESSERACT),yes)
       HAVE_LEPTONICA := yes
     endif
   endif
-  ifeq ($(USE_SYSTEM_TESSERACT),yes)
-    HAVE_TESSERACT := $(HAVE_SYS_TESSERACT)
-  else
-    ifneq ($(wildcard thirdparty/tesseract/src/*),)
-      HAVE_TESSERACT := yes
-    endif
+endif
+
+ifeq ($(USE_TESSERACT),yes)
+  ifneq ($(HAVE_LEPTONICA),yes)
+    echo "Build will fail! Tesseract requires LEPTONICA"
   endif
 endif
 

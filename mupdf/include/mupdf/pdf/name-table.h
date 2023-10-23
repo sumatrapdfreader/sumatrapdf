@@ -17,11 +17,12 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* Alphabetically sorted list of all PDF names to be available as constants */
 PDF_MAKE_NAME("1.2", 1_2)
+PDF_MAKE_NAME("1.5", 1_5)
 PDF_MAKE_NAME("3D", 3D)
 PDF_MAKE_NAME("A", A)
 PDF_MAKE_NAME("A85", A85)

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_XREF_H
 #define MUPDF_PDF_XREF_H
@@ -93,11 +93,34 @@ struct pdf_xref
 	int64_t end_ofs; /* file offset to end of xref */
 };
 
+/**
+	Retrieve the pdf_xref_entry for a given object.
+
+	This can cause xref reorganisations (solidifications etc) due to
+	repairs, so all held pdf_xref_entries should be considered
+	invalid after this call (other than the returned one).
+*/
 pdf_xref_entry *pdf_cache_object(fz_context *ctx, pdf_document *doc, int num);
 
 int pdf_count_objects(fz_context *ctx, pdf_document *doc);
+
+/**
+	Resolve an indirect object (or chain of objects).
+
+	This can cause xref reorganisations (solidifications etc) due to
+	repairs, so all held pdf_xref_entries should be considered
+	invalid after this call (other than the returned one).
+*/
 pdf_obj *pdf_resolve_indirect(fz_context *ctx, pdf_obj *ref);
 pdf_obj *pdf_resolve_indirect_chain(fz_context *ctx, pdf_obj *ref);
+
+/**
+	Load a given object.
+
+	This can cause xref reorganisations (solidifications etc) due to
+	repairs, so all held pdf_xref_entries should be considered
+	invalid after this call (other than the returned one).
+*/
 pdf_obj *pdf_load_object(fz_context *ctx, pdf_document *doc, int num);
 pdf_obj *pdf_load_unencrypted_object(fz_context *ctx, pdf_document *doc, int num);
 
@@ -161,6 +184,12 @@ pdf_xref_entry *pdf_get_populating_xref_entry(fz_context *ctx, pdf_document *doc
 pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i);
 
 /*
+	Map a function across all xref entries in a document.
+*/
+void pdf_xref_entry_map(fz_context *ctx, pdf_document *doc, void (*fn)(fz_context *, pdf_xref_entry *, int i, pdf_document *doc, void *), void *arg);
+
+
+/*
 	Used after loading a document to access entries.
 
 	This will never throw anything, or return NULL if it is
@@ -169,6 +198,8 @@ pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i);
 
 	This will never "solidify" the xref, so no entry may be found
 	(NULL will be returned) for free entries.
+
+	Called with a valid i, this will never try/catch or throw.
 */
 pdf_xref_entry *pdf_get_xref_entry_no_change(fz_context *ctx, pdf_document *doc, int i);
 pdf_xref_entry *pdf_get_xref_entry_no_null(fz_context *ctx, pdf_document *doc, int i);
@@ -200,7 +231,7 @@ void pdf_mark_xref(fz_context *ctx, pdf_document *doc);
 void pdf_clear_xref(fz_context *ctx, pdf_document *doc);
 void pdf_clear_xref_to_mark(fz_context *ctx, pdf_document *doc);
 
-int pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int64_t *tmpofs, pdf_obj **root);
+int pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stmofsp, int64_t *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int64_t *tmpofs, pdf_obj **root);
 
 pdf_obj *pdf_progressive_advance(fz_context *ctx, pdf_document *doc, int pagenum);
 

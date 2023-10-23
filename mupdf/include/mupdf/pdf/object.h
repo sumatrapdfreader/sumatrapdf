@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_OBJECT_H
 #define MUPDF_PDF_OBJECT_H
@@ -63,6 +63,7 @@ pdf_obj *pdf_deep_copy_obj(fz_context *ctx, pdf_obj *obj);
 
 pdf_obj *pdf_keep_obj(fz_context *ctx, pdf_obj *obj);
 void pdf_drop_obj(fz_context *ctx, pdf_obj *obj);
+pdf_obj *pdf_drop_singleton_obj(fz_context *ctx, pdf_obj *obj);
 
 int pdf_is_null(fz_context *ctx, pdf_obj *obj);
 int pdf_is_bool(fz_context *ctx, pdf_obj *obj);
@@ -148,6 +149,10 @@ size_t pdf_to_str_len(fz_context *ctx, pdf_obj *obj);
 int pdf_to_num(fz_context *ctx, pdf_obj *obj);
 int pdf_to_gen(fz_context *ctx, pdf_obj *obj);
 
+int pdf_to_bool_default(fz_context *ctx, pdf_obj *obj, int def);
+int pdf_to_int_default(fz_context *ctx, pdf_obj *obj, int def);
+float pdf_to_real_default(fz_context *ctx, pdf_obj *obj, float def);
+
 int pdf_array_len(fz_context *ctx, pdf_obj *array);
 pdf_obj *pdf_array_get(fz_context *ctx, pdf_obj *array, int i);
 void pdf_array_put(fz_context *ctx, pdf_obj *array, int i, pdf_obj *obj);
@@ -172,6 +177,7 @@ pdf_obj *pdf_dict_gets(fz_context *ctx, pdf_obj *dict, const char *key);
 pdf_obj *pdf_dict_getsa(fz_context *ctx, pdf_obj *dict, const char *key, const char *abbrev);
 pdf_obj *pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 pdf_obj *pdf_dict_getp_inheritable(fz_context *ctx, pdf_obj *dict, const char *path);
+pdf_obj *pdf_dict_gets_inheritable(fz_context *ctx, pdf_obj *dict, const char *key);
 void pdf_dict_put(fz_context *ctx, pdf_obj *dict, pdf_obj *key, pdf_obj *val);
 void pdf_dict_put_drop(fz_context *ctx, pdf_obj *dict, pdf_obj *key, pdf_obj *val);
 void pdf_dict_get_put_drop(fz_context *ctx, pdf_obj *dict, pdf_obj *key, pdf_obj *val, pdf_obj **old_val);
@@ -200,6 +206,7 @@ pdf_obj *pdf_dict_puts_dict(fz_context *ctx, pdf_obj *dict, const char *key, int
 
 int pdf_dict_get_bool(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 int pdf_dict_get_int(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+int64_t pdf_dict_get_int64(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 float pdf_dict_get_real(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 const char *pdf_dict_get_name(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 const char *pdf_dict_get_string(fz_context *ctx, pdf_obj *dict, pdf_obj *key, size_t *sizep);
@@ -207,6 +214,21 @@ const char *pdf_dict_get_text_string(fz_context *ctx, pdf_obj *dict, pdf_obj *ke
 fz_rect pdf_dict_get_rect(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 fz_matrix pdf_dict_get_matrix(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 int64_t pdf_dict_get_date(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+
+int pdf_dict_get_bool_default(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int def);
+int pdf_dict_get_int_default(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int def);
+float pdf_dict_get_real_default(fz_context *ctx, pdf_obj *dict, pdf_obj *key, float def);
+
+int pdf_dict_get_inheritable_bool(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+int pdf_dict_get_inheritable_int(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+int64_t pdf_dict_get_inheritable_int64(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+float pdf_dict_get_inheritable_real(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+const char *pdf_dict_get_inheritable_name(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+const char *pdf_dict_get_inheritable_string(fz_context *ctx, pdf_obj *dict, pdf_obj *key, size_t *sizep);
+const char *pdf_dict_get_inheritable_text_string(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+fz_rect pdf_dict_get_inheritable_rect(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+fz_matrix pdf_dict_get_inheritable_matrix(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+int64_t pdf_dict_get_inheritable_date(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 
 void pdf_array_push_bool(fz_context *ctx, pdf_obj *array, int x);
 void pdf_array_push_int(fz_context *ctx, pdf_obj *array, int64_t x);
@@ -216,6 +238,15 @@ void pdf_array_push_string(fz_context *ctx, pdf_obj *array, const char *x, size_
 void pdf_array_push_text_string(fz_context *ctx, pdf_obj *array, const char *x);
 pdf_obj *pdf_array_push_array(fz_context *ctx, pdf_obj *array, int initial);
 pdf_obj *pdf_array_push_dict(fz_context *ctx, pdf_obj *array, int initial);
+
+void pdf_array_put_bool(fz_context *ctx, pdf_obj *array, int i, int x);
+void pdf_array_put_int(fz_context *ctx, pdf_obj *array, int i, int64_t x);
+void pdf_array_put_real(fz_context *ctx, pdf_obj *array, int i, double x);
+void pdf_array_put_name(fz_context *ctx, pdf_obj *array, int i, const char *x);
+void pdf_array_put_string(fz_context *ctx, pdf_obj *array, int i, const char *x, size_t n);
+void pdf_array_put_text_string(fz_context *ctx, pdf_obj *array, int i, const char *x);
+pdf_obj *pdf_array_put_array(fz_context *ctx, pdf_obj *array, int i, int initial);
+pdf_obj *pdf_array_put_dict(fz_context *ctx, pdf_obj *array, int i, int initial);
 
 int pdf_array_get_bool(fz_context *ctx, pdf_obj *array, int index);
 int pdf_array_get_int(fz_context *ctx, pdf_obj *array, int index);
@@ -354,6 +385,10 @@ void pdf_begin_implicit_operation(fz_context *ctx, pdf_document *doc);
 
 /* Call this to end an operation. */
 void pdf_end_operation(fz_context *ctx, pdf_document *doc);
+
+/* Call this to abandon an operation. Revert to the state
+ * when you began. */
+void pdf_abandon_operation(fz_context *ctx, pdf_document *doc);
 
 /* Call this to find out how many undo/redo steps there are, and the
  * current position we are within those. 0 = original document,

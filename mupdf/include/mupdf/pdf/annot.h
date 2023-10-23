@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_ANNOT_H
 #define MUPDF_PDF_ANNOT_H
@@ -263,16 +263,24 @@ int pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float 
 fz_link_dest pdf_resolve_link_dest(fz_context *ctx, pdf_document *doc, const char *uri);
 
 /*
-	Create a destination object given an internal link URI.
-*/
-pdf_obj *pdf_new_destination_from_link(fz_context *ctx, pdf_document *doc, const char *uri);
-
-/*
 	Create an action object given a link URI. The action will
 	be a GoTo or URI action depending on whether the link URI
 	specifies a document internal or external destination.
 */
 pdf_obj *pdf_new_action_from_link(fz_context *ctx, pdf_document *doc, const char *uri);
+
+/*
+	Create a destination object given a link URI expected to adhere
+	to the Adobe specification "Parameters for Opening PDF files"
+	from the Adobe Acrobat SDK. The resulting destination object
+	will either be a PDF string, or a PDF array referring to a page
+	and suitable zoom level settings. In the latter case the page
+	can be referred to by PDF object number or by page number, this
+	is controlled by the is_remote argument. For remote destinations
+	it is not possible to refer to the page by object number, so
+	page numbers are used instead.
+*/
+pdf_obj *pdf_new_dest_from_link(fz_context *ctx, pdf_document *doc, const char *uri, int is_remote);
 
 /*
 	Create a link URI string according to the Adobe specification
@@ -283,13 +291,34 @@ pdf_obj *pdf_new_action_from_link(fz_context *ctx, pdf_document *doc, const char
 
 	The resulting string must be freed by the caller.
 */
-char *pdf_format_link_uri(fz_context *ctx, fz_link_dest dest);
+char *pdf_new_uri_from_explicit_dest(fz_context *ctx, fz_link_dest dest);
 
 /*
-	Parse an internal link URI that uses the Adobe specification
-	"parameters for opening PDF files".
+	Create a remote link URI string according to the Adobe specification
+	"Parameters for Opening PDF files" from the Adobe Acrobat SDK,
+	version 8.1, which can, at the time of writing, be found here:
+
+	https://web.archive.org/web/20170921000830/http://www.adobe.com/content/dam/Adobe/en/devnet/acrobat/pdfs/pdf_open_parameters.pdf
+
+	The file: URI scheme is used in the resulting URI if the remote document
+	is specified by a system independent path (already taking the recommendations
+	in table 3.40 of the PDF 1.7 specification into account), and either a
+	destination name or a page number and zoom level are appended:
+	file:///path/doc.pdf#page=42&view=FitV,100
+	file:///path/doc.pdf#nameddest=G42.123456
+
+	If a URL is used to specify the remote document, then its scheme takes
+	precedence and either a destination name or a page number and zoom level
+	are appended:
+	ftp://example.com/alpha.pdf#page=42&view=Fit
+	https://example.com/bravo.pdf?query=parameter#page=42&view=Fit
+
+	The resulting string must be freed by the caller.
 */
-fz_link_dest pdf_parse_link_uri(fz_context *ctx, const char *uri);
+char *pdf_append_named_dest_to_uri(fz_context *ctx, const char *url, const char *name);
+char *pdf_append_explicit_dest_to_uri(fz_context *ctx, const char *url, fz_link_dest dest);
+char *pdf_new_uri_from_path_and_named_dest(fz_context *ctx, const char *path, const char *name);
+char *pdf_new_uri_from_path_and_explicit_dest(fz_context *ctx, const char *path, fz_link_dest dest);
 
 /*
 	Create transform to fit appearance stream to annotation Rect
@@ -709,7 +738,21 @@ void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const ch
 void pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4]);
 void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float *color);
 
+/*
+ * Request that an appearance stream should be generated for an annotation if none is present.
+ * It will be created in future calls to pdf_update_annot or pdf_update_page.
+ */
+void pdf_annot_request_synthesis(fz_context *ctx, pdf_annot *annot);
+
+/*
+ * Request that an appearance stream should be re-generated for an annotation
+ * the next time pdf_annot_update or pdf_page_update is called.
+ * You usually won't need to call this, because changing any annotation attributes
+ * via the pdf_annot functions will do so automatically.
+ * It will be created in future calls to pdf_update_annot or pdf_update_page.
+ */
 void pdf_annot_request_resynthesis(fz_context *ctx, pdf_annot *annot);
+
 int pdf_annot_needs_resynthesis(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_resynthesised(fz_context *ctx, pdf_annot *annot);
 void pdf_dirty_annot(fz_context *ctx, pdf_annot *annot);
@@ -843,8 +886,6 @@ fz_buffer *pdf_load_embedded_file_contents(fz_context *ctx, pdf_obj *fs);
 */
 int pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs);
 
-char *pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
-char *pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *obj, int pagenum);
 pdf_obj *pdf_lookup_dest(fz_context *ctx, pdf_document *doc, pdf_obj *needle);
 fz_link *pdf_load_link_annots(fz_context *ctx, pdf_document *, pdf_page *, pdf_obj *annots, int pagenum, fz_matrix page_ctm);
 
@@ -885,5 +926,10 @@ void pdf_set_annot_filespec(fz_context *ctx, pdf_annot *annot, pdf_obj *obj);
 */
 int pdf_annot_hidden_for_editing(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_hidden_for_editing(fz_context *ctx, pdf_annot *annot, int hidden);
+
+/*
+ * Apply Redaction annotation by redacting page underneath and removing the annotation.
+ */
+int pdf_apply_redaction(fz_context *ctx, pdf_annot *annot, pdf_redact_options *opts);
 
 #endif

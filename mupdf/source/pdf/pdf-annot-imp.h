@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_ANNOT_IMP_H
 #define MUPDF_PDF_ANNOT_IMP_H
@@ -55,5 +55,13 @@ void pdf_drop_annots(fz_context *ctx, pdf_annot *annot_list);
 void pdf_drop_widgets(fz_context *ctx, pdf_annot *widget_list);
 
 void pdf_set_annot_has_changed(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Create a destination object given an internal link URI.
+*/
+pdf_obj *pdf_add_filespec(fz_context *ctx, pdf_document *doc, const char *file, pdf_obj *embedded_file);
+pdf_obj *pdf_add_url_filespec(fz_context *ctx, pdf_document *doc, const char *url);
+char *pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest);
+char *pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *obj, int pagenum);
 
 #endif

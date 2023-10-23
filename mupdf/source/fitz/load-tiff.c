@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -404,6 +404,7 @@ tiff_decode_data(fz_context *ctx, struct tiff *tiff, const unsigned char *rp, un
 
 			stm = fz_open_dctd(ctx, encstm,
 					tiff->photometric == 2 || tiff->photometric == 3 ? 0 : -1,
+					1,
 					0,
 					jpegtables);
 			break;
@@ -1360,44 +1361,61 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported subsampling factor");
 	}
 
-	tiff->stride = (tiff->imagewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
-	tiff->tilestride = (tiff->tilewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
-
 	switch (tiff->photometric)
 	{
 	case 0: /* WhiteIsZero -- inverted */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for bw tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		break;
 	case 1: /* BlackIsZero */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for bw tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		break;
 	case 2: /* RGB */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for rgb tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	case 3: /* RGBPal */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for palettized tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	case 4: /* Transparency mask */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for transparency mask tiff");
 		tiff->colorspace = NULL;
 		break;
 	case 5: /* CMYK */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 4)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for cmyk tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
 		break;
 	case 6: /* YCbCr */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for ycbcr tiff");
 		/* it's probably a jpeg ... we let jpeg convert to rgb */
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	case 8: /* Direct L*a*b* encoding. a*, b* signed values */
 	case 9: /* ICC Style L*a*b* encoding */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for lab tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_lab(ctx));
 		break;
 	case 32844: /* SGI CIE Log 2 L (16bpp Greyscale) */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for l tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		if (tiff->bitspersample != 8)
 			tiff->bitspersample = 8;
 		tiff->stride >>= 1;
 		break;
 	case 32845: /* SGI CIE Log 2 L, u, v (24bpp or 32bpp) */
+		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for luv tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		if (tiff->bitspersample != 8)
 			tiff->bitspersample = 8;
@@ -1406,6 +1424,9 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 	default:
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown photometric: %d", tiff->photometric);
 	}
+
+	tiff->stride = (tiff->imagewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
+	tiff->tilestride = (tiff->tilewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
 
 #if FZ_ENABLE_ICC
 	if (tiff->profile)
@@ -1515,7 +1536,12 @@ tiff_decode_jpeg(fz_context *ctx, struct tiff *tiff)
 	fz_var(rawstm);
 	fz_var(stm);
 
-	if (tiff->jpegofs + tiff->jpeglen > (size_t)(tiff->ep - tiff->bp))
+	if (tiff->jpegofs > (size_t)(tiff->ep - tiff->bp))
+	{
+		fz_warn(ctx, "TIFF JPEG image offset too large, capping");
+		tiff->jpegofs = (size_t)(tiff->ep - tiff->bp);
+	}
+	if (tiff->jpeglen > (size_t)(tiff->ep - tiff->bp) - tiff->jpegofs)
 	{
 		fz_warn(ctx, "TIFF JPEG image length too long, capping");
 		tiff->jpeglen = (size_t)(tiff->ep - tiff->bp) - tiff->jpegofs;
@@ -1524,7 +1550,7 @@ tiff_decode_jpeg(fz_context *ctx, struct tiff *tiff)
 	fz_try(ctx)
 	{
 		rawstm = fz_open_memory(ctx, tiff->bp + tiff->jpegofs, tiff->jpeglen);
-		stm = fz_open_dctd(ctx, rawstm, -1, 0, NULL);
+		stm = fz_open_dctd(ctx, rawstm, -1, 1, 0, NULL);
 		size = (unsigned)fz_read(ctx, stm, tiff->samples, wlen);
 	}
 	fz_always(ctx)

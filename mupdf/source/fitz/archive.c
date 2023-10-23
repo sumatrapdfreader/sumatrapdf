@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -26,6 +26,17 @@
 
 fz_stream *
 fz_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
+{
+	fz_stream *stream = fz_try_open_archive_entry(ctx, arch, name);
+
+	if (stream == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open entry %s", name);
+
+	return stream;
+}
+
+fz_stream *
+fz_try_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 {
 	char *local_name;
 	fz_stream *stream = NULL;
@@ -49,6 +60,17 @@ fz_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 
 fz_buffer *
 fz_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
+{
+	fz_buffer *buf = fz_try_read_archive_entry(ctx, arch, name);
+
+	if (buf == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read %s", name);
+
+	return buf;
+}
+
+fz_buffer *
+fz_try_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 {
 	char *local_name;
 	fz_buffer *buf = NULL;
@@ -134,8 +156,8 @@ fz_new_archive_of_size(fz_context *ctx, fz_stream *file, int size)
 	return arch;
 }
 
-fz_archive *
-fz_open_archive_with_stream(fz_context *ctx, fz_stream *file)
+static fz_archive *
+do_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
 	fz_archive *arch = NULL;
 
@@ -143,7 +165,34 @@ fz_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 		arch = fz_open_zip_archive_with_stream(ctx, file);
 	else if (fz_is_tar_archive(ctx, file))
 		arch = fz_open_tar_archive_with_stream(ctx, file);
-	else
+
+	return arch;
+}
+
+fz_archive *
+fz_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
+{
+	fz_archive *arch = NULL;
+
+	fz_var(arch);
+
+	fz_try(ctx)
+		arch = do_try_open_archive_with_stream(ctx, file);
+	fz_catch(ctx)
+	{
+		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		/* Otherwise, swallow */
+	}
+
+	return arch;
+}
+
+fz_archive *
+fz_open_archive_with_stream(fz_context *ctx, fz_stream *file)
+{
+	fz_archive *arch = do_try_open_archive_with_stream(ctx, file);
+
+	if (arch == NULL)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot recognize archive");
 
 	return arch;
@@ -204,8 +253,6 @@ static fz_buffer *read_tree_entry(fz_context *ctx, fz_archive *arch, const char 
 {
 	fz_tree *tree = ((fz_tree_archive*)arch)->tree;
 	fz_buffer *ent = fz_tree_lookup(ctx, tree, name);
-	if (ent == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to read %s", name);
 	return fz_keep_buffer(ctx, ent);
 }
 
@@ -213,8 +260,6 @@ static fz_stream *open_tree_entry(fz_context *ctx, fz_archive *arch, const char 
 {
 	fz_tree *tree = ((fz_tree_archive*)arch)->tree;
 	fz_buffer *ent = fz_tree_lookup(ctx, tree, name);
-	if (ent == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to open %s", name);
 	return fz_open_buffer(ctx, ent);
 }
 
@@ -337,17 +382,11 @@ static fz_buffer *read_multi_entry(fz_context *ctx, fz_archive *arch_, const cha
 			subname += n;
 		}
 
-		fz_try(ctx)
-			res = fz_read_archive_entry(ctx, arch->sub[i].arch, subname);
-		fz_catch(ctx)
-			res = NULL;
+		res = fz_try_read_archive_entry(ctx, arch->sub[i].arch, subname);
 
 		if (res)
 			break;
 	}
-
-	if (!res)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to read %s", name);
 
 	return res;
 }
@@ -371,17 +410,11 @@ static fz_stream *open_multi_entry(fz_context *ctx, fz_archive *arch_, const cha
 			subname += n;
 		}
 
-		fz_try(ctx)
-			res = fz_open_archive_entry(ctx, arch->sub[i].arch, subname);
-		fz_catch(ctx)
-			res = NULL;
+		res = fz_open_archive_entry(ctx, arch->sub[i].arch, subname);
 
 		if (res)
 			break;
 	}
-
-	if (!res)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to open %s", name);
 
 	return res;
 }

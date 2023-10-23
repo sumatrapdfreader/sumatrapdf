@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef PDF_INTERPRET_H
 #define PDF_INTERPRET_H
@@ -385,13 +385,20 @@ pdf_obj *pdf_processor_pop_resources(fz_context *ctx, pdf_processor *proc);
 			*image either the same (for no change) or updated
 			to be a new one. Reference must be dropped, and a
 			new kept reference returned.
+
+	share_rewrite: function pointer called to rewrite a shade
+
+	repeated_image_rewrite: If 0, then each image is rewritten only once.
+		Otherwise, it is called for every instance (useful if gathering
+		information about the ctm).
 */
 typedef struct
 {
 	void *opaque;
 	void (*color_rewrite)(fz_context *ctx, void *opaque, pdf_obj **cs, int *n, float color[FZ_MAX_COLORS]);
-	void (*image_rewrite)(fz_context *ctx, void *opaque, fz_image **image);
+	void (*image_rewrite)(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm, pdf_obj *obj);
 	pdf_shade_recolorer *shade_rewrite;
+	int repeated_image_rewrite;
 } pdf_color_filter_options;
 
 pdf_processor *
@@ -400,7 +407,7 @@ pdf_new_color_filter(fz_context *ctx, pdf_document *doc, pdf_processor *chain, i
 /*
 	Functions to actually process annotations, glyphs and general stream objects.
 */
-void pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *obj, pdf_obj *res, fz_cookie *cookie, pdf_obj **out_res);
+void pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *res, pdf_obj *stm, fz_cookie *cookie, pdf_obj **out_res);
 void pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_annot *annot, fz_cookie *cookie);
 void pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *resources, fz_buffer *contents);
 

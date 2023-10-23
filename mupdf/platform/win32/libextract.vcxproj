@@ -63,7 +63,6 @@
     <ClCompile Include="..\..\thirdparty\extract\src\join.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\json.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\mem.c" />
-    <ClCompile Include="..\..\thirdparty\extract\src\misc-test.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\odt.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\odt_template.c" />
     <ClCompile Include="..\..\thirdparty\extract\src\outf.c" />

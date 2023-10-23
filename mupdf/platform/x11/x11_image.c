@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * Blit RGBA images to X with X(Shm)Images
@@ -45,6 +45,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
+
+#include <limits.h>
 
 extern int ffs(int);
 
@@ -454,6 +456,12 @@ ximage_blit(Drawable d, GC gc,
 	int ax, ay;
 	int w, h;
 	unsigned char *srcptr;
+
+	if (srcw >= (INT_MAX / 4) / srch)
+	{
+		fprintf(stderr, "image size overflow: %d x %d\n", srcw, srch);
+		exit(1);
+	}
 
 	for (ay = 0; ay < srch; ay += HEIGHT)
 	{

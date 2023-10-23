@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -178,6 +178,7 @@ Various decoding, decompression, and decryption filters can be chained together.
 
     fz_stream *fz_open_dctd(fz_context *ctx, fz_stream *chain,
         int color_transform,
+        int invert_cmyk,
         int l2factor,
         fz_stream *jpegtables);
 

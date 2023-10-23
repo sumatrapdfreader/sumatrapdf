@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -135,7 +135,7 @@ static void term_destination(j_compress_ptr cinfo)
 }
 
 void
-fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int quality)
+fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int quality, int invert_cmyk)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr err;
@@ -210,7 +210,7 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 
 		jpeg_start_compress(&cinfo, TRUE);
 
-		if (fz_colorspace_is_subtractive(ctx, pix->colorspace))
+		if (fz_colorspace_is_cmyk(ctx, pix->colorspace) && invert_cmyk)
 			fz_invert_pixmap_raw(ctx, pix);
 
 		while (cinfo.next_scanline < cinfo.image_height) {
@@ -218,7 +218,7 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 			(void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
 		}
 
-		if (fz_colorspace_is_subtractive(ctx, pix->colorspace))
+		if (fz_colorspace_is_cmyk(ctx, pix->colorspace) && invert_cmyk)
 			fz_invert_pixmap_raw(ctx, pix);
 
 		jpeg_finish_compress(&cinfo);
@@ -243,7 +243,7 @@ fz_save_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pixmap, const char *filename,
 	fz_output *out = fz_new_output_with_path(ctx, filename, 0);
 	fz_try(ctx)
 	{
-		fz_write_pixmap_as_jpeg(ctx, out, pixmap, quality);
+		fz_write_pixmap_as_jpeg(ctx, out, pixmap, quality, 1);
 		fz_close_output(ctx, out);
 	}
 	fz_always(ctx)
@@ -254,4 +254,47 @@ fz_save_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pixmap, const char *filename,
 	{
 		fz_rethrow(ctx);
 	}
+}
+
+static fz_buffer *
+jpeg_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, int quality, int invert_cmyk, int drop)
+{
+	fz_buffer *buf = NULL;
+	fz_output *out = NULL;
+
+	fz_var(buf);
+	fz_var(out);
+
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 1024);
+		out = fz_new_output_with_buffer(ctx, buf);
+		fz_write_pixmap_as_jpeg(ctx, out, pix, quality, invert_cmyk);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+	{
+		if (drop)
+			fz_drop_pixmap(ctx, pix);
+		fz_drop_output(ctx, out);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
+	}
+	return buf;
+}
+
+fz_buffer *
+fz_new_buffer_from_image_as_jpeg(fz_context *ctx, fz_image *image, fz_color_params color_params, int quality, int invert_cmyk)
+{
+	fz_pixmap *pix = fz_get_pixmap_from_image(ctx, image, NULL, NULL, NULL, NULL);
+	return jpeg_from_pixmap(ctx, pix, color_params, quality, 1, invert_cmyk);
+}
+
+fz_buffer *
+fz_new_buffer_from_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, int quality, int invert_cmyk)
+{
+	return jpeg_from_pixmap(ctx, pix, color_params, quality, 0, invert_cmyk);
 }

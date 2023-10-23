@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_XML_H
 #define MUPDF_FITZ_XML_H
@@ -27,6 +27,7 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/buffer.h"
 #include "mupdf/fitz/pool.h"
+#include "mupdf/fitz/archive.h"
 
 /**
 	XML document model
@@ -43,6 +44,30 @@ typedef fz_xml fz_xml_doc;
 	preserve_white: whether to keep or delete all-whitespace nodes.
 */
 fz_xml *fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white);
+
+/**
+	Parse the contents of buffer into a tree of xml nodes.
+
+	preserve_white: whether to keep or delete all-whitespace nodes.
+*/
+fz_xml *fz_parse_xml_stream(fz_context *ctx, fz_stream *stream, int preserve_white);
+
+/**
+	Parse the contents of an archive entry into a tree of xml nodes.
+
+	preserve_white: whether to keep or delete all-whitespace nodes.
+*/
+fz_xml *fz_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char *filename, int preserve_white);
+
+/**
+	Try and parse the contents of an archive entry into a tree of xml nodes.
+
+	preserve_white: whether to keep or delete all-whitespace nodes.
+
+	Will return NULL if the archive entry can't be found. Otherwise behaves
+	the same as fz_parse_xml_archive_entry. May throw exceptions.
+*/
+fz_xml *fz_try_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char *filename, int preserve_white);
 
 /**
 	Parse the contents of a buffer into a tree of XML nodes,
@@ -136,7 +161,13 @@ void fz_xml_add_att(fz_context *ctx, fz_pool *pool, fz_xml *node, const char *ke
 char *fz_xml_text(fz_xml *item);
 
 /**
-	Pretty-print an XML tree to stdout.
+	Pretty-print an XML tree to given output.
+*/
+void fz_output_xml(fz_context *ctx, fz_output *out, fz_xml *item, int level);
+
+/**
+	Pretty-print an XML tree to stdout. (Deprecated, use
+	fz_output_xml in preference).
 */
 void fz_debug_xml(fz_xml *item, int level);
 
@@ -200,12 +231,30 @@ fz_xml *fz_xml_find_down_match(fz_xml *item, const char *tag, const char *att, c
 fz_xml *fz_xml_find_dfs(fz_xml *item, const char *tag, const char *att, const char *match);
 
 /**
+	Perform a depth first search from item, returning the first
+	child that matches the given tag (or any tag if tag is NULL),
+	with the given attribute (if att is non NULL), that matches
+	match (if match is non NULL). The search stops if it ever
+	reaches the top of the tree, or the declared 'top' item.
+*/
+fz_xml *fz_xml_find_dfs_top(fz_xml *item, const char *tag, const char *att, const char *match, fz_xml *top);
+
+/**
 	Perform a depth first search onwards from item, returning the first
 	child that matches the given tag (or any tag if tag is NULL),
 	with the given attribute (if att is non NULL), that matches
 	match (if match is non NULL).
 */
 fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, const char *match);
+
+/**
+	Perform a depth first search onwards from item, returning the first
+	child that matches the given tag (or any tag if tag is NULL),
+	with the given attribute (if att is non NULL), that matches
+	match (if match is non NULL). The search stops if it ever reaches
+	the top of the tree, or the declared 'top' item.
+*/
+fz_xml *fz_xml_find_next_dfs_top(fz_xml *item, const char *tag, const char *att, const char *match, fz_xml *top);
 
 /**
 	DOM-like functions for html in xml.

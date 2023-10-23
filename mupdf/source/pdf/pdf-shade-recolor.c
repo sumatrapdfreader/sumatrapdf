@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -154,7 +154,7 @@ fz_recolor_shade_type1(fz_context *ctx, pdf_obj *shade, pdf_function **func, rec
 				v -= range[2 * i];
 				if (d != 0)
 					v = v * ((1<<FUNBPS)-1) / d;
-				iv = (int)(v + 0.5);
+				iv = (int)(v + 0.5f);
 				fz_write_bits(ctx, output, iv, FUNBPS);
 			}
 			p += n_out;
@@ -258,7 +258,7 @@ fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float samples[256][FZ
 				v -= range[2 * i];
 				if (d != 0)
 					v = v * ((1<<FUNBPS)-1) / d;
-				iv = (int)(v + 0.5);
+				iv = (int)(v + 0.5f);
 				fz_write_bits(ctx, output, iv, FUNBPS);
 			}
 			q += n_out;
@@ -920,7 +920,7 @@ pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade,
 
 			new_bg = pdf_dict_put_array(ctx, rewritten, PDF_NAME(Background), rd.dst_cs->n);
 			for (i = 0; i < n; i++)
-				pdf_array_put(ctx, new_bg, i, pdf_new_real(ctx, bg[i]));
+				pdf_array_put_real(ctx, new_bg, i, bg[i]);
 			pdf_dict_put(ctx, rewritten, PDF_NAME(Background), new_bg);
 		}
 

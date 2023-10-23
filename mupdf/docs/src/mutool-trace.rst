@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -67,12 +67,12 @@ The trace takes the form of an XML document, with the root element being the doc
 
    <document filename="hello.pdf">
    <page number="1" mediabox="0 0 595 842">
-   <fill_path winding="nonzero" colorspace="DeviceRGB" color="1 0 0" matrix="1 0 0 -1 0 842">
+   <fill_path winding="nonzero" colorspace="DeviceRGB" color="1 0 0" transform="1 0 0 -1 0 842">
    <moveto x="50" y="50"/>
    <lineto x="100" y="200"/>
    <lineto x="200" y="50"/>
    </fill_path>
-   <fill_text colorspace="DeviceRGB" color="0" matrix="1 0 0 -1 0 842">
+   <fill_text colorspace="DeviceRGB" color="0" transform="1 0 0 -1 0 842">
    <span font="Times-Roman" wmode="0" trm="100 0 0 100">
    <g unicode="H" glyph="H" x="50" y="500" />
    <g unicode="e" glyph="e" x="122.2" y="500" />

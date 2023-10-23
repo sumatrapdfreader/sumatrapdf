@@ -101,6 +101,8 @@
   <ItemGroup>
     <None Include="..\java\example\PageCanvas.java" />
     <None Include="..\java\example\Viewer.java" />
+    <None Include="..\java\example\ViewerCore.java" />
+    <None Include="..\java\example\Worker.java" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="javaviewerlib.vcxproj">

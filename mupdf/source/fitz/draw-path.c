@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
@@ -310,6 +310,11 @@ fz_flatten_fill_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, 
 	fz_irect local_bbox;
 	if (!bbox)
 		bbox = &local_bbox;
+
+	/* If we're given an empty scissor, sanitize it. This makes life easier
+	 * down the line. */
+	if (fz_is_empty_irect(scissor))
+		scissor.x1 = scissor.x0, scissor.y1 = scissor.y0;
 
 	if (fz_reset_rasterizer(ctx, rast, scissor))
 	{

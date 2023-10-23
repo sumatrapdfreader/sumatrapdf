@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -108,9 +108,6 @@ fz_new_pixmap_from_display_list_with_separations(fz_context *ctx, fz_display_lis
 	fz_rect rect;
 	fz_irect bbox;
 	fz_pixmap *pix;
-	fz_device *dev = NULL;
-
-	fz_var(dev);
 
 	rect = fz_bound_display_list(ctx, list);
 	rect = fz_transform_rect(rect, ctm);
@@ -121,6 +118,16 @@ fz_new_pixmap_from_display_list_with_separations(fz_context *ctx, fz_display_lis
 		fz_clear_pixmap(ctx, pix);
 	else
 		fz_clear_pixmap_with_value(ctx, pix, 0xFF);
+
+	return fz_fill_pixmap_from_display_list(ctx, list, ctm, pix);
+}
+
+fz_pixmap *
+fz_fill_pixmap_from_display_list(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_pixmap *pix)
+{
+	fz_device *dev = NULL;
+
+	fz_var(dev);
 
 	fz_try(ctx)
 	{

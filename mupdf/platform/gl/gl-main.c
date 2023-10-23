@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "gl-app.h"
 
@@ -60,6 +60,7 @@ void glutLeaveMainLoop(void)
 #endif
 
 fz_context *ctx = NULL;
+fz_colorspace *profile = NULL;
 pdf_document *pdf = NULL;
 pdf_page *page = NULL;
 fz_stext_page *page_text = NULL;
@@ -87,15 +88,15 @@ static void open_browser(const char *uri)
 	int err;
 #endif
 
-	/* Relative file:// URI, make it absolute! */
-	if (!strncmp(uri, "file://", 7) && uri[7] != '/')
+	/* Relative file: URI, make it absolute! */
+	if (!strncmp(uri, "file:", 5) && uri[5] != '/')
 	{
 		char buf_base[PATH_MAX];
 		char buf_cwd[PATH_MAX];
 		fz_dirname(buf_base, filename, sizeof buf_base);
 		if (getcwd(buf_cwd, sizeof buf_cwd))
 		{
-			fz_snprintf(buf, sizeof buf, "file://%s/%s/%s", buf_cwd, buf_base, uri+7);
+			fz_snprintf(buf, sizeof buf, "file://%s/%s/%s", buf_cwd, buf_base, uri+5);
 			fz_cleanname(buf+7);
 			uri = buf;
 		}
@@ -211,6 +212,7 @@ static int console_h = 14; /* to be scaled by lineheight */
 static int outline_start_x = 0;
 static int console_start_y = 0;
 
+static int oldbox = FZ_CROP_BOX, currentbox = FZ_CROP_BOX;
 static int oldtint = 0, currenttint = 0;
 static int oldinvert = 0, currentinvert = 0;
 static int oldicc = 1, currenticc = 1;
@@ -533,7 +535,7 @@ static int create_accel_path(char outname[], size_t len, int create, const char 
 			goto fail; /* won't fit */
 
 		if (create)
-			fz_mkdir(outname);
+			(void) fz_mkdir(outname);
 		if (!fz_is_directory(ctx, outname))
 			goto fail; /* directory creation failed, or that dir doesn't exist! */
 #ifdef _WIN32
@@ -650,6 +652,7 @@ static char *help_dialog_text =
 	"\n"
 	"< - decrease E-book font size\n"
 	"> - increase E-book font size\n"
+	"B - cycle between MediaBox, CropBox, ArtBox, etc.\n"
 	"A - toggle anti-aliasing\n"
 	"I - toggle inverted color mode\n"
 	"C - toggle tinted color mode\n"
@@ -854,7 +857,7 @@ void trace_page_update(void)
 void trace_save_snapshot(void)
 {
 	static int trace_idx = 1;
-	trace_action("page.toPixmap(Identity, DeviceRGB).saveAsPNG(\"trace-%03d.png\");\n", trace_idx++);
+	trace_action("page.toPixmap(Matrix.identity, ColorSpace.DeviceRGB).saveAsPNG(\"trace-%03d.png\");\n", trace_idx++);
 }
 
 static int document_shown_as_dirty = 0;
@@ -1026,7 +1029,7 @@ void load_page(void)
 	}
 
 	/* compute bounds here for initial window size */
-	page_bounds = fz_bound_page(ctx, fzpage);
+	page_bounds = fz_bound_page_box(ctx, fzpage, currentbox);
 	transform_page();
 
 	area = fz_irect_from_rect(draw_page_bounds);
@@ -1042,6 +1045,7 @@ static void render_page(void)
 	fz_pixmap *pix;
 	fz_device *dev;
 
+	page_bounds = fz_bound_page_box(ctx, fzpage, currentbox);
 	transform_page();
 
 	fz_set_aa_level(ctx, currentaa);
@@ -1051,8 +1055,8 @@ static void render_page(void)
 		fz_drop_pixmap(ctx, page_contents);
 		page_contents = NULL;
 
-		bbox = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, fzpage), draw_page_ctm));
-		page_contents = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), bbox, seps, 0);
+		bbox = fz_round_rect(fz_transform_rect(fz_bound_page_box(ctx, fzpage, currentbox), draw_page_ctm));
+		page_contents = fz_new_pixmap_with_bbox(ctx, profile, bbox, seps, 0);
 		fz_clear_pixmap(ctx, page_contents);
 
 		dev = fz_new_draw_device(ctx, draw_page_ctm, page_contents);
@@ -1068,7 +1072,7 @@ static void render_page(void)
 			fz_rethrow(ctx);
 	}
 
-	pix = fz_clone_pixmap_area_with_different_seps(ctx, page_contents, NULL, fz_device_rgb(ctx), NULL, fz_default_color_params, NULL);
+	pix = fz_clone_pixmap_area_with_different_seps(ctx, page_contents, NULL, profile, NULL, fz_default_color_params, NULL);
 	{
 		dev = fz_new_draw_device(ctx, draw_page_ctm, pix);
 		fz_try(ctx)
@@ -1119,7 +1123,8 @@ void render_page_if_changed(void)
 		oldtint != currenttint ||
 		oldicc != currenticc ||
 		oldseparations != currentseparations ||
-		oldaa != currentaa)
+		oldaa != currentaa ||
+		oldbox != currentbox)
 	{
 		page_contents_changed = 1;
 	}
@@ -1135,6 +1140,7 @@ void render_page_if_changed(void)
 		oldicc = currenticc;
 		oldseparations = currentseparations;
 		oldaa = currentaa;
+		oldbox = currentbox;
 		page_contents_changed = 0;
 		page_annots_changed = 0;
 	}
@@ -1563,10 +1569,10 @@ static void do_page_selection(void)
 			n = fz_highlight_selection(ctx, page_text, page_a, page_b, hits, nelem(hits));
 		}
 
-		glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO); /* invert destination color */
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
+		glColor4f(0.0, 0.1, 0.4, 0.3f);
 
-		glColor4f(1, 1, 1, 1);
 		glBegin(GL_QUADS);
 		for (i = 0; i < n; ++i)
 		{
@@ -1783,7 +1789,21 @@ static void load_document(void)
 	fz_location location;
 
 	fz_drop_outline(ctx, outline);
+	outline = NULL;
 	fz_drop_document(ctx, doc);
+	doc = NULL;
+
+	if (!strncmp(filename, "file://", 7))
+	{
+		anchor = strchr(filename + 7, '#');
+		if (anchor)
+		{
+			memmove(anchor + 1, anchor, strlen(anchor) + 1);
+			*anchor = 0;
+			anchor++;
+		}
+		memmove(filename, filename + 7, strlen(filename));
+	}
 
 	/* If there was an accelerator to load, what would it be called? */
 	if (get_accelerator_filename(accelpath, sizeof(accelpath), 0))
@@ -1810,7 +1830,7 @@ static void load_document(void)
 		}
 	}
 
-	trace_action("doc = new Document(%q);\n", filename);
+	trace_action("doc = Document.openDocument(%q);\n", filename);
 
 	doc = fz_open_accelerated_document(ctx, filename, accel);
 	pdf = pdf_specifics(ctx, doc);
@@ -1898,13 +1918,7 @@ static void load_document(void)
 			jump_to_location(location);
 		else
 		{
-			location.chapter = 0;
-			if (pdf)
-				location.page = pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL);
-			else
-				location.page = -1;
-			if (location.page < 0)
-				location = fz_resolve_link(ctx, doc, anchor, NULL, NULL);
+			location = fz_resolve_link(ctx, doc, anchor, NULL, NULL);
 			if (location.page < 0)
 				fz_warn(ctx, "cannot find location: %s", anchor);
 			else
@@ -1929,6 +1943,7 @@ static void reflow_document(void)
 		return;
 
 	fz_drop_outline(ctx, outline);
+	outline = NULL;
 
 	fz_parse_stext_options(ctx, &opts, reflow_options);
 
@@ -2383,6 +2398,12 @@ static void do_app(void)
 				currentaa = number;
 			break;
 
+		case 'B':
+			currentbox += 1;
+			if (currentbox >= FZ_UNKNOWN_BOX)
+				currentbox = FZ_MEDIA_BOX;
+			break;
+
 		case 'm':
 			if (number == 0)
 				push_history();
@@ -2621,6 +2642,14 @@ static fz_buffer *format_info_text()
 			fz_strlcat(buf, "edit, ", sizeof buf);
 		if (fz_has_permission(ctx, doc, FZ_PERMISSION_ANNOTATE))
 			fz_strlcat(buf, "annotate, ", sizeof buf);
+		if (fz_has_permission(ctx, doc, FZ_PERMISSION_FORM))
+			fz_strlcat(buf, "form, ", sizeof buf);
+		if (fz_has_permission(ctx, doc, FZ_PERMISSION_ACCESSIBILITY))
+			fz_strlcat(buf, "accessibility, ", sizeof buf);
+		if (fz_has_permission(ctx, doc, FZ_PERMISSION_ASSEMBLE))
+			fz_strlcat(buf, "assemble, ", sizeof buf);
+		if (fz_has_permission(ctx, doc, FZ_PERMISSION_PRINT_HQ))
+			fz_strlcat(buf, "print-hq, ", sizeof buf);
 		if (strlen(buf) > 2)
 			buf[strlen(buf)-2] = 0;
 		else
@@ -2694,9 +2723,9 @@ static fz_buffer *format_info_text()
 		if (!size)
 			size = paper_size_name(h, w);
 		if (size)
-			fz_append_printf(ctx, out, "Size: %d x %d (%s)\n", w, h, size);
+			fz_append_printf(ctx, out, "Size: %d x %d (%s - %s)\n", w, h, fz_string_from_box_type(currentbox), size);
 		else
-			fz_append_printf(ctx, out, "Size: %d x %d\n", w, h);
+			fz_append_printf(ctx, out, "Size: %d x %d (%s)\n", w, h, fz_string_from_box_type(currentbox));
 	}
 	fz_append_printf(ctx, out, "ICC rendering: %s.\n", currenticc ? "on" : "off");
 	fz_append_printf(ctx, out, "Spot rendering: %s.\n", currentseparations ? "on" : "off");
@@ -2975,6 +3004,8 @@ static void usage(const char *argv0)
 	fprintf(stderr, "usage: %s [options] document [page]\n", argv0);
 	fprintf(stderr, "\t-p -\tpassword\n");
 	fprintf(stderr, "\t-r -\tresolution\n");
+	fprintf(stderr, "\t-c -\tdisplay ICC profile\n");
+	fprintf(stderr, "\t-b -\tuse named page box (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)\n");
 	fprintf(stderr, "\t-I\tinvert colors\n");
 	fprintf(stderr, "\t-W -\tpage width for EPUB layout\n");
 	fprintf(stderr, "\t-H -\tpage height for EPUB layout\n");
@@ -3068,6 +3099,7 @@ int main(int argc, char **argv)
 #endif
 {
 	const char *trace_file_name = NULL;
+	const char *profile_name = NULL;
 	float scale = 0;
 	int c;
 
@@ -3085,14 +3117,16 @@ int main(int argc, char **argv)
 
 	glutInit(&argc, argv);
 
-	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJA:B:C:T:Y:R:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJb:A:B:C:T:Y:R:c:")) != -1)
 	{
 		switch (c)
 		{
 		default: usage(argv[0]); break;
 		case 'p': password = fz_optarg; break;
 		case 'r': currentzoom = fz_atof(fz_optarg); break;
+		case 'c': profile_name = fz_optarg; break;
 		case 'I': currentinvert = !currentinvert; break;
+		case 'b': currentbox = fz_box_type_from_string(fz_optarg); break;
 		case 'W': layout_w = fz_atof(fz_optarg); break;
 		case 'H': layout_h = fz_atof(fz_optarg); break;
 		case 'S': layout_em = fz_atof(fz_optarg); break;
@@ -3113,7 +3147,7 @@ int main(int argc, char **argv)
 
 	ui_init_dpi(scale);
 
-	oldzoom = currentzoom = DEFRES * ui.scale;
+	oldzoom = currentzoom = currentzoom * ui.scale;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 
@@ -3139,6 +3173,17 @@ int main(int argc, char **argv)
 		trace_action("	err.name = 'RegressionError';\n");
 		trace_action("	return err;\n");
 		trace_action("}\n");
+	}
+
+	if (profile_name)
+	{
+		fz_buffer *profile_data = fz_read_file(ctx, profile_name);
+		profile = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_RGB, 0, NULL, profile_data);
+		fz_drop_buffer(ctx, profile_data);
+	}
+	else
+	{
+		profile = fz_device_rgb(ctx);
 	}
 
 	if (layout_css)
@@ -3186,7 +3231,7 @@ int main(int argc, char **argv)
 				oldzoom = currentzoom;
 
 				/* compute bounds here for initial window size */
-				page_bounds = fz_bound_page(ctx, fzpage);
+				page_bounds = fz_bound_page_box(ctx, fzpage, currentbox);
 				transform_page();
 
 				area = fz_irect_from_rect(draw_page_bounds);

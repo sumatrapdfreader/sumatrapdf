@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_PDF_DOCUMENT_H
 #define MUPDF_PDF_DOCUMENT_H
@@ -403,6 +403,7 @@ struct pdf_document
 	fz_stream *file;
 
 	int version;
+	int is_fdf;
 	int64_t startxref;
 	int64_t file_size;
 	pdf_crypt *crypt;
@@ -671,8 +672,8 @@ void pdf_delete_page_range(fz_context *ctx, pdf_document *doc, int start, int en
 /*
 	Get page label (string) from a page number (index).
 */
-void pdf_page_label(fz_context *ctx, pdf_document *doc, int page, char *buf, int size);
-void pdf_page_label_imp(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, int size);
+void pdf_page_label(fz_context *ctx, pdf_document *doc, int page, char *buf, size_t size);
+void pdf_page_label_imp(fz_context *ctx, fz_document *doc, int chapter, int page, char *buf, size_t size);
 
 typedef enum {
 	PDF_PAGE_LABEL_NONE = 0,
@@ -715,6 +716,8 @@ typedef struct
 	char upwd_utf8[128]; /* User password. */
 	int do_snapshot; /* Do not use directly. Use the snapshot functions. */
 	int do_preserve_metadata; /* When cleaning, preserve metadata unchanged. */
+	int do_use_objstms; /* Use objstms if possible */
+	int compression_effort; /* 0 for default. 100 = max, 1 = min. */
 } pdf_write_options;
 
 FZ_DATA extern const pdf_write_options pdf_default_write_options;
@@ -792,5 +795,17 @@ void pdf_load_journal(fz_context *ctx, pdf_document *doc, const char *filename);
 	does not match. Will throw on a corrupted journal.
 */
 void pdf_read_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm);
+
+/*
+	Minimize the memory used by a document.
+
+	We walk the in memory xref tables, evicting the PDF objects
+	therein that aren't in use.
+
+	This reduces the current memory use, but any subsequent use
+	of these objects will load them back into memory again.
+*/
+void pdf_minimize_document(fz_context *ctx, pdf_document *doc);
+
 
 #endif

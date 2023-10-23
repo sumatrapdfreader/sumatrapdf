@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 .. default-domain:: js
@@ -48,6 +48,8 @@ Command Line Options
 
    `-p` password
       The password needed to open a password protected :title:`PDF` file.
+   `-c` profile.cc
+      Load an ICC profile to use for display (default is sRGB).
    `-r` resolution
       Set the initial zoom level, specified as DPI. The default value is `72`.
    `-W` width
@@ -346,6 +348,10 @@ This will render a raster file from page one of the input file "mupdf_explored.p
   It is advised to use `rlwrap`_ with `mutool` for command line history and cursor navigation (this can be also installed via :title:`Homebrew` or :title:`MacPorts`).
 
 
+.. note::
+
+   Use `mutool -help` for summary usage.
+
 
 For rendering and converting documents there are three commands available:
 
@@ -430,7 +436,13 @@ There are also several tools specifically for working with :title:`PDF` files:
 
      mutool-pages.rst
 
-   Prints details about media box, artbox, etc. for each page in a :title:`PDF` file.
+   Prints the size and rotation of each page in a PDF. Provides information about :ref:`MediaBox<mutool_trim_defined_boxes>`, :ref:`ArtBox<mutool_trim_defined_boxes>`, etc. for each page in a :title:`PDF` file.
+
+   .. toctree::
+
+     mutool-trim.rst
+
+   This command allows you to make a modified version of a :title:`PDF` with content that falls inside or outside of :ref:`defined boxes<mutool_trim_defined_boxes>` removed.
 
 
    .. toctree::
@@ -439,20 +451,10 @@ There are also several tools specifically for working with :title:`PDF` files:
 
    A tool for running :title:`JavaScript` programs with access to the :title:`MuPDF` library functions.
 
-
-
 .. _mupdf_command_line_mutool_js_api:
 
-:title:`mutool JavaScript` API
-------------------------------------
 
-
-
-
-
-.. toctree::
-
-     mutool-run-js-api.rst
+   See the :ref:`JavaScript API<mutool_run_javascript_api>` for more.
 
 
 

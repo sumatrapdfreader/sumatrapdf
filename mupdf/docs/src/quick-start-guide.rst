@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -102,10 +102,6 @@ To install only the command line tools, libraries, and headers invoke `make` lik
 
    Results of the build can be found in `build/release` in your "mupdf" folder.
 
-   Building for both :title:`macOS` & :title:`Linux` depend on having both `autoconf` and `automake` installed on your system. If this software is not already on your system (usually `usr/local/bin`) then it can be installed from the `GNU website`_.
-
-   Alternatively, `autoconf` and `automake` can be installed via :title:`Brew` by running: `brew install autoconf automake`.
-
 
 
 Validating your installation
@@ -146,6 +142,6 @@ And a suite of image types, e.g. `png`, `jpg`, `bmp` etc.
 
 .. External links
 
-.. _MuPDF Releases: https://mupdf.com/releases/index.html
+.. _MuPDF Releases: https://mupdf.com/releases/index.html?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link
 .. _MuPDF on Github: https://github.com/ArtifexSoftware/mupdf
 .. _GNU website: https://www.gnu.org/software/automake/

@@ -1,8 +1,11 @@
 .. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
+----
 
 .. default-domain:: js
+
+.. include:: html_tags.rst
 
 .. _mutool_object_display_list_device:
 
@@ -25,8 +28,10 @@
 
     :return: `DisplayListDevice`.
 
-    **Example**
+    |example_tag|
 
     .. code-block:: javascript
 
-        var displayListDevice = new DisplayListDevice(my_display_list);
+        var my_display_list = new mupdf.DisplayList([0,0,100,100]);
+        console.log("my_display_list="+my_display_list);
+        var displayListDevice = new mupdf.DisplayListDevice(my_display_list);

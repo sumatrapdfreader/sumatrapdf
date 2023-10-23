@@ -31,7 +31,7 @@ def make_outparam_helper_python(
         sep = ', '
     generated.swig_python.write('):\n')
     generated.swig_python.write(f'    """\n')
-    generated.swig_python.write(f'    Wrapper for out-params of {cursor.mangled_name}().\n')
+    generated.swig_python.write(f'    Wrapper for out-params of {cursor.spelling}().\n')
     sep = ''
     generated.swig_python.write(f'    Returns: ')
     sep = ''

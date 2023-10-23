@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -551,7 +551,7 @@ ocg_intents_include(fz_context *ctx, pdf_ocg_descriptor *desc, const char *name)
 	len = pdf_array_len(ctx, desc->intent);
 	for (i=0; i < len; i++)
 	{
-		const char *intent = pdf_to_name(ctx, pdf_array_get(ctx, desc->intent, i));
+		const char *intent = pdf_array_get_name(ctx, desc->intent, i);
 		if (strcmp(intent, "All") == 0)
 			return 1;
 		if (strcmp(intent, name) == 0)
@@ -627,7 +627,7 @@ pdf_is_ocg_hidden_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, const ch
 			int match = 0;
 			len = pdf_array_len(ctx, obj);
 			for (i=0; i<len; i++) {
-				match |= ocg_intents_include(ctx, desc, pdf_to_name(ctx, pdf_array_get(ctx, obj, i)));
+				match |= ocg_intents_include(ctx, desc, pdf_array_get_name(ctx, obj, i));
 				if (match)
 					break;
 			}
@@ -771,6 +771,7 @@ pdf_read_ocg(fz_context *ctx, pdf_document *doc)
 	fz_catch(ctx)
 	{
 		pdf_drop_ocg(ctx, doc);
+		doc->ocg = NULL;
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		fz_warn(ctx, "Ignoring broken Optional Content configuration");
 		doc->ocg = fz_malloc_struct(ctx, pdf_ocg_descriptor);

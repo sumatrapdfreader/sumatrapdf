@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -373,7 +373,7 @@ Our matrix structure is a row-major 3x3 matrix with the last column always `[ 0 
 
 
 
-.. code-block:: C
+.. code-block::
 
     / a b 0 \
     | c d 0 |
@@ -453,16 +453,16 @@ These are simple mathematical operations that can not throw errors, so do not ne
     Invert a matrix.
 
 `fz_point fz_transform_point(fz_point point, fz_matrix m);`
-    Transform a matrix via a point.
+    Transform a point according to the given matrix.
 
 `fz_point fz_transform_vector(fz_point vector, fz_matrix m);`
-    Transform a matrix via a vector (ignores translation).
+    Transform a vector according to the given matrix (ignores translation).
 
 `fz_rect fz_transform_rect(fz_rect rect, fz_matrix m);`
-    Transform a `fz_rect` via a `fz_rect`.
+    Transform a `fz_rect` according to the given matrix.
 
 `fz_quad fz_transform_quad(fz_quad q, fz_matrix m);`
-    Transform a `fz_quad` via a `fz_quad`.
+    Transform a `fz_quad` according to the given matrix.
 
 `int fz_is_point_inside_rect(fz_point p, fz_rect r);`
     Returns whether the point is inside the supplied `fz_rect`.

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "pdf-annot-imp.h"
@@ -161,7 +161,7 @@ check_field_locking(fz_context *ctx, pdf_obj *obj, void *data_, pdf_obj **ff)
 
 			if (((flags & PDF_FIELD_IS_READ_ONLY) == 0) && /* Field is not currently locked */
 				pdf_is_field_locked(ctx, data->locked, data->prefix->name)) /* Field should be locked */
-				pdf_dict_put_drop(ctx, obj, PDF_NAME(Ff), pdf_new_int(ctx, flags | PDF_FIELD_IS_READ_ONLY));
+				pdf_dict_put_int(ctx, obj, PDF_NAME(Ff), flags | PDF_FIELD_IS_READ_ONLY);
 		}
 	}
 	fz_catch(ctx)
@@ -206,7 +206,10 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 	fz_always(ctx)
 		pdf_drop_locked_fields(ctx, locked);
 	fz_catch(ctx)
+	{
+		pop_field_locking(ctx, NULL, &data);
 		fz_rethrow(ctx);
+	}
 }
 
 void
@@ -244,16 +247,14 @@ pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7
 
 		sf = pdf_to_int(ctx, pdf_dict_get(ctx, form, PDF_NAME(SigFlags)));
 		if ((sf & (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY)) != (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY))
-			pdf_dict_put_drop(ctx, form, PDF_NAME(SigFlags), pdf_new_int(ctx, sf | PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY));
+			pdf_dict_put_int(ctx, form, PDF_NAME(SigFlags), sf | PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY);
 
 		pdf_signature_set_value(ctx, doc, wobj, signer, t);
-	}
-	fz_always(ctx)
-	{
 		pdf_end_operation(ctx, doc);
 	}
 	fz_catch(ctx)
 	{
+		pdf_abandon_operation(ctx, doc);
 		fz_rethrow(ctx);
 	}
 }
@@ -308,7 +309,11 @@ void pdf_sign_signature(fz_context *ctx, pdf_annot *widget,
 	int logo = flags & PDF_SIGNATURE_SHOW_LOGO;
 	fz_rect rect = pdf_annot_rect(ctx, widget);
 	fz_text_language lang = pdf_annot_language(ctx, widget);
+#ifdef CLUSTER
+	int64_t now = 1112281971; /* release date of MuPDF 0.1 */
+#else
 	int64_t now = time(NULL);
+#endif
 	char *name = NULL;
 	char *info = NULL;
 	fz_display_list *dlist = NULL;
@@ -433,14 +438,13 @@ void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 
 		dlist = pdf_signature_appearance_unsigned(ctx, rect, lang);
 		pdf_set_annot_appearance_from_display_list(ctx, widget, "N", NULL, fz_identity, dlist);
+		pdf_end_operation(ctx, widget->page->doc);
 	}
 	fz_always(ctx)
-	{
-		pdf_end_operation(ctx, widget->page->doc);
 		fz_drop_display_list(ctx, dlist);
-	}
 	fz_catch(ctx)
 	{
+		pdf_abandon_operation(ctx, widget->page->doc);
 		fz_rethrow(ctx);
 	}
 }

@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /* PDFPage interface */
 
@@ -240,4 +240,16 @@ FUN(PDFPage_getTransform)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return to_Matrix_safe(ctx, env, ctm);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFPage_getObject)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_page *page = from_PDFPage(env, self);
+
+	if (!ctx || !page)
+		return NULL;
+
+	return to_PDFObject_safe_own(ctx, env, pdf_keep_obj(ctx, page->obj));
 }

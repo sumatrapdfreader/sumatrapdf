@@ -90,7 +90,6 @@ def fn( fnname):
     wrapper classes for args and return value.
     '''
     return fnname
-    return f'm{fnname}'
 
 def namespace_fn( fnname):
     '''
@@ -132,12 +131,11 @@ def method( structname, fnname):
     Returns name of class method that wraps MuPDF function `fnname()`.
     '''
     return fnname
-    if structname.startswith( 'fz_'):
-        ret = util.clip( fnname, ('fz_', 'pdf_'))
-        if ret in ('stdin', 'stdout', 'stderr'):
-            jlib.log( 'appending underscore to {ret=}')
-            ret += '_'
-        return ret
-    if structname.startswith( 'pdf_'):
-        return util.clip( fnname, ('fz_', 'pdf_'))
-    assert 0, f'unrecognised structname={structname}'
+    if structname:
+        structname = structname.lstrip( 'struct ')
+    assert structname is None or structname.startswith( ('fz_', 'pdf_'))
+    ret = util.clip( fnname, ('fz_', 'pdf_'))
+    if ret in ('stdin', 'stdout', 'stderr'):
+        jlib.log( 'appending underscore to {ret=}')
+        ret += '_'
+    return ret

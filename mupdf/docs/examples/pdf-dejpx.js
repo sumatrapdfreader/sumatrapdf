@@ -1,6 +1,6 @@
 // Find all JPEG-2000 images and turn them into regular images.
 
-var doc = new PDFDocument(scriptArgs[0]);
+var doc = Document.openDocument(scriptArgs[0]);
 
 function isJPXImage(ref) {
 	if ("Filter" in ref) {

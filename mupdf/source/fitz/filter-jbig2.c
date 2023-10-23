@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -168,8 +168,13 @@ static void *fz_jbig2_realloc(Jbig2Allocator *allocator, void *p, size_t size)
 fz_jbig2_globals *
 fz_load_jbig2_globals(fz_context *ctx, fz_buffer *buf)
 {
-	fz_jbig2_globals *globals = fz_malloc_struct(ctx, fz_jbig2_globals);
+	fz_jbig2_globals *globals;
 	Jbig2Ctx *jctx;
+
+	if (buf == NULL || buf->data == NULL || buf->len == 0)
+		return NULL;
+
+	globals = fz_malloc_struct(ctx, fz_jbig2_globals);
 
 	globals->alloc.ctx = ctx;
 	globals->alloc.alloc.alloc = fz_jbig2_alloc;

@@ -2,13 +2,13 @@
 
 var pdf = new PDFDocument()
 
-var subdoc = new Document("pdfref17.pdf")
+var subdoc = Document.openDocument("pdfref17.pdf")
 
 var resources = { XObject: {} }
 
 var contents = new Buffer()
 for (var i=0; i < 5; ++i) {
-	var pixmap = subdoc.loadPage(1140+i).toPixmap([0.2,0,0,0.2,0,0], DeviceRGB, true)
+	var pixmap = subdoc.loadPage(1140+i).toPixmap([0.2,0,0,0.2,0,0], ColorSpace.DeviceRGB, true)
 	resources.XObject["Im" + i] = pdf.addImage(new Image(pixmap))
 	contents.writeLine("q 100 0 0 150 " + (50+100*i) + " 50 cm /Im" + i + " Do Q")
 }

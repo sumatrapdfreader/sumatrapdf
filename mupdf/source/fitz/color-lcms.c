@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -498,6 +498,20 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 			else
 			{
 				cmsDoTransform(GLO link->handle, buffer, outputpos, sw);
+				if (!copy_spots)
+				{
+					/* Copy the alpha by steam */
+					unsigned char *d = outputpos + dn - 1;
+					const unsigned char *s = inputpos + sn -1;
+					int w = sw;
+
+					while (w--)
+					{
+						*d = *s;
+						d += dn;
+						s += sn;
+					}
+				}
 				if (mult == 1)
 					fz_premultiply_row_0or1(ctx, dn, dc, dw, outputpos);
 				else if (mult == 2)

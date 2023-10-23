@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -38,6 +38,9 @@ pdf_graft_map *
 pdf_new_graft_map(fz_context *ctx, pdf_document *dst)
 {
 	pdf_graft_map *map = NULL;
+
+	if (dst == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create graft make without a destination document");
 
 	map = fz_malloc_struct(ctx, pdf_graft_map);
 

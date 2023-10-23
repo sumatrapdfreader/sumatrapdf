@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "gl-app.h"
 
@@ -83,7 +83,7 @@ int do_sign(void)
 		trace_action("'showLogo':%s}, ", logo ? "true" : "false");
 
 		if (strlen(sign_image_filename) > 0)
-			trace_action("new Image(null, %q), ", sign_image_filename);
+			trace_action("new Image(%q, null), ", sign_image_filename);
 		else
 			trace_action("null, ");
 

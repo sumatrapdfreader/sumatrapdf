@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. Copyright (C) 2001-2023 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -39,6 +39,9 @@ The `poster` command reads the input PDF file and for each page chops it up into
 
    `-y` y decimation factor
       Pieces to vertically divide each page into.
+
+   `-r`
+      Split horizontally from right to left (default splits from left to right).
 
 
 ----

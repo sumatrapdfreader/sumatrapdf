@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #ifndef MUPDF_FITZ_STRUCTURED_TEXT_H
 #define MUPDF_FITZ_STRUCTURED_TEXT_H
@@ -186,6 +186,7 @@ struct fz_stext_line
 struct fz_stext_char
 {
 	int c;
+	int bidi; /* even for LTR, odd for RTL */
 	int color; /* sRGB hex color */
 	fz_point origin;
 	fz_quad quad;
@@ -281,7 +282,7 @@ char *fz_copy_selection(fz_context *ctx, fz_stext_page *page, fz_point a, fz_poi
 char *fz_copy_rectangle(fz_context *ctx, fz_stext_page *page, fz_rect area, int crlf);
 
 /**
-	Options for creating a pixmap and draw device.
+	Options for creating structured text.
 */
 typedef struct
 {

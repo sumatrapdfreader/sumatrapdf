@@ -10,14 +10,15 @@ import sys
 
 import jlib
 
+from . import parse
 
 try:
     import clang.cindex
 except Exception as e:
     jlib.log('Warning: failed to import clang.cindex: {e=}\n'
             f'We need Clang Python to build MuPDF python.\n'
-            f'Install with `pip install libclang`, or use `--venv pylocal`, or\n'
-            f'(OpenBSD only) `pkg_add py3-llvm.`\n'
+            f'Install with `pip install libclang` (typically inside a Python venv),\n'
+            f'or (OpenBSD only) `pkg_add py3-llvm.`\n'
             )
     clang = None
 
@@ -56,9 +57,9 @@ def get_name_canonical( type_):
         #jlib.log( 'Not canonicalising {self.spelling=}')
         return type_
     ret = type_.get_canonical()
-    if 'struct (unnamed at ' in ret.spelling:
+    if 'struct (unnamed' in ret.spelling:
         jlib.log( 'Not canonicalising {type_.spelling=}')
-        ret = self
+        ret = type_
     return ret
 
 
@@ -70,6 +71,7 @@ class State:
         self.openbsd = self.os_name == 'OpenBSD'
         self.linux = self.os_name == 'Linux'
         self.macos = self.os_name == 'Darwin'
+        self.pyodide = os.environ.get('OS') == 'pyodide'
         self.have_done_build_0 = False
 
         # Maps from <tu> to dict of fnname: cursor.
@@ -94,7 +96,10 @@ class State:
         enums = dict()
         structs = dict()
 
-        for cursor in tu.cursor.get_children():
+        for cursor in parse.get_children(tu.cursor):
+            verbose = state_.show_details( cursor.spelling)
+            if verbose:
+                jlib.log('Looking at {cursor.spelling=} {cursor.kind=} {cursor.location=}')
             if cursor.kind==clang.cindex.CursorKind.ENUM_DECL:
                 #jlib.log('ENUM_DECL: {cursor.spelling=}')
                 enum_values = list()
@@ -107,23 +112,24 @@ class State:
                 name = cursor.spelling
                 if name.startswith( ( 'fz_', 'pdf_')):
                     structs[ name] = cursor
-            if (cursor.linkage == clang.cindex.LinkageKind.EXTERNAL
-                    or cursor.is_definition()  # Picks up static inline functions.
-                    ):
-                if cursor.kind == clang.cindex.CursorKind.FUNCTION_DECL:
-                    fnname = cursor.mangled_name
-                    if self.show_details( fnname):
-                        jlib.log( 'Looking at {fnname=}')
-                    if fnname not in omit_fns:
-                        fns[ fnname] = cursor
+            if cursor.kind == clang.cindex.CursorKind.FUNCTION_DECL:
+                fnname = cursor.spelling
+                if self.show_details( fnname):
+                    jlib.log( 'Looking at {fnname=}')
+                if fnname in omit_fns:
+                    jlib.log('{fnname=} is in omit_fns')
                 else:
-                    global_data[ cursor.mangled_name] = cursor
+                    fns[ fnname] = cursor
+            if (cursor.kind == clang.cindex.CursorKind.VAR_DECL
+                    and cursor.linkage == clang.cindex.LinkageKind.EXTERNAL
+                    ):
+                global_data[ cursor.spelling] = cursor
 
         self.functions_cache[ tu] = fns
         self.global_data[ tu] = global_data
         self.enums[ tu] = enums
         self.structs[ tu] = structs
-        jlib.log('Have populated fns and global_data. {len(enums)=} {len(self.structs)}')
+        jlib.log('Have populated fns and global_data. {len(enums)=} {len(self.structs)} {len(fns)=}')
 
     def find_functions_starting_with( self, tu, name_prefix, method):
         '''
@@ -224,14 +230,17 @@ def python_version():
     '''
     Returns two-digit version number of Python as a string, e.g. '3.9'.
     '''
-    return '.'.join(platform.python_version().split('.')[:2])
+    ret = '.'.join(platform.python_version().split('.')[:2])
+    #jlib.log(f'returning ret={ret!r}')
+    return ret
 
 def cpu_name():
     '''
     Returns 'x32' or 'x64' depending on Python build.
     '''
-    #log(f'sys.maxsize={hex(sys.maxsize)}')
-    return f'x{32 if sys.maxsize == 2**31 else 64}'
+    ret = f'x{32 if sys.maxsize == 2**31 - 1 else 64}'
+    #jlib.log(f'returning ret={ret!r}')
+    return ret
 
 def cmd_run_multiple(commands, prefix=None):
     '''
@@ -254,6 +263,7 @@ class BuildDirs:
     def __init__( self):
 
         # Assume we are in mupdf/scripts/.
+        #jlib.log( f'platform.platform(): {platform.platform()}')
         file_ = abspath( __file__)
         assert file_.endswith( f'/scripts/wrap/state.py'), \
                 'Unexpected __file__=%s file_=%s' % (__file__, file_)
@@ -267,12 +277,7 @@ class BuildDirs:
         self.ref_dir = abspath( f'{self.dir_mupdf}/mupdfwrap_ref')
         assert not self.ref_dir.endswith( '/')
 
-        if state_.windows:
-            # Default build depends on the Python that we are running under.
-            #
-            self.set_dir_so( f'{self.dir_mupdf}/build/shared-release-{cpu_name()}-py{python_version()}')
-        else:
-            self.set_dir_so( f'{self.dir_mupdf}/build/shared-release')
+        self.set_dir_so( f'{self.dir_mupdf}/build/shared-release')
 
     def set_dir_so( self, dir_so):
         '''
@@ -287,25 +292,65 @@ class BuildDirs:
         dir_so = abspath( dir_so)
         self.dir_so = dir_so
 
-        if 0: pass  # lgtm [py/unreachable-statement]
-        elif '-debug' in dir_so:    self.cpp_flags = '-g'
-        elif '-release' in dir_so:  self.cpp_flags = '-O2 -DNDEBUG'
-        elif '-memento' in dir_so:  self.cpp_flags = '-g -DMEMENTO'
+        if state_.windows:
+            # debug builds have:
+            # /Od
+            # /D _DEBUG
+            # /RTC1
+            # /MDd
+            #
+            if 0: pass  # lgtm [py/unreachable-statement]
+            elif '-release' in dir_so:
+                self.cpp_flags = '/O2 /DNDEBUG'
+            elif '-debug' in dir_so:
+                # `/MDd` forces use of debug runtime and (i think via
+                # it setting `/D _DEBUG`) debug versions of things like
+                # `std::string` (incompatible with release builds). We also set
+                # `/Od` (no optimisation) and `/RTC1` (extra runtime checks)
+                # because these seem to be conventionally set in VS.
+                #
+                self.cpp_flags = '/MDd /Od /RTC1'
+            elif '-memento' in dir_so:
+                self.cpp_flags = '/MDd /Od /RTC1 /DMEMENTO'
+            else:
+                self.cpp_flags = None
+                jlib.log( 'Warning: unrecognised {dir_so=}, so cannot determine cpp_flags')
         else:
-            self.cpp_flags = None
-            jlib.log( 'Warning: unrecognised {dir_so=}, so cannot determine cpp_flags')
+            if 0: pass  # lgtm [py/unreachable-statement]
+            elif '-debug' in dir_so:    self.cpp_flags = '-g'
+            elif '-release' in dir_so:  self.cpp_flags = '-O2 -DNDEBUG'
+            elif '-memento' in dir_so:  self.cpp_flags = '-g -DMEMENTO'
+            else:
+                self.cpp_flags = None
+                jlib.log( 'Warning: unrecognised {dir_so=}, so cannot determine cpp_flags')
 
         # Set self.cpu and self.python_version.
         if state_.windows:
-            # Infer from self.dir_so.
-            m = re.match( 'shared-([a-z]+)(-(x[0-9]+))?(-py([0-9.]+))?$', os.path.basename(self.dir_so))
+            # Infer cpu and python version from self.dir_so. And append current
+            # cpu and python version if not already present.
+            leaf = os.path.basename(self.dir_so)
+            m = re.match( 'shared-([a-z]+)$', leaf)
+            if m:
+                suffix = f'-{Cpu(cpu_name())}-py{python_version()}'
+                jlib.log('Adding suffix to {leaf!r}: {suffix!r}')
+                self.dir_so += suffix
+                leaf = os.path.basename(self.dir_so)
+            m = re.search( '-(x[0-9]+)-py([0-9.]+)$', leaf)
             #log(f'self.dir_so={self.dir_so} {os.path.basename(self.dir_so)} m={m}')
             assert m, f'Failed to parse dir_so={self.dir_so!r} - should be *-x32|x64-pyA.B'
-            assert m.group(3), f'No cpu in self.dir_so: {self.dir_so}'
-            self.cpu = Cpu( m.group(3))
-            self.python_version = m.group(5)
-            #log('{self.cpu=} {self.python_version=} {dir_so=}')
+            self.cpu = Cpu( m.group(1))
+            self.python_version = m.group(2)
+            #jlib.log('{self.cpu=} {self.python_version=} {dir_so=}')
         else:
             # Use Python we are running under.
             self.cpu = Cpu(cpu_name())
             self.python_version = python_version()
+
+    def windows_build_type(self):
+        dir_so_flags = os.path.basename( self.dir_so).split( '-')
+        if 'debug' in dir_so_flags:
+            return 'Debug'
+        elif 'release' in dir_so_flags:
+            return 'Release'
+        else:
+            assert 0, f'Expecting "-release-" or "-debug-" in build_dirs.dir_so={self.dir_so}'

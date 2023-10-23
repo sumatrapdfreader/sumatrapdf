@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "html-imp.h"
@@ -37,13 +37,24 @@
 #define TEXT_ENCODING_UTF8 65001
 
 static void
+skip_bytes(fz_context *ctx, fz_stream *stm, size_t len)
+{
+	size_t skipped = fz_skip(ctx, stm, len);
+	if (skipped < len)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in data");
+}
+
+static void
 mobi_read_text_none(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t size)
 {
 	unsigned char buf[4096];
+	size_t n;
 	if (size > 4096)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "text block too large");
-	fz_read(ctx, stm, buf, size);
-	fz_append_data(ctx, out, buf, size);
+	n = fz_read(ctx, stm, buf, size);
+	if (n < size)
+		fz_warn(ctx, "premature end in mobi uncompressed text data");
+	fz_append_data(ctx, out, buf, n);
 }
 
 static void
@@ -59,8 +70,10 @@ mobi_read_text_palmdoc(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t
 		if (c >= 0x01 && c <= 0x08)
 		{
 			unsigned char buf[8];
-			fz_read(ctx, stm, buf, c);
-			fz_append_data(ctx, out, buf, c);
+			size_t n = fz_read(ctx, stm, buf, c);
+			fz_append_data(ctx, out, buf, n);
+			if (n < (size_t) c)
+				break;
 		}
 		else if (c <= 0x7f)
 		{
@@ -68,9 +81,13 @@ mobi_read_text_palmdoc(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t
 		}
 		else if (c >= 0x80 && c <= 0xbf)
 		{
-			int x = (c << 8) | fz_read_byte(ctx, stm);
-			int distance = (x >> 3) & 0x7ff;
-			int length = (x & 7) + 3;
+			int cc, x, distance, length;
+			cc = fz_read_byte(ctx, stm);
+			if (cc == EOF)
+				break;
+			x = (c << 8) | cc;
+			distance = (x >> 3) & 0x7ff;
+			length = (x & 7) + 3;
 			if (distance > 0 && (size_t)distance <= out->len)
 			{
 				int i;
@@ -85,38 +102,52 @@ mobi_read_text_palmdoc(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t
 			fz_append_byte(ctx, out, c ^ 0x80);
 		}
 	}
+
+	if (out->len < end)
+		fz_warn(ctx, "premature end in mobi palmdoc data");
 }
 
 static uint32_t
 mobi_read_data(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t *offset, uint32_t total_count, int format)
 {
 	// https://wiki.mobileread.com/wiki/MOBI
-	uint32_t compression, text_length, record_count, text_encoding;
-	uint32_t i;
+	uint32_t compression, text_length, record_count, text_encoding, i;
 	unsigned char buf[4];
+	fz_range range = { 0 };
+	fz_stream *rec = NULL;
+	size_t n;
 
-	fz_seek(ctx, stm, offset[0], 0);
+	fz_var(rec);
 
-	// PalmDOC header
-	compression = fz_read_uint16(ctx, stm);
-	fz_skip(ctx, stm, 2);
-	text_length = fz_read_uint32(ctx, stm);
-	record_count = fz_read_uint16(ctx, stm);
-	fz_skip(ctx, stm, 2);
-	fz_skip(ctx, stm, 2); // encryption
-	fz_skip(ctx, stm, 2);
-
-	// Optional MOBI header
-	fz_read(ctx, stm, buf, 4);
-	if (!memcmp(buf, "MOBI", 4))
+	fz_try(ctx)
 	{
-		fz_skip(ctx, stm, 8);
-		text_encoding = fz_read_uint32(ctx, stm);
-	}
-	else
-	{
+		range.offset = offset[0];
+		range.length = offset[1] - offset[0];
+		rec = fz_open_range_filter(ctx, stm, &range, 1);
+
+		// PalmDOC header
+		compression = fz_read_uint16(ctx, rec);
+		skip_bytes(ctx, rec, 2);
+		text_length = fz_read_uint32(ctx, rec);
+		record_count = fz_read_uint16(ctx, rec);
+		skip_bytes(ctx, rec, 2);
+		skip_bytes(ctx, rec, 2); // encryption
+		skip_bytes(ctx, rec, 2);
+
+		// Optional MOBI header
 		text_encoding = TEXT_ENCODING_LATIN_1;
+		n = fz_read(ctx, rec, buf, 4);
+		if (n == 4 && !memcmp(buf, "MOBI", 4))
+		{
+			skip_bytes(ctx, rec, 4);
+			skip_bytes(ctx, rec, 4);
+			text_encoding = fz_read_uint32(ctx, rec);
+		}
 	}
+	fz_always(ctx)
+		fz_drop_stream(ctx, rec);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	if (compression != COMPRESSION_NONE && compression != COMPRESSION_PALMDOC)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown compression method");
@@ -129,11 +160,22 @@ mobi_read_data(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t *offset
 	{
 		uint32_t remain = text_length - (uint32_t)out->len;
 		uint32_t size = remain < 4096 ? remain : 4096;
-		fz_seek(ctx, stm, offset[i], 0);
-		if (compression == COMPRESSION_NONE)
-			mobi_read_text_none(ctx, out, stm, size);
-		else
-			mobi_read_text_palmdoc(ctx, out, stm, size);
+
+		fz_try(ctx)
+		{
+			range.offset = offset[i];
+			range.length = offset[i + 1] - offset[i];
+			rec = fz_open_range_filter(ctx, stm, &range, 1);
+
+			if (compression == COMPRESSION_NONE)
+				mobi_read_text_none(ctx, out, rec, size);
+			else
+				mobi_read_text_palmdoc(ctx, out, rec, size);
+		}
+		fz_always(ctx)
+			fz_drop_stream(ctx, rec);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
 	}
 
 	if (format == FORMAT_TEXT && out->len > 6)
@@ -196,51 +238,71 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)
 	fz_stream *stm = NULL;
 	fz_buffer *buffer = NULL;
 	fz_tree *tree = NULL;
-	uint32_t *offset = NULL;
+	uint32_t *offsets = NULL;
 	char buf[32];
-	uint32_t i, n, extra;
+	uint32_t i, k, extra;
 	uint32_t recindex;
+	uint32_t minoffset, maxoffset;
 	int format = FORMAT_TEXT;
+	size_t n;
 
 	// https://wiki.mobileread.com/wiki/PalmDOC
 
 	fz_var(stm);
 	fz_var(buffer);
-	fz_var(offset);
+	fz_var(offsets);
 	fz_var(tree);
 
 	fz_try(ctx)
 	{
 		stm = fz_open_buffer(ctx, mobi);
 
-		fz_skip(ctx, stm, 32); // database name
-		fz_skip(ctx, stm, 28); // database attributes, version, dates, etc
+		skip_bytes(ctx, stm, 32); // database name
+		skip_bytes(ctx, stm, 28); // database attributes, version, dates, etc
 
-		fz_read(ctx, stm, (unsigned char *)buf, 8); // database type and creator
+		n = fz_read(ctx, stm, (unsigned char *)buf, 8); // database type and creator
 		buf[8] = 0;
 
-		if (!memcmp(buf, "BOOKMOBI", 8))
+		if (n == 8 && !memcmp(buf, "BOOKMOBI", 8))
 			format = FORMAT_HTML;
-		else if (!memcmp(buf, "TEXtREAd", 8))
+		else if (n == 8 && !memcmp(buf, "TEXtREAd", 8))
 			format = FORMAT_TEXT;
+		else if (n != 8)
+			fz_warn(ctx, "premature end in data");
 		else
 			fz_warn(ctx, "Unknown MOBI/PRC format: %s.", buf);
 
-		fz_skip(ctx, stm, 8); // database internal fields
+		skip_bytes(ctx, stm, 8); // database internal fields
+
+		// record info list count
+		n = fz_read_uint16(ctx, stm);
+
+		minoffset = (uint32_t)fz_tell(ctx, stm) + n * 2 * sizeof (uint32_t) - 1;
+		maxoffset = (uint32_t)mobi->len;
 
 		// record info list
-		n = fz_read_uint16(ctx, stm);
-		offset = fz_malloc_array(ctx, n + 1, uint32_t);
-		for (i = 0; i < n; ++i)
+		offsets = fz_malloc_array(ctx, n + 1, uint32_t);
+		for (i = 0, k = 0; i < n; ++i)
 		{
-			offset[i] = fz_read_uint32(ctx, stm);
-			fz_skip(ctx, stm, 4);
+			uint32_t offset = fz_read_uint32(ctx, stm);
+			if (offset <= minoffset)
+				continue;
+			if (offset >= maxoffset)
+				continue;
+			offsets[k++] = offset;
+			skip_bytes(ctx, stm, 4);
+			minoffset = fz_mini(minoffset, offsets[i]);
 		}
-		offset[n] = (uint32_t)mobi->len;
+		offsets[k] = (uint32_t)mobi->len;
+
+		// adjust n in case some out of bound offsets were skipped
+		n = k;
+		if (n == 0)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "no mobi records to read");
 
 		// decompress text data
 		buffer = fz_new_buffer(ctx, 128 << 10);
-		extra = mobi_read_data(ctx, buffer, stm, offset, n, format);
+		extra = mobi_read_data(ctx, buffer, stm, offsets, n, format);
 		fz_terminate_buffer(ctx, buffer);
 
 #ifndef NDEBUG
@@ -255,10 +317,10 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)
 		recindex = 1;
 		for (i = extra; i < n; ++i)
 		{
-			uint32_t size = offset[i+1] - offset[i];
+			uint32_t size = offsets[i+1] - offsets[i];
 			if (size > 8)
 			{
-				unsigned char *data = mobi->data + offset[i];
+				unsigned char *data = mobi->data + offsets[i];
 				if (fz_recognize_image_format(ctx, data))
 				{
 					buffer = fz_new_buffer_from_copied_data(ctx, data, size);
@@ -273,7 +335,7 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)
 	fz_always(ctx)
 	{
 		fz_drop_stream(ctx, stm);
-		fz_free(ctx, offset);
+		fz_free(ctx, offsets);
 	}
 	fz_catch(ctx)
 	{

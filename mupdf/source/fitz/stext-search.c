@@ -17,11 +17,10 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
-#include "mupdf/ucdn.h"
 
 #include <string.h>
 #include <limits.h>
@@ -29,23 +28,28 @@
 
 /* Enumerate marked selection */
 
-static float dist2(float a, float b)
-{
-	return a * a + b * b;
-}
-
 static float hdist(fz_point *dir, fz_point *a, fz_point *b)
 {
 	float dx = b->x - a->x;
 	float dy = b->y - a->y;
-	return fz_abs(dx * dir->x + dy * dir->y);
+	return fz_abs(dx * dir->x - dy * dir->y);
 }
 
 static float vdist(fz_point *dir, fz_point *a, fz_point *b)
 {
 	float dx = b->x - a->x;
 	float dy = b->y - a->y;
-	return fz_abs(dx * dir->y + dy * dir->x);
+	return fz_abs(dx * dir->y - dy * dir->x);
+}
+
+static float vecdot(fz_point a, fz_point b)
+{
+	return a.x * b.x + a.y * b.y;
+}
+
+static float linedist(fz_point origin, fz_point dir, fz_point q)
+{
+	return vecdot(dir, fz_make_point(q.x - origin.x, q.y - origin.y));
 }
 
 static int line_length(fz_stext_line *line)
@@ -57,102 +61,79 @@ static int line_length(fz_stext_line *line)
 	return n;
 }
 
-static int
-direction_from_bidi_class(int bidiclass, int curdir)
+static float largest_size_in_line(fz_stext_line *line)
 {
-	switch (bidiclass)
-	{
-	/* strong */
-	case UCDN_BIDI_CLASS_L: return 1;
-	case UCDN_BIDI_CLASS_R: return -1;
-	case UCDN_BIDI_CLASS_AL: return -1;
-
-	/* weak */
-	case UCDN_BIDI_CLASS_EN:
-	case UCDN_BIDI_CLASS_ES:
-	case UCDN_BIDI_CLASS_ET:
-	case UCDN_BIDI_CLASS_AN:
-	case UCDN_BIDI_CLASS_CS:
-	case UCDN_BIDI_CLASS_NSM:
-	case UCDN_BIDI_CLASS_BN:
-		return curdir;
-
-	/* neutral */
-	case UCDN_BIDI_CLASS_B:
-	case UCDN_BIDI_CLASS_S:
-	case UCDN_BIDI_CLASS_WS:
-	case UCDN_BIDI_CLASS_ON:
-		return curdir;
-
-	/* embedding, override, pop ... we don't support them */
-	default:
-		return 0;
-	}
+	fz_stext_char *ch;
+	float size = 0;
+	for (ch = line->first_char; ch; ch = ch->next)
+		if (ch->size > size)
+			size = ch->size;
+	return size;
 }
 
-static int find_closest_in_line(fz_stext_line *line, int idx, fz_point p)
+static int find_closest_in_line(fz_stext_line *line, int idx, fz_point q)
 {
 	fz_stext_char *ch;
 	float closest_dist = 1e30f;
 	int closest_idx = idx;
-	int dirn = 0;
+	float d1, d2;
 
-	if (line->dir.x > line->dir.y)
-	{
-		if (p.y < line->bbox.y0)
-			return idx;
-		if (p.y > line->bbox.y1)
-			return idx + line_length(line);
-	}
-	else
-	{
-		if (p.x < line->bbox.x0)
-			return idx + line_length(line);
-		if (p.x > line->bbox.x1)
-			return idx;
-	}
+	float hsize = largest_size_in_line(line) / 2;
+	fz_point vdir = fz_make_point(-line->dir.y, line->dir.x);
+	fz_point hdir = line->dir;
+
+	// Compute mid-line from quads!
+	fz_point p1 = fz_make_point(
+		(line->first_char->quad.ll.x + line->first_char->quad.ul.x) / 2,
+		(line->first_char->quad.ll.y + line->first_char->quad.ul.y) / 2
+	);
+
+	// Signed distance perpendicular mid-line (positive is below)
+	float vdist = linedist(p1, vdir, q);
+	if (vdist < -hsize)
+		return idx;
+	if (vdist > hsize)
+		return idx + line_length(line);
 
 	for (ch = line->first_char; ch; ch = ch->next)
 	{
-		float mid_x = (ch->quad.ul.x + ch->quad.ur.x + ch->quad.ll.x + ch->quad.lr.x) / 4;
-		float mid_y = (ch->quad.ul.y + ch->quad.ur.y + ch->quad.ll.y + ch->quad.lr.y) / 4;
-		float this_dist = dist2(p.x - mid_x, p.y - mid_y);
-
-		dirn = direction_from_bidi_class(ucdn_get_bidi_class(ch->c), dirn);
-
-		if (this_dist < closest_dist)
+		if (ch->bidi & 1)
 		{
-			closest_dist = this_dist;
-			if (dirn == -1)
-			{
-				/* R2L */
-				if (line->dir.x > line->dir.y)
-					closest_idx = (p.x < mid_x) ? idx+1 : idx;
-				else
-					closest_idx = (p.y < mid_y) ? idx+1 : idx;
-			}
-			else
-			{
-				/* Neutral or L2R */
-				if (line->dir.x > line->dir.y)
-					closest_idx = (p.x < mid_x) ? idx : idx+1;
-				else
-					closest_idx = (p.y < mid_y) ? idx : idx+1;
-			}
+			d1 = fz_abs(linedist(ch->quad.lr, hdir, q));
+			d2 = fz_abs(linedist(ch->quad.ll, hdir, q));
 		}
+		else
+		{
+			d1 = fz_abs(linedist(ch->quad.ll, hdir, q));
+			d2 = fz_abs(linedist(ch->quad.lr, hdir, q));
+		}
+
+		if (d1 < closest_dist)
+		{
+			closest_dist = d1;
+			closest_idx = idx;
+		}
+
+		if (d2 < closest_dist)
+		{
+			closest_dist = d2;
+			closest_idx = idx + 1;
+		}
+
 		++idx;
 	}
+
 	return closest_idx;
 }
 
-static int find_closest_in_page(fz_stext_page *page, fz_point p)
+static int find_closest_in_page(fz_stext_page *page, fz_point q)
 {
 	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_line *closest_line = NULL;
 	int closest_idx = 0;
-	float closest_dist = 1e30f;
-	float this_dist;
+	float closest_vdist = 1e30f;
+	float closest_hdist = 1e30f;
 	int idx = 0;
 
 	for (block = page->first_block; block; block = block->next)
@@ -161,45 +142,74 @@ static int find_closest_in_page(fz_stext_page *page, fz_point p)
 			continue;
 		for (line = block->u.t.first_line; line; line = line->next)
 		{
-			fz_rect box = line->bbox;
-			if (p.x >= box.x0 && p.x <= box.x1)
+			float hsize = largest_size_in_line(line) / 2;
+			fz_point hdir = line->dir;
+			fz_point vdir = fz_make_point(-line->dir.y, line->dir.x);
+
+			// Compute mid-line from quads!
+			fz_point p1 = fz_make_point(
+				(line->first_char->quad.ll.x + line->first_char->quad.ul.x) / 2,
+				(line->first_char->quad.ll.y + line->first_char->quad.ul.y) / 2
+			);
+			fz_point p2 = fz_make_point(
+				(line->last_char->quad.lr.x + line->last_char->quad.ur.x) / 2,
+				(line->last_char->quad.lr.y + line->last_char->quad.ur.y) / 2
+			);
+
+			// Signed distance perpendicular mid-line (positive is below)
+			float vdist = linedist(p1, vdir, q);
+
+			// Signed distance tangent to mid-line from end points (positive is to end)
+			float hdist1 = linedist(p1, hdir, q);
+			float hdist2 = linedist(p2, hdir, q);
+
+			// Within the line itself!
+			if (vdist >= -hsize && vdist <= hsize && (hdist1 > 0) != (hdist2 > 0))
 			{
-				if (p.y < box.y0)
-					this_dist = dist2(box.y0 - p.y, 0);
-				else if (p.y > box.y1)
-					this_dist = dist2(p.y - box.y1, 0);
-				else
-					this_dist = 0;
-			}
-			else if (p.y >= box.y0 && p.y <= box.y1)
-			{
-				if (p.x < box.x0)
-					this_dist = dist2(box.x0 - p.x, 0);
-				else if (p.x > box.x1)
-					this_dist = dist2(p.x - box.x1, 0);
-				else
-					this_dist = 0;
-			}
-			else
-			{
-				float dul = dist2(p.x - box.x0, p.y - box.y0);
-				float dur = dist2(p.x - box.x1, p.y - box.y0);
-				float dll = dist2(p.x - box.x0, p.y - box.y1);
-				float dlr = dist2(p.x - box.x1, p.y - box.y1);
-				this_dist = fz_min(fz_min(dul, dur), fz_min(dll, dlr));
-			}
-			if (this_dist < closest_dist)
-			{
-				closest_dist = this_dist;
+				closest_vdist = 0;
+				closest_hdist = 0;
 				closest_line = line;
 				closest_idx = idx;
 			}
+			else
+			{
+				// Vertical distance from mid-line.
+				float avdist = fz_abs(vdist);
+
+				// Horizontal distance from closest end-point
+				float ahdist = fz_min(fz_abs(hdist1), fz_abs(hdist2));
+
+				if (avdist < hsize)
+				{
+					// Within extended line
+					if (ahdist <= closest_hdist)
+					{
+						closest_vdist = 0;
+						closest_hdist = ahdist;
+						closest_line = line;
+						closest_idx = idx;
+					}
+				}
+				else
+				{
+					// Outside line
+					// TODO: closest column?
+					if (avdist <= closest_vdist)
+					{
+						closest_vdist = avdist;
+						closest_line = line;
+						closest_idx = idx;
+					}
+				}
+			}
+
 			idx += line_length(line);
 		}
 	}
 
 	if (closest_line)
-		return find_closest_in_line(closest_line, closest_idx, p);
+		return find_closest_in_line(closest_line, closest_idx, q);
+
 	return 0;
 }
 
@@ -328,49 +338,50 @@ struct highlight
 	float hfuzz, vfuzz;
 };
 
+int same_point(fz_point a, fz_point b)
+{
+	int dx = fz_abs(a.x - b.x);
+	int dy = fz_abs(a.y - b.y);
+	return (dx < 0.1 && dy < 0.1);
+}
+
+int is_near(float hfuzz, float vfuzz, fz_point hdir, fz_point end, fz_point p1, fz_point p2)
+{
+	float v = fz_abs(linedist(end, fz_make_point(-hdir.y, hdir.x), p1));
+	float d1 = fz_abs(linedist(end, hdir, p1));
+	float d2 = fz_abs(linedist(end, hdir, p2));
+	return (v < vfuzz && d1 < hfuzz && d1 < d2);
+}
+
 static void on_highlight_char(fz_context *ctx, void *arg, fz_stext_line *line, fz_stext_char *ch)
 {
 	struct highlight *hits = arg;
-	float vfuzz = ch->size * hits->vfuzz;
-	float hfuzz = ch->size * hits->hfuzz;
+	float vfuzz = hits->vfuzz * ch->size;
+	float hfuzz = hits->hfuzz * ch->size;
+	fz_point dir = line->dir;
+
+	// Skip zero-extent quads
+	if (same_point(ch->quad.ll, ch->quad.lr))
+		return;
 
 	if (hits->len > 0)
 	{
 		fz_quad *end = &hits->box[hits->len-1];
-		float llh = hdist(&line->dir, &end->lr, &ch->quad.ll);
-		float llv = vdist(&line->dir, &end->lr, &ch->quad.ll);
-		float ulh = hdist(&line->dir, &end->ur, &ch->quad.ul);
-		float ulv = vdist(&line->dir, &end->ur, &ch->quad.ul);
-		float lrh = hdist(&line->dir, &end->ll, &ch->quad.lr);
-		float lrv = vdist(&line->dir, &end->ll, &ch->quad.lr);
-		float urh = hdist(&line->dir, &end->ul, &ch->quad.ur);
-		float urv = vdist(&line->dir, &end->ul, &ch->quad.ur);
 
-		if (lrh + lrv + urh + urv < llh + llv + ulh + ulv)
+		if (is_near(hfuzz, vfuzz, dir, end->lr, ch->quad.ll, ch->quad.lr) &&
+			is_near(hfuzz, vfuzz, dir, end->ur, ch->quad.ul, ch->quad.ur))
 		{
-			/* Merge to the right, if at all. */
-			if (lrh < hfuzz
-				&& lrv < vfuzz
-				&& urh < hfuzz
-				&& urv < vfuzz)
-			{
-				end->ul = ch->quad.ul;
-				end->ll = ch->quad.ll;
-				return;
-			}
+			end->ur = ch->quad.ur;
+			end->lr = ch->quad.lr;
+			return;
 		}
-		else
+
+		if (is_near(hfuzz, vfuzz, dir, end->ll, ch->quad.lr, ch->quad.ll) &&
+			is_near(hfuzz, vfuzz, dir, end->ul, ch->quad.ur, ch->quad.ul))
 		{
-			/* Merge to the left, if at all */
-			if (llh < hfuzz
-				&& llv < vfuzz
-				&& ulh < hfuzz
-				&& ulv < vfuzz)
-			{
-				end->ur = ch->quad.ur;
-				end->lr = ch->quad.lr;
-				return;
-			}
+			end->ul = ch->quad.ul;
+			end->ll = ch->quad.ll;
+			return;
 		}
 	}
 

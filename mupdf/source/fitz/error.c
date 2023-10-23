@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -99,7 +99,7 @@ void fz_flush_warnings(fz_context *ctx)
 	ctx->warn.count = 0;
 }
 
-void fz_vwarn(fz_context *ctx, const char *fmt, va_list ap)
+void (fz_vwarn)(fz_context *ctx, const char *fmt, va_list ap)
 {
 	char buf[sizeof ctx->warn.message];
 
@@ -120,13 +120,44 @@ void fz_vwarn(fz_context *ctx, const char *fmt, va_list ap)
 	}
 }
 
-void fz_warn(fz_context *ctx, const char *fmt, ...)
+void (fz_warn)(fz_context *ctx, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
 	fz_vwarn(ctx, fmt, ap);
 	va_end(ap);
 }
+
+#if FZ_VERBOSE_EXCEPTIONS
+void fz_vwarnFL(fz_context *ctx, const char *file, int line, const char *fmt, va_list ap)
+{
+	char buf[sizeof ctx->warn.message];
+
+	fz_vsnprintf(buf, sizeof buf, fmt, ap);
+	buf[sizeof(buf) - 1] = 0;
+
+	if (!strcmp(buf, ctx->warn.message))
+	{
+		ctx->warn.count++;
+	}
+	else
+	{
+		fz_flush_warnings(ctx);
+		if (ctx->warn.print)
+			ctx->warn.print(ctx->warn.print_user, buf);
+		fz_strlcpy(ctx->warn.message, buf, sizeof ctx->warn.message);
+		ctx->warn.count = 1;
+	}
+}
+
+void fz_warnFL(fz_context *ctx, const char *file, int line, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	fz_vwarnFL(ctx, file, line, fmt, ap);
+	va_end(ap);
+}
+#endif
 
 /* Error context */
 
@@ -269,24 +300,47 @@ const char *fz_caught_message(fz_context *ctx)
 	return ctx->error.message;
 }
 
+void (fz_log_error_printf)(fz_context *ctx, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	(fz_vlog_error_printf)(ctx, fmt, ap);
+	va_end(ap);
+}
+
+void (fz_vlog_error_printf)(fz_context *ctx, const char *fmt, va_list ap)
+{
+	char message[256];
+
+	fz_flush_warnings(ctx);
+	if (ctx->error.print)
+	{
+		fz_vsnprintf(message, sizeof message, fmt, ap);
+		message[sizeof(message) - 1] = 0;
+
+		ctx->error.print(ctx->error.print_user, message);
+	}
+}
+
+void (fz_log_error)(fz_context *ctx, const char *str)
+{
+	fz_flush_warnings(ctx);
+	if (ctx->error.print)
+		ctx->error.print(ctx->error.print_user, str);
+}
+
 /* coverity[+kill] */
-FZ_NORETURN void fz_vthrow(fz_context *ctx, int code, const char *fmt, va_list ap)
+FZ_NORETURN void (fz_vthrow)(fz_context *ctx, int code, const char *fmt, va_list ap)
 {
 	fz_vsnprintf(ctx->error.message, sizeof ctx->error.message, fmt, ap);
 	ctx->error.message[sizeof(ctx->error.message) - 1] = 0;
-
-	if (code != FZ_ERROR_ABORT && code != FZ_ERROR_TRYLATER)
-	{
-		fz_flush_warnings(ctx);
-		if (ctx->error.print)
-			ctx->error.print(ctx->error.print_user, ctx->error.message);
-	}
 
 	throw(ctx, code);
 }
 
 /* coverity[+kill] */
-FZ_NORETURN void fz_throw(fz_context *ctx, int code, const char *fmt, ...)
+FZ_NORETURN void (fz_throw)(fz_context *ctx, int code, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -295,25 +349,140 @@ FZ_NORETURN void fz_throw(fz_context *ctx, int code, const char *fmt, ...)
 }
 
 /* coverity[+kill] */
-FZ_NORETURN void fz_rethrow(fz_context *ctx)
+FZ_NORETURN void (fz_rethrow)(fz_context *ctx)
 {
 	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
 	throw(ctx, ctx->error.errcode);
 }
 
-void fz_morph_error(fz_context *ctx, int fromerr, int toerr)
+void (fz_morph_error)(fz_context *ctx, int fromerr, int toerr)
 {
 	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
 	if (ctx->error.errcode == fromerr)
 		ctx->error.errcode = toerr;
 }
 
-void fz_rethrow_if(fz_context *ctx, int err)
+void (fz_rethrow_if)(fz_context *ctx, int err)
 {
 	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
 	if (ctx->error.errcode == err)
 		fz_rethrow(ctx);
 }
+
+#if FZ_VERBOSE_EXCEPTIONS
+static const char *
+errcode_to_string(int exc)
+{
+	switch (exc)
+	{
+	case FZ_ERROR_NONE:
+		return "NONE";
+	case FZ_ERROR_MEMORY:
+		return "MEMORY";
+	case FZ_ERROR_GENERIC:
+		return "GENERIC";
+	case FZ_ERROR_SYNTAX:
+		return "SYNTAX";
+	case FZ_ERROR_MINOR:
+		return "MINOR";
+	case FZ_ERROR_TRYLATER:
+		return "TRYLATER";
+	case FZ_ERROR_ABORT:
+		return "ABORT";
+	case FZ_ERROR_REPAIRED:
+		return "REPAIRED";
+	case FZ_ERROR_COUNT:
+		return "COUNT";
+	default:
+		return "<Invalid>";
+	}
+}
+
+
+void fz_log_error_printfFL(fz_context *ctx, const char *file, int line, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	fz_vlog_error_printfFL(ctx, file, line, fmt, ap);
+	va_end(ap);
+}
+
+void fz_vlog_error_printfFL(fz_context *ctx, const char *file, int line, const char *fmt, va_list ap)
+{
+	char message[256];
+
+	fz_flush_warnings(ctx);
+	if (ctx->error.print)
+	{
+		fz_vsnprintf(message, sizeof message, fmt, ap);
+		message[sizeof(message) - 1] = 0;
+
+		fz_log_errorFL(ctx, file, line, message);
+	}
+}
+
+void fz_log_errorFL(fz_context *ctx, const char *file, int line, const char *str)
+{
+	char message[256];
+
+	fz_flush_warnings(ctx);
+	if (ctx->error.print)
+	{
+		fz_snprintf(message, sizeof message, "%s:%d '%s'", file, line, str);
+		message[sizeof(message) - 1] = 0;
+		ctx->error.print(ctx->error.print_user, message);
+	}
+}
+
+/* coverity[+kill] */
+FZ_NORETURN void fz_vthrowFL(fz_context *ctx, const char *file, int line, int code, const char *fmt, va_list ap)
+{
+	fz_vsnprintf(ctx->error.message, sizeof ctx->error.message, fmt, ap);
+	ctx->error.message[sizeof(ctx->error.message) - 1] = 0;
+
+	(fz_log_error_printf)(ctx, "%s:%d: Throwing %s '%s'", file, line, errcode_to_string(code), ctx->error.message);
+
+	throw(ctx, code);
+}
+
+/* coverity[+kill] */
+FZ_NORETURN void fz_throwFL(fz_context *ctx, const char *file, int line, int code, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	fz_vthrowFL(ctx, file, line, code, fmt, ap);
+	va_end(ap);
+}
+
+/* coverity[+kill] */
+FZ_NORETURN void fz_rethrowFL(fz_context *ctx, const char *file, int line)
+{
+	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
+	(fz_log_error_printf)(ctx, "%s:%d: Rethrowing", file, line);
+	throw(ctx, ctx->error.errcode);
+}
+
+void fz_morph_errorFL(fz_context *ctx, const char *file, int line, int fromerr, int toerr)
+{
+	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
+	if (ctx->error.errcode == fromerr)
+	{
+		(fz_log_error_printf)(ctx, "%s:%d: Morphing %s->%s", file, line, errcode_to_string(fromerr), errcode_to_string(toerr));
+		ctx->error.errcode = toerr;
+	}
+}
+
+void fz_rethrow_ifFL(fz_context *ctx, const char *file, int line, int err)
+{
+	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
+	if (ctx->error.errcode == err)
+	{
+		(fz_log_error_printf)(ctx, "%s:%d: Rethrowing", file, line);
+		(fz_rethrow)(ctx);
+	}
+}
+#endif
 
 void fz_start_throw_on_repair(fz_context *ctx)
 {

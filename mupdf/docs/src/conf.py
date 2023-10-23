@@ -2,6 +2,8 @@
 #
 import sys
 import os
+import datetime
+import re
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -17,9 +19,12 @@ sys.path.insert(0, os.path.abspath("."))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.ifconfig"]
-extensions = [
-    'rst2pdf.pdfbuilder'
-]
+extensions = []
+if hasattr(os, "uname") and os.uname()[0] in ("OpenBSD", "Darwin"):
+    # rst2pdf is not available on OpenBSD or MacOS.
+    pass
+else:
+    extensions.append("rst2pdf.pdfbuilder")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -35,14 +40,33 @@ master_doc = "index"
 
 # General information about the project.
 project = "MuPDF"
-copyright = "2004-2023, Artifex"
+thisday = datetime.date.today()
+copyright = "2004-" + str(thisday.year) + ", Artifex"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = "1.21.2"
+major = None
+minor = None
+patch = None
+
+_path = os.path.abspath(f'{__file__}/../../../include/mupdf/fitz/version.h')
+with open(_path) as f:
+    for line in f:
+        if not major:
+            major = re.search('#define FZ_VERSION_MAJOR ([0-9]+$)', line)
+        if not minor:
+            minor = re.search('#define FZ_VERSION_MINOR ([0-9]+$)', line)
+        if not patch:
+            patch = re.search('#define FZ_VERSION_PATCH ([0-9]+$)', line)
+
+    if major and minor and patch:
+        release = major.group(1) + "." + minor.group(1) + "." + patch.group(1)
+        print(f'{__file__}: setting version from {_path}: {release}')
+    else:
+        raise Exception(f'Failed to find MuPDF version in {_path}')
 
 # The short X.Y version
 version = release
@@ -64,6 +88,17 @@ exclude_patterns = ["_build","build"]
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 default_role = 'any'
+
+# To supress these warnings do the following:
+# See: https://stackoverflow.com/questions/37359407/suppress-warnings-for-unfound-references-with-default-role-any-in-sphinx
+def on_missing_reference(app, env, node, contnode):
+    if node['reftype'] == 'any':
+        return contnode
+    else:
+        return None
+
+def setup(app):
+    app.connect('missing-reference', on_missing_reference)
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -90,7 +125,7 @@ keep_warnings = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "sphinx_rtd_theme"
+html_theme = "furo"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -112,7 +147,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "images/mupdf-sidebar-logo.png"
+# html_logo = "images/mupdf-sidebar-logo.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -123,6 +158,10 @@ html_favicon = "_static/favicon.ico"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_theme_options = {
+    "light_logo": "mupdf-sidebar-logo-dark.png",
+    "dark_logo": "mupdf-sidebar-logo-light.png"
+}
 
 # A list of CSS files. The entry must be a filename string or a tuple containing
 # the filename string and the attributes dictionary. The filename must be

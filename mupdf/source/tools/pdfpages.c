@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 /*
  * Information tool.
@@ -137,10 +137,21 @@ showpages(fz_context *ctx, pdf_document *doc, fz_output *out, const char *pageli
 	pagecount = pdf_count_pages(ctx, doc);
 	while ((pagelist = fz_parse_page_range(ctx, pagelist, &spage, &epage, pagecount)))
 	{
+		int fail;
 		if (spage > epage)
 			page = spage, spage = epage, epage = page;
 		for (page = spage; page <= epage; page++)
-			ret |= showpage(ctx, doc, out, page);
+		{
+			fail = showpage(ctx, doc, out, page);
+			/* On the first failure, check for the pagecount having changed. */
+			if (fail && !ret)
+			{
+				pagecount = pdf_count_pages(ctx, doc);
+				if (epage > pagecount)
+					epage = pagecount;
+			}
+			ret |= fail;
+		}
 	}
 
 	return ret;
@@ -224,7 +235,10 @@ int pdfpages_main(int argc, char **argv)
 	fz_try(ctx)
 		ret = pdfpages_pages(ctx, fz_stdout(ctx), filename, password, &argv[fz_optind], argc-fz_optind);
 	fz_catch(ctx)
+	{
+		fz_log_error(ctx, fz_caught_message(ctx));
 		ret = 1;
+	}
 	fz_drop_context(ctx);
 	return ret;
 }

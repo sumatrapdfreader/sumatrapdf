@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -33,7 +33,7 @@ struct entry
 	int gen;
 	int64_t ofs;
 	int64_t stm_ofs;
-	int stm_len;
+	int64_t stm_len;
 };
 
 static void add_root(fz_context *ctx, pdf_obj *obj, pdf_obj ***roots, int *num_roots, int *max_roots)
@@ -50,11 +50,11 @@ static void add_root(fz_context *ctx, pdf_obj *obj, pdf_obj ***roots, int *num_r
 }
 
 int
-pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int64_t *tmpofs, pdf_obj **root)
+pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stmofsp, int64_t *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int64_t *tmpofs, pdf_obj **root)
 {
 	fz_stream *file = doc->file;
 	pdf_token tok;
-	int stm_len;
+	int64_t stm_len;
 	int64_t local_ofs;
 
 	if (tmpofs == NULL)
@@ -97,7 +97,7 @@ pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stm
 			if (file->eof)
 				fz_rethrow(ctx);
 			/* Silently swallow the error */
-			dict = pdf_new_dict(ctx, NULL, 2);
+			dict = pdf_new_dict(ctx, doc, 2);
 		}
 
 		/* We must be careful not to try to resolve any indirections
@@ -138,7 +138,7 @@ pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t *stm
 
 		obj = pdf_dict_get(ctx, dict, PDF_NAME(Length));
 		if (!pdf_is_indirect(ctx, obj) && pdf_is_int(ctx, obj))
-			stm_len = pdf_to_int(ctx, obj);
+			stm_len = pdf_to_int64(ctx, obj);
 
 		if (doc->file_reading_linearly && page)
 		{
@@ -341,7 +341,7 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 	int num = 0;
 	int gen = 0;
 	int64_t tmpofs, stm_ofs, numofs = 0, genofs = 0;
-	int stm_len;
+	int64_t stm_len;
 	pdf_token tok;
 	int next;
 	int i;
@@ -360,7 +360,8 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 	fz_var(list);
 	fz_var(obj);
 
-	fz_warn(ctx, "repairing PDF document");
+	if (!doc->is_fdf)
+		fz_warn(ctx, "repairing PDF document");
 
 	if (doc->repair_attempted)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Repair failed already - not trying again");
@@ -388,7 +389,7 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 		{
 			for (j = 0; j < n - 4; j++)
 			{
-				if (memcmp(&buf->scratch[j], "%PDF", 4) == 0)
+				if (memcmp(&buf->scratch[j], "%PDF", 4) == 0 || memcmp(&buf->scratch[j], "%FDF", 4) == 0)
 				{
 					fz_seek(ctx, doc->file, (int64_t)(j + 8), 0); /* skip "%PDF-X.Y" */
 					break;
@@ -648,10 +649,7 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 		pdf_drop_obj(ctx, obj);
 		obj = NULL;
 
-		obj = pdf_new_int(ctx, maxnum + 1);
-		pdf_dict_put(ctx, pdf_trailer(ctx, doc), PDF_NAME(Size), obj);
-		pdf_drop_obj(ctx, obj);
-		obj = NULL;
+		pdf_dict_put_int(ctx, pdf_trailer(ctx, doc), PDF_NAME(Size), maxnum + 1);
 
 		if (roots)
 		{

@@ -6,7 +6,7 @@ if (scriptArgs.length != 1 && scriptArgs.length != 3) {
 	quit();
 }
 
-var doc = new PDFDocument(scriptArgs[0]);
+var doc = Document.openDocument(scriptArgs[0]);
 
 function mapNameTree(N, fn) {
 	function mapNameTreeNames(NN) {

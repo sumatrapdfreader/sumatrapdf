@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
 
@@ -56,7 +56,7 @@ img_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 }
 
 static fz_rect
-img_bound_page(fz_context *ctx, fz_page *page_)
+img_bound_page(fz_context *ctx, fz_page *page_, fz_box_type box)
 {
 	img_page *page = (img_page*)page_;
 	fz_image *image = page->image;
@@ -163,7 +163,7 @@ img_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 }
 
 static int
-img_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
+img_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, size_t size)
 {
 	img_document *doc = (img_document*)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
@@ -235,6 +235,23 @@ img_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	return (fz_document*)doc;
 }
 
+static int
+img_recognize_content(fz_context *ctx, fz_stream *stream)
+{
+	unsigned char data[8];
+	size_t n = fz_read(ctx, stream, data, 8);
+	int fmt;
+
+	if (n != 8)
+		return 0;
+
+	fmt = fz_recognize_image_format(ctx, data);
+	if (fmt != FZ_IMAGE_UNKNOWN)
+		return 100;
+
+	return 0;
+}
+
 static const char *img_extensions[] =
 {
 	"bmp",
@@ -259,6 +276,7 @@ static const char *img_extensions[] =
 	"png",
 	"pnm",
 	"ppm",
+	"psd",
 	"tif",
 	"tiff",
 	"wdp",
@@ -277,6 +295,7 @@ static const char *img_mimetypes[] =
 	"image/png",
 	"image/tiff",
 	"image/vnd.ms-photo",
+	"image/vnd.adobe.photoshop",
 	"image/x-jb2",
 	"image/x-jbig2",
 	"image/x-portable-anymap",
@@ -297,5 +316,6 @@ fz_document_handler img_document_handler =
 	img_extensions,
 	img_mimetypes,
 	NULL,
-	NULL
+	NULL,
+	img_recognize_content
 };
