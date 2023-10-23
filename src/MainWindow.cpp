@@ -517,7 +517,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            AutoFreeStr msg(str::Format(_TRA("Error loading %s"), fullPath));
+            TempStr msg = str::FormatTemp(_TRA("Error loading %s"), fullPath);
             NotificationCreateArgs nargs;
             nargs.hwndParent = win->hwndCanvas;
             nargs.warning = true;

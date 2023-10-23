@@ -1009,38 +1009,35 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
         return;
     }
 
-    const char* menuString = path::GetBaseNameTemp(filePath);
+    TempStr menuString = (TempStr)path::GetBaseNameTemp(filePath);
 
     // If the name is too long, save only the ends glued together
     // E.g. 'Very Long PDF Name (3).pdf' -> 'Very Long...e (3).pdf'
     const size_t MAX_LEN = 70;
     size_t menuStrLen = str::Len(menuString);
     if (menuStrLen > MAX_LEN) {
-        const char* tmpStr = menuString;
-        char* newStr = AllocArray<char>(MAX_LEN);
+        char* newStr = (char*)Allocator::AllocZero(GetTempAllocator(), MAX_LEN);
         const size_t half = MAX_LEN / 2;
         const size_t strSize = menuStrLen + 1; // size()+1 because wcslen() doesn't include \0
         // Copy first N/2 characters, move last N/2 characters to the halfway point
         for (size_t i = 0; i < half; i++) {
-            newStr[i] = tmpStr[i];
-            newStr[i + half] = tmpStr[strSize - half + i];
+            newStr[i] = menuString[i];
+            newStr[i + half] = menuString[strSize - half + i];
         }
         // Add ellipsis
         newStr[half - 2] = newStr[half - 1] = newStr[half] = '.';
         // Ensure null-terminated string
         newStr[MAX_LEN - 1] = '\0';
         // Save truncated string
-        menuString = str::DupTemp(newStr);
-        str::Free(newStr);
+        menuString = newStr;
     }
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
     int menuIdx = (int)((index + 1) % 10);
-    menuString = str::Format("&%d) %s", menuIdx, fileName);
+    menuString = str::FormatTemp("&%d) %s", menuIdx, fileName);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
     InsertMenuW(menuFile, CmdExit, flags, menuId, ToWStrTemp(menuString));
-    str::Free(menuString);
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {

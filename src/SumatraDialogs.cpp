@@ -825,12 +825,12 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         HwndSetText(hDlg, _TRA("Add Favorite"));
-        AutoFreeStr s(str::Format(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo));
+        TempStr s = str::FormatTemp(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo);
         SetDlgItemTextW(hDlg, IDC_ADD_PAGE_STATIC, ToWStrTemp(s));
-        SetDlgItemText(hDlg, IDOK, _TR("OK"));
-        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+        SetDlgItemTextW(hDlg, IDOK, _TR("OK"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->favName) {
-            WCHAR* ws = ToWStrTemp(data->favName);
+            TempWStr ws = ToWStrTemp(data->favName);
             SetDlgItemTextW(hDlg, IDC_FAV_NAME_EDIT, ws);
             EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         }
