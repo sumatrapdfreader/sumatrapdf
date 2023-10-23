@@ -2953,11 +2953,13 @@ static void CreateLnkShortcut(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
+    const char* path = ctrl->GetFilePath();
+
     const WCHAR* defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
 
-    WCHAR dstFileName[MAX_PATH];
+    WCHAR dstFileName[MAX_PATH] = {0};
     // Remove the extension so that it can be replaced with .lnk
-    const char* name = path::GetBaseNameTemp(ctrl->GetFilePath());
+    const char* name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
     str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
@@ -2993,22 +2995,20 @@ static void CreateLnkShortcut(MainWindow* win) {
     if (win->AsFixed()) {
         ss = win->AsFixed()->GetScrollState();
     }
-    const char* viewModeStr = DisplayModeToString(ctrl->GetDisplayMode());
-    AutoFreeWstr ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
+    const char* viewMode = DisplayModeToString(ctrl->GetDisplayMode());
+    TempStr zoomVirtual = str::FormatTemp("%.2f", ctrl->GetZoomVirtual());
     if (kZoomFitPage == ctrl->GetZoomVirtual()) {
-        ZoomVirtual.SetCopy(L"fitpage");
+        zoomVirtual = (TempStr)"fitpage";
     } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
-        ZoomVirtual.SetCopy(L"fitwidth");
+        zoomVirtual = (TempStr) "fitwidth";
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
-        ZoomVirtual.SetCopy(L"fitcontent");
+        zoomVirtual = (TempStr) "fitcontent";
     }
 
-    auto viewMode = ToWStrTemp(viewModeStr);
-    AutoFreeStr args = str::Format("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(), ss.page,
-                                   viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
+    TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page,
+                                   viewMode, zoomVirtual, (int)ss.x, (int)ss.y);
     AutoFreeStr label = ctrl->GetPageLabel(ss.page);
-    const char* path = path::GetBaseNameTemp(ctrl->GetFilePath());
-    AutoFreeStr desc = str::Format(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), path);
+    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), path);
     auto exePath = GetExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
