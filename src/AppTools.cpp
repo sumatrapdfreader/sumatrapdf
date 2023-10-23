@@ -109,8 +109,7 @@ TempStr AppGenDataFilenameTemp(const char* fileName) {
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        AutoFreeStr res = path::GetPathOfFileInAppDir(fileName);
-        return str::DupTemp(res);
+        return path::GetPathOfFileInAppDirTemp(fileName);
     }
 
     char* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);

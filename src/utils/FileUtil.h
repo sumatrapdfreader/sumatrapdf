@@ -32,7 +32,7 @@ bool IsAbsolute(const char* path);
 bool Match(const char* path, const char* filter);
 
 char* GetTempFilePath(const char* filePrefix = nullptr);
-char* GetPathOfFileInAppDir(const char* fileName = nullptr);
+TempStr GetPathOfFileInAppDirTemp(const char* fileName = nullptr);
 } // namespace path
 
 namespace file {
