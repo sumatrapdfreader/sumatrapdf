@@ -2909,4 +2909,3 @@ void AddPathToRecentDocs(const char* path) {
     WCHAR* pathW = ToWstrTemp(path);
     SHAddToRecentDocs(SHARD_PATH, pathW);
 }
-

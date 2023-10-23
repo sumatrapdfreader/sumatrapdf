@@ -208,11 +208,11 @@ size_t NormalizeNewlinesInPlace(char* s);
 size_t RemoveCharsInPlace(char* str, const char* toRemove);
 size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 
-size_t BufSet(char* dst, size_t dstCchSize, const char* src);
-size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src);
-size_t BufSet(WCHAR* dst, size_t dstCchSize, const char* src);
-size_t BufAppend(char* dst, size_t dstCchSize, const char* s);
-size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s);
+int BufSet(char* dst, int dstCchSize, const char* src);
+int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src);
+int BufSet(WCHAR* dst, int dstCchSize, const char* src);
+int BufAppend(char* dst, int dstCchSize, const char* s);
+int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s);
 
 char* MemToHex(const u8* buf, size_t len);
 bool HexToMem(const char* s, u8* buf, size_t bufLen);

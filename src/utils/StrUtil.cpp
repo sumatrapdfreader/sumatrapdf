@@ -788,25 +788,6 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove) {
     return removed;
 }
 
-// append as much of s at the end of dst (which must be properly null-terminated)
-// as will fit.
-size_t BufAppend(char* dst, size_t dstCchSize, const char* s) {
-    CrashAlwaysIf(0 == dstCchSize);
-
-    size_t currDstCchLen = str::Len(dst);
-    if (currDstCchLen + 1 >= dstCchSize) {
-        return 0;
-    }
-    size_t left = dstCchSize - currDstCchLen - 1;
-    size_t srcCchSize = str::Len(s);
-    size_t toCopy = std::min(left, srcCchSize);
-
-    errno_t err = strncat_s(dst, dstCchSize, s, toCopy);
-    CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
-
-    return toCopy;
-}
-
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 char* MemToHex(const u8* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
@@ -2229,45 +2210,64 @@ size_t NormalizeWSInPlace(WCHAR* str) {
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
-size_t BufSet(char* dst, size_t dstCchSize, const char* src) {
+int BufSet(char* dst, int dstCchSize, const char* src) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    size_t srcCchSize = str::Len(src);
-    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
+    int srcCchSize = str::Len(src);
+    int toCopy = std::min(dstCchSize - 1, srcCchSize);
 
-    errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
+    errno_t err = strncpy_s(dst, (size_t)dstCchSize, src, (size_t)toCopy);
     CrashIf(err || dst[toCopy] != '\0');
 
     return toCopy;
 }
 
-size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {
+int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    size_t srcCchSize = str::Len(src);
-    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
+    int srcCchSize = str::Len(src);
+    int toCopy = std::min(dstCchSize - 1, srcCchSize);
 
     memset(dst, 0, dstCchSize * sizeof(WCHAR));
     memcpy(dst, src, toCopy * sizeof(WCHAR));
     return toCopy;
 }
 
-size_t BufSet(WCHAR* dst, size_t dstCchSize, const char* src) {
+int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
     return BufSet(dst, dstCchSize, ToWstrTemp(src));
 }
 
-size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
+int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    size_t currDstCchLen = str::Len(dst);
+    int currDstCchLen = str::Len(dst);
     if (currDstCchLen + 1 >= dstCchSize) {
         return 0;
     }
-    size_t left = dstCchSize - currDstCchLen - 1;
-    size_t srcCchSize = str::Len(s);
-    size_t toCopy = std::min(left, srcCchSize);
+    int left = dstCchSize - currDstCchLen - 1;
+    int srcCchSize = str::Len(s);
+    int toCopy = std::min(left, srcCchSize);
 
     errno_t err = wcsncat_s(dst, dstCchSize, s, toCopy);
+    CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
+
+    return toCopy;
+}
+
+// append as much of s at the end of dst (which must be properly null-terminated)
+// as will fit.
+int BufAppend(char* dst, int dstCchSize, const char* s) {
+    CrashAlwaysIf(0 == dstCchSize);
+
+    int currDstCchLen = str::Len(dst);
+    if (currDstCchLen + 1 >= dstCchSize) {
+        return 0;
+    }
+    int left = dstCchSize - currDstCchLen - 1;
+    int srcCchSize = str::Len(s);
+    int toCopy = std::min(left, srcCchSize);
+
+    errno_t err = strncat_s(dst, dstCchSize, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
@@ -2290,7 +2290,7 @@ char* FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     for (const char* src = buf; *src;) {
         *next++ = *src++;
         if (*src && i == 2) {
-            next += str::BufSet(next, resLen - (next - res), thousandSep);
+            next += str::BufSet(next, resLen - (int)(next - res), thousandSep);
         }
         i = (i + 1) % 3;
     }
