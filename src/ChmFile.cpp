@@ -70,12 +70,7 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     return {d, len};
 }
 
-char* ChmFile::ToUtf8(const char* text, uint overrideCP) const {
-    return ToUtf8((u8*)text, overrideCP);
-}
-
-char* ChmFile::ToUtf8(const u8* text, uint overrideCP) const {
-    const char* s = (char*)text;
+char* ChmFile::ToUtf8(const char* s, uint overrideCP) const {
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
     }
@@ -258,17 +253,25 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
         return;
     }
 
-    AutoFreeStr utf8Path = ToUtf8((u8*)path.Get());
+    char* utf8Path = ToUtf8(path.Get());
     if (HasData(utf8Path)) {
-        path.Set(utf8Path.Release());
+        path.Set(utf8Path);
         fileCP = codepage;
-    } else if (fileCP != codepage) {
-        utf8Path.Set(ToUtf8((u8*)path.Get(), fileCP));
-        if (HasData(utf8Path)) {
-            path.Set(utf8Path.Release());
-            codepage = fileCP;
-        }
+        return;
     }
+    str::Free(utf8Path);
+
+    if (fileCP == codepage) {
+        return;
+    }
+
+    utf8Path = ToUtf8(path.Get(), fileCP);
+    if (HasData(utf8Path)) {
+        path.Set(utf8Path);
+        codepage = fileCP;
+        return;
+    }
+    str::Free(utf8Path);
 }
 
 bool ChmFile::Load(const char* path) {

@@ -27,7 +27,6 @@ struct ChmFile {
     ByteSlice GetData(const char* fileName) const;
     char* ResolveTopicID(unsigned int id) const;
 
-    char* ToUtf8(const u8* text, uint overrideCP = 0) const;
     char* ToUtf8(const char* text, uint overrideCP = 0) const;
     WCHAR* ToWstr(const char* text) const;
 
