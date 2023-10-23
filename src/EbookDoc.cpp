@@ -1033,7 +1033,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
                 str::NormalizeWSInPlace(itemText);
             }
             if (!str::IsEmpty(itemText.Get())) {
-                AutoFreeStr url(str::Format(FB2_TOC_ENTRY_MARK "%d", titleCount));
+                TempStr url = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", titleCount);
                 char* txt = ToUtf8Temp(itemText);
                 visitor->Visit(txt, url, level);
                 itemText.Reset();
@@ -1226,7 +1226,7 @@ bool PalmDoc::HasToc() const {
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < tocEntries.Size(); i++) {
-        AutoFreeStr url(str::Format(PDB_TOC_ENTRY_MARK "%d", i + 1));
+        TempStr url = str::FormatTemp(PDB_TOC_ENTRY_MARK "%d", i + 1);
         char* name = tocEntries[i];
         visitor->Visit(name, url, 1);
     }

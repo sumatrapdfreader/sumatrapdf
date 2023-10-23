@@ -3010,7 +3010,6 @@ char* EngineMupdf::ExtractFontList() {
     StrVec fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
-        AutoFreeStr anonFontName;
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj* font = fontList.at(i);
@@ -3026,8 +3025,7 @@ char* EngineMupdf::ExtractFontList() {
                 needAnonName = str::IsEmpty(name);
             }
             if (needAnonName) {
-                anonFontName.Set(str::Format("<#%d>", pdf_obj_parent_num(ctx, font2)));
-                name = anonFontName;
+                name = str::FormatTemp("<#%d>", pdf_obj_parent_num(ctx, font2));
             }
             embedded = false;
             pdf_obj* desc = pdf_dict_gets(ctx, font2, "FontDescriptor");

@@ -770,7 +770,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
 static HWND CreateInstallerHwnd() {
-    AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
+    TempStr title = str::FormatTemp(_TRA("SumatraPDF %s Installer"), CURR_VERSION_STRA);
 
     DWORD exStyle = 0;
     if (trans::IsCurrLangRtl()) {
@@ -783,7 +783,8 @@ static HWND CreateInstallerHwnd() {
     int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    TempWstr titleW = ToWstrTemp(title);
+    HWND hwnd = CreateWindowExW(exStyle, winCls, titleW, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     gWnd->hwnd = hwnd;
     DpiScale(hwnd, dx, dy);
     HwndResizeClientSize(hwnd, dx, dy);
