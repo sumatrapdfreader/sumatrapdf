@@ -286,9 +286,9 @@ static WCHAR* PdfToWstr(fz_context* ctx, pdf_obj* obj) {
     return res;
 }
 
-static char* PdfToUtf8(fz_context* ctx, pdf_obj* obj) {
+static TempStr PdfToUtf8Temp(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    char* res = str::Dup(s);
+    TempStr res = str::DupTemp(s);
     fz_free(ctx, s);
     return res;
 }
@@ -1428,7 +1428,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         if (i < n - 1 && data.at(i + 1).startAt <= pageCount) {
             secLen = data.at(i + 1).startAt - pli.startAt;
         }
-        AutoFreeStr prefix(PdfToUtf8(ctx, data.at(i).prefix));
+        TempStr prefix = PdfToUtf8Temp(ctx, data.at(i).prefix);
         for (int j = 0; j < secLen; j++) {
             int idx = pli.startAt + j - 1;
             TempStr label = FormatPageLabelTemp(pli.type, pli.countFrom + j, prefix);
