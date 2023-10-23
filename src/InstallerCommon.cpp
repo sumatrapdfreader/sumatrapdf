@@ -502,8 +502,8 @@ static void SetCloseProcessMsg() {
             procNames = str::JoinTemp(procNames, " and ", name);
         }
     }
-    AutoFreeStr s = str::Format(_TRA("Please close %s to proceed!"), procNames);
-    SetMsg(ToWstr(s), COLOR_MSG_FAILED);
+    TempStr s = str::FormatTemp(_TRA("Please close %s to proceed!"), procNames);
+    SetMsg(ToWstrTemp(s), COLOR_MSG_FAILED);
 }
 
 void SetDefaultMsg() {

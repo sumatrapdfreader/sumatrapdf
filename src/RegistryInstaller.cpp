@@ -604,8 +604,8 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     // those were introduced in 3.4
     exts = gSupportedExts;
     while (exts) {
-        char* progIDName = str::JoinTemp(kAppName, exts);
-        char* key = str::JoinTemp("Software\\Classes\\", progIDName);
+        TempStr progIDName = str::JoinTemp(kAppName, exts);
+        TempStr key = str::JoinTemp("Software\\Classes\\", progIDName);
 
         LoggedDeleteRegKey(hkey, key);
 
@@ -617,7 +617,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
     // delete keys written in ListAsDefaultProgramWin10()
     LoggedDeleteRegValue(hkey, "SOFTWARE\\RegisteredApplications", kAppName);
-    AutoFreeStr keyName = str::Format("SOFTWARE\\%s\\Capabilities", kAppName);
+    TempStr keyName = str::FormatTemp("SOFTWARE\\%s\\Capabilities", kAppName);
     LoggedDeleteRegKey(hkey, keyName);
 
     ShellNotifyAssociationsChanged();

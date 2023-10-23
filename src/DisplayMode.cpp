@@ -105,7 +105,7 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
     if (!IsValidZoom(zoom) && stateForIssue2140) {
         // TODO: does issue 2140 still occur?
         logf("Invalid ds->zoom: %g\n", zoom);
-        char* ext = path::GetExtTemp(stateForIssue2140->filePath);
+        TempStr ext = path::GetExtTemp(stateForIssue2140->filePath);
         if (!str::IsEmpty(ext)) {
             logf("File type: %s\n", ext);
         }
@@ -113,7 +113,7 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
         logf("PageNo: %d\n", stateForIssue2140->pageNo);
     }
     CrashIf(!IsValidZoom(zoom));
-    free(*dst);
+    str::FreePtr(dst);
     if (kZoomFitPage == zoom) {
         *dst = str::Dup("fit page");
     } else if (kZoomFitWidth == zoom) {

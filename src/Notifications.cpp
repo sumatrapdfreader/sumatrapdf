@@ -227,9 +227,8 @@ void NotificationWnd::UpdateProgress(int current, int total) {
     }
     progress = limitValue(100 * current / total, 0, 100);
     if (HasProgress()) {
-        char* msg = str::Format(progressMsg, current, total);
+        TempStr msg = str::FormatTemp(progressMsg, current, total);
         UpdateMessage(msg);
-        str::Free(msg);
     }
 }
 

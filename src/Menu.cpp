@@ -1155,7 +1155,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
             }
         }
 
-        TempStr menuString = str::Format(_TRA("Open in %s"), name);
+        TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
         uint menuId = CmdOpenWithExternalFirst + count;
         TempWStr ws = ToWstrTemp(menuString);
         InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, ws);
@@ -1697,7 +1697,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
                 const char* tr = _TRA("Remove page %s from favorites");
-                AutoFreeStr s = str::Format(tr, pageLabel.Get());
+                TempStr s = str::FormatTemp(tr, pageLabel.Get());
                 MenuSetText(popup, CmdFavoriteDel, s);
             } else {
                 MenuRemove(popup, CmdFavoriteDel);
@@ -1709,7 +1709,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 if (ok) {
                     AppendAccelKeyToMenuString(str, a);
                 }
-                AutoFreeStr s = str::Format(str.Get(), pageLabel.Get());
+                TempStr s = str::FormatTemp(str.Get(), pageLabel.Get());
                 MenuSetText(popup, CmdFavoriteAdd, s);
             }
         } else {

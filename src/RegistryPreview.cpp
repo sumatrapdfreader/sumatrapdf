@@ -58,27 +58,27 @@ bool InstallPreviewDll(const char* dllPath, bool allUsers) {
         const char* ext2 = prev.ext2;
         ok = true;
 
-        AutoFreeStr displayName = str::Format("SumatraPDF Preview (*%s)", ext);
+        TempStr displayName = str::FormatTemp("SumatraPDF Preview (*%s)", ext);
         // register class
-        AutoFreeStr key = str::Format("Software\\Classes\\CLSID\\%s", clsid);
+        TempStr key = str::FormatTemp("Software\\Classes\\CLSID\\%s", clsid);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, displayName);
         ok &= LoggedWriteRegStr(hkey, key, "AppId", IsRunningInWow64() ? kAppIdPrevHostExeWow64 : kAppIdPrevHostExe);
         ok &= LoggedWriteRegStr(hkey, key, "DisplayName", displayName);
-        key.Set(str::Format("Software\\Classes\\CLSID\\%s\\InProcServer32", clsid));
+        key = str::FormatTemp("Software\\Classes\\CLSID\\%s\\InProcServer32", clsid);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, dllPath);
         ok &= LoggedWriteRegStr(hkey, key, "ThreadingModel", "Apartment");
         // IThumbnailProvider
-        key.Set(str::Format("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext));
+        key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         if (ext2) {
-            key.Set(str::Format("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2));
+            key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2);
             ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         }
         // IPreviewHandler
-        key.Set(str::Format("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext));
+        key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         if (ext2) {
-            key.Set(str::Format("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2));
+            key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
             ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         }
         ok &= LoggedWriteRegStr(hkey, kRegKeyPreviewHandlers, clsid, displayName);
@@ -101,7 +101,7 @@ static void DeleteOrFail(const char* key, HRESULT* hr) {
 bool UninstallPreviewDll() {
     HRESULT hr = S_OK;
 
-    AutoFreeStr key;
+    TempStr key;
     for (auto& prev : gPreviewers) {
         if (prev.skip) {
             logf("UninstallPreviewDll: skipping '%s'\n", prev.ext);
@@ -115,27 +115,27 @@ bool UninstallPreviewDll() {
         DeleteRegValue(HKEY_LOCAL_MACHINE, kRegKeyPreviewHandlers, clsid);
         DeleteRegValue(HKEY_CURRENT_USER, kRegKeyPreviewHandlers, clsid);
         // remove class data
-        key = str::Format("Software\\Classes\\CLSID\\%s", clsid);
+        key = str::FormatTemp("Software\\Classes\\CLSID\\%s", clsid);
         DeleteOrFail(key, &hr);
         // IThumbnailProvider
-        key = str::Format("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext);
+        key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext);
         DeleteOrFail(key, &hr);
         if (ext2) {
-            key = str::Format("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2);
+            key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2);
             DeleteOrFail(key, &hr);
         }
         // IExtractImage (for Windows XP)
-        key = str::Format("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext);
+        key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext);
         DeleteOrFail(key, &hr);
         if (ext2) {
-            key = str::Format("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext2);
+            key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext2);
             DeleteOrFail(key, &hr);
         }
         // IPreviewHandler
-        key = str::Format("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext);
+        key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext);
         DeleteOrFail(key, &hr);
         if (ext2) {
-            key = str::Format("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
+            key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
             DeleteOrFail(key, &hr);
         }
         logf("UninstallPreviewDll: removed '%s'\n", prev.ext);
