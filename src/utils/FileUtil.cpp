@@ -787,7 +787,7 @@ bool RemoveAll(const char* dir) {
     auto n = str::Len(dirW) + 2;
     auto a = GetTempAllocator();
     TempWStr dirDoubleTerminated = (WCHAR*)Allocator::AllocZero(a, n * sizeof(WCHAR));
-    str::BufSet(dirDoubleTerminated,(int)n, dirW);
+    str::BufSet(dirDoubleTerminated, (int)n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
