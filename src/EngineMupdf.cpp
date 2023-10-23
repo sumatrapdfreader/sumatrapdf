@@ -1305,9 +1305,9 @@ int CmpPageLabelInfo(const void* a, const void* b) {
     return ((PageLabelInfo*)a)->startAt - ((PageLabelInfo*)b)->startAt;
 }
 
-static char* FormatPageLabel(const char* type, int pageNo, const char* prefix) {
+static TempStr FormatPageLabelTemp(const char* type, int pageNo, const char* prefix) {
     if (str::Eq(type, "D")) {
-        return str::Format("%s%d", prefix, pageNo);
+        return str::FormatTemp("%s%d", prefix, pageNo);
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
@@ -1315,11 +1315,11 @@ static char* FormatPageLabel(const char* type, int pageNo, const char* prefix) {
         if (*type == 'r') {
             str::ToLowerInPlace(number.Get());
         }
-        return str::Format("%s%s", prefix, number.Get());
+        return str::FormatTemp("%s%s", prefix, number.Get());
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
-        str::WStr number;
+        str::Str number;
         number.AppendChar('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number.at(0));
@@ -1327,9 +1327,9 @@ static char* FormatPageLabel(const char* type, int pageNo, const char* prefix) {
         if (*type == 'a') {
             str::ToLowerInPlace(number.Get());
         }
-        return str::Format("%s%s", prefix, number.Get());
+        return str::FormatTemp("%s%s", prefix, number.Get());
     }
-    return str::Dup(prefix);
+    return str::DupTemp(prefix);
 }
 
 void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
@@ -1431,9 +1431,8 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         AutoFreeStr prefix(PdfToUtf8(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
             int idx = pli.startAt + j - 1;
-            char* label = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
+            TempStr label = FormatPageLabelTemp(pli.type, pli.countFrom + j, prefix);
             labels->SetAt(idx, label);
-            str::Free(label);
         }
     }
 
