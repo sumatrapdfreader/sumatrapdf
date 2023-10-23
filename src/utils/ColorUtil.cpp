@@ -70,14 +70,14 @@ Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
     return Gdiplus::Color(c);
 }
 
-char* SerializeColor(COLORREF c) {
+TempStr SerializeColorTemp(COLORREF c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
     char* s = nullptr;
     if (a > 0) {
-        s = str::Format("#%02x%02x%02x%02x", a, r, g, b);
+        s = str::FormatTemp("#%02x%02x%02x%02x", a, r, g, b);
     } else {
-        s = str::Format("#%02x%02x%02x", r, g, b);
+        s = str::FormatTemp("#%02x%02x%02x", r, g, b);
     }
     return s;
 }

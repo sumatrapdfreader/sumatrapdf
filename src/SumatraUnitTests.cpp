@@ -197,9 +197,8 @@ static void hexstrTest() {
 }
 
 static void assertSerializedColor(COLORREF c, const char* s) {
-    char* s2 = SerializeColor(c);
+    TempStr s2 = SerializeColorTemp(c);
     utassert(str::Eq(s2, s));
-    str::Free(s2);
 }
 
 static void colorTest() {

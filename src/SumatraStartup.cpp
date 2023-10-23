@@ -603,8 +603,8 @@ static void ReplaceColor(char** col, char* maybeColor) {
     ParsedColor c;
     ParseColor(c, maybeColor);
     if (c.parsedOk) {
-        char* colNewStr = SerializeColor(c.col);
-        str::ReplacePtr(col, colNewStr);
+        TempStr colNewStr = SerializeColorTemp(c.col);
+        str::ReplaceWithCopy(col, colNewStr);
     }
 }
 
