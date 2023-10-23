@@ -717,7 +717,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             currReparseIdx = s - htmlParser->Start();
         }
 
-        WCHAR* buf = ToWstrTemp(s, end - s);
+        WCHAR* buf = ToWStrTemp(s, end - s);
         size_t strLen = str::Len(buf);
         // soft hyphens should not be displayed
         strLen -= str::RemoveCharsInPlace(buf, L"\xad");
@@ -870,7 +870,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("face");
     const WCHAR* faceName = CurrFont()->GetName();
     if (attr) {
-        WCHAR* buf = ToWstrTemp(attr->val, attr->valLen);
+        WCHAR* buf = ToWStrTemp(attr->val, attr->valLen);
         size_t strLen = str::Len(buf);
         // multiple font names can be comma separated
         if (strLen > 0 && *buf != ',') {
@@ -1409,7 +1409,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            WCHAR* buf = ToWstrTemp(i.str.s, i.str.len);
+            WCHAR* buf = ToWStrTemp(i.str.s, i.str.len);
             size_t strLen = str::Len(buf);
             // soft hyphens should not be displayed
             strLen -= str::RemoveCharsInPlace(buf, L"\xad");

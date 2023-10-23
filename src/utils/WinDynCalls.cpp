@@ -27,7 +27,7 @@ static HMODULE SafeLoadLibrary(const char* dllNameA) {
     if (!res || res >= dimof(dllPath)) {
         return nullptr;
     }
-    auto dllName = ToWstrTemp(dllNameA);
+    auto dllName = ToWStrTemp(dllNameA);
     BOOL ok = PathAppendW(dllPath, dllName);
     if (!ok) {
         return nullptr;

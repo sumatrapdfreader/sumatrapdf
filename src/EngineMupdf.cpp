@@ -419,7 +419,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
         return stm;
     }
 
-    WCHAR* pathW = ToWstrTemp(path);
+    WCHAR* pathW = ToWStrTemp(path);
     fz_try(ctx) {
         stm = fz_open_file_w(ctx, pathW);
     }

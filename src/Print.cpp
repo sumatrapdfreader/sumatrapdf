@@ -112,7 +112,7 @@ Printer* NewPrinter(char* printerName) {
     HANDLE hPrinter = nullptr;
     LONG ret = 0;
     Printer* printer = nullptr;
-    WCHAR* printerNameW = ToWstrTemp(printerName);
+    WCHAR* printerNameW = ToWStrTemp(printerName);
     BOOL ok = OpenPrinterW(printerNameW, &hPrinter, nullptr);
     if (!ok) {
         return nullptr;
@@ -292,9 +292,9 @@ static bool PrintToDevice(const PrintData& pd) {
         if (!fileName) {
             fileName.Set("filename");
         }
-        di.lpszDocName = ToWstrTemp(fileName);
+        di.lpszDocName = ToWStrTemp(fileName);
     } else {
-        di.lpszDocName = ToWstrTemp(engine.FilePath());
+        di.lpszDocName = ToWStrTemp(engine.FilePath());
     }
 
     int current = 1, total = 0;
@@ -325,7 +325,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    WCHAR* printerName = ToWstrTemp(pd.printer->name);
+    WCHAR* printerName = ToWStrTemp(pd.printer->name);
 
     {
         // validate printer settings as per

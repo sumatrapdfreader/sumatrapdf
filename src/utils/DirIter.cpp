@@ -36,7 +36,7 @@ static bool IsSpecialDir(const char* s) {
 }
 
 bool DirTraverse(const char* dir, bool recurse, const std::function<bool(WIN32_FIND_DATAW* fd, const char*)>& cb) {
-    auto dirW = ToWstrTemp(dir);
+    auto dirW = ToWStrTemp(dir);
     WCHAR* pattern = path::JoinTemp(dirW, L"*");
 
     WIN32_FIND_DATAW fd;
@@ -105,7 +105,7 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
 }
 
 bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::function<bool(const char*)>& fileMatchesFn) {
-    auto dirW = ToWstrTemp(dir);
+    auto dirW = ToWStrTemp(dir);
     WCHAR* pattern = path::JoinTemp(dirW, L"*");
 
     WIN32_FIND_DATAW fdata;

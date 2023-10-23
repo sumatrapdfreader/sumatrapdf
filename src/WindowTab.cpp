@@ -153,7 +153,7 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     TempStr fileFilterA = str::FormatTemp("%s\1*.*\1", _TRA("All files"));
-    TempWStr fileFilter = ToWstrTemp(fileFilterA);
+    TempWStr fileFilter = ToWStrTemp(fileFilterA);
     str::TransCharsInPlace(fileFilter, L"\1", L"\0");
     ofn.lpstrFilter = fileFilter;
 
@@ -164,7 +164,7 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     if (!ok) {
         return false;
     }
-    TempStr path = ToStrTemp(dstFileName);
+    TempStr path = ToUtf8Temp(dstFileName);
     ok = file::WriteFile(path, data);
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0

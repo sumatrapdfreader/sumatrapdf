@@ -548,7 +548,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            WCHAR* tmp = ToWstrTemp(str);
+            WCHAR* tmp = ToWStrTemp(str);
             tmp = str::Format(L"\u202A%s\u202C", tmp);
             str = ToUtf8(tmp);
             str::Free(tmp);

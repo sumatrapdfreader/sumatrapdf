@@ -87,7 +87,7 @@ class SyncTex : public Synchronizer {
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
     syncFilePath = str::Dup(syncFilePathIn);
-    WCHAR* path = ToWstrTemp(syncFilePathIn);
+    WCHAR* path = ToWStrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
 
@@ -99,7 +99,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    WCHAR* path = ToWstrTemp(syncFilePath);
+    WCHAR* path = ToWStrTemp(syncFilePath);
     if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
@@ -111,7 +111,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    WCHAR* path = ToWstrTemp(syncFilePath);
+    WCHAR* path = ToWStrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
@@ -532,7 +532,7 @@ int SyncTex::RebuildIndexIfNeeded() {
 
     TempStr syncPathTemp = str::DupTemp(syncFilePath.Get());
 Repeat:
-    WCHAR* ws = ToWstrTemp(syncPathTemp);
+    WCHAR* ws = ToWStrTemp(syncPathTemp);
     AutoFreeStr pathAnsi = strconv::WstrToAnsi(ws);
     scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
     if (scanner) {

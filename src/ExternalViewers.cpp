@@ -415,7 +415,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         return false;
     }
 
-    CmdLineArgsIter args(ToWstrTemp(ev->commandLine));
+    CmdLineArgsIter args(ToWStrTemp(ev->commandLine));
     if (args.nArgs == 0) {
         return false;
     }

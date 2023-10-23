@@ -330,7 +330,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
             s = FavReadableName(fn);
         }
         auto safeStr = MenuToSafeStringTemp(s);
-        WCHAR* ws = ToWstrTemp(safeStr);
+        WCHAR* ws = ToWStrTemp(safeStr);
         AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, ws);
     }
 }
@@ -422,7 +422,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
                 TempStr fileName = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
-                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWstrTemp(fileName));
+                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWStrTemp(fileName));
             }
         }
     }

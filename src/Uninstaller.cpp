@@ -74,7 +74,7 @@ static void RemoveInstalledFiles() {
     size_t n = dimof(gInstalledFiles);
     for (size_t i = 0; i < n; i++) {
         const char* s = gInstalledFiles[i];
-        auto relPath = ToWstrTemp(s);
+        auto relPath = ToWStrTemp(s);
         AutoFreeWstr path = path::Join(dir, relPath);
         BOOL ok = file::Delete(path);
         if (ok) {

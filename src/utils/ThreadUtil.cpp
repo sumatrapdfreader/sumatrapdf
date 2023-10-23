@@ -30,7 +30,7 @@ typedef struct tagTHREADNAME_INFO {
 #pragma warning(disable : 6322) // silence /analyze: Empty _except block
 void SetThreadName(const char* threadName, DWORD threadId) {
     if (DynSetThreadDescription && threadId == 0) {
-        WCHAR* ws = ToWstrTemp(threadName);
+        WCHAR* ws = ToWStrTemp(threadName);
         DynSetThreadDescription(GetCurrentThread(), ws);
         return;
     }

@@ -341,7 +341,7 @@ void DbgOutLastError(DWORD err) {
 // return true if a given registry key (path) exists
 bool RegKeyExists(HKEY hkey, const char* keyName) {
     HKEY hKey;
-    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
     LONG res = RegOpenKeyW(hkey, keyNameW, &hKey);
     if (ERROR_SUCCESS == res) {
         RegCloseKey(hKey);
@@ -357,8 +357,8 @@ char* ReadRegStrTemp(HKEY hkey, const char* keyName, const char* valName) {
     if (!hkey) {
         return nullptr;
     }
-    WCHAR* keyNameW = ToWstrTemp(keyName);
-    WCHAR* valNameW = ToWstrTemp(valName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
     WCHAR* val = nullptr;
     REGSAM access = KEY_READ;
     HKEY hKey;
@@ -414,9 +414,9 @@ char* LoggedReadRegStr2Temp(const char* keyName, const char* valName) {
 }
 
 bool WriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char* value) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
-    WCHAR* valNameW = ToWstrTemp(valName);
-    WCHAR* valueW = ToWstrTemp(value);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
+    WCHAR* valueW = ToWStrTemp(value);
 
     DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
@@ -430,16 +430,16 @@ bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, cons
 }
 
 bool ReadRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD& value) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
-    WCHAR* valNameW = ToWstrTemp(valName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
     DWORD size = sizeof(DWORD);
     LSTATUS res = SHGetValue(hkey, keyNameW, valNameW, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
 bool WriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD value) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
-    WCHAR* valNameW = ToWstrTemp(valName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
@@ -451,15 +451,15 @@ bool LoggedWriteRegDWORD(HKEY hkey, const char* key, const char* valName, DWORD 
 }
 
 bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName) {
-    WCHAR* keyW = ToWstrTemp(key);
-    WCHAR* valNameW = ToWstrTemp(valName);
+    WCHAR* keyW = ToWStrTemp(key);
+    WCHAR* valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
     logf("LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, res);
     return (ERROR_SUCCESS == res);
 }
 
 bool CreateRegKey(HKEY hkey, const char* keyName) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
     HKEY hKey;
     LSTATUS res = RegCreateKeyExW(hkey, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS) {
@@ -488,7 +488,7 @@ const char* RegKeyNameWTemp(HKEY key) {
 }
 
 static void ResetRegKeyAcl(HKEY hkey, const char* keyName) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
     HKEY hKey;
     LONG res = RegOpenKeyEx(hkey, keyNameW, 0, WRITE_DAC, &hKey);
     if (ERROR_SUCCESS != res) {
@@ -512,7 +512,7 @@ bool DeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
-    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
     LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
@@ -521,7 +521,7 @@ bool LoggedDeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
-    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
     LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
     logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
@@ -532,16 +532,16 @@ bool LoggedDeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
 }
 
 bool DeleteRegValue(HKEY hkey, const char* keyName, const char* value) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
-    WCHAR* valueW = ToWstrTemp(value);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valueW = ToWStrTemp(value);
 
     auto res = SHDeleteValueW(hkey, keyNameW, valueW);
     return res == ERROR_SUCCESS;
 }
 
 bool LoggedDeleteRegValue(HKEY hkey, const char* keyName, const char* valName) {
-    WCHAR* keyNameW = ToWstrTemp(keyName);
-    WCHAR* valNameW = ToWstrTemp(valName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
 
     auto res = SHDeleteValueW(hkey, keyNameW, valNameW);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
@@ -553,7 +553,7 @@ bool LoggedDeleteRegValue(HKEY hkey, const char* keyName, const char* valName) {
 }
 
 HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid) {
-    WCHAR* ws = ToWstrTemp(lpsz);
+    WCHAR* ws = ToWStrTemp(lpsz);
     return CLSIDFromString(ws, pclsid);
 }
 
@@ -727,7 +727,7 @@ TempStr GetExeDirTemp() {
 
 void ChangeCurrDirToDocuments() {
     char* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
-    WCHAR* dirW = ToWstrTemp(dir);
+    WCHAR* dirW = ToWStrTemp(dir);
     SetCurrentDirectoryW(dirW);
 }
 
@@ -788,10 +788,10 @@ bool CreateShortcut(const char* shortcutPathA, const char* exePathA, const char*
                     int iconIndex) {
     ScopedCom com;
 
-    WCHAR* shortcutPath = ToWstrTemp(shortcutPathA);
-    WCHAR* exePath = ToWstrTemp(exePathA);
-    WCHAR* args = ToWstrTemp(argsA);
-    WCHAR* description = ToWstrTemp(descriptionA);
+    WCHAR* shortcutPath = ToWStrTemp(shortcutPathA);
+    WCHAR* exePath = ToWStrTemp(exePathA);
+    WCHAR* args = ToWStrTemp(argsA);
+    WCHAR* description = ToWStrTemp(descriptionA);
 
     ScopedComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
@@ -831,7 +831,7 @@ IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd) {
         return nullptr;
     }
 
-    WCHAR* lpWPath = ToWstrTemp(filePath);
+    WCHAR* lpWPath = ToWStrTemp(filePath);
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(nullptr, nullptr, lpWPath, nullptr, &pidl, nullptr);
     if (FAILED(hr)) {
@@ -897,9 +897,9 @@ bool LaunchFile(const char* path, const char* params, const char* verb, bool hid
     SHELLEXECUTEINFOW sei{};
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_FLAG_NO_UI;
-    sei.lpVerb = ToWstrTemp(verb);
-    sei.lpFile = ToWstrTemp(path);
-    sei.lpParameters = ToWstrTemp(params);
+    sei.lpVerb = ToWStrTemp(verb);
+    sei.lpFile = ToWStrTemp(path);
+    sei.lpParameters = ToWStrTemp(params);
     sei.nShow = hidden ? SW_HIDE : SW_SHOWNORMAL;
     BOOL ok = ShellExecuteExW(&sei);
     if (!ok) {
@@ -920,10 +920,10 @@ HANDLE LaunchProces(const char* exe, const char* cmdLine) {
     STARTUPINFOW si{};
     si.cb = sizeof(si);
 
-    WCHAR* exeW = ToWstrTemp(exe);
+    WCHAR* exeW = ToWStrTemp(exe);
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
-    WCHAR* cmdLineW = ToWstrTemp(cmdLine);
+    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
     BOOL ok = CreateProcessW(exeW, cmdLineW, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
     if (!ok) {
         return nullptr;
@@ -941,8 +941,8 @@ HANDLE LaunchProcess(const char* cmdLine, const char* currDir, DWORD flags) {
 
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
-    WCHAR* cmdLineW = ToWstrTemp(cmdLine);
-    WCHAR* dirW = ToWstrTemp(currDir);
+    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
+    WCHAR* dirW = ToWStrTemp(currDir);
     if (!CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, FALSE, flags, nullptr, dirW, &si, &pi)) {
         return nullptr;
     }
@@ -1279,7 +1279,7 @@ static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
 }
 
 static bool CopyOrAppendTextToClipboard(const char* s, bool appendOnly) {
-    WCHAR* ws = ToWstrTemp(s);
+    WCHAR* ws = ToWStrTemp(s);
     return CopyOrAppendTextToClipboard(ws, appendOnly);
 }
 
@@ -1553,7 +1553,7 @@ void MenuSetText(HMENU m, int id, const WCHAR* s) {
 }
 
 void MenuSetText(HMENU m, int id, const char* s) {
-    WCHAR* ws = ToWstrTemp(s);
+    WCHAR* ws = ToWStrTemp(s);
     MenuSetText(m, id, ws);
 }
 
@@ -1571,7 +1571,7 @@ TempStr MenuToSafeStringTemp(const char* s) {
 }
 
 HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize) {
-    WCHAR* fontNameW = ToWstrTemp(fontName);
+    WCHAR* fontNameW = ToWStrTemp(fontName);
     LOGFONTW lf{};
 
     lf.lfWidth = 0;
@@ -1734,7 +1734,7 @@ char* NormalizeString(const char* strA, int /* NORM_FORM */ form) {
     if (!DynNormalizeString) {
         return nullptr;
     }
-    WCHAR* str = ToWstrTemp(strA);
+    WCHAR* str = ToWStrTemp(strA);
     int sizeEst = DynNormalizeString(form, str, -1, nullptr, 0);
     if (sizeEst <= 0) {
         return nullptr;
@@ -1759,7 +1759,7 @@ bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char
     // which reside in the same directory (in this case: libmupdf.dll)
     if (DynSetDllDirectoryW) {
         char* dllDir = path::GetDirTemp(dllPath);
-        WCHAR* dllDirW = ToWstrTemp(dllDir);
+        WCHAR* dllDirW = ToWStrTemp(dllDir);
         DynSetDllDirectoryW(dllDirW);
     }
 
@@ -1784,7 +1784,7 @@ bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char
     if (args) {
         DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
         if (DllInstall) {
-            WCHAR* argsW = ToWstrTemp(args);
+            WCHAR* argsW = ToWStrTemp(args);
             ok = SUCCEEDED(DllInstall(install, argsW));
         } else {
             args = nullptr;
@@ -2541,7 +2541,7 @@ void HwndSetText(HWND hwnd, const char* sv) {
         SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
         return;
     }
-    WCHAR* ws = ToWstrTemp(sv);
+    WCHAR* ws = ToWStrTemp(sv);
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws);
 }
 
@@ -2699,7 +2699,7 @@ bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen) {
     if (sLen <= 0) {
         sLen = (int)str::Len(s);
     }
-    WCHAR* ws = ToWstrTemp(s, (size_t)sLen);
+    WCHAR* ws = ToWStrTemp(s, (size_t)sLen);
     if (!ws) {
         return false;
     }
@@ -2715,7 +2715,7 @@ bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
     if (sLen <= 0) {
         sLen = (int)str::Len(s);
     }
-    WCHAR* ws = ToWstrTemp(s, sLen);
+    WCHAR* ws = ToWStrTemp(s, sLen);
     if (!ws) {
         return false;
     }
@@ -2730,7 +2730,7 @@ int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
     if (sLen <= 0) {
         sLen = (int)str::Len(s);
     }
-    WCHAR* ws = ToWstrTemp(s, (size_t)sLen);
+    WCHAR* ws = ToWStrTemp(s, (size_t)sLen);
     if (!ws) {
         return 0;
     }
@@ -2741,7 +2741,7 @@ int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
 // uses the same logic as HdcDrawText
 Size HdcMeasureText(HDC hdc, const char* s, UINT format) {
     format |= DT_CALCRECT;
-    WCHAR* ws = ToWstrTemp(s);
+    WCHAR* ws = ToWStrTemp(s);
     if (!ws) {
         return {};
     }
@@ -2772,7 +2772,7 @@ void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
 }
 
 void DrawCenteredText(HDC hdc, const Rect r, const char* txt, bool isRTL) {
-    TempWStr ws = ToWstrTemp(txt);
+    TempWStr ws = ToWStrTemp(txt);
     DrawCenteredText(hdc, r, ws, isRTL);
 }
 
@@ -2906,6 +2906,6 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
 }
 
 void AddPathToRecentDocs(const char* path) {
-    WCHAR* pathW = ToWstrTemp(path);
+    WCHAR* pathW = ToWStrTemp(path);
     SHAddToRecentDocs(SHARD_PATH, pathW);
 }

@@ -281,7 +281,7 @@ bool CrashHandlerDownloadSymbols() {
         return false;
     }
 
-    WCHAR* ws = ToWstrTemp(gSymbolPath);
+    WCHAR* ws = ToWStrTemp(gSymbolPath);
     if (!dbghelp::Initialize(ws, false)) {
         log("CrashHandlerDownloadSymbols: dbghelp::Initialize() failed\n");
         return false;
@@ -403,7 +403,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID) {
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
     DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", nullptr, 0);
     bool fullDump = (0 != n);
-    WCHAR* ws = ToWstrTemp(gCrashDumpPath);
+    WCHAR* ws = ToWStrTemp(gCrashDumpPath);
     dbghelp::WriteMiniDump(ws, &gMei, fullDump);
     return 0;
 }

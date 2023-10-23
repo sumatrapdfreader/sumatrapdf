@@ -153,7 +153,7 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
             toConvert = c->allTranslations.LendData() + idxTrans; // after insertion because could re-allocate
         }
         // if we don't have a translation, we cache WCHAR* version from original string
-        auto ws = ToWstrTemp(toConvert);
+        auto ws = ToWStrTemp(toConvert);
         size_t idxTransW = c->allTranslationsW.size();
         CrashIf(idxTransW > 64 * 1024);
         translation.idxTransW = (u16)idxTransW;

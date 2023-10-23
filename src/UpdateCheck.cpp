@@ -204,7 +204,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     const WCHAR* mainInstr = _TR("New version available");
-    WCHAR* verTmp = ToWstrTemp(updateInfo->latestVer);
+    WCHAR* verTmp = ToWStrTemp(updateInfo->latestVer);
     WCHAR* content =
         str::Format(_TR("You have version '%s' and version '%s' is available.\nDo you want to install new version?"),
                     CURR_VERSION_STR, verTmp);

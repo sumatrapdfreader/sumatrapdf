@@ -43,7 +43,7 @@ static float gDefaultFontSize = 10.f;
 static const WCHAR* GetDefaultFontName() {
     char* s = gDefaultFontName.Get();
     if (s) {
-        return ToWstrTemp(s);
+        return ToWStrTemp(s);
     }
     return L"Georgia";
 }

@@ -503,7 +503,7 @@ static void SetCloseProcessMsg() {
         }
     }
     TempStr s = str::FormatTemp(_TRA("Please close %s to proceed!"), procNames);
-    SetMsg(ToWstrTemp(s), COLOR_MSG_FAILED);
+    SetMsg(ToWStrTemp(s), COLOR_MSG_FAILED);
 }
 
 void SetDefaultMsg() {

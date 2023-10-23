@@ -512,11 +512,11 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
 }
 
 static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const char* caption) {
-    WCHAR* initialFolder = ToWstrTemp(initialFolderA);
+    WCHAR* initialFolder = ToWStrTemp(initialFolderA);
     BROWSEINFO bi = {0};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpszTitle = ToWstrTemp(caption);
+    bi.lpszTitle = ToWStrTemp(caption);
     bi.lpfn = BrowseCallbackProc;
     bi.lParam = (LPARAM)initialFolder;
 
@@ -783,7 +783,7 @@ static HWND CreateInstallerHwnd() {
     int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
-    TempWStr titleW = ToWstrTemp(title);
+    TempWStr titleW = ToWStrTemp(title);
     HWND hwnd = CreateWindowExW(exStyle, winCls, titleW, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     gWnd->hwnd = hwnd;
     DpiScale(hwnd, dx, dy);

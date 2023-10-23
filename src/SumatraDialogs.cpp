@@ -79,7 +79,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
-        AutoFreeWstr txt(str::Format(_TR("Enter password for %s"), ToWstrTemp(data->fileName)));
+        AutoFreeWstr txt(str::Format(_TR("Enter password for %s"), ToWStrTemp(data->fileName)));
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, L"");
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
@@ -163,7 +163,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
         }
         CrashIf(!data->currPageLabel);
-        WCHAR* ws = ToWstrTemp(data->currPageLabel);
+        WCHAR* ws = ToWStrTemp(data->currPageLabel);
         SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_EDIT, ws);
         AutoFreeWstr totalCount(str::Format(_TR("(of %d)"), data->pageCount));
         SetDlgItemTextW(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
@@ -381,7 +381,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         for (int i = 0; i < trans::GetLangsCount(); i++) {
             const char* name = trans::GetLangNameByIdx(i);
             const char* langCode = trans::GetLangCodeByIdx(i);
-            auto langName = ToWstrTemp(name);
+            auto langName = ToWStrTemp(name);
             ListBox_AppendString_NoSort(langList, langName);
             if (str::Eq(langCode, data->langCode)) {
                 itemToSelect = i;
@@ -649,12 +649,12 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     cmdLine = detected[0];
                 }
                 for (char* s : detected) {
-                    WCHAR* ws = ToWstrTemp(s);
+                    WCHAR* ws = ToWStrTemp(s);
                     // if no existing command was selected then set the user custom command in the combo
                     ComboBox_AddString(hwndComboBox, ws);
                 }
 
-                WCHAR* cmdLineW = ToWstrTemp(cmdLine);
+                WCHAR* cmdLineW = ToWStrTemp(cmdLine);
                 // Find the index of the active command line
                 LRESULT ind = SendMessageW(hwndComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLineW);
                 if (CB_ERR == ind) {
@@ -826,11 +826,11 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         HwndSetText(hDlg, _TRA("Add Favorite"));
         AutoFreeStr s(str::Format(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo));
-        SetDlgItemTextW(hDlg, IDC_ADD_PAGE_STATIC, ToWstrTemp(s));
+        SetDlgItemTextW(hDlg, IDC_ADD_PAGE_STATIC, ToWStrTemp(s));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->favName) {
-            WCHAR* ws = ToWstrTemp(data->favName);
+            WCHAR* ws = ToWStrTemp(data->favName);
             SetDlgItemTextW(hDlg, IDC_FAV_NAME_EDIT, ws);
             EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         }

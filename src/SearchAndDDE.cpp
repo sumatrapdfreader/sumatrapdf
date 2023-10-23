@@ -390,7 +390,7 @@ void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char
 
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
 char* ReverseTextTemp(char* s) {
-    WCHAR* ws = ToWstrTemp(s);
+    WCHAR* ws = ToWStrTemp(s);
     int n = (int)str::Len(ws);
     for (int i = 0; i < n / 2; i++) {
         WCHAR c1 = ws[i];

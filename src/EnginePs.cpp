@@ -34,7 +34,7 @@ TryAgain64Bit:
     for (const char* gsProd : gsProducts) {
         HKEY hkey;
         char* keyName = str::JoinTemp("Software\\", gsProd);
-        WCHAR* keyNameW = ToWstrTemp(keyName);
+        WCHAR* keyNameW = ToWStrTemp(keyName);
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyNameW, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
         }
@@ -216,13 +216,13 @@ static EngineBase* psgz2pdf(const char* fileName) {
         return nullptr;
     }
 
-    WCHAR* path = ToWstrTemp(fileName);
+    WCHAR* path = ToWStrTemp(fileName);
     gzFile inFile = gzopen_w(path, "rb");
     if (!inFile) {
         return nullptr;
     }
     FILE* outFile = nullptr;
-    WCHAR* tmpFileW = ToWstrTemp(tmpFile);
+    WCHAR* tmpFileW = ToWStrTemp(tmpFile);
     errno_t err = _wfopen_s(&outFile, tmpFileW, L"wb");
     if (err != 0 || !outFile) {
         gzclose(inFile);

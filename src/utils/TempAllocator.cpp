@@ -103,7 +103,7 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     return strconv::WstrToUtf8(s, cch, GetTempAllocator());
 }
 
-TempWStr ToWstrTemp(const char* s, size_t cb) {
+TempWStr ToWStrTemp(const char* s, size_t cb) {
     if (!s) {
         CrashIf((int)cb > 0);
         return nullptr;

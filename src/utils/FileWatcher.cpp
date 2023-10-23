@@ -388,7 +388,7 @@ static void CALLBACK ExitMonitoringThread(ULONG_PTR arg) {
 }
 
 static WatchedDir* NewWatchedDir(const char* dirPath) {
-    WCHAR* dirW = ToWstrTemp(dirPath);
+    WCHAR* dirW = ToWStrTemp(dirPath);
     DWORD access = FILE_LIST_DIRECTORY;
     DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE;
     DWORD disp = OPEN_EXISTING;
@@ -407,7 +407,7 @@ static WatchedDir* NewWatchedDir(const char* dirPath) {
 }
 
 static WatchedFile* NewWatchedFile(const char* filePath, const std::function<void()>& onFileChangedCb) {
-    WCHAR* pathW = ToWstrTemp(filePath);
+    WCHAR* pathW = ToWStrTemp(filePath);
     bool isManualCheck = PathIsNetworkPathW(pathW);
     char* dirPath = path::GetDirTemp(filePath);
     WatchedDir* wd = nullptr;

@@ -2234,7 +2234,7 @@ int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src) {
 }
 
 int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
-    return BufSet(dst, dstCchSize, ToWstrTemp(src));
+    return BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
 int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s) {

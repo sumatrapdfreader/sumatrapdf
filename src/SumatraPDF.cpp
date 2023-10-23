@@ -555,8 +555,8 @@ void MessageBoxWarning(HWND hwnd, const char* msg, const char* title) {
     if (!title) {
         title = _TRA("Warning");
     }
-    WCHAR* msgW = ToWstrTemp(msg);
-    WCHAR* titleW = ToWstrTemp(title);
+    WCHAR* msgW = ToWStrTemp(msg);
+    WCHAR* titleW = ToWStrTemp(title);
     MessageBoxW(hwnd, msgW, titleW, type);
 }
 
@@ -2392,7 +2392,7 @@ enum class SaveChoice {
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     const char* fileName = path::GetBaseNameTemp(filePath);
     char* mainInstrA = str::Format(_TRA("Unsaved annotations in '%s'"), fileName);
-    WCHAR* mainInstr = ToWstrTemp(mainInstrA);
+    WCHAR* mainInstr = ToWStrTemp(mainInstrA);
     const WCHAR* content = _TR("Save annotations?");
 
     constexpr int kBtnIdDiscard = 100;
@@ -2690,7 +2690,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::WStr& fileFilter) {
     } else if (type == kindEngineComicBooks) {
         fileFilter.Append(_TR("Comic books"));
     } else if (type == kindEngineImage) {
-        WCHAR* extW = ToWstrTemp(ctrl->GetDefaultFileExt() + 1);
+        WCHAR* extW = ToWStrTemp(ctrl->GetDefaultFileExt() + 1);
         fileFilter.AppendFmt(_TR("Image files (*.%s)"), extW);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
@@ -2745,7 +2745,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
 
-    TempWStr defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
+    TempWStr defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
@@ -2884,7 +2884,7 @@ static void RenameCurrentFile(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    const WCHAR* defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
+    const WCHAR* defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
     str::WStr fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     CrashIf(!ok);
@@ -2898,7 +2898,7 @@ static void RenameCurrentFile(MainWindow* win) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
 
-    WCHAR* srcPathW = ToWstrTemp(srcPath);
+    WCHAR* srcPathW = ToWStrTemp(srcPath);
     WCHAR* initDir = path::GetDirTemp(srcPathW);
 
     OPENFILENAME ofn{};
@@ -2956,7 +2956,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const WCHAR* defExt = ToWstrTemp(ctrl->GetDefaultFileExt());
+    const WCHAR* defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
 
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
@@ -3006,7 +3006,7 @@ static void CreateLnkShortcut(MainWindow* win) {
         ZoomVirtual.SetCopy(L"fitcontent");
     }
 
-    auto viewMode = ToWstrTemp(viewModeStr);
+    auto viewMode = ToWStrTemp(viewModeStr);
     AutoFreeStr args = str::Format("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->GetFilePath(), ss.page,
                                    viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeStr label = ctrl->GetPageLabel(ss.page);
@@ -4450,7 +4450,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
         return;
     }
     // TODO: limit the size of the selection to e.g. 1 kB?
-    WCHAR* selTextW = ToWstrTemp(selText);
+    WCHAR* selTextW = ToWStrTemp(selText);
     str::WStr encodedSelection = URLEncode(selTextW);
     str::WStr url(urlPattern);
     // assume that user might typo and use e.g. ${userLang} in url
@@ -4461,7 +4461,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
     }
     Replace(url, kSelectionStr, encodedSelection.Get());
     const char* lang = trans::GetCurrentLangCode();
-    auto langW = ToWstrTemp(lang);
+    auto langW = ToWStrTemp(lang);
     Replace(url, kUserLangStr, langW);
     char* uri = ToUtf8Temp(url.Get());
     LaunchBrowser(uri);
@@ -4691,7 +4691,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             logf("FrameOnCommand: missing selectedSH for wmId %d\n", wmId);
             return 0;
         }
-        WCHAR* url = ToWstrTemp(selectedSH->url);
+        WCHAR* url = ToWStrTemp(selectedSH->url);
         // try to auto-fix url
         bool isValidURL = str::Find(url, L"://") != nullptr;
         if (!isValidURL) {

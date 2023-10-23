@@ -479,7 +479,7 @@ static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoo
         if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
-            WCHAR* pageBmpPathW = ToWstrTemp(pageBmpPath);
+            WCHAR* pageBmpPathW = ToWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
             ByteSlice imgData = SerializeBitmap(bmp->GetBitmap());
@@ -573,7 +573,7 @@ int main(int, char**) {
     ScopedMui miniMui;
 
     WIN32_FIND_DATA fdata;
-    WCHAR* pathW = ToWstrTemp(filePath);
+    WCHAR* pathW = ToWStrTemp(filePath);
     HANDLE hfind = FindFirstFileW(pathW, &fdata);
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")

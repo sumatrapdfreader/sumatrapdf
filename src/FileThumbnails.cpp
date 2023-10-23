@@ -148,7 +148,7 @@ void SaveThumbnail(FileState* ds) {
         CrashIf(!str::EndsWithI(bmpPath, ".png"));
         Gdiplus::Bitmap bmp(ds->thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
-        WCHAR* bmpPathW = ToWstrTemp(bmpPath);
+        WCHAR* bmpPathW = ToWStrTemp(bmpPath);
         bmp.Save(bmpPathW, &tmpClsid, nullptr);
     }
 }

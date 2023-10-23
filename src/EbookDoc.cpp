@@ -651,7 +651,7 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             if (!text) {
                 continue;
             }
-            auto itemText = ToWstrTemp(text.Get());
+            auto itemText = ToWStrTemp(text.Get());
             str::NormalizeWSInPlace(itemText);
             AutoFreeWstr itemSrc;
             if (href) {

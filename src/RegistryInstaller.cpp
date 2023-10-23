@@ -228,7 +228,7 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
     auto exts = gSupportedExts;
     while (exts) {
-        WCHAR* ext = ToWstrTemp(exts);
+        WCHAR* ext = ToWStrTemp(exts);
         WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         ok &= CreateRegKey(hkey, name);
         seqstrings::Next(exts);
@@ -533,7 +533,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 // delete registry key but only if it's empty
 static bool DeleteEmptyRegKey(HKEY root, const char* keyName) {
     HKEY hkey;
-    WCHAR* keyNameW = ToWstrTemp(keyName);
+    WCHAR* keyNameW = ToWStrTemp(keyName);
     LSTATUS status = RegOpenKeyExW(root, keyNameW, 0, KEY_READ, &hkey);
     if (status != ERROR_SUCCESS) {
         return true;

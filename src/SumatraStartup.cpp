@@ -208,7 +208,7 @@ static bool InstanceInit() {
 }
 
 static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
-    WCHAR* cmd = ToWstrTemp(cmdA);
+    WCHAR* cmd = ToWStrTemp(cmdA);
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
         size_t cbData = (str::Len(cmd) + 1) * sizeof(WCHAR);
@@ -242,7 +242,7 @@ static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFir
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
-        auto viewMode = ToWstrTemp(viewModeStr);
+        auto viewMode = ToWStrTemp(viewModeStr);
         cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath, viewMode, i.startZoom, i.startScroll.x,
                       i.startScroll.y);
     }
@@ -774,7 +774,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = title;
-    dialogConfig.pszMainInstruction = ToWstrTemp(corruptedInstallation);
+    dialogConfig.pszMainInstruction = ToWStrTemp(corruptedInstallation);
     dialogConfig.pszContent =
         LR"(Learn more at <a href="https://www.sumatrapdfreader.org/docs/Corrupted-installation">www.sumatrapdfreader.org/docs/Corrupted-installation</a>.)";
     dialogConfig.nDefaultButton = IDOK;
@@ -828,7 +828,7 @@ static void ShowInstallerHelp() {
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = title;
-    dialogConfig.pszMainInstruction = ToWstrTemp(msg);
+    dialogConfig.pszMainInstruction = ToWStrTemp(msg);
     dialogConfig.pszContent =
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
     dialogConfig.nDefaultButton = IDOK;

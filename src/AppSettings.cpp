@@ -163,7 +163,7 @@ bool LoadSettings() {
 
     // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
-    //    auto fontName = ToWstrTemp(gprefs->fixedPageUI.ebookFontName);
+    //    auto fontName = ToWStrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
     SetCurrentThemeFromSettings();

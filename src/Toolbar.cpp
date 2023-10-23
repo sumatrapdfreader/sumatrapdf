@@ -217,7 +217,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             s = str::JoinTemp(s, "  ", accelStr.Get());
         }
 
-        WCHAR* tmp = ToWstrTemp(s);
+        WCHAR* tmp = ToWStrTemp(s);
 
         binfo.cbSize = sizeof(TBBUTTONINFO);
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;

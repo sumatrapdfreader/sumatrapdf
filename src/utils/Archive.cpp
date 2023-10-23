@@ -190,7 +190,7 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
 }
 
 static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
-    WCHAR* pathW = ToWstrTemp(path);
+    WCHAR* pathW = ToWStrTemp(path);
     ar_stream* stm = ar_open_file_w(pathW);
     bool ok = archive->Open(stm, path);
     if (!ok) {
@@ -309,7 +309,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
         return {(u8*)fileInfo->data, fileInfo->fileSizeUncompressed};
     }
 
-    auto rarPath = ToWstrTemp(rarFilePath_);
+    auto rarPath = ToWStrTemp(rarFilePath_);
 
     Data uncompressedBuf;
 
@@ -326,7 +326,7 @@ ByteSlice MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     char* data = nullptr;
     size_t size = 0;
-    auto fileName = ToWstrTemp(fileInfo->name);
+    auto fileName = ToWStrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
     bool ok = FindFile(hArc, &rarHeader, fileName);
@@ -368,7 +368,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath) {
         return false;
     }
     CrashIf(rarFilePath_);
-    auto rarPathW = ToWstrTemp(rarPath);
+    auto rarPathW = ToWStrTemp(rarPath);
 
     ByteSlice uncompressedBuf;
 
