@@ -170,8 +170,16 @@ size_t Len(const char* s) {
     return s ? strlen(s) : 0;
 }
 
+int Leni(const char* s) {
+    return s ? (int)strlen(s) : 0;
+}
+
 size_t Len(const WCHAR* s) {
     return s ? wcslen(s) : 0;
+}
+
+int Leni(const WCHAR* s) {
+    return s ? (int)wcslen(s) : 0;
 }
 
 void Free(const char* s) {
@@ -833,7 +841,7 @@ static const char* ParseLimitedNumber(const char* str, const char* format, const
     const char* endF = Parse(format, "%u%c", &width, &f2[1]);
     if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((size_t)width + 1, dimof(limited)), str);
+        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), str);
         const char* end = Parse(limited, f2, valueOut);
         if (end && !*end) {
             *endOut = str + width;
@@ -2213,7 +2221,7 @@ size_t NormalizeWSInPlace(WCHAR* str) {
 int BufSet(char* dst, int dstCchSize, const char* src) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    int srcCchSize = str::Len(src);
+    int srcCchSize = (int)str::Len(src);
     int toCopy = std::min(dstCchSize - 1, srcCchSize);
 
     errno_t err = strncpy_s(dst, (size_t)dstCchSize, src, (size_t)toCopy);
@@ -2225,7 +2233,7 @@ int BufSet(char* dst, int dstCchSize, const char* src) {
 int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    int srcCchSize = str::Len(src);
+    int srcCchSize = str::Leni(src);
     int toCopy = std::min(dstCchSize - 1, srcCchSize);
 
     memset(dst, 0, dstCchSize * sizeof(WCHAR));
@@ -2240,12 +2248,12 @@ int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
 int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    int currDstCchLen = str::Len(dst);
+    int currDstCchLen = str::Leni(dst);
     if (currDstCchLen + 1 >= dstCchSize) {
         return 0;
     }
     int left = dstCchSize - currDstCchLen - 1;
-    int srcCchSize = str::Len(s);
+    int srcCchSize = str::Leni(s);
     int toCopy = std::min(left, srcCchSize);
 
     errno_t err = wcsncat_s(dst, dstCchSize, s, toCopy);
@@ -2259,12 +2267,12 @@ int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s) {
 int BufAppend(char* dst, int dstCchSize, const char* s) {
     CrashAlwaysIf(0 == dstCchSize);
 
-    int currDstCchLen = str::Len(dst);
+    int currDstCchLen = str::Leni(dst);
     if (currDstCchLen + 1 >= dstCchSize) {
         return 0;
     }
     int left = dstCchSize - currDstCchLen - 1;
-    int srcCchSize = str::Len(s);
+    int srcCchSize = str::Leni(s);
     int toCopy = std::min(left, srcCchSize);
 
     errno_t err = strncat_s(dst, dstCchSize, s, toCopy);
@@ -2430,7 +2438,7 @@ static const WCHAR* ParseLimitedNumber(const WCHAR* str, const WCHAR* format, co
     const WCHAR* endF = Parse(format, L"%u%c", &width, &f2[1]);
     if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((size_t)width + 1, dimof(limited)), str);
+        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), str);
         const WCHAR* end = Parse(limited, f2, valueOut);
         if (end && !*end) {
             *endOut = str + width;

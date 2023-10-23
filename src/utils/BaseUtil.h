@@ -165,6 +165,8 @@ using uint = unsigned int;
 
 #define NoOp() ((void)0)
 #define dimof(array) (sizeof(DimofSizeHelper(array)))
+#define dimofi(array) (int)(sizeof(DimofSizeHelper(array)))
+
 template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
 

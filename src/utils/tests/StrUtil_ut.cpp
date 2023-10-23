@@ -693,7 +693,7 @@ void StrTest() {
     };
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
-        TempStr tmp = str::FormatRomanNumeral(formatRomanData[i].number);
+        TempStr tmp = str::FormatRomanNumeralTemp(formatRomanData[i].number);
         utassert(str::Eq(tmp, formatRomanData[i].result));
     }
 

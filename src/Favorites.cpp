@@ -579,7 +579,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
         text = FavCompactReadableNameTemp(fav, fn);
     } else {
         char* fp = fav->filePath;
-        text = path::GetBaseNameTemp(fp);
+        text = (TempStr)path::GetBaseNameTemp(fp);
     }
     res->text = str::Dup(text);
     return res;

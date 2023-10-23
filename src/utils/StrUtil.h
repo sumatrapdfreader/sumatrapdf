@@ -89,6 +89,9 @@ enum class TrimOpt { Left, Right, Both };
 size_t Len(const WCHAR*);
 size_t Len(const char* s);
 
+int Leni(const WCHAR*);
+int Leni(const char* s);
+
 void Free(const char*);
 void Free(const u8*);
 

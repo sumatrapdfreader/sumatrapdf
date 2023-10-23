@@ -1257,7 +1257,7 @@ static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
         EmptyClipboard();
     }
 
-    size_t n = str::Len(text) + 1;
+    int n = str::Leni(text) + 1;
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
     if (handle) {
         WCHAR* globalText = (WCHAR*)GlobalLock(handle);

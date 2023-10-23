@@ -784,9 +784,10 @@ bool RemoveAll(const char* dir) {
     WCHAR* dirW = ToWStrTemp(dir);
     // path must be doubly terminated
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
-    size_t n = str::Len(dirW) + 2;
-    AutoFreeWstr dirDoubleTerminated = AllocArray<WCHAR>(n);
-    str::BufSet(dirDoubleTerminated, n, dirW);
+    auto n = str::Len(dirW) + 2;
+    auto a = GetTempAllocator();
+    TempWStr dirDoubleTerminated = (WCHAR*)Allocator::AllocZero(a, n * sizeof(WCHAR));
+    str::BufSet(dirDoubleTerminated,(int)n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
