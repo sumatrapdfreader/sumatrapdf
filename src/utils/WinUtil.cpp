@@ -243,13 +243,11 @@ TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
         int buildNo = (int)(ver.dwBuildNumber & 0xFFFF);
-        AutoFreeStr s = str::Format("10.%d", buildNo);
-        return str::DupTemp(s.Get());
+        return str::FormatTemp("10.%d", buildNo);
     }
 
     // either a newer or an older NT version, neither of which we support
-    AutoFreeStr s = str::Format("NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
-    return str::DupTemp(s.Get());
+    return str::FormatTemp("NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
 }
 
 TempStr GetWindowsVerTemp() {
@@ -955,7 +953,7 @@ bool CreateProcessHelper(const char* exe, const char* args) {
     if (!args) {
         args = "";
     }
-    AutoFreeStr cmd = str::Format("\"%s\" %s", exe, args);
+    TempStr cmd = str::FormatTemp("\"%s\" %s", exe, args);
     AutoCloseHandle process = LaunchProcess(cmd);
     return process != nullptr;
 }
@@ -2180,22 +2178,21 @@ bool SafeCloseHandle(HANDLE* h) {
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(const char* exePath) {
-    AutoFreeStr cmd;
-    char* explorerPath;
-    char* bufA;
-    WCHAR buf[MAX_PATH]{};
+    TempStr cmd = nullptr;
+    char* explorerPath = nullptr;
+    WCHAR buf[MAX_PATH] = {0};
     uint res = GetWindowsDirectoryW(buf, dimof(buf));
     if (0 == res || res >= dimof(buf)) {
         goto Run;
     }
-    bufA = ToUtf8Temp(buf);
-    explorerPath = path::JoinTemp(bufA, "explorer.exe");
+    explorerPath = ToUtf8Temp(buf);
+    explorerPath = path::JoinTemp(explorerPath, "explorer.exe");
     if (!file::Exists(explorerPath)) {
         goto Run;
     }
-    cmd.Set(str::Format("\"%s\" \"%s\"", explorerPath, exePath));
+    cmd = str::FormatTemp("\"%s\" \"%s\"", explorerPath, exePath);
 Run:
-    HANDLE h = LaunchProcess(cmd ? cmd.Get() : exePath);
+    HANDLE h = LaunchProcess(cmd ? cmd : exePath);
     SafeCloseHandle(&h);
 }
 

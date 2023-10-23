@@ -1619,7 +1619,7 @@ void HtmlWindow::SetVisible(bool visible) {
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
 void HtmlWindow::NavigateToDataUrl(const char* url) {
-    AutoFreeStr fullUrl(str::Format("its://%d/%s", windowId, url));
+    TempStr fullUrl = str::FormatTemp("its://%d/%s", windowId, url);
     NavigateToUrl(fullUrl);
 }
 
@@ -1706,8 +1706,8 @@ void HtmlWindow::SetHtmlReal(const ByteSlice& d) {
     }
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(d);
-    AutoFreeWstr baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
-    htmlContent->SetBaseUrl(baseUrl);
+    TempStr baseUrl = str::FormatTemp(HW_PROTO_PREFIXA "://%d/", windowId);
+    htmlContent->SetBaseUrl(ToWStrTemp(baseUrl));
 
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);

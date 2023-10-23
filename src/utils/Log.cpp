@@ -96,9 +96,8 @@ static void logToPipe(const char* s, size_t n = 0) {
 
     if (didConnect) {
         // logview accepts logging from anyone, so announce ourselves
-        char* initialMsg = str::Format("app: %s\n", gLogAppName);
+        TempStr initialMsg = str::FormatTemp("app: %s\n", gLogAppName);
         WriteFile(hLogPipe, initialMsg, (DWORD)str::Len(initialMsg), &cbWritten, nullptr);
-        str::Free(initialMsg);
     }
 
     DWORD cb = (DWORD)n;

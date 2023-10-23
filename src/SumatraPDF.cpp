@@ -4586,9 +4586,8 @@ void ClearHistory(MainWindow* win) {
     RemoveNotification(notifWnd);
     ::InvalidateRect(win->hwndCanvas, nullptr, true);
     ::UpdateWindow(win->hwndCanvas);
-    char* msg2 = str::Format(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
+    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
-    str::Free(msg2);
 
     // TODO: deletion takes time so run it async
 
