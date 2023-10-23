@@ -827,10 +827,10 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     if (!ctrl->ValidPageNo(pageNo)) {
         pageNo = ctrl->CurrentPageNo();
     }
-    AutoFreeStr pageInfo = str::Format("%s %d / %d", _TRA("Page:"), pageNo, ctrl->PageCount());
+    TempStr pageInfo = str::FormatTemp("%s %d / %d", _TRA("Page:"), pageNo, ctrl->PageCount());
     if (ctrl->HasPageLabels()) {
         AutoFreeStr label = ctrl->GetPageLabel(pageNo);
-        pageInfo = str::Format("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, ctrl->PageCount());
+        pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:"), label.Get(), pageNo, ctrl->PageCount());
     }
     NotificationUpdateMessage(wnd, pageInfo);
 }
@@ -976,27 +976,30 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
 
-    AutoFreeStr docTitle(str::Dup(""));
+    TempStr docTitle = (TempStr) "";
     if (tab->ctrl) {
         char* title = tab->ctrl->GetProperty(DocumentProperty::Title);
         if (title != nullptr) {
             str::NormalizeWSInPlace(title);
-            docTitle.Set(title);
+            docTitle = str::DupTemp(title);
             if (!str::IsEmpty(title)) {
-                docTitle.Set(str::Format("- [%s] ", title));
+                docTitle = str::FormatTemp("- [%s] ", title);
             }
         }
     }
 
     if (!IsUIRightToLeft()) {
-        tab->frameTitle.Set(str::Format("%s %s- %s", titlePath, docTitle.Get(), kSumatraWindowTitle));
+        char* s = str::Format("%s %s- %s", titlePath, docTitle, kSumatraWindowTitle);
+        tab->frameTitle.Set(s);
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        tab->frameTitle.Set(str::Format("%s %s- %s", kSumatraWindowTitle, docTitle.Get(), titlePath));
+        char* s = str::Format("%s %s- %s", kSumatraWindowTitle, docTitle, titlePath);
+        tab->frameTitle.Set(s);
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        tab->frameTitle.Set(str::Format(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle.Get()));
+        char* s = str::Format(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle.Get());
+        tab->frameTitle.Set(s);
     }
 }
 
