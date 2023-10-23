@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-30e97d6fd71649751fcbdfff5968eeb9971e7e60
+bfaa5d8f8111cc423721162351d3bc559d1c2b25
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -1439,8 +1439,10 @@ vn:&Nổi Bật
 :&Keyboard Shortcuts
 br:Atalhos do Teclado
 de:Tasten&kombinationen
+el:Συντομεύσεις πληκτρολογίου
 fr:&Raccourcis clavier
 it:&Tasti rapidi
+nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
 tw:鍵盤快速鍵(&K)
 :&Last Page
