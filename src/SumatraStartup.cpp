@@ -261,6 +261,18 @@ static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFir
     SendMyselfDDE(cmd.Get(), targetHwnd);
 }
 
+static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    if (flags.enterPresentation || flags.enterFullScreen) {
+        if (flags.enterPresentation && win->isFullScreen || flags.enterFullScreen && win->presentation) {
+            ExitFullScreen(win);
+        }
+        EnterFullScreen(win, flags.enterPresentation);
+    }
+}
+
 static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
@@ -284,13 +296,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
     if (!win->IsDocLoaded() || !isFirstWin) {
         return win;
     }
-
-    if (flags.enterPresentation || flags.enterFullScreen) {
-        if (flags.enterPresentation && win->isFullScreen || flags.enterFullScreen && win->presentation) {
-            ExitFullScreen(win);
-        }
-        EnterFullScreen(win, flags.enterPresentation);
-    }
+    FlagsEnterFullscreen(flags, win);
     if (flags.startView != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, flags.startView);
     }
@@ -1324,6 +1330,9 @@ ContinueOpenWindow:
         if (!win) {
             goto Exit;
         }
+    }
+    if (flags.fileNames.Size() == 0) {
+        FlagsEnterFullscreen(flags, win);
     }
 
     if (flags.stressTestPath) {
