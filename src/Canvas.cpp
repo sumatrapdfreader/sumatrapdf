@@ -506,7 +506,15 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     if (MouseAction::None == ma || IsRightDragging(win)) {
         return;
     }
-    CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
+
+    if (MouseAction::Scrolling == ma) {
+        // TODO: I'm seeing this in crash reports. Can we get button up without button down?
+        // maybe when down happens on a different hwnd? How can I add more logging.
+        logfa("OnMouseLeftButtonUp: unexpected MouseAction::Scrolling (%d)\n", ma);
+        win->mouseAction = MouseAction::None;
+        ReportIf(true);
+        return;
+    }
 
     // TODO: should IsDrag() ever be true here? We should get mouse move first
     bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
