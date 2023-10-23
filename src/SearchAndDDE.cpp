@@ -573,30 +573,28 @@ void ShowForwardSearchResult(MainWindow* win, const char* fileName, int line, in
         return;
     }
 
-    AutoFreeStr buf;
-    NotificationCreateArgs args;
+    TempStr buf = nullptr;
+    NotificationCreateArgs args{};
     args.hwndParent = win->hwndCanvas;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
         args.msg = _TRA("No synchronization file found");
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
         args.msg = _TRA("Synchronization file cannot be opened");
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        buf.Set(str::Format(_TRA("Page number %u inexistant"), page));
+        buf = str::FormatTemp(_TRA("Page number %u inexistant"), page);
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
         args.msg = _TRA("No synchronization info at this position");
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-        buf.Set(str::Format(_TRA("Unknown source file (%s)"), fileName));
+        buf = str::FormatTemp(_TRA("Unknown source file (%s)"), fileName);
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
-        buf.Set(str::Format(_TRA("Source file %s has no synchronization point"), fileName));
+        buf = str::FormatTemp(_TRA("Source file %s has no synchronization point"), fileName);
     } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE) {
-        buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
+        buf = str::FormatTemp(_TRA("No result found around line %u in file %s"), line, fileName);
     } else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
-        buf.Set(str::Format(_TRA("No result found around line %u in file %s"), line, fileName));
+        buf = str::FormatTemp(_TRA("No result found around line %u in file %s"), line, fileName);
     }
     if (buf) {
-        args.msg = buf.StealData();
-    }
-    if (args.msg) {
+        args.msg = buf;
         ShowNotification(args);
     }
 }

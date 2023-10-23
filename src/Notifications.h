@@ -30,6 +30,6 @@ bool UpdateNotificationProgress(NotificationWnd*, int, int);
 bool NotificationExists(NotificationWnd*);
 void RelayoutNotifications(HWND hwnd);
 
-NotificationWnd* ShowNotification(NotificationCreateArgs& args);
+NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs);
