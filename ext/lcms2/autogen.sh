@@ -7,12 +7,12 @@ test -z "$srcdir" && srcdir=.
 DIE=0
 ACLOCAL_FLAGS="-I m4"
 
-if [ "$1" = "--distclean" ]; 
+if [ "$1" = "--distclean" ];
 then
     make distclean
-    rm configure config.guess config.sub depcomp install-sh missing 
-    rm aclocal.m4 compile ltmain.sh m4/libtool.m4 m4/ltoptions.m4 
-    rm m4/ltsugar.m4 m4/lt~obsolete.m4 m4/ltversion.m4 
+    rm configure config.guess config.sub depcomp install-sh missing
+    rm aclocal.m4 compile ltmain.sh m4/libtool.m4 m4/ltoptions.m4
+    rm m4/ltsugar.m4 m4/lt~obsolete.m4 m4/ltversion.m4
     echo done cleaning!
     exit 0
 fi

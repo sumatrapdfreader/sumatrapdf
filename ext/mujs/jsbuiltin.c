@@ -1,8 +1,4 @@
 #include "jsi.h"
-#include "jslex.h"
-#include "jscompile.h"
-#include "jsvalue.h"
-#include "jsbuiltin.h"
 #include "regexp.h"
 
 static void jsB_globalf(js_State *J, const char *name, js_CFunction cfun, int n)

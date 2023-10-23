@@ -1,6 +1,4 @@
 #include "jsi.h"
-#include "jsvalue.h"
-#include "jsbuiltin.h"
 
 #define QQ(X) #X
 #define Q(X) QQ(X)

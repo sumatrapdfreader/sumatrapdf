@@ -33,6 +33,8 @@
 #ifndef HB_COMMON_H
 #define HB_COMMON_H
 
+#include "hb-rename.h"
+
 #ifndef HB_EXTERN
 #define HB_EXTERN extern
 #endif

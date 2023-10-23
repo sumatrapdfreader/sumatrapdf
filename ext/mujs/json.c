@@ -1,8 +1,4 @@
 #include "jsi.h"
-#include "jslex.h"
-#include "jsvalue.h"
-#include "jsbuiltin.h"
-
 #include "utf.h"
 
 int js_isnumberobject(js_State *J, int idx)

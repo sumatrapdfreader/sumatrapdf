@@ -1,10 +1,12 @@
 # Create utfdata.h from UnicodeData.txt
 
+import sys
+
 tolower = []
 toupper = []
 isalpha = []
 
-for line in open("UnicodeData.txt").readlines():
+for line in open(sys.argv[1]).readlines():
 	line = line.split(";")
 	code = int(line[0],16)
 	# if code > 65535: continue # skip non-BMP codepoints
@@ -71,7 +73,7 @@ def dumpmap(name, input):
 			print(hex(a)+","+str(n-a)+",")
 	print("};");
 
-print("/* This file was automatically created from UnicodeData.txt */")
+print("/* This file was automatically created from " + sys.argv[1] + " */")
 dumpalpha()
 dumpmap("ucd_tolower", tolower)
 dumpmap("ucd_toupper", toupper)

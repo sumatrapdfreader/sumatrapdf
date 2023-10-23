@@ -1,6 +1,4 @@
 #include "jsi.h"
-#include "jsvalue.h"
-#include "jsbuiltin.h"
 
 int js_getlength(js_State *J, int idx)
 {
@@ -64,8 +62,8 @@ static void Ap_concat(js_State *J)
 static void Ap_join(js_State *J)
 {
 	char * volatile out = NULL;
+	const char * volatile r = NULL;
 	const char *sep;
-	const char *r;
 	int seplen;
 	int k, n, len, rlen;
 
@@ -249,8 +247,8 @@ static int sortcmp(const void *avoid, const void *bvoid)
 	double v;
 	int c;
 
-	int unx = (a->type == JS_TUNDEFINED);
-	int uny = (b->type == JS_TUNDEFINED);
+	int unx = (a->t.type == JS_TUNDEFINED);
+	int uny = (b->t.type == JS_TUNDEFINED);
 	if (unx) return !uny;
 	if (uny) return -1;
 
@@ -318,7 +316,7 @@ static void Ap_sort(js_State *J)
 		js_pushvalue(J, array[i].v);
 		js_setindex(J, 0, i);
 	}
-	for (i = n; i < len; ++i) {
+	for (i = len-i; i >= n; --i) {
 		js_delindex(J, 0, i);
 	}
 
@@ -334,18 +332,24 @@ static void Ap_splice(js_State *J)
 {
 	int top = js_gettop(J);
 	int len, start, del, add, k;
-	double f;
-
-	js_newarray(J);
 
 	len = js_getlength(J, 0);
+	start = js_tointeger(J, 1);
+	if (start < 0)
+		start = (len + start) > 0 ? len + start : 0;
+	else if (start > len)
+		start = len;
 
-	f = js_tointeger(J, 1);
-	if (f < 0) f = f + len;
-	start = f < 0 ? 0 : f > len ? len : f;
+	if (js_isdefined(J, 2))
+		del = js_tointeger(J, 2);
+	else
+		del = len - start;
+	if (del > len - start)
+		del = len - start;
+	if (del < 0)
+		del = 0;
 
-	f = js_tointeger(J, 2);
-	del = f < 0 ? 0 : f > len - start ? len - start : f;
+	js_newarray(J);
 
 	/* copy deleted items to return array */
 	for (k = 0; k < del; ++k)
@@ -583,6 +587,7 @@ static void Ap_map(js_State *J)
 			js_pop(J, 1);
 		}
 	}
+	js_setlength(J, -1, len);
 }
 
 static void Ap_filter(js_State *J)
@@ -723,7 +728,7 @@ void jsB_initarray(js_State *J)
 		jsB_propf(J, "Array.prototype.shift", Ap_shift, 0);
 		jsB_propf(J, "Array.prototype.slice", Ap_slice, 2);
 		jsB_propf(J, "Array.prototype.sort", Ap_sort, 1);
-		jsB_propf(J, "Array.prototype.splice", Ap_splice, 0); /* 2 */
+		jsB_propf(J, "Array.prototype.splice", Ap_splice, 2);
 		jsB_propf(J, "Array.prototype.unshift", Ap_unshift, 0); /* 1 */
 
 		/* ES5 */

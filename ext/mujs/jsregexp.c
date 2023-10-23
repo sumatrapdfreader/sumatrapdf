@@ -1,6 +1,4 @@
 #include "jsi.h"
-#include "jsvalue.h"
-#include "jsbuiltin.h"
 #include "regexp.h"
 
 static char *escaperegexp(js_State *J, const char *pattern) {

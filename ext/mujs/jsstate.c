@@ -1,16 +1,11 @@
 #include "jsi.h"
-#include "jsparse.h"
-#include "jscompile.h"
-#include "jsvalue.h"
-#include "jsrun.h"
-#include "jsbuiltin.h"
 
 #include <assert.h>
 #include <errno.h>
 
 static int js_ptry(js_State *J) {
 	if (J->trytop == JS_TRYLIMIT) {
-		J->stack[J->top].type = JS_TLITSTR;
+		J->stack[J->top].t.type = JS_TLITSTR;
 		J->stack[J->top].u.litstr = "exception stack overflow";
 		++J->top;
 		return 1;
@@ -290,7 +285,7 @@ js_State *js_newstate(js_Alloc alloc, void *actx, int flags)
 	js_State *J;
 
 	assert(sizeof(js_Value) == 16);
-	assert(soffsetof(js_Value, type) == 15);
+	assert(soffsetof(js_Value, t.type) == 15);
 
 	if (!alloc)
 		alloc = js_defaultalloc;

@@ -9,7 +9,7 @@ extern "C" {
 
 #define JS_VERSION_MAJOR 1
 #define JS_VERSION_MINOR 3
-#define JS_VERSION_PATCH 1
+#define JS_VERSION_PATCH 2
 
 #define JS_VERSION (JS_VERSION_MAJOR * 10000 + JS_VERSION_MINOR * 100 + JS_VERSION_PATCH)
 #define JS_CHECKVERSION(x,y,z) (JS_VERSION >= ((x) * 10000 + (y) * 100 + (z)))

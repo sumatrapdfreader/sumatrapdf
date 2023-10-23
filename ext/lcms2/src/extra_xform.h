@@ -31,7 +31,7 @@
 // Usually that is calculated from NUMINCHANNELS and INPACKEDSAMPLESIZE, so
 // specifying it directly is only useful if either (or both) of those is not
 // known in advance.
-// 
+//
 // For Premultiplied Alpha modes, you must define PREMULT. We only support
 // premultiplied alpha where the alpha is the last 'extra' channel, and
 // where both source and destination are packed in the same way.
@@ -46,7 +46,7 @@
 //                                    (T = Transform, FROM = transformed data,
 //                                    TO = output buffer to pack into,
 //                                    SIZE = size of data, AL = Alpha)
-// 
+//
 // Ignore AL unless PREMULT is defined, in which case it will be in the packed
 // format. AL is guaranteed to be non-zero.
 //
