@@ -3,7 +3,7 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-3.5 (???)
+3.5 (2023-10-23)
 * CmdEditAnnotation select annotation under cursor and open annotation edit window
 * rename CmdShowCursorPosition => CmdToggleCursorPosition
 * add Annotations [ FreeTextColor, FreeTextSize, FreeTextBorderWidth ] settings
