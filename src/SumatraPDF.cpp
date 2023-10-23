@@ -1235,17 +1235,18 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
 
-    AutoFreeStr unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
+    char* unsupported = win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures);
     if (unsupported) {
-        unsupported.Set(str::Format(_TRA("This document uses unsupported features (%s) and might not render properly"),
-                                    unsupported.Get()));
+        const char* s = _TRA("This document uses unsupported features (%s) and might not render properly");
+        TempStr msg = str::FormatTemp(s, unsupported);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
         nargs.timeoutMs = 0;
         nargs.groupId = kNotifGroupPersistentWarning;
-        nargs.msg = unsupported;
+        nargs.msg = msg;
         ShowNotification(nargs);
+        str::Free(unsupported);
     }
 
     // This should only happen after everything else is ready
@@ -1667,11 +1668,10 @@ static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noS
 }
 
 static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs) {
-    AutoFreeStr msg(str::Format(_TRA("File %s not found"), path));
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
-    nargs.msg = msg;
+    nargs.msg = str::FormatTemp(_TRA("File %s not found"), path);
     ShowNotification(nargs);
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
@@ -1679,14 +1679,11 @@ static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs
 static void ShowErrorLoading(MainWindow* win, const char* path, bool noSavePrefs) {
     // TODO: same message as in Canvas.cpp to not introduce
     // new translation. Find a better message e.g. why failed.
-    char* msg = str::Format(_TRA("Error loading %s"), path);
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.msg = msg;
+    nargs.msg = str::FormatTemp(_TRA("Error loading %s"), path);
     nargs.warning = true;
     ShowNotification(nargs);
-    str::Free(msg);
-
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
 
@@ -1798,11 +1795,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyLoad) {
 }
 
 static NotificationWnd* ShowLoadingNotif(MainWindow* win, const char* path) {
-    AutoFreeStr msg(str::Format(_TRA("Loading %s ..."), path));
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.groupId = path;
-    nargs.msg = msg;
+    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path);
     return ShowNotification(nargs);
 }
 
@@ -1982,13 +1978,11 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     MainWindow* win = tab->win;
     if (gEnableLazyLoad && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
-        char* msg = str::Format(_TRA("Please wait - loading..."));
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
-        args.msg = msg;
+        args.msg = str::FormatTemp(_TRA("Please wait - loading..."));
         args.warning = true;
         ShowNotification(args);
-        str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
         // display the notification ASAP
         win->RedrawAll(true);
@@ -2393,9 +2387,9 @@ enum class SaveChoice {
 };
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
-    const char* fileName = path::GetBaseNameTemp(filePath);
-    char* mainInstrA = str::Format(_TRA("Unsaved annotations in '%s'"), fileName);
-    WCHAR* mainInstr = ToWStrTemp(mainInstrA);
+    TempStr fileName = (TempStr)path::GetBaseNameTemp(filePath);
+    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved annotations in '%s'"), fileName);
+    TempWStr mainInstr = ToWStrTemp(mainInstrA);
     const WCHAR* content = _TR("Save annotations?");
 
     constexpr int kBtnIdDiscard = 100;
