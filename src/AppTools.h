@@ -29,7 +29,7 @@ bool HasBeenInstalled();
 bool IsRunningInPortableMode();
 bool IsDllBuild();
 
-char* AppGenDataFilenameTemp(const char* fileName);
+TempStr AppGenDataFilenameTemp(const char* fileName);
 
 void SetAppDataPath(const char* path);
 

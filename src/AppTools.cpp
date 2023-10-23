@@ -98,7 +98,7 @@ void SetAppDataPath(const char* path) {
 
 // Generate the full path for a filename used by the app in the userdata path
 // Caller needs to free() the result
-char* AppGenDataFilenameTemp(const char* fileName) {
+TempStr AppGenDataFilenameTemp(const char* fileName) {
     if (!fileName) {
         return nullptr;
     }
@@ -516,7 +516,7 @@ void SaveCallstackLogs() {
     if (s.empty()) {
         return;
     }
-    char* filePath = AppGenDataFilenameTemp("callstacks.txt");
+    TempStr filePath = AppGenDataFilenameTemp("callstacks.txt");
     file::WriteFile(filePath, s);
     s.Free();
 }

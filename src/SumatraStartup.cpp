@@ -451,9 +451,9 @@ static bool SetupPluginMode(Flags& i) {
 }
 
 static void SetupCrashHandler() {
-    char* symDir = AppGenDataFilenameTemp("crashinfo");
-    char* crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
-    char* crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
+    TempStr symDir = AppGenDataFilenameTemp("crashinfo");
+    TempStr crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
+    TempStr crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
 }
 
@@ -463,7 +463,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     char* exePath = GetExePathTemp();
     str::ToLowerInPlace(exePath);
     u32 hash = MurmurHash2(exePath, str::Len(exePath));
-    AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
+    TempStr mapId = str::FormatTemp("SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
     HANDLE hMap = nullptr;
@@ -474,7 +474,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     DWORD lastErr = 0;
 Retry:
     // use a memory mapping containing a process id as mutex
-    hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
+    hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), ToWStrTemp(mapId));
     if (!hMap) {
         goto Error;
     }

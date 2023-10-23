@@ -236,7 +236,7 @@ static void ShowFileInFolder(WindowTab* tab) {
     }
 
     const char* process = "explorer.exe";
-    AutoFreeStr args = str::Format("/select,\"%s\"", path);
+    TempStr args = str::FormatTemp("/select,\"%s\"", path);
     CreateProcessHelper(process, args);
 }
 

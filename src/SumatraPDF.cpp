@@ -2998,15 +2998,15 @@ static void CreateLnkShortcut(MainWindow* win) {
     const char* viewMode = DisplayModeToString(ctrl->GetDisplayMode());
     TempStr zoomVirtual = str::FormatTemp("%.2f", ctrl->GetZoomVirtual());
     if (kZoomFitPage == ctrl->GetZoomVirtual()) {
-        zoomVirtual = (TempStr)"fitpage";
+        zoomVirtual = (TempStr) "fitpage";
     } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
         zoomVirtual = (TempStr) "fitwidth";
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
         zoomVirtual = (TempStr) "fitcontent";
     }
 
-    TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page,
-                                   viewMode, zoomVirtual, (int)ss.x, (int)ss.y);
+    TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode,
+                                   zoomVirtual, (int)ss.x, (int)ss.y);
     AutoFreeStr label = ctrl->GetPageLabel(ss.page);
     TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label.Get(), path);
     auto exePath = GetExePathTemp();
@@ -4580,7 +4580,7 @@ void ClearHistory(MainWindow* win) {
     auto notifWnd = ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 
     DeleteThumbnailCacheDirectory();
-    char* symDir = AppGenDataFilenameTemp("crashinfo");
+    TempStr symDir = AppGenDataFilenameTemp("crashinfo");
     dir::RemoveAll(symDir);
 
     RemoveNotification(notifWnd);
@@ -4595,7 +4595,7 @@ void ClearHistory(MainWindow* win) {
     /*
     RunAsync([nFiles, win, notifWnd]() {
         DeleteThumbnailCacheDirectory();
-        char* symDir = AppGenDataFilenameTemp("crashinfo");
+        TempStr symDir = AppGenDataFilenameTemp("crashinfo");
         dir::RemoveAll(symDir);
 
         uitask::Post([nFiles, win, notifWnd]() {
@@ -5781,19 +5781,18 @@ void ShowCrashHandlerMessage() {
 
 static void DownloadDebugSymbols() {
     // over-ride the default symbols directory to be more useful
-    char* symDir = AppGenDataFilenameTemp("crashinfo");
+    TempStr symDir = AppGenDataFilenameTemp("crashinfo");
     SetSymbolsDir(symDir);
 
     bool ok = CrashHandlerDownloadSymbols();
-    char* msg = nullptr;
+    TempStr msg = nullptr;
     if (ok) {
-        msg = str::Format("Downloaded symbols! to %s", symDir);
+        msg = str::FormatTemp("Downloaded symbols! to %s", symDir);
     } else {
-        msg = str::Dup("Failed to download symbols.");
+        msg = str::DupTemp("Failed to download symbols.");
     }
     uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);
-    free(msg);
 }
 
 void ShutdownCleanup() {

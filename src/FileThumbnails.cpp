@@ -29,7 +29,7 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     if (!filePath) {
         return nullptr;
     }
-    char* path = str::DupTemp(filePath);
+    TempStr path = str::DupTemp(filePath);
     if (path::HasVariableDriveLetter(path)) {
         // ignore the drive letter, if it might change
         path[0] = '?';
@@ -37,24 +37,24 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     CalcMD5Digest((u8*)path, str::Len(path), digest);
     AutoFreeStr fingerPrint = str::MemToHex(digest, dimof(digest));
 
-    char* thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
     if (!thumbsDir) {
         return nullptr;
     }
 
-    char* res = path::JoinTemp(thumbsDir, str::JoinTemp(fingerPrint, ".png"));
+    TempStr res = path::JoinTemp(thumbsDir, str::JoinTemp(fingerPrint, ".png"));
     return res;
 }
 
 void DeleteThumbnailCacheDirectory() {
-    char* thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
     dir::RemoveAll(thumbsDir);
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
-    char* thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
-    char* pattern = path::JoinTemp(thumbsDir, kPngExt);
+    TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    TempStr pattern = path::JoinTemp(thumbsDir, kPngExt);
 
     StrVec filePaths;
 
