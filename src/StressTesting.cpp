@@ -255,18 +255,18 @@ static int SecsSinceSystemTime(SYSTEMTIME& time) {
     return SystemTimeDiffInSecs(currTime, time);
 }
 
-static char* FormatTime(int totalSecs) {
+static TempStr FormatTimeTemp(int totalSecs) {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
     int mins = totalMins % 60;
     int hrs = totalMins / 60;
     if (hrs > 0) {
-        return str::Format("%d hrs %d mins %d secs", hrs, mins, secs);
+        return str::FormatTemp("%d hrs %d mins %d secs", hrs, mins, secs);
     }
     if (mins > 0) {
-        return str::Format("%d mins %d secs", mins, secs);
+        return str::FormatTemp("%d mins %d secs", mins, secs);
     }
-    return str::Format("%d secs", secs);
+    return str::FormatTemp("%d secs", secs);
 }
 
 static void FormatTime(int totalSecs, str::Str* s) {
@@ -493,8 +493,8 @@ static void Finished(StressTest* st, bool success) {
 
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
-        AutoFreeStr tm(FormatTime(secs));
-        AutoFreeStr s(str::Format("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.Get()));
+        TempStr tm = FormatTimeTemp(secs);
+        TempStr s = str::FormatTemp("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm);
         NotificationCreateArgs args;
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;
@@ -517,7 +517,7 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
     } else {
-        AutoFreeStr s(str::Format("Path '%s' doesn't exist", path));
+        TempStr s = str::FormatTemp("Path '%s' doesn't exist", path);
         NotificationCreateArgs args;
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;
@@ -630,9 +630,9 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     }
 
     int secs = SecsSinceSystemTime(st->stressStartTime);
-    AutoFreeStr tm(FormatTime(secs));
+    TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
-    AutoFreeStr s(str::Format("File %d (of %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm.Get()));
+    TempStr s = str::FormatTemp("File %d (of %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
     NotificationCreateArgs nargs;
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;
@@ -715,7 +715,7 @@ static bool GoToNextFile(StressTest* st) {
 
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
-    AutoFreeStr s(str::Format("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime));
+    TempStr s = str::FormatTemp("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime);
     NotificationCreateArgs args;
     args.hwndParent = st->win->hwndCanvas;
     args.msg = s;
