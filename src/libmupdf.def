@@ -57,6 +57,7 @@ EXPORTS
 	fz_load_outline
 	fz_load_page
 	fz_bound_page
+	fz_bound_page_box
 	fz_run_page
 	fz_new_pdf_writer_with_output
 	pdf_obj_num_is_stream
