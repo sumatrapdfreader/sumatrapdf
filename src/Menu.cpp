@@ -1016,7 +1016,7 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     const size_t MAX_LEN = 70;
     size_t menuStrLen = str::Len(menuString);
     if (menuStrLen > MAX_LEN) {
-        char* newStr = (char*)Allocator::AllocZero(GetTempAllocator(), MAX_LEN);
+        char* newStr = AllocArrayTemp<char>(MAX_LEN);
         const size_t half = MAX_LEN / 2;
         const size_t strSize = menuStrLen + 1; // size()+1 because wcslen() doesn't include \0
         // Copy first N/2 characters, move last N/2 characters to the halfway point

@@ -623,13 +623,13 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     size_t dy = (size_t)screen.dy;
     size_t stride = ((dx * bytesPerPixel + 3) / 4) * 4;
     size_t nBytes = stride * (dy + 5);
-    AutoFree bmpData = AllocArray<char>(nBytes);
+    char* bmpData = AllocArrayTemp<char>(nBytes);
     if (!bmpData) {
         return nullptr;
     }
 
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
-    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, bmpData.Get());
+    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, bmpData);
     if (!ok) {
         // nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
@@ -671,12 +671,12 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
     ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
     ddjvu_rect_t rrect = prect;
 
-    AutoFree bmpData = AllocArray<char>(full.dx * full.dy + 1);
+    char* bmpData = AllocArrayTemp<char>(full.dx * full.dy + 1);
     if (!bmpData) {
         return pageRc;
     }
 
-    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData.Get());
+    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData);
     if (!ok) {
         return pageRc;
     }

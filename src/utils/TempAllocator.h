@@ -7,7 +7,13 @@ Allocator* GetTempAllocator();
 void DestroyTempAllocator();
 void ResetTempAllocator();
 
-// exists just to mark the intent
+template <typename T>
+FORCEINLINE T* AllocArrayTemp(size_t n) {
+    auto a = GetTempAllocator();
+    return (T*)Allocator::AllocZero(a, n * sizeof(T));
+}
+
+// exists just to mark the intentA
 using TempStr = char*;
 using TempWStr = WCHAR*;
 

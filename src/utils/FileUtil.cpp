@@ -688,11 +688,11 @@ bool SetModificationTime(const char* path, FILETIME lastMod) {
 
 // return true if a file starts with string s of size len
 bool StartsWithN(const char* path, const char* s, size_t len) {
-    AutoFree buf(AllocArray<char>(len));
+    char* buf = AllocArrayTemp<char>(len);
     if (!buf) {
         return false;
     }
-    if (!ReadN(path, buf.Get(), len)) {
+    if (!ReadN(path, buf, len)) {
         return false;
     }
     return memeq(buf, s, len);
@@ -785,8 +785,7 @@ bool RemoveAll(const char* dir) {
     // path must be doubly terminated
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
     auto n = str::Len(dirW) + 2;
-    auto a = GetTempAllocator();
-    TempWStr dirDoubleTerminated = (WCHAR*)Allocator::AllocZero(a, n * sizeof(WCHAR));
+    WCHAR* dirDoubleTerminated = AllocArrayTemp<WCHAR>(n);
     str::BufSet(dirDoubleTerminated, (int)n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;

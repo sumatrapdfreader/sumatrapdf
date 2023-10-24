@@ -397,7 +397,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     WORD w = (WORD)bmpInfo.bmWidth;
     WORD h = (WORD)bmpInfo.bmHeight;
     int stride = ((w * 3 + 3) / 4) * 4;
-    AutoFree bmpData((char*)malloc(stride * h));
+    char* bmpData = AllocArrayTemp<char>(stride * h);
     if (!bmpData) {
         return {};
     }

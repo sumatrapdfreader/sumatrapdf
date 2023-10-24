@@ -2353,7 +2353,7 @@ char* FormatRomanNumeralTemp(int number) {
     }
     CrashIf(len == 0);
 
-    TempStr roman = (TempStr)Allocator::AllocZero(GetTempAllocator(), len + 1);
+    char* roman = AllocArrayTemp<char>(len + 1);
     TempStr c = roman;
     for (int n = number, i = 0; i < dimof(romandata); i++) {
         for (; n >= romandata[i].value; n -= romandata[i].value) {

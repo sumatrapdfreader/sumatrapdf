@@ -1824,8 +1824,7 @@ size_t HwndGetTextLen(HWND hwnd) {
 // return text of window or edit control, nullptr in case of an error
 TempWStr HwndGetTextWTemp(HWND hwnd) {
     size_t cch = HwndGetTextLen(hwnd);
-    size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
-    WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
+    WCHAR* txt = AllocArrayTemp<WCHAR>(cch + 2); // +2 for extra room
     if (nullptr == txt) {
         return nullptr;
     }
@@ -1836,8 +1835,7 @@ TempWStr HwndGetTextWTemp(HWND hwnd) {
 // return text of window or edit control, nullptr in case of an error
 TempStr HwndGetTextTemp(HWND hwnd) {
     size_t cch = HwndGetTextLen(hwnd);
-    size_t nBytes = (cch + 2) * sizeof(WCHAR); // +2 for extra room
-    WCHAR* txt = (WCHAR*)Allocator::AllocZero(GetTempAllocator(), nBytes);
+    WCHAR* txt = AllocArrayTemp<WCHAR>(cch + 2); // +2 for extra room
     if (nullptr == txt) {
         return nullptr;
     }
