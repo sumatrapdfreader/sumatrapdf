@@ -298,8 +298,8 @@ LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         RECT rect;
         GetClientRect(hWnd, &rect);
         SetTextColor(hdc, gCurrentTheme->window.textColor);
-        SetBkColor(hdc, gCurrentTheme->window.controlBackgroundColor);
-        auto bg = CreateSolidBrush(gCurrentTheme->window.controlBackgroundColor);
+        SetBkColor(hdc, GetControlBackgroundColor());
+        auto bg = CreateSolidBrush(GetControlBackgroundColor());
         FillRect(hdc, &rect, bg);
         DeleteObject(bg);
         return 1;

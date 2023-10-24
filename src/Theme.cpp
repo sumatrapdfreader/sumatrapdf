@@ -178,6 +178,13 @@ static Theme* GetThemeByName(const char* name, int& idx) {
     return nullptr;
 }
 
+// this is the default aggressive yellow that we suppress
+constexpr COLORREF kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
+
+static bool IsDefaultMainWinColor(ParsedColor* col) {
+    return col->parsedOk && col->col == kMainWinBgColDefault;
+}
+
 // call after loading settings
 void SetCurrentThemeFromSettings() {
     const char* name = gGlobalPrefs->theme;
@@ -189,6 +196,16 @@ void SetCurrentThemeFromSettings() {
         return;
     }
     SetThemeByIndex(idx);
+
+    ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
+    bool isDefault = IsDefaultMainWinColor(bgParsed);
+    if (isDefault) {
+        gThemeLight.colorizeControls = false;
+        gThemeLight.window.controlBackgroundColor = kColWhite;
+    } else {
+        gThemeLight.colorizeControls = true;
+        gThemeLight.window.controlBackgroundColor = bgParsed->col;
+    }
 }
 
 void GetDocumentColors(COLORREF& text, COLORREF& bg) {
@@ -227,16 +244,18 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
     }
 }
 
+COLORREF GetControlBackgroundColor() {
+    // note: we can change it in ThemeUpdateAfterLoadSettings()
+    return gCurrentTheme->window.controlBackgroundColor;
+}
+
+// TODO: migrate from prefs to theme.
 COLORREF GetMainWindowBackgroundColor() {
     COLORREF bgColor = gCurrentTheme->window.backgroundColor;
-    // Special behavior for light theme.
-    // TODO: migrate from prefs to theme.
     if (currentThemeIndex == 0) {
-        // for backward compatibility use a value that older versions will render as yellow
-        constexpr COLORREF kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
-
+        // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
-        if (kMainWinBgColDefault != bgParsed->col) {
+        if (!IsDefaultMainWinColor(bgParsed)) {
             bgColor = bgParsed->col;
         }
     }

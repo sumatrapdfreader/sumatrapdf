@@ -33,6 +33,7 @@
 #include "SumatraDialogs.h"
 #include "Tabs.h"
 #include "Translations.h"
+#include "Accelerators.h"
 
 struct FavTreeItem {
     ~FavTreeItem();
@@ -427,8 +428,6 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
         }
     }
 }
-
-#include "Accelerators.h"
 
 // Called when a user opens "Favorites" top-level menu. We need to construct
 // the menu:

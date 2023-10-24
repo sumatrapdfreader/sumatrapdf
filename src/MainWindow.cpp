@@ -624,7 +624,7 @@ void LinkHandler::GotoNamedDest(const char* name) {
 }
 
 void UpdateControlsColors(MainWindow* win) {
-    COLORREF bgCol = gCurrentTheme->window.controlBackgroundColor;
+    COLORREF bgCol = GetControlBackgroundColor();
     COLORREF txtCol = gCurrentTheme->window.textColor;
 
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);

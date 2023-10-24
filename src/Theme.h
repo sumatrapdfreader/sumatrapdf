@@ -54,6 +54,7 @@ int GetCurrentThemeIndex();
 // configured through themes.
 void GetDocumentColors(COLORREF& text, COLORREF& bg);
 COLORREF GetMainWindowBackgroundColor();
+COLORREF GetControlBackgroundColor();
 
 constexpr COLORREF RgbToCOLORREF(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
