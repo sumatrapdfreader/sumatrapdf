@@ -145,7 +145,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
+        TempStr src = str::DupTemp(attr->val, attr->valLen);
         url::DecodeInPlace(src);
         ByteSlice* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -208,7 +208,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (!attr) {
         return;
     }
-    AutoFreeStr src = str::Dup(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
     ByteSlice* img = epubDoc->GetImageData(src, pagePath);
     if (img) {
@@ -270,7 +270,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     ByteSlice* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
-        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
+        TempStr src = str::DupTemp(attr->val, attr->valLen);
         url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
@@ -344,7 +344,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
+        TempStr src = str::DupTemp(attr->val, attr->valLen);
         url::DecodeInPlace(src);
         ByteSlice* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);

@@ -822,7 +822,7 @@ bool IsUntrustedFile(const char* filePath, const char* fileURL) {
     }
 
     // check all parents of embedded files and ADSs as well
-    AutoFreeStr path(str::Dup(filePath));
+    TempStr path = str::DupTemp(filePath);
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
         *str::FindCharLast(path, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {

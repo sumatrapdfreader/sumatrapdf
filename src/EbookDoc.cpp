@@ -39,11 +39,11 @@ static uint GetCodepageFromPI(const char* xmlPI) {
         return CP_ACP;
     }
 
-    AutoFreeStr encoding = str::Dup(enc->val, enc->valLen);
+    TempStr encoding = str::DupTemp(enc->val, enc->valLen);
     struct {
         const char* namePart;
         uint codePage;
-    } encodings[] = {
+    } static encodings[] = {
         {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
         // TODO: any other commonly used codepages?
     };

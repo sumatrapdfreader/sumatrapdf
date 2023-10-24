@@ -93,13 +93,13 @@ static char* Escape(const WCHAR* str) {
     return ToUtf8(escaped.Get());
 }
 
-static char* Escape(const char* str) {
+static TempStr EscapeTemp(const char* str) {
     if (str::IsEmpty(str)) {
-        return {};
+        return nullptr;
     }
 
     if (!NeedsEscape(str)) {
-        return str::Dup(str);
+        return (TempStr)str;
     }
 
     str::Str escaped(256);
@@ -125,56 +125,56 @@ static char* Escape(const char* str) {
                 break;
         }
     }
-    return escaped.StealData();
+    return str::DupTemp(escaped.Get());
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
     Out1("\t<Properties\n");
-    AutoFreeStr str = Escape(engine->FilePath());
-    Out("\t\tFilePath=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(DocumentProperty::Title));
-    if (str.Get()) {
-        Out("\t\tTitle=\"%s\"\n", str.Get());
+    TempStr str = EscapeTemp(engine->FilePath());
+    Out("\t\tFilePath=\"%s\"\n", str);
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::Title));
+    if (str) {
+        Out("\t\tTitle=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::Subject));
-    if (str.Get()) {
-        Out("\t\tSubject=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::Subject));
+    if (str) {
+        Out("\t\tSubject=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::Author));
-    if (str.Get()) {
-        Out("\t\tAuthor=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::Author));
+    if (str) {
+        Out("\t\tAuthor=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::Copyright));
-    if (str.Get()) {
-        Out("\t\tCopyright=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::Copyright));
+    if (str) {
+        Out("\t\tCopyright=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::CreationDate));
-    if (str.Get()) {
-        Out("\t\tCreationDate=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::CreationDate));
+    if (str) {
+        Out("\t\tCreationDate=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::ModificationDate));
-    if (str.Get()) {
-        Out("\t\tModDate=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::ModificationDate));
+    if (str) {
+        Out("\t\tModDate=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::CreatorApp));
-    if (str.Get()) {
-        Out("\t\tCreator=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::CreatorApp));
+    if (str) {
+        Out("\t\tCreator=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::PdfProducer));
-    if (str.Get()) {
-        Out("\t\tPdfProducer=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::PdfProducer));
+    if (str) {
+        Out("\t\tPdfProducer=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::PdfVersion));
-    if (str.Get()) {
-        Out("\t\tPdfVersion=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::PdfVersion));
+    if (str) {
+        Out("\t\tPdfVersion=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::PdfFileStructure));
-    if (str.Get()) {
-        Out("\t\tPdfFileStructure=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::PdfFileStructure));
+    if (str) {
+        Out("\t\tPdfFileStructure=\"%s\"\n", str);
     }
-    str = Escape(engine->GetProperty(DocumentProperty::UnsupportedFeatures));
-    if (str.Get()) {
-        Out("\t\tUnsupportedFeatures=\"%s\"\n", str.Get());
+    str = EscapeTemp(engine->GetProperty(DocumentProperty::UnsupportedFeatures));
+    if (str) {
+        Out("\t\tUnsupportedFeatures=\"%s\"\n", str);
     }
     if (!engine->AllowsPrinting()) {
         Out1("\t\tPrintingAllowed=\"no\"\n");
@@ -199,8 +199,8 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (fontlist) {
         StrVec fonts;
         Split(fonts, fontlist, "\n");
-        str = Escape(Join(fonts, "\n\t\t"));
-        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
+        str = EscapeTemp(Join(fonts, "\n\t\t"));
+        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str);
     }
 }
 
@@ -208,8 +208,8 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
     char* destName = dest->GetName();
     if (destName) {
-        AutoFreeStr name = Escape(destName);
-        return str::Format("Name=\"%s\"", name.Get());
+        TempStr name = EscapeTemp(destName);
+        return str::Format("Name=\"%s\"", name);
     }
     // as handled by LinkHandler::ScrollTo in MainWindow.cpp
     int pageNo = dest->GetPageNo();
@@ -234,11 +234,11 @@ static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
 
 void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
-        AutoFreeStr title = Escape(item->title);
+        TempStr title = EscapeTemp(item->title);
         for (int i = 0; i < level; i++) {
             Out1("\t");
         }
-        Out("<Item Title=\"%s\"", title.Get());
+        Out("<Item Title=\"%s\"", title);
         if (item->pageNo) {
             Out(" Page=\"%d\"", item->pageNo);
         }
@@ -247,9 +247,9 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
         }
         if (item->GetPageDestination()) {
             IPageDestination* dest = item->GetPageDestination();
-            AutoFreeStr target = Escape(dest->GetValue());
-            if (target.Get()) {
-                Out(" Target=\"%s\"", target.Get());
+            TempStr target = EscapeTemp(dest->GetValue());
+            if (target) {
+                Out(" Target=\"%s\"", target);
             }
             if (item->pageNo != dest->GetPageNo()) {
                 Out(" TargetPage=\"%d\"", dest->GetPageNo());
@@ -309,8 +309,8 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
-        AutoFreeStr label = Escape(engine->GetPageLabeTemp(pageNo));
-        Out("\t\tLabel=\"%s\"\n", label.Get());
+        TempStr label = EscapeTemp(engine->GetPageLabeTemp(pageNo));
+        Out("\t\tLabel=\"%s\"\n", label);
     }
     Rect bbox = engine->PageMediabox(pageNo).Round();
     Out("\t\tMediaBox=\"%d %d %d %d\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
@@ -346,9 +346,9 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 if (dest->GetKind() != nullptr) {
                     Out("\t\t\t\tLinkType=\"%s\"\n", dest->GetKind());
                 }
-                AutoFreeStr value = Escape(dest->GetValue());
-                if (value.Get()) {
-                    Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
+                TempStr value = EscapeTemp(dest->GetValue());
+                if (value) {
+                    Out("\t\t\t\tLinkTarget=\"%s\"\n", value);
                 }
                 if (dest->GetPageNo()) {
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetPageNo());
@@ -358,9 +358,9 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
                 }
             }
-            AutoFreeStr name = Escape(el->GetValue());
-            if (name.Get()) {
-                Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
+            TempStr name = EscapeTemp(el->GetValue());
+            if (name) {
+                Out("\t\t\t\tLabel=\"%s\"\n", name);
             }
             Out1("\t\t\t/>\n");
         }
