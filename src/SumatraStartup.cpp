@@ -726,28 +726,31 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
 // in Installer.cpp
 u32 GetLibmupdfDllSize();
 
-// verify that libmupdf.dll has the same size as the one embedded in exe
-static void VerifyNoLibmupdfMismatch() {
-    FARPROC addr = nullptr;
-    if (gIsAsanBuild) {
-        return;
-    }
+// a single exe is both an installer and the app (if libmupdf.dll has been extracted)
+// if we don't find libmupdf.dll alongside us, we assume this is installer
+// if libmupdf.dll is present but different that ours, it's a damaged installation
+static bool ForceRunningAsInstaller() {
     if (!ExeHasInstallerResources()) {
         // this is not a version that needs libmupdf.dll
-        return;
+        return false;
     }
+
     u32 expectedSize = GetLibmupdfDllSize();
     ReportIf(0 == expectedSize);
     if (0 == expectedSize) {
-        return;
+        // shouldn't happen
+        return false;
     }
 
-    char* exePath = GetExePathTemp();
-    char* dir = path::GetDirTemp(exePath);
-    char* path = path::JoinTemp(dir, "libmupdf.dll");
+    TempStr exePath = GetExePathTemp();
+    TempStr dir = path::GetDirTemp(exePath);
+    TempStr path = path::JoinTemp(dir, "libmupdf.dll");
     auto realSize = file::GetSize(path);
+    if (realSize < 0) {
+        return true;
+    }
     if (realSize == (i64)expectedSize) {
-        return;
+        return false;
     }
 
     constexpr const char* corruptedInstallationConsole = R"(
@@ -1050,7 +1053,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
-        return exitCode;
+        ::ExitProcess(exitCode);
     }
 
     if (isUninstaller) {
@@ -1087,7 +1090,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         }
     }
 
-    VerifyNoLibmupdfMismatch();
+    if (ForceRunningAsInstaller() || true) {
+        logf("forcing running as an installer\n");
+        exitCode = RunInstaller();
+        // exit immediately. for some reason exit handlers try to
+        // pull in libmupdf.dll which we don't have access to in the installer
+        ::ExitProcess(exitCode);
+    }
 
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)

@@ -46,7 +46,7 @@ char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     if (cbNeeded == 0) {
         return nullptr;
     }
-    char* res = Allocator::AllocArray<char>(a, cbNeeded + 1);  // +1 for terminating 0
+    char* res = Allocator::AllocArray<char>(a, cbNeeded + 1); // +1 for terminating 0
     if (!res) {
         return nullptr;
     }
