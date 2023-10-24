@@ -328,8 +328,8 @@ static char* GetUninstallerPathInTemp() {
 
 // to be able to delete installation directory we must copy
 // ourselves to temp directory and re-launch
-static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
-    log("RelaunchMaybeElevatedFromTempDirectory()\n");
+static void RelaunchElevatedFromTempDirectory(Flags* cli) {
+    log("RelaunchElevatedFromTempDirectory()\n");
     if (gIsDebugBuild) {
         // for easier debugging, debug build doesn't need
         // to be copied / re-launched
@@ -339,10 +339,6 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     char* installerTempPath = GetUninstallerPathInTemp();
     char* ownPath = GetExePathTemp();
     if (str::EqI(installerTempPath, ownPath)) {
-        if (!gCli->allUsers) {
-            log("  already running from temp dir\n");
-            return;
-        }
         if (IsProcessRunningElevated()) {
             log("  already running elevated and from temp dir\n");
             return;
@@ -365,15 +361,8 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     if (cli->log) {
         cmdLine.Append(" -log");
     }
-    if (cli->allUsers) {
-        cmdLine.Append(" -all-users");
-    }
     logf("  re-launching '%s' with args '%s' as elevated\n", installerTempPath, cmdLine.Get());
-    if (cli->allUsers) {
-        LaunchElevated(installerTempPath, cmdLine.Get());
-    } else {
-        LaunchProcess(installerTempPath, cmdLine.Get());
-    }
+    LaunchElevated(installerTempPath, cmdLine.Get());
     ::ExitProcess(0);
 }
 
@@ -449,7 +438,7 @@ int RunUninstaller() {
         goto Exit;
     }
 
-    RelaunchMaybeElevatedFromTempDirectory(gCli);
+    RelaunchElevatedFromTempDirectory(gCli);
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
     if (gWasSearchFilterInstalled) {
@@ -497,8 +486,6 @@ int RunUninstaller() {
     LaunchFileIfExists(uninstallerLogPath);
 
 Exit:
-#if 0 // technically a leak but there's no point
     free(gFirstError);
-#endif
     return ret;
 }

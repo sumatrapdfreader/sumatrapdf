@@ -50,8 +50,8 @@ static DWORD GetDirSize(const char* dir, bool recur) {
     return (DWORD)totalSize;
 }
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers) {
-    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d)\n", RegKeyNameTemp(hkey), (int)allUsers);
+bool WriteUninstallerRegistryInfo(HKEY hkey) {
+    logf("WriteUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     bool ok = true;
 
     char* installedExePath = GetInstallationFilePathTemp(kExeName);
@@ -59,10 +59,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers) {
     char* installDir = GetInstallDirTemp();
     // uninstaller is the same executable with a different flag
     char* uninstallerPath = installedExePath;
-    TempStr uninstallCmdLine = str::FormatTemp("\"%s\" -uninstall", uninstallerPath);
-    if (allUsers) {
-        uninstallCmdLine = str::JoinTemp(uninstallCmdLine, " -all-users");
-    }
+    AutoFreeStr uninstallCmdLine = str::Format("\"%s\" -uninstall", uninstallerPath);
 
     char* regPathUninst = GetRegPathUninstTemp(kAppName);
     // path to installed executable (or "$path,0" to force the first icon)
@@ -88,8 +85,8 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers) {
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoRepair", 1);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "Publisher", kPublisherStr);
     // command line for uninstaller
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, "UninstallString", uninstallCmdLine);
-    TempStr uninstallCmdLineSilent = str::JoinTemp(uninstallCmdLine, " -silent");
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "UninstallString", uninstallCmdLine.Get());
+    TempStr uninstallCmdLineSilent = str::JoinTemp(uninstallCmdLine.Get(), " -silent");
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "QuietUninstallString", uninstallCmdLineSilent);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLInfoAbout", "https://www.sumatrapdfreader.org/");
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLUpdateInfo",
