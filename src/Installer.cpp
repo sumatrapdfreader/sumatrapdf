@@ -1144,7 +1144,9 @@ Exit:
             LaunchFileIfExists(installerLogPath);
         }
     }
+#if 0 // technically a leak but there's no point and we don't want to crash if allocator is corrupted
     str::Free(installerLogPath);
     str::Free(gFirstError);
+#endif
     return ret;
 }
