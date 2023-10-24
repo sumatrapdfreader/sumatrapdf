@@ -425,7 +425,7 @@ static void SaveAttachment(WindowTab* tab, const char* fileName, int attachmentN
     }
     char* dir = path::GetDirTemp(tab->filePath);
     fileName = path::GetBaseNameTemp(fileName);
-    AutoFreeStr dstPath = path::Join(dir, fileName);
+    TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }
@@ -469,7 +469,7 @@ static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fi
     }
     char* dir = path::GetDirTemp(tab->filePath);
     fileName = path::GetBaseNameTemp(fileName);
-    AutoFreeStr dstPath = path::Join(dir, fileName);
+    TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }

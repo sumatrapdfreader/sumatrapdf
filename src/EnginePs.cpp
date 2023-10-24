@@ -147,7 +147,7 @@ static EngineBase* ps2pdf(const char* path) {
     AutoFreeStr shortPath = path::ShortPath(path);
     AutoFreeStr tmpFile = path::GetTempFilePath("PsE");
     ScopedFile tmpFileScope(tmpFile);
-    AutoFreeStr gswin32c(GetGhostscriptPath());
+    AutoFreeStr gswin32c = GetGhostscriptPath();
     if (!shortPath || !tmpFile || !gswin32c) {
         return nullptr;
     }
@@ -210,7 +210,7 @@ static EngineBase* ps2pdf(const char* path) {
 }
 
 static EngineBase* psgz2pdf(const char* fileName) {
-    AutoFreeStr tmpFile(path::GetTempFilePath("PsE"));
+    AutoFreeStr tmpFile = path::GetTempFilePath("PsE");
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;
@@ -388,7 +388,7 @@ EngineBase* EnginePs::CreateFromFile(const char* fileName) {
 }
 
 bool IsEnginePsAvailable() {
-    AutoFreeStr gswin32c(GetGhostscriptPath());
+    AutoFreeStr gswin32c = GetGhostscriptPath();
     return gswin32c.Get() != nullptr;
 }
 

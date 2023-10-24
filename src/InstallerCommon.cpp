@@ -408,8 +408,8 @@ static bool KillProcessesUsingInstallation() {
     if (dir.empty()) {
         return true;
     }
-    AutoFreeStr libmupdf = path::Join(dir, "libmupdf.dll");
-    AutoFreeStr browserPlugin = path::Join(dir, kBrowserPluginName);
+    TempStr libmupdf = path::JoinTemp(dir, "libmupdf.dll");
+    TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {

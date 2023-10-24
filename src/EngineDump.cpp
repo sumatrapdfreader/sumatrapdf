@@ -195,7 +195,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (!fullDump) {
         return;
     }
-    AutoFreeStr fontlist(engine->GetProperty(DocumentProperty::FontList));
+    AutoFreeStr fontlist = engine->GetProperty(DocumentProperty::FontList);
     if (fontlist) {
         StrVec fonts;
         Split(fonts, fontlist, "\n");

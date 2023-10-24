@@ -147,7 +147,7 @@ bool UninstallPreviewDll() {
 void DisablePreviewInstallExts(const char* cmdLine) {
     // allows installing only a subset of available preview handlers
     if (str::StartsWithI(cmdLine, "exts:")) {
-        AutoFreeStr extsList = str::Dup(cmdLine + 5);
+        TempStr extsList = str::DupTemp(cmdLine + 5);
         str::ToLowerInPlace(extsList);
         str::TransCharsInPlace(extsList, ";. :", ",,,\0");
         StrVec exts;

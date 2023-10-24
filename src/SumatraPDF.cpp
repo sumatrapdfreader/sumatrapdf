@@ -3654,7 +3654,7 @@ static void OnMenuGoToPage(MainWindow* win) {
 
     auto* ctrl = win->ctrl;
     TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
-    AutoFreeStr newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
+    AutoFreeStr newPageLabel = Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels());
     if (!newPageLabel) {
         return;
     }
