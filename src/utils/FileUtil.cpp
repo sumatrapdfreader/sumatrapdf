@@ -516,7 +516,7 @@ ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         goto Error;
     }
-    d = (char*)Allocator::AllocZero(allocator, size + ZERO_PADDING_COUNT);
+    d = Allocator::AllocArray<char>(allocator, size + ZERO_PADDING_COUNT);
     if (!d) {
         goto Error;
     }

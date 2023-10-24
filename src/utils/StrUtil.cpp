@@ -615,7 +615,7 @@ char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args) {
         } else {
             bufCchSize += 1024;
         }
-        buf = (char*)Allocator::AllocZero(a, bufCchSize);
+        buf = Allocator::AllocArray<char>(a, bufCchSize);
         if (!buf) {
             break;
         }

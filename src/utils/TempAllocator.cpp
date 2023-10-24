@@ -12,7 +12,7 @@ It's a very fast bump allocator.
 
 You must periodically call ResetTempAllocator()
 to free memory used by allocator.
-A safe place to call it is inside message windows loop.
+A good place to do it is at the beginning of window message loop.
 */
 
 thread_local static PoolAllocator* gTempAllocator = nullptr;

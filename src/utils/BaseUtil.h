@@ -364,7 +364,7 @@ struct Allocator {
     static void* Alloc(Allocator* a, size_t size);
 
     template <typename T>
-    static T* Alloc(Allocator* a, size_t n = 1) {
+    static T* AllocArray(Allocator* a, size_t n = 1) {
         size_t size = n * sizeof(T);
         return (T*)AllocZero(a, size);
     }

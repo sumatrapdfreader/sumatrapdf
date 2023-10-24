@@ -86,7 +86,7 @@ struct HashTable {
 
 static HashTable* NewHashTable(size_t size, Allocator* allocator) {
     CrashIf(!allocator); // we'll leak otherwise
-    HashTable* h = (HashTable*)Allocator::AllocZero(allocator, sizeof(HashTable));
+    HashTable* h = Allocator::AllocArray<HashTable>(allocator, 1);
     // number of hash table entries should be power of 2
     size = RoundToPowerOf2(size);
     // entries are not allocated with allocator since those are large blocks
@@ -159,7 +159,7 @@ static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uint
         e = h->freeList;
         h->freeList = h->freeList->next;
     } else {
-        e = (HashTableEntry*)Allocator::AllocZero(allocator, sizeof(HashTableEntry));
+        e = Allocator::AllocArray<HashTableEntry>(allocator, 1);
     }
     e->next = h->entries[pos];
     h->entries[pos] = e;

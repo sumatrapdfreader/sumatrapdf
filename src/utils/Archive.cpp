@@ -169,7 +169,7 @@ const char* MultiFormatArchive::GetComment() {
     if (0 == n || (size_t)-1 == n) {
         return nullptr;
     }
-    char* comment = Allocator::Alloc<char>(&allocator_, n + 1);
+    char* comment = Allocator::AllocArray<char>(&allocator_, n + 1);
     if (!comment) {
         return nullptr;
     }

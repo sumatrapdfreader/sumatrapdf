@@ -14,12 +14,11 @@ WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
         cb = str::Len(s);
     }
     if (cb == 0) {
-        return (WCHAR*)Allocator::AllocZero(a, sizeof(WCHAR));
+        return Allocator::AllocArray<WCHAR>(a, 1);
     }
     // ask for the size of buffer needed for converted string
     int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, nullptr, 0);
-    size_t cbAlloc = ((size_t)cchNeeded * sizeof(WCHAR)) + sizeof(WCHAR); // +1 for terminating 0
-    WCHAR* res = (WCHAR*)Allocator::AllocZero(a, cbAlloc);
+    WCHAR* res = Allocator::AllocArray<WCHAR>(a, cchNeeded + 1); // +1 for terminating 0
     if (!res) {
         return nullptr;
     }
@@ -40,15 +39,14 @@ char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
         cch = str::Len(s);
     }
     if (cch == 0) {
-        return (char*)Allocator::AllocZero(a, sizeof(char));
+        return Allocator::AllocArray<char>(a, 1);
     }
     // ask for the size of buffer needed for converted string
     int cbNeeded = WideCharToMultiByte(codePage, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
     if (cbNeeded == 0) {
         return nullptr;
     }
-    size_t cbAlloc = cbNeeded + sizeof(char); // +1 for terminating 0
-    char* res = (char*)Allocator::AllocZero(a, cbAlloc);
+    char* res = Allocator::AllocArray<char>(a, cbNeeded + 1);  // +1 for terminating 0
     if (!res) {
         return nullptr;
     }
