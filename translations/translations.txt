@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bfaa5d8f8111cc423721162351d3bc559d1c2b25
+1bc9d88dad8b04e11fff7d6cc28f0984a072da60
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -15,6 +15,7 @@ it:Annotazione %s. Ctrl+clic per modificarla.
 nl:%s opmerking. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique para editar.
+ru:Аннотация %s. Ctrl+щелчок для изменения.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About
 af:&Omtrent
@@ -1444,6 +1445,7 @@ fr:&Raccourcis clavier
 it:&Tasti rapidi
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
+ru:&Горячие клавиши
 tw:鍵盤快速鍵(&K)
 :&Last Page
 am:&Վերջին էջ
@@ -5839,6 +5841,7 @@ mk:Избришани се %d датотеки од историјата, изб
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
 pt:Histórico de %d ficheiros removido e miniaturas removidas.
+ru:Очищена история %d файлов, удалены миниатюры.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
@@ -5864,6 +5867,7 @@ mk:Бришење на историјата...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
 pt:A limpar histórico...
+ru:Очистка истории...
 tw:正在清除歷史記錄...
 vn:Đang dọn dẹp lịch sử...
 :Close
@@ -8408,6 +8412,7 @@ kr:주석 삭제
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
 pt:Eliminar anotação
+ru:Удалить аннотацию
 tw:刪除註解
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
