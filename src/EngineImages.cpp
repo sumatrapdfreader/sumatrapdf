@@ -907,7 +907,7 @@ TocTree* EngineImageDir::GetToc() {
     TocItem* root = newImageDirTocItem(nullptr, label, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
-        label = GetPageLabeTemp(1);
+        label = GetPageLabeTemp(i);
         TocItem* item = newImageDirTocItem(root, label, i);
         item->id = i;
         root->AddSiblingAtEnd(item);
