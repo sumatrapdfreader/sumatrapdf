@@ -89,10 +89,11 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked)
     return w;
 }
 
+// caller has to free()
 char* GetInstallerLogPath() {
     TempStr dir = GetTempDirTemp();
     if (!dir) {
-        return str::DupTemp("sumatra-install-log.txt");
+        return str::Dup("sumatra-install-log.txt");
     }
     return path::Join(dir, "sumatra-install-log.txt");
 }
