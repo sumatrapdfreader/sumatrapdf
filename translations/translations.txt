@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1bc9d88dad8b04e11fff7d6cc28f0984a072da60
+f6ca3e07bec7d0cd0cdbafcd4400ed69780e7f57
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -16,6 +16,7 @@ nl:%s opmerking. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique para editar.
 ru:Аннотация %s. Ctrl+щелчок для изменения.
+sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About
 af:&Omtrent
@@ -128,6 +129,7 @@ pl:&Rozmiar rzeczywisty
 pt:Tam&anho real
 ro:&Mărimea actuală
 ru:Насто&ящий размер
+sk:&Aktuálna veľkosť
 sl:Dej&anska velikost
 sr-rs:&Стварна величина
 sv:&Faktisk storlek
