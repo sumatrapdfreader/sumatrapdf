@@ -1976,8 +1976,8 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
     }
 }
 
-constexpr int kMenuPaddingY = 2;
-constexpr int kMenuPaddingX = 2;
+constexpr int kMenuPaddingY = 4;
+constexpr int kMenuPaddingX = 8;
 
 void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {
