@@ -1915,12 +1915,18 @@ void LoadDocumentAsync(LoadArgs* argsIn, bool activateExisting) {
     });
 }
 
+static bool gDisableLazyLoad = true;
+
 // remember which files failed to open so that a failure to
 // open a file doesn't block next/prev file in
 static StrVec gFilesFailedToOpen;
 
 MainWindow* LoadDocument(LoadArgs* args, bool lazyLoad, bool activateExisting) {
     CrashAlwaysIf(gCrashOnOpen);
+
+    if (gDisableLazyLoad) {
+        lazyLoad = false;
+    }
 
     const char* path = args->FilePath();
     if (activateExisting) {
