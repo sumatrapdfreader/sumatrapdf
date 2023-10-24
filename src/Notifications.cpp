@@ -166,7 +166,7 @@ NotificationWnd::~NotificationWnd() {
     auto fontToDelete = font;
     Destroy();
     str::Free(progressMsg);
-    if (fontToDelete) {
+    if (false && fontToDelete) {
         DeleteObject(fontToDelete);
     }
 }
