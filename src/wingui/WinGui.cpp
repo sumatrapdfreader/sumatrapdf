@@ -3426,7 +3426,6 @@ constexpr float closePenWidth = 1.0f;
 constexpr COLORREF circleColor = RgbToCOLORREF(0xC13535);
 
 void TabsCtrl::Paint(HDC hdc, RECT& rc) {
-    logfa("TabsCtrl::Paint\n");
     TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
     bool overClose = tabState.overClose && tabState.tabInfo->canClose;
@@ -3449,9 +3448,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     Theme* theme = gCurrentTheme;
     SolidBrush br(GdipCol(GetControlBackgroundColor()));
 
-    HFONT guiFont = GetDefaultGuiFont();
-    logfa("guiFont: %p\n", (uintptr_t)guiFont);
-    Font f(hdc, guiFont);
+    Font f(hdc, GetDefaultGuiFont());
 
     Gdiplus::Rect gr = ToGdipRect(rc);
     gfx.FillRectangle(&br, gr);
@@ -3519,10 +3516,6 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
             p2 = {r.x, r.y + r.dy};
             gfx.DrawLine(&penX, p1, p2);
         }
-
-        auto r2 = ti->r;
-        logfa("TabsCtrl::Paint: tab: %d, textColor: 0x%x, ti->r pos: (%3d,%3d) size: (%3d,%3d), ti->text: '%s'\n", i, textColor,
-              r2.x, r2.y, r2.dx, r2.dy, ti->text);
 
         // draw text
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
