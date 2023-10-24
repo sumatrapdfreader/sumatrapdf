@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bfaa5d8f8111cc423721162351d3bc559d1c2b25
+3ea0987926a1c431efa6765b7f6fa34b459e8c4b
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -15,6 +15,8 @@ it:Annotazione %s. Ctrl+clic per modificarla.
 nl:%s opmerking. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique para editar.
+ru:Аннотация %s. Ctrl+щелчок для изменения.
+sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About
 af:&Omtrent
@@ -127,6 +129,7 @@ pl:&Rozmiar rzeczywisty
 pt:Tam&anho real
 ro:&Mărimea actuală
 ru:Насто&ящий размер
+sk:&Aktuálna veľkosť
 sl:Dej&anska velikost
 sr-rs:&Стварна величина
 sv:&Faktisk storlek
@@ -309,6 +312,7 @@ pl:&Wstecz
 pt:&Recuar 
 ro:&Înapoi
 ru:&Назад
+sk:&Späť
 sl:Nazaj
 sr-rs:&Назад
 ta:&பின்
@@ -354,6 +358,7 @@ pl:Widok o&dczytu
 pt:&Como livro 
 ro:&Vizualizare în format carte
 ru:В &разворот
+sk:&Zobraziť ako knihu
 sl:Knjižni pogled
 sr-rs:Приказ &књиге
 ta:&புத்தகவுருக் காட்சி
@@ -502,6 +507,7 @@ pl:&Zamknij
 pt:Fe&char
 ro:&Închide
 ru:&Закрыть
+sk:&Zatvoriť
 sl:&Zapri
 sr-rs:&Затвори
 sv:&Stäng
@@ -661,6 +667,7 @@ pl:Kopiuj do s&chowka
 pt:&Copiar para a área de transferência 
 ro:&Copiază pe Clipboard
 ru:С&копировать в буфер обмена
+sk:&Kopírovať do schránky
 sl:&Kopiraj v odložišče
 sr-rs:&Копирај у оставу (клипборд)
 ta:&குறிப்பலகைக்குப் படியெடுத்திடுக
@@ -708,6 +715,7 @@ pl:O&drzuć zmiany
 pt:&Descartar alterações
 ro:&Renunțați la modificări
 ru:Отказат&ься от изменений
+sk:&Zrušiť zmeny
 sl:&Zavrni spremembe
 sr-rs:Одба&ци промене
 ta:&மாற்றங்களைக் கழித்திடுக
@@ -1438,12 +1446,14 @@ uk:Виділити
 vn:&Nổi Bật
 :&Keyboard Shortcuts
 br:Atalhos do Teclado
+ca:&Dreceres de teclat
 de:Tasten&kombinationen
 el:Συντομεύσεις πληκτρολογίου
 fr:&Raccourcis clavier
 it:&Tasti rapidi
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
+ru:&Горячие клавиши
 tw:鍵盤快速鍵(&K)
 :&Last Page
 am:&Վերջին էջ
@@ -4642,6 +4652,7 @@ pl:Autor: %s
 pt:Autor: %s
 ro:Autor: %s
 ru:Автор: %s
+sk:Autor: %s
 sl:Avtor: %s
 sr-rs:Аутор: %s
 ta:ஆக்கியவர்: %s
@@ -5155,6 +5166,7 @@ pl:Obramowanie: %d
 pt:Contorno: %d
 ro:Graniță: %d
 ru:Рамка: %d
+sk:Okraj: %d
 sl:Rob: %d
 sr-rs:Ивица: %d
 ta:ஓரம்: %d
@@ -5751,6 +5763,7 @@ pl:Szukanie aktualizacji...
 pt:A procurar atualizações...
 ro:Căutare actualizare...
 ru:Проверка наличия обновления...
+sk:Kontrolujú sa aktualizácie…
 sl:Preverjanje posodobitev …
 sr-rs:Провера ажурирања...
 sv:Söker efter uppdatering...
@@ -5839,6 +5852,8 @@ mk:Избришани се %d датотеки од историјата, изб
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
 pt:Histórico de %d ficheiros removido e miniaturas removidas.
+ru:Очищена история %d файлов, удалены миниатюры.
+sk:Vymazaná história %d súborov, odstránené náhľady.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
@@ -5864,6 +5879,8 @@ mk:Бришење на историјата...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
 pt:A limpar histórico...
+ru:Очистка истории...
+sk:Vymazávanie histórie…
 tw:正在清除歷史記錄...
 vn:Đang dọn dẹp lịch sử...
 :Close
@@ -5970,6 +5987,7 @@ pl:Zamknij inne karty
 pt:Fechar outros separadores 
 ro:Închide alte file
 ru:Закрыть другие вкладки
+sk:Zatvoriť ostatné karty
 sl:Zapri druge zavihke
 sr-rs:Затвори остале картице
 sv:Stäng andra flikar
@@ -6015,6 +6033,7 @@ pl:Zamknij karty po prawej stronie
 pt:Fechar separadores à direita
 ro:Închide filele la dreapta
 ru:Закрыть вкладки справа
+sk:Zatvoriť karty vpravo
 sl:Zapri zavihke na desni
 sr-rs:Затвори картице са десне стране
 ta:வலதுபுறம் உள்ள கீற்றுகளை மூடிடுக
@@ -6238,6 +6257,7 @@ pl:Paleta poleceń
 pt:Paleta de comandos
 ro:Paleta de comenzi
 ru:Панель команд
+sk:Paleta príkazov
 sl:Ukazna paleta
 sr-rs:&Палета команди
 ta:கட்டளைப் பந்தி
@@ -6356,6 +6376,7 @@ pl:Zawartość:
 pt:Conteúdo:
 ro:Сonţinut:
 ru:Содержимое:
+sk:Obsah:
 sl:Vsebina:
 sr-rs:Садржај:
 sv:Innehåll:
@@ -6869,6 +6890,7 @@ no:Kopier filbane
 pl:Kopiuj ścieżkę pliku
 pt:Copiar caminho do ficheiro
 ru:Скопировать путь к файлу
+sk:Kopírovať cestu k súboru
 sv:Kopiera sökväg
 ta:கோப்பு பாதை நகலெடு
 tl:Kopyahin ang File Path
@@ -6910,6 +6932,7 @@ pl:Kopiuj do schowka
 pt:Copiar para a área de transferência 
 ro:Copiază pe Clipboard
 ru:Скопировать в буфер обмена
+sk:Kopírovať do schránky
 sl:Kopiraj v odložišče
 sr-rs:Копирај у оставу (клипборд)
 ta:குறிப்பலகைக்குப் படியெடுத்திடுக
@@ -7218,6 +7241,7 @@ pl:Nie można uzyskać nazwy drukarki
 pt:Não foi possível obter o nome da impressora 
 ro:Nu s-a putut obține numele imprimantei
 ru:Не удалось получить имя принтера
+sk:Nepodarilo sa získať názov tlačiarne
 sl:Ni bilo mogoče najti imena tiskalnika
 sr-rs:Није могуће добити име штампача
 sv:Kunde inte att hämta skrivarens namn
@@ -7598,6 +7622,7 @@ pl:Nie można odinstalować filtru wyszukiwania Sumatry
 pt: Não foi possível desinstalar o filtro de pesquisa
 ro:Nu s-a putut dezinstala filtrul de căutare Sumatra
 ru:Не удалось удалить фильтр поиска Sumatra
+sk:Vyhľadávací filter Sumatra sa nedá odinštalovať\r\n
 sl:Ni bilo mogoče odstraniti iskalnega filtra Sumatra
 sr-rs:Деинсталација Sumatra филтера за претрагу није успела
 ta:சுமத்ரா தேடல் வடிப்பான் நிறுவலை நீக்கமுடியவில்லை
@@ -7774,6 +7799,7 @@ pl:Utwórz adnotację &pod kursorem
 pt:Criar anotação no local do c&ursor
 ro:Creează adnotare &sub cursor
 ru:Создать аннотацию &под курсором
+sk:Vytvorenie anotácie pod k&urzorom
 sl:Ustvari pripombo &pod kurzorjem
 sr-rs:Направи белешку &испод курсора
 ta:&நிலைகாட்டியின் அடியில் குறிப்புரையை உருவாக்குக
@@ -7825,6 +7851,7 @@ pl:Utwórz adnotację z zaznaczenia
 pt:Criar anotação na seleção
 ro:Creează adnotare din selecție
 ru:Создать аннотацию из выделения
+sk:Vytvoriť anotáciu z výberu
 sl:Ustvari pripombo iz izbire
 sr-rs:Направи белешку из селекције
 ta:தேர்வு செய்ததிலிருந்து குறிப்புரையை உருவாக்குக
@@ -8069,6 +8096,7 @@ pl:&Własne powiększenie...
 pt:Tamanho personali&zado...
 ro:Mă&rire setată de utilizator
 ru:Свой &масштаб...
+sk:Vlastné &zväčšenie…
 sl:Povečava po &meri …
 sr-rs:Сопствено &увећање
 ta:&வழமைக் காணுருவளவு
@@ -8247,6 +8275,7 @@ pl:Data:
 pt:Data:
 ro:Dată:
 ru:Дата:
+sk:Dátum:
 sl:Datum:
 sr-rs:Датум:
 sv:Datum
@@ -8408,6 +8437,8 @@ kr:주석 삭제
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
 pt:Eliminar anotação
+ru:Удалить аннотацию
+sk:Odstrániť anotáciu
 tw:刪除註解
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
@@ -8648,6 +8679,7 @@ pl:Nie instaluj
 pt:Não instalar
 ro:Nu instala
 ru:Не устанавливать
+sk:Neinštalovať
 sl:Ne nameščaj
 sr-rs:Не инсталирај
 sv:Installera inte
@@ -8745,6 +8777,7 @@ pl:&Wyjście
 pt:&Sair
 ro:&Ieșire
 ru:В&ыход
+sk:U&končiť
 sl:I&zhod
 sr-rs:Иза&ђи
 sv:Avsluta
@@ -8795,6 +8828,7 @@ pl:W&yjdź z trybu pełnoekranowego
 pt:Sair de &ecrã completo
 ro:&Ieșire mod pe tot ecranul.
 ru:&Выйти из полноэкранного режима
+sk:U&končiť zobrazenie na celú obrazovku
 sl:&Izhod iz celozaslonskega načina
 sr-rs:Иза&ђи из целог екрана
 ta:முழுத்திரை வெளியேறு 
@@ -8891,6 +8925,7 @@ nl:Bewerk %s Aantekening
 pl:Edytuj adnotację %s
 pt:Editar %s
 ru:Изменить аннотацию %s
+sk:Upraviť %s anotáciu
 tw:編輯 %s 註解
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
@@ -8935,6 +8970,7 @@ pl:Edytuj adnotacje
 pt:Editar anotações 
 ro:Modifică adnotări
 ru:Изменить аннотации
+sk:Upraviť anotáciu
 sl:Uredi pripombo
 sr-rs:&Уреди белешке
 ta:குறிப்புரைகளைத் திருத்துக
