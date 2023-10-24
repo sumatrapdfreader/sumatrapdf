@@ -1090,7 +1090,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         }
     }
 
-    if (ForceRunningAsInstaller() || true) {
+    if (ForceRunningAsInstaller()) {
         logf("forcing running as an installer\n");
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
