@@ -300,23 +300,6 @@ func currDirAbsMust() string {
 	return dir
 }
 
-// we are executed for do/ directory so top dir is parent dir
-func cdUpDir(dirName string) {
-	startDir := currDirAbsMust()
-	dir := startDir
-	for {
-		// we're already in top directory
-		if filepath.Base(dir) == dirName && dirExists(dir) {
-			err := os.Chdir(dir)
-			must(err)
-			return
-		}
-		parentDir := filepath.Dir(dir)
-		panicIf(dir == parentDir, "invalid startDir: '%s', dir: '%s'", startDir, dir)
-		dir = parentDir
-	}
-}
-
 func execTextTemplate(tmplText string, data interface{}) string {
 	tmpl, err := template.New("").Parse(tmplText)
 	must(err)

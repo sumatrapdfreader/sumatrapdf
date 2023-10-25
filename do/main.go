@@ -163,7 +163,6 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 }
 
 func main() {
-	cdUpDir("sumatrapdf")
 	logf(ctx(), "Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
