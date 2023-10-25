@@ -69,7 +69,7 @@ fz_trace_text_span(fz_context *ctx, fz_output *out, fz_text_span *span, int dept
 {
 	int i;
 	fz_trace_indent(ctx, out, depth);
-	fz_write_printf(ctx, out, "<span font=\"%s\" wmode=\"%d\" bidi=\"%d\" dir=\"%d\"", fz_font_name(ctx, span->font), span->wmode, span->bidi_level, span->markup_dir);
+	fz_write_printf(ctx, out, "<span font=\"%s\" wmode=\"%d\" bidi=\"%d\"", fz_font_name(ctx, span->font), span->wmode, span->bidi_level);
 	if (span->language != FZ_LANG_UNSET)
 	{
 		char text[8];

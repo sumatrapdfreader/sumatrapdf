@@ -53,8 +53,15 @@ pdf_load_embedded_cmap_imp(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, 
 		obj = pdf_dict_get(ctx, stmobj, PDF_NAME(UseCMap));
 		if (pdf_is_name(ctx, obj))
 		{
-			usecmap = pdf_load_system_cmap(ctx, pdf_to_name(ctx, obj));
-			pdf_set_usecmap(ctx, cmap, usecmap);
+			fz_try(ctx)
+			{
+				usecmap = pdf_load_system_cmap(ctx, pdf_to_name(ctx, obj));
+				pdf_set_usecmap(ctx, cmap, usecmap);
+			}
+			fz_catch(ctx)
+			{
+				fz_warn(ctx, "cannot load system CMap: %s", pdf_to_name(ctx, obj));
+			}
 		}
 		else if (pdf_is_indirect(ctx, obj))
 		{

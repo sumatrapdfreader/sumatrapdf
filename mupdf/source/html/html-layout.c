@@ -379,14 +379,11 @@ static void measure_string_h(fz_context *ctx, fz_html_flow *node)
 }
 
 
-static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline, float *vert_adv)
+static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline)
 {
 	float max_a = 0, max_d = 0, h = node->h;
-	*vert_adv = node->h;
 	while (node != end)
 	{
-		if (node->h > *vert_adv)
-			*vert_adv = node->h;
 		if (node->type == FLOW_IMAGE)
 		{
 			if (node->h > max_a)
@@ -394,13 +391,16 @@ static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline
 		}
 		else if (node->type != FLOW_SBREAK && node->type != FLOW_BREAK)
 		{
-			float a = node->box->s.layout.em * 0.8f;
-			float d = node->box->s.layout.em * 0.2f;
+			// Clamp ascender/descender to line-height size.
+			// TODO: This is not entirely to spec, but close enough.
+			float s = fz_min(node->box->s.layout.em, node->h);
+			float a = s * 0.8f;
+			float d = s * 0.2f;
 			if (a > max_a) max_a = a;
 			if (d > max_d) max_d = d;
 		}
-		if (node->h > h) h = node->h;
-		if (max_a + max_d > h) h = max_a + max_d;
+		if (node->h > h)
+			h = node->h;
 		node = node->next;
 	}
 	*baseline = max_a + (h - max_a - max_d) / 2;
@@ -552,10 +552,10 @@ typedef struct
 
 static int flush_line(fz_context *ctx, fz_html_box *box, layout_data *ld, float page_w, float line_w, int align, float indent, fz_html_flow *a, fz_html_flow *b, fz_html_restarter *restart)
 {
-	float avail, line_h, baseline, vadv;
+	float avail, line_h, baseline;
 	float page_h = ld->page_h;
 	float page_top = ld->page_top;
-	line_h = measure_line(a, b, &baseline, &vadv);
+	line_h = measure_line(a, b, &baseline);
 	if (page_h > 0)
 	{
 		avail = page_h - fmodf(box->s.layout.b - page_top, page_h);
@@ -580,7 +580,7 @@ static int flush_line(fz_context *ctx, fz_html_box *box, layout_data *ld, float 
 		}
 	}
 	layout_line(ctx, indent, page_w, line_w, align, a, b, box, baseline, line_h);
-	box->s.layout.b += vadv;
+	box->s.layout.b += line_h;
 	if (restart)
 		restart->potential = NULL;
 

@@ -30,6 +30,9 @@
 
 #define TILE
 
+/* Enable this to watch changes in the structure stack. */
+#undef DEBUG_STRUCTURE
+
 /*
  * Emit graphics calls to device.
  */
@@ -834,107 +837,6 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
  * Assemble and emit text
  */
 
-static int
-guess_bidi_level(int bidiclass, int cur_bidi)
-{
-	switch (bidiclass)
-	{
-	/* strong */
-	case UCDN_BIDI_CLASS_L:
-		return 0;
-	case UCDN_BIDI_CLASS_R:
-	case UCDN_BIDI_CLASS_AL:
-		return 1;
-
-	/* weak */
-	case UCDN_BIDI_CLASS_EN:
-	case UCDN_BIDI_CLASS_ES:
-	case UCDN_BIDI_CLASS_ET:
-	case UCDN_BIDI_CLASS_AN:
-		return 0;
-
-	case UCDN_BIDI_CLASS_CS:
-	case UCDN_BIDI_CLASS_NSM:
-	case UCDN_BIDI_CLASS_BN:
-		return cur_bidi;
-
-	/* neutral */
-	case UCDN_BIDI_CLASS_B:
-	case UCDN_BIDI_CLASS_S:
-	case UCDN_BIDI_CLASS_WS:
-	case UCDN_BIDI_CLASS_ON:
-		return cur_bidi;
-
-	/* embedding, override, pop ... we don't support them */
-	default:
-		return 0;
-	}
-}
-
-static int
-guess_markup_dir(int bidiclass)
-{
-	switch (bidiclass)
-	{
-	/* strong */
-	case UCDN_BIDI_CLASS_L:
-		return FZ_BIDI_LTR;
-	case UCDN_BIDI_CLASS_R:
-	case UCDN_BIDI_CLASS_AL:
-		return FZ_BIDI_RTL;
-
-	/* weak */
-	case UCDN_BIDI_CLASS_EN:
-	case UCDN_BIDI_CLASS_ES:
-	case UCDN_BIDI_CLASS_ET:
-	case UCDN_BIDI_CLASS_AN:
-		return FZ_BIDI_LTR;
-
-	case UCDN_BIDI_CLASS_CS:
-	case UCDN_BIDI_CLASS_NSM:
-	case UCDN_BIDI_CLASS_BN:
-		return FZ_BIDI_NEUTRAL;
-
-	default:
-		return FZ_BIDI_NEUTRAL;
-	}
-}
-
-static void patch_bidi(fz_context *ctx, fz_text *text)
-{
-	fz_text_span *span;
-	int rtl = 0;
-	int ltr = 0;
-
-	/* Hacky solution that just looks for majority strong LTR or RTL
-	 * characters to determine bidi level of neutral characters. This is
-	 * primarily used for reversing visual order text into logical order in
-	 * the stext-device.
-	 */
-
-	for (span = text->head; span; span = span->next)
-	{
-		if (span->markup_dir == FZ_BIDI_LTR)
-			ltr += span->len;
-		if (span->markup_dir == FZ_BIDI_RTL)
-			rtl += span->len;
-	}
-
-	if (rtl > ltr)
-	{
-		for (span = text->head; span; span = span->next)
-			if (span->markup_dir == FZ_BIDI_NEUTRAL)
-				span->bidi_level = 1;
-	}
-	else if (ltr > rtl)
-	{
-		for (span = text->head; span; span = span->next)
-			if (span->markup_dir == FZ_BIDI_NEUTRAL)
-				span->bidi_level = 0;
-	}
-}
-
-
 static pdf_gstate *
 pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 {
@@ -950,8 +852,6 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	text = pdf_tos_get_text(ctx, &pr->tos);
 	if (!text)
 		return gstate;
-
-	patch_bidi(ctx, text);
 
 	/* If we are going to output text, we need to have flushed any begin layers first. */
 	flush_begin_layer(ctx, pr);
@@ -1091,6 +991,41 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	return pr->gstate + pr->gtop;
 }
 
+static int
+guess_bidi_level(int bidiclass, int cur_bidi)
+{
+	switch (bidiclass)
+	{
+	/* strong */
+	case UCDN_BIDI_CLASS_L: return 0;
+	case UCDN_BIDI_CLASS_R: return 1;
+	case UCDN_BIDI_CLASS_AL: return 1;
+
+	/* weak */
+	case UCDN_BIDI_CLASS_EN:
+	case UCDN_BIDI_CLASS_ES:
+	case UCDN_BIDI_CLASS_ET:
+		return 0;
+	case UCDN_BIDI_CLASS_AN:
+		return 1;
+	case UCDN_BIDI_CLASS_CS:
+	case UCDN_BIDI_CLASS_NSM:
+	case UCDN_BIDI_CLASS_BN:
+		return cur_bidi;
+
+	/* neutral */
+	case UCDN_BIDI_CLASS_B:
+	case UCDN_BIDI_CLASS_S:
+	case UCDN_BIDI_CLASS_WS:
+	case UCDN_BIDI_CLASS_ON:
+		return cur_bidi;
+
+	/* embedding, override, pop ... we don't support them */
+	default:
+		return 0;
+	}
+}
+
 static void
 pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language lang)
 {
@@ -1100,8 +1035,6 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 	int gid;
 	int ucsbuf[PDF_MRANGE_CAP];
 	int ucslen;
-	int bc;
-	int dir;
 	int i;
 	int render_direct;
 
@@ -1152,20 +1085,15 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 		ucslen = 1;
 	}
 
-	/* Guess bidi level from unicode value. Record uncertainty of guess in
-	 * markup_dir temporarily, to set bidi level of weak/neutral to
-	 * majority directionality before flushing the finished text object.
-	 */
-	bc = ucdn_get_bidi_class(ucsbuf[0]);
-	pr->bidi = guess_bidi_level(bc, pr->bidi);
-	dir = guess_markup_dir(bc);
+	/* guess bidi level from unicode value */
+	pr->bidi = guess_bidi_level(ucdn_get_bidi_class(ucsbuf[0]), pr->bidi);
 
 	/* add glyph to textobject */
-	fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, gid, ucsbuf[0], fontdesc->wmode, pr->bidi, dir, lang);
+	fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, gid, ucsbuf[0], fontdesc->wmode, pr->bidi, FZ_BIDI_NEUTRAL, lang);
 
 	/* add filler glyphs for one-to-many unicode mapping */
 	for (i = 1; i < ucslen; i++)
-		fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, -1, ucsbuf[i], fontdesc->wmode, pr->bidi, dir, lang);
+		fz_show_glyph(ctx, pr->tos.text, fontdesc->font, trm, -1, ucsbuf[i], fontdesc->wmode, pr->bidi, FZ_BIDI_NEUTRAL, lang);
 
 	pdf_tos_move_after_char(ctx, &pr->tos);
 }
@@ -1739,16 +1667,50 @@ end_layer(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
 	}
 }
 
+#ifdef DEBUG_STRUCTURE
+static void
+structure_dump(fz_context *ctx, const char *str, pdf_obj *obj)
+{
+	printf("%s STACK=", str);
+
+	if (obj == NULL)
+	{
+		printf("empty\n");
+		return;
+	}
+
+	do
+	{
+		int n = pdf_to_num(ctx, obj);
+		printf(" %d", n);
+		obj = pdf_dict_get(ctx, obj, PDF_NAME(P));
+	}
+	while (obj);
+	printf("\n");
+}
+#endif
+
 static void
 pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 {
 	pdf_obj *struct_tree_root = pdf_dict_getl(ctx, pdf_trailer(ctx, proc->doc), PDF_NAME(Root), PDF_NAME(StructTreeRoot), NULL);
 
+#ifdef DEBUG_STRUCTURE
+	structure_dump(ctx, "pop_structure_to (before)", proc->mcid_sent);
+
+	{
+		int n = pdf_to_num(ctx, common);
+		printf("Popping until %d\n", n);
+	}
+#endif
+
 	while (pdf_objcmp(ctx, proc->mcid_sent, common))
 	{
 		pdf_obj *p = pdf_dict_get(ctx, proc->mcid_sent, PDF_NAME(P));
-
-		fz_end_structure(ctx, proc->dev);
+		pdf_obj *tag = pdf_dict_get(ctx, proc->mcid_sent, PDF_NAME(S));
+		fz_structure standard = structure_type(ctx, proc, tag);
+		if (standard != FZ_STRUCTURE_INVALID)
+			fz_end_structure(ctx, proc->dev);
 		pdf_drop_obj(ctx, proc->mcid_sent);
 		proc->mcid_sent = pdf_keep_obj(ctx, p);
 		if (!pdf_objcmp(ctx, p, struct_tree_root))
@@ -1758,6 +1720,9 @@ pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 			break;
 		}
 	}
+#ifdef DEBUG_STRUCTURE
+	structure_dump(ctx, "pop_structure_to (after)", proc->mcid_sent);
+#endif
 }
 
 struct line
@@ -1818,6 +1783,11 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 {
 	pdf_obj *common = NULL;
 
+#ifdef DEBUG_STRUCTURE
+	printf("send_begin_structure  %d\n", pdf_to_num(ctx, mc_dict));
+	structure_dump(ctx, "on entry", proc->mcid_sent);
+#endif
+
 	/* We are currently nested in A,B,C,...E,F,mcid_sent. We want to update to
 	 * being in A,B,C,...G,H,mc_dict. So we need to find the lowest common point. */
 	common = find_most_recent_ancestor(ctx, proc->mcid_sent, mc_dict);
@@ -1825,6 +1795,9 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 	/* So, we need to pop everything up to common (i.e. everything below common will be closed). */
 	pop_structure_to(ctx, proc, common);
 
+#ifdef DEBUG_STRUCTURE
+	structure_dump(ctx, "after popping", proc->mcid_sent);
+#endif
 	/* Now we need to send everything between common (proc->mcid_sent) and mc_dict.
 	 * Again, n^2 will do... */
 	while (pdf_objcmp(ctx, proc->mcid_sent, mc_dict))
@@ -1842,6 +1815,9 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 			send = p;
 		}
 
+#ifdef DEBUG_STRUCTURE
+		printf("sending %d\n", pdf_to_num(ctx, send));
+#endif
 		uid = pdf_to_num(ctx, send);
 		tag = pdf_dict_get(ctx, send, PDF_NAME(S));
 		standard = structure_type(ctx, proc, tag);
@@ -1851,6 +1827,9 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 		pdf_drop_obj(ctx, proc->mcid_sent);
 		proc->mcid_sent = pdf_keep_obj(ctx, send);
 	}
+#ifdef DEBUG_STRUCTURE
+	structure_dump(ctx, "on exit", proc->mcid_sent);
+#endif
 }
 
 static void
