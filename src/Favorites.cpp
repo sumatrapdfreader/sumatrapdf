@@ -520,7 +520,7 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     }
 
     LoadArgs args(fs->filePath, win);
-    win = LoadDocument(&args, false, false);
+    win = LoadDocument(&args, false);
     if (win) {
         uitask::Post([=] { GoToFavorite(win, pageNo); });
     }

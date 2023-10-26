@@ -159,6 +159,9 @@ struct LoadArgs {
     // and rationalize all SaveSettings() calls
     bool noSavePrefs = false;
 
+    bool lazyLoad = false;
+    bool async = false;
+
     DocController* ctrl = nullptr;
 
     FileArgs* fileArgs = nullptr;
@@ -171,7 +174,7 @@ struct LoadArgs {
 
 struct PasswordUI;
 
-MainWindow* LoadDocument(LoadArgs* args, bool lazyload, bool activateExisting);
+MainWindow* LoadDocument(LoadArgs* args, bool activateExisting);
 MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload);
 void LoadDocumentAsync(LoadArgs* args, bool activateExisting);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);

@@ -458,7 +458,7 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
         return;
     }
     LoadArgs args(path, win);
-    LoadDocument(&args, false, true);
+    LoadDocument(&args, true);
 }
 
 static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fileName) {

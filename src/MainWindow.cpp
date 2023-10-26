@@ -503,7 +503,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
         LoadArgs args(fullPath, win);
-        newWin = LoadDocument(&args, false, false);
+        newWin = LoadDocument(&args, false);
         if (!newWin) {
             return;
         }

@@ -1283,7 +1283,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
             args.forceReuse = true;
             args.noSavePrefs = true;
             args.tabState = tab->tabState;
-            LoadDocument(&args, false, false);
+            LoadDocument(&args, false);
         }
         return;
     }
@@ -1914,9 +1914,10 @@ void LoadDocumentAsync(LoadArgs* argsIn, bool activateExisting) {
 // open a file doesn't block next/prev file in
 static StrVec gFilesFailedToOpen;
 
-MainWindow* LoadDocument(LoadArgs* args, bool lazyLoad, bool activateExisting) {
+MainWindow* LoadDocument(LoadArgs* args, bool activateExisting) {
     CrashAlwaysIf(gCrashOnOpen);
 
+    bool lazyLoad = args->lazyLoad;
     const char* path = args->FilePath();
     if (activateExisting) {
         MainWindow* existing = FindMainWindowByFile(path, true);
@@ -2366,7 +2367,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
-    LoadDocument(&args, false, false);
+    LoadDocument(&args, false);
 
     ShowSavedAnnotationsNotification(win->hwndCanvas, newPath);
     if (hadEditAnnotations) {
@@ -2922,7 +2923,7 @@ static void RenameCurrentFile(MainWindow* win) {
         LogLastError();
         LoadArgs args(srcPath, win);
         args.forceReuse = true;
-        LoadDocument(&args, false, false);
+        LoadDocument(&args, false);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.msg = _TRA("Failed to rename the file!");
@@ -2937,7 +2938,7 @@ static void RenameCurrentFile(MainWindow* win) {
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
-    LoadDocument(&args, false, false);
+    LoadDocument(&args, false);
 }
 
 static void CreateLnkShortcut(MainWindow* win) {
@@ -3057,7 +3058,7 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     LoadArgs args(path, newWin);
     args.showWin = true;
     args.noPlaceWindow = true;
-    LoadDocument(&args, false, false);
+    LoadDocument(&args, false);
 }
 
 // create a new window and load currently shown document into it
@@ -3117,7 +3118,7 @@ static void OpenFolder(MainWindow* win) {
     }
     LoadArgs args(dir, win);
     args.engine = engine;
-    LoadDocument(&args, false, false);
+    LoadDocument(&args, false);
 }
 
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
@@ -3228,7 +3229,7 @@ static void OpenFile(MainWindow* win) {
     GetFilesFromGetOpenFileName(&ofn, files);
     for (char* path : files) {
         LoadArgs args(path, win);
-        LoadDocument(&args, false, false);
+        LoadDocument(&args, false);
     }
 }
 
@@ -3311,7 +3312,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     // we could automatically go to next file
     LoadArgs args(path, win);
     args.forceReuse = true;
-    LoadDocument(&args, false, false);
+    LoadDocument(&args, false);
 }
 
 constexpr int kSplitterDx = 5;
@@ -4529,7 +4530,7 @@ void ReopenLastClosedFile(MainWindow* win) {
         return;
     }
     LoadArgs args(path, win);
-    LoadDocument(&args, false, false);
+    LoadDocument(&args, false);
 }
 
 void CopyFilePath(WindowTab* tab) {
@@ -4636,7 +4637,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         FileState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm::DiskAccess)) {
             LoadArgs args(state->filePath, win);
-            LoadDocument(&args, false, false);
+            LoadDocument(&args, false);
         }
         return 0;
     }
