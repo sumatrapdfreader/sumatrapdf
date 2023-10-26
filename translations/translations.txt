@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c5b7557e87076ab2eb011f805a5c9c9048bb62bb
+372f503f6f900fde28bbe7cfa9a2982f20a10766
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -539,6 +539,7 @@ el:Συνέχεια της εγκατάστασης της έκδοσης 32-bit
 es:&Continuar con la instalación de la versión de 32 bits
 et:&Jätka 32-bitise versiooni paigaldamist
 eu:&Jarraitu 32-biteko bertsioa ezartzen
+fa:&ادامه نصب نسخه 32 بیتی
 fi:&Jatka 32-bittisen version asentamista
 fr:Continuer l'installation de la version 32-bits
 ga:&Lean ar aghaidh ag suiteáil an leagain 32-beart
@@ -652,6 +653,7 @@ dk:&Kopier til udklipsholder
 el:Αντιγραφή στο πρόχειρο
 es:&Copiar a portapapeles
 eu:&Kopiatu gakora
+fa:&کپی در کلیپ برد
 fi:&Kopioi leikepöydälle
 fr:&Copier dans le presse-papiers
 ga:&Cóipeáil chuig an ngearrthaisce é
@@ -1458,6 +1460,7 @@ br:&Atalhos do Teclado
 ca:&Dreceres de teclat
 de:Tasten&kombinationen
 el:Συντομεύσεις πληκτρολογίου
+fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
 it:&Tasti rapidi
 ja:キーボード シュートカット(&K)
@@ -1482,6 +1485,7 @@ dk:&Sidste side
 el:Τελευταία σελίδα
 es:Última página
 eu:&Azken orrialdea
+fa:&آخرین صفحه
 fi:&Viimeinen sivu
 fr:&Dernière page
 ga:&An leathanach deireanach
@@ -2266,6 +2270,7 @@ dk:&Forrige side
 el:Προηγούμενη σελίδα
 es:&Página anterior
 eu:A&urreko orrialdea
+fa:صفحه &قبل
 fi:&Edellinen sivu
 fr:Page &précédente
 ga:&An leathanach roimhe
@@ -2566,6 +2571,7 @@ el:Κατάργηση από το ιστορικό
 es:&Eliminar del historial
 et:&Eemalda Ajaloost
 eu:&Kendu historiatik
+fa:&حذف کردن از تاریخچه
 fi:&Poista historiasta
 fr:Supprimer de l'historique
 ga:&Bain ón stair
@@ -2726,6 +2732,7 @@ el:Αναζήτηση με Google
 es:&Buscar con Google
 et:Otsi Google-iga
 eu:Bilatu G&oogle-rekin
+fa:&جستجو در گوگل
 fi:&Haku Googlen avulla
 fr:&Rechercher avec Google
 ga:&Cuardaigh le Google
@@ -3036,6 +3043,7 @@ el:Κείμενο
 es:&Texto
 et:&Tekst
 eu:I&dazkia
+fa:&متن
 fi:&Teksti
 fr:&Texte
 ga:&Téacs
@@ -3144,6 +3152,7 @@ el:Μετάφραση με Google
 es:&Traducir con Google
 et:&Tõlgi Google-iga
 eu:Itzuli &Google-rekin
+fa:&ترجمه با گوگل
 fi:&Käännä Googlen avulla
 fr:&Traduire avec Google
 ga:&Aistrigh le Google é
@@ -6267,6 +6276,7 @@ el:Παλέτα εντολών
 es:Paleta de comandos 
 et:Käsupalett
 eu:Agindu paleta
+fa:کادر فرمان
 fi:Komentopolku
 fr:Palette de commande
 ga:Pailéad na n-orduithe
@@ -7628,6 +7638,7 @@ el:Δεν ήταν δυνατή η κατάργηση της εγκατάστα�
 es:No se pudo desinstalar el filtro de búsqueda de Sumatra.
 et:Sumatra otsingufiltri kustutamine ebaõnnestus
 eu:Ezin da Sumatraren bilaketa iragazkia kendu 
+fa:نمی‌توان فیلتر جستجوی Sumatra را حذف کرد
 fi:Ei voinut poistaa Sumatran hakusuodatinta
 fr:Impossible de désinstaller le filtre de recherche de Sumatra
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
@@ -8110,6 +8121,7 @@ dk:Tilpasset &Zoom
 el:Ορισμός Ζουμ
 es:Zoom &personalizado...
 eu:Norbere &Zooma...
+fa:&بزرگنمایی سفارشی...
 fi:Mukautettu ja zoomaus...
 fr:&Zoom personnalisé...
 ga:Gluais saincheaptha...
@@ -8795,6 +8807,7 @@ dk:&Afslut
 el:Έξοδος
 es:S&alir
 eu:I&rten
+fa:&خروج
 fi:P&oistu
 fr:&Quitter
 ga:Scoir
@@ -8843,6 +8856,7 @@ el:Έξοδος από την πλήρη οθόνη
 es:&Salir de la pantalla completa
 et:V&älju Täisekraanilt
 eu:Irten ikusleiho-o&sotik
+fa:&خروج از حالت تمام صفحه
 fi:P&oistu Koko näyttö
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
@@ -10683,6 +10697,7 @@ dk:Tilpas &indhold
 el:Προσαρμογή περιεχομένου
 es:Ajustar al &contenido
 eu:Finkatu &edukia
+fa:متناسب با &محتوا
 fi:Sovita &Sisältö
 fr:Ajuster au &contenu
 ga:Oiriúnaigh an t-inneachar
@@ -10725,6 +10740,7 @@ dk:Tilpas til &Side
 el:Προσαρμογή σελίδας
 es:Ajustar a la &página
 eu:Finkatu &orrialdea
+fa:متناسب با &صفحه
 fi:Sovita &Sivu
 fr:&Page entière
 ga:Oiriúnaigh don leathanach é
@@ -10767,6 +10783,7 @@ dk:Tilpas &bredde
 el:Προσαρμογή πλάτους
 es:Ajustar al &ancho
 eu:Finkatu &zabalera
+fa:متناسب با &عرض
 fi:Sovita &Leveys
 fr:Pleine &largeur
 ga:Oiriúnaigh don leithead é
@@ -14248,6 +14265,7 @@ cy:Agor Cyfarwyddiadur yng Nghyfarwyddiadur &Opus
 de:Verzeichnis in Directory &Opus öffnen
 el:Άνοιγμα καταλόγου στο Directory &Opus
 es:Abrir directorio en Directory &Opus
+fa:باز کردن پوشه در Directory &Opus
 fi:Avaa hakemisto osoitteessa Directory &Opus
 fr:Ouvrir dans Directory &Opus
 ga:Oscail an chomhadlann i saothar comhadlainne
@@ -15117,6 +15135,7 @@ dk:&Side
 el:Σελίδα
 es:Pá&gina...
 eu:O&rrialdea...
+fa:&صفحه
 fi:Si&vu...
 fr:Pa&ge...
 ga:Leathanach...
@@ -15610,6 +15629,7 @@ cy:Arhoswch - wrthi'n llwytho...
 de:Bitte auf das Laden warten...
 el:Παρακαλώ περιμένετε - φόρτωση...
 es:Por favor, espere - cargando...
+fa:لطفا صبر کنید - در حال بارگذاری...
 fi:Odota - latautuu...
 fr:Veuillez patienter, chargement…
 ga:Fan le do thoil - tá sé ag luchtú...
@@ -15925,6 +15945,7 @@ dk:Pr&æsentation
 el:Παρουσίαση
 es:Pr&esentación
 eu:Aur&kezpena
+fa:ارائه
 fi:Es&ittely
 fr:Prés&entation
 ga:Cur i láthair
@@ -16585,6 +16606,7 @@ dk:&Omdøb
 el:Μετονομασία
 es:Re&nombrar...
 eu:B&errizendatu...
+fa:تغییر &نام...
 fi:Uu&delleennimeä
 fr:Re&nommer...
 ga:Athai&nmnigh...
@@ -16981,6 +17003,7 @@ dk:Rotér &Venstre
 el:Περιστροφή αριστερά
 es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
+fa:چرخاندن به &چپ
 fi:Kierrä &Vasemmalle
 fr:Rotation vers la &gauche
 ga:Rothlaigh tuathal é
@@ -17025,6 +17048,7 @@ dk:Rotér &Højre
 el:Περιστροφή δεξιά
 es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
+fa:چرخاندن به &راست
 fi:Kierrä &oikealle
 fr:Rotation vers la d&roite
 ga:Rothlaigh deiseal é
@@ -17070,6 +17094,7 @@ el:Επιλογή
 es:S&elección
 et:V&alik
 eu:&Hautapena
+fa:&انتخاب
 fi:V&alinta
 fr:&Sélection
 ga:Roghnú
@@ -17343,6 +17368,7 @@ dk:Gem gen&vej
 el:Αποθήκευση συντόμευσης
 es:Guardar A&tajo...
 eu:Gorde &lastertekla...
+fa:ذخیره &میانبر...
 fi:Tallenna P&ikakuvake...
 fr:Enregistrer le raccourci (&h)
 ga:Cuir an t-aicearra i dtaisce...
@@ -17672,6 +17698,7 @@ el:Αναζήτηση με Bing
 es:Buscar con &Bing
 et:Otsi &Bingiga
 eu:Bilatu &Bing-rekin
+fa:جستجو در &بینگ
 fi:Haku &Bingin avulla
 fr:Rechercher avec &Bing
 ga:Cuardaigh le &Bing
@@ -17718,6 +17745,7 @@ el:Αναζήτηση με Google
 es:Buscar con &Google
 et:Otsi &Google-iga
 eu:Bilatu &Google-ekin
+fa:جستجو در &گوگل
 fi:Haku &Googlen avulla
 fr:Rechercher avec &Google
 ga:Cuardaigh le &Google
@@ -18278,6 +18306,7 @@ el:Εμφάνιση &Αγαπημένων
 es:Mostrar &favoritos
 et:Näita &Lemmikuid
 eu:Erakutsi &Gogokoenak
+fa:&نمایش علاقه‌مندی‌ها
 fi:Näytä &Suosikit
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
@@ -18392,6 +18421,7 @@ el:Εμφάνιση μπαρών κύλισης
 es:Mostrar las &barras de desplazamiento
 et:Näita kerimi&sribasid
 eu:Erakutsi &Irristabarrak
+fa:نمایش &پیمایشگر
 fi:Näytä &Vierityspalkit
 fr:Afficher les &barres de défilement
 ga:Taispeáin na barraí &scrollála
@@ -18509,6 +18539,7 @@ dk:Vis bog&mærker
 el:Εμφάνιση σελιδοδεικτών
 es:Mostrar favo&ritos
 eu:Erakutsi &Lastermarkak
+fa:نمایش &نشانک‌ها
 fi:Näytä kirja&merkit
 fr:&Afficher les signets
 ga:Taispeáin na Ceanáin
@@ -18730,6 +18761,7 @@ el:Εμφάνιση στον &φάκελο
 es:Mostrar en &carpeta
 et:Näita &kausta
 eu:Erakutsi &agiritegian
+fa:نمایش در &پوشه
 fi:Näytä &kansiossa
 fr:Ouvrir le &dossier
 ga:Taispeáin san &fillteán
@@ -18778,6 +18810,7 @@ dk:Vis i folder
 el:Εμφάνιση στο φάκελο 
 es:mostrar en carpeta
 eu:Erakutsi agiritegian
+fa:نمایش در پوشه
 fi:Näytä kansiossa
 fr:Ouvrir le dossier
 ga:Taispeáin san fhillteán é
@@ -20457,6 +20490,7 @@ el:Μετάφραση με DeepL
 es:Traducir con &DeepL
 et:Tõlgi &DeepL-iga
 eu:Itzuli &DeepL-rekin
+fa:ترجمه با &دیپ ال
 fi:Käännä &DeepL avulla
 fr:Traduire avec &DeepL
 ga:Aistrigh le &DeepL é
@@ -21718,7 +21752,7 @@ ar:ناسخ النص
 az:mətnin kopyalanması
 bg:копиране на текст
 bn:লেখা কপি করা হচ্ছে
-br:copiando texto
+br:Copiando texto
 bs:kopiram tekst
 by:капіяваць тэкст
 ca-xv:s'està copiant text
