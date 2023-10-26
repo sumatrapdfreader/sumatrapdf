@@ -286,7 +286,7 @@ static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
 static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
-    MainWindow* win = LoadDocument(&args, false);
+    MainWindow* win = LoadDocument(&args);
     if (!win) {
         return win;
     }
@@ -389,7 +389,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad 
         args.tabState = state;
     }
     args.lazyLoad = lazyLoad;
-    if (!LoadDocument(&args, false)) {
+    if (!LoadDocument(&args)) {
         return;
     }
     WindowTab* tab = win->CurrentTab();

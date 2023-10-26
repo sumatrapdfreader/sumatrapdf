@@ -90,10 +90,10 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         // assume it's a thumbnail of a document
         auto path = url;
         CrashIf(!path);
-        // ctrl forces always opening
-        bool activateExisting = !IsCtrlPressed();
         LoadArgs args(path, win);
-        LoadDocumentAsync(&args, activateExisting);
+        // ctrl forces always opening
+        args.activateExisting = !IsCtrlPressed();
+        LoadDocumentAsync(&args);
     }
     // SetFocus(win->hwndFrame);
 }

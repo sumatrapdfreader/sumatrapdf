@@ -537,7 +537,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     // args->forceReuse = rand() % 3 != 1;
     args.forceReuse = true;
     args.noPlaceWindow = true;
-    MainWindow* w = LoadDocument(&args, false);
+    MainWindow* w = LoadDocument(&args);
     if (!w) {
         return false;
     }

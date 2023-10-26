@@ -441,7 +441,7 @@ static void OpenAttachment(WindowTab* tab, const char* fileName, int attachmentN
     DocController* ctrl = CreateControllerForEngineOrFile(newEngine, nullptr, nullptr, win);
     LoadArgs* args = new LoadArgs(tab->filePath, win);    
     args->ctrl = ctrl;
-    LoadDocumentFinish(args, false);
+    LoadDocumentFinish(args);
     str::Free(data.data());
 }
 
@@ -458,7 +458,8 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
         return;
     }
     LoadArgs args(path, win);
-    LoadDocument(&args, true);
+    args.activateExisting = true;
+    LoadDocument(&args);
 }
 
 static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fileName) {

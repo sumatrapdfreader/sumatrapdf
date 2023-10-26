@@ -161,6 +161,7 @@ struct LoadArgs {
 
     bool lazyLoad = false;
     bool async = false;
+    bool activateExisting = false;
 
     DocController* ctrl = nullptr;
 
@@ -174,9 +175,9 @@ struct LoadArgs {
 
 struct PasswordUI;
 
-MainWindow* LoadDocument(LoadArgs* args, bool activateExisting);
-MainWindow* LoadDocumentFinish(LoadArgs* args, bool lazyload);
-void LoadDocumentAsync(LoadArgs* args, bool activateExisting);
+MainWindow* LoadDocument(LoadArgs* args);
+MainWindow* LoadDocumentFinish(LoadArgs* args);
+void LoadDocumentAsync(LoadArgs* args);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
                                                MainWindow* win);

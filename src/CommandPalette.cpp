@@ -657,7 +657,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         if (str::Eq(s, converted)) {
             LoadArgs args(path, win);
             args.forceReuse = false; // open in a new tab
-            LoadDocumentAsync(&args, false);
+            LoadDocumentAsync(&args);
             ScheduleDelete();
             return;
         }

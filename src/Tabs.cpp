@@ -149,7 +149,7 @@ static void MigrateTab(WindowTab* tab, MainWindow* newWin) {
     LoadArgs args(tab->filePath, newWin);
     args.forceReuse = true;
     args.noSavePrefs = true;
-    LoadDocument(&args, false);
+    LoadDocument(&args);
     delete tab;
 
     CloseWindowIfNoDocuments(oldWin);
