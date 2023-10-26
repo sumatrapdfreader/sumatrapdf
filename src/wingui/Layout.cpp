@@ -268,8 +268,12 @@ Kind LayoutBase::GetKind() {
 void LayoutBase::SetVisibility(Visibility newVisibility) {
     visibility = newVisibility;
 }
+
 Visibility LayoutBase::GetVisibility() {
     return visibility;
+}
+void LayoutBase::SetBounds(Rect bounds) {
+    lastBounds = bounds;
 }
 
 bool IsLayoutOfKind(ILayout* l, Kind kind) {

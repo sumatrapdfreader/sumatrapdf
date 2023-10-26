@@ -82,6 +82,7 @@ struct LayoutBase : public ILayout {
     Kind GetKind() override;
     void SetVisibility(Visibility) override;
     Visibility GetVisibility() override;
+    void SetBounds(Rect) override;
 };
 
 bool IsLayoutOfKind(ILayout*, Kind);

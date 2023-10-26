@@ -110,6 +110,68 @@ static Vec<StaticLinkInfo*> gStaticLinks;
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
+Kind kindHwndWidgetText = "hwndWidgetText";
+
+struct HwndWidgetText : LayoutBase {
+    const char* s = nullptr;
+    HWND hwnd = nullptr;
+    HFONT font = nullptr;
+    bool isRtl = false;
+
+    Size sz = {0, 0};
+
+    HwndWidgetText(const char* s, HWND hwnd, HFONT font = nullptr);
+
+	// ILayout
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(const Constraints bc) override;
+
+    Size MinIntrinsicSize(int width, int height);
+    Size Measure(bool onlyIfEmpty = false);
+    void Draw(HDC dc, int x, int y);
+};
+
+HwndWidgetText::HwndWidgetText(const char* s, HWND hwnd, HFONT font) : s(s), hwnd(hwnd), font(font) {
+    kind = kindHwndWidgetText;
+}
+
+Size HwndWidgetText::Layout(const Constraints bc) {
+    Measure();
+    return bc.Constrain({sz.dx, sz.dy});
+}
+
+Size HwndWidgetText::Measure(bool onlyIfEmpty) {
+    if (onlyIfEmpty && !sz.IsEmpty()) {
+        return sz;
+    }
+    sz = HwndMeasureText(hwnd, s, font);
+    return sz;
+}
+
+int HwndWidgetText::MinIntrinsicHeight(int width) {
+    Measure(true);
+    return sz.dy;
+}
+
+int HwndWidgetText::MinIntrinsicWidth(int height) {
+    Measure(true);
+    return sz.dx;
+}
+
+Size HwndWidgetText::MinIntrinsicSize(int width, int height) {
+    int dx = MinIntrinsicWidth(height);
+    int dy = MinIntrinsicHeight(width);
+    return {dx, dy};
+}
+
+void HwndWidgetText::Draw(HDC hdc, int x, int y) {
+    ScopedSelectFont f(hdc, font);
+    UINT fmt = DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
+    RECT r = {x, y, x + sz.dx, y + sz.dy};
+    HdcDrawText(hdc, s, -1, &r, fmt);
+}
+
 static void DrawAppName(HDC hdc, Point pt) {
     const char* txt = kAppName;
     // colorful version
@@ -681,16 +743,16 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
         offset.x = kDocListMarginLeft;
     }
 
-    SelectObject(hdc, fontFrequentlyRead);
-    SIZE txtSize;
     const char* txt = _TRA("Frequently Read");
-    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
-    Rect headerRect(offset.x, rc.y + (kDocListMarginTop - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    HwndWidgetText freqRead(txt, hwnd, fontFrequentlyRead);
+    freqRead.isRtl = isRtl;
+    Size txtSize = freqRead.Measure(true);
+
+    Rect headerRect(offset.x, rc.y + (kDocListMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
-    rTmp = ToRECT(headerRect);
-    HdcDrawText(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
+    freqRead.Draw(hdc, headerRect.x, headerRect.y);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
@@ -780,14 +842,17 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
     txt = _TRA("Open a document...");
-    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
-    Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    HwndWidgetText openDoc(txt, hwnd, nullptr);
+    openDoc.isRtl = isRtl;
+    txtSize = openDoc.Measure(true);
+    Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         rect.x = rectIcon.x - rect.dx - 3;
     }
-    rTmp = ToRECT(rect);
-    HdcDrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
+    openDoc.Draw(hdc, rect.x, rect.y);
+
     DrawLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
+
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);

@@ -2838,19 +2838,19 @@ SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
 Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
     SIZE sz{};
     size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
+
+    AutoReleaseDC dc(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
     if (font == nullptr) {
         font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
     }
-    HGDIOBJ prev = SelectObject(dc, font);
+    ScopedSelectFont prev(dc, font);
 
     RECT r{};
     uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
     HdcDrawText(dc, txt, (int)txtLen, &r, fmt);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
+
     int dx = RectDx(r);
     int dy = RectDy(r);
     return {dx, dy};

@@ -153,6 +153,23 @@ struct AutoDeleteDC {
     }
 };
 
+struct AutoReleaseDC {
+    HWND hwnd = nullptr;
+    HDC hdc = nullptr;
+
+    explicit AutoReleaseDC(HWND hwnd) {
+        hdc = GetWindowDC(hwnd);
+    }
+    AutoReleaseDC() = default;
+
+    ~AutoReleaseDC() {
+        ReleaseDC(hwnd, hdc);
+    }
+    operator HDC() const { // NOLINT
+        return hdc;
+    }
+};
+
 template <typename T>
 class ScopedGdiObj {
     T obj;
@@ -213,14 +230,21 @@ class ScopedSelectObject {
 
 class ScopedSelectFont {
     HDC hdc = nullptr;
-    HFONT prevFont = nullptr;
+    HGDIOBJ prevFont = nullptr;
 
   public:
-    explicit ScopedSelectFont(HDC hdc, HFONT font) : prevFont((HFONT)SelectObject(hdc, font)) {
+    // font can be nullptr
+    explicit ScopedSelectFont(HDC hdc, HFONT font) {
+        this->hdc = hdc;
+        if (font) {
+            prevFont = (HFONT)SelectObject(hdc, font);
+        }
     }
 
     ~ScopedSelectFont() {
-        SelectObject(hdc, prevFont);
+        if (prevFont) {
+            SelectObject(hdc, prevFont);
+        }
     }
 };
 
