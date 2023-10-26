@@ -1286,10 +1286,10 @@ ContinueOpenWindow:
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }
-                RestoreTabOnStartup(win, state, gEnableLazyLoad);
+                RestoreTabOnStartup(win, state, gGlobalPrefs->lazyLoading);
             }
             TabsSelect(win, data->tabIndex - 1);
-            if (gEnableLazyLoad) {
+            if (gGlobalPrefs->lazyLoading) {
                 ReloadDocument(win, false);
             }
         }

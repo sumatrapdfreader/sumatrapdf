@@ -5,6 +5,7 @@ Next version:
 
 3.6
 * -search now copies search term to find box so that F3 works
+* add LazyLoading advanced setting
 
 3.5.2 (2023-10-25)
 * fix not showing tab text

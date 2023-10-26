@@ -345,6 +345,9 @@ struct GlobalPrefs {
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
+    // when restoring session, delay loading of documents until their tab
+    // is selected
+    bool lazyLoading;
     // ISO code of the current UI language
     char* uiLanguage;
     // pattern used to launch the LaTeX editor when doing inverse search
@@ -654,7 +657,7 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
-     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-5.html"},
+     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-6.html"},
     {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t) ""},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
@@ -676,6 +679,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
     {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
     {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, lazyLoading), SettingType::Bool, true},
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
@@ -719,13 +723,14 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 61, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 62, gGlobalPrefsFields,
     "\0Theme\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0Pri"
     "nterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0Resto"
-    "reSession\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Shortcuts\0Es"
-    "cToExit\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar\0ShowToolbar"
-    "\0ShowFavorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontWeightOffset\0"
-    "TreeFontName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0UseTabs\0UseSys"
-    "Colors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "reSession\0LazyLoading\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0"
+    "Shortcuts\0EscToExit\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar"
+    "\0ShowToolbar\0ShowFavorites\0ShowToc\0NoHomeTab\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize\0TreeFontW"
+    "eightOffset\0TreeFontName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0Us"
+    "eTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek"
+    "\0\0"};
 
 #endif

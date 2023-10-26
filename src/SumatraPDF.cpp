@@ -102,9 +102,6 @@ bool gDebugShowLinks = false;
 // so always disable
 bool gShowFrameRate = false;
 
-// if true, Enable lazyload session tabs on startup
-bool gEnableLazyLoad = true;
-
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
@@ -1269,7 +1266,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
     // TODO: maybe should ensure it never is called for IsAboutTab() ?
-    // This only happens if gEnableLazyLoad is true
+    // This only happens if gLazyLoading is true
     if (tab->IsAboutTab()) {
         return;
     }
@@ -1976,7 +1973,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     MainWindow* win = tab->win;
-    if (gEnableLazyLoad && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
+    if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.msg = str::FormatTemp(_TRA("Please wait - loading..."));
@@ -2027,7 +2024,7 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     SetFocus(win->hwndFrame);
     if (!tab->IsAboutTab()) {
-        if (gEnableLazyLoad && !tab->ctrl) {
+        if (gGlobalPrefs->lazyLoading && !tab->ctrl) {
             ReloadDocument(win, false);
         } else {
             if (tab->reloadOnFocus) {

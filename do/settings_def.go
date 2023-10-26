@@ -292,6 +292,7 @@ var (
 				"after UseDefaultState in FileStates)"),
 		mkField("RestoreSession", Bool, true,
 			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
+		mkField("LazyLoading", Bool, true, "when restoring session, delay loading of documents until their tab is selected").setVersion("3.6"),
 		mkField("UiLanguage", String, nil,
 			"ISO code of the current UI language").setDoc("[ISO code](langs.html) of the current UI language"),
 		mkField("InverseSearchCmdLine", String, nil,
