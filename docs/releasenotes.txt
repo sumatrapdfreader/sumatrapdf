@@ -3,7 +3,19 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-3.5 (???)
+3.6
+* -search now copies search term to find box so that F3 works
+
+3.5.2 (2023-10-25)
+* fix not showing tab text
+make menus in dark themes look more like standard menus (bigger padding)
+* fix Bookmarks for folder showing bad file names
+
+3.5.1 (2023-10-24)
+* fix uninstaller crash
+* disable lazy loading of files when restoring a session
+
+3.5 (2023-10-23)
 * CmdEditAnnotation select annotation under cursor and open annotation edit window
 * rename CmdShowCursorPosition => CmdToggleCursorPosition
 * add Annotations [ FreeTextColor, FreeTextSize, FreeTextBorderWidth ] settings

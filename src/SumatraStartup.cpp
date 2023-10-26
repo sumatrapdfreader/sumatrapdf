@@ -273,6 +273,16 @@ static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {
     }
 }
 
+static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
+    if (!win || !searchTerm) {
+        return;
+    }
+    HwndSetText(win->hwndFindEdit, searchTerm);
+    bool wasModified = true;
+    bool showProgress = true;
+    FindTextOnThread(win, TextSearchDirection::Forward, searchTerm, wasModified, showProgress);
+}
+
 static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
@@ -317,11 +327,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
         int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
     }
-    if (flags.search != nullptr) {
-        bool wasModified = true;
-        bool showProgress = true;
-        FindTextOnThread(win, TextSearchDirection::Forward, flags.search, wasModified, showProgress);
-    }
+    MaybeStartSearch(win, flags.search);
     return win;
 }
 
@@ -1306,7 +1312,10 @@ ContinueOpenWindow:
             PrintCurrentFile(win, flags.exitWhenDone);
         }
     }
-    SelectTabInWindow(tabToSelect);
+    if (tabToSelect) {
+        SelectTabInWindow(tabToSelect);
+        MaybeStartSearch(tabToSelect->win, flags.search);
+    }
 
     nWithDde = (int)gDdeOpenOnStartup.size();
     if (nWithDde > 0) {
