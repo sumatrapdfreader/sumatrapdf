@@ -523,8 +523,8 @@ static MenuDef menuDefHelp[] = {
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
     {
-        "Highlight links",
-        CmdDebugShowLinks,
+        "Show links",
+        CmdToggleLinks,
     },
     {
         "Download symbols",
@@ -1554,7 +1554,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     int themeCmdId = CmdThemeFirst + GetCurrentThemeIndex();
     CheckMenuRadioItem(win->menu, CmdThemeFirst, CmdThemeLast, themeCmdId, MF_BYCOMMAND);
 
-    MenuSetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
+    MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
 }
 
 // TODO: not the best file for this

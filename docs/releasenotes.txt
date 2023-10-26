@@ -4,8 +4,9 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 
 3.6
-* -search cmd-line arg now copies search term to find box so that F3 works
-* add LazyLoading advanced setting, defaults to true. When loading documents when restoring a session, lazy loading delays loading a file until its tab is selected leading to faster startup.
+* add `ShowLinks` advanced setting and `Toggle Show Links` for command palette (`Ctrl + K`)
+* `-search` cmd-line arg now copies search term to find box so that F3 works
+* add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
 
 3.5.2 (2023-10-25)
 * fix not showing tab text

@@ -783,13 +783,13 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool) {
 
 /* debug code to visualize links (can block while rendering) */
 static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
-    if (!gDebugShowLinks) {
+    if (!gGlobalPrefs->showLinks) {
         return;
     }
 
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
-    HGDIOBJ oldPen = SelectObject(hdc, pen);
+
+    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, RGB(0x00, 0x00, 0xff)), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
@@ -806,18 +806,14 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             Rect rect = dm->CvtToScreen(pageNo, el->GetRect());
             Rect isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty()) {
+                isect.Inflate(2, 2);
                 DrawRect(hdc, isect);
             }
         }
     }
 
-    DeletePen(SelectObject(hdc, oldPen));
-
-    if (dm->GetZoomVirtual() == kZoomFitContent) {
+    if (false && dm->GetZoomVirtual() == kZoomFitContent) {
         // also display the content box when fitting content
-        pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
-        oldPen = SelectObject(hdc, pen);
-
         for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
             PageInfo* pageInfo = dm->GetPageInfo(pageNo);
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio) {
@@ -828,8 +824,6 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
             Rect rect = dm->CvtToScreen(pageNo, cbbox);
             DrawRect(hdc, rect);
         }
-
-        DeletePen(SelectObject(hdc, oldPen));
     }
 }
 

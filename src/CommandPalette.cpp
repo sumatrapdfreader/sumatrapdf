@@ -310,8 +310,6 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
 
     switch (cmdId) {
-        case CmdDebugShowLinks:
-            return gIsDebugBuild || gIsPreReleaseBuild;
         case CmdDebugTestApp:
         case CmdDebugShowNotif:
         case CmdDebugStartStressTest:

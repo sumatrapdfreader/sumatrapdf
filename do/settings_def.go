@@ -330,6 +330,7 @@ var (
 			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
 				"in the document"),
 		mkField("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
+		mkField("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").setVersion("3.6"),
 		mkField("TocDy", Int, 0,
 			"if both favorites and bookmarks parts of sidebar are visible, this is "+
 				"the height of bookmarks (table of contents) part"),

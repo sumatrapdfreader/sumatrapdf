@@ -94,10 +94,6 @@ constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
 
-/* if true, we're in debug mode where we show links as blue rectangle on
-   the screen. Makes debugging code related to links easier. */
-bool gDebugShowLinks = false;
-
 // used to show it in debug, but is not very useful,
 // so always disable
 bool gShowFrameRate = false;
@@ -5200,8 +5196,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             DownloadDebugSymbols();
             break;
 
-        case CmdDebugShowLinks:
-            gDebugShowLinks = !gDebugShowLinks;
+        case CmdToggleLinks:
+            gGlobalPrefs->showLinks = !gGlobalPrefs->showLinks;
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }

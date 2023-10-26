@@ -191,14 +191,23 @@ class ScopedGetDC {
 
 class ScopedSelectObject {
     HDC hdc = nullptr;
+    HGDIOBJ obj = nullptr;
     HGDIOBJ prev = nullptr;
 
   public:
-    ScopedSelectObject(HDC hdc, HGDIOBJ obj) : hdc(hdc), prev(SelectObject(hdc, obj)) {
+    ScopedSelectObject(HDC hdc, HGDIOBJ obj, bool alsoDelete = false) {
+        this->hdc = hdc;
+        this->prev = SelectObject(hdc, obj);
+        if (alsoDelete) {
+            this->obj = obj;
+        }
     }
 
     ~ScopedSelectObject() {
         SelectObject(hdc, prev);
+        if (obj) {
+            DeleteObject(obj);
+        }
     }
 };
 
