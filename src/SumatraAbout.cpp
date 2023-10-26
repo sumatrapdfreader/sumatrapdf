@@ -116,20 +116,21 @@ struct HwndWidgetText : LayoutBase {
     const char* s = nullptr;
     HWND hwnd = nullptr;
     HFONT font = nullptr;
+    bool withUnderline = false;
     bool isRtl = false;
 
     Size sz = {0, 0};
 
     HwndWidgetText(const char* s, HWND hwnd, HFONT font = nullptr);
 
-	// ILayout
+    // ILayout
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     Size Layout(const Constraints bc) override;
 
     Size MinIntrinsicSize(int width, int height);
     Size Measure(bool onlyIfEmpty = false);
-    void Draw(HDC dc, int x, int y);
+    void Draw(HDC dc);
 };
 
 HwndWidgetText::HwndWidgetText(const char* s, HWND hwnd, HFONT font) : s(s), hwnd(hwnd), font(font) {
@@ -165,11 +166,17 @@ Size HwndWidgetText::MinIntrinsicSize(int width, int height) {
     return {dx, dy};
 }
 
-void HwndWidgetText::Draw(HDC hdc, int x, int y) {
+void HwndWidgetText::Draw(HDC hdc) {
+    CrashIf(lastBounds.IsEmpty());
     ScopedSelectFont f(hdc, font);
     UINT fmt = DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
-    RECT r = {x, y, x + sz.dx, y + sz.dy};
-    HdcDrawText(hdc, s, -1, &r, fmt);
+    RECT dr = RectToRECT(lastBounds);
+    HdcDrawText(hdc, s, -1, &dr, fmt);
+    if (withUnderline) {
+        auto& r = lastBounds;
+        Rect lineRect = {r.x, r.y + sz.dy, sz.dx, 0};
+        DrawLine(hdc, lineRect);
+    }
 }
 
 static void DrawAppName(HDC hdc, Point pt) {
@@ -250,26 +257,25 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 // draw on the bottom right
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 16));
+
+    HwndWidgetText w(txt, hwnd, fontLeftTxt);
+    w.isRtl = IsUIRightToLeft();
+    w.withUnderline = true;
+    Size txtSize = w.Measure(true);
+
     auto col = gCurrentTheme->window.linkColor;
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
-    ScopedSelectObject font(hdc, fontLeftTxt);
+    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, col), true);
 
     SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
     Rect rc = ClientRect(hwnd);
 
-    SIZE txtSize;
-    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
     int innerPadding = DpiScale(hwnd, kInnerPadding);
-    int x = rc.dx - txtSize.cx - innerPadding;
-    int y = rc.y + rc.dy - txtSize.cy - innerPadding;
-    Rect rect(x, y, txtSize.cx, txtSize.cy);
-    RECT rTmp = ToRECT(rect);
-    HdcDrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
-    {
-        ScopedSelectObject pen(hdc, penLinkLine);
-        DrawLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
-    }
+    int x = rc.dx - txtSize.dx - innerPadding;
+    int y = rc.y + rc.dy - txtSize.dy - innerPadding;
+    Rect rect(x, y, txtSize.dx, txtSize.dy);
+    w.SetBounds(rect);
+    w.Draw(hdc);
 
     // make the click target larger
     rect.Inflate(innerPadding, innerPadding);
@@ -686,9 +692,8 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 24));
-    int fontSize = 24;
-    AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, "MS Shell Dlg", fontSize));
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
+    AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, "MS Shell Dlg", 24));
+    AutoDeleteFont fontText(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
 
     ScopedSelectObject font(hdc, fontSumatraTxt);
 
@@ -752,9 +757,10 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
-    freqRead.Draw(hdc, headerRect.x, headerRect.y);
+    freqRead.SetBounds(headerRect);
+    freqRead.Draw(hdc);
 
-    SelectObject(hdc, fontLeftTxt);
+    SelectObject(hdc, fontText);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     DeleteVecMembers(win->staticLinks);
@@ -842,16 +848,16 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
     txt = _TRA("Open a document...");
-    HwndWidgetText openDoc(txt, hwnd, nullptr);
+    HwndWidgetText openDoc(txt, hwnd, fontText);
     openDoc.isRtl = isRtl;
+    openDoc.withUnderline = true;
     txtSize = openDoc.Measure(true);
     Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         rect.x = rectIcon.x - rect.dx - 3;
     }
-    openDoc.Draw(hdc, rect.x, rect.y);
-
-    DrawLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
+    openDoc.SetBounds(rect);
+    openDoc.Draw(hdc);
 
     // make the click target larger
     rect = rect.Union(rectIcon);
