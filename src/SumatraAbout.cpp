@@ -604,22 +604,22 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
 /* alternate static page to display when no document is loaded */
 
-#define DOCLIST_SEPARATOR_DY 2
-#define DOCLIST_THUMBNAIL_BORDER_W 1
-#define DOCLIST_MARGIN_LEFT DpiScale(win->hwndFrame, 40)
-#define DOCLIST_MARGIN_BETWEEN_X DpiScale(win->hwndFrame, 30)
-#define DOCLIST_MARGIN_RIGHT DpiScale(win->hwndFrame, 40)
-#define DOCLIST_MARGIN_TOP DpiScale(win->hwndFrame, 60)
-#define DOCLIST_MARGIN_BETWEEN_Y DpiScale(win->hwndFrame, 50)
-#define DOCLIST_MARGIN_BOTTOM DpiScale(win->hwndFrame, 40)
-#define DOCLIST_MAX_THUMBNAILS_X 5
-#define DOCLIST_BOTTOM_BOX_DY DpiScale(win->hwndFrame, 50)
+constexpr int kDocListSeparatorDy = 2;
+constexpr int kDocListThumbnailBorderDx = 1;
+#define kDocListMarginLeft DpiScale(win->hwndFrame, 40)
+#define kDocListMarginBetweenX DpiScale(win->hwndFrame, 30)
+#define kDocListMarginBetweenY DpiScale(win->hwndFrame, 50)
+#define kDocListMarginRight DpiScale(win->hwndFrame, 40)
+#define kDocListMarginTop DpiScale(win->hwndFrame, 60)
+#define kDocListMarginBottom DpiScale(win->hwndFrame, 40)
+constexpr int kDocListMaxThumbnailsX = 5;
+#define kDocListBottomBoxDy DpiScale(win->hwndFrame, 50)
 
 void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     HWND hwnd = win->hwndFrame;
     auto col = gCurrentTheme->window.textColor;
-    AutoDeletePen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
-    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
+    AutoDeletePen penBorder(CreatePen(PS_SOLID, kDocListSeparatorDy, col));
+    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kDocListThumbnailBorderDx, col));
     col = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
@@ -659,33 +659,33 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     col = GetMainWindowBackgroundColor();
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
-    rc.dy -= DOCLIST_BOTTOM_BOX_DY;
+    rc.dy -= kDocListBottomBoxDy;
 
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
 
-    int dx = (rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) /
-             (kThumbnailDx + DOCLIST_MARGIN_BETWEEN_X);
-    int width = limitValue(dx, 1, DOCLIST_MAX_THUMBNAILS_X);
-    int dy = (rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
-             (kThumbnailDy + DOCLIST_MARGIN_BETWEEN_Y);
+    int dx = (rc.dx - kDocListMarginLeft - kDocListMarginRight + kDocListMarginBetweenX) /
+             (kThumbnailDx + kDocListMarginBetweenX);
+    int width = limitValue(dx, 1, kDocListMaxThumbnailsX);
+    int dy = (rc.dy - kDocListMarginTop - kDocListMarginBottom + kDocListMarginBetweenY) /
+             (kThumbnailDy + kDocListMarginBetweenY);
     int height = std::min(dy, kFileHistoryMaxFrequent / width);
-    int x = rc.x + DOCLIST_MARGIN_LEFT +
-            (rc.dx - width * kThumbnailDx - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
-             DOCLIST_MARGIN_RIGHT) /
+    int x = rc.x + kDocListMarginLeft +
+            (rc.dx - width * kThumbnailDx - (width - 1) * kDocListMarginBetweenX - kDocListMarginLeft -
+             kDocListMarginRight) /
                 2;
-    Point offset(x, rc.y + DOCLIST_MARGIN_TOP);
+    Point offset(x, rc.y + kDocListMarginTop);
     if (offset.x < DpiScale(hwnd, kInnerPadding)) {
         offset.x = DpiScale(hwnd, kInnerPadding);
     } else if (list.size() == 0) {
-        offset.x = DOCLIST_MARGIN_LEFT;
+        offset.x = kDocListMarginLeft;
     }
 
     SelectObject(hdc, fontFrequentlyRead);
     SIZE txtSize;
     const char* txt = _TRA("Frequently Read");
     GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
-    Rect headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    Rect headerRect(offset.x, rc.y + (kDocListMarginTop - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
@@ -705,8 +705,8 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             FileState* state = list.at(h * width + w);
 
-            Rect page(offset.x + w * (kThumbnailDx + DOCLIST_MARGIN_BETWEEN_X),
-                      offset.y + h * (kThumbnailDy + DOCLIST_MARGIN_BETWEEN_Y), kThumbnailDx, kThumbnailDy);
+            Rect page(offset.x + w * (kThumbnailDx + kDocListMarginBetweenX),
+                      offset.y + h * (kThumbnailDy + kDocListMarginBetweenY), kThumbnailDx, kThumbnailDy);
             if (isRtl) {
                 page.x = rc.dx - page.x - page.dx;
             }
@@ -763,9 +763,8 @@ void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     }
 
     /* render bottom links */
-    rc.y +=
-        DOCLIST_MARGIN_TOP + height * kThumbnailDy + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
-    rc.dy = DOCLIST_BOTTOM_BOX_DY;
+    rc.y += kDocListMarginTop + height * kThumbnailDy + (height - 1) * kDocListMarginBetweenY + kDocListMarginBottom;
+    rc.dy = kDocListBottomBoxDy;
 
     col = gCurrentTheme->window.linkColor;
     SetTextColor(hdc, col);
