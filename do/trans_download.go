@@ -24,33 +24,34 @@ func getTransSecret() string {
 	return v
 }
 
-func printSusTranslations(d []byte) {
+// sometimes people press enter at the end of the translation
+// we should fix it in apptranslator.org but for now fix it here
+func fixTranslation(s string) string {
+	s = strings.TrimSuffix(s, `\n`)
+	s = strings.TrimSuffix(s, `\r`)
+	s = strings.TrimSuffix(s, `\n`)
+	return s
+}
+
+func fixTranslations(d []byte) []byte {
+	var b bytes.Buffer
 	a := strings.Split(string(d), "\n")
 	currString := ""
-	isSus := func(s string) bool {
-		/*
-			if strings.Contains(s, `\n\n`) {
-				return true
-			}
-		*/
-		if strings.HasPrefix(s, `\n`) || strings.HasSuffix(s, `\n`) {
-			return true
-		}
-		if strings.HasPrefix(s, `\r`) || strings.HasSuffix(s, `\r`) {
-			return true
-		}
-		return false
-	}
 
 	for _, s := range a {
 		if strings.HasPrefix(s, ":") {
 			currString = s[1:]
+			b.WriteString(s + "\n")
 			continue
 		}
-		if isSus(s) {
-			fmt.Printf("Suspicious translation:\n%s\n%s\n\n", currString, s)
+		fixed := fixTranslation(s)
+		if s != fixed {
+			fmt.Printf("\nfixed translation:\n%s\n%s\n  =>\n%s\n\n", currString, s, fixed)
 		}
+		b.WriteString(fixed + "\n")
 	}
+	res := b.Bytes()
+	return res[:len(res)-1] // remove last \n
 }
 
 func downloadTranslationsMust() []byte {
@@ -196,6 +197,7 @@ func splitIntoPerLangFiles(d []byte) {
 
 func downloadTranslations() bool {
 	d := downloadTranslationsMust()
+	d = fixTranslations(d)
 
 	path := filepath.Join(translationsDir, "translations.txt")
 	curr := readFileMust(path)
@@ -215,7 +217,6 @@ func downloadTranslations() bool {
 	writeFileMust(path, d)
 	logf(ctx(), "Wrote %s of size %d\n", path, len(d))
 
-	printSusTranslations(d)
 	return false
 }
 

@@ -7652,7 +7652,7 @@ pl:Nie można odinstalować filtru wyszukiwania Sumatry
 pt: Não foi possível desinstalar o filtro de pesquisa
 ro:Nu s-a putut dezinstala filtrul de căutare Sumatra
 ru:Не удалось удалить фильтр поиска Sumatra
-sk:Vyhľadávací filter Sumatra sa nedá odinštalovať\r\n
+sk:Vyhľadávací filter Sumatra sa nedá odinštalovať
 sl:Ni bilo mogoče odstraniti iskalnega filtra Sumatra
 sr-rs:Деинсталација Sumatra филтера за претрагу није успела
 ta:சுமத்ரா தேடல் வடிப்பான் நிறுவலை நீக்கமுடியவில்லை
