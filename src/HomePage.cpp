@@ -300,13 +300,13 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     Rect rc = ClientRect(hwnd);
     RECT rTmp = ToRECT(rc);
     col = GetMainWindowBackgroundColor();
-    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
+    AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
     FillRect(hdc, &rTmp, brushAboutBg);
 
     /* render title */
     Rect titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
 
-    AutoDeleteBrush bgBrush(CreateSolidBrush(col));
+    AutoDeleteBrush bgBrush = CreateSolidBrush(col);
     ScopedSelectObject brush(hdc, bgBrush);
     ScopedSelectObject pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
@@ -724,7 +724,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     rc.dy -= titleBox.dy;
     rTmp = ToRECT(rc);
     col = GetMainWindowBackgroundColor();
-    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
+    AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
     FillRect(hdc, &rTmp, brushAboutBg);
     rc.dy -= kDocListBottomBoxDy;
 

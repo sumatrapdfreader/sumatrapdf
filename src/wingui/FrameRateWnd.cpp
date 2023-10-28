@@ -32,7 +32,7 @@ that it's actually a part of that window.
 
 static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT&) {
     RECT rc = ClientRECT(w->hwnd);
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(COL_BLACK));
+    AutoDeleteBrush brush = CreateSolidBrush(COL_BLACK);
     FillRect(hdc, &rc, brush);
 
     SetTextColor(hdc, COL_WHITE);

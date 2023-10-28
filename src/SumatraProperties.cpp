@@ -602,7 +602,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     Rect rcClient = ClientRect(hwnd);
     RECT rTmp = ToRECT(rcClient);
     auto col = GetMainWindowBackgroundColor();
-    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
+    AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
     FillRect(hdc, &rTmp, brushAboutBg);
 
     col = gCurrentTheme->window.textColor;
