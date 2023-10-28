@@ -2904,3 +2904,46 @@ void AddPathToRecentDocs(const char* path) {
     WCHAR* pathW = ToWStrTemp(path);
     SHAddToRecentDocs(SHARD_PATH, pathW);
 }
+
+TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
+    void* mem = GlobalLock(h);
+    if (!mem) {
+        return nullptr;
+    }
+
+    TempStr res;
+    if (isUnicode) {
+        res = ToUtf8Temp((WCHAR*)mem);
+    } else {
+        res = str::DupTemp((char*)mem);
+    }
+    GlobalUnlock(h);
+    return res;
+}
+
+HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
+    HGLOBAL h = GlobalAlloc(flags, n);
+    if (!h) {
+        return 0;
+    }
+    void* d = GlobalLock(h);
+    if (d) {
+        memcpy(d, src, n);
+    }
+    GlobalUnlock(h);
+    return h;
+}
+
+HGLOBAL StrToHGLOBAL(const char* s, UINT flags) {
+    int cb = str::Len(s) + 1;
+    return MemToHGLOBAL((void*)s, cb, flags);
+}
+
+TempStr AtomToStrTemp(ATOM a) {
+    WCHAR buf[1024];
+    UINT cch = GlobalGetAtomNameW(a, buf, dimofi(buf));
+    if (cch == 0) {
+        return nullptr;
+    }
+    return ToUtf8Temp(buf, cch);
+}

@@ -219,7 +219,7 @@ static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
         }
         // fall-through to DDEExecute if wasn't handled
     }
-    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    DDEExecute(kSumatraDdeServer, kSumatraDdeTopic, cmd);
 }
 
 // delegate file opening to a previously running instance by sending a DDE message

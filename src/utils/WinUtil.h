@@ -338,3 +338,8 @@ void TbGetRect(HWND hwnd, int buttonId, RECT* rc);
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree);
 void AddPathToRecentDocs(const char*);
+
+TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode);
+HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags = GMEM_MOVEABLE);
+HGLOBAL StrToHGLOBAL(const char* s, UINT flags = GMEM_MOVEABLE);
+TempStr AtomToStrTemp(ATOM a);
