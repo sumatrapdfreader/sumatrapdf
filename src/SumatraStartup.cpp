@@ -1417,7 +1417,7 @@ Exit:
     }
 
     DeleteCachedCursors();
-    DeleteObject(GetDefaultGuiFont());
+    DeleteCreatedFonts();
     DeleteBitmap(gBitmapReloadingCue);
 
     extern void CleanupEngineDjVu(); // in EngineDjVu.cpp

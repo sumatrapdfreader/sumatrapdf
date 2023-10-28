@@ -163,12 +163,8 @@ int GetWndX(NotificationWnd* wnd) {
 }
 
 NotificationWnd::~NotificationWnd() {
-    auto fontToDelete = font;
     Destroy();
     str::Free(progressMsg);
-    if (false && fontToDelete) {
-        DeleteObject(fontToDelete);
-    }
 }
 
 HWND NotificationWnd::Create(const NotificationCreateArgs& args) {

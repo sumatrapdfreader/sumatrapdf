@@ -348,6 +348,17 @@ bool ListRemove(T** root, T* el) {
     return true;
 }
 
+template <typename T>
+int ListLen(T* root) {
+    int n = 0;
+    T* curr = root;
+    while (curr) {
+        n++;
+        curr = curr->next;
+    }
+    return n;
+}
+
 // Base class for allocators that can be provided to Vec class
 // (and potentially others). Needed because e.g. in crash handler
 // we want to use Vec but not use standard malloc()/free() functions

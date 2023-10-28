@@ -374,7 +374,7 @@ int Wnd::OnCreate(CREATESTRUCT*) {
     /*
     LOGFONT logfont;
     ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
-    font = ::CreateFontIndirect(&logfont);
+    font = ::CreateFontIndirectW(&logfont);
     ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
     */
 

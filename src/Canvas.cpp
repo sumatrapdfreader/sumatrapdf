@@ -979,7 +979,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         int renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay != 0) {
-            AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
+            HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             auto col = gCurrentTheme->window.textColor;
             SetTextColor(hdc, col);
@@ -1566,7 +1566,7 @@ static void OnPaintError(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
+    HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
     auto bgCol = GetMainWindowBackgroundColor();
     ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));

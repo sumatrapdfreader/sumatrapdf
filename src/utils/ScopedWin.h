@@ -185,7 +185,6 @@ class ScopedGdiObj {
         return obj;
     }
 };
-using AutoDeleteFont = ScopedGdiObj<HFONT>;
 using AutoDeletePen = ScopedGdiObj<HPEN>;
 using AutoDeleteBrush = ScopedGdiObj<HBRUSH>;
 

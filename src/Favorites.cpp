@@ -864,13 +864,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
 }
 
-static HFONT gTreeFont = nullptr;
-
 HFONT GetTreeFont() {
-    if (gTreeFont) {
-        return gTreeFont;
-    }
-
     int fntSize = GetSizeOfDefaultGuiFont();
     int fntSizeUser = gGlobalPrefs->treeFontSize;
     int fntWeightOffsetUser = gGlobalPrefs->treeFontWeightOffset;
@@ -878,9 +872,7 @@ HFONT GetTreeFont() {
     if (fntSizeUser > 5) {
         fntSize = fntSizeUser;
     }
-    gTreeFont = GetUserGuiFont(fntSize, fntWeightOffsetUser, fntNameUser);
-    CrashIf(!gTreeFont);
-    return gTreeFont;
+    return GetUserGuiFont(fntNameUser, fntSize, fntWeightOffsetUser);
 }
 
 // in TableOfContents.cpp

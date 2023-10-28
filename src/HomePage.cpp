@@ -207,8 +207,8 @@ static char* GetAppVersionTemp() {
 static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     Size result{};
 
-    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
-    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize));
+    HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+    HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
     ScopedSelectObject selFont(hdc, fontSumatraTxt);
 
     SIZE txtSize{};
@@ -233,8 +233,8 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 }
 
 static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
-    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
-    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize));
+    HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+    HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
 
     SetBkMode(hdc, TRANSPARENT);
 
@@ -256,7 +256,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 
 // draw on the bottom right
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 16));
+    HFONT fontLeftTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
 
     HwndWidgetText w(txt, hwnd, fontLeftTxt);
     w.isRtl = IsUIRightToLeft();
@@ -292,8 +292,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     col = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
+    HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
+    HFONT fontRightTxt = CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
 
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
@@ -373,8 +373,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize));
-    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize));
+    HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
+    HFONT fontRightTxt = CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
@@ -691,9 +691,9 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     col = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
-    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, "MS Shell Dlg", 24));
-    AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, "MS Shell Dlg", 24));
-    AutoDeleteFont fontText(CreateSimpleFont(hdc, "MS Shell Dlg", 14));
+    HFONT fontSumatraTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     ScopedSelectObject font(hdc, fontSumatraTxt);
 

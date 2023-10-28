@@ -867,8 +867,6 @@ void CreateToolbar(MainWindow* win) {
     CreateFindBox(win, font, iconSize);
     CreateInfoText(win, font);
 
-    // TODO: leaking font
-
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);
 }

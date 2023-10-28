@@ -1867,22 +1867,6 @@ void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
     free(modi);
 }
 
-static HFONT gMenuFont = nullptr;
-
-HFONT GetMenuFont() {
-    if (!gMenuFont) {
-        NONCLIENTMETRICS ncm{};
-        ncm.cbSize = sizeof(ncm);
-        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-        gMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
-    }
-    return gMenuFont;
-}
-
-void DeleteMenuFont() {
-    DeleteFontSafe(&gMenuFont);
-}
-
 struct MenuText {
     WCHAR* menuText;
     int menuTextLen;
