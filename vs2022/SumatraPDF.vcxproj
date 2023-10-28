@@ -740,6 +740,7 @@
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
+    <ClInclude Include="..\src\HomePage.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\Menu.h" />
@@ -756,7 +757,6 @@
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\StressTesting.h" />
-    <ClInclude Include="..\src\SumatraAbout.h" />
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraProperties.h" />
@@ -813,6 +813,7 @@
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\FzImgReader.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
+    <ClCompile Include="..\src\HomePage.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
@@ -838,7 +839,6 @@
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
-    <ClCompile Include="..\src\SumatraAbout.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />

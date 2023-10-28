@@ -46,7 +46,7 @@
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
-#include "SumatraAbout.h"
+#include "HomePage.h"
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "Translations.h"

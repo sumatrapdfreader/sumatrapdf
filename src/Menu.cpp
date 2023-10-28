@@ -35,7 +35,7 @@
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Selection.h"
-#include "SumatraAbout.h"
+#include "HomePage.h"
 #include "Translations.h"
 #include "Toolbar.h"
 #include "EditAnnotations.h"

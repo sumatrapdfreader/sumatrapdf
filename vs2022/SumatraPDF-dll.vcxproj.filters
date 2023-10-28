@@ -102,6 +102,9 @@
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\HomePage.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Installer.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -148,9 +151,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\StressTesting.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SumatraAbout.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SumatraDialogs.h">
@@ -317,6 +317,9 @@
     <ClCompile Include="..\src\GlobalPrefs.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\HomePage.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Installer.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -366,9 +369,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SumatraAbout.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraConfig.cpp">

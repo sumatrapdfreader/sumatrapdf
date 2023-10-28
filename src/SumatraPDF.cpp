@@ -70,7 +70,7 @@
 #include "SearchAndDDE.h"
 #include "Selection.h"
 #include "StressTesting.h"
-#include "SumatraAbout.h"
+#include "HomePage.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "TableOfContents.h"

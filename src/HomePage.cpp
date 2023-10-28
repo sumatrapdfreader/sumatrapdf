@@ -23,7 +23,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "FileThumbnails.h"
-#include "SumatraAbout.h"
+#include "HomePage.h"
 #include "Translations.h"
 #include "Version.h"
 #include "Theme.h"
@@ -683,7 +683,7 @@ constexpr int kDocListThumbnailBorderDx = 1;
 constexpr int kDocListMaxThumbnailsX = 5;
 #define kDocListBottomBoxDy DpiScale(win->hwndFrame, 50)
 
-void DrawStartPage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
+void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     HWND hwnd = win->hwndFrame;
     auto col = gCurrentTheme->window.textColor;
     AutoDeletePen penBorder(CreatePen(PS_SOLID, kDocListSeparatorDy, col));

@@ -22,7 +22,7 @@
 #include "MainWindow.h"
 #include "resource.h"
 #include "Commands.h"
-#include "SumatraAbout.h"
+#include "HomePage.h"
 #include "SumatraProperties.h"
 #include "Translations.h"
 #include "SumatraConfig.h"

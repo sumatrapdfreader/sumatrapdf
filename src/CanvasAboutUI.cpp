@@ -22,7 +22,7 @@
 #include "Commands.h"
 #include "Canvas.h"
 #include "Menu.h"
-#include "SumatraAbout.h"
+#include "HomePage.h"
 #include "Translations.h"
 #include "Theme.h"
 
@@ -35,7 +35,7 @@ static void OnPaintAbout(MainWindow* win) {
     auto bgCol = GetMainWindowBackgroundColor();
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
         gGlobalPrefs->showStartPage) {
-        DrawStartPage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);
+        DrawHomePage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);
     } else {
         DrawAboutPage(win, win->buffer->GetDC());
     }
