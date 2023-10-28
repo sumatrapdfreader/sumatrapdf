@@ -35,14 +35,15 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
-#define ABOUT_BORDER_COL RGB(0, 0, 0)
+constexpr COLORREF kAboutBorderCol = RGB(0, 0, 0);
 
-constexpr int ABOUT_LEFT_RIGHT_SPACE_DX = 8;
-constexpr int ABOUT_MARGIN_DX = 10;
-constexpr int ABOUT_BOX_MARGIN_DY = 6;
-constexpr int ABOUT_TXT_DY = 6;
-constexpr int ABOUT_RECT_PADDING = 8;
-#define kInnerPadding 8
+constexpr int kAboutLeftRightSpaceDx = 8;
+constexpr int kAboutMarginDx = 10;
+constexpr int kAboutBoxMarginDy = 6;
+constexpr int kAboutTxtDy = 6;
+constexpr int kAboutRectPadding = 8;
+
+constexpr int kInnerPadding = 8;
 
 constexpr const char* kSumatraTxtFont = "Arial Black";
 constexpr int kSumatraTxtFontSize = 24;
@@ -193,7 +194,7 @@ static void DrawAppName(HDC hdc, Point pt) {
     }
 }
 
-static char* GetAppVersionTemp() {
+static TempStr GetAppVersionTemp() {
     char* s = str::DupTemp("v" CURR_VERSION_STRA);
     if (IsProcess64()) {
         s = str::JoinTemp(s, " 64-bit");
@@ -209,26 +210,18 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
-    ScopedSelectObject selFont(hdc, fontSumatraTxt);
 
-    SIZE txtSize{};
     /* calculate minimal top box size */
-    const char* txt = kAppName;
-
-    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
-    result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
-    result.dx = txtSize.cx;
+    Size txtSize = HwndMeasureText(hwnd, kAppName, fontSumatraTxt);
+    result.dy = txtSize.dy + DpiScale(hwnd, kAboutBoxMarginDy * 2);
+    result.dx = txtSize.dx;
 
     /* consider version and version-sub strings */
-    SelectObject(hdc, fontVersionTxt);
-    char* ver = GetAppVersionTemp();
-    GetTextExtentPoint32Utf8(hdc, ver, (int)str::Len(ver), &txtSize);
-    LONG minWidth = txtSize.cx + DpiScale(hwnd, 8);
-    txt = VERSION_SUB_TXT;
-    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
-    txtSize.cx = std::max(txtSize.cx, minWidth);
-    result.dx += 2 * (txtSize.cx + DpiScale(hwnd, kInnerPadding));
-
+    TempStr ver = GetAppVersionTemp();
+    txtSize = HwndMeasureText(hwnd, ver, fontVersionTxt);
+    int minWidth = txtSize.dx + DpiScale(hwnd, 8);
+    int dx = std::max(txtSize.dx, minWidth);
+    result.dx += 2 * (dx + DpiScale(hwnd, kInnerPadding));
     return result;
 }
 
@@ -238,6 +231,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 
     SetBkMode(hdc, TRANSPARENT);
 
+    ScopedSelectFont f(hdc, fontSumatraTxt);
     SIZE txtSize;
     const char* txt = kAppName;
     GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
@@ -367,8 +361,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     }
 
     SelectObject(hdc, penDivideLine);
-    Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, ABOUT_LEFT_RIGHT_SPACE_DX),
-                    rect.y + titleRect.dy + 4, 0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
+    Rect divideLine(gAboutLayoutInfo[0].rightPos.x - DpiScale(hwnd, kAboutLeftRightSpaceDx), rect.y + titleRect.dy + 4,
+                    0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     DrawLine(hdc, divideLine);
 }
 
@@ -427,9 +421,9 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         }
     }
 
-    int leftRightSpaceDx = DpiScale(hwnd, ABOUT_LEFT_RIGHT_SPACE_DX);
-    int marginDx = DpiScale(hwnd, ABOUT_MARGIN_DX);
-    int aboutTxtDy = DpiScale(hwnd, ABOUT_TXT_DY);
+    int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
+    int marginDx = DpiScale(hwnd, kAboutMarginDx);
+    int aboutTxtDy = DpiScale(hwnd, kAboutTxtDy);
     /* calculate total dimension and position */
     Rect minRect;
     minRect.dx = leftRightSpaceDx + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + leftRightSpaceDx;
@@ -645,7 +639,7 @@ void ShowAboutWindow(MainWindow* win) {
     SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
     EndPaint(gHwndAbout, &ps);
-    int rectPadding = DpiScale(gHwndAbout, ABOUT_RECT_PADDING);
+    int rectPadding = DpiScale(gHwndAbout, kAboutRectPadding);
     rc.Inflate(rectPadding, rectPadding);
 
     // resize the new window to just match these dimensions

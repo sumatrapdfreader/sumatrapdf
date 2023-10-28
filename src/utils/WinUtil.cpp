@@ -2848,26 +2848,6 @@ void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
 }
 
 // Return size of a text <txt> in a given <hwnd>, taking into account its font
-Size TextSizeInHwnd(HWND hwnd, const char* txt, HFONT font) {
-    if (!txt || !*txt) {
-        return Size{};
-    }
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-    SIZE sz{};
-    GetTextExtentPoint32Utf8(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    return Size(sz.cx, sz.cy);
-}
-
-// Return size of a text <txt> in a given <hwnd>, taking into account its font
 Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     if (!txt || !*txt) {
         return Size{};
@@ -2905,10 +2885,18 @@ SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
     return sz;
 }
 
+// Return size of a text <txt> in a given <hwnd>, taking into account its font
+Size TextSizeInHwnd(HWND hwnd, const char* txt, HFONT font) {
+    if (!txt || !*txt) {
+        return Size{};
+    }
+    TempWStr ws = ToWStrTemp(txt);
+    return TextSizeInHwnd(hwnd, ws, font);
+}
+
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
+Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     SIZE sz{};
-    size_t txtLen = str::Len(txt);
 
     AutoReleaseDC dc(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
@@ -2920,7 +2908,8 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
 
     RECT r{};
     uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    HdcDrawText(dc, txt, (int)txtLen, &r, fmt);
+    size_t txtLen = str::Len(txt);
+    DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
 
     int dx = RectDx(r);
     int dy = RectDy(r);
@@ -2928,33 +2917,9 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz{};
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-
-    RECT r{};
-    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    int dx = RectDx(r);
-    int dy = RectDy(r);
-    return {dx, dy};
-}
-
-/* Return size of a text <txt> in a given <hdc>, taking into account its font */
-Size TextSizeInDC(HDC hdc, const WCHAR* txt) {
-    SIZE sz;
-    size_t txtLen = str::Len(txt);
-    GetTextExtentPoint32(hdc, txt, (int)txtLen, &sz);
-    return Size(sz.cx, sz.cy);
+Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
+    TempWStr sw = ToWStrTemp(txt);
+    return HwndMeasureText(hwnd, sw, font);
 }
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {

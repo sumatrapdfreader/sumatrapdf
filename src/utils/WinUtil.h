@@ -112,7 +112,6 @@ void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 Size TextSizeInHwnd(HWND, const char*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
-Size TextSizeInDC(HDC, const WCHAR*);
 
 bool IsFocused(HWND);
 bool IsCursorOverWindow(HWND);
