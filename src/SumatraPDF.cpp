@@ -4909,6 +4909,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdToggleFrequentlyRead: {
+            gGlobalPrefs->showStartPage = !gGlobalPrefs->showStartPage;
+            win->RedrawAll(true);
+            break;
+        }
+
         case CmdSaveAnnotationsNewFile: {
             if (tab) {
                 SaveAnnotationsToMaybeNewPdfFile(tab);

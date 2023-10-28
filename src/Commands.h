@@ -175,6 +175,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdNextTab, "Next Tab")                                             \
     V(CmdPrevTab, "Previous Tab")                                         \
     V(CmdSelectNextTheme, "Select next theme")                            \
+    V(CmdToggleFrequentlyRead, "Toggle Frequently Read")                    \
     V(CmdNone, "Do nothing")
 
 //V(CmdSelectAnnotation, "Select Annotation")                           \

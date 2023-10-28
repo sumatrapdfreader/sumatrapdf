@@ -94,6 +94,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdClearHistory,
     CmdReopenLastClosedFile,
     CmdSelectNextTheme,
+    CmdToggleFrequentlyRead,
 #if defined(DEBUG)
     CmdDebugCrashMe,
     CmdDebugCorruptMemory,
@@ -222,6 +223,11 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
 
     if (IsOpenExternalViewerCommand(cmdId)) {
         return HasExternalViewerForCmd(cmdId);
+    }
+
+    // we only want to show this in home page
+    if (cmdId == CmdToggleFrequentlyRead) {
+        return !ctx.isDocLoaded;
     }
 
     if (!ctx.isDocLoaded) {
