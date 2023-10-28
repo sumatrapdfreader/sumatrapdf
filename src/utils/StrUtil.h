@@ -227,9 +227,9 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int CmpNatural(const char*, const char*);
 int CmpNatural(const WCHAR*, const WCHAR*);
 
-char* FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
-char* FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
-char* FormatRomanNumeralTemp(int number);
+TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
+TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
+TempStr FormatRomanNumeralTemp(int number);
 
 bool EmptyOrWhiteSpaceOnly(const char* sv);
 } // namespace str

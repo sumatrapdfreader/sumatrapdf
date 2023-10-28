@@ -595,10 +595,10 @@ defer { instance->Release(); };
 
 #include "GeomUtil.h"
 #include "Vec.h"
+#include "TempAllocator.h"
 #include "StrUtil.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"
-#include "TempAllocator.h"
 #include "ColorUtil.h"
 
 // lstrcpy is dangerous so forbid using it

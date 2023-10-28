@@ -2750,7 +2750,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
     str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcFileName));
+    auto baseName = path::GetBaseNameTemp(srcFileName);
+    str::BufSet(dstFileName, dimof(dstFileName), baseName);
     if (str::FindChar(dstFileName, ':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
@@ -2884,7 +2885,8 @@ static void RenameCurrentFile(MainWindow* win) {
     str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameTemp(srcPath));
+    auto baseName = path::GetBaseNameTemp(srcPath);
+    str::BufSet(dstFileName, dimof(dstFileName), baseName);
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2954,7 +2956,7 @@ static void CreateLnkShortcut(MainWindow* win) {
 
     WCHAR dstFileName[MAX_PATH] = {0};
     // Remove the extension so that it can be replaced with .lnk
-    const char* name = path::GetBaseNameTemp(path);
+    auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
     str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {

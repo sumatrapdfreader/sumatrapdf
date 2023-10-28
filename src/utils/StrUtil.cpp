@@ -2218,25 +2218,33 @@ size_t NormalizeWSInPlace(WCHAR* str) {
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
-int BufSet(char* dst, int dstCchSize, const char* src) {
-    CrashAlwaysIf(0 == dstCchSize);
+int BufSet(char* dst, int cchDst, const char* src) {
+    CrashAlwaysIf(0 == cchDst || !dst);
+    if (!src) {
+        *dst = 0;
+        return 0;
+    }
 
     int srcCchSize = (int)str::Len(src);
-    int toCopy = std::min(dstCchSize - 1, srcCchSize);
+    int toCopy = std::min(cchDst - 1, srcCchSize);
 
-    errno_t err = strncpy_s(dst, (size_t)dstCchSize, src, (size_t)toCopy);
+    errno_t err = strncpy_s(dst, (size_t)cchDst, src, (size_t)toCopy);
     CrashIf(err || dst[toCopy] != '\0');
 
     return toCopy;
 }
 
-int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src) {
-    CrashAlwaysIf(0 == dstCchSize);
+int BufSet(WCHAR* dst, int cchDst, const WCHAR* src) {
+    CrashAlwaysIf(0 == cchDst || !dst);
+    if (!src) {
+        *dst = 0;
+        return 0;
+    }
 
     int srcCchSize = str::Leni(src);
-    int toCopy = std::min(dstCchSize - 1, srcCchSize);
+    int toCopy = std::min(cchDst - 1, srcCchSize);
 
-    memset(dst, 0, dstCchSize * sizeof(WCHAR));
+    memset(dst, 0, cchDst * sizeof(WCHAR));
     memcpy(dst, src, toCopy * sizeof(WCHAR));
     return toCopy;
 }
@@ -2245,18 +2253,18 @@ int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
     return BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
-int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s) {
-    CrashAlwaysIf(0 == dstCchSize);
+int BufAppend(WCHAR* dst, int cchDst, const WCHAR* s) {
+    CrashAlwaysIf(0 == cchDst);
 
     int currDstCchLen = str::Leni(dst);
-    if (currDstCchLen + 1 >= dstCchSize) {
+    if (currDstCchLen + 1 >= cchDst) {
         return 0;
     }
-    int left = dstCchSize - currDstCchLen - 1;
+    int left = cchDst - currDstCchLen - 1;
     int srcCchSize = str::Leni(s);
     int toCopy = std::min(left, srcCchSize);
 
-    errno_t err = wcsncat_s(dst, dstCchSize, s, toCopy);
+    errno_t err = wcsncat_s(dst, cchDst, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
@@ -2264,18 +2272,18 @@ int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s) {
 
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
-int BufAppend(char* dst, int dstCchSize, const char* s) {
-    CrashAlwaysIf(0 == dstCchSize);
+int BufAppend(char* dst, int dstCch, const char* s) {
+    CrashAlwaysIf(0 == dstCch);
 
     int currDstCchLen = str::Leni(dst);
-    if (currDstCchLen + 1 >= dstCchSize) {
+    if (currDstCchLen + 1 >= dstCch) {
         return 0;
     }
-    int left = dstCchSize - currDstCchLen - 1;
+    int left = dstCch - currDstCchLen - 1;
     int srcCchSize = str::Leni(s);
     int toCopy = std::min(left, srcCchSize);
 
-    errno_t err = strncat_s(dst, dstCchSize, s, toCopy);
+    errno_t err = strncat_s(dst, dstCch, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
@@ -2283,7 +2291,7 @@ int BufAppend(char* dst, int dstCchSize, const char* s) {
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-char* FormatNumWithThousandSepTemp(i64 num, LCID locale) {
+TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     WCHAR thousandSepW[4]{};
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
@@ -2309,7 +2317,7 @@ char* FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-char* FormatFloatWithThousandSepTemp(double number, LCID locale) {
+TempStr FormatFloatWithThousandSepTemp(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
     char* tmp = FormatNumWithThousandSepTemp(num / 100, locale);
@@ -2334,8 +2342,8 @@ char* FormatFloatWithThousandSepTemp(double number, LCID locale) {
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
-char* FormatRomanNumeralTemp(int number) {
-    if (number < 1) {
+TempStr FormatRomanNumeralTemp(int n) {
+    if (n < 1) {
         return nullptr;
     }
 
@@ -2345,23 +2353,14 @@ char* FormatRomanNumeralTemp(int number) {
     } romandata[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
                      {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
 
-    size_t len = 0;
-    for (int n = number, i = 0; i < dimof(romandata); i++) {
-        for (; n >= romandata[i].value; n -= romandata[i].value) {
-            len += romandata[i].numeral[1] ? 2 : 1;
+    str::Str roman;
+    for (int i = 0; i < dimof(romandata); i++) {
+        auto&& el = romandata[i];
+        for (; n >= el.value; n -= el.value) {
+            roman.Append(el.numeral);
         }
     }
-    CrashIf(len == 0);
-
-    char* roman = AllocArrayTemp<char>(len + 1);
-    TempStr c = roman;
-    for (int n = number, i = 0; i < dimof(romandata); i++) {
-        for (; n >= romandata[i].value; n -= romandata[i].value) {
-            c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);
-        }
-    }
-
-    return roman;
+    return str::DupTemp(roman.Get());
 }
 
 /* compares two strings "naturally" by sorting numbers within a string
