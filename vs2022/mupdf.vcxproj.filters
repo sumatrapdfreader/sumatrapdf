@@ -758,6 +758,9 @@
     <ClCompile Include="..\mupdf\source\html\mobi.c">
       <Filter>mupdf\source\html</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\html\office.c">
+      <Filter>mupdf\source\html</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\html\story-writer.c">
       <Filter>mupdf\source\html</Filter>
     </ClCompile>

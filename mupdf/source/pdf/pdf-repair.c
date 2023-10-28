@@ -402,7 +402,8 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 		c = fz_read_byte(ctx, doc->file);
 		while (c >= 0 && (c == ' ' || c == '%'))
 			c = fz_read_byte(ctx, doc->file);
-		fz_unread_byte(ctx, doc->file);
+		if (c != EOF)
+			fz_unread_byte(ctx, doc->file);
 
 		while (1)
 		{

@@ -946,6 +946,7 @@ function mupdf_files()
     "html-outline.c",
     "html-parse.c",
     "mobi.c",
+    "office.c",
     "story-writer.c",
     "xml-dom.c",
   })

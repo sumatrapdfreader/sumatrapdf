@@ -206,7 +206,7 @@ png_deinterlace(fz_context *ctx, struct info *info, unsigned int *passw, unsigne
 	unsigned int p, x, y, k;
 
 	if (info->height > UINT_MAX / stride)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "image too large");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
 	output = Memento_label(fz_malloc(ctx, info->height * stride), "png_deinterlace");
 
 	for (p = 0; p < 7; p++)

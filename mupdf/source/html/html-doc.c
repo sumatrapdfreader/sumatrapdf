@@ -28,7 +28,7 @@
 
 enum { T, R, B, L };
 
-enum { FORMAT_FB2, FORMAT_XHTML, FORMAT_HTML5, FORMAT_MOBI, FORMAT_TXT };
+enum { FORMAT_FB2, FORMAT_XHTML, FORMAT_HTML5, FORMAT_MOBI, FORMAT_TXT, FORMAT_OFFICE };
 
 typedef struct
 {
@@ -238,6 +238,7 @@ htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *zip, fz_buffer *buf
 	case FORMAT_HTML5: doc->super.lookup_metadata = htdoc_lookup_metadata; break;
 	case FORMAT_XHTML: doc->super.lookup_metadata = xhtdoc_lookup_metadata; break;
 	case FORMAT_MOBI: doc->super.lookup_metadata = mobi_lookup_metadata; break;
+	case FORMAT_OFFICE: doc->super.lookup_metadata = NULL; break;
 	}
 	doc->super.is_reflowable = 1;
 
@@ -252,6 +253,7 @@ htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *zip, fz_buffer *buf
 		case FORMAT_XHTML: doc->html = fz_parse_xhtml(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
 		case FORMAT_MOBI: doc->html = fz_parse_mobi(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
 		case FORMAT_TXT: doc->html = fz_parse_txt(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
+		case FORMAT_OFFICE: doc->html = fz_parse_office(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
 		}
 		doc->outline = fz_load_html_outline(ctx, doc->html);
 	}
@@ -465,4 +467,96 @@ fz_document_handler txt_document_handler =
 	txt_open_document_with_stream,
 	txt_extensions,
 	txt_mimetypes
+};
+
+static fz_document *
+office_open_document_with_stream(fz_context *ctx, fz_stream *file)
+{
+	return htdoc_open_document_with_buffer(ctx, NULL /*zip*/, fz_read_all(ctx, file, 0), FORMAT_OFFICE);
+}
+
+static fz_document *
+office_open_document(fz_context *ctx, const char *filename)
+{
+	return htdoc_open_document_with_buffer(ctx, NULL /*zip*/, fz_read_file(ctx, filename), FORMAT_OFFICE);
+}
+
+static const char *office_extensions[] =
+{
+	"docx",
+	"xlsx",
+	"pptx",
+	"hwpx",
+	NULL
+};
+
+static const char *office_mimetypes[] =
+{
+	// DOCX
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	// XLSX
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	// PPTX
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	// HWPX
+	"application/haansofthwpx",
+	"application/vnd.hancom.hwpx",
+	NULL
+};
+
+static int
+office_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+{
+	fz_archive *arch = NULL;
+	int ret = 0;
+	fz_xml *xml = NULL;
+
+	fz_var(arch);
+	fz_var(ret);
+	fz_var(xml);
+
+	fz_try(ctx)
+	{
+		arch = fz_try_open_archive_with_stream(ctx, stream);
+		if (arch == NULL)
+			break;
+
+		xml = fz_try_parse_xml_archive_entry(ctx, arch, "META-INF/container.xml", 0);
+		if (xml)
+		{
+			if (fz_xml_find_dfs(xml, "rootfile", "media-type", "application/hwpml-package+xml"))
+				ret = 100; /* HWPX */
+			break;
+		}
+		xml = fz_try_parse_xml_archive_entry(ctx, arch, "_rels/.rels", 0);
+		if (xml)
+		{
+			if (fz_xml_find_dfs(xml, "Relationship", "Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"))
+			{
+				ret = 100; /* DOCX | PPTX | XLSX */
+			}
+			break;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_xml(ctx, xml);
+		fz_drop_archive(ctx, arch);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
+}
+
+fz_document_handler office_document_handler =
+{
+	NULL,
+	office_open_document,
+	office_open_document_with_stream,
+	office_extensions,
+	office_mimetypes,
+	NULL, /* open_accel */
+	NULL, /* open_accel with stream */
+	office_recognize_doc_content
 };

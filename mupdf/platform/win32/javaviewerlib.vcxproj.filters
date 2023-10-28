@@ -12,6 +12,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\AbortException.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
     <None Include="..\java\src\com\artifex\mupdf\fitz\Annotation.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>

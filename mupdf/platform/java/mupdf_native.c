@@ -87,6 +87,7 @@ static JavaVM *jvm = NULL;
 
 /* All the cached classes/mids/fids we need. */
 
+static jclass cls_AbortException;
 static jclass cls_AlertResult;
 static jclass cls_Archive;
 static jclass cls_ArrayOfQuad;
@@ -1249,6 +1250,7 @@ static int find_fids(JNIEnv *env)
 	mid_TreeArchive_init = get_method(&err, env, "<init>", "(J)V");
 	fid_TreeArchive_pointer = get_field(&err, env, "pointer", "J");
 
+	cls_AbortException = get_class(&err, env, PKG"AbortException");
 	cls_TryLaterException = get_class(&err, env, PKG"TryLaterException");
 
 	/* Standard Java classes */
@@ -1306,6 +1308,7 @@ static void jni_detach_thread(jboolean detach)
 
 static void lose_fids(JNIEnv *env)
 {
+	(*env)->DeleteGlobalRef(env, cls_AbortException);
 	(*env)->DeleteGlobalRef(env, cls_AlertResult);
 	(*env)->DeleteGlobalRef(env, cls_Archive);
 	(*env)->DeleteGlobalRef(env, cls_ArrayOfQuad);

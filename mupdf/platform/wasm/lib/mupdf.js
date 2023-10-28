@@ -31,6 +31,13 @@ class TryLaterError extends Error {
 	}
 }
 
+class AbortError extends Error {
+	constructor(message) {
+		super(message)
+		this.name = "AbortError"
+	}
+}
+
 const libmupdf_injections = {
 	fetchOpen,
 	fetchRead,

@@ -1000,8 +1000,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			mediabox = fz_bound_page(app->ctx, app->page);
 		fz_catch(app->ctx)
 		{
-			if (fz_caught(app->ctx) != FZ_ERROR_TRYLATER)
-				fz_rethrow(app->ctx);
+			fz_rethrow_unless(app->ctx, FZ_ERROR_TRYLATER);
 			mediabox = fz_make_rect(0, 0, 100, 100);
 			app->incomplete = 1;
 		}

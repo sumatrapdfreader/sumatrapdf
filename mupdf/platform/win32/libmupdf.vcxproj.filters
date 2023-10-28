@@ -591,6 +591,9 @@
     <ClCompile Include="..\..\source\html\story-writer.c">
       <Filter>html</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\html\office.c">
+      <Filter>html</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\source\fitz\encode-fax.c">
       <Filter>fitz</Filter>
     </ClCompile>

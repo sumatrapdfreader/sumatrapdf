@@ -1666,7 +1666,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	tile->stride = tile->w * (size_t)tile->n;
 	/* Redundant test? We only ever make pixmaps smaller! */
 	if (tile->h > INT_MAX / (tile->w * tile->n))
-		fz_throw(ctx, FZ_ERROR_MEMORY, "pixmap too large");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap too large");
 	tile->samples = fz_realloc(ctx, tile->samples, (size_t)tile->h * tile->w * tile->n);
 }
 

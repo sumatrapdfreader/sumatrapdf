@@ -1160,6 +1160,7 @@
     <ClCompile Include="..\..\source\html\html-outline.c" />
     <ClCompile Include="..\..\source\html\html-parse.c" />
     <ClCompile Include="..\..\source\html\mobi.c" />
+    <ClCompile Include="..\..\source\html\office.c" />
     <ClCompile Include="..\..\source\html\story-writer.c" />
     <ClCompile Include="..\..\source\html\xml-dom.c" />
     <ClCompile Include="..\..\source\pdf\pdf-annot.c" />

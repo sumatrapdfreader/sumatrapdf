@@ -1900,6 +1900,30 @@ fz_parse_mobi(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 	return fz_parse_html_imp(ctx, set, zip, base_uri, buf, user_css, 1, 1, 1);
 }
 
+fz_html *
+fz_parse_office(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buffer_in, const char *user_css)
+{
+	fz_buffer *buffer_html = NULL;
+	fz_html *html = NULL;
+	fz_office_to_html_opts opts = { 0 };
+
+	fz_try(ctx)
+	{
+		buffer_html = fz_office_to_html(ctx, set, buffer_in, user_css, &opts);
+		html = fz_parse_html_imp(ctx, set, zip, base_uri, buffer_html, user_css, 0 /*try_xml*/, 1 /*try_html5*/, 0 /*patch_mobi*/);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, buffer_html);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_html(ctx, html);
+		fz_rethrow(ctx);
+	}
+	return html;
+}
+
 static void indent(int level)
 {
 	while (level-- > 0)

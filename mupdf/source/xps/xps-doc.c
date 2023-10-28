@@ -532,20 +532,33 @@ xps_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;
+	fz_xml *xml = NULL;
+	fz_xml *pos;
 
 	fz_var(arch);
 	fz_var(ret);
+	fz_var(xml);
 
 	fz_try(ctx)
 	{
 		arch = fz_try_open_archive_with_stream(ctx, stream);
 
-		if (fz_has_archive_entry(ctx, arch, "/_rels/.rels") ||
-			fz_has_archive_entry(ctx, arch, "\\_rels\\.rels"))
+		xml = fz_try_parse_xml_archive_entry(ctx, arch, "/_rels/.rels", 0);
+		if (xml == NULL)
+			xml = fz_try_parse_xml_archive_entry(ctx, arch, "\\_rels\\.rels", 0);
+
+		if (xml == NULL)
+			break;
+
+		pos = fz_xml_find_dfs(xml, "Relationship", "Type", "http://schemas.microsoft.com/xps/2005/06/fixedrepresentation");
+		if (pos)
 			ret = 100;
 	}
 	fz_always(ctx)
+	{
+		fz_drop_xml(ctx, xml);
 		fz_drop_archive(ctx, arch);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 

@@ -392,19 +392,32 @@ void fz_read_string(fz_context *ctx, fz_stream *stm, char *buffer, int len)
 
 int fz_read_rune(fz_context *ctx, fz_stream *in)
 {
+	uint8_t d, e, f;
+	int x;
 	int c = fz_read_byte(ctx, in);
+	if (c == EOF)
+		return EOF;
 
 	if ((c & 0xF8) == 0xF0)
 	{
-		uint8_t d = fz_read_byte(ctx, in);
+		x = fz_read_byte(ctx, in);
+		if (x == EOF)
+			return 0xFFFD;
+		d = (uint8_t)x;
 		c = (c & 7)<<18;
 		if ((d & 0xC0) == 0x80)
 		{
-			uint8_t e = fz_read_byte(ctx, in);
+			x = fz_read_byte(ctx, in);
+			if (x == EOF)
+				return 0xFFFD;
+			e = (uint8_t)x;
 			c += (d & 0x3f)<<12;
 			if ((e & 0xC0) == 0x80)
 			{
-				uint8_t f = fz_read_byte(ctx, in);
+				x = fz_read_byte(ctx, in);
+				if (x == EOF)
+					return 0xFFFD;
+				f = (uint8_t)x;
 				c += (e & 0x3f)<<6;
 				if ((f & 0xC0) == 0x80)
 				{
@@ -421,11 +434,17 @@ int fz_read_rune(fz_context *ctx, fz_stream *in)
 	}
 	else if ((c & 0xF0) == 0xE0)
 	{
-		uint8_t d = fz_read_byte(ctx, in);
+		x = fz_read_byte(ctx, in);
+		if (x == EOF)
+			return 0xFFFD;
+		d = (uint8_t)x;
 		c = (c & 15)<<12;
 		if ((d & 0xC0) == 0x80)
 		{
-			uint8_t e = fz_read_byte(ctx, in);
+			x = fz_read_byte(ctx, in);
+			if (x == EOF)
+				return 0xFFFD;
+			e = (uint8_t)x;
 			c += (d & 0x3f)<<6;
 			if ((e & 0xC0) == 0x80)
 			{
@@ -439,7 +458,10 @@ int fz_read_rune(fz_context *ctx, fz_stream *in)
 	}
 	else if ((c & 0xE0) == 0xC0)
 	{
-		uint8_t d = fz_read_byte(ctx, in);
+		x = fz_read_byte(ctx, in);
+		if (x == EOF)
+			return 0xFFFD;
+		d = (uint8_t)x;
 		c = (c & 31)<<6;
 		if ((d & 0xC0) == 0x80)
 		{

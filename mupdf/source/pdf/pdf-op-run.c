@@ -2109,8 +2109,7 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 			xobj_default_cs = pdf_update_default_colorspaces(ctx, pr->default_cs, resources);
 		fz_catch(ctx)
 		{
-			if (fz_caught(ctx) != FZ_ERROR_TRYLATER)
-				fz_rethrow(ctx);
+			fz_rethrow_unless(ctx, FZ_ERROR_TRYLATER);
 			if (pr->cookie)
 				pr->cookie->incomplete = 1;
 		}

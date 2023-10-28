@@ -1571,7 +1571,7 @@ tiff_decode_samples(fz_context *ctx, struct tiff *tiff)
 	unsigned i;
 
 	if (tiff->imagelength > UINT_MAX / tiff->stride)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "image too large");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
 	tiff->samples = Memento_label(fz_malloc(ctx, (size_t)tiff->imagelength * tiff->stride), "tiff_samples");
 	memset(tiff->samples, 0x00, (size_t)tiff->imagelength * tiff->stride);
 

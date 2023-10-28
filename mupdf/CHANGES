@@ -1,3 +1,8 @@
+List of changes in MuPDF 1.24
+
+	Removed deprecated functions:
+		pdf_check_signature
+
 List of changes in MuPDF 1.23.0
 
 	New features:

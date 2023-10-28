@@ -152,8 +152,7 @@ pdf_new_pixmap_from_page_contents_with_separations_and_usage(fz_context *ctx, pd
 		fz_catch(ctx)
 		{
 			dev->close_device = NULL; /* aborted run, don't warn about unclosed device */
-			if (fz_caught(ctx) != FZ_ERROR_ABORT)
-				fz_rethrow(ctx);
+			fz_rethrow_unless(ctx, FZ_ERROR_ABORT);
 		}
 		fz_close_device(ctx, dev);
 	}
@@ -207,8 +206,7 @@ pdf_new_pixmap_from_page_with_separations_and_usage(fz_context *ctx, pdf_page *p
 		fz_catch(ctx)
 		{
 			dev->close_device = NULL; /* aborted run, don't warn about unclosed device */
-			if (fz_caught(ctx) != FZ_ERROR_ABORT)
-				fz_rethrow(ctx);
+			fz_rethrow_unless(ctx, FZ_ERROR_ABORT);
 		}
 		fz_close_device(ctx, dev);
 	}

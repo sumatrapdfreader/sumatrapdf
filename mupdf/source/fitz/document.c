@@ -709,8 +709,7 @@ fz_run_page_contents(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix t
 		fz_catch(ctx)
 		{
 			dev->close_device = NULL; /* aborted run, don't warn about unclosed device */
-			if (fz_caught(ctx) != FZ_ERROR_ABORT)
-				fz_rethrow(ctx);
+			fz_rethrow_unless(ctx, FZ_ERROR_ABORT);
 		}
 	}
 }
@@ -727,8 +726,7 @@ fz_run_page_annots(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix tra
 		fz_catch(ctx)
 		{
 			dev->close_device = NULL; /* aborted run, don't warn about unclosed device */
-			if (fz_caught(ctx) != FZ_ERROR_ABORT)
-				fz_rethrow(ctx);
+			fz_rethrow_unless(ctx, FZ_ERROR_ABORT);
 		}
 	}
 }
@@ -745,8 +743,7 @@ fz_run_page_widgets(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix tr
 		fz_catch(ctx)
 		{
 			dev->close_device = NULL; /* aborted run, don't warn about unclosed device */
-			if (fz_caught(ctx) != FZ_ERROR_ABORT)
-				fz_rethrow(ctx);
+			fz_rethrow_unless(ctx, FZ_ERROR_ABORT);
 		}
 	}
 }

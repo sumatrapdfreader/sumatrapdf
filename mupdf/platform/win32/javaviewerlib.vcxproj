@@ -172,6 +172,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\AbortException.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Annotation.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Buffer.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\BufferInputStream.java" />

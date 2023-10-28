@@ -323,14 +323,6 @@ fz_pixmap *pdf_preview_signature_as_pixmap(fz_context *ctx,
 	const char *reason,
 	const char *location);
 
-/*
-	check a signature's certificate chain and digest
-
-	This is a helper function defined to provide compatibility with older
-	versions of mupdf
-*/
-int pdf_check_signature(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature, char *ebuf, size_t ebufsize);
-
 void pdf_drop_signer(fz_context *ctx, pdf_pkcs7_signer *signer);
 void pdf_drop_verifier(fz_context *ctx, pdf_pkcs7_verifier *verifier);
 

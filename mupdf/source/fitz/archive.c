@@ -75,15 +75,19 @@ fz_try_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 	char *local_name;
 	fz_buffer *buf = NULL;
 
-	if (arch == NULL || !arch->read_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read archive entry");
+	if (arch == NULL || !arch->read_entry || !arch->has_entry || name == NULL)
+		return NULL;
 
 	local_name = fz_cleanname(fz_strdup(ctx, name));
 
 	fz_var(buf);
 
 	fz_try(ctx)
+	{
+		if (!arch->has_entry(ctx, arch, local_name))
+			break;
 		buf = arch->read_entry(ctx, arch, local_name);
+	}
 	fz_always(ctx)
 		fz_free(ctx, local_name);
 	fz_catch(ctx)

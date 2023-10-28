@@ -319,8 +319,9 @@ lex_name(fz_context *ctx, fz_stream *f, pdf_lexbuf *lb)
 					hex[i] = lex_byte(ctx, f) - 'A' + 10;
 					break;
 				default:
-				case EOF:
 					goto illegal;
+				case EOF:
+					goto illegal_eof;
 				}
 			}
 			if (s) *s++ = (hex[0] << 4) + hex[1];
@@ -328,6 +329,7 @@ lex_name(fz_context *ctx, fz_stream *f, pdf_lexbuf *lb)
 illegal:
 			if (i == 1)
 				fz_unread_byte(ctx, f);
+illegal_eof:
 			if (s) *s++ = '#';
 			continue;
 		}
