@@ -49,7 +49,6 @@ static int kButtonSpacingX = 4;
 
 // distance between label and edit field
 constexpr int kTextPaddingRight = 6;
-constexpr int kPageBoxDx = 40;
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
@@ -519,7 +518,7 @@ void UpdateToolbarState(MainWindow* win) {
 }
 
 static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
-    int findBoxDx = DpiScale(win->hwndFrame, 160);
+    int findBoxDx = HwndMeasureText(win->hwndFrame, "this is a story of my", hfont).dx;
     HMODULE hmod = GetModuleHandleW(nullptr);
     HWND p = win->hwndToolbar;
     DWORD style = WS_VISIBLE | WS_CHILD | WS_BORDER;
@@ -703,7 +702,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     auto hwndFrame = win->hwndFrame;
     auto hwndToolbar = win->hwndToolbar;
-    int boxWidth = DpiScale(hwndFrame, kPageBoxDx);
+    int boxWidth = HwndMeasureText(hwndFrame, "99999", font).dx;
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto h = GetModuleHandle(nullptr);
     int dx = boxWidth;
