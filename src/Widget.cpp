@@ -50,8 +50,8 @@ Size HwndWidgetText::MinIntrinsicSize(int width, int height) {
 
 void HwndWidgetText::Draw(HDC hdc) {
     CrashIf(lastBounds.IsEmpty());
-    UINT fmt = DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
-    RECT dr = RectToRECT(lastBounds);
+    UINT fmt = DT_NOCLIP | DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
+    RECT dr = ToRECT(lastBounds);
     HdcDrawText(hdc, s, &dr, fmt, font);
     if (withUnderline) {
         auto& r = lastBounds;

@@ -199,15 +199,15 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     Rect rc = ClientRect(hwnd);
 
     int innerPadding = DpiScale(hwnd, kInnerPadding);
-    int x = rc.dx - txtSize.dx - innerPadding;
-    int y = rc.y + rc.dy - txtSize.dy - innerPadding;
-    Rect rect(x, y, txtSize.dx, txtSize.dy);
-    w.SetBounds(rect);
+    Rect r = {0, 0, txtSize.dx, txtSize.dy};
+    PositionRB(rc, r);
+    MoveXY(r, -innerPadding, -innerPadding);
+    w.SetBounds(r);
     w.Draw(hdc);
 
     // make the click target larger
-    rect.Inflate(innerPadding, innerPadding);
-    return rect;
+    r.Inflate(innerPadding, innerPadding);
+    return r;
 }
 
 static TempStr TrimGitTemp(char* s) {
@@ -691,7 +691,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     DeleteVecMembers(win->staticLinks);
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            if (h * width + w >= (int)list.size()) {
+            if (h * width + w >= list.isize()) {
                 // display the "Open a document" link right below the last row
                 height = w > 0 ? h + 1 : h;
                 break;

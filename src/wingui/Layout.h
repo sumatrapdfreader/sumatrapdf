@@ -5,7 +5,8 @@
 
 const int Inf = std::numeric_limits<int>::max();
 
-RECT RectToRECT(Rect);
+void PositionRB(const Rect& container, Rect& r);
+void MoveXY(Rect& r, int x, int y);
 
 int Clamp(int v, int vmin, int vmax);
 int Scale(int v, i64 num, i64 den);

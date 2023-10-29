@@ -137,18 +137,18 @@ SIZE ToSIZE(Size s);
 SizeF ToSizeFl(Size s);
 Size ToSize(SizeF s);
 
-RectF ToRectF(Rect r);
+RectF ToRectF(const Rect& r);
 
-RECT ToRECT(Rect r);
-RECT ToRECT(RectF r);
+RECT ToRECT(const Rect& r);
+RECT ToRECT(const RectF& r);
 
-Rect ToRect(RectF r);
+Rect ToRect(const RectF& r);
 Rect ToRect(const RECT& r);
 
-Gdiplus::Rect ToGdipRect(Rect r);
-Gdiplus::RectF ToGdipRectF(Rect r);
+Gdiplus::Rect ToGdipRect(const Rect& r);
+Gdiplus::RectF ToGdipRectF(const Rect& r);
 
-Gdiplus::Rect ToGdipRect(RectF r);
-Gdiplus::RectF ToGdipRectF(RectF r);
+Gdiplus::Rect ToGdipRect(const RectF& r);
+Gdiplus::RectF ToGdipRectF(const RectF& r);
 
 int NormalizeRotation(int rotation);

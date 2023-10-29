@@ -584,7 +584,7 @@ void Wnd::SetBounds(Rect bounds) {
     bounds.dx -= (insets.right + insets.left);
     bounds.dy -= (insets.bottom + insets.top);
 
-    auto r = RectToRECT(bounds);
+    auto r = ToRECT(bounds);
     ::MoveWindow(hwnd, &r);
     // TODO: optimize if doesn't change position
     ::InvalidateRect(hwnd, nullptr, TRUE);
