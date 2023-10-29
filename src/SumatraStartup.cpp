@@ -438,7 +438,7 @@ static bool SetupPluginMode(Flags& i) {
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        AutoFreeStr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        TempStr args = str::DupTemp(str::FindChar(i.pluginURL, '#') + 1);
         str::TransCharsInPlace(args, "#", "&");
         StrVec parts;
         Split(parts, args, "&", true);

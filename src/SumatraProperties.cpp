@@ -39,43 +39,50 @@ constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
-struct PropertyEl {
-    PropertyEl(const char* leftTxt, char* rightTxt, bool isPath = false) : leftTxt(leftTxt), isPath(isPath) {
-        this->rightTxt.Set(rightTxt);
-    }
-
-    // A property is always in format: Name (left): Value (right)
-    // (leftTxt is static, rightTxt will be freed)
-    const char* leftTxt;
-    AutoFreeStr rightTxt;
-
-    // data calculated by the layout
-    Rect leftPos;
-    Rect rightPos;
-
-    // overlong paths get the ellipsis in the middle instead of at the end
-    bool isPath;
-};
-
 struct PropertiesLayout {
+    struct Prop {
+        // A property is always in format: Name (left): Value (right)
+        int keyIdx;
+        int valIdx;
+        // overlong paths get the ellipsis in the middle instead of at the end
+        bool isPath;
+
+        // data calculated by the layout
+        Rect keyPos;
+        Rect valPos;
+    };
+
     PropertiesLayout() = default;
     ~PropertiesLayout() {
         delete btnCopyToClipboard;
         delete btnGetFonts;
-        DeleteVecMembers(props);
     }
 
-    void AddProperty(const char* key, char* value, bool isPath = false) {
+    void AddProperty(const char* key, const char* value, bool isPath = false) {
         // don't display value-less properties
-        if (!str::IsEmpty(value)) {
-            props.Append(new PropertyEl(key, value, isPath));
-        } else {
-            free(value);
+        if (str::IsEmpty(value)) {
+            return;
         }
+        int keyIdx = strings.Append(key);
+        int valIdx = strings.Append(value);
+        Prop p = {keyIdx, valIdx, isPath};
+        props.Append(p);
     }
+
+    char* PropKey(int i) {
+        int idx = props[i].keyIdx;
+        return strings.at(idx);
+    }
+
+    char* PropValue(int i) {
+        int idx = props[i].valIdx;
+        return strings.at(idx);
+    }
+
     bool HasProperty(const char* key) {
         for (auto&& prop : props) {
-            if (str::Eq(key, prop->leftTxt)) {
+            char* k = strings.at(prop.keyIdx);
+            if (str::Eq(key, k)) {
                 return true;
             }
         }
@@ -86,7 +93,8 @@ struct PropertiesLayout {
     HWND hwndParent = nullptr;
     Button* btnCopyToClipboard = nullptr;
     Button* btnGetFonts = nullptr;
-    Vec<PropertyEl*> props;
+    Vec<Prop> props;
+    StrVec strings;
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
@@ -243,7 +251,7 @@ static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
 }
 
 static char* FormatPdfFileStructure(DocController* ctrl) {
-    AutoFreeStr fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
+    AutoFreeStr fstruct = ctrl->GetProperty(DocumentProperty::PdfFileStructure);
     if (str::IsEmpty(fstruct.Get())) {
         return nullptr;
     }
@@ -299,15 +307,17 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     /* calculate text dimensions for the left side */
     SelectObject(hdc, fontLeftTxt);
     int leftMaxDx = 0;
-    for (PropertyEl* el : layoutData->props) {
-        const char* txt = el->leftTxt;
+    int nProps = layoutData->props.isize();
+    for (int i = 0; i < nProps; i++) {
+        auto&& prop = layoutData->props.at(i);
+        const char* txt = layoutData->PropKey(i);
         RECT rc{};
         HdcDrawText(hdc, txt, &rc, DT_NOPREFIX | DT_CALCRECT);
-        el->leftPos.dx = rc.right - rc.left;
+        prop.keyPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
 
-        if (el->leftPos.dx > leftMaxDx) {
-            leftMaxDx = el->leftPos.dx;
+        if (prop.keyPos.dx > leftMaxDx) {
+            leftMaxDx = prop.keyPos.dx;
         }
     }
 
@@ -316,8 +326,9 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     int rightMaxDx = 0;
     int lineCount = 0;
     int textDy = 0;
-    for (PropertyEl* el : layoutData->props) {
-        const char* txt = el->rightTxt;
+    for (int i = 0; i < nProps; i++) {
+        auto&& prop = layoutData->props.at(i);
+        const char* txt = layoutData->PropValue(i);
         RECT rc{};
         HdcDrawText(hdc, txt, &rc, DT_NOPREFIX | DT_CALCRECT);
         auto dx = rc.right - rc.left;
@@ -325,9 +336,9 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
         if (dx > 720) {
             dx = 720;
         }
-        el->rightPos.dx = dx;
-        el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;
-        textDy += el->rightPos.dy;
+        prop.valPos.dx = dx;
+        prop.keyPos.dy = prop.valPos.dy = rc.bottom - rc.top;
+        textDy += prop.valPos.dy;
 
         if (dx > rightMaxDx) {
             rightMaxDx = dx;
@@ -345,11 +356,12 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     int offset = kRectPadding;
 
     int currY = 0;
-    for (PropertyEl* el : layoutData->props) {
-        el->leftPos = Rect(offset, offset + currY, leftMaxDx, el->leftPos.dy);
-        el->rightPos.x = offset + leftMaxDx + kLeftRightPaddingDx;
-        el->rightPos.y = offset + currY;
-        currY += el->rightPos.dy + kTxtPaddingDy;
+    for (int i = 0; i < nProps; i++) {
+        auto&& prop = layoutData->props.at(i);
+        prop.keyPos = Rect(offset, offset + currY, leftMaxDx, prop.keyPos.dy);
+        prop.valPos.x = offset + leftMaxDx + kLeftRightPaddingDx;
+        prop.valPos.y = offset + currY;
+        currY += prop.valPos.dy + kTxtPaddingDy;
     }
 
     auto dx = totalDx + 2 * offset;
@@ -397,8 +409,11 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
 
     // concatenate all the properties into a multi-line string
     str::Str lines(256);
-    for (PropertyEl* el : layoutData->props) {
-        lines.AppendFmt("%s %s\r\n", el->leftTxt, el->rightTxt.Get());
+    int nProps = layoutData->props.isize();
+    for (int i = 0; i < nProps; i++) {
+        auto key = layoutData->PropKey(i);
+        auto val = layoutData->PropValue(i);
+        lines.AppendFmt("%s %s\r\n", key, val);
     }
 
     CopyTextToClipboard(lines.LendData());
@@ -482,20 +497,23 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     CrashIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
-    char* str = str::Dup(path);
-    layoutData->AddProperty(_TRA("File:"), str, true);
+    layoutData->AddProperty(_TRA("File:"), path, true);
 
-    str = ctrl->GetProperty(DocumentProperty::Title);
+    char* str = ctrl->GetProperty(DocumentProperty::Title);
     layoutData->AddProperty(_TRA("Title:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::Subject);
     layoutData->AddProperty(_TRA("Subject:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::Author);
     layoutData->AddProperty(_TRA("Author:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::Copyright);
     layoutData->AddProperty(_TRA("Copyright:"), str);
+    str::Free(str);
 
     DisplayModel* dm = ctrl->AsFixed();
     str = ctrl->GetProperty(DocumentProperty::CreationDate);
@@ -505,6 +523,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         ConvDateToDisplay(&str, IsoDateParse);
     }
     layoutData->AddProperty(_TRA("Created:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::ModificationDate);
     if (str && dm && kindEngineMupdf == dm->engineType) {
@@ -513,18 +532,23 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         ConvDateToDisplay(&str, IsoDateParse);
     }
     layoutData->AddProperty(_TRA("Modified:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::CreatorApp);
     layoutData->AddProperty(_TRA("Application:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::PdfProducer);
     layoutData->AddProperty(_TRA("PDF Producer:"), str);
+    str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::PdfVersion);
     layoutData->AddProperty(_TRA("PDF Version:"), str);
+    str::Free(str);
 
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TRA("PDF Optimizations:"), str);
+    str::Free(str);
 
     i64 fileSize = file::GetSize(path); // can be gPluginURL
     if (-1 == fileSize && dm) {
@@ -600,33 +624,32 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
 
     Rect rcClient = ClientRect(hwnd);
-    RECT rTmp = ToRECT(rcClient);
     auto col = GetMainWindowBackgroundColor();
-    AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
-    FillRect(hdc, &rTmp, brushAboutBg);
+    FillRect(hdc, rcClient, col);
 
     col = gCurrentTheme->window.textColor;
     SetTextColor(hdc, col);
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
-    for (PropertyEl* el : layoutData->props) {
-        const char* txt = el->leftTxt;
-        rTmp = ToRECT(el->leftPos);
-        HdcDrawText(hdc, txt, &rTmp, DT_RIGHT | DT_NOPREFIX);
+    int nProps = layoutData->props.isize();
+    for (int i = 0; i < nProps; i++) {
+        auto&& prop = layoutData->props.at(i);
+        auto txt = layoutData->PropKey(i);
+        HdcDrawText(hdc, txt, prop.keyPos, DT_RIGHT | DT_NOPREFIX);
     }
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
-    for (PropertyEl* el : layoutData->props) {
-        const char* txt = el->rightTxt;
-        Rect rc = el->rightPos;
+    for (int i = 0; i < nProps; i++) {
+        auto&& prop = layoutData->props.at(i);
+        auto txt = layoutData->PropValue(i);
+        Rect rc = prop.valPos;
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - kRectPadding) {
             rc.dx = rcClient.x + rcClient.dx - kRectPadding - rc.x;
         }
-        rTmp = ToRECT(rc);
-        uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
-        HdcDrawText(hdc, txt, &rTmp, format);
+        uint format = DT_LEFT | DT_NOPREFIX | (prop.isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
+        HdcDrawText(hdc, txt, rc, format);
     }
 
     SelectObject(hdc, origFont);

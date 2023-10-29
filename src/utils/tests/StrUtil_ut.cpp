@@ -112,7 +112,7 @@ static void StrUrlExtractTest() {
     utassert(!url::GetFileName(""));
     utassert(!url::GetFileName("#hash_only"));
     utassert(!url::GetFileName("?query=only"));
-    AutoFreeStr fileName(url::GetFileName("http://example.net/filename.ext"));
+    AutoFreeStr fileName = url::GetFileName("http://example.net/filename.ext");
     utassert(str::Eq(fileName, "filename.ext"));
     fileName.Set(url::GetFileName("http://example.net/filename.ext#with_hash"));
     utassert(str::Eq(fileName, "filename.ext"));
@@ -387,7 +387,7 @@ static void StrVecTest2() {
         utassert(v2.Find("", 3) == 4);
         utassert(v2.Find("", 5) == -1);
         utassert(v2.Find("B") == -1 && v2.FindI("B") == 1);
-        AutoFreeStr joined(Join(v2, ";"));
+        AutoFreeStr joined = Join(v2, ";");
         utassert(str::Eq(joined, "a;b;;c;"));
         CheckRemoveAt(v2);
     }
@@ -396,7 +396,7 @@ static void StrVecTest2() {
         StrVec v2;
         size_t count = Split(v2, "a,b,,c,", ",", true);
         utassert(count == 3 && v2.Find("c") == 2);
-        AutoFreeStr joined(Join(v2, ";"));
+        AutoFreeStr joined = Join(v2, ";");
         utassert(str::Eq(joined, "a;b;c"));
         StrVecCheckIter(v2, nullptr);
 
