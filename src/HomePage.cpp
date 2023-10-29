@@ -112,17 +112,19 @@ static Vec<StaticLinkInfo*> gStaticLinks;
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
-static void DrawAppName(HDC hdc, Point pt) {
+static void DrawAppName(HDC hdc, Point pt, HFONT font) {
     const char* txt = kAppName;
     // colorful version
     COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
+    char buf[2] = {0};
+    uint fmt = DT_LEFT | DT_NOCLIP;
     for (size_t i = 0; i < str::Len(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
-        TextOutUtf8(hdc, pt.x, pt.y, txt + i, 1);
-
-        SIZE txtSize;
-        GetTextExtentPoint32A(hdc, txt + i, 1, &txtSize);
-        pt.x += txtSize.cx;
+        Rect r{pt.x, pt.y, 1024, 1024};
+        buf[0] = txt[i];
+        HdcDrawText(hdc, buf, r, fmt, font);
+        Size txtSize = HdcMeasureText(hdc, buf, fmt, font);
+        pt.x += txtSize.dx;
     }
 }
 
@@ -158,26 +160,26 @@ static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 }
 
 static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
+    uint fmt = DT_LEFT | DT_NOCLIP;
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
 
     SetBkMode(hdc, TRANSPARENT);
 
-    ScopedSelectFont f(hdc, fontSumatraTxt);
-    SIZE txtSize;
     const char* txt = kAppName;
-    GetTextExtentPoint32Utf8(hdc, txt, (int)str::Len(txt), &txtSize);
-    Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
-    DrawAppName(hdc, mainRect.TL());
+    Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
+    Rect mainRect(rect.x + (rect.dx - txtSize.dx) / 2, rect.y + (rect.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    DrawAppName(hdc, mainRect.TL(), fontSumatraTxt);
 
     SetTextColor(hdc, gCurrentTheme->window.textColor);
-    ScopedSelectFont restoreFont(hdc, fontVersionTxt);
-    Point pt(mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding), mainRect.y);
+    int x = mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding);
+    int y = mainRect.y;
 
     char* ver = GetAppVersionTemp();
-    TextOutUtf8(hdc, pt.x, pt.y, ver, (int)str::Len(ver));
-    txt = VERSION_SUB_TXT;
-    TextOutUtf8(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
+    Rect r = {x, y, 1024, 1024};
+    HdcDrawText(hdc, ver, r, fmt, fontVersionTxt);
+    r.y += DpiScale(hwnd, 13);
+    HdcDrawText(hdc, VERSION_SUB_TXT, r, fmt);
 }
 
 // draw on the bottom right
@@ -206,6 +208,15 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     // make the click target larger
     rect.Inflate(innerPadding, innerPadding);
     return rect;
+}
+
+static TempStr TrimGitTemp(char* s) {
+    if (gitCommidId && str::EndsWith(s, gitCommidId)) {
+        auto sLen = str::Len(s);
+        auto gitLen = str::Len(gitCommidId);
+        s = str::DupTemp(s, sLen - gitLen - 7);
+    }
+    return s;
 }
 
 /* Draws the about screen and remembers some state for hyperlinking.
@@ -260,8 +271,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
+    uint fmt = DT_LEFT | DT_NOCLIP;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        TextOutUtf8(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, (int)str::Len(el->leftTxt));
+        auto& pos = el->leftPos;
+        Rect r{pos.x, pos.y, 1024, 1024};
+        HdcDrawText(hdc, el->leftTxt, r, fmt);
     }
 
     /* render text on the right */
@@ -276,13 +290,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
             col = gCurrentTheme->window.textColor;
         }
         SetTextColor(hdc, col);
-        size_t txtLen = str::Len(el->rightTxt);
-        if (gitCommidId) {
-            if (str::EndsWith(el->rightTxt, gitCommidId)) {
-                txtLen -= str::Len(gitCommidId) - 7;
-            }
-        }
-        TextOutUtf8(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)txtLen);
+        char* s = (char*)el->rightTxt;
+        s = TrimGitTemp(s);
+        auto& pos = el->rightPos;
+        Rect r{pos.x, pos.y, 1024, 1024};
+        HdcDrawText(hdc, s, r, fmt);
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
@@ -311,11 +323,11 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     SelectObject(hdc, fontLeftTxt);
     int leftLargestDx = 0;
     int leftDy = 0;
+    uint fmt = DT_LEFT;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        SIZE txtSize;
-        GetTextExtentPoint32Utf8(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
-        el->leftPos.dx = txtSize.cx;
-        el->leftPos.dy = txtSize.cy;
+        Size txtSize = HdcMeasureText(hdc, el->leftTxt, fmt);
+        el->leftPos.dx = txtSize.dx;
+        el->leftPos.dy = txtSize.dy;
 
         if (el == &gAboutLayoutInfo[0]) {
             leftDy = el->leftPos.dy;
@@ -332,16 +344,11 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     int rightLargestDx = 0;
     int rightDy = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        SIZE txtSize;
-        size_t txtLen = str::Len(el->rightTxt);
-        if (gitCommidId) {
-            if (str::EndsWith(el->rightTxt, gitCommidId)) {
-                txtLen -= str::Len(gitCommidId) - 7;
-            }
-        }
-        GetTextExtentPoint32Utf8(hdc, el->rightTxt, (int)txtLen, &txtSize);
-        el->rightPos.dx = txtSize.cx;
-        el->rightPos.dy = txtSize.cy;
+        char* s = (char*)el->rightTxt;
+        s = TrimGitTemp(s);
+        Size txtSize = HdcMeasureText(hdc, s, fmt);
+        el->rightPos.dx = txtSize.dx;
+        el->rightPos.dy = txtSize.dy;
 
         if (el == &gAboutLayoutInfo[0]) {
             rightDy = el->rightPos.dy;

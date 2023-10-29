@@ -2769,54 +2769,6 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen) {
-    if (!s) {
-        return false;
-    }
-    if (sLen <= 0) {
-        sLen = (int)str::Len(s);
-    }
-    WCHAR* ws = ToWStrTemp(s, (size_t)sLen);
-    if (!ws) {
-        return false;
-    }
-    sLen = (int)str::Len(ws); // TODO: can this be different after converting to WCHAR?
-    return TextOutW(hdc, x, y, ws, (int)sLen);
-}
-
-bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
-    *psizl = SIZE{};
-    if (!s) {
-        return true;
-    }
-    if (sLen <= 0) {
-        sLen = (int)str::Len(s);
-    }
-    WCHAR* ws = ToWStrTemp(s, sLen);
-    if (!ws) {
-        return false;
-    }
-    sLen = (int)str::Len(ws); // TODO: can this be different after converting to WCHAR?
-    return GetTextExtentPoint32W(hdc, ws, sLen, psizl);
-}
-
-/*
-format:
-#define DT_TOP                      0x00000000
-#define DT_LEFT                     0x00000000
-#define DT_CENTER                   0x00000001
-#define DT_RIGHT                    0x00000002
-#define DT_VCENTER                  0x00000004
-#define DT_BOTTOM                   0x00000008
-#define DT_WORDBREAK                0x00000010
-#define DT_SINGLELINE               0x00000020
-#define DT_EXPANDTABS               0x00000040
-#define DT_TABSTOP                  0x00000080
-#define DT_NOCLIP                   0x00000100
-#define DT_EXTERNALLEADING          0x00000200
-#define DT_CALCRECT                 0x00000400
-#define DT_NOPREFIX                 0x00000800
-*/
 int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font) {
     if (!s) {
         return 0;
@@ -2886,7 +2838,7 @@ Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
         return Size{};
     }
     size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
+    AutoReleaseDC dc(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
     if (font == nullptr) {
@@ -2896,26 +2848,7 @@ Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     SIZE sz{};
     GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
     return Size(sz.cx, sz.cy);
-}
-
-// TODO: unify with TextSizeInHwnd
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz{};
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-    window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    return sz;
 }
 
 // Return size of a text <txt> in a given <hwnd>, taking into account its font
@@ -2929,8 +2862,9 @@ Size TextSizeInHwnd(HWND hwnd, const char* txt, HFONT font) {
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz{};
-
+    if (!txt || !*txt) {
+        return Size{};
+    }
     AutoReleaseDC dc(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
@@ -2951,6 +2885,9 @@ Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
+    if (!txt || !*txt) {
+        return Size{};
+    }
     TempWStr sw = ToWStrTemp(txt);
     return HwndMeasureText(hwnd, sw, font);
 }
