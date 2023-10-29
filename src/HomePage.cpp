@@ -235,16 +235,14 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     Rect rc = ClientRect(hwnd);
-    RECT rTmp = ToRECT(rc);
     col = GetMainWindowBackgroundColor();
     AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
-    FillRect(hdc, &rTmp, brushAboutBg);
+    FillRect(hdc, rc, brushAboutBg);
 
     /* render title */
     Rect titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
-    AutoDeleteBrush bgBrush = CreateSolidBrush(col);
-    ScopedSelectObject brush(hdc, bgBrush);
+    ScopedSelectObject brush(hdc, CreateSolidBrush(col), true);
     ScopedSelectObject pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx,
@@ -297,9 +295,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
         HdcDrawText(hdc, s, r, fmt);
 
         if (hasUrl) {
-            int underlineY = el->rightPos.y + el->rightPos.dy - 3;
-            DrawLine(hdc, Rect(el->rightPos.x, underlineY, el->rightPos.dx, 0));
-            auto sl = new StaticLinkInfo(el->rightPos, el->url, el->url);
+            int underlineY = pos.y + pos.dy - 3;
+            DrawLine(hdc, Rect(pos.x, underlineY, pos.dx, 0));
+            auto sl = new StaticLinkInfo(pos, el->url, el->url);
             staticLinks.Append(sl);
         }
     }
