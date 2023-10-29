@@ -2971,7 +2971,7 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
 }
 
 HGLOBAL StrToHGLOBAL(const char* s, UINT flags) {
-    int cb = str::Len(s) + 1;
+    int cb = (int)str::Len(s) + 1;
     return MemToHGLOBAL((void*)s, cb, flags);
 }
 
