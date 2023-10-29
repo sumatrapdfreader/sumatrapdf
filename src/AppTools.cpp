@@ -55,6 +55,7 @@ bool IsRunningInPortableMode() {
     sCacheIsPortable = 1;
 
     if (gIsStoreBuild) {
+        sCacheIsPortable = 0;
         return false;
     }
 
@@ -67,6 +68,7 @@ bool IsRunningInPortableMode() {
     char* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
+        sCacheIsPortable = 1;
         return true;
     }
 
@@ -81,6 +83,7 @@ bool IsRunningInPortableMode() {
         }
     }
 
+    sCacheIsPortable = 1;
     return true;
 }
 
