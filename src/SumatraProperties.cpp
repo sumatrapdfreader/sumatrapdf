@@ -294,7 +294,7 @@ static char* FormatPermissionsA(DocController* ctrl) {
 static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
     HFONT fontRightTxt = CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
-    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
+    ScopedSelectFont origFont(hdc, fontLeftTxt);
 
     /* calculate text dimensions for the left side */
     SelectObject(hdc, fontLeftTxt);
@@ -352,7 +352,6 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
         currY += el->rightPos.dy + kTxtPaddingDy;
     }
 
-    SelectObject(hdc, origFont);
     auto dx = totalDx + 2 * offset;
     auto dy = totalDy + offset;
 
@@ -380,12 +379,13 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
 
 static void ShowExtendedProperties(HWND hwnd) {
     PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
-    if (pl) {
-        MainWindow* win = FindMainWindowByHwnd(pl->hwndParent);
-        if (win && !pl->HasProperty(_TRA("Fonts:"))) {
-            DestroyWindow(hwnd);
-            ShowProperties(win->hwndFrame, win->ctrl, true);
-        }
+    if (!pl) {
+        return;
+    }
+    MainWindow* win = FindMainWindowByHwnd(pl->hwndParent);
+    if (win && !pl->HasProperty(_TRA("Fonts:"))) {
+        DestroyWindow(hwnd);
+        ShowProperties(win->hwndFrame, win->ctrl, true);
     }
 }
 
