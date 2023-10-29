@@ -2806,20 +2806,17 @@ format:
 #define DT_CALCRECT                 0x00000400
 #define DT_NOPREFIX                 0x00000800
 */
-int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, uint format, HFONT font) {
+int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font) {
     if (!s) {
         return 0;
     }
-    if (sLen <= 0) {
-        sLen = (int)str::Len(s);
-    }
-    WCHAR* ws = ToWStrTemp(s, (size_t)sLen);
+    WCHAR* ws = ToWStrTemp(s);
     if (!ws) {
         return 0;
     }
-    sLen = (int)str::Len(ws);
+    int cch = (int)str::Len(ws);
     ScopedSelectFont f(hdc, font);
-    return DrawTextW(hdc, ws, sLen, r, format);
+    return DrawTextW(hdc, ws, cch, r, format);
 }
 
 // uses the same logic as HdcDrawText

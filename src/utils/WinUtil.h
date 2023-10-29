@@ -118,7 +118,7 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font);
 bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen = 0);
 bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
 
-int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, uint format, HFONT font = nullptr);
+int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font = nullptr);
 
 
