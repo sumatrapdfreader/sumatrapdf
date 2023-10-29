@@ -62,10 +62,6 @@ constexpr int kVersionTxtFontSize = 12;
 #define GIT_COMMIT_ID_STR QM(GIT_COMMIT_ID)
 #endif
 
-#define URL_LICENSE "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
-#define URL_AUTHORS "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
-#define URL_TRANSLATORS "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
-
 #define LAYOUT_LTR 0
 
 static ATOM gAtomAbout;
@@ -88,9 +84,9 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {"website", "SumatraPDF website", kWebsiteURL},
     {"manual", "SumatraPDF manual", kManualURL},
     {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
-    {"programming", "The Programmers", URL_AUTHORS},
-    {"translations", "The Translators", URL_TRANSLATORS},
-    {"licenses", "Various Open Source", URL_LICENSE},
+    {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
+    {"translations", "The Translators", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"},
+    {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
 #ifdef GIT_COMMIT_ID
     // TODO: use short ID for rightTxt (only first 7 digits) with less hackery
     {"last change", "git commit " GIT_COMMIT_ID_STR,
@@ -603,32 +599,54 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
 /* alternate static page to display when no document is loaded */
 
-constexpr int kDocListSeparatorDy = 2;
-constexpr int kDocListThumbnailBorderDx = 1;
-#define kDocListMarginLeft DpiScale(win->hwndFrame, 40)
-#define kDocListMarginBetweenX DpiScale(win->hwndFrame, 30)
-#define kDocListMarginBetweenY DpiScale(win->hwndFrame, 50)
-#define kDocListMarginRight DpiScale(win->hwndFrame, 40)
-#define kDocListMarginTop DpiScale(win->hwndFrame, 60)
-#define kDocListMarginBottom DpiScale(win->hwndFrame, 40)
-constexpr int kDocListMaxThumbnailsX = 5;
-#define kDocListBottomBoxDy DpiScale(win->hwndFrame, 50)
+constexpr int kThumbsMaxCols = 5;
+constexpr int kThumbsSeparatorDy = 2;
+constexpr int kThumbsBorderDx = 1;
+#define kThumbsMarginLeft DpiScale(hdc, 40)
+#define kThumbsMarginRight DpiScale(hdc, 40)
+#define kThumbsMarginTop DpiScale(hdc, 60)
+#define kThumbsMarginBottom DpiScale(hdc, 40)
+#define kThumbsSpaceBetweenX DpiScale(hdc, 30)
+#define kThumbsSpaceBetweenY DpiScale(hdc, 50)
+#define kThumbsBottomBoxDy DpiScale(hdc, 50)
 
-void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
+struct ThumbnailLayot {
+    Rect bThumb;
+    Rect bIcon;
+    Rect bName;
+};
+
+struct HomePageLayout {
+    Rect bApp;
+    Rect bAppVer;
+    Rect bLine;
+
+    Rect bFreqRead;
+
+    Rect bOpenDocIcon;
+    Rect bOpenDoc;
+
+    Rect bHideFreqRead;
+    Vec<ThumbnailLayot> thumbnails;
+};
+
+void LaoutHomePage(HDC hdc, Rect r, const FileHistory& fileHistory, HomePageLayout& l) {
+    // TODO: write me
+}
+
+void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     HWND hwnd = win->hwndFrame;
-    auto col = gCurrentTheme->window.textColor;
-    AutoDeletePen penBorder(CreatePen(PS_SOLID, kDocListSeparatorDy, col));
-    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kDocListThumbnailBorderDx, col));
-    col = gCurrentTheme->window.linkColor;
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
+    auto color = gCurrentTheme->window.textColor;
+    AutoDeletePen penBorder(CreatePen(PS_SOLID, kThumbsSeparatorDy, color));
+    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
+    color = gCurrentTheme->window.linkColor;
+    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
 
-    HFONT fontSumatraTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
-    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     Rect rc = ClientRect(win->hwndCanvas);
-    col = GetMainWindowBackgroundColor();
-    FillRect(hdc, rc, col);
+    color = GetMainWindowBackgroundColor();
+    FillRect(hdc, rc, color);
 
     ScopedSelectObject pen(hdc, penBorder);
 
@@ -643,41 +661,42 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
-    col = gCurrentTheme->window.textColor;
-    SetTextColor(hdc, col);
+    color = gCurrentTheme->window.textColor;
+    SetTextColor(hdc, color);
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-    col = GetMainWindowBackgroundColor();
-    FillRect(hdc, rc, col);
-    rc.dy -= kDocListBottomBoxDy;
+    color = GetMainWindowBackgroundColor();
+    FillRect(hdc, rc, color);
+    rc.dy -= kThumbsBottomBoxDy;
 
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
 
-    int dx = (rc.dx - kDocListMarginLeft - kDocListMarginRight + kDocListMarginBetweenX) /
-             (kThumbnailDx + kDocListMarginBetweenX);
-    int width = limitValue(dx, 1, kDocListMaxThumbnailsX);
-    int dy = (rc.dy - kDocListMarginTop - kDocListMarginBottom + kDocListMarginBetweenY) /
-             (kThumbnailDy + kDocListMarginBetweenY);
-    int height = std::min(dy, kFileHistoryMaxFrequent / width);
-    int x = rc.x + kDocListMarginLeft +
-            (rc.dx - width * kThumbnailDx - (width - 1) * kDocListMarginBetweenX - kDocListMarginLeft -
-             kDocListMarginRight) /
+    int dx = (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) /
+             (kThumbnailDx + kThumbsSpaceBetweenX);
+    int thumbsCols = limitValue(dx, 1, kThumbsMaxCols);
+    int dy = (rc.dy - kThumbsMarginTop - kThumbsMarginBottom + kThumbsSpaceBetweenY) /
+             (kThumbnailDy + kThumbsSpaceBetweenY);
+    int thumbsRows = std::min(dy, kFileHistoryMaxFrequent / thumbsCols);
+    int x = rc.x + kThumbsMarginLeft +
+            (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
+             kThumbsMarginRight) /
                 2;
-    Point offset(x, rc.y + kDocListMarginTop);
+    Point offset(x, rc.y + kThumbsMarginTop);
     if (offset.x < DpiScale(hwnd, kInnerPadding)) {
         offset.x = DpiScale(hwnd, kInnerPadding);
     } else if (list.size() == 0) {
-        offset.x = kDocListMarginLeft;
+        offset.x = kThumbsMarginLeft;
     }
 
     const char* txt = _TRA("Frequently Read");
+    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
     HwndWidgetText freqRead(txt, hwnd, fontFrequentlyRead);
     freqRead.isRtl = isRtl;
     Size txtSize = freqRead.Measure(true);
 
-    Rect headerRect(offset.x, rc.y + (kDocListMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    Rect headerRect(offset.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
@@ -687,17 +706,17 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     DeleteVecMembers(win->staticLinks);
-    for (int h = 0; h < height; h++) {
-        for (int w = 0; w < width; w++) {
-            if (h * width + w >= list.isize()) {
+    for (int row = 0; row < thumbsRows; row++) {
+        for (int col = 0; col < thumbsCols; col++) {
+            if (row * thumbsCols + col >= list.isize()) {
                 // display the "Open a document" link right below the last row
-                height = w > 0 ? h + 1 : h;
+                thumbsRows = col > 0 ? row + 1 : row;
                 break;
             }
-            FileState* state = list.at(h * width + w);
+            FileState* state = list.at(row * thumbsCols + col);
 
-            Rect page(offset.x + w * (kThumbnailDx + kDocListMarginBetweenX),
-                      offset.y + h * (kThumbnailDy + kDocListMarginBetweenY), kThumbnailDx, kThumbnailDy);
+            Rect page(offset.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
+                      offset.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
             if (isRtl) {
                 page.x = rc.dx - page.x - page.dx;
             }
@@ -751,11 +770,11 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     }
 
     /* render bottom links */
-    rc.y += kDocListMarginTop + height * kThumbnailDy + (height - 1) * kDocListMarginBetweenY + kDocListMarginBottom;
-    rc.dy = kDocListBottomBoxDy;
+    rc.y += kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
+    rc.dy = kThumbsBottomBoxDy;
 
-    col = gCurrentTheme->window.linkColor;
-    SetTextColor(hdc, col);
+    color = gCurrentTheme->window.linkColor;
+    SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 
     HIMAGELIST himl = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
