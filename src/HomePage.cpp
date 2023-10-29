@@ -27,6 +27,7 @@
 #include "Translations.h"
 #include "Version.h"
 #include "Theme.h"
+#include "Widget.h"
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2
@@ -110,75 +111,6 @@ static Vec<StaticLinkInfo*> gStaticLinks;
 #define COL3 RGB(93, 160, 40)
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
-
-Kind kindHwndWidgetText = "hwndWidgetText";
-
-struct HwndWidgetText : LayoutBase {
-    const char* s = nullptr;
-    HWND hwnd = nullptr;
-    HFONT font = nullptr;
-    bool withUnderline = false;
-    bool isRtl = false;
-
-    Size sz = {0, 0};
-
-    HwndWidgetText(const char* s, HWND hwnd, HFONT font = nullptr);
-
-    // ILayout
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    Size Layout(const Constraints bc) override;
-
-    Size MinIntrinsicSize(int width, int height);
-    Size Measure(bool onlyIfEmpty = false);
-    void Draw(HDC dc);
-};
-
-HwndWidgetText::HwndWidgetText(const char* s, HWND hwnd, HFONT font) : s(s), hwnd(hwnd), font(font) {
-    kind = kindHwndWidgetText;
-}
-
-Size HwndWidgetText::Layout(const Constraints bc) {
-    Measure();
-    return bc.Constrain({sz.dx, sz.dy});
-}
-
-Size HwndWidgetText::Measure(bool onlyIfEmpty) {
-    if (onlyIfEmpty && !sz.IsEmpty()) {
-        return sz;
-    }
-    sz = HwndMeasureText(hwnd, s, font);
-    return sz;
-}
-
-int HwndWidgetText::MinIntrinsicHeight(int width) {
-    Measure(true);
-    return sz.dy;
-}
-
-int HwndWidgetText::MinIntrinsicWidth(int height) {
-    Measure(true);
-    return sz.dx;
-}
-
-Size HwndWidgetText::MinIntrinsicSize(int width, int height) {
-    int dx = MinIntrinsicWidth(height);
-    int dy = MinIntrinsicHeight(width);
-    return {dx, dy};
-}
-
-void HwndWidgetText::Draw(HDC hdc) {
-    CrashIf(lastBounds.IsEmpty());
-    ScopedSelectFont f(hdc, font);
-    UINT fmt = DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
-    RECT dr = RectToRECT(lastBounds);
-    HdcDrawText(hdc, s, -1, &dr, fmt);
-    if (withUnderline) {
-        auto& r = lastBounds;
-        Rect lineRect = {r.x, r.y + sz.dy, sz.dx, 0};
-        DrawLine(hdc, lineRect);
-    }
-}
 
 static void DrawAppName(HDC hdc, Point pt) {
     const char* txt = kAppName;

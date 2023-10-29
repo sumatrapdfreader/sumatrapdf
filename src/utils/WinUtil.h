@@ -106,12 +106,21 @@ Rect GetVirtualScreenRect();
 
 void DrawRect(HDC, Rect);
 void DrawLine(HDC, Rect);
+
 void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC hdc, Rect r, const char* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 Size TextSizeInHwnd(HWND, const char*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
+Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
+Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font);
+bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen = 0);
+bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
+
+int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, uint format, HFONT font = nullptr);
+Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font = nullptr);
+
 
 bool IsFocused(HWND);
 bool IsCursorOverWindow(HWND);
@@ -309,19 +318,12 @@ void HwndInvalidate(HWND);
 HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);
 
-Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
-Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndSendCommand(HWND hwnd, int cmdId);
 void HwndDestroyWindowSafe(HWND* hwnd);
 void HwndToForeground(HWND hwnd);
 void HwndSetVisibility(HWND hwnd, bool visible);
-
-bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen = 0);
-bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
-int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format);
-Size HdcMeasureText(HDC hdc, const char* s, UINT format);
 
 bool DeleteObjectSafe(HGDIOBJ*);
 bool DestroyIconSafe(HICON*);

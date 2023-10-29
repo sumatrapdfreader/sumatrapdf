@@ -659,6 +659,7 @@ function sumatrapdf_files()
     "UpdateCheck.*",
     "Version.h",
     "Uninstaller.cpp",
+    "Widget.*",
     "WindowTab.*",
 
     "ext/versions.txt",

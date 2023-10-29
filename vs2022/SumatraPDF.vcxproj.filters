@@ -192,6 +192,9 @@
     <ClInclude Include="..\src\Version.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Widget.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\WindowTab.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -420,6 +423,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UpdateCheck.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Widget.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\WindowTab.cpp">

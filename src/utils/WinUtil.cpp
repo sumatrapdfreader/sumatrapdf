@@ -2789,7 +2789,24 @@ bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl) {
     return GetTextExtentPoint32W(hdc, ws, sLen, psizl);
 }
 
-int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
+/*
+format:
+#define DT_TOP                      0x00000000
+#define DT_LEFT                     0x00000000
+#define DT_CENTER                   0x00000001
+#define DT_RIGHT                    0x00000002
+#define DT_VCENTER                  0x00000004
+#define DT_BOTTOM                   0x00000008
+#define DT_WORDBREAK                0x00000010
+#define DT_SINGLELINE               0x00000020
+#define DT_EXPANDTABS               0x00000040
+#define DT_TABSTOP                  0x00000080
+#define DT_NOCLIP                   0x00000100
+#define DT_EXTERNALLEADING          0x00000200
+#define DT_CALCRECT                 0x00000400
+#define DT_NOPREFIX                 0x00000800
+*/
+int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, uint format, HFONT font) {
     if (!s) {
         return 0;
     }
@@ -2801,16 +2818,19 @@ int HdcDrawText(HDC hdc, const char* s, int sLen, RECT* r, UINT format) {
         return 0;
     }
     sLen = (int)str::Len(ws);
+    ScopedSelectFont f(hdc, font);
     return DrawTextW(hdc, ws, sLen, r, format);
 }
 
 // uses the same logic as HdcDrawText
-Size HdcMeasureText(HDC hdc, const char* s, UINT format) {
+Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font) {
     format |= DT_CALCRECT;
     WCHAR* ws = ToWStrTemp(s);
     if (!ws) {
         return {};
     }
+
+    ScopedSelectFont f(hdc, font);
     int sLen = (int)str::Len(ws);
     // pick a very large area
     // TODO: allow limiting by dx
