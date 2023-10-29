@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-299364639d7ea7cc712b2e5801f84e6d4703cabc
+39360a5a11b1955da84f7d0b901f8adbbbcb6168
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -18,6 +18,7 @@ ja:注釈 %s 。”Ctrl + クリック”で編集
 nl:%s opmerking. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique para editar.
+ro:%s adnotare. Ctrl+clic să modifici
 ru:Аннотация %s. Ctrl+щелчок для изменения.
 sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
@@ -693,7 +694,7 @@ vn:&Lưu Sao Chép
 am:&Մերժել
 az:Dəyişiklikləri &rədd et
 bg:От&хвърли промените
-br:&Descartar
+br:&Descartar mudanças
 by:&Скасаваць змены
 ca-xv:&Descarta
 ca:&Descarta
@@ -1478,6 +1479,7 @@ it:&Tasti rapidi
 ja:キーボード シュートカット(&K)
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
+ro:&Comandă rapidă de la tastatură
 ru:&Горячие клавиши
 sk:&Klávesové skratky
 tw:鍵盤快速鍵(&K)
@@ -2508,7 +2510,7 @@ am:Հիշել այս կարգավորումները &բոլոր ֆայլերի �
 ar:&تذكر هذه الإعدادات لكل مستند
 az:Bu &parametrləri bütün sənədlər üçün yadda saxla
 bg:Запази &настройките за всеки документ
-br:&Lembrar estas configurações pra cada documento
+br:&Lembrar destas configurações pra cada documento
 bs:&Upamti ove postavke za svaki pojedini dokument
 by:Запомніць гэтыя параметры для &кожнага дакумента
 ca-xv:Conserva estes &preferències per a cada document
@@ -5032,7 +5034,7 @@ no:Bokmerk snarveier
 pa:ਬੁੱਕਮਾਰਕ ਸ਼ਾਰਟਕੱਟ
 pl:Zakładki
 pt:Atalhos de marcadores
-ro:Legături rapide - semne de carte
+ro:Comenzi rapide - semne de carte
 ru:Ярлыки закладок
 si:කෙටිමං පොත්සලකුනු කරන්න
 sk:Zástupca záložiek
@@ -5097,7 +5099,7 @@ nn:Bokmerk snarveg til side %s av %s
 no:Bokmerk snarvei til side %s av %s
 pl:Wstaw zakładkę do strony %s z %s
 pt:Atalho para a página %s de %s
-ro:Legătură rapidă către pagina %s din %s
+ro:Comandă rapidă către pagina %s din %s
 ru:Ярлык закладки на стр. %s из %s
 si:%s හි %s පිටුවට  කෙටිමග පොත්සලකුනු කරන්න
 sk:Zástupca záložky na stranu %s z %s
@@ -5914,6 +5916,7 @@ mk:Избришани се %d датотеки од историјата, изб
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
 pt:Histórico de %d ficheiros removido e miniaturas removidas.
+ro:Istoricul șters pentru %d fișiere, miniaturi șterse.
 ru:Очищена история %d файлов, удалены миниатюры.
 sk:Vymazaná história %d súborov, odstránené náhľady.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
@@ -5942,6 +5945,7 @@ mk:Бришење на историјата...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
 pt:A limpar histórico...
+ro:Ștergere istoric...
 ru:Очистка истории...
 sk:Vymazávanie histórie…
 tw:正在清除歷史記錄...
@@ -6601,7 +6605,7 @@ ar:المواجهة مستمرة
 az:Ardıcıl cüt səhifələr
 bg:Непрекъснати срещуположни страници
 bn:ক্রমাগত দুটি পৃষ্ঠায়
-br:Face Contínua
+br:Página Dupla Contínua
 bs:Dvije stranice slijedno
 by:Працягла дзьве старонкі
 ca-xv:Pàgina doble contínua
@@ -6959,6 +6963,7 @@ nn:Kopier Filbane
 no:Kopier filbane
 pl:Kopiuj ścieżkę pliku
 pt:Copiar caminho do ficheiro
+ro:Copiază cale de fișier
 ru:Скопировать путь к файлу
 sk:Kopírovať cestu k súboru
 sv:Kopiera sökväg
@@ -7018,7 +7023,7 @@ ar:(ناسخ النص رفض (ناسخ باسم صورة فقط
 az:Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
 bg:Текстът не може да бъде копиран (затова беше копиран само като картинка)
 bn:লেখা কপি করতে দেয়া হয়নি (ছবি-মাত্র কপি করা হচ্ছিল)
-br:Cópia de texto negada (copiando só como imagem)
+br:A cópia do texto foi negada (copiando só como imagem)
 bs:Kopiranje teksta je nemoguće (kopirano kao slika)
 by:Тэкст забаронена капіяваць (капіяваць толькі як малюнак)
 ca-xv:No es pot copiar el text (només es copia com a imatge)
@@ -8520,9 +8525,11 @@ kr:주석 삭제
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
 pt:Eliminar anotação
+ro:Șterge adnotarea
 ru:Удалить аннотацию
 sk:Odstrániť anotáciu
 tw:刪除註解
+uk:Видалити анотацію
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
 ar:رفض الأذونات:
@@ -9016,6 +9023,7 @@ kr:주석 편집 (%s)
 nl:Bewerk %s Aantekening
 pl:Edytuj adnotację %s
 pt:Editar %s
+ro:Modifică %s adnotare
 ru:Изменить аннотацию %s
 sk:Upraviť %s anotáciu
 tw:編輯 %s 註解
@@ -10146,7 +10154,7 @@ ar:الملف %s غير موجود
 az:Fayl %s tapılmadı
 bg:Файлът %s не е намерен
 bn:%s ফাইলটি পাওয়া যাচ্ছে না
-br:Arquivo %s não encontrado
+br:O arquivo %s não foi encontrado
 bs:Fajl %s nije pronađen
 by:Файл %s не знойдзены
 ca-xv:No s'ha trobat el fitxer %s
@@ -12645,7 +12653,7 @@ am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նա
 ar:دع Windows يظهر &معاينات لملفات PDF
 az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
 bg:Нека Windows показва &преглед на PDF документи
-br:Deixar o Windows mostrar &pré-visualizações de documentos PDF
+br:Deixar o Windows mostrar as &pré-visualizações de documentos PDF
 bs:Omogući Windows-ima da prikažu &pregled PDF dokumenata
 by:Паказваць &перадпрагляд дакументаў PDF у Windows
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
@@ -14429,6 +14437,7 @@ nn:Opne i nytt vindauge
 no:Åpne i nytt vindu
 pl:Otwórz w nowym oknie
 pt:Abrir em nova janela
+ro:Deschide în fereastră nouă
 ru:Открыть в новом окне
 sk:Otvoriť v novom okne
 ta:புதிய சாளரத்தில் திற
@@ -14930,7 +14939,7 @@ am:PDF-ի լավարկում՝
 ar:تحسينات ملف PDF:
 az:PDF optimallaşdırması:
 bg:PDF оптимизации:
-br:Otimizações PDF:
+br:Otimizações do PDF:
 bs:PDF optimizacije:
 by:Аптымізацыя PDF:
 ca-xv:Optimitzacions del PDF:
@@ -16312,7 +16321,7 @@ ar:الطباعة في التقدم.
 az:Çap davam edir.
 bg:Печатане...
 bn:প্রিন্ট হচ্ছে
-br:Imprimindo...
+br:Impressão em progresso.
 bs:Štampanje u napretku.
 by:Ідзе друк
 ca-xv:La impresió és en procés.
@@ -16655,11 +16664,13 @@ nn:Eigenskapar...
 no:Egenskaper...
 pl:Właściwości...
 pt:Propriedades...
+ro:Proprietăți
 ru:Свойства...
 sk:Vlastnosti…
 ta:பண்புகள்
 tl:Properties...
 tw:內容...
+uk:Властивості...
 :Re&name...
 am:Ան&վանափոխել...
 ar:إعادة ت&سمية...
@@ -19180,7 +19191,7 @@ am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
 az:%s mənbə faylının sinxronlaşdırma mövqeyi yoxdur
 bg:Файлът-източник %s няма точка на синхронизация
-br:O arquivo fonte %s não tem ponto de sincronização
+br:O arquivo fonte %s não tem um ponto de sincronização
 bs:Izvorni fajl %s nema sinhronizacijske tačke
 by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
 ca-xv:El fitxer d'origen %s no té un punt de sincronització vàlid
