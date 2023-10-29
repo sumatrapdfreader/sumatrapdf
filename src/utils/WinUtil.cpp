@@ -2769,7 +2769,7 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font) {
+int HdcDrawText(HDC hdc, const char* s, RECT* r, uint fmt, HFONT font) {
     if (!s) {
         return 0;
     }
@@ -2779,17 +2779,17 @@ int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font) {
     }
     int cch = (int)str::Len(ws);
     ScopedSelectFont f(hdc, font);
-    return DrawTextW(hdc, ws, cch, r, format);
+    return DrawTextW(hdc, ws, cch, r, fmt);
 }
 
-int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint format, HFONT font) {
+int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint fmt, HFONT font) {
     RECT r2 = ToRECT(r);
-    return HdcDrawText(hdc, s, &r2, format, font);
+    return HdcDrawText(hdc, s, &r2, fmt, font);
 }
 
 // uses the same logic as HdcDrawText
-Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font) {
-    format |= DT_CALCRECT;
+Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
+    fmt |= DT_CALCRECT;
     WCHAR* ws = ToWStrTemp(s);
     if (!ws) {
         return {};
@@ -2800,7 +2800,7 @@ Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font) {
     // pick a very large area
     // TODO: allow limiting by dx
     RECT rc{0, 0, 4096, 4096};
-    int dy = DrawTextW(hdc, ws, sLen, &rc, format);
+    int dy = DrawTextW(hdc, ws, sLen, &rc, fmt);
     if (0 == dy) {
         return {};
     }
@@ -2810,6 +2810,14 @@ Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font) {
         dy = dy2;
     }
     return Size(dx, dy);
+}
+
+Size HdcMeasureText(HDC hdc, const char* s, HFONT font) {
+    // DT_LEFT - left-aligned
+    // DT_NOCLIP - is faster, no clipping
+    // DT_NOPREFIX - doesn't process & to underline next char
+    uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX;
+    return HdcMeasureText(hdc, s, fmt, font);
 }
 
 void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {

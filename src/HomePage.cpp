@@ -139,23 +139,23 @@ static TempStr GetAppVersionTemp() {
     return s;
 }
 
-static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
+static Size CalcSumatraVersionSize(HDC hdc) {
     Size result{};
 
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
 
     /* calculate minimal top box size */
-    Size txtSize = HwndMeasureText(hwnd, kAppName, fontSumatraTxt);
-    result.dy = txtSize.dy + DpiScale(hwnd, kAboutBoxMarginDy * 2);
+    Size txtSize = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
+    result.dy = txtSize.dy + DpiScale(hdc, kAboutBoxMarginDy * 2);
     result.dx = txtSize.dx;
 
     /* consider version and version-sub strings */
     TempStr ver = GetAppVersionTemp();
-    txtSize = HwndMeasureText(hwnd, ver, fontVersionTxt);
-    int minWidth = txtSize.dx + DpiScale(hwnd, 8);
+    txtSize = HdcMeasureText(hdc, ver, fontVersionTxt);
+    int minWidth = txtSize.dx + DpiScale(hdc, 8);
     int dx = std::max(txtSize.dx, minWidth);
-    result.dx += 2 * (dx + DpiScale(hwnd, kInnerPadding));
+    result.dx += 2 * (dx + DpiScale(hdc, kInnerPadding));
     return result;
 }
 
@@ -241,7 +241,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     FillRect(hdc, &rTmp, brushAboutBg);
 
     /* render title */
-    Rect titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
+    Rect titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
     AutoDeleteBrush bgBrush = CreateSolidBrush(col);
     ScopedSelectObject brush(hdc, bgBrush);
@@ -317,7 +317,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate minimal top box size */
-    Size headerSize = CalcSumatraVersionSize(hwnd, hdc);
+    Size headerSize = CalcSumatraVersionSize(hdc);
 
     /* calculate left text dimensions */
     SelectObject(hdc, fontLeftTxt);
@@ -637,7 +637,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
-    Rect titleBox = Rect(Point(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
+    Rect titleBox = Rect(Point(0, 0), CalcSumatraVersionSize(hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(win->hwndCanvas, hdc, titleBox);
     DrawLine(hdc, Rect(0, titleBox.dy, rc.dx, 0));

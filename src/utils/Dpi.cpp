@@ -88,3 +88,9 @@ void DpiScale(HWND hwnd, int& x1, int& x2) {
     x1 = nx1;
     x2 = nx2;
 }
+
+int DpiScale(HDC hdc, int x) {
+    int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+    int res = MulDiv(x, dpi, 96);
+    return res;
+}
