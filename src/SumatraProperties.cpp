@@ -148,7 +148,7 @@ static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-static char* FormatSystemTimeA(SYSTEMTIME& date) {
+static TempStr FormatSystemTimeTemp(SYSTEMTIME& date) {
     WCHAR bufW[512]{};
     int cchBufLen = dimof(bufW);
     int ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, bufW, cchBufLen);
@@ -158,7 +158,7 @@ static char* FormatSystemTimeA(SYSTEMTIME& date) {
 
     // don't add 00:00:00 for dates without time
     if (0 == date.wHour && 0 == date.wMinute && 0 == date.wSecond) {
-        return ToUtf8(bufW);
+        return ToUtf8Temp(bufW);
     }
 
     WCHAR* tmp = bufW + ret;
@@ -168,34 +168,30 @@ static char* FormatSystemTimeA(SYSTEMTIME& date) {
         tmp[-1] = '\0';
     }
 
-    return ToUtf8(bufW);
+    return ToUtf8Temp(bufW);
 }
 
 // Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
 // format e.g. "12/22/2009 5:19:33 PM"
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // The conversion happens in place
-static void ConvDateToDisplay(char** s, bool (*DateParse)(const char* date, SYSTEMTIME* timeOut)) {
-    if (!s || !*s || !DateParse) {
-        return;
+static TempStr ConvDateToDisplayTemp(const char* s, bool (*dateParseFn)(const char* date, SYSTEMTIME* timeOut)) {
+    if (!s || !*s || !dateParseFn) {
+        return nullptr;
     }
 
     SYSTEMTIME date{};
-    bool ok = DateParse(*s, &date);
+    bool ok = dateParseFn(s, &date);
     if (!ok) {
-        return;
+        return nullptr;
     }
 
-    char* formatted = FormatSystemTimeA(date);
-    if (formatted) {
-        free(*s);
-        *s = formatted;
-    }
+    return FormatSystemTimeTemp(date);
 }
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
-static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
+static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
     float zoom = 1.0f / engine->GetFileDPI();
     SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
@@ -247,7 +243,7 @@ static char* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     char* strWidth = str::FormatFloatWithThousandSepTemp(width);
     char* strHeight = str::FormatFloatWithThousandSepTemp(height);
 
-    return fmt::Format("%s x %s %s%s", strWidth, strHeight, unit, formatName);
+    return str::FormatTemp("%s x %s %s%s", strWidth, strHeight, unit, formatName);
 }
 
 static char* FormatPdfFileStructure(DocController* ctrl) {
@@ -281,7 +277,7 @@ static char* FormatPdfFileStructure(DocController* ctrl) {
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static char* FormatPermissionsA(DocController* ctrl) {
+static TempStr FormatPermissionsTemp(DocController* ctrl) {
     if (!ctrl->AsFixed()) {
         return nullptr;
     }
@@ -296,7 +292,8 @@ static char* FormatPermissionsA(DocController* ctrl) {
         denials.Append(_TRA("copying text"));
     }
 
-    return Join(denials, ", ");
+    char* s = Join(denials, ", ");
+    return str::DupTemp(s);
 }
 
 static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
@@ -517,21 +514,22 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
 
     DisplayModel* dm = ctrl->AsFixed();
     str = ctrl->GetProperty(DocumentProperty::CreationDate);
+    TempStr strTemp;
     if (str && dm && kindEngineMupdf == dm->engineType) {
-        ConvDateToDisplay(&str, PdfDateParseA);
+        strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
     } else {
-        ConvDateToDisplay(&str, IsoDateParse);
+        strTemp = ConvDateToDisplayTemp(str, IsoDateParse);
     }
-    layoutData->AddProperty(_TRA("Created:"), str);
     str::Free(str);
+    layoutData->AddProperty(_TRA("Created:"), strTemp);
 
     str = ctrl->GetProperty(DocumentProperty::ModificationDate);
     if (str && dm && kindEngineMupdf == dm->engineType) {
-        ConvDateToDisplay(&str, PdfDateParseA);
+        strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
     } else {
-        ConvDateToDisplay(&str, IsoDateParse);
+        strTemp = ConvDateToDisplayTemp(str, IsoDateParse);
     }
-    layoutData->AddProperty(_TRA("Modified:"), str);
+    layoutData->AddProperty(_TRA("Modified:"), strTemp);
     str::Free(str);
 
     str = ctrl->GetProperty(DocumentProperty::CreatorApp);
@@ -560,37 +558,38 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         d.Free();
     }
     if (-1 != fileSize) {
-        char* tmp = FormatFileSizeTemp(fileSize);
-        layoutData->AddProperty(_TRA("File Size:"), str::Dup(tmp));
+        strTemp = FormatFileSizeTemp(fileSize);
+        layoutData->AddProperty(_TRA("File Size:"), strTemp);
     }
 
-    str = str::Format("%d", ctrl->PageCount());
-    layoutData->AddProperty(_TRA("Number of Pages:"), str);
+    strTemp = str::FormatTemp("%d", ctrl->PageCount());
+    layoutData->AddProperty(_TRA("Number of Pages:"), strTemp);
 
     if (dm) {
-        str = FormatPageSize(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
+        strTemp = FormatPageSizeTemp(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
         if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            WCHAR* tmp = ToWStrTemp(str);
+            WCHAR* tmp = ToWStrTemp(strTemp);
             tmp = str::Format(L"\u202A%s\u202C", tmp);
-            str = ToUtf8(tmp);
+            strTemp = ToUtf8Temp(tmp);
             str::Free(tmp);
         }
-        layoutData->AddProperty(_TRA("Page Size:"), str);
+        layoutData->AddProperty(_TRA("Page Size:"), strTemp);
     }
 
-    str = FormatPermissionsA(ctrl);
-    layoutData->AddProperty(_TRA("Denied Permissions:"), str);
+    strTemp = FormatPermissionsTemp(ctrl);
+    layoutData->AddProperty(_TRA("Denied Permissions:"), strTemp);
 
     if (extended) {
         // Note: FontList extraction can take a while
         str = ctrl->GetProperty(DocumentProperty::FontList);
         if (str) {
             // add a space between basic and extended file properties
-            layoutData->AddProperty(" ", str::Dup(" "));
+            layoutData->AddProperty(" ", " ");
         }
         layoutData->AddProperty(_TRA("Fonts:"), str);
+        str::Free(str);
     }
 }
 
