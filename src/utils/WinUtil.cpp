@@ -1169,7 +1169,7 @@ Rect GetVirtualScreenRect() {
     return result;
 }
 
-void DrawRect(HDC hdc, const Rect rect) {
+void DrawRect(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
@@ -1177,7 +1177,18 @@ void DrawRect(HDC hdc, const Rect rect) {
     LineTo(hdc, rect.x, rect.y);
 }
 
-void DrawLine(HDC hdc, const Rect rect) {
+void FillRect(HDC hdc, const Rect& rect, HBRUSH br) {
+    RECT r = ToRECT(rect);
+    FillRect(hdc, &r, br);
+}
+
+void FillRect(HDC hdc, const Rect& rect, COLORREF col) {
+    AutoDeleteBrush br(CreateSolidBrush(col));
+    RECT r = ToRECT(rect);
+    FillRect(hdc, &r, br);
+}
+
+void DrawLine(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
@@ -2817,6 +2828,11 @@ int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font) {
     int cch = (int)str::Len(ws);
     ScopedSelectFont f(hdc, font);
     return DrawTextW(hdc, ws, cch, r, format);
+}
+
+int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint format, HFONT font) {
+    RECT r2 = ToRECT(r);
+    return HdcDrawText(hdc, s, &r2, format, font);
 }
 
 // uses the same logic as HdcDrawText

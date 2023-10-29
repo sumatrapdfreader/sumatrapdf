@@ -104,8 +104,10 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
 Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 
-void DrawRect(HDC, Rect);
-void DrawLine(HDC, Rect);
+void DrawRect(HDC, const Rect&);
+void FillRect(HDC, const Rect&, HBRUSH);
+void FillRect(HDC hdc, const Rect&, COLORREF);
+void DrawLine(HDC, const Rect&);
 
 void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC hdc, Rect r, const char* txt, bool isRTL = false);
@@ -119,6 +121,7 @@ bool TextOutUtf8(HDC hdc, int x, int y, const char* s, int sLen = 0);
 bool GetTextExtentPoint32Utf8(HDC hdc, const char* s, int sLen, LPSIZE psizl);
 
 int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font = nullptr);
+int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font = nullptr);
 
 

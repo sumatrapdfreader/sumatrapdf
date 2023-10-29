@@ -621,15 +621,10 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
-    ScopedSelectObject font(hdc, fontSumatraTxt);
-
     Rect rc = ClientRect(win->hwndCanvas);
-    RECT rTmp = ToRECT(rc);
     col = GetMainWindowBackgroundColor();
-    AutoDeleteBrush brushLogoBg(CreateSolidBrush(col));
-    FillRect(hdc, &rTmp, brushLogoBg);
+    FillRect(hdc, rc, col);
 
-    ScopedSelectObject brush(hdc, brushLogoBg);
     ScopedSelectObject pen(hdc, penBorder);
 
     bool isRtl = IsUIRightToLeft();
@@ -648,10 +643,8 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-    rTmp = ToRECT(rc);
     col = GetMainWindowBackgroundColor();
-    AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
-    FillRect(hdc, &rTmp, brushAboutBg);
+    FillRect(hdc, rc, col);
     rc.dy -= kDocListBottomBoxDy;
 
     Vec<FileState*> list;
@@ -686,7 +679,6 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
     freqRead.SetBounds(headerRect);
     freqRead.Draw(hdc);
 
-    SelectObject(hdc, fontText);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     DeleteVecMembers(win->staticLinks);
@@ -736,14 +728,11 @@ void DrawHomePage(MainWindow* win, HDC hdc, FileHistory& fileHistory, COLORREF t
             if (isRtl) {
                 rect.x -= iconSpace;
             }
-            rTmp = ToRECT(rect);
             char* path = state->filePath;
             const char* fileName = path::GetBaseNameTemp(path);
             UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
-            HdcDrawText(hdc, fileName, &rTmp, fmt);
+            HdcDrawText(hdc, fileName, rect, fmt, fontText);
 
-            // note: this crashes asan build in windows code
-            // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
             SHFILEINFO sfi = {nullptr};
             uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
             WCHAR* filePathW = ToWStrTemp(path);
