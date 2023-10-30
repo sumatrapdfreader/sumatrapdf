@@ -308,7 +308,7 @@ var (
 		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
 		mkField("EscToExit", Bool, false,
 			"if true, Esc key closes SumatraPDF").setExpert(),
-		mkField("ReuseInstance", Bool, false,
+		mkField("ReuseInstance", Bool, true,
 			"if true, we'll always open files using existing SumatraPDF process").setExpert(),
 		mkField("ReloadModifiedDocuments", Bool, true,
 			"if true, a document will be reloaded automatically whenever it's changed "+
