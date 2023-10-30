@@ -904,6 +904,22 @@ static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
     return next;
 }
 
+constexpr const char* kNewWindow = "[NewWindow]";
+/*
+Open new window.
+
+[NewWindow]
+*/
+static const char* HandleNewWindowCmd(const char* cmd, bool* ack) {
+    if (!str::StartsWith(cmd, kNewWindow)) {
+        return nullptr;
+    }
+    const char* next = cmd + str::Len(kNewWindow);
+    CreateAndShowMainWindow(nullptr);
+    *ack = true;
+    return next;
+}
+
 /*
 [GetFileState("<filepath>")]
 [GetFileState()]
@@ -1010,7 +1026,10 @@ static bool HandleExecuteCmds(HWND hwnd, const char* cmd) {
             nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);
         }
         if (!nextCmd) {
-            // backwards compatibility: ignore unknown commands (maybe from newer version)
+            nextCmd = HandleNewWindowCmd(cmd, &didHandle);
+        }
+        if (!nextCmd) {
+            // forwards compatibility: ignore unknown commands (maybe from newer version)
             AutoFreeStr tmp;
             nextCmd = str::Parse(cmd, "%s]", &tmp);
         }

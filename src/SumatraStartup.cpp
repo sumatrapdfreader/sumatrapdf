@@ -1252,7 +1252,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
             if (flags.inNewWindow) {
                 goto ContinueOpenWindow;
             } else {
-                HwndToForeground(existingHwnd);
+                // https://github.com/sumatrapdfreader/sumatrapdf/issues/3386
+                // e.g. when shift-click in taskbar, open a new window
+                SendMyselfDDE("[NewWindow]", existingHwnd);
+                goto Exit;
             }
         }
         goto Exit;
