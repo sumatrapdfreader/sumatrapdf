@@ -113,33 +113,13 @@ static TempStr GetAppVersionTemp() {
     return s;
 }
 
-static Size CalcSumatraVersionSize(HDC hdc) {
-    Size result{};
-
-    HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
-    HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
-
-    /* calculate minimal top box size */
-    Size txtSize = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
-    result.dy = txtSize.dy + DpiScale(hdc, kAboutBoxMarginDy * 2);
-    result.dx = txtSize.dx;
-
-    /* consider version and version-sub strings */
-    TempStr ver = GetAppVersionTemp();
-    txtSize = HdcMeasureText(hdc, ver, fontVersionTxt);
-    int minWidth = txtSize.dx + DpiScale(hdc, 8);
-    int dx = std::max(txtSize.dx, minWidth);
-    result.dx += 2 * (dx + DpiScale(hdc, kInnerPadding));
-    return result;
-}
-
 constexpr COLORREF kCol1 = RGB(196, 64, 50);
 constexpr COLORREF kCol2 = RGB(227, 107, 35);
 constexpr COLORREF kCol3 = RGB(93, 160, 40);
 constexpr COLORREF kCol4 = RGB(69, 132, 190);
 constexpr COLORREF kCol5 = RGB(112, 115, 207);
 
-static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
+static void DrawSumatraVersion(HDC hdc, Rect rect) {
     uint fmt = DT_LEFT | DT_NOCLIP;
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
@@ -164,13 +144,13 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     }
 
     SetTextColor(hdc, gCurrentTheme->window.textColor);
-    int x = mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding);
+    int x = mainRect.x + mainRect.dx + DpiScale(hdc, kInnerPadding);
     int y = mainRect.y;
 
     char* ver = GetAppVersionTemp();
     Point p = {x, y};
     HdcDrawText(hdc, ver, p, fmt, fontVersionTxt);
-    p.y += DpiScale(hwnd, 13);
+    p.y += DpiScale(hdc, 13);
     HdcDrawText(hdc, VERSION_SUB_TXT, p, fmt);
 }
 
@@ -200,6 +180,23 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     // make the click target larger
     r.Inflate(innerPadding, innerPadding);
     return r;
+}
+
+static Size CalcSumatraVersionSize(HDC hdc) {
+    HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+    HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
+
+    /* calculate minimal top box size */
+    Size sz = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
+    sz.dy = sz.dy + DpiScale(hdc, kAboutBoxMarginDy * 2);
+
+    /* consider version and version-sub strings */
+    TempStr ver = GetAppVersionTemp();
+    Size txtSize = HdcMeasureText(hdc, ver, fontVersionTxt);
+    int minWidth = txtSize.dx + DpiScale(hdc, 8);
+    int dx = std::max(txtSize.dx, minWidth);
+    sz.dx += 2 * (dx + DpiScale(hdc, kInnerPadding));
+    return sz;
 }
 
 static TempStr TrimGitTemp(char* s) {
@@ -248,7 +245,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
 #endif
 
     titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
-    DrawSumatraVersion(hwnd, hdc, titleRect);
+    DrawSumatraVersion(hdc, titleRect);
 
     /* render attribution box */
     col = gCurrentTheme->window.textColor;
@@ -605,53 +602,79 @@ constexpr int kThumbsBorderDx = 1;
 #define kThumbsBottomBoxDy DpiScale(hdc, 50)
 
 struct ThumbnailLayot {
-    Rect bThumb;
-    Rect bIcon;
-    Rect bName;
+    Rect bThumb;    // thumbnail
+    Rect bIcon;     // icon under the thumbnail
+    Rect bFileName; // file name next to icon
+    FileState* fs;  // info needed to draw the thumbnail
 };
 
 struct HomePageLayout {
-    Rect bApp;
-    Rect bAppVer;
-    Rect bLine;
+    Rect bAppWithVer; // SumatraPDF colorful text + version
+    Rect bLine;       // line under bApp
 
-    Rect bFreqRead;
+    Rect bFreqRead; // "Frequently Read" text
 
-    Rect bOpenDocIcon;
-    Rect bOpenDoc;
+    Rect bOpenDocIcon; // icon before "OpenDocument"
+    Rect bOpenDoc;     // "Open Document" link
 
-    Rect bHideFreqRead;
-    Vec<ThumbnailLayot> thumbnails;
+    Rect bHideFreqRead;             // "Hide/Show Frequently Read" link
+    Vec<ThumbnailLayot> thumbnails; // info for each thumbnail
+
+    Vec<FileState*>* fileStates;
 };
 
-void LaoutHomePage(HDC hdc, Rect r, const FileHistory& fileHistory, HomePageLayout& l) {
-    // TODO: write me
+// layout homepage in r
+void LayoutHomePage(HDC hdc, Rect rc, HomePageLayout& l) {
+    Size sz = CalcSumatraVersionSize(hdc);
+    {
+        Rect& r = l.bAppWithVer;
+        r.x = rc.dx - sz.dx - 3;
+        r.y = 0;
+        r.SetSize(sz);
+    }
+
+    l.bLine = {0, sz.dy, rc.dx, 0};
+
+    // TODO: the rest
+}
+
+void DrawHomePage(HDC hdc, const HomePageLayout& l) {
+    const Rect& r = l.bAppWithVer;
+    DrawSumatraVersion(hdc, r);
+
+    auto color = gCurrentTheme->window.textColor;
+    AutoDeletePen penBorder(CreatePen(PS_SOLID, kThumbsSeparatorDy, color));
+    ScopedSelectObject pen(hdc, penBorder);
+    DrawLine(hdc, l.bLine);
 }
 
 void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLORREF textColor,
                   COLORREF backgroundColor) {
+    Vec<FileState*> fileStates;
+    fileHistory.GetFrequencyOrder(fileStates);
+
+    HomePageLayout layout;
+    layout.fileStates = &fileStates;
+    Rect rc = ClientRect(win->hwndCanvas);
+    LayoutHomePage(hdc, rc, layout);
+
     HWND hwnd = win->hwndFrame;
     auto color = gCurrentTheme->window.textColor;
-    AutoDeletePen penBorder(CreatePen(PS_SOLID, kThumbsSeparatorDy, color));
+
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
     color = gCurrentTheme->window.linkColor;
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
 
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
-    Rect rc = ClientRect(win->hwndCanvas);
     color = GetMainWindowBackgroundColor();
     FillRect(hdc, rc, color);
-
-    ScopedSelectObject pen(hdc, penBorder);
 
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
-    Rect titleBox = Rect(Point(0, 0), CalcSumatraVersionSize(hdc));
-    titleBox.x = rc.dx - titleBox.dx - 3;
-    DrawSumatraVersion(win->hwndCanvas, hdc, titleBox);
-    DrawLine(hdc, Rect(0, titleBox.dy, rc.dx, 0));
+
+    DrawHomePage(hdc, layout);
 
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
@@ -659,14 +682,12 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     color = gCurrentTheme->window.textColor;
     SetTextColor(hdc, color);
 
+    Rect& titleBox = layout.bAppWithVer;
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
     color = GetMainWindowBackgroundColor();
     FillRect(hdc, rc, color);
     rc.dy -= kThumbsBottomBoxDy;
-
-    Vec<FileState*> list;
-    fileHistory.GetFrequencyOrder(list);
 
     int dx =
         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
@@ -679,9 +700,9 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
              kThumbsMarginRight) /
                 2;
     Point offset(x, rc.y + kThumbsMarginTop);
-    if (offset.x < DpiScale(hwnd, kInnerPadding)) {
-        offset.x = DpiScale(hwnd, kInnerPadding);
-    } else if (list.size() == 0) {
+    if (offset.x < DpiScale(hdc, kInnerPadding)) {
+        offset.x = DpiScale(hdc, kInnerPadding);
+    } else if (fileStates.size() == 0) {
         offset.x = kThumbsMarginLeft;
     }
 
@@ -703,12 +724,12 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     DeleteVecMembers(win->staticLinks);
     for (int row = 0; row < thumbsRows; row++) {
         for (int col = 0; col < thumbsCols; col++) {
-            if (row * thumbsCols + col >= list.isize()) {
+            if (row * thumbsCols + col >= fileStates.isize()) {
                 // display the "Open a document" link right below the last row
                 thumbsRows = col > 0 ? row + 1 : row;
                 break;
             }
-            FileState* state = list.at(row * thumbsCols + col);
+            FileState* state = fileStates.at(row * thumbsCols + col);
 
             Rect page(offset.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
                       offset.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
@@ -742,7 +763,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            int iconSpace = DpiScale(win->hwndFrame, 20);
+            int iconSpace = DpiScale(hdc, 20);
             Rect rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl) {
                 rect.x -= iconSpace;
@@ -756,7 +777,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
             uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
             WCHAR* filePathW = ToWStrTemp(path);
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
-            x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
+            x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
             ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
 
             auto sl = new StaticLinkInfo(rect.Union(page), path, path);

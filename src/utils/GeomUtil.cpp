@@ -212,6 +212,16 @@ Size Rect::Size() const {
     return {dx, dy};
 }
 
+void Rect::SetSize(const struct Size& sz) {
+    dx = sz.dx;
+    dy = sz.dy;
+}
+
+void Rect::SetPos(const Point& pos) {
+    x = pos.x;
+    y = pos.y;
+}
+
 bool Rect::Equals(const Rect& other) const {
     return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
 }
