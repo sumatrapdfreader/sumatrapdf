@@ -643,8 +643,7 @@ void DrawHomePage(HDC hdc, const HomePageLayout& l) {
     DrawSumatraVersion(hdc, r);
 
     auto color = gCurrentTheme->window.textColor;
-    AutoDeletePen penBorder(CreatePen(PS_SOLID, kThumbsSeparatorDy, color));
-    ScopedSelectObject pen(hdc, penBorder);
+    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
     DrawLine(hdc, l.bLine);
 }
 
@@ -683,11 +682,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     SetTextColor(hdc, color);
 
     Rect& titleBox = layout.bAppWithVer;
-    rc.y += titleBox.dy;
-    rc.dy -= titleBox.dy;
-    color = GetMainWindowBackgroundColor();
-    FillRect(hdc, rc, color);
-    rc.dy -= kThumbsBottomBoxDy;
+    rc.SubTB(titleBox.dy, kThumbsBottomBoxDy);
 
     int dx =
         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);

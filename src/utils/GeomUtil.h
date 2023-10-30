@@ -83,6 +83,8 @@ struct Rect {
     Rect Union(Rect other) const;
     void Offset(int _x, int _y);
     void Inflate(int _x, int _y);
+    void SubTB(int t, int b);
+    void SubLR(int l, int r);
     Point TL() const;
     Point BR() const;
     Size Size() const;
