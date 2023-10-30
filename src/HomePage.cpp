@@ -102,27 +102,6 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 
 static Vec<StaticLinkInfo*> gStaticLinks;
 
-#define COL1 RGB(196, 64, 50)
-#define COL2 RGB(227, 107, 35)
-#define COL3 RGB(93, 160, 40)
-#define COL4 RGB(69, 132, 190)
-#define COL5 RGB(112, 115, 207)
-
-static void DrawAppName(HDC hdc, Point pt, HFONT font) {
-    const char* txt = kAppName;
-    // colorful version
-    COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
-    char buf[2] = {0};
-    uint fmt = DT_LEFT | DT_NOCLIP;
-    for (size_t i = 0; i < str::Len(txt); i++) {
-        SetTextColor(hdc, cols[i % dimof(cols)]);
-        buf[0] = txt[i];
-        HdcDrawText(hdc, buf, pt, fmt, font);
-        Size txtSize = HdcMeasureText(hdc, buf, fmt, font);
-        pt.x += txtSize.dx;
-    }
-}
-
 static TempStr GetAppVersionTemp() {
     char* s = str::DupTemp("v" CURR_VERSION_STRA);
     if (IsProcess64()) {
@@ -154,6 +133,12 @@ static Size CalcSumatraVersionSize(HDC hdc) {
     return result;
 }
 
+constexpr COLORREF kCol1 = RGB(196, 64, 50);
+constexpr COLORREF kCol2 = RGB(227, 107, 35);
+constexpr COLORREF kCol3 = RGB(93, 160, 40);
+constexpr COLORREF kCol4 = RGB(69, 132, 190);
+constexpr COLORREF kCol5 = RGB(112, 115, 207);
+
 static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     uint fmt = DT_LEFT | DT_NOCLIP;
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
@@ -164,7 +149,19 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     const char* txt = kAppName;
     Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
     Rect mainRect(rect.x + (rect.dx - txtSize.dx) / 2, rect.y + (rect.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
-    DrawAppName(hdc, mainRect.TL(), fontSumatraTxt);
+
+    // draw SumatraPDF in colorful way
+    Point pt = mainRect.TL();
+    // colorful version
+    static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
+    char buf[2] = {0};
+    for (size_t i = 0; i < str::Len(kAppName); i++) {
+        SetTextColor(hdc, cols[i % dimof(cols)]);
+        buf[0] = kAppName[i];
+        HdcDrawText(hdc, buf, pt, fmt, fontSumatraTxt);
+        txtSize = HdcMeasureText(hdc, buf, fmt, fontSumatraTxt);
+        pt.x += txtSize.dx;
+    }
 
     SetTextColor(hdc, gCurrentTheme->window.textColor);
     int x = mainRect.x + mainRect.dx + DpiScale(hwnd, kInnerPadding);
