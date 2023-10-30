@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-39360a5a11b1955da84f7d0b901f8adbbbcb6168
+ad5d07b7f4aae5ff03b3c541b61d91c5b998061d
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
@@ -15,6 +15,7 @@ fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
+kr:%s 주석. Ctrl+클릭으로 편집
 nl:%s opmerking. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique para editar.
@@ -1091,7 +1092,7 @@ pl:&Pierwsza strona
 pt:&Primeira página
 ro:&Prima pagină
 ru:Пер&вая страница
-sk:&Prvá strana
+sk:P&rvá strana
 sl:Prva stran
 sr-rs:П&рва страница
 sv:Anpassa till sida
@@ -1269,7 +1270,7 @@ pt:&Ir para
 ro:Sal&t la
 ru:Пере&ход
 si:&යන්න (G)
-sk:&Ísť na
+sk:P&rejsť na
 sl:Po&jdi na
 sn:Enda ku...
 sp-rs:Idi
@@ -1468,8 +1469,10 @@ tw:螢光標示(&H)
 uk:Виділити 
 vn:&Nổi Bật
 :&Keyboard Shortcuts
+az:&Klaviatura birləşmələri
 br:&Atalhos do Teclado
 ca:&Dreceres de teclat
+cn:快捷键(&A)
 cz:&Klávesové zkratky
 de:Tasten&kombinationen
 el:Συντομεύσεις πληκτρολογίου
@@ -1477,6 +1480,7 @@ fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
 it:&Tasti rapidi
 ja:キーボード シュートカット(&K)
+kr:키보드 단축키(&K)
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
 ro:&Comandă rapidă de la tastatură
@@ -1518,7 +1522,7 @@ pl:&Ostatnia strona
 pt:Última págin&a
 ro:&Ultima pagină
 ru:Последня&я страница
-sk:Po&sledná strana
+sk:Posl&edná strana
 sl:Zadnja stran
 sr-rs:&Задња страница
 ta:&கடைசி பக்கம்
@@ -9504,7 +9508,7 @@ pl:&Dalej
 pt:A&vançar
 ro:Î&nainte
 ru:В&перёд
-sk:Dop&redu
+sk:&Dopredu
 sl:&Naprej
 sr-rs:Н&апред
 ta:முன்
@@ -13403,7 +13407,7 @@ pl:Nowe &okno
 pt:Nova &janela
 ro:&Fereastră nouă
 ru:&Новое окно
-sk:Nové &okno
+sk:&Nové okno
 sl:Novo okno
 sr-rs:Нови &прозор
 sv:Nytt fönster
@@ -16706,7 +16710,7 @@ pl:Zmień &nazwę...
 pt:Re&nomear...
 ro:Re&denumește...
 ru:Пере&именовать...
-sk:Preme&novať…
+sk:P&remenovať…
 sl:Preime&nuj …
 sr-rs:Пре&именуј...
 ta:பெயர்மாற்றுக
@@ -17198,7 +17202,7 @@ pl:Z&aznaczenie
 pt:S&eleção
 ro:S&electare
 ru:В&ыделение
-sk:Vý&ber
+sk:&Výber
 sl:I&zbor
 sr-rs:И&збор
 ta:தேர்வு
@@ -18243,7 +18247,7 @@ pt:&Enviar por correio electrónico...
 ro:Trimite prin &E-mail...
 ru:Отправить по &электронной почте...
 si:&E-mail... මගින් යවන්න
-sk:Odoslať &e-mailom...
+sk:Odoslať e-mailo&m...
 sl:Pošlji po &E-pošti …
 sp-rs:Pošalji putem e-pošte...
 sq:Dërgoj me &e-mail...
@@ -18488,7 +18492,7 @@ pt:M&ostrar páginas contínuas
 ro:Arată &paginile continuu
 ru:Отключить постраничную &прокрутку
 si:අඛණ්ඩව &පිටු පෙන්වන්න
-sk:Zobraziť &strany priebežne
+sk:Zobraziť strany priebe&žne
 sl:&Prikaži strani nepretrgano
 sp-rs:Prikaži stranice bez prekida
 sq:Tregoj &faqet në vazhdimësi
@@ -18608,7 +18612,7 @@ pt:Mostrar &barra de ferramentas
 ro:Arată bara de &instrumente
 ru:Показывать панель &инструментов
 si:&මෙවලම්පුවරුව පෙන්වන්න
-sk:Zobraziť &panel nástrojov
+sk:Zobraziť panel &nástrojov
 sl:Pokaži orodno vrstico
 sn:Ratidza Toolbar
 sp-rs:Traka sa alatkama
@@ -18772,7 +18776,7 @@ pl:Pokaż p&aski przewijania
 pt:M&ostrar barra de deslocação
 ro:Arată bare de de&rulare
 ru:Показывать по&лосы прокрутки
-sk:Zobraziť p&osuvníky
+sk:Zobraziť posu&vníky
 sl:Pokaži drsne trak&ove
 sr-rs:Прикажи траке за по&мерање
 ta:உருட்பட்டைகளை காண்பி 
