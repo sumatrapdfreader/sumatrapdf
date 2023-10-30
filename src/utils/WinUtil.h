@@ -118,6 +118,7 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font);
 
 int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint format, HFONT font = nullptr);
+int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, const char* s, HFONT font = nullptr);
 

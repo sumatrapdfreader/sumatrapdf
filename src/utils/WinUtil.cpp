@@ -2787,6 +2787,12 @@ int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint fmt, HFONT font) {
     return HdcDrawText(hdc, s, &r2, fmt, font);
 }
 
+int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font) {
+    Rect r = {pos.x, pos.y, 0, 0};
+    RECT r2 = ToRECT(r);
+    return HdcDrawText(hdc, s, &r2, fmt, font);
+}
+
 // uses the same logic as HdcDrawText
 Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
     fmt |= DT_CALCRECT;

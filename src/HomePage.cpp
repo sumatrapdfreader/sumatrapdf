@@ -116,9 +116,8 @@ static void DrawAppName(HDC hdc, Point pt, HFONT font) {
     uint fmt = DT_LEFT | DT_NOCLIP;
     for (size_t i = 0; i < str::Len(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
-        Rect r{pt.x, pt.y, 1024, 1024};
         buf[0] = txt[i];
-        HdcDrawText(hdc, buf, r, fmt, font);
+        HdcDrawText(hdc, buf, pt, fmt, font);
         Size txtSize = HdcMeasureText(hdc, buf, fmt, font);
         pt.x += txtSize.dx;
     }
@@ -172,10 +171,10 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     int y = mainRect.y;
 
     char* ver = GetAppVersionTemp();
-    Rect r = {x, y, 1024, 1024};
-    HdcDrawText(hdc, ver, r, fmt, fontVersionTxt);
-    r.y += DpiScale(hwnd, 13);
-    HdcDrawText(hdc, VERSION_SUB_TXT, r, fmt);
+    Point p = {x, y};
+    HdcDrawText(hdc, ver, p, fmt, fontVersionTxt);
+    p.y += DpiScale(hwnd, 13);
+    HdcDrawText(hdc, VERSION_SUB_TXT, p, fmt);
 }
 
 // draw on the bottom right
@@ -268,8 +267,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     uint fmt = DT_LEFT | DT_NOCLIP;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         auto& pos = el->leftPos;
-        Rect r{pos.x, pos.y, 1024, 1024};
-        HdcDrawText(hdc, el->leftTxt, r, fmt);
+        HdcDrawText(hdc, el->leftTxt, pos, fmt);
     }
 
     /* render text on the right */
@@ -287,8 +285,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
         char* s = (char*)el->rightTxt;
         s = TrimGitTemp(s);
         auto& pos = el->rightPos;
-        Rect r{pos.x, pos.y, 1024, 1024};
-        HdcDrawText(hdc, s, r, fmt);
+        HdcDrawText(hdc, s, pos, fmt);
 
         if (hasUrl) {
             int underlineY = pos.y + pos.dy - 3;
