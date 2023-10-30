@@ -111,6 +111,7 @@ static i32 gCommandsNoActivate[] = {
     CmdHelpVisitWebsite,
     CmdOpenFile,
     CmdOpenFolder,
+    CmdProperties,
     // TOOD: probably more
 };
 // clang-format on

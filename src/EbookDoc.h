@@ -15,13 +15,14 @@ struct ImageData {
 char* NormalizeURL(const char* url, const char* base);
 
 struct PropertyMap {
-    AutoFree values[(int)DocumentProperty::PdfVersion];
+    char* values[(int)DocumentProperty::PdfVersion] = {0};
 
+    ~PropertyMap();
     int Find(DocumentProperty prop) const;
 
   public:
-    void Set(DocumentProperty prop, char* valueUtf8, bool replace = false);
-    char* Get(DocumentProperty prop) const;
+    void SetVal(DocumentProperty prop, char* val, bool setIfExists = false);
+    TempStr GetTemp(DocumentProperty prop) const;
 };
 
 /* ********** EPUB ********** */
@@ -55,7 +56,7 @@ class EpubDoc {
     ByteSlice* GetImageData(const char* fileName, const char* pagePath);
     ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
-    char* GetProperty(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(DocumentProperty prop) const;
     const char* GetFileName() const;
     bool IsRTL() const;
 
@@ -96,7 +97,7 @@ class Fb2Doc {
     ByteSlice* GetImageData(const char* fileName) const;
     ByteSlice* GetCoverImage() const;
 
-    char* GetProperty(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(DocumentProperty prop) const;
     const char* GetFileName() const;
     bool IsZipped() const;
 
@@ -126,7 +127,7 @@ class PalmDoc {
 
     ByteSlice GetHtmlData() const;
 
-    char* GetProperty(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(DocumentProperty prop) const;
     const char* GetFileName() const;
 
     bool HasToc() const;
@@ -157,7 +158,7 @@ class HtmlDoc {
     ByteSlice* GetImageData(const char* fileName);
     ByteSlice GetFileData(const char* relPath);
 
-    char* GetProperty(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(DocumentProperty prop) const;
     const char* GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
@@ -178,7 +179,7 @@ class TxtDoc {
 
     ByteSlice GetHtmlData() const;
 
-    char* GetProperty(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(DocumentProperty prop) const;
     const char* GetFileName() const;
 
     bool IsRFC() const;

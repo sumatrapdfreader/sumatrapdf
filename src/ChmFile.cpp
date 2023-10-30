@@ -70,7 +70,7 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     return {d, len};
 }
 
-char* ChmFile::ToUtf8(const char* s, uint overrideCP) const {
+char* ChmFile::SmartToUtf8(const char* s, uint overrideCP) const {
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
     }
@@ -83,7 +83,7 @@ char* ChmFile::ToUtf8(const char* s, uint overrideCP) const {
     return strconv::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-WCHAR* ChmFile::ToWstr(const char* text) const {
+WCHAR* ChmFile::SmartToWstr(const char* text) const {
     return strconv::StrToWstr(text, codepage);
 }
 
@@ -253,7 +253,7 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
         return;
     }
 
-    char* utf8Path = ToUtf8(path.Get());
+    char* utf8Path = SmartToUtf8(path.Get());
     if (HasData(utf8Path)) {
         path.Set(utf8Path);
         fileCP = codepage;
@@ -265,7 +265,7 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
         return;
     }
 
-    utf8Path = ToUtf8(path.Get(), fileCP);
+    utf8Path = SmartToUtf8(path.Get(), fileCP);
     if (HasData(utf8Path)) {
         path.Set(utf8Path);
         codepage = fileCP;
@@ -321,19 +321,21 @@ bool ChmFile::Load(const char* path) {
     return true;
 }
 
-char* ChmFile::GetProperty(DocumentProperty prop) const {
-    AutoFreeStr result;
+TempStr ChmFile::GetPropertyTemp(DocumentProperty prop) const {
+    char* result = nullptr;
     if (DocumentProperty::Title == prop && title) {
-        result.Set(ToUtf8(title));
+        result = SmartToUtf8(title);
     } else if (DocumentProperty::CreatorApp == prop && creator) {
-        result.Set(ToUtf8(creator));
+        result = SmartToUtf8(creator);
     }
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {
         // TODO: original code called str::RemoveCharsInPlace(result, "\n\r\t")
         str::NormalizeWSInPlace(result);
     }
-    return result.StealData();
+    TempStr temp = str::DupTemp(result);
+    str::Free(result);
+    return temp;
 }
 
 const char* ChmFile::GetHomePath() const {

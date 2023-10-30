@@ -4015,7 +4015,6 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
 }
 
 void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip) {
-    logfa("TabsCtrl::SetTextAndTooltip: text: '%s', tooltip: '%s'\n", text, tooltip);
     TabInfo* tab = GetTab(idx);
     str::ReplaceWithCopy(&tab->text, text);
     str::ReplaceWithCopy(&tab->tooltip, tooltip);

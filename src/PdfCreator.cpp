@@ -302,7 +302,7 @@ static DocumentProperty propsToCopy[] = {
 bool PdfCreator::CopyProperties(EngineBase* engine) const {
     bool ok;
     for (int i = 0; i < dimof(propsToCopy); i++) {
-        AutoFreeStr value = engine->GetProperty(propsToCopy[i]);
+        TempStr value = engine->GetPropertyTemp(propsToCopy[i]);
         if (value) {
             ok = SetProperty(propsToCopy[i], value);
             if (!ok) {

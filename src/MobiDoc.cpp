@@ -905,10 +905,13 @@ ByteSlice MobiDoc::GetHtmlData() const {
     return {};
 }
 
-char* MobiDoc::GetProperty(DocumentProperty prop) {
+TempStr MobiDoc::GetPropertyTemp(DocumentProperty prop) {
     for (auto& p : props) {
         if (p.prop == prop) {
-            return strconv::StrToUtf8(p.value, textEncoding);
+            char* temp = strconv::StrToUtf8(p.value, textEncoding);
+            TempStr res = str::DupTemp(temp);
+            str::Free(temp);
+            return res;
         }
     }
     return nullptr;

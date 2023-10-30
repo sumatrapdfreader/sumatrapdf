@@ -247,8 +247,8 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
 }
 
 static char* FormatPdfFileStructure(DocController* ctrl) {
-    AutoFreeStr fstruct = ctrl->GetProperty(DocumentProperty::PdfFileStructure);
-    if (str::IsEmpty(fstruct.Get())) {
+    TempStr fstruct = ctrl->GetPropertyTemp(DocumentProperty::PdfFileStructure);
+    if (str::IsEmpty(fstruct)) {
         return nullptr;
     }
     StrVec parts;
@@ -292,8 +292,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
         denials.Append(_TRA("copying text"));
     }
 
-    char* s = Join(denials, ", ");
-    return str::DupTemp(s);
+    return JoinTemp(denials, ", ");
 }
 
 static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
@@ -496,53 +495,44 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
     layoutData->AddProperty(_TRA("File:"), path, true);
 
-    char* str = ctrl->GetProperty(DocumentProperty::Title);
+    char* str = ctrl->GetPropertyTemp(DocumentProperty::Title);
     layoutData->AddProperty(_TRA("Title:"), str);
-    str::Free(str);
 
-    str = ctrl->GetProperty(DocumentProperty::Subject);
+    str = ctrl->GetPropertyTemp(DocumentProperty::Subject);
     layoutData->AddProperty(_TRA("Subject:"), str);
-    str::Free(str);
 
-    str = ctrl->GetProperty(DocumentProperty::Author);
+    str = ctrl->GetPropertyTemp(DocumentProperty::Author);
     layoutData->AddProperty(_TRA("Author:"), str);
-    str::Free(str);
 
-    str = ctrl->GetProperty(DocumentProperty::Copyright);
+    str = ctrl->GetPropertyTemp(DocumentProperty::Copyright);
     layoutData->AddProperty(_TRA("Copyright:"), str);
-    str::Free(str);
 
     DisplayModel* dm = ctrl->AsFixed();
-    str = ctrl->GetProperty(DocumentProperty::CreationDate);
+    str = ctrl->GetPropertyTemp(DocumentProperty::CreationDate);
     TempStr strTemp;
     if (str && dm && kindEngineMupdf == dm->engineType) {
         strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
     } else {
         strTemp = ConvDateToDisplayTemp(str, IsoDateParse);
     }
-    str::Free(str);
     layoutData->AddProperty(_TRA("Created:"), strTemp);
 
-    str = ctrl->GetProperty(DocumentProperty::ModificationDate);
+    str = ctrl->GetPropertyTemp(DocumentProperty::ModificationDate);
     if (str && dm && kindEngineMupdf == dm->engineType) {
         strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
     } else {
         strTemp = ConvDateToDisplayTemp(str, IsoDateParse);
     }
     layoutData->AddProperty(_TRA("Modified:"), strTemp);
-    str::Free(str);
 
-    str = ctrl->GetProperty(DocumentProperty::CreatorApp);
+    str = ctrl->GetPropertyTemp(DocumentProperty::CreatorApp);
     layoutData->AddProperty(_TRA("Application:"), str);
-    str::Free(str);
 
-    str = ctrl->GetProperty(DocumentProperty::PdfProducer);
+    str = ctrl->GetPropertyTemp(DocumentProperty::PdfProducer);
     layoutData->AddProperty(_TRA("PDF Producer:"), str);
-    str::Free(str);
 
-    str = ctrl->GetProperty(DocumentProperty::PdfVersion);
+    str = ctrl->GetPropertyTemp(DocumentProperty::PdfVersion);
     layoutData->AddProperty(_TRA("PDF Version:"), str);
-    str::Free(str);
 
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TRA("PDF Optimizations:"), str);
@@ -570,10 +560,10 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            WCHAR* tmp = ToWStrTemp(strTemp);
-            tmp = str::Format(L"\u202A%s\u202C", tmp);
-            strTemp = ToUtf8Temp(tmp);
-            str::Free(tmp);
+            WCHAR* ws = ToWStrTemp(strTemp);
+            ws = str::Format(L"\u202A%s\u202C", ws);
+            strTemp = ToUtf8Temp(ws);
+            str::Free(ws);
         }
         layoutData->AddProperty(_TRA("Page Size:"), strTemp);
     }
@@ -583,13 +573,12 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
 
     if (extended) {
         // Note: FontList extraction can take a while
-        str = ctrl->GetProperty(DocumentProperty::FontList);
+        str = ctrl->GetPropertyTemp(DocumentProperty::FontList);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(" ", " ");
         }
         layoutData->AddProperty(_TRA("Fonts:"), str);
-        str::Free(str);
     }
 }
 

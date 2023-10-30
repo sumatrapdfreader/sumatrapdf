@@ -469,4 +469,5 @@ struct StrVec {
 
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
 char* Join(const StrVec& v, const char* joint = nullptr);
+TempStr JoinTemp(const StrVec& v, const char* joint);
 ByteSlice ToByteSlice(const char* s);

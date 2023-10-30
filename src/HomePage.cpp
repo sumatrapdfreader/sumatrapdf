@@ -634,7 +634,8 @@ void LaoutHomePage(HDC hdc, Rect r, const FileHistory& fileHistory, HomePageLayo
     // TODO: write me
 }
 
-void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
+void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLORREF textColor,
+                  COLORREF backgroundColor) {
     HWND hwnd = win->hwndFrame;
     auto color = gCurrentTheme->window.textColor;
     AutoDeletePen penBorder(CreatePen(PS_SOLID, kThumbsSeparatorDy, color));
@@ -673,11 +674,11 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
 
-    int dx = (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) /
-             (kThumbnailDx + kThumbsSpaceBetweenX);
+    int dx =
+        (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
     int thumbsCols = limitValue(dx, 1, kThumbsMaxCols);
-    int dy = (rc.dy - kThumbsMarginTop - kThumbsMarginBottom + kThumbsSpaceBetweenY) /
-             (kThumbnailDy + kThumbsSpaceBetweenY);
+    int dy =
+        (rc.dy - kThumbsMarginTop - kThumbsMarginBottom + kThumbsSpaceBetweenY) / (kThumbnailDy + kThumbsSpaceBetweenY);
     int thumbsRows = std::min(dy, kFileHistoryMaxFrequent / thumbsCols);
     int x = rc.x + kThumbsMarginLeft +
             (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
@@ -770,7 +771,8 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     }
 
     /* render bottom links */
-    rc.y += kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
+    rc.y +=
+        kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
     rc.dy = kThumbsBottomBoxDy;
 
     color = gCurrentTheme->window.linkColor;

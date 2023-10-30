@@ -129,7 +129,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
 HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     log("EpubFilter::GetNextChunkValue()\n");
 
-    char* str = nullptr;
+    TempStr str = nullptr;
     WCHAR* ws = nullptr;
 
     switch (m_state) {
@@ -140,25 +140,22 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case STATE_EPUB_AUTHOR:
             m_state = STATE_EPUB_TITLE;
-            str = m_epubDoc->GetProperty(DocumentProperty::Author);
+            str = m_epubDoc->GetPropertyTemp(DocumentProperty::Author);
             if (!str::IsEmpty(str)) {
                 ws = ToWStrTemp(str);
                 chunkValue.SetTextValue(PKEY_Author, ws);
-                str::Free(str);
                 return S_OK;
             }
             // fall through
 
         case STATE_EPUB_TITLE:
             m_state = STATE_EPUB_DATE;
-            str = m_epubDoc->GetProperty(DocumentProperty::Title);
+            str = m_epubDoc->GetPropertyTemp(DocumentProperty::Title);
             if (!str) {
-                str::Free(str);
-                str = m_epubDoc->GetProperty(DocumentProperty::Subject);
+                str = m_epubDoc->GetPropertyTemp(DocumentProperty::Subject);
             }
             if (!str::IsEmpty(str)) {
                 ws = ToWStrTemp(str);
-                str::Free(str);
                 chunkValue.SetTextValue(PKEY_Title, ws);
                 return S_OK;
             }
@@ -166,20 +163,18 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case STATE_EPUB_DATE:
             m_state = STATE_EPUB_CONTENT;
-            str = m_epubDoc->GetProperty(DocumentProperty::ModificationDate);
+            str = m_epubDoc->GetPropertyTemp(DocumentProperty::ModificationDate);
             if (!str) {
-                str = m_epubDoc->GetProperty(DocumentProperty::CreationDate);
+                str = m_epubDoc->GetPropertyTemp(DocumentProperty::CreationDate);
             }
             if (!str::IsEmpty(str)) {
                 SYSTEMTIME systime;
                 if (IsoDateParse(str, &systime)) {
-                    str::Free(str);
                     FILETIME filetime;
                     SystemTimeToFileTime(&systime, &filetime);
                     chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
                     return S_OK;
                 }
-                str::Free(str);
             }
             // fall through
 

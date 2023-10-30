@@ -311,10 +311,8 @@ WCHAR* TextSelection::ExtractText(const char* lineSep) {
         }
     }
 
-    char* res = Join(lines, lineSep);
-    WCHAR* ws = ToWstr(res);
-    str::Free(res);
-    return ws;
+    TempStr res = JoinTemp(lines, lineSep);
+    return ToWstr(res);
 }
 
 void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const {

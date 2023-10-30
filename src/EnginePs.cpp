@@ -306,14 +306,14 @@ class EnginePs : public EngineBase {
         return pdfEngine->HasClipOptimizations(pageNo);
     }
 
-    char* GetProperty(DocumentProperty prop) override {
+    TempStr GetPropertyTemp(DocumentProperty prop) override {
         // omit properties created by Ghostscript
         if (!pdfEngine || DocumentProperty::CreationDate == prop || DocumentProperty::ModificationDate == prop ||
             DocumentProperty::PdfVersion == prop || DocumentProperty::PdfProducer == prop ||
             DocumentProperty::PdfFileStructure == prop) {
             return nullptr;
         }
-        return pdfEngine->GetProperty(prop);
+        return pdfEngine->GetPropertyTemp(prop);
     }
 
     bool BenchLoadPage(int pageNo) override {

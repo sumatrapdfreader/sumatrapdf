@@ -96,49 +96,43 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Author:
             m_state = PdfFilterState::Title;
-            prop = m_pdfEngine->GetProperty(DocumentProperty::Author);
+            prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::Author);
             if (!str::IsEmpty(prop)) {
                 ws = ToWstr(prop);
                 chunkValue.SetTextValue(PKEY_Author, ws);
-                str::FreePtr(&prop);
                 return S_OK;
             }
-            str::FreePtr(&prop);
 
             [[fallthrough]];
 
         case PdfFilterState::Title:
             m_state = PdfFilterState::Date;
-            prop = m_pdfEngine->GetProperty(DocumentProperty::Title);
+            prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::Title);
             if (!prop) {
-                prop = m_pdfEngine->GetProperty(DocumentProperty::Subject);
+                prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::Subject);
             }
             if (!str::IsEmpty(prop)) {
                 ws = ToWstr(prop);
                 chunkValue.SetTextValue(PKEY_Title, ws);
-                str::FreePtr(&prop);
                 return S_OK;
             }
-            str::FreePtr(&prop);
 
             [[fallthrough]];
 
         case PdfFilterState::Date:
             m_state = PdfFilterState::Content;
-            prop = m_pdfEngine->GetProperty(DocumentProperty::ModificationDate);
+            prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::ModificationDate);
             if (!prop) {
-                prop = m_pdfEngine->GetProperty(DocumentProperty::CreationDate);
+                prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::CreationDate);
             }
             if (!str::IsEmpty(prop)) {
                 SYSTEMTIME systime;
                 FILETIME filetime;
                 if (PdfDateParse(prop, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
                     chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-                    str::FreePtr(&prop);
                     return S_OK;
                 }
             }
-            str::FreePtr(&prop);
 
             [[fallthrough]];
 

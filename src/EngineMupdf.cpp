@@ -2964,7 +2964,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     }
 }
 
-char* EngineMupdf::ExtractFontList() {
+TempStr EngineMupdf::ExtractFontListTemp() {
     Vec<pdf_obj*> fontList;
     Vec<pdf_obj*> resList;
 
@@ -3095,8 +3095,7 @@ char* EngineMupdf::ExtractFontList() {
     }
 
     fonts.SortNatural();
-    char* res = Join(fonts, "\n");
-    return res;
+    return JoinTemp(fonts, "\n");
 }
 
 static const char* DocumentPropertyToMupdfMetadataKey(DocumentProperty prop) {
@@ -3119,7 +3118,7 @@ static const char* DocumentPropertyToMupdfMetadataKey(DocumentProperty prop) {
     return nullptr;
 }
 
-char* EngineMupdf::GetProperty(DocumentProperty prop) {
+TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
     const char* key = DocumentPropertyToMupdfMetadataKey(prop);
     if (key) {
         char buf[1024]{};
@@ -3131,7 +3130,7 @@ char* EngineMupdf::GetProperty(DocumentProperty prop) {
                 n = bufSize - 1;
                 buf[bufSize - 1] = 0; // not sure if necessary
             }
-            char* s = str::Dup(buf, (size_t)n - 1);
+            char* s = str::DupTemp(buf, (size_t)n - 1);
             return s;
         }
     }
@@ -3144,13 +3143,13 @@ char* EngineMupdf::GetProperty(DocumentProperty prop) {
         pdf_crypt* crypt = pdfdoc->crypt;
         if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
             if (pdf_crypt_revision(ctx, crypt) == 5) {
-                return str::Format("%d.%d Adobe Extension Level %d", major, minor, 3);
+                return str::FormatTemp("%d.%d Adobe Extension Level %d", major, minor, 3);
             }
             if (pdf_crypt_revision(ctx, crypt) == 6) {
-                return str::Format("%d.%d Adobe Extension Level %d", major, minor, 8);
+                return str::FormatTemp("%d.%d Adobe Extension Level %d", major, minor, 8);
             }
         }
-        return str::Format("%d.%d", major, minor);
+        return str::FormatTemp("%d.%d", major, minor);
     }
 
     if (DocumentProperty::PdfFileStructure == prop) {
@@ -3173,18 +3172,18 @@ char* EngineMupdf::GetProperty(DocumentProperty prop) {
         if (fstruct.Size() == 0) {
             return nullptr;
         }
-        return Join(fstruct, ",");
+        return JoinTemp(fstruct, ",");
     }
 
     if (DocumentProperty::UnsupportedFeatures == prop) {
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Unsupported_XFA"))) {
-            return str::Dup("XFA");
+            return (TempStr) "XFA";
         }
         return nullptr;
     }
 
     if (DocumentProperty::FontList == prop) {
-        return ExtractFontList();
+        return ExtractFontListTemp();
     }
 
     static struct {
@@ -3208,10 +3207,10 @@ char* EngineMupdf::GetProperty(DocumentProperty prop) {
             if (!obj) {
                 return nullptr;
             }
-            WCHAR* s = PdfToWstr(ctx, obj);
-            PdfCleanStringInPlace(s);
-            char* res = ToUtf8(s);
-            str::Free(s);
+            WCHAR* ws = PdfToWstr(ctx, obj);
+            PdfCleanStringInPlace(ws);
+            TempStr res = ToUtf8Temp(ws);
+            str::Free(ws);
             return res;
         }
     }

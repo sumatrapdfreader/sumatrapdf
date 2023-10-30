@@ -132,47 +132,47 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     Out1("\t<Properties\n");
     TempStr str = EscapeTemp(engine->FilePath());
     Out("\t\tFilePath=\"%s\"\n", str);
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::Title));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::Title));
     if (str) {
         Out("\t\tTitle=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::Subject));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::Subject));
     if (str) {
         Out("\t\tSubject=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::Author));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::Author));
     if (str) {
         Out("\t\tAuthor=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::Copyright));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::Copyright));
     if (str) {
         Out("\t\tCopyright=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::CreationDate));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::CreationDate));
     if (str) {
         Out("\t\tCreationDate=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::ModificationDate));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::ModificationDate));
     if (str) {
         Out("\t\tModDate=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::CreatorApp));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::CreatorApp));
     if (str) {
         Out("\t\tCreator=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::PdfProducer));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::PdfProducer));
     if (str) {
         Out("\t\tPdfProducer=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::PdfVersion));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::PdfVersion));
     if (str) {
         Out("\t\tPdfVersion=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::PdfFileStructure));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::PdfFileStructure));
     if (str) {
         Out("\t\tPdfFileStructure=\"%s\"\n", str);
     }
-    str = EscapeTemp(engine->GetProperty(DocumentProperty::UnsupportedFeatures));
+    str = EscapeTemp(engine->GetPropertyTemp(DocumentProperty::UnsupportedFeatures));
     if (str) {
         Out("\t\tUnsupportedFeatures=\"%s\"\n", str);
     }
@@ -195,7 +195,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (!fullDump) {
         return;
     }
-    AutoFreeStr fontlist = engine->GetProperty(DocumentProperty::FontList);
+    TempStr fontlist = engine->GetPropertyTemp(DocumentProperty::FontList);
     if (fontlist) {
         StrVec fonts;
         Split(fonts, fontlist, "\n");

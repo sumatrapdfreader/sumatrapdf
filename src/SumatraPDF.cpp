@@ -971,7 +971,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
 
     TempStr docTitle = (TempStr) "";
     if (tab->ctrl) {
-        char* title = tab->ctrl->GetProperty(DocumentProperty::Title);
+        TempStr title = tab->ctrl->GetPropertyTemp(DocumentProperty::Title);
         if (title != nullptr) {
             str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
@@ -1227,7 +1227,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
 
-    char* unsupported = win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures);
+    TempStr unsupported = win->ctrl->GetPropertyTemp(DocumentProperty::UnsupportedFeatures);
     if (unsupported) {
         const char* s = _TRA("This document uses unsupported features (%s) and might not render properly");
         TempStr msg = str::FormatTemp(s, unsupported);
@@ -1238,7 +1238,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.groupId = kNotifGroupPersistentWarning;
         nargs.msg = msg;
         ShowNotification(nargs);
-        str::Free(unsupported);
     }
 
     // This should only happen after everything else is ready

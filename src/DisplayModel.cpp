@@ -96,8 +96,8 @@ int DisplayModel::PageCount() const {
     return engine->PageCount();
 }
 
-char* DisplayModel::GetProperty(DocumentProperty prop) {
-    return engine->GetProperty(prop);
+TempStr DisplayModel::GetPropertyTemp(DocumentProperty prop) {
+    return engine->GetPropertyTemp(prop);
 }
 
 void DisplayModel::GoToPage(int pageNo, bool addNavPoint) {

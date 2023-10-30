@@ -444,7 +444,7 @@ class EngineBase {
     bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual char* GetProperty(DocumentProperty prop) = 0;
+    virtual TempStr GetPropertyTemp(DocumentProperty prop) = 0;
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

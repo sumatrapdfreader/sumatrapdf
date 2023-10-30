@@ -387,7 +387,7 @@ static void StrVecTest2() {
         utassert(v2.Find("", 3) == 4);
         utassert(v2.Find("", 5) == -1);
         utassert(v2.Find("B") == -1 && v2.FindI("B") == 1);
-        AutoFreeStr joined = Join(v2, ";");
+        TempStr joined = JoinTemp(v2, ";");
         utassert(str::Eq(joined, "a;b;;c;"));
         CheckRemoveAt(v2);
     }
@@ -396,7 +396,7 @@ static void StrVecTest2() {
         StrVec v2;
         size_t count = Split(v2, "a,b,,c,", ",", true);
         utassert(count == 3 && v2.Find("c") == 2);
-        AutoFreeStr joined = Join(v2, ";");
+        TempStr joined = JoinTemp(v2, ";");
         utassert(str::Eq(joined, "a;b;c"));
         StrVecCheckIter(v2, nullptr);
 

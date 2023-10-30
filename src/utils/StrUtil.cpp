@@ -2801,8 +2801,19 @@ size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
     return (size_t)(v.Size() - startSize);
 }
 
-char* Join(const StrVec& v, const char* joint) {
-    str::Str tmp(256);
+static int CalcCapForJoin(const StrVec& v, const char* joint) {
+    // it's ok to over-estimate
+    int len = v.Size();
+    size_t jointLen = str::Len(joint);
+    int cap = len * jointLen;
+    for (int i = 0; i < len; i++) {
+        char* s = v.at(i);
+        cap += (int)str::Len(s);
+    }
+    return cap + 32; // arbitrary buffer
+}
+
+static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
     int len = v.Size();
     size_t jointLen = str::Len(joint);
     int firstForJoint = 0;
@@ -2813,11 +2824,23 @@ char* Join(const StrVec& v, const char* joint) {
             continue;
         }
         if (i > firstForJoint && jointLen > 0) {
-            tmp.Append(joint, jointLen);
+            res.Append(joint, jointLen);
         }
-        tmp.Append(s);
+        res.Append(s);
     }
-    return tmp.StealData();
+    return res.StealData();
+}
+
+char* Join(const StrVec& v, const char* joint) {
+    int capHint = CalcCapForJoin(v, joint);
+    str::Str tmp(capHint);
+    return JoinInner(v, joint, tmp);
+}
+
+TempStr JoinTemp(const StrVec& v, const char* joint) {
+    int capHint = CalcCapForJoin(v, joint);
+    str::Str tmp(capHint, GetTempAllocator());
+    return JoinInner(v, joint, tmp);
 }
 
 ByteSlice ToByteSlice(const char* s) {
