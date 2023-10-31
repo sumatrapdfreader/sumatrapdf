@@ -40,6 +40,12 @@ ifeq ($(tofu_cjk_lang),yes)
   XCFLAGS += -DTOFU_CJK_LANG
 endif
 
+ifeq ($(archive),yes)
+  build_suffix := $(build_suffix)-archive
+  XCFLAGS += -DHAVE_LIBARCHIVE
+  HAVE_LIBARCHIVE := yes
+endif
+
 # System specific features
 
 ifeq ($(findstring -fembed-bitcode,$(XCFLAGS)),)
@@ -159,6 +165,7 @@ SYS_OPENJPEG_LIBS := -lopenjp2
 SYS_ZLIB_LIBS := -lz
 SYS_TESSERACT_LIBS := -ltesseract
 SYS_LEPTONICA_LIBS := -llept
+SYS_LIBARCHIVE_LIBS := -larchive
 
 ifneq "$(CLUSTER)" ""
   CFLAGS += -DCLUSTER
@@ -242,6 +249,12 @@ else ifeq ($(LINUX_OR_OPENBSD),yes)
   ifeq ($(HAVE_SYS_TESSERACT),yes)
 	SYS_TESSERACT_CFLAGS := $(shell pkg-config --cflags tesseract)
 	SYS_TESSERACT_LIBS := $(shell pkg-config --libs tesseract)
+  endif
+
+  HAVE_SYS_LIBARCHIVE := $(shell pkg-config --exists 'libarchive' && echo yes)
+  ifeq ($(HAVE_SYS_LIBARCHIVE),yes)
+	SYS_LIBARCHIVE_CFLAGS := $(shell pkg-config --cflags libarchive)
+	SYS_LIBARCHIVE_LIBS := $(shell pkg-config --libs libarchive)
   endif
 
   HAVE_SYS_CURL := $(shell pkg-config --exists libcurl && echo yes)

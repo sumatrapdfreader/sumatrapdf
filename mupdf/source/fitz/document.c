@@ -113,17 +113,18 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 		{
 			int score = 0;
 
-			fz_seek(ctx, stream, 0, SEEK_SET);
-
 			if (dc->handler[i]->recognize_content)
+			{
+				fz_seek(ctx, stream, 0, SEEK_SET);
 				score = dc->handler[i]->recognize_content(ctx, stream);
-
+			}
 			if (best_score < score)
 			{
 				best_score = score;
 				best_i = i;
 			}
 		}
+		fz_seek(ctx, stream, 0, SEEK_SET);
 	}
 
 	if (best_score < 100)

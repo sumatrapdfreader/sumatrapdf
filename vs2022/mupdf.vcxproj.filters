@@ -536,6 +536,9 @@
     <ClCompile Include="..\mupdf\source\fitz\glyphbox.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\gz-doc.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\halftone.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
@@ -711,6 +714,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\unlibarchive.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\untar.c">

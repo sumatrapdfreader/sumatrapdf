@@ -1,32 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="DebugDLL|Win32">
-      <Configuration>DebugDLL</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugDLL|x64">
-      <Configuration>DebugDLL</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Disabled|Win32">
-      <Configuration>Disabled</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Disabled|x64">
-      <Configuration>Disabled</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="MementoDLL|Win32">
-      <Configuration>MementoDLL</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="MementoDLL|x64">
-      <Configuration>MementoDLL</Configuration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Memento|Win32">
@@ -37,21 +17,9 @@
       <Configuration>Memento</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDLL|Win32">
-      <Configuration>ReleaseDLL</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDLL|x64">
-      <Configuration>ReleaseDLL</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -277,634 +245,163 @@
     <ClInclude Include="..\..\thirdparty\tesseract\src\wordrec\wordrec.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\fitz\tessocr.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">
-      </ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\altorenderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\baseapi.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\capi.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\hocrrenderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\lstmboxrenderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\pdfrenderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\renderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\api\wordstrboxrenderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproduct.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproductavx.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproductfma.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproductsse.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrix.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrixavx2.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrixneon.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrixsse.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\simddetect.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\applybox.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\control.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\linerec.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\ltrresultiterator.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\mutableiterator.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\output.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pageiterator.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pagesegmain.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pagewalk.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\paragraphs.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\paramsd.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pgedit.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\reject.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\resultiterator.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\tessedit.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\tesseractclass.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\tessvars.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\thresholder.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\werdit.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blamer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blobbox.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blobs.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blread.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\boxread.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\boxword.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ccstruct.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\coutln.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\detlinefit.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\dppoint.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\imagedata.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\linlsq.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\matrix.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\mod128.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\normalis.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ocrblock.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ocrpara.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ocrrow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\otsuthr.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\pageres.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\pdblock.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\points.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\polyaprx.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\polyblk.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\quadlsq.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\quspline.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ratngs.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\rect.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\rejctmap.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\seam.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\split.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\statistc.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\stepblob.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\werd.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\ccutil.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\clst.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst2.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\errcode.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\mainblk.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\params.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\scanutils.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\serialis.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\strngs.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\tessdatamanager.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\tprintf.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unichar.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharcompress.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharmap.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharset.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\classify\classify.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\context.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\dawg.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\dawg_cache.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\dict.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\permdawg.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\stopper.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\trie.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\convolve.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\fullyconnected.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\functions.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\input.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\lstm.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\lstmrecognizer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\maxpool.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\network.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\networkio.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\parallel.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\plumbing.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\recodebeam.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\reconfig.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\reversed.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\series.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\stridemap.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\tfnetwork.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\weightmatrix.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\alignedblob.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\baselinedetect.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\bbgrid.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\blkocc.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\blobgrid.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\ccnontextdetect.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\cjkpitch.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colfind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colpartition.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colpartitiongrid.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colpartitionset.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\devanagari_processing.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\drawtord.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\edgblob.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\edgloop.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\fpchop.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\gap_map.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\imagefind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\linefind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\makerow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\oldbasel.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\pithsync.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\pitsync1.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\scanedg.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\sortflts.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\strokewidth.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tabfind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tablefind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tablerecog.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tabvector.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\textlineprojection.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\textord.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\topitch.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tordmain.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tospace.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tovars.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\underlin.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\wordseg.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\workingpartset.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\viewer\scrollview.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\viewer\svmnode.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\viewer\svutil.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\wordrec\tface.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\wordrec\wordrec.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\tessocr.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\altorenderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\baseapi.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\capi.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\hocrrenderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\lstmboxrenderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\pdfrenderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\renderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\wordstrboxrenderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproduct.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproductavx.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproductfma.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\dotproductsse.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrix.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrixavx2.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrixneon.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\intsimdmatrixsse.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\arch\simddetect.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\applybox.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\control.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\linerec.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\ltrresultiterator.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\mutableiterator.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\output.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pageiterator.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pagesegmain.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pagewalk.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\paragraphs.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\paramsd.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\pgedit.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\reject.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\resultiterator.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\tessedit.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\tesseractclass.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\tessvars.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\thresholder.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccmain\werdit.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blamer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blobbox.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blobs.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\blread.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\boxread.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\boxword.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ccstruct.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\coutln.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\detlinefit.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\dppoint.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\imagedata.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\linlsq.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\matrix.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\mod128.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\normalis.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ocrblock.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ocrpara.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ocrrow.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\otsuthr.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\pageres.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\pdblock.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\points.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\polyaprx.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\polyblk.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\quadlsq.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\quspline.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\ratngs.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\rect.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\rejctmap.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\seam.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\split.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\statistc.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\stepblob.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\werd.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\ccutil.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\clst.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst2.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\errcode.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\mainblk.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\params.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\scanutils.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\serialis.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\strngs.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\tessdatamanager.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\tprintf.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unichar.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharcompress.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharmap.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unicharset.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\classify\classify.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\context.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\dawg.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\dawg_cache.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\dict.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\permdawg.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\stopper.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\dict\trie.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\convolve.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\fullyconnected.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\functions.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\input.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\lstm.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\lstmrecognizer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\maxpool.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\network.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\networkio.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\parallel.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\plumbing.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\recodebeam.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\reconfig.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\reversed.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\series.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\stridemap.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\tfnetwork.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\weightmatrix.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\alignedblob.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\baselinedetect.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\bbgrid.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\blkocc.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\blobgrid.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\ccnontextdetect.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\cjkpitch.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colfind.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colpartition.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colpartitiongrid.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\colpartitionset.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\devanagari_processing.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\drawtord.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\edgblob.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\edgloop.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\fpchop.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\gap_map.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\imagefind.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\linefind.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\makerow.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\oldbasel.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\pithsync.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\pitsync1.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\scanedg.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\sortflts.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\strokewidth.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tabfind.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tablefind.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tablerecog.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tabvector.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\textlineprojection.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\textord.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\topitch.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tordmain.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tospace.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\tovars.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\underlin.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\wordseg.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\textord\workingpartset.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\viewer\scrollview.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\viewer\svmnode.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\viewer\svutil.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\wordrec\tface.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\wordrec\wordrec.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libleptonica.vcxproj">
@@ -926,19 +423,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -951,39 +436,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -996,65 +455,27 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -1062,15 +483,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -1078,19 +491,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -1098,53 +499,11 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level2</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;HAVE_TESSERACT;TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;WIN32;DEBUG;HAVE_AVX;HAVE_AVX2;HAVE_SSE4_1;HAVE_FMA;__AVX__;__AVX2__;__FMA__;__SSE4_1__</PreprocessorDefinitions>
-      <ConformanceMode>
-      </ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <BufferSecurityCheck />
-      <TreatWChar_tAsBuiltInType>
-      </TreatWChar_tAsBuiltInType>
-      <ForceConformanceInForLoopScope>
-      </ForceConformanceInForLoopScope>
-      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
     <ClCompile>
       <WarningLevel>Level2</WarningLevel>
       <SDLCheck>false</SDLCheck>
@@ -1167,7 +526,7 @@
       </ForceConformanceInForLoopScope>
       <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1187,29 +546,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;HAVE_TESSERACT;TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1230,55 +568,8 @@
       <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;HAVE_TESSERACT;TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1301,28 +592,9 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;HAVE_TESSERACT;TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;WIN32;HAVE_AVX;HAVE_AVX2;HAVE_SSE4_1;HAVE_FMA;__AVX__;__AVX2__;__FMA__;__SSE4_1__;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>
-      </ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BrowseInformation>true</BrowseInformation>
+      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1342,27 +614,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;HAVE_TESSERACT;TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;WIN32;HAVE_AVX;HAVE_AVX2;HAVE_SSE4_1;HAVE_FMA;__AVX__;__AVX2__;__FMA__;__SSE4_1__;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1384,53 +637,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;HAVE_TESSERACT;TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;WIN32;HAVE_AVX;HAVE_AVX2;HAVE_SSE4_1;HAVE_FMA;__AVX__;__AVX2__;__FMA__;__SSE4_1__;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>TESSERACT_IMAGEDATA_AS_PIX;TESSERACT_DISABLE_DEBUG_FONTS;GRAPHICS_DISABLED;DISABLED_LEGACY_ENGINE;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\thirdparty\tesseract\include;..\..\thirdparty\tesseract\src\api;..\..\thirdparty\tesseract\src\arch;..\..\thirdparty\tesseract\src\ccmain;..\..\thirdparty\tesseract\src\ccstruct;..\..\thirdparty\tesseract\src\ccutil;..\..\thirdparty\tesseract\src\classify;..\..\thirdparty\tesseract\src\dict;..\..\thirdparty\tesseract\src\lstm;..\..\thirdparty\tesseract\src\textord;..\..\thirdparty\tesseract\src\viewer;..\..\thirdparty\tesseract\src\wordrec;..\..\thirdparty\tesseract\src\cutil;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>

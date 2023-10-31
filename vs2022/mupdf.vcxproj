@@ -730,6 +730,7 @@
     <ClCompile Include="..\mupdf\source\fitz\getopt.c" />
     <ClCompile Include="..\mupdf\source\fitz\glyph.c" />
     <ClCompile Include="..\mupdf\source\fitz\glyphbox.c" />
+    <ClCompile Include="..\mupdf\source\fitz\gz-doc.c" />
     <ClCompile Include="..\mupdf\source\fitz\halftone.c" />
     <ClCompile Include="..\mupdf\source\fitz\harfbuzz.c" />
     <ClCompile Include="..\mupdf\source\fitz\hash.c" />
@@ -789,6 +790,7 @@
     <ClCompile Include="..\mupdf\source\fitz\transition.c" />
     <ClCompile Include="..\mupdf\source\fitz\tree.c" />
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
+    <ClCompile Include="..\mupdf\source\fitz\unlibarchive.c" />
     <ClCompile Include="..\mupdf\source\fitz\untar.c" />
     <ClCompile Include="..\mupdf\source\fitz\unzip.c" />
     <ClCompile Include="..\mupdf\source\fitz\util.c" />

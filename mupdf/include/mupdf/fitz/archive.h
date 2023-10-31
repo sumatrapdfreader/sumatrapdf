@@ -194,16 +194,23 @@ fz_buffer *fz_try_read_archive_entry(fz_context *ctx, fz_archive *arch, const ch
 */
 
 /**
-	Detect if stream object is a tar achieve.
+	Detect if stream object is a tar archive.
 
 	Assumes that the stream object is seekable.
 */
 int fz_is_tar_archive(fz_context *ctx, fz_stream *file);
 
 /**
+	Detect if stream object is an archive supported by libarchive.
+
+	Assumes that the stream object is seekable.
+*/
+int fz_is_libarchive_archive(fz_context *ctx, fz_stream *file);
+
+/**
 	Open a tar archive file.
 
-	An exception is throw if the file is not a tar archive as
+	An exception is thrown if the file is not a tar archive as
 	indicated by the presence of a tar signature.
 
 	filename: a path to a tar archive file as it would be given to
@@ -217,11 +224,31 @@ fz_archive *fz_open_tar_archive(fz_context *ctx, const char *filename);
 	Open an archive using a seekable stream object rather than
 	opening a file or directory on disk.
 
-	An exception is throw if the stream is not a tar archive as
+	An exception is thrown if the stream is not a tar archive as
 	indicated by the presence of a tar signature.
 
 */
 fz_archive *fz_open_tar_archive_with_stream(fz_context *ctx, fz_stream *file);
+
+/**
+	Open an archive using libarchive.
+
+	An exception is thrown if the file is not supported by libarchive.
+
+	filename: a path to an archive file as it would be given to
+	open(2).
+*/
+fz_archive *fz_open_libarchive_archive(fz_context *ctx, const char *filename);
+
+/**
+	Open an archive using libarchive.
+
+	Open an archive using a seekable stream object rather than
+	opening a file or directory on disk.
+
+	An exception is thrown if the stream is not supported by libarchive.
+*/
+fz_archive *fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file);
 
 /**
 	fz_archive: zip implementation
@@ -237,7 +264,7 @@ int fz_is_zip_archive(fz_context *ctx, fz_stream *file);
 /**
 	Open a zip archive file.
 
-	An exception is throw if the file is not a zip archive as
+	An exception is thrown if the file is not a zip archive as
 	indicated by the presence of a zip signature.
 
 	filename: a path to a zip archive file as it would be given to
@@ -251,7 +278,7 @@ fz_archive *fz_open_zip_archive(fz_context *ctx, const char *path);
 	Open an archive using a seekable stream object rather than
 	opening a file or directory on disk.
 
-	An exception is throw if the stream is not a zip archive as
+	An exception is thrown if the stream is not a zip archive as
 	indicated by the presence of a zip signature.
 
 */

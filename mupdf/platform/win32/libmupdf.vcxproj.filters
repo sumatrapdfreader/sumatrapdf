@@ -642,6 +642,12 @@
     <ClCompile Include="..\..\source\fitz\encode-jpx.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\gz-doc.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\unlibarchive.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">

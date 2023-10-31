@@ -1,32 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="DebugDLL|Win32">
-      <Configuration>DebugDLL</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugDLL|x64">
-      <Configuration>DebugDLL</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Disabled|Win32">
-      <Configuration>Disabled</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Disabled|x64">
-      <Configuration>Disabled</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="MementoDLL|Win32">
-      <Configuration>MementoDLL</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="MementoDLL|x64">
-      <Configuration>MementoDLL</Configuration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Memento|Win32">
@@ -37,21 +17,9 @@
       <Configuration>Memento</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDLL|Win32">
-      <Configuration>ReleaseDLL</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDLL|x64">
-      <Configuration>ReleaseDLL</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -94,611 +62,158 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\fitz\leptonica-wrap.c" />
-    <ClCompile Include="..\..\thirdparty\leptonica\src\adaptmap.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\affine.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\affinecompose.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\arrayaccess.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\baseline.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bbuffer.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bilateral.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bilinear.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\binexpand.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\binreduce.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\blend.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bmf.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bmpio.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bmpiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen3.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen4.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\boxbasic.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc3.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc4.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc5.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\bytearray.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\ccbord.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\classapp.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colorcontent.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\coloring.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colormap.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colormorph.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colorquant1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colorquant2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colorseg.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\colorspace.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\compare.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\conncomp.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\convertfiles.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\convolve.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\correlscore.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp3.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp4.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dnabasic.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dnafunc1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dnahash.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dwacomb.2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\dwacomblow.2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\edge.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\encoding.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\enhance.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\fhmtauto.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\fhmtgenlow.1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphauto.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\leptonica\src\adaptmap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\affine.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\affinecompose.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\arrayaccess.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\baseline.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bbuffer.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bilateral.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bilinear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binexpand.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binreduce.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\blend.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bmf.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bmpio.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bmpiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxbasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc5.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bytearray.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ccbord.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\classapp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorcontent.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\coloring.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colormap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colormorph.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorquant1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorquant2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorseg.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorspace.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\compare.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\conncomp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\convertfiles.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\convolve.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\correlscore.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dnabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dnafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dnahash.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dwacomb.2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dwacomblow.2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\edge.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\encoding.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\enhance.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fhmtauto.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fhmtgenlow.1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphauto.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphgen.1.c" />
-    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphgenlow.1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\fpix1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\fpix2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\gifiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\gplot.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\graphics.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\graymorph.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\grayquant.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\heap.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\jbclass.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheader.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheaderstub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\jpegiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\kernel.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\libversions.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\list.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\map.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\morph.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\morphapp.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\morphdwa.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\morphseq.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\numabasic.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\numafunc1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\numafunc2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pageseg.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\paintcmap.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\partify.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\partition.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio1stub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio2stub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pix1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pix2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pix3.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pix4.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pix5.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixabasic.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixacc.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixafunc1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixafunc2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixalloc.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixarith.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixcomp.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixconv.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixlabel.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pixtiling.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pngiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pnmio.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\pnmiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\projective.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\psio1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\psio1stub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\psio2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\psio2stub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\ptabasic.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\ptafunc1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\ptafunc2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\ptra.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\quadtree.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\queue.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rank.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rbtree.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\readfile.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\regutils.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rop.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\roplow.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rotate.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateam.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateorth.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateshear.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\runlength.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\sarray1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\sarray2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\scale1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\scale2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\seedfill.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\sel1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\sel2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\selgen.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\shear.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\skew.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\spixio.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\stack.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\stringcode.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\strokes.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\textops.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\tiffiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\utils1.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\utils2.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\warper.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\webpiostub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\writefile.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\zlibmem.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\leptonica\src\zlibmemstub.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphgenlow.1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fpix1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fpix2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\gifiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\gplot.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\graphics.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\graymorph.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\grayquant.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\heap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jbclass.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheader.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheaderstub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jpegiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\kernel.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\libversions.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\list.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\map.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morph.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morphapp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morphdwa.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morphseq.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\numabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\numafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\numafunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pageseg.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\paintcmap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\partify.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\partition.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio1stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio2stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix5.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixacc.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixafunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixalloc.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixarith.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixcomp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixconv.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixlabel.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixtiling.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pngiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pnmio.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pnmiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\projective.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio1stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio2stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptafunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptra.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\quadtree.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\queue.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rank.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rbtree.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\readfile.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\regutils.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rop.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\roplow.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotate.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateam.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateorth.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateshear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\runlength.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sarray1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sarray2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\scale1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\scale2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\seedfill.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sel1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sel2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\selgen.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\shear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\skew.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\spixio.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\stack.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\stringcode.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\strokes.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\textops.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\tiffiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\utils1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\utils2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\warper.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\webpiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\writefile.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\zlibmem.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\zlibmemstub.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -714,19 +229,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -739,39 +242,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -784,65 +261,27 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -850,15 +289,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -866,19 +297,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -886,19 +305,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -914,29 +321,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -956,29 +342,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -999,56 +364,8 @@
       <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1069,26 +386,9 @@
       <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BrowseInformation>true</BrowseInformation>
+      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1107,26 +407,8 @@
       <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MementoDLL|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>
-      </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -1146,51 +428,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>

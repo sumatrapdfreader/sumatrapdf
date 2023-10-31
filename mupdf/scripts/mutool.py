@@ -70,13 +70,10 @@ def clean(argv):
     outfile = 'out.pdf'
     password = ''
     opts = mupdf.PdfCleanOptions()
-    print( 'opts.do_garbage=%s' % opts.write.do_garbage)
     opts.write.do_garbage += 1
-    print( 'opts.do_garbage=%s' % opts.write.do_garbage)
     errors = 0
     items, argv = getopt.getopt( argv, 'adfgilp:sczDAE:O:U:P:')
     for option, value in items:
-         print( f'option={option} value={value}')
          if 0:   pass   # lgtm [py/unreachable-statement]
          elif option == '-p': password = value
          elif option == '-d': opts.write.do_decompress += 1
@@ -117,7 +114,6 @@ def clean(argv):
             # Enable for debugging.
             import traceback
             traceback.print_exc()
-    print( f'errors={errors}')
     return errors != 0;
 
 

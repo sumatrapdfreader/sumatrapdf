@@ -148,6 +148,7 @@ python scripts\mupdfwrap.py --venv -b 0</Command>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <UseFullPaths>false</UseFullPaths>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)64.dll</OutputFile>

@@ -17,6 +17,11 @@ ifeq ($(USE_SYSTEM_LIBS),yes)
   USE_SYSTEM_TESSERACT := yes
 endif
 
+# Unlike the other libraries, we default to using system
+# libarchive if it is requested - because we offer no
+# packaged version.
+USE_SYSTEM_LIBARCHIVE ?= yes
+
 ifeq ($(OS),MACOS)
   USE_SYSTEM_GLUT := yes
 endif
@@ -278,3 +283,18 @@ thirdparty/extract/src/odt_template.c: thirdparty/extract/src/template.odt third
 	@touch $@
 
 generate: thirdparty/extract/src/docx_template.c
+
+# --- LIBARCHIVE ---
+
+ifeq ($(HAVE_LIBARCHIVE),yes)
+  THIRD_CFLAGS += -DHAVE_LIBARCHIVE
+ifeq ($(USE_SYSTEM_LIBARCHIVE),yes)
+  THIRD_CFLAGS += $(SYS_LIBARCHIVE_CFLAGS)
+  THIRD_LIBS += $(SYS_LIBARCHIVE_LIBS) -lstdc++
+else
+  THIRD_CFLAGS += $(LIBARCHIVE_CFLAGS)
+  THIRD_LIBS += $(LIBARCHIVE_LIBS)
+  THIRD_SRC += $(LIBARCHIVE_SRC)
+  THIRD_SRC += $(LIBARCHIVE_SRC)
+endif
+endif

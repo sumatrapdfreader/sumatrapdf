@@ -223,27 +223,31 @@ mobi_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *
 static fz_document *
 htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *zip, fz_buffer *buf, int format)
 {
-	html_document *doc = fz_new_derived_document(ctx, html_document);
-	doc->super.drop_document = htdoc_drop_document;
-	doc->super.layout = htdoc_layout;
-	doc->super.load_outline = htdoc_load_outline;
-	doc->super.resolve_link_dest = htdoc_resolve_link;
-	doc->super.make_bookmark = htdoc_make_bookmark;
-	doc->super.lookup_bookmark = htdoc_lookup_bookmark;
-	doc->super.count_pages = htdoc_count_pages;
-	doc->super.load_page = htdoc_load_page;
-	switch (format)
-	{
-	case FORMAT_FB2: doc->super.lookup_metadata = fb2doc_lookup_metadata; break;
-	case FORMAT_HTML5: doc->super.lookup_metadata = htdoc_lookup_metadata; break;
-	case FORMAT_XHTML: doc->super.lookup_metadata = xhtdoc_lookup_metadata; break;
-	case FORMAT_MOBI: doc->super.lookup_metadata = mobi_lookup_metadata; break;
-	case FORMAT_OFFICE: doc->super.lookup_metadata = NULL; break;
-	}
-	doc->super.is_reflowable = 1;
+	html_document *doc = NULL;
+
+	fz_var(doc);
 
 	fz_try(ctx)
 	{
+		doc = fz_new_derived_document(ctx, html_document);
+		doc->super.drop_document = htdoc_drop_document;
+		doc->super.layout = htdoc_layout;
+		doc->super.load_outline = htdoc_load_outline;
+		doc->super.resolve_link_dest = htdoc_resolve_link;
+		doc->super.make_bookmark = htdoc_make_bookmark;
+		doc->super.lookup_bookmark = htdoc_lookup_bookmark;
+		doc->super.count_pages = htdoc_count_pages;
+		doc->super.load_page = htdoc_load_page;
+		switch (format)
+		{
+		case FORMAT_FB2: doc->super.lookup_metadata = fb2doc_lookup_metadata; break;
+		case FORMAT_HTML5: doc->super.lookup_metadata = htdoc_lookup_metadata; break;
+		case FORMAT_XHTML: doc->super.lookup_metadata = xhtdoc_lookup_metadata; break;
+		case FORMAT_MOBI: doc->super.lookup_metadata = mobi_lookup_metadata; break;
+		case FORMAT_OFFICE: doc->super.lookup_metadata = NULL; break;
+		}
+		doc->super.is_reflowable = 1;
+
 		doc->zip = zip;
 		doc->set = fz_new_html_font_set(ctx);
 		switch (format)

@@ -169,6 +169,8 @@ do_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 		arch = fz_open_zip_archive_with_stream(ctx, file);
 	else if (fz_is_tar_archive(ctx, file))
 		arch = fz_open_tar_archive_with_stream(ctx, file);
+	else if (fz_is_libarchive_archive(ctx, file))
+		arch = fz_open_libarchive_archive_with_stream(ctx, file);
 
 	return arch;
 }
