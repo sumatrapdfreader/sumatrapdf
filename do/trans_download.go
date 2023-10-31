@@ -27,9 +27,11 @@ func getTransSecret() string {
 // sometimes people press enter at the end of the translation
 // we should fix it in apptranslator.org but for now fix it here
 func fixTranslation(s string) string {
+	s = strings.TrimSpace(s)
 	s = strings.TrimSuffix(s, `\n`)
 	s = strings.TrimSuffix(s, `\r`)
 	s = strings.TrimSuffix(s, `\n`)
+	s = strings.TrimSpace(s)
 	return s
 }
 
