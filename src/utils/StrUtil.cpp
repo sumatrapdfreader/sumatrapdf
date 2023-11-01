@@ -2805,7 +2805,7 @@ static int CalcCapForJoin(const StrVec& v, const char* joint) {
     // it's ok to over-estimate
     int len = v.Size();
     size_t jointLen = str::Len(joint);
-    int cap = len * jointLen;
+    int cap = len * (int)jointLen;
     for (int i = 0; i < len; i++) {
         char* s = v.at(i);
         cap += (int)str::Len(s);
