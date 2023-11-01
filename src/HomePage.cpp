@@ -143,7 +143,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
         pt.x += txtSize.dx;
     }
 
-    SetTextColor(hdc, gCurrentTheme->window.textColor);
+    SetTextColor(hdc, ThemeWindowTextColor());
     int x = mainRect.x + mainRect.dx + DpiScale(hdc, kInnerPadding);
     int y = mainRect.y;
 
@@ -163,7 +163,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     w.withUnderline = true;
     Size txtSize = w.Measure(true);
 
-    auto col = gCurrentTheme->window.linkColor;
+    auto col = ThemeWindowLinkColor();
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, col), true);
 
     SetTextColor(hdc, col);
@@ -212,10 +212,10 @@ static TempStr TrimGitTemp(char* s) {
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& staticLinks) {
-    auto col = gCurrentTheme->window.textColor;
+    auto col = ThemeWindowTextColor();
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
-    col = gCurrentTheme->window.linkColor;
+    col = ThemeWindowLinkColor();
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
     HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
@@ -248,7 +248,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     DrawSumatraVersion(hdc, titleRect);
 
     /* render attribution box */
-    col = gCurrentTheme->window.textColor;
+    col = ThemeWindowTextColor();
     SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
 
@@ -271,9 +271,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm::DiskAccess) && el->url;
         if (hasUrl) {
-            col = gCurrentTheme->window.linkColor;
+            col = ThemeWindowLinkColor();
         } else {
-            col = gCurrentTheme->window.textColor;
+            col = ThemeWindowTextColor();
         }
         SetTextColor(hdc, col);
         char* s = (char*)el->rightTxt;
@@ -642,7 +642,7 @@ void DrawHomePage(HDC hdc, const HomePageLayout& l) {
     const Rect& r = l.bAppWithVer;
     DrawSumatraVersion(hdc, r);
 
-    auto color = gCurrentTheme->window.textColor;
+    auto color = ThemeWindowTextColor();
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
     DrawLine(hdc, l.bLine);
 }
@@ -658,10 +658,10 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     LayoutHomePage(hdc, rc, layout);
 
     HWND hwnd = win->hwndFrame;
-    auto color = gCurrentTheme->window.textColor;
+    auto color = ThemeWindowTextColor();
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
-    color = gCurrentTheme->window.linkColor;
+    color = ThemeWindowLinkColor();
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
 
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
@@ -678,7 +678,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
-    color = gCurrentTheme->window.textColor;
+    color = ThemeWindowTextColor();
     SetTextColor(hdc, color);
 
     Rect& titleBox = layout.bAppWithVer;
@@ -785,7 +785,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
     rc.dy = kThumbsBottomBoxDy;
 
-    color = gCurrentTheme->window.linkColor;
+    color = ThemeWindowLinkColor();
     SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 

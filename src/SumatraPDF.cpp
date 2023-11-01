@@ -5497,14 +5497,14 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return FrameOnCommand(win, hwnd, msg, wp, lp);
 
         case WM_MEASUREITEM:
-            if (gCurrentTheme->colorizeControls) {
+            if (ThemeColorizeControls()) {
                 MenuCustomDrawMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;
 
         case WM_DRAWITEM:
-            if (gCurrentTheme->colorizeControls) {
+            if (ThemeColorizeControls()) {
                 MenuCustomDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
                 return TRUE;
             }

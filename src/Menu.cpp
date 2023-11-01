@@ -1918,7 +1918,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     };
 }
 void MarkMenuOwnerDraw(HMENU hmenu) {
-    if (!gCurrentTheme->colorizeControls) {
+    if (!ThemeColorizeControls()) {
         return;
     }
     WCHAR buf[1024];
@@ -2052,7 +2052,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     ScopedSelectFont restoreFont(hdc, font);
 
     COLORREF bgCol = GetMainWindowBackgroundColor();
-    COLORREF txtCol = gCurrentTheme->window.textColor;
+    COLORREF txtCol = ThemeWindowTextColor();
     // TODO: if isDisabled, pick a color that represents disabled
     // either add it to theme definition or auto-generate
     // (lighter if dark color, darker if light color)

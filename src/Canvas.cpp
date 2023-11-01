@@ -981,7 +981,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (renderDelay != 0) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            auto col = gCurrentTheme->window.textColor;
+            auto col = ThemeWindowTextColor();
             SetTextColor(hdc, col);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {

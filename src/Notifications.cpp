@@ -326,13 +326,13 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 
     ScopedSelectObject fontPrev(hdc, font);
 
-    COLORREF colBg = gCurrentTheme->notifications.backgroundColor;
+    COLORREF colBg = ThemeNotificationsBackgroundColor();
     COLORREF colBorder = MkGray(0xdd);
-    COLORREF colTxt = gCurrentTheme->notifications.textColor;
+    COLORREF colTxt = ThemeNotificationsTextColor();
     if (highlight) {
-        colBg = gCurrentTheme->notifications.highlightColor;
+        colBg = ThemeNotificationsHighlightColor();
         colBorder = colBg;
-        colTxt = gCurrentTheme->notifications.highlightTextColor;
+        colTxt = ThemeNotificationsHighlightTextColor();
     }
     // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
     // COLORREF colBg = MkGray(0xff);
@@ -374,7 +374,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         rc = rProgress;
         int progressWidth = rc.dx;
 
-        COLORREF col = gCurrentTheme->notifications.progressColor;
+        COLORREF col = ThemeNotificationsProgressColor();
         Pen pen(GdiRgbFromCOLORREF(col));
         grc = {rc.x, rc.y, rc.dx, rc.dy};
         graphics.DrawRectangle(&pen, grc);

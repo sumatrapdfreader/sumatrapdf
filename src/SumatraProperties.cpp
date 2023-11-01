@@ -615,7 +615,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     auto col = GetMainWindowBackgroundColor();
     FillRect(hdc, rcClient, col);
 
-    col = gCurrentTheme->window.textColor;
+    col = ThemeWindowTextColor();
     SetTextColor(hdc, col);
 
     /* render text on the left*/
