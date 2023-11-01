@@ -45,6 +45,10 @@ Gdiplus::Color Unblend(COLORREF c, u8 alpha);
 Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
 
+constexpr COLORREF RgbToCOLORREF(COLORREF rgb) {
+    return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
+}
+
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
