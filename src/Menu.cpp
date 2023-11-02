@@ -64,7 +64,7 @@ BuildMenuCtx::~BuildMenuCtx() {
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
-    const WCHAR* text = nullptr;
+    const char* text = nullptr;
     // copy of MENUITEMINFO fields
     uint fType = 0;
     uint fState = 0;
@@ -1867,33 +1867,21 @@ void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
     free(modi);
 }
 
-struct MenuText {
-    WCHAR* menuText;
-    int menuTextLen;
-    WCHAR* shortcutText;
-    int shortcutTextLen;
-};
-
 // menu text consists of potentially 2 parts:
 // - text of the menu item
 // - text for the keyboard shortcut
 // They are separated with \t
-static void ParseMenuText(WCHAR* s, MenuText& mt) {
-    mt.shortcutText = nullptr;
-    mt.menuText = s;
-    while (*s && *s != L'\t') {
-        s++;
+static char* ParseMenuTextTemp(const char* sIn, char** shortcutOut) {
+    *shortcutOut = nullptr;
+    auto tabPos = str::FindChar(sIn, '\t');
+    if (!tabPos) {
+        return (char*)sIn;
     }
-    mt.menuTextLen = (int)(s - mt.menuText);
-    if (*s != L'\t') {
-        return;
-    }
-    s++;
-    mt.shortcutText = s;
-    while (*s) {
-        s++;
-    }
-    mt.shortcutTextLen = (int)(s - mt.shortcutText);
+    int n = tabPos - sIn;
+    char* s = str::DupTemp(sIn);
+    s[n] = 0;
+    *shortcutOut = s + n + 1;
+    return s;
 }
 
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
@@ -1950,7 +1938,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         modi->hbmpChecked = mii.hbmpChecked;
         modi->hbmpUnchecked = mii.hbmpUnchecked;
         if (str::Len(buf) > 0) {
-            modi->text = str::Dup(buf);
+            modi->text = ToUtf8(buf);
         }
         mii.dwItemData = (ULONG_PTR)modi;
         SetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
@@ -1977,19 +1965,19 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
         return;
     }
 
-    auto text = modi && modi->text ? modi->text : L"Dummy";
+    auto text = modi && modi->text ? modi->text : "Dummy";
     HFONT font = GetMenuFont();
-    MenuText mt;
-    ParseMenuText((WCHAR*)text, mt);
+    char* shortcutText = nullptr;
+    char* menuText = ParseMenuTextTemp(text, &shortcutText);
 
-    auto size = TextSizeInHwnd(hwnd, mt.menuText, font);
+    auto size = HwndMeasureText(hwnd, menuText, font);
     mis->itemHeight = size.dy;
     int dx = size.dx;
-    if (mt.shortcutText != nullptr) {
+    if (shortcutText != nullptr) {
         // add space betweeen menu text and shortcut
-        size = TextSizeInHwnd(hwnd, "    ", font);
+        size = HwndMeasureText(hwnd, "    ", font);
         dx += size.dx;
-        size = TextSizeInHwnd(hwnd, mt.shortcutText, font);
+        size = HwndMeasureText(hwnd, shortcutText, font);
         dx += size.dx;
     }
     auto padX = DpiScale(hwnd, kMenuPaddingX);
@@ -2105,18 +2093,20 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         return;
     }
 
-    MenuText mt;
-    ParseMenuText((WCHAR*)modi->text, mt);
+    char* shortcutText = nullptr;
+    char* menuText = ParseMenuTextTemp(modi->text, &shortcutText);
 
     // DrawTextEx handles & => underscore drawing
     rc.top += padY;
     rc.left += dxCheckMark;
-    DrawTextExW(hdc, mt.menuText, mt.menuTextLen, &rc, DT_LEFT, nullptr);
-    if (mt.shortcutText != nullptr) {
+    WCHAR* ws = ToWStrTemp(menuText);
+    DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
+    if (shortcutText != nullptr) {
+        ws = ToWStrTemp(shortcutText);
         rc = dis->rcItem;
         rc.top += padY;
         rc.right -= (padX + dxCheckMark / 2);
-        DrawTextExW(hdc, mt.shortcutText, mt.shortcutTextLen, &rc, DT_RIGHT, nullptr);
+        DrawTextExW(hdc, ws, -1, &rc, DT_RIGHT, nullptr);
     }
 
     constexpr int kRadioCircleDx = 6;

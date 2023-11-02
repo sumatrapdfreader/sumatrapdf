@@ -166,6 +166,7 @@ char* Utf8ToAnsi(const char* s) {
 
 } // namespace strconv
 
+// short names because frequently used
 char* ToUtf8(const WCHAR* s, size_t cch) {
     return strconv::WstrToUtf8(s, cch);
 }
