@@ -24,6 +24,18 @@
 
 #include <string.h>
 
+enum
+{
+	FZ_ARCHIVE_HANDLER_MAX = 32
+};
+
+struct fz_archive_handler_context
+{
+	int refs;
+	int count;
+	const fz_archive_handler *handler[FZ_ARCHIVE_HANDLER_MAX];
+};
+
 fz_stream *
 fz_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 {
@@ -164,15 +176,20 @@ static fz_archive *
 do_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
 	fz_archive *arch = NULL;
+	int i;
 
-	if (fz_is_zip_archive(ctx, file))
-		arch = fz_open_zip_archive_with_stream(ctx, file);
-	else if (fz_is_tar_archive(ctx, file))
-		arch = fz_open_tar_archive_with_stream(ctx, file);
-	else if (fz_is_libarchive_archive(ctx, file))
-		arch = fz_open_libarchive_archive_with_stream(ctx, file);
+	for (i = 0; i < ctx->archive->count; i++)
+	{
+		fz_seek(ctx, file, 0, SEEK_SET);
+		if (ctx->archive->handler[i]->recognize(ctx, file))
+		{
+			arch = ctx->archive->handler[i]->open(ctx, file);
+			if (arch)
+				return arch;
+		}
+	}
 
-	return arch;
+	return NULL;
 }
 
 fz_archive *
@@ -502,4 +519,75 @@ fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub, cons
 	arch->sub[arch->len].arch = fz_keep_archive(ctx, sub);
 	arch->sub[arch->len].dir = clean_path;
 	arch->len++;
+}
+
+static const fz_archive_handler fz_zip_archive_handler =
+{
+	fz_is_zip_archive,
+	fz_open_zip_archive_with_stream
+};
+
+static const fz_archive_handler fz_tar_archive_handler =
+{
+	fz_is_tar_archive,
+	fz_open_tar_archive_with_stream
+};
+
+const fz_archive_handler fz_libarchive_archive_handler =
+{
+	fz_is_libarchive_archive,
+	fz_open_libarchive_archive_with_stream
+};
+
+void fz_new_archive_handler_context(fz_context *ctx)
+{
+	ctx->archive = fz_malloc_struct(ctx, fz_archive_handler_context);
+	ctx->archive->refs = 1;
+
+	fz_register_archive_handler(ctx, &fz_zip_archive_handler);
+	fz_register_archive_handler(ctx, &fz_tar_archive_handler);
+#ifdef HAVE_LIBARCHIVE
+	fz_register_archive_handler(ctx, &fz_libarchive_archive_handler);
+#endif
+}
+
+fz_archive_handler_context *fz_keep_archive_handler_context(fz_context *ctx)
+{
+	if (!ctx || !ctx->archive)
+		return NULL;
+	return fz_keep_imp(ctx, ctx->archive, &ctx->archive->refs);
+}
+
+void fz_drop_archive_handler_context(fz_context *ctx)
+{
+	if (!ctx)
+		return;
+
+	if (fz_drop_imp(ctx, ctx->archive, &ctx->archive->refs))
+	{
+		fz_free(ctx, ctx->archive);
+		ctx->archive = NULL;
+	}
+}
+
+void fz_register_archive_handler(fz_context *ctx, const fz_archive_handler *handler)
+{
+	fz_archive_handler_context *ac;
+	int i;
+
+	if (!handler)
+		return;
+
+	ac = ctx->archive;
+	if (ac == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "archive handler list not found");
+
+	for (i = 0; i < ac->count; i++)
+		if (ac->handler[i] == handler)
+			return;
+
+	if (ac->count >= FZ_ARCHIVE_HANDLER_MAX)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Too many archive handlers");
+
+	ac->handler[ac->count++] = handler;
 }

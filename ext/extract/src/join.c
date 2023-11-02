@@ -193,7 +193,8 @@ On exit:
 static int
 make_lines(
 	extract_alloc_t *alloc,
-	content_root_t  *lines)
+	content_root_t  *lines,
+	double           master_space_guess)
 {
 	int                    ret = -1;
 	int                    a;
@@ -253,7 +254,7 @@ make_lines(
 				double perp     = (diff.x * tdir.y - diff.y * tdir.x) / last_a->adv / scale_squared;
 				/* colinear and perp are now both pre-transform space distances, to match adv etc. */
 				double score;
-				double space_guess = (last_a->adv + first_b->adv)/4;
+				double space_guess = (last_a->adv + first_b->adv)/2 * master_space_guess;
 
 				/* Heuristic: perpendicular distance larger than half of adv rules it out as a match. */
 				/* Ideally we should be using font bbox here, but we don't have that, currently. */
@@ -583,6 +584,13 @@ make_paragraphs(
 					{
 						/* The span is now empty, unlink and free it. */
 						extract_span_free(alloc, &a_span);
+
+						/* If this leaves the line empty, remove the line. */
+						if (line_a->content.base.next == &line_a->content.base)
+						{
+							extract_line_free(alloc, &line_a);
+							a--; /* Keep the index correct. */
+						}
 					}
 				}
 				else if (extract_span_char_last(a_span)->ucs == ' ')
@@ -990,9 +998,10 @@ spans_within_rect(
 static int
 join_content(
 	extract_alloc_t *alloc,
-	content_root_t  *lines)
+	content_root_t  *lines,
+	double master_space_guess)
 {
-	if (make_lines(alloc, lines))
+	if (make_lines(alloc, lines, master_space_guess))
 		return -1;
 	if (make_paragraphs(alloc, lines))
 		return -1;
@@ -1192,7 +1201,8 @@ table_find_cells_text(
 		subpage_t        *subpage,
 		cell_t          **cells,
 		int               cells_num_x,
-		int               cells_num_y)
+		int               cells_num_y,
+		double            master_space_guess)
 {
 	/* Find text within each cell. We don't attempt to handle images within
 	cells. */
@@ -1208,7 +1218,7 @@ table_find_cells_text(
 
 		if (spans_within_rect(alloc, &subpage->content, &cell->rect, &cell->content))
 			return -1;
-		if (join_content(alloc, &cell->content))
+		if (join_content(alloc, &cell->content, master_space_guess))
 			return -1;
 	}
 
@@ -1255,7 +1265,7 @@ end:
 /* Finds single table made from lines whose y coordinates are in the range
 y_min..y_max. */
 static int
-table_find(extract_alloc_t *alloc, subpage_t *subpage, double y_min, double y_max)
+table_find(extract_alloc_t *alloc, subpage_t *subpage, double y_min, double y_max, double master_space_guess)
 {
 	tablelines_t *all_h = &subpage->tablelines_horizontal;
 	tablelines_t *all_v = &subpage->tablelines_vertical;
@@ -1437,7 +1447,7 @@ table_find(extract_alloc_t *alloc, subpage_t *subpage, double y_min, double y_ma
 
 	if (table_find_extend(cells, cells_num_x, cells_num_y)) goto end;
 
-	if (table_find_cells_text(alloc, subpage, cells, cells_num_x, cells_num_y)) goto end;
+	if (table_find_cells_text(alloc, subpage, cells, cells_num_x, cells_num_y, master_space_guess)) goto end;
 
 	e = 0;
 end:
@@ -1464,7 +1474,8 @@ Any text found inside tables is removed from page->spans[].
 */
 static int extract_subpage_tables_find_lines(
 		extract_alloc_t *alloc,
-		subpage_t       *subpage)
+		subpage_t       *subpage,
+		double           master_space_guess)
 {
 	double miny;
 	double maxy;
@@ -1552,7 +1563,7 @@ static int extract_subpage_tables_find_lines(
 			{
 				outf("New table. maxy=%f miny=%f", maxy, miny);
 				/* Find table. */
-				table_find(alloc, subpage, miny - margin, maxy + margin);
+				table_find(alloc, subpage, miny - margin, maxy + margin, master_space_guess);
 			}
 			miny = tl->rect.min.y;
 		}
@@ -1560,7 +1571,7 @@ static int extract_subpage_tables_find_lines(
 	}
 
 	/* Find last table. */
-	table_find(alloc, subpage, miny - margin, maxy + margin);
+	table_find(alloc, subpage, miny - margin, maxy + margin, master_space_guess);
 
 	return 0;
 }
@@ -1599,9 +1610,10 @@ text. */
 static int
 extract_subpage_tables_find(
 		extract_alloc_t *alloc,
-		subpage_t       *subpage)
+		subpage_t       *subpage,
+		double           master_space_guess)
 {
-	if (extract_subpage_tables_find_lines(alloc, subpage)) return -1;
+	if (extract_subpage_tables_find_lines(alloc, subpage, master_space_guess)) return -1;
 
 	if (0)
 	{
@@ -1616,15 +1628,16 @@ extract_subpage_tables_find(
 static int
 extract_join_subpage(
 		extract_alloc_t *alloc,
-		subpage_t       *subpage)
+		subpage_t       *subpage,
+		double           master_space_guess)
 {
 	/* Find tables on this page first. This will remove text that is within
 	tables from page->spans, so that text doesn't appear more than once in
 	the final output. */
-	if (extract_subpage_tables_find(alloc, subpage)) return -1;
+	if (extract_subpage_tables_find(alloc, subpage, master_space_guess)) return -1;
 
 	/* Now join remaining spans into lines and paragraphs. */
-	if (join_content(alloc, &subpage->content))
+	if (join_content(alloc, &subpage->content, master_space_guess))
 		return -1;
 
 	return 0;
@@ -1637,7 +1650,7 @@ A line is a list of spans that are at the same angle and on the same
 line. A paragraph is a list of lines that are at the same angle and close
 together.
 */
-int extract_document_join(extract_alloc_t *alloc, document_t *document, int layout_analysis)
+int extract_document_join(extract_alloc_t *alloc, document_t *document, int layout_analysis, double master_space_guess)
 {
 	int p;
 
@@ -1653,7 +1666,7 @@ int extract_document_join(extract_alloc_t *alloc, document_t *document, int layo
 			subpage_t* subpage = page->subpages[c];
 
 			outf("processing page %i, subpage %i: num_spans=%i", p, c, content_count_spans(&subpage->content));
-			if (extract_join_subpage(alloc, subpage)) return -1;
+			if (extract_join_subpage(alloc, subpage, master_space_guess)) return -1;
 		}
 	}
 

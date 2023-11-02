@@ -677,7 +677,7 @@ struct extract_t
 {
 	extract_alloc_t         *alloc;
 	int                      layout_analysis;
-
+	double                   master_space_guess;
 	document_t               document;
 
 	/* Number of extra spans from subpage_span_end_clean(). */
@@ -764,6 +764,7 @@ int extract_begin(extract_alloc_t  *alloc,
 
 	extract_bzero(extract, sizeof(*extract));
 	extract->alloc = alloc;
+	extract->master_space_guess = 0.5;
 	document_init(&extract->document);
 
 	/* FIXME: Start at 10 because template document might use some low-numbered IDs.
@@ -779,6 +780,11 @@ int extract_begin(extract_alloc_t  *alloc,
 	*pextract = extract;
 
 	return 0;
+}
+
+void extract_set_space_guess(extract_t *extract, double space_guess)
+{
+    extract->master_space_guess = space_guess;
 }
 
 int extract_set_layout_analysis(extract_t *extract, int enable)
@@ -1255,7 +1261,7 @@ int extract_add_char(
 		/* We don't currently have access to the size of the advance for a space.
 		 * Typically it's around 1 to 1/2 that of a real char. So guess at that
 		 * using the 2 advances we have available to us. */
-		double space_guess = (adv0 + adv)/4;
+		double space_guess = (adv0 + adv)/2 * extract->master_space_guess;
 
 		/* Use dot product to calculate the distance that we have moved along the direction vector. */
 		dist = (x - predicted_end_of_char0.x) * dir.x + (y - predicted_end_of_char0.y) * dir.y;
@@ -2239,7 +2245,7 @@ int extract_process(
 	extract_astring_init(&extract->contentss[extract->contentss_num]);
 	extract->contentss_num += 1;
 
-	if (extract_document_join(extract->alloc, &extract->document, extract->layout_analysis)) goto end;
+	if (extract_document_join(extract->alloc, &extract->document, extract->layout_analysis, extract->master_space_guess)) goto end;
 
 	switch (extract->format)
 	{

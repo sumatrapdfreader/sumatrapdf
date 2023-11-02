@@ -659,7 +659,7 @@ typedef struct
 
 
 /* This does all the work of finding paragraphs and tables. */
-int extract_document_join(extract_alloc_t *alloc, document_t *document, int layout_analysis);
+int extract_document_join(extract_alloc_t *alloc, document_t *document, int layout_analysis, double master_space_guess);
 
 double extract_font_size(matrix4_t *ctm);
 

@@ -57,6 +57,13 @@ typedef enum
 */
 int extract_begin(extract_alloc_t *alloc, extract_format_t format, extract_t **pextract);
 
+/*
+	Set expected size of spaces between words as a fraction of character
+	size; default is 0.5.
+
+	Lower values split text into more words.
+*/
+void extract_set_space_guess(extract_t *extract, double space_guess);
 
 /* Must be called before extract_span_begin(). */
 int extract_page_begin(extract_t *extract, double minx, double miny, double maxx, double maxy);

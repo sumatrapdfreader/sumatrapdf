@@ -736,6 +736,18 @@ static int get_bool_option(fz_context *ctx, const char *options, const char *nam
 		return default_;
 }
 
+static double get_double_option(fz_context *ctx, const char *options, const char *name, double default_)
+{
+	const char *value;
+	if (fz_has_option(ctx, options, name, &value))
+	{
+		double ret = atof(value);
+		return ret;
+	}
+	else
+		return default_;
+}
+
 static void *s_realloc_fn(void *state, void *prev, size_t size)
 {
 	fz_docx_writer *writer = state;
@@ -754,6 +766,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 
 	fz_try(ctx)
 	{
+		double space_guess = get_double_option(ctx, options, "space-guess", 0);
 		writer = fz_new_derived_document_writer(
 				ctx,
 				fz_docx_writer,
@@ -771,6 +784,8 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
 		if (extract_begin(writer->alloc, format, &writer->extract))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract instance");
+		if (space_guess)
+			extract_set_space_guess(writer->extract, space_guess);
 		writer->spacing = get_bool_option(ctx, options, "spacing", 0);
 		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
 		writer->images = get_bool_option(ctx, options, "images", 1);

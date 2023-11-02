@@ -371,6 +371,20 @@ fz_archive *fz_new_multi_archive(fz_context *ctx);
 */
 void fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub, const char *path);
 
+typedef int (fz_recognize_archive_fn)(fz_context *, fz_stream *);
+typedef fz_archive *(fz_open_archive_fn)(fz_context *, fz_stream *);
+
+typedef struct
+{
+	fz_recognize_archive_fn *recognize;
+	fz_open_archive_fn *open;
+}
+fz_archive_handler;
+
+extern const fz_archive_handler fz_libarchive_archive_handler;
+
+void fz_register_archive_handler(fz_context *ctx, const fz_archive_handler *handler);
+
 /**
 	Implementation details: Subject to change.
 */
@@ -378,8 +392,8 @@ void fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub,
 struct fz_archive
 {
 	int refs;
-
 	fz_stream *file;
+
 	const char *format;
 
 	void (*drop_archive)(fz_context *ctx, fz_archive *arch);

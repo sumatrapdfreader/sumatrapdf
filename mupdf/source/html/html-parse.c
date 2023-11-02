@@ -1496,14 +1496,7 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 		*rtitle = NULL;
 
 	root = fz_xml_root(g.xml);
-
-	fz_try(ctx)
-		g.css = fz_new_css(ctx);
-	fz_catch(ctx)
-	{
-		fz_drop_xml(ctx, g.xml);
-		fz_rethrow(ctx);
-	}
+	g.css = fz_new_css(ctx);
 
 #ifndef NDEBUG
 	if (fz_atoi(getenv("FZ_DEBUG_XML")))
@@ -2280,11 +2273,11 @@ convert_to_boxes(fz_context *ctx, fz_story *story)
 	{
 		redirect_warnings_to_buffer(ctx, story->warnings, &saved);
 		xml_to_boxes(ctx, story->font_set, story->zip, ".", story->user_css, story->dom, &story->tree, NULL, 0, 0);
-		fz_drop_xml(ctx, story->dom);
-		story->dom = NULL;
 	}
 	fz_always(ctx)
 	{
+		fz_drop_xml(ctx, story->dom);
+		story->dom = NULL;
 		restore_warnings(ctx, &saved);
 	}
 	fz_catch(ctx)

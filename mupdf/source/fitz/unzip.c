@@ -546,15 +546,15 @@ static fz_buffer *read_zip_entry(fz_context *ctx, fz_archive *arch, const char *
 		{
 			cbuf = fz_malloc(ctx, ent->csize);
 
-			fz_read(ctx, file, cbuf, ent->csize);
-
 			z.zalloc = fz_zlib_alloc;
 			z.zfree = fz_zlib_free;
 			z.opaque = ctx;
-			z.next_in = cbuf;
-			z.avail_in = ent->csize;
 			z.next_out = ubuf->data;
 			z.avail_out = ent->usize;
+			z.next_in = cbuf;
+			z.avail_in = fz_read(ctx, file, cbuf, ent->csize);
+			if (z.avail_in < ent->csize)
+				fz_warn(ctx, "premature end of compressed data for compressed archive entry");
 
 			code = inflateInit2(&z, -15);
 			if (code != Z_OK)

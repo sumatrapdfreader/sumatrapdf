@@ -1602,10 +1602,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                     #
                     win32_infix = _windows_vs_upgrade( vs_upgrade, build_dirs, devenv)
                     jlib.log(f'Building mupdfcpp.dll by running devenv ...')
-                    build = f'{windows_build_type}Python'
-                    if 'tesseract' in dir_so_flags:
-                        build += 'Tesseract'
-                    build += f'|{build_dirs.cpu.windows_config}'
+                    build = f'{windows_build_type}|{build_dirs.cpu.windows_config}'
                     command = (
                             f'cd {build_dirs.dir_mupdf}&&'
                             f'"{devenv}"'
