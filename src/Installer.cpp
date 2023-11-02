@@ -656,7 +656,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     gButtonDy = btnSize.dy;
     gBottomPartDy = gButtonDy + (margin * 2);
 
-    Size size = TextSizeInHwnd(hwnd, "Foo");
+    Size size = HwndMeasureText(hwnd, "Foo");
     int staticDy = size.dy + DpiScale(hwnd, 6);
 
     y = r.dy - gBottomPartDy;
@@ -710,7 +710,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     y -= (DpiScale(hwnd, 4) + margin);
 
     const char* s = "&...";
-    Size btnSize2 = TextSizeInHwnd(hwnd, s);
+    Size btnSize2 = HwndMeasureText(hwnd, s);
     btnSize2.dx += DpiScale(hwnd, 4);
     wnd->btnBrowseDir = CreateDefaultButton(hwnd, s);
     wnd->btnBrowseDir->onClicked = OnButtonBrowse;

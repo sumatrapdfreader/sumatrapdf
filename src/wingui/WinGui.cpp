@@ -2144,13 +2144,12 @@ void DropDown::SetItemsSeqStrings(const char* items) {
 
 Size DropDown::GetIdealSize() {
     HFONT hfont = GetWindowFont(hwnd);
-    Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
+    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
 
     int n = items.Size();
     for (int i = 0; i < n; i++) {
         char* s = items[i];
-        WCHAR* ws = ToWStrTemp(s);
-        Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
+        Size s2 = HwndMeasureText(hwnd, s, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);
     }

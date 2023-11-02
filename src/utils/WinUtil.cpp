@@ -2846,34 +2846,6 @@ void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
     DrawCenteredText(hdc, rc, txt, isRTL);
 }
 
-// Return size of a text <txt> in a given <hwnd>, taking into account its font
-Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
-    if (!txt || !*txt) {
-        return Size{};
-    }
-    size_t txtLen = str::Len(txt);
-    AutoReleaseDC dc(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-    SIZE sz{};
-    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    return Size(sz.cx, sz.cy);
-}
-
-// Return size of a text <txt> in a given <hwnd>, taking into account its font
-Size TextSizeInHwnd(HWND hwnd, const char* txt, HFONT font) {
-    if (!txt || !*txt) {
-        return Size{};
-    }
-    TempWStr ws = ToWStrTemp(txt);
-    return TextSizeInHwnd(hwnd, ws, font);
-}
-
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     if (!txt || !*txt) {
