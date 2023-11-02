@@ -249,36 +249,42 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
     COLORREF text = kColBlack;
     bg = kColWhite;
 
-    if (currentThemeIndex == 0) {
-        // for backwards compat light theme respects the old customization colors
-        ParsedColor* parsedCol;
-        if (gGlobalPrefs->fixedPageUI.invertColors) {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-        } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-        }
+    ParsedColor* parsedCol;
+    parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+    if (parsedCol->parsedOk) {
+        text = parsedCol->col;
+    }
+
+    parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+    if (parsedCol->parsedOk) {
         bg = parsedCol->col;
-        if (gGlobalPrefs->fixedPageUI.invertColors) {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
-        } else {
-            parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
-        }
-        return parsedCol->col;
     }
 
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
-        // if we're inverting in non-default themes, the colors
-        // should match the colors of the window
-        // TODO: this probably only makes sense for dark themes
-        text = ThemeWindowTextColor();
-        bg = gCurrentTheme->window.backgroundColor;
-        if (IsLightColor(bg)) {
-            bg = AdjustLightness2(bg, -8);
-        } else {
-            bg = AdjustLightness2(bg, 8);
-        }
+    if (!gGlobalPrefs->fixedPageUI.invertColors) {
+        return text;
     }
 
+    // if uesr did change those colors in advanced settings, respect them
+    bool userDidChange = text != kColBlack || bg != kColWhite;
+    if (userDidChange) {
+        std::swap(text, bg);
+        return text;
+    }
+
+    // default colors
+    if (gCurrentTheme == &gThemeLight) {
+        return text;
+    }
+
+    // if we're inverting in non-default themes, the colors
+    // should match the colors of the window
+    text = ThemeWindowTextColor();
+    bg = gCurrentTheme->window.backgroundColor;
+    if (IsLightColor(bg)) {
+        bg = AdjustLightness2(bg, -8);
+    } else {
+        bg = AdjustLightness2(bg, 8);
+    }
     return text;
 }
 
