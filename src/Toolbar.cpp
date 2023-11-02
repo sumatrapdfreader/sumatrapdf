@@ -226,6 +226,26 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     }
 }
 
+static void SetToolbarInfoText(MainWindow* win, const char* s) {
+    HWND hwnd = win->hwndTbInfoText;
+    HwndSetText(hwnd, s);
+    Size size = HwndMeasureText(hwnd, s);
+
+    bool hide = size.dx == 0;
+    SendMessageW(hwnd, TB_HIDEBUTTON, CmdInfoText, hide);
+    if (hide) {
+        MoveWindow(hwnd, 0, 0, 0, 0, TRUE);
+        return;
+    }
+
+    TbSetButtonDx(win->hwndToolbar, CmdInfoText, size.dx);
+    RECT r{};
+    TbGetRect(win->hwndToolbar, CmdFindMatch, &r);
+    int x = r.right + DpiScale(win->hwndToolbar, 10);
+    int y = (r.bottom - size.dy) / 2;
+    MoveWindow(hwnd, x, y, size.dx, size.dy, TRUE);
+}
+
 constexpr LPARAM kStateEnabled = (LPARAM)MAKELONG(1, 0);
 constexpr LPARAM kStateDisabled = (LPARAM)MAKELONG(0, 0);
 
@@ -250,10 +270,10 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     if (setButtonsVisibility && NeedsFindUI(win)) {
         UpdateToolbarFindText(win);
     }
-    const WCHAR* msg = L"";
+    const char* msg = "";
     DisplayModel* dm = win->AsFixed();
     if (dm && EngineHasUnsavedAnnotations(dm->GetEngine())) {
-        msg = _TR("You have unsaved annotations");
+        msg = _TRA("You have unsaved annotations");
     }
     SetToolbarInfoText(win, msg);
 }
@@ -436,7 +456,7 @@ void UpdateToolbarFindText(MainWindow* win) {
         return;
     }
 
-    const WCHAR* text = _TR("Find:");
+    const char* text = _TRA("Find:");
     HwndSetText(win->hwndFindLabel, text);
 
     Rect findWndRect = WindowRect(win->hwndFindBg);
@@ -446,7 +466,7 @@ void UpdateToolbarFindText(MainWindow* win) {
     int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
-    Size size = TextSizeInHwnd(win->hwndFindLabel, text);
+    Size size = HwndMeasureText(win->hwndFindLabel, text);
     size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
@@ -464,26 +484,6 @@ void UpdateToolbarFindText(MainWindow* win) {
 
     dx = size.dx + findWndRect.dx + 12;
     TbSetButtonDx(win->hwndToolbar, CmdFindFirst, dx);
-}
-
-void SetToolbarInfoText(MainWindow* win, const WCHAR* s) {
-    HWND hwnd = win->hwndTbInfoText;
-    HwndSetText(hwnd, s);
-    Size size = TextSizeInHwnd(hwnd, s);
-
-    bool hide = size.dx == 0;
-    SendMessageW(hwnd, TB_HIDEBUTTON, CmdInfoText, hide);
-    if (hide) {
-        MoveWindow(hwnd, 0, 0, 0, 0, TRUE);
-        return;
-    }
-
-    TbSetButtonDx(win->hwndToolbar, CmdInfoText, size.dx);
-    RECT r{};
-    TbGetRect(win->hwndToolbar, CmdFindMatch, &r);
-    int x = r.right + DpiScale(win->hwndToolbar, 10);
-    int y = (r.bottom - size.dy) / 2;
-    MoveWindow(hwnd, x, y, size.dx, size.dy, TRUE);
 }
 
 void UpdateToolbarState(MainWindow* win) {
@@ -563,7 +563,7 @@ static void CreateInfoText(MainWindow* win, HFONT font) {
     SetWindowFont(labelInfo, font, FALSE);
 
     win->hwndTbInfoText = labelInfo;
-    SetToolbarInfoText(win, L"");
+    SetToolbarInfoText(win, "");
 }
 
 static WNDPROC DefWndProcPageBox = nullptr;
@@ -612,11 +612,11 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 }
 
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
-    const WCHAR* text = _TR("Page:");
+    const char* text = _TRA("Page:");
     if (!updateOnly) {
         HwndSetText(win->hwndPageLabel, text);
     }
-    Size size = TextSizeInHwnd(win->hwndPageLabel, text);
+    Size size = HwndMeasureText(win->hwndPageLabel, text);
     size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
@@ -642,12 +642,12 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     } else {
         txt = str::FormatTemp(" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
         TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
-        size2 = TextSizeInHwnd(win->hwndPageTotal, txt2);
+        size2 = HwndMeasureText(win->hwndPageTotal, txt2);
     }
 
     HwndSetText(win->hwndPageTotal, txt);
     if (0 == size2.dx) {
-        size2 = TextSizeInHwnd(win->hwndPageTotal, txt);
+        size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
     size2.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
     size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
