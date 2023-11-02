@@ -1267,8 +1267,14 @@ ContinueOpenWindow:
     // and also to keep TabState forever for lazy loading of tabs
     sessionData = gGlobalPrefs->sessionData;
     gGlobalPrefs->sessionData = new Vec<SessionData*>();
+    // do not restore a session if there's 
     if (sessionData->size() > 0 && !gPluginURL) {
-        restoreSession = gGlobalPrefs->restoreSession;
+        bool noRestore = !gGlobalPrefs->useTabs && (FindPrevInstWindow(&hMutex) != nullptr);
+        if (!noRestore) {
+            restoreSession = gGlobalPrefs->restoreSession;
+        } else {
+            logf("not restoring a session because the same exe is already running and tabas are disabled\n");
+        }
     }
 
     showStartPage = !restoreSession && flags.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles &&
