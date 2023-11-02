@@ -2039,7 +2039,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     HFONT font = GetMenuFont();
     ScopedSelectFont restoreFont(hdc, font);
 
-    COLORREF bgCol = GetMainWindowBackgroundColor();
+    COLORREF bgCol = ThemeMainWindowBackgroundColor();
     COLORREF txtCol = ThemeWindowTextColor();
     // TODO: if isDisabled, pick a color that represents disabled
     // either add it to theme definition or auto-generate

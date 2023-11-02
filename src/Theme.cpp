@@ -245,8 +245,8 @@ void SetCurrentThemeFromSettings() {
     }
 }
 
-void GetDocumentColors(COLORREF& text, COLORREF& bg) {
-    text = kColBlack;
+COLORREF ThemeDocumentColors(COLORREF& bg) {
+    COLORREF text = kColBlack;
     bg = kColWhite;
 
     if (currentThemeIndex == 0) {
@@ -263,8 +263,7 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
         } else {
             parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
         }
-        text = parsedCol->col;
-        return;
+        return parsedCol->col;
     }
 
     if (gGlobalPrefs->fixedPageUI.invertColors) {
@@ -279,15 +278,17 @@ void GetDocumentColors(COLORREF& text, COLORREF& bg) {
             bg = AdjustLightness2(bg, 8);
         }
     }
+
+    return text;
 }
 
-COLORREF GetControlBackgroundColor() {
+COLORREF ThemeControlBackgroundColor() {
     // note: we can change it in ThemeUpdateAfterLoadSettings()
     return gCurrentTheme->window.controlBackgroundColor;
 }
 
 // TODO: migrate from prefs to theme.
-COLORREF GetMainWindowBackgroundColor() {
+COLORREF ThemeMainWindowBackgroundColor() {
     COLORREF bgColor = gCurrentTheme->window.backgroundColor;
     if (currentThemeIndex == 0) {
         // Special behavior for light theme.

@@ -224,7 +224,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     Rect rc = ClientRect(hwnd);
-    col = GetMainWindowBackgroundColor();
+    col = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
     FillRect(hdc, rc, brushAboutBg);
 
@@ -666,7 +666,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
 
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
-    color = GetMainWindowBackgroundColor();
+    color = ThemeMainWindowBackgroundColor();
     FillRect(hdc, rc, color);
 
     bool isRtl = IsUIRightToLeft();

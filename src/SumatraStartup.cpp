@@ -1170,7 +1170,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     gCrashOnOpen = flags.crashOnOpen;
 
-    GetDocumentColors(gRenderCache.textColor, gRenderCache.backgroundColor);
+    gRenderCache.textColor = ThemeDocumentColors(gRenderCache.backgroundColor);
     // logfa("retrieved doc colors in WinMain: 0x%x 0x%x\n", gRenderCache.textColor, gRenderCache.backgroundColor);
 
     gIsStartup = true;

@@ -773,7 +773,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
 #else
 static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
-    auto col = GetMainWindowBackgroundColor();
+    auto col = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush brush(CreateSolidBrush(col));
     ScopedSelectPen restorePen(hdc, pen);
     ScopedSelectObject restoreBrush(hdc, brush);
@@ -892,7 +892,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         AutoDeleteBrush brush = CreateSolidBrush(WIN_COL_BLACK);
         FillRect(hdc, rcArea, brush);
     } else if (0 == nGCols) {
-        auto col = GetMainWindowBackgroundColor();
+        auto col = ThemeMainWindowBackgroundColor();
         AutoDeleteBrush brush = CreateSolidBrush(col);
         FillRect(hdc, rcArea, brush);
     } else {
@@ -1568,7 +1568,7 @@ static void OnPaintError(MainWindow* win) {
 
     HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-    auto bgCol = GetMainWindowBackgroundColor();
+    auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
     FillRect(hdc, &ps.rcPaint, bgBrush);
     // TODO: should this be "Error opening %s"?

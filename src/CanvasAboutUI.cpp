@@ -32,7 +32,7 @@ static void OnPaintAbout(MainWindow* win) {
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
     auto txtCol = ThemeWindowTextColor();
-    auto bgCol = GetMainWindowBackgroundColor();
+    auto bgCol = ThemeMainWindowBackgroundColor();
     if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
         gGlobalPrefs->showStartPage) {
         DrawHomePage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);

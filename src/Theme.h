@@ -10,13 +10,9 @@ void SetCurrentThemeFromSettings();
 
 int GetCurrentThemeIndex();
 
-// These functions take into account both gPrefs and the theme.
-// Access to these colors must go through them until everything is
-// configured through themes.
-void GetDocumentColors(COLORREF& text, COLORREF& bg);
-COLORREF GetMainWindowBackgroundColor();
-COLORREF GetControlBackgroundColor();
-
+COLORREF ThemeDocumentColors(COLORREF&);
+COLORREF ThemeMainWindowBackgroundColor();
+COLORREF ThemeControlBackgroundColor();
 COLORREF ThemeWindowBackgroundColor();
 COLORREF ThemeWindowTextColor();
 COLORREF ThemeWindowControlBackgroundColor();

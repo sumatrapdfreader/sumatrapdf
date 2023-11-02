@@ -1447,7 +1447,7 @@ static MainWindow* CreateMainWindow() {
     if (!win->isMenuHidden) {
         SetMenu(win->hwndFrame, win->menu);
     }
-    win->brControlBgColor = CreateSolidBrush(GetControlBackgroundColor());
+    win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -1536,7 +1536,7 @@ void DeleteMainWindow(MainWindow* win) {
 
 static void UpdateThemeForWindow(MainWindow* win) {
     DeleteObject(win->brControlBgColor);
-    win->brControlBgColor = CreateSolidBrush(GetControlBackgroundColor());
+    win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
 
     UpdateControlsColors(win);
     RebuildMenuBarForWindow(win);
@@ -2124,8 +2124,8 @@ static void RerenderFixedPage() {
 }
 
 void UpdateDocumentColors() {
-    COLORREF text, bg;
-    GetDocumentColors(text, bg);
+    COLORREF bg;
+    COLORREF text = ThemeDocumentColors(bg);
     // logfa("retrieved doc colors in UpdateDocumentColors: 0x%x 0x%x\n", text, bg);
 
     if ((text == gRenderCache.textColor) && (bg == gRenderCache.backgroundColor)) {

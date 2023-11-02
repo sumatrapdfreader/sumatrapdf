@@ -612,7 +612,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
 
     Rect rcClient = ClientRect(hwnd);
-    auto col = GetMainWindowBackgroundColor();
+    auto col = ThemeMainWindowBackgroundColor();
     FillRect(hdc, rcClient, col);
 
     col = ThemeWindowTextColor();
