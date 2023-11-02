@@ -1,7 +1,8 @@
 AppTranslator: SumatraPDF
-0e27d310a45eb63ee0e9ff112cf902f7b119a20e
+9e791edfaa17067759855d51efcea0cae8a542f1
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
+ar:ملاحظة %s. اضغط Ctrl للتحرير.
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 br:Anotação %s. Ctrl+clique pra editar.
 ca:Anotació %s. Ctrl+clic per editar.
@@ -97,6 +98,7 @@ vn:Giới thiệu
 :&Actual Size
 af:&Werklike Grootte
 am:&Իրական չափը
+ar:&الحجم الأصلي
 az:&Faktiki ölçü
 bg:&Реална големина
 br:&Tamanho Real
@@ -280,6 +282,7 @@ uz:&Hamma tanlangan betlar
 vn:Tất cả các trang được chọn
 :&Back
 am:&Վերադառնալ
+ar:&عودة
 az:&Geri
 bg:&Назад
 br:&Voltar
@@ -328,6 +331,7 @@ uk:Назад
 vn:Quay Lại
 :&Book View
 am:&Գրքի տեսքով
+ar:&عرض الكتاب
 az:&Kitab görüntüsü
 bg:&Като Книга
 br:&Visualizar como Livro
@@ -375,6 +379,7 @@ uk:Подання книги
 vn:Đọc Sách
 :&Cancel
 am:Չեղարկել
+ar:&إلغاء
 az:&İmtina
 bg:&Отказ
 br:&Cancelar
@@ -428,6 +433,7 @@ uk:&Скасувати
 vn:&Hủy
 :&Caret
 am:&Ստեղն
+ar:&إقحام
 az:&Karet
 bg:&коректорски знак
 bn:&Caret
@@ -1476,6 +1482,7 @@ cn:快捷键(&A)
 cz:&Klávesové zkratky
 de:Tasten&kombinationen
 el:Συντομεύσεις πληκτρολογίου
+es:Atajos de teclado
 fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
 it:&Tasti rapidi
@@ -4865,6 +4872,7 @@ uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Background Color:
 am:Խորքի գույնը.
+ar:لون الخلفية:
 az:Fon rəngi
 bg:Цвят на фона
 bn:পটভূমির রং:
@@ -5191,6 +5199,7 @@ uz:Xatcho'plar
 vn:Chỉ dấu sách
 :Border: %d
 am:Եզրագիծ. %d
+ar:الحد: %d
 az:Kənar: %d
 bg:Окантовка: %d
 bn:সীমানা: %d
@@ -5790,6 +5799,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Checking for update...
 am:Արդիացումների ստուգում...
+ar:جاري البحث عن التحديث...
 az:Yeniləmə yoxlanılır...
 bg:Проверявам за обновления
 br:Procurando atualização...
@@ -5900,6 +5910,7 @@ uk:Коло
 vn:Vòng tròn
 :Cleared history of %d files, deleted thumbnails.
 am:%d ֆայլերի մաքրված պատմություն, ջնջված մանրապատկերներ:
+ar:تم مسح سجل %d من الملفات والصور المصغرة المحذوفة.
 az:%d faylın tarixçəsi və eskizi silindi.
 br:Limpou o histórico de %d arquivos, miniaturas apagadas.
 ca:S'ha esborrat l'historial de %d fitxers, i s'han suprimit les miniatures.
@@ -5928,6 +5939,7 @@ tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
 am:Պատմության մաքրում...
+ar:مسح التاريخ...
 az:Tarixçə silinir...
 br:Limpando o histórico...
 by:Ачыстка гісторыі…
