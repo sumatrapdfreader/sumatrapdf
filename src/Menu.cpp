@@ -1905,10 +1905,35 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         }
     };
 }
+
 void MarkMenuOwnerDraw(HMENU hmenu) {
     if (!ThemeColorizeControls()) {
         return;
     }
+
+    // https://stackoverflow.com/questions/30353644/cmenu-border-color-on-mfc
+    static HBRUSH hbrBrush = nullptr;
+    static COLORREF bgCol = (COLORREF)-1;
+    COLORREF col = ThemeMainWindowBackgroundColor();
+    if (!hbrBrush) {
+        bgCol = col;
+        hbrBrush = ::CreateSolidBrush(col);
+    } else {
+        if (col != bgCol) {
+            // in case theme changed
+            DeleteBrush(hbrBrush);
+            bgCol = col;
+            hbrBrush = ::CreateSolidBrush(col);
+        }
+    }
+
+    MENUINFO mi = {0};
+    mi.cbSize = sizeof(MENUINFO);
+    GetMenuInfo(hmenu, &mi);
+    mi.hbrBack = hbrBrush;
+    mi.fMask = MIM_BACKGROUND | MIM_STYLE | MIM_APPLYTOSUBMENUS;
+    SetMenuInfo(hmenu, &mi);
+
     WCHAR buf[1024];
 
     MENUITEMINFOW mii{};
@@ -1923,7 +1948,6 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         mii.cch = dimof(buf);
         BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
         CrashIf(!ok);
-
         mii.fMask = MIIM_FTYPE | MIIM_DATA;
         mii.fType |= MFT_OWNERDRAW;
         if (mii.dwItemData != 0) {
