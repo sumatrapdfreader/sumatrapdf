@@ -112,7 +112,9 @@
     "bit": "cpp",
     "coroutine": "cpp",
     "format": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "MAE.C": "cpp",
+    "MAR.C": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug"
 }
