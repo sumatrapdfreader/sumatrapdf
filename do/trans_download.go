@@ -35,6 +35,30 @@ func fixTranslation(s string) string {
 	return s
 }
 
+type BadTranslation struct {
+	currString string
+	orig       string
+	fixed      string
+}
+
+var badTranslatins []BadTranslation
+
+func printBadTranslations() {
+	sort.Slice(badTranslatins, func(i, j int) bool {
+		return badTranslatins[i].orig < badTranslatins[j].orig
+	})
+	currLang := ""
+	for _, bt := range badTranslatins {
+		lang := strings.Split(bt.orig, ":")[0]
+		if lang != currLang {
+			currLang = lang
+			uri := "https://www.apptranslator.org/app/SumatraPDF/" + lang
+			fmt.Printf("\n%s\n", uri)
+		}
+		fmt.Printf("  :: %s\n'%s' => '%s'\n", bt.currString, bt.orig, bt.fixed)
+	}
+}
+
 func fixTranslations(d []byte) []byte {
 	var b bytes.Buffer
 	a := strings.Split(string(d), "\n")
@@ -48,7 +72,11 @@ func fixTranslations(d []byte) []byte {
 		}
 		fixed := fixTranslation(s)
 		if s != fixed {
-			fmt.Printf("\nfixed translation:\n%s\n%s\n  =>\n%s\n\n", currString, s, fixed)
+			push(&badTranslatins, BadTranslation{
+				currString: currString,
+				orig:       s,
+				fixed:      fixed,
+			})
 		}
 		b.WriteString(fixed + "\n")
 	}
@@ -200,6 +228,8 @@ func splitIntoPerLangFiles(d []byte) {
 func downloadTranslations() bool {
 	d := downloadTranslationsMust()
 	d = fixTranslations(d)
+
+	printBadTranslations()
 
 	path := filepath.Join(translationsDir, "translations.txt")
 	curr := readFileMust(path)

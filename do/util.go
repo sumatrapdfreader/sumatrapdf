@@ -308,3 +308,7 @@ func execTextTemplate(tmplText string, data interface{}) string {
 	must(err)
 	return buf.String()
 }
+
+func push[S ~[]E, E any](s *S, els ...E) {
+	*s = append(*s, els...)
+}
