@@ -2806,13 +2806,12 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     ScopedCritSec csPages(&e->pagesAccess);
     ScopedCritSec cs(e->ctxAccess);
 
-    float x, y;
-    float zoom = 0.f; // TODO: used to have zoom but mupdf changed outline
     int pageNo = -1;
+    fz_link_dest ldest{};
     fz_var(pageNo);
     fz_try(e->ctx) {
-        fz_location loc = fz_resolve_link(e->ctx, e->_doc, uri, &x, &y);
-        pageNo = fz_page_number_from_location(e->ctx, e->_doc, loc);
+        ldest = fz_resolve_link_dest(e->ctx, e->_doc, uri);
+        pageNo = fz_page_number_from_location(e->ctx, e->_doc, ldest.loc);
     }
     fz_catch(e->ctx) {
         logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
@@ -2823,7 +2822,14 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         return;
     }
 
-    RectF r(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    // TODO: handle ldest.type like FZ_LINK_DEST_FIT_H ?
+    float x = isnan(ldest.x) ? 0.f : ldest.x;
+    float y = isnan(ldest.y) ? 0.f : ldest.y;
+    float zoom = isnan(ldest.zoom) ? 0.f : ldest.zoom;
+    float w = isnan(ldest.w) ? DEST_USE_DEFAULT : ldest.w;
+    float h = isnan(ldest.y) ? DEST_USE_DEFAULT : ldest.y;
+
+    RectF r(x, y, w, h);
     auto ctrl = linkHandler->GetDocController();
     ctrl->ScrollTo(pageNo + 1, r, zoom);
 }
