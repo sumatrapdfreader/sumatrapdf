@@ -155,6 +155,9 @@ bool LoadSettings() {
     setMin(gprefs->sidebarDx, 0);
     setMin(gprefs->tocDy, 0);
     setMin(gprefs->treeFontSize, 0);
+    if (gprefs->toolbarSize == 0) {
+        gprefs->toolbarSize = 18; // same as kDefaultIconSize in Toolbar.cpp
+    }
     setMinMax(gprefs->toolbarSize, 8, 64);
 
     if (!gprefs->treeFontName) {

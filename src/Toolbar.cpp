@@ -295,8 +295,11 @@ void ShowOrHideToolbar(MainWindow* win) {
 }
 
 void UpdateFindbox(MainWindow* win) {
-    SetWindowStyle(win->hwndFindBg, SS_WHITERECT, win->IsDocLoaded());
-    SetWindowStyle(win->hwndPageBg, SS_WHITERECT, win->IsDocLoaded());
+    if (!ThemeColorizeControls()) {
+        // this looks ugly in dark themes i.e. non-default i.e. non-colorized
+        SetWindowStyle(win->hwndFindBg, SS_WHITERECT, win->IsDocLoaded());
+        SetWindowStyle(win->hwndPageBg, SS_WHITERECT, win->IsDocLoaded());
+    }
 
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
     UpdateWindow(win->hwndToolbar);
@@ -798,8 +801,9 @@ void CreateToolbar(MainWindow* win) {
     // tbMetrics.dwMask = TBMF_PAD;
     tbMetrics.dwMask = TBMF_BUTTONSPACING;
     TbGetMetrics(hwndToolbar, &tbMetrics);
+    int yPad = DpiScale(win->hwndFrame, 2);
     tbMetrics.cxPad += DpiScale(win->hwndFrame, 14);
-    tbMetrics.cyPad += DpiScale(win->hwndFrame, 2);
+    tbMetrics.cyPad += yPad;
     tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, kButtonSpacingX);
     // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
     TbSetMetrics(hwndToolbar, &tbMetrics);
@@ -860,6 +864,14 @@ void CreateToolbar(MainWindow* win) {
     int defFontSize = GetSizeOfDefaultGuiFont();
     // 18 was the default toolbar size, we want to scale the fonts in proportion
     int newSize = (defFontSize * gGlobalPrefs->toolbarSize) / kDefaultIconSize;
+    int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically
+    if (newSize > maxFontSize) {
+        logfa("CreateToolbar: setting toolbar font size to %d (scaled was %d, default size: %d)\n", maxFontSize,
+              newSize, defFontSize);
+        newSize = maxFontSize;
+    } else {
+        logfa("CreateToolbar: setting toolbar font size to %d (default size: %d)\n", newSize, defFontSize);
+    }
     auto font = GetDefaultGuiFontOfSize(newSize);
 
     CreatePageBox(win, font, iconSize);
