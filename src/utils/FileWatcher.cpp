@@ -71,7 +71,7 @@ struct WatchedDir {
     HANDLE hDir = nullptr;
     bool startMonitoring = true;
     OverlappedEx overlapped;
-    char buf[8 * 1024]{};
+    char buf[16 * 1024]{};
 };
 
 struct WatchedFile {
