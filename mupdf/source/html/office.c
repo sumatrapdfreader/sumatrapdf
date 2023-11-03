@@ -31,6 +31,8 @@ typedef struct
 
 	int footnotes_max;
 	char **footnotes;
+
+	char *title;
 } doc_info;
 
 static void
@@ -1037,6 +1039,35 @@ process_office_document(fz_context *ctx, fz_archive *arch, const char *file, doc
 		fz_rethrow(ctx);
 }
 
+static void
+process_office_document_properties(fz_context *ctx, fz_archive *arch, const char *file, doc_info *info)
+{
+	fz_xml *xml = NULL;
+	char *title;
+
+	fz_try(ctx)
+	{
+		fz_xml *pos;
+
+		xml = fz_parse_xml_archive_entry(ctx, arch, file, 1);
+
+		pos = fz_xml_find_dfs(xml, "title", NULL, NULL);
+		title = fz_xml_text(fz_xml_down(pos));
+		if (title)
+		{
+			fz_write_string(ctx, info->out, "<title>");
+			doc_escape(ctx, info->out, title);
+			fz_write_string(ctx, info->out, "</title>");
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_xml(ctx, xml);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
 fz_buffer *
 fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, const char *user_css, fz_office_to_html_opts *opts)
 {
@@ -1047,6 +1078,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 	fz_xml *pos = NULL;
 	fz_xml *rels = NULL;
 	const char *schema = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
+	const char *schema_props = "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties";
 	doc_info info = { 0 };
 
 	stream = fz_open_buffer(ctx, buffer_in);
@@ -1085,6 +1117,19 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 		/* Try other types */
 		{
 			xml = try_parse_xml_archive_entry(ctx, archive, "_rels/.rels", 0);
+
+			fz_write_string(ctx, info.out, "<html>\n");
+
+			pos = fz_xml_find_dfs(xml, "Relationship", "Type", schema_props);
+			if (pos)
+			{
+				const char *file = fz_xml_att(pos, "Target");
+				fz_write_string(ctx, info.out, "<head>\n");
+				process_office_document_properties(ctx, archive, file, &info);
+				fz_write_string(ctx, info.out, "</head>\n");
+			}
+
+			fz_write_string(ctx, info.out, "<body>\n");
 			pos = fz_xml_find_dfs(xml, "Relationship", "Type", schema);
 			if (!pos)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Archive not docx.");

@@ -381,7 +381,7 @@ typedef struct
 }
 fz_archive_handler;
 
-extern const fz_archive_handler fz_libarchive_archive_handler;
+FZ_DATA extern const fz_archive_handler fz_libarchive_archive_handler;
 
 void fz_register_archive_handler(fz_context *ctx, const fz_archive_handler *handler);
 
