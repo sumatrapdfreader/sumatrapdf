@@ -30,6 +30,7 @@ EXPORTS
 	fz_transform_page
 	fz_load_chapter_page
 	fz_run_page_contents
+	fz_resolve_link_dest
 	pdf_was_repaired
 	pdf_has_unsaved_changes
 	pdf_can_be_saved_incrementally
