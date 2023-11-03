@@ -221,8 +221,11 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         return;
     }
 
+    wd->startMonitoring = false;
+
     // This might mean overflow? Not sure.
-    if (!bytesTransfered) {
+    if (!bytesTransfered) {    
+        StartMonitoringDirForChanges(wd);
         return;
     }
 
@@ -250,7 +253,6 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
     }
 
-    wd->startMonitoring = false;
     StartMonitoringDirForChanges(wd);
 
     for (char* f : changedFiles) {
