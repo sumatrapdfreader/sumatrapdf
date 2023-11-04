@@ -971,6 +971,9 @@ process_office_document(fz_context *ctx, fz_archive *arch, const char *file, doc
 
 	fz_var(resolved_rel);
 
+	fz_var(rels);
+	fz_var(xml);
+
 	fz_try(ctx)
 	{
 		fz_xml *pos;

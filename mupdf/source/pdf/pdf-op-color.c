@@ -1455,6 +1455,8 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 	image = orig;
 	fz_keep_image(ctx, image);
 	pdf_keep_obj(ctx, im_obj);
+
+	fz_var(im_obj);
 	fz_try(ctx)
 	{
 

@@ -246,6 +246,7 @@ htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *zip, fz_buffer *buf
 	html_document *doc = NULL;
 
 	fz_var(doc);
+	fz_var(zip);
 
 	fz_try(ctx)
 	{

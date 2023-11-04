@@ -2420,6 +2420,7 @@ void fz_reset_story(fz_context *ctx, fz_story *story)
 	story->restart_draw.end = NULL;
 	story->restart_draw.end_flow = NULL;
 	story->rect_count = 0;
+	story->complete = 0;
 }
 
 static char *

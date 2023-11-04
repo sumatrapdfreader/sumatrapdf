@@ -208,6 +208,7 @@ int muconvert_main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	fz_var(doc);
 	fz_try(ctx)
 	{
 		for (i = fz_optind; i < argc; ++i)

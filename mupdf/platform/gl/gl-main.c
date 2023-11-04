@@ -2822,10 +2822,14 @@ static void do_canvas(void)
 
 	if (search_active)
 	{
+		int chapters = fz_count_chapters(ctx, doc);
 		ui_layout(T, X, NW, 0, 0);
 		ui_panel_begin(0, ui.gridsize + ui.padsize*4, ui.padsize*2, ui.padsize*2, 1);
 		ui_layout(L, NONE, W, ui.padsize, 0);
-		ui_label("Searching chapter %d page %d...", search_page.chapter, search_page.page);
+		if (chapters == 1 && search_page.chapter == 0)
+			ui_label("Searching page %d...", search_page.page);
+		else
+			ui_label("Searching chapter %d page %d...", search_page.chapter, search_page.page);
 		ui_panel_end();
 	}
 	else
