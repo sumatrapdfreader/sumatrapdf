@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3d38b0eacbe46fb8848c9d7610e4094eb9c33a57
+0c73917bd79e2bde786fa3526d725cec051bef9c
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -23,6 +23,7 @@ pt:Anotação %s. Ctrl +clique pra editar.
 ro:%s adnotare. Ctrl+clic să modifici
 ru:Аннотация %s. Ctrl+щелчок для изменения.
 sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
+sr-rs:%s белешка. Ctrl+клик за уређивање.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About
 af:&Omtrent
@@ -1494,6 +1495,7 @@ pt:&Atalhos do Teclado
 ro:&Comandă rapidă de la tastatură
 ru:&Горячие клавиши
 sk:&Klávesové skratky
+sr-rs:&Пречице на тастатури
 tw:鍵盤快速鍵(&K)
 :&Last Page
 am:&Վերջին էջ
@@ -5717,7 +5719,7 @@ sl:Spremeni jezik (Change Language)
 sn:Chinja mutauro (Change Language)
 sp-rs:Promeni jezik (Change Language)
 sq:Ndryshoj gjuhën (Change Language)
-sr-rs:Промени &језик (Change Language)
+sr-rs:Промени језик (Change Language)
 sv:Byt språk (Change Language)
 ta:மொழியை மாற்று (Change Language)
 th:เปลี่ยนภาษา
@@ -5935,6 +5937,7 @@ pt:Histórico de %d ficheiros removido e miniaturas removidas.
 ro:Istoricul șters pentru %d fișiere, miniaturi șterse.
 ru:Очищена история %d файлов, удалены миниатюры.
 sk:Vymazaná história %d súborov, odstránené náhľady.
+sr-rs:Историја од %d датотека очишћена, сличице обрисане.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
 :Clearing history...
@@ -5965,6 +5968,7 @@ pt:A limpar histórico...
 ro:Ștergere istoric...
 ru:Очистка истории...
 sk:Vymazávanie histórie…
+sr-rs:Чишћење историје...
 tw:正在清除歷史記錄...
 vn:Đang dọn dẹp lịch sử...
 :Close
@@ -6983,6 +6987,7 @@ pt:Copiar Caminho do Ficheiro
 ro:Copiază cale de fișier
 ru:Скопировать путь к файлу
 sk:Kopírovať cestu k súboru
+sr-rs:Копирај путању датотеке
 sv:Kopiera sökväg
 ta:கோப்பு பாதை நகலெடு
 tl:Kopyahin ang File Path
@@ -8262,7 +8267,7 @@ sk:Tmavý
 sl:Temna
 sp-rs:Tamno
 sq:I errët
-sr-rs:Тамно
+sr-rs:&Тамно
 sv:Mörk
 ta:இருள்
 th:เข้ม
@@ -8325,7 +8330,7 @@ sk:Tmavší
 sl:Temnejša
 sp-rs:Tamnije
 sq:Më i errët
-sr-rs:Тамније
+sr-rs:Там&није
 sv:Mörkare
 ta:மேலும் இருள்
 th:เข้มกว่า
@@ -8545,6 +8550,7 @@ pt:Eliminar anotação
 ro:Șterge adnotarea
 ru:Удалить аннотацию
 sk:Odstrániť anotáciu
+sr-rs:Обриши белешку
 tw:刪除註解
 uk:Видалити анотацію
 :Denied Permissions:
@@ -9043,6 +9049,7 @@ pt:Editar a Anotação %s
 ro:Modifică %s adnotare
 ru:Изменить аннотацию %s
 sk:Upraviť %s anotáciu
+sr-rs:Уреди %s белешку
 tw:編輯 %s 註解
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
@@ -12778,7 +12785,7 @@ sk:Svetlý
 sl:Svetla
 sp-rs:Svetlo
 sq:I çelët
-sr-rs:Светло
+sr-rs:&Светло
 sv:Ljus
 ta:ஒளி
 th:สว่าง
@@ -14457,6 +14464,7 @@ pt:Abrir em Nova Janela
 ro:Deschide în fereastră nouă
 ru:Открыть в новом окне
 sk:Otvoriť v novom okne
+sr-rs:Отвори у новом прозору
 ta:புதிய சாளரத்தில் திற
 tl:Buksan sa bagong Window
 tw:在新視窗中開啟
@@ -16684,6 +16692,7 @@ pt:Propriedades...
 ro:Proprietăți
 ru:Свойства...
 sk:Vlastnosti…
+sr-rs:Својства...
 ta:பண்புகள்
 tl:Properties...
 tw:內容...
