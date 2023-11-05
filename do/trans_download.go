@@ -53,7 +53,7 @@ func printBadTranslations() {
 			uri := "https://www.apptranslator.org/app/SumatraPDF/" + lang
 			fmt.Printf("\n%s\n", uri)
 		}
-		fmt.Printf("  :: %s\n'%s' => '%s'\n", bt.currString, bt.orig, bt.fixed)
+		fmt.Printf("%s\n  '%s' => '%s'\n", bt.currString, bt.orig, bt.fixed)
 	}
 }
 
