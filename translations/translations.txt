@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0c73917bd79e2bde786fa3526d725cec051bef9c
+e07a183234fb65910c391d02da37d4633e7f59ef
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
