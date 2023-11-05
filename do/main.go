@@ -14,8 +14,63 @@ import (
 )
 
 var (
-	flgSkipSign bool
+	flgSkipSign       bool
+	r2Access          string
+	r2Secret          string
+	b2Access          string
+	b2Secret          string
+	transUploadSecret string
+	certPwd           string
 )
+
+func loadSecrets() bool {
+	var m map[string]string
+	panicIf(!u.IsWinOrMac(), "secretsEnv is empty and running on linux")
+	secretsSrcPath := filepath.Join("..", "secrets", "sumatrapdf.env")
+	d, err := os.ReadFile(secretsSrcPath)
+	if err != nil {
+		logf("Failed to read secrets from %s, will try env variables\n", secretsSrcPath)
+		return false
+	}
+	m = u.ParseEnvMust(d)
+
+	getEnv := func(key string, val *string, minLen int) {
+		v := strings.TrimSpace(m[key])
+		if len(v) < minLen {
+			logf("Missing %s, len: %d, wanted: %d\n", key, len(v), minLen)
+			return
+		}
+		*val = v
+		// logf("Got %s, '%s'\n", key, v)
+		logf("Got %s\n", key)
+	}
+	getEnv("R2_ACCESS", &r2Access, 0)
+	getEnv("R2_SECRET", &r2Secret, 0)
+	getEnv("BB_ACCESS", &b2Access, 0)
+	getEnv("BB_SECRET", &b2Secret, 0)
+	getEnv("TRANS_UPLOAD_SECRET", &transUploadSecret, 0)
+	getEnv("CERT_PWD", &certPwd, 0)
+	return true
+}
+
+func ensureAllUploadCreds() {
+	panicIf(r2Access == "", "Not uploading to s3 because R2_ACCESS env variable not set\n")
+	panicIf(r2Secret == "", "Not uploading to s3 because R2_SECRET env variable not set\n")
+	panicIf(b2Access == "", "Not uploading to backblaze because BB_ACCESS env variable not set\n")
+	panicIf(b2Secret == "", "Not uploading to backblaze because BB_SECRET env variable not set\n")
+}
+
+func getSecrets() {
+	if loadSecrets() {
+		return
+	}
+	r2Access = os.Getenv("R2_ACCESS")
+	r2Secret = os.Getenv("R2_SECRET")
+	b2Access = os.Getenv("BB_ACCESS")
+	b2Secret = os.Getenv("BB_SECRET")
+	transUploadSecret = os.Getenv("TRANS_UPLOAD_SECRET")
+	certPwd = os.Getenv("CERT_PWD")
+}
 
 func regenPremake() {
 	premakePath := filepath.Join("bin", "premake5.exe")
@@ -42,7 +97,7 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	logf(ctx(), "> %s\n", fmtCmdShort(*cmd))
+	logf("> %s\n", fmtCmdShort(*cmd))
 	return cmd.Run()
 }
 
@@ -116,7 +171,7 @@ func runCppCheck(all bool) {
 	os.Remove(cppcheckLogFile)
 	err := runCmdShowProgressAndLog(cmd, cppcheckLogFile)
 	must(err)
-	logf(ctx(), "\nLogged output to '%s'\n", cppcheckLogFile)
+	logf("\nLogged output to '%s'\n", cppcheckLogFile)
 }
 
 type BuildOptions struct {
@@ -127,17 +182,10 @@ type BuildOptions struct {
 	releaseBuild              bool
 }
 
-func ensureAllUploadCreds() {
-	panicIf(os.Getenv("R2_ACCESS") == "", "Not uploading to s3 because R2_ACCESS env variable not set\n")
-	panicIf(os.Getenv("R2_SECRET") == "", "Not uploading to s3 because R2_SECRET env variable not set\n")
-	panicIf(os.Getenv("BB_ACCESS") == "", "Not uploading to backblaze because BB_ACCESS env variable not set\n")
-	panicIf(os.Getenv("BB_SECRET") == "", "Not uploading to backblaze because BB_SECRET env variable not set\n")
-}
-
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
-	logf(ctx(), "upload: %v\n", opts.upload)
-	logf(ctx(), "sign: %v\n", opts.sign)
-	logf(ctx(), "verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
+	logf("upload: %v\n", opts.upload)
+	logf("sign: %v\n", opts.sign)
+	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
 		ensureAllUploadCreds()
@@ -163,10 +211,10 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 }
 
 func main() {
-	logf(ctx(), "Current directory: %s\n", currDirAbsMust())
+	logf("Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
-		logf(ctx(), "Finished in %s\n", time.Since(timeStart))
+		logf("Finished in %s\n", time.Since(timeStart))
 	}()
 
 	// ad-hoc flags to be set manually (to show less options)
@@ -250,6 +298,7 @@ func main() {
 		return
 	}
 
+	getSecrets()
 	detectVersions()
 
 	if false {
@@ -405,7 +454,7 @@ func main() {
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {
-			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+			logf("uploadToStorage: skipping because opts.upload = false\n")
 		}
 		return
 	}
@@ -422,7 +471,7 @@ func main() {
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {
-			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+			logf("uploadToStorage: skipping because opts.upload = false\n")
 		}
 		return
 	}
@@ -432,7 +481,7 @@ func main() {
 		if opts.upload {
 			uploadToStorage(buildTypeRel)
 		} else {
-			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+			logf("uploadToStorage: skipping because opts.upload = false\n")
 		}
 		return
 	}
@@ -444,7 +493,7 @@ func main() {
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {
-			logf(ctx(), "uploadToStorage: skipping because opts.upload = false\n")
+			logf("uploadToStorage: skipping because opts.upload = false\n")
 		}
 		return
 	}
@@ -495,7 +544,7 @@ var logViewWinDir = filepath.Join("tools", "logview-win")
 
 func buildLogView() {
 	ver := extractLogViewVersion()
-	logf(ctx(), "biuldLogView: ver: %s\n", ver)
+	logf("biuldLogView: ver: %s\n", ver)
 	os.RemoveAll(filepath.Join(logViewWinDir, "build", "bin"))
 	//cmdRunLoggedInDir(".", "wails", "build", "-clean", "-f", "-upx")
 	cmdRunLoggedInDir(logViewWinDir, "wails", "build", "-clean", "-f", "-upx")
@@ -503,7 +552,7 @@ func buildLogView() {
 	path := filepath.Join(logViewWinDir, "build", "bin", "logview.exe")
 	panicIf(!u.FileExists(path))
 	signMust(path)
-	logf(ctx(), "\n")
+	logf("\n")
 	printFileSize(path)
 }
 
@@ -535,7 +584,7 @@ func extractLogViewVersion() string {
 
 func printFileSize(path string) {
 	size := u.FileSize(path)
-	logf(ctx(), "%s: %s\n", path, u.FormatSize(size))
+	logf("%s: %s\n", path, u.FormatSize(size))
 }
 
 func printBuildNoInfo(buildNo int) {
@@ -545,5 +594,5 @@ func printBuildNoInfo(buildNo int) {
 	// from the time we used svn
 	n := len(lines) - (buildNo - 1000)
 	s := lines[n]
-	logf(ctx(), "%d: %s\n", buildNo, s)
+	logf("%d: %s\n", buildNo, s)
 }

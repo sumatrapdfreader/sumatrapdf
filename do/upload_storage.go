@@ -294,7 +294,7 @@ func isBuildAlreadyUploaded(mc *minioutil.Client, buildType BuildType) bool {
 	remotePath := path.Join(dirRemote, fname)
 	exists := mc.Exists(remotePath)
 	if exists {
-		logf(ctx(), "build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
+		logf("build of type '%s' for ver '%s' already exists because '%s' exists\n", buildType, ver, mc.URLForPath(remotePath))
 
 	}
 	return exists
@@ -320,7 +320,7 @@ func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bo
 			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
 		}
 		uri := c.URLForPath(pathRemote)
-		logf(ctx(), "Uploaded %s => %s in %s\n", pathLocal, uri, time.Since(timeStart))
+		logf("Uploaded %s => %s in %s\n", pathLocal, uri, time.Since(timeStart))
 	}
 	return nil
 }
@@ -344,7 +344,7 @@ func getFinalDirForBuildType(buildType BuildType) string {
 func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 	timeStart := time.Now()
 	defer func() {
-		logf(ctx(), "Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
+		logf("Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
 	}()
 
 	dirRemote := getRemoteDir(buildType)
@@ -355,7 +355,7 @@ func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 
 	// for release build we don't upload files with version info
 	if buildType == buildTypeRel {
-		logf(ctx(), "Skipping uploading version for release builds\n")
+		logf("Skipping uploading version for release builds\n")
 		return
 	}
 
@@ -365,7 +365,7 @@ func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 			remotePath := f[0]
 			_, err := mc.UploadData(remotePath, []byte(f[1]), true)
 			must(err)
-			logf(ctx(), "Uploaded `%s'\n", mc.URLForPath(remotePath))
+			logf("Uploaded `%s'\n", mc.URLForPath(remotePath))
 		}
 	}
 
@@ -428,25 +428,25 @@ func minioDeleteOldBuildsPrefix(mc *minioutil.Client, buildType BuildType) {
 	var keys []string
 	for f := range objectsCh {
 		keys = append(keys, f.Key)
-		//logf(ctx(), "  %s\n", f.Key)
+		//logf("  %s\n", f.Key)
 	}
 
 	uri := mc.URLForPath(remoteDir)
-	logf(ctx(), "%d files under '%s'\n", len(keys), uri)
+	logf("%d files under '%s'\n", len(keys), uri)
 	byVer := groupFilesByVersion(keys)
 	for i, v := range byVer {
 		deleting := (i >= nBuildsToRetain)
 		if deleting {
-			logf(ctx(), "deleting %d\n", v.ver)
+			logf("deleting %d\n", v.ver)
 			if true {
 				for _, key := range v.files {
 					err := mc.Remove(key)
 					must(err)
-					logf(ctx(), "  deleted %s\n", key)
+					logf("  deleted %s\n", key)
 				}
 			}
 		} else {
-			logf(ctx(), "not deleting %d\n", v.ver)
+			logf("not deleting %d\n", v.ver)
 		}
 	}
 }
@@ -455,8 +455,8 @@ func newMinioBackblazeClient() *minioutil.Client {
 	config := &minioutil.Config{
 		Bucket:   "kjk-files",
 		Endpoint: "s3.us-west-001.backblazeb2.com",
-		Access:   os.Getenv("BB_ACCESS"),
-		Secret:   os.Getenv("BB_SECRET"),
+		Access:   b2Access,
+		Secret:   b2Secret,
 	}
 	mc, err := minioutil.New(config)
 	must(err)
@@ -467,8 +467,8 @@ func newMinioR2Client() *minioutil.Client {
 	config := &minioutil.Config{
 		Bucket:   "files",
 		Endpoint: "71694ef61795ecbe1bc331d217dbd7a7.r2.cloudflarestorage.com",
-		Access:   os.Getenv("R2_ACCESS"),
-		Secret:   os.Getenv("R2_SECRET"),
+		Access:   r2Access,
+		Secret:   r2Secret,
 	}
 	mc, err := minioutil.New(config)
 	must(err)
@@ -478,13 +478,13 @@ func newMinioR2Client() *minioutil.Client {
 func uploadToStorage(buildType BuildType) {
 	isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildType)
 	if isUploaded {
-		logf(ctx(), "uploadToStorage: skipping upload because already uploaded")
+		logf("uploadToStorage: skipping upload because already uploaded")
 		return
 	}
 
 	timeStart := time.Now()
 	defer func() {
-		logf(ctx(), "uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
+		logf("uploadToStorage of '%s' finished in %s\n", buildType, time.Since(timeStart))
 	}()
 	var wg sync.WaitGroup
 
@@ -507,7 +507,7 @@ func uploadToStorage(buildType BuildType) {
 	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
 	// no guarantees the files will be visible from other networks
 	// if buildType != buildTypeRel {
-	// 	logf(ctx(), "uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
+	// 	logf("uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
 	// 	time.Sleep(time.Minute * 5)
 	// }
 
@@ -525,17 +525,17 @@ func uploadToStorage(buildType BuildType) {
 }
 
 func uploadLogView() {
-	logf(ctx(), "uploadLogView\n")
+	logf("uploadLogView\n")
 	ver := extractLogViewVersion()
 	path := filepath.Join("tools", "logview-win", "build", "bin", "logview.exe")
 	panicIf(!fileExists(path), "file '%s' doesn't exist", path)
 	remotePath := "software/logview/rel/" + fmt.Sprintf("logview-%s.exe", ver)
 	mc := newMinioBackblazeClient()
 	if mc.Exists(remotePath) {
-		logf(ctx(), "%s (%s) already uploaded\n", remotePath, mc.URLForPath(remotePath))
+		logf("%s (%s) already uploaded\n", remotePath, mc.URLForPath(remotePath))
 		return
 	}
 	mc.UploadFile(remotePath, path, true)
 	sizeStr := u.FmtSizeHuman(getFileSize(path))
-	logf(ctx(), "Uploaded %s of size %s as %s\n", path, sizeStr, mc.URLForPath(remotePath))
+	logf("Uploaded %s of size %s as %s\n", path, sizeStr, mc.URLForPath(remotePath))
 }

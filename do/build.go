@@ -67,7 +67,7 @@ func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
 		if fileExists(srcPath) {
 			must(copyFile(dstPath, srcPath))
 		} else {
-			logf(ctx(), "Skipping copying '%s'\n", srcPath)
+			logf("Skipping copying '%s'\n", srcPath)
 		}
 	}
 }
@@ -99,9 +99,9 @@ func detectVersions() {
 	preReleaseVerCached = strconv.Itoa(ver)
 	gitSha1Cached = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
-	logf(ctx(), "preReleaseVer: '%s'\n", preReleaseVerCached)
-	logf(ctx(), "gitSha1: '%s'\n", gitSha1Cached)
-	logf(ctx(), "sumatraVersion: '%s'\n", sumatraVersion)
+	logf("preReleaseVer: '%s'\n", preReleaseVerCached)
+	logf("gitSha1: '%s'\n", gitSha1Cached)
+	logf("sumatraVersion: '%s'\n", sumatraVersion)
 }
 
 // remove all files and directories under out/ except settings files
@@ -140,7 +140,7 @@ func cleanPreserveSettings() {
 			}
 		}
 	}
-	logf(ctx(), "clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
+	logf("clean: skipped %d files, deleted %d dirs and %d files\n", nSkipped, nDirsDeleted, nFilesDeleted)
 }
 
 func cleanReleaseBuilds() {
@@ -168,7 +168,7 @@ func buildLzsa() {
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
-	logf(ctx(), "build and signed '%s'\n", path)
+	logf("build and signed '%s'\n", path)
 }
 
 func buildConfigPath() string {
@@ -337,12 +337,12 @@ func createManifestMust() {
 // 	for _, de := range files {
 // 		i, err := de.Info()
 // 		panicIfErr(err)
-// 		logf(ctx(), "%s: %d\n", de.Name(), i.Size())
+// 		logf("%s: %d\n", de.Name(), i.Size())
 // 	}
 // }
 
 func signFilesMust(dir string) {
-	logf(ctx(), "signFileMust: '%s'\n", dir)
+	logf("signFileMust: '%s'\n", dir)
 	//listFilesInDir(dir)
 
 	if fileExists(filepath.Join(dir, "SumatraPDF.exe")) {
@@ -447,7 +447,7 @@ func getSuffixForPlatform(platform string) string {
 func buildCiDaily() {
 	isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildTypePreRel)
 	if isUploaded {
-		logf(ctx(), "buildCiDaily: skipping build because already built and uploaded")
+		logf("buildCiDaily: skipping build because already built and uploaded")
 		return
 	}
 

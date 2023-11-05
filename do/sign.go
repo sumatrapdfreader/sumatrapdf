@@ -19,7 +19,7 @@ func runCmdLoggedRedacted(cmd *exec.Cmd, redact string) error {
 }
 
 func hasCertPwd() bool {
-	return strings.TrimSpace(os.Getenv("CERT_PWD")) != ""
+	return strings.TrimSpace(certPwd) != ""
 }
 
 // https://zabkat.com/blog/code-signing-sha1-armageddon.htm
@@ -38,7 +38,6 @@ func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
 
-	certPwd := os.Getenv("CERT_PWD")
 	if certPwd == "" {
 		if flgSkipSign {
 			return

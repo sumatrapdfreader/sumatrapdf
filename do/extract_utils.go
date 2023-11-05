@@ -12,10 +12,10 @@ import (
 )
 
 var runLogged2 = func(cmd *exec.Cmd, panicOnErr bool) string {
-	logf(ctx(), "> %s\n", cmd.String())
+	logf("> %s\n", cmd.String())
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
-	logf(ctx(), "Output:\n%s\n", string(out))
+	logf("Output:\n%s\n", string(out))
 	if panicOnErr {
 		logIfError(ctx(), err)
 		panicIf(panicOnErr && err != nil)
@@ -30,11 +30,11 @@ var runLogged = func(cmd *exec.Cmd) string {
 func printCurrDir() {
 	dir, err := filepath.Abs(".")
 	must(err)
-	logf(ctx(), "dir: %s\n", dir)
+	logf("dir: %s\n", dir)
 	files, err := os.ReadDir(dir)
 	must(err)
 	for _, de := range files {
-		logf(ctx(), "  %s dir: %v\n", de.Name(), de.IsDir())
+		logf("  %s dir: %v\n", de.Name(), de.IsDir())
 	}
 }
 
@@ -43,14 +43,14 @@ func extractUtils(inAction bool) {
 	printCurrDir()
 
 	commitMsg := "update from sumatrapdf"
-	logf(ctx(), "updateNotepad2: inAction=%v\n", inAction)
+	logf("updateNotepad2: inAction=%v\n", inAction)
 	parentDir, err := filepath.Abs("..")
 	must(err)
-	logf(ctx(), "parentDir: %s\n", parentDir)
+	logf("parentDir: %s\n", parentDir)
 	dstDir := filepath.Join(parentDir, "pdfprint")
-	logf(ctx(), "notepadDir: %s\n", dstDir)
+	logf("notepadDir: %s\n", dstDir)
 	if !u.DirExists(dstDir) {
-		logf(ctx(), "Directory '%s' doesn't exist\n", dstDir)
+		logf("Directory '%s' doesn't exist\n", dstDir)
 		os.Exit(1)
 	}
 	if !inAction {
@@ -61,7 +61,7 @@ func extractUtils(inAction bool) {
 
 	utilsDir := filepath.Join(dstDir, "utils")
 	// remove existing dir
-	logf(ctx(), "deleting all files in directory '%s'\n", utilsDir)
+	logf("deleting all files in directory '%s'\n", utilsDir)
 	must(os.RemoveAll(utilsDir))
 	// recreate dir
 	must(os.MkdirAll(utilsDir, 0755))
@@ -147,10 +147,10 @@ func copyFilesRecurMust(dstDir, srcDir string) {
 func copyFileMust(dst, src string) {
 	_, err := os.Stat(dst)
 	if err == nil {
-		logf(ctx(), "destination '%s' already exists, skipping\n")
+		logf("destination '%s' already exists, skipping\n")
 		return
 	}
-	logf(ctx(), "copy %s => %s\n", src, dst)
+	logf("copy %s => %s\n", src, dst)
 	dstDir := filepath.Dir(dst)
 	err = os.MkdirAll(dstDir, 0755)
 	must(err)

@@ -130,7 +130,7 @@ func (f *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, f.Comment)
 	}
-	logf(ctx(), "Unkonwn type name: '%s'\n", typeName)
+	logf("Unkonwn type name: '%s'\n", typeName)
 	panicIf(true)
 	return ""
 }
@@ -449,7 +449,7 @@ func genSettingsStruct() string {
 func updateSumatraWebsite() string {
 	dir := filepath.Join("..", "sumatra-website")
 	dir, err := filepath.Abs(dir)
-	logf(ctx(), "sumatra website dir: '%s'\n", dir)
+	logf("sumatra website dir: '%s'\n", dir)
 	must(err)
 	panicIf(!dirExists(dir), "directory for sumatra website '%s' doesn't exist", dir)
 	panicIf(!isGitClean(dir), "github repository '%s' must be clean", dir)
@@ -547,5 +547,5 @@ func genAndSaveSettingsStructs() {
 
 	genSettingsHTML()
 	genLangsHTML()
-	logf(ctx(), "!!!!!! checkin sumatra website repo!!!!\n")
+	logf("!!!!!! checkin sumatra website repo!!!!\n")
 }

@@ -39,7 +39,7 @@ func ctx() context.Context {
 	return context.Background()
 }
 
-func logf(ctx context.Context, s string, arg ...interface{}) {
+func logf(s string, arg ...interface{}) {
 	if len(arg) > 0 {
 		s = fmt.Sprintf(s, arg...)
 	}
@@ -92,7 +92,7 @@ func absPathMust(path string) string {
 
 func runExeMust(c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
-	logf(ctx(), "> %s\n", cmd)
+	logf("> %s\n", cmd)
 	out, err := cmd.CombinedOutput()
 	must(err)
 	return []byte(out)
@@ -100,7 +100,7 @@ func runExeMust(c string, args ...string) []byte {
 
 func runExeInDirMust(dir string, c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
-	logf(ctx(), "> %s\n", cmd)
+	logf("> %s\n", cmd)
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	must(err)
@@ -114,11 +114,11 @@ func runExeLoggedMust(c string, args ...string) []byte {
 }
 
 func makePrintDuration(name string) func() {
-	logf(ctx(), "%s\n", name)
+	logf("%s\n", name)
 	timeStart := time.Now()
 	return func() {
 		dur := time.Since(timeStart)
-		logf(ctx(), "%s took %s\n", name, formatDuration(dur))
+		logf("%s took %s\n", name, formatDuration(dur))
 	}
 }
 
@@ -199,7 +199,7 @@ func findLargestFileByExt() {
 				return nil
 			}
 			if false && (nFiles == 0 || nFiles%128 == 0) {
-				logf(ctx(), "%s\n", path)
+				logf("%s\n", path)
 			}
 			nFiles++
 			ext := strings.ToLower(filepath.Ext(path))
@@ -212,13 +212,13 @@ func findLargestFileByExt() {
 			}
 			size := fi.Size()
 			if size > extToSize[ext] {
-				logf(ctx(), "%s of size %s\n", path, formatSize(size))
+				logf("%s of size %s\n", path, formatSize(size))
 				extToSize[ext] = size
 			}
 			return nil
 		})
 	}
-	logf(ctx(), "processed %d files\n", nFiles)
+	logf("processed %d files\n", nFiles)
 }
 
 func fmdCmdShort(cmd *exec.Cmd) string {
@@ -229,7 +229,7 @@ func fmdCmdShort(cmd *exec.Cmd) string {
 }
 
 func runCmdLoggedMust(cmd *exec.Cmd) string {
-	logf(ctx(), ">2 %s\n", fmdCmdShort(cmd))
+	logf(">2 %s\n", fmdCmdShort(cmd))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -270,11 +270,11 @@ func runCmdMust(cmd *exec.Cmd) string {
 		out, err := cmd.CombinedOutput()
 		if err == nil {
 			if len(out) > 0 {
-				logf(ctx(), "Output:\n%s\n", string(out))
+				logf("Output:\n%s\n", string(out))
 			}
 			return string(out)
 		}
-		logf(ctx(), "cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
+		logf("cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
 		must(err)
 		return string(out)
 	}
@@ -282,7 +282,7 @@ func runCmdMust(cmd *exec.Cmd) string {
 	if err == nil {
 		return ""
 	}
-	logf(ctx(), "cmd '%s' failed with '%s'\n", cmd, err)
+	logf("cmd '%s' failed with '%s'\n", cmd, err)
 	must(err)
 	return ""
 }

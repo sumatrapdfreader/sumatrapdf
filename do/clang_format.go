@@ -14,7 +14,7 @@ func detectClangFormat() string {
 	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\clang-format.exe`)
 	panicIf(!fileExists(path), "didn't find clang-format.exe")
 	if !printClangPath {
-		logf(ctx(), "clang-format: %s\n", path)
+		logf("clang-format: %s\n", path)
 		printClangPath = true
 	}
 	return path
@@ -28,7 +28,7 @@ func clangFormatFile(path string) {
 
 func clangFormatFiles() {
 	path := detectClangFormat()
-	logf(ctx(), "using '%s'\n", path)
+	logf("using '%s'\n", path)
 	files := []string{
 		`src\*.cpp`,
 		`src\*.h`,
@@ -59,7 +59,7 @@ func clangFormatFiles() {
 		for _, wl := range whitelisted {
 			wl = strings.ToLower(wl)
 			if strings.Contains(s, wl) {
-				logf(ctx(), "Whitelisted '%s'\n", s)
+				logf("Whitelisted '%s'\n", s)
 				return true
 			}
 		}
@@ -84,5 +84,5 @@ func clangFormatFiles() {
 		}
 	}
 	wg.Wait()
-	logf(ctx(), "used '%s'\n", path)
+	logf("used '%s'\n", path)
 }

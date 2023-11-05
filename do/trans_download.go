@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -19,9 +18,8 @@ var (
 )
 
 func getTransSecret() string {
-	v := os.Getenv("TRANS_UPLOAD_SECRET")
-	panicIf(v == "", "must set TRANS_UPLOAD_SECRET env variable")
-	return v
+	panicIf(transUploadSecret == "", "must set TRANS_UPLOAD_SECRET env variable or in .env file")
+	return transUploadSecret
 }
 
 // sometimes people press enter at the end of the translation
@@ -186,7 +184,7 @@ func splitIntoPerLangFiles(d []byte) {
 			skipStr = "  SKIP"
 			langsToSkip[lang] = true
 		}
-		logf(ctx(), "Wrote: '%s', missing: %d%s\n", path, nMissing, skipStr)
+		logf("Wrote: '%s', missing: %d%s\n", path, nMissing, skipStr)
 	}
 
 	// write translations-good.txt with langs that don't miss too many translations
@@ -222,7 +220,7 @@ func splitIntoPerLangFiles(d []byte) {
 	s := strings.Join(a, "\n")
 	path := filepath.Join(translationsDir, "translations-good.txt")
 	writeFileMust(path, []byte(s))
-	logf(ctx(), "Wrote %s of size %d\n", path, len(s))
+	logf("Wrote %s of size %d\n", path, len(s))
 }
 
 func downloadTranslations() bool {
@@ -247,7 +245,7 @@ func downloadTranslations() bool {
 	// saving as gzipped and embedding that in the exe
 	//u.WriteFileGzipped(translationsTxtPath+".gz", d)
 	writeFileMust(path, d)
-	logf(ctx(), "Wrote %s of size %d\n", path, len(d))
+	logf("Wrote %s of size %d\n", path, len(d))
 
 	return false
 }

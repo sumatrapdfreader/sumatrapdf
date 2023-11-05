@@ -54,7 +54,7 @@ func detectMsbuildPath() string {
 	path := detectPath(vsBasePaths, msBuildName)
 	panicIf(path == "", fmt.Sprintf("Didn't find %s", msBuildName))
 	if !printedMsbuildPath {
-		logf(ctx(), "msbuild.exe: %s\n", path)
+		logf("msbuild.exe: %s\n", path)
 		printedMsbuildPath = true
 	}
 	return path
