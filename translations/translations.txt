@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4735d2e01f73975af59bfbb55acbb608d14f5bff
+b90a4eb361de4afacba9190a06f35eb9b30e03de
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -7,6 +7,7 @@ az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 br:Anotação %s. Ctrl+clique pra editar.
 ca:Anotació %s. Ctrl+clic per editar.
 cn:%s 标注
+cy:%s anodiad. Ctrl+clic i olygu.
 cz:Poznámka %s. Ctrl+kliknutí pro úpravu.
 de:%s-Anmerkung. Strg+Klick zum Bearbeiten.
 el:%s σχολιασμός. Ctrl+κλικ για επεξεργασία.
@@ -1480,6 +1481,7 @@ az:&Klaviatura birləşmələri
 br:&Atalhos do Teclado
 ca:&Dreceres de teclat
 cn:快捷键(&A)
+cy:&Llwybrau Byr Bysellfwrdd
 cz:&Klávesové zkratky
 de:Tasten&kombinationen
 el:Συντομεύσεις πληκτρολογίου
