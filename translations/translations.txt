@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b90a4eb361de4afacba9190a06f35eb9b30e03de
+f3c3904da09ef0355ae38eb4a87cd9a7b3f5e52e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -18,7 +18,7 @@ ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
-nl:%s opmerking. Ctrl+klik om te bewerken
+nl:%s aantekening. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl +clique pra editar.
 ro:%s adnotare. Ctrl+clic să modifici
@@ -78,7 +78,7 @@ nn:&Om
 no:&Om
 pa:ਇਸ &ਬਾਰੇ
 pl:&O programie SumatraPDF
-pt:&Acerca
+pt:&Sobre
 ro:&Despre
 ru:&О программе...
 si:&පිළීබඳව
@@ -132,7 +132,7 @@ ku:&Mezinahiya rastîn
 mk:&Вистинска Големина
 ml:യഥാർത്ഥ സൈസ്
 ne:वास्तविक आकार
-nl:&Werkelijke grootte
+nl:&Ware grootte
 no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
 pt:&Tamanho Real
@@ -364,7 +364,7 @@ kr:책처럼 보기(&B)
 mk:&Преглед на Книга
 ml:&പുസ്തക കാഴ്ച
 ne:&पुस्तकको रुपमा हेर्नुहोस
-nl:&Boek Tonen
+nl:&Boekweergave
 no:&Bokvisning
 pl:Widok o&dczytu
 pt:&Visualizar como Livro
@@ -470,7 +470,7 @@ kw:&Karet
 lt:&Intarpas
 lv:&Norāde
 ml:&കാരറ്റ് അടയാളം
-nl:&Merkteken
+nl:&Invoegteken
 no:&Innsettingspunkt
 pl:&Kareta
 pt:&Cursor
@@ -912,7 +912,7 @@ id:Menghadap
 it:Pagine a&ffiancate
 ja:見開き(&F)
 kr:두 페이지(&F)
-nl:&Gericht op
+nl:&Dubbele pagina
 no:&Side om side
 pl:&Wiele stron
 pt:&Lado a Lado
@@ -2732,7 +2732,7 @@ it:&Salva in questo PDF
 ja:上書き保存(&S)
 kr:기존 PDF에 저장(&S)
 kw:&Gwitha dhe PDF seulabrys
-nl:&Opslaan in bestaande PDF
+nl:&Opslaan in deze PDF
 no:&Lagre til eksisterende PDF
 pl:&Zapisz w istniejącym pliku PDF
 pt:&Guardar num PDF existente
@@ -2780,7 +2780,7 @@ it:Cerca con Google
 ja:Google で検索(&S)
 kr:Google로 검색(&S)
 kw:&Hwilas Gans Google
-nl:&Zoeken Met Google
+nl:&Zoeken met Google
 no:&Søk med Google
 pl:&Szukaj za pomocą Google
 pt:&Pesquisar com Google
@@ -3206,7 +3206,7 @@ it:&Traduci con Google
 ja:Google を使って翻訳(&T)
 kr:Google로 번역(&T)
 kw:&Treylya Gans Google
-nl:&Vertalen Met Google
+nl:&Vertalen met Google
 no:&Oversett med Google
 pl:&Tłumacz za pomocą Google
 pt:&Traduzir com Google
@@ -3781,7 +3781,7 @@ nn:Om SumatraPDF
 no:Om SumatraPDF
 pa:SumatraPDF ਬਾਰੇ
 pl:O programie SumatraPDF
-pt:Acerca de SumatraPDF
+pt:Sobre o SumatraPDF
 ro:Despre SumatraPDF
 ru:О программе SumatraPDF
 si:SumatraPDF පිළිබඳව
@@ -4914,7 +4914,7 @@ lv:Fona krāsa:
 mk:Боја на позадина
 ml:പശ്ചാത്തല നിറം:
 ne:पृष्ठभूमिको रंग:
-nl:Achtergrond Kleur
+nl:Achtergrondkleur:
 nn:Bakgrunnsfarge:
 no:Bakgrunnsfarge:
 pl:Kolor tła:
@@ -8147,7 +8147,7 @@ lv:Kursora pozīcija:
 mk:Местоположба на покажувач:
 ml:കഴ്‌സർ സ്ഥാനം:
 ne:कर्सर स्थिति:
-nl:Cursor positie
+nl:Cursorpositie
 nn:Markørposisjon:
 no:Skrivemerkeposisjon:
 pl:Pozycja kursora:
@@ -8199,7 +8199,7 @@ it:&Zoom personalizzato...
 ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
 ml:ഇഷ്‌ടാനുസൃത &സൂം...
-nl:Aangepast & zoom...
+nl:Aangepaste &zoom...
 no:Tilpasset &zoom...
 pl:&Własne powiększenie...
 pt:Zoom &Personalizado...
@@ -8841,7 +8841,7 @@ kr:64비트 버전 다운로드
 kw:Iskarga gwersyon 64-byt
 mk:Преземете 64-битна верзија
 ml:64-ബിറ്റ് പതിപ്പ് ഡൗൺലോഡ് ചെയ്യുക
-nl:Download 64bit versie
+nl:Download 64-bit versie
 nn:Last ned 64-bit versjon
 no:Last ned 64-biters versjon
 pl:Pobierz wersję 64-bitową
@@ -9289,7 +9289,7 @@ lv:Ievadiet komandrindu, izsaucamu ar dubultklikšķi uz PDF dokumenta:
 mk:Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
 my:Masukkan baris arahan untuk digunakan apabila anda klik dua kali pada dokumen PDF:
 ne:PDF कागजातमा दोहोरो क्लिक गर्दा आह्वान गर्ने आदेश पङ्‌क्ति प्रविष्ट गराउनुहोस्:
-nl:Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-document:
+nl:Opdrachtregel die gestart moet worden bij het dubbelklikken van een PDF-document:
 nn:Gå inn i kommandolinja for å hentast, når du dobbeltklikkar på PDF-dokumentet:
 no:Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
 pl:Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
@@ -9697,7 +9697,7 @@ lv:Neizdevās izdzēst atinstalēšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
 ne:अनस्थापकको रजिस्टरी कुञ्जीहरू हटाउन असफल भयो
-nl:Kon deinstallatie register sleutels niet verwijderen
+nl:Kon deinstallatie registersleutels niet verwijderen
 nn:Mislykkast i å slette avinstalleringsregisternøklane
 no:Kan ikke slette avinstalleringsnøkler i Registeret
 pl:Nie można usunąć kluczy deinstalatora z rejestru
@@ -10277,7 +10277,7 @@ kw:Stagel Restren
 lt:Failo priedas
 lv:Faila pielikums
 mk:Прикачи документ
-nl:Bestands Bijlage
+nl:Bestandsbijlage
 nn:Filvedlegg:
 no:Filvedlegg
 pl:Załącznik
@@ -10461,7 +10461,7 @@ id:Pencarian
 it:&Trova
 ja:検索(&D)...
 kr:찾기(&D)...
-nl:Zoe&k
+nl:&Zoek
 no:Fin&n...
 pl:&Znajdź...
 pt:Locali&zar...
@@ -17363,7 +17363,7 @@ id:Simpan catatan ke PDF terkini
 it:Salva annotazioni in questo PDF
 ja:注釈を上書き保存
 kr:주석을 현재 PDF에 저장하기
-nl:Notities opslaan in bestaande PDF
+nl:Aantekeningen opslaan in deze PDF
 no:Lagre merknader til eksisterende PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
 pt:Guardar Anotações num PDF Existente
@@ -17647,7 +17647,7 @@ kr:기존 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lt:Išsaugoti pakeitimus į esamą PDF failą
 lv:Saglabāt izmaiņas esošajā PDF failā
-nl:Wijzigingen opslaan in bestaande PDF
+nl:Wijzigingen opslaan in deze PDF
 nn:Lagre endringar til eksisterande PDF
 no:Lagre endringer til eksisterende PDF
 pl:Zapisz zmiany w istniejącym pliku PDF
@@ -17836,7 +17836,7 @@ it:Cerca con &Bing
 ja:Bing で検索(&B)
 kr:Bing으로 검색(&B)
 kw:Hwilas Gans &Bing
-nl:Zoeken Met &Bing
+nl:Zoeken met &Bing
 no:Søk med &Bing
 pl:Szukaj za pomocą &Bing
 pt:Pesquisar com &Bing
@@ -17884,7 +17884,7 @@ it:Cerca con &Google
 ja:Google で検索(&G)
 kr:Google로 검색(&G)
 kw:Hwilas Gans &Google
-nl:Zoeken Met &Google
+nl:Zoeken met &Google
 no:Søk med &Google
 pl:Szukaj za pomocą &Google
 pt:Pesquisar com &Google
@@ -19191,7 +19191,7 @@ lv:Piedodiet, šim nevajadzēja notikt!\n\nLūdzu, spiediet 'Atcelt', ja jūs v�
 mk:Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
 my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
-nl:Sorry, dit had niet mogen gebeuren!\n\nDruk 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.
+nl:Sorry, dit had niet mogen gebeuren!\n\nSelecteer 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.
 nn:Beklager, dét skulle ikkje ha skjedd!\n\nVenligst trykk 'Lukk' hvis du vil hjelpe oss å fikse orsaka til dette krasjet.
 no:Beklager, dette skulle ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du ønsker å hjelpe oss med å fikse dette problemet.
 pl:Przepraszamy - to nie powinno się zdarzyć!\n\nProszę nacisnąć przycisk 'Anuluj', jeżeli chcesz pomóc nam w usunięciu tego problemu.
@@ -20062,7 +20062,7 @@ kr:텍스트 정렬:
 kw:Alinyans Tekst:
 lt:Teksto lygiavimas:
 lv:Teksta līdzinājums:
-nl:Tekst Uitlijning:
+nl:Tekstuitlijning:
 nn:Tekstjustering:
 no:Tekstjustering:
 pl:Wyrównanie tekstu:
@@ -20113,7 +20113,7 @@ lt:Teksto spalva:
 lv:Teksta krāsa:
 my:Warna Teks:
 ne:अक्षरको रङ:
-nl:Tekst Kleur
+nl:Tekstkleur
 nn:Tekstfarge:
 no:Tekstfarge:
 pl:Kolor tekstu:
@@ -20163,7 +20163,7 @@ kw:Braster Tekst:
 lt:Teksto dydis:
 lv:Teksta lielums:
 my:Saiz Teks:
-nl:Tekst Grootte:
+nl:Tekstgrootte:
 nn:Tekststorleik:
 no:Tekststørrelse:
 pl:Rozmiar tekstu:
@@ -20213,7 +20213,7 @@ kw:Braster Tekst: %d
 lt:Teksto dydis: %d
 lv:Teksta lielums: %d
 my:Saiz Teks: %d
-nl:Tekst Grootte: %d
+nl:Tekstgrootte: %d
 nn:Tekststorleik: %d
 no:Tekststørrelse: %d
 pl:Rozmiar tekstu: %d
@@ -20335,7 +20335,7 @@ lv:Pateicamies par SumatraPDF izvēlēšanos!
 mk:Ви благодарам што го одбравте SumatraPDF!
 my:Terima kasih kerana memilih SumatraPDF!
 ne:SumatraPDF चयन गर्नुभएकोमा धन्यवाद !
-nl:Dank u om voor SumatraPDF te kiezen!
+nl:Bedankt voor het kiezen van SumatraPDF!
 nn:Takk for at du valde SumatraPDF!
 no:Takk for at du valgte SumatraPDF!
 pl:Dziękujemy za wybór SumatraPDF!
@@ -20397,7 +20397,7 @@ lv:Paldies! SumatraPDF ir instalēta.
 mk:Ви благодарам! SumatraPDF е успешно инсталиран.
 my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
 ne:धन्यबाद! SumatraPDF इन्सटल गरिएको छ
-nl:Dank u! SumatraPDF is geinstalleerd.
+nl:Bedankt! SumatraPDF is geïnstalleerd.
 nn:Tusen takk! SumatraPDF har blitt installert.
 no:Takk! SumatraPDF har blitt installert.
 pl:Program SumatraPDF został zainstalowany.
@@ -20643,7 +20643,7 @@ it:Traduci con &DeepL
 ja:DeepL を使って翻訳(&D)
 kr:DeepL로 번역(&D)
 kw:Treylya gans &DeepL
-nl:Vertalen Met &Deepl
+nl:Vertalen met &Deepl
 no:Oversett med &DeepL
 pl:Tłumacz za pomocą &DeepL
 pt:Traduzir com &DeepL
