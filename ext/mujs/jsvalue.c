@@ -205,8 +205,15 @@ double js_stringtofloat(const char *s, char **ep)
 	}
 	if (isflt)
 		n = js_strtod(s, &end);
-	else
-		n = js_strtol(s, &end, 10);
+	else {
+		/* js_strtol doesn't parse the sign */
+		if (*s == '-')
+			n = -js_strtol(s+1, &end, 10);
+		else if (*s == '+')
+			n = js_strtol(s+1, &end, 10);
+		else
+			n = js_strtol(s, &end, 10);
+	}
 	if (end == e) {
 		*ep = (char*)e;
 		return n;
@@ -474,13 +481,24 @@ void js_newscript(js_State *J, js_Function *fun, js_Environment *scope)
 
 void js_newcfunctionx(js_State *J, js_CFunction cfun, const char *name, int length, void *data, js_Finalize finalize)
 {
-	js_Object *obj = jsV_newobject(J, JS_CCFUNCTION, J->Function_prototype);
+	js_Object *obj;
+
+	if (js_try(J)) {
+		if (finalize)
+			finalize(J, data);
+		js_throw(J);
+	}
+
+	obj = jsV_newobject(J, JS_CCFUNCTION, J->Function_prototype);
 	obj->u.c.name = name;
 	obj->u.c.function = cfun;
 	obj->u.c.constructor = NULL;
 	obj->u.c.length = length;
 	obj->u.c.data = data;
 	obj->u.c.finalize = finalize;
+
+	js_endtry(J);
+
 	js_pushobject(J, obj);
 	{
 		js_pushnumber(J, length);
@@ -527,6 +545,12 @@ void js_newuserdatax(js_State *J, const char *tag, void *data, js_HasProperty ha
 		prototype = js_toobject(J, -1);
 	js_pop(J, 1);
 
+	if (js_try(J)) {
+		if (finalize)
+			finalize(J, data);
+		js_throw(J);
+	}
+
 	obj = jsV_newobject(J, JS_CUSERDATA, prototype);
 	obj->u.user.tag = tag;
 	obj->u.user.data = data;
@@ -534,6 +558,9 @@ void js_newuserdatax(js_State *J, const char *tag, void *data, js_HasProperty ha
 	obj->u.user.put = put;
 	obj->u.user.delete = delete;
 	obj->u.user.finalize = finalize;
+
+	js_endtry(J);
+
 	js_pushobject(J, obj);
 }
 

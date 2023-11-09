@@ -309,7 +309,7 @@ js_State *js_newstate(js_Alloc alloc, void *actx, int flags)
 
 	J->stack = alloc(actx, NULL, JS_STACKSIZE * sizeof *J->stack);
 	if (!J->stack) {
-		alloc(actx, NULL, 0);
+		alloc(actx, J, 0);
 		return NULL;
 	}
 
