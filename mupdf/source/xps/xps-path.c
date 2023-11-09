@@ -802,8 +802,12 @@ xps_clip(fz_context *ctx, xps_document *doc, fz_matrix ctm, xps_resource *dict, 
 		path = xps_parse_path_geometry(ctx, doc, dict, clip_tag, 0, &fill_rule);
 	else
 		path = fz_new_path(ctx);
-	fz_clip_path(ctx, dev, path, fill_rule == 0, ctm, fz_infinite_rect);
-	fz_drop_path(ctx, path);
+	fz_try(ctx)
+		fz_clip_path(ctx, dev, path, fill_rule == 0, ctm, fz_infinite_rect);
+	fz_always(ctx)
+		fz_drop_path(ctx, path);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 void

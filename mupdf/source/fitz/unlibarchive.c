@@ -109,6 +109,7 @@ libarchive_read(struct archive *a, void *client_data, const void **buf)
 	fz_catch(ctx)
 	{
 		/* Ignore error */
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
 		return -1;
 	}
 
@@ -131,6 +132,7 @@ libarchive_skip(struct archive *a, void *client_data, la_int64_t skip)
 	fz_catch(ctx)
 	{
 		/* Ignore error */
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
 		return -1;
 	}
 
@@ -152,6 +154,7 @@ libarchive_seek(struct archive *a, void *client_data, la_int64_t offset, int whe
 	fz_catch(ctx)
 	{
 		/* Ignore error */
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
 		return -1;
 	}
 
@@ -161,8 +164,6 @@ libarchive_seek(struct archive *a, void *client_data, la_int64_t offset, int whe
 static int
 libarchive_close(struct archive *a, void *client_data)
 {
-	fz_libarchive_archive *arch = (fz_libarchive_archive *)client_data;
-
 	/* Nothing to do. Stream is dropped when the fz_archive is closed. */
 	return ARCHIVE_OK;
 }
@@ -236,7 +237,7 @@ lookup_archive_entry(fz_context *ctx, fz_libarchive_archive *arch, const char *n
 
 	for (idx = 0; idx < arch->entries_len; idx++)
 	{
-		if (!strcmp(name, arch->entries[idx]->name))
+		if (!strcmp(name, (const char *)arch->entries[idx]->name))
 			return idx;
 	}
 
@@ -254,7 +255,7 @@ static const char *list_libarchive_entry(fz_context *ctx, fz_archive *arch_, int
 	fz_libarchive_archive *arch = (fz_libarchive_archive *)arch_;
 	if (idx < 0 || idx >= arch->entries_len)
 		return NULL;
-	return arch->entries[idx]->name;
+	return (const char *)arch->entries[idx]->name;
 }
 
 static int count_libarchive_entries(fz_context *ctx, fz_archive *arch_)
@@ -267,10 +268,10 @@ static fz_buffer *
 read_libarchive_entry(fz_context *ctx, fz_archive *arch_, const char *name)
 {
 	fz_libarchive_archive *arch = (fz_libarchive_archive *)arch_;
-	fz_stream *file = arch->super.file;
 	fz_buffer *ubuf = NULL;
 	int idx;
 	struct archive_entry *entry;
+	la_ssize_t ret;
 	size_t size;
 
 	idx = lookup_archive_entry(ctx, arch, name);
@@ -303,9 +304,11 @@ read_libarchive_entry(fz_context *ctx, fz_archive *arch_, const char *name)
 		size = arch->entries[idx]->len;
 		ubuf = fz_new_buffer(ctx, size);
 
-		ubuf->len = archive_read_data(arch->archive, ubuf->data, size);
-		if (ubuf->len != size)
-			fz_warn(ctx, "Premature end of data reading archive entry data (%z vs %z)", (size_t)ubuf->len, (size_t)size);
+		ret = archive_read_data(arch->archive, ubuf->data, size);
+		if (ret < 0)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to read archive data");
+		if ((size_t)ret != size)
+			fz_warn(ctx, "Premature end of data reading archive entry data (%zu vs %zu)", (size_t)ubuf->len, (size_t)size);
 	}
 	fz_always(ctx)
 		arch->ctx = NULL;
@@ -321,7 +324,6 @@ read_libarchive_entry(fz_context *ctx, fz_archive *arch_, const char *name)
 static fz_stream *
 open_libarchive_entry(fz_context *ctx, fz_archive *arch_, const char *name)
 {
-	fz_libarchive_archive *arch = (fz_libarchive_archive *)arch_;
 	fz_buffer *buf = read_libarchive_entry(ctx, arch_, name);
 	fz_stream *stm = NULL;
 
@@ -374,6 +376,10 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 			if (r != ARCHIVE_OK)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Corrupt archive");
 
+			path = archive_entry_pathname_utf8(entry);
+			if (!path)
+				continue;
+
 			if (arch->entries_len == arch->entries_max)
 			{
 				int new_max = arch->entries_max * 2;
@@ -383,8 +389,6 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 				arch->entries = fz_realloc(ctx, arch->entries, sizeof(arch->entries[0]) * new_max);
 				arch->entries_max = new_max;
 			}
-
-			path = archive_entry_pathname_utf8(entry);
 
 			z = strlen(path);
 			arch->entries[arch->entries_len] = fz_malloc(ctx, sizeof(entry_t) - 32 + z + 1);
@@ -425,6 +429,222 @@ fz_open_libarchive_archive(fz_context *ctx, const char *filename)
 	return tar;
 }
 
+
+/* Universal decomp stream */
+
+typedef struct
+{
+	fz_stream *chain;
+	fz_context *ctx; /* Safe as not persistent. */
+	struct archive *archive;
+	struct archive_entry *entry;
+	uint8_t block[4096];
+} fz_libarchived_state;
+
+static la_ssize_t
+libarchived_read(struct archive *a, void *client_data, const void **buf)
+{
+	fz_libarchived_state *state = (fz_libarchived_state *)client_data;
+	size_t z;
+	uint8_t *p;
+	size_t left;
+	fz_context *ctx = state->ctx;
+	la_ssize_t ret = 0;
+
+	fz_try(ctx)
+	{
+		z = fz_available(ctx, state->chain, 1024);
+
+		/* If we're at the EOF, can't read anything! */
+		if (z == 0)
+			break;
+
+		/* If we have at least 1K, then just return the pointer to that
+		 * directly. */
+		if (z >= 1024)
+		{
+			*buf = state->chain->rp;
+			state->chain->rp += z;
+			ret = (la_ssize_t)z;
+			break;
+		}
+
+		/* If not, let's pull a large enough lump out. */
+
+		left = sizeof(state->block);
+		p = state->block;
+		do
+		{
+			memcpy(p, state->chain->rp, z);
+			p += z;
+			state->chain->rp += z;
+			left -= z;
+			if (left)
+			{
+				z = fz_available(ctx, state->chain, left);
+				if (z > left)
+					z = left;
+				if (z == 0)
+					break;
+			}
+		}
+		while (left != 0);
+
+		ret = p - state->block;
+		*buf = state->block;
+	}
+	fz_catch(ctx)
+	{
+		/* Ignore error */
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		return -1;
+	}
+
+	return ret;
+}
+
+static la_int64_t
+libarchived_skip(struct archive *a, void *client_data, la_int64_t skip)
+{
+	fz_libarchived_state *state = (fz_libarchived_state *)client_data;
+	int64_t pos;
+	fz_context *ctx = state->ctx;
+
+	fz_try(ctx)
+	{
+		pos = fz_tell(state->ctx, state->chain);
+		fz_seek(state->ctx, state->chain, pos + skip, SEEK_SET);
+		pos = fz_tell(state->ctx, state->chain) - pos;
+	}
+	fz_catch(ctx)
+	{
+		/* Ignore error */
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		return -1;
+	}
+
+	return pos;
+}
+
+static la_int64_t
+libarchived_seek(struct archive *a, void *client_data, la_int64_t offset, int whence)
+{
+	fz_libarchived_state *state = (fz_libarchived_state *)client_data;
+	fz_context *ctx = state->ctx;
+	int64_t pos;
+
+	fz_try(ctx)
+	{
+		fz_seek(ctx, state->chain, offset, whence);
+		pos = fz_tell(ctx, state->chain);
+	}
+	fz_catch(ctx)
+	{
+		/* Ignore error */
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		return -1;
+	}
+
+	return pos;
+}
+
+static int
+libarchived_close(struct archive *a, void *client_data)
+{
+	/* Nothing to do. Stream is dropped when the fz_stream is dropped. */
+	return ARCHIVE_OK;
+}
+
+static int
+next_libarchived(fz_context *ctx, fz_stream *stm, size_t required)
+{
+	fz_libarchived_state *state = stm->state;
+	la_ssize_t z;
+
+	if (stm->eof)
+		return EOF;
+
+	z = archive_read_data(state->archive, state->block, sizeof(state->block));
+	if (z < 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to read compressed data");
+	if (z == 0)
+	{
+		stm->eof = 1;
+		return EOF;
+	}
+
+	stm->rp = state->block;
+	stm->wp = state->block + z;
+
+	return *stm->rp++;
+}
+
+static void
+close_libarchived(fz_context *ctx, void *state_)
+{
+	fz_libarchived_state *state = (fz_libarchived_state *)state_;
+	int code;
+
+	state->ctx = ctx;
+	code = archive_read_free(state->archive);
+	state->ctx = NULL;
+	if (code != ARCHIVE_OK)
+		fz_warn(ctx, "libarchive error: archive_read_free: %d", code);
+
+	fz_drop_stream(ctx, state->chain);
+	fz_free(ctx, state);
+}
+
+fz_stream *
+fz_open_libarchived(fz_context *ctx, fz_stream *chain)
+{
+	fz_libarchived_state *state;
+	int r;
+
+	state = fz_malloc_struct(ctx, fz_libarchived_state);
+
+	state->chain = fz_keep_stream(ctx, chain);
+	state->archive = archive_read_new();
+	archive_read_support_filter_all(state->archive);
+	archive_read_support_format_raw(state->archive);
+
+	state->ctx = ctx;
+	r = archive_read_set_seek_callback(state->archive, libarchived_seek);
+	if (r == ARCHIVE_OK)
+		r = archive_read_open2(state->archive, state, NULL, libarchived_read, libarchived_skip, libarchived_close);
+	if (r != ARCHIVE_OK)
+	{
+		archive_read_free(state->archive);
+		state->ctx = NULL;
+		fz_drop_stream(ctx, state->chain);
+		fz_free(ctx, state);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to open archive");
+	}
+
+	r = archive_filter_code(state->archive, 0);
+	if (r == ARCHIVE_FILTER_NONE)
+	{
+		archive_read_free(state->archive);
+		state->ctx = NULL;
+		fz_drop_stream(ctx, state->chain);
+		fz_free(ctx, state);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to open archive");
+	}
+
+	/* This is the one we want. */
+	r = archive_read_next_header(state->archive, &state->entry);
+	if (r != ARCHIVE_OK)
+	{
+		archive_read_free(state->archive);
+		state->ctx = NULL;
+		fz_drop_stream(ctx, state->chain);
+		fz_free(ctx, state);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to open archive");
+	}
+
+	return fz_new_stream(ctx, state, next_libarchived, close_libarchived);
+}
+
 #else
 
 int
@@ -451,6 +671,14 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 
 fz_archive *
 fz_open_libarchive_archive(fz_context *ctx, const char *filename)
+{
+	fz_throw(ctx, FZ_ERROR_GENERIC, "libarchive support not included");
+
+	return NULL;
+}
+
+fz_stream *
+fz_open_libarchived(fz_context *ctx, fz_stream *chain)
 {
 	fz_throw(ctx, FZ_ERROR_GENERIC, "libarchive support not included");
 

@@ -155,6 +155,15 @@ fz_stream *fz_open_faxd(fz_context *ctx, fz_stream *chain,
 fz_stream *fz_open_flated(fz_context *ctx, fz_stream *chain, int window_bits);
 
 /**
+	libarchived filter performs generic compressed decoding of data
+	in any format understood by libarchive from the chained filter.
+
+	This will throw an exception if libarchive is not built in, or
+	if the compression format is not recognised.
+*/
+fz_stream *fz_open_libarchived(fz_context *ctx, fz_stream *chain);
+
+/**
 	lzwd filter performs LZW decoding of data read from the chained
 	filter.
 
