@@ -136,6 +136,7 @@ bool PdfMerger::MergePdfFile(const char* path) {
     }
     fz_catch(ctx) {
         // TODO: show error message
+        fz_report_error(ctx);
         return false;
     }
     return true;
@@ -164,6 +165,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
         doc_des = pdf_create_document(ctx);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         doc_des = nullptr;
     }
     if (doc_des == nullptr) {
@@ -190,6 +192,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
         pdf_save_document(ctx, doc_des, dstPath, &opts);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         // TODO: show an error message?
         return false;
     }

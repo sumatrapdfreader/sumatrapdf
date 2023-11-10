@@ -336,6 +336,7 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
             }
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             fz_warn(ctx, "ignoring face name decoding fonterror");
         }
     }
@@ -449,6 +450,7 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
                     parseTTFs(ctx, szPathUtf8);
             }
             fz_catch(ctx) {
+                fz_report_error(ctx);
                 // ignore errors occurring while parsing a given font file
             }
         }
@@ -583,6 +585,7 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
             create_system_font_list(ctx);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     LeaveCriticalSection(&cs_fonts);
@@ -720,6 +723,7 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
         font = pdf_load_windows_font_by_name(ctx, fontname);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     if (font)
         return font;
@@ -754,6 +758,7 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
                     }
                     fz_catch(ctx) {
                         font = pdf_load_windows_font_by_name(ctx, "KaiTi_GB2312");
+                        fz_report_error(ctx);
                     }
                     break;
                 case FZ_ADOBE_JAPAN:

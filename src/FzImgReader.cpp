@@ -34,6 +34,7 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
     fz_catch(ctx) {
         fz_drop_colorspace(ctx, cs);
         cs = nullptr;
+        fz_report_error(ctx);
     }
 
     Gdiplus::PixelFormat fmt = fz_device_rgb(ctx) == cs    ? PixelFormat24bppRGB
@@ -90,6 +91,7 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
         fz_drop_colorspace(ctx, cs);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         return nullptr;
     }
 
@@ -139,6 +141,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
         pix = fz_load_jpx(ctx, data, len, nullptr);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         pix = nullptr;
     }
     if (!pix) {
@@ -179,6 +182,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
         fz_drop_pixmap(ctx, pix_argb);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         return nullptr;
     }
 

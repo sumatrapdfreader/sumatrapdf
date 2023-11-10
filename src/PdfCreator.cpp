@@ -89,6 +89,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
         fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         fz_rethrow(ctx);
     }
     return img;
@@ -114,6 +115,7 @@ PdfCreator::PdfCreator() {
         doc = pdf_create_document(ctx);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         doc = nullptr;
     }
 }
@@ -181,6 +183,7 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) const {
     }
     fz_catch(ctx) {
         ok = false;
+        fz_report_error(ctx);
     }
     return ok;
 }
@@ -198,6 +201,7 @@ static bool AddPageFromHBITMAP(PdfCreator* c, HBITMAP hbmp, Size size, float img
         fz_drop_image(c->ctx, image);
     }
     fz_catch(c->ctx) {
+        fz_report_error(c->ctx);
         return false;
     }
     return ok;
@@ -230,6 +234,7 @@ bool PdfCreator::AddPageFromImageData(const ByteSlice& data, float imgDpi) const
         img = fz_new_image_from_buffer(ctx, buf);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         img = nullptr;
     }
     if (!img) {
@@ -283,6 +288,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const char* value) const {
         pdf_dict_puts_drop(ctx, info, name, valobj);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         return false;
     }
     return true;
@@ -349,6 +355,7 @@ bool PdfCreator::SaveToFile(const char* filePath) const {
         pdf_save_document(ctx, doc, (const char*)filePath, &opts);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         return false;
     }
     return true;

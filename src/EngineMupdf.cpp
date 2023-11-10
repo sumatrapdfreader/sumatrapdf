@@ -164,6 +164,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float
     }
     fz_catch(ctx) {
         fz_warn(ctx, "fz_resolve_link failed");
+        fz_report_error(ctx);
         pageNo = -1;
     }
 
@@ -416,6 +417,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
         }
         fz_catch(ctx) {
             stm = nullptr;
+            fz_report_error(ctx);
         }
         return stm;
     }
@@ -426,6 +428,7 @@ static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
     }
     fz_catch(ctx) {
         stm = nullptr;
+        fz_report_error(ctx);
     }
     return stm;
 }
@@ -443,6 +446,7 @@ static void FzStreamFingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) 
     fz_catch(ctx) {
         fz_warn(ctx, "couldn't read stream data, using a nullptr fingerprint instead");
         ZeroMemory(digest, 16);
+        fz_report_error(ctx);
         return;
     }
     CrashIf(nullptr == buf);
@@ -891,6 +895,7 @@ RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
         bgrPixmap = FzConvertPixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         return nullptr;
     }
 
@@ -1140,6 +1145,7 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
         stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     if (!stext) {
         return nullptr;
@@ -1246,6 +1252,7 @@ static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
         pdf_drop_obj(ctx, dict);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logfa("PdfLoadAttachment() failed\n");
     }
     return res;
@@ -1290,6 +1297,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const 
         pdf_drop_obj(ctx, dict);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logfa("PdfLoadAttachments() failed for '%s'\n", path);
     }
     return root.next;
@@ -1635,6 +1643,7 @@ ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
         buffer = pdf_load_stream_number(ctx, pdfdoc, streamNo);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         return {};
     }
     auto dataSize = buffer->len;
@@ -1770,6 +1779,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
         file = FzOpenFile2(ctx, fnCopy);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         file = nullptr;
     }
 
@@ -1797,6 +1807,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
             fz_drop_buffer(ctx, buffer);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             return false;
         }
     }
@@ -1847,6 +1858,7 @@ bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI)
         stm = FzOpenIStream(ctx, stream);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         stm = nullptr;
     }
     if (!stm) {
@@ -1903,6 +1915,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         fz_drop_stream(ctx, stm);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         _doc = nullptr;
     }
     if (!_doc) {
@@ -1984,6 +1997,7 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
         root = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Root");
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         root = nullptr;
     }
     if (!root) {
@@ -2001,6 +2015,7 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
 
     pdf_obj* prefs = nullptr;
@@ -2015,6 +2030,7 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
 
     return layout;
@@ -2031,6 +2047,7 @@ static bool IsLinearizedFile(EngineMupdf* e) {
         isLinear = pdf_doc_was_linearized(e->ctx, e->pdfdoc);
     }
     fz_catch(e->ctx) {
+        fz_report_error(e->ctx);
         isLinear = 0;
     }
     return isLinear;
@@ -2055,6 +2072,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
             fz_drop_page(ctx, page);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             mbox = {};
         }
         if (fz_is_empty_rect(mbox)) {
@@ -2077,6 +2095,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
         // otherwise get displayed
+        fz_report_error(ctx);
         fz_warn(ctx, "Couldn't load outline");
     }
 }
@@ -2091,6 +2110,7 @@ bool EngineMupdf::FinishLoading() {
         pageCount = fz_count_pages(ctx, _doc);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         pageCount = 0;
     }
     if (pageCount == 0) {
@@ -2126,6 +2146,7 @@ bool EngineMupdf::FinishLoading() {
             mbox = fz_transform_rect(mbox, page_ctm);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             mbox = {};
         }
         if (fz_is_empty_rect(mbox)) {
@@ -2144,6 +2165,7 @@ bool EngineMupdf::FinishLoading() {
         outline = fz_load_outline(ctx, _doc);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         // ignore errors from pdf_load_outline()
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
@@ -2198,6 +2220,7 @@ bool EngineMupdf::FinishLoading() {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         fz_warn(ctx, "Couldn't load document properties");
         pdf_drop_obj(ctx, pdfInfo);
         pdfInfo = nullptr;
@@ -2212,6 +2235,7 @@ bool EngineMupdf::FinishLoading() {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         fz_warn(ctx, "Couldn't load page labels");
     }
     if (pageLabels) {
@@ -2355,6 +2379,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
         pdf_drop_obj(ctx, nameobj);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         dest = nullptr;
     }
 
@@ -2370,6 +2395,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
         uri = pdf_parse_link_dest(ctx, pdfdoc, dest);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         uri = nullptr;
     }
 
@@ -2502,6 +2528,7 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
             RebuildCommentsFromAnnotationsInner(ctx, annot, pageNo, comments);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
 
@@ -2527,6 +2554,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
             pageInfo->page = fz_load_page(ctx, _doc, pageIdx);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
 
@@ -2549,6 +2577,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
             }
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
         RebuildCommentsFromAnnotations(ctx, pageInfo);
     }
@@ -2569,6 +2598,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
         stext = fz_new_stext_page_from_page(ctx, page, &opts);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
 
     fz_link* link = fz_load_links(ctx, page);
@@ -2633,6 +2663,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         list = nullptr;
     }
 
@@ -2740,6 +2771,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             fz_drop_pixmap(ctx, pix);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             delete bitmap;
             return nullptr;
         }
@@ -2761,6 +2793,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             fz_drop_pixmap(ctx, pix);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             delete bitmap;
             return nullptr;
         }
@@ -2814,6 +2847,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         pageNo = fz_page_number_from_location(e->ctx, e->_doc, ldest.loc);
     }
     fz_catch(e->ctx) {
+        fz_report_error(e->ctx);
         logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
     }
     if (pageNo < 0) {
@@ -2869,6 +2903,7 @@ fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
         bounds = fz_bound_page_box(ctx, page, FZ_MEDIA_BOX);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         bounds = {};
     }
     if (fz_is_empty_rect(bounds)) {
@@ -2914,6 +2949,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         fz_drop_pixmap(ctx, pixmap);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         bmp = nullptr;
     }
 
@@ -2935,6 +2971,7 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
         stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     if (!stext) {
         return {};
@@ -3002,6 +3039,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             }
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
 
@@ -3065,6 +3103,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             }
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             continue;
         }
         CrashIf(!name || !type || !encoding);
@@ -3236,6 +3275,7 @@ ByteSlice EngineMupdf::GetFileData() {
         res = FzExtractStreamData(ctx, pdfdoc->file);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         res = {};
     }
 
@@ -3331,6 +3371,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
         logf("Saved annotations to '%s' in  %.2f ms, incremental: %d\n", path, dur, save_opts.do_incremental);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         const char* mupdfErr = fz_caught_message(epdf->ctx);
         logf("Saving '%s' failed with: '%s'\n", path, mupdfErr);
         if (showErrorFunc) {
@@ -3678,6 +3719,7 @@ Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pag
         typ = AnnotationTypeFromPdfAnnot(tp);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         // do nothing
     }
 

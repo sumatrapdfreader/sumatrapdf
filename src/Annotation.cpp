@@ -163,6 +163,7 @@ RectF GetBounds(Annotation* annot) {
         rc = pdf_bound_annot(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logf("GetBounds(): pdf_bound_annot() failed\n");
     }
     annot->bounds = ToRectF(rc);
@@ -185,6 +186,7 @@ void SetRect(Annotation* annot, RectF r) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             // can happen for non-moveable annotations
             failed = true;
             logf("SetRect(): pdf_set_annot_rect() or pdf_update_annot() failed\n");
@@ -210,6 +212,7 @@ const char* Author(Annotation* annot) {
         s = pdf_annot_author(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         s = nullptr;
     }
     if (!s || str::EmptyOrWhiteSpaceOnly(s)) {
@@ -227,6 +230,7 @@ int Quadding(Annotation* annot) {
         res = pdf_annot_quadding(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logf("Quadding(): pdf_annot_quadding() failed\n");
     }
     return res;
@@ -252,6 +256,7 @@ bool SetQuadding(Annotation* annot, int newQuadding) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             logf("SetQuadding(): pdf_set_annot_quadding or pdf_update_annot() failed\n");
         }
     }
@@ -282,6 +287,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             logf("SetQuadPointsAsRect(): mupdf calls failed\n");
         }
     }
@@ -305,6 +311,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
             r = fz_rect_from_quad(q);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
         RectF rect = ToRectF(r);
         res.Append(rect);
@@ -322,6 +329,7 @@ TempStr Contents(Annotation* annot) {
         s = pdf_annot_contents(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         s = nullptr;
         logf("Contents(): pdf_annot_contents()\n");
     }
@@ -342,6 +350,7 @@ bool SetContents(Annotation* annot, const char* sv) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -363,6 +372,7 @@ void DeleteAnnotation(Annotation* annot) {
             pdf_delete_annot(ctx, page, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             failed = true;
         }
         if (failed) {
@@ -387,6 +397,7 @@ int PopupId(Annotation* annot) {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     return res;
 }
@@ -403,6 +414,7 @@ time_t CreationDate(Annotation* annot) {
         res = pdf_annot_creation_date(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     return res;
 }
@@ -417,6 +429,7 @@ time_t ModificationDate(Annotation* annot) {
         res = pdf_annot_modification_date(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     return res;
 }
@@ -436,6 +449,7 @@ const char* IconName(Annotation* annot) {
         }
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     return iconName;
 }
@@ -450,6 +464,7 @@ void SetIconName(Annotation* annot, const char* iconName) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     // TODO: only if the value changed
@@ -494,6 +509,7 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
                              fz_default_color_params);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
         return MkPdfColorFromFloat(rgb[0], rgb[1], rgb[2]);
     }
@@ -511,6 +527,7 @@ PdfColor GetColor(Annotation* annot) {
         pdf_annot_color(ctx, annot->pdfannot, &n, color);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         n = -1;
     }
     if (n == -1) {
@@ -535,6 +552,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
             oldOpacity = pdf_annot_opacity(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             n = -1;
         }
         if (n == -1) {
@@ -571,6 +589,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -587,6 +606,7 @@ PdfColor InteriorColor(Annotation* annot) {
         pdf_annot_interior_color(ctx, annot->pdfannot, &n, color);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         n = -1;
     }
     if (n == -1) {
@@ -608,6 +628,7 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
             pdf_annot_color(ctx, annot->pdfannot, &n, color);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             n = -1;
         }
         if (n == -1) {
@@ -635,6 +656,7 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -653,6 +675,7 @@ const char* DefaultAppearanceTextFont(Annotation* annot) {
         pdf_annot_default_appearance(ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     return fontName;
 }
@@ -672,6 +695,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, const char* sv) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -689,6 +713,7 @@ int DefaultAppearanceTextSize(Annotation* annot) {
         pdf_annot_default_appearance(ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     return (int)sizeF;
 }
@@ -708,6 +733,7 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -725,6 +751,7 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
         pdf_annot_default_appearance(ctx, annot->pdfannot, &fontName, &sizeF, &n, textColor);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
     }
     PdfColor res = PdfColorFromFloat(ctx, n, textColor);
     return res;
@@ -746,6 +773,7 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -761,6 +789,7 @@ void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
         pdf_annot_line_ending_styles(ctx, annot->pdfannot, &leStart, &leEnd);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logf("GetLineEndingStyles: pdf_annot_line_ending_styles() failed\n");
     }
     *start = (int)leStart;
@@ -781,6 +810,7 @@ void SetLineEndingStyles(Annotation* annot, int start, int end) {
                         pdf_update_annot(ctx, annot->pdfannot);
                 }
                 fz_catch(ctx) {
+                        fz_report_error(ctx);
                         logf("SetLineEndingStyles: failure in mupdf calls\n");
                 }
         }
@@ -797,6 +827,7 @@ int BorderWidth(Annotation* annot) {
         res = pdf_annot_border(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logf("BorderWidth: pdf_annot_border() failed\n");
     }
 
@@ -813,6 +844,7 @@ void SetBorderWidth(Annotation* annot, int newWidth) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             logf("SetBorderWidth: SetBorderWidth() or pdf_update_annot() failed\n");
         }
     }
@@ -828,6 +860,7 @@ int Opacity(Annotation* annot) {
         fopacity = pdf_annot_opacity(ctx, annot->pdfannot);
     }
     fz_catch(ctx) {
+        fz_report_error(ctx);
         logf("Opacity: pdf_annot_opacity() failed\n");
     }
     int res = (int)(fopacity * 255.f);
@@ -848,6 +881,7 @@ void SetOpacity(Annotation* annot, int newOpacity) {
             pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             logf("SetOpacity: pdf_set_annot_opacity() or pdf_update_annot() failed\n");
         }
     }
@@ -1038,6 +1072,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
             pdf_update_annot(ctx, annot);
         }
         fz_catch(ctx) {
+            fz_report_error(ctx);
             if (annot) {
                 pdf_drop_annot(ctx, annot);
             }

@@ -224,7 +224,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     wd->startMonitoring = false;
 
     // This might mean overflow? Not sure.
-    if (!bytesTransfered) {    
+    if (!bytesTransfered) {
         StartMonitoringDirForChanges(wd);
         return;
     }
