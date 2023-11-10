@@ -2363,6 +2363,22 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
     if (!pdfdoc) {
         return nullptr;
     }
+    IPageDestination* pageDest = nullptr;
+    ScopedCritSec scope2(ctxAccess);
+    char* uri = str::JoinTemp("#nameddest=", name);
+    float x, y, zoom = 0;
+    int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
+
+    RectF r{x, y, 0, 0};
+    pageDest = NewSimpleDest(pageNo, r, zoom);
+    return pageDest;
+}
+
+#if 0
+IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
+    if (!pdfdoc) {
+        return nullptr;
+    }
 
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(ctxAccess);
@@ -2411,6 +2427,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
     fz_free(ctx, uri);
     return pageDest;
 }
+#endif
 
 // return a page but only if is fully loaded
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
