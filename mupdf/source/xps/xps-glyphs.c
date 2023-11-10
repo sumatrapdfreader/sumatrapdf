@@ -258,12 +258,19 @@ xps_lookup_font(fz_context *ctx, xps_document *doc, char *base_uri, char *font_u
 			if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
 			{
 				if (doc->cookie)
+				{
 					doc->cookie->incomplete = 1;
+					fz_ignore_error(ctx);
+				}
 				else
 					fz_rethrow(ctx);
 			}
 			else
+			{
+				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_report_error(ctx);
 				fz_warn(ctx, "cannot find font resource part '%s'", partname);
+			}
 			return NULL;
 		}
 

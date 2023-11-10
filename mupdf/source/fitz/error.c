@@ -333,6 +333,16 @@ void (fz_log_error)(fz_context *ctx, const char *str)
 /* coverity[+kill] */
 FZ_NORETURN void (fz_vthrow)(fz_context *ctx, int code, const char *fmt, va_list ap)
 {
+	if (ctx->error.message[0])
+	{
+		fz_flush_warnings(ctx);
+		fz_warn(ctx, "UNHANDLED EXCEPTION!");
+		fz_report_error(ctx);
+#ifdef CLUSTER
+		abort();
+#endif
+	}
+
 	fz_vsnprintf(ctx->error.message, sizeof ctx->error.message, fmt, ap);
 	ctx->error.message[sizeof(ctx->error.message) - 1] = 0;
 
@@ -453,6 +463,16 @@ void fz_log_errorFL(fz_context *ctx, const char *file, int line, const char *str
 /* coverity[+kill] */
 FZ_NORETURN void fz_vthrowFL(fz_context *ctx, const char *file, int line, int code, const char *fmt, va_list ap)
 {
+	if (ctx->error.message[0])
+	{
+		fz_flush_warnings(ctx);
+		fz_warn(ctx, "UNHANDLED EXCEPTION!");
+		fz_report_error(ctx);
+#ifdef CLUSTER
+		abort();
+#endif
+	}
+
 	fz_vsnprintf(ctx->error.message, sizeof ctx->error.message, fmt, ap);
 	ctx->error.message[sizeof(ctx->error.message) - 1] = 0;
 
@@ -521,4 +541,38 @@ void fz_end_throw_on_repair(fz_context *ctx)
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 	ctx->throw_on_repair--;
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
+}
+
+void fz_report_error(fz_context *ctx)
+{
+#ifdef CLUSTER
+	if (ctx->error.errcode == FZ_ERROR_TRYLATER || ctx->error.errcode == FZ_ERROR_ABORT)
+	{
+		fprintf(stderr, "REPORTED ERROR THAT IS TRYLATER OR ABORT\n");
+		abort();
+	}
+#endif
+	ctx->error.errcode = FZ_ERROR_NONE;
+	fz_log_error(ctx, ctx->error.message);
+}
+
+void fz_ignore_error(fz_context *ctx)
+{
+#ifdef CLUSTER
+	if (ctx->error.errcode != FZ_ERROR_TRYLATER && ctx->error.errcode != FZ_ERROR_ABORT)
+	{
+		fprintf(stderr, "IGNORED ERROR THAT IS NOT TRYLATER OR ABORT\n");
+		abort();
+	}
+#endif
+	ctx->error.errcode = FZ_ERROR_NONE;
+}
+
+/* Convert an error into another runtime exception. */
+const char *fz_convert_error(fz_context *ctx, int *code)
+{
+	if (code)
+		*code = ctx->error.errcode;
+	ctx->error.errcode = FZ_ERROR_NONE;
+	return ctx->error.message;
 }

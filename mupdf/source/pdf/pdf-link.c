@@ -637,6 +637,8 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
 			link = NULL;
 		}
 

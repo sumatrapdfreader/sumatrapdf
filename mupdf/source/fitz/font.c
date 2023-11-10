@@ -456,6 +456,8 @@ fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int it
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
 			font = NULL;
 		}
 	}
@@ -474,6 +476,8 @@ fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ros, int
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
 			font = NULL;
 		}
 	}
@@ -492,6 +496,8 @@ fz_font *fz_load_system_fallback_font(fz_context *ctx, int script, int language,
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
 			font = NULL;
 		}
 	}

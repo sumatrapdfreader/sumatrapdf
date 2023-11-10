@@ -40,7 +40,7 @@
 
 FZ_NORETURN static void rethrow(js_State *J)
 {
-	js_newerror(J, fz_caught_message(js_getcontext(J)));
+	js_newerror(J, fz_convert_error(js_getcontext(J), NULL));
 	js_throw(J);
 }
 

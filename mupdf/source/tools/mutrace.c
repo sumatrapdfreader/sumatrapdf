@@ -153,7 +153,8 @@ int mutrace_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
-		fprintf(stderr, "cannot initialize mupdf: %s\n",  fz_caught_message(ctx));
+		fz_report_error(ctx);
+		fprintf(stderr, "cannot initialize mupdf\n");
 		fz_drop_context(ctx);
 		return EXIT_FAILURE;
 	}
@@ -181,7 +182,8 @@ int mutrace_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
-		fprintf(stderr, "cannot run document: %s\n", fz_caught_message(ctx));
+		fz_report_error(ctx);
+		fprintf(stderr, "cannot run document\n");
 		fz_drop_document(ctx, doc);
 		fz_drop_context(ctx);
 		return EXIT_FAILURE;

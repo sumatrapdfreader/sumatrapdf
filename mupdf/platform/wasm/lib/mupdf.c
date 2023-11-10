@@ -59,10 +59,14 @@ static fz_quad out_quad;
 __attribute__((noinline)) void
 wasm_rethrow(fz_context *ctx)
 {
-	if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
-		EM_ASM({ throw new libmupdf.TryLaterError("operation in progress"); });
+	int code;
+	const char *message = fz_convert_error(ctx, &code);
+	if (code == FZ_ERROR_TRYLATER)
+		EM_ASM({ throw new libmupdf.TryLaterError(UTF8ToString($0)); }, message);
+	else if (code == FZ_ERROR_ABORT)
+		EM_ASM({ throw new libmupdf.AbortError(UTF8ToString($0)); }, message);
 	else
-		EM_ASM({ throw new Error(UTF8ToString($0)); }, fz_caught_message(ctx));
+		EM_ASM({ throw new Error(UTF8ToString($0)); }, message);
 }
 
 EXPORT

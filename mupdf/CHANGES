@@ -3,6 +3,11 @@ List of changes in MuPDF 1.24
 	Removed deprecated functions:
 		pdf_check_signature
 
+	Error handling changes:
+		You must call pdf_report_error in the final fz_catch. Any
+		unreported errors will be automatically reported when a new
+		error is raised, or when closing the fitz context.
+
 List of changes in MuPDF 1.23.0
 
 	New features:

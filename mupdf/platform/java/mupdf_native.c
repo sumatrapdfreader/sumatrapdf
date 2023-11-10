@@ -662,10 +662,14 @@ static void jni_throw_imp(JNIEnv *env, jclass cls, const char *mess)
 
 static void jni_rethrow_imp(JNIEnv *env, fz_context *ctx)
 {
-	if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
-		jni_throw_imp(env, cls_TryLaterException, fz_caught_message(ctx));
+	int code;
+	const char *message = fz_convert_error(ctx, &code);
+	if (code == FZ_ERROR_TRYLATER)
+		jni_throw_imp(env, cls_TryLaterException, message);
+	else if (code == FZ_ERROR_ABORT)
+		jni_throw_imp(env, cls_AbortException, message);
 	else
-		jni_throw_imp(env, cls_RuntimeException, fz_caught_message(ctx));
+		jni_throw_imp(env, cls_RuntimeException, message);
 }
 
 #define jni_rethrow_void(env, ctx) do { jni_rethrow_imp(env, ctx); return; } while (0);

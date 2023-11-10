@@ -1568,14 +1568,14 @@ def make_function_wrappers(
             f'''
             FZ_FUNCTION void {te}(fz_context* ctx)
             {{
-                int code = fz_caught(ctx);
+                int code;
+                const char* text = fz_convert_error(ctx, &code);
                 {refcheck_if}
                 if (s_trace_exceptions)
                 {{
                     std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): code=" << code << "\\n";
                 }}
                 #endif
-                const char* text = fz_caught_message(ctx);
                 {refcheck_if}
                 if (s_trace_exceptions)
                 {{

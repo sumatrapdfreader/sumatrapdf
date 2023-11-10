@@ -219,6 +219,7 @@ static int run_slow_operation_step(int cancel)
 		ui_show_warning_dialog("%s failed: %s",
 			ui_slow_operation_state.operation_text,
 			fz_caught_message(ctx));
+		fz_report_error(ctx);
 
 		/* Call to cancel. */
 		fz_try(ctx)
@@ -426,6 +427,7 @@ static void do_save_pdf_dialog(int for_signing)
 			fz_catch(ctx)
 			{
 				ui_show_warning_dialog("%s", fz_caught_message(ctx));
+				fz_report_error(ctx);
 			}
 		}
 	}
@@ -482,6 +484,7 @@ static void save_attachment_dialog(void)
 			fz_catch(ctx)
 			{
 				ui_show_warning_dialog("%s", fz_caught_message(ctx));
+				fz_report_error(ctx);
 			}
 		}
 	}
@@ -522,6 +525,7 @@ static void open_attachment_dialog(void)
 			fz_catch(ctx)
 			{
 				ui_show_warning_dialog("%s", fz_caught_message(ctx));
+				fz_report_error(ctx);
 			}
 		}
 	}
@@ -551,6 +555,7 @@ static void open_stamp_image_dialog(void)
 			fz_catch(ctx)
 			{
 				ui_show_warning_dialog("%s", fz_caught_message(ctx));
+				fz_report_error(ctx);
 			}
 		}
 	}

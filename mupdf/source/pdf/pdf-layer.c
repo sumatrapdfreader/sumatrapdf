@@ -773,6 +773,8 @@ pdf_read_ocg(fz_context *ctx, pdf_document *doc)
 		pdf_drop_ocg(ctx, doc);
 		doc->ocg = NULL;
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_report_error(ctx);
 		fz_warn(ctx, "Ignoring broken Optional Content configuration");
 		doc->ocg = fz_malloc_struct(ctx, pdf_ocg_descriptor);
 	}

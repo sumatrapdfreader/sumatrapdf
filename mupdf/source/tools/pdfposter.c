@@ -259,7 +259,7 @@ int pdfposter_main(int argc, char **argv)
 		pdf_drop_document(ctx, doc);
 	fz_catch(ctx)
 	{
-		fz_log_error(ctx, fz_caught_message(ctx));
+		fz_report_error(ctx);
 		ret = 1;
 	}
 	fz_drop_context(ctx);

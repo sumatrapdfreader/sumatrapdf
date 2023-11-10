@@ -166,6 +166,8 @@ pdf_run_page_contents_with_usage_imp(fz_context *ctx, pdf_document *doc, pdf_pag
 					fz_catch(ctx)
 					{
 						fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+						fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+						fz_report_error(ctx);
 						fz_warn(ctx, "Ignoring Page blending colorspace.");
 					}
 					if (!fz_is_valid_blend_colorspace(ctx, colorspace))

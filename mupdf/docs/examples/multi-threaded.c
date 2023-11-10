@@ -307,7 +307,10 @@ int main(int argc, char **argv)
 		fz_drop_document(ctx, doc);
 	}
 	fz_catch(ctx)
-		fail(fz_caught_message(ctx));
+	{
+		fz_report_error(ctx);
+		fail("error");
+	}
 
 	// Finally the main thread's context is freed.
 	fz_drop_context(ctx);

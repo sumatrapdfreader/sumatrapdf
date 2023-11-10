@@ -627,6 +627,8 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
 			}
 			fz_catch(ctx)
 			{
+				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_report_error(ctx);
 				fz_warn(ctx, "ignoring style attribute");
 			}
 		}
@@ -728,6 +730,8 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 	fz_catch(ctx)
 	{
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_report_error(ctx);
 		fz_warn(ctx, "cannot load font-face: %s", src);
 	}
 }

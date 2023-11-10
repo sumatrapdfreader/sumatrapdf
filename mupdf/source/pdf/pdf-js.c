@@ -42,7 +42,7 @@ struct pdf_js
 
 FZ_NORETURN static void rethrow(pdf_js *js)
 {
-	js_newerror(js->imp, fz_caught_message(js->ctx));
+	js_newerror(js->imp, fz_convert_error(js->ctx, NULL));
 	js_throw(js->imp);
 }
 

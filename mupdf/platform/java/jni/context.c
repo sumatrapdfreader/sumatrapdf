@@ -161,7 +161,8 @@ static int init_base_context(JNIEnv *env)
 		fz_register_document_handlers(base_context);
 	fz_catch(base_context)
 	{
-		LOGE("cannot register document handlers (%s)", fz_caught_message(base_context));
+		fz_report_error(base_context);
+		LOGE("cannot register document handlers");
 		fin_base_context(env);
 		return -1;
 	}

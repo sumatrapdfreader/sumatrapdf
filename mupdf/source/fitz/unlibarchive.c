@@ -109,7 +109,7 @@ libarchive_read(struct archive *a, void *client_data, const void **buf)
 	fz_catch(ctx)
 	{
 		/* Ignore error */
-		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_convert_error(ctx, NULL));
 		return -1;
 	}
 
@@ -132,7 +132,7 @@ libarchive_skip(struct archive *a, void *client_data, la_int64_t skip)
 	fz_catch(ctx)
 	{
 		/* Ignore error */
-		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_convert_error(ctx, NULL));
 		return -1;
 	}
 
@@ -154,7 +154,7 @@ libarchive_seek(struct archive *a, void *client_data, la_int64_t offset, int whe
 	fz_catch(ctx)
 	{
 		/* Ignore error */
-		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_convert_error(ctx, NULL));
 		return -1;
 	}
 
@@ -496,7 +496,7 @@ libarchived_read(struct archive *a, void *client_data, const void **buf)
 	fz_catch(ctx)
 	{
 		/* Ignore error */
-		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_convert_error(ctx, NULL));
 		return -1;
 	}
 
@@ -519,7 +519,7 @@ libarchived_skip(struct archive *a, void *client_data, la_int64_t skip)
 	fz_catch(ctx)
 	{
 		/* Ignore error */
-		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_convert_error(ctx, NULL));
 		return -1;
 	}
 
@@ -541,7 +541,7 @@ libarchived_seek(struct archive *a, void *client_data, la_int64_t offset, int wh
 	fz_catch(ctx)
 	{
 		/* Ignore error */
-		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_caught_message(ctx));
+		archive_set_error(a, ARCHIVE_FATAL, "%s", fz_convert_error(ctx, NULL));
 		return -1;
 	}
 

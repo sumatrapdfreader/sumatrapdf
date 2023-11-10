@@ -1722,6 +1722,7 @@ int main(int argc, char **argv)
 
 				fz_drop_document(ctx, doc);
 				doc = NULL;
+				fz_report_error(ctx);
 				fz_warn(ctx, "ignoring error in '%s'", filename);
 			}
 		}

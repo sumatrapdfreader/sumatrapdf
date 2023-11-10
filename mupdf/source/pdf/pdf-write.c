@@ -1597,7 +1597,8 @@ static void preloadobjstms(fz_context *ctx, pdf_document *doc)
 				x->gen = 0;
 			}
 			/* Ignore the error, so we can carry on trying to load. */
-			fz_warn(ctx, "%s", fz_caught_message(ctx));
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
 		}
 	}
 }

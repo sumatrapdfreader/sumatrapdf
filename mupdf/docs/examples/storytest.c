@@ -405,7 +405,7 @@ int main(int argc, const char *argv[])
 	}
 	fz_catch(ctx)
 	{
-		fprintf(stderr, "Failed with %s", fz_caught_message(ctx));
+		fz_report_error(ctx);
 	}
 
 	/* Now one made with programmatic content. */
@@ -462,7 +462,7 @@ int main(int argc, const char *argv[])
 	}
 	fz_catch(ctx)
 	{
-		fprintf(stderr, "Failed with %s", fz_caught_message(ctx));
+		fz_report_error(ctx);
 	}
 
 	/* Now a combination of the two. */
@@ -546,7 +546,7 @@ int main(int argc, const char *argv[])
 	}
 	fz_catch(ctx)
 	{
-		fprintf(stderr, "Failed with %s", fz_caught_message(ctx));
+		fz_report_error(ctx);
 	}
 
 	test_write_stabilized_story(ctx);

@@ -118,7 +118,7 @@ fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated, si
 	}
 	fz_catch(ctx)
 	{
-		if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
+		if (fz_caught(ctx) == FZ_ERROR_TRYLATER || fz_caught(ctx) == FZ_ERROR_MEMORY)
 		{
 			fz_drop_buffer(ctx, buf);
 			fz_rethrow(ctx);
@@ -126,6 +126,7 @@ fz_read_best(fz_context *ctx, fz_stream *stm, size_t initial, int *truncated, si
 		if (truncated)
 		{
 			*truncated = 1;
+			fz_report_error(ctx);
 		}
 		else
 		{

@@ -1879,7 +1879,10 @@ static void load_document(void)
 	fz_try(ctx)
 		outline = fz_load_outline(ctx, doc);
 	fz_catch(ctx)
+	{
+		fz_report_error(ctx);
 		outline = NULL;
+	}
 
 	load_history();
 
@@ -2299,6 +2302,7 @@ void do_console(void)
 				{
 					console->write(ctx, "\nError: ");
 					console->write(ctx, fz_caught_message(ctx));
+					fz_report_error(ctx);
 				}
 			}
 			fz_flush_warnings(ctx);
@@ -2998,7 +3002,10 @@ void run_main_loop(void)
 			do_main();
 	}
 	fz_catch(ctx)
+	{
 		ui_show_error_dialog("%s", fz_caught_message(ctx));
+		fz_report_error(ctx);
+	}
 	ui_end();
 }
 
@@ -3249,6 +3256,7 @@ int main(int argc, char **argv)
 		fz_catch(ctx)
 		{
 			ui_show_error_dialog("%s", fz_caught_message(ctx));
+			fz_report_error(ctx);
 		}
 
 		fz_try(ctx)
@@ -3259,6 +3267,7 @@ int main(int argc, char **argv)
 		fz_catch(ctx)
 		{
 			ui_show_error_dialog("%s", fz_caught_message(ctx));
+			fz_report_error(ctx);
 		}
 	}
 	else

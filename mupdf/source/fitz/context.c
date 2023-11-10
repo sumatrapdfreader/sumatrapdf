@@ -148,6 +148,16 @@ fz_drop_context(fz_context *ctx)
 	if (!ctx)
 		return;
 
+	if (ctx->error.message[0])
+	{
+		fz_flush_warnings(ctx);
+		fz_warn(ctx, "UNHANDLED EXCEPTION!");
+		fz_report_error(ctx);
+#ifdef CLUSTER
+		abort();
+#endif
+	}
+
 	/* Other finalisation calls go here (in reverse order) */
 	fz_drop_document_handler_context(ctx);
 	fz_drop_archive_handler_context(ctx);

@@ -205,6 +205,7 @@ fz_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 	{
 		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
 		/* Otherwise, swallow */
+		fz_report_error(ctx);
 	}
 
 	return arch;

@@ -108,7 +108,9 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 		pdf_drop_verifier(ctx, verifier);
 	}
 	fz_catch(ctx)
-		printf("\tVerification error: %s\n", fz_caught_message(ctx));
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 static void clear_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
@@ -358,7 +360,7 @@ int pdfsign_main(int argc, char **argv)
 		pdf_drop_document(ctx, doc);
 	fz_catch(ctx)
 	{
-		fz_log_error(ctx, fz_caught_message(ctx));
+		fz_report_error(ctx);
 		fz_log_error(ctx, "error processing signatures");
 	}
 

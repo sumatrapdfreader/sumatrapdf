@@ -30,6 +30,7 @@ typedef struct ps_band_writer_s
 {
 	fz_band_writer super;
 	z_stream stream;
+	int stream_started;
 	int stream_ended;
 	size_t input_size;
 	unsigned char *input;
@@ -97,6 +98,7 @@ ps_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	writer->stream.zalloc = fz_zlib_alloc;
 	writer->stream.zfree = fz_zlib_free;
 	writer->stream.opaque = ctx;
+	writer->stream_started = 1;
 
 	err = deflateInit(&writer->stream, Z_DEFAULT_COMPRESSION);
 	if (err != Z_OK)
@@ -159,7 +161,7 @@ ps_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
 {
 	ps_band_writer *writer = (ps_band_writer *)writer_;
 
-	if (!writer->stream_ended)
+	if (writer->stream_started && !writer->stream_ended)
 	{
 		int err = deflateEnd(&writer->stream);
 		if (err != Z_OK)

@@ -60,6 +60,8 @@ pdf_load_embedded_cmap_imp(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, 
 			}
 			fz_catch(ctx)
 			{
+				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_report_error(ctx);
 				fz_warn(ctx, "cannot load system CMap: %s", pdf_to_name(ctx, obj));
 			}
 		}

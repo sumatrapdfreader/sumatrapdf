@@ -107,8 +107,16 @@ pdf_try_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *fon
 	fz_catch(ctx)
 	{
 		if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
+		{
+			fz_ignore_error(ctx);
 			if (cookie)
 				cookie->incomplete++;
+		}
+		else
+		{
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
+		}
 	}
 	if (desc == NULL)
 		desc = pdf_load_hail_mary_font(ctx, doc);
@@ -1007,6 +1015,7 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 			{
 				if (caught == FZ_ERROR_TRYLATER)
 				{
+					fz_ignore_error(ctx);
 					cookie->incomplete++;
 					tok = PDF_TOK_EOF;
 				}
@@ -1016,10 +1025,12 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 				}
 				else if (caught == FZ_ERROR_MINOR)
 				{
+					fz_report_error(ctx);
 					cookie->errors++;
 				}
 				else if (caught == FZ_ERROR_SYNTAX)
 				{
+					fz_report_error(ctx);
 					cookie->errors++;
 					if (++syntax_errors >= MAX_SYNTAX_ERRORS)
 					{
@@ -1035,13 +1046,22 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 			else
 			{
 				if (caught == FZ_ERROR_TRYLATER)
+				{
+					fz_ignore_error(ctx);
 					tok = PDF_TOK_EOF;
+				}
 				else if (caught == FZ_ERROR_ABORT)
+				{
 					fz_rethrow(ctx);
+				}
 				else if (caught == FZ_ERROR_MINOR)
+				{
 					/* ignore minor errors */ ;
+					fz_report_error(ctx);
+				}
 				else if (caught == FZ_ERROR_SYNTAX)
 				{
+					fz_report_error(ctx);
 					if (++syntax_errors >= MAX_SYNTAX_ERRORS)
 					{
 						fz_warn(ctx, "too many syntax errors; ignoring rest of page");
@@ -1223,8 +1243,7 @@ pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_o
 		/* Note: Any SYNTAX errors should have been swallowed
 		 * by pdf_process_stream, but in case any escape from other
 		 * functions, recast the error type here to be safe. */
-		if (fz_caught(ctx) == FZ_ERROR_SYNTAX)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error in content stream");
+		fz_morph_error(ctx, FZ_ERROR_SYNTAX, FZ_ERROR_GENERIC);
 		fz_rethrow(ctx);
 	}
 }

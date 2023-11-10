@@ -381,6 +381,8 @@ xps_read_page_list(fz_context *ctx, xps_document *doc)
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_report_error(ctx);
 			fz_warn(ctx, "cannot process FixedDocument rels part");
 		}
 		xps_read_and_process_metadata_part(ctx, doc, fixdoc->name, fixdoc);
