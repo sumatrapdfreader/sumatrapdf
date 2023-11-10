@@ -333,7 +333,7 @@ void (fz_log_error)(fz_context *ctx, const char *str)
 /* coverity[+kill] */
 FZ_NORETURN void (fz_vthrow)(fz_context *ctx, int code, const char *fmt, va_list ap)
 {
-	if (ctx->error.message[0])
+	if (ctx->error.errcode)
 	{
 		fz_flush_warnings(ctx);
 		fz_warn(ctx, "UNHANDLED EXCEPTION!");
@@ -463,7 +463,7 @@ void fz_log_errorFL(fz_context *ctx, const char *file, int line, const char *str
 /* coverity[+kill] */
 FZ_NORETURN void fz_vthrowFL(fz_context *ctx, const char *file, int line, int code, const char *fmt, va_list ap)
 {
-	if (ctx->error.message[0])
+	if (ctx->error.errcode)
 	{
 		fz_flush_warnings(ctx);
 		fz_warn(ctx, "UNHANDLED EXCEPTION!");

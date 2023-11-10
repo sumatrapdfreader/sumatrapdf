@@ -148,7 +148,7 @@ fz_drop_context(fz_context *ctx)
 	if (!ctx)
 		return;
 
-	if (ctx->error.message[0])
+	if (ctx->error.errcode)
 	{
 		fz_flush_warnings(ctx);
 		fz_warn(ctx, "UNHANDLED EXCEPTION!");
