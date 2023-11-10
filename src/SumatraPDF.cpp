@@ -4959,7 +4959,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEUP, 0);
             } else {
                 // in single page view, scrolls by page
-                win->ctrl->GoToNextPage();
+                win->ctrl->GoToPrevPage();
             }
         } break;
 
