@@ -2066,7 +2066,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
         fz_try(ctx) {
             page = nullptr;
             page = fz_load_page(ctx, e->_doc, i);
-            mbox = fz_bound_page_box(ctx, page, FZ_CROP_BOX);
+            mbox = fz_bound_page(ctx, page);
         }
         fz_always(ctx) {
             fz_drop_page(ctx, page);
@@ -2658,7 +2658,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
     fz_device* dev = nullptr;
     fz_display_list* list = nullptr;
 
-    fz_rect pagerect = fz_bound_page_box(ctx, pageInfo->page, FZ_CROP_BOX);
+    fz_rect pagerect = fz_bound_page(ctx, pageInfo->page);
 
     fz_var(dev);
     fz_var(list);
@@ -2744,7 +2744,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         pRect = ToFzRect(*pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
-        pRect = fz_bound_page_box(ctx, page, FZ_CROP_BOX);
+        pRect = fz_bound_page(ctx, page);
     }
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
@@ -2917,7 +2917,7 @@ fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
     fz_rect bounds;
     fz_var(bounds);
     fz_try(ctx) {
-        bounds = fz_bound_page_box(ctx, page, FZ_CROP_BOX);
+        bounds = fz_bound_page(ctx, page);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
