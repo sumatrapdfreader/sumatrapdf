@@ -354,13 +354,11 @@ static TempStr FormatParamsTemp(const char* cmdLine, WindowTab* tab) {
         cmdLine = str::ReplaceTemp(cmdLine, "%d", dir);
         appendPath = false;
     }
-    if (str::Find(cmdLine, R"("%1")")) {
-        // "%1", is alrady quoted so no need to add quotes
+    if (str::Find(cmdLine, "%1")) {
+        // TODO: if %1 is un-quoted, we should quote it but it's complicated because
+        // it could be part of a pattern like %1.Page%p.txt
+        // (as in https://github.com/sumatrapdfreader/sumatrapdf/issues/3868)
         cmdLine = str::ReplaceTemp(cmdLine, "%1", path);
-    } else if (str::Find(cmdLine, R"(%1)")) {
-        // %1, not quoted, need to add
-        char* s = str::JoinTemp("\"", path, "\"");
-        cmdLine = str::ReplaceTemp(cmdLine, "%1", s);
     } else if (appendPath) {
         cmdLine = str::FormatTemp(R"(%s "%s")", cmdLine, path);
     }
@@ -415,16 +413,24 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         return false;
     }
 
-    CmdLineArgsIter args(ToWStrTemp(ev->commandLine));
-    if (args.nArgs == 0) {
+    StrVec args;
+    ParseCmdLine(ToWStrTemp(ev->commandLine), args);
+    int nArgs = args.Size();
+    if (nArgs == 0) {
         return false;
     }
     const char* exePath = args.at(0);
     if (!file::Exists(exePath)) {
         return false;
     }
-    char* cmdLine = args.ParamsTemp();
-    TempStr params = FormatParamsTemp(cmdLine, tab);
+    StrVec argsQuoted;
+    for (int i = 1; i < nArgs; i++) {
+        char* s = args.at(i);
+        TempStr param = FormatParamsTemp(s, tab);
+        TempStr paramQuoted = QuoteCmdLineArgTemp(param);
+        argsQuoted.Append(paramQuoted);
+    }
+    TempStr params = JoinTemp(argsQuoted, " ");
     return LaunchFile(exePath, params);
 }
 

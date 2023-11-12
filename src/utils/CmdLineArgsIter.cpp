@@ -4,6 +4,59 @@
 #include "utils/BaseUtil.h"
 #include "utils/CmdLineArgsIter.h"
 
+// TODO: quote '"' etc as per:
+// https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170&redirectedfrom=MSDN
+TempStr QuoteCmdLineArgTemp(char* arg) {
+    if (!arg) {
+        return nullptr;
+    }
+    int n = (int)str::Len(arg);
+    if (n < 2) {
+        return arg;
+    }
+    if (*arg == '"' && arg[n - 1] == '"') {
+        // already quoted, we assume correctly
+        return arg;
+    }
+    bool needsQuote = false;
+    char* s = arg;
+    char c = *s++;
+    while (c) {
+        if (c == ' ' || c == '"') {
+            needsQuote = true;
+            break;
+        }
+        c = *s++;
+    }
+    if (!needsQuote) {
+        return arg;
+    }
+    str::Str res;
+    // TODO: can't do it because PoolAllocator doesn't support Realloc()
+    // res.allocator = GetTempAllocator();
+    res.AppendChar('"');
+    s = arg;
+    c = *s++;
+    while (c) {
+        // TODO: quote '"' ?
+        res.AppendChar(c);
+        c = *s++;
+    }
+    res.AppendChar('"');
+    return res.StealData();
+}
+
+int ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
+    int nArgs;
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    for (int i = 0; i < nArgs; i++) {
+        char* arg = ToUtf8Temp(argsArr[i]);
+        argsOut.Append(arg);
+    }
+    LocalFree(argsArr);
+    return nArgs;
+}
+
 bool CouldBeArg(const char* s) {
     char c = *s;
     return (c == L'-') || (c == L'/');
@@ -13,12 +66,7 @@ CmdLineArgsIter::~CmdLineArgsIter() {
 }
 
 CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
-    for (int i = 0; i < nArgs; i++) {
-        char* arg = ToUtf8Temp(argsArr[i]);
-        args.Append(arg);
-    }
-    LocalFree(argsArr);
+    nArgs = ParseCmdLine(cmdLine, args);
 }
 
 const char* CmdLineArgsIter::NextArg() {

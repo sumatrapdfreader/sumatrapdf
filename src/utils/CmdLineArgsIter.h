@@ -3,6 +3,9 @@
 
 bool CouldBeArg(const char*);
 
+int ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut);
+TempStr QuoteCmdLineArgTemp(char* arg);
+
 struct CmdLineArgsIter {
     StrVec args;
     int curr = 1; // first argument is exe path, which we skip
