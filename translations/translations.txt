@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f3c3904da09ef0355ae38eb4a87cd9a7b3f5e52e
+12ac511f0eff739bd93cf66f0d6d0dc6f0e71286
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -15,6 +15,7 @@ es:Comentario %s.
 fa:علامت گذاری %s. برای ویرایش Ctrl+click را بزنید
 fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
+he:.כדי לערוך Ctrl +  הערה. לחץ על %s
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
@@ -905,7 +906,7 @@ fi:&Kohtaaminen
 fr:&Deux pages
 ga:&Dhá leathanach
 gl:Páxina &dobre
-he:מוּל
+he:זוג עמודים
 hr:&Dvije stranice
 hu:Oldal&pár
 id:Menghadap
@@ -1488,6 +1489,7 @@ el:Συντομεύσεις πληκτρολογίου
 es:Atajos de teclado
 fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
+he:קיצורי דרך במקלדת
 it:&Tasti rapidi
 ja:キーボード シュートカット(&K)
 kr:키보드 단축키(&K)
@@ -2772,7 +2774,7 @@ fi:&Haku Googlen avulla
 fr:&Rechercher avec Google
 ga:&Cuardaigh le Google
 gl:Bu&scar con Google
-he:Google חפש באמצעות
+he:חפש באמצעות Google
 hr:Pretraži &sa Google-om
 hu:Keresés Google-el
 id:&Cari dengan Google
@@ -3198,7 +3200,7 @@ fi:&Käännä Googlen avulla
 fr:&Traduire avec Google
 ga:&Aistrigh le Google é
 gl:&Traducido con Google
-he:google תרגם באמצעות
+he:תרגם באמצעות google
 hr:&Prevedi sa Google-om
 hu:Fordítsd le a Google-el
 id:&Terjemahkan dengan Google
@@ -3896,7 +3898,7 @@ fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s leis na ceanáin
 gl:Engadir a páxina %s aos favoritos
-he:...למועדפים %s 'הוסף את עמוד מס
+he:למועדפים %s הוסף את עמוד...
 hi:पृष्ठ %s को पसंदीदा सूचि में जोड़े
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
@@ -5927,6 +5929,7 @@ es:Eliminado historial de %d ficheros, miniaturas eliminadas.
 fa:تاریخچه %d پرونده حذف شد. تصاویر بند انگشتی حذف شدند.
 fr:Historique de %d fichiers effacé, vignettes supprimées.
 ga:Glanadh an t-oireas de %d comhad, mionsamhlacha scriosta.
+he:.קבצים, תמונות ממוזערות נמחקו %d נוקתה היסטוריה של
 hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
 it:Svuotata la cronologia di %d file, anteprime eliminate
@@ -5958,6 +5961,7 @@ es:Borrando historial...
 fa:پاک کردن تاریخجه
 fr:Effacement de l'historique…
 ga:Tá an t-oireas á ghlanadh...
+he:...מנקה היסטוריה
 hr:Brisanje povijesti...
 hu:Előzmények törlése...
 it:Svuotamento cronologia in corso...
@@ -6975,6 +6979,7 @@ es:Copiar dirección del archivo
 fa:کپی کردن مسیر فایل
 fr:Copier le chemin du fichier
 ga:Cóipeáil Conair an Chomhaid
+he:העתק את נתיב הקובץ
 hr:Kopiraj putanju datoteke
 hu:Útvonal másolása
 it:Copia percorso file
@@ -8541,6 +8546,7 @@ es:Eliminar anotación
 fa:حذف علامت‌گذاری‌
 fr:Supprimer l'annotation
 ga:Scrios an nóta mínithe
+he:מחק הערה
 hr:Izbriši bilješku
 hu:Megjegyzés törlése
 it:Elimina Annotazione
@@ -14290,7 +14296,7 @@ fi:Avaa hakemisto &Explorerissa
 fr:Ouvrir dans l'&Explorateur
 ga:Oscail an Chomhadlann in &Explorer
 gl:Abrir directorio no &explorador
-he:פתח מדריך בסייר הקבצים
+he:הצג את הקובץ בסייר הקבצים
 hr:Otvori direktorij u &Exploreru
 hu:Tároló mappa megnyitása
 id:Buka Direktori di &Explorer
@@ -14453,6 +14459,7 @@ es:Abrir en nueva ventana
 fa:بازکردن در پنجره جدید
 fr:Ouvrir dans une nouvelle fenêtre
 ga:Oscail i bhfuinneog nua
+he:פתח בחלון חדש
 hr:Otvori u novom prozoru
 hu:Megnyitás új ablakban
 it:Apri in una nuova finestra
@@ -15242,7 +15249,7 @@ fi:Si&vu...
 fr:Pa&ge...
 ga:Leathanach...
 gl:Pá&xina...
-he:...עמוד
+he:עמוד...
 hr:St&ranica...
 hu:&Oldal…
 id:Halaman
@@ -17356,7 +17363,7 @@ fi:Tallenna merkinnät nykyiseen PDF-tiedostoon
 fr:Sauvegarder les annotations dans le PDF existant
 ga:Cuir na nótaí mínithe i dtaisce sa PDF atá ann
 gl:Gardar anotacións ó PDF existente
-he:שמירת הערות במסמך PDF קיים
+he:שמור הערות במסמך PDF קיים
 hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
 id:Simpan catatan ke PDF terkini
@@ -17828,7 +17835,7 @@ fi:Haku &Bingin avulla
 fr:Rechercher avec &Bing
 ga:Cuardaigh le &Bing
 gl:Buscar con &Bing
-he:Bing חפש באמצעות
+he:חפש באמצעות Bing
 hr:Pretraži sa &Bing-om
 hu:Keresés &Bing-el
 id:Cari menggunakan &Bing
@@ -17876,7 +17883,7 @@ fi:Haku &Googlen avulla
 fr:Rechercher avec &Google
 ga:Cuardaigh le &Google
 gl:Buscar con &Google
-he:Google חפש באמצעות
+he:חפש באמצעות Google
 hr:Pretraži sa &Google-om
 hu:Keresés &Google-el
 id:Cari menggunakan &Google
@@ -20635,7 +20642,7 @@ fi:Käännä &DeepL avulla
 fr:Traduire avec &DeepL
 ga:Aistrigh le &DeepL é
 gl:Traducido con &DeepL
-he:DeepL תרגם באמצעות
+he:תרגם באמצעות DeepL
 hr:Prevedi sa &DeepL
 hu:Fordítsd le a DeepL-el
 id:Terjemahkan dengan &DeepL
