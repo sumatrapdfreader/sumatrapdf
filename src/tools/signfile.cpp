@@ -60,16 +60,6 @@ void ShowUsage(const char* exeName) {
     CertCloseStore(hStore, 0);
 }
 
-static void ParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
-    int nArgs = 0;
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
-    for (int i = 0; i < nArgs; i++) {
-        char* arg = ToUtf8Temp(argsArr[i]);
-        args.Append(arg);
-    }
-    LocalFree(argsArr);
-}
-
 int main() {
     StrVec args;
     ParseCmdLine(GetCommandLineW(), args);
