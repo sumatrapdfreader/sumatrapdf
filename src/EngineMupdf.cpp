@@ -167,7 +167,9 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float
         fz_report_error(ctx);
         pageNo = -1;
     }
-
+    if (pageNo < 0) {
+        return -1;
+    }
     return pageNo + 1;
 }
 
@@ -2368,6 +2370,9 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
     char* uri = str::JoinTemp("#nameddest=", name);
     float x, y, zoom = 0;
     int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
+    if (pageNo < 0) {
+        return nullptr;
+    }
 
     RectF r{x, y, 0, 0};
     pageDest = NewSimpleDest(pageNo, r, zoom);
