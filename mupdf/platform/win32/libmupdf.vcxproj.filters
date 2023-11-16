@@ -648,6 +648,12 @@
     <ClCompile Include="..\..\source\fitz\unlibarchive.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\unchm.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\lzxd.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -910,6 +916,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\image-rewriter.h">
       <Filter>!include\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\lzxd-imp.h">
+      <Filter>fitz</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

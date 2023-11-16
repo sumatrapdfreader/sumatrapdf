@@ -2171,11 +2171,11 @@ fz_draw_pop_clip(fz_context *ctx, fz_device *devp)
 			fz_paint_pixmap_with_mask(state[0].dest, state[1].dest, state[1].mask);
 			if (state[0].shape != state[1].shape)
 			{
-				fz_paint_pixmap_with_mask(state[0].shape, state[1].shape, state[1].mask);
+				fz_paint_over_pixmap_with_mask(state[0].shape, state[1].shape, state[1].mask);
 			}
 			if (state[0].group_alpha != state[1].group_alpha)
 			{
-				fz_paint_pixmap_with_mask(state[0].group_alpha, state[1].group_alpha, state[1].mask);
+				fz_paint_over_pixmap_with_mask(state[0].group_alpha, state[1].group_alpha, state[1].mask);
 			}
 
 #ifdef DUMP_GROUP_BLENDS

@@ -212,13 +212,12 @@ const char *fz_convert_error(fz_context *ctx, int *code);
 enum
 {
 	FZ_ERROR_NONE = 0,
-	FZ_ERROR_MEMORY = 1,
+	FZ_ERROR_MEMORY = 1, // fatal out of memory exception
 	FZ_ERROR_GENERIC = 2,
-	FZ_ERROR_SYNTAX = 3,
-	FZ_ERROR_MINOR = 4,
-	FZ_ERROR_TRYLATER = 5,
-	FZ_ERROR_ABORT = 6,
-	FZ_ERROR_REPAIRED = 7,
+	FZ_ERROR_SYNTAX = 3, // syntax errors that should be diagnosed and ignored
+	FZ_ERROR_TRYLATER = 4, // try-later progressive loading signal
+	FZ_ERROR_ABORT = 5, // user requested abort signal
+	FZ_ERROR_REPAIRED = 6, // internal flag used when repairing a PDF to avoid cycles
 	FZ_ERROR_COUNT
 };
 

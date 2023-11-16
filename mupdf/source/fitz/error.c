@@ -400,8 +400,6 @@ errcode_to_string(int exc)
 		return "GENERIC";
 	case FZ_ERROR_SYNTAX:
 		return "SYNTAX";
-	case FZ_ERROR_MINOR:
-		return "MINOR";
 	case FZ_ERROR_TRYLATER:
 		return "TRYLATER";
 	case FZ_ERROR_ABORT:

@@ -26,7 +26,7 @@
 #include <string.h>
 
 static pdf_obj *
-pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle, pdf_cycle_list *cycle_up)
+pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, const char *needle, pdf_cycle_list *cycle_up)
 {
 	pdf_cycle_list cycle;
 	pdf_obj *kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
@@ -45,17 +45,18 @@ pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle, pdf_cycle_l
 			int m = (l + r) >> 1;
 			pdf_obj *kid = pdf_array_get(ctx, kids, m);
 			pdf_obj *limits = pdf_dict_get(ctx, kid, PDF_NAME(Limits));
-			pdf_obj *first = pdf_array_get(ctx, limits, 0);
-			pdf_obj *last = pdf_array_get(ctx, limits, 1);
+			const char *first = pdf_array_get_text_string(ctx, limits, 0);
+			const char *last = pdf_array_get_text_string(ctx, limits, 1);
 
 			if (!pdf_is_indirect(ctx, kid))
 			{
 				fz_warn(ctx, "non-indirect internal node found in name tree");
 				break;
 			}
-			if (pdf_objcmp(ctx, needle, first) < 0)
+
+			if (strcmp(needle, first) < 0)
 				r = m - 1;
-			else if (pdf_objcmp(ctx, needle, last) > 0)
+			else if (strcmp(needle, last) > 0)
 				l = m + 1;
 			else
 			{
@@ -94,10 +95,10 @@ pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle, pdf_cycle_l
 		{
 			int m = (l + r) >> 1;
 			int c;
-			pdf_obj *key = pdf_array_get(ctx, names, m * 2);
+			const char *key = pdf_array_get_text_string(ctx, names, m * 2);
 			pdf_obj *val = pdf_array_get(ctx, names, m * 2 + 1);
 
-			c = pdf_objcmp(ctx, needle, key);
+			c = strcmp(needle, key);
 			if (c < 0)
 				r = m - 1;
 			else if (c > 0)
@@ -111,7 +112,7 @@ pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle, pdf_cycle_l
 		 * simple search if the binary search fails. */
 		r = pdf_array_len(ctx, names)/2;
 		for (l = 0; l < r; l++)
-			if (!pdf_objcmp(ctx, needle, pdf_array_get(ctx, names, l * 2)))
+			if (!strcmp(needle, pdf_array_get_text_string(ctx, names, l * 2)))
 				return pdf_array_get(ctx, names, l * 2 + 1);
 	}
 
@@ -124,7 +125,7 @@ pdf_lookup_name(fz_context *ctx, pdf_document *doc, pdf_obj *which, pdf_obj *nee
 	pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
 	pdf_obj *names = pdf_dict_get(ctx, root, PDF_NAME(Names));
 	pdf_obj *tree = pdf_dict_get(ctx, names, which);
-	return pdf_lookup_name_imp(ctx, tree, needle, NULL);
+	return pdf_lookup_name_imp(ctx, tree, pdf_to_text_string(ctx, needle), NULL);
 }
 
 pdf_obj *
@@ -147,7 +148,7 @@ pdf_lookup_dest(fz_context *ctx, pdf_document *doc, pdf_obj *needle)
 	if (names)
 	{
 		pdf_obj *tree = pdf_dict_get(ctx, names, PDF_NAME(Dests));
-		return pdf_lookup_name_imp(ctx, tree, needle, NULL);
+		return pdf_lookup_name_imp(ctx, tree, pdf_to_text_string(ctx, needle), NULL);
 	}
 
 	return NULL;

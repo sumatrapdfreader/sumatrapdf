@@ -659,6 +659,7 @@
     <ClInclude Include="..\mupdf\source\fitz\image-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\jmemcust.h" />
     <ClInclude Include="..\mupdf\source\fitz\leptonica-wrap.h" />
+    <ClInclude Include="..\mupdf\source\fitz\lzxd-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h" />
     <ClInclude Include="..\mupdf\source\fitz\pixmap-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h" />
@@ -749,6 +750,7 @@
     <ClCompile Include="..\mupdf\source\fitz\load-psd.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c" />
     <ClCompile Include="..\mupdf\source\fitz\log.c" />
+    <ClCompile Include="..\mupdf\source\fitz\lzxd.c" />
     <ClCompile Include="..\mupdf\source\fitz\memento.c" />
     <ClCompile Include="..\mupdf\source\fitz\memory.c" />
     <ClCompile Include="..\mupdf\source\fitz\noto.c" />
@@ -790,6 +792,7 @@
     <ClCompile Include="..\mupdf\source\fitz\transition.c" />
     <ClCompile Include="..\mupdf\source\fitz\tree.c" />
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
+    <ClCompile Include="..\mupdf\source\fitz\unchm.c" />
     <ClCompile Include="..\mupdf\source\fitz\unlibarchive.c" />
     <ClCompile Include="..\mupdf\source\fitz\untar.c" />
     <ClCompile Include="..\mupdf\source\fitz\unzip.c" />

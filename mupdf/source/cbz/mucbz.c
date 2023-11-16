@@ -288,6 +288,9 @@ cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
 
 static const char *cbz_extensions[] =
 {
+#ifdef HAVE_LIBARCHIVE
+	"cbr",
+#endif
 	"cbt",
 	"cbz",
 	"tar",
@@ -297,7 +300,13 @@ static const char *cbz_extensions[] =
 
 static const char *cbz_mimetypes[] =
 {
+#ifdef HAVE_LIBARCHIVE
+	"application/vnd.comicbook-rar",
+#endif
 	"application/vnd.comicbook+zip",
+#ifdef HAVE_LIBARCHIVE
+	"application/x-cbr",
+#endif
 	"application/x-cbt",
 	"application/x-cbz",
 	"application/x-tar",

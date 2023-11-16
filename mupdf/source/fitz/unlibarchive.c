@@ -303,6 +303,7 @@ read_libarchive_entry(fz_context *ctx, fz_archive *arch_, const char *name)
 		arch->current_entry_idx++;
 		size = arch->entries[idx]->len;
 		ubuf = fz_new_buffer(ctx, size);
+		ubuf->len = size;
 
 		ret = archive_read_data(arch->archive, ubuf->data, size);
 		if (ret < 0)

@@ -358,7 +358,7 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	xres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(XObject));
 	xobj = pdf_dict_gets(ctx, xres, csi->name);
 	if (!xobj)
-		fz_throw(ctx, FZ_ERROR_MINOR, "cannot find XObject resource '%s'", csi->name);
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find XObject resource '%s'", csi->name);
 	subtype = pdf_dict_get(ctx, xobj, PDF_NAME(Subtype));
 	if (pdf_name_eq(ctx, subtype, PDF_NAME(Form)))
 	{
@@ -367,7 +367,7 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 			subtype = st;
 	}
 	if (!pdf_is_name(ctx, subtype))
-		fz_throw(ctx, FZ_ERROR_MINOR, "no XObject subtype specified");
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "no XObject subtype specified");
 
 	if (pdf_is_ocg_hidden(ctx, csi->doc, csi->rdb, proc->usage, pdf_dict_get(ctx, xobj, PDF_NAME(OC))))
 		return;
@@ -427,7 +427,7 @@ pdf_process_CS(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 		csres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(ColorSpace));
 		csobj = pdf_dict_gets(ctx, csres, csi->name);
 		if (!csobj)
-			fz_throw(ctx, FZ_ERROR_MINOR, "cannot find ColorSpace resource '%s'", csi->name);
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find ColorSpace resource '%s'", csi->name);
 		if (pdf_is_array(ctx, csobj) && pdf_array_len(ctx, csobj) == 1 && pdf_name_eq(ctx, pdf_array_get(ctx, csobj, 0), PDF_NAME(Pattern)))
 		{
 			if (stroke)
@@ -463,7 +463,7 @@ pdf_process_SC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 		patres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(Pattern));
 		patobj = pdf_dict_gets(ctx, patres, csi->name);
 		if (!patobj)
-			fz_throw(ctx, FZ_ERROR_MINOR, "cannot find Pattern resource '%s'", csi->name);
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find Pattern resource '%s'", csi->name);
 
 		type = pdf_dict_get_int(ctx, patobj, PDF_NAME(PatternType));
 
@@ -507,7 +507,7 @@ pdf_process_SC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 
 		else
 		{
-			fz_throw(ctx, FZ_ERROR_MINOR, "unknown pattern type: %d", type);
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "unknown pattern type: %d", type);
 		}
 	}
 
@@ -637,7 +637,7 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 		if (!csi->xbalance)
 		{
 			if (is_known_bad_word(word))
-				fz_throw(ctx, FZ_ERROR_MINOR, "unknown keyword: '%s'", word);
+				fz_warn(ctx, "unknown keyword: '%s'", word);
 			else
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "unknown keyword: '%s'", word);
 		}
@@ -658,7 +658,7 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 			gsres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(ExtGState));
 			gsobj = pdf_dict_gets(ctx, gsres, csi->name);
 			if (!gsobj)
-				fz_throw(ctx, FZ_ERROR_MINOR, "cannot find ExtGState resource '%s'", csi->name);
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find ExtGState resource '%s'", csi->name);
 			if (proc->op_gs_begin)
 				proc->op_gs_begin(ctx, proc, csi->name, gsobj);
 			pdf_process_extgstate(ctx, proc, csi, gsobj);
@@ -808,7 +808,7 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 			shaderes = pdf_dict_get(ctx, csi->rdb, PDF_NAME(Shading));
 			shadeobj = pdf_dict_gets(ctx, shaderes, csi->name);
 			if (!shadeobj)
-				fz_throw(ctx, FZ_ERROR_MINOR, "cannot find Shading resource '%s'", csi->name);
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find Shading resource '%s'", csi->name);
 			shade = pdf_load_shading(ctx, csi->doc, shadeobj);
 			fz_try(ctx)
 				proc->op_sh(ctx, proc, csi->name, shade);
@@ -1023,11 +1023,6 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 				{
 					fz_rethrow(ctx);
 				}
-				else if (caught == FZ_ERROR_MINOR)
-				{
-					fz_report_error(ctx);
-					cookie->errors++;
-				}
 				else if (caught == FZ_ERROR_SYNTAX)
 				{
 					fz_report_error(ctx);
@@ -1054,11 +1049,6 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 				{
 					fz_rethrow(ctx);
 				}
-				else if (caught == FZ_ERROR_MINOR)
-				{
-					/* ignore minor errors */ ;
-					fz_report_error(ctx);
-				}
 				else if (caught == FZ_ERROR_SYNTAX)
 				{
 					fz_report_error(ctx);
@@ -1079,6 +1069,9 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 		}
 	}
 	while (tok != PDF_TOK_EOF);
+
+	if (syntax_errors > 0)
+		fz_warn(ctx, "encountered syntax errors; page may not be correct");
 }
 
 void pdf_processor_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)

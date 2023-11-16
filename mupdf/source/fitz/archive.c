@@ -540,6 +540,12 @@ const fz_archive_handler fz_libarchive_archive_handler =
 	fz_open_libarchive_archive_with_stream
 };
 
+const fz_archive_handler fz_chm_archive_handler =
+{
+	fz_is_chm_archive,
+	fz_open_chm_archive_with_stream
+};
+
 void fz_new_archive_handler_context(fz_context *ctx)
 {
 	ctx->archive = fz_malloc_struct(ctx, fz_archive_handler_context);

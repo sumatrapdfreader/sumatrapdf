@@ -2546,6 +2546,68 @@ fz_paint_pixmap_with_mask(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_REST
 	}
 }
 
+static fz_forceinline void
+paint_over_span_with_mask(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT sp, const byte * FZ_RESTRICT mp, int w)
+{
+	do
+	{
+		int ma = *mp++;
+		ma = FZ_EXPAND(ma);
+		if (ma == 0 || *sp == 0)
+		{
+			dp++;
+			sp++;
+		}
+		else
+		{
+			int a = *sp++;
+			if (ma != 256)
+				a = fz_mul255(ma, a);
+			*dp = 255 - fz_mul255(255 - a, 255 - *dp);
+			dp++;
+		}
+	}
+	while (--w);
+}
+
+void
+fz_paint_over_pixmap_with_mask(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_RESTRICT src, const fz_pixmap * FZ_RESTRICT msk)
+{
+	const unsigned char *sp, *mp;
+	unsigned char *dp;
+	fz_irect bbox;
+	int x, y, w, h;
+
+	assert(dst->n == src->n);
+	assert(msk->n == 1);
+
+	bbox = fz_pixmap_bbox_no_ctx(dst);
+	bbox = fz_intersect_irect(bbox, fz_pixmap_bbox_no_ctx(src));
+	bbox = fz_intersect_irect(bbox, fz_pixmap_bbox_no_ctx(msk));
+
+	x = bbox.x0;
+	y = bbox.y0;
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
+	if (w == 0 || h == 0)
+		return;
+
+	/* sa == da, or something has gone very wrong! */
+	assert(src->alpha == dst->alpha && dst->alpha == 1 && src->n == 1);
+	sp = src->samples + (y - src->y) * (size_t)src->stride + (size_t)(x - src->x);
+	mp = msk->samples + (y - msk->y) * (size_t)msk->stride + (size_t)(x - msk->x);
+	dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (size_t)(x - dst->x);
+
+
+	while (h--)
+	{
+		paint_over_span_with_mask(dp, sp, mp, w);
+		sp += src->stride;
+		dp += dst->stride;
+		mp += msk->stride;
+	}
+}
+
 static inline void
 fz_paint_glyph_mask(int span, unsigned char *dp, int da, const fz_glyph *glyph, int w, int h, int skip_x, int skip_y)
 {

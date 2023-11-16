@@ -510,11 +510,6 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 						add_space = 1;
 					new_line = 0;
 				}
-				else if (spacing < 0)
-				{
-					/* Motion is backward in line! */
-					new_line = 0;
-				}
 				else
 				{
 					/* Motion is large and unexpected (probably a new table column). */

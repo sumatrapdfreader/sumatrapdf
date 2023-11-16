@@ -223,7 +223,6 @@ mobi_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *
 static int
 txt_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, size_t size)
 {
-	html_document *doc = (html_document*)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
 		return (int)fz_strlcpy(buf, "Text", size);
 	return -1;

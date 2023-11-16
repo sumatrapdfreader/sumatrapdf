@@ -208,6 +208,13 @@ int fz_is_tar_archive(fz_context *ctx, fz_stream *file);
 int fz_is_libarchive_archive(fz_context *ctx, fz_stream *file);
 
 /**
+	Detect if stream object is a chm archive.
+
+	Assumes that the stream object is seekable.
+*/
+int fz_is_chm_archive(fz_context *ctx, fz_stream *file);
+
+/**
 	Open a tar archive file.
 
 	An exception is thrown if the file is not a tar archive as
@@ -249,6 +256,26 @@ fz_archive *fz_open_libarchive_archive(fz_context *ctx, const char *filename);
 	An exception is thrown if the stream is not supported by libarchive.
 */
 fz_archive *fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file);
+
+/**
+	Open a chm file as an archive.
+
+	An exception is thrown if the file is not recognised as a chm.
+
+	filename: a path to an archive file as it would be given to
+	open(2).
+*/
+fz_archive *fz_open_chm_archive(fz_context *ctx, const char *filename);
+
+/**
+	Open a chm file as an archive.
+
+	Open an archive using a seekable stream object rather than
+	opening a file or directory on disk.
+
+	An exception is thrown if the file is not recognised as a chm.
+*/
+fz_archive *fz_open_chm_archive_with_stream(fz_context *ctx, fz_stream *file);
 
 /**
 	fz_archive: zip implementation
@@ -382,6 +409,8 @@ typedef struct
 fz_archive_handler;
 
 FZ_DATA extern const fz_archive_handler fz_libarchive_archive_handler;
+
+FZ_DATA extern const fz_archive_handler fz_chm_archive_handler;
 
 void fz_register_archive_handler(fz_context *ctx, const fz_archive_handler *handler);
 
