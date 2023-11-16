@@ -495,7 +495,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     }
 
     IPageDestination* remoteLink = link;
-    char* fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
+    TempStr fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
     fullPath = path::JoinTemp(fullPath, path);
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -517,11 +517,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            TempStr msg = str::FormatTemp(_TRA("Error loading %s"), fullPath);
-            NotificationCreateArgs nargs;
-            nargs.hwndParent = win->hwndCanvas;
-            nargs.warning = true;
-            ShowNotification(nargs);
+            ShowErrorLoadingNotification(newWin, fullPath, true);
         }
         return;
     }

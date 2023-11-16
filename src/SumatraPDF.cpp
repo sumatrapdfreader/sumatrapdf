@@ -1667,13 +1667,14 @@ static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
 
-static void ShowErrorLoading(MainWindow* win, const char* path, bool noSavePrefs) {
+void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs) {
     // TODO: same message as in Canvas.cpp to not introduce
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.msg = str::FormatTemp(_TRA("Error loading %s"), path);
     nargs.warning = true;
+    nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
@@ -1867,7 +1868,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
             args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
             RemoveNotification(wndNotif);
             if (!args->ctrl) {
-                ShowErrorLoading(win, path, args->noSavePrefs);
+                ShowErrorLoadingNotification(win, path, args->noSavePrefs);
                 delete args;
                 return;
             }
@@ -1896,7 +1897,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
             MainWindow* win = args->win;
             const char* path = args->FilePath();
             if (!args->ctrl) {
-                ShowErrorLoading(win, path, args->noSavePrefs);
+                ShowErrorLoadingNotification(win, path, args->noSavePrefs);
                 delete args;
                 return;
             }
@@ -1956,7 +1957,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
         }
 
         if (!ctrl) {
-            ShowErrorLoading(win, path, args->noSavePrefs);
+            ShowErrorLoadingNotification(win, path, args->noSavePrefs);
             return win;
         }
     }

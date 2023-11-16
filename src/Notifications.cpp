@@ -51,7 +51,7 @@ struct NotificationWnd : ProgressUpdateUI, Wnd {
     bool WasCanceled() override;
 
     bool HasClose() const {
-        return (timeoutMs == 0) || (progressMsg != nullptr);
+        return true;
     }
 
     bool HasProgress() const {
