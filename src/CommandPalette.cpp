@@ -327,10 +327,10 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     return true;
 }
 
-static char* ConvertPathForDisplayTemp(const char* s) {
-    const char* name = path::GetBaseNameTemp(s);
-    char* dir = path::GetDirTemp(s);
-    char* res = str::JoinTemp(name, "  (", dir);
+static TempStr ConvertPathForDisplayTemp(const char* s) {
+    TempStr name = path::GetBaseNameTemp(s);
+    TempStr dir = path::GetDirTemp(s);
+    TempStr res = str::JoinTemp(name, "  (", dir);
     res = str::JoinTemp(res, ")");
     return res;
 }

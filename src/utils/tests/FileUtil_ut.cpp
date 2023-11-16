@@ -10,10 +10,10 @@
 void FileUtilTest() {
     const char* path1 = "C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
 
-    const char* baseName = path::GetBaseNameTemp(path1);
+    TempStr baseName = path::GetBaseNameTemp(path1);
     utassert(str::Eq(baseName, "SumatraPDF.exe"));
 
-    char* dirName = path::GetDirTemp(path1);
+    TempStr dirName = path::GetDirTemp(path1);
     utassert(str::Eq(dirName, "C:\\Program Files\\SumatraPDF"));
     baseName = path::GetBaseNameTemp(dirName);
     utassert(str::Eq(baseName, "SumatraPDF"));

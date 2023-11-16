@@ -1009,7 +1009,7 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
         return;
     }
 
-    TempStr menuString = (TempStr)path::GetBaseNameTemp(filePath);
+    TempStr menuString = path::GetBaseNameTemp(filePath);
 
     // If the name is too long, save only the ends glued together
     // E.g. 'Very Long PDF Name (3).pdf' -> 'Very Long...e (3).pdf'

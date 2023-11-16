@@ -90,8 +90,8 @@ static DWORD WINAPI UninstallerThread(void*) {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    char* exePath = GetInstalledExePathTemp();
-    char* ownPath = GetExePathTemp();
+    TempStr exePath = GetInstalledExePathTemp();
+    TempStr ownPath = GetExePathTemp();
     if (!path::IsSame(exePath, ownPath)) {
         KillProcessesWithModule(exePath, true);
     }
@@ -389,7 +389,7 @@ static char* GetSelfDeleteBatchPathInTemp() {
 // we create a bash script that deletes us
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
-    char* exePath = GetExePathTemp();
+    TempStr exePath = GetExePathTemp();
     str::Str script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
@@ -429,8 +429,8 @@ int RunUninstaller() {
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
     char* instDir = gCli->installDir;
-    char* cmdLine = ToUtf8Temp(GetCommandLineW());
-    char* exePath = GetExePathTemp();
+    TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
+    TempStr exePath = GetExePathTemp();
     logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
     int ret = 1;

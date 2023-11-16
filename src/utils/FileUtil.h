@@ -6,7 +6,7 @@ namespace path {
 bool IsSep(char c);
 
 TempStr GetExtTemp(const char* path);
-const char* GetBaseNameTemp(const char* path);
+TempStr GetBaseNameTemp(const char* path);
 TempStr GetPathNoExtTemp(const char* path);
 
 TempStr GetDirTemp(const char* path);

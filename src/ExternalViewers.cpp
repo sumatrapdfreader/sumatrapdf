@@ -193,8 +193,8 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
 
     static int const csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
     for (int csidl : csidls) {
-        char* dir = GetSpecialFolderTemp(csidl);
-        char* path = path::JoinTemp(dir, partialPath);
+        TempStr dir = GetSpecialFolderTemp(csidl);
+        TempStr path = path::JoinTemp(dir, partialPath);
         if (file::Exists(path)) {
             ev->exeFullPath = str::Dup(path);
             return true;

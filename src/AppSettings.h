@@ -9,8 +9,8 @@ enum {
     WIN_STATE_MINIMIZED,
 };
 
-char* GetSettingsPathTemp();
-char* GetSettingsFileNameTemp();
+TempStr GetSettingsPathTemp();
+TempStr GetSettingsFileNameTemp();
 
 bool LoadSettings();
 bool SaveSettings();

@@ -58,11 +58,11 @@ static int cmpFloat(const void* a, const void* b) {
     return *(float*)a < *(float*)b ? -1 : *(float*)a > *(float*)b ? 1 : 0;
 }
 
-char* GetSettingsFileNameTemp() {
+TempStr GetSettingsFileNameTemp() {
     return str::DupTemp("SumatraPDF-settings.txt");
 }
 
-char* GetSettingsPathTemp() {
+TempStr GetSettingsPathTemp() {
     return AppGenDataFilenameTemp(GetSettingsFileNameTemp());
 }
 
@@ -88,7 +88,7 @@ bool LoadSettings() {
     auto timeStart = TimeGet();
 
     GlobalPrefs* gprefs = nullptr;
-    char* settingsPath = GetSettingsPathTemp();
+    TempStr settingsPath = GetSettingsPathTemp();
     {
         ByteSlice prefsData = file::ReadFile(settingsPath);
 
@@ -247,7 +247,7 @@ bool SaveSettings() {
     str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
 
-    char* path = GetSettingsPathTemp();
+    TempStr path = GetSettingsPathTemp();
     ReportIf(!path);
     if (!path) {
         return false;
@@ -281,7 +281,7 @@ bool SaveSettings() {
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
 bool ReloadSettings() {
-    char* settingsPath = GetSettingsPathTemp();
+    TempStr settingsPath = GetSettingsPathTemp();
     if (!file::Exists(settingsPath)) {
         return false;
     }
@@ -359,7 +359,7 @@ void RegisterSettingsForFileChanges() {
     }
 
     CrashIf(gWatchedSettingsFile); // only call me once
-    char* path = GetSettingsPathTemp();
+    TempStr path = GetSettingsPathTemp();
     gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }
 

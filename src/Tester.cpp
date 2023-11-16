@@ -130,8 +130,8 @@ static void MobiTestFile(const char* filePath) {
         // remove the file extension
         const char* dir = kMobiSaveDir;
         dir::CreateAll(dir);
-        const char* fileName = path::GetBaseNameTemp(filePath);
-        char* filePathBase = path::JoinTemp(dir, fileName);
+        TempStr fileName = path::GetBaseNameTemp(filePath);
+        TempStr filePathBase = path::JoinTemp(dir, fileName);
         char* ext = str::FindCharLast(filePathBase, '.');
         *ext = 0;
 

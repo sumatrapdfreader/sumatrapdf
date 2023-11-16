@@ -23,8 +23,8 @@ bool IsSep(char c) {
 // Note: if want to change to returning TempStr, would have
 // to audit caller as they depend of in-place nature of returned
 // value
-const char* GetBaseNameTemp(const char* path) {
-    const char* s = path + str::Len(path);
+TempStr GetBaseNameTemp(const char* path) {
+    char* s = (char*)path + str::Len(path);
     for (; s > path; s--) {
         if (IsSep(s[-1])) {
             break;
@@ -147,7 +147,7 @@ TempWStr GetDirTemp(const WCHAR* path) {
 }
 
 TempStr GetDirTemp(const char* path) {
-    const char* baseName = GetBaseNameTemp(path);
+    TempStr baseName = GetBaseNameTemp(path);
     if (baseName == path) {
         // relative directory
         return str::DupTemp(".");
@@ -313,8 +313,8 @@ bool IsSame(const char* path1, const char* path2) {
     }
 
     // we assume that if the last part doesn't match, they can't be the same
-    const char* base1 = path::GetBaseNameTemp(path1);
-    const char* base2 = path::GetBaseNameTemp(path2);
+    TempStr base1 = path::GetBaseNameTemp(path1);
+    TempStr base2 = path::GetBaseNameTemp(path2);
     if (!str::EqI(base1, base2)) {
         return false;
     }

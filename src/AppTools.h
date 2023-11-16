@@ -34,7 +34,6 @@ TempStr AppGenDataFilenameTemp(const char* fileName);
 void SetAppDataPath(const char* path);
 
 void DetectTextEditors(Vec<TextEditor*>&);
-void OpenFileWithTextEditor(const char* path);
 char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);

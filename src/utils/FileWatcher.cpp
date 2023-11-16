@@ -166,7 +166,7 @@ static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
         if (wf->watchedDir != d) {
             continue;
         }
-        const char* path = path::GetBaseNameTemp(wf->filePath);
+        TempStr path = path::GetBaseNameTemp(wf->filePath);
 
         if (!str::EqI(fileName, path)) {
             continue;

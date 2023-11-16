@@ -872,8 +872,8 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     }
 
     const char* path = pageFileNames.at(pageNo - 1);
-    const char* fileName = path::GetBaseNameTemp(path);
-    char* ext = path::GetExtTemp(fileName);
+    TempStr fileName = path::GetBaseNameTemp(path);
+    TempStr ext = path::GetExtTemp(fileName);
     if (!ext) {
         return str::DupTemp(fileName);
     }
@@ -886,7 +886,7 @@ int EngineImageDir::GetPageByLabel(const char* label) const {
     size_t nLabel = str::Len(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
         char* pagePath = pageFileNames[i];
-        const char* fileName = path::GetBaseNameTemp(pagePath);
+        TempStr fileName = path::GetBaseNameTemp(pagePath);
         char* ext = path::GetExtTemp(fileName);
         if (!str::StartsWith(fileName, label)) {
             continue;
@@ -930,8 +930,8 @@ bool EngineImageDir::SaveFileAs(const char* dstPath) {
         return false;
     }
     for (char* pathOld : pageFileNames) {
-        const char* fileName = path::GetBaseNameTemp(pathOld);
-        char* pathNew = path::JoinTemp(dstPath, fileName);
+        TempStr fileName = path::GetBaseNameTemp(pathOld);
+        TempStr pathNew = path::JoinTemp(dstPath, fileName);
         ok = ok && file::Copy(pathNew, pathOld, true);
     }
     return ok;
@@ -1257,7 +1257,7 @@ bool EngineCbx::FinishLoading() {
     TocItem* curr = nullptr;
     for (int i = 0; i < pageCount; i++) {
         const char* fname = files[i]->name;
-        const char* baseName = path::GetBaseNameTemp(fname);
+        TempStr baseName = path::GetBaseNameTemp(fname);
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;

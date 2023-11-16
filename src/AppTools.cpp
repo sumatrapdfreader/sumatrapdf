@@ -26,13 +26,13 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
-    char* regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
-    char* installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
+    TempStr regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
+    TempStr installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!installedPath) {
         return false;
     }
 
-    char* exePath = GetExePathTemp();
+    TempStr exePath = GetExePathTemp();
     if (exePath) {
         return false;
     }
@@ -64,8 +64,8 @@ bool IsRunningInPortableMode() {
         return false;
     }
 
-    char* exePath = GetExePathTemp();
-    char* programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
+    TempStr exePath = GetExePathTemp();
+    TempStr programFilesDir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         sCacheIsPortable = 1;
@@ -115,7 +115,7 @@ TempStr AppGenDataFilenameTemp(const char* fileName) {
         return path::GetPathOfFileInAppDirTemp(fileName);
     }
 
-    char* path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    TempStr path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
     if (!path) {
         return nullptr;
     }
@@ -402,18 +402,6 @@ char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col)
     cmdline.Append(s);
 
     return cmdline.StealData();
-}
-
-void OpenFileWithTextEditor(const char* path) {
-    Vec<TextEditor*> editors;
-    DetectTextEditors(editors);
-    const char* cmd = editors[0]->openFileCmd;
-
-    char* cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
-    logf("OpenFileWithTextEditor: '%s'\n", cmdLine);
-    char* appDir = GetExeDirTemp();
-    AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
-    str::Free(cmdLine);
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)

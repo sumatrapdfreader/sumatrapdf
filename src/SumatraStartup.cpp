@@ -479,7 +479,7 @@ static void SetupCrashHandler() {
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    char* exePath = GetExePathTemp();
+    TempStr exePath = GetExePathTemp();
     str::ToLowerInPlace(exePath);
     u32 hash = MurmurHash2(exePath, str::Len(exePath));
     TempStr mapId = str::FormatTemp("SumatraPDF-%08x", hash);
@@ -679,8 +679,8 @@ static void UpdateGlobalPrefs(const Flags& i) {
 // we're in installer mode if the name of the executable
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
-    char* exePath = GetExePathTemp();
-    const char* exeName = path::GetBaseNameTemp(exePath);
+    TempStr exePath = GetExePathTemp();
+    TempStr exeName = path::GetBaseNameTemp(exePath);
     if (str::FindI(exeName, "uninstall")) {
         return false;
     }
@@ -704,7 +704,7 @@ static bool IsOurExeInstalled() {
     if (!installedDir.Get()) {
         return false;
     }
-    char* exeDir = GetExeDirTemp();
+    TempStr exeDir = GetExeDirTemp();
     return str::EqI(installedDir.Get(), exeDir);
 }
 
@@ -716,14 +716,14 @@ static bool IsInstallerButNotInstalled() {
 }
 
 static void CheckIsStoreBuild() {
-    char* exePath = GetExePathTemp();
-    const char* exeName = path::GetBaseNameTemp(exePath);
+    TempStr exePath = GetExePathTemp();
+    TempStr exeName = path::GetBaseNameTemp(exePath);
     if (str::FindI(exeName, "store")) {
         gIsStoreBuild = true;
         return;
     }
-    char* dir = path::GetDirTemp(exePath);
-    char* path = path::JoinTemp(dir, "AppxManifest.xml");
+    TempStr dir = path::GetDirTemp(exePath);
+    TempStr path = path::JoinTemp(dir, "AppxManifest.xml");
     if (file::Exists(path)) {
         gIsStoreBuild = true;
     }
@@ -950,7 +950,7 @@ static void LogDpiAwareness() {
 
 #if 0
 static void testLogf() {
-    const char* fileName = path::GetBaseNameTemp(__FILE__);
+    TempStr fileName = path::GetBaseNameTemp(__FILE__);
     WCHAR* gswin32c = L"this is a path";
     WCHAR* tmpFile = L"c:\foo\bar.txt";
     auto gswin = ToUtf8Temp(gswin32c);

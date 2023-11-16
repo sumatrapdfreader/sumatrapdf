@@ -764,7 +764,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
                 rect.x -= iconSpace;
             }
             char* path = state->filePath;
-            const char* fileName = path::GetBaseNameTemp(path);
+            TempStr fileName = path::GetBaseNameTemp(path);
             UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
             HdcDrawText(hdc, fileName, rect, fmt, fontText);
 

@@ -3509,6 +3509,20 @@ static void OnMenuViewShowHideScrollbars() {
     UpdateFixedPageScrollbarsVisibility();
 }
 
+#if 0 // note: was used in OpenAdvancedOptions()
+static void OpenFileWithTextEditor(const char* path) {
+    Vec<TextEditor*> editors;
+    DetectTextEditors(editors);
+    const char* cmd = editors[0]->openFileCmd;
+
+    char* cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
+    logf("OpenFileWithTextEditor: '%s'\n", cmdLine);
+    char* appDir = GetExeDirTemp();
+    AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
+    str::Free(cmdLine);
+}
+#endif
+
 static void OpenAdvancedOptions() {
     if (!HasPermission(Perm::DiskAccess) || !HasPermission(Perm::SavePreferences)) {
         return;
@@ -3516,8 +3530,8 @@ static void OpenAdvancedOptions() {
 
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
-    char* path = GetSettingsPathTemp();
-    OpenFileWithTextEditor(path);
+    TempStr path = GetSettingsPathTemp();
+    LaunchFile(path);
 }
 
 static void ShowOptionsDialog(HWND hwnd) {
@@ -5697,7 +5711,7 @@ static TempStr GetFileSizeAsStrTemp(const char* path) {
 void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Crash file: %s\r\n", gCrashFilePath);
 
-    char* exePath = GetExePathTemp();
+    TempStr exePath = GetExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
     s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe);
     if (IsDllBuild()) {

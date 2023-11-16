@@ -309,7 +309,7 @@ static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isC
     if (isCurrent) {
         return str::FormatTemp("%s : %s", _TRA("Current file"), rn);
     }
-    const char* fp = path::GetBaseNameTemp(fav->filePath);
+    TempStr fp = path::GetBaseNameTemp(fav->filePath);
     return str::FormatTemp("%s : %s", fp, rn);
 }
 
@@ -346,8 +346,8 @@ static bool SortByBaseFileName(const char* s1, const char* s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    const char* base1 = path::GetBaseNameTemp(s1);
-    const char* base2 = path::GetBaseNameTemp(s2);
+    TempStr base1 = path::GetBaseNameTemp(s1);
+    TempStr base2 = path::GetBaseNameTemp(s2);
     int n = str::CmpNatural(base1, base2);
     return n < 0;
 }
@@ -578,7 +578,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
         text = FavCompactReadableNameTemp(fav, fn);
     } else {
         char* fp = fav->filePath;
-        text = (TempStr)path::GetBaseNameTemp(fp);
+        text = path::GetBaseNameTemp(fp);
     }
     res->text = str::Dup(text);
     return res;

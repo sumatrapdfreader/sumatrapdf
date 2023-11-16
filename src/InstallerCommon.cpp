@@ -110,8 +110,8 @@ char* GetExistingInstallationDir() {
         return str::Dup(gCachedExistingInstallationDir);
     }
     log("GetExistingInstallationDir()\n");
-    char* regPathUninst = GetRegPathUninstTemp(kAppName);
-    char* dir = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
+    TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
+    TempStr dir = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!dir) {
         return nullptr;
     }
@@ -162,22 +162,22 @@ char* GetInstallDirTemp() {
 }
 
 char* GetInstallationFilePathTemp(const char* name) {
-    char* res = path::JoinTemp(gCli->installDir, name);
+    TempStr res = path::JoinTemp(gCli->installDir, name);
     logf("GetInstallationFilePath(%s) = > %s\n", name, res);
     return res;
 }
 
 TempStr GetInstalledExePathTemp() {
-    char* dir = GetInstallDirTemp();
+    TempStr dir = GetInstallDirTemp();
     return path::JoinTemp(dir, kExeName);
 }
 
 TempStr GetShortcutPathTemp(int csidl) {
-    char* dir = GetSpecialFolderTemp(csidl, false);
+    TempStr dir = GetSpecialFolderTemp(csidl, false);
     if (!dir) {
         return {};
     }
-    char* lnkName = str::JoinTemp(kAppName, ".lnk");
+    TempStr lnkName = str::JoinTemp(kAppName, ".lnk");
     return path::JoinTemp(dir, lnkName);
 }
 
@@ -482,7 +482,7 @@ static const char* readableProcessNames[] = {
 static const char* ReadableProcName(const char* procPath) {
     readableProcessNames[0] = kExeName;
     readableProcessNames[1] = kAppName;
-    const char* procName = path::GetBaseNameTemp(procPath);
+    TempStr procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
         if (str::EqI(procName, readableProcessNames[i])) {
             return readableProcessNames[i + 1];

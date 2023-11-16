@@ -241,7 +241,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
     if (propertyId == UIA_NamePropertyId) {
         // typically filename
         pRetVal->vt = VT_BSTR;
-        const char* s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
+        TempStr s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
         pRetVal->bstrVal = SysAllocString(ToWStrTemp(s));
         return S_OK;
     } else if (propertyId == UIA_IsTextPatternAvailablePropertyId) {

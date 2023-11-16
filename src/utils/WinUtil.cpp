@@ -719,7 +719,7 @@ TempStr GetExeDirTemp() {
 }
 
 void ChangeCurrDirToDocuments() {
-    char* dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
+    TempStr dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
     WCHAR* dirW = ToWStrTemp(dir);
     SetCurrentDirectoryW(dirW);
 }
