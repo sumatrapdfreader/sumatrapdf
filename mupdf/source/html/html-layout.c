@@ -999,6 +999,17 @@ static float largest_max_width(fz_context *ctx, fz_html_box *box)
 	return r_max;
 }
 
+static void squish_block(fz_context *ctx, fz_html_box *box)
+{
+	fz_html_box *child;
+
+	box->s.layout.b = box->s.layout.y;
+	if (box->type == BOX_FLOW)
+		return;
+	for (child = box->down; child; child = child->next)
+		squish_block(ctx, child);
+}
+
 static void layout_table_row(fz_context *ctx, layout_data *ld, fz_html_box *row, int ncol, struct column_width *colw, float spacing)
 {
 	fz_html_box *cell, *child;
@@ -1100,7 +1111,11 @@ static void layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 	}
 
 	/* TODO: remove 'vertical' margin adjustments across automatic page breaks */
-	if (layout_block_page_break(ctx, ld, &top->s.layout.b, box->style->page_break_before))
+	if (restart && restart->start != NULL)
+	{
+		/* We're still skipping, don't check for pagebreak before! */
+	}
+	else if (layout_block_page_break(ctx, ld, &top->s.layout.b, box->style->page_break_before))
 		eop = 1;
 
 	/* Position table in box flow, and add margins and padding */
@@ -1226,19 +1241,23 @@ static void layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 			row->s.layout.x = box->s.layout.x;
 			row->s.layout.w = box->s.layout.w;
 			row->s.layout.y = row->s.layout.b = box->s.layout.b;
+			row->s.layout.b = row->s.layout.y;
 
 			if (restart && restart->start != NULL)
 			{
 				if (restart->start == row)
 					restart->start = NULL;
 				else
+				{
+					squish_block(ctx, row);
 					continue; /* still skipping */
+			}
 			}
 
 			layout_table_row(ctx, ld, row, ncol, colw, spacing);
 
 			/* If the row doesn't fit on the current page, break here and put the row on the next page.
-			 * Unless the row was at the very start of the page, in which case it'll overfloaw instead.
+			 * Unless the row was at the very start of the page, in which case it'll overflow instead.
 			 * FIXME: Don't overflow, draw twice with offset to break it abruptly at the page border!
 			 */
 			if (ld->page_h > 0)
@@ -1268,6 +1287,22 @@ static void layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 		fz_free(ctx, colw);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+
+	if (restart && restart->start != NULL)
+	{
+		/* We're still skipping, don't check for pagebreak after! */
+	}
+	else if (layout_block_page_break(ctx, ld, &top->s.layout.b, box->style->page_break_after))
+	{
+		if (restart && restart->end == NULL)
+		{
+			if (restart->potential)
+				restart->end = restart->potential;
+			else
+				restart->end = box;
+			return;
+		}
+	}
 }
 
 /* === LAYOUT BLOCKS === */
@@ -1315,7 +1350,11 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 	}
 
 	/* TODO: remove 'vertical' margin adjustments across automatic page breaks */
-	if (layout_block_page_break(ctx, ld, &top->s.layout.b, style->page_break_before))
+	if (restart && restart->start != NULL)
+	{
+		/* We're still skipping, don't check for pagebreak before! */
+	}
+	else if (layout_block_page_break(ctx, ld, &top->s.layout.b, style->page_break_before))
 		eop = 1;
 
 	/* Important to remember that box->{x,y,w,b} are the coordinates of the content. The
@@ -1416,7 +1455,21 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 		box->s.layout.b += fz_from_css_number_scale(style->line_height, em);
 	}
 
-	(void) layout_block_page_break(ctx, ld, &box->s.layout.b, style->page_break_after);
+	if (restart && restart->start != NULL)
+	{
+		/* We're still skipping, don't check for pagebreak after! */
+	}
+	else if (layout_block_page_break(ctx, ld, &box->s.layout.b, style->page_break_after))
+	{
+		if (restart && restart->end == NULL)
+		{
+			if (restart->potential)
+				restart->end = restart->potential;
+			else
+				restart->end = box;
+			return;
+		}
+	}
 }
 
 /* === LAYOUT === */

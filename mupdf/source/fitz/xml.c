@@ -28,6 +28,8 @@
 
 #include <gumbo.h>
 
+#define FZ_XML_MAX_DEPTH 4096
+
 /* #define FZ_XML_SEQ */
 
 static const struct { const char *name; int c; } html_entities[] = {
@@ -496,6 +498,8 @@ static void xml_emit_open_tag(fz_context *ctx, struct parser *parser, const char
 
 	parser->head = head;
 	parser->depth++;
+	if (parser->depth >= FZ_XML_MAX_DEPTH)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "too deep xml element nesting");
 }
 
 static void xml_emit_att_name(fz_context *ctx, struct parser *parser, const char *a, const char *b)

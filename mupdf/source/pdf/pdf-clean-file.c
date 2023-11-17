@@ -25,12 +25,6 @@
 
 #include <string.h>
 
-typedef struct
-{
-	pdf_document *doc;
-	fz_context *ctx;
-} globals;
-
 static int
 string_in_names_list(fz_context *ctx, pdf_obj *p, pdf_obj *names_list)
 {
@@ -52,7 +46,7 @@ string_in_names_list(fz_context *ctx, pdf_obj *p, pdf_obj *names_list)
 
 static void retainpage(fz_context *ctx, pdf_document *doc, pdf_obj *parent, pdf_obj *kids, int page)
 {
-	pdf_obj *pageref = pdf_lookup_page_obj(ctx, doc, page-1);
+	pdf_obj *pageref = pdf_lookup_page_obj(ctx, doc, page);
 
 	pdf_flatten_inheritable_page_items(ctx, pageref);
 
@@ -233,19 +227,17 @@ static int strip_outlines(fz_context *ctx, pdf_document *doc, pdf_obj *outlines,
 	return nc;
 }
 
-static void retainpages(fz_context *ctx, globals *glo, int argc, char **argv)
+static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int count, int *new_page_list)
 {
 	pdf_obj *oldroot, *pages, *kids, *olddests;
 	pdf_obj *root = NULL;
-	pdf_document *doc = glo->doc;
-	int argidx = 0;
 	pdf_obj *names_list = NULL;
 	pdf_obj *outlines;
 	pdf_obj *ocproperties;
 	pdf_obj *allfields = NULL;
-	int pagecount;
-	int i;
+	int pagecount, i;
 	int *page_object_nums = NULL;
+	fz_page *page, *next;
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
@@ -263,6 +255,19 @@ static void retainpages(fz_context *ctx, globals *glo, int argc, char **argv)
 
 	fz_try(ctx)
 	{
+		/* Adjust the fz layer of cached pages (by nuking it!) */
+		fz_lock(ctx, FZ_LOCK_ALLOC);
+		{
+			for (page = doc->super.open; page != NULL; page = next)
+			{
+				next = page->next;
+				page->prev = NULL;
+				page->next = NULL;
+			}
+			doc->super.open = NULL;
+		}
+		fz_unlock(ctx, FZ_LOCK_ALLOC);
+
 		root = pdf_new_dict(ctx, doc, 3);
 		pdf_dict_put(ctx, root, PDF_NAME(Type), pdf_dict_get(ctx, oldroot, PDF_NAME(Type)));
 		pdf_dict_put(ctx, root, PDF_NAME(Pages), pdf_dict_get(ctx, oldroot, PDF_NAME(Pages)));
@@ -277,25 +282,8 @@ static void retainpages(fz_context *ctx, globals *glo, int argc, char **argv)
 		kids = pdf_new_array(ctx, doc, 1);
 
 		/* Retain pages specified */
-		while (argc - argidx)
-		{
-			int page, spage, epage;
-			const char *pagelist = argv[argidx];
-
-			pagecount = pdf_count_pages(ctx, doc);
-
-			while ((pagelist = fz_parse_page_range(ctx, pagelist, &spage, &epage, pagecount)))
-			{
-				if (spage < epage)
-					for (page = spage; page <= epage; ++page)
-						retainpage(ctx, doc, pages, kids, page);
-				else
-					for (page = spage; page >= epage; --page)
-						retainpage(ctx, doc, pages, kids, page);
-			}
-
-			argidx++;
-		}
+		for (i = 0; i < count; ++i)
+			retainpage(ctx, doc, pages, kids, new_page_list[i]);
 
 		/* Update page count */
 		pdf_dict_put_int(ctx, pages, PDF_NAME(Count), pdf_array_len(ctx, kids));
@@ -421,33 +409,86 @@ static void retainpages(fz_context *ctx, globals *glo, int argc, char **argv)
 		pdf_drop_obj(ctx, kids);
 	}
 	fz_catch(ctx)
+	{
 		fz_rethrow(ctx);
+}
+}
+
+void pdf_rearrange_pages(fz_context *ctx, pdf_document *doc, int count, int *new_page_list)
+{
+	pdf_begin_operation(ctx, doc, "Rearrange pages");
+	fz_try(ctx)
+	{
+		pdf_rearrange_pages_imp(ctx, doc, count, new_page_list);
+		pdf_end_operation(ctx, doc);
+	}
+	fz_catch(ctx)
+	{
+		pdf_abandon_operation(ctx, doc);
+		fz_rethrow(ctx);
+	}
 }
 
 void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_clean_options *opts, int argc, char *argv[])
 {
-	globals glo = { 0 };
+	pdf_document *pdf = NULL;
+	int *pages = NULL;
+	int cap, len, page;
 
-	glo.ctx = ctx;
+	fz_var(pdf);
+	fz_var(pages);
 
 	fz_try(ctx)
 	{
-		glo.doc = pdf_open_document(ctx, infile);
-		if (pdf_needs_password(ctx, glo.doc))
-			if (!pdf_authenticate_password(ctx, glo.doc, password))
-				fz_throw(glo.ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
+		pdf = pdf_open_document(ctx, infile);
+		if (pdf_needs_password(ctx, pdf))
+			if (!pdf_authenticate_password(ctx, pdf, password))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
 
 		/* Only retain the specified subset of the pages */
 		if (argc)
-			retainpages(ctx, &glo, argc, argv);
+		{
+			int pagecount = pdf_count_pages(ctx, pdf);
+			int argidx = 0;
 
-		pdf_rewrite_images(ctx, glo.doc, &opts->image);
+			len = cap = 0;
 
-		pdf_save_document(ctx, glo.doc, outfile, &opts->write);
+			while (argc - argidx)
+			{
+				int spage, epage;
+				const char *pagelist = argv[argidx];
+
+				while ((pagelist = fz_parse_page_range(ctx, pagelist, &spage, &epage, pagecount)))
+				{
+					if (len + (epage - spage + 1) >= cap)
+					{
+						int n = cap ? cap * 2 : 8;
+						pages = fz_realloc_array(ctx, pages, n, int);
+						cap = n;
+					}
+
+					if (spage < epage)
+						for (page = spage; page <= epage; ++page)
+							pages[len++] = page;
+					else
+						for (page = spage; page >= epage; --page)
+							pages[len++] = page;
+				}
+
+				argidx++;
+			}
+
+			pdf_rearrange_pages(ctx, pdf, len, pages);
+		}
+
+		pdf_rewrite_images(ctx, pdf, &opts->image);
+
+		pdf_save_document(ctx, pdf, outfile, &opts->write);
 	}
 	fz_always(ctx)
 	{
-		pdf_drop_document(ctx, glo.doc);
+		fz_free(ctx, pages);
+		pdf_drop_document(ctx, pdf);
 	}
 	fz_catch(ctx)
 	{

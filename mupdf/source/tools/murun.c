@@ -6571,6 +6571,41 @@ static void ffi_PDFDocument_save(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFDocument_rearrangePages(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	int n = js_getlength(J, 1);
+	int *pages = NULL;
+	int i;
+
+	fz_try(ctx)
+		pages = fz_malloc_array(ctx, n, int);
+	fz_catch(ctx)
+		rethrow(J);
+
+	if (js_try(J)) {
+		fz_free(ctx, pages);
+		js_throw(J);
+	}
+
+	for (i = 0; i < n; ++i)
+	{
+		js_getindex(J, 1, i);
+		pages[i] = js_tonumber(J, -1);
+		js_pop(J, 1);
+	}
+
+	js_endtry(J);
+
+	fz_try(ctx)
+		pdf_rearrange_pages(ctx, pdf, n, pages);
+	fz_always(ctx)
+		fz_free(ctx, pages);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFDocument_newNull(js_State *J)
 {
 	ffi_pushobj(J, PDF_NULL);
@@ -10285,6 +10320,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFDocument.findPage", ffi_PDFDocument_findPage, 1);
 		jsB_propfun(J, "PDFDocument.findPageNumber", ffi_PDFDocument_findPageNumber, 1);
 		jsB_propfun(J, "PDFDocument.lookupDest", ffi_PDFDocument_lookupDest, 1);
+		jsB_propfun(J, "PDFDocument.rearrangePages", ffi_PDFDocument_rearrangePages, 1);
 		jsB_propfun(J, "PDFDocument.save", ffi_PDFDocument_save, 2);
 
 		jsB_propfun(J, "PDFDocument.newNull", ffi_PDFDocument_newNull, 0);

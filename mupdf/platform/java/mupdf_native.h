@@ -3911,6 +3911,14 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_isRedacted
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    rearrangePages
+ * Signature: ([I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_rearrangePages
+  (JNIEnv *, jobject, jintArray);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    save
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */

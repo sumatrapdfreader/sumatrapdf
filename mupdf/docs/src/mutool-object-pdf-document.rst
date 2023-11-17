@@ -104,6 +104,35 @@ With :title:`MuPDF` it is also possible to create, edit and manipulate :title:`P
         var lang = pdfDocument.getLanguage();
 
 
+
+.. method:: rearrangePages(pages)
+
+    |mutool_tag|
+
+    Rearrange (re-order and/or delete) pages in the `PDFDocument`.
+
+    The pages in the document will be rearranged according to the input list.
+    Any pages not listed will be removed, and pages may be duplicated by
+    listing them multiple times.
+
+    The PDF objects describing removed pages will remain in the file and take
+    up space (and can be recovered by forensic tools) unless you save with the
+    `garbage` option.
+
+    N.B. the `PDFDocument` should not be used for anything except saving after rearranging the pages (FIXME).
+
+    :arg pages: An array of page numbers (0-based).
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var document = new Document.openDocument("my_pdf.pdf");
+        pdfDocument.rearrangePages([3,2]);
+        pdfDocument.save("fewer_pages.pdf", "garbage");
+
+
+
 .. method:: save(fileName, options)
 
     |mutool_tag|

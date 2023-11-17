@@ -1775,3 +1775,34 @@ FUN(PDFDocument_appendExplicitDestToURI)(JNIEnv *env, jclass cls, jstring jurl, 
 	fz_free(ctx, uri);
 	return juri;
 }
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_rearrangePages)(JNIEnv *env, jobject self, jobject jpages)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	jsize len = 0;
+	int *pages = NULL;
+
+	if (!ctx || !pdf) return;
+
+	len = (*env)->GetArrayLength(env, jpages);
+	fz_try(ctx)
+		pages = fz_malloc_array(ctx, len, int);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+
+	(*env)->GetIntArrayRegion(env, jpages, 0, len, pages);
+	if ((*env)->ExceptionCheck(env))
+	{
+		fz_free(ctx, pages);
+		return;
+	}
+
+	fz_try(ctx)
+		pdf_rearrange_pages(ctx, pdf, len, pages);
+	fz_always(ctx)
+		fz_free(ctx, pages);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
