@@ -6,6 +6,6 @@ struct EditAnnotationsWindow;
 void ShowEditAnnotationsWindow(WindowTab*);
 bool CloseAndDeleteEditAnnotationsWindow(WindowTab*);
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
-void SetSelectedAnnotation(WindowTab*, Annotation*);
+void SetSelectedAnnotation(WindowTab*, Annotation*, bool setEditFocus = true);
 void UpdateAnnotationsList(EditAnnotationsWindow*);
 void NotifyAnnotationsChanged(EditAnnotationsWindow*);

@@ -213,7 +213,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         }
 #endif
     }
-    SetSelectedAnnotation(tab, selectNext);
+    SetSelectedAnnotation(tab, selectNext, false);
 }
 
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
@@ -802,7 +802,7 @@ static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent*
 }
 
 // TODO: maybe use ew->tab->selectedAnnotation instead of annot
-static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation* annot) {
+static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation* annot, bool setEditFocus) {
     HidePerAnnotControls(ew);
     if (annot) {
         int itemNo = ew->annotations.Find(annot);
@@ -831,10 +831,10 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         DoSaveEmbed(ew, annot);
 
         // TODO: not sure it should be here as it might trigger recursive loop
-        SetSelectedAnnotation(ew->tab, annot);
+        //SetSelectedAnnotation(ew->tab, annot);
         ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
-        if (ew->editContents->IsVisible()) {
+        if (setEditFocus && ew->editContents->IsVisible()) {
             ew->editContents->SetFocus();
             ew->editContents->SetCursorPositionAtEnd();
         }
@@ -891,7 +891,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     MessageBoxNYI(ew->hwnd);
 }
 
-void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
+void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool setEditFocus) {
     // when we delete an annotation we automatically pick one to
     // set as selected and it might end up as currently selected
     // we still want to redraw to not show deleted annotation
@@ -908,7 +908,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     auto ew = tab->editAnnotsWindow;
     // go to page with a given annotations before triggering repaint
     if (ew) {
-        UpdateUIForSelectedAnnotation(ew, annot);
+        UpdateUIForSelectedAnnotation(ew, annot, setEditFocus);
         HwndMakeVisible(ew->hwnd);
     }
     MainWindowRerender(win);
@@ -938,7 +938,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
         return;
     }
     Annotation* annot = annotations.at(itemNo);
-    SetSelectedAnnotation(tab, annot);
+    SetSelectedAnnotation(tab, annot, false);
 }
 
 static UINT_PTR gMainWindowRerenderTimer = 0;
@@ -1440,7 +1440,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     Annotation* annot = ew->tab->selectedAnnotation;
     ew->skipGoToPage = (annot != nullptr);
     if (annot) {
-        UpdateUIForSelectedAnnotation(ew, annot);
+        UpdateUIForSelectedAnnotation(ew, annot, true);
     }
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
