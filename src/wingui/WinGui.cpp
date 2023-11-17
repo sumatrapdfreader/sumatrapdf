@@ -1137,7 +1137,7 @@ void Wnd::SetFocus() const {
 }
 
 bool Wnd::IsFocused() const {
-    BOOL isFocused = ::IsFocused(hwnd);
+    BOOL isFocused = HwndIsFocused(hwnd);
     return tobool(isFocused);
 }
 

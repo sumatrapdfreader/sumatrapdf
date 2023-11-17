@@ -1193,7 +1193,7 @@ void DrawLine(HDC hdc, const Rect& rect) {
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-bool IsFocused(HWND hwnd) {
+bool HwndIsFocused(HWND hwnd) {
     return GetFocus() == hwnd;
 }
 
@@ -1202,6 +1202,13 @@ bool IsCursorOverWindow(HWND hwnd) {
     GetCursorPos(&pt);
     Rect rcWnd = WindowRect(hwnd);
     return rcWnd.Contains({pt.x, pt.y});
+}
+
+TempStr HwndGetClassName(HWND hwnd) {
+    WCHAR buf[512] = {0};
+    int n = GetClassNameW(hwnd, buf, dimof(buf));
+    CrashIf(n == 0);
+    return ToUtf8Temp(buf);
 }
 
 Point HwndGetCursorPos(HWND hwnd) {

@@ -408,6 +408,12 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         int key = (int)msg.wParam;
         if (key == VK_DELETE) {
+            // we don't want this to trigger in edit control
+            HWND focused = ::GetFocus();
+            TempStr cls = HwndGetClassName(focused);
+            if (str::EqI(cls, "Edit")) {
+                return false;
+            }
             DeleteSelectedAnnotation(this);
             return true;
         }

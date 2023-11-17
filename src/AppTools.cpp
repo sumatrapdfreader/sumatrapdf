@@ -414,7 +414,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
 
     switch (msg) {
         case WM_LBUTTONDOWN:
-            delayFocus = !IsFocused(hwnd);
+            delayFocus = !HwndIsFocused(hwnd);
             return true;
 
         case WM_LBUTTONUP: {

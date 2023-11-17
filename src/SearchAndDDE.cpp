@@ -94,7 +94,7 @@ void FindFirst(MainWindow* win) {
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (IsFocused(win->hwndFindEdit)) {
+        if (HwndIsFocused(win->hwndFindEdit)) {
             SendMessageW(win->hwndFindEdit, WM_SETFOCUS, 0, 0);
         } else {
             SetFocus(win->hwndFindEdit);

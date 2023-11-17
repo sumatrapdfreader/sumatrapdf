@@ -3646,7 +3646,7 @@ static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuous
 }
 
 static void FocusPageNoEdit(HWND hwndPageEdit) {
-    if (IsFocused(hwndPageEdit)) {
+    if (HwndIsFocused(hwndPageEdit)) {
         SendMessageW(hwndPageEdit, WM_SETFOCUS, 0, 0);
     } else {
         SetFocus(hwndPageEdit);
@@ -4338,7 +4338,8 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
-    if ((!tocVisible && IsFocused(win->tocTreeView->hwnd)) || (!showFavorites && IsFocused(win->favTreeView->hwnd))) {
+    if ((!tocVisible && HwndIsFocused(win->tocTreeView->hwnd)) ||
+        (!showFavorites && HwndIsFocused(win->favTreeView->hwnd))) {
         SetFocus(win->hwndFrame);
     }
 
@@ -4482,7 +4483,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    if (IsFocused(tab->win->hwndFindEdit) || IsFocused(tab->win->hwndPageEdit)) {
+    if (HwndIsFocused(tab->win->hwndFindEdit) || HwndIsFocused(tab->win->hwndPageEdit)) {
         SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
     }
@@ -5182,7 +5183,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdMoveFrameFocus:
-            if (!IsFocused(win->hwndFrame)) {
+            if (!HwndIsFocused(win->hwndFrame)) {
                 SetFocus(win->hwndFrame);
             } else if (win->tocVisible) {
                 SetFocus(win->tocTreeView->hwnd);
@@ -5602,7 +5603,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // handled as expected)
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
-            if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeView->hwnd)) {
+            if (win && (x == -1) && (y == -1) && !HwndIsFocused(win->tocTreeView->hwnd)) {
                 return SendMessageW(win->hwndCanvas, WM_CONTEXTMENU, wp, lp);
             }
             return DefWindowProc(hwnd, msg, wp, lp);

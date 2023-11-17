@@ -120,8 +120,10 @@ int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font =
 Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font = nullptr);
 Size HdcMeasureText(HDC hdc, const char* s, HFONT font = nullptr);
 
-bool IsFocused(HWND);
+bool HwndIsFocused(HWND);
 bool IsCursorOverWindow(HWND);
+
+TempStr HwndGetClassName(HWND hwnd);
 Point HwndGetCursorPos(HWND hwnd);
 int MapWindowPoints(HWND, HWND, Point*, int);
 void HwndScreenToClient(HWND, Point&);
