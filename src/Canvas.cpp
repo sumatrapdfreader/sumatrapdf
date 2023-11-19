@@ -602,13 +602,6 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
 static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     auto isLeft = bit::IsMaskSet(key, (WPARAM)MK_LBUTTON);
-    if (isLeft && (win->presentation || win->isFullScreen)) {
-        // note: before 3.5 used to turn 2 pages
-        // OnMouseLeftButtonDown(win, x, y, key);
-        ExitFullScreen(win);
-        return;
-    }
-
     if (gGlobalPrefs->enableTeXEnhancements && isLeft) {
         bool dontSelect = OnInverseSearch(win, x, y);
         if (dontSelect) {
@@ -618,6 +611,13 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
 
     Point mousePos = Point(x, y);
     DisplayModel* dm = win->AsFixed();
+    bool isOverText = dm->IsOverText(mousePos);
+    if (!isOverText && isLeft && (win->presentation || win->isFullScreen)) {
+        // note: before 3.5 used to turn 2 pages
+        // OnMouseLeftButtonDown(win, x, y, key);
+        ExitFullScreen(win);
+        return;
+    }
     int elementPageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
@@ -629,7 +629,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 #endif
-    if (dm->IsOverText(mousePos)) {
+    if (isOverText) {
         int pageNo = dm->GetPageNoByPoint(mousePos);
         if (win->ctrl->ValidPageNo(pageNo)) {
             PointF pt = dm->CvtFromScreen(mousePos, pageNo);
