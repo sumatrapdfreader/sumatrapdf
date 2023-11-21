@@ -969,6 +969,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     bool showStartPage = false;
     bool restoreSession = false;
     HANDLE hMutex = nullptr;
+    HWND existingInstanceHwnd = nullptr;
     HWND existingHwnd = nullptr;
     WindowTab* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
@@ -1230,12 +1231,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         goto Exit;
     }
 
+    // only call FindPrevInstWindow() once
+    existingInstanceHwnd = FindPrevInstWindow(&hMutex);
+
     if (flags.printDialog || flags.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
         existingHwnd = FindWindow(FRAME_CLASS_NAME, nullptr);
     } else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
-        existingHwnd = FindPrevInstWindow(&hMutex);
+        existingHwnd = existingInstanceHwnd;
     }
 
     // call before creating first window and menu. Otherwise menu shortcuts will be missing
@@ -1281,11 +1285,11 @@ ContinueOpenWindow:
     gGlobalPrefs->sessionData = new Vec<SessionData*>();
     // do not restore a session if tabs are disabled and SumatraPDF is already running
     if (sessionData->size() > 0 && !gPluginURL) {
-        bool noRestore = !gGlobalPrefs->useTabs && (FindPrevInstWindow(&hMutex) != nullptr);
+        bool noRestore = !gGlobalPrefs->useTabs && (existingInstanceHwnd != nullptr);
         if (!noRestore) {
             restoreSession = gGlobalPrefs->restoreSession;
         } else {
-            logf("not restoring a session because the same exe is already running and tabas are disabled\n");
+            logf("not restoring a session because the same exe is already running and tabs are disabled\n");
         }
     }
 

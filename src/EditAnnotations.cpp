@@ -831,7 +831,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         DoSaveEmbed(ew, annot);
 
         // TODO: not sure it should be here as it might trigger recursive loop
-        //SetSelectedAnnotation(ew->tab, annot);
+        // SetSelectedAnnotation(ew->tab, annot);
         ew->listBox->SetCurrentSelection(itemNo);
         ew->buttonDelete->SetIsVisible(true);
         if (setEditFocus && ew->editContents->IsVisible()) {
