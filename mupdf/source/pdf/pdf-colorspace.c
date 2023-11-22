@@ -367,7 +367,7 @@ pdf_load_colorspace_imp(fz_context *ctx, pdf_obj *obj, pdf_cycle_list *cycle_up)
 	pdf_cycle_list cycle;
 
 	if (pdf_cycle(ctx, &cycle, cycle_up, obj))
-			fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive colorspace");
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive colorspace");
 
 	if (pdf_is_name(ctx, obj))
 	{

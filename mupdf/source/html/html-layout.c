@@ -1251,7 +1251,7 @@ static void layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 				{
 					squish_block(ctx, row);
 					continue; /* still skipping */
-			}
+				}
 			}
 
 			layout_table_row(ctx, ld, row, ncol, colw, spacing);

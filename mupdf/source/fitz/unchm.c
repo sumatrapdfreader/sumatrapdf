@@ -105,7 +105,7 @@ next_chm(fz_context *ctx, fz_stream *stm, size_t required)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Short read in CHM handling");
 		stm->pos += n;
 		stm->rp = state->buffer;
-		stm->wp = stm->wp + left;
+		stm->wp = stm->rp + left;
 		return *stm->rp++;
 	}
 
@@ -339,7 +339,7 @@ get_encint(fz_context *ctx, fz_stream *stm, uint32_t *left)
 {
 	uint32_t v = 0;
 	uint32_t w;
-	int n = 4;
+	int res, n = 4;
 
 	do
 	{
@@ -347,9 +347,10 @@ get_encint(fz_context *ctx, fz_stream *stm, uint32_t *left)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Overly long encoded int in CHM");
 
 		(*left) -= 1;
-		w = fz_read_byte(ctx, stm);
-		if (w == EOF)
+		res = fz_read_byte(ctx, stm);
+		if (res == EOF)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "EOF in encoded int in CHM");
+		w = res;
 		v = (v<<7) | (w & 127);
 	}
 	while (w & 128);
@@ -395,7 +396,10 @@ read_listing_chunk(fz_context *ctx, fz_chm_archive *chm, uint32_t dir_chunk_size
 			n = fz_read(ctx, stm, (uint8_t *)name, namelen);
 			if (n < namelen)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Truncated name in CHM");
-			name[namelen] = 0;
+			if (namelen > 1 && name[namelen - 1] == '/')
+				name[namelen - 1] = 0;
+			else
+				name[namelen] = 0;
 			left -= namelen;
 			sec = get_encint(ctx, stm, &left);
 			off = get_encint(ctx, stm, &left);

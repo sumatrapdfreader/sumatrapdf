@@ -882,6 +882,7 @@ drop_block(fz_context *ctx, block_t *block)
 	case kind_alignedoffset:
 		drop_tree(ctx, block->kind.u.aligned_offset.main_tree);
 		drop_tree(ctx, block->kind.u.aligned_offset.length_tree);
+		drop_tree(ctx, block->kind.u.aligned_offset.aligned_offset_tree);
 		break;
 	case kind_uncompressed:
 		break;
