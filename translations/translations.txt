@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-12ac511f0eff739bd93cf66f0d6d0dc6f0e71286
+489448e7c0ee0626e8d16f7554c6d19ee120cec0
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -7,6 +7,7 @@ az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 br:Anotação %s. Ctrl+clique pra editar.
 ca:Anotació %s. Ctrl+clic per editar.
 cn:%s 标注
+co:Annutazione %s. Ctrl+cliccu per mudificà.
 cy:%s anodiad. Ctrl+clic i olygu.
 cz:Poznámka %s. Ctrl+kliknutí pro úpravu.
 de:%s-Anmerkung. Strg+Klick zum Bearbeiten.
@@ -1482,6 +1483,7 @@ az:&Klaviatura birləşmələri
 br:&Atalhos do Teclado
 ca:&Dreceres de teclat
 cn:快捷键(&A)
+co:Accurtatoghji di &tastera
 cy:&Llwybrau Byr Bysellfwrdd
 cz:&Klávesové zkratky
 de:Tasten&kombinationen
@@ -5921,6 +5923,7 @@ az:%d faylın tarixçəsi və eskizi silindi.
 br:Limpou o histórico de %d arquivos, miniaturas apagadas.
 ca:S'ha esborrat l'historial de %d fitxers, i s'han suprimit les miniatures.
 cn:清除了共 %d 个文件的历史记录，并删除了缩略图缓存。
+co:Cronolugia viutata per %d schedarii, vignette squassate.
 cy:Hanes wedi'i glirio o ffeiliau %d., lluniau bach wedi'u dileu
 cz:Vymazána historie %d souborů, vymazány miniatury.
 de:Verlauf von %d Dateien gelöscht, Miniaturansichten gelöscht.
@@ -5953,6 +5956,7 @@ br:Limpando o histórico...
 by:Ачыстка гісторыі…
 ca:S'està esborrant l'historial...
 cn:正在清除历史记录…
+co:Viutatura di a cronolugia…
 cy:Yn clirio hanes...
 cz:Mažu historii...
 de:Historie löschen...
@@ -6971,6 +6975,7 @@ az:Faylın yolunu kopyala
 br:Copiar o Caminho do Arquivo
 ca:Copia el camí del fitxer
 cn:复制文件路径
+co:Cupià u chjassu di u schedariu
 cy:Llwybr Copïo Ffeil
 cz:Kopírovat cestu k souboru
 de:Dateipfad kopieren
@@ -8538,6 +8543,7 @@ az:Qeydi sil
 br:Apagar Anotação
 ca:Suprimeix l'anotació
 cn:删除标注
+co:Squassà l’annutazione
 cy:Dileu Nodiant
 cz:Smazat Poznámku
 de:Anmerkung löschen
@@ -9038,6 +9044,7 @@ az:%s qeydinə düzəliş et
 br:Editar a Anotação %s
 ca:Edita l'anotació %s
 cn:编辑 %s 标注
+co:Mudificà l’annutazione %s
 cy:Golygu Nodiant %s
 cz:Upravit poznámku %s
 de:%s Anmerkung bearbeiten
@@ -9070,7 +9077,7 @@ by:Рэдагаваць анатацыі
 ca-xv:Edita les anotacions
 ca:Edita les anotacions
 cn:编辑标注
-co:&Mudificà l’annutazioni
+co:Mudificà l’annutazioni
 cy:Golygu Anodiadau
 cz:Upravit poznámky
 de:Anmerkungen bearbeiten
@@ -9265,7 +9272,7 @@ by:Увядзіце каманду для выкліку пры падвойна
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
 cn:请输入您双击 PDF 文档后调用的命令行:
-co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
+co:Stampittate a linea di cumanda à eseguisce quandu si face un doppiu cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklick auf das PDF-Dokument wird der folgende Befehl ausgeführt:
@@ -14451,6 +14458,7 @@ br:Abrir numa Nova Janela
 by:Адкрыць у новым акне
 ca:Obre en una finestra nova
 cn:在新窗口中打开
+co:Apre in una finestra nova
 cy:Agor Mewn Ffenestr Newydd
 cz:Otevřít v novém okně
 de:In neuem Fenster öffnen
@@ -16680,6 +16688,7 @@ az:Xüsusiyyətlər...
 br:Propriedades...
 ca:Propietats...
 cn:属性...
+co:Pruprietà…
 cy:Priodweddau...
 cz:Vlastnosti...
 de:Eigenschaften...
@@ -17110,7 +17119,7 @@ vn:Đổi tên thành
 am:Պտտել &ձախ
 az:So&la çevir
 bg:Завърти на&ляво
-br:Girar a &Esquerda
+br:Girar pra &Esquerda
 by:Павярнуць у&лева
 ca:Gira a l'&esquerra
 cn:逆时针旋转(&L)
@@ -17155,7 +17164,7 @@ vn:Quay &Trái
 am:Պտտել &աջ
 az:S&ağa çevir
 bg:Завърти на&дясно
-br:Girar a &Direita
+br:Girar pra &Direita
 by:Павярнуць у&права
 ca:Gira a la &dreta
 cn:顺时针旋转(&R)
@@ -21518,7 +21527,7 @@ vn:Bạn có phiên bản '%s' và phiên bản '%s' sẵn sàng. \nBạn muốn
 am:Դուք տեադրում եք SumatraPDF-ի 32 բիթային տարբերակը 64 բիթային OS-ում:\nՑանկանո՞ւմ եք ներբեռնել\n64 բիթային տարբերակը:
 az:Siz 32-bitlik SumatraPDF proqramını 64-bitlik əməliyyat sistemində quraşdırırsınız.\nProqramın\n64-bitlik versiyasını endirmək istəyərdinizmi?
 bg:Вие инсталирате 32-битова версия на SumatraPDF на 64-битова ОС.\nИскате ли да свалите\n64-битовата версия?
-br:Você está instalando o SumatraPDF de 32 bits num\nSO de 64 bits.\nVocê gostaria de\nbaixar a versão de 64 bits?
+br:Você está instalando o SumatraPDF de 32 bits num\nSO de 64 bits. Você gostaria de\nbaixar a versão de 64 bits?
 by:Вы ўстанаўліваеце 32-бітную версію\nSumatraPDF на 64-бітную АС.\nСпампаваць64-бітную версію?
 ca-xv:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
 ca:Esteu instal·lant el SumatraPDF de 32 bits a un sistema operatiu de 64 bits. Voleu baixar la versió de 64 bits?
