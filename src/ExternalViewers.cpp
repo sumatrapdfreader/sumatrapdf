@@ -18,6 +18,7 @@
 #include "WindowTab.h"
 #include "ExternalViewers.h"
 #include "Commands.h"
+#include "Translations.h"
 
 #include "utils/Log.h"
 
@@ -338,31 +339,30 @@ bool CouldBePDFDoc(WindowTab* tab) {
 //  %1 : file path (else the file path is appended)
 //  %d : directory in which file is
 //  %p : current page number
-static TempStr FormatParamsTemp(const char* cmdLine, WindowTab* tab) {
-    if (cmdLine == nullptr) {
-        cmdLine = R"("%1")";
-    }
-    if (str::Find(cmdLine, "%p")) {
+static TempStr FormatParamTemp(char* arg, WindowTab* tab) {
+    if (str::Find(arg, "%p")) {
         int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
         TempStr pageNoStr = str::FormatTemp("%d", pageNo);
-        cmdLine = str::ReplaceTemp(cmdLine, "%p", pageNoStr);
+        arg = str::ReplaceTemp(arg, "%p", pageNoStr);
     }
-    bool appendPath = true;
     char* path = tab->filePath;
-    if (str::Find(cmdLine, "%d")) {
+    if (str::Find(arg, "%d")) {
         TempStr dir = path::GetDirTemp(path);
-        cmdLine = str::ReplaceTemp(cmdLine, "%d", dir);
-        appendPath = false;
+        arg = str::ReplaceTemp(arg, "%d", dir);
     }
-    if (str::Find(cmdLine, "%1")) {
+    if (str::Find(arg, "%1")) {
         // TODO: if %1 is un-quoted, we should quote it but it's complicated because
         // it could be part of a pattern like %1.Page%p.txt
         // (as in https://github.com/sumatrapdfreader/sumatrapdf/issues/3868)
-        cmdLine = str::ReplaceTemp(cmdLine, "%1", path);
-    } else if (appendPath) {
-        cmdLine = str::FormatTemp(R"(%s "%s")", cmdLine, path);
+        arg = str::ReplaceTemp(arg, "%1", path);
     }
-    return (char*)cmdLine;
+    return (char*)arg;
+}
+
+static TempStr GetDocumentPathQuoted(WindowTab* tab) {
+    TempStr path = tab->filePath;
+    path = str::JoinTemp("\"", path, "\"");
+    return path;
 }
 
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
@@ -377,8 +377,14 @@ bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     if (ev->exeFullPath == nullptr) {
         return false;
     }
-    TempStr params = FormatParamsTemp(ev->launchArgs, tab);
-    return LaunchFile(ev->exeFullPath, params);
+    char* origArgs = (char*)ev->launchArgs;
+    TempStr args;
+    if (origArgs) {
+        args = FormatParamTemp(origArgs, tab);
+    } else {
+        args = GetDocumentPathQuoted(tab);
+    }
+    return LaunchFile(ev->exeFullPath, args);
 }
 
 bool PathMatchFilter(const char* path, char* filter) {
@@ -421,12 +427,20 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     }
     const char* exePath = args.at(0);
     if (!file::Exists(exePath)) {
+        TempStr msg =
+            str::Format("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
+        TempWStr msgw = ToWStrTemp(msg);
+        auto caption = _TR("Error");
+        MessageBoxExW(nullptr, msgw, caption, MB_OK | MB_ICONERROR, 0);
         return false;
     }
     StrVec argsQuoted;
+    if (nArgs == 1) {
+        return LaunchFile(exePath, tab->filePath);
+    }
     for (int i = 1; i < nArgs; i++) {
         char* s = args.at(i);
-        TempStr param = FormatParamsTemp(s, tab);
+        TempStr param = FormatParamTemp(s, tab);
         TempStr paramQuoted = QuoteCmdLineArgTemp(param);
         argsQuoted.Append(paramQuoted);
     }

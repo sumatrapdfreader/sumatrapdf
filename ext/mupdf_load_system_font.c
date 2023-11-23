@@ -287,7 +287,8 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
 
     // check if this is a TrueType font of version 1.0 or an OpenType font
     if (BEtoHl(ttOffsetTableBE.uVersion) != TTC_VERSION1 && BEtoHl(ttOffsetTableBE.uVersion) != TTAG_OTTO) {
-        fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : invalid font version %x", BEtoHl(ttOffsetTableBE.uVersion));
+        fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : invalid font '%s', invalid version %x", path,
+                 BEtoHl(ttOffsetTableBE.uVersion));
     }
 
     // determine the name table's offset by iterating through the offset table
