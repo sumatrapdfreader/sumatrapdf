@@ -255,7 +255,7 @@ typedef struct
 
 typedef struct
 {
-	uint16_t len;
+	uint32_t len;
 	uint16_t v[32];
 } vec16_t;
 
@@ -276,7 +276,7 @@ drop_vec8(fz_context *ctx, vec8_t *vec)
 }
 
 static vec16_t *
-new_vec16(fz_context *ctx, uint16_t len)
+new_vec16(fz_context *ctx, uint32_t len)
 {
 	vec16_t *v = fz_calloc(ctx, sizeof(vec16_t) + (len - 32)*sizeof(uint16_t), 1);
 
@@ -1053,26 +1053,74 @@ block_decode_element_aux(fz_context *ctx, bitstream_t *bstm, uint32_t r[3], deco
 	return ret;
 }
 
-static block_t
-block_read(fz_context *ctx, bitstream_t *bstm, decoder_state_t *state)
+// This structure stores the required state to process the compressed chunks of data in a
+// sequential order.
+//
+// ```no_run
+// # fn get_compressed_chunk() -> Option<Vec<u8>> { unimplemented!() }
+// # fn write_data(a: &[u8]) { unimplemented!() }
+// use ::lzxd::{Lzxd, WindowSize};
+//
+// let mut lzxd = Lzxd::new(WindowSize::KB64);
+//
+// while let Some(chunk) = get_compressed_chunk() {
+//     let decompressed = lzxd.decompress_next(&chunk);
+//     write_data(decompressed.unwrap());
+// }
+// ```
+typedef struct fz_lzxd_t
 {
-	block_t block;
+	// Sliding window into which data is decompressed.
+	window_t *window;
+
+	// Current decoder state.
+	decoder_state_t state;
+
+	// > The three most recent real match offsets are kept in a list.
+	uint32_t r[3];
+
+	// Has the very first chunk been read yet? Unlike the rest, it has additional data.
+	int first_chunk_read;
+
+	// This field will update after the first chunk is read, but will remain being 0
+	// if the E8 Call Translation is not enabled for this stream.
+	//size_t e8_translation_size;
+
+	// Current block.
+	block_t current_block;
+
+	// Which chunk we are decoding;
+	size_t chunk_num;
+
+	// Reset interval (in chunks)
+	size_t reset_interval;
+} fz_lzxd_t;
+
+static void
+block_read(fz_context *ctx, bitstream_t *bstm, fz_lzxd_t *self)
+{
+	decoder_state_t *state = &self->state;
+	block_t *block = &self->current_block;
+
 	// > Each block of compressed data begins with a 3-bit Block Type field.
 	// > Of the eight possible values, only three are valid values for the Block Type
 	// > field.
 	uint8_t kind = bitstream_read_bits(ctx, bstm, 3);
 
-	block.size = bitstream_read_u24_be(ctx, bstm);
-	if (block.size == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid Block Size %zd", block.size);
+	drop_block(ctx, block);
+
+	block->size = bitstream_read_u24_be(ctx, bstm);
+	if (block->size == 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid Block Size %zd", block->size);
 
 	switch(kind)
 	{
 	case 1:
 		read_main_and_length_trees(ctx, bstm, state);
-		block.kind.type = kind_verbatim;
-		block.kind.u.verbatim.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0);
-		block.kind.u.verbatim.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0);
+		block->kind.u.verbatim.length_tree = NULL;
+		block->kind.u.verbatim.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0);
+		block->kind.type = kind_verbatim;
+		block->kind.u.verbatim.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0);
 		break;
 	case 2:
 	{
@@ -1085,35 +1133,33 @@ block_read(fz_context *ctx, bitstream_t *bstm, decoder_state_t *state)
 		for (i = 0; i < 8; i++)
 			path_lengths->v[i] = bitstream_read_bits(ctx, bstm, 3);
 
-		block.kind.type = kind_alignedoffset;
-		block.kind.u.aligned_offset.aligned_offset_tree = canonical_tree_create_instance(ctx, path_lengths, 1);
+		block->kind.type = kind_alignedoffset;
+		block->kind.u.aligned_offset.main_tree = NULL;
+		block->kind.u.aligned_offset.length_tree = NULL;
+		block->kind.u.aligned_offset.aligned_offset_tree = canonical_tree_create_instance(ctx, path_lengths, 1);
 
 		// > An aligned offset block is identical to the verbatim block except for the
 		// > presence of the aligned offset tree preceding the other trees.
 		read_main_and_length_trees(ctx, bstm, state);
 
-		block.kind.u.aligned_offset.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0);
-		block.kind.u.aligned_offset.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0);
+		block->kind.u.aligned_offset.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0);
+		block->kind.u.aligned_offset.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0);
 		break;
 	}
 	case 3:
 	{
 		if (bitstream_align(ctx, bstm))
-		{
 			bitstream_read_bits(ctx, bstm, 16); // padding will be 1..=16, not 0
-		}
 
-		block.kind.type = kind_uncompressed;
-		block.kind.u.uncompressed.r[0] = bitstream_read_u32_le(ctx, bstm);
-		block.kind.u.uncompressed.r[1] = bitstream_read_u32_le(ctx, bstm);
-		block.kind.u.uncompressed.r[2] = bitstream_read_u32_le(ctx, bstm);
+		block->kind.type = kind_uncompressed;
+		block->kind.u.uncompressed.r[0] = bitstream_read_u32_le(ctx, bstm);
+		block->kind.u.uncompressed.r[1] = bitstream_read_u32_le(ctx, bstm);
+		block->kind.u.uncompressed.r[2] = bitstream_read_u32_le(ctx, bstm);
 		break;
 	}
 	default:
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid Block type");
 	}
-
-	return block;
 }
 
 static decoded_t
@@ -1169,49 +1215,6 @@ block_decode_element(fz_context *ctx, block_t *self, bitstream_t *bstm, uint32_t
 //! [`Lzxd`]: struct.Lzxd.html
 
 // The main interface to perform LZXD decompression.
-//
-// This structure stores the required state to process the compressed chunks of data in a
-// sequential order.
-//
-// ```no_run
-// # fn get_compressed_chunk() -> Option<Vec<u8>> { unimplemented!() }
-// # fn write_data(a: &[u8]) { unimplemented!() }
-// use ::lzxd::{Lzxd, WindowSize};
-//
-// let mut lzxd = Lzxd::new(WindowSize::KB64);
-//
-// while let Some(chunk) = get_compressed_chunk() {
-//     let decompressed = lzxd.decompress_next(&chunk);
-//     write_data(decompressed.unwrap());
-// }
-// ```
-typedef struct fz_lzxd_t
-{
-	// Sliding window into which data is decompressed.
-	window_t *window;
-
-	// Current decoder state.
-	decoder_state_t state;
-
-	// > The three most recent real match offsets are kept in a list.
-	uint32_t r[3];
-
-	// Has the very first chunk been read yet? Unlike the rest, it has additional data.
-	int first_chunk_read;
-
-	// This field will update after the first chunk is read, but will remain being 0
-	// if the E8 Call Translation is not enabled for this stream.
-	//size_t e8_translation_size;
-
-	// Current block.
-	block_t current_block;
-
-	// Which chunk we are decoding;
-	size_t chunk_num;
-
-	// Reset interval (in chunks)
-	size_t reset_interval;
-} fz_lzxd_t;
 
 void
 fz_drop_lzxd(fz_context *ctx, fz_lzxd_t *self)
@@ -1340,9 +1343,7 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 
 		if (self->current_block.size == 0)
 		{
-			drop_block(ctx, &self->current_block);
-			self->current_block.size = 0;
-			self->current_block = block_read(ctx, &bstm, &self->state);
+			block_read(ctx, &bstm, self);
 			assert(self->current_block.size != 0); /* Guaranteed by exception handling within block_read */
 		}
 

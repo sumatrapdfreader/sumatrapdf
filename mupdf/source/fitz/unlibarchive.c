@@ -210,8 +210,12 @@ static void
 drop_libarchive_archive(fz_context *ctx, fz_archive *arch_)
 {
 	fz_libarchive_archive *arch = (fz_libarchive_archive *)arch_;
+	int i;
 
 	archive_read_free(arch->archive);
+	for (i = 0; i < arch->entries_len; ++i)
+		fz_free(ctx, arch->entries[i]);
+	fz_free(ctx, arch->entries);
 	arch->archive = NULL;
 }
 
