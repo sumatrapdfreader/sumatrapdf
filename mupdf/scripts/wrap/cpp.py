@@ -333,6 +333,8 @@ def make_fncall( tu, cursor, return_type, fncall, out, refcheck_if):
             # appears to kill std::cerr on Linux.
             out.write( f'        if ({arg.name}) std::cerr << " {arg.name}=\'" << {arg.name} << "\'";\n')
             out.write( f'        else std::cerr << " {arg.name}:null";\n')
+        elif parse.is_( arg.cursor.type, 'va_list'):
+            out.write( f'        std::cerr << " {arg.name}:va_list";\n')
         elif (0
                 or parse.is_( arg.cursor.type, 'signed char')
                 or parse.is_( arg.cursor.type, 'unsigned char')
@@ -825,7 +827,7 @@ def function_wrapper(
     '''
     assert cursor.kind == state.clang.cindex.CursorKind.FUNCTION_DECL
     if cursor.type.is_function_variadic() and fnname != 'fz_warn':
-        jlib.log( 'Not writing low-level wrapper because variadic: {fnname=}')
+        jlib.log( 'Not writing low-level wrapper because variadic: {fnname=}', 1)
         return
 
     verbose = state.state_.show_details( fnname)
@@ -1005,6 +1007,11 @@ g_extra_declarations = textwrap.dedent(f'''
         C++ alternative to fz_search_page() that returns information in a std::vector.
         */
         FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document *doc, int number, const char *needle, int hit_max);
+
+        /**
+        C++ alternative to fz_string_from_text_language() that returns information in a std::string.
+        */
+        FZ_FUNCTION std::string fz_string_from_text_language2(fz_text_language lang);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1108,6 +1115,13 @@ g_extra_definitions = textwrap.dedent(f'''
                 ret[i].mark = marks[i];
             }}
             return ret;
+        }}
+
+        FZ_FUNCTION std::string fz_string_from_text_language2(fz_text_language lang)
+        {{
+            char    str[8];
+            fz_string_from_text_language(str, lang);
+            return std::string(str);
         }}
         ''')
 
@@ -2611,7 +2625,7 @@ def function_wrapper_class_aware(
     '''
     verbose = state.state_.show_details( fnname)
     if fn_cursor and fn_cursor.type.is_function_variadic() and fnname != 'fz_warn':
-        jlib.log( 'Not writing class-aware wrapper because variadic: {fnname=}')
+        jlib.log( 'Not writing class-aware wrapper because variadic: {fnname=}', 1)
         return
     if verbose:
         jlib.log( 'Writing class-aware wrapper for {fnname=}')
@@ -2803,7 +2817,7 @@ def function_wrapper_class_aware(
                         # For now we just output a diagnostic, but eventually
                         # we might make C++ wrappers return a std::string here,
                         # free()-ing the char* before returning.
-                        jlib.log( '### Function name implies kept reference and returns char*:'
+                        jlib.log( 'Function name implies kept reference and returns char*:'
                                 ' {fnname}(): {fn_cursor.result_type.spelling=}'
                                 ' -> {return_pointee.spelling=}.'
                                 )
@@ -4544,8 +4558,11 @@ def cpp_source(
                     e = util.update_file_regress( text, self.filename, check_regression=cr)
                     jlib.log('util.update_file_regress() returned => {e}', 1)
                     if e:
-                        jlib.log('util.update_file_regress() => {e=}')
+                        jlib.log('util.update_file_regress() => {e=}', 1)
                         self.regressions = True
+                        jlib.log(f'File updated: {os.path.relpath(self.filename)}')
+                    else:
+                        jlib.log(f'File unchanged: {os.path.relpath(self.filename)}')
             def get( self):
                 return self.file.getvalue()
     else:
@@ -4740,9 +4757,10 @@ def cpp_source(
             for diagnostic2 in diagnostic.children:
                 show_clang_diagnostic( diagnostic2, depth + 1)
             jlib.log( '{" "*4*depth}{diagnostic}')
-        jlib.log( 'tu.diagnostics():')
-        for diagnostic in tu.diagnostics:
-            show_clang_diagnostic(diagnostic, 1)
+        if tu.diagnostics:
+            jlib.log( 'tu.diagnostics():')
+            for diagnostic in tu.diagnostics:
+                show_clang_diagnostic(diagnostic, 1)
 
     finally:
         if os.path.isfile( temp_h):
@@ -4975,7 +4993,7 @@ def cpp_source(
             # These fns do not work in windows.def, probably because they are
             # usually inline?
             #
-            jlib.log('Not adding to windows_def because static: {fnname}()')
+            jlib.log('Not adding to windows_def because static: {fnname}()', 1)
         elif fnname in (
                 'fz_lookup_metadata2',
                 'fz_md5_pixmap2',
@@ -4986,6 +5004,7 @@ def cpp_source(
                 'fz_md5_final2',
                 'fz_highlight_selection2',
                 'fz_search_page2',
+                'fz_string_from_text_language2',
                 ):
             # These are excluded from windows_def because are C++ so
             # we'd need to use the mangled name in. Instead we mark them

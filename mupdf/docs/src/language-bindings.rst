@@ -422,6 +422,20 @@ Changelog
 APIs; changes to the main MuPDF API are not detailed here.]
 
 
+* **2023-11-16**:
+
+    * Fixed debug builds on Windows.
+    * Fixed 32-bit builds on Windows.
+    * Fixed cross-build to arm64 on MacOS.
+    * Fixed unsafe custom fz_search_page2().
+    * Added custom fz_highlight_selection2().
+    * Added debug diagnostics to Director `use_virtual_*()` methods.
+    * Various fixes for Pyodide builds.
+    * Use version numbers in names of shared libraries.
+    * Added custom wrapping of struct pdf_clean_options.
+    * Use $CXX if defined when building bindings (not Windows).
+
+
 * **2023-07-13**:
 
   * Improved generation of extra/customised functions and methods.
@@ -843,6 +857,13 @@ All platforms
         python -m pip install --upgrade pip
 
 
+General build flags
+~~~~~~~~~~~~~~~~~~~
+
+In all of the commands below, one can set environmental variables to control
+the build of the underlying MuPDF C API, for example `USE_SYSTEM_LIBJPEG=yes`.
+
+
 Building and installing the Python bindings using `pip`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -866,7 +887,7 @@ Building the Python bindings
 
   .. code-block:: shell
 
-      pip install libclang swig
+      pip install libclang swig setuptools
       cd mupdf && python scripts/mupdfwrap.py -b all
 
 * OpenBSD.
@@ -877,7 +898,7 @@ Building the Python bindings
   .. code-block:: shell
 
       sudo pkg_add py3-llvm
-      pip install swig
+      pip install swig setuptools
       cd mupdf && python scripts/mupdfwrap.py -b all
 
 Building the C++ bindings
@@ -887,7 +908,7 @@ Building the C++ bindings
 
   .. code-block:: shell
 
-      pip install libclang
+      pip install libclang setuptools
       cd mupdf && python scripts/mupdfwrap.py -b m01
 
 * OpenBSD.
@@ -898,6 +919,7 @@ Building the C++ bindings
   .. code-block:: shell
 
       sudo pkg_add py3-llvm
+      pip install setuptools
       cd mupdf && python scripts/mupdfwrap.py -b m01
 
 
@@ -908,7 +930,7 @@ Building the C# bindings
 
   .. code-block:: shell
 
-      pip install libclang swig
+      pip install libclang swig setuptools
       cd mupdf && python scripts/mupdfwrap.py -b --csharp all
 
 * Linux.
@@ -928,7 +950,7 @@ Building the C# bindings
   .. code-block:: shell
 
       sudo pkg_add py3-llvm mono
-      pip install swig
+      pip install swig setuptools
       cd mupdf && python scripts/mupdfwrap.py -b --csharp all
 
 
@@ -1022,6 +1044,11 @@ Notes
   .. code-block:: shell
 
       python scripts/mupdfwrap.py -b --devenv <devenv.com-location> ...
+
+* Specifying compilers.
+
+  On non-Windows, we use `cc` and `c++` as default C and C++ compilers;
+  override by setting environment variables `$CC` and `$CXX`.
 
 * OpenBSD `libclang`.
 
@@ -1492,6 +1519,11 @@ functions and class methods.]
     C++ alternative to fz_search_page() that returns information in a std::vector.
     */
     FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document *doc, int number, const char *needle, int hit_max);
+
+    /**
+    C++ alternative to fz_string_from_text_language() that returns information in a std::string.
+    */
+    FZ_FUNCTION std::string fz_string_from_text_language2(fz_text_language lang);
 
 
 Python/C# bindings details

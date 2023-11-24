@@ -853,7 +853,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
 
                 fnname_to_method_structname[ fnname] = arg0
 
-    jlib.log( f'populating find_wrappable_function_with_arg0_type_cache took {time.time()-t0}s')
+    jlib.log( f'populating find_wrappable_function_with_arg0_type_cache took {time.time()-t0:.2f}s')
 
 
 def find_wrappable_function_with_arg0_type( tu, structname):

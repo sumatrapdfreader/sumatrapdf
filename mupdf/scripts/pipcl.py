@@ -1463,7 +1463,7 @@ def build_extension(
             #   emcc: warning: ignoring unsupported linker flag: `-rpath` [-Wlinkflags]
             #   wasm-ld: error: unknown -z value: origin
             #
-            log0(f'## pyodide(): PEP-3149 suffix untested, so omitting. {_so_suffix()=}.')
+            log0(f'pyodide: PEP-3149 suffix untested, so omitting. {_so_suffix()=}.')
             path_so_leaf = f'_{name}.so'
             path_so = f'{outdir}/{path_so_leaf}'
 
@@ -1529,7 +1529,7 @@ def build_extension(
                         {libs_text}
                         {rpath_flag}
                     '''
-        run_if(
+        command_was_run = run_if(
                 command,
                 path_so,
                 path_cpp,
@@ -1538,7 +1538,7 @@ def build_extension(
                 prerequisites,
                 )
 
-        if darwin():
+        if command_was_run and darwin():
             # We need to patch up references to shared libraries in `libs`.
             sublibraries = list()
             for lib in libs:
@@ -1581,7 +1581,9 @@ def base_compiler(vs=None, pythonflags=None, cpp=False, use_env=True):
             If true we return C++ compiler command instead of C. On Windows
             this has no effect - we always return `cl.exe`.
         use_env:
-            If true we use `os.environ['CC']` or `os.environ['CXX']` if set.
+            If true we return '$CC' or '$CXX' if the corresponding
+            environmental variable is set (without evaluating with `getenv()`
+            or `os.environ`).
 
     Returns `(cc, pythonflags)`:
         cc:
@@ -1592,7 +1594,14 @@ def base_compiler(vs=None, pythonflags=None, cpp=False, use_env=True):
     '''
     if not pythonflags:
         pythonflags = PythonFlags()
-    cc = os.environ.get( 'CXX' if cpp else 'CC') if use_env else None
+    cc = None
+    if use_env:
+        if cpp:
+            if os.environ.get( 'CXX'):
+                cc = '$CXX'
+        else:
+            if os.environ.get( 'CC'):
+                cc = '$CC'
     if cc:
         pass
     elif windows():
@@ -1633,7 +1642,10 @@ def base_linker(vs=None, pythonflags=None, cpp=False, use_env=True):
     '''
     if not pythonflags:
         pythonflags = PythonFlags()
-    linker = os.environ.get( 'LD') if use_env else None
+    linker = None
+    if use_env:
+        if os.environ.get( 'LD'):
+            linker = '$LD'
     if linker:
         pass
     elif windows():
@@ -1762,9 +1774,6 @@ class PythonFlags:
             _lib_dir = os.environ[ 'PYO3_CROSS_LIB_DIR']
             self.includes = f'-I {_include_dir}'
             self.ldflags = f'-L {_lib_dir}'
-            log2(f'PythonFlags: Pyodide.')
-            log2( f'    {_include_dir=}')
-            log2( f'    {_lib_dir=}')
 
         else:
             # We use python-config which appears to work better than pkg-config

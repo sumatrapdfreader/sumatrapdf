@@ -402,7 +402,10 @@ Tools required to build:
 
             pip install libclang
 
-    SWIG for Python bindings:
+    setuptools:
+        Used internally.
+
+    SWIG for Python/C# bindings:
 
         We work with swig-3 and swig-4. If swig-4 is used, we propogate
         doxygen-style comments for structures and functions into the generated
@@ -637,6 +640,13 @@ Usage:
                     Set -j arg used when action 'm' calls make (not
                     Windows). If <N> is 0 we use the number of CPUs
                     (from Python's multiprocessing.cpu_count()).
+                --m-target
+                    Set target for action 'm'. Default is blank, so make will
+                    build the default `all` target.
+                --m-vars
+                    Text to insert near start of the action 'm' make command,
+                    typically to set MuPDF build flags, for example:
+                        --m-vars 'HAVE_LIBCRYPTO=no'
                 --regress
                     Checks for regressions in generated C++ code and SWIG .i
                     file (actions 0 and 2 below). If a generated file already
@@ -1167,7 +1177,7 @@ def get_so_version( build_dirs):
     return f'.{minor}.{patch}'
 
 
-def _get_m_command( build_dirs, j=None, make=None):
+def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
     '''
     Generates a `make` command for building with `build_dirs.dir_mupdf`.
 
@@ -1197,6 +1207,8 @@ def _get_m_command( build_dirs, j=None, make=None):
     actual_build_dir = f'{build_dirs.dir_mupdf}/build/'
     make_env = ''
     make_args = ' HAVE_GLUT=no HAVE_PTHREAD=yes verbose=yes'
+    if m_vars:
+        make_args += f' {m_vars}'
     suffix = None
     build_prefix = ''
     in_prefix = True
@@ -1247,6 +1259,8 @@ def _get_m_command( build_dirs, j=None, make=None):
     assert suffix, f'Leaf must contain "shared-" or "fpic-": build_dirs.dir_so={build_dirs.dir_so}'
     if build_prefix:
         make_args += f' build_prefix={build_prefix}'
+    if m_target:
+        make_args += f' {m_target}'
     command = f'cd {build_dirs.dir_mupdf} &&'
     if make_env:
         command += make_env
@@ -1354,7 +1368,7 @@ def build_0(
 
     # On 32-bit Windows, libclang doesn't work. So we attempt to run 64-bit `-b
     # 0` to generate C++ code.
-    jlib.log( '{state.state_.windows=} {build_dirs.cpu.bits=} {sys.maxsize=}')
+    jlib.log( '{state.state_.windows=} {build_dirs.cpu.bits=}')
     if state.state_.windows and build_dirs.cpu.bits == 32:
         try:
             jlib.log( 'Trying dummy call of clang.cindex.Index.create()')
@@ -1471,6 +1485,8 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
     clang_info_verbose = False
     force_rebuild = False
     header_git = False
+    m_target = None
+    m_vars = None
     j = 0
     refcheck_if = '#ifndef NDEBUG'
     pyodide = state.state_.pyodide
@@ -1480,6 +1496,9 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
         # because of the command changing.
         assert os.environ.get('CXX', None), 'Pyodide build but $CXX not defined.'
         compiler = '$CXX'
+    elif 'CXX' in os.environ:
+        compiler = os.environ['CXX']
+        jlib.log(f'Setting compiler to {os.environ["CXX"]=}.')
     elif state.state_.macos:
         compiler = 'c++ -std=c++14'
         # Add extra flags for MacOS cross-compilation, where ARCHFLAGS can be
@@ -1538,6 +1557,10 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
         elif actions == '--refcheck-if':
             refcheck_if = args.next()
             jlib.log( 'Have set {refcheck_if=}')
+        elif actions == '--m-target':
+            m_target = args.next()
+        elif actions == '--m-vars':
+            m_vars = args.next()
         elif actions.startswith( '-'):
             raise Exception( f'Unrecognised --build flag: {actions}')
         else:
@@ -1564,7 +1587,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                     jlib.log( 'Ignoring `-b m` on Windows as not required.')
                 else:
                     jlib.log( 'Building libmupdf.so ...')
-                    command, actual_build_dir, suffix = _get_m_command( build_dirs, j, make_command)
+                    command, actual_build_dir, suffix = _get_m_command( build_dirs, j, make_command, m_target, m_vars)
                     jlib.system( command, prefix=jlib.log_text(), out='log', verbose=1)
 
                     suffix2 = '.dylib' if state.state_.macos else '.so'
@@ -1685,13 +1708,14 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     {link_l_flags(libmupdf)}
                                 ''').strip().replace( '\n', ' \\\n')
                                 )
-                        jlib.build(
+                        command_was_run = jlib.build(
                                 [include1, include2] + cpp_files,
                                 libmupdfcpp,
                                 command,
                                 force_rebuild,
                                 )
-                        macos_patch( libmupdfcpp, f'{build_dirs.dir_so}/libmupdf.dylib{so_version}')
+                        if command_was_run:
+                            macos_patch( libmupdfcpp, f'{build_dirs.dir_so}/libmupdf.dylib{so_version}')
                         if so_version:
                             jlib.system(f'ln -sf libmupdfcpp.so{so_version} {build_dirs.dir_so}/libmupdfcpp.so')
 
@@ -2132,16 +2156,17 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                 ]
                         infiles += sos
 
-                        jlib.build(
+                        command_was_run = jlib.build(
                                 infiles,
                                 out_so,
                                 command,
                                 force_rebuild,
                                 )
-                        macos_patch( out_so,
-                                f'{build_dirs.dir_so}/libmupdf.dylib{so_version}',
-                                f'{build_dirs.dir_so}/libmupdfcpp.so{so_version}',
-                                )
+                        if command_was_run:
+                            macos_patch( out_so,
+                                    f'{build_dirs.dir_so}/libmupdf.dylib{so_version}',
+                                    f'{build_dirs.dir_so}/libmupdfcpp.so{so_version}',
+                                    )
             else:
                 raise Exception( 'unrecognised --build action %r' % action)
 
@@ -2954,9 +2979,9 @@ def main2():
                 command += f' && python -m pip install --upgrade pip'
                 if state.state_.openbsd:
                     jlib.log( 'Not installing libclang on openbsd; we assume py3-llvm is installed.')
-                    command += f' && python -m pip install --upgrade swig'
+                    command += f' && python -m pip install --upgrade swig setuptools'
                 else:
-                    command += f' && python -m pip install{force_reinstall} --upgrade libclang swig'
+                    command += f' && python -m pip install{force_reinstall} --upgrade libclang swig setuptools'
                 command += f' && python {shlex.quote(sys.argv[0])}'
                 while 1:
                     try:

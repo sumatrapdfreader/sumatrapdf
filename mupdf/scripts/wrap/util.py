@@ -35,18 +35,16 @@ def update_file_regress( text, filename, check_regression):
     '''
     Behaves like jlib.fs_update(), but if check_regression is true and
     <filename> already exists with different content from <text>, we show a
-    diff and raise an exception.
+    diff and return an exception.
     '''
     text_old = jlib.fs_update( text, filename, check_regression)
-    if text_old:
-        jlib.log( 'jlib.fs_update() => {len(text_old)=}. {filename=} {check_regression}')
     if check_regression:
         if text_old is not None:
             # Existing content differs and <check_regression> is true.
             with open( f'{filename}-2', 'w') as f:
                 f.write( text)
-            jlib.log( 'Output would have changed: {filename}')
+            message = f'File would have changed: {os.path.relpath(filename)}'
+            jlib.log( message)
             jlib.system( f'diff -u {filename} {filename}-2', verbose=True, raise_errors=False, prefix=f'diff {os.path.relpath(filename)}: ', out='log')
-            return Exception( f'Output would have changed: {filename}')
-        else:
-            jlib.log( 'Generated file unchanged: {filename}')
+            return Exception( message)
+    return text_old
