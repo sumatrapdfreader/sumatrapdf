@@ -287,7 +287,7 @@ bool ReloadSettings() {
     }
 
     // make sure that the settings file is readable - else wait
-    // a short while to prevent accidental dataloss
+    // a short while to prevent accidental data loss
     // this is triggered when e.g. saving the file with VS Code
     bool ok = false;
     for (int i = 0; !ok && i < 5; i++) {

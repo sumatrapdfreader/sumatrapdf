@@ -1283,14 +1283,13 @@ ContinueOpenWindow:
     // and also to keep TabState forever for lazy loading of tabs
     sessionData = gGlobalPrefs->sessionData;
     gGlobalPrefs->sessionData = new Vec<SessionData*>();
-    // do not restore a session if tabs are disabled and SumatraPDF is already running
-    if (sessionData->size() > 0 && !gPluginURL) {
-        bool noRestore = !gGlobalPrefs->useTabs && (existingInstanceHwnd != nullptr);
-        if (!noRestore) {
-            restoreSession = gGlobalPrefs->restoreSession;
-        } else {
-            logf("not restoring a session because the same exe is already running and tabs are disabled\n");
-        }
+
+    restoreSession = gGlobalPrefs->restoreSession && (sessionData->size() > 0) && !gPluginMode;
+    if (!gGlobalPrefs->useTabs && (existingInstanceHwnd != nullptr)) {
+        // do not restore a session if tabs are disabled and SumatraPDF is already running
+        // TODO: maybe disable restoring if tabs are disabled?
+        restoreSession = false;
+        logf("not restoring a session because the same exe is already running and tabs are disabled\n");
     }
 
     showStartPage = !restoreSession && flags.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles &&
