@@ -35,9 +35,7 @@ class HtmlWindowCallback {
 // HtmlWindow embeds a web browser (Internet Explorer) control
 // inside provided HWND so that an app can display html content.
 class HtmlWindow {
-  protected:
-    friend class FrameSite;
-
+  public:
     int windowId = 0;
     HWND hwndParent = nullptr;
     IWebBrowser2* webBrowser = nullptr;
@@ -68,7 +66,6 @@ class HtmlWindow {
     void SetHtmlReal(const ByteSlice&);
     void FreeHtmlSetInProgressData();
 
-  public:
     ~HtmlWindow();
 
     void OnSize(Size size);

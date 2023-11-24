@@ -87,7 +87,7 @@ struct ChmModel : DocController {
     PoolAllocator poolAlloc;
 
     bool Load(const char* fileName);
-    void DisplayPage(const char* pageUrl);
+    bool DisplayPage(const char* pageUrl);
 
     ChmCacheEntry* FindDataForUrl(const char* url) const;
 

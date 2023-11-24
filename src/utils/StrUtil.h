@@ -238,8 +238,8 @@ namespace url {
 
 void DecodeInPlace(char* url);
 bool IsAbsolute(const char* url);
-char* GetFullPathTemp(const char* url);
-char* GetFileName(const char* url);
+TempStr GetFullPathTemp(const char* url);
+TempStr GetFileNameTemp(const char* url);
 
 } // namespace url
 

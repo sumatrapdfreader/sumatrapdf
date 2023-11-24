@@ -2531,15 +2531,15 @@ bool IsAbsolute(const char* url) {
     return colon && (!hash || hash > colon);
 }
 
-char* GetFullPathTemp(const char* url) {
-    char* path = str::Dup(url);
+TempStr GetFullPathTemp(const char* url) {
+    TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
     DecodeInPlace(path);
     return path;
 }
 
-char* GetFileName(const char* url) {
-    char* path = str::DupTemp(url);
+TempStr GetFileNameTemp(const char* url) {
+    TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
     char* base = path + str::Len(path);
     for (; base > path; base--) {
@@ -2551,7 +2551,7 @@ char* GetFileName(const char* url) {
         return nullptr;
     }
     DecodeInPlace(base);
-    return str::Dup(base);
+    return str::DupTemp(base);
 }
 
 } // namespace url

@@ -464,9 +464,9 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
     // extract the filename from the URL in plugin mode instead
     // of using the more confusing temporary filename
     if (gPluginMode) {
-        char* urlName = url::GetFileName(gPluginURL);
+        TempStr urlName = url::GetFileNameTemp(gPluginURL);
         if (urlName) {
-            path = urlName; // TODO: leaks
+            path = urlName;
         }
     }
     path = path::GetBaseNameTemp(path);
@@ -783,7 +783,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 }
 
 void ControllerCallbackHandler::SaveDownload(const char* url, const ByteSlice& data) {
-    char* path = url::GetFileName(url);
+    TempStr path = url::GetFileNameTemp(url);
     // LinkSaver linkSaver(win->CurrentTab(), win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, path, data);
 }
@@ -2742,13 +2742,13 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const char* srcFileName = ctrl->GetFilePath();
+    TempStr srcFileName = (TempStr)ctrl->GetFilePath();
     if (gPluginMode) {
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        srcFileName = "filename";
-        char* urlName = url::GetFileName(gPluginURL);
+        srcFileName = (TempStr) "filename";
+        TempStr urlName = url::GetFileNameTemp(gPluginURL);
         if (urlName) {
-            srcFileName = urlName; // TODO: leaks
+            srcFileName = urlName;
         }
     }
 

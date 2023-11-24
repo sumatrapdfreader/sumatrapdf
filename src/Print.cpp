@@ -287,10 +287,10 @@ static bool PrintToDevice(const PrintData& pd) {
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
     if (gPluginMode) {
-        AutoFreeStr fileName = url::GetFileName(gPluginURL);
+        TempStr fileName = url::GetFileNameTemp(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
         if (!fileName) {
-            fileName.Set("filename");
+            fileName = (TempStr) "filename";
         }
         di.lpszDocName = ToWStrTemp(fileName);
     } else {
