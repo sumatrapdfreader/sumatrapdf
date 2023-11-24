@@ -1000,6 +1000,8 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
 
 // returns true if did handle a message
 static bool HandleExecuteCmds(HWND hwnd, const char* cmd) {
+    gMostRecentlyOpenedDoc = nullptr;
+
     bool didHandle = false;
     while (!str::IsEmpty(cmd)) {
         {
