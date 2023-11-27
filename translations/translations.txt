@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-489448e7c0ee0626e8d16f7554c6d19ee120cec0
+e54662c901c91e2c815d366c3bdb11eac5c0602e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -1493,7 +1493,7 @@ fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
 he:קיצורי דרך במקלדת
 it:&Tasti rapidi
-ja:キーボード シュートカット(&K)
+ja:キーボード ショートカット(&K)
 kr:키보드 단축키(&K)
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
@@ -9324,6 +9324,7 @@ tw:請輸入滑鼠按兩下 PDF 文件時，應執行的命令(&E):
 uk:Введіть командну стрічку, що викликається при подвійному клацані на PDF-документі:
 uz:PDF-hujjatni ikki marta bosganda ishga tushadigan buyruq satrini kiriting:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
+:Error
 :Error loading %s
 am:Բացման սխալ %s
 ar:%s خطأ في التحميل
@@ -14577,6 +14578,7 @@ fr:Ouvrir dans %s
 ga:Oscail i %s
 gl:Abrir en %s
 he:פתח ב- %s
+hi:%s में खोलें
 hr:Otvori u %s
 hu:Megnyitás %s
 id:Buka di %s
