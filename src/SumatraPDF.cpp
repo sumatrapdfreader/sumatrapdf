@@ -385,8 +385,14 @@ void SelectTabInWindow(WindowTab* tab) {
 // Find the first window showing a given PDF file
 MainWindow* FindMainWindowByFile(const char* file, bool focusTab) {
     WindowTab* tab = nullptr;
-    if (gMostRecentlyOpenedDoc && path::IsSame(gMostRecentlyOpenedDoc->GetFilePath(), file)) {
-        tab = FindTabByController(gMostRecentlyOpenedDoc);
+    if (!file) {
+        return nullptr;
+    }
+    if (gMostRecentlyOpenedDoc != nullptr) {
+        auto lastPath = gMostRecentlyOpenedDoc->GetFilePath();
+        if (path::IsSame(lastPath, file)) {
+            tab = FindTabByController(gMostRecentlyOpenedDoc);
+        }
     }
     if (!tab) {
         tab = FindTabByFile(file);
