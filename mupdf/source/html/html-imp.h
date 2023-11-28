@@ -399,46 +399,17 @@ struct fz_story
 	fz_archive *zip;
 };
 
-enum
-{
-	FZ_HTML_STRUCT_UNKNOWN = 0,
-	FZ_HTML_STRUCT_BODY,
-	FZ_HTML_STRUCT_DIV,
-	FZ_HTML_STRUCT_SPAN,
-	FZ_HTML_STRUCT_BLOCKQUOTE,
-	FZ_HTML_STRUCT_P,
-	FZ_HTML_STRUCT_H1,
-	FZ_HTML_STRUCT_H2,
-	FZ_HTML_STRUCT_H3,
-	FZ_HTML_STRUCT_H4,
-	FZ_HTML_STRUCT_H5,
-	FZ_HTML_STRUCT_H6,
-	FZ_HTML_STRUCT_L,
-	FZ_HTML_STRUCT_LI,
-	FZ_HTML_STRUCT_TABLE,
-	FZ_HTML_STRUCT_TR,
-	FZ_HTML_STRUCT_TH,
-	FZ_HTML_STRUCT_TD,
-	FZ_HTML_STRUCT_THEAD,
-	FZ_HTML_STRUCT_TBODY,
-	FZ_HTML_STRUCT_TFOOT
-};
-
-
 struct fz_html_box_s
 {
 	unsigned int type : 3;
 	unsigned int is_first_flow : 1; /* for text-indent */
 	unsigned int markup_dir : 2;
-	unsigned int structure : 5;
+	unsigned int heading : 3;
 	unsigned int list_item : 21;
 
 	fz_html_box *up, *down, *next;
 
-#ifndef NDEBUG
-	const char *tag;
-#endif
-	const char *id, *href;
+	const char *tag, *id, *href;
 	const fz_css_style *style;
 
 	union {
@@ -604,8 +575,6 @@ fz_html_flow *fz_html_split_flow(fz_context *ctx, fz_pool *pool, fz_html_flow *f
 
 fz_archive *fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi);
 
-int fz_html_heading_from_struct(int structure);
-const char *fz_html_structure_to_string(int structure);
-fz_structure fz_html_structure_to_structure(int s);
+fz_structure fz_html_tag_to_structure(const char *tag);
 
 #endif

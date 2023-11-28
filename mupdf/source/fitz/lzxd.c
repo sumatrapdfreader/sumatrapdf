@@ -47,6 +47,7 @@ typedef struct {
 
 	uint16_t n; // Next number in the bitstream.
 	int remaining; // How many bits left in the current `n`.
+	int exhausted;
 } bitstream_t;
 
 static void
@@ -59,6 +60,8 @@ init_bitstream(fz_context *ctx, bitstream_t *self, const uint8_t *buffer, size_t
 	self->buffer_len = buffer_len;
 	self->rp = buffer;
 	self->limit = buffer + buffer_len;
+	self->n = 0;
+	self->exhausted = 0;
 }
 
 static uint16_t
@@ -67,7 +70,10 @@ read16(fz_context *ctx, bitstream_t *self)
 	uint16_t ret;
 
 	if (self->rp == self->limit)
+	{
+		self->exhausted = 1;
 		return 0;
+	}
 
 	ret = self->rp[0] | (self->rp[1]<<8);
 	self->rp += 2;
@@ -99,7 +105,7 @@ bitstream_read_bit(fz_context *ctx, bitstream_t *self)
 
 // Read from the bitstream, no more than 16 bits (one word).
 static uint32_t
-bitstream_read_bits_oneword(fz_context *ctx, bitstream_t *self, int bits)
+bitstream_read_bits(fz_context *ctx, bitstream_t *self, int bits)
 {
 	uint32_t lo, hi;
 	assert(bits <= 16);
@@ -124,26 +130,9 @@ bitstream_read_bits_oneword(fz_context *ctx, bitstream_t *self, int bits)
 	return (hi<<bits) | lo;
 }
 
-static uint32_t
-bitstream_read_bits(fz_context *ctx, bitstream_t *self, int bits)
-{
-	uint32_t w0, w1;
-
-	if (bits <= 16)
-		return bitstream_read_bits_oneword(ctx, self, bits);
-
-	assert(bits <= 32);
-
-	// Read the two words.
-	w0 = bitstream_read_bits_oneword(ctx, self, 16);
-	w1 = bitstream_read_bits_oneword(ctx, self, bits - 16);
-
-	return (w1<<16) | w0;
-}
-
 // Read from the bitstream, no more than 16 bits (one word).
 static uint32_t
-bitstream_peek_bits_oneword(fz_context *ctx, bitstream_t *self, int bits)
+bitstream_peek_bits(fz_context *ctx, bitstream_t *self, int bits)
 {
 	uint32_t lo, hi;
 	assert(bits <= 16);
@@ -162,16 +151,6 @@ bitstream_peek_bits_oneword(fz_context *ctx, bitstream_t *self, int bits)
 	lo = lo >> (16-bits);
 
 	return (hi<<bits) | lo;
-}
-
-static uint32_t
-bitstream_peek_bits(fz_context *ctx, bitstream_t *self, int bits)
-{
-	// The original rust code attempted to deal with bits > 16, but I don't
-	// believe it actually worked.
-	assert(bits <= 16);
-
-	return bitstream_peek_bits_oneword(ctx, self, bits);
 }
 
 static uint16_t
@@ -208,18 +187,6 @@ bitstream_align(fz_context *ctx, bitstream_t *self)
 
 	self->remaining = 0;
 	return 1;
-}
-
-static int
-bitstream_is_empty(fz_context *ctx, bitstream_t *self)
-{
-	// > the output bitstream is padded with up to 15 bits of zeros to realign the bitstream
-	// > on a 16-bit boundary (even byte boundary) for the next 32 KB of data.
-	//
-	// TODO but how likely it is to have valid 0 data in the last 15 bits? we would
-	// misinterpret this unless we know the decompressed chunk length to know when to
-	// stop reading
-	return self->rp == self->limit && self->n == 0;
 }
 
 // Copies from the current buffer to the destination output ignoring the representation.
@@ -262,7 +229,7 @@ typedef struct
 static vec8_t *
 new_vec8(fz_context *ctx, uint16_t len)
 {
-	vec8_t *v = fz_calloc(ctx, sizeof(vec8_t) + (len - 32)*sizeof(uint8_t), 1);
+	vec8_t *v = fz_malloc(ctx, sizeof(vec8_t) + (((size_t)len) - 32)*sizeof(uint8_t));
 
 	v->len = len;
 
@@ -278,7 +245,7 @@ drop_vec8(fz_context *ctx, vec8_t *vec)
 static vec16_t *
 new_vec16(fz_context *ctx, uint32_t len)
 {
-	vec16_t *v = fz_calloc(ctx, sizeof(vec16_t) + (len - 32)*sizeof(uint16_t), 1);
+	vec16_t *v = fz_malloc(ctx, sizeof(vec16_t) + (((size_t)len) - 32)*sizeof(uint16_t));
 
 	v->len = len;
 
@@ -330,9 +297,12 @@ typedef struct
 static canonical_tree_t *
 new_canonical_tree(fz_context *ctx, size_t count)
 {
+	vec8_t *vec;
 	// > In the case of the very first such tree, the delta is calculated against a tree
 	// > in which all elements have a zero path length.
-	return new_vec8(ctx, count);
+	vec = new_vec8(ctx, (uint16_t)count);
+	memset(vec->v, 0, count);
+	return vec;
 }
 
 static void
@@ -360,7 +330,7 @@ drop_tree(fz_context *ctx, tree_t *self)
 // > an LZXD decoder uses only the path lengths of the Huffman tree to reconstruct the
 // > identical tree,
 static tree_t *
-canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_canonical_tree)
+canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_canonical_tree, int allow_empty)
 {
 	tree_t *tree = NULL;
 
@@ -385,6 +355,13 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 		tree = fz_malloc_struct(ctx, tree_t);
 
 		tree->largest_length = largest_length;
+		if (tree->largest_length == 0)
+		{
+			/* The tree is empty! */
+			if (allow_empty)
+				break;
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Empty huffman tree");
+		}
 		tree->huffman_tree = huffman_tree = new_vec16(ctx, huffsize);
 
 		// > a zero path length indicates that the element has a zero frequency and is not
@@ -408,7 +385,7 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 					uint16_t i;
 
 					if (pos + amount > huffsize)
-						fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid huffman tree");
+						fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid huffman tree (overrun)");
 
 					for (i = amount; i > 0; i--)
 						huffman_tree->v[pos++] = code;
@@ -418,11 +395,7 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 
 		// If we didn't fill the entire table, the path lengths were wrong.
 		if (pos != huffsize)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid huffman tree");
-
-		// Move self into tree only after nothing can throw to avoid double frees.
-		tree->path_lengths = self;
-		tree->drop_path_lengths = own_canonical_tree;
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid huffman tree (underrun)");
 	}
 	fz_catch(ctx)
 	{
@@ -431,6 +404,10 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 			drop_canonical_tree(ctx, self);
 		fz_rethrow(ctx);
 	}
+
+	// Move self into tree only after nothing can throw to avoid double frees.
+	tree->path_lengths = self;
+	tree->drop_path_lengths = own_canonical_tree;
 
 	return tree;
 }
@@ -468,7 +445,7 @@ tree_update_range_with_pretree(fz_context *ctx, canonical_tree_t *self, bitstrea
 		path_lengths.v[i] = bitstream_read_bits(ctx, bstm, 4);
 	}
 
-	pretree = canonical_tree_create_instance(ctx, &path_lengths, 0);
+	pretree = canonical_tree_create_instance(ctx, &path_lengths, 0, 0);
 
 	fz_try(ctx)
 	{
@@ -528,9 +505,8 @@ tree_update_range_with_pretree(fz_context *ctx, canonical_tree_t *self, bitstrea
 				// "Decode new code" is used to parse the next code from the bitstream, which
 				// has a value range of [0, 16].
 				uint16_t code = tree_decode_element(ctx, pretree, bstm);
-				assert(code <= 16);
 
-				if (i + same > self->len)
+				if (i + same > self->len || code > 16)
 					fz_throw(ctx, FZ_ERROR_GENERIC, "Overrun with pretree codes");
 
 				value = (17 + self->v[i] - code) % 17;
@@ -928,7 +904,7 @@ block_decode_element_aux(fz_context *ctx, bitstream_t *bstm, uint32_t r[3], deco
 	else
 	{
 		// Decode the match. For a match, there are two components, offset and length.
-		uint16_t length_header = (main_element - 256) & 7;
+		uint16_t length_header = main_element & 7;
 		uint16_t match_length;
 		uint16_t position_slot;
 		uint32_t match_offset;
@@ -1118,9 +1094,9 @@ block_read(fz_context *ctx, bitstream_t *bstm, fz_lzxd_t *self)
 	case 1:
 		read_main_and_length_trees(ctx, bstm, state);
 		block->kind.u.verbatim.length_tree = NULL;
-		block->kind.u.verbatim.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0);
+		block->kind.u.verbatim.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0, 0);
 		block->kind.type = kind_verbatim;
-		block->kind.u.verbatim.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0);
+		block->kind.u.verbatim.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0, 1);
 		break;
 	case 2:
 	{
@@ -1136,14 +1112,14 @@ block_read(fz_context *ctx, bitstream_t *bstm, fz_lzxd_t *self)
 		block->kind.type = kind_alignedoffset;
 		block->kind.u.aligned_offset.main_tree = NULL;
 		block->kind.u.aligned_offset.length_tree = NULL;
-		block->kind.u.aligned_offset.aligned_offset_tree = canonical_tree_create_instance(ctx, path_lengths, 1);
+		block->kind.u.aligned_offset.aligned_offset_tree = canonical_tree_create_instance(ctx, path_lengths, 1, 0);
 
 		// > An aligned offset block is identical to the verbatim block except for the
 		// > presence of the aligned offset tree preceding the other trees.
 		read_main_and_length_trees(ctx, bstm, state);
 
-		block->kind.u.aligned_offset.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0);
-		block->kind.u.aligned_offset.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0);
+		block->kind.u.aligned_offset.main_tree = canonical_tree_create_instance(ctx, state->main_tree, 0, 0);
+		block->kind.u.aligned_offset.length_tree = canonical_tree_create_instance(ctx, state->length_tree, 0, 1);
 		break;
 	}
 	case 3:
@@ -1336,7 +1312,7 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 
 	try_read_first_chunk(ctx, self, &bstm);
 
-	while (!bitstream_is_empty(ctx, &bstm))
+	do
 	{
 		decoded_t decoded;
 		size_t advance;
@@ -1346,6 +1322,7 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 			block_read(ctx, &bstm, self);
 			assert(self->current_block.size != 0); /* Guaranteed by exception handling within block_read */
 		}
+		assert((((1<<(16-bstm.remaining))-1) & bstm.n ) == 0);
 
 		decoded = block_decode_element(ctx, &self->current_block, &bstm, self->r);
 
@@ -1369,6 +1346,8 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 			advance = bitstream_remaining_bytes(ctx, &bstm);
 			if (advance > decoded.u.read)
 				advance = decoded.u.read;
+			else
+				bstm.exhausted = 1;
 			window_copy_from_bitstream(ctx, self->window, &bstm, advance);
 			break;
 		}
@@ -1381,6 +1360,7 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Block overread");
 		self->current_block.size -= advance;
 	}
+	while ((self->window->pos & 0x7fff) && !bstm.exhausted);
 
 	// > To ensure that an exact number of input bytes represent an exact number of
 	// > output bytes for each chunk, after each 32 KB of uncompressed data is
@@ -1430,5 +1410,6 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 		drop_canonical_tree(ctx, self->state.length_tree);
 		self->state.length_tree = NULL;
 		self->state.length_tree = new_canonical_tree(ctx, 249);
+		self->current_block.size = 0;
 	}
 }

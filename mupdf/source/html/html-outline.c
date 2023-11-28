@@ -375,7 +375,7 @@ add_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 		fz_rethrow(ctx);
 	}
 
-	heading = fz_html_heading_from_struct(box->structure);
+	heading = box->heading;
 	if (x->level[x->current] < heading && x->current < 5)
 	{
 		x->tail[x->current+1] = x->down[x->current];
@@ -400,7 +400,7 @@ load_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 {
 	while (box)
 	{
-		int heading = fz_html_heading_from_struct(box->structure);
+		int heading = box->heading;
 		if (heading)
 			add_html_outline(ctx, x, box);
 		if (box->down)

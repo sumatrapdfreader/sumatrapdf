@@ -330,27 +330,6 @@ static const char *get_node_text(fz_context *ctx, fz_html_flow *node)
 		return "";
 }
 
-int fz_html_heading_from_struct(int structure)
-{
-	switch (structure)
-	{
-	case FZ_HTML_STRUCT_H1:
-		return 1;
-	case FZ_HTML_STRUCT_H2:
-		return 2;
-	case FZ_HTML_STRUCT_H3:
-		return 3;
-	case FZ_HTML_STRUCT_H4:
-		return 4;
-	case FZ_HTML_STRUCT_H5:
-		return 5;
-	case FZ_HTML_STRUCT_H6:
-		return 6;
-	default:
-		return 0;
-	}
-}
-
 static void measure_string_w(fz_context *ctx, fz_html_flow *node, hb_buffer_t *hb_buf)
 {
 	float em = node->box->s.layout.em;
@@ -2190,9 +2169,11 @@ static int draw_table_row(fz_context *ctx, fz_html_box *box, float page_top, flo
 static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
 {
 	int ret = 0;
+	int str = fz_html_tag_to_structure(box->tag);
 
-	if (box->structure != FZ_HTML_STRUCT_UNKNOWN)
-		fz_begin_structure(ctx, dev, fz_html_structure_to_structure(box->structure), fz_html_structure_to_string(box->structure), 0);
+	if (str != FZ_STRUCTURE_INVALID)
+		fz_begin_structure(ctx, dev, str, box->tag, 0);
+
 	switch (box->type)
 	{
 	case BOX_TABLE_ROW:
@@ -2214,7 +2195,8 @@ static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float pag
 			ret = 1;
 		break;
 	}
-	if (box->structure != FZ_HTML_STRUCT_UNKNOWN)
+
+	if (str != FZ_STRUCTURE_INVALID)
 		fz_end_structure(ctx, dev);
 
 	return ret;
@@ -2566,7 +2548,7 @@ static int enumerate_block_box(fz_context *ctx, fz_html_box *box, float page_top
 
 	if (box->style->visibility == V_VISIBLE && !skipping)
 	{
-		heading = fz_html_heading_from_struct(box->structure);
+		heading = box->heading;
 		if (heading || box->id != NULL || box->href)
 		{
 			/* We have a box worthy of a callback. */
