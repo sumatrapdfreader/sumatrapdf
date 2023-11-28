@@ -101,6 +101,7 @@ void Printer::SetDevMode(DEVMODEW* dm) {
 
 Printer::~Printer() {
     str::Free(name);
+    str::Free(output);
     free((void*)devMode);
     free((void*)papers);
     free((void*)paperSizes);
@@ -295,6 +296,9 @@ static bool PrintToDevice(const PrintData& pd) {
         di.lpszDocName = ToWStrTemp(fileName);
     } else {
         di.lpszDocName = ToWStrTemp(engine.FilePath());
+    }
+    if (pd.printer->output) {
+        di.lpszOutput = ToWStrTemp(pd.printer->output);
     }
 
     int current = 1, total = 0;
@@ -1151,6 +1155,8 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             // alternatively allow indicating the paper kind directly by number
             devMode->dmPaperSize = GetPaperKind(s + 10);
             devMode->dmFields |= DM_PAPERSIZE;
+        } else if (str::StartsWithI(s, "output=")) {
+            printer->output = str::Dup(s + 7);
         }
     }
 

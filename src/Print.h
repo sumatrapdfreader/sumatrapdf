@@ -6,6 +6,7 @@ PaperFormat GetPaperFormatFromSizeApprox(SizeF size);
 
 struct Printer {
     char* name = nullptr;
+    char* output = nullptr;
     DEVMODEW* devMode = nullptr;
     PRINTER_INFO_2* info = nullptr;
 
