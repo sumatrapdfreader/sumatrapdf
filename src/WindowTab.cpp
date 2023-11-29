@@ -44,6 +44,10 @@ WindowTab::~WindowTab() {
         AsChm()->RemoveParentHwnd();
     }
     delete selectionOnPage;
+    // technically we only need to clear ctrl == gMostRecentlyOpenedDoc
+    // but gMostRecentlyOpenedDoc is only for dde commands
+    // so doesn't need to be kept for long
+    gMostRecentlyOpenedDoc = nullptr;
     delete ctrl;
 }
 
