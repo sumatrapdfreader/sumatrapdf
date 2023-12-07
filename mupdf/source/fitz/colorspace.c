@@ -351,9 +351,9 @@ fz_new_colorspace(fz_context *ctx, enum fz_colorspace_type type, int flags, int 
 	FZ_INIT_KEY_STORABLE(cs, 1, fz_drop_colorspace_imp);
 
 	if (n > FZ_MAX_COLORS)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many color components (%d > %d)", n, FZ_MAX_COLORS);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "too many color components (%d > %d)", n, FZ_MAX_COLORS);
 	if (n < 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too few color components (%d < 1)", n);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "too few color components (%d < 1)", n);
 
 	fz_try(ctx)
 	{
@@ -526,9 +526,9 @@ fz_colorspace *fz_new_cal_rgb_colorspace(fz_context *ctx, float wp[3], float bp[
 void fz_colorspace_name_colorant(fz_context *ctx, fz_colorspace *cs, int i, const char *name)
 {
 	if (i < 0 || i >= cs->n)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Attempt to name out of range colorant");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Attempt to name out of range colorant");
 	if (cs->type != FZ_COLORSPACE_SEPARATION)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Attempt to name colorant for non-separation colorspace");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Attempt to name colorant for non-separation colorspace");
 
 	fz_free(ctx, cs->u.separation.colorant[i]);
 	cs->u.separation.colorant[i] = NULL;
@@ -543,7 +543,7 @@ void fz_colorspace_name_colorant(fz_context *ctx, fz_colorspace *cs, int i, cons
 const char *fz_colorspace_colorant(fz_context *ctx, fz_colorspace *cs, int i)
 {
 	if (!cs || i < 0 || i >= cs->n)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Colorant out of range");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Colorant out of range");
 	switch (cs->type)
 	{
 	case FZ_COLORSPACE_NONE:
@@ -940,9 +940,9 @@ static void
 fz_init_process_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *ss, fz_colorspace *ds, fz_colorspace *is, fz_color_params params)
 {
 	if (ss->type == FZ_COLORSPACE_INDEXED)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "base colorspace must not be indexed");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "base colorspace must not be indexed");
 	if (ss->type == FZ_COLORSPACE_SEPARATION)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "base colorspace must not be separation");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "base colorspace must not be separation");
 
 #if FZ_ENABLE_ICC
 	if (ctx->icc_enabled)
@@ -971,7 +971,7 @@ fz_init_process_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colo
 		}
 		fz_catch(ctx)
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			fz_warn(ctx, "cannot create ICC link, falling back to fast color conversion");
 			cc->convert = fz_lookup_fast_color_converter(ctx, ss, ds);
@@ -995,9 +995,9 @@ fz_find_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *
 #endif
 
 	if (ds->type == FZ_COLORSPACE_INDEXED)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot convert into Indexed colorspace.");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot convert into Indexed colorspace.");
 	if (ds->type == FZ_COLORSPACE_SEPARATION)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot convert into Separation colorspace.");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot convert into Separation colorspace.");
 
 	if (ss->type == FZ_COLORSPACE_INDEXED)
 	{
@@ -1084,7 +1084,7 @@ static void fz_cached_color_convert(fz_context *ctx, fz_color_converter *cc_, co
 			fz_hash_insert(ctx, cc->hash, ss, val);
 		fz_catch(ctx)
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			fz_free(ctx, val);
 		}
@@ -1888,7 +1888,7 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 			}
 			fz_catch(ctx)
 			{
-				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 				fz_report_error(ctx);
 				fz_warn(ctx, "falling back to fast color conversion");
 				fz_convert_fast_pixmap_samples(ctx, src, dst, copy_spots);

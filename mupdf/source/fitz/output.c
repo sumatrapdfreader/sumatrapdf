@@ -51,13 +51,13 @@ file_write(fz_context *ctx, void *opaque, const void *buffer, size_t count)
 	{
 		int x = putc(((unsigned char*)buffer)[0], file);
 		if (x == EOF && ferror(file))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot fwrite: %s", strerror(errno));
+			fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot fwrite: %s", strerror(errno));
 		return;
 	}
 
 	n = fwrite(buffer, 1, count, file);
 	if (n < count && ferror(file))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot fwrite: %s", strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot fwrite: %s", strerror(errno));
 }
 
 static void
@@ -150,7 +150,7 @@ file_seek(fz_context *ctx, void *opaque, int64_t off, int whence)
 	int n = fseeko(file, off, whence);
 #endif
 	if (n < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot fseek: %s", strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot fseek: %s", strerror(errno));
 }
 
 static int64_t
@@ -163,7 +163,7 @@ file_tell(fz_context *ctx, void *opaque)
 	int64_t off = ftello(file);
 #endif
 	if (off == -1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot ftell: %s", strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot ftell: %s", strerror(errno));
 	return off;
 }
 
@@ -246,7 +246,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 	fz_output *out;
 
 	if (filename == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "no output to write to");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no output to write to");
 
 	if (!strcmp(filename, "/dev/null") || !fz_strcasecmp(filename, "nul:"))
 		return fz_new_output(ctx, 0, NULL, null_write, NULL, NULL);
@@ -264,7 +264,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 	{
 		if (fz_remove_utf8(filename) < 0)
 			if (errno != ENOENT)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot remove file '%s': %s", filename, strerror(errno));
+				fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
 #if defined(__MINGW32__) || defined(__MINGW64__)
 	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+"); /* 'x' flag not suported. */
@@ -284,14 +284,14 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 	{
 		if (remove(filename) < 0)
 			if (errno != ENOENT)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot remove file '%s': %s", filename, strerror(errno));
+				fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
 	file = fopen(filename, append ? "rb+" : "wb+x");
 	if (file == NULL && append)
 		file = fopen(filename, "wb+");
 #endif
 	if (!file)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file '%s': %s", filename, strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open file '%s': %s", filename, strerror(errno));
 
 	setvbuf(file, NULL, _IONBF, 0); /* we do our own buffering */
 	out = fz_new_output(ctx, 8192, file, file_write, NULL, file_drop);
@@ -313,7 +313,7 @@ buffer_write(fz_context *ctx, void *opaque, const void *data, size_t len)
 static void
 buffer_seek(fz_context *ctx, void *opaque, int64_t off, int whence)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "cannot seek in buffer: %s", strerror(errno));
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot seek in buffer: %s", strerror(errno));
 }
 
 static int64_t
@@ -369,7 +369,7 @@ void
 fz_seek_output(fz_context *ctx, fz_output *out, int64_t off, int whence)
 {
 	if (out->seek == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot seek in unseekable output stream\n");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot seek in unseekable output stream\n");
 	fz_flush_output(ctx, out);
 	out->seek(ctx, out->state, off, whence);
 }
@@ -378,7 +378,7 @@ int64_t
 fz_tell_output(fz_context *ctx, fz_output *out)
 {
 	if (out->tell == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot tell in untellable output stream\n");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot tell in untellable output stream\n");
 	if (out->bp)
 		return out->tell(ctx, out->state) + (out->wp - out->bp);
 	return out->tell(ctx, out->state);
@@ -397,7 +397,7 @@ void
 fz_truncate_output(fz_context *ctx, fz_output *out)
 {
 	if (out->truncate == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot truncate this output stream");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot truncate this output stream");
 	fz_flush_output(ctx, out);
 	out->truncate(ctx, out->state);
 }
@@ -718,7 +718,7 @@ void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int 
 		return;
 
 	if (w <= 0 || h <= 0 || n <= 0 || alpha < 0 || alpha > 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid bandwriter header dimensions/setup");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid bandwriter header dimensions/setup");
 
 	writer->w = w;
 	writer->h = h;
@@ -740,7 +740,7 @@ void fz_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band
 	if (writer->line + band_height > writer->h)
 		band_height = writer->h - writer->line;
 	if (band_height < 0) {
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Too much band data!");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Too much band data!");
 	}
 	if (band_height > 0) {
 		writer->band(ctx, writer, stride, writer->line, band_height, samples);

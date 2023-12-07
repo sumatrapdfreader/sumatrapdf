@@ -42,7 +42,7 @@ fz_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 	fz_stream *stream = fz_try_open_archive_entry(ctx, arch, name);
 
 	if (stream == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open entry %s", name);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find entry %s", name);
 
 	return stream;
 }
@@ -54,9 +54,9 @@ fz_try_open_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 	fz_stream *stream = NULL;
 
 	if (arch == NULL || !arch->open_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open archive entry");
+		return NULL;
 
-	local_name = fz_cleanname(fz_strdup(ctx, name));
+	local_name = fz_cleanname_strdup(ctx, name);
 
 	fz_var(stream);
 
@@ -76,7 +76,7 @@ fz_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 	fz_buffer *buf = fz_try_read_archive_entry(ctx, arch, name);
 
 	if (buf == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read %s", name);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find entry %s", name);
 
 	return buf;
 }
@@ -90,7 +90,7 @@ fz_try_read_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 	if (arch == NULL || !arch->read_entry || !arch->has_entry || name == NULL)
 		return NULL;
 
-	local_name = fz_cleanname(fz_strdup(ctx, name));
+	local_name = fz_cleanname_strdup(ctx, name);
 
 	fz_var(buf);
 
@@ -117,9 +117,9 @@ fz_has_archive_entry(fz_context *ctx, fz_archive *arch, const char *name)
 	if (arch == NULL)
 		return 0;
 	if (!arch->has_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot check if archive has entry");
+		return 0;
 
-	local_name = fz_cleanname(fz_strdup(ctx, name));
+	local_name = fz_cleanname_strdup(ctx, name);
 
 	fz_var(res);
 
@@ -139,7 +139,7 @@ fz_list_archive_entry(fz_context *ctx, fz_archive *arch, int idx)
 	if (arch == 0)
 		return NULL;
 	if (!arch->list_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot list archive entries");
+		return NULL;
 
 	return arch->list_entry(ctx, arch, idx);
 }
@@ -150,7 +150,7 @@ fz_count_archive_entries(fz_context *ctx, fz_archive *arch)
 	if (arch == NULL)
 		return 0;
 	if (!arch->count_entries)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot count archive entries");
+		return 0;
 	return arch->count_entries(ctx, arch);
 }
 
@@ -158,7 +158,7 @@ const char *
 fz_archive_format(fz_context *ctx, fz_archive *arch)
 {
 	if (arch == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read format of non-existent archive");
+		return "undefined";
 	return arch->format;
 }
 
@@ -172,8 +172,8 @@ fz_new_archive_of_size(fz_context *ctx, fz_stream *file, int size)
 	return arch;
 }
 
-static fz_archive *
-do_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
+fz_archive *
+fz_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
 	fz_archive *arch = NULL;
 	int i;
@@ -193,32 +193,11 @@ do_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 }
 
 fz_archive *
-fz_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
-{
-	fz_archive *arch = NULL;
-
-	fz_var(arch);
-
-	fz_try(ctx)
-		arch = do_try_open_archive_with_stream(ctx, file);
-	fz_catch(ctx)
-	{
-		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
-		/* Otherwise, swallow */
-		fz_report_error(ctx);
-	}
-
-	return arch;
-}
-
-fz_archive *
 fz_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
-	fz_archive *arch = do_try_open_archive_with_stream(ctx, file);
-
+	fz_archive *arch = fz_try_open_archive_with_stream(ctx, file);
 	if (arch == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot recognize archive");
-
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot recognize archive");
 	return arch;
 }
 
@@ -320,7 +299,8 @@ fz_tree_archive_add_buffer(fz_context *ctx, fz_archive *arch_, const char *name,
 	fz_tree_archive *arch = (fz_tree_archive *)arch_;
 
 	if (arch == NULL || arch->super.has_entry != has_tree_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot insert into a non-tree archive");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot insert into a non-tree archive");
+
 	buf = fz_keep_buffer(ctx, buf);
 
 	fz_try(ctx)
@@ -339,7 +319,8 @@ fz_tree_archive_add_data(fz_context *ctx, fz_archive *arch_, const char *name, c
 	fz_buffer *buf;
 
 	if (arch == NULL || arch->super.has_entry != has_tree_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot insert into a non-tree archive");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot insert into a non-tree archive");
+
 	buf = fz_new_buffer_from_copied_data(ctx, data, size);
 
 	fz_try(ctx)
@@ -482,7 +463,7 @@ fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub, cons
 	char *clean_path = NULL;
 
 	if (arch->super.has_entry != has_multi_entry)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot mount within a non-multi archive!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot mount within a non-multi archive");
 
 	if (arch->len == arch->max)
 	{
@@ -496,11 +477,7 @@ fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub, cons
 	if (path)
 	{
 		size_t n = strlen(path);
-
-		clean_path = fz_malloc(ctx, n + 2);
-		memcpy(clean_path, path, n);
-		clean_path[n] = 0;
-		fz_cleanname(clean_path);
+		clean_path = fz_cleanname_strdup(ctx, path);
 		if (clean_path[0] == '.' && clean_path[1] == 0)
 		{
 			fz_free(ctx, clean_path);
@@ -587,14 +564,14 @@ void fz_register_archive_handler(fz_context *ctx, const fz_archive_handler *hand
 
 	ac = ctx->archive;
 	if (ac == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "archive handler list not found");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "archive handler list not found");
 
 	for (i = 0; i < ac->count; i++)
 		if (ac->handler[i] == handler)
 			return;
 
 	if (ac->count >= FZ_ARCHIVE_HANDLER_MAX)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Too many archive handlers");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Too many archive handlers");
 
 	ac->handler[ac->count++] = handler;
 }

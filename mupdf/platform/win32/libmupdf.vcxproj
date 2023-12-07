@@ -540,6 +540,7 @@
     <ClCompile Include="..\..\source\fitz\halftone.c" />
     <ClCompile Include="..\..\source\fitz\harfbuzz.c" />
     <ClCompile Include="..\..\source\fitz\hash.c" />
+    <ClCompile Include="..\..\source\fitz\heap.c" />
     <ClCompile Include="..\..\source\fitz\image.c" />
     <ClCompile Include="..\..\source\fitz\jmemcust.c" />
     <ClCompile Include="..\..\source\fitz\link.c" />
@@ -710,6 +711,8 @@
     <ClInclude Include="..\..\include\mupdf\fitz\glyph-cache.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\glyph.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\hash.h" />
+    <ClInclude Include="..\..\include\mupdf\fitz\heap-imp.h" />
+    <ClInclude Include="..\..\include\mupdf\fitz\heap.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\image.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\link.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\log.h" />

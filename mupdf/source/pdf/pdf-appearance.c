@@ -2383,7 +2383,7 @@ pdf_write_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 	}
 	else
 	{
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create appearance stream for %s widgets", pdf_to_name(ctx, ft));
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot create appearance stream for %s widgets", pdf_to_name(ctx, ft));
 	}
 }
 
@@ -2394,7 +2394,7 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 	switch (pdf_annot_type(ctx, annot))
 	{
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create appearance stream for %s annotations",
+		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot create appearance stream for %s annotations",
 			pdf_dict_get_name(ctx, annot->obj, PDF_NAME(Subtype)));
 	case PDF_ANNOT_WIDGET:
 		pdf_write_widget_appearance(ctx, annot, buf, rect, bbox, matrix, res);
@@ -3249,7 +3249,7 @@ retry_after_repair:
 				fz_catch(ctx)
 				{
 					fz_rethrow_if(ctx, FZ_ERROR_REPAIRED);
-					fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+					fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 					fz_report_error(ctx);
 					fz_warn(ctx, "cannot create appearance stream");
 				}

@@ -192,7 +192,7 @@ void fz_new_icc_context(fz_context *ctx)
 {
 	cmsContext glo = cmsCreateContext(&fz_lcms_memhandler, ctx);
 	if (!glo)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cmsCreateContext failed");
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cmsCreateContext failed");
 	ctx->colorspace->icc_instance = glo;
 	cmsSetLogErrorHandler(glo, fz_lcms_log_error);
 }
@@ -217,7 +217,7 @@ static void fz_lcms_log_error(cmsContext id, cmsUInt32Number error_code, const c
 void fz_new_icc_context(fz_context *ctx)
 {
 	if (glo_ctx != NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Stock LCMS2 library cannot be used in multiple contexts!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Stock LCMS2 library cannot be used in multiple contexts!");
 	glo_ctx = ctx;
 	cmsSetLogErrorHandler(fz_lcms_log_error);
 }
@@ -236,7 +236,7 @@ fz_icc_profile *fz_new_icc_profile(fz_context *ctx, unsigned char *data, size_t 
 	fz_icc_profile *profile;
 	profile = cmsOpenProfileFromMem(GLO data, (cmsUInt32Number)size);
 	if (profile == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cmsOpenProfileFromMem failed");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cmsOpenProfileFromMem failed");
 	return profile;
 }
 
@@ -349,7 +349,7 @@ fz_new_icc_link(fz_context *ctx,
 	{
 		transform = cmsCreateTransform(GLO src_pro, src_fmt, dst_pro, dst_fmt, rend.ri, flags);
 		if (!transform)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cmsCreateTransform(%s,%s) failed", src->name, dst->name);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cmsCreateTransform(%s,%s) failed", src->name, dst->name);
 	}
 
 	/* LCMS proof creation links don't work properly with the Ghent test files. Handle this in a brutish manner. */
@@ -357,13 +357,13 @@ fz_new_icc_link(fz_context *ctx,
 	{
 		transform = cmsCreateTransform(GLO src_pro, src_fmt, dst_pro, dst_fmt, INTENT_RELATIVE_COLORIMETRIC, flags);
 		if (!transform)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cmsCreateTransform(src=proof,dst) failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cmsCreateTransform(src=proof,dst) failed");
 	}
 	else if (prf_pro == dst_pro)
 	{
 		transform = cmsCreateTransform(GLO src_pro, src_fmt, prf_pro, dst_fmt, rend.ri, flags);
 		if (!transform)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cmsCreateTransform(src,proof=dst) failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cmsCreateTransform(src,proof=dst) failed");
 	}
 	else
 	{
@@ -385,11 +385,11 @@ fz_new_icc_link(fz_context *ctx,
 
 		src_to_prf_link = cmsCreateTransform(GLO src_pro, src_fmt, prf_pro, prf_fmt, rend.ri, flags);
 		if (!src_to_prf_link)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cmsCreateTransform(src,proof) failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cmsCreateTransform(src,proof) failed");
 		src_to_prf_pro = cmsTransform2DeviceLink(GLO src_to_prf_link, 3.4, flags);
 		cmsDeleteTransform(GLO src_to_prf_link);
 		if (!src_to_prf_pro)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cmsTransform2DeviceLink(src,proof) failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cmsTransform2DeviceLink(src,proof) failed");
 
 		hProfiles[0] = src_to_prf_pro;
 		hProfiles[1] = prf_pro;
@@ -397,7 +397,7 @@ fz_new_icc_link(fz_context *ctx,
 		transform = cmsCreateMultiprofileTransform(GLO hProfiles, 3, src_fmt, dst_fmt, INTENT_RELATIVE_COLORIMETRIC, flags);
 		cmsCloseProfile(GLO src_to_prf_pro);
 		if (!transform)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cmsCreateMultiprofileTransform(src,proof,dst) failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cmsCreateMultiprofileTransform(src,proof,dst) failed");
 	}
 
 	fz_try(ctx)
@@ -471,7 +471,7 @@ fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src
 	cmm_num_dst = T_CHANNELS(dst_format);
 	cmm_extras = T_EXTRA(src_format);
 	if (cmm_num_src != sc || cmm_num_dst != dc || cmm_extras != ssp+sa || sa != da || (copy_spots && ssp != dsp))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "bad setup in ICC pixmap transform: src: %d vs %d+%d+%d, dst: %d vs %d+%d+%d", cmm_num_src, sc, ssp, sa, cmm_num_dst, dc, dsp, da);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "bad setup in ICC pixmap transform: src: %d vs %d+%d+%d, dst: %d vs %d+%d+%d", cmm_num_src, sc, ssp, sa, cmm_num_dst, dc, dsp, da);
 
 	inputpos = src->samples;
 	outputpos = dst->samples;

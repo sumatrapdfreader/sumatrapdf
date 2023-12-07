@@ -51,6 +51,8 @@ extern "C" {
 #include "mupdf/fitz/compressed-buffer.h"
 #include "mupdf/fitz/filter.h"
 #include "mupdf/fitz/archive.h"
+#include "mupdf/fitz/heap.h"
+
 
 /* Resources */
 #include "mupdf/fitz/store.h"

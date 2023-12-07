@@ -267,7 +267,7 @@ fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int d
 		size_t skipbits = 8 * stride - (size_t)w * n * depth;
 
 		if (skipbits > 32)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Inappropriate stride!");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Inappropriate stride!");
 
 		stm = fz_open_memory(ctx, sp, h * stride);
 		fz_try(ctx)
@@ -297,7 +297,7 @@ fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int d
 			fz_rethrow(ctx);
 	}
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot unpack tile with %d bits per component", depth);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot unpack tile with %d bits per component", depth);
 }
 
 /* Apply decode array */
@@ -471,7 +471,7 @@ fz_unpack_stream(fz_context *ctx, fz_stream *src, int depth, int w, int h, int n
 	else if (depth == 1 || depth == 2 || depth == 4 || depth == 8 || depth  == 16 || depth == 24 || depth == 32)
 		unpack_line = fz_unpack_any_l2depth;
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported combination in fz_unpack_stream");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unsupported combination in fz_unpack_stream");
 
 	state = fz_malloc(ctx, sizeof(unpack_state) + dst_stride + src_stride);
 	state->src = src;

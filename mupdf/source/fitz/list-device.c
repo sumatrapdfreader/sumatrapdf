@@ -348,7 +348,7 @@ fz_append_display_node(
 	if (color == NULL)
 	{
 		if (colorspace)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Colorspace cannot be specified without color.");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Colorspace cannot be specified without color.");
 	}
 	else
 	{
@@ -2073,7 +2073,7 @@ visible:
 		}
 		fz_catch(ctx)
 		{
-			if (fz_caught(ctx) == FZ_ERROR_MEMORY)
+			if (fz_caught(ctx) == FZ_ERROR_SYSTEM)
 			{
 				fz_drop_colorspace(ctx, colorspace);
 				fz_drop_stroke_state(ctx, stroke);

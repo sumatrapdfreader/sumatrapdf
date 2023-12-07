@@ -95,7 +95,7 @@ pwg_page_header(fz_context *ctx, fz_output *out, const fz_pwg_options *pwg,
 	case 8: fz_write_int32_be(ctx, out, 18); /* Sgray */ break;
 	case 24: fz_write_int32_be(ctx, out, 19); /* Srgb */ break;
 	case 32: fz_write_int32_be(ctx, out, 6); /* Cmyk */ break;
-	default: fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap bpp must be 1, 8, 24 or 32 to write as pwg");
+	default: fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap bpp must be 1, 8, 24 or 32 to write as pwg");
 	}
 	fz_write_int32_be(ctx, out, pwg ? pwg->compression : 0);
 	fz_write_int32_be(ctx, out, pwg ? pwg->row_count : 0);
@@ -334,11 +334,11 @@ pwg_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	int n = writer->super.n;
 
 	if (writer->super.s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PWG band writer cannot cope with spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PWG band writer cannot cope with spot colors");
 	if (writer->super.alpha != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PWG band writer cannot cope with alpha");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PWG band writer cannot cope with alpha");
 	if (n != 1 && n != 3 && n != 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale, rgb or cmyk to write as pwg");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale, rgb or cmyk to write as pwg");
 
 	pwg_page_header(ctx, writer->super.out, &writer->pwg,
 			writer->super.xres, writer->super.yres, writer->super.w, writer->super.h, n*8);

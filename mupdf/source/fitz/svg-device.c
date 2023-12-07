@@ -570,6 +570,9 @@ svg_dev_data_text(fz_context *ctx, fz_buffer *out, int c)
 			fz_append_string(ctx, out, "&quot;");
 		else if (c >= 32 && c < 127 && c != '<' && c != '>')
 			fz_append_byte(ctx, out, c);
+		else if (c >= 0xD800 && c <= 0xDFFF)
+			/* no surrogate characters in SVG */
+			fz_append_printf(ctx, out, "&#xFFFD;");
 		else
 			fz_append_printf(ctx, out, "&#x%04x;", c);
 		fz_append_byte(ctx, out, '"');
@@ -1315,7 +1318,7 @@ svg_dev_close_device(fz_context *ctx, fz_device *dev)
 	fz_write_string(ctx, out, " xmlns=\"http://www.w3.org/2000/svg\"");
 	fz_write_string(ctx, out, " xmlns:xlink=\"http://www.w3.org/1999/xlink\"");
 	fz_write_string(ctx, out, " version=\"1.1\"");
-	fz_write_printf(ctx, out, " width=\"%gpt\" height=\"%gpt\" viewBox=\"0 0 %g %g\">\n",
+	fz_write_printf(ctx, out, " width=\"%g\" height=\"%g\" viewBox=\"0 0 %g %g\">\n",
 		sdev->page_width, sdev->page_height, sdev->page_width, sdev->page_height);
 
 	if (sdev->defs->len > 0)

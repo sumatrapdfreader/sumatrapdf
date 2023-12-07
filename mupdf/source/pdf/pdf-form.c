@@ -215,7 +215,7 @@ pdf_lookup_field_imp(fz_context *ctx, pdf_obj *arr, const char *str, pdf_cycle_l
 		pdf_obj *k = pdf_array_get(ctx, arr, i);
 		pdf_obj *found;
 		if (pdf_cycle(ctx, &cycle, cycle_up, k))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in fields");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in fields");
 		found = lookup_field_sub(ctx, k, str, &cycle);
 		if (found)
 			return found;
@@ -831,7 +831,7 @@ static char *load_field_name(fz_context *ctx, pdf_obj *field, int spare, pdf_cyc
 	int llen;
 
 	if (pdf_cycle(ctx, &cycle, cycle_up, field))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cycle in field parents");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Cycle in field parents");
 
 	parent = pdf_dict_get(ctx, field, PDF_NAME(Parent));
 	lname = pdf_dict_get_text_string(ctx, field, PDF_NAME(T));
@@ -839,7 +839,7 @@ static char *load_field_name(fz_context *ctx, pdf_obj *field, int spare, pdf_cyc
 
 	// Limit fields to 16K
 	if (llen > (16 << 10) || llen + spare > (16 << 10))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Field name too long");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Field name too long");
 
 	/*
 	 * If we found a name at this point in the field hierarchy
@@ -884,7 +884,7 @@ void pdf_create_field_name(fz_context *ctx, pdf_document *doc, const char *prefi
 		if (!pdf_lookup_field(ctx, form, buf))
 			return;
 	}
-	fz_throw(ctx, FZ_ERROR_GENERIC, "Could not create unique field name.");
+	fz_throw(ctx, FZ_ERROR_LIMIT, "Could not create unique field name.");
 }
 
 const char *pdf_field_label(fz_context *ctx, pdf_obj *field)
@@ -1376,11 +1376,11 @@ int pdf_signature_byte_range(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 			int length = pdf_array_get_int(ctx, br, 2*i+1);
 
 			if (offset < 0 || offset > doc->file_size)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "offset of signature byte range outside of file");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "offset of signature byte range outside of file");
 			else if (length < 0)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "length of signature byte range negative");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "length of signature byte range negative");
 			else if (offset + length > doc->file_size)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "signature byte range extends past end of file");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "signature byte range extends past end of file");
 
 			byte_range[i].offset = offset;
 			byte_range[i].length = length;
@@ -1424,9 +1424,9 @@ static void validate_certificate_data(fz_context *ctx, pdf_document *doc, fz_ran
 			;
 
 		if (c != EOF)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "signature certificate data contains invalid character");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "signature certificate data contains invalid character");
 		if ((size_t)fz_tell(ctx, stm) != hole->length)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of signature certificate data");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of signature certificate data");
 	}
 	fz_always(ctx)
 		fz_drop_stream(ctx, stm);
@@ -2028,7 +2028,7 @@ static void pdf_execute_action_chain(fz_context *ctx, pdf_document *doc, pdf_obj
 	pdf_obj *next;
 
 	if (pdf_cycle(ctx, &cycle, cycle_up, action))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in action chain");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in action chain");
 
 	if (pdf_is_array(ctx, action))
 	{

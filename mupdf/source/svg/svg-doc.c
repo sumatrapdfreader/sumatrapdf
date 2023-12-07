@@ -75,7 +75,7 @@ svg_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 	svg_page *page;
 
 	if (number != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page %d", number);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot find page %d", number);
 
 	page = fz_new_derived_page(ctx, svg_page, doc_);
 	page->super.bound_page = svg_bound_page;

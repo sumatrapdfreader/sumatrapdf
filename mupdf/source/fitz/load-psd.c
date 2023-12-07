@@ -48,7 +48,7 @@ static int
 get8(source_t *source)
 {
 	if (source->total < 1)
-		fz_throw(source->ctx, FZ_ERROR_GENERIC, "Truncated PSD");
+		fz_throw(source->ctx, FZ_ERROR_FORMAT, "Truncated PSD");
 	source->total--;
 
 	return *source->p++;
@@ -62,7 +62,7 @@ get16be(source_t *source)
 	if (source->total < 2)
 	{
 		source->total = 0;
-		fz_throw(source->ctx, FZ_ERROR_GENERIC, "Truncated PSD");
+		fz_throw(source->ctx, FZ_ERROR_FORMAT, "Truncated PSD");
 	}
 
 	source->total -= 2;
@@ -81,7 +81,7 @@ get32be(source_t *source)
 	if (source->total < 4)
 	{
 		source->total = 0;
-		fz_throw(source->ctx, FZ_ERROR_GENERIC, "Truncated PSD");
+		fz_throw(source->ctx, FZ_ERROR_FORMAT, "Truncated PSD");
 	}
 
 	source->total -= 4;
@@ -147,7 +147,7 @@ static char *getString(source_t *source)
 	if (source->total < len + odd)
 	{
 		source->total = 0;
-		fz_throw(source->ctx, FZ_ERROR_GENERIC, "Truncated string in PSD");
+		fz_throw(source->ctx, FZ_ERROR_FORMAT, "Truncated string in PSD");
 	}
 
 	s = fz_malloc(source->ctx, len+1);
@@ -189,12 +189,12 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		v = get32be(&source);
 		/* Read signature */
 		if (v != 0x38425053 /* 8BPS */)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "not a psd image (wrong signature)");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "not a psd image (wrong signature)");
 
 		/* Version */
 		v = get16be(&source);
 		if (v != 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad PSD version");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad PSD version");
 
 		(void)get16be(&source);
 		(void)get32be(&source);
@@ -204,13 +204,13 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		info->width = getu32be(&source);
 		bpc = get16be(&source);
 		if (bpc != 8 && bpc != 16)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Only 8 or 16 bpc PSD files supported!");
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "Only 8 or 16 bpc PSD files supported!");
 
 		c = get16be(&source);
 		if (c == 4) /* CMYK (+ Spots?) */
 		{
-			if (n < 4)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "CMYK PSD with %d chans not supported!", n);
+			if (n != 4)
+				fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "CMYK PSD with %d chans not supported!", n);
 			info->cs = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
 		}
 		else if (c == 3) /* RGB */
@@ -218,21 +218,21 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 			if (n == 4)
 				alpha = 1;
 			else if (n != 3)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "RGB PSD with %d chans not supported!", n);
+				fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "RGB PSD with %d chans not supported!", n);
 			info->cs = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		}
 		else if (c == 1) /* Greyscale */
 		{
 			if (n != 1)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Greyscale PSD with %d chans not supported!", n);
+				fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "Greyscale PSD with %d chans not supported!", n);
 			info->cs = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		}
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported PSD colorspace (%d)!", c);
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "Unsupported PSD colorspace (%d)!", c);
 
 		v = get32be(&source);
 		if (v != 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected color data in PSD!");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected color data in PSD!");
 
 		/* Now read image resources... */
 		ir_len = getu32be(&source);
@@ -242,7 +242,7 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 
 			v = get32be(&source);
 			if (v != 0x3842494d) /* 8BIM */
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to find expected 8BIM in PSD");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Failed to find expected 8BIM in PSD");
 			v = get16be(&source);
 
 			fz_free(ctx, getString(&source));
@@ -265,7 +265,7 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 					if (v == 0 && alpha_found == 0)
 						alpha_found = 1, alpha = 1;
 					else if (v != 2)
-						fz_throw(ctx, FZ_ERROR_GENERIC, "Non CMYK spot found in PSD");
+						fz_throw(ctx, FZ_ERROR_FORMAT, "Non CMYK spot found in PSD");
 
 					C = 0xff - (get16be(&source)>>8);
 					M = 0xff - (get16be(&source)>>8);
@@ -303,19 +303,19 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		if (fz_count_separations(ctx, seps) + info->cs->n + 1 == n && alpha == 0)
 			alpha = 1;
 		if (fz_count_separations(ctx, seps) + info->cs->n + alpha != n)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "PSD contains mismatching spot/alpha data");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "PSD contains mismatching spot/alpha data");
 
 		/* Skip over the Layer data. */
 		v = get32be(&source);
 		if (v != 0)
 		{
 		  if (source.total < (size_t)v)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Truncated PSD");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated PSD");
 			source.total -= v;
 			source.p += v;
 		}
 		if (source.total == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unflattened PSD not supported");
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "Unflattened PSD not supported");
 
 		v = get16be(&source);
 		switch (v)
@@ -331,15 +331,15 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 			/* Skip over rows * channels * byte counts. */
 			m = ((size_t)info->height) * info->n * 2;
 			if (m > source.total)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Truncated RLE PSD");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated RLE PSD");
 			source.total -= m;
 			source.p += m;
 			break;
 		case 2: /* Deflate */
 		case 3: /* Deflate with prediction */
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Deflate PSD not supported");
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "Deflate PSD not supported");
 		default:
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected compression (%d) found in PSD", v);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected compression (%d) found in PSD", v);
 		}
 
 		if (only_metadata)

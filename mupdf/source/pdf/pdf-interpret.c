@@ -114,7 +114,7 @@ pdf_try_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *fon
 		}
 		else
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 		}
 	}
@@ -1236,7 +1236,7 @@ pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_o
 		/* Note: Any SYNTAX errors should have been swallowed
 		 * by pdf_process_stream, but in case any escape from other
 		 * functions, recast the error type here to be safe. */
-		fz_morph_error(ctx, FZ_ERROR_SYNTAX, FZ_ERROR_GENERIC);
+		fz_morph_error(ctx, FZ_ERROR_SYNTAX, FZ_ERROR_FORMAT);
 		fz_rethrow(ctx);
 	}
 }

@@ -85,7 +85,7 @@ fz_set_leptonica_mem(fz_context *ctx)
 		leptonica_mem = ctx;
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	if (die)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Attempt to use Leptonica from 2 threads at once!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Attempt to use Leptonica from 2 threads at once!");
 	setPixMemoryManager(leptonica_malloc, leptonica_free);
 }
 
@@ -100,7 +100,7 @@ fz_clear_leptonica_mem(fz_context *ctx)
 		leptonica_mem = NULL;
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	if (die)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Attempt to use Leptonica from 2 threads at once!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Attempt to use Leptonica from 2 threads at once!");
 	setPixMemoryManager(malloc, free);
 }
 

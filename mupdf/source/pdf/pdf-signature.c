@@ -51,7 +51,7 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_
 	fz_var(cstr);
 
 	if (hexdigest_length < 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Bad parameters to pdf_write_digest");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Bad parameters to pdf_write_digest");
 
 	len = (hexdigest_length - 2) / 2;
 
@@ -73,9 +73,9 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_
 		digest = fz_malloc(ctx, len);
 		digest_len = signer->create_digest(ctx, signer, in, digest, len);
 		if (digest_len == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "signer provided no signature digest");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "signer provided no signature digest");
 		if (digest_len > len)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "signature digest larger than space for digest");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "signature digest larger than space for digest");
 
 		fz_drop_stream(ctx, in);
 		in = NULL;
@@ -218,7 +218,7 @@ pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7
 	pdf_document *doc = widget->page->doc;
 
 	if (pdf_widget_is_readonly(ctx, widget))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature is read only, it cannot be signed.");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Signature is read only, it cannot be signed.");
 
 	pdf_begin_operation(ctx, doc, "Sign signature");
 
@@ -421,7 +421,7 @@ void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 
 		pdf_begin_operation(ctx, widget->page->doc, "Clear Signature");
 		if (pdf_widget_is_readonly(ctx, widget))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Signature read only, it cannot be cleared.");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Signature read only, it cannot be cleared.");
 
 		pdf_xref_remove_unsaved_signature(ctx, ((pdf_annot *)widget)->page->doc, ((pdf_annot *)widget)->obj);
 

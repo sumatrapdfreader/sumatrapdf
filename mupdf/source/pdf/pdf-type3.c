@@ -241,7 +241,7 @@ void pdf_load_type3_glyphs(fz_context *ctx, pdf_document *doc, pdf_font_desc *fo
 	fz_catch(ctx)
 	{
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);
 		fz_warn(ctx, "type3 glyph load failed");
 	}

@@ -115,7 +115,7 @@ static int next_file(fz_context *ctx, fz_stream *stm, size_t n)
 	/* n is only a hint, that we can safely ignore */
 	n = fread(state->buffer, 1, sizeof(state->buffer), state->file);
 	if (n < sizeof(state->buffer) && ferror(state->file))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "read error: %s", strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "read error: %s", strerror(errno));
 	stm->rp = state->buffer;
 	stm->wp = state->buffer + n;
 	stm->pos += (int64_t)n;
@@ -134,7 +134,7 @@ static void seek_file(fz_context *ctx, fz_stream *stm, int64_t offset, int whenc
 	int64_t n = fseeko(state->file, offset, whence);
 #endif
 	if (n < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot seek: %s", strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot seek: %s", strerror(errno));
 #ifdef _WIN32
 	stm->pos = _ftelli64(state->file);
 #else
@@ -189,7 +189,7 @@ fz_open_file(fz_context *ctx, const char *name)
 	file = fopen(name, "rb");
 #endif
 	if (file == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open %s: %s", name, strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open %s: %s", name, strerror(errno));
 	return fz_open_file_ptr(ctx, file);
 }
 
@@ -213,7 +213,7 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
 	FILE *file = _wfopen(name, L"rb");
 	if (file == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file %ls: %s", name, strerror(errno));
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open file %ls: %s", name, strerror(errno));
 	return fz_open_file_ptr(ctx, file);
 }
 #endif

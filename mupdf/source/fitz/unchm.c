@@ -102,7 +102,7 @@ next_chm(fz_context *ctx, fz_stream *stm, size_t required)
 		fz_seek(ctx, chm->super.file, chm->section0_offset + state->entry->offset + stm->pos, SEEK_SET);
 		n = fz_read(ctx, chm->super.file, state->buffer, left);
 		if (n < left)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Short read in CHM handling");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Short read in CHM handling");
 		stm->pos += n;
 		stm->rp = state->buffer;
 		stm->wp = stm->rp + left;
@@ -131,7 +131,7 @@ next_chm(fz_context *ctx, fz_stream *stm, size_t required)
 		else
 			end = chm->section1_data_len;
 		if (end <= start || end > chm->section1_csize)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid CHM compressed data");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid CHM compressed data");
 
 		/* Ensure our buffer is large enough for it. */
 		if (state->comp_max < end-start)
@@ -146,7 +146,7 @@ next_chm(fz_context *ctx, fz_stream *stm, size_t required)
 		fz_seek(ctx, chm->super.file, chm->section1_offset + start, SEEK_SET);
 		n = fz_read(ctx, chm->super.file, state->comp, end-start);
 		if (n < end-start)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Short read in CHM handling");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Short read in CHM handling");
 
 		/* Do the actual decompression */
 		fz_lzxd_decompress_chunk(ctx, state->lzxd, state->comp, end-start, state->buffer);
@@ -223,7 +223,7 @@ chm_stream(fz_context *ctx, fz_chm_archive *archive, chm_entry *entry)
 	else
 	{
 		fz_free(ctx, state);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "CHM entry in invalid section");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "CHM entry in invalid section");
 	}
 
 	(void)fz_keep_archive(ctx, &archive->super);
@@ -344,12 +344,12 @@ get_encint(fz_context *ctx, fz_stream *stm, uint32_t *left)
 	do
 	{
 		if (n-- == 0 || *left == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Overly long encoded int in CHM");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Overly long encoded int in CHM");
 
 		(*left) -= 1;
 		res = fz_read_byte(ctx, stm);
 		if (res == EOF)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "EOF in encoded int in CHM");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "EOF in encoded int in CHM");
 		w = res;
 		v = (v<<7) | (w & 127);
 	}
@@ -370,16 +370,16 @@ read_listing_chunk(fz_context *ctx, fz_chm_archive *chm, uint32_t dir_chunk_size
 
 	n = fz_read(ctx, stm, data, nelem(data));
 	if (n != nelem(pmgl) || memcmp(data, pmgl, nelem(pmgl)))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Expected a PMGL chunk in CHM");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Expected a PMGL chunk in CHM");
 
 	left = fz_read_uint32_le(ctx, stm);
 	if (left > dir_chunk_size)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Overlong PMGL chunk in CHM");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Overlong PMGL chunk in CHM");
 
 	fz_skip(ctx, stm, 12); /* Always 0, prev chunk, next chunk */
 	left = dir_chunk_size - left;
 	if (left <= 20)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Short PMGL chunk");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Short PMGL chunk");
 	left -= 20;
 
 	fz_var(name);
@@ -391,11 +391,11 @@ read_listing_chunk(fz_context *ctx, fz_chm_archive *chm, uint32_t dir_chunk_size
 			uint32_t namelen = get_encint(ctx, stm, &left);
 			uint64_t sec, off, len;
 			if (left <= namelen)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Truncated name in CHM");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated name in CHM");
 			name = fz_malloc(ctx, namelen+1);
 			n = fz_read(ctx, stm, (uint8_t *)name, namelen);
 			if (n < namelen)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Truncated name in CHM");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated name in CHM");
 			if (namelen > 1 && name[namelen - 1] == '/')
 				name[namelen - 1] = 0;
 			else
@@ -441,19 +441,19 @@ prep_decompress(fz_context *ctx, fz_chm_archive *chm)
 	uint64_t q;
 
 	if (entry == NULL || reset_entry == NULL || data_entry == NULL || entry->section != 0 || reset_entry->section != 0 || data_entry->section != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't decompress data with missing control data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Can't decompress data with missing control data");
 
 	// First, read the control data.
 	fz_seek(ctx, chm->super.file, chm->section0_offset + entry->offset, SEEK_SET);
 	v = fz_read_uint32_le(ctx, chm->super.file);
 	if (v < 5)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed CHM control data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed CHM control data");
 	v = fz_read_uint32_le(ctx, chm->super.file);
 	if (v != 0x43585a4c) // LZXC
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed CHM control data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed CHM control data");
 	v = fz_read_uint32_le(ctx, chm->super.file);
 	if (v < 1 || v > 2)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported CHM control data version");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported CHM control data version");
 	reset_interval = fz_read_uint32_le(ctx, chm->super.file);
 	chm->window_size = fz_read_uint32_le(ctx, chm->super.file);
 	if (v == 2)
@@ -461,8 +461,10 @@ prep_decompress(fz_context *ctx, fz_chm_archive *chm)
 		reset_interval *= 0x8000;
 		chm->window_size *= 0x8000;
 	}
+	if (chm->window_size == 0)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported CHM window size");
 	if (reset_interval != chm->window_size || (chm->window_size & 0x7fff))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported CHM reset interval");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported CHM reset interval");
 	chm->reset_block_interval = chm->window_size / 0x8000;
 
 	// Now read the reset table.
@@ -471,26 +473,26 @@ prep_decompress(fz_context *ctx, fz_chm_archive *chm)
 	chm->block_entries = fz_read_uint32_le(ctx, chm->super.file);
 	v = fz_read_uint32_le(ctx, chm->super.file);
 	if (v != 8)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed CHM reset table data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed CHM reset table data");
 	v = fz_read_uint32_le(ctx, chm->super.file);
 	if (v != 0x28)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed CHM reset table data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed CHM reset table data");
 	q = fz_read_uint64_le(ctx, chm->super.file);
 	chm->section1_usize = (size_t)q;
 	if (q != (uint64_t)chm->section1_usize)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "CHM data too large");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "CHM data too large");
 	q = fz_read_uint64_le(ctx, chm->super.file);
 	chm->section1_csize = (size_t)q;
 	if (q != (uint64_t)chm->section1_csize)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "CHM data too large");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "CHM data too large");
 	q = fz_read_uint64_le(ctx, chm->super.file);
 	if (q != 0x8000)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed CHM reset table data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed CHM reset table data");
 	chm->section1_block_table_offset = fz_tell(ctx, chm->super.file);
 
 	/* Looks like they don't inlude an n+1th one. */
 	if ((chm->section1_usize+0x7fff) / 0x8000 != chm->block_entries)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed CHM reset table data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed CHM reset table data");
 
 	chm->section1_offset = chm->section0_offset + data_entry->offset;
 	chm->section1_data_len = data_entry->size;
@@ -502,7 +504,7 @@ fz_open_chm_archive_with_stream(fz_context *ctx, fz_stream *file)
 	fz_chm_archive *chm;
 
 	if (!fz_is_chm_archive(ctx, file))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot recognize chm archive");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot recognize chm archive");
 
 	chm = fz_new_derived_archive(ctx, file, fz_chm_archive);
 	chm->super.format = "chm";
@@ -527,12 +529,12 @@ fz_open_chm_archive_with_stream(fz_context *ctx, fz_stream *file)
 		fz_seek(ctx, file, 0, SEEK_SET);
 		n = fz_read(ctx, file, data, nelem(data));
 		if (n != nelem(signature) || memcmp(data, signature, nelem(signature)))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Not a CHM file");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Not a CHM file");
 
 		/* Version */
 		v = fz_read_uint32_le(ctx, file);
 		if (v != 3)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported CHM version");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported CHM version");
 
 		header_len = fz_read_uint32_le(ctx, file);
 		fz_skip(ctx, file, 4 + 4 + 4 + 32); /* 1 - Unknown, timestamp, language id, 2 * GUIDs */
@@ -550,10 +552,10 @@ fz_open_chm_archive_with_stream(fz_context *ctx, fz_stream *file)
 		fz_seek(ctx, file, header_len + 0x18, SEEK_SET);
 		n = fz_read(ctx, file, data, nelem(data));
 		if (n != nelem(itsp) || memcmp(data, itsp, nelem(itsp)))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Not a CHM file");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Not a CHM file");
 		v = fz_read_uint32_le(ctx, file);
 		if (v != 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported CHM ITSP version");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported CHM ITSP version");
 
 		dir_header_len = fz_read_uint32_le(ctx, file);
 		fz_skip(ctx, file, 4); /* 0x0a - unknown */
@@ -578,7 +580,7 @@ fz_open_chm_archive_with_stream(fz_context *ctx, fz_stream *file)
 		/* Now we want to actually decompress the data. */
 		entry = lookup_chm_entry(ctx, chm, "::DataSpace/Storage/MSCompressed/Content");
 		if (entry == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "CHM with no compressed data");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "CHM with no compressed data");
 		prep_decompress(ctx, chm);
 	}
 	fz_catch(ctx)

@@ -209,16 +209,23 @@ void fz_ignore_error(fz_context *ctx);
  */
 const char *fz_convert_error(fz_context *ctx, int *code);
 
-enum
+enum fz_error_type
 {
-	FZ_ERROR_NONE = 0,
-	FZ_ERROR_MEMORY = 1, // fatal out of memory exception
-	FZ_ERROR_GENERIC = 2,
-	FZ_ERROR_SYNTAX = 3, // syntax errors that should be diagnosed and ignored
-	FZ_ERROR_TRYLATER = 4, // try-later progressive loading signal
-	FZ_ERROR_ABORT = 5, // user requested abort signal
-	FZ_ERROR_REPAIRED = 6, // internal flag used when repairing a PDF to avoid cycles
-	FZ_ERROR_COUNT
+	FZ_ERROR_NONE,
+	FZ_ERROR_GENERIC,
+
+	FZ_ERROR_SYSTEM, // fatal out of memory or syscall error
+	FZ_ERROR_LIBRARY, // unclassified error from third-party library
+	FZ_ERROR_ARGUMENT, // invalid or out-of-range arguments to functions
+	FZ_ERROR_LIMIT, // failed because of resource or other hard limits
+	FZ_ERROR_UNSUPPORTED, // tried to use an unsupported feature
+	FZ_ERROR_FORMAT, // syntax or format errors that are unrecoverable
+	FZ_ERROR_SYNTAX, // syntax errors that should be diagnosed and ignored
+
+	// for internal use only
+	FZ_ERROR_TRYLATER, // try-later progressive loading signal
+	FZ_ERROR_ABORT, // user requested abort signal
+	FZ_ERROR_REPAIRED, // internal flag used when repairing a PDF to avoid cycles
 };
 
 /**

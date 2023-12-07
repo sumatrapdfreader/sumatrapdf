@@ -273,20 +273,20 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 	/* image can be with or without extrasamples: comps is 1 or 2 */
 
 	if (!(tiff->samplesperpixel == 1 && tiff->extrasamples == 0) && !(tiff->samplesperpixel == 2 && tiff->extrasamples))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid number of samples for RGBPal");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid number of samples for RGBPal");
 
 	if (tiff->bitspersample != 1 && tiff->bitspersample != 2 && tiff->bitspersample != 4 && tiff->bitspersample != 8 && tiff->bitspersample != 16)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid number of bits for RGBPal");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid number of bits for RGBPal");
 
 	if (tiff->colormaplen < (unsigned)maxval * 3)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient colormap data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient colormap data");
 
 	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 
 	srcstride = (tiff->imagewidth * (1 + tiff->extrasamples) * tiff->bitspersample + 7) / 8;
 	if (tiff->stride < 0 || srcstride > (unsigned int)tiff->stride)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for format");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient data for format");
 
 	/* Multiplying by two at the end because each component value in the
 	   colormap is 16 bits wide. */
@@ -342,7 +342,7 @@ tiff_decode_data(fz_context *ctx, struct tiff *tiff, const unsigned char *rp, un
 	int old_tiff;
 
 	if (rp + rlen > tiff->ep)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "strip extends beyond the end of the file");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "strip extends beyond the end of the file");
 
 	/* the bits are in un-natural order */
 	if (tiff->fillorder == 2)
@@ -426,11 +426,11 @@ tiff_decode_data(fz_context *ctx, struct tiff *tiff, const unsigned char *rp, un
 			break;
 		case 32809:
 			if (tiff->bitspersample != 4)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid bits per pixel in thunder encoding");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "invalid bits per pixel in thunder encoding");
 			stm = fz_open_thunder(ctx, encstm, tiff->imagewidth);
 			break;
 		default:
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unknown TIFF compression: %d", tiff->compression);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "unknown TIFF compression: %d", tiff->compression);
 		}
 
 		size = (unsigned)fz_read(ctx, stm, wp, wlen);
@@ -550,7 +550,7 @@ tiff_paste_subsampled_tile(fz_context *ctx, struct tiff *tiff, unsigned char *ti
 	sw = tiff->ycbcrsubsamp[0];
 	sh = tiff->ycbcrsubsamp[1];
 	if (sw > 4 || sh > 4 || !fz_is_pow2(sw) || !fz_is_pow2(sh))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal TIFF Subsample values %d %d", sw, sh);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Illegal TIFF Subsample values %d %d", sw, sh);
 
 	for (k = 0; k < 3; k++)
 		for (y = 0; y < sh; y++)
@@ -626,7 +626,7 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 	tilesacross = (tiff->imagewidth + tiff->tilewidth - 1) / tiff->tilewidth;
 	tiles = tilesacross * tilesdown;
 	if (tiff->tileoffsetslen < tiles || tiff->tilebytecountslen < tiles)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient tile metadata");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient tile metadata");
 
 	/* JPEG can handle subsampling on its own */
 	if (tiff->photometric == 6 && tiff->compression != 6 && tiff->compression != 7)
@@ -650,11 +650,11 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 				unsigned decoded;
 
 				if (offset > (unsigned)(tiff->ep - tiff->bp))
-					fz_throw(ctx, FZ_ERROR_GENERIC, "invalid tile offset %u", offset);
+					fz_throw(ctx, FZ_ERROR_FORMAT, "invalid tile offset %u", offset);
 				if (rlen > (unsigned)(tiff->ep - rp))
-					fz_throw(ctx, FZ_ERROR_GENERIC, "invalid tile byte count %u", rlen);
+					fz_throw(ctx, FZ_ERROR_FORMAT, "invalid tile byte count %u", rlen);
 				if (rlen == 0)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "tile byte count zero");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "tile byte count zero");
 
 				decoded = tiff_decode_data(ctx, tiff, rp, rlen, data, wlen);
 				tiff_paste_subsampled_tile(ctx, tiff, data, decoded, tiff->tilewidth, tiff->tilelength, y, x);
@@ -677,14 +677,14 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 				const unsigned char *rp = tiff->bp + offset;
 
 				if (offset > (unsigned)(tiff->ep - tiff->bp))
-					fz_throw(ctx, FZ_ERROR_GENERIC, "invalid tile offset %u", offset);
+					fz_throw(ctx, FZ_ERROR_FORMAT, "invalid tile offset %u", offset);
 				if (rlen > (unsigned)(tiff->ep - rp))
-					fz_throw(ctx, FZ_ERROR_GENERIC, "invalid tile byte count %u", rlen);
+					fz_throw(ctx, FZ_ERROR_FORMAT, "invalid tile byte count %u", rlen);
 				if (rlen == 0)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "tile byte count zero");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "tile byte count zero");
 
 				if (tiff_decode_data(ctx, tiff, rp, rlen, data, wlen) != wlen)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "decoded tile is the wrong size");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "decoded tile is the wrong size");
 
 				tiff_paste_tile(ctx, tiff, data, y, x);
 				tile++;
@@ -703,7 +703,7 @@ tiff_decode_strips(fz_context *ctx, struct tiff *tiff)
 
 	strips = (tiff->imagelength + tiff->rowsperstrip - 1) / tiff->rowsperstrip;
 	if (tiff->stripoffsetslen < strips || tiff->stripbytecountslen < strips)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient strip metadata");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient strip metadata");
 
 	data = tiff->samples;
 
@@ -731,11 +731,11 @@ tiff_decode_strips(fz_context *ctx, struct tiff *tiff)
 			int decoded;
 
 			if (offset > (unsigned)(tiff->ep - tiff->bp))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid strip offset %u", offset);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "invalid strip offset %u", offset);
 			if (rlen > (unsigned)(tiff->ep - rp))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid strip byte count %u", rlen);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "invalid strip byte count %u", rlen);
 			if (rlen == 0)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "strip byte count zero");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "strip byte count zero");
 
 			decoded = tiff_decode_data(ctx, tiff, rp, rlen, data, wlen);
 			tiff_paste_subsampled_tile(ctx, tiff, data, decoded, tiff->imagewidth, tiff->rowsperstrip, y, 0);
@@ -753,11 +753,11 @@ tiff_decode_strips(fz_context *ctx, struct tiff *tiff)
 			const unsigned char *rp = tiff->bp + offset;
 
 			if (offset > (unsigned)(tiff->ep - tiff->bp))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid strip offset %u", offset);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "invalid strip offset %u", offset);
 			if (rlen > (unsigned)(tiff->ep - rp))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid strip byte count %u", rlen);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "invalid strip byte count %u", rlen);
 			if (rlen == 0)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "strip byte count zero");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "strip byte count zero");
 
 			/* if imagelength is not a multiple of rowsperstrip, adjust the expectation of the size of the decoded data */
 			if (y + tiff->rowsperstrip >= tiff->imagelength)
@@ -1004,9 +1004,9 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	{
 	case StripOffsets:
 		if (tiff->stripoffsets)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one strip offsets tag allowed");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "at most one strip offsets tag allowed");
 		if (tiff->rowsperstrip == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid strip dimensions");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid strip dimensions");
 		if (count > tiff->maxstrips)
 			count = tiff->maxstrips;
 		tiff->stripoffsets = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_stripoffsets");
@@ -1016,9 +1016,9 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 
 	case StripByteCounts:
 		if (tiff->stripbytecounts)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one strip byte counts tag allowed");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "at most one strip byte counts tag allowed");
 		if (tiff->rowsperstrip == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid strip dimensions");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid strip dimensions");
 		if (count > tiff->maxstrips)
 			count = tiff->maxstrips;
 		tiff->stripbytecounts = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_stripbytecounts");
@@ -1028,9 +1028,9 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 
 	case ColorMap:
 		if (tiff->colormap)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one color map allowed");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "at most one color map allowed");
 		if (type != TSHORT)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected element type for color map");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "unexpected element type for color map");
 		if (count > tiff->maxcolors)
 			count = tiff->maxcolors;
 		tiff->colormap = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_colormap");
@@ -1040,9 +1040,9 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 
 	case TileOffsets:
 		if (tiff->tileoffsets)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one tile offsets tag allowed");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "at most one tile offsets tag allowed");
 		if (tiff->tilelength == 0 || tiff->tilewidth == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid tile dimensions");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid tile dimensions");
 		if (count > tiff->maxtiles)
 			count = tiff->maxtiles;
 		tiff->tileoffsets = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_tileoffsets");
@@ -1052,9 +1052,9 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 
 	case TileByteCounts:
 		if (tiff->tilebytecounts)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one tile byte counts tag allowed");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "at most one tile byte counts tag allowed");
 		if (tiff->tilelength == 0 || tiff->tilewidth == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid tile dimensions");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid tile dimensions");
 		if (count > tiff->maxtiles)
 			count = tiff->maxtiles;
 		tiff->tilebytecounts = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_tilebytecounts");
@@ -1065,7 +1065,7 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case JPEGTables:
 		/* Check both value and value + count to allow for overflow */
 		if (value > (size_t)(tiff->ep - tiff->bp))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "TIFF JPEG tables offset out of range");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "TIFF JPEG tables offset out of range");
 		if (value + count > (size_t)(tiff->ep - tiff->bp))
 			count = (size_t)(tiff->ep - tiff->bp) - value;
 		tiff->jpegtables = tiff->bp + value;
@@ -1074,9 +1074,9 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 
 	case ICCProfile:
 		if (tiff->profile)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one ICC profile tag allowed");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "at most one ICC profile tag allowed");
 		if (value > (size_t)(tiff->ep - tiff->bp))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "TIFF profile offset out of range");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "TIFF profile offset out of range");
 		if (value + count > (size_t)(tiff->ep - tiff->bp))
 			count = (size_t)(tiff->ep - tiff->bp) - value;
 		tiff->profile = Memento_label(fz_malloc(ctx, count), "tiff_profile");
@@ -1152,12 +1152,12 @@ tiff_read_header(fz_context *ctx, struct tiff *tiff, const unsigned char *buf, s
 	/* get byte order marker */
 	tiff->order = readshort(tiff);
 	if (tiff->order != TII && tiff->order != TMM)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "not a TIFF file, wrong magic marker");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "not a TIFF file, wrong magic marker");
 
 	/* check version */
 	version = readshort(tiff);
 	if (version != 42)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "not a TIFF file, wrong version marker");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "not a TIFF file, wrong version marker");
 
 	/* get offset of IFD */
 	tiff->ifd_offsets = Memento_label(fz_malloc_array(ctx, 1, unsigned), "tiff_ifd_offsets");
@@ -1172,20 +1172,20 @@ tiff_next_ifd(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	int i;
 
 	if (offset > (unsigned)(tiff->ep - tiff->bp))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid IFD offset %u", offset);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid IFD offset %u", offset);
 
 	tiff->rp = tiff->bp + offset;
 	count = readshort(tiff);
 
 	if (count * 12 > (unsigned)(tiff->ep - tiff->rp))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "overlarge IFD entry count %u", count);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "overlarge IFD entry count %u", count);
 
 	tiff->rp += count * 12;
 	offset = tiff_readlong(tiff);
 
 	for (i = 0; i < tiff->ifds; i++)
 		if (tiff->ifd_offsets[i] == offset)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in IFDs detected");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in IFDs detected");
 
 	tiff->ifd_offsets = fz_realloc_array(ctx, tiff->ifd_offsets, tiff->ifds + 1, unsigned);
 	tiff->ifd_offsets[tiff->ifds] = offset;
@@ -1204,13 +1204,13 @@ tiff_seek_ifd(fz_context *ctx, struct tiff *tiff, int subimage)
 		offset = tiff_next_ifd(ctx, tiff, offset);
 
 		if (offset == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "subimage index %i out of range", subimage);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "subimage index %i out of range", subimage);
 	}
 
 	tiff->rp = tiff->bp + offset;
 
 	if (tiff->rp < tiff->bp || tiff->rp > tiff->ep)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid IFD offset %u", offset);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid IFD offset %u", offset);
 }
 
 static void
@@ -1225,7 +1225,7 @@ tiff_read_ifd(fz_context *ctx, struct tiff *tiff)
 	offset = tiff->rp - tiff->bp;
 	count = readshort(tiff);
 	if (count * 12 > (unsigned)(tiff->ep - tiff->rp))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "overlarge IFD entry count %u", count);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "overlarge IFD entry count %u", count);
 	original = offset + 2;
 	original_rp = tiff->rp;
 
@@ -1333,81 +1333,83 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 	unsigned i;
 
 	if (tiff->imagelength <= 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image height must be > 0");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (tiff->imagewidth <= 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image width must be > 0");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
 	if (tiff->bitspersample > 16 || !fz_is_pow2(tiff->bitspersample))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "bits per sample illegal %d", tiff->bitspersample);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "bits per sample illegal %d", tiff->bitspersample);
 	if (tiff->samplesperpixel == 0 || tiff->samplesperpixel >= FZ_MAX_COLORS)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "components per pixel out of range");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "components per pixel out of range");
 	if (tiff->samplesperpixel < tiff->extrasamples)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "components per pixel out of range when compared to extra samples");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "components per pixel out of range when compared to extra samples");
 	/* Bug 706071: Check for overflow in the stride calculation separately. */
 	if (tiff->imagewidth > (UINT_MAX - 7) / tiff->samplesperpixel / tiff->bitspersample)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2) / (tiff->bitspersample / 8 + 1))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 
 	if (tiff->planar != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image data is not in chunky format");
+		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "image data is not in chunky format");
 
 	if (tiff->photometric == 6)
 	{
 		if (tiff->samplesperpixel != 3)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel when subsampling");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for YCbCr");
 		if (tiff->bitspersample != 8)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported bits per sample when subsampling");
-		if (tiff->ycbcrsubsamp[0] == 0 || tiff->ycbcrsubsamp[1] == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported subsampling factor");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid bits per sample when subsampling");
+		if (tiff->ycbcrsubsamp[0] != 1 && tiff->ycbcrsubsamp[0] != 2 && tiff->ycbcrsubsamp[0] != 4)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid subsampling factor");
+		if (tiff->ycbcrsubsamp[1] != 1 && tiff->ycbcrsubsamp[1] != 2 && tiff->ycbcrsubsamp[1] != 4)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid subsampling factor");
 	}
 
 	switch (tiff->photometric)
 	{
 	case 0: /* WhiteIsZero -- inverted */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for bw tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for bw tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		break;
 	case 1: /* BlackIsZero */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for bw tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for bw tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		break;
 	case 2: /* RGB */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for rgb tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for rgb tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	case 3: /* RGBPal */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for palettized tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for palettized tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	case 4: /* Transparency mask */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for transparency mask tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for transparency mask tiff");
 		tiff->colorspace = NULL;
 		break;
 	case 5: /* CMYK */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 4)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for cmyk tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for cmyk tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
 		break;
 	case 6: /* YCbCr */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for ycbcr tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for ycbcr tiff");
 		/* it's probably a jpeg ... we let jpeg convert to rgb */
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	case 8: /* Direct L*a*b* encoding. a*, b* signed values */
 	case 9: /* ICC Style L*a*b* encoding */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for lab tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for lab tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_lab(ctx));
 		break;
 	case 32844: /* SGI CIE Log 2 L (16bpp Greyscale) */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for l tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for l tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		if (tiff->bitspersample != 8)
 			tiff->bitspersample = 8;
@@ -1415,14 +1417,14 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 		break;
 	case 32845: /* SGI CIE Log 2 L, u, v (24bpp or 32bpp) */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported samples per pixel for luv tiff");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for luv tiff");
 		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		if (tiff->bitspersample != 8)
 			tiff->bitspersample = 8;
 		tiff->stride >>= 1;
 		break;
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown photometric: %d", tiff->photometric);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown photometric: %d", tiff->photometric);
 	}
 
 	tiff->stride = (tiff->imagewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
@@ -1445,7 +1447,7 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 			fz_drop_buffer(ctx, buff);
 		fz_catch(ctx)
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			fz_warn(ctx, "ignoring embedded ICC profile");
 		}
@@ -1453,11 +1455,11 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 #endif
 
 	if (!tiff->colorspace && tiff->samplesperpixel < 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too few components for transparency mask");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "too few components for transparency mask");
 	if (tiff->colorspace && tiff->colormap && tiff->samplesperpixel < 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too few components for RGBPal");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "too few components for RGBPal");
 	if (tiff->colorspace && !tiff->colormap && tiff->samplesperpixel < (unsigned) fz_colorspace_n(ctx, tiff->colorspace))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "fewer components per pixel than indicated by colorspace");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "fewer components per pixel than indicated by colorspace");
 
 	switch (tiff->resolutionunit)
 	{
@@ -1488,7 +1490,7 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 	if (tiff->compression == 1)
 	{
 		if (tiff->rowsperstrip == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "rowsperstrip cannot be 0");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "rowsperstrip cannot be 0");
 		if (!tiff->tilelength && !tiff->tilewidth && !tiff->stripbytecounts)
 		{
 			tiff->stripbytecountslen = (tiff->imagelength + tiff->rowsperstrip - 1) / tiff->rowsperstrip;
@@ -1575,7 +1577,7 @@ tiff_decode_samples(fz_context *ctx, struct tiff *tiff)
 	unsigned i;
 
 	if (tiff->imagelength > UINT_MAX / tiff->stride)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 	tiff->samples = Memento_label(fz_malloc(ctx, (size_t)tiff->imagelength * tiff->stride), "tiff_samples");
 	memset(tiff->samples, 0x00, (size_t)tiff->imagelength * tiff->stride);
 
@@ -1586,7 +1588,7 @@ tiff_decode_samples(fz_context *ctx, struct tiff *tiff)
 	else if (tiff->jpegofs && tiff->jpeglen)
 		tiff_decode_jpeg(ctx, tiff);
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image is missing strip, tile and jpeg data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "image is missing strip, tile and jpeg data");
 
 	/* Predictor (only for LZW and Flate) */
 	if ((tiff->compression == 5 || tiff->compression == 8 || tiff->compression == 32946) && tiff->predictor == 2)

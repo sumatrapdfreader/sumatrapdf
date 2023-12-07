@@ -185,7 +185,7 @@ void fz_decouple_type3_font(fz_context *ctx, fz_font *font, void *t3doc)
 		return;
 
 	if (font->t3doc != t3doc)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't decouple type3 font from a different doc");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can't decouple type3 font from a different doc");
 
 	font->t3doc = NULL;
 	free_resources(ctx, font);
@@ -456,7 +456,7 @@ fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int it
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			font = NULL;
 		}
@@ -476,7 +476,7 @@ fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ros, int
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			font = NULL;
 		}
@@ -496,7 +496,7 @@ fz_font *fz_load_system_fallback_font(fz_context *ctx, int script, int language,
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			font = NULL;
 		}
@@ -686,7 +686,7 @@ fz_keep_freetype(fz_context *ctx)
 	{
 		const char *mess = ft_error_string(fterr);
 		fz_ft_unlock(ctx);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot init freetype: %s", mess);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot init freetype: %s", mess);
 	}
 
 	FT_Add_Default_Modules(fct->ftlib);
@@ -698,7 +698,7 @@ fz_keep_freetype(fz_context *ctx)
 		if (fterr)
 			fz_warn(ctx, "FT_Done_Library(): %s", ft_error_string(fterr));
 		fz_ft_unlock(ctx);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "freetype version too old: %d.%d.%d", maj, min, pat);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "freetype version too old: %d.%d.%d", maj, min, pat);
 	}
 
 	fct->ftlib_refs++;
@@ -741,7 +741,7 @@ fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, in
 	if (fterr)
 	{
 		fz_drop_freetype(ctx);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "FT_New_Memory_Face(%s): %s", name, ft_error_string(fterr));
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "FT_New_Memory_Face(%s): %s", name, ft_error_string(fterr));
 	}
 
 	if (!name)
@@ -872,10 +872,17 @@ void fz_set_font_embedding(fz_context *ctx, fz_font *font, int embed)
 {
 	if (!font)
 		return;
+	if (embed)
+	{
 	if (font->flags.never_embed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Embedding not permitted/possible");
-
-	font->flags.embed = !!embed;
+			fz_warn(ctx, "not allowed to embed font: %s", font->name);
+		else
+			font->flags.embed = 1;
+}
+	else
+	{
+		font->flags.embed = 0;
+	}
 }
 
 static int
@@ -920,7 +927,7 @@ fz_new_base14_font(fz_context *ctx, const char *name)
 			return fz_keep_font(ctx, ctx->font->base14[x]);
 		}
 	}
-	fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin font with name '%s'", name);
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot find builtin font with name '%s'", name);
 }
 
 fz_font *
@@ -947,7 +954,7 @@ fz_new_cjk_font(fz_context *ctx, int ordering)
 			return fz_keep_font(ctx, ctx->font->cjk[ordering]);
 		}
 	}
-	fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin CJK font");
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot find builtin CJK font");
 }
 
 fz_font *
@@ -958,7 +965,7 @@ fz_new_builtin_font(fz_context *ctx, const char *name, int is_bold, int is_itali
 	fz_font *font;
 	data = fz_lookup_builtin_font(ctx, name, is_bold, is_italic, &size);
 	if (!data)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin font with name '%s'", name);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot find builtin font with name '%s'", name);
 	font = fz_new_font_from_memory(ctx, NULL, data, size, 0, 0);
 
 	/* Don't embed builtin fonts. */
@@ -2212,7 +2219,7 @@ fz_shaper_data_t *fz_font_shaper_data(fz_context *ctx, fz_font *font)
 void fz_font_digest(fz_context *ctx, fz_font *font, unsigned char digest[16])
 {
 	if (!font->buffer)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "no font file for digest");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no font file for digest");
 	if (!font->has_digest)
 	{
 		fz_md5_buffer(ctx, font->buffer, font->digest);
@@ -2246,7 +2253,7 @@ fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font)
 	uint32_t csumpos = 0;
 
 	if (!font || !font->buffer)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Not a ttc");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "missing input");
 
 	stream = fz_open_buffer(ctx, font->buffer);
 
@@ -2258,17 +2265,17 @@ fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font)
 	{
 		/* Signature */
 		if (fz_read_uint32(ctx, stream) != CHR('t','t','c','f'))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Not a ttc");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Not a ttc");
 
 		/* Version */
 		tmp = fz_read_uint32(ctx, stream);
 		if (tmp != 0x10000 && tmp != 0x20000)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported TTC version");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported TTC version");
 
 		/* How many subfonts are there? */
 		tmp = fz_read_uint32(ctx, stream);
 		if ((uint32_t)font->subfont >= tmp || font->subfont < 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad subfont in TTC");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad subfont in TTC");
 
 		/* Read through the index table until we get the one for our subfont. */
 		for (i = 0; i <= font->subfont; i++)

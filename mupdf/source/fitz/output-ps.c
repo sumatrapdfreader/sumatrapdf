@@ -86,10 +86,10 @@ ps_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	int err;
 
 	if (writer->super.s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Postscript writer cannot cope with spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Postscript writer cannot cope with spot colors");
 
 	if (alpha != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Postscript output cannot have alpha");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Postscript output cannot have alpha");
 
 	writer->super.w = w;
 	writer->super.h = h;
@@ -102,7 +102,7 @@ ps_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 
 	err = deflateInit(&writer->stream, Z_DEFAULT_COMPRESSION);
 	if (err != Z_OK)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "compression error %d", err);
 
 	fz_write_printf(ctx, out, "%%%%Page: %d %d\n", pagenum, pagenum);
 	fz_write_printf(ctx, out, "%%%%PageBoundingBox: 0 0 %d %d\n", w_points, h_points);
@@ -122,7 +122,7 @@ ps_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_write_string(ctx, out, "/DeviceCMYK setcolorspace\n");
 		break;
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected colorspace for ps output");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unexpected colorspace for ps output");
 	}
 	fz_write_printf(ctx, out,
 		"<<\n"
@@ -150,7 +150,7 @@ ps_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 	writer->stream_ended = 1;
 	err = deflateEnd(&writer->stream);
 	if (err != Z_OK)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "compression error %d", err);
 
 	fz_write_data(ctx, out, writer->output, writer->output_size - writer->stream.avail_out);
 	fz_write_string(ctx, out, "\nshowpage\n%%%%PageTrailer\n%%%%EndPageTrailer\n\n");
@@ -236,10 +236,10 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 
 	required_input = w;
 	if (required_input > SIZE_MAX / n)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "ps data too large.");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "ps data too large.");
 	required_input = required_input * n;
 	if (required_input > SIZE_MAX / band_height)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "ps data too large.");
 	required_input *= band_height;
 	required_output = required_input >= UINT_MAX ? UINT_MAX : deflateBound(&writer->stream, (uLong)required_input);
 	if (required_output < required_input || required_output > UINT_MAX)
@@ -286,7 +286,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 
 		err = deflate(&writer->stream, (finalband && remain == writer->stream.avail_in) ? Z_FINISH : Z_NO_FLUSH);
 		if (err != Z_OK && err != Z_STREAM_END)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "compression error %d", err);
 
 		/* We are guaranteed that writer->stream.next_in will have been updated for the
 		 * data that has been eaten. */

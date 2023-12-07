@@ -165,6 +165,25 @@ def test(path):
     assert getattr(mupdf.FzBuffer, 'fz_buffer_extract')
     assert getattr(mupdf.FzBuffer, 'fz_buffer_extract_copy')
 
+    # Test that we get the expected Python exception instance and text.
+    document = mupdf.FzDocument(path)
+    try:
+        mupdf.fz_load_page(document, 99999999)
+    except mupdf.FzErrorArgument as e:
+        log(f'{type(e)=} {str(e)=} {repr(e)=}.')
+        log(f'{e.what()=}.')
+        expected = 'code=4: invalid page number: 100000000'
+        assert str(e) == expected and e.what() == expected, (
+                f'Incorrect exception text:\n'
+                f'    {str(e)=}\n'
+                f'    {e.what()=}\n'
+                f'    {expected=}'
+                )
+    except Exception as e:
+        assert 0, f'Incorrect exception {type(e)=} {e=}.'
+    else:
+        assert 0, f'No expected exception.'
+
     # Test SWIG Director wrapping of pdf_filter_options:
     #
     test_filter(path)

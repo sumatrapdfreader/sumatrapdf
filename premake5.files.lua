@@ -871,6 +871,7 @@ function mupdf_files()
     "halftone.c",
     "harfbuzz.c",
     "hash.c",
+    "heap.c",
     "image.c",
     "jmemcust.c",
     "link.c",

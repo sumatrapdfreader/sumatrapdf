@@ -116,7 +116,7 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 	else
 	{
 		if (funcs != n)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Expected 1 2in, n-out function, or n 2 in, 1-out functions");
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "Expected 1 2in, n-out function, or n 2 in, 1-out functions");
 
 		for (yy = 0; yy <= FUNSEGS; yy++)
 		{

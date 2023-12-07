@@ -447,7 +447,7 @@ pdf_grestore(fz_context *ctx, pdf_run_processor *pr)
 		{
 			/* Silently swallow the problem - restores must
 			 * never throw! */
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY); // FIXME - unsure if we can throw here?
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM); // FIXME - unsure if we can throw here?
 			fz_report_error(ctx);
 		}
 		clip_depth--;
@@ -1750,7 +1750,7 @@ find_most_recent_common_ancestor_imp(fz_context *ctx, pdf_obj *a, struct line *l
 	if (pdf_is_dict(ctx, a))
 	{
 		if (pdf_cycle(ctx, &cycle, cycle_up_a, a))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in structure tree");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in structure tree");
 		line.obj = a;
 		line.child = line_a;
 		parent = pdf_dict_get(ctx, a, PDF_NAME(P));
@@ -1760,7 +1760,7 @@ find_most_recent_common_ancestor_imp(fz_context *ctx, pdf_obj *a, struct line *l
 	else if (pdf_is_dict(ctx, b))
 	{
 		if (pdf_cycle(ctx, &cycle, cycle_up_b, b))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in structure tree");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in structure tree");
 		line.obj = b;
 		line.child = line_b;
 		parent = pdf_dict_get(ctx, b, PDF_NAME(P));
@@ -2193,7 +2193,7 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 		/* Note: Any SYNTAX errors should have been swallowed
 		 * by pdf_process_contents, but in case any escape from other
 		 * functions, recast the error type here to be safe. */
-		fz_morph_error(ctx, FZ_ERROR_SYNTAX, FZ_ERROR_GENERIC);
+		fz_morph_error(ctx, FZ_ERROR_SYNTAX, FZ_ERROR_FORMAT);
 		fz_rethrow(ctx);
 	}
 }

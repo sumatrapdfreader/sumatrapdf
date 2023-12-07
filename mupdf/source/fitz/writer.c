@@ -244,7 +244,7 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *explicit_f
 		else
 			format = NULL;
 	}
-	fz_throw(ctx, FZ_ERROR_GENERIC, "cannot detect document format");
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot detect document format");
 }
 
 fz_document_writer *
@@ -288,7 +288,7 @@ fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *
 		return fz_new_docx_writer_with_output(ctx, out, options);
 #endif
 
-	fz_throw(ctx, FZ_ERROR_GENERIC, "unknown output document format: %s", format);
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown output document format: %s", format);
 }
 
 fz_document_writer *
@@ -334,7 +334,7 @@ fz_begin_page(fz_context *ctx, fz_document_writer *wri, fz_rect mediabox)
 	if (!wri)
 		return NULL;
 	if (wri->dev)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "called begin page without ending the previous page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "called begin page without ending the previous page");
 	wri->dev = wri->begin_page(ctx, wri, mediabox);
 	return wri->dev;
 }

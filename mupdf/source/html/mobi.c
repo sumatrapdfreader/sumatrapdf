@@ -41,7 +41,7 @@ skip_bytes(fz_context *ctx, fz_stream *stm, size_t len)
 {
 	size_t skipped = fz_skip(ctx, stm, len);
 	if (skipped < len)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in data");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in data");
 }
 
 static void
@@ -50,7 +50,7 @@ mobi_read_text_none(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t si
 	unsigned char buf[4096];
 	size_t n;
 	if (size > 4096)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "text block too large");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "text block too large");
 	n = fz_read(ctx, stm, buf, size);
 	if (n < size)
 		fz_warn(ctx, "premature end in mobi uncompressed text data");
@@ -150,11 +150,11 @@ mobi_read_data(fz_context *ctx, fz_buffer *out, fz_stream *stm, uint32_t *offset
 		fz_rethrow(ctx);
 
 	if (compression != COMPRESSION_NONE && compression != COMPRESSION_PALMDOC)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown compression method");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown compression method");
 	if (text_encoding != TEXT_ENCODING_LATIN_1 &&
 		text_encoding != TEXT_ENCODING_1252 &&
 		text_encoding != TEXT_ENCODING_UTF8)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown text encoding");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown text encoding");
 
 	for (i = 1; i <= record_count && i < total_count; ++i)
 	{
@@ -298,7 +298,7 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)
 		// adjust n in case some out of bound offsets were skipped
 		n = k;
 		if (n == 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "no mobi records to read");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "no mobi records to read");
 
 		// decompress text data
 		buffer = fz_new_buffer(ctx, 128 << 10);

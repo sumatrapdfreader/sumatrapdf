@@ -989,7 +989,7 @@ pdfinfo_info(fz_context *ctx, fz_output *out, char *filename, char *password, in
 				glo.doc = pdf_open_document(glo.ctx, filename);
 				if (pdf_needs_password(ctx, glo.doc))
 					if (!pdf_authenticate_password(ctx, glo.doc, password))
-						fz_throw(glo.ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", filename);
+						fz_throw(glo.ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", filename);
 				glo.pagecount = pdf_count_pages(ctx, glo.doc);
 
 				showglobalinfo(ctx, &glo);

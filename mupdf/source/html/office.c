@@ -731,10 +731,10 @@ make_absolute_path(fz_context *ctx, const char *abs, const char *rel)
 		else if (rel[1] == '.' && rel[2] == '/')
 			rel += 3, up++;
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unresolvable path");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Unresolvable path");
 	}
 	if (rel[0] == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unresolvable path");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unresolvable path");
 
 	while (up)
 	{
@@ -1106,7 +1106,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 		{
 			pos = fz_xml_find_dfs(xml, "rootfile", "media-type", "application/hwpml-package+xml");
 			if (!pos)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Archive not hwpx.");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Archive not hwpx.");
 
 			while (pos)
 			{
@@ -1135,7 +1135,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 			fz_write_string(ctx, info.out, "<body>\n");
 			pos = fz_xml_find_dfs(xml, "Relationship", "Type", schema);
 			if (!pos)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Archive not docx.");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Archive not docx.");
 
 			while (pos)
 			{

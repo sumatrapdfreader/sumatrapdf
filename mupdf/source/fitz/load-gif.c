@@ -130,14 +130,14 @@ gif_read_subblocks(fz_context *ctx, struct info *info, const unsigned char *p, c
 	do
 	{
 		if (end - p < 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in data subblocks in gif image");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in data subblocks in gif image");
 		len = *p;
 		p += 1;
 
 		if (len > 0)
 		{
 			if (end - p < len)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in data subblock in gif image");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in data subblock in gif image");
 			if (buf)
 				fz_append_data(ctx, buf, p, len);
 			p += len;
@@ -151,12 +151,12 @@ static const unsigned char *
 gif_read_header(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < 6)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in header in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in header in gif image");
 
 	if (memcmp(&p[0], "GIF", 3))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid signature in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid signature in gif image");
 	if (memcmp(&p[3], "87a", 3) && memcmp(&p[3], "89a", 3))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported version in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported version in gif image");
 
 	info->gif89a = !memcmp(p, "GIF89a", 6);
 
@@ -174,16 +174,16 @@ static const unsigned char *
 gif_read_lsd(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < 7)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in logical screen descriptor in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in logical screen descriptor in gif image");
 
 	info->width = safe_load_u16(p);
 	info->height = safe_load_u16(p+2);
 	if (info->width <= 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image width must be > 0");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
 	if (info->height <= 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image height must be > 0");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (info->height > UINT_MAX / info->width / 3 /* components */)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions might overflow");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image dimensions might overflow");
 
 	info->has_gct = (p[4] >> 7) & 0x1;
 	if (info->has_gct)
@@ -205,7 +205,7 @@ static const unsigned char *
 gif_read_gct(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < info->gct_entries * 3)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in global color table in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in global color table in gif image");
 
 	info->gct = Memento_label(fz_malloc(ctx, info->gct_entries * 3), "gif_gct");
 	memmove(info->gct, p, info->gct_entries * 3);
@@ -217,7 +217,7 @@ static const unsigned char *
 gif_read_id(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < 10)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in image descriptor in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in image descriptor in gif image");
 
 	info->image_left = p[2] << 8 | p[1];
 	info->image_top = p[4] << 8 | p[3];
@@ -236,7 +236,7 @@ static const unsigned char *
 gif_read_lct(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < info->lct_entries * 3)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in local color table in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in local color table in gif image");
 
 	info->lct = Memento_label(fz_malloc(ctx, info->lct_entries * 3), "gif_lct");
 	memmove(info->lct, p, info->lct_entries * 3);
@@ -279,7 +279,7 @@ gif_read_tbid(fz_context *ctx, struct info *info, const unsigned char *p, const 
 	int ct_entries;
 
 	if (end - p < 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in table based image data in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in table based image data in gif image");
 
 	mincodesize = *p;
 
@@ -362,9 +362,9 @@ static const unsigned char *
 gif_read_gce(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < 8)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in graphic control extension in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in graphic control extension in gif image");
 	if (p[2] != 0x04)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "out of range graphic control extension block size in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "out of range graphic control extension block size in gif image");
 
 	info->has_transparency = p[3] & 0x1;
 	if (info->has_transparency)
@@ -383,9 +383,9 @@ static const unsigned char*
 gif_read_pte(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < 15)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in plain text extension in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in plain text extension in gif image");
 	if (p[2] != 0x0c)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "out of range plain text extension block size in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "out of range plain text extension block size in gif image");
 	return gif_read_subblocks(ctx, info, p + 15, end, NULL);
 }
 
@@ -410,7 +410,7 @@ gif_read_icc(fz_context *ctx, struct info *info, const unsigned char *p, const u
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)
 	{
-		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);
 		fz_warn(ctx, "ignoring embedded ICC profile in GIF");
 	}
@@ -457,9 +457,9 @@ gif_read_ae(fz_context *ctx, struct info *info, const unsigned char *p, const un
 	int i, ignored;
 
 	if (end - p < 14)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in application extension in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in application extension in gif image");
 	if (p[2] != 0x0b)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "out of range application extension block size in gif image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "out of range application extension block size in gif image");
 
 	ignored = 0;
 	for (i = 0; i < (int)nelem(ignorable); i++)
@@ -537,7 +537,7 @@ gif_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		{
 			/* Read block indicator */
 			if (end - p < 1)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of block indicator in gif image");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of block indicator in gif image");
 
 			/* Read trailer */
 			if (p[0] == 0x3b)
@@ -549,7 +549,7 @@ gif_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 			{
 				/* Read extension label */
 				if (end - p < 2)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in extension label in gif image");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in extension label in gif image");
 
 				if (p[1] == 0x01 && info->gif89a)
 				{
@@ -601,7 +601,7 @@ gif_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 				info->has_lct = 0;
 			}
 			else
-				fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported block indicator %02x in gif image", p[0]);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported block indicator %02x in gif image", p[0]);
 		}
 
 		gif_mask_transparency(ctx, info);

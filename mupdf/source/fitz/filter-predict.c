@@ -257,11 +257,11 @@ fz_open_predict(fz_context *ctx, fz_stream *chain, int predictor, int columns, i
 		bpc = 8;
 
 	if (bpc != 1 && bpc != 2 && bpc != 4 && bpc != 8 && bpc != 16)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid number of bits per component: %d", bpc);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid number of bits per component: %d", bpc);
 	if (colors > FZ_MAX_COLORS)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many color components (%d > %d)", colors, FZ_MAX_COLORS);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "too many color components (%d > %d)", colors, FZ_MAX_COLORS);
 	if (columns >= INT_MAX / (bpc * colors))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many columns lead to an integer overflow (%d)", columns);
+		fz_throw(ctx, FZ_ERROR_LIMIT, "too many columns lead to an integer overflow (%d)", columns);
 
 	if (predictor != 1 && predictor != 2 &&
 			predictor != 10 && predictor != 11 &&

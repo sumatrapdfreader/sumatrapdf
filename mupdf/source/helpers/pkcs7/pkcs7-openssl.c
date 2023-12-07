@@ -30,13 +30,13 @@
 pdf_pkcs7_signer *
 pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OpenSSL support.");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OpenSSL support.");
 }
 
 pdf_pkcs7_verifier *
 pkcs7_openssl_new_verifier(fz_context *ctx)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OpenSSL support.");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OpenSSL support.");
 }
 
 #else
@@ -455,7 +455,7 @@ check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, fz_stream *stm, unsi
 	int res = PDF_SIGNATURE_ERROR_UNKNOWN;
 
 	if (sig_len > INT_MAX)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature length too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Signature length too large");
 
 	bsig = BIO_new_mem_buf(sig, (int)sig_len);
 	pk7sig = d2i_PKCS7_bio(bsig, NULL);
@@ -810,15 +810,15 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 
 		pfxbio = BIO_new_file(pfile, "rb");
 		if (pfxbio == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't open pfx file: %s", pfile);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Can't open pfx file: %s", pfile);
 
 		p12 = d2i_PKCS12_bio(pfxbio, NULL);
 		if (p12 == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid pfx file: %s", pfile);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
 
 		asafes = PKCS12_unpack_authsafes(p12);
 		if (asafes == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid pfx file: %s", pfile);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
 
 		/* Nothing in this for loop can fz_throw */
 		for (i = 0; i < sk_PKCS7_num(asafes); i++)
@@ -850,10 +850,10 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 		sk_PKCS7_pop_free (asafes, PKCS7_free);
 
 		if (signer->pkey == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to obtain public key");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to obtain public key");
 
 		if (signer->x509 == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to obtain certificate");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to obtain certificate");
 	}
 	fz_always(ctx)
 	{
@@ -878,7 +878,7 @@ pdf_pkcs7_distinguished_name *get_signatory(fz_context *ctx, pdf_pkcs7_verifier 
 	X509 *x509 = NULL;
 
 	if (sig_len > INT_MAX)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature length too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Signature length too large");
 
 	bsig = BIO_new_mem_buf(sig, (int)sig_len);
 	pk7sig = d2i_PKCS7_bio(bsig, NULL);

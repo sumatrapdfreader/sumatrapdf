@@ -385,7 +385,7 @@ static void epub_load_accelerator(fz_context *ctx, epub_document *doc, fz_stream
 				fz_free(ctx, acc->pages_in_chapter);
 			fz_free(ctx, acc);
 			/* Swallow the error and run unaccelerated */
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			make_new = 1;
 		}
@@ -846,7 +846,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 			/* Further abuse base_uri to hold a temporary name. */
 			const size_t z0 = sizeof("META-INF/encryption.xml")-1;
 			if (sizeof(base_uri) <= prefix_len + z0)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Prefix too long in epub");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Prefix too long in epub");
 			strcpy(base_uri + prefix_len, "META-INF/encryption.xml");
 			if (fz_has_archive_entry(ctx, zip, base_uri))
 			{
@@ -867,7 +867,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 		rootfile = fz_xml_find_down(rootfiles, "rootfile");
 		full_path = fz_xml_att(rootfile, "full-path");
 		if (!full_path)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find root file in EPUB");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find root file in EPUB");
 
 		fz_dirname(base_uri+prefix_len, full_path, sizeof(base_uri) - prefix_len);
 
@@ -919,7 +919,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 				fz_catch(ctx)
 				{
 					fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-					fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+					fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 					fz_report_error(ctx);
 					fz_warn(ctx, "ignoring chapter %s", s);
 				}
@@ -968,7 +968,7 @@ epub_output_accelerator(fz_context *ctx, fz_document *doc_, fz_output *out)
 	fz_try(ctx)
 	{
 		if (doc->accel == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "No accelerator data to write");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "No accelerator data to write");
 
 		fz_write_int32_le(ctx, out, MAGIC_ACCELERATOR);
 		fz_write_int32_le(ctx, out, MAGIC_ACCEL_EPUB);

@@ -233,7 +233,7 @@ make_resource_instance(fz_context *ctx, pdf_color_processor *p, pdf_obj *key, co
 			return;
 		}
 	}
-	fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot create unique resource name");
+	fz_throw(ctx, FZ_ERROR_LIMIT, "Cannot create unique resource name");
 }
 
 static void

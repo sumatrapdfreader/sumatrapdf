@@ -64,15 +64,15 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 	int n;
 
 	if (w < 0 || h < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal dimensions for pixmap %d %d", w, h);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Illegal dimensions for pixmap %d %d", w, h);
 
 	n = alpha + s + fz_colorspace_n(ctx, colorspace);
 	if (stride < n*w && stride > -n*w)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal stride for pixmap (n=%d w=%d, stride=%d)", n, w, stride);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Illegal stride for pixmap (n=%d w=%d, stride=%d)", n, w, stride);
 	if (samples == NULL && stride < n*w)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal -ve stride for pixmap without data");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Illegal -ve stride for pixmap without data");
 	if (n > FZ_MAX_COLORS)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal number of colorants");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Illegal number of colorants");
 
 	pix = fz_malloc_struct(ctx, fz_pixmap);
 	FZ_INIT_STORABLE(pix, 1, fz_drop_pixmap_imp);
@@ -105,7 +105,7 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 		fz_try(ctx)
 		{
 			if ((size_t)pix->stride > SIZE_MAX / (size_t)pix->h)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Overly large image");
+				fz_throw(ctx, FZ_ERROR_LIMIT, "Overly large image");
 			pix->samples = Memento_label(fz_malloc(ctx, pix->h * pix->stride), "pixmap_data");
 		}
 		fz_catch(ctx)
@@ -130,7 +130,7 @@ fz_new_pixmap(fz_context *ctx, fz_colorspace *colorspace, int w, int h, fz_separ
 	if (!colorspace && s == 0) alpha = 1;
 	n = fz_colorspace_n(ctx, colorspace) + s + alpha;
 	if (w > INT_MAX / n)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Overly wide image");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Overly wide image");
 	stride = n * w;
 	return fz_new_pixmap_with_data(ctx, colorspace, w, h, seps, alpha, stride, NULL);
 }
@@ -177,7 +177,7 @@ fz_pixmap *fz_new_pixmap_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, const f
 		local_rect.y1 = pixmap->y + pixmap->h;
 	}
 	else if (rect->x0 < pixmap->x || rect->y0 < pixmap->y || rect->x1 > pixmap->x + pixmap->w || rect->y1 > pixmap->y + pixmap->h)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Pixmap region is not a subarea");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Pixmap region is not a subarea");
 
 	subpix = fz_malloc_struct(ctx, fz_pixmap);
 	*subpix = *pixmap;
@@ -871,7 +871,7 @@ fz_tint_pixmap(fz_context *ctx, fz_pixmap *pix, int black, int white)
 		break;
 
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can only tint RGB, BGR and Gray pixmaps");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can only tint RGB, BGR and Gray pixmaps");
 		break;
 	}
 }
@@ -940,7 +940,7 @@ fz_invert_pixmap_luminance(fz_context *ctx, fz_pixmap *pix)
 	}
 	else
 	{
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can only invert luminance of Gray and RGB pixmaps");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can only invert luminance of Gray and RGB pixmaps");
 	}
 }
 
@@ -1158,7 +1158,7 @@ fz_convert_pixmap(fz_context *ctx, const fz_pixmap *pix, fz_colorspace *ds, fz_c
 	fz_pixmap *cvt;
 
 	if (!ds && !keep_alpha)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot both throw away and keep alpha");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot both throw away and keep alpha");
 
 	cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha && pix->alpha);
 
@@ -1414,11 +1414,11 @@ fz_new_pixmap_from_color_and_mask(fz_context *ctx, fz_pixmap *color, fz_pixmap *
 	int x, y, k;
 
 	if (color->alpha)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "color pixmap must not have an alpha channel");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "color pixmap must not have an alpha channel");
 	if (mask->n != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "mask pixmap must have exactly one channel");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "mask pixmap must have exactly one channel");
 	if (mask->w != color->w || mask->h != color->h)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "color and mask pixmaps must be the same size");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "color and mask pixmaps must be the same size");
 
 	dst = fz_new_pixmap_with_bbox(ctx, color->colorspace, fz_pixmap_bbox(ctx, color), NULL, 1);
 
@@ -1666,7 +1666,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	tile->stride = tile->w * (size_t)tile->n;
 	/* Redundant test? We only ever make pixmaps smaller! */
 	if (tile->h > INT_MAX / (tile->w * tile->n))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "pixmap too large");
 	tile->samples = fz_realloc(ctx, tile->samples, (size_t)tile->h * tile->w * tile->n);
 }
 
@@ -1870,9 +1870,9 @@ fz_convert_indexed_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	ptrdiff_t s_line_inc, d_line_inc;
 
 	if (src->colorspace->type != FZ_COLORSPACE_INDEXED)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot convert non-indexed pixmap");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot convert non-indexed pixmap");
 	if (src->n != 1 + src->alpha)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot convert indexed pixmap mis-matching components");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot convert indexed pixmap mis-matching components");
 
 	base = src->colorspace->u.indexed.base;
 	high = src->colorspace->u.indexed.high;
@@ -1942,9 +1942,9 @@ fz_convert_separation_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	ss = src->colorspace;
 
 	if (ss->type != FZ_COLORSPACE_SEPARATION)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot expand non-separation pixmap");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot expand non-separation pixmap");
 	if (src->n != ss->n + src->alpha)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot expand separation pixmap mis-matching alpha channel");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot expand separation pixmap mis-matching alpha channel");
 
 	base = ss->u.separation.base;
 	dst = fz_new_pixmap_with_bbox(ctx, base, fz_pixmap_bbox(ctx, src), src->seps, src->alpha);

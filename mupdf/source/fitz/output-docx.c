@@ -96,7 +96,7 @@ static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_m
 					bbox.x1,
 					bbox.y1))
 			{
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin span");
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to begin span");
 			}
 
 			trm = span->trm;
@@ -121,11 +121,11 @@ static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_m
 				bounds = fz_bound_glyph(ctx, span->font, span->items[i].gid, combined);
 				if (extract_add_char(dev->writer->extract, combined.e, combined.f, item->ucs, adv,
 							bounds.x0, bounds.y0, bounds.x1, bounds.y1))
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to add char");
+					fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to add char");
 			}
 
 			if (extract_span_end(dev->writer->extract))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to end span");
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to end span");
 		}
 	}
 	fz_always(ctx)
@@ -216,7 +216,7 @@ static void dev_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_m
 						dev->writer
 						))
 				{
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to add image type=%s", type);
+					fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to add image type=%s", type);
 				}
 			}
 			else
@@ -256,14 +256,14 @@ static void s_moveto(fz_context *ctx, void *arg, float x, float y)
 {
 	extract_t* extract = arg;
 	if (extract_moveto(extract, x, y))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_moveto() failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_moveto() failed");
 }
 
 static void s_lineto(fz_context *ctx, void *arg, float x, float y)
 {
 	extract_t* extract = arg;
 	if (extract_lineto(extract, x, y))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_lineto() failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_lineto() failed");
 }
 
 static void s_curveto(fz_context *ctx, void *arg, float x1, float y1,
@@ -273,14 +273,14 @@ static void s_curveto(fz_context *ctx, void *arg, float x1, float y1,
 	(straight) lines will be handled correctly. */
 	extract_t* extract = arg;
 	if (extract_moveto(extract, x3, y3))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_moveto() failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_moveto() failed");
 }
 
 static void s_closepath(fz_context *ctx, void *arg)
 {
 	extract_t* extract = arg;
 	if (extract_closepath(extract))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "extract_closepath() failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_closepath() failed");
 }
 
 /*
@@ -325,10 +325,10 @@ void dev_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int ev
 				matrix.f,
 				color[0]
 				))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin fill");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to begin fill");
 		s_walk_path(ctx, dev, extract, path);
 		if (extract_fill_end(extract))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_fill_end() failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_fill_end() failed");
 	}
 	fz_always(ctx)
 	{
@@ -365,10 +365,10 @@ dev_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path,
 				stroke->linewidth,
 				color[0]
 				))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin stroke");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to begin stroke");
 		s_walk_path(ctx, dev, extract, path);
 		if (extract_stroke_end(extract))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_stroke_end() failed");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_stroke_end() failed");
 	}
 	fz_always(ctx)
 	{
@@ -537,7 +537,7 @@ dev_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, con
 	fz_try(ctx)
 	{
 		if (extract_begin_struct(extract, fz_struct_to_extract(standard), uid, -1))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin struct");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to begin struct");
 	}
 	fz_always(ctx)
 		dev->writer->ctx = NULL;
@@ -556,7 +556,7 @@ dev_end_structure(fz_context *ctx, fz_device *dev_)
 	fz_try(ctx)
 	{
 		if (extract_end_struct(extract))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to end struct");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to end struct");
 	}
 	fz_always(ctx)
 		dev->writer->ctx = NULL;
@@ -576,7 +576,7 @@ static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_
 	fz_try(ctx)
 	{
 		if (extract_page_begin(writer->extract, mediabox.x0, mediabox.y0, mediabox.x1, mediabox.y1))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin page");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to begin page");
 		dev = fz_new_derived_device(ctx, fz_docx_device);
 		dev->super.fill_text = dev_fill_text;
 		dev->super.stroke_text = dev_stroke_text;
@@ -610,10 +610,10 @@ static void writer_end_page(fz_context *ctx, fz_document_writer *writer_, fz_dev
 	{
 		fz_close_device(ctx, dev);
 		if (extract_page_end(writer->extract))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to end page");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to end page");
 
 		if (extract_process(writer->extract, writer->spacing, writer->rotation, writer->images))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to process page");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to process page");
 	}
 	fz_always(ctx)
 	{
@@ -685,12 +685,12 @@ static void writer_close(fz_context *ctx, fz_document_writer *writer_)
 				&extract_buffer_output
 				))
 		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_output: %s", strerror(errno));
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to create extract_buffer_output: %s", strerror(errno));
 		}
 		if (extract_write(writer->extract, extract_buffer_output))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to generate docx content: %s", strerror(errno));
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to generate docx content: %s", strerror(errno));
 		if (extract_buffer_close(&extract_buffer_output))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to close extract_buffer: %s", strerror(errno));
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to close extract_buffer: %s", strerror(errno));
 
 		extract_end(&writer->extract);
 		fz_close_output(ctx, writer->output);
@@ -781,9 +781,9 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		if (get_bool_option(ctx, options, "text", 0)) format = extract_format_TEXT;
 		if (get_bool_option(ctx, options, "json", 0)) format = extract_format_JSON;
 		if (extract_alloc_create(s_realloc_fn, writer, &writer->alloc))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_alloc instance");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to create extract_alloc instance");
 		if (extract_begin(writer->alloc, format, &writer->extract))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract instance");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to create extract instance");
 		if (space_guess)
 			extract_set_space_guess(writer->extract, space_guess);
 		writer->spacing = get_bool_option(ctx, options, "spacing", 0);
@@ -791,7 +791,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->images = get_bool_option(ctx, options, "images", 1);
 		writer->mediabox_clip = get_bool_option(ctx, options, "mediabox-clip", 1);
 		if (extract_set_layout_analysis(writer->extract, get_bool_option(ctx, options, "analyse", 0)))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_enable_analysis failed.");
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_enable_analysis failed.");
 		{
 			const char* v;
 			if (fz_has_option(ctx, options, "tables-csv-format", &v))
@@ -803,7 +803,7 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 				if (extract_tables_csv_format(writer->extract, formatbuf))
 				{
 					fz_free(ctx, formatbuf);
-					fz_throw(ctx, FZ_ERROR_GENERIC, "extract_tables_csv_format() failed.");
+					fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_tables_csv_format() failed.");
 				}
 				fz_free(ctx, formatbuf);
 			}
@@ -859,13 +859,13 @@ fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const c
 
 fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "ODT writer not enabled");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "ODT writer not enabled");
 	return NULL;
 }
 
 fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "ODT writer not enabled");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "ODT writer not enabled");
 	return NULL;
 }
 
@@ -875,25 +875,25 @@ fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const c
 
 fz_document_writer *fz_new_odt_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX/ODT writer not enabled");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "DOCX/ODT writer not enabled");
 	return NULL;
 }
 
 fz_document_writer *fz_new_odt_writer(fz_context *ctx, const char *path, const char *options)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX/ODT writer not enabled");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "DOCX/ODT writer not enabled");
 	return NULL;
 }
 
 fz_document_writer *fz_new_docx_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX writer not enabled");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "DOCX writer not enabled");
 	return NULL;
 }
 
 fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *path, const char *options)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "DOCX writer not enabled");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "DOCX writer not enabled");
 	return NULL;
 }
 

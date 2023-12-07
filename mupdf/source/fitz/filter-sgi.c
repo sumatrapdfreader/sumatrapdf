@@ -258,7 +258,7 @@ next_sgilog16(fz_context *ctx, fz_stream *stm, size_t max)
 				if (state->run < 0)
 				{
 					state->run = -1;
-					fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 				}
 				if (state->run < 128)
 					state->n = state->run;
@@ -269,7 +269,7 @@ next_sgilog16(fz_context *ctx, fz_stream *stm, size_t max)
 					if (state->c < 0)
 					{
 						state->run = -1;
-						fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+						fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 					}
 				}
 			}
@@ -282,7 +282,7 @@ next_sgilog16(fz_context *ctx, fz_stream *stm, size_t max)
 					if (c < 0)
 					{
 						state->run = -1;
-						fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+						fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 					}
 					*p++ |= c<<shift;
 					state->n--;
@@ -467,7 +467,7 @@ next_sgilog24(fz_context *ctx, fz_stream *stm, size_t max)
 		if (c < 0)
 		{
 			state->err = 1;
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 		}
 		p += 3;
 	}
@@ -591,7 +591,7 @@ next_sgilog32(fz_context *ctx, fz_stream *stm, size_t max)
 				if (state->run < 0)
 				{
 					state->run = -1;
-					fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 				}
 				if (state->run < 128)
 					state->n = state->run;
@@ -602,7 +602,7 @@ next_sgilog32(fz_context *ctx, fz_stream *stm, size_t max)
 					if (state->c < 0)
 					{
 						state->run = -1;
-						fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+						fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 					}
 				}
 			}
@@ -615,7 +615,7 @@ next_sgilog32(fz_context *ctx, fz_stream *stm, size_t max)
 					if (c < 0)
 					{
 						state->run = -1;
-						fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in run length decode");
+						fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in run length decode");
 					}
 					*p++ |= c<<shift;
 					state->n--;

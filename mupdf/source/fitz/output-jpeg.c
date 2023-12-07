@@ -67,7 +67,7 @@ fz_jpg_mem_init(j_common_ptr cinfo, fz_context *ctx)
 				fz_jpg_mem_alloc, fz_jpg_mem_free, NULL))
 	{
 		fz_free(ctx, custmptr);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot initialize custom JPEG memory handler");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot initialize custom JPEG memory handler");
 	}
 	cinfo->client_data = custmptr;
 }
@@ -100,7 +100,7 @@ static void error_exit(j_common_ptr cinfo)
 	char msg[JMSG_LENGTH_MAX];
 	fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
 	cinfo->err->format_message(cinfo, msg);
-	fz_throw(ctx, FZ_ERROR_GENERIC, "jpeg error: %s", msg);
+	fz_throw(ctx, FZ_ERROR_LIBRARY, "jpeg error: %s", msg);
 }
 
 static void init_destination(j_compress_ptr cinfo)
@@ -148,9 +148,9 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 	int alpha = pix->alpha;
 
 	if (pix->s > 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have separations to save as JPEG");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap may not have separations to save as JPEG");
 	if (cs && !fz_colorspace_is_gray(ctx, cs) && !fz_colorspace_is_rgb(ctx, cs) && !fz_colorspace_is_cmyk(ctx, cs))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be Grayscale, RGB, or CMYK to save as JPEG");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be Grayscale, RGB, or CMYK to save as JPEG");
 
 	/* Treat alpha only as greyscale */
 	if (n == 1 && alpha)
@@ -158,7 +158,7 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 	n -= alpha;
 
 	if (alpha > 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have alpha to save as JPEG");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap may not have alpha to save as JPEG");
 
 	cinfo.mem = NULL;
 	cinfo.global_state = 0;

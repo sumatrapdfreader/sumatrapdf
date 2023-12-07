@@ -81,7 +81,7 @@ pdf_xobject_colorspace(fz_context *ctx, pdf_obj *xobj)
 			fz_catch(ctx)
 			{
 				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 				fz_report_error(ctx);
 				fz_warn(ctx, "Ignoring XObject blending colorspace.");
 			}

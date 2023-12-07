@@ -90,7 +90,7 @@ next_flated(fz_context *ctx, fz_stream *stm, size_t required)
 		}
 		else if (code != Z_OK)
 		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "zlib error: %s", zp->msg);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "zlib error: %s", zp->msg);
 		}
 	}
 
@@ -136,7 +136,7 @@ fz_open_flated(fz_context *ctx, fz_stream *chain, int window_bits)
 	if (code != Z_OK)
 	{
 		fz_free(ctx, state);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "zlib error: inflateInit2 failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "zlib error: inflateInit2 failed");
 	}
 
 	state->chain = fz_keep_stream(ctx, chain);

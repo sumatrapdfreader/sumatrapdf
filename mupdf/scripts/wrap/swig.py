@@ -78,7 +78,7 @@ def build_swig(
 
     # Create a .i file for SWIG.
     #
-    common = f'''
+    common = textwrap.dedent(f'''
             #include <stdexcept>
 
             #include "mupdf/functions.h"
@@ -97,6 +97,7 @@ def build_swig(
             #endif
 
             '''
+            )
     if language == 'csharp':
         common += textwrap.dedent(f'''
                 /* This is required otherwise compiling the resulting C++ code
@@ -850,8 +851,36 @@ def build_swig(
             // This appears to allow python to call fns taking an int64_t.
             %include "stdint.i"
 
+            /*
+            This is only documented for Ruby, but is mentioned for Python at
+            https://sourceforge.net/p/swig/mailman/message/4867286/.
+
+            It makes the Python wrapper for `FzErrorBase` inherit Python's
+            `Exception` instead of `object`, which in turn means it can be
+            caught in Python with `except Exception as e: ...` or similar.
+
+            Note that while it will have the underlying C++ class's `what()`
+            method, this is not used by the `__str__()` and `__repr__()`
+            methods. Instead:
+
+                `__str__()` appears to return a tuple of the constructor args
+                that were originally used to create the exception object with
+                `PyObject_CallObject(class_, args)`.
+
+                `__repr__()` returns a SWIG-style string such as
+                `<texcept.MyError; proxy of <Swig Object of type 'MyError *' at
+                0xb61ebfabc00> >`.
+
+            We explicitly overwrite `__str__()` to call `what()`.
+            */
+            %feature("exceptionclass")  FzErrorBase;
+
             %{{
-            {common}
+            ''')
+
+    text += common
+
+    text += textwrap.dedent(f'''
             %}}
 
             %include exception.i
@@ -899,41 +928,8 @@ def build_swig(
             %array_functions(float, floats);
             ''')
 
-    text += textwrap.dedent(f'''
-            %exception
-            {{
-                try
-                {{
-                    $action
-                }}
-                catch( std::exception& e)
-                {{
-                    if (g_mupdf_trace_exceptions)
-                    {{
-                        std::cerr
-                                #ifndef _WIN32
-                                << __PRETTY_FUNCTION__ << ": "
-                                #endif
-                                << "Converting C++ std::exception into {language} exception: " << e.what()
-                                << "\\n";
-                    }}
-                    SWIG_exception( SWIG_RuntimeError, e.what());
-                }}
-                catch(...)
-                {{
-                    if (g_mupdf_trace_exceptions)
-                    {{
-                        std::cerr
-                                #ifndef _WIN32
-                                << __PRETTY_FUNCTION__ << ": "
-                                #endif
-                                << "Converting unknown C++ exception into {language} exception."
-                                << "\\n";
-                    }}
-                    SWIG_exception( SWIG_RuntimeError, "Unknown exception");
-                }}
-            }}
-            ''')
+    if language == 'python':
+        text += generated.swig_python_exceptions.getvalue()
 
     text += textwrap.dedent(f'''
             // Ensure SWIG handles OUTPUT params.
@@ -1037,6 +1033,7 @@ def build_swig(
         # tuples.
         #
         text += generated.swig_python
+        text += generated.swig_python_set_error_classes.getvalue()
 
         def set_class_method(struct, fn):
             return f'{rename.class_(struct)}.{rename.method(struct, fn)} = {fn}'
@@ -1648,6 +1645,10 @@ def build_swig(
         def make_command( module, cpp, swig_i):
             cpp = os.path.relpath( cpp)
             swig_i = os.path.relpath( swig_i)
+            # We need to predefine MUPDF_FITZ_HEAP_H to disable parsing of
+            # include/mupdf/fitz/heap.h. Otherwise swig's preprocessor seems to
+            # ignore #undef's in include/mupdf/fitz/heap-imp.h then complains
+            # about redefinition of macros in include/mupdf/fitz/heap.h.
             command = (
                     textwrap.dedent(
                     f'''
@@ -1666,6 +1667,7 @@ def build_swig(
                         -I{os.path.relpath(include1)}
                         -I{os.path.relpath(include2)}
                         -ignoremissing
+                        -DMUPDF_FITZ_HEAP_H
                         {swig_i}
                     ''').strip().replace( '\n', "" if state_.windows else " \\\n")
                     )
@@ -1766,6 +1768,7 @@ def build_swig(
                     -I{os.path.relpath(include1)}
                     -I{os.path.relpath(include2)}
                     -ignoremissing
+                    -DMUPDF_FITZ_HEAP_H
                     {os.path.relpath(swig_i)}
                 ''').strip().replace( '\n', "" if state_.windows else "\\\n")
                 )

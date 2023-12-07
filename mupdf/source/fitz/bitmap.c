@@ -292,7 +292,7 @@ fz_new_bitmap(fz_context *ctx, int w, int h, int n, int xres, int yres)
 	/* Stride is 32 bit aligned. We may want to make this 64 bit if we use SSE2 etc. */
 	int stride = ((n * w + 31) & ~31) >> 3;
 	if (h < 0 || ((size_t)h > (size_t)(SIZE_MAX / stride)))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "bitmap too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "bitmap too large");
 
 	bit = fz_malloc_struct(ctx, fz_bitmap);
 	fz_try(ctx)
@@ -345,9 +345,9 @@ pbm_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	int h = writer->h;
 
 	if (writer->s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pbms cannot contain spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pbms cannot contain spot colors");
 	if (writer->n != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many color components in bitmap");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "too many color components in bitmap");
 
 	fz_write_printf(ctx, out, "P4\n%d %d\n", w, h);
 }
@@ -360,9 +360,9 @@ pkm_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	int h = writer->h;
 
 	if (writer->s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pkms cannot contain spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pkms cannot contain spot colors");
 	if (writer->n != 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "wrong number of color components in bitmap");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "wrong number of color components in bitmap");
 
 	fz_write_printf(ctx, out, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE CMYK\nENDHDR\n", w, h);
 }
@@ -373,7 +373,7 @@ fz_write_bitmap_as_pbm(fz_context *ctx, fz_output *out, fz_bitmap *bitmap)
 	fz_band_writer *writer;
 
 	if (bitmap->n != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "bitmap must be monochrome to save as PBM");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "bitmap must be monochrome to save as PBM");
 
 	writer = fz_new_pbm_band_writer(ctx, out);
 	fz_try(ctx)
@@ -394,7 +394,7 @@ fz_write_bitmap_as_pkm(fz_context *ctx, fz_output *out, fz_bitmap *bitmap)
 	fz_band_writer *writer;
 
 	if (bitmap->n != 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "bitmap must be CMYK to save as PKM");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "bitmap must be CMYK to save as PKM");
 
 	writer = fz_new_pkm_band_writer(ctx, out);
 	fz_try(ctx)

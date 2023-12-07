@@ -445,7 +445,7 @@ pdf_dev_font(fz_context *ctx, pdf_device *pdev, fz_font *font, fz_matrix trm)
 	// TODO: vertical wmode
 
 	if (fz_font_t3_procs(ctx, font))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pdf device does not support type 3 fonts");
+		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "pdf device does not support type 3 fonts");
 
 	if (fz_font_flags(font)->ft_substitute || !pdf_font_writing_supported(ctx, font))
 		gs->font = pdf_dev_add_substitute_font_res(ctx, pdev, font);

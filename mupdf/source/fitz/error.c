@@ -42,9 +42,10 @@
 
 void fz_default_error_callback(void *user, const char *message)
 {
-	fprintf(stderr, "error: %s\n", message);
+	/* TODO: send errcode and format it here instead of in fz_report_error */
+	fputs(message, stderr);
+	fputc('\n', stderr);
 #ifdef USE_OUTPUT_DEBUG_STRING
-	OutputDebugStringA("error: ");
 	OutputDebugStringA(message);
 	OutputDebugStringA("\n");
 #endif
@@ -248,7 +249,7 @@ fz_jmp_buf *fz_push_try(fz_context *ctx)
 		/* We need to arrive in the always/catch block as if throw had taken place. */
 		ctx->error.top++;
 		ctx->error.top->state = 2;
-		ctx->error.top->code = FZ_ERROR_GENERIC;
+		ctx->error.top->code = FZ_ERROR_LIMIT;
 	}
 	else
 	{
@@ -386,32 +387,28 @@ void (fz_rethrow_unless)(fz_context *ctx, int err)
 		fz_rethrow(ctx);
 }
 
-#if FZ_VERBOSE_EXCEPTIONS
 static const char *
-errcode_to_string(int exc)
+fz_error_type_name(enum fz_error_type exc)
 {
 	switch (exc)
 	{
-	case FZ_ERROR_NONE:
-		return "NONE";
-	case FZ_ERROR_MEMORY:
-		return "MEMORY";
-	case FZ_ERROR_GENERIC:
-		return "GENERIC";
-	case FZ_ERROR_SYNTAX:
-		return "SYNTAX";
-	case FZ_ERROR_TRYLATER:
-		return "TRYLATER";
-	case FZ_ERROR_ABORT:
-		return "ABORT";
-	case FZ_ERROR_REPAIRED:
-		return "REPAIRED";
-	case FZ_ERROR_COUNT:
-		return "COUNT";
-	default:
-		return "<Invalid>";
+	case FZ_ERROR_NONE: return "none";
+	case FZ_ERROR_GENERIC: return "generic";
+	case FZ_ERROR_SYSTEM: return "system";
+	case FZ_ERROR_LIBRARY: return "library";
+	case FZ_ERROR_UNSUPPORTED: return "unsupported";
+	case FZ_ERROR_ARGUMENT: return "argument";
+	case FZ_ERROR_LIMIT: return "limit";
+	case FZ_ERROR_FORMAT: return "format";
+	case FZ_ERROR_SYNTAX: return "syntax";
+	case FZ_ERROR_TRYLATER: return "trylater";
+	case FZ_ERROR_ABORT: return "abort";
+	case FZ_ERROR_REPAIRED: return "repaired";
 	}
+	return "invalid error type";
 }
+
+#if FZ_VERBOSE_EXCEPTIONS
 
 int fz_do_catchFL(fz_context *ctx, const char *file, int line)
 {
@@ -474,7 +471,7 @@ FZ_NORETURN void fz_vthrowFL(fz_context *ctx, const char *file, int line, int co
 	fz_vsnprintf(ctx->error.message, sizeof ctx->error.message, fmt, ap);
 	ctx->error.message[sizeof(ctx->error.message) - 1] = 0;
 
-	(fz_log_error_printf)(ctx, "%s:%d: Throwing %s '%s'", file, line, errcode_to_string(code), ctx->error.message);
+	(fz_log_error_printf)(ctx, "%s:%d: Throwing %s '%s'", file, line, fz_error_type_name(code), ctx->error.message);
 
 	throw(ctx, code);
 }
@@ -501,7 +498,7 @@ void fz_morph_errorFL(fz_context *ctx, const char *file, int line, int fromerr, 
 	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
 	if (ctx->error.errcode == fromerr)
 	{
-		(fz_log_error_printf)(ctx, "%s:%d: Morphing %s->%s", file, line, errcode_to_string(fromerr), errcode_to_string(toerr));
+		(fz_log_error_printf)(ctx, "%s:%d: Morphing %s->%s", file, line, fz_error_type_name(fromerr), fz_error_type_name(toerr));
 		ctx->error.errcode = toerr;
 	}
 }
@@ -550,8 +547,9 @@ void fz_report_error(fz_context *ctx)
 		abort();
 	}
 #endif
+	/* TODO: send errcode to fz_log_error instead of formatting it here */
+	fz_log_error_printf(ctx, "%s error: %s", fz_error_type_name(ctx->error.errcode), ctx->error.message);
 	ctx->error.errcode = FZ_ERROR_NONE;
-	fz_log_error(ctx, ctx->error.message);
 }
 
 void fz_ignore_error(fz_context *ctx)

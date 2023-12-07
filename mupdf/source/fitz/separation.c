@@ -81,11 +81,11 @@ void fz_add_separation(fz_context *ctx, fz_separations *sep, const char *name, f
 	int n;
 
 	if (!sep)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't add to non-existent separations");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can't add to non-existent separations");
 
 	n = sep->num_separations;
 	if (n == FZ_MAX_SEPARATIONS)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many separations");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "too many separations");
 
 	sep->name[n] = fz_strdup(ctx, name);
 	sep->cs[n] = fz_keep_colorspace(ctx, cs);
@@ -99,11 +99,11 @@ void fz_add_separation_equivalents(fz_context *ctx, fz_separations *sep, uint32_
 	int n;
 
 	if (!sep)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't add to non-existent separations");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can't add to non-existent separations");
 
 	n = sep->num_separations;
 	if (n == FZ_MAX_SEPARATIONS)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many separations");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "too many separations");
 
 	sep->name[n] = fz_strdup(ctx, name);
 	sep->rgba[n] = rgba;
@@ -118,7 +118,7 @@ void fz_set_separation_behavior(fz_context *ctx, fz_separations *sep, int separa
 	fz_separation_behavior old;
 
 	if (!sep || separation < 0 || separation >= sep->num_separations)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't control non-existent separation");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can't control non-existent separation");
 
 	if (beh == FZ_SEPARATION_DISABLED && !sep->controllable)
 		beh = FZ_SEPARATION_DISABLED_RENDER;
@@ -151,7 +151,7 @@ sep_state(const fz_separations *sep, int i)
 fz_separation_behavior fz_separation_current_behavior_internal(fz_context *ctx, const fz_separations *sep, int separation)
 {
 	if (!sep || separation < 0 || separation >= sep->num_separations)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't disable non-existent separation");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can't disable non-existent separation");
 
 	return sep_state(sep, separation);
 }
@@ -168,7 +168,7 @@ fz_separation_behavior fz_separation_current_behavior(fz_context *ctx, const fz_
 const char *fz_separation_name(fz_context *ctx, const fz_separations *sep, int separation)
 {
 	if (!sep || separation < 0 || separation >= sep->num_separations)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't access non-existent separation");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "can't access non-existent separation");
 
 	return sep->name[separation];
 }
@@ -358,7 +358,7 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 
 	if (dst->x < src->x || dst->x + dst->w > src->x + src->w ||
 		dst->y < src->y || dst->y + dst->h > src->y + src-> h)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot convert pixmap where dst is not within src!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot convert pixmap where dst is not within src!");
 
 	/* Process colorants (and alpha) first */
 	if (dst->colorspace == src->colorspace && proof_cs == NULL && dst->s == 0 && src->s == 0)
@@ -1185,7 +1185,7 @@ fz_separation_equivalent(fz_context *ctx,
 			convert[3] = ((seps->cmyk[i]>>24) & 0xff)/ 255.0f;
 			return;
 		default:
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot return equivalent in this colorspace");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot return equivalent in this colorspace");
 		}
 	}
 

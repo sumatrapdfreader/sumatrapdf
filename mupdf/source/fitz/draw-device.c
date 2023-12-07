@@ -322,7 +322,7 @@ static void fz_knockout_end(fz_context *ctx, fz_draw_device *dev)
 	fz_draw_state *state;
 
 	if (dev->top == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected knockout end");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unexpected knockout end");
 
 	state = pop_stack(ctx, dev, "knockout");
 	if ((state[0].blendmode & FZ_BLEND_KNOCKOUT) == 0)
@@ -563,7 +563,7 @@ resolve_color(fz_context *ctx,
 	int effective_opm;
 
 	if (colorspace == NULL && model != NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "color destination requires source color");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "color destination requires source color");
 
 	effective_opm = color_params.opm;
 	devn = fz_colorspace_is_device_n(ctx, colorspace);
@@ -1049,7 +1049,7 @@ fz_draw_fill_text(fz_context *ctx, fz_device *devp, const fz_text *text, fz_matr
 		colorspace = fz_default_colorspace(ctx, dev->default_cs, colorspace_in);
 
 	if (colorspace == NULL && model != NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "color destination requires source color");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "color destination requires source color");
 
 	if (alpha == 0)
 		return;
@@ -2142,7 +2142,7 @@ fz_draw_pop_clip(fz_context *ctx, fz_device *devp)
 	fz_draw_state *state;
 
 	if (dev->top == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected pop clip");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unexpected pop clip");
 
 	state = pop_stack(ctx, dev, "clip");
 
@@ -2283,7 +2283,7 @@ fz_draw_end_mask(fz_context *ctx, fz_device *devp)
 	fz_draw_state *state;
 
 	if (dev->top == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected end mask");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unexpected end mask");
 
 	state = convert_stack(ctx, dev, "mask");
 
@@ -2424,7 +2424,7 @@ fz_draw_end_group(fz_context *ctx, fz_device *devp)
 	fz_draw_state *state;
 
 	if (dev->top == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected end group");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unexpected end group");
 
 	state = pop_stack(ctx, dev, "group");
 
@@ -2766,7 +2766,7 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 	fz_pixmap *group_alpha = NULL;
 
 	if (dev->top == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected end tile");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unexpected end tile");
 
 	state = pop_stack(ctx, dev, "tile");
 	dev->flags = state[1].flags;
@@ -2968,7 +2968,7 @@ fz_draw_close_device(fz_context *ctx, fz_device *devp)
 
 	/* pop and free the stacks */
 	if (dev->top > dev->resolve_spots)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "items left on stack in draw device: %d", dev->top);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "items left on stack in draw device: %d", dev->top);
 
 	if (dev->resolve_spots && dev->top)
 	{
@@ -3114,7 +3114,7 @@ new_draw_device(fz_context *ctx, fz_matrix transform, fz_pixmap *dest, const fz_
 #if FZ_ENABLE_SPOT_RENDERING
 		dev->resolve_spots = 1;
 #else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Spot rendering (and overprint/overprint simulation) not available in this build");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Spot rendering (and overprint/overprint simulation) not available in this build");
 #endif
 
 	dev->overprint_possible = (dest->seps != NULL);
@@ -3252,7 +3252,7 @@ fz_parse_draw_options(fz_context *ctx, fz_draw_options *opts, const char *args)
 		else if (fz_option_eq(val, "cmyk"))
 			opts->colorspace = fz_device_cmyk(ctx);
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unknown colorspace in options");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown colorspace in options");
 	}
 	if (fz_has_option(ctx, args, "alpha", &val))
 		opts->alpha = fz_option_eq(val, "yes");

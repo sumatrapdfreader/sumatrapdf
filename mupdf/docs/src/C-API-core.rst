@@ -93,9 +93,13 @@ Throwing a new exception can be done with `fz_throw`. Passing an exception along
 .. code-block:: C
 
     enum {
-        FZ_ERROR_MEMORY, // when malloc fails
-        FZ_ERROR_SYNTAX, // recoverable syntax errors
-        FZ_ERROR_GENERIC, // all other errors
+        FZ_ERROR_SYSTEM, // fatal out of memory or syscall error
+        FZ_ERROR_LIBRARY, // unclassified error from third-party library
+        FZ_ERROR_ARGUMENT, // invalid or out-of-range arguments to functions
+        FZ_ERROR_LIMIT, // failed because of resource or other hard limits
+        FZ_ERROR_UNSUPPORTED, // tried to use an unsupported feature
+        FZ_ERROR_FORMAT, // syntax or format errors that are unrecoverable
+        FZ_ERROR_SYNTAX, // syntax errors that should be diagnosed and ignored
     };
     void fz_throw(fz_context *ctx, int error_code, const char *fmt, ...);
     void fz_rethrow(fz_context *ctx);

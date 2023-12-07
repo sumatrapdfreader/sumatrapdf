@@ -48,7 +48,7 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 	while (dict && pdf_is_dict(ctx, dict))
 	{
 		if (pdf_mark_bits_set(ctx, marks, dict))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Cycle detected in outlines");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Cycle detected in outlines");
 
 		parent = pdf_dict_get(ctx, dict, PDF_NAME(Parent));
 		prev = pdf_dict_get(ctx, dict, PDF_NAME(Prev));
@@ -61,11 +61,11 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 		if (fixed == NULL)
 		{
 			if (parent_diff)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Outline parent pointer still bad or missing despite repair");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Outline parent pointer still bad or missing despite repair");
 			if (prev_diff)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Outline prev pointer still bad or missing despite repair");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Outline prev pointer still bad or missing despite repair");
 			if (last_diff)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Outline last pointer still bad or missing despite repair");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Outline last pointer still bad or missing despite repair");
 		}
 		else if (parent_diff || prev_diff || last_diff)
 		{
@@ -370,7 +370,7 @@ pdf_outline_iterator_update(fz_context *ctx, fz_outline_iterator *iter_, fz_outl
 	pdf_document *doc = (pdf_document *)iter->super.doc;
 
 	if (iter->modifier != MOD_NONE || iter->current == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't update a non-existent outline item!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't update a non-existent outline item!");
 
 	pdf_begin_operation(ctx, doc, "Update outline item");
 
@@ -396,7 +396,7 @@ pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 	int count;
 
 	if (iter->modifier != MOD_NONE || iter->current == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't delete a non-existent outline item!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't delete a non-existent outline item!");
 
 	prev = pdf_dict_get(ctx, iter->current, PDF_NAME(Prev));
 	next = pdf_dict_get(ctx, iter->current, PDF_NAME(Next));

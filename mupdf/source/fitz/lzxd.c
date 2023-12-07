@@ -54,7 +54,7 @@ static void
 init_bitstream(fz_context *ctx, bitstream_t *self, const uint8_t *buffer, size_t buffer_len)
 {
 	if (buffer_len & 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Odd length buffer");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Odd length buffer");
 	self->remaining = 0;
 	self->buffer = buffer;
 	self->buffer_len = buffer_len;
@@ -201,7 +201,7 @@ bitstream_read_raw(fz_context *ctx, bitstream_t *self, uint8_t *out, size_t len)
 	size_t read = self->limit - self->rp;
 
 	if (read < advance)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Truncated lzwd bitstream");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated lzwd bitstream");
 	memcpy(out, self->rp, len);
 	self->rp += advance;
 }
@@ -265,7 +265,7 @@ vec8_max(fz_context *ctx, const vec8_t *v)
 	uint8_t max;
 
 	if (v == NULL || (n = v->len) == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected empty vector!");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected empty vector!");
 
 	max = v->v[0];
 	for (i = 1; i < n; i++)
@@ -360,7 +360,7 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 			/* The tree is empty! */
 			if (allow_empty)
 				break;
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Empty huffman tree");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Empty huffman tree");
 		}
 		tree->huffman_tree = huffman_tree = new_vec16(ctx, huffsize);
 
@@ -385,7 +385,7 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 					uint16_t i;
 
 					if (pos + amount > huffsize)
-						fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid huffman tree (overrun)");
+						fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid huffman tree (overrun)");
 
 					for (i = amount; i > 0; i--)
 						huffman_tree->v[pos++] = code;
@@ -395,7 +395,7 @@ canonical_tree_create_instance(fz_context *ctx, canonical_tree_t *self, int own_
 
 		// If we didn't fill the entire table, the path lengths were wrong.
 		if (pos != huffsize)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid huffman tree (underrun)");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid huffman tree (underrun)");
 	}
 	fz_catch(ctx)
 	{
@@ -479,7 +479,7 @@ tree_update_range_with_pretree(fz_context *ctx, canonical_tree_t *self, bitstrea
 				uint16_t zeros = bitstream_read_bits(ctx, bstm, 4) + 4;
 
 				if (i + zeros > self->len)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Overrun with pretree codes");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "Overrun with pretree codes");
 
 				do
 					self->v[i++] = 0;
@@ -491,7 +491,7 @@ tree_update_range_with_pretree(fz_context *ctx, canonical_tree_t *self, bitstrea
 				uint16_t zeros = bitstream_read_bits(ctx, bstm, 5) + 20;
 
 				if (i + zeros > self->len)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Overrun with pretree codes");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "Overrun with pretree codes");
 
 				do
 					self->v[i++] = 0;
@@ -507,7 +507,7 @@ tree_update_range_with_pretree(fz_context *ctx, canonical_tree_t *self, bitstrea
 				uint16_t code = tree_decode_element(ctx, pretree, bstm);
 
 				if (i + same > self->len || code > 16)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Overrun with pretree codes");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "Overrun with pretree codes");
 
 				value = (17 + self->v[i] - code) % 17;
 				do
@@ -518,7 +518,7 @@ tree_update_range_with_pretree(fz_context *ctx, canonical_tree_t *self, bitstrea
 				break;
 			}
 			default:
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid code in pretree updating.");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid code in pretree updating.");
 			}
 		}
 	}
@@ -564,7 +564,7 @@ window_size_position_slots(fz_context *ctx, fz_lzxd_window_size_t ws)
 	case MB16: return 162;
 	case MB32: return 290;
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal window size");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Illegal window size");
 	}
 }
 
@@ -604,11 +604,11 @@ window_create(fz_context *ctx, fz_lzxd_window_size_t ws)
 	// The window must be at least as big as the smallest chunk, or else we can't possibly
 	// contain an entire chunk inside of the sliding window.
 	if (ws < MAX_CHUNK_SIZE)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal LZXD window size");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Illegal LZXD window size");
 
 	// We can use bit operations if we rely on this assumption so make sure it holds.
 	if (!is_power_of_two(ws))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "LZXD Window size must be a power of 2");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "LZXD Window size must be a power of 2");
 
 	w = fz_malloc(ctx, sizeof(window_t) - sizeof(w->buffer) + sizeof(uint8_t) * ws);
 	w->pos = 0;
@@ -691,7 +691,7 @@ static void
 window_copy_from_bitstream(fz_context *ctx, window_t *self, bitstream_t *bstm, size_t len)
 {
 	if (len > self->len)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Window Too Small");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Window Too Small");
 
 	// This seems inefficient. Couldn't we just raw_read in 2 hits and
 	// wraparound?
@@ -711,7 +711,7 @@ static void
 window_past_view(fz_context *ctx, window_t *self, size_t len, uint8_t *uncompressed)
 {
 	if (len > MAX_CHUNK_SIZE)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Attempt to past_view too much");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Attempt to past_view too much");
 
 	// The old code used to shuffle data within the window. We don't do that.
 	// We just copy out the last 32k.
@@ -1087,7 +1087,7 @@ block_read(fz_context *ctx, bitstream_t *bstm, fz_lzxd_t *self)
 
 	block->size = bitstream_read_u24_be(ctx, bstm);
 	if (block->size == 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid Block Size %zd", block->size);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid Block Size %zd", block->size);
 
 	switch(kind)
 	{
@@ -1134,7 +1134,7 @@ block_read(fz_context *ctx, bitstream_t *bstm, fz_lzxd_t *self)
 		break;
 	}
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid Block type");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid Block type");
 	}
 }
 
@@ -1244,7 +1244,7 @@ fz_new_lzxd(fz_context *ctx, fz_lzxd_window_size_t window_size, size_t reset_int
 		self->current_block.kind.u.uncompressed.r[1] = 1;
 		self->current_block.kind.u.uncompressed.r[2] = 1;
 		if (reset_interval & 0x7fff)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal LZXD reset interval");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Illegal LZXD reset interval");
 		self->reset_interval = reset_interval / 0x8000;
 		self->chunk_num = 0;
 	}
@@ -1277,7 +1277,7 @@ try_read_first_chunk(fz_context *ctx, fz_lzxd_t *self, bitstream_t *bstm)
 			//int high = bitstream_read_u16_le(ctx, bstm);
 			//int low = bitstream_read_u16_le(ctx, bstm);
 			//self->e8_translation_size = (high << 16) | low;
-			fz_throw(ctx, FZ_ERROR_GENERIC, "E8 translation unsupported");
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "E8 translation unsupported");
 		}
 		else
 		{
@@ -1306,7 +1306,7 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 	bitstream_t bstm;
 
 	if (chunk_len & 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Odd lengthed chunk");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Odd lengthed chunk");
 
 	init_bitstream(ctx, &bstm, chunk, chunk_len);
 
@@ -1357,7 +1357,7 @@ fz_lzxd_decompress_chunk(fz_context *ctx, fz_lzxd_t *self, const uint8_t *chunk,
 		decoded_len += advance;
 
 		if (self->current_block.size < advance)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Block overread");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Block overread");
 		self->current_block.size -= advance;
 	}
 	while ((self->window->pos & 0x7fff) && !bstm.exhausted);

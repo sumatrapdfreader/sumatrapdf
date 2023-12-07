@@ -719,7 +719,7 @@ parse_code(fz_context *ctx, pdf_function *func, fz_stream *stream, int *codeptr,
 	int a, b, mid, cmp;
 
 	if (depth > 100)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too much recursion in calculator function");
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "too much nesting in calculator function");
 
 	while (1)
 	{

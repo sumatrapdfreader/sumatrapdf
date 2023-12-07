@@ -416,7 +416,7 @@ fz_format_output_path(fz_context *ctx, char *path, size_t size, const char *fmt,
 		num[i++] = '0';
 	n = s - fmt;
 	if (n + i + strlen(p) >= size)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "path name buffer overflow");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "path name buffer overflow");
 	memcpy(path, fmt, n);
 	while (i > 0)
 		path[n++] = num[--i];
@@ -477,6 +477,16 @@ fz_cleanname(char *name)
 		*q++ = '.';
 	*q = '\0';
 	return name;
+}
+
+char *
+fz_cleanname_strdup(fz_context *ctx, const char *name)
+{
+	size_t len = strlen(name);
+	char *newname = fz_malloc(ctx, fz_maxz(2, len + 1));
+	memcpy(newname, name, len + 1);
+	newname[len] = '\0';
+	return fz_cleanname(newname);
 }
 
 enum

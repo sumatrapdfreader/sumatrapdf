@@ -116,7 +116,7 @@ void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
 	if (api == NULL)
 	{
 		fz_clear_leptonica_mem(ctx);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Tesseract initialisation failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract initialisation failed");
 	}
 
 	if (language == NULL || language[0] == 0)
@@ -133,7 +133,7 @@ void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
 	{
 		delete api;
 		fz_clear_leptonica_mem(ctx);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Tesseract initialisation failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract initialisation failed");
 	}
 
 	return api;
@@ -164,7 +164,7 @@ ocr_set_image(fz_context *ctx, tesseract::TessBaseAPI *api, fz_pixmap *pix)
 	Pix *image = pixCreateHeader(pix->w, pix->h, 8);
 
 	if (image == NULL)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "Tesseract image creation failed");
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "Tesseract image creation failed");
 	pixSetData(image, (l_uint32 *)pix->samples);
 	pixSetPadBits(image, 1);
 	pixSetXRes(image, pix->xres);
@@ -272,7 +272,7 @@ void ocr_recognise(fz_context *ctx,
 	if (code < 0)
 	{
 		ocr_clear_image(ctx, image);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "OCR recognise failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "OCR recognise failed");
 	}
 
 	if (!isbigendian())

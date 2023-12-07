@@ -637,7 +637,7 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			link = NULL;
 		}
@@ -1053,7 +1053,7 @@ pdf_add_filespec_from_link(fz_context *ctx, pdf_document *doc, const char *uri)
 		else if (fz_is_external_link(ctx, uri))
 			filespec = pdf_add_url_filespec(ctx, doc, uri);
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "can not add non-uri as file specification");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "can not add non-uri as file specification");
 	}
 	fz_always(ctx)
 		fz_free(ctx, file);
@@ -1096,7 +1096,7 @@ pdf_new_action_from_link(fz_context *ctx, pdf_document *doc, const char *uri)
 			pdf_dict_put_text_string(ctx, action, PDF_NAME(URI), uri);
 		}
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported link URI type");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "unsupported link URI type");
 	}
 	fz_always(ctx)
 		fz_free(ctx, file);

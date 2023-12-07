@@ -35,9 +35,9 @@ pnm_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	int alpha = writer->alpha;
 
 	if (writer->s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PNM writer cannot cope with spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PNM writer cannot cope with spot colors");
 	if (cs && !fz_colorspace_is_gray(ctx, cs) && !fz_colorspace_is_rgb(ctx, cs))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as pnm");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale or rgb to write as pnm");
 
 	/* Treat alpha only as greyscale */
 	if (n == 1 && alpha)
@@ -45,7 +45,7 @@ pnm_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	n -= alpha;
 
 	if (alpha)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PNM writer cannot cope with alpha");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PNM writer cannot cope with alpha");
 
 	if (n == 1)
 		fz_write_printf(ctx, out, "P5\n");
@@ -66,7 +66,7 @@ pnm_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band_sta
 	int end = band_start + band_height;
 
 	if (n != 1 && n != 3)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as pnm");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale or rgb to write as pnm");
 
 	if (!out)
 		return;
@@ -169,7 +169,7 @@ pam_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	int alpha = writer->alpha;
 
 	if (writer->s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PAM writer cannot cope with spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PAM writer cannot cope with spot colors");
 
 	fz_write_printf(ctx, out, "P7\n");
 	fz_write_printf(ctx, out, "WIDTH %d\n", w);
@@ -187,7 +187,7 @@ pam_write_header(fz_context *ctx, fz_band_writer *writer, fz_colorspace *cs)
 	else if (n == 4 && !alpha && fz_colorspace_is_cmyk(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE CMYK\n");
 	else if (n == 4 && alpha && fz_colorspace_is_cmyk(ctx, cs)) fz_write_printf(ctx, out, "TUPLTYPE CMYK_ALPHA\n");
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be alpha only, gray, rgb, or cmyk");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be alpha only, gray, rgb, or cmyk");
 	fz_write_printf(ctx, out, "ENDHDR\n");
 }
 

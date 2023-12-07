@@ -111,7 +111,7 @@ xps_read_part(fz_context *ctx, xps_document *doc, char *partname)
 						seen_last = 1;
 					}
 					else
-						fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find all pieces for part '%s'", partname);
+						fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find all pieces for part '%s'", partname);
 				}
 			}
 		}

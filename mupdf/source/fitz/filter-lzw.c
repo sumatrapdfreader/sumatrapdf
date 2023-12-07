@@ -143,7 +143,7 @@ next_lzwd(fz_context *ctx, fz_stream *stm, size_t len)
 		}
 		else if (code > next_code || (!lzw->old_tiff && next_code >= NUM_CODES))
 		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "out of range code encountered in lzw decode");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "out of range code encountered in lzw decode");
 		}
 		else if (next_code < NUM_CODES)
 		{
@@ -156,7 +156,7 @@ next_lzwd(fz_context *ctx, fz_stream *stm, size_t len)
 			else if (code == next_code)
 				table[next_code].value = table[next_code].first_char;
 			else
-				fz_throw(ctx, FZ_ERROR_GENERIC, "out of range code encountered in lzw decode");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "out of range code encountered in lzw decode");
 
 			next_code ++;
 

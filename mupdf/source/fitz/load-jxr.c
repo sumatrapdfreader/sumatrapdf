@@ -179,7 +179,7 @@ jxr_unpack_sample(fz_context *ctx, struct info *info, jxr_image_t image, int *sp
 	{
 		switch (bpc)
 		{
-		default: fz_throw(ctx, FZ_ERROR_GENERIC, "unknown sample type: %d", bpc);
+		default: fz_throw(ctx, FZ_ERROR_FORMAT, "unknown sample type: %d", bpc);
 		case JXR_BD1WHITE1: dp[k] = sp[k] ? 255 : 0; break;
 		case JXR_BD1BLACK1: dp[k] = sp[k] ? 0 : 255; break;
 		case JXR_BD5: dp[k] = sp[k] << 3; break;
@@ -215,7 +215,7 @@ jxr_unpack_alpha_sample(fz_context *ctx, struct info *info, jxr_image_t image, i
 	int bpc = jxr_get_CONTAINER_BPC(image);
 	switch (bpc)
 	{
-	default: fz_throw(ctx, FZ_ERROR_GENERIC, "unknown alpha sample type: %d", bpc);
+	default: fz_throw(ctx, FZ_ERROR_FORMAT, "unknown alpha sample type: %d", bpc);
 	case JXR_BD8: dp[0] = sp[0]; break;
 	case JXR_BD10: dp[0] = sp[0] >> 2; break;
 	case JXR_BD16: dp[0] = sp[0] >> 8; break;
@@ -318,7 +318,7 @@ jxr_read_image(fz_context *ctx, const unsigned char *data, int size, struct info
 
 		rc = jxr_read_image_container_memory(container, (unsigned char *)data, size);
 		if (rc < 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read jxr image container: %s", jxr_error_string(rc));
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot read jxr image container: %s", jxr_error_string(rc));
 
 		info->xres = jxrc_width_resolution(container, 0);
 		info->yres = jxrc_height_resolution(container, 0);
@@ -334,7 +334,7 @@ jxr_read_image(fz_context *ctx, const unsigned char *data, int size, struct info
 				break;
 			}
 		if (i == nelem(pixelformats))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported pixel format: %u", info->format);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported pixel format: %u", info->format);
 
 		if (info->comps == 1)
 			info->cspace = fz_device_gray(ctx);
@@ -375,7 +375,7 @@ jxr_read_image(fz_context *ctx, const unsigned char *data, int size, struct info
 
 			rc = jxr_read_image_bitstream_memory(image, (unsigned char *)data + image_offset, size - image_offset);
 			if (rc < 0)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read jxr image: %s", jxr_error_string(rc));
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot read jxr image: %s", jxr_error_string(rc));
 
 			if (info->format == JXRC_FMT_32bppPBGRA ||
 					info->format == JXRC_FMT_64bppPRGBA ||
@@ -403,7 +403,7 @@ jxr_read_image(fz_context *ctx, const unsigned char *data, int size, struct info
 
 				rc = jxr_read_image_bitstream_memory(alpha, (unsigned char *)data + alpha_offset, size - alpha_offset);
 				if (rc < 0)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read jxr image: %s", jxr_error_string(rc));
+					fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot read jxr image: %s", jxr_error_string(rc));
 			}
 		}
 	}
@@ -472,13 +472,13 @@ fz_load_jxr_info(fz_context *ctx, const unsigned char *data, size_t size, int *w
 fz_pixmap *
 fz_load_jxr(fz_context *ctx, const unsigned char *data, size_t size)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "JPEG-XR codec is not available");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "JPEG-XR codec is not available");
 }
 
 void
 fz_load_jxr_info(fz_context *ctx, const unsigned char *data, size_t size, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
 {
-	fz_throw(ctx, FZ_ERROR_GENERIC, "JPEG-XR codec is not available");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "JPEG-XR codec is not available");
 }
 
 #endif /* HAVE_JPEGXR */

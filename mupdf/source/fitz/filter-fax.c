@@ -411,13 +411,13 @@ dec1d(fz_context *ctx, fz_faxd *fax)
 		code = get_code(ctx, fax, cf_white_decode, cfd_white_initial_bits);
 
 	if (code == UNCOMPRESSED)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "uncompressed data in faxd");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "uncompressed data in faxd");
 
 	if (code < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "negative code in 1d faxd");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "negative code in 1d faxd");
 
 	if (fax->a + code > fax->columns)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "overflow in 1d faxd");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "overflow in 1d faxd");
 
 	if (fax->c)
 		setbits(fax->dst, fax->a, fax->a + code);
@@ -450,13 +450,13 @@ dec2d(fz_context *ctx, fz_faxd *fax)
 			code = get_code(ctx, fax, cf_white_decode, cfd_white_initial_bits);
 
 		if (code == UNCOMPRESSED)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "uncompressed data in faxd");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "uncompressed data in faxd");
 
 		if (code < 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "negative code in 2d faxd");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "negative code in 2d faxd");
 
 		if (fax->a + code > fax->columns)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "overflow in 2d faxd");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "overflow in 2d faxd");
 
 		if (fax->c)
 			setbits(fax->dst, fax->a, fax->a + code);
@@ -549,13 +549,13 @@ dec2d(fz_context *ctx, fz_faxd *fax)
 		break;
 
 	case UNCOMPRESSED:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "uncompressed data in faxd");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "uncompressed data in faxd");
 
 	case ERROR:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid code in 2d faxd");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid code in 2d faxd");
 
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid code in 2d faxd (%d)", code);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid code in 2d faxd (%d)", code);
 	}
 }
 
@@ -580,7 +580,7 @@ next_faxd(fz_context *ctx, fz_stream *stm, size_t max)
 				eat_bits(fax, 1);
 		}
 		if ((fax->word >> (32 - 12)) != 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "initial EOL not found");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "initial EOL not found");
 	}
 
 	if (fax->stage == STATE_INIT)
@@ -644,7 +644,7 @@ loop:
 		}
 		fz_catch(ctx)
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			goto error;
 		}
@@ -658,7 +658,7 @@ loop:
 		}
 		fz_catch(ctx)
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			goto error;
 		}
@@ -834,7 +834,7 @@ fz_open_faxd(fz_context *ctx, fz_stream *chain,
 	fz_faxd *fax;
 
 	if (columns < 0 || columns >= INT_MAX - 7)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "too many columns lead to an integer overflow (%d)", columns);
+		fz_throw(ctx, FZ_ERROR_LIMIT, "too many columns integer overflow (%d)", columns);
 
 	fax = fz_malloc_struct(ctx, fz_faxd);
 	fz_try(ctx)

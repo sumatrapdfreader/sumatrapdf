@@ -270,7 +270,7 @@ static void
 push_cmd(fz_context *ctx, fz_path *path, int cmd)
 {
 	if (path->refs != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot modify shared paths");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot modify shared paths");
 
 	if (path->cmd_len + 1 >= path->cmd_cap)
 	{
@@ -327,7 +327,7 @@ void
 fz_moveto(fz_context *ctx, fz_path *path, float x, float y)
 {
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	if (path->cmd_len > 0 && LAST_CMD(path) == FZ_MOVETO)
 	{
@@ -352,7 +352,7 @@ fz_lineto(fz_context *ctx, fz_path *path, float x, float y)
 	float x0, y0;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	x0 = path->current.x;
 	y0 = path->current.y;
@@ -402,7 +402,7 @@ fz_curveto(fz_context *ctx, fz_path *path,
 	float x0, y0;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	x0 = path->current.x;
 	y0 = path->current.y;
@@ -459,7 +459,7 @@ fz_quadto(fz_context *ctx, fz_path *path,
 	float x0, y0;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	x0 = path->current.x;
 	y0 = path->current.y;
@@ -491,7 +491,7 @@ fz_curvetov(fz_context *ctx, fz_path *path, float x2, float y2, float x3, float 
 	float x0, y0;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	x0 = path->current.x;
 	y0 = path->current.y;
@@ -528,7 +528,7 @@ fz_curvetoy(fz_context *ctx, fz_path *path, float x1, float y1, float x3, float 
 	float x0, y0;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	x0 = path->current.x;
 	y0 = path->current.y;
@@ -560,7 +560,7 @@ fz_closepath(fz_context *ctx, fz_path *path)
 	uint8_t rep;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	if (path->cmd_len == 0)
 	{
@@ -626,7 +626,7 @@ void
 fz_rectto(fz_context *ctx, fz_path *path, float x1, float y1, float x2, float y2)
 {
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot modify a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot modify a packed path");
 
 	if (path->cmd_len > 0 && LAST_CMD(path) == FZ_MOVETO)
 	{
@@ -1013,7 +1013,7 @@ fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
 	fz_point p, p1, p2, p3, q, s;
 
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot transform a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot transform a packed path");
 
 	if (ctm.b == 0 && ctm.c == 0)
 	{
@@ -1371,7 +1371,7 @@ fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
 void fz_trim_path(fz_context *ctx, fz_path *path)
 {
 	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't trim a packed path");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't trim a packed path");
 	if (path->cmd_cap > path->cmd_len)
 	{
 		path->cmds = fz_realloc_array(ctx, path->cmds, path->cmd_len, unsigned char);
@@ -1605,7 +1605,7 @@ fz_clone_path(fz_context *ctx, fz_path *path)
 				}
 			}
 		default:
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unknown packing method found in path");
+			assert(!"Unknown packing method found in path");
 		}
 	}
 	fz_catch(ctx)

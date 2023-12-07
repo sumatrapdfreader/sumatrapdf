@@ -59,7 +59,7 @@ xps_find_image_brush_source_part(fz_context *ctx, xps_document *doc, char *base_
 
 	image_source_att = fz_xml_att(root, "ImageSource");
 	if (!image_source_att)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find image source attribute");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find image source attribute");
 
 	/* "{ColorConvertedBitmap /Resources/Image.tiff /Resources/Profile.icc}" */
 	if (strstr(image_source_att, "{ColorConvertedBitmap") == image_source_att)
@@ -90,7 +90,7 @@ xps_find_image_brush_source_part(fz_context *ctx, xps_document *doc, char *base_
 	}
 
 	if (!image_name)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find image source");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find image source");
 
 	if (image_part)
 	{
@@ -135,7 +135,7 @@ xps_parse_image_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rect
 		}
 		else
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			fz_warn(ctx, "cannot find image source");
 		}
@@ -152,7 +152,7 @@ xps_parse_image_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rect
 	}
 	fz_catch(ctx)
 	{
-		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);
 		fz_warn(ctx, "cannot decode image resource");
 		return;

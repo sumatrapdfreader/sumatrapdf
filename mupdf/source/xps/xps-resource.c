@@ -96,7 +96,7 @@ xps_parse_remote_resource_dictionary(fz_context *ctx, xps_document *doc, char *b
 	{
 		xml = fz_parse_xml(ctx, part->data, 0);
 		if (!fz_xml_is_tag(fz_xml_root(xml), "ResourceDictionary"))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected ResourceDictionary element");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "expected ResourceDictionary element");
 
 		fz_strlcpy(part_uri, part_name, sizeof part_uri);
 		s = strrchr(part_uri, '/');

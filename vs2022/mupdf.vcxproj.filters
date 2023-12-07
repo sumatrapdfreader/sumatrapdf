@@ -135,6 +135,12 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\hash.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\heap-imp.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\heap.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\fitz\image.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
@@ -549,6 +555,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\hash.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\heap.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\image.c">

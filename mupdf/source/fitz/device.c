@@ -143,7 +143,7 @@ pop_clip_stack(fz_context *ctx, fz_device *dev, int type)
 	if (dev->container_len == 0 || dev->container[dev->container_len-1].type != type)
 	{
 		fz_disable_device(ctx, dev);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "device calls unbalanced");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "device calls unbalanced");
 	}
 	dev->container_len--;
 }
@@ -154,7 +154,7 @@ pop_push_clip_stack(fz_context *ctx, fz_device *dev, int pop_type, int push_type
 	if (dev->container_len == 0 || dev->container[dev->container_len-1].type != pop_type)
 	{
 		fz_disable_device(ctx, dev);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "device calls unbalanced");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "device calls unbalanced");
 	}
 	dev->container[dev->container_len-1].type = push_type;
 }
@@ -350,7 +350,7 @@ void
 fz_fill_image(fz_context *ctx, fz_device *dev, fz_image *image, fz_matrix ctm, float alpha, fz_color_params color_params)
 {
 	if (image->colorspace == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "argument to fill image must be a color image");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "argument to fill image must be a color image");
 	if (dev->fill_image)
 	{
 		fz_try(ctx)

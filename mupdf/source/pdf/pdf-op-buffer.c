@@ -614,7 +614,7 @@ pdf_out_BI(fz_context *ctx, pdf_processor *proc, fz_image *img, const char *colo
 	else if (colorspace)
 		fz_write_printf(ctx, out, "/CS%n\n", colorspace);
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "BI operator can only show ImageMask, Gray, RGB, or CMYK images");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "BI operator can only show ImageMask, Gray, RGB, or CMYK images");
 	if (img->interpolate)
 		fz_write_string(ctx, out, "/I true\n");
 	fz_write_string(ctx, out, "/D[");
@@ -629,7 +629,7 @@ pdf_out_BI(fz_context *ctx, pdf_processor *proc, fz_image *img, const char *colo
 	switch (cbuf->params.type)
 	{
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown compressed buffer type");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown compressed buffer type");
 		break;
 
 	case FZ_IMAGE_JPEG:

@@ -267,7 +267,7 @@ xps_lookup_font(fz_context *ctx, xps_document *doc, char *base_uri, char *font_u
 			}
 			else
 			{
-				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 				fz_report_error(ctx);
 				fz_warn(ctx, "cannot find font resource part '%s'", partname);
 			}

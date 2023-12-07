@@ -41,7 +41,7 @@ void fz_deflate(fz_context *ctx, unsigned char *dest, size_t *destLen, const uns
 
 	err = deflateInit(&stream, (int)level);
 	if (err != Z_OK)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "zlib compression failed: %d", err);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "deflateInit failed: %d", err);
 
 	stream.next_out = dest;
 	stream.avail_out = 0;
@@ -64,7 +64,7 @@ void fz_deflate(fz_context *ctx, unsigned char *dest, size_t *destLen, const uns
 	*destLen = stream.total_out;
 	deflateEnd(&stream);
 	if (err != Z_STREAM_END)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Zlib failure: %d", err);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "deflate error: %d", err);
 }
 
 unsigned char *fz_new_deflated_data(fz_context *ctx, size_t *compressed_length, const unsigned char *source, size_t source_length, fz_deflate_level level)

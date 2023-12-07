@@ -106,7 +106,7 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 		if (n == 0)
 			break;
 		if (n < nelem(record))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar record");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in tar record");
 
 		if (is_zeroed(ctx, record, nelem(record)))
 			continue;
@@ -119,7 +119,7 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 
 		size = otoi(octsize);
 		if (size > INT_MAX)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "tar archive entry too large");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "tar archive entry too large");
 
 		typeflag = (char) record[156];
 
@@ -130,7 +130,7 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 			{
 				n = fz_read(ctx, file, (unsigned char *) longname, size);
 				if (n < (size_t) size)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar long name entry name");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in tar long name entry name");
 				longname[size] = '\0';
 			}
 			fz_catch(ctx)
@@ -206,7 +206,7 @@ static fz_buffer *read_tar_entry(fz_context *ctx, fz_archive *arch, const char *
 		fz_seek(ctx, file, ent->offset + 512, 0);
 		ubuf->len = fz_read(ctx, file, ubuf->data, ent->size);
 		if (ubuf->len != (size_t)ent->size)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read entire archive entry");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot read entire archive entry");
 	}
 	fz_catch(ctx)
 	{
@@ -243,7 +243,6 @@ fz_is_tar_archive(fz_context *ctx, fz_stream *file)
 {
 	const unsigned char gnusignature[6] = { 'u', 's', 't', 'a', 'r', ' ' };
 	const unsigned char paxsignature[6] = { 'u', 's', 't', 'a', 'r', '\0' };
-	const unsigned char v7signature[6] = { '\0', '\0', '\0', '\0', '\0', '\0' };
 	unsigned char data[6];
 	size_t n;
 
@@ -255,8 +254,6 @@ fz_is_tar_archive(fz_context *ctx, fz_stream *file)
 		return 1;
 	if (!memcmp(data, paxsignature, nelem(paxsignature)))
 		return 1;
-	if (!memcmp(data, v7signature, nelem(v7signature)))
-		return 1;
 
 	return 0;
 }
@@ -267,7 +264,7 @@ fz_open_tar_archive_with_stream(fz_context *ctx, fz_stream *file)
 	fz_tar_archive *tar;
 
 	if (!fz_is_tar_archive(ctx, file))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot recognize tar archive");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot recognize tar archive");
 
 	tar = fz_new_derived_archive(ctx, file, fz_tar_archive);
 	tar->super.format = "tar";

@@ -65,7 +65,7 @@ check_same_doc(fz_context *ctx, fz_xml *a, fz_xml *b)
 {
 	/* Sanity check: The child and parent must come from the same doc. */
 	if (doc_pointer(a) != doc_pointer(b))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Parent and child must be from the same document");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Parent and child must be from the same document");
 }
 
 /* Helper function to skip forward if we are passed a
@@ -273,7 +273,7 @@ void fz_dom_append_child(fz_context *ctx, fz_xml *parent, fz_xml *child)
 	while (x)
 	{
 		if (x == child)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't add a parent to its child.");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't add a parent to its child.");
 		x = x->up;
 	}
 
@@ -325,7 +325,7 @@ void fz_dom_insert_before(fz_context *ctx, fz_xml *existing, fz_xml *elt)
 	while (x)
 	{
 		if (x == elt)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't add a node before its child.");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't add a node before its child.");
 		x = x->up;
 	}
 
@@ -369,7 +369,7 @@ void fz_dom_insert_after(fz_context *ctx, fz_xml *existing, fz_xml *elt)
 	while (x)
 	{
 		if (x == elt)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't add a node after its child.");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't add a node after its child.");
 		x = x->up;
 	}
 
@@ -467,7 +467,7 @@ void fz_dom_add_attribute(fz_context *ctx, fz_xml *elt, const char *att, const c
 		return;
 
 	if (FZ_TEXT_ITEM(elt))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot add attributes to text node.");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot add attributes to text node.");
 
 	/* Move value to being a malloced thing, with the entity parsing done. */
 	if (value) {
@@ -554,7 +554,7 @@ void fz_dom_remove_attribute(fz_context *ctx, fz_xml *elt, const char *att)
 		return;
 
 	if (FZ_TEXT_ITEM(elt))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot add attributes to text node.");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot add attributes to text node.");
 
 	attr = &elt->u.node.u.d.atts;
 	while (*attr)

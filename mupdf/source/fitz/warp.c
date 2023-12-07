@@ -281,7 +281,7 @@ fz_warp_pixmap(fz_context *ctx, fz_pixmap *src, const fz_point points[4], int wi
 		return NULL;
 
 	if (width >= (1<<24) || width < 0 || height >= (1<<24) || height < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Bad width/height");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "Bad width/height");
 
 	dst = fz_new_pixmap(ctx, src->colorspace, width, height,
 			src->seps, src->alpha);

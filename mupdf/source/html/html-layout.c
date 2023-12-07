@@ -249,7 +249,7 @@ static int walk_string(string_walker *walker)
 		walker->scale = face->units_per_EM;
 		fterr = FT_Set_Char_Size(face, walker->scale, walker->scale, 72, 72);
 		if (fterr)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "freetype setting character size: %s", ft_error_string(fterr));
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "freetype setting character size: %s", ft_error_string(fterr));
 
 		hb_buffer_clear_contents(walker->hb_buf);
 		hb_buffer_set_direction(walker->hb_buf, walker->rtl ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);

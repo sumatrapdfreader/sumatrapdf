@@ -88,7 +88,7 @@ fz_malloc(fz_context *ctx, size_t size)
 		return NULL;
 	p = do_scavenging_malloc(ctx, size);
 	if (!p)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "malloc of %zu bytes failed", size);
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "malloc (%zu bytes) failed", size);
 	return p;
 }
 
@@ -107,10 +107,10 @@ fz_calloc(fz_context *ctx, size_t count, size_t size)
 	if (count == 0 || size == 0)
 		return NULL;
 	if (count > SIZE_MAX / size)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "calloc (%zu x %zu bytes) failed (size_t overflow)", count, size);
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "calloc (%zu x %zu bytes) failed (size_t overflow)", count, size);
 	p = do_scavenging_malloc(ctx, count * size);
 	if (!p)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "calloc (%zu x %zu bytes) failed", count, size);
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "calloc (%zu x %zu bytes) failed", count, size);
 	memset(p, 0, count*size);
 	return p;
 }
@@ -139,7 +139,7 @@ fz_realloc(fz_context *ctx, void *p, size_t size)
 	}
 	p = do_scavenging_realloc(ctx, p, size);
 	if (!p)
-		fz_throw(ctx, FZ_ERROR_MEMORY, "realloc (%zu bytes) failed", size);
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "realloc (%zu bytes) failed", size);
 	return p;
 }
 

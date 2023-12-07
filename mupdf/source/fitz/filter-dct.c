@@ -91,7 +91,7 @@ fz_dct_mem_init(struct jpeg_decompress_struct *cinfo, fz_dctd *state)
 				fz_dct_mem_alloc, fz_dct_mem_free, NULL))
 	{
 		fz_free(state->ctx, custmptr);
-		fz_throw(state->ctx, FZ_ERROR_GENERIC, "cannot initialize custom JPEG memory handler");
+		fz_throw(state->ctx, FZ_ERROR_LIBRARY, "cannot initialize custom JPEG memory handler");
 	}
 	cinfo->client_data = custmptr;
 }
@@ -115,7 +115,7 @@ static void error_exit_dct(j_common_ptr cinfo)
 	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
 	fz_context *ctx = state->ctx;
 	cinfo->err->format_message(cinfo, msg);
-	fz_throw(ctx, FZ_ERROR_GENERIC, "jpeg error: %s", msg);
+	fz_throw(ctx, FZ_ERROR_LIBRARY, "jpeg error: %s", msg);
 }
 
 static void output_message_dct(j_common_ptr cinfo)

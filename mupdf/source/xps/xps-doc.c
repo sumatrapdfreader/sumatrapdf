@@ -366,7 +366,7 @@ xps_read_page_list(fz_context *ctx, xps_document *doc)
 	xps_read_and_process_metadata_part(ctx, doc, "/_rels/.rels", NULL);
 
 	if (!doc->start_part)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find fixed document sequence start part");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find fixed document sequence start part");
 
 	xps_read_and_process_metadata_part(ctx, doc, doc->start_part, NULL);
 
@@ -381,7 +381,7 @@ xps_read_page_list(fz_context *ctx, xps_document *doc)
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			fz_warn(ctx, "cannot process FixedDocument rels part");
 		}
@@ -412,25 +412,25 @@ xps_load_fixed_page(fz_context *ctx, xps_document *doc, xps_fixpage *page)
 
 		root = fz_xml_root(xml);
 		if (!root)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "FixedPage missing root element");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "FixedPage missing root element");
 
 		if (fz_xml_is_tag(root, "AlternateContent"))
 		{
 			fz_xml *node = xps_lookup_alternate_content(ctx, doc, root);
 			if (!node)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "FixedPage missing alternate root element");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "FixedPage missing alternate root element");
 			fz_detach_xml(ctx, node);
 			root = node;
 		}
 
 		if (!fz_xml_is_tag(root, "FixedPage"))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "expected FixedPage element");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "expected FixedPage element");
 		width_att = fz_xml_att(root, "Width");
 		if (!width_att)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "FixedPage missing required attribute: Width");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "FixedPage missing required attribute: Width");
 		height_att = fz_xml_att(root, "Height");
 		if (!height_att)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "FixedPage missing required attribute: Height");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "FixedPage missing required attribute: Height");
 
 		page->width = atoi(width_att);
 		page->height = atoi(height_att);
@@ -503,7 +503,7 @@ xps_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 		n ++;
 	}
 
-	fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page %d", number + 1);
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot find page %d", number + 1);
 }
 
 static int
@@ -544,6 +544,8 @@ xps_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 	fz_try(ctx)
 	{
 		arch = fz_try_open_archive_with_stream(ctx, stream);
+		if (arch == NULL)
+			break;
 
 		xml = fz_try_parse_xml_archive_entry(ctx, arch, "/_rels/.rels", 0);
 		if (xml == NULL)

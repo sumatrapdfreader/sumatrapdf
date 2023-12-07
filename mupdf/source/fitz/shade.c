@@ -1006,7 +1006,7 @@ fz_process_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_rect scisso
 	else if (shade->type == FZ_MESH_TYPE7)
 		fz_process_shade_type7(ctx, shade, ctm, &painter);
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected mesh type %d\n", shade->type);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unexpected mesh type %d\n", shade->type);
 }
 
 static fz_rect
@@ -1094,7 +1094,7 @@ fz_bound_mesh(fz_context *ctx, fz_shade *shade)
 		shade->type == FZ_MESH_TYPE7)
 		return fz_bound_mesh_type4567(ctx, shade);
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected mesh type %d\n", shade->type);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unexpected mesh type %d\n", shade->type);
 }
 
 fz_shade *

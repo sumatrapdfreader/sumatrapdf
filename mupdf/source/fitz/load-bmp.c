@@ -167,10 +167,10 @@ static const unsigned char *
 bmp_read_file_header(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
 {
 	if (end - p < 14)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in file header in bmp image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in file header in bmp image");
 
 	if (!is_bitmap(p))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid signature %02x%02x in bmp image", p[0], p[1]);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid signature %02x%02x in bmp image", p[0], p[1]);
 
 	info->type[0] = read8(p + 0);
 	info->type[1] = read8(p + 1);
@@ -593,7 +593,7 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 	else if (is_os2_bmp(info) && info->compression == BI_HUFFMAN1D)
 		ssp = decompressed = bmp_decompress_huffman1d(ctx, info, p, &end);
 	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unhandled compression (%u)  in bmp image", info->compression);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unhandled compression (%u)  in bmp image", info->compression);
 
 	bitcount = info->bitcount;
 	width = info->width;
@@ -606,7 +606,7 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 		if (h == 0 || h > SHRT_MAX)
 		{
 			fz_free(ctx, decompressed);
-			fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions out of range in bmp image");
+			fz_throw(ctx, FZ_ERROR_LIMIT, "image dimensions out of range in bmp image");
 		}
 	}
 
@@ -806,7 +806,12 @@ bmp_read_color_profile(fz_context *ctx, struct info *info, const unsigned char *
 		fz_buffer *profile;
 		fz_colorspace *cs;
 
-		if ((uint32_t)(end - begin) < info->profileoffset + info->profilesize)
+		if ((uint32_t)(end - begin) <= info->profileoffset)
+		{
+			fz_warn(ctx, "ignoring color profile located outside bmp image");
+			return NULL;
+		}
+		if ((uint32_t)(end - begin) - info->profileoffset < info->profilesize)
 		{
 			fz_warn(ctx, "ignoring truncated color profile in bmp image");
 			return NULL;
@@ -853,7 +858,7 @@ bmp_read_color_masks(fz_context *ctx, struct info *info, const unsigned char *be
 	{
 		size = 12;
 		if (end - p < 12)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in mask header in bmp image");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in mask header in bmp image");
 
 		info->rmask = read32(p + 0);
 		info->gmask = read32(p + 4);
@@ -863,7 +868,7 @@ bmp_read_color_masks(fz_context *ctx, struct info *info, const unsigned char *be
 	{
 		size = 16;
 		if (end - p < 16)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in mask header in bmp image");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in mask header in bmp image");
 
 		info->rmask = read32(p + 0);
 		info->gmask = read32(p + 4);
@@ -965,13 +970,13 @@ bmp_read_info_header(fz_context *ctx, struct info *info, const unsigned char *be
 	uint32_t size;
 
 	if (end - p < 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in info header in bmp image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in info header in bmp image");
 	size = info->version = read32(p + 0);
 
 	if (!is_win_bmp(info) && !is_os2_bmp(info))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown header version (%u) in bmp image", info->version);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown header version (%u) in bmp image", info->version);
 	if ((uint32_t)(end - p) < size)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in info header in bmp image");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end in info header in bmp image");
 
 	/* default compression */
 	info->compression = BI_NONE;
@@ -1164,19 +1169,19 @@ bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, c
 	compute_mask_info(info->amask, &info->ashift, &info->abits);
 
 	if (info->width == 0 || info->width > SHRT_MAX || info->height == 0 || info->height > SHRT_MAX)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions (%u x %u) out of range in bmp image", info->width, info->height);
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image dimensions (%u x %u) out of range in bmp image", info->width, info->height);
 	if (!is_valid_compression(info))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported compression method (%u) in bmp image", info->compression);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported compression method (%u) in bmp image", info->compression);
 	if (!is_valid_bitcount(info))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid bits per pixel (%u) for compression (%u) in bmp image", info->bitcount, info->compression);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "invalid bits per pixel (%u) for compression (%u) in bmp image", info->bitcount, info->compression);
 	if (info->rbits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit red mask in bmp image", info->rbits);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported %u bit red mask in bmp image", info->rbits);
 	if (info->gbits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit green mask in bmp image", info->gbits);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported %u bit green mask in bmp image", info->gbits);
 	if (info->bbits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit blue mask in bmp image", info->bbits);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported %u bit blue mask in bmp image", info->bbits);
 	if (info->abits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit alpha mask in bmp image", info->abits);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unsupported %u bit alpha mask in bmp image", info->abits);
 
 	/* Read color profile or default to RGB */
 	if (has_color_profile(info))
@@ -1263,7 +1268,7 @@ fz_load_bmp_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int 
 		p = begin + nextoffset;
 
 		if (end - p < 14)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "not enough data for bitmap array (%02x%02x) in bmp image", p[0], p[1]);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "not enough data for bitmap array (%02x%02x) in bmp image", p[0], p[1]);
 
 		if (!is_bitmap_array(p))
 		{
@@ -1291,7 +1296,7 @@ fz_load_bmp_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int 
 	} while (subimage >= 0 && nextoffset > 0);
 
 	if (subimage != -1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "subimage index (%d) out of range in bmp image", origidx);
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "subimage index (%d) out of range in bmp image", origidx);
 
 	fz_try(ctx)
 		image = bmp_read_image(ctx, &info, begin, end, p, 0);
@@ -1316,7 +1321,7 @@ fz_load_bmp_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len
 		const unsigned char *p = begin + nextoffset;
 
 		if (end - p < 14)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "not enough data for bitmap array in bmp image");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "not enough data for bitmap array in bmp image");
 
 		if (!is_bitmap_array(p))
 		{

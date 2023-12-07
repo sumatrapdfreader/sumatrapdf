@@ -39,7 +39,7 @@ static void putchunk(fz_context *ctx, fz_output *out, char *tag, unsigned char *
 	unsigned int sum;
 
 	if ((uint32_t)size != size)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PNG chunk too large");
+		fz_throw(ctx, FZ_ERROR_LIMIT, "PNG chunk too large");
 
 	fz_write_int32_be(ctx, out, (int)size);
 	fz_write_data(ctx, out, tag, 4);
@@ -171,11 +171,11 @@ png_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	int color;
 
 	if (writer->super.s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PNGs cannot contain spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PNGs cannot contain spot colors");
 	if (fz_colorspace_type(ctx, cs) == FZ_COLORSPACE_BGR)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap can not be bgr");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap can not be bgr");
 	if (cs && !fz_colorspace_is_gray(ctx, cs) && !fz_colorspace_is_rgb(ctx, cs))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as png");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale or rgb to write as png");
 
 	/* Treat alpha only as greyscale */
 	if (n == 1 && alpha)
@@ -187,7 +187,7 @@ png_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	case 1: color = (alpha ? 4 : 0); break; /* 0 = Greyscale, 4 = Greyscale + Alpha */
 	case 3: color = (alpha ? 6 : 2); break; /* 2 = RGB, 6 = RGBA */
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as png");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale or rgb to write as png");
 	}
 
 	big32(head+0, w);
@@ -235,10 +235,10 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		size_t usize = w;
 
 		if (usize > SIZE_MAX / n - 1)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
+			fz_throw(ctx, FZ_ERROR_LIMIT, "png data too large.");
 		usize = usize * n + 1;
 		if (usize > SIZE_MAX / band_height)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "png data too large.");
+			fz_throw(ctx, FZ_ERROR_LIMIT, "png data too large.");
 		usize *= band_height;
 		writer->stream.opaque = ctx;
 		writer->stream.zalloc = fz_zlib_alloc;
@@ -246,7 +246,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		writer->stream_started = 1;
 		err = deflateInit(&writer->stream, Z_DEFAULT_COMPRESSION);
 		if (err != Z_OK)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "compression error %d", err);
 		writer->usize = usize;
 		/* Now figure out how large a buffer we need to compress into.
 		 * deflateBound always expands a bit, and it's limited by being
@@ -309,7 +309,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 
 		err = deflate(&writer->stream, (finalband && remain == writer->stream.avail_in) ? Z_FINISH : Z_NO_FLUSH);
 		if (err != Z_OK && err != Z_STREAM_END)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "compression error %d", err);
 
 		/* We are guaranteed that writer->stream.next_in will have been updated for the
 		 * data that has been eaten. */
@@ -340,7 +340,7 @@ png_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 	writer->stream_ended = 1;
 	err = deflateEnd(&writer->stream);
 	if (err != Z_OK)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "compression error %d", err);
 
 	putchunk(ctx, out, "IEND", block, 0);
 }

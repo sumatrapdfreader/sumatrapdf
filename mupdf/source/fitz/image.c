@@ -1065,7 +1065,7 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 	fz_catch(ctx)
 	{
 		/* Do nothing */
-		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);
 	}
 
@@ -1345,7 +1345,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 	uint8_t orientation = 0;
 
 	if (len < 8)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown image file format");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown image file format");
 
 	type = fz_recognize_image_format(ctx, buf);
 	bpc = 8;
@@ -1383,7 +1383,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 		bpc = 1;
 		break;
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown image file format");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown image file format");
 	}
 
 	fz_try(ctx)

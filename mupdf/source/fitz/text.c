@@ -115,7 +115,7 @@ fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int 
 	fz_text_span *span;
 
 	if (text->refs != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot modify shared text objects");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot modify shared text objects");
 
 	span = fz_add_text_span(ctx, text, font, wmode, bidi_level, markup_dir, lang, trm);
 

@@ -577,7 +577,7 @@ fz_bitmap *fz_new_bitmap_from_pixmap_band(fz_context *ctx, fz_pixmap *pix, fz_ha
 	n -= alpha;
 
 	if (alpha != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have alpha channel to convert to bitmap");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap may not have alpha channel to convert to bitmap");
 
 	switch(n)
 	{
@@ -588,7 +588,7 @@ fz_bitmap *fz_new_bitmap_from_pixmap_band(fz_context *ctx, fz_pixmap *pix, fz_ha
 		thresh = do_threshold_4;
 		break;
 	default:
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or CMYK to convert to bitmap");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale or CMYK to convert to bitmap");
 		return NULL;
 	}
 

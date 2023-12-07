@@ -179,7 +179,7 @@ create_resource_name(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *key, c
 		if (!pdf_dict_gets(ctx, res, buf))
 			return;
 	}
-	fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot create unique resource name");
+	fz_throw(ctx, FZ_ERROR_LIMIT, "Cannot create unique resource name");
 }
 
 static void

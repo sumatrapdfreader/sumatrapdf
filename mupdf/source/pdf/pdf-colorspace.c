@@ -50,7 +50,7 @@ load_icc_based(fz_context *ctx, pdf_obj *dict, int allow_alt, pdf_cycle_list *cy
 			fz_catch(ctx)
 			{
 				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-				fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 				fz_report_error(ctx);
 				fz_warn(ctx, "ignoring broken ICC Alternate colorspace");
 			}
@@ -81,7 +81,7 @@ load_icc_based(fz_context *ctx, pdf_obj *dict, int allow_alt, pdf_cycle_list *cy
 		fz_catch(ctx)
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 			fz_report_error(ctx);
 			fz_warn(ctx, "ignoring broken ICC profile");
 		}
@@ -507,7 +507,7 @@ pdf_load_output_intent(fz_context *ctx, pdf_document *doc)
 	fz_catch(ctx)
 	{
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-		fz_rethrow_if(ctx, FZ_ERROR_MEMORY);
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);
 		fz_warn(ctx, "Attempt to read Output Intent failed");
 	}

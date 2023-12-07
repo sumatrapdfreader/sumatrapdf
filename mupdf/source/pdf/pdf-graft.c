@@ -40,7 +40,7 @@ pdf_new_graft_map(fz_context *ctx, pdf_document *dst)
 	pdf_graft_map *map = NULL;
 
 	if (dst == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create graft make without a destination document");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot create graft make without a destination document");
 
 	map = fz_malloc_struct(ctx, pdf_graft_map);
 
@@ -108,7 +108,7 @@ pdf_graft_mapped_object(fz_context *ctx, pdf_graft_map *map, pdf_obj *obj)
 		return pdf_keep_obj(ctx, obj);
 
 	if (map->src && src != map->src)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "grafted objects must all belong to the same source document");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "grafted objects must all belong to the same source document");
 
 	if (pdf_is_indirect(ctx, obj))
 	{
@@ -131,7 +131,7 @@ pdf_graft_mapped_object(fz_context *ctx, pdf_graft_map *map, pdf_obj *obj)
 		}
 
 		if (src_num < 1 || src_num >= map->len)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "source object number out of range");
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "source object number out of range");
 
 		/* Check if we have done this one.  If yes, then just
 		 * return our indirect ref */

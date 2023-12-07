@@ -209,7 +209,7 @@ static void savefont(pdf_obj *dict)
 
 		obj = pdf_dict_get(ctx, obj, PDF_NAME(Subtype));
 		if (obj && !pdf_is_name(ctx, obj))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid font descriptor subtype");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid font descriptor subtype");
 
 		if (pdf_name_eq(ctx, obj, PDF_NAME(Type1C)))
 			ext = "cff";
@@ -218,7 +218,7 @@ static void savefont(pdf_obj *dict)
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(OpenType)))
 			ext = "otf";
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unhandled font type '%s'", pdf_to_name(ctx, obj));
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "unhandled font type '%s'", pdf_to_name(ctx, obj));
 	}
 
 	if (!stream)
@@ -253,9 +253,6 @@ static void savefont(pdf_obj *dict)
 static void extractobject(int num)
 {
 	pdf_obj *ref;
-
-	if (!doc)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "no file specified");
 
 	fz_try(ctx)
 	{
@@ -318,7 +315,7 @@ int pdfextract_main(int argc, char **argv)
 		doc = pdf_open_document(ctx, infile);
 		if (pdf_needs_password(ctx, doc))
 			if (!pdf_authenticate_password(ctx, doc, password))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
+				fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", infile);
 
 		if (fz_optind == argc)
 		{

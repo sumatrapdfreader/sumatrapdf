@@ -71,7 +71,7 @@ fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock, fz_has
 	fz_hash_table *table;
 
 	if (keylen > FZ_HASH_TABLE_KEY_LENGTH)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "hash table key length too large");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "hash table key length too large");
 
 	table = fz_malloc_struct(ctx, fz_hash_table);
 	table->keylen = keylen;
@@ -184,7 +184,7 @@ fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 		}
 	}
 	if (newents == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "hash table resize failed; out of memory (%d entries)", newsize);
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "hash table resize failed; out of memory (%d entries)", newsize);
 	table->ents = newents;
 	memset(table->ents, 0, sizeof(fz_hash_entry) * newsize);
 	table->size = newsize;

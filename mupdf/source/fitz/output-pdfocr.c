@@ -153,7 +153,7 @@ fz_pdfocr_options *
 fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *args)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	const char *val;
 
@@ -166,13 +166,13 @@ fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *ar
 		else if (fz_option_eq(val, "flate"))
 			opts->compress = 1;
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported PDFOCR compression %s (none, or flate only)", val);
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unsupported PDFOCR compression %s (none, or flate only)", val);
 	}
 	if (fz_has_option(ctx, args, "strip-height", &val))
 	{
 		int i = fz_atoi(val);
 		if (i <= 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported PDFOCR strip height %d (suggest 0)", i);
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unsupported PDFOCR strip height %d (suggest 0)", i);
 		opts->strip_height = i;
 	}
 	if (fz_has_option(ctx, args, "ocr-language", &val))
@@ -192,7 +192,7 @@ void
 fz_write_pixmap_as_pdfocr(fz_context *ctx, fz_output *out, const fz_pixmap *pixmap, const fz_pdfocr_options *pdfocr)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	fz_band_writer *writer;
 
@@ -277,11 +277,11 @@ pdfocr_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	strips = (h + sh-1)/sh;
 
 	if (a != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PDFOCR cannot write alpha channel");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PDFOCR cannot write alpha channel");
 	if (s != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PDFOCR cannot write spot colors");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PDFOCR cannot write spot colors");
 	if (n != 3 && n != 1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "PDFOCR expected to be Grayscale or RGB");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PDFOCR expected to be Grayscale or RGB");
 
 	fz_free(ctx, writer->stripbuf);
 	writer->stripbuf = NULL;
@@ -885,7 +885,7 @@ pdfocr_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
 fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const fz_pdfocr_options *options)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	pdfocr_band_writer *writer = fz_new_band_writer(ctx, pdfocr_band_writer, out);
 
@@ -919,7 +919,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 	fz_catch(ctx)
 	{
 		fz_drop_band_writer(ctx, &writer->super);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "OCR initialisation failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "OCR initialisation failed");
 	}
 
 	return &writer->super;
@@ -930,13 +930,13 @@ void
 fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer_, fz_pdfocr_progress_fn *progress, void *progress_arg)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	pdfocr_band_writer *writer = (pdfocr_band_writer *)writer_;
 	if (writer == NULL)
 		return;
 	if (writer->super.header != pdfocr_write_header)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Not a pdfocr band writer!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Not a pdfocr band writer!");
 
 	writer->progress = progress;
 	writer->progress_arg = progress_arg;
@@ -947,7 +947,7 @@ void
 fz_save_pixmap_as_pdfocr(fz_context *ctx, fz_pixmap *pixmap, char *filename, int append, const fz_pdfocr_options *pdfocr)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	fz_output *out = fz_new_output_with_path(ctx, filename, append);
 	fz_try(ctx)
@@ -1029,7 +1029,7 @@ fz_document_writer *
 fz_new_pdfocr_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	fz_pdfocr_writer *wri = NULL;
 
@@ -1058,7 +1058,7 @@ fz_document_writer *
 fz_new_pdfocr_writer(fz_context *ctx, const char *path, const char *options)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	fz_output *out = fz_new_output_with_path(ctx, path ? path : "out.pdfocr", 0);
 	return fz_new_pdfocr_writer_with_output(ctx, out, options);
@@ -1069,13 +1069,13 @@ void
 fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, fz_pdfocr_progress_fn *progress, void *progress_arg)
 {
 #ifdef OCR_DISABLED
-	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OCR support in this build");
 #else
 	fz_pdfocr_writer *wri = (fz_pdfocr_writer *)writer;
 	if (!writer)
 		return;
 	if (writer->begin_page != pdfocr_begin_page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Not a pdfocr writer!");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Not a pdfocr writer!");
 	fz_pdfocr_band_writer_set_progress(ctx, wri->bander, progress, progress_arg);
 #endif
 }
