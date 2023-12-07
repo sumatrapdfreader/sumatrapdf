@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cbe9ddf483c9fbfc5ba7b44adf102a899e343941
+191f4c279d4e8b2e882318fc4aed14c9377712d6
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -14277,7 +14277,7 @@ hu:Mappa megnyitása Double Commander-ben
 id:Buka Direktori di &Double Commander
 it:Apri cartella in &Double Commander
 ja:Double Commanderでディレクトリを開く(&D)
-kr:더블 커멘더에서 디렉토리 열기
+kr:더블 커맨더에서 디렉토리 열기
 nl:Open Map in &Double Commander
 no:Åpne mappe i &Double Commander
 pl:Otwórz katalog w &Double Commanderze
@@ -14353,7 +14353,7 @@ hu:Mappa megnyitása Total Commander-ben
 id:Buka Direktori di &Total Commander
 it:Apri cartella in &Total Commander
 ja:Total Commanderでディレクトリを開く(&T)
-kr:토탈 커멘더에서 디렉토리 열기
+kr:토탈 커맨더에서 디렉토리 열기
 nl:Open Map in &TotalCommander
 no:Åpne mappe i &Total Commander
 pl:Otwórz katalog w &Total Commanderze
