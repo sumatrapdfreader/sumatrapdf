@@ -1853,6 +1853,8 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         }
         args->win = win;
         args->isNewWindow = true;
+        // TODO: do it in CreateMainWindow()? Do it later when isNewWindow?
+        ShowWindow(win->hwndFrame, SW_SHOW);
         if (currWin) {
             RememberFavTreeExpansionState(currWin);
             win->expandedFavorites = currWin->expandedFavorites;
