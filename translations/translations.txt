@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-191f4c279d4e8b2e882318fc4aed14c9377712d6
+0df3dba061360acacb83783ce126ee23b301bc12
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -9326,6 +9326,7 @@ uz:PDF-hujjatni ikki marta bosganda ishga tushadigan buyruq satrini kiriting:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 :Error
 br:Erro
+de:Fehler
 he:שגיאה
 pl:Błąd
 pt:Erro
