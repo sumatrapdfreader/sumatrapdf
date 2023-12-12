@@ -223,15 +223,37 @@ int
 fz_is_libarchive_archive(fz_context *ctx, fz_stream *file)
 {
 	fz_libarchive_archive arch;
-	int fail;
+	struct archive_entry *entry;
+	int ret;
 
 	arch.super.file = file;
 	fz_seek(ctx, file, 0, SEEK_SET);
-	fail = libarchive_open(ctx, &arch);
-	if (!fail)
-		archive_read_free(arch.archive);
 
-	return !fail;
+	/* Annoyingly, libarchive can say "sure, I can open this" only to
+	 * then fail when we try to read from it. We therefore need to
+	 * try to read at least 1 entry out to be sure. */
+	ret = libarchive_open(ctx, &arch);
+	if (ret == ARCHIVE_OK)
+	{
+		fz_var(ret);
+
+		fz_try(ctx)
+		{
+			arch.ctx = ctx; /* safe */
+			ret = archive_read_next_header(arch.archive, &entry);
+		}
+		fz_catch(ctx)
+		{
+			archive_read_free(arch.archive);
+			fz_rethrow(ctx);
+		}
+	}
+
+	archive_read_free(arch.archive);
+
+	/* Do NOT return true if we get ARCHIVE_EOF. We will fail to recognise empty
+	 * archives, but the alternative is false positives. */
+	return ret == ARCHIVE_OK;
 }
 
 static int

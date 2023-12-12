@@ -1109,7 +1109,7 @@ bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, c
 
 	/* clamp bitmap offset to buffer size */
 	if (info->bitmapoffset < (uint32_t)(p - begin))
-		info->bitmapoffset = 0;
+		info->bitmapoffset = (uint32_t)(p - begin);
 	if ((uint32_t)(end - begin) < info->bitmapoffset)
 		info->bitmapoffset = end - begin;
 

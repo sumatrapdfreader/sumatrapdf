@@ -118,8 +118,8 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 				fz_seek(ctx, stream, 0, SEEK_SET);
 				fz_try(ctx)
 				{
-				score = dc->handler[i]->recognize_content(ctx, stream);
-			}
+					score = dc->handler[i]->recognize_content(ctx, stream);
+				}
 				fz_catch(ctx)
 				{
 					/* in case of zip errors when recognizing EPUB/XPS/DOCX files */

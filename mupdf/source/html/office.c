@@ -1083,6 +1083,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 	const char *schema = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
 	const char *schema_props = "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties";
 	doc_info info = { 0 };
+	int i;
 
 	stream = fz_open_buffer(ctx, buffer_in);
 
@@ -1149,6 +1150,12 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 	{
 		fz_drop_xml(ctx, rels);
 		fz_drop_xml(ctx, xml);
+		for (i = 0; i < info.shared_string_len; ++i)
+			fz_free(ctx, info.shared_strings[i]);
+		fz_free(ctx, info.shared_strings);
+		for (i = 0; i < info.footnotes_max; ++i)
+			fz_free(ctx, info.footnotes[i]);
+		fz_free(ctx, info.footnotes);
 		fz_drop_output(ctx, info.out);
 		fz_drop_archive(ctx, archive);
 		fz_drop_stream(ctx, stream);
