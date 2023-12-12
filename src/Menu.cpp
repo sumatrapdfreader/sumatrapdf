@@ -1003,6 +1003,27 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
+// TODO: write it in a way that handles unicode
+static TempStr ShortenString(char* menuString, size_t maxLen) {
+    size_t menuStrLen = str::Len(menuString);
+    if (menuStrLen <= maxLen) {
+        return menuString;
+    }
+    char* newStr = AllocArrayTemp<char>(maxLen);
+    const size_t half = maxLen / 2;
+    const size_t strSize = menuStrLen + 1; // size()+1 because wcslen() doesn't include \0
+    // Copy first N/2 characters, move last N/2 characters to the halfway point
+    for (size_t i = 0; i < half; i++) {
+        newStr[i] = menuString[i];
+        newStr[i + half] = menuString[strSize - half + i];
+    }
+    // Add ellipsis
+    newStr[half - 2] = newStr[half - 1] = newStr[half] = '.';
+    // Ensure null-terminated string
+    newStr[maxLen - 1] = '\0';
+    return newStr;
+}
+
 static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     ReportIf(!filePath || !menuFile);
     if (!filePath || !menuFile) {
@@ -1010,27 +1031,10 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     }
 
     TempStr menuString = path::GetBaseNameTemp(filePath);
-
     // If the name is too long, save only the ends glued together
     // E.g. 'Very Long PDF Name (3).pdf' -> 'Very Long...e (3).pdf'
     const size_t MAX_LEN = 70;
-    size_t menuStrLen = str::Len(menuString);
-    if (menuStrLen > MAX_LEN) {
-        char* newStr = AllocArrayTemp<char>(MAX_LEN);
-        const size_t half = MAX_LEN / 2;
-        const size_t strSize = menuStrLen + 1; // size()+1 because wcslen() doesn't include \0
-        // Copy first N/2 characters, move last N/2 characters to the halfway point
-        for (size_t i = 0; i < half; i++) {
-            newStr[i] = menuString[i];
-            newStr[i + half] = menuString[strSize - half + i];
-        }
-        // Add ellipsis
-        newStr[half - 2] = newStr[half - 1] = newStr[half] = '.';
-        // Ensure null-terminated string
-        newStr[MAX_LEN - 1] = '\0';
-        // Save truncated string
-        menuString = newStr;
-    }
+    menuString = ShortenString(menuString, MAX_LEN);
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
     int menuIdx = (int)((index + 1) % 10);
@@ -1058,6 +1062,15 @@ static void AppendRecentFilesToMenu(HMENU m) {
         }
         AddFileMenuItem(m, fp, i);
     }
+#if 0
+    AddFileMenuItem(
+        m,
+        "\xf0\x9f\xa4\xa3\xf0\x9f\x98\x8a\xf0\x9f\x98\x82\xe2\x9d\xa4\xf0\x9f\x98\x8d\xf0\x9f\x98\x92\xf0\x9f\x91\x8c"
+        "\xf0\x9f\x98\x98\xf0\x9f\x92\x95\xf0\x9f\x98\x81\xf0\x9f\x91\x8d\xf0\x9f\x99\x8c\xf0\x9f\xa4\xa6\xe2\x80\x8d"
+        "\xe2\x99\x80\xef\xb8\x8f\xf0\x9f\xa4\xa6\xe2\x80\x8d\xe2\x99\x82\xef\xb8\x8f\xf0\x9f\xa4\xb7\xe2\x80\x8d\xe2"
+        "\x99\x80\xef\xb8\x8f\xf0\x9f\xa4\xb7\xe2\x80\x8d\xe2\x99\x82\xef\xb8\x8f\x2e\x70\x64\x66",
+        i++);
+#endif
 
     if (i > 0) {
         InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
