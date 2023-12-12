@@ -756,6 +756,7 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
             win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
         }
         LoadArgs args(pdfFile, win);
+        args.activateExisting = !IsCtrlPressed();
         win = LoadDocument(&args);
     } else if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
