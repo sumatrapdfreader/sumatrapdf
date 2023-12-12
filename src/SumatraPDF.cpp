@@ -1517,12 +1517,12 @@ static MainWindow* CreateMainWindow() {
 }
 
 MainWindow* CreateAndShowMainWindow(SessionData* data) {
-    // CreateMainWindow shouldn't change the windowState value
     int windowState = gGlobalPrefs->windowState;
     MainWindow* win = CreateMainWindow();
     if (!win) {
         return nullptr;
     }
+    // CreateMainWindow shouldn't change the windowState value
     CrashIf(windowState != gGlobalPrefs->windowState);
 
     if (data) {
@@ -1847,14 +1847,12 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         args->isNewWindow = false;
     } else if (!win || !openNewTab && !args->forceReuse && win->IsDocLoaded()) {
         MainWindow* currWin = win;
-        win = CreateMainWindow();
+        win = CreateAndShowMainWindow(nullptr);
         if (!win) {
             return nullptr;
         }
         args->win = win;
         args->isNewWindow = true;
-        // TODO: do it in CreateMainWindow()? Do it later when isNewWindow?
-        ShowWindow(win->hwndFrame, SW_SHOW);
         if (currWin) {
             RememberFavTreeExpansionState(currWin);
             win->expandedFavorites = currWin->expandedFavorites;
