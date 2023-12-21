@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f1ff3fd49936859c77f210d76f3619fc22206202
+417d40ea7f6c89d7bf64b0491144626064ff83c1
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -2009,6 +2009,7 @@ fr:&Ouvrir...
 ga:&Oscail...
 gl:&Abrir...
 he:פתח...
+hi:खोलें
 hr:&Otvori...
 hu:&Megnyitás…
 id:&Buka...
@@ -2312,6 +2313,7 @@ fr:Page &précédente
 ga:&An leathanach roimhe
 gl:&Páxina anterior
 he:עמוד קודם
+hi:पिछला पृष्ठ
 hr:&Prethodna stranica
 hu:&Előző oldal
 id:Halaman Sebelumnya
@@ -2729,6 +2731,7 @@ fr:&Sauvegarder dans le PDF existant
 ga:&Cuir i dtaisce i PDF atá ann
 gl:Gardar a PDF exi&stente
 he:קיים PDF שמירה במסמך
+hi:मौजूदा पीडीएफ में सहेजें
 hr:&Spremi u postojeći PDF
 hu:Meglévő PDF-be mentés
 id:&Simpan ke PDF yang sudah ada
@@ -14480,6 +14483,7 @@ fa:بازکردن در پنجره جدید
 fr:Ouvrir dans une nouvelle fenêtre
 ga:Oscail i bhfuinneog nua
 he:פתח בחלון חדש
+hi:नई विंडो में खोलें
 hr:Otvori u novom prozoru
 hu:Megnyitás új ablakban
 it:Apri in una nuova finestra
@@ -15271,6 +15275,7 @@ fr:Pa&ge...
 ga:Leathanach...
 gl:Pá&xina...
 he:עמוד...
+hi:पृष्ठ
 hr:St&ranica...
 hu:&Oldal…
 id:Halaman
@@ -15766,6 +15771,7 @@ fr:Veuillez patienter, chargement…
 ga:Fan le do thoil - tá sé ag luchtú...
 gl:Prégase agardar, cargando...
 he:...אנא המתן - טוען
+hi:कृपया प्रतीक्षा करें - लोड हो रहा है...
 hr:Molim pričekajte - učitavanje...
 hu:Kérem várjon...
 id:Mohon tunggu - sedang memuat...
@@ -16751,6 +16757,7 @@ fr:Re&nommer...
 ga:Athai&nmnigh...
 gl:Cambiar &nome...
 he:שנה שם...
+hi:नाम बदलें
 hr:Preime&nuj
 hu:&Átnevezés…
 id:Rubah Nama
@@ -16843,6 +16850,7 @@ fr:Rédiger
 ga:Folaigh
 gl:Redactar
 he:ערוך
+hi:संपादन
 hr:Urediti
 hu:Megrövidít
 id:Menyunting
@@ -17195,6 +17203,7 @@ fr:Rotation vers la d&roite
 ga:Rothlaigh deiseal é
 gl:Rotar de&reita
 he:סובב ימינה
+hi:दाएं घुमाएं
 hr:&Rotiraj desno
 hu:Forgatás &jobbra
 id:Putar Ke Kanan
@@ -17615,6 +17624,7 @@ fr:Enregistrer les modifications dans un nouveau PDF
 ga:Cuir na hathruithe i dtaisce in PDF nua
 gl:Gardar anotacións a un novo PDF
 he:חדש PDF שמור שינויים בקובץ
+hi:परिवर्तनों को एक नई पीडीएफ में सहेजें
 hr:Spremi promjene u novi PDF
 hu:Változtatások elmentése egy új PDF-be
 id:Simpan perubahan ke PDF baru
