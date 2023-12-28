@@ -396,9 +396,7 @@ next:
 
 static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
     while (item) {
-        if (tocState.Contains(item->id)) {
-            item->isOpenToggled = true;
-        }
+        item->isOpenToggled = tocState.Contains(item->id);
         SetInitialExpandState(item->child, tocState);
         item = item->next;
     }
