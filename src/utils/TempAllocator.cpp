@@ -70,12 +70,25 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
         return nullptr;
     }
 
+    const char* curr = s;
+    const char* end = str::Find(curr, toReplace);
+    if (!end) {
+        // optimization: nothing to replace so do nothing
+        return (TempStr)s;
+    }
+
+    size_t findLen = str::Len(toReplace);
+    size_t replLen = str::Len(replaceWith);
+    size_t lenDiff = 0;
+    if (replLen > findLen) {
+        lenDiff = replLen - findLen;
+    }
+    // heuristic: allow 6 replacements without reallocating
+    size_t capHint = str::Len(s) + 1 + (lenDiff * 6);
+    str::Str result(capHint);
     bool ok;
-    str::Str result(str::Len(s));
-    size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
-    const char *start = s, *end;
-    while ((end = str::Find(start, toReplace)) != nullptr) {
-        ok = result.Append(start, end - start);
+    while (end != nullptr) {
+        ok = result.Append(curr, end - curr);
         if (!ok) {
             return nullptr;
         }
@@ -83,14 +96,14 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
         if (!ok) {
             return nullptr;
         }
-        start = end + findLen;
+        curr = end + findLen;
+        end = str::Find(curr, toReplace);
     }
-    ok = result.Append(start);
+    ok = result.Append(curr);
     if (!ok) {
         return nullptr;
     }
-    char* res = DupTemp(result.Get());
-    return res;
+    return result.StealData(GetTempAllocator());
 }
 
 } // namespace str
