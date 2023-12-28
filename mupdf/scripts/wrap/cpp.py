@@ -1634,13 +1634,15 @@ def make_function_wrappers(
                         if (g_mupdf_trace_exceptions)
                         {{
                             std::cerr
+                                    << __FILE__ << ':' << __LINE__ << ':'
                                     #ifndef _WIN32
-                                    << __PRETTY_FUNCTION__ << ": "
+                                    << __PRETTY_FUNCTION__ << ':'
                                     #endif
-                                    << "Converting C++ std::exception mupdf::{typename} into Python exception: "
+                                    << " Converting C++ std::exception mupdf::{typename} ({i=}) into Python exception:\\n"
                                     << "    e.m_code: " << e.m_code << "\\n"
                                     << "    e.m_text: " << e.m_text << "\\n"
-                                    << "    e.what():" << e.what() << "\\n"
+                                    << "    e.what(): " << e.what() << "\\n"
+                                    << "    typeid(e).name(): " << typeid(e).name() << "\\n"
                                     << "\\n";
                         }}
                         set_exception(s_error_classes[{i}], e.m_code, e.m_text);
@@ -1654,27 +1656,36 @@ def make_function_wrappers(
                     if (g_mupdf_trace_exceptions)
                     {{
                         std::cerr
+                                << __FILE__ << ':' << __LINE__ << ':'
                                 #ifndef _WIN32
-                                << __PRETTY_FUNCTION__ << ": "
+                                << __PRETTY_FUNCTION__ << ':'
                                 #endif
-                                << "Converting C++ std::exception mupdf::{typename} into Python exception: "
+                                << " Converting C++ std::exception mupdf::FzErrorBase ({error_classes_n-1=}) into Python exception:\\n"
                                 << "    e.m_code: " << e.m_code << "\\n"
                                 << "    e.m_text: " << e.m_text << "\\n"
-                                << "    e.what():" << e.what() << "\\n"
+                                << "    e.what(): " << e.what() << "\\n"
+                                << "    typeid(e).name(): " << typeid(e).name() << "\\n"
                                 << "\\n";
                     }}
-                    set_exception(s_error_classes[{error_classes_n-1}], e.m_code, e.m_text);
+                    PyObject* class_ = s_error_classes[{error_classes_n-1}];
+                    PyObject* args = Py_BuildValue("is", e.m_code, e.m_text.c_str());
+                    PyObject* instance = PyObject_CallObject(class_, args);
+                    PyErr_SetObject(class_, instance);
+                    Py_XDECREF(instance);
+                    Py_XDECREF(args);
                 }}
                 catch (std::exception& e)
                 {{
                     if (g_mupdf_trace_exceptions)
                     {{
                         std::cerr
+                                << __FILE__ << ':' << __LINE__ << ':'
                                 #ifndef _WIN32
-                                << __PRETTY_FUNCTION__ << ": "
+                                << __PRETTY_FUNCTION__ << ':'
                                 #endif
-                                << "Converting C++ std::exception into Python exception: "
+                                << " Converting C++ std::exception into Python exception: "
                                 << e.what()
+                                << "    typeid(e).name(): " << typeid(e).name() << "\\n"
                                 << "\\n";
                     }}
                     SWIG_Error(SWIG_RuntimeError, e.what());
@@ -1685,10 +1696,11 @@ def make_function_wrappers(
                     if (g_mupdf_trace_exceptions)
                     {{
                         std::cerr
+                                << __FILE__ << ':' << __LINE__ << ':'
                                 #ifndef _WIN32
-                                << __PRETTY_FUNCTION__ << ": "
+                                << __PRETTY_FUNCTION__ << ':'
                                 #endif
-                                << "Converting unknown C++ exception into Python exception."
+                                << " Converting unknown C++ exception into Python exception."
                                 << "\\n";
                     }}
                     SWIG_Error(SWIG_RuntimeError, "Unknown exception");

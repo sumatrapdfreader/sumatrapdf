@@ -234,6 +234,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\helpers\pkcs7-openssl.h">
       <Filter>mupdf\include\mupdf\helpers</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\html.h">
+      <Filter>mupdf\include\mupdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\memento.h">
       <Filter>mupdf\include\mupdf</Filter>
     </ClInclude>
@@ -731,6 +734,9 @@
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\uncfb.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\unchm.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
@@ -786,6 +792,9 @@
       <Filter>mupdf\source\html</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\html\story-writer.c">
+      <Filter>mupdf\source\html</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\html\txt.c">
       <Filter>mupdf\source\html</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\html\xml-dom.c">

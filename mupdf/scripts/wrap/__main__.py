@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''
+r'''
 Support for generating C++ and python wrappers for the mupdf API.
 
 Overview:
@@ -428,7 +428,7 @@ Building Python bindings:
 
         Windows:
             > py -m venv pylocal
-            > pylocal\\Scripts\\activate
+            > pylocal\Scripts\activate
             (pylocal) > pip install libclang pyqt5
             (pylocal) > cd ...\mupdf
             (pylocal) > python setup.py install
@@ -898,10 +898,10 @@ Usage:
             Compare generated class methods with functions called by platform/gl
             code.
 
-        python3 -m cProfile -s cumulative ./scripts/mupdfwrap.py -b 0
+        python3 -m cProfile -s cumulative ./scripts/mupdfwrap.py --venv -b 0
             Profile generation of C++ source code.
 
-        ./scripts/mupdfwrap.py --venv --swig-windows-auto -b all -t
+        ./scripts/mupdfwrap.py --venv -b all -t
             Build and test on Windows.
 
 
@@ -1137,7 +1137,7 @@ def _test_get_m_command():
         assert command == expected_command, f'\nExpected: {expected_command}\nBut:      {command}'
 
     mupdf_root = os.path.abspath( f'{__file__}/../../../')
-    infix = 'CXX=clang++ ' if state.state_.openbsd else ''
+    infix = 'CXX=c++ ' if state.state_.openbsd else ''
 
     test(
             'shared-release',
@@ -1192,9 +1192,9 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
         if state.state_.openbsd:
             # Need to run gmake, not make. Also for some
             # reason gmake on OpenBSD sets CC to clang, but
-            # CXX to g++, so need to force CXX=clang++ too.
+            # CXX to g++, so need to force CXX=c++ too.
             #
-            make = 'CXX=clang++ gmake'
+            make = 'CXX=c++ gmake'
     if not make:
         make = 'make'
 
@@ -1999,7 +1999,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                     elif build_csharp:
                         cpp_path = f'{build_dirs.dir_mupdf}/platform/csharp/mupdfcpp_swig.cpp'
                         out_so = f'{build_dirs.dir_so}/mupdfcsharp.so'  # todo: append {so_version} ?
-
+                    cpp_path = os.path.relpath(cpp_path)    # So we don't expose build machine details in __FILE__.
                     if state.state_.openbsd:
                         # clang needs around 2G on OpenBSD.
                         #
@@ -2972,17 +2972,21 @@ def main2():
                     jlib.system(f'"{sys.executable}" -m venv --system-site-packages {venv}', out='log', verbose=1)
                 else:
                     jlib.system(f'"{sys.executable}" -m venv {venv}', out='log', verbose=1)
+
                 if state.state_.windows:
-                    command = f'{venv}\\Scripts\\activate.bat'
+                    command_venv_enter = f'{venv}\\Scripts\\activate.bat'
                 else:
-                    command = f'. {venv}/bin/activate'
-                command += f' && python -m pip install --upgrade pip'
+                    command_venv_enter = f'. {venv}/bin/activate'
+
+                command = f'{command_venv_enter} && python -m pip install --upgrade pip'
                 if state.state_.openbsd:
                     jlib.log( 'Not installing libclang on openbsd; we assume py3-llvm is installed.')
                     command += f' && python -m pip install --upgrade swig setuptools'
                 else:
                     command += f' && python -m pip install{force_reinstall} --upgrade libclang swig setuptools'
-                command += f' && python {shlex.quote(sys.argv[0])}'
+                jlib.system(command, out='log', verbose=1)
+
+                command = f'{command_venv_enter} && python {shlex.quote(sys.argv[0])}'
                 while 1:
                     try:
                         command += f' {shlex.quote(args.next())}'

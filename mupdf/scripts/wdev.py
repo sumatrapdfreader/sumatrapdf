@@ -12,7 +12,7 @@ import textwrap
 
 
 class WindowsVS:
-    '''
+    r'''
     Windows only. Finds locations of Visual Studio command-line tools. Assumes
     VS2019-style paths.
 
@@ -101,7 +101,7 @@ class WindowsVS:
 
         # Find vcvars.bat.
         #
-        vcvars = f'{directory}\\VC\Auxiliary\\Build\\vcvars{cpu.bits}.bat'
+        vcvars = f'{directory}\\VC\\Auxiliary\\Build\\vcvars{cpu.bits}.bat'
         assert os.path.isfile( vcvars), f'No match for: {vcvars}'
 
         # Find cl.exe.

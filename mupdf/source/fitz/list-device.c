@@ -2048,7 +2048,6 @@ visible:
 			{
 				const unsigned char *data;
 				int uid;
-				align_node_for_pointer(&node);
 				data = (const unsigned char *)node;
 				memcpy(&uid, data+1, sizeof(uid));
 				fz_begin_structure(ctx, dev, (fz_structure)data[0], (const char *)(data[1+sizeof(uid)] == 0 ? NULL : &data[1+sizeof(uid)]), uid);

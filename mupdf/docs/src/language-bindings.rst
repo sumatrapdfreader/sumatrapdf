@@ -181,7 +181,7 @@ Extensions beyond the basic C API
 * There are various custom class methods and constructors.
 
 * There are extra functions for generating a text representation of 'POD'
-  structs and their C++ wrapper classes.
+  (plain old data) structs and their C++ wrapper classes.
 
   For example for `fz_rect` we provide these functions:
 
@@ -889,6 +889,12 @@ Building and installing the Python bindings using `pip`
   Building using `pip` is not supported because `libclang` is not
   available from pypi.org so pip will fail to install prerequisites from
   `pypackage.toml`.
+
+  Instead one can run `setup.py` directly:
+
+  .. code-block:: shell
+
+      cd mupdf && setup.py install
 
 
 Building the Python bindings

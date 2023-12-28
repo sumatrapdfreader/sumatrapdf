@@ -87,6 +87,29 @@ void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float 
 #define SPACE_MAX_DIST 0.8f
 #define BASE_MAX_DIST 0.8f
 
+/* We keep a stack of the different metatexts that apply at any
+ * given point (normally none!). Whenever we get some content
+ * with a metatext in force, we really want to update the bounds
+ * for that metatext. But running along the whole list each time
+ * would be painful. So we just update the bounds for dev->metatext
+ * and rely on metatext_bounds() propagating it upwards 'just in
+ * time' for us to use metatexts other than the latest one. This
+ * also means we need to propagate bounds upwards when we pop
+ * a metatext.
+ *
+ * Why do we need bounds at all? Well, suppose we get:
+ *    /Span <</ActualText (c) >> BDC /Im0 Do EMC
+ * Then where on the page do we put 'c' ? By collecting the
+ * bounds, we can place 'c' wherever the image was.
+ */
+typedef struct metatext_t
+{
+	fz_metatext type;
+	char *text;
+	fz_rect bounds;
+	struct metatext_t *prev;
+} metatext_t;
+
 typedef struct
 {
 	fz_device super;
@@ -100,6 +123,20 @@ typedef struct
 	int flags;
 	int color;
 	const fz_text *lasttext;
+	fz_stext_options opts;
+
+	metatext_t *metatext;
+
+	/* Store the last values we saw. We need this for flushing the actualtext. */
+	struct
+	{
+		int valid;
+		int clipped;
+		fz_matrix trm;
+		int wmode;
+		int bidi_level;
+		fz_font *font;
+	} last;
 } fz_stext_device;
 
 const char *fz_stext_options_usage =
@@ -112,6 +149,47 @@ const char *fz_stext_options_usage =
 	"\tdehyphenate: attempt to join up hyphenated words\n"
 	"\tmediabox-clip=no: include characters outside mediabox\n"
 	"\n";
+
+/* Find the current actualtext, if any. Will abort if dev == NULL. */
+static metatext_t *
+find_actualtext(fz_stext_device *dev)
+{
+	metatext_t *mt = dev->metatext;
+
+	while (mt && mt->type != FZ_METATEXT_ACTUALTEXT)
+		mt = mt->prev;
+
+	return mt;
+}
+
+/* Find the bounds of the given metatext. Will abort if mt or
+ * dev are NULL. */
+static fz_rect *
+metatext_bounds(metatext_t *mt, fz_stext_device *dev)
+{
+	metatext_t *mt2 = dev->metatext;
+
+	while (mt2 != mt)
+	{
+		mt2->prev->bounds = fz_union_rect(mt2->prev->bounds, mt2->bounds);
+		mt2 = mt2->prev;
+	}
+
+	return &mt->bounds;
+}
+
+/* Find the bounds of the current actualtext, or NULL if there
+ * isn't one. Will abort if dev is NULL. */
+static fz_rect *
+actualtext_bounds(fz_stext_device *dev)
+{
+	metatext_t *mt = find_actualtext(dev);
+
+	if (mt == NULL)
+		return NULL;
+
+	return metatext_bounds(mt, dev);
+}
 
 fz_stext_page *
 fz_new_stext_page(fz_context *ctx, fz_rect mediabox)
@@ -655,27 +733,35 @@ fz_add_stext_char(fz_context *ctx,
 }
 
 static void
-fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix ctm)
+do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix ctm, int start, int end)
 {
 	fz_font *font = span->font;
 	fz_matrix tm = span->trm;
-	fz_matrix trm;
 	float adv;
 	int i;
 
-	if (span->len == 0)
-		return;
-
-	for (i = 0; i < span->len; i++)
+	for (i = start; i < end; i++)
 	{
 		/* Calculate new pen location and delta */
 		tm.e = span->items[i].x;
 		tm.f = span->items[i].y;
-		trm = fz_concat(tm, ctm);
+		dev->last.trm = fz_concat(tm, ctm);
+		dev->last.bidi_level = span->bidi_level;
+		dev->last.wmode = span->wmode;
+		if (font != dev->last.font)
+		{
+			fz_drop_font(ctx, dev->last.font);
+			dev->last.font = fz_keep_font(ctx, font);
+		}
+		dev->last.valid = 1;
 
 		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
 			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &dev->page->mediabox))
+			{
+				dev->last.clipped = 1;
 				continue;
+			}
+		dev->last.clipped = 0;
 
 		/* Calculate bounding box and new pen position based on font metrics */
 		if (span->items[i].gid >= 0)
@@ -683,15 +769,209 @@ fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_m
 		else
 			adv = 0;
 
+		/* Send the chars we have through. */
 		fz_add_stext_char(ctx, dev, font,
 			span->items[i].ucs,
 			span->items[i].gid,
-			trm,
+			dev->last.trm,
 			adv,
-			span->wmode,
-			span->bidi_level,
+			dev->last.wmode,
+			dev->last.bidi_level,
 			(i == 0) && (dev->flags & FZ_STEXT_PRESERVE_SPANS));
 	}
+}
+
+static int
+rune_index(const char *utf8, size_t idx)
+{
+	int rune;
+
+	do
+	{
+		int len = fz_chartorune(&rune, utf8);
+		if (rune == 0)
+			return -1;
+		utf8 += len;
+	}
+	while (idx--);
+
+	return rune;
+}
+
+static void
+flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, int i)
+{
+	if (*actualtext == 0)
+		return;
+
+	while (1)
+	{
+		int rune;
+		actualtext += fz_chartorune(&rune, actualtext);
+
+		if (rune == 0)
+			break;
+
+		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
+			if (dev->last.clipped)
+				continue;
+
+		fz_add_stext_char(ctx, dev, dev->last.font,
+			rune,
+			-1,
+			dev->last.trm,
+			0,
+			dev->last.wmode,
+			dev->last.bidi_level,
+			(i == 0) && (dev->flags & FZ_STEXT_PRESERVE_SPANS));
+		i++;
+	}
+}
+
+static void
+do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix ctm, metatext_t *mt)
+{
+	/* We are within an actualtext block. This means we can't just add the chars
+	 * as they are. We need to add the chars as they are meant to be. Sadly the
+	 * actualtext mechanism doesn't help us at all with positioning. */
+	fz_font *font = span->font;
+	fz_matrix tm = span->trm;
+	float adv;
+	int start, i, end;
+	char *actualtext = mt->text;
+	size_t z = fz_utflen(actualtext);
+
+	/* If actualtext is empty, nothing to do! */
+	if (z == 0)
+		return;
+
+	/* Now, we HOPE that the creator of a PDF will minimise the actual text
+	 * differences, so that we'll get:
+	 *   "Politicians <Actualtext="lie">fib</ActualText>, always."
+	 * rather than:
+	 *   "<Actualtext="Politicians lie, always">Politicians fib, always.</ActualText>
+	 * but experience with PDF files tells us that this won't always be the case.
+	 *
+	 * We try to minimise the actualtext section here, just in case.
+	 */
+
+	/* Spot a matching prefix and send it. */
+	for (start = 0; start < span->len; start++)
+	{
+		int rune;
+		int len = fz_chartorune(&rune, actualtext);
+		if (span->items[start].gid != rune || rune == 0)
+			break;
+		actualtext += len; z--;
+	}
+	if (start != 0)
+		do_extract(ctx, dev, span, ctm, 0, start);
+
+	if (start == span->len)
+	{
+		/* The prefix has consumed all this object. Just shorten the actualtext and we'll
+		 * catch the rest next time. */
+		z = strlen(actualtext)+1;
+		memmove(mt->text, actualtext, z);
+		return;
+	}
+
+	/* Spot a matching postfix. Can't send it til the end. */
+	for (end = span->len; end > start; end--)
+	{
+		/* Nasty n^2 algo here, cos backtracking through utf8 is not trivial. It'll do. */
+		int rune = rune_index(actualtext, z-1);
+		if (span->items[end-1].gid != rune)
+			break;
+		z--;
+	}
+	/* So we can send end -> span->len at the end. */
+
+	/* So we have at least SOME chars that don't match. */
+	/* Now, do the difficult bit in the middle.*/
+	/* items[start..end] have to be sent with actualtext[start..z] */
+	for (i = start; i < end; i++)
+	{
+		fz_text_item *item = &span->items[i];
+		int rune = -1;
+
+		if ((size_t)i < z)
+			actualtext += fz_chartorune(&rune, actualtext);
+
+		/* Calculate new pen location and delta */
+		tm.e = item->x;
+		tm.f = item->y;
+		dev->last.trm = fz_concat(tm, ctm);
+		dev->last.bidi_level = span->bidi_level;
+		dev->last.wmode = span->wmode;
+		if (font != dev->last.font)
+		{
+			fz_drop_font(ctx, dev->last.font);
+			dev->last.font = fz_keep_font(ctx, font);
+		}
+		dev->last.valid = 1;
+
+		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
+			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &dev->page->mediabox))
+			{
+				dev->last.clipped = 1;
+				continue;
+			}
+		dev->last.clipped = 0;
+
+		/* Calculate bounding box and new pen position based on font metrics */
+		if (item->gid >= 0)
+			adv = fz_advance_glyph(ctx, font, item->gid, span->wmode);
+		else
+			adv = 0;
+
+		fz_add_stext_char(ctx, dev, font,
+			rune,
+			span->items[i].gid,
+			dev->last.trm,
+			adv,
+			dev->last.wmode,
+			dev->last.bidi_level,
+			(i == 0) && (dev->flags & FZ_STEXT_PRESERVE_SPANS));
+	}
+
+	/* If we haven't spotted a postfix by this point, then don't force ourselves to output
+	 * any more of the actualtext at this point. We might get a new text object that matches
+	 * more of it. */
+	if (end == span->len)
+	{
+		/* Shorten actualtext and exit. */
+		z = strlen(actualtext)+1;
+		memmove(mt->text, actualtext, z);
+		return;
+	}
+
+	/* We found a matching postfix. It seems likely that this is going to be the only
+	 * text object we get, so send any remaining actualtext now. */
+	flush_actualtext(ctx, dev, actualtext, i);
+
+	/* Send the postfix */
+	if (end != span->len)
+		do_extract(ctx, dev, span, ctm, end, span->len);
+
+	mt->text[0] = 0;
+}
+
+static void
+fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix ctm)
+{
+	metatext_t *mt;
+
+	if (span->len == 0)
+		return;
+
+	/* Are we in an actualtext? */
+	mt = find_actualtext(dev);
+
+	if (mt)
+		do_extract_within_actualtext(ctx, dev, span, ctm, mt);
+	else
+		do_extract(ctx, dev, span, ctm, 0, span->len);
 }
 
 static int hexrgb_from_color(fz_context *ctx, fz_colorspace *colorspace, const float *color)
@@ -781,18 +1061,123 @@ fz_stext_ignore_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_ma
 	tdev->lasttext = fz_keep_text(ctx, text);
 }
 
+static void
+fz_stext_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const char *text)
+{
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	metatext_t *mt = fz_malloc_struct(ctx, metatext_t);
+
+	mt->prev = tdev->metatext;
+	tdev->metatext = mt;
+	mt->type = meta;
+	mt->text = fz_strdup(ctx, text);
+	mt->bounds = fz_empty_rect;
+}
+
+static void
+pop_metatext(fz_context *ctx, fz_stext_device *dev)
+{
+	metatext_t *prev;
+	fz_rect bounds;
+
+	if (!dev->metatext)
+		return;
+
+	prev = dev->metatext->prev;
+	bounds = dev->metatext->bounds;
+	fz_free(ctx, dev->metatext->text);
+	fz_free(ctx, dev->metatext);
+	dev->metatext = prev;
+	if (prev)
+		prev->bounds = fz_union_rect(prev->bounds, bounds);
+}
+
+static void
+fz_stext_end_metatext(fz_context *ctx, fz_device *dev)
+{
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_font *myfont = NULL;
+
+	if (!tdev->metatext)
+		return; /* Mismatched pop. Live with it. */
+
+	if (tdev->metatext->type != FZ_METATEXT_ACTUALTEXT)
+	{
+		/* We only deal with ActualText here. Just pop anything else off,
+		 * and we're done. */
+		pop_metatext(ctx, tdev);
+		return;
+	}
+
+	/* If we have a 'last' text position, send the content after that. */
+	if (tdev->last.valid)
+	{
+		flush_actualtext(ctx, tdev, tdev->metatext->text, 0);
+		pop_metatext(ctx, tdev);
+		return;
+	}
+
+	/* If we have collected a rectangle for content that encloses the actual text,
+	 * send the content there. */
+	if (!fz_is_empty_rect(tdev->metatext->bounds))
+	{
+		tdev->last.trm.a = tdev->metatext->bounds.x1 - tdev->metatext->bounds.x0;
+		tdev->last.trm.b = 0;
+		tdev->last.trm.c = 0;
+		tdev->last.trm.d = tdev->metatext->bounds.y1 - tdev->metatext->bounds.y0;
+		tdev->last.trm.e = tdev->metatext->bounds.x0;
+		tdev->last.trm.f = tdev->metatext->bounds.y0;
+	}
+	else
+		fz_warn(ctx, "Actualtext with no position. Text may be lost or mispositioned.");
+
+	fz_var(myfont);
+
+	fz_try(ctx)
+	{
+		if (tdev->last.font == NULL)
+		{
+			myfont = fz_new_base14_font(ctx, "Helvetica");
+			tdev->last.font = myfont;
+		}
+		flush_actualtext(ctx, tdev, tdev->metatext->text, 0);
+		pop_metatext(ctx, tdev);
+	}
+	fz_always(ctx)
+	{
+		if (myfont)
+		{
+			tdev->last.font = NULL;
+			fz_drop_font(ctx, myfont);
+		}
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+
 /* Images and shadings */
 
 static void
 fz_stext_fill_image(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ctm, float alpha, fz_color_params color_params)
 {
 	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_rect *bounds = actualtext_bounds(tdev);
 
-	/* If the alpha is less than 50% then it's probably a watermark or effect or something. Skip it. */
-	if (alpha < 0.5f)
+	/* Unless we are being told to preserve images OR we are in an actualtext, nothing to do here. */
+	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0 && bounds == NULL)
 		return;
 
+	/* If the alpha is less than 50% then it's probably a watermark or effect or something. Skip it. */
+	if (alpha >= 0.5f)
 	add_image_block_to_page(ctx, tdev->page, ctm, img);
+
+	/* If there is an actualtext in force, update its bounds. */
+	if (bounds)
+	{
+		static const fz_rect unit = { 0, 0, 1, 1 };
+		*bounds = fz_union_rect(*bounds, fz_transform_rect(unit, ctm));
+	}
 }
 
 static void
@@ -842,9 +1227,19 @@ fz_new_image_from_shade(fz_context *ctx, fz_shade *shade, fz_matrix *in_out_ctm,
 static void
 fz_stext_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha, fz_color_params color_params)
 {
-	fz_matrix local_ctm = ctm;
-	fz_rect scissor = fz_device_current_scissor(ctx, dev);
-	fz_image *image = fz_new_image_from_shade(ctx, shade, &local_ctm, color_params, scissor);
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_rect *bounds = actualtext_bounds(tdev);
+	fz_matrix local_ctm;
+	fz_rect scissor;
+	fz_image *image;
+
+	/* Unless we are preserving image, OR we are in an actualtext, nothing to do here. */
+	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0 && bounds == NULL)
+		return;
+
+	local_ctm = ctm;
+	scissor = fz_device_current_scissor(ctx, dev);
+	image = fz_new_image_from_shade(ctx, shade, &local_ctm, color_params, scissor);
 	fz_try(ctx)
 		fz_stext_fill_image(ctx, dev, image, local_ctm, alpha, color_params);
 	fz_always(ctx)
@@ -894,6 +1289,9 @@ fz_stext_drop_device(fz_context *ctx, fz_device *dev)
 {
 	fz_stext_device *tdev = (fz_stext_device*)dev;
 	fz_drop_text(ctx, tdev->lasttext);
+	fz_drop_font(ctx, tdev->last.font);
+	while (tdev->metatext)
+		pop_metatext(ctx, tdev);
 }
 
 fz_stext_options *
@@ -927,6 +1325,23 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 	return opts;
 }
 
+static void
+fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *ss, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp)
+{
+	fz_rect *bounds = actualtext_bounds((fz_stext_device *)dev);
+
+	if (bounds == NULL)
+		return;
+
+	*bounds = fz_union_rect(*bounds, fz_bound_path(ctx, path, ss, ctm));
+}
+
+static void
+fz_stext_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp)
+{
+	fz_stext_stroke_path(ctx, dev, path, NULL, ctm, cs, color, alpha, cp);
+}
+
 fz_device *
 fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options *opts)
 {
@@ -940,13 +1355,15 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->super.clip_text = fz_stext_clip_text;
 	dev->super.clip_stroke_text = fz_stext_clip_stroke_text;
 	dev->super.ignore_text = fz_stext_ignore_text;
+	dev->super.begin_metatext = fz_stext_begin_metatext;
+	dev->super.end_metatext = fz_stext_end_metatext;
 
-	if (opts && (opts->flags & FZ_STEXT_PRESERVE_IMAGES))
-	{
+	dev->super.fill_path = fz_stext_fill_path;
+	dev->super.stroke_path = fz_stext_stroke_path;
+
 		dev->super.fill_shade = fz_stext_fill_shade;
 		dev->super.fill_image = fz_stext_fill_image;
 		dev->super.fill_image_mask = fz_stext_fill_image_mask;
-	}
 
 	if (opts)
 		dev->flags = opts->flags;
@@ -957,6 +1374,8 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->lastchar = ' ';
 	dev->lasttext = NULL;
 	dev->lastbidi = 0;
+	if (opts)
+		dev->opts = *opts;
 
 	return (fz_device*)dev;
 }

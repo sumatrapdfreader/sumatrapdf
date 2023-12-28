@@ -80,7 +80,7 @@ fz_is_directory(fz_context *ctx, const char *path)
 	struct stat info;
 
 	if (stat(path, &info) < 0)
-		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot stat '%s': %s", path, strerror(errno));
+		return 0;
 
 	return S_ISDIR(info.st_mode);
 }

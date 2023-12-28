@@ -1954,9 +1954,6 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	fz_always(ctx)
 	{
 		pdf_drop_obj(ctx, v);
-		pdf_drop_obj(ctx, o);
-		pdf_drop_obj(ctx, r);
-		pdf_drop_obj(ctx, t);
 		pdf_drop_obj(ctx, b);
 		fz_free(ctx, buf);
 	}

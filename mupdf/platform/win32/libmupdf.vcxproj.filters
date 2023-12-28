@@ -657,6 +657,12 @@
     <ClCompile Include="..\..\source\fitz\heap.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\html\txt.c">
+      <Filter>html</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\uncfb.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -928,6 +934,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\heap-imp.h">
       <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\html.h">
+      <Filter>!include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
