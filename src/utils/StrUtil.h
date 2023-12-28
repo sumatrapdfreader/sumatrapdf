@@ -9,6 +9,8 @@
 
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
 bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
+int utf8StrLen(const u8* s);
+int utf8RuneLen(const u8* s);
 
 struct ByteSlice {
     u8* d = nullptr;
@@ -299,7 +301,7 @@ struct Str {
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
     char& Last() const;
-    char* StealData();
+    char* StealData(Allocator* a = nullptr);
     char* LendData() const;
     bool Contains(const char* s, size_t sLen = 0);
     bool IsEmpty() const;

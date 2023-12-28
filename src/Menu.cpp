@@ -1003,25 +1003,73 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
 
-// TODO: write it in a way that handles unicode
-static TempStr ShortenString(char* menuString, size_t maxLen) {
-    size_t menuStrLen = str::Len(menuString);
-    if (menuStrLen <= maxLen) {
-        return menuString;
+// shorten a string to maxLen characters, adding ellipsis in the middle
+// ascii version that doesn't handle UTF-8
+static TempStr ShortenStringTemp(char* s, int maxLen) {
+    size_t sLen = str::Len(s);
+    if (sLen <= maxLen) {
+        return s;
     }
-    char* newStr = AllocArrayTemp<char>(maxLen);
+    char* ret = AllocArrayTemp<char>(maxLen + 2);
     const size_t half = maxLen / 2;
-    const size_t strSize = menuStrLen + 1; // size()+1 because wcslen() doesn't include \0
-    // Copy first N/2 characters, move last N/2 characters to the halfway point
+    const size_t strSize = sLen + 1; // +1 for terminating \0
+    // copy first N/2 characters, move last N/2 characters to the halfway point
     for (size_t i = 0; i < half; i++) {
-        newStr[i] = menuString[i];
-        newStr[i + half] = menuString[strSize - half + i];
+        ret[i] = s[i];
+        ret[i + half] = s[strSize - half + i];
     }
-    // Add ellipsis
-    newStr[half - 2] = newStr[half - 1] = newStr[half] = '.';
-    // Ensure null-terminated string
-    newStr[maxLen - 1] = '\0';
-    return newStr;
+    // add ellipsis in the middle
+    ret[half - 2] = ret[half - 1] = ret[half] = '.';
+    return ret;
+}
+
+// shorten a string to maxLen characters, adding ellipsis in the middle
+// works correctly with utf8 strings
+static TempStr ShortenStringUtf8Temp(char* s, int maxRunes) {
+    int nRunes = utf8StrLen((u8*)s);
+    if (nRunes < 0) {
+        // not a valid utf8
+        return ShortenStringTemp(s, maxRunes);
+    }
+    if (nRunes <= maxRunes) {
+        return s;
+    }
+    int toRemove = (nRunes - maxRunes) + 3; // 3 for "..."
+    int removeStartingAt = (nRunes / 2) - (toRemove / 2);
+    // over-allocate the result by 4x to be always safe
+    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
+    char* tmp = ret;
+    int n;
+    for (int i = 0; i < nRunes; i++) {
+        n = utf8RuneLen((u8*)s);
+        CrashIf(n <= 0);
+        if (i < removeStartingAt || i >= removeStartingAt + toRemove) {
+            switch (n) {
+                default:
+                    CrashIf(true);
+                    break;
+                case 4:
+                    *tmp++ = *s++;
+                    __fallthrough;
+                case 3:
+                    *tmp++ = *s++;
+                    __fallthrough;
+                case 2:
+                    *tmp++ = *s++;
+                    __fallthrough;
+                case 1:
+                    *tmp++ = *s++;
+            }
+        } else if (i == removeStartingAt) {
+            *tmp++ = '.';
+            *tmp++ = '.';
+            *tmp++ = '.';
+            s += n;
+        } else {
+            s += n;
+        }
+    }
+    return ret;
 }
 
 static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
@@ -1031,10 +1079,9 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     }
 
     TempStr menuString = path::GetBaseNameTemp(filePath);
-    // If the name is too long, save only the ends glued together
-    // E.g. 'Very Long PDF Name (3).pdf' -> 'Very Long...e (3).pdf'
-    const size_t MAX_LEN = 70;
-    menuString = ShortenString(menuString, MAX_LEN);
+    // shorten very long file names so that menu isn't too wide
+    const size_t kMaxRunes = 70;
+    menuString = ShortenStringUtf8Temp(menuString, kMaxRunes);
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
     int menuIdx = (int)((index + 1) % 10);

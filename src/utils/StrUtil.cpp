@@ -63,28 +63,39 @@ static const u8 trailingBytesForUTF8[256] = {
  * definition of UTF-8 goes up to 4-byte sequences.
  */
 
-static bool isLegalUTF8(const u8* source, int length) {
+static bool isLegalUTF8(const u8* src, int length) {
     u8 a;
-    const u8* srcptr = source + length;
+    for (int i = 0; i < length; i++) {
+        a = src[i];
+        if (a == 0) {
+            return false;
+        }
+    }
+    const u8* end = src + length;
 
     switch (length) {
         default:
             return false;
         /* Everything else falls through when "true"... */
         case 4:
-            if ((a = (*--srcptr)) < 0x80 || a > 0xBF) {
+            a = (*--end);
+            if (a < 0x80 || a > 0xBF) {
                 return false;
             }
+            __fallthrough;
         case 3:
-            if ((a = (*--srcptr)) < 0x80 || a > 0xBF) {
+            a = (*--end);
+            if (a < 0x80 || a > 0xBF) {
                 return false;
             }
+            __fallthrough;
         case 2:
-            if ((a = (*--srcptr)) > 0xBF) {
+            a = (*--end);
+            if (a > 0xBF) {
                 return false;
             }
 
-            switch (*source) {
+            switch (*src) {
                 /* no fall-through in this inner switch */
                 case 0xE0:
                     if (a < 0xA0) {
@@ -111,24 +122,28 @@ static bool isLegalUTF8(const u8* source, int length) {
                         return false;
                     }
             }
-
+            __fallthrough;
         case 1:
-            if (*source >= 0x80 && *source < 0xC2) {
+            if (*src >= 0x80 && *src < 0xC2) {
                 return false;
             }
     }
 
-    return *source <= 0xF4;
+    return *src <= 0xF4;
 }
 
 /* --------------------------------------------------------------------- */
 
+inline int utf8RuneLen(const u8* s) {
+    int n = trailingBytesForUTF8[*s] + 1;
+    return n;
+}
+
 /*
- * Exported function to return whether a UTF-8 sequence is legal or not.
- * This is not used here; it's just exported.
+ * return true if a UTF-8 sequence is legal
  */
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
-    int n = trailingBytesForUTF8[*source] + 1;
+    int n = utf8RuneLen(source);
     if (source + n > sourceEnd) {
         return false;
     }
@@ -136,18 +151,33 @@ bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
 }
 
 /*
- * Exported function to return whether a UTF-8 string is legal or not.
- * This is not used here; it's just exported.
+ * return true if UTF-8 string is legal.
  */
 bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
-    while (*source != sourceEnd) {
-        int n = trailingBytesForUTF8[**source] + 1;
-        if (n > sourceEnd - *source || !isLegalUTF8(*source, n)) {
+    const u8* s = *source;
+    while (s != sourceEnd) {
+        int n = utf8RuneLen(s);
+        if (n > sourceEnd - s || !isLegalUTF8(s, n)) {
             return false;
         }
-        *source += n;
+        s += n;
     }
+    *source = s;
     return true;
+}
+
+// return -1 if not a valid utf8 string
+int utf8StrLen(const u8* s) {
+    int len = 0;
+    while (*s) {
+        int n = utf8RuneLen(s);
+        if (!isLegalUTF8(s, n)) {
+            return -1;
+        }
+        s += n;
+        len++;
+    }
+    return len;
 }
 
 // --- end of Unicode, Inc. utf8 code
@@ -1440,10 +1470,13 @@ char& Str::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-char* Str::StealData() {
+char* Str::StealData(Allocator* a) {
+    if (a == nullptr) {
+        a = this->allocator;
+    }
     char* res = els;
     if (els == buf) {
-        res = (char*)Allocator::MemDup(allocator, buf, len + kPadding);
+        res = (char*)Allocator::MemDup(a, buf, len + kPadding);
     }
     els = buf;
     Reset();
