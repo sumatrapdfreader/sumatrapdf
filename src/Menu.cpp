@@ -1041,7 +1041,7 @@ static TempStr ShortenStringUtf8Temp(char* s, int maxRunes) {
     char* tmp = ret;
     int n;
     for (int i = 0; i < nRunes; i++) {
-        n = utf8RuneLen((u8*)s);
+        n = utf8RuneLen((const u8*)s);
         CrashIf(n <= 0);
         if (i < removeStartingAt || i >= removeStartingAt + toRemove) {
             switch (n) {

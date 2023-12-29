@@ -134,7 +134,7 @@ static bool isLegalUTF8(const u8* src, int length) {
 
 /* --------------------------------------------------------------------- */
 
-inline int utf8RuneLen(const u8* s) {
+int utf8RuneLen(const u8* s) {
     int n = trailingBytesForUTF8[*s] + 1;
     return n;
 }
