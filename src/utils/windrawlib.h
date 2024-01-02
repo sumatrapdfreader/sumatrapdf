@@ -26,15 +26,15 @@
  */
 typedef DWORD WD_COLOR;
 
-#define WD_ARGB(a, r, g, b)                                                                      \
-    ((((WD_COLOR)(a)&0xff) << 24) | (((WD_COLOR)(r)&0xff) << 16) | (((WD_COLOR)(g)&0xff) << 8) | \
-     (((WD_COLOR)(b)&0xff) << 0))
+#define WD_ARGB(a, r, g, b)                                                                            \
+    ((((WD_COLOR)(a) & 0xff) << 24) | (((WD_COLOR)(r) & 0xff) << 16) | (((WD_COLOR)(g) & 0xff) << 8) | \
+     (((WD_COLOR)(b) & 0xff) << 0))
 #define WD_RGB(r, g, b) WD_ARGB(255, (r), (g), (b))
 
-#define WD_AVALUE(color) (((WD_COLOR)(color)&0xff000000U) >> 24)
-#define WD_RVALUE(color) (((WD_COLOR)(color)&0x00ff0000U) >> 16)
-#define WD_GVALUE(color) (((WD_COLOR)(color)&0x0000ff00U) >> 8)
-#define WD_BVALUE(color) (((WD_COLOR)(color)&0x000000ffU) >> 0)
+#define WD_AVALUE(color) (((WD_COLOR)(color) & 0xff000000U) >> 24)
+#define WD_RVALUE(color) (((WD_COLOR)(color) & 0x00ff0000U) >> 16)
+#define WD_GVALUE(color) (((WD_COLOR)(color) & 0x0000ff00U) >> 8)
+#define WD_BVALUE(color) (((WD_COLOR)(color) & 0x000000ffU) >> 0)
 
 /* Create WD_COLOR from GDI's COLORREF. */
 #define WD_COLOR_FROM_GDI_EX(a, cref) WD_ARGB((a), GetRValue(cref), GetGValue(cref), GetBValue(cref))

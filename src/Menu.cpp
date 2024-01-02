@@ -1006,15 +1006,15 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 // shorten a string to maxLen characters, adding ellipsis in the middle
 // ascii version that doesn't handle UTF-8
 static TempStr ShortenStringTemp(char* s, int maxLen) {
-    size_t sLen = str::Len(s);
+    int sLen = (int)str::Len(s);
     if (sLen <= maxLen) {
         return s;
     }
     char* ret = AllocArrayTemp<char>(maxLen + 2);
-    const size_t half = maxLen / 2;
-    const size_t strSize = sLen + 1; // +1 for terminating \0
+    const int half = maxLen / 2;
+    const int strSize = sLen + 1; // +1 for terminating \0
     // copy first N/2 characters, move last N/2 characters to the halfway point
-    for (size_t i = 0; i < half; i++) {
+    for (int i = 0; i < half; i++) {
         ret[i] = s[i];
         ret[i + half] = s[strSize - half + i];
     }

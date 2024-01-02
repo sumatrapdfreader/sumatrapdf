@@ -461,7 +461,7 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
 
 // cf. https://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-#define CURRENT_HMODULE ((HMODULE)&__ImageBase)
+#define CURRENT_HMODULE ((HMODULE) & __ImageBase)
 
 static void create_system_font_list(fz_context* ctx) {
     WCHAR szFontDir[MAX_PATH];
