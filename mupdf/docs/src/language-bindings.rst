@@ -1547,6 +1547,28 @@ functions and class methods.]
     */
     FZ_FUNCTION std::string fz_get_glyph_name2(fz_context *ctx, fz_font *font, int glyph);
 
+    /**
+    Extra struct containing fz_install_load_system_font_funcs()'s args,
+    which we wrap with virtual_fnptrs set to allow use from Python/C# via
+    Swig Directors.
+    */
+    typedef struct fz_install_load_system_font_funcs_args
+    {{
+        fz_load_system_font_fn *f;
+        fz_load_system_cjk_font_fn *f_cjk;
+        fz_load_system_fallback_font_fn *f_fallback;
+    }} fz_install_load_system_font_funcs_args;
+
+    /**
+    Alternative to fz_install_load_system_font_funcs() that takes args in a
+    struct, to allow use from Python/C# via Swig Directors.
+    */
+    void fz_install_load_system_font_funcs2(fz_context *ctx, fz_install_load_system_font_funcs_args* args);
+
+    /* Internal singleton state to allow Swig Director class to find
+    fz_install_load_system_font_funcs_args class wrapper instance. */
+    extern void* fz_install_load_system_font_funcs2_state;
+
 
 Python/C# bindings details
 ---------------------------------------------------------------
@@ -1640,6 +1662,22 @@ Non-standard API or implementation
 * `pdf_lookup_metadata(pdfdocument, key)`: Return key value or None if not found:
 * `pdf_set_annot_color()`: Takes single `color` arg which must be float or tuple of 1-4 floats.
 * `pdf_set_annot_interior_color()`: Takes single `color` arg which must be float or tuple of 1-4 floats.
+* `fz_install_load_system_font_funcs()`: Takes Python callbacks with no `ctx` arg,
+  which can return `None`, `fz_font*` or a `mupdf.FzFont`.
+
+  Example usage (from `scripts/mupdfwrap_test.py:test_install_load_system_font()`)::
+
+    def font_f(name, bold, italic, needs_exact_metrics):
+        print(f'font_f(): Looking for font: {name=} {bold=} {italic=} {needs_exact_metrics=}.')
+        return mupdf.fz_new_font_from_file(...)
+    def f_cjk(name, ordering, serif):
+        print(f'f_cjk(): Looking for font: {name=} {ordering=} {serif=}.')
+        return None
+    def f_fallback(script, language, serif, bold, italic):
+        print(f'f_fallback(): looking for font: {script=} {language=} {serif=} {bold=} {italic=}.')
+        return None
+    mupdf.fz_install_load_system_font_funcs(font_f, f_cjk, f_fallback)
+
 
 Making MuPDF function pointers call Python code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

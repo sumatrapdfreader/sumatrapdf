@@ -90,6 +90,12 @@ void fz_register_document_handler(fz_context *ctx, const fz_document_handler *ha
 const fz_document_handler *
 fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const char *magic)
 {
+	return fz_recognize_document_stream_and_dir_content(ctx, stream, NULL, magic);
+}
+
+const fz_document_handler *
+fz_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream *stream, fz_archive *dir, const char *magic)
+{
 	fz_document_handler_context *dc;
 	int i, best_score, best_i;
 	const char *ext;
@@ -107,7 +113,7 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 	best_score = 0;
 	best_i = -1;
 
-	if (stream && stream->seek != NULL)
+	if ((stream && stream->seek != NULL) || (stream == NULL && dir != NULL))
 	{
 		for (i = 0; i < dc->count; i++)
 		{
@@ -115,10 +121,11 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 
 			if (dc->handler[i]->recognize_content)
 			{
-				fz_seek(ctx, stream, 0, SEEK_SET);
+				if (stream)
+					fz_seek(ctx, stream, 0, SEEK_SET);
 				fz_try(ctx)
 				{
-					score = dc->handler[i]->recognize_content(ctx, stream);
+					score = dc->handler[i]->recognize_content(ctx, stream, dir);
 				}
 				fz_catch(ctx)
 				{
@@ -134,7 +141,8 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 				best_i = i;
 			}
 		}
-		fz_seek(ctx, stream, 0, SEEK_SET);
+		if (stream)
+			fz_seek(ctx, stream, 0, SEEK_SET);
 	}
 
 	if (best_score < 100)
@@ -180,13 +188,22 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 
 const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const char *filename)
 {
-	fz_stream *stream  = fz_open_file(ctx, filename);
+	fz_stream *stream = NULL;
 	const fz_document_handler *handler = NULL;
+	fz_archive *zip = NULL;
+
+	if (fz_is_directory(ctx, filename))
+		zip = fz_open_directory(ctx, filename);
+	else
+		stream  = fz_open_file(ctx, filename);
 
 	fz_try(ctx)
-		handler = fz_recognize_document_stream_content(ctx, stream, filename);
+		handler = fz_recognize_document_stream_and_dir_content(ctx, stream, zip, filename);
 	fz_always(ctx)
+	{
 		fz_drop_stream(ctx, stream);
+		fz_drop_archive(ctx, zip);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
@@ -196,7 +213,7 @@ const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const 
 const fz_document_handler *
 fz_recognize_document(fz_context *ctx, const char *magic)
 {
-	return fz_recognize_document_stream_content(ctx, NULL, magic);
+	return fz_recognize_document_stream_and_dir_content(ctx, NULL, NULL, magic);
 }
 
 #if FZ_ENABLE_PDF
@@ -204,35 +221,37 @@ extern fz_document_handler pdf_document_handler;
 #endif
 
 fz_document *
-fz_open_accelerated_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream, fz_stream *accel)
+fz_open_accelerated_document_with_stream_and_dir(fz_context *ctx, const char *magic, fz_stream *stream, fz_stream *accel, fz_archive *dir)
 {
 	const fz_document_handler *handler;
 
-	if (stream == NULL)
+	if (stream == NULL && dir == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no document to open");
 	if (magic == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "missing file type");
 
-	handler = fz_recognize_document_stream_content(ctx, stream, magic);
+	handler = fz_recognize_document_stream_and_dir_content(ctx, stream, dir, magic);
 	if (!handler)
 		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot find document handler for file type: '%s'", magic);
-	if (handler->open_accel_with_stream)
-		if (accel || handler->open_with_stream == NULL)
-			return handler->open_accel_with_stream(ctx, stream, accel);
-	if (accel)
-	{
-		/* We've had an accelerator passed to a format that doesn't
-		 * handle it. This should never happen, as how did the
-		 * accelerator get created? */
-		fz_drop_stream(ctx, accel);
-	}
-	return handler->open_with_stream(ctx, stream);
+	return handler->open(ctx, stream, accel, dir);
+}
+
+fz_document *
+fz_open_accelerated_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream, fz_stream *accel)
+{
+	return fz_open_accelerated_document_with_stream_and_dir(ctx, magic, stream, accel, NULL);
 }
 
 fz_document *
 fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream)
 {
 	return fz_open_accelerated_document_with_stream(ctx, magic, stream, NULL);
+}
+
+fz_document *
+fz_open_document_with_stream_and_dir(fz_context *ctx, const char *magic, fz_stream *stream, fz_archive *dir)
+{
+	return fz_open_accelerated_document_with_stream_and_dir(ctx, magic, stream, NULL, dir);
 }
 
 fz_document *
@@ -266,31 +285,28 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 	if (!handler)
 		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot find document handler for file: %s", filename);
 
-	if (accel) {
-		if (handler->open_accel)
-			return handler->open_accel(ctx, filename, accel);
-		if (handler->open_accel_with_stream == NULL)
-		{
-			/* We're not going to be able to use the accelerator - this
-			 * should never happen, as how can one have been created? */
-			accel = NULL;
-		}
+	if (fz_is_directory(ctx, filename))
+	{
+		/* Cannot accelerate directories, currently. */
+		fz_archive *dir = fz_open_directory(ctx, filename);
+
+		fz_try(ctx)
+			doc = fz_open_accelerated_document_with_stream_and_dir(ctx, filename, NULL, NULL, dir);
+		fz_always(ctx)
+			fz_drop_archive(ctx, dir);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+
+		return doc;
 	}
-	if (!accel && handler->open)
-		return handler->open(ctx, filename);
 
 	file = fz_open_file(ctx, filename);
 
 	fz_try(ctx)
 	{
-		if (accel || handler->open_with_stream == NULL)
-		{
-			if (accel)
-				afile = fz_open_file(ctx, accel);
-			doc = handler->open_accel_with_stream(ctx, file, afile);
-		}
-		else
-			doc = handler->open_with_stream(ctx, file);
+		if (accel)
+			afile = fz_open_file(ctx, accel);
+		doc = handler->open(ctx, file, afile, NULL);
 	}
 	fz_always(ctx)
 	{

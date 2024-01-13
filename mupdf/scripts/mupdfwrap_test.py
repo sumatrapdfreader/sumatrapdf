@@ -146,6 +146,71 @@ def test_filter(path):
         document.pdf_save_document('mupdf_test-out0.pdf', mupdf.PdfWriteOptions())
 
 
+def test_install_load_system_font(path):
+    '''
+    Very basic test of mupdf.fz_install_load_system_font_funcs(). We check
+    that the fonts returned by our python callback is returned if we ask for a
+    non-existent font.
+
+    We also render `path` as a PNG with/without our font override. This isn't
+    particularly useful, but if `path` contained references to unknown fonts,
+    it would give different results.
+    '''
+    print(f'test_install_load_system_font()')
+
+    def make_png(infix=''):
+        document = mupdf.FzDocument(path)
+        pixmap = mupdf.FzPixmap(document, 0, mupdf.FzMatrix(), mupdf.FzColorspace(mupdf.FzColorspace.Fixed_RGB), 0)
+        path_out = f'{path}{infix}.png'
+        pixmap.fz_save_pixmap_as_png(path_out)
+        print(f'Have created: {path_out}.')
+
+    make_png()
+
+    trace = list()
+    replacement_font = mupdf.fz_new_font_from_file(
+            None,
+            os.path.abspath(f'{__file__}/../../resources/fonts/urw/NimbusRoman-BoldItalic.cff'),
+            0,
+            0,
+            )
+    assert replacement_font.m_internal
+    print(f'{replacement_font.m_internal.name=} {replacement_font.m_internal.glyph_count=}')
+
+    def font_f(name, bold, italic, needs_exact_metrics):
+        trace.append((name, bold, italic, needs_exact_metrics))
+        print(f'font_f(): Looking for font: {name=} {bold=} {italic=} {needs_exact_metrics=}.')
+        # Always return `replacement_font`.
+        return replacement_font
+    def f_cjk(name, ordering, serif):
+        trace.append((name, ordering, serif))
+        print(f'f_cjk(): Looking for font: {name=} {ordering=} {serif=}.')
+        return None
+    def f_fallback(script, language, serif, bold, italic):
+        trace.append((script, language, serif, bold, italic))
+        print(f'f_fallback(): looking for font: {script=} {language=} {serif=} {bold=} {italic=}.')
+        return None
+    mupdf.fz_install_load_system_font_funcs(font_f, f_cjk, f_fallback)
+
+    # Check that asking for any font returns `replacement_font`.
+    font = mupdf.fz_load_system_font("some-font-name", 0, 0, 0)
+    assert isinstance(font, mupdf.FzFont)
+    assert trace == [
+            ('some-font-name', 0, 0, 0),
+            ], f'Incorrect {trace=}.'
+    assert font.m_internal
+    print(f'{font.m_internal.name=} {font.m_internal.glyph_count=}')
+    assert font.m_internal.name == replacement_font.m_internal.name
+    assert font.m_internal.glyph_count == replacement_font.m_internal.glyph_count
+
+    make_png('-replace-font')
+
+    # Restore default behaviour.
+    mupdf.fz_install_load_system_font_funcs()
+    font = mupdf.fz_load_system_font("some-font-name", 0, 0, 0)
+    assert not font.m_internal
+
+
 def test(path):
     '''
     Runs various mupdf operations on <path>, which is assumed to be a file that
@@ -156,6 +221,8 @@ def test(path):
     assert os.path.isfile(path)
     global g_test_n
     g_test_n += 1
+
+    test_install_load_system_font(path)
 
     # See notes in wrap/swig.py:build_swig() about buffer_extract() and
     # buffer_storage().

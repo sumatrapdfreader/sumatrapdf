@@ -1508,6 +1508,71 @@ def build_swig(
                         self._out = out
                     return FzDocumentWriter__init__0(self, *args)
                 FzDocumentWriter.__init__ = FzDocumentWriter__init__1
+
+                # Create class derived from
+                # fz_install_load_system_font_funcs_args class wrapper with
+                # overrides of the virtual functions to allow calling of Python
+                # callbacks.
+                #
+                class fz_install_load_system_font_funcs_args3({rename.class_('fz_install_load_system_font_funcs_args')}2):
+                    """
+                    Class derived from Swig Director class
+                    fz_install_load_system_font_funcs_args2, to allow
+                    implementation of fz_install_load_system_font_funcs with
+                    Python callbacks.
+                    """
+                    def __init__(self, f=None, f_cjk=None, f_fallback=None):
+                        super().__init__()
+
+                        self.f3 = f
+                        self.f_cjk3 = f_cjk
+                        self.f_fallback3 = f_fallback
+
+                        self.use_virtual_f(True if f else False)
+                        self.use_virtual_f_cjk(True if f_cjk else False)
+                        self.use_virtual_f_fallback(True if f_fallback else False)
+
+                    def ret_font(self, font):
+                        if font is None:
+                            return None
+                        elif isinstance(font, {rename.class_('fz_font')}):
+                            return ll_fz_keep_font(font.m_internal)
+                        elif isinstance(font, fz_font):
+                            return font
+                        else:
+                            assert 0, f'Expected FzFont or fz_font, but fz_install_load_system_font_funcs() callback returned {{type(font)=}}'
+
+                    def f(self, ctx, name, bold, italic, needs_exact_metrics):
+                        font = self.f3(name, bold, italic, needs_exact_metrics)
+                        return self.ret_font(font)
+
+                    def f_cjk(self, ctx, name, ordering, serif):
+                        font = self.f_cjk3(name, ordering, serif)
+                        return self.ret_font(font)
+
+                    def f_fallback(self, ctx, script, language, serif, bold, italic):
+                        font = self.f_fallback3(script, language, serif, bold, italic)
+                        return self.ret_font(font)
+
+                # We store the most recently created
+                # fz_install_load_system_font_funcs_args in this global so that
+                # it is not cleaned up by Python.
+                g_fz_install_load_system_font_funcs_args = None
+
+                def fz_install_load_system_font_funcs(f=None, f_cjk=None, f_fallback=None):
+                    """
+                    Python override for MuPDF
+                    fz_install_load_system_font_funcs() using Swig Director
+                    support. Python callbacks are not passed a `ctx` arg, and
+                    can return None, a mupdf.fz_font or a mupdf.FzFont.
+                    """
+                    global g_fz_install_load_system_font_funcs_args
+                    g_fz_install_load_system_font_funcs_args = fz_install_load_system_font_funcs_args3(
+                            f,
+                            f_cjk,
+                            f_fallback,
+                            )
+                    fz_install_load_system_font_funcs2(g_fz_install_load_system_font_funcs_args)
                 ''')
 
         # Add __iter__() methods for all classes with begin() and end() methods.

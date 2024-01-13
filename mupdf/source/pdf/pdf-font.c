@@ -1274,9 +1274,24 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 		 * the ToUnicode table if it exists to map via the substitute font's cmap. */
 		if (strstr(fontdesc->encoding->cmap_name, "Identity-") && fontdesc->font->flags.ft_substitute)
 		{
-			fz_warn(ctx, "non-embedded font using identity encoding: %s", basefont);
-			if (fontdesc->to_unicode && !fontdesc->to_ttf_cmap)
-				fontdesc->to_ttf_cmap = pdf_keep_cmap(ctx, fontdesc->to_unicode);
+			if (!fontdesc->to_ttf_cmap)
+			{
+				if (fontdesc->to_unicode)
+				{
+					// Use ToUnicode from PDF file if possible.
+					fontdesc->to_ttf_cmap = pdf_keep_cmap(ctx, fontdesc->to_unicode);
+				}
+				else
+				{
+					// Attempt a generic ToUnicode (default MacRoman ordering for TrueType)
+					fontdesc->to_ttf_cmap = pdf_load_builtin_cmap(ctx, "TrueType-UCS2");
+				}
+			}
+
+			if (fontdesc->to_ttf_cmap)
+				fz_warn(ctx, "non-embedded font using identity encoding: %s (mapping via %s)", basefont, fontdesc->to_ttf_cmap->cmap_name);
+			else
+				fz_warn(ctx, "non-embedded font using identity encoding: %s", basefont);
 		}
 
 		/* Horizontal */

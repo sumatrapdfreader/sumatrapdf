@@ -189,8 +189,8 @@ void fz_write_story(
  *      story content has been written to the device).
  *  pagefn_ref:
  *      Passed to pagefn().
- *  archive:
- *      NULL, or an archive to load images etc from.
+ *  dir:
+ *      NULL, or a directory context to load images etc from.
  */
 void fz_write_stabilized_story(
 		fz_context *ctx,
@@ -203,7 +203,7 @@ void fz_write_stabilized_story(
 		void *rectfn_ref,
 		fz_write_story_pagefn pagefn,
 		void *pagefn_ref,
-		fz_archive *archive
+		fz_archive *dir
 		);
 
 #endif

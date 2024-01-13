@@ -524,7 +524,7 @@ void fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
 fz_font *fz_load_html_font(fz_context *ctx, fz_html_font_set *set, const char *family, int is_bold, int is_italic, int is_small_caps);
 void fz_drop_html_font_set(fz_context *ctx, fz_html_font_set *htx);
 
-void fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_css *css);
+void fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *dir, const char *base_uri, fz_css *css);
 
 void fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em);
 void fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html, int page);
@@ -551,7 +551,7 @@ fz_archive *fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi);
 fz_structure fz_html_tag_to_structure(const char *tag);
 
 fz_html *fz_parse_html(fz_context *ctx,
-	fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css,
+	fz_html_font_set *set, fz_archive *dir, const char *base_uri, fz_buffer *buf, const char *user_css,
 	int try_xml, int try_html5, int patch_mobi);
 
 fz_buffer *fz_txt_buffer_to_html(fz_context *ctx, fz_buffer *in);

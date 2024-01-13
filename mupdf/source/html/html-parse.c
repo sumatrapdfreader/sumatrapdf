@@ -556,7 +556,10 @@ static fz_image *load_html_image(fz_context *ctx, fz_archive *zip, const char *b
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)
+	{
+		fz_ignore_error(ctx);
 		fz_warn(ctx, "html: cannot load image src='%s'", src);
+	}
 
 	return img;
 }
@@ -569,7 +572,10 @@ static fz_image *load_svg_image(fz_context *ctx, fz_archive *zip, const char *ba
 	fz_try(ctx)
 		img = fz_new_image_from_svg_xml(ctx, xmldoc, node, base_uri, zip);
 	fz_catch(ctx)
+	{
+		fz_ignore_error(ctx);
 		fz_warn(ctx, "html: cannot load embedded svg document");
+	}
 #endif
 	return img;
 }

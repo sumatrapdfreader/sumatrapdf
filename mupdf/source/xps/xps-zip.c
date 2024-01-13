@@ -144,8 +144,8 @@ xps_has_part(fz_context *ctx, xps_document *doc, char *name)
 	return 0;
 }
 
-static fz_document *
-xps_open_document_with_directory(fz_context *ctx, const char *directory)
+fz_document *
+xps_open_document_with_directory(fz_context *ctx, fz_archive *dir)
 {
 	xps_document *doc;
 
@@ -154,7 +154,7 @@ xps_open_document_with_directory(fz_context *ctx, const char *directory)
 
 	fz_try(ctx)
 	{
-		doc->zip = fz_open_directory(ctx, directory);
+		doc->zip = fz_keep_archive(ctx, dir);
 		xps_read_page_list(ctx, doc);
 	}
 	fz_catch(ctx)
@@ -192,22 +192,19 @@ fz_document *
 xps_open_document(fz_context *ctx, const char *filename)
 {
 	fz_stream *file;
-	char *p;
 	fz_document *doc = NULL;
 
-	p = strstr(filename, "/_rels/.rels");
-	if (p == NULL)
-		p = strstr(filename, "\\_rels\\.rels");
-	if (p)
+	if (fz_is_directory(ctx, filename))
 	{
-		char *buf = fz_strdup(ctx, filename);
-		buf[p-filename] = 0;
+		fz_archive *dir = fz_open_directory(ctx, filename);
+
 		fz_try(ctx)
-			doc = xps_open_document_with_directory(ctx, buf);
+			doc = xps_open_document_with_directory(ctx, dir);
 		fz_always(ctx)
-			fz_free(ctx, buf);
+			fz_drop_archive(ctx, dir);
 		fz_catch(ctx)
 			fz_rethrow(ctx);
+
 		return doc;
 	}
 

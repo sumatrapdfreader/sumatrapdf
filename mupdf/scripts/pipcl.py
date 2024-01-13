@@ -23,7 +23,6 @@ import platform
 import re
 import shutil
 import site
-import setuptools
 import subprocess
 import sys
 import sysconfig
@@ -559,6 +558,7 @@ class Package:
             # PEP-425. On Linux gives `linux_x86_64` which is rejected by
             # pypi.org.
             #
+            import setuptools
             tag_platform = setuptools.distutils.util.get_platform().replace('-', '_').replace('.', '_')
 
             # We need to patch things on MacOS.

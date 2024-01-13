@@ -874,7 +874,8 @@ push_adjustment_to_array(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *ar
 {
 	if (p->Tm_adjust == 0)
 		return;
-	pdf_array_push_real(ctx, arr, p->Tm_adjust * 1000);
+	/* Negate the number here, because it will be subtracted upon use. */
+	pdf_array_push_real(ctx, arr, -p->Tm_adjust * 1000);
 	p->Tm_adjust = 0;
 }
 
@@ -905,7 +906,7 @@ filter_show_string(fz_context *ctx, pdf_sanitize_processor *p, unsigned char *bu
 		}
 		if (i != len)
 		{
-			adjust_text(ctx, p, p->tos.char_tx, p->tos.char_ty);
+			adjust_text(ctx, p, p->tos.char_tx / p->gstate->pending.text.scale, p->tos.char_ty / p->gstate->pending.text.scale);
 			i += inc;
 		}
 		if (removed_space)
@@ -962,7 +963,7 @@ filter_show_text(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *text)
 					}
 					if (j != len)
 					{
-						adjust_text(ctx, p, p->tos.char_tx, p->tos.char_ty);
+						adjust_text(ctx, p, -p->tos.char_tx / p->gstate->pending.text.scale, -p->tos.char_ty / p->gstate->pending.text.scale);
 						j += inc;
 					}
 					if (removed_space)
@@ -971,7 +972,7 @@ filter_show_text(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *text)
 			}
 			else
 			{
-				float tadj = - pdf_to_real(ctx, item) * gstate->pending.text.size * 0.001f;
+				float tadj = pdf_to_real(ctx, item) * gstate->pending.text.size * 0.001f / p->gstate->pending.text.scale;
 				if (fontdesc->wmode == 0)
 				{
 					adjust_text(ctx, p, tadj, 0);

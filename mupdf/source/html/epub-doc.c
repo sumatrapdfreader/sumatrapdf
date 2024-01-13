@@ -990,6 +990,8 @@ epub_output_accelerator(fz_context *ctx, fz_document *doc_, fz_output *out)
 		fz_rethrow(ctx);
 }
 
+/* Takes ownership of zip. Will always eventually drop it.
+ * Never takes ownership of accel. */
 static fz_document *
 epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 {
@@ -1034,53 +1036,38 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 }
 
 static fz_document *
-epub_open_accel_document_with_stream(fz_context *ctx, fz_stream *file, fz_stream *accel)
+epub_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *dir)
 {
-	return epub_init(ctx, fz_open_zip_archive_with_stream(ctx, file), accel);
-}
-
-static fz_document *
-epub_open_accel_document(fz_context *ctx, const char *filename, const char *accel)
-{
-	fz_stream *afile = NULL;
+	fz_stream *file2 = NULL;
 	fz_document *doc;
+	fz_archive *zip = NULL;
 
-	if (accel)
-		afile = fz_open_file(ctx, accel);
+	if (file == NULL)
+	{
+		/* Directory case: file == NULL and dir == the directory. */
+		if (fz_has_archive_entry(ctx, dir, "META-INF/container.xml"))
+			file2 = file = fz_open_archive_entry(ctx, dir, "META-INF/container.xml");
+		else
+			file2 = file = fz_open_archive_entry(ctx, dir, "META-INF\\container.xml");
+		if (file == NULL)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Not an epub file");
+		zip = fz_keep_archive(ctx, dir);
+	}
+	else
+	{
+		/* File case: file != NULL and dir can be ignored. */
+		zip = fz_open_archive_with_stream(ctx, file);
+	}
+
 
 	fz_try(ctx)
-	{
-		if (strstr(filename, "META-INF/container.xml") || strstr(filename, "META-INF\\container.xml"))
-		{
-			char dirname[2048], *p;
-			fz_strlcpy(dirname, filename, sizeof dirname);
-			p = strstr(dirname, "META-INF");
-			*p = 0;
-			if (!dirname[0])
-				fz_strlcpy(dirname, ".", sizeof dirname);
-			doc = epub_init(ctx, fz_open_directory(ctx, dirname), afile);
-		}
-		else
-			doc = epub_init(ctx, fz_open_zip_archive(ctx, filename), afile);
-	}
+		doc = epub_init(ctx, zip, file);
 	fz_always(ctx)
-		fz_drop_stream(ctx, afile);
+		fz_drop_stream(ctx, file2);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
 	return doc;
-}
-
-static fz_document *
-epub_open_document_with_stream(fz_context *ctx, fz_stream *file)
-{
-	return epub_init(ctx, fz_open_zip_archive_with_stream(ctx, file), NULL);
-}
-
-static fz_document *
-epub_open_document(fz_context *ctx, const char *filename)
-{
-	return epub_open_accel_document(ctx, filename, NULL);
 }
 
 static int
@@ -1089,6 +1076,38 @@ epub_recognize(fz_context *doc, const char *magic)
 	if (strstr(magic, "META-INF/container.xml") || strstr(magic, "META-INF\\container.xml"))
 		return 200;
 	return 0;
+}
+
+static int
+epub_recognize_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
+{
+	fz_archive *arch = NULL;
+	int ret = 0;
+
+	fz_var(arch);
+	fz_var(ret);
+
+	fz_try(ctx)
+	{
+		if (stream == NULL)
+			arch = fz_keep_archive(ctx, dir);
+		else
+		{
+			arch = fz_try_open_archive_with_stream(ctx, stream);
+			if (arch == NULL)
+				break;
+		}
+
+		if (fz_has_archive_entry(ctx, arch, "META-INF/container.xml") ||
+			fz_has_archive_entry(ctx, arch, "META-INF\\container.xml"))
+			ret = 100;
+	}
+	fz_always(ctx)
+		fz_drop_archive(ctx, arch);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
 }
 
 static const char *epub_extensions[] =
@@ -1107,9 +1126,7 @@ fz_document_handler epub_document_handler =
 {
 	epub_recognize,
 	epub_open_document,
-	epub_open_document_with_stream,
 	epub_extensions,
 	epub_mimetypes,
-	epub_open_accel_document,
-	epub_open_accel_document_with_stream
+	epub_recognize_content
 };

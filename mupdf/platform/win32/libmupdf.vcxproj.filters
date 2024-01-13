@@ -648,12 +648,6 @@
     <ClCompile Include="..\..\source\fitz\unlibarchive.c">
       <Filter>fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\fitz\unchm.c">
-      <Filter>fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\fitz\lzxd.c">
-      <Filter>fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\fitz\heap.c">
       <Filter>fitz</Filter>
     </ClCompile>
@@ -663,21 +657,18 @@
     <ClCompile Include="..\..\source\fitz\uncfb.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\text-decoder.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
-      <Filter>fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\fitz\html-tags.h">
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\jmemcust.h">
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\paint-glyph.h">
-      <Filter>fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\fitz\unicodedata_db.h">
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz.h">
@@ -926,9 +917,6 @@
     <ClInclude Include="..\..\include\mupdf\pdf\image-rewriter.h">
       <Filter>!include\pdf</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\fitz\lzxd-imp.h">
-      <Filter>fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\heap.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
@@ -937,6 +925,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\html.h">
       <Filter>!include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\ucdn_db.h">
+      <Filter>fitz</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

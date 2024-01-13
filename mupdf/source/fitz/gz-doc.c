@@ -27,7 +27,7 @@
 #endif
 
 static fz_document *
-gz_open_document_with_stream(fz_context *ctx, fz_stream *ostm)
+gz_open_document(fz_context *ctx, fz_stream *ostm, fz_stream *accel, fz_archive *dir)
 {
 	fz_stream *stm = fz_open_flated(ctx, ostm, 16 + MAX_WBITS);
 	fz_buffer *buf = NULL;
@@ -66,10 +66,13 @@ static const char *gz_mimetypes[] =
 };
 
 static int
-gz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+gz_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
 {
 	int ret = 0;
 	uint8_t data[10];
+
+	if (stream == NULL)
+		return 0;
 
 	fz_try(ctx)
 	{
@@ -90,11 +93,8 @@ gz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 fz_document_handler gz_document_handler =
 {
 	NULL,
-	NULL,
-	gz_open_document_with_stream,
+	gz_open_document,
 	gz_extensions,
 	gz_mimetypes,
-	NULL, /* open_accel */
-	NULL, /* open_accel with stream */
 	gz_recognize_doc_content
 };

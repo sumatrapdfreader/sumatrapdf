@@ -556,7 +556,6 @@
     <ClCompile Include="..\..\source\fitz\load-psd.c" />
     <ClCompile Include="..\..\source\fitz\load-tiff.c" />
     <ClCompile Include="..\..\source\fitz\log.c" />
-    <ClCompile Include="..\..\source\fitz\lzxd.c" />
     <ClCompile Include="..\..\source\fitz\memento.c" />
     <ClCompile Include="..\..\source\fitz\memory.c" />
     <ClCompile Include="..\..\source\fitz\noto.c" />
@@ -580,8 +579,8 @@
     <ClCompile Include="..\..\source\fitz\pool.c" />
     <ClCompile Include="..\..\source\fitz\printf.c" />
     <ClCompile Include="..\..\source\fitz\random.c" />
+    <ClCompile Include="..\..\source\fitz\text-decoder.c" />
     <ClCompile Include="..\..\source\fitz\uncfb.c" />
-    <ClCompile Include="..\..\source\fitz\unchm.c" />
     <ClCompile Include="..\..\source\fitz\unlibarchive.c" />
     <ClCompile Include="..\..\source\fitz\warp.c" />
     <ClCompile Include="..\..\source\fitz\xmltext-device.c" />
@@ -771,13 +770,11 @@
     <ClInclude Include="..\..\source\fitz\font-table.h" />
     <ClInclude Include="..\..\source\fitz\glyph-imp.h" />
     <ClInclude Include="..\..\source\fitz\glyphbox.h" />
-    <ClInclude Include="..\..\source\fitz\html-tags.h" />
     <ClInclude Include="..\..\source\fitz\image-imp.h" />
     <ClInclude Include="..\..\source\fitz\jmemcust.h" />
-    <ClInclude Include="..\..\source\fitz\lzxd-imp.h" />
     <ClInclude Include="..\..\source\fitz\paint-glyph.h" />
     <ClInclude Include="..\..\source\fitz\pixmap-imp.h" />
-    <ClInclude Include="..\..\source\fitz\unicodedata_db.h" />
+    <ClInclude Include="..\..\source\fitz\ucdn_db.h" />
     <ClInclude Include="..\..\source\fitz\xml-imp.h" />
     <ClInclude Include="..\..\source\fitz\z-imp.h" />
     <ClInclude Include="..\..\source\html\html-imp.h" />

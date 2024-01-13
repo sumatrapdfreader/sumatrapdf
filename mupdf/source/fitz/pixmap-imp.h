@@ -25,11 +25,7 @@
 
 void fz_drop_pixmap_imp(fz_context *ctx, fz_storable *pix);
 
-void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect r, const fz_default_colorspaces *default_cs);
 void fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
-size_t fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
-
-fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, const fz_irect *clip);
 
 typedef struct fz_scale_cache fz_scale_cache;
 
@@ -37,7 +33,6 @@ fz_scale_cache *fz_new_scale_cache(fz_context *ctx);
 void fz_drop_scale_cache(fz_context *ctx, fz_scale_cache *cache);
 fz_pixmap *fz_scale_pixmap_cached(fz_context *ctx, const fz_pixmap *src, float x, float y, float w, float h, const fz_irect *clip, fz_scale_cache *cache_x, fz_scale_cache *cache_y);
 
-void fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor);
 void fz_subsample_pixblock(unsigned char *s, int w, int h, int n, int factor, ptrdiff_t stride);
 
 fz_irect fz_pixmap_bbox_no_ctx(const fz_pixmap *src);

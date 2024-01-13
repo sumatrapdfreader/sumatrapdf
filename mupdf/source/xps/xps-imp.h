@@ -28,6 +28,7 @@ typedef struct xps_page_s xps_page;
 
 fz_document *xps_open_document(fz_context *ctx, const char *filename);
 fz_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
+fz_document *xps_open_document_with_directory(fz_context *ctx, fz_archive *dir);
 int xps_count_pages(fz_context *ctx, fz_document *doc, int chapter);
 fz_page *xps_load_page(fz_context *ctx, fz_document *doc, int chapter, int number);
 fz_outline *xps_load_outline(fz_context *ctx, fz_document *doc);

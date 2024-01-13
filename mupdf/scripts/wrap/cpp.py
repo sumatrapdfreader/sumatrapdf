@@ -1020,9 +1020,43 @@ g_extra_declarations = textwrap.dedent(f'''
         C++ alternative to fz_get_glyph_name() that returns information in a std::string.
         */
         FZ_FUNCTION std::string fz_get_glyph_name2(fz_context *ctx, fz_font *font, int glyph);
+
+        /**
+        Extra struct containing fz_install_load_system_font_funcs()'s args,
+        which we wrap with virtual_fnptrs set to allow use from Python/C# via
+        Swig Directors.
+        */
+        typedef struct fz_install_load_system_font_funcs_args
+        {{
+            fz_load_system_font_fn *f;
+            fz_load_system_cjk_font_fn *f_cjk;
+            fz_load_system_fallback_font_fn *f_fallback;
+        }} fz_install_load_system_font_funcs_args;
+
+        /**
+        Alternative to fz_install_load_system_font_funcs() that takes args in a
+        struct, to allow use from Python/C# via Swig Directors.
+        */
+        FZ_FUNCTION void fz_install_load_system_font_funcs2(fz_context *ctx, fz_install_load_system_font_funcs_args* args);
+
+        /* Internal singleton state to allow Swig Director class to find
+        fz_install_load_system_font_funcs_args class wrapper instance. */
+        FZ_DATA extern void* fz_install_load_system_font_funcs2_state;
+
+        /* Helper for calling a `fz_document_open_fn` function pointer via Swig
+        from Python/C#. */
+        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context *ctx, fz_document_open_fn fn, fz_stream *stream, fz_stream *accel, fz_archive *dir);
+
+        /* Helper for calling a `fz_document_recognize_content_fn` function
+        pointer via Swig from Python/C#. */
+        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context *ctx, fz_document_recognize_content_fn fn, fz_stream *stream, fz_archive *dir);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
+
+        #include "mupdf/exceptions.h"
+        #include "mupdf/internal.h"
+
         FZ_FUNCTION std::string fz_lookup_metadata2( fz_context* ctx, fz_document* doc, const char* key)
         {{
             /* Find length first. */
@@ -1137,6 +1171,23 @@ g_extra_definitions = textwrap.dedent(f'''
             char name[32];
             fz_get_glyph_name(ctx, font, glyph, name, sizeof(name));
             return std::string(name);
+        }}
+
+        void fz_install_load_system_font_funcs2(fz_context *ctx, fz_install_load_system_font_funcs_args* args)
+        {{
+            fz_install_load_system_font_funcs(ctx, args->f, args->f_cjk, args->f_fallback);
+        }}
+
+        void* fz_install_load_system_font_funcs2_state = nullptr;
+
+        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context *ctx, fz_document_open_fn fn, fz_stream *stream, fz_stream *accel, fz_archive *dir)
+        {{
+            return fn(ctx, stream, accel, dir);
+        }}
+
+        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context *ctx, fz_document_recognize_content_fn fn, fz_stream *stream, fz_archive *dir)
+        {{
+            return fn(ctx, stream, dir);
         }}
         ''')
 
@@ -1987,72 +2038,6 @@ def make_function_wrappers(
                 }}
             }}
             '''))
-
-    # Write custom functions to allow calling of fz_document_handler function
-    # pointers.
-    #
-    # Would be good to extend function_wrapper() and
-    # function_wrapper_class_aware() to work with fnptr type as well as actual
-    # functions. But for now we specify things manually and don't support
-    # passing wrapper classes.
-    #
-    def fnptr_wrapper(
-            return_type,
-            fnptr,
-            fnptr_args, # Must include leading comma.
-            fnptr_arg_names, # Must include leading comma.
-            ):
-        decl = f'''FZ_FUNCTION {return_type} {rename.ll_fn(fnptr)}_call({fnptr} fn{fnptr_args})'''
-        out_functions_h.write(
-                textwrap.indent(
-                    textwrap.dedent( f'''
-                        /* Helper for calling a {fnptr}. Provides a `fz_context` and coverts
-                        fz_try..fz_catch exceptions into C++ exceptions. */
-                        {decl};
-                        '''),
-                    '    ',
-                    )
-                )
-        out_functions_cpp.write( textwrap.dedent( f'''
-                {decl}
-                {{
-                    fz_context* ctx = mupdf::internal_context_get();
-                    {return_type} ret;
-                    fz_try(ctx)
-                    {{
-                        ret = fn( ctx{fnptr_arg_names});
-                    }}
-                    fz_catch(ctx)
-                    {{
-                        mupdf::internal_throw_exception( ctx);
-                    }}
-                    return ret;
-                }}
-                '''))
-    fnptr_wrapper(
-            'fz_document*',
-            'fz_document_open_fn',
-            ', const char* filename',
-            ', filename',
-            )
-    fnptr_wrapper(
-            'fz_document*',
-            'fz_document_open_with_stream_fn',
-            ', fz_stream* stream',
-            ', stream',
-            )
-    fnptr_wrapper(
-            'fz_document*',
-            'fz_document_open_accel_fn',
-            ', const char* filename, const char* accel',
-            ', filename, accel',
-            )
-    fnptr_wrapper(
-            'fz_document*',
-            'fz_document_open_accel_with_stream_fn',
-            ', fz_stream* stream, fz_stream* accel',
-            ', stream, accel',
-            )
 
 
 def class_add_iterator( tu, struct_cursor, struct_name, classname, extras, refcheck_if):
@@ -3775,9 +3760,9 @@ def class_wrapper_virtual_fnptrs(
         refcheck_if,
         ):
     '''
-    Generate extra wrapper class for structs that contain function pointers,
-    for use as a SWIG Director class so that the function pointers can be made
-    to effectively point to Python or C# code.
+    Generate extra wrapper class if struct contains function pointers, for
+    use as a SWIG Director class so that the function pointers can be made to
+    effectively point to Python or C# code.
     '''
     if not extras.virtual_fnptrs:
         return
@@ -3899,7 +3884,7 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(')')
         out_cpp.write('\n')
         out_cpp.write('{\n')
-        self_expression = self_( f'arg_{self_n}')
+        self_expression = self_() if self_n is None else self_( f'arg_{self_n}')
         out_cpp.write(f'    {classname}2* self = {self_expression};\n')
         out_cpp.write(f'    {refcheck_if}\n')
         out_cpp.write(f'    if (s_trace_director)\n')
@@ -5167,8 +5152,12 @@ def cpp_source(
     for structname, cursor in state.state_.structs[ tu].items():
         generated.c_structs.append( structname)
 
+    # Create windows_mupdf.def, containing explicit exports for all MuPDF
+    # global data and functions. We do this instead of explicitly prefixing
+    # everything with FZ_FUNCTION or FZ_DATA in the MuPDF header files.
+    #
+    windows_def_path = os.path.relpath(f'{base}/windows_mupdf.def')
     windows_def = ''
-    #windows_def += 'LIBRARY mupdfcpp\n'    # This breaks things.
     windows_def += 'EXPORTS\n'
 
     for name, cursor in state.state_.find_global_data_starting_with( tu, ('fz_', 'pdf_')):
@@ -5184,35 +5173,21 @@ def cpp_source(
             # usually inline?
             #
             jlib.log('Not adding to windows_def because static: {fnname}()', 1)
-        elif fnname in (
-                'fz_lookup_metadata2',
-                'fz_md5_pixmap2',
-                'fz_pixmap_samples_int',
-                'fz_samples_get',
-                'fz_samples_set',
-                'pdf_lookup_metadata2',
-                'fz_md5_final2',
-                'fz_highlight_selection2',
-                'fz_search_page2',
-                'fz_string_from_text_language2',
-                'fz_get_glyph_name2',
-                ):
-            # These are excluded from windows_def because are C++ so
-            # we'd need to use the mangled name in. Instead we mark them
-            # with FZ_FUNCTION.
-            pass
+        elif os.path.abspath(cursor.extent.start.file.name) == os.path.abspath(out_hs.extra.filename):
+            # Items defined in out_hs.extra are C++ so we would need to use the
+            # mangled name if we added them to windows_def. Instead they are
+            # explicitly prefixed with `FZ_FUNCTION`.
+            #
+            # (We use os.path.abspath() to avoid problems with back and forward
+            # slashes in cursor.extent.start.file.name on Windows.)
+            #
+            jlib.log('Not adding to {windows_def_path} because defined in {os.path.relpath(out_hs.extra.filename)}: {cursor.spelling}')
         else:
             windows_def += f'    {fnname}\n'
     # Add some internal fns that PyMuPDF requires.
     for fnname in (
             'FT_Get_First_Char',
             'FT_Get_Next_Char',
-            'pdf_lookup_page_loc',
-            'fz_scale_pixmap',
-            'fz_pixmap_size',
-            'fz_subsample_pixmap',
-            'fz_copy_pixmap_rect',
-            'fz_write_pixmap_as_jpeg',
             ):
         windows_def += f'    {fnname}\n'
 
@@ -5222,7 +5197,7 @@ def cpp_source(
         windows_def += f'    fz_lock_debug_lock\n'
         windows_def += f'    fz_lock_debug_unlock\n'
 
-    jlib.fs_update( windows_def, f'{base}/windows_mupdf.def')
+    jlib.fs_update( windows_def, windows_def_path)
 
     def register_fn_use( name):
         assert name.startswith( ('fz_', 'pdf_'))

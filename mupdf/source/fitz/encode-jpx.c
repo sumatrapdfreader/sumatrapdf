@@ -128,7 +128,7 @@ static OPJ_OFF_T skip_stm(OPJ_OFF_T p_nb_bytes, void *p_user_data)
 {
 	my_stream *stm = (my_stream *)p_user_data;
 
-	stm = stm;
+	(void)stm;
 
 	return -1;
 }
@@ -137,7 +137,7 @@ static OPJ_BOOL seek_stm(OPJ_OFF_T p_nb_bytes, void *p_user_data)
 {
 	my_stream *stm = (my_stream *)p_user_data;
 
-	stm = stm;
+	(void)stm;
 
 	return 0;
 }
@@ -242,7 +242,6 @@ fz_write_pixmap_as_jpx(fz_context *ctx, fz_output *out, fz_pixmap *pix, int q)
 		else if (pix->w < 2*parameters.cp_tdx && pix->h < 2*parameters.cp_tdy)
 		{
 			/* We only compress lossily if the image is larger than the tilesize, otherwise work losslessly. */
-			parameters = parameters;
 		}
 		else
 		{

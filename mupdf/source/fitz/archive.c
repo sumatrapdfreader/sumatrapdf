@@ -178,6 +178,9 @@ fz_try_open_archive_with_stream(fz_context *ctx, fz_stream *file)
 	fz_archive *arch = NULL;
 	int i;
 
+	if (file == NULL)
+		return NULL;
+
 	for (i = 0; i < ctx->archive->count; i++)
 	{
 		fz_seek(ctx, file, 0, SEEK_SET);
@@ -515,12 +518,6 @@ const fz_archive_handler fz_libarchive_archive_handler =
 {
 	fz_is_libarchive_archive,
 	fz_open_libarchive_archive_with_stream
-};
-
-const fz_archive_handler fz_chm_archive_handler =
-{
-	fz_is_chm_archive,
-	fz_open_chm_archive_with_stream
 };
 
 const fz_archive_handler fz_cfb_archive_handler =

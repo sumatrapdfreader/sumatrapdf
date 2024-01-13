@@ -57,7 +57,7 @@ fz_xml *fz_parse_xml_stream(fz_context *ctx, fz_stream *stream, int preserve_whi
 
 	preserve_white: whether to keep or delete all-whitespace nodes.
 */
-fz_xml *fz_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char *filename, int preserve_white);
+fz_xml *fz_parse_xml_archive_entry(fz_context *ctx, fz_archive *dir, const char *filename, int preserve_white);
 
 /**
 	Try and parse the contents of an archive entry into a tree of xml nodes.
@@ -67,7 +67,7 @@ fz_xml *fz_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char
 	Will return NULL if the archive entry can't be found. Otherwise behaves
 	the same as fz_parse_xml_archive_entry. May throw exceptions.
 */
-fz_xml *fz_try_parse_xml_archive_entry(fz_context *ctx, fz_archive *arch, const char *filename, int preserve_white);
+fz_xml *fz_try_parse_xml_archive_entry(fz_context *ctx, fz_archive *dir, const char *filename, int preserve_white);
 
 /**
 	Parse the contents of a buffer into a tree of XML nodes,

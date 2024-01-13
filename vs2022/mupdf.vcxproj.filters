@@ -336,9 +336,6 @@
     <ClInclude Include="..\mupdf\source\fitz\leptonica-wrap.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="..\mupdf\source\fitz\lzxd-imp.h">
-      <Filter>mupdf\source\fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
@@ -608,9 +605,6 @@
     <ClCompile Include="..\mupdf\source\fitz\log.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\mupdf\source\fitz\lzxd.c">
-      <Filter>mupdf\source\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\memento.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
@@ -713,6 +707,9 @@
     <ClCompile Include="..\mupdf\source\fitz\test-device.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\text-decoder.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\text.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
@@ -735,9 +732,6 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\uncfb.c">
-      <Filter>mupdf\source\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="..\mupdf\source\fitz\unchm.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\unlibarchive.c">

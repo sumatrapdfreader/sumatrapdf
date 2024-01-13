@@ -840,6 +840,7 @@ tiff_read_tag_value(fz_context *ctx, unsigned *p, struct tiff *tiff, unsigned ty
 		unsigned newn = (tiff->ep - tiff->rp) / divisor;
 		memset(&p[newn], 0, (n - newn) * sizeof (unsigned));
 		fz_warn(ctx, "TIFF tag extends beyond end of file, truncating tag");
+		n = newn;
 	}
 
 	while (n--)
@@ -1347,6 +1348,10 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2) / (tiff->bitspersample / 8 + 1))
 		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
+	if (tiff->tilewidth & 0xf)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "tile width not a multiple of 16");
+	if (tiff->tilelength & 0xf)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "tile height not a multiple of 16");
 
 	if (tiff->planar != 1)
 		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "image data is not in chunky format");

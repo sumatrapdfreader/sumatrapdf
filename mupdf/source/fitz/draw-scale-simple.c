@@ -440,6 +440,18 @@ check_weights(fz_weights *weights, int j, int w, float x, float wf)
 		weights->index[maxidx-1] += 256-sum;
 }
 
+static int
+window_fix(int l, int *rp, float window, float centre)
+{
+	int r = *rp;
+	while (centre - l > window)
+		l++;
+	while (r - centre > window)
+		r--;
+	*rp = r;
+	return l;
+}
+
 static fz_weights *
 make_weights(fz_context *ctx, int src_w, float x, float dst_w, fz_scale_filter *filter, int vertical, int dst_w_int, int patch_l, int patch_r, int n, int flip, fz_scale_cache *cache)
 {
@@ -495,6 +507,15 @@ make_weights(fz_context *ctx, int src_w, float x, float dst_w, fz_scale_filter *
 		int l, r;
 		l = ceilf(centre - window);
 		r = floorf(centre + window);
+
+		/* Now, due to the vagaries of floating point, if centre is large, l
+		 * and r can actually end up further than 2*window apart. All we care
+		 * about in this case is that we don't crash! We want a cheap correction
+		 * that avoids the assert and doesn't cost too much in the normal case.
+		 * This should do. */
+		if (r - l > 2 * window)
+			l = window_fix(l, &r, window, centre);
+
 		init_weights(weights, j);
 		for (; l <= r; l++)
 		{

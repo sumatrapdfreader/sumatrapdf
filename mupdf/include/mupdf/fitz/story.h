@@ -56,11 +56,11 @@ typedef struct fz_story fz_story;
 
 	Passing a NULL buffer will be treated as an empty document.
 	Passing a NULL user_css will be treated as an empty CSS string.
-	A non-NULL archive will allow images etc to be loaded. The
+	A non-NULL dir will allow images etc to be loaded. The
 	story keeps its own reference, so the caller can drop its
 	reference after this call.
 */
-fz_story *fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em, fz_archive *archive);
+fz_story *fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em, fz_archive *dir);
 
 /*
 	Retrieve the warnings given from parsing this story.

@@ -107,6 +107,10 @@ detect_txt_encoding(fz_context *ctx, fz_buffer *buf)
 		}
 	}
 
+	(void)count_tabs;
+	(void)count_hi;
+	(void)count_controls;
+
 	if (plausibly_utf8)
 		return ENCODING_UTF8;
 	return ENCODING_ASCII;
@@ -211,7 +215,7 @@ fz_txt_buffer_to_html(fz_context *ctx, fz_buffer *in)
 }
 
 static fz_buffer *
-txt_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, const char *user_css)
+txt_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *zip, const char *user_css)
 {
 	return fz_txt_buffer_to_html(ctx, buf);
 }
@@ -224,21 +228,16 @@ static const fz_htdoc_format_t fz_htdoc_txt =
 };
 
 static fz_document *
-txt_open_document_with_stream(fz_context *ctx, fz_stream *file)
+txt_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *zip)
 {
-	return fz_htdoc_open_document_with_stream(ctx, file, &fz_htdoc_txt);
-}
-
-static fz_document *
-txt_open_document(fz_context *ctx, const char *filename)
-{
-	return fz_htdoc_open_document_with_file(ctx, filename, &fz_htdoc_txt);
+	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, zip, &fz_htdoc_txt);
 }
 
 static const char *txt_extensions[] =
 {
 	"txt",
 	"text",
+	"log",
 	NULL
 };
 
@@ -252,7 +251,6 @@ fz_document_handler txt_document_handler =
 {
 	NULL,
 	txt_open_document,
-	txt_open_document_with_stream,
 	txt_extensions,
 	txt_mimetypes
 };

@@ -42,6 +42,9 @@ VERSION_PATCH = $(shell grep "define FZ_VERSION_PATCH" include/mupdf/fitz/versio
 
 ifeq ($(LINUX_OR_OPENBSD),yes)
   SO_VERSION = .$(VERSION_MINOR).$(VERSION_PATCH)
+  ifeq ($(OS),Linux)
+    SO_VERSION_LINUX := yes
+  endif
 endif
 
 # --- Commands ---
@@ -93,9 +96,11 @@ $(OUT)/%.exe: %.c
 	$(LINK_CMD)
 
 $(OUT)/%.$(SO)$(SO_VERSION):
-	$(LINK_CMD) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
-ifneq ($(SO_VERSION),)
+ifeq ($(SO_VERSION_LINUX),yes)
+	$(LINK_CMD) -Wl,-soname,$(notdir $@) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
 	ln -sf $(notdir $@) $(patsubst %$(SO_VERSION), %, $@)
+else
+	$(LINK_CMD) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
 endif
 
 $(OUT)/%.def: $(OUT)/%.$(SO)$(SO_VERSION)
@@ -631,14 +636,14 @@ install-shared-c: install-shared-check shared install-headers
 	install -d $(DESTDIR)$(libdir)
 	install -m 644 $(OUT)/libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
 ifneq ($(OS),OpenBSD)
-	ln -s libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)
+	ln -sf libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)
 endif
 
 install-shared-c++: install-shared-c c++
 	install -m 644 platform/c++/include/mupdf/*.h $(DESTDIR)$(incdir)/mupdf
 	install -m 644 $(OUT)/libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
 ifneq ($(OS),OpenBSD)
-	ln -s libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdfcpp.$(SO)
+	ln -sf libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdfcpp.$(SO)
 endif
 
 install-shared-python: install-shared-c++ python

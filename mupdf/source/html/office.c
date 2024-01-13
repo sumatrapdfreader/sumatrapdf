@@ -978,10 +978,15 @@ load_footnotes(fz_context *ctx, fz_archive *arch, fz_xml *rels, doc_info *info, 
 static void
 process_office_document(fz_context *ctx, fz_archive *arch, const char *file, doc_info *info)
 {
-	char *file_rels = make_rel_name(ctx, file);
+	char *file_rels;
 	fz_xml *xml = NULL;
 	fz_xml *rels = NULL;
 	char *resolved_rel = NULL;
+
+	if (file == NULL)
+		return;
+
+	file_rels = make_rel_name(ctx, file);
 
 	fz_var(resolved_rel);
 
@@ -1086,7 +1091,7 @@ process_office_document_properties(fz_context *ctx, fz_archive *arch, const char
 }
 
 static fz_buffer *
-fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, const char *user_css, fz_office_to_html_opts *opts)
+fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_archive *dir, const char *user_css, fz_office_to_html_opts *opts)
 {
 	fz_stream *stream = NULL;
 	fz_archive *archive = NULL;
@@ -1099,9 +1104,8 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 	doc_info info = { 0 };
 	int i;
 
-	stream = fz_open_buffer(ctx, buffer_in);
-
 	fz_var(archive);
+	fz_var(stream);
 	fz_var(buffer_out);
 	fz_var(xml);
 	fz_var(rels);
@@ -1111,7 +1115,13 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 
 	fz_try(ctx)
 	{
-		archive = fz_open_archive_with_stream(ctx, stream);
+		if (buffer_in)
+		{
+			stream = fz_open_buffer(ctx, buffer_in);
+			archive = fz_open_archive_with_stream(ctx, stream);
+		}
+		else
+			archive = fz_keep_archive(ctx, dir);
 		buffer_out = fz_new_buffer(ctx, 1024);
 		info.out = fz_new_output_with_buffer(ctx, buffer_out);
 
@@ -1155,7 +1165,8 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 			while (pos)
 			{
 				const char *file = fz_xml_att(pos, "Target");
-				process_office_document(ctx, archive, file, &info);
+				if (file)
+					process_office_document(ctx, archive, file, &info);
 				pos = fz_xml_find_next_dfs(pos, "Relationship", "Type", schema);
 			}
 		}
@@ -1195,11 +1206,11 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 /* Office document handler */
 
 static fz_buffer *
-office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, const char *user_css)
+office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *zip, const char *user_css)
 {
 	fz_office_to_html_opts opts = { 0 };
 
-	return fz_office_to_html(ctx, set, buf, user_css, &opts);
+	return fz_office_to_html(ctx, set, buf, zip, user_css, &opts);
 }
 
 static const fz_htdoc_format_t fz_htdoc_office =
@@ -1210,15 +1221,9 @@ static const fz_htdoc_format_t fz_htdoc_office =
 };
 
 static fz_document *
-office_open_document_with_stream(fz_context *ctx, fz_stream *file)
+office_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *zip)
 {
-	return fz_htdoc_open_document_with_stream(ctx, file, &fz_htdoc_office);
-}
-
-static fz_document *
-office_open_document(fz_context *ctx, const char *filename)
-{
-	return fz_htdoc_open_document_with_file(ctx, filename, &fz_htdoc_office);
+	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, zip, &fz_htdoc_office);
 }
 
 static const char *office_extensions[] =
@@ -1245,7 +1250,7 @@ static const char *office_mimetypes[] =
 };
 
 static int
-office_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+office_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *zip)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;
@@ -1257,9 +1262,14 @@ office_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 
 	fz_try(ctx)
 	{
-		arch = fz_try_open_archive_with_stream(ctx, stream);
-		if (arch == NULL)
-			break;
+		if (stream)
+		{
+			arch = fz_try_open_archive_with_stream(ctx, stream);
+			if (arch == NULL)
+				break;
+		}
+		else
+			arch = fz_keep_archive(ctx, zip);
 
 		xml = fz_try_parse_xml_archive_entry(ctx, arch, "META-INF/container.xml", 0);
 		if (xml)
@@ -1293,10 +1303,7 @@ fz_document_handler office_document_handler =
 {
 	NULL,
 	office_open_document,
-	office_open_document_with_stream,
 	office_extensions,
 	office_mimetypes,
-	NULL, /* open_accel */
-	NULL, /* open_accel with stream */
 	office_recognize_doc_content
 };

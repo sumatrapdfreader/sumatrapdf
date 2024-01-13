@@ -622,6 +622,9 @@ fz_is_zip_archive(fz_context *ctx, fz_stream *file)
 	unsigned char data[4];
 	size_t n;
 
+	if (file == NULL)
+		return 0;
+
 	fz_seek(ctx, file, 0, 0);
 	n = fz_read(ctx, file, data, nelem(data));
 	if (n != nelem(signature))

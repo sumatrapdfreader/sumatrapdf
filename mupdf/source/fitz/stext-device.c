@@ -147,6 +147,7 @@ const char *fz_stext_options_usage =
 	"\tpreserve-whitespace: do not convert all whitespace into space characters\n"
 	"\tpreserve-spans: do not merge spans on the same line\n"
 	"\tdehyphenate: attempt to join up hyphenated words\n"
+	"\tuse-cid-for-unknown-unicode: guess unicode from cid if normal mapping fails\n"
 	"\tmediabox-clip=no: include characters outside mediabox\n"
 	"\n";
 
@@ -738,6 +739,7 @@ do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix 
 	fz_font *font = span->font;
 	fz_matrix tm = span->trm;
 	float adv;
+	int unicode;
 	int i;
 
 	for (i = start; i < end; i++)
@@ -769,9 +771,13 @@ do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix 
 		else
 			adv = 0;
 
+		unicode = span->items[i].ucs;
+		if (unicode == FZ_REPLACEMENT_CHARACTER && (dev->flags & FZ_STEXT_USE_CID_FOR_UNKNOWN_UNICODE))
+			unicode = span->items[i].cid;
+
 		/* Send the chars we have through. */
 		fz_add_stext_char(ctx, dev, font,
-			span->items[i].ucs,
+			unicode,
 			span->items[i].gid,
 			dev->last.trm,
 			adv,
@@ -1170,7 +1176,7 @@ fz_stext_fill_image(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ct
 
 	/* If the alpha is less than 50% then it's probably a watermark or effect or something. Skip it. */
 	if (alpha >= 0.5f)
-	add_image_block_to_page(ctx, tdev->page, ctm, img);
+		add_image_block_to_page(ctx, tdev->page, ctm, img);
 
 	/* If there is an actualtext in force, update its bounds. */
 	if (bounds)
@@ -1313,6 +1319,8 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_DEHYPHENATE;
 	if (fz_has_option(ctx, string, "preserve-spans", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_PRESERVE_SPANS;
+	if (fz_has_option(ctx, string, "use-cid-for-unknown-unicode", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_USE_CID_FOR_UNKNOWN_UNICODE;
 
 	opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
 	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "no"))
@@ -1361,9 +1369,9 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->super.fill_path = fz_stext_fill_path;
 	dev->super.stroke_path = fz_stext_stroke_path;
 
-		dev->super.fill_shade = fz_stext_fill_shade;
-		dev->super.fill_image = fz_stext_fill_image;
-		dev->super.fill_image_mask = fz_stext_fill_image_mask;
+	dev->super.fill_shade = fz_stext_fill_shade;
+	dev->super.fill_image = fz_stext_fill_image;
+	dev->super.fill_image_mask = fz_stext_fill_image_mask;
 
 	if (opts)
 		dev->flags = opts->flags;

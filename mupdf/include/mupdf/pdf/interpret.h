@@ -285,7 +285,7 @@ struct pdf_filter_options
 	int no_update;
 
 	void *opaque;
-	void (*complete)(fz_context *ctx, fz_buffer *buffer, void *arg);
+	void (*complete)(fz_context *ctx, fz_buffer *buffer, void *opaque);
 
 	pdf_filter_factory *filters;
 };

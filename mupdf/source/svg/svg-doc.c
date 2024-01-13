@@ -163,12 +163,11 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
 }
 
 static fz_document *
-svg_open_document_with_stream(fz_context *ctx, fz_stream *file)
+svg_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *zip)
 {
-	fz_buffer *buf;
+	fz_buffer *buf = fz_read_all(ctx, file, 0);
 	fz_document *doc = NULL;
 
-	buf = fz_read_all(ctx, file, 0);
 	fz_try(ctx)
 		doc = svg_open_document_with_buffer(ctx, buf, NULL, NULL);
 	fz_always(ctx)
@@ -268,7 +267,7 @@ static const char *svg_mimetypes[] =
 };
 
 static int
-svg_recognize_doc_content(fz_context *ctx, fz_stream *stm)
+svg_recognize_doc_content(fz_context *ctx, fz_stream *stm, fz_archive *dir)
 {
 	// A standalone SVG document is an XML document with an <svg> root element.
 	//
@@ -281,6 +280,9 @@ svg_recognize_doc_content(fz_context *ctx, fz_stream *stm)
 	// Return failure on anything unexpected, or if the first element is not SVG.
 
 	int c;
+
+	if (stm == NULL)
+		return 0;
 
 parse_text:
 	// Skip whitespace until "<"
@@ -319,11 +321,8 @@ parse_comment:
 fz_document_handler svg_document_handler =
 {
 	NULL,
-	NULL,
-	svg_open_document_with_stream,
+	svg_open_document,
 	svg_extensions,
 	svg_mimetypes,
-	NULL,
-	NULL,
 	svg_recognize_doc_content
 };

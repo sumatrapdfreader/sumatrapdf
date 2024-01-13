@@ -506,14 +506,6 @@ xps_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 	fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot find page %d", number + 1);
 }
 
-static int
-xps_recognize(fz_context *ctx, const char *magic)
-{
-	if (strstr(magic, "/_rels/.rels") || strstr(magic, "\\_rels\\.rels"))
-		return 100;
-	return 0;
-}
-
 static const char *xps_extensions[] =
 {
 	"oxps",
@@ -530,7 +522,7 @@ static const char *xps_mimetypes[] =
 };
 
 static int
-xps_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+xps_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;
@@ -543,9 +535,14 @@ xps_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 
 	fz_try(ctx)
 	{
-		arch = fz_try_open_archive_with_stream(ctx, stream);
-		if (arch == NULL)
-			break;
+		if (stream == NULL)
+			arch = fz_keep_archive(ctx, dir);
+		else
+		{
+			arch = fz_try_open_archive_with_stream(ctx, stream);
+			if (arch == NULL)
+				break;
+		}
 
 		xml = fz_try_parse_xml_archive_entry(ctx, arch, "/_rels/.rels", 0);
 		if (xml == NULL)
@@ -569,14 +566,20 @@ xps_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 	return ret;
 }
 
+static fz_document *
+xps_open(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *dir)
+{
+	if (file)
+		return xps_open_document_with_stream(ctx, file);
+	else
+		return xps_open_document_with_directory(ctx, dir);
+}
+
 fz_document_handler xps_document_handler =
 {
-	xps_recognize,
-	xps_open_document,
-	xps_open_document_with_stream,
+	NULL,
+	xps_open,
 	xps_extensions,
 	xps_mimetypes,
-	NULL,
-	NULL,
 	xps_recognize_doc_content
 };

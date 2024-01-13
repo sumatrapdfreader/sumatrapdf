@@ -3339,7 +3339,7 @@ static void ffi_TreeArchive_add(js_State *J)
 static void ffi_new_Buffer(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	int n = js_isdefined(J, 1) ? js_tonumber(J, 1) : 0;
+	int n = fz_maxi(0, js_isdefined(J, 1) ? js_tointeger(J, 1) : 0);
 	fz_buffer *buf = NULL;
 	fz_try(ctx)
 		buf = fz_new_buffer(ctx, n);

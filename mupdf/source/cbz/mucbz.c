@@ -258,11 +258,9 @@ cbz_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *b
 }
 
 static fz_document *
-cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
+cbz_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *dir)
 {
-	cbz_document *doc;
-
-	doc = fz_new_derived_document(ctx, cbz_document);
+	cbz_document *doc = fz_new_derived_document(ctx, cbz_document);
 
 	doc->super.drop_document = cbz_drop_document;
 	doc->super.count_pages = cbz_count_pages;
@@ -271,7 +269,10 @@ cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
 
 	fz_try(ctx)
 	{
-		doc->arch = fz_open_archive_with_stream(ctx, file);
+		if (file)
+			doc->arch = fz_open_archive_with_stream(ctx, file);
+		else
+			doc->arch = fz_keep_archive(ctx, dir);
 		cbz_create_page_list(ctx, doc);
 	}
 	fz_catch(ctx)
@@ -311,7 +312,7 @@ static const char *cbz_mimetypes[] =
 };
 
 static int
-cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
+cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;
@@ -322,9 +323,14 @@ cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 
 	fz_try(ctx)
 	{
-		arch = fz_try_open_archive_with_stream(ctx, stream);
-		if (arch == NULL)
-			break;
+		if (stream == NULL)
+			arch = fz_keep_archive(ctx, dir);
+		else
+		{
+			arch = fz_try_open_archive_with_stream(ctx, stream);
+			if (arch == NULL)
+				break;
+		}
 
 		/* If it's an archive, and we can find at least one plausible page
 		 * then we can open it as a cbz. */
@@ -332,7 +338,10 @@ cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 		for (i = 0; i < count && ret == 0; i++)
 		{
 			const char *name = fz_list_archive_entry(ctx, arch, i);
-			const char *ext = name ? strrchr(name, '.') : NULL;
+			const char *ext;
+			if (name == NULL)
+				continue;
+			ext = strrchr(name, '.');
 			if (ext)
 			{
 				for (k = 0; cbz_ext_list[k]; k++)
@@ -357,11 +366,8 @@ cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream)
 fz_document_handler cbz_document_handler =
 {
 	NULL,
-	NULL,
-	cbz_open_document_with_stream,
+	cbz_open_document,
 	cbz_extensions,
 	cbz_mimetypes,
-	NULL,
-	NULL,
 	cbz_recognize_doc_content
 };

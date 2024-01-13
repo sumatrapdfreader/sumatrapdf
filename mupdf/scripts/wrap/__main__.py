@@ -1696,10 +1696,14 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                 )
 
                     elif 'shared' in dir_so_flags:
+                        link_soname_arg = ''
+                        if state.state_.linux:
+                            link_soname_arg = f'-Wl,-soname,{os.path.basename(libmupdfcpp)}'
                         command = ( textwrap.dedent(
                                 f'''
                                 {compiler}
                                     -o {os.path.relpath(libmupdfcpp)}
+                                    {link_soname_arg}
                                     {build_dirs.cpp_flags}
                                     -fPIC -shared
                                     -I {include1}
@@ -1716,7 +1720,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                 )
                         if command_was_run:
                             macos_patch( libmupdfcpp, f'{build_dirs.dir_so}/libmupdf.dylib{so_version}')
-                        if so_version:
+                        if so_version and state.state_.linux:
                             jlib.system(f'ln -sf libmupdfcpp.so{so_version} {build_dirs.dir_so}/libmupdfcpp.so')
 
                     elif 'fpic' in dir_so_flags:

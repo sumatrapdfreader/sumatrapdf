@@ -3246,6 +3246,8 @@ pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *ar
 		opts->do_compress_fonts = fz_option_eq(val, "yes");
 	if (fz_has_option(ctx, args, "compress-images", &val))
 		opts->do_compress_images = fz_option_eq(val, "yes");
+	if (fz_has_option(ctx, args, "compression-effort", &val))
+		opts->compression_effort = fz_atoi(val);
 	if (fz_has_option(ctx, args, "ascii", &val))
 		opts->do_ascii = fz_option_eq(val, "yes");
 	if (fz_has_option(ctx, args, "pretty", &val))
@@ -3258,6 +3260,8 @@ pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *ar
 		opts->do_sanitize = fz_option_eq(val, "yes");
 	if (fz_has_option(ctx, args, "incremental", &val))
 		opts->do_incremental = fz_option_eq(val, "yes");
+	if (fz_has_option(ctx, args, "objstms", &val))
+		opts->do_use_objstms = fz_option_eq(val, "yes");
 	if (fz_has_option(ctx, args, "regenerate-id", &val))
 		opts->dont_regenerate_id = fz_option_eq(val, "no");
 	if (fz_has_option(ctx, args, "decrypt", &val))

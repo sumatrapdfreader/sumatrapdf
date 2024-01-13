@@ -63,6 +63,44 @@ const char **fz_duplicate_glyph_names_from_unicode(int unicode);
 const char *fz_glyph_name_from_unicode_sc(int unicode);
 
 /**
+ * A text decoder (to read arbitrary encodings and convert to unicode).
+ */
+typedef struct fz_text_decoder fz_text_decoder;
+
+struct fz_text_decoder {
+	// get maximum size estimate of converted text (fast)
+	int (*decode_bound)(fz_text_decoder *dec, unsigned char *input, int n);
+
+	// get exact size of converted text (slow)
+	int (*decode_size)(fz_text_decoder *dec, unsigned char *input, int n);
+
+	// convert text into output buffer
+	void (*decode)(fz_text_decoder *dec, char *output, unsigned char *input, int n);
+
+	// for internal use only; do not touch!
+	void *table1;
+	void *table2;
+};
+
+/* Initialize a text decoder using an IANA encoding name.
+ * See source/fitz/text-decoder.c for the exact list of supported encodings.
+ * Will throw an exception if the requested encoding is not available.
+ *
+ * The following is a subset of the supported encodings (see source/fitz/text-decoder.c for the full list):
+ *   iso-8859-1
+ *   iso-8859-7
+ *   koi8-r
+ *   euc-jp
+ *   shift_jis
+ *   euc-kr
+ *   euc-cn
+ *   gb18030
+ *   euc-tw
+ *   big5
+ */
+void fz_init_text_decoder(fz_context *ctx, fz_text_decoder *dec, const char *encoding);
+
+/**
 	An abstract font handle.
 */
 typedef struct fz_font fz_font;
