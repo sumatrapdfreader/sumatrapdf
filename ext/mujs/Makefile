@@ -31,11 +31,6 @@ endif
 
 HDRS = mujs.h jsi.h regexp.h utf.h astnames.h opnames.h
 
-ifneq ($(HAVE_READLINE),no)
-  READLINE_CFLAGS = -DHAVE_READLINE
-  READLINE_LIBS = -lreadline
-endif
-
 SRCS = \
 	jsarray.c \
 	jsboolean.c \
@@ -80,7 +75,7 @@ utfdata.h: genucd.py UnicodeData.txt
 
 build/sanitize/mujs: main.c one.c $(SRCS) $(HDRS)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -g -fsanitize=address -fno-omit-frame-pointer -o $@ main.c one.c -lm $(READLINE_CFLAGS) $(READLINE_LIBS)
+	$(CC) $(CFLAGS) -g -fsanitize=address -fno-omit-frame-pointer -o $@ main.c one.c -lm -DHAVE_READLINE -lreadline
 
 build/debug/libmujs.$(SO): one.c $(SRCS) $(HDRS)
 	@mkdir -p $(@D)
@@ -91,7 +86,7 @@ build/debug/libmujs.o: one.c $(SRCS) $(HDRS)
 build/debug/libmujs.a: build/debug/libmujs.o
 	$(AR) cr $@ $^
 build/debug/mujs: main.c build/debug/libmujs.o
-	$(CC) $(CFLAGS) -g -o $@ $^ -lm $(READLINE_CFLAGS) $(READLINE_LIBS)
+	$(CC) $(CFLAGS) -g -o $@ $^ -lm -DHAVE_READLINE -lreadline
 build/debug/mujs-pp: pp.c build/debug/libmujs.o
 	$(CC) $(CFLAGS) -g -o $@ $^ -lm
 
@@ -104,7 +99,7 @@ build/release/libmujs.o: one.c $(SRCS) $(HDRS)
 build/release/libmujs.a: build/release/libmujs.o
 	$(AR) cr $@ $^
 build/release/mujs: main.c build/release/libmujs.o
-	$(CC) $(CFLAGS) $(OPTIM) -o $@ $^ -lm $(READLINE_CFLAGS) $(READLINE_LIBS)
+	$(CC) $(CFLAGS) $(OPTIM) -o $@ $^ -lm -DHAVE_READLINE -lreadline
 build/release/mujs-pp: pp.c build/release/libmujs.o
 	$(CC) $(CFLAGS) $(OPTIM) -o $@ $^ -lm
 
