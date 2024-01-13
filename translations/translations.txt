@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-417d40ea7f6c89d7bf64b0491144626064ff83c1
+9d644bba436530d1949a57332f3392ff42dba2b6
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -9331,13 +9331,18 @@ vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 br:Erro
 cn:错误
 co:Sbagliu
+cy:Gwall
+cz:Chyba
 de:Fehler
 el:Σφάλμα
+es:Error
 fr:Erreur
 he:שגיאה
+it:Errore
 nl:Fout
 pl:Błąd
 pt:Erro
+ro:Eroare
 ru:Ошибка
 :Error loading %s
 am:Բացման սխալ %s
@@ -21514,7 +21519,7 @@ cz:Používáte verzi '%s' a verze '%s' je k dispozici.\nChcete nainstalovat nov
 de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
 dk:Du har version '%s' og version '%s' er tilgængelig. \nVil du installere ny version?
 el:Έχετε την έκδοση '%s' και είναι διαθέσιμη η έκδοση '%s'.\nΘέλετε να εγκαταστήσετε τη νέα έκδοση;
-es:Esta es la versión «%s» y ya está disponible la versión «%s».\N¿Quiere instalar la versión nueva?
+es:Esta es la versión «%s» y ya está disponible la versión «%s».\n¿Quiere instalar la versión nueva?
 et:Sul on versioon '%s' ja saadaval on versioon '%s'.\nKas soovid paigaldada uue versiooni?
 eu:'%s' bertsioa duzu eta '%s' bertsioa eskuragarri dago.\nNahi duzu bertsio berria ezartzea?
 fa:شما نسخه '%s' را دارید و نسخه '%s' موجود است.\nآیا می خواهید نسخه جدید را نصب کنید؟
