@@ -2275,7 +2275,31 @@ fz_draw_begin_mask(fz_context *ctx, fz_device *devp, fz_rect area, int luminosit
 }
 
 static void
-fz_draw_end_mask(fz_context *ctx, fz_device *devp)
+apply_transform_function_to_pixmap(fz_context *ctx, fz_pixmap *pix, fz_function *tr)
+{
+	int w, h;
+	ptrdiff_t stride;
+	uint8_t *s;
+
+	assert(pix && pix->n == 1);
+
+	s = pix->samples;
+	stride = pix->stride - pix->w;
+	for (h = pix->h; h > 0; h--)
+	{
+		for (w = pix->w; w > 0; w--)
+		{
+			float f = *s / 255.0f;
+			float d;
+			fz_eval_function(ctx, tr, &f, 1, &d, 1);
+			*s++ = (uint8_t)fz_clampi(d*255.0f, 0, 255);
+		}
+		s += stride;
+	}
+}
+
+static void
+fz_draw_end_mask(fz_context *ctx, fz_device *devp, fz_function *tr)
 {
 	fz_draw_device *dev = (fz_draw_device*)devp;
 	fz_pixmap *temp, *dest;
@@ -2315,6 +2339,11 @@ fz_draw_end_mask(fz_context *ctx, fz_device *devp)
 		fz_dump_blend(ctx, "-> Clip ", temp);
 		printf("\n");
 #endif
+		if (tr)
+		{
+			/* Apply transfer function to state[1].mask */
+			apply_transform_function_to_pixmap(ctx, state[1].mask, tr);
+		}
 
 		/* create new dest scratch buffer */
 		bbox = fz_pixmap_bbox(ctx, temp);

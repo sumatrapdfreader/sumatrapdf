@@ -229,6 +229,7 @@ cmd_needs_alignment(fz_display_command cmd)
 		cmd == FZ_CMD_FILL_IMAGE ||
 		cmd == FZ_CMD_FILL_IMAGE_MASK ||
 		cmd == FZ_CMD_CLIP_IMAGE_MASK ||
+		cmd == FZ_CMD_END_MASK ||
 		cmd == FZ_CMD_DEFAULT_COLORSPACES);
 }
 
@@ -1153,22 +1154,30 @@ fz_list_begin_mask(fz_context *ctx, fz_device *dev, fz_rect rect, int luminosity
 }
 
 static void
-fz_list_end_mask(fz_context *ctx, fz_device *dev)
+fz_list_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
-	fz_append_display_node(
-		ctx,
-		dev,
-		FZ_CMD_END_MASK,
-		0, /* flags */
-		NULL, /* rect */
-		NULL, /* path */
-		NULL, /* color */
-		NULL, /* colorspace */
-		NULL, /* alpha */
-		NULL, /* ctm */
-		NULL, /* stroke */
-		NULL, /* private_data */
-		0); /* private_data_len */
+	fz_function *tr2 = fz_keep_function(ctx, tr);
+
+	fz_try(ctx)
+		fz_append_display_node(
+			ctx,
+			dev,
+			FZ_CMD_END_MASK,
+			0, /* flags */
+			NULL, /* rect */
+			NULL, /* path */
+			NULL, /* color */
+			NULL, /* colorspace */
+			NULL, /* alpha */
+			NULL, /* ctm */
+			NULL, /* stroke */
+			&tr2, /* private_data */
+			sizeof(tr2)); /* private_data_len */
+	fz_catch(ctx)
+	{
+		fz_drop_function(ctx, tr);
+		fz_rethrow(ctx);
+	}
 }
 
 static void
@@ -1636,6 +1645,10 @@ fz_drop_display_list_imp(fz_context *ctx, fz_storable *list_)
 			align_node_for_pointer(&node);
 			fz_drop_image(ctx, *(fz_image **)node);
 			break;
+		case FZ_CMD_END_MASK:
+			align_node_for_pointer(&node);
+			fz_drop_function(ctx, *(fz_function **)node);
+			break;
 		case FZ_CMD_DEFAULT_COLORSPACES:
 			align_node_for_pointer(&node);
 			fz_drop_default_colorspaces(ctx, *(fz_default_colorspaces **)node);
@@ -2001,7 +2014,8 @@ visible:
 				fz_begin_mask(ctx, dev, trans_rect, n.flags & 1, colorspace, color, color_params);
 				break;
 			case FZ_CMD_END_MASK:
-				fz_end_mask(ctx, dev);
+				align_node_for_pointer(&node);
+				fz_end_mask_tr(ctx, dev, *(fz_function **)node);
 				break;
 			case FZ_CMD_BEGIN_GROUP:
 				fz_begin_group(ctx, dev, trans_rect, colorspace, (n.flags & ISOLATED) != 0, (n.flags & KNOCKOUT) != 0, (n.flags>>2), alpha);

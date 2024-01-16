@@ -467,12 +467,12 @@ fz_test_begin_mask(fz_context *ctx, fz_device *dev_, fz_rect rect, int luminosit
 }
 
 static void
-fz_test_end_mask(fz_context *ctx, fz_device *dev_)
+fz_test_end_mask(fz_context *ctx, fz_device *dev_, fz_function *tr)
 {
 	fz_test_device *dev = (fz_test_device*)dev_;
 
 	if (dev->passthrough)
-		fz_end_mask(ctx, dev->passthrough);
+		fz_end_mask_tr(ctx, dev->passthrough, tr);
 }
 
 static void

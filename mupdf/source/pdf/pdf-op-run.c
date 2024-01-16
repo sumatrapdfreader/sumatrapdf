@@ -89,6 +89,7 @@ struct pdf_gstate
 	int blendmode;
 	pdf_obj *softmask;
 	pdf_obj *softmask_resources;
+	pdf_obj *softmask_tr;
 	fz_matrix softmask_ctm;
 	float softmask_bc[FZ_MAX_COLORS];
 	int luminosity;
@@ -197,6 +198,15 @@ typedef struct
 	fz_matrix ctm;
 } softmask_save;
 
+static fz_function *
+load_transfer_function(fz_context *ctx, pdf_obj *obj)
+{
+	if (obj == NULL || pdf_name_eq(ctx, obj, PDF_NAME(Identity)))
+		return NULL;
+
+	return (fz_function *)pdf_load_function(ctx, obj, 1, 1);
+}
+
 static pdf_gstate *
 begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)
 {
@@ -207,6 +217,7 @@ begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)
 	fz_matrix mask_matrix;
 	fz_colorspace *mask_colorspace;
 	int saved_blendmode;
+	fz_function *tr = NULL;
 
 	save->softmask = softmask;
 	if (softmask == NULL)
@@ -239,15 +250,25 @@ begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)
 
 	fz_try(ctx)
 	{
+		if (gstate->softmask_tr)
+		{
+			tr = load_transfer_function(ctx, gstate->softmask_tr);
+			pdf_drop_obj(ctx, gstate->softmask_tr);
+			gstate->softmask_tr = NULL;
+		}
+
 		fz_begin_mask(ctx, pr->dev, mask_bbox, gstate->luminosity, mask_colorspace, gstate->softmask_bc, gstate->fill.color_params);
 		gstate->blendmode = 0;
 		pdf_run_xobject(ctx, pr, softmask, save->page_resources, fz_identity, 1);
 		gstate = pr->gstate + pr->gtop;
 		gstate->blendmode = saved_blendmode;
-		fz_end_mask(ctx, pr->dev);
+		fz_end_mask_tr(ctx, pr->dev, tr);
 	}
 	fz_always(ctx)
+	{
+		fz_drop_function(ctx, tr);
 		fz_drop_colorspace(ctx, mask_colorspace);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
@@ -393,6 +414,7 @@ pdf_keep_gstate(fz_context *ctx, pdf_gstate *gs)
 	if (gs->softmask_resources)
 		pdf_keep_obj(ctx, gs->softmask_resources);
 	fz_keep_stroke_state(ctx, gs->stroke_state);
+	pdf_keep_obj(ctx, gs->softmask_tr);
 }
 
 static void
@@ -404,6 +426,7 @@ pdf_drop_gstate(fz_context *ctx, pdf_gstate *gs)
 	pdf_drop_obj(ctx, gs->softmask);
 	pdf_drop_obj(ctx, gs->softmask_resources);
 	fz_drop_stroke_state(ctx, gs->stroke_state);
+	pdf_drop_obj(ctx, gs->softmask_tr);
 }
 
 static void
@@ -2338,7 +2361,7 @@ static void pdf_run_gs_ca(fz_context *ctx, pdf_processor *proc, float alpha)
 	gstate->fill.alpha = fz_clamp(alpha, 0, 1);
 }
 
-static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, float *bc, int luminosity)
+static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, float *bc, int luminosity, pdf_obj *tr)
 {
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pdf_gstate *gstate = pdf_flush_text(ctx, pr);
@@ -2361,6 +2384,8 @@ static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smas
 		gstate->softmask_ctm = gstate->ctm;
 		gstate->softmask = pdf_keep_obj(ctx, smask);
 		gstate->softmask_resources = pdf_keep_obj(ctx, pr->rstack->resources);
+		if (tr)
+			gstate->softmask_tr = pdf_keep_obj(ctx, tr);
 		for (i = 0; i < cs_n; ++i)
 			gstate->softmask_bc[i] = bc[i];
 		gstate->luminosity = luminosity;

@@ -338,14 +338,14 @@ pdf_process_extgstate(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, pdf_ob
 				luminosity = 0;
 
 			tr = pdf_dict_get(ctx, obj, PDF_NAME(TR));
-			if (tr && !pdf_name_eq(ctx, tr, PDF_NAME(Identity)))
-				fz_warn(ctx, "ignoring transfer function");
+			if (tr && pdf_name_eq(ctx, tr, PDF_NAME(Identity)))
+				tr = NULL;
 
-			proc->op_gs_SMask(ctx, proc, xobj, softmask_bc, luminosity);
+			proc->op_gs_SMask(ctx, proc, xobj, softmask_bc, luminosity, tr);
 		}
 		else if (pdf_is_name(ctx, obj) && pdf_name_eq(ctx, obj, PDF_NAME(None)))
 		{
-			proc->op_gs_SMask(ctx, proc, NULL, NULL, 0);
+			proc->op_gs_SMask(ctx, proc, NULL, NULL, 0, NULL);
 		}
 	}
 }

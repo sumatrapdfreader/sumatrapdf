@@ -488,13 +488,13 @@ fz_trace_begin_mask(fz_context *ctx, fz_device *dev_, fz_rect bbox, int luminosi
 }
 
 static void
-fz_trace_end_mask(fz_context *ctx, fz_device *dev_)
+fz_trace_end_mask(fz_context *ctx, fz_device *dev_, fz_function *tr)
 {
 	fz_trace_device *dev = (fz_trace_device*)dev_;
 	fz_output *out = dev->out;
 	dev->depth--;
 	fz_trace_indent(ctx, out, dev->depth);
-	fz_write_printf(ctx, out, "</clip_mask>\n");
+	fz_write_printf(ctx, out, "</clip_mask%s>\n", tr ? " (with TR)" : "");
 	dev->depth++;
 }
 

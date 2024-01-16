@@ -152,7 +152,7 @@ fz_bbox_begin_mask(fz_context *ctx, fz_device *dev, fz_rect rect, int luminosity
 }
 
 static void
-fz_bbox_end_mask(fz_context *ctx, fz_device *dev)
+fz_bbox_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
 	fz_bbox_device *bdev = (fz_bbox_device*)dev;
 	assert(bdev->ignore > 0);

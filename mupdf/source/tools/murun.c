@@ -1699,9 +1699,12 @@ js_dev_begin_mask(fz_context *ctx, fz_device *dev, fz_rect bbox, int luminosity,
 }
 
 static void
-js_dev_end_mask(fz_context *ctx, fz_device *dev)
+js_dev_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
 	js_State *J = ((js_device*)dev)->J;
+
+	if (tr)
+		fz_warn(ctx, "Ignoring Transfer function");
 	if (js_try(J))
 		rethrow_as_fz(J);
 	if (js_hasproperty(J, -1, "endMask")) {

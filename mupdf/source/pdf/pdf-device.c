@@ -1069,12 +1069,15 @@ pdf_dev_begin_mask(fz_context *ctx, fz_device *dev, fz_rect bbox, int luminosity
 }
 
 static void
-pdf_dev_end_mask(fz_context *ctx, fz_device *dev)
+pdf_dev_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
 	pdf_device *pdev = (pdf_device*)dev;
 	pdf_document *doc = pdev->doc;
 	gstate *gs = CURRENT_GSTATE(pdev);
 	pdf_obj *form_ref = (pdf_obj *)gs->on_pop_arg;
+
+	if (tr)
+		fz_warn(ctx, "Ignoring Transfer function");
 
 	/* Here we do part of the pop, but not all of it. */
 	pdf_dev_end_text(ctx, pdev);

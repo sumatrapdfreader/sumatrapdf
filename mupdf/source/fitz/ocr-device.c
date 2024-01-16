@@ -286,12 +286,12 @@ fz_ocr_begin_mask(fz_context *ctx, fz_device *dev, fz_rect rect, int luminosity,
 }
 
 static void
-fz_ocr_end_mask(fz_context *ctx, fz_device *dev)
+fz_ocr_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
 	fz_ocr_device *ocr = (fz_ocr_device *)dev;
 
-	fz_end_mask(ctx, ocr->list_dev);
-	fz_end_mask(ctx, ocr->draw_dev);
+	fz_end_mask_tr(ctx, ocr->list_dev, tr);
+	fz_end_mask_tr(ctx, ocr->draw_dev, tr);
 }
 
 static void
@@ -852,11 +852,11 @@ rewrite_begin_mask(fz_context *ctx, fz_device *dev, fz_rect area, int luminosity
 }
 
 static void
-rewrite_end_mask(fz_context *ctx, fz_device *dev)
+rewrite_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
 	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
 
-	fz_end_mask(ctx, rewrite->target);
+	fz_end_mask_tr(ctx, rewrite->target, tr);
 }
 
 static void
