@@ -905,6 +905,105 @@ FUN(PDFObject_putDictionaryPDFObjectDate)(JNIEnv *env, jobject self, jobject jna
 }
 
 JNIEXPORT void JNICALL
+FUN(PDFObject_putDictionaryStringRect)(JNIEnv *env, jobject self, jstring jname, jobject jrect)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	fz_rect rect  = from_Rect(env, jrect);
+	const char *name = NULL;
+	pdf_obj *key = NULL;
+
+	if (!ctx || !dict) return;
+	if (jname)
+	{
+		name = (*env)->GetStringUTFChars(env, jname, NULL);
+		if (!name) return;
+	}
+
+	fz_var(key);
+
+	fz_try(ctx)
+	{
+		key = name ? pdf_new_name(ctx, name) : NULL;
+		pdf_dict_put_rect(ctx, dict, key, rect);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, key);
+		if (name)
+			(*env)->ReleaseStringUTFChars(env, jname, name);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFObject_putDictionaryStringMatrix)(JNIEnv *env, jobject self, jstring jname, jobject jmatrix)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	fz_matrix matrix  = from_Matrix(env, jmatrix);
+	const char *name = NULL;
+	pdf_obj *key = NULL;
+
+	if (!ctx || !dict) return;
+	if (jname)
+	{
+		name = (*env)->GetStringUTFChars(env, jname, NULL);
+		if (!name) return;
+	}
+
+	fz_var(key);
+
+	fz_try(ctx)
+	{
+		key = name ? pdf_new_name(ctx, name) : NULL;
+		pdf_dict_put_matrix(ctx, dict, key, matrix);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, key);
+		if (name)
+			(*env)->ReleaseStringUTFChars(env, jname, name);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFObject_putDictionaryStringDate)(JNIEnv *env, jobject self, jstring jname, jlong time)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	const char *name = NULL;
+	pdf_obj *key = NULL;
+
+	if (!ctx || !dict) return;
+	if (jname)
+	{
+		name = (*env)->GetStringUTFChars(env, jname, NULL);
+		if (!name) return;
+	}
+
+	fz_var(key);
+
+	fz_try(ctx)
+	{
+		key = name ? pdf_new_name(ctx, name) : NULL;
+		pdf_dict_put_date(ctx, dict, key, time);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, key);
+		if (name)
+			(*env)->ReleaseStringUTFChars(env, jname, name);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+
+JNIEXPORT void JNICALL
 FUN(PDFObject_deleteArray)(JNIEnv *env, jobject self, jint index)
 {
 	fz_context *ctx = get_context(env);

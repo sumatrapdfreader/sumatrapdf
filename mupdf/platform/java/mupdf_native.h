@@ -4633,6 +4633,30 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryString
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    putDictionaryStringRect
+ * Signature: (Ljava/lang/String;Lcom/artifex/mupdf/fitz/Rect;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryStringRect
+  (JNIEnv *, jobject, jstring, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    putDictionaryStringMatrix
+ * Signature: (Ljava/lang/String;Lcom/artifex/mupdf/fitz/Matrix;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryStringMatrix
+  (JNIEnv *, jobject, jstring, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    putDictionaryStringDate
+ * Signature: (Ljava/lang/String;J)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryStringDate
+  (JNIEnv *, jobject, jstring, jlong);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
  * Method:    putDictionaryPDFObjectBoolean
  * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;Z)V
  */

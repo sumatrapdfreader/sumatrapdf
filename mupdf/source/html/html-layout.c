@@ -490,14 +490,11 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 		{
 		default:
 		case VA_BASELINE:
-			va = 0;
-			break;
 		case VA_SUB:
-			va = node->box->s.layout.em * 0.2f;
-			break;
 		case VA_SUPER:
-			va = node->box->s.layout.em * -0.3f;
+			va = node->box->s.layout.baseline;
 			break;
+
 		case VA_TOP:
 		case VA_TEXT_TOP:
 			va = -baseline + node->box->s.layout.em * 0.8f;
@@ -633,7 +630,7 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 	int align;
 	fz_html_restarter *restart = ld->restart;
 
-	float em = box->s.layout.em = fz_from_css_number(box->style->font_size, top->s.layout.em, top->s.layout.em, top->s.layout.em);
+	float em = box->s.layout.em;
 	indent = box->is_first_flow ? fz_from_css_number(top->style->text_indent, em, top->s.layout.w, 0) : 0;
 	align = top->style->text_align;
 
@@ -1458,11 +1455,19 @@ static void layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_
 static void layout_update_styles(fz_context *ctx, fz_html_box *box, fz_html_box *top)
 {
 	float top_em = top->s.layout.em;
+	float top_baseline = top->s.layout.baseline;
 	float top_w = top->s.layout.w;
 	while (box)
 	{
 		const fz_css_style *style = box->style;
 		float em = box->s.layout.em = fz_from_css_number(style->font_size, top_em, top_em, top_em);
+
+		if (style->vertical_align == VA_SUPER)
+			box->s.layout.baseline = top_baseline - top_em / 3;
+		else if (style->vertical_align == VA_SUB)
+			box->s.layout.baseline = top_baseline + top_em / 5;
+		else
+			box->s.layout.baseline = top_baseline;
 
 		if (box->type != BOX_INLINE && box->type != BOX_FLOW)
 		{
@@ -1660,6 +1665,7 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 	{
 		fz_warn(ctx, "html: nothing to layout");
 		box->s.layout.em = em;
+		box->s.layout.baseline = 0;
 		box->s.layout.x = start_x;
 		box->s.layout.w = page_w;
 		box->s.layout.y = start_y;
@@ -1688,6 +1694,7 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 		if (box->s.layout.em != em || box->s.layout.x != start_x || box->s.layout.w != page_w)
 		{
 			box->s.layout.em = em;
+			box->s.layout.baseline = 0;
 			box->s.layout.x = start_x;
 			box->s.layout.w = page_w;
 			layout_update_styles(ctx, box->down, box);

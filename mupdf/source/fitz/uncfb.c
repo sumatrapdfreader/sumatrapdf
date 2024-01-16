@@ -585,35 +585,57 @@ make_absolute(fz_context *ctx, fz_cfb_archive *cfb, char *prefix, int node, int 
 {
 	uint32_t type;
 
-	if (node == (int)NOSTREAM)
-		return;
-
-	if (node < 0 || node >= cfb->count)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid tree");
-
-	if (depth >= 32)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "CBF Tree too deep");
-
-	type = cfb->entries[node].t;
-	if (type == REACHED || type == REACHED_KEEP)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "CBF Tree has cycles");
-	cfb->entries[node].t = (type == 2) ? REACHED_KEEP : REACHED;
-
-	make_absolute(ctx, cfb, prefix, cfb->entries[node].l, depth+1);
-	make_absolute(ctx, cfb, prefix, cfb->entries[node].r, depth+1);
-
-	if (prefix)
+	/* To avoid recursion where possible. */
+	while (1)
 	{
-		size_t z0 = strlen(prefix);
-		size_t z1 = strlen(cfb->entries[node].name);
-		char *newname = fz_malloc(ctx, z0+z1+2);
-		memcpy(newname, prefix, z0);
-		newname[z0] = '/';
-		memcpy(newname+z0+1, cfb->entries[node].name, z1+1);
-		fz_free(ctx, cfb->entries[node].name);
-		cfb->entries[node].name = newname;
+		if (node == (int)NOSTREAM)
+			return;
+
+		if (node < 0 || node >= cfb->count)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid tree");
+
+		if (depth >= 32)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "CBF Tree too deep");
+
+		type = cfb->entries[node].t;
+		if (type == REACHED || type == REACHED_KEEP)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "CBF Tree has cycles");
+		cfb->entries[node].t = (type == 2) ? REACHED_KEEP : REACHED;
+
+		if (prefix)
+		{
+			size_t z0 = strlen(prefix);
+			size_t z1 = strlen(cfb->entries[node].name);
+			char *newname = fz_malloc(ctx, z0+z1+2);
+			memcpy(newname, prefix, z0);
+			newname[z0] = '/';
+			memcpy(newname+z0+1, cfb->entries[node].name, z1+1);
+			fz_free(ctx, cfb->entries[node].name);
+			cfb->entries[node].name = newname;
+		}
+
+		if (cfb->entries[node].d == NOSTREAM && cfb->entries[node].r == NOSTREAM)
+		{
+			/* Handle 'l' without recursion, because there is no 'r' or 'd'. */
+			node = cfb->entries[node].l;
+			continue;
+		}
+		make_absolute(ctx, cfb, prefix, cfb->entries[node].l, depth+1);
+		if (cfb->entries[node].d == NOSTREAM)
+		{
+			/* Handle 'r' without recursion, because there is no 'd'. */
+			node = cfb->entries[node].r;
+			continue;
+		}
+		make_absolute(ctx, cfb, prefix, cfb->entries[node].r, depth+1);
+
+		/* Rather than recursing:
+		 *	make_absolute(ctx, cfb, node == 0 ? NULL : cfb->entries[node].name, cfb->entries[node].d, depth+1);
+		 * instead just loop. */
+		prefix = node == 0 ? NULL : cfb->entries[node].name;
+		node = cfb->entries[node].d;
 	}
-	make_absolute(ctx, cfb, node == 0 ? NULL : cfb->entries[node].name, cfb->entries[node].d, depth+1);
+
 }
 
 static void

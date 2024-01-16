@@ -421,7 +421,7 @@ struct fz_html_box_s
 		/* Only needed during layout */
 		struct {
 			float x, y, w, b; /* content */
-			float em;
+			float em, baseline;
 		} layout;
 	} s;
 
