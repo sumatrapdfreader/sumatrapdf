@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9d644bba436530d1949a57332f3392ff42dba2b6
+1a85bfff7fe099c2e89a48fb37957c0df95d1853
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -17,6 +17,7 @@ fa:علامت گذاری %s. برای ویرایش Ctrl+click را بزنید
 fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 he:.כדי לערוך Ctrl +  הערה. לחץ על %s
+hu:Megjegyzés: %s. Szerkesztés: Ctrl+kattintás.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
@@ -1492,6 +1493,7 @@ es:Atajos de teclado
 fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
 he:קיצורי דרך במקלדת
+hu:&Gyorsbillentyűk
 it:&Tasti rapidi
 ja:キーボード ショートカット(&K)
 kr:키보드 단축키(&K)
@@ -4470,7 +4472,7 @@ sl:Ali ste prepričani, da želite odstraniti SumatraPDF?
 sn:Une chokwadi chekuti urikuda kubvisa SumatraPDF?
 sp-rs:Da li sigurno želite da uklonite SumatraPDF?
 sq:Jeni i sigurt se doni të çinstaloni SumatraPDF?
-sr-rs:Да ли желите деинсталацију СуматраПДФ
+sr-rs:Да ли сигурно желите да деинсталирате SumatraPDF?
 sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
 th:คุณแน่ใจหรือไม่ว่าต้องการถอนการติดตั้ง SumatraPDF?
@@ -9338,12 +9340,14 @@ el:Σφάλμα
 es:Error
 fr:Erreur
 he:שגיאה
+hu:Hiba
 it:Errore
 nl:Fout
 pl:Błąd
 pt:Erro
 ro:Eroare
 ru:Ошибка
+sr-rs:Грешка
 :Error loading %s
 am:Բացման սխալ %s
 ar:%s خطأ في التحميل
