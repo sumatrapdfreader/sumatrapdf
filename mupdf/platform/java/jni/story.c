@@ -91,8 +91,8 @@ FUN(Story_newStory)(JNIEnv *env, jclass cls, jbyteArray content, jbyteArray css,
 	return jlong_cast(story);
 }
 
-JNIEXPORT jboolean JNICALL
-FUN(Story_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled)
+JNIEXPORT jint JNICALL
+FUN(Story_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled, jint flags)
 {
 	fz_context *ctx = get_context(env);
 	fz_story *story = from_Story_safe(env, self);
@@ -102,7 +102,7 @@ FUN(Story_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled)
 
 	fz_try(ctx)
 	{
-		more = fz_place_story(ctx, story, rect, &filled);
+		more = fz_place_story_flags(ctx, story, rect, &filled, flags);
 
 		(*env)->SetFloatField(env, jfilled, fid_Rect_x0, filled.x0);
 		(*env)->SetFloatField(env, jfilled, fid_Rect_x1, filled.x1);
@@ -112,7 +112,7 @@ FUN(Story_place)(JNIEnv *env, jobject self, jobject jrect, jobject jfilled)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return !!more;
+	return more;
 }
 
 JNIEXPORT void JNICALL

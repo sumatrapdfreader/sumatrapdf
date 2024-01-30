@@ -1599,11 +1599,11 @@ FUN(PDFAnnotation_getHiddenForEditing)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFAnnotation_applyRedaction)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod)
+FUN(PDFAnnotation_applyRedaction)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod, jint lineArt)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation_safe(env, self);
-	pdf_redact_options opts = { blackBoxes, imageMethod };
+	pdf_redact_options opts = { blackBoxes, imageMethod, lineArt };
 	jboolean redacted = JNI_FALSE;
 
 	if (!ctx || !annot) return JNI_FALSE;

@@ -292,10 +292,12 @@ fz_java_device_begin_mask(fz_context *ctx, fz_device *dev, fz_rect rect, int lum
 }
 
 static void
-fz_java_device_end_mask(fz_context *ctx, fz_device *dev)
+fz_java_device_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
 {
 	fz_java_device *jdev = (fz_java_device *)dev;
 	JNIEnv *env = jdev->env;
+
+	// TODO: pass transfer function
 
 	(*env)->CallVoidMethod(env, jdev->self, mid_Device_endMask);
 	if ((*env)->ExceptionCheck(env))

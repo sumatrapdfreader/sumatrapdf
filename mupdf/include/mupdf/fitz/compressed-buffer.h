@@ -83,9 +83,15 @@ typedef struct
 */
 typedef struct
 {
+	int refs;
 	fz_compression_params params;
 	fz_buffer *buffer;
 } fz_compressed_buffer;
+
+/**
+	Take a reference to an fz_compressed_buffer.
+*/
+fz_compressed_buffer *fz_keep_compressed_buffer(fz_context *ctx, fz_compressed_buffer *cbuf);
 
 /**
 	Return the storage size used for a buffer and its data.
@@ -172,7 +178,7 @@ enum
 void fz_drop_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf);
 
 /**
-	Create a new, UNKNOWN format, compressed_buffer;
+	Create a new, UNKNOWN format, compressed_buffer.
 */
 fz_compressed_buffer *fz_new_compressed_buffer(fz_context *ctx);
 

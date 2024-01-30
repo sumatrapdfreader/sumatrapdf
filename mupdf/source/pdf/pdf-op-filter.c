@@ -976,7 +976,7 @@ filter_show_text(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *text)
 				if (fontdesc->wmode == 0)
 				{
 					adjust_text(ctx, p, tadj, 0);
-					p->tos.tm = fz_pre_translate(p->tos.tm, tadj * p->gstate->pending.text.scale, 0);
+					p->tos.tm = fz_pre_translate(p->tos.tm, -tadj * p->gstate->pending.text.scale, 0);
 				}
 				else
 				{
@@ -1442,7 +1442,7 @@ cull_replay_rectto(fz_context *ctx, void *arg, float x1, float y1, float x2, flo
 	pdf_sanitize_processor *p = (pdf_sanitize_processor *)arg;
 
 	if (p->chain->op_re)
-		p->chain->op_re(ctx, p->chain, x1, y1, x2, y2);
+		p->chain->op_re(ctx, p->chain, x1, y1, x2-x1, y2-y1);
 }
 
 typedef struct
@@ -1469,13 +1469,15 @@ end_segment(fz_context *ctx, segmenter_data_t *sd)
 		cull_replay_rectto
 	};
 	fz_rect r;
+	const fz_stroke_state *st;
 
 	if (sd->segment == NULL)
 		return;
 
-	r = fz_bound_path(ctx, sd->segment, (sd->type == FZ_CULL_PATH_STROKE || sd->type == FZ_CULL_PATH_FILL_STROKE) ? &sd->sstate : NULL, sd->ctm);
+	st = (sd->type == FZ_CULL_PATH_STROKE || sd->type == FZ_CULL_PATH_FILL_STROKE) ? &sd->sstate : NULL;
+	r = fz_bound_path(ctx, sd->segment, st, sd->ctm);
 
-	if (sd->p->options->culler(ctx, sd->p->options->opaque, r, sd->type))
+	if (sd->p->options->culler && sd->p->options->culler(ctx, sd->p->options->opaque, r, sd->type))
 	{
 		/* This segment can be skipped */
 	}

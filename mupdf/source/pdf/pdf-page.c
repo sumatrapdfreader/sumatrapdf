@@ -629,6 +629,42 @@ pdf_bound_page(fz_context *ctx, pdf_page *page, fz_box_type box)
 	return fz_transform_rect(rect, page_ctm);
 }
 
+/*
+ * Modify the page boxes (using fitz space coordinates).
+ * Note that changing the CropBox will change the fitz coordinate space mapping,
+ * invalidating all bounding boxes previously acquired.
+ */
+void
+pdf_set_page_box(fz_context *ctx, pdf_page *page, fz_box_type box, fz_rect rect)
+{
+	fz_matrix page_ctm, inv_page_ctm;
+	fz_rect page_rect;
+	pdf_page_transform_box(ctx, page, NULL, &page_ctm, box);
+	inv_page_ctm = fz_invert_matrix(page_ctm);
+	page_rect = fz_transform_rect(rect, inv_page_ctm);
+
+	switch (box)
+	{
+	case FZ_MEDIA_BOX:
+		pdf_dict_put_rect(ctx, page->obj, PDF_NAME(MediaBox), page_rect);
+		break;
+	case FZ_CROP_BOX:
+		pdf_dict_put_rect(ctx, page->obj, PDF_NAME(CropBox), page_rect);
+		break;
+	case FZ_BLEED_BOX:
+		pdf_dict_put_rect(ctx, page->obj, PDF_NAME(BleedBox), page_rect);
+		break;
+	case FZ_TRIM_BOX:
+		pdf_dict_put_rect(ctx, page->obj, PDF_NAME(TrimBox), page_rect);
+		break;
+	case FZ_ART_BOX:
+		pdf_dict_put_rect(ctx, page->obj, PDF_NAME(ArtBox), page_rect);
+		break;
+	case FZ_UNKNOWN_BOX:
+		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "unknown page box type: %d", box);
+	}
+}
+
 fz_link *
 pdf_load_links(fz_context *ctx, pdf_page *page)
 {

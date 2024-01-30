@@ -199,8 +199,8 @@ fz_image *fz_new_image_of_size(fz_context *ctx,
 		int yres,
 		int interpolate,
 		int imagemask,
-		float *decode,
-		int *colorkey,
+		const float *decode,
+		const int *colorkey,
 		fz_image *mask,
 		size_t size,
 		fz_image_get_pixmap_fn *get_pixmap,
@@ -243,7 +243,7 @@ fz_image *fz_new_image_of_size(fz_context *ctx,
 	A new reference is taken to this image. Supplying a masked
 	image as a mask to another image is illegal!
 */
-fz_image *fz_new_image_from_compressed_buffer(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colorspace, int xres, int yres, int interpolate, int imagemask, float *decode, int *colorkey, fz_compressed_buffer *buffer, fz_image *mask);
+fz_image *fz_new_image_from_compressed_buffer(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colorspace, int xres, int yres, int interpolate, int imagemask, const float *decode, const int *colorkey, fz_compressed_buffer *buffer, fz_image *mask);
 
 /**
 	Create an image from the given

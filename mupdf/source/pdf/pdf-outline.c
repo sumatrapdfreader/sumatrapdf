@@ -56,7 +56,7 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 
 		parent_diff = pdf_objcmp(ctx, parent, expected_parent);
 		prev_diff = pdf_objcmp(ctx, prev, expected_prev);
-		last_diff = next == NULL && pdf_objcmp(ctx, last, dict);
+		last_diff = next == NULL && pdf_objcmp_resolve(ctx, last, dict);
 
 		if (fixed == NULL)
 		{

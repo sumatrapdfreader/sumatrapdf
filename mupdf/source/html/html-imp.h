@@ -324,6 +324,18 @@ struct fz_html_s
 	char *title;
 };
 
+typedef enum
+{
+	FZ_HTML_RESTART_REASON_NONE = 0,
+	FZ_HTML_RESTART_REASON_LINE_HEIGHT = 1,
+	FZ_HTML_RESTART_REASON_LINE_WIDTH = 2
+} fz_html_restart_reason;
+
+enum
+{
+	FZ_HTML_RESTARTER_FLAGS_NO_OVERFLOW = 1
+};
+
 typedef struct {
 	/* start will be filled in on entry with the first node to start
 	 * operation on. NULL means start 'immediately'. As we traverse
@@ -352,6 +364,10 @@ typedef struct {
 	 * a border, so that if we then fail to put any content into the box
 	 * we'll elide the entire box/border, not output an empty one. */
 	fz_html_box *potential;
+
+	fz_html_restart_reason reason;
+
+	int flags;
 } fz_html_restarter;
 
 struct fz_story

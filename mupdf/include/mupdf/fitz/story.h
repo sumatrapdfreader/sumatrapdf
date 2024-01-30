@@ -78,10 +78,20 @@ fz_story *fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, fl
 const char *fz_story_warnings(fz_context *ctx, fz_story *story);
 
 /*
+	Equivalent to fz_place_story_flags with flags being 0.
+*/
+int fz_place_story(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *filled);
+
+/*
 	Place (or continue placing) a story into the supplied rectangle
 	'where', updating 'filled' with the actual area that was used.
-	Returns zero if all the content fitted, non-zero if there is
-	more to fit.
+	Returns zero (FZ_PLACE_STORY_RETURN_ALL_FITTED) if all the
+	content fitted, non-zero if there is more to fit.
+
+	If the FZ_PLACE_STORY_FLAG_NO_OVERFLOW flag is set, then a
+	return code of FZ_PLACE_STORY_RETURN_OVERFLOW_WIDTH will be
+	returned when the next item (word) to be placed would not fit
+	in a rectangle of that given width.
 
 	Note, that filled may not be returned as a strict subset of
 	where, due to padding/margins at the bottom of pages, and
@@ -95,8 +105,24 @@ const char *fz_story_warnings(fz_context *ctx, fz_story *story);
 	After this function is called, the DOM is no longer accessible,
 	and any fz_xml pointer retrieved from fz_story_document is no
 	longer valid.
+
+	flags: Additional flags controlling layout. Pass 0 if none
+	required.
 */
-int fz_place_story(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *filled);
+int fz_place_story_flags(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *filled, int flags);
+
+enum
+{
+	/* Avoid the usual HTML behaviour of overflowing the box horizontally
+	 * in some circumstances. We now abort the place in such cases and
+	 * return with */
+	FZ_PLACE_STORY_FLAG_NO_OVERFLOW = 1,
+
+	/* Specific return codes from fz_place_story_flags. Also
+	 * "non-zero" for 'more to fit'. */
+	FZ_PLACE_STORY_RETURN_ALL_FITTED = 0,
+	FZ_PLACE_STORY_RETURN_OVERFLOW_WIDTH = 2
+};
 
 /*
 	Draw the placed story to the given device.

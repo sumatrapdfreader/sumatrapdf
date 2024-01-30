@@ -190,6 +190,7 @@ int pdfrecolor_main(int argc, char **argv)
 	opts.do_compress_images = 1;
 	opts.do_compress_fonts = 1;
 	opts.do_garbage = 3;
+	opts.do_use_objstms = 1;
 #else
 	opts.do_compress = 0;
 	opts.do_pretty = 1;

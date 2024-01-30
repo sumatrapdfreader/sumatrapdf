@@ -39,10 +39,18 @@ public class PDFPage extends Page
 	public static final int REDACT_IMAGE_REMOVE = 1;
 	public static final int REDACT_IMAGE_PIXELS = 2;
 
-	public native boolean applyRedactions(boolean blackBoxes, int imageMethod);
+	public static final int REDACT_LINEART_NONE = 0;
+	public static final int REDACT_LINEART_IF_TOUCHED = 1;
+	public static final int REDACT_LINEART_IF_COVERED = 2;
+
+	public native boolean applyRedactions(boolean blackBoxes, int imageMethod, int lineArt);
 
 	public boolean applyRedactions() {
-		return applyRedactions(true, REDACT_IMAGE_PIXELS);
+		return applyRedactions(true, REDACT_IMAGE_PIXELS, REDACT_LINEART_NONE);
+	}
+
+	public boolean applyRedactions(boolean blackBoxes, int imageMethod) {
+		return applyRedactions(blackBoxes, imageMethod, REDACT_LINEART_NONE);
 	}
 
 	public native boolean update();
@@ -91,6 +99,12 @@ public class PDFPage extends Page
 	}
 	public Link createLinkFitBH(Rect bbox, int page, float y) {
 		return createLink(bbox, LinkDestination.FitBH(0, page, y));
+	}
+
+	public native void setPageBox(int box, Rect rect);
+
+	public void setCropBox(Rect rect) {
+		setPageBox(Page.CROP_BOX, rect);
 	}
 
 	// TODO: toPixmap with usage and page box

@@ -28,6 +28,15 @@ public class Story
 		Context.init();
 	}
 
+	/* Flags for 3-args place() */
+	public static final int FLAGS_NO_OVERFLOW = 1;
+
+	/* Return codes from 3-args place().
+	 * Also 'non-zero' means more to do.
+	 */
+	public static final int ALL_FITTED = 0;
+	public static final int OVERFLOW_WIDTH = 2;
+
 	protected long pointer;
 
 	protected native void finalize();
@@ -74,7 +83,12 @@ public class Story
 		this(content, user_css, em, null);
 	}
 
-	public native boolean place(Rect rect, Rect filled);
+	public boolean place(Rect rect, Rect filled)
+	{
+		return place(rect, filled, 0) != 0;
+	}
+
+	public native int place(Rect rect, Rect filled, int flags);
 
 	public native void draw(Device dev, Matrix ctm);
 

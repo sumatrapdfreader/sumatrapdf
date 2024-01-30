@@ -2278,6 +2278,11 @@ convert_to_boxes(fz_context *ctx, fz_story *story)
 
 int fz_place_story(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *filled)
 {
+	return fz_place_story_flags(ctx, story, where, filled, 0);
+}
+
+int fz_place_story_flags(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *filled, int flags)
+{
 	float w, h;
 
 	if (filled)
@@ -2300,6 +2305,8 @@ int fz_place_story(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *fil
 	story->restart_draw.start_flow = story->restart_place.start_flow;
 	story->restart_draw.end = NULL;
 	story->restart_draw.end_flow = NULL;
+	story->restart_draw.reason = FZ_HTML_RESTART_REASON_NONE;
+	story->restart_draw.flags = flags;
 	story->bbox = where;
 	fz_restartable_layout_html(ctx, &story->tree, where.x0, where.y0, w, h, story->em, &story->restart_draw);
 	story->restart_draw.start = story->restart_place.start;
@@ -2319,7 +2326,11 @@ int fz_place_story(fz_context *ctx, fz_story *story, fz_rect where, fz_rect *fil
 		fz_debug_html(ctx, story->tree.root);
 #endif
 
-	return story->restart_draw.end != NULL;
+	if (story->restart_draw.end == NULL)
+		return FZ_HTML_RESTART_REASON_NONE;
+	if (story->restart_draw.reason == FZ_HTML_RESTART_REASON_LINE_WIDTH)
+		return FZ_HTML_RESTART_REASON_LINE_WIDTH;
+	return FZ_HTML_RESTART_REASON_LINE_HEIGHT;
 }
 
 const char *

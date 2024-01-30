@@ -1484,90 +1484,121 @@ functions and class methods.]
 
 .. code-block:: c++
 
-    /**
-    C++ alternative to `fz_lookup_metadata()` that returns a `std::string`
-    or calls `fz_throw()` if not found.
-    */
-    FZ_FUNCTION std::string fz_lookup_metadata2(fz_context* ctx, fz_document* doc, const char* key);
+        /**
+        C++ alternative to `fz_lookup_metadata()` that returns a `std::string`
+        or calls `fz_throw()` if not found.
+        */
+        FZ_FUNCTION std::string fz_lookup_metadata2(fz_context* ctx, fz_document* doc, const char* key);
 
-    /**
-    C++ alternative to `pdf_lookup_metadata()` that returns a `std::string`
-    or calls `fz_throw()` if not found.
-    */
-    FZ_FUNCTION std::string pdf_lookup_metadata2(fz_context* ctx, pdf_document* doc, const char* key);
+        /**
+        C++ alternative to `pdf_lookup_metadata()` that returns a `std::string`
+        or calls `fz_throw()` if not found.
+        */
+        FZ_FUNCTION std::string pdf_lookup_metadata2(fz_context* ctx, pdf_document* doc, const char* key);
 
-    /**
-    C++ alternative to `fz_md5_pixmap()` that returns the digest by value.
-    */
-    FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context* ctx, fz_pixmap* pixmap);
+        /**
+        C++ alternative to `fz_md5_pixmap()` that returns the digest by value.
+        */
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context* ctx, fz_pixmap* pixmap);
 
-    /**
-    C++ alternative to fz_md5_final() that returns the digest by value.
-    */
-    FZ_FUNCTION std::vector<unsigned char> fz_md5_final2(fz_md5* md5);
+        /**
+        C++ alternative to fz_md5_final() that returns the digest by value.
+        */
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_final2(fz_md5* md5);
 
-    /** */
-    FZ_FUNCTION long long fz_pixmap_samples_int(fz_context* ctx, fz_pixmap* pixmap);
+        /** */
+        FZ_FUNCTION long long fz_pixmap_samples_int(fz_context* ctx, fz_pixmap* pixmap);
 
-    /**
-    Provides simple (but slow) access to pixmap data from Python and C#.
-    */
-    FZ_FUNCTION int fz_samples_get(fz_pixmap* pixmap, int offset);
+        /**
+        Provides simple (but slow) access to pixmap data from Python and C#.
+        */
+        FZ_FUNCTION int fz_samples_get(fz_pixmap* pixmap, int offset);
 
-    /**
-    Provides simple (but slow) write access to pixmap data from Python and
-    C#.
-    */
-    FZ_FUNCTION void fz_samples_set(fz_pixmap* pixmap, int offset, int value);
+        /**
+        Provides simple (but slow) write access to pixmap data from Python and
+        C#.
+        */
+        FZ_FUNCTION void fz_samples_set(fz_pixmap* pixmap, int offset, int value);
 
-    /**
-    C++ alternative to fz_highlight_selection() that returns quads in a
-    std::vector.
-    */
-    FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context* ctx, fz_stext_page* page, fz_point a, fz_point b, int max_quads);
+        /**
+        C++ alternative to fz_highlight_selection() that returns quads in a
+        std::vector.
+        */
+        FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context* ctx, fz_stext_page* page, fz_point a, fz_point b, int max_quads);
 
-    struct fz_search_page2_hit
-    {{
-        fz_quad quad;
-        int mark;
-    }};
+        struct fz_search_page2_hit
+        {{
+            fz_quad quad;
+            int mark;
+        }};
 
-    /**
-    C++ alternative to fz_search_page() that returns information in a std::vector.
-    */
-    FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document *doc, int number, const char *needle, int hit_max);
+        /**
+        C++ alternative to fz_search_page() that returns information in a std::vector.
+        */
+        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document* doc, int number, const char* needle, int hit_max);
 
-    /**
-    C++ alternative to fz_string_from_text_language() that returns information in a std::string.
-    */
-    FZ_FUNCTION std::string fz_string_from_text_language2(fz_text_language lang);
+        /**
+        C++ alternative to fz_string_from_text_language() that returns information in a std::string.
+        */
+        FZ_FUNCTION std::string fz_string_from_text_language2(fz_text_language lang);
 
-    /**
-    C++ alternative to fz_get_glyph_name() that returns information in a std::string.
-    */
-    FZ_FUNCTION std::string fz_get_glyph_name2(fz_context *ctx, fz_font *font, int glyph);
+        /**
+        C++ alternative to fz_get_glyph_name() that returns information in a std::string.
+        */
+        FZ_FUNCTION std::string fz_get_glyph_name2(fz_context* ctx, fz_font* font, int glyph);
 
-    /**
-    Extra struct containing fz_install_load_system_font_funcs()'s args,
-    which we wrap with virtual_fnptrs set to allow use from Python/C# via
-    Swig Directors.
-    */
-    typedef struct fz_install_load_system_font_funcs_args
-    {{
-        fz_load_system_font_fn *f;
-        fz_load_system_cjk_font_fn *f_cjk;
-        fz_load_system_fallback_font_fn *f_fallback;
-    }} fz_install_load_system_font_funcs_args;
+        /**
+        Extra struct containing fz_install_load_system_font_funcs()'s args,
+        which we wrap with virtual_fnptrs set to allow use from Python/C# via
+        Swig Directors.
+        */
+        typedef struct fz_install_load_system_font_funcs_args
+        {{
+            fz_load_system_font_fn* f;
+            fz_load_system_cjk_font_fn* f_cjk;
+            fz_load_system_fallback_font_fn* f_fallback;
+        }} fz_install_load_system_font_funcs_args;
 
-    /**
-    Alternative to fz_install_load_system_font_funcs() that takes args in a
-    struct, to allow use from Python/C# via Swig Directors.
-    */
-    void fz_install_load_system_font_funcs2(fz_context *ctx, fz_install_load_system_font_funcs_args* args);
+        /**
+        Alternative to fz_install_load_system_font_funcs() that takes args in a
+        struct, to allow use from Python/C# via Swig Directors.
+        */
+        FZ_FUNCTION void fz_install_load_system_font_funcs2(fz_context* ctx, fz_install_load_system_font_funcs_args* args);
 
-    /* Internal singleton state to allow Swig Director class to find
-    fz_install_load_system_font_funcs_args class wrapper instance. */
-    extern void* fz_install_load_system_font_funcs2_state;
+        /** Internal singleton state to allow Swig Director class to find
+        fz_install_load_system_font_funcs_args class wrapper instance. */
+        FZ_DATA extern void* fz_install_load_system_font_funcs2_state;
+
+        /** Helper for calling a `fz_document_open_fn` function pointer via Swig
+        from Python/C#. */
+        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context* ctx, fz_document_open_fn fn, fz_stream* stream, fz_stream* accel, fz_archive* dir);
+
+        /** Helper for calling a `fz_document_recognize_content_fn` function
+        pointer via Swig from Python/C#. */
+        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context* ctx, fz_document_recognize_content_fn fn, fz_stream* stream, fz_archive* dir);
+
+        /* Swig-friendly wrapper for pdf_choice_widget_options(), returns the
+        options directly in a vector. */
+        FZ_FUNCTION std::vector<std::string> pdf_choice_widget_options2(fz_context* ctx, pdf_annot* tw, int exportval);
+
+        /** Swig-friendly wrapper for fz_new_image_from_compressed_buffer(),
+        uses specified `decode` and `colorkey` if they are not null (in which
+        case we assert that they have size `2*fz_colorspace_n(colorspace)`). */
+        FZ_FUNCTION fz_image* fz_new_image_from_compressed_buffer2(
+                fz_context* ctx,
+                int w,
+                int h,
+                int bpc,
+                fz_colorspace* colorspace,
+                int xres,
+                int yres,
+                int interpolate,
+                int imagemask,
+                const std::vector<float>* decode,
+                const std::vector<int>* colorkey,
+                fz_compressed_buffer* buffer,
+                fz_image* mask
+                );
 
 
 Python/C# bindings details

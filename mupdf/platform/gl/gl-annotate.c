@@ -1439,7 +1439,7 @@ void do_redact_panel(void)
 	int i;
 
 	int num_redact = 0;
-	static pdf_redact_options redact_opts = { 1, PDF_REDACT_IMAGE_PIXELS };
+	static pdf_redact_options redact_opts = { 1, PDF_REDACT_IMAGE_PIXELS, PDF_REDACT_LINE_ART_REMOVE_IF_TOUCHED };
 	int search_valid;
 
 	if (pdf_has_redactions_doc != pdf)
@@ -1486,9 +1486,10 @@ void do_redact_panel(void)
 	if (ui_button_aux("Redact Page", num_redact == 0))
 	{
 		ui_select_annot(NULL);
-		trace_action("page.applyRedactions(%s, %d);\n",
+		trace_action("page.applyRedactions(%s, %d, %d);\n",
 			redact_opts.black_boxes ? "true" : "false",
-			redact_opts.image_method);
+			redact_opts.image_method,
+			redact_opts.line_art);
 		pdf_redact_page(ctx, pdf, page, &redact_opts);
 		trace_page_update();
 		load_page();

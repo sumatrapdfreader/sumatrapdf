@@ -1715,26 +1715,35 @@ def run( command, capture=False, check=1):
             When running the command, on Windows newlines are replaced by
             spaces; otherwise each line is terminated by a backslash character.
         capture:
-            If true, we return output from command.
+            If true, we include the command's output in our return value.
+        check:
+            If true we raise an exception on error; otherwise we include the
+            command's returncode in our return value.
     Returns:
-        None on success, otherwise raises an exception.
+        check capture   Return
+        --------------------------
+          false false   returncode
+          false  true   (returncode, output)
+          true  false   None or raise exception
+          true   true   output or raise exception
     '''
     lines = _command_lines( command)
     nl = '\n'
     log2( f'Running: {nl.join(lines)}')
     sep = ' ' if windows() else '\\\n'
     command2 = sep.join( lines)
-    if capture:
-        return subprocess.run(
-                command2,
-                shell=True,
-                capture_output=True,
-                check=check,
-                encoding='utf8',
-                ).stdout
+    cp = subprocess.run(
+            command2,
+            shell=True,
+            stdout=subprocess.PIPE if capture else None,
+            stderr=subprocess.STDOUT if capture else None,
+            check=check,
+            encoding='utf8',
+            )
+    if check:
+        return cp.stdout if capture else None
     else:
-        subprocess.run( command2, shell=True, check=check)
-
+        return (cp.returncode, cp.stdout) if capture else cp.returncode
 
 def darwin():
     return sys.platform.startswith( 'darwin')
@@ -1814,9 +1823,10 @@ class PythonFlags:
             else:
                 python_config = f'{python_exe}-config'
             log1(f'Using {python_config=}.')
-            self.includes = run( f'{python_config} --includes', capture=1).strip()
-            #if darwin():
-            #    self.ldflags =
+            try:
+                self.includes = run( f'{python_config} --includes', capture=1).strip()
+            except Exception as e:
+                raise Exception('We require python development tools to be installed.') from e
             self.ldflags = run( f'{python_config} --ldflags', capture=1).strip()
             if linux():
                 # It seems that with python-3.10 on Linux, we can get an

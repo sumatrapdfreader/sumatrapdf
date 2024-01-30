@@ -1009,7 +1009,7 @@ g_extra_declarations = textwrap.dedent(f'''
         /**
         C++ alternative to fz_search_page() that returns information in a std::vector.
         */
-        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document *doc, int number, const char *needle, int hit_max);
+        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document* doc, int number, const char* needle, int hit_max);
 
         /**
         C++ alternative to fz_string_from_text_language() that returns information in a std::string.
@@ -1019,7 +1019,7 @@ g_extra_declarations = textwrap.dedent(f'''
         /**
         C++ alternative to fz_get_glyph_name() that returns information in a std::string.
         */
-        FZ_FUNCTION std::string fz_get_glyph_name2(fz_context *ctx, fz_font *font, int glyph);
+        FZ_FUNCTION std::string fz_get_glyph_name2(fz_context* ctx, fz_font* font, int glyph);
 
         /**
         Extra struct containing fz_install_load_system_font_funcs()'s args,
@@ -1028,34 +1028,54 @@ g_extra_declarations = textwrap.dedent(f'''
         */
         typedef struct fz_install_load_system_font_funcs_args
         {{
-            fz_load_system_font_fn *f;
-            fz_load_system_cjk_font_fn *f_cjk;
-            fz_load_system_fallback_font_fn *f_fallback;
+            fz_load_system_font_fn* f;
+            fz_load_system_cjk_font_fn* f_cjk;
+            fz_load_system_fallback_font_fn* f_fallback;
         }} fz_install_load_system_font_funcs_args;
 
         /**
         Alternative to fz_install_load_system_font_funcs() that takes args in a
         struct, to allow use from Python/C# via Swig Directors.
         */
-        FZ_FUNCTION void fz_install_load_system_font_funcs2(fz_context *ctx, fz_install_load_system_font_funcs_args* args);
+        FZ_FUNCTION void fz_install_load_system_font_funcs2(fz_context* ctx, fz_install_load_system_font_funcs_args* args);
 
-        /* Internal singleton state to allow Swig Director class to find
+        /** Internal singleton state to allow Swig Director class to find
         fz_install_load_system_font_funcs_args class wrapper instance. */
         FZ_DATA extern void* fz_install_load_system_font_funcs2_state;
 
-        /* Helper for calling a `fz_document_open_fn` function pointer via Swig
+        /** Helper for calling a `fz_document_open_fn` function pointer via Swig
         from Python/C#. */
-        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context *ctx, fz_document_open_fn fn, fz_stream *stream, fz_stream *accel, fz_archive *dir);
+        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context* ctx, fz_document_open_fn fn, fz_stream* stream, fz_stream* accel, fz_archive* dir);
 
-        /* Helper for calling a `fz_document_recognize_content_fn` function
+        /** Helper for calling a `fz_document_recognize_content_fn` function
         pointer via Swig from Python/C#. */
-        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context *ctx, fz_document_recognize_content_fn fn, fz_stream *stream, fz_archive *dir);
+        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context* ctx, fz_document_recognize_content_fn fn, fz_stream* stream, fz_archive* dir);
+
+        /* Swig-friendly wrapper for pdf_choice_widget_options(), returns the
+        options directly in a vector. */
+        FZ_FUNCTION std::vector<std::string> pdf_choice_widget_options2(fz_context* ctx, pdf_annot* tw, int exportval);
+
+        /** Swig-friendly wrapper for fz_new_image_from_compressed_buffer(),
+        uses specified `decode` and `colorkey` if they are not null (in which
+        case we assert that they have size `2*fz_colorspace_n(colorspace)`). */
+        FZ_FUNCTION fz_image* fz_new_image_from_compressed_buffer2(
+                fz_context* ctx,
+                int w,
+                int h,
+                int bpc,
+                fz_colorspace* colorspace,
+                int xres,
+                int yres,
+                int interpolate,
+                int imagemask,
+                const std::vector<float>* decode,
+                const std::vector<int>* colorkey,
+                fz_compressed_buffer* buffer,
+                fz_image* mask
+                );
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
-
-        #include "mupdf/exceptions.h"
-        #include "mupdf/internal.h"
 
         FZ_FUNCTION std::string fz_lookup_metadata2( fz_context* ctx, fz_document* doc, const char* key)
         {{
@@ -1091,25 +1111,25 @@ g_extra_definitions = textwrap.dedent(f'''
             return ret;
         }}
 
-        FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context *ctx, fz_pixmap *pixmap)
+        FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context* ctx, fz_pixmap* pixmap)
         {{
             std::vector<unsigned char>  ret(16);
             fz_md5_pixmap( ctx, pixmap, &ret[0]);
             return ret;
         }}
 
-        FZ_FUNCTION long long fz_pixmap_samples_int(fz_context *ctx, fz_pixmap *pixmap)
+        FZ_FUNCTION long long fz_pixmap_samples_int(fz_context* ctx, fz_pixmap* pixmap)
         {{
             long long ret = (intptr_t) pixmap->samples;
             return ret;
         }}
 
-        FZ_FUNCTION int fz_samples_get(fz_pixmap *pixmap, int offset)
+        FZ_FUNCTION int fz_samples_get(fz_pixmap* pixmap, int offset)
         {{
             return pixmap->samples[offset];
         }}
 
-        FZ_FUNCTION void fz_samples_set(fz_pixmap *pixmap, int offset, int value)
+        FZ_FUNCTION void fz_samples_set(fz_pixmap* pixmap, int offset, int value)
         {{
             pixmap->samples[offset] = value;
         }}
@@ -1121,7 +1141,7 @@ g_extra_definitions = textwrap.dedent(f'''
             return ret;
         }}
 
-        FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context *ctx, fz_stext_page *page, fz_point a, fz_point b, int max_quads)
+        FZ_FUNCTION std::vector<fz_quad> fz_highlight_selection2(fz_context* ctx, fz_stext_page* page, fz_point a, fz_point b, int max_quads)
         {{
             {{
                 std::vector<fz_quad>    ret(max_quads);
@@ -1145,7 +1165,7 @@ g_extra_definitions = textwrap.dedent(f'''
             fz_throw(ctx, FZ_ERROR_GENERIC, "fz_highlight_selection() failed");
         }}
 
-        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context *ctx, fz_document *doc, int number, const char *needle, int hit_max)
+        FZ_FUNCTION std::vector<fz_search_page2_hit> fz_search_page2(fz_context* ctx, fz_document* doc, int number, const char* needle, int hit_max)
         {{
             std::vector<fz_quad>    quads(hit_max);
             std::vector<int>        marks(hit_max);
@@ -1166,28 +1186,82 @@ g_extra_definitions = textwrap.dedent(f'''
             return std::string(str);
         }}
 
-        FZ_FUNCTION std::string fz_get_glyph_name2(fz_context *ctx, fz_font *font, int glyph)
+        FZ_FUNCTION std::string fz_get_glyph_name2(fz_context* ctx, fz_font* font, int glyph)
         {{
             char name[32];
             fz_get_glyph_name(ctx, font, glyph, name, sizeof(name));
             return std::string(name);
         }}
 
-        void fz_install_load_system_font_funcs2(fz_context *ctx, fz_install_load_system_font_funcs_args* args)
+        void fz_install_load_system_font_funcs2(fz_context* ctx, fz_install_load_system_font_funcs_args* args)
         {{
             fz_install_load_system_font_funcs(ctx, args->f, args->f_cjk, args->f_fallback);
         }}
 
         void* fz_install_load_system_font_funcs2_state = nullptr;
 
-        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context *ctx, fz_document_open_fn fn, fz_stream *stream, fz_stream *accel, fz_archive *dir)
+        FZ_FUNCTION fz_document* fz_document_open_fn_call(fz_context* ctx, fz_document_open_fn fn, fz_stream* stream, fz_stream* accel, fz_archive* dir)
         {{
             return fn(ctx, stream, accel, dir);
         }}
 
-        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context *ctx, fz_document_recognize_content_fn fn, fz_stream *stream, fz_archive *dir)
+        FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context* ctx, fz_document_recognize_content_fn fn, fz_stream* stream, fz_archive* dir)
         {{
             return fn(ctx, stream, dir);
+        }}
+
+        FZ_FUNCTION std::vector<std::string> pdf_choice_widget_options2(fz_context* ctx, pdf_annot* tw, int exportval)
+        {{
+            int n = pdf_choice_widget_options(ctx, tw, exportval, nullptr);
+            std::vector<const char*> opts(n);
+            int n2 = pdf_choice_widget_options(ctx, tw, exportval, &opts[0]);
+            assert(n2 == n);
+            std::vector<std::string> ret(n);
+            for (int i=0; i<n; ++i)
+            {{
+                ret[i] = opts[i];
+            }}
+            return ret;
+        }}
+
+        FZ_FUNCTION fz_image* fz_new_image_from_compressed_buffer2(
+                fz_context* ctx,
+                int w,
+                int h,
+                int bpc,
+                fz_colorspace* colorspace,
+                int xres,
+                int yres,
+                int interpolate,
+                int imagemask,
+                const std::vector<float> *decode,
+                const std::vector<int> *colorkey,
+                fz_compressed_buffer* buffer,
+                fz_image* mask
+                )
+        {{
+            int n = fz_colorspace_n(ctx, colorspace);
+            printf("fz_new_image_from_compressed_buffer2() decode=%p colorkey=%p n=%i\\n", decode, colorkey, n);
+            assert(!decode || decode->size() == 2 * n);
+            assert(!colorkey || colorkey->size() == 2 * n);
+            const float* decode2 = decode ? &(*decode)[0] : nullptr;
+            const int* colorkey2 = colorkey ? &(*colorkey)[0] : nullptr;
+            fz_image* ret = fz_new_image_from_compressed_buffer(
+                    ctx,
+                    w,
+                    h,
+                    bpc,
+                    colorspace,
+                    xres,
+                    yres,
+                    interpolate,
+                    imagemask,
+                    decode2,
+                    colorkey2,
+                    buffer,
+                    mask
+                    );
+            return ret;
         }}
         ''')
 

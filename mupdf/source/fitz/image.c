@@ -1116,8 +1116,8 @@ fz_new_image_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, fz_image *mask)
 
 fz_image *
 fz_new_image_of_size(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colorspace,
-		int xres, int yres, int interpolate, int imagemask, float *decode,
-		int *colorkey, fz_image *mask, size_t size,
+		int xres, int yres, int interpolate, int imagemask, const float *decode,
+		const int *colorkey, fz_image *mask, size_t size,
 		fz_image_get_pixmap_fn *get_pixmap,
 		fz_image_get_size_fn *get_size,
 		fz_drop_image_fn *drop)
@@ -1198,8 +1198,8 @@ compressed_image_get_size(fz_context *ctx, fz_image *image)
 fz_image *
 fz_new_image_from_compressed_buffer(fz_context *ctx, int w, int h,
 	int bpc, fz_colorspace *colorspace,
-	int xres, int yres, int interpolate, int imagemask, float *decode,
-	int *colorkey, fz_compressed_buffer *buffer, fz_image *mask)
+	int xres, int yres, int interpolate, int imagemask, const float *decode,
+	const int *colorkey, fz_compressed_buffer *buffer, fz_image *mask)
 {
 	fz_compressed_image *image;
 

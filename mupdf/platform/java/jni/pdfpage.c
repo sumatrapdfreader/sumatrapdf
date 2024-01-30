@@ -72,12 +72,12 @@ FUN(PDFPage_update)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod)
+FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod, jint lineArt)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);
 	jboolean redacted = JNI_FALSE;
-	pdf_redact_options opts = { blackBoxes, imageMethod };
+	pdf_redact_options opts = { blackBoxes, imageMethod, lineArt };
 
 	if (!ctx || !page) return JNI_FALSE;
 
@@ -252,4 +252,20 @@ FUN(PDFPage_getObject)(JNIEnv *env, jobject self)
 		return NULL;
 
 	return to_PDFObject_safe_own(ctx, env, pdf_keep_obj(ctx, page->obj));
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFPage_setPageBox)(JNIEnv *env, jobject self, jint box, jobject jrect)
+{
+	fz_context *ctx = get_context(env);
+	pdf_page *page = from_PDFPage(env, self);
+	fz_rect rect = from_Rect(env, jrect);
+
+	if (!ctx || !page)
+		return;
+
+	fz_try(ctx)
+		pdf_set_page_box(ctx, page, box, rect);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }
