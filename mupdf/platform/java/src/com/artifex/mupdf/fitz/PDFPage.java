@@ -38,6 +38,7 @@ public class PDFPage extends Page
 	public static final int REDACT_IMAGE_NONE = 0;
 	public static final int REDACT_IMAGE_REMOVE = 1;
 	public static final int REDACT_IMAGE_PIXELS = 2;
+	public static final int REDACT_IMAGE_REMOVE_UNLESS_INVISIBLE = 3;
 
 	public static final int REDACT_LINEART_NONE = 0;
 	public static final int REDACT_LINEART_IF_TOUCHED = 1;

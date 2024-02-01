@@ -646,6 +646,7 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_NONE == PDF_REDACT_IMAGE_NONE;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_REMOVE == PDF_REDACT_IMAGE_REMOVE;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_PIXELS == PDF_REDACT_IMAGE_PIXELS;
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_REMOVE_UNLESS_INVISIBLE == PDF_REDACT_IMAGE_REMOVE_UNLESS_INVISIBLE;
 
 	return valid ? 1 : 0;
 }

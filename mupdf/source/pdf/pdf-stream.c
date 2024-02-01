@@ -666,7 +666,7 @@ pdf_load_stream_number(fz_context *ctx, pdf_document *doc, int num)
 fz_compressed_buffer *
 pdf_load_compressed_stream(fz_context *ctx, pdf_document *doc, int num, size_t worst_case)
 {
-	fz_compressed_buffer *bc = fz_malloc_struct(ctx, fz_compressed_buffer);
+	fz_compressed_buffer *bc = fz_new_compressed_buffer(ctx);
 
 	fz_try(ctx)
 	{

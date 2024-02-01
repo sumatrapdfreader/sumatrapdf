@@ -117,6 +117,9 @@
     <ClInclude Include="..\..\source\fitz\leptonica-wrap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\thirdparty\leptonica\src\hashmap.h">
+      <Filter>Header Files\leptonica</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\thirdparty\leptonica\src\adaptmap.c">
@@ -577,6 +580,12 @@
     </ClCompile>
     <ClCompile Include="..\..\source\fitz\leptonica-wrap.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binarize.c">
+      <Filter>Source Files\leptonica</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\leptonica\src\hashmap.c">
+      <Filter>Source Files\leptonica</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

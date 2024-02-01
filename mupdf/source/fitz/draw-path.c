@@ -1144,6 +1144,8 @@ fz_dash_lineto(fz_context *ctx, struct sctx *s, float bx, float by, int from_bez
 		}
 		ax = s->rect.x1;	/* d < 0, dx < 0 */
 a_moved_horizontally:	/* d and dx have the same sign */
+		assert((d > 0 && dx > 0) || (d < 0 && dx < 0));
+		assert(dx != 0);
 		ay += dy * d/dx;
 		used = total * d/dx;
 		total -= used;
@@ -1176,6 +1178,8 @@ a_moved_horizontally:	/* d and dx have the same sign */
 		}
 		ay = s->rect.y1;	/* d < 0, dy < 0 */
 a_moved_vertically:	/* d and dy have the same sign */
+		assert((d > 0 && dy > 0) || (d < 0 && dy < 0));
+		assert(dy != 0);
 		ax += dx * d/dy;
 		d = total * d/dy;
 		total -= d;
@@ -1224,7 +1228,11 @@ a_moved_vertically:	/* d and dy have the same sign */
 	}
 
 	/* Now if bx is off screen, bring it back */
-	if ((d = bx - s->rect.x0) < 0)
+	if (dx == 0)
+	{
+		/* Earlier stages can have moved a to be b, while leaving it completely off screen. */
+	}
+	else if ((d = bx - s->rect.x0) < 0)
 	{
 		old_bx = bx;
 		old_by = by;
@@ -1237,6 +1245,8 @@ a_moved_vertically:	/* d and dy have the same sign */
 		old_by = by;
 		bx = s->rect.x1;	/* d > 0, dx > 0 */
 b_moved_horizontally:	/* d and dx have the same sign */
+		assert((d > 0 && dx > 0) || (d < 0 && dx < 0));
+		assert(dx != 0);
 		by -= dy * d/dx;
 		tail = total * d/dx;
 		total -= tail;
@@ -1244,7 +1254,11 @@ b_moved_horizontally:	/* d and dx have the same sign */
 		dy = by - ay;
 	}
 	/* Then vertically... */
-	if ((d = by - s->rect.y0) < 0)
+	if (dy == 0)
+	{
+		/* Earlier stages can have moved a to be b, while leaving it completely off screen. */
+	}
+	else if ((d = by - s->rect.y0) < 0)
 	{
 		old_bx = bx;
 		old_by = by;
@@ -1258,6 +1272,8 @@ b_moved_horizontally:	/* d and dx have the same sign */
 		old_by = by;
 		by = s->rect.y1;	/* d > 0, dy > 0 */
 b_moved_vertically:	/* d and dy have the same sign */
+		assert((d > 0 && dy > 0) || (d < 0 && dy < 0));
+		assert(dy != 0);
 		bx -= dx * d/dy;
 		t = total * d/dy;
 		tail += t;

@@ -292,6 +292,7 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\coutln.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\detlinefit.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\dppoint.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\image.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\imagedata.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\linlsq.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\matrix.cpp" />
@@ -321,11 +322,9 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst2.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\errcode.cpp" />
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\mainblk.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\params.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\scanutils.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\serialis.cpp" />
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\strngs.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\tessdatamanager.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\tprintf.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\unichar.cpp" />

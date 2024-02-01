@@ -43,6 +43,7 @@
     <ClInclude Include="..\..\thirdparty\leptonica\src\dewarp.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\environ.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\gplot.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\hashmap.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\heap.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\imageio.h" />
     <ClInclude Include="..\..\thirdparty\leptonica\src\jbclass.h" />
@@ -70,6 +71,7 @@
     <ClCompile Include="..\..\thirdparty\leptonica\src\bbuffer.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\bilateral.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\bilinear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binarize.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\binexpand.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\binreduce.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\blend.c" />
@@ -126,6 +128,7 @@
     <ClCompile Include="..\..\thirdparty\leptonica\src\graphics.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\graymorph.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\grayquant.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\hashmap.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\heap.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\jbclass.c" />
     <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheader.c" />

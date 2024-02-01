@@ -649,7 +649,7 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 }
 
 static fz_image *
-pdf_redact_image_filter_remove(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
+pdf_redact_image_filter_remove(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image, fz_rect clip)
 {
 	fz_pixmap *redacted = NULL;
 	struct redact_filter_state *red = opaque;
@@ -696,7 +696,57 @@ pdf_redact_image_filter_remove(fz_context *ctx, void *opaque, fz_matrix ctm, con
 }
 
 static fz_image *
-pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
+pdf_redact_image_filter_remove_invisible(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image, fz_rect clip)
+{
+	fz_pixmap *redacted = NULL;
+	struct redact_filter_state *red = opaque;
+	pdf_page *page = red->page;
+	pdf_annot *annot;
+	pdf_obj *qp;
+	fz_rect area;
+	fz_rect r;
+	int i, n;
+
+	fz_var(redacted);
+
+	area = fz_transform_rect(fz_unit_rect, ctm);
+
+	/* Restrict the are of the image to that which can actually be seen. */
+	area = fz_intersect_rect(area, clip);
+
+	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
+	{
+		if (red->target != NULL && red->target != annot)
+			continue;
+		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
+		{
+			qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
+			n = pdf_array_len(ctx, qp);
+			if (n > 0)
+			{
+				for (i = 0; i < n; i += 8)
+				{
+					r = fz_rect_from_quad(pdf_to_quad(ctx, qp, i));
+					r = fz_intersect_rect(r, area);
+					if (!fz_is_empty_rect(r))
+						return NULL;
+				}
+			}
+			else
+			{
+				r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+				r = fz_intersect_rect(r, area);
+				if (!fz_is_empty_rect(r))
+					return NULL;
+			}
+		}
+	}
+
+	return fz_keep_image(ctx, image);
+}
+
+static fz_image *
+pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image, fz_rect clip)
 {
 	fz_pixmap *redacted = NULL;
 	fz_pixmap *mask = NULL;
@@ -954,6 +1004,8 @@ void init_redact_filter(fz_context *ctx, pdf_redact_options *redact_opts, struct
 		red->sanitize_opts.image_filter = pdf_redact_image_filter_pixels;
 	if (image_method == PDF_REDACT_IMAGE_REMOVE)
 		red->sanitize_opts.image_filter = pdf_redact_image_filter_remove;
+	if (image_method == PDF_REDACT_IMAGE_REMOVE_UNLESS_INVISIBLE)
+		red->sanitize_opts.image_filter = pdf_redact_image_filter_remove_invisible;
 	red->sanitize_opts.culler = culler;
 
 	red->filter_list[0].filter = pdf_new_sanitize_filter;

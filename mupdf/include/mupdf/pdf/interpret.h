@@ -318,7 +318,7 @@ typedef enum
 typedef struct
 {
 	void *opaque;
-	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
+	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image, fz_rect scissor);
 	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
 	void (*after_text_object)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
 	int (*culler)(fz_context *ctx, void *opaque, fz_rect bbox, fz_cull_type type);
