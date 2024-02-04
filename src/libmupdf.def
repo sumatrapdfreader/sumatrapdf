@@ -446,7 +446,6 @@ EXPORTS
 	gettimeofday
 	fz_fopen_utf8
 	fz_utf8_from_wchar
-	fz_wchar_from_utf8
 	fz_fopen_utf8
 	fz_free_argv
 	fz_new_text
