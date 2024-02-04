@@ -165,9 +165,6 @@ static __inline int signbit(double x)
 
 #ifdef _WIN32
 
-char *fz_utf8_from_wchar(const wchar_t *s);
-wchar_t *fz_wchar_from_utf8(const char *s);
-
 /* really a FILE* but we don't want to include stdio.h here */
 void *fz_fopen_utf8(const char *name, const char *mode);
 int fz_remove_utf8(const char *name);
@@ -184,6 +181,8 @@ void fz_free_argv(int argc, char **argv);
 
 int64_t fz_stat_ctime(const char *path);
 int64_t fz_stat_mtime(const char *path);
+int fz_mkdir(char *path);
+
 
 /* inline is standard in C++. For some compilers we can enable it within
  * C too. Some compilers think they know better than we do about when

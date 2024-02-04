@@ -348,8 +348,8 @@ class Package:
                 assumed to be relative to `root`.
 
                 `to_` identifies what the file should be called within a wheel
-                or when installing. If `to_` ends with `/`, the leaf of `from_`
-                is appended to it.
+                or when installing. If `to_` is '' or ends with `/`, the leaf
+                of `from_` is appended to it.
 
                 Initial `$dist-info/` in `_to` is replaced by
                 `{name}-{version}.dist-info/`; this is useful for license files
@@ -1541,7 +1541,7 @@ def build_extension(
         if command_was_run and darwin():
             # We need to patch up references to shared libraries in `libs`.
             sublibraries = list()
-            for lib in libs:
+            for lib in () if libs is None else libs:
                 for libpath in libpaths:
                     found = list()
                     for suffix in '.so', '.dylib':
@@ -1745,6 +1745,7 @@ def run( command, capture=False, check=1):
     else:
         return (cp.returncode, cp.stdout) if capture else cp.returncode
 
+
 def darwin():
     return sys.platform.startswith( 'darwin')
 
@@ -1759,6 +1760,9 @@ def pyodide():
 
 def linux():
     return platform.system() == 'Linux'
+
+def openbsd():
+    return platform.system() == 'OpenBSD'
 
 class PythonFlags:
     '''
@@ -1874,6 +1878,8 @@ def macos_patch( library, *sublibraries):
     '''
     log2( f'macos_patch(): library={library}  sublibraries={sublibraries}')
     if not darwin():
+        return
+    if not sublibraries:
         return
     subprocess.run( f'otool -L {library}', shell=1, check=1)
     command = 'install_name_tool'
@@ -2170,6 +2176,36 @@ def _so_suffix():
     # things like `numpy/core/_simd.cpython-311-darwin.so`.
     #
     return sysconfig.get_config_var('EXT_SUFFIX')
+
+
+def get_soname(path):
+    '''
+    If we are on Linux and `path` is softlink and points to a shared library
+    for which `objdump -p` contains 'SONAME', return the pointee. Otherwise
+    return `path`. Useful if Linux shared libraries have been created with
+    `-Wl,-soname,...`, where we need to embed the versioned library.
+    '''
+    log1(f'{path=} {os.path.abspath(path)=}.')
+    if linux() and os.path.islink(path):
+        path2 = os.path.realpath(path)
+        log1(f'Is link: {path} -> {path2}.')
+        if subprocess.run(f'objdump -p {path2}|grep SONAME', shell=1, check=0).returncode == 0:
+            log1(f'SONAME, returning {path2=}.')
+            return path2
+        log1(f'Not SONAME')
+    elif openbsd():
+        # Return newest .so with version suffix.
+        sos = glob.glob(f'{path}.*')
+        log1(f'{sos=}')
+        sos2 = list()
+        for so in sos:
+            suffix = so[len(path):]
+            if not suffix or re.match('^[.][0-9.]*[0-9]$', suffix):
+                sos2.append(so)
+        sos2.sort(key=lambda p: os.path.getmtime(p))
+        log1(f'{sos2=}')
+        return sos2[-1]
+    return path
 
 
 def install_dir(root=None):

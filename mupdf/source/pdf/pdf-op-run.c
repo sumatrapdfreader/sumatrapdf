@@ -219,6 +219,8 @@ begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)
 	int saved_blendmode;
 	fz_function *tr = NULL;
 
+	fz_var(tr);
+
 	save->softmask = softmask;
 	if (softmask == NULL)
 		return gstate;
@@ -2385,7 +2387,10 @@ static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smas
 		gstate->softmask = pdf_keep_obj(ctx, smask);
 		gstate->softmask_resources = pdf_keep_obj(ctx, pr->rstack->resources);
 		if (tr)
+		{
+			pdf_drop_obj(ctx, gstate->softmask_tr);
 			gstate->softmask_tr = pdf_keep_obj(ctx, tr);
+		}
 		for (i = 0; i < cs_n; ++i)
 			gstate->softmask_bc[i] = bc[i];
 		gstate->luminosity = luminosity;

@@ -309,30 +309,30 @@ def build():
     if windows():
         infix = '' if sys.maxsize == 2**31 - 1 else '64'
         names = [
-                f'mupdfcpp{infix}.dll', # C and C++.
-                '_mupdf.pyd',           # Python internals.
-                'mupdf.py',             # Python.
+                f'{build_dir()}/mupdfcpp{infix}.dll',   # C and C++.
+                f'{build_dir()}/_mupdf.pyd',            # Python internals.
+                f'{build_dir()}/mupdf.py',              # Python.
                 ]
     elif macos():
         log( f'Contents of {build_dir()} are:')
         for leaf in os.listdir(build_dir()):
             log( f'    {leaf}')
         names = [
-                'libmupdf.dylib',   # C.
-                'libmupdfcpp.so',   # C++.
-                '_mupdf.so',        # Python internals.
-                'mupdf.py',         # Python.
+                f'{build_dir()}/libmupdf.dylib',    # C.
+                f'{build_dir()}/libmupdfcpp.so',    # C++.
+                f'{build_dir()}/_mupdf.so',         # Python internals.
+                f'{build_dir()}/mupdf.py',          # Python.
                 ]
     else:
         names = [
-                'libmupdf.so',      # C.
-                'libmupdfcpp.so',   # C++.
-                '_mupdf.so',        # Python internals.
-                'mupdf.py',         # Python.
+                pipcl.get_soname(f'{build_dir()}/libmupdf.so'),     # C.
+                pipcl.get_soname(f'{build_dir()}/libmupdfcpp.so'),  # C++.
+                f'{build_dir()}/_mupdf.so',                         # Python internals.
+                f'{build_dir()}/mupdf.py',                          # Python.
                 ]
     paths = []
     for name in names:
-        paths.append((f'{build_dir()}/{name}', name))
+        paths.append((name, ''))
 
     log(f'build(): returning: {paths}')
     return paths

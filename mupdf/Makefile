@@ -454,6 +454,7 @@ incdir ?= $(prefix)/include
 mandir ?= $(prefix)/share/man
 docdir ?= $(prefix)/share/doc/mupdf
 pydir ?= $(shell python3 -c "import sysconfig; print(sysconfig.get_path('platlib'))")
+SO_INSTALL_MODE ?= 644
 
 third: $(THIRD_LIB)
 extra-libs: $(THIRD_GLUT_LIB)
@@ -612,13 +613,17 @@ $(error OUT=$(OUT) does not contain shared)
 endif
 
 # C++, Python and C# shared libraries.
+#
+# To disable automatic use of a venv, use `make VENV_FLAG= ...` or `VENV_FLAG=
+# make ...`.
+#
+VENV_FLAG ?= --venv
 c++-%: shared-%
-	./scripts/mupdfwrap.py --venv -d $(OUT) -b 01
+	./scripts/mupdfwrap.py $(VENV_FLAG) -d $(OUT) -b 01
 python-%: c++-%
-	./scripts/mupdfwrap.py --venv -d $(OUT) -b 23
+	./scripts/mupdfwrap.py $(VENV_FLAG) -d $(OUT) -b 23
 csharp-%: c++-%
-	./scripts/mupdfwrap.py --venv -d $(OUT) -b --csharp 23
-
+	./scripts/mupdfwrap.py $(VENV_FLAG) -d $(OUT) -b --csharp 23
 
 # Installs of C, C++, Python and C# shared libraries
 #
@@ -632,21 +637,21 @@ endif
 
 install-shared-c: install-shared-check shared install-headers
 	install -d $(DESTDIR)$(libdir)
-	install -m 644 $(OUT)/libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
+	install -m $(SO_INSTALL_MODE) $(OUT)/libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
 ifneq ($(OS),OpenBSD)
 	ln -sf libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)
 endif
 
 install-shared-c++: install-shared-c c++
 	install -m 644 platform/c++/include/mupdf/*.h $(DESTDIR)$(incdir)/mupdf
-	install -m 644 $(OUT)/libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
+	install -m $(SO_INSTALL_MODE) $(OUT)/libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
 ifneq ($(OS),OpenBSD)
 	ln -sf libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdfcpp.$(SO)
 endif
 
 install-shared-python: install-shared-c++ python
 	install -d $(DESTDIR)$(pydir)/mupdf
-	install -m 644 $(OUT)/_mupdf.$(SO) $(DESTDIR)$(pydir)/mupdf
+	install -m $(SO_INSTALL_MODE) $(OUT)/_mupdf.$(SO) $(DESTDIR)$(pydir)/mupdf
 	install -m 644 $(OUT)/mupdf.py $(DESTDIR)$(pydir)/mupdf/__init__.py
 
 else

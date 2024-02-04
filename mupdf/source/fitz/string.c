@@ -938,3 +938,28 @@ void *fz_memmem(const void *h0, size_t k, const void *n0, size_t l)
 
 	return twoway_memmem(h, h+k, n, l);
 }
+
+char *
+fz_utf8_from_wchar(fz_context *ctx, const wchar_t *s)
+{
+	const wchar_t *src = s;
+	char *d;
+	char *dst;
+	int len = 1;
+
+	while (*src)
+	{
+		len += fz_runelen(*src++);
+	}
+
+	d = Memento_label(fz_malloc(ctx, len), "utf8_from_wchar");
+	dst = d;
+	src = s;
+	while (*src)
+	{
+		dst += fz_runetochar(dst, *src++);
+	}
+	*dst = 0;
+
+	return d;
+}

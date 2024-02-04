@@ -1211,6 +1211,7 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
         make_args += f' {m_vars}'
     suffix = None
     build_prefix = ''
+    build_suffix = ''
     in_prefix = True
     for i, flag in enumerate( flags):
         if flag in ('x32', 'x64') or re.match('py[0-9]', flag):
@@ -1219,6 +1220,7 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             # when creating wheels; we need to ignore
             # them.
             jlib.log('Ignoring {flag=}')
+            build_suffix += f'-{flag}'
         else:
             if 0: pass  # lgtm [py/unreachable-statement]
             elif flag == 'debug':
@@ -1259,6 +1261,8 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
     assert suffix, f'Leaf must contain "shared-" or "fpic-": build_dirs.dir_so={build_dirs.dir_so}'
     if build_prefix:
         make_args += f' build_prefix={build_prefix}'
+    if build_suffix:
+        make_args += f' build_suffix={build_suffix}'
     if m_target:
         make_args += f' {m_target}'
     command = f'cd {build_dirs.dir_mupdf} &&'
@@ -1456,7 +1460,11 @@ def link_l_flags(sos):
     if state.state_.pyodide:
         # Don't add '-Wl,-rpath*' etc if building for Pyodide.
         ld_origin = False
-    return jlib.link_l_flags( sos, ld_origin)
+    ret = jlib.link_l_flags( sos, ld_origin)
+    r = os.environ.get('LDFLAGS')
+    if r:
+        ret += f' {r}'
+    return ret
 
 
 def build( build_dirs, swig_command, args, vs_upgrade, make_command):

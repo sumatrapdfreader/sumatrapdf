@@ -249,6 +249,12 @@ const char *fz_runeptr(const char *str, int idx);
 */
 int fz_utflen(const char *s);
 
+/*
+	Convert a wchar string into a new heap allocated utf8 one.
+*/
+char *fz_utf8_from_wchar(fz_context *ctx, const wchar_t *s);
+
+
 /**
 	Locale-independent decimal to binary conversion. On overflow
 	return (-)INFINITY and set errno to ERANGE. On underflow return

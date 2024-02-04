@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <time.h>
 #include <windows.h>
+#include <direct.h> /* for mkdir */
 
 #ifdef _MSC_VER
 #ifndef _WINRT
@@ -62,8 +63,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 #endif /* !_WINRT */
 #endif /* _MSC_VER */
 
-char *
-fz_utf8_from_wchar(const wchar_t *s)
+static char *
+utf8_from_wchar(const wchar_t *s)
 {
 	const wchar_t *src = s;
 	char *d;
@@ -89,8 +90,8 @@ fz_utf8_from_wchar(const wchar_t *s)
 	return d;
 }
 
-wchar_t *
-fz_wchar_from_utf8(const char *s)
+static wchar_t *
+wchar_from_utf8(const char *s)
 {
 	wchar_t *d, *r;
 	int c;
@@ -115,13 +116,13 @@ fz_fopen_utf8(const char *name, const char *mode)
 	wchar_t *wname, *wmode;
 	FILE *file;
 
-	wname = fz_wchar_from_utf8(name);
+	wname = wchar_from_utf8(name);
 	if (wname == NULL)
 	{
 		return NULL;
 	}
 
-	wmode = fz_wchar_from_utf8(mode);
+	wmode = wchar_from_utf8(mode);
 	if (wmode == NULL)
 	{
 		free(wname);
@@ -141,7 +142,7 @@ fz_remove_utf8(const char *name)
 	wchar_t *wname;
 	int n;
 
-	wname = fz_wchar_from_utf8(name);
+	wname = wchar_from_utf8(name);
 	if (wname == NULL)
 	{
 		errno = ENOMEM;
@@ -169,7 +170,7 @@ fz_argv_from_wargv(int argc, wchar_t **wargv)
 
 	for (i = 0; i < argc; i++)
 	{
-		argv[i] = Memento_label(fz_utf8_from_wchar(wargv[i]), "fz_arg");
+		argv[i] = Memento_label(utf8_from_wchar(wargv[i]), "fz_arg");
 		if (argv[i] == NULL)
 		{
 			fprintf(stderr, "Out of memory while processing command line args!\n");
@@ -195,7 +196,7 @@ fz_stat_ctime(const char *path)
 	struct _stat info;
 	wchar_t *wpath;
 
-	wpath = fz_wchar_from_utf8(path);
+	wpath = wchar_from_utf8(path);
 	if (wpath == NULL)
 		return 0;
 
@@ -214,7 +215,7 @@ fz_stat_mtime(const char *path)
 	struct _stat info;
 	wchar_t *wpath;
 
-	wpath = fz_wchar_from_utf8(path);
+	wpath = wchar_from_utf8(path);
 	if (wpath == NULL)
 		return 0;
 
@@ -225,6 +226,22 @@ fz_stat_mtime(const char *path)
 
 	free(wpath);
 	return info.st_mtime;
+}
+
+int
+fz_mkdir(char *path)
+{
+	int ret;
+	wchar_t *wpath = wchar_from_utf8(path);
+
+	if (wpath == NULL)
+		return -1;
+
+	ret = _wmkdir(wpath);
+
+	free(wpath);
+
+	return ret;
 }
 
 #else
@@ -245,6 +262,12 @@ fz_stat_mtime(const char *path)
 	if (stat(path, &info) < 0)
 		return 0;
 	return info.st_mtime;
+}
+
+int
+fz_mkdir(char *path)
+{
+	return mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
 #endif /* _WIN32 */

@@ -586,6 +586,7 @@ TESSERACT_SRC += thirdparty/tesseract/src/api/pdfrenderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/renderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/wordstrboxrenderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/arch/dotproduct.cpp
+TESSERACT_SRC += thirdparty/tesseract/src/arch/dotproductneon.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrix.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/arch/simddetect.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccmain/applybox.cpp
