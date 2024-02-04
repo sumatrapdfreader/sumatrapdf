@@ -1369,9 +1369,12 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->super.fill_path = fz_stext_fill_path;
 	dev->super.stroke_path = fz_stext_stroke_path;
 
-	dev->super.fill_shade = fz_stext_fill_shade;
-	dev->super.fill_image = fz_stext_fill_image;
-	dev->super.fill_image_mask = fz_stext_fill_image_mask;
+	/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/4018 */
+	if ((opts->flags & FZ_STEXT_PRESERVE_IMAGES) != 0) {
+		dev->super.fill_shade = fz_stext_fill_shade;
+		dev->super.fill_image = fz_stext_fill_image;
+		dev->super.fill_image_mask = fz_stext_fill_image_mask;
+	}
 
 	if (opts)
 		dev->flags = opts->flags;
