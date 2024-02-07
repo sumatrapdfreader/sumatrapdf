@@ -10,6 +10,8 @@
 
 bool ToBool(BOOL b);
 
+UINT_PTR NextSubclassId();
+
 RECT ClientRECT(HWND);
 Rect ClientRect(HWND);
 Rect WindowRect(HWND);

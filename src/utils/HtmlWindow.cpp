@@ -1417,7 +1417,7 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             break;
 
         case WM_DROPFILES:
-            return CallWindowProc(win->wndProcBrowserPrev, hwnd, msg, wp, lp);
+            return ::DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_VSCROLL:
             win->SendMsg(msg, wp, lp);
@@ -1426,17 +1426,25 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
+static LRESULT CALLBACK WndProcParent2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+                                                   DWORD_PTR data) {
+    return WndProcParent(hwnd, msg, wp, lp);
+}
+
 void HtmlWindow::SubclassHwnd() {
-    wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
-    userDataBrowserPrev = SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
+    CrashIf(subclassId); // don't subclass multiple times
+    subclassId = NextSubclassId();
+    BOOL ok = SetWindowSubclass(hwndParent, WndProcParent2, subclassId, (DWORD_PTR)this);
+    CrashIf(!ok);
+
 }
 
 void HtmlWindow::UnsubclassHwnd() {
-    if (!wndProcBrowserPrev) {
+    if (!subclassId) {
         return;
     }
-    SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)wndProcBrowserPrev);
-    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)userDataBrowserPrev);
+    RemoveWindowSubclass(hwndParent, WndProcParent2, subclassId);
+    subclassId = 0;
 }
 
 HtmlWindow::HtmlWindow(HWND parent, HtmlWindowCallback* cb) {

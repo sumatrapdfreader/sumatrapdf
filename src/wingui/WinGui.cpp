@@ -23,13 +23,6 @@ Kind kindWnd = "wnd";
 
 constexpr bool gLogTabs = false;
 
-static LONG gSubclassId = 0;
-
-UINT_PTR NextSubclassId() {
-    LONG res = InterlockedIncrement(&gSubclassId);
-    return (UINT_PTR)res;
-}
-
 #define WIN_MESSAGES(V)          \
     V(WM_CREATE)                 \
     V(WM_DESTROY)                \

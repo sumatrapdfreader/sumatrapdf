@@ -88,10 +88,9 @@ class HtmlWindow {
     bool canGoBack = false;
     bool canGoForward = false;
 
-    // TODO: not for public use
-    WNDPROC wndProcBrowserPrev = nullptr;
-    LONG_PTR userDataBrowserPrev = 0;
     HtmlWindowCallback* htmlWinCb = nullptr;
+
+    UINT_PTR subclassId = 0;
 
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
     void OnDocumentComplete(const WCHAR* url);

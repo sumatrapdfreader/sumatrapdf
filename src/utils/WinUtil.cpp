@@ -13,6 +13,13 @@
 
 #include "utils/Log.h"
 
+static LONG gSubclassId = 0;
+
+UINT_PTR NextSubclassId() {
+    LONG res = InterlockedIncrement(&gSubclassId);
+    return (UINT_PTR)res;
+}
+
 bool ToBool(BOOL b) {
     return b ? true : false;
 }
