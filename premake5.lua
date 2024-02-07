@@ -61,28 +61,6 @@ include("premake5.files.lua")
 -- TODO: could fold 9 libraries used by mupdf into a single
 -- project mupdf-libs, to make solution smaller
 
--- to make debug builds faster, we compile stable libraries (freetype, libjpeg etc.)
--- in release mode even in debug builds
-function regconf()
-  defines { "_HAS_ITERATOR_DEBUGGING=0" }
-  filter "configurations:Debug"
-    defines { "DEBUG" }
-
-  filter "configurations:Release*"
-    defines { "NDEBUG" }
-    optimize "Size"
-
-  -- no ltcg in asan builds
-  -- TODO: or arm64 ?
-  filter { "configurations:Release*", "platforms:x32 or x64" }
-    flags {
-      "LinkTimeOptimization",
-    }
-
-  filter {}
-  runtime "Release"
-end
-
 -- setup WebView2 paths
 function webviewconf()
   includedirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include" }
@@ -96,11 +74,36 @@ function webviewconf()
   links { "WebView2LoaderStatic.lib"}
 end
 
+-- to make debug builds faster, we compile stable libraries (freetype, libjpeg etc.)
+-- in release mode even in debug builds
+function regconf()
+  defines { "_HAS_ITERATOR_DEBUGGING=0" }
+  editandcontinue "Off"
+
+  filter "configurations:Debug"
+    defines { "DEBUG" }
+
+  filter "configurations:Release*"
+    defines { "NDEBUG" }
+    optimize "Size"
+
+  -- asan builds:
+  -- * no ltcg
+  -- TODO: or arm64 ?
+  filter { "configurations:Release*", "platforms:x32 or x64" }
+    flags {
+      "LinkTimeOptimization",
+    }
+  filter {}
+  runtime "Release"
+end
+
 -- config for stable libraries where debug build is done with optimization
 function optconf()
   optimize "Size"
   undefines { "DEBUG" }
   defines { "NDEBUG" }
+  editandcontinue "Off"
 
   -- we mix Deubg / Release compilation between projects
   -- but all linked modules have to use the same type
@@ -110,21 +113,21 @@ function optconf()
   defines { "_HAS_ITERATOR_DEBUGGING=0" }
   runtime "Release"
 
-  -- no ltcg in asan builds
+  -- asan builds:
+  -- * no ltcg
   -- TODO: or arm64 ?
   filter { "configurations:Release*", "platforms:x32 or x64" }
     flags {
       "LinkTimeOptimization",
     }
-
   filter {}
 end
 
 function zlib_ng_defines()
-  defines { 
+  defines {
     "_CRT_SECURE_NO_DEPRECATE",
     "_CRT_NONSTDC_NO_DEPRECATE",
-    "X86_FEATURES", 
+    "X86_FEATURES",
     "X86_PCLMULQDQ_CRC",
     "X86_SSE2",
     "X86_SSE42_CRC_INTRIN",
