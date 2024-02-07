@@ -1388,7 +1388,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 
 	fz_try(ctx)
 	{
-		bc = fz_malloc_struct(ctx, fz_compressed_buffer);
+		bc = fz_new_compressed_buffer(ctx);
 		bc->buffer = fz_keep_buffer(ctx, buffer);
 		bc->params.type = type;
 		if (type == FZ_IMAGE_JPEG)

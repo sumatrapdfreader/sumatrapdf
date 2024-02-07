@@ -238,11 +238,56 @@ static int count_tar_entries(fz_context *ctx, fz_archive *arch)
 	return tar->count;
 }
 
+static int isoct(unsigned char *d, int n)
+{
+	while (--n > 0)
+	{
+		unsigned char c = *d++;
+		if (c < '0' || c > '7')
+			return 0;
+	}
+	return (*d == 0);
+}
+
+static int
+check_v7(fz_context *ctx, fz_stream *file)
+{
+	unsigned char data[512];
+	size_t n;
+	int i;
+
+	fz_seek(ctx, file, 0, SEEK_SET);
+	n = fz_read(ctx, file, data, nelem(data));
+	if (n != nelem(data))
+		return 0;
+
+	/* Skip over name. */
+	for (i = 0; i < 100 && data[i] != 0; i++);
+
+	/* We want at least 1 byte of name, and a zero terminator. */
+	if (i == 0 || i == 100)
+		return 0;
+
+	/* Skip over a run of zero terminators. */
+	for (; i < 100 && data[i] == 0; i++);
+
+	if (i != 100)
+		return 0;
+
+	return (isoct(data+100, 8) &&
+		isoct(data+108, 8) &&
+		isoct(data+116, 8) &&
+		isoct(data+124, 12) &&
+		isoct(data+136, 12) &&
+		isoct(data+148, 8));
+}
+
 int
 fz_is_tar_archive(fz_context *ctx, fz_stream *file)
 {
 	const unsigned char gnusignature[6] = { 'u', 's', 't', 'a', 'r', ' ' };
 	const unsigned char paxsignature[6] = { 'u', 's', 't', 'a', 'r', '\0' };
+	const unsigned char v7signature[6] = { '\0', '\0', '\0', '\0', '\0', '\0' };
 	unsigned char data[6];
 	size_t n;
 
@@ -254,6 +299,8 @@ fz_is_tar_archive(fz_context *ctx, fz_stream *file)
 		return 1;
 	if (!memcmp(data, paxsignature, nelem(paxsignature)))
 		return 1;
+	if (!memcmp(data, v7signature, nelem(v7signature)))
+		return check_v7(ctx, file);
 
 	return 0;
 }

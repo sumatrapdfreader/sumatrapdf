@@ -35,6 +35,7 @@
 #define ZIP_DATA_DESC_SIG 0x08074b50
 #define ZIP_CENTRAL_DIRECTORY_SIG 0x02014b50
 #define ZIP_END_OF_CENTRAL_DIRECTORY_SIG 0x06054b50
+#define ZIP_UP_SIG 0x7075
 
 #define ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIG 0x07064b50
 #define ZIP64_END_OF_CENTRAL_DIRECTORY_SIG 0x06064b50
@@ -383,6 +384,23 @@ static void read_zip_dir_imp(fz_context *ctx, fz_zip_archive *zip, int64_t start
 					{
 						offset = fz_read_uint64_le(ctx, file);
 						sizeleft -= 8;
+					}
+					fz_seek(ctx, file, sizeleft - size, 1);
+				}
+				if (type == ZIP_UP_SIG && size > 5)
+				{
+					int sizeleft = size - 1;
+					if (fz_read_byte(ctx, file) == 1)
+					{
+						/* Version 1 */
+						(void) fz_read_uint32(ctx, file); /* Skip the CRC */
+						sizeleft -= 4;
+						fz_free(ctx, name);
+						name = NULL;
+						name = Memento_label(fz_malloc(ctx, sizeleft + 1), "zip_name");
+						fz_read(ctx, file, (unsigned char *)name, sizeleft);
+						name[sizeleft] = 0;
+						sizeleft = 0;
 					}
 					fz_seek(ctx, file, sizeleft - size, 1);
 				}
