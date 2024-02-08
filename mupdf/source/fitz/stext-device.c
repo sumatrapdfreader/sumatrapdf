@@ -1076,7 +1076,7 @@ fz_stext_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const
 	mt->prev = tdev->metatext;
 	tdev->metatext = mt;
 	mt->type = meta;
-	mt->text = fz_strdup(ctx, text);
+	mt->text = text ? fz_strdup(ctx, text) : NULL;
 	mt->bounds = fz_empty_rect;
 }
 
@@ -1170,20 +1170,21 @@ fz_stext_fill_image(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ct
 	fz_stext_device *tdev = (fz_stext_device*)dev;
 	fz_rect *bounds = actualtext_bounds(tdev);
 
-	/* Unless we are being told to preserve images OR we are in an actualtext, nothing to do here. */
-	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0 && bounds == NULL)
-		return;
-
-	/* If the alpha is less than 50% then it's probably a watermark or effect or something. Skip it. */
-	if (alpha >= 0.5f)
-		add_image_block_to_page(ctx, tdev->page, ctm, img);
-
 	/* If there is an actualtext in force, update its bounds. */
 	if (bounds)
 	{
 		static const fz_rect unit = { 0, 0, 1, 1 };
 		*bounds = fz_union_rect(*bounds, fz_transform_rect(unit, ctm));
 	}
+
+	/* Unless we are being told to preserve images, nothing to do here. */
+	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0)
+		return;
+
+	/* If the alpha is less than 50% then it's probably a watermark or effect or something. Skip it. */
+	if (alpha >= 0.5f)
+		add_image_block_to_page(ctx, tdev->page, ctm, img);
+
 }
 
 static void
@@ -1239,8 +1240,16 @@ fz_stext_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix 
 	fz_rect scissor;
 	fz_image *image;
 
-	/* Unless we are preserving image, OR we are in an actualtext, nothing to do here. */
-	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0 && bounds == NULL)
+	/* If we aren't keeping images, but we are in a bound, update the bounds
+	 * without generating the entire image. */
+	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0 && bounds)
+	{
+		*bounds = fz_union_rect(*bounds, fz_bound_shade(ctx, shade, ctm));
+		return;
+	}
+
+	/* Unless we are preserving image, nothing to do here. */
+	if ((tdev->opts.flags & FZ_STEXT_PRESERVE_IMAGES) == 0)
 		return;
 
 	local_ctm = ctm;
@@ -1369,12 +1378,9 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->super.fill_path = fz_stext_fill_path;
 	dev->super.stroke_path = fz_stext_stroke_path;
 
-	/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/4018 */
-	if ((opts->flags & FZ_STEXT_PRESERVE_IMAGES) != 0) {
-		dev->super.fill_shade = fz_stext_fill_shade;
-		dev->super.fill_image = fz_stext_fill_image;
-		dev->super.fill_image_mask = fz_stext_fill_image_mask;
-	}
+	dev->super.fill_shade = fz_stext_fill_shade;
+	dev->super.fill_image = fz_stext_fill_image;
+	dev->super.fill_image_mask = fz_stext_fill_image_mask;
 
 	if (opts)
 		dev->flags = opts->flags;

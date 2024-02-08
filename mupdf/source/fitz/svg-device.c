@@ -1286,7 +1286,7 @@ svg_dev_begin_layer(fz_context *ctx, fz_device *dev, const char *name)
 	fz_buffer *out = sdev->out;
 
 	sdev->layers++;
-	fz_append_printf(ctx, out, "<g id=\"layer_%d\" data-name=\"%s\">\n", sdev->layers, name);
+	fz_append_printf(ctx, out, "<g id=\"layer_%d\" data-name=\"%s\">\n", sdev->layers, name ? name : "");
 }
 
 static void

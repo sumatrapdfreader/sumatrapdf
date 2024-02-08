@@ -552,7 +552,7 @@ fz_trace_begin_layer(fz_context *ctx, fz_device *dev_, const char *name)
 	fz_trace_device *dev = (fz_trace_device*)dev_;
 	fz_output *out = dev->out;
 	fz_trace_indent(ctx, out, dev->depth);
-	fz_write_printf(ctx, out, "<layer name=\"%s\">\n", name);
+	fz_write_printf(ctx, out, "<layer name=\"%s\">\n", name ? name : "");
 	dev->depth++;
 }
 

@@ -68,13 +68,13 @@ FZ_NORETURN static void fz_css_error(struct lexbuf *buf, const char *msg)
 	 * <section prior to the error> ">" <the char that tripped> "<" <section after the error>
 	 */
 	/* Is the section prior to the error too long? If so, truncate it with an elipsis. */
-	if (err_pos - s > n-PRE_POST_SIZE)
+	if (err_pos - s > n-PRE_POST_SIZE - 3)
 	{
 		*d++ = '.';
 		*d++ = '.';
 		*d++ = '.';
 		n -= 3;
-		s = err_pos - (n-PRE_POST_SIZE);
+		s = err_pos - (n-PRE_POST_SIZE - 3);
 	}
 
 	/* Copy the prefix (if there is one) */
@@ -92,7 +92,7 @@ FZ_NORETURN static void fz_css_error(struct lexbuf *buf, const char *msg)
 	/* Marker, char, end marker */
 	*d++ = '>', n--;
 	if (*err_pos)
-		*d++ = *err_pos, n--;
+		*d++ = *err_pos++, n--;
 	*d++ = '<', n--;
 
 	/* Postfix */
@@ -111,7 +111,7 @@ FZ_NORETURN static void fz_css_error(struct lexbuf *buf, const char *msg)
 		for (n = PRE_POST_SIZE-3; n > 0; n--)
 		{
 			unsigned char c = *err_pos++;
-			*d =  (c < 32 || c > 127) ? ' ' : c;
+			*d++ =  (c < 32 || c > 127) ? ' ' : c;
 		}
 
 		*d++ = '.';

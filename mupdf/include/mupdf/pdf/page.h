@@ -47,8 +47,12 @@ void pdf_load_page_tree(fz_context *ctx, pdf_document *doc);
 */
 void pdf_drop_page_tree(fz_context *ctx, pdf_document *doc);
 
-void pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc);
+/*
+	Internal function used to drop the page tree.
 
+	Library users should not call this directly.
+*/
+void pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc);
 
 /*
 	Make page self sufficient.
@@ -69,17 +73,85 @@ void pdf_flatten_inheritable_page_items(fz_context *ctx, pdf_obj *page);
 	number: page number, where 0 is the first page of the document.
 */
 pdf_page *pdf_load_page(fz_context *ctx, pdf_document *doc, int number);
+
+/*
+	Internal function to perform pdf_load_page.
+
+	Do not call this directly.
+*/
 fz_page *pdf_load_page_imp(fz_context *ctx, fz_document *doc, int chapter, int number);
+
+/*
+	Enquire as to whether a given page uses transparency or not.
+*/
 int pdf_page_has_transparency(fz_context *ctx, pdf_page *page);
 
-void pdf_page_obj_transform(fz_context *ctx, pdf_obj *pageobj, fz_rect *page_mediabox, fz_matrix *page_ctm);
-void pdf_page_transform(fz_context *ctx, pdf_page *page, fz_rect *mediabox, fz_matrix *ctm);
-void pdf_page_obj_transform_box(fz_context *ctx, pdf_obj *pageobj, fz_rect *page_mediabox, fz_matrix *page_ctm, fz_box_type box);
+/*
+	Fetch the given box for a page, together with a transform that converts
+	from fitz coords to PDF coords.
+
+	pageobj: The object that represents the page.
+
+	outbox: If non-NULL, this will be filled in with the requested box
+	in fitz coordinates.
+
+	outctm: A transform to map from fitz page space to PDF page space.
+
+	box: Which box to return.
+*/
+void pdf_page_obj_transform_box(fz_context *ctx, pdf_obj *pageobj, fz_rect *outbox, fz_matrix *out, fz_box_type box);
+
+/*
+	As for pdf_page_obj_transform_box, always requesting the
+	cropbox.
+*/
+void pdf_page_obj_transform(fz_context *ctx, pdf_obj *pageobj, fz_rect *outbox, fz_matrix *outctm);
+
+/*
+	As for pdf_page_obj_transform_box, but working from a pdf_page
+	object rather than the pdf_obj representing the page.
+*/
 void pdf_page_transform_box(fz_context *ctx, pdf_page *page, fz_rect *mediabox, fz_matrix *ctm, fz_box_type box);
+
+/*
+	As for pdf_page_transform_box, always requesting the
+	cropbox.
+*/
+void pdf_page_transform(fz_context *ctx, pdf_page *page, fz_rect *mediabox, fz_matrix *ctm);
+
+/*
+	Find the pdf object that represents the resources dictionary
+	for a page.
+
+	This is a borrowed pointer that the caller should pdf_keep_obj
+	if. This may be NULL.
+*/
 pdf_obj *pdf_page_resources(fz_context *ctx, pdf_page *page);
+
+/*
+	Find the pdf object that represents the page contents
+	for a page.
+
+	This is a borrowed pointer that the caller should pdf_keep_obj
+	if. This may be NULL.
+*/
 pdf_obj *pdf_page_contents(fz_context *ctx, pdf_page *page);
+
+/*
+	Find the pdf object that represents the transparency group
+	for a page.
+
+	This is a borrowed pointer that the caller should pdf_keep_obj
+	if. This may be NULL.
+*/
 pdf_obj *pdf_page_group(fz_context *ctx, pdf_page *page);
 
+/*
+	Modify the page boxes (using fitz space coordinates).
+
+	Note that changing the CropBox will change the fitz coordinate space mapping,
+	invalidating all bounding boxes previously acquired.
+*/
 void pdf_set_page_box(fz_context *ctx, pdf_page *page, fz_box_type box, fz_rect rect);
 
 /*

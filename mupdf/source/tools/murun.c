@@ -1827,7 +1827,10 @@ js_dev_begin_layer(fz_context *ctx, fz_device *dev, const char *name)
 		rethrow_as_fz(J);
 	if (js_hasproperty(J, -1, "beginLayer")) {
 		js_copy(J, -2);
-		js_pushstring(J, name);
+		if (name)
+			js_pushstring(J, name);
+		else
+			js_pushnull(J);
 		js_call(J, 1);
 		js_pop(J, 1);
 	}
@@ -1857,7 +1860,10 @@ js_dev_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, c
 	if (js_hasproperty(J, -1, "beginStructure")) {
 		js_copy(J, -2);
 		js_pushstring(J, fz_structure_to_string(standard));
-		js_pushstring(J, raw);
+		if (raw)
+			js_pushstring(J, raw);
+		else
+			js_pushnull(J);
 		js_pushnumber(J, uid);
 		js_call(J, 3);
 		js_pop(J, 1);
@@ -1888,7 +1894,10 @@ js_dev_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const c
 	if (js_hasproperty(J, -1, "beginMetatext")) {
 		js_copy(J, -2);
 		js_pushstring(J, string_from_metatext(meta));
-		js_pushstring(J, text);
+		if (text)
+			js_pushstring(J, text);
+		else
+			js_pushnull(J);
 		js_call(J, 2);
 		js_pop(J, 1);
 	}
@@ -3127,7 +3136,7 @@ static void ffi_Device_beginStructure(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	fz_device *dev = js_touserdata(J, 0, "fz_device");
 	fz_structure str = js_iscoercible(J, 1) ? fz_structure_from_string(js_tostring(J, 1)) : FZ_STRUCTURE_INVALID;
-	const char *raw = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
+	const char *raw = js_iscoercible(J, 2) ? js_tostring(J, 2) : "";
 	int uid = js_tointeger(J, 3);
 
 	fz_try(ctx)
@@ -4539,6 +4548,29 @@ static void ffi_Pixmap_clear(js_State *J)
 		fz_catch(ctx)
 			rethrow(J);
 	}
+}
+
+static void ffi_Pixmap_computeMD5(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = ffi_topixmap(J, 0);
+	const char *hexdigit = "0123456789abcdef";
+	unsigned char digest[16] = { 0 };
+	char str[33];
+	size_t i;
+
+	fz_try(ctx)
+		fz_md5_pixmap(ctx, pixmap, digest);
+	fz_catch(ctx)
+		rethrow(J);
+
+	for (i = 0; i < nelem(digest); i++)
+	{
+		str[2*i] = hexdigit[(digest[i] >> 4) & 0xf];
+		str[2*i+1] = hexdigit[digest[i] & 0xf];
+	}
+	str[32] = '\0';
+	js_pushstring(J, str);
 }
 
 static void ffi_Pixmap_getX(js_State *J)
@@ -10281,6 +10313,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Pixmap.getBounds", ffi_Pixmap_getBounds, 0);
 		jsB_propfun(J, "Pixmap.clear", ffi_Pixmap_clear, 1);
 
+		jsB_propfun(J, "Pixmap.computeMD5", ffi_Pixmap_computeMD5, 0);
 		jsB_propfun(J, "Pixmap.getX", ffi_Pixmap_getX, 0);
 		jsB_propfun(J, "Pixmap.getY", ffi_Pixmap_getY, 0);
 		jsB_propfun(J, "Pixmap.getWidth", ffi_Pixmap_getWidth, 0);

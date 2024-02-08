@@ -112,6 +112,7 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 		int xf = x_factor, yf = y_factor;
 		float w, h;
 		int x, y;
+		int xd, yd, y0, y1;
 
 		rotate = pdf_to_int(ctx, pdf_dict_get_inheritable(ctx, page_obj, PDF_NAME(Rotate)));
 		mediabox = pdf_to_rect(ctx, pdf_dict_get_inheritable(ctx, page_obj, PDF_NAME(MediaBox)));
@@ -128,11 +129,15 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 		{
 			xf = y_factor;
 			yf = x_factor;
+			yd = x_dir;
+			xd = 1;
 		}
 		else
 		{
 			xf = x_factor;
 			yf = y_factor;
+			xd = -x_dir;
+			yd = -1;
 		}
 
 		if (xf == 0 && yf == 0)
@@ -148,11 +153,13 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 		else if (yf == 0)
 			yf = 1;
 
-		for (y = yf-1; y >= 0; y--)
+		y0 = (yd > 0) ? 0 : yf-1;
+		y1 = (yd > 0) ? yf : -1;
+		for (y = y0; y != y1; y += yd)
 		{
-			int x0 = (x_dir > 0) ? 0 : xf-1;
-			int x1 = (x_dir > 0) ? xf : -1;
-			for (x = x0; x != x1; x += x_dir)
+			int x0 = (xd > 0) ? 0 : xf-1;
+			int x1 = (xd > 0) ? xf : -1;
+			for (x = x0; x != x1; x += xd)
 			{
 				pdf_obj *newpageobj, *newpageref, *newmediabox;
 				fz_rect mb;

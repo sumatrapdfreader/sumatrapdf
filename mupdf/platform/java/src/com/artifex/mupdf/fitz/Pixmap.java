@@ -105,6 +105,7 @@ public class Pixmap
 	public native void gamma(float gamma);
 	public native void tint(int black, int white);
 	public native Pixmap convertToColorSpace(ColorSpace cs, ColorSpace proof, DefaultColorSpaces defaultCs, int colorParams, boolean keepAlpha);
+	public native byte[] computeMD5();
 
 	public Rect getBounds() {
 		int x = getX();

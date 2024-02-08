@@ -552,22 +552,24 @@ mobi_open_document_with_buffer(fz_context *ctx, fz_buffer *mobi)
 {
 	fz_archive *dir = NULL;
 	fz_buffer *html;
+	fz_document *doc;
 	fz_var(dir);
 	fz_try(ctx)
 	{
 		dir = fz_extract_html_from_mobi(ctx, mobi);
 		html = fz_read_archive_entry(ctx, dir, "index.html");
+		doc = fz_htdoc_open_document_with_buffer(ctx, dir, html, &fz_htdoc_mobi);
 	}
 	fz_always(ctx)
 	{
 		fz_drop_buffer(ctx, mobi);
+		fz_drop_archive(ctx, dir);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_archive(ctx, dir);
 		fz_rethrow(ctx);
 	}
-	return fz_htdoc_open_document_with_buffer(ctx, dir, html, &fz_htdoc_mobi);
+	return doc;
 }
 
 static fz_document *

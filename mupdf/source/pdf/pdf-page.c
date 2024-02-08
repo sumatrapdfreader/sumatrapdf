@@ -629,11 +629,6 @@ pdf_bound_page(fz_context *ctx, pdf_page *page, fz_box_type box)
 	return fz_transform_rect(rect, page_ctm);
 }
 
-/*
- * Modify the page boxes (using fitz space coordinates).
- * Note that changing the CropBox will change the fitz coordinate space mapping,
- * invalidating all bounding boxes previously acquired.
- */
 void
 pdf_set_page_box(fz_context *ctx, pdf_page *page, fz_box_type box, fz_rect rect)
 {

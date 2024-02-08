@@ -456,3 +456,27 @@ FUN(Pixmap_convertToColorSpace)(JNIEnv *env, jobject self, jobject jcs, jobject 
 
 	return to_Pixmap_safe_own(ctx, env, dst);
 }
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_computeMD5)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	unsigned char digest[16] = { 0 };
+	jbyteArray arr;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		fz_md5_pixmap(ctx, pixmap, digest);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	arr = (*env)->NewByteArray(env, 16);
+	if (!arr || (*env)->ExceptionCheck(env)) jni_throw_run(env, "cannot create byte array");
+
+	(*env)->SetByteArrayRegion(env, arr, 0, 16, (const jbyte *)digest);
+	if ((*env)->ExceptionCheck(env)) return NULL;
+
+	return arr;
+}
