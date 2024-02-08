@@ -631,43 +631,7 @@ workspace "SumatraPDF"
     gumbo_files()
 --]]
 
-  function fonts_old()
-    --[[ files {
-      "mupdf/font_base14.asm",
-    }
-    --]]
-    filter {"platforms:x64 or x64_asan"}
-      files {
-        "mupdf/fonts_64.asm",
-      }
-    filter {}
-
-    filter {"platforms:x32"}
-      files {
-        "mupdf/fonts_32.asm",
-      }
-    filter {}
-
-    -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
-    -- .\mupdf\font_base14.asm
-    filter {'files:**.asm', 'platforms:x32'}
-       buildmessage 'Compiling %{file.relpath}'
-       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-       buildcommands {
-          '..\\bin\\nasm.exe -f win32 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
-       }
-    filter {}
-
-    filter {'files:**.asm', 'platforms:x64 or x64_asan'}
-      buildmessage 'Compiling %{file.relpath}'
-      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-      buildcommands {
-        '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
-      }
-    filter {}
-  end
-
-  function fonts_new()
+  function fonts()
     files {
       "mupdf/resources/fonts/urw/Dingbats.cff",
       "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
@@ -753,8 +717,7 @@ workspace "SumatraPDF"
       "ext/gumbo-parser/src",
       "ext/extract/include",
     }
-    -- fonts_old()
-    fonts_new()
+    fonts()
 
     mupdf_files()
     links { "mupdf-libs" }
