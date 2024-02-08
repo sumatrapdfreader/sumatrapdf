@@ -691,6 +691,7 @@ workspace "SumatraPDF"
       "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerifDevanagari-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSerifGeorgian-Regular.otf",
     }
 
     filter {'files:**.cff'}

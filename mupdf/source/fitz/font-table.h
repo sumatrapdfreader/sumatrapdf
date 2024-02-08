@@ -90,6 +90,7 @@ ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_UNKNOWN,	FZ_LANG_UN
 
 #define DEFNOTO(symbol, name, script) FONT(noto, symbol, name, script, FZ_LANG_UNSET, NO_SUBFONT, REGULAR)
 DEFNOTO(NotoSerifDevanagari_Regular_otf, "Noto Serif Devanagari", UCDN_SCRIPT_DEVANAGARI)
+DEFNOTO(NotoSerifGeorgian_Regular_otf, "Noto Serif Georgian", UCDN_SCRIPT_GEORGIAN)
 
 #endif
 

@@ -1000,6 +1000,9 @@
     <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSerifDevanagari-Regular.otf">
       <Filter>mupdf\resources\fonts\noto</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSerifGeorgian-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
     <CustomBuild Include="..\mupdf\resources\fonts\sil\CharisSIL-Bold.cff">
       <Filter>mupdf\resources\fonts\sil</Filter>
     </CustomBuild>
