@@ -444,12 +444,12 @@ enum class SplitterType {
 
 struct Splitter;
 
-// called when user drags the splitter ('done' is false) and when drag is finished ('done' is
+// called when user drags the splitter ('finishedDragging' is false) and when drag is finished ('finishedDragging' is
 // true). the owner can constrain splitter by using current cursor
 // position and setting resizeAllowed to false if it's not allowed to go there
 struct SplitterMoveEvent {
     Splitter* w = nullptr;
-    bool done = false; // TODO: rename to finishedDragging
+    bool finishedDragging = false;
     // user can set to false to forbid resizing here
     bool resizeAllowed = true;
 };
