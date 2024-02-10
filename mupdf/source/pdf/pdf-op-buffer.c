@@ -976,6 +976,8 @@ pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode)
 	proc->out = out;
 	proc->ahxencode = ahxencode;
 
+	proc->super.requirements = PDF_PROCESSOR_REQUIRES_DECODED_IMAGES;
+
 	return (pdf_processor*)proc;
 }
 

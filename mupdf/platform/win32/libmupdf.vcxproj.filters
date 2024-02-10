@@ -660,6 +660,15 @@
     <ClCompile Include="..\..\source\fitz\text-decoder.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-subset.c">
+      <Filter>pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\subset-ttf.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\subset-cff.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">

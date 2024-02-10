@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 /* Enable FITZ_DEBUG_LOCKING_TIMES below if you want to check the times
  * for which locks are held too. */
@@ -88,7 +89,10 @@ fz_malloc(fz_context *ctx, size_t size)
 		return NULL;
 	p = do_scavenging_malloc(ctx, size);
 	if (!p)
+	{
+		errno = ENOMEM;
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "malloc (%zu bytes) failed", size);
+	}
 	return p;
 }
 
@@ -107,10 +111,13 @@ fz_calloc(fz_context *ctx, size_t count, size_t size)
 	if (count == 0 || size == 0)
 		return NULL;
 	if (count > SIZE_MAX / size)
-		fz_throw(ctx, FZ_ERROR_SYSTEM, "calloc (%zu x %zu bytes) failed (size_t overflow)", count, size);
+		fz_throw(ctx, FZ_ERROR_LIMIT, "calloc (%zu x %zu bytes) failed (size_t overflow)", count, size);
 	p = do_scavenging_malloc(ctx, count * size);
 	if (!p)
+	{
+		errno = ENOMEM;
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "calloc (%zu x %zu bytes) failed", count, size);
+	}
 	memset(p, 0, count*size);
 	return p;
 }
@@ -139,7 +146,10 @@ fz_realloc(fz_context *ctx, void *p, size_t size)
 	}
 	p = do_scavenging_realloc(ctx, p, size);
 	if (!p)
+	{
+		errno = ENOMEM;
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "realloc (%zu bytes) failed", size);
+	}
 	return p;
 }
 

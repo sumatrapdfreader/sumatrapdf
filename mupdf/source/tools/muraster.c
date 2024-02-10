@@ -1005,7 +1005,7 @@ initialise_banding(fz_context *ctx, render_details *render, int color)
 	w = render->ibounds.x1 - render->ibounds.x0;
 	h = render->ibounds.y1 - render->ibounds.y0;
 	if (w <= 0 || h <= 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid page dimensions");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid page dimensions");
 
 
 	min_band_mem = (size_t)bpp * w * min_band_height;
@@ -1702,7 +1702,7 @@ int main(int argc, char **argv)
 				if (fz_needs_password(ctx, doc))
 				{
 					if (!fz_authenticate_password(ctx, doc, password))
-						fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", filename);
+						fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", filename);
 				}
 
 				fz_layout_document(ctx, doc, layout_w, layout_h, layout_em);

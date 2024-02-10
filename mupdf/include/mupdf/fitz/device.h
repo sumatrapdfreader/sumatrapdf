@@ -432,6 +432,7 @@ enum
 	/* Hints */
 	FZ_DONT_INTERPOLATE_IMAGES = 1,
 	FZ_NO_CACHE = 2,
+	FZ_DONT_DECODE_IMAGES = 4
 };
 
 /**

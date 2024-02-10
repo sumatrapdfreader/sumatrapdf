@@ -1756,7 +1756,7 @@ static void event_cb(fz_context *callback_ctx, pdf_document *callback_doc, pdf_d
 		break;
 
 	default:
-		fz_throw(callback_ctx, FZ_ERROR_GENERIC, "event not yet implemented");
+		fz_throw(callback_ctx, FZ_ERROR_UNSUPPORTED, "event not yet implemented");
 		break;
 	}
 }

@@ -24,6 +24,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <errno.h>
 
 #undef DEBUG_OCR
 
@@ -537,6 +538,7 @@ fz_clone_text_span(fz_context *ctx, const fz_text_span *span)
 	if (cspan->items == NULL)
 	{
 		fz_free(ctx, cspan);
+		errno = ENOMEM;
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "calloc (%zu x %zu bytes) failed", (size_t)cspan->len, sizeof(*cspan->items));
 	}
 	memcpy(cspan->items, span->items, sizeof(*cspan->items) * cspan->len);

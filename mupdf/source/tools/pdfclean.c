@@ -65,6 +65,7 @@ static int usage(void)
 		"\t-A\tcreate appearance streams for annotations\n"
 		"\t-AA\trecreate appearance streams for annotations\n"
 		"\t-m\tpreserve metadata\n"
+		"\t-S\tsubset fonts if possible [EXPERIMENTAL!]\n"
 		"\t-Z\tuse objstms if possible for extra compression\n"
 		"\t--{color,gray,bitonal}-{,lossy-,lossless-}image-subsample-method -\n\t\taverage, bicubic\n"
 		"\t--{color,gray,bitonal}-{,lossy-,lossless-}image-subsample-dpi -[,-]\n\t\tDPI at which to subsample [+ target dpi]\n"
@@ -126,7 +127,7 @@ int pdfclean_main(int argc, char **argv)
 	opts.write = pdf_default_write_options;
 	opts.write.dont_regenerate_id = 1;
 
-	while ((c = fz_getopt_long(argc, argv, "ade:fgilmp:stczDAE:O:U:P:Z", longopts)) != -1)
+	while ((c = fz_getopt_long(argc, argv, "ade:fgilmp:stczDAE:O:U:P:SZ", longopts)) != -1)
 	{
 		switch (c)
 		{
@@ -151,6 +152,7 @@ int pdfclean_main(int argc, char **argv)
 		case 'O': fz_strlcpy(opts.write.opwd_utf8, fz_optarg, sizeof opts.write.opwd_utf8); break;
 		case 'U': fz_strlcpy(opts.write.upwd_utf8, fz_optarg, sizeof opts.write.upwd_utf8); break;
 		case 'm': opts.write.do_preserve_metadata = 1; break;
+		case 'S': opts.subset_fonts = 1; break;
 		case 'Z': opts.write.do_use_objstms = 1; break;
 		case 0:
 		{

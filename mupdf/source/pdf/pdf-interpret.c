@@ -382,7 +382,10 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	{
 		if (proc->op_Do_image)
 		{
-			fz_image *image = pdf_load_image(ctx, csi->doc, xobj);
+			fz_image *image = NULL;
+
+			if (proc->requirements && PDF_PROCESSOR_REQUIRES_DECODED_IMAGES)
+				image = pdf_load_image(ctx, csi->doc, xobj);
 			fz_try(ctx)
 				proc->op_Do_image(ctx, proc, csi->name, image);
 			fz_always(ctx)

@@ -191,7 +191,7 @@ var festival_template =
 	+"</dl>"
 	+"</li>"
 	+"<ul>"
-	+"</body></html";
+	+"</body></html>";
 
 var mediabox = [0, 0, 512, 640];
 var margin = 10;
@@ -217,7 +217,7 @@ var margin = 10;
 
 		placed = story.place(where);
 
-		story.draw(dev, Identity);
+		story.draw(dev, Matrix.identity);
 
 		writer.endPage();
 	}
@@ -255,7 +255,7 @@ var margin = 10;
 
 		placed = story.place(where);
 
-		story.draw(dev, Identity);
+		story.draw(dev, Matrix.identity);
 
 		writer.endPage(writer);
 	}
@@ -318,7 +318,7 @@ var margin = 10;
 
 		placed = story.place(where);
 
-		story.draw(dev, Identity);
+		story.draw(dev, Matrix.identity);
 
 		writer.endPage();
 	}

@@ -84,7 +84,7 @@ read(fz_context *ctx, fz_stream *stm, uint8_t *buf, size_t size)
 	size_t n = fz_read(ctx, stm, buf, size);
 
 	if (n != size)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Short read in CFB handling");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Short read in CFB handling");
 }
 
 static uint16_t
@@ -122,7 +122,7 @@ get_len(fz_context *ctx, fz_cfb_archive *cfb, const uint8_t *b)
 	if (cfb->major == 3)
 	{
 		if (len & 0x80000000)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Illegal length in CFB");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Illegal length in CFB");
 		len &= 0xFFFFFFFFU;
 	}
 	return len;
@@ -173,7 +173,7 @@ read_fat(fz_context *ctx, fz_cfb_archive *cfb, uint32_t sector)
 	uint32_t real_sect = read_difat(ctx, cfb, fatsect);
 
 	if (real_sect > MAXREGSECT)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Corrupt FAT");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Corrupt FAT");
 
 	if (real_sect != cfb->fatcache_sector)
 	{
@@ -311,13 +311,13 @@ cfb_next(fz_context *ctx, fz_stream *stm, size_t required)
 		if (state->next_sector_slow_flag == 0)
 			state->next_sector_slow = read_fat(ctx, cfb, state->next_sector_slow);
 		if (state->next_sector_slow == state->next_sector)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Loop in FAT chain");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Loop in FAT chain");
 	}
 	if (state->next_sector > MAXREGSECT && state->next_sector != ENDOFCHAIN)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected entry in FAT chain");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected entry in FAT chain");
 
 	if (this_sector > MAXREGSECT)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected end of FAT chain");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected end of FAT chain");
 	sector_seek(ctx, cfb, this_sector, 0);
 	read(ctx, cfb->super.file, state->buffer, sector_size);
 	stm->rp = state->buffer;
@@ -378,13 +378,13 @@ cfb_next_mini(fz_context *ctx, fz_stream *stm, size_t required)
 		if (state->next_sector_slow_flag == 0)
 			state->next_sector_slow = read_mini_fat(ctx, cfb, state->next_sector_slow);
 		if (state->next_sector_slow == state->next_sector)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Loop in FAT chain");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Loop in FAT chain");
 	}
 	if (state->next_sector > MAXREGSECT && state->next_sector != ENDOFCHAIN)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected entry in FAT chain");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected entry in FAT chain");
 
 	if (this_sector > MAXREGSECT)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Unexpected end of FAT chain");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Unexpected end of FAT chain");
 
 	fz_seek(ctx, state->mini_stream, ((uint64_t)this_sector) * MINI_SECTOR_SIZE, SEEK_SET);
 	read(ctx, state->mini_stream, state->buffer, MINI_SECTOR_SIZE);
@@ -554,7 +554,7 @@ expect(fz_context *ctx, fz_stream *file, const uint8_t *pattern, size_t n, const
 	read(ctx, file, buffer, n);
 
 	if (memcmp(buffer, pattern, n) != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "%s in CFB", msg);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "%s in CFB", msg);
 }
 
 static void
@@ -564,7 +564,7 @@ expect16(fz_context *ctx, fz_stream *file, uint16_t v, const char *msg)
 
 	u = fz_read_uint16_le(ctx, file);
 	if (u != v)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "%s in CFB: 0x%04x != 0x%04x", msg, u, v);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "%s in CFB: 0x%04x != 0x%04x", msg, u, v);
 }
 
 static void
@@ -574,7 +574,7 @@ expect32(fz_context *ctx, fz_stream *file, uint32_t v, const char *msg)
 
 	u = fz_read_uint32_le(ctx, file);
 	if (u != v)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "%s in CFB: 0x%08x != 0x%08x", msg, u, v);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "%s in CFB: 0x%08x != 0x%08x", msg, u, v);
 }
 
 #define REACHED 0xFFFFFFFF
@@ -592,14 +592,14 @@ make_absolute(fz_context *ctx, fz_cfb_archive *cfb, char *prefix, int node, int 
 			return;
 
 		if (node < 0 || node >= cfb->count)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid tree");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid tree");
 
 		if (depth >= 32)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "CBF Tree too deep");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "CBF Tree too deep");
 
 		type = cfb->entries[node].t;
 		if (type == REACHED || type == REACHED_KEEP)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "CBF Tree has cycles");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "CBF Tree has cycles");
 		cfb->entries[node].t = (type == 2) ? REACHED_KEEP : REACHED;
 
 		if (prefix)
@@ -676,7 +676,7 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 	int i;
 
 	if (!fz_is_cfb_archive(ctx, file))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot recognize cfb archive");
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cannot recognize cfb archive");
 
 	cfb = fz_new_derived_archive(ctx, file, fz_cfb_archive);
 	cfb->super.format = "cfb";
@@ -698,12 +698,12 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 		(void)fz_read_uint16_le(ctx, file);
 		cfb->major = fz_read_uint16_le(ctx, file);
 		if (cfb->major != 3 && cfb->major != 4)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad major version of CFB: %d", cfb->major);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad major version of CFB: %d", cfb->major);
 		expect16(ctx, file, 0xfffe, "Bad byte order");
 		cfb->sector_shift = fz_read_uint16_le(ctx, file);
 		if ((cfb->major == 3 && cfb->sector_shift != 9) ||
 			(cfb->major == 4 && cfb->sector_shift != 12))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Bad sector shift: %d", cfb->sector_shift);
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad sector shift: %d", cfb->sector_shift);
 		expect16(ctx, file, 6, "Bad mini section shift");
 		expect(ctx, file, zeros, 6, "Bad padding");
 		cfb->num_dir_sectors = fz_read_uint32_le(ctx, file);
@@ -765,7 +765,7 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 						break;
 				}
 				if (i+2 != namelen || i == 64)
-					fz_throw(ctx, FZ_ERROR_GENERIC, "Malformed name in CFB directory");
+					fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed name in CFB directory");
 
 				/* Copy the name. */
 				cfb->entries[cfb->count++].name = fz_malloc(ctx, count);
@@ -820,7 +820,7 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 			if (slow_sector_flag == 0)
 				slow_sector = read_fat(ctx, cfb, slow_sector);
 			if (slow_sector == sector)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Loop in FAT");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Loop in FAT");
 		}
 		while (sector <= MAXREGSECT);
 

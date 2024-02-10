@@ -785,6 +785,8 @@
     <ClCompile Include="..\mupdf\source\fitz\stream-read.c" />
     <ClCompile Include="..\mupdf\source\fitz\string.c" />
     <ClCompile Include="..\mupdf\source\fitz\strtof.c" />
+    <ClCompile Include="..\mupdf\source\fitz\subset-cff.c" />
+    <ClCompile Include="..\mupdf\source\fitz\subset-ttf.c" />
     <ClCompile Include="..\mupdf\source\fitz\svg-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\test-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\text-decoder.c" />
@@ -857,6 +859,7 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-signature.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-store.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-stream.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-subset.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-type3.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-unicode.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-util.c" />

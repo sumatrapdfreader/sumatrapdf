@@ -1050,7 +1050,7 @@ epub_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archiv
 		else
 			file2 = file = fz_open_archive_entry(ctx, dir, "META-INF\\container.xml");
 		if (file == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Not an epub file");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Not an epub file");
 		zip = fz_keep_archive(ctx, dir);
 	}
 	else

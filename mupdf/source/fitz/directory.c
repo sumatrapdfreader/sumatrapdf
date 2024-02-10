@@ -28,6 +28,7 @@
 
 #ifdef _MSC_VER
 #include <windows.h>
+#include <errno.h>
 #define stat _stat
 #else
 #include <dirent.h>
@@ -156,7 +157,10 @@ fz_open_directory(fz_context *ctx, const char *path)
 			int rune;
 			p += fz_chartorune(&rune, p);
 			if (rune >= 0x10000 || rune < 0)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Unrepresentable UTF-8 char in directory name");
+			{
+				errno = EINVAL;
+				fz_throw(ctx, FZ_ERROR_SYSTEM, "Unrepresentable UTF-8 char in directory name");
+			}
 			z++;
 		}
 		w = wpath = fz_malloc(ctx, z * sizeof(WCHAR));

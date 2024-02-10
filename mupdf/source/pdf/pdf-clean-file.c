@@ -485,6 +485,9 @@ void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password
 
 		pdf_rewrite_images(ctx, pdf, &opts->image);
 
+		if (opts->subset_fonts)
+			pdf_subset_fonts(ctx, pdf, len, pages);
+
 		pdf_save_document(ctx, pdf, outfile, &opts->write);
 	}
 	fz_always(ctx)

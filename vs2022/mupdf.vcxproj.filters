@@ -701,6 +701,12 @@
     <ClCompile Include="..\mupdf\source\fitz\strtof.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\subset-cff.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\subset-ttf.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\svg-device.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
@@ -915,6 +921,9 @@
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-stream.c">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-subset.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-type3.c">

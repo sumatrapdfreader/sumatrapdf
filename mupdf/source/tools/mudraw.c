@@ -413,7 +413,7 @@ static int usage(void)
 		"\n"
 		"\t-o -\toutput file name (%%d for page number)\n"
 		"\t-F -\toutput format (default inferred from output file name)\n"
-		"\t\traster: png, pnm, pam, pbm, pkm, pwg, pcl, ps\n"
+		"\t\traster: png, pnm, pam, pbm, pkm, pwg, pcl, ps, pdf, j2k\n"
 		"\t\tvector: svg, pdf, trace, ocr.trace\n"
 		"\t\ttext: txt, html, xhtml, stext, stext.json\n"
 #ifndef OCR_DISABLED
@@ -1132,7 +1132,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			}
 			if (output_format == OUT_J2K && bands > 1)
 			{
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Can't band with J2k output!");
+				fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't band with J2k output!");
 			}
 
 			for (band = 0; band < bands; band++)

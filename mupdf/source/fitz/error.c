@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #ifdef _MSC_VER
 #ifndef NDEBUG
@@ -295,6 +296,12 @@ int fz_caught(fz_context *ctx)
 	return ctx->error.errcode;
 }
 
+int fz_caught_errno(fz_context *ctx)
+{
+	assert(ctx && ctx->error.errcode == FZ_ERROR_SYSTEM);
+	return ctx->error.errnum;
+}
+
 const char *fz_caught_message(fz_context *ctx)
 {
 	assert(ctx && ctx->error.errcode >= FZ_ERROR_NONE);
@@ -343,6 +350,11 @@ FZ_NORETURN void (fz_vthrow)(fz_context *ctx, int code, const char *fmt, va_list
 		abort();
 #endif
 	}
+
+	if (code == FZ_ERROR_SYSTEM)
+		ctx->error.errnum = errno;
+	else
+		ctx->error.errnum = 0;
 
 	fz_vsnprintf(ctx->error.message, sizeof ctx->error.message, fmt, ap);
 	ctx->error.message[sizeof(ctx->error.message) - 1] = 0;

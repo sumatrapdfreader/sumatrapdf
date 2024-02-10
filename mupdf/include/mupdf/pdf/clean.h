@@ -30,6 +30,9 @@ typedef struct
 {
 	pdf_write_options write;
 	pdf_image_rewriter_options image;
+
+	/* Experimental option. Subject to change. */
+	int subset_fonts;
 } pdf_clean_options;
 
 /*

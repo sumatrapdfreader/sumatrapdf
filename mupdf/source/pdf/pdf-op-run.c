@@ -682,6 +682,11 @@ pdf_show_image(fz_context *ctx, pdf_run_processor *pr, fz_image *image)
 	if (pr->super.hidden)
 		return;
 
+	/* image can be NULL here if we are, for example, running to an
+	 * stext device. */
+	if (image == NULL)
+		return;
+
 	flush_begin_layer(ctx, pr);
 
 	/* PDF has images bottom-up, so flip them right side up here */
@@ -3139,6 +3144,10 @@ pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_mat
 
 		proc->super.op_END = pdf_run_END;
 	}
+
+	proc->super.requirements = 0;
+	if ((dev->hints & FZ_DONT_DECODE_IMAGES) == 0)
+		proc->super.requirements |= PDF_PROCESSOR_REQUIRES_DECODED_IMAGES;
 
 	proc->doc = pdf_keep_document(ctx, doc);
 	proc->dev = dev;

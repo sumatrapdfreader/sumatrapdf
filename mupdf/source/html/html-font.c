@@ -42,7 +42,7 @@ fz_load_html_default_font(fz_context *ctx, fz_html_font_set *set, const char *fa
 		if (!data)
 			data = fz_lookup_builtin_font(ctx, backup_family, is_bold, is_italic, &size);
 		if (!data)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot load html font: %s", real_family);
+			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot load html font: %s", real_family);
 		set->fonts[idx] = fz_new_font_from_memory(ctx, NULL, data, size, 0, 1);
 		fz_font_flags(set->fonts[idx])->is_serif = !is_sans;
 	}

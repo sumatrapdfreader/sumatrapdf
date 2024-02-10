@@ -582,6 +582,8 @@
     <ClCompile Include="..\..\source\fitz\text-decoder.c" />
     <ClCompile Include="..\..\source\fitz\uncfb.c" />
     <ClCompile Include="..\..\source\fitz\unlibarchive.c" />
+    <ClCompile Include="..\..\source\fitz\subset-cff.c" />
+    <ClCompile Include="..\..\source\fitz\subset-ttf.c" />
     <ClCompile Include="..\..\source\fitz\warp.c" />
     <ClCompile Include="..\..\source\fitz\xmltext-device.c" />
     <ClCompile Include="..\..\source\fitz\separation.c" />
@@ -665,6 +667,7 @@
     <ClCompile Include="..\..\source\pdf\pdf-signature.c" />
     <ClCompile Include="..\..\source\pdf\pdf-store.c" />
     <ClCompile Include="..\..\source\pdf\pdf-stream.c" />
+    <ClCompile Include="..\..\source\pdf\pdf-subset.c" />
     <ClCompile Include="..\..\source\pdf\pdf-type3.c" />
     <ClCompile Include="..\..\source\pdf\pdf-unicode.c" />
     <ClCompile Include="..\..\source\pdf\pdf-util.c" />

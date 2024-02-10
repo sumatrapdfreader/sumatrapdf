@@ -35,6 +35,11 @@ pdf_processor *pdf_keep_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_close_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_drop_processor(fz_context *ctx, pdf_processor *proc);
 
+typedef enum
+{
+	PDF_PROCESSOR_REQUIRES_DECODED_IMAGES = 1
+} pdf_processor_requirements;
+
 struct pdf_processor
 {
 	int refs;
@@ -176,6 +181,8 @@ struct pdf_processor
 	/* interpreter state that persists across content streams */
 	const char *usage;
 	int hidden;
+
+	pdf_processor_requirements requirements;
 };
 
 typedef struct

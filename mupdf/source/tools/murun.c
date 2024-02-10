@@ -10081,9 +10081,9 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Page.isPDF", ffi_Page_isPDF, 0);
 		jsB_propfun(J, "Page.getBounds", ffi_Page_getBounds, 0);
 		jsB_propfun(J, "Page.run", ffi_Page_run, 2);
-		jsB_propfun(J, "Page.run", ffi_Page_runPageContents, 2);
-		jsB_propfun(J, "Page.run", ffi_Page_runPageAnnots, 2);
-		jsB_propfun(J, "Page.run", ffi_Page_runPageWidgets, 2);
+		jsB_propfun(J, "Page.runPageContents", ffi_Page_runPageContents, 2);
+		jsB_propfun(J, "Page.runPageAnnots", ffi_Page_runPageAnnots, 2);
+		jsB_propfun(J, "Page.runPageWidgets", ffi_Page_runPageWidgets, 2);
 
 		jsB_propfun(J, "Page.toPixmap", ffi_Page_toPixmap, 4);
 		jsB_propfun(J, "Page.toDisplayList", ffi_Page_toDisplayList, 1);

@@ -1078,7 +1078,7 @@ int
 pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_options *redact_opts)
 {
 	if (page == NULL || page->doc != doc)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't redact a page not from the doc");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't redact a page not from the doc");
 	return pdf_apply_redaction_imp(ctx, page, NULL, redact_opts);
 }
 
