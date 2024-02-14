@@ -180,6 +180,7 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 	memset(info, 0, sizeof(*info));
 
 	fz_var(image);
+	fz_var(seps);
 
 	fz_try(ctx)
 	{

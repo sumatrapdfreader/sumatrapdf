@@ -438,7 +438,7 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, const cha
 }
 
 static struct { int ros, serif; const char *name; } known_cjk_fonts[] = {
-	{ FZ_ADOBE_GB, 0, "SimFang" },
+	{ FZ_ADOBE_GB, 1, "SimFang" },
 	{ FZ_ADOBE_GB, 0, "SimHei" },
 	{ FZ_ADOBE_GB, 1, "SimKai" },
 	{ FZ_ADOBE_GB, 1, "SimLi" },

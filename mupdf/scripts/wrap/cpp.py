@@ -1258,7 +1258,7 @@ g_extra_definitions = textwrap.dedent(f'''
                     imagemask,
                     decode2,
                     colorkey2,
-                    buffer,
+                    fz_keep_compressed_buffer(ctx, buffer),
                     mask
                     );
             return ret;

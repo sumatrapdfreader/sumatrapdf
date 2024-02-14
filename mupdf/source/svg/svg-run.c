@@ -31,17 +31,13 @@
 #define DEF_HEIGHT 792
 #define DEF_FONTSIZE 12
 
-struct svg_use_cycle {
-	fz_xml *node;
-	struct svg_use_cycle *up;
-};
+#define MAX_USE_DEPTH 100
 
 typedef struct svg_state
 {
-	struct svg_use_cycle *cycle;
-
 	fz_matrix transform;
 	fz_stroke_state stroke;
+	int use_depth;
 
 	float viewport_w, viewport_h;
 	float viewbox_w, viewbox_h, viewbox_size;
@@ -1225,10 +1221,22 @@ svg_run_use_symbol(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *u
 		svg_run_element(ctx, dev, doc, node, &local_state);
 }
 
+static int
+is_use_cycle(fz_xml *use, fz_xml *symbol)
+{
+	/* If "use" is a direct child of "symbol", we have a recursive symbol/use definition! */
+	while (use)
+	{
+		if (use == symbol)
+			return 1;
+		use = fz_xml_up(use);
+	}
+	return 0;
+}
+
 static void
 svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *inherit_state)
 {
-	struct svg_use_cycle local_cycle, *cycle;
 	svg_state local_state = *inherit_state;
 
 	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
@@ -1238,18 +1246,11 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 	float x = 0;
 	float y = 0;
 
-	for (cycle = local_state.cycle; cycle; cycle = cycle->up)
+	if (++local_state.use_depth > MAX_USE_DEPTH)
 	{
-		if (cycle->node == root)
-		{
-			fz_warn(ctx, "svg: recursive <use> references");
+		fz_warn(ctx, "svg: too much recursion");
 			return;
 		}
-	}
-
-	local_cycle.node = root;
-	local_cycle.up = local_state.cycle;
-	local_state.cycle = &local_cycle;
 
 	svg_parse_common(ctx, doc, root, &local_state);
 	if (x_att) x = svg_parse_length(x_att, local_state.viewbox_w, local_state.fontsize);
@@ -1260,6 +1261,12 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 	if (href_att && href_att[0] == '#')
 	{
 		fz_xml *linked = fz_tree_lookup(ctx, doc->idmap, href_att + 1);
+		if (is_use_cycle(root, linked))
+		{
+			fz_warn(ctx, "svg: cyclic <use> reference");
+			return;
+		}
+
 		if (linked)
 		{
 			if (fz_xml_is_tag(linked, "symbol"))
@@ -1650,7 +1657,7 @@ svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *de
 	/* Initial graphics state */
 	state.transform = ctm;
 	state.stroke = fz_default_stroke_state;
-	state.cycle = NULL;
+	state.use_depth = 0;
 
 	state.viewport_w = DEF_WIDTH;
 	state.viewport_h = DEF_HEIGHT;
