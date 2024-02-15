@@ -1544,10 +1544,10 @@ pdf_serialise_journal(fz_context *ctx, pdf_document *doc, fz_output *out)
 				continue;
 			}
 			fz_write_printf(ctx, out, "%d 0 obj\n", frag->obj_num);
-			pdf_print_encrypted_obj(ctx, out, frag->inactive, 1, 0, NULL, frag->obj_num, 0);
+			pdf_print_encrypted_obj(ctx, out, frag->inactive, 1, 0, NULL, frag->obj_num, 0, NULL);
 			if (frag->stream)
 			{
-				fz_write_printf(ctx, out, "stream\n");
+				fz_write_printf(ctx, out, "\nstream\n");
 				fz_write_data(ctx, out, frag->stream->data, frag->stream->len);
 				fz_write_string(ctx, out, "\nendstream");
 			}
@@ -3196,7 +3196,7 @@ static inline int isdelim(int ch)
 
 static inline void fmt_putc(fz_context *ctx, struct fmt *fmt, int c)
 {
-	if (fmt->sep && !isdelim(fmt->last) && !isdelim(c)) {
+	if (fmt->sep && !isdelim(fmt->last) && !iswhite(fmt->last) && !isdelim(c) && !iswhite(c)) {
 		fmt->sep = 0;
 		fmt_putc(ctx, fmt, ' ');
 	}
@@ -3375,6 +3375,8 @@ static void fmt_name(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 			fmt_putc(ctx, fmt, s[i]);
 		}
 	}
+
+	fmt->sep = 1;
 }
 
 static void fmt_array(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
@@ -3386,7 +3388,6 @@ static void fmt_array(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 		fmt_putc(ctx, fmt, '[');
 		for (i = 0; i < n; i++) {
 			fmt_obj(ctx, fmt, pdf_array_get(ctx, obj, i));
-			fmt_sep(ctx, fmt);
 		}
 		fmt_putc(ctx, fmt, ']');
 	}
@@ -3421,15 +3422,44 @@ static void fmt_dict(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 {
 	int i, n;
 	pdf_obj *key, *val;
+	int skip = 0;
+	pdf_obj *type = pdf_dict_get(ctx, obj, PDF_NAME(Type));
 
 	n = pdf_dict_len(ctx, obj);
+
+	/* Open the dictionary.
+	 * We spot /Type and /Subtype here so we can sent those first,
+	 * in order. The hope is this will improve compression, because
+	 * we'll be consistently sending those first. */
 	if (fmt->tight) {
 		fmt_puts(ctx, fmt, "<<");
+		if (type)
+		{
+			pdf_obj *subtype = pdf_dict_get(ctx, obj, PDF_NAME(Subtype));
+			fmt_obj(ctx, fmt, PDF_NAME(Type));
+			fmt_obj(ctx, fmt, type);
+			if (subtype)
+			{
+				fmt_obj(ctx, fmt, PDF_NAME(Subtype));
+				fmt_obj(ctx, fmt, subtype);
+				skip |= 2; /* Skip Subtype */
+			}
+			skip |= 1; /* Skip Type */
+		}
+
+		/* Now send all the key/value pairs except the ones we have decided to
+		 * skip. */
 		for (i = 0; i < n; i++) {
 			key = pdf_dict_get_key(ctx, obj, i);
+			if (skip)
+			{
+				if ((skip & 1) != 0 && key == PDF_NAME(Type))
+					continue;
+				if ((skip & 2) != 0 && key == PDF_NAME(Subtype))
+					continue;
+			}
 			val = pdf_dict_get_val(ctx, obj, i);
 			fmt_obj(ctx, fmt, key);
-			fmt_sep(ctx, fmt);
 			if (key == PDF_NAME(Contents) && is_signature(ctx, obj))
 			{
 				pdf_crypt *crypt = fmt->crypt;
@@ -3445,11 +3475,12 @@ static void fmt_dict(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 			}
 			else
 				fmt_obj(ctx, fmt, val);
-			fmt_sep(ctx, fmt);
 		}
+
 		fmt_puts(ctx, fmt, ">>");
 	}
-	else {
+	else /* Not tight, send it simply. */
+	{
 		fmt_puts(ctx, fmt, "<<\n");
 		fmt->indent ++;
 		for (i = 0; i < n; i++) {
@@ -3490,25 +3521,49 @@ static void fmt_obj(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 	char buf[256];
 
 	if (obj == PDF_NULL)
+	{
 		fmt_puts(ctx, fmt, "null");
+		fmt->sep = 1;
+		return;
+	}
 	else if (obj == PDF_TRUE)
+	{
 		fmt_puts(ctx, fmt, "true");
+		fmt->sep = 1;
+		return;
+	}
 	else if (obj == PDF_FALSE)
+	{
 		fmt_puts(ctx, fmt, "false");
+		fmt->sep = 1;
+		return;
+	}
 	else if (pdf_is_indirect(ctx, obj))
 	{
-		fz_snprintf(buf, sizeof buf, "%d %d R", pdf_to_num(ctx, obj), pdf_to_gen(ctx, obj));
+		int n = pdf_to_num(ctx, obj);
+		int g = pdf_to_gen(ctx, obj);
+		fz_snprintf(buf, sizeof buf, "%d %d R", n, g);
 		fmt_puts(ctx, fmt, buf);
+		fmt->sep = 1;
+		return;
 	}
 	else if (pdf_is_int(ctx, obj))
 	{
 		fz_snprintf(buf, sizeof buf, "%d", pdf_to_int(ctx, obj));
 		fmt_puts(ctx, fmt, buf);
+		fmt->sep = 1;
+		return;
 	}
 	else if (pdf_is_real(ctx, obj))
 	{
-		fz_snprintf(buf, sizeof buf, "%g", pdf_to_real(ctx, obj));
+		float f = pdf_to_real(ctx, obj);
+		if (f == (int)f)
+			fz_snprintf(buf, sizeof buf, "%d", pdf_to_int(ctx, obj));
+		else
+			fz_snprintf(buf, sizeof buf, "%g", f);
 		fmt_puts(ctx, fmt, buf);
+		fmt->sep = 1;
+		return;
 	}
 	else if (pdf_is_string(ctx, obj))
 	{
@@ -3534,13 +3589,13 @@ static void fmt_obj(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 }
 
 static char *
-pdf_sprint_encrypted_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pdf_obj *obj, int tight, int ascii, pdf_crypt *crypt, int num, int gen)
+pdf_sprint_encrypted_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pdf_obj *obj, int tight, int ascii, pdf_crypt *crypt, int num, int gen, int *sep)
 {
 	struct fmt fmt;
 
 	fmt.indent = 0;
 	fmt.col = 0;
-	fmt.sep = 0;
+	fmt.sep = sep ? *sep : 0;
 	fmt.last = 0;
 
 	if (!buf || cap == 0)
@@ -3566,6 +3621,9 @@ pdf_sprint_encrypted_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pd
 	fz_try(ctx)
 	{
 		fmt_obj(ctx, &fmt, obj);
+		if (sep)
+			*sep = fmt.sep;
+		fmt.sep = 0;
 		fmt_putc(ctx, &fmt, 0);
 	}
 	fz_catch(ctx)
@@ -3580,16 +3638,16 @@ pdf_sprint_encrypted_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pd
 char *
 pdf_sprint_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pdf_obj *obj, int tight, int ascii)
 {
-	return pdf_sprint_encrypted_obj(ctx, buf, cap, len, obj, tight, ascii, NULL, 0, 0);
+	return pdf_sprint_encrypted_obj(ctx, buf, cap, len, obj, tight, ascii, NULL, 0, 0, NULL);
 }
 
-void pdf_print_encrypted_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int tight, int ascii, pdf_crypt *crypt, int num, int gen)
+void pdf_print_encrypted_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int tight, int ascii, pdf_crypt *crypt, int num, int gen, int *sep)
 {
 	char buf[1024];
 	char *ptr;
 	size_t n;
 
-	ptr = pdf_sprint_encrypted_obj(ctx, buf, sizeof buf, &n, obj, tight, ascii, crypt, num, gen);
+	ptr = pdf_sprint_encrypted_obj(ctx, buf, sizeof buf, &n, obj, tight, ascii, crypt, num, gen, sep);
 	fz_try(ctx)
 		fz_write_data(ctx, out, ptr, n);
 	fz_always(ctx)
@@ -3601,7 +3659,7 @@ void pdf_print_encrypted_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int 
 
 void pdf_print_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int tight, int ascii)
 {
-	pdf_print_encrypted_obj(ctx, out, obj, tight, ascii, NULL, 0, 0);
+	pdf_print_encrypted_obj(ctx, out, obj, tight, ascii, NULL, 0, 0, NULL);
 }
 
 void pdf_debug_obj(fz_context *ctx, pdf_obj *obj)

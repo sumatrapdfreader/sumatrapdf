@@ -222,8 +222,11 @@ pdf_processor *pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_devi
 
 	ahxencode: If 0, then image streams will be send as binary,
 	otherwise they will be asciihexencoded.
+
+	newlines: If 0, then minimal spacing will be sent. If 1
+	then newlines will be sent after every operator.
 */
-pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int ahxencode);
+pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int ahxencode, int newlines);
 
 /*
 	Create an output processor. This
@@ -233,8 +236,11 @@ pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int 
 
 	ahxencode: If 0, then image streams will be send as binary,
 	otherwise they will be asciihexencoded.
+
+	newlines: If 0, then minimal spacing will be sent. If 1
+	then newlines will be sent after every operator.
 */
-pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode);
+pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode, int newlines);
 
 typedef struct pdf_filter_options pdf_filter_options;
 
@@ -283,6 +289,9 @@ typedef struct
 	Operators will be fed into the filter generated from the first
 	factory function in the list, and from there go to the filter
 	generated from the second factory in the list etc.
+
+	newlines: If 0, then minimal whitespace will be produced. If 1,
+	then a newline will be sent after every operator.
 */
 struct pdf_filter_options
 {
@@ -295,6 +304,7 @@ struct pdf_filter_options
 	void (*complete)(fz_context *ctx, fz_buffer *buffer, void *opaque);
 
 	pdf_filter_factory *filters;
+	int newlines;
 };
 
 typedef enum

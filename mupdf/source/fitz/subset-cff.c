@@ -44,7 +44,7 @@
 	This may need to be changed to be predefined charstrings that
 	just set a zero width if this is illegal.
 
-	Similarly, for now, we don't attempt to subset either the local
+	Similarly, for now, we don't attempt to compact either the local
 	or global subrs.
 */
 
@@ -80,9 +80,15 @@ typedef struct
 
 typedef struct
 {
+	uint8_t scanned;
+	uint16_t num;
+} usage_t;
+
+typedef struct
+{
 	int len;
 	int max;
-	uint16_t *list;
+	usage_t *list;
 } usage_list_t;
 
 typedef struct
@@ -106,6 +112,8 @@ typedef struct
 	index_t charstrings_index;
 	index_t local_index;
 	index_t fdarray_index;
+	int gsubr_bias;
+	int subr_bias;
 	uint32_t top_dict_index_offset;
 	uint32_t string_index_offset;
 	uint32_t global_index_offset;
@@ -705,7 +713,7 @@ do_subset(fz_context *ctx, cff_t *cff, fz_buffer **buffer, usage_list_t *keep_li
 	uint32_t num_charstrings = index->count;
 	int gid;
 	int num_gids = keep_list->len;
-	const uint16_t *gids = keep_list->list;
+	const usage_t *gids = keep_list->list;
 
 	if (num_charstrings == 0)
 		return;
@@ -717,14 +725,14 @@ do_subset(fz_context *ctx, cff_t *cff, fz_buffer **buffer, usage_list_t *keep_li
 	for (i = 0; i < num_charstrings; offset = end, i++)
 	{
 		end = index_get(ctx, index, i+1);
-		if (i == 0)
-		{
-			/* Keep this. */
-		}
-		else if (gid < num_gids && i == gids[gid])
+		if (gid < num_gids && i == gids[gid].num)
 		{
 			/* Keep this */
 			gid++;
+		}
+		else if (i == 0)
+		{
+			/* Keep this. */
 		}
 		else
 		{
@@ -757,14 +765,14 @@ do_subset(fz_context *ctx, cff_t *cff, fz_buffer **buffer, usage_list_t *keep_li
 	for (i = 0; i < num_charstrings; offset = end, i++)
 	{
 		end = index_get(ctx, index, i+1);
-		if (i == 0)
-		{
-			/* Keep this */
-		}
-		else if (gid < num_gids && gids[gid] == i)
+		if (gid < num_gids && gids[gid].num == i)
 		{
 			/* Keep this */
 			gid++;
+		}
+		else if (i == 0)
+		{
+			/* Keep this */
 		}
 		else
 		{
@@ -803,8 +811,8 @@ subset_globals(fz_context *ctx, cff_t *cff)
 
 /* Charstring "executing" functions */
 
-static void
-usage_list_add(fz_context *ctx, usage_list_t *list, int value)
+static int
+usage_list_find(fz_context *ctx, usage_list_t *list, int value)
 {
 	/* are we on the list already? */
 	int lo = 0;
@@ -813,14 +821,32 @@ usage_list_add(fz_context *ctx, usage_list_t *list, int value)
 	while (lo < hi)
 	{
 		int mid = (lo + hi)>>1;
-		int v = list->list[mid];
+		int v = list->list[mid].num;
 		if (v < value)
 			lo = mid+1;
 		else if (v > value)
 			hi = mid;
 		else
-			return;
+			return mid;
 	}
+	return lo;
+}
+
+static int
+usage_list_contains(fz_context *ctx, usage_list_t *list, int value)
+{
+	int lo = usage_list_find(ctx, list, value);
+
+	return (lo < list->len && list->list[lo].num == value);
+}
+
+static void
+usage_list_add(fz_context *ctx, usage_list_t *list, int value)
+{
+	int lo = usage_list_find(ctx, list, value);
+
+	if (lo < list->len && list->list[lo].num == value)
+		return;
 
 	if (list->len == list->max)
 	{
@@ -834,14 +860,26 @@ usage_list_add(fz_context *ctx, usage_list_t *list, int value)
 	}
 
 	memmove(&list->list[lo+1], &list->list[lo], (list->len - lo) * sizeof(*list->list));
-	list->list[lo] = value;
+	list->list[lo].num = value;
+	list->list[lo].scanned = 0;
 	list->len++;
+}
+
+static void
+drop_usage_list(fz_context *ctx, usage_list_t *list)
+{
+	if (!list)
+		return;
+	fz_free(ctx, list->list);
+	list->list = NULL;
 }
 
 static void
 mark_subr_used(fz_context *ctx, cff_t *cff, int subr, int global)
 {
 	usage_list_t *list = global ? &cff->global_usage : &cff->local_usage;
+
+	subr += global ? cff->gsubr_bias : cff->subr_bias;
 
 	usage_list_add(ctx, list, subr);
 }
@@ -860,6 +898,9 @@ use_sub_char(fz_context *ctx, cff_t *cff, int code)
 	if (gid == 0)
 		return;
 
+	if (usage_list_contains(ctx, &cff->gids_to_keep, gid))
+		return;
+
 	usage_list_add(ctx, &cff->extra_gids_to_keep, gid);
 }
 
@@ -871,15 +912,23 @@ do { if (sp + n > (int)(sizeof(stack)/sizeof(*stack))) fz_throw(ctx, FZ_ERROR_FO
 static void
 execute_charstring(fz_context *ctx, cff_t *cff, const uint8_t *pc, const uint8_t *end)
 {
-	double trans[32];
+	double trans[32] = { 0 };
 	double stack[48];
 	int sp = 0;
 	int stem_hints = 0;
 	uint8_t c;
 
+	/* 0 => starting, 1 => had hstem, 2 => anything else */
+	int start = 0;
+
 	while (pc < end)
 	{
 		c = *pc++;
+
+		/* An operator other than one of the hint ones immediately
+		 * disqualifies us from being in the hint extension state. */
+		if (c < 32 && (c != 1 && c != 18 && c != 19 && c != 20))
+			start = 2;
 
 		switch (c)
 		{
@@ -887,25 +936,27 @@ execute_charstring(fz_context *ctx, cff_t *cff, const uint8_t *pc, const uint8_t
 		case 2:
 		case 9:
 		case 13:
-		case 15:
-		case 16:
 		case 17:
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Reserved charstring byte");
 			break;
 
 		/* Deal with all the hints together */
 		case 18: /* hstemhm */
-		case 23: /* vstemhm */
 		case 1: /* hstem */
+			start = 1;
+		case 23: /* vstemhm */
 		case 3: /* vstem */
 			stem_hints += (sp/2);
 			goto clear;
 
 		case 19: /* hintmask */
 		case 20: /* cntrmask */
+			if (start == 1)
+				stem_hints += (sp/2);
 			pc += (stem_hints+7)>>3;
 			if (pc > end)
 				goto overflow;
+			start = 2;
 			goto clear;
 
 		/* The operators all clear the stack. */
@@ -914,6 +965,7 @@ execute_charstring(fz_context *ctx, cff_t *cff, const uint8_t *pc, const uint8_t
 		case 6: /* hlineto */
 		case 7: /* vlineto */
 		case 8: /* rrcurveto */
+		case 15: /* vsindex */
 		case 21: /* rmoveto */
 		case 22: /* hmoveto */
 		case 24: /* rcurveline */
@@ -1114,6 +1166,11 @@ overflow:
 			}
 			sp = 0;
 			break;
+		case 16: /* blend */
+			/* Consumes a lot of operators, leaves n, where n = stack[sp-1]. */
+			ATLEAST(1);
+			sp = stack[sp-1];
+			break;
 		case 29: /* callgsubr */
 			ATLEAST(1);
 			mark_subr_used(ctx, cff, stack[sp-1], 1);
@@ -1168,12 +1225,14 @@ atleast_fail:
 static void
 scan_charstrings(fz_context *ctx, cff_t *cff)
 {
-	uint32_t i, offset, end;
-	uint32_t num_charstrings = cff->charstrings_index.count;
-	int gid;
-	uint16_t *gids = cff->gids_to_keep.list;
+	uint32_t offset, end;
+	int num_charstrings = (int)cff->charstrings_index.count;
+	int i, gid;
+	usage_t *gids = cff->gids_to_keep.list;
 	int num_gids = cff->gids_to_keep.len;
+	int changed;
 
+	/* Scan through the charstrings.*/
 	offset = index_get(ctx, &cff->charstrings_index, 0);
 	gid = 0;
 	for (i = 0; i < num_charstrings; offset = end, i++)
@@ -1183,7 +1242,7 @@ scan_charstrings(fz_context *ctx, cff_t *cff)
 		{
 			/* Keep this. */
 		}
-		else if (gid < num_gids && i == gids[gid])
+		else if (gid < num_gids && i == gids[gid].num)
 		{
 			/* Keep this */
 			gid++;
@@ -1196,9 +1255,53 @@ scan_charstrings(fz_context *ctx, cff_t *cff)
 		execute_charstring(ctx, cff, &cff->base[offset], &cff->base[end]);
 	}
 
-	/* Now, move the extra ones onto the main list. */
-	for (gid = 0; gid < cff->extra_gids_to_keep.len; gid++)
-		usage_list_add(ctx, &cff->gids_to_keep, cff->extra_gids_to_keep.list[gid]);
+	/* Now we search the 'extra' ones, the 'subrs' (local) and 'gsubrs' (globals)
+	 * that are used. Searching each of these might find more that need to be
+	 * searched, so we use a loop. */
+	do
+	{
+		changed = 0;
+		/* Extra (subsidiary) glyphs */
+		for (i = 0; i < cff->extra_gids_to_keep.len; i++)
+		{
+			if (cff->extra_gids_to_keep.list[i].scanned)
+				continue;
+			cff->extra_gids_to_keep.list[i].scanned = 1;
+			gid = cff->extra_gids_to_keep.list[i].num;
+			usage_list_add(ctx, &cff->gids_to_keep, gid);
+			offset = index_get(ctx, &cff->charstrings_index, gid);
+			end = index_get(ctx, &cff->charstrings_index, gid+1);
+			execute_charstring(ctx, cff, &cff->base[offset], &cff->base[end]);
+			changed = 1;
+		}
+
+		/* Now, run through the locals, seeing what locals and globals they call.  */
+		for (i = 0; i < cff->local_usage.len; i++)
+		{
+			if (cff->local_usage.list[i].scanned)
+				continue;
+			cff->local_usage.list[i].scanned = 1;
+			gid = cff->local_usage.list[i].num;
+			offset = index_get(ctx, &cff->local_index, gid);
+			end = index_get(ctx, &cff->local_index, gid+1);
+			execute_charstring(ctx, cff, &cff->base[offset], &cff->base[end]);
+			changed = 1;
+		}
+
+		/* Now, run through the globals, seeing what globals they call.  */
+		for (i = 0; i < cff->global_usage.len; i++)
+		{
+			if (cff->global_usage.list[i].scanned)
+				continue;
+			cff->global_usage.list[i].scanned = 1;
+			gid = cff->global_usage.list[i].num;
+			offset = index_get(ctx, &cff->global_index, gid);
+			end = index_get(ctx, &cff->global_index, gid+1);
+			execute_charstring(ctx, cff, &cff->base[offset], &cff->base[end]);
+			changed = 1;
+		}
+	}
+	while (changed);
 }
 
 static void
@@ -1418,7 +1521,7 @@ load_charset_for_cidfont(fz_context *ctx, cff_t *cff)
 			if (d + 4 >= cff->base + cff->len)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 			first = get16(d);
-			nleft = get16(d+2) + 1;
+			nleft = get16(d+2);
 			d += 4;
 			while (nleft--)
 			{
@@ -1540,7 +1643,9 @@ update_dicts(fz_context *ctx, cff_t *cff, uint32_t offset)
 		offset += cff->string_index.index_size;
 	else
 		offset += 2;
-	if (cff->global_index.index_size)
+	if (cff->global_subset)
+		offset += (uint32_t)cff->global_subset->len;
+	else if (cff->global_index.index_size)
 		offset += cff->global_index.index_size;
 	else
 		offset += 2;
@@ -1564,7 +1669,12 @@ update_dicts(fz_context *ctx, cff_t *cff, uint32_t offset)
 	}
 	assert(top_dict_data[cff->top_dict_fixup_offsets.charstrings] == 29);
 	put32(top_dict_data + cff->top_dict_fixup_offsets.charstrings+1, offset);
-	offset += (uint32_t)cff->charstrings_subset->len;
+	if (cff->charstrings_subset)
+		offset += (uint32_t)cff->charstrings_subset->len;
+	else if (cff->charstrings_index.index_size)
+		offset += cff->charstrings_index.index_size;
+	else
+		offset += 2;
 	if (cff->top_dict_fixup_offsets.fdarray)
 	{
 		assert(top_dict_data[cff->top_dict_fixup_offsets.fdarray] == 29);
@@ -1620,7 +1730,7 @@ read_top_dict(fz_context *ctx, cff_t *cff, int idx)
 		switch (k)
 		{
 		case DICT_OP_Subrs:
-			cff->local_index_offset = dict_arg_int(ctx, &di, 0);
+			cff->local_index_offset = dict_arg_int(ctx, &di, 0) + cff->private_offset;
 			break;
 		default:
 			break;
@@ -1710,7 +1820,6 @@ make_new_private_dict(fz_context *ctx, cff_t *cff)
 			switch (k)
 			{
 			case DICT_OP_Subrs:
-				/* Drop this for now */
 				subrs = 1;
 				break;
 			default:
@@ -1924,6 +2033,12 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 
 		/* Next the Global subr index */
 		index_load(ctx, &cff.global_index, base, (uint32_t)len, cff.global_index_offset);
+		if (cff.global_index.count < 1240)
+			cff.gsubr_bias = 107;
+		else if (cff.global_index.count < 33900)
+			cff.gsubr_bias = 1131;
+		else
+			cff.gsubr_bias = 32768;
 
 		/* CFF files can contain several fonts, but we only want the first one. */
 		read_top_dict(ctx, &cff, 0);
@@ -1933,6 +2048,12 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 
 		index_load(ctx, &cff.charstrings_index, base, (uint32_t)len, cff.charstrings_index_offset);
 		index_load(ctx, &cff.local_index, base, (uint32_t)len, cff.local_index_offset);
+		if (cff.local_index.count < 1240)
+			cff.subr_bias = 107;
+		else if (cff.local_index.count < 33900)
+			cff.subr_bias = 1131;
+		else
+			cff.subr_bias = 32768;
 		index_load(ctx, &cff.fdarray_index, base, (uint32_t)len, cff.fdarray_index_offset);
 
 		/* Move our list of gids into our own storage. */
@@ -2049,7 +2170,12 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 		if (cff.fdselect_offset)
 			fz_write_data(ctx, out, base + cff.fdselect_offset, cff.fdselect_len);
 		/* Copy charstrings */
-		fz_write_data(ctx, out, cff.charstrings_subset->data, cff.charstrings_subset->len);
+		if (cff.charstrings_subset)
+			fz_write_data(ctx, out, cff.charstrings_subset->data, cff.charstrings_subset->len);
+		else if (cff.charstrings_index.index_size)
+			fz_write_data(ctx, out, base + cff.charstrings_index.index_offset, cff.charstrings_index.index_size);
+		else
+			fz_write_uint16_be(ctx, out, 0);
 		if (cff.fdarray)
 			output_fdarray(ctx, out, &cff);
 		/* Copy Private dict */
@@ -2068,6 +2194,13 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 		fz_drop_buffer(ctx, cff.private_subset);
 		fz_drop_buffer(ctx, cff.charstrings_subset);
 		fz_drop_buffer(ctx, cff.top_dict_subset);
+		fz_drop_buffer(ctx, cff.local_subset);
+		fz_drop_buffer(ctx, cff.global_subset);
+		fz_free(ctx, cff.gid_to_cid);
+		drop_usage_list(ctx, &cff.local_usage);
+		drop_usage_list(ctx, &cff.global_usage);
+		drop_usage_list(ctx, &cff.gids_to_keep);
+		drop_usage_list(ctx, &cff.extra_gids_to_keep);
 	}
 	fz_catch(ctx)
 	{

@@ -1051,7 +1051,7 @@ g_extra_declarations = textwrap.dedent(f'''
         pointer via Swig from Python/C#. */
         FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context* ctx, fz_document_recognize_content_fn fn, fz_stream* stream, fz_archive* dir);
 
-        /* Swig-friendly wrapper for pdf_choice_widget_options(), returns the
+        /** Swig-friendly wrapper for pdf_choice_widget_options(), returns the
         options directly in a vector. */
         FZ_FUNCTION std::vector<std::string> pdf_choice_widget_options2(fz_context* ctx, pdf_annot* tw, int exportval);
 
@@ -1073,6 +1073,9 @@ g_extra_declarations = textwrap.dedent(f'''
                 fz_compressed_buffer* buffer,
                 fz_image* mask
                 );
+
+        /** Swig-friendly wrapper for pdf_rearrange_pages(). */
+        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>* pages);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1262,6 +1265,11 @@ g_extra_definitions = textwrap.dedent(f'''
                     mask
                     );
             return ret;
+        }}
+
+        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>* pages)
+        {{
+            return pdf_rearrange_pages(ctx, doc, pages->size(), &(*pages)[0]);
         }}
         ''')
 
@@ -4577,7 +4585,7 @@ def refcount_check_code( out, refcheck_if):
             a static instance of this class template with T set to our wrapper
             class, for example:
 
-                static RefsCheck<fz_document, Document> s_Document_refs_check;
+                static RefsCheck<fz_document, FzDocument> s_FzDocument_refs_check;
 
             Then if s_check_refs is true, each constructor function calls
             .add(), the destructor calls .remove() and other class functions

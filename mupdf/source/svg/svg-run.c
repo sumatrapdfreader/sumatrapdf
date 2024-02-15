@@ -1249,8 +1249,8 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 	if (++local_state.use_depth > MAX_USE_DEPTH)
 	{
 		fz_warn(ctx, "svg: too much recursion");
-			return;
-		}
+		return;
+	}
 
 	svg_parse_common(ctx, doc, root, &local_state);
 	if (x_att) x = svg_parse_length(x_att, local_state.viewbox_w, local_state.fontsize);

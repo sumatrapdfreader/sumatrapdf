@@ -1902,7 +1902,7 @@ static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		else
 		{
 			pdf_dict_put_int(ctx, obj, PDF_NAME(Length), pdf_encrypted_len(ctx, opts->crypt, num, gen, len));
-			pdf_print_encrypted_obj(ctx, opts->out, obj, opts->do_tight, opts->do_ascii, opts->crypt, num, gen);
+			pdf_print_encrypted_obj(ctx, opts->out, obj, opts->do_tight, opts->do_ascii, opts->crypt, num, gen, NULL);
 			fz_write_string(ctx, opts->out, "\nstream\n");
 			pdf_encrypt_data(ctx, opts->crypt, num, gen, write_data, opts->out, data, len);
 		}
@@ -1982,7 +1982,7 @@ static void expandstream(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 		else
 		{
 			pdf_dict_put_int(ctx, obj, PDF_NAME(Length), pdf_encrypted_len(ctx, opts->crypt, num, gen, (int)len));
-			pdf_print_encrypted_obj(ctx, opts->out, obj, opts->do_tight, opts->do_ascii, opts->crypt, num, gen);
+			pdf_print_encrypted_obj(ctx, opts->out, obj, opts->do_tight, opts->do_ascii, opts->crypt, num, gen, NULL);
 			fz_write_string(ctx, opts->out, "\nstream\n");
 			pdf_encrypt_data(ctx, opts->crypt, num, gen, write_data, opts->out, data, len);
 		}
@@ -2151,7 +2151,7 @@ static void writeobject(fz_context *ctx, pdf_document *doc, pdf_write_state *opt
 			else
 			{
 				fz_write_printf(ctx, opts->out, "%d %d obj\n", num, gen);
-				pdf_print_encrypted_obj(ctx, opts->out, obj, opts->do_tight, opts->do_ascii, unenc ? NULL : opts->crypt, num, gen);
+				pdf_print_encrypted_obj(ctx, opts->out, obj, opts->do_tight, opts->do_ascii, unenc ? NULL : opts->crypt, num, gen, NULL);
 				fz_write_string(ctx, opts->out, "\nendobj\n\n");
 			}
 		}
@@ -2225,6 +2225,7 @@ static void writexref(fz_context *ctx, pdf_document *doc, pdf_write_state *opts,
 			trailer = pdf_keep_obj(ctx, pdf_trailer(ctx, doc));
 			pdf_dict_put_int(ctx, trailer, PDF_NAME(Size), pdf_xref_len(ctx, doc));
 			pdf_dict_put_int(ctx, trailer, PDF_NAME(Prev), doc->startxref);
+			pdf_dict_del(ctx, trailer, PDF_NAME(XRefStm));
 			if (!opts->do_snapshot)
 				doc->startxref = startxref;
 		}
@@ -3063,7 +3064,7 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 	}
 }
 
-static void clean_content_streams(fz_context *ctx, pdf_document *doc, int sanitize, int ascii)
+static void clean_content_streams(fz_context *ctx, pdf_document *doc, int sanitize, int ascii, int newlines)
 {
 	int n = pdf_count_pages(ctx, doc);
 	int i;
@@ -3074,6 +3075,7 @@ static void clean_content_streams(fz_context *ctx, pdf_document *doc, int saniti
 
 	options.recurse = 1;
 	options.ascii = ascii;
+	options.newlines = newlines;
 	options.filters = sanitize ? list : NULL;
 	list[0].filter = pdf_new_sanitize_filter;
 	list[0].options = &sopts;
@@ -3330,7 +3332,7 @@ prepare_for_save(fz_context *ctx, pdf_document *doc, const pdf_write_options *in
 		pdf_begin_operation(ctx, doc, "Clean content streams");
 		fz_try(ctx)
 		{
-			clean_content_streams(ctx, doc, in_opts->do_sanitize, in_opts->do_ascii);
+			clean_content_streams(ctx, doc, in_opts->do_sanitize, in_opts->do_ascii, in_opts->do_pretty);
 			pdf_end_operation(ctx, doc);
 		}
 		fz_catch(ctx)
@@ -3527,6 +3529,7 @@ typedef struct
 	fz_output *content_out;
 	int root_num;
 	int info_num;
+	int sep;
 } objstm_gather_data;
 
 static void
@@ -3592,6 +3595,7 @@ flush_gathered(fz_context *ctx, pdf_document *doc, objstm_gather_data *data)
 		}
 
 		data->n = 0;
+		data->sep = 0;
 	}
 	fz_always(ctx)
 	{
@@ -3648,7 +3652,7 @@ objstm_gather(fz_context *ctx, pdf_xref_entry *x, int i, pdf_document *doc, void
 		data->content_out = fz_new_output_with_buffer(ctx, data->content_buf);
 
 	olen = data->content_buf->len;
-	pdf_print_encrypted_obj(ctx, data->content_out, x->obj, 1, 0, NULL, 0, 0);
+	pdf_print_encrypted_obj(ctx, data->content_out, x->obj, 1, 0, NULL, 0, 0, NULL);
 	data->objnum[data->n] = i;
 	len = data->content_buf->len;
 	data->len[data->n] = len - olen;

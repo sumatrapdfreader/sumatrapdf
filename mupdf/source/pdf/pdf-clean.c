@@ -156,7 +156,7 @@ pdf_filter_content_stream(
 	fz_try(ctx)
 	{
 		*out_buf = fz_new_buffer(ctx, 1024);
-		top = proc_buffer = pdf_new_buffer_processor(ctx, *out_buf, options->ascii);
+		top = proc_buffer = pdf_new_buffer_processor(ctx, *out_buf, options->ascii, options->newlines);
 		if (num_filters > 0)
 		{
 			for (i = num_filters - 1; i >= 0; i--)
@@ -239,7 +239,7 @@ pdf_filter_type3(fz_context *ctx, pdf_document *doc, pdf_obj *obj, pdf_obj *page
 			in_res = page_res;
 
 		buffer = fz_new_buffer(ctx, 1024);
-		top = proc_buffer = pdf_new_buffer_processor(ctx, buffer, options->ascii);
+		top = proc_buffer = pdf_new_buffer_processor(ctx, buffer, options->ascii, options->newlines);
 		if (num_filters > 0)
 		{
 			for (i = num_filters - 1; i >= 0; i--)

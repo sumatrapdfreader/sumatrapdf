@@ -1577,7 +1577,7 @@ functions and class methods.]
         pointer via Swig from Python/C#. */
         FZ_FUNCTION int fz_document_recognize_content_fn_call(fz_context* ctx, fz_document_recognize_content_fn fn, fz_stream* stream, fz_archive* dir);
 
-        /* Swig-friendly wrapper for pdf_choice_widget_options(), returns the
+        /** Swig-friendly wrapper for pdf_choice_widget_options(), returns the
         options directly in a vector. */
         FZ_FUNCTION std::vector<std::string> pdf_choice_widget_options2(fz_context* ctx, pdf_annot* tw, int exportval);
 
@@ -1599,6 +1599,9 @@ functions and class methods.]
                 fz_compressed_buffer* buffer,
                 fz_image* mask
                 );
+
+        /** Swig-friendly wrapper for pdf_rearrange_pages(). */
+        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>* pages);
 
 
 Python/C# bindings details

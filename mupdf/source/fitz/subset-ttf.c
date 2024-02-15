@@ -69,6 +69,7 @@ typedef struct
 
 typedef struct
 {
+	int is_otf;
 	int symbolic;
 	encoding_t *encoding;
 	uint32_t orig_num_glyphs;
@@ -251,7 +252,10 @@ write_tables(fz_context *ctx, ttf_t *ttf, fz_output *out)
 	uint32_t offset;
 
 	/* scalar type - TTF for now - may need to cope with other types later. */
-	fz_write_int32_be(ctx, out, 0x00010000);
+	if (ttf->is_otf)
+		fz_write_int32_be(ctx, out, 0x4f54544f);
+	else
+		fz_write_int32_be(ctx, out, 0x00010000);
 
 	/* number of tables */
 	fz_write_uint16_be(ctx, out, ttf->len);
@@ -464,8 +468,10 @@ subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	uint32_t i, n, off;
 	ptr_list_t pl = { 0 };
 	size_t name_data_size;
-	uint8_t *new_name_data;
+	uint8_t *new_name_data = NULL;
 	size_t new_len;
+
+	fz_var(new_name_data);
 
 	fz_try(ctx)
 	{
@@ -506,6 +512,7 @@ subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	fz_always(ctx)
 	{
 		drop_ptr_list(ctx, &pl);
+		fz_free(ctx, new_name_data);
 	}
 	fz_catch(ctx)
 	{
@@ -788,7 +795,7 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 		offset = 14 + segs * 2 * 3 + 2 + seg * 2;
 		put16(d + offset - segs * 2, 0); /* Delta - always 0 for now. */
 		put16(d + offset, entries - offset); /* offset */
-		put16(d + entries, ttf->gid_renum[enc->gid[i]]); /* Insert an entry */
+		put16(d + entries, ttf->is_otf ? enc->gid[i] : ttf->gid_renum[enc->gid[i]]); /* Insert an entry */
 		entries += 2;
 		for (i++; i < n; i++)
 		{
@@ -799,7 +806,7 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 				while (seg_end < i)
 				{
 					seg_end++;
-					put16(d + entries, ttf->gid_renum[enc->gid[seg_end]]);
+					put16(d + entries, ttf->is_otf ? enc->gid[seg_end] : ttf->gid_renum[enc->gid[seg_end]]);
 					entries += 2;
 				}
 			}
@@ -909,7 +916,7 @@ read_hhea(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	/* Previously gids 0 to orig_num_long_hor_metrics-1 were described with
 	 * hor metrics, and the ones afterwards were fixed widths. Find where
 	 * that dividing line is in our new reduced set. */
-	if (ttf->encoding)
+	if (ttf->encoding && !ttf->is_otf)
 	{
 		ttf->new_num_long_hor_metrics = 0;
 		for (i = ttf->orig_num_long_hor_metrics-1; i > 0; i--)
@@ -1175,7 +1182,7 @@ subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 
 	for (i = 0; i < ttf->orig_num_long_hor_metrics; i++)
 	{
-		if (i == 0 || ttf->gid_renum[i])
+		if (i == 0 || ttf->is_otf || ttf->gid_renum[i])
 		{
 			put32(d, get32(s));
 			d += 4;
@@ -1189,7 +1196,7 @@ subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	}
 	for ( ; i < ttf->orig_num_glyphs; i++)
 	{
-		if (i == 0 || ttf->gid_renum[i])
+		if (i == 0 || ttf->is_otf || ttf->gid_renum[i])
 		{
 			put16(d, get16(s));
 			d += 2;
@@ -1353,6 +1360,24 @@ subset_post(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids
 	add_table(ctx, ttf, TAG("post"), t);
 }
 
+static void
+subset_CFF(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids, int symbolic, int cidfont)
+{
+	fz_buffer *t = read_table(ctx, stm, TAG("CFF "), 1);
+	fz_buffer *sub = NULL;
+
+	fz_var(sub);
+
+	fz_try(ctx)
+		sub = fz_subset_cff_for_gids(ctx, t, gids, num_gids, symbolic, cidfont);
+	fz_always(ctx)
+		fz_drop_buffer(ctx, t);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	add_table(ctx, ttf, TAG("CFF "), sub);
+}
+
 fz_buffer *
 fz_subset_ttf_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids, int symbolic, int cidfont)
 {
@@ -1366,6 +1391,7 @@ fz_subset_ttf_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 
 	fz_try(ctx)
 	{
+		ttf.is_otf = (fz_read_uint32_le(ctx, stm) == 0x4f54544f);
 		ttf.symbolic = symbolic;
 
 		/* Subset the name table. No other dependencies. */
@@ -1387,12 +1413,20 @@ fz_subset_ttf_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 		/* Read head and store the table. Remember the loca index size. */
 		read_head(ctx, &ttf, stm);
 
-		/* Read loca and store it. Stash a pointer to the table for quick access. */
-		read_loca(ctx, &ttf, stm);
+		if (ttf.is_otf)
+		{
+			subset_CFF(ctx, &ttf, stm, gids, num_gids, symbolic, cidfont);
+		}
 
-		/* Read the glyf data, and scan it for composites. This makes the gid_renum table,
-		 * subsets the glyf data, and rewrites the loca table. */
-		read_glyf(ctx, &ttf, stm, gids, num_gids);
+		/* Read loca and store it. Stash a pointer to the table for quick access. */
+		if (!ttf.is_otf)
+		{
+			read_loca(ctx, &ttf, stm);
+
+			/* Read the glyf data, and scan it for composites. This makes the gid_renum table,
+			 * subsets the glyf data, and rewrites the loca table. */
+			read_glyf(ctx, &ttf, stm, gids, num_gids);
+		}
 
 		/* Read hhea and store it. Remember numOfLongHorMetrics. */
 		read_hhea(ctx, &ttf, stm);
@@ -1421,9 +1455,12 @@ fz_subset_ttf_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 				printf("LOCA %d = %x\n", i, get_loca(ctx, &ttf, i));
 		}
 #endif
-		shrink_loca_if_possible(ctx, &ttf);
+		if (!ttf.is_otf)
+		{
+			shrink_loca_if_possible(ctx, &ttf);
 
-		update_num_glyphs(ctx, &ttf);
+			update_num_glyphs(ctx, &ttf);
+		}
 
 		if (!cidfont)
 		{
@@ -1456,8 +1493,15 @@ fz_subset_ttf_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 	}
 	fz_always(ctx)
 	{
+		int i;
+
 		fz_drop_output(ctx, out);
 		fz_drop_stream(ctx, stm);
+		for (i = 0; i < ttf.len; i++)
+			fz_drop_buffer(ctx, ttf.table[i].tab);
+		fz_free(ctx, ttf.table);
+		fz_free(ctx, ttf.gid_renum);
+		fz_free(ctx, ttf.encoding);
 	}
 	fz_catch(ctx)
 	{
