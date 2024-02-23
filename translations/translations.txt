@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1a85bfff7fe099c2e89a48fb37957c0df95d1853
+28c898ae0185da6d73060ebb919ab3d7a265c9d0
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -16,6 +16,7 @@ es:Comentario %s.
 fa:علامت گذاری %s. برای ویرایش Ctrl+click را بزنید
 fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
+gl:%s anotación. Ctrl+clic para editar.
 he:.כדי לערוך Ctrl +  הערה. לחץ על %s
 hu:Megjegyzés: %s. Szerkesztés: Ctrl+kattintás.
 it:Annotazione %s. Ctrl+clic per modificarla.
@@ -1492,6 +1493,7 @@ el:Συντομεύσεις πληκτρολογίου
 es:Atajos de teclado
 fa:میانبرهای &صفحه کلید
 fr:&Raccourcis clavier
+gl:Atallos de &teclado
 he:קיצורי דרך במקלדת
 hu:&Gyorsbillentyűk
 it:&Tasti rapidi
@@ -5937,6 +5939,7 @@ es:Eliminado historial de %d ficheros, miniaturas eliminadas.
 fa:تاریخچه %d پرونده حذف شد. تصاویر بند انگشتی حذف شدند.
 fr:Historique de %d fichiers effacé, vignettes supprimées.
 ga:Glanadh an t-oireas de %d comhad, mionsamhlacha scriosta.
+gl:Limpado historial de %d ficheiros, eliminadas miniaturas.
 he:.קבצים, תמונות ממוזערות נמחקו %d נוקתה היסטוריה של
 hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
@@ -5970,6 +5973,7 @@ es:Borrando historial...
 fa:پاک کردن تاریخجه
 fr:Effacement de l'historique…
 ga:Tá an t-oireas á ghlanadh...
+gl:Limpando historial...
 he:...מנקה היסטוריה
 hr:Brisanje povijesti...
 hu:Előzmények törlése...
@@ -6056,6 +6060,7 @@ uz:Yopish
 vn:Đóng lại
 :Close Other Tabs
 am:Փակել այլ ներդիրները
+ar:أغلق علامات التبويب الأخرى
 az:Digər tabları bağla
 bg:Затвори другите отметки
 br:Fechar Outras Abas
@@ -6976,6 +6981,7 @@ uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copy File Path
 am:Պատճենել ֆայլի ուղին
+ar:نسخ مسار الملف
 az:Faylın yolunu kopyala
 br:Copiar o Caminho do Arquivo
 ca:Copia el camí del fitxer
@@ -6989,6 +6995,7 @@ es:Copiar dirección del archivo
 fa:کپی کردن مسیر فایل
 fr:Copier le chemin du fichier
 ga:Cóipeáil Conair an Chomhaid
+gl:Copiar camiño do ficheiro
 he:העתק את נתיב הקובץ
 hr:Kopiraj putanju datoteke
 hu:Útvonal másolása
@@ -8557,6 +8564,7 @@ es:Eliminar anotación
 fa:حذف علامت‌گذاری‌
 fr:Supprimer l'annotation
 ga:Scrios an nóta mínithe
+gl:Eliminar anotación
 he:מחק הערה
 hr:Izbriši bilješku
 hu:Megjegyzés törlése
@@ -9058,6 +9066,7 @@ es:Editar %s anotación
 fa:ویرایش %s علامت‌گذاری‌
 fr:Modifier l'annotation %s
 ga:Cuir an nóta mínithe %s in eagar
+gl:Editar %s anotación
 hr:Uredi %s bilješku
 hu:%s. megjegyzés szerkesztése
 it:Modifica annotazione %s
@@ -9339,6 +9348,7 @@ de:Fehler
 el:Σφάλμα
 es:Error
 fr:Erreur
+gl:Erro
 he:שגיאה
 hu:Hiba
 it:Errore
@@ -9347,6 +9357,7 @@ pl:Błąd
 pt:Erro
 ro:Eroare
 ru:Ошибка
+sk:Chyba
 sr-rs:Грешка
 :Error loading %s
 am:Բացման սխալ %s
@@ -9698,7 +9709,7 @@ am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալին�
 ar:فشل في حذف مفاتيح مكتب تسجيل إلغاء التثبيت
 az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 bg:Неуспешно изтриване на ключовете на деинсталатора в регистъра
-br:Falhou em apagar as chaves de registro do desinstalador
+br:Falhou em apagar as chaves do registro do desinstalador
 bs:Neuspješno brisanje registarskih ključeva deinstalera
 by:Немагчыма знішчыць ключы рэестру знішчальніка
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
@@ -12716,7 +12727,7 @@ am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նա
 ar:دع Windows يظهر &معاينات لملفات PDF
 az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
 bg:Нека Windows показва &преглед на PDF документи
-br:Deixar o Windows mostrar as &pré-visualizações de documentos PDF
+br:Deixar o Windows mostrar as &pré-visualizações dos documentos PDF
 bs:Omogući Windows-ima da prikažu &pregled PDF dokumenata
 by:Паказваць &перадпрагляд дакументаў PDF у Windows
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
@@ -14491,6 +14502,7 @@ es:Abrir en nueva ventana
 fa:بازکردن در پنجره جدید
 fr:Ouvrir dans une nouvelle fenêtre
 ga:Oscail i bhfuinneog nua
+gl:Abrir en xanela nova
 he:פתח בחלון חדש
 hi:नई विंडो में खोलें
 hr:Otvori u novom prozoru
@@ -15807,7 +15819,7 @@ ar:الرجاء الإنتظار - اعادة...
 az:Görüntü hazırlanır, lütfən gözləyin...
 bg:Моля изчакайте - изображението се създава
 bn:দয়া করে অপেক্ষা করুন, লোড হচ্ছে....
-br:Por favor aguarde, renderizando...
+br:Por favor aguarde - renderizando...
 bs:Molim pričekajte, iscrtavam...
 by:Пачакайце - фармуецца малюнак...
 ca-xv:S'està renderitzant...
@@ -16725,6 +16737,7 @@ es:Propiedades...
 fa:مشخصات
 fr:Propriétés…
 ga:Airíonna...
+gl:Propiedades...
 hr:Svojstva...
 hu:Tulajdonságok
 it:Proprietà
@@ -19267,7 +19280,7 @@ am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
 az:%s mənbə faylının sinxronlaşdırma mövqeyi yoxdur
 bg:Файлът-източник %s няма точка на синхронизация
-br:O arquivo fonte %s não tem um ponto de sincronização
+br:O arquivo de origem %s não tem um ponto de sincronização
 bs:Izvorni fajl %s nema sinhronizacijske tačke
 by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
 ca-xv:El fitxer d'origen %s no té un punt de sincronització vàlid
@@ -20901,7 +20914,7 @@ ar:ملف مصدري غير معروف (%s)
 az:Naməlum mənbə faylı (%s)
 bg:Файлът, избран за източник, е непознат (%s)
 bn:অচেনা মূল ফাইল (%s)
-br:Arquivo fonte desconhecido (%s)
+br:Arquivo de origem desconhecido (%s)
 bs:Nepoznat izvorni fajl (%s)
 by:Невядомы зыходны файл (%s)
 ca-xv:Fitxer origen desconegut (%s)
