@@ -1774,6 +1774,7 @@ classextras = ClassExtras(
                             this->filters = nullptr;
                             pdf_filter_factory eof = {{ nullptr, nullptr}};
                             m_filters.push_back( eof);
+                            this->newlines = 0;
                         }}
                         ''',
                         comment = '/* Default constructor initialises all fields to null/zero. */',

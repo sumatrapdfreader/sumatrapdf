@@ -460,7 +460,7 @@ pdf_redact_end_page(fz_context *ctx, fz_buffer *buf, void *opaque)
 	pdf_obj *qp;
 	int i, n;
 
-	fz_append_string(ctx, buf, "0 g\n");
+	fz_append_string(ctx, buf, " 0 g\n");
 
 	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
 	{
@@ -526,20 +526,24 @@ pdf_redact_text_filter(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, f
 		{
 			qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
 			n = pdf_array_len(ctx, qp);
+			/* Note, we test for the intersection being a valid rectangle, NOT
+			 * a non-empty one. This is because we can have 'empty' character
+			 * boxes (say for diacritics), that while 0 width, do have a defined
+			 * position on the plane, and hence inclusion makes sense. */
 			if (n > 0)
 			{
 				for (i = 0; i < n; i += 8)
 				{
 					q = pdf_to_quad(ctx, qp, i);
 					r = fz_rect_from_quad(q);
-					if (!fz_is_empty_rect(fz_intersect_rect(bbox, r)))
+					if (fz_is_valid_rect(fz_intersect_rect(bbox, r)))
 						return 1;
 				}
 			}
 			else
 			{
 				r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-				if (!fz_is_empty_rect(fz_intersect_rect(bbox, r)))
+				if (fz_is_valid_rect(fz_intersect_rect(bbox, r)))
 					return 1;
 			}
 		}

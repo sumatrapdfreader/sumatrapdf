@@ -184,6 +184,29 @@ fz_strdup(fz_context *ctx, const char *s)
 	return ns;
 }
 
+fz_string *
+fz_new_string(fz_context *ctx, const char *s)
+{
+	fz_string *str = fz_malloc(ctx, sizeof(int)+strlen(s)+1);
+
+	str->refs = 1;
+	strcpy(str->str, s);
+
+	return str;
+}
+
+fz_string *fz_keep_string(fz_context *ctx, fz_string *str)
+{
+	return fz_keep_imp(ctx, str, &str->refs);
+}
+
+void fz_drop_string(fz_context *ctx, fz_string *str)
+{
+	if (fz_drop_imp(ctx, str, &str->refs))
+		fz_free(ctx, str);
+}
+
+
 static void *
 fz_malloc_default(void *opaque, size_t size)
 {

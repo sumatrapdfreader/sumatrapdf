@@ -898,7 +898,7 @@ All page objects are structured into a page tree, which defines the order the pa
     :arg contents: Contents string. This represents the page content stream - see section 3.7.1 in the PDF 1.7 specification.
 
 
-    :return: `PDFPage`.
+    :return: `PDFObject`.
 
 
     |example_tag|
@@ -915,7 +915,8 @@ All page objects are structured into a page tree, which defines the order the pa
         fonts.put("Helv", helvetica);
         var resources = pdfDocument.addObject(pdfDocument.newDictionary());
         resources.put("Font", fonts);
-        var blankPage = pdfDocument.addPage([0,0,300,350], 0, resources, "BT /Helv 12 Tf 100 100 Td (MuPDF!)Tj ET");
+        var pageObject = pdfDocument.addPage([0,0,300,350], 0, resources, "BT /Helv 12 Tf 100 100 Td (MuPDF!)Tj ET");
+        pdfDocument.insertPage(-1, pageObject);
 
 
     |example_tag|
@@ -1054,21 +1055,21 @@ The following functions can be used to copy objects from one :title:`PDF` docume
         pdfDocument.graftObject(obj);
 
 
-.. method:: graftPage(dstDoc, dstPageNumber, srcDoc, srcPageNumber)
-
-    |mutool_tag|
+.. method:: graftPage(to, srcDoc, srcPageNumber)
 
     Graft a page and its resources at the given page number from the source document to the requested page number in the document.
 
-    :arg dstPageNumber: The page number where the source page will be inserted. Page numbers start at `0`, and `-1` means at the end of the document.
+    :arg to: The page number to insert the page before. Page numbers start at `0` and `-1` means at the end of the document.
     :arg srcDoc: Source document.
     :arg srcPageNumber: Source page number.
 
     |example_tag|
 
+    This would copy the first page of the source document (`0`) to the last page (-1) of the current PDF document.
+
     .. code-block:: javascript
 
-        pdfDocument.graftObject(-1, srcdoc, 0);
+        pdfDocument.graftPage(-1, srcDoc, 0);
 
 
 ----

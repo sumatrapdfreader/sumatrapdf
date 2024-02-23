@@ -342,7 +342,7 @@ fz_colorspace *proof_cs = NULL;
 static const char *icc_filename = NULL;
 static float gamma_value = 1;
 static int invert = 0;
-static int kill = 0;
+static int s_kill = 0; /* Using `kill` causes problems on Android. */
 static int band_height = 0;
 static int lowmemory = 0;
 
@@ -601,14 +601,14 @@ file_level_trailers(fz_context *ctx)
 
 static void apply_kill_switch(fz_device *dev)
 {
-	if (kill == 1)
+	if (s_kill == 1)
 	{
 		/* kill all non-clipping text operators */
 		dev->fill_text = NULL;
 		dev->stroke_text = NULL;
 		dev->ignore_text = NULL;
 	}
-	else if (kill == 2)
+	else if (s_kill == 2)
 	{
 		/* kill all non-clipping path, image, and shading operators */
 		dev->fill_path = NULL;
@@ -2058,7 +2058,7 @@ int mudraw_main(int argc, char **argv)
 		case 'U': layout_css = fz_optarg; break;
 		case 'X': layout_use_doc_css = 0; break;
 
-		case 'K': ++kill; break;
+		case 'K': ++s_kill; break;
 
 		case 'O': spots = fz_atof(fz_optarg);
 #ifndef FZ_ENABLE_SPOT_RENDERING

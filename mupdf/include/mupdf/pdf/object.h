@@ -127,6 +127,7 @@ typedef struct
 
 int pdf_mark_list_push(fz_context *ctx, pdf_mark_list *list, pdf_obj *obj);
 void pdf_mark_list_pop(fz_context *ctx, pdf_mark_list *list);
+int pdf_mark_list_check(fz_context *ctx, pdf_mark_list *list, pdf_obj *obj);
 void pdf_mark_list_init(fz_context *ctx, pdf_mark_list *list);
 void pdf_mark_list_free(fz_context *ctx, pdf_mark_list *list);
 

@@ -26,6 +26,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define PDF_MAKE_NAME(STRING,NAME) STRING,
 static const char *PDF_NAME_LIST[] = {
@@ -365,7 +366,7 @@ int pdf_to_int(fz_context *ctx, pdf_obj *obj)
 	if (obj->kind == PDF_INT)
 		return (int)NUM(obj)->u.i;
 	if (obj->kind == PDF_REAL)
-		return (int)(NUM(obj)->u.f + 0.5f); /* No roundf in MSVC */
+		return (int)floorf(NUM(obj)->u.f + 0.5);
 	return 0;
 }
 
@@ -377,7 +378,7 @@ int pdf_to_int_default(fz_context *ctx, pdf_obj *obj, int def)
 	if (obj->kind == PDF_INT)
 		return (int)NUM(obj)->u.i;
 	if (obj->kind == PDF_REAL)
-		return (int)(NUM(obj)->u.f + 0.5f); /* No roundf in MSVC */
+		return (int)floorf(NUM(obj)->u.f + 0.5);
 	return def;
 }
 
@@ -389,7 +390,7 @@ int64_t pdf_to_int64(fz_context *ctx, pdf_obj *obj)
 	if (obj->kind == PDF_INT)
 		return NUM(obj)->u.i;
 	if (obj->kind == PDF_REAL)
-		return (((double)NUM(obj)->u.f) + 0.5f); /* No roundf in MSVC */
+		return (int64_t)floorf(NUM(obj)->u.f + 0.5);
 	return 0;
 }
 
@@ -2942,6 +2943,16 @@ pdf_mark_list_pop(fz_context *ctx, pdf_mark_list *marks)
 	--marks->len;
 }
 
+int
+pdf_mark_list_check(fz_context *ctx, pdf_mark_list *marks, pdf_obj *obj)
+{
+	if (pdf_mark_list_push(ctx, marks, obj))
+		return 1;
+	pdf_mark_list_pop(ctx, marks);
+
+	return 0;
+}
+
 void
 pdf_mark_list_init(fz_context *ctx, pdf_mark_list *marks)
 {
@@ -3558,7 +3569,7 @@ static void fmt_obj(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 	{
 		float f = pdf_to_real(ctx, obj);
 		if (f == (int)f)
-			fz_snprintf(buf, sizeof buf, "%d", pdf_to_int(ctx, obj));
+			fz_snprintf(buf, sizeof buf, "%d", (int)f);
 		else
 			fz_snprintf(buf, sizeof buf, "%g", f);
 		fmt_puts(ctx, fmt, buf);

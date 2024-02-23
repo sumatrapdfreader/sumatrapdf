@@ -773,7 +773,7 @@ static fz_html_box *find_table_row_context(fz_context *ctx, fz_html_box *box)
 	if (look)
 		return look;
 	fz_warn(ctx, "table-row not inside table element");
-	return box;
+	return NULL;
 }
 
 static fz_html_box *find_table_cell_context(fz_context *ctx, fz_html_box *box)
@@ -784,7 +784,7 @@ static fz_html_box *find_table_cell_context(fz_context *ctx, fz_html_box *box)
 	if (look)
 		return look;
 	fz_warn(ctx, "table-cell not inside table-row element");
-	return box;
+	return NULL;
 }
 
 static fz_html_box *find_inline_context(fz_context *ctx, struct genstate *g, fz_html_box *box)
@@ -914,19 +914,27 @@ static fz_html_box *gen2_table(fz_context *ctx, struct genstate *g, fz_html_box 
 
 static fz_html_box *gen2_table_row(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
 {
-	fz_html_box *this_box;
-	root_box = find_table_row_context(ctx, root_box);
+	fz_html_box *this_box, *table_box;
+
+	table_box = find_table_row_context(ctx, root_box);
+	if (!table_box)
+		return gen2_block(ctx, g, root_box, node, style);
+
 	this_box = new_box(ctx, g, node, BOX_TABLE_ROW, style);
-	append_box(ctx, root_box, this_box);
+	append_box(ctx, table_box, this_box);
 	return this_box;
 }
 
 static fz_html_box *gen2_table_cell(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
 {
-	fz_html_box *this_box;
-	root_box = find_table_cell_context(ctx, root_box);
+	fz_html_box *this_box, *row_box;
+
+	row_box = find_table_cell_context(ctx, root_box);
+	if (!row_box)
+		return gen2_block(ctx, g, root_box, node, style);
+
 	this_box = new_box(ctx, g, node, BOX_TABLE_CELL, style);
-	append_box(ctx, root_box, this_box);
+	append_box(ctx, row_box, this_box);
 	return this_box;
 }
 
@@ -1072,6 +1080,22 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 		this_box = gen2_block(ctx, g, root_box, node, style);
 		this_box->list_item = ++g->list_counter;
 		break;
+
+	// TODO: https://www.w3.org/TR/CSS2/tables.html#anonymous-boxes
+	//
+	// The table generation code should insert and create anonymous boxes
+	// for any missing child/parent elements.
+	//
+	// MISSING CHILDREN:
+	// 1: Wrap consecutive BLOCK found in a TABLE in an anon TABLE_ROW.
+	// 2: Wrap consecutive BLOCK found in a TABLE_ROW in an anon TABLE_CELL.
+	//
+	// MISSING PARENTS:
+	// 1: Wrap consecutive TABLE_CELL found outside TABLE_ROW in an anon TABLE_ROW
+	// 2: Wrap consecutive TABLE_ROW found outside TABLE in an anon TABLE
+	//
+	// For now we ignore this and treat any such elements that are out of
+	// context as plain block elements.
 
 	case DIS_TABLE:
 		this_box = gen2_table(ctx, g, root_box, node, style);

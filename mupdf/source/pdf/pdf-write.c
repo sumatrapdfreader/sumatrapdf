@@ -1261,7 +1261,7 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 }
 
 static void
-lpr_inherit_res_contents(fz_context *ctx, pdf_obj *res, pdf_obj *dict, pdf_obj *text)
+lpr_inherit_res_contents(fz_context *ctx, pdf_mark_list *list, int cycle, pdf_obj *res, pdf_obj *dict, pdf_obj *text)
 {
 	pdf_obj *o, *r;
 	int i, n;
@@ -1271,18 +1271,24 @@ lpr_inherit_res_contents(fz_context *ctx, pdf_obj *res, pdf_obj *dict, pdf_obj *
 	if (!o)
 		return;
 
+	if (!cycle)
+		cycle = pdf_mark_list_check(ctx, list, o);
+
 	/* If the resources dict we are building doesn't have an entry of this
 	 * type yet, then just copy it (ensuring it's not a reference) */
 	r = pdf_dict_get(ctx, res, text);
 	if (r == NULL)
 	{
-		o = pdf_resolve_indirect(ctx, o);
-		if (pdf_is_dict(ctx, o))
-			o = pdf_copy_dict(ctx, o);
-		else if (pdf_is_array(ctx, o))
-			o = pdf_copy_array(ctx, o);
-		else
-			o = NULL;
+		/* Only copy the dict if to do so would not cause a cycle! */
+		if (!cycle)
+		{
+			if (pdf_is_dict(ctx, o))
+				o = pdf_copy_dict(ctx, o);
+			else if (pdf_is_array(ctx, o))
+				o = pdf_copy_array(ctx, o);
+			else
+				o = NULL;
+		}
 		if (o)
 			pdf_dict_put_drop(ctx, res, text, o);
 		return;
@@ -1305,41 +1311,59 @@ lpr_inherit_res_contents(fz_context *ctx, pdf_obj *res, pdf_obj *dict, pdf_obj *
 }
 
 static void
-lpr_inherit_res(fz_context *ctx, pdf_obj *node, int depth, pdf_obj *dict)
+lpr_inherit_res(fz_context *ctx, pdf_mark_list *list, pdf_obj *node, int depth, pdf_obj *dict)
 {
 	while (1)
 	{
 		pdf_obj *o;
+		int cycle;
 
 		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
 		depth--;
 		if (!node || depth < 0)
 			break;
 
+		cycle = pdf_mark_list_push(ctx, list, node);
 		o = pdf_dict_get(ctx, node, PDF_NAME(Resources));
 		if (o)
 		{
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(ExtGState));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(ColorSpace));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(Pattern));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(Shading));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(XObject));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(Font));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(ProcSet));
-			lpr_inherit_res_contents(ctx, dict, o, PDF_NAME(Properties));
+			int cycle2 = cycle;
+			if (!cycle)
+				cycle2 = pdf_mark_list_push(ctx, list, o);
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(ExtGState));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(ColorSpace));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(Pattern));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(Shading));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(XObject));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(Font));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(ProcSet));
+			lpr_inherit_res_contents(ctx, list, cycle2, dict, o, PDF_NAME(Properties));
+			if (!cycle2)
+				pdf_mark_list_pop(ctx, list);
 		}
+		if (!cycle)
+			pdf_mark_list_pop(ctx, list);
 	}
 }
 
 static pdf_obj *
-lpr_inherit(fz_context *ctx, pdf_obj *node, char *text, int depth)
+lpr_inherit(fz_context *ctx, pdf_mark_list *list, pdf_obj *node, char *text, int depth)
 {
 	do
 	{
 		pdf_obj *o = pdf_dict_gets(ctx, node, text);
 
 		if (o)
+		{
+			/* Watch for cycling here. If we do hit a cycle, then take
+			 * care NOT to resolve the indirection to avoid creating direct
+			 * object cycles. */
+			if (pdf_mark_list_push(ctx, list, o))
+				return o;
+
+			pdf_mark_list_pop(ctx, list);
 			return pdf_resolve_indirect(ctx, o);
+		}
 		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
 		depth--;
 	}
@@ -1373,23 +1397,23 @@ lpr(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_obj *node, int 
 				o = pdf_keep_obj(ctx, pdf_new_dict(ctx, doc, 2));
 				pdf_dict_put(ctx, node, PDF_NAME(Resources), o);
 			}
-			lpr_inherit_res(ctx, node, depth, o);
-			r = lpr_inherit(ctx, node, "MediaBox", depth);
+			lpr_inherit_res(ctx, list, node, depth, o);
+			r = lpr_inherit(ctx, list, node, "MediaBox", depth);
 			if (r)
 				pdf_dict_put(ctx, node, PDF_NAME(MediaBox), r);
-			r = lpr_inherit(ctx, node, "CropBox", depth);
+			r = lpr_inherit(ctx, list, node, "CropBox", depth);
 			if (r)
 				pdf_dict_put(ctx, node, PDF_NAME(CropBox), r);
-			r = lpr_inherit(ctx, node, "BleedBox", depth);
+			r = lpr_inherit(ctx, list, node, "BleedBox", depth);
 			if (r)
 				pdf_dict_put(ctx, node, PDF_NAME(BleedBox), r);
-			r = lpr_inherit(ctx, node, "TrimBox", depth);
+			r = lpr_inherit(ctx, list, node, "TrimBox", depth);
 			if (r)
 				pdf_dict_put(ctx, node, PDF_NAME(TrimBox), r);
-			r = lpr_inherit(ctx, node, "ArtBox", depth);
+			r = lpr_inherit(ctx, list, node, "ArtBox", depth);
 			if (r)
 				pdf_dict_put(ctx, node, PDF_NAME(ArtBox), r);
-			r = lpr_inherit(ctx, node, "Rotate", depth);
+			r = lpr_inherit(ctx, list, node, "Rotate", depth);
 			if (r)
 				pdf_dict_put(ctx, node, PDF_NAME(Rotate), r);
 			page++;
@@ -1412,11 +1436,12 @@ lpr(fz_context *ctx, pdf_document *doc, pdf_mark_list *list, pdf_obj *node, int 
 		}
 	}
 	fz_always(ctx)
+	{
+		pdf_mark_list_pop(ctx, list);
 		pdf_drop_obj(ctx, o);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
-
-	pdf_mark_list_pop(ctx, list);
 
 	return page;
 }

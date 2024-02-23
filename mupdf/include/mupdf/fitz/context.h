@@ -724,6 +724,34 @@ char *fz_strdup(fz_context *ctx, const char *s);
 */
 void fz_memrnd(fz_context *ctx, uint8_t *block, int len);
 
+/*
+	Reference counted malloced C strings.
+*/
+typedef struct
+{
+	int refs;
+	char str[1];
+} fz_string;
+
+/*
+	Allocate a new string to hold a copy of str.
+
+	Returns with a refcount of 1.
+*/
+fz_string *fz_new_string(fz_context *ctx, const char *str);
+
+/*
+	Take another reference to a string.
+*/
+fz_string *fz_keep_string(fz_context *ctx, fz_string *str);
+
+/*
+	Drop a reference to a string, freeing if the refcount
+	reaches 0.
+*/
+void fz_drop_string(fz_context *ctx, fz_string *str);
+
+#define fz_cstring_from_string(A) ((A) == NULL ? NULL : (A)->str)
 
 /* Implementation details: subject to change. */
 

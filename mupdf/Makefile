@@ -41,9 +41,11 @@ VERSION_MINOR = $(shell grep "define FZ_VERSION_MINOR" include/mupdf/fitz/versio
 VERSION_PATCH = $(shell grep "define FZ_VERSION_PATCH" include/mupdf/fitz/version.h | cut -d ' ' -f 3)
 
 ifeq ($(LINUX_OR_OPENBSD),yes)
-  SO_VERSION = .$(VERSION_MINOR).$(VERSION_PATCH)
-  ifeq ($(OS),Linux)
-    SO_VERSION_LINUX := yes
+  ifneq ($(USE_SONAME),no)
+    SO_VERSION = .$(VERSION_MINOR).$(VERSION_PATCH)
+    ifeq ($(OS),Linux)
+      SO_VERSION_LINUX := yes
+    endif
   endif
 endif
 

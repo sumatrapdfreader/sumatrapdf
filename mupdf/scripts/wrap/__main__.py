@@ -640,10 +640,10 @@ Usage:
                     Set -j arg used when action 'm' calls make (not
                     Windows). If <N> is 0 we use the number of CPUs
                     (from Python's multiprocessing.cpu_count()).
-                --m-target
+                --m-target <target>
                     Set target for action 'm'. Default is blank, so make will
                     build the default `all` target.
-                --m-vars
+                --m-vars <text>
                     Text to insert near start of the action 'm' make command,
                     typically to set MuPDF build flags, for example:
                         --m-vars 'HAVE_LIBCRYPTO=no'
@@ -1161,6 +1161,8 @@ def get_so_version( build_dirs):
     Returns '' on macos.
     '''
     if state.state_.macos or state.state_.pyodide:
+        return ''
+    if os.environ.get('USE_SONAME') == 'no':
         return ''
     d = dict()
     def get_v( name):
@@ -1705,7 +1707,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
 
                     elif 'shared' in dir_so_flags:
                         link_soname_arg = ''
-                        if state.state_.linux:
+                        if state.state_.linux and so_version:
                             link_soname_arg = f'-Wl,-soname,{os.path.basename(libmupdfcpp)}'
                         command = ( textwrap.dedent(
                                 f'''

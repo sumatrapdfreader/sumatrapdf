@@ -2293,3 +2293,228 @@ int pdf_count_signatures(fz_context *ctx, pdf_document *doc)
 	pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), count_sigs, NULL, &n, ft_name, &ft);
 	return n;
 }
+
+/*
+ * Bake interactive form fields into static content.
+ */
+
+static pdf_obj *get_annot_ap(fz_context *ctx, pdf_obj *annot)
+{
+	pdf_obj *ap = pdf_dict_get(ctx, annot, PDF_NAME(AP));
+	pdf_obj *as = pdf_dict_get(ctx, annot, PDF_NAME(AS));
+	if (ap)
+	{
+		ap = pdf_dict_get(ctx, ap, PDF_NAME(N));
+		if (pdf_is_stream(ctx, ap))
+			return ap;
+		ap = pdf_dict_get(ctx, ap, as);
+		if (pdf_is_stream(ctx, ap))
+			return ap;
+	}
+	return NULL;
+}
+
+static fz_matrix get_annot_transform(fz_context *ctx, pdf_obj *annot, pdf_obj *ap)
+{
+	float w, h, x, y;
+	fz_matrix transform;
+	fz_rect bbox;
+	fz_rect rect;
+
+	rect = pdf_dict_get_rect(ctx, annot, PDF_NAME(Rect));
+	bbox = pdf_dict_get_rect(ctx, ap, PDF_NAME(BBox));
+	transform = pdf_dict_get_matrix(ctx, ap, PDF_NAME(Matrix));
+
+	bbox = fz_transform_rect(bbox, transform);
+	w = (rect.x1 - rect.x0) / (bbox.x1 - bbox.x0);
+	h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
+	x = rect.x0 - bbox.x0 * w;
+	y = rect.y0 - bbox.y0 * h;
+
+	return fz_make_matrix(w, 0, 0, h, x, y);
+}
+
+static void pdf_bake_annot(fz_context *ctx, fz_buffer *buf, pdf_document *doc, pdf_obj *page, pdf_obj *res_xobj, pdf_obj *annot)
+{
+	fz_matrix m;
+	pdf_obj *ap;
+	char name[20];
+
+	ap = get_annot_ap(ctx, annot);
+	if (ap)
+	{
+		fz_snprintf(name, sizeof name, "Annot%d", pdf_to_num(ctx, annot));
+		pdf_dict_puts(ctx, res_xobj, name, ap);
+		pdf_dict_put(ctx, ap, PDF_NAME(Type), PDF_NAME(XObject));
+		pdf_dict_put(ctx, ap, PDF_NAME(Subtype), PDF_NAME(Form));
+		m = get_annot_transform(ctx, annot, ap);
+		fz_append_printf(ctx, buf,
+			"q\n%g %g %g %g %g %g cm\n/%s Do\nQ\n",
+			m.a, m.b, m.c, m.d, m.e, m.f,
+			name
+		);
+	}
+}
+
+static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int bake_annots, int bake_widgets)
+{
+	pdf_obj *res;
+	pdf_obj *res_xobj;
+	pdf_obj *contents;
+	pdf_obj *new_contents = NULL;
+	pdf_obj *annots;
+	pdf_obj *annot;
+	pdf_obj *subtype;
+	pdf_obj *prologue = NULL;
+	fz_buffer *buf = NULL;
+	int underflow, overflow;
+	int i;
+
+	fz_var(buf);
+	fz_var(prologue);
+	fz_var(new_contents);
+
+	annots = pdf_dict_get(ctx, page, PDF_NAME(Annots));
+	if (pdf_array_len(ctx, annots) == 0)
+		return;
+
+	res = pdf_dict_get(ctx, page, PDF_NAME(Resources));
+	if (!res)
+		res = pdf_dict_put_dict(ctx, page, PDF_NAME(Resources), 4);
+
+	res_xobj = pdf_dict_get(ctx, res, PDF_NAME(XObject));
+	if (!res_xobj)
+		res_xobj = pdf_dict_put_dict(ctx, res, PDF_NAME(XObject), 8);
+
+	fz_try(ctx)
+	{
+		// Ensure that the graphics state is balanced.
+		contents = pdf_dict_get(ctx, page, PDF_NAME(Contents));
+		pdf_count_q_balance(ctx, doc, res, contents, &underflow, &overflow);
+
+		// Prepend enough 'q' to ensure we can get back to initial state.
+		buf = fz_new_buffer(ctx, 1024);
+		fz_append_string(ctx, buf, "q\n");
+		while (underflow-- > 0)
+			fz_append_string(ctx, buf, "q\n");
+
+		prologue = pdf_add_stream(ctx, doc, buf, NULL, 0);
+		fz_drop_buffer(ctx, buf);
+		buf = NULL;
+
+		// Append enough 'Q' to get back to initial state.
+		buf = fz_new_buffer(ctx, 1024);
+		fz_append_string(ctx, buf, "Q\n");
+		while (overflow-- > 0)
+			fz_append_string(ctx, buf, "Q\n");
+
+		for (i = 0; i < pdf_array_len(ctx, annots); )
+		{
+			annot = pdf_array_get(ctx, annots, i);
+			subtype = pdf_dict_get(ctx, annot, PDF_NAME(Subtype));
+			if (subtype == PDF_NAME(Link))
+			{
+				++i;
+			}
+			else if (subtype == PDF_NAME(Widget))
+			{
+				if (bake_widgets)
+				{
+					pdf_bake_annot(ctx, buf, doc, page, res_xobj, annot);
+					pdf_array_delete(ctx, annots, i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+			else
+			{
+				if (bake_annots)
+				{
+					pdf_bake_annot(ctx, buf, doc, page, res_xobj, annot);
+					pdf_array_delete(ctx, annots, i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+		}
+
+		if (!pdf_is_array(ctx, contents))
+		{
+			new_contents = pdf_new_array(ctx, doc, 10);
+			pdf_array_push(ctx, new_contents, prologue);
+			pdf_array_push(ctx, new_contents, contents);
+			pdf_dict_put(ctx, page, PDF_NAME(Contents), new_contents);
+			pdf_drop_obj(ctx, new_contents);
+			contents = new_contents;
+			new_contents = NULL;
+		}
+		else
+		{
+			pdf_array_insert(ctx, contents, prologue, 0);
+		}
+
+		pdf_array_push_drop(ctx, contents, pdf_add_stream(ctx, doc, buf, NULL, 0));
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		pdf_drop_obj(ctx, prologue);
+		pdf_drop_obj(ctx, new_contents);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+void pdf_bake_document(fz_context *ctx, pdf_document *doc, int bake_annots, int bake_widgets)
+{
+	pdf_page *page = NULL;
+	pdf_annot *annot;
+	int i, n;
+
+	fz_var(page);
+
+	pdf_begin_operation(ctx, doc, "Bake interactive content");
+	fz_try(ctx)
+	{
+		n = pdf_count_pages(ctx, doc);
+		for (i = 0; i < n; ++i)
+		{
+			page = pdf_load_page(ctx, doc, i);
+
+			if (bake_annots)
+				for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
+					pdf_annot_request_synthesis(ctx, annot);
+			if (bake_widgets)
+				for (annot = pdf_first_widget(ctx, page); annot; annot = pdf_next_widget(ctx, annot))
+					pdf_annot_request_synthesis(ctx, annot);
+			pdf_update_page(ctx, page);
+
+			pdf_bake_page(ctx, doc, page->obj, bake_annots, bake_widgets);
+
+			fz_drop_page(ctx, (fz_page*)page);
+			page = NULL;
+		}
+
+		if (bake_widgets)
+		{
+			pdf_obj *trailer = pdf_trailer(ctx, doc);
+			pdf_obj *root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
+			pdf_dict_del(ctx, root, PDF_NAME(AcroForm));
+		}
+		pdf_end_operation(ctx, doc);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_page(ctx, (fz_page*)page);
+	}
+	fz_catch(ctx)
+	{
+		pdf_abandon_operation(ctx, doc);
+	}
+}

@@ -2030,7 +2030,6 @@ visible:
 				int cached;
 				fz_list_tile_data *data;
 				fz_rect tile_rect;
-				align_node_for_pointer(&node);
 				data = (fz_list_tile_data *)node;
 				tiled++;
 				tile_rect = data->view;
@@ -2054,7 +2053,6 @@ visible:
 				fz_set_default_colorspaces(ctx, dev, *(fz_default_colorspaces **)node);
 				break;
 			case FZ_CMD_BEGIN_LAYER:
-				align_node_for_pointer(&node);
 				fz_begin_layer(ctx, dev, (const char *)node);
 				break;
 			case FZ_CMD_END_LAYER:

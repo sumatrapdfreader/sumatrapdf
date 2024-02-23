@@ -129,6 +129,10 @@ typedef struct
 	uint32_t fdselect_len;
 	uint32_t fdarray_index_offset;
 
+	uint16_t unpacked_charset_len;
+	uint16_t unpacked_charset_max;
+	uint16_t *unpacked_charset;
+
 	struct
 	{
 		fz_buffer *rewritten_dict;
@@ -162,19 +166,19 @@ typedef struct
 } cff_t;
 
 /* cid -> gid */
-static const uint8_t standard_encoding[] =
+static const uint8_t standard_encoding[256] =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-	32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-	48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-	64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-	80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+	17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+	33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+	49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+	65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
+	81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 109, 110,
+	0, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 	0, 111, 112, 113, 114, 0, 115, 116, 117, 118, 119, 120, 121, 122, 0, 123,
 	0, 124, 125, 126, 127, 128, 129, 130, 131, 0, 132, 133, 0, 134, 135, 136,
 	137, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -890,13 +894,24 @@ use_sub_char(fz_context *ctx, cff_t *cff, int code)
 	/* code is a character code in 'standard encoding'. We
 	 * need to map that to whatever glyph that would be in
 	 * standard encoding, and mark that glyph as being used. */
-	uint8_t gid;
+	uint32_t i, gid;
 
 	if (code < 0 || code > 255)
 		return;
-	gid = standard_encoding[code];
-	if (gid == 0)
+	i = standard_encoding[code];
+	if (i == 0)
 		return;
+
+	for (gid = 0; gid < cff->unpacked_charset_len; gid++)
+	{
+		if (cff->unpacked_charset[gid] == i)
+			break;
+	}
+	if (gid == cff->unpacked_charset_len)
+	{
+		fz_warn(ctx, "subsidiary char out of range");
+		return;
+	}
 
 	if (usage_list_contains(ctx, &cff->gids_to_keep, gid))
 		return;
@@ -1364,7 +1379,7 @@ get_charset_len(fz_context *ctx, cff_t *cff)
 	const uint8_t *d = cff->base + charset_offset;
 	const uint8_t *d0 = d;
 	uint8_t fmt;
-	uint32_t n;
+	uint32_t i, n;
 
 	if (charset_offset < 2)
 	{
@@ -1380,36 +1395,73 @@ get_charset_len(fz_context *ctx, cff_t *cff)
 
 	if (fmt == 0)
 	{
-		d += 2*(n-1);
+		cff->unpacked_charset = fz_malloc(ctx, sizeof(uint16_t) * n);
+		cff->unpacked_charset_len = cff->unpacked_charset_max = n;
+		cff->unpacked_charset[0] = 0;
+		for (i = 1; i < n; i++)
+		{
+			cff->unpacked_charset[i] = get16(d);
+			d += 2;
+		}
 	}
 	else if (fmt == 1)
 	{
+		cff->unpacked_charset = fz_malloc(ctx, sizeof(uint16_t) * 256);
+		cff->unpacked_charset_max = 256;
+		cff->unpacked_charset_len = 1;
+		cff->unpacked_charset[0] = 0;
 		n--;
 		while (n > 0)
 		{
-			/* uint16_t first; */
+			uint16_t first;
 			uint32_t nleft;
 			if (d + 3>= cff->base + cff->len)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
-			/* first = get16(d); */
+			first = get16(d);
 			nleft = d[2] + 1;
 			d += 3;
 			n -= nleft;
+			while (nleft)
+			{
+				if (cff->unpacked_charset_len == cff->unpacked_charset_max)
+				{
+					cff->unpacked_charset = fz_realloc(ctx, cff->unpacked_charset, sizeof(uint16_t) * 2 * cff->unpacked_charset_max);
+					cff->unpacked_charset_max *= 2;
+				}
+				cff->unpacked_charset[cff->unpacked_charset_len++] = first;
+				first++;
+				nleft--;
+			}
 		}
 	}
 	else if (fmt == 2)
 	{
+		cff->unpacked_charset = fz_malloc(ctx, sizeof(uint16_t) * 256);
+		cff->unpacked_charset_max = 256;
+		cff->unpacked_charset_len = 1;
+		cff->unpacked_charset[0] = 0;
 		n--;
 		while (n > 0)
 		{
-			/* uint16_t first; */
+			uint16_t first;
 			uint32_t nleft;
 			if (d + 4 >= cff->base + cff->len)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
-			/* first = get16(d); */
+			first = get16(d);
 			nleft = get16(d+2) + 1;
 			d += 4;
 			n -= nleft;
+			while (nleft)
+			{
+				if (cff->unpacked_charset_len == cff->unpacked_charset_max)
+				{
+					cff->unpacked_charset = fz_realloc(ctx, cff->unpacked_charset, sizeof(uint16_t) * 2 * cff->unpacked_charset_max);
+					cff->unpacked_charset_max *= 2;
+				}
+				cff->unpacked_charset[cff->unpacked_charset_len++] = first;
+				first++;
+				nleft--;
+			}
 		}
 	}
 	else
@@ -1450,18 +1502,7 @@ get_fdselect_len(fz_context *ctx, cff_t *cff)
 		if (d + 2 >= cff->base + cff->len)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt fdselect");
 		n = get16(d);
-		d += 2;
-		while (n > 0)
-		{
-			/* uint16_t first; */
-			uint32_t nleft;
-			if (d + 3 >= cff->base + cff->len)
-				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
-			/* first = get16(d); */
-			nleft = d[2] + 1;
-			d += 3;
-			n -= nleft;
-		}
+		d += 2 + 3*n;
 		if (d + 2 >= cff->base + cff->len)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt fdselect");
 		d += 2;
@@ -1590,6 +1631,9 @@ rewrite_fdarray(fz_context *ctx, cff_t *cff, uint32_t offset0)
 	uint32_t len = 0;
 	uint8_t os;
 	uint32_t offset;
+
+	if (cff->fdarray == NULL)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Expected to rewrite an fdarray");
 
 	/* Count how many bytes the index will require. */
 	for (i = 0; i < n; i++)
@@ -1760,12 +1804,22 @@ make_new_top_dict(fz_context *ctx, cff_t *cff)
 			switch (k)
 			{
 			case DICT_OP_charset:
-				di.arg[0].u.i = 0x80000000;
-				cff->top_dict_fixup_offsets.charset = fz_tell_output(ctx, out);
+				if (cff->charset_offset < 2)
+					di.arg[0].u.i = cff->charset_offset;
+				else
+				{
+					di.arg[0].u.i = 0x80000000;
+					cff->top_dict_fixup_offsets.charset = fz_tell_output(ctx, out);
+				}
 				break;
 			case DICT_OP_Encoding:
-				di.arg[0].u.i = 0x80000000;
-				cff->top_dict_fixup_offsets.encoding = fz_tell_output(ctx, out);
+				if (cff->encoding_offset < 2)
+					di.arg[0].u.i = cff->encoding_offset;
+				else
+				{
+					di.arg[0].u.i = 0x80000000;
+					cff->top_dict_fixup_offsets.encoding = fz_tell_output(ctx, out);
+				}
 				break;
 			case DICT_OP_CharStrings:
 				di.arg[0].u.i = 0x80000000;
@@ -2071,6 +2125,9 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 				usage_list_add(ctx, &cff.gids_to_keep, gids[i]);
 		}
 
+		get_encoding_len(ctx, &cff);
+		get_charset_len(ctx, &cff);
+
 		/* Scan charstrings. */
 		scan_charstrings(ctx, &cff);
 
@@ -2079,8 +2136,6 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 		subset_locals(ctx, &cff);
 		subset_globals(ctx, &cff);
 
-		get_encoding_len(ctx, &cff);
-		get_charset_len(ctx, &cff);
 		if (cidfont)
 		{
 			get_fdselect_len(ctx, &cff);
@@ -2201,6 +2256,16 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 		drop_usage_list(ctx, &cff.global_usage);
 		drop_usage_list(ctx, &cff.gids_to_keep);
 		drop_usage_list(ctx, &cff.extra_gids_to_keep);
+		if (cff.fdarray)
+		{
+			int n = cff.fdarray_index.count;
+			int i;
+
+			for (i = 0; i < n; i++)
+				fz_drop_buffer(ctx, cff.fdarray[i].rewritten_dict);
+			fz_free(ctx, cff.fdarray);
+		}
+		fz_free(ctx, cff.unpacked_charset);
 	}
 	fz_catch(ctx)
 	{

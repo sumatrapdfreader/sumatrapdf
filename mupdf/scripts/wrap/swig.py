@@ -898,6 +898,8 @@ def build_swig(
             {{
                 %template(vectoruc) vector<unsigned char>;
                 %template(vectori) vector<int>;
+                %template(vectorf) vector<float>;
+                %template(vectord) vector<double>;
                 %template(vectors) vector<std::string>;
                 %template(vectorq) vector<{rename.namespace_class("fz_quad")}>;
                 %template(vector_search_page2_hit) vector<fz_search_page2_hit>;

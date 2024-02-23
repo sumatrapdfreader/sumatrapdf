@@ -372,7 +372,7 @@ ptr_list_add(fz_context *ctx, ptr_list_t *pl, uint8_t *ptr)
 		int n = pl->max * 2;
 		if (n == 0)
 			n = 32;
-		pl->ptr = fz_malloc(ctx, sizeof(*pl->ptr) * n);
+		pl->ptr = fz_realloc(ctx, pl->ptr, sizeof(*pl->ptr) * n);
 		pl->max = n;
 	}
 	pl->ptr[pl->len++] = ptr;
@@ -463,13 +463,18 @@ find_string_in_block(const uint8_t *str, size_t str_len, const uint8_t *block, s
 static void
 subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 {
-	fz_buffer *t = read_table(ctx, stm, TAG("name"), 1);
-	uint8_t *d = t->data;
+	fz_buffer *t = read_table(ctx, stm, TAG("name"), 0);
+	uint8_t *d;
 	uint32_t i, n, off;
 	ptr_list_t pl = { 0 };
 	size_t name_data_size;
 	uint8_t *new_name_data = NULL;
 	size_t new_len;
+
+	if (t == NULL)
+		return; /* No name table */
+
+	d = t->data;
 
 	fz_var(new_name_data);
 
@@ -480,7 +485,7 @@ subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 
 		n = get16(d+2);
 		off = get16(d+4);
-		name_data_size = t->len - 6 + 12*n;
+		name_data_size = t->len - 6 - 12*n;
 
 		if (t->len < 6 + 12*n)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated name table");
@@ -526,12 +531,13 @@ subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 static encoding_t *
 load_enc_tab0(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 {
-	encoding_t *enc = fz_malloc_struct(ctx, encoding_t);
+	encoding_t *enc;
 	int i;
 
 	if (data_size < 262)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated cmap 0 format table");
 
+	enc = fz_malloc_struct(ctx, encoding_t);
 	d += offset + 6;
 
 	enc->max = 256;
@@ -544,19 +550,21 @@ load_enc_tab0(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 static encoding_t *
 load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 {
-	encoding_t *enc = fz_malloc_struct(ctx, encoding_t);
+	encoding_t *enc;
 	uint16_t seg_count;
 	uint32_t i;
 
 	if (data_size < 26)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap4 too small");
 
-	enc->max = 256;
 	seg_count = get16(d+offset+6); /* 2 * seg_count */
 
 	if (seg_count & 1)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap4 table");
 	seg_count >>= 1;
+
+	enc = fz_malloc_struct(ctx, encoding_t);
+	enc->max = 256;
 
 	/* Run through the segments, counting how many are used. */
 	for (i = 0; i < seg_count; i++)
@@ -586,6 +594,37 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 			if (target != 0)
 				enc->gid[s] = target;
 		}
+	}
+
+	return enc;
+}
+
+static encoding_t *
+load_enc_tab6(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
+{
+	encoding_t *enc;
+	uint16_t first_code;
+	uint16_t entry_count;
+	uint16_t length;
+	uint32_t i;
+
+	if (data_size < 10)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap6 too small");
+
+	length = get16(d+offset+2);
+	first_code = get16(d+offset+6);
+	entry_count = get16(d+offset+8);
+
+	if (length < entry_count*2 + 10)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap6 table");
+
+	enc = fz_calloc(ctx, 1, sizeof(encoding_t) + sizeof(uint16_t) * (first_code + entry_count - 256));
+	enc->max = first_code + entry_count;
+
+	/* Run through the segments, counting how many are used. */
+	for (i = 0; i < entry_count; i++)
+	{
+		enc->gid[first_code+i] = get16(d+offset+10+i*2);
 	}
 
 	return enc;
@@ -628,6 +667,9 @@ load_enc(fz_context *ctx, fz_buffer *t, int pid, int psid)
 			break;
 		case 4:
 			enc = load_enc_tab4(ctx, d, data_size, offset);
+			break;
+		case 6:
+			enc = load_enc_tab6(ctx, d, data_size, offset);
 			break;
 		default:
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Unsupported cmap table format %d", fmt);
@@ -834,7 +876,10 @@ read_maxp(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	fz_buffer *t = read_table(ctx, stm, TAG("maxp"), 1);
 
 	if (t->len < 6)
+	{
+		fz_drop_buffer(ctx, t);
 		fz_throw(ctx, FZ_ERROR_FORMAT, "truncated maxp table");
+	}
 
 	ttf->orig_num_glyphs = get16(t->data+4);
 
@@ -881,7 +926,10 @@ read_loca(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	t = read_table(ctx, stm, TAG("loca"), 1);
 
 	if (t->len < len)
+	{
+		fz_drop_buffer(ctx, t);
 		fz_throw(ctx, FZ_ERROR_FORMAT, "truncated loca table");
+	}
 
 	ttf->loca = t->data;
 	ttf->loca_len = &t->len;
@@ -975,6 +1023,12 @@ glyph_used(fz_context *ctx, ttf_t *ttf, fz_buffer *glyf, uint16_t i)
 	if (ttf->gid_renum[i] != 0)
 		return;
 
+	if (i > ttf->orig_num_glyphs)
+	{
+		fz_warn(ctx, "TTF subsetting; gid > num_gids!");
+		return;
+	}
+
 	ttf->gid_renum[i] = 1;
 
 	/* If this glyf is composite, then we need to add any dependencies of it. */
@@ -982,6 +1036,8 @@ glyph_used(fz_context *ctx, ttf_t *ttf, fz_buffer *glyf, uint16_t i)
 	len = get_loca(ctx, ttf, i+1) - offset;
 	if (len == 0)
 		return;
+	if (offset+2 > glyf->len)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Corrupt glyf data");
 	data = glyf->data + offset;
 	if ((int16_t)get16(data) >= 0)
 		return; /* Single glyph - no dependencies */
@@ -1175,10 +1231,23 @@ static void
 subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 {
 	fz_buffer *t = read_table(ctx, stm, TAG("hmtx"), 1);
-	uint16_t i;
+	uint16_t i, max16;
 	uint8_t *s = t->data;
 	uint8_t *d = t->data;
 	int cidfont = (ttf->encoding == NULL);
+	size_t max = t->len;
+
+	if (ttf->orig_num_long_hor_metrics * 4 > max)
+	{
+		fz_drop_buffer(ctx, t);
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed hmtx table");
+	}
+	max -= ttf->orig_num_long_hor_metrics * 4;
+	max /= 2;
+	if (max > ttf->orig_num_glyphs)
+		max = ttf->orig_num_glyphs;
+	/* We know orig_num_glyphs is 16bit, so this cast safe. */
+	max16 = (uint16_t)max;
 
 	for (i = 0; i < ttf->orig_num_long_hor_metrics; i++)
 	{
@@ -1194,7 +1263,7 @@ subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 		}
 		s += 4;
 	}
-	for ( ; i < ttf->orig_num_glyphs; i++)
+	for ( ; i < max16; i++)
 	{
 		if (i == 0 || ttf->is_otf || ttf->gid_renum[i])
 		{
@@ -1246,7 +1315,7 @@ shrink_loca_if_possible(fz_context *ctx, ttf_t *ttf)
 static size_t
 subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int num_gids)
 {
-	int16_t i, n;
+	int i, n;
 	int j;
 	fz_int2_heap heap = { 0 };
 	uint8_t *d0, *e, *idx;
@@ -1264,6 +1333,9 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 
 	/* Store all the indexes. */
 	j = 0;
+	if (len < (size_t)n*2)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+	len -= (size_t)n*2;
 	for (i = 0; i < n; i++)
 	{
 		uint16_t o = get16(d);
@@ -1298,23 +1370,33 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 	/* Run through the list moving the strings down that we care about. */
 	j = 0;
 	e = d;
+	n = heap.len;
 	for (i = 0; i < n; i++)
 	{
-		uint8_t len = *d+1;
+		uint8_t slen;
+
+		if (len < 1)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+		slen = *d+1;
+		if (len < slen)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+		len -= slen;
 
 		if (j >= heap.len || heap.heap[j].a != i)
 		{
 			/* Drop this one. */
-			d += len;
+			d += slen;
 		}
 
-		memmove(e, d, len);
-		d += len;
-		e += len;
+		memmove(e, d, slen);
+		d += slen;
+		e += slen;
 
 		put16(idx + 2*i, 258 + j);
 		j++;
 	}
+
+	fz_free(ctx, heap.heap);
 
 	return e - d0;
 }

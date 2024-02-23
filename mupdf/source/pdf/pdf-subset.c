@@ -197,6 +197,10 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 			{
 				cidfont = 0; // fontsub2a
 			}
+			else if (pdf_name_eq(ctx, subtype, PDF_NAME(CIDFontType0C)))
+			{
+				is_cff = 1;
+			}
 			else
 			{
 				is_cff = 1;
@@ -309,6 +313,10 @@ show_string(fz_context *ctx, pdf_font_analysis_processor *p, unsigned char *buf,
 	pdf_font_desc *fontdesc = gs->font;
 	size_t pos = 0;
 	font_usage_t *font = &p->usage->font[gs->current_font];
+
+	/* e.g. for non-embedded base14 fonts. */
+	if (fontdesc == NULL)
+		return;
 
 	while (pos < len)
 	{
@@ -730,11 +738,23 @@ pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int len, int *pages)
 			pdf_debug_obj(ctx, pdf_dict_get(ctx, font->font[0], PDF_NAME(FontDescriptor)));
 #endif
 
-			if (font->is_cff)
-				subset_cff(ctx, doc, font, font->fontfile, symbolic, font->is_cidfont);
-			else
-				subset_ttf(ctx, doc, font, font->fontfile, symbolic, font->is_cidfont);
+			/* If we hit a (non-SYSTEM) problem subsetting a font, give up for this font alone.
+			 * This will leave this font alone. */
+			fz_try(ctx)
+			{
+				if (font->is_cff)
+					subset_cff(ctx, doc, font, font->fontfile, symbolic, font->is_cidfont);
+				else
+					subset_ttf(ctx, doc, font, font->fontfile, symbolic, font->is_cidfont);
+			}
+			fz_catch(ctx)
+			{
+				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+				fz_report_error(ctx);
+				continue;
+			}
 
+			/* Any problems changing these parts of the fonts are really fatal though. */
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(TrueType)) ||
 				pdf_name_eq(ctx, subtype, PDF_NAME(Type1)))
 			{
@@ -745,7 +765,6 @@ pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int len, int *pages)
 			for (j = 0; j < font->len; j++)
 				prefix_font_name(ctx, doc, font->font[j], font->fontfile);
 		}
-
 	}
 	fz_always(ctx)
 	{
