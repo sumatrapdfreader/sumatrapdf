@@ -19,7 +19,7 @@ More information about jbig2dec and updated versions are available from:
 https://jbig2dec.com/
 
 A set of example files is available from
-https://jbig2dec.com/tests/
+https://git.ghostscript.com/?p=tests.git;a=tree;f=jbig2
 
 Development source code is kept in a git repository at:
 http://git.ghostscript.com/?p=jbig2dec.git
@@ -28,5 +28,5 @@ Report bugs at https://bugs.ghostscript.com
 For security issues please use the "Security - Other" product,
 and for normal bugs the "jbig2dec" product.
 
-Contact the developers at the IRC channel #ghostscript at freenode.net
+Contact the developers on Discord: https://discord.gg/taPnFQp5gb
 or via the mailing list <gs-devel@ghostscript.com>.

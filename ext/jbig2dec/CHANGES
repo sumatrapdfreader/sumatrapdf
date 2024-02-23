@@ -1,3 +1,21 @@
+Version 0.20 (2023 August 28)
+
+* Move definition of inline macro so that it doesn't cause
+  linker errors during cross-compilation.
+
+* Fix OSS-fuzz issue 10862, a memory leak, by freeing image
+  resources upon error.
+
+* Fix a bug where a buffer was accessed without considering
+  alignment requirements on architectures such as SPARC.
+
+* Fix compiler warnings.
+
+* Improve custom memory allocator used in testing to restricting
+  memory usage.
+
+* Use silent automake rules when compiling as a separate project.
+
 Version 0.19 (2020 September 10)
 
 * API change to use full 32 bit segment numbers, in accordance

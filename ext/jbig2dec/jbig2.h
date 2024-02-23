@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2020 Artifex Software, Inc.
+/* Copyright (C) 2001-2023 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -9,8 +9,8 @@
    of the license contained in the file LICENSE in this distribution.
 
    Refer to licensing information at http://www.artifex.com or contact
-   Artifex Software, Inc.,  1305 Grant Avenue - Suite 200, Novato,
-   CA 94945, U.S.A., +1(415)492-9861, for further information.
+   Artifex Software, Inc.,  39 Mesa Street, Suite 108A, San Francisco,
+   CA 94129, USA, for further information.
 */
 
 /*
@@ -26,7 +26,7 @@ extern "C"
 #endif
 
 #define JBIG2_VERSION_MAJOR (0)
-#define JBIG2_VERSION_MINOR (19)
+#define JBIG2_VERSION_MINOR (20)
 
 /* warning levels */
 typedef enum {
@@ -104,11 +104,6 @@ Jbig2Image *jbig2_page_out(Jbig2Ctx *ctx);
 void jbig2_release_page(Jbig2Ctx *ctx, Jbig2Image *image);
 /* mark the current page as complete, simulating an end-of-page segment (for broken streams) */
 int jbig2_complete_page(Jbig2Ctx *ctx);
-
-/* If we don't have a definition for inline, make it nothing so the code will compile */
-#ifndef inline
-#define inline
-#endif
 
 #ifdef __cplusplus
 }

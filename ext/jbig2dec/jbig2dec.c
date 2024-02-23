@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2020 Artifex Software, Inc.
+/* Copyright (C) 2001-2023 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -9,8 +9,8 @@
    of the license contained in the file LICENSE in this distribution.
 
    Refer to licensing information at http://www.artifex.com or contact
-   Artifex Software, Inc.,  1305 Grant Avenue - Suite 200, Novato,
-   CA 94945, U.S.A., +1(415)492-9861, for further information.
+   Artifex Software, Inc.,  39 Mesa Street, Suite 108A, San Francisco,
+   CA 94129, USA, for further information.
 */
 
 /*
@@ -91,6 +91,47 @@ static int print_usage(void);
 #define KBYTE 1024
 #define MBYTE (1024 * KBYTE)
 
+static void *jbig2dec_reached_limit(jbig2dec_allocator_t *allocator, size_t oldsize, size_t size)
+{
+    size_t limit_mb = allocator->memory_limit / MBYTE;
+    size_t used_mb = allocator->memory_used / MBYTE;
+    size_t oldsize_mb = oldsize / MBYTE;
+    size_t size_mb = size / MBYTE;
+
+    if (oldsize == 0)
+        jbig2_error(allocator->ctx, JBIG2_SEVERITY_FATAL, -1, "memory: limit reached: limit: %zu (%zu Mbyte) used: %zu (%zu Mbyte) allocation: %zu (%zu Mbyte)",
+            allocator->memory_limit, limit_mb,
+            allocator->memory_used, used_mb,
+            size, size_mb);
+    else
+        jbig2_error(allocator->ctx, JBIG2_SEVERITY_FATAL, -1, "memory: limit reached: limit: %zu (%zu Mbyte) used: %zu (%zu Mbyte) reallocation: %zu (%zu Mbyte) -> %zu (%zu Mbyte)",
+            allocator->memory_limit, limit_mb,
+            allocator->memory_used, used_mb,
+            oldsize, oldsize_mb,
+            size, size_mb);
+
+    return NULL;
+}
+
+static void jbig2dec_peak(jbig2dec_allocator_t *allocator)
+{
+    size_t limit_mb = allocator->memory_limit / MBYTE;
+    size_t peak_mb = allocator->memory_peak / MBYTE;
+    size_t used_mb = allocator->memory_used / MBYTE;
+
+    if (allocator->ctx == NULL)
+        return;
+    if (used_mb <= peak_mb)
+        return;
+
+    allocator->memory_peak = allocator->memory_used;
+
+    jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu %sbyte used: %lu %sbyte, peak: %lu %sbyte",
+        limit_mb > 0 ? limit_mb : allocator->memory_limit, limit_mb > 0 ? "M" : "",
+        used_mb > 0 ? used_mb : allocator->memory_used, used_mb > 0 ? "M" : "",
+        peak_mb > 0 ? peak_mb : allocator->memory_peak, peak_mb > 0 ? "M" : "");
+}
+
 static void *jbig2dec_alloc(Jbig2Allocator *allocator_, size_t size)
 {
     jbig2dec_allocator_t *allocator = (jbig2dec_allocator_t *) allocator_;
@@ -98,8 +139,11 @@ static void *jbig2dec_alloc(Jbig2Allocator *allocator_, size_t size)
 
     if (size == 0)
         return NULL;
-    if (size > allocator->memory_limit - ALIGNMENT - allocator->memory_used)
+    if (size > SIZE_MAX - ALIGNMENT)
         return NULL;
+
+    if (size + ALIGNMENT > allocator->memory_limit - allocator->memory_used)
+        return jbig2dec_reached_limit(allocator, 0, size + ALIGNMENT);
 
     ptr = malloc(size + ALIGNMENT);
     if (ptr == NULL)
@@ -107,15 +151,7 @@ static void *jbig2dec_alloc(Jbig2Allocator *allocator_, size_t size)
     memcpy(ptr, &size, sizeof(size));
     allocator->memory_used += size + ALIGNMENT;
 
-    if (allocator->memory_used > allocator->memory_peak) {
-        allocator->memory_peak = allocator->memory_used;
-
-        if (allocator->ctx) {
-            size_t limit_mb = allocator->memory_limit / MBYTE;
-            size_t peak_mb = allocator->memory_peak / MBYTE;
-            jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu Mbyte peak usage: %lu Mbyte", limit_mb, peak_mb);
-        }
-    }
+    jbig2dec_peak(allocator);
 
     return (unsigned char *) ptr + ALIGNMENT;
 }
@@ -136,54 +172,36 @@ static void jbig2dec_free(Jbig2Allocator *allocator_, void *p)
 static void *jbig2dec_realloc(Jbig2Allocator *allocator_, void *p, size_t size)
 {
     jbig2dec_allocator_t *allocator = (jbig2dec_allocator_t *) allocator_;
-    unsigned char *oldp = p ? (unsigned char *) p - ALIGNMENT : NULL;
+    unsigned char *oldp;
+    size_t oldsize;
 
+    if (p == NULL)
+        return jbig2dec_alloc(allocator_, size);
+    if (p < (void *) ALIGNMENT)
+        return NULL;
+
+    if (size == 0) {
+        jbig2dec_free(allocator_, p);
+        return NULL;
+    }
     if (size > SIZE_MAX - ALIGNMENT)
         return NULL;
 
-    if (oldp == NULL)
-    {
-        if (size == 0)
-            return NULL;
-        if (size > allocator->memory_limit - ALIGNMENT - allocator->memory_used)
-            return NULL;
+    oldp = (unsigned char *) p - ALIGNMENT;
+    memcpy(&oldsize, oldp, sizeof(oldsize));
 
-        p = malloc(size + ALIGNMENT);
-    }
-    else
-    {
-        size_t oldsize;
-        memcpy(&oldsize, oldp, sizeof(oldsize));
+    if (size + ALIGNMENT > allocator->memory_limit - allocator->memory_used + oldsize + ALIGNMENT)
+        return jbig2dec_reached_limit(allocator, oldsize + ALIGNMENT, size + ALIGNMENT);
 
-        if (size == 0)
-        {
-            allocator->memory_used -= oldsize + ALIGNMENT;
-            free(oldp);
-            return NULL;
-        }
+    p = realloc(oldp, size + ALIGNMENT);
+    if (p == NULL)
+        return NULL;
 
-        if (size > allocator->memory_limit - allocator->memory_used + oldsize)
-            return NULL;
-
-        p = realloc(oldp, size + ALIGNMENT);
-        if (p == NULL)
-            return NULL;
-
-        allocator->memory_used -= oldsize + ALIGNMENT;
-    }
-
+    allocator->memory_used -= oldsize + ALIGNMENT;
     memcpy(p, &size, sizeof(size));
     allocator->memory_used += size + ALIGNMENT;
 
-    if (allocator->memory_used > allocator->memory_peak) {
-        allocator->memory_peak = allocator->memory_used;
-
-        if (allocator->ctx) {
-            size_t limit_mb = allocator->memory_limit / MBYTE;
-            size_t peak_mb = allocator->memory_peak / MBYTE;
-            jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu Mbyte peak usage: %lu Mbyte", limit_mb, peak_mb);
-        }
-    }
+    jbig2dec_peak(allocator);
 
     return (unsigned char *) p + ALIGNMENT;
 }

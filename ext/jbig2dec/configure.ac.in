@@ -4,6 +4,7 @@ AC_INIT([jbig2dec], [unknown-version], [gs-devel@ghostscript.com])
 AC_PREREQ(2.53)
 AC_CONFIG_SRCDIR([jbig2dec.c])
 
+AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([-Wall])
 AM_CONFIG_HEADER(config.h)
 
