@@ -554,7 +554,7 @@ pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri)
 		pdf_dict_put(ctx, annot_obj, PDF_NAME(Subtype), PDF_NAME(Link));
 		pdf_dict_put_rect(ctx, annot_obj, PDF_NAME(Rect), rect);
 
-		bs = pdf_dict_put_array(ctx, annot_obj, PDF_NAME(BS), 4);
+		bs = pdf_dict_put_dict(ctx, annot_obj, PDF_NAME(BS), 4);
 		pdf_dict_put(ctx, bs, PDF_NAME(S), PDF_NAME(S));
 		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
 		pdf_dict_put_int(ctx, bs, PDF_NAME(W), 0);

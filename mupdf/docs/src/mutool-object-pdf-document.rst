@@ -1027,8 +1027,6 @@ The following functions can be used to copy objects from one :title:`PDF` docume
 
 .. method:: newGraftMap()
 
-    |mutool_tag|
-
     Create a graft map on the destination document, so that objects that have already been copied can be found again. Each graft map should only be used with one source document. Make sure to create a new graft map for each source document used.
 
     :return: `PDFGraftMap`.
@@ -1041,8 +1039,6 @@ The following functions can be used to copy objects from one :title:`PDF` docume
 
 
 .. method:: graftObject(object)
-
-    |mutool_tag|
 
     Deep copy an object into the destination document. This function will not remember previously copied objects. If you are copying several objects from the same source document using multiple calls, you should use a graft map instead.
 

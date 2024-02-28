@@ -1858,3 +1858,15 @@ pdf_page_label_imp(fz_context *ctx, fz_document *doc, int chapter, int page, cha
 {
 	pdf_page_label(ctx, pdf_document_from_fz_document(ctx, doc), page, buf, size);
 }
+
+pdf_page *
+pdf_keep_page(fz_context *ctx, pdf_page *page)
+{
+	return (pdf_page *) fz_keep_page(ctx, &page->super);
+}
+
+void
+pdf_drop_page(fz_context *ctx, pdf_page *page)
+{
+	fz_drop_page(ctx, &page->super);
+}

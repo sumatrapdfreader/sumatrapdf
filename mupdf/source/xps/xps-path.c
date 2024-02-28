@@ -28,12 +28,16 @@
 #include <stdlib.h>
 
 static char *
-xps_parse_float_array(fz_context *ctx, xps_document *doc, char *s, int num, float *x)
+xps_parse_float_array(fz_context *ctx, xps_document *doc, char *s, int num, int *obtained, float *x)
 {
 	int k = 0;
 
 	if (s == NULL || *s == 0)
+	{
+		if (obtained)
+			*obtained = k;
 		return NULL;
+	}
 
 	while (*s)
 	{
@@ -47,6 +51,8 @@ xps_parse_float_array(fz_context *ctx, xps_document *doc, char *s, int num, floa
 		if (++k == num)
 			break;
 	}
+	if (obtained)
+		*obtained = k;
 	return s;
 }
 
@@ -55,10 +61,14 @@ xps_parse_point(fz_context *ctx, xps_document *doc, char *s_in, float *x, float 
 {
 	char *s_out = s_in;
 	float xy[2];
+	int obtained = 0;
 
-	s_out = xps_parse_float_array(ctx, doc, s_out, 2, &xy[0]);
-	*x = xy[0];
-	*y = xy[1];
+	s_out = xps_parse_float_array(ctx, doc, s_out, 2, &obtained, &xy[0]);
+	if (obtained >= 2)
+	{
+		*x = xy[0];
+		*y = xy[1];
+	}
 	return s_out;
 }
 
@@ -563,6 +573,7 @@ xps_parse_poly_quadratic_bezier_segment(fz_context *ctx, xps_document *doc, fz_p
 	while (*s != 0)
 	{
 		while (*s == ' ') s++;
+		x[n] = y[n] = 0;
 		s = xps_parse_point(ctx, doc, s, &x[n], &y[n]);
 		n ++;
 		if (n == 2)
@@ -611,6 +622,7 @@ xps_parse_poly_bezier_segment(fz_context *ctx, xps_document *doc, fz_path *path,
 	while (*s != 0)
 	{
 		while (*s == ' ') s++;
+		x[n] = y[n] = 0;
 		s = xps_parse_point(ctx, doc, s, &x[n], &y[n]);
 		n ++;
 		if (n == 3)
@@ -649,6 +661,7 @@ xps_parse_poly_line_segment(fz_context *ctx, xps_document *doc, fz_path *path, f
 	while (*s != 0)
 	{
 		while (*s == ' ') s++;
+		x = y = 0;
 		s = xps_parse_point(ctx, doc, s, &x, &y);
 		if (stroking && !is_stroked)
 			fz_moveto(ctx, path, x, y);

@@ -1766,7 +1766,7 @@ static void fz_convert_edgebuffer_app(fz_context *ctx, fz_rasterizer *ras, int e
 						rl = *row++;
 						rr = *row++;
 						w = -(rl&1) | 1;
-						rl &= ~1;
+						/* rl &= ~1; */
 						rowlen--;
 						if (rr > lr)
 							lr = rr;

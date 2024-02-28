@@ -161,6 +161,6 @@ int pdf_font_writing_supported(fz_context *ctx, fz_font *font);
 
 	EXPERIMENTAL AND SUBJECT TO CHANGE.
 */
-void pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int pages_len, int *pages);
+void pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int pages_len, const int *pages);
 
 #endif

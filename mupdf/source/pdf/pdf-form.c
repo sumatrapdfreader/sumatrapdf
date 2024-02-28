@@ -1414,14 +1414,14 @@ static void validate_certificate_data(fz_context *ctx, pdf_document *doc, fz_ran
 		if (c == '<')
 			c = fz_read_byte(ctx, stm);
 
-		while (is_hex_or_white((c = fz_read_byte(ctx, stm))))
-			;
+		while (is_hex_or_white(c))
+			c = fz_read_byte(ctx, stm);
 
 		if (c == '>')
 			c = fz_read_byte(ctx, stm);
 
-		while (is_white((c = fz_read_byte(ctx, stm))))
-			;
+		while (is_white(c))
+			c = fz_read_byte(ctx, stm);
 
 		if (c != EOF)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "signature certificate data contains invalid character");

@@ -321,7 +321,7 @@ index_get(fz_context *ctx, index_t *index, int idx)
 	int os;
 	uint32_t v;
 
-	if (idx < 0 || idx > index->count)
+	if (idx < 0 || idx > index->count || index->count == 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Index bounds");
 
 	os = index->offsize;
@@ -538,7 +538,7 @@ dict_next(fz_context *ctx, dict_iterator *di)
 {
 	int n;
 
-	if (di->offset == di->end_offset)
+	if (di->offset >= di->end_offset)
 	{
 		di->eod = 1;
 		return 0;
@@ -1108,6 +1108,7 @@ overflow:
 				break;
 
 			case 27: /* dup */
+				ATLEAST(1);
 				PUSH(1);
 				stack[sp-1] = stack[sp-2];
 				break;
@@ -1123,7 +1124,10 @@ overflow:
 			}
 			case 29: /* index */
 			{
-				int i = (int)stack[sp-1];
+				int i;
+				ATLEAST(1);
+				i = (int)stack[sp-1];
+				ATLEAST(i+1);
 				if (i < 0 || i > sp-1)
 					i = 0;
 				stack[sp-1] = stack[sp-2-i];
@@ -1171,6 +1175,7 @@ overflow:
 			default:
 				fz_throw(ctx, FZ_ERROR_FORMAT, "Reserved charstring byte");
 			}
+			break;
 		}
 		case 14: /* endchar */
 			pc = end;
@@ -1420,6 +1425,8 @@ get_charset_len(fz_context *ctx, cff_t *cff)
 			first = get16(d);
 			nleft = d[2] + 1;
 			d += 3;
+			if (nleft > n)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 			n -= nleft;
 			while (nleft)
 			{
@@ -1450,6 +1457,8 @@ get_charset_len(fz_context *ctx, cff_t *cff)
 			first = get16(d);
 			nleft = get16(d+2) + 1;
 			d += 4;
+			if (nleft > n)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 			n -= nleft;
 			while (nleft)
 			{
@@ -2043,8 +2052,8 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 {
 	cff_t cff = { 0 };
 	fz_buffer *newbuf = NULL;
-	uint8_t *base = orig->data;
-	size_t len = orig->len;
+	uint8_t *base;
+	size_t len;
 	fz_output *out = NULL;
 	int i;
 
@@ -2053,6 +2062,9 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 
 	if (orig == NULL)
 		return NULL;
+
+	base = orig->data;
+	len = orig->len;
 
 	fz_try(ctx)
 	{

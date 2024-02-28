@@ -195,7 +195,7 @@ Extensions beyond the basic C API
 
   These each generate text such as: `(x0=90.51 y0=160.65 x1=501.39 y1=1215.6)`
 
-Environmental variables
+Runtime environmental variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All builds
@@ -873,6 +873,10 @@ General build flags
 
 In all of the commands below, one can set environmental variables to control
 the build of the underlying MuPDF C API, for example `USE_SYSTEM_LIBJPEG=yes`.
+
+In addition, `XCXXFLAGS` can be used to set additional C++ compiler flags when
+building the C++ and Python bindings (the name is analogous to the `XCFLAGS`
+used by MuPDF's makefile when compiling the core library).
 
 
 Building and installing the Python bindings using `pip`
@@ -1594,14 +1598,17 @@ functions and class methods.]
                 int yres,
                 int interpolate,
                 int imagemask,
-                const std::vector<float>* decode,
-                const std::vector<int>* colorkey,
+                const std::vector<float>& decode,
+                const std::vector<int>& colorkey,
                 fz_compressed_buffer* buffer,
                 fz_image* mask
                 );
 
         /** Swig-friendly wrapper for pdf_rearrange_pages(). */
-        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>* pages);
+        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>& pages);
+
+        /** Swig-friendly wrapper for pdf_subset_fonts(). */
+        void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages);
 
 
 Python/C# bindings details

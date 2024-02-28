@@ -1580,6 +1580,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
         actions = '0123' if state.state_.windows else 'm0123'
 
     dir_so_flags = os.path.basename( build_dirs.dir_so).split( '-')
+    cflags = os.environ.get('XCXXFLAGS', '')
 
     windows_build_type = build_dirs.windows_build_type()
     so_version = get_so_version( build_dirs)
@@ -1675,6 +1676,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                         -o {o_file}
                                         {build_dirs.cpp_flags}
                                         -fPIC
+                                        {cflags}
                                         -I {include1}
                                         -I {include2}
                                         {cpp_file}
@@ -1716,6 +1718,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     {link_soname_arg}
                                     {build_dirs.cpp_flags}
                                     -fPIC -shared
+                                    {cflags}
                                     -I {include1}
                                     -I {include2}
                                     {cpp_files_text}
@@ -1752,6 +1755,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                         {build_dirs.cpp_flags}
                                         -fPIC
                                         -c
+                                        {cflags}
                                         -I {include1}
                                         -I {include2}
                                         -o {ofile}
@@ -2047,6 +2051,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                         {build_dirs.cpp_flags}
                                         -fPIC
                                         --shared
+                                        {cflags}
                                         -I {include1}
                                         -I {include2}
                                         {flags_compile}
@@ -2097,6 +2102,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     {cpp_path}
                                     {build_dirs.cpp_flags}
                                     -fPIC
+                                    {cflags}
                                     -I {include1}
                                     -I {include2}
                                     {flags_compile}
@@ -2152,6 +2158,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     {build_dirs.cpp_flags}
                                     -fPIC
                                     -shared
+                                    {cflags}
                                     -I {include1}
                                     -I {include2}
                                     {flags_compile}

@@ -276,12 +276,14 @@ def has_refs( tu, type_):
                     if not ret:
                         if verbose:
                             jlib.log(
-                                    'Cannot find .refs member or we only have forward'
+                                    '{type_.spelling=}: Cannot find .refs member or we only have forward'
                                     ' declaration, so have to hard-code the size and offset'
                                     ' of the refs member.'
                                     )
                         if base_type_cursor.is_definition():
                             if key == 'pdf_document':
+                                ret = 'super.refs', 32
+                            elif key == 'pdf_page':
                                 ret = 'super.refs', 32
                             elif key == 'fz_pixmap':
                                 ret = 'storable.refs', 32

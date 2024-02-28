@@ -236,3 +236,20 @@ Placement Result Object
 
 `more`
     *True* if more content remains to be placed, otherwise *false* if all content fits in the `Story`.
+
+
+
+.. _mutool_run_js_api_object_default_appearance_text_object:
+
+Default Appearance Text Object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+`font`
+    String representing the font.
+
+`size`
+    Integer representing the size of the font.
+
+`color`
+    Array representing the :ref:`color value<mutool_run_js_api_colors>`.

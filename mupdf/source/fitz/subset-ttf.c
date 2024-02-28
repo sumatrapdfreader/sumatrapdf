@@ -233,6 +233,9 @@ tabcmp(const void *a_, const void *b_)
 static void
 sort_tables(fz_context *ctx, ttf_t *ttf)
 {
+	/* Avoid scanbuild/coverity false warning with this unnecessary test */
+	if (ttf->table == NULL || ttf->len == 0)
+		return;
 	qsort(ttf->table, ttf->len, sizeof(tagged_table_t), tabcmp);
 }
 
@@ -384,6 +387,9 @@ typedef int (void_cmp_t)(const void *, const void *);
 static void
 ptr_list_sort(fz_context *ctx, ptr_list_t *pl, cmp_t *cmp)
 {
+	/* Avoid scanbuild/coverity false warning with this unnecessary test */
+	if (pl->ptr == NULL || pl->len == 0)
+		return;
 	qsort(pl->ptr, pl->len, sizeof(*pl->ptr), (void_cmp_t *)cmp);
 }
 
@@ -504,6 +510,8 @@ subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 			uint32_t offset = find_string_in_block(name, name_len, new_name_data, new_len);
 			if (offset == UNFOUND)
 			{
+				if (name_data_size < new_len + name_len)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "Bad name table in TTF");
 				memcpy(new_name_data + new_len, name, name_len);
 				offset = (uint32_t)new_len;
 				new_len += name_len;
@@ -563,8 +571,8 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap4 table");
 	seg_count >>= 1;
 
-	enc = fz_malloc_struct(ctx, encoding_t);
-	enc->max = 256;
+	enc = fz_calloc(ctx, 1, sizeof(encoding_t) + sizeof(uint16_t) * (65536 - 256));
+	enc->max = 65536;
 
 	/* Run through the segments, counting how many are used. */
 	for (i = 0; i < seg_count; i++)
@@ -577,7 +585,10 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 		uint16_t target;
 		uint32_t s;
 
-		for (s = seg_start; s <= seg_end && s < enc->max; s++)
+		if (seg_start >= enc->max || seg_end >= enc->max)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap4 table.");
+
+		for (s = seg_start; s <= seg_end; s++)
 		{
 			if (offset == 0)
 			{
@@ -958,6 +969,8 @@ read_hhea(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	}
 
 	ttf->orig_num_long_hor_metrics = get16(t->data+34);
+	if (ttf->orig_num_long_hor_metrics > ttf->orig_num_glyphs)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Overlong hhea table");
 
 	add_table(ctx, ttf, TAG("hhea"), t);
 
@@ -1098,6 +1111,7 @@ static void
 renumber_composite(fz_context *ctx, ttf_t *ttf, uint8_t *data, uint32_t len)
 {
 	uint16_t flags;
+	uint16_t x;
 
 	data += 4 * 2 + 2;
 	if (len < 4*2 + 2)
@@ -1111,7 +1125,10 @@ renumber_composite(fz_context *ctx, ttf_t *ttf, uint8_t *data, uint32_t len)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Corrupt glyf data");
 
 		flags = get16(data);
-		put16(data+2, ttf->gid_renum[get16(data+2)]);
+		x = get16(data+2);
+		if (x >= ttf->orig_num_glyphs)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Corrupt glyf data");
+		put16(data+2, ttf->gid_renum[x]);
 
 		/* Skip the X and Y offsets */
 		if (flags & ARGS_1_AND_2_ARE_WORDS)
@@ -1195,9 +1212,15 @@ read_glyf(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids)
 	/* Now subset the glyf table. */
 	new_start = 0;
 	old_start = get_loca(ctx, ttf, 0);
+	if (old_start >= t->len)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
 	for (i = 0; i < ttf->orig_num_glyphs; i++)
 	{
 		old_end = get_loca(ctx, ttf, i+1);
+		if (old_end > t->len)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
+		if (old_end == old_start)
+			continue;
 		if (i == 0 || ttf->gid_renum[i] != 0)
 		{
 			len = old_end - old_start;
@@ -1205,7 +1228,7 @@ read_glyf(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids)
 			if (enc)
 			{
 				if ((int16_t)get16(t->data + new_start) < 0)
-					renumber_composite(ctx, ttf, t->data, (uint32_t)t->len);
+					renumber_composite(ctx, ttf, t->data + new_start, len);
 				put_loca(ctx, ttf, ttf->gid_renum[i], new_start);
 			}
 			else

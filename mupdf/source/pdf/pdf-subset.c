@@ -608,8 +608,6 @@ prefix_font_name(fz_context *ctx, pdf_document *doc, pdf_obj *font, pdf_obj *fil
 	fz_drop_buffer(ctx, buf);
 
 	v = digest[0] ^ digest[1] ^ digest[2] ^ digest[3];
-
-	v = digest[0];
 	new_name[0] = 'A' + (v % 26);
 	v /= 26;
 	new_name[1] = 'A' + (v % 26);
@@ -685,7 +683,7 @@ static pdf_obj *get_subtype(fz_context *ctx, font_usage_t *font)
 }
 
 void
-pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int len, int *pages)
+pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int len, const int *pages)
 {
 	int i, j;
 	pdf_page *page = NULL;

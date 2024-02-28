@@ -462,6 +462,7 @@ static int usage(void)
 		"\t-KK\tonly draw text\n"
 		"\t-D\tdisable use of display list\n"
 		"\t-i\tignore errors\n"
+		"\t-m -\tlimit memory usage in bytes\n"
 		"\t-L\tlow memory mode (avoid caching, clear objects after each page)\n"
 #ifndef DISABLE_MUTHREADS
 		"\t-P\tparallel interpretation/rendering\n"
