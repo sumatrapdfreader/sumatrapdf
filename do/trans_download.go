@@ -233,7 +233,7 @@ func downloadTranslations() bool {
 	curr := readFileMust(path)
 	if bytes.Equal(d, curr) {
 		fmt.Printf("Translations didn't change\n")
-		return false
+		//return false
 	}
 
 	// disable per-lang files for now

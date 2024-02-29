@@ -29,6 +29,7 @@ var gLangs = [][]string{
 	{"fa", "Persian (فارسی)", "_LANGID(LANG_FARSI)", "RTL"},
 	{"fi", "Finnish (Suomi)", "_LANGID(LANG_FINNISH)"},
 	{"fr", "French (Français)", "_LANGID(LANG_FRENCH)"},
+	{"fo", "Faroese (Føroyskt)", "_LANGID(LANG_FAEROESE)"},
 	{"fy-nl", "Frisian (Frysk)", "_LANGID(LANG_FRISIAN)"},
 	{"ga", "Irish (Gaeilge)", "_LANGID(LANG_IRISH)"},
 	{"gl", "Galician (Galego)", "_LANGID(LANG_GALICIAN)"},

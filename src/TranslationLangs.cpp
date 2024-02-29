@@ -8,7 +8,7 @@
 
 namespace trans {
 
-constexpr int kLangsCount = 71;
+constexpr int kLangsCount = 72;
 
 const char *gLangCodes =   "en\0" \
   "af\0" \
@@ -33,6 +33,7 @@ const char *gLangCodes =   "en\0" \
   "dk\0" \
   "nl\0" \
   "et\0" \
+  "fo\0" \
   "fi\0" \
   "fr\0" \
   "fy-nl\0" \
@@ -105,6 +106,7 @@ const char *gLangNames =   "English\0" \
   "Danish (Dansk)\0" \
   "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
+  "Faroese (F\303\270royskt)\0" \
   "Finnish (Suomi)\0" \
   "French (Fran\303\247ais)\0" \
   "Frisian (Frysk)\0" \
@@ -189,6 +191,7 @@ const LANGID gLangIds[kLangsCount] = {
   _LANGID(LANG_DANISH),
   _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
+  _LANGID(LANG_FAEROESE),
   _LANGID(LANG_FINNISH),
   _LANGID(LANG_FRENCH),
   _LANGID(LANG_FRISIAN),
@@ -242,7 +245,7 @@ const LANGID gLangIds[kLangsCount] = {
 
 bool IsLangRtl(int idx)
 {
-  return (3 == idx) || (30 == idx) || (39 == idx) || (48 == idx);
+  return (3 == idx) || (31 == idx) || (40 == idx) || (49 == idx);
 }
 
 int gLangsCount = kLangsCount;
