@@ -2743,8 +2743,8 @@ HWND TreeView::Create(const TreeViewCreateArgs& argsIn) {
     args.exStyle = argsIn.exStyle | TVS_EX_DOUBLEBUFFER;
 
     if (fullRowSelect) {
-        args.exStyle |= TVS_FULLROWSELECT;
-        args.exStyle &= ~TVS_HASLINES;
+        args.style |= TVS_FULLROWSELECT;
+        args.style &= ~TVS_HASLINES;
     }
 
     Wnd::CreateControl(args);
