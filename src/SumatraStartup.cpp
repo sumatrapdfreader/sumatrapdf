@@ -470,7 +470,10 @@ static bool SetupPluginMode(Flags& i) {
 }
 
 static void SetupCrashHandler() {
-    TempStr symDir = AppGenDataFilenameTemp("crashinfo");
+    const char* bits = IsProcess64() ? "64" : "32";
+    const char* ver = CURR_VERSION_STRA;
+    TempStr dirName = str::FormatTemp("crashinfo-%s-%s", ver, bits);
+    TempStr symDir = AppGenDataFilenameTemp(dirName);
     TempStr crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
     TempStr crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);

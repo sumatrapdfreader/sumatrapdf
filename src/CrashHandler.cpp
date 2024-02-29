@@ -190,18 +190,6 @@ static void UploadCrashReport(const ByteSlice& d) {
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
-// We might have symbol files for older builds. If we're here, then we
-// didn't get the symbols so we assume it's because symbols didn't match
-// Returns false if files were there but we couldn't delete them
-static void DeleteSymbolsIfExist() {
-    // TODO: remove all files in symDir (symbols, previous crash files
-    bool ok = file::Delete(gLibMupdfPdbPath);
-    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
-    ok = file::Delete(gSumatraPdfPdbPath);
-    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
-    ok = file::Delete(gSumatraPdfDllPdbPath);
-    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
-}
 
 static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* dstDir, Allocator* allocator) {
     logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
@@ -237,6 +225,22 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
     return ok;
 }
 
+// no longer needed because we use unique directory for each build
+#if 0
+// We might have symbol files for older builds. If we're here, then we
+// didn't get the symbols so we assume it's because symbols didn't match
+// Returns false if files were there but we couldn't delete them
+static void DeleteSymbolsIfExist() {
+    // TODO: remove all files in symDir (symbols, previous crash files
+    bool ok = file::Delete(gLibMupdfPdbPath);
+    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
+    ok = file::Delete(gSumatraPdfPdbPath);
+    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
+    ok = file::Delete(gSumatraPdfDllPdbPath);
+    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
+}
+#endif
+
 // .pdb files are stored in a .zip file on a web server. Download that .zip
 // file as pdbZipPath, extract the symbols relevant to our executable
 // to symDir directory.
@@ -256,7 +260,7 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
         return false;
     }
 
-    DeleteSymbolsIfExist();
+    //DeleteSymbolsIfExist();
 
     HttpRsp rsp;
     if (!HttpGet(gSymbolsUrl, &rsp)) {
