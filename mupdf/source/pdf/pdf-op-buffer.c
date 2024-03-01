@@ -268,7 +268,7 @@ pdf_out_y(fz_context *ctx, pdf_processor *proc_, float x1, float y1, float x3, f
 
 	if (proc->sep)
 		fz_write_byte(ctx, proc->out, ' ');
-	fz_write_printf(ctx, proc->out, "%g %g %g %g c", x1, y1, x3, y3);
+	fz_write_printf(ctx, proc->out, "%g %g %g %g y", x1, y1, x3, y3);
 	post_op(ctx, proc);
 }
 

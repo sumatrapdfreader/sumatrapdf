@@ -192,6 +192,10 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
         var link = links[0];
         var linkDestination = doc.resolveLink(link)
 
+    .. note::
+
+        If there are no links then an empty array is returned.
+
 
 .. _mutool_run_js_api_page_create_link:
 

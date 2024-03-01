@@ -72,7 +72,7 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
      - Yes
      -
    * - Link
-     - No
+     - Yes
      - Please use :ref:`Page.createLink()<mutool_run_js_api_page_create_link>`.
    * - FreeText
      - Yes
@@ -81,6 +81,9 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
      - Yes
      -
    * - Circle
+     - Yes
+     -
+   * - Line
      - Yes
      -
    * - Polygon
@@ -120,10 +123,10 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
      - Yes
      -
    * - Sound
-     - Yes
+     - No
      -
    * - Movie
-     - Yes
+     - No
      -
    * - RichMedia
      - No

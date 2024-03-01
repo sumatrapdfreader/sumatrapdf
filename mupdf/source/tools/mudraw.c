@@ -813,7 +813,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 
 		fz_try(ctx)
 		{
-			fz_stext_options stext_options;
+			fz_stext_options stext_options = { 0 };
 
 			stext_options.flags = (output_format == OUT_HTML ||
 						output_format == OUT_XHTML ||

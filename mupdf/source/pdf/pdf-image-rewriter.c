@@ -529,7 +529,7 @@ fz_recompress_image_as_flate(fz_context *ctx, fz_pixmap *pix, const char *qualit
 	fz_output *out = NULL;
 	fz_output *out2 = NULL;
 	int h = pix->h;
-	size_t n = pix->w * pix->n;
+	size_t n = (size_t) pix->w * pix->n;
 	const unsigned char *samp = pix->samples;
 	ptrdiff_t str = pix->stride;
 	int q = fz_atoi(quality);

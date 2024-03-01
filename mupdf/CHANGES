@@ -1,12 +1,111 @@
 List of changes in MuPDF 1.24
 
-	Removed deprecated functions:
-		pdf_check_signature
-
 	Error handling changes:
+
 		You must call pdf_report_error in the final fz_catch. Any
 		unreported errors will be automatically reported when a new
 		error is raised, or when closing the fitz context.
+
+
+	New formats:
+
+		Read Office (XML) files! We internally open and convert
+		docx/pptx/xlsx documents to HTML to allow reading the plain
+		text content. The exact layout will NOT be preserved.
+
+		Optional compile time option to use libarchive for reading CBR
+		and other archive formats.
+
+		Read plain text documents.
+
+		Read gzipped files directly.
+
+		Open and read FDF files to support importing annotations or
+		form data using the low-level PDF functions. There are no tools
+		for this yet.
+
+		Read CFB (Compound File Binary) format archives -- used for the
+		Office formats.
+
+		Write images as JPEG2000.
+
+	New tools and features:
+
+		mutool bake (and associated functions) to bake appearance of
+		annotations and forms into static content.
+
+		Font subsetting flag to mutool clean (EXPERIMENTAL FEATURE).
+
+		Option to use ObjStms when writing PDF files.
+
+		Compression effort option when writing PDF files.
+
+		Add option to control how line art is affected by redaction.
+		Add more options to control how images are affected by
+		redaction (remove-unless-invisible).
+
+		Fix up q/Q gstate balance when cleaning content streams.
+
+	New functions and types:
+
+		pdf_rearrange_pages to subset or re-order pages in a PDF file.
+
+		fz_invert_bitmap to invert monochrome bitmaps.
+
+		fz_compressed_image_type to query the format of a compressed
+		image.
+
+		fz_text_decoder to convert various legacy and CJK encodings
+		into UTF-8.
+
+		More helper functions to easily manipulate PDF objects in C.
+
+		Add flag to control fz_place_story overflow behavior when the
+		text doesn't fit into the box.
+
+		New archive handlers can be added at runtime.
+
+	Major bug fixes and improvements:
+
+		Support using Art, Bleed, Media, and Trim boxes for PDF page
+		size.
+
+		Support ActualText in PDF! No more strange text extraction when
+		the file uses ActualText to patch over bad font encodings.
+
+		Add special TrueType fallback encoding CMap for a specific
+		flavor of broken PDF files that use an "identity" encoding
+		without embedding the font.
+
+		Limited "transfer function" support in PDF. Transfer functions
+		are a deprecated legacy PDF feature that predates proper color
+		management. They were intended to provide limited color
+		management such as applying a gamma curve. Transfer functions
+		have often been (ab)-used to invert images, and many PDF
+		creators use them when writing softmask images. We have added
+		support for this case only.
+
+		Box drawing characters added to fonts for HTML and plain text
+		documents.
+
+		Write more compact PDF files (removed some unneccessary
+		whitespace).
+
+		Improved selection behavior for non-axis aligned text.
+
+		Improved heuristics for detecting the logical and visual order
+		of RTL text in PDF.
+
+		Improved heuristics for inserting missing spaces in PDF text.
+
+		Improved handling of CMYK JPEG files (which ones are inverted
+		and which are not).
+
+		Improved content type detection. Don't assume everything is PDF
+		when we can't recognize it.
+
+	Removed deprecated functions:
+		pdf_check_signature
 
 List of changes in MuPDF 1.23.0
 
