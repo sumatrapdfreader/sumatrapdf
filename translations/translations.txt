@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7546d2f4137a0ff622c0c02c77bcd008e4b2bdfe
+1332e2b1eb9e05390cecd18d716d9a9d867914c7
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -791,6 +791,7 @@ et:Ä&ra küsi uuesti
 eu:&Ez galdetu berriro
 fa:&دوباره از من نپرس
 fi:Ä&lä kysy uudestaan
+fo:&Spyr meg ikki  aftur
 fr:&Ne plus me demander
 fy-nl:Net mear freegje
 ga:&Ná fiafraigh dom arís
@@ -861,6 +862,7 @@ et:&Vaid paarisleheküljed
 eu:&Orrialde bakoitiak bakarrik
 fa:فقط صفحات &زوج
 fi:Vain pa&rilliset sivut
+fo:&Líkar síður einans
 fr:Seulement les pages &paires
 ga:&Leathanaigh cothromacha amháin
 gl:&Páxinas pares só
@@ -969,6 +971,7 @@ et:&Fail
 eu:&Agiria
 fa:&پرونده
 fi:&Tiedosto
+fo:&Fíla
 fr:&Fichier
 fy-nl:&Bestân
 ga:&Comhad
@@ -1039,6 +1042,7 @@ et:&Otsitav:
 eu:&Bilatu hau:
 fa:&جستجو برای:
 fi:&Etsittävä:
+fo:&Finn hvat:
 fr:&Rechercher :
 fy-nl:&Sykje nei:
 ga:&Aimsigh céard:
@@ -1102,6 +1106,7 @@ es:&Primera página
 eu:&Lehen orrialdea
 fa:&صفحه اول
 fi:&Ensimmäinen sivu
+fo:&Fyrsta Síða
 fr:P&remière page
 ga:&An Chéad Leathanach
 gl:&Primeira páxina
@@ -1151,6 +1156,7 @@ et:&Sobita leheküljed prinditavale alale
 eu:&Zuzendu orrialdeak eremu irarkigarrira
 fa:اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &درست کن
 fi:&Sovita sivut tulostettavalle alueelle
+fo:&Tillaga síður til prentstødd
 fr:&Ajuster les pages à la zone d'impression
 ga:&Oiriúnaigh leathanaigh go limistéar inchlóbhuailte
 gl:&Axustar páxinas á área imprimible
@@ -1211,6 +1217,7 @@ et:&Vaba tekst
 eu:&Idazki askea
 fa:متن &آزاد
 fi:&Vapaa teksti
+fo:&Fríur Tekstur
 fr:&Texte libre
 ga:&Téacs Saor
 gl:Texto &libre
@@ -1265,6 +1272,7 @@ et:&Liigu
 eu:&Joan Hona
 fa:&برو به
 fi:&Siirry
+fo:&Far Til
 fr:A&ller…
 fy-nl:&Gean nei
 ga:&Téigh Chuig
@@ -1335,6 +1343,7 @@ et:&Leheküljele:
 eu:J&oan orrialdera:
 fa:&برو به صفحه‌ی:
 fi:&Siirry sivulle:
+fo:&Far til síðu:
 fr:&Aller à la page :
 fy-nl:&Gean nei side:
 ga:&Téigh chuig lch:
@@ -1404,6 +1413,7 @@ et:&Abi
 eu:&Laguntza
 fa:&راهنما
 fi:&Ohje
+fo:&Hjálp
 fr:Ai&de
 fy-nl:&Help
 ga:&Cabhair
@@ -1469,6 +1479,7 @@ es:&Destacar
 eu:&Nabarmendu
 fa:برجسته کردن
 fi:&Kohokohta
+fo:&Hálýsing
 fr:&Surligner
 ga:&Aibhsigh
 gl:&Resaltado
@@ -8899,6 +8910,7 @@ et:Ära paigalda
 eu:Ez ezarri
 fa:نصب نشود
 fi:Älä asenna
+fo:Innstallera ikki
 fr:Ne pas installer
 ga:Ná suiteáil é
 gl:Non instalar
@@ -8952,6 +8964,7 @@ et:Laadi alla 64-bitine versioon
 eu:Jeitsi 64-biteko bertsioa
 fa:دانلود نسخه 64 بیتی
 fi:Lataa 64-bittinen versio
+fo:Heinta 64-bita útgávuna
 fr:Télécharger la version 64-bits
 ga:Íosluchtaigh an leagan 64-beart
 gl:Baixar versión de 64 bits
@@ -9003,6 +9016,7 @@ es:S&alir
 eu:I&rten
 fa:&خروج
 fi:P&oistu
+fo:Ú&tgongd
 fr:&Quitter
 ga:Scoir
 gl:Sa&ír
@@ -9052,6 +9066,7 @@ et:V&älju Täisekraanilt
 eu:Irten ikusleiho-o&sotik
 fa:&خروج از حالت تمام صفحه
 fi:P&oistu Koko näyttö
+fo:E&nda Fullan Skíggja
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
 gl:Sa&ír da pantalla completa
@@ -9107,6 +9122,7 @@ et:EPUB-dokumendid
 eu:EPUB agiriak
 fa:EPUB اسناد
 fi:EPUB-asiakirjat
+fo:EPUB ebøkur
 fr:Fichiers EPUB
 fy-nl:EPUB-bestannen
 ga:Cáipéisí EPUB
@@ -9164,6 +9180,7 @@ de:%s Anmerkung bearbeiten
 el:Επεξεργασία %s Σχολιασμού
 es:Editar %s anotación
 fa:ویرایش %s علامت‌گذاری‌
+fo:Rætta %s Viðmerking
 fr:Modifier l'annotation %s
 ga:Cuir an nóta mínithe %s in eagar
 gl:Editar %s anotación
@@ -9202,6 +9219,7 @@ et:Muuda märkusi
 eu:Editatu oharrak
 fa:ویرایش علامت‌گذاری‌ها
 fi:Muokkaa huomautuksia
+fo:Rætta Viðmerkingar
 fr:Modifier les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
@@ -9258,6 +9276,7 @@ et:Sisesta salasõna
 eu:Idatzi sarhitza
 fa:کلمه‌ی عبور را وارد کنید
 fi:Kirjoita salasana
+fo:Skriva loyniorð
 fr:Entrer le mot de passe
 fy-nl:Wachtwurd ynfiere
 ga:Cuir isteach focal faire
@@ -9329,6 +9348,7 @@ et:Sisesta faili %s salasõna
 eu:Idatzi %s-rentzako sarhitza
 fa:کلمه‌ی عبور را برای %s وارد کنید
 fi:Kirjoita tiedoston %s salasana
+fo:Skriva loyniorð til %s
 fr:Entrer le mot de passe pour %s
 fy-nl:Wachtwurd ynfiere foar %s
 ga:Cuir isteach focal faire le haghaidh %s
@@ -9447,6 +9467,7 @@ cz:Chyba
 de:Fehler
 el:Σφάλμα
 es:Error
+fo:Villa
 fr:Erreur
 gl:Erro
 he:שגיאה
@@ -9483,6 +9504,7 @@ et:Viga laadimisel: %s
 eu:Akatsa %s gertatzerakoan
 fa:خطا هنگام بارگذاری %s
 fi:Virhe ladattaessa: %s
+fo:Villa íkomin undir innlesing av %s
 fr:Erreur de chargement de %s
 ga:Tharla botún ag luchtú %s
 gl:Erro cargando %s
@@ -9547,6 +9569,7 @@ et:Ava kõik
 eu:Hedatu guztiak
 fa:پهن‌کردن همه
 fi:Laajenna kaikki
+fo:Víða Allar
 fr:Tout développer
 ga:Leathnaigh Gach
 gl:Expandir todo
@@ -9602,6 +9625,7 @@ et:L&emmikud
 eu:&Gogokoenak
 fa:&علاقه‌مندی‌ها
 fi:S&uosikit
+fo:B&ókamerkir
 fr:Fa&voris
 ga:Ce&anáin
 gl:F&avoritos
@@ -9662,6 +9686,7 @@ es:A&delante
 eu:A&urrera
 fa:بعدی
 fi:E&teenpäin
+fo:F&ram
 fr:&Avancer
 ga:Ar aghaidh
 gl:A&vanzar
@@ -9707,6 +9732,7 @@ es:P&antalla completa
 eu:Ikusleiho-o&soa
 fa:&تمام‌صفحه
 fi:K&oko näyttö
+fo:F&ullur Skíggi
 fr:P&lein écran
 ga:Lánscáileán
 gl:P&antalla completa
@@ -9827,6 +9853,7 @@ et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fa:کلیدهای رجیستری برنامه‌ی حذف پاک نشد
 fi:Poisto-ohjelman rekisteriavainten poistaminen epäonnistui
+fo:Tað eydnaðist ikki at strika Registry lyklar
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
 ga:Theip air eochracha clárlainne an díshuiteálaithe a scriosadh
 gl:Fallou o borrado das claves de rexistro
@@ -9891,6 +9918,7 @@ et:Faili ümbernimetamine ebaõnnestus!
 eu:Hutsegitea agiria berrizendatzerakoan!
 fa:تغییر نام پرونده ناموفق بود!
 fi:Tiedoston uudelleennimeäminen epäonnistui!
+fo:Tað eydnaðist ikki at nýnevna fíluna!
 fr:Impossible de renommer le fichier !
 ga:Theip ar athainmniú an chomhaid!
 gl:Fallouse ao renomear o ficheiro
@@ -9957,6 +9985,7 @@ et:Faili salvestamine ebaõnnestus
 eu:Hutsegitea agiria gordetzerakoan
 fa:ذخیره کردن پرونده با شکست مواجه شد
 fi:Tiedoston tallennus epäonnistui
+fo:Tað eydnaðist ikki at goyma eina fílu
 fr:Échec à l'enregistrement du fichier
 fy-nl:Flater by bewarjen bestân
 ga:Theip air comhad a chuir i dtaisce
@@ -10025,6 +10054,7 @@ et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fa:ثبت اطلاعات ارسال شده با پسوند طولانی ناموفق
 fi:Tiedostopäätetietojen kirjoittaminen rekisteriin epäonnistui
+fo:Tað miseydnaðist at goyma víðkanar upplýsingina av víðkanu fíluni til Registry
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
 ga:Theip air faisnéis fhairsingthe iarmhír comhadainm a scríobh chuig an chlárlann
 gl:Non se puido escribir a información de extensión do ficheiro no rexistro
@@ -10088,6 +10118,7 @@ et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
 fa:ثبت اطلاعات فرآیند حذف در رجیستری ناموفق بود
 fi:Poistamistietojen kirjoittaminen rekisteriin epäonnistui
+fo:Tað miseydnaðist at goyma avinnstallerings upplýsingina í Registry
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
 ga:Theip air an fhaisnéis díshuiteálaithe a scríobh chuig an chlárlann
 gl:Fallouse ao escribir a información de desintalación no rexistro
@@ -10152,6 +10183,7 @@ et:Kiire veebivaade
 eu:Web Ikuspen Azkarra
 fa:نمایش بی‌درنگ
 fi:Nopea web-näkymä
+fo:Skjót Net Vísing
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 gl:Vista web rápida
@@ -10216,6 +10248,7 @@ et:Lemmikud
 eu:Gogokoenak
 fa:علاقه‌مندی‌ها
 fi:suosikit
+fo:Bókamerkir
 fr:Favoris
 ga:Ceanáin
 gl:Favoritos
@@ -10282,6 +10315,7 @@ et:FictionBook-dokumendid
 eu:FikzioLiburu agiriak
 fa:اسناد FictionBook
 fi:FictionBook-asiakirjat
+fo:FictionBook skjøl
 fr:Documents FictionBook
 ga:Cáipéisí FictionBook
 gl:Documentos FictionBook
@@ -10346,6 +10380,7 @@ et:Faili %s ei leitud
 eu:%s agiria ez da aurkitu
 fa:پرونده %s پیدا نشد
 fi:Tiedosto %s ei löydy
+fo:Fílan %s er ikki funnin
 fr:Fichier %s non trouvé
 ga:NÃor aimsÃodh an comhad %s
 gl:Ficheiro %s non atopado
@@ -10410,6 +10445,7 @@ et:Lisatud fail
 eu:Agiri eranspena
 fa:پیوست فابل
 fi:Liitetiedosto
+fo:Fílu Viðfesti
 fr:Pièce jointe
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
@@ -10466,6 +10502,7 @@ et:Faili suurus:
 eu:Agiriaren neurria:
 fa:حجم پرونده:
 fi:Tiedoston koko:
+fo:Fílu Stødd:
 fr:Taille du fichier :
 fy-nl:Bestânsgrutte
 ga:Méid an chomhaid:
@@ -10534,6 +10571,7 @@ et:Fail:
 eu:Agiria:
 fa:پرونده:
 fi:Tiedosto:
+fo:Fíla:
 fr:Fichier :
 fy-nl:Bestân:
 ga:Comhad:
@@ -10599,6 +10637,7 @@ es:Busca&r...
 eu:&Bilatu...
 fa:&جستجو
 fi:Löyd&ä
+fo:Fin&n...
 fr:R&echercher...
 ga:Aimsigh...
 gl:Atopa&r...
@@ -10649,6 +10688,7 @@ et:Otsi
 eu:Bilatu
 fa:جستجو
 fi:Etsi
+fo:Finn
 fr:Rechercher
 fy-nl:Sykje
 ga:Aimsigh
@@ -10718,6 +10758,7 @@ et:Otsi järgmine
 eu:Bilatu Hurrengoa
 fa:مورد بعدی را پیدا کن
 fi:Etsi seuraava
+fo:Finn Næsta
 fr:Occurrence suivante
 fy-nl:Folgjende
 ga:Aimsigh Ar Aghaidh
@@ -10789,6 +10830,7 @@ et:Otsi eelmine
 eu:Bilatu Aurrekoa
 fa:مورد قبلی را پیدا کن
 fi:Etsi edellinen
+fo:Finna Fyrra
 fr:Occurrence précédente
 fy-nl:Foarige
 ga:Aimsigh Roimhe
@@ -10860,6 +10902,7 @@ et:Otsi:
 eu:Bilatu:
 fa:جستجو:
 fi:Etsi:
+fo:Finn:
 fr:Rechercher :
 fy-nl:Sykje:
 ga:Aimsigh:
@@ -10925,6 +10968,7 @@ es:Ajustar al &contenido
 eu:Finkatu &edukia
 fa:متناسب با &محتوا
 fi:Sovita &Sisältö
+fo:Tillaga &Innihald
 fr:Ajuster au &contenu
 ga:Oiriúnaigh an t-inneachar
 gl:Axustar &contido
@@ -10969,6 +11013,7 @@ es:Ajustar a la &página
 eu:Finkatu &orrialdea
 fa:متناسب با &صفحه
 fi:Sovita &Sivu
+fo:Tillaga &Síðu
 fr:&Page entière
 ga:Oiriúnaigh don leathanach é
 gl:Axustar &páxina
@@ -11013,6 +11058,7 @@ es:Ajustar al &ancho
 eu:Finkatu &zabalera
 fa:متناسب با &عرض
 fi:Sovita &Leveys
+fo:Tillaga &Vídd
 fr:Pleine &largeur
 ga:Oiriúnaigh don leithead é
 gl:Axustar &largura
@@ -11061,6 +11107,7 @@ et:Sisu sobitamine
 eu:Finkatu Edukia
 fa:متناسب کردن با محتویات
 fi:Sovita sisältö
+fo:Tillaga Innihald
 fr:Ajuster au contenu
 ga:Oiriúnaigh an t-inneachar
 gl:Axustar contido
@@ -11127,6 +11174,7 @@ et:Lehekülje kõrguse sobitamine
 eu:Finkatu Orrialdea
 fa:به بزرگی پنجره
 fi:Sovita sivu pystysuunnassa
+fo:Tillaga Síðuna
 fr:Page entière
 fy-nl:Folsleine side
 ga:Oiriúnaigh don Lch
@@ -11197,6 +11245,7 @@ et:Lehekülje laiuse sobitamine
 eu:Finkatu Zabalera
 fa:به بزرگی پهنای پنجره
 fi:Sovita sivu vaakasuunnassa
+fo:Tillaga Víddina
 fr:Pleine largeur
 fy-nl:Passend yn breedte
 ga:Oiriúnaigh don Leithead
@@ -11265,6 +11314,7 @@ et:Sobita lehekülje laius ja näita jätkuvana
 eu:Finkatu Zabalera eta Erakutsi Orrialdeak Jarraian
 fa:صفحات را به بزرگی پهنای پنجره و به صورت پیوسته نمایش بده
 fi:Sovita leveys ja näytä sivut peräkkäin
+fo:Tillaga Víddina og Vís Síður Framhaldandi
 fr:Pleine largeur, vue continue
 ga:Oiriúnaigh don leithead & taispeáin leathanaigh go leanúnach
 gl:Axustar ancho e amosar páxinas seguidas
@@ -11329,6 +11379,7 @@ et:Sobita üksik lehekülg
 eu:Finkatu Orrialde Bakar bat
 fa:متناسب کردن یک صفحه
 fi:Sovita yksittäinen sivu
+fo:Tillaga til Einkulta Síðu
 fr:Page unique
 ga:Oiriúnaigh leathanach amháin
 gl:Axustar a páxina única
@@ -11394,6 +11445,7 @@ et:Fondid:
 eu:Hizi-motak:
 fa:قلم‌ها:
 fi:Fontit:
+fo:Skriftsløg
 fr:Polices :
 ga:Clófhoirne:
 gl:Tipos de letra:
@@ -11460,6 +11512,7 @@ et:Leiti tekst leheküljel %s
 eu:Bilatu idazkia %s orrialdean
 fa:متن در صفحه‌ی ‌%s پیدا شد
 fi:Tekstiä löytyi sivulta %s
+fo:Tekstur funnin á síðu %s
 fr:Texte trouvé à la page %s
 fy-nl:Tekst fûn op side %s
 ga:Aimsíodh téacs ag lch a %s
@@ -11524,6 +11577,7 @@ et:Leiti tekst leheküljel %s (uuesti)
 eu:Bilatu idazkia %s orrialdean (berriro)
 fa:متن در صفحه‌ی ‌%s پیدا شد (دوباره)
 fi:Teksti löytyi sivulta %s (uudelleen)
+fo:Tekstur funnin á síðu %s (aftur)
 fr:Texte trouvé page %s (suivant)
 ga:Aimsíodh téacs ag lch a %s (arís)
 gl:Atopado texto na páxina %s (de novo)
@@ -11588,6 +11642,7 @@ et:Sageli loetud dokumendid
 eu:Sarri Irakurriak
 fa:آخرین چیزهایی که خوانده‌اید
 fi:Usein luetut
+fo:Oftani Lisin
 fr:Lu fréquemment
 ga:Léite Go Minic
 gl:Lido decote
@@ -11654,6 +11709,7 @@ et:GB
 eu:GB
 fa:گیگابایت
 fi:Gt
+fo:GB
 fr:Go
 fy-nl:GB
 ga:GB
@@ -11720,6 +11776,7 @@ et:Hangi fondi infot
 eu:Lortu hizkien argibideak
 fa:دریافت اطلاعات فونت
 fi:Hanki fonttien tiedot
+fo:Heinta Info um Skriftsløg
 fr:Infos sur les polices
 ga:Faigh eolas maidir le na clófhoirne
 gl:Obter información do tipo de letra
@@ -11770,6 +11827,7 @@ et:Liigu leheküljele
 eu:Joan orrialdera
 fa:برو به صفحه‌ی
 fi:Siirry sivulle
+fo:Far til síðu
 fr:Aller à la page
 fy-nl:Gean nei side
 ga:Téigh chuig lch
@@ -11839,6 +11897,7 @@ et:Peida &sätted
 eu:Ezkuta A&ukerak
 fa:مخفی کردن &گزینه‌ها
 fi:Piilota
+fo:Goym &Valmøguleikar
 fr:Masquer les &options
 ga:Cuir na roghanna i bhfolach
 gl:Agochar as &opcións
@@ -11904,6 +11963,7 @@ et:Peida sageli loetud dokumendid
 eu:Ezkutatu sarri irakurriak
 fa:پنهان کردن آخرین چیزهایی که خوانده‌اید
 fi:Piilota usein luetut
+fo:Goym oftani lisin
 fr:Masquer les lectures fréquentes
 ga:Folaigh cinn léite go minic
 gl:Agachar o lido decote
@@ -11969,6 +12029,7 @@ et:Soovitus: Uuesti otsimiseks vajuta F3-klahvi
 eu:Oharra: Erabili F3 tekla berriro bilatzeko
 fa:نکته: برای جستجوی مجدد از کلید F3 استفاده کنید
 fi:Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
+fo:Eini Ráð: Brúka F3 knøttin at leita aftur við
 fr:Remarque : touche F3 pour le résultat suivant
 fy-nl:Tip: Brûk de funksjetoets F3 om fierder te sykjen
 ga:Leid: Bain feidhm as an gcnaipe F3 chun nithe a aimsiú arís
@@ -12032,6 +12093,7 @@ et:Ikoon:
 eu:Ikurra:
 fa:آیکون
 fi:Kuvake:
+fo:Ímynd:
 fr:Icône :
 ga:Deilbhín:
 gl:Icona
