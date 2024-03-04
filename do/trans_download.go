@@ -114,7 +114,7 @@ AppTranslator: SumatraPDF
 af:&Omtrent
 am:&Ծրագրի մասին
 */
-func splitIntoPerLangFiles(d []byte) {
+func generateGoodSubset(d []byte) {
 	a := strings.Split(string(d), "\n")
 	a = a[2:]
 	perLang := make(map[string]map[string]string)
@@ -130,6 +130,9 @@ func splitIntoPerLangFiles(d []byte) {
 		m[currString] = trans
 	}
 
+	goodLangs := []string{}
+	fullyTranslated := []string{}
+	notTranslated := []string{}
 	// build perLang maps
 	for _, s := range a {
 		if len(s) == 0 {
@@ -175,16 +178,29 @@ func splitIntoPerLangFiles(d []byte) {
 			}
 			a = append(a, trans)
 		}
-		s := strings.Join(a, "\n")
-		path := filepath.Join(translationsDir, lang+".txt")
-		writeFileMust(path, []byte(s))
+		// note: no longer writing per-language files
+		// too much churn in the repo
+		if false {
+			s := strings.Join(a, "\n")
+			path := filepath.Join(translationsDir, lang+".txt")
+			writeFileMust(path, []byte(s))
+		}
 		nMissing := nStrings - len(m)
 		skipStr := ""
 		if nMissing > 100 {
 			skipStr = "  SKIP"
 			langsToSkip[lang] = true
+			notTranslated = append(notTranslated, lang)
+		} else {
+			if nMissing == 0 {
+				fullyTranslated = append(fullyTranslated, lang)
+			} else {
+				goodLangs = append(goodLangs, lang)
+			}
 		}
-		logf("Wrote: '%s', missing: %d%s\n", path, nMissing, skipStr)
+		if nMissing > 0 {
+			logf("Lang %s, missing: %d%s\n", lang, nMissing, skipStr)
+		}
 	}
 
 	// write translations-good.txt with langs that don't miss too many translations
@@ -221,6 +237,9 @@ func splitIntoPerLangFiles(d []byte) {
 	path := filepath.Join(translationsDir, "translations-good.txt")
 	writeFileMust(path, []byte(s))
 	logf("Wrote %s of size %d\n", path, len(s))
+	logf("not translated langs: %v\n", notTranslated)
+	logf("good langs: %v\n", goodLangs)
+	logf("fully translated langs: %v\n", fullyTranslated)
 }
 
 func downloadTranslations() bool {
@@ -236,10 +255,7 @@ func downloadTranslations() bool {
 		//return false
 	}
 
-	// disable per-lang files for now
-	if false {
-		splitIntoPerLangFiles(d)
-	}
+	generateGoodSubset(d)
 
 	// TODO: save ~400k in uncompressed binary by
 	// saving as gzipped and embedding that in the exe
