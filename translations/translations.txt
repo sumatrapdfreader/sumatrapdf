@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1332e2b1eb9e05390cecd18d716d9a9d867914c7
+6b097017affa25b1fbc2fce2cd2396a9f5caec18
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -360,7 +360,7 @@ es:&Vista de libro
 eu:&Liburu ikuspegia
 fa:نمای کتاب
 fi:&Kirja näkymä
-fo:& Bóka vísing
+fo:&Bóka vísing
 fr:&Comme un livre
 ga:&Amharc Leabhair
 gl:Vista de li&bro
@@ -571,7 +571,7 @@ et:&Jätka 32-bitise versiooni paigaldamist
 eu:&Jarraitu 32-biteko bertsioa ezartzen
 fa:&ادامه نصب نسخه 32 بیتی
 fi:&Jatka 32-bittisen version asentamista
-fo:& Halt áfram at installera 32-bita útgávu
+fo:&Halt áfram at installera 32-bita útgávu
 fr:Continuer l'installation de la version 32-bits
 ga:&Lean ar aghaidh ag suiteáil an leagain 32-beart
 gl:Continuar instalando a versión de 32 bits
@@ -1518,7 +1518,9 @@ de:Tasten&kombinationen
 el:Συντομεύσεις πληκτρολογίου
 es:Atajos de teclado
 fa:میانبرهای &صفحه کلید
+fo:&Knappaborð Snarvegir
 fr:&Raccourcis clavier
+ga:&Aicearraí méarchláir
 gl:Atallos de &teclado
 he:קיצורי דרך במקלדת
 hu:&Gyorsbillentyűk
@@ -1552,6 +1554,7 @@ es:Última página
 eu:&Azken orrialdea
 fa:&آخرین صفحه
 fi:&Viimeinen sivu
+fo:&Seinasta Síða
 fr:&Dernière page
 ga:&An leathanach deireanach
 gl:Ú&ltima páxina
@@ -1600,6 +1603,7 @@ et:&Suurendus:
 eu:&Handipena:
 fa:&درشت نمایی
 fi:&Suurennus:
+fo:&Ger størri
 fr:&Grossissement :
 fy-nl:&Fergrutting:
 ga:For&mhéadú:
@@ -1666,6 +1670,7 @@ et:&Kasutusjuhend
 eu:E&skuliburua
 fa:&کتابچه‌ی راهنمای آنلاین
 fi:&Käyttöohje
+fo:&Leiðbeining
 fr:&Manuel
 fy-nl:Utlis
 ga:Lá&mhleabhar
@@ -1732,6 +1737,7 @@ et:&Tõstutundlik
 eu:&Hizki larri-xeheak bereizi
 fa:دقیقا &مثل عبارت وارد شده
 fi:Sama kirjainkoko
+fo:&Samsvara Stavbundni
 fr:&Respecter la casse
 fy-nl:Haad-/lytse letters tapasse
 ga:&Comhoiriúnaigh an cás
@@ -9469,6 +9475,7 @@ el:Σφάλμα
 es:Error
 fo:Villa
 fr:Erreur
+ga:Earráid
 gl:Erro
 he:שגיאה
 hi:त्रुटि
@@ -12147,6 +12154,7 @@ et:Pildifailid (*.%s)
 eu:Irudi agiriak (*.%s)
 fa:پرونده‌های تصویری (*.%s)
 fi:Kuvatiedostot (*.%s)
+fo:Myndafílur (*.%s)
 fr:Fichiers-images (*.%s)
 ga:Comhaid íomhánna (*.%s)
 gl:Ficheiros de imaxe (*.%s)
@@ -12210,6 +12218,7 @@ et:Pildid
 eu:Irudiak
 fa:تصاویر
 fi:Kuvat
+fo:Myndir
 fr:Images
 ga:Íomhánna
 gl:Imaxes
@@ -12266,6 +12275,7 @@ et:Tint
 eu:Tinta
 fa:جوهر
 fi:Muste
+fo:Blekk
 fr:Encre
 ga:Dúch
 gl:Trazo
@@ -12323,6 +12333,7 @@ et:Paigalda SumatraPDF
 eu:Ezarri SumatraPDF
 fa:نصب کردن SumatraPDF
 fi:Asenna SumatraPDF
+fo:Innstallera SumatraPDF
 fr:Installer SumatraPDF
 ga:Suiteáil SumatraPDF
 gl:Instalar SumatraPDF
@@ -12387,6 +12398,7 @@ et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
 fa:SumatraPDF را در این &پوشه نصب کن:
 fi:Asenna SumatraPDF kansioon:
+fo:Innstallera SumatraPDF í &mappuna:
 fr:Installer SumatraPDF dans le répertoire :
 ga:Suiteáil SumatraPDF sa bh&fillteán seo:
 gl:Instalar SumatraPDF no &cartafol:
@@ -12449,6 +12461,7 @@ et:Paigalda ja kävita uuesti
 eu:Ezarri eta berrabiarazi
 fa:نصب و راه‌اندازی مجدد
 fi:Asenna ja käynnistä uudelleen
+fo:Innstallera og endurbyrja
 fr:Installer et redémarrer
 ga:Suiteáil agus atosaigh é
 gl:Instalar e volver iniciar
@@ -12498,6 +12511,7 @@ es:Instalar para todos los usuarios
 eu:Ezarri erabiltzaile guztientzat
 fa:برای همه کاربران نصب کن
 fi:Asenna kaikille käyttäjille
+fo:Installera til allar brúkarar
 fr:Installer pour tous les utilisateurs
 ga:Suiteáil do chách é
 gl:Instalar para todos os usuarios
@@ -12549,6 +12563,7 @@ et:Paigaldamine ebaõnnestus!
 eu:Ezarpen hutsegitea!
 fa:ایراد در نصب
 fi:Asentaminen epäonnistui!
+fo:Innstallatiónin miseydnaðist!
 fr:Échec de l'installation !
 ga:Theip ar an suiteáil!
 gl:Fallou a instalación!
@@ -12614,6 +12629,7 @@ et:Toimub paigaldamine...
 eu:Ezarpena garatzen...
 fa:در حال نصب...
 fi:Asennus käynnissä...
+fo:Innstallatiónin er í gongd...
 fr:Installation en cours…
 ga:Suiteáil ar siúl...
 gl:Instalación en curso...
@@ -12676,6 +12692,7 @@ et:32-bitise SumatraPDF-i paigaldamine 64-bitisele operatsioonisüsteemile
 eu:32-biteko Sumatra ezartzen 64-biteko SE-n
 fa:در حال نصب سوماترا پی‌دی‌اف 32 بیتی روی سیستم‌عامل 64 بیتی
 fi:32-bittisen SumatraPDF:n asentaminen 64-bittiseen käyttöjärjestelmään
+fo:Innstallerar 32-bita SumatraPDF til 64-bita stýrisskipan
 fr:Installation de SumatraPDF 32-bits sur un système 64-bits
 ga:Ag suiteáil SumatraPDF 32-beart ar chóras oibriúcháin 64-beart
 gl:Instalando o SumatraPDF de 32-bit en sistema de 64-bit
@@ -12722,6 +12739,7 @@ et:Sisevärv:
 eu:Barneko margoa:
 fa:رنگ داخلی
 fi:Sisätilojen väri:
+fo:Innanhýsis Litur:
 fr:Couleur Intérieure :
 ga:An dath inmheánach:
 gl:Cor interior:
@@ -12775,6 +12793,7 @@ et:KB
 eu:KB
 fa:کیلوبایت
 fi:Kt
+fo:KB
 fr:Ko
 fy-nl:KB
 ga:KB
@@ -12844,6 +12863,7 @@ et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
 fa:جستجوگر ویندوز امکان &جستجو در اسناد PDF را داشته باشد
 fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
+fo:Lat Windows Desktop Search &leita eftir PDF skjølum
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 ga:Lig do Chuardach Deasca Windows cáipéisí PDF a chuardach
 gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
@@ -12907,6 +12927,7 @@ et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fa:ویندوز امکان پیش‌نمایش اسناد PDF را داشته باشد
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
+fo:Lat Windows vísa &forvísing av PDF skjølum
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 ga:Lig do Windows réamhamhairc de cháipéisí PDF a thaispeáint
 gl:Deixar que Windows mostre &previsualizacións de documentos PDF
@@ -12970,6 +12991,7 @@ et:Hele
 eu:Argia
 fa:روشن
 fi:Vaalea
+fo:Ljóst
 fr:Clair
 ga:éadroime
 gl:Claro
@@ -13029,6 +13051,7 @@ et:Joon
 eu:Lerroa
 fa:خط
 fi:Rivi
+fo:Linja
 fr:Ligne
 ga:Líne
 gl:Liña
@@ -13081,6 +13104,7 @@ et:Joone lõpp:
 eu:Lerro hasiera:
 fa:انتهای خط
 fi:Rivin loppu:
+fo:Linju Endi:
 fr:Fin de ligne :
 ga:Críoch na líne:
 gl:Liña final:
@@ -13130,6 +13154,7 @@ et:Joone algus:
 eu:Lerro hasiera:
 fa:شروع خط
 fi:Rivin alku:
+fo:Linju Byrjan:
 fr:Début de ligne :
 ga:Tús an líne:
 gl:Liña inicial:
@@ -13176,6 +13201,7 @@ es:Cargando %s ...
 eu:Gertatzen %s ...
 fa:در حال بارگذاری %s ...
 fi:Ladataan %s ...
+fo:Heintar %s...
 fr:Chargement de %s ...
 ga:%s á luchtú...
 gl:Cargando %s ...
@@ -13297,6 +13323,7 @@ et:Tee SumatraPDF PDF-failide vaikerakenduseks?
 eu:Egin SumatraPFD berezko aplikazioa PDF agirientzat?
 fa:پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
 fi:Tee SumatraPDF:stä PDF-asiakirjojen oletuslukuohjelma?
+fo:Ger SumatraPDF til standard nýtsluskipan fyri PDF fílur?
 fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 fy-nl:SumatraPDF as standertlêzer fan PDF-bestannen ynstelle?
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe?
@@ -13428,6 +13455,7 @@ et:Tõstutundlik
 eu:Hizki Larriak-xeheak Bereizi
 fa:دقیقا مثل عبارت وارد شده
 fi:Sama kirjainkoko
+fo:Samsvara Stavbundni
 fr:Respecter la casse
 fy-nl:Haadlettergefoelich
 ga:Comhoiriúnaigh an cás
@@ -13496,6 +13524,7 @@ et:Mobi-dokumendid
 eu:Mobi agiriak
 fa:Mobi اسناد
 fi:Mobi-asiakirjat
+fo:Mobi skjøl
 fr:Fichiers Mobi
 fy-nl:Mobi-bestannen
 ga:Cáipéisí Mobi
@@ -13562,6 +13591,7 @@ et:Muudetud:
 eu:Aldatuta:
 fa:اصلاح شده:
 fi:Muuttanut:
+fo:Tillagað:
 fr:Modifié le :
 fy-nl:Oanpast:
 ga:Mionathraithe:
@@ -13625,6 +13655,7 @@ es:Nueva &ventana
 eu:&Leiho berria
 fa:پنجره جدید
 fi:Uusi &ikkuna
+fo:Nýggjur &gluggi
 fr:Nouvelle &fenêtre
 ga:Fuinneog nua
 gl:Nova &xanela
@@ -13674,6 +13705,7 @@ et:Saadaval on uus versioon
 eu:Bertsio berria eskuragarri
 fa:نسخه جدیدی موجود است
 fi:Uusi versio saatavilla
+fo:Nýggj útgáva er tøk
 fr:Nouvelle version disponible
 ga:Tá leagan nua ar fáil
 gl:Nova versión dispoñible
@@ -13729,6 +13761,7 @@ et:Järgmine lehekülg
 eu:Hurrengo Orrialdea
 fa:صفحه‌ی بعدی
 fi:Seuraava sivu
+fo:Næsta Síða
 fr:Page suivante
 fy-nl:Folgjende side
 ga:Leathanach Ar Aghaidh
