@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6b097017affa25b1fbc2fce2cd2396a9f5caec18
+574305038364f5920a83807d7b9cde911eeef9b2
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -1799,6 +1799,7 @@ es:&Página siguiente
 eu:&Hurrengo orrialdea
 fa:صفحه بعدی
 fi:&Seuraava sivu
+fo:&Næsta Síða
 fr:Page &suivante
 ga:&Leathanach Ar Aghaidh
 gl:Segui&nte páxina
@@ -1850,6 +1851,7 @@ et:&Ei
 eu:&Ez
 fa:&خیر
 fi:&Ei
+fo:&Nei
 fr:&Non
 fy-nl:&Nee
 ga:&Ná déan
@@ -1917,6 +1919,7 @@ et:Vaid &paaritud leheküljed
 eu:&Orrialde bikoitiak bakarrik
 fa:فقط صفحات &فرد
 fi:Vain &parittomat sivut
+fo:Einans &Ólíkar síður
 fr:Seulement les pages &impaires
 ga:&Corr-leathanaigh amháin
 gl:&Só páxinas impares
@@ -1982,6 +1985,7 @@ et:&Ava dokument
 eu:&Ireki Agiria
 fa:باز کردن سند
 fi:&Avaa asiakirja
+fo:&Opna Skjal
 fr:&Ouvrir le document
 ga:&Oscail Cáipéis
 gl:Abrir documento
@@ -2043,6 +2047,7 @@ es:&Abrir...
 eu:&Ireki...
 fa:&بازکردن
 fi:&Avaa...
+fo:&Opna...
 fr:&Ouvrir...
 ga:&Oscail...
 gl:&Abrir...
@@ -2094,6 +2099,7 @@ et:&Sätted
 eu:A&ukerak
 fa:&گزینه‌ها
 fi:&Asetukset
+fo:&Valmøguleikar
 fr:&Options
 ga:&Roghanna
 gl:&Opcións
@@ -2157,6 +2163,7 @@ et:&Sätted...
 eu:A&ukerak...
 fa:&تنظیمات ...
 fi:&Asetukset...
+fo:&Valmøguleikar...
 fr:&Options...
 fy-nl:&Opsjes...
 ga:&Roghanna...
@@ -2222,6 +2229,7 @@ et:&Salasõna:
 eu:Sarhitza
 fa:&کلمه‌ی عبور
 fi:&Salasana
+fo:&Loyniorð:
 fr:&Mot de passe :
 fy-nl:&Wachtwurd:
 ga:&Focal faire:
@@ -2288,6 +2296,7 @@ et:&Kinnita dokument
 eu:&Pin Agiria
 fa:&سنجاق کردن سند
 fi:&Kiinnitä asiakirja
+fo:&Festa Skjal
 fr:&Épingler le document
 ga:&Greamaigh an cháipéis le biorrán
 gl:&Marcar Documento
@@ -2348,6 +2357,7 @@ es:&Página anterior
 eu:A&urreko orrialdea
 fa:صفحه &قبل
 fi:&Edellinen sivu
+fo:&Fyrra Síða
 fr:Page &précédente
 ga:&An leathanach roimhe
 gl:&Páxina anterior
@@ -2397,6 +2407,7 @@ et:&Prindi...
 eu:&Irarkitu...
 fa:&چاپ...
 fi:&Tulosta...
+fo:&Prenta...
 fr:Im&primer...
 ga:&Clóbhuail...
 gl:&Imprimir...
@@ -2461,6 +2472,7 @@ et:&Prindi... (keelatud)
 eu:&Irarkitu... (ukatuta)
 fa:&چاپ... (ممنوع شده)
 fi:&Tulosta... (kielletty)
+fo:&Prenta...(noktað)
 fr:&Imprimer... (refusé)
 ga:&Clóbhualadh... (diúltaithe)
 gl:&Imprimir... (denegado)
@@ -2525,6 +2537,7 @@ et:&Jäta meelde selle dokumendi salasõna
 eu:&Gogoratu agiri honetarako sarhitza
 fa:رمز عبور این سند را به &خاطر داشته باش
 fi:&Muista tämän asiakirjan salasana
+fo:&Goym loyniorðið til hetta skjalið
 fr:&Mémoriser le mot de passe pour ce document
 ga:&Cuimhnigh ar an bhfocal faire don cháipéis seo
 gl:&Lembrar o contrasinal para este documento
@@ -2588,6 +2601,7 @@ et:Dokumendi sulgemisel jäetakse &meelde küljendi sätted
 eu:G&ogoratu ezarpen hauek agiri bakoitzerako
 fa:این تنظیمات را برای همه‌ی اسناد به &خاطر بسپار
 fi:&Muista nämä asetukset jokaiselle asiakirjalle
+fo:&Goym hesar stillingar til eitthvørt skjal
 fr:&Mémoriser ces paramètres pour chaque document
 fy-nl:&Bewarje dizze ynstellingen foar elk dokumint
 ga:Cuimhnigh ar na socruithe seo do gach cáipéis
@@ -2651,6 +2665,7 @@ et:&Eemalda Ajaloost
 eu:&Kendu historiatik
 fa:&حذف کردن از تاریخچه
 fi:&Poista historiasta
+fo:&Strika í Søguyvirliti
 fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
@@ -2703,6 +2718,7 @@ et:Salvesta &kui...
 eu:&Gorde Honela...
 fa:&ذخیره کردن با نام...
 fi:Tallenna &nimellä...
+fo:&Goym Sum...
 fr:&Enregistrer sous...
 ga:&Cuir i dtaisce mar...
 gl:&Gardar como...
@@ -2766,6 +2782,7 @@ et:&Salvesta olemas olevasse PDF-i
 eu:Gorde &badagoen PDF batean
 fa:&ذخیره در PDF جاری
 fi:&Tallenna nykyiseen PDF-tiedostoon
+fo:&Goym til verandi PDF
 fr:&Sauvegarder dans le PDF existant
 ga:&Cuir i dtaisce i PDF atá ann
 gl:Gardar a PDF exi&stente
@@ -3670,6 +3687,7 @@ et:(%d:st)
 eu:(%d-tik)
 fa:(از %d)
 fi:(%d:stä)
+fo:(av %d)
 fr:(de %d)
 fy-nl:(fan %d)
 ga:(as %d)
@@ -3734,6 +3752,7 @@ et:(lehekülg %s)
 eu:(%s orrialdea)
 fa:(صفحه‌ی %s)
 fi:(sivu %s)
+fo:(síða %s)
 fr:(page %s)
 ga:(leathanach a %s)
 gl:(páxina %s)
@@ -13832,6 +13851,7 @@ et:Otsitavat teksti ei leitud
 eu:Ez da emaitzik aurkitu
 fa:موردی یافت نشد
 fi:Osumia ei löytynyt
+fo:Ongi samsvør vórðu funnin
 fr:Aucun résultat n'a été trouvé
 fy-nl:Gjin sykresultaat fûn
 ga:Níor aimsíodh comhionanna
@@ -13898,6 +13918,7 @@ et:Tulemusi ei leitud rea %u lähedalt failis %s
 eu:Ez da emaitzik aurkitu %u lerro inguran %s agirian
 fa:هیچ نتیجه‌ای در خط %u در پرونده‌ی %s یافت نشد
 fi:Tulosta ei löytynyt rivin %u ympäriltä tiedostossa %s
+fo:Ongi úrslit vórðu funnin um linju %u í fíluni %s
 fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 ga:Níor aimsíodh toradh idir líne %u sa chomhad %s
 gl:Non se atopou resultado arredor da liña %u no ficheiro %s
@@ -13961,6 +13982,7 @@ et:Sünkroniserimisfaili ei leitud
 eu:Aldiberetze agiria ez da aurkitu
 fa:پرونده همگام‌سازی موجود نیست
 fi:Synkronointitiedostoa ei löytynyt
+fo:Ongin synkroniseringar fíla er funnin
 fr:Aucun fichier de synchronisation trouvé
 fy-nl:Gjin syngronisaasjebestân fûn
 ga:Níor aimsíodh comhad comhaimseartha
@@ -14025,6 +14047,7 @@ et:Sellel kohal ei ole sünkroniseerimisinfot
 eu:Ez dago aldiberetze argibiderik toki honetan
 fa:هیچ اطلاعاتی در این محل همگام نشد
 fi:Tällä sijainnilla ei ole synkronisointitietoja
+fo:Ongin upplýsing um synkronisering á hesum stað
 fr:Aucune information de synchronisation à cette position
 fy-nl:Gjin syngronisaasjeynformaasje beskikber
 ga:Níl faisnéis chomhaimseartha ag an suíomh seo
@@ -14090,6 +14113,7 @@ et:Lehekülgede arv:
 eu:Orrialde Zenbatekoa:
 fa:تعداد صفحات:
 fi:Sivujen määrä:
+fo:Síðutal
 fr:Nombre de pages :
 fy-nl:Oantal sides:
 ga:Líon na leathanaigh:
@@ -14226,6 +14250,7 @@ et:Läbipaistvus:
 eu:Iragazkaiztasuna:
 fa:وضوح
 fi:Läpinäkyvyys:
+fo:Óskygni:
 fr:Opacité :
 ga:Teimhneacht:
 gl:Opacidade:
@@ -14276,6 +14301,7 @@ et:Läbipaistvus: %d
 eu:Iragazkaiztasuna: %d
 fa:شفافیت: %d
 fi:Läåinäkyvyys: %d
+fo:Óskygni: %d
 fr:Opacité : %d
 ga:Teimhneacht: %d
 gl:Opacidade: %d
@@ -14329,6 +14355,7 @@ et:Ava
 eu:Ireki
 fa:باز کردن
 fi:Avaa
+fo:Opna
 fr:Ouvrir
 fy-nl:Iepenje
 ga:Oscail
@@ -14398,6 +14425,7 @@ et:Ava PDF-XChangega
 eu:Ireki PDF-XChangen
 fa:باز کردن در PDF-&XChange
 fi:Avaa PDF-XChange
+fo:Opna &í PDF-XChange
 fr:Ouvrir dans PDF-XChange
 fy-nl:Iepenje mei PDF-XChange
 ga:Oscail &i PDF-XChange
@@ -14458,6 +14486,7 @@ es:Abrir archivo adjunto
 eu:Ireki eranskina
 fa:باز کردن پیوست
 fi:Avaa liite
+fo:Opna Fylgiskjal
 fr:Ouvrir la pièce jointe
 ga:Oscail an ceangaltán
 gl:Abrir anexo
@@ -14499,6 +14528,7 @@ el:Άνοιγμα καταλόγου στο &Double Commander
 es:Abrir directorio en &Double Commander
 fa:باز کردن پوشه در &Double Commander
 fi:Avaa hakemisto &Double Commanderissa
+fo:Opna Mappu við &Double Commander
 fr:Ouvrir dans &Double Commander
 ga:Oscail an chomhadlann i gceannasaí &dúbailte
 gl:Abrir directorio no &Double Commander
@@ -14537,6 +14567,7 @@ el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείω
 es:Abrir directorio en &Explorador de Archivos
 fa:باز کردن پوشه در &Explorer
 fi:Avaa hakemisto &Explorerissa
+fo:Opna Mappu við &Explorer
 fr:Ouvrir dans l'&Explorateur
 ga:Oscail an Chomhadlann in &Explorer
 gl:Abrir directorio no &explorador
@@ -14575,6 +14606,7 @@ el:Άνοιγμα κατακόγου στον &Total Commander
 es:Abrir directorio en &Total Commander
 fa:باز کردن پوشه در &Total Commander
 fi:Avaa hakemisto &Total Commanderissa
+fo:Opna Mappu við &Total Commander
 fr:Ouvrir dans &Total Commander
 ga:Oscail an chomhadlann i gceannasaí iomlán
 gl:Abrir directorio no &Total Commander
@@ -14613,6 +14645,7 @@ el:Άνοιγμα καταλόγου στο Directory &Opus
 es:Abrir directorio en Directory &Opus
 fa:باز کردن پوشه در Directory &Opus
 fi:Avaa hakemisto osoitteessa Directory &Opus
+fo:Opna Mappu við Directory &Opus
 fr:Ouvrir dans Directory &Opus
 ga:Oscail an chomhadlann i saothar comhadlainne
 gl:Abrir directorio no Directory &Opus
@@ -14657,6 +14690,7 @@ et:Ava põimitud PDF
 eu:Ireki barneko PDF
 fa:باز کردن پی‌دی‌اف جاسازی‌شده
 fi:Avaa upotettu PDF-tiedosto
+fo:Opna Innilokaðan PDF
 fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
@@ -14702,6 +14736,7 @@ de:In neuem Fenster öffnen
 el:Άνοιγμα Σε Νέο Παράθυρο
 es:Abrir en nueva ventana
 fa:بازکردن در پنجره جدید
+fo:Opna í Nýggjum Glugga
 fr:Ouvrir dans une nouvelle fenêtre
 ga:Oscail i bhfuinneog nua
 gl:Abrir en xanela nova
@@ -14747,6 +14782,7 @@ et:Ava dokument...
 eu:Ireki agiri bat...
 fa:باز کردن یک سند...
 fi:Avaa asiakirja...
+fo:Opna eitt skjal...
 fr:Ouvrir un document...
 ga:Oscail cáipéis...
 gl:Abrir un documento...
@@ -14812,6 +14848,7 @@ et:Ava rakenduses %s
 eu:Irekitzea %s
 fa:باز کردن در %s
 fi:Avaa ohjelmassa %s
+fo:Opna við %s
 fr:Ouvrir dans %s
 ga:Oscail i %s
 gl:Abrir en %s
@@ -14876,6 +14913,7 @@ et:Ava &Adobe Readeris
 eu:Ireki &Adobe Readerren
 fa:باز کردن در &Adobe Reader
 fi:Avaa &Adobe Readerissa
+fo:Opna við &Adobe Reader
 fr:Ouvrir dans &Adobe Reader
 fy-nl:Iepenje mei &Adobe Reader
 ga:Oscail in &Adobe Reader
@@ -14942,6 +14980,7 @@ et:Ava &Foxit Readeris
 eu:Ireki &Foxit Readerren
 fa:باز کردن در &Foxit Reader
 fi:Avaa &Foxit Readerissa
+fo:Opna við &Foxit Reader
 fr:Ouvrir dans Fo&xit Reader
 fy-nl:Iepenje mei &Foxit Reader
 ga:Oscail i &Foxit Reader
@@ -15006,6 +15045,7 @@ et:Ava Microsoft XPS-Viewerga
 eu:Ireki Microsoft XPS-Ikusgailuan
 fa:باز کردن در Microsoft X&PS-Viewer
 fi:Avaa Microsoft XPS-Viewer
+fo:Opna við &Microsoft XPS-Kagara
 fr:Ouvrir dans Microsoft XPS-Viewer
 fy-nl:Iepenje mei Microsoft XPS-Viewer
 ga:Oscail i &Microsoft XPS-Viewer
@@ -15063,6 +15103,7 @@ el:Άνοιγμα στη βοήθεια Microsoft &HTML
 es:Abrir en Microsoft HTML Help
 fa:باز کردن در Microsoft &HTML Help
 fi:Avaa Microsoft &HTML Help -ohjelmassa
+fo:Opna við Microsoft &HTML Hjálp
 fr:Ouvrir dans &HTML Help
 ga:Oscail in Microsoft &HTML Help
 gl:Abrir na axuda Microsoft &HTML
@@ -15108,6 +15149,7 @@ et:O&madused
 eu:Eza&ugarriak
 fa:م&شخصات
 fi:Ominaisuudet
+fo:E&ginleikar
 fr:P&ropriétés
 ga:Ai&ríonna
 gl:P&ropiedades
@@ -15173,6 +15215,7 @@ et:PDF-dokument
 eu:PDF Agiria
 fa:PDF سند
 fi:PDF-asiakirja
+fo:PDF Skjal
 fr:Document PDF
 fy-nl:PDF-bestân
 ga:Cáipéis PDF
@@ -15239,6 +15282,7 @@ et:PDF-i optimeerimised:
 eu:PDF Hobekuntzak:
 fa:PDF بهینه‌سازی
 fi:PDF-optimoinnit:
+fo:PDF Optimeringar:
 fr:Optimisations PDF :
 ga:Optimisations PDF
 gl:Optimización de PDF:
@@ -15302,6 +15346,7 @@ et:PDF-i looja:
 eu:PDF Egilea:
 fa:برنامه‌ی ساخت PDF:
 fi:PDF-tuottaja:
+fo:PDF Framleiðari:
 fr:PDF produit par :
 fy-nl:PDF-makker:
 ga:Déantasóir PDF:
@@ -15367,6 +15412,7 @@ et:PDF-i versioon:
 eu:PDF Bertsioa:
 fa:نسخه‌ی PDF:
 fi:PDF-versio:
+fo:PDF Útgáva:
 fr:Version du PDF :
 fy-nl:PDF-ferzje:
 ga:Leagan PDF:
@@ -15433,6 +15479,7 @@ et:PDF-dokumendid
 eu:PDF agiriak
 fa:PDF اسناد
 fi:PDF-asiakirjat
+fo:PDF Skjøl
 fr:Documents PDF
 fy-nl:PDF-bestannen
 ga:Cáipéisí PDF
@@ -15495,6 +15542,7 @@ es:Pá&gina...
 eu:O&rrialdea...
 fa:&صفحه
 fi:Si&vu...
+fo:Sí&ða...
 fr:Pa&ge...
 ga:Leathanach...
 gl:Pá&xina...
@@ -15545,6 +15593,7 @@ et:Lehekülg %s
 eu:%s Orrialdea
 fa:صفحه‌ی %s
 fi:Sivu %s
+fo:Síða %s
 fr:Page %s
 ga:Leathanach %s
 gl:Páxina %s
@@ -15611,6 +15660,7 @@ et:Lehekülje suurus:
 eu:Orrialde Neurria:
 fa:ابعاد صفحه:
 fi:Sivun koko:
+fo:Síðu Stødd:
 fr:Dimensions de la page :
 fy-nl:Sidegrutte:
 ga:Méid an leathanaigh:
@@ -15676,6 +15726,7 @@ et:Lehekülge number %u ei ole olemas
 eu:%u orrialde zenbakia ez dago
 fa:صفحه‌ی %u موجود نیست
 fi:Sivunumeroa %u ei ole olemassa
+fo:Síðu nummar %u finst ikki
 fr:La page %u n'existe pas
 fy-nl:Sidenûmer %u bestiet net
 ga:Níl an uimhir leathanaigh %u ann
@@ -15740,6 +15791,7 @@ et:Lehekülje mastaapimine
 eu:Orrialdea neurriratzen
 fa:مقیاس‌گذاری صفحه
 fi:Sivun skaalaus
+fo:Síðu skalering
 fr:Mise à l'échelle
 ga:Scálú leathanaigh
 gl:Escalado de páxina
@@ -15805,6 +15857,7 @@ et:Lehekülg:
 eu:Orrialdea:
 fa:صفحه:
 fi:Sivu:
+fo:Síða:
 fr:Page :
 fy-nl:Side:
 ga:Leathanach:
@@ -15874,6 +15927,7 @@ et:PalmDoc-dokumendid
 eu:PalmDoc agiriak
 fa:PalmDoc اسناد
 fi:PalmDoc-asiakirjat
+fo:PalmDoc skjøl
 fr:Fichiers PalmDoc
 ga:Cáipéisí PalmDoc
 gl:Documentos PalmDoc
@@ -15935,6 +15989,7 @@ et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
 fa:پیش از ادامه لطفا %s را ببندید!
 fi:Sulje %s jatkaaksesi!
+fo:Vinarliga lat %s aftur fyri at halda fram!
 fr:Fermez %s pour continuer, s.v.p. !
 ga:Dún %s le do thoil chun dul ar aghaidh!
 gl:Peche %s para continuar
@@ -15991,6 +16046,7 @@ el:Παρακαλώ περιμένετε - φόρτωση...
 es:Por favor, espere - cargando...
 fa:لطفا صبر کنید - در حال بارگذاری...
 fi:Odota - latautuu...
+fo:Vinarliga bíða - heintar...
 fr:Veuillez patienter, chargement…
 ga:Fan le do thoil - tá sé ag luchtú...
 gl:Prégase agardar, cargando...
@@ -16039,6 +16095,7 @@ et:Palun oota - toimub visualiseerimine...
 eu:Mesedez itxaron - aurkezten...
 fa:لطفاً صبر کنید...
 fi:Odota - tulkitaan...
+fo:Vinarliga bíða - endurgevur...
 fr:Veuillez patienter, génération…
 fy-nl:In amerijke asjobleaft - werjaan...
 ga:Fan le do thoil - tá sé á chóiriú...
@@ -16101,6 +16158,7 @@ es:Polilínea
 et:Murdjoon
 eu:Poli lerroa
 fi:Poly Line
+fo:Fjølfaldað Linja
 fr:Ligne polygonale
 ga:Líne iolrach
 gl:Liña polivinílica
@@ -16203,6 +16261,7 @@ es:Ventana Emergente: %d 0 R
 et:Hüpikaken: %d 0 R
 eu:Ohar-leihoa: %d 0 R
 fi:Ponnahdusikkuna: %d 0 R
+fo:Støkkmynd: %d O R
 fr:Popup: %d 0 R
 ga:Mír aníos: %d 0 R
 gl:Aparecer: %d 0 R
@@ -16253,6 +16312,7 @@ et:Postscript-dokumendid
 eu:Postscript agirak
 fa:Postscript اسناد
 fi:Postscript-asiakirjat
+fo:Postscript skjøl
 fr:Documents Postscript
 ga:Cáipéisí Postscript
 gl:Documentos Postscript
@@ -16313,6 +16373,7 @@ es:Pr&esentación
 eu:Aur&kezpena
 fa:ارائه
 fi:Es&ittely
+fo:Fr&amløga
 fr:Prés&entation
 ga:Cur i láthair
 gl:Pr&esentación
@@ -16362,6 +16423,7 @@ et:Eelmine lehekülg
 eu:Aurreko Orrialdea
 fa:صفحه‌ی قبلی
 fi:Edellinen sivu
+fo:Fyrra Síða
 fr:Page précédente
 fy-nl:Foarige side
 ga:Leathanach Roimhe
@@ -16431,6 +16493,7 @@ et:Prindi
 eu:Irarkitu
 fa:چاپ
 fi:Tulosta
+fo:Prenta
 fr:Imprimer
 ga:Clóbhuail
 gl:Imprimir
@@ -16497,6 +16560,7 @@ et:Printimisvahemik
 eu:Irarketa eremua
 fa:محدوده‌ی چاپ
 fi:Tulostusalue
+fo:Prentingar øki
 fr:Plage d'impression
 ga:Raon clóbhuailte
 gl:Imprimir un rango
@@ -16560,6 +16624,7 @@ et:Antud nimega printerit ei leidu
 eu:Ez dagi emandako izenik duen irarkailurik
 fa:چاپگری با نام داده شده وجود ندارد
 fi:Annetun nimistä tulostinta ei ole
+fo:Nevndi prentari finst ikki
 fr:Il n'y a pas d'imprimante de ce nom
 ga:Níl clóire leis an ainm sin ann
 gl:A impresora co nome indicado non existe
@@ -16624,6 +16689,7 @@ et:Printimine on pooleli.
 eu:Irarketa garatzen.
 fa:فرآیند چاپ در جریان است.
 fi:Tulostaminen käynnissä.
+fo:Prenting er í gongd.
 fr:Impression en cours
 ga:Clóbhualadh ar siúl.
 gl:Impresión en curso.
@@ -16689,6 +16755,7 @@ et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Eten eta utzi?
 fa:فرآیند چاپ هنوز در جریان است. انصراف و خروج؟
 fi:Tulostaminen on edelleen käynnissä. Keskeytä ja lopeta?
+fo:Prenting er enn í gongd. Steðga og enda?
 fr:Impression toujours en cours. Annuler et quitter ?
 ga:Tá clóbhuladh fós ar siúl. Tobscoir agus dún?
 gl:Aínda se está imprimindo. Abortar e saír?
@@ -16752,6 +16819,7 @@ et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
 fa:فرآیند چاپ هنوز در جریان است. انصراف و شروع مجدد؟
 fi:Tulostaminen on vielä käynnissä. Keskeytetäänkö ja aloitetaan uudelleen?
+fo:Prenting er enn í gongd. Steðga og endurbyrja?
 fr:Impression toujours en cours. Annuler et recommencer ?
 ga:Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
 gl:Aínda se está imprimino. Abortar e comezar de novo?
@@ -16815,6 +16883,7 @@ et:Lehekülje %d/%d printimine...
 eu:%d orria %d-tik irarkitzen...
 fa:در حال چاپ کردن صفحه‌ی %d از %d...
 fi:Tulostetaan sivua %d/%d...
+fo:Prentar síðu %d av %d...
 fr:Impression de la page %d sur %d...
 ga:Ag clóbhualadh leathanach a %d as %d...
 gl:Imprimir páxina %d de %d...
@@ -16880,6 +16949,7 @@ et:Probleem printimisel
 eu:Arazoak irarkitzerakoan.
 fa:مشکل در چاپ.
 fi:Tulostusongelma
+fo:Prentingar trupulleiki.
 fr:Problème d'impression.
 fy-nl:Probleem by it ôfdrukken.
 ga:Fadhb chlóbhuailte.
@@ -16939,6 +17009,7 @@ de:Eigenschaften...
 el:Ιδιότητες...
 es:Propiedades...
 fa:مشخصات
+fo:Eginleikar...
 fr:Propriétés…
 ga:Airíonna...
 gl:Propiedades...
@@ -16980,6 +17051,7 @@ es:Re&nombrar...
 eu:B&errizendatu...
 fa:تغییر &نام...
 fi:Uu&delleennimeä
+fo:Ný&nevna
 fr:Re&nommer...
 ga:Athai&nmnigh...
 gl:Cambiar &nome...
@@ -17025,6 +17097,7 @@ es:Rectangulo: x=%d y=%d dx=%d dy=%d
 et:Ristkülik: x=%d y=%d dx=%d dy=%d
 eu:Zuzen: x=%d y=%d dx=%d dy=%d
 fi:Suorakulmainen: x=%d y=%d dx=%d dy=%d
+fo:Rekt: x=%d y=%d dx=%d dy=%d
 fr:Rect : x=%d y=%d dx=%d dy=%d
 ga:Ceart: x=%d y=%d dx=%d dy=%d
 gl:Rectángulo: x=%d y=%d dx=%d dy=%d
@@ -17073,6 +17146,7 @@ es:Redactar
 et:Redaktsioon
 eu:Idatzi
 fi:Muokkaa
+fo:Búgva til prentingar
 fr:Rédiger
 ga:Folaigh
 gl:Redactar
@@ -17126,6 +17200,7 @@ et:Jäta &avatud failid meelde
 eu:&Gogoratu irekitako agiriak
 fa:پرونده‌های &باز را به خاطر بسپار
 fi:Muista &avatut tiedostot
+fo:Goym &opnaðar fílur
 fr:Mémoriser les fichiers &ouverts
 fy-nl:Unthâld &iepene bestannen
 ga:Cuimhnigh ar chomhaid &oscailte
@@ -17192,6 +17267,7 @@ et:Kustuta lemmikutest
 eu:Kendu Gogokoenetatik
 fa:حذف از علاقه‌مندی‌ها
 fi:&Poista suosikeista
+fo:Strika í bókamerkjum
 fr:Enlever des favoris
 ga:Bain ó na ceanáin
 gl:Eliminar de favoritos
@@ -17255,6 +17331,7 @@ et:Kustuta lehekülg %s lemmikutest
 eu:Kendu %s orrialdea gogokoenetatik
 fa:حذف صفحه‌ی %s از علاقه‌مندی‌ها
 fi:Poista sivu %s suosikeista
+fo:Strika síðu %s úr bókamerkjum
 fr:Enlever page %s des favoris
 ga:Bain leathanach a %s ó na ceanáin
 gl:Eliminar páxina %s de favoritos
@@ -17320,6 +17397,7 @@ et:Nimeta ümber
 eu:Berrizendatu Honela
 fa:تغییر نام به
 fi:Uudelleennimeä
+fo:Nýnevna Til
 fr:Renommer
 ga:Athainmnigh chuig
 gl:Renomear como
@@ -17381,6 +17459,7 @@ es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fa:چرخاندن به &چپ
 fi:Kierrä &Vasemmalle
+fo:Snara til &Vinstru
 fr:Rotation vers la &gauche
 ga:Rothlaigh tuathal é
 gl:Rotar &esquerda
@@ -17426,6 +17505,7 @@ es:Girar &a la derecha
 eu:Itzulikatu e&skuinera
 fa:چرخاندن به &راست
 fi:Kierrä &oikealle
+fo:Snara til &Høgru
 fr:Rotation vers la d&roite
 ga:Rothlaigh deiseal é
 gl:Rotar de&reita
@@ -17474,6 +17554,7 @@ et:V&alik
 eu:&Hautapena
 fa:&انتخاب
 fi:V&alinta
+fo:Ú&rvalda
 fr:&Sélection
 ga:Roghnú
 gl:S&elección
@@ -17520,6 +17601,7 @@ es:&Ondulado
 et:&Kritseldus
 eu:U&hindua
 fi:K&iemurteleva
+fo:K&rutlut
 fr:&Ondulé
 ga:Catach
 gl:O&ndulado
@@ -17618,6 +17700,7 @@ et:Salvesta märkused olemasolevasse PDF-i
 eu:Gorde oharrak badagoen PDF-an
 fa:ذخیره علامت‌گذاری‌ها در PDF جاری
 fi:Tallenna merkinnät nykyiseen PDF-tiedostoon
+fo:Goym Viðmerkingar til verandi PDF
 fr:Sauvegarder les annotations dans le PDF existant
 ga:Cuir na nótaí mínithe i dtaisce sa PDF atá ann
 gl:Gardar anotacións ó PDF existente
@@ -17661,6 +17744,7 @@ es:Guarda archivo adjunto...
 eu:Gorde eranskina...
 fa:...ذخیره کردن پیوست
 fi:Tallenna liite...
+fo:Goym Fylgiskjal...
 fr:Enregistrer la pièce jointe...
 ga:Cuir an ceangaltán i dtaisce...
 gl:Gardar anexo...
@@ -17707,6 +17791,7 @@ es:Guardar el archivo incrustado...
 et:Salvesta põimitud fail...
 eu:Gorde barneko agiria...
 fi:Tallenna upotettu tiedosto...
+fo:Goym Innilokaða Fílu...
 fr:Enregistrer le fichier incorporé...
 ga:Taisc comhad leabaithe...
 gl:Gardar ficheiro inserido...
@@ -17755,6 +17840,7 @@ es:Guardar A&tajo...
 eu:Gorde &lastertekla...
 fa:ذخیره &میانبر...
 fi:Tallenna P&ikakuvake...
+fo:Goym S&narveg...
 fr:Enregistrer le raccourci (&h)
 ga:Cuir an t-aicearra i dtaisce...
 gl:Gardar ata&llo...
@@ -17800,6 +17886,7 @@ et:Salvestada märkused?
 eu:Gorde oharrak?
 fa:علامت‌گذاری‌ها ذخیره شوند؟
 fi:Tallenna huomautukset?
+fo:Goym viðmerkingar?
 fr:Sauvegarder les annotations ?
 ga:Cuir na nótaí mínithe i dtaisce?
 gl:Gardar anotacións?
@@ -17849,6 +17936,7 @@ et:Salvesta muudatused uude PDF-i
 eu:Gorde aldaketak PDF berri batean
 fa:ذخیره تغییرات در یک PDF جدید
 fi:Tallenna muutokset uuteen PDF-tiedostoon
+fo:Goym broytingar sum eitt nýtt PDF
 fr:Enregistrer les modifications dans un nouveau PDF
 ga:Cuir na hathruithe i dtaisce in PDF nua
 gl:Gardar anotacións a un novo PDF
@@ -17902,6 +17990,7 @@ et:Salvesta muudatused olemas olevasse PDF-i
 eu:Gorde aldaketak badagoen PDF batean
 fa:ذخیره تغییرات در PDF جاری
 fi:Tallenna muutokset nykyiseen PDF-tiedostoon
+fo:Goym broytingar í verandi PDF
 fr:Enregistrer les modifications dans le PDF existant
 ga:Cuir na hathruithe i dtaisce in PDF atá ann
 gl:Gardar cambios nun PDF existente
@@ -17953,6 +18042,7 @@ et:Salvesta &uude PDF-i
 eu:Gorde &PDF berrian
 fa:جدید pdf ذخیره کردن در
 fi:Tallenna &uusi PDF-tiedosto
+fo:Goym sum eitt &nýtt PDF
 fr:Sauvegarder dans un &nouveau PDF
 ga:Cuir i dtaisce sa PDF &nua é
 gl:Gardar en PDF &novo
@@ -17998,6 +18088,7 @@ es:Anotaciones guardadas en '%s'
 et:Märkused salvestatud '%s'
 eu:Oharrak gordeta hemen: '%s'
 fi:Tallennetut huomautukset kohtaan '%s'.
+fo:Goymdi viðmerkingar til '%s'
 fr:Annotation enregistrée vers '%s'
 ga:Cuireadh na hathruithe i dtaisce in '%s'
 gl:Gardáronse as anotacións a '%s'
@@ -22252,6 +22343,7 @@ et:dokumendi printimine
 eu:agiria irarkitzen
 fa:در حال چاپ سند
 fi:tulostetaan asiakirjaa
+fo:prentar skjal
 fr:impression du document
 ga:ag clóbhualadh an cháipéis
 gl:imprimindo documento
