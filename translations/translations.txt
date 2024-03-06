@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-613988cc8492053d1ade58f845b1eb47972a1055
+d9d54b3db0dec232791e9af9e114c1b3ad71b48e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -1107,7 +1107,7 @@ es:&Primera página
 eu:&Lehen orrialdea
 fa:&صفحه اول
 fi:&Ensimmäinen sivu
-fo:&Fyrsta Síða
+fo:&Fyrstu Síðu
 fr:P&remière page
 ga:&An Chéad Leathanach
 gl:&Primeira páxina
@@ -1273,7 +1273,7 @@ et:&Liigu
 eu:&Joan Hona
 fa:&برو به
 fi:&Siirry
-fo:&Far Til
+fo:Far &Til
 fr:A&ller…
 fy-nl:&Gean nei
 ga:&Téigh Chuig
@@ -1555,7 +1555,7 @@ es:Última página
 eu:&Azken orrialdea
 fa:&آخرین صفحه
 fi:&Viimeinen sivu
-fo:&Seinasta Síða
+fo:S&einastU Síðu
 fr:&Dernière page
 ga:&An leathanach deireanach
 gl:Ú&ltima páxina
@@ -1800,7 +1800,7 @@ es:&Página siguiente
 eu:&Hurrengo orrialdea
 fa:صفحه بعدی
 fi:&Seuraava sivu
-fo:&Næsta Síða
+fo:&Næstu Síðu
 fr:Page &suivante
 ga:&Leathanach Ar Aghaidh
 gl:Segui&nte páxina
@@ -2719,7 +2719,7 @@ et:Salvesta &kui...
 eu:&Gorde Honela...
 fa:&ذخیره کردن با نام...
 fi:Tallenna &nimellä...
-fo:&Goym Sum...
+fo:Goym &Sum...
 fr:&Enregistrer sous...
 ga:&Cuir i dtaisce mar...
 gl:&Gardar como...
@@ -2884,7 +2884,7 @@ et:Sea&distused
 eu:&Ezarpenak
 fa:&تنظیمات
 fi:&Asetukset
-fo:&Stillingar
+fo:Stillin&gar
 fr:&Préférences
 fy-nl:&Ynstellingen
 ga:&Socruithe
@@ -3976,7 +3976,7 @@ et:Lisa lehekülg %s lemmikutesse
 eu:Gehitu %s Orrialdea Gogokoenetara
 fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها
 fi:&Lisää sivu %s suosikkeihin
-fo:Legg síðu %s til yndisstøð
+fo:&Legg síðu %s til yndisstøð
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s leis na ceanáin
 gl:Engadir a páxina %s aos favoritos
@@ -5794,7 +5794,7 @@ et:Vali keel (Change Language)
 eu:Aldatu Hizkuntza (Change Language)
 fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
-fo:Skift tungumál
+fo:&Skift Tungumál
 fr:Changer la langue
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
@@ -6464,7 +6464,7 @@ et:Käsupalett
 eu:Agindu paleta
 fa:کادر فرمان
 fi:Komentopolku
-fo:Stýrisboð Úrval
+fo:Úr&vald Stýrisboð
 fr:Palette de commande
 ga:Pailéad na n-orduithe
 gl:Paleta de comando
@@ -7279,6 +7279,7 @@ et:Autoriõigus:
 eu:Copyrighta:
 fa:حقّ نشر
 fi:Copyright:
+fo:Copyright
 fr:Copyright :
 ga:Cóipcheart:
 gl:Copyright:
@@ -8351,7 +8352,7 @@ es:Zoom &personalizado...
 eu:Norbere &Zooma...
 fa:&بزرگنمایی سفارشی...
 fi:Mukautettu ja zoomaus...
-fo:Sjálvvald &Suming
+fo:Sjálvvald Su&ming
 fr:&Zoom personnalisé...
 ga:Gluais saincheaptha...
 gl:Aumento personali&zado...
@@ -9502,7 +9503,9 @@ uk:Введіть командну стрічку, що викликається
 uz:PDF-hujjatni ikki marta bosganda ishga tushadigan buyruq satrini kiriting:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 :Error
+az:Xəta
 br:Erro
+ca:Error
 cn:错误
 co:Sbagliu
 cy:Gwall
@@ -9518,6 +9521,8 @@ he:שגיאה
 hi:त्रुटि
 hu:Hiba
 it:Errore
+ja:エラー
+kr:오류
 nl:Fout
 pl:Błąd
 pt:Erro
@@ -9525,6 +9530,7 @@ ro:Eroare
 ru:Ошибка
 sk:Chyba
 sr-rs:Грешка
+tw:錯誤
 :Error loading %s
 am:Բացման սխալ %s
 ar:%s خطأ في التحميل
@@ -10293,7 +10299,7 @@ et:Lemmikud
 eu:Gogokoenak
 fa:علاقه‌مندی‌ها
 fi:suosikit
-fo:Bókamerkir
+fo:Yndisstøð
 fr:Favoris
 ga:Ceanáin
 gl:Favoritos
@@ -10682,7 +10688,7 @@ es:Busca&r...
 eu:&Bilatu...
 fa:&جستجو
 fi:Löyd&ä
-fo:Fin&n...
+fo:Lei&ta...
 fr:R&echercher...
 ga:Aimsigh...
 gl:Atopa&r...
@@ -10733,7 +10739,7 @@ et:Otsi
 eu:Bilatu
 fa:جستجو
 fi:Etsi
-fo:Finn
+fo:Leita
 fr:Rechercher
 fy-nl:Sykje
 ga:Aimsigh
@@ -11103,7 +11109,7 @@ es:Ajustar al &ancho
 eu:Finkatu &zabalera
 fa:متناسب با &عرض
 fi:Sovita &Leveys
-fo:Tillaga &Vídd
+fo:&Tillaga Vídd
 fr:Pleine &largeur
 ga:Oiriúnaigh don leithead é
 gl:Axustar &largura
@@ -13290,6 +13296,7 @@ et:MB
 eu:MB
 fa:مگابایت
 fi:Mt
+fo:MB
 fr:Mo
 fy-nl:MB
 ga:MB
@@ -13800,7 +13807,7 @@ et:Järgmine lehekülg
 eu:Hurrengo Orrialdea
 fa:صفحه‌ی بعدی
 fi:Seuraava sivu
-fo:Næsta Síða
+fo:Næstu Síðu
 fr:Page suivante
 fy-nl:Folgjende side
 ga:Leathanach Ar Aghaidh
@@ -14203,6 +14210,7 @@ et:Sobib
 eu:Ongi
 fa:تأیید
 fi:OK
+fo:OK
 fr:OK
 fy-nl:OK
 ga:Tá go maith
@@ -14587,7 +14595,7 @@ el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείω
 es:Abrir directorio en &Explorador de Archivos
 fa:باز کردن پوشه در &Explorer
 fi:Avaa hakemisto &Explorerissa
-fo:Opna Mappu við &Explorer
+fo:Opna Mappu við Sti&finder
 fr:Ouvrir dans l'&Explorateur
 ga:Oscail an Chomhadlann in &Explorer
 gl:Abrir directorio no &explorador
@@ -15000,7 +15008,7 @@ et:Ava &Foxit Readeris
 eu:Ireki &Foxit Readerren
 fa:باز کردن در &Foxit Reader
 fi:Avaa &Foxit Readerissa
-fo:Opna við &Foxit Reader
+fo:Opna við Foxit &Reader
 fr:Ouvrir dans Fo&xit Reader
 fy-nl:Iepenje mei &Foxit Reader
 ga:Oscail i &Foxit Reader
@@ -15169,7 +15177,7 @@ et:O&madused
 eu:Eza&ugarriak
 fa:م&شخصات
 fi:Ominaisuudet
-fo:E&ginleikar
+fo:Eginlei&kar
 fr:P&ropriétés
 ga:Ai&ríonna
 gl:P&ropiedades
@@ -15562,7 +15570,7 @@ es:Pá&gina...
 eu:O&rrialdea...
 fa:&صفحه
 fi:Si&vu...
-fo:Sí&ða...
+fo:Sí&ðu...
 fr:Pa&ge...
 ga:Leathanach...
 gl:Pá&xina...
@@ -16231,6 +16239,7 @@ et:Hulknurk
 eu:Poligonoa
 fa:چند ضلعی
 fi:Polygon
+fo:Polygon
 fr:Polygone
 ga:Polagán
 gl:Polígono
@@ -17287,7 +17296,7 @@ et:Kustuta lemmikutest
 eu:Kendu Gogokoenetatik
 fa:حذف از علاقه‌مندی‌ها
 fi:&Poista suosikeista
-fo:Strika í bókamerkjum
+fo:&Strika úr yndisstøðum
 fr:Enlever des favoris
 ga:Bain ó na ceanáin
 gl:Eliminar de favoritos
@@ -17479,7 +17488,7 @@ es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fa:چرخاندن به &چپ
 fi:Kierrä &Vasemmalle
-fo:Snara til &Vinstru
+fo:Snara til Vin&stru
 fr:Rotation vers la &gauche
 ga:Rothlaigh tuathal é
 gl:Rotar &esquerda
@@ -17574,7 +17583,7 @@ et:V&alik
 eu:&Hautapena
 fa:&انتخاب
 fi:V&alinta
-fo:Ú&rvalda
+fo:Ú&rvalt
 fr:&Sélection
 ga:Roghnú
 gl:S&elección
@@ -18630,7 +18639,7 @@ et:Saada &e-postiga
 eu:&Post@z bidali...
 fa:ارسال با پست ا&لکترونیکی...
 fi:Lä&hetä sähköpostilla
-fo:Send við &E-posti...
+fo:Sen&d við E-posti...
 fr:Envoyer par &courriel...
 fy-nl:Ferstjoer per &e-mail...
 ga:Seol i ríomhphost...
@@ -18880,7 +18889,7 @@ et:Näita &lehekülgi pidevana
 eu:&Erakutsi Orrialdeak Jarraian
 fa:به صورت &پیوسته
 fi:Näytä &sivut peräkkäin
-fo:Vís &Síður Framhaldandi
+fo:Vís Síður &Framhaldandi
 fr:&Vue continue
 fy-nl:Toan sides kontinue
 ga:Teaspáin na leathanaigh go leanúnach
@@ -18944,7 +18953,7 @@ et:Näita kerimi&sribasid
 eu:Erakutsi &Irristabarrak
 fa:نمایش &پیمایشگر
 fi:Näytä &Vierityspalkit
-fo:Vís &Skrullibjálkar
+fo:Vís S&krullibjálkar
 fr:Afficher les &barres de défilement
 ga:Taispeáin na barraí &scrollála
 gl:Amosr barra&s de desprazamento
@@ -18999,7 +19008,7 @@ et:&Näita tööriistariba
 eu:Erakutsi &Tresnabarra
 fa:نمایش نوار &ابزار
 fi:Näytä &työkalupalkki
-fo:Vís &Amboðsbjálka
+fo:Vís Amb&oðsbjálka
 fr:Afficher la &barre d'outils
 fy-nl:Arkbalke toane
 ga:Taispeáin an Barra Uirlisí
@@ -19114,7 +19123,7 @@ et:Näita lemmikuid
 eu:Erakutsi Gogokoenak
 fa:علاقه‌مندی‌ها را نشان بده
 fi:&Näytä suosikit
-fo:Vís Yndisstøð
+fo:&Vís Yndisstøð
 fr:Afficher les favoris
 ga:Taispeáin Ceanáin
 gl:Amosar favoritos
