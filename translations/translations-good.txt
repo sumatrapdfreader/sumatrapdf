@@ -14,7 +14,7 @@ de:%s-Anmerkung. Strg+Klick zum Bearbeiten.
 el:%s σχολιασμός. Ctrl+κλικ για επεξεργασία.
 es:Comentario %s.
 fa:علامت گذاری %s. برای ویرایش Ctrl+click را بزنید
-fo:%s viðmerking. Ctrl+click fyri at rætta.
+fo:%s viðmerking. Ctrl+Klikkja fyri at rætta.
 fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 gl:%s anotación. Ctrl+clic para editar.
@@ -1348,7 +1348,7 @@ es:Última página
 eu:&Azken orrialdea
 fa:&آخرین صفحه
 fi:&Viimeinen sivu
-fo:S&einastU Síðu
+fo:S&einastu Síðu
 fr:&Dernière page
 ga:&An leathanach deireanach
 gl:Ú&ltima páxina
@@ -2029,7 +2029,7 @@ es:&Página anterior
 eu:A&urreko orrialdea
 fa:صفحه &قبل
 fi:&Edellinen sivu
-fo:&Fyrra Síða
+fo:Fyrru &Síðu
 fr:Page &précédente
 ga:&An leathanach roimhe
 gl:&Páxina anterior
@@ -3544,7 +3544,7 @@ et:Lisa lemmikutesse
 eu:Gehitu Gogokoenetara
 fa:افزودن به علاقه‌مندی‌ها
 fi:Lisää suosikkeihin
-fo:Legg til yndisstøð
+fo:&Legg til yndisstøð
 fr:Ajouter aux favoris
 ga:Cuir leis na ceanáin é
 gl:Engadir a favoritos
@@ -9246,7 +9246,7 @@ et:Otsi:
 eu:Bilatu:
 fa:جستجو:
 fi:Etsi:
-fo:Finn:
+fo:Leita:
 fr:Rechercher :
 ga:Aimsigh:
 gl:Procura:
@@ -14746,7 +14746,7 @@ et:Kustuta lehekülg %s lemmikutest
 eu:Kendu %s orrialdea gogokoenetatik
 fa:حذف صفحه‌ی %s از علاقه‌مندی‌ها
 fi:Poista sivu %s suosikeista
-fo:Strika síðu %s úr bókamerkjum
+fo:Strika síðu %s úr &yndisstøðum
 fr:Enlever page %s des favoris
 ga:Bain leathanach a %s ó na ceanáin
 gl:Eliminar páxina %s de favoritos
@@ -14851,7 +14851,7 @@ es:Girar &a la izquierda
 eu:Itzulikatu e&zkerrera
 fa:چرخاندن به &چپ
 fi:Kierrä &Vasemmalle
-fo:Snara til Vin&stru
+fo:Snara &til Vinstru
 fr:Rotation vers la &gauche
 ga:Rothlaigh tuathal é
 gl:Rotar &esquerda
@@ -15093,7 +15093,7 @@ et:Salvesta märkused olemasolevasse PDF-i
 eu:Gorde oharrak badagoen PDF-an
 fa:ذخیره علامت‌گذاری‌ها در PDF جاری
 fi:Tallenna merkinnät nykyiseen PDF-tiedostoon
-fo:Goym Viðmerkingar til verandi PDF
+fo:Goym &Viðmerkingar til verandi PDF
 fr:Sauvegarder les annotations dans le PDF existant
 ga:Cuir na nótaí mínithe i dtaisce sa PDF atá ann
 gl:Gardar anotacións ó PDF existente
@@ -16210,7 +16210,7 @@ et:Näita kerimi&sribasid
 eu:Erakutsi &Irristabarrak
 fa:نمایش &پیمایشگر
 fi:Näytä &Vierityspalkit
-fo:Vís S&krullibjálkar
+fo:Vís Skrullibjál&kar
 fr:Afficher les &barres de défilement
 ga:Taispeáin na barraí &scrollála
 gl:Amosr barra&s de desprazamento
