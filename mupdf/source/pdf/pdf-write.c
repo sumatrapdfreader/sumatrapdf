@@ -1288,9 +1288,11 @@ lpr_inherit_res_contents(fz_context *ctx, pdf_mark_list *list, int cycle, pdf_ob
 				o = pdf_copy_array(ctx, o);
 			else
 				o = NULL;
+			if (o)
+				pdf_dict_put_drop(ctx, res, text, o);
 		}
-		if (o)
-			pdf_dict_put_drop(ctx, res, text, o);
+		else if (o)
+			pdf_dict_put(ctx, res, text, o);
 		return;
 	}
 

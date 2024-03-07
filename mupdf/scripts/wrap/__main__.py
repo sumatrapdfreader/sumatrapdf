@@ -1189,7 +1189,8 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
     #jlib.log( '{build_dirs.dir_mupdf=}')
     if not make:
         make = os.environ.get('MUPDF_MAKE')
-        jlib.log('Overriding from $MUPDF_MAKE={make}.')
+        if make:
+            jlib.log('Overriding from $MUPDF_MAKE: {make=}.')
     if not make:
         if state.state_.openbsd:
             # Need to run gmake, not make. Also for some
@@ -1197,6 +1198,7 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             # CXX to g++, so need to force CXX=c++ too.
             #
             make = 'CXX=c++ gmake'
+            jlib.log('OpenBSD, using: {make=}.')
     if not make:
         make = 'make'
 
@@ -1325,9 +1327,9 @@ def macos_patch( library, *sublibraries):
         List of paths of shared libraries; these have typically been
         specified with `-l` when `library` was created.
     '''
-    jlib.log( f'macos_patch(): library={library}  sublibraries={sublibraries}')
     if not state.state_.macos:
         return
+    jlib.log( f'macos_patch(): library={library}  sublibraries={sublibraries}')
     # Find what shared libraries are used by `library`.
     jlib.system( f'otool -L {library}', out='log')
     command = 'install_name_tool'
@@ -1374,10 +1376,10 @@ def build_0(
 
     # On 32-bit Windows, libclang doesn't work. So we attempt to run 64-bit `-b
     # 0` to generate C++ code.
-    jlib.log( '{state.state_.windows=} {build_dirs.cpu.bits=}')
+    jlib.log1( '{state.state_.windows=} {build_dirs.cpu.bits=}')
     if state.state_.windows and build_dirs.cpu.bits == 32:
         try:
-            jlib.log( 'Trying dummy call of clang.cindex.Index.create()')
+            jlib.log( 'Windows 32-bit: trying dummy call of clang.cindex.Index.create()')
             state.clang.cindex.Index.create()
         except Exception as e:
             py = f'py -{state.python_version()}'

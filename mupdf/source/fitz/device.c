@@ -578,12 +578,12 @@ void fz_end_layer(fz_context *ctx, fz_device *dev)
 	}
 }
 
-void fz_begin_structure(fz_context *ctx, fz_device *dev, fz_structure str, const char *raw, int uid)
+void fz_begin_structure(fz_context *ctx, fz_device *dev, fz_structure str, const char *raw, int idx)
 {
 	if (dev->begin_structure)
 	{
 		fz_try(ctx)
-			dev->begin_structure(ctx, dev, str, raw, uid);
+			dev->begin_structure(ctx, dev, str, raw, idx);
 		fz_catch(ctx)
 		{
 			fz_disable_device(ctx, dev);

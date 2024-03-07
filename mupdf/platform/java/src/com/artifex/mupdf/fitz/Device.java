@@ -83,7 +83,7 @@ abstract public class Device
 	abstract public void setDefaultColorSpaces(DefaultColorSpaces dcs);
 	abstract public void beginLayer(String name);
 	abstract public void endLayer();
-	abstract public void beginStructure(int standard, String raw, int uid);
+	abstract public void beginStructure(int standard, String raw, int idx);
 	abstract public void endStructure();
 	abstract public void beginMetatext(int meta, String text);
 	abstract public void endMetatext();

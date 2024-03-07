@@ -50,24 +50,30 @@ FZ_NORETURN static void fz_css_error(struct lexbuf *buf, const char *msg)
 	unsigned char text[PRE_POST_SIZE * 2 + 4];
 	unsigned char *d = text;
 	const unsigned char *s = buf->start;
-	int n = sizeof(text)-1;
+	int n;
 
 	/* We want to make a helpful fragment for the error message.
 	 * We want err_pos to be the point at which we just tripped
 	 * the error. err_pos needs to be at least 1 byte behind
 	 * our read pointer, as we've read that char. */
-	const unsigned char *err_pos = buf->s-1;
+	const unsigned char *err_pos = buf->s;
+	n = 1;
 
 	/* And if we're using lookahead, it's further behind. */
 	if (buf->lookahead >= CSS_KEYWORD)
-		err_pos -= strlen(buf->string);
+		n += buf->string_len;
 	else if (buf->lookahead != EOF)
-		err_pos--;
+		n += 1;
+
+	/* But it can't be before the start of the buffer */
+	n = fz_mini(n, err_pos - buf->start);
+	err_pos -= n;
 
 	/* We're going to try to output:
 	 * <section prior to the error> ">" <the char that tripped> "<" <section after the error>
 	 */
 	/* Is the section prior to the error too long? If so, truncate it with an elipsis. */
+	n = sizeof(text)-1;
 	if (err_pos - s > n-PRE_POST_SIZE - 3)
 	{
 		*d++ = '.';
@@ -218,6 +224,8 @@ static fz_css_value *fz_new_css_value(fz_context *ctx, fz_pool *pool, int type, 
 
 static void css_lex_next(struct lexbuf *buf)
 {
+	if (buf->c == 0)
+		return;
 	buf->s += fz_chartorune(&buf->c, (const char *)buf->s);
 	if (buf->c == '\n')
 		++buf->line;
@@ -231,7 +239,7 @@ static void css_lex_init(fz_context *ctx, struct lexbuf *buf, fz_pool *pool, con
 	buf->s = (const unsigned char *)s;
 	buf->lookahead = EOF;
 	buf->start = buf->s;
-	buf->c = 0;
+	buf->c = -1;
 	buf->file = file;
 	buf->line = 1;
 	css_lex_next(buf);

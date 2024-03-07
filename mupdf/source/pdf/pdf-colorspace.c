@@ -80,8 +80,11 @@ load_icc_based(fz_context *ctx, pdf_obj *dict, int allow_alt, pdf_cycle_list *cy
 			fz_drop_buffer(ctx, buf);
 		fz_catch(ctx)
 		{
-			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+			if (fz_caught(ctx) == FZ_ERROR_TRYLATER || fz_caught(ctx) == FZ_ERROR_SYSTEM)
+			{
+				fz_drop_colorspace(ctx, alt);
+				fz_rethrow(ctx);
+			}
 			fz_report_error(ctx);
 			fz_warn(ctx, "ignoring broken ICC profile");
 		}

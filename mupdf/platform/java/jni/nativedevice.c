@@ -678,7 +678,7 @@ FUN(NativeDevice_endTile)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-FUN(NativeDevice_beginStructure)(JNIEnv *env, jobject self, jint standard, jstring jraw, jint uid)
+FUN(NativeDevice_beginStructure)(JNIEnv *env, jobject self, jint standard, jstring jraw, jint idx)
 {
 	fz_context *ctx = get_context(env);
 	fz_device *dev = from_Device(env, self);
@@ -698,7 +698,7 @@ FUN(NativeDevice_beginStructure)(JNIEnv *env, jobject self, jint standard, jstri
 	if (err)
 		return;
 	fz_try(ctx)
-		fz_begin_structure(ctx, dev, standard, raw, uid);
+		fz_begin_structure(ctx, dev, standard, raw, idx);
 	fz_always(ctx)
 	{
 		(*env)->ReleaseStringUTFChars(env, jraw, raw);

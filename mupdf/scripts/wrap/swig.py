@@ -69,12 +69,15 @@ def build_swig(
     assert language in ('python', 'csharp')
     # Find version of swig. (We use quotes around <swig> to make things work on
     # Windows.)
-    t = jlib.system( f'"{swig_command}" -version', out='return', verbose=1)
-    jlib.log('SWIG version info:\n========\n{t}\n========')
+    e, swig_location = jlib.system( f'which "{swig_command}"', raise_errors=0, out='return', verbose=0)
+    if e == 0:
+        jlib.log(f'{swig_location=}')
+    t = jlib.system( f'"{swig_command}" -version', out='return', verbose=0)
+    jlib.log1('SWIG version info:\n========\n{t}\n========')
     m = re.search( 'SWIG Version ([0-9]+)[.]([0-9]+)[.]([0-9]+)', t)
     assert m
     swig_major = int( m.group(1))
-    jlib.system( f'which "{swig_command}"', raise_errors=0)
+    jlib.log(f'{m.group()}')
 
     # Create a .i file for SWIG.
     #
@@ -1861,16 +1864,16 @@ def build_swig(
                 '\\2public override string ToString() { return to_string(); }\n\\1',
                 cs,
                 )
-        jlib.log('{len(cs)=}')
-        jlib.log('{len(cs2)=}')
+        jlib.log1('{len(cs)=}')
+        jlib.log1('{len(cs2)=}')
         assert cs2 != cs, f'Failed to add toString() methods.'
-        jlib.log('{len(generated.swig_csharp)=}')
+        jlib.log1('{len(generated.swig_csharp)=}')
         assert len(generated.swig_csharp)
         cs2 += generated.swig_csharp
-        jlib.log( 'Updating cs2 => {build_dirs.dir_so}/mupdf.cs')
+        jlib.log1( 'Updating cs2 => {build_dirs.dir_so}/mupdf.cs')
         jlib.fs_update(cs2, f'{build_dirs.dir_so}/mupdf.cs')
         #jlib.fs_copy(f'{outdir}/mupdf.cs', f'{build_dirs.dir_so}/mupdf.cs')
-        jlib.log('{rebuilt=}')
+        jlib.log1('{rebuilt=}')
 
     else:
         assert 0

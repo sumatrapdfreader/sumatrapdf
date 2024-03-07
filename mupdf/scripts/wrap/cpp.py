@@ -1969,7 +1969,7 @@ def make_function_wrappers(
 
         functions.append( (fnname, cursor))
 
-    jlib.log( '{len(functions)=}')
+    jlib.log1( '{len(functions)=}')
 
     # Sort by function-name to make output easier to read.
     functions.sort()
@@ -3116,7 +3116,7 @@ def function_wrapper_class_aware(
                         # For now we just output a diagnostic, but eventually
                         # we might make C++ wrappers return a std::string here,
                         # free()-ing the char* before returning.
-                        jlib.log( 'Function name implies kept reference and returns char*:'
+                        jlib.log1( 'Function name implies kept reference and returns char*:'
                                 ' {fnname}(): {fn_cursor.result_type.spelling=}'
                                 ' -> {return_pointee.spelling=}.'
                                 )
@@ -4371,7 +4371,7 @@ def class_wrapper(
             for extramethod in extras.methods_extra:
                 if not extramethod.overload:
                     if extramethod.name_args.startswith( f'{rename.method( struct_name, fnname)}('):
-                        jlib.log( 'Omitting default method because same name as extramethod: {extramethod.name_args}')
+                        jlib.log1( 'Omitting default method because same name as extramethod: {extramethod.name_args}')
                         break
             else:
                 #log( 'adding to extras.method_wrappers: {fnname}')
@@ -5030,7 +5030,7 @@ def cpp_source(
     try:
         with open( temp_h, 'w') as f:
             if state.state_.linux or state.state_.macos:
-                jlib.log('Prefixing Fitz headers with `typedef unsigned long size_t;`'
+                jlib.log1('Prefixing Fitz headers with `typedef unsigned long size_t;`'
                         ' because size_t not available to clang on Linux/MacOS.')
                 # On Linux, size_t is defined internally in gcc (e.g. not even
                 # in /usr/include/stdint.h) and so not visible to clang.
@@ -5097,9 +5097,9 @@ def cpp_source(
         def show_clang_diagnostic( diagnostic, depth=0):
             for diagnostic2 in diagnostic.children:
                 show_clang_diagnostic( diagnostic2, depth + 1)
-            jlib.log( '{" "*4*depth}{diagnostic}')
+            jlib.log1( '{" "*4*depth}{diagnostic}')
         if tu.diagnostics:
-            jlib.log( 'tu.diagnostics():')
+            jlib.log1( 'tu.diagnostics():')
             for diagnostic in tu.diagnostics:
                 show_clang_diagnostic(diagnostic, 1)
 
@@ -5333,8 +5333,6 @@ def cpp_source(
         generated.c_globals.append(name)
         windows_def += f'    {name} DATA\n'
     for fnname, cursor in state.state_.find_functions_starting_with( tu, ('fz_', 'pdf_', 'FT_'), method=False):
-        if fnname == 'fz_is_infinite_irect':
-            jlib.log( '{fnname=} {cursor.storage_class=}')
         if cursor.storage_class == state.clang.cindex.StorageClass.STATIC:
             # These fns do not work in windows.def, probably because they are
             # usually inline?
@@ -5348,7 +5346,7 @@ def cpp_source(
             # (We use os.path.abspath() to avoid problems with back and forward
             # slashes in cursor.extent.start.file.name on Windows.)
             #
-            jlib.log('Not adding to {windows_def_path} because defined in {os.path.relpath(out_hs.extra.filename)}: {cursor.spelling}')
+            jlib.log1('Not adding to {windows_def_path} because defined in {os.path.relpath(out_hs.extra.filename)}: {cursor.spelling}')
         else:
             windows_def += f'    {fnname}\n'
     # Add some internal fns that PyMuPDF requires.

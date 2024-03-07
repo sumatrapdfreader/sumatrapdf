@@ -717,6 +717,24 @@ fz_bound_page_box(fz_context *ctx, fz_page *page, fz_box_type box)
 }
 
 void
+fz_run_document_structure(fz_context *ctx, fz_document *doc, fz_device *dev, fz_cookie *cookie)
+{
+	if (doc && doc->run_structure)
+	{
+		fz_try(ctx)
+		{
+			doc->run_structure(ctx, doc, dev, cookie);
+		}
+		fz_catch(ctx)
+		{
+			dev->close_device = NULL; /* aborted run, don't warn about unclosed device */
+			fz_rethrow_unless(ctx, FZ_ERROR_ABORT);
+			fz_ignore_error(ctx);
+		}
+	}
+}
+
+void
 fz_run_page_contents(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
 {
 	if (page && page->run_page_contents)

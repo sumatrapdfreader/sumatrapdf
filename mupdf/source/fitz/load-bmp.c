@@ -817,6 +817,11 @@ bmp_read_color_profile(fz_context *ctx, struct info *info, const unsigned char *
 			fz_warn(ctx, "ignoring truncated color profile in bmp image");
 			return NULL;
 		}
+		if (info->profilesize == 0)
+		{
+			fz_warn(ctx, "ignoring color profile without data in bmp image");
+			return NULL;
+		}
 
 		profile = fz_new_buffer_from_copied_data(ctx, begin + info->profileoffset, info->profilesize);
 

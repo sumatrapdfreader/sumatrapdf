@@ -92,7 +92,10 @@ fz_new_buffer_from_shared_data(fz_context *ctx, const unsigned char *data, size_
 fz_buffer *
 fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_t size)
 {
-	fz_buffer *b = fz_new_buffer(ctx, size);
+	fz_buffer *b;
+	if (size > 0 && data == NULL)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no data provided");
+	b = fz_new_buffer(ctx, size);
 	b->len = size;
 	memcpy(b->data, data, size);
 	return b;

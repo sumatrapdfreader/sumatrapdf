@@ -117,7 +117,7 @@ class State:
                 if self.show_details( fnname):
                     jlib.log( 'Looking at {fnname=}')
                 if fnname in omit_fns:
-                    jlib.log('{fnname=} is in omit_fns')
+                    jlib.log1('{fnname=} is in omit_fns')
                 else:
                     fns[ fnname] = cursor
             if (cursor.kind == clang.cindex.CursorKind.VAR_DECL
@@ -129,7 +129,7 @@ class State:
         self.global_data[ tu] = global_data
         self.enums[ tu] = enums
         self.structs[ tu] = structs
-        jlib.log('Have populated fns and global_data. {len(enums)=} {len(self.structs)} {len(fns)=}')
+        jlib.log1('Have populated fns and global_data. {len(enums)=} {len(self.structs)} {len(fns)=}')
 
     def find_functions_starting_with( self, tu, name_prefix, method):
         '''

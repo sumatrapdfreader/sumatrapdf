@@ -1666,6 +1666,8 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 	{
 		fz_drop_tree(ctx, g.images, (void(*)(fz_context*,void*))fz_drop_image);
 		fz_drop_css(ctx, g.css);
+		g.css = fz_new_css(ctx);
+		g.images = NULL;
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);

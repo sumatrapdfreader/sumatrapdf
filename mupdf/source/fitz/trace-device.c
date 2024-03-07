@@ -567,7 +567,7 @@ fz_trace_end_layer(fz_context *ctx, fz_device *dev_)
 }
 
 static void
-fz_trace_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, const char *raw, int uid)
+fz_trace_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, const char *raw, int idx)
 {
 	fz_trace_device *dev = (fz_trace_device*)dev_;
 	fz_output *out = dev->out;
@@ -576,8 +576,8 @@ fz_trace_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard
 	fz_write_printf(ctx, out, "<structure standard=\"%s\"", str);
 	if (raw && strcmp(str, raw))
 		fz_write_printf(ctx, out, " raw=\"%s\"", raw);
-	if (uid != 0)
-		fz_write_printf(ctx, out, " uid=\"%d\"", uid);
+	if (idx != 0)
+		fz_write_printf(ctx, out, " idx=\"%d\"", idx);
 	fz_write_printf(ctx, out, ">\n");
 	dev->depth++;
 }

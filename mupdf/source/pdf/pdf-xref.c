@@ -2152,7 +2152,8 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 		count = pdf_dict_get_int(ctx, objstm, PDF_NAME(N));
 		first = pdf_dict_get_int(ctx, objstm, PDF_NAME(First));
 
-		validate_object_number_range(ctx, first, count, "object stream");
+		if (count < 0 || count > PDF_MAX_OBJECT_NUMBER)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "number of objects in object stream out of range");
 
 		numbuf = fz_calloc(ctx, count, sizeof(*numbuf));
 		ofsbuf = fz_calloc(ctx, count, sizeof(*ofsbuf));
@@ -3145,6 +3146,7 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.page_label = pdf_page_label_imp;
 	doc->super.lookup_metadata = (fz_document_lookup_metadata_fn*)pdf_lookup_metadata;
 	doc->super.set_metadata = (fz_document_set_metadata_fn*)pdf_set_metadata;
+	doc->super.run_structure = (fz_document_run_structure_fn *)pdf_run_document_structure;
 
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
 	doc->file = fz_keep_stream(ctx, file);

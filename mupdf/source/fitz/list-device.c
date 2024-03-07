@@ -1382,7 +1382,7 @@ fz_list_end_layer(fz_context *ctx, fz_device *dev)
 }
 
 static void
-fz_list_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int uid)
+fz_list_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int idx)
 {
 	unsigned char *data;
 	size_t len = (raw ? strlen(raw) : 0);
@@ -1400,13 +1400,13 @@ fz_list_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, 
 		NULL,
 		NULL, /* stroke */
 		NULL, /* private_data */
-		len+2+sizeof(uid)); /* private_data_len */
+		len+2+sizeof(idx)); /* private_data_len */
 	data[0] = (char)standard;
-	memcpy(data+1, &uid, sizeof(uid));
+	memcpy(data+1, &idx, sizeof(idx));
 	if (len)
-		memcpy(data+1+sizeof(uid), raw, len+1);
+		memcpy(data+1+sizeof(idx), raw, len+1);
 	else
-		data[1+sizeof(uid)] = 0;
+		data[1+sizeof(idx)] = 0;
 }
 
 static void
@@ -2061,10 +2061,10 @@ visible:
 			case FZ_CMD_BEGIN_STRUCTURE:
 			{
 				const unsigned char *data;
-				int uid;
+				int idx;
 				data = (const unsigned char *)node;
-				memcpy(&uid, data+1, sizeof(uid));
-				fz_begin_structure(ctx, dev, (fz_structure)data[0], (const char *)(&data[1+sizeof(uid)]), uid);
+				memcpy(&idx, data+1, sizeof(idx));
+				fz_begin_structure(ctx, dev, (fz_structure)data[0], (const char *)(&data[1+sizeof(idx)]), idx);
 				break;
 			}
 			case FZ_CMD_END_STRUCTURE:

@@ -754,13 +754,14 @@ pdf_repair_obj_stms(fz_context *ctx, pdf_document *doc)
 				if (pdf_name_eq(ctx, pdf_dict_get(ctx, dict, PDF_NAME(Type)), PDF_NAME(ObjStm)))
 					pdf_repair_obj_stm(ctx, doc, i);
 			}
+			fz_always(ctx)
+				pdf_drop_obj(ctx, dict);
 			fz_catch(ctx)
 			{
 				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 				fz_report_error(ctx);
 				fz_warn(ctx, "ignoring broken object stream (%d 0 R)", i);
 			}
-			pdf_drop_obj(ctx, dict);
 		}
 	}
 

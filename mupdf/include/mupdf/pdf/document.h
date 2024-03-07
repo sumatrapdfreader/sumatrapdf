@@ -807,5 +807,16 @@ void pdf_read_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm);
 */
 void pdf_minimize_document(fz_context *ctx, pdf_document *doc);
 
+/*
+	Map a pdf object representing a structure tag through
+	an optional role_map and convert to an fz_structure.
+*/
+fz_structure pdf_structure_type(fz_context *ctx, pdf_obj *role_map, pdf_obj *tag);
+
+/*
+	Run the document structure to a device.
+*/
+void pdf_run_document_structure(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_cookie *cookie);
+
 
 #endif

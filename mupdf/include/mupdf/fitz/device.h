@@ -329,7 +329,7 @@ struct fz_device
 	void (*begin_layer)(fz_context *, fz_device *, const char *layer_name);
 	void (*end_layer)(fz_context *, fz_device *);
 
-	void (*begin_structure)(fz_context *, fz_device *, fz_structure standard, const char *raw, int uid);
+	void (*begin_structure)(fz_context *, fz_device *, fz_structure standard, const char *raw, int idx);
 	void (*end_structure)(fz_context *, fz_device *);
 
 	void (*begin_metatext)(fz_context *, fz_device *, fz_metatext meta, const char *text);
@@ -371,7 +371,7 @@ void fz_render_flags(fz_context *ctx, fz_device *dev, int set, int clear);
 void fz_set_default_colorspaces(fz_context *ctx, fz_device *dev, fz_default_colorspaces *default_cs);
 void fz_begin_layer(fz_context *ctx, fz_device *dev, const char *layer_name);
 void fz_end_layer(fz_context *ctx, fz_device *dev);
-void fz_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int uid);
+void fz_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int idx);
 void fz_end_structure(fz_context *ctx, fz_device *dev);
 void fz_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const char *text);
 void fz_end_metatext(fz_context *ctx, fz_device *dev);

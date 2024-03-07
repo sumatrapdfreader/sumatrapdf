@@ -1852,7 +1852,7 @@ js_dev_end_layer(fz_context *ctx, fz_device *dev)
 }
 
 static void
-js_dev_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int uid)
+js_dev_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int idx)
 {
 	js_State *J = ((js_device*)dev)->J;
 	if (js_try(J))
@@ -1864,7 +1864,7 @@ js_dev_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, c
 			js_pushstring(J, raw);
 		else
 			js_pushnull(J);
-		js_pushnumber(J, uid);
+		js_pushnumber(J, idx);
 		js_call(J, 3);
 		js_pop(J, 1);
 	}
@@ -3137,10 +3137,10 @@ static void ffi_Device_beginStructure(js_State *J)
 	fz_device *dev = js_touserdata(J, 0, "fz_device");
 	fz_structure str = js_iscoercible(J, 1) ? fz_structure_from_string(js_tostring(J, 1)) : FZ_STRUCTURE_INVALID;
 	const char *raw = js_iscoercible(J, 2) ? js_tostring(J, 2) : "";
-	int uid = js_tointeger(J, 3);
+	int idx = js_tointeger(J, 3);
 
 	fz_try(ctx)
-		fz_begin_structure(ctx, dev, str, raw, uid);
+		fz_begin_structure(ctx, dev, str, raw, idx);
 	fz_catch(ctx)
 		rethrow(J);
 }

@@ -477,6 +477,10 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 {
 	fz_pixmap *img = NULL;
 	size_t span;
+	int n;
+
+	n = fz_colorspace_n(ctx, pnm->cs);
+	assert(n >= 1 && n <= 3);
 
 	pnm->width = 0;
 	p = pnm_read_comments(ctx, p, e, 1);
@@ -516,14 +520,14 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	if (pnm->bitdepth == 1)
 	{
 		/* Overly sensitive test, but we can live with it. */
-		if ((size_t)pnm->width > SIZE_MAX / (unsigned int)fz_colorspace_n(ctx, pnm->cs))
+		if ((size_t)pnm->width > SIZE_MAX / (unsigned int)n)
 			fz_throw(ctx, FZ_ERROR_LIMIT, "image row too large");
-		span = ((size_t)fz_colorspace_n(ctx, pnm->cs) * pnm->width + 7)/8;
+		span = ((size_t)n * pnm->width + 7)/8;
 	}
 	else
 	{
 		size_t bytes_per_sample = (pnm->bitdepth-1)/8 + 1;
-		span = (size_t)fz_colorspace_n(ctx, pnm->cs) * bytes_per_sample;
+		span = (size_t)n * bytes_per_sample;
 		if ((size_t)pnm->width > SIZE_MAX / span)
 			fz_throw(ctx, FZ_ERROR_LIMIT, "image row too large");
 		span = (size_t)pnm->width * span;

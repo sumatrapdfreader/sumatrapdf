@@ -319,11 +319,14 @@ fz_xml *fz_xml_find_next_match(fz_xml *item, const char *tag, const char *att, c
 	if (item && FZ_DOCUMENT_ITEM(item))
 		item = item->down;
 
-	do
+	if (item != NULL)
 	{
-		item = tag ? fz_xml_find_next(item, tag) : item->u.node.next;
+		do
+		{
+			item = tag ? fz_xml_find_next(item, tag) : item->u.node.next;
+		}
+		while (item != NULL && !fz_xml_att_eq(item, att, match));
 	}
-	while (item != NULL && !fz_xml_att_eq(item, att, match));
 
 	return item;
 }

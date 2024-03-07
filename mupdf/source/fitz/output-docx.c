@@ -527,7 +527,7 @@ fz_struct_to_extract(fz_structure type)
 }
 
 static void
-dev_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, const char *raw, int uid)
+dev_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, const char *raw, int idx)
 {
 	fz_docx_device *dev = (fz_docx_device *)dev_;
 	extract_t *extract = dev->writer->extract;
@@ -536,7 +536,7 @@ dev_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard, con
 	dev->writer->ctx = ctx;
 	fz_try(ctx)
 	{
-		if (extract_begin_struct(extract, fz_struct_to_extract(standard), uid, -1))
+		if (extract_begin_struct(extract, fz_struct_to_extract(standard), idx, -1))
 			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to begin struct");
 	}
 	fz_always(ctx)
