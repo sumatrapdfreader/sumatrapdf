@@ -429,6 +429,10 @@ int pdf_annot_has_interior_color(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_has_line_ending_styles(fz_context *ctx, pdf_annot *annot);
 
 /*
+	Check to see if an annotation has quadding.
+*/
+int pdf_annot_has_quadding(fz_context *ctx, pdf_annot *annot);
+/*
 	Check to see if an annotation has a border.
 */
 int pdf_annot_has_border(fz_context *ctx, pdf_annot *annot);

@@ -132,7 +132,7 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
     .. note::
 
-        In both :title:`MuPDF WASM` and :title`mutool run` `showExtras` defaults to *true* unless otherwise specified.
+        In both :title:`MuPDF WASM` and :title:`mutool run` `showExtras` defaults to *true* unless otherwise specified.
 
     |example_tag|
 

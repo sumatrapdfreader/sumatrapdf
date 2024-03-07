@@ -163,20 +163,24 @@ cbz_bound_page(fz_context *ctx, fz_page *page_, fz_box_type box)
 	cbz_page *page = (cbz_page*)page_;
 	fz_image *image = page->image;
 	int xres, yres;
-	fz_rect bbox;
-	uint8_t orientation = fz_image_orientation(ctx, page->image);
+	fz_rect bbox = fz_empty_rect;
+	uint8_t orientation;
 
-	fz_image_resolution(image, &xres, &yres);
-	bbox.x0 = bbox.y0 = 0;
-	if (orientation == 0 || (orientation & 1) == 1)
+	if (image)
 	{
-		bbox.x1 = image->w * DPI / xres;
-		bbox.y1 = image->h * DPI / yres;
-	}
-	else
-	{
-		bbox.y1 = image->w * DPI / xres;
-		bbox.x1 = image->h * DPI / yres;
+		fz_image_resolution(image, &xres, &yres);
+		bbox.x0 = bbox.y0 = 0;
+		orientation = fz_image_orientation(ctx, image);
+		if (orientation == 0 || (orientation & 1) == 1)
+		{
+			bbox.x1 = image->w * DPI / xres;
+			bbox.y1 = image->h * DPI / yres;
+		}
+		else
+		{
+			bbox.y1 = image->w * DPI / xres;
+			bbox.x1 = image->h * DPI / yres;
+		}
 	}
 	return bbox;
 }
@@ -188,23 +192,28 @@ cbz_run_page(fz_context *ctx, fz_page *page_, fz_device *dev, fz_matrix ctm, fz_
 	fz_image *image = page->image;
 	int xres, yres;
 	float w, h;
-	uint8_t orientation = fz_image_orientation(ctx, page->image);
-	fz_matrix immat = fz_image_orientation_matrix(ctx, page->image);
+	uint8_t orientation;
+	fz_matrix immat;
 
-	fz_image_resolution(image, &xres, &yres);
-	if (orientation == 0 || (orientation & 1) == 1)
+	if (image)
 	{
-		w = image->w * DPI / xres;
-		h = image->h * DPI / yres;
+		fz_image_resolution(image, &xres, &yres);
+		orientation = fz_image_orientation(ctx, image);
+		if (orientation == 0 || (orientation & 1) == 1)
+		{
+			w = image->w * DPI / xres;
+			h = image->h * DPI / yres;
+		}
+		else
+		{
+			h = image->w * DPI / xres;
+			w = image->h * DPI / yres;
+		}
+		immat = fz_image_orientation_matrix(ctx, image);
+		immat = fz_post_scale(immat, w, h);
+		ctm = fz_concat(immat, ctm);
+		fz_fill_image(ctx, dev, image, ctm, 1, fz_default_color_params);
 	}
-	else
-	{
-		h = image->w * DPI / xres;
-		w = image->h * DPI / yres;
-	}
-	immat = fz_post_scale(immat, w, h);
-	ctm = fz_concat(immat, ctm);
-	fz_fill_image(ctx, dev, image, ctm, 1, fz_default_color_params);
 }
 
 static void
@@ -226,13 +235,15 @@ cbz_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 
 	fz_var(page);
 
-	buf = fz_read_archive_entry(ctx, doc->arch, doc->page[number]);
+	page = fz_new_derived_page(ctx, cbz_page, doc_);
+	page->super.bound_page = cbz_bound_page;
+	page->super.run_page_contents = cbz_run_page;
+	page->super.drop_page = cbz_drop_page;
+
 	fz_try(ctx)
 	{
-		page = fz_new_derived_page(ctx, cbz_page, doc_);
-		page->super.bound_page = cbz_bound_page;
-		page->super.run_page_contents = cbz_run_page;
-		page->super.drop_page = cbz_drop_page;
+		fz_warn(ctx, "loading page %d: %s", number, doc->page[number]);
+		buf = fz_read_archive_entry(ctx, doc->arch, doc->page[number]);
 		page->image = fz_new_image_from_buffer(ctx, buf);
 	}
 	fz_always(ctx)
@@ -241,8 +252,8 @@ cbz_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_page(ctx, (fz_page*)page);
-		fz_rethrow(ctx);
+		fz_report_error(ctx);
+		fz_warn(ctx, "cannot decode image on page, leaving it blank");
 	}
 
 	return (fz_page*)page;

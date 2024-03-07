@@ -223,7 +223,7 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
         pdfPage.process(processor);
 
 
-.. method:: toPixmap(transform, colorspace, alpha, renderExtra, usage)
+.. method:: toPixmap(transform, colorspace, alpha, renderExtra, usage, box)
 
     Render the page into a `Pixmap` using the given `colorspace` and `alpha` while applying the `transform`. Rendering of annotations/widgets can be disabled. A page can be rendered for e.g. "View" or "Print" usage.
 
@@ -232,6 +232,7 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
     :arg alpha: `Boolean`.
     :arg renderExtra: `Boolean` Whether annotations and widgets should be rendered.
     :arg usage: `String` "View" or "Print".
+    :arg box: `String` Default is "CropBox".
 
     :return: `Pixmap`.
 
@@ -243,7 +244,8 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
                                       mupdf.ColorSpace.DeviceRGB,
                                       false,
                                       true,
-                                      "View");
+                                      "View",
+                                      "CropBox");
 
 .. redundant
 

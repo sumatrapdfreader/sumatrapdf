@@ -298,6 +298,7 @@ public class PDFAnnotation
 	public native int getLanguage();
 	public native void setLanguage(int lang);
 
+	public native boolean hasQuadding();
 	public native int getQuadding();
 	public native void setQuadding(int quadding);
 

@@ -1,0 +1,72 @@
+name: Pip build/install and test of Python Bindings
+
+on:
+  schedule:
+    - cron: '13 5 * * *'
+  workflow_dispatch:
+
+jobs:
+
+  test:
+    name: Pip build/install and test of Python Bindings
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macos-latest]
+
+      # Avoid cancelling of all runs after a single failure.
+      fail-fast: false
+
+    steps:
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+
+      - name: Pip build/install and test of Python Bindings
+
+        # We use a python script to run a series of commands, all inside a venv
+        # so that packages can be installed as required.
+        #
+        # We use pip to build and install the Python bindings. This
+        # will automatically install required packages as specified in
+        # pyproject.toml, and then use setup.py to build and install into the
+        # venv.
+        #
+        # Then we run MuPDF's python tests using the venv's newly-installed
+        # `mupdf` module.
+        #
+
+        run: |
+            import os
+            import platform
+            import subprocess
+            import sys
+
+            venv_name = 'pylocal'
+
+            command = ''
+            command += f'{sys.executable} -m venv {venv_name}'
+            if platform.system() == 'Windows':
+                command += f' && ./{venv_name}/Scripts/activate'.replace('/', os.sep)
+            else:
+                command += f' && . {venv_name}/bin/activate'
+            command += f' && python -m pip install -U pip setuptools'
+            command += f' && python -m pip install -vv .'
+            command += f' && python scripts/mupdfwrap.py -d - --test-python'
+
+            print(f'Running: {command}')
+            sys.stdout.flush()
+            subprocess.run( command, check=1, shell=1)
+
+        shell: python
+
+      - name: Archive generated code
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: generated-code
+          path: |
+            platform/c++/
+            platform/python/

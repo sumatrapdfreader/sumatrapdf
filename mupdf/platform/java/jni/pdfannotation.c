@@ -936,6 +936,21 @@ FUN(PDFAnnotation_setLanguage)(JNIEnv *env, jobject self, jint lang)
 		jni_rethrow_void(env, ctx);
 }
 
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasQuadding)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_quadding(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
 JNIEXPORT jint JNICALL
 FUN(PDFAnnotation_getQuadding)(JNIEnv *env, jobject self)
 {

@@ -1,0 +1,62 @@
+name: Build and test of C# Bindings
+
+on:
+  schedule:
+    - cron: '3 5 * * *'
+  workflow_dispatch:
+
+jobs:
+
+  test:
+    name: Build and test of C# Bindings
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        #os: [ubuntu-20.04, windows-2019, macos-10.15]
+        # 2023-02-10: Clang-python appears to not find any functions on macos.
+        os: [ubuntu-20.04, windows-2019]
+
+      # Avoid cancelling of all runs after a single failure.
+      fail-fast: false
+
+    steps:
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+
+      - name: Build and test of C# Bindings
+
+        # We use a python script to run a series of commands, all inside a venv
+        # so that clang-python is available.
+        #
+
+        run: |
+            import os
+            import platform
+            import subprocess
+            import sys
+
+            def run(command):
+                print(f'Running: {command}')
+                sys.stdout.flush()
+                subprocess.run( command, shell=True, check=True)
+
+            #if platform.system() == 'Linux':
+            #    run(f'sudo apt install swig')
+
+            venv_name = 'pylocal'
+
+            command = ''
+            command += f'{sys.executable} -m venv {venv_name}'
+            if platform.system() == 'Windows':
+                command += f' && .\\{venv_name}\\Scripts\\activate'
+            else:
+                command += f' && . {venv_name}/bin/activate'
+            command += f' && python -m pip install -U pip libclang swig setuptools'
+            command += f' && python scripts/mupdfwrap.py -b --csharp all --test-csharp'
+
+            run( command)
+
+        shell: python

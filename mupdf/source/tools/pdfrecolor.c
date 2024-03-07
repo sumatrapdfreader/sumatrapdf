@@ -67,23 +67,30 @@ static void
 image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm, pdf_obj *im_obj)
 {
 	fz_image *orig = *image;
-	fz_pixmap *pix;
+	fz_pixmap *pix = NULL;
 	fz_colorspace* dst_cs;
 
-	dst_cs = outcs;
+	fz_var(pix);
 
+	dst_cs = outcs;
 	pix = fz_get_unscaled_pixmap_from_image(ctx, orig);
 
-	if (pix->colorspace != dst_cs)
+	fz_try(ctx)
 	{
-		fz_pixmap *pix2 = fz_convert_pixmap(ctx, pix, dst_cs, NULL, NULL, fz_default_color_params, 1);
-		fz_drop_pixmap(ctx, pix);
-		pix = pix2;
-	}
+		if (pix->colorspace != dst_cs)
+		{
+			fz_pixmap *pix2 = fz_convert_pixmap(ctx, pix, dst_cs, NULL, NULL, fz_default_color_params, 1);
+			fz_drop_pixmap(ctx, pix);
+			pix = pix2;
+		}
 
-	*image = fz_new_image_from_pixmap(ctx, pix, orig->mask);
-	fz_drop_pixmap(ctx, pix);
-	fz_drop_image(ctx, orig);
+		*image = fz_new_image_from_pixmap(ctx, pix, orig->mask);
+		fz_drop_image(ctx, orig);
+	}
+	fz_always(ctx)
+		fz_drop_pixmap(ctx, pix);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void

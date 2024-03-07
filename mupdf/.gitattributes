@@ -1,0 +1,32 @@
+# Macros:
+[attr]tabs		whitespace=trailing-space,space-before-tab,indent-with-non-tab,tabwidth=4
+[attr]spaces		whitespace=trailing-space,space-before-tab,tabs-in-indent
+[attr]makefile		whitespace=trailing-space,space-before-tab,indent-with-non-tab,tabwidth=8
+
+# Source files:
+*			text=auto
+Make*			makefile
+*.mk			makefile
+*.make			makefile
+*.[chm]			tabs
+*.java			tabs
+*.xml			tabs
+*.props			spaces
+*.targets		spaces
+*.vcxproj		spaces
+*.vcxproj.filters	spaces
+bin2coff.xml		spaces
+
+# Documentation files:
+*.txt			spaces
+
+# Legacy source files:
+memento.*		spaces
+
+# Generated source files:
+source/html/css-properties.h	spaces
+
+# iOS project files:
+*.xib			spaces
+*.xcscheme		spaces
+*.json			spaces

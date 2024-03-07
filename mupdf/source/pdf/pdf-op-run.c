@@ -1724,6 +1724,8 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 		fz_structure standard;
 		pdf_obj *tag;
 		int idx;
+		pdf_obj *slowptr = send;
+		int slow = 0;
 
 		while (1) {
 			pdf_obj *p = pdf_dict_get(ctx, send, PDF_NAME(P));
@@ -1731,6 +1733,16 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 			if (!pdf_objcmp(ctx, p, proc->mcid_sent))
 				break;
 			send = p;
+
+			slow ^= 1;
+			if (slow == 0)
+				slowptr = pdf_dict_get(ctx, slowptr, PDF_NAME(P));
+			if (!pdf_objcmp(ctx, send, slowptr))
+			{
+				fz_warn(ctx, "Loop found in structure tree. Ignoring structure.");
+				proc->broken_struct_tree = 1;
+				return;
+			}
 		}
 
 #ifdef DEBUG_STRUCTURE

@@ -17,7 +17,7 @@
 `PDFGraftMap`
 ----------------
 
-|mutool_tag|
+
 
 |instance_methods|
 
