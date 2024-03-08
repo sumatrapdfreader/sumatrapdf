@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c09d6064465f778c0151643606dc10aef2f7aa48
+56681a26a62cbe5e4912bc99a983a04d66156c93
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -19186,7 +19186,7 @@ et:Näita &kerimisribasid
 eu:Erakutsi Irristaba&rrak
 fa:نمایش &پیمایشگر
 fi:Näytä vie&rityspalkit
-fo:Vís Skr&ullibjálkar
+fo:Vís Skrullibjál&kar
 fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o

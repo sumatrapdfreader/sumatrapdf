@@ -16414,7 +16414,7 @@ et:Näita &kerimisribasid
 eu:Erakutsi Irristaba&rrak
 fa:نمایش &پیمایشگر
 fi:Näytä vie&rityspalkit
-fo:Vís Skr&ullibjálkar
+fo:Vís Skrullibjál&kar
 fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o
