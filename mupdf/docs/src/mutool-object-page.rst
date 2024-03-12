@@ -37,8 +37,6 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
 .. method:: run(device, matrix)
 
-    |wasm_tag|
-
     Calls device functions for all the contents on the page, using the specified transform :ref:`matrix<mutool_run_js_api_matrix>`. The `device` can be one of the built-in devices or a :title:`JavaScript` object with methods for the device calls. The `matrix` maps from user space points to device space pixels.
 
     :arg device: The device object.
@@ -48,12 +46,10 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
     .. code-block:: javascript
 
-        var rect = page.run(obj, mupdf.Matrix.identity);
+        page.run(obj, mupdf.Matrix.identity);
 
 
 .. method:: runPageContents(device, matrix)
-
-    |wasm_tag|
 
     This is the same as the :ref:`run<Page_run>` method above but it only considers the page itself and omits annotations and widgets.
 
@@ -64,12 +60,10 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
     .. code-block:: javascript
 
-        var rect = page.runPageContents(obj, mupdf.Matrix.identity);
+        page.runPageContents(obj, mupdf.Matrix.identity);
 
 
 .. method:: runPageAnnots(device, matrix)
-
-    |wasm_tag|
 
     This is the same as the :ref:`run<Page_run>` method above but it only considers the page annotations.
 
@@ -80,12 +74,10 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
     .. code-block:: javascript
 
-        var rect = page.runPageAnnots(obj, mupdf.Matrix.identity);
+        page.runPageAnnots(obj, mupdf.Matrix.identity);
 
 
 .. method:: runPageWidgets(device, matrix)
-
-    |wasm_tag|
 
     This is the same as the :ref:`run<Page_run>` method above but it only considers the page widgets.
 
@@ -96,7 +88,7 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
     .. code-block:: javascript
 
-        var rect = page.runPageWidgets(obj, mupdf.Matrix.identity);
+        page.runPageWidgets(obj, mupdf.Matrix.identity);
 
 
 .. method:: toPixmap(matrix, colorspace, alpha, showExtras)

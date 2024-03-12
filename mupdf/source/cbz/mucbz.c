@@ -242,7 +242,6 @@ cbz_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 
 	fz_try(ctx)
 	{
-		fz_warn(ctx, "loading page %d: %s", number, doc->page[number]);
 		buf = fz_read_archive_entry(ctx, doc->arch, doc->page[number]);
 		page->image = fz_new_image_from_buffer(ctx, buf);
 	}
