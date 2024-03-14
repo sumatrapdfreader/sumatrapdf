@@ -197,22 +197,30 @@ cbz_run_page(fz_context *ctx, fz_page *page_, fz_device *dev, fz_matrix ctm, fz_
 
 	if (image)
 	{
-		fz_image_resolution(image, &xres, &yres);
-		orientation = fz_image_orientation(ctx, image);
-		if (orientation == 0 || (orientation & 1) == 1)
+		fz_try(ctx)
 		{
-			w = image->w * DPI / xres;
-			h = image->h * DPI / yres;
+			fz_image_resolution(image, &xres, &yres);
+			orientation = fz_image_orientation(ctx, image);
+			if (orientation == 0 || (orientation & 1) == 1)
+			{
+				w = image->w * DPI / xres;
+				h = image->h * DPI / yres;
+			}
+			else
+			{
+				h = image->w * DPI / xres;
+				w = image->h * DPI / yres;
+			}
+			immat = fz_image_orientation_matrix(ctx, image);
+			immat = fz_post_scale(immat, w, h);
+			ctm = fz_concat(immat, ctm);
+			fz_fill_image(ctx, dev, image, ctm, 1, fz_default_color_params);
 		}
-		else
+		fz_catch(ctx)
 		{
-			h = image->w * DPI / xres;
-			w = image->h * DPI / yres;
+			fz_report_error(ctx);
+			fz_warn(ctx, "cannot render image on page");
 		}
-		immat = fz_image_orientation_matrix(ctx, image);
-		immat = fz_post_scale(immat, w, h);
-		ctm = fz_concat(immat, ctm);
-		fz_fill_image(ctx, dev, image, ctm, 1, fz_default_color_params);
 	}
 }
 
