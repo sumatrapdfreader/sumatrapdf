@@ -7806,6 +7806,7 @@ fo:Rætta %s Viðmerking
 fr:Modifier l'annotation %s
 ga:Cuir an nóta mínithe %s in eagar
 gl:Editar %s anotación
+he:ערוך את הערה %s
 hr:Uredi %s bilješku
 hu:%s. megjegyzés szerkesztése
 it:Modifica annotazione %s
