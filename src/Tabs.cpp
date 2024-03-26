@@ -36,6 +36,12 @@
 
 #include "utils/Log.h"
 
+// used only if gGlobalPrefs->ctrlTabLastViewed is true
+static int lastViewedNdx = -1;
+// used to avoid changing lastViewedNdx during startup
+extern bool gIsStartup; // setup to true then false during WinMain from SumatraStartup.cpp
+
+
 static void UpdateTabTitle(WindowTab* tab) {
     if (!tab) {
         return;
@@ -451,6 +457,8 @@ void SaveCurrentWindowTab(MainWindow* win) {
     int current = win->tabsCtrl->GetSelected();
     if (-1 == current) {
         return;
+    } else if (!gIsStartup && gGlobalPrefs->ctrlTabLastViewed) {
+        lastViewedNdx = current;
     }
     if (win->CurrentTab() != win->Tabs().at(current)) {
         return; // TODO: restore ReportIf() ?
@@ -563,11 +571,23 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     if (count < 2) {
         return;
     }
-    int idx = win->tabsCtrl->GetSelected() + 1;
-    if (reverse) {
-        idx -= 2;
+
+    // if true, Ctrl+Tab cycles through tabs in recently used order
+    bool ctrlTabLastViewed = gGlobalPrefs->ctrlTabLastViewed;
+
+    int curNdx = win->tabsCtrl->GetSelected();
+    int idx;
+    if (!ctrlTabLastViewed || (lastViewedNdx < 0) || (lastViewedNdx >= count) || (lastViewedNdx == curNdx)) {
+        if (reverse) {
+            idx = curNdx - 1;
+        } else {
+            idx = curNdx + 1;
+        }
+        idx += count; // ensure > 0
+        idx = idx % count;
+    } else {
+        idx = lastViewedNdx;
     }
-    idx += count; // ensure > 0
-    idx = idx % count;
+
     TabsSelect(win, idx);
 }

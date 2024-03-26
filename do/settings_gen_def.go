@@ -372,6 +372,8 @@ var (
 			"3 is fullscreen, 4 is minimized"),
 		mkCompactStruct("WindowPos", windowPos,
 			"default position (can be on any monitor)").setStructName("Rect").setDoc("default position (x, y) and size (width, height) of the window"),
+		mkField("CtrlTabLastViewed", Bool, false,
+			"if true, Ctrl+Tab cycles through tabs in recently used order").setVersion("3.6"),
 
 		// file history and favorites
 		mkArray("FileStates", fileSettings,
