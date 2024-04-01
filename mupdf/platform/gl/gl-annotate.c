@@ -1752,7 +1752,7 @@ static void do_edit_line(fz_irect canvas_area, fz_irect area, fz_rect *rect)
 		rect->y0 = fz_min(a.y, b.y);
 		rect->x1 = fz_max(a.x, b.x);
 		rect->y1 = fz_max(a.y, b.y);
-		lw = pdf_annot_border(ctx, ui.selected_annot);
+		lw = pdf_annot_border_width(ctx, ui.selected_annot);
 		*rect = fz_expand_rect(*rect, fz_matrix_expansion(view_page_ctm) * lw);
 
 		/* cancel on right click */

@@ -128,8 +128,6 @@ public class PDFAnnotation
 	public native void setFlags(int flags);
 	public native String getContents();
 	public native void setContents(String contents);
-	public native float getBorder();
-	public native void setBorder(float width);
 	public native float[] getColor();
 	public native void setColor(float[] color);
 	public native float getOpacity();
@@ -352,4 +350,10 @@ public class PDFAnnotation
 	}
 
 	public native boolean applyRedaction(boolean blackBoxes, int imageMethod, int lineArt);
+
+	/** @deprecated use getBorderWidth instead. */
+	public float getBorder() { return getBorderWidth(); }
+
+	/** @deprecated use setBorderWidth instead. */
+	public void setBorder(float width) { setBorderWidth(width); }
 }

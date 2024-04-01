@@ -63,8 +63,9 @@ def get_fz_extras( tu, fzname):
 def get_children(cursor):
     '''
     Like cursor.get_children() but recurses into cursors with
-    clang.cindex.CursorKind.UNEXPOSED_DECL, which picks up top-level items
-    marked with `extern "C"`.
+    clang.cindex.CursorKind.UNEXPOSED_DECL which picks up top-level items
+    marked with `extern "C"`, and clang.cindex.CursorKind.LINKAGE_SPEC which
+    picks up items inside `extern "C" {...}`.
     '''
     verbose = 0
     for cursor in cursor.get_children():
@@ -77,7 +78,13 @@ def get_children(cursor):
                 if verbose and cursor.spelling:
                     jlib.log( '{cursor.spelling=}')
                 yield cursor2
-        elif 1:
+        elif cursor.kind == clang.cindex.CursorKind.LINKAGE_SPEC:
+            # extern "C" {...}
+            for cursor2 in cursor.get_children():
+                if verbose and cursor.spelling:
+                    jlib.log( '{cursor.spelling=}')
+                yield cursor2
+        else:
             if verbose and cursor.spelling:
                 jlib.log( '{cursor.spelling=}')
             yield cursor

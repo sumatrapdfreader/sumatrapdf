@@ -733,7 +733,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 					pdf_dict_put_int(ctx, annot->obj, PDF_NAME(Rotate), rot);
 
 				pdf_set_annot_rect(ctx, annot, text_rect);
-				pdf_set_annot_border(ctx, annot, 0);
+				pdf_set_annot_border_width(ctx, annot, 0);
 				pdf_set_annot_default_appearance(ctx, annot, "Helv", 12, nelem(black), black);
 			}
 			break;
@@ -759,7 +759,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 			{
 				fz_point a = { 12, 12 }, b = { 12 + 100, 12 + 50 };
 				pdf_set_annot_line(ctx, annot, a, b);
-				pdf_set_annot_border(ctx, annot, 1);
+				pdf_set_annot_border_width(ctx, annot, 1);
 				pdf_set_annot_color(ctx, annot, 3, red);
 			}
 			break;
@@ -769,7 +769,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 			{
 				fz_rect shape_rect = { 12, 12, 12+100, 12+50 };
 				pdf_set_annot_rect(ctx, annot, shape_rect);
-				pdf_set_annot_border(ctx, annot, 1);
+				pdf_set_annot_border_width(ctx, annot, 1);
 				pdf_set_annot_color(ctx, annot, 3, red);
 			}
 			break;
@@ -777,7 +777,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 		case PDF_ANNOT_POLYGON:
 		case PDF_ANNOT_POLY_LINE:
 		case PDF_ANNOT_INK:
-			pdf_set_annot_border(ctx, annot, 1);
+			pdf_set_annot_border_width(ctx, annot, 1);
 			pdf_set_annot_color(ctx, annot, 3, red);
 			break;
 
@@ -1419,62 +1419,6 @@ pdf_set_annot_line_end_style(fz_context *ctx, pdf_annot *annot, enum pdf_line_en
 	pdf_set_annot_line_ending_styles(ctx, annot, s, e);
 }
 
-float
-pdf_annot_border(fz_context *ctx, pdf_annot *annot)
-{
-	pdf_obj *bs, *bs_w, *border;
-	float ret = 1;
-
-	pdf_annot_push_local_xref(ctx, annot);
-
-	fz_try(ctx)
-	{
-		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
-		bs_w = pdf_dict_get(ctx, bs, PDF_NAME(W));
-		if (pdf_is_number(ctx, bs_w))
-		{
-			ret = pdf_to_real(ctx, bs_w);
-			break;
-		}
-		border = pdf_dict_get(ctx, annot->obj, PDF_NAME(Border));
-		bs_w = pdf_array_get(ctx, border, 2);
-		if (pdf_is_number(ctx, bs_w))
-			ret = pdf_to_real(ctx, bs_w);
-	}
-	fz_always(ctx)
-		pdf_annot_pop_local_xref(ctx, annot);
-	fz_catch(ctx)
-		fz_rethrow(ctx);
-
-	return ret;
-}
-
-void
-pdf_set_annot_border(fz_context *ctx, pdf_annot *annot, float w)
-{
-	begin_annot_op(ctx, annot, "Set border");
-
-	fz_try(ctx)
-	{
-		pdf_obj *bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
-		if (!pdf_is_dict(ctx, bs))
-			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
-		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
-		pdf_dict_put_real(ctx, bs, PDF_NAME(W), w);
-
-		pdf_dict_del(ctx, annot->obj, PDF_NAME(Border)); /* deprecated */
-		pdf_dict_del(ctx, annot->obj, PDF_NAME(BE)); /* no effect */
-		end_annot_op(ctx, annot);
-	}
-	fz_catch(ctx)
-	{
-		abandon_annot_op(ctx, annot);
-		fz_rethrow(ctx);
-	}
-
-	pdf_dirty_annot(ctx, annot);
-}
-
 static pdf_obj *border_style_subtypes[] = {
 	PDF_NAME(Circle),
 	PDF_NAME(FreeText),
@@ -1483,6 +1427,7 @@ static pdf_obj *border_style_subtypes[] = {
 	PDF_NAME(Polygon),
 	PDF_NAME(PolyLine),
 	PDF_NAME(Square),
+	PDF_NAME(Widget),
 	NULL,
 };
 
@@ -1542,8 +1487,8 @@ pdf_annot_border_style(fz_context *ctx, pdf_annot *annot)
 float
 pdf_annot_border_width(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_obj *border, *bs, *w;
-	float width;
+	pdf_obj *bs, *bs_w, *border;
+	float ret = 1;
 
 	pdf_annot_push_local_xref(ctx, annot);
 
@@ -1551,20 +1496,31 @@ pdf_annot_border_width(fz_context *ctx, pdf_annot *annot)
 	{
 		check_allowed_subtypes(ctx, annot, PDF_NAME(BS), border_style_subtypes);
 
-		/* if values missing, fall back to deprecated /Border array */
-		border = pdf_dict_get(ctx, annot->obj, PDF_NAME(Border));
 		bs = pdf_dict_get(ctx, annot->obj, PDF_NAME(BS));
-		w = pdf_dict_get(ctx, bs, PDF_NAME(W));
-		if (!pdf_is_number(ctx, w) && pdf_is_dict(ctx, border))
-			w = pdf_array_get(ctx, border, 2);
-		width = pdf_to_real(ctx, w);
+		bs_w = pdf_dict_get(ctx, bs, PDF_NAME(W));
+		if (pdf_is_number(ctx, bs_w))
+		{
+			ret = pdf_to_real(ctx, bs_w);
+			break;
+		}
+		border = pdf_dict_get(ctx, annot->obj, PDF_NAME(Border));
+		bs_w = pdf_array_get(ctx, border, 2);
+		if (pdf_is_number(ctx, bs_w))
+			ret = pdf_to_real(ctx, bs_w);
 	}
 	fz_always(ctx)
 		pdf_annot_pop_local_xref(ctx, annot);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
-	return width;
+	return ret;
+}
+
+float
+pdf_annot_border(fz_context *ctx, pdf_annot *annot)
+{
+	/* DEPRECATED */
+	return pdf_annot_border_width(ctx, annot);
 }
 
 int
@@ -1693,6 +1649,13 @@ pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width)
 	}
 
 	pdf_dirty_annot(ctx, annot);
+}
+
+void
+pdf_set_annot_border(fz_context *ctx, pdf_annot *annot, float w)
+{
+	/* DEPRECATED */
+	pdf_set_annot_border_width(ctx, annot, w);
 }
 
 void

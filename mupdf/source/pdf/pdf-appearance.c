@@ -197,7 +197,7 @@ pdf_write_dash_pattern(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_ob
 
 static float pdf_write_border_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf)
 {
-	float w = pdf_annot_border(ctx, annot);
+	float w = pdf_annot_border_width(ctx, annot);
 	fz_append_printf(ctx, buf, "%g w\n", w);
 	return w;
 }
@@ -2239,7 +2239,7 @@ pdf_layout_text_widget(fz_context *ctx, pdf_annot *annot)
 	text = pdf_field_value(ctx, annot->obj);
 	ff = pdf_field_flags(ctx, annot->obj);
 
-	b = pdf_annot_border(ctx, annot);
+	b = pdf_annot_border_width(ctx, annot);
 	r = pdf_dict_get_int(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(MK)), PDF_NAME(R));
 	q = pdf_annot_quadding(ctx, annot);
 	pdf_annot_default_appearance(ctx, annot, &font, &size, &n, color);
@@ -2491,7 +2491,7 @@ static pdf_obj *draw_push_button(fz_context *ctx, pdf_annot *annot, fz_rect bbox
 	fz_var(res);
 	fz_try(ctx)
 	{
-		b = pdf_annot_border(ctx, annot);
+		b = pdf_annot_border_width(ctx, annot);
 		has_bc = pdf_annot_MK_BC_rgb(ctx, annot, bc);
 		has_bg = pdf_annot_MK_BG_rgb(ctx, annot, bg);
 

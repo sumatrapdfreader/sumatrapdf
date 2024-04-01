@@ -1510,6 +1510,5 @@ fz_load_bmp(fz_context *ctx, const unsigned char *p, size_t total)
 void
 fz_load_bmp_info(fz_context *ctx, const unsigned char *p, size_t total, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
 {
-    /* SumatraPDF */
 	fz_load_bmp_info_subimage(ctx, p, total, wp, hp, xresp, yresp, cspacep, 0);
 }

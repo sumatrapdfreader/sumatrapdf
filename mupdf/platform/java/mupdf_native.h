@@ -2894,22 +2894,6 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setContents
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
- * Method:    getBorder
- * Signature: ()F
- */
-JNIEXPORT jfloat JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getBorder
-  (JNIEnv *, jobject);
-
-/*
- * Class:     com_artifex_mupdf_fitz_PDFAnnotation
- * Method:    setBorder
- * Signature: (F)V
- */
-JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setBorder
-  (JNIEnv *, jobject, jfloat);
-
-/*
- * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    getColor
  * Signature: ()[F
  */

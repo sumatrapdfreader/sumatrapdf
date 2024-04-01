@@ -8167,29 +8167,6 @@ static void ffi_PDFAnnotation_setRect(js_State *J)
 		rethrow(J);
 }
 
-static void ffi_PDFAnnotation_getBorder(js_State *J)
-{
-	fz_context *ctx = js_getcontext(J);
-	pdf_annot *annot = ffi_toannot(J, 0);
-	float border = 0;
-	fz_try(ctx)
-		border = pdf_annot_border(ctx, annot);
-	fz_catch(ctx)
-		rethrow(J);
-	js_pushnumber(J, border);
-}
-
-static void ffi_PDFAnnotation_setBorder(js_State *J)
-{
-	fz_context *ctx = js_getcontext(J);
-	pdf_annot *annot = ffi_toannot(J, 0);
-	float border = js_tonumber(J, 1);
-	fz_try(ctx)
-		pdf_set_annot_border(ctx, annot, border);
-	fz_catch(ctx)
-		rethrow(J);
-}
-
 static void ffi_PDFAnnotation_getColor(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -10492,8 +10469,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.hasRect", ffi_PDFAnnotation_hasRect, 0);
 		jsB_propfun(J, "PDFAnnotation.getRect", ffi_PDFAnnotation_getRect, 0);
 		jsB_propfun(J, "PDFAnnotation.setRect", ffi_PDFAnnotation_setRect, 1);
-		jsB_propfun(J, "PDFAnnotation.getBorder", ffi_PDFAnnotation_getBorder, 0);
-		jsB_propfun(J, "PDFAnnotation.setBorder", ffi_PDFAnnotation_setBorder, 1);
+		jsB_propfun(J, "PDFAnnotation.getBorder", ffi_PDFAnnotation_getBorderWidth, 0); /* DEPRECATED */
+		jsB_propfun(J, "PDFAnnotation.setBorder", ffi_PDFAnnotation_setBorderWidth, 1); /* DEPRECATED */
 		jsB_propfun(J, "PDFAnnotation.getColor", ffi_PDFAnnotation_getColor, 0);
 		jsB_propfun(J, "PDFAnnotation.setColor", ffi_PDFAnnotation_setColor, 1);
 		jsB_propfun(J, "PDFAnnotation.hasInteriorColor", ffi_PDFAnnotation_hasInteriorColor, 0);

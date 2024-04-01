@@ -469,6 +469,7 @@ fz_rect pdf_annot_rect(fz_context *ctx, pdf_annot *annot);
 
 /*
 	Retrieve the annotation border line width in points.
+	DEPRECATED: Use pdf_annot_border_width instead.
 */
 float pdf_annot_border(fz_context *ctx, pdf_annot *annot);
 
@@ -581,7 +582,8 @@ void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *imag
 void pdf_set_annot_rect(fz_context *ctx, pdf_annot *annot, fz_rect rect);
 
 /*
-	Set the border width for an annotation, in points and remove any border effect.
+	Set the border width for an annotation, in points.
+	DEPRECATED: Use pdf_set_annot_border_width instead.
 */
 void pdf_set_annot_border(fz_context *ctx, pdf_annot *annot, float width);
 

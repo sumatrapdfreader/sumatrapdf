@@ -641,8 +641,17 @@ Usage:
                     Windows). If <N> is 0 we use the number of CPUs
                     (from Python's multiprocessing.cpu_count()).
                 --m-target <target>
-                    Set target for action 'm'. Default is blank, so make will
-                    build the default `all` target.
+                    Comma-separated list of target(s) to be built by action 'm'
+                    (Unix) or action '1' (Windows).
+
+                    On Unix, the specified target(s) are used as Make target(s)
+                    instead of implicit `all`. For example `--m-target libs`
+                    can be used to disable the default building of tools.
+
+                    On Windows, for each specified target, `/Project <target>`
+                    is appended to the devenv command. So one can use
+                    `--m-target mutool,muraster` to build mutool.exe and
+                    muraster.exe as well as mupdfcpp64.dll.
                 --m-vars <text>
                     Text to insert near start of the action 'm' make command,
                     typically to set MuPDF build flags, for example:
@@ -1225,6 +1234,7 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             # them.
             jlib.log('Ignoring {flag=}')
             build_suffix += f'-{flag}'
+            actual_build_dir += f'-{flag}'
         else:
             if 0: pass  # lgtm [py/unreachable-statement]
             elif flag == 'debug':
@@ -1268,7 +1278,8 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
     if build_suffix:
         make_args += f' build_suffix={build_suffix}'
     if m_target:
-        make_args += f' {m_target}'
+        for t in m_target.split(','):
+            make_args += f' {t}'
     command = f'cd {build_dirs.dir_mupdf} &&'
     if make_env:
         command += make_env
@@ -1644,9 +1655,13 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                             f'"{devenv}"'
                             f' platform/{win32_infix}/mupdf.sln'
                             f' /Build "{build}"'
-                            f' /Project mupdfcpp'
                             )
-                    jlib.system(command, verbose=1, out='log')
+                    projects = ['mupdfcpp']
+                    if m_target:
+                        projects += m_target.split(',')
+                    for project in projects:
+                        command2 = f'{command} /Project {project}'
+                        jlib.system(command2, verbose=1, out='log')
 
                     jlib.fs_copy(
                             f'{build_dirs.dir_mupdf}/platform/{win32_infix}/{build_dirs.cpu.windows_subdir}{windows_build_type}/mupdfcpp{build_dirs.cpu.windows_suffix}.dll',
@@ -3002,11 +3017,16 @@ def main2():
                     command_venv_enter = f'. {venv}/bin/activate'
 
                 command = f'{command_venv_enter} && python -m pip install --upgrade pip'
-                if state.state_.openbsd:
-                    jlib.log( 'Not installing libclang on openbsd; we assume py3-llvm is installed.')
-                    command += f' && python -m pip install --upgrade swig setuptools'
-                else:
-                    command += f' && python -m pip install{force_reinstall} --upgrade libclang swig setuptools'
+
+                # Required packages are specified by
+                # setup.py:get_requires_for_build_wheel().
+                mupdf_root = os.path.abspath( f'{__file__}/../../../')
+                sys.path.insert(0, f'{mupdf_root}')
+                import setup
+                del sys.path[0]
+                packages = setup.get_requires_for_build_wheel()
+                packages = ' '.join(packages)
+                command += f' && python -m pip install{force_reinstall} --upgrade {packages}'
                 jlib.system(command, out='log', verbose=1)
 
                 command = f'{command_venv_enter} && python {shlex.quote(sys.argv[0])}'

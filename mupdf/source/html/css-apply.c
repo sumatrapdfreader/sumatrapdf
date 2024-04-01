@@ -673,6 +673,7 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 	fz_css_property *prop;
 	fz_font *font = NULL;
 	fz_buffer *buf = NULL;
+	fz_stream *stm = NULL;
 	int is_bold, is_italic, is_small_caps;
 	char path[2048];
 
@@ -712,19 +713,26 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 
 	fz_var(buf);
 	fz_var(font);
+	fz_var(stm);
 
 	fz_try(ctx)
 	{
 		if (fz_has_archive_entry(ctx, zip, path))
 			buf = fz_read_archive_entry(ctx, zip, path);
 		else
-			buf = fz_read_file(ctx, src);
+		{
+			stm = fz_try_open_file(ctx, src);
+			if (stm == NULL)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "cannot locate font '%s' specified by css", src);
+			buf = fz_read_all(ctx, stm, 0);
+		}
 		font = fz_new_font_from_buffer(ctx, NULL, buf, 0, 0);
 		fz_add_html_font_face(ctx, set, family, is_bold, is_italic, is_small_caps, path, font);
 	}
 	fz_always(ctx)
 	{
 		fz_drop_buffer(ctx, buf);
+		fz_drop_stream(ctx, stm);
 		fz_drop_font(ctx, font);
 	}
 	fz_catch(ctx)

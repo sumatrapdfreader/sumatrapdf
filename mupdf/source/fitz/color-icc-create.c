@@ -313,6 +313,179 @@ gsicc_create_compute_cam(fz_context *ctx, float white_src[], float *cam)
 	matrixmult(ctx, &(cat02matrixinv[0]), 3, 3, temp_matrix, 3, 3, cam);
 }
 
+/* The algorithm used by the following few routines comes from
+ * LCMS2. We use this for converting the XYZ primaries + whitepoint
+ * supplied to fz_new_icc_data_from_cal into the correct form for
+ * writing into the profile.
+ *
+ * Prior to this code, we were, in some cases (such as with
+ * the color data from pal8v4.bmp) ending up with a profile where
+ * the whitepoint did not match properly.
+ */
+
+// Determinant lower than that are assumed zero (used on matrix invert)
+#define MATRIX_DET_TOLERANCE    0.0001
+
+static int
+matrix_invert(double *out, const double *in)
+{
+	double det, c0, c1, c2, absdet;
+
+	c0 =  in[4]*in[8] - in[5]*in[7];
+	c1 = -in[3]*in[8] + in[5]*in[6];
+	c2 =  in[3]*in[7] - in[4]*in[6];
+
+	det = in[0]*c0 + in[1]*c1 + in[2]*c2;
+	absdet = det;
+	if (absdet < 0)
+		absdet = -absdet;
+	if (absdet < MATRIX_DET_TOLERANCE)
+		return 1;  // singular matrix; can't invert
+
+	out[0] = c0/det;
+	out[1] = (in[2]*in[7] - in[1]*in[8])/det;
+	out[2] = (in[1]*in[5] - in[2]*in[4])/det;
+	out[3] = c1/det;
+	out[4] = (in[0]*in[8] - in[2]*in[6])/det;
+	out[5] = (in[2]*in[3] - in[0]*in[5])/det;
+	out[6] = c2/det;
+	out[7] = (in[1]*in[6] - in[0]*in[7])/det;
+	out[8] = (in[0]*in[4] - in[1]*in[3])/det;
+
+	return 0;
+}
+
+static void
+transform_vector(double *out, const double *mat, const double *v)
+{
+	out[0] = mat[0]*v[0] + mat[1]*v[1] + mat[2]*v[2];
+	out[1] = mat[3]*v[0] + mat[4]*v[1] + mat[5]*v[2];
+	out[2] = mat[6]*v[0] + mat[7]*v[1] + mat[8]*v[2];
+}
+
+static void
+matrix_compose(double *out, const double *a, const double *b)
+{
+	out[0] = a[0]*b[0] + a[1]*b[3] + a[2]*b[6];
+	out[1] = a[0]*b[1] + a[1]*b[4] + a[2]*b[7];
+	out[2] = a[0]*b[2] + a[1]*b[5] + a[2]*b[8];
+	out[3] = a[3]*b[0] + a[4]*b[3] + a[5]*b[6];
+	out[4] = a[3]*b[1] + a[4]*b[4] + a[5]*b[7];
+	out[5] = a[3]*b[2] + a[4]*b[5] + a[5]*b[8];
+	out[6] = a[6]*b[0] + a[7]*b[3] + a[8]*b[6];
+	out[7] = a[6]*b[1] + a[7]*b[4] + a[8]*b[7];
+	out[8] = a[6]*b[2] + a[7]*b[5] + a[8]*b[8];
+}
+
+static int
+adaptation_matrix(double *out, const double *fromXYZ, const double *toXYZ)
+{
+	// Bradford matrix
+	static const double LamRigg[9] = {
+		0.8951,  0.2664, -0.1614,
+		-0.7502,  1.7135,  0.0367,
+		0.0389, -0.0685,  1.0296
+	};
+	double chad_inv[9];
+	double fromRGB[3];
+	double toRGB[3];
+	double cone[9];
+	double tmp[9];
+
+	/* This should never fail, because it's the same operation
+	 * every time! Could save the work here... */
+	if (matrix_invert(chad_inv, LamRigg))
+		return 1;
+
+	transform_vector(fromRGB, LamRigg, fromXYZ);
+	transform_vector(toRGB, LamRigg, toXYZ);
+
+	// Build matrix
+	cone[0] = toRGB[0]/fromRGB[0];
+	cone[1] = 0.0;
+	cone[2] = 0.0;
+	cone[3] = 0.0;
+	cone[4] = toRGB[1]/fromRGB[1];
+	cone[5] = 0.0;
+	cone[6] = 0.0;
+	cone[7] = 0.0;
+	cone[8] = toRGB[2]/fromRGB[2];
+
+	// Normalize
+	matrix_compose(tmp, cone, LamRigg);
+	matrix_compose(out, chad_inv, tmp);
+
+	return 0;
+}
+
+static int
+build_rgb2XYZ_transfer_matrix(double *out, double *xyYwhite, const double *xyYprimaries)
+{
+	double whitepoint[3], coef[3];
+	double xn, yn;
+	double xr, yr;
+	double xg, yg;
+	double xb, yb;
+	double primaries[9];
+	double result[9];
+	double mat[9];
+	double bradford[9];
+	static double d50XYZ[3] = {  0.9642, 1.0, 0.8249 };
+
+	xn = xyYwhite[0];
+	yn = xyYwhite[1];
+	xr = xyYprimaries[0];
+	yr = xyYprimaries[1];
+	xg = xyYprimaries[3];
+	yg = xyYprimaries[4];
+	xb = xyYprimaries[6];
+	yb = xyYprimaries[7];
+
+	// Build Primaries matrix
+	primaries[0] = xr;
+	primaries[1] = xg;
+	primaries[2] = xb;
+	primaries[3] = yr;
+	primaries[4] = yg;
+	primaries[5] = yb;
+	primaries[6] = (1-xr-yr);
+	primaries[7] = (1-xg-yg);
+	primaries[8] = (1-xb-yb);
+
+	// Result = Primaries ^ (-1) inverse matrix
+	if (matrix_invert(&result[0], &primaries[0]))
+		return 1;
+
+	/* Convert whitepoint from xyY to XYZ. Isn't this where
+	 * we came in? I think we've effectively normalised during
+	 * this process. */
+	whitepoint[0] = xn/yn;
+	whitepoint[1] = 1;
+	whitepoint[2] = (1-xn-yn)/yn;
+
+	// Across inverse primaries ...
+	transform_vector(coef, result, whitepoint);
+
+	// Give us the Coefs, then I build transformation matrix
+	mat[0] = coef[0]*xr;
+	mat[1] = coef[1]*xg;
+	mat[2] = coef[2]*xb;
+	mat[3] = coef[0]*yr;
+	mat[4] = coef[1]*yg;
+	mat[5] = coef[2]*yb;
+	mat[6] = coef[0]*(1.0-xr-yr);
+	mat[7] = coef[1]*(1.0-xg-yg);
+	mat[8] = coef[2]*(1.0-xb-yb);
+
+	if (adaptation_matrix(bradford, whitepoint, d50XYZ))
+		return 1;
+
+	matrix_compose(out, bradford, mat);
+
+	return 0;
+}
+
+
 fz_buffer *
 fz_new_icc_data_from_cal(fz_context *ctx,
 	float wp[3],
@@ -407,13 +580,33 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 	/* The matrix */
 	if (n == 3)
 	{
-		float primary[3];
+		/* Convert whitepoint from XYZ to xyY */
+		double xyz = wp[0] + wp[1] + wp[2];
+		double whitexyY[3] = { wp[0] / xyz, wp[1] / xyz, 1.0 };
+		/* Convert primaries from XYZ to xyY */
+		double matrix012 = matrix[0] + matrix[1] + matrix[2];
+		double matrix345 = matrix[3] + matrix[4] + matrix[5];
+		double matrix678 = matrix[6] + matrix[7] + matrix[8];
+		double primariesxyY[9] = {
+			matrix[0] / matrix012,
+			matrix[1] / matrix012,
+			matrix[1],
+			matrix[3] / matrix345,
+			matrix[4] / matrix345,
+			matrix[5],
+			matrix[6] / matrix678,
+			matrix[7] / matrix678,
+			matrix[8]
+			};
+		double primaries[9];
+
+		if (build_rgb2XYZ_transfer_matrix(primaries, whitexyY, primariesxyY))
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "CalRGB profile creation failed; bad values");
 
 		for (k = 0; k < 3; k++)
 		{
-			/* Apply the cat02 matrix to the primaries */
-			apply_adaption(ctx, cat02, &(matrix[k * 3]), &(primary[0]));
-			get_XYZ_doubletr(ctx, temp_XYZ, &(primary[0]));
+			float primary[3] = { primaries[k+0], primaries[k+3], primaries[k+6] };
+			get_XYZ_doubletr(ctx, temp_XYZ, primary);
 			add_xyzdata(ctx, profile, temp_XYZ);
 		}
 	}

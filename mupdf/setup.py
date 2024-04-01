@@ -72,6 +72,15 @@ def macos():
     return s == 'Darwin'
 
 @cache
+def openbsd():
+    s = platform.system()
+    return s == 'OpenBSD'
+
+@cache
+def msys2():
+    return platform.system().startswith('MSYS_NT-')
+
+@cache
 def build_dir():
     # This is x86/x64-specific.
     #
@@ -497,6 +506,36 @@ def build_sdist( sdist_directory, config_settings=None):
             sdist_directory,
             config_settings,
             )
+
+def get_requires_for_build_wheel(config_settings=None):
+    '''
+    Adds to pyproject.toml:[build-system]:requires, allowing programmatic
+    control over what packages we require.
+    '''
+    ret = list()
+    ret.append('setuptools')
+    if openbsd():
+        #print(f'OpenBSD: libclang not available via pip; assuming `pkg_add py3-llvm`.')
+        pass
+    elif macos() and platform.machine() == 'arm64':
+        #print(
+        #       f'MacOS/arm64: forcing use of libclang 16.0.6 because 17.0.6'
+        #       f' and 18.1.1 are known to fail with:'
+        #       f' `clang.cindex.TranslationUnitLoadError: Error parsing translation unit.`'
+        #       )
+        ret.append('libclang==16.0.6')
+    else:
+        ret.append('libclang')
+    if msys2():
+        #print(f'msys2: pip install of swig does not build; assuming `pacman -S swig`.')
+        pass
+    elif openbsd():
+        #print(f'OpenBSD: pip install of swig does not build; assuming `pkg_add swig`.')
+        pass
+    else:
+        ret.append( 'swig')
+    return ret
+
 
 # Allow us to be used as a pre-PIP-517 setup.py script.
 #

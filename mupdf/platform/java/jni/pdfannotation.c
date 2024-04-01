@@ -328,37 +328,6 @@ FUN(PDFAnnotation_setRect)(JNIEnv *env, jobject self, jobject jrect)
 		jni_rethrow_void(env, ctx);
 }
 
-JNIEXPORT jfloat JNICALL
-FUN(PDFAnnotation_getBorder)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	pdf_annot *annot = from_PDFAnnotation(env, self);
-	jfloat border;
-
-	if (!ctx || !annot) return 0;
-
-	fz_try(ctx)
-		border = pdf_annot_border(ctx, annot);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-
-	return border;
-}
-
-JNIEXPORT void JNICALL
-FUN(PDFAnnotation_setBorder)(JNIEnv *env, jobject self, jfloat border)
-{
-	fz_context *ctx = get_context(env);
-	pdf_annot *annot = from_PDFAnnotation(env, self);
-
-	if (!ctx || !annot) return;
-
-	fz_try(ctx)
-		pdf_set_annot_border(ctx, annot, border);
-	fz_catch(ctx)
-		jni_rethrow_void(env, ctx);
-}
-
 JNIEXPORT jobject JNICALL
 FUN(PDFAnnotation_getColor)(JNIEnv *env, jobject self)
 {

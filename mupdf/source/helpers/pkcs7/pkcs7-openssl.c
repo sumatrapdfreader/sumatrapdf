@@ -801,9 +801,6 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 
 		OpenSSL_add_all_algorithms();
 
-		EVP_add_digest(EVP_md5());
-		EVP_add_digest(EVP_sha1());
-
 		ERR_load_crypto_strings();
 
 		ERR_clear_error();

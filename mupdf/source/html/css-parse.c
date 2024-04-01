@@ -897,6 +897,7 @@ static fz_css_selector *parse_selector(struct lexbuf *buf)
 	{
 		if (accept(buf, ' '))
 		{
+			white(buf);
 			if (accept(buf, '+'))
 				sel = parse_combinator(buf, '+', sel);
 			else if (accept(buf, '>'))
