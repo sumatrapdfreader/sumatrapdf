@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c219465770461682707156147f9acbd6de92779b
+5a0836ea986a98bd9dd0ec2bfbdc0f627a2d1993
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -424,6 +424,7 @@ it:&Annulla
 ja:キャンセル(&C)
 kr:취소
 kw:&Hedhi
+lt:&Atšaukti
 mk:Откажи
 ml:&ക്യാൻസൽ ചെയ്യുക
 ne:&रद्द गर्नुहोस्
@@ -530,6 +531,7 @@ id:&Tutup
 it:&Chiudi
 ja:閉じる(&C)
 kr:닫기(&C)
+lt:&Uždaryti
 mk:&Затвори
 ml:&അടയ്ക്കുക
 ne:बन्द गर्नुहोस्
@@ -700,6 +702,7 @@ id:&Salin ke Papan Klip
 it:&Copia negli Appunti
 ja:クリップボードへコピー(&C)
 kr:클립보드에 복사(&C)
+lt:&Kopijuoti į iškarpinę
 ml:ക്ലിപ്പ്ബോർഡിലേയ്ക്ക് &പകർത്തുക
 nl:&Kopieer Naar Klembord
 no:&Kopier til utklippstavle
@@ -749,6 +752,7 @@ it:Esci
 ja:変更を破棄(&D)
 kr:변경사항 취소(&D)
 kw:&Tewlel chanjyow
+lt:A&tmesti pakeitimus
 mk:Откажи ги измените
 ml:മാറ്റങ്ങൾ &ഉപേക്ഷിക്കുക
 nl:&Weggooien
@@ -1528,6 +1532,7 @@ hu:&Gyorsbillentyűk
 it:&Tasti rapidi
 ja:キーボード ショートカット(&K)
 kr:키보드 단축키(&K)
+lt:&Spartieji klavišai
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
 pt:Atal&hos de teclado
@@ -2060,6 +2065,7 @@ id:&Buka...
 it:&Apri
 ja:開く(&O)...
 kr:열기(&O)...
+lt:&Atidaryti
 nl:&Openen
 nn:&Opne...
 no:&Åpne...
@@ -2796,6 +2802,7 @@ it:&Salva in questo PDF
 ja:上書き保存(&S)
 kr:기존 PDF에 저장(&S)
 kw:&Gwitha dhe PDF seulabrys
+lt:&Išsaugoti į esamą PDF
 nl:&Opslaan in deze PDF
 no:&Lagre til eksisterende PDF
 pl:&Zapisz w istniejącym pliku PDF
@@ -3279,6 +3286,7 @@ it:&Traduci con Google
 ja:Google を使って翻訳(&T)
 kr:Google로 번역(&T)
 kw:&Treylya Gans Google
+lt:&Versti su Google
 nl:&Vertalen met Google
 no:&Oversett med Google
 pl:&Tłumacz za pomocą Google
@@ -8059,6 +8067,7 @@ it:Crea annotazione sotto al c&ursore
 ja:カーソル位置に注釈を作成(&U)
 kr:커서 아래 주석 생성(&U)
 kw:Gwruthyl Notenyans &Yn-Dann Resor
+lt:Sukurti anotaciją žymeklio &vietoje
 ml:&കഴ്സറിന് കീഴിൽ വ്യാഖ്യാനം സൃഷ്ടിക്കുക
 nl:Maak Aantekening Onder Cursor
 no:Lag merknad &under peker
@@ -8722,6 +8731,7 @@ hu:Megjegyzés törlése
 it:Elimina Annotazione
 ja:注釈を削除
 kr:주석 삭제
+lt:Ištrinti anotaciją
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
 pt:Eliminar anotação
@@ -9071,6 +9081,7 @@ id:Keluar
 it:&Esci
 ja:終了(&X)
 kr:나가기(&X)
+lt:&Išeiti
 nl:A&fsluiten
 nn:A&vslutt
 no:A&vslutt
@@ -13714,6 +13725,7 @@ id:Halaman Baru
 it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 kr:새 창(&W)
+lt:&Naujas langas
 nl:Nieuw &Kader
 nn:Nytt &vindauge
 no:Nytt &vindu
@@ -14607,6 +14619,7 @@ id:Buka Direktori di &Explorer
 it:Apri cartella in &Explorer
 ja:エクスプローラーでディレクトリを開く(&E)
 kr:탐색기에서 디렉토리 열기
+lt:Atidaryti aplankalą "&Explorer"
 nl:Open Map in &Verkenner
 no:Åpne mappe i &filutforsker
 pl:Otwórz katalog w &Eksploratorze
@@ -14646,6 +14659,7 @@ id:Buka Direktori di &Total Commander
 it:Apri cartella in &Total Commander
 ja:Total Commanderでディレクトリを開く(&T)
 kr:토탈 커맨더에서 디렉토리 열기
+lt:Atidaryti aplankalą "&Total Commander"
 nl:Open Map in &TotalCommander
 no:Åpne mappe i &Total Commander
 pl:Otwórz katalog w &Total Commanderze
@@ -17093,6 +17107,7 @@ id:Rubah Nama
 it:Ri&nomina...
 ja:ファイル名の変更(&N)...
 kr:이름 바꾸기(&N)...
+lt:&Pervadinti
 nl:Her&noem
 no:Gi nytt &navn...
 pl:Zmień &nazwę...
@@ -17596,6 +17611,7 @@ it:S&elezione
 ja:選択範囲(&E)
 kr:선택(&E)
 kw:D&ewisans
+lt:&Pažymėtas tekstas
 nl:S&electie
 no:U&tvalg
 pl:Z&aznaczenie
@@ -17742,6 +17758,7 @@ id:Simpan catatan ke PDF terkini
 it:Salva annotazioni in questo PDF
 ja:注釈を上書き保存
 kr:주석을 현재 PDF에 저장하기
+lt:Išsaugoti anotacijas į esamą PDF failą
 nl:Aantekeningen opslaan in deze PDF
 no:Lagre merknader til eksisterende PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
@@ -18085,6 +18102,7 @@ it:Salva in un &nuovo PDF
 ja:新しい PDF に保存(&N)
 kr:새 PDF로 저장(&N)
 kw:Gwitha dhe PDF &nowydh
+lt:Išsaugoti į &naują PDF
 nl:Opslaan in &nieuwe PDF
 no:Lagre til &ny PDF
 pl:Zapisz w &nowym pliku PDF
@@ -18228,6 +18246,7 @@ it:Cerca con &Bing
 ja:Bing で検索(&B)
 kr:Bing으로 검색(&B)
 kw:Hwilas Gans &Bing
+lt:Ieškoti su &Bing
 nl:Zoeken met &Bing
 no:Søk med &Bing
 pl:Szukaj za pomocą &Bing
@@ -18277,6 +18296,7 @@ it:Cerca con &Google
 ja:Google で検索(&G)
 kr:Google로 검색(&G)
 kw:Hwilas Gans &Google
+lt:Ieškoti su &Google
 nl:Zoeken met &Google
 no:Søk med &Google
 pl:Szukaj za pomocą &Google
@@ -21083,6 +21103,7 @@ it:Traduci con &DeepL
 ja:DeepL を使って翻訳(&D)
 kr:DeepL로 번역(&D)
 kw:Treylya gans &DeepL
+lt:Versti su &DeepL
 nl:Vertalen met &Deepl
 no:Oversett med &DeepL
 pl:Tłumacz za pomocą &DeepL
