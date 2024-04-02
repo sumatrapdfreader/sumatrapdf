@@ -1439,7 +1439,7 @@ void DeleteCreatedFonts() {
     gMenuFont = nullptr;
 }
 
-static HFONT AddCreatedFont(HFONT font, const char* name, int size, u16 flags, u16 weightOffset) {
+static HFONT RememberCreatedFont(HFONT font, const char* name, int size, u16 flags, u16 weightOffset) {
     auto cf = new CreatedFontInfo();
     cf->name = str::Dup(name);
     cf->font = font;
@@ -1449,7 +1449,7 @@ static HFONT AddCreatedFont(HFONT font, const char* name, int size, u16 flags, u
     ListInsert(&gFonts, cf);
     int n = ListLen(gFonts);
     name = name ? name : "";
-    /* logf("AddCreatedFont: added font '%s', size: %d, flags: %x, weightOffset: %d\n", name, size, (int)flags,
+    /* logf("RememberCreatedFont: added font '%s', size: %d, flags: %x, weightOffset: %d\n", name, size, (int)flags,
          (int)weightOffset);  */
     return font;
 }
@@ -1492,7 +1492,7 @@ HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSizePt) {
     lf.lfOrientation = 0;
 
     HFONT res = CreateFontIndirectW(&lf);
-    return AddCreatedFont(res, fontName, realSize, flags, 0);
+    return RememberCreatedFont(res, fontName, realSize, flags, 0);
 }
 
 HFONT GetDefaultGuiFontOfSize(int size) {
@@ -1506,14 +1506,14 @@ HFONT GetDefaultGuiFontOfSize(int size) {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
     HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return AddCreatedFont(res, nullptr, size, 0, 0);
+    return RememberCreatedFont(res, nullptr, size, 0, 0);
 }
 
-HFONT GetUserGuiFont(char* fontName, int size, int weightOffset) {
+HFONT GetUserGuiFont(const char* fontName, int size) {
     if (str::EqI(fontName, "automatic") || str::EqI(fontName, "auto")) {
         fontName = nullptr;
     }
-    auto f = FindCreatedFont(fontName, size, 0, (u16)weightOffset);
+    auto f = FindCreatedFont(fontName, size, 0, (u16)0);
     if (f) {
         return f->font;
     }
@@ -1528,9 +1528,8 @@ HFONT GetUserGuiFont(char* fontName, int size, int weightOffset) {
         str::BufSet(dest, cchDestBufSize, nameW);
     }
     ncm.lfMessageFont.lfHeight = -size;
-    ncm.lfMessageFont.lfWeight += weightOffset;
     HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return AddCreatedFont(res, fontName, size, 0, 0);
+    return RememberCreatedFont(res, fontName, size, 0, 0);
 }
 
 HFONT GetDefaultGuiFont(bool bold, bool italic) {
@@ -1559,7 +1558,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
         ncm.lfMessageFont.lfItalic = true;
     }
     HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return AddCreatedFont(res, nullptr, size, flags, 0);
+    return RememberCreatedFont(res, nullptr, size, flags, 0);
 }
 
 int GetSizeOfDefaultGuiFont() {
@@ -2812,11 +2811,18 @@ Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
     }
 
     ScopedSelectFont f(hdc, font);
+    HGDIOBJ origFont = nullptr;
+    if (font) {
+        origFont = SelectObject(hdc, font);
+    }
     int sLen = (int)str::Len(ws);
     // pick a very large area
     // TODO: allow limiting by dx
     RECT rc{0, 0, 4096, 4096};
     int dy = DrawTextW(hdc, ws, sLen, &rc, fmt);
+    if (font) {
+        SelectObject(hdc, origFont);
+    }
     if (0 == dy) {
         return {};
     }

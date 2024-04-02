@@ -15,6 +15,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -2050,7 +2051,7 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     }
 
     auto text = modi && modi->text ? modi->text : "Dummy";
-    HFONT font = GetMenuFont();
+    HFONT font = GetAppMenuFont();
     char* shortcutText = nullptr;
     char* menuText = ParseMenuTextTemp(text, &shortcutText);
 
@@ -2120,7 +2121,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
     auto hdc = dis->hDC;
-    HFONT font = GetMenuFont();
+    HFONT font = GetAppMenuFont();
     ScopedSelectFont restoreFont(hdc, font);
 
     COLORREF bgCol = ThemeMainWindowBackgroundColor();

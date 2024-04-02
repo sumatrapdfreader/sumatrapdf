@@ -11,6 +11,7 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -782,17 +783,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
 void RunCommandPallette(MainWindow* win, const char* prefix) {
     CrashIf(gCommandPaletteWnd);
 
-    // make min font size 16 (I get 12)
-    int fontSize = GetSizeOfDefaultGuiFont();
-    // make font 1.4x bigger than system font
-    fontSize = (fontSize * 14) / 10;
-    if (fontSize < 16) {
-        fontSize = 16;
-    }
-    HFONT font = GetDefaultGuiFontOfSize(fontSize);
-
     auto wnd = new CommandPaletteWnd();
-    wnd->font = font;
+    wnd->font = GetAppBiggerFont();
     wnd->win = win;
     bool ok = wnd->Create(win, prefix);
     CrashIf(!ok);

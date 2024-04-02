@@ -2077,6 +2077,7 @@ HWND DropDown::Create(const DropDownCreateArgs& args) {
     cargs.parent = args.parent;
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
     cargs.className = WC_COMBOBOX;
+    cargs.font = args.font;
 
     Wnd::CreateControl(cargs);
     if (!hwnd) {
@@ -2187,6 +2188,7 @@ HWND Trackbar::Create(const TrackbarCreateArgs& args) {
     CreateControlArgs cargs;
     cargs.className = TRACKBAR_CLASS;
     cargs.parent = args.parent;
+    cargs.font = args.font;
 
     // TODO: add initial size to CreateControlArgs
     // initialSize = idealSize;

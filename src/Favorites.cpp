@@ -864,17 +864,6 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
 }
 
-HFONT GetTreeFont() {
-    int fntSize = GetSizeOfDefaultGuiFont();
-    int fntSizeUser = gGlobalPrefs->treeFontSize;
-    int fntWeightOffsetUser = gGlobalPrefs->treeFontWeightOffset;
-    char* fntNameUser = gGlobalPrefs->treeFontName;
-    if (fntSizeUser > 5) {
-        fntSize = fntSizeUser;
-    }
-    return GetUserGuiFont(fntNameUser, fntSize, fntWeightOffsetUser);
-}
-
 // in TableOfContents.cpp
 extern LRESULT TocTreeKeyDown2(TreeKeyDownEvent*);
 
@@ -901,7 +890,7 @@ void CreateFavorites(MainWindow* win) {
     auto treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndFavBox;
-    args.font = GetTreeFont();
+    args.font = GetAppTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 

@@ -18,6 +18,7 @@
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DisplayMode.h"
 #include "AppColors.h"
 #include "Annotation.h"
@@ -369,7 +370,6 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         NotificationCreateArgs args;
                         args.hwndParent = win->hwndCanvas;
                         args.groupId = kNotifGroupAnnotation;
-                        args.font = GetDefaultGuiFont();
                         args.timeoutMs = -1;
                         TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                         args.msg = str::FormatTemp(_TRN("%s annotation. Ctrl+click to edit."), name);

@@ -367,3 +367,74 @@ void UnregisterSettingsForFileChanges() {
     FileWatcherUnsubscribe(gWatchedSettingsFile);
     // TODO: memleak of gWatchedSettingsFile
 }
+
+constexpr int kMinFontSize = 9;
+
+int GetAppFontSize() {
+    auto fntSize = gGlobalPrefs->uIFontSize;
+    if (fntSize < kMinFontSize) {
+        fntSize = GetSizeOfDefaultGuiFont();
+    }
+    return fntSize;
+}
+
+static HFONT gAppFont = nullptr;
+HFONT GetAppFont() {
+    if (gAppFont) {
+        return gAppFont;
+    }
+    auto fntSize = GetAppFontSize();
+    gAppFont = GetUserGuiFont("auto", fntSize);
+    return gAppFont;
+}
+
+constexpr int kMinBiggerFontSize = 14;
+
+static HFONT gBiggerAppFont = nullptr;
+// if user provided font size, we use that
+// otherwise we return 1.4x of default font size but no smaller than 16
+// on my laptop on high dpi default font size is 12
+HFONT GetAppBiggerFont() {
+    if (gBiggerAppFont) {
+        return gBiggerAppFont;
+    }
+    int fntSize = gGlobalPrefs->uIFontSize;
+    if (fntSize < kMinFontSize) {
+        fntSize = GetSizeOfDefaultGuiFont();
+        fntSize = (fntSize * 12) / 10;
+        if (fntSize < kMinBiggerFontSize) {
+            fntSize = kMinBiggerFontSize;
+        }
+    }
+    gBiggerAppFont = GetDefaultGuiFontOfSize(fntSize);
+    return gBiggerAppFont;
+}
+
+HFONT GetAppTreeFont() {
+    int fntSize = gGlobalPrefs->treeFontSize;
+    if (fntSize < kMinFontSize) {
+        fntSize = gGlobalPrefs->uIFontSize;
+    }
+    if (fntSize < kMinFontSize) {
+        fntSize = GetSizeOfDefaultGuiFont();
+    }
+    char* fntNameUser = gGlobalPrefs->treeFontName;
+    return GetUserGuiFont(fntNameUser, fntSize);
+}
+
+static HFONT gAppMenuFont = nullptr;
+
+HFONT GetAppMenuFont() {
+    if (gAppMenuFont) {
+        return gAppMenuFont;
+    }
+    NONCLIENTMETRICS ncm{};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    auto fntSize = gGlobalPrefs->uIFontSize;
+    if (fntSize >= kMinFontSize) {
+        ncm.lfMenuFont.lfHeight = -fntSize;
+    }
+    gAppMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
+    return gAppMenuFont;
+}

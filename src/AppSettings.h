@@ -18,3 +18,8 @@ bool ReloadSettings();
 void CleanUpSettings();
 void RegisterSettingsForFileChanges();
 void UnregisterSettingsForFileChanges();
+int GetAppFontSize();
+HFONT GetAppFont();
+HFONT GetAppBiggerFont();
+HFONT GetAppTreeFont();
+HFONT GetAppMenuFont();

@@ -299,18 +299,15 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     HFONT fontLeftTxt = CreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
     HFONT fontRightTxt = CreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
 
-    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
-
     /* calculate minimal top box size */
     Size headerSize = CalcSumatraVersionSize(hdc);
 
     /* calculate left text dimensions */
-    SelectObject(hdc, fontLeftTxt);
     int leftLargestDx = 0;
     int leftDy = 0;
     uint fmt = DT_LEFT;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        Size txtSize = HdcMeasureText(hdc, el->leftTxt, fmt);
+        Size txtSize = HdcMeasureText(hdc, el->leftTxt, fmt, fontLeftTxt);
         el->leftPos.dx = txtSize.dx;
         el->leftPos.dy = txtSize.dy;
 
@@ -325,13 +322,12 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     }
 
     /* calculate right text dimensions */
-    SelectObject(hdc, fontRightTxt);
     int rightLargestDx = 0;
     int rightDy = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         char* s = (char*)el->rightTxt;
         s = TrimGitTemp(s);
-        Size txtSize = HdcMeasureText(hdc, s, fmt);
+        Size txtSize = HdcMeasureText(hdc, s, fmt, fontRightTxt);
         el->rightPos.dx = txtSize.dx;
         el->rightPos.dy = txtSize.dy;
 
@@ -380,8 +376,6 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         el->rightPos.y = currY;
         currY += rightDy + aboutTxtDy;
     }
-
-    SelectObject(hdc, origFont);
 }
 
 static void OnPaintAbout(HWND hwnd) {

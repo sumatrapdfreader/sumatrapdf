@@ -190,7 +190,6 @@ static void UploadCrashReport(const ByteSlice& d) {
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
-
 static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* dstDir, Allocator* allocator) {
     logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
     lzma::SimpleArchive archive;
@@ -260,7 +259,7 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
         return false;
     }
 
-    //DeleteSymbolsIfExist();
+    // DeleteSymbolsIfExist();
 
     HttpRsp rsp;
     if (!HttpGet(gSymbolsUrl, &rsp)) {

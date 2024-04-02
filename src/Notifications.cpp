@@ -12,6 +12,7 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "SumatraPdf.h"
 #include "AppTools.h"
 
@@ -194,13 +195,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     cargs.style = WS_CHILD | SS_CENTER;
     cargs.title = args.msg;
     if (cargs.font == nullptr) {
-        int fontSize = GetSizeOfDefaultGuiFont();
-        // make font 1.4x bigger than system font
-        fontSize = (fontSize * 14) / 10;
-        if (fontSize < 16) {
-            fontSize = 16;
-        }
-        cargs.font = GetDefaultGuiFontOfSize(fontSize);
+        cargs.font = GetAppBiggerFont();
     }
     cargs.pos = Rect(0, 0, 0, 0);
 
@@ -251,9 +246,8 @@ void NotificationWnd::Layout(const char* message) {
     Size szText;
     {
         HDC hdc = GetDC(hwnd);
-        ScopedSelectObject fontPrev(hdc, font);
         uint fmt = DT_SINGLELINE | DT_NOPREFIX;
-        szText = HdcMeasureText(hdc, message, fmt);
+        szText = HdcMeasureText(hdc, message, fmt, font);
         ReleaseDC(hwnd, hdc);
     }
 

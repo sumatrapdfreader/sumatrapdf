@@ -400,11 +400,11 @@ struct GlobalPrefs {
     int toolbarSize;
     // maximum width of a single tab
     int tabWidth;
+    // over-ride application font size. 0 means Windows default
+    int uIFontSize;
     // font size for bookmarks and favorites tree views. 0 means Windows
     // default
     int treeFontSize;
-    // font weight offset for bookmarks and favorites tree views.
-    int treeFontWeightOffset;
     // font name for bookmarks and favorites tree views. automatic means
     // Windows default
     char* treeFontName;
@@ -704,8 +704,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
+    {offsetof(GlobalPrefs, uIFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, treeFontWeightOffset), SettingType::Int, 0},
     {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t) "automatic"},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
@@ -731,9 +731,9 @@ static const StructInfo gGlobalPrefsInfo = {
     "nterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0Resto"
     "reSession\0LazyLoading\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0"
     "Shortcuts\0EscToExit\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar"
-    "\0ShowToolbar\0ShowFavorites\0ShowToc\0NoHomeTab\0ShowLinks\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0TreeFontSize"
-    "\0TreeFontWeightOffset\0TreeFontName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0Wi"
-    "ndowPos\0UseTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0Ope"
-    "nCountWeek\0\0"};
+    "\0ShowToolbar\0ShowFavorites\0ShowToc\0NoHomeTab\0ShowLinks\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0UIFontSize\0"
+    "TreeFontSize\0TreeFontName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0U"
+    "seTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek"
+    "\0\0"};
 
 #endif

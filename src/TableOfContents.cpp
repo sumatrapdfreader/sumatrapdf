@@ -17,6 +17,7 @@
 #include "wingui/LabelWithCloseWnd.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -962,8 +963,6 @@ void TocTreeCharHandler(CharEvent* ev) {
 }
 #endif
 
-extern HFONT GetTreeFont();
-
 void CreateToc(MainWindow* win) {
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -987,7 +986,7 @@ void CreateToc(MainWindow* win) {
     auto treeView = new TreeView();
     TreeViewCreateArgs args;
     args.parent = win->hwndTocBox;
-    args.font = GetTreeFont();
+    args.font = GetAppTreeFont();
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 

@@ -119,7 +119,7 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font = nullptr);
-Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font = nullptr);
+Size HdcMeasureText(HDC hdc, const char* s, uint format, HFONT font);
 Size HdcMeasureText(HDC hdc, const char* s, HFONT font = nullptr);
 
 bool HwndIsFocused(HWND);
@@ -155,7 +155,7 @@ HFONT GetMenuFont();
 HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize);
 HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
 HFONT GetDefaultGuiFontOfSize(int size);
-HFONT GetUserGuiFont(char* fontName, int size, int weightOffset);
+HFONT GetUserGuiFont(const char* fontName, int size);
 int GetSizeOfDefaultGuiFont();
 void DeleteCreatedFonts();
 

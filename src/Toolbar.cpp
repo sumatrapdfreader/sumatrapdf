@@ -11,6 +11,7 @@
 
 #include "Accelerators.h"
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -861,7 +862,7 @@ void CreateToolbar(MainWindow* win) {
 
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 
-    int defFontSize = GetSizeOfDefaultGuiFont();
+    int defFontSize = GetAppFontSize();
     // 18 was the default toolbar size, we want to scale the fonts in proportion
     int newSize = (defFontSize * gGlobalPrefs->toolbarSize) / kDefaultIconSize;
     int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically

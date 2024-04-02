@@ -372,6 +372,7 @@ using DropDownSelectionChangedHandler = std::function<void()>;
 
 struct DropDownCreateArgs {
     HWND parent = nullptr;
+    HFONT font = nullptr;
     // TODO: model or items
 };
 
@@ -411,6 +412,7 @@ struct TrackbarCreateArgs {
     bool isHorizontal = true;
     int rangeMin = 1;
     int rangeMax = 5;
+    HFONT font = nullptr;
 };
 
 struct Trackbar : Wnd {
