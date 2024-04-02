@@ -936,6 +936,7 @@ UINT_PTR removeIfNoCopyPerms[] = {
 };
 
 // TODO: all prefs params also fall under disk access
+// also CanViewExternally()
 UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdNewWindow, // ???
     CmdOpenFile,
