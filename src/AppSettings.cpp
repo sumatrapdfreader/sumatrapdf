@@ -40,6 +40,19 @@ extern void RememberDefaultWindowPosition(MainWindow* win);
 
 static WatchedFile* gWatchedSettingsFile = nullptr;
 
+static HFONT gAppFont = nullptr;
+static HFONT gBiggerAppFont = nullptr;
+static HFONT gAppMenuFont = nullptr;
+static HFONT gTreeFont = nullptr;
+
+// TODO: if font sizes change, would need to re-layout the app
+static void ResetCachedFonts() {
+    gAppFont = nullptr;
+    gBiggerAppFont = nullptr;
+    gAppMenuFont = nullptr;
+    gTreeFont = nullptr;
+}
+
 // number of weeks past since 2011-01-01
 static int GetWeekCount() {
     SYSTEMTIME date20110101{};
@@ -173,9 +186,9 @@ bool LoadSettings() {
     if (!file::Exists(settingsPath)) {
         SaveSettings();
     }
+    ResetCachedFonts();
 
     logf("LoadSettings() took %.2f ms\n", TimeSinceInMs(timeStart));
-
     return true;
 }
 
@@ -378,7 +391,6 @@ int GetAppFontSize() {
     return fntSize;
 }
 
-static HFONT gAppFont = nullptr;
 HFONT GetAppFont() {
     if (gAppFont) {
         return gAppFont;
@@ -390,7 +402,6 @@ HFONT GetAppFont() {
 
 constexpr int kMinBiggerFontSize = 14;
 
-static HFONT gBiggerAppFont = nullptr;
 // if user provided font size, we use that
 // otherwise we return 1.4x of default font size but no smaller than 16
 // on my laptop on high dpi default font size is 12
@@ -411,6 +422,9 @@ HFONT GetAppBiggerFont() {
 }
 
 HFONT GetAppTreeFont() {
+    if (gTreeFont) {
+        return gTreeFont;
+    }
     int fntSize = gGlobalPrefs->treeFontSize;
     if (fntSize < kMinFontSize) {
         fntSize = gGlobalPrefs->uIFontSize;
@@ -419,10 +433,9 @@ HFONT GetAppTreeFont() {
         fntSize = GetSizeOfDefaultGuiFont();
     }
     char* fntNameUser = gGlobalPrefs->treeFontName;
-    return GetUserGuiFont(fntNameUser, fntSize);
+    gTreeFont = GetUserGuiFont(fntNameUser, fntSize);
+    return gTreeFont;
 }
-
-static HFONT gAppMenuFont = nullptr;
 
 HFONT GetAppMenuFont() {
     if (gAppMenuFont) {
