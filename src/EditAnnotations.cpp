@@ -322,7 +322,13 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
 }
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
+    // hacky: we want the position of the main window
+    // but the size of client area
     tab->lastEditAnnotsWindowPos = WindowRect(hwnd);
+    auto cr = ClientRect(hwnd);
+    tab->lastEditAnnotsWindowPos.dx = cr.dx;
+    tab->lastEditAnnotsWindowPos.dy = cr.dy;
+
     if (tab->selectedAnnotation != nullptr) {
         tab->selectedAnnotation = nullptr;
         MainWindowRerender(tab->win);
