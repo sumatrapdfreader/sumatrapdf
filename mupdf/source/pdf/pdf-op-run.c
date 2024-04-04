@@ -1594,6 +1594,7 @@ pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 	}
 #endif
 
+	/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/4163 */
 	while (proc->mcid_sent && pdf_objcmp(ctx, proc->mcid_sent, common))
 	{
 		pdf_obj *p = pdf_dict_get(ctx, proc->mcid_sent, PDF_NAME(P));
