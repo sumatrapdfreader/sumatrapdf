@@ -18,4 +18,5 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void RemoveTab(WindowTab*);
 // create a new window if win==nullptr
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
-                        Vec<WindowTab*>& toCloseRight);
+                        Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft);
+void CloseAllTabs(MainWindow*);

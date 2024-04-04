@@ -194,7 +194,8 @@ struct CommandPaletteBuildCtx {
     bool hasToc = false;
     bool allowToggleMenuBar = false;
     bool canCloseOtherTabs = false;
-    bool canCloseTabsToRight = true;
+    bool canCloseTabsToRight = false;
+    bool canCloseTabsToLeft = false;
 
     ~CommandPaletteBuildCtx();
 };
@@ -216,6 +217,9 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
     if (CmdCloseTabsToTheRight == cmdId) {
         return ctx.canCloseTabsToRight;
+    }
+    if (CmdCloseTabsToTheLeft == cmdId) {
+        return ctx.canCloseTabsToLeft;
     }
 
     if (CmdReopenLastClosedFile == cmdId) {
@@ -347,12 +351,19 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     int nTabs = mainWin->TabCount();
     int currTabIdx = mainWin->GetTabIdx(tab);
     ctx.canCloseTabsToRight = currTabIdx < (nTabs - 1);
+    ctx.canCloseTabsToLeft = false;
+    int nFirstDocTab = 0;
     for (int i = 0; i < nTabs; i++) {
         WindowTab* t = mainWin->GetTab(i);
         if (t->IsAboutTab()) {
+            ReportIf(i > 0);
+            nFirstDocTab = 1;
             continue;
         }
         if (t == tab) {
+            if (i > nFirstDocTab) {
+                ctx.canCloseTabsToLeft = true;
+            }
             continue;
         }
         ctx.canCloseOtherTabs = true;

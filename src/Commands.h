@@ -13,6 +13,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdCloseCurrentDocument, "Close Current Document")                  \
     V(CmdCloseOtherTabs, "Close Other Tabs")                              \
     V(CmdCloseTabsToTheRight, "Close Tabs To The Right")                  \
+    V(CmdCloseTabsToTheLeft, "Close Tabs To The Left")                    \
+    V(CmdCloseAllTabs, "Close All Tabs")                                  \
     V(CmdSaveAs, "Save File As...")                                       \
     V(CmdPrint, "Print Document...")                                      \
     V(CmdShowInFolder, "Show File In Folder...")                          \

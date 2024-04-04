@@ -220,6 +220,14 @@ static MenuDef menuDefContextTab[] = {
         CmdCloseTabsToTheRight,
     },
     {
+        _TRN("Close Tabs To The Left"),
+        CmdCloseTabsToTheLeft,
+    },
+    {
+        _TRN("Close All Tabs"),
+        CmdCloseAllTabs,
+    },
+    {
         nullptr,
         0,
     },
@@ -241,7 +249,7 @@ static void ShowFileInFolder(WindowTab* tab) {
 }
 
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
-                        Vec<WindowTab*>& toCloseRight) {
+                        Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft) {
     int nTabs = win->TabCount();
     bool seenCurrent = false;
     for (int i = 0; i < nTabs; i++) {
@@ -256,7 +264,25 @@ void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& to
         toCloseOther.Append(tab);
         if (seenCurrent) {
             toCloseRight.Append(tab);
+        } else {
+            toCloseLeft.Append(tab);
         }
+    }
+}
+
+void CloseAllTabs(MainWindow* win) {
+    // can't close while iterating over the tabs so collect them first
+    Vec<WindowTab*> toClose;
+    int nTabs = win->TabCount();
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* t = win->GetTab(i);
+        if (t->IsAboutTab()) {
+            continue;
+        }
+        toClose.Append(t);
+    }
+    for (WindowTab* t : toClose) {
+        CloseTab(t, false);
     }
 }
 
@@ -280,13 +306,17 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
 
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
-    CollectTabsToClose(win, tabUnderMouse, toCloseOther, toCloseRight);
+    Vec<WindowTab*> toCloseLeft;
+    CollectTabsToClose(win, tabUnderMouse, toCloseOther, toCloseRight, toCloseLeft);
 
     if (toCloseOther.IsEmpty()) {
         MenuSetEnabled(popup, CmdCloseOtherTabs, false);
     }
     if (toCloseRight.IsEmpty()) {
         MenuSetEnabled(popup, CmdCloseTabsToTheRight, false);
+    }
+    if (toCloseLeft.IsEmpty()) {
+        MenuSetEnabled(popup, CmdCloseTabsToTheLeft, false);
     }
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
@@ -298,6 +328,10 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             CloseTab(tabUnderMouse, false);
             break;
 
+        case CmdCloseAllTabs: {
+            CloseAllTabs(win);
+            break;
+        }
         case CmdCloseOtherTabs: {
             for (WindowTab* t : toCloseOther) {
                 CloseTab(t, false);
@@ -306,6 +340,12 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         }
         case CmdCloseTabsToTheRight: {
             for (WindowTab* t : toCloseRight) {
+                CloseTab(t, false);
+            }
+            break;
+        }
+        case CmdCloseTabsToTheLeft: {
+            for (WindowTab* t : toCloseLeft) {
                 CloseTab(t, false);
             }
             break;

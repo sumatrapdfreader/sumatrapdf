@@ -4849,14 +4849,23 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             TabsOnCtrlTab(win, true);
             break;
 
+        case CmdCloseAllTabs: {
+            CloseAllTabs(win);
+            break;
+        }
         case CmdCloseOtherTabs:
-        case CmdCloseTabsToTheRight: {
+        case CmdCloseTabsToTheRight:
+        case CmdCloseTabsToTheLeft: {
             Vec<WindowTab*> toCloseOther;
             Vec<WindowTab*> toCloseRight;
-            CollectTabsToClose(win, tab, toCloseOther, toCloseRight);
+            Vec<WindowTab*> toCloseLeft;
+            CollectTabsToClose(win, tab, toCloseOther, toCloseRight, toCloseLeft);
             Vec<WindowTab*>& toClose = toCloseOther;
             if (wmId == CmdCloseTabsToTheRight) {
                 toClose = toCloseRight;
+            }
+            if (wmId == CmdCloseTabsToTheLeft) {
+                toClose = toCloseLeft;
             }
             for (WindowTab* t : toClose) {
                 CloseTab(t, false);

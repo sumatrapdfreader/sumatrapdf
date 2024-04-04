@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5a0836ea986a98bd9dd0ec2bfbdc0f627a2d1993
+15e1dbc8d6b7d0356aaa0606c984be7aa70220b1
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6173,6 +6173,7 @@ tw:關閉
 uk:Закрити
 uz:Yopish
 vn:Đóng lại
+:Close All Tabs
 :Close Other Tabs
 am:Փակել այլ ներդիրները
 ar:أغلق علامات التبويب الأخرى
@@ -6222,6 +6223,7 @@ tr:Diğer Sekmeleri Kapat
 tw:關閉其他分頁
 uk:Закрити інші вкладки
 vn:Đóng các tab khác
+:Close Tabs To The Left
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
 az:Sağdakı tabları bağla
