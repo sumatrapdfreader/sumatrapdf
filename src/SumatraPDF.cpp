@@ -4531,11 +4531,11 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
         CopySelectionToClipboard(tab->win);
         return;
     }
-    // TODO: can this be reached?
     if (tab->AsFixed()) {
         NotificationCreateArgs args;
         args.hwndParent = tab->win->hwndCanvas;
         args.msg = _TRA("Select content with Ctrl+left mouse button");
+        args.timeoutMs = 2000;
         ShowNotification(args);
     }
 }
