@@ -2570,6 +2570,15 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = pages[pageIdx];
 
+    if (loadQuick) {
+        /* https://github.com/sumatrapdfreader/sumatrapdf/issues/4145 */
+        /* ctxAccess can be taken for a long time during rendering. We don't want to block main thread when e.g. getting annotations under cursor */
+        if (!TryEnterCriticalSection(ctxAccess)) {
+            return nullptr;
+        }
+        LeaveCriticalSection(ctxAccess);
+    }
+
     ScopedCritSec ctxScope(ctxAccess);
     if (!pageInfo->page) {
         fz_try(ctx) {
