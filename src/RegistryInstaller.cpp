@@ -148,10 +148,10 @@ ShCtx\Software\Classes\${ext}\OpenWithProgids
   SumatraPDF.${ext} = "" (empty REG_SZ value)
 */
 bool RegisterForOpenWith(HKEY hkey) {
-    char* exePath = str::JoinTemp(R"(")", GetInstalledExePathTemp(), R"(")");
-    char* cmdOpen = str::JoinTemp(exePath, " \"%1\"");
-    char* cmdPrint = str::JoinTemp(exePath, " -print-to-default \"%1\"");
-    char* cmdPrintTo = str::JoinTemp(exePath, " -print-to \"%2\" \"%1\"");
+    char* exePathQuoted = str::JoinTemp(R"(")", GetInstalledExePathTemp(), R"(")");
+    char* cmdOpen = str::JoinTemp(exePathQuoted, R"( "%1" "%2" "%3" "%4")");
+    char* cmdPrint = str::JoinTemp(exePathQuoted, " -print-to-default \"%1\"");
+    char* cmdPrintTo = str::JoinTemp(exePathQuoted, " -print-to \"%2\" \"%1\"");
     char* key;
     auto exts = gSupportedExts;
     bool ok = true;
@@ -172,11 +172,11 @@ bool RegisterForOpenWith(HKEY hkey) {
         // ",-${n}" => n is icon with resource id
         char* iconPath;
         if (str::Eq(ext, ".epub")) {
-            iconPath = str::JoinTemp(exePath, ",2");
+            iconPath = str::JoinTemp(exePathQuoted, ",2");
         } else if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
-            iconPath = str::JoinTemp(exePath, ",3");
+            iconPath = str::JoinTemp(exePathQuoted, ",3");
         } else {
-            iconPath = str::JoinTemp(exePath, ",1");
+            iconPath = str::JoinTemp(exePathQuoted, ",1");
         }
 
         key = str::JoinTemp(progIDKey, "\\Application");
