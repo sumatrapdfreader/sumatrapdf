@@ -20,6 +20,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DisplayMode.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
@@ -245,6 +246,16 @@ void SetCurrentThemeFromSettings() {
     }
 }
 
+// if is dark, makes lighter, if light, makes darker
+static COLORREF AdjustLightOrDark(COLORREF col, float n) {
+    if (IsLightColor(col)) {
+        col = AdjustLightness2(col, -n);
+    } else {
+        col = AdjustLightness2(col, n);
+    }
+    return col;
+}
+
 COLORREF ThemeDocumentColors(COLORREF& bg) {
     COLORREF text = kColBlack;
     bg = kColWhite;
@@ -274,11 +285,7 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
     // should match the colors of the window
     text = ThemeWindowTextColor();
     bg = gCurrentTheme->window.backgroundColor;
-    if (IsLightColor(bg)) {
-        bg = AdjustLightness2(bg, -8);
-    } else {
-        bg = AdjustLightness2(bg, 8);
-    }
+    bg = AdjustLightOrDark(bg, 8);
     return text;
 }
 
@@ -306,6 +313,13 @@ COLORREF ThemeWindowBackgroundColor() {
 
 COLORREF ThemeWindowTextColor() {
     return gCurrentTheme->window.textColor;
+}
+
+COLORREF ThemeWindowTextDisabledColor() {
+    auto col = gCurrentTheme->window.textColor;
+    // TODO: probably add textDisabledColor
+    auto col2 = AdjustLightOrDark(col, 0x7f);
+    return col2;
 }
 
 COLORREF ThemeWindowControlBackgroundColor() {
@@ -337,5 +351,8 @@ COLORREF ThemeNotificationsProgressColor() {
 }
 
 bool ThemeColorizeControls() {
-    return gCurrentTheme->colorizeControls;
+    if (gCurrentTheme->colorizeControls) {
+        return true;
+    }
+    return !IsMenuFontSizeDefault();
 }

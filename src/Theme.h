@@ -15,6 +15,7 @@ COLORREF ThemeMainWindowBackgroundColor();
 COLORREF ThemeControlBackgroundColor();
 COLORREF ThemeWindowBackgroundColor();
 COLORREF ThemeWindowTextColor();
+COLORREF ThemeWindowTextDisabledColor();
 COLORREF ThemeWindowControlBackgroundColor();
 COLORREF ThemeWindowLinkColor();
 COLORREF ThemeNotificationsBackgroundColor();

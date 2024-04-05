@@ -437,6 +437,17 @@ HFONT GetAppTreeFont() {
     return gTreeFont;
 }
 
+int GetAppMenuFontSize() {
+    NONCLIENTMETRICS ncm{};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    int fntSize = std::abs(ncm.lfMenuFont.lfHeight);
+    if (gGlobalPrefs->uIFontSize >= kMinFontSize) {
+        fntSize = gGlobalPrefs->uIFontSize;
+    }
+    return fntSize;
+}
+
 HFONT GetAppMenuFont() {
     if (gAppMenuFont) {
         return gAppMenuFont;
@@ -444,10 +455,13 @@ HFONT GetAppMenuFont() {
     NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    auto fntSize = gGlobalPrefs->uIFontSize;
-    if (fntSize >= kMinFontSize) {
-        ncm.lfMenuFont.lfHeight = -fntSize;
-    }
+    int fntSize = GetAppMenuFontSize();
+    ncm.lfMenuFont.lfHeight = -fntSize;
     gAppMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     return gAppMenuFont;
+}
+
+bool IsMenuFontSizeDefault() {
+    auto fntSize = gGlobalPrefs->uIFontSize;
+    return fntSize < kMinFontSize;
 }

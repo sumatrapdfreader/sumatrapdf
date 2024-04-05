@@ -2043,6 +2043,18 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
     }
 }
 
+static int GetMenuCheckMarkCx(HWND hwnd) {
+    int cx = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
+    if (!IsMenuFontSizeDefault()) {
+        cx = GetAppMenuFontSize();
+        // this applies scaling for default values on my win 11 i.e.:
+        // font size is 12, menu checkmark is 15
+        cx = (cx * 15) / 12;
+        cx = DpiScale(hwnd, cx);
+    }
+    return cx;
+}
+
 constexpr int kMenuPaddingY = 4;
 constexpr int kMenuPaddingX = 8;
 
@@ -2077,9 +2089,9 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     auto padX = DpiScale(hwnd, kMenuPaddingX);
     auto padY = DpiScale(hwnd, kMenuPaddingY);
 
-    auto cxMenuCheck = GetSystemMetrics(SM_CXMENUCHECK);
+    int cxMenuCheckMark = GetMenuCheckMarkCx(hwnd);
     mis->itemHeight += padY * 2;
-    mis->itemWidth = uint(dx + DpiScale(hwnd, cxMenuCheck) + (padX * 2));
+    mis->itemWidth = uint(dx + cxMenuCheckMark + (padX * 2));
 }
 
 // https://gist.github.com/kjk/1df108aa126b7d8e298a5092550a53b7
@@ -2118,7 +2130,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // bool isDefault = bit::IsMaskSet(modi->fState, (uint)MFS_DEFAULT);
 
     // disabled should be drawn grayed out
-    // bool isDisabled = bit::IsMaskSet(modi->fState, (uint)MFS_DISABLED);
+    bool isDisabled = bit::IsMaskSet(modi->fState, (uint)MFS_DISABLED);
 
     // don't know what that means
     // bool isHilited = bit::IsMaskSet(modi->fState, (uint)MFS_HILITE);
@@ -2138,6 +2150,9 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // TODO: if isDisabled, pick a color that represents disabled
     // either add it to theme definition or auto-generate
     // (lighter if dark color, darker if light color)
+    if (isDisabled) {
+        txtCol = ThemeWindowTextDisabledColor();
+    }
 
     bool isSelected = bit::IsMaskSet(dis->itemState, (uint)ODS_SELECTED);
     if (isSelected) {
@@ -2148,9 +2163,9 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     RECT rc = dis->rcItem;
     int rcDy = RectDy(rc);
 
+    int cxCheckMark = GetMenuCheckMarkCx(hwnd);
     int padY = DpiScale(hwnd, kMenuPaddingY);
     int padX = DpiScale(hwnd, kMenuPaddingX);
-    int dxCheckMark = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
 
     COLORREF prevTxtCol = SetTextColor(hdc, txtCol);
     COLORREF prevBgCol = SetBkColor(hdc, bgCol);
@@ -2170,7 +2185,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 
     if (isSeparator) {
         CrashIf(modi->text);
-        int sx = rc.left + dxCheckMark;
+        int sx = rc.left + cxCheckMark;
         int y = rc.top + (rcDy / 2);
         int ex = rc.right - padX;
         auto pen = CreatePen(PS_SOLID, 1, txtCol);
@@ -2192,14 +2207,14 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 
     // DrawTextEx handles & => underscore drawing
     rc.top += padY;
-    rc.left += dxCheckMark;
+    rc.left += cxCheckMark;
     WCHAR* ws = ToWStrTemp(menuText);
     DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
     if (shortcutText != nullptr) {
         ws = ToWStrTemp(shortcutText);
         rc = dis->rcItem;
         rc.top += padY;
-        rc.right -= (padX + dxCheckMark / 2);
+        rc.right -= (padX + cxCheckMark / 2);
         DrawTextExW(hdc, ws, -1, &rc, DT_RIGHT, nullptr);
     }
 
@@ -2210,7 +2225,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         if (isRadioCheck) {
             int dx = DpiScale(hwnd, kRadioCircleDx);
             int offX = DpiScale(hwnd, 1); // why? beause it looks better
-            rc.left = rc.left + offX + (dxCheckMark / 2) - (dx / 2);
+            rc.left = rc.left + offX + (cxCheckMark / 2) - (dx / 2);
             rc.right = rc.left + dx;
             rc.top = rc.top + (rcDy / 2) - (dx / 2);
             rc.bottom = rc.top + dx;
@@ -2225,8 +2240,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         POINT points[3];
         int offX = DpiScale(hwnd, 6); // 6 is chosen experimentally
         points[0] = {rc.left + offX, rc.top + (rcDy / 2)};
-        points[1] = {rc.left + (dxCheckMark / 2), rc.bottom - (padY * 3)};
-        points[2] = {rc.left + dxCheckMark - offX, rc.top + (padY * 3)};
+        points[1] = {rc.left + (cxCheckMark / 2), rc.bottom - (padY * 3)};
+        points[2] = {rc.left + cxCheckMark - offX, rc.top + (padY * 3)};
         Polyline(hdc, points, dimof(points));
     }
 }
