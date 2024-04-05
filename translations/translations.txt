@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-15e1dbc8d6b7d0356aaa0606c984be7aa70220b1
+027bdb2248a725d875b337d99dd0f4500930890c
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6174,6 +6174,10 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Close All Tabs
+br:Fechar Todas as Abas
+nl:Sluit Alle Tabbladen
+pl:Zamknij wszystkie karty
+sk:Zatvoriť všetky karty
 :Close Other Tabs
 am:Փակել այլ ներդիրները
 ar:أغلق علامات التبويب الأخرى
@@ -6224,11 +6228,15 @@ tw:關閉其他分頁
 uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
+br:Fechar Abas à Esquerda
+nl:Sluit Tabbladen aan de Linkerkant
+pl:Zamknij karty po lewej stronie
+sk:Zatvoriť karty vľavo
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
 az:Sağdakı tabları bağla
 bg:Затвори табовете в дясно
-br:Fechar as Abas a Direita
+br:Fechar Abas à Direita
 by:Закрыць укладкі справа
 ca:Tanca totes les pestanyes de la dreta
 cn:关闭右侧标签页
@@ -8709,6 +8717,7 @@ tw:預設縮放(&Z):
 uk:Масштаб за замовчуванням:
 uz:Andoza &miqyos
 vn:Kích thước mặc định
+:Delete
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
 az:Qeydi sil
