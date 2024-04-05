@@ -48,6 +48,7 @@ bool WriteFile(const char* path, const ByteSlice&);
 
 i64 GetSize(const char*);
 bool Delete(const char* path);
+bool DeleteFileToTrash(const char* path);
 
 FILETIME GetModificationTime(const char* path);
 

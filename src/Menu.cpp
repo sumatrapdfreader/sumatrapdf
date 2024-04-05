@@ -130,8 +130,12 @@ static MenuDef menuDefFile[] = {
         _TRN("Re&name..."),
         CmdRenameFile,
     },
-#endif
+    #endif
     //] ACCESSKEY_ALTERNATIVE
+    {
+        _TRN("Delete"),
+        CmdDeleteFile,
+    },
     {
         _TRN("&Print..."),
         CmdPrint,
@@ -844,6 +848,7 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdProperties,
     CmdTogglePresentationMode,
     CmdRenameFile,
+    CmdDeleteFile,
     CmdShowInFolder,
     // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
     // are removed instead of disabled (and can remain enabled
@@ -852,6 +857,7 @@ static UINT_PTR disableIfNoDocument[] = {
 
 static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
+    CmdDeleteFile,
     CmdSendByEmail,
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
@@ -945,6 +951,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdShowInFolder,
     CmdSaveAs,
     CmdRenameFile,
+    CmdDeleteFile,
     CmdSendByEmail, // ???
     CmdContributeTranslation, // ???
     CmdAdvancedOptions,
@@ -1611,6 +1618,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
 
     if (win->IsDocLoaded() && !fileExists) {
         MenuSetEnabled(win->menu, CmdRenameFile, false);
+        MenuSetEnabled(win->menu, CmdDeleteFile, false);
     }
 
     int themeCmdId = CmdThemeFirst + GetCurrentThemeIndex();

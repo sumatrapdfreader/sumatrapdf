@@ -19,6 +19,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdPrint, "Print Document...")                                      \
     V(CmdShowInFolder, "Show File In Folder...")                          \
     V(CmdRenameFile, "Rename File...")                                    \
+    V(CmdDeleteFile, "Delete File")                                       \
     V(CmdExit, "Exit Application")                                        \
     V(CmdReloadDocument, "Reload Document")                               \
     V(CmdCreateShortcutToFile, "Create .lnk Shortcut")                    \

@@ -648,6 +648,18 @@ bool Delete(const char* filePathA) {
     return true;
 }
 
+bool DeleteFileToTrash(const char* path) {
+    TempWStr pathW = ToWStrTemp(path);
+    auto n = str::Len(pathW) + 2;
+    WCHAR* pathDoubleTerminated = AllocArrayTemp<WCHAR>(n);
+    str::BufSet(pathDoubleTerminated, (int)n, pathW);
+    FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
+    uint op = FO_DELETE;
+    SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
+    int res = SHFileOperationW(&shfo);
+    return res == 0;
+}
+
 bool Copy(const char* dst, const char* src, bool dontOverwrite) {
     WCHAR* dstW = ToWStrTemp(dst);
     WCHAR* srcW = ToWStrTemp(src);
@@ -784,7 +796,7 @@ bool CreateForFile(const char* path) {
 
 // remove directory and all its children
 bool RemoveAll(const char* dir) {
-    WCHAR* dirW = ToWStrTemp(dir);
+    TempWStr dirW = ToWStrTemp(dir);
     // path must be doubly terminated
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
     auto n = str::Len(dirW) + 2;

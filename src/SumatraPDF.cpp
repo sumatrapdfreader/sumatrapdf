@@ -2889,6 +2889,27 @@ static void ShowCurrentFileInFolder(MainWindow* win) {
     ShowFileInFolder(path);
 }
 
+static void DeleteCurrentFile(MainWindow* win) {
+    if (!HasPermission(Perm::DiskAccess)) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    if (gPluginMode) {
+        return;
+    }
+    auto* ctrl = win->ctrl;
+    const char* path = ctrl->GetFilePath();
+    // this happens e.g. for embedded documents and directories
+    if (!file::Exists(path)) {
+        return;
+    }
+    CloseCurrentTab(win, false);
+    file::DeleteFileToTrash(path);
+    gFileHistory.MarkFileInexistent(path, true);
+}
+
 static void RenameCurrentFile(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
@@ -4797,6 +4818,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdRenameFile:
             RenameCurrentFile(win);
+            break;
+
+        case CmdDeleteFile:
+            DeleteCurrentFile(win);
             break;
 
         case CmdSaveAs:
