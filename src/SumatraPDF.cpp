@@ -118,6 +118,9 @@ HBITMAP gBitmapReloadingCue;
 RenderCache* gRenderCache;
 HCURSOR gCursorDrag;
 
+// set after Ctl+Tab key was pressed (only if gGlobalPrefs->ctrlTabLastViewed == true)
+bool gCtrlTabPressed = false;
+
 // set after mouse shortcuts involving the Alt key (so that the menu bar isn't activated)
 bool gSupressNextAltMenuTrigger = false;
 
@@ -4171,6 +4174,24 @@ static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot) {
     return annot;
 }
 
+// used when gGlobalPrefs->ctrlTabLastViewed == true
+static bool FrameOnKeyup(MainWindow* win, WPARAM key, LPARAM lp) {
+    bool isCtrl = IsCtrlPressed();
+    bool isShift = IsShiftPressed();
+    if (win->tabsVisible && gCtrlTabPressed && VK_TAB == key) {
+        gCtrlTabPressed = false;
+        // if true, Ctrl+Tab cycles through tabs in recently used order
+        if (!isCtrl) {
+            TabsOnCtrlTab(win, isShift);
+        } else {
+            // case CmdCommandPaletteOnlyTabs:
+            RunCommandPallette(win, "#");
+        }
+        return true;
+    }
+    return false;
+}
+
 static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     // TODO: how does this interact with new accelerators?
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -4187,7 +4208,15 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     bool isShift = IsShiftPressed();
 
     if (win->tabsVisible && isCtrl && VK_TAB == key) {
-        TabsOnCtrlTab(win, isShift);
+        // if true, Ctrl+Tab cycles through tabs in recently used order
+        bool ctrlTabLastViewed = gGlobalPrefs->ctrlTabLastViewed;
+        if (!ctrlTabLastViewed) {
+            // standard Ctrl+Tab behaviour
+            TabsOnCtrlTab(win, isShift);
+        } else {
+            // recently used order is handled on WM_KEYUP, see FrameOnKeyup!
+            gCtrlTabPressed = true;
+        }
         return true;
     }
 
@@ -6066,6 +6095,13 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_KEYDOWN:
             if (win) {
                 FrameOnKeydown(win, wp, lp);
+            }
+            break;
+
+        // used when gGlobalPrefs->ctrlTabLastViewed == true
+        case WM_KEYUP:
+            if (win) {
+                FrameOnKeyup(win, wp, lp);
             }
             break;
 

@@ -447,6 +447,9 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
 static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 static HWND gHwndToActivateOnClose = nullptr;
+// true WHEN gGlobalPrefs->ctrlTabLastViewed AND gCtrlTabPressed: convert "#" to "@"
+static bool gCtrlTabLastViewed = false;
+
 
 void SafeDeleteCommandPaletteWnd() {
     if (!gCommandPaletteWnd) {
@@ -480,7 +483,7 @@ LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 }
 
 bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN) {
+    if (!gCtrlTabLastViewed && msg.message == WM_KEYDOWN) {
         int dir = 0;
         if (msg.wParam == VK_ESCAPE) {
             ScheduleDelete();
@@ -514,7 +517,40 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         }
         listBox->SetCurrentSelection(sel);
         return true;
+    } else if (gCtrlTabLastViewed && msg.message == WM_KEYUP) {
+        int dir = 0;
+        if (msg.wParam == VK_ESCAPE) {
+            ScheduleDelete();
+            return true;
+        }
+
+        if (msg.wParam == VK_CONTROL) {
+            ExecuteCurrentSelection();
+            return true;
+        }
+
+        if (msg.wParam == VK_TAB) {
+            dir = IsShiftPressed() ? - 1 : 1;
+        }
+        if (dir == 0) {
+            return false;
+        }
+        int n = listBox->GetCount();
+        if (n == 0) {
+            return false;
+        }
+        int currSel = listBox->GetCurrentSelection();
+        int sel = currSel + dir;
+        if (sel < 0) {
+            sel = n - 1;
+        }
+        if (sel >= n) {
+            sel = 0;
+        }
+        listBox->SetCurrentSelection(sel);
+        return true;
     }
+
     return false;
 }
 
@@ -759,7 +795,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         StaticCreateArgs args;
         args.parent = hwnd;
         args.font = this->font;
-        args.text = "↑ ↓ to navigate      Enter to select     Esc to close";
+        args.text = gCtrlTabLastViewed ? "Ctl+Tab to navigate, release Ctl to select, Esc to cancel" : "↑ ↓ to navigate      Enter to select     Esc to close";
 
         auto c = new Static();
         auto wnd = c->Create(args);
@@ -783,7 +819,6 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     PositionCommandPalette(hwnd, win->hwndFrame);
 
     if (!str::IsEmpty(prefix)) {
-        // this will trigger filtering
         editQuery->SetText(prefix);
         editQuery->SetSelection(1, 1);
     }
@@ -800,7 +835,17 @@ void RunCommandPallette(MainWindow* win, const char* prefix) {
     wnd->onDestroy = OnDestroy;
     wnd->font = GetAppBiggerFont();
     wnd->win = win;
-    bool ok = wnd->Create(win, prefix);
+
+    // true WHEN gGlobalPrefs->ctrlTabLastViewed AND gCtrlTabPressed: convert "#" to "@"
+    bool bCtrlTabLastViewed = false;
+    if (!str::IsEmpty(prefix)) {
+        if (str::Eq(prefix, "#")) {
+            bCtrlTabLastViewed = true;
+        }
+    }
+    gCtrlTabLastViewed = bCtrlTabLastViewed;
+
+    bool ok = wnd->Create(win, bCtrlTabLastViewed ? "@" : prefix);
     ReportIf(!ok);
     gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;
