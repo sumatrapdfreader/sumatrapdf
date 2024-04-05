@@ -3,7 +3,7 @@
 
 bool CouldBeArg(const char*);
 
-int ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut);
+void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut);
 TempStr QuoteCmdLineArgTemp(char* arg);
 
 struct CmdLineArgsIter {

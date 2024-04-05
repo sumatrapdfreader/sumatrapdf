@@ -46,15 +46,18 @@ TempStr QuoteCmdLineArgTemp(char* arg) {
     return res.StealData();
 }
 
-int ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
+void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
     for (int i = 0; i < nArgs; i++) {
         char* arg = ToUtf8Temp(argsArr[i]);
+        // ignore empty quoted strings ("")
+        if (str::IsEmpty(arg)) {
+            continue;
+        }
         argsOut.Append(arg);
     }
     LocalFree(argsArr);
-    return nArgs;
 }
 
 bool CouldBeArg(const char* s) {
@@ -66,7 +69,8 @@ CmdLineArgsIter::~CmdLineArgsIter() {
 }
 
 CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
-    nArgs = ParseCmdLine(cmdLine, args);
+    ParseCmdLine(cmdLine, args);
+    nArgs = args.Size();
 }
 
 const char* CmdLineArgsIter::NextArg() {
