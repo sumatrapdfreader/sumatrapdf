@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-027bdb2248a725d875b337d99dd0f4500930890c
+976447b8166846cbd4b9caa384ed213deea14666
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6155,7 +6155,7 @@ no:Lukk
 pa:ਬੰਦ ਕਰੋ
 pl:Zamknij
 pt:Fechar
-ro:Inchide
+ro:Închide
 ru:Закрыть
 si:වහන්න
 sk:Zatvoriť
@@ -6175,8 +6175,12 @@ uz:Yopish
 vn:Đóng lại
 :Close All Tabs
 br:Fechar Todas as Abas
+co:Chjode tutte l’unghjette
+fr:Fermer tous les onglets
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
+ro:Închide toate filele
+ru:Закрыть все вкладки
 sk:Zatvoriť všetky karty
 :Close Other Tabs
 am:Փակել այլ ներդիրները
@@ -6228,15 +6232,19 @@ tw:關閉其他分頁
 uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
-br:Fechar Abas à Esquerda
+br:Fechar Abas a Esquerda
+co:Chjode l’unghjette versu a manca
+fr:Fermer les onglets sur la gauche
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
+ro:Închide filele la stânga
+ru:Закрыть вкладки слева
 sk:Zatvoriť karty vľavo
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
 az:Sağdakı tabları bağla
 bg:Затвори табовете в дясно
-br:Fechar Abas à Direita
+br:Fechar Abas a Direita
 by:Закрыць укладкі справа
 ca:Tanca totes les pestanyes de la dreta
 cn:关闭右侧标签页
@@ -8718,6 +8726,13 @@ uk:Масштаб за замовчуванням:
 uz:Andoza &miqyos
 vn:Kích thước mặc định
 :Delete
+br:Apagar
+co:Squassà
+fr:Supprimer
+nl:Verwijderen
+pl:Usuń
+ro:Șterge
+ru:Удалить
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
 az:Qeydi sil
@@ -9115,7 +9130,7 @@ am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
 bg:&Изход от цял екран
-br:Sair da Tela &Cheia
+br:S&air da Tela Cheia
 by:В&ыйсці з поўнаэкраннага рэжыму
 ca-xv:Surt de &la pantalla completa
 ca:Surt de &la pantalla completa
@@ -14885,7 +14900,7 @@ ar:فتح في  %s
 az:%s ilə aç
 bg:Отваряне с %s
 bn:%s এ খুলুন
-br:Abrir em %s
+br:Abrir no %s
 bs:Otvori u %s
 by:Адкрыць у %s
 ca-xv:Obri amb %s
@@ -15763,7 +15778,7 @@ am:%u էջը գոյություն չունի
 ar:غير موجود %u رقم الصفحة
 az:Səhifə %u mövcud deyil
 bg:Страница с номер %u не съществува
-br:Número da página %u inexistente
+br:Página com o número %u inexistente
 bs:Stranica %u ne postoji
 by:Старонка %u не існуе
 ca-xv:La pàgina %u no existeix
@@ -17239,7 +17254,7 @@ am:Հիշել &բացված ֆայլերը
 ar:تذكر الملفات المفتوحة
 az:&Açılmış faylları yadda saxla
 bg:&Запомни отворените файлове
-br:Lembrar &arquivos abertos
+br:Lembrar dos &arquivos abertos
 bs:Zapamti &otvorene fajlove
 by:&Запомніць адкрытыя файлы
 ca-xv:Recorda els fitxers &oberts

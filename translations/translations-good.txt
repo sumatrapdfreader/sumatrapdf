@@ -5120,7 +5120,7 @@ nn:Lukk
 no:Lukk
 pl:Zamknij
 pt:Fechar
-ro:Inchide
+ro:Închide
 ru:Закрыть
 sk:Zatvoriť
 sl:Zapri
@@ -5134,8 +5134,12 @@ uk:Закрити
 vn:Đóng lại
 :Close All Tabs
 br:Fechar Todas as Abas
+co:Chjode tutte l’unghjette
+fr:Fermer tous les onglets
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
+ro:Închide toate filele
+ru:Закрыть все вкладки
 sk:Zatvoriť všetky karty
 :Close Other Tabs
 am:Փակել այլ ներդիրները
@@ -5184,15 +5188,19 @@ tw:關閉其他分頁
 uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
-br:Fechar Abas à Esquerda
+br:Fechar Abas a Esquerda
+co:Chjode l’unghjette versu a manca
+fr:Fermer les onglets sur la gauche
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
+ro:Închide filele la stânga
+ru:Закрыть вкладки слева
 sk:Zatvoriť karty vľavo
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
 az:Sağdakı tabları bağla
 bg:Затвори табовете в дясно
-br:Fechar Abas à Direita
+br:Fechar Abas a Direita
 by:Закрыць укладкі справа
 ca:Tanca totes les pestanyes de la dreta
 cn:关闭右侧标签页
@@ -7247,6 +7255,13 @@ tw:預設縮放(&Z):
 uk:Масштаб за замовчуванням:
 vn:Kích thước mặc định
 :Delete
+br:Apagar
+co:Squassà
+fr:Supprimer
+nl:Verwijderen
+pl:Usuń
+ro:Șterge
+ru:Удалить
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
 az:Qeydi sil
@@ -7594,7 +7609,7 @@ am:Փ&ակել լիաէկրանը
 ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
 bg:&Изход от цял екран
-br:Sair da Tela &Cheia
+br:S&air da Tela Cheia
 by:В&ыйсці з поўнаэкраннага рэжыму
 ca:Surt de &la pantalla completa
 ca-xv:Surt de &la pantalla completa
@@ -12447,7 +12462,7 @@ am:Բացել %s-ում
 ar:فتح في  %s
 az:%s ilə aç
 bg:Отваряне с %s
-br:Abrir em %s
+br:Abrir no %s
 by:Адкрыць у %s
 ca:Obre amb %s
 ca-xv:Obri amb %s
@@ -13168,7 +13183,7 @@ am:%u էջը գոյություն չունի
 ar:غير موجود %u رقم الصفحة
 az:Səhifə %u mövcud deyil
 bg:Страница с номер %u не съществува
-br:Número da página %u inexistente
+br:Página com o número %u inexistente
 by:Старонка %u не існуе
 ca:No existeix la pàgina %u
 ca-xv:La pàgina %u no existeix
@@ -14432,7 +14447,7 @@ am:Հիշել &բացված ֆայլերը
 ar:تذكر الملفات المفتوحة
 az:&Açılmış faylları yadda saxla
 bg:&Запомни отворените файлове
-br:Lembrar &arquivos abertos
+br:Lembrar dos &arquivos abertos
 by:&Запомніць адкрытыя файлы
 ca:Recorda els fitxers &oberts
 ca-xv:Recorda els fitxers &oberts
