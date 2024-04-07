@@ -465,3 +465,8 @@ bool IsMenuFontSizeDefault() {
     auto fntSize = gGlobalPrefs->uIFontSize;
     return fntSize < kMinFontSize;
 }
+
+bool IsAppFontSizeDefault() {
+    auto fntSize = gGlobalPrefs->uIFontSize;
+    return fntSize < kMinFontSize;
+}
