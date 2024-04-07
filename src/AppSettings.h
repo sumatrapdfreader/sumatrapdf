@@ -21,6 +21,7 @@ void UnregisterSettingsForFileChanges();
 int GetAppFontSize();
 HFONT GetAppFont();
 int GetAppMenuFontSize();
+bool IsAppFontSizeDefault();
 HFONT GetAppMenuFont();
 HFONT GetAppBiggerFont();
 HFONT GetAppTreeFont();

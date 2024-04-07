@@ -84,7 +84,9 @@
 #include "BuildConfig.h"
 
 #define NOMINMAX
+#include <winsock2.h> // must include before <windows.h>
 #include <windows.h>
+#include <ws2def.h>
 #include <unknwn.h>
 #include <shlwapi.h>
 #include <shlobj.h>
