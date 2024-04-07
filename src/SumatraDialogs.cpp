@@ -6,6 +6,8 @@
 #include "utils/WinUtil.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
+
 #include "GlobalPrefs.h"
 
 #include "SumatraPDF.h"
@@ -235,19 +237,28 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
     WCHAR* tmp;
 
     switch (msg) {
-        case WM_INITDIALOG:
+        case WM_INITDIALOG: {
+//            HFONT fnt = GetAppFont();
+//            HwndSetFont(hDlg, fnt);
+//            SetDlgItemFont(hDlg, IDC_STATIC, fnt);
+//            SetDlgItemFont(hDlg, IDC_MATCH_CASE, fnt);
+//            SetDlgItemFont(hDlg, IDC_FIND_NEXT_HINT, fnt);
+//            SetDlgItemFont(hDlg, IDOK, fnt);
+//            SetDlgItemFont(hDlg, IDCANCEL, fnt);
+//            SetDlgItemFont(hDlg, IDC_FIND_EDIT, fnt);
+
             //[ ACCESSKEY_GROUP Find Dialog
             data = (Dialog_Find_Data*)lp;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
             HwndSetText(hDlg, _TR("Find"));
-            SetDlgItemText(hDlg, IDC_STATIC, _TR("&Find what:"));
-            SetDlgItemText(hDlg, IDC_MATCH_CASE, _TR("&Match case"));
-            SetDlgItemText(hDlg, IDC_FIND_NEXT_HINT, _TR("Hint: Use the F3 key for finding again"));
-            SetDlgItemText(hDlg, IDOK, _TR("Find"));
-            SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+            SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Find what:"));
+            SetDlgItemTextW(hDlg, IDC_MATCH_CASE, _TR("&Match case"));
+            SetDlgItemTextW(hDlg, IDC_FIND_NEXT_HINT, _TR("Hint: Use the F3 key for finding again"));
+            SetDlgItemTextW(hDlg, IDOK, _TR("Find"));
+            SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
             if (data->searchTerm) {
-                SetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
+                SetDlgItemTextW(hDlg, IDC_FIND_EDIT, data->searchTerm);
             }
             data->searchTerm = nullptr;
             CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
@@ -259,6 +270,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             SetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
             return FALSE;
             //] ACCESSKEY_GROUP Find Dialog
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wp)) {

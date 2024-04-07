@@ -133,6 +133,7 @@ void HwndMakeVisible(HWND);
 
 bool IsMouseOverRect(HWND hwnd, const Rect& r);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
+void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt);
 
 char* GetDefaultPrinterNameTemp();
 

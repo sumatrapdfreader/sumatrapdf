@@ -1254,6 +1254,11 @@ void CenterDialog(HWND hDlg, HWND hParent) {
     SetWindowPos(hDlg, nullptr, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt) {
+    HWND hwnd = GetDlgItem(hDlg, nIDDlgItem);
+    HwndSetFont(hwnd, fnt);
+}
+
 // Get the name of default printer or nullptr if not exists.
 char* GetDefaultPrinterNameTemp() {
     WCHAR buf[512] = {0};
