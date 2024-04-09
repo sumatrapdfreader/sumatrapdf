@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-976447b8166846cbd4b9caa384ed213deea14666
+33712d35d569be5646b0483d86dd8ccfd2b617bf
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6176,7 +6176,10 @@ vn:Đóng lại
 :Close All Tabs
 br:Fechar Todas as Abas
 co:Chjode tutte l’unghjette
+cy:Cau Pob Tab
+de:Alle Tabs schließen
 fr:Fermer tous les onglets
+he:סגור את כל הכרטיסיות
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
 ro:Închide toate filele
@@ -6234,7 +6237,10 @@ vn:Đóng các tab khác
 :Close Tabs To The Left
 br:Fechar Abas a Esquerda
 co:Chjode l’unghjette versu a manca
+cy:Cau Tabiau I'r Chwith
+de:Tabs links schließen
 fr:Fermer les onglets sur la gauche
+he:סגור כרטיסיות משמאל
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
 ro:Închide filele la stânga
@@ -8728,7 +8734,10 @@ vn:Kích thước mặc định
 :Delete
 br:Apagar
 co:Squassà
+cy:Dileu
+de:Löschen
 fr:Supprimer
+he:מחק
 nl:Verwijderen
 pl:Usuń
 ro:Șterge
@@ -17083,6 +17092,7 @@ fo:Eginleikar...
 fr:Propriétés…
 ga:Airíonna...
 gl:Propiedades...
+he:מאפיינים...
 hi:प्रकृति...
 hr:Svojstva...
 hu:Tulajdonságok
