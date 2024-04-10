@@ -71,6 +71,10 @@ Thu Jun 19 09:39:21 UTC 2008
 #       endif
 #   endif
 
+#if defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
+#define SYNCTEX_WINDOWS 1
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -2990,6 +2994,12 @@ int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 		if (_synctex_is_equivalent_file_name(name,(SYNCTEX_NAME(input)))) {
 			return SYNCTEX_TAG(input);
 		}
+#if SYNCTEX_WINDOWS
+        else if (_synctex_is_equivalent_file_name_normalized(name, (SYNCTEX_NAME(input)))) {
+            return SYNCTEX_TAG(input);
+        }
+#endif
+
 	} while((input = SYNCTEX_SIBLING(input)) != NULL);
 	return 0;
 }

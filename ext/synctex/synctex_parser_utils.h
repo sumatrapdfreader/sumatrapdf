@@ -87,6 +87,8 @@ int _synctex_error(const char * reason,...);
  *  This should be discussed more precisely. */
 void _synctex_strip_last_path_extension(char * string);
 
+synctex_bool_t _synctex_is_equivalent_file_name_normalized(const char* lhs, const char* rhs);
+
 /*  Compare two file names, windows is sometimes case insensitive...
  *  The given strings may differ stricto sensu, but represent the same file name.
  *  It might not be the real way of doing things.

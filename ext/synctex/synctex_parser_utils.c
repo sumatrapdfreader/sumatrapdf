@@ -155,6 +155,25 @@ const char * synctex_ignore_leading_dot_slash(const char * name)
     return name;
 }
 
+#if SYNCTEX_WINDOWS
+synctex_bool_t _synctex_is_equivalent_file_name_normalized(const char* lhs, const char* rhs) {
+    /*  Remove the leading regex '(\./+)*' in both rhs and lhs */
+    lhs = synctex_ignore_leading_dot_slash(lhs);
+    rhs = synctex_ignore_leading_dot_slash(rhs);
+    DWORD retval = 0;
+    // BOOL success;
+    char buffer[200];
+    //LPSTR* lppPart = {NULL};
+
+    // Retrieve the full path name for a file.
+    // The file does not need to exist.
+
+    retval = GetFullPathNameA((LPCSTR)rhs, 200, (LPSTR)buffer, NULL);
+    rhs = (const char*)buffer;
+    return _synctex_is_equivalent_file_name(lhs, rhs);
+
+}
+#endif
 /*  Compare two file names, windows is sometimes case insensitive... */
 synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs) {
     /*  Remove the leading regex '(\./+)*' in both rhs and lhs */
