@@ -1215,6 +1215,7 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		pdf_dict_put(ctx, params_obj, PDF_NAME(N), opts->linear_n);
 		opts->linear_t = pdf_new_int(ctx, INT_MIN);
 		pdf_dict_put(ctx, params_obj, PDF_NAME(T), opts->linear_t);
+		pdf_dict_put_int(ctx, params_obj, PDF_NAME(P), 0);
 
 		/* Primary hint stream */
 		hint_obj = pdf_new_dict(ctx, doc, 10);
@@ -1226,7 +1227,6 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		opts->renumber_map[hint_num] = hint_num;
 		opts->rev_renumber_map[hint_num] = hint_num;
 		opts->gen_list[hint_num] = 0;
-		pdf_dict_put_int(ctx, hint_obj, PDF_NAME(P), 0);
 		opts->hints_s = pdf_new_int(ctx, INT_MIN);
 		pdf_dict_put(ctx, hint_obj, PDF_NAME(S), opts->hints_s);
 		/* FIXME: Do we have thumbnails? Do a T entry */

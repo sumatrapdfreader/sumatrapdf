@@ -1309,6 +1309,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 	value = value_from_property(match, PRO_FONT_SIZE);
 	if (value)
 	{
+		/* absolute-size */
 		if (!strcmp(value->data, "xx-large")) style->font_size = make_number(1.73f, N_SCALE);
 		else if (!strcmp(value->data, "x-large")) style->font_size = make_number(1.44f, N_SCALE);
 		else if (!strcmp(value->data, "large")) style->font_size = make_number(1.2f, N_SCALE);
@@ -1316,13 +1317,15 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		else if (!strcmp(value->data, "small")) style->font_size = make_number(0.83f, N_SCALE);
 		else if (!strcmp(value->data, "x-small")) style->font_size = make_number(0.69f, N_SCALE);
 		else if (!strcmp(value->data, "xx-small")) style->font_size = make_number(0.69f, N_SCALE);
+		/* relative-size */
 		else if (!strcmp(value->data, "larger")) style->font_size = make_number(1.2f, N_SCALE);
 		else if (!strcmp(value->data, "smaller")) style->font_size = make_number(1/1.2f, N_SCALE);
-		else style->font_size = number_from_value(value, 12, N_LENGTH);
-		/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/4162 */
-		if (style->font_size.unit == N_NUMBER && style->font_size.value > 50) {
-			style->font_size.unit = N_PERCENT;
-		}
+		/* percentage */
+		else if (value->type == CSS_PERCENT) style->font_size = number_from_value(value, 12, N_LENGTH);
+		/* length */
+		else if (value->type == CSS_LENGTH) style->font_size = number_from_value(value, 12, N_LENGTH);
+		/* default to 1em */
+		else style->font_size = make_number(1, N_SCALE);
 	}
 	else
 	{

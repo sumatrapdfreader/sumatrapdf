@@ -72,12 +72,12 @@ FUN(PDFPage_update)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod, jint lineArt)
+FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod, jint lineArt, jint text)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);
 	jboolean redacted = JNI_FALSE;
-	pdf_redact_options opts = { blackBoxes, imageMethod, lineArt };
+	pdf_redact_options opts = { blackBoxes, imageMethod, lineArt, text };
 
 	if (!ctx || !page) return JNI_FALSE;
 

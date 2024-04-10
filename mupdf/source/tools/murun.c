@@ -7899,6 +7899,7 @@ static void ffi_PDFPage_applyRedactions(js_State *J)
 	if (js_isdefined(J, 1)) opts.black_boxes = js_toboolean(J, 1);
 	if (js_isdefined(J, 2)) opts.image_method = js_tointeger(J, 2);
 	if (js_isdefined(J, 3)) opts.line_art = js_tointeger(J, 3);
+	if (js_isdefined(J, 4)) opts.text = js_tointeger(J, 4);
 	fz_try(ctx)
 		pdf_redact_page(ctx, page->doc, page, &opts);
 	fz_catch(ctx)
@@ -10444,7 +10445,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFPage.createAnnotation", ffi_PDFPage_createAnnotation, 1);
 		jsB_propfun(J, "PDFPage.deleteAnnotation", ffi_PDFPage_deleteAnnotation, 1);
 		jsB_propfun(J, "PDFPage.update", ffi_PDFPage_update, 0);
-		jsB_propfun(J, "PDFPage.applyRedactions", ffi_PDFPage_applyRedactions, 3);
+		jsB_propfun(J, "PDFPage.applyRedactions", ffi_PDFPage_applyRedactions, 4);
 		jsB_propfun(J, "PDFPage.process", ffi_PDFPage_process, 1);
 		jsB_propfun(J, "PDFPage.toPixmap", ffi_PDFPage_toPixmap, 6);
 		jsB_propfun(J, "PDFPage.getTransform", ffi_PDFPage_getTransform, 0);

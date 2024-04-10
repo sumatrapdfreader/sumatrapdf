@@ -1662,7 +1662,7 @@ find_most_recent_common_ancestor_imp(fz_context *ctx, pdf_obj *a, struct line *l
 }
 
 static pdf_obj *
-find_most_recent_ancestor(fz_context *ctx, pdf_obj *a, pdf_obj *b)
+find_most_recent_common_ancestor(fz_context *ctx, pdf_obj *a, pdf_obj *b)
 {
 	if (!pdf_is_dict(ctx, a) || !pdf_is_dict(ctx, b))
 		return NULL;
@@ -1709,7 +1709,7 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 
 	/* We are currently nested in A,B,C,...E,F,mcid_sent. We want to update to
 	 * being in A,B,C,...G,H,mc_dict. So we need to find the lowest common point. */
-	common = find_most_recent_ancestor(ctx, proc->mcid_sent, mc_dict);
+	common = find_most_recent_common_ancestor(ctx, proc->mcid_sent, mc_dict);
 
 	/* So, we need to pop everything up to common (i.e. everything below common will be closed). */
 	pop_structure_to(ctx, proc, common);

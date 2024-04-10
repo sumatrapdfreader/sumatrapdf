@@ -344,12 +344,22 @@ public class PDFAnnotation
 	public native boolean getHiddenForEditing();
 	public native void setHiddenForEditing(boolean hidden);
 
-	public boolean applyRedaction(boolean blackBoxes, int imageMethod)
+	public boolean applyRedaction(boolean blackBoxes)
 	{
-		return applyRedaction(blackBoxes, imageMethod, 0);
+		return applyRedaction(blackBoxes, PDFPage.REDACT_IMAGE_PIXELS, PDFPage.REDACT_LINE_ART_NONE, PDFPage.REDACT_TEXT_REMOVE);
 	}
 
-	public native boolean applyRedaction(boolean blackBoxes, int imageMethod, int lineArt);
+	public boolean applyRedaction(boolean blackBoxes, int imageMethod)
+	{
+		return applyRedaction(blackBoxes, imageMethod, PDFPage.REDACT_LINE_ART_NONE, PDFPage.REDACT_TEXT_REMOVE);
+	}
+
+	public boolean applyRedaction(boolean blackBoxes, int imageMethod, int lineArt)
+	{
+		return applyRedaction(blackBoxes, imageMethod, lineArt, PDFPage.REDACT_TEXT_REMOVE);
+	}
+
+	public native boolean applyRedaction(boolean blackBoxes, int imageMethod, int lineArt, int text);
 
 	/** @deprecated use getBorderWidth instead. */
 	public float getBorder() { return getBorderWidth(); }

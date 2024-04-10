@@ -207,10 +207,11 @@ fz_find_html_target(fz_context *ctx, fz_html *html, const char *id)
 }
 
 static fz_html_flow *
-make_flow_bookmark(fz_context *ctx, fz_html_flow *flow, float y)
+make_flow_bookmark(fz_context *ctx, fz_html_flow *flow, float y, fz_html_flow **candidate)
 {
 	while (flow)
 	{
+		*candidate = flow;
 		if (flow->y >= y)
 			return flow;
 		flow = flow->next;
@@ -219,35 +220,40 @@ make_flow_bookmark(fz_context *ctx, fz_html_flow *flow, float y)
 }
 
 static fz_html_flow *
-make_box_bookmark(fz_context *ctx, fz_html_box *box, float y)
+make_box_bookmark(fz_context *ctx, fz_html_box *box, float y, fz_html_flow **candidate)
 {
 	fz_html_flow *mark;
+	fz_html_flow *dummy = NULL;
+	if (candidate == NULL)
+		candidate = &dummy;
 	while (box)
 	{
 		if (box->type == BOX_FLOW)
 		{
 			if (box->s.layout.y >= y)
 			{
-				mark = make_flow_bookmark(ctx, box->u.flow.head, y);
+				mark = make_flow_bookmark(ctx, box->u.flow.head, y, candidate);
 				if (mark)
 					return mark;
 			}
+			else
+				*candidate = make_flow_bookmark(ctx, box->u.flow.head, y, candidate);
 		}
 		else
 		{
-			mark = make_box_bookmark(ctx, box->down, y);
+			mark = make_box_bookmark(ctx, box->down, y, candidate);
 			if (mark)
 				return mark;
 		}
 		box = box->next;
 	}
-	return NULL;
+	return *candidate;
 }
 
 fz_bookmark
 fz_make_html_bookmark(fz_context *ctx, fz_html *html, int page)
 {
-	return (fz_bookmark)make_box_bookmark(ctx, html->tree.root, page * html->page_h);
+	return (fz_bookmark)make_box_bookmark(ctx, html->tree.root, page * html->page_h, NULL);
 }
 
 static int

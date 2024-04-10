@@ -648,6 +648,13 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_PIXELS == PDF_REDACT_IMAGE_PIXELS;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_REMOVE_UNLESS_INVISIBLE == PDF_REDACT_IMAGE_REMOVE_UNLESS_INVISIBLE;
 
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_LINE_ART_NONE == PDF_REDACT_LINE_ART_NONE;
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_LINE_ART_REMOVE_IF_TOUCHED == PDF_REDACT_LINE_ART_REMOVE_IF_TOUCHED;
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_LINE_ART_REMOVE_IF_COVERED == PDF_REDACT_LINE_ART_REMOVE_IF_COVERED;
+
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_REMOVE == PDF_REDACT_TEXT_REMOVE;
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_NONE == PDF_REDACT_TEXT_NONE;
+
 	return valid ? 1 : 0;
 }
 

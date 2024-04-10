@@ -449,6 +449,7 @@ struct redact_filter_state {
 	pdf_page *page;
 	pdf_annot *target; // NULL if all
 	int line_art;
+	int text;
 };
 
 static void
@@ -989,6 +990,7 @@ void init_redact_filter(fz_context *ctx, pdf_redact_options *redact_opts, struct
 	int black_boxes = redact_opts ? redact_opts->black_boxes : 0;
 	int image_method = redact_opts ? redact_opts->image_method : PDF_REDACT_IMAGE_PIXELS;
 	int line_art = redact_opts ? redact_opts->line_art : PDF_REDACT_LINE_ART_NONE;
+	int text = redact_opts ? redact_opts->text : PDF_REDACT_TEXT_REMOVE;
 
 	memset(&red->filter_opts, 0, sizeof red->filter_opts);
 	memset(&red->sanitize_opts, 0, sizeof red->sanitize_opts);
@@ -1001,9 +1003,11 @@ void init_redact_filter(fz_context *ctx, pdf_redact_options *redact_opts, struct
 	if (black_boxes)
 		red->filter_opts.complete = pdf_redact_end_page;
 	red->line_art = line_art;
+	red->text = text;
 
 	red->sanitize_opts.opaque = red;
-	red->sanitize_opts.text_filter = pdf_redact_text_filter;
+	if (text == PDF_REDACT_TEXT_REMOVE)
+		red->sanitize_opts.text_filter = pdf_redact_text_filter;
 	if (image_method == PDF_REDACT_IMAGE_PIXELS)
 		red->sanitize_opts.image_filter = pdf_redact_image_filter_pixels;
 	if (image_method == PDF_REDACT_IMAGE_REMOVE)
