@@ -1329,6 +1329,13 @@ ContinueOpenWindow:
             auto tab = FindTabByFile(path);
             if (tab) {
                 tabToSelect = tab;
+                if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
+                    int page;
+                    Vec<Rect> rects;
+                    char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
+                    int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
+                    ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
+                }
                 continue;
             }
         }
