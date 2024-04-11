@@ -241,7 +241,8 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // (the latter only yields a RENAMED action with the expected file name)
         const char* actionName = GetFileActionName(notify->Action);
         logf("ReadDirectoryChangesNotification: %s '%s'\n", actionName, fileName);
-        if (notify->Action == FILE_ACTION_MODIFIED || notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
+        if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
+            notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             changedFiles.AppendIfNotExists(fileName);
         }
 
