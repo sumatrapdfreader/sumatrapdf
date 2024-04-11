@@ -330,12 +330,18 @@ buffer_drop(fz_context *ctx, void *opaque)
 	fz_drop_buffer(ctx, buffer);
 }
 
+static void
+buffer_reset(fz_context *ctx, void *opaque)
+{
+}
+
 fz_output *
 fz_new_output_with_buffer(fz_context *ctx, fz_buffer *buf)
 {
 	fz_output *out = fz_new_output(ctx, 0, fz_keep_buffer(ctx, buf), buffer_write, NULL, buffer_drop);
 	out->seek = buffer_seek;
 	out->tell = buffer_tell;
+	out->reset = buffer_reset;
 	return out;
 }
 
@@ -345,9 +351,9 @@ fz_close_output(fz_context *ctx, fz_output *out)
 	if (out == NULL)
 		return;
 	fz_flush_output(ctx, out);
-	if (out->close)
+	if (!out->closed && out->close)
 		out->close(ctx, out->state);
-	out->close = NULL;
+	out->closed = 1;
 }
 
 void
@@ -355,7 +361,7 @@ fz_drop_output(fz_context *ctx, fz_output *out)
 {
 	if (out)
 	{
-		if (out->close)
+		if (!out->closed)
 			fz_warn(ctx, "dropping unclosed output");
 		if (out->drop)
 			out->drop(ctx, out->state);
@@ -363,6 +369,18 @@ fz_drop_output(fz_context *ctx, fz_output *out)
 		if (out != &fz_stdout_global && out != &fz_stderr_global)
 			fz_free(ctx, out);
 	}
+}
+
+void
+fz_reset_output(fz_context *ctx, fz_output *out)
+{
+	if (!out)
+		return;
+	if (out->reset == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot reset this output");
+
+	out->reset(ctx, out->state);
+	out->closed = 0;
 }
 
 void

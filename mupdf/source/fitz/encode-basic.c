@@ -57,6 +57,13 @@ static void ahx_close(fz_context *ctx, void *opaque)
 	fz_write_byte(ctx, state->chain, '>');
 }
 
+static void ahx_reset(fz_context *ctx, void *opaque)
+{
+	struct ahx *state = opaque;
+	state->column = 0;
+	fz_reset_output(ctx, state->chain);
+}
+
 static void ahx_drop(fz_context *ctx, void *opaque)
 {
 	struct ahx *state = opaque;
@@ -66,10 +73,15 @@ static void ahx_drop(fz_context *ctx, void *opaque)
 fz_output *
 fz_new_asciihex_output(fz_context *ctx, fz_output *chain)
 {
+	fz_output *out;
 	struct ahx *state = fz_malloc_struct(ctx, struct ahx);
+
 	state->chain = chain;
 	state->column = 0;
-	return fz_new_output(ctx, 512, state, ahx_write, ahx_close, ahx_drop);
+	out = fz_new_output(ctx, 512, state, ahx_write, ahx_close, ahx_drop);
+	out->reset = ahx_reset;
+
+	return out;
 }
 
 struct a85
@@ -160,6 +172,15 @@ static void a85_close(fz_context *ctx, void *opaque)
 	fz_write_byte(ctx, state->chain, '>');
 }
 
+static void a85_reset(fz_context *ctx, void *opaque)
+{
+	struct a85 *state = opaque;
+	state->column = 0;
+	state->word = 0;
+	state->n = 0;
+	fz_reset_output(ctx, state->chain);
+}
+
 static void a85_drop(fz_context *ctx, void *opaque)
 {
 	struct a85 *state = opaque;
@@ -169,12 +190,17 @@ static void a85_drop(fz_context *ctx, void *opaque)
 fz_output *
 fz_new_ascii85_output(fz_context *ctx, fz_output *chain)
 {
+	fz_output *out;
 	struct a85 *state = fz_malloc_struct(ctx, struct a85);
+
 	state->chain = chain;
 	state->column = 0;
 	state->word = 0;
 	state->n = 0;
-	return fz_new_output(ctx, 512, state, a85_write, a85_close, a85_drop);
+	out = fz_new_output(ctx, 512, state, a85_write, a85_close, a85_drop);
+	out->reset = a85_reset;
+
+	return out;
 }
 
 struct rle
@@ -276,6 +302,14 @@ static void rle_close(fz_context *ctx, void *opaque)
 	fz_write_byte(ctx, enc->chain, 128);
 }
 
+static void rle_reset(fz_context *ctx, void *opaque)
+{
+	struct rle *enc = opaque;
+	enc->state = ZERO;
+	enc->run = 0;
+	fz_reset_output(ctx, enc->chain);
+}
+
 static void rle_drop(fz_context *ctx, void *opaque)
 {
 	struct rle *enc = opaque;
@@ -285,17 +319,23 @@ static void rle_drop(fz_context *ctx, void *opaque)
 fz_output *
 fz_new_rle_output(fz_context *ctx, fz_output *chain)
 {
+	fz_output *out;
 	struct rle *enc = fz_malloc_struct(ctx, struct rle);
+
 	enc->chain = chain;
 	enc->state = ZERO;
 	enc->run = 0;
-	return fz_new_output(ctx, 4096, enc, rle_write, rle_close, rle_drop);
+	out = fz_new_output(ctx, 4096, enc, rle_write, rle_close, rle_drop);
+	out->reset = rle_reset;
+
+	return out;
 }
 
 struct arc4
 {
 	fz_output *chain;
 	fz_arc4 arc4;
+	fz_arc4 arc4_orig;
 };
 
 static void arc4_write(fz_context *ctx, void *opaque, const void *data, size_t n)
@@ -313,6 +353,13 @@ static void arc4_write(fz_context *ctx, void *opaque, const void *data, size_t n
 	}
 }
 
+static void arc4_reset(fz_context *ctx, void *opaque)
+{
+	struct arc4 *state = opaque;
+	memcpy(&state->arc4, &state->arc4_orig, sizeof(state->arc4));
+	fz_reset_output(ctx, state->chain);
+}
+
 static void arc4_drop(fz_context *ctx, void *opaque)
 {
 	fz_free(ctx, opaque);
@@ -321,10 +368,16 @@ static void arc4_drop(fz_context *ctx, void *opaque)
 fz_output *
 fz_new_arc4_output(fz_context *ctx, fz_output *chain, unsigned char *key, size_t keylen)
 {
+	fz_output *out;
 	struct arc4 *state = fz_malloc_struct(ctx, struct arc4);
+
 	state->chain = chain;
 	fz_arc4_init(&state->arc4, key, keylen);
-	return fz_new_output(ctx, 256, state, arc4_write, NULL, arc4_drop);
+	memcpy(&state->arc4_orig, &state->arc4, sizeof(state->arc4));
+	out = fz_new_output(ctx, 256, state, arc4_write, NULL, arc4_drop);
+	out->reset = arc4_reset;
+
+	return out;
 }
 
 struct deflate
@@ -397,6 +450,15 @@ static void deflate_close(fz_context *ctx, void *opaque)
 		fz_throw(ctx, FZ_ERROR_LIBRARY, "zlib compression failed: %d", err);
 }
 
+static void deflate_reset(fz_context *ctx, void *opaque)
+{
+	struct deflate *state = opaque;
+	int err = deflateReset(&state->z);
+	if (err != Z_OK)
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "zlib reset failed: %d", err);
+	fz_reset_output(ctx, state->chain);
+}
+
 static void deflate_drop(fz_context *ctx, void *opaque)
 {
 	struct deflate *state = opaque;
@@ -408,9 +470,10 @@ static void deflate_drop(fz_context *ctx, void *opaque)
 fz_output *
 fz_new_deflate_output(fz_context *ctx, fz_output *chain, int effort, int raw)
 {
+	fz_output *out;
 	int err;
-
 	struct deflate *state = fz_malloc_struct(ctx, struct deflate);
+
 	state->chain = chain;
 	state->z.opaque = ctx;
 	state->z.zalloc = fz_zlib_alloc;
@@ -422,5 +485,8 @@ fz_new_deflate_output(fz_context *ctx, fz_output *chain, int effort, int raw)
 		fz_free(ctx, state);
 		fz_throw(ctx, FZ_ERROR_LIBRARY, "zlib deflateInit2 failed: %d", err);
 	}
-	return fz_new_output(ctx, 8192, state, deflate_write, deflate_close, deflate_drop);
+	out = fz_new_output(ctx, 8192, state, deflate_write, deflate_close, deflate_drop);
+	out->reset = deflate_reset;
+
+	return out;
 }
