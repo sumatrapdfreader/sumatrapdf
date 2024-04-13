@@ -15,6 +15,8 @@ enum class DisplayMode {
     Continuous,
     ContinuousFacing,
     ContinuousBookView,
+    MultiPage,
+    ContinuousMultiPage,
 };
 
 constexpr float kZoomFitPage = -1.f;

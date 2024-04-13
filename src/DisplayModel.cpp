@@ -67,8 +67,12 @@
 // if true, we pre-render the pages right before and after the visible pages
 static bool gPredictiveRender = true;
 
-static int ColumnsFromDisplayMode(DisplayMode displayMode) {
+int DisplayModel::ColumnsFromDisplayMode(DisplayMode displayMode)  const {
     if (!IsSingle(displayMode)) {
+        if (IsMultiPage(displayMode)) {
+            SizeF pageSize = PageSizeAfterRotation(startPage);
+            return std::max(std::min((int)(viewPort.dx / (pageSize.dx * zoomReal)), 12),1);
+        }
         return 2;
     }
     return 1;
@@ -681,7 +685,9 @@ RestartLayout:
        rotation, columns parameters. You can think of it as a simple
        table layout i.e. rows with a fixed number of columns. */
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
-    int columnMaxWidth[2] = {0, 0};
+    int columnMaxWidth[12] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
     int pageInARow = 0;
     int rowMaxPageDy = 0;
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
@@ -766,8 +772,9 @@ RestartLayout:
 
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
-    int canvasDx = windowMargin.left + columnMaxWidth[0] + (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) +
-                   windowMargin.right;
+    int canvasDx = windowMargin.left + columnMaxWidth[0] + windowMargin.right;
+    for (int c = 1; c < columns; c++)
+        canvasDx += pageSpacing.dx + columnMaxWidth[c];
     if ((!gGlobalPrefs->fixedPageUI.hideScrollbars) && (!needHScroll) && canvasDx > viewPort.dx) {
         needHScroll = true;
         viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
@@ -1287,6 +1294,9 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
                 break;
             case DisplayMode::BookView:
                 newDisplayMode = DisplayMode::ContinuousBookView;
+                break;
+            case DisplayMode::MultiPage:
+                newDisplayMode = DisplayMode::ContinuousMultiPage;
                 break;
         }
     }
