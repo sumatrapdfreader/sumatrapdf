@@ -3574,7 +3574,10 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
     }
     ScopedCritSec scope(&e->pagesAccess);
     for (int i = 1; i <= e->pageCount; i++) {
-        const auto& pi = e->GetFzPageInfo(i, true);
+        FzPageInfo* pi = e->GetFzPageInfo(i, true);
+        if (!pi) {
+            continue;
+        }
         annotsOut.Append(pi->annotations);
     }
 }
