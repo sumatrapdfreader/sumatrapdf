@@ -71,6 +71,8 @@ struct DisplayModel : DocController {
 
     ~DisplayModel() override;
 
+    int ColumnsFromDisplayMode(DisplayMode displayMode) const;
+
     // meta data
     const char* GetFilePath() const override;
     const char* GetDefaultFileExt() const override;

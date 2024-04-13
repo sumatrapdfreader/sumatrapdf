@@ -86,7 +86,7 @@ bool gShowDebugMenu = false;
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
-static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
+static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 5, "view layout ids are not in a continuous range");
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
 // clang-format off
@@ -229,6 +229,10 @@ static MenuDef menuDefView[] = {
     {
         _TRN("&Book View"),
         CmdBookView,
+    },
+    {
+        _TRN("&Multi Page View"),
+        CmdMultiPage,
     },
     {
         _TRN("Show &Pages Continuously"),
@@ -980,6 +984,7 @@ UINT_PTR removeIfChm[] = {
     CmdSinglePageView,
     CmdFacingView,
     CmdBookView,
+    CmdMultiPage,
     CmdToggleContinuousView,
     CmdRotateLeft,
     CmdRotateRight,
@@ -1550,6 +1555,8 @@ void MenuUpdateDisplayMode(MainWindow* win) {
         id = CmdFacingView;
     } else if (IsBookView(displayMode)) {
         id = CmdBookView;
+    } else if (IsMultiPage(displayMode)) {
+        id = CmdMultiPage;
     } else {
         CrashIf(win->ctrl || DisplayMode::Automatic != displayMode);
     }

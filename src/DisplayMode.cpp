@@ -19,6 +19,7 @@ bool IsContinuous(DisplayMode mode) {
         case DisplayMode::Continuous:
         case DisplayMode::ContinuousFacing:
         case DisplayMode::ContinuousBookView:
+        case DisplayMode::ContinuousMultiPage:
             return true;
     }
     return false;
@@ -30,6 +31,10 @@ bool IsFacing(DisplayMode mode) {
 
 bool IsBookView(DisplayMode mode) {
     return DisplayMode::BookView == mode || DisplayMode::ContinuousBookView == mode;
+}
+
+bool IsMultiPage(DisplayMode mode) {
+    return DisplayMode::MultiPage == mode || DisplayMode::ContinuousMultiPage == mode;
 }
 
 bool IsValidZoom(float zoom) {
@@ -56,7 +61,9 @@ static const char* displayModeNames =
     "book view\0"
     "continuous\0"
     "continuous facing\0"
-    "continuous book view\0";
+    "continuous book view\0"
+    "multi pages\0"
+    "continuous multi pages\0";
 
 const char* DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;

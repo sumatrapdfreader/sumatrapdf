@@ -3638,6 +3638,10 @@ static void ToggleContinuousView(MainWindow* win) {
         case DisplayMode::ContinuousBookView:
             newMode = IsContinuous(newMode) ? DisplayMode::BookView : DisplayMode::ContinuousBookView;
             break;
+        case DisplayMode::MultiPage:
+        case DisplayMode::ContinuousMultiPage:
+            newMode = IsContinuous(newMode) ? DisplayMode::MultiPage : DisplayMode::ContinuousMultiPage;
+            break;
     }
     SwitchToDisplayMode(win, newMode);
 }
@@ -4968,6 +4972,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdBookView:
             SwitchToDisplayMode(win, DisplayMode::BookView, true);
+            break;
+
+        case CmdMultiPage:
+            SwitchToDisplayMode(win, DisplayMode::MultiPage, true);
             break;
 
         case CmdToggleContinuousView:

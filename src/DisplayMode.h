@@ -5,6 +5,7 @@ bool IsSingle(DisplayMode mode);
 bool IsContinuous(DisplayMode mode);
 bool IsFacing(DisplayMode mode);
 bool IsBookView(DisplayMode mode);
+bool IsMultiPage(DisplayMode mode);
 bool IsValidZoom(float zoomLevel);
 
 const char* DisplayModeToString(DisplayMode mode);
