@@ -88,6 +88,9 @@ class EbookAbortCookie : public AbortCookie {
     void Abort() override {
         abort = true;
     }
+    void* GetData() override {
+        return nullptr;
+    }
 };
 
 class EngineEbook : public EngineBase {

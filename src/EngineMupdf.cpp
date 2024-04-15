@@ -78,6 +78,9 @@ class FitzAbortCookie : public AbortCookie {
     void Abort() override {
         cookie.abort = 1;
     }
+    void* GetData() override {
+        return (void*)&cookie;
+    }
 };
 
 // copy of fz_is_external_link without ctx
@@ -2558,27 +2561,42 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
     comments.Reverse();
 }
 
+// like GetFzPageInfo() but fails if we can't acquire locks
+// prevents blocking main thread due to render thread keeping the lock
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/4145
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/4187
+FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
+#if 0
+    return GetFzPageInfo(pageNo, true);
+#else
+    FzPageInfo* res = nullptr;
+    if (!TryEnterCriticalSection(&pagesAccess)) {
+        return nullptr;
+    }
+    if (TryEnterCriticalSection(ctxAccess)) {
+        // CRITICAL_SECTION locking is recursive
+        res = GetFzPageInfo(pageNo, true);
+        LeaveCriticalSection(ctxAccess);
+    }
+    LeaveCriticalSection(&pagesAccess);
+    return res;
+#endif
+}
+
+extern "C" fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
+                                                       fz_cookie* cookie);
+
 // Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
 // (I don't think we read from network now).
 // Maybe: when loading fully, cache extracted text in FzPageInfo
 // so that we don't have to re-do fz_new_stext_page_from_page() when doing search
-FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
+FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie) {
     // TODO: minimize time spent under pagesAccess when fully loading
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = pages[pageIdx];
-
-    if (loadQuick) {
-        /* https://github.com/sumatrapdfreader/sumatrapdf/issues/4145 */
-        /* ctxAccess can be taken for a long time during rendering. We don't want to block main thread when e.g. getting
-         * annotations under cursor */
-        if (!TryEnterCriticalSection(ctxAccess)) {
-            return nullptr;
-        }
-        LeaveCriticalSection(ctxAccess);
-    }
 
     ScopedCritSec ctxScope(ctxAccess);
     if (!pageInfo->page) {
@@ -2627,7 +2645,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     fz_stext_options opts{};
     opts.flags = FZ_STEXT_PRESERVE_IMAGES;
     fz_try(ctx) {
-        stext = fz_new_stext_page_from_page(ctx, page, &opts);
+        stext = fz_new_stext_page_from_page2(ctx, page, &opts, cookie);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -2735,19 +2753,19 @@ RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rota
 RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
 
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
-    if (!pageInfo || !pageInfo->page) {
-        return nullptr;
-    }
-    fz_page* page = pageInfo->page;
-
     fz_cookie* fzcookie = nullptr;
     FitzAbortCookie* cookie = nullptr;
     if (args.cookie_out) {
         cookie = new FitzAbortCookie();
         *args.cookie_out = cookie;
-        fzcookie = &cookie->cookie;
+        fzcookie = (fz_cookie*)cookie->GetData();
     }
+
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, fzcookie);
+    if (!pageInfo || !pageInfo->page) {
+        return nullptr;
+    }
+    fz_page* page = pageInfo->page;
 
     ScopedCritSec cs(ctxAccess);
 
@@ -2836,7 +2854,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
 // don't delete the result
 IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
-    FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfoCanFail(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
@@ -3574,7 +3592,7 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
     }
     ScopedCritSec scope(&e->pagesAccess);
     for (int i = 1; i <= e->pageCount; i++) {
-        FzPageInfo* pi = e->GetFzPageInfo(i, true);
+        FzPageInfo* pi = e->GetFzPageInfo(i, false);
         if (!pi) {
             continue;
         }
@@ -3645,7 +3663,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     if (!epdf->pdfdoc) {
         return nullptr;
     }
-    FzPageInfo* pi = epdf->GetFzPageInfo(pageNo, true);
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
     if (!pi) {
         return nullptr;
     }

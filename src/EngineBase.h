@@ -367,6 +367,7 @@ class AbortCookie {
     // aborts a rendering request (as far as possible)
     // note: must be thread-safe
     virtual void Abort() = 0;
+    virtual void* GetData() = 0;
 };
 
 struct RenderPageArgs {
