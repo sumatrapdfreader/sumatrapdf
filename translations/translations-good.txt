@@ -5136,9 +5136,11 @@ vn:Đóng lại
 br:Fechar Todas as Abas
 co:Chjode tutte l’unghjette
 cy:Cau Pob Tab
+cz:Zavřít všechny karty
 de:Alle Tabs schließen
 fr:Fermer tous les onglets
 he:סגור את כל הכרטיסיות
+it:Chiudi tutte le schede
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
 ro:Închide toate filele
@@ -5194,9 +5196,11 @@ vn:Đóng các tab khác
 br:Fechar Abas a Esquerda
 co:Chjode l’unghjette versu a manca
 cy:Cau Tabiau I'r Chwith
+cz:Zavřít karty doleva
 de:Tabs links schließen
 fr:Fermer les onglets sur la gauche
 he:סגור כרטיסיות משמאל
+it:Chiudi schede a sinistra
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
 ro:Închide filele la stânga
@@ -7264,13 +7268,16 @@ vn:Kích thước mặc định
 br:Apagar
 co:Squassà
 cy:Dileu
+cz:Vymazat
 de:Löschen
 fr:Supprimer
 he:מחק
+it:Cancella
 nl:Verwijderen
 pl:Usuń
 ro:Șterge
 ru:Удалить
+sk:Odstrániť
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
 az:Qeydi sil
