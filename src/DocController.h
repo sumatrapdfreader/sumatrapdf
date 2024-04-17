@@ -94,7 +94,7 @@ struct DocController {
     virtual void SetViewPortSize(Size size) = 0;
 
     // columns
-    virtual void SetColumns(int c)  {};
+    virtual void SetColumns(int)  {};
     virtual void ToggleLiquid()  {};
     virtual bool IsLiquid() {
         return false;
