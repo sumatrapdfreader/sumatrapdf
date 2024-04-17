@@ -71,7 +71,13 @@ struct DisplayModel : DocController {
 
     ~DisplayModel() override;
 
-    int ColumnsFromDisplayMode(DisplayMode displayMode) const;
+    void SetColumns(int columns);
+    void SetColumnsFromDisplayMode(DisplayMode displayMode);
+    void SetColumnsFromZoom();
+    void ToggleLiquid();
+    bool IsLiquid();
+    int columns = 1;
+    bool liquid=false;
 
     // meta data
     const char* GetFilePath() const override;

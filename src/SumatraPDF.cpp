@@ -606,6 +606,7 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     SetRtl(win->hwndReBar, isRTL);
     SetRtl(win->hwndToolbar, isRTL);
     SetRtl(win->hwndFindEdit, isRTL);
+    SetRtl(win->hwndColumnEdit, isRTL);
     SetRtl(win->hwndFindLabel, isRTL);
     SetRtl(win->hwndTbInfoText, isRTL);
     SetRtl(win->hwndPageLabel, isRTL);
@@ -3649,6 +3650,13 @@ static void ToggleContinuousView(MainWindow* win) {
     }
     SwitchToDisplayMode(win, newMode);
 }
+// toggles 'liquil columns' state
+static void ToggleLiquidColumns(MainWindow* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    win->ctrl->ToggleLiquid();
+}
 
 static void ToggleMangaMode(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
@@ -4985,7 +4993,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdToggleContinuousView:
             ToggleContinuousView(win);
             break;
-
+        case CmdToggleLiquid:
+            ToggleLiquidColumns(win);
+            break;
         case CmdToggleMangaMode:
             ToggleMangaMode(win);
             break;

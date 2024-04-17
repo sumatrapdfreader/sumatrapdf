@@ -93,6 +93,13 @@ struct DocController {
     virtual float GetNextZoomStep(float towards) const = 0;
     virtual void SetViewPortSize(Size size) = 0;
 
+    // columns
+    virtual void SetColumns(int c)  {};
+    virtual void ToggleLiquid()  {};
+    virtual bool IsLiquid() {
+        return false;
+    };
+
     // table of contents
     bool HasToc() {
         auto* tree = GetToc();

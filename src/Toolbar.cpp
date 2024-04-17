@@ -457,6 +457,21 @@ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
     return ret;
 }
 
+static WNDPROC DefWndProcEditColumn = nullptr;
+static LRESULT CALLBACK WndProcEditColumn(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
+    if (!win || !win->IsDocLoaded()) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+    switch (wp) {
+    case VK_RETURN: {
+        char* s = HwndGetTextTemp(win->hwndColumnEdit);
+        int column = atoi(s);
+        win->ctrl->SetColumns(column);
+    }}
+    LRESULT ret = CallWindowProc(DefWndProcEditColumn, hwnd, msg, wp, lp);
+    return ret;
+}
 void UpdateToolbarFindText(MainWindow* win) {
     bool showUI = NeedsFindUI(win);
     HwndSetVisibility(win->hwndFindLabel, showUI);
@@ -564,7 +579,30 @@ static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
     win->hwndFindEdit = find;
     win->hwndFindBg = findBg;
 }
+static void CreateColumnBox(MainWindow* win, HFONT hfont, int iconDy) {
+    int findBoxDx = HwndMeasureText(win->hwndFrame, "this", hfont).dx;
+    HMODULE hmod = GetModuleHandleW(nullptr);
+    HWND p = win->hwndToolbar;
+    DWORD style = WS_VISIBLE | WS_CHILD | WS_BORDER;
+    DWORD exStyle = 0;
+    int dy = iconDy + 2;
+    HWND colBg =
+        CreateWindowEx(exStyle, WC_STATIC, L"", style, 700, 0, findBoxDx+2, dy, p, (HMENU) nullptr, hmod, nullptr);
 
+    style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
+    dy = iconDy;
+    exStyle = 0;
+
+    HWND col = CreateWindowExW(exStyle, WC_EDIT, L"", style, 701, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
+    SetWindowFont(col, hfont, FALSE);
+    win->hwndColumnEdit = col;
+    win->hwndColumnBg= colBg;
+        if (!DefWndProcEditColumn) {
+        DefWndProcEditColumn = (WNDPROC)GetWindowLongPtr(col, GWLP_WNDPROC);
+    }
+    SetWindowLongPtr(col, GWLP_WNDPROC, (LONG_PTR)WndProcEditColumn);
+    HwndSetVisibility(win->hwndColumnEdit, NeedsFindUI(win));
+}
 static void CreateInfoText(MainWindow* win, HFONT font) {
     HMODULE hmod = GetModuleHandleW(nullptr);
     DWORD style = WS_VISIBLE | WS_CHILD;
@@ -1015,6 +1053,7 @@ void CreateToolbar(MainWindow* win) {
 
     CreatePageBox(win, font, iconSize);
     CreateFindBox(win, font, iconSize);
+    CreateColumnBox(win, font, iconSize);
     CreateInfoText(win, font);
 
     UpdateToolbarPageText(win, -1);
