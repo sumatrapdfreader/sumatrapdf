@@ -1,12 +1,12 @@
 AppTranslator: SumatraPDF
-e23ee787a2cbe9b4b87cc4274cacdfe2ff286a03
+b8f3780c50c45cb3b9cc40eda268551f0dd48c5e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
 az:Qeyd %s. Düzəliş etmək üçün Ctrl+düyməyə basın.
 br:Anotação %s. Ctrl+clique pra editar.
 ca:Anotació %s. Ctrl+clic per editar.
-cn:%s 标注
+cn:%s 标注。按下 Ctrl 并单击以编辑。
 co:Annutazione %s. Ctrl+cliccu per mudificà.
 cy:%s anodiad. Ctrl+clic i olygu.
 cz:Poznámka %s. Ctrl+kliknutí pro úpravu.
@@ -4042,7 +4042,7 @@ bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 by:Дадаць старонку %s у лепшыя закладкі з (калі патрэбна) імянем:
 ca-xv:Afegeix la pàgina %s als preferits amb el nom (opcional):
 ca:Afegeix la pàgina %s als preferits amb un nom (opcional):
-cn:以 (可选) 名称将第 %s 页添加到收藏夹:
+cn:以 (可选) 名称将第 %s 页添加到收藏夹：
 co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
 cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
 cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
@@ -6175,6 +6175,7 @@ uz:Yopish
 vn:Đóng lại
 :Close All Tabs
 br:Fechar Todas as Abas
+cn:关闭所有标签页
 co:Chjode tutte l’unghjette
 cy:Cau Pob Tab
 cz:Zavřít všechny karty
@@ -6192,7 +6193,7 @@ am:Փակել այլ ներդիրները
 ar:أغلق علامات التبويب الأخرى
 az:Digər tabları bağla
 bg:Затвори другите отметки
-br:Fechar Outras Abas
+br:Fechar as Outras Abas
 by:Закрыць іншыя ўкладкі
 ca:Tanca les altres pestanyes
 cn:关闭其他标签页
@@ -6238,6 +6239,7 @@ uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
 br:Fechar Abas a Esquerda
+cn:关闭左侧窗口
 co:Chjode l’unghjette versu a manca
 cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
@@ -6363,7 +6365,7 @@ br:Cor:
 by:Колер:
 ca-xv:Color
 ca:Color
-cn:颜色:
+cn:颜色：
 co:Culore :
 cy:Lliw:
 cz:Barva:
@@ -7304,7 +7306,7 @@ by:Аўтарския правы:
 ca-xv:Copyright:
 ca:Copyright:
 cn:版权:
-co:Diritti di copia :
+co:Diritti d’autore :
 cy:Hawlfraint
 cz:Autorská práva:
 de:Copyright:
@@ -8737,6 +8739,7 @@ uz:Andoza &miqyos
 vn:Kích thước mặc định
 :Delete
 br:Apagar
+cn:删除
 co:Squassà
 cy:Dileu
 cz:Vymazat
