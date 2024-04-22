@@ -1401,7 +1401,8 @@ char& Str::operator[](u32 idx) const {
 size_t Str::size() const {
     return len;
 }
-int Str::isize() const {
+
+int Str::Size() const {
     return (int)len;
 }
 
@@ -2663,7 +2664,7 @@ void StrVec::SetAt(int idx, const char* s) {
 }
 
 int StrVec::Size() const {
-    return index.isize();
+    return index.Size();
 }
 
 char* StrVec::operator[](int idx) const {

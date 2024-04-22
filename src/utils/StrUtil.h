@@ -293,7 +293,7 @@ struct Str {
     char& operator[](u32 idx) const;
 #endif
     size_t size() const;
-    int isize() const;
+    int Size() const;
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
     bool Append(const char* src, size_t count = -1);
@@ -462,7 +462,7 @@ struct StrVec {
         return Iterator(this, 0);
     }
     Iterator end() {
-        return Iterator(this, index.isize());
+        return Iterator(this, index.Size());
     }
 };
 

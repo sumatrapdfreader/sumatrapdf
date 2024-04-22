@@ -93,7 +93,7 @@ FileState* FileHistory::Get(size_t index) const {
 
 FileState* FileHistory::FindByPath(const char* filePath) const {
     int idxExact = -1;
-    int n = states->isize();
+    int n = states->Size();
     for (int i = 0; i < n; i++) {
         FileState* fs = states->at(i);
         if (str::EqI(fs->filePath, filePath)) {
@@ -112,7 +112,7 @@ FileState* FileHistory::FindByName(const char* filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
     TempStr fileName = path::GetBaseNameTemp(filePath);
-    int n = states->isize();
+    int n = states->Size();
     for (int i = 0; i < n; i++) {
         FileState* fs = states->at(i);
         if (str::EqI(fs->filePath, filePath)) {

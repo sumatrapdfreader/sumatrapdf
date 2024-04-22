@@ -149,7 +149,7 @@ void log(const char* s, bool always) {
         gLogAllocator = new HeapAllocator();
         gLogBuf = new str::Str(32 * 1024, gLogAllocator);
     } else {
-        if (gLogBuf->isize() > kMaxLogBuf) {
+        if (gLogBuf->Size() > kMaxLogBuf) {
             // TODO: use gLogBuf->Clear(), which doesn't free the allocated space
             gLogBuf->Reset();
         }

@@ -195,7 +195,7 @@ static void WindowMapAdd(HWND hwnd, Wnd* w) {
 
 /*
 static bool WindowMapRemove(HWND hwnd) {
-    int n = gWindowToHwndMap.isize();
+    int n = gWindowToHwndMap.Size();
     for (int i = 0; i < n; i++) {
         auto&& el = gWindowToHwndMap[i];
         if (el.hwnd == hwnd) {
@@ -208,7 +208,7 @@ static bool WindowMapRemove(HWND hwnd) {
 */
 
 static bool WindowMapRemove(Wnd* w) {
-    int n = gWindowToHwndMap.isize();
+    int n = gWindowToHwndMap.Size();
     for (int i = 0; i < n; i++) {
         auto&& el = gWindowToHwndMap[i];
         if (el.window == w) {

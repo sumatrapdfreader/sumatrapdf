@@ -1025,7 +1025,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
 IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
 
-    int n = els.isize();
+    int n = els.Size();
     // elements are extracted bottom-to-top but are accessed
     // in top-to-bottom order, so search bacwards
     for (int i = n - 1; i >= 0; i--) {

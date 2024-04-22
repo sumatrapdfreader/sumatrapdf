@@ -187,7 +187,7 @@ static Favorite* FindByPage(FileState* ds, int pageNo, const char* pageLabel = n
         return nullptr;
     }
     auto favs = ds->favorites;
-    int n = favs->isize();
+    int n = favs->Size();
     if (pageLabel) {
         for (int i = 0; i < n; i++) {
             auto fav = favs->at(i);

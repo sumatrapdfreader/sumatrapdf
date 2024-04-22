@@ -181,7 +181,7 @@ struct EditAnnotationsWindow : Wnd {
 
 #if 0
 static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
-    int nAnnots = ew->annotations.isize();
+    int nAnnots = ew->annotations.Size();
     if (nAnnots == 0) {
         return nullptr;
     }
@@ -363,7 +363,7 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     auto model = new ListBoxModelStrings();
     int n = 0;
-    n = ew->annotations.isize();
+    n = ew->annotations.Size();
 
     str::Str s;
     for (int i = 0; i < n; i++) {
@@ -940,7 +940,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
     int itemNo = listBox->GetCurrentSelection();
     if (!annotations.isValidIndex(itemNo)) {
         logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, annotations.size()=%d\n", itemNo,
-              annotations.isize());
+              annotations.Size());
         ReportIf(true);
         return;
     }

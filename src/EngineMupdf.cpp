@@ -1133,7 +1133,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
             auto pel = new PageElementImage();
             pel->pageNo = pageNo;
             pel->rect = ToRectF(block->bbox);
-            pel->imageID = images.isize();
+            pel->imageID = images.Size();
             img->imageElement = pel;
             images.Append(img);
         }
@@ -2614,7 +2614,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     }
 
     // build annotations info on first access
-    if (pdfdoc && pageInfo->annotations.isize() == 0) {
+    if (pdfdoc && pageInfo->annotations.Size() == 0) {
         fz_try(ctx) {
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
             pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
@@ -2969,7 +2969,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
     const auto& images = pageInfo->images;
-    bool outOfBounds = imageIdx >= images.isize();
+    bool outOfBounds = imageIdx >= images.Size();
     fz_rect imgRect = images.at(imageIdx)->rect;
     bool badRect = ToRectF(imgRect) != rect;
     CrashIf(outOfBounds);
@@ -3736,18 +3736,18 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     FzPageInfo* pageInfo = e->pages[pageIdx];
 
     if (change == AnnotationChange::Remove) {
-        int sizeBefore = pageInfo->annotations.isize();
+        int sizeBefore = pageInfo->annotations.Size();
         int removedPos = pageInfo->annotations.Remove(annot);
         CrashIf(removedPos < 0); // must exist
-        int sizeNow = pageInfo->annotations.isize();
+        int sizeNow = pageInfo->annotations.Size();
         CrashIf(sizeBefore != sizeNow + 1);
         ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
-        int sizeBefore = pageInfo->annotations.isize();
+        int sizeBefore = pageInfo->annotations.Size();
         int pos = pageInfo->annotations.Find(annot);
         CrashIf(pos >= 0); // shouldn't exist
         pageInfo->annotations.Append(annot);
-        int sizeNow = pageInfo->annotations.isize();
+        int sizeNow = pageInfo->annotations.Size();
         CrashIf(sizeBefore != sizeNow - 1);
         ValidateAnnotationsInSync(e, pageInfo);
     } else {

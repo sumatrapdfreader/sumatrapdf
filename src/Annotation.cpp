@@ -270,7 +270,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
         auto ctx = e->ctx;
         ScopedCritSec cs(e->ctxAccess);
         fz_quad quads[512];
-        int n = rects.isize();
+        int n = rects.Size();
         if (n == 0) {
             return;
         }

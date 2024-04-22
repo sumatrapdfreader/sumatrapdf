@@ -629,7 +629,7 @@ bool EngineImage::FinishLoading() {
             pages.Append(pi);
         }
     }
-    pageCount = pages.isize();
+    pageCount = pages.Size();
 
     return pageCount > 0;
 }
@@ -1237,7 +1237,7 @@ bool EngineCbx::FinishLoading() {
         json::Parse(comment, &cip);
     }
 
-    int nFiles = pageFiles.isize();
+    int nFiles = pageFiles.Size();
     if (nFiles == 0) {
         delete cbxFile;
         cbxFile = nullptr;

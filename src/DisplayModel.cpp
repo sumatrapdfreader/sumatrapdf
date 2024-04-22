@@ -1603,7 +1603,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     CrashIf(zoomLevels[0] != kZoomMin || zoomLevels[dimof(zoomLevels)-1] != kZoomMax);
 #endif
     Vec<float>* zoomLevels = gGlobalPrefs->zoomLevels;
-    int nZooms = zoomLevels->isize();
+    int nZooms = zoomLevels->Size();
     CrashIf(nZooms != 0 && (zoomLevels->at(0) < kZoomMin || zoomLevels->Last() > kZoomMax));
     CrashIf(nZooms != 0 && zoomLevels->at(0) > zoomLevels->Last());
 

@@ -354,7 +354,7 @@ VBox::~VBox() {
 }
 
 int VBox::ChildrenCount() const {
-    return children.isize();
+    return children.Size();
 }
 
 int VBox::NonCollapsedChildrenCount() {
@@ -681,7 +681,7 @@ HBox::~HBox() {
 }
 
 int HBox::ChildrenCount() const {
-    return children.isize();
+    return children.Size();
 }
 
 int HBox::NonCollapsedChildrenCount() {

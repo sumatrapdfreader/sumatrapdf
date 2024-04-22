@@ -209,10 +209,6 @@ class Vec {
         return len;
     }
 
-    int isize() const {
-        return (int)len;
-    }
-
     int Size() const {
         return (int)len;
     }

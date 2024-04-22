@@ -1088,7 +1088,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     int cbData;
     if (fmt == CF_TEXT) {
         data = (void*)str.Get();
-        cbData = str.isize() + 1;
+        cbData = str.Size() + 1;
     } else if (fmt == CF_UNICODETEXT) {
         TempWStr tmp = ToWStrTemp(str.Get());
         data = (void*)tmp;

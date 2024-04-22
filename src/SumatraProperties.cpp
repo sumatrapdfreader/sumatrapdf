@@ -303,7 +303,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     /* calculate text dimensions for the left side */
     SelectObject(hdc, fontLeftTxt);
     int leftMaxDx = 0;
-    int nProps = layoutData->props.isize();
+    int nProps = layoutData->props.Size();
     for (int i = 0; i < nProps; i++) {
         auto&& prop = layoutData->props.at(i);
         const char* txt = layoutData->PropKey(i);
@@ -405,7 +405,7 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
 
     // concatenate all the properties into a multi-line string
     str::Str lines(256);
-    int nProps = layoutData->props.isize();
+    int nProps = layoutData->props.Size();
     for (int i = 0; i < nProps; i++) {
         auto key = layoutData->PropKey(i);
         auto val = layoutData->PropValue(i);
@@ -620,7 +620,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
-    int nProps = layoutData->props.isize();
+    int nProps = layoutData->props.Size();
     for (int i = 0; i < nProps; i++) {
         auto&& prop = layoutData->props.at(i);
         auto txt = layoutData->PropKey(i);

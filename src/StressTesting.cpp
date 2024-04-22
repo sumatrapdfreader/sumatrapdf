@@ -451,7 +451,7 @@ struct StressTest {
 
 template <typename T>
 T RemoveRandomElementFromVec(Vec<T>& v) {
-    auto n = v.isize();
+    auto n = v.Size();
     CrashIf(n <= 0);
     int idx = rand() % n;
     int res = v.PopAt((size_t)idx);
@@ -614,7 +614,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
         }
     }
 
-    int randomPageIdx = rand() % st->pagesToRender.isize();
+    int randomPageIdx = rand() % st->pagesToRender.Size();
     st->pageForSearchStart = st->pagesToRender[randomPageIdx];
 
     st->currPageNo = st->pagesToRender.PopAt(0);
