@@ -429,7 +429,7 @@ UINT Pdfsync::SourceToRecord(const char* srcfilename, int line, int, Vec<size_t>
 
     for (size_t isec = fileIndex.at(isrc).start; isec < fileIndex.at(isrc).end; isec++) {
         // does this section belong to the desired file?
-        if (lines.at(isec).file != isrc) {
+        if (lines.at(isec).file != (size_t)isrc) {
             continue;
         }
 
