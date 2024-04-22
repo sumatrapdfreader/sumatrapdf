@@ -1374,10 +1374,6 @@ char& Str::at(int idx) const {
     return at((size_t)idx);
 }
 
-char& Str::operator[](size_t idx) const {
-    return at(idx);
-}
-
 char& Str::operator[](long idx) const {
     CrashIf(idx < 0);
     return at((size_t)idx);
@@ -2675,11 +2671,6 @@ char* StrVec::operator[](int idx) const {
     return at(idx);
 }
 
-char* StrVec::operator[](size_t idx) const {
-    CrashIf((int)idx < 0);
-    return at((int)idx);
-}
-
 char* StrVec::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
@@ -2735,16 +2726,12 @@ char* StrVec::RemoveAt(int idx) {
 }
 
 // Note: returned string remains valid as long as StrVec is valid
-char* StrVec::RemoveAtFast(size_t idx) {
-    u32 strIdx = index[idx];
-    index.RemoveAtFast(idx);
-    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
-    return res;
-}
-
 char* StrVec::RemoveAtFast(int idx) {
     CrashIf(idx < 0);
-    return this->RemoveAtFast((size_t)idx);
+    u32 strIdx = index[idx];
+    index.RemoveAtFast((size_t)idx);
+    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
+    return res;
 }
 
 // return true if did remove

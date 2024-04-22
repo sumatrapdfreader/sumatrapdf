@@ -418,7 +418,11 @@ struct StrVec {
     int Size() const;
     char* at(int) const;
     char* operator[](int) const;
-    char* operator[](size_t) const;
+
+    // TODO: remove
+    char* operator[](size_t idx) const {
+        return at((int)idx);
+    }
 
     int Append(const char*, size_t len = 0);
     int AppendIfNotExists(const char*);
@@ -428,7 +432,6 @@ struct StrVec {
     int FindI(const char*, int startAt = 0) const;
     bool Contains(const char*) const;
     char* PopAt(int);
-    char* RemoveAtFast(size_t idx);
     char* RemoveAtFast(int idx);
     char* RemoveAt(int idx);
     bool Remove(const char*);
