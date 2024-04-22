@@ -286,7 +286,6 @@ struct Str {
     char& at(int idx) const;
     char& operator[](size_t idx) const;
     char& operator[](long idx) const;
-    char& operator[](ULONG idx) const;
     char& operator[](int idx) const;
 #if defined(_WIN64)
     char& at(u32 idx) const;

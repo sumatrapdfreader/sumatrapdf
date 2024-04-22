@@ -1379,10 +1379,6 @@ char& Str::operator[](long idx) const {
     return at((size_t)idx);
 }
 
-char& Str::operator[](ULONG idx) const {
-    return at((size_t)idx);
-}
-
 char& Str::operator[](int idx) const {
     CrashIf(idx < 0);
     return at((size_t)idx);
