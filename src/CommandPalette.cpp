@@ -437,7 +437,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
             tempStrings.Append(strs);
         }
     }
-    tempStrings.SortNoCase();
+    SortNoCase(tempStrings);
     for (char* s : tempStrings) {
         commands.Append(s);
     }

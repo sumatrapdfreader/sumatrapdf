@@ -300,7 +300,7 @@ static void StrVecTest() {
         auto exp = strs[4];
         assertStrEq(got, exp);
     }
-    sortedView.SortNoCase();
+    SortNoCase(sortedView);
 
     for (int i = 0; i < n; i++) {
         auto got = sortedView.at(i);
@@ -315,7 +315,7 @@ static void StrVecTest() {
         assertStrEq(got, exp);
     }
     StrVecCheckIter(v, nullptr);
-    v.SortNoCase();
+    SortNoCase(v);
     for (int i = 0; i < n; i++) {
         char* got = v.at(i);
         auto exp = strs[sortedNoCaseOrder[i]];

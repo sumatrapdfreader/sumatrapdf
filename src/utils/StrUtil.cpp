@@ -2785,8 +2785,8 @@ static bool strLessNoCase(const char* s1, const char* s2) {
     return n < 0;
 }
 
-void StrVec::SortNoCase() {
-    Sort(strLessNoCase);
+void SortNoCase(StrVec& v) {
+    v.Sort(strLessNoCase);
 }
 
 static bool strLessNatural(const char* s1, const char* s2) {
@@ -2794,8 +2794,8 @@ static bool strLessNatural(const char* s1, const char* s2) {
     return n < 0; // TODO: verify it's < and not >
 }
 
-void StrVec::SortNatural() {
-    Sort(strLessNatural);
+void SortNatural(StrVec& v) {
+    v.Sort(strLessNatural);
 }
 
 void StrVec::Sort(StrLessFunc lessFn) {

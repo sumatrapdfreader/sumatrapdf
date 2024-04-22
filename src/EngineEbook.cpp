@@ -630,7 +630,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
         return nullptr;
     }
 
-    fonts.SortNatural();
+    SortNatural(fonts);
     return JoinTemp(fonts, "\n");
 }
 

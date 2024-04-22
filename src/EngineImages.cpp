@@ -848,7 +848,7 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
         return false;
     }
 
-    e->pageFileNames.SortNatural();
+    SortNatural(e->pageFileNames);
 
     for (int i = 0; i < nFiles; i++) {
         ImagePageInfo* pi = new ImagePageInfo();

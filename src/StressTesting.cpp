@@ -385,7 +385,7 @@ bool DirFileProvider::OpenDir(const char* dirPath) {
     CrashIf(filesToOpen.size() > 0);
 
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
-    filesToOpen.SortNatural();
+    SortNatural(filesToOpen);
 
     TempStr pattern = str::FormatTemp("%s\\*", dirPath);
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);

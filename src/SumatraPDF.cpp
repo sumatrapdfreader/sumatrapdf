@@ -3331,7 +3331,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
         files.RemoveAt(i);
     }
     files.AppendIfNotExists(path);
-    files.SortNatural();
+    SortNatural(files);
     return files;
 }
 

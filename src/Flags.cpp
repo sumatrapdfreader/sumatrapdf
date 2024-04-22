@@ -159,7 +159,7 @@ bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
 
     StrVec rangeList;
     Split(rangeList, ranges, ",", true);
-    rangeList.SortNatural();
+    SortNatural(rangeList);
 
     for (char* rangeStr : rangeList) {
         int start, end;

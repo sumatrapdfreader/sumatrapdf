@@ -430,8 +430,6 @@ struct StrVec {
     bool Remove(const char*);
 
     void Sort(StrLessFunc lessFn = nullptr);
-    void SortNoCase();
-    void SortNatural();
     struct Iterator {
         using iterator_category = std::forward_iterator_tag;
 
@@ -468,6 +466,9 @@ struct StrVec {
         return Iterator(this, index.isize());
     }
 };
+
+void SortNoCase(StrVec&);
+void SortNatural(StrVec&);
 
 size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
 char* Join(const StrVec& v, const char* sep = nullptr);
