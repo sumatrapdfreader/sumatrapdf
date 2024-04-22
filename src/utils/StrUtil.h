@@ -411,10 +411,6 @@ struct StrVec {
     ~StrVec() = default;
     void Reset();
 
-    // TODO: remove
-    size_t size() const {
-        return index.Size();
-    }
     int Size() const;
     char* at(int) const;
     char* operator[](int) const;
@@ -432,6 +428,7 @@ struct StrVec {
     bool Remove(const char*);
 
     void Sort(StrLessFunc lessFn = nullptr);
+
     struct Iterator {
         using iterator_category = std::forward_iterator_tag;
 

@@ -2103,7 +2103,7 @@ void DropDown::SetCurrentSelection(int n) {
         ComboBox_SetCurSel(hwnd, -1);
         return;
     }
-    int nItems = (int)items.size();
+    int nItems = items.Size();
     CrashIf(n >= nItems);
     ComboBox_SetCurSel(hwnd, n);
 }

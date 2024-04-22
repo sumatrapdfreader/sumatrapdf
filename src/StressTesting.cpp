@@ -316,7 +316,7 @@ class TestFileProvider {
 
 class FilesProvider : public TestFileProvider {
     StrVec files;
-    size_t provided = 0;
+    int provided = 0;
 
   public:
     explicit FilesProvider(const char* path) {
@@ -325,7 +325,7 @@ class FilesProvider : public TestFileProvider {
     }
     FilesProvider(StrVec& filesIn, int n, int offset) {
         // get every n-th file starting at offset
-        for (size_t i = offset; i < filesIn.size(); i += n) {
+        for (int i = offset; i < filesIn.Size(); i += n) {
             const char* f = filesIn[i];
             files.Append(f);
         }
@@ -340,7 +340,7 @@ class FilesProvider : public TestFileProvider {
     }
 
     TempStr NextFile() override {
-        if (provided >= files.size()) {
+        if (provided >= files.Size()) {
             return nullptr;
         }
         TempStr res = files.at(provided++);
@@ -382,7 +382,7 @@ DirFileProvider::~DirFileProvider() {
 }
 
 bool DirFileProvider::OpenDir(const char* dirPath) {
-    CrashIf(filesToOpen.size() > 0);
+    CrashIf(filesToOpen.Size() > 0);
 
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     SortNatural(filesToOpen);
@@ -394,11 +394,11 @@ bool DirFileProvider::OpenDir(const char* dirPath) {
 }
 
 TempStr DirFileProvider::NextFile() {
-    if (filesToOpen.size() > 0) {
+    if (filesToOpen.Size() > 0) {
         return filesToOpen.PopAt(0);
     }
 
-    if (dirsToVisit.size() > 0) {
+    if (dirsToVisit.Size() > 0) {
         // test next directory
         char* path = dirsToVisit.RemoveAt(0);
         OpenDir(path);
@@ -416,9 +416,9 @@ void DirFileProvider::Restart() {
     OpenDir(startDir);
 }
 
-static size_t GetAllMatchingFiles(const char* dir, const char* filter, StrVec& files, bool showProgress) {
+static int GetAllMatchingFiles(const char* dir, const char* filter, StrVec& files, bool showProgress) {
     CollectStressTestSupportedFilesFromDirectory(dir, filter, files);
-    return files.size();
+    return files.Size();
 }
 
 /* The idea of StressTest is to render a lot of PDFs sequentially, simulating
@@ -848,7 +848,7 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
     StrVec fileExts;
     Vec<StrVec*> filesPerType;
 
-    for (size_t i = 0; i < files.size(); i++) {
+    for (int i = 0; i < files.Size(); i++) {
         char* file = files.at(i);
         char* ext = path::GetExtTemp(file);
         CrashAlwaysIf(!ext);
@@ -856,7 +856,7 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
         if (-1 == typeNo) {
             fileExts.Append(ext);
             filesPerType.Append(new StrVec());
-            typeNo = (int)filesPerType.size() - 1;
+            typeNo = filesPerType.Size() - 1;
         }
         filesPerType.at(typeNo)->Append(file);
     }
@@ -865,8 +865,8 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
         StrVec* all = filesPerType.at(j);
         StrVec* random = new StrVec();
 
-        for (int n = 0; n < maxPerType && all->size() > 0; n++) {
-            int idx = rand() % all->size();
+        for (int n = 0; n < maxPerType && all->Size() > 0; n++) {
+            int idx = rand() % all->Size();
             char* file = all->at(idx);
             random->Append(file);
             all->RemoveAt(idx);
@@ -883,7 +883,7 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
         gotAll = true;
         for (size_t j = 0; j < filesPerType.size(); j++) {
             StrVec* random = filesPerType.at(j);
-            if (random->size() > 0) {
+            if (random->Size() > 0) {
                 gotAll = false;
                 char* file = random->at(0);
                 files.Append(file);
@@ -925,12 +925,12 @@ void StartStressTest(Flags* i, MainWindow* win) {
 
         printf("Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);
-        size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
+        int filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
         if (0 == filesCount) {
             printf("Didn't find any files matching filter '%s'\n", i->stressTestFilter);
             return;
         }
-        printf("Found %d files", (int)filesCount);
+        printf("Found %d files", filesCount);
         if (i->stressTestMax > 0) {
             while (filesToTest.Size() > i->stressTestMax) {
                 int lastIdx = filesToTest.Size() - 1;
@@ -943,8 +943,8 @@ void StartStressTest(Flags* i, MainWindow* win) {
         if (i->stressRandomizeFiles) {
             // TODO: should probably allow over-writing the 100 limit
             RandomizeFiles(filesToTest, 100);
-            filesCount = filesToTest.size();
-            printf("\nAfter randomization: %d files", (int)filesCount);
+            filesCount = filesToTest.Size();
+            printf("\nAfter randomization: %d files", filesCount);
         }
         printf("\n");
         fflush(stdout);

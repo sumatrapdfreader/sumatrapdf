@@ -187,7 +187,7 @@ void SetCurrentLang(const char* langCode) {
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
     CrashIf(gPolicyRestrictions != Perm::RestrictedUse);
-    CrashIf(gAllowedLinkProtocols.size() != 0 || gAllowedFileTypes.size() != 0);
+    CrashIf(gAllowedLinkProtocols.Size() != 0 || gAllowedFileTypes.Size() != 0);
 
     // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
     if (restrict) {

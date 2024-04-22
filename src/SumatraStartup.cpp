@@ -114,7 +114,7 @@ void FileExistenceChecker::HideMissingFiles() {
         gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
-    if (paths.size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
+    if (paths.Size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
         gWindows.at(0)->RedrawAll(true);
     }
 }
@@ -129,7 +129,7 @@ void FileExistenceChecker::Run() {
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
-    for (size_t i = 0; i < paths.size(); i++) {
+    for (int i = 0; i < paths.Size(); i++) {
         const char* path = paths[i];
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
             paths.RemoveAt(i--);
@@ -411,7 +411,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad 
 }
 
 static bool SetupPluginMode(Flags& i) {
-    if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0) {
+    if (!IsWindow(i.hwndPluginParent) || i.fileNames.Size() == 0) {
         return false;
     }
 
@@ -454,7 +454,7 @@ static bool SetupPluginMode(Flags& i) {
         str::TransCharsInPlace(args, "#", "&");
         StrVec parts;
         Split(parts, args, "&", true);
-        for (size_t k = 0; k < parts.size(); k++) {
+        for (int k = 0; k < parts.Size(); k++) {
             char* part = parts.at(k);
             int pageNo;
             if (str::StartsWithI(part, "page=") && str::Parse(part + 4, "=%d%$", &pageNo)) {
@@ -642,7 +642,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
 
     char* arg = nullptr;
     char* param = nullptr;
-    for (size_t n = 0; n < i.globalPrefArgs.size(); n++) {
+    for (int n = 0; n < i.globalPrefArgs.Size(); n++) {
         arg = i.globalPrefArgs.at(n);
         if (str::EqI(arg, "-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
@@ -1215,7 +1215,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     {
         // search only applies if there's 1 file
-        auto nFiles = flags.fileNames.size();
+        auto nFiles = flags.fileNames.Size();
         if (nFiles != 1) {
             str::FreePtr(&flags.search);
         }
@@ -1254,12 +1254,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         // TODO: should exit?
     }
     if (existingHwnd) {
-        size_t nFiles = flags.fileNames.size();
+        int nFiles = flags.fileNames.Size();
         // we allow -new-window on its own if no files given
         if (nFiles > 0 && IsNoAdminToAdmin(existingHwnd)) {
             goto Exit;
         }
-        for (size_t n = 0; n < nFiles; n++) {
+        for (int n = 0; n < nFiles; n++) {
             char* path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);
             OpenUsingDDE(existingHwnd, path, flags, isFirstWindow);
@@ -1295,7 +1295,7 @@ ContinueOpenWindow:
         logf("not restoring a session because the same exe is already running and tabs are disabled\n");
     }
 
-    showStartPage = !restoreSession && flags.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles &&
+    showStartPage = !restoreSession && flags.fileNames.Size() == 0 && gGlobalPrefs->rememberOpenedFiles &&
                     gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
@@ -1354,7 +1354,7 @@ ContinueOpenWindow:
         MaybeGoTo(win, flags.destName, flags.pageNumber);
     }
 
-    nWithDde = (int)gDdeOpenOnStartup.size();
+    nWithDde = gDdeOpenOnStartup.Size();
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
         for (char* path : gDdeOpenOnStartup) {
@@ -1371,7 +1371,7 @@ ContinueOpenWindow:
 
     gIsStartup = false;
 
-    if (flags.fileNames.size() > 0 && !win) {
+    if (flags.fileNames.Size() > 0 && !win) {
         // failed to create any window, even though there
         // were files to load (or show a failure message for)
         goto Exit;

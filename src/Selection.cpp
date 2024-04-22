@@ -291,7 +291,7 @@ char* GetSelectedText(WindowTab* tab, const char* lineSep, bool& isTextOnlySelec
         }
         str::Free(text);
     }
-    if (selections.size() == 0) {
+    if (selections.Size() == 0) {
         return nullptr;
     }
     char* s = Join(selections, lineSep);

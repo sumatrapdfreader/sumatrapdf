@@ -331,21 +331,21 @@ static void StrVecTest2() {
     v.Append("foo");
     v.Append("bar");
     char* s = Join(v);
-    utassert(v.size() == 2);
+    utassert(v.Size() == 2);
     utassert(str::Eq("foobar", s));
     str::Free(s);
 
     s = Join(v, ";");
-    utassert(v.size() == 2);
+    utassert(v.Size() == 2);
     utassert(str::Eq("foo;bar", s));
     str::Free(s);
 
     v.Append(nullptr);
-    utassert(v.size() == 3);
+    utassert(v.Size() == 3);
 
     v.Append("glee");
     s = Join(v, "_ _");
-    utassert(v.size() == 4);
+    utassert(v.Size() == 4);
     utassert(str::Eq("foo_ _bar_ _glee", s));
     str::Free(s);
 
@@ -355,7 +355,7 @@ static void StrVecTest2() {
     StrVecCheckIter(v, strsSorted);
 
     s = Join(v, "++");
-    utassert(v.size() == 4);
+    utassert(v.Size() == 4);
     utassert(str::Eq("bar++foo++glee", s));
     str::Free(s);
 
@@ -369,7 +369,7 @@ static void StrVecTest2() {
         v2.Append("nobar");
         utassert(str::Eq(v2.at(4), "nobar"));
         v2 = v;
-        utassert(v2.size() == 4);
+        utassert(v2.Size() == 4);
         // copies should be same values but at different addresses
         utassert(v2.at(1) != v.at(1));
         utassert(str::Eq(v2.at(1), v.at(1)));
@@ -410,11 +410,11 @@ static void StrVecTest2() {
 
 static void StrVecTest3() {
     StrVec v;
-    utassert(v.size() == 0);
+    utassert(v.Size() == 0);
     v.Append(str::Dup("one"));
     v.Append(str::Dup("two"));
     v.Append(str::Dup("One"));
-    utassert(v.size() == 3);
+    utassert(v.Size() == 3);
     utassert(str::Eq(v.at(0), "one"));
     utassert(str::EqI(v.at(2), "one"));
     utassert(v.Find("One") == 2);
