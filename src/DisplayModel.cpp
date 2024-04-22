@@ -87,6 +87,10 @@ void DisplayModel::SetColumns(int columns) {
     GoToPage(CurrentPageNo(), 0);
 }
 
+int DisplayModel::GetColumns() {
+    return columns;
+}   
+
 void DisplayModel::SetColumnsFromDisplayMode(DisplayMode displayMode) {
     switch (displayMode) {
         case DisplayMode::SinglePage:

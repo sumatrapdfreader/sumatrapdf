@@ -72,6 +72,7 @@ struct DisplayModel : DocController {
     ~DisplayModel() override;
 
     void SetColumns(int columns);
+    int GetColumns();
     void SetColumnsFromDisplayMode(DisplayMode displayMode);
     void SetColumnsFromZoom();
     void ToggleLiquid();

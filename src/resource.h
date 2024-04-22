@@ -14,6 +14,8 @@
 #define IDD_DIALOG_CUSTOM_ZOOM          138
 #define IDD_PROPSHEET_PRINT_ADVANCED    139
 #define IDD_DIALOG_FAV_ADD              140
+#define IDD_DIALOG_COLUMN               141
+
 
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
@@ -61,6 +63,8 @@
 #define IDC_TOC_LABEL_WITH_CLOSE        1101
 #define IDC_FAV_LABEL_WITH_CLOSE        1106
 #define IDB_RELOADING_CUE               2010
+#define IDC_COLUMN_EDIT                 1110
+#define IDC_COLUMN_LABEL_OF             1111
 
 #define IDC_STATIC                      -1
 

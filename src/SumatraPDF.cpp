@@ -3746,6 +3746,33 @@ static void OnMenuGoToPage(MainWindow* win) {
         ctrl->GoToPage(newPageNo, true);
     }
 }
+static void FocusColumnEdit(HWND hwndColumnEdit) {
+    if (HwndIsFocused(hwndColumnEdit)) {
+        SendMessageW(hwndColumnEdit, WM_SETFOCUS, 0, 0);
+    } else {
+        SetFocus(hwndColumnEdit);
+    }
+}
+static void OnMenuMultiColumn(MainWindow* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+
+    // Don't show a dialog if we don't have to - use the Toolbar instead
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
+        FocusColumnEdit(win->hwndColumnEdit);
+        return;
+    }
+
+    auto* ctrl = win->ctrl;
+    int current = ctrl->GetColumns();
+    int newColumn = Dialog_Column(win->hwndFrame, current);
+    if (!newColumn) {
+        return;
+    }
+    ctrl->SetColumns(newColumn);
+    UpdateToolbarState(win);
+}
 
 void EnterFullScreen(MainWindow* win, bool presentation) {
     if (!HasPermission(Perm::FullscreenAccess) || gPluginMode) {
@@ -4987,7 +5014,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdMultiPage:
-            SwitchToDisplayMode(win, DisplayMode::MultiPage, true);
+            // SwitchToDisplayMode(win, DisplayMode::MultiPage, true);
+            OnMenuMultiColumn(win);
             break;
 
         case CmdToggleContinuousView:

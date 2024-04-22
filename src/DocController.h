@@ -95,6 +95,7 @@ struct DocController {
 
     // columns
     virtual void SetColumns(int)  {};
+    virtual int GetColumns()  {return 0;};
     virtual void ToggleLiquid()  {};
     virtual bool IsLiquid() {
         return false;

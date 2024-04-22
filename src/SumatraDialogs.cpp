@@ -318,6 +318,73 @@ char* Dialog_GoToPage(HWND hwnd, const char* currentPageLabel, int pageCount, bo
     CreateDialogBox(IDD_DIALOG_GOTO_PAGE, hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
     return str::Dup(data.newPageLabel);
 }
+/* For passing data to/from Column dialog */
+struct Dialog_Column_Data {
+    int currColumn = 1;            // current column number
+    int newColumn = 1;           // total number of columns
+
+    ~Dialog_Column_Data() {}
+};
+
+static INT_PTR CALLBACK Dialog_Column_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+    HWND editColumn;
+    Dialog_Column_Data* data;
+
+    //[ ACCESSKEY_GROUP GoTo Page Dialog
+    if (WM_INITDIALOG == msg) {
+        data = (Dialog_Column_Data*)lp;
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
+        HwndSetText(hDlg, _TR("Set Columns"));
+
+        editColumn = GetDlgItem(hDlg, IDC_COLUMN_EDIT);
+        TempWStr ws = ToWStrTemp(str::FormatTemp("%d", data->currColumn));
+        SetDlgItemTextW(hDlg, IDC_COLUMN_EDIT, ws);
+        TempStr totalCount = str::FormatTemp(_TRA("(1 - 12)"));
+        ws = ToWStrTemp(totalCount);
+        SetDlgItemTextW(hDlg, IDC_COLUMN_LABEL_OF, ws);
+
+        EditSelectAll(editColumn);
+        SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Set Columns:"));
+        SetDlgItemTextW(hDlg, IDOK, _TR("Set Columns"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
+
+        CenterDialog(hDlg);
+        SetFocus(editColumn);
+        return FALSE;
+    }
+    //] ACCESSKEY_GROUP GoTo Page Dialog
+
+    char* tmp;
+    switch (msg) {
+        case WM_COMMAND:
+            switch (LOWORD(wp)) {
+                case IDOK:
+                    data = (Dialog_Column_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+                    editColumn = GetDlgItem(hDlg, IDC_COLUMN_EDIT);
+                    tmp = HwndGetTextTemp(editColumn);
+                    data->newColumn=atoi(tmp);
+                    EndDialog(hDlg, IDOK);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hDlg, IDCANCEL);
+                    return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}
+
+/* Shows a 'go to page' dialog and returns the page label entered by the user
+   or nullptr if user clicked the "cancel" button or there was an error.
+   The caller must free() the result. */
+int Dialog_Column(HWND hwnd, int currentColumn) {
+    Dialog_Column_Data data;
+    data.currColumn = currentColumn;
+
+    CreateDialogBox(IDD_DIALOG_COLUMN, hwnd, Dialog_Column_Proc, (LPARAM)&data);
+    return data.newColumn;
+}
 
 /* For passing data to/from Find dialog */
 struct Dialog_Find_Data {
