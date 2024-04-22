@@ -2602,7 +2602,7 @@ void StrVec::Reset() {
 }
 
 // returns index of inserted string
-int StrVec::Append(const char* s, size_t sLen) {
+int StrVec::Append(const char* s, int sLen) {
     bool ok;
     if (s == nullptr) {
         ok = index.Append(kNullIdx);
@@ -2612,10 +2612,10 @@ int StrVec::Append(const char* s, size_t sLen) {
         return Size() - 1;
     }
     if (sLen == 0) {
-        sLen = str::Len(s);
+        sLen = str::Leni(s);
     }
-    u32 idx = (u32)strings.size();
-    ok = strings.Append(s, sLen);
+    u32 idx = (u32)strings.Size();
+    ok = strings.Append(s, (size_t)sLen);
     // ensure to always zero-terminate
     ok &= strings.AppendChar(0);
     if (!ok) {

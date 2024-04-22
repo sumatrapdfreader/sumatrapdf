@@ -414,7 +414,7 @@ struct StrVec {
     char* at(int) const;
     char* operator[](int) const;
 
-    int Append(const char*, size_t len = 0);
+    int Append(const char*, int len = 0);
     int AppendIfNotExists(const char*);
     bool InsertAt(int, const char*);
     void SetAt(int idx, const char* s);
