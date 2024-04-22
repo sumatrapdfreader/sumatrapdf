@@ -2584,15 +2584,6 @@ TempStr GetFileNameTemp(const char* url) {
 
 //--- StrVec
 
-/*
-TODO:
- - StrVecWithData where it associate arbitrary data with each string
- - StrVecWithSubset - has additional index which contains a subset
-   of strings which we create by providing a filter function.
-   Could be used for efficiently managing strings in
-   Command Palette
-*/
-
 // represents null string
 constexpr u32 kNullIdx = (u32)-2;
 
@@ -2628,6 +2619,7 @@ int StrVec::Append(const char* s, int sLen) {
     return Size() - 1;
 }
 
+// returns index of inserted string, -1 if not inserted
 int StrVec::AppendIfNotExists(const char* s) {
     if (Contains(s)) {
         return -1;
@@ -2868,3 +2860,72 @@ ByteSlice ToByteSlice(const char* s) {
     size_t n = str::Len(s);
     return {(u8*)s, n};
 }
+
+/*
+    TODO:
+    - StrVecWithData where it associate arbitrary data with each string
+    - StrVecWithSubset - has additional index which contains a subset
+    of strings which we create by providing a filter function.
+    Could be used for efficiently managing strings in
+    Command Palette
+*/
+
+struct StrVecWithDataRaw  {
+    str::Str strings;
+    Vec<u32> index;
+    Vec<uintptr_t> data;
+
+    StrVecWithDataRaw() = default;
+    ~StrVecWithDataRaw() = default;
+
+    int Size() const;
+    char* at(int) const;
+    char* operator[](int) const;
+
+    int Append(const char*, uintptr_t);
+    uintptr_t GetData(int) const;
+};
+
+int StrVecWithDataRaw::Size() const {
+    int n = index.Size();
+    CrashIf(data.Size() != n);
+    return n;
+}
+
+char* StrVecWithDataRaw::at(int idx) const {
+    int n = Size();
+    CrashIf(idx < 0 || idx >= n);
+    u32 start = index.at(idx);
+    if (start == kNullIdx) {
+        return nullptr;
+    }
+    char* s = strings.LendData() + start;
+    return s;
+}
+
+char* StrVecWithDataRaw::operator[](int idx) const {
+    return at(idx);
+}
+
+int StrVecWithDataRaw::Append(const char*, uintptr_t) {
+    return -1;
+}
+
+uintptr_t StrVecWithDataRaw::GetData(int idx) const {
+    int n = Size();
+    CrashIf(idx < 0 || idx >= n);
+    uintptr_t res = data.at(idx);
+    return res;
+}
+
+template <typename T>
+struct StrVecWithData : StrVecWithDataRaw {
+    int Append(const char* s, T data) {
+        uintptr_t d = (uintptr_t)data;
+        return StrVecWithDataRaw::Append(s, d);
+    }
+    T GetData(int idx) const {
+        uintptr_t res = StrVecWithDataRaw::GetData(idx);
+        return (T)(res);
+    }
+};
