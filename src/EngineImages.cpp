@@ -1081,7 +1081,7 @@ bool ComicInfoParser::Visit(const char* path, const char* value, json::Type type
         return true;
     }
     // stop parsing once we have all desired information
-    return !propTitle || propAuthors.size() == 0 || !propCreator || !propDate ||
+    return !propTitle || propAuthors.Size() == 0 || !propCreator || !propDate ||
            str::FindChar(propDate, '/') <= propDate;
 }
 
@@ -1293,7 +1293,7 @@ TempStr EngineCbx::GetPropertyTemp(DocumentProperty prop) {
         case DocumentProperty::Title:
             return cip.propTitle;
         case DocumentProperty::Author: {
-            if (cip.propAuthors.size() == 0) {
+            if (cip.propAuthors.Size() == 0) {
                 return nullptr;
             }
             return JoinTemp(cip.propAuthors, ", ");

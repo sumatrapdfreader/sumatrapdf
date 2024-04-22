@@ -526,7 +526,7 @@ bool CheckInstallUninstallPossible(bool silent) {
     gProcessesToClose.Reset();
     ProcessesUsingInstallation(gProcessesToClose);
 
-    bool possible = gProcessesToClose.size() == 0;
+    bool possible = gProcessesToClose.Size() == 0;
     if (possible) {
         SetDefaultMsg();
     } else {

@@ -391,7 +391,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
         filePathsSorted.InsertAt(0, currFileFav->filePath);
     }
 
-    if (filePathsSorted.size() == 0) {
+    if (filePathsSorted.Size() == 0) {
         return;
     }
 
@@ -400,12 +400,12 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     gFavorites.ResetMenuIds();
     int menuId = CmdFavoriteFirst;
 
-    size_t menusCount = filePathsSorted.size();
+    int menusCount = filePathsSorted.Size();
     if (menusCount > MAX_FAV_MENUS) {
         menusCount = MAX_FAV_MENUS;
     }
 
-    for (size_t i = 0; i < menusCount; i++) {
+    for (int i = 0; i < menusCount; i++) {
         const char* filePath = filePathsSorted.at(i);
         FileState* f = gFavorites.GetFavByFilePath(filePath);
         CrashIf(!f);
@@ -413,7 +413,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
             continue;
         }
         HMENU sub = m;
-        bool combined = (f->favorites->size() == 1);
+        bool combined = (f->favorites->Size() == 1);
         if (!combined) {
             sub = CreateMenu();
         }

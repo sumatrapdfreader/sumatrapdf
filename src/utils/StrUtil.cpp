@@ -2666,10 +2666,6 @@ void StrVec::SetAt(int idx, const char* s) {
     index[idx] = strIdx;
 }
 
-size_t StrVec::size() const {
-    return index.size();
-}
-
 int StrVec::Size() const {
     return index.isize();
 }
@@ -2744,6 +2740,11 @@ char* StrVec::RemoveAtFast(size_t idx) {
     index.RemoveAtFast(idx);
     char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
     return res;
+}
+
+char* StrVec::RemoveAtFast(int idx) {
+    CrashIf(idx < 0);
+    return this->RemoveAtFast((size_t)idx);
 }
 
 // return true if did remove

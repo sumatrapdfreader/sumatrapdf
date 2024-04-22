@@ -57,8 +57,8 @@ TryAgain64Bit:
     SortNatural(versions);
 
     // return the path to the newest installation
-    size_t nVers = versions.size();
-    for (size_t ix = nVers; ix > 0; ix--) {
+    int nVers = versions.Size();
+    for (int ix = nVers; ix > 0; ix--) {
         for (const char* gsProd : gsProducts) {
             char* ver = versions.at(ix - 1);
             TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd, ver);
@@ -66,8 +66,8 @@ TryAgain64Bit:
             if (!GS_DLL) {
                 continue;
             }
-            char* dir = path::GetDirTemp(GS_DLL);
-            char* exe = path::JoinTemp(dir, "gswin32c.exe");
+            TempStr dir = path::GetDirTemp(GS_DLL);
+            TempStr exe = path::JoinTemp(dir, "gswin32c.exe");
             if (file::Exists(exe)) {
                 return str::Dup(exe);
             }

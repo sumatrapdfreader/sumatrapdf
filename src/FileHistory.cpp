@@ -252,7 +252,7 @@ void RememberRecentlyClosedDocument(const char* path) {
 }
 
 char* PopRecentlyClosedDocument() {
-    size_t n = gClosedDocuments.size();
+    int n = gClosedDocuments.Size();
     if (n > 0) {
         return gClosedDocuments.RemoveAtFast(n - 1);
     }

@@ -626,7 +626,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
             fonts.AppendIfNotExists(fontName);
         }
     }
-    if (fonts.size() == 0) {
+    if (fonts.Size() == 0) {
         return nullptr;
     }
 

@@ -456,7 +456,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
     }
 
     char* keywordA = ToUtf8Temp(keyword);
-    if (references.size() == 2) {
+    if (references.Size() == 2) {
         char* refs = references[1];
         visitor->Visit(keywordA, refs, level);
         return true;

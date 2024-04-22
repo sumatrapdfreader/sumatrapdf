@@ -411,7 +411,10 @@ struct StrVec {
     ~StrVec() = default;
     void Reset();
 
-    size_t size() const;
+    // TODO: remove
+    size_t size() const {
+        return index.Size();
+    }
     int Size() const;
     char* at(int) const;
     char* operator[](int) const;
@@ -426,6 +429,7 @@ struct StrVec {
     bool Contains(const char*) const;
     char* PopAt(int);
     char* RemoveAtFast(size_t idx);
+    char* RemoveAtFast(int idx);
     char* RemoveAt(int idx);
     bool Remove(const char*);
 

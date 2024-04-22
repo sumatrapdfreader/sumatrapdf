@@ -1129,7 +1129,7 @@ static const char* HandleTealDocTag(str::Str& builder, StrVec& tocEntries, const
             char* s = ToUtf8Temp(ws);
             tocEntries.Append(s);
             str::Free(ws);
-            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", (int)tocEntries.size());
+            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size());
             return tok->s + tok->sLen;
         }
     } else if (tok->NameIs("HEADER")) {
@@ -1239,7 +1239,7 @@ const char* PalmDoc::GetFileName() const {
 }
 
 bool PalmDoc::HasToc() const {
-    return tocEntries.size() > 0;
+    return tocEntries.Size() > 0;
 }
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {

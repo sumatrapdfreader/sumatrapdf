@@ -184,14 +184,14 @@ static void CollectFilesToBench(char* dir, StrVec& files) {
 static void BenchDir(char* dir) {
     StrVec files;
     CollectFilesToBench(dir, files);
-    for (size_t i = 0; i < files.size(); i++) {
+    for (int i = 0; i < files.Size(); i++) {
         BenchFile(files.at(i), nullptr);
     }
 }
 
 void BenchFileOrDir(StrVec& pathsToBench) {
-    size_t n = pathsToBench.size() / 2;
-    for (size_t i = 0; i < n; i++) {
+    int n = pathsToBench.Size() / 2;
+    for (int i = 0; i < n; i++) {
         char* path = pathsToBench.at(2 * i);
         if (file::Exists(path)) {
             BenchFile(path, pathsToBench.at(2 * i + 1));

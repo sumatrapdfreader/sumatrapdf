@@ -101,7 +101,7 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
         }
     } while (FindNextFileW(hfind, &fdata));
     FindClose(hfind);
-    return paths.size() > 0;
+    return paths.Size() > 0;
 }
 
 bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::function<bool(const char*)>& fileMatchesFn) {

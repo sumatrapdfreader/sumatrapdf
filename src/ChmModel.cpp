@@ -104,7 +104,7 @@ const char* ChmModel::GetDefaultFileExt() const {
 }
 
 int ChmModel::PageCount() const {
-    return (int)pages.size();
+    return pages.Size();
 }
 
 TempStr ChmModel::GetPropertyTemp(DocumentProperty prop) {
@@ -316,13 +316,13 @@ class ChmTocBuilder : public EbookTocVisitor {
         }
 
         TempStr plainUrl = url::GetFullPathTemp(url);
-        int pageNo = (int)pages->size() + 1;
+        int pageNo = pages->Size() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
             pages->Append(plainUrl);
-            CrashIf((size_t)pageNo != pages->size());
+            CrashIf(pageNo != pages->Size());
         } else {
-            CrashIf((size_t)pageNo == pages->size() + 1);
+            CrashIf(pageNo == pages->Size() + 1);
         }
         return pageNo;
     }
@@ -333,7 +333,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         this->pages = pages;
         this->tocTrace = tocTrace;
         this->allocator = allocator;
-        int n = (int)pages->size();
+        int n = pages->Size();
         for (int i = 0; i < n; i++) {
             const char* url = pages->at(i);
             bool inserted = urlsSet.Insert(url, i + 1, nullptr);
@@ -366,8 +366,8 @@ bool ChmModel::Load(const char* fileName) {
     tocTrace = new Vec<ChmTocTraceItem>();
     ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, &poolAlloc);
     doc->ParseToc(&tmpTocBuilder);
-    CrashIf(pages.size() == 0);
-    return pages.size() > 0;
+    CrashIf(pages.Size() == 0);
+    return pages.Size() > 0;
 }
 
 struct ChmCacheEntry {
