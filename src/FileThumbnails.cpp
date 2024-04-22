@@ -34,7 +34,7 @@ static char* GetThumbnailPathTemp(const char* filePath) {
         // ignore the drive letter, if it might change
         path[0] = '?';
     }
-    CalcMD5Digest((u8*)path, str::Len(path), digest);
+    CalcMD5Digest((u8*)path, str::Leni(path), digest);
     AutoFreeStr fingerPrint = str::MemToHex(digest, dimof(digest));
 
     TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);

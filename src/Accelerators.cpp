@@ -242,7 +242,7 @@ static bool SkipVirtKey(const char*& s, const char* key) {
     if (!str::StartsWithI(s, key)) {
         return false;
     }
-    s += str::Len(key);
+    s += str::Leni(key);
     SkipWS(s);
     SkipPlusOrMinus(s);
     SkipWS(s);

@@ -747,7 +747,7 @@ bool IsValidProgramVersion(const char* txt) {
 static unsigned int ExtractNextNumber(const char** txt) {
     unsigned int val = 0;
     const char* next = str::Parse(*txt, "%u%?.", &val);
-    *txt = next ? next : *txt + str::Len(*txt);
+    *txt = next ? next : *txt + str::Leni(*txt);
     return val;
 }
 
@@ -777,7 +777,7 @@ bool AdjustVariableDriveLetter(char* path) {
         return false;
     }
     // only check absolute path on drives i.e. those that start with "d:\"
-    if (str::Len(path) < 4 || path[1] != ':') {
+    if (str::Leni(path) < 4 || path[1] != ':') {
         return false;
     }
 
@@ -803,7 +803,7 @@ bool AdjustVariableDriveLetter(char* path) {
 bool IsUntrustedFile(const char* filePath, const char* fileURL) {
     AutoFreeStr protocol;
     if (fileURL && str::Parse(fileURL, "%S:", &protocol)) {
-        if (str::Len(protocol) > 1 && !str::EqI(protocol, "file")) {
+        if (str::Leni(protocol) > 1 && !str::EqI(protocol, "file")) {
             return true;
         }
     }
@@ -814,7 +814,7 @@ bool IsUntrustedFile(const char* filePath, const char* fileURL) {
 
     // check all parents of embedded files and ADSs as well
     TempStr path = str::DupTemp(filePath);
-    while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
+    while (str::Leni(path) > 2 && str::FindChar(path + 2, ':')) {
         *str::FindCharLast(path, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {
             return true;

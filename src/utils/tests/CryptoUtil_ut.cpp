@@ -7,21 +7,21 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-static bool TestDigestMD5(const char* data, size_t size, const char* verify) {
+static bool TestDigestMD5(const char* data, int size, const char* verify) {
     u8 digest[16];
     CalcMD5Digest((const u8*)data, size, digest);
     AutoFreeStr hash = _MemToHex(&digest);
     return str::Eq(hash, verify);
 }
 
-static bool TestDigestSHA1(const char* data, size_t size, const char* verify) {
+static bool TestDigestSHA1(const char* data, int size, const char* verify) {
     u8 digest[20];
     CalcSHA1Digest((const u8*)data, size, digest);
     AutoFreeStr hash = _MemToHex(&digest);
     return str::Eq(hash, verify);
 }
 
-static bool TestDigestSHA2(const char* data, size_t size, const char* verify) {
+static bool TestDigestSHA2(const char* data, int size, const char* verify) {
     u8 digest[32];
     CalcSHA2Digest((const u8*)data, size, digest);
     AutoFreeStr hash = _MemToHex(&digest);

@@ -160,7 +160,7 @@ int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sy
 
 // move to the next line in a list of zero-terminated lines
 static char* Advance0Line(char* line, char* end) {
-    line += str::Len(line);
+    line += str::Leni(line);
     // skip all zeroes until the next non-empty line
     for (; line < end && !*line; line++) {
         ;
@@ -262,7 +262,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 AutoFreeStr filename(strconv::AnsiToUtf8(line + 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
-                if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"') {
+                if (filename[0] == '"' && filename[str::Leni(filename) - 1] == '"') {
                     size_t n = str::Len(filename) - 2;
                     filename = str::Dup(filename + 1, n);
                 }

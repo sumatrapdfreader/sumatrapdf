@@ -135,8 +135,8 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
     // colorful version
     static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
     char buf[2] = {0};
-    for (size_t i = 0; i < str::Len(kAppName); i++) {
-        SetTextColor(hdc, cols[i % dimof(cols)]);
+    for (int i = 0; i < str::Leni(kAppName); i++) {
+        SetTextColor(hdc, cols[i % dimofi(cols)]);
         buf[0] = kAppName[i];
         HdcDrawText(hdc, buf, pt, fmt, fontSumatraTxt);
         txtSize = HdcMeasureText(hdc, buf, fmt, fontSumatraTxt);
@@ -392,18 +392,18 @@ static void CopyAboutInfoToClipboard() {
     str::Str info(512);
     char* ver = GetAppVersionTemp();
     info.AppendFmt("%s %s\r\n", kAppName, ver);
-    for (size_t i = info.size() - 2; i > 0; i--) {
+    for (int i = info.Size() - 2; i > 0; i--) {
         info.AppendChar('-');
     }
     info.Append("\r\n");
     // concatenate all the information into a single string
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
-    size_t maxLen = 0;
+    int maxLen = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        maxLen = std::max(maxLen, str::Len(el->leftTxt));
+        maxLen = std::max(maxLen, str::Leni(el->leftTxt));
     }
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--) {
+        for (int i = maxLen - str::Leni(el->leftTxt); i > 0; i--) {
             info.AppendChar(' ');
         }
         info.AppendFmt("%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);

@@ -269,7 +269,7 @@ bool SumatraLaunchBrowser(const char* url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        size_t urlLen = str::Len(url);
+        int urlLen = str::Leni(url);
         if (!parent || !url || (urlLen > 4096)) {
             return false;
         }
@@ -2099,11 +2099,13 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
     char* yPos = str::FormatFloatWithThousandSepTemp((double)pt.y * (double)factor);
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
-        if (str::IsDigit(xPos[str::Len(xPos) - 2])) {
-            xPos[str::Len(xPos) - 1] = '\0';
+        int xLen = str::Leni(xPos);
+        if (str::IsDigit(xPos[xLen - 2])) {
+            xPos[xLen - 1] = '\0';
         }
-        if (str::IsDigit(yPos[str::Len(yPos) - 2])) {
-            yPos[str::Len(yPos) - 1] = '\0';
+        int yLen = str::Leni(yPos);
+        if (str::IsDigit(yPos[yLen - 2])) {
+            yPos[yLen - 1] = '\0';
         }
     }
     return fmt::FormatTemp("%s x %s %s", xPos, yPos, unitName);
@@ -2801,7 +2803,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
         memmove(ext, colon, (str::Len(colon) + 1) * sizeof(WCHAR));
     } else if (str::EndsWithI(dstFileName, defExt)) {
         // Remove the extension so that it can be re-added depending on the chosen filter
-        dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+        int idx = str::Leni(dstFileName) - str::Leni(defExt);
+        dstFileName[idx] = '\0';
     }
 
     OPENFILENAME ofn{};
@@ -2812,7 +2815,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
-    if (str::Len(defExt) > 0 && defExt[0] == L'.') {
+    if (str::Leni(defExt) > 0 && defExt[0] == L'.') {
         defExt++;
     }
     ofn.lpstrDefExt = defExt;
@@ -2854,7 +2857,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
             }
         } else {
             TempStr s = GetLastErrorStrTemp();
-            if (str::Len(s) > 0) {
+            if (str::Leni(s) > 0) {
                 errorMsg = str::FormatTemp("%s\n\n%s", _TRA("Failed to save a file"), s);
             }
         }
@@ -2943,7 +2946,8 @@ static void RenameCurrentFile(MainWindow* win) {
     str::BufSet(dstFileName, dimof(dstFileName), baseName);
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt)) {
-        dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+        int idx = str::Leni(dstFileName) - str::Leni(defExt);
+        dstFileName[idx] = '\0';
     }
 
     WCHAR* srcPathW = ToWStrTemp(srcPath);
@@ -3014,7 +3018,8 @@ static void CreateLnkShortcut(MainWindow* win) {
     str::BufSet(dstFileName, dimof(dstFileName), name);
     str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
-        dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+        int idx = str::Leni(dstFileName) - str::Leni(defExt);
+        dstFileName[idx] = '\0';
     }
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -3190,7 +3195,7 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     while (*file) {
         path = ToUtf8Temp(path::JoinTemp(dir, file));
         filesOut.Append(path);
-        file += str::Len(file) + 1;
+        file += str::Leni(file) + 1;
     }
 }
 

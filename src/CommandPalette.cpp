@@ -433,7 +433,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     int cmdId = (int)CmdFirst + 1;
     for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, cmdId)) {
         if (AllowCommand(ctx, (i32)cmdId)) {
-            CrashIf(str::Len(strs) == 0);
+            CrashIf(str::Leni(strs) == 0);
             tempStrings.Append(strs);
         }
     }
@@ -517,7 +517,7 @@ static bool FilterMatches(const char* str, const char* filter) {
         }
         s++;
     }
-    if (str::Len(wordStart) > 0) {
+    if (str::Leni(wordStart) > 0) {
         words.AppendIfNotExists(wordStart);
     }
     // all words must be present

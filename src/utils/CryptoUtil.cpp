@@ -9,8 +9,8 @@
 #endif
 
 // TODO: could use CryptoNG available starting in Vista
-static NO_INLINE void CalcDigestWin(const void* data, size_t dataSize, u8* digest, DWORD digestSize,
-                                    const WCHAR* provider, DWORD type, ALG_ID alg) {
+static NO_INLINE void CalcDigestWin(const void* data, int dataSize, u8* digest, DWORD digestSize, const WCHAR* provider,
+                                    DWORD type, ALG_ID alg) {
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = CryptAcquireContextW(&hProv, nullptr, provider, type, CRYPT_VERIFYCONTEXT);
@@ -41,15 +41,15 @@ static NO_INLINE void CalcDigestWin(const void* data, size_t dataSize, u8* diges
     CryptReleaseContext(hProv, 0);
 }
 
-void CalcMD5Digest(const void* data, size_t dataSize, u8 digest[16]) {
+void CalcMD5Digest(const void* data, int dataSize, u8 digest[16]) {
     CalcDigestWin(data, dataSize, digest, 16, MS_DEF_PROV, PROV_RSA_FULL, CALG_MD5);
 }
 
-void CalcSHA1Digest(const void* data, size_t dataSize, u8 digest[20]) {
+void CalcSHA1Digest(const void* data, int dataSize, u8 digest[20]) {
     CalcDigestWin(data, dataSize, digest, 20, MS_DEF_PROV, PROV_RSA_FULL, CALG_SHA1);
 }
 
-void CalcSHA2Digest(const void* data, size_t dataSize, u8 digest[32]) {
+void CalcSHA2Digest(const void* data, int dataSize, u8 digest[32]) {
     CalcDigestWin(data, dataSize, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
 }
 

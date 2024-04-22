@@ -2870,7 +2870,7 @@ ByteSlice ToByteSlice(const char* s) {
     Command Palette
 */
 
-struct StrVecWithDataRaw  {
+struct StrVecWithDataRaw {
     str::Str strings;
     Vec<u32> index;
     Vec<uintptr_t> data;

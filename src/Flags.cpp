@@ -223,7 +223,7 @@ static void ParseZoomValue(float* zoom, const char* txtOrig) {
     }
     // remove trailing % in place, if exists
     if (str::EndsWith(txt, "%")) {
-        txt[str::Len(txt) - 1] = 0;
+        txt[str::Leni(txt) - 1] = 0;
     }
     str::Parse(txt, "%f", zoom);
     // prevent really small zoom and zoom values that are not valid numbers
@@ -310,7 +310,7 @@ void ParseAdobeFlags(FileArgs& i, const char* s) {
         // pagemode=bookmarks, thumbs, none
         // scrollbar=1|0
         if (str::EqI(name, "search")) {
-            if (str::Len(val) > 0) {
+            if (str::Leni(val) > 0) {
                 i.search = str::Dup(val);
             }
             continue;

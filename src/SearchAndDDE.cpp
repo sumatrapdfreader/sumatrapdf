@@ -392,7 +392,7 @@ void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
 char* ReverseTextTemp(char* s) {
     WCHAR* ws = ToWStrTemp(s);
-    int n = (int)str::Len(ws);
+    int n = str::Leni(ws);
     for (int i = 0; i < n / 2; i++) {
         WCHAR c1 = ws[i];
         WCHAR c2 = ws[n - 1 - i];
@@ -915,7 +915,7 @@ static const char* HandleNewWindowCmd(const char* cmd, bool* ack) {
     if (!str::StartsWith(cmd, kNewWindow)) {
         return nullptr;
     }
-    const char* next = cmd + str::Len(kNewWindow);
+    const char* next = cmd + str::Leni(kNewWindow);
     CreateAndShowMainWindow(nullptr);
     *ack = true;
     return next;
@@ -1092,7 +1092,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     } else if (fmt == CF_UNICODETEXT) {
         TempWStr tmp = ToWStrTemp(str.Get());
         data = (void*)tmp;
-        cbData = (str::Len(tmp) + 1) * 2;
+        cbData = (str::Leni(tmp) + 1) * 2;
     } else {
         CrashIf(true);
         return 0;

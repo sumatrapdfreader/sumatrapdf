@@ -1015,7 +1015,7 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 // shorten a string to maxLen characters, adding ellipsis in the middle
 // ascii version that doesn't handle UTF-8
 static TempStr ShortenStringTemp(char* s, int maxLen) {
-    int sLen = (int)str::Len(s);
+    int sLen = str::Leni(s);
     if (sLen <= maxLen) {
         return s;
     }
@@ -2031,7 +2031,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         modi->hbmpItem = mii.hbmpItem;
         modi->hbmpChecked = mii.hbmpChecked;
         modi->hbmpUnchecked = mii.hbmpUnchecked;
-        if (str::Len(buf) > 0) {
+        if (str::Leni(buf) > 0) {
             modi->text = ToUtf8(buf);
         }
         mii.dwItemData = (ULONG_PTR)modi;
