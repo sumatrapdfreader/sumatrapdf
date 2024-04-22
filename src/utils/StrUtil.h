@@ -467,7 +467,7 @@ void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
 void SortNoCase(StrVec&);
 void SortNatural(StrVec&);
 
-size_t Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
+int Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
 char* Join(const StrVec& v, const char* sep = nullptr);
 TempStr JoinTemp(const StrVec& v, const char* sep);
 ByteSlice ToByteSlice(const char* s);

@@ -2802,7 +2802,7 @@ void Sort(StrVec& v, StrLessFunc lessFn) {
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-size_t Split(StrVec& v, const char* s, const char* separator, bool collapse) {
+int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
     int startSize = v.Size();
     const char* next;
     while (true) {
