@@ -2771,7 +2771,7 @@ static bool strLessNoCase(const char* s1, const char* s2) {
 }
 
 void SortNoCase(StrVec& v) {
-    v.Sort(strLessNoCase);
+    Sort(v, strLessNoCase);
 }
 
 static bool strLessNatural(const char* s1, const char* s2) {
@@ -2780,16 +2780,19 @@ static bool strLessNatural(const char* s1, const char* s2) {
 }
 
 void SortNatural(StrVec& v) {
-    v.Sort(strLessNatural);
+    Sort(v, strLessNatural);
 }
 
-void StrVec::Sort(StrLessFunc lessFn) {
+void Sort(StrVec& v, StrLessFunc lessFn) {
     if (lessFn == nullptr) {
         lessFn = strLess;
     }
-    std::sort(index.begin(), index.end(), [this, lessFn](u32 i1, u32 i2) -> bool {
-        char* is1 = (i1 == kNullIdx) ? nullptr : strings.Get() + i1;
-        char* is2 = (i2 == kNullIdx) ? nullptr : strings.Get() + i2;
+    const char* strs = v.strings.Get();
+    auto b = v.index.begin();
+    auto e = v.index.end();
+    std::sort(b, e, [strs, lessFn](u32 i1, u32 i2) -> bool {
+        const char* is1 = (i1 == kNullIdx) ? nullptr : strs + i1;
+        const char* is2 = (i2 == kNullIdx) ? nullptr : strs + i2;
         bool ret = lessFn(is1, is2);
         return ret;
     });

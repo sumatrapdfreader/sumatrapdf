@@ -426,8 +426,6 @@ struct StrVec {
     char* RemoveAt(int idx);
     bool Remove(const char*);
 
-    void Sort(StrLessFunc lessFn = nullptr);
-
     struct Iterator {
         using iterator_category = std::forward_iterator_tag;
 
@@ -465,6 +463,7 @@ struct StrVec {
     }
 };
 
+void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
 void SortNoCase(StrVec&);
 void SortNatural(StrVec&);
 

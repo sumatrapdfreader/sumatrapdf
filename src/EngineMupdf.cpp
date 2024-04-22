@@ -1391,7 +1391,7 @@ static void EnsureLabelsUnique(StrVec* labels) {
     }
     // ensure that all page labels are unique (by appending a number to duplicates)
     StrVec dups(*labels);
-    dups.Sort();
+    Sort(dups);
     int nDups = dups.Size();
     for (int i = 1; i < nDups; i++) {
         if (!str::Eq(dups.at(i), dups.at(i - 1))) {

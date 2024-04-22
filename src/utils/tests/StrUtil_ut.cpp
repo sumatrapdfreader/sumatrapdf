@@ -275,7 +275,7 @@ static void StrVecTest() {
     StrVecCheckIter(v, strs);
 
     StrVec sortedView = v;
-    sortedView.Sort();
+    Sort(sortedView);
 
     for (int i = 0; i < n; i++) {
         char* got = sortedView.at(i);
@@ -308,7 +308,7 @@ static void StrVecTest() {
         assertStrEq(got, exp);
     }
 
-    v.Sort();
+    Sort(v);
     for (int i = 0; i < n; i++) {
         char* got = v.at(i);
         auto exp = strs[sortedOrder[i]];
@@ -350,7 +350,7 @@ static void StrVecTest2() {
     str::Free(s);
 
     StrVecCheckIter(v, nullptr);
-    v.Sort();
+    Sort(v);
     const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
     StrVecCheckIter(v, strsSorted);
 

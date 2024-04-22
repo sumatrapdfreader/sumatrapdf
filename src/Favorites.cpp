@@ -359,7 +359,7 @@ static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore =
             filePathsSortedOut.Append(fs->filePath);
         }
     }
-    filePathsSortedOut.Sort(SortByBaseFileName);
+    Sort(filePathsSortedOut, SortByBaseFileName);
 }
 
 // For easy access, we try to show favorites in the menu, similar to a list of
