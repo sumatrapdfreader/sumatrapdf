@@ -190,7 +190,7 @@ MupdfContext::~MupdfContext() {
     }
 }
 
-void BlitPixmap(fz_pixmap* dst, fz_pixmap* src, int dstX, int dstY) {
+static void BlitPixmap(fz_pixmap* dst, fz_pixmap* src, int dstX, int dstY) {
     int dx = src->w;
     int dy = src->h;
     int srcN = src->n;
@@ -202,51 +202,25 @@ void BlitPixmap(fz_pixmap* dst, fz_pixmap* src, int dstX, int dstY) {
         size_t atY = y + (size_t)dstY;
         u8* d = dst->samples + (dstStride * atY) + ((size_t)dstX * dstN);
         for (int x = 0; x < dx; x++) {
-            d[0] = s[0];
+            // note: we're swapping red and green channel because src is rgb
+            // and we want bgr for Toolbar's IMAGELIST
+            d[0] = s[2];
             d[1] = s[1];
-            d[2] = s[2];
+            d[2] = s[0];
             d += dstN;
             s += srcN;
         }
     }
 }
 
-void ClearPixmap(fz_pixmap* pixmap) {
-    auto stride = pixmap->stride;
-    size_t dx = (size_t)pixmap->w;
-    size_t dy = (size_t)pixmap->h;
-    u8* samples = pixmap->samples;
-    CrashIf(pixmap->n != 3);
-    for (size_t y = 0; y < dy; y++) {
-        u8* d = samples + (stride * y);
-        for (size_t x = 0; x < dx; x++) {
-            d[0] = 255;
-            d[1] = 0;
-            d[2] = 0;
-            d += pixmap->n;
-            if (false) {
-                if (x % 2 == 0) {
-                    *d++ = 255;
-                    *d++ = 0;
-                    *d++ = 0;
-                } else {
-                    *d++ = 0;
-                    *d++ = 0;
-                    *d++ = 255;
-                }
-            }
-        }
-    }
-}
-
-fz_pixmap* BuildIconsPixmap(MupdfContext* muctx, int dx, int dy) {
+static fz_pixmap* BuildIconsPixmap(MupdfContext* muctx, int dx, int dy, const char* strokeCol) {
     fz_context* ctx = muctx->ctx;
-    int nIcons = (int)dimof(gAllIcons);
-    int bmpDx = dx * nIcons;
-    int bmpDy = dy;
-    fz_pixmap* dstPixmap = fz_new_pixmap(ctx, fz_device_rgb(ctx), bmpDx, bmpDy, nullptr, 0);
+    int nIcons = dimofi(gAllIcons);
+    int dstDx = dx * nIcons;
+    fz_pixmap* dstPixmap = fz_new_pixmap(ctx, fz_device_bgr(ctx), dstDx, dy, nullptr, 0);
     for (int i = 0; i < nIcons; i++) {
         const char* svgData = gAllIcons[i];
+        svgData = str::ReplaceTemp(svgData, "currentColor", strokeCol);
         fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svgData, str::Len(svgData));
         fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
         image->w = dx;
@@ -262,15 +236,17 @@ fz_pixmap* BuildIconsPixmap(MupdfContext* muctx, int dx, int dy) {
     return dstPixmap;
 }
 
-HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
+static HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
     int w = pixmap->w;
     int h = pixmap->h;
     int n = pixmap->n;
     int imgSize = pixmap->stride * h;
     int bitsCount = n * 8;
 
-    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
-    BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;
+    size_t bmiSize = sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD);
+    auto bmi = (BITMAPINFO*)calloc(1, bmiSize);
+    defer { free(bmi); };
+    BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
     bmih->biSize = sizeof(*bmih);
     bmih->biWidth = w;
     bmih->biHeight = -h;
@@ -292,29 +268,11 @@ HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
     return hbmp;
 }
 
-HBITMAP BuildIconsBitmap(int dx, int dy) {
+HBITMAP BuildIconsBitmap(int dx, int dy, const char* strokeCol) {
     MupdfContext* muctx = new MupdfContext();
-    fz_pixmap* pixmap = BuildIconsPixmap(muctx, dx, dy);
-    // ClearPixmap(pixmap);
-#if 1
-#if 0
-    RenderedBitmap* rbmp = NewRenderedFzPixmap(muctx->ctx, pixmap);
-    HBITMAP bmp = rbmp->hbmp;
-#else
+    fz_pixmap* pixmap = BuildIconsPixmap(muctx, dx, dy, strokeCol);
     HBITMAP bmp = CreateBitmapFromPixmap(pixmap);
-#endif
     fz_drop_pixmap(muctx->ctx, pixmap);
     delete muctx;
     return bmp;
-#else
-    int nIcons = dimof(gAllIcons);
-    int bmpDx = dx * nIcons;
-    int bmpDy = dy;
-    u8* bits = pixmap->samples;
-    HBITMAP res = CreateBitmap(bmpDx, bmpDy, 1, 24, bits);
-    fz_drop_pixmap(muctx->ctx, pixmap);
-    delete muctx;
-
-    return res;
-#endif
 }

@@ -785,7 +785,9 @@ void CreateToolbar(MainWindow* win) {
     // assume square icons
     HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLORDDB | ILC_MASK, kButtonsCount, 0);
     COLORREF mask = RGB(0xff, 0xff, 0xff);
-    HBITMAP hbmp = BuildIconsBitmap(dx, dx);
+    COLORREF col = ThemeWindowTextColor();
+    TempStr colStr = SerializeColorTemp(col);
+    HBITMAP hbmp = BuildIconsBitmap(dx, dx, colStr);
     if (true) {
         ImageList_AddMasked(himl, hbmp, mask);
     } else {

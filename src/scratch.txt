@@ -1,0 +1,28 @@
+static void ClearPixmap(fz_pixmap* pixmap) {
+    auto stride = pixmap->stride;
+    size_t dx = (size_t)pixmap->w;
+    size_t dy = (size_t)pixmap->h;
+    u8* samples = pixmap->samples;
+    CrashIf(pixmap->n != 3);
+    for (size_t y = 0; y < dy; y++) {
+        u8* d = samples + (stride * y);
+        for (size_t x = 0; x < dx; x++) {
+            d[0] = 255;
+            d[1] = 0;
+            d[2] = 0;
+            d += pixmap->n;
+            if (false) {
+                if (x % 2 == 0) {
+                    *d++ = 255;
+                    *d++ = 0;
+                    *d++ = 0;
+                } else {
+                    *d++ = 0;
+                    *d++ = 0;
+                    *d++ = 255;
+                }
+            }
+        }
+    }
+}
+

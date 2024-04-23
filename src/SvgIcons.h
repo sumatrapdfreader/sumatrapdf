@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-HBITMAP BuildIconsBitmap(int dx, int dy);
+HBITMAP BuildIconsBitmap(int dx, int dy, const char* strokeCol);
 
 // must match order in gAllIcons
 enum class TbIcon {
