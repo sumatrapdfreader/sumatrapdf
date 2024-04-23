@@ -822,13 +822,9 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
 // TODO: doesn't work well for themes i.e. rendered svg is thicker and the color
 // is too white and doesn't match desired stroke color
 // To see the problem: set strokeCol to "red" and you'll see icon is rendered
-// part red and part white
-// I think the issue is that the icon is rendered to rgb but I need to create
-// rgba and I would have to un-miltiply alpha instead of just using 0 or 0xff
+// part red and part white. Should be all red.
+// I tried 2 rgb bitmaps (one mask) but same result.
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/3793
-// try creating mask bitmap
-// Main bitmap -- 0x00RRGGBB for colored pixels, 0x00000000 for transparent pixels.
-// Mask bitmap -- 0x00000000 for colored pixels, 0x00FFFFFF for transparent pixels.
 HBITMAP BuildIconsBitmap(int dx, int dy, const char* strokeCol) {
     MupdfContext* muctx = new MupdfContext();
     fz_context* ctx = muctx->ctx;
