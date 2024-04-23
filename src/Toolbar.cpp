@@ -779,15 +779,9 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     COLORREF mask = RGB(0xff, 0xff, 0xff);
     COLORREF col = ThemeWindowTextColor();
     TempStr colStr = SerializeColorTemp(col);
+    //colStr = (TempStr)"red";
     HBITMAP hbmp = BuildIconsBitmap(dx, dx, colStr);
-    if (true) {
-        ImageList_AddMasked(himl, hbmp, mask);
-    } else {
-        int amres = ImageList_AddMasked(himl, hbmp, mask);
-        int nImages = ImageList_GetImageCount(himl);
-        logf("res: %d, nImages: %d\n", amres, nImages);
-        LogBitmapInfo(hbmp);
-    }
+    ImageList_AddMasked(himl, hbmp, mask);
     DeleteObject(hbmp);
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
     return iconSize;
