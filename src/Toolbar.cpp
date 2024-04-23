@@ -1,6 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
+}
+
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
@@ -751,6 +756,135 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
+struct MupdfContext {
+    fz_locks_context fz_locks_ctx{};
+    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
+    fz_context* ctx = nullptr;
+    MupdfContext();
+    ~MupdfContext();
+};
+
+static void fz_lock_context_cs(void* user, int lock) {
+    MupdfContext* ctx = (MupdfContext*)user;
+    EnterCriticalSection(&ctx->mutexes[lock]);
+}
+
+static void fz_unlock_context_cs(void* user, int lock) {
+    MupdfContext* ctx = (MupdfContext*)user;
+    LeaveCriticalSection(&ctx->mutexes[lock]);
+}
+
+MupdfContext::MupdfContext() {
+    for (int i = 0; i < FZ_LOCK_MAX; i++) {
+        InitializeCriticalSection(&mutexes[i]);
+    }
+    fz_locks_ctx.user = this;
+    fz_locks_ctx.lock = fz_lock_context_cs;
+    fz_locks_ctx.unlock = fz_unlock_context_cs;
+    ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
+}
+
+MupdfContext::~MupdfContext() {
+    fz_drop_context(ctx);
+    for (int i = 0; i < FZ_LOCK_MAX; i++) {
+        DeleteCriticalSection(&mutexes[i]);
+    }
+}
+
+static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY) {
+    int dx = src->w;
+    int dy = src->h;
+    int srcN = src->n;
+    int dstN = 4;
+    auto srcStride = src->stride;
+    for (size_t y = 0; y < (size_t)dy; y++) {
+        u8* s = src->samples + (srcStride * (size_t)y);
+        size_t atY = y + (size_t)dstY;
+        u8* d = dstSamples + (dstStride * atY) + ((size_t)dstX * dstN);
+        for (int x = 0; x < dx; x++) {
+            bool isTransparent = (s[0] == 0xff) && (s[1] == 0xff) && (s[2] == 0xff);
+            // note: we're swapping red and green channel because src is rgb
+            // and we want bgr for Toolbar's IMAGELIST
+            d[0] = s[2];
+            d[1] = s[1];
+            d[2] = s[0];
+            if (isTransparent) {
+                d[3] = 0;
+            } else {
+                d[3] = 0xff;
+            }
+            d += dstN;
+            s += srcN;
+        }
+    }
+}
+
+// TODO: doesn't work well for themes i.e. rendered svg is thicker and the color
+// is too white and doesn't match desired stroke color
+// To see the problem: set strokeCol to "red" and you'll see icon is rendered
+// part red and part white
+// I think the issue is that the icon is rendered to rgb but I need to create
+// rgba and I would have to un-miltiply alpha instead of just using 0 or 0xff
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/3793
+// try creating mask bitmap
+// Main bitmap -- 0x00RRGGBB for colored pixels, 0x00000000 for transparent pixels.
+// Mask bitmap -- 0x00000000 for colored pixels, 0x00FFFFFF for transparent pixels.
+HBITMAP BuildIconsBitmap(int dx, int dy, const char* strokeCol) {
+    MupdfContext* muctx = new MupdfContext();
+    fz_context* ctx = muctx->ctx;
+    int nIcons = (int)TbIcon::kMax;
+    int destDx = dx * nIcons;
+    ptrdiff_t dstStride;
+
+    u8* hbmpData = nullptr;
+    HBITMAP hbmp;
+    {
+        int w = destDx;
+        int h = dy;
+        int n = 4;
+        dstStride = destDx * n;
+        int imgSize = (int)dstStride * h;
+        int bitsCount = n * 8;
+
+        size_t bmiSize = sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD);
+        auto bmi = (BITMAPINFO*)calloc(1, bmiSize);
+        defer {
+            free(bmi);
+        };
+        BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
+        bmih->biSize = sizeof(*bmih);
+        bmih->biWidth = w;
+        bmih->biHeight = -h;
+        bmih->biPlanes = 1;
+        bmih->biCompression = BI_RGB;
+        bmih->biBitCount = bitsCount;
+        bmih->biSizeImage = imgSize;
+        bmih->biClrUsed = 0;
+        HANDLE hFile = INVALID_HANDLE_VALUE;
+        DWORD fl = PAGE_READWRITE;
+        HANDLE hMap = CreateFileMappingW(hFile, nullptr, fl, 0, imgSize, nullptr);
+        uint usage = DIB_RGB_COLORS;
+        hbmp = CreateDIBSection(nullptr, bmi, usage, (void**)&hbmpData, hMap, 0);
+    }
+
+    for (int i = 0; i < nIcons; i++) {
+        const char* svgData = GetSvgIcon((TbIcon)i);
+        svgData = str::ReplaceTemp(svgData, "currentColor", strokeCol);
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svgData, str::Len(svgData));
+        fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
+        image->w = dx;
+        image->h = dy;
+        fz_pixmap* pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0);
+        fz_drop_pixmap(ctx, pixmap);
+        fz_drop_image(ctx, image);
+        fz_drop_buffer(ctx, buf);
+    }
+
+    delete muctx;
+    return hbmp;
+}
+
 constexpr int kDefaultIconSize = 18;
 
 static int SetToolbarIconsImageList(MainWindow* win) {
@@ -775,13 +909,12 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
 
     // assume square icons
-    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR24 | ILC_MASK, kButtonsCount, 0);
-    COLORREF mask = RGB(0xff, 0xff, 0xff);
+    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, kButtonsCount, 0);
     COLORREF col = ThemeWindowTextColor();
     TempStr colStr = SerializeColorTemp(col);
-    //colStr = (TempStr)"red";
+    // colStr = (TempStr)"red";
     HBITMAP hbmp = BuildIconsBitmap(dx, dx, colStr);
-    ImageList_AddMasked(himl, hbmp, mask);
+    ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
     return iconSize;
