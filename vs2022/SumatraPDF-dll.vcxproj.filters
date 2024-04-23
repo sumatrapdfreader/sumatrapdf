@@ -556,6 +556,9 @@
     <None Include="..\src\ext\versions.txt">
       <Filter>src\ext</Filter>
     </None>
+    <None Include="..\src\scratch.txt">
+      <Filter>src</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">
