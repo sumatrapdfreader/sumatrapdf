@@ -2716,6 +2716,9 @@ static fz_buffer *format_info_text()
 	fz_append_printf(ctx, out, "ICC rendering: %s.\n", currenticc ? "on" : "off");
 	fz_append_printf(ctx, out, "Spot rendering: %s.\n", currentseparations ? "on" : "off");
 
+	if (fz_is_document_reflowable(ctx, doc))
+		fz_append_printf(ctx, out, "Em size: %g\n", layout_em);
+
 	return out;
 }
 

@@ -1264,7 +1264,7 @@ a_moved_vertically:	/* d and dy have the same sign */
 b_moved_horizontally:	/* d and dx have the same sign */
 		assert((d > 0 && dx > 0) || (d < 0 && dx < 0));
 		assert(dx != 0);
-		by = advance(by, ay, -d, dx);
+		by = advance(by, ay, d, dx);
 		tail = total * d/dx;
 		total -= tail;
 		dx = bx - ax;
@@ -1291,7 +1291,7 @@ b_moved_horizontally:	/* d and dx have the same sign */
 b_moved_vertically:	/* d and dy have the same sign */
 		assert((d > 0 && dy > 0) || (d < 0 && dy < 0));
 		assert(dy != 0);
-		bx = advance(bx, ax, -d, dy);
+		bx = advance(bx, ax, d, dy);
 		t = total * d/dy;
 		tail += t;
 		total -= t;

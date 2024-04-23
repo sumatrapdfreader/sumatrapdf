@@ -460,6 +460,7 @@ examine_page(fz_context *ctx, pdf_document *doc, pdf_page *page, fonts_usage_t *
 
 		for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
 			pdf_process_annot(ctx, proc, annot, NULL);
+		pdf_close_processor(ctx, proc);
 	}
 	fz_always(ctx)
 	{

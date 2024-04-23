@@ -48,14 +48,14 @@ pdf_close_processor(fz_context *ctx, pdf_processor *proc)
 {
 	void (*close_processor)(fz_context *ctx, pdf_processor *proc);
 
-	if (!proc)
+	if (!proc || proc->closed)
 		return;
 
+	proc->closed = 1;
 	close_processor = proc->close_processor;
 	if (!close_processor)
 		return;
 
-	proc->close_processor = NULL;
 	close_processor(ctx, proc); /* Tail recursion */
 }
 
@@ -64,12 +64,25 @@ pdf_drop_processor(fz_context *ctx, pdf_processor *proc)
 {
 	if (fz_drop_imp(ctx, proc, &proc->refs))
 	{
-		if (proc->close_processor)
+		if (!proc->closed)
 			fz_warn(ctx, "dropping unclosed PDF processor");
 		if (proc->drop_processor)
 			proc->drop_processor(ctx, proc);
 		fz_free(ctx, proc);
 	}
+}
+
+void pdf_reset_processor(fz_context *ctx, pdf_processor *proc)
+{
+	if (proc == NULL)
+		return;
+
+	proc->closed = 0;
+
+	if (proc->reset_processor == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot reset PDF processor");
+
+	proc->reset_processor(ctx, proc);
 }
 
 static void

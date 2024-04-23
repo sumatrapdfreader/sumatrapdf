@@ -123,6 +123,18 @@ public class PDFAnnotation
 	public static final int IS_TOGGLE_NO_VIEW = 1 << (9-1);
 	public static final int IS_LOCKED_CONTENTS = 1 << (10-1);
 
+	public static final int IT_DEFAULT = 0;
+	public static final int IT_FREETEXT_CALLOUT = 1;
+	public static final int IT_FREETEXT_TYPEWRITER = 2;
+	public static final int IT_LINE_ARROW = 3;
+	public static final int IT_LINE_DIMENSION = 4;
+	public static final int IT_POLYLINE_DIMENSION = 5;
+	public static final int IT_POLYGON_CLOUD = 6;
+	public static final int IT_POLYGON_DIMENSION = 7;
+	public static final int IT_STAMP_IMAGE = 8;
+	public static final int IT_STAMP_SNAPSHOT = 9;
+	public static final int IT_UNKNOWN = 255;
+
 	public native int getType();
 	public native int getFlags();
 	public native void setFlags(int flags);
@@ -280,6 +292,10 @@ public class PDFAnnotation
 	public native boolean hasFileSpecification();
 	public native void setFileSpecification(PDFObject fs);
 	public native PDFObject getFileSpecification();
+
+	public native boolean hasIntent();
+	public native int getIntent();
+	public native void setIntent(int intent);
 
 	public native void eventEnter();
 	public native void eventExit();

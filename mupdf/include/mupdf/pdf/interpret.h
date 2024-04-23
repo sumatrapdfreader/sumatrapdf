@@ -44,9 +44,12 @@ struct pdf_processor
 {
 	int refs;
 
+	int closed;
+
 	/* close the processor. Also closes any chained processors. */
 	void (*close_processor)(fz_context *ctx, pdf_processor *proc);
 	void (*drop_processor)(fz_context *ctx, pdf_processor *proc);
+	void (*reset_processor)(fz_context *ctx, pdf_processor *proc);
 
 	/* At any stage, we can have one set of resources in place.
 	 * This function gives us a set of resources to use. We remember
@@ -208,7 +211,7 @@ typedef struct
 	float stack[32];
 } pdf_csi;
 
-void pdf_count_q_balance(fz_context *ctx, pdf_document *doc, pdf_obj *res, pdf_obj *stm, int *underflow, int *overflow);
+void pdf_count_q_balance(fz_context *ctx, pdf_document *doc, pdf_obj *res, pdf_obj *stm, int *prepend, int *append);
 
 /* Functions to set up pdf_process structures */
 
@@ -229,6 +232,16 @@ pdf_processor *pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_devi
 	then newlines will be sent after every operator.
 */
 pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int ahxencode, int newlines);
+
+/*
+	Reopen a closed processor to be used again.
+
+	This brings a processor back to life after a close.
+	Not all processors may support this, so this may throw
+	an exception.
+*/
+void pdf_reset_processor(fz_context *ctx, pdf_processor *proc);
+
 
 /*
 	Create an output processor. This

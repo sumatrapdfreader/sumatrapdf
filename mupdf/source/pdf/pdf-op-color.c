@@ -1708,6 +1708,14 @@ pdf_color_pop_resources(fz_context *ctx, pdf_processor *proc)
 	return pdf_processor_pop_resources(ctx, p->chain);
 }
 
+static void
+pdf_reset_color_processor(fz_context *ctx, pdf_processor *proc)
+{
+	pdf_color_processor *p = (pdf_color_processor*)proc;
+
+	pdf_reset_processor(ctx, p->chain);
+}
+
 pdf_processor *
 pdf_new_color_filter(
 	fz_context *ctx,
@@ -1723,6 +1731,7 @@ pdf_new_color_filter(
 
 	proc->super.close_processor = pdf_close_color_processor;
 	proc->super.drop_processor = pdf_drop_color_processor;
+	proc->super.reset_processor = pdf_reset_color_processor;
 
 	proc->super.push_resources = pdf_color_push_resources;
 	proc->super.pop_resources = pdf_color_pop_resources;

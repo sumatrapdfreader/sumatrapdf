@@ -2367,7 +2367,7 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 	pdf_obj *subtype;
 	pdf_obj *prologue = NULL;
 	fz_buffer *buf = NULL;
-	int underflow, overflow;
+	int prepend, append;
 	int i;
 
 	fz_var(buf);
@@ -2390,12 +2390,11 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 	{
 		// Ensure that the graphics state is balanced.
 		contents = pdf_dict_get(ctx, page, PDF_NAME(Contents));
-		pdf_count_q_balance(ctx, doc, res, contents, &underflow, &overflow);
+		pdf_count_q_balance(ctx, doc, res, contents, &prepend, &append);
 
 		// Prepend enough 'q' to ensure we can get back to initial state.
 		buf = fz_new_buffer(ctx, 1024);
-		fz_append_string(ctx, buf, "q\n");
-		while (underflow-- > 0)
+		while (prepend-- > 0)
 			fz_append_string(ctx, buf, "q\n");
 
 		prologue = pdf_add_stream(ctx, doc, buf, NULL, 0);
@@ -2404,8 +2403,7 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 
 		// Append enough 'Q' to get back to initial state.
 		buf = fz_new_buffer(ctx, 1024);
-		fz_append_string(ctx, buf, "Q\n");
-		while (overflow-- > 0)
+		while (append-- > 0)
 			fz_append_string(ctx, buf, "Q\n");
 
 		for (i = 0; i < pdf_array_len(ctx, annots); )

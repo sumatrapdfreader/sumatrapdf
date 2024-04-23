@@ -1614,3 +1614,49 @@ FUN(PDFAnnotation_hasRect)(JNIEnv *env, jobject self)
 
 	return has;
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasIntent)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_intent(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFAnnotation_getIntent)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	enum pdf_intent intent = PDF_ANNOT_IT_DEFAULT;
+
+	if (!ctx || !annot) return PDF_ANNOT_IT_DEFAULT;
+
+	fz_try(ctx)
+		intent = pdf_annot_intent(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return intent;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setIntent)(JNIEnv *env, jobject self, jint intent)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+
+	if (!ctx || !annot) return;
+
+	fz_try(ctx)
+		pdf_set_annot_intent(ctx, annot, intent);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

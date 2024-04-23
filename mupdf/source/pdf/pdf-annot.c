@@ -3056,6 +3056,162 @@ pdf_set_annot_author(fz_context *ctx, pdf_annot *annot, const char *author)
 	}
 }
 
+static pdf_obj *intent_subtypes[] = {
+	PDF_NAME(FreeText),
+	PDF_NAME(Line),
+	PDF_NAME(Polygon),
+	PDF_NAME(PolyLine),
+	PDF_NAME(Stamp),
+	NULL,
+};
+
+enum pdf_intent pdf_intent_from_name(fz_context *ctx, pdf_obj *it)
+{
+	if (
+		it == PDF_NULL ||
+		it == PDF_NAME(FreeText) ||
+		it == PDF_NAME(Line) ||
+		it == PDF_NAME(PolyLine) ||
+		it == PDF_NAME(Polygon) ||
+		it == PDF_NAME(Stamp)
+	)
+		return PDF_ANNOT_IT_DEFAULT;
+	if (it == PDF_NAME(FreeTextCallout))
+		return PDF_ANNOT_IT_FREETEXT_CALLOUT;
+	if (it == PDF_NAME(FreeTextTypeWriter))
+		return PDF_ANNOT_IT_FREETEXT_TYPEWRITER;
+	if (it == PDF_NAME(LineArrow))
+		return PDF_ANNOT_IT_LINE_ARROW;
+	if (it == PDF_NAME(LineDimension))
+		return PDF_ANNOT_IT_LINE_DIMENSION;
+	if (it == PDF_NAME(PolyLineDimension))
+		return PDF_ANNOT_IT_POLYLINE_DIMENSION;
+	if (it == PDF_NAME(PolygonCloud))
+		return PDF_ANNOT_IT_POLYGON_CLOUD;
+	if (it == PDF_NAME(PolygonDimension))
+		return PDF_ANNOT_IT_POLYGON_DIMENSION;
+	if (it == PDF_NAME(StampImage))
+		return PDF_ANNOT_IT_STAMP_IMAGE;
+	if (it == PDF_NAME(StampSnapshot))
+		return PDF_ANNOT_IT_STAMP_SNAPSHOT;
+	return PDF_ANNOT_IT_UNKNOWN;
+}
+
+enum pdf_intent pdf_intent_from_string(fz_context *ctx, const char *it)
+{
+	if (
+		it == NULL ||
+		!strcmp(it, "FreeText") ||
+		!strcmp(it, "Line") ||
+		!strcmp(it, "PolyLine") ||
+		!strcmp(it, "Polygon") ||
+		!strcmp(it, "Stamp")
+	)
+		return PDF_ANNOT_IT_DEFAULT;
+	if (!strcmp(it, "FreeTextCallout"))
+		return PDF_ANNOT_IT_FREETEXT_CALLOUT;
+	if (!strcmp(it, "FreeTextTypeWriter"))
+		return PDF_ANNOT_IT_FREETEXT_TYPEWRITER;
+	if (!strcmp(it, "LineArrow"))
+		return PDF_ANNOT_IT_LINE_ARROW;
+	if (!strcmp(it, "LineDimension"))
+		return PDF_ANNOT_IT_LINE_DIMENSION;
+	if (!strcmp(it, "PolyLineDimension"))
+		return PDF_ANNOT_IT_POLYLINE_DIMENSION;
+	if (!strcmp(it, "PolygonCloud"))
+		return PDF_ANNOT_IT_POLYGON_CLOUD;
+	if (!strcmp(it, "PolygonDimension"))
+		return PDF_ANNOT_IT_POLYGON_DIMENSION;
+	if (!strcmp(it, "StampImage"))
+		return PDF_ANNOT_IT_STAMP_IMAGE;
+	if (!strcmp(it, "StampSnapshot"))
+		return PDF_ANNOT_IT_STAMP_SNAPSHOT;
+	return PDF_ANNOT_IT_UNKNOWN;
+}
+
+pdf_obj *pdf_name_from_intent(fz_context *ctx, enum pdf_intent it)
+{
+	switch (it)
+	{
+	default:
+	case PDF_ANNOT_IT_DEFAULT: return PDF_NULL;
+	case PDF_ANNOT_IT_FREETEXT_CALLOUT: return PDF_NAME(FreeTextCallout);
+	case PDF_ANNOT_IT_FREETEXT_TYPEWRITER: return PDF_NAME(FreeTextTypeWriter);
+	case PDF_ANNOT_IT_LINE_ARROW: return PDF_NAME(LineArrow);
+	case PDF_ANNOT_IT_LINE_DIMENSION: return PDF_NAME(LineDimension);
+	case PDF_ANNOT_IT_POLYLINE_DIMENSION: return PDF_NAME(PolyLineDimension);
+	case PDF_ANNOT_IT_POLYGON_CLOUD: return PDF_NAME(PolygonCloud);
+	case PDF_ANNOT_IT_POLYGON_DIMENSION: return PDF_NAME(PolygonDimension);
+	}
+}
+
+const char *pdf_string_from_intent(fz_context *ctx, enum pdf_intent it)
+{
+	switch (it)
+	{
+	default:
+	case PDF_ANNOT_IT_DEFAULT: return NULL;
+	case PDF_ANNOT_IT_FREETEXT_CALLOUT: return "FreeTextCallout";
+	case PDF_ANNOT_IT_FREETEXT_TYPEWRITER: return "FreeTextTypeWriter";
+	case PDF_ANNOT_IT_LINE_ARROW: return "LineArrow";
+	case PDF_ANNOT_IT_LINE_DIMENSION: return "LineDimension";
+	case PDF_ANNOT_IT_POLYLINE_DIMENSION: return "PolyLineDimension";
+	case PDF_ANNOT_IT_POLYGON_CLOUD: return "PolygonCloud";
+	case PDF_ANNOT_IT_POLYGON_DIMENSION: return "PolygonDimension";
+	}
+}
+
+int
+pdf_annot_has_intent(fz_context *ctx, pdf_annot *annot)
+{
+	/* Only a subset of intents are defined in the spec, so we limit this API to the defined ones.
+	 * FreeText: Callout, TypeWriter
+	 * Line: Arrow, Dimension
+	 * Polygon: Cloud, Dimension
+	 * PolyLine: Dimension
+	 */
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(IT), intent_subtypes);
+}
+
+enum pdf_intent
+pdf_annot_intent(fz_context *ctx, pdf_annot *annot)
+{
+	enum pdf_intent ret;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(IT), intent_subtypes);
+		ret = pdf_intent_from_name(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(IT)));
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
+}
+
+void
+pdf_set_annot_intent(fz_context *ctx, pdf_annot *annot, enum pdf_intent it)
+{
+	begin_annot_op(ctx, annot, "Set intent");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(IT), intent_subtypes);
+		pdf_dict_put(ctx, annot->obj, PDF_NAME(IT), pdf_name_from_intent(ctx, it));
+		pdf_dirty_annot(ctx, annot);
+		end_annot_op(ctx, annot);
+	}
+	fz_catch(ctx)
+	{
+		abandon_annot_op(ctx, annot);
+		fz_rethrow(ctx);
+	}
+}
+
 void
 pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4])
 {

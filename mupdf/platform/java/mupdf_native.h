@@ -2812,6 +2812,28 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFAnnotation_IS_TOGGLE_NO_VIEW 256L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_IS_LOCKED_CONTENTS
 #define com_artifex_mupdf_fitz_PDFAnnotation_IS_LOCKED_CONTENTS 512L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_DEFAULT
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_DEFAULT 0L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_FREETEXT_CALLOUT
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_FREETEXT_CALLOUT 1L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_FREETEXT_TYPEWRITER
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_FREETEXT_TYPEWRITER 2L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_LINE_ARROW
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_LINE_ARROW 3L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_LINE_DIMENSION
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_LINE_DIMENSION 4L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYLINE_DIMENSION
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYLINE_DIMENSION 5L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYGON_CLOUD
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYGON_CLOUD 6L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYGON_DIMENSION
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYGON_DIMENSION 7L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_STAMP_IMAGE
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_STAMP_IMAGE 8L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_STAMP_SNAPSHOT
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_STAMP_SNAPSHOT 9L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_IT_UNKNOWN
+#define com_artifex_mupdf_fitz_PDFAnnotation_IT_UNKNOWN 255L
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    finalize
@@ -3395,6 +3417,30 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setFileSpecific
  */
 JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getFileSpecification
   (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasIntent
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasIntent
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getIntent
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getIntent
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setIntent
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setIntent
+  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
@@ -5031,6 +5077,28 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFWidget_IS_TOGGLE_NO_VIEW 256L
 #undef com_artifex_mupdf_fitz_PDFWidget_IS_LOCKED_CONTENTS
 #define com_artifex_mupdf_fitz_PDFWidget_IS_LOCKED_CONTENTS 512L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_DEFAULT
+#define com_artifex_mupdf_fitz_PDFWidget_IT_DEFAULT 0L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_FREETEXT_CALLOUT
+#define com_artifex_mupdf_fitz_PDFWidget_IT_FREETEXT_CALLOUT 1L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_FREETEXT_TYPEWRITER
+#define com_artifex_mupdf_fitz_PDFWidget_IT_FREETEXT_TYPEWRITER 2L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_LINE_ARROW
+#define com_artifex_mupdf_fitz_PDFWidget_IT_LINE_ARROW 3L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_LINE_DIMENSION
+#define com_artifex_mupdf_fitz_PDFWidget_IT_LINE_DIMENSION 4L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_POLYLINE_DIMENSION
+#define com_artifex_mupdf_fitz_PDFWidget_IT_POLYLINE_DIMENSION 5L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_POLYGON_CLOUD
+#define com_artifex_mupdf_fitz_PDFWidget_IT_POLYGON_CLOUD 6L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_POLYGON_DIMENSION
+#define com_artifex_mupdf_fitz_PDFWidget_IT_POLYGON_DIMENSION 7L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_STAMP_IMAGE
+#define com_artifex_mupdf_fitz_PDFWidget_IT_STAMP_IMAGE 8L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_STAMP_SNAPSHOT
+#define com_artifex_mupdf_fitz_PDFWidget_IT_STAMP_SNAPSHOT 9L
+#undef com_artifex_mupdf_fitz_PDFWidget_IT_UNKNOWN
+#define com_artifex_mupdf_fitz_PDFWidget_IT_UNKNOWN 255L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_UNKNOWN
 #define com_artifex_mupdf_fitz_PDFWidget_TYPE_UNKNOWN 0L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_BUTTON

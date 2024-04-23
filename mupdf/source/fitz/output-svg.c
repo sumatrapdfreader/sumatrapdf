@@ -58,8 +58,17 @@ svg_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)
 
 	wri->count += 1;
 
-	fz_format_output_path(ctx, path, sizeof path, wri->path, wri->count);
-	wri->out = fz_new_output_with_path(ctx, path, 0);
+	if (wri->path)
+	{
+		fz_format_output_path(ctx, path, sizeof path, wri->path, wri->count);
+		wri->out = fz_new_output_with_path(ctx, path, 0);
+	}
+	else
+	{
+		if (!wri->out)
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot write multiple pages to a single SVG output");
+	}
+
 	return fz_new_svg_device_with_id(ctx, wri->out, w, h, wri->text_format, wri->reuse_images, &wri->id);
 }
 
@@ -113,6 +122,38 @@ fz_new_svg_writer(fz_context *ctx, const char *path, const char *args)
 			if (fz_option_eq(val, "yes"))
 				wri->reuse_images = 0;
 		wri->path = fz_strdup(ctx, path ? path : "out-%04d.svg");
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, wri);
+		fz_rethrow(ctx);
+	}
+
+	return (fz_document_writer*)wri;
+}
+
+fz_document_writer *
+fz_new_svg_writer_with_output(fz_context *ctx, fz_output *out, const char *args)
+{
+	const char *val;
+	fz_svg_writer *wri = fz_new_derived_document_writer(ctx, fz_svg_writer, svg_begin_page, svg_end_page, NULL, svg_drop_writer);
+
+	wri->text_format = FZ_SVG_TEXT_AS_PATH;
+	wri->reuse_images = 1;
+
+	fz_try(ctx)
+	{
+		if (fz_has_option(ctx, args, "text", &val))
+		{
+			if (fz_option_eq(val, "text"))
+				wri->text_format = FZ_SVG_TEXT_AS_TEXT;
+			else if (fz_option_eq(val, "path"))
+				wri->text_format = FZ_SVG_TEXT_AS_PATH;
+		}
+		if (fz_has_option(ctx, args, "no-reuse-images", &val))
+			if (fz_option_eq(val, "yes"))
+				wri->reuse_images = 0;
+		wri->out = out;
 	}
 	fz_catch(ctx)
 	{

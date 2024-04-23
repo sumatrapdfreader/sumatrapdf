@@ -250,14 +250,20 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *explicit_f
 fz_document_writer *
 fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *format, const char *options)
 {
-	if (is_extension(format, "cbz"))
-		return fz_new_cbz_writer_with_output(ctx, out, options);
+#if FZ_ENABLE_OCR_OUTPUT
 	if (is_extension(format, "ocr"))
 		return fz_new_pdfocr_writer_with_output(ctx, out, options);
+#endif
 #if FZ_ENABLE_PDF
 	if (is_extension(format, "pdf"))
 		return fz_new_pdf_writer_with_output(ctx, out, options);
 #endif
+
+	if (is_extension(format, "cbz"))
+		return fz_new_cbz_writer_with_output(ctx, out, options);
+
+	if (is_extension(format, "svg"))
+		return fz_new_svg_writer_with_output(ctx, out, options);
 
 	if (is_extension(format, "pcl"))
 		return fz_new_pcl_writer_with_output(ctx, out, options);
@@ -296,12 +302,13 @@ fz_new_document_writer_with_buffer(fz_context *ctx, fz_buffer *buffer, const cha
 {
 	fz_document_writer *wri;
 	fz_output *out = fz_new_output_with_buffer(ctx, buffer);
-	fz_try(ctx)
+	fz_try(ctx) {
 		wri = fz_new_document_writer_with_output(ctx, out, format, options);
-	fz_always(ctx)
+	}
+	fz_catch(ctx) {
 		fz_drop_output(ctx, out);
-	fz_catch(ctx)
 		fz_rethrow(ctx);
+	}
 	return wri;
 }
 

@@ -571,6 +571,18 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IS_TOGGLE_NO_VIEW == PDF_ANNOT_IS_TOGGLE_NO_VIEW;
 	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IS_LOCKED_CONTENTS == PDF_ANNOT_IS_LOCKED_CONTENTS;
 
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_DEFAULT == PDF_ANNOT_IT_DEFAULT;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_FREETEXT_CALLOUT == PDF_ANNOT_IT_FREETEXT_CALLOUT;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_FREETEXT_TYPEWRITER == PDF_ANNOT_IT_FREETEXT_TYPEWRITER;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_LINE_ARROW == PDF_ANNOT_IT_LINE_ARROW;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_LINE_DIMENSION == PDF_ANNOT_IT_LINE_DIMENSION;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYLINE_DIMENSION == PDF_ANNOT_IT_POLYLINE_DIMENSION;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYGON_CLOUD == PDF_ANNOT_IT_POLYGON_CLOUD;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_POLYGON_DIMENSION == PDF_ANNOT_IT_POLYGON_DIMENSION;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_STAMP_IMAGE == PDF_ANNOT_IT_STAMP_IMAGE;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_STAMP_SNAPSHOT == PDF_ANNOT_IT_STAMP_SNAPSHOT;
+	valid &= com_artifex_mupdf_fitz_PDFAnnotation_IT_UNKNOWN == PDF_ANNOT_IT_UNKNOWN;
+
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_UNSET == FZ_LANG_UNSET;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_ur == FZ_LANG_ur;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_urd == FZ_LANG_urd;

@@ -2583,8 +2583,32 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
 #endif
 }
 
-extern "C" fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
-                                                       fz_cookie* cookie);
+/* SumatraPDF */
+fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options, fz_cookie* cookie) {
+    fz_stext_page* text;
+    fz_device* dev = NULL;
+
+    fz_var(dev);
+
+    if (page == NULL)
+        return NULL;
+
+    text = fz_new_stext_page(ctx, fz_bound_page(ctx, page));
+    fz_try(ctx) {
+        dev = fz_new_stext_device(ctx, text, options);
+        fz_run_page_contents(ctx, page, dev, fz_identity, cookie);
+        fz_close_device(ctx, dev);
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+    }
+    fz_catch(ctx) {
+        fz_drop_stext_page(ctx, text);
+        fz_rethrow(ctx);
+    }
+
+    return text;
+}
 
 // Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
 // (I don't think we read from network now).

@@ -1161,6 +1161,14 @@ pdf_drop_output_processor(fz_context *ctx, pdf_processor *proc)
 }
 
 static void
+pdf_reset_output_processor(fz_context *ctx, pdf_processor *proc)
+{
+	pdf_output_processor *p = (pdf_output_processor *)proc;
+
+	fz_reset_output(ctx, p->out);
+}
+
+static void
 pdf_out_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
 {
 	pdf_output_processor *p = (pdf_output_processor *)proc;
@@ -1191,6 +1199,7 @@ pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode, int new
 
 	proc->super.close_processor = pdf_close_output_processor;
 	proc->super.drop_processor = pdf_drop_output_processor;
+	proc->super.reset_processor = pdf_reset_output_processor;
 
 	proc->super.push_resources = pdf_out_push_resources;
 	proc->super.pop_resources = pdf_out_pop_resources;
@@ -1345,7 +1354,9 @@ typedef struct
 {
 	pdf_processor super;
 	int *balance;
-	int *minimum;
+	int *min_q;
+	int *min_op_q;
+	int first;
 } pdf_balance_processor;
 
 static void
@@ -1360,33 +1371,171 @@ pdf_balance_Q(fz_context *ctx, pdf_processor *proc_)
 {
 	pdf_balance_processor *proc = (pdf_balance_processor*)proc_;
 	(*proc->balance)--;
-	if (*proc->balance < *proc->minimum)
-		*proc->minimum = *proc->balance;
+	if (*proc->balance < *proc->min_q)
+		*proc->min_q = *proc->balance;
 }
 
+static void
+pdf_balance_void(fz_context *ctx, pdf_processor *proc_)
+{
+	pdf_balance_processor *proc = (pdf_balance_processor*)proc_;
+	if (*proc->balance < *proc->min_op_q)
+		*proc->min_op_q = *proc->balance;
+}
+
+#define BALANCE { pdf_balance_void(ctx, p); }
+
+static void pdf_balance_string(fz_context *ctx, pdf_processor *p, const char *x) BALANCE
+static void pdf_balance_int(fz_context *ctx, pdf_processor *p, int x) BALANCE
+static void pdf_balance_float(fz_context *ctx, pdf_processor *p, float x) BALANCE
+static void pdf_balance_float2(fz_context *ctx, pdf_processor *p, float x, float y) BALANCE
+static void pdf_balance_float3(fz_context *ctx, pdf_processor *p, float x, float y, float z) BALANCE
+static void pdf_balance_float4(fz_context *ctx, pdf_processor *p, float x, float y, float z, float w) BALANCE
+static void pdf_balance_float6(fz_context *ctx, pdf_processor *p, float a, float b, float c, float d, float e, float f) BALANCE
+
+static void pdf_balance_d(fz_context *ctx, pdf_processor *p, pdf_obj *array, float phase) BALANCE
+static void pdf_balance_gs_begin(fz_context *ctx, pdf_processor *p, const char *name, pdf_obj *extgstate) BALANCE
+static void pdf_balance_Tf(fz_context *ctx, pdf_processor *p, const char *name, pdf_font_desc *font, float size) BALANCE
+static void pdf_balance_TJ(fz_context *ctx, pdf_processor *p, pdf_obj *array) BALANCE
+static void pdf_balance_Tj(fz_context *ctx, pdf_processor *p, char *str, size_t len) BALANCE
+static void pdf_balance_squote(fz_context *ctx, pdf_processor *p, char *str, size_t len) BALANCE
+static void pdf_balance_dquote(fz_context *ctx, pdf_processor *p, float aw, float ac, char *str, size_t len) BALANCE
+static void pdf_balance_cs(fz_context *ctx, pdf_processor *p, const char *name, fz_colorspace *cs) BALANCE
+static void pdf_balance_sc_pattern(fz_context *ctx, pdf_processor *p, const char *name, pdf_pattern *pat, int n, float *color) BALANCE
+static void pdf_balance_sc_shade(fz_context *ctx, pdf_processor *p, const char *name, fz_shade *shade) BALANCE
+static void pdf_balance_sc_color(fz_context *ctx, pdf_processor *p, int n, float *color) BALANCE
+static void pdf_balance_BDC(fz_context *ctx, pdf_processor *p, const char *tag, pdf_obj *raw, pdf_obj *cooked) BALANCE
+static void pdf_balance_BI(fz_context *ctx, pdf_processor *p, fz_image *img, const char *colorspace) BALANCE
+static void pdf_balance_sh(fz_context *ctx, pdf_processor *p, const char *name, fz_shade *shade) BALANCE
+static void pdf_balance_Do_image(fz_context *ctx, pdf_processor *p, const char *name, fz_image *image) BALANCE
+static void pdf_balance_Do_form(fz_context *ctx, pdf_processor *p, const char *name, pdf_obj *xobj) BALANCE
+
 static pdf_processor *
-pdf_new_balance_processor(fz_context *ctx, int *balance, int *minimum)
+pdf_new_balance_processor(fz_context *ctx, int *balance, int *min_q, int *min_op_q)
 {
 	pdf_balance_processor *proc = pdf_new_processor(ctx, sizeof *proc);
 
 	proc->super.op_q = pdf_balance_q;
 	proc->super.op_Q = pdf_balance_Q;
 
+	/* general graphics state */
+	proc->super.op_w = pdf_balance_float;
+	proc->super.op_j = pdf_balance_int;
+	proc->super.op_J = pdf_balance_int;
+	proc->super.op_M = pdf_balance_float;
+	proc->super.op_d = pdf_balance_d;
+	proc->super.op_ri = pdf_balance_string;
+	proc->super.op_i = pdf_balance_float;
+	proc->super.op_gs_begin = pdf_balance_gs_begin;
+
+	/* special graphics state */
+	proc->super.op_cm = pdf_balance_float6;
+
+	/* path construction */
+	proc->super.op_m = pdf_balance_float2;
+	proc->super.op_l = pdf_balance_float2;
+	proc->super.op_c = pdf_balance_float6;
+	proc->super.op_v = pdf_balance_float4;
+	proc->super.op_y = pdf_balance_float4;
+	proc->super.op_h = pdf_balance_void;
+	proc->super.op_re = pdf_balance_float4;
+
+	/* path painting */
+	proc->super.op_S = pdf_balance_void;
+	proc->super.op_s = pdf_balance_void;
+	proc->super.op_F = pdf_balance_void;
+	proc->super.op_f = pdf_balance_void;
+	proc->super.op_fstar = pdf_balance_void;
+	proc->super.op_B = pdf_balance_void;
+	proc->super.op_Bstar = pdf_balance_void;
+	proc->super.op_b = pdf_balance_void;
+	proc->super.op_bstar = pdf_balance_void;
+	proc->super.op_n = pdf_balance_void;
+
+	/* clipping paths */
+	proc->super.op_W = pdf_balance_void;
+	proc->super.op_Wstar = pdf_balance_void;
+
+	/* text objects */
+	proc->super.op_BT = pdf_balance_void;
+	proc->super.op_ET = pdf_balance_void;
+
+	/* text state */
+	proc->super.op_Tc = pdf_balance_float;
+	proc->super.op_Tw = pdf_balance_float;
+	proc->super.op_Tz = pdf_balance_float;
+	proc->super.op_TL = pdf_balance_float;
+	proc->super.op_Tf = pdf_balance_Tf;
+	proc->super.op_Tr = pdf_balance_int;
+	proc->super.op_Ts = pdf_balance_float;
+
+	/* text positioning */
+	proc->super.op_Td = pdf_balance_float2;
+	proc->super.op_TD = pdf_balance_float2;
+	proc->super.op_Tm = pdf_balance_float6;
+	proc->super.op_Tstar = pdf_balance_void;
+
+	/* text showing */
+	proc->super.op_TJ = pdf_balance_TJ;
+	proc->super.op_Tj = pdf_balance_Tj;
+	proc->super.op_squote = pdf_balance_squote;
+	proc->super.op_dquote = pdf_balance_dquote;
+
+	/* type 3 fonts */
+	proc->super.op_d0 = pdf_balance_float2;
+	proc->super.op_d1 = pdf_balance_float6;
+
+	/* color */
+	proc->super.op_CS = pdf_balance_cs;
+	proc->super.op_cs = pdf_balance_cs;
+	proc->super.op_SC_color = pdf_balance_sc_color;
+	proc->super.op_sc_color = pdf_balance_sc_color;
+	proc->super.op_SC_pattern = pdf_balance_sc_pattern;
+	proc->super.op_sc_pattern = pdf_balance_sc_pattern;
+	proc->super.op_SC_shade = pdf_balance_sc_shade;
+	proc->super.op_sc_shade = pdf_balance_sc_shade;
+
+	proc->super.op_G = pdf_balance_float;
+	proc->super.op_g = pdf_balance_float;
+	proc->super.op_RG = pdf_balance_float3;
+	proc->super.op_rg = pdf_balance_float3;
+	proc->super.op_K = pdf_balance_float4;
+	proc->super.op_k = pdf_balance_float4;
+
+	/* shadings, images, xobjects */
+	proc->super.op_BI = pdf_balance_BI;
+	proc->super.op_sh = pdf_balance_sh;
+	proc->super.op_Do_image = pdf_balance_Do_image;
+	proc->super.op_Do_form = pdf_balance_Do_form;
+
+	/* marked content */
+	proc->super.op_MP = pdf_balance_string;
+	proc->super.op_DP = pdf_balance_BDC;
+	proc->super.op_BMC = pdf_balance_string;
+	proc->super.op_BDC = pdf_balance_BDC;
+	proc->super.op_EMC = pdf_balance_void;
+
+	/* compatibility */
+	proc->super.op_BX = pdf_balance_void;
+	proc->super.op_EX = pdf_balance_void;
+
 	proc->balance = balance;
-	proc->minimum = minimum;
+	proc->min_q = min_q;
+	proc->min_op_q = min_op_q;
 
 	return (pdf_processor*)proc;
 }
 
 void
-pdf_count_q_balance(fz_context *ctx, pdf_document *doc, pdf_obj *res, pdf_obj *stm, int *underflow, int *overflow)
+pdf_count_q_balance(fz_context *ctx, pdf_document *doc, pdf_obj *res, pdf_obj *stm, int *prepend, int *append)
 {
 	pdf_processor *proc;
 
-	int balance = 0;
-	int minimum = 0;
+	int end_q = 0;
+	int min_q = 0;
+	int min_op_q = 1;
 
-	proc = pdf_new_balance_processor(ctx, &balance, &minimum);
+	proc = pdf_new_balance_processor(ctx, &end_q, &min_q, &min_op_q);
 	fz_try(ctx)
 	{
 		pdf_process_raw_contents(ctx, proc, doc, res, stm, NULL);
@@ -1397,6 +1546,16 @@ pdf_count_q_balance(fz_context *ctx, pdf_document *doc, pdf_obj *res, pdf_obj *s
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
-	*underflow = -minimum;
-	*overflow = balance - minimum;
+	/* normally zero, but in bad files there could be more Q than q */
+	*prepend = -min_q;
+
+	/* how many Q are missing at the end */
+	*append = end_q - min_q;
+
+	/* if there are unguarded operators we must add one level of q/Q around everything */
+	if (min_op_q == min_q)
+	{
+		*prepend += 1;
+		*append += 1;
+	}
 }

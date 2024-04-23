@@ -90,7 +90,6 @@ EXPORTS
 	fz_load_links
 	fz_has_permission
 	fz_new_stext_page_from_page
-	fz_new_stext_page_from_page2
 	pdf_dict_geta
 	pdf_document_from_fz_document
 	pdf_page_from_fz_page

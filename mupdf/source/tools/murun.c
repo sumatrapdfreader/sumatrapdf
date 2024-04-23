@@ -5540,15 +5540,25 @@ static void ffi_new_DrawDevice(js_State *J)
 static void ffi_new_DocumentWriter(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
-	const char *filename = js_tostring(J, 1);
+	const char *filename = NULL;
 	const char *format = js_iscoercible(J, 2) ? js_tostring(J, 2) : NULL;
 	const char *options = js_iscoercible(J, 3) ? js_tostring(J, 3) : NULL;
 	fz_document_writer *wri = NULL;
+	fz_buffer *buf = NULL;
 
-	fz_try(ctx)
-		wri = fz_new_document_writer(ctx, filename, format, options);
-	fz_catch(ctx)
+	if (js_isuserdata(J, 1, "fz_buffer"))
+		buf = js_touserdata(J, 1, "fz_buffer");
+	else
+		filename = js_tostring(J, 1);
+
+	fz_try(ctx) {
+		if (buf)
+			wri = fz_new_document_writer_with_buffer(ctx, buf, format, options);
+		else
+			wri = fz_new_document_writer(ctx, filename, format, options);
+	} fz_catch(ctx) {
 		rethrow(J);
+	}
 
 	js_getregistry(J, "fz_document_writer");
 	js_newuserdata(J, "fz_document_writer", wri, ffi_gc_fz_document_writer);
@@ -8950,18 +8960,6 @@ static void ffi_PDFAnnotation_hasIcon(js_State *J)
 	js_pushboolean(J, has);
 }
 
-static void ffi_PDFAnnotation_hasQuadding(js_State *J)
-{
-	fz_context *ctx = js_getcontext(J);
-	pdf_annot *annot = ffi_toannot(J, 0);
-	int has;
-	fz_try(ctx)
-		has = pdf_annot_has_quadding(ctx, annot);
-	fz_catch(ctx)
-		rethrow(J);
-	js_pushboolean(J, has);
-}
-
 static void ffi_PDFAnnotation_getIcon(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -8983,6 +8981,18 @@ static void ffi_PDFAnnotation_setIcon(js_State *J)
 		pdf_set_annot_icon_name(ctx, annot, name);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_hasQuadding(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_quadding(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
 }
 
 static void ffi_PDFAnnotation_getQuadding(js_State *J)
@@ -9030,6 +9040,42 @@ static void ffi_PDFAnnotation_setLanguage(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 }
+
+static void ffi_PDFAnnotation_hasIntent(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_intent(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
+}
+
+static void ffi_PDFAnnotation_getIntent(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	const char *intent;
+	fz_try(ctx)
+		intent = pdf_string_from_intent(ctx, pdf_annot_intent(ctx, annot));
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushstring(J, intent);
+}
+
+static void ffi_PDFAnnotation_setIntent(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	const char *intent = js_tostring(J, 1);
+	fz_try(ctx)
+		pdf_set_annot_intent(ctx, annot, pdf_intent_from_string(ctx, intent));
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 
 static void ffi_PDFAnnotation_hasLine(js_State *J)
 {
@@ -10512,15 +10558,22 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.setQuadding", ffi_PDFAnnotation_setQuadding, 1);
 		jsB_propfun(J, "PDFAnnotation.getLanguage", ffi_PDFAnnotation_getLanguage, 0);
 		jsB_propfun(J, "PDFAnnotation.setLanguage", ffi_PDFAnnotation_setLanguage, 1);
-		jsB_propfun(J, "PDFAnnotation.hasLine", ffi_PDFAnnotation_hasLine, 0);
-		jsB_propfun(J, "PDFAnnotation.getLine", ffi_PDFAnnotation_getLine, 0);
-		jsB_propfun(J, "PDFAnnotation.setLine", ffi_PDFAnnotation_setLine, 2);
+
+		jsB_propfun(J, "PDFAnnotation.hasIntent", ffi_PDFAnnotation_hasIntent, 0);
+		jsB_propfun(J, "PDFAnnotation.getIntent", ffi_PDFAnnotation_getIntent, 0);
+		jsB_propfun(J, "PDFAnnotation.setIntent", ffi_PDFAnnotation_setIntent, 1);
+
 		jsB_propfun(J, "PDFAnnotation.getDefaultAppearance", ffi_PDFAnnotation_getDefaultAppearance, 0);
 		jsB_propfun(J, "PDFAnnotation.setDefaultAppearance", ffi_PDFAnnotation_setDefaultAppearance, 3);
 		jsB_propfun(J, "PDFAnnotation.setAppearance", ffi_PDFAnnotation_setAppearance, 6);
+
 		jsB_propfun(J, "PDFAnnotation.hasFilespec", ffi_PDFAnnotation_hasFilespec, 0);
 		jsB_propfun(J, "PDFAnnotation.getFilespec", ffi_PDFAnnotation_getFilespec, 0);
 		jsB_propfun(J, "PDFAnnotation.setFilespec", ffi_PDFAnnotation_setFilespec, 1);
+
+		jsB_propfun(J, "PDFAnnotation.hasLine", ffi_PDFAnnotation_hasLine, 0);
+		jsB_propfun(J, "PDFAnnotation.getLine", ffi_PDFAnnotation_getLine, 0);
+		jsB_propfun(J, "PDFAnnotation.setLine", ffi_PDFAnnotation_setLine, 2);
 
 		jsB_propfun(J, "PDFAnnotation.hasInkList", ffi_PDFAnnotation_hasInkList, 0);
 		jsB_propfun(J, "PDFAnnotation.getInkList", ffi_PDFAnnotation_getInkList, 0);

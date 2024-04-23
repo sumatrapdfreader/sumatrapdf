@@ -112,6 +112,26 @@ enum
 	PDF_ANNOT_Q_RIGHT = 2
 };
 
+enum pdf_intent
+{
+	PDF_ANNOT_IT_DEFAULT = 0,
+	PDF_ANNOT_IT_FREETEXT_CALLOUT,
+	PDF_ANNOT_IT_FREETEXT_TYPEWRITER,
+	PDF_ANNOT_IT_LINE_ARROW,
+	PDF_ANNOT_IT_LINE_DIMENSION,
+	PDF_ANNOT_IT_POLYLINE_DIMENSION,
+	PDF_ANNOT_IT_POLYGON_CLOUD,
+	PDF_ANNOT_IT_POLYGON_DIMENSION,
+	PDF_ANNOT_IT_STAMP_IMAGE,
+	PDF_ANNOT_IT_STAMP_SNAPSHOT,
+	PDF_ANNOT_IT_UNKNOWN = 255,
+};
+
+const char *pdf_string_from_intent(fz_context *ctx, enum pdf_intent intent);
+pdf_obj *pdf_name_from_intent(fz_context *ctx, enum pdf_intent intent);
+enum pdf_intent pdf_intent_from_string(fz_context *ctx, const char *str);
+enum pdf_intent pdf_intent_from_name(fz_context *ctx, pdf_obj *obj);
+
 /*
 	Map from a PDF name specifying an annotation line ending
 	to an enumerated line ending value.
@@ -738,6 +758,10 @@ int64_t pdf_annot_modification_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_modification_date(fz_context *ctx, pdf_annot *annot, int64_t time);
 int64_t pdf_annot_creation_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_creation_date(fz_context *ctx, pdf_annot *annot, int64_t time);
+
+int pdf_annot_has_intent(fz_context *ctx, pdf_annot *annot);
+enum pdf_intent pdf_annot_intent(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_intent(fz_context *ctx, pdf_annot *annot, enum pdf_intent it);
 
 void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4]);
 void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float *color);
