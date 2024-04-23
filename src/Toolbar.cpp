@@ -326,10 +326,11 @@ LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         RECT rect;
         GetClientRect(hWnd, &rect);
         SetTextColor(hdc, ThemeWindowTextColor());
-        SetBkColor(hdc, ThemeControlBackgroundColor());
-        auto bg = CreateSolidBrush(ThemeControlBackgroundColor());
-        FillRect(hdc, &rect, bg);
-        DeleteObject(bg);
+        COLORREF bgCol = ThemeControlBackgroundColor();
+        SetBkColor(hdc, bgCol);
+        auto bgBrush = CreateSolidBrush(bgCol);
+        FillRect(hdc, &rect, bgBrush);
+        DeleteObject(bgBrush);
         return 1;
     }
     if (WM_NCDESTROY == uMsg) {
@@ -791,18 +792,20 @@ MupdfContext::~MupdfContext() {
     }
 }
 
-static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY) {
+static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY, COLORREF bgCol) {
     int dx = src->w;
     int dy = src->h;
     int srcN = src->n;
     int dstN = 4;
     auto srcStride = src->stride;
+    u8 r, g, b;
+    UnpackColor(bgCol, r, g, b);
     for (size_t y = 0; y < (size_t)dy; y++) {
         u8* s = src->samples + (srcStride * (size_t)y);
         size_t atY = y + (size_t)dstY;
         u8* d = dstSamples + (dstStride * atY) + ((size_t)dstX * dstN);
         for (int x = 0; x < dx; x++) {
-            bool isTransparent = (s[0] == 0xff) && (s[1] == 0xff) && (s[2] == 0xff);
+            bool isTransparent = (s[0] == r) && (s[1] == g) && (s[2] == b);
             // note: we're swapping red and green channel because src is rgb
             // and we want bgr for Toolbar's IMAGELIST
             d[0] = s[2];
@@ -819,13 +822,7 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
     }
 }
 
-// TODO: doesn't work well for themes i.e. rendered svg is thicker and the color
-// is too white and doesn't match desired stroke color
-// To see the problem: set strokeCol to "red" and you'll see icon is rendered
-// part red and part white. Should be all red.
-// I tried 2 rgb bitmaps (one mask) but same result.
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/3793
-HBITMAP BuildIconsBitmap(int dx, int dy, const char* strokeCol) {
+static HBITMAP BuildIconsBitmap(int dx, int dy) {
     MupdfContext* muctx = new MupdfContext();
     fz_context* ctx = muctx->ctx;
     int nIcons = (int)TbIcon::kMax;
@@ -863,15 +860,21 @@ HBITMAP BuildIconsBitmap(int dx, int dy, const char* strokeCol) {
         hbmp = CreateDIBSection(nullptr, bmi, usage, (void**)&hbmpData, hMap, 0);
     }
 
+    COLORREF fgCol = ThemeWindowTextColor();
+    COLORREF bgCol = ThemeControlBackgroundColor();
     for (int i = 0; i < nIcons; i++) {
         const char* svgData = GetSvgIcon((TbIcon)i);
+        TempStr strokeCol = SerializeColorTemp(fgCol);
+        TempStr fillCol = SerializeColorTemp(bgCol);
+        TempStr fillColRepl = str::JoinTemp("fill=\"", fillCol, "\""); // fill="${col}"
         svgData = str::ReplaceTemp(svgData, "currentColor", strokeCol);
+        svgData = str::ReplaceTemp(svgData, R"(fill="none")", fillColRepl);
         fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svgData, str::Len(svgData));
         fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
         image->w = dx;
         image->h = dy;
         fz_pixmap* pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
-        BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0);
+        BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0, bgCol);
         fz_drop_pixmap(ctx, pixmap);
         fz_drop_image(ctx, image);
         fz_drop_buffer(ctx, buf);
@@ -906,10 +909,7 @@ static int SetToolbarIconsImageList(MainWindow* win) {
 
     // assume square icons
     HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, kButtonsCount, 0);
-    COLORREF col = ThemeWindowTextColor();
-    TempStr colStr = SerializeColorTemp(col);
-    // colStr = (TempStr)"red";
-    HBITMAP hbmp = BuildIconsBitmap(dx, dx, colStr);
+    HBITMAP hbmp = BuildIconsBitmap(dx, dx);
     ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
@@ -985,9 +985,8 @@ void CreateToolbar(MainWindow* win) {
 
     REBARBANDINFOW rbBand{};
     rbBand.cbSize = sizeof(REBARBANDINFOW);
-    rbBand.fMask = /*RBBIM_COLORS | RBBIM_TEXT | RBBIM_BACKGROUND | */
-        RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE /*| RBBIM_SIZE*/;
-    rbBand.fStyle = /*RBBS_CHILDEDGE |*/ /* RBBS_BREAK |*/ RBBS_FIXEDSIZE /*| RBBS_GRIPPERALWAYS*/;
+    rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
+    rbBand.fStyle = RBBS_FIXEDSIZE;
     if (theme::IsAppThemed()) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
     }
