@@ -775,7 +775,7 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
 
     // assume square icons
-    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLORDDB | ILC_MASK, kButtonsCount, 0);
+    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR24 | ILC_MASK, kButtonsCount, 0);
     COLORREF mask = RGB(0xff, 0xff, 0xff);
     COLORREF col = ThemeWindowTextColor();
     TempStr colStr = SerializeColorTemp(col);
