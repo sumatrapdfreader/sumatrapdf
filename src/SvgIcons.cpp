@@ -245,7 +245,9 @@ static HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
 
     size_t bmiSize = sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD);
     auto bmi = (BITMAPINFO*)calloc(1, bmiSize);
-    defer { free(bmi); };
+    defer {
+        free(bmi);
+    };
     BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
     bmih->biSize = sizeof(*bmih);
     bmih->biWidth = w;

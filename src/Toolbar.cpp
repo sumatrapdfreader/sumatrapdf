@@ -753,18 +753,10 @@ void LogBitmapInfo(HBITMAP hbmp) {
 
 constexpr int kDefaultIconSize = 18;
 
-// https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
-void CreateToolbar(MainWindow* win) {
-    kButtonSpacingX = 0;
-    HINSTANCE hinst = GetModuleHandle(nullptr);
-    HWND hwndParent = win->hwndFrame;
-    DWORD style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
-    style |= TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN;
-    const WCHAR* cls = TOOLBARCLASSNAME;
-    HMENU cmd = (HMENU)IDC_TOOLBAR;
-    HWND hwndToolbar = CreateWindowExW(0, cls, nullptr, style, 0, 0, 0, 0, hwndParent, cmd, hinst, nullptr);
-    win->hwndToolbar = hwndToolbar;
-    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+static int SetToolbarIconsImageList(MainWindow* win) {
+    HWND hwndToolbar = win->hwndToolbar;
+    CrashIf(!hwndToolbar);
+    HWND hwndParent = GetParent(hwndToolbar);
 
     // we call it ToolbarSize for users, but it's really size of the icon
     // toolbar size is iconSize + padding (seems to be 6)
@@ -798,6 +790,28 @@ void CreateToolbar(MainWindow* win) {
     }
     DeleteObject(hbmp);
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    return iconSize;
+}
+
+void UpdateToolbarAfterThemeChange(MainWindow* win) {
+    SetToolbarIconsImageList(win);
+    HwndScheduleRepaint(win->hwndToolbar);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
+void CreateToolbar(MainWindow* win) {
+    kButtonSpacingX = 0;
+    HINSTANCE hinst = GetModuleHandle(nullptr);
+    HWND hwndParent = win->hwndFrame;
+    DWORD style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
+    style |= TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN;
+    const WCHAR* cls = TOOLBARCLASSNAME;
+    HMENU cmd = (HMENU)IDC_TOOLBAR;
+    HWND hwndToolbar = CreateWindowExW(0, cls, nullptr, style, 0, 0, 0, 0, hwndParent, cmd, hinst, nullptr);
+    win->hwndToolbar = hwndToolbar;
+    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+
+    int iconSize = SetToolbarIconsImageList(win);
 
     TBMETRICS tbMetrics{};
     tbMetrics.cbSize = sizeof(tbMetrics);
@@ -825,7 +839,7 @@ void CreateToolbar(MainWindow* win) {
     BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
     CrashIf(!ok);
 
-    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(dx, dx));
+    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
 
     RECT rc;
     LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);

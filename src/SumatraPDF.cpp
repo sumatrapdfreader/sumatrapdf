@@ -1567,24 +1567,23 @@ void DeleteMainWindow(MainWindow* win) {
     delete win;
 }
 
-static void UpdateThemeForWindow(MainWindow* win) {
-    DeleteObject(win->brControlBgColor);
-    win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
-
-    UpdateControlsColors(win);
-    RebuildMenuBarForWindow(win);
-    CaptionUpdateUI(win, win->caption);
-    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
-    RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
-    RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
-}
-
 void UpdateAfterThemeChange() {
-    for (auto mainWin : gWindows) {
+    for (auto win : gWindows) {
+        DeleteObject(win->brControlBgColor);
+        win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
+
+        UpdateControlsColors(win);
+        RebuildMenuBarForWindow(win);
+        CaptionUpdateUI(win, win->caption);
+        // TODO: probably leaking toolbar image list
+        UpdateToolbarAfterThemeChange(win);
+
         // TODO: this only rerenders canvas, not frame, even with
         // includingNonClientArea == true.
-        MainWindowRerender(mainWin, true);
-        UpdateThemeForWindow(mainWin);
+        MainWindowRerender(win, true);
+        uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
+        RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
+        RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
     }
     UpdateDocumentColors();
 }

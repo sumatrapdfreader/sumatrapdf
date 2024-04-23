@@ -25,6 +25,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "Translations.h"
+#include "Toolbar.h"
 
 constexpr COLORREF kColBlack = 0x000000;
 constexpr COLORREF kColWhite = 0xFFFFFF;
