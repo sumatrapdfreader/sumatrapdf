@@ -3441,7 +3441,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
 
     SolidBrush br(GdipCol(ThemeControlBackgroundColor()));
 
-    Font f(hdc, GetDefaultGuiFont());
+    Font f(hdc, GetFont());
 
     Gdiplus::Rect gr = ToGdipRect(rc);
     gfx.FillRectangle(&br, gr);
@@ -3545,7 +3545,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     gfx->FillRectangle(&br, gr);
 
     HDC hdc = GetDC(hwnd);
-    Font f(hdc, GetDefaultGuiFont());
+    Font f(hdc, GetFont());
     ReleaseDC(hwnd, hdc);
 
     Gdiplus::RectF rTxt(0, 0, ti->r.dx, ti->r.dy);

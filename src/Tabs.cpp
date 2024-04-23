@@ -15,6 +15,7 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "AppColors.h"
 #include "EngineBase.h"
@@ -47,8 +48,15 @@ static void UpdateTabTitle(WindowTab* tab) {
 }
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScale(hwnd, kTabBarDy);
-    return (int)(dy * factor);
+    int tabDy = kTabBarDy;
+    HFONT hfont = GetAppFont();
+    int dy = FontDyPx(hwnd, hfont);
+    dy += DpiScale(hwnd, 4);
+    if (dy > tabDy) {
+        tabDy = dy;
+    }
+    dy = DpiScale(hwnd, tabDy);
+    return (int)((float)dy * factor);
 }
 
 static inline Size GetTabSize(HWND hwnd) {
@@ -412,6 +420,7 @@ void CreateTabbar(MainWindow* win) {
     TabsCreateArgs args;
     args.parent = win->hwndFrame;
     args.withToolTips = true;
+    args.font = GetAppFont();
     tabsCtrl->Create(args);
     win->tabsCtrl = tabsCtrl;
     win->tabSelectionHistory = new Vec<WindowTab*>();

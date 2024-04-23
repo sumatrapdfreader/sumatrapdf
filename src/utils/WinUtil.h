@@ -115,6 +115,7 @@ void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC hdc, Rect r, const char* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font = nullptr);
+int FontDyPx(HWND hwnd, HFONT hfont);
 
 int HdcDrawText(HDC hdc, const char* s, RECT* r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint format, HFONT font = nullptr);

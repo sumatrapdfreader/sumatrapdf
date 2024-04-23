@@ -2868,7 +2868,7 @@ void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
+static Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     if (!txt || !*txt) {
         return Size{};
     }
@@ -2897,6 +2897,11 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
     }
     TempWStr sw = ToWStrTemp(txt);
     return HwndMeasureText(hwnd, sw, font);
+}
+
+int FontDyPx(HWND hwnd, HFONT hfont) {
+    Size s = HwndMeasureText(hwnd, "A", hfont);
+    return s.dy;
 }
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {
