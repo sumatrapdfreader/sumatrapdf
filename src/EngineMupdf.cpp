@@ -189,19 +189,18 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     CrashIf(!link && !outline);
     char* uri = FzGetURL(link, outline);
 
-    if (IsExternalUrl(uri)) {
-        auto res = new PageDestinationURL(uri);
+    TempStr frag = nullptr;
+    TempStr path = CleanupFileURLTemp(uri, &frag);
+
+    if (path) {
+        logf("NewPageDestinationMupdf: path='%s', frag='%s'\n", path, frag);
+        auto res = new PageDestinationFile(path, frag);
         res->rect = FzGetRectF(link, outline);
         return res;
     }
 
-    if (str::StartsWithI(uri, "file://")) {
-        TempStr path = CleanupFileURLTemp(uri);
-        char* frag = str::FindChar(uri, '#');
-        if (frag) {
-            frag++;
-        }
-        auto res = new PageDestinationFile(path, frag);
+    if (IsExternalUrl(uri)) {
+        auto res = new PageDestinationURL(uri);
         res->rect = FzGetRectF(link, outline);
         return res;
     }
@@ -2584,7 +2583,8 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
 }
 
 /* SumatraPDF */
-fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options, fz_cookie* cookie) {
+fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
+                                            fz_cookie* cookie) {
     fz_stext_page* text;
     fz_device* dev = NULL;
 

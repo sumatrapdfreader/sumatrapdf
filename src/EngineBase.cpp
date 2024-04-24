@@ -400,19 +400,6 @@ bool EngineBase::HandleLink(IPageDestination*, ILinkHandler*) {
     return false;
 }
 
-// skip file:// and maybe file:/// from s. It might be added by mupdf
-// do not free the result
-static const char* SkipFileProtocolTemp(const char* s) {
-    if (!str::StartsWithI(s, "file://")) {
-        return s;
-    }
-    s += 7; // skip "file://"
-    while (*s == '/') {
-        s++;
-    }
-    return s;
-}
-
 // skip mailto: from s
 static const char* SkipMailProtocolTemp(const char* s) {
     if (!str::StartsWithI(s, "mailto:")) {
@@ -425,16 +412,25 @@ static const char* SkipMailProtocolTemp(const char* s) {
     return s;
 }
 
-// s could be in format "file://path.pdf#page=1"
-// We only want the "path.pdf"
-// TODO: could also parse page=1 and return it so that
-// we can go to the right place
-TempStr CleanupFileURLTemp(const char* s) {
-    s = SkipFileProtocolTemp(s);
-    char* s2 = str::DupTemp(s);
-    char* s3 = str::FindChar(s2, '#');
+// s could be in format "file:path.pdf#page=1", as returned by mupdf
+// We return "path.pdf" and "page=1" in argsOut
+// or nullptr if not file:
+TempStr CleanupFileURLTemp(const char* s, TempStr* argsOut) {
+    if (!str::StartsWithI(s, "file:")) {
+        return nullptr;
+    }
+    s += 5;
+    while (*s == '/') {
+        s++;
+    }
+    TempStr s2 = str::DupTemp(s);
+    TempStr s3 = str::FindChar(s2, '#');
     if (s3) {
         *s3 = 0;
+        s3++;
+    }
+    if (argsOut) {
+        *argsOut = s3;
     }
     return s2;
 }
@@ -442,7 +438,7 @@ TempStr CleanupFileURLTemp(const char* s) {
 // s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
 // We only want the "path.pdf" / "foo@bar.com"
 TempStr CleanupURLForClipbardCopyTemp(const char* s) {
-    TempStr s2 = CleanupFileURLTemp(s);
+    TempStr s2 = CleanupFileURLTemp(s, nullptr);
     s2 = (char*)SkipMailProtocolTemp(s2);
     return s2;
 }

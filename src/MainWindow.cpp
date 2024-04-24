@@ -396,15 +396,8 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
     if (kindDestinationLaunchFile == kind) {
-        PageDestinationFile* pdf = (PageDestinationFile*)dest;
-        // LaunchFile only opens files inside SumatraPDF
-        // (except for allowed perceived file types)
-        TempStr tmpPath = CleanupFileURLTemp(pdf->path);
-        // heuristic: replace %20 with ' '
-        if (!file::Exists(tmpPath) && (str::Find(tmpPath, "%20") != nullptr)) {
-            tmpPath = str::ReplaceTemp(tmpPath, "%20", " ");
-        }
-        LaunchFile(tmpPath, dest);
+        PageDestinationFile* fileDest = (PageDestinationFile*)dest;
+        LaunchFile(fileDest->path, dest);
         return;
     }
     if (kindDestinationLaunchEmbedded == kind) {
@@ -473,10 +466,10 @@ void LinkHandler::LaunchURL(const char* uri) {
     }
 }
 
+// for safety, only handle relative paths and only open them in SumatraPDF
+// (unless they're of an allowed perceived type) and never launch any external
+// file in plugin mode (where documents are supposed to be self-contained)
 void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
-    // for safety, only handle relative paths and only open them in SumatraPDF
-    // (unless they're of an allowed perceived type) and never launch any external
-    // file in plugin mode (where documents are supposed to be self-contained)
     // TDOO: maybe should enable this in plugin mode
     if (gPluginMode) {
         return;
@@ -497,6 +490,11 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
     IPageDestination* remoteLink = link;
     TempStr fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
     fullPath = path::JoinTemp(fullPath, path);
+
+    // heuristic: replace %20 with ' '
+    if (!file::Exists(fullPath) && (str::Find(fullPath, "%20") != nullptr)) {
+        fullPath = str::ReplaceTemp(fullPath, "%20", " ");
+    }
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
     MainWindow* newWin = FindMainWindowByFile(fullPath, true);
