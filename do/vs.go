@@ -28,11 +28,6 @@ var (
 		`C:\Program Files\Microsoft Visual Studio\2022\Preview`,
 		`C:\Program Files\Microsoft Visual Studio\2022\Community`,
 		`C:\Program Files\Microsoft Visual Studio\2022\Professional`,
-		// https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise`,
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional`,
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Community`,
-		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview`,
 	}
 )
 
