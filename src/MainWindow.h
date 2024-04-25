@@ -99,6 +99,7 @@ struct MainWindow {
     HWND hwndToolbar = nullptr;
     HWND hwndFindLabel = nullptr;
     HWND hwndFindEdit = nullptr;
+    HWND hwndColumnLabel = nullptr;
     HWND hwndColumnEdit = nullptr;
     HWND hwndColumnBg = nullptr;
     HWND hwndFindBg = nullptr;

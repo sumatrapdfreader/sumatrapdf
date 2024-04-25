@@ -1046,6 +1046,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
     UpdateToolbarPageText(win, pageCount);
     UpdateToolbarFindText(win);
+    UpdateToolbarColumn(win);
 
     FindToggleMatchCase(win);
     UpdateFindbox(win);
@@ -1420,6 +1421,7 @@ static void CreateSidebar(MainWindow* win) {
 static void UpdateToolbarSidebarText(MainWindow* win) {
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);
+    UpdateToolbarColumn(win);
     UpdateToolbarButtonsToolTipsForWindow(win);
 
     win->tocLabelWithClose->SetLabel(_TR("Bookmarks"));
@@ -2279,6 +2281,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         ToolbarUpdateStateForWindow(win, true);
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
+        UpdateToolbarColumn(win);
         UpdateFindbox(win);
         UpdateTabWidth(win);
         if (wasntFixed) {
@@ -3715,11 +3718,11 @@ static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuous
     }
 }
 
-static void FocusPageNoEdit(HWND hwndPageEdit) {
-    if (HwndIsFocused(hwndPageEdit)) {
-        SendMessageW(hwndPageEdit, WM_SETFOCUS, 0, 0);
+static void FocusEdit(HWND hwndEdit) {
+    if (HwndIsFocused(hwndEdit)) {
+        SendMessageW(hwndEdit, WM_SETFOCUS, 0, 0);
     } else {
-        SetFocus(hwndPageEdit);
+        SetFocus(hwndEdit);
     }
 }
 
@@ -3730,7 +3733,7 @@ static void OnMenuGoToPage(MainWindow* win) {
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        FocusPageNoEdit(win->hwndPageEdit);
+        FocusEdit(win->hwndPageEdit);
         return;
     }
 
@@ -3746,13 +3749,7 @@ static void OnMenuGoToPage(MainWindow* win) {
         ctrl->GoToPage(newPageNo, true);
     }
 }
-static void FocusColumnEdit(HWND hwndColumnEdit) {
-    if (HwndIsFocused(hwndColumnEdit)) {
-        SendMessageW(hwndColumnEdit, WM_SETFOCUS, 0, 0);
-    } else {
-        SetFocus(hwndColumnEdit);
-    }
-}
+
 static void OnMenuMultiColumn(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
@@ -3760,7 +3757,7 @@ static void OnMenuMultiColumn(MainWindow* win) {
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        FocusColumnEdit(win->hwndColumnEdit);
+        FocusEdit(win->hwndColumnEdit);
         return;
     }
 

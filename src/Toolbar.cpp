@@ -275,6 +275,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     // toolbar buttons were shown/hidden
     if (setButtonsVisibility && NeedsFindUI(win)) {
         UpdateToolbarFindText(win);
+        UpdateToolbarColumn(win);
     }
     const char* msg = "";
     DisplayModel* dm = win->AsFixed();
@@ -464,11 +465,12 @@ static LRESULT CALLBACK WndProcEditColumn(HWND hwnd, UINT msg, WPARAM wp, LPARAM
         return DefWindowProc(hwnd, msg, wp, lp);
     }
     switch (wp) {
-    case VK_RETURN: {
-        char* s = HwndGetTextTemp(win->hwndColumnEdit);
-        int column = atoi(s);
-        win->ctrl->SetColumns(column);
-    }}
+        case VK_RETURN: {
+            char* s = HwndGetTextTemp(win->hwndColumnEdit);
+            int column = atoi(s);
+            win->ctrl->SetColumns(column);
+        }
+    }
     LRESULT ret = CallWindowProc(DefWndProcEditColumn, hwnd, msg, wp, lp);
     return ret;
 }
@@ -511,10 +513,54 @@ void UpdateToolbarFindText(MainWindow* win) {
     TbSetButtonDx(win->hwndToolbar, CmdFindFirst, dx);
 }
 
+void UpdateToolbarColumn(MainWindow* win) {
+    bool showUI = NeedsFindUI(win);
+    HwndSetVisibility(win->hwndColumnLabel, showUI);
+    HwndSetVisibility(win->hwndColumnBg, showUI);
+    HwndSetVisibility(win->hwndColumnEdit, showUI);
+    if (!showUI) {
+        return;
+    }
+
+    const char* text = _TRA("Columns:");
+    HwndSetText(win->hwndColumnLabel, text);
+
+    Rect ColumnWndRect = WindowRect(win->hwndColumnBg);
+
+    RECT r{};
+    TbGetRect(win->hwndToolbar, CmdFindMatch, &r);
+    int currX = r.right + DpiScale(win->hwndToolbar, 10);
+    int currY = (r.bottom - ColumnWndRect.dy) / 2;
+
+    Size size = HwndMeasureText(win->hwndColumnLabel, text);
+    size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
+    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
+
+    int padding = GetSystemMetrics(SM_CXEDGE);
+    int x = currX;
+    int y = (ColumnWndRect.dy - size.dy + 1) / 2 + currY;
+    MoveWindow(win->hwndColumnLabel, x, y, size.dx, size.dy, TRUE);
+    x = currX + size.dx;
+    y = currY;
+    MoveWindow(win->hwndColumnBg, x, y, ColumnWndRect.dx, ColumnWndRect.dy, FALSE);
+    x = currX + size.dx + padding;
+    y = (ColumnWndRect.dy - size.dy + 1) / 2 + currY;
+    int dx = ColumnWndRect.dx - 2 * padding;
+    MoveWindow(win->hwndColumnEdit, x, y, dx, size.dy, FALSE);
+
+    dx = size.dx + ColumnWndRect.dx + 12;
+
+    if (win->ctrl) {
+        TempStr label = str::FormatTemp("%d", win->ctrl->GetColumns());
+        HwndSetText(win->hwndColumnEdit, label);
+    }
+}
+
 void UpdateToolbarState(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
+    UpdateToolbarColumn(win);
     HWND hwnd = win->hwndToolbar;
     WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, CmdZoomFitWidthAndContinuous, 0);
     DisplayMode dm = win->ctrl->GetDisplayMode();
@@ -587,17 +633,22 @@ static void CreateColumnBox(MainWindow* win, HFONT hfont, int iconDy) {
     DWORD exStyle = 0;
     int dy = iconDy + 2;
     HWND colBg =
-        CreateWindowEx(exStyle, WC_STATIC, L"", style, 700, 0, findBoxDx+2, dy, p, (HMENU) nullptr, hmod, nullptr);
+        CreateWindowEx(exStyle, WC_STATIC, L"", style, 700, 0, findBoxDx + 2, dy, p, (HMENU) nullptr, hmod, nullptr);
 
-    style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
+    style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER;
     dy = iconDy;
     exStyle = 0;
 
     HWND col = CreateWindowExW(exStyle, WC_EDIT, L"", style, 701, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
+    style = WS_VISIBLE | WS_CHILD;
+    HWND label = CreateWindowExW(0, WC_STATIC, L"", style, 0, 1, 0, 0, p, (HMENU) nullptr, hmod, nullptr);
+
+    SetWindowFont(label, hfont, FALSE);
     SetWindowFont(col, hfont, FALSE);
+    win->hwndColumnLabel = label;
     win->hwndColumnEdit = col;
-    win->hwndColumnBg= colBg;
-        if (!DefWndProcEditColumn) {
+    win->hwndColumnBg = colBg;
+    if (!DefWndProcEditColumn) {
         DefWndProcEditColumn = (WNDPROC)GetWindowLongPtr(col, GWLP_WNDPROC);
     }
     SetWindowLongPtr(col, GWLP_WNDPROC, (LONG_PTR)WndProcEditColumn);

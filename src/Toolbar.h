@@ -7,6 +7,7 @@ void CreateToolbar(MainWindow*);
 void ToolbarUpdateStateForWindow(MainWindow*, bool setButtonsVisibility);
 void UpdateToolbarButtonsToolTipsForWindow(MainWindow*);
 void UpdateToolbarFindText(MainWindow*);
+void UpdateToolbarColumn(MainWindow* win);
 void UpdateToolbarPageText(MainWindow*, int pageCount, bool updateOnly = false);
 void UpdateFindbox(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
