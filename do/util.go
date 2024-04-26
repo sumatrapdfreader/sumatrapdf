@@ -287,13 +287,6 @@ func runCmdMust(cmd *exec.Cmd) string {
 	return ""
 }
 
-func fmtSmart(format string, args ...interface{}) string {
-	if len(args) == 0 {
-		return format
-	}
-	return fmt.Sprintf(format, args...)
-}
-
 func currDirAbsMust() string {
 	dir, err := filepath.Abs(".")
 	must(err)
@@ -311,4 +304,11 @@ func execTextTemplate(tmplText string, data interface{}) string {
 
 func push[S ~[]E, E any](s *S, els ...E) {
 	*s = append(*s, els...)
+}
+
+func measureDuration() func() {
+	timeStart := time.Now()
+	return func() {
+		logf("took %s\n", time.Since(timeStart))
+	}
 }

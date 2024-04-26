@@ -255,6 +255,7 @@ func main() {
 		flgExtractUtils    bool
 		flgBuildLogview    bool
 		flgBuildNo         int
+		flgUpdateGoDeps    bool
 	)
 
 	{
@@ -290,11 +291,21 @@ func main() {
 		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
 		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win. Use -upload to also upload it to backblaze")
 		flag.IntVar(&flgBuildNo, "build-no-info", 0, "print build number info for given build number")
+		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
+
 		flag.Parse()
 	}
 
 	if flgExtractUtils {
 		extractUtils(flgCIBuild)
+		return
+	}
+
+	if flgUpdateGoDeps {
+		defer measureDuration()()
+		u.UpdateGoDeps("do", true)
+		u.UpdateGoDeps(filepath.Join("tools", "logview-win"), true)
+		u.UpdateGoDeps(filepath.Join("tools", "regress"), true)
 		return
 	}
 

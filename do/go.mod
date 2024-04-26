@@ -5,15 +5,16 @@ go 1.21
 toolchain go1.22.2
 
 require (
-	github.com/kjk/common v0.0.0-20240401135115-ddaf3066325e
+	github.com/kjk/common v0.0.0-20240426141304-c217812bf00b
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
 	github.com/kjk/u v0.0.0-20220410204605-ce4a95db4475
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kjk/atomicfile v0.0.0-20220410204726-989ae30d2b66 // indirect
@@ -21,7 +22,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/minio-go/v6 v6.0.57 // indirect
-	github.com/minio/minio-go/v7 v7.0.69 // indirect
+	github.com/minio/minio-go/v7 v7.0.70 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
