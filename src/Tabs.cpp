@@ -50,20 +50,21 @@ static void UpdateTabTitle(WindowTab* tab) {
 int GetTabbarHeight(HWND hwnd, float factor) {
     int tabDy = kTabBarDy;
     HFONT hfont = GetAppFont();
-    int dy = FontDyPx(hwnd, hfont);
-    dy += DpiScale(hwnd, 4);
-    if (dy > tabDy) {
-        tabDy = dy;
+    int fontDyWithPadding = FontDyPx(hwnd, hfont) + 3;
+    if (fontDyWithPadding > tabDy) {
+        tabDy = fontDyWithPadding;
     }
-    dy = DpiScale(hwnd, tabDy);
-    return (int)((float)dy * factor);
+    tabDy = DpiScale(hwnd, tabDy);
+    return (int)((float)tabDy * factor);
 }
 
+#if 0
 static inline Size GetTabSize(HWND hwnd) {
     int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, kTabMinDx));
-    int dy = DpiScale(hwnd, kTabBarDy);
+    int dy = GetTabbarHeight(hwnd);
     return Size(dx, dy);
 }
+#endif
 
 static void ShowTabBar(MainWindow* win, bool show) {
     if (show == win->tabsVisible) {
