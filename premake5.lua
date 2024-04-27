@@ -633,6 +633,7 @@ workspace "SumatraPDF"
 
   function fonts()
     files {
+
       "mupdf/resources/fonts/urw/Dingbats.cff",
       "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
       "mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
@@ -653,6 +654,11 @@ workspace "SumatraPDF"
       "mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
       "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
       "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
+      "mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerifDevanagari-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerifGeorgian-Regular.otf",

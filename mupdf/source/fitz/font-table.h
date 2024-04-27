@@ -88,6 +88,13 @@ ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_COMMON,	FZ_LANG_UNS
 ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_INHERITED,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
 ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_UNKNOWN,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
 
+FONT(noto,	NotoSansMath_Regular_otf,	"Noto Sans Math",	MUPDF_SCRIPT_MATH,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+FONT(noto,	NotoMusic_Regular_otf,		"Noto Music",		MUPDF_SCRIPT_MUSIC,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+FONT(noto,	NotoSansSymbols_Regular_otf,	"Noto Sans Symbols",	MUPDF_SCRIPT_SYMBOLS,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+ALIAS(noto,	NotoSansSymbols_Regular_otf,	"Noto Sans Symbols",	UCDN_SCRIPT_BRAILLE,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+FONT(noto,	NotoSansSymbols2_Regular_otf,	"Noto Sans Symbols2",	MUPDF_SCRIPT_SYMBOLS2,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+FONT(noto,	NotoEmoji_Regular_ttf,		"Noto Emoji",		MUPDF_SCRIPT_EMOJI,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+
 #define DEFNOTO(symbol, name, script) FONT(noto, symbol, name, script, FZ_LANG_UNSET, NO_SUBFONT, REGULAR)
 DEFNOTO(NotoSerifDevanagari_Regular_otf, "Noto Serif Devanagari", UCDN_SCRIPT_DEVANAGARI)
 DEFNOTO(NotoSerifGeorgian_Regular_otf, "Noto Serif Georgian", UCDN_SCRIPT_GEORGIAN)

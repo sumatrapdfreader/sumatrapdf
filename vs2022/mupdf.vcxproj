@@ -924,6 +924,84 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
     </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoEmoji-Regular.ttf">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoEmoji-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_ttf ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoMusic-Regular.otf">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoMusic-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+    </CustomBuild>
     <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSans-Regular.otf">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
@@ -950,6 +1028,123 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSans-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSansMath-Regular.otf">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSansMath-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSansSymbols-Regular.otf">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSansSymbols-Regular.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSansSymbols2-Regular.otf">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86_64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf ARM64</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">../out/dbgarm64/obj/arm64/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">../out/arm64/obj/arm64/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">../out/arm64_prefast/obj/arm64/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/mupdf/NotoSansSymbols2-Regular.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\bin2coff.exe "%(Identity)" "$(IntDir)/%(Filename).obj" _binary_%(Filename)_otf x86</Message>

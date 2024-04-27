@@ -1000,7 +1000,22 @@
     <CustomBuild Include="..\mupdf\resources\fonts\droid\DroidSansFallbackFull.ttf">
       <Filter>mupdf\resources\fonts\droid</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoEmoji-Regular.ttf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoMusic-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
     <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSans-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSansMath-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSansSymbols-Regular.otf">
+      <Filter>mupdf\resources\fonts\noto</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSansSymbols2-Regular.otf">
       <Filter>mupdf\resources\fonts\noto</Filter>
     </CustomBuild>
     <CustomBuild Include="..\mupdf\resources\fonts\noto\NotoSerif-Regular.otf">
