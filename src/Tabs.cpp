@@ -48,13 +48,12 @@ static void UpdateTabTitle(WindowTab* tab) {
 }
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int tabDy = kTabBarDy;
+    int tabDy = DpiScale(hwnd, kTabBarDy);
     HFONT hfont = GetAppFont();
-    int fontDyWithPadding = FontDyPx(hwnd, hfont) + 3;
+    int fontDyWithPadding = FontDyPx(hwnd, hfont) + DpiScale(hwnd, 2);
     if (fontDyWithPadding > tabDy) {
         tabDy = fontDyWithPadding;
     }
-    tabDy = DpiScale(hwnd, tabDy);
     return (int)((float)tabDy * factor);
 }
 
