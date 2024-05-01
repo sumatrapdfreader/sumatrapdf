@@ -850,6 +850,7 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdRenameFile,
     CmdDeleteFile,
     CmdShowInFolder,
+    CmdInvokeInverseSearch,
     // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
     // are removed instead of disabled (and can remain enabled
     // for broken XPS/CHM documents)
@@ -962,6 +963,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdOpenSelectedDocument,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
+    CmdInvokeInverseSearch,
     0,
 };
 
@@ -995,6 +997,7 @@ UINT_PTR removeIfChm[] = {
     CmdZoom800,
     CmdZoom12_5,
     CmdZoom8_33,
+    CmdInvokeInverseSearch,
     (UINT_PTR)menuDefContext,
     0,
 };
@@ -2279,6 +2282,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
 // so that accidental removal of the menu isn't catastrophic
 void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     CrashIf(!win->menu);
+
     if (win->presentation || win->isFullScreen) {
         return;
     }

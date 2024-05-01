@@ -76,7 +76,7 @@ bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const c
 }
 
 bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles) {
-    char* dir = path::GetDirTemp(pattern);
+    TempStr dir = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATAW fdata{};
     WCHAR* patternW = ToWstr(pattern);

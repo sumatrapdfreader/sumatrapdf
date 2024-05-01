@@ -474,9 +474,9 @@ TempStr GetPathOfFileInAppDirTemp(const char* fileName) {
     if (!fileName) {
         return ToUtf8Temp(modulePath);
     }
-    WCHAR* moduleDir = path::GetDirTemp(modulePath);
-    WCHAR* fileNameW = ToWStrTemp(fileName);
-    WCHAR* path = path::JoinTemp(moduleDir, fileNameW);
+    TempWStr moduleDir = path::GetDirTemp(modulePath);
+    TempWStr fileNameW = ToWStrTemp(fileName);
+    TempWStr path = path::JoinTemp(moduleDir, fileNameW);
     path = path::Normalize(path);
     TempStr res = ToUtf8Temp(path);
     str::Free(path);
@@ -782,7 +782,7 @@ bool Create(const char* dir) {
 
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const char* dir) {
-    char* parent = path::GetDirTemp(dir);
+    TempStr parent = path::GetDirTemp(dir);
     if (!str::Eq(parent, dir) && !Exists(parent)) {
         CreateAll(parent);
     }

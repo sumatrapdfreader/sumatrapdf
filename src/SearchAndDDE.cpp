@@ -443,7 +443,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha, 0);
 }
 
-// returns true if the double-click was handled and false if it wasn't
+// returns true if inverse search was performed
 bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
         return false;

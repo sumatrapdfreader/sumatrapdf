@@ -2340,8 +2340,23 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     return true;
 }
 
+static void InvokeInverseSearch(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    if (!gGlobalPrefs->enableTeXEnhancements) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    OnInverseSearch(win, pt.x, pt.y);
+}
+
 // returns true if saved successully
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
+    if (!tab) {
+        return false;
+    }
     WCHAR dstFileName[MAX_PATH + 1]{};
 
     OPENFILENAME ofn{};
@@ -4991,9 +5006,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSaveAnnotations: {
-            if (tab) {
-                SaveAnnotationsToExistingFile(tab);
-            }
+            SaveAnnotationsToExistingFile(tab);
             break;
         }
 
@@ -5003,18 +5016,22 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdSaveAnnotationsNewFile: {
-            if (tab) {
-                SaveAnnotationsToMaybeNewPdfFile(tab);
-            }
+        case CmdInvokeInverseSearch: {
+            InvokeInverseSearch(tab);
             break;
         }
 
-        case CmdToggleMenuBar:
+        case CmdSaveAnnotationsNewFile: {
+            SaveAnnotationsToMaybeNewPdfFile(tab);
+            break;
+        }
+
+        case CmdToggleMenuBar: {
             if (!win->tabsInTitlebar) {
-                ToggleMenuBar(win);
+                ToggleMenuBar(win, false);
             }
             break;
+        }
 
         case CmdChangeLanguage:
             OnMenuChangeLanguage(win->hwndFrame);

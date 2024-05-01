@@ -412,7 +412,7 @@ static WatchedDir* NewWatchedDir(const char* dirPath) {
 static WatchedFile* NewWatchedFile(const char* filePath, const std::function<void()>& onFileChangedCb) {
     WCHAR* pathW = ToWStrTemp(filePath);
     bool isManualCheck = PathIsNetworkPathW(pathW);
-    char* dirPath = path::GetDirTemp(filePath);
+    TempStr dirPath = path::GetDirTemp(filePath);
     WatchedDir* wd = nullptr;
     bool newDir = false;
     if (!isManualCheck) {
