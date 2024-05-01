@@ -2,12 +2,13 @@
 //import { join } from "path";
 //import { stream } from 'fast-glob';
 
-const fs = require('fs');
-const fg = require('fast-glob');
+const fs = require("fs");
+const fg = require("fast-glob");
 const path = require("path");
-const pdf = require('pdfjs-dist/es5/build/pdf.js');
 
-//console.log(pdf);
+import * as pdf from "pdfjs-dist/build/pdf";
+
+console.log(pdf);
 //console.log(pdf.Util);
 //console.log(new pdf.Util());
 //console.log(Object.keys(pdf.Util));
@@ -51,7 +52,9 @@ function dumpWithAnnots() {
   let n = 1;
   for (let o of withAnnots) {
     const { filePath, nAnnots, nPages } = o;
-    console.log(`${n}: ${filePath} has ${nPages} pages and ${nAnnots} annotations`);
+    console.log(
+      `${n}: ${filePath} has ${nPages} pages and ${nAnnots} annotations`
+    );
     n++;
   }
 }
@@ -146,10 +149,10 @@ function dumpAnnotsByTypeAndMaybeCopy(dstDir) {
           fs.copyFileSync(filePath, dstPath);
         }
         prevPageNo = -1;
-        console.log(`  ${filePath}, page: ${pageNo}`)
+        console.log(`  ${filePath}, page: ${pageNo}`);
       } else {
         if (prevPageNo != pageNo) {
-          process.stdout.write(`, ${pageNo}`)
+          process.stdout.write(`, ${pageNo}`);
           // console.log(`      page: ${pageNo}`)
         }
       }
@@ -163,8 +166,8 @@ async function doPDF(filePath) {
   var ab = fs.readFileSync(filePath, null).buffer;
   const params = {
     data: ab,
-    verbosity: 0
-  }
+    verbosity: 0,
+  };
   const doc = await pdf.getDocument(params).promise;
   const nPages = doc.numPages;
   let nAnnots = 0;
@@ -181,7 +184,9 @@ async function doPDF(filePath) {
     recordAnnotations(filePath, i, page, annots);
   }
   if (nAnnots > 0) {
-    console.log(`${fileNo}: ${filePath} has ${nPages} pages and ${nAnnots} annotations`);
+    console.log(
+      `${fileNo}: ${filePath} has ${nPages} pages and ${nAnnots} annotations`
+    );
     const o = {
       filePath: filePath,
       nAnnots: nAnnots,
@@ -201,7 +206,7 @@ async function doPDF(filePath) {
   }
   const opts = {
     cwd: startDir,
-  }
+  };
   fileNo = 1;
   const stream = fg.stream("**/*.pdf", opts);
   for await (const name of stream) {
