@@ -348,6 +348,7 @@ static DWORD WINAPI FileWatcherThread(void*) {
         }
     }
     DestroyTempAllocator();
+    return 0;
 }
 
 static void StartThreadIfNecessary() {
