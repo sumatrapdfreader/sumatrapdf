@@ -1813,6 +1813,10 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 
 	fz_try(ctx)
 	{
+		/* Treat any alpha-only pixmap as being device gray here. */
+		if (!ss)
+			ss = fz_device_gray(ctx);
+
 		/* Convert indexed into base colorspace. */
 		if (ss->type == FZ_COLORSPACE_INDEXED)
 		{

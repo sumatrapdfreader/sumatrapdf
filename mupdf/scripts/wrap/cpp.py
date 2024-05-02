@@ -1090,6 +1090,11 @@ g_extra_declarations = textwrap.dedent(f'''
 
         /** Swig-friendly wrapper for pdf_subset_fonts(). */
         void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages);
+
+        /** Swig-friendly and typesafe way to do fz_snprintf(fmt, value). `fmt`
+        must end with one of 'efg' otherwise we throw an exception. */
+        std::string fz_format_double(fz_context* ctx, const char* fmt, double value);
+
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1288,6 +1293,23 @@ g_extra_definitions = textwrap.dedent(f'''
         void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages)
         {{
             return pdf_subset_fonts(ctx, doc, pages.size(), &pages[0]);
+        }}
+
+        static void s_format_check(fz_context* ctx, const char* fmt, const char* specifiers)
+        {{
+            int length = strlen(fmt);
+            if (!length || !strchr(specifiers, fmt[length-1]))
+            {{
+                fz_throw(ctx, FZ_ERROR_ARGUMENT, "Incorrect fmt '%s' should end with one of '%s'.", fmt, specifiers);
+            }}
+        }}
+
+        std::string fz_format_double(fz_context* ctx, const char* fmt, double value)
+        {{
+            char buffer[256];
+            s_format_check(ctx, fmt, "efg");
+            fz_snprintf(buffer, sizeof(buffer), fmt, value);
+            return buffer;
         }}
         ''')
 

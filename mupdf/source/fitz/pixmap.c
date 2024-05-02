@@ -1159,8 +1159,6 @@ fz_convert_pixmap(fz_context *ctx, const fz_pixmap *pix, fz_colorspace *ds, fz_c
 
 	if (!ds && !keep_alpha)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot both throw away and keep alpha");
-	if (!pix->colorspace)
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot convert alpha-only pixmap");
 
 	cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha && pix->alpha);
 

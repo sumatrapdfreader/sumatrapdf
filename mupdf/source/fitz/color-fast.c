@@ -1248,14 +1248,20 @@ static void fast_gray_to_gray(fz_context *ctx, const fz_pixmap *src, fz_pixmap *
 	ptrdiff_t d_line_inc = dst->stride - w * dn;
 	ptrdiff_t s_line_inc = src->stride - w * sn;
 
+	if ((int)w < 0 || h < 0)
+		return;
+
+	/* Alpha-only pixmaps count as device_gray with no alpha. */
+	if (sn == 1 && sa)
+		sa = 0;
+	if (dn == 1 && da)
+		da = 0;
+
 	/* If copying spots, they must match, and we can never drop alpha (but we can invent it) */
 	if (copy_spots && ss != ds)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "incompatible number of spots when converting pixmap");
 	if (!da && sa)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot drop alpha when converting pixmap");
-
-	if ((int)w < 0 || h < 0)
-		return;
 
 	if (d_line_inc == 0 && s_line_inc == 0)
 	{

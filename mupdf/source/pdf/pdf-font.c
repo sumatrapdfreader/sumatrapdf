@@ -1289,7 +1289,11 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 			}
 
 			if (fontdesc->to_ttf_cmap)
+			{
 				fz_warn(ctx, "non-embedded font using identity encoding: %s (mapping via %s)", basefont, fontdesc->to_ttf_cmap->cmap_name);
+				if (!fontdesc->to_unicode)
+					fontdesc->to_unicode = pdf_keep_cmap(ctx, fontdesc->to_ttf_cmap);
+			}
 			else
 				fz_warn(ctx, "non-embedded font using identity encoding: %s", basefont);
 		}
