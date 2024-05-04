@@ -193,6 +193,13 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
 
     if (str::Skip(maybePath, "file:")) {
         // decode: file:path%20to_file.pdf#page=1
+
+        // this is to handle file:// and
+        // file:/// (which I assume is a mistake in PDF)
+        str::Skip(maybePath, "/");
+        str::Skip(maybePath, "/");
+        str::Skip(maybePath, "/");
+
         TempStr path = str::DupTemp(maybePath);
         TempStr dest = str::FindChar(path, '#');
         if (dest) {
