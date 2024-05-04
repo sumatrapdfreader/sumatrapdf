@@ -76,7 +76,7 @@ struct PageDestinationDjVu : IPageDestination {
         str::Free(value);
     }
 
-    char* GetValue() override {
+    char* GetValue2() override {
         if (value) {
             return value;
         }
@@ -118,7 +118,7 @@ static TocItem* NewDjVuTocItem(TocItem* parent, const char* title, const char* l
     auto res = new TocItem(parent, title, 0);
     res->dest = NewDjVuDestination(link, nullptr);
     if (res->dest) {
-        res->pageNo = res->dest->GetPageNo();
+        res->pageNo = PageDestGetPageNo(res->dest);
     }
     return res;
 }

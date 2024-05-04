@@ -187,7 +187,7 @@ static TocItem* newEbookTocItem(TocItem* parent, const char* title, IPageDestina
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     if (dest) {
-        res->pageNo = dest->GetPageNo();
+        res->pageNo = PageDestGetPageNo(dest);
     }
     return res;
 }

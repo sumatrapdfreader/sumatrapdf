@@ -60,9 +60,7 @@ struct PageText {
 void FreePageText(PageText*);
 
 // a link destination
-struct IPageDestination {
-    Kind kind = nullptr;
-
+struct IPageDestination : KindBase {
     int pageNo = -1;
     RectF rect = {};
     float zoom = 0.f;
@@ -70,33 +68,54 @@ struct IPageDestination {
     IPageDestination() = default;
     virtual ~IPageDestination(){};
 
-    Kind GetKind() {
-        return kind;
-    }
-
     // page the destination points to (-1 for external destinations such as URLs)
-    virtual int GetPageNo() {
+    virtual int GetPageNo2() {
         return pageNo;
     }
     // rectangle of the destination on the above returned page
-    virtual RectF GetRect() {
+    virtual RectF GetRect2() {
         return rect;
     }
     // optional zoom level on the above returned page
-    virtual float GetZoom() {
+    virtual float GetZoom2() {
         return zoom;
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    virtual char* GetValue() {
+    virtual char* GetValue2() {
         return nullptr;
     }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    virtual char* GetName() {
+    virtual char* GetName2() {
         return nullptr;
     }
 };
+
+static inline char* PageDestGetName(IPageDestination* dest) {
+    return dest->GetName2();
+}
+
+static inline char* PageDestGetValue(IPageDestination* dest) {
+    return dest->GetValue2();
+}
+
+static inline int PageDestGetPageNo(IPageDestination* dest) {
+    if (!dest) {
+        return -1;
+    }
+    return dest->GetPageNo2();
+}
+
+// rectangle of the destination on the above returned page
+static inline RectF PageDestGetRect(IPageDestination* dest) {
+    return dest->GetRect2();
+}
+
+// optional zoom level on the above returned page
+static inline float PageDestGetZoom(IPageDestination* dest) {
+    return dest->GetZoom2();
+}
 
 struct PageDestinationURL : IPageDestination {
     char* url = nullptr;
@@ -113,7 +132,7 @@ struct PageDestinationURL : IPageDestination {
         str::Free(url);
     }
 
-    char* GetValue() override {
+    char* GetValue2() override {
         return url;
     }
 };
@@ -136,11 +155,11 @@ struct PageDestinationFile : IPageDestination {
         str::Free(dest);
     }
 
-    char* GetValue() override {
+    char* GetValue2() override {
         return path;
     }
 
-    char* GetName() override {
+    char* GetName2() override {
         return dest;
     }
 };
@@ -153,8 +172,8 @@ struct PageDestination : IPageDestination {
 
     ~PageDestination() override;
 
-    char* GetValue() override;
-    char* GetName() override;
+    char* GetValue2() override;
+    char* GetName2() override;
 };
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const char* value = nullptr);
@@ -245,7 +264,7 @@ struct PageElementDestination : IPageElement {
 
     char* GetValue() override {
         if (dest) {
-            return dest->GetValue();
+            return dest->GetValue2();
         }
         return nullptr;
     }

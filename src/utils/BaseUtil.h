@@ -558,7 +558,9 @@ using Kind = const char*;
 struct KindBase {
     Kind kind;
 
-    Kind GetKind() const { return kind; }
+    Kind GetKind() const {
+        return kind;
+    }
 };
 
 inline bool isOfKindHelper(Kind k1, Kind k2) {

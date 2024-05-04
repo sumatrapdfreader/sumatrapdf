@@ -61,13 +61,13 @@ PageDestination::~PageDestination() {
 }
 
 // string value associated with the destination (e.g. a path or a URL)
-char* PageDestination::GetValue() {
+char* PageDestination::GetValue2() {
     return value;
 }
 
 // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
 // (mainly applicable for links of type "LaunchFile" to PDF documents)
-char* PageDestination::GetName() {
+char* PageDestination::GetName2() {
     return name;
 }
 
@@ -194,11 +194,12 @@ bool TocItem::IsExpanded() {
 }
 
 bool TocItem::PageNumbersMatch() const {
-    if (!dest || dest->GetPageNo() <= 0) {
-        return true;
+    int destPageNo = PageDestGetPageNo(dest);
+    if (destPageNo <= 0) {
+        return true; // TODO: should be false?
     }
-    if (pageNo != dest->GetPageNo()) {
-        logf("pageNo: %d, dest->pageNo: %d\n", pageNo, dest->GetPageNo());
+    if (pageNo != destPageNo) {
+        logf("pageNo: %d, dest->pageNo: %d\n", pageNo, destPageNo);
         return false;
     }
     return true;

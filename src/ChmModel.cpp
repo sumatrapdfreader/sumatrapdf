@@ -219,11 +219,11 @@ void ChmModel::ScrollTo(int, RectF, float) {
 
 bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
     CrashIf(link->GetKind() != kindDestinationScrollTo);
-    char* url = link->GetName();
+    char* url = PageDestGetName(link);
     if (DisplayPage(url)) {
         return true;
     }
-    int pageNo = link->GetPageNo();
+    int pageNo = PageDestGetPageNo(link);
     GoToPage(pageNo, false);
     return true;
 }

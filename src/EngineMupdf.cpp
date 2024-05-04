@@ -119,11 +119,11 @@ struct PageDestinationMupdf : IPageDestination {
         str::Free(name);
     }
 
-    char* GetValue() override;
-    char* GetName() override;
+    char* GetValue2() override;
+    char* GetName2() override;
 };
 
-char* PageDestinationMupdf ::GetValue() {
+char* PageDestinationMupdf ::GetValue2() {
     if (value) {
         return value;
     }
@@ -135,7 +135,7 @@ char* PageDestinationMupdf ::GetValue() {
     return value;
 }
 
-char* PageDestinationMupdf ::GetName() {
+char* PageDestinationMupdf ::GetName2() {
     if (name) {
         return name;
     }

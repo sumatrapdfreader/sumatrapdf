@@ -432,12 +432,12 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
         chm->HandleLink(dest, nullptr);
         return;
     }
-    int pageNo = dest->GetPageNo();
+    int pageNo = PageDestGetPageNo(dest);
     if (!win->ctrl->ValidPageNo(pageNo)) {
         return;
     }
-    RectF rect = dest->GetRect();
-    float zoom = dest->GetZoom();
+    RectF rect = PageDestGetRect(dest);
+    float zoom = PageDestGetZoom(dest);
     win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
@@ -536,7 +536,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink)
         return;
     }
 
-    char* destName = remoteLink->GetName();
+    char* destName = PageDestGetName(remoteLink);
     if (destName) {
         IPageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {

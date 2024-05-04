@@ -60,7 +60,7 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
     if (!link) {
         return;
     }
-    char* path = link->GetValue();
+    char* path = PageDestGetValue(link);
     if (!path) {
         path = tocItem->title;
     }
@@ -409,7 +409,7 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
         return;
     }
     if (dti->dest) {
-        pageNo = dti->dest->GetPageNo();
+        pageNo = PageDestGetPageNo(dti->dest);
     }
     char* name = dti->title;
     TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
@@ -536,7 +536,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     TocItem* dti = (TocItem*)ti;
     IPageDestination* dest = dti ? dti->dest : nullptr;
     if (dest) {
-        pageNo = dti->dest->GetPageNo();
+        pageNo = PageDestGetPageNo(dti->dest);
     }
 
     WindowTab* tab = win->CurrentTab();
@@ -553,7 +553,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         // with the embedded stream number
         path = embeddedFile->path;
         // this is name of the file as set inside PDF file
-        fileName = dest->GetName();
+        fileName = PageDestGetName(dest);
         bool canOpenEmbedded = str::EndsWithI(fileName, ".pdf");
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
@@ -571,7 +571,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         // with the embedded stream number
         path = attachment->path;
         // this is name of the file as set inside PDF file
-        fileName = dest->GetName();
+        fileName = PageDestGetName(dest);
         // hack: attachmentNo is saved in pageNo see
         // PdfLoadAttachments and DestFromAttachment
         attachmentNo = pageNo;
