@@ -291,7 +291,7 @@ bool SumatraLaunchBrowser(const char* url) {
         return false;
     }
 
-    return LaunchFile(url, nullptr, "open");
+    return LaunchFileShell(url, nullptr, "open");
 }
 
 bool DocIsSupportedFileType(Kind kind) {
@@ -332,7 +332,7 @@ bool OpenFileExternally(const char* path) {
     }
 
     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
-    return LaunchFile(path);
+    return LaunchFileShell(path);
 }
 
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous) {
@@ -2888,22 +2888,19 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 }
 
-static void ShowCurrentFileInFolder(MainWindow* win) {
-    if (!HasPermission(Perm::DiskAccess)) {
+void SumatraOpenPathInExplorer(const char* path) {
+    if (gPluginMode || !HasPermission(Perm::DiskAccess)) {
         return;
     }
+    OpenPathInExplorer(path);
+}
+
+static void ShowCurrentFileInFolder(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    if (gPluginMode) {
-        return;
-    }
     auto* ctrl = win->ctrl;
-    auto path = ctrl->GetFilePath();
-    if (!path) {
-        return;
-    }
-    ShowFileInFolder(path);
+    SumatraOpenPathInExplorer(ctrl->GetFilePath());
 }
 
 static void DeleteCurrentFile(MainWindow* win) {
@@ -3605,7 +3602,7 @@ static void OpenAdvancedOptions() {
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
     TempStr path = GetSettingsPathTemp();
-    LaunchFile(path);
+    LaunchFileShell(path);
 }
 
 static void ShowOptionsDialog(HWND hwnd) {
@@ -5879,9 +5876,9 @@ void ShowCrashHandlerMessage() {
         log("ShowCrashHandlerMessage: !gCrashFilePath\n");
         return;
     }
-    LaunchFile(gCrashFilePath, nullptr, "open");
+    LaunchFileShell(gCrashFilePath, nullptr, "open");
     auto url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
-    LaunchFile(url, nullptr, "open");
+    LaunchFileShell(url, nullptr, "open");
 }
 
 static void DownloadDebugSymbols() {

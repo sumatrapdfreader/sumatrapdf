@@ -1100,6 +1100,14 @@ bool EmptyOrWhiteSpaceOnly(const char* s) {
     return true;
 }
 
+bool Skip(const char*& s, const char* toSkip) {
+    if (str::StartsWith(s, toSkip)) {
+        s = s + str::Len(toSkip);
+        return true;
+    }
+    return false;
+}
+
 } // namespace str
 
 namespace url {

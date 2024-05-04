@@ -242,20 +242,6 @@ static MenuDef menuDefContextTab[] = {
 };
 // clang-format on
 
-static void ShowFileInFolder(WindowTab* tab) {
-    if (!HasPermission(Perm::DiskAccess)) {
-        return;
-    }
-    const char* path = tab->GetPath();
-    if (!path) {
-        return;
-    }
-
-    const char* process = "explorer.exe";
-    TempStr args = str::FormatTemp("/select,\"%s\"", path);
-    CreateProcessHelper(process, args);
-}
-
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft) {
     int nTabs = win->TabCount();
@@ -359,7 +345,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             break;
         }
         case CmdShowInFolder: {
-            ShowFileInFolder(tabUnderMouse);
+            SumatraOpenPathInExplorer(tabUnderMouse->GetPath());
             break;
         }
         case CmdCopyFilePath: {

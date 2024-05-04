@@ -15,6 +15,26 @@
 
 namespace path {
 
+Type GetType(const char* pathA) {
+    if (!pathA) {
+        Type::None;
+    }
+
+    WCHAR* path = ToWStrTemp(pathA);
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+    BOOL res = GetFileAttributesEx(path, GetFileExInfoStandard, &fileInfo);
+    if (0 == res) {
+        // path doesn't exist
+        return Type::None;
+    }
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        return Type::Dir;
+    }
+    // TODO: not sure if that is that simple, but whatevs
+    // https://learn.microsoft.com/en-us/windows/win32/fileio/file-attribute-constants
+    return Type::File;
+}
+
 bool IsSep(char c) {
     return '\\' == c || '/' == c;
 }
@@ -404,8 +424,11 @@ static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
 #undef AtEndOf
 }
 
+static bool AtEndOf(const char* str) {
+    return *str == 0;
+}
+
 static bool MatchWildcardsRec(const char* fileName, const char* filter) {
-#define AtEndOf(str) (*(str) == '\0')
     switch (*filter) {
         case '\0':
         case ';':
@@ -421,7 +444,6 @@ static bool MatchWildcardsRec(const char* fileName, const char* filter) {
         default:
             return tolower(*fileName) == tolower(*filter) && MatchWildcardsRec(fileName + 1, filter + 1);
     }
-#undef AtEndOf
 }
 
 /* matches the filename of a path against a list of semicolon

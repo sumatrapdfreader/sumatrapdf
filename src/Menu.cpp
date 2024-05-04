@@ -1630,16 +1630,6 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
 }
 
-// TODO: not the best file for this
-void ShowFileInFolder(const char* path) {
-    if (!HasPermission(Perm::DiskAccess)) {
-        return;
-    }
-    const char* process = "explorer.exe";
-    TempStr args = str::FormatTemp("/select,\"%s\"", path);
-    CreateProcessHelper(process, args);
-}
-
 void OnAboutContextMenu(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !gGlobalPrefs->rememberOpenedFiles ||
         !gGlobalPrefs->showStartPage) {
@@ -1674,7 +1664,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     }
 
     if (CmdShowInFolder == cmd) {
-        ShowFileInFolder(path);
+        SumatraOpenPathInExplorer(path);
         return;
     }
 
@@ -1698,6 +1688,14 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         win->RedrawAll(true);
         return;
     }
+}
+
+// s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
+// We only want the "path.pdf" / "foo@bar.com"
+static TempStr CleanupURLForClipbardCopyTemp(const char* s) {
+    str::Skip(s, "file:");
+    str::Skip(s, "mailto:");
+    return str::DupTemp(s);
 }
 
 void OnWindowContextMenu(MainWindow* win, int x, int y) {

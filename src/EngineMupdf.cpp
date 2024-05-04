@@ -189,12 +189,28 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     CrashIf(!link && !outline);
     char* uri = FzGetURL(link, outline);
 
-    TempStr frag = nullptr;
-    TempStr path = CleanupFileURLTemp(uri, &frag);
+    const char* maybePath = (const char*)uri;
 
-    if (path) {
-        logf("NewPageDestinationMupdf: path='%s', frag='%s'\n", path, frag);
-        auto res = new PageDestinationFile(path, frag);
+    if (str::Skip(maybePath, "file:")) {
+        // decode: file:path%20to_file.pdf#page=1
+        TempStr path = str::DupTemp(maybePath);
+        TempStr dest = str::FindChar(path, '#');
+        if (dest) {
+            *dest = 0;
+            dest++;
+        }
+        // mupdf url-encodes paths so we un-decode them
+        fz_urldecode(path);
+        fz_cleanname(path);
+
+        // mupdf does unix path, we want windows
+        path = str::ReplaceTemp(path, "/", "\\");
+        if (dest) {
+            fz_urldecode(dest);
+        }
+
+        logf("NewPageDestinationMupdf: path='%s', dest='%s'\n", path, dest);
+        auto res = new PageDestinationFile(path, dest);
         res->rect = FzGetRectF(link, outline);
         return res;
     }

@@ -398,7 +398,7 @@ bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     } else {
         args = GetDocumentPathQuoted(tab);
     }
-    return LaunchFile(ev->exeFullPath, args);
+    return LaunchFileShell(ev->exeFullPath, args);
 }
 
 bool PathMatchFilter(const char* path, char* filter) {
@@ -450,7 +450,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     }
     StrVec argsQuoted;
     if (nArgs == 1) {
-        return LaunchFile(exePath, tab->filePath);
+        return LaunchFileShell(exePath, tab->filePath);
     }
     for (int i = 1; i < nArgs; i++) {
         char* s = args.at(i);
@@ -459,7 +459,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         argsQuoted.Append(paramQuoted);
     }
     TempStr params = JoinTemp(argsQuoted, " ");
-    return LaunchFile(exePath, params);
+    return LaunchFileShell(exePath, params);
 }
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \

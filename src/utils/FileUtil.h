@@ -33,6 +33,14 @@ bool Match(const char* path, const char* filter);
 
 char* GetTempFilePath(const char* filePrefix = nullptr);
 TempStr GetPathOfFileInAppDirTemp(const char* fileName = nullptr);
+
+enum Type {
+    None, // path doesn't exist
+    File,
+    Dir,
+};
+Type GetType(const char* path);
+
 } // namespace path
 
 namespace file {

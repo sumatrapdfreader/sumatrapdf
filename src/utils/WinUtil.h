@@ -81,8 +81,9 @@ IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
 HANDLE LaunchProces(const char* exe, const char* cmdLine);
 HANDLE LaunchProcess(const char* cmdLine, const char* currDir = nullptr, DWORD flags = 0);
 bool CreateProcessHelper(const char* exe, const char* args);
-bool LaunchFile(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
+bool LaunchFileShell(const char* path, const char* params = nullptr, const char* verb = nullptr, bool hidden = false);
 bool LaunchBrowser(const char* url);
+void OpenPathInExplorer(const char* path);
 
 bool LaunchElevated(const char* path, const char* cmdline);
 bool IsProcessRunningElevated();

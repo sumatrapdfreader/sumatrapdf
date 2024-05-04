@@ -31,4 +31,3 @@ int MenuIdFromVirtualZoom(float virtualZoom);
 void UpdateAppMenu(MainWindow* win, HMENU m);
 void ToggleMenuBar(MainWindow* win, bool showTemporarily);
 float ZoomMenuItemToZoom(int menuItemId);
-void ShowFileInFolder(const char* path);

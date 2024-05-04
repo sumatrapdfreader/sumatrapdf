@@ -713,7 +713,7 @@ bool LaunchFileIfExists(const char* path) {
     if (!file::Exists(path)) {
         return false;
     }
-    LaunchFile(path, nullptr, "open");
+    LaunchFileShell(path, nullptr, "open");
     return true;
 }
 

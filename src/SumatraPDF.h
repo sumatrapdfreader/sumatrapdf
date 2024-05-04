@@ -202,3 +202,4 @@ char* GetLogFilePath();
 void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path);
 void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, const char* mupdfErr);
 void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs);
+void SumatraOpenPathInExplorer(const char* path);

@@ -397,7 +397,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     }
     if (kindDestinationLaunchFile == kind) {
         PageDestinationFile* fileDest = (PageDestinationFile*)dest;
-        LaunchFile(fileDest->path, dest);
+        this->LaunchFile(fileDest->path, dest);
         return;
     }
     if (kindDestinationLaunchEmbedded == kind) {
@@ -458,7 +458,7 @@ void LinkHandler::LaunchURL(const char* uri) {
         str::TransCharsInPlace(path, "/", "\\");
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
-        LaunchFile(path, nullptr);
+        this->LaunchFile(path, nullptr);
     } else {
         // LaunchBrowser will reject unsupported URI schemes
         // TODO: support file URIs?
@@ -469,31 +469,42 @@ void LinkHandler::LaunchURL(const char* uri) {
 // for safety, only handle relative paths and only open them in SumatraPDF
 // (unless they're of an allowed perceived type) and never launch any external
 // file in plugin mode (where documents are supposed to be self-contained)
-void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* link) {
-    // TDOO: maybe should enable this in plugin mode
-    if (gPluginMode) {
+void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink) {
+    if (gPluginMode || !HasPermission(Perm::DiskAccess)) {
         return;
     }
 
-    // TODO: make it a function
     TempStr path = str::ReplaceTemp(pathOrig, "/", "\\");
     if (str::StartsWith(path, ".\\")) {
         path = path + 2;
     }
 
-    char drive;
-    bool isAbsPath = str::StartsWith(path, "\\") || str::Parse(path, "%c:\\", &drive);
+    TempStr fullPath = path;
+    bool isAbsPath = str::StartsWith(path, "\\");
+    if (str::Len(path) >= 2 && path[1] == ':') {
+        /* technically c: is not abs, only c:\\ */
+        isAbsPath = true;
+    }
+#if 0
+    // we used to not allow absolute links due to security, but if we can open
+    // the doc we should assume we can handle it securely
     if (isAbsPath) {
         return;
     }
-
-    IPageDestination* remoteLink = link;
-    TempStr fullPath = path::GetDirTemp(win->ctrl->GetFilePath());
-    fullPath = path::JoinTemp(fullPath, path);
-
-    // heuristic: replace %20 with ' '
-    if (!file::Exists(fullPath) && (str::Find(fullPath, "%20") != nullptr)) {
-        fullPath = str::ReplaceTemp(fullPath, "%20", " ");
+#endif
+    if (!isAbsPath) {
+        auto dir = path::GetDirTemp(win->ctrl->GetFilePath());
+        fullPath = path::JoinTemp(dir, path);
+    }
+    path::Type pathType = path::GetType(fullPath);
+    if (pathType == path::Type::None) {
+        auto win = gWindows[0];
+        ShowErrorLoadingNotification(win, fullPath, true);
+        return;
+    }
+    if (pathType == path::Type::Dir) {
+        SumatraOpenPathInExplorer(fullPath);
+        return;
     }
 
     // TODO: respect link->ld.gotor.new_window for PDF documents ?

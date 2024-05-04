@@ -120,20 +120,20 @@ struct PageDestinationURL : IPageDestination {
 
 struct PageDestinationFile : IPageDestination {
     char* path = nullptr;
-    char* name = nullptr;
+    char* dest = nullptr;
 
     PageDestinationFile() = delete;
 
-    PageDestinationFile(const char* u, const char* frag) {
+    PageDestinationFile(const char* u, const char* dest) {
         CrashIf(!u);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
-        name = str::Dup(frag);
+        dest = str::Dup(dest);
     }
 
     ~PageDestinationFile() override {
         str::Free(path);
-        str::Free(name);
+        str::Free(dest);
     }
 
     char* GetValue() override {
@@ -141,7 +141,7 @@ struct PageDestinationFile : IPageDestination {
     }
 
     char* GetName() override {
-        return name;
+        return dest;
     }
 };
 
@@ -516,7 +516,3 @@ struct PasswordUI {
     virtual char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
-
-TempStr CleanupFileURLTemp(const char* s, TempStr* argsOut);
-
-TempStr CleanupURLForClipbardCopyTemp(const char* s);

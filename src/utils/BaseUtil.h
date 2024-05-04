@@ -542,6 +542,11 @@ struct Foo {
     Kind kind;
 };
 
+or:
+
+struct Foo : KindBase {
+};
+
 extern Kind kindFoo;
 
 // in foo.cpp
@@ -549,6 +554,13 @@ Kind kindFoo = "foo";
 */
 
 using Kind = const char*;
+
+struct KindBase {
+    Kind kind;
+
+    Kind GetKind() const { return kind; }
+};
+
 inline bool isOfKindHelper(Kind k1, Kind k2) {
     return k1 == k2;
 }

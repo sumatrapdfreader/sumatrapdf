@@ -889,7 +889,7 @@ DWORD GetFileVersion(const WCHAR* path) {
 }
 #endif
 
-bool LaunchFile(const char* path, const char* params, const char* verb, bool hidden) {
+bool LaunchFileShell(const char* path, const char* params, const char* verb, bool hidden) {
     if (str::IsEmpty(path)) {
         return false;
     }
@@ -912,7 +912,16 @@ bool LaunchFile(const char* path, const char* params, const char* verb, bool hid
 }
 
 bool LaunchBrowser(const char* url) {
-    return LaunchFile(url, nullptr, "open");
+    return LaunchFileShell(url, nullptr, "open");
+}
+
+void OpenPathInExplorer(const char* path) {
+    if (!path) {
+        return;
+    }
+    const char* process = "explorer.exe";
+    TempStr args = str::FormatTemp("/select,\"%s\"", path);
+    CreateProcessHelper(process, args);
 }
 
 HANDLE LaunchProces(const char* exe, const char* cmdLine) {
@@ -1090,7 +1099,7 @@ DWORD GetOriginalAccountType() {
 }
 
 bool LaunchElevated(const char* path, const char* cmdline) {
-    return LaunchFile(path, cmdline, "runas");
+    return LaunchFileShell(path, cmdline, "runas");
 }
 
 /* Ensure that the rectangle is at least partially in the work area on a

@@ -233,7 +233,8 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 TempStr FormatRomanNumeralTemp(int number);
 
-bool EmptyOrWhiteSpaceOnly(const char* sv);
+bool EmptyOrWhiteSpaceOnly(const char*);
+bool Skip(const char*& s, const char* toSkip);
 } // namespace str
 
 namespace url {
