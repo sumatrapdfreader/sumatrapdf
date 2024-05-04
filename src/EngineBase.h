@@ -61,6 +61,7 @@ void FreePageText(PageText*);
 
 // a link destination
 struct IPageDestination : KindBase {
+    // page the destination points to (-1 for external destinations such as URLs)
     int pageNo = -1;
     RectF rect = {};
     float zoom = 0.f;
@@ -68,10 +69,6 @@ struct IPageDestination : KindBase {
     IPageDestination() = default;
     virtual ~IPageDestination(){};
 
-    // page the destination points to (-1 for external destinations such as URLs)
-    virtual int GetPageNo2() {
-        return pageNo;
-    }
     // rectangle of the destination on the above returned page
     virtual RectF GetRect2() {
         return rect;
@@ -104,7 +101,7 @@ static inline int PageDestGetPageNo(IPageDestination* dest) {
     if (!dest) {
         return -1;
     }
-    return dest->GetPageNo2();
+    return dest->pageNo;
 }
 
 // rectangle of the destination on the above returned page
