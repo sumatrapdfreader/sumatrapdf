@@ -5,6 +5,7 @@ EXPORTS
 	pdf_annot_filespec
 	pdf_load_embedded_file_contents
 	pdf_get_embedded_file_params
+	fz_urldecode
 	fz_new_odt_writer
 	fz_new_odt_writer_with_output
 	fz_new_docx_writer
