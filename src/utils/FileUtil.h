@@ -20,7 +20,6 @@ TempWStr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileNam
 
 bool IsDirectory(const char*);
 
-WCHAR* Normalize(const WCHAR* path);
 char* NormalizeTemp(const char* path);
 
 char* ShortPath(const char* pathA);

@@ -281,7 +281,7 @@ char* NormalizeTemp(const char* path) {
 // can be used for interaction with non-UNICODE aware applications
 char* ShortPath(const char* pathA) {
     WCHAR* path = ToWStrTemp(pathA);
-    AutoFreeWstr normpath(Normalize(path));
+    AutoFreeWstr normpath = Normalize(path);
     DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
     if (!cch) {
         return ToUtf8(normpath.Get());
