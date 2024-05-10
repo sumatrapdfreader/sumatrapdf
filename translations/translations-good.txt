@@ -5134,6 +5134,7 @@ uk:Закрити
 vn:Đóng lại
 :Close All Tabs
 br:Fechar Todas as Abas
+ca:Tanca totes les pestanyes
 cn:关闭所有标签页
 co:Chjode tutte l’unghjette
 cy:Cau Pob Tab
@@ -5142,11 +5143,13 @@ de:Alle Tabs schließen
 fr:Fermer tous les onglets
 he:סגור את כל הכרטיסיות
 it:Chiudi tutte le schede
+ja:すべてのタブを閉じる
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
 ro:Închide toate filele
 ru:Закрыть все вкладки
 sk:Zatvoriť všetky karty
+tw:關閉全部分頁
 :Close Other Tabs
 am:Փակել այլ ներդիրները
 ar:أغلق علامات التبويب الأخرى
@@ -5195,7 +5198,8 @@ uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
 br:Fechar Abas a Esquerda
-cn:关闭左侧窗口
+ca:Tanca totes les pestanyes de l'esquerra
+cn:关闭左侧标签页
 co:Chjode l’unghjette versu a manca
 cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
@@ -5203,11 +5207,13 @@ de:Tabs links schließen
 fr:Fermer les onglets sur la gauche
 he:סגור כרטיסיות משמאל
 it:Chiudi schede a sinistra
+ja:左のタブをすべて閉じる
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
 ro:Închide filele la stânga
 ru:Закрыть вкладки слева
 sk:Zatvoriť karty vľavo
+tw:關閉左側分頁
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
 az:Sağdakı tabları bağla
@@ -7034,7 +7040,7 @@ hr:Tamna
 hu:Sötét
 id:Gelap
 it:Tema scuro
-ja:濃色
+ja:ダーク
 kr:어두운
 kw:Tewl
 lt:Tamsi
@@ -7268,6 +7274,7 @@ uk:Масштаб за замовчуванням:
 vn:Kích thước mặc định
 :Delete
 br:Apagar
+ca:Suprimeix
 cn:删除
 co:Squassà
 cy:Dileu
@@ -7276,11 +7283,13 @@ de:Löschen
 fr:Supprimer
 he:מחק
 it:Cancella
+ja:削除
 nl:Verwijderen
 pl:Usuń
 ro:Șterge
 ru:Удалить
 sk:Odstrániť
+tw:刪除
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
 az:Qeydi sil
@@ -10921,7 +10930,7 @@ hr:Svijetla
 hu:Világos
 id:Terang
 it:Tema chiaro
-ja:淡色
+ja:ライト
 kr:밝은
 kw:Golow
 lt:Šviesi
