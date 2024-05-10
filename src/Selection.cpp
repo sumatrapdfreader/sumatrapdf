@@ -276,6 +276,18 @@ void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit, bool relat
     UpdateToolbarState(win);
 }
 
+void ZoomToPoint(MainWindow* win, float factor, Point& pt) {
+    CrashIf(factor == kZoomFitPage || factor == kZoomFitContent);
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    float zoom = factor;
+    auto zoomVirt = win->ctrl->GetZoomVirtual(true);
+    zoom = factor * zoomVirt;
+    win->ctrl->SetZoomVirtual(zoom, &pt);
+    UpdateToolbarState(win);
+}
+
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
 // caller needs to str::Free() the result
