@@ -14,7 +14,9 @@
 `StructuredText`
 ----------------------------
 
-`StructuredText` objects hold text from a page that has been analyzed and grouped into blocks, lines and spans. To obtain a `StructuredText` instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
+`StructuredText` objects hold text from a page that has been analyzed and
+grouped into blocks, lines and spans. To obtain a `StructuredText`
+instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
 
 
 |instance_methods|
@@ -39,7 +41,8 @@
 
 .. method:: highlight(p, q)
 
-    Return an array with :ref:`rectangles<mutool_run_js_api_rectangle>` needed to highlight a selection defined by the start and end points.
+    Return an array with :ref:`rectangles<mutool_run_js_api_rectangle>`
+    needed to highlight a selection defined by the start and end points.
 
     :arg p: Start point in format `[x,y]`.
     :arg q: End point in format `[x,y]`.
@@ -80,7 +83,12 @@
 
     |wasm_tag|
 
-    Walk through the blocks (images or text blocks) of the structured text. For each text block walk over its lines of text, and for each line each of its characters. For each block, line or character the walker will have a method called.
+    :arg walker: Function with protocol methods, see example below for details.
+
+    Walk through the blocks (images or text blocks) of the structured text.
+    For each text block walk over its lines of text, and for each line each
+    of its characters. For each block, line or character the walker will
+    have a method called.
 
     |example_tag|
 
@@ -110,15 +118,18 @@
 
     .. note::
 
-        On `beginLine` the direction parameter is a vector (e.g. `[0, 1]`) and can you can calculate the rotation as an angle with some trigonometry on the vector.
+        On `beginLine` the direction parameter is a vector (e.g. `[0, 1]`) and
+        can you can calculate the rotation as an angle with some trigonometry on the vector.
 
 
-.. method:: asJSON()
+.. method:: asJSON(scale)
 
     |wasm_tag|
 
     Returns the instance in :title:`JSON` format.
 
+    :arg scale: `Float` Default: `1`. Multiply all the coordinates by this
+    factor to get the coordinates at another resolution.
     :return: `String`.
 
     |example_tag|

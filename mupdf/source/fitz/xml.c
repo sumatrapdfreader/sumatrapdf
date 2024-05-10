@@ -132,7 +132,9 @@ void fz_output_xml(fz_context *ctx, fz_output *out, fz_xml *item, int level)
 	/* Skip over the DOC object at the top. */
 	if (item->up == NULL)
 	{
-		fz_output_xml(ctx, out, item->down, level);
+		fz_xml *child;
+		for (child = fz_xml_down(item); child; child = child->u.node.next)
+			fz_output_xml(ctx, out, child, level + 1);
 		return;
 	}
 

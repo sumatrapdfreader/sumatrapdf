@@ -200,8 +200,6 @@
 
 .. method:: slice(start end)
 
-    |mutool_tag|
-
     Create a new buffer containing a (subset of) the data in this buffer. Start and end are offsets from the beginning of this buffer, and if negative from the end of this buffer.
 
     :arg start: Start index.

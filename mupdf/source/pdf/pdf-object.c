@@ -3977,6 +3977,14 @@ const char *pdf_dict_get_text_string(fz_context *ctx, pdf_obj *dict, pdf_obj *ke
 	return pdf_to_text_string(ctx, pdf_dict_get(ctx, dict, key));
 }
 
+const char *pdf_dict_get_text_string_opt(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	pdf_obj *obj = pdf_dict_get(ctx, dict, key);
+	if (!pdf_is_string(ctx, obj))
+		return NULL;
+	return pdf_to_text_string(ctx, obj);
+}
+
 fz_rect pdf_dict_get_rect(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
 {
 	return pdf_to_rect(ctx, pdf_dict_get(ctx, dict, key));

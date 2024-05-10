@@ -896,6 +896,7 @@ int main(int argc, char **argv)
 	struct timeval now;
 	struct timeval *timeout;
 	struct timeval tmo_advance_delay;
+	char *profile_name = NULL;
 	int kbps = 0;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
@@ -907,7 +908,7 @@ int main(int argc, char **argv)
 
 	pdfapp_init(ctx, &gapp);
 
-	while ((c = fz_getopt(argc, argv, "Ip:r:A:C:W:H:S:U:Xb:")) != -1)
+	while ((c = fz_getopt(argc, argv, "Ip:r:A:C:W:H:S:U:Xb:c:")) != -1)
 	{
 		switch (c)
 		{
@@ -920,6 +921,7 @@ int main(int argc, char **argv)
 		case 'r': resolution = atoi(fz_optarg); break;
 		case 'I': gapp.invert = 1; break;
 		case 'A': fz_set_aa_level(ctx, atoi(fz_optarg)); break;
+		case 'c': profile_name = fz_optarg; break;
 		case 'W': gapp.layout_w = fz_atof(fz_optarg); break;
 		case 'H': gapp.layout_h = fz_atof(fz_optarg); break;
 		case 'S': gapp.layout_em = fz_atof(fz_optarg); break;
@@ -953,6 +955,9 @@ int main(int argc, char **argv)
 	gapp.default_resolution = resolution;
 	gapp.resolution = resolution;
 	gapp.pageno = pageno;
+
+	if (profile_name)
+		pdfapp_load_profile(&gapp, profile_name);
 
 	tmo_at.tv_sec = 0;
 	tmo_at.tv_usec = 0;

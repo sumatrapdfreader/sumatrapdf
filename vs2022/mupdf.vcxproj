@@ -803,6 +803,7 @@
     <ClCompile Include="..\mupdf\source\fitz\unzip.c" />
     <ClCompile Include="..\mupdf\source\fitz\util.c" />
     <ClCompile Include="..\mupdf\source\fitz\writer.c" />
+    <ClCompile Include="..\mupdf\source\fitz\xml-write.c" />
     <ClCompile Include="..\mupdf\source\fitz\xml.c" />
     <ClCompile Include="..\mupdf\source\fitz\zip.c" />
     <ClCompile Include="..\mupdf\source\html\css-apply.c" />

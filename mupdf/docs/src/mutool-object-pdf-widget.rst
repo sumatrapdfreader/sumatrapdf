@@ -31,8 +31,6 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
 
 .. method:: getFieldType()
 
-    |mutool_tag_wasm_soon|
-
     Return `String` indicating type of widget: "button", "checkbox", "combobox", "listbox", "radiobutton", "signature" or "text".
 
     :return: `String`.
@@ -42,8 +40,6 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
     .. code-block:: javascript
 
         var type = widget.getFieldType();
-
-    .. |tor_todo| WASM: TypeError: PDFWidget.TYPES is not a function
 
 
 .. method:: getFieldFlags()

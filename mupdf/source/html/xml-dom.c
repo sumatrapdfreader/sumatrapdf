@@ -76,8 +76,33 @@ skip_doc_pointer(fz_xml *x)
 	return (x == NULL || !FZ_DOCUMENT_ITEM(x)) ? x : x->down;
 }
 
-static fz_xml *
-new_xml_node(fz_context *ctx, fz_xml *dom, const char *tag)
+fz_xml *
+fz_new_dom(fz_context *ctx, const char *tag)
+{
+	fz_pool *pool = fz_new_pool(ctx);
+	fz_xml *xml;
+
+	fz_try(ctx)
+	{
+		xml = fz_pool_alloc(ctx, pool, sizeof *xml);
+		xml->up = NULL;
+		xml->down = NULL;
+		xml->u.doc.refs = 1;
+		xml->u.doc.pool = pool;
+		xml->down = fz_new_dom_node(ctx, xml, tag);
+		xml->down->up = xml;
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pool(ctx, pool);
+		fz_rethrow(ctx);
+	}
+
+	return xml->down;
+}
+
+fz_xml *
+fz_new_dom_node(fz_context *ctx, fz_xml *dom, const char *tag)
 {
 	const char *ns;
 	fz_xml *xml;
@@ -108,8 +133,8 @@ new_xml_node(fz_context *ctx, fz_xml *dom, const char *tag)
 	return xml;
 }
 
-static fz_xml *
-new_xml_text_node(fz_context *ctx, fz_xml *dom, const char *text)
+fz_xml *
+fz_new_dom_text_node(fz_context *ctx, fz_xml *dom, const char *text)
 {
 	fz_xml *xml;
 	size_t len = text ? strlen(text) : 0;
@@ -150,11 +175,11 @@ clone_xml(fz_context *ctx, fz_xml *dom, fz_xml *node)
 	/* Text nodes are simple. No children. */
 	if (FZ_TEXT_ITEM(node))
 	{
-		return new_xml_text_node(ctx, dom, node->u.node.u.text);
+		return fz_new_dom_text_node(ctx, dom, node->u.node.u.text);
 	}
 
 	/* Clone a non-text node. */
-	clone = new_xml_node(ctx, dom, node->u.node.u.d.name);
+	clone = fz_new_dom_node(ctx, dom, node->u.node.u.d.name);
 
 	/* Clone the attributes. */
 	attr = node->u.node.u.d.atts;
@@ -227,7 +252,7 @@ fz_xml *fz_dom_create_element(fz_context *ctx, fz_xml *dom, const char *tag)
 
 	/* We make a new node, unconnected to anything else.
 	 * up will stil point to the dom root though. */
-	return new_xml_node(ctx, dom, tag);
+	return fz_new_dom_node(ctx, dom, tag);
 }
 
 fz_xml *fz_dom_create_text_node(fz_context *ctx, fz_xml *dom, const char *text)
@@ -236,7 +261,7 @@ fz_xml *fz_dom_create_text_node(fz_context *ctx, fz_xml *dom, const char *text)
 		return NULL;
 
 	/* We make a new node, unconnected to anything else. */
-	return new_xml_text_node(ctx, dom, text);
+	return fz_new_dom_text_node(ctx, dom, text);
 }
 
 fz_xml *fz_dom_find(fz_context *ctx, fz_xml *elt, const char *tag, const char *att, const char *match)
@@ -260,7 +285,6 @@ void fz_dom_append_child(fz_context *ctx, fz_xml *parent, fz_xml *child)
 	fz_xml *x;
 
 	child = skip_doc_pointer(child);
-	parent = skip_doc_pointer(parent);
 
 	if (parent == NULL || child == NULL)
 		return;

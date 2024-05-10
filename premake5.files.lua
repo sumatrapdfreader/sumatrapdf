@@ -939,6 +939,7 @@ function mupdf_files()
     "unzip.c",
     "util.c",
     "writer.c",
+    "xml-write.c",
     "xml.c",
     "zip.c",
   })

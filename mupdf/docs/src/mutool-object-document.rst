@@ -231,8 +231,6 @@
 
 .. method:: outlineIterator()
 
-    |mutool_tag|
-
     Returns an :ref:`OutlineIterator<mutool_object_outline_iterator>` for the document outline.
 
     :return: `OutlineIterator`.

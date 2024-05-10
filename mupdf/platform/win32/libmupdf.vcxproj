@@ -585,6 +585,7 @@
     <ClCompile Include="..\..\source\fitz\subset-cff.c" />
     <ClCompile Include="..\..\source\fitz\subset-ttf.c" />
     <ClCompile Include="..\..\source\fitz\warp.c" />
+    <ClCompile Include="..\..\source\fitz\xml-write.c" />
     <ClCompile Include="..\..\source\fitz\xmltext-device.c" />
     <ClCompile Include="..\..\source\fitz\separation.c" />
     <ClCompile Include="..\..\source\fitz\shade.c" />

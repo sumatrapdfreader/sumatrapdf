@@ -2111,6 +2111,43 @@ layout_variable_text(fz_context *ctx, fz_layout_block *out,
 		fz_rethrow(ctx);
 }
 
+#if FZ_ENABLE_HTML_ENGINE
+static void
+write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res, const char *rc, float size, float w, float h)
+{
+	fz_rect rect = { 0, 0, w, h };
+	fz_buffer *inbuf = fz_new_buffer_from_copied_data(ctx, rc, strlen(rc)+1);
+	fz_story *story = NULL;
+	fz_device *dev = NULL;
+	fz_buffer *buf2 = NULL;
+
+	fz_var(story);
+	fz_var(dev);
+	fz_var(res);
+	fz_var(buf2);
+
+	fz_try(ctx)
+	{
+		story = fz_new_story(ctx, inbuf, "@page{margin:0} body{margin:0} p{margin:0}", size, NULL);
+		dev = pdf_page_write(ctx, annot->page->doc, rect, res, &buf2);
+		fz_place_story(ctx, story, rect, NULL);
+		fz_draw_story(ctx, story, dev, fz_identity);
+		fz_close_device(ctx, dev);
+
+		fz_append_buffer(ctx, buf, buf2);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_device(ctx, dev);
+		fz_drop_buffer(ctx, buf2);
+		fz_drop_story(ctx, story);
+		fz_drop_buffer(ctx, inbuf);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+#endif
+
 static void
 pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 	fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res)
@@ -2122,6 +2159,9 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	int q, r, n;
 	int lang;
 	fz_rect rd;
+#if FZ_ENABLE_HTML_ENGINE
+	const char *rc;
+#endif
 
 	/* /Rotate is an undocumented annotation property supported by Adobe */
 	text = pdf_annot_contents(ctx, annot);
@@ -2270,8 +2310,15 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 	if (rd.x0 != 0 || rd.y0 != 0)
 		fz_append_printf(ctx, buf, "q 1 0 0 1 %g %g cm\n", rd.x0, -rd.y1);
-	write_variable_text(ctx, annot, buf, res, lang, text, font, size, n, color, q, w, h, b*2,
-		0.8f, 1.2f, 1, 0, 0);
+
+#if FZ_ENABLE_HTML_ENGINE
+	rc = pdf_dict_get_text_string_opt(ctx, annot->obj, PDF_NAME(RC));
+	if (rc)
+		write_rich_content(ctx, annot, buf, res, rc, size, w, h);
+	else
+#endif
+		write_variable_text(ctx, annot, buf, res, lang, text, font, size, n, color, q, w, h, b*2,
+			0.8f, 1.2f, 1, 0, 0);
 	if (rd.x0 != 0 || rd.y0 != 0)
 		fz_append_printf(ctx, buf, "Q\n");
 }

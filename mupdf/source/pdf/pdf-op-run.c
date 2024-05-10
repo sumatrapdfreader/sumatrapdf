@@ -149,6 +149,7 @@ struct pdf_run_processor
 
 	marked_content_stack *marked_content;
 	pdf_obj *mcid_sent;
+	pdf_obj *pending_mcid_pop;
 
 	int struct_parent;
 	int broken_struct_tree;
@@ -157,6 +158,10 @@ struct pdf_run_processor
 	begin_layer_stack *begin_layer;
 	begin_layer_stack **next_begin_layer;
 };
+
+/* Forward definition */
+static void
+pop_any_pending_mcid_changes(fz_context *ctx, pdf_run_processor *pr);
 
 static void
 push_begin_layer(fz_context *ctx, pdf_run_processor *proc, const char *str)
@@ -688,6 +693,7 @@ pdf_show_image(fz_context *ctx, pdf_run_processor *pr, fz_image *image)
 	if (image == NULL)
 		return;
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	flush_begin_layer(ctx, pr);
 
 	/* PDF has images bottom-up, so flip them right side up here */
@@ -737,6 +743,7 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
 	softmask_save softmask = { NULL };
 	int knockout_group = 0;
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	flush_begin_layer(ctx, pr);
 
 	if (dostroke) {
@@ -890,6 +897,7 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	if (!text)
 		return gstate;
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	/* If we are going to output text, we need to have flushed any begin layers first. */
 	flush_begin_layer(ctx, pr);
 
@@ -1208,6 +1216,7 @@ show_string(fz_context *ctx, pdf_run_processor *pr, unsigned char *buf, size_t l
 	int cid;
 	fz_text_language lang = find_lang_from_mc(ctx, pr);
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	flush_begin_layer(ctx, pr);
 
 	while (buf < end)
@@ -1562,22 +1571,25 @@ end_layer(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
 static void
 structure_dump(fz_context *ctx, const char *str, pdf_obj *obj)
 {
-	printf("%s STACK=", str);
+	fprintf(stderr, "%s STACK=", str);
 
 	if (obj == NULL)
 	{
-		printf("empty\n");
+		fprintf(stderr, "empty\n");
 		return;
 	}
 
 	do
 	{
+		pdf_obj *s = pdf_dict_get(ctx, obj, PDF_NAME(S));
 		int n = pdf_to_num(ctx, obj);
-		printf(" %d", n);
+		fprintf(stderr, " %d", n);
+		if (s)
+			fprintf(stderr, "[%s]", pdf_to_name(ctx, s));
 		obj = pdf_dict_get(ctx, obj, PDF_NAME(P));
 	}
 	while (obj);
-	printf("\n");
+	fprintf(stderr, "\n");
 }
 #endif
 
@@ -1591,7 +1603,7 @@ pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 
 	{
 		int n = pdf_to_num(ctx, common);
-		printf("Popping until %d\n", n);
+		fprintf(stderr, "Popping until %d\n", n);
 	}
 #endif
 
@@ -1600,6 +1612,9 @@ pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 		pdf_obj *p = pdf_dict_get(ctx, proc->mcid_sent, PDF_NAME(P));
 		pdf_obj *tag = pdf_dict_get(ctx, proc->mcid_sent, PDF_NAME(S));
 		fz_structure standard = pdf_structure_type(ctx, proc->role_map, tag);
+#ifdef DEBUG_STRUCTURE
+		fprintf(stderr, "sending pop [tag=%s][std=%d]\n", pdf_to_name(ctx, tag) ? pdf_to_name(ctx, tag) : "null", standard);
+#endif
 		if (standard != FZ_STRUCTURE_INVALID)
 			fz_end_structure(ctx, proc->dev);
 		pdf_drop_obj(ctx, proc->mcid_sent);
@@ -1614,6 +1629,16 @@ pop_structure_to(fz_context *ctx, pdf_run_processor *proc, pdf_obj *common)
 #ifdef DEBUG_STRUCTURE
 	structure_dump(ctx, "pop_structure_to (after)", proc->mcid_sent);
 #endif
+}
+
+static void
+pop_any_pending_mcid_changes(fz_context *ctx, pdf_run_processor *pr)
+{
+	if (pr->pending_mcid_pop == NULL)
+		return;
+
+	pop_structure_to(ctx, pr, pr->pending_mcid_pop);
+	pr->pending_mcid_pop = NULL;
 }
 
 struct line
@@ -1703,7 +1728,7 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 	pdf_obj *common = NULL;
 
 #ifdef DEBUG_STRUCTURE
-	printf("send_begin_structure  %d\n", pdf_to_num(ctx, mc_dict));
+	fprintf(stderr, "send_begin_structure  %d\n", pdf_to_num(ctx, mc_dict));
 	structure_dump(ctx, "on entry", proc->mcid_sent);
 #endif
 
@@ -1761,12 +1786,12 @@ send_begin_structure(fz_context *ctx, pdf_run_processor *proc, pdf_obj *mc_dict)
 			}
 		}
 
-#ifdef DEBUG_STRUCTURE
-		printf("sending %d\n", pdf_to_num(ctx, send));
-#endif
 		idx = get_struct_index(ctx, send);
 		tag = pdf_dict_get(ctx, send, PDF_NAME(S));
 		standard = pdf_structure_type(ctx, proc->role_map, tag);
+#ifdef DEBUG_STRUCTURE
+		fprintf(stderr, "sending %d[idx=%d][tag=%s][std=%d]\n", pdf_to_num(ctx, send), idx, pdf_to_name(ctx, tag) ? pdf_to_name(ctx, tag) : "null", standard);
+#endif
 		if (standard != FZ_STRUCTURE_INVALID)
 			fz_begin_structure(ctx, proc->dev, standard, pdf_to_name(ctx, tag), idx);
 
@@ -1787,6 +1812,9 @@ push_marked_content(fz_context *ctx, pdf_run_processor *proc, const char *tagstr
 	marked_content_stack *mc = NULL;
 	int drop_tag = 1;
 	pdf_obj *mc_dict = NULL;
+
+	/* Ignore any pending pops. */
+	proc->pending_mcid_pop = NULL;
 
 	/* Flush any pending text so it's not in the wrong layer. */
 	pdf_flush_text(ctx, proc);
@@ -1910,8 +1938,22 @@ pop_marked_content(fz_context *ctx, pdf_run_processor *proc, int neat)
 		/* Structure */
 		if (mc_dict && !proc->broken_struct_tree && pushed)
 		{
-			pdf_obj *p = pdf_dict_get(ctx, mc_dict, PDF_NAME(P));
-			pop_structure_to(ctx, proc, p);
+			/* Is there a nested mc_dict? If so we want to pop back to that.
+			 * If not, we want to pop back to the top.
+			 * proc->marked_content = the previous one, but maybe not the
+			 * previous one with an mc_dict. So we may need to search further.
+			 */
+			pdf_obj *previous_mcid = NULL;
+			marked_content_stack *mc_with_mcid = proc->marked_content;
+			while (mc_with_mcid)
+			{
+				previous_mcid = lookup_mcid(ctx, proc, mc_with_mcid->val);
+				if (previous_mcid != NULL)
+					break;
+				mc_with_mcid = mc_with_mcid->next;
+			}
+
+			proc->pending_mcid_pop = previous_mcid;
 		}
 
 		/* Finally, close any layers. */
@@ -1974,6 +2016,7 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 		return;
 	pr->cycle = &cycle_here;
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	flush_begin_layer(ctx, pr);
 
 	fz_var(cs);
@@ -2135,6 +2178,7 @@ static void pdf_run_w(fz_context *ctx, pdf_processor *proc, float linewidth)
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pdf_gstate *gstate = pdf_flush_text(ctx, pr);
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	flush_begin_layer(ctx, pr);
 
 	pr->dev->flags &= ~FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
@@ -2738,6 +2782,7 @@ static void pdf_run_sh(fz_context *ctx, pdf_processor *proc, const char *name, f
 {
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 
+	pop_any_pending_mcid_changes(ctx, pr);
 	flush_begin_layer(ctx, pr);
 	pdf_show_shade(ctx, pr, shade);
 }
@@ -3094,8 +3139,22 @@ pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_mat
 	/* We need to save an extra level to allow for level 0 to be the parent gstate level. */
 	pdf_gsave(ctx, proc);
 
-	proc->struct_parent = struct_parent;
-	proc->role_map = pdf_keep_obj(ctx, pdf_dict_getl(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), PDF_NAME(StructTreeRoot), PDF_NAME(RoleMap), NULL));
+	/* Structure details */
+	{
+		pdf_obj *struct_tree_root = pdf_dict_getl(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), PDF_NAME(StructTreeRoot), NULL);
+		proc->struct_parent = struct_parent;
+		proc->role_map = pdf_keep_obj(ctx, pdf_dict_get(ctx, struct_tree_root, PDF_NAME(RoleMap)));
+
+		/* Annotations and XObjects can be their own content items. We spot this by
+		 * the struct_parent looking up to be a singular object. */
+		if (struct_parent != -1 && struct_tree_root)
+		{
+			pdf_obj *struct_obj = pdf_lookup_number(ctx, pdf_dict_get(ctx, struct_tree_root, PDF_NAME(ParentTree)), struct_parent);
+			if (pdf_is_dict(ctx, struct_obj))
+				send_begin_structure(ctx, proc, struct_obj);
+			/* We always end structure as required on closedown, so this is safe. */
+		}
+	}
 
 	return (pdf_processor*)proc;
 }

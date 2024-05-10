@@ -24,6 +24,7 @@
     background-color: #fbff68;
     border-radius: 4px;
     border: 1px solid #222;
+    color:#000;
 }
 
 .discordLink {
@@ -107,9 +108,14 @@ button.cta a {
     color:#fff !important;
 }
 
+.footer-version {
+    font-weight: bold;
+    font-size: 12px;
+    color: #999;
+}
+
 
 /*** Furo theme overrides ***/
-
 /* This is to do with hiding the Furo link text and the "Made with" text */
 .bottom-of-page .left-details {
     font-size:0;
@@ -140,16 +146,13 @@ button.cta a {
     padding: 0;
 }
 
-.sidebar-container .sidebar-search-container {
-    display: none;
-}
 
 .sidebar-search-container.top {
     /*position:sticky;
     top:10px;*/
     border-radius: 20px;
     border: solid #333 1px;
-    background-color: #fff;
+    /*background-color: #fff;*/
 }
 
 .sidebar-search-container.top .sidebar-search {
@@ -157,9 +160,8 @@ button.cta a {
     border-bottom: 0 !important;
 }
 
-/* really important ! */
-.sidebar-search {
-    color: #000 !important;
+.sidebar-drawer .sidebar-search-container {
+    width: 95%;
 }
 
 .toc-drawer .toc-title {
@@ -218,4 +220,11 @@ span:target~h4:first-of-type, span:target~h5:first-of-type, span:target~h6:first
 
 
 
+}
+
+/* small screens */
+@media all and (max-width : 550px)  {
+    .discordLink img {
+        display: none;
+    }
 }

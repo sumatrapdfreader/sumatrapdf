@@ -755,6 +755,9 @@
     <ClCompile Include="..\mupdf\source\fitz\writer.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\xml-write.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\xml.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>

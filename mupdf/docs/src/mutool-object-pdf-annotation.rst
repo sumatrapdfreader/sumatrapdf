@@ -210,8 +210,6 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
 .. method:: getHiddenForEditing()
 
-    |mutool_tag|
-
     Get a special annotation hidden flag for editing. This flag prevents the annotation from being rendered.
 
     :return: `Boolean`.
@@ -223,8 +221,6 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
         var hidden = annotation.getHiddenForEditing();
 
 .. method:: setHiddenForEditing(hidden)
-
-    |mutool_tag|
 
     Set a special annotation hidden flag for editing. This flag prevents the annotation from being rendered.
 

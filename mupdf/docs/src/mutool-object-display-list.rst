@@ -109,15 +109,17 @@ A display list records all the device calls for playback later. If you want to r
 
 
 
-.. method:: search(needle)
+.. method:: search(needle, max_hits)
 
 
-    Search the display list text for all instances of the `needle` value, and return an array of search hits. Each search hit is an array of :ref:`rectangles<mutool_run_js_api_quad>` corresponding to all characters in the search hit.
+    Search the display list text for all instances of the `needle` value,
+    and return an array of search hits.
+    Each search hit is an array of :ref:`rectangles<mutool_run_js_api_quad>`
+    corresponding to all characters in the search hit.
 
     :arg needle: `String`.
+    :arg max_hits: `Integer` Use to limit number of results, defaults to 500.
     :return: `[ [ Quad, Quad, ... ], [ Quad, Quad, ...], ... ]`.
-
-    |mutool_tag|
 
 
     |example_tag|

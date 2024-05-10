@@ -52,7 +52,20 @@
 /* #define FZ_ENABLE_CBZ 1 */
 /* #define FZ_ENABLE_IMG 1 */
 /* #define FZ_ENABLE_HTML 1 */
+/* #define FZ_ENABLE_FB2 1 */
+/* #define FZ_ENABLE_MOBI 1 */
 /* #define FZ_ENABLE_EPUB 1 */
+/* #define FZ_ENABLE_OFFICE 1 */
+/* #define FZ_ENABLE_TXT 1 */
+
+/**
+	Some of those document agents rely on the HTML
+	engine. This will be enabled if required based upon
+	those engines, but can be enabled independently of
+	them so that other features (such as the fz_story
+	mechanism or PDF Annotation rich content) can work.
+*/
+/* #define FZ_ENABLE_HTML_ENGINE 1 */
 
 /**
 	Choose which document writers to include.
@@ -183,6 +196,22 @@
 #define FZ_ENABLE_EPUB 1
 #endif /* FZ_ENABLE_EPUB */
 
+#ifndef FZ_ENABLE_FB2
+#define FZ_ENABLE_FB2 1
+#endif /* FZ_ENABLE_FB2 */
+
+#ifndef FZ_ENABLE_MOBI
+#define FZ_ENABLE_MOBI 1
+#endif /* FZ_ENABLE_MOBI */
+
+#ifndef FZ_ENABLE_TXT
+#define FZ_ENABLE_TXT 1
+#endif /* FZ_ENABLE_TXT */
+
+#ifndef FZ_ENABLE_OFFICE
+#define FZ_ENABLE_OFFICE 1
+#endif /* FZ_ENABLE_OFFICE */
+
 #ifndef FZ_ENABLE_OCR_OUTPUT
 #define FZ_ENABLE_OCR_OUTPUT 1
 #endif /* FZ_ENABLE_OCR_OUTPUT */
@@ -206,6 +235,33 @@
 #ifndef FZ_ENABLE_ICC
 #define FZ_ENABLE_ICC 1
 #endif /* FZ_ENABLE_ICC */
+
+#ifdef FZ_ENABLE_HTML_ENGINE
+#if FZ_ENABLE_HTML == 0
+#error FZ_ENABLE_HTML cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
+#if FZ_ENABLE_EPUB == 0
+#error FZ_ENABLE_EPUB cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
+#if FZ_ENABLE_MOBI == 0
+#error FZ_ENABLE_MOBI cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
+#if FZ_ENABLE_FB2 == 0
+#error FZ_ENABLE_FB2 cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
+#if FZ_ENABLE_TXT == 0
+#error FZ_ENABLE_TXT cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
+#if FZ_ENABLE_OFFICE == 0
+#error FZ_ENABLE_OFFICE cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
+#else
+#if FZ_ENABLE_HTML || FZ_ENABLE_EPUB || FZ_ENABLE_MOBI || FZ_ENABLE_FB2 || FZ_ENABLE_TXT || FZ_ENABLE_OFFICE
+#define FZ_ENABLE_HTML_ENGINE 1
+#else
+#define FZ_ENABLE_HTML_ENGINE 0
+#endif
+#endif
 
 /* If Epub and HTML are both disabled, disable SIL fonts */
 #if FZ_ENABLE_HTML == 0 && FZ_ENABLE_EPUB == 0

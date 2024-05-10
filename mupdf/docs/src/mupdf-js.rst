@@ -27,8 +27,8 @@
 
 :title:`MuPDF` can be used in two ways with :title:`Javascript` as follows:
 
-- Within `mutool run`.
-- Within a :title:`WASM` solution.
+- With `mutool run`.
+- With `mupdf.js <https://mupdfjs.readthedocs.io/en/latest/>`_ package for :title:`Node` and browsers.
 
 Both usages are, in fact, very similar and here we show code samples and the API for both.
 

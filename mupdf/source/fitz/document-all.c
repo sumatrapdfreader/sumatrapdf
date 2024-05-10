@@ -53,14 +53,22 @@ void fz_register_document_handlers(fz_context *ctx)
 #if FZ_ENABLE_IMG
 	fz_register_document_handler(ctx, &img_document_handler);
 #endif /* FZ_ENABLE_IMG */
-#if FZ_ENABLE_HTML
+#if FZ_ENABLE_FB2
 	fz_register_document_handler(ctx, &fb2_document_handler);
+#endif /* FZ_ENABLE_FB2 */
+#if FZ_ENABLE_HTML
 	fz_register_document_handler(ctx, &html_document_handler);
 	fz_register_document_handler(ctx, &xhtml_document_handler);
-	fz_register_document_handler(ctx, &mobi_document_handler);
-	fz_register_document_handler(ctx, &txt_document_handler);
-	fz_register_document_handler(ctx, &office_document_handler);
 #endif /* FZ_ENABLE_HTML */
+#if FZ_ENABLE_MOBI
+	fz_register_document_handler(ctx, &mobi_document_handler);
+#endif /* FZ_ENABLE_MOBI */
+#if FZ_ENABLE_TXT
+	fz_register_document_handler(ctx, &txt_document_handler);
+#endif /* FZ_ENABLE_TXT */
+#if FZ_ENABLE_OFFICE
+	fz_register_document_handler(ctx, &office_document_handler);
+#endif /* FZ_ENABLE_OFFICE */
 #if FZ_ENABLE_EPUB
 	fz_register_document_handler(ctx, &epub_document_handler);
 #endif /* FZ_ENABLE_EPUB */

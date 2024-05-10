@@ -504,7 +504,7 @@ pdf_structure_type(fz_context *ctx, pdf_obj *role_map, pdf_obj *tag)
 		return FZ_STRUCTURE_H6;
 
 	/* List elements (PDF 1.7 - Table 10.23) */
-	if (pdf_name_eq(ctx, tag, PDF_NAME(List)))
+	if (pdf_name_eq(ctx, tag, PDF_NAME(L)))
 		return FZ_STRUCTURE_LIST;
 	if (pdf_name_eq(ctx, tag, PDF_NAME(LI)))
 		return FZ_STRUCTURE_LISTITEM;
