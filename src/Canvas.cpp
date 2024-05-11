@@ -1301,10 +1301,10 @@ const char* GiFlagsToStr(DWORD flags) {
 }
 
 static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
-    if (!touch::SupportsGestures()) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !touch::SupportsGestures()) {
         return DefWindowProc(win->hwndFrame, msg, wp, lp);
     }
-    DisplayModel* dm = win->AsFixed();
 
     HGESTUREINFO hgi = (HGESTUREINFO)lp;
     GESTUREINFO gi{};
@@ -1319,7 +1319,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
 
     switch (gi.dwID) {
         case GID_ZOOM:
-            if (gi.dwFlags != GF_BEGIN && win->AsFixed()) {
+            if (gi.dwFlags != GF_BEGIN) {
                 float zoom = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
                 Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
                 if (pt.IsEmpty()) {
@@ -1332,9 +1332,6 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case GID_PAN:
-            if (!dm) {
-                goto Exit;
-            }
             // Flicking left or right changes the page,
             // panning moves the document in the scroll window
             if (gi.dwFlags == GF_BEGIN) {
@@ -1441,7 +1438,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             // A gesture was not recognized
             break;
     }
-Exit:
+
     touch::CloseGestureInfoHandle(hgi);
     return 0;
 }
