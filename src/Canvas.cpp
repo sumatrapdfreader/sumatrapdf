@@ -1321,7 +1321,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
         case GID_ZOOM:
             if (gi.dwFlags != GF_BEGIN && win->AsFixed()) {
                 float zoom = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
-                Point pt { gi.ptsLocation.x, gi.ptsLocation.y };
+                Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
                 if (pt.IsEmpty()) {
                     ZoomToSelection(win, zoom, false, true);
                 } else {

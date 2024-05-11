@@ -219,28 +219,20 @@ static bool GetSelectionMidPoint(MainWindow* win, Point& pt) {
         pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
         pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
         pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
-
-        int pageNo = dm->GetPageNoByPoint(pt);
-        if (!dm->ValidPageNo(pageNo)) {
+    } else {
+        // or towards the top-left-most part of the first visible page
+        int page = dm->FirstVisiblePageNo();
+        PageInfo* pageInfo = dm->GetPageInfo(page);
+        if (!pageInfo) {
             return false;
         }
-        if (!dm->PageVisible(pageNo)) {
+        Rect visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
+        if (visible.IsEmpty()) {
             return false;
         }
-        return true;
+        pt = visible.TL();
     }
 
-    // or towards the top-left-most part of the first visible page
-    int page = dm->FirstVisiblePageNo();
-    PageInfo* pageInfo = dm->GetPageInfo(page);
-    if (!pageInfo) {
-        return false;
-    }
-    Rect visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
-    if (visible.IsEmpty()) {
-        return false;
-    }
-    pt = visible.TL();
     int pageNo = dm->GetPageNoByPoint(pt);
     if (!dm->ValidPageNo(pageNo)) {
         return false;
@@ -277,7 +269,6 @@ void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit, bool relat
 }
 
 void ZoomToPoint(MainWindow* win, float factor, Point& pt) {
-    CrashIf(factor == kZoomFitPage || factor == kZoomFitContent);
     if (!win->IsDocLoaded()) {
         return;
     }

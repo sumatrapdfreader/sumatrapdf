@@ -4934,19 +4934,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ChangeZoomLevel(win, kZoomFitPage, false);
             break;
 
+        case CmdZoomOut:
         case CmdZoomIn: {
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            auto zoom = ctrl->GetNextZoomStep(kZoomMax);
-            ZoomToSelection(win, zoom, false);
-        } break;
-
-        case CmdZoomOut: {
-            if (!win->IsDocLoaded()) {
-                return 0;
-            }
-            auto zoom = ctrl->GetNextZoomStep(kZoomMin);
+            float towards = (wmId == CmdZoomIn) ? kZoomMax : kZoomMin;
+            auto zoom = ctrl->GetNextZoomStep(towards);
             ZoomToSelection(win, zoom, false);
         } break;
 

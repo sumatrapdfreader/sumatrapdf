@@ -1583,11 +1583,12 @@ float DisplayModel::GetZoomVirtual(bool absolute) const {
 float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     if (gGlobalPrefs->zoomIncrement > 0) {
         float zoom = GetZoomVirtual(true);
+        float factor = (gGlobalPrefs->zoomIncrement / 100 + 1);
         if (zoom < towardsLevel) {
-            return std::min(zoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+            return std::min(zoom * factor, towardsLevel);
         }
         if (zoom > towardsLevel) {
-            return std::max(zoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+            return std::max(zoom / factor, towardsLevel);
         }
         return zoom;
     }
