@@ -1136,6 +1136,8 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     return win->presentation ? TRUE : FALSE;
 }
 
+static bool gWheelScrollRelative = true;
+
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
@@ -1154,9 +1156,25 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     if ((LOWORD(wp) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wp) & MK_RBUTTON)) {
         Point pt = HwndGetCursorPos(win->hwndCanvas);
 
-        float zoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
-        win->ctrl->SetZoomVirtual(zoom, &pt);
-        UpdateToolbarState(win);
+        float newZoom2 = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
+        ;
+        logf("delta: %d\n", (int)delta);
+        float newZoom;
+        float factor = 0;
+        if (gWheelScrollRelative) {
+            // delta seems to be 120 or -120 so we translate it to zoom factor 1.2 / (1 / 1.2 = 0.83)
+            factor = (float)delta / 100;
+            if (delta < 0) {
+                delta = -delta;
+                factor = 100.f / (float)delta;
+            }
+            newZoom = ScaleZoomBy(win, factor);
+        } else {
+            // before 3.6 we were scrolling by steps
+            newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
+        }
+        logf("delta: %d, factor: %f, relative: %f, step: %f\n", delta, factor, newZoom, newZoom2);
+        ZoomToSelection(win, newZoom, &pt, false);
 
         // don't show the context menu when zooming with the right mouse-button down
         if ((LOWORD(wp) & MK_RBUTTON)) {
@@ -1320,14 +1338,11 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     switch (gi.dwID) {
         case GID_ZOOM:
             if (gi.dwFlags != GF_BEGIN) {
-                float zoom = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
+                float factor = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
                 Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
                 HwndScreenToClient(win->hwndCanvas, pt);
-                if (pt.IsEmpty()) {
-                    ZoomToSelection(win, zoom, false, true);
-                } else {
-                    ZoomToPoint(win, zoom, pt);
-                }
+                float newZoom = ScaleZoomBy(win, factor);
+                ZoomToSelection(win, newZoom, &pt, false);
             }
             touchState.startArg = LowerU64(gi.ullArguments);
             break;

@@ -891,7 +891,7 @@ static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
     }
 
     if (zoom != kInvalidZoom) {
-        ZoomToSelection(win, zoom);
+        ZoomToSelection(win, zoom, nullptr, false);
     }
 
     if ((scroll.x != -1 || scroll.y != -1) && win->AsFixed()) {

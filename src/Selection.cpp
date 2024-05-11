@@ -243,39 +243,32 @@ static bool GetSelectionMidPoint(MainWindow* win, Point& pt) {
     return true;
 }
 
-void ZoomToSelection(MainWindow* win, float factor, bool scrollToFit, bool relative) {
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-
-    Point pt;
-    bool zoomToPt = GetSelectionMidPoint(win, pt);
-    // when not zooming to fit (which contradicts zooming to a specific point), ...
-    if (!relative && (kZoomFitPage == factor || kZoomFitContent == factor) && scrollToFit) {
-        zoomToPt = false;
-    }
-
-    float zoom = factor;
-    if (relative) {
-        auto zoomVirt = win->ctrl->GetZoomVirtual(true);
-        zoom = factor * zoomVirt;
-    }
-    Point* ptPtr = nullptr;
-    if (zoomToPt) {
-        ptPtr = &pt;
-    }
-    win->ctrl->SetZoomVirtual(zoom, ptPtr);
-    UpdateToolbarState(win);
+float ScaleZoomBy(MainWindow* win, float factor) {
+    auto zoomVirt = win->ctrl->GetZoomVirtual(true);
+    return factor * zoomVirt;
 }
 
-void ZoomToPoint(MainWindow* win, float factor, Point& pt) {
+// if pt is provided, it's position on canvas and we'll try to preserve that point after zoom
+// if pt is nullptr we'll try to pick a smart point to zoom around is smartZoom is true
+void ZoomToSelection(MainWindow* win, float newZoom, Point* pt, bool smartZoom) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    float zoom = factor;
-    auto zoomVirt = win->ctrl->GetZoomVirtual(true);
-    zoom = factor * zoomVirt;
-    win->ctrl->SetZoomVirtual(zoom, &pt);
+
+    Point ptSmart;
+    if (!pt && smartZoom) {
+        bool zoomToPt = GetSelectionMidPoint(win, ptSmart);
+        if (zoomToPt) {
+            pt = &ptSmart;
+        }
+    }
+    if (newZoom < 0) {
+        // if newZoom is one of kZoomFit* constants, we don't do smartZoom
+        // TODO: shouldn't happen if noSmartZoom is tru
+        pt = nullptr;
+    }
+
+    win->ctrl->SetZoomVirtual(newZoom, pt);
     UpdateToolbarState(win);
 }
 

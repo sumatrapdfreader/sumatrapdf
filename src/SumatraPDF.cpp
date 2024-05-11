@@ -3678,7 +3678,7 @@ static void OnMenuZoom(MainWindow* win, int menuId) {
     }
 
     float zoom = ZoomMenuItemToZoom(menuId);
-    ZoomToSelection(win, zoom);
+    ZoomToSelection(win, zoom, nullptr, true);
 }
 
 static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuously) {
@@ -3711,7 +3711,7 @@ static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuous
     } else if (win->CurrentTab()->prevZoomVirtual != kInvalidZoom) {
         float prevZoom = win->CurrentTab()->prevZoomVirtual;
         SwitchToDisplayMode(win, win->CurrentTab()->prevDisplayMode);
-        ZoomToSelection(win, prevZoom);
+        ZoomToSelection(win, prevZoom, nullptr, true);
     }
 }
 
@@ -4295,12 +4295,10 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
         case '=':
         case 0xE0:
         case 0xE4: {
-            float newZoom = ctrl->GetNextZoomStep(kZoomMax);
-            ZoomToSelection(win, newZoom, false);
+            HwndSendCommand(win->hwndFrame, CmdZoomIn);
         } break;
         case '-': {
-            float newZoom = ctrl->GetNextZoomStep(kZoomMin);
-            ZoomToSelection(win, newZoom, false);
+            HwndSendCommand(win->hwndFrame, CmdZoomOut);
         } break;
         case '/':
             if (!gIsDivideKeyDown) {
@@ -4586,7 +4584,7 @@ static void OnMenuCustomZoom(MainWindow* win) {
     if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom)) {
         return;
     }
-    ZoomToSelection(win, zoom);
+    ZoomToSelection(win, zoom, nullptr, true);
 }
 
 char* GetLogFilePath() {
@@ -4941,7 +4939,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             float towards = (wmId == CmdZoomIn) ? kZoomMax : kZoomMin;
             auto zoom = ctrl->GetNextZoomStep(towards);
-            ZoomToSelection(win, zoom, false);
+            ZoomToSelection(win, zoom, nullptr, false);
         } break;
 
         case CmdZoom6400:
