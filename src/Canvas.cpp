@@ -1158,24 +1158,55 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
-    if ((LOWORD(wp) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wp) & MK_RBUTTON)) {
+    // isCtrl is also set if this is pinch gestore from touchpad (on thinkpad x1 at least).
+    bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+    bool isRightButton = (LOWORD(wp) & MK_RBUTTON);
+    if (isCtrl || isRightButton) {
         Point pt = HwndGetCursorPos(win->hwndCanvas);
 
         float newZoom;
         float factor = 0;
+        short delta2 = delta;
         if (gWheelScrollRelative) {
-            // delta seems to be 120 or -120 so we translate it to zoom factor 1.2 / (1 / 1.2 = 0.83)
-            factor = (float)delta / 100;
+            // calc zooming factor as centered around 1.f (1 is no change, > 1 is zoom in, < 1 is zoom out)
+            // from delta values that are centered around 0
+            bool negative = false;
+            // delta is 120 when pinch on thinkpad touchpad
+            // 4 - 248 when ctrl + scrollpoint
+
             if (delta < 0) {
-                delta = -delta;
-                factor = 100.f / (float)delta;
+                negative = true;
+                delta2 = -delta;
+            }
+
+            if (delta == 120) {
+                // special case the value coming from pinch gensture on thinkpad touchpad
+                // otherwise it's too slow (would end up 6)
+                delta = 16;
+            } else {
+                // logarithmically dampen delta because otherwise it zooms too fast
+                // the higher the value, the more we dampen
+                // 2 is chosen heuristically
+                double dampenFactor = 2;
+                double logX = log10((double)delta2) / log10(dampenFactor);
+                delta2 = (int)logX;
+            }
+            factor = (float)delta2 / 100.f;
+            if (factor > 0.5f) {
+                factor = 0.5f;
+            }
+            if (negative) {
+                factor = 1.f - factor;
+            } else {
+                factor = 1.f + factor;
             }
             newZoom = ScaleZoomBy(win, factor);
         } else {
             // before 3.6 we were scrolling by steps
             newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
         }
-        // logf("delta: %d, factor: %f, newZoom: %f, step: %f\n", delta, factor, newZoom);
+        // logf("delta: %d, delta2: %d, factor: %f, newZoom: %f, isRightButton: %d, isCtrl: %d\n", delta, delta2,
+        // factor, newZoom, (int)isRightButton, (int)isCtrl);
         bool smartZoom = false; // Note: if true will prioritze selection
         SmartZoom(win, newZoom, &pt, smartZoom);
 
