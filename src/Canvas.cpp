@@ -1171,7 +1171,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // calc zooming factor as centered around 1.f (1 is no change, > 1 is zoom in, < 1 is zoom out)
             // from delta values that are centered around 0
             bool negative = false;
-            // delta is 120 when pinch on thinkpad touchpad
+            // delta is 120 (WHEEL_DELTA) when pinch on thinkpad touchpad
             // 4 - 248 when ctrl + scrollpoint
 
             if (delta < 0) {
@@ -1179,7 +1179,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
                 delta2 = -delta;
             }
 
-            if (delta == 120) {
+            if (delta == WHEEL_DELTA) {
                 // special case the value coming from pinch gensture on thinkpad touchpad
                 // otherwise it's too slow (would end up 6)
                 delta = 16;
