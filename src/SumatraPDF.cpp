@@ -3669,6 +3669,106 @@ static void ToggleMangaMode(MainWindow* win) {
     dm->SetScrollState(state);
 }
 
+static Point GetSelectionCenter(MainWindow* win) {
+    bool hasSelection = win->showSelection && win->CurrentTab()->selectionOnPage;
+    if (!hasSelection) {
+        return {};
+    }
+    DisplayModel* dm = win->AsFixed();
+    Rect selRect;
+    for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
+        selRect = selRect.Union(sel.GetRect(dm));
+    }
+
+    Rect rc = ClientRect(win->hwndCanvas);
+    Point pt;
+    pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
+    pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
+    pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
+    pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
+    return pt;
+}
+
+static Point GetFirstVisiblePageTopLeft(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    int page = dm->FirstVisiblePageNo();
+    PageInfo* pageInfo = dm->GetPageInfo(page);
+    if (!pageInfo) {
+        return {};
+    }
+    Rect visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
+    return visible.TL();
+}
+
+static Point GetCanvasCenter(MainWindow* win) {
+    Rect rc = ClientRect(win->hwndCanvas);
+    auto x = rc.x + (rc.dx / 2);
+    auto y = rc.y + (rc.dy / 2);
+    return {x, y};
+}
+
+static bool IsPointOnPage(DisplayModel* dm, Point& pt) {
+    int pageNo = dm->GetPageNoByPoint(pt);
+    if (!dm->ValidPageNo(pageNo)) {
+        return false;
+    }
+    if (!dm->PageVisible(pageNo)) {
+        return false;
+    }
+    return true;
+}
+
+static bool gZoomAroundCenterCanvas = true;
+
+static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
+    // zoom around current selection takes precedence
+    DisplayModel* dm = win->AsFixed();
+    Point pt = GetSelectionCenter(win);
+    if (!pt.IsEmpty() && IsPointOnPage(dm, pt)) {
+        return pt;
+    }
+    // suggestedPoint is typically a current mouse position
+    if (!pt.IsEmpty() && IsPointOnPage(dm, suggestdPoint)) {
+        return suggestdPoint;
+    }
+    // or towards the top-left-most part of the first visible page
+    // TODO: something better, like center of the screen?
+    if (gZoomAroundCenterCanvas) {
+        pt = GetCanvasCenter(win);
+    } else {
+        pt = GetFirstVisiblePageTopLeft(win);
+    }
+    if (!pt.IsEmpty() && IsPointOnPage(dm, pt)) {
+        return pt;
+    }
+    return {};
+}
+
+// if suggestedPoint is provided, it's position on canvas and we'll try to preserve that point after zoom
+// if suggestedPoint is nullptr we'll try to pick a smart point to zoom around if smartZoom is true
+void SmartZoom(MainWindow* win, float newZoom, Point* suggestedPoint, bool smartZoom) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    Point* pt = suggestedPoint;
+
+    Point ptSmart;
+    if (smartZoom) {
+        ptSmart = GetSmartZoomPos(win, ptSmart);
+        if (!ptSmart.IsEmpty()) {
+            pt = &ptSmart;
+        }
+    }
+    if (newZoom < 0) {
+        // if newZoom is one of kZoomFit* constants, we don't do smartZoom
+        // TODO: shouldn't happen if !smartZoom
+        pt = nullptr;
+    }
+
+    win->ctrl->SetZoomVirtual(newZoom, pt);
+    UpdateToolbarState(win);
+}
+
 /* Zoom document in window 'hwnd' to zoom level 'zoom'.
    'zoom' is given as a floating-point number, 1.0 is 100%, 2.0 is 200% etc.
 */
@@ -3678,7 +3778,7 @@ static void OnMenuZoom(MainWindow* win, int menuId) {
     }
 
     float zoom = ZoomMenuItemToZoom(menuId);
-    ZoomToSelection(win, zoom, nullptr, true);
+    SmartZoom(win, zoom, nullptr, true);
 }
 
 static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuously) {
@@ -3711,7 +3811,7 @@ static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuous
     } else if (win->CurrentTab()->prevZoomVirtual != kInvalidZoom) {
         float prevZoom = win->CurrentTab()->prevZoomVirtual;
         SwitchToDisplayMode(win, win->CurrentTab()->prevDisplayMode);
-        ZoomToSelection(win, prevZoom, nullptr, true);
+        SmartZoom(win, prevZoom, nullptr, true);
     }
 }
 
@@ -4584,7 +4684,7 @@ static void OnMenuCustomZoom(MainWindow* win) {
     if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom)) {
         return;
     }
-    ZoomToSelection(win, zoom, nullptr, true);
+    SmartZoom(win, zoom, nullptr, true);
 }
 
 char* GetLogFilePath() {
@@ -4939,7 +5039,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             float towards = (wmId == CmdZoomIn) ? kZoomMax : kZoomMin;
             auto zoom = ctrl->GetNextZoomStep(towards);
-            ZoomToSelection(win, zoom, nullptr, false);
+            Point mousePos = HwndGetCursorPos(win->hwndCanvas);
+            SmartZoom(win, zoom, &mousePos, true);
         } break;
 
         case CmdZoom6400:

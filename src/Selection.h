@@ -27,8 +27,6 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
                                 int margin = 1);
 void PaintSelection(MainWindow* win, HDC hdc);
 void UpdateTextSelection(MainWindow* win, bool select = true);
-void ZoomToSelection(MainWindow* win, float factor, Point* pt, bool smartZoom);
-float ScaleZoomBy(MainWindow* win, float factor);
 void CopySelectionToClipboard(MainWindow* win);
 void OnSelectAll(MainWindow* win, bool textOnly = false);
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y);

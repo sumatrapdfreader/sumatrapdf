@@ -323,7 +323,7 @@ static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool 
         SwitchToDisplayMode(win, flags.startView);
     }
     if (flags.startZoom != kInvalidZoom) {
-        ZoomToSelection(win, flags.startZoom, nullptr, false);
+        SmartZoom(win, flags.startZoom, nullptr, false);
     }
     if ((flags.startScroll.x != -1 || flags.startScroll.y != -1) && win->AsFixed()) {
         DisplayModel* dm = win->AsFixed();

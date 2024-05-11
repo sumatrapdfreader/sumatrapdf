@@ -1136,6 +1136,11 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     return win->presentation ? TRUE : FALSE;
 }
 
+float ScaleZoomBy(MainWindow* win, float factor) {
+    auto zoomVirt = win->ctrl->GetZoomVirtual(true);
+    return factor * zoomVirt;
+}
+
 static bool gWheelScrollRelative = true;
 
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
@@ -1156,9 +1161,6 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     if ((LOWORD(wp) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wp) & MK_RBUTTON)) {
         Point pt = HwndGetCursorPos(win->hwndCanvas);
 
-        float newZoom2 = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
-        ;
-        logf("delta: %d\n", (int)delta);
         float newZoom;
         float factor = 0;
         if (gWheelScrollRelative) {
@@ -1173,8 +1175,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // before 3.6 we were scrolling by steps
             newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
         }
-        logf("delta: %d, factor: %f, relative: %f, step: %f\n", delta, factor, newZoom, newZoom2);
-        ZoomToSelection(win, newZoom, &pt, false);
+        // logf("delta: %d, factor: %f, newZoom: %f, step: %f\n", delta, factor, newZoom);
+        bool smartZoom = false; // Note: if true will prioritze selection
+        SmartZoom(win, newZoom, &pt, smartZoom);
 
         // don't show the context menu when zooming with the right mouse-button down
         if ((LOWORD(wp) & MK_RBUTTON)) {
@@ -1342,7 +1345,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
                 HwndScreenToClient(win->hwndCanvas, pt);
                 float newZoom = ScaleZoomBy(win, factor);
-                ZoomToSelection(win, newZoom, &pt, false);
+                SmartZoom(win, newZoom, &pt, false);
             }
             touchState.startArg = LowerU64(gi.ullArguments);
             break;
