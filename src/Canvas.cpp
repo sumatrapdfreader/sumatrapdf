@@ -1339,16 +1339,20 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     switch (gi.dwID) {
-        case GID_ZOOM:
-            if (gi.dwFlags != GF_BEGIN) {
-                float factor = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
+        case GID_ZOOM: {
+            auto curr = (float)LowerU64(gi.ullArguments);
+            bool isBegin = gi.dwFlags & GF_BEGIN;
+            if (!isBegin) {
+                auto prev = (float)touchState.zoomIntermediate;
+                float factor = curr / prev;
                 Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
                 HwndScreenToClient(win->hwndCanvas, pt);
                 float newZoom = ScaleZoomBy(win, factor);
                 SmartZoom(win, newZoom, &pt, false);
             }
-            touchState.startArg = LowerU64(gi.ullArguments);
+            touchState.zoomIntermediate = curr;
             break;
+        }
 
         case GID_PAN:
             // Flicking left or right changes the page,
