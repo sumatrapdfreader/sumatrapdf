@@ -1322,6 +1322,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             if (gi.dwFlags != GF_BEGIN) {
                 float zoom = (float)LowerU64(gi.ullArguments) / (float)touchState.startArg;
                 Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
+                HwndScreenToClient(win->hwndCanvas, pt);
                 if (pt.IsEmpty()) {
                     ZoomToSelection(win, zoom, false, true);
                 } else {
