@@ -6,7 +6,6 @@
 
 constexpr const char* kWebsiteURL = "https://www.sumatrapdfreader.org/";
 constexpr const char* kManualURL = "https://www.sumatrapdfreader.org/manual";
-constexpr const char* kManualKeyboardShortcutsURL = "https://www.sumatrapdfreader.org/docs/Keyboard-shortcuts";
 constexpr const char* kContributeTranslationsURL = "https://www.sumatrapdfreader.org/docs/Contribute-translation";
 
 #ifndef CRASH_REPORT_URL

@@ -407,6 +407,7 @@ func writeDocsHtmlFiles() {
 	}
 	{
 		// copy image files
+		copyFileMustOverwrite = true
 		dstDir := filepath.Join("docs", "www", "img")
 		srcDir := filepath.Join("docs", "md", "img")
 		copyFilesRecurMust(dstDir, srcDir)

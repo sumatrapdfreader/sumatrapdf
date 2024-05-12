@@ -183,7 +183,7 @@ void SetCurrentLang(const char* langCode) {
 }
 
 #define DEFAULT_FILE_PERCEIVED_TYPES "audio,video,webpage"
-#define DEFAULT_LINK_PROTOCOLS "http,https,mailto"
+#define DEFAULT_LINK_PROTOCOLS "http,https,mailto,file"
 
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
@@ -4832,6 +4832,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
     logf("ExtractFiles(): dir '%s'\n", destDir);
     lzma::FileInfo* fi;
     u8* uncompressed;
+    bool ok;
 
     int nFiles = archive->filesCount;
 
@@ -4844,11 +4845,16 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
             return false;
         }
         TempStr filePath = path::JoinTemp(destDir, fi->name);
+        ok = dir::CreateForFile(filePath);
+        if (!ok) {
+            logf("ExtractFiles: dir::CreateForFile(%s) failed\n", filePath);
+            free(uncompressed);
+            return false;
+        }
 
         ByteSlice d = {uncompressed, fi->uncompressedSize};
-        bool ok = file::WriteFile(filePath, d);
+        ok = file::WriteFile(filePath, d);
         free(uncompressed);
-
         if (!ok) {
             logf("ExtractFiles: lzma::Write(%s) failed\n", filePath);
             return false;
@@ -4859,17 +4865,39 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
     return true;
 }
 
-bool ExtractManual() {
+TempStr GetManualDir() {
+    TempStr dirName = str::FormatTemp("manual-%s", CURR_VERSION_STRA);
+    TempStr dir = AppGenDataFilenameTemp(dirName);
+    return dir;
+}
+
+constexpr const char* kManualIndex = "SumatraPDF-documentation.html";
+constexpr const char* kManualKeyboard = "Keyboard-shortcuts.html";
+
+static bool ExtractManual() {
+    auto dir = GetManualDir();
+    auto path = path::Join(dir, kManualIndex);
+    if (file::Exists(path)) {
+        return true;
+    }
     bool ok = OpenManualArchive();
     if (!ok) {
         return false;
     }
-    TempStr dirName = str::FormatTemp("manual-%s", CURR_VERSION_STRA);
-    TempStr dir = AppGenDataFilenameTemp(dirName);
     dir::CreateAll(dir);
     logf("ExtractInstallerFiles() to '%s'\n", dir);
     // on error, ExtractFiles() shows error message itself
     return ExtractFiles(&gManualArchive, dir);
+}
+
+static void OpenManualAtFile(const char* name) {
+    if (!ExtractManual()) {
+        return;
+    }
+    auto dir = GetManualDir();
+    auto path = path::Join(dir, name);
+    TempStr url = str::Join("file://", path);
+    SumatraLaunchBrowser(url);
 }
 
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -5386,12 +5414,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SumatraLaunchBrowser(kWebsiteURL);
             break;
 
-        case CmdHelpOpenManualInBrowser:
-            SumatraLaunchBrowser(kManualURL);
+        case CmdHelpOpenManual:
+            OpenManualAtFile(kManualIndex);
             break;
 
-        case CmdHelpOpenKeyboardShortcutsInBrowser:
-            SumatraLaunchBrowser(kManualKeyboardShortcutsURL);
+        case CmdHelpOpenKeyboardShortcuts:
+            OpenManualAtFile(kManualKeyboard);
+            break;
+
+        case CmdHelpOpenManualOnWebsite:
+            SumatraLaunchBrowser(kManualURL);
             break;
 
         case CmdContributeTranslation:

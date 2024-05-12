@@ -144,15 +144,19 @@ func copyFilesRecurMust(dstDir, srcDir string) {
 	}
 }
 
+var copyFileMustOverwrite = false
+
 func copyFileMust(dst, src string) {
-	_, err := os.Stat(dst)
-	if err == nil {
-		logf("destination '%s' already exists, skipping\n", dst)
-		return
+	if !copyFileMustOverwrite {
+		_, err := os.Stat(dst)
+		if err == nil {
+			logf("destination '%s' already exists, skipping\n", dst)
+			return
+		}
 	}
 	logf("copy %s => %s\n", src, dst)
 	dstDir := filepath.Dir(dst)
-	err = os.MkdirAll(dstDir, 0755)
+	err := os.MkdirAll(dstDir, 0755)
 	must(err)
 	d, err := os.ReadFile(src)
 	must(err)

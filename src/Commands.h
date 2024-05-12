@@ -128,8 +128,9 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdAdvancedSettings, "Advanced Settings...")                        \
     V(CmdChangeLanguage, "Change Language...")                            \
     V(CmdCheckUpdate, "Check For Updates")                                \
-    V(CmdHelpOpenManualInBrowser, "Help: Manual")                         \
-    V(CmdHelpOpenKeyboardShortcutsInBrowser, "Help: Keyboard Shortcuts")  \
+    V(CmdHelpOpenManual, "Help: Manual")                                  \
+    V(CmdHelpOpenManualOnWebsite, "Help: Manual On Website")              \
+    V(CmdHelpOpenKeyboardShortcuts, "Help: Keyboard Shortcuts")           \
     V(CmdHelpVisitWebsite, "Help: SumatraPDF Website")                    \
     V(CmdHelpAbout, "Help: About SumatraPDF")                             \
     V(CmdMoveFrameFocus, "Move Frame Focus")                              \

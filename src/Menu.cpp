@@ -492,19 +492,24 @@ MenuDef menuDefFavorites[] = {
 };
 //] ACCESSKEY_GROUP Favorites Menu
 
+
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
     {
-        _TRN("Visit &Website"),
-        CmdHelpVisitWebsite,
-    },
-    {
         _TRN("&Manual"),
-        CmdHelpOpenManualInBrowser,
+        CmdHelpOpenManual,
     },
     {
         _TRN("&Keyboard Shortcuts"),
-        CmdHelpOpenKeyboardShortcutsInBrowser
+        CmdHelpOpenKeyboardShortcuts
+    },
+    {
+        _TRN("Manual On Website"),
+        CmdHelpOpenManualOnWebsite,
+    },
+    {
+        _TRN("Visit &Website"),
+        CmdHelpVisitWebsite,
     },
     {
         _TRN("Check for &Updates"),
@@ -902,8 +907,8 @@ UINT_PTR removeIfNoInternetPerms[] = {
     CmdSearchSelectionWithGoogle,
     CmdSearchSelectionWithBing,
     CmdHelpVisitWebsite,
-    CmdHelpOpenManualInBrowser,
-    CmdHelpOpenKeyboardShortcutsInBrowser,
+    CmdHelpOpenManualOnWebsite,
+    CmdHelpOpenKeyboardShortcuts,
     CmdContributeTranslation,
     0,
 };

@@ -258,7 +258,8 @@ int mainVerify(const char* archivePath) {
 int printUsage(const char* exeName) {
     int errorStep = 0;
     FailIf(true,
-           "Usage:\n  %s <archive.lzsa>\n    verify archive\n  %s <archive.lzsa> <filename>[:<in-archive name>] [...]\n    "
+           "Usage:\n  %s <archive.lzsa>\n    verify archive\n  %s <archive.lzsa> <filename>[:<in-archive name>] "
+           "[...]\n    "
            "create archive from files\n  %s <archive.lzsa> <dir>\n    create archive from directory",
            exeName, exeName, exeName);
 }

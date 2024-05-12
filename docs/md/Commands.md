@@ -224,8 +224,10 @@ CmdShowLog,,Show Log
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
+CmdHelpOpenManual,,Help: Manual
+CmdHelpOpenKeyboardShortcuts,,Help: Keyboard Shortcuts
 CmdHelpAbout,,Help: About SumatraPDF
-CmdHelpOpenManualInBrowser,,Help: Manual
+CmdHelpOpenManualOnWebsite,,Help: Manual On Website
 CmdHelpVisitWebsite,,Help: SumatraPDF Website
 ```
 
