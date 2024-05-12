@@ -1179,7 +1179,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
                 delta2 = -delta;
             }
 
-            if (delta == WHEEL_DELTA) {
+            if (delta2 == WHEEL_DELTA) {
                 // special case the value coming from pinch gensture on thinkpad touchpad
                 // otherwise it's too slow (would end up 6)
                 delta = 16;
