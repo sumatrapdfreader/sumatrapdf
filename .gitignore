@@ -41,3 +41,4 @@ docs_epub_tmp
 this_is_invalid_location
 docs/www/*.html
 docs/www/img/
+docs/manual.dat
