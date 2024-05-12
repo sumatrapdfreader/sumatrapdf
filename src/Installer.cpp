@@ -18,6 +18,7 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
+#include "resource.h"
 #include "AppSettings.h"
 #include "Settings.h"
 #include "Flags.h"
@@ -99,7 +100,7 @@ char* GetInstallerLogPath() {
     return path::Join(dir, kLogFileName);
 }
 
-static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
+static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, const char* destDir) {
     logf("ExtractFiles(): dir '%s'\n", destDir);
     lzma::FileInfo* fi;
     u8* uncompressed;
@@ -937,18 +938,22 @@ static void ShowNoEmbeddedFiles(const WCHAR* msg) {
     MessageBoxW(nullptr, msg, caption, MB_OK);
 }
 
+static LoadedDataResource gLoadedArchive;
+
 static bool OpenEmbeddedFilesArchive() {
     if (gArchive.filesCount > 0) {
         log("OpenEmbeddedFilesArchive: already opened\n");
         return true;
     }
-    ByteSlice r = LockDataResource(1);
-    if (r.empty()) {
+    bool ok = LockDataResource(IDR_DLL_PAK, &gLoadedArchive);
+    if (!ok) {
         ShowNoEmbeddedFiles(L"No embbedded files");
         return false;
     }
 
-    bool ok = lzma::ParseSimpleArchive(r.data(), r.size(), &gArchive);
+    auto data = gLoadedArchive.data;
+    auto size = gLoadedArchive.dataSize;
+    ok = lzma::ParseSimpleArchive(data, (size_t)size, &gArchive);
     if (!ok) {
         ShowNoEmbeddedFiles(L"Embedded lzsa archive is corrupted");
         return false;
@@ -996,7 +1001,7 @@ bool ExtractInstallerFiles(char* dir) {
         return false;
     }
     // on error, ExtractFiles() shows error message itself
-    return ExtractFiles(&gArchive, dir);
+    return ExtractInstallerFiles(&gArchive, dir);
 }
 
 // returns true if should exit the installer

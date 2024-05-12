@@ -300,9 +300,14 @@ void DeleteCachedCursors();
 int GetMeasurementSystem();
 bool TrackMouseLeave(HWND);
 
+struct LoadedDataResource {
+    const u8* data = nullptr;
+    int dataSize = 0;
+};
+bool LockDataResource(int resId, LoadedDataResource*);
+
 HINSTANCE GetInstance();
 Size ButtonGetIdealSize(HWND hwnd);
-ByteSlice LockDataResource(int id);
 bool IsValidDelayType(int type);
 
 void HwndResizeClientSize(HWND, int, int);

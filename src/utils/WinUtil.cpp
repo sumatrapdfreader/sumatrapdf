@@ -2597,20 +2597,28 @@ Size ButtonGetIdealSize(HWND hwnd) {
     return res;
 }
 
-ByteSlice LockDataResource(int id) {
+constexpr int kResourceNotFound = -1;
+
+bool LockDataResource(int resId, LoadedDataResource* res) {
+    if (res->dataSize != 0) {
+        return res->dataSize != kResourceNotFound;
+    }
+
     auto h = GetModuleHandleW(nullptr);
-    WCHAR* name = MAKEINTRESOURCEW(id);
+    WCHAR* name = MAKEINTRESOURCEW(resId);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
-        return {};
+        res->dataSize = kResourceNotFound;
+        return false;
     }
-    HGLOBAL res = LoadResource(nullptr, resSrc);
-    if (!res) {
-        return {};
+    HGLOBAL hres = LoadResource(nullptr, resSrc);
+    if (!hres) {
+        res->dataSize = kResourceNotFound;
+        return false;
     }
-    const u8* data = (const u8*)LockResource(res);
-    DWORD dataSize = SizeofResource(nullptr, resSrc);
-    return {data, dataSize};
+    res->data = (const u8*)LockResource(hres);
+    res->dataSize = (int)SizeofResource(nullptr, resSrc);
+    return true;
 }
 
 bool IsValidDelayType(int type) {

@@ -20,6 +20,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/Archive.h"
 #include "utils/Timer.h"
+#include "utils/LzmaSimpleArchive.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -4804,6 +4805,71 @@ void DebugCorruptMemory() {
     // this triggers ntdll.dll!RtlReportCriticalFailure()
     free(s);
 #endif
+}
+
+static LoadedDataResource gManualArchiveData;
+static lzma::SimpleArchive gManualArchive{};
+
+bool OpenManualArchive() {
+    if (gManualArchive.filesCount > 0) {
+        return true;
+    }
+    bool ok = LockDataResource(IDR_MANUAL_PAK, &gManualArchiveData);
+    if (!ok) {
+        return false;
+    }
+    auto data = gManualArchiveData.data;
+    auto size = gManualArchiveData.dataSize;
+    ok = lzma::ParseSimpleArchive(data, (size_t)size, &gManualArchive);
+    if (!ok) {
+        logf("OpenManualArchive: lzma:ParseSimpleArchive() failed\n");
+        return false;
+    }
+    return true;
+}
+
+static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
+    logf("ExtractFiles(): dir '%s'\n", destDir);
+    lzma::FileInfo* fi;
+    u8* uncompressed;
+
+    int nFiles = archive->filesCount;
+
+    for (int i = 0; i < nFiles; i++) {
+        fi = &archive->files[i];
+        uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
+
+        if (!uncompressed) {
+            logf("ExtractFiles: lzma::GetFileDataByIdx() failed\n");
+            return false;
+        }
+        TempStr filePath = path::JoinTemp(destDir, fi->name);
+
+        ByteSlice d = {uncompressed, fi->uncompressedSize};
+        bool ok = file::WriteFile(filePath, d);
+        free(uncompressed);
+
+        if (!ok) {
+            logf("ExtractFiles: lzma::Write(%s) failed\n", filePath);
+            return false;
+        }
+        logf("  extracted '%s'\n", filePath);
+    }
+
+    return true;
+}
+
+bool ExtractManual() {
+    bool ok = OpenManualArchive();
+    if (!ok) {
+        return false;
+    }
+    TempStr dirName = str::FormatTemp("manual-%s", CURR_VERSION_STRA);
+    TempStr dir = AppGenDataFilenameTemp(dirName);
+    dir::CreateAll(dir);
+    logf("ExtractInstallerFiles() to '%s'\n", dir);
+    // on error, ExtractFiles() shows error message itself
+    return ExtractFiles(&gManualArchive, dir);
 }
 
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
