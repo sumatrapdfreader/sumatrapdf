@@ -91,60 +91,6 @@ struct ChmUI {
     bool useFixedPageUI;
 };
 
-// list of handlers for selected text, shown in context menu when text
-// selection is active. See [docs for more
-// information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
-struct SelectionHandler {
-    // url to invoke for the selection. ${selection} will be replaced with
-    // current selection and ${userlang} with language code for current UI
-    // (e.g. 'de' for German)
-    char* url;
-    // name shown in context menu
-    char* name;
-    //
-    int cmdID;
-};
-
-// list of additional external viewers for various file types. See [docs
-// for more
-// information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
-struct ExternalViewer {
-    // command line with which to call the external viewer, may contain %p
-    // for page number and "%1" for the file name (add quotation marks
-    // around paths containing spaces)
-    char* commandLine;
-    // name of the external viewer to be shown in the menu (implied by
-    // CommandLine if missing)
-    char* name;
-    // optional filter for which file types the menu item is to be shown;
-    // separate multiple entries using ';' and don't include any spaces
-    // (e.g. *.pdf;*.xps for all PDF and XPS documents)
-    char* filter;
-};
-
-// these override the default settings in the Print dialog
-struct PrinterDefaults {
-    // default value for scaling (shrink, fit, none)
-    char* printScale;
-};
-
-// customization options for how we show forward search results (used
-// from LaTeX editors)
-struct ForwardSearch {
-    // when set to a positive value, the forward search highlight style
-    // will be changed to a rectangle at the left of the page (with the
-    // indicated amount of margin from the page margin)
-    int highlightOffset;
-    // width of the highlight rectangle (if HighlightOffset is > 0)
-    int highlightWidth;
-    // color used for the forward search highlight
-    char* highlightColor;
-    ParsedColor highlightColorParsed;
-    // if true, highlight remains visible until the next mouse click
-    // (instead of fading away immediately)
-    bool highlightPermanent;
-};
-
 // default values for annotations in PDF documents
 struct Annotations {
     // highlight annotation color
@@ -175,6 +121,60 @@ struct Annotations {
     // default author for created annotations, use (none) to not add an
     // author at all. If not set will use Windows user name
     char* defaultAuthor;
+};
+
+// list of additional external viewers for various file types. See [docs
+// for more
+// information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
+struct ExternalViewer {
+    // command line with which to call the external viewer, may contain %p
+    // for page number and "%1" for the file name (add quotation marks
+    // around paths containing spaces)
+    char* commandLine;
+    // name of the external viewer to be shown in the menu (implied by
+    // CommandLine if missing)
+    char* name;
+    // optional filter for which file types the menu item is to be shown;
+    // separate multiple entries using ';' and don't include any spaces
+    // (e.g. *.pdf;*.xps for all PDF and XPS documents)
+    char* filter;
+};
+
+// customization options for how we show forward search results (used
+// from LaTeX editors)
+struct ForwardSearch {
+    // when set to a positive value, the forward search highlight style
+    // will be changed to a rectangle at the left of the page (with the
+    // indicated amount of margin from the page margin)
+    int highlightOffset;
+    // width of the highlight rectangle (if HighlightOffset is > 0)
+    int highlightWidth;
+    // color used for the forward search highlight
+    char* highlightColor;
+    ParsedColor highlightColorParsed;
+    // if true, highlight remains visible until the next mouse click
+    // (instead of fading away immediately)
+    bool highlightPermanent;
+};
+
+// these override the default settings in the Print dialog
+struct PrinterDefaults {
+    // default value for scaling (shrink, fit, none)
+    char* printScale;
+};
+
+// list of handlers for selected text, shown in context menu when text
+// selection is active. See [docs for more
+// information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
+struct SelectionHandler {
+    // url to invoke for the selection. ${selection} will be replaced with
+    // current selection and ${userlang} with language code for current UI
+    // (e.g. 'de' for German)
+    char* url;
+    // name shown in context menu
+    char* name;
+    //
+    int cmdID;
 };
 
 // custom keyboard shortcuts
@@ -301,41 +301,40 @@ struct SessionData {
     int sidebarDx;
 };
 
-// Most values on this structure can be updated through the UI and are
-// persisted in SumatraPDF-settings.txt
+// Preferences are persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {
-    // the name of the theme to use
-    char* theme;
-    // customization options for PDF, XPS, DjVu and PostScript UI
-    FixedPageUI fixedPageUI;
-    // customization options for Comic Book and images UI
-    ComicBookUI comicBookUI;
-    // customization options for CHM UI. If UseFixedPageUI is true,
-    // FixedPageUI settings apply instead
-    ChmUI chmUI;
-    // list of handlers for selected text, shown in context menu when text
-    // selection is active. See [docs for more
-    // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
-    Vec<SelectionHandler*>* selectionHandlers;
-    // list of additional external viewers for various file types. See
-    // [docs for more
-    // information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
-    Vec<ExternalViewer*>* externalViewers;
-    // zoom levels which zooming steps through in addition to Fit Page, Fit
-    // Width and the minimum and maximum allowed values (8.33 and 6400)
-    Vec<float>* zoomLevels;
-    // zoom step size in percents relative to the current zoom level. if
-    // zero or negative, the values from ZoomLevels are used instead
-    float zoomIncrement;
-    // these override the default settings in the Print dialog
-    PrinterDefaults printerDefaults;
-    // customization options for how we show forward search results (used
-    // from LaTeX editors)
-    ForwardSearch forwardSearch;
-    // default values for annotations in PDF documents
-    Annotations annotations;
-    // passwords to try when opening a password protected document
-    Vec<char*>* defaultPasswords;
+    // if true, we check once a day if an update is available
+    bool checkForUpdates;
+    // actual resolution of the main screen in DPI (if this value isn't
+    // positive, the system's UI setting is used)
+    int customScreenDPI;
+    // how pages should be laid out by default, needs to be synchronized
+    // with DefaultDisplayMode after deserialization and before
+    // serialization
+    char* defaultDisplayMode;
+    // default zoom (in %) or one of those values: fit page, fit width, fit
+    // content
+    char* defaultZoom;
+    // if true, we expose the SyncTeX inverse search command line in
+    // Settings -> Options
+    bool enableTeXEnhancements;
+    // if true, Esc key closes SumatraPDF
+    bool escToExit;
+    // if true, we show the full path to a file in the title bar
+    bool fullPathInTitle;
+    // pattern used to launch the LaTeX editor when doing inverse search
+    char* inverseSearchCmdLine;
+    // when restoring session, delay loading of documents until their tab
+    // is selected
+    bool lazyLoading;
+    // background color of the non-document windows, traditionally yellow
+    char* mainWindowBackground;
+    ParsedColor mainWindowBackgroundParsed;
+    // if true, doesn't open Home tab
+    bool noHomeTab;
+    // if true, a document will be reloaded automatically whenever it's
+    // changed (currently doesn't work for documents shown in the ebook UI)
+    bool reloadModifiedDocuments;
     // if true, we remember which files we opened and their display
     // settings
     bool rememberOpenedFiles;
@@ -345,37 +344,8 @@ struct GlobalPrefs {
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
-    // when restoring session, delay loading of documents until their tab
-    // is selected
-    bool lazyLoading;
-    // ISO code of the current UI language
-    char* uiLanguage;
-    // pattern used to launch the LaTeX editor when doing inverse search
-    char* inverseSearchCmdLine;
-    // if true, we expose the SyncTeX inverse search command line in
-    // Settings -> Options
-    bool enableTeXEnhancements;
-    // how pages should be laid out by default, needs to be synchronized
-    // with DefaultDisplayMode after deserialization and before
-    // serialization
-    char* defaultDisplayMode;
-    // default zoom (in %) or one of those values: fit page, fit width, fit
-    // content
-    char* defaultZoom;
-    // custom keyboard shortcuts
-    Vec<Shortcut*>* shortcuts;
-    // if true, Esc key closes SumatraPDF
-    bool escToExit;
     // if true, we'll always open files using existing SumatraPDF process
     bool reuseInstance;
-    // if true, a document will be reloaded automatically whenever it's
-    // changed (currently doesn't work for documents shown in the ebook UI)
-    bool reloadModifiedDocuments;
-    // background color of the non-document windows, traditionally yellow
-    char* mainWindowBackground;
-    ParsedColor mainWindowBackgroundParsed;
-    // if true, we show the full path to a file in the title bar
-    bool fullPathInTitle;
     // if false, the menu bar will be hidden for all newly opened windows
     // (use F9 to show it until the window closes or Alt to show it just
     // briefly), only applies if UseTabs is false
@@ -387,48 +357,77 @@ struct GlobalPrefs {
     // if true, we show table of contents (Bookmarks) sidebar if it's
     // present in the document
     bool showToc;
-    // if true, doesn't open Home tab
-    bool noHomeTab;
     // if true we draw a blue border around links in the document
     bool showLinks;
-    // if both favorites and bookmarks parts of sidebar are visible, this
-    // is the height of bookmarks (table of contents) part
-    int tocDy;
-    // width of favorites/bookmarks sidebar (if shown)
-    int sidebarDx;
-    // height of toolbar
-    int toolbarSize;
-    // maximum width of a single tab
-    int tabWidth;
-    // over-ride application font size. 0 means Windows default
-    int uIFontSize;
-    // font size for bookmarks and favorites tree views. 0 means Windows
-    // default
-    int treeFontSize;
-    // font name for bookmarks and favorites tree views. automatic means
-    // Windows default
-    char* treeFontName;
-    // if true, implements smooth scrolling
-    bool smoothScroll;
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
-    // if true, we check once a day if an update is available
-    bool checkForUpdates;
+    // width of favorites/bookmarks sidebar (if shown)
+    int sidebarDx;
+    // if true, implements smooth scrolling
+    bool smoothScroll;
+    // maximum width of a single tab
+    int tabWidth;
+    // the name of the theme to use
+    char* theme;
+    // if both favorites and bookmarks parts of sidebar are visible, this
+    // is the height of bookmarks (table of contents) part
+    int tocDy;
+    // height of toolbar
+    int toolbarSize;
+    // font name for bookmarks and favorites tree views. automatic means
+    // Windows default
+    char* treeFontName;
+    // font size for bookmarks and favorites tree views. 0 means Windows
+    // default
+    int treeFontSize;
+    // over-ride application font size. 0 means Windows default
+    int uIFontSize;
+    // if true, we use Windows system colors for background/text color.
+    // Over-rides other settings
+    bool useSysColors;
+    // if true, documents are opened in tabs instead of new windows
+    bool useTabs;
+    // zoom levels which zooming steps through in addition to Fit Page, Fit
+    // Width and the minimum and maximum allowed values (8.33 and 6400)
+    Vec<float>* zoomLevels;
+    // zoom step size in percents relative to the current zoom level. if
+    // zero or negative, the values from ZoomLevels are used instead
+    float zoomIncrement;
+    // customization options for PDF, XPS, DjVu and PostScript UI
+    FixedPageUI fixedPageUI;
+    // customization options for Comic Book and images UI
+    ComicBookUI comicBookUI;
+    // customization options for CHM UI. If UseFixedPageUI is true,
+    // FixedPageUI settings apply instead
+    ChmUI chmUI;
+    // default values for annotations in PDF documents
+    Annotations annotations;
+    // list of additional external viewers for various file types. See
+    // [docs for more
+    // information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
+    Vec<ExternalViewer*>* externalViewers;
+    // customization options for how we show forward search results (used
+    // from LaTeX editors)
+    ForwardSearch forwardSearch;
+    // these override the default settings in the Print dialog
+    PrinterDefaults printerDefaults;
+    // list of handlers for selected text, shown in context menu when text
+    // selection is active. See [docs for more
+    // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
+    Vec<SelectionHandler*>* selectionHandlers;
+    // custom keyboard shortcuts
+    Vec<Shortcut*>* shortcuts;
+    // passwords to try when opening a password protected document
+    Vec<char*>* defaultPasswords;
+    // ISO code of the current UI language
+    char* uiLanguage;
     // we won't ask again to update to this version
     char* versionToSkip;
     // default state of new windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
     Rect windowPos;
-    // if true, documents are opened in tabs instead of new windows
-    bool useTabs;
-    // if true, we use Windows system colors for background/text color.
-    // Over-rides other settings
-    bool useSysColors;
-    // actual resolution of the main screen in DPI (if this value isn't
-    // positive, the system's UI setting is used)
-    int customScreenDPI;
     // information about opened files (in most recently used order)
     Vec<FileState*>* fileStates;
     // state of the last session, usage depends on RestoreSession
@@ -508,34 +507,6 @@ static const FieldInfo gChmUIFields[] = {
 };
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
-static const FieldInfo gSelectionHandlerFields[] = {
-    {offsetof(SelectionHandler, url), SettingType::String, 0},
-    {offsetof(SelectionHandler, name), SettingType::String, 0},
-};
-static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 2, gSelectionHandlerFields, "URL\0Name"};
-
-static const FieldInfo gExternalViewerFields[] = {
-    {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
-    {offsetof(ExternalViewer, name), SettingType::String, 0},
-    {offsetof(ExternalViewer, filter), SettingType::String, 0},
-};
-static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 3, gExternalViewerFields,
-                                               "CommandLine\0Name\0Filter"};
-
-static const FieldInfo gPrinterDefaultsFields[] = {
-    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t) "shrink"},
-};
-static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale"};
-
-static const FieldInfo gForwardSearchFields[] = {
-    {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},
-    {offsetof(ForwardSearch, highlightWidth), SettingType::Int, 15},
-    {offsetof(ForwardSearch, highlightColor), SettingType::Color, (intptr_t) "#6581ff"},
-    {offsetof(ForwardSearch, highlightPermanent), SettingType::Bool, false},
-};
-static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForwardSearchFields,
-                                              "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent"};
-
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t) "#ffff00"},
     {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t) "#00ff00"},
@@ -552,6 +523,34 @@ static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations), 10, gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextSize\0FreeTextBorderWidth\0T"
     "extIconColor\0TextIconType\0DefaultAuthor"};
+
+static const FieldInfo gExternalViewerFields[] = {
+    {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
+    {offsetof(ExternalViewer, name), SettingType::String, 0},
+    {offsetof(ExternalViewer, filter), SettingType::String, 0},
+};
+static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 3, gExternalViewerFields,
+                                               "CommandLine\0Name\0Filter"};
+
+static const FieldInfo gForwardSearchFields[] = {
+    {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},
+    {offsetof(ForwardSearch, highlightWidth), SettingType::Int, 15},
+    {offsetof(ForwardSearch, highlightColor), SettingType::Color, (intptr_t) "#6581ff"},
+    {offsetof(ForwardSearch, highlightPermanent), SettingType::Bool, false},
+};
+static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForwardSearchFields,
+                                              "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent"};
+
+static const FieldInfo gPrinterDefaultsFields[] = {
+    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t) "shrink"},
+};
+static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale"};
+
+static const FieldInfo gSelectionHandlerFields[] = {
+    {offsetof(SelectionHandler, url), SettingType::String, 0},
+    {offsetof(SelectionHandler, name), SettingType::String, 0},
+};
+static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 2, gSelectionHandlerFields, "URL\0Name"};
 
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
@@ -660,63 +659,69 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
      (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-6.html"},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t) "automatic"},
+    {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t) "fit page"},
+    {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, fullPathInTitle), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
+    {offsetof(GlobalPrefs, lazyLoading), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, (intptr_t) "#80fff200"},
+    {offsetof(GlobalPrefs, noHomeTab), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, reloadModifiedDocuments), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, reuseInstance), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showMenubar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
     {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t) ""},
-    {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
-    {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
-    {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
-    {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, selectionHandlers), SettingType::Array, (intptr_t)&gSelectionHandlerInfo},
-    {offsetof(GlobalPrefs, externalViewers), SettingType::Array, (intptr_t)&gExternalViewerInfo},
-    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
+    {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t) "automatic"},
+    {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, uIFontSize), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
     {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray,
      (intptr_t) "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 "
                 "6400"},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t) "0"},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, printerDefaults), SettingType::Struct, (intptr_t)&gPrinterDefaultsInfo},
-    {offsetof(GlobalPrefs, forwardSearch), SettingType::Struct, (intptr_t)&gForwardSearchInfo},
+    {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
-    {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, lazyLoading), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
-    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
-    {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t) "automatic"},
-    {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t) "fit page"},
+    {offsetof(GlobalPrefs, externalViewers), SettingType::Array, (intptr_t)&gExternalViewerInfo},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, forwardSearch), SettingType::Struct, (intptr_t)&gForwardSearchInfo},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, printerDefaults), SettingType::Struct, (intptr_t)&gPrinterDefaultsInfo},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, selectionHandlers), SettingType::Array, (intptr_t)&gSelectionHandlerInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, shortcuts), SettingType::Array, (intptr_t)&gShortcutInfo},
-    {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, reuseInstance), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, reloadModifiedDocuments), SettingType::Bool, true},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, (intptr_t) "#80fff200"},
-    {offsetof(GlobalPrefs, fullPathInTitle), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, showMenubar), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, noHomeTab), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
-    {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
-    {offsetof(GlobalPrefs, uIFontSize), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t) "automatic"},
-    {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
+    {(size_t)-1, SettingType::Comment, (intptr_t) "You're not expected to change those manually"},
+    {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
+    {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
     {offsetof(GlobalPrefs, windowState), SettingType::Int, 1},
     {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo},
-    {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
-    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo},
     {offsetof(GlobalPrefs, reopenOnce), SettingType::StringArray, 0},
@@ -726,14 +731,14 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 63, gGlobalPrefsFields,
-    "\0Theme\0FixedPageUI\0ComicBookUI\0ChmUI\0\0SelectionHandlers\0ExternalViewers\0\0ZoomLevels\0ZoomIncrement\0\0Pri"
-    "nterDefaults\0ForwardSearch\0Annotations\0DefaultPasswords\0\0RememberOpenedFiles\0RememberStatePerDocument\0Resto"
-    "reSession\0LazyLoading\0UiLanguage\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0"
-    "Shortcuts\0EscToExit\0ReuseInstance\0ReloadModifiedDocuments\0\0MainWindowBackground\0FullPathInTitle\0ShowMenubar"
-    "\0ShowToolbar\0ShowFavorites\0ShowToc\0NoHomeTab\0ShowLinks\0TocDy\0SidebarDx\0ToolbarSize\0TabWidth\0UIFontSize\0"
-    "TreeFontSize\0TreeFontName\0SmoothScroll\0ShowStartPage\0CheckForUpdates\0VersionToSkip\0WindowState\0WindowPos\0U"
-    "seTabs\0UseSysColors\0CustomScreenDPI\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek"
-    "\0\0"};
+    sizeof(GlobalPrefs), 69, gGlobalPrefsFields,
+    "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
+    "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0ReloadModifiedDocuments\0RememberOpene"
+    "dFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowToolbar\0ShowFavorites\0ShowToc"
+    "\0ShowLinks\0ShowStartPage\0SidebarDx\0SmoothScroll\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSi"
+    "ze\0UIFontSize\0UseSysColors\0UseTabs\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0ComicBookUI\0\0ChmUI\0\0Annotat"
+    "ions\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0\0\0DefaultPassword"
+    "s\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
+    "OpenCountWeek\0\0"};
 
 #endif

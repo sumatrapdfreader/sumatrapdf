@@ -248,43 +248,34 @@ var (
 
 	globalPrefs = []*Field{
 		mkComment(""),
-		mkField("Theme", String, "", "the name of the theme to use").setDoc("Valid themes: light, dark, darker").setVersion("3.5"),
-		mkStruct("FixedPageUI", fixedPageUI,
-			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
-		mkStruct("ComicBookUI", comicBookUI,
-			"customization options for Comic Book and images UI").setExpert(),
-		mkStruct("ChmUI", chmUI,
-			"customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
 		mkEmptyLine(),
 
-		mkArray("SelectionHandlers", selectionHandler, "list of handlers for selected text, shown in context menu when text selection is active. See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)"),
-		mkArray("ExternalViewers", externalViewer,
-			"list of additional external viewers for various file types. "+
-				"See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)").setExpert(),
-		mkEmptyLine(),
-
-		//the below prefs don't apply to EbookUI (so far)
-		mkCompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
-			"zoom levels which zooming steps through in addition to Fit Page, Fit Width and "+
-				"the minimum and maximum allowed values (8.33 and 6400)").setExpert().setDoc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
-		mkField("ZoomIncrement", Float, 0,
-			"zoom step size in percents relative to the current zoom level. "+
-				"if zero or negative, the values from ZoomLevels are used instead").setExpert(),
-		mkEmptyLine(),
-
-		// the below prefs apply only to FixedPageUI and ComicBookUI (so far)
-		mkStruct("PrinterDefaults", printerDefaults,
-			"these override the default settings in the Print dialog").setExpert(),
-		mkStruct("ForwardSearch", forwardSearch,
-			"customization options for how we show forward search results (used from "+
-				"LaTeX editors)").setExpert(),
-		mkStruct("Annotations", annotations,
-			"default values for annotations in PDF documents").setExpert().setVersion("3.3"),
-		mkCompactArray("DefaultPasswords", String, nil,
-			"passwords to try when opening a password protected document").setDoc("a whitespace separated list of passwords to try when opening a password protected document " +
-			"(passwords containing spaces must be quoted)").setExpert().setVersion("2.4"),
-		mkEmptyLine(),
-
+		mkField("CheckForUpdates", Bool, true,
+			"if true, we check once a day if an update is available"),
+		mkField("CustomScreenDPI", Int, 0,
+			"actual resolution of the main screen in DPI (if this value "+
+				"isn't positive, the system's UI setting is used)").setExpert().setVersion("2.5"),
+		mkField("DefaultDisplayMode", String, "automatic",
+			"how pages should be laid out by default, needs to be synchronized with "+
+				"DefaultDisplayMode after deserialization and before serialization").setDoc("default layout of pages. valid values: automatic, single page, facing, " +
+			"book view, continuous, continuous facing, continuous book view"),
+		mkField("DefaultZoom", String, "fit page",
+			"default zoom (in %) or one of those values: fit page, fit width, fit content"),
+		mkField("EnableTeXEnhancements", Bool, false,
+			"if true, we expose the SyncTeX inverse search command line in Settings -> Options"),
+		mkField("EscToExit", Bool, false,
+			"if true, Esc key closes SumatraPDF").setExpert(),
+		mkField("FullPathInTitle", Bool, false,
+			"if true, we show the full path to a file in the title bar").setExpert().setVersion("3.0"),
+		mkField("InverseSearchCmdLine", String, nil,
+			"pattern used to launch the LaTeX editor when doing inverse search"),
+		mkField("LazyLoading", Bool, true, "when restoring session, delay loading of documents until their tab is selected").setVersion("3.6"),
+		mkField("MainWindowBackground", Color, mkRGBA(0xFF, 0xF2, 0x00, 0x80),
+			"background color of the non-document windows, traditionally yellow").setExpert(),
+		mkField("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
+		mkField("ReloadModifiedDocuments", Bool, true,
+			"if true, a document will be reloaded automatically whenever it's changed "+
+				"(currently doesn't work for documents shown in the ebook UI)").setExpert().setVersion("2.5"),
 		mkField("RememberOpenedFiles", Bool, true,
 			"if true, we remember which files we opened and their display settings"),
 		mkField("RememberStatePerDocument", Bool, true,
@@ -292,33 +283,8 @@ var (
 				"after UseDefaultState in FileStates)"),
 		mkField("RestoreSession", Bool, true,
 			"if true and SessionData isn't empty, that session will be restored at startup").setExpert(),
-		mkField("LazyLoading", Bool, true, "when restoring session, delay loading of documents until their tab is selected").setVersion("3.6"),
-		mkField("UiLanguage", String, nil,
-			"ISO code of the current UI language").setDoc("[ISO code](langs.html) of the current UI language"),
-		mkField("InverseSearchCmdLine", String, nil,
-			"pattern used to launch the LaTeX editor when doing inverse search"),
-		mkField("EnableTeXEnhancements", Bool, false,
-			"if true, we expose the SyncTeX inverse search command line in Settings -> Options"),
-		mkField("DefaultDisplayMode", String, "automatic",
-			"how pages should be laid out by default, needs to be synchronized with "+
-				"DefaultDisplayMode after deserialization and before serialization").setDoc("default layout of pages. valid values: automatic, single page, facing, " +
-			"book view, continuous, continuous facing, continuous book view"),
-		mkField("DefaultZoom", String, "fit page",
-			"default zoom (in %) or one of those values: fit page, fit width, fit content"),
-		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
-		mkField("EscToExit", Bool, false,
-			"if true, Esc key closes SumatraPDF").setExpert(),
 		mkField("ReuseInstance", Bool, true,
 			"if true, we'll always open files using existing SumatraPDF process").setExpert(),
-		mkField("ReloadModifiedDocuments", Bool, true,
-			"if true, a document will be reloaded automatically whenever it's changed "+
-				"(currently doesn't work for documents shown in the ebook UI)").setExpert().setVersion("2.5"),
-		mkEmptyLine(),
-
-		mkField("MainWindowBackground", Color, mkRGBA(0xFF, 0xF2, 0x00, 0x80),
-			"background color of the non-document windows, traditionally yellow").setExpert(),
-		mkField("FullPathInTitle", Bool, false,
-			"if true, we show the full path to a file in the title bar").setExpert().setVersion("3.0"),
 		mkField("ShowMenubar", Bool, true,
 			"if false, the menu bar will be hidden for all newly opened windows "+
 				"(use F9 to show it until the window closes or Alt to show it just briefly), only applies if UseTabs is false").setExpert().setVersion("2.5"),
@@ -329,28 +295,74 @@ var (
 		mkField("ShowToc", Bool, true,
 			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
 				"in the document"),
-		mkField("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
 		mkField("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").setVersion("3.6"),
+		mkField("ShowStartPage", Bool, true,
+			"if true, we show a list of frequently read documents when no document is loaded"),
+		mkField("SidebarDx", Int, 0,
+			"width of favorites/bookmarks sidebar (if shown)"),
+		mkField("SmoothScroll", Bool, false,
+			"if true, implements smooth scrolling").setExpert(),
+		mkField("TabWidth", Int, 300,
+			"maximum width of a single tab"),
+		mkField("Theme", String, "", "the name of the theme to use").setDoc("Valid themes: light, dark, darker").setVersion("3.5"),
 		mkField("TocDy", Int, 0,
 			"if both favorites and bookmarks parts of sidebar are visible, this is "+
 				"the height of bookmarks (table of contents) part"),
-		mkField("SidebarDx", Int, 0,
-			"width of favorites/bookmarks sidebar (if shown)"),
 		mkField("ToolbarSize", Int, 18, "height of toolbar").setVersion("3.4"),
-		mkField("TabWidth", Int, 300,
-			"maximum width of a single tab"),
-		mkField("UIFontSize", Int, 0,
-			"over-ride application font size. 0 means Windows default").setVersion("3.6"),
-		mkField("TreeFontSize", Int, 0,
-			"font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
 		mkField("TreeFontName", String, "automatic",
 			"font name for bookmarks and favorites tree views. automatic means Windows default"),
-		mkField("SmoothScroll", Bool, false,
-			"if true, implements smooth scrolling").setExpert(),
-		mkField("ShowStartPage", Bool, true,
-			"if true, we show a list of frequently read documents when no document is loaded"),
-		mkField("CheckForUpdates", Bool, true,
-			"if true, we check once a day if an update is available"),
+		mkField("TreeFontSize", Int, 0,
+			"font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
+		mkField("UIFontSize", Int, 0,
+			"over-ride application font size. 0 means Windows default").setVersion("3.6"),
+		mkField("UseSysColors", Bool, false,
+			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
+		mkField("UseTabs", Bool, true,
+			"if true, documents are opened in tabs instead of new windows").setVersion("3.0"),
+		mkCompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
+			"zoom levels which zooming steps through in addition to Fit Page, Fit Width and "+
+				"the minimum and maximum allowed values (8.33 and 6400)").setExpert().setDoc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
+		mkField("ZoomIncrement", Float, 0,
+			"zoom step size in percents relative to the current zoom level. "+
+				"if zero or negative, the values from ZoomLevels are used instead").setExpert(),
+
+		mkEmptyLine(),
+
+		mkStruct("FixedPageUI", fixedPageUI,
+			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
+		mkEmptyLine(),
+		mkStruct("ComicBookUI", comicBookUI,
+			"customization options for Comic Book and images UI").setExpert(),
+		mkEmptyLine(),
+		mkStruct("ChmUI", chmUI,
+			"customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
+		mkEmptyLine(),
+		mkStruct("Annotations", annotations,
+			"default values for annotations in PDF documents").setExpert().setVersion("3.3"),
+		mkEmptyLine(),
+		mkArray("ExternalViewers", externalViewer,
+			"list of additional external viewers for various file types. "+
+				"See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)").setExpert(),
+		mkEmptyLine(),
+		mkStruct("ForwardSearch", forwardSearch,
+			"customization options for how we show forward search results (used from "+
+				"LaTeX editors)").setExpert(),
+		mkEmptyLine(),
+		mkStruct("PrinterDefaults", printerDefaults,
+			"these override the default settings in the Print dialog").setExpert(),
+		mkEmptyLine(),
+		mkArray("SelectionHandlers", selectionHandler, "list of handlers for selected text, shown in context menu when text selection is active. See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)"),
+		mkEmptyLine(),
+		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
+		mkEmptyLine(),
+
+		// those are at the end because not expect user to change them manually
+		mkComment("You're not expected to change those manually"),
+		mkCompactArray("DefaultPasswords", String, nil,
+			"passwords to try when opening a password protected document").setDoc("a whitespace separated list of passwords to try when opening a password protected document " +
+			"(passwords containing spaces must be quoted)").setExpert().setVersion("2.4"),
+		mkField("UiLanguage", String, nil,
+			"ISO code of the current UI language").setDoc("[ISO code](langs.html) of the current UI language"),
 		mkField("VersionToSkip", String, nil,
 			"we won't ask again to update to this version"),
 		mkField("WindowState", Int, 1,
@@ -358,26 +370,20 @@ var (
 			"3 is fullscreen, 4 is minimized"),
 		mkCompactStruct("WindowPos", windowPos,
 			"default position (can be on any monitor)").setStructName("Rect").setDoc("default position (x, y) and size (width, height) of the window"),
-		mkField("UseTabs", Bool, true,
-			"if true, documents are opened in tabs instead of new windows").setVersion("3.0"),
-		mkField("UseSysColors", Bool, false,
-			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
-		mkField("CustomScreenDPI", Int, 0,
-			"actual resolution of the main screen in DPI (if this value "+
-				"isn't positive, the system's UI setting is used)").setExpert().setVersion("2.5"),
-		mkEmptyLine(),
 
 		// file history and favorites
 		mkArray("FileStates", fileSettings,
 			"information about opened files (in most recently used order)"),
 		mkArray("SessionData", sessionData,
 			"state of the last session, usage depends on RestoreSession").setVersion("3.1"),
+
 		mkCompactArray("ReopenOnce", String, nil,
 			"a list of paths for files to be reopened at the next start "+
 				"or the string \"SessionData\" if this data is saved in SessionData "+
 				"(needed for auto-updating)").setDoc("data required for reloading documents after an auto-update").setVersion("3.0"),
 		mkCompactStruct("TimeOfLastUpdateCheck", fileTime,
 			"timestamp of the last update check").setStructName("FILETIME").setDoc("data required to determine when SumatraPDF last checked for updates"),
+
 		mkField("OpenCountWeek", Int, 0,
 			"week count since 2011-01-01 needed to \"age\" openCount values in file history").setDoc("value required to determine recency for the OpenCount value in FileStates"),
 		// non-serialized fields
@@ -392,6 +398,5 @@ var (
 	}
 
 	globalPrefsStruct = mkStruct("GlobalPrefs", globalPrefs,
-		"Most values on this structure can be updated through the UI and are persisted "+
-			"in SumatraPDF-settings.txt")
+		"Preferences are persisted in SumatraPDF-settings.txt")
 )
