@@ -64,11 +64,13 @@ END
 // for combined executable / installer, it's an lzsa archive that contains
 // libmupdf.dll, PdfPreview.dll and PdfFilter.dll
 #ifdef INSTALL_PAYLOAD_ZIP
-1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
+IDR_DLL_PAK             RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
 
-2                       RCDATA "..\\translations\\translations-good.txt"
-//2                       RCDATA "..\\translations\\translations.txt"
+IDR_TRANSLATIONS        RCDATA "..\\translations\\translations-good.txt"
+//IDR_TRANSLATIONS      RCDATA "..\\translations\\translations.txt"
+
+IDR_MANUAL_PAK          RCDATA               "..\\docs\\manual.dat"
 
 /////////////////////////////////////////////////////////////////////////////
 

@@ -981,6 +981,7 @@ workspace "SumatraPDF"
       linkoptions { "/INFERASANLIBS" }
     filter {}
     -- dependson { "PdfFilter", "PdfPreview", "test_util" }
+    prebuildcommands { "cd %{cfg.targetdir}\\..\\.. & go run ./do -gen-docs"  }
 
   -- a dll version where most functionality is in libmupdf.dll
   project "SumatraPDF-dll"
@@ -1037,7 +1038,8 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     dependson { "PdfFilter", "PdfPreview", "test_util" }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
+    prebuildcommands { "cd %{cfg.targetdir}\\..\\.. & .\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
+    prebuildcommands { "cd %{cfg.targetdir}\\..\\.. & go run ./do -gen-docs"  }
 
 workspace "MakeLZSA"
   configurations { "Debug", "Release" }
@@ -1058,10 +1060,6 @@ workspace "MakeLZSA"
   warnings "Extra"
 
   location "this_is_invalid_location"
-
-  filter "action:vs2019"
-    location "vs2019"
-  filter {}
 
   filter "action:vs2022"
     location "vs2022"
@@ -1103,6 +1101,13 @@ workspace "MakeLZSA"
     "_WIN32_WINNT=0x0603"
   }
 
+  project "zlib"
+    kind "StaticLib"
+    language "C"
+    optconf()
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    zlib_files()
+
   project "MakeLZSA"
     kind "ConsoleApp"
     language "C++"
@@ -1126,4 +1131,4 @@ workspace "MakeLZSA"
     includedirs { "ext/bzip2", "ext/lzma/C" }
     unarr_files()
     links_zlib()
-    links { "shlwapi", "version", "comctl32" }
+    links { "shlwapi", "version", "comctl32", "wininet" }

@@ -115,20 +115,21 @@ bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::functi
     }
 
     bool isFile;
-    do {
+    for (; FindNextFileW(hfind, &fdata);) {
         isFile = IsRegularFile(fdata.dwFileAttributes);
-        if (isFile) {
-            char* name = ToUtf8Temp(fdata.cFileName);
-            char* filePath = path::JoinTemp(dir, name);
-            bool matches = true;
-            if (fileMatchesFn) {
-                matches = fileMatchesFn(filePath);
-            }
-            if (matches) {
-                files.Append(filePath);
-            }
+        if (!isFile) {
+            continue;
         }
-    } while (FindNextFileW(hfind, &fdata));
+        char* name = ToUtf8Temp(fdata.cFileName);
+        char* filePath = path::JoinTemp(dir, name);
+        bool matches = true;
+        if (fileMatchesFn) {
+            matches = fileMatchesFn(filePath);
+        }
+        if (matches) {
+            files.Append(filePath);
+        }
+    }
     FindClose(hfind);
     return true;
 }

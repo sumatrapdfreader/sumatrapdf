@@ -1226,8 +1226,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     bool vScroll = !hScroll;
     bool isCont = !IsContinuous(win->ctrl->GetDisplayMode());
 
-    //logf("delta: %d, accumDelta: %d, hscroll: %d, continuous: %d, gDeltaPerLine: %d\n", (int)delta, win->wheelAccumDelta,
-    //     (int)hScroll, (int)isCont, gDeltaPerLine);
+    // logf("delta: %d, accumDelta: %d, hscroll: %d, continuous: %d, gDeltaPerLine: %d\n", (int)delta,
+    // win->wheelAccumDelta,
+    //      (int)hScroll, (int)isCont, gDeltaPerLine);
 
     if (hScroll) {
         gSuppressAltKey = true;
@@ -1309,7 +1310,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         while (win->wheelAccumDelta <= -gDeltaPerLine) {
             SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
             win->wheelAccumDelta += gDeltaPerLine;
-            //logf("  line down\n");
+            // logf("  line down\n");
             didScrollByLine = true;
         }
     } else {
@@ -1317,7 +1318,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         while (win->wheelAccumDelta >= gDeltaPerLine) {
             SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
             win->wheelAccumDelta -= gDeltaPerLine;
-            //logf("  line up\n");
+            // logf("  line up\n");
             didScrollByLine = true;
         }
     }
@@ -1336,7 +1337,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         // we don't flip a page if we did scroll by line
         return 0;
     }
-    //logf("  flip page: delta: %d, accumDelta: %d\n", (int)delta, (int)win->wheelAccumDelta);
+    // logf("  flip page: delta: %d, accumDelta: %d\n", (int)delta, (int)win->wheelAccumDelta);
     if (delta > 0) {
         win->ctrl->GoToPrevPage(true);
     } else {

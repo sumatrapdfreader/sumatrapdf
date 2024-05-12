@@ -690,9 +690,15 @@ static bool ExeHasNameOfInstaller() {
     return str::FindI(exeName, "install");
 }
 
-static bool ExeHasInstallerResources() {
-    HRSRC resSrc = FindResourceW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+static bool HasDataResource(int id) {
+    auto resName = MAKEINTRESOURCEW(id);
+    auto hmod = GetModuleHandleW(nullptr);
+    HRSRC resSrc = FindResourceW(hmod, resName, RT_RCDATA);
     return resSrc != nullptr;
+}
+
+static bool ExeHasInstallerResources() {
+    return HasDataResource(IDR_DLL_PAK);
 }
 
 static bool IsInstallerAndNamedAsSuch() {

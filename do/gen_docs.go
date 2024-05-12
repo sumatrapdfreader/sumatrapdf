@@ -392,7 +392,7 @@ func mdToHTMLAll() {
 		must(err)
 	}
 	writeDocsHtmlFiles()
-	u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
+	//u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
 	logf("mdToHTMLAll finished in %s\n", time.Since(timeStart))
 }
 

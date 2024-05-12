@@ -87,6 +87,9 @@
     <ClInclude Include="..\src\utils\ColorUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\DirIter.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\Dpi.h">
       <Filter>src\utils</Filter>
     </ClInclude>
@@ -100,6 +103,9 @@
       <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrFormat.h">
       <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
@@ -248,6 +254,9 @@
     <ClCompile Include="..\src\utils\ColorUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\DirIter.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\Dpi.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
@@ -261,6 +270,9 @@
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrFormat.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">

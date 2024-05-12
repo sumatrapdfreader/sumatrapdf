@@ -64,6 +64,10 @@
 
 #define IDC_STATIC                      -1
 
+#define IDR_DLL_PAK                     1
+#define IDR_TRANSLATIONS                2
+#define IDR_MANUAL_PAK                  3
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
