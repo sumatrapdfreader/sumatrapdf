@@ -256,6 +256,7 @@ func main() {
 		flgBuildLogview    bool
 		flgBuildNo         int
 		flgUpdateGoDeps    bool
+		flgGenDocs         bool
 	)
 
 	{
@@ -292,8 +293,13 @@ func main() {
 		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win. Use -upload to also upload it to backblaze")
 		flag.IntVar(&flgBuildNo, "build-no-info", 0, "print build number info for given build number")
 		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
-
+		flag.BoolVar(&flgGenDocs, "gen-docs", false, "generate html docs in docs/www from markdown in docs/md")
 		flag.Parse()
+	}
+
+	if flgGenDocs {
+		mdToHTMLAll()
+		return
 	}
 
 	if flgExtractUtils {

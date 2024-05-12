@@ -1,18 +1,5 @@
 [SumatraPDF](https://www.sumatrapdfreader.org/) is a free [PDF, EPUB, MOBI, CHM, XPS, DjVu, CBZ and CBR](Supported-document-formats.md) reader for Windows. It's small and starts up fast. Simplicity of user interface is important to us.
 
-## Downloads
-
-- [latest stable release](https://www.sumatrapdfreader.org/download-free-pdf-viewer)
-- [pre-release builds](https://www.sumatrapdfreader.org/prerelease) (latest features, potentially buggy)
-
-## Feedback
-
-Found a bug? Have feature request? Submit via [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues) and  [vote for features](https://sumatrapdf.canny.io/feature-requests) you want to see next.
-
-Have feedback or question? Discuss in a [forum](https://github.com/sumatrapdfreader/sumatrapdf/discussions).
-
-Want to make SumatraPDF work better in your language? [Contribute a translation.](Contribute-translation.md)
-
 :columns
 ## Documentation for users
 
@@ -90,6 +77,19 @@ Want to make SumatraPDF work better in your language? [Contribute a translation.
 
 [Source code downloads](Source-code-downloads.md)
 :columns
+
+## Downloads
+
+- [latest stable release](https://www.sumatrapdfreader.org/download-free-pdf-viewer)
+- [pre-release builds](https://www.sumatrapdfreader.org/prerelease) (latest features, potentially buggy)
+
+## Feedback
+
+Found a bug? Have feature request? Submit via [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues) and  [vote for features](https://sumatrapdf.canny.io/feature-requests) you want to see next.
+
+Have feedback or question? Discuss in a [forum](https://github.com/sumatrapdfreader/sumatrapdf/discussions).
+
+Want to make SumatraPDF work better in your language? [Contribute a translation.](Contribute-translation.md)
 
 ## Home screen
 

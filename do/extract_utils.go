@@ -147,7 +147,7 @@ func copyFilesRecurMust(dstDir, srcDir string) {
 func copyFileMust(dst, src string) {
 	_, err := os.Stat(dst)
 	if err == nil {
-		logf("destination '%s' already exists, skipping\n")
+		logf("destination '%s' already exists, skipping\n", dst)
 		return
 	}
 	logf("copy %s => %s\n", src, dst)
