@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -409,6 +410,15 @@ func writeDocsHtmlFiles() {
 		dstDir := filepath.Join("docs", "www", "img")
 		srcDir := filepath.Join("docs", "md", "img")
 		copyFilesRecurMust(dstDir, srcDir)
+	}
+	{
+		// create lzsa archive
+		makeLzsa := filepath.Join("bin", "MakeLZSA.exe")
+		archive := filepath.Join("docs", "manual.dat")
+		os.Remove(archive)
+		docsDir := filepath.Join("docs", "www")
+		cmd := exec.Command(makeLzsa, archive, docsDir)
+		runCmdLoggedMust(cmd)
 	}
 }
 

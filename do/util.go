@@ -107,10 +107,9 @@ func runExeInDirMust(dir string, c string, args ...string) []byte {
 	return []byte(out)
 }
 
-func runExeLoggedMust(c string, args ...string) []byte {
+func runExeLoggedMust(c string, args ...string) {
 	cmd := exec.Command(c, args...)
-	out := runCmdLoggedMust(cmd)
-	return []byte(out)
+	runCmdLoggedMust(cmd)
 }
 
 func makePrintDuration(name string) func() {
@@ -228,14 +227,13 @@ func fmdCmdShort(cmd *exec.Cmd) string {
 	return cmd2.String()
 }
 
-func runCmdLoggedMust(cmd *exec.Cmd) string {
+func runCmdLoggedMust(cmd *exec.Cmd) {
 	logf(">2 %s\n", fmdCmdShort(cmd))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	err := cmd.Run()
 	must(err)
-	return ""
 }
 
 func createDirMust(path string) string {
