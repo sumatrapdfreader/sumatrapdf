@@ -609,15 +609,22 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         }
     }
 
-    Point mousePos = Point(x, y);
     DisplayModel* dm = win->AsFixed();
+    // note: before 3.5 double-click used to turn 2 pages
+    // OnMouseLeftButtonDown(win, x, y, key);
+    Point mousePos = Point(x, y);
     bool isOverText = dm->IsOverText(mousePos);
-    if (!isOverText && isLeft && (win->presentation || win->isFullScreen)) {
-        // note: before 3.5 used to turn 2 pages
-        // OnMouseLeftButtonDown(win, x, y, key);
-        ExitFullScreen(win);
-        return;
+
+    if (isLeft && (win->presentation || win->isFullScreen)) {
+        // in fullscreen we allow to exit by tapping in upper right corner
+        constexpr int kCornerSize = 64;
+        Rect r = ClientRect(win->hwndCanvas);
+        if (!isOverText && (x >= (r.dx - kCornerSize)) && (y < kCornerSize)) {
+            ExitFullScreen(win);
+            return;
+        }
     }
+
     int elementPageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
