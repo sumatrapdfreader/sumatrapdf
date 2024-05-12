@@ -5178,7 +5178,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ctrl->GoToPrevPage();
             break;
 
-        // TODO: rename CmdScrolDownOrNextPage
         case CmdScrollDown: {
             if (!win->IsDocLoaded()) {
                 return 0;

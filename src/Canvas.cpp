@@ -1222,31 +1222,44 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return 0;
     }
 
-    bool horizontalScroll = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
-    if (horizontalScroll) {
+    bool hScroll = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
+    bool vScroll = !hScroll;
+    bool isCont = !IsContinuous(win->ctrl->GetDisplayMode());
+
+    //logf("delta: %d, accumDelta: %d, hscroll: %d, continuous: %d, gDeltaPerLine: %d\n", (int)delta, win->wheelAccumDelta,
+    //     (int)hScroll, (int)isCont, gDeltaPerLine);
+
+    if (hScroll) {
         gSuppressAltKey = true;
     }
 
-    constexpr int pageFlipDelta = WHEEL_DELTA * 3;
-    bool isSinglePage = !IsContinuous(win->ctrl->GetDisplayMode());
-    float zoomVirt = win->ctrl->GetZoomVirtual();
-    bool flipPage = (zoomVirt == kZoomFitContent) || (zoomVirt == kZoomFitPage);
-    // Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
-    if (!horizontalScroll && isSinglePage && flipPage) {
-        //logf("1: delta: %d, accumDelta: %d\n", (int)delta, win->wheelAccumDelta);
-        win->wheelAccumDelta += delta;
-
-        if (win->wheelAccumDelta >= pageFlipDelta) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= pageFlipDelta;
+    if (vScroll && !isCont) {
+        constexpr int pageFlipDelta = WHEEL_DELTA * 3;
+        float zoomVirt = win->ctrl->GetZoomVirtual();
+        // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
+        bool flipPage = zoomVirt == kZoomFitContent;
+        DisplayModel* dm = win->AsFixed();
+        if (dm && !dm->NeedVScroll()) {
+            // if page/pages fully fit in window, flip the whole page
+            // logf("  flipping page because !dm->NeedVScroll()\n");
+            flipPage = true;
+        }
+        // int scrolLPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+        //  Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
+        if (flipPage) {
+            win->wheelAccumDelta += delta;
+            if (win->wheelAccumDelta >= pageFlipDelta) {
+                win->ctrl->GoToPrevPage();
+                win->wheelAccumDelta -= pageFlipDelta;
+                return 0;
+            }
+            if (win->wheelAccumDelta <= -pageFlipDelta) {
+                win->ctrl->GoToNextPage();
+                win->wheelAccumDelta += pageFlipDelta;
+                return 0;
+            }
             return 0;
         }
-        if (win->wheelAccumDelta <= -pageFlipDelta) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += pageFlipDelta;
-            return 0;
-        }
-        return 0;
     }
 
     if (gDeltaPerLine == 0) {
@@ -1258,9 +1271,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         SCROLLINFO si{};
         si.cbSize = sizeof(si);
         si.fMask = SIF_PAGE;
-        GetScrollInfo(win->hwndCanvas, horizontalScroll ? SB_HORZ : SB_VERT, &si);
+        GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
         int scrollBy = -MulDiv(si.nPage, delta, WHEEL_DELTA);
-        if (horizontalScroll) {
+        if (hScroll) {
             win->AsFixed()->ScrollXBy(scrollBy);
         } else {
             win->AsFixed()->ScrollYBy(scrollBy, true);
@@ -1287,33 +1300,47 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     win->wheelAccumDelta += delta;
-    int currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+    int prevScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
 
-    while (win->wheelAccumDelta >= gDeltaPerLine) {
-        if (horizontalScroll) {
-            SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
-        } else {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+    UINT scrollMsg = hScroll ? WM_HSCROLL : WM_VSCROLL;
+    bool didScrollByLine = false;
+    if (win->wheelAccumDelta < 0) {
+        WPARAM scrollWp = hScroll ? SB_LINERIGHT : SB_LINEDOWN;
+        while (win->wheelAccumDelta <= -gDeltaPerLine) {
+            SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
+            win->wheelAccumDelta += gDeltaPerLine;
+            //logf("  line down\n");
+            didScrollByLine = true;
         }
-        win->wheelAccumDelta -= gDeltaPerLine;
+    } else {
+        WPARAM scrollWp = hScroll ? SB_LINELEFT : SB_LINEUP;
+        while (win->wheelAccumDelta >= gDeltaPerLine) {
+            SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
+            win->wheelAccumDelta -= gDeltaPerLine;
+            //logf("  line up\n");
+            didScrollByLine = true;
+        }
     }
-    while (win->wheelAccumDelta <= -gDeltaPerLine) {
-        if (horizontalScroll) {
-            SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
-        } else {
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
-        }
-        win->wheelAccumDelta += gDeltaPerLine;
+    // in non-continuous mode flip page if necessary
+    if (!vScroll || !isCont) {
+        return 0;
+    }
+    if (!didScrollByLine) {
+        // we haven't reached accumulated delta to scroll by line
+        return 0;
     }
 
-    bool didNotScroll = GetScrollPos(win->hwndCanvas, SB_VERT) == currentScrollPos;
-    if (!horizontalScroll && isSinglePage && didNotScroll) {
-        logf("2: delta: %d, accumDelta: %d\n", (int)delta, (int)win->wheelAccumDelta);
-        if (delta > 0) {
-            win->ctrl->GoToPrevPage(true);
-        } else {
-            win->ctrl->GoToNextPage();
-        }
+    int currScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+    bool didScroll = (currScrollPos != prevScrollPos);
+    if (didScroll) {
+        // we don't flip a page if we did scroll by line
+        return 0;
+    }
+    //logf("  flip page: delta: %d, accumDelta: %d\n", (int)delta, (int)win->wheelAccumDelta);
+    if (delta > 0) {
+        win->ctrl->GoToPrevPage(true);
+    } else {
+        win->ctrl->GoToNextPage();
     }
 
     return 0;
@@ -1597,13 +1624,16 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return OnGesture(win, msg, wp, lp);
 
         case WM_NCPAINT: {
+            DisplayModel* dm = win->AsFixed();
             // check whether scrolling is required in the horizontal and/or vertical axes
             int requiredScrollAxes = -1;
-            if (win->AsFixed()->NeedHScroll() && win->AsFixed()->NeedVScroll()) {
+            bool needH = dm->NeedHScroll();
+            bool needV = dm->NeedVScroll();
+            if (needH && needV) {
                 requiredScrollAxes = SB_BOTH;
-            } else if (win->AsFixed()->NeedHScroll()) {
+            } else if (needH) {
                 requiredScrollAxes = SB_HORZ;
-            } else if (win->AsFixed()->NeedVScroll()) {
+            } else if (needV) {
                 requiredScrollAxes = SB_VERT;
             }
 
