@@ -25,7 +25,7 @@ ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
 nl:%s aantekening. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
-pt:Anotação %s. Ctrl +clique pra editar.
+pt:Anotação %s. Ctrl + clique pra editar.
 ro:%s adnotare. Ctrl+clic să modifici
 ru:Аннотация %s. Ctrl+щелчок для изменения.
 sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
@@ -118,7 +118,7 @@ kr:실제 크기(&A)
 nl:&Ware grootte
 no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
-pt:T&amanho real
+pt:&Tamanho Real
 ro:&Mărimea actuală
 ru:Насто&ящий размер
 sk:&Aktuálna veľkosť
@@ -170,7 +170,7 @@ nl:&Geavanceerde Opties...
 nn:&Avanserte innstillingar
 no:&Avanserte innstillinger
 pl:Opcje &zaawansowane...
-pt:Opções &avançadas...
+pt:Opções &Avançadas...
 ro:Opțiuni &avansate...
 ru:&Расширенные настройки...
 sk:&Rozšírené možnosti...
@@ -3363,7 +3363,7 @@ nl:Voeg Favoriet toe
 nn:Legg til ein favoritt
 no:Legg til i Favoritter
 pl:Dodaj do ulubionych
-pt:Adicionar favorito
+pt:Adicionar Favorito
 ro:Adaugă ca favorit
 ru:&Добавить в избранное
 sk:Pridať obľúbenú položku
@@ -3416,7 +3416,7 @@ nl:Voeg pagina %s toe aan Favorieten
 nn:Legg til side %s i favorittane
 no:Legg til side %s i favoritter
 pl:Dodaj stronę %s do ulubionych
-pt:Adicionar página %s aos favoritos
+pt:Adicionar a página %s aos favoritos
 ro:Adaugă pagina %s la favorite
 ru:Добавить стр. %s в избранное
 sk:Pridať stranu %s k obľúbeným
@@ -3469,7 +3469,7 @@ nl:Voeg pagina %s toe aan Favorieten met (optionele) naam:
 nn:Legg til side %s i favorittane med (valfritt) namn:
 no:Legg til side %s i favoritter med (valgfritt) navn:
 pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
-pt:Adicionar página %s aos favoritos com nome (opcional):
+pt:Adicionar a página %s aos favoritos com o nome (opcional):
 ro:Adaugă pagina %s la favorite cu (opțional) numele:
 ru:Добавить стр. %s в избранное с (необязательным) именем:
 sk:Pridať stranu %s k obľúbeným s (voliteľným) názvom:
@@ -4155,7 +4155,7 @@ nl:Automatisch controleren op &updates
 nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
 pl:&Szukaj aktualizacji automatycznie
-pt:Procurar atualizações a&utomaticamente
+pt:Procurar atualizações &automaticamente
 ro:Urmărește automat &versiuni noi
 ru:&Автоматически проверять обновления
 sk:Automaticky kontrolovať &aktualizácie
@@ -4841,7 +4841,7 @@ nl:Taal wijzigen (Change Language)
 nn:Byt språk (Change Language)
 no:Endre språk (Change Language)
 pl:Zmień język (Change Language)
-pt:Mudar idioma
+pt:Mudar Idioma
 ro:Schimbare limbă (Change Language)
 ru:Изменить &язык (Change Language)
 sk:Zmeniť jazyk (Change Language)
@@ -5146,6 +5146,7 @@ it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
+pt:Fechar Todas as Abas
 ro:Închide toate filele
 ru:Закрыть все вкладки
 sk:Zatvoriť všetky karty
@@ -5210,6 +5211,7 @@ it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
+pt:Fechar as Abas a Esquerda
 ro:Închide filele la stânga
 ru:Закрыть вкладки слева
 sk:Zatvoriť karty vľavo
@@ -7286,6 +7288,7 @@ it:Cancella
 ja:削除
 nl:Verwijderen
 pl:Usuń
+pt:Apagar
 ro:Șterge
 ru:Удалить
 sk:Odstrániť
@@ -11307,6 +11310,11 @@ tw:漫畫模式(&G)
 uk:Режим манги
 vn:Kiểu &Manga
 :Manual On Website
+br:Manual no Site da Web
+de:Handbuch im Internet
+fr:Manuel sur le site web
+pl:Instrukcja obsługi na stronie internetowej
+pt:Manual no Site da Web
 :Match Case
 am:Հաշվի առնել մեծատառ/փոքրատառը
 ar:مطابقة حالة الأحرف

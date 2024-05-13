@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ce02bebe7256a27846ac22ddf83a6551f656bc30
+19fb33e3a1300ebfd6a7c46440f422d1c000a246
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -25,7 +25,7 @@ ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
 nl:%s aantekening. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
-pt:Anotação %s. Ctrl +clique pra editar.
+pt:Anotação %s. Ctrl + clique pra editar.
 ro:%s adnotare. Ctrl+clic să modifici
 ru:Аннотация %s. Ctrl+щелчок для изменения.
 sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
@@ -142,7 +142,7 @@ ne:वास्तविक आकार
 nl:&Ware grootte
 no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
-pt:T&amanho real
+pt:&Tamanho Real
 ro:&Mărimea actuală
 ru:Насто&ящий размер
 sk:&Aktuálna veľkosť
@@ -205,7 +205,7 @@ nn:&Avanserte innstillingar
 no:&Avanserte innstillinger
 pa:&ਉੱਨਤ ਵਿਕਲਪ
 pl:Opcje &zaawansowane...
-pt:Opções &avançadas...
+pt:Opções &Avançadas...
 ro:Opțiuni &avansate...
 ru:&Расширенные настройки...
 si:සංකීර්ණ සැකසුුම්
@@ -3942,7 +3942,7 @@ nn:Legg til ein favoritt
 no:Legg til i Favoritter
 pa:ਪਸੰਦੀਦਾ ਜੋੜੋ
 pl:Dodaj do ulubionych
-pt:Adicionar favorito
+pt:Adicionar Favorito
 ro:Adaugă ca favorit
 ru:&Добавить в избранное
 si:ප්‍රියතම  ගොන්නට දමන්න
@@ -4012,7 +4012,7 @@ nn:Legg til side %s i favorittane
 no:Legg til side %s i favoritter
 pa:%s ਪੰਨੇ ਨੂੰ ਪਸੰਦੀਦਾ ਵਿੱਚ ਜੋੜੋ
 pl:Dodaj stronę %s do ulubionych
-pt:Adicionar página %s aos favoritos
+pt:Adicionar a página %s aos favoritos
 ro:Adaugă pagina %s la favorite
 ru:Добавить стр. %s в избранное
 si:%s වැනි පිටුව ප්‍රියතම ‌ගොන්නට දමන්න
@@ -4081,7 +4081,7 @@ nl:Voeg pagina %s toe aan Favorieten met (optionele) naam:
 nn:Legg til side %s i favorittane med (valfritt) namn:
 no:Legg til side %s i favoritter med (valgfritt) navn:
 pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
-pt:Adicionar página %s aos favoritos com nome (opcional):
+pt:Adicionar a página %s aos favoritos com o nome (opcional):
 ro:Adaugă pagina %s la favorite cu (opțional) numele:
 ru:Добавить стр. %s в избранное с (необязательным) именем:
 si:%s වැනි පිටුව ප්‍රියතම ‌‌ගොන්නට දමන්න (අවශ්‍යයනම්) නමකින්
@@ -4962,7 +4962,7 @@ nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
 pa:ਆਪਣੇ-ਆਪ &ਅਪਡੇਟਾਂ ਦੀ ਜਾਂਚ ਕਰੋ
 pl:&Szukaj aktualizacji automatycznie
-pt:Procurar atualizações a&utomaticamente
+pt:Procurar atualizações &automaticamente
 ro:Urmărește automat &versiuni noi
 ru:&Автоматически проверять обновления
 si:යාවත්කාලකිරීම් ස්වයක්‍රීයව සොයන්න
@@ -5831,7 +5831,7 @@ nn:Byt språk (Change Language)
 no:Endre språk (Change Language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ
 pl:Zmień język (Change Language)
-pt:Mudar idioma
+pt:Mudar Idioma
 ro:Schimbare limbă (Change Language)
 ru:Изменить &язык (Change Language)
 si:භාෂාව වෙනස්කරන්න (Change Language)
@@ -6187,6 +6187,7 @@ it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
+pt:Fechar Todas as Abas
 ro:Închide toate filele
 ru:Закрыть все вкладки
 sk:Zatvoriť všetky karty
@@ -6254,6 +6255,7 @@ it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
+pt:Fechar as Abas a Esquerda
 ro:Închide filele la stânga
 ru:Закрыть вкладки слева
 sk:Zatvoriť karty vľavo
@@ -8757,6 +8759,7 @@ it:Cancella
 ja:削除
 nl:Verwijderen
 pl:Usuń
+pt:Apagar
 ro:Șterge
 ru:Удалить
 sk:Odstrániť
@@ -13544,6 +13547,11 @@ uk:Режим манги
 uz:Man&ga usuli
 vn:Kiểu &Manga
 :Manual On Website
+br:Manual no Site da Web
+de:Handbuch im Internet
+fr:Manuel sur le site web
+pl:Instrukcja obsługi na stronie internetowej
+pt:Manual no Site da Web
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
 am:Հաշվի առնել մեծատառ/փոքրատառը
