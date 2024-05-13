@@ -1775,7 +1775,8 @@ ScrollState DisplayModel::GetScrollState() {
         return state;
     }
     if (gLogScrollState) {
-        logf("GetScrollState: page: %d, pageOnScreen: %d,%d\n", state.page, pageInfo->pageOnScreen.x, pageInfo->pageOnScreen.y);
+        logf("GetScrollState: page: %d, pageOnScreen: %d,%d\n", state.page, pageInfo->pageOnScreen.x,
+             pageInfo->pageOnScreen.y);
     }
 
     Rect screen(Point(), viewPort.Size());
@@ -1803,9 +1804,10 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
     if (gLogScrollState) {
         logf("SetScrollState: page: %d, pos: %d,%d\n", state.page, (int)state.x, (int)state.y);
     }
+    // must have both GoToPage() calls
+    GoToPage(state.page, false);
     // Bail out, if the page wasn't scrolled
     if (state.x < 0 && state.y < 0) {
-        GoToPage(state.page, false);
         if (gLogScrollState) {
             logf("  exit because not scrolled\n");
         }
