@@ -351,18 +351,6 @@ static DWORD WINAPI FileWatcherThread(void*) {
     return 0;
 }
 
-static void StartFileThreadIfNecessary() {
-    if (g_threadHandle) {
-        return;
-    }
-    logf("StartFileThreadIfNecessary: starting a thread\n");
-    InitializeCriticalSection(&g_threadCritSec);
-    g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-
-    g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
-    SetThreadName("FileWatcherThread", g_threadId);
-}
-
 static WatchedDir* FindExistingWatchedDir(const char* dirPath) {
     for (WatchedDir* wd = g_watchedDirs; wd; wd = wd->next) {
         // TODO: normalize dirPath?
@@ -468,8 +456,20 @@ WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>&
         logf("FileWatcherSubscribe: path='%s' doesn't exist\n", path);
         return nullptr;
     }
+    if (IsProcess32()) {
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/4111
+        logf("FileWatcherSubscribe: not starting a file watcher thread due to 32-bit miscompilation\n");
+        return nullptr;
+    }
 
-    StartFileThreadIfNecessary();
+    if (!g_threadHandle) {
+        logf("StartFileThreadIfNecessary: starting a thread\n");
+        InitializeCriticalSection(&g_threadCritSec);
+        g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+        g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
+        SetThreadName("FileWatcherThread", g_threadId);
+    }
 
     ScopedCritSec cs(&g_threadCritSec);
     return NewWatchedFile(path, onFileChangedCb);

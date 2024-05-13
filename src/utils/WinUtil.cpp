@@ -284,6 +284,10 @@ bool IsProcess64() {
     return 8 == sizeof(void*);
 }
 
+bool IsProcess32() {
+    return 4 == sizeof(void*);
+}
+
 // return true if running on a 64-bit OS
 bool IsOs64() {
     // 64-bit processes can only run on a 64-bit OS,
