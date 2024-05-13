@@ -191,6 +191,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},
     {FCONTROL | FVIRTKEY, VK_NEXT, CmdNextTab},
     {FCONTROL | FVIRTKEY, VK_PRIOR, CmdPrevTab},
+    {FVIRTKEY, VK_F1, CmdHelpOpenManual},
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
@@ -216,6 +217,7 @@ ACCEL gBuiltInAccelerators[] = {
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
     {0, 'c', CmdToggleContinuousView},
+
 };
 
 static void SkipWS(const char*& s) {

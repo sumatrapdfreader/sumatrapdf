@@ -11306,6 +11306,7 @@ tr:Man&ga Kipi
 tw:漫畫模式(&G)
 uk:Режим манги
 vn:Kiểu &Manga
+:Manual On Website
 :Match Case
 am:Հաշվի առնել մեծատառ/փոքրատառը
 ar:مطابقة حالة الأحرف
