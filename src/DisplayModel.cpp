@@ -1570,6 +1570,8 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
             ScrollYBy(centerI.y - fixPt->y, false);
         }
     }
+
+    cb->ZoomChanged(this, zoomLevel);
 }
 
 float DisplayModel::GetZoomVirtual(bool absolute) const {

@@ -106,6 +106,7 @@ const char* gPluginURL = nullptr; // owned by Flags in WinMain
 
 static Kind kNotifGroupPersistentWarning = "persistentWarning";
 static Kind kNotifGroupPageInfo = "pageInfoHelper";
+static Kind kNotifZoom = "zoom";
 
 FileHistory gFileHistory;
 Favorites gFavorites;
@@ -695,6 +696,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
         RepaintAsync(win, 0);
     }
     void PageNoChanged(DocController* ctrl, int pageNo) override;
+    void ZoomChanged(DocController* ctrl, float zoomVirtual) override;
     void UpdateScrollbars(Size canvas) override;
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
@@ -840,6 +842,21 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
+static TempStr BuildZoomString(float zoomLevel) {
+    const char* zoomLevelStr;
+    if (zoomLevel == kZoomFitPage) {
+        zoomLevelStr = _TRA("Fit Page");
+    } else if (zoomLevel == kZoomFitWidth) {
+        zoomLevelStr = _TRA("Fit Width");
+    } else if (zoomLevel == kZoomFitContent) {
+        zoomLevelStr = _TRA("Fit Content");
+    } else {
+        zoomLevelStr = str::FormatTemp("%.f%%", zoomLevel);
+    }
+    const char* zoomStr = _TRA("Zoom");
+    return str::FormatTemp("%s: %s", zoomStr, zoomLevelStr);
+}
+
 static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
     if (!ctrl->ValidPageNo(pageNo)) {
         pageNo = ctrl->CurrentPageNo();
@@ -850,6 +867,9 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
         TempStr label = ctrl->GetPageLabeTemp(pageNo);
         pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:"), label, pageNo, nPages);
     }
+    float zoomLevel = ctrl->GetZoomVirtual();
+    auto zoomStr = BuildZoomString(zoomLevel);
+    pageInfo = str::JoinTemp(pageInfo, " ", zoomStr);
     NotificationUpdateMessage(wnd, pageInfo);
 }
 
@@ -866,6 +886,19 @@ static void TogglePageInfoHelper(MainWindow* win) {
     args.groupId = kNotifGroupPageInfo;
     wnd = ShowNotification(args);
     UpdatePageInfoHelper(win->ctrl, wnd, -1);
+}
+
+void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float zoomVirtual) {
+    // discard change requests from documents
+    // loaded asynchronously in a background tab
+    if (win->ctrl != ctrl) {
+        return;
+    }
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    if (!wnd) {
+        return;
+    }
+    UpdatePageInfoHelper(win->ctrl, wnd, win->currPageNo);
 }
 
 // The current page edit box is updated with the current page number
@@ -2261,6 +2294,8 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupActionResponse);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
+
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
     win->mouseAction = MouseAction::None;
 
@@ -2559,6 +2594,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     ClearFindBox(win);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
 
     RememberRecentlyClosedDocument(tab->filePath);
 
@@ -3748,24 +3784,17 @@ static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
     return {};
 }
 
-static Kind notifZoom = "notifZoom";
 static void ShowZoomNotification(MainWindow* win, float zoomLevel) {
+    // don't show zoom info if showing page info
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    if (wnd) {
+        return;
+    }
     NotificationCreateArgs args;
-    args.groupId = notifZoom;
+    args.groupId = kNotifZoom;
     args.timeoutMs = 300;
     args.hwndParent = win->hwndCanvas;
-    const char* zoomLevelStr;
-    if (zoomLevel == kZoomFitPage) {
-        zoomLevelStr = _TRA("Fit Page");
-    } else if (zoomLevel == kZoomFitWidth) {
-        zoomLevelStr = _TRA("Fit Width");
-    } else if (zoomLevel == kZoomFitContent) {
-        zoomLevelStr = _TRA("Fit Content");
-    } else {
-        zoomLevelStr = str::FormatTemp("%.f%%", zoomLevel);
-    }
-    const char* zoomStr = _TRA("Zoom");
-    args.msg = str::FormatTemp("%s: %s\n", zoomStr, zoomLevelStr);
+    args.msg = BuildZoomString(zoomLevel);
     ShowNotification(args);
 }
 
@@ -4219,6 +4248,10 @@ static void OnFrameKeyEsc(MainWindow* win) {
     }
     if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+        return;
+    }
+    if (GetNotificationForGroup(win->hwndCanvas, kNotifZoom)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
         return;
     }
     if (win->showSelection) {

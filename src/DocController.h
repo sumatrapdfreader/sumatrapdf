@@ -47,6 +47,7 @@ struct DocControllerCallback {
     // the toc with the curent page). Needed for when a page change happens
     // indirectly or is initiated from within the model
     virtual void PageNoChanged(DocController* ctrl, int pageNo) = 0;
+    virtual void ZoomChanged(DocController* ctrl, float zoomVirtual) = 0;
     // tell the UI to open the linked document or URL
     virtual void GotoLink(IPageDestination*) = 0;
     // DisplayModel //
