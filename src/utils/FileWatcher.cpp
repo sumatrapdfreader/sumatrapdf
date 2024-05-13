@@ -351,11 +351,11 @@ static DWORD WINAPI FileWatcherThread(void*) {
     return 0;
 }
 
-static void StartThreadIfNecessary() {
+static void StartFileThreadIfNecessary() {
     if (g_threadHandle) {
         return;
     }
-
+    logf("StartFileThreadIfNecessary: starting a thread\n");
     InitializeCriticalSection(&g_threadCritSec);
     g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
@@ -465,10 +465,11 @@ WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>&
     // logf("FileWatcherSubscribe() path: %s\n", path);
 
     if (!file::Exists(path)) {
+        logf("FileWatcherSubscribe: path='%s' doesn't exist\n", path);
         return nullptr;
     }
 
-    StartThreadIfNecessary();
+    StartFileThreadIfNecessary();
 
     ScopedCritSec cs(&g_threadCritSec);
     return NewWatchedFile(path, onFileChangedCb);
