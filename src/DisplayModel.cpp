@@ -1755,6 +1755,8 @@ bool DisplayModel::ScrollScreenToRect(int pageNo, Rect extremes) {
     return sx != 0 || sy != 0;
 }
 
+static bool gLogScrollState = false;
+
 ScrollState DisplayModel::GetScrollState() {
     ScrollState state(FirstVisiblePageNo(), -1, -1);
     if (!ValidPageNo(state.page)) {
@@ -1767,7 +1769,13 @@ ScrollState DisplayModel::GetScrollState() {
     // page wasn't scrolled right/down at all
     if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0) {
         ReportIf(!ValidPageNo(state.page));
+        if (gLogScrollState) {
+            logf("GetScrollState: page: %d, pos: %d,%d\n", state.page, (int)state.x, (int)state.y);
+        }
         return state;
+    }
+    if (gLogScrollState) {
+        logf("GetScrollState: page: %d, pageOnScreen: %d,%d\n", state.page, pageInfo->pageOnScreen.x, pageInfo->pageOnScreen.y);
     }
 
     Rect screen(Point(), viewPort.Size());
@@ -1775,7 +1783,9 @@ ScrollState DisplayModel::GetScrollState() {
     state.page = GetPageNextToPoint(pageVis.TL());
     ReportIf(!ValidPageNo(state.page));
     PointF ptD = CvtFromScreen(pageVis.TL(), state.page);
-
+    if (gLogScrollState) {
+        logf("  page: %d, pageVis: %d,%d, ptD: %d,%d\n", state.page, pageVis.x, pageVis.y, (int)ptD.x, (int)ptD.y);
+    }
     // Remember to show the margin, if it's currently visible
     if (pageInfo->pageOnScreen.x <= 0) {
         state.x = ptD.x;
@@ -1783,28 +1793,46 @@ ScrollState DisplayModel::GetScrollState() {
     if (pageInfo->pageOnScreen.y <= 0) {
         state.y = ptD.y;
     }
-
+    if (gLogScrollState) {
+        logf("  page: %d, state: %d,%d\n", state.page, (int)state.x, (int)state.y);
+    }
     return state;
 }
 
 void DisplayModel::SetScrollState(const ScrollState& state) {
-    GoToPage(state.page, 0);
+    if (gLogScrollState) {
+        logf("SetScrollState: page: %d, pos: %d,%d\n", state.page, (int)state.x, (int)state.y);
+    }
     // Bail out, if the page wasn't scrolled
     if (state.x < 0 && state.y < 0) {
+        GoToPage(state.page, false);
+        if (gLogScrollState) {
+            logf("  exit because not scrolled\n");
+        }
         return;
     }
 
     PointF newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
     Point newPt = CvtToScreen(state.page, newPtD);
+    if (gLogScrollState) {
+        logf("  newPtD: %d,%d\n", (int)newPtD.x, (int)newPtD.y);
+        logf("  newPt:  %d,%d\n", newPt.x, newPt.y);
+    }
 
     // Also show the margins, if this has been requested
     if (state.x < 0) {
         newPt.x = -1;
     } else {
+        if (gLogScrollState) {
+            logf("  x += viewPort.x (%d), state.x: %d\n", viewPort.x, (int)state.x);
+        }
         newPt.x += viewPort.x;
     }
     if (state.y < 0) {
         newPt.y = 0;
+    }
+    if (gLogScrollState) {
+        logf("  newPt:  %d,%d\n", newPt.x, newPt.y);
     }
     GoToPage(state.page, newPt.y, false, newPt.x);
 }

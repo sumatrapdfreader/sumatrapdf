@@ -2035,12 +2035,15 @@ void LoadModelIntoTab(WindowTab* tab) {
         SetSidebarVisibility(win, tab->showToc, gGlobalPrefs->showFavorites);
     }
 
-    if (win->AsFixed()) {
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
         if (tab->canvasRc != win->canvasRc) {
-            win->ctrl->SetViewPortSize(win->GetViewPortSize());
+            auto viewPort = win->GetViewPortSize();
+            win->ctrl->SetViewPortSize(viewPort);
+        } else {
+            // avoid double setting of scroll state -> it gets triggered by SetViewPortSize();
+            dm->SetScrollState(dm->GetScrollState());
         }
-        DisplayModel* dm = win->AsFixed();
-        dm->SetScrollState(dm->GetScrollState());
         if (dm->InPresentation() != win->InPresentation()) {
             dm->SetInPresentation(win->InPresentation());
         }
