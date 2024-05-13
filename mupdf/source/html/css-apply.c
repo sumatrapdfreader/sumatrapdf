@@ -92,6 +92,59 @@ static const char *list_style_position_kw[] = {
 	"outside",
 };
 
+static const char *font_style_kw[] = {
+	"italic",
+	"oblique",
+};
+
+static const char *font_variant_kw[] = {
+	"small-caps",
+};
+
+static const char *font_weight_kw[] = {
+	"bold",
+	"bolder",
+	"lighter",
+};
+
+static const char *font_size_kw[] = {
+	"large",
+	"larger",
+	"medium",
+	"small",
+	"smaller",
+	"x-large",
+	"x-small",
+	"xx-large",
+	"xx-small",
+};
+
+/* Properties to ignore when scanning through font-family. We set font-family
+ * to the full font shorthand value list because Adobe generates DS strings
+ * where the font-family comes before the font-size (and not at the end as it's
+ * supposed to). This lets us scan the font shorthand list without trying to
+ * look up fonts named "bold", etc.
+ */
+static const char *font_family_ignore[] = {
+	",",
+	"/",
+	"bold",
+	"bolder",
+	"italic",
+	"large",
+	"larger",
+	"lighter",
+	"medium",
+	"oblique",
+	"small",
+	"small-caps",
+	"smaller",
+	"x-large",
+	"x-small",
+	"xx-large",
+	"xx-small",
+};
+
 static int
 keyword_in_list(const char *name, const char **list, int n)
 {
@@ -529,6 +582,72 @@ add_shorthand_list_style(fz_css_match *match, fz_css_value *value, int spec)
 	}
 }
 
+static fz_css_value static_value_normal = { CSS_KEYWORD, "normal", NULL, NULL };
+
+static fz_css_value *
+add_shorthand_font_size(fz_css_match *match, fz_css_value *value, int spec)
+{
+	/* font-size */
+	add_property(match, PRO_FONT_SIZE, value, spec);
+
+	/* / line-height */
+	if (value->next && value->next->next && !strcmp(value->next->data, "/"))
+	{
+		value = value->next->next;
+		add_property(match, PRO_LINE_HEIGHT, value, spec);
+	}
+
+	return value;
+}
+
+static void
+add_shorthand_font(fz_css_match *match, fz_css_value *value, int spec)
+{
+	fz_css_value *font_style = NULL;
+	fz_css_value *font_variant = NULL;
+	fz_css_value *font_weight = NULL;
+
+	/* add the start as font-family for most robust scanning of matching font names */
+	add_property(match, PRO_FONT_FAMILY, value, spec);
+
+	/* then look for known style/variant/weight keywords and font-size/line-height */
+	for (; value; value = value->next)
+	{
+		/* style/variant/weight/size */
+		if (value->type == CSS_KEYWORD)
+		{
+			if (keyword_in_list(value->data, font_style_kw, nelem(font_style_kw)))
+				font_style = value;
+			else if (keyword_in_list(value->data, font_variant_kw, nelem(font_variant_kw)))
+				font_variant = value;
+			else if (keyword_in_list(value->data, font_weight_kw, nelem(font_weight_kw)))
+				font_weight = value;
+			else if (keyword_in_list(value->data, font_size_kw, nelem(font_size_kw)))
+				value = add_shorthand_font_size(match, value, spec);
+		}
+		else if (value->type == CSS_NUMBER)
+			font_weight = value;
+		else if (value->type == CSS_LENGTH || value->type == CSS_PERCENT)
+			value = add_shorthand_font_size(match, value, spec);
+	}
+
+	/* set all properties to their initial values if not specified! */
+	if (font_style)
+		add_property(match, PRO_FONT_STYLE, font_style, spec);
+	else
+		add_property(match, PRO_FONT_STYLE, &static_value_normal, spec);
+
+	if (font_variant)
+		add_property(match, PRO_FONT_VARIANT, font_variant, spec);
+	else
+		add_property(match, PRO_FONT_VARIANT, &static_value_normal, spec);
+
+	if (font_weight)
+		add_property(match, PRO_FONT_WEIGHT, font_weight, spec);
+	else
+		add_property(match, PRO_FONT_WEIGHT, &static_value_normal, spec);
+}
+
 static void
 add_property(fz_css_match *match, int name, fz_css_value *value, int spec)
 {
@@ -568,7 +687,9 @@ add_property(fz_css_match *match, int name, fz_css_value *value, int spec)
 	case PRO_LIST_STYLE:
 		add_shorthand_list_style(match, value, spec);
 		return;
-	/* TODO: font */
+	case PRO_FONT:
+		add_shorthand_font(match, value, spec);
+		return;
 	/* TODO: background */
 	}
 
@@ -1406,15 +1527,15 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		int is_italic = is_italic_from_font_style(font_style);
 		style->small_caps = !strcmp(font_variant, "small-caps");
 		value = value_from_property(match, PRO_FONT_FAMILY);
-		while (value)
+		for (; value; value = value->next)
 		{
-			if (strcmp(value->data, ",") != 0)
+			/* ignore numbers and keywords used in font short-hand syntax */
+			if (value->type == CSS_STRING || (value->type == CSS_KEYWORD && !keyword_in_list(value->data, font_family_ignore, nelem(font_family_ignore))))
 			{
 				style->font = fz_load_html_font(ctx, set, value->data, is_bold, is_italic, style->small_caps);
 				if (style->font)
 					break;
 			}
-			value = value->next;
 		}
 		if (!style->font)
 			style->font = fz_load_html_font(ctx, set, "serif", is_bold, is_italic, style->small_caps);
@@ -1604,6 +1725,7 @@ fz_css_enlist(fz_context *ctx, const fz_css_style *style, fz_css_style_splay **t
 
 	return &x->style;
 }
+
 /*
  * Pretty printing
  */

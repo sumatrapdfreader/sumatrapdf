@@ -694,15 +694,32 @@ pdf_subset_fonts(fz_context *ctx, pdf_document *doc, int len, const int *pages)
 
 	fz_try(ctx)
 	{
-		/* Process every page. */
-		for (i = 0; i < len; i++)
+		if (len == 0)
 		{
-			page = pdf_load_page(ctx, doc, pages[i]);
+			/* Process every page. */
+			len = pdf_count_pages(ctx, doc);
+			for (i = 0; i < len; i++)
+			{
+				page = pdf_load_page(ctx, doc, i);
 
-			examine_page(ctx, doc, page, &usage);
+				examine_page(ctx, doc, page, &usage);
 
-			fz_drop_page(ctx, (fz_page *)page);
-			page = NULL;
+				fz_drop_page(ctx, (fz_page *)page);
+				page = NULL;
+			}
+		}
+		else
+		{
+			/* Process just the pages we are given. */
+			for (i = 0; i < len; i++)
+			{
+				page = pdf_load_page(ctx, doc, pages[i]);
+
+				examine_page(ctx, doc, page, &usage);
+
+				fz_drop_page(ctx, (fz_page *)page);
+				page = NULL;
+			}
 		}
 
 		/* All our font usage data is in heaps. Sort the heaps. */

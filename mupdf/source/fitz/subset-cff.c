@@ -1258,14 +1258,14 @@ scan_charstrings(fz_context *ctx, cff_t *cff)
 	for (i = 0; i < num_charstrings; offset = end, i++)
 	{
 		end = index_get(ctx, &cff->charstrings_index, i+1);
-		if (i == 0)
-		{
-			/* Keep this. */
-		}
-		else if (gid < num_gids && i == gids[gid].num)
+		if (gid < num_gids && i == gids[gid].num)
 		{
 			/* Keep this */
 			gid++;
+		}
+		else if (i == 0)
+		{
+			/* Keep this. */
 		}
 		else
 		{

@@ -31,6 +31,7 @@ border-width,PRO_BORDER_WIDTH
 color,PRO_COLOR
 direction,PRO_DIRECTION
 display,PRO_DISPLAY
+font,PRO_FONT
 font-family,PRO_FONT_FAMILY
 font-size,PRO_FONT_SIZE
 font-style,PRO_FONT_STYLE

@@ -497,7 +497,7 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 	fz_icc_tag *tag_list;
 	icProfile iccprofile;
 	icHeader *header = &(iccprofile.header);
-	fz_buffer *profile;
+	fz_buffer *profile = NULL;
 	size_t profile_size;
 	int k;
 	int num_tags;
@@ -553,81 +553,83 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 	for (k = 0; k < num_tags; k++)
 		profile_size += tag_list[k].size;
 
+	fz_var(profile);
+
 	/* Allocate buffer */
 	fz_try(ctx)
 	{
 		profile = fz_new_buffer(ctx, profile_size);
-	}
-	fz_catch(ctx)
-	{
-		fz_free(ctx, tag_list);
-		fz_rethrow(ctx);
-	}
 
-	/* Header */
-	header->size = (icUInt32Number)profile_size;
-	copy_header(ctx, profile, header);
+		/* Header */
+		header->size = (icUInt32Number)profile_size;
+		copy_header(ctx, profile, header);
 
-	/* Tag table */
-	copy_tagtable(ctx, profile, tag_list, num_tags);
+		/* Tag table */
+		copy_tagtable(ctx, profile, tag_list, num_tags);
 
-	/* Common tags */
-	add_common_tag_data(ctx, profile, tag_list, desc_name);
+		/* Common tags */
+		add_common_tag_data(ctx, profile, tag_list, desc_name);
 
-	/* Get the cat02 matrix */
-	gsicc_create_compute_cam(ctx, wp, cat02);
+		/* Get the cat02 matrix */
+		gsicc_create_compute_cam(ctx, wp, cat02);
 
-	/* The matrix */
-	if (n == 3)
-	{
-		/* Convert whitepoint from XYZ to xyY */
-		double xyz = wp[0] + wp[1] + wp[2];
-		double whitexyY[3] = { wp[0] / xyz, wp[1] / xyz, 1.0 };
-		/* Convert primaries from XYZ to xyY */
-		double matrix012 = matrix[0] + matrix[1] + matrix[2];
-		double matrix345 = matrix[3] + matrix[4] + matrix[5];
-		double matrix678 = matrix[6] + matrix[7] + matrix[8];
-		double primariesxyY[9] = {
-			matrix[0] / matrix012,
-			matrix[1] / matrix012,
-			matrix[1],
-			matrix[3] / matrix345,
-			matrix[4] / matrix345,
-			matrix[5],
-			matrix[6] / matrix678,
-			matrix[7] / matrix678,
-			matrix[8]
-			};
-		double primaries[9];
-
-		if (build_rgb2XYZ_transfer_matrix(primaries, whitexyY, primariesxyY))
-			fz_throw(ctx, FZ_ERROR_ARGUMENT, "CalRGB profile creation failed; bad values");
-
-		for (k = 0; k < 3; k++)
+		/* The matrix */
+		if (n == 3)
 		{
-			float primary[3] = { primaries[k+0], primaries[k+3], primaries[k+6] };
-			get_XYZ_doubletr(ctx, temp_XYZ, primary);
-			add_xyzdata(ctx, profile, temp_XYZ);
+			/* Convert whitepoint from XYZ to xyY */
+			double xyz = wp[0] + wp[1] + wp[2];
+			double whitexyY[3] = { wp[0] / xyz, wp[1] / xyz, 1.0 };
+			/* Convert primaries from XYZ to xyY */
+			double matrix012 = matrix[0] + matrix[1] + matrix[2];
+			double matrix345 = matrix[3] + matrix[4] + matrix[5];
+			double matrix678 = matrix[6] + matrix[7] + matrix[8];
+			double primariesxyY[9] = {
+				matrix[0] / matrix012,
+				matrix[1] / matrix012,
+				matrix[1],
+				matrix[3] / matrix345,
+				matrix[4] / matrix345,
+				matrix[5],
+				matrix[6] / matrix678,
+				matrix[7] / matrix678,
+				matrix[8]
+				};
+			double primaries[9];
+
+			if (build_rgb2XYZ_transfer_matrix(primaries, whitexyY, primariesxyY))
+				fz_throw(ctx, FZ_ERROR_ARGUMENT, "CalRGB profile creation failed; bad values");
+
+			for (k = 0; k < 3; k++)
+			{
+				float primary[3] = { primaries[k+0], primaries[k+3], primaries[k+6] };
+				get_XYZ_doubletr(ctx, temp_XYZ, primary);
+				add_xyzdata(ctx, profile, temp_XYZ);
+			}
+		}
+
+		/* White and black points. WP is D50 */
+		get_D50(ctx, temp_XYZ);
+		add_xyzdata(ctx, profile, temp_XYZ);
+
+		/* Black point. Apply cat02*/
+		apply_adaption(ctx, cat02, bp, &(black_adapt[0]));
+		get_XYZ_doubletr(ctx, temp_XYZ, &(black_adapt[0]));
+		add_xyzdata(ctx, profile, temp_XYZ);
+
+		/* Gamma */
+		for (k = 0; k < n; k++)
+		{
+			encode_gamma = float2u8Fixed8(ctx, gamma[k]);
+			add_gammadata(ctx, profile, encode_gamma, icSigCurveType);
 		}
 	}
-
-	/* White and black points. WP is D50 */
-	get_D50(ctx, temp_XYZ);
-	add_xyzdata(ctx, profile, temp_XYZ);
-
-	/* Black point. Apply cat02*/
-	apply_adaption(ctx, cat02, bp, &(black_adapt[0]));
-	get_XYZ_doubletr(ctx, temp_XYZ, &(black_adapt[0]));
-	add_xyzdata(ctx, profile, temp_XYZ);
-
-	/* Gamma */
-	for (k = 0; k < n; k++)
+	fz_always(ctx)
+		fz_free(ctx, tag_list);
+	fz_catch(ctx)
 	{
-		encode_gamma = float2u8Fixed8(ctx, gamma[k]);
-		add_gammadata(ctx, profile, encode_gamma, icSigCurveType);
+		fz_drop_buffer(ctx, profile);
+		fz_rethrow(ctx);
 	}
-
-	fz_free(ctx, tag_list);
 
 #if SAVEICCPROFILE
 	if (n == 3)
