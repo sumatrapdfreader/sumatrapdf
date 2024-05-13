@@ -3748,6 +3748,27 @@ static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
     return {};
 }
 
+static Kind notifZoom = "notifZoom";
+static void ShowZoomNotification(MainWindow* win, float zoomLevel) {
+    NotificationCreateArgs args;
+    args.groupId = notifZoom;
+    args.timeoutMs = 300;
+    args.hwndParent = win->hwndCanvas;
+    const char* zoomLevelStr;
+    if (zoomLevel == kZoomFitPage) {
+        zoomLevelStr = _TRA("Fit Page");
+    } else if (zoomLevel == kZoomFitWidth) {
+        zoomLevelStr = _TRA("Fit Width");
+    } else if (zoomLevel == kZoomFitContent) {
+        zoomLevelStr = _TRA("Fit Content");
+    } else {
+        zoomLevelStr = str::FormatTemp("%.f%%", zoomLevel);
+    }
+    const char* zoomStr = _TRA("Zoom");
+    args.msg = str::FormatTemp("%s: %s\n", zoomStr, zoomLevelStr);
+    ShowNotification(args);
+}
+
 // if suggestedPoint is provided, it's position on canvas and we'll try to preserve that point after zoom
 // if suggestedPoint is nullptr we'll try to pick a smart point to zoom around if smartZoom is true
 void SmartZoom(MainWindow* win, float newZoom, Point* suggestedPoint, bool smartZoom) {
@@ -3771,6 +3792,7 @@ void SmartZoom(MainWindow* win, float newZoom, Point* suggestedPoint, bool smart
 
     win->ctrl->SetZoomVirtual(newZoom, pt);
     UpdateToolbarState(win);
+    ShowZoomNotification(win, newZoom);
 }
 
 /* Zoom document in window 'hwnd' to zoom level 'zoom'.
