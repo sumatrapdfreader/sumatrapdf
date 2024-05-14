@@ -8,16 +8,28 @@
 
 Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 
-* add `-search` cmd-line option to start a search when opening a document
+* include manual (`F1` to launch browser with documentation)
 * add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
 * new commands and their command palette (`Ctrl + K`) texts:
   *  `CmdCloseAllTabs` : "Close All Tabs"
   *  `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
   *  `CmdDeleteFile`: "Delete File"
+  *  `CmdInvokeInverseSearch`
+  *  `CmdToggleFrequentlyRead`
+  *  `CmdToggleLinks`
 * added `UIFontSize` advanced setting
 * removed `TreeFontWeightOffset` advanced setting
+* increase number of thumbnails on home page from 10 => 30
+* add `ShowLinks` advanced setting and  "Toggle Show Links" (`CmdToggleLinks`) for command palette
+* default `ReuseInstance` setting to true
 * improvements to scrolling and zooming
 * theming improvements
+* go back to opening settings file with default .txt editor (notepad most likely)
+* don't exit fullscreen on double-click. must double-click in upper-right corner
+* when opening via double-click, if `Ctrl` is pressed will always open in new tab (vs. activating existing tab)
+* register for handling `.webp` files
+* bug fix: Del should not delete an annotation if editing content
+* bug fix: re-enable tree view full row select
 
 ### 3.5.2 (2023-10-25)
 
