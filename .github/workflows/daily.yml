@@ -1,4 +1,4 @@
-name: Daily build
+name: daily
 on:
   schedule:
     - cron: "0 1 * * *"
