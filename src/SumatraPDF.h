@@ -89,7 +89,7 @@ extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;
 extern RenderCache gRenderCache;
 
-extern bool gSuppressAltKey;
+extern bool gSupressNextAltMenuTrigger;
 extern HBITMAP gBitmapReloadingCue;
 extern HCURSOR gCursorDrag;
 extern bool gCrashOnOpen;

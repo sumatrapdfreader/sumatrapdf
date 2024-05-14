@@ -1,3 +1,5 @@
+# for manually triggering daily build:
+# gh workflow run daily_manual.yml
 name: daily_manual
 on:
   workflow_dispatch

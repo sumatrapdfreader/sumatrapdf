@@ -116,7 +116,7 @@ RenderCache gRenderCache;
 HCURSOR gCursorDrag;
 
 // set after mouse shortcuts involving the Alt key (so that the menu bar isn't activated)
-bool gSuppressAltKey = false;
+bool gSupressNextAltMenuTrigger = false;
 
 bool gCrashOnOpen = false;
 
@@ -5904,8 +5904,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // pressing and releasing the Alt key focuses the menu even if
             // the wheel has been used for scrolling horizontally, so we
             // have to suppress that effect explicitly in this situation
-            if (VK_MENU == wp && gSuppressAltKey) {
-                gSuppressAltKey = false;
+            if (VK_MENU == wp && gSupressNextAltMenuTrigger) {
+                gSupressNextAltMenuTrigger = false;
                 return 0;
             }
             return DefWindowProc(hwnd, msg, wp, lp);

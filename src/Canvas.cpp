@@ -1167,6 +1167,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // Note: not all mouse drivers correctly report the Ctrl key's state
     // isCtrl is also set if this is pinch gestore from touchpad (on thinkpad x1 at least).
     bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+    bool isAlt = (LOWORD(wp) & MK_ALT) || IsAltPressed();
     bool isRightButton = (LOWORD(wp) & MK_RBUTTON);
     if (isCtrl || isRightButton) {
         Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -1237,8 +1238,10 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // win->wheelAccumDelta,
     //      (int)hScroll, (int)isCont, gDeltaPerLine);
 
-    if (hScroll) {
-        gSuppressAltKey = true;
+    // Alt speeds up scrolling but also triggers showing menu
+    // this will suppress next menu trigger to avoid accidental triggering of menu
+    if (isAlt) {
+        gSupressNextAltMenuTrigger = true;
     }
 
     if (vScroll && !isCont) {
@@ -1291,7 +1294,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     // alt while scrolling will scroll by half a page per tick
     // usefull for browsing long files
-    if ((LOWORD(wp) & MK_ALT) || IsAltPressed()) {
+    if (isAlt) {
         wp = (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN;
         SendMessageW(win->hwndCanvas, WM_VSCROLL, wp, 0);
         return 0;
