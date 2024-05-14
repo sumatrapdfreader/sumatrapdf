@@ -483,13 +483,27 @@ func genHTMLDocsFromMarkdown() {
 	writeDocsHtmlFiles()
 }
 
+func copyDocsToWebsite() {
+	logf("copyDocsToWebsite()\n")
+	websiteDir := updateSumatraWebsite()
+	srcDir := filepath.Join("docs", "md")
+	dstDir := filepath.Join(websiteDir, "server", "www", "docs-md")
+	copyFilesRecurMust(dstDir, srcDir)
+	runExeInDirMust(websiteDir, "git", "status")
+}
+
 func genHTMLDocsForWebsite() {
+	if false {
+		genHTMLDocsForWebsite2()
+	} else {
+		copyDocsToWebsite()
+	}
+}
+
+func genHTMLDocsForWebsite2() {
 	logf("genHTMLDocsForWebsite starting\n")
 	docsForWebsite = true
 	dir := updateSumatraWebsite()
-	if !u.DirExists(dir) {
-		logFatalf("Directory '%s' doesn't exist\n", dir)
-	}
 	currBranch := getCurrentBranchMust(dir)
 	panicIf(currBranch != "master")
 	// don't use .html extension in links to generated .html files
