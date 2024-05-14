@@ -5,17 +5,17 @@ go 1.21
 toolchain go1.22.2
 
 require (
-	github.com/kjk/common v0.0.0-20240426141304-c217812bf00b
+	github.com/dustin/go-humanize v1.0.1
+	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2
+	github.com/kjk/common v0.0.0-20240514175550-025f7649f574
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
 	github.com/kjk/u v0.0.0-20220410204605-ce4a95db4475
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gomarkdown/markdown v0.0.0-20240419095408-642f0ee99ae2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kjk/atomicfile v0.0.0-20220410204726-989ae30d2b66 // indirect
@@ -30,9 +30,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
