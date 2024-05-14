@@ -40,8 +40,8 @@ master
 Return active branch marked with "*" ('rel3.1working' in this case) or empty
 string if no current branch.
 */
-func getCurrentBranchMust() string {
-	d := runExeMust("git", "branch")
+func getCurrentBranchMust(dir string) string {
+	d := runExeInDirMust(dir, "git", "branch")
 	// "(HEAD detached at b5adf8738)" is what we get on GitHub CI
 	s := string(d)
 	if strings.Contains(s, "(HEAD detached") {
@@ -61,7 +61,7 @@ func getCurrentBranchMust() string {
 // i.e. we allow 3.1.1 and 3.1.2 from branch 3.1 but not from 3.0 or 3.2
 func verifyOnReleaseBranchMust() {
 	// 'git branch' return branch name in format: '* master'
-	currBranch := getCurrentBranchMust()
+	currBranch := getCurrentBranchMust(".")
 	prefix := "rel"
 	suffix := "working"
 	panicIf(!strings.HasPrefix(currBranch, prefix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)

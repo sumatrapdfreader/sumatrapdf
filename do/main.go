@@ -300,7 +300,7 @@ func main() {
 	}
 
 	if flgGenDocs {
-		genHTMLDocsFromMarkdown()
+		genHTMLDocsForApp()
 		return
 	}
 

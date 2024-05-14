@@ -435,18 +435,26 @@ func removeHTMLFilesInDir(dir string) {
 	}
 }
 
+func getWWWOutDir() string {
+	if docsForWebsite {
+		dir := getWebsiteDir()
+		return filepath.Join(dir, "server", "www", "docs")
+	}
+	return filepath.Join("docs", "www")
+}
+
 func writeDocsHtmlFiles() {
-	wwwDir := filepath.Join("docs", "www")
-	imgDir := filepath.Join(wwwDir, "img")
+	wwwOutDir := getWWWOutDir()
+	imgOutDir := filepath.Join(wwwOutDir, "img")
 	// images are copied from docs/md/img so remove potentially stale images
-	must(os.RemoveAll(imgDir))
-	must(os.MkdirAll(filepath.Join(wwwDir, "img"), 0755))
+	must(os.RemoveAll(imgOutDir))
+	must(os.MkdirAll(filepath.Join(wwwOutDir, "img"), 0755))
 	// remove potentially stale .html files
 	// can't just remove the directory because has .css and .ico files
-	removeHTMLFilesInDir(wwwDir)
+	removeHTMLFilesInDir(wwwOutDir)
 	for name, info := range mdProcessed {
 		name = strings.ReplaceAll(name, ".md", ".html")
-		path := filepath.Join(wwwDir, name)
+		path := filepath.Join(wwwOutDir, name)
 		err := os.WriteFile(path, info.data, 0644)
 		logf("wrote '%s', len: %d\n", path, len(info.data))
 		must(err)
@@ -454,50 +462,14 @@ func writeDocsHtmlFiles() {
 	{
 		// copy image files
 		copyFileMustOverwrite = true
-		dstDir := filepath.Join(wwwDir, "img")
+		dstDir := filepath.Join(wwwOutDir, "img")
 		srcDir := filepath.Join("docs", "md", "img")
 		copyFilesRecurMust(dstDir, srcDir)
 	}
-	{
-		// create lzsa archive
-		makeLzsa := filepath.Join("bin", "MakeLZSA.exe")
-		archive := filepath.Join("docs", "manual.dat")
-		os.Remove(archive)
-		cmd := exec.Command(makeLzsa, archive, wwwDir)
-		runCmdLoggedMust(cmd)
-		size := u.FileSize(archive)
-		sizeH := humanize.Bytes(uint64(size))
-		logf("size of '%s': %s\n", archive, sizeH)
-	}
-	{
-		dir, err := filepath.Abs(wwwDir)
-		must(err)
-		url := "file://" + filepath.Join(dir, "SumatraPDF-documentation.html")
-		logf("To view, open:\n%s\n", url)
-	}
-}
-
-func genHTMLDocsForWebsite() {
-	logf("genHTMLDocsForWebsite starting\n")
-	docsForWebsite = true
-	dir := updateSumatraWebsite()
-	if !u.DirExists(dir) {
-		logFatalf("Directory '%s' doesn't exist\n", dir)
-	}
-	{
-		cmd := exec.Command("git", "pull")
-		cmd.Dir = dir
-		runCmdMust(cmd)
-	}
-	// don't use .html extension in links to generated .html files
-	// for docs we need them because they are shown from file system
-	// for website we prefer "clean" links because they are served via web server
-	mdHTMLExt = false
 }
 
 func genHTMLDocsFromMarkdown() {
 	logf("genHTMLDocsFromMarkdown starting\n")
-	timeStart := time.Now()
 	loadSearchJS()
 	fsys = os.DirFS("docs")
 
@@ -509,6 +481,49 @@ func genHTMLDocsFromMarkdown() {
 		must(err)
 	}
 	writeDocsHtmlFiles()
+}
+
+func genHTMLDocsForWebsite() {
+	logf("genHTMLDocsForWebsite starting\n")
+	docsForWebsite = true
+	dir := updateSumatraWebsite()
+	if !u.DirExists(dir) {
+		logFatalf("Directory '%s' doesn't exist\n", dir)
+	}
+	currBranch := getCurrentBranchMust(dir)
+	panicIf(currBranch != "master")
+	// don't use .html extension in links to generated .html files
+	// for docs we need them because they are shown from file system
+	// for website we prefer "clean" links because they are served via web server
+	mdHTMLExt = false
+	genHTMLDocsFromMarkdown()
+}
+
+func genHTMLDocsForApp() {
+	logf("genHTMLDocsFromMarkdown starting\n")
+	timeStart := time.Now()
+	defer func() {
+		logf("genHTMLDocsFromMarkdown finished in %s\n", time.Since(timeStart))
+	}()
+
+	genHTMLDocsFromMarkdown()
+	wwwOutDir := getWWWOutDir()
+	{
+		// create lzsa archive
+		makeLzsa := filepath.Join("bin", "MakeLZSA.exe")
+		archive := filepath.Join("docs", "manual.dat")
+		os.Remove(archive)
+		cmd := exec.Command(makeLzsa, archive, wwwOutDir)
+		runCmdLoggedMust(cmd)
+		size := u.FileSize(archive)
+		sizeH := humanize.Bytes(uint64(size))
+		logf("size of '%s': %s\n", archive, sizeH)
+	}
+	{
+		dir, err := filepath.Abs(wwwOutDir)
+		must(err)
+		url := "file://" + filepath.Join(dir, "SumatraPDF-documentation.html")
+		logf("To view, open:\n%s\n", url)
+	}
 	//u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
-	logf("genHTMLDocsFromMarkdown finished in %s\n", time.Since(timeStart))
 }
