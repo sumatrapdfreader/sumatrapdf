@@ -4,6 +4,20 @@
 
 ## **Version history**
 
+### next
+
+Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
+
+* add `-search` cmd-line option to start a search when opening a document
+* add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
+* new commands and their command palette (`Ctrl + K`) texts:
+  *  `CmdCloseAllTabs` : "Close All Tabs"
+  *  `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
+  *  `CmdDeleteFile`: "Delete File"
+* added `UIFontSize` advanced setting
+* removed `TreeFontWeightOffset` advanced setting
+* improvements to scrolling and zooming
+
 ### 3.5.2 (2023-10-25)
 
 - fix not showing tab text
@@ -34,7 +48,7 @@
 - respect image orientation `exif` metadata in .jpeg and .png images
 - support Adobe Reader syntax for opening files `/A "page=<pageno>#nameddest=<dest>search=<string>`
 - add `Next Tab` / `Prev Tab` commands with `Ctrl + PageUp` / `Ctrl + PageDown` shortcuts
-- keep Home tab open; add `NoHomeTab` advanced option to d`isable that
+- keep Home tab open; add `NoHomeTab` advanced option to disable that
 - add context menu to tabs
 - bugfix: handle files we can't open in `next file in folder` / `prev file in folder` commands
 - command palette: when search starts with `>`, only show commands, not files (like in Visual Studio Code)
