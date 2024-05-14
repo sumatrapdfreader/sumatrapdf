@@ -7,6 +7,8 @@
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
 
+[Scrolling, zooming, navigating](Scrolling-and-zooming.md)
+
 [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md)
 
 [Commands](Commands.md)

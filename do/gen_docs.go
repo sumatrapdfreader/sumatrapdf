@@ -398,10 +398,30 @@ func mdToHTMLAll() {
 	logf("mdToHTMLAll finished in %s\n", time.Since(timeStart))
 }
 
+func removeHTMLFilesInDir(dir string) {
+	files, err := os.ReadDir(dir)
+	must(err)
+	for _, fi := range files {
+		if fi.IsDir() {
+			continue
+		}
+		name := fi.Name()
+		if strings.HasSuffix(name, ".html") {
+			path := filepath.Join(dir, name)
+			must(os.Remove(path))
+		}
+	}
+}
+
 func writeDocsHtmlFiles() {
 	wwwDir := filepath.Join("docs", "www")
-	must(os.RemoveAll(wwwDir))
+	imgDir := filepath.Join(wwwDir, "img")
+	// images are copied from docs/md/img so remove potentially stale images
+	must(os.RemoveAll(imgDir))
 	must(os.MkdirAll(filepath.Join(wwwDir, "img"), 0755))
+	// remove potentially stale .html files
+	// can't just remove the directory because has .css and .ico files
+	removeHTMLFilesInDir(wwwDir)
 	for name, info := range mdProcessed {
 		name = strings.ReplaceAll(name, ".md", ".html")
 		path := filepath.Join(wwwDir, name)
@@ -426,6 +446,12 @@ func writeDocsHtmlFiles() {
 		size := u.FileSize(archive)
 		sizeH := humanize.Bytes(uint64(size))
 		logf("size of '%s': %s\n", archive, sizeH)
+	}
+	{
+		dir, err := filepath.Abs(wwwDir)
+		must(err)
+		url := "file://" + filepath.Join(dir, "SumatraPDF-documentation.html")
+		logf("To view, open %s\n", url)
 	}
 }
 
