@@ -39,11 +39,16 @@ func ctx() context.Context {
 	return context.Background()
 }
 
-func logf(s string, arg ...interface{}) {
-	if len(arg) > 0 {
-		s = fmt.Sprintf(s, arg...)
+func logf(s string, args ...interface{}) {
+	if len(args) > 0 {
+		s = fmt.Sprintf(s, args...)
 	}
 	fmt.Print(s)
+}
+
+func logFatalf(s string, args ...interface{}) {
+	logf(s, args...)
+	os.Exit(1)
 }
 
 func getCallstackFrames(skip int) []string {
@@ -228,7 +233,7 @@ func fmdCmdShort(cmd *exec.Cmd) string {
 }
 
 func runCmdLoggedMust(cmd *exec.Cmd) {
-	logf(">2 %s\n", fmdCmdShort(cmd))
+	logf("> %s\n", fmdCmdShort(cmd))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin

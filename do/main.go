@@ -257,6 +257,7 @@ func main() {
 		flgBuildNo         int
 		flgUpdateGoDeps    bool
 		flgGenDocs         bool
+		flgGenWebsiteDocs  bool
 	)
 
 	{
@@ -294,11 +295,17 @@ func main() {
 		flag.IntVar(&flgBuildNo, "build-no-info", 0, "print build number info for given build number")
 		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
 		flag.BoolVar(&flgGenDocs, "gen-docs", false, "generate html docs in docs/www from markdown in docs/md")
+		flag.BoolVar(&flgGenWebsiteDocs, "gen-website-docs", false, "generate html docs in ../sumatra-website repo and check them in")
 		flag.Parse()
 	}
 
 	if flgGenDocs {
-		mdToHTMLAll()
+		genHTMLDocsFromMarkdown()
+		return
+	}
+
+	if flgGenWebsiteDocs {
+		genHTMLDocsForWebsite()
 		return
 	}
 

@@ -446,8 +446,12 @@ func genSettingsStruct() string {
 	return content
 }
 
+func getWebsiteDir() string {
+	return filepath.Join("..", "sumatra-website")
+}
+
 func updateSumatraWebsite() string {
-	dir := filepath.Join("..", "sumatra-website")
+	dir := getWebsiteDir()
 	dir, err := filepath.Abs(dir)
 	logf("sumatra website dir: '%s'\n", dir)
 	must(err)

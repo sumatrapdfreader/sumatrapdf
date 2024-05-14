@@ -381,8 +381,30 @@ func mdToHTML(name string, force bool) ([]byte, error) {
 	return mdInfo.data, nil
 }
 
-func mdToHTMLAll() {
-	logf("mdToHTMLAll starting\n")
+var (
+	// if true, we generate docs for website, which requires slight changes
+	docsForWebsite = false
+)
+
+func genHTMLDocsForWebsite() {
+	logf("genHTMLDocsForWebsite starting\n")
+	dir := updateSumatraWebsite()
+	if !u.DirExists(dir) {
+		logFatalf("Directory '%s' doesn't exist\n", dir)
+	}
+	{
+		cmd := exec.Command("git", "pull")
+		cmd.Dir = dir
+		runCmdMust(cmd)
+	}
+	// don't use .html extension in links to generated .html files
+	// for docs we need them because they are shown from file system
+	// for website we prefer "clean" links because they are served via web server
+	mdHTMLExt = false
+}
+
+func genHTMLDocsFromMarkdown() {
+	logf("genHTMLDocsFromMarkdown starting\n")
 	timeStart := time.Now()
 	fsys = os.DirFS("docs")
 
@@ -395,7 +417,7 @@ func mdToHTMLAll() {
 	}
 	writeDocsHtmlFiles()
 	//u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
-	logf("mdToHTMLAll finished in %s\n", time.Since(timeStart))
+	logf("genHTMLDocsFromMarkdown finished in %s\n", time.Since(timeStart))
 }
 
 func removeHTMLFilesInDir(dir string) {
