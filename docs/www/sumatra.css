@@ -1,0 +1,387 @@
+/* simple css reset */
+
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* Set core root defaults */
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+html {
+  font-size: 12pt;
+}
+
+/* TODO: figure out how to make nav be stable when switching between pages.
+
+Tried so far (on Chrome)
+* html { width: 100vw; }
+  nav stable but scroll-x shows up on pages with scroll-y because
+  scrollbar pushes the total content width
+* body { scrollbar-gutter: stable; }
+  seemingly no effect
+  https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-gutter
+* body { overflow-y: overlay }
+  nav stable but covers right margin so centering with margins looks
+  asymetrical (e.g. testimonials).
+  Would have to set the margin-right to margin-left + scrollbar width
+  https://stackoverflow.com/questions/13054797/how-to-prevent-a-webkit-scrollbar-from-pushing-over-the-contents-of-a-div
+
+Not tried:
+* https://kingsora.github.io/OverlayScrollbars/
+  it's 53kB minified
+* http://grsmto.github.io/simplebar/
+  6kB minified but can't be used on body
+* https://dev.to/jonosellier/easy-overlay-scrollbars-variable-width-1mbh
+  a very simple way to implement overlay scrollbars
+  although overflow: overlay is deprecated?
+* https://stackoverflow.com/a/64554893
+  I don't get it
+*/
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* makes scrollbar thin, from chat.openai.com */
+/*
+::-webkit-scrollbar {
+  height: 1rem;
+  width: 0.5rem;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 0.5rem;
+  width: 1rem;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  --tw-border-opacity: 1;
+  background-color: rgba(217, 217, 227, 0.8);
+  border-color: rgba(255, 255, 255, var(--tw-border-opacity));
+  border-radius: 9999px;
+  border-width: 1px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgba(236, 236, 241, var(--tw-bg-opacity));
+} */
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+}
+
+/* A elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* Make images easier to work with */
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Remove all animations, transitions and smooth scroll for people that prefer not to see them */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* start of real fun */
+
+body {
+  font-family: sans-serif;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: row;
+  font-weight: 500;
+  align-items: center;
+  background-color: white;
+  z-index: 99; /* needs to be higher than img */
+
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  margin-bottom: 1.5rem;
+}
+
+.nav-btn {
+  font-size: 18px;
+  padding: 8px 1rem;
+  margin-left: 1rem;
+  text-decoration: none;
+  color: black;
+  border-radius: 0.5rem;
+}
+
+.nav-logo {
+  margin-left: 1rem;
+  margin-top: 1px;
+}
+
+.nav-btn-selected {
+  background-color: rgba(255, 240, 0, 0.9);
+}
+
+.nav-btn:hover {
+  background-color: rgba(255, 240, 0, 0.9);
+}
+
+.page-wrap {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+/* https://csshint.com/css-box-shadow-examples/ */
+.shadow-8 {
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px 0px;
+}
+
+.ib {
+  display: inline-block;
+}
+
+.mt1 {
+  margin-top: 0.25rem;
+}
+
+.mt2 {
+  margin-top: 0.5rem;
+}
+
+.mt3 {
+  margin-top: 1rem;
+}
+
+.mb6 {
+  margin-bottom: 2rem;
+}
+
+.mt72 {
+  margin-top: 72px;
+}
+
+.pa1 {
+  padding: 4px;
+}
+
+.mr2 {
+  margin-right: 0.5rem;
+}
+
+.mr3 {
+  margin-right: 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.font-w-600 {
+  font-weight: 600;
+}
+
+.font-s-24pt {
+  font-size: 24pt;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.selected-img {
+  /* border: 1px solid #87cefa;
+  border: 1px solid #fff100;
+  border: 1px solid yellow; */
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px 0px;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px,
+    rgb(209, 213, 219) 0px 0px 0px 1px inset;
+}
+
+#shot-description {
+  padding: 8px 16px;
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000;
+  opacity: 0.8;
+  color: #fff;
+  border-radius: 8px;
+  white-space: pre;
+}
+
+.img-wrapper-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.img-wrapper {
+  position: relative;
+  max-width: 95vw;
+  display: flex;
+  justify-content: space-around;
+}
+
+.img-wrapper > img {
+  object-fit: scale-down;
+  max-width: 90%;
+}
+
+.nav-icon-left {
+  position: absolute;
+  left: 0;
+  top: calc(50% - 24px);
+}
+
+.nav-icon-right {
+  position: absolute;
+  right: 0;
+  top: calc(50% - 24px);
+}
+
+a.for-nav-icon {
+  display: flex;
+  text-decoration: none;
+  font-size: 0;
+  justify-content: center;
+  align-items: center;
+  fill: gray;
+  width: 40px;
+  height: 40px;
+  border-radius: 24px;
+  background-color: #fff;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.3), 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+a.for-nav-icon:hover {
+  fill: #555;
+  background-color: #f2f2f2;
+}
+
+.nav-icon {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  display: block;
+}
+
+.page {
+  margin-bottom: 2px;
+}
+
+
+@media only screen and (max-width: 600px) {
+  html {
+    font-size: 13px;
+  }
+  .hide-on-small {
+    visibility: collapse;
+    display: none;
+  }
+  .nav-logo {
+    visibility: collapse;
+    display: none;
+  }
+  .nav {
+    justify-content: center;
+    padding: 2px 0;
+    margin-bottom: 0.5rem;
+  }
+  .nav-btn {
+    font-size: 14px;
+    margin-left: 0px;
+    padding: 2px 4px;
+  }
+}
+
+.notion-page > div > img {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.doc-columns {
+  columns: 2;
+  margin-top: 1rem;
+}
+
+.doc-columns > h2 {
+  margin-top: 0px;
+}
+
+.doc-columns > h3 {
+  margin-top: 0px;
+}
+/* TODO: only one column at smaller size */
+@media only screen and (max-width: 720px) {
+  .doc-columns {
+    columns: 1;
+  }
+}
