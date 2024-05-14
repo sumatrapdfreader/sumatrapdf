@@ -17,6 +17,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 * added `UIFontSize` advanced setting
 * removed `TreeFontWeightOffset` advanced setting
 * improvements to scrolling and zooming
+* theming improvements
 
 ### 3.5.2 (2023-10-25)
 
