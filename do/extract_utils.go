@@ -145,6 +145,7 @@ func copyFilesRecurMust(dstDir, srcDir string) {
 }
 
 var copyFileMustOverwrite = false
+var copyFilesExtsToNormalizeNL = []string{}
 
 func copyFileMust(dst, src string) {
 	if !copyFileMustOverwrite {
@@ -160,6 +161,11 @@ func copyFileMust(dst, src string) {
 	must(err)
 	d, err := os.ReadFile(src)
 	must(err)
+	ext := filepath.Ext(dst)
+	ext = strings.ToLower(ext)
+	if slices.Contains(copyFilesExtsToNormalizeNL, ext) {
+		d = u.NormalizeNewlines(d)
+	}
 	err = os.WriteFile(dst, d, 0644)
 	must(err)
 }

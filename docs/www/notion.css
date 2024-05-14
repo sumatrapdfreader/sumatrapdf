@@ -19,23 +19,26 @@
   margin-bottom: 1rem;
 }
 
-.notion-page > h2 {
+.notion-page > h1 {
   margin-bottom: 0.75rem;
 }
 
+.notion-page > h2 {
+  margin-bottom: 0.6rem;
+}
+
+.notion-page > h3 {
+  margin-bottom: 0.3rem;
+}
+
 .notion-page div {
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
   /* background-color: aliceblue; */
 }
 
-.notion-page div. .notion-page ul {
+.notion-page div.notion-page ul {
   margin-block-start: 0;
   margin-block-end: 0;
-}
-
-.notion-page div + ul {
-  /* hack: div has margin-bottom: 1rem */
-  margin-top: -1rem;
 }
 
 /* notion css */
@@ -43,6 +46,7 @@ a,
 a.visited {
   color: inherit;
   text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .pdf-relative-link-path {
@@ -212,6 +216,7 @@ ul {
   margin: 0;
   margin-block-start: 0.6em;
   margin-block-end: 0.6em;
+  margin-top: 1rem;
 }
 
 li > ol:first-child,
@@ -222,6 +227,7 @@ li > ul:first-child {
 
 ul > li {
   list-style: disc;
+  margin-bottom: 0.3rem;
 }
 
 ul > li > ul > li {
@@ -658,8 +664,8 @@ blockquote {
   display: flex;
   flex-wrap: wrap;
   margin-left: -0.5em;
-  /* padding-bottom: 1em; */
-  margin-bottom: 0 !important;
+  padding-bottom: 1em;
+  /* margin-bottom: 0 !important; */
   /* font-size: 1rem; */
 }
 
