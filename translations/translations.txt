@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-19fb33e3a1300ebfd6a7c46440f422d1c000a246
+39139b2b187df461f434fb1e4765688004b68234
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -13548,6 +13548,7 @@ uz:Man&ga usuli
 vn:Kiểu &Manga
 :Manual On Website
 br:Manual no Site da Web
+co:Manuale nant’à u situ web
 de:Handbuch im Internet
 fr:Manuel sur le site web
 pl:Instrukcja obsługi na stronie internetowej

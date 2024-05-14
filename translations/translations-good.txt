@@ -11311,6 +11311,7 @@ uk:Режим манги
 vn:Kiểu &Manga
 :Manual On Website
 br:Manual no Site da Web
+co:Manuale nant’à u situ web
 de:Handbuch im Internet
 fr:Manuel sur le site web
 pl:Instrukcja obsługi na stronie internetowej
