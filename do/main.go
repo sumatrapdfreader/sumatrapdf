@@ -44,12 +44,12 @@ func loadSecrets() bool {
 		// logf("Got %s, '%s'\n", key, v)
 		logf("Got %s\n", key)
 	}
-	getEnv("R2_ACCESS", &r2Access, 0)
-	getEnv("R2_SECRET", &r2Secret, 0)
-	getEnv("BB_ACCESS", &b2Access, 0)
-	getEnv("BB_SECRET", &b2Secret, 0)
-	getEnv("TRANS_UPLOAD_SECRET", &transUploadSecret, 0)
-	getEnv("CERT_PWD", &certPwd, 0)
+	getEnv("R2_ACCESS", &r2Access, 8)
+	getEnv("R2_SECRET", &r2Secret, 8)
+	getEnv("BB_ACCESS", &b2Access, 8)
+	getEnv("BB_SECRET", &b2Secret, 8)
+	getEnv("TRANS_UPLOAD_SECRET", &transUploadSecret, 4)
+	getEnv("CERT_PWD", &certPwd, 4)
 	return true
 }
 
@@ -468,7 +468,7 @@ func main() {
 	}
 
 	if flgCIDailyBuild {
-		buildCiDaily()
+		buildCiDaily(opts)
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
 		} else {

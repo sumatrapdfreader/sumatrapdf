@@ -444,11 +444,13 @@ func getSuffixForPlatform(platform string) string {
 	return ""
 }
 
-func buildCiDaily() {
-	isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildTypePreRel)
-	if isUploaded {
-		logf("buildCiDaily: skipping build because already built and uploaded")
-		return
+func buildCiDaily(opts *BuildOptions) {
+	if opts.upload {
+		isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildTypePreRel)
+		if isUploaded {
+			logf("buildCiDaily: skipping build because already built and uploaded")
+			return
+		}
 	}
 
 	cleanReleaseBuilds()

@@ -123,27 +123,27 @@ function optconf()
   filter {}
 end
 
-function zlib_ng_defines()
-  defines {
-    "_CRT_SECURE_NO_DEPRECATE",
-    "_CRT_NONSTDC_NO_DEPRECATE",
-    "X86_FEATURES",
-    "X86_PCLMULQDQ_CRC",
-    "X86_SSE2",
-    "X86_SSE42_CRC_INTRIN",
-    "X86_SSE42_CRC_HASH",
-    "X86_AVX2",
-    "X86_AVX_CHUNKSET",
-    "X86_SSE2_CHUNKSET",
-    "UNALIGNED_OK",
-    "UNALIGNED64_OK",
-    "WITH_GZFILEOP",
-    "ZLIB_COMPAT"
-  }
-  includedirs {
-    "ext/zlib-ng",
-  }
-end
+-- function zlib_ng_defines()
+--   defines {
+--     "_CRT_SECURE_NO_DEPRECATE",
+--     "_CRT_NONSTDC_NO_DEPRECATE",
+--     "X86_FEATURES",
+--     "X86_PCLMULQDQ_CRC",
+--     "X86_SSE2",
+--     "X86_SSE42_CRC_INTRIN",
+--     "X86_SSE42_CRC_HASH",
+--     "X86_AVX2",
+--     "X86_AVX_CHUNKSET",
+--     "X86_SSE2_CHUNKSET",
+--     "UNALIGNED_OK",
+--     "UNALIGNED64_OK",
+--     "WITH_GZFILEOP",
+--     "ZLIB_COMPAT"
+--   }
+--   includedirs {
+--     "ext/zlib-ng",
+--   }
+-- end
 
 function zlib_defines()
   includedirs {
@@ -187,7 +187,7 @@ workspace "SumatraPDF"
   filter {}
 
   filter "platforms:arm64"
-     architecture "arm64"
+     architecture "ARM64"
   filter {}
 
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
@@ -406,17 +406,18 @@ workspace "SumatraPDF"
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
-  project "zlib-ng"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    zlib_ng_defines()
-    disablewarnings { "4244", "4267" }
-    zlib_ng_files()
+  -- project "zlib-ng"
+  --   kind "StaticLib"
+  --   language "C"
+  --   optconf()
+  --   zlib_ng_defines()
+  --   disablewarnings { "4244", "4267" }
+  --   zlib_ng_files()
 
   -- to make Visual Studio solution smaller
   -- combine 9 libs only used by mupdf into a single project
   -- instead of having 9 projects
+
   project "mupdf-libs"
     kind "StaticLib"
     language "C"
@@ -1043,7 +1044,7 @@ workspace "SumatraPDF"
 
 workspace "MakeLZSA"
   configurations { "Debug", "Release" }
-  platforms { "x32", "x64" }
+  platforms { "x32", "x64", "arm64", "x64_asan" }
   startproject "MakeLZSA"
 
   filter "platforms:x32"
@@ -1101,13 +1102,6 @@ workspace "MakeLZSA"
     "_WIN32_WINNT=0x0603"
   }
 
-  project "zlib"
-    kind "StaticLib"
-    language "C"
-    optconf()
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    zlib_files()
-
   project "MakeLZSA"
     kind "ConsoleApp"
     language "C++"
@@ -1115,12 +1109,13 @@ workspace "MakeLZSA"
     regconf()
 
     makelzsa_files()
-    uses_zlib()
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     includedirs { "src", "ext/lzma/C", "ext/unarr" }
 
     -- for zlib
-    -- disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    -- zlib_files()
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    zlib_files()
+    uses_zlib()
 
     -- unarrlib
     -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
@@ -1130,5 +1125,4 @@ workspace "MakeLZSA"
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
     includedirs { "ext/bzip2", "ext/lzma/C" }
     unarr_files()
-    links_zlib()
     links { "shlwapi", "version", "comctl32", "wininet" }
