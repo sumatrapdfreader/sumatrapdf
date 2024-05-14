@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	mdhtml "github.com/gomarkdown/markdown/html"
@@ -398,9 +399,12 @@ func mdToHTMLAll() {
 }
 
 func writeDocsHtmlFiles() {
+	wwwDir := filepath.Join("docs", "www")
+	must(os.RemoveAll(wwwDir))
+	must(os.MkdirAll(filepath.Join(wwwDir, "img"), 0755))
 	for name, info := range mdProcessed {
 		name = strings.ReplaceAll(name, ".md", ".html")
-		path := filepath.Join("docs", "www", name)
+		path := filepath.Join(wwwDir, name)
 		err := os.WriteFile(path, info.data, 0644)
 		logf("wrote '%s', len: %d\n", path, len(info.data))
 		must(err)
@@ -408,7 +412,7 @@ func writeDocsHtmlFiles() {
 	{
 		// copy image files
 		copyFileMustOverwrite = true
-		dstDir := filepath.Join("docs", "www", "img")
+		dstDir := filepath.Join(wwwDir, "img")
 		srcDir := filepath.Join("docs", "md", "img")
 		copyFilesRecurMust(dstDir, srcDir)
 	}
@@ -417,9 +421,11 @@ func writeDocsHtmlFiles() {
 		makeLzsa := filepath.Join("bin", "MakeLZSA.exe")
 		archive := filepath.Join("docs", "manual.dat")
 		os.Remove(archive)
-		docsDir := filepath.Join("docs", "www")
-		cmd := exec.Command(makeLzsa, archive, docsDir)
+		cmd := exec.Command(makeLzsa, archive, wwwDir)
 		runCmdLoggedMust(cmd)
+		size := u.FileSize(archive)
+		sizeH := humanize.Bytes(uint64(size))
+		logf("size of '%s': %s\n", archive, sizeH)
 	}
 }
 

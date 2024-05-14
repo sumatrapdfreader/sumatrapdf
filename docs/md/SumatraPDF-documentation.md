@@ -90,11 +90,3 @@ Found a bug? Have feature request? Submit via [issue tracker](https://github.com
 Have feedback or question? Discuss in a [forum](https://github.com/sumatrapdfreader/sumatrapdf/discussions).
 
 Want to make SumatraPDF work better in your language? [Contribute a translation.](Contribute-translation.md)
-
-## Home screen
-
-![Home Page](img/homepage.png)
-
-## Tab interface showing PDF document
-
-![format-pdf.png](img/format-pdf.png)
