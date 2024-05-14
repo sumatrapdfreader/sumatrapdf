@@ -39,18 +39,30 @@ var (
 	fsys        fs.FS
 )
 
-const h1BreadcrumbsStart = `
-<div class="breadcrumbs">
-	<div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div>
-	<div>/</div>
-	<div>`
 const h1BreadcrumbsEnd = `</div>
 </div>
 `
 
+func getH1BreadcrumbStart() string {
+	const h1BreadcrumbsStart = `
+	<div class="breadcrumbs">
+		<div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div>
+		<div>/</div>
+		<div>`
+	const h1BreadcrumbsStartWebsite = `
+<div class="breadcrumbs">
+	<div><a href="SumatraPDF-documentation">SumatraPDF documentation</a></div>
+	<div>/</div>
+	<div>`
+	if docsForWebsite {
+		return h1BreadcrumbsStartWebsite
+	}
+	return h1BreadcrumbsStart
+}
+
 func renderFirstH1(w io.Writer, h *ast.Heading, entering bool, seenFirstH1 *bool) {
 	if entering {
-		io.WriteString(w, h1BreadcrumbsStart)
+		io.WriteString(w, getH1BreadcrumbStart())
 	} else {
 		*seenFirstH1 = true
 		io.WriteString(w, h1BreadcrumbsEnd)
@@ -364,6 +376,9 @@ func mdToHTML(name string, force bool) ([]byte, error) {
 	editLink = strings.Replace(editLink, "{name}", name, -1)
 	innerHTML += editLink
 	filePath = "manual.tmpl.html"
+	if docsForWebsite {
+		filePath = "manual.website.tmpl.html"
+	}
 	tmplManual, err := fs.ReadFile(fsys, filePath)
 	must(err)
 	s := strings.Replace(string(tmplManual), "{{InnerHTML}}", innerHTML, -1)
@@ -372,6 +387,7 @@ func mdToHTML(name string, force bool) ([]byte, error) {
 	title = strings.Replace(title, "-", " ", -1)
 	s = strings.Replace(s, "{{Title}}", title, -1)
 
+	panicIf(searchJS == "")
 	if name == "Commands.md" {
 		s = strings.Replace(s, `<div>:search:</div>`, searchHTML, -1)
 		toReplace := "</body>"
@@ -386,38 +402,22 @@ var (
 	docsForWebsite = false
 )
 
-func genHTMLDocsForWebsite() {
-	logf("genHTMLDocsForWebsite starting\n")
-	dir := updateSumatraWebsite()
-	if !u.DirExists(dir) {
-		logFatalf("Directory '%s' doesn't exist\n", dir)
+var searchJS = ``
+var searchHTML = ``
+
+func loadSearchJS() {
+	{
+		path := filepath.Join("do", "gen_docs.search.js")
+		d, err := os.ReadFile(path)
+		must(err)
+		searchJS = `<script>` + string(d) + `</script>`
 	}
 	{
-		cmd := exec.Command("git", "pull")
-		cmd.Dir = dir
-		runCmdMust(cmd)
-	}
-	// don't use .html extension in links to generated .html files
-	// for docs we need them because they are shown from file system
-	// for website we prefer "clean" links because they are served via web server
-	mdHTMLExt = false
-}
-
-func genHTMLDocsFromMarkdown() {
-	logf("genHTMLDocsFromMarkdown starting\n")
-	timeStart := time.Now()
-	fsys = os.DirFS("docs")
-
-	mdToHTML("SumatraPDF-documentation.md", false)
-	for len(mdToProcess) > 0 {
-		name := mdToProcess[0]
-		mdToProcess = mdToProcess[1:]
-		_, err := mdToHTML(name, false)
+		path := filepath.Join("do", "gen_docs.search.html")
+		d, err := os.ReadFile(path)
 		must(err)
+		searchHTML = string(d)
 	}
-	writeDocsHtmlFiles()
-	//u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
-	logf("genHTMLDocsFromMarkdown finished in %s\n", time.Since(timeStart))
 }
 
 func removeHTMLFilesInDir(dir string) {
@@ -473,119 +473,42 @@ func writeDocsHtmlFiles() {
 		dir, err := filepath.Abs(wwwDir)
 		must(err)
 		url := "file://" + filepath.Join(dir, "SumatraPDF-documentation.html")
-		logf("To view, open %s\n", url)
+		logf("To view, open:\n%s\n", url)
 	}
 }
 
-const (
-	searchHTML = `
-	<h3 style="margin-top: 1em;">Find command:</h3>
-	<table style="margin-bottom: 2em;" class="collection-content">
-		<thead>
-			<tr>
-				<th width="0">Command IDs</th>
-				<th width="0">Keyboard shortcuts</th>
-				<th width="0">Command Palette</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td width="0"><input type="text" id="cmd_ids" /></td>
-				<td width="0"><input type="text" id="key_sht" /></td>
-				<td width="0"><input type="text" id="cmd_plt" /></td>
-			</tr>
-		</tbody>
-	</table>
-`
+func genHTMLDocsForWebsite() {
+	logf("genHTMLDocsForWebsite starting\n")
+	docsForWebsite = true
+	dir := updateSumatraWebsite()
+	if !u.DirExists(dir) {
+		logFatalf("Directory '%s' doesn't exist\n", dir)
+	}
+	{
+		cmd := exec.Command("git", "pull")
+		cmd.Dir = dir
+		runCmdMust(cmd)
+	}
+	// don't use .html extension in links to generated .html files
+	// for docs we need them because they are shown from file system
+	// for website we prefer "clean" links because they are served via web server
+	mdHTMLExt = false
+}
 
-	searchJS = `
-  <script>
-    function driver() {
-      let selectors = ["input#cmd_ids", "input#key_sht", "input#cmd_plt"];
-      let q = "//table[contains(@class,'collection-content')]/tbody/tr[not(./td/input)]";
-      let rows = getElementByXpath(q);
-      console.log("rows:", rows.length);
-      let lists = [], inputs = [];
-      selectors.forEach((x, y) => { inputs[y] = document.querySelector(x); });
-      for (let i = 1; i <= selectors.length; i++) {
-        q = "//table[contains(@class,'collection-content')]/tbody/tr/td[(not(./input))][position()=" + i + "]";
-        let els = getElementByXpath(q);
-        els = els.map(x => x.innerText);
-        lists[i - 1] = els;
-      }
+func genHTMLDocsFromMarkdown() {
+	logf("genHTMLDocsFromMarkdown starting\n")
+	timeStart := time.Now()
+	loadSearchJS()
+	fsys = os.DirFS("docs")
 
-      lists[1] = lists[1].map(x => x.replace(/(?:(?<!\+)|(?<=\+\+))\,/g, ""));//removing commas b/w shortcuts
-      function tableFilter() {
-        let regexs = [
-          getRegex_cmdids(inputs[0]),
-          getRegex_keysht(inputs[1]),
-          getRegex_cmdplt(inputs[2])
-        ];
-        rows.forEach(row => row.setAttribute("style", "display: none;"));
-        let shortlist = (new Array(rows.length)).fill(undefined);
-        regexs.forEach((regex, list_index) => {
-          if (!!regex)
-            lists[list_index].forEach((item, row_index) => {
-              if (shortlist[row_index] === undefined)
-                shortlist[row_index] = regex.test(item);
-              else if (shortlist[row_index])
-                shortlist[row_index] = regex.test(item);
-            });
-        });
-        if (!regexs.some(x => !!x))
-          rows.forEach(row => row.removeAttribute("style"));
-        else
-          shortlist.forEach((flag, index) => {
-            if (flag)
-              rows[index].removeAttribute("style");
-          });
-      };
-      inputs.forEach(ele => setEvent(ele, tableFilter));
-    };
-
-    function setEvent(target, callback) {
-      target.addEventListener("keyup", callback);
-    };
-
-    function getElementByXpath(xpathToExecute) {
-      let result = [];
-      let snapshotNodes = document.evaluate(xpathToExecute, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-      for (let i = 0; i < snapshotNodes.snapshotLength; i++)
-        result.push(snapshotNodes.snapshotItem(i));
-      return result;
-    };
-
-    function getRegex_cmdids(ele) {
-      let ip_val = ele.value.replace(/([^\w\s])/g, "").replace(/\s+$/, "");
-      if (ip_val.length == 0) return false;
-      return new RegExp(
-        ip_val
-          .replace(/\s+(\w+)/g, "(?=.*$1)")
-        , "i");
-    };
-
-    function getRegex_keysht(ele) {
-      let ip_val = ele.value.replace(/\s+$/, "");
-      if (ip_val.length == 0) return false;
-      return new RegExp(
-        "(?:(?=\\W)(?<=\\w)|(?<!\\w))(" +
-        ip_val.replace(/([^\w\s])/g, "\\$1")
-          .replace(/([^\s]+)/g, "($1)")
-          .replace(/\s+/g, "\|")
-        + ")(?:(?<=\\W)(?=\\w)|(?!\\w))"
-        , "i");
-    };
-
-    function getRegex_cmdplt(ele) {
-      let ip_val = ele.value.replace(/\s+$/, "");
-      if (ip_val.length == 0) return false;
-      return new RegExp(
-        "(?:(?=\\W)(?<=\\w)|(?<!\\w))" +
-        ip_val
-          .replace(/([^\w\s])/g, "\\$1")
-          .replace(/\s+([\w\W]+)/g, "(?=.*\\b$1)")
-        , "i");
-    };
-    driver();
-  </script>`
-)
+	mdToHTML("SumatraPDF-documentation.md", false)
+	for len(mdToProcess) > 0 {
+		name := mdToProcess[0]
+		mdToProcess = mdToProcess[1:]
+		_, err := mdToHTML(name, false)
+		must(err)
+	}
+	writeDocsHtmlFiles()
+	//u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
+	logf("genHTMLDocsFromMarkdown finished in %s\n", time.Since(timeStart))
+}

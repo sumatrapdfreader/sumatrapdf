@@ -23,7 +23,7 @@ Certain actions add navigation point. You can go back and forward in the history
 
 Actions that add navigation point:
 * explicitly going to a page (`g`, `Ctrl + g`)
-* clicking on a links withing documents
+* clicking on a links within documents
 * going to a page via Bookmarks tree view
 * navigating via favorites (`Ctrl + b`)
 

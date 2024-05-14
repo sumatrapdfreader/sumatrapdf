@@ -213,7 +213,7 @@ struct TooltipCreateArgs {
     HFONT font = nullptr;
 };
 
-// a tooltip manages multiple areas withing HWND
+// a tooltip manages multiple areas within HWND
 struct Tooltip : Wnd {
     Tooltip();
     HWND Create(const TooltipCreateArgs&);
