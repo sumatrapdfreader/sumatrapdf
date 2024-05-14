@@ -1,9 +1,6 @@
-name: daily
+name: daily_manual
 on:
-  schedule:
-    - cron: "0 1 * * *"
-  repository_dispatch:
-    types: [build-daily]
+  workflow_dispatch
 jobs:
   build:
     name: Build
