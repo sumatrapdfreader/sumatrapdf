@@ -485,11 +485,13 @@ func genHTMLDocsFromMarkdown() {
 
 func copyDocsToWebsite() {
 	logf("copyDocsToWebsite()\n")
-	websiteDir := updateSumatraWebsite()
+	updateSumatraWebsite()
 	srcDir := filepath.Join("docs", "md")
+	websiteDir := getWebsiteDir()
 	dstDir := filepath.Join(websiteDir, "server", "www", "docs-md")
 	copyFilesRecurMust(dstDir, srcDir)
-	runExeInDirMust(websiteDir, "git", "status")
+	d := runExeInDirMust(websiteDir, "git", "status")
+	logf("\n%s\n", string(d))
 }
 
 func genHTMLDocsForWebsite() {
