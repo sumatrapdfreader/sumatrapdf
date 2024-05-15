@@ -14,7 +14,7 @@ Multiple DDE commands: `[Command1(parameter1, parameter2, ..., )][Command2(...)]
 
 ### Named commands
 
-Since 3.5 (currently in [pre-release](https://www.sumatrapdfreader.org/prerelease)) you can send all [named commands](Commands.md).
+Since 3.5 you can send all [named commands](Commands.md).
 
 - format `[<command_id>]` e.g. `[CmdClose]`
 
