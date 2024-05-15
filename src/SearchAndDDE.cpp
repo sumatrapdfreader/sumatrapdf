@@ -40,12 +40,6 @@
 
 #include "utils/Log.h"
 
-// open file command
-//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
-//    if newwindow = 1 then a new window is created even if the file is already open
-//    if focus = 1 then the focus is set to the window
-//  eg: [Open("c:\file.pdf", 1, 1, 0)]
-
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
@@ -716,26 +710,48 @@ static const char* HandleSearchCmd(const char* cmd, bool* ack) {
 /*
 Open file DDE Command
 
-[Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
+[Open("<pdffilepath>"[,<newWindow>,<setFocus>,<forceRefresh>,<inCurrentTab>])]
+    newWindow, setFocus, forceRefresh, inCurrentTab are flags that can be 0 or 1 (set)
+if the flag is set to 1:
+    newWindow    : new window is created even if the file is already open
+    setFocus     : focus is set to the window
+    forceRefresh : reloads document
+    inCurrentTab : replaces document in current tab (if 0 loads in a new tab)
+                   if newWindow != 0 => ignored
+valid formats:
+    [Open("c:\file.pdf")]
+    [Open("c:\file.pdf", 1, 1, 0)]
+    [Open("c:\file.pdf", 1, 1, 0, 1)]
 */
+// TODO: handle inCurrentTab flag
 static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     AutoFreeStr pdfFile;
     int newWindow = 0;
-    BOOL setFocus = 0;
-    BOOL forceRefresh = 0;
+    int setFocus = 0;
+    int forceRefresh = 0;
+    int inCurrentTab = 0;
     const char* next = str::Parse(cmd, "[Open(\"%s\")]", &pdfFile);
+    if (!next) {
+        const char* pat = "[Open(\"%s\",%u,%u,%u,%u)]";
+        next = str::Parse(cmd, pat, &pdfFile, &newWindow, &setFocus, &forceRefresh, &inCurrentTab);
+    }
     if (!next) {
         const char* pat = "[Open(\"%s\",%u,%u,%u)]";
         next = str::Parse(cmd, pat, &pdfFile, &newWindow, &setFocus, &forceRefresh);
     }
     if (!next) {
+        logf("HandleOpenCmd: invalid command format '%s'\n", cmd);
         return nullptr;
+    }
+    if (newWindow != 0 && inCurrentTab != 0) {
+        inCurrentTab = 0;
+        logf("HandleOpenCmd: setting inCurrentTab to 0 because newWindow != 0\n");
     }
 
     bool focusTab = (newWindow == 0);
     MainWindow* win = nullptr;
     if (newWindow == 2) {
-        // TODO: don't do it if we have a about window
+        // TODO: don't do it if we have a window with just about tab
         win = CreateAndShowMainWindow(nullptr);
     }
 
