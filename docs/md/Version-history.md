@@ -72,6 +72,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - enable `CmdCloseOtherTabs`, `CmdCloseTabsToTheRight` commands from command palette
 - recognize `PgUp` / `PgDown` and a few more in keyboard shortcuts
 - add `-disable-auto-rotation` cmd-line print option
+- add `-dde` cmd-line option
 
 ### 3.4.6 (2022-06-08)
 

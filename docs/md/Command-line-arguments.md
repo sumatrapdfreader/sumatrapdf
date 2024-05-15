@@ -38,7 +38,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 ## Send DDE commands
 
-- `-dde cmd` : send [DDE commands](DDE-Commands.md) to currently running instance e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to properly quote arguments. File paths must be absolute.
+- `-dde cmd` : send [DDE commands](DDE-Commands.md) to currently running instance e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to properly quote arguments. File paths must be absolute. Since 3.5.
 
 ## Printing options
 
