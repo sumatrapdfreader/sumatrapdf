@@ -555,8 +555,18 @@ func main() {
 }
 
 func logView() {
-	cmd := exec.Command("go", "run", `.\tools\logview\`)
-	runCmdLoggedMust(cmd)
+	path := filepath.Join(logViewWinDir, "build", "bin", "logview.exe")
+	if !u.FileExists(path) {
+		logf("'%s' doesn't exist, rebuilding\n", path)
+		buildLogView()
+	} else {
+		logf("'%s' already exist. If you want to re-build:\n", path)
+		logf("rm \"%s\"\n", path)
+	}
+	cmd := exec.Command(path)
+	err := cmd.Start()
+	must(err)
+	logf("Started %s\n", path)
 }
 
 func cmdRunLoggedInDir(dir string, args ...string) {
