@@ -725,73 +725,118 @@ valid formats:
 */
 // TODO: handle inCurrentTab flag
 static const char* HandleOpenCmd(const char* cmd, bool* ack) {
-    AutoFreeStr pdfFile;
+    AutoFreeStr filePath;
     int newWindow = 0;
     int setFocus = 0;
     int forceRefresh = 0;
     int inCurrentTab = 0;
-    const char* next = str::Parse(cmd, "[Open(\"%s\")]", &pdfFile);
+    const char* next = str::Parse(cmd, "[Open(\"%s\")]", &filePath);
     if (!next) {
         const char* pat = "[Open(\"%s\",%u,%u,%u,%u)]";
-        next = str::Parse(cmd, pat, &pdfFile, &newWindow, &setFocus, &forceRefresh, &inCurrentTab);
+        next = str::Parse(cmd, pat, &filePath, &newWindow, &setFocus, &forceRefresh, &inCurrentTab);
     }
     if (!next) {
         const char* pat = "[Open(\"%s\",%u,%u,%u)]";
-        next = str::Parse(cmd, pat, &pdfFile, &newWindow, &setFocus, &forceRefresh);
+        next = str::Parse(cmd, pat, &filePath, &newWindow, &setFocus, &forceRefresh);
     }
     if (!next) {
         logf("HandleOpenCmd: invalid command format '%s'\n", cmd);
         return nullptr;
     }
+    // on startup this is called while LoadDocument is in progress, which causes
+    // all sort of mayhem. Queue files to be loaded in a sequence
+    if (gIsStartup) {
+        logf("HandleOpenCmd: gIsStartup, appending to gDdeOpenOnStartup\n");
+        gDdeOpenOnStartup.Append(filePath);
+        return next;
+    }
+
     if (newWindow != 0 && inCurrentTab != 0) {
         inCurrentTab = 0;
         logf("HandleOpenCmd: setting inCurrentTab to 0 because newWindow != 0\n");
     }
 
     bool focusTab = (newWindow == 0);
+
+    // intelligently pick a window or create one
     MainWindow* win = nullptr;
-    if (newWindow == 2) {
-        // TODO: don't do it if we have a window with just about tab
-        win = CreateAndShowMainWindow(nullptr);
-    }
-
-    // on startup this is called while LoadDocument is in progress, which causes
-    // all sort of mayhem. Queue files to be loaded in a sequence
-    if (gIsStartup) {
-        gDdeOpenOnStartup.Append(pdfFile);
-        return next;
-    }
-
-    if (win == nullptr) {
-        win = FindMainWindowByFile(pdfFile, focusTab);
-    }
-    if (newWindow || !win) {
-        // https://github.com/sumatrapdfreader/sumatrapdf/issues/2315
-        // open in the last active window
-        if (win == nullptr) {
-            win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+    MainWindow* emptyExistingWin = nullptr;
+    auto nWindows = gWindows.Size();
+    for (auto& w : gWindows) {
+        if (w->IsAboutWindow()) {
+            emptyExistingWin = w;
+            logf("HandleOpenCmd: found empty existing window\n");
+            break;
         }
-        LoadArgs args(pdfFile, win);
+    }
+    if (newWindow > 0) {
+        if (emptyExistingWin) {
+            // instead of opening new window, re-use exisitng open window
+            win = emptyExistingWin;
+            logf("HandleOpenCmd: newWindow > 0, using empty existing window\n");
+        } else {
+            win = CreateAndShowMainWindow(nullptr);
+            logf("HandleOpenCmd: newWindow > 0, created new window\n");
+        }
+    }
+    bool doLoad = true;
+    if (!win) {
+        win = FindMainWindowByFile(filePath, focusTab);
+        if (win) {
+            logf("HandleOpenCmd: found existing window with file '%s'\n", filePath.Get());
+            doLoad = false;
+            if (!win->IsDocLoaded()) {
+                ReloadDocument(win, false);
+                forceRefresh = 0;
+                logf("HandleOpenCmd: existing tab was not loaded, so reloaded, set forceRefresh = 0\n");
+            }
+        }
+    }
+    if (!win) {
+        if (nWindows == 1) {
+            // of only one window, use that one
+            win = gWindows[0];
+            logf("HandleOpenCmd: using the only window\n");
+        }
+        if (!win) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/2315
+            // open in the last active window
+            win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+            if (win) {
+                logf("HandleOpenCmd: found last active window\n");
+            } else {
+                logf("HandleOpenCmd: didn't find last active window\n");
+            }
+        }
+        if (!win && nWindows > 0) {
+            // if can't find active, using the first
+            win = gWindows[0];
+            logf("HandleOpenCmd: first window\n");
+        }
+    }
+
+    if (doLoad) {
+        LoadArgs args(filePath, win);
         args.activateExisting = !IsCtrlPressed();
         win = LoadDocument(&args);
-    } else if (!win->IsDocLoaded()) {
-        ReloadDocument(win, false);
-        forceRefresh = 0;
+        if (!win) {
+            logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", filePath.Get());
+        }
     }
 
     // TODO: not sure why this triggers. Seems to happen when opening multiple files
     // via Open menu in explorer. The first one is opened via cmd-line arg, the
     // rest via DDE.
     // CrashIf(win && win->IsAboutWindow());
-    if (!win) {
-        return next;
-    }
-
-    if (forceRefresh) {
-        ReloadDocument(win, true);
-    }
-    if (setFocus) {
-        win->Focus();
+    if (win) {
+        if (forceRefresh) {
+            logf("HandleOpenCmd: forceRefresh != 0 so calling ReloadDocument()\n");
+            ReloadDocument(win, true);
+        }
+        if (setFocus) {
+            logf("HandleOpenCmd: setFocus != 0 so calling win->Focus()\n");
+            win->Focus();
+        }
     }
 
     *ack = true;
