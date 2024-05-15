@@ -518,7 +518,7 @@ kw:&Pesya lea gwersyon 32-byt
 nl:&Doorgaan met installeren van 32bit versie
 no:&Fortsett installasjon av 32-biters versjon
 pl:&Kontynuuj instalację wersji 32-bitowej
-pt:&Continuar com a instalação 32 bits
+pt:&Continuar instalando a versão de 32 bits
 ro:&Continuă cu instalare versiune 32 de biți
 ru:&Продолжить установку 32-разрядной версии
 sk:&Pokračovať v inštalácii 32-bitovej verzie
@@ -571,7 +571,7 @@ nl:Selectie kopiëren
 nn:&Kopier utval
 no:&Kopier valgt område
 pl:Kopiuj &zaznaczenie
-pt:&Copiar seleção
+pt:&Copiar Seleção
 ro:&Copiază selecția
 ru:С&копировать выделенное
 sk:&Kopírovať vybrané
@@ -619,7 +619,7 @@ lt:&Kopijuoti į iškarpinę
 nl:&Kopieer Naar Klembord
 no:&Kopier til utklippstavle
 pl:Kopiuj do s&chowka
-pt:&Copiar para a área de transferência
+pt:&Copiar pra Área de Transferência
 ro:&Copiază pe Clipboard
 ru:С&копировать в буфер обмена
 sk:&Kopírovať do schránky
@@ -721,7 +721,7 @@ nl:Niet opnieuw vragen
 nn:Ikkje spør meg igjen
 no:&Ikke spør meg igjen
 pl:&Nie pytaj więcej
-pt:&Não perguntar novamente
+pt:&Não me perguntar de novo
 ro:&Nu mă întreba din nou
 ru:&Больше не спрашивать
 sk:&Nepýtať sa znova
@@ -774,7 +774,7 @@ nl:Alleen &Even pagina's
 nn:&Kun partalssider
 no:Bare &partallssider
 pl:Strony &parzyste
-pt:Ap&enas páginas pares
+pt:&Só as páginas pares
 ro:&Doar paginile pare
 ru:Только ч&ётные страницы
 sk:&Tlačiť iba párne strany
@@ -3839,7 +3839,7 @@ nl:Weet u zeker dat u SumatraPDF wilt verwijderen?
 nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
-pt:Tem certeza de que pretende desinstalar SumatraPDF?
+pt:Você tem certeza que você quer desinstalar o SumatraPDF?
 ro:Sunteţi sigur că doriţi să dezinstalaţi Sumatra PDF?
 ru:Вы действительно хотите удалить SumatraPDF?
 sk:Naozaj chcete odinštalovat SumatraPDF?
@@ -4208,7 +4208,7 @@ nl:Achtergrondkleur:
 nn:Bakgrunnsfarge:
 no:Bakgrunnsfarge:
 pl:Kolor tła:
-pt:Cor de fundo:
+pt:Cor de Fundo:
 ro:Culoare fundal:
 ru:Цвет фона:
 sk:Farba pozadia:
@@ -4261,7 +4261,7 @@ nl:Boekweergave
 nn:Bokvising
 no:Bokvisning
 pl:Widok odczytu
-pt:Ver como livro
+pt:Visualizar como Livro
 ro:Vizualizare în format carte
 ru:В разворот
 sk:Zobraziť ako knihu
@@ -4314,7 +4314,7 @@ nl:Bladwijzer maken
 nn:Bokmerk snarveg
 no:Bokmerk snarveier
 pl:Zakładki
-pt:Atalhos de marcadores
+pt:Atalhos dos Marcadores
 ro:Comenzi rapide - semne de carte
 ru:Ярлыки закладок
 sk:Zástupca záložiek
@@ -4629,7 +4629,7 @@ nl:Kan geen verbinding maken met internet (fout %#x).
 nn:Kan ikkje kople til internettet (Feilkode %#x).
 no:Kan ikke koble til Internett (feilmelding %#x).
 pl:Nie można połączyć z Internetem (błąd %#x).
-pt:Não foi possível ligar à Internet (erro %#x).
+pt:Não pôde conectar com a Internet (erro %#x).
 ro:Conectare la Internet eșuată (eroare %#x).
 ru:Отсутствует соединение с Интернетом (ошибка %#x).
 sk:Pripojenie k internetu zlyhalo (chyba %#x).
@@ -4735,7 +4735,7 @@ nl:Kan dit bestand niet afdrukken
 nn:Kan ikkje skrive ut denne fila
 no:Kan ikke skrive ut filen
 pl:Nie można drukować tego pliku
-pt:Não foi possível imprimir este ficheiro
+pt:Não pôde imprimir este ficheiro
 ro:Nu pot imprima acest fișier
 ru:Не удалось распечатать этот файл
 sk:Tlač súboru zlyhala
@@ -4788,7 +4788,7 @@ nl:Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in d
 nn:Kan ikkje starte invertert søkjekommando. Venligst sjekk kommandolinja i innstillingane.
 no:Kan ikke starte invertert søkekommando. Vennligst sjekk kommandolinjen i innstillingene.
 pl:Nie można rozpocząć odwrotnego wyszukiwania. Proszę sprawdzić ustawienia wiersza poleceń.
-pt:Não foi possível iniciar o comando da pesquisa inversa. Por favor verifique a linha de comandos nas definições.
+pt:Não pôde iniciar o comando de busca invertida. Por favor verifique a linha de comandos nas definições.
 ro:Nu pot lansa comanda de căutare inversă. Verificați, vă rog, opțiunile din linia de comandă.
 ru:Ошибка команды обратного поиска. Проверьте параметры командной строки.
 sk:Príkaz inverzné hľadanie zlyhal. Skontrolujte príkazový riadok v nastaveniach.
@@ -4894,7 +4894,7 @@ nl:Controleren op &Updates
 nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
 pl:Szukaj &aktualizacji
-pt:Procurar at&ualizações
+pt:Procurar &Atualizações
 ro:Verifică apariția unei &versiuni noi
 ru:Проверить наличие новой &версии
 sk:&Skontrolovať novú verziu
@@ -4945,7 +4945,7 @@ nl:Controleer op Update...
 nn:Ser etter oppdatering...
 no:Ser etter oppdatering...
 pl:Szukanie aktualizacji...
-pt:A procurar atualizações...
+pt:Procurando atualização...
 ro:Căutare actualizare...
 ru:Проверка наличия обновления...
 sk:Kontrolujú sa aktualizácie…
@@ -5037,7 +5037,7 @@ ja:%d 個の履歴を削除し、サムネイルを削除しました。
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
-pt:Histórico de %d ficheiros removido e miniaturas eliminadas.
+pt:Histórico de %d ficheiros limpo, miniaturas apagadas.
 ro:Istoricul șters pentru %d fișiere, miniaturi șterse.
 ru:Очищена история %d файлов, удалены миниатюры.
 sk:Vymazaná história %d súborov, odstránené náhľady.
@@ -5072,7 +5072,7 @@ ja:履歴を削除中...
 kr:내역 초기화...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
-pt:A limpar histórico...
+pt:Limpando histórico...
 ro:Ștergere istoric...
 ru:Очистка истории...
 sk:Vymazávanie histórie…
@@ -5185,7 +5185,7 @@ kr:다른 탭 닫기
 nl:Andere Tabbladen Sluiten
 no:Lukk andre faner
 pl:Zamknij inne karty
-pt:Fechar outros separadores
+pt:Fechar as Outras Abas
 ro:Închide alte file
 ru:Закрыть другие вкладки
 sk:Zatvoriť ostatné karty
@@ -5249,7 +5249,7 @@ kr:오른쪽 탭 닫기
 nl:Sluit Tabbladen Rechts
 no:Lukk faner til høyre
 pl:Zamknij karty po prawej stronie
-pt:Fechar separadores à direita
+pt:Fechar as Abas a Direita
 ro:Închide filele la dreapta
 ru:Закрыть вкладки справа
 sk:Zatvoriť karty vpravo
@@ -5452,7 +5452,7 @@ kr:명령 팔레트
 nl:Opdrachten
 no:Kommandopalett
 pl:Paleta poleceń
-pt:Paleta de comandos
+pt:Paleta de Comandos
 ro:Paleta de comenzi
 ru:Панель команд
 sk:Paleta príkazov
@@ -5661,7 +5661,7 @@ nl:Doorlopende boekweergave
 nn:Kontinuerleg bokvising
 no:Kontinuerlig bokvisning
 pl:Widok odczytu - układ ciągły
-pt:Ver como livro contínuo
+pt:Visualizar como Livro Contínuo
 ro:Vedere în format carte, continuu
 ru:Прокрутка в разворот
 sk:Priebežný knižný pohľad
@@ -5714,7 +5714,7 @@ nl:Dubbele pagina doorlopend
 nn:Kontunuerleg motståande
 no:Kontinuerlig - motstående
 pl:Wiele stron - układ ciągły
-pt:Lado a lado contínuo
+pt:Lado a Lado Contínuo
 ro:Pagină dublă continuu
 ru:Прокрутка по две страницы
 sk:Dve strany priebežne
@@ -5767,7 +5767,7 @@ nl:Help met Vertalen
 nn:Delta med omsetjing
 no:Bidra med oversetting
 pl:Dodaj swoje tłumaczenie
-pt:Participar na tradução
+pt:Contribua com a Tradução
 ro:Contribuie la traducere
 ru:Помочь с переводом
 sk:Prispieť k prekladu programu
@@ -5968,7 +5968,7 @@ nl:Kopieer Bestand Pad
 nn:Kopier Filbane
 no:Kopier filbane
 pl:Kopiuj ścieżkę pliku
-pt:Copiar caminho do ficheiro
+pt:Copiar o Caminho do Ficheiro
 ro:Copiază cale de fișier
 ru:Скопировать путь к файлу
 sk:Kopírovať cestu k súboru
@@ -6011,7 +6011,7 @@ kr:클립보드에 복사
 nl:Kopieer naar klembord
 no:Kopier til utklippstavle
 pl:Kopiuj do schowka
-pt:Copiar para a área de transferência
+pt:Copiar pra Área de Transferência
 ro:Copiază pe Clipboard
 ru:Скопировать в буфер обмена
 sk:Kopírovať do schránky
@@ -6063,7 +6063,7 @@ nl:Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 nn:Kopiering av tekst blei nektast (Kopierer kun som bilete)
 no:Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
 pl:Nie można kopiować tekstu (można kopiować jako obrazy)
-pt:A cópia de texto foi recusada (copiar como imagem)
+pt:A cópia do texto foi negada (copiando apenas como imagem)
 ro:Copierea textului interzisă (s-a copiat ca imagine)
 ru:Скопировать текст невозможно (копируется как изображение)
 sk:Kopírovanie textu odmietnuté (iba ako obrázok)
@@ -6116,7 +6116,7 @@ nl:Auteursrecht
 nn:Opphavsret:
 no:Opphavsrett:
 pl:Prawo autorskie:
-pt:Direitos de autor:
+pt:Copyright:
 ro:Drept de autor
 ru:Авторские права:
 sk:Autorské práva:
@@ -6169,7 +6169,7 @@ nl:Kan geen printereigenschappen verkrijgen
 nn:Kunne ikkje hente utskrivaregenskapene
 no:Kunne ikke innhente skriveregenskaper
 pl:Nie można uzyskać właściwości drukarki
-pt:Não foi possível obter as propriedades da impressora
+pt:Não pôde obter as propriedades da impressora
 ro:Nu s-au putut obține proprietățile imprimantei
 ru:Не удалось определить свойства принтера
 sk:Získanie vlastností tlačiarne zlyhalo
@@ -6222,7 +6222,7 @@ nl:Kan de installatiemap niet aanmaken
 nn:Kunne ikkje lage installasjonsdirektivet
 no:Kunne ikke opprette installasjonsmappen
 pl:Nie można utworzyć katalogu instalacyjnego
-pt:Não foi possível criar a pasta de instalação
+pt:Não pôde criar o diretório de instalação
 ro:Nu s-a putut crea directorul de instalare
 ru:Не удалось создать папку установки
 sk:Nie je možné vytvoriť inštalačný adresár
@@ -6270,7 +6270,7 @@ kw:Ny yllir kavos hanow pryntyer
 nl:Kan de naam van de printer niet vinden
 no:Kunne ikke hente skrivernavn
 pl:Nie można uzyskać nazwy drukarki
-pt:Não foi possível obter o nome da impressora
+pt:Não pôde obter o nome da impressora
 ro:Nu s-a putut obține numele imprimantei
 ru:Не удалось получить имя принтера
 sk:Nepodarilo sa získať názov tlačiarne
@@ -6323,7 +6323,7 @@ nl:Kan de printer niet initialiseren
 nn:Kunne ikkje starte utskrivaren
 no:Kunne ikke klargjøre skriveren
 pl:Nie można zainicjować drukarki
-pt:Não foi possível iniciar a impressora
+pt:Não pôde inicializar a impressora
 ro:Nu s-a putut inițializa imprimanta
 ru:Не удалось инициализировать принтер
 sk:Inicializácia tlačiarne zlyhala
@@ -6376,7 +6376,7 @@ nl:Kan PDF-previewer niet installeren
 nn:Kunne ikkje installere PDF-forhandsvisar
 no:Kunne ikke installere PDF forhåndsvisning
 pl:Nie można zainstalować podglądu PDF
-pt:Não foi possível instalar o pré-visualizador de PDF
+pt:Não pôde instalar o pré-visualizador de PDF
 ro:Nu s-a putut instala previzualizatorul PDF
 ru:Не удалось установить просмотрщик PDF
 sk:Nie je možné nainštalovať PDF prehliadač rýchlych náhľadov
@@ -6429,7 +6429,7 @@ nl:Kan PDF-zoekfilter niet installeren
 nn:Kunne ikkje installere PDF-søkjefilter
 no:Kunne ikke installere PDF søkefilter
 pl:Nie można zainstalować filtru przeszukiwania PDF
-pt:Não foi possível instalar o filtro de pesquisa PDF
+pt:Não pôde instalar o filtro de busca dos PDFs
 ro:Nu s-a putut instala filtrul de căutare PDF
 ru:Не удалось установить фильтр поиска PDF
 sk:Nie je možné nainštalovať PDF vyhľadávací filter
@@ -6482,7 +6482,7 @@ nl:Kan deze pagina niet weergegeven
 nn:Kunne ikkje rendre siden
 no:Kunne ikke vise siden
 pl:Nie można wyświetlić strony
-pt:Não foi possível processar a página
+pt:Não pôd renderizar a página
 ro:Nu s-a putut afișa pagina
 ru:Не удалось сформировать изображение страницы
 sk:Nepodarilo sa načítať stranu
@@ -6535,7 +6535,7 @@ nl:Kan PDF-previewer niet verwijderen
 nn:Kunne ikkje avinstallere PDF-forhandsvisar
 no:Kunne ikke avinstallere PDF forhåndsvisning
 pl:Nie można usunąć podglądu PDF
-pt:Não foi possível desinstalar a antevisão de PDF
+pt:Não pôde desinstalar o pré-visualizador dos PDFs
 ro:Nu s-a putut dezinstala previzualizatorul PDF
 ru:Не удалось удалить просмотрщик PDF
 sk:Nie je možné odinštalovať PDF prehliadač rýchlych náhľadov
@@ -6587,7 +6587,7 @@ lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
 nl:Kan Sumatra zoekfilter niet verwijderen
 no:Kunne ikke avinstallere Sumatra-søkefilter
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
-pt: Não foi possível desinstalar o filtro de pesquisa
+pt: Não pôde desinstalar o filtro de busca
 ro:Nu s-a putut dezinstala filtrul de căutare Sumatra
 ru:Не удалось удалить фильтр поиска Sumatra
 sk:Vyhľadávací filter Sumatra sa nedá odinštalovať
@@ -6640,7 +6640,7 @@ nl:Kan browserplugin niet verwijderen
 nn:Kunne ikkje avinstallere nettlesartillegget
 no:Kunne ikke avinstallere nettlesertillegget
 pl:Nie można usunąć wtyczki do przeglądarek
-pt:Não foi possível desinstalar a extensão do navegador
+pt:Não pôde desinstalar o plugin do navegador
 ro:Nu s-a putut dezinstala plugin-ul de browser
 ru:Не удалось удалить плагин браузера
 sk:Nie je možné odinštalovať plugin prehliadača
@@ -6693,7 +6693,7 @@ nl:Kon %s niet op schijf wegschrijven
 nn:Kunne ikkje lagre %s til disken
 no:Kunne ikke skrive %s til disk
 pl:Nie można zapisać %s na dysk
-pt:Não foi possível escrever %s no disco
+pt:Não pôde gravar o %s no disco
 ro:Nu s-a putut scrie %s pe disc
 ru:Не удалось записать %s на диск
 sk:Nie je možné zapísať %s na disk
@@ -6743,7 +6743,7 @@ lt:Sukurti anotaciją žymeklio &vietoje
 nl:Maak Aantekening Onder Cursor
 no:Lag merknad &under peker
 pl:Utwórz adnotację &pod kursorem
-pt:Criar anotação no local do c&ursor
+pt:Criar Anotação &sob o Cursor
 ro:Creează adnotare &sub cursor
 ru:Создать аннотацию &под курсором
 sk:Vytvorenie anotácie pod k&urzorom
@@ -6794,7 +6794,7 @@ lv:Veidot anotāciju no atlases
 nl:Aantekening maken op basis van Selectie
 no:Lag merknad på merket område
 pl:Utwórz adnotację z zaznaczenia
-pt:Criar anotação na seleção
+pt:Criar Anotação na Seleção
 ro:Creează adnotare din selecție
 ru:Создать аннотацию из выделения
 sk:Vytvoriť anotáciu z výberu
@@ -6999,7 +6999,7 @@ kr:확대/축소 사용자 정의(&Z)...
 nl:Aangepaste &zoom...
 no:Tilpasset &zoom...
 pl:&Własne powiększenie...
-pt:Tamanho personali&zado...
+pt:Zoom &Personalizado...
 ro:Mă&rire setată de utilizator
 ru:Свой &масштаб...
 sk:Vlastné &zväčšenie…
@@ -7104,7 +7104,7 @@ nl:Zwart
 nn:Mørkare
 no:Mørkere
 pl:Ciemniejszy
-pt:Mais escuro
+pt:Mais Escuro
 ro:Mai Intunecat
 ru:Более темная
 sk:Tmavší
@@ -7208,7 +7208,7 @@ nl:Standaardopmaak:
 nn:Standard &oppsett:
 no:Standard sideoppsett:
 pl:&Układ domyślny:
-pt:&Exibição padrão:
+pt:Estrutura &Padrão:
 ro:&Aspect implicit:
 ru:&Компоновка по умолчанию
 sk:Predvolené &zobrazenie:
@@ -7320,7 +7320,7 @@ kr:주석 삭제
 lt:Ištrinti anotaciją
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
-pt:Eliminar anotação
+pt:Apagar Anotação
 ro:Șterge adnotarea
 ru:Удалить аннотацию
 sk:Odstrániť anotáciu
@@ -7367,7 +7367,7 @@ nl:Niet toegestaan:
 nn:Permisjonar som blei nekta:
 no:Manglende tillatelser:
 pl:Brak zezwoleń:
-pt:Permissões recusadas:
+pt:Permissões Negadas:
 ro:Permisiuni interzise:
 ru:Запрещённые права:
 sk:Odmietnuté povolenia:
@@ -7473,7 +7473,7 @@ nl:Documenteigenschappen
 nn:Dokumentegenskaper
 no:Dokumentegenskaper
 pl:Właściwości dokumentu
-pt:Propriedades do documento
+pt:Propriedades do Documento
 ro:Proprietăți document
 ru:Свойства документа
 sk:Vlastnosti dokumentu
@@ -7766,7 +7766,7 @@ ja:注釈 %s を編集
 kr:주석 편집 (%s)
 nl:Bewerk %s Aantekening
 pl:Edytuj adnotację %s
-pt:Editar anotação %s
+pt:Editar Anotação %s
 ro:Modifică %s adnotare
 ru:Изменить аннотацию %s
 sk:Upraviť %s anotáciu
@@ -7811,7 +7811,7 @@ lv:Rediģēt anotācijas
 nl:Bewerk Aantekeningen
 no:Rediger merknader
 pl:Edytuj adnotacje
-pt:Editar anotações
+pt:Editar Anotações
 ro:Modifică adnotări
 ru:Изменить аннотации
 sk:Upraviť anotáciu
@@ -7864,7 +7864,7 @@ nl:Wachtwoord invoeren
 nn:Skriv inn passord
 no:Skriv inn passord
 pl:Podaj hasło
-pt:Introduza a palavra-passe
+pt:Insira a palavra-passe
 ro:Introduceți parola
 ru:Введите пароль
 sk:Zadať heslo
@@ -7917,7 +7917,7 @@ nl:Wachtwoord invoeren voor %s
 nn:Skriv inn passord for %s
 no:Skriv inn passord for %s
 pl:Podaj hasło dla %s
-pt:Introduza a palavra-passe de %s
+pt:Insira a palavra-passe do %s
 ro:Introduceți parola pentru %s
 ru:Введите пароль для %s
 sk:Zadať heslo pre %s
@@ -7970,7 +7970,7 @@ nl:Opdrachtregel die gestart moet worden bij het dubbelklikken van een PDF-docum
 nn:Gå inn i kommandolinja for å hentast, når du dobbeltklikkar på PDF-dokumentet:
 no:Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
 pl:Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
-pt:Indique a linha de comandos a invocar ao clicar duas vezes no documento PDF:
+pt:Insira a linha de comandos a invocar quando você clica duas vezes no documento PDF:
 ro:Introduceți linia de comandă, chemată prin dublu clic pe documentul PDF
 ru:Введите командную строку, вызываемую при двойном щелчке на файле PDF:
 sk:Dvojité kliknutie na PDF dokument vykoná zadaný príkazový riadok:
@@ -8250,7 +8250,7 @@ nl:V&oledig Scherm
 nn:F&ullskjerm
 no:F&ullskjerm
 pl:Pełny &ekran
-pt:E&crã completo
+pt:E&crã Completo
 ro:P&e tot ecranul
 ru:Полный &экран
 sk:Celá o&brazovka
@@ -9241,7 +9241,7 @@ kr:내용에 맞춤(&C)
 nl:&Inhoud Aanpassen
 no:Tilpass til &innhold
 pl:Dopasuj do &zawartości
-pt:Ajustar ao &conteúdo
+pt:Ajustar ao &Conteúdo
 ro:Cuprinde &conținutul
 ru:Вписать содер&жимое
 sk:Prispôsobiť &obsahu
@@ -11314,6 +11314,7 @@ br:Manual no Site da Web
 co:Manuale nant’à u situ web
 de:Handbuch im Internet
 fr:Manuel sur le site web
+nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
 pt:Manual no Site da Web
 :Match Case
@@ -18923,7 +18924,7 @@ nl:[Bestand gewijzigd; verversen] %s
 nn:[Endringar oppdaga; lastar inn på nytt] %s
 no:[Endringer oppdaget; oppdaterer] %s
 pl:[wykryto zmiany; odświeżanie] %s
-pt:[Alterações detetadas; a recarregar] %s
+pt:[Mudanças detetadas; atualizando] %s
 ro:[Schimbări detectate; actualizare] %s
 ru:[Обнаружены изменения; обновление...] %s
 sk:[Boli zistené zmeny, znovu sa načítava] %s
@@ -18976,7 +18977,7 @@ nl:tekst kopiëren
 nn:Kopierer tekst
 no:kopierer tekst
 pl:kopiowanie tekstu
-pt:a copiar texto
+pt:copiando o texto
 ro:se copiază textul
 ru:копирование текста
 sk:prebieha kopírovanie textu
