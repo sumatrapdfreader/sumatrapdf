@@ -638,7 +638,7 @@ char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args) {
         /* we have to make the buffer bigger. The algorithm used to calculate
            the new size is arbitrary (aka. educated guess) */
         if (buf != message) {
-            free(buf);
+            Allocator::Free(a, buf);
         }
         if (bufCchSize < 4 * 1024) {
             bufCchSize += bufCchSize;

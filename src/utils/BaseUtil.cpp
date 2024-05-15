@@ -30,9 +30,9 @@ void Allocator::Free(Allocator* a, void* p) {
     }
     if (!a) {
         free(p);
-    } else {
-        a->Free(p);
+        return;
     }
+    a->Free(p);
 }
 
 void* Allocator::Realloc(Allocator* a, void* mem, size_t size) {
