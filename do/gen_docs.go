@@ -483,6 +483,105 @@ func genHTMLDocsFromMarkdown() {
 	writeDocsHtmlFiles()
 }
 
+func extractCommandsFromMarkdown() []string {
+	// CmdHelpOpenManual,,Help: Manual
+	// =>
+	// CmdHelpOpenManual
+	// or "" if not found
+	extractCommandFromMarkdownLine := func(s string) string {
+		if !strings.HasPrefix(s, "Cmd") {
+			return ""
+		}
+		idx := strings.Index(s, ",")
+		panicIf(idx < 0)
+		s = s[:idx]
+		return s
+	}
+
+	path := filepath.Join("docs", "md", "Commands.md")
+	lines, err := u.ReadLines(path)
+	must(err)
+	var res []string
+	for _, l := range lines {
+		s := extractCommandFromMarkdownLine(l)
+		if s != "" {
+			push(&res, s)
+		}
+	}
+	panicIf(len(res) < 20)
+	return res
+}
+
+func extractCommandFromSource() []string {
+	//	V(CmdCreateAnnotCaret, "Create Caret Annotation")                     \
+	//
+	// =>
+	// CmdCreateAnnotCaret
+	// or "" if not found
+	extractCommandFromSourceLine := func(s string) string {
+		commentIdx := strings.Index(s, "//")
+		idx := strings.Index(s, "V(Cmd")
+		if idx < 0 {
+			return ""
+		}
+		if commentIdx >= 0 && commentIdx < idx {
+			// this is a commented-out line
+			return ""
+		}
+		s = s[idx+2:]
+		panicIf(!strings.HasPrefix(s, "Cmd"))
+		idx = strings.Index(s, ",")
+		panicIf(idx < 0)
+		s = s[:idx]
+		return s
+	}
+
+	path := filepath.Join("src", "Commands.h")
+	lines, err := u.ReadLines(path)
+	must(err)
+	var res []string
+	for _, l := range lines {
+		s := extractCommandFromSourceLine(l)
+		if s != "" {
+			push(&res, s)
+		}
+	}
+	panicIf(len(res) < 20)
+	return res
+}
+
+func checkComandsAreDocumented() {
+	logf("checkCommandsAreDocumented\n")
+	commandsInSource := extractCommandFromSource()
+	logf("%d commands in Commands.h\n", len(commandsInSource))
+	commandsInDocs := extractCommandsFromMarkdown()
+	logf("%d commands in Commands.md\n", len(commandsInDocs))
+	mDocs := map[string]bool{}
+	for _, c := range commandsInDocs {
+		mDocs[c] = true
+	}
+	mSrc := map[string]bool{}
+	for _, c := range commandsInSource {
+		if mDocs[c] {
+			delete(mDocs, c)
+			continue
+		}
+		mSrc[c] = true
+	}
+	if len(mSrc) > 0 {
+		logf("%d in Commands.h but not Commands.md:\n", len(mSrc))
+		for c := range mSrc {
+			logf("  %s\n", c)
+		}
+	}
+	if len(mDocs) > 0 {
+		logf("%d in Commands.md but not in Commands.h:\n", len(mDocs))
+		for c := range mDocs {
+			logf("  %s\n", c)
+		}
+	}
+}
+
 func copyDocsToWebsite() {
 	logf("copyDocsToWebsite()\n")
 	updateSumatraWebsite()
@@ -513,8 +612,12 @@ func genHTMLDocsForWebsite() {
 	}
 }
 
+// TODO: for now we just copy .md files to sumatra-website repo and use
+// the existing md => html generation, which is duplicate of what we do here
+// if we improve html generation here a lot, we'll switch to generating
+// html files for sumatra-website here
 func genHTMLDocsForWebsite2() {
-	logf("genHTMLDocsForWebsite starting\n")
+	logf("genHTMLDocsForWebsite2 starting\n")
 	docsForWebsite = true
 	dir := updateSumatraWebsite()
 	currBranch := getCurrentBranchMust(dir)
@@ -552,5 +655,5 @@ func genHTMLDocsForApp() {
 		url := "file://" + filepath.Join(dir, "SumatraPDF-documentation.html")
 		logf("To view, open:\n%s\n", url)
 	}
-	//u.OpenBrowser(filepath.Join("docs", "www", "SumatraPDF-documentation.html"))
+	checkComandsAreDocumented()
 }

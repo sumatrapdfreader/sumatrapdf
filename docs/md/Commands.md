@@ -84,6 +84,7 @@ CmdNextTab,Ctrl + Right,Next Tab,
 CmdPrevTab,Ctrl + Left,Previous Tab,
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
+CmdToggleLinks,,Toggle Show Links, Toggle drawing blue rectangle around links
 ```
 
 ### **Navigation**
@@ -152,7 +153,6 @@ CmdCreateAnnotUnderline,"u, U",Create Underline Annotation
 CmdDeleteAnnotation,Delete,Delete Annotation
 CmdEditAnnotations,,Edit Annotations
 CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF
-CmdSelectAnnotation,,Select Annotation in Editor
 ```
 
 ### **Zoom menu**
@@ -237,7 +237,6 @@ CmdHelpVisitWebsite,,Help: SumatraPDF Website
 Command IDs,Keyboard shortcuts,Command Palette
 CmdDebugCrashMe,,Debug: Crash Me
 CmdDebugDownloadSymbols,,Debug: Download Symbols
-CmdDebugShowLinks,,Debug: Show Links
 CmdDebugShowNotif,,Debug: Show Notification
 CmdDebugStartStressTest,,Debug: Start Stress Test
 CmdDebugTestApp,,Debug: Test App
