@@ -3748,6 +3748,12 @@ static Point GetCanvasCenter(MainWindow* win) {
 }
 
 static bool IsPointOnPage(DisplayModel* dm, Point& pt) {
+    if (!dm) {
+        return false;
+    }
+    if (pt.IsEmpty()) {
+        return false;
+    }
     int pageNo = dm->GetPageNoByPoint(pt);
     if (!dm->ValidPageNo(pageNo)) {
         return false;
@@ -3764,11 +3770,11 @@ static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
     // zoom around current selection takes precedence
     DisplayModel* dm = win->AsFixed();
     Point pt = GetSelectionCenter(win);
-    if (!pt.IsEmpty() && IsPointOnPage(dm, pt)) {
+    if (IsPointOnPage(dm, pt)) {
         return pt;
     }
     // suggestedPoint is typically a current mouse position
-    if (!pt.IsEmpty() && IsPointOnPage(dm, suggestdPoint)) {
+    if (IsPointOnPage(dm, suggestdPoint)) {
         return suggestdPoint;
     }
     // or towards the top-left-most part of the first visible page
@@ -3778,7 +3784,7 @@ static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
     } else {
         pt = GetFirstVisiblePageTopLeft(win);
     }
-    if (!pt.IsEmpty() && IsPointOnPage(dm, pt)) {
+    if (IsPointOnPage(dm, pt)) {
         return pt;
     }
     return {};
