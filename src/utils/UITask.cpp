@@ -11,10 +11,19 @@ namespace uitask {
 static HWND gTaskDispatchHwnd = nullptr;
 
 #define UITASK_CLASS_NAME L"UITask_Wnd_Class"
-#define WM_EXECUTE_TASK (WM_USER + 104)
+
+static UINT gExecuteTaskMessage = 0;
+
+static UINT GetExecuteTaskMessage() {
+    if (!gExecuteTaskMessage) {
+        gExecuteTaskMessage = RegisterWindowMessageW(UITASK_CLASS_NAME);
+    }
+    return gExecuteTaskMessage;
+}
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_EXECUTE_TASK == msg) {
+    UINT wmExecTask = GetExecuteTaskMessage();
+    if (wmExecTask == msg) {
         auto func = (std::function<void()>*)lp;
         (*func)();
         delete func;
@@ -36,7 +45,8 @@ void Initialize() {
 void DrainQueue() {
     CrashIf(!gTaskDispatchHwnd);
     MSG msg;
-    while (PeekMessage(&msg, gTaskDispatchHwnd, WM_EXECUTE_TASK, WM_EXECUTE_TASK, PM_REMOVE)) {
+    UINT wmExecTask = GetExecuteTaskMessage();
+    while (PeekMessage(&msg, gTaskDispatchHwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
         DispatchMessage(&msg);
     }
 }
@@ -49,7 +59,8 @@ void Destroy() {
 
 void Post(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
-    PostMessageW(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
+    UINT wmExecTask = GetExecuteTaskMessage();
+    PostMessageW(gTaskDispatchHwnd, wmExecTask, 0, (LPARAM)func);
 } // NOLINT
 
 void PostOptimized(const std::function<void()>& f) {
@@ -60,7 +71,8 @@ void PostOptimized(const std::function<void()>& f) {
         return;
     }
     auto func = new std::function<void()>(f);
-    PostMessageW(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
+    UINT wmExecTask = GetExecuteTaskMessage();
+    PostMessageW(gTaskDispatchHwnd, wmExecTask, 0, (LPARAM)func);
 } // NOLINT
 
 } // namespace uitask
