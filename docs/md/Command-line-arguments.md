@@ -36,6 +36,10 @@ Anything that is not recognized as a known option is interpreted as a file path 
 - `-scroll <x,y>` : Scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
 - `search <term>` : Start a search for a given term when opening a document e.g. `SumatraPDF.exe -search "foo" bar.pdf`. Since 3.4
 
+## Send DDE commands
+
+- `-dde cmd` : send [DDE commands](DDE-Commands.md) to currently running instance e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to properly quote arguments. File paths must be absolute.
+
 ## Printing options
 
 - `-print-to-default` : prints all files indicated on this command line to the system default printer. After printing, SumatraPDF exits immediately (check the error code for failure).
