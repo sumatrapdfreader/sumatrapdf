@@ -720,8 +720,8 @@ if the flag is set to 1:
                    if newWindow != 0 => ignored
 valid formats:
     [Open("c:\file.pdf")]
-    [Open("c:\file.pdf", 1, 1, 0)]
-    [Open("c:\file.pdf", 1, 1, 0, 1)]
+    [Open("c:\file.pdf",1,1,0)]
+    [Open("c:\file.pdf",1,1,0,1)]
 */
 // TODO: handle inCurrentTab flag
 static const char* HandleOpenCmd(const char* cmd, bool* ack) {
@@ -740,9 +740,10 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
         next = str::Parse(cmd, pat, &filePath, &newWindow, &setFocus, &forceRefresh);
     }
     if (!next) {
-        logf("HandleOpenCmd: invalid command format '%s'\n", cmd);
         return nullptr;
     }
+    logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d\n", filePath.Get(),
+         newWindow, setFocus, forceRefresh, inCurrentTab);
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
@@ -763,7 +764,7 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     MainWindow* emptyExistingWin = nullptr;
     auto nWindows = gWindows.Size();
     for (auto& w : gWindows) {
-        if (w->IsAboutWindow()) {
+        if (!w->HasDocsLoaded()) {
             emptyExistingWin = w;
             logf("HandleOpenCmd: found empty existing window\n");
             break;
@@ -818,6 +819,9 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     if (doLoad) {
         LoadArgs args(filePath, win);
         args.activateExisting = !IsCtrlPressed();
+        if (newWindow) {
+            args.activateExisting = false;
+        }
         win = LoadDocument(&args);
         if (!win) {
             logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", filePath.Get());
@@ -966,17 +970,17 @@ static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
     return next;
 }
 
-constexpr const char* kNewWindow = "[NewWindow]";
 /*
 Open new window.
 
 [NewWindow]
 */
 static const char* HandleNewWindowCmd(const char* cmd, bool* ack) {
-    if (!str::StartsWith(cmd, kNewWindow)) {
+    if (!str::StartsWith(cmd, "[NewWindow]")) {
         return nullptr;
     }
-    const char* next = cmd + str::Leni(kNewWindow);
+    logf("HandleNewWindowCmd\n");
+    const char* next = cmd + str::Leni("[NewWindow]");
     CreateAndShowMainWindow(nullptr);
     *ack = true;
     return next;

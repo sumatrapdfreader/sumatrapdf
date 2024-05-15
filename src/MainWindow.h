@@ -77,8 +77,9 @@ struct MainWindow {
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
-    bool IsAboutWindow() const;
+    bool IsCurrentTabAbout() const;
     bool IsDocLoaded() const;
+    bool HasDocsLoaded() const;
 
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;

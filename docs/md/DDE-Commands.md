@@ -20,12 +20,12 @@ Since 3.5 you can send all [named commands](Commands.md).
 
 ### Open file
 
-- format: `[Open("<pdffilepath>"[,<newwindow>,<focus>,<forcerefresh>])]`
+- format: `[Open("<filePath>"[,<newWindow>,<focus>,<forceRefresh>])]`
 - arguments:
-    - if `newwindow` is 1 then a new window is created even if the file is already open
+    - if `newWindow` is 1 then a new window is created even if the file is already open
     - if `focus` is 1 then the focus is set to the window
-    - if `forcerefresh` is 1 the command forces the refresh of the file window if already open (useful for files opened over network that don't get file-change notifications)".
-- example: `[Open("c:\file.pdf", 1, 1, 0)]`
+    - if `forceRefresh` is 1 the command forces the refresh of the file window if already open (useful for files opened over network that don't get file-change notifications)".
+- example: `[Open("c:\file.pdf",1,1,0)]`
 
 ### Forward-search
 

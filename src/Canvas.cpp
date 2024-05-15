@@ -1916,7 +1916,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
             }
 
-            if (win->IsAboutWindow()) {
+            if (win->IsCurrentTabAbout()) {
                 return WndProcCanvasAbout(win, hwnd, msg, wp, lp);
             }
 

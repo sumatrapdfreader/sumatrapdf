@@ -168,7 +168,24 @@ void ClearMouseState(MainWindow* win) {
     win->annotationUnderCursor = nullptr;
 }
 
-bool MainWindow::IsAboutWindow() const {
+bool MainWindow::HasDocsLoaded() const {
+    int nTabs = TabCount();
+    if (nTabs == 0) {
+        // logf("HasDocsLoaded: false because nTabs == 0\n");
+        return true;
+    }
+    for (int i = 0; i < nTabs; i++) {
+        auto tab = GetTab(i);
+        if (!tab->IsAboutTab()) {
+            // logf("HasDocsLoaded: true because GetTab(i) !IsAboutTab()\n");
+            return true;
+        }
+    }
+    // logf("HasDocsLoaded: false because all %d tabs are IsAboutTab()\n", nTabs);
+    return false;
+}
+
+bool MainWindow::IsCurrentTabAbout() const {
     return nullptr == CurrentTab() || CurrentTab()->IsAboutTab();
 }
 
@@ -190,9 +207,9 @@ WindowTab* MainWindow::CurrentTab() const {
     if (!tabsCtrl) {
         return nullptr;
     }
-    int idx = tabsCtrl->GetSelected();
-    if (idx >= 0) {
-        curr = GetTab(idx);
+    int i = tabsCtrl->GetSelected();
+    if (i >= 0) {
+        curr = GetTab(i);
         return curr;
     }
 #if 0

@@ -332,7 +332,7 @@ bool ReloadSettings() {
     CrashAlwaysIf(!ok || !gGlobalPrefs);
 
     // TODO: about window doesn't have to be at position 0
-    if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
+    if (gWindows.size() > 0 && gWindows.at(0)->IsCurrentTabAbout()) {
         MainWindow* win = gWindows.at(0);
         win->DeleteToolTip();
         DeleteVecMembers(win->staticLinks);

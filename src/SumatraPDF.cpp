@@ -1719,7 +1719,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noS
         SaveSettings();
     }
     // update the Frequently Read list
-    if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+    if (1 == gWindows.size() && gWindows.at(0)->IsCurrentTabAbout()) {
         gWindows.at(0)->RedrawAll(true);
     }
 }
@@ -1754,7 +1754,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
     CrashIf(openNewTab && args->forceReuse);
 
-    if (win->IsAboutWindow()) {
+    if (win->IsCurrentTabAbout()) {
         // TODO: probably need to do it when switching tabs
         // invalidate the links on the Frequently Read page
         DeleteVecMembers(win->staticLinks);
@@ -1874,7 +1874,7 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         }
     }
 
-    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsCurrentTabAbout()) {
         win = gWindows.at(0);
         args->win = win;
         args->isNewWindow = false;
@@ -3174,7 +3174,7 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
 // create a new window and load currently shown document into it
 // meant to make it easy to compare 2 documents
 static void DuplicateInNewWindow(MainWindow* win) {
-    if (win->IsAboutWindow()) {
+    if (win->IsCurrentTabAbout()) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -3392,8 +3392,8 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
 }
 
 static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
-    CrashIf(win->IsAboutWindow());
-    if (win->IsAboutWindow()) {
+    CrashIf(win->IsCurrentTabAbout());
+    if (win->IsCurrentTabAbout()) {
         return;
     }
     if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
@@ -3482,7 +3482,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sideb
                 dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
             }
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
-            if (!win->IsAboutWindow()) {
+            if (!win->IsCurrentTabAbout()) {
                 rc.y += tabHeight;
                 rc.dy -= tabHeight;
             }
@@ -3595,7 +3595,7 @@ void SetCurrentLanguageAndRefreshUI(const char* langCode) {
         RebuildMenuBarForWindow(win);
         UpdateToolbarSidebarText(win);
         // About page text is translated during (re)drawing
-        if (win->IsAboutWindow()) {
+        if (win->IsCurrentTabAbout()) {
             win->RedrawAll(true);
         }
     }
@@ -3669,7 +3669,7 @@ static void ShowOptionsDialog(HWND hwnd) {
 
 static void ShowOptionsDialog(MainWindow* win) {
     ShowOptionsDialog(win->hwndFrame);
-    if (!gWindows.empty() && gWindows.at(0)->IsAboutWindow()) {
+    if (!gWindows.empty() && gWindows.at(0)->IsCurrentTabAbout()) {
         gWindows.at(0)->RedrawAll(true);
     }
 }
@@ -4989,7 +4989,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     WindowTab* tab = win->CurrentTab();
-    if (!win->IsAboutWindow()) {
+    if (!win->IsCurrentTabAbout()) {
         if (CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
             size_t idx = (size_t)wmId - (size_t)CmdOpenWithExternalFirst;
             ViewWithExternalViewer(tab, idx);
@@ -5074,7 +5074,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdOpenPrevFileInFolder:
         case CmdOpenNextFileInFolder:
-            if (!win->IsAboutWindow()) {
+            if (!win->IsCurrentTabAbout()) {
                 // folder browsing should also work when an error page is displayed,
                 // so special-case it before the win->IsDocLoaded() check
                 bool forward = wmId == CmdOpenNextFileInFolder;

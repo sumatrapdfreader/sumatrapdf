@@ -114,7 +114,7 @@ void FileExistenceChecker::HideMissingFiles() {
         gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
-    if (paths.Size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
+    if (paths.Size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsCurrentTabAbout()) {
         gWindows.at(0)->RedrawAll(true);
     }
 }
@@ -1257,7 +1257,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     if (flags.dde) {
         logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde, existingHwnd);
         SendMyselfDDE(flags.dde, existingHwnd);
-        // TODO: should exit?
+        goto Exit;
     }
     if (existingHwnd) {
         int nFiles = flags.fileNames.Size();
