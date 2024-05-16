@@ -37,10 +37,6 @@
 
 #include "mujs.h"
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 #ifndef _WIN32
 #include <sys/stat.h> /* for mkdir */
 #include <unistd.h> /* for getcwd */

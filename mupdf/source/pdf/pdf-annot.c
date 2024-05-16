@@ -662,15 +662,55 @@ pdf_add_popup_annot(fz_context *ctx, pdf_annot *annot)
 	return popup;
 }
 
+static pdf_obj *popup_subtypes[] = {
+	PDF_NAME(Text),
+	PDF_NAME(FreeText),
+	PDF_NAME(Line),
+	PDF_NAME(Square),
+	PDF_NAME(Circle),
+	PDF_NAME(Polygon),
+	PDF_NAME(PolyLine),
+	PDF_NAME(Highlight),
+	PDF_NAME(Underline),
+	PDF_NAME(Squiggly),
+	PDF_NAME(StrikeOut),
+	PDF_NAME(Stamp),
+	PDF_NAME(Caret),
+	PDF_NAME(Ink),
+	PDF_NAME(FileAttachment),
+	PDF_NAME(Sound),
+	PDF_NAME(Redact),
+	NULL,
+};
+
+int
+pdf_annot_has_popup(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(Popup), popup_subtypes);
+}
+
 void pdf_set_annot_popup(fz_context *ctx, pdf_annot *annot, fz_rect rect)
 {
 	fz_matrix page_ctm, inv_page_ctm;
 	pdf_obj *popup;
-	pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
-	inv_page_ctm = fz_invert_matrix(page_ctm);
-	rect = fz_transform_rect(rect, inv_page_ctm);
-	popup = pdf_add_popup_annot(ctx, annot);
-	pdf_dict_put_rect(ctx, popup, PDF_NAME(Rect), rect);
+
+	begin_annot_op(ctx, annot, "Set popup");
+
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(Popup), popup_subtypes);
+		pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
+		inv_page_ctm = fz_invert_matrix(page_ctm);
+		rect = fz_transform_rect(rect, inv_page_ctm);
+		popup = pdf_add_popup_annot(ctx, annot);
+		pdf_dict_put_rect(ctx, popup, PDF_NAME(Rect), rect);
+		end_annot_op(ctx, annot);
+	}
+	fz_catch(ctx)
+	{
+		abandon_annot_op(ctx, annot);
+		fz_rethrow(ctx);
+	}
 }
 
 fz_rect pdf_annot_popup(fz_context *ctx, pdf_annot *annot)
@@ -678,6 +718,7 @@ fz_rect pdf_annot_popup(fz_context *ctx, pdf_annot *annot)
 	fz_matrix page_ctm;
 	fz_rect rect;
 	pdf_obj *popup;
+	check_allowed_subtypes(ctx, annot, PDF_NAME(Popup), popup_subtypes);
 	pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
 	popup = pdf_dict_get(ctx, annot->obj, PDF_NAME(Popup));
 	rect = pdf_dict_get_rect(ctx, popup, PDF_NAME(Rect));
@@ -2206,6 +2247,7 @@ pdf_annot_has_interior_color(fz_context *ctx, pdf_annot *annot)
 void
 pdf_annot_interior_color(fz_context *ctx, pdf_annot *annot, int *n, float color[4])
 {
+	check_allowed_subtypes(ctx, annot, PDF_NAME(IC), interior_color_subtypes);
 	do_pdf_annot_color(ctx, annot, n, color, PDF_NAME(IC));
 }
 
@@ -2216,6 +2258,7 @@ pdf_set_annot_interior_color(fz_context *ctx, pdf_annot *annot, int n, const flo
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(IC), interior_color_subtypes);
 		pdf_set_annot_color_imp(ctx, annot, PDF_NAME(IC), n, color, interior_color_subtypes);
 		end_annot_op(ctx, annot);
 	}
@@ -2796,6 +2839,7 @@ pdf_clear_annot_ink_list(fz_context *ctx, pdf_annot *annot)
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(InkList), ink_list_subtypes);
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(InkList));
 		end_annot_op(ctx, annot);
 	}
@@ -2816,6 +2860,7 @@ void pdf_add_annot_ink_list_stroke(fz_context *ctx, pdf_annot *annot)
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(InkList), ink_list_subtypes);
 		ink_list = pdf_dict_get(ctx, annot->obj, PDF_NAME(InkList));
 		if (!pdf_is_array(ctx, ink_list))
 			ink_list = pdf_dict_put_array(ctx, annot->obj, PDF_NAME(InkList), 10);
@@ -2841,6 +2886,7 @@ void pdf_add_annot_ink_list_stroke_vertex(fz_context *ctx, pdf_annot *annot, fz_
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(InkList), ink_list_subtypes);
 		pdf_page_transform(ctx, annot->page, NULL, &page_ctm);
 		inv_page_ctm = fz_invert_matrix(page_ctm);
 
@@ -3515,12 +3561,19 @@ pdf_set_annot_appearance_from_display_list(fz_context *ctx, pdf_annot *annot, co
 	}
 }
 
+static pdf_obj *stamp_subtypes[] = {
+	PDF_NAME(Stamp),
+	NULL,
+};
+
 void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *img)
 {
 	pdf_document *doc = annot->page->doc;
 	fz_buffer *buf = NULL;
 	pdf_obj *res = NULL;
 	pdf_obj *res_xobj;
+	fz_rect rect;
+	float s;
 
 	begin_annot_op(ctx, annot, "Set stamp image");
 
@@ -3529,9 +3582,11 @@ void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *img)
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(Stamp), stamp_subtypes);
+
 		// Shrink Rect to fit image, maintaining aspect ratio.
-		fz_rect rect = pdf_bound_annot(ctx, annot);
-		float s = fz_min((rect.x1 - rect.x0) / img->w, (rect.y1 - rect.y0) / img->h);
+		rect = pdf_bound_annot(ctx, annot);
+		s = fz_min((rect.x1 - rect.x0) / img->w, (rect.y1 - rect.y0) / img->h);
 		rect.x1 = rect.x0 + img->w * s;
 		rect.y1 = rect.y0 + img->h * s;
 

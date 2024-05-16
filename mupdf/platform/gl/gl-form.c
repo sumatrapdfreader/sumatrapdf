@@ -25,10 +25,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 #include "mupdf/helpers/pkcs7-openssl.h"
 
 static pdf_annot *sig_widget;

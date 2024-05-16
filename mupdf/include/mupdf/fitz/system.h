@@ -62,6 +62,10 @@ typedef unsigned __int64 uint64_t;
 
 #define nelem(x) (sizeof(x)/sizeof((x)[0]))
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #define FZ_PI 3.14159265f
 #define FZ_RADIAN 57.2957795f
 #define FZ_DEGREE 0.017453292f

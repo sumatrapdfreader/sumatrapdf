@@ -9382,6 +9382,41 @@ static void ffi_PDFAnnotation_setIsOpen(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_hasPopup(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	int has;
+	fz_try(ctx)
+		has = pdf_annot_has_popup(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, has);
+}
+
+static void ffi_PDFAnnotation_getPopup(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	fz_rect rect;
+	fz_try(ctx)
+		rect = pdf_annot_popup(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+	ffi_pushrect(J, rect);
+}
+
+static void ffi_PDFAnnotation_setPopup(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = ffi_toannot(J, 0);
+	fz_rect rect = ffi_torect(J, 1);
+	fz_try(ctx)
+		pdf_set_annot_popup(ctx, annot, rect);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFAnnotation_getHiddenForEditing(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -10605,6 +10640,10 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.hasOpen", ffi_PDFAnnotation_hasOpen, 0);
 		jsB_propfun(J, "PDFAnnotation.getIsOpen", ffi_PDFAnnotation_getIsOpen, 0);
 		jsB_propfun(J, "PDFAnnotation.setIsOpen", ffi_PDFAnnotation_setIsOpen, 1);
+
+		jsB_propfun(J, "PDFAnnotation.hasPopup", ffi_PDFAnnotation_hasPopup, 0);
+		jsB_propfun(J, "PDFAnnotation.getPopup", ffi_PDFAnnotation_getPopup, 0);
+		jsB_propfun(J, "PDFAnnotation.setPopup", ffi_PDFAnnotation_setPopup, 1);
 
 		jsB_propfun(J, "PDFAnnotation.applyRedaction", ffi_PDFAnnotation_applyRedaction, 3);
 		jsB_propfun(J, "PDFAnnotation.process", ffi_PDFAnnotation_process, 1);

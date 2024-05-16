@@ -56,33 +56,39 @@ static void drop_directory(fz_context *ctx, fz_archive *arch)
 	fz_free(ctx, dir->entries);
 }
 
+static void make_dir_path(char *output, fz_archive *arch, const char *tail, size_t size)
+{
+	/* Skip any leading ../ path segments, so we don't look outside the
+	 * directory itself. The paths coming here have already been
+	 * canonicalized with fz_cleanname so any remaining ".." parts are
+	 * guaranteed to be at the start of the path.
+	 */
+	fz_directory *dir = (fz_directory *) arch;
+	while (tail[0] == '.' && tail[1] == '.' && tail[2] == '/')
+		tail += 3;
+	fz_strlcpy(output, dir->path, size);
+	fz_strlcat(output, "/", size);
+	fz_strlcat(output, tail, size);
+}
+
 static fz_stream *open_dir_entry(fz_context *ctx, fz_archive *arch, const char *name)
 {
-	fz_directory *dir = (fz_directory *) arch;
-	char path[2048];
-	fz_strlcpy(path, dir->path, sizeof path);
-	fz_strlcat(path, "/", sizeof path);
-	fz_strlcat(path, name, sizeof path);
+	char path[PATH_MAX];
+	make_dir_path(path, arch, name, sizeof path);
 	return fz_try_open_file(ctx, path);
 }
 
 static fz_buffer *read_dir_entry(fz_context *ctx, fz_archive *arch, const char *name)
 {
-	fz_directory *dir = (fz_directory *) arch;
-	char path[2048];
-	fz_strlcpy(path, dir->path, sizeof path);
-	fz_strlcat(path, "/", sizeof path);
-	fz_strlcat(path, name, sizeof path);
+	char path[PATH_MAX];
+	make_dir_path(path, arch, name, sizeof path);
 	return fz_try_read_file(ctx, path);
 }
 
 static int has_dir_entry(fz_context *ctx, fz_archive *arch, const char *name)
 {
-	fz_directory *dir = (fz_directory *) arch;
-	char path[2048];
-	fz_strlcpy(path, dir->path, sizeof path);
-	fz_strlcat(path, "/", sizeof path);
-	fz_strlcat(path, name, sizeof path);
+	char path[PATH_MAX];
+	make_dir_path(path, arch, name, sizeof path);
 	return fz_file_exists(ctx, path);
 }
 

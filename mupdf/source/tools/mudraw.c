@@ -53,10 +53,6 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #include <unistd.h> /* for getcwd */
 #endif
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 /* Allow for windows stdout being made binary */
 #ifdef _WIN32
 #include <io.h>

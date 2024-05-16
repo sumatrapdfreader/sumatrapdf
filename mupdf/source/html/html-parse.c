@@ -544,6 +544,7 @@ static fz_image *load_html_image(fz_context *ctx, fz_archive *zip, const char *b
 			fz_strlcat(path, "/", sizeof path);
 			fz_strlcat(path, src, sizeof path);
 			fz_urldecode(path);
+			fz_cleanname(path);
 			buf = fz_read_archive_entry(ctx, zip, path);
 		}
 #if FZ_ENABLE_SVG

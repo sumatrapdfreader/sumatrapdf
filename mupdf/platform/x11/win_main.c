@@ -42,10 +42,6 @@
 #define WM_MOUSEWHEEL 0x020A
 #endif
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
 
 #define ID_ABOUT	0x1000

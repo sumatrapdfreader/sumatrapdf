@@ -473,6 +473,11 @@ int pdf_annot_has_icon_name(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_has_open(fz_context *ctx, pdf_annot *annot);
 
 /*
+	Check to see if an annotation has a popup annotation.
+*/
+int pdf_annot_has_popup(fz_context *ctx, pdf_annot *annot);
+
+/*
 	Check to see if an annotation has author data.
 */
 int pdf_annot_has_author(fz_context *ctx, pdf_annot *annot);

@@ -28,10 +28,6 @@
 #include <time.h>
 #include <limits.h>
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 static int is_draw_mode = 0;
 static int new_contents = 0;
 

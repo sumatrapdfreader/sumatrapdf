@@ -275,6 +275,8 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 	fz_stream *file;
 	fz_stream *afile = NULL;
 	fz_document *doc = NULL;
+	fz_archive *dir = NULL;
+	char dirname[PATH_MAX];
 
 	fz_var(afile);
 
@@ -288,7 +290,7 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 	if (fz_is_directory(ctx, filename))
 	{
 		/* Cannot accelerate directories, currently. */
-		fz_archive *dir = fz_open_directory(ctx, filename);
+		dir = fz_open_directory(ctx, filename);
 
 		fz_try(ctx)
 			doc = fz_open_accelerated_document_with_stream_and_dir(ctx, filename, NULL, NULL, dir);
@@ -306,10 +308,16 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 	{
 		if (accel)
 			afile = fz_open_file(ctx, accel);
-		doc = handler->open(ctx, file, afile, NULL);
+		if (handler->wants_dir)
+		{
+			fz_dirname(dirname, filename, sizeof dirname);
+			dir = fz_open_directory(ctx, dirname);
+		}
+		doc = handler->open(ctx, file, afile, dir);
 	}
 	fz_always(ctx)
 	{
+		fz_drop_archive(ctx, dir);
 		fz_drop_stream(ctx, afile);
 		fz_drop_stream(ctx, file);
 	}

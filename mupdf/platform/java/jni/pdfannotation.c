@@ -1660,3 +1660,50 @@ FUN(PDFAnnotation_setIntent)(JNIEnv *env, jobject self, jint intent)
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFAnnotation_hasPopup)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jboolean has = JNI_FALSE;
+
+	fz_try(ctx)
+		has = pdf_annot_has_popup(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return has;
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFAnnotation_getPopup)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	fz_rect rect;
+
+	if (!ctx || !annot) return JNI_FALSE;
+
+	fz_try(ctx)
+		rect = pdf_annot_popup(ctx, annot);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Rect_safe(ctx, env, rect);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setPopup)(JNIEnv *env, jobject self, jobject jrect)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	fz_rect rect = from_Rect(env, jrect);
+
+	if (!ctx || !annot) return;
+
+	fz_try(ctx)
+		pdf_set_annot_popup(ctx, annot, rect);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

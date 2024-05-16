@@ -281,6 +281,10 @@ public class PDFAnnotation
 	public native String getIcon();
 	public native void setIcon(String icon);
 
+	public native boolean hasPopup();
+	public native Rect getPopup();
+	public native void setPopup(Rect rect);
+
 	public native boolean hasOpen();
 	public native boolean getIsOpen();
 	public native void setIsOpen(boolean open);

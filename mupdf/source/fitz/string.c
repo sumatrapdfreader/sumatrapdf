@@ -28,10 +28,6 @@
 #include <float.h>
 #include <stdlib.h>
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 #ifdef _WIN32
 #include <windows.h> /* for MultiByteToWideChar etc. */
 #endif

@@ -34,10 +34,6 @@
 #define ICON_DISK 0x1f4be
 #define ICON_PIN 0x1f4cc
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 struct entry
 {
 	int is_dir;

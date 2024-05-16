@@ -47,6 +47,7 @@ typedef struct
 	int is_cff;
 	int is_cidfont;
 	pdf_obj *fontfile;
+	unsigned char digest[16];
 
 	fz_int_heap gids;
 	fz_int_heap cids;
@@ -166,9 +167,11 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 	pdf_obj *obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->res, PDF_NAME(Font)), name);
 	pdf_obj *subtype, *fontdesc;
 	pdf_obj *key = NULL;
+	pdf_obj *fontfile = NULL;
 	int num, gen, i;
 	int is_cff = 0;
 	int cidfont = 0;
+	unsigned char digest[16];
 
 	if (obj == NULL)
 		return;
@@ -180,18 +183,21 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 	if (pdf_name_eq(ctx, subtype, PDF_NAME(TrueType)))
 	{
 		fontdesc = pdf_dict_get(ctx, obj, PDF_NAME(FontDescriptor));
-		key = pdf_dict_get(ctx, fontdesc, PDF_NAME(FontFile2));
+		key = PDF_NAME(FontFile2);
+		fontfile = pdf_dict_get(ctx, fontdesc, key);
 		cidfont = 0;
 	}
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(Type0)))
 	{
 		obj = pdf_array_get(ctx, pdf_dict_get(ctx, obj, PDF_NAME(DescendantFonts)), 0);
 		fontdesc = pdf_dict_get(ctx, obj, PDF_NAME(FontDescriptor));
-		key = pdf_dict_get(ctx, fontdesc, PDF_NAME(FontFile2));
+		key = PDF_NAME(FontFile2);
+		fontfile = pdf_dict_get(ctx, fontdesc, key);
 		cidfont = 1; // fontsub7a
-		if (!key)
+		if (!fontfile)
 		{
-			key = pdf_dict_get(ctx, fontdesc, PDF_NAME(FontFile3));
+			key = PDF_NAME(FontFile3);
+			fontfile = pdf_dict_get(ctx, fontdesc, key);
 			subtype = pdf_dict_get(ctx, key, PDF_NAME(Subtype));
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(OpenType)))
 			{
@@ -211,7 +217,8 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(Type1)))
 	{
 		fontdesc = pdf_dict_get(ctx, obj, PDF_NAME(FontDescriptor));
-		key = pdf_dict_get(ctx, fontdesc, PDF_NAME(FontFile3));
+		key = PDF_NAME(FontFile3);
+		fontfile = pdf_dict_get(ctx, fontdesc, key);
 		is_cff = 1;
 		cidfont = 0;
 	}
@@ -223,7 +230,7 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 #endif
 	}
 
-	if (!key)
+	if (!fontfile)
 	{
 #ifdef DEBUG_SUBSETTING
 		fz_write_printf(ctx, fz_stddbg(ctx), "No key found for font of subtype ");
@@ -232,14 +239,31 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 		return;
 	}
 
-	num = pdf_to_num(ctx, key);
-	gen = pdf_to_gen(ctx, key);
+	num = pdf_to_num(ctx, fontfile);
+	gen = pdf_to_gen(ctx, fontfile);
 
 	for (i = 0; i < p->usage->len; i++)
 	{
 		if (p->usage->font[i].num == num &&
 			p->usage->font[i].gen == gen)
 			break;
+	}
+
+	fz_font_digest(ctx, font->font, digest);
+
+	/* Check for duplicate fonts. (Fonts in the document that have
+	 * the font stream included multiple times as different objects).
+	 * This can happen with naive insertion routines. */
+	if (i == p->usage->len)
+	{
+		for (i = 0; i < p->usage->len; i++)
+		{
+			if (memcmp(digest, p->usage->font[i].digest, 16) == 0)
+			{
+				pdf_dict_put(ctx, fontdesc, key, p->usage->font[i].fontfile);
+				break;
+			}
+		}
 	}
 
 	pdf_drop_font(ctx, p->gs->font);
@@ -279,7 +303,7 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 
 	p->usage->font[i].is_cff = is_cff;
 	p->usage->font[i].is_cidfont = cidfont;
-	p->usage->font[i].fontfile = pdf_keep_obj(ctx, key);
+	p->usage->font[i].fontfile = pdf_keep_obj(ctx, fontfile);
 	p->usage->font[i].num = num;
 	p->usage->font[i].gen = gen;
 	p->usage->font[i].cids.len = 0;
@@ -291,6 +315,7 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 	p->usage->font[i].len = 0;
 	p->usage->font[i].max = 0;
 	p->usage->font[i].font = NULL;
+	memcpy(p->usage->font[i].digest, digest, 16);
 	p->usage->len++;
 
 	p->usage->font[i].font = fz_malloc(ctx, sizeof(*p->usage->font[i].font) * 4);
