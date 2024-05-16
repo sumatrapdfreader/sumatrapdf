@@ -80,6 +80,7 @@ class EngineMupdf : public EngineBase {
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
     fz_context* _ctx = nullptr;
+    DWORD ctxCreatorThreadID = 0;
     fz_locks_context fz_locks_ctx;
     int displayDPI{96};
     fz_document* _doc = nullptr;

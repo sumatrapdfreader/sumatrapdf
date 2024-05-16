@@ -1601,6 +1601,7 @@ EngineMupdf::EngineMupdf() {
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     _ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
+    ctxCreatorThreadID = GetCurrentThreadId();
     InstallFitzErrorCallbacks(_ctx);
 
     pdf_install_load_system_font_funcs(_ctx);
@@ -1608,7 +1609,8 @@ EngineMupdf::EngineMupdf() {
 }
 
 fz_context* EngineMupdf::Ctx() const {
-    if (IsGUIThread(FALSE)) {
+    DWORD currThreadID = GetCurrentThreadId();
+    if (currThreadID == ctxCreatorThreadID) {
         return _ctx;
     }
     auto ctx = GetOrClonePerThreadContext(this, _ctx);
@@ -1618,7 +1620,9 @@ fz_context* EngineMupdf::Ctx() const {
 EngineMupdf::~EngineMupdf() {
     EnterCriticalSection(&pagesAccess);
 
-    auto ctx = Ctx();
+    ReleaseAllContextsForEngine(this);
+
+    auto ctx = _ctx;
     for (FzPageInfo* pi : pages) {
         DeleteVecMembers(pi->links);
         DeleteVecMembers(pi->autoLinks);
@@ -1646,7 +1650,6 @@ EngineMupdf::~EngineMupdf() {
     fz_drop_document(ctx, _doc);
     drop_cached_fonts_for_ctx(ctx);
 
-    ReleaseAllContextsForEngine(this);
     fz_drop_context(ctx);
 
     delete pageLabels;
