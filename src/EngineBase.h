@@ -539,3 +539,5 @@ struct PasswordUI {
     virtual char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
+
+void ReleasePerThreadContext(EngineBase*);

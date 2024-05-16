@@ -1,6 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
+}
+
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
@@ -68,6 +73,8 @@
 #include "ExternalViewers.h"
 #include "AppColors.h"
 #include "Theme.h"
+#include "Annotation.h"
+#include "EngineMupdf.h"
 
 #include "utils/Log.h"
 
@@ -1163,6 +1170,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     LoadSettings();
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
+    InitializeEngineMupdf();
 
 #if defined(DEBUG)
     void TestBrowser(); // scratch.cpp
@@ -1493,6 +1501,7 @@ Exit:
 
     ShutdownCleanup();
     EngineEbookCleanup();
+    DestroyEngineMupdf();
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely

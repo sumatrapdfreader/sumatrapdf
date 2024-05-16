@@ -127,3 +127,4 @@ void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange = An
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo);
 
 void InitializeEngineMupdf();
+void DestroyEngineMupdf();
