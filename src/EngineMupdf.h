@@ -72,6 +72,8 @@ class EngineMupdf : public EngineBase {
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
+    fz_context* Ctx() const;
+
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION* ctxAccess;
@@ -79,7 +81,7 @@ class EngineMupdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    fz_context* ctx = nullptr;
+    fz_context* _ctx = nullptr;
     fz_locks_context fz_locks_ctx;
     int displayDPI{96};
     fz_document* _doc = nullptr;
