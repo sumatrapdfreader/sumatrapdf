@@ -245,19 +245,22 @@ inline void CrashIfFunc(bool cond) {
 #define __analysis_assume(x)
 #endif
 
-#define CrashAlwaysIf(cond)         \
-    do {                            \
-        __analysis_assume(!(cond)); \
-        if (cond) {                 \
-            CrashMe();              \
-        }                           \
-    } while (0)
-
+// trigger a crash if cond is true and we're pre-release, debug or asan build
 #define CrashIf(cond)               \
     do {                            \
         __analysis_assume(!(cond)); \
         CrashIfFunc(cond);          \
     } while (0)
+
+// trigger a crash always, even in release builds
+#define CrashAlwaysIf(cond)         \
+    do {                            \
+    __analysis_assume(!(cond)); \
+    if (cond) {                 \
+    CrashMe();              \
+    }                           \
+} while (0)
+
 
 // must be defined in the app. can be no-op to disable this functionality
 void _uploadDebugReportIfFunc(bool cond, const char*);

@@ -624,15 +624,20 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 
 // TODO: need to finish StrFormat and use it instead.
 char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args) {
-    char message[256]{};
-    size_t bufCchSize = dimof(message);
+    char message[512]{};
+    int bufCchSize = dimofi(message);
     char* buf = message;
     for (;;) {
-        int count = vsnprintf(buf, bufCchSize, fmt, args);
+        int count = vsnprintf(buf, (size_t)bufCchSize, fmt, args);
         // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
         // when %S string had certain Unicode characters
         CrashIf(count == -1);
-        if ((count >= 0) && ((size_t)count < bufCchSize)) {
+        if (count < 0) {
+            str::BufSet(buf, bufCchSize, "vsnprintf() returned -1");
+            break;
+        }
+
+        if ((count >= 0) && (count < bufCchSize)) {
             break;
         }
         /* we have to make the buffer bigger. The algorithm used to calculate
@@ -640,11 +645,7 @@ char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args) {
         if (buf != message) {
             Allocator::Free(a, buf);
         }
-        if (bufCchSize < 4 * 1024) {
-            bufCchSize += bufCchSize;
-        } else {
-            bufCchSize += 1024;
-        }
+        bufCchSize = count + 2; // +2 just in case
         buf = Allocator::AllocArray<char>(a, bufCchSize);
         if (!buf) {
             break;
