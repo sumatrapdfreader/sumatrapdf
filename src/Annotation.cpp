@@ -156,7 +156,6 @@ int PageNo(Annotation* annot) {
 RectF GetBounds(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     fz_rect rc = {};
 
     fz_try(ctx) {
@@ -179,7 +178,6 @@ void SetRect(Annotation* annot, RectF r) {
     bool failed = false;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         fz_rect rc = ToFzRect(r);
         fz_try(ctx) {
             pdf_set_annot_rect(ctx, annot->pdfannot, rc);
@@ -203,7 +201,6 @@ void SetRect(Annotation* annot, RectF r) {
 const char* Author(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
 
     const char* s = nullptr;
 
@@ -224,7 +221,6 @@ const char* Author(Annotation* annot) {
 int Quadding(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     int res = 0;
     fz_try(ctx) {
         res = pdf_annot_quadding(ctx, annot->pdfannot);
@@ -245,7 +241,6 @@ bool SetQuadding(Annotation* annot, int newQuadding) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         CrashIf(!IsValidQuadding(newQuadding));
         bool didChange = Quadding(annot) != newQuadding;
         if (!didChange) {
@@ -268,7 +263,6 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         fz_quad quads[512];
         int n = rects.Size();
         if (n == 0) {
@@ -299,7 +293,6 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
     auto pdf = annot->pdf;
-    ScopedCritSec cs(e->ctxAccess);
     Vec<RectF> res;
     int n = pdf_annot_quad_point_count(ctx, annot->pdfannot);
     for (int i = 0; i < n; i++) {
@@ -323,7 +316,6 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
 TempStr Contents(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     const char* s = nullptr;
     fz_try(ctx) {
         s = pdf_annot_contents(ctx, annot->pdfannot);
@@ -344,7 +336,6 @@ bool SetContents(Annotation* annot, const char* sv) {
     }
     auto ctx = e->Ctx();
     {
-        ScopedCritSec cs(e->ctxAccess);
         fz_try(ctx) {
             pdf_set_annot_contents(ctx, annot->pdfannot, sv);
             pdf_update_annot(ctx, annot->pdfannot);
@@ -364,7 +355,6 @@ void DeleteAnnotation(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
     {
-        ScopedCritSec cs(e->ctxAccess);
         bool failed = false;
         pdf_page* page = nullptr;
         fz_try(ctx) {
@@ -387,7 +377,6 @@ void DeleteAnnotation(Annotation* annot) {
 int PopupId(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     pdf_obj* obj = nullptr;
     int res = -1;
     fz_try(ctx) {
@@ -407,7 +396,6 @@ time_t CreationDate(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
     auto pdf = annot->pdf;
-    ScopedCritSec cs(e->ctxAccess);
     int64_t res = 0;
     fz_try(ctx)
     {
@@ -423,7 +411,6 @@ time_t CreationDate(Annotation* annot) {
 time_t ModificationDate(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     int64_t res = 0;
     fz_try(ctx) {
         res = pdf_annot_modification_date(ctx, annot->pdfannot);
@@ -438,7 +425,6 @@ time_t ModificationDate(Annotation* annot) {
 const char* IconName(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     bool hasIcon = false;
     const char* iconName = nullptr;
     fz_try(ctx) {
@@ -458,7 +444,6 @@ void SetIconName(Annotation* annot, const char* iconName) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
     {
-        ScopedCritSec cs(e->ctxAccess);
         fz_try(ctx) {
             pdf_set_annot_icon_name(ctx, annot->pdfannot, iconName);
             pdf_update_annot(ctx, annot->pdfannot);
@@ -520,7 +505,6 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
 PdfColor GetColor(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     float color[4]{};
     int n = -1;
     fz_try(ctx) {
@@ -542,7 +526,6 @@ bool SetColor(Annotation* annot, PdfColor c) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         bool didChange = false;
         float color[4]{};
         int n = -1;
@@ -599,7 +582,6 @@ bool SetColor(Annotation* annot, PdfColor c) {
 PdfColor InteriorColor(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     float color[4]{};
     int n = -1;
     fz_try(ctx) {
@@ -620,7 +602,6 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         bool didChange = false;
         float color[4]{};
         int n = -1;
@@ -666,7 +647,6 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
 const char* DefaultAppearanceTextFont(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
@@ -684,7 +664,6 @@ void SetDefaultAppearanceTextFont(Annotation* annot, const char* sv) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         const char* fontName = nullptr;
         float sizeF{0.0};
         int n = 0;
@@ -704,7 +683,6 @@ void SetDefaultAppearanceTextFont(Annotation* annot, const char* sv) {
 int DefaultAppearanceTextSize(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
@@ -722,7 +700,6 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         const char* fontName = nullptr;
         float sizeF{0.0};
         int n = 0;
@@ -742,7 +719,6 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
 PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     const char* fontName = nullptr;
     float sizeF{0.0};
     int n = 0;
@@ -761,7 +737,6 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         const char* fontName = nullptr;
         float sizeF{0.0};
         int n = 0;
@@ -782,7 +757,6 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
 void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     pdf_line_ending leStart = PDF_ANNOT_LE_NONE;
     pdf_line_ending leEnd = PDF_ANNOT_LE_NONE;
     fz_try(ctx) {
@@ -801,7 +775,6 @@ void SetLineEndingStyles(Annotation* annot, int start, int end) {
     EngineMupdf* e = annot->engine;
         {
             auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
                 fz_try(ctx)
                 {
                         pdf_line_ending leStart = (pdf_line_ending)start;
@@ -821,7 +794,6 @@ void SetLineEndingStyles(Annotation* annot, int start, int end) {
 int BorderWidth(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     float res = 0;
     fz_try(ctx) {
         res = pdf_annot_border(ctx, annot->pdfannot);
@@ -838,7 +810,6 @@ void SetBorderWidth(Annotation* annot, int newWidth) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         fz_try(ctx) {
             pdf_set_annot_border(ctx, annot->pdfannot, (float)newWidth);
             pdf_update_annot(ctx, annot->pdfannot);
@@ -854,7 +825,6 @@ void SetBorderWidth(Annotation* annot, int newWidth) {
 int Opacity(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto ctx = e->Ctx();
-    ScopedCritSec cs(e->ctxAccess);
     float fopacity = 0;
     fz_try(ctx) {
         fopacity = pdf_annot_opacity(ctx, annot->pdfannot);
@@ -871,7 +841,6 @@ void SetOpacity(Annotation* annot, int newOpacity) {
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
-        ScopedCritSec cs(e->ctxAccess);
         CrashIf(newOpacity < 0 || newOpacity > 255);
         newOpacity = std::clamp(newOpacity, 0, 255);
         float fopacity = (float)newOpacity / 255.f;
@@ -1001,8 +970,6 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
     pdf_annot* annot = nullptr;
 
     {
-        ScopedCritSec cs(epdf->ctxAccess);
-
         fz_try(ctx) {
             auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
             enum pdf_annot_type atyp = (enum pdf_annot_type)typ;

@@ -1246,7 +1246,6 @@ pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     return copy;
 }
 
-// Note: make sure to only call with ctxAccess
 // PdfLoadAttachment && PdfLoadAttachments must traverse in the same order
 static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
     pdf_obj* dict;
@@ -1285,7 +1284,6 @@ static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
     return res;
 }
 
-// Note: make sure to only call with ctxAccess
 static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const char* path) {
     fz_outline root{};
     pdf_obj* dict;
@@ -1598,7 +1596,6 @@ EngineMupdf::EngineMupdf() {
         InitializeCriticalSection(&mutexes[i]);
     }
     InitializeCriticalSection(&pagesAccess);
-    ctxAccess = &mutexes[FZ_LOCK_ALLOC];
 
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
@@ -1679,7 +1676,6 @@ class PasswordCloner : public PasswordUI {
 };
 
 EngineBase* EngineMupdf::Clone() {
-    ScopedCritSec scope(ctxAccess);
     if (!FilePath()) {
         // before port we could clone streams but it's no longer possible
         return nullptr;
@@ -2157,7 +2153,6 @@ static bool IsLinearizedFile(EngineMupdf* e) {
     }
     auto ctx = e->Ctx();
 
-    ScopedCritSec scope(e->ctxAccess);
     int isLinear = 0;
     fz_try(ctx) {
         isLinear = pdf_doc_was_linearized(ctx, e->pdfdoc);
@@ -2170,8 +2165,6 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 }
 
 static void FinishNonPDFLoading(EngineMupdf* e) {
-    ScopedCritSec scope(e->ctxAccess);
-
     auto ctx = e->Ctx();
     for (int i = 0; i < e->pageCount; i++) {
         fz_rect mbox{};
@@ -2247,8 +2240,6 @@ bool EngineMupdf::FinishLoading() {
         FinishNonPDFLoading(this);
         return true;
     }
-
-    ScopedCritSec scope(ctxAccess);
 
     for (int pageNo = 0; pageNo < pageCount; pageNo++) {
         pdf_obj* pageref = nullptr;
@@ -2451,8 +2442,6 @@ TocTree* EngineMupdf::GetToc() {
 
     int idCounter = 0;
 
-    ScopedCritSec cs(ctxAccess);
-
     TocItem* root = nullptr;
     TocItem* att = nullptr;
     if (outline) {
@@ -2483,7 +2472,6 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
     }
     auto ctx = Ctx();
     IPageDestination* pageDest = nullptr;
-    ScopedCritSec scope2(ctxAccess);
     char* uri = str::JoinTemp("#nameddest=", name);
     float x, y, zoom = 0;
     int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
@@ -2503,7 +2491,6 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
     }
 
     ScopedCritSec scope1(&pagesAccess);
-    ScopedCritSec scope2(ctxAccess);
 
     size_t nameLen = str::Len(name);
     pdf_obj* dest = nullptr;
@@ -2687,11 +2674,8 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
     if (!TryEnterCriticalSection(&pagesAccess)) {
         return nullptr;
     }
-    if (TryEnterCriticalSection(ctxAccess)) {
-        // CRITICAL_SECTION locking is recursive
-        res = GetFzPageInfo(pageNo, true);
-        LeaveCriticalSection(ctxAccess);
-    }
+    // TODO: this might block?
+    res = GetFzPageInfo(pageNo, true);
     LeaveCriticalSection(&pagesAccess);
     return res;
 #endif
@@ -2738,7 +2722,6 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = pages[pageIdx];
 
-    ScopedCritSec ctxScope(ctxAccess);
     if (!pageInfo->page) {
         fz_try(ctx) {
             pageInfo->page = fz_load_page(ctx, _doc, pageIdx);
@@ -2826,8 +2809,6 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
         return RectF();
     }
 
-    ScopedCritSec scope(ctxAccess);
-
     fz_cookie fzcookie{};
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
@@ -2909,8 +2890,6 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
     fz_page* page = pageInfo->page;
-
-    ScopedCritSec cs(ctxAccess);
 
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
@@ -3026,12 +3005,6 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         return;
     }
 
-    // those locks must be taken in this order
-    // we need to lock pagesAccess because it might
-    // be taken below
-    ScopedCritSec csPages(&e->pagesAccess);
-    ScopedCritSec cs(e->ctxAccess);
-
     int pageNo = -1;
     fz_link_dest ldest{};
     auto ctx = e->Ctx();
@@ -3126,8 +3099,6 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
 
-    ScopedCritSec scope(ctxAccess);
-
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
     CrashIf(!image);
     if (!image) {
@@ -3162,8 +3133,6 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
     if (!pageInfo) {
         return {};
     }
-
-    ScopedCritSec scope(ctxAccess);
 
     fz_stext_page* stext = nullptr;
     fz_var(stext);
@@ -3226,7 +3195,6 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             continue;
         }
 
-        ScopedCritSec scope(ctxAccess);
         pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
         fz_try(ctx) {
             pdf_obj* resources = pdf_page_resources(ctx, page);
@@ -3245,10 +3213,6 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             fz_report_error(ctx);
         }
     }
-
-    // start ctxAccess scope here so that we don't also have to
-    // ask for pagesAccess (as is required for GetFzPage)
-    ScopedCritSec scope(ctxAccess);
 
     for (pdf_obj* res : resList) {
         pdf_unmark_obj(ctx, res);
@@ -3451,8 +3415,6 @@ TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
     };
     for (int i = 0; i < dimof(pdfPropNames); i++) {
         if (pdfPropNames[i].prop == prop) {
-            // _info is guaranteed not to contain any indirect references,
-            // so no need for ctxAccess
             pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropNames[i].name);
             if (!obj) {
                 return nullptr;
@@ -3475,7 +3437,6 @@ ByteSlice EngineMupdf::GetFileData() {
     }
 
     ByteSlice res;
-    ScopedCritSec scope(ctxAccess);
 
     fz_var(res);
     fz_try(ctx) {
@@ -3824,7 +3785,6 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         return nullptr;
     }
 
-    ScopedCritSec cs(epdf->ctxAccess);
     Vec<Annotation*> els;
     for (auto& annot : pi->annotations) {
         auto& atp = annot->type;
@@ -3918,7 +3878,6 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
     CrashIf(pageNo < 1);
     CrashIf(!engine->pdfdoc);
-    ScopedCritSec cs(engine->ctxAccess);
 
     AnnotationType typ = AnnotationType::Unknown;
     fz_rect bounds;

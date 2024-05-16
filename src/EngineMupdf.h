@@ -74,9 +74,7 @@ class EngineMupdf : public EngineBase {
 
     fz_context* Ctx() const;
 
-    // make sure to never ask for pagesAccess in an ctxAccess
-    // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION* ctxAccess;
+    // protects this object in multi-threaded access
     CRITICAL_SECTION pagesAccess;
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];

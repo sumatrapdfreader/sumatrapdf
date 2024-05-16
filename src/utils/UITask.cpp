@@ -27,7 +27,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
     UINT wmExecTask = GetExecuteTaskMessage();
     if (wmExecTask == msg) {
         auto func = (std::function<void()>*)lp;
-        // logf("uitask::WndPorcTaskDispatch: about to free func 0x%p\n", (void*)func);
+        //logf("uitask::WndPorcTaskDispatch: about to free func 0x%p\n", (void*)func);
         (*func)();
         delete func;
         return 0;
@@ -62,7 +62,7 @@ void Destroy() {
 
 void Post(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
-    // logf("uitask::Post: allocated func 0x%p\n", (void*)func);
+    //logf("uitask::Post: allocated func 0x%p\n", (void*)func);
     UINT wmExecTask = GetExecuteTaskMessage();
     PostMessageW(gTaskDispatchHwnd, wmExecTask, 0, (LPARAM)func);
 } // NOLINT
@@ -75,7 +75,7 @@ void PostOptimized(const std::function<void()>& f) {
         return;
     }
     auto func = new std::function<void()>(f);
-    // logf("uitask::PostOptimized: allocated func 0x%p\n", (void*)func);
+    //logf("uitask::PostOptimized: allocated func 0x%p\n", (void*)func);
     UINT wmExecTask = GetExecuteTaskMessage();
     PostMessageW(gTaskDispatchHwnd, wmExecTask, 0, (LPARAM)func);
 } // NOLINT
