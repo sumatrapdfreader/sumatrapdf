@@ -1579,7 +1579,6 @@ EngineMupdf::EngineMupdf() {
 
     pdf_install_load_system_font_funcs(_ctx);
     fz_register_document_handlers(_ctx);
-    fz_set_text_aa_level(_ctx, 8);
 }
 
 fz_context* EngineMupdf::Ctx() const {
