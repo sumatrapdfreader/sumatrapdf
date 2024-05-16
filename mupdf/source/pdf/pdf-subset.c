@@ -198,7 +198,7 @@ font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_fon
 		{
 			key = PDF_NAME(FontFile3);
 			fontfile = pdf_dict_get(ctx, fontdesc, key);
-			subtype = pdf_dict_get(ctx, key, PDF_NAME(Subtype));
+			subtype = pdf_dict_get(ctx, fontfile, PDF_NAME(Subtype));
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(OpenType)))
 			{
 				cidfont = 0; // fontsub2a

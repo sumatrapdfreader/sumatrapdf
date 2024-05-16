@@ -1219,9 +1219,7 @@ read_glyf(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids)
 		old_end = get_loca(ctx, ttf, i+1);
 		if (old_end > t->len)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
-		if (old_end == old_start)
-			continue;
-		if (i == 0 || ttf->gid_renum[i] != 0)
+		if ((old_end != old_start) && (i == 0 || ttf->gid_renum[i] != 0))
 		{
 			len = old_end - old_start;
 			memmove(t->data + new_start, t->data + old_start, len);
