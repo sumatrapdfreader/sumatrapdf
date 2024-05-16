@@ -800,7 +800,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
     }
 
-    HRESULT res = PrintDlgEx(&pdex);
+    HRESULT res = PrintDlgExW(&pdex);
     if (res != S_OK) {
         logf("OnMenuPrint: PrintDlgEx failed\n");
         MessageBoxWarning(win->hwndFrame, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));

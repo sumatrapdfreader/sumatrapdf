@@ -255,12 +255,11 @@ inline void CrashIfFunc(bool cond) {
 // trigger a crash always, even in release builds
 #define CrashAlwaysIf(cond)         \
     do {                            \
-    __analysis_assume(!(cond)); \
-    if (cond) {                 \
-    CrashMe();              \
-    }                           \
-} while (0)
-
+        __analysis_assume(!(cond)); \
+        if (cond) {                 \
+            CrashMe();              \
+        }                           \
+    } while (0)
 
 // must be defined in the app. can be no-op to disable this functionality
 void _uploadDebugReportIfFunc(bool cond, const char*);
