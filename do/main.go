@@ -492,6 +492,7 @@ func main() {
 	}
 
 	if flgCIBuild {
+		genHTMLDocsForApp()
 		buildCi()
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
@@ -502,6 +503,7 @@ func main() {
 	}
 
 	if flgBuildRelease {
+		genHTMLDocsForApp()
 		buildRelease()
 		if opts.upload {
 			uploadToStorage(buildTypeRel)
@@ -514,6 +516,7 @@ func main() {
 	// this one is typically for me to build locally, so build all projects
 	if flgBuildPreRelease {
 		cleanReleaseBuilds()
+		genHTMLDocsForApp()
 		buildPreRelease(kPlatformIntel64, true)
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)

@@ -982,7 +982,6 @@ workspace "SumatraPDF"
       linkoptions { "/INFERASANLIBS" }
     filter {}
     -- dependson { "PdfFilter", "PdfPreview", "test_util" }
-    prebuildcommands { "cd %{cfg.targetdir}\\..\\.. & go run ./do -gen-docs"  }
 
   -- a dll version where most functionality is in libmupdf.dll
   project "SumatraPDF-dll"
@@ -1040,7 +1039,6 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     dependson { "PdfFilter", "PdfPreview", "test_util" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
-    prebuildcommands { "cd ..\\.. & go run ./do -gen-docs"  }
 
 workspace "MakeLZSA"
   configurations { "Debug", "Release" }
