@@ -1,14 +1,22 @@
 # Debugging Sumatra
 
-## **How to help us debug Sumatra hangs or crashes**
+**Help us debug Sumatra hangs or crashes**
 
 If Sumatra crashes or hangs reliably on your machine but we can't reproduce it ourselves, you can help us by debugging it. Here's a tutorial on how to do it.
 
 Please first test with latest pre-release version from [https://www.sumatrapdfreader.org/prerelease.html](https://www.sumatrapdfreader.org/prerelease.html)
 
-Some bugs might already be fixed there compared to latest 
+Some bugs might already be fixed there compared to latest
 
 Those instructions require SumatraPDF 3.2 or later.
+
+## Getting logs
+
+We log information that might be helpful in debugging issues in memory. Sometimes we might ask you to send us logs.
+
+To see the logs: press `Ctrl + K` ([Command Palette](Command-Palette.md)), type `show log`
+
+This saves current logs to a file and opens default .txt editor with log file.
 
 ## Install necessary software
 

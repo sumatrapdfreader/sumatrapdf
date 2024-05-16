@@ -76,13 +76,14 @@ void UpdateDeltaPerLine() {
         return;
     }
     // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
-    // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
+    // WHEEL_DELTA equals 120, so gDeltaPerLine will be 40
     gDeltaPerLine = 0;
     if (ulScrollLines == (ULONG)-1) {
         gDeltaPerLine = -1;
     } else if (ulScrollLines != 0) {
         gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
     }
+    logf("SPI_GETWHEELSCROLLLINES: ulScrollLines=%d, gDeltaPerLine=%d\n", (int)ulScrollLines, gDeltaPerLine);
 }
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
