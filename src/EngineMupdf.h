@@ -125,3 +125,5 @@ RectF ToRectF(fz_rect rect);
 RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap);
 void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange = AnnotationChange::Modify);
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo);
+
+void InitializeEngineMupdf();

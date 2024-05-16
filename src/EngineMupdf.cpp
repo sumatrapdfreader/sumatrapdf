@@ -1516,6 +1516,50 @@ static void InstallFitzErrorCallbacks(fz_context* ctx) {
     fz_set_error_callback(ctx, fz_print_cb, nullptr);
 }
 
+struct ContextThreadID {
+    EngineMupdf* engine = nullptr;
+    fz_context* ctx = nullptr;
+    DWORD threadID = 0;
+};
+
+static Vec<ContextThreadID>* gPerThreadContexts;
+static CRITICAL_SECTION gPerThreadContextsCs;
+
+void InitializeEngineMupdf() {
+    CrashIf(gPerThreadContexts);
+    InitializeCriticalSection(&gPerThreadContextsCs);
+    gPerThreadContexts = new Vec<ContextThreadID>();
+}
+
+fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
+    DWORD threadID = GetCurrentThreadId();
+    ScopedCritSec cs(&gPerThreadContextsCs);
+    for (auto& el : *gPerThreadContexts) {
+        if (el.engine == engine && el.threadID == threadID) {
+            return el.ctx;
+        }
+    }
+    auto newCtx = fz_clone_context(ctx);
+    ContextThreadID el{engine, newCtx, threadID};
+    gPerThreadContexts->Append(el);
+    return newCtx;
+}
+
+void ReleasePerThreadContext(EngineMupdf* engine) {
+    DWORD threadID = GetCurrentThreadId();
+    ScopedCritSec cs(&gPerThreadContextsCs);
+    auto n = gPerThreadContexts->Size();
+    for (int i = 0; i < n; i++) {
+        auto& el = gPerThreadContexts->at(i);
+        if (el.engine == engine && el.threadID == threadID) {
+            auto ctx = el.ctx;
+            fz_drop_context(ctx);
+            gPerThreadContexts->RemoveAtFast(i);
+            return;
+        }
+    }
+}
+
 EngineMupdf::EngineMupdf() {
     kind = kindEngineMupdf;
     defaultExt = str::Dup(".pdf");
@@ -1535,6 +1579,7 @@ EngineMupdf::EngineMupdf() {
 
     pdf_install_load_system_font_funcs(_ctx);
     fz_register_document_handlers(_ctx);
+    fz_set_text_aa_level(_ctx, 8);
 }
 
 fz_context* EngineMupdf::Ctx() const {
