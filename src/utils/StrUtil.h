@@ -398,8 +398,6 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 
-struct StrVec;
-
 // strings are stored linearly in strings, separated by 0
 // index is an array of indexes i.e. strings[index[2]] is
 // beginning of string at index 2
@@ -472,3 +470,22 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse = false
 char* Join(const StrVec& v, const char* sep = nullptr);
 TempStr JoinTemp(const StrVec& v, const char* sep);
 ByteSlice ToByteSlice(const char* s);
+
+// multi-threaded queue of strings
+struct StrQueue {
+    StrQueue();
+    ~StrQueue();
+
+    int Append(const char*, int len = 0);
+    void Lock();
+    void Unlock();
+    char* PopFront();
+    bool IsSentinel(char*);
+    void MarkFinished();
+
+    StrVec strings;
+
+    volatile bool finishedQueuing = false;
+    CRITICAL_SECTION cs;
+    HANDLE hEvent = nullptr;
+};

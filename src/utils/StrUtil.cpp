@@ -2938,3 +2938,66 @@ struct StrVecWithData : StrVecWithDataRaw {
         return (T)(res);
     }
 };
+
+constexpr uintptr_t kStrQueueSentinel = (uintptr_t)-2;
+
+void StrQueue::MarkFinished() {
+    Lock();
+    CrashIf(finishedQueuing);
+    finishedQueuing = true;
+    Unlock();
+    SetEvent(hEvent);
+}
+
+StrQueue::StrQueue() {
+    InitializeCriticalSection(&cs);
+    BOOL manualReset = FALSE;
+    BOOL initialState = FALSE;
+    hEvent = CreateEventW(nullptr /* SECURITY_ATTRIBUTES* */, manualReset, initialState, nullptr /* name */);
+}
+
+StrQueue::~StrQueue() {
+    DeleteCriticalSection(&cs);
+    CloseHandle(hEvent);
+}
+
+void StrQueue::Lock() {
+    EnterCriticalSection(&cs);
+}
+
+void StrQueue::Unlock() {
+    LeaveCriticalSection(&cs);
+}
+
+int StrQueue::Append(const char* s, int len) {
+    Lock();
+    auto res = strings.Append(s, len);
+    Unlock();
+    SetEvent(hEvent);
+    return res;
+}
+
+// is blocking
+// retuns sentinel value if no more strings
+// use IsSentinel() to check if returned value is a sentinel
+char* StrQueue::PopFront() {
+    while (true) {
+        WaitForSingleObject(hEvent, INFINITE);
+        EnterCriticalSection(&cs);
+        if (strings.Size() > 0) {
+            char* s = strings.RemoveAt(0);
+            LeaveCriticalSection(&cs);
+            return s;
+        } else {
+            if (finishedQueuing) {
+                LeaveCriticalSection(&cs);
+                return (char*)kStrQueueSentinel;
+            }
+        }
+        LeaveCriticalSection(&cs);
+    }
+}
+
+bool StrQueue::IsSentinel(char* s) {
+    return s == (char*)kStrQueueSentinel;
+}
