@@ -484,6 +484,8 @@ struct StrQueue {
     bool IsSentinel(char*);
     void MarkFinished();
 
+    void Access(const std::function<bool(StrQueue*)>& fn);
+
     StrVec strings;
 
     volatile bool finishedQueuing = false;

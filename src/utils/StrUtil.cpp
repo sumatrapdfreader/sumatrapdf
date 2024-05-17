@@ -3005,6 +3005,18 @@ char* StrQueue::PopFront() {
     }
 }
 
+void StrQueue::Access(const std::function<bool(StrQueue*)>& fn) {
+    while (true) {
+        Lock();
+        auto didPick = fn(this);
+        Unlock();
+        if (didPick) {
+            return;
+        }
+        WaitForSingleObject(hEvent, INFINITE);
+    }
+}
+
 bool StrQueue::IsSentinel(char* s) {
     return s == (char*)kStrQueueSentinel;
 }
