@@ -11,3 +11,5 @@ bool CollectFilesFromDirectory(const char* dir, StrVec& files,
                                const std::function<bool(const char* path)>& fileMatches);
 
 i64 GetFileSize(WIN32_FIND_DATAW*);
+
+void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse);

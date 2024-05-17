@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/ThreadUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/DirIter.h"
 
@@ -139,4 +140,30 @@ i64 GetFileSize(WIN32_FIND_DATAW* fd) {
     ul.HighPart = fd->nFileSizeHigh;
     ul.LowPart = fd->nFileSizeLow;
     return (i64)ul.QuadPart;
+}
+
+struct DirTraverseThreadData {
+    StrQueue* queue = nullptr;
+    const char* dir = nullptr;
+    bool recurse = false;
+};
+
+static DWORD WINAPI DirTraverseThread(LPVOID data) {
+    DirTraverseThreadData* td = (DirTraverseThreadData*)data;
+    CrashIf(!td);
+
+    DirTraverse(td->dir, td->recurse, [td](const char* path) -> bool {
+        td->queue->Append(path);
+        return true;
+    });
+    td->queue->MarkFinished();
+    return 0;
+}
+
+void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse) {
+    auto td = new DirTraverseThreadData{queue, dir, recurse};
+    DWORD threadId = 0;
+    HANDLE hThread = CreateThread(nullptr, 0, DirTraverseThread, (void*)td, 0, &threadId);
+    SetThreadName("DirTraverseThread", threadId);
+    CloseHandle(hThread);
 }

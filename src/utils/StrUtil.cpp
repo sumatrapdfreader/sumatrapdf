@@ -2969,6 +2969,13 @@ void StrQueue::Unlock() {
     LeaveCriticalSection(&cs);
 }
 
+int StrQueue::Size() {
+    Lock();
+    auto res = strings.Size();
+    Unlock();
+    return res;
+}
+
 int StrQueue::Append(const char* s, int len) {
     Lock();
     auto res = strings.Append(s, len);
@@ -2982,19 +2989,19 @@ int StrQueue::Append(const char* s, int len) {
 // use IsSentinel() to check if returned value is a sentinel
 char* StrQueue::PopFront() {
     while (true) {
-        WaitForSingleObject(hEvent, INFINITE);
-        EnterCriticalSection(&cs);
+        Lock();
         if (strings.Size() > 0) {
             char* s = strings.RemoveAt(0);
-            LeaveCriticalSection(&cs);
+            Unlock();
             return s;
         } else {
             if (finishedQueuing) {
-                LeaveCriticalSection(&cs);
+                Unlock();
                 return (char*)kStrQueueSentinel;
             }
         }
-        LeaveCriticalSection(&cs);
+        Unlock();
+        WaitForSingleObject(hEvent, INFINITE);
     }
 }
 

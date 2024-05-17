@@ -352,6 +352,37 @@ class FilesProvider : public TestFileProvider {
     }
 };
 
+class DirFileProviderAsync : public TestFileProvider {
+    StrQueue queue;
+    AutoFreeStr startDir;
+    AutoFreeStr fileFilter;
+
+  public:
+    DirFileProviderAsync(const char* path, const char* filter) {
+        startDir.SetCopy(path);
+        if (filter && !str::Eq(filter, "*")) {
+            fileFilter.SetCopy(filter);
+        }
+        StartDirTraverseAsync(&queue, path, true);
+    }
+    ~DirFileProviderAsync() override = default;
+    TempStr NextFile() override;
+    void Restart() override {
+        StartDirTraverseAsync(&queue, startDir.Get(), true);
+    }
+    int GetFilesCount() override {
+        return queue.Size();
+    }
+};
+
+TempStr DirFileProviderAsync::NextFile() {
+    char* path = queue.PopFront();
+    if (queue.IsSentinel(path)) {
+        return nullptr;
+    }
+    return path;
+}
+
 class DirFileProvider : public TestFileProvider {
     AutoFreeStr startDir;
     AutoFreeStr fileFilter;
@@ -364,7 +395,7 @@ class DirFileProvider : public TestFileProvider {
 
   public:
     DirFileProvider(const char* path, const char* filter);
-    ~DirFileProvider() override;
+    ~DirFileProvider() override = default;
     TempStr NextFile() override;
     void Restart() override;
     int GetFilesCount() override;
@@ -376,9 +407,6 @@ DirFileProvider::DirFileProvider(const char* path, const char* filter) {
         fileFilter.SetCopy(filter);
     }
     OpenDir(path);
-}
-
-DirFileProvider::~DirFileProvider() {
 }
 
 bool DirFileProvider::OpenDir(const char* dirPath) {
@@ -513,7 +541,7 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
         ParsePageRanges(ranges, st->pageRanges);
         Start(st, filesProvider, cycles);
     } else if (dir::Exists(path)) {
-        DirFileProvider* dirFileProvider = new DirFileProvider(path, filter);
+        auto dirFileProvider = new DirFileProviderAsync(path, filter);
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
     } else {
@@ -632,7 +660,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     int secs = SecsSinceSystemTime(st->stressStartTime);
     TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
-    TempStr s = str::FormatTemp("File %d (of %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
+    TempStr s = str::FormatTemp("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
     NotificationCreateArgs nargs;
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;

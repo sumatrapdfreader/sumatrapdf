@@ -142,7 +142,7 @@ static void InstallCrashHandler() {
         printflush("InstallCrashHandler(): CreateEvent() failed\n");
         return;
     }
-    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, 0);
+    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, nullptr);
     if (!gDumpThread) {
         printflush("InstallCrashHandler(): CreateThread() failed\n");
         return;
