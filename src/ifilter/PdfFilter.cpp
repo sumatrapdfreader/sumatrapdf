@@ -24,7 +24,7 @@ void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) 
 VOID PdfFilter::CleanUp() {
     logf("PdfFilter::Cleanup()\n");
     if (m_pdfEngine) {
-        delete m_pdfEngine;
+        m_pdfEngine->Release();
         m_pdfEngine = nullptr;
     }
     m_state = PdfFilterState::End;

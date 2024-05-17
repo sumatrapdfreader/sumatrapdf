@@ -596,7 +596,7 @@ int main(int, char**) {
     if (renderPath) {
         RenderDocument(engine, renderPath, renderZoom, silent);
     }
-    delete engine;
+    engine->Release();
 
     return 0;
 }

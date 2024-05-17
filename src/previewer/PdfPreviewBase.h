@@ -134,7 +134,7 @@ class PreviewBase : public IThumbnailProvider,
             m_hwnd = nullptr;
         }
         m_pStream = nullptr;
-        delete m_engine;
+        m_engine->Release();
         m_engine = nullptr;
         return S_OK;
     }

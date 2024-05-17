@@ -741,7 +741,7 @@ EngineBase* EngineImage::CreateFromFile(const char* path) {
     logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
     if (!engine->LoadSingleFile(path)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
@@ -750,7 +750,7 @@ EngineBase* EngineImage::CreateFromFile(const char* path) {
 EngineBase* EngineImage::CreateFromStream(IStream* stream) {
     EngineImage* engine = new EngineImage();
     if (!engine->LoadFromStream(stream)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
@@ -964,7 +964,7 @@ EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
     CrashIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
     if (!LoadImageDir(engine, fileName)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
@@ -1378,7 +1378,7 @@ EngineBase* EngineCbx::CreateFromFile(const char* path) {
     if (engine->LoadFromFile(path)) {
         return engine;
     }
-    delete engine;
+    engine->Release();
     return nullptr;
 }
 
@@ -1389,7 +1389,7 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        delete engine;
+        engine->Release();
     }
 
     archive = OpenRarArchive(stream);
@@ -1398,7 +1398,7 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        delete engine;
+        engine->Release();
     }
 
     archive = Open7zArchive(stream);
@@ -1407,7 +1407,7 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        delete engine;
+        engine->Release();
     }
 
     archive = OpenTarArchive(stream);
@@ -1416,7 +1416,7 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        delete engine;
+        engine->Release();
     }
 
     return nullptr;

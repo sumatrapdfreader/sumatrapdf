@@ -381,7 +381,7 @@ class EnginePs : public EngineBase {
 EngineBase* EnginePs::CreateFromFile(const char* fileName) {
     EnginePs* engine = new EnginePs();
     if (!engine->Load(fileName)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;

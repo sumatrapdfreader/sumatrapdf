@@ -1738,7 +1738,7 @@ ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
 ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
     EngineMupdf* engine = new EngineMupdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
-    delete engine;
+    engine->Release();
     return res;
 }
 
@@ -3666,7 +3666,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
         }
         engine->displayDPI = displayDPI;
         if (!engine->Load(stream, "foo.fb2", pwdUI)) {
-            delete engine;
+            engine->Release();
             return nullptr;
         }
         engine->SetFilePath(path);
@@ -3678,7 +3678,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
     }
     engine->displayDPI = displayDPI;
     if (!engine->Load(path, pwdUI)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
@@ -3687,7 +3687,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     EngineMupdf* engine = new EngineMupdf();
     if (!engine->Load(stream, nameHint, pwdUI)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
@@ -3697,7 +3697,7 @@ EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHin
     EngineMupdf* engine = new EngineMupdf();
     IStream* stream = CreateStreamFromData(data);
     if (!engine->Load(stream, nameHint, pwdUI)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;

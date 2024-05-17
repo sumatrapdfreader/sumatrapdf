@@ -1196,7 +1196,7 @@ int EngineDjVu::GetPageByLabel(const char* label) const {
 EngineBase* EngineDjVu::CreateFromFile(const char* path) {
     EngineDjVu* engine = new EngineDjVu();
     if (!engine->Load(path)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
@@ -1205,7 +1205,7 @@ EngineBase* EngineDjVu::CreateFromFile(const char* path) {
 EngineBase* EngineDjVu::CreateFromStream(IStream* stream) {
     EngineDjVu* engine = new EngineDjVu();
     if (!engine->Load(stream)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;

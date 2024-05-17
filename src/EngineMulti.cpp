@@ -415,7 +415,7 @@ bool IsEngineMultiSupportedFileType(Kind kind) {
 static EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     return engine;
