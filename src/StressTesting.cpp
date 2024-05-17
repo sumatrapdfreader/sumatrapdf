@@ -410,6 +410,7 @@ struct StressTest {
     int nFilesProcessed = 0; // number of files processed so far
     int timerId = 0;
     bool exitWhenDone = false;
+    int nSlowPages = 0;
 
     SYSTEMTIME stressStartTime{};
     Vec<PageRange> pageRanges;
@@ -561,6 +562,8 @@ static bool OpenFile(StressTest* st, const char* fileName) {
         SetSidebarVisibility(st->win, st->win->tocVisible, gGlobalPrefs->showFavorites);
     }
 
+    st->nSlowPages = 0;
+    st->pagesToRender.Clear();
     constexpr int nMaxPages = 32;
     int nPages = st->win->ctrl->PageCount();
     if (IsFullRange(st->pageRanges)) {
@@ -692,8 +695,17 @@ static bool GoToNextPage(StressTest* st) {
     args.msg = s;
     args.groupId = kNotifGroupStressTestBenchmark;
     ShowNotification(args);
-
-    if (st->pagesToRender.size() == 0) {
+    if (pageRenderTime > 700) {
+        st->nSlowPages += 1;
+    }
+    bool goToNextFile = st->pagesToRender.size() == 0;
+    if (st->nSlowPages >= 3) {
+        // some files are scanned .jpx images that are slow to render
+        // not much to learn from rendering them so we skip those if
+        // we see more than 3 slow pages
+        goToNextFile = true;
+    }
+    if (goToNextFile) {
         if (GoToNextFile(st)) {
             return true;
         }
