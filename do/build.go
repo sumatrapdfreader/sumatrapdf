@@ -126,7 +126,7 @@ func cleanPreserveSettings() {
 			name := e2.Name()
 			path2 := filepath.Join(path, name)
 			// delete everything except those files
-			excluded := (name == "sumatrapdfcache") || (name == "SumatraPDF-settings.txt")
+			excluded := (name == "sumatrapdfcache") || (name == "SumatraPDF-settings.txt") || strings.Contains(name, "asan_dynamic")
 			if excluded {
 				nSkipped++
 				continue
