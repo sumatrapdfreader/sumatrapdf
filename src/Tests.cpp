@@ -45,7 +45,7 @@ void TestRenderPage(const Flags& i) {
             printf("failed to render page\n");
         }
         delete bmp;
-        delete engine;
+        engine->Release();
     }
 }
 
@@ -95,6 +95,6 @@ void TestExtractPage(const Flags& ci) {
             extractPageText(engine, pageNo);
         }
 
-        delete engine;
+        engine->Release();
     }
 }

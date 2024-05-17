@@ -90,7 +90,7 @@ struct PrintData {
 
     ~PrintData() {
         delete printer;
-        delete engine;
+        engine->Release();
     }
 };
 
@@ -284,6 +284,11 @@ static bool PrintToDevice(const PrintData& pd) {
     int res;
 
     EngineBase& engine = *pd.engine;
+
+    pd.engine->AddRef();
+    defer {
+        pd.engine->Release();
+    };
 
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
@@ -1270,7 +1275,7 @@ bool PrintFile(const char* fileName, char* printerName, bool displayErrors, cons
         return false;
     }
     bool ok = PrintFile2(engine, printerName, displayErrors, settings);
-    delete engine;
+    engine->Release();
     logfa("PrintFile: finished ok\n");
     return ok;
 }

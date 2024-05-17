@@ -1020,7 +1020,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
     logf("CreateControllerForEngineOrFile: '%s', %d pages\n", path, nPages);
     if (nPages <= 0) {
         // seen nPages < 0 in a crash in epub file
-        delete engine;
+        engine->Release();
         return nullptr;
     }
     DocController* ctrl = new DisplayModel(engine, win->cbHandler);

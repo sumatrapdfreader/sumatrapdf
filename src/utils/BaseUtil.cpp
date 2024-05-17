@@ -9,6 +9,46 @@ Kind kindNone = "none";
 // if > 1 we won't crash when memory allocation fails
 LONG gAllowAllocFailure = 0;
 
+int AtomicInt::Inc() {
+    return (int)InterlockedIncrement(&val);
+}
+
+int AtomicInt::Dec() {
+    return (int)InterlockedDecrement(&val);
+}
+
+int AtomicInt::Add(int n) {
+    return (int)InterlockedAdd(&val, n);
+}
+
+int AtomicInt::Sub(int n) {
+    return (int)InterlockedAdd(&val, -n);
+}
+
+int AtomicInt::Get() const {
+    return InterlockedCompareExchange((ULONG*)&val, 0, 0);
+}
+
+bool AtomicBool::Get() const {
+    return InterlockedCompareExchange((ULONG*)&val, 0, 0) != 0;
+}
+
+bool AtomicBool::Set(bool newValue) {
+    auto res = InterlockedExchange((ULONG*)&val, newValue ? 1 : 0);
+    return res != 0;
+}
+
+int AtomicRefCount::Add() {
+    return (int)InterlockedIncrement(&val);
+}
+// returns true if counter reaches 0, meaning it has been released
+// by all who held a reference to it
+bool AtomicRefCount::Dec() {
+    auto res = InterlockedDecrement(&val);
+    CrashIf(res < 0);
+    return res == 0;
+}
+
 void* Allocator::Alloc(Allocator* a, size_t size) {
     if (!a) {
         return malloc(size);

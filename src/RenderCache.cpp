@@ -30,10 +30,12 @@
 
 bool gShowTileLayout = false;
 
-RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)}) {
+RenderCache::RenderCache() {
     // enable when debugging RenderCache logic
     // gEnableDbgLog = true;
-
+    int screenDx = GetSystemMetrics(SM_CXSCREEN);
+    int screenDy = GetSystemMetrics(SM_CYSCREEN);
+    maxTileSize = {screenDx, screenDy};
     isRemoteSession = GetSystemMetrics(SM_REMOTESESSION);
     textColor = WIN_COL_BLACK;
     backgroundColor = WIN_COL_WHITE;
@@ -651,11 +653,12 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             continue;
         }
 
-        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
+        auto dm = req.dm;
+        if (!dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
             continue;
         }
 
-        if (req.dm->dontRenderFlag) {
+        if (dm->dontRenderFlag) {
             if (req.renderCb) {
                 req.renderCb->Callback();
             }
@@ -665,12 +668,13 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         // make sure that we have extracted page text for
         // all rendered pages to allow text selection and
         // searching without any further delays
-        if (!req.dm->textCache->HasTextForPage(req.pageNo)) {
-            req.dm->textCache->GetTextForPage(req.pageNo);
+        if (!dm->textCache->HasTextForPage(req.pageNo)) {
+            dm->textCache->GetTextForPage(req.pageNo);
         }
 
         CrashIf(req.abortCookie != nullptr);
-        EngineBase* engine = req.dm->GetEngine();
+        EngineBase* engine = dm->GetEngine();
+        engine->AddRef();
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
         auto timeStart = TimeGet();
         bmp = engine->RenderPage(args);
@@ -679,6 +683,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             if (req.renderCb) {
                 req.renderCb->Callback(nullptr);
             }
+            engine->Release();
             continue;
         }
         auto durMs = TimeSinceInMs(timeStart);
@@ -697,8 +702,9 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
                 UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
             }
             cache->Add(req, bmp);
-            req.dm->RepaintDisplay();
+            dm->RepaintDisplay();
         }
+        engine->Release();
         ResetTempAllocator();
     }
     DestroyTempAllocator();

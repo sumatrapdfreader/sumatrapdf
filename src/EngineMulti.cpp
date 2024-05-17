@@ -92,7 +92,7 @@ EngineMulti::EngineMulti() {
 
 EngineMulti::~EngineMulti() {
     for (auto&& ei : enginesInfo) {
-        delete ei.engine;
+        ei.engine->Release();
     }
     delete tocTree;
 }

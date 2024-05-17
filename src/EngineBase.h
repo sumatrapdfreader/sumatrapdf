@@ -402,6 +402,7 @@ struct RenderPageArgs {
 class EngineBase {
   public:
     Kind kind = nullptr;
+    AtomicRefCount refCount;
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
     const char* defaultExt = nullptr;
@@ -418,9 +419,12 @@ class EngineBase {
     // TODO: migrate other engines to use this
     AutoFreeStr fileNameBase;
 
-    virtual ~EngineBase();
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual EngineBase* Clone() = 0;
+
+    int AddRef();
+    // return true if deleted the object
+    bool Release();
 
     // number of pages the loaded document contains
     int PageCount() const;
@@ -526,6 +530,9 @@ class EngineBase {
 
     // protected:
     void SetFilePath(const char* s);
+
+  protected:
+    virtual ~EngineBase();
 };
 
 struct PasswordUI {

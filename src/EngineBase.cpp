@@ -314,6 +314,18 @@ RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* page
     this->cookie_out = cookie_out;
 }
 
+int EngineBase::AddRef() {
+    return refCount.Add();
+}
+
+bool EngineBase::Release() {
+    if (refCount.Dec()) {
+        delete this;
+        return true;
+    }
+    return false;
+}
+
 EngineBase::~EngineBase() {
     str::Free(decryptionKey);
     str::Free(defaultExt);

@@ -253,7 +253,7 @@ class EnginePs : public EngineBase {
     }
 
     ~EnginePs() override {
-        delete pdfEngine;
+        pdfEngine->Release();
     }
 
     EngineBase* Clone() override {

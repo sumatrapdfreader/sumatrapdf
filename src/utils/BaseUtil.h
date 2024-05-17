@@ -601,6 +601,44 @@ class ExitScopeHelp {
     }
 };
 
+// it's 32-bit value which we cast to int for ease of use
+struct AtomicInt {
+    AtomicInt() = default;
+    ~AtomicInt() = default;
+    int Inc();
+    int Dec();
+    int Add(int n);
+    int Sub(int n);
+    int Get() const;
+
+  private:
+    volatile LONG val = 0;
+};
+
+class AtomicBool {
+  public:
+    AtomicBool() = default;
+    ~AtomicBool() = default;
+    bool Get() const;
+    bool Set(bool newValue);
+
+  private:
+    volatile LONG val = 0;
+};
+
+struct AtomicRefCount {
+    AtomicRefCount() = default;
+    ~AtomicRefCount() = default;
+    int Add();
+    // returns true if counter reaches 0, meaning it has been released
+    // by all who held a reference to it
+    bool Dec();
+
+  private:
+    // starts life as acquired
+    volatile LONG val = 1;
+};
+
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
 extern LONG gAllowAllocFailure;

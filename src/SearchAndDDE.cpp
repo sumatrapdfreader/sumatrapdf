@@ -318,23 +318,31 @@ static DWORD WINAPI FindThread(LPVOID data) {
     CrashIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
     MainWindow* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
+    auto textSearch = dm->textSearch;
+    auto ctrl = win->ctrl;
+
+    auto engine = dm->GetEngine();
+    engine->AddRef();
+    defer {
+        engine->Release();
+    };
 
     TextSel* rect;
     dm->textSearch->SetDirection(ftd->direction);
-    if (ftd->wasModified || !win->ctrl->ValidPageNo(dm->textSearch->GetCurrentPageNo()) ||
-        !dm->GetPageInfo(dm->textSearch->GetCurrentPageNo())->visibleRatio) {
-        rect = dm->textSearch->FindFirst(win->ctrl->CurrentPageNo(), ftd->text, ftd);
+    if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
+        !dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
+        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text, ftd);
     } else {
-        rect = dm->textSearch->FindNext(ftd);
+        rect = textSearch->FindNext(ftd);
     }
 
     bool loopedAround = false;
     if (!win->findCanceled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
-        int startPage = (TextSearchDirection::Forward == ftd->direction) ? 1 : win->ctrl->PageCount();
-        if (!ftd->wasModified || win->ctrl->CurrentPageNo() != startPage) {
+        int startPage = (TextSearchDirection::Forward == ftd->direction) ? 1 : ctrl->PageCount();
+        if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
-            rect = dm->textSearch->FindFirst(startPage, ftd->text, ftd);
+            rect = textSearch->FindFirst(startPage, ftd->text, ftd);
         }
     }
 

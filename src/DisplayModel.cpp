@@ -315,7 +315,7 @@ DisplayModel::~DisplayModel() {
     delete textSearch;
     delete textSelection;
     delete textCache;
-    delete engine;
+    engine->Release();
     free(pagesInfo);
 }
 
